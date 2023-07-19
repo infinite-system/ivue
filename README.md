@@ -5,7 +5,7 @@ Advanced State Management & Class Architecture for Vue 3+.
 ## Install
 
 ```sh
-yarn add xvue
+yarn add infinite-vue
 ```
 
 ## Run Dev Server

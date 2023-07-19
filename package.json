@@ -1,5 +1,5 @@
 {
-  "name": "xvue",
+  "name": "infinite-vue",
   "version": "1.0.0",
   "description": "xVue – Infinite Vue. Advanced State Management & Class Architecture for Vue 3+.",
   "exports": {
