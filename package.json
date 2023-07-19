@@ -1,6 +1,6 @@
 {
   "name": "infinite-vue",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "xVue – Infinite Vue. Advanced State Management & Class Architecture for Vue 3+.",
   "exports": {
     ".": {
@@ -63,11 +63,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/infinite-system/vue-mobx-finegrained"
+    "url": "https://github.com/infinite-system/infinite-vue"
   },
-  "homepage": "https://github.com/infinite-system/vue-mobx-finegrained",
+  "homepage": "https://github.com/infinite-system/infinite-vue",
   "bugs": {
-    "url": "https://github.com/infinite-system/vue-mobx-finegrained/issues",
+    "url": "https://github.com/infinite-system/infinite-vue/issues",
     "email": "ekalashnikov@gmail.com"
   },
   "keywords": [
