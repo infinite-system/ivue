@@ -23,10 +23,10 @@ export class BaseIOC {
     this.container.bind(MessagesRepository).to(MessagesRepository).inSingletonScope().onActivation(xVue);
     this.container.bind(Router).to(Router).inSingletonScope().onActivation(xVue);
     this.container.bind(RouterRepository).to(RouterRepository).inSingletonScope().onActivation(xVue);
-    this.container.bind(NavigationRepository).to(NavigationRepository).inSingletonScope()
+    this.container.bind(NavigationRepository).to(NavigationRepository).inSingletonScope().onActivation(xVue);
     this.container.bind(UserModel).to(UserModel).inSingletonScope().onActivation(xVue);
-    this.container.bind(AppPresenter).to(AppPresenter).inSingletonScope()
-    this.container.bind(LoginRegisterPresenter).to(LoginRegisterPresenter).inSingletonScope()
+    this.container.bind(AppPresenter).to(AppPresenter).inSingletonScope().onActivation(xVue);
+    this.container.bind(LoginRegisterPresenter).to(LoginRegisterPresenter).inSingletonScope().onActivation(xVue);
     this.container.bind(XVueTestClass).to(XVueTestClass).inSingletonScope().onActivation(xVue);
     this.container.bind(AuthenticationRepository).to(AuthenticationRepository).inSingletonScope().onActivation(xVue);
 
