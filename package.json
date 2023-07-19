@@ -1,0 +1,91 @@
+{
+  "name": "xvue",
+  "version": "1.0.0",
+  "description": "xVue – Infinite Vue. Advanced State Management & Class Architecture for Vue 3+.",
+  "exports": {
+    ".": {
+      "require": "./dist/index.umd.js",
+      "import": "./dist/index.es.js",
+      "types": "./dist/src/index.d.ts",
+      "style": "./dist/style.css"
+    }
+  },
+  "main": "./dist/index.umd.js",
+  "module": "./dist/index.es.js",
+  "types": "./dist/src/index.d.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "run-p type-check build-only",
+    "preview": "vite preview",
+    "test": "vitest --reporter=verbose",
+    "build-only": "rm -rf ./dist/* && vite build",
+    "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
+  },
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@rushstack/eslint-patch": "^1.2.0",
+    "@tsconfig/node18": "^2.0.1",
+    "@types/inversify": "^2.0.33",
+    "@types/jsdom": "^21.1.1",
+    "@types/node": "^18.16.8",
+    "@vitejs/plugin-vue": "^4.2.3",
+    "@vitejs/plugin-vue-jsx": "^3.0.1",
+    "@vue/eslint-config-typescript": "^11.0.3",
+    "@vue/test-utils": "^2.3.2",
+    "@vue/tsconfig": "^0.4.0",
+    "@vueuse/core": "^10.1.2",
+    "babel-jest": "^29.5.0",
+    "eslint": "^8.39.0",
+    "eslint-plugin-vue": "^9.11.0",
+    "inversify": "^6.0.1",
+    "inversify-inject-decorators": "^3.1.0",
+    "jsdom": "^22.0.0",
+    "lodash": "^4.17.21",
+    "npm-run-all": "^4.1.5",
+    "pinia": "^2.0.36",
+    "reflect-metadata": "^0.1.13",
+    "transform-class-properties": "^1.0.0-beta",
+    "tree-model": "^1.0.7",
+    "typescript": "~5.0.4",
+    "vite": "^4.3.5",
+    "vite-plugin-dts": "^2.3.0",
+    "vitest": "^0.31.0",
+    "vue": "^3.0.0",
+    "vue-dd": "^1.6.4",
+    "vue-router": "^4.2.0",
+    "vue-tsc": "^1.6.4",
+    "vue-use": "^0.2.0",
+    "wait-for-expect": "^3.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/infinite-system/vue-mobx-finegrained"
+  },
+  "homepage": "https://github.com/infinite-system/vue-mobx-finegrained",
+  "bugs": {
+    "url": "https://github.com/infinite-system/vue-mobx-finegrained/issues",
+    "email": "ekalashnikov@gmail.com"
+  },
+  "keywords": [
+    "xVue",
+    "vuex",
+    "mobx",
+    "redux",
+    "vue",
+    "react",
+    "vuejs",
+    "vuex",
+    "pinia",
+    "state management",
+    "reactive"
+  ],
+  "author": {
+    "name": "Evgeny Kalashnikov",
+    "email": "ekalashnikov@gmail.com"
+  },
+  "license": "MIT"
+}
