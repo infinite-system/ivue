@@ -89,8 +89,7 @@ export function xVue(ctx, obj) {
         }
       },
       set: descriptors.set?.bind(vue) || undefined,
-      enumerable: descriptors.
-        enumerable || true,
+      enumerable: descriptors.enumerable || true,
       configurable: descriptors.configurable || true
     })
   }
