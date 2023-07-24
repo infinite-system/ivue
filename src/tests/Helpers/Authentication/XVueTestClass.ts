@@ -9,7 +9,7 @@ import { watch } from "vue";
 import { generateHugeArray } from "@/tests/Helpers/Generators/generators";
 import { container } from "@/tests/Helpers/Container.ts"
 import { Field } from "@/tests/Helpers/Field";
-import { xVueMake, xVue, Override, unraw } from "@/";
+import { xVueMake, xVue, Override, unraw, beforeAction } from "@/";
 import { Types } from "@/tests/Helpers/Core/Types";
 
 @injectable()
@@ -63,10 +63,20 @@ export class XVueTestClass extends ParentXVueTestClass {
 
     container.bind(Field).toSelf().onActivation(xVue)
 
-    this.transientField1 = xVueMake(new Field(10)).init()
+    beforeAction(Field.prototype.init, vue => {
+      console.log('before init of prototype of Field')
+    })
+
+    this.transientField1 = xVueMake(new Field(10))
+
+    beforeAction(this.transientField1.init, vue => {
+      console.log('before init of Field')
+    })
+
+    this.transientField1.init()
 
     // console.log('this.transientField1', this.transientField1)
-    this.transientField2 = xVueMake(new Field(25))
+    this.transientField2 = xVueMake(new Field(25)).init()
   }
 
   get propTransient () {

@@ -106,51 +106,68 @@ export function afterAction (fn, callback) {
   }
 }
 
-export function runBeforeAction (vue, fn, prop, args) {
-  if (beforeMap.has(fn)) {
+export function runBeforeAction (vue, obj, prop, args) {
+  const runFn = (fn) => {
     const fns = beforeMap.get(fn)
     for (let i = 0; i < fns.length; i++) {
       fns[i](vue, ...args)
     }
   }
+  if (beforeMap.has(obj[prop])) runFn(obj[prop])
+  if (beforeMap.has(vue[prop])) runFn(vue[prop])
 }
 
-export function runAfterAction (vue, fn, prop, args, fnReturn) {
-  if (afterMap.has(fn)) {
+export function runAfterAction (vue, obj, prop, args, fnReturn) {
+  const runFn = (fn) => {
     const fns = afterMap.get(fn)
     for (let i = 0; i < fns.length; i++) {
       fns[i](vue, fnReturn, ...args)
     }
   }
+  if (afterMap.has(obj[prop])) runFn(obj[prop])
+  if (afterMap.has(vue[prop])) runFn(vue[prop])
 }
 
 export function overrideFunctionHandler (type_, vue, obj, prop) {
+  // Define a default void return
   let fnReturn = void (0)
-  const fnInterceptable = (...args) => {
-    runBeforeAction(vue, obj[prop], prop, args)
-    fnReturn = obj[prop].bind(vue)(...args)
-    runAfterAction(vue, obj[prop], prop, args, fnReturn)
+  // Handle basic scoped most often scenario early
+  // Usually the init() function
+  if (type_ === Override.SCOPED) {
+    // Inside scoped you can put watch(), computed(), watchEffect()
+    // and it will be auto garbage collected on scope destruction
+    return function (...args) {
+      const scope = effectScope()
+      scope.run(() => {
+        fnReturn = obj[prop].bind(vue)(...args)
+      })
+      tryOnScopeDispose(() => scope.stop())
+      return fnReturn
+    }
   }
+
+  // Handle interceptable functions
+  // Define the common handler
+  const fnInterceptable = (...args) => {
+    runBeforeAction(vue, obj, prop, args)
+    fnReturn = obj[prop].bind(vue)(...args)
+    runAfterAction(vue, obj, prop, args, fnReturn)
+  }
+
   switch (type_) {
     case Override.INTERCEPT:
+      // Basic, fast, non-scoped intercepts
       return function (...args) {
         fnInterceptable(...args)
         return fnReturn
       }
     case Override.SCOPED_INTERCEPT:
+      // Inside scoped you can put watch(), computed(), watchEffect()
+      // and it will be auto garbage collected on scope destruction
       return function (...args) {
         const scope = effectScope()
         scope.run(() => {
           fnInterceptable(...args)
-        })
-        tryOnScopeDispose(() => scope.stop())
-        return fnReturn
-      }
-    case Override.SCOPED:
-      return function (...args) {
-        const scope = effectScope()
-        scope.run(() => {
-          fnReturn = obj[prop].bind(vue)(...args)
         })
         tryOnScopeDispose(() => scope.stop())
         return fnReturn
