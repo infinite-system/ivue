@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { watch, computed } from 'vue'
+import { watch, computed, toRefs } from 'vue'
 import { container } from '@/tests/Helpers/AppIOC'
 import { XVueTestClass } from "../src/tests/Helpers/Authentication/XVueTestClass.js";
+import { storeToRefs } from "pinia";
 
 const vm: XVueTestClass = container.get(XVueTestClass)
+const { primitive } = toRefs(container.get(XVueTestClass))
 
 watch(() => vm.computedVariable?.[0]?.test, newVal => {
   console.log('new computedVariable:', newVal)
@@ -18,7 +20,6 @@ const hugeId = 2646049
 </script>
 
 <template>
-
   <div style="width:900px; margin:0 auto;">
     <h1>xVue - Infinite Vue - Implementation Tests</h1>
 <!--  <vue-dd v-model="vm" get-all-properties/>-->
@@ -122,7 +123,15 @@ const hugeId = 2646049
     <h2>markRaw Tests</h2>
     <div>nonReactiveProp is disabled:</div>
     <vue-dd name="nonReactiveProp" v-model="vm.nonReactiveProp" :preview="0" :dark="false" :open-level="2" />
+
+    <h2>Private prop test</h2>
+    <div>vm.x: {{ vm.x }} <button @click="vm.x++">Increase</button></div>
     <br />
+
+    <h2>Transients Test</h2>
+    <div>vm.transientField1.prop: {{ vm.transientField1.prop }} <button @click="vm.transientField1.prop++">Increase++</button></div>
+    <div>vm.transientField2.prop: {{ vm.transientField2.prop }} <button @click="vm.transientField2.prop++">Increase++</button></div>
+    <div>Computed vm.propTransient: {{ vm.propTransient }}</div>
     <br />
     <br />
     <br />

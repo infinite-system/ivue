@@ -10,6 +10,11 @@ import { AuthenticationRepository } from "@/tests/Helpers/Authentication/Authent
 import { container } from './container.ts'
 import { xVue } from '@/xVue'
 
+import { beforeAction } from "@/utils";
+
+beforeAction(XVueTestClass.prototype.init, (vue) => {
+  console.log('before XVueTestClass')
+})
 
 export class BaseIOC {
   container

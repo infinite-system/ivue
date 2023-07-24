@@ -7,20 +7,33 @@ import { lazyInject } from '@/tests/Helpers/Container'
 import { ParentXVueTestClass } from "@/tests/Helpers/Authentication/ParentXVueTestClass";
 import { watch } from "vue";
 import { generateHugeArray } from "@/tests/Helpers/Generators/generators";
-import { unraw } from "@/utils";
+import { container } from "@/tests/Helpers/Container.ts"
+import { Field } from "@/tests/Helpers/Field";
+import { xVueMake, xVue, Override, unraw } from "@/";
+import { Types } from "@/tests/Helpers/Core/Types";
 
 @injectable()
 export class XVueTestClass extends ParentXVueTestClass {
 
   overrides = {
-    nonReactiveProp: false
+    init: Override.SCOPED_INTERCEPT,
+    nonReactiveProp: Override.DISABLED
   }
 
   @inject(AuthenticationRepository) authRepo: AuthenticationRepository
-  @lazyInject(AppPresenter) app: AppPresenter
+  @inject(Types.IAppPresenter) app: AppPresenter
   @inject(MessagesRepository) messagesRepository: MessagesRepository
   @inject(Router) router: Router
 
+  private _x = 1
+
+  get x () {
+    return this._x
+  }
+
+  set x (v) {
+    this._x = v
+  }
 
   primitive = 1
 
@@ -38,20 +51,33 @@ export class XVueTestClass extends ParentXVueTestClass {
     super()
   }
 
-  setup() {
+  transientField1: Field
+  transientField2: Field
+
+  init() {
     watch(() => this.primitive, newValue => {
       if (newValue === 10) {
         console.log('watch matched value: 10 =', newValue)
       }
     })
+
+    container.bind(Field).toSelf().onActivation(xVue)
+
+    this.transientField1 = xVueMake(new Field(10)).init()
+
+    // console.log('this.transientField1', this.transientField1)
+    this.transientField2 = xVueMake(new Field(25))
+  }
+
+  get propTransient () {
+    return this.transientField1.prop
   }
 
   get computedVariable() {
     console.log('computedVariable')
-    // this.object.test = 1
-    return this.authRepo.originalVariable.map(el => (({
+    return this.authRepo.originalVariable.map(el => ({
       test: el.test + ' computed 1', test2: el.test2 + ' computed 1'
-    })))
+    }))
   }
 
   get computedUponComputedVariable() {
@@ -113,13 +139,9 @@ export class XVueTestClass extends ParentXVueTestClass {
   reset() {
   }
 
-
   numberOfRecords = 5000000
-
   hugeArray = []
-
   loadingHugeData = false
-
   timeTaken = 0
 
   loadHugeData(numberOfRecords) {
@@ -139,6 +161,7 @@ export class XVueTestClass extends ParentXVueTestClass {
     const minutes = (ms / (1000 * 60)).toFixed(1);
     const hours = (ms / (1000 * 60 * 60)).toFixed(1);
     const days = (ms / (1000 * 60 * 60 * 24)).toFixed(1);
+
     if (seconds < 60) return seconds + " Seconds";
     else if (minutes < 60) return minutes + " Minutes";
     else if (hours < 24) return hours + " Hrs";

@@ -1,13 +1,14 @@
-import { getAllProperties, getMagicProperties } from "./utils";
+import { Override, overrideFunctionHandler, getMagicProperties } from "./utils";
 import { computed, effectScope, markRaw, reactive } from "vue";
 import { tryOnScopeDispose } from "@vueuse/core";
 
-function beforeAction(prop, fn, args) {
-  console.log('beforeAction:', prop + '()', /*fn,*/ args)
-}
-
-function afterAction(prop, fn, args, fnReturn) {
-  console.log('afterAction:', prop + '()', /*fn,*/ args, fnReturn)
+/**
+ * Make a transient xVue instance without inversify container.
+ *
+ * @param obj
+ */
+export function xVueMake<T> (obj:T) {
+  return xVue(null, obj) as T
 }
 
 /**
@@ -16,41 +17,41 @@ function afterAction(prop, fn, args, fnReturn) {
  * @param ctx
  * @param obj
  */
-export function xVue(ctx, obj) {
+export function xVue (ctx, obj) {
 
-  const props = getAllProperties(obj)
   const magicProps = getMagicProperties(obj)
 
-  const hasOverrides = 'overrides' in obj
-  const overrides = 'overrides' in obj ? obj.overrides : {}
+  let hasOverrides = 'overrides' in obj && typeof obj.overrides === 'object'
+  const overrides = hasOverrides ? obj.overrides : {}
+
+  const hasInit = 'init' in obj && typeof obj.init === 'function'
+  if (hasInit) {
+    if (!('init' in overrides)) overrides.init = Override.SCOPED // Default to SCOPED for 'init' function
+    hasOverrides = true // if init() function is defined, we have a default override for it
+  }
 
   const vue = reactive(Object.create(obj))
 
-  for (let i = 0; i < props.length; i++) {
-
-    const prop = props[i]
-    if (prop === 'constructor') continue // skip constructors
-    if (prop in magicProps.get) continue // skip getters
-
-    vue[prop] = typeof obj[prop] === 'function'
-      ? function (...args) {
-        beforeAction(prop, obj[prop], args)
-        const fnReturn = obj[prop].bind(vue)(...args)
-        afterAction(prop, obj[prop], args, fnReturn)
-        return fnReturn
-      }
-      : (overrides?.[prop] === false ? markRaw(obj[prop]) : obj[prop])
-  }
-
   if (hasOverrides) {
-    obj.overrides = markRaw(obj.overrides)
+    for (const prop in overrides) {
+      if (prop in magicProps.get) continue // skip getters to not cause a computation
+      if (typeof obj[prop] === 'function') {
+        if (overrides[prop] === Override.DISABLED) continue // skip, because disabling a function has no effect
+        vue[prop] = overrideFunctionHandler(overrides[prop], vue, obj, prop)
+      } else {
+        if (overrides[prop] === Override.DISABLED && typeof obj[prop] === 'object') {
+          vue[prop] = markRaw(obj[prop])
+        }
+      }
+    }
   }
 
   const computeds = {}
   const scope = {}
 
   for (const prop in magicProps.get) {
-    if (overrides?.[prop] === false) continue
+
+    if (overrides?.[prop] === Override.DISABLED) continue // skip if DISABLED
 
     // Get getter and setter descriptors
     const descriptors = Object.getOwnPropertyDescriptor(obj.constructor.prototype, prop)
@@ -88,16 +89,15 @@ export function xVue(ctx, obj) {
           return computeds[prop]
         }
       },
-      set: descriptors.set?.bind(vue) || undefined,
-      enumerable: descriptors.enumerable || true,
-      configurable: descriptors.configurable || true
+      set: descriptors?.set?.bind(vue) || undefined,
+      enumerable: descriptors?.enumerable || true,
+      configurable: descriptors?.configurable || true
     })
   }
 
-  if ('setup' in vue && typeof vue.setup === 'function') {
-    const setupScope = effectScope()
-    setupScope.run(() => vue.setup())
-    tryOnScopeDispose(() => setupScope.stop())
+  if (hasInit && ctx !== null && ctx.currentRequest.bindings[0].scope === 'Singleton') {
+    // Initialize Singleton Immediately
+    vue.init()
   }
 
   return vue

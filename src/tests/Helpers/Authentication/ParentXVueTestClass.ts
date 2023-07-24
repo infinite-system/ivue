@@ -1,4 +1,3 @@
-
 import { inject, injectable } from 'inversify'
 import { MessagesRepository } from "@/tests/Helpers/Core/Messages/MessagesRepository";
 
@@ -23,16 +22,16 @@ export abstract class ParentXVueTestClass {
 
   // constructor() {}
 
-  init() {
+  init () {
     this.showValidationWarning = false
     this.reset()
   }
 
 
   parentValue = 'Text from parent class'
-  parentValueAlert() {
+  parentValueAlert () {
     alert(this.parentValue)
   }
 
-  abstract reset(): void
+  abstract reset (): void
 }

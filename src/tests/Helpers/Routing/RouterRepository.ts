@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify'
 import { Types } from '../Core/Types'
-import { RouterGateway } from "@/Routing/RouterGateway";
+import { RouterGateway } from "@/tests/Helpers/Routing/RouterGateway";
 
 @injectable()
 export class RouterRepository {
