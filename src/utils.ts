@@ -44,14 +44,32 @@ export function getGetters (instance) {
   return getters
 }
 
+/**
+ * Convert object back to Vue reactive.
+ *
+ * @param obj
+ */
 export function unraw(obj) {
   delete obj.__v_skip
 }
 
+/**
+ * Alias for Vues' markRaw()
+ * @param obj
+ */
 export function raw(obj) {
   return markRaw(obj)
 }
 
+/**
+ * Overrides list.
+ * SCOPED: allows watch(), computed(), watchEffect() to be auto garbage collected.
+ * SCOPED_INTERCEPT: allows scoping AND before/after function intercepts
+ * INTERCEPT: allows before/after function intercepts only,
+ *            watch(), computed(), watchEffect() will NOT be garbage collected
+ * DISABLED: for objects -> makes them markRaw() non-reactive,
+ *           for getters -> makes them non-computed normal getters.
+ */
 export enum Override {
   SCOPED = 'SCOPED',
   SCOPED_INTERCEPT = 'SCOPED_INTERCEPT',
@@ -62,6 +80,12 @@ export enum Override {
 const beforeMap = new Map()
 const afterMap = new Map()
 
+/**
+ * Function to run before action in xVue.
+ *
+ * @param fn
+ * @param callback
+ */
 export function beforeAction (fn, callback) {
   if (beforeMap.has(fn)) {
     beforeMap.get(fn).push(callback)
@@ -70,6 +94,12 @@ export function beforeAction (fn, callback) {
   }
 }
 
+/**
+ * Function to run after action in xVue.
+ *
+ * @param fn
+ * @param callback
+ */
 export function afterAction (fn, callback) {
   if (beforeMap.has(fn)) {
     beforeMap.get(fn).push(callback)
@@ -78,6 +108,14 @@ export function afterAction (fn, callback) {
   }
 }
 
+/**
+ * Execute functions before action.
+ *
+ * @param vue
+ * @param obj
+ * @param prop
+ * @param args
+ */
 export function runBeforeAction (vue, obj, prop, args) {
   const runFn = (fn) => {
     const fns = beforeMap.get(fn)
@@ -89,6 +127,14 @@ export function runBeforeAction (vue, obj, prop, args) {
   if (beforeMap.has(vue[prop])) runFn(vue[prop])
 }
 
+/**
+ * Execute functions after action.
+ *
+ * @param vue
+ * @param obj
+ * @param prop
+ * @param args
+ */
 export function runAfterAction (vue, obj, prop, args, fnReturn) {
   const runFn = (fn) => {
     const fns = afterMap.get(fn)
@@ -100,6 +146,17 @@ export function runAfterAction (vue, obj, prop, args, fnReturn) {
   if (afterMap.has(vue[prop])) runFn(vue[prop])
 }
 
+/**
+ * Override function depending on type.
+ * SCOPED: allows watch(), computed(), watchEffect() to be auto garbage collected.
+ * SCOPED_INTERCEPT: allows scoping AND before/after function intercepts
+ * INTERCEPT: allows before/after function intercepts only,
+ *            watch(), computed(), watchEffect() will NOT be garbage collected
+ * @param type_
+ * @param vue
+ * @param obj
+ * @param prop
+ */
 export function overrideFunctionHandler (type_, vue, obj, prop) {
   // Define a default void return
   let fnReturn = void (0)
