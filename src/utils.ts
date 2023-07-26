@@ -1,26 +1,23 @@
 import { markRaw, effectScope } from 'vue'
 import { tryOnScopeDispose } from "@vueuse/core";
+
+const gettersMap = new Map()
 /**
- * Get setters and getters of a class instance.
- * Also gets all magic methods (getters and setters) stored in 'all' param.
+ * Get getters of a class instance and the total number of them.
  *
  * @param instance
- * @return { get: [...], set: [...], all: [...] }
+ * @return { values: { [getter]: true }, length: number }
  */
-const magicPropsMap = new Map()
-
-export function getMagicProperties (instance) {
+export function getGetters (instance) {
 
   let proto = Object.getPrototypeOf(instance)
 
-  if (magicPropsMap.has(proto)) {
-    // console.log('from map!!', proto)
-    return magicPropsMap.get(proto)
+  if (gettersMap.has(proto)) {
+    return gettersMap.get(proto)
   }
+  const originalPrototype = proto
 
-  const originalProto = proto
-
-  const props = []
+  let props: object[] | undefined = []
   while (proto && proto.constructor.name !== 'Object') {
     const protoProps = Object.entries(
       Object.getOwnPropertyDescriptors(proto)
@@ -30,46 +27,21 @@ export function getMagicProperties (instance) {
     proto = Object.getPrototypeOf(proto.constructor.prototype)
   }
 
-  const magicProps = { get: {}, set: {} }
+  const getters = { values: {}, length: 0 }
 
   for (let i = 0; i < props.length; i++) {
     if (props[i][0] !== '__proto__') {
       if (typeof props[i][1].get === 'function') {
-        // getters
-        magicProps.get[props[i][0]] = true
-      }
-      if (typeof props[i][1].set === 'function') {
-        // setters
-        magicProps.set[props[i][0]] = true
+        getters.values[props[i][0]] = true
+        getters.length++
       }
     }
   }
 
-  magicPropsMap.set(originalProto, magicProps)
+  props = undefined
+  gettersMap.set(originalPrototype, getters)
 
-  return magicProps
-}
-
-/**
- * Get all object properties including all ancestor prototype properties.
- *
- * @param obj
- */
-export function getAllProperties (obj) {
-
-  let proto = Object.getPrototypeOf(obj)
-  const props = Object.getOwnPropertyNames(obj)
-
-  // this determines all the ancestor prototype props as well
-  while (proto && proto.constructor.name !== 'Object') {
-    const protoProps = Object.getOwnPropertyNames(proto)
-      // caller, callee, arguments are not accessible so should be skipped
-      .filter(el => !['caller', 'callee', 'arguments'].includes(el))
-    props.push.apply(props, protoProps)
-    proto = Object.getPrototypeOf(proto.constructor.prototype)
-  }
-
-  return Array.from(new Set(props))
+  return getters
 }
 
 export function unraw(obj) {

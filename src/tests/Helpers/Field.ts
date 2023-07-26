@@ -1,20 +1,20 @@
 import { watch } from "vue";
-import { Override } from "@/utils";
+import { Override } from "@/";
 
 export class Field {
   overrides = {
     init: Override.SCOPED_INTERCEPT
   }
-  constructor(private _prop) {
+  constructor (private _prop) {
     console.log('constructing field', this._prop)
   }
-  get prop() {
+  get prop () {
     return this._prop
   }
-  set prop(v) {
+  set prop (v) {
     this._prop = v
   }
-  init() {
+  init () {
     console.log('init')
     watch(() => this.prop, newVal => {
       console.log('newVal', newVal)
