@@ -1,9 +1,9 @@
-import { xVue, xVueMake } from "./xVue";
+import { xVue, xVueNew } from "./xVue";
 import { Override, raw, unraw, afterAction, beforeAction } from "./utils";
 
 export {
   xVue,
-  xVueMake,
+  xVueNew,
   Override,
   beforeAction,
   afterAction,

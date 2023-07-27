@@ -6,7 +6,7 @@ export class Field {
     init: Override.SCOPED_INTERCEPT
   }
   constructor (private _prop) {
-    console.log('constructing field', this._prop)
+    // console.log('constructing field', this._prop)
   }
   get prop () {
     return this._prop

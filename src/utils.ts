@@ -49,7 +49,7 @@ export function getGetters (instance) {
  *
  * @param obj
  */
-export function unraw(obj) {
+export function unraw (obj) {
   delete obj.__v_skip
 }
 
@@ -57,7 +57,7 @@ export function unraw(obj) {
  * Alias for Vues' markRaw()
  * @param obj
  */
-export function raw(obj) {
+export function raw (obj) {
   return markRaw(obj)
 }
 
@@ -112,18 +112,20 @@ export function afterAction (fn, callback) {
  * Execute functions before action.
  *
  * @param vue
- * @param obj
  * @param prop
  * @param args
  */
-export function runBeforeAction (vue, obj, prop, args) {
+export function runBeforeAction (vue, prop, args) {
+  // console.log('run fn', vue, obj, prop, vue[prop], obj[prop])
+  // console.trace()
   const runFn = (fn) => {
     const fns = beforeMap.get(fn)
     for (let i = 0; i < fns.length; i++) {
+      // console.log('fns[i]', fns[i])
       fns[i](vue, ...args)
     }
   }
-  if (beforeMap.has(obj[prop])) runFn(obj[prop])
+  if (beforeMap.has(vue.constructor.prototype[prop])) runFn(vue.constructor.prototype[prop])
   if (beforeMap.has(vue[prop])) runFn(vue[prop])
 }
 
@@ -135,14 +137,14 @@ export function runBeforeAction (vue, obj, prop, args) {
  * @param prop
  * @param args
  */
-export function runAfterAction (vue, obj, prop, args, fnReturn) {
+export function runAfterAction (vue, prop, args, fnReturn) {
   const runFn = (fn) => {
     const fns = afterMap.get(fn)
     for (let i = 0; i < fns.length; i++) {
       fns[i](vue, fnReturn, ...args)
     }
   }
-  if (afterMap.has(obj[prop])) runFn(obj[prop])
+  if (afterMap.has(vue.constructor.prototype[prop])) runFn(vue.constructor.prototype[prop])
   if (afterMap.has(vue[prop])) runFn(vue[prop])
 }
 
@@ -153,11 +155,11 @@ export function runAfterAction (vue, obj, prop, args, fnReturn) {
  * INTERCEPT: allows before/after function intercepts only,
  *            watch(), computed(), watchEffect() will NOT be garbage collected
  * @param type_
+ * @param func
  * @param vue
- * @param obj
  * @param prop
  */
-export function overrideFunctionHandler (type_, vue, obj, prop) {
+export function overrideFunctionHandler (type_, func, vue, prop) {
   // Define a default void return
   let fnReturn = void (0)
   // Handle basic scoped most often scenario early
@@ -168,7 +170,7 @@ export function overrideFunctionHandler (type_, vue, obj, prop) {
     return function (...args) {
       const scope = effectScope()
       scope.run(() => {
-        fnReturn = obj[prop].bind(vue)(...args)
+        fnReturn = func.bind(vue)(...args)
       })
       tryOnScopeDispose(() => scope.stop())
       return fnReturn
@@ -178,9 +180,9 @@ export function overrideFunctionHandler (type_, vue, obj, prop) {
   // Handle interceptable functions
   // Define the common handler
   const fnInterceptable = (...args) => {
-    runBeforeAction(vue, obj, prop, args)
-    fnReturn = obj[prop].bind(vue)(...args)
-    runAfterAction(vue, obj, prop, args, fnReturn)
+    runBeforeAction(vue, prop, args)
+    fnReturn = func.bind(vue)(...args)
+    runAfterAction(vue, prop, args, fnReturn)
   }
 
   switch (type_) {

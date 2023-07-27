@@ -1,14 +1,16 @@
 import { Override, overrideFunctionHandler, getGetters } from "./utils";
 import { computed, effectScope, markRaw, reactive } from "vue";
 import { tryOnScopeDispose } from "@vueuse/core";
+import { Field } from "@/tests/Helpers/Field";
 
 /**
- * Make a transient xVue instance without inversify container.
+ * Make a new transient xVue instance of <T> Class without inversify container.
  *
- * @param obj
+ * @param className
+ * @param args
  */
-export function xVueMake<T> (obj: T) {
-  return xVue(null, obj) as T
+export function xVueNew<T> (className: T, ...args) {
+  return xVue(null, className, ...args) as T
 }
 
 /**
@@ -16,32 +18,34 @@ export function xVueMake<T> (obj: T) {
  *
  * @param ctx
  * @param obj
+ * @param args
  */
-export function xVue (ctx, obj) {
+export function xVue (ctx, obj, ...args) {
 
   const getters = getGetters(obj)
 
-  let hasOverrides = 'overrides' in obj && typeof obj.overrides === 'object'
-  let overrides = hasOverrides ? obj.overrides : undefined
+  const vue = reactive(ctx === null ? Reflect.construct(obj, args) : Object.create(obj))
 
-  const hasInit = 'init' in obj && typeof obj.init === 'function'
+  let hasOverrides = 'overrides' in vue && typeof vue.overrides === 'object'
+  let overrides = hasOverrides ? vue.overrides : undefined
+
+  const hasInit = 'init' in vue && typeof vue.init === 'function'
   if (hasInit) {
     if (!overrides) overrides = {} // only initialize empty object if there is 'init'
     if (!('init' in overrides)) overrides.init = Override.SCOPED // Default to SCOPED for 'init' function
     hasOverrides = true // if init() function is defined, we have a default override for it
   }
 
-  const vue = reactive(Object.create(obj))
-
   if (hasOverrides) {
     for (const prop in overrides) {
       if (prop in getters.values) continue // skip getters to not cause a computation
-      if (typeof obj[prop] === 'function') {
+      if (typeof vue[prop] === 'function') {
         if (overrides[prop] === Override.DISABLED) continue // skip, because disabling a function has no effect
-        vue[prop] = overrideFunctionHandler(overrides[prop], vue, obj, prop)
+        const func = vue[prop]
+        vue[prop] = overrideFunctionHandler(overrides[prop], func, vue, prop)
       } else {
-        if (overrides[prop] === Override.DISABLED && typeof obj[prop] === 'object') {
-          vue[prop] = markRaw(obj[prop])
+        if (overrides[prop] === Override.DISABLED && typeof vue[prop] === 'object') {
+          vue[prop] = markRaw(vue[prop])
         }
       }
     }
@@ -56,7 +60,7 @@ export function xVue (ctx, obj) {
     for (const prop in getters.values) {
       if (overrides?.[prop] === Override.DISABLED) continue // skip if DISABLED
       // Get getter and setter descriptors
-      const descriptors = Object.getOwnPropertyDescriptor(obj.constructor.prototype, prop)
+      const descriptors = Object.getOwnPropertyDescriptor(vue.constructor.prototype, prop)
       // Computed storage
       computed_[prop] = null
       // Handle getters as Vue 3 computed()

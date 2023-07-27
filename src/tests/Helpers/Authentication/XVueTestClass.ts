@@ -9,7 +9,7 @@ import { watch } from "vue";
 import { generateHugeArray } from "@/tests/Helpers/Generators/generators";
 import { container } from "@/tests/Helpers/Container.ts"
 import { Field } from "@/tests/Helpers/Field";
-import { xVueMake, xVue, Override, unraw, beforeAction } from "@/";
+import { xVueNew, xVue, Override, unraw, beforeAction } from "@/";
 import { Types } from "@/tests/Helpers/Core/Types";
 
 @injectable()
@@ -49,10 +49,12 @@ export class XVueTestClass extends ParentXVueTestClass {
 
   constructor() {
     super()
+    this.primitive = 10
   }
 
   transientField1: Field
   transientField2: Field
+  transientFields: Field[] = []
 
   init() {
     watch(() => this.primitive, newValue => {
@@ -61,22 +63,32 @@ export class XVueTestClass extends ParentXVueTestClass {
       }
     })
 
-    container.bind(Field).toSelf().onActivation(xVue)
+    // container.bind(Field).toSelf().onActivation(xVue)
 
     beforeAction(Field.prototype.init, vue => {
       console.log('before init of prototype of Field')
     })
 
-    this.transientField1 = xVueMake(new Field(10))
+    // const f =new Field(10)
+    // this.transientField1 = xVueMake(new Field(10))
+    this.transientField1 = xVueNew(Field, 10)
+    this.transientField2 = xVueNew(Field, 10)
+    for (let i = 0; i < 300000; i++) {
+      // this.transientFields.push(xVueMake(new Field(i)))
+      this.transientFields.push(xVueNew(Field, i))
+    }
+
+    console.log('this.transientField1', this.transientField1)
 
     beforeAction(this.transientField1.init, vue => {
-      console.log('before init of Field')
+      console.log('before init of Field', vue)
     })
 
     this.transientField1.init()
 
+    // const f2 = new Field(25)
     // console.log('this.transientField1', this.transientField1)
-    this.transientField2 = xVueMake(new Field(25)).init()
+    // this.transientField2 = xVueMake(new Field(20))
   }
 
   get propTransient () {
