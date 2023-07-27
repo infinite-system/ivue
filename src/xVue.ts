@@ -1,7 +1,6 @@
 import { Override, overrideFunctionHandler, getGetters } from "./utils";
 import { computed, effectScope, markRaw, reactive } from "vue";
 import { tryOnScopeDispose } from "@vueuse/core";
-import { Field } from "@/tests/Helpers/Field";
 
 /**
  * Make a new transient xVue instance of <T> Class without inversify container.
