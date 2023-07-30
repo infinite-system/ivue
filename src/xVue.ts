@@ -4,11 +4,12 @@ import { tryOnScopeDispose } from "@vueuse/core";
 
 /**
  * Make a new transient xVue instance of <T> Class without inversify container.
+ * For typescript: https://www.typescriptlang.org/docs/handbook/utility-types.html#parameterstype
  *
  * @param className
  * @param args
  */
-export function xVueNew<T> (className: T, ...args) {
+export function xVueNew<T> (className: T, ...args: T extends { new (...args: infer P): any } ? P : never[]) {
   return xVue(null, className, ...args) as T
 }
 

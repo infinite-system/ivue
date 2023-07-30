@@ -71,9 +71,9 @@ export class XVueTestClass extends ParentXVueTestClass {
 
     // const f =new Field(10)
     // this.transientField1 = xVueMake(new Field(10))
-    this.transientField1 = xVueNew(Field, 10)
-    this.transientField2 = xVueNew(Field, 10)
-    for (let i = 0; i < 300000; i++) {
+    this.transientField1 = xVueNew(Field, 2)
+    this.transientField2 = xVueNew(Field, 1)
+    for (let i = 0; i < 3; i++) {
       // this.transientFields.push(xVueMake(new Field(i)))
       this.transientFields.push(xVueNew(Field, i))
     }
@@ -85,6 +85,7 @@ export class XVueTestClass extends ParentXVueTestClass {
     })
 
     this.transientField1.init()
+    this.transientField2.init()
 
     // const f2 = new Field(25)
     // console.log('this.transientField1', this.transientField1)

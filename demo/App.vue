@@ -24,8 +24,6 @@ const hugeId = 2646049
     <h1>xVue - Infinite Vue - Implementation Tests</h1>
 <!--  <vue-dd v-model="vm" get-all-properties/>-->
 
-
-
     <h2>Class Inheritance Tests</h2>
 
     vm.parentValue: <input v-model="vm.parentValue"/><br/>

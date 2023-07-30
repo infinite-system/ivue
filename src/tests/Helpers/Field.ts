@@ -5,8 +5,8 @@ export class Field {
   overrides = {
     init: Override.SCOPED_INTERCEPT
   }
-  constructor (private _prop) {
-    // console.log('constructing field', this._prop)
+  constructor (private _prop: number) {
+    console.log('constructing field', this._prop)
   }
   get prop () {
     return this._prop
