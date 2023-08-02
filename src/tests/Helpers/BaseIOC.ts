@@ -1,39 +1,57 @@
+import { AppPresenter } from './AppPresenter'
+import { RouterRepository } from './Routing/RouterRepository'
 import { MessagesRepository } from './Core/Messages/MessagesRepository'
 import { Router } from './Routing/Router'
-import { RouterRepository } from './Routing/RouterRepository'
 import { UserModel } from './Authentication/UserModel'
 import { NavigationRepository } from './Navigation/NavigationRepository'
-import { AppPresenter } from './AppPresenter'
 import { LoginRegisterPresenter } from "./Authentication/LoginRegisterPresenter.js";
 import { XVueTestClass } from "./Authentication/XVueTestClass.js";
 import { AuthenticationRepository } from "@/tests/Helpers/Authentication/AuthenticationRepository.js";
-import { container } from './container.ts'
-import { xVue } from '@/xVue'
-
-import { beforeAction } from "@/utils";
-
-beforeAction(XVueTestClass.prototype.init, (vue) => {
-  console.log('before XVueTestClass')
-})
+import { container, containerMap } from './container.ts'
+import { Store } from "@/tests/Helpers/Core/Store";
+import { HttpGateway } from "@/tests/Helpers/Core/HttpGateway";
+import { RouterGateway } from "@/tests/Helpers/Routing/RouterGateway";
+import { iVueBuilder } from '@/iVue'
 
 export class BaseIOC {
   container
 
-  constructor() {
+  constructor () {
     this.container = container
   }
 
-  buildBaseTemplate = () => {
+  singleton (from, to = null) {
 
-    this.container.bind(MessagesRepository).to(MessagesRepository).inSingletonScope().onActivation(xVue);
-    this.container.bind(Router).to(Router).inSingletonScope().onActivation(xVue);
-    this.container.bind(RouterRepository).to(RouterRepository).inSingletonScope().onActivation(xVue);
-    this.container.bind(NavigationRepository).to(NavigationRepository).inSingletonScope().onActivation(xVue);
-    this.container.bind(UserModel).to(UserModel).inSingletonScope().onActivation(xVue);
-    this.container.bind(AppPresenter).to(AppPresenter).inSingletonScope().onActivation(xVue);
-    this.container.bind(LoginRegisterPresenter).to(LoginRegisterPresenter).inSingletonScope().onActivation(xVue);
-    this.container.bind(XVueTestClass).to(XVueTestClass).inSingletonScope().onActivation(xVue);
-    this.container.bind(AuthenticationRepository).to(AuthenticationRepository).inSingletonScope().onActivation(xVue);
+    // Container Map allows for HMR support for Vite
+    // It breaks otherwise because the container tries
+    // to rebind classes on reload
+    if (containerMap.has(from)) return
+
+    to = to ?? from
+
+    this.container.bind(from).to(to)
+      .inSingletonScope()
+      .onActivation(iVueBuilder);
+
+    containerMap.set(from, true)
+  }
+
+  init () {
+
+    this.singleton(Store.DataGateway, HttpGateway)
+    this.singleton(Store.RouterGateway, RouterGateway)
+    this.singleton(Store.AppPresenter, AppPresenter)
+
+    this.singleton(RouterRepository)
+    this.singleton(Router)
+
+    this.singleton(MessagesRepository);
+    this.singleton(NavigationRepository)
+    this.singleton(UserModel)
+    this.singleton(AuthenticationRepository)
+
+    this.singleton(XVueTestClass)
+    this.singleton(LoginRegisterPresenter)
 
     return this.container
   }

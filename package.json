@@ -1,7 +1,7 @@
 {
   "name": "infinite-vue",
   "version": "1.2.0",
-  "description": "xVue – Infinite Vue. Advanced State Management & Class Architecture for Vue 3+.",
+  "description": "iVue – Infinite Vue. Advanced State Management & Class Architecture for Vue 3+.",
   "exports": {
     ".": {
       "require": "./dist/index.umd.js",
@@ -71,7 +71,7 @@
     "email": "ekalashnikov@gmail.com"
   },
   "keywords": [
-    "xVue",
+    "iVue",
     "vuex",
     "mobx",
     "redux",

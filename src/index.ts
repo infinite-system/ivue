@@ -1,12 +1,12 @@
-import { xVue, xVueNew } from "./xVue";
-import { Override, raw, unraw, afterAction, beforeAction } from "./utils";
+import { iVueBuilder, iVue } from "./iVue";
+import { Behavior, raw, unraw, after, before } from "./utils";
 
 export {
-  xVue,
-  xVueNew,
-  Override,
-  beforeAction,
-  afterAction,
+  iVue,
+  iVueBuilder,
+  Behavior,
+  before,
+  after,
   raw,
   unraw
 }

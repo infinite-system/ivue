@@ -3,25 +3,23 @@ import { AuthenticationRepository } from './AuthenticationRepository'
 import { MessagesRepository } from '../Core/Messages/MessagesRepository'
 import { Router } from '../Routing/Router'
 import { AppPresenter } from "@/tests/Helpers/AppPresenter";
-import { lazyInject } from '@/tests/Helpers/Container'
 import { ParentXVueTestClass } from "@/tests/Helpers/Authentication/ParentXVueTestClass";
 import { watch } from "vue";
 import { generateHugeArray } from "@/tests/Helpers/Generators/generators";
-import { container } from "@/tests/Helpers/Container.ts"
 import { Field } from "@/tests/Helpers/Field";
-import { xVueNew, xVue, Override, unraw, beforeAction } from "@/";
-import { Types } from "@/tests/Helpers/Core/Types";
+import { iVue, Behavior, unraw, before, after } from "@/";
+import { Store } from "@/tests/Helpers/Core/Store";
 
-@injectable()
+// @injectable()
 export class XVueTestClass extends ParentXVueTestClass {
 
-  overrides = {
-    init: Override.SCOPED_INTERCEPT,
-    nonReactiveProp: Override.DISABLED
+  behavior = {
+    init: Behavior.SCOPED_INTERCEPT,
+    nonReactiveProp: Behavior.DISABLED
   }
 
   @inject(AuthenticationRepository) authRepo: AuthenticationRepository
-  @inject(Types.IAppPresenter) app: AppPresenter
+  @inject(Store.AppPresenter) app: AppPresenter
   @inject(MessagesRepository) messagesRepository: MessagesRepository
   @inject(Router) router: Router
 
@@ -47,7 +45,7 @@ export class XVueTestClass extends ParentXVueTestClass {
     }
   }
 
-  constructor() {
+  constructor () {
     super()
     this.primitive = 10
   }
@@ -56,70 +54,99 @@ export class XVueTestClass extends ParentXVueTestClass {
   transientField2: Field
   transientFields: Field[] = []
 
-  init() {
+  init () {
+
     watch(() => this.primitive, newValue => {
       if (newValue === 10) {
         console.log('watch matched value: 10 =', newValue)
       }
     })
 
-    // container.bind(Field).toSelf().onActivation(xVue)
+    // container.bind(Field).toSelf().onActivation(iVue)
 
-    beforeAction(Field.prototype.init, vue => {
+    before(Field.prototype.init, vue => {
       console.log('before init of prototype of Field')
     })
 
     // const f =new Field(10)
-    // this.transientField1 = xVueMake(new Field(10))
-    this.transientField1 = xVueNew(Field, 2)
-    this.transientField2 = xVueNew(Field, 1)
+    // this.transientField1 = iVueMake(new Field(10))
+    // this.transientUserModel = iVueNew(UserModel)
+    // console.log('this.transientUserModel', this.transientUserModel)
+
+    this.transientField1 = iVue(Field, 2)
+    this.transientField2 = iVue(Field, 1)
+
     for (let i = 0; i < 3; i++) {
-      // this.transientFields.push(xVueMake(new Field(i)))
-      this.transientFields.push(xVueNew(Field, i))
+      // this.transientFields.push(iVueMake(new Field(i)))
+      this.transientFields.push(iVue(Field, i))
     }
 
     console.log('this.transientField1', this.transientField1)
 
-    beforeAction(this.transientField1.init, vue => {
+    before(this.transientField1.init, vue => {
       console.log('before init of Field', vue)
     })
 
     this.transientField1.init()
     this.transientField2.init()
 
+    before(Field.prototype.runWithIntercept, (intercept, self, ...[var1]) => {
+      intercept.return = 'Prototype intercept'
+      self.prop++
+      console.log('var1', var1)
+      return false
+    })
+
+    before(this.transientField2.runWithIntercept, (intercept, self: Field) => {
+
+      intercept.return = 'Awesome'
+      return false
+    })
+
+    after(this.transientField2.runWithIntercept, (intercept, self: Field) => {
+      // console.log('running...')
+      // intercept.return = 'Awesome!!'
+      // return false
+    })
+
+    after(this.transientField2.runWithIntercept, (intercept, self: Field) => {
+      // console.log('running...')
+      intercept.return = 'Awesome2'
+    })
+
     // const f2 = new Field(25)
     // console.log('this.transientField1', this.transientField1)
-    // this.transientField2 = xVueMake(new Field(20))
+    // this.transientField2 = iVueMake(new Field(20))
   }
 
   get propTransient () {
     return this.transientField1.prop
   }
 
-  get computedVariable() {
+  get computedVariable () {
     console.log('computedVariable')
     return this.authRepo.originalVariable.map(el => ({
       test: el.test + ' computed 1', test2: el.test2 + ' computed 1'
     }))
   }
 
-  get computedUponComputedVariable() {
+  get computedUponComputedVariable () {
     console.log('computedUponComputedVariable')
     return this.computedVariable.map(el => ({
       test: el.test + ' computed 2', test2: el.test2 + ' computed 2'
     }))
   }
 
-  set computedVariable(value) {
+  set computedVariable (value) {
     this.authRepo.originalVariable = value
   }
 
-  get getComputedButMakeReactiveAgain() {
+  get getComputedButMakeReactiveAgain () {
     unraw(this.computedVariable[0])
     return this.computedVariable[0]
   }
 
-  get computedPrimitive() {
+  get computedPrimitive () {
     // console.log('compute3', this.primitive)
     return this.primitive
   }
@@ -127,11 +154,11 @@ export class XVueTestClass extends ParentXVueTestClass {
   /**
    * Circular computed store connectivity test.
    */
-  get deepEmail() {
+  get deepEmail () {
     return String(this.app.router.userModel.app.router.userModel.email).split('').join('+')
   }
 
-  pushToOriginalVariableInAuthRepo() {
+  pushToOriginalVariableInAuthRepo () {
     this.authRepo.originalVariable.push({
       test: 'push-1',
       test2: 'push-2'
@@ -141,7 +168,7 @@ export class XVueTestClass extends ParentXVueTestClass {
   loading = false
   result: unknown = ''
 
-  async asyncFunction() {
+  async asyncFunction () {
     return new Promise((resolve) => {
       this.loading = true
       setTimeout(() => {
@@ -151,7 +178,7 @@ export class XVueTestClass extends ParentXVueTestClass {
     })
   }
 
-  async runAsyncFunction() {
+  async runAsyncFunction () {
     this.result = ''
     this.result = await this.asyncFunction()
   }
@@ -159,7 +186,7 @@ export class XVueTestClass extends ParentXVueTestClass {
   /**
    * Implement abstract parent function.
    */
-  reset() {
+  reset () {
   }
 
   numberOfRecords = 5000000
@@ -167,7 +194,7 @@ export class XVueTestClass extends ParentXVueTestClass {
   loadingHugeData = false
   timeTaken = 0
 
-  loadHugeData(numberOfRecords) {
+  loadHugeData (numberOfRecords: number) {
     this.timeTaken = 0
     this.loadingHugeData = true
     const start = Date.now();
@@ -179,7 +206,7 @@ export class XVueTestClass extends ParentXVueTestClass {
     })
   }
 
-  msToTime(ms) {
+  msToTime (ms) {
     const seconds = (ms / 1000).toFixed(1);
     const minutes = (ms / (1000 * 60)).toFixed(1);
     const hours = (ms / (1000 * 60 * 60)).toFixed(1);

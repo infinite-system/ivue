@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { watch, computed, toRefs } from 'vue'
 import { container } from '@/tests/Helpers/AppIOC'
-import { XVueTestClass } from "../src/tests/Helpers/Authentication/XVueTestClass.js";
-import { storeToRefs } from "pinia";
+import { XVueTestClass } from "../src/tests/Helpers/Authentication/XVueTestClass";
 
 const vm: XVueTestClass = container.get(XVueTestClass)
-const { primitive } = toRefs(container.get(XVueTestClass))
-
+// const { primitive } = toRefs(container.get(XVueTestClass))
 watch(() => vm.computedVariable?.[0]?.test, newVal => {
   console.log('new computedVariable:', newVal)
-}, {deep: true})
+}, { deep: true })
 
 
 const localComputedValue = computed(() => {
@@ -21,8 +19,9 @@ const hugeId = 2646049
 
 <template>
   <div style="width:900px; margin:0 auto;">
-    <h1>xVue - Infinite Vue - Implementation Tests</h1>
-<!--  <vue-dd v-model="vm" get-all-properties/>-->
+    <h1>iVue - Infinite Vue - Implementation Tests</h1>
+    <!--  <vue-dd v-model="vm" get-all-properties/>-->
+
 
     <h2>Class Inheritance Tests</h2>
 
@@ -30,13 +29,14 @@ const hugeId = 2646049
     <button @click="vm.parentValueAlert()">vm.parentValueAlert()</button>
 
     <h2>Computed Resolution Tests</h2>
-    <hr />
+    <hr/>
     <h3>Primitive Computed Tests</h3>
     <table>
       <tr>
         <td class="label"><strong>vm.computedPrimitive</strong></td>
         <td class="value">{{ vm.computedPrimitive }}
-          <button @click="vm.primitive++">Change Primitive</button></td>
+          <button @click="vm.primitive++">Change Primitive</button>
+        </td>
       </tr>
       <tr>
         <td class="label"><strong>localComputedValue</strong> (refers to vm.computedVariable.[0].test):</td>
@@ -74,7 +74,7 @@ const hugeId = 2646049
 
     <h3>Complex (Objects/Arrays from other stores) Computed Tests</h3>
     <button @click="vm.pushToOriginalVariableInAuthRepo()">vm.pushToOriginalVariableInAuthRepo()</button>
-    <br />
+    <br/>
     <button @click="vm.computedVariable = [{
       test: 'set 1', test2: 'set 2'
     }]">Setter on a computed vm.computedVariable (resets vm.authRepo.originalVariable)
@@ -98,45 +98,58 @@ const hugeId = 2646049
     </div>
     <br/>
     <h2>Aync Function Test</h2>
-    <hr />
-    <span>Loader: <span v-if="vm.loading">loading...</span></span><br />
-    <span>Result: {{ vm.result }}</span><br />
+    <hr/>
+    <span>Loader: <span v-if="vm.loading">loading...</span></span><br/>
+    <span>Result: {{ vm.result }}</span><br/>
     <button @click="vm.runAsyncFunction">runAsyncFunction() (wait for 2 seconds)</button>
     <h2>Huge Data Test</h2>
-    <hr />
-    <input v-model="vm.numberOfRecords" />
-    <button @click="vm.loadHugeData(vm.numberOfRecords)">Load Huge Data ({{vm.numberOfRecords.toLocaleString("en-US")}} records)</button>
-    <br /> Loader: <strong>{{ vm.loadingHugeData ?
-      'loading ' + vm.numberOfRecords.toLocaleString("en-US") + ' records ...'
-      : ''
+    <hr/>
+    <input v-model="vm.numberOfRecords"/>
+    <button @click="vm.loadHugeData(vm.numberOfRecords)">Load Huge Data
+      ({{ vm.numberOfRecords.toLocaleString("en-US") }} records)
+    </button>
+    <br/> Loader: <strong>{{
+      vm.loadingHugeData ?
+          'loading ' + vm.numberOfRecords.toLocaleString("en-US") + ' records ...'
+          : ''
     }}</strong>
-    <div style="color:green" v-if="vm.timeTaken">Loaded in {{vm.msToTime(vm.timeTaken)}}.</div>
+    <div style="color:green" v-if="vm.timeTaken">Loaded in {{ vm.msToTime(vm.timeTaken) }}.</div>
 
     <div v-if="hugeId in vm.hugeArray">
       <h3>Editing Record #{{ hugeId.toLocaleString("en-US") }}</h3>
-      user: <input v-model="vm.hugeArray[hugeId].struct.user" /><br />
-      text: <input v-model="vm.hugeArray[hugeId].struct.text" />
+      user: <input v-model="vm.hugeArray[hugeId].struct.user"/><br/>
+      text: <input v-model="vm.hugeArray[hugeId].struct.text"/>
       <pre style="font-size:10px; line-height:10px;">{{ vm.hugeArray[hugeId] }}</pre>
     </div>
     <h2>markRaw Tests</h2>
     <div>nonReactiveProp is disabled:</div>
-    <vue-dd name="nonReactiveProp" v-model="vm.nonReactiveProp" :preview="0" :dark="false" :open-level="2" />
+    <vue-dd name="nonReactiveProp" v-model="vm.nonReactiveProp" :preview="0" :dark="false" :open-level="2"/>
 
     <h2>Private prop test</h2>
-    <div>vm.x: {{ vm.x }} <button @click="vm.x++">Increase</button></div>
-    <br />
+    <div>vm.x: {{ vm.x }}
+      <button @click="vm.x++">Increase</button>
+    </div>
+    <br/>
 
     <h2>Transients Test</h2>
-    <div>vm.transientField1.prop: {{ vm.transientField1.prop }} <button @click="vm.transientField1.prop++">Increase++</button></div>
-    <div>vm.transientField2.prop: {{ vm.transientField2.prop }} <button @click="vm.transientField2.prop++">Increase++</button></div>
+    <div>vm.transientField1.prop: {{ vm.transientField1.prop }}
+      <button @click="vm.transientField1.prop++">Increase++</button>
+    </div>
+    <div>vm.transientField2.prop: {{ vm.transientField2.prop }}
+      <button @click="vm.transientField2.prop++">Increase++</button>
+    </div>
     <div>Computed vm.propTransient: {{ vm.propTransient }}</div>
-    <br />
-    <br />
-    <br />
-    <br />
-    <br />
-    <br />
-    <br />
+    <h2>Intercepts Test</h2>
+    <div>vm.transientField2.runWithIntercept(): {{ vm.transientField2.runWithInterceptResult }}
+      <button @click="vm.transientField2.runWithInterceptResult = vm.transientField2.runWithIntercept('test')">vm.transientField2.runWithIntercept()</button>
+    </div>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
   </div>
 </template>
 <style>
@@ -246,6 +259,7 @@ input {
 td.label {
   text-align: right;
 }
+
 td.value {
   padding-left: 20px;
 }

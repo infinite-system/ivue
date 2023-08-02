@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify'
-import { Types } from '../Core/Types'
+import { Store } from '../Core/Store'
 import { Router } from '../Routing/Router'
 import { UserModel } from './UserModel'
 import { MessagePacking } from '../Core/Messages/MessagePacking'
@@ -11,7 +11,7 @@ export class AuthenticationRepository {
 
   @inject(Router) router: Router
 
-  @inject(Types.IDataGateway) dataGateway: RouterGateway
+  @inject(Store.DataGateway) dataGateway: RouterGateway
 
   @inject(UserModel) userModel: UserModel
 

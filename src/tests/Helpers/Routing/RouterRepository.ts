@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify'
-import { Types } from '../Core/Types'
+import { Store } from '../Core/Store'
 import { RouterGateway } from "@/tests/Helpers/Routing/RouterGateway";
 
 @injectable()
 export class RouterRepository {
 
-  @inject(Types.IRouterGateway) routerGateway: RouterGateway
+  @inject(Store.RouterGateway) routerGateway: RouterGateway
 
   currentRoute = { routeId: null }
 

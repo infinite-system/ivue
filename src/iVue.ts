@@ -1,50 +1,55 @@
-import { Override, overrideFunctionHandler, getGetters } from "./utils";
+import { Behavior, overrideFunctionHandler, getGetters } from "./utils";
 import { computed, effectScope, markRaw, reactive } from "vue";
 import { tryOnScopeDispose } from "@vueuse/core";
 
 /**
- * Make a new transient xVue instance of <T> Class without inversify container.
+ * Make a new transient iVue instance of <T> Class without inversify container.
  * For typescript: https://www.typescriptlang.org/docs/handbook/utility-types.html#parameterstype
  *
  * @param className
  * @param args
  */
-export function xVueNew<T> (className: T, ...args: T extends { new (...args: infer P): any } ? P : never[]) {
-  return xVue(null, className, ...args) as T
+export function iVue<T> (className: T, ...args: T extends { new (...args: infer P): any } ? P : never[]) {
+  return iVueBuilder(null, className, ...args) as T
 }
 
 /**
  * Pure VueJS Reactive Observable Class-based Architecture System.
  *
- * @param ctx
- * @param obj
- * @param args
+ * @param  ctx Inversify Container context
+ * @param  obj Object or Class name,
+ *              - If instantiated via Inversify Container it is an object
+ *              - If instantiated via iVue(className, ...args) it is a class name
+ * @param args Arguments are available when used via iVue(obj, ...args)
  */
-export function xVue (ctx, obj, ...args) {
+export function iVueBuilder (ctx, obj, ...args) {
 
   const getters = getGetters(obj)
 
-  const vue = reactive(ctx === null ? Reflect.construct(obj, args) : Object.create(obj))
+  const vue = reactive(ctx === null
+    ? Reflect.construct(obj, args) // if we are instantiating objects directly with iVue(obj, ...args)
+    : Object.create(obj) // if we are instantiating via an IOC container
+  )
 
-  let hasOverrides = 'overrides' in vue && typeof vue.overrides === 'object'
-  let overrides = hasOverrides ? vue.overrides : undefined
+  let hasBehavior = 'behavior' in vue && typeof vue.behavior === 'object'
+  let behavior = hasBehavior ? vue.behavior : undefined
 
   const hasInit = 'init' in vue && typeof vue.init === 'function'
   if (hasInit) {
-    if (!overrides) overrides = {} // only initialize empty object if there is 'init'
-    if (!('init' in overrides)) overrides.init = Override.SCOPED // Default to SCOPED for 'init' function
-    hasOverrides = true // if init() function is defined, we have a default override for it
+    if (!behavior) behavior = {} // only initialize empty object if there is 'init'
+    if (!('init' in behavior)) behavior.init = Behavior.SCOPED // Default to SCOPED for 'init' function
+    hasBehavior = true // if init() function is defined, we have a default override for it
   }
 
-  if (hasOverrides) {
-    for (const prop in overrides) {
+  if (hasBehavior) {
+    for (const prop in behavior) {
       if (prop in getters.values) continue // skip getters to not cause a computation
       if (typeof vue[prop] === 'function') {
-        if (overrides[prop] === Override.DISABLED) continue // skip, because disabling a function has no effect
+        if (behavior[prop] === Behavior.DISABLED) continue // skip, because disabling a function has no effect
         const func = vue[prop]
-        vue[prop] = overrideFunctionHandler(overrides[prop], func, vue, prop)
+        vue[prop] = overrideFunctionHandler(behavior[prop], func, vue, prop)
       } else {
-        if (overrides[prop] === Override.DISABLED && typeof vue[prop] === 'object') {
+        if (behavior[prop] === Behavior.DISABLED && typeof vue[prop] === 'object') {
           vue[prop] = markRaw(vue[prop])
         }
       }
@@ -54,31 +59,31 @@ export function xVue (ctx, obj, ...args) {
   if (getters.length) {
     // Only initialize these if there are getters to save on memory
     // https://stackoverflow.com/questions/44222017/memory-overhead-of-empty-array-vs-undefined-var
-    const computed_ = {}
+    const computedMap = {}
     const computedScope = {}
 
     for (const prop in getters.values) {
-      if (overrides?.[prop] === Override.DISABLED) continue // skip if DISABLED
+      if (behavior?.[prop] === Behavior.DISABLED) continue // skip if DISABLED
       // Get getter and setter descriptors
       const descriptors = Object.getOwnPropertyDescriptor(vue.constructor.prototype, prop)
       // Computed storage
-      computed_[prop] = null
+      computedMap[prop] = null
       // Handle getters as Vue 3 computed()
       Object.defineProperty(vue, prop, {
         // Redefine the existing getter function
         // by making it wrapped up inside Vue 3 computed function
         get: function () {
-          if (computed_[prop]) {
+          if (computedMap[prop]) {
             // If computed is already defined
             // just return the reactive .value of the computed
-            return computed_[prop].value
+            return computedMap[prop].value
           }
           // If computed is not defined create an effect scope
           // to make the computed disposable to prevent memory leaks
           computedScope[prop] = effectScope()
           computedScope[prop].run(() => {
             // This is the meat of the matter
-            computed_[prop] = computed(() => {
+            computedMap[prop] = computed(() => {
               // Run the getter of the Class inside the computed
               // as the reactive(vue) object via .bind(vue).
               return descriptors.get.bind(vue)()
@@ -89,7 +94,7 @@ export function xVue (ctx, obj, ...args) {
           // the computed will be stopped as well to prevent memory leaks.
           tryOnScopeDispose(() => computedScope[prop].stop())
 
-          return computed_[prop].value
+          return computedMap[prop].value
         },
         set: descriptors?.set?.bind(vue) || undefined,
         enumerable: descriptors?.enumerable || true,
