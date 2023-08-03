@@ -1,12 +1,13 @@
-import { inject, injectable } from 'inversify'
-import { NavigationRepository } from './NavigationRepository'
-import { RouterRepository } from '../Routing/RouterRepository'
+import { injectable } from 'inversify'
+import type { NavigationRepository } from './NavigationRepository'
+import type { RouterRepository } from '../Routing/RouterRepository'
+import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
 
 @injectable()
 export class NavigationPresenter {
 
-  @inject(NavigationRepository) navigationRepository: NavigationRepository
-  @inject(RouterRepository) routerRepository: RouterRepository
+  @lazy(Inject.NavigationRepository) navigationRepository: NavigationRepository
+  @lazy(Inject.RouterRepository) routerRepository: RouterRepository
 
   get viewModel() {
     const vm = {

@@ -1,8 +1,7 @@
 import { watch } from "vue";
-import { Behavior } from "@/";
-import { Store } from "@/tests/Helpers/Core/Store";
+import { Behavior } from "@/index";
+import { Inject, IOC } from "@/tests/Helpers/IOC/IOC";
 import type { AppPresenter } from "@/tests/Helpers/AppPresenter";
-import { container } from '@/tests/Helpers/AppIOC'
 import type { RouterGateway } from "@/tests/Helpers/Routing/RouterGateway";
 
 export class Field {
@@ -17,8 +16,8 @@ export class Field {
 
   constructor (private _prop: number) {
     console.log('constructing field', this._prop)
-    this.app = container.get(Store.AppPresenter);
-    this.router$ = container.get(Store.RouterGateway);
+    this.app = IOC.get(Inject.AppPresenter);
+    this.router$ = IOC.get(Inject.RouterGateway);
   }
   get prop () {
     return this._prop
@@ -38,7 +37,12 @@ export class Field {
   }
   interceptableValue = 'testing'
   runWithInterceptResult = ''
+
   runWithIntercept(variable = '') {
     return this.interceptableValue
+  }
+
+  private privateFunc(){
+    alert('hey')
   }
 }

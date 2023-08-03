@@ -1,10 +1,12 @@
 import { inject, injectable } from 'inversify'
-import { MessagesRepository } from "@/tests/Helpers/Core/Messages/MessagesRepository";
+import type { MessagesRepository } from "@/tests/Helpers/Core/Messages/MessagesRepository";
+
+import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
 
 @injectable()
 export abstract class ParentXVueTestClass {
 
-  @inject(MessagesRepository) messagesRepository: MessagesRepository
+  @lazy(Inject.MessagesRepository) messagesRepository: MessagesRepository
 
   private parentPrivate = 111
 

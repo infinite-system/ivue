@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { LoginRegisterPresenter } from './LoginRegisterPresenter.js'
-import { container } from '../AppIOC'
-const presenter = container.get(LoginRegisterPresenter)
+import { IOC } from '@/tests/Helpers/IOC/IOC'
+const presenter = IOC.get(LoginRegisterPresenter)
 </script>
 <template>
     <div @click="() => presenter.logOut()"

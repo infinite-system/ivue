@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { watch, computed, toRefs } from 'vue'
-import { container } from '@/tests/Helpers/AppIOC'
 import { XVueTestClass } from "../src/tests/Helpers/Authentication/XVueTestClass";
-
-const vm: XVueTestClass = container.get(XVueTestClass)
+import { Inject, IOC } from '../src/tests/Helpers/IOC/Ioc'
+// import { ioc } from '@/tests/Helpers/IoC/AppIOC'
+const vm: XVueTestClass = IOC.get(Inject.XVueTestClass)
 // const { primitive } = toRefs(container.get(XVueTestClass))
 watch(() => vm.computedVariable?.[0]?.test, newVal => {
   console.log('new computedVariable:', newVal)

@@ -1,16 +1,16 @@
-import { inject, injectable } from 'inversify'
-import { AuthenticationRepository } from './AuthenticationRepository'
-import { MessagesRepository } from '../Core/Messages/MessagesRepository'
-import { Router } from '../Routing/Router'
-import { AppPresenter } from "@/tests/Helpers/AppPresenter";
+import { injectable } from 'inversify'
+import type { AuthRepository } from './AuthRepository'
+import type { AppPresenter } from "@/tests/Helpers/AppPresenter";
+import type { MessagesRepository } from '../Core/Messages/MessagesRepository'
+import type { Router } from '../Routing/Router'
 import { ParentXVueTestClass } from "@/tests/Helpers/Authentication/ParentXVueTestClass";
 import { watch } from "vue";
 import { generateHugeArray } from "@/tests/Helpers/Generators/generators";
 import { Field } from "@/tests/Helpers/Field";
-import { iVue, Behavior, unraw, before, after } from "@/";
-import { Store } from "@/tests/Helpers/Core/Store";
+import { iVue, Behavior, unraw, before, after } from "@/index";
+import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
 
-// @injectable()
+@injectable()
 export class XVueTestClass extends ParentXVueTestClass {
 
   behavior = {
@@ -18,10 +18,10 @@ export class XVueTestClass extends ParentXVueTestClass {
     nonReactiveProp: Behavior.DISABLED
   }
 
-  @inject(AuthenticationRepository) authRepo: AuthenticationRepository
-  @inject(Store.AppPresenter) app: AppPresenter
-  @inject(MessagesRepository) messagesRepository: MessagesRepository
-  @inject(Router) router: Router
+  @lazy(Inject.AuthRepository) authRepo: AuthRepository
+  @lazy(Inject.AppPresenter) app: AppPresenter
+  @lazy(Inject.MessagesRepository) messagesRepository: MessagesRepository
+  @lazy(Inject.Router) router: Router
 
   private _x = 1
 
@@ -62,16 +62,10 @@ export class XVueTestClass extends ParentXVueTestClass {
       }
     })
 
-    // container.bind(Field).toSelf().onActivation(iVue)
-
-    before(Field.prototype.init, vue => {
-      console.log('before init of prototype of Field')
+    before(Field.prototype.init, (intercept, self) => {
+      console.log('before init of prototype of Field', 'this', self)
+      return false
     })
-
-    // const f =new Field(10)
-    // this.transientField1 = iVueMake(new Field(10))
-    // this.transientUserModel = iVueNew(UserModel)
-    // console.log('this.transientUserModel', this.transientUserModel)
 
     this.transientField1 = iVue(Field, 2)
     this.transientField2 = iVue(Field, 1)
@@ -82,41 +76,41 @@ export class XVueTestClass extends ParentXVueTestClass {
     }
 
     console.log('this.transientField1', this.transientField1)
+    console.log('this.transientField2', this.transientField2)
 
-    before(this.transientField1.init, vue => {
-      console.log('before init of Field', vue)
+    before(this.transientField1.init, (intercept, self) => {
+      console.log('before init of Field', self)
+
     })
 
     this.transientField1.init()
     this.transientField2.init()
+    //
+    // before(Field.prototype.runWithIntercept, (intercept, self, ...[var1]) => {
+    //
+    //   intercept.return = 'Prototype intercept'
+    //
+    //   self.prop++
+    //   console.log('var1', var1)
+    //   return false
+    // })
 
-    before(Field.prototype.runWithIntercept, (intercept, self, ...[var1]) => {
-      intercept.return = 'Prototype intercept'
-      self.prop++
-      console.log('var1', var1)
-      return false
-    })
+    // before(this.transientField2.runWithIntercept, (intercept, self: Field) => {
+    //   intercept.return = 'Awesome'
+    //   return false
+    // })
+    //
+    // after(this.transientField2.runWithIntercept, (intercept, self: Field) => {
+    //
+    //   intercept.return = intercept.return + 'Awesome!!'
+    //   // return false
+    // })
+    //
+    // after(this.transientField2.runWithIntercept, (intercept, self: Field) => {
+    //   // console.log('running...')
+    //   intercept.return = 'Awesome2'
+    // })
 
-    before(this.transientField2.runWithIntercept, (intercept, self: Field) => {
-
-      intercept.return = 'Awesome'
-      return false
-    })
-
-    after(this.transientField2.runWithIntercept, (intercept, self: Field) => {
-      // console.log('running...')
-      // intercept.return = 'Awesome!!'
-      // return false
-    })
-
-    after(this.transientField2.runWithIntercept, (intercept, self: Field) => {
-      // console.log('running...')
-      intercept.return = 'Awesome2'
-    })
-
-    // const f2 = new Field(25)
-    // console.log('this.transientField1', this.transientField1)
-    // this.transientField2 = iVueMake(new Field(20))
   }
 
   get propTransient () {
@@ -155,6 +149,7 @@ export class XVueTestClass extends ParentXVueTestClass {
    * Circular computed store connectivity test.
    */
   get deepEmail () {
+    console.log('app', this.app)
     return String(this.app.router.userModel.app.router.userModel.email).split('').join('+')
   }
 

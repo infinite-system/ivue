@@ -1,10 +1,9 @@
 <script setup lang="ts">
-
 import NavigationComponent from '@/tests/Helpers/Navigation/NavigationComponent.vue'
-import { container } from '../AppIOC'
+import { IOC } from '@/tests/Helpers/IOC/IOC'
 import { AppPresenter } from "@/tests/Helpers/AppPresenter.ts";
 
-const app = container.get(AppPresenter)
+const app = IOC.get(AppPresenter)
 </script>
 <template>
   <vue-dd v-model="app" />

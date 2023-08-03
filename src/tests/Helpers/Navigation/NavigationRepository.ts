@@ -1,13 +1,15 @@
-import { inject, injectable } from 'inversify'
+import { injectable } from 'inversify'
 import TreeModel from 'tree-model'
-import { AuthenticationRepository } from '../Authentication/AuthenticationRepository'
-import { Router } from '../Routing/Router'
+import type { AuthRepository } from '../Authentication/AuthRepository'
+import type { Router } from '../Routing/Router'
+
+import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
 
 @injectable()
 export class NavigationRepository {
 
-  @inject(AuthenticationRepository) authRepo: AuthenticationRepository
-  @inject(Router) router: Router
+  @lazy(Inject.AuthRepository) authRepo: AuthRepository
+  @lazy(Inject.Router) router: Router
 
   get currentNode () {
     return this.getTree().all((node) => node.model.id === this.router.currentRoute.routeId)[0]

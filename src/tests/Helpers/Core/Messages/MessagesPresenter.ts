@@ -1,5 +1,6 @@
-import { inject, injectable } from 'inversify'
-import { MessagesRepository } from './MessagesRepository'
+import { injectable } from 'inversify'
+import type { MessagesRepository } from './MessagesRepository'
+import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
 
 export abstract class GrandParent {
   grandParentProp = 1
@@ -8,7 +9,7 @@ export abstract class GrandParent {
 @injectable()
 export abstract class MessagesPresenter extends GrandParent {
 
-  @inject(MessagesRepository) messagesRepository: MessagesRepository
+  @lazy(Inject.MessagesRepository) messagesRepository: MessagesRepository
 
   nonObservedProp = 'test'
 

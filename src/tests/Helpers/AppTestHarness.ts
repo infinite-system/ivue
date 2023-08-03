@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { vi } from 'vitest'
-import { Store } from './Core/Store'
-import { BaseIOC } from './BaseIOC'
+import { Inject } from '@/tests/Helpers/IOC/IOC'
+import { AppIOC } from '@/tests/Helpers/IOC/AppIOC'
 import { FakeRouterGateway } from './Routing/FakeRouterGateway'
 import { FakeHttpGateway } from './Core/FakeHttpGateway'
 import { LoginRegisterPresenter } from './Authentication/LoginRegisterPresenter.js'
@@ -30,15 +30,15 @@ export class AppTestHarness {
   routerRepository
 
   init() {
-    this.container = new BaseIOC().init()
+    this.container = new AppIOC().init()
 
-    this.container.bind(Store.DataGateway).to(FakeHttpGateway).inSingletonScope()
-    this.container.bind(Store.RouterGateway).to(FakeRouterGateway).inSingletonScope()
+    this.container.bind(Inject.DataGateway).to(FakeHttpGateway).inSingletonScope()
+    this.container.bind(Inject.RouterGateway).to(FakeRouterGateway).inSingletonScope()
 
     this.appPresenter = this.container.get(AppPresenter)
     this.router = this.container.get(Router)
     this.routerRepository = this.container.get(RouterRepository)
-    this.routerGateway = this.container.get(Store.RouterGateway)
+    this.routerGateway = this.container.get(Inject.RouterGateway)
 
     this.routerGateway.goToId = vi.fn().mockImplementation((routeId) => {
       // pivot
@@ -59,7 +59,7 @@ export class AppTestHarness {
   // 3. login or register to the app
   setupLogin = async (loginStub, type) => {
 
-    this.dataGateway = this.container.get(Store.DataGateway)
+    this.dataGateway = this.container.get(Inject.DataGateway)
 
     this.dataGateway.get = vi.fn().mockImplementation((path) => {
       // return Promise.resolve(SingleBooksResultStub())

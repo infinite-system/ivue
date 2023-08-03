@@ -1,57 +1,57 @@
-import { inject, injectable } from 'inversify'
-import { Store } from '../Core/Store'
-import { RouterGateway } from "@/tests/Helpers/Routing/RouterGateway";
+import { injectable } from 'inversify'
+import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
+import type { RouterGateway } from "@/tests/Helpers/Routing/RouterGateway";
 
 @injectable()
 export class RouterRepository {
 
-  @inject(Store.RouterGateway) routerGateway: RouterGateway
+  @lazy(Inject.RouterGateway) routerGateway: RouterGateway
 
   currentRoute = { routeId: null }
 
   onRouteChanged = null
 
   routes = [
-      {
-        routeId: 'root',
-        routeDef: {
-          path: '/',
-          isSecure: true,
-          component: () => import('@/tests/Helpers/Home/HomeComponent.vue'),
-        }
-      },
-      {
-        routeId: 'loginLink',
-        routeDef: {
-          path: '/app/login',
-          isSecure: false,
-          component: () => import('@/tests/Helpers/Authentication/LoginRegisterComponent.vue'),
-        }
-      },
-      {
-        routeId: 'homeLink',
-        routeDef: {
-          path: '/app/home',
-          isSecure: true,
-          component: () => import('@/tests/Helpers/Home/HomeComponent.vue'),
-        }
-      },
-      {
-        routeId: 'authorPolicyLink',
-        routeDef: {
-          path: '/app/author-policy',
-          isSecure: false,
-          component: () => import('@/tests/Helpers/Home/HomeComponent.vue'),
-        }
-      },
-      {
-        routeId: '*',
-        routeDef: {
-          path: '/:catchAll(.*)*',
-          isSecure: true,
-          component: () => import('@/tests/Helpers/Routing/NotFoundRoute.vue')
-        }
-      },
+    {
+      routeId: 'root',
+      routeDef: {
+        path: '/',
+        isSecure: true,
+        component: () => import('@/tests/Helpers/Home/HomeComponent.vue'),
+      }
+    },
+    {
+      routeId: 'loginLink',
+      routeDef: {
+        path: '/app/login',
+        isSecure: false,
+        component: () => import('@/tests/Helpers/Authentication/LoginRegisterComponent.vue'),
+      }
+    },
+    {
+      routeId: 'homeLink',
+      routeDef: {
+        path: '/app/home',
+        isSecure: true,
+        component: () => import('@/tests/Helpers/Home/HomeComponent.vue'),
+      }
+    },
+    {
+      routeId: 'authorPolicyLink',
+      routeDef: {
+        path: '/app/author-policy',
+        isSecure: false,
+        component: () => import('@/tests/Helpers/Home/HomeComponent.vue'),
+      }
+    },
+    {
+      routeId: '*',
+      routeDef: {
+        path: '/:catchAll(.*)*',
+        isSecure: true,
+        component: () => import('@/tests/Helpers/Routing/NotFoundRoute.vue')
+      }
+    },
   ]
 
   flatRoutes = {}
@@ -115,10 +115,10 @@ export class RouterRepository {
   }
 
 
-  getNewRoute(newRouteId){
+  getNewRoute (newRouteId) {
     return newRouteId in this.flatRoutes
       ? this.flatRoutes[newRouteId]
-      : this.routes[this.routes.length-1]
+      : this.routes[this.routes.length - 1]
   }
 
   async goToId (routeId, params, query) {

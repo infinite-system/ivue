@@ -103,6 +103,7 @@ export function iVueBuilder (ctx, obj, ...args) {
     }
   }
 
+
   if (hasInit && ctx !== null && ctx.currentRequest.bindings[0].scope === 'Singleton') {
     // Initialize Singleton Immediately
     vue.init()

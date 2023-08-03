@@ -3,10 +3,10 @@
 import LogoutComponent from '../Authentication/LogoutComponent.vue'
 import { Router } from '../Routing/Router'
 import { NavigationPresenter } from './NavigationPresenter'
-import { container } from '../AppIOC'
+import { IOC } from '@/tests/Helpers/IOC/IOC'
 
-const presenter = container.get(NavigationPresenter)
-const router = container.get(Router)
+const presenter = IOC.get(NavigationPresenter)
+const router = IOC.get(Router)
 </script>
 <template>
   <Observer>

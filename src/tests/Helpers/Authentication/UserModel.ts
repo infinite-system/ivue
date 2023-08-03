@@ -1,12 +1,11 @@
 import { injectable } from 'inversify'
-import { lazy } from '@/tests/Helpers/Container.ts'
-import { AppPresenter } from "@/tests/Helpers/AppPresenter.js";
-import { Store } from "@/tests/Helpers/Core/Store.js";
+import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
+import type { AppPresenter } from "@/tests/Helpers/AppPresenter.js";
 
 @injectable()
 export class UserModel {
 
-  @lazy(Store.AppPresenter) app: AppPresenter
+  @lazy(Inject.AppPresenter) app: AppPresenter
 
   email = ''
   token = ''

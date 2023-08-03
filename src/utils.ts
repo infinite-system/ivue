@@ -59,31 +59,40 @@ export function unraw (obj) {
 }
 
 /**
- * Alias for Vues' markRaw()
- * @param obj
+ * Alias for Vue markRaw() function.
+ *
+ * @param args
  */
-export function raw (obj) {
-  return markRaw(obj)
+export function raw (...args) {
+  return markRaw(...args)
 }
 
+/**
+ * Intercepts store type definition.
+ * Map key is a function that maps to an array of callback functions.
+ */
+type InterceptsMap = {
+  before: Map<Function, Function[]>,
+  after: Map<Function, Function[]>
+}
 
 /**
  * Stores all available intercept methods.
  */
-const interceptsMap = {
+const interceptsMap: InterceptsMap = {
   before: new Map(),
   after: new Map()
 }
 
 /**
- * Add callback to prototype or instance method.
+ * Add intercept to prototype or instance method.
  *
  * @param type
  * @param fn
  * @param callback
  * @param opts
  */
-function addCallback (type, fn, callback, opts) {
+function addIntercept (type, fn, callback, opts) {
   if (interceptsMap[type].has(fn)) {
     interceptsMap[type].get(fn)[opts.top ? 'unshift' : 'push'](callback)
   } else {
@@ -91,11 +100,11 @@ function addCallback (type, fn, callback, opts) {
   }
 }
 
-type CallbackOptions = {
+export type InterceptOptions = {
   top: boolean
 }
 
-type CallbackFn = (intercept: { return: any }, ...args:any[]) => void | false
+export type InterceptFn = (intercept: { return: any }, self: Object) => void | false
 
 /**
  * Function to run before an interceptable method in iVue.
@@ -104,8 +113,8 @@ type CallbackFn = (intercept: { return: any }, ...args:any[]) => void | false
  * @param callback
  * @param opts
  */
-export function before (fn, callback: CallbackFn, opts: CallbackOptions = { top: false }) {
-  addCallback('before', fn, callback, opts)
+export function before (fn: Function, callback: InterceptFn, opts: InterceptOptions = { top: false }) {
+  addIntercept('before', fn, callback, opts)
 }
 
 /**
@@ -115,8 +124,8 @@ export function before (fn, callback: CallbackFn, opts: CallbackOptions = { top:
  * @param callback
  * @param opts
  */
-export function after (fn, callback: CallbackFn, opts: CallbackOptions = { top: false }) {
-  addCallback('after', fn, callback, opts)
+export function after (fn: Function, callback: InterceptFn, opts: InterceptOptions = { top: false }) {
+  addIntercept('after', fn, callback, opts)
 }
 
 /**
@@ -133,19 +142,21 @@ export function runIntercept (type, self, prop, args, intercept) {
   const runFn = fn => {
     const fns = interceptsMap[type].get(fn)
     for (let i = 0; i < fns.length; i++) {
-      if (fns[i](intercept, self, ...args) === false)
-        return false // short circuit, if intercept returns false
+      if (false === fns[i](intercept, self, ...args))
+        return false // return false, to short circuit the execution chain
     }
   }
   // Run intercepts attached to class prototype method
   if (interceptsMap[type].has(self.constructor.prototype[prop])) {
-    if (runFn(self.constructor.prototype[prop]) === false)
-      return false
+    if (false === runFn(self.constructor.prototype[prop])) {
+      return false // short circuit, if intercept returns false
+    }
   }
   // Run intercepts attached to an instance method
   if (interceptsMap[type].has(self[prop])) {
-    if (runFn(self[prop]) === false)
-      return false
+    if (false === runFn(self[prop])) {
+      return false // short circuit, if intercept returns false
+    }
   }
   // If there is no short circuit, we should return undefined like a function without a return
   return void (0)
@@ -203,15 +214,15 @@ export function overrideFunctionHandler (type, func, self, prop) {
   const processIntercept = (...args) => {
 
     const intercept = { return: result }
-    const before = runIntercept('before', self, prop, args, intercept)
 
-    if (before === false) return intercept.return // short circuit, if intercept returns false
+    const before = runIntercept('before', self, prop, args, intercept)
+    if (false === before) return intercept.return // short circuit, if intercept returns false
 
     result = func.bind(self)(...args)
-
     intercept.return = result
+
     const after = runIntercept('after', self, prop, args, intercept)
-    if (after === false) return intercept.return
+    if (false === after) return intercept.return // short circuit, if intercept returns false
 
     return intercept.return
   }
@@ -220,8 +231,7 @@ export function overrideFunctionHandler (type, func, self, prop) {
     case Behavior.INTERCEPT:
       // Basic, fast, non-scoped intercepts
       return function (...args) {
-        result = processIntercept(...args)
-        return result
+        return processIntercept(...args)
       }
     case Behavior.SCOPED_INTERCEPT:
       // Inside scoped you can put watch(), computed(), watchEffect()

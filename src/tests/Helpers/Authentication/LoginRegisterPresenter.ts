@@ -1,15 +1,17 @@
 import { inject, injectable } from 'inversify'
-import { AuthenticationRepository } from './AuthenticationRepository'
-import { MessagesPresenter } from '../Core/Messages/MessagesPresenter'
-import { MessagesRepository } from '../Core/Messages/MessagesRepository'
-import { Router } from '../Routing/Router'
+import type { AuthRepository } from './AuthRepository'
+import type { MessagesRepository } from '../Core/Messages/MessagesRepository'
+import type { Router } from '../Routing/Router'
+
+import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
+import { MessagesPresenter } from "@/tests/Helpers/Core/Messages/MessagesPresenter";
 
 @injectable()
 export class LoginRegisterPresenter extends MessagesPresenter {
 
-  @inject(AuthenticationRepository) authenticationRepository: AuthenticationRepository
-  @inject(MessagesRepository) messagesRepository: MessagesRepository
-  @inject(Router) router: Router
+  @lazy(Inject.AuthRepository) authenticationRepository: AuthRepository
+  @lazy(Inject.MessagesRepository) messagesRepository: MessagesRepository
+  @lazy(Inject.Router) router: Router
 
   email = null
   password = null

@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { LoginRegisterPresenter } from '@/tests/Helpers/Authentication/LoginRegisterPresenter.js'
 import MessagesComponent from '@/tests/Helpers/Core/Messages/MessagesComponent.vue'
-// import { useValidation } from '../Core/Providers/Validation'
-import { container } from '../AppIOC'
+import { IOC, Inject } from '@/tests/Helpers/IOC/IOC'
 
-const vm: LoginRegisterPresenter = container.get(LoginRegisterPresenter);
+const vm: LoginRegisterPresenter = IOC.get(Inject.LoginRegisterPresenter);
 
 </script>
 <template>

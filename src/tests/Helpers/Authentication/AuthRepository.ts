@@ -1,19 +1,18 @@
-import { inject, injectable } from 'inversify'
-import { Store } from '../Core/Store'
-import { Router } from '../Routing/Router'
-import { UserModel } from './UserModel'
-import { MessagePacking } from '../Core/Messages/MessagePacking'
-import { RouterGateway } from "../Routing/RouterGateway";
-
+import { injectable } from 'inversify'
+import type { Router } from '../Routing/Router'
+import type { UserModel } from './UserModel'
+import type { MessagePacking } from '../Core/Messages/MessagePacking'
+import type { RouterGateway } from "../Routing/RouterGateway";
+import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
 
 @injectable()
-export class AuthenticationRepository {
+export class AuthRepository {
 
-  @inject(Router) router: Router
+  @lazy(Inject.Router) router: Router
 
-  @inject(Store.DataGateway) dataGateway: RouterGateway
+  @lazy(Inject.DataGateway) dataGateway: RouterGateway
 
-  @inject(UserModel) userModel: UserModel
+  @lazy(Inject.UserModel) userModel: UserModel
 
 
   originalVariable = [
