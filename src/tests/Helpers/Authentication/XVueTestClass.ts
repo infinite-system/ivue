@@ -7,13 +7,13 @@ import { ParentXVueTestClass } from "@/tests/Helpers/Authentication/ParentXVueTe
 import { watch } from "vue";
 import { generateHugeArray } from "@/tests/Helpers/Generators/generators";
 import { Field } from "@/tests/Helpers/Field";
-import { iVue, Behavior, unraw, before, after } from "@/index";
+import { iVue, Behavior, unraw, before } from "@/index";
 import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
 
 @injectable()
 export class XVueTestClass extends ParentXVueTestClass {
 
-  behavior = {
+  static behavior = {
     init: Behavior.SCOPED_INTERCEPT,
     nonReactiveProp: Behavior.DISABLED
   }
@@ -67,6 +67,11 @@ export class XVueTestClass extends ParentXVueTestClass {
       return false
     })
 
+    Field.behavior = {
+      ...Field.behavior,
+      interceptable: Behavior.INTERCEPT
+    }
+
     this.transientField1 = iVue(Field, 2)
     this.transientField2 = iVue(Field, 1)
 
@@ -80,8 +85,13 @@ export class XVueTestClass extends ParentXVueTestClass {
 
     before(this.transientField1.init, (intercept, self) => {
       console.log('before init of Field', self)
-
     })
+
+    before(Field.prototype.interceptable, (intercept, self) => {
+      console.log('before interceptable of Field', self)
+    })
+
+    this.transientField1.interceptable()
 
     this.transientField1.init()
     this.transientField2.init()

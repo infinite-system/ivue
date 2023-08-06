@@ -9,7 +9,7 @@ export class Field {
   app: AppPresenter
   router$: RouterGateway
 
-  behavior = {
+  static behavior: Object = {
     init: Behavior.SCOPED_INTERCEPT,
     runWithIntercept: Behavior.INTERCEPT
   }
@@ -19,22 +19,27 @@ export class Field {
     this.app = IOC.get(Inject.AppPresenter);
     this.router$ = IOC.get(Inject.RouterGateway);
   }
+
   get prop () {
     return this._prop
   }
+
   set prop (v) {
     this._prop = v
   }
+
   get email() {
     return this.app.router.userModel.email
   }
+
   init () {
-    console.log('init')
+    // console.log('init')
     watch(() => this.prop, newVal => {
       console.log('newVal', newVal)
     })
     return this
   }
+
   interceptableValue = 'testing'
   runWithInterceptResult = ''
 
@@ -42,6 +47,9 @@ export class Field {
     return this.interceptableValue
   }
 
+  interceptable() {
+    console.log('interceptable')
+  }
   private privateFunc(){
     alert('hey')
   }

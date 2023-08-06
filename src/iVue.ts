@@ -34,8 +34,8 @@ export function iVueBuilder (ctx, obj, ...args) {
     : Object.create(obj) // if we are instantiating via an IOC container
   )
 
-  let hasBehavior = 'behavior' in vue && typeof vue.behavior === 'object'
-  let behavior = hasBehavior ? vue.behavior : undefined
+  let hasBehavior = 'behavior' in vue.constructor && typeof vue.constructor.behavior === 'object'
+  let behavior = hasBehavior ? vue.constructor.behavior : undefined
 
   const hasInit = 'init' in vue && typeof vue.init === 'function'
   if (hasInit) {
