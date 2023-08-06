@@ -9,8 +9,8 @@ import { tryOnScopeDispose } from "@vueuse/core";
  * @param className
  * @param args
  */
-export function iVue<T> (className: T, ...args: T extends { new (...args: infer P): any } ? P : never[]) {
-  return iVueBuilder(null, className, ...args) as T
+export function iVue<T> (className: T, ...args: T extends { new (...args: infer P): any } ? P : never[]): InstanceType<T> {
+  return iVueBuilder(null, className, ...args)
 }
 
 /**

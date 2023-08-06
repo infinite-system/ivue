@@ -1,5 +1,5 @@
 import { iVueBuilder, iVue } from "./iVue";
-import { Behavior, raw, unraw, after, before } from "./utils";
+import { Behavior, raw, unraw, after, before, useTraits } from "./utils";
 
 export {
   iVue,
@@ -8,5 +8,6 @@ export {
   before,
   after,
   raw,
-  unraw
+  unraw,
+  useTraits
 }

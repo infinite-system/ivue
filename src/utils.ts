@@ -61,10 +61,10 @@ export function unraw (obj) {
 /**
  * Alias for Vue markRaw() function.
  *
- * @param args
+ * @param obj
  */
-export function raw (...args) {
-  return markRaw(...args)
+export function raw (obj) {
+  return markRaw(obj)
 }
 
 /**
@@ -245,4 +245,41 @@ export function overrideFunctionHandler (type, func, self, prop) {
         return result
       }
   }
+}
+
+/**
+ * Generic Class type, matches any type of JS class.
+ */
+type Class = { new(...args: any[]): any; };
+
+/**
+ * Apply traits to the derived class, methods and properties are supported.
+ *
+ * @param derivedCtor
+ * @param constructors
+ */
+export function useTraits (derivedCtor: Class, constructors: Class[]): void {
+  constructors.forEach((baseCtor) => {
+    const obj = new baseCtor()
+    for (const prop in obj) {
+      Object.defineProperty(
+        derivedCtor.prototype,
+        prop,
+        {
+          value: obj[prop],
+          writable: true
+        }
+      );
+    }
+    Object.getOwnPropertyNames(baseCtor.prototype).forEach((name) => {
+      if (!(name in derivedCtor.prototype)) {
+        Object.defineProperty(
+          derivedCtor.prototype,
+          name,
+          Object.getOwnPropertyDescriptor(baseCtor.prototype, name) ||
+          Object.create(null)
+        );
+      }
+    });
+  });
 }

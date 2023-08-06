@@ -14,6 +14,7 @@ const localComputedValue = computed(() => {
   return vm.computedVariable?.[0]?.test + ' + local append'
 })
 
+
 const hugeId = 2646049
 </script>
 

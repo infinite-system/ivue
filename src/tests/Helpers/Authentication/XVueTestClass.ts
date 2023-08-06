@@ -213,4 +213,3 @@ export class XVueTestClass extends ParentXVueTestClass {
     else return days + " Days"
   }
 }
-
