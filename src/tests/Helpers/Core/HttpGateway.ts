@@ -1,13 +1,13 @@
 import { injectable } from 'inversify'
 import type { Config } from './Config'
 import type { UserModel } from '../Authentication/UserModel'
-import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
+import { use, $ } from '@/tests/Helpers/IOC/IOC'
 
 @injectable()
 export class httpGateway {
 
-  @lazy(Inject.Config) config: Config
-  @lazy(Inject.UserModel) userModel: UserModel
+  @use($.Config) config: Config
+  @use($.UserModel) userModel: UserModel
 
   async get (path) {
     const response = await fetch(this.config.apiUrl + path, {

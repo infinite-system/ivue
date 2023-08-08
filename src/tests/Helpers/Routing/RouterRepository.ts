@@ -1,11 +1,11 @@
 import { injectable } from 'inversify'
-import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
+import { use, $ } from '@/tests/Helpers/IOC/IOC'
 import type { RouterGateway } from "@/tests/Helpers/Routing/RouterGateway";
 
 @injectable()
 export class RouterRepository {
 
-  @lazy(Inject.RouterGateway) routerGateway: RouterGateway
+  @use($.RouterGateway) routerGateway: RouterGateway
 
   currentRoute = { routeId: null }
 

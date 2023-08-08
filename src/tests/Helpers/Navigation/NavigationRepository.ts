@@ -3,13 +3,13 @@ import TreeModel from 'tree-model'
 import type { AuthRepository } from '../Authentication/AuthRepository'
 import type { Router } from '../Routing/Router'
 
-import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
+import { use, $ } from '@/tests/Helpers/IOC/IOC'
 
 @injectable()
 export class NavigationRepository {
 
-  @lazy(Inject.AuthRepository) authRepo: AuthRepository
-  @lazy(Inject.Router) router: Router
+  @use($.AuthRepository) authRepo: AuthRepository
+  @use($.Router) router: Router
 
   get currentNode () {
     return this.getTree().all((node) => node.model.id === this.router.currentRoute.routeId)[0]

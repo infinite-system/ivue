@@ -1,13 +1,13 @@
 import { injectable } from 'inversify'
 import type { MessagesRepository } from './Core/Messages/MessagesRepository'
 import type { Router } from './Routing/Router'
-import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
+import { use, $ } from '@/tests/Helpers/IOC/IOC'
 
 @injectable()
 export class AppPresenter {
 
-  @lazy(Inject.Router) router: Router
-  @lazy(Inject.MessagesRepository) messagesRepository: MessagesRepository
+  @use($.Router) router: Router
+  @use($.MessagesRepository) messagesRepository: MessagesRepository
 
   get currentRoute () {
     return this.router.currentRoute

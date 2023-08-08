@@ -10,12 +10,10 @@ const gettersMap = new Map()
 /**
  * Get getters of a class instance and the total number of them.
  *
- * @param instance
+ * @param proto
  * @return { values: { [getter]: true }, length: number }
  */
-export function getGetters (instance) {
-
-  let proto = Object.getPrototypeOf(instance)
+export function getGetters (proto) {
 
   if (gettersMap.has(proto)) {
     return gettersMap.get(proto)
@@ -199,14 +197,17 @@ export function overrideFunctionHandler (type, func, self, prop) {
   if (type === Behavior.SCOPED) {
     // Inside scoped you can put watch(), computed(), watchEffect()
     // and it will be auto garbage collected on scope destruction
-    return function (...args) {
-      const scope = effectScope()
-      scope.run(() => {
-        result = func.bind(self)(...args)
-      })
-      tryOnScopeDispose(() => scope.stop())
-      return result
-    }
+    return Object.defineProperty(self, prop, {
+      value: function (...args) {
+        const scope = effectScope()
+        scope.run(() => {
+          result = func.bind(self)(...args)
+        })
+        tryOnScopeDispose(() => scope.stop())
+        return result
+      },
+      enumerable: false
+    })
   }
 
   // Handle interceptable methods
@@ -230,27 +231,33 @@ export function overrideFunctionHandler (type, func, self, prop) {
   switch (type) {
     case Behavior.INTERCEPT:
       // Basic, fast, non-scoped intercepts
-      return function (...args) {
-        return processIntercept(...args)
-      }
+      return Object.defineProperty(self, prop, {
+        value: function (...args) {
+          return processIntercept(...args)
+        },
+        enumerable: false
+      })
     case Behavior.SCOPED_INTERCEPT:
       // Inside scoped you can put watch(), computed(), watchEffect()
       // and it will be auto garbage collected on scope destruction
-      return function (...args) {
-        const scope = effectScope()
-        scope.run(() => {
-          result = processIntercept(...args)
+      return Object.defineProperty(self, prop, {
+          value: function (...args) {
+            const scope = effectScope()
+            scope.run(() => {
+              result = processIntercept(...args)
+            })
+            tryOnScopeDispose(() => scope.stop())
+            return result
+          },
+          enumerable: false
         })
-        tryOnScopeDispose(() => scope.stop())
-        return result
-      }
   }
 }
 
 /**
  * Generic Class type, matches any type of JS class.
  */
-type Class = { new(...args: any[]): any; };
+type Class = { new (...args: any[]): any; };
 
 /**
  * Apply traits to the derived class, methods and properties are supported.
@@ -258,7 +265,7 @@ type Class = { new(...args: any[]): any; };
  * @param derivedCtor
  * @param constructors
  */
-export function useTraits (derivedCtor: Class, constructors: Class[]): void {
+export function mix (derivedCtor: Class, constructors: Class[]): void {
   constructors.forEach((baseCtor) => {
     const obj = new baseCtor()
     for (const prop in obj) {

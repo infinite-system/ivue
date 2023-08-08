@@ -1,5 +1,5 @@
 import { Behavior, overrideFunctionHandler, getGetters } from "./utils";
-import { computed, effectScope, markRaw, reactive } from "vue";
+import { computed, effectScope, markRaw, reactive, Ref, IfAny, toRef } from "vue";
 import { tryOnScopeDispose } from "@vueuse/core";
 
 /**
@@ -12,10 +12,19 @@ import { tryOnScopeDispose } from "@vueuse/core";
 export function iVue<T extends abstract new (...args: any) => any> (
   className: T,
   ...args: T extends { new (...args: infer P): any } ? P : never[]
-): InstanceType<T> {
+): InstanceType<T> & iVueToRefs<T> {
   return iVueBuilder(null, className, ...args)
 }
 
+export type ToRef<T> = IfAny<T, Ref<T>, [T] extends [Ref] ? T : Ref<T>>
+
+export type ToRefs<T = any> = {
+  [K in keyof T]: ToRef<T[K]>
+}
+
+export interface iVueToRefs<T> {
+  toRefs: () => InstanceType<T>
+}
 /**
  * Pure VueJS Reactive Observable Class-based Architecture System.
  *
@@ -27,11 +36,14 @@ export function iVue<T extends abstract new (...args: any) => any> (
  */
 export function iVueBuilder (ctx, obj, ...args) {
 
-  const getters = getGetters(obj)
+  const getters = getGetters(ctx
+    ? Reflect.getPrototypeOf(obj) // Instantiating via IOC
+    : obj.prototype // Instantiating via iVue() / iRefs()
+  )
 
-  const vue = reactive(ctx === null
-    ? Reflect.construct(obj, args) // if we are instantiating objects directly with iVue(obj, ...args)
-    : Object.create(obj) // if we are instantiating via an IOC container
+  const vue = reactive(ctx
+    ? Object.create(obj) // if we are instantiating via an IOC container (usually singletons)
+    : Reflect.construct(obj, args) // if we are instantiating objects directly with iVue(obj, ...args)
   )
 
   let hasBehavior = 'behavior' in vue.constructor && typeof vue.constructor.behavior === 'object'
@@ -50,7 +62,7 @@ export function iVueBuilder (ctx, obj, ...args) {
       if (typeof vue[prop] === 'function') {
         if (behavior[prop] === Behavior.DISABLED) continue // skip, because disabling a function has no effect
         const func = vue[prop]
-        vue[prop] = overrideFunctionHandler(behavior[prop], func, vue, prop)
+        overrideFunctionHandler(behavior[prop], func, vue, prop)
       } else {
         if (behavior[prop] === Behavior.DISABLED && typeof vue[prop] === 'object') {
           vue[prop] = markRaw(vue[prop])
@@ -106,9 +118,34 @@ export function iVueBuilder (ctx, obj, ...args) {
     }
   }
 
+  Object.defineProperty(vue, 'toRefs', {
+    value: function () {
+      const result = {}
+      for (const prop in vue) {
+        if (typeof vue[prop] !== 'function') {
+          result[prop] = toRef(vue, prop)
+        } else {
+          result[prop] = vue[prop]
+        }
+      }
 
-  if (hasInit && ctx !== null && ctx.currentRequest.bindings[0].scope === 'Singleton') {
-    // Initialize Singleton Immediately
+      return new Proxy(vue, {
+        get: (target, key) => {
+          if (key in result) {
+            return result[key]
+          } else if (key in target) {
+            return target[key].bind(vue);
+          } else {
+            console.error('Undefined key: ' + key + ' in ' + vue.constructor.name)
+          }
+        }
+      })
+    },
+    enumerable: false
+  })
+
+  if (hasInit) {
+    // Run initializer where reactive references can already be used
     vue.init()
   }
 

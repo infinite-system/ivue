@@ -1,10 +1,11 @@
 import { Container } from "inversify";
 import getDecorators from "inversify-inject-decorators";
+import { iVue, iVueToRefs } from '@/iVue';
 
 /**
  * Injection Symbols Map.
  */
-export const Inject = {
+export const $ = {
   DataGateway: Symbol.for('DataGateway'),
   RouterGateway: Symbol.for('RouterGateway'),
   AppPresenter: Symbol.for('AppPresenter'),
@@ -19,6 +20,12 @@ export const Inject = {
   Config: Symbol.for('Config')
 }
 
+export function instance<T>(value:T): InstanceType<T> & iVueToRefs<T> {
+  return IOC.get(value)
+}
+
+export const init = iVue
+
 // Container map allows for HMR support for Vite
 // It breaks otherwise, because the container tries to rebind classes on reload
 export const IOCMap = new Map()
@@ -32,4 +39,4 @@ export const IOC = new Container({
 })
 
 const { lazyInject } = getDecorators(IOC);
-export const lazy = lazyInject
+export const use = lazyInject

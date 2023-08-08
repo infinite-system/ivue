@@ -1,25 +1,38 @@
 <script setup lang="ts">
-import { watch, computed, toRefs } from 'vue'
+import { watch, computed, toRefs, onMounted, onUnmounted } from 'vue'
 import { XVueTestClass } from "../src/tests/Helpers/Authentication/XVueTestClass";
-import { Inject, IOC } from '../src/tests/Helpers/IOC/Ioc'
+import { $, instance } from '../src/tests/Helpers/IOC/IOC'
+import { iVue } from '../src/iVue';
+import { UseMouse } from '../src/tests/Helpers/Field';
 // import { ioc } from '@/tests/Helpers/IoC/AppIOC'
-const vm: XVueTestClass = IOC.get(Inject.XVueTestClass)
+const vm = <XVueTestClass>instance($.XVueTestClass)
+const { array } = <XVueTestClass>instance($.XVueTestClass).toRefs()
 // const { primitive } = toRefs(container.get(XVueTestClass))
+
 watch(() => vm.computedVariable?.[0]?.test, newVal => {
   console.log('new computedVariable:', newVal)
 }, { deep: true })
 
+setTimeout(() => {
+  // array.value = [1]
+}, 1000)
 
 const localComputedValue = computed(() => {
   return vm.computedVariable?.[0]?.test + ' + local append'
 })
-
-
+const { x, y } = iVue(UseMouse).toRefs()
 const hugeId = 2646049
 </script>
 
 <template>
+  {{ array}}
   <div style="width:900px; margin:0 auto;">
+    {{x}}, {{y}}
+<br />
+    {{ vm.transientField1.x }} ,
+    {{ vm.transientField1.y }}
+
+
     <h1>iVue - Infinite Vue - Implementation Tests</h1>
     <!--  <vue-dd v-model="vm" get-all-properties/>-->
 

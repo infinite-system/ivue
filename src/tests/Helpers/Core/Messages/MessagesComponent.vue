@@ -4,9 +4,9 @@ import { MessagesPresenter } from './MessagesPresenter'
 // { import { useValidation } from '../Providers/Validation' }
 // const [uiMessages] = useValidation()
 
-import { IOC } from '@/tests/Helpers/IOC/IOC'
+import { instance } from '@/tests/Helpers/IOC/IOC'
 
-const vm = IOC.get(MessagesPresenter);
+const vm = instance(MessagesPresenter);
 </script>
 <template>
 

@@ -3,40 +3,38 @@
 import LogoutComponent from '../Authentication/LogoutComponent.vue'
 import { Router } from '../Routing/Router'
 import { NavigationPresenter } from './NavigationPresenter'
-import { IOC } from '@/tests/Helpers/IOC/IOC'
+import { instance } from '@/tests/Helpers/IOC/IOC'
 
-const presenter = IOC.get(NavigationPresenter)
-const router = IOC.get(Router)
+const presenter = instance(NavigationPresenter)
+const router = instance(Router)
 </script>
 <template>
-  <Observer>
-    <div class="navigation-container">
-      <div class="navigation-item-header" :style="{ backgroundColor: '#5BCA06' }">
-        {{ presenter.viewModel.currentSelectedVisibleName }}
-      </div>
-      <div
-        v-for="menuItem in presenter.viewModel.menuItems"
-        class="navigation-item"
-        :style="{
-              backgroundColor: '#3DE7CF',
-            }"
-        @click="() => router.goToId(menuItem.id)"
-      >
-        {{ menuItem.visibleName }}
-      </div>
-
-      <router-link to="/">Go Home</router-link>
-
-      <div
-        v-if="presenter.viewModel.showBack"
-        class="navigation-item"
-        @click="() => presenter.back()"
-        :style="{ backgroundColor: '#2e91fc' }"
-      >
-        <span>⬅ </span>Back
-      </div>
-
-      <LogoutComponent />
+  <div class="navigation-container">
+    <div class="navigation-item-header" :style="{ backgroundColor: '#5BCA06' }">
+      {{ presenter.viewModel.currentSelectedVisibleName }}
     </div>
-  </Observer>
+    <div
+      v-for="menuItem in presenter.viewModel.menuItems"
+      class="navigation-item"
+      :style="{
+            backgroundColor: '#3DE7CF',
+          }"
+      @click="() => router.goToId(menuItem.id)"
+    >
+      {{ menuItem.visibleName }}
+    </div>
+
+    <router-link to="/">Go Home</router-link>
+
+    <div
+      v-if="presenter.viewModel.showBack"
+      class="navigation-item"
+      @click="() => presenter.back()"
+      :style="{ backgroundColor: '#2e91fc' }"
+    >
+      <span>⬅ </span>Back
+    </div>
+
+    <LogoutComponent />
+  </div>
 </template>

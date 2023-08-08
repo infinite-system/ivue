@@ -13,7 +13,7 @@ import { httpGateway } from "@/tests/Helpers/Core/HttpGateway";
 import { RouterGateway } from "@/tests/Helpers/Routing/RouterGateway";
 import { iVueBuilder } from '@/iVue'
 // Container
-import { IOC, IOCMap, Inject } from '@/tests/Helpers/IOC/IOC'
+import { IOC, IOCMap, $ } from '@/tests/Helpers/IOC/IOC'
 
 export class AppIOC {
   container
@@ -39,17 +39,17 @@ export class AppIOC {
   }
 
   initBase () {
-    this.singleton(Inject.RouterRepository, RouterRepository)
-    this.singleton(Inject.Router, Router)
+    this.singleton($.RouterRepository, RouterRepository)
+    this.singleton($.Router, Router)
 
-    this.singleton(Inject.MessagesRepository, MessagesRepository)
-    this.singleton(Inject.NavigationRepository, NavigationRepository)
-    this.singleton(Inject.UserModel, UserModel)
-    this.singleton(Inject.AuthRepository, AuthRepository)
+    this.singleton($.MessagesRepository, MessagesRepository)
+    this.singleton($.NavigationRepository, NavigationRepository)
+    this.singleton($.UserModel, UserModel)
+    this.singleton($.AuthRepository, AuthRepository)
 
-    this.singleton(Inject.XVueTestClass, XVueTestClass)
-    this.singleton(Inject.LoginRegisterPresenter, LoginRegisterPresenter)
-    this.singleton(Inject.Config, Config)
+    this.singleton($.XVueTestClass, XVueTestClass)
+    this.singleton($.LoginRegisterPresenter, LoginRegisterPresenter)
+    this.singleton($.Config, Config)
 
     return this
   }
@@ -57,9 +57,9 @@ export class AppIOC {
   init () {
     this.initBase()
 
-    this.singleton(Inject.DataGateway, httpGateway)
-    this.singleton(Inject.RouterGateway, RouterGateway)
-    this.singleton(Inject.AppPresenter, AppPresenter)
+    this.singleton($.DataGateway, httpGateway)
+    this.singleton($.RouterGateway, RouterGateway)
+    this.singleton($.AppPresenter, AppPresenter)
   }
 
   get (value) {

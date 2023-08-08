@@ -8,7 +8,7 @@ import { watch } from "vue";
 import { generateHugeArray } from "@/tests/Helpers/Generators/generators";
 import { Field } from "@/tests/Helpers/Field";
 import { iVue, Behavior, unraw, before } from "@/index";
-import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
+import { use, $ } from '@/tests/Helpers/IOC/IOC'
 
 @injectable()
 export class XVueTestClass extends ParentXVueTestClass {
@@ -18,10 +18,10 @@ export class XVueTestClass extends ParentXVueTestClass {
     nonReactiveProp: Behavior.DISABLED
   }
 
-  @lazy(Inject.AuthRepository) authRepo: AuthRepository
-  @lazy(Inject.AppPresenter) app: AppPresenter
-  @lazy(Inject.MessagesRepository) messagesRepository: MessagesRepository
-  @lazy(Inject.Router) router: Router
+  @use($.AuthRepository) authRepo: AuthRepository
+  @use($.AppPresenter) app: AppPresenter
+  @use($.MessagesRepository) messagesRepository: MessagesRepository
+  @use($.Router) router: Router
 
   private _x = 1
 
@@ -52,6 +52,7 @@ export class XVueTestClass extends ParentXVueTestClass {
 
   transientField1: Field
   transientField2: Field
+  transientField3: Field
   transientFields: Field[] = []
 
   init () {
@@ -64,13 +65,16 @@ export class XVueTestClass extends ParentXVueTestClass {
 
     before(Field.prototype.init, (intercept, self) => {
       console.log('before init of prototype of Field', 'this', self)
-      return false
+      // return false
     })
 
     Field.behavior = {
       ...Field.behavior,
       interceptable: Behavior.INTERCEPT
     }
+
+    this.transientField3 = iVue(Field, 2)
+    console.log('this.transientField3', this.transientField3)
 
     this.transientField1 = iVue(Field, 2)
     this.transientField2 = iVue(Field, 1)
@@ -95,6 +99,9 @@ export class XVueTestClass extends ParentXVueTestClass {
 
     this.transientField1.init()
     this.transientField2.init()
+
+
+
     //
     // before(Field.prototype.runWithIntercept, (intercept, self, ...[var1]) => {
     //

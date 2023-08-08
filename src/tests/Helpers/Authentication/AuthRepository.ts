@@ -3,16 +3,16 @@ import type { Router } from '../Routing/Router'
 import type { UserModel } from './UserModel'
 import type { MessagePacking } from '../Core/Messages/MessagePacking'
 import type { RouterGateway } from "../Routing/RouterGateway";
-import { lazy, Inject } from '@/tests/Helpers/IOC/IOC'
+import { use, $ } from '@/tests/Helpers/IOC/IOC'
 
 @injectable()
 export class AuthRepository {
 
-  @lazy(Inject.Router) router: Router
+  @use($.Router) router: Router
 
-  @lazy(Inject.DataGateway) dataGateway: RouterGateway
+  @use($.DataGateway) dataGateway: RouterGateway
 
-  @lazy(Inject.UserModel) userModel: UserModel
+  @use($.UserModel) userModel: UserModel
 
 
   originalVariable = [
