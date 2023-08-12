@@ -25,8 +25,12 @@ const __Kernel__ = ($ = Kernel.prototype) => ([
   // Getters:
   $.get,  // Any singleton
   $.make, // Any transient
+
   $.use,  // iVue singleton
   $.init, // iVue transient
+
+  $.$use,  // iVue singleton converted via .toRefs()
+  $.$init, // iVue transient converted via .toRefs()
 ])
 
 /**
@@ -205,6 +209,32 @@ export class Kernel {
 
     return this.newInstance(mapping, ...args)
   }
+
+  /**
+   * Initialize iVue ref based singleton returned from the Kernel container,
+   * or a self-bound transient that is created on the fly.
+   *
+   * Equivalent to use(className, ...args).toRefs()
+   */
+  $use<T extends abstract new (...args: any) => any> (
+    className: T,
+    ...args: T extends { new (...args: infer P): any } ? P : never[]
+  ): InstanceType<T> {
+    return this.use(className, ...args).toRefs()
+  }
+
+  /**
+   * Initialize iVue ref based transient returned from the Kernel container,
+   * or a self-bound transient that is created on the fly.
+   *
+   * Equivalent to init(className, ...args).toRefs()
+   */
+  $init<T extends abstract new (...args: any) => any> (
+    className: T,
+    ...args: T extends { new (...args: infer P): any } ? P : never[]
+  ): InstanceType<T> {
+    return this.init(className, ...args).toRefs()
+  }
 }
 
 __Kernel__()
@@ -229,4 +259,7 @@ export const make = kernel.make.bind(kernel)
 
 export const use = kernel.use.bind(kernel)
 export const init = kernel.init.bind(kernel)
+
+export const $use = kernel.$use.bind(kernel)
+export const $init = kernel.$init.bind(kernel)
 

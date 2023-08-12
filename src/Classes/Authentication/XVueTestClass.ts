@@ -88,7 +88,7 @@ export class XVueTestClass extends ParentXVueTestClass {
     setTimeout(() => {
 
 
-      for (let i = 0; i < 100000; i++) {
+      for (let i = 0; i < 500000; i++) {
         // this.transientFields.push(iVueMake(new Field(i)))
         this.transientFields.push(init(Field, i, false))
       }

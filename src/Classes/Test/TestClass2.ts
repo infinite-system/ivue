@@ -1,9 +1,11 @@
 // import { UseRouting } from '@/tests/Helpers/Traits/UseRouting';
 import { UseApp } from '@/Classes/Traits/UseApp';
-import { use, init } from '@/Kernel';
+import { use, $init, $use } from '@/Kernel';
 import { Behavior, mix } from '@/utils';
 import { watch, UnwrapRef, ComputedRef, onMounted, onUnmounted, ref } from 'vue'
 import { TestClass, Mouse } from '@/Classes/Test/TestClass';
+import { UseRouting } from '@/Classes/Traits/UseRouting';
+import { Router } from '@/Classes/Routing/Router';
 
 export function useMouse() {
   // state encapsulated and managed by the composable
@@ -31,13 +33,17 @@ export class TestClass2 {
 
   val = 1
 
+  router: Router
+
   init () {
-    ({ x: this.x, y: this.y } = init(Mouse).toRefs())
+    // ({ $router: this.router } = $use(UseRouting));
+
+    ({ x: this.x, y: this.y } = $init(Mouse));
     // ({ x: this.x, y: this.y } = useMouse())
   }
 
-  x
-  y
+  x: number
+  y: number
 
   alert () {
     console.log('alert')
