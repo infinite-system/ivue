@@ -6,7 +6,7 @@
   "compilerOptions": {
     "outDir": "target",
     /* enable decorators & inversify*/
-    "target": "ES2016",
+    "target": "ES2015",
 //    "lib": ["ES2021.String"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest'
-import { AppTestHarness } from './Helpers/AppTestHarness'
-import { LoginRegisterPresenter } from "./Helpers/Authentication/LoginRegisterPresenter.js";
-import { TestPresenterAuto } from "./Helpers/Authentication/TestPresenterAuto.js";
+import { AppTestHarness } from '../Classes/AppTestHarness'
+import { LoginRegisterPresenter } from "../Classes/Authentication/LoginRegisterPresenter.js";
+import { TestPresenterAuto } from "../Classes/Authentication/TestPresenterAuto.js";
 
 let appTestHarness = null
 let presenter = null

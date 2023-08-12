@@ -5,6 +5,7 @@ import pkg from "./package.json";
 import dts from "vite-plugin-dts";
 import { resolve } from 'node:path';
 
+import { terser } from 'rollup-plugin-terser';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -14,6 +15,7 @@ export default defineConfig({
     }),
   ],
   build: {
+    minify: 'terser',
     lib: {
       entry: "./src/index.ts",
       formats: ["es", "umd"],
@@ -22,6 +24,17 @@ export default defineConfig({
       fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {
+      plugins: [terser({
+        format: {
+          comments: false,
+        },
+
+        mangle: {
+          keep_classnames: false,
+          reserved: [],
+        },
+
+      })],
       external: ["vue"],
       output: {
         globals: {

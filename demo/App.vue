@@ -1,12 +1,39 @@
 <script setup lang="ts">
-import { watch, computed, toRefs, onMounted, onUnmounted } from 'vue'
-import { XVueTestClass } from "../src/tests/Helpers/Authentication/XVueTestClass";
-import { $, instance } from '../src/tests/Helpers/IOC/IOC'
-import { iVue } from '../src/iVue';
-import { UseMouse } from '../src/tests/Helpers/Field';
-// import { ioc } from '@/tests/Helpers/IoC/AppIOC'
-const vm = <XVueTestClass>instance($.XVueTestClass)
-const { array } = <XVueTestClass>instance($.XVueTestClass).toRefs()
+import { watch, computed, toRefs, onMounted, onUnmounted, ref } from 'vue'
+import { createSharedComposable } from '@vueuse/core'
+import { XVueTestClass } from "../src/Classes/Authentication/XVueTestClass";
+import { use, init } from '@/index'
+import { TestClass } from '../src/Classes/Test/TestClass';
+import { Mouse } from '../src/Classes/Test/TestClass';
+const vm: XVueTestClass = use(XVueTestClass)
+const vt: TestClass = use(TestClass)
+
+
+function useMouse(a) {
+  // state encapsulated and managed by the composable
+  const x = ref(0)
+  const y = ref(0)
+
+  // a composable can update its managed state over time.
+  function update(event) {
+    x.value = event.pageX
+    y.value = event.pageY
+  }
+
+  // a composable can also hook into its owner component's
+  // lifecycle to setup and teardown side effects.
+  onMounted(() => window.addEventListener('mousemove', update))
+  onUnmounted(() => window.removeEventListener('mousemove', update))
+
+  // expose managed state as return value
+  return { x, y, a }
+}
+
+
+const mouse = use(Mouse, 1).toRefs()
+const mouse2 = init(Mouse, 2).toRefs()
+const mouse3 = use(Mouse, 1).toRefs()
+const mouse4 = mouse2
 // const { primitive } = toRefs(container.get(XVueTestClass))
 
 watch(() => vm.computedVariable?.[0]?.test, newVal => {
@@ -17,18 +44,38 @@ setTimeout(() => {
   // array.value = [1]
 }, 1000)
 
+let i = 2
+setInterval(() => {
+  // array.value = [1]
+  mouse.b.value.test++
+  mouse.c.value.push(i++)
+}, 1000)
+
 const localComputedValue = computed(() => {
   return vm.computedVariable?.[0]?.test + ' + local append'
 })
-const { x, y } = iVue(UseMouse).toRefs()
+const { x, y } = init(Mouse).toRefs()
+
 const hugeId = 2646049
 </script>
 
 <template>
-  {{ array}}
+  {{ mouse }}<br />
+  {{ mouse2 }}<br />
+  {{ mouse3 }}<br />
+  {{ mouse4 }}<br />
+  <!--  {{ array}}-->
   <div style="width:900px; margin:0 auto;">
-    {{x}}, {{y}}
-<br />
+    <!--    {{x}}, {{y}}-->
+    <br/>
+    <br/>
+    {{ vt.testClass2.x }},
+    {{ vt.testClass2.y }}
+    <br/>
+    <br/>
+    {{ vt.testClass2.val }}
+    <button @click="vt.testClass2.val++">vt.testClass2.val++</button>
+    <br />
     {{ vm.transientField1.x }} ,
     {{ vm.transientField1.y }}
 
@@ -155,7 +202,9 @@ const hugeId = 2646049
     <div>Computed vm.propTransient: {{ vm.propTransient }}</div>
     <h2>Intercepts Test</h2>
     <div>vm.transientField2.runWithIntercept(): {{ vm.transientField2.runWithInterceptResult }}
-      <button @click="vm.transientField2.runWithInterceptResult = vm.transientField2.runWithIntercept('test')">vm.transientField2.runWithIntercept()</button>
+      <button @click="vm.transientField2.runWithInterceptResult = vm.transientField2.runWithIntercept('test')">
+        vm.transientField2.runWithIntercept()
+      </button>
     </div>
     <br/>
     <br/>
