@@ -1,4 +1,4 @@
-# iVue – Infinite Vue
+# ivue – Infinite Vue
 
 Advanced State Management & Class Architecture for Vue 3+.
 
@@ -15,8 +15,8 @@ yarn dev
 
 ### Files to look at:
 
-Main logic for iVue:
-https://github.com/infinite-system/infinite-vue/blob/main/src/iVue.ts
+Main logic for ivue:
+https://github.com/infinite-system/infinite-vue/blob/main/src/ivue.ts
 
 Utils:
 https://github.com/infinite-system/infinite-vue/blob/main/src/utils.ts

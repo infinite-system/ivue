@@ -1,6 +1,6 @@
 import { watch, onMounted, onUnmounted } from "vue";
 import { Behavior } from "@/index";
-import { use, init } from "@/Kernel";
+import { use, init } from "@/kernel";
 import { AppPresenter } from "@/Classes/AppPresenter";
 import { RouterGateway } from "@/Classes/Routing/RouterGateway";
 
@@ -57,22 +57,22 @@ export class Field {
 
   init () {
 
-    if (this.buildMouse) {
-
-      // console.log('init')
-      watch(() => this.prop, newVal => {
-        console.log('newVal', newVal)
-      })
-
-      // eslint-disable-next-line no-unexpected-multiline
-      const mouse = init(Mouse).toRefs();
-
-      ({
-        x: this.x,
-        y: this.y,
-      } = mouse)
-
-    }
+    // if (this.buildMouse) {
+    //
+    //   // console.log('init')
+    //   watch(() => this.prop, newVal => {
+    //     console.log('newVal', newVal)
+    //   })
+    //
+    //   // eslint-disable-next-line no-unexpected-multiline
+    //   const mouse = init(Mouse).toRefs();
+    //
+    //   ({
+    //     x: this.x,
+    //     y: this.y,
+    //   } = mouse)
+    //
+    // }
     // const { update, x } = mouse
     // // console.log('/**/iRefs(UseMouse)', iRefs(UseMouse).update({x:0,y:0}))
     //

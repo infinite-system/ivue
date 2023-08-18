@@ -3,7 +3,7 @@ import { AuthRepository } from './AuthRepository'
 import { MessagesRepository } from '../Core/Messages/MessagesRepository'
 import { Router } from '../Routing/Router'
 
-import { use } from '@/Kernel'
+import { use } from '@/kernel'
 import { MessagesPresenter } from "@/Classes/Core/Messages/MessagesPresenter";
 
 @injectable()

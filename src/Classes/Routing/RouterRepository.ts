@@ -1,5 +1,5 @@
 import { injectable } from 'inversify'
-import { use } from '@/Kernel'
+import { use } from '@/kernel'
 import { RouterGateway } from "@/Classes/Routing/RouterGateway";
 
 @injectable()

@@ -11,3 +11,4 @@ const presenter = use(LoginRegisterPresenter)
       <span>☯ Logout</span>
     </div>
 </template>
+@/kernel.js

@@ -7,8 +7,9 @@ import { ParentXVueTestClass } from "@/Classes/Authentication/ParentXVueTestClas
 import { watch } from "vue";
 import { generateHugeArray } from "@/Classes/Generators/generators";
 import { Field } from "@/Classes/Field";
-import { iVue, Behavior, unraw, before } from "@/index";
+import { ivue, Behavior, unraw, before, raw } from "@/index";
 import { use, init } from '@/index'
+import { UserModel } from './UserModel';
 
 export class XVueTestClass extends ParentXVueTestClass {
 
@@ -19,11 +20,12 @@ export class XVueTestClass extends ParentXVueTestClass {
 
   get authRepo () { return use(AuthRepository) }
 
-  get app () { return use(AppPresenter) }
+  get app () { console.log('changing'); return use(AppPresenter) }
 
   get messagesRepository () { return use(MessagesRepository) }
 
   get router () { return use(Router) }
+
 
   private _x = 1
 
@@ -49,11 +51,11 @@ export class XVueTestClass extends ParentXVueTestClass {
     super()
   }
 
-  transientField1: Field
+  transientField1!: Field
 
-  transientField2: Field
+  transientField2!: Field
 
-  transientField3: Field
+  transientField3!: Field
 
   transientFields: Field[] = []
 
@@ -75,11 +77,11 @@ export class XVueTestClass extends ParentXVueTestClass {
       // interceptable: Behavior.INTERCEPT
     }
 
-    this.transientField3 = iVue(Field, 11)
+    this.transientField3 = init(Field, 11)
     console.log('this.transientField3', this.transientField3)
 
-    this.transientField1 = iVue(Field, 23)
-    this.transientField2 = iVue(Field, 5)
+    this.transientField1 = init(Field, 23)
+    this.transientField2 = init(Field, 5)
 
     this.timeTaken = 0
 
@@ -89,7 +91,7 @@ export class XVueTestClass extends ParentXVueTestClass {
 
 
       for (let i = 0; i < 500000; i++) {
-        // this.transientFields.push(iVueMake(new Field(i)))
+        // this.transientFields.push(ivueMake(new Field(i)))
         this.transientFields.push(init(Field, i, false))
       }
 
@@ -113,6 +115,9 @@ export class XVueTestClass extends ParentXVueTestClass {
     this.transientField2.init()
 
 
+    // watch(this, (state) => {
+      // console.log('changed', state)
+    // })
 
     //
     // before(Field.prototype.runWithIntercept, (intercept, self, ...[var1]) => {
@@ -178,7 +183,7 @@ export class XVueTestClass extends ParentXVueTestClass {
    * Circular computed store connectivity test.
    */
   get deepEmail () {
-    console.log('app', this.app)
+    //console.log('app', this.app)
     return String(this.app.router.userModel.app.router.userModel.email).split('').join('+')
   }
 
@@ -231,7 +236,7 @@ export class XVueTestClass extends ParentXVueTestClass {
   }
 
   msToTime (ms) {
-    const seconds = (ms / 1000).toFixed(1);
+    const seconds = (ms / 1000).toFixed(3);
     const minutes = (ms / (1000 * 60)).toFixed(1);
     const hours = (ms / (1000 * 60 * 60)).toFixed(1);
     const days = (ms / (1000 * 60 * 60 * 24)).toFixed(1);

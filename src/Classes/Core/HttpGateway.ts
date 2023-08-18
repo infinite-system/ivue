@@ -1,7 +1,7 @@
 import { injectable } from 'inversify'
 import { Config } from './Config'
 import { UserModel } from '../Authentication/UserModel'
-import { use } from '@/Kernel'
+import { use } from '@/kernel'
 
 @injectable()
 export class HttpGateway {

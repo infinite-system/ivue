@@ -3,7 +3,7 @@ import TreeModel from 'tree-model'
 import { AuthRepository } from '../Authentication/AuthRepository'
 import { Router } from '../Routing/Router'
 
-import { use } from '@/Kernel'
+import { use } from '@/kernel'
 
 @injectable()
 export class NavigationRepository {

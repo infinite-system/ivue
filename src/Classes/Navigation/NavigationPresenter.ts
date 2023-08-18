@@ -1,7 +1,7 @@
 import { injectable } from 'inversify'
 import { NavigationRepository } from './NavigationRepository'
 import { RouterRepository } from '../Routing/RouterRepository'
-import { use } from '@/Kernel'
+import { use } from '@/kernel'
 
 @injectable()
 export class NavigationPresenter {

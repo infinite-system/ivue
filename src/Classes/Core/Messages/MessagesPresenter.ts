@@ -1,6 +1,6 @@
 import { injectable } from 'inversify'
 import { MessagesRepository } from './MessagesRepository'
-import { use } from '@/Kernel'
+import { use } from '@/kernel'
 
 export abstract class GrandParent {
   grandParentProp = 1

@@ -20,4 +20,4 @@ const app = use(AppPresenter)
       </div>
     </div>
 
-</template>
+</template>@/kernel

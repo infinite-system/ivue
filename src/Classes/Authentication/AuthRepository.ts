@@ -3,7 +3,7 @@ import { Router } from '../Routing/Router'
 import { UserModel } from './UserModel'
 import { MessagePacking } from '../Core/Messages/MessagePacking'
 import { HttpGateway } from '@/Classes/Core/HttpGateway';
-import { use } from '@/Kernel'
+import { use } from '@/kernel'
 
 @injectable()
 export class AuthRepository {
@@ -13,17 +13,17 @@ export class AuthRepository {
   get userModel () { return use(UserModel) }
 
   originalVariable = [
-    {test: 'val-1', test2: 'val-2'}
+    { test: 'val-1', test2: 'val-2' }
   ]
 
-  testVariable = [{test1: 'test1!', test2: 'test1!', sub: {test: 'yes'}}]
+  testVariable = [{ test1: 'test1!', test2: 'test1!', sub: { test: 'yes' } }]
   testVariable2 = {
     awesome: {
       super: 'yes'
     }
   }
 
-  async login(email, password) {
+  async login (email, password) {
     const loginDto = await this.http.post('/login', {
       email,
       password,
@@ -37,7 +37,7 @@ export class AuthRepository {
     return MessagePacking.unpackServerDtoToPm(loginDto)
   }
 
-  async register(email, password) {
+  async register (email, password) {
     const registerDto = await this.http.post('/register', {
       email,
       password,
@@ -46,7 +46,7 @@ export class AuthRepository {
     return MessagePacking.unpackServerDtoToPm(registerDto)
   }
 
-  async logOut() {
+  async logOut () {
     this.userModel.email = ''
     this.userModel.token = ''
   }

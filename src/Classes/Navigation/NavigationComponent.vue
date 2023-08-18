@@ -38,3 +38,4 @@ const router = use(Router)
     <LogoutComponent />
   </div>
 </template>
+@/kernel

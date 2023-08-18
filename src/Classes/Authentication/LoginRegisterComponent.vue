@@ -98,3 +98,4 @@ const vm: LoginRegisterPresenter = use(LoginRegisterPresenter);
     </div>
   </div>
 </template>
+@/kernel

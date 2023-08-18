@@ -1,7 +1,7 @@
 {
   "name": "infinite-vue",
   "version": "1.4.4",
-  "description": "iVue – Infinite Vue. Advanced State Management & Class Architecture for Vue 3+.",
+  "description": "ivue – Infinite Vue. Advanced State Management & Class Architecture for Vue 3+.",
   "exports": {
     ".": {
       "require": "./dist/index.umd.js",
@@ -54,7 +54,7 @@
     "vite": "^4.3.5",
     "vite-plugin-dts": "^2.3.0",
     "vitest": "^0.31.0",
-    "vue": "^3.0.0",
+    "vue": "^3.3.4",
     "vue-dd": "^1.6.4",
     "vue-router": "^4.2.0",
     "vue-tsc": "^1.6.4",
@@ -71,7 +71,7 @@
     "email": "ekalashnikov@gmail.com"
   },
   "keywords": [
-    "iVue",
+    "ivue",
     "vuex",
     "mobx",
     "redux",

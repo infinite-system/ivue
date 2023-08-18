@@ -1,8 +1,6 @@
-import { injectable } from 'inversify'
 import { createRouter, createWebHistory } from 'vue-router'
-import { Router } from 'vue-router'
+import { type Router } from 'vue-router'
 
-@injectable()
 export class RouterGateway {
 
   router: Router

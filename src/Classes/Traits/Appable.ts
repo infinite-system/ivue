@@ -1,6 +1,6 @@
-import { use } from '@/Kernel'
+import { use } from '@/kernel'
 import { AppPresenter } from '@/Classes/AppPresenter';
 
-export class UseApp {
+export class Appable {
   get app () { return use(AppPresenter) }
 }

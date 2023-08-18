@@ -1,5 +1,5 @@
 import { injectable } from 'inversify'
-import { use } from '@/Kernel'
+import { use } from '@/kernel'
 import { AppPresenter } from "@/Classes/AppPresenter.js";
 
 @injectable()

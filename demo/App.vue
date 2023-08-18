@@ -2,20 +2,29 @@
 import { watch, computed, toRefs, onMounted, onUnmounted, ref } from 'vue'
 import { createSharedComposable } from '@vueuse/core'
 import { XVueTestClass } from "../src/Classes/Authentication/XVueTestClass";
-import { use, init } from '@/index'
+import { use, init, raw, Traits, Behavior } from '@/index'
 import { TestClass } from '../src/Classes/Test/TestClass';
 import { Mouse } from '../src/Classes/Test/TestClass';
+import { UserModel } from '../src/Classes/Authentication/UserModel';
+import { iobj } from '../src/index';
+import { AppPresenter } from '../src/Classes/AppPresenter';
+import { Capsuleable } from '../src/Classes/Traits/Capsuleable';
+import { Appable } from '../src/Classes/Traits/Appable';
+import { Mountable } from '../src/Classes/Traits/Mountable';
+import { Vueable } from '../src/Classes/Traits/Vueable';
+import SubComponent from './SubComponent.vue'
+import SubComponent2 from './SubComponent2.vue'
+
 const vm: XVueTestClass = use(XVueTestClass)
 const vt: TestClass = use(TestClass)
-
-
-function useMouse(a) {
+//
+function useMouse (a) {
   // state encapsulated and managed by the composable
   const x = ref(0)
   const y = ref(0)
 
   // a composable can update its managed state over time.
-  function update(event) {
+  function update (event) {
     x.value = event.pageX
     y.value = event.pageY
   }
@@ -30,7 +39,123 @@ function useMouse(a) {
 }
 
 
-const mouse = use(Mouse, 1).toRefs()
+const ctx = iobj({
+  test: 1,
+  get user () { return use(UserModel) },
+  get mouse () { return init(Mouse, 1) }
+})
+
+const __Test__ = ($ = Test.prototype) => ({
+  public: {
+    data: {
+      x: $.x,
+      y: $.y,
+    }
+  }
+})
+
+class TestPrivate {
+
+  mouse: Mouse
+
+  constructor (public self: Test, private i) {
+    this.mouse = init(Mouse, i)
+    this.self.b = i + 'hey'
+  }
+
+  get y () { return this.self.b }
+
+  doSomething () {
+    console.log('self.b', this.self.b)
+  }
+}
+// eslint-disable-next-line no-redeclare
+interface TestPrivate extends Appable {}
+Traits(TestPrivate, [Appable])
+
+class Test {
+
+  static emits = ['test']
+
+  private $: TestPrivate
+  private capsule = TestPrivate
+
+  constructor (i: number) {
+    this.encapsulate(arguments)
+  }
+
+  b = 'hey'
+  // n = []
+  // m = {}
+  // get email () {
+  //   return this.ctx().user.email
+  // }
+  // private init () {
+  //
+  //
+  //   // watch(() => this.n.length, (val, old) => {
+  //   //   console.log(val, old, Object.is(val, old))
+  //   // })
+  //   watch(this, (val) => {
+  //     console.log('change', val)
+  //   })
+  //   // watch(() => {
+  //   //   let j = 0
+  //   //   for (const i in this.m) {
+  //   //     j++
+  //   //   }
+  //   //   return j
+  //   // }, (val, old) => {
+  //   //   console.log('size', val, old, Object.is(val, old))
+  //   // })
+  // }
+
+  get a () {
+    return this.$.mouse.a
+  }
+
+  get x () {
+    return this.$.mouse.x
+  }
+
+  get y () {
+    return this.$.mouse.y
+  }
+
+  mounted () {
+    console.log('mounted')
+    console.log('route', this.$route, 'router', this.$router, 'refs.test', this.$refs)
+    // this.$emit('test')
+    // console.log('this.$emit', this.$emit('test'))
+  }
+
+  // exports() {
+  //   return { n, init } = this
+  // }
+}
+// eslint-disable-next-line no-redeclare
+interface Test extends Capsuleable, Vueable {}
+Traits(Test, [Capsuleable, Vueable])
+
+console.log('$ in proto', '$$' in Test.prototype, 'a' in Test.prototype, Test.prototype)
+
+// __Test__()
+const t:Test = init(Test, 2)
+console.log('t.p', t, t.p, t.$)
+let j = 0
+// setInterval(() => {
+//   t.m[j] = 1
+//   j++
+// }, 1000)
+const t2 = init(Test, 4)
+// watch(t, (newT) => {
+//   console.log('changed', newT.a)
+// })
+// watch(t2, (newT) => {
+//   console.log('changed', newT.a)
+// })
+const { x: o } = t.toRefs()
+const mouse1 = use(Mouse, 1).toRefs()
 const mouse2 = init(Mouse, 2).toRefs()
 const mouse3 = use(Mouse, 1).toRefs()
 const mouse4 = mouse2
@@ -45,44 +170,75 @@ setTimeout(() => {
 }, 1000)
 
 let i = 2
-setInterval(() => {
-  // array.value = [1]
-  mouse.b.value.test++
-  mouse.c.value.push(i++)
-}, 1000)
+// setInterval(() => {
+//   // array.value = [1]
+//   mouse1.b.value.test++
+//   mouse1.c.value.push(i++)
+// }, 1000)
 
 const localComputedValue = computed(() => {
   return vm.computedVariable?.[0]?.test + ' + local append'
 })
 const { x, y } = init(Mouse).toRefs()
 
+setInterval(() => {
+  vm.app.i++
+})
+
 const hugeId = 2646049
+
+function hey() {
+  console.log('yo')
+}
+
 </script>
 
 <template>
-  {{ mouse }}<br />
-  {{ mouse2 }}<br />
-  {{ mouse3 }}<br />
-  {{ mouse4 }}<br />
+<!--  <SubComponent />-->
+  <SubComponent2 @testEmit="hey" />
+  <br />
+  <br />
+  <br />
+<!--  {{ o }}<br/>-->
+  Yo:
+  {{ t.$.mouse.x }}, {{ t.$.mouse.y }}
+  <br/>
+  <br/>
+  {{ t2.x }}, {{ t2.y }}
+  <br/>
+
+  {{ t.x }}, {{ t.y }}
+
+<!--  {{ t._.doSomething() }}-->
+<!--  {{ t2._.doSomething() }}-->
+  <br/>
+  <br/>
+
+<!--  {{ mouse1 }}<br/>-->
+<!--  {{ mouse2 }}<br/>-->
+<!--  {{ mouse3 }}<br/>-->
+<!--  {{ mouse4 }}<br/>-->
   <!--  {{ array}}-->
   <div style="width:900px; margin:0 auto;">
     <!--    {{x}}, {{y}}-->
     <br/>
     <br/>
-    {{ vt.testClass2.x }},
-    {{ vt.testClass2.y }}
+<!--    {{ vt.testClass2.x }},-->
+<!--    {{ vt.testClass2.y }}-->
     <br/>
     <br/>
     {{ vt.testClass2.val }}
     <button @click="vt.testClass2.val++">vt.testClass2.val++</button>
-    <br />
+    <br/>
     {{ vm.transientField1.x }} ,
     {{ vm.transientField1.y }}
 
 
-    <h1>iVue - Infinite Vue - Implementation Tests</h1>
+    <h1>ivue - Infinite Vue - Implementation Tests</h1>
     <!--  <vue-dd v-model="vm" get-all-properties/>-->
 
+
+    <div ref="test">Hello</div>
 
     <h2>Class Inheritance Tests</h2>
 
@@ -328,3 +484,4 @@ td.value {
 }
 </style>
 
+../src/Classes/Traits/Capsuleable../src/kernel

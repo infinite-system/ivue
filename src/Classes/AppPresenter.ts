@@ -1,7 +1,7 @@
 import { injectable } from 'inversify'
 import { MessagesRepository } from './Core/Messages/MessagesRepository'
 import { Router } from './Routing/Router'
-import { use } from '@/Kernel'
+import { use } from '@/kernel'
 
 // @injectable()
 export class AppPresenter {
@@ -12,6 +12,8 @@ export class AppPresenter {
   get currentRoute () {
     return this.router.currentRoute
   }
+
+  i = 0
 
   constructor () {}
 

@@ -1,10 +1,10 @@
 // import { UseRouting } from '@/tests/Helpers/Traits/UseRouting';
-import { UseApp } from '@/Classes/Traits/UseApp';
-import { use, $init, $use } from '@/Kernel';
-import { Behavior, mix } from '@/utils';
+import { Appable } from '@/Classes/Traits/Appable';
+import { use, $init, $use } from '@/kernel';
+import { Behavior, Traits } from '@/utils';
 import { watch, UnwrapRef, ComputedRef, onMounted, onUnmounted, ref } from 'vue'
 import { TestClass, Mouse } from '@/Classes/Test/TestClass';
-import { UseRouting } from '@/Classes/Traits/UseRouting';
+import { Routable } from '@/Classes/Traits/Routable';
 import { Router } from '@/Classes/Routing/Router';
 
 export function useMouse() {
@@ -33,17 +33,23 @@ export class TestClass2 {
 
   val = 1
 
-  router: Router
+  router: Router // TODO: convert to routable
 
   init () {
+
+    if (this.app.router){
+
+    }
     // ({ $router: this.router } = $use(UseRouting));
 
-    ({ x: this.x, y: this.y } = $init(Mouse));
+    ({ x: this.x, y: this.y, b: this.b } = $init(Mouse));
+    // this.b.test
     // ({ x: this.x, y: this.y } = useMouse())
   }
 
-  x: number
-  y: number
+  x: Mouse['x']
+  y: Mouse['y']
+  b: Mouse['b']
 
   alert () {
     console.log('alert')
@@ -53,5 +59,5 @@ export class TestClass2 {
 }
 
 // Enables traits IDE support & functionality
-export interface TestClass2 extends UseApp {}
-mix(TestClass2, [UseApp])
+export interface TestClass2 extends Appable {}
+Traits(TestClass2, [Appable])

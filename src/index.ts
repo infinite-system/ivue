@@ -1,34 +1,47 @@
-import { Mapping, Kernel, kernel, iVueKernel, get, make, use, init } from "./Kernel";
-import { iVueBuilder, iVue, iVueInversify } from "./iVue";
-import type { IVueToRefs, IVue } from "./iVue";
-import { Behavior, raw, unraw, after, before, mix, extend } from "./utils";
+import type { IVueToRefs, IVue } from "./types/core";
+
+import { ivue, iobj, ivueTransform } from "./ivue";
+
+import { Mapping, Kernel, kernel, ivueOnInit, ivueInversify, bind, get, make, use, init, $use, $init } from "./kernel";
+
+import { raw, unraw, Traits, extend } from "./utils";
+
+import { Behavior, after, before } from "./behavior";
 
 export {
-  // iVue
-  iVue,
-  iVueBuilder,
-  iVueInversify,
-
-  // iVue Types
-  IVue,
-  IVueToRefs,
-
-  // Behavior utils
-  Behavior,
-  before,
-  after,
-  raw,
-  unraw,
-  mix,
-  extend,
-
+  // ivue
+  ivue,
+  iobj,
+  ivueTransform,
+  
   // Kernel
   Mapping,
   Kernel,
+  ivueOnInit,
+  ivueInversify,
   kernel,
-  iVueKernel,
+  bind,
   get,
   make,
   use,
-  init
-}
+  init,
+  $use,
+  $init,
+
+  // Behavior
+  Behavior,
+  before,
+  after,
+
+  // utils
+  raw,
+  unraw,
+  Traits,
+  extend,  
+};
+
+// Types
+export type {
+  IVue,
+  IVueToRefs
+};

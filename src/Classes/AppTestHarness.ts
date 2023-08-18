@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { vi } from 'vitest'
-import { Kernel } from '@/Kernel'
+import { Kernel } from '@/kernel'
 import { FakeRouterGateway } from './Routing/FakeRouterGateway'
 import { FakeHttpGateway } from './Core/FakeHttpGateway'
 import { LoginRegisterPresenter } from './Authentication/LoginRegisterPresenter.js'

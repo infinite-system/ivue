@@ -37,3 +37,4 @@ const vm = use(MessagesPresenter);
 <!--          )-->
 <!--        })}-->
 </template>
+@/kernel

@@ -1,6 +1,6 @@
 import { injectable } from 'inversify'
 import { MessagesRepository } from "@/Classes/Core/Messages/MessagesRepository";
-import { use } from '@/Kernel'
+import { use } from '@/kernel'
 
 @injectable()
 export abstract class ParentXVueTestClass {

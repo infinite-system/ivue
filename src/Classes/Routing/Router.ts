@@ -1,10 +1,8 @@
-import { injectable } from 'inversify'
 import { MessagesRepository } from '../Core/Messages/MessagesRepository'
 import { RouterRepository } from './RouterRepository'
 import { UserModel } from '../Authentication/UserModel'
-import { use } from '@/Kernel'
+import { use } from '@/kernel'
 
-@injectable()
 export class Router {
 
   get routerRepository () { return use(RouterRepository) }

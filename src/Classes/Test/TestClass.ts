@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { TestClass2 } from './TestClass2'
-import { use } from '@/Kernel';
+import { use } from '@/kernel';
 import { onMounted, onUnmounted } from 'vue';
 
 export class Mouse {
@@ -8,10 +8,11 @@ export class Mouse {
   y = 0
   constructor(public a:number){}
   init () {
-    const update = (event) => {
+    const update = (event: MouseEvent) => {
       this.x = event.pageX
       this.y = event.pageY
     }
+    this.x =1
     onMounted(() => window.addEventListener('mousemove', update))
     onUnmounted(() => window.removeEventListener('mousemove', update))
     return this
