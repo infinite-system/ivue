@@ -1,10 +1,9 @@
 import type { Getters } from '../types/core'
 
 /**
- * Store all getters for each class prototype processed by getGetters.
- * @see getGetters
+ * Store all getters for each class prototype processed by getPrototypeGetters.
+ * @see getPrototypeGetters
  */
-
 const getters = new Map()
 
 /**
@@ -13,7 +12,7 @@ const getters = new Map()
  * @param proto
  * @return Getters
  */
-export function getGetters (proto: object | null) {
+export function getPrototypeGetters (proto: object | null) {
 
   if (getters.has(proto)) return getters.get(proto)
 
@@ -22,10 +21,9 @@ export function getGetters (proto: object | null) {
   const props: any[] = []
   
   while (proto && proto.constructor.name !== 'Object') {
-    const protoProps = Object.entries(
+    props.push.apply(props, Object.entries(
       Object.getOwnPropertyDescriptors(proto)
-    )
-    props.push.apply(props, protoProps)
+    ))
     proto = Object.getPrototypeOf(proto.constructor.prototype)
   }
 
@@ -38,13 +36,13 @@ export function getGetters (proto: object | null) {
     }
   }
 
-  // Save getters in the getters
+  // Save getters in the getters map
   getters.set(initialProto, _getters)
 
   return _getters
 }
 
-export function getGettersFromInstance (instance: { [x: string]: any; }) {
+export function getInstanceGetters (instance: { [x: string]: any; }) {
 
   const getters: Getters = { values: {}, length: 0 }
   const props = Object.entries(Object.getOwnPropertyDescriptors(instance))

@@ -6,13 +6,12 @@ import { Capsuleable } from '../src/Classes/Traits/Capsuleable';
 import { Quasarable } from '@/Classes/Traits/Quasarable';
 
 export class $Mouse {
-
-  constructor (public self: Mouse) {}
-
+  x = 0
+  y = 0
   init () {
     const update = (event: MouseEvent) => {
-      this.self.x = event.pageX
-      this.self.y = event.pageY
+      this.x = event.pageX
+      this.y = event.pageY
     }
     onMounted(() => window.addEventListener('mousemove', update))
     onUnmounted(() => window.removeEventListener('mousemove', update))
@@ -21,42 +20,44 @@ export class $Mouse {
 
 export class Mouse {
 
-  capsule = $Mouse
+  capsule = $Mouse // detached
   constructor () {
     this.encapsulate(arguments)
+  }
+
+  get x () { return this.$.x }
+
+  get y () { return this.$.y }
+}
+Traits(Mouse, [Capsuleable])
+export interface Mouse extends Capsuleable {}
+
+
+export class $Test {
+
+  init() {
+    ({
+      x: this.x,
+      y: this.y
+    } = init(Mouse).toRefs('x', 'y'))
+  }
+  
+  words = 'saying some words...'
+
+  say (i:number) {
+    console.log(this.words)
   }
 
   x = 0
   y = 0
 }
-
-export interface Mouse extends Capsuleable {}
-Traits(Mouse, [Capsuleable])
-
-export class $Test {
-
-  mouse: Mouse
-
-  constructor (public self: Test) {
-    this.mouse = init(Mouse)
-  }
-
-  get x () {
-    return this.mouse.x
-  }
-
-  get y () {
-    return this.mouse.x
-  }
-}
-
-export interface $Test extends Appable {}
 Traits($Test, [Appable])
+export interface $Test extends Appable {}
+
 
 export class Test {
 
-  capsule = $Test
-
+  capsule = $Test // detached
   constructor (emit: any) {
     this.encapsulate(arguments)
     this.$emit = emit
@@ -64,26 +65,27 @@ export class Test {
 
   init () {
     watch(this, newValue => {
-      console.log(newValue)
+      console.log('newValue', newValue)
     })
   }
 
   get x () {
-    return ''//this.$.x
+    console.log('this.$.x', this.$.x)
+    return this.$.x
   }
 
   get y () {
-    return ''//this.$.y
+    console.log('this.$.y', this.$.y)
+    return this.$.y
   }
 
   get email () {
     return this.$.app.router.userModel.email
   }
 
-  onBeforeMount(){
-
+  beforeMount () {
+    console.log('before mounting...')
   }
 }
-
-export interface Test extends Capsuleable, Quasarable {}
 Traits(Test, [Capsuleable, Quasarable])
+export interface Test extends Capsuleable, Quasarable {}

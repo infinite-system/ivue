@@ -1,17 +1,16 @@
-import {init } from '@/kernel';
-import { after } from '@/index';
+import { init, use } from '@/kernel';
+import type { AnyClass } from '@/types/core';
 
 export class Capsuleable {
 
   $!: InstanceType<this['capsule']>
   
-  capsule: any
+  capsule: AnyClass | any
 
-  encapsulate (args: IArguments) {
-    after(this.constructor, (self: any) => {
-      // init capsule only after this.constructor
-      this.$ = init(this.capsule, this, ...args)
+  encapsulate (args: IArguments | [] = [], method = init) {
+    this.$ = method(this.capsule, this, ...args)
+    if (method === init || method === use) {
       this.$.__v_skip = true // markRaw() equivalent
-    })
+    }
   }
 }

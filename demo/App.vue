@@ -77,8 +77,7 @@ class Test {
 
   static emits = ['test']
 
-  private $: TestPrivate
-  private capsule = TestPrivate
+  capsule = TestPrivate
 
   constructor (i: number) {
     this.encapsulate(arguments)
@@ -140,7 +139,7 @@ Traits(Test, [Capsuleable, Vueable])
 console.log('$ in proto', '$$' in Test.prototype, 'a' in Test.prototype, Test.prototype)
 
 // __Test__()
-const t:Test = init(Test, 2)
+const t = init(Test, 2)
 console.log('t.p', t, t.p, t.$)
 let j = 0
 // setInterval(() => {
@@ -179,7 +178,7 @@ let i = 2
 const localComputedValue = computed(() => {
   return vm.computedVariable?.[0]?.test + ' + local append'
 })
-const { x, y } = init(Mouse).toRefs()
+const { x, y } = init(Mouse, 1).toRefs()
 
 setInterval(() => {
   vm.app.i++

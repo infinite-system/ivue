@@ -1,4 +1,5 @@
 import { isObject, isPromise } from "./is";
+
 /**
  * Deep merge two objects.
  * Merges and modifies the target object.
@@ -18,7 +19,7 @@ export function extend (target: { [x: string]: any; }, ...sources: any[]) {
  * Deep merge two objects inner function.
  * Merges and modifies the target object.
  * Merge sources into target from left to right.
- * Supports circular references and promises
+ * Supports circular references and promises.
  *
  * @param target Target object to merge into
  * @param sources Sources object to merge from
@@ -29,7 +30,6 @@ export function extend (target: { [x: string]: any; }, ...sources: any[]) {
 function _extend<K, V> (target: { [x: string]: any; }, sources: any[], parents: Map<K, V> | null | any = null) {
 
   if (!sources.length) return target;
-
   // save target object in Map as a key
   parents.set(target, true)
 

@@ -21,9 +21,9 @@ export const intercepts: InterceptsMap = {
  * @returns 
  */
 export function runConstructorIntercept<T extends AnyClass> (
-  type: keyof InterceptsMap, mapping: Mapping<T>, intercept: Intercept
+  type: keyof InterceptsMap, obj: any, intercept: Intercept
 ) {
-  const fns = intercepts[type].get(mapping.to) as InterceptsFns
+  const fns = intercepts[type].get(obj) as InterceptsFns
   for (let i = 0; i < fns.length; i++)
     if (false === fns[i](intercept, intercept.self, ...intercept.args))
       return intercept.return
@@ -51,7 +51,7 @@ function autoBindIntercept (to: Function | [Class, Function], scoped: boolean): 
   if (Array.isArray(to)) {
 
     if (typeof to[0] !== 'function') {
-      throw new Error('Cannot bind intercept to  ' + to[0] + '. Supply a valid Class to autobind behavior.')
+      throw new Error('Cannot autobind intercept to ' + to[0] + '. Supply a valid Class to autobind behavior.')
     }
 
     if (typeof to[1] === 'function') {
@@ -74,7 +74,7 @@ function autoBindIntercept (to: Function | [Class, Function], scoped: boolean): 
 
       return to[1] as InterceptFn
     } else {
-      throw new Error('Cannot bind intercept "' + to[1] + '"  to ' + (to[0]?.name ?? to[0]))
+      throw new Error('Cannot autobind intercept "' + to[1] + '"  to ' + (to[0]?.name ?? to[0]))
     }
   }
 

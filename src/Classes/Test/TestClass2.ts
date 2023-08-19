@@ -1,8 +1,8 @@
 // import { UseRouting } from '@/tests/Helpers/Traits/UseRouting';
 import { Appable } from '@/Classes/Traits/Appable';
-import { use, $init, $use } from '@/kernel';
-import { Behavior, Traits } from '@/utils';
-import { watch, UnwrapRef, ComputedRef, onMounted, onUnmounted, ref } from 'vue'
+import { init, use } from '@/kernel';
+import { Traits } from '@/utils';
+import { watch, type UnwrapRef, type ComputedRef, onMounted, onUnmounted, ref } from 'vue'
 import { TestClass, Mouse } from '@/Classes/Test/TestClass';
 import { Routable } from '@/Classes/Traits/Routable';
 import { Router } from '@/Classes/Routing/Router';
@@ -33,16 +33,15 @@ export class TestClass2 {
 
   val = 1
 
-  router: Router // TODO: convert to routable
+  router!: Router // TODO: convert to routable
 
   init () {
 
     if (this.app.router){
 
     }
-    // ({ $router: this.router } = $use(UseRouting));
 
-    ({ x: this.x, y: this.y, b: this.b } = $init(Mouse));
+    ({ x: this.x, y: this.y, b: this.b } = init(Mouse, 1).toRefs());
     // this.b.test
     // ({ x: this.x, y: this.y } = useMouse())
   }

@@ -2,11 +2,11 @@ import type { IVueToRefs, IVue } from "./types/core";
 
 import { ivue, iobj, ivueTransform } from "./ivue";
 
-import { Mapping, Kernel, kernel, ivueOnInit, ivueInversify, bind, get, make, use, init, $use, $init } from "./kernel";
-
-import { raw, unraw, Traits, extend } from "./utils";
+import { Mapping, Kernel, kernel, ivueOnInit, ivueInversify, bind, get, make, use, init } from "./kernel";
 
 import { Behavior, after, before } from "./behavior";
+
+import { raw, unraw, Traits, extend } from "./utils";
 
 export {
   // ivue
@@ -25,8 +25,6 @@ export {
   make,
   use,
   init,
-  $use,
-  $init,
 
   // Behavior
   Behavior,
@@ -37,7 +35,7 @@ export {
   raw,
   unraw,
   Traits,
-  extend,  
+  extend,
 };
 
 // Types

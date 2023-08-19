@@ -1,7 +1,7 @@
 import { computed, reactive, toRef, type ComputedRef } from "vue";
 import type { IVue, IVueToRefsObj, AnyClass, ConstructorArgs, Getters } from "./types/core";
 import { Behavior } from "./behavior";
-import { getGetters, getGettersFromInstance } from './utils/getters'
+import { getPrototypeGetters, getInstanceGetters } from './utils/getters'
 
 /**
  * Create ivue instance from class constructor.
@@ -11,7 +11,7 @@ import { getGetters, getGettersFromInstance } from './utils/getters'
  * @returns @see IVue<T>
  */
 export function ivue<T extends AnyClass> (className: T, ...args: ConstructorArgs<T>): IVue<T> {
-  const vue = ivueTransform(reactive(Reflect.construct(className, args)), getGetters(className.prototype), ...args)
+  const vue = ivueTransform(reactive(Reflect.construct(className, args)), getPrototypeGetters(className.prototype), ...args)
   if (typeof vue.init === 'function') vue.init()
   return vue
 }
@@ -23,7 +23,7 @@ export function ivue<T extends AnyClass> (className: T, ...args: ConstructorArgs
  * @returns 
  */
 export function iobj<T extends object> (obj: T): T & IVueToRefsObj<T> {
-  const vue = ivueTransform(reactive(obj), getGettersFromInstance(obj))
+  const vue = ivueTransform(reactive(obj), getInstanceGetters(obj))
   if (typeof vue.init === 'function') vue.init()
   return vue
 }

@@ -4,7 +4,7 @@ import type { MappingScope, IVue, AnyClass, ConstructorArgs, Intercept } from '.
 
 import { ivueTransform } from './ivue';
 
-import { getGetters } from './utils'
+import { getPrototypeGetters } from './utils'
 
 import { runConstructorIntercept, intercepts, behaviorMethodHandler, Behavior } from './behavior'
 
@@ -40,9 +40,6 @@ const __Kernel__ = ($ = Kernel.prototype) => ([
 
   $.use,  // ivue singleton
   $.init, // ivue transient
-
-  $.$use,  // ivue singleton converted via .toRefs()
-  $.$init, // ivue transient converted via .toRefs()
 ])
 
 /**
@@ -120,11 +117,14 @@ export class Kernel {
     if (this.instances.has(className)) return this.instances.get(className)
 
     // Find mapping
-    const mapping = this.singletons.get(className)
-    if (!mapping)
-      throw new Error(
-        "ivue.kernel: Singleton mapping for '" + this.constructorName(className) + "' not found."
-      )
+    let mapping = this.singletons.get(className)
+    
+    if (!mapping) {
+      // Automatically bind a singleton
+      this.bind(className).singleton()
+      // Get the new transient mapping
+      mapping = this.transients.get(className)
+    }
 
     // Create instance
     const instance = mapping.onInit(mapping, ...args)
@@ -143,12 +143,13 @@ export class Kernel {
    */
   make<T extends AnyClass> (className: T, ...args: ConstructorArgs<T>): any {
 
-    const mapping = this.transients.get(className)
-    if (!mapping)
-      throw new Error(
-        "ivue.kernel: Transient mapping for '" + this.constructorName(className) + "' not found."
-      )
-
+    let mapping = this.transients.get(className)
+    if (!mapping) {
+      // Automatically bind a transient
+      this.bind(className).transient()
+      // Get the new transient mapping
+      mapping = this.transients.get(className)
+    }
     // Create instance
     return mapping.onInit(mapping, ...args)
   }
@@ -218,29 +219,50 @@ export class Kernel {
 
     return mapping.onInit(mapping, ...args)
   }
-
-  /**
-   * Initialize ivue ref based singleton returned from the Kernel container,
-   * or a self-bound transient that is created on the fly.
-   *
-   * Equivalent to use(className, ...args).toRefs()
-   */
-  $use<T extends AnyClass> (className: T, ...args: ConstructorArgs<T>): InstanceType<T> {
-    return this.use(className, ...args).toRefs()
-  }
-
-  /**
-   * Initialize ivue ref based transient returned from the Kernel container,
-   * or a self-bound transient that is created on the fly.
-   *
-   * Equivalent to init(className, ...args).toRefs()
-   */
-  $init<T extends AnyClass> (className: T, ...args: ConstructorArgs<T>): InstanceType<T> {
-    return this.init(className, ...args).toRefs()
-  }
 }
 
 __Kernel__()
+
+/**
+ * Any class initializer callback for Kernel Mapping.
+ * 
+ * @param mapping @see Mapping
+ * @param args 
+ * @returns 
+ */
+export function onInit<T extends AnyClass> (mapping: Mapping<T>, ...args: ConstructorArgs<T>): any {
+
+  // Before constructor intercepts
+  if (intercepts.before.has(mapping.to)) {
+    const intercept = { mapping: mapping, return: null, self: null, args } as Intercept
+    if (false === runConstructorIntercept('before', mapping.to, intercept))
+      return intercept.return
+  }
+
+  // @ts-ignore
+  const obj = new mapping.to(...args)
+
+  const getters = getPrototypeGetters(mapping.to.prototype)
+  if (typeof obj.constructor.behavior === 'object') {
+    for (const prop in obj.constructor.behavior) {
+      if (prop in getters.values) continue // skip getters to not cause a computation
+      if (typeof obj[prop] === 'function') {
+        if (obj.constructor.behavior[prop] === Behavior.DISABLED) continue // skip DISABLED
+        const func = obj[prop] // This re-assignment is important to copy the function
+        behaviorMethodHandler(obj.constructor.behavior[prop], func, obj, prop)
+      }
+    }
+  }
+
+  // After constructor intercepts
+  if (intercepts.after.has(mapping.to)) {
+    const intercept = { mapping: mapping, return: obj, self: obj, args } as Intercept
+    if (false === runConstructorIntercept('after', mapping.to, intercept))
+      return intercept.return
+  }
+
+  return obj
+}
 
 /**
  * ivue class initializer callback for Kernel Mapping.
@@ -252,11 +274,11 @@ export function ivueOnInit<T extends AnyClass> (mapping: Mapping<T>, ...args: Co
 
   if (intercepts.before.has(mapping.to)) {
     const intercept = { mapping: mapping, return: null, self: null, args }
-    if (false === runConstructorIntercept('before', mapping, intercept))
+    if (false === runConstructorIntercept('before', mapping.to, intercept))
       return intercept.return
   }
 
-  const getters = getGetters(mapping.to.prototype)
+  const getters = getPrototypeGetters(mapping.to.prototype)
   const vue = ivueTransform(reactive(Reflect.construct(mapping.to, args)), getters, ...args)
 
   if (typeof vue.constructor.behavior === 'object') {
@@ -277,7 +299,7 @@ export function ivueOnInit<T extends AnyClass> (mapping: Mapping<T>, ...args: Co
   // After constructor intercepts
   if (intercepts.after.has(mapping.to)) {
     const intercept = { mapping: mapping, return: vue, self: vue, args }
-    if (false === runConstructorIntercept('after', mapping, intercept))
+    if (false === runConstructorIntercept('after', mapping.to, intercept))
       return intercept.return
   }
 
@@ -288,47 +310,6 @@ export function ivueOnInit<T extends AnyClass> (mapping: Mapping<T>, ...args: Co
 }
 
 /**
- * Any class initializer callback for Kernel Mapping.
- * 
- * @param mapping @see Mapping
- * @param args 
- * @returns 
- */
-export function onInit<T extends AnyClass> (mapping: Mapping<T>, ...args: ConstructorArgs<T>): any {
-
-  // Before constructor intercepts
-  if (intercepts.before.has(mapping.to)) {
-    const intercept = { mapping: mapping, return: null, self: null, args } as Intercept
-    if (false === runConstructorIntercept('before', mapping, intercept))
-      return intercept.return
-  }
-
-  // @ts-ignore
-  const obj = new mapping.to(...args)
-
-  const getters = getGetters(mapping.to.prototype)
-  if (typeof obj.constructor.behavior === 'object') {
-    for (const prop in obj.constructor.behavior) {
-      if (prop in getters.values) continue // skip getters to not cause a computation
-      if (typeof obj[prop] === 'function') {
-        if (obj.constructor.behavior[prop] === Behavior.DISABLED) continue // skip DISABLED
-        const func = obj[prop] // This re-assignment is important to copy the function
-        behaviorMethodHandler(obj.constructor.behavior[prop], func, obj, prop)
-      }
-    }
-  }
-
-  // After constructor intercepts
-  if (intercepts.after.has(mapping.to)) {
-    const intercept = { mapping: mapping, return: obj, self: obj, args } as Intercept
-    if (false === runConstructorIntercept('after', mapping, intercept))
-      return intercept.return
-  }
-
-  return obj
-}
-
-/**
  * Activation method to use with Inversify IOC library.
  *
  * @param ctx
@@ -336,7 +317,7 @@ export function onInit<T extends AnyClass> (mapping: Mapping<T>, ...args: Constr
  * @param args
  */
 export function ivueInversify (ctx: any, obj: any, ...args: any) {
-  const vue = ivueTransform(reactive(Object.create(obj)), getGetters(Reflect.getPrototypeOf(obj)), ...args)
+  const vue = ivueTransform(reactive(Object.create(obj)), getPrototypeGetters(Reflect.getPrototypeOf(obj)), ...args)
   if (typeof vue.init === 'function') vue.init()
   return vue
 }
@@ -352,6 +333,3 @@ export const make = kernel.make.bind(kernel)
 
 export const use = kernel.use.bind(kernel)
 export const init = kernel.init.bind(kernel)
-
-export const $use = kernel.$use.bind(kernel)
-export const $init = kernel.$init.bind(kernel)

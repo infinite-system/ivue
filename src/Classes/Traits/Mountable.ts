@@ -1,9 +1,9 @@
-import { type Class } from '@/utils';
+import { type Class } from '@/types/core';
 import { after } from '@/index'
 import { onMounted, onUnmounted, onBeforeMount, onBeforeUnmount } from 'vue'
 
-export function mountable (self: Mountable, baseClass: Class) {
-  after(baseClass, (self: any) => {
+export function mountable (self: Mountable, mainClass: Class) {
+  after(mainClass, (intercept, self: any) => {
     if ('beforeMount' in self) onBeforeMount(() => self.beforeMount())
     if ('mounted' in self) onMounted(() => self.mounted())
     if ('beforeUnmount' in self) onBeforeUnmount(() => self.beforeUnmount())
@@ -13,11 +13,11 @@ export function mountable (self: Mountable, baseClass: Class) {
 
 /** Make a class mountable to a Vue component */
 export class Mountable {
-  constructor(baseClass: Class) {
-    mountable(this, baseClass)
+  constructor(mainClass: Class) {
+    mountable(this, mainClass)
   }
-  onBeforeMount?: ReturnType<typeof onBeforeMount> = function() {}
+  beforeMount?: ReturnType<typeof onBeforeMount> = function() {}
   mounted?: ReturnType<typeof onMounted> = function() {}
-  onBeforeUnmount?: ReturnType<typeof onBeforeUnmount> = function() {}
-  onUnmounted?: ReturnType<typeof onUnmounted> = function() {}
+  beforeUnmount?: ReturnType<typeof onBeforeUnmount> = function() {}
+  unmounted?: ReturnType<typeof onUnmounted> = function() {}
 }

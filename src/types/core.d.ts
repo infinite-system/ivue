@@ -1,18 +1,18 @@
 import type { Mapping } from '../kernel'
 
-export type IVue<T extends abstract new (...args: any) => any> = InstanceType<T> & IVueToRefs<T>
+export type AnyClass = abstract new (...args: any) => any;
 
-export interface IVueToRefs<T extends abstract new (...args: any) => any> {
-  toRefs: () => InstanceType<T>
+export type IVue<T extends AnyClass> = InstanceType<T> & IVueToRefs<T>
+
+export interface IVueToRefs<T extends AnyClass> {
+  toRefs: (...args) => InstanceType<T>
 }
 
 export interface IVueToRefsObj<T extends object> {
-  toRefs: () => T
+  toRefs: (...args) => T
 }
 
 export type MappingScope = 'singleton' | 'transient'
-
-export type AnyClass = abstract new (...args: any) => any;
 
 export type ConstructorArgs<T> = T extends { new(...args: infer P): any } ? P : never[]
 

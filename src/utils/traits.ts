@@ -1,36 +1,37 @@
 import type { Class } from '../types/core'
+
 /**
  * Apply traits to the derived class, methods and properties are supported.
  *
- * @param derivedCtor
- * @param constructors
+ * @param mainClass
+ * @param classes
  */
-export function Traits (derivedCtor: Class, constructors: any[]): void {
+export function Traits (mainClass: Class, classes: any[]): void {
 
-  constructors.reverse().forEach((baseCtor) => {
+  classes.reverse().forEach((traitClass) => {
 
-    const obj = new baseCtor(derivedCtor)
+    const obj = new traitClass(mainClass)
 
     for (const prop in obj) {
       Object.defineProperty(
-        derivedCtor.prototype,
+        mainClass.prototype,
         prop,
         {
           value: obj[prop],
           writable: true
         }
-      );
+      )
     }
 
-    Object.getOwnPropertyNames(baseCtor.prototype).forEach((name) => {
-      if (!(name in derivedCtor.prototype)) {
+    Object.getOwnPropertyNames(traitClass.prototype).forEach((name) => {
+      if (!(name in mainClass.prototype)) {
         Object.defineProperty(
-          derivedCtor.prototype,
+          mainClass.prototype,
           name,
-          Object.getOwnPropertyDescriptor(baseCtor.prototype, name) ||
+          Object.getOwnPropertyDescriptor(traitClass.prototype, name) ||
           Object.create(null)
-        );
+        )
       }
-    });
-  });
+    })
+  })
 }

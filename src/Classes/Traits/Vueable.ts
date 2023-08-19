@@ -1,26 +1,27 @@
+import type { Class } from '@/types/core'
 import { getCurrentInstance, type ComponentInternalInstance, nextTick } from 'vue';
 import { mountable, Mountable } from '@/Classes/Traits/Mountable';
 import { Routable } from '@/Classes/Traits/Routable';
 import { Behavior } from '@/behavior';
-import { Traits, type Class, extend } from '@/utils';
+import { Traits, extend } from '@/utils';
 
-export function vueable (self: Vueable, baseClass: Class) {
+export function vueable (self: Vueable, mainClass: Class) {
 
-  mountable(self, baseClass)
+  mountable(self, mainClass)
 
   self.$instance = getCurrentInstance()
 
-  baseClass.behavior = extend(baseClass.behavior ?? {}, { $refs: Behavior.DISABLED })
+  mainClass.behavior = extend(mainClass.behavior ?? {}, { $refs: Behavior.DISABLED })
 }
 
 export class Vueable {
 
   $instance!: ComponentInternalInstance | null
   
-  $emit!: Function
+  $emit: Function = (...args:any) => {}
   
-  constructor (baseClass: Class) {
-    vueable(this, baseClass)
+  constructor (mainClass: Class) {
+    vueable(this, mainClass)
   }
   
   get $refs () {
