@@ -1,13 +1,13 @@
 import 'reflect-metadata'
 import { vi } from 'vitest'
-import { Kernel } from '@/kernel'
+import { Kernel } from '@/index'
 import { FakeRouterGateway } from './Routing/FakeRouterGateway'
 import { FakeHttpGateway } from './Core/FakeHttpGateway'
-import { LoginRegisterPresenter } from './Authentication/LoginRegisterPresenter.js'
+import { LoginRegisterPresenter } from './Auth/LoginRegisterPresenter.js'
 import { SingleBooksResultStub } from './Stubs/SingleBooksResultStub'
 import { Router } from './Routing/Router'
-import { AppPresenter } from './AppPresenter'
-import { RouterRepository } from './Routing/RouterRepository'
+import { App } from './App'
+
 import { HttpGateway } from '@/Classes/Core/HttpGateway';
 import { RouterGateway } from '@/Classes/Routing/RouterGateway';
 
@@ -36,14 +36,13 @@ export class AppTestHarness {
     this.container.bind(HttpGateway).to(FakeHttpGateway).inSingletonScope()
     this.container.bind(RouterGateway).to(FakeRouterGateway).inSingletonScope()
 
-    this.appPresenter = this.container.get(AppPresenter)
+    this.appPresenter = this.container.get(App)
     this.router = this.container.get(Router)
-    this.routerRepository = this.container.get(RouterRepository)
     this.routerGateway = this.container.get(RouterGateway)
 
-    this.routerGateway.goToId = vi.fn().mockImplementation((routeId) => {
+    this.routerGateway.go = vi.fn().mockImplementation((name) => {
       // pivot
-      this.router.updateCurrentRoute(routeId, null, null)
+      this.router.updateRoute(name, null, null)
     })
 
 

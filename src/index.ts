@@ -1,22 +1,29 @@
-import type { IVueToRefs, IVue } from "./types/core";
+import type { 
+  Null, AnyClass, Class, 
+  IVue, IVueToRefs, IVueToRefsObj, 
+  MappingScope, ConstructorArgs, Getters, 
+  InterceptsMap, Intercept, InterceptOptions, 
+  InterceptsFns, InterceptFn, InterceptAttachTo,
+} from "./types/core"
 
-import { ivue, iobj, ivueTransform } from "./ivue";
+import { ivue, iobj, ivueTransform } from "./ivue"
 
-import { Mapping, Kernel, kernel, ivueOnInit, ivueInversify, bind, get, make, use, init } from "./kernel";
+import { Mapping, Kernel, kernel, ivueOnInit, ivueInversify, bind, get, make, use, init } from "./kernel"
 
-import { Behavior, after, before } from "./behavior";
+import { Behavior, after, before } from "./behavior"
 
-import { raw, unraw, Traits, extend } from "./utils";
+import { raw, unraw, Traits, extend, pre } from "./utils"
+
 
 export {
   // ivue
   ivue,
   iobj,
   ivueTransform,
-  
+
   // Kernel
-  Mapping,
-  Kernel,
+  Mapping,   // class
+  Kernel,    // class
   ivueOnInit,
   ivueInversify,
   kernel,
@@ -27,7 +34,7 @@ export {
   init,
 
   // Behavior
-  Behavior,
+  Behavior,  // enum
   before,
   after,
 
@@ -36,10 +43,14 @@ export {
   unraw,
   Traits,
   extend,
-};
+  pre
+}
 
 // Types
 export type {
-  IVue,
-  IVueToRefs
-};
+  Null, AnyClass, Class, 
+  IVue, IVueToRefs, IVueToRefsObj, 
+  MappingScope, ConstructorArgs, Getters, 
+  InterceptsMap, Intercept, InterceptOptions, 
+  InterceptsFns, InterceptFn, InterceptAttachTo,
+}

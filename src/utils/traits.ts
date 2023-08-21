@@ -13,22 +13,24 @@ export function Traits (mainClass: Class, classes: any[]): void {
     const obj = new traitClass(mainClass)
 
     for (const prop in obj) {
-      Object.defineProperty(
-        mainClass.prototype,
-        prop,
-        {
-          value: obj[prop],
-          writable: true
-        }
-      )
-    }
-
-    Object.getOwnPropertyNames(traitClass.prototype).forEach((name) => {
-      if (!(name in mainClass.prototype)) {
+      if (!(prop in mainClass.prototype)) {
         Object.defineProperty(
           mainClass.prototype,
-          name,
-          Object.getOwnPropertyDescriptor(traitClass.prototype, name) ||
+          prop,
+          {
+            value: obj[prop],
+            writable: true
+          }
+        )
+      }
+    }
+
+    Object.getOwnPropertyNames(traitClass.prototype).forEach((prop) => {
+      if (!(prop in mainClass.prototype)) {
+        Object.defineProperty(
+          mainClass.prototype,
+          prop,
+          Object.getOwnPropertyDescriptor(traitClass.prototype, prop) ||
           Object.create(null)
         )
       }

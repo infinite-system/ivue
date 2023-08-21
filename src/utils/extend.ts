@@ -1,10 +1,11 @@
 import { isObject, isPromise } from "./is";
 
 /**
- * Deep merge two objects.
- * Merges and modifies the target object.
+ * Advanced deep merge of two objects or more object.
  * Merges sources into target from left to right.
  * Supports circular references and promises.
+ * Merges and modifies the target object.
+ * 
  * @param target object
  * @param sources array
  */
@@ -17,15 +18,13 @@ export function extend (target: { [x: string]: any; }, ...sources: any[]) {
 
 /**
  * Deep merge two objects inner function.
- * Merges and modifies the target object.
- * Merge sources into target from left to right.
- * Supports circular references and promises.
  *
- * @param target Target object to merge into
- * @param sources Sources object to merge from
- * @param parents Store parents for circular reference checks
- * @returns {*}
- * @private
+ * @param target   Target  - object to merge into.
+ * @param sources  Sources - object to merge from.
+ * @param parents  Parents - for circular reference checks.
+ * @return {*}
+ * 
+ * @internal
  */
 function _extend<K, V> (target: { [x: string]: any; }, sources: any[], parents: Map<K, V> | null | any = null) {
 

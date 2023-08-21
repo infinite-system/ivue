@@ -28,4 +28,4 @@ App.vue:
 https://github.com/infinite-system/infinite-vue/blob/main/demo/App.vue
 
 Main class used for playground in App.vue:
-https://github.com/infinite-system/infinite-vue/blob/main/src/tests/Helpers/Authentication/XVueTestClass.ts
+https://github.com/infinite-system/infinite-vue/blob/main/src/tests/Helpers/Auth/IVueTests.ts

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import NavigationComponent from '@/Classes/Navigation/NavigationComponent.vue'
-import { use } from '@/Kernel'
-import { AppPresenter } from "@/Classes/AppPresenter.ts";
+import { use } from '@/index'
+import { App } from "@/Classes/App";
 
-const app = use(AppPresenter)
+const app = use(App)
 </script>
 <template>
   <vue-dd v-model="app" />
@@ -13,11 +13,11 @@ const app = use(AppPresenter)
         <NavigationComponent />
       </div>
 <!--      <div class="w3-col s8 w3-left" v-for="current in renderedComponents">-->
-<!--        <component v-if="presenter.currentRoute.routeId === current.id" :is="current.component" />-->
+<!--        <component v-if="presenter.active.name === current.id" :is="current.component" />-->
 <!--      </div>-->
       <div class="w3-col s8 w3-left">
         <router-view />
       </div>
     </div>
 
-</template>@/kernel
+</template>

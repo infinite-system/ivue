@@ -2612,6 +2612,11 @@ imurmurhash@^0.1.4:
   resolved "https://registry.npmjs.org/imurmurhash/-/imurmurhash-0.1.4.tgz"
   integrity sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==
 
+infinite-vue@^1.4.5, "ivue@npm:infinite-vue":
+  version "1.4.5"
+  resolved "https://registry.yarnpkg.com/infinite-vue/-/infinite-vue-1.4.5.tgz#a652c5acc8cf938cdae7fc53c4c9d88c997b1a73"
+  integrity sha512-wMt1r0AoFTvCWsD9lnY5MEfZtybwUizqUkIfxx89sAjALPr8YREnov06OcCRtIVKxsT1oegDz53zT5c5sUhbpA==
+
 inflight@^1.0.4:
   version "1.0.6"
   resolved "https://registry.npmjs.org/inflight/-/inflight-1.0.6.tgz"

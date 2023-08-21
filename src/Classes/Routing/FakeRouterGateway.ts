@@ -1,10 +1,7 @@
-import { injectable } from 'inversify'
-
-@injectable()
 export class FakeRouterGateway {
-  registerRoutes = async (routeConfig) => {}
+  register = async (routeConfig) => {}
 
   unload = () => {}
 
-  goToId = async (routeId) => {}
+  go = async (name) => {}
 }

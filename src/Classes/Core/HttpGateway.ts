@@ -1,48 +1,51 @@
-import { injectable } from 'inversify'
 import { Config } from './Config'
-import { UserModel } from '../Authentication/UserModel'
-import { use } from '@/kernel'
+import { User } from '../Auth/User'
+import { use } from '@/index'
 
-@injectable()
 export class HttpGateway {
 
   get config () { return use(Config) }
-  get userModel () { return use(UserModel) }
 
-  async get (path) {
-    const response = await fetch(this.config.apiUrl + path, {
+  get user () { return use(User) }
+
+  setHeaders () {
+    return {
+      'Content-Type': 'application/json',
+      Authorization: this.user.token,
+    }
+  }
+
+  async get (path: string) {
+
+    const response = await fetch(
+      this.config.apiUrl + path, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: this.userModel.token,
-      },
+      headers: this.setHeaders()
     })
-    const dto = response.json()
-    return dto
+
+    return response.json()
   }
 
-  async post (path, requestDto) {
-    const response = await fetch(this.config.apiUrl + path, {
+  async post (path: string, req: {}) {
+
+    const response = await fetch(
+      this.config.apiUrl + path, {
       method: 'POST',
-      body: JSON.stringify(requestDto),
-      headers: {
-        'Content-Type': 'application/json',
-         Authorization: this.userModel.token,
-      },
+      body: JSON.stringify(req),
+      headers: this.setHeaders()
     })
-    const dto = response.json()
-    return dto
+
+    return response.json()
   }
 
-  async delete (path) {
-    const response = await fetch(this.config.apiUrl + path, {
+  async delete (path: string) {
+
+    const response = await fetch(
+      this.config.apiUrl + path, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: this.userModel.token,
-      },
+      headers: this.setHeaders()
     })
-    const dto = response.json()
-    return dto
+
+    return response.json()
   }
 }

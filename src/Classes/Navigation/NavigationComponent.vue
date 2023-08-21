@@ -1,41 +1,42 @@
 <script setup lang="ts">
 // import { withInjection } from '../Core/Providers/Injection'
-import LogoutComponent from '../Authentication/LogoutComponent.vue'
+import LogoutComponent from '../Auth/LogoutComponent.vue'
 import { Router } from '../Routing/Router'
-import { NavigationPresenter } from './NavigationPresenter'
-import { use } from '@/Kernel'
+import { Navigation } from './Navigation'
+import { use } from '@/index'
 
-const presenter = use(NavigationPresenter)
+const v = use(Navigation)
 const router = use(Router)
 </script>
 <template>
   <div class="navigation-container">
-    <div class="navigation-item-header" :style="{ backgroundColor: '#5BCA06' }">
-      {{ presenter.viewModel.currentSelectedVisibleName }}
+    <div
+      class="navigation-item-header"
+      :style="{ backgroundColor: '#5BCA06' }"
+    >
+      {{ v.menu.activeName }}
     </div>
     <div
-      v-for="menuItem in presenter.viewModel.menuItems"
+      v-for="item in v.menu.items"
       class="navigation-item"
       :style="{
-            backgroundColor: '#3DE7CF',
-          }"
-      @click="() => router.goToId(menuItem.id)"
+        backgroundColor: '#3DE7CF',
+      }"
+      @click="() => router.go(item.id)"
     >
-      {{ menuItem.visibleName }}
+      {{ item.activeName }}
     </div>
 
     <router-link to="/">Go Home</router-link>
 
-    <div
-      v-if="presenter.viewModel.showBack"
-      class="navigation-item"
-      @click="() => presenter.back()"
-      :style="{ backgroundColor: '#2e91fc' }"
-    >
-      <span>⬅ </span>Back
-    </div>
-
-    <LogoutComponent />
+  <div
+    v-if="v.menu.showBack"
+    class="navigation-item"
+    @click="() => v.back()"
+    :style="{ backgroundColor: '#2e91fc' }"
+  >
+    <span>⬅ </span>Back
   </div>
-</template>
-@/kernel
+
+  <LogoutComponent />
+</div></template>

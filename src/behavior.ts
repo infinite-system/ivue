@@ -18,14 +18,15 @@ export const intercepts: InterceptsMap = {
  * @param type 
  * @param mapping 
  * @param intercept 
- * @returns 
+ * @return
  */
-export function runConstructorIntercept<T extends AnyClass> (
+export function runConstructorIntercept(
   type: keyof InterceptsMap, obj: any, intercept: Intercept
 ) {
   const fns = intercepts[type].get(obj) as InterceptsFns
-  for (let i = 0; i < fns.length; i++)
-    if (false === fns[i](intercept, intercept.self, ...intercept.args))
+  const fnsLength = fns.length
+  for (let i = 0; i < fnsLength; i++)
+    if (true === fns[i](intercept, ...intercept.args))
       return intercept.return
 }
 
@@ -45,24 +46,49 @@ function addIntercept (type: keyof InterceptsMap, fn: InterceptFn, callback: any
   }
 }
 
-
+/**
+ * Autobinds intercept to the class method automatically or directly.
+ * This way there is no need to specify an intercept via behavior prop 
+ * 
+ * ```ts
+ * class Example {
+ *    behavior: {
+ *      methodName: Behavior.SCOPED_INTERCEPT,
+ *      methodName2: Behavior.INTERCEPT
+ *    }
+ * }
+ * ```
+ * You can just do:
+ * class Example {} without the behavior prop and attach the event like this:
+ * 
+ * ```
+ * before([Example, Examplpe.prototype.methodName], function (intercept) {
+ *   intercept.return = 100
+ *   return true
+ * })
+ * ```
+ * @param to      Attach to this Function or [Class, Function].
+ * @param scoped  Whether we want to enable scope disposal for memory leak control.
+ * @returns       Function or Class to attach the intercept event function to.
+ */
 function autoBindIntercept (to: Function | [Class, Function], scoped: boolean): InterceptFn {
 
   if (Array.isArray(to)) {
 
     if (typeof to[0] !== 'function') {
-      throw new Error('Cannot autobind intercept to ' + to[0] + '. Supply a valid Class to autobind behavior.')
+      throw new Error('ivue.kernel.behavior: Cannot autobind intercept to ' + to[0] + '. Supply a valid Class to autobind behavior.')
     }
 
     if (typeof to[1] === 'function') {
 
+      // Analyze function definition
       const fnString = to[1].toString()
       const isClass = fnString.substring(0, 5) === 'class'
 
       if (!isClass) {
+        // Determine function name
         const firstBrace = fnString.indexOf('(')
         let [maybeAsync, funcName] = fnString.substring(0, firstBrace).split(' ')
-
         funcName = maybeAsync === 'async' ? funcName : maybeAsync
 
         // Attach behavior
@@ -72,9 +98,10 @@ function autoBindIntercept (to: Function | [Class, Function], scoped: boolean): 
         }
       }
 
+      // resolved function
       return to[1] as InterceptFn
     } else {
-      throw new Error('Cannot autobind intercept "' + to[1] + '"  to ' + (to[0]?.name ?? to[0]))
+      throw new Error('ivue.kernel.behavior: Cannot autobind intercept "' + to[1] + '"  to ' + (to[0]?.name ?? to[0]))
     }
   }
 
@@ -126,18 +153,20 @@ export function after (
  * @param args
  * @param intercept
  */
-export function runIntercept (type: keyof InterceptsMap, self: Class, prop: string, args: IArguments[], intercept: Intercept) {
+export function runIntercept (type: keyof InterceptsMap, self: Class, prop: string, args: any[], intercept: Intercept) {
   // Intercepts runner, processes multiple intercepts assigned to the method.
-  let fns: InterceptsFns = intercepts[type].get(self.constructor.prototype[prop]), fnsLength = fns?.length
+  let fns: InterceptsFns = intercepts[type].get(self.constructor.prototype[prop])
+  let fnsLength = fns?.length
   for (let i = 0; i < fnsLength; i++) {
-    if (false === fns[i](intercept, self, ...args))
-      return false // return false, to short circuit the execution chain
+    if (true === fns[i](intercept, ...args))
+      return true // return true, to short circuit the execution chain
   }
 
-  fns = intercepts[type].get(self[prop]); fnsLength = fns?.length
+  fns = intercepts[type].get(self[prop])
+  fnsLength = fns?.length
   for (let i = 0; i < fnsLength; i++) {
-    if (false === fns[i](intercept, self, ...args))
-      return false // return false, to short circuit the execution chain
+    if (true === fns[i](intercept, ...args))
+      return true // return true, to short circuit the execution chain
   }
 
   // If there is no short circuit, we should return undefined like a function without a return
@@ -173,7 +202,7 @@ export enum Behavior {
  * @param self
  * @param prop
  */
-export function behaviorMethodHandler (type: Behavior, func: Function, self: Class, prop: string) {
+export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping<T>, type: Behavior, func: Function, self: Class, prop: string) {
   // Define a default void return
   let result = void (0)
   // Handle basic scoped most often scenario early
@@ -196,17 +225,17 @@ export function behaviorMethodHandler (type: Behavior, func: Function, self: Cla
 
   // Handle interceptable methods
   // Define the common intercept processor:
-  const processIntercept = (...args: IArguments[]) => {
+  const processIntercept = (...args: any) => {
 
-    const intercept: Intercept = { return: result, name: prop, self, args }
+    const intercept: Intercept = { mapping, self, return: result, name: prop, args,  }
 
-    if (false === runIntercept('before', self, prop, args, intercept)) 
+    if (true === runIntercept('before', self, prop, args, intercept)) 
       return intercept.return // short circuit, if intercept returns false
 
     result = func.bind(self)(...args)
     intercept.return = result
 
-    if (false === runIntercept('after', self, prop, args, intercept)) 
+    if (true === runIntercept('after', self, prop, args, intercept)) 
       return intercept.return // short circuit, if intercept returns false
 
     return intercept.return
