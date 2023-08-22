@@ -1,7 +1,7 @@
 import type { 
-  Null, AnyClass, Class, 
+  Null, AnyObj, AnyClass, Class, 
   IVue, IVueToRefs, IVueToRefsObj, 
-  MappingScope, ConstructorArgs, Getters, 
+  MappingScope, MappingType, InferredArgs, Getters, 
   InterceptsMap, Intercept, InterceptOptions, 
   InterceptsFns, InterceptFn, InterceptAttachTo,
 } from "./types/core"
@@ -48,9 +48,9 @@ export {
 
 // Types
 export type {
-  Null, AnyClass, Class, 
+  Null, AnyObj, AnyClass, Class, 
   IVue, IVueToRefs, IVueToRefsObj, 
-  MappingScope, ConstructorArgs, Getters, 
+  MappingScope, MappingType, InferredArgs, Getters, 
   InterceptsMap, Intercept, InterceptOptions, 
   InterceptsFns, InterceptFn, InterceptAttachTo,
 }

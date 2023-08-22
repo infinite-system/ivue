@@ -1,10 +1,10 @@
-import { Messages } from "@/Classes/Core/Messages/Messages";
+import { Message } from "@/App/Services/Message/Message";
 import { use } from '@/index'
 
 
 export abstract class ParentIVueTests {
 
-  get messages() { return use(Messages) }
+  get message() { return use(Message) }
 
   private parentPrivate = 111
 
@@ -17,8 +17,6 @@ export abstract class ParentIVueTests {
   }
 
   showWarning = null
-
-  messagesObservables = {}
 
   // constructor() {}
 

@@ -5,15 +5,15 @@ import { VueDd } from 'vue-dd'
 import { bind } from '../src'
 
 import router from './router'
-import { HttpGateway } from '../src/Classes/Core/HttpGateway';
-import { RouterGateway } from '../src/Classes/Routing/RouterGateway';
-import { App } from '../src/Classes/App';
+import { Http } from '@/App/Services/Http/Http';
+import { App } from '@/App/App';
+import { Router } from '@/App/Services/Routing/Router';
 
 
 export function initKernel () {
-  bind(HttpGateway).singleton().ivue()
-  bind(RouterGateway).singleton().ivue()
   bind(App).singleton().ivue()
+  bind(Router).singleton().ivue()
+  bind(Http).singleton().ivue()
 }
 
 initKernel()

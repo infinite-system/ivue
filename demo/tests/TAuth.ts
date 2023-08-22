@@ -1,13 +1,13 @@
 import { use } from '@/index'
 import { TUser } from './TUser'
-import { TMessages } from './TMessages'
+import { TMessage } from './TMessage'
 
 
 export class TAuth {
 
   user = use(TUser)
 
-  messages = use(TMessages)
+  message = use(TMessage)
 
   originalVariable = [
     { test: 'val-1', test2: 'val-2' }

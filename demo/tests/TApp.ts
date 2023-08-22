@@ -1,4 +1,4 @@
-import { TMessages } from './TMessages'
+import { TMessage } from './TMessage'
 import { TRouter } from './TRouter'
 import { use } from '@/index'
 
@@ -6,7 +6,7 @@ export class TApp {
 
   get router () { return use(TRouter) }
   
-  get messages () { return use(TMessages) }
+  get message () { return use(TMessage) }
 
 }
 

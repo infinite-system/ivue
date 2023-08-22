@@ -1,6 +1,6 @@
 import { reactive, markRaw } from 'vue'
 
-import type { MappingScope, IVue, AnyClass, ConstructorArgs, Intercept } from './types/core';
+import type { MappingScope, MappingType, IVue, AnyClass, InferredArgs, Intercept } from './types/core';
 
 import { ivueTransform } from './ivue';
 
@@ -11,18 +11,39 @@ import { runConstructorIntercept, intercepts, behaviorMethodHandler, Behavior } 
 import { safeClassName } from './utils/safe-class-name';
 
 /**
- * IOC Mapping declaration.
+ * Kernel Mapping
  */
-export class Mapping<T extends AnyClass> {
+export class Mapping {
 
-  constructor (public from: T) { this.to = from }
+  /**
+   * Construct mapping, by default set 'to' 
+   * to equal 'from' binding, to 
+   * support auto-binding.
+   * 
+   * @param from mapping pointer
+   */
+  constructor (public from: any) { 
+    this.to = from 
+  }
 
-  to: T
+  /**
+   * Resolves mapping to this value.
+   */
+  to: any
 
+  /**
+   * Scope: singleton | transient
+   */
   scope: MappingScope = 'singleton'
 
-  type = 'generic'
+  /**
+   * Mapping type: generic | ivue | ...
+   */
+  type: MappingType = 'generic'
 
+  /**
+   * Mapping initializer method.
+   */
   onInit = onInit
 }
 
@@ -45,28 +66,59 @@ const __Kernel__ = ($ = Kernel.prototype) => ([
 ])
 
 /**
- * ivue Kernel IOC Container.
+ * Kernel - ivue IOC Container.
+ *
+ * [IOC] Inversion of Control
  */
 export class Kernel {
 
+  /**
+   * Transiet mappings storage.
+   */
   private transients = new Map()
 
+  /**
+   * Singleton mappings storage.
+   */
   private singletons = new Map()
 
+  /**
+   * Singleton instances storage.
+   */
   private instances = new Map()
 
-  private current!: Mapping<ObjectConstructor>
+  /**
+   * Current mapping being set.
+   */
+  private current!: Mapping
 
+  /**
+   * Set mapping to bind from this value.
+   * 
+   * @param from mapping pointer
+   * @returns this
+   */
   bind (from: any) {
     this.current = new Mapping(from)
     return this
   }
 
+  /**
+   * Set mapping to resolve the binding to the value of to param.
+   * 
+   * @param to resolve mapping to this value
+   * @returns this
+   */
   to (to: any) {
     this.current.to = to
     return this
   }
 
+  /**
+   * Set binding to singleton scope.
+   * 
+   * @returns this
+   */
   singleton () {
     this.current.scope = 'singleton'
     // @ts-ignore
@@ -74,6 +126,11 @@ export class Kernel {
     return this
   }
 
+  /**
+   * Set binding to transient scope.
+   * 
+   * @returns this
+   */
   transient () {
     this.current.scope = 'transient'
     // @ts-ignore
@@ -81,17 +138,34 @@ export class Kernel {
     return this
   }
 
+  /**
+   * Set mapping type.
+   * 
+   * @param value type of mapping
+   * @returns this
+   */
   type (value: any) {
     this.current.type = value
     return this
   }
 
+  /**
+   * Set preset ivue initializer callback.
+   * 
+   * @returns this
+   */
   ivue () {
     this.current.type = 'ivue'
     this.current.onInit = ivueOnInit
     return this
   }
 
+  /**
+   * Set mapping initializer callback method.
+   * 
+   * @param callback Initializer callback method
+   * @returns this
+   */
   onInit (callback: any) {
     this.current.onInit = callback
     return this
@@ -103,7 +177,7 @@ export class Kernel {
    * @param className
    * @param args
    */
-  get<T extends AnyClass> (className: T, ...args: ConstructorArgs<T>): any {
+  get<T extends AnyClass> (className: T, ...args: InferredArgs<T>): T {
 
     // Instance exists? return it
     if (this.instances.has(className)) return this.instances.get(className)
@@ -133,7 +207,7 @@ export class Kernel {
    * @param className
    * @param args
    */
-  make<T extends AnyClass> (className: T, ...args: ConstructorArgs<T>): any {
+  make<T extends AnyClass> (className: T, ...args: InferredArgs<T>): T {
 
     let mapping = this.transients.get(className)
     if (!mapping) {
@@ -153,7 +227,7 @@ export class Kernel {
    * @param className
    * @param args
    */
-  use<T extends AnyClass> (className: T, ...args: ConstructorArgs<T>): IVue<T> {
+  use<T extends AnyClass> (className: T, ...args: InferredArgs<T>): IVue<T> {
 
     // Instance exists? return it
     if (this.instances.has(className)) return this.instances.get(className)
@@ -189,7 +263,7 @@ export class Kernel {
    * Initialize ivue reactive singleton returned from the Kernel container,
    * or a self-bound transient that is created on the fly.
    */
-  init<T extends AnyClass> (className: T, ...args: ConstructorArgs<T>): IVue<T> {
+  init<T extends AnyClass> (className: T, ...args: InferredArgs<T>): IVue<T> {
 
     // Find mapping
     let mapping = this.transients.get(className)
@@ -222,7 +296,7 @@ __Kernel__()
  * @param args 
  * @returns 
  */
-export function onInit<T extends AnyClass> (mapping: Mapping<T>, ...args: ConstructorArgs<T>): any {
+export function onInit<T extends AnyClass> (mapping: Mapping, ...args: InferredArgs<T>): any {
 
   // Before constructor intercepts
   if (intercepts.before.has(mapping.to)) {
@@ -234,6 +308,7 @@ export function onInit<T extends AnyClass> (mapping: Mapping<T>, ...args: Constr
   // @ts-ignore
   const obj = new mapping.to(...args)
 
+  // Behavior handling
   const getters = getPrototypeGetters(mapping.to.prototype)
   if (typeof obj.constructor.behavior === 'object') {
     for (const prop in obj.constructor.behavior) {
@@ -262,7 +337,7 @@ export function onInit<T extends AnyClass> (mapping: Mapping<T>, ...args: Constr
  * @param mapping @see Mapping
  * @param args
  */
-export function ivueOnInit<T extends AnyClass> (mapping: Mapping<T>, ...args: ConstructorArgs<T>): any {
+export function ivueOnInit<T extends AnyClass> (mapping: Mapping, ...args: InferredArgs<T>): any {
 
   if (intercepts.before.has(mapping.to)) {
     const intercept = { mapping: mapping, self: null, return: null, name: mapping.to.constructor.name, args }
@@ -273,6 +348,7 @@ export function ivueOnInit<T extends AnyClass> (mapping: Mapping<T>, ...args: Co
   const getters = getPrototypeGetters(mapping.to.prototype)
   const vue = ivueTransform(reactive(Reflect.construct(mapping.to, args)), getters, ...args)
 
+  // Behavior hanlding
   if (typeof vue.constructor.behavior === 'object') {
     for (const prop in vue.constructor.behavior) {
       if (prop in getters.values) continue // skip getters to not cause a computation

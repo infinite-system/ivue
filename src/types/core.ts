@@ -20,7 +20,9 @@ export interface IVueToRefsObj<T extends object> {
 
 export type MappingScope = 'singleton' | 'transient'
 
-export type ConstructorArgs<T> = T extends { new(...args: infer P): any } ? P : never[]
+export type MappingType = 'generic' | 'ivue' | any
+
+export type InferredArgs<T> = T extends { new(...args: infer P): any } ? P : never[]
 
 export type Getters = { 
   values: { [x: string]: PropertyDescriptor; }, 
@@ -29,7 +31,7 @@ export type Getters = {
 
 export type Intercept = {
   return: any,
-  mapping: Mapping<any>,
+  mapping: Mapping,
   name?: string,
   self: any,
   args: any

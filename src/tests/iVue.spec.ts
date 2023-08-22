@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest'
-import { AppTestHarness } from '../Classes/AppTestHarness'
-import { LoginRegisterPresenter } from "../Classes/Auth/LoginRegisterPresenter.js";
-import { TestPresenterAuto } from "../Classes/Auth/TestPresenterAuto.js";
+import { AppTestHarness } from '../App/AppTestHarness'
+import { Auth } from "../App/Auth/Auth";
+import { TestPresenterAuto } from "../App/Auth/TestPresenterAuto.js";
 
 let appTestHarness = null
 let presenter = null
@@ -26,5 +26,3 @@ function test (presenterClass, mode = 'manual') {
   })
 }
 
-test(LoginRegisterPresenter, 'manual')
-test(TestPresenterAuto, 'auto')

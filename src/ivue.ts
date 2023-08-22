@@ -1,5 +1,5 @@
 import { computed, reactive, toRef, type ComputedRef } from "vue";
-import type { IVue, IVueToRefsObj, AnyClass, ConstructorArgs, Getters } from "./types/core";
+import type { IVue, IVueToRefsObj, AnyClass, InferredArgs, Getters } from "./types/core";
 import { Behavior } from "./behavior";
 import { getPrototypeGetters, getInstanceGetters } from './utils/getters'
 
@@ -10,7 +10,7 @@ import { getPrototypeGetters, getInstanceGetters } from './utils/getters'
  * @param args 
  * @returns @see IVue<T>
  */
-export function ivue<T extends AnyClass> (className: T, ...args: ConstructorArgs<T>): IVue<T> {
+export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>): IVue<T> {
   const vue = ivueTransform(reactive(Reflect.construct(className, args)), getPrototypeGetters(className.prototype), ...args)
   if (typeof vue.init === 'function') vue.init()
   return vue

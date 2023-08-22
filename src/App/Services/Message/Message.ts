@@ -1,7 +1,7 @@
 import { use } from '@/index'
 import type { Null } from '@/types/core'
 
-export class $TMessage {
+export class $Message {
 
   appMessages: Null<any[]> = null
 
@@ -24,9 +24,9 @@ export class $TMessage {
   }
 }
 
-export class TMessage {
+export class Message {
 
-  get $ () { return use($TMessage) }
+  get $ () { return use($Message) }
 
   showWarning: Null<boolean> = null
 
@@ -45,7 +45,7 @@ export class TMessage {
     return this.$.clientMessages
   }
 
-  unpack (pm: any, userMessage: any) {
+  show (pm: any, userMessage: any) {
     this.showWarning = !pm.success
     this.$.appMessages = pm.success ? [userMessage] : [pm.serverMessage]
   }

@@ -1,4 +1,4 @@
-import { TMessages } from './TMessages'
+import { TMessage } from './TMessage'
 import { TUser } from './TUser'
 import { use } from '@/index'
 
@@ -6,7 +6,7 @@ export class $TRouter {
 
   get user () { return use(TUser) }
 
-  get messages () { return use(TMessages) }
+  get message () { return use(TMessage) }
 
 }
 

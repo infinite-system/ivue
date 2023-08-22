@@ -1,11 +1,11 @@
 
 import { TAuth } from './TAuth'
 import { TApp } from "./TApp";
-import { TMessages } from './TMessages'
+import { TMessage } from './TMessage'
 import { TRouter } from './TRouter'
 import { ParentIVueTests } from "./ParentIVueTests";
 import { watch } from "vue";
-import { generateHugeArray } from "@/Classes/Generators/generators";
+import { generateHugeArray } from "@/App/Generators/generators";
 import { TField } from "./TField";
 import { use, init, Behavior, unraw, before } from "@/index";
 
@@ -20,7 +20,7 @@ export class IVueTests extends ParentIVueTests {
 
   get app () { console.log('changing'); return use(TApp) }
 
-  get messages () { return use(TMessages) }
+  get message () { return use(TMessage) }
 
   get router () { return use(TRouter) }
 

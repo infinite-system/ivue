@@ -202,7 +202,7 @@ export enum Behavior {
  * @param self
  * @param prop
  */
-export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping<T>, type: Behavior, func: Function, self: Class, prop: string) {
+export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping, type: Behavior, func: Function, self: Class, prop: string) {
   // Define a default void return
   let result = void (0)
   // Handle basic scoped most often scenario early

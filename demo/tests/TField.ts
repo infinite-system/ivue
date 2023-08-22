@@ -1,8 +1,8 @@
 import { watch, onMounted, onUnmounted } from "vue";
 import { Behavior } from "@/index";
 import { use, init } from "@/index";
-import { App } from "@/Classes/App";
-import { RouterGateway } from "@/Classes/Routing/RouterGateway";
+import { App } from "@/App/App";
+import { RouterGateway } from "@/App/Routing/RouterGateway";
 
 export class Mouse {
 

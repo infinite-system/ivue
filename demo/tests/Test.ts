@@ -1,14 +1,14 @@
 
 import { onMounted, onUnmounted, watch } from 'vue';
 import { init, Traits } from '@/index';
-import { UseApp } from '@/Classes/Traits/UseApp';
-import { UseCapsule } from '@/Classes/Traits/UseCapsule';
-import { UseQuasar } from '@/Classes/Traits/UseQuasar';
-import { UseEmit } from '@/Classes/Traits/UseEmit';
-import { UseMounting } from '@/Classes/Traits/UseMounting';
-import { UseVue } from '@/Classes/Traits/UseVue';
-import { UseRouting } from '@/Classes/Traits/UseRouting';
-import { UseRouter } from '@/Classes/Traits/UseRouter';
+import { UseApp } from '@/App/Traits/UseApp';
+import { UseCapsule } from '@/traits/UseCapsule';
+import { UseQuasar } from '@/App/Traits/UseQuasar';
+import { UseEmit } from '@/App/Traits/UseEmit';
+import { UseMounting } from '@/App/Traits/UseMounting';
+import { UseVue } from '@/App/Traits/UseVue';
+import { UseRouting } from '@/App/Traits/UseRouting';
+import { UseRouter } from '@/App/Traits/UseRouter';
 
 export class $Mouse {
   x = 0
