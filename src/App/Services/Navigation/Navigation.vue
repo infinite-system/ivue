@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // import { withInjection } from '../Services/Providers/Injection'
-import Logout from '../Auth/Logout.vue'
-import { Router } from '../Routing/Router'
+import Logout from '@/App/Auth/Logout.vue'
+import { Router } from '@/App/Services/Routing/Router'
 import { Navigation } from './Navigation'
 import { use } from '@/index'
 
@@ -9,6 +9,16 @@ const v = use(Navigation)
 const router = use(Router)
 </script>
 <template>
+  <br />
+  Route:
+  {{ v.route?.name }}
+
+  <br />
+  Router:
+  
+  {{ router.currentRoute.name }}
+
+  <button @click="router.push({name:'login'})">Login</button>
   <div class="navigation-container">
     <div
       class="navigation-item-header"
@@ -39,4 +49,4 @@ const router = use(Router)
   </div>
 
   <Logout />
-</div></template>../Services/Routing/Router
+</div></template>

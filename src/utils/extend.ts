@@ -9,10 +9,10 @@ import { isObject, isPromise } from "./is";
  * @param target object
  * @param sources array
  */
-export function extend (target: { [x: string]: any; }, ...sources: any[]) {
+export function extend (target: any, ...sources: any[]) {
   let parents: any = new Map() // parents object to detect circular references
   const result = _extend(target, [...sources], parents);
-  parents = undefined // flush the parents map upon completion
+  // parents = undefined // flush the parents map upon completion
   return result
 }
 
@@ -26,7 +26,7 @@ export function extend (target: { [x: string]: any; }, ...sources: any[]) {
  * 
  * @internal
  */
-function _extend<K, V> (target: { [x: string]: any; }, sources: any[], parents: Map<K, V> | null | any = null) {
+function _extend<K, V> (target: any, sources: any[], parents: Map<K, V> | null | any = null) {
 
   if (!sources.length) return target;
   // save target object in Map as a key
@@ -35,8 +35,9 @@ function _extend<K, V> (target: { [x: string]: any; }, sources: any[], parents: 
   const source = sources.shift();
 
   if (isObject(target) && isObject(source)) {
+
     for (const key in source) {
-      if (isObject(source[key])) {
+      if (isObject(source[key]) && source[key].constructor.name === 'Object') {
         // detect circular references using Map parents object
         if (parents.has(source[key])) {
           // console.log('detected circular reference key:', key,
@@ -56,12 +57,18 @@ function _extend<K, V> (target: { [x: string]: any; }, sources: any[], parents: 
               // assign directly the proxy or any other object
               target[key] = source[key]
             } else {
+
               // if target[key] is not an object
               // convert it to an object to be able to extend
-              if (typeof target[key] !== 'object') {
-                target[key] = {}
+              if (!isObject(target[key])) {
+                target[key] = source[key]
+              } else {
+                if (target[key].constructor.name !== 'Object') {
+                  target[key] = source[key]
+                } else {
+                  _extend(target[key], [source[key]], parents)
+                }
               }
-              _extend(target[key], [source[key]], parents)
             }
           }
         }
@@ -71,6 +78,5 @@ function _extend<K, V> (target: { [x: string]: any; }, sources: any[], parents: 
       }
     }
   }
-
   return _extend(target, sources, parents);
 }

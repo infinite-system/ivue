@@ -56,3 +56,5 @@ export type InterceptsFns = InterceptFn[] | undefined | any
 export type Null<T> = T | null
 
 export type AnyObj = Record<string | number | symbol, any>
+
+export type Params<T extends (...args: any) => any> = Parameters<T>

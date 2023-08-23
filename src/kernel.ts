@@ -6,7 +6,7 @@ import { ivueTransform } from './ivue';
 
 import { getPrototypeGetters } from './utils/getters'
 
-import { runConstructorIntercept, intercepts, behaviorMethodHandler, Behavior } from './behavior'
+import { runConstructorIntercept, intercepts, behaviorMethodHandler, IVUE } from './behavior'
 
 import { safeClassName } from './utils/safe-class-name';
 
@@ -177,7 +177,7 @@ export class Kernel {
    * @param className
    * @param args
    */
-  get<T extends AnyClass> (className: T, ...args: InferredArgs<T>): T {
+  get<T extends AnyClass> (className: T, ...args: InferredArgs<T>): InstanceType<T> {
 
     // Instance exists? return it
     if (this.instances.has(className)) return this.instances.get(className)
@@ -189,7 +189,7 @@ export class Kernel {
       // Automatically bind a singleton
       this.bind(className).singleton()
       // Get the new transient mapping
-      mapping = this.transients.get(className)
+      mapping = this.singletons.get(className)
     }
 
     // Create instance
@@ -207,9 +207,10 @@ export class Kernel {
    * @param className
    * @param args
    */
-  make<T extends AnyClass> (className: T, ...args: InferredArgs<T>): T {
+  make<T extends AnyClass> (className: T, ...args: InferredArgs<T>): InstanceType<T> {
 
     let mapping = this.transients.get(className)
+    
     if (!mapping) {
       // Automatically bind a transient
       this.bind(className).transient()
@@ -308,13 +309,13 @@ export function onInit<T extends AnyClass> (mapping: Mapping, ...args: InferredA
   // @ts-ignore
   const obj = new mapping.to(...args)
 
-  // Behavior handling
+  // IVUE handling
   const getters = getPrototypeGetters(mapping.to.prototype)
   if (typeof obj.constructor.behavior === 'object') {
     for (const prop in obj.constructor.behavior) {
       if (prop in getters.values) continue // skip getters to not cause a computation
       if (typeof obj[prop] === 'function') {
-        if (obj.constructor.behavior[prop] === Behavior.DISABLED) continue // skip DISABLED
+        if (obj.constructor.behavior[prop] === IVUE.OFF) continue // skip OFF
         const func = obj[prop] // This re-assignment is important to copy the function
         behaviorMethodHandler(mapping, obj.constructor.behavior[prop], func, obj, prop)
       }
@@ -348,16 +349,16 @@ export function ivueOnInit<T extends AnyClass> (mapping: Mapping, ...args: Infer
   const getters = getPrototypeGetters(mapping.to.prototype)
   const vue = ivueTransform(reactive(Reflect.construct(mapping.to, args)), getters, ...args)
 
-  // Behavior hanlding
+  // IVUE hanlding
   if (typeof vue.constructor.behavior === 'object') {
     for (const prop in vue.constructor.behavior) {
       if (prop in getters.values) continue // skip getters to not cause a computation
       if (typeof vue[prop] === 'function') {
-        if (vue.constructor.behavior[prop] === Behavior.DISABLED) continue // skip DISABLED
+        if (vue.constructor.behavior[prop] === IVUE.OFF) continue // skip OFF
         const func = vue[prop] // This re-assignment is important to copy the function
         behaviorMethodHandler(mapping, vue.constructor.behavior[prop], func, vue, prop)
       } else {
-        if (vue.constructor.behavior[prop] === Behavior.DISABLED && vue?.[prop] && typeof vue[prop] === 'object') {
+        if (vue.constructor.behavior[prop] === IVUE.OFF && vue?.[prop] && typeof vue[prop] === 'object') {
           vue[prop] = markRaw(vue[prop])
         }
       }

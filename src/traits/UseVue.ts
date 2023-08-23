@@ -1,7 +1,7 @@
-import type { Class } from '@/types/core'
-import { Traits } from '@/index';
-import { useMounting, UseMounting } from '@/App/Traits/UseMounting';
-import { UseRouting } from '@/App/Traits/UseRouting';
+import type { Class } from '../types/core'
+import { Traits } from '../utils/traits';
+import { useMounting, UseMounting } from './UseMounting';
+import { UseRouting } from './UseRouting';
 import { useRefs, UseRefs } from './UseRefs';
 import { UseEmit } from './UseEmit';
 import { UseTick } from './UseTick';

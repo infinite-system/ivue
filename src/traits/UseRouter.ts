@@ -1,5 +1,5 @@
-import Router from '../../../demo/router';
+import { config } from '../config';
 
 export class UseRouter {
-  $router = Router
+  get router () { return config.router }
 }

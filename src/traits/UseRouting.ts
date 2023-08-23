@@ -1,4 +1,4 @@
-import { Traits } from '@/index';
+import { Traits } from '../utils/traits';
 import { UseRouter } from './UseRouter';
 import { UseRoute } from './UseRoute';
 

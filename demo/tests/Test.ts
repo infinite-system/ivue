@@ -4,11 +4,11 @@ import { init, Traits } from '@/index';
 import { UseApp } from '@/App/Traits/UseApp';
 import { UseCapsule } from '@/traits/UseCapsule';
 import { UseQuasar } from '@/App/Traits/UseQuasar';
-import { UseEmit } from '@/App/Traits/UseEmit';
-import { UseMounting } from '@/App/Traits/UseMounting';
-import { UseVue } from '@/App/Traits/UseVue';
-import { UseRouting } from '@/App/Traits/UseRouting';
-import { UseRouter } from '@/App/Traits/UseRouter';
+import { UseEmit } from '@/traits/UseEmit';
+import { UseMounting } from '@/traits/UseMounting';
+import { UseVue } from '@/traits/UseVue';
+import { UseRouting } from '@/traits/UseRouting';
+import { UseRouter } from '@/traits/UseRouter';
 
 export class $Mouse {
   x = 0

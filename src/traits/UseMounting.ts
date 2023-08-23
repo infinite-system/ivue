@@ -1,5 +1,5 @@
-import { type Class } from '@/types/core';
-import { after } from '@/index'
+import { type Class } from '../types/core';
+import { after } from '../behavior'
 import { onMounted, onUnmounted, onBeforeMount, onBeforeUnmount } from 'vue'
 
 export function useMounting (mainClass: Class, obj: UseMounting | any) {

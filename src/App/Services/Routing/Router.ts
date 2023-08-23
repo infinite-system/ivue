@@ -1,27 +1,37 @@
-import { markRaw } from 'vue';
+import { unref } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router'
-import { Behavior, use } from '@/index'
+import { Traits, UseCapsule, use } from '@/index'
 import { $Message } from '../Message/Message'
 import { User } from '../../Auth/User'
 import type { RouteLocationNormalized } from 'vue-router';
-import type { Null, AnyObj } from '@/types/core';
+import type { Null, AnyObj, Params } from '@/types/core';
 import type { Router as VueRouter } from 'vue-router'
 
 const __$Router__ = ($ = $Router.prototype) => ([
-  // Links
+  // Access
   $.user,
   $.$message,
   // Data
+  $.router,
   $.active,
   $.routes,
   $.routeConfig,
   // Methods
   $.register,
   $.flatten,
-  $.configure,
+  $.setup,
   $.find,
+  // Router state change tracking
   $.onRouteChanged,
-  $.updateRoute,
+  $.beforeRoute,
+  $.afterRoute,
+  // Extensions upon Router
+  $.push,
+  $.replace,
+  $.forward,
+  $.back,
+  // Loaded state promise
+  $.isLoaded
 ])
 
 export class $Router {
@@ -29,6 +39,8 @@ export class $Router {
   get user () { return use(User) }
 
   get $message () { return use($Message) }
+
+  loading = false
 
   router!: VueRouter
 
@@ -50,12 +62,14 @@ export class $Router {
     this.flatRoutes = this.flatten(this.routes)
     // console.log('this.flatRoutes', this.flatRoutes)
 
-    this.routeConfig = this.configure(this.routes)
+    this.routeConfig = this.setup(this.routes)
     // console.log('routeConfig', routeConfig)
 
-
     this.router = createRouter({ history: createWebHistory(), routes: this.routes })
-    this.router.beforeEach(async to => await this.updateRoute(to))
+
+    this.router.beforeEach(async to => await this.beforeRoute(to))
+
+    this.router.afterEach(async (to, from, failure) => await this.afterRoute(/*to, from, failure*/))
   }
 
   private flatRoutes: AnyObj = {}
@@ -77,7 +91,7 @@ export class $Router {
     return flatRoutes
   }
 
-  configure (routes: any) {
+  setup (routes: any) {
 
     const routeConfig: any[] = []
 
@@ -93,7 +107,7 @@ export class $Router {
       }
 
       if ('children' in route) {
-        routeDefinition.children = this.configure(route.children)
+        routeDefinition.children = this.setup(route.children)
       }
 
       routeConfig.push(routeDefinition)
@@ -110,7 +124,9 @@ export class $Router {
     this.$message.appMessages = []
   }
 
-  async updateRoute (to: RouteLocationNormalized) {
+  async beforeRoute (to: RouteLocationNormalized) {
+
+    this.loading = true
 
     const old = this.find(this.active.name)
     const fresh = this.find(to.name)
@@ -121,13 +137,7 @@ export class $Router {
     const notAllowed = fresh.secure && !token || fresh.name === '*'
     const allowed = fresh.secure && token || !fresh.secure
 
-    console.log(
-      'fresh', fresh,
-      'old', old,
-      'routeChanged', routeChanged,
-      'notAllowed', notAllowed,
-      'allowed', allowed,
-    )
+    // console.log('fresh', fresh, 'old', old, 'routeChanged', routeChanged, 'notAllowed', notAllowed, 'allowed', allowed)
 
     if (routeChanged) {
 
@@ -135,7 +145,7 @@ export class $Router {
 
       if (notAllowed) {
 
-        this.router.push({ name: 'loginLink' })
+        await this.push({ name: 'login' })
 
         return false
 
@@ -153,40 +163,100 @@ export class $Router {
     }
     return true
   }
+
+  async afterRoute () {
+    this.loading = false
+  }
+
+  push (...args: Params<VueRouter['push']>) {
+    this.loading = true;
+    return run(this.router, this.router.push, arguments)
+  }
+
+  replace (...args: Params<VueRouter['replace']>) {
+    this.loading = true;
+    return run(this.router, this.router.replace, arguments)
+  }
+
+  back (...args: Params<VueRouter['back']>) {
+    this.loading = true;
+    return run(this.router, this.router.back, arguments)
+  }
+
+  forward (...args: Params<VueRouter['forward']>) {
+    this.loading = true;
+    return run(this.router, this.router.forward, arguments)
+  }
+
+  go (...args: Params<VueRouter['go']>) {
+    this.loading = true;
+    return run(this.router, this.router.go, arguments)
+  }
+
+  async isLoaded () {
+    return new Promise((resolve, reject) => {
+      let interval: string | number | NodeJS.Timeout | undefined;
+      if (this.loading) {
+        interval = setInterval(() => {
+          if (!this.loading) {
+            clearInterval(interval)
+            resolve(!this.loading)
+          }
+        }, 10)
+      } else {
+        resolve(!this.loading)
+      }
+    })
+  }
 }
 
 __$Router__
 
-const $ = use($Router)
+
+
+function run<T extends Function> (bind: any, fn: T, args: any = []): T {
+  return fn.apply(bind, args)
+}
+
 export class Router {
 
-  $ = markRaw(use($Router))
-
-  static behavior = {
-    active: Behavior.DISABLED,
-    currentRoute: Behavior.DISABLED,
-    options: Behavior.DISABLED
+  capsule = $Router
+  constructor () {
+    this.useCapsule(arguments)
   }
 
-  get active () { return $.active }
-  get currentRoute () { return $.router.currentRoute }
-  get options () { return $.router.options }
+  // Extended functions
+  get active () { return this.$.active }
+  async isLoaded () { return run(this.$, this.$.isLoaded) }
 
-  set listening (v: boolean) { $.router.listening = v }
+  // Vue Router API
+  get currentRoute () { return unref(this.$.router.currentRoute) }
+  get options () { return this.$.router.options }
 
-  addRoute = $.router.addRoute.bind($.router)
-  removeRoute = $.router.removeRoute.bind($.router)
-  hasRoute = $.router.hasRoute.bind($.router)
-  getRoutes = $.router.getRoutes.bind($.router)
-  resolve = $.router.resolve.bind($.router)
-  push = $.router.push.bind($.router)
-  replace = $.router.replace.bind($.router)
-  back = $.router.back.bind($.router)
-  forward = $.router.forward.bind($.router)
-  go = $.router.go.bind($.router)
-  beforeEach = $.router.beforeEach.bind($.router)
-  beforeResolve = $.router.beforeResolve.bind($.router)
-  afterEach = $.router.afterEach.bind($.router)
-  onError = $.router.onError.bind($.router)
-  isReady = $.router.isReady.bind($.router)
+  get listening () { return this.$.router.listening }
+  set listening (v: boolean) { this.$.router.listening = v }
+
+  addRoute (...args: Params<VueRouter['addRoute']>) { return run(this.$.router, this.$.router.addRoute, arguments) }
+  removeRoute (...args: Params<VueRouter['removeRoute']>) { return run(this.$.router, this.$.router.removeRoute, arguments) }
+  hasRoute (...args: Params<VueRouter['hasRoute']>) { return run(this.$.router, this.$.router.hasRoute, arguments) }
+  getRoutes (...args: Params<VueRouter['getRoutes']>) { return run(this.$.router, this.$.router.getRoutes) }
+  resolve (...args: Params<VueRouter['resolve']>) { return run(this.$.router, this.$.router.resolve, arguments) }
+
+  /* Extended functionality of these methods */
+  push (...args: Params<VueRouter['push']>) { return run(this.$, this.$.push, arguments) }
+  replace (...args: Params<VueRouter['replace']>) { return run(this.$, this.$.replace, arguments) }
+  back (...args: Params<VueRouter['back']>) { return run(this.$, this.$.back) }
+  forward (...args: Params<VueRouter['forward']>) { return run(this.$, this.$.forward) }
+  go (...args: Params<VueRouter['go']>) { return run(this.$, this.$.go, arguments) }
+  /* Extensions end */
+
+  beforeEach (...args: Params<VueRouter['beforeEach']>) { return run(this.$.router, this.$.router.beforeEach, arguments) }
+  beforeResolve (...args: Params<VueRouter['beforeResolve']>) { return run(this.$.router, this.$.router.beforeResolve, arguments) }
+  afterEach (...args: Params<VueRouter['afterEach']>) { return run(this.$.router, this.$.router.afterEach, arguments) }
+  onError (...args: Params<VueRouter['onError']>) { return run(this.$.router, this.$.router.onError, arguments) }
+  isReady (...args: Params<VueRouter['isReady']>) { return run(this.$.router, this.$.router.isReady) }
+  install (...args: Params<VueRouter['install']>) { return run(this.$.router, this.$.router.install, arguments) }
 }
+
+Traits(Router, [UseCapsule])
+export interface Router extends UseCapsule {}

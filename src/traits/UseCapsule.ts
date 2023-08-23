@@ -1,5 +1,6 @@
-import { ivue, init, use } from '@/index';
-import type { AnyClass } from '@/types/core';
+import { get, make, use, init } from '../kernel';
+import type { AnyClass } from '../types/core';
+import { markRaw } from 'vue';
 
 export class UseCapsule {
 
@@ -7,10 +8,21 @@ export class UseCapsule {
 
   capsule: AnyClass | any
 
-  useCapsule (args: IArguments | [] = [], method = init) {
-    this.$ = method(this.capsule, this, ...args)
-    if (method === init || method === use || method === ivue) {
-      this.$.__v_skip = true // markRaw() equivalent
-    }
+  useCapsule (args: any = []) {
+    this.$ = use(this.capsule, this, ...args)
+    markRaw(this.$)
+  }
+
+  initCapsule (args: any = []) {
+    this.$ = init(this.capsule, this, ...args)
+    markRaw(this.$)
+  }
+
+  getCapsule (args: any = []) {
+    this.$ = get(this.capsule, this, ...args)
+  }
+
+  makeCapsule (args: any = []) {
+    this.$ = make(this.capsule, this, ...args)
   }
 }

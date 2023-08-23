@@ -1,6 +1,7 @@
 import TreeModel from 'tree-model'
 import { Router } from '../Routing/Router'
-import { use } from '@/index'
+import { Traits, UseRoute, UseRouter, use } from '@/index'
+import { watch } from 'vue'
 
 export class $Navigation {
 
@@ -14,7 +15,7 @@ export class $Navigation {
     const tree = new TreeModel()
 
     const root = tree.parse({
-      id: 'homeLink',
+      id: 'home',
       type: 'root',
       text: 'Home',
       children: [],
@@ -72,3 +73,5 @@ export class Navigation {
     this.$.back()
   }
 }
+Traits(Navigation, [UseRoute, UseRouter])
+export interface Navigation extends UseRoute, UseRouter {}

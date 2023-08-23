@@ -1,7 +1,7 @@
-import 'reflect-metadata'
+import { createApp } from "vue";
 import { vi } from 'vitest'
-import { bind, use } from '@/index'
-
+import { setup, bind, use } from '@/index'
+import AppComponent from "../../demo/App.vue";
 import { FakeRouter } from './Services/Routing/FakeRouter'
 import { FakeHttp } from './Services/Http/FakeHttp'
 
@@ -12,7 +12,7 @@ import { Auth } from './Auth/Auth.js'
 
 import { SingleBooksResultStub } from './Stubs/SingleBooksResultStub'
 
-export class AppTestHarness {
+export class BlackBox {
 
   app!: App
 
@@ -22,20 +22,32 @@ export class AppTestHarness {
 
   router!: Router
 
+  vue!: ReturnType<typeof createApp>
+
   init() {
 
-    bind(Http).to(FakeHttp).singleton().ivue()
-    bind(Router).to(FakeRouter).singleton().ivue()
+    // bind(Http).to(FakeHttp).singleton().ivue()
+    // bind(Router).to(FakeRouter).singleton().ivue()
 
-    this.app = use(App)
-    this.router = use(Router)
+    this.app = use(App).load()
+    setup({ router: this.app.router })
+    
+    // this.vue = createApp(AppComponent);
+    
+    // console.log('router', this.app.router)
+    // this.vue.use(this.app.router)
+    
+    // this.vue.mount("#app");
 
-    this.router.push = vi.fn().mockImplementation(to => {
-      // pivot
-      this.router.$.updateRoute(to)
-    })
 
-    this.auth = use(Auth)
+    // Object.defineProperty(Router.prototype, 'push', {
+    //   value: vi.fn().mockImplementation(to => {
+    //     // pivot
+    //     this.router.$.beforeRoute(to)
+    //   })
+    // })
+
+    return this
   }
 
   // 2. bootstrap the app

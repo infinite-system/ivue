@@ -26,8 +26,6 @@ const v = use(Auth);
       </div>
     </div>
 
-    <button @click="() => { v.email = 'test' }">Set Presenter email</button>
-
     <div>
       <div class="w3-row">
         <div class="w3-col s4 w3-center">

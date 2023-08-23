@@ -7,13 +7,13 @@ import { ParentIVueTests } from "./ParentIVueTests";
 import { watch } from "vue";
 import { generateHugeArray } from "@/App/Generators/generators";
 import { TField } from "./TField";
-import { use, init, Behavior, unraw, before } from "@/index";
+import { use, init, IVUE, unraw, before } from "@/index";
 
 export class IVueTests extends ParentIVueTests {
 
   static behavior = {
-    init: Behavior.SCOPED_INTERCEPT,
-    nonReactiveProp: Behavior.DISABLED
+    init: IVUE.SCOPED_INTERCEPT,
+    nonReactiveProp: IVUE.OFF
   }
 
   get auth () { return use(TAuth) }
@@ -72,7 +72,7 @@ export class IVueTests extends ParentIVueTests {
 
     TField.behavior = {
       // ...Field.behavior,
-      // interceptable: Behavior.INTERCEPT
+      // interceptable: IVUE.INTERCEPT
     }
 
     this.transientField3 = init(TField, 11)

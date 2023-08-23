@@ -87,31 +87,34 @@ export function Traits (main: Class, traits: Class[]): void {
 
     // Loop through all properties to get the methods
     Object.getOwnPropertyNames(trait.prototype).forEach(prop => {
+      if (prop !== 'constructor') {
 
-      if (!(prop in initialProto)) notInInitialProto[prop] = true
+        if (!(prop in initialProto)) notInInitialProto[prop] = true
 
-      // Did prop exist on the initial state of main prototype?
-      // If it did, we do not want to override it
-      if (prop in notInInitialProto) {
-        const descriptor = Object.getOwnPropertyDescriptor(trait.prototype, prop) || Object.create(null)
-        
-        // This is to ensure that setters from other traits are passed down
-        // but only if the initialProto has no setter set
-        if (descriptor?.set && !(prop in initialProtoSetterOnly)) {
-          initialProtoSetterOnly[prop] = descriptor?.set
+        // Did prop exist on the initial state of main prototype?
+        // If it did, we do not want to override it
+        if (prop in notInInitialProto) {
+          const descriptor = Object.getOwnPropertyDescriptor(trait.prototype, prop) || Object.create(null)
+
+          // This is to ensure that setters from other traits are passed down
+          // but only if the initialProto has no setter set
+          if (descriptor?.set && !(prop in initialProtoSetterOnly)) {
+            initialProtoSetterOnly[prop] = descriptor?.set
+          }
+
+          // This is to ensure the initialProto with set only does not get overriden 
+          // with traits that do not have a setter, but only have a getter
+          if (descriptor?.get && !descriptor?.set && prop in initialProtoSetterOnly) {
+            descriptor.set = initialProtoSetterOnly[prop]
+          }
+
+          Object.defineProperty(
+            main.prototype,
+            prop,
+            descriptor
+          )
         }
 
-        // This is to ensure the initialProto with set only does not get overriden 
-        // with traits that do not have a setter, but only have a getter
-        if (descriptor?.get && !descriptor?.set && prop in initialProtoSetterOnly){
-          descriptor.set = initialProtoSetterOnly[prop]
-        }
-        
-        Object.defineProperty(
-          main.prototype,
-          prop,
-          descriptor
-        )
       }
     })
   })

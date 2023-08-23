@@ -4,7 +4,6 @@ import type { Null } from '@/types/core'
 export class $Message {
 
   appMessages: Null<any[]> = null
-
   clientMessages: Null<any[]> = null
 
   constructor () {
@@ -32,10 +31,8 @@ export class Message {
 
   init () {
     this.showWarning = false
-    this.reset()
+    this.$.reset()
   }
-
-  reset () {}
 
   get appMessages () {
     return this.$.appMessages

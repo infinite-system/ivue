@@ -1,3 +1,4 @@
+import { markRaw } from 'vue';
 
 /**
  * Convert object back to Vue reactive.
@@ -14,6 +15,5 @@ export function unraw (obj: any) {
  * @param obj
  */
 export function raw (obj: any) {
-  obj.__v_skip = true
-  return obj
+  return markRaw(obj)
 }

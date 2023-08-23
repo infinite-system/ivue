@@ -1,6 +1,6 @@
-import Router from '../../../demo/router';
-import { reactive } from 'vue'
+import { toValue } from 'vue';
+import { config } from '../config';
 
 export class UseRoute {
-  $route = reactive(Router.active)
+   get route () { return toValue(config.router?.currentRoute) }
 }

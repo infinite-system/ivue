@@ -53,8 +53,8 @@ function addIntercept (type: keyof InterceptsMap, fn: InterceptFn, callback: any
  * ```ts
  * class Example {
  *    behavior: {
- *      methodName: Behavior.SCOPED_INTERCEPT,
- *      methodName2: Behavior.INTERCEPT
+ *      methodName: IVUE.SCOPED_INTERCEPT,
+ *      methodName2: IVUE.INTERCEPT
  *    }
  * }
  * ```
@@ -94,7 +94,7 @@ function autoBindIntercept (to: Function | [Class, Function], scoped: boolean): 
         // Attach behavior
         to[0].behavior = {
           ...(typeof to[0].behavior === 'object' ? to[0].behavior : {}),
-          funcName: scoped ? Behavior.SCOPED_INTERCEPT : Behavior.INTERCEPT
+          funcName: scoped ? IVUE.SCOPED_INTERCEPT : IVUE.INTERCEPT
         }
       }
 
@@ -107,7 +107,7 @@ function autoBindIntercept (to: Function | [Class, Function], scoped: boolean): 
 
   return to as InterceptFn
 }
-
+  
 /**
  * Function to run before an interceptable method in ivue.
  *
@@ -183,31 +183,31 @@ export function runIntercept (type: keyof InterceptsMap, self: Class, prop: stri
  *        INTERCEPT: Allows before & after method intercepts only,
  *                   watch(), computed(), watchEffect() will NOT be garbage collected.
  *
- *         DISABLED: For objects -> makes them markRaw() non-reactive,
+ *         OFF: For objects -> makes them markRaw() non-reactive,
  *                   For getters -> makes them non-computed normal getters.
  */
-export enum Behavior {
+export enum IVUE {
   SCOPED = 'SCOPED',
   SCOPED_INTERCEPT = 'SCOPED_INTERCEPT',
   INTERCEPT = 'INTERCEPT',
-  DISABLED = 'DISABLED'
+  OFF = 'OFF'
 }
 
 /**
  * Override function depending on behavior type.
- * @see Behavior
+ * @see IVUE
  *
  * @param type
  * @param func
  * @param self
  * @param prop
  */
-export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping, type: Behavior, func: Function, self: Class, prop: string) {
+export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping, type: IVUE, func: Function, self: Class, prop: string) {
   // Define a default void return
   let result = void (0)
   // Handle basic scoped most often scenario early
   // Usually the init() function
-  if (type === Behavior.SCOPED) {
+  if (type === IVUE.SCOPED) {
     // Inside scoped you can put watch(), computed(), watchEffect()
     // and it will be auto garbage collected on scope destruction
     return Object.defineProperty(self, prop, {
@@ -242,7 +242,7 @@ export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping, typ
   }
 
   switch (type) {
-    case Behavior.INTERCEPT:
+    case IVUE.INTERCEPT:
       // Basic, fast, non-scoped intercepts
       return Object.defineProperty(self, prop, {
         value: function (...args: any) {
@@ -250,7 +250,7 @@ export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping, typ
         },
         enumerable: false
       })
-    case Behavior.SCOPED_INTERCEPT:
+    case IVUE.SCOPED_INTERCEPT:
       // Inside scoped you can put watch(), computed(), watchEffect()
       // and it will be auto garbage collected on scope destruction
       return Object.defineProperty(self, prop, {

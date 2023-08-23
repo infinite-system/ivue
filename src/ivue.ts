@@ -1,6 +1,6 @@
 import { computed, reactive, toRef, type ComputedRef } from "vue";
 import type { IVue, IVueToRefsObj, AnyClass, InferredArgs, Getters } from "./types/core";
-import { Behavior } from "./behavior";
+import { IVUE } from "./behavior";
 import { getPrototypeGetters, getInstanceGetters } from './utils/getters'
 
 /**
@@ -46,7 +46,9 @@ export function ivueTransform (vue: any, getters: Getters, ...args: undefined[])
     computeds = {}
 
     for (const prop in getters.values) {
-      if (vue.constructor?.behavior?.[prop] === Behavior.DISABLED) continue // skip if DISABLED
+      if (vue.constructor?.behavior?.[prop] === IVUE.OFF) {
+        continue // skip if OFF
+      }
 
       // Handle getter as Vue computed()
       Object.defineProperty(vue, prop, {

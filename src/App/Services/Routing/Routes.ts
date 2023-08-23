@@ -6,19 +6,19 @@ export default [
     component: () => import('@/App/Home/Home.vue'),
   },
   {
-    name: 'loginLink',
+    name: 'login',
     path: '/app/login',
     secure: false,
     component: () => import('@/App/Auth/Auth.vue'),
   },
   {
-    name: 'homeLink',
+    name: 'home',
     path: '/app/home',
     secure: true,
     component: () => import('@/App/Home/Home.vue'),
   },
   {
-    name: 'authorPolicyLink',
+    name: 'authorPolicy',
     path: '/app/author-policy',
     secure: false,
     component: () => import('@/App/Home/Home.vue'),

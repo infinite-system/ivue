@@ -1,5 +1,5 @@
 import { watch, onMounted, onUnmounted } from "vue";
-import { Behavior } from "@/index";
+import { IVUE } from "@/index";
 import { use, init } from "@/index";
 import { App } from "@/App/App";
 import { RouterGateway } from "@/App/Routing/RouterGateway";
@@ -29,8 +29,8 @@ export class TField {
   router = use(RouterGateway)
 
   static behavior: any = {
-    init: Behavior.SCOPED_INTERCEPT,
-    runWithIntercept: Behavior.INTERCEPT
+    init: IVUE.SCOPED_INTERCEPT,
+    runWithIntercept: IVUE.INTERCEPT
   }
 
   constructor (private _prop: number, private buildMouse = true) {}

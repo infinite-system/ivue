@@ -1,16 +1,17 @@
-import type { Class } from '@/types/core'
-import { Behavior, extend } from '@/index';
+import type { Class } from '../types/core'
+import { IVUE } from '../behavior';
+import { extend } from '../utils/extend'
 import { getCurrentInstance } from 'vue';
 
-export function useInstance(self: any, mainClass: Class) {
-  mainClass.behavior = extend(mainClass.behavior ?? {}, { $instance: Behavior.DISABLED })
+export function useInstance (mainClass: Class, self: UseInstance | any) {
+  mainClass.behavior = extend(mainClass.behavior ?? {}, { $instance: IVUE.OFF })
 }
 
 export class UseInstance {
   get $instance () {
     return getCurrentInstance()
   }
-  constructor(mainClass: Class) {
-    useInstance(this, mainClass)
+  constructor (mainClass: Class) {
+    useInstance(mainClass, this)
   }
 }

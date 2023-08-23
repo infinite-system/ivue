@@ -1,9 +1,12 @@
 import { use } from '@/index'
+import type { Class } from '../../types/core'
+import { Traits } from '@/index'
 import { User } from './User'
 import { Http } from '@/App/Services/Http/Http';
 import { $Message, Message } from '@/App/Services/Message/Message';
 import { Router } from '@/App/Services/Routing/Router'
 import type { Null } from '@/types/core'
+import { UseCapsule } from '@/traits/UseCapsule';
 
 export class $Auth {
 
@@ -43,13 +46,23 @@ export class $Auth {
 
 export class Auth  {
 
-  $ = use($Auth)
-  router = use(Router)
-  message = use(Message)
+  capsule = $Auth
+  constructor() {
+    this.useCapsule()
+  }
+
+  get router () { return use(Router) }
+  get message () { return use(Message) }
 
   email: Null<string> = null
   password: Null<string> = null
   option: Null<string> = null
+
+  init(){
+    this.option = 'login'
+    this.email = 'ekalashnikov@gmail.com'
+    this.password = 'test1234'
+  }
 
   reset () {
     this.email = ''
@@ -74,7 +87,7 @@ export class Auth  {
     this.message.show(login, 'User logged in')
 
     if (login.success) {
-      this.router.push({ name: 'homeLink' })
+      this.router.push({ name: 'home' })
     }
   }
 
@@ -85,6 +98,9 @@ export class Auth  {
 
   async logout () {
     this.$.logout()
-    this.router.push({ name: 'loginLink' })
+    this.router.push({ name: 'login' })
   }
 }
+
+Traits(Auth, [UseCapsule])
+export interface Auth extends UseCapsule {}

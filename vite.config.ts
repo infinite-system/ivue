@@ -1,4 +1,4 @@
-// import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import pkg from "./package.json";
@@ -35,10 +35,11 @@ export default defineConfig({
         },
 
       })],
-      external: ["vue"],
+      external: ["vue", "vue-router"],
       output: {
         globals: {
-          vue: "Vue"
+          vue: "Vue",
+          "vue-router": "VueRouter"
         },
       },
     },
@@ -47,8 +48,8 @@ export default defineConfig({
     port: 5010
   },
   resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'),
-    }
+    alias: [
+      { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
+    ]
   }
 })

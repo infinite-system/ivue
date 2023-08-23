@@ -1,9 +1,10 @@
-import type { Class } from '@/types/core';
-import { Behavior, extend } from '@/index';
+import type { Class } from '../types/core';
+import { IVUE } from '../behavior';
+import { extend } from '../utils/extend'
 import { getCurrentInstance } from 'vue';
 
 export function useRefs (mainClass: Class, obj: any) {
-  mainClass.behavior = extend(mainClass.behavior ?? {}, { $refs: Behavior.DISABLED })
+  mainClass.behavior = extend(mainClass.behavior ?? {}, { $refs: IVUE.OFF })
 }
 
 export class UseRefs {

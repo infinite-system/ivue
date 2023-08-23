@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { use } from '@/index'
-import { App } from "@/App/App";
-
-import Navigation from '@/App/Navigation/Navigation.vue'
-
-const app = use(App)
+import Navigation from '@/App/Services/Navigation/Navigation.vue'
 </script>
 <template>
-  <vue-dd v-model="app" />
+  <!-- <vue-dd v-model="app" get-all-properties /> -->
+  <br />
+  
   <div class="w3-row">
     <div class="w3-col s4 w3-center">
       <Navigation />
