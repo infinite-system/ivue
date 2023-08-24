@@ -1,7 +1,7 @@
-import { effectScope } from 'vue'
+import { effectScope, type EffectScope } from 'vue'
 import { Mapping } from './kernel'
 import { tryOnScopeDispose } from "@vueuse/core";
-import type { AnyClass, Class } from './types/core'
+import type { AnyClass, Class, Null } from './types/core'
 import type { InterceptsFns, Intercept, InterceptsMap, InterceptFn, InterceptOptions, InterceptAttachTo } from './types/core';
 
 /**
@@ -20,7 +20,7 @@ export const intercepts: InterceptsMap = {
  * @param intercept 
  * @return
  */
-export function runConstructorIntercept(
+export function runConstructorIntercept (
   type: keyof InterceptsMap, obj: any, intercept: Intercept
 ) {
   const fns = intercepts[type].get(obj) as InterceptsFns
@@ -107,7 +107,7 @@ function autoBindIntercept (to: Function | [Class, Function], scoped: boolean): 
 
   return to as InterceptFn
 }
-  
+
 /**
  * Function to run before an interceptable method in ivue.
  *
@@ -212,11 +212,13 @@ export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping, typ
     // and it will be auto garbage collected on scope destruction
     return Object.defineProperty(self, prop, {
       value: function (...args: any) {
-        const scope = effectScope()
-        scope.run(() => {
-          result = func.bind(self)(...args)
+        let scope: Null<EffectScope> = effectScope()
+        scope.run(() => result = func.bind(self)(...args))
+        tryOnScopeDispose(() => {
+          scope?.stop()
+          scope = null
+          result = void (0)
         })
-        tryOnScopeDispose(() => scope.stop())
         return result
       },
       enumerable: false
@@ -227,15 +229,15 @@ export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping, typ
   // Define the common intercept processor:
   const processIntercept = (...args: any) => {
 
-    const intercept: Intercept = { mapping, self, return: result, name: prop, args,  }
+    const intercept: Intercept = { mapping, self, return: result, name: prop, args, }
 
-    if (true === runIntercept('before', self, prop, args, intercept)) 
+    if (true === runIntercept('before', self, prop, args, intercept))
       return intercept.return // short circuit, if intercept returns false
 
     result = func.bind(self)(...args)
     intercept.return = result
 
-    if (true === runIntercept('after', self, prop, args, intercept)) 
+    if (true === runIntercept('after', self, prop, args, intercept))
       return intercept.return // short circuit, if intercept returns false
 
     return intercept.return
@@ -255,11 +257,13 @@ export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping, typ
       // and it will be auto garbage collected on scope destruction
       return Object.defineProperty(self, prop, {
         value: function (...args: any) {
-          const scope = effectScope()
-          scope.run(() => {
-            result = processIntercept(...args)
+          let scope: Null<EffectScope> = effectScope()
+          scope.run(() => result = processIntercept(...args))
+          tryOnScopeDispose(() => {
+            scope?.stop()
+            scope = null
+            result = void (0)
           })
-          tryOnScopeDispose(() => scope.stop())
           return result
         },
         enumerable: false

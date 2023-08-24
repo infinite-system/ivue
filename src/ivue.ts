@@ -3,6 +3,7 @@ import type { IVue, IVueToRefsObj, AnyClass, InferredArgs, Getters } from "./typ
 import { IVUE } from "./behavior";
 import { getPrototypeGetters, getInstanceGetters } from './utils/getters'
 import { tryOnScopeDispose } from '@vueuse/core';
+import type { Null } from './types/core';
 /**
  * Create ivue instance from class constructor.
  * 
@@ -11,7 +12,7 @@ import { tryOnScopeDispose } from '@vueuse/core';
  * @returns @see IVue<T>
  */
 export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>): IVue<T> {
-  let scope:  EffectScope | null = effectScope()
+  let scope:  Null<EffectScope> = effectScope()
   
   let vue = ivueTransform(reactive(Reflect.construct(className, args)), getPrototypeGetters(className.prototype), scope, ...args)
   
@@ -32,7 +33,7 @@ export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>
  * @returns 
  */
 export function iobj<T extends object> (obj: T): T & IVueToRefsObj<T> {
-  let scope: EffectScope | null = effectScope()
+  let scope: Null<EffectScope> = effectScope()
   
   let vue = ivueTransform(reactive(obj), getInstanceGetters(obj), scope)
   
@@ -93,7 +94,6 @@ export function ivueTransform (vue: any, getters: Getters, scope: EffectScope, .
   Object.defineProperty(vue, 'toRefs', {
     enumerable: false,
     configurable: true,
-
     /**
      * Convert from reacive to refs, will convert the all the properties
      * or just the ones specified in the filter.

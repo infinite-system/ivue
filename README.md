@@ -22,10 +22,10 @@ Utils:
 https://github.com/infinite-system/infinite-vue/blob/main/src/utils.ts
 
 Inversion of Control Container:
-https://github.com/infinite-system/infinite-vue/blob/main/src/tests/Helpers/BaseIOC.ts
+https://github.com/infinite-system/infinite-vue/blob/main/src/kernel.ts
 
 App.vue:
 https://github.com/infinite-system/infinite-vue/blob/main/demo/App.vue
 
 Main class used for playground in App.vue:
-https://github.com/infinite-system/infinite-vue/blob/main/src/tests/Helpers/Auth/IVueTests.ts
+https://github.com/infinite-system/infinite-vue/blob/main/demo/tests/IVueTests.ts

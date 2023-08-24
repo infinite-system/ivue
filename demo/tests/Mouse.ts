@@ -8,7 +8,7 @@ import { onBeforeRouteUpdate } from 'vue-router';
 export class $Mouse {
   x = 0
   y = 0
-  init () {
+  async init () {
     const update = (event: MouseEvent) => {
       this.x = event.pageX
       this.y = event.pageY
