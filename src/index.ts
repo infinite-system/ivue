@@ -15,6 +15,7 @@ import { Mapping, Kernel, kernel, ivueOnInit, ivueInversify, bind, get, make, us
 import { IVUE, after, before } from "./behavior"
 
 import { raw, unraw, Traits, extend, pre } from "./utils"
+
 import { UseCapsule } from './traits/UseCapsule';
 import { UseInstance } from './traits/UseInstance';
 import { UseMounting } from './traits/UseMounting';
@@ -25,7 +26,6 @@ import { UseRouting } from './traits/UseRouting';
 import { UseEmit } from './traits/UseEmit';
 import { UseTick } from './traits/UseTick';
 import { UseVue } from './traits/UseVue';
-
 
 export {
   // config

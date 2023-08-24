@@ -12,11 +12,11 @@ export class App {
 
   get router () { return use(Router) }
   
-  get message () { return use(Message) }
+  get user () { return use(User) }
 
   get auth () { return use(Auth) }
 
-  get user () { return use(User) }
+  get message () { return use(Message) }
 
   load () {
     this.router.$.register(routes)

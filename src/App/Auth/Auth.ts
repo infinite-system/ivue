@@ -1,5 +1,4 @@
 import { use } from '@/index'
-import type { Class } from '../../types/core'
 import { Traits } from '@/index'
 import { User } from './User'
 import { Http } from '@/App/Services/Http/Http';

@@ -1,6 +1,6 @@
-import { reactive, markRaw } from 'vue'
+import { reactive, markRaw, effectScope, type EffectScope} from 'vue'
 
-import type { MappingScope, MappingType, IVue, AnyClass, InferredArgs, Intercept } from './types/core';
+import type { MappingScope, MappingType, IVue, AnyClass, InferredArgs, Intercept, Null } from './types/core';
 
 import { ivueTransform } from './ivue';
 
@@ -9,6 +9,8 @@ import { getPrototypeGetters } from './utils/getters'
 import { runConstructorIntercept, intercepts, behaviorMethodHandler, IVUE } from './behavior'
 
 import { safeClassName } from './utils/safe-class-name';
+
+import { tryOnScopeDispose } from '@vueuse/core';
 
 /**
  * Kernel Mapping
@@ -22,8 +24,8 @@ export class Mapping {
    * 
    * @param from mapping pointer
    */
-  constructor (public from: any) { 
-    this.to = from 
+  constructor (public from: any) {
+    this.to = from
   }
 
   /**
@@ -41,6 +43,10 @@ export class Mapping {
    */
   type: MappingType = 'generic'
 
+  /**
+   * EffectScope for ivue type
+   */
+  effectScope:  Null<EffectScope> = null
   /**
    * Mapping initializer method.
    */
@@ -184,7 +190,7 @@ export class Kernel {
 
     // Find mapping
     let mapping = this.singletons.get(className)
-    
+
     if (!mapping) {
       // Automatically bind a singleton
       this.bind(className).singleton()
@@ -210,7 +216,7 @@ export class Kernel {
   make<T extends AnyClass> (className: T, ...args: InferredArgs<T>): InstanceType<T> {
 
     let mapping = this.transients.get(className)
-    
+
     if (!mapping) {
       // Automatically bind a transient
       this.bind(className).transient()
@@ -221,6 +227,10 @@ export class Kernel {
     return mapping.onInit(mapping, ...args)
   }
 
+  subscribers: Map<AnyClass, number> = new Map()
+
+  effectScopes: Map<AnyClass, any> = new Map()
+
   /**
    * ivue reactive singleton returned from the Kernel container,
    * or a self-bound singleton that is created on the fly.
@@ -230,34 +240,68 @@ export class Kernel {
    */
   use<T extends AnyClass> (className: T, ...args: InferredArgs<T>): IVue<T> {
 
-    // Instance exists? return it
-    if (this.instances.has(className)) return this.instances.get(className)
+    let instance, mapping: Mapping, scope: Null<EffectScope>
 
-    // Find mapping
-    let mapping = this.singletons.get(className)
+    const dispose = () => {
+      
+      const subscribersLowered = (this.subscribers.get(className) || 0) - 1
+      this.subscribers.set(className, subscribersLowered)
 
-    if (!mapping) {
-      // Automatically bind a singleton and convert to ivue reactive
-      this.bind(className).singleton().ivue()
-      // Get the new singleton mapping
-      mapping = this.singletons.get(className)
-
-    } else if (mapping.type !== 'ivue') {
-      throw new Error(
-        "ivue.kernel: use(" + safeClassName(className) + ") method "
-        + "should be used only with 'ivue' type singleton mappings, "
-        + "use get(" + safeClassName(className) + ") method for "
-        + "standard JavaScript singleton Kernel mappings."
-      )
+      if (this.effectScopes.has(className) && subscribersLowered <= 0) {
+        this.effectScopes.get(className).stop()
+        instance = scope = mapping.effectScope = null
+        this.effectScopes.delete(className)
+        this.instances.delete(className)
+      }
     }
 
-    // Create instance
-    const instance = mapping.onInit(mapping, ...args)
+    return ((): IVue<T> => {
 
-    // Save instance
-    this.instances.set(className, instance)
+      this.subscribers.set(className, (this.subscribers.get(className) || 0) + 1)
 
-    return instance
+      // Instance exists? return it
+      if (!this.instances.has(className)) {
+
+        // Find mapping
+        mapping = this.singletons.get(className)
+
+        if (!mapping) {
+          // Automatically bind a singleton and convert to ivue reactive
+          this.bind(className).singleton().ivue()
+          // Get the new singleton mapping
+          mapping = this.singletons.get(className)
+
+        } else if (mapping.type !== 'ivue') {
+          throw new Error(
+            "ivue.kernel: use(" + safeClassName(className) + ") method "
+            + "should be used only with 'ivue' type singleton mappings, "
+            + "use get(" + safeClassName(className) + ") method for "
+            + "standard JavaScript singleton Kernel mappings."
+          )
+        }
+
+        scope = mapping.effectScope = effectScope(true)
+
+        this.effectScopes.set(className, scope)
+        
+        // Create instance
+        instance = scope.run(() => mapping.onInit(mapping, ...args))
+
+        // Save instance
+        this.instances.set(className, instance)
+
+        tryOnScopeDispose(dispose)
+
+        return instance
+
+      } else {
+
+        tryOnScopeDispose(dispose)
+
+        return this.instances.get(className)
+      }
+
+    })()
   }
 
   /**
@@ -284,7 +328,17 @@ export class Kernel {
       )
     }
 
-    return mapping.onInit(mapping, ...args)
+    let scope : Null<EffectScope> = mapping.effectScope = effectScope(true)
+    
+    let vue = scope.run(() => mapping.onInit(mapping, ...args))
+
+    tryOnScopeDispose(() => {
+      scope?.stop()
+      scope = vue = mapping.effectScope = null
+    })
+
+    return vue
+    
   }
 }
 
@@ -301,7 +355,7 @@ export function onInit<T extends AnyClass> (mapping: Mapping, ...args: InferredA
 
   // Before constructor intercepts
   if (intercepts.before.has(mapping.to)) {
-    const intercept = { mapping: mapping, self: null, return: null,  args } as Intercept
+    const intercept = { mapping: mapping, self: null, return: null, args } as Intercept
     if (true === runConstructorIntercept('before', mapping.to, intercept))
       return intercept.return
   }
@@ -347,9 +401,9 @@ export function ivueOnInit<T extends AnyClass> (mapping: Mapping, ...args: Infer
   }
 
   const getters = getPrototypeGetters(mapping.to.prototype)
-  const vue = ivueTransform(reactive(Reflect.construct(mapping.to, args)), getters, ...args)
+  const vue = mapping.effectScope?.run(() => ivueTransform(reactive(Reflect.construct(mapping.to, args)), getters, mapping.effectScope as EffectScope, ...args))
 
-  // IVUE hanlding
+  // Behavior hanlding
   if (typeof vue.constructor.behavior === 'object') {
     for (const prop in vue.constructor.behavior) {
       if (prop in getters.values) continue // skip getters to not cause a computation
@@ -373,7 +427,7 @@ export function ivueOnInit<T extends AnyClass> (mapping: Mapping, ...args: Infer
   }
 
   // .init() exists? Run it, reactive references can already be used inside .init()
-  if (typeof vue.init === 'function') vue.init()
+  if (typeof vue.init === 'function') mapping.effectScope?.run(async () => await vue.init())
 
   return vue
 }
@@ -386,8 +440,18 @@ export function ivueOnInit<T extends AnyClass> (mapping: Mapping, ...args: Infer
  * @param args
  */
 export function ivueInversify (ctx: any, obj: any, ...args: any) {
-  const vue = ivueTransform(reactive(Object.create(obj)), getPrototypeGetters(Reflect.getPrototypeOf(obj)), ...args)
-  if (typeof vue.init === 'function') vue.init()
+
+  let scope: Null<EffectScope> = effectScope(true)
+  
+  let vue = ivueTransform(reactive(Object.create(obj)), getPrototypeGetters(Reflect.getPrototypeOf(obj)), scope, ...args)
+  
+  if (typeof vue.init === 'function') scope.run(async () => await vue.init())
+  
+  tryOnScopeDispose(() => {
+    scope?.stop()
+    scope = vue = null
+  })
+
   return vue
 }
 

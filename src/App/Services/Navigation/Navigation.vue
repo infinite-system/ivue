@@ -15,10 +15,13 @@ const router = use(Router)
 
   <br />
   Router:
-  
+
   {{ router.currentRoute.name }}
 
-  <button @click="router.push({name:'login'})">Login</button>
+  <button @click="router.push({ name: 'login' })">Login</button>
+  <br />
+  <button @click="v.router?.push({ name: 'ivue' })">ivue</button>
+
   <div class="navigation-container">
     <div
       class="navigation-item-header"
@@ -39,14 +42,15 @@ const router = use(Router)
 
     <router-link to="/">Go Home</router-link>
 
-  <div
-    v-if="v.menu.showBack"
-    class="navigation-item"
-    @click="() => v.back()"
-    :style="{ backgroundColor: '#2e91fc' }"
-  >
-    <span>⬅ </span>Back
-  </div>
+    <div
+      v-if="v.menu.showBack"
+      class="navigation-item"
+      @click="() => v.back()"
+      :style="{ backgroundColor: '#2e91fc' }"
+    >
+      <span>⬅ </span>Back
+    </div>
 
-  <Logout />
-</div></template>
+    <Logout />
+  </div>
+</template>

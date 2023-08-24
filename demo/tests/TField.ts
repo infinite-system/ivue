@@ -2,7 +2,7 @@ import { watch, onMounted, onUnmounted } from "vue";
 import { IVUE } from "@/index";
 import { use, init } from "@/index";
 import { App } from "@/App/App";
-import { RouterGateway } from "@/App/Routing/RouterGateway";
+import { TRouter } from "./TRouter";
 
 export class Mouse {
 
@@ -26,7 +26,7 @@ export class TField {
 
   app = use(App)
 
-  router = use(RouterGateway)
+  router = use(TRouter)
 
   static behavior: any = {
     init: IVUE.SCOPED_INTERCEPT,

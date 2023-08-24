@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, provide } from 'vue'
 import { IVueTests } from "../tests/IVueTests";
-import { use, pre } from '@/index'
+import { bind, use, init, pre } from '@/index'
 
 import SubComponent2 from './SubComponent2.vue'
 import TraitsComponent from './TraitsComponent.vue'
+import { Mouse } from '../tests/Mouse';
 
 const vm: IVueTests = use(IVueTests)
-
+provide('mouse', init(Mouse))
 const localComputedValue = computed(() => {
   return vm.computedVariable?.[0]?.test + ' + local append'
 })

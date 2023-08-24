@@ -1,7 +1,6 @@
 import TreeModel from 'tree-model'
 import { Router } from '../Routing/Router'
 import { Traits, UseRoute, UseRouter, use } from '@/index'
-import { watch } from 'vue'
 
 export class $Navigation {
 

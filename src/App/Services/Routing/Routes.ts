@@ -24,6 +24,12 @@ export default [
     component: () => import('@/App/Home/Home.vue'),
   },
   {
+    name: 'ivue',
+    path: '/ivue',
+    secure: false,
+    component: () => import('../../../../demo/components/IVueTest.vue'),
+  },
+  {
     name: '*',
     path: '/:catchAll(.*)*',
     secure: true,

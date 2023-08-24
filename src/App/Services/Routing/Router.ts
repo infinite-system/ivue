@@ -212,8 +212,6 @@ export class $Router {
 
 __$Router__
 
-
-
 function run<T extends Function> (bind: any, fn: T, args: any = []): T {
   return fn.apply(bind, args)
 }

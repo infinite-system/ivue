@@ -1,4 +1,5 @@
 import type { Mapping } from '../kernel'
+import { ivueTransform } from '../ivue';
 
 export type AnyClass = abstract new (...args: any) => any;
 
@@ -10,6 +11,9 @@ export type Class = {
 
 export type IVue<T extends AnyClass> = InstanceType<T> & IVueToRefs<T>
 
+/**
+ * @see ivueTransform
+ */
 export interface IVueToRefs<T extends AnyClass> {
   toRefs: (...args: any) => InstanceType<T>
 }

@@ -1,6 +1,6 @@
 
-import { onMounted, onUnmounted, watch } from 'vue';
-import { init, Traits } from '@/index';
+import { onActivated, onDeactivated, onMounted, onUnmounted, onUpdated, watch } from 'vue';
+import { init, use, Traits } from '@/index';
 import { UseApp } from '@/App/Traits/UseApp';
 import { UseCapsule } from '@/traits/UseCapsule';
 import { UseQuasar } from '@/App/Traits/UseQuasar';
@@ -9,41 +9,21 @@ import { UseMounting } from '@/traits/UseMounting';
 import { UseVue } from '@/traits/UseVue';
 import { UseRouting } from '@/traits/UseRouting';
 import { UseRouter } from '@/traits/UseRouter';
-
-export class $Mouse {
-  x = 0
-  y = 0
-  init () {
-    const update = (event: MouseEvent) => {
-      this.x = event.pageX
-      this.y = event.pageY
-    }
-    onMounted(() => window.addEventListener('mousemove', update))
-    onUnmounted(() => window.removeEventListener('mousemove', update))
-  }
-}
-
-export class Mouse {
-
-  capsule = $Mouse // detached
-  constructor () {
-    this.useCapsule(arguments)
-  }
-
-  get x () { return this.$.x }
-
-  get y () { return this.$.y }
-}
-Traits(Mouse, [UseCapsule])
-export interface Mouse extends UseCapsule {}
+import { Mouse } from './Mouse'
 
 
 export class $Test {
 
   constructor (public self: Test) {}
 
+  mouse!: Mouse
   init () {
-    ({ x: this.x, y: this.y } = init(Mouse).toRefs('x', 'y'))
+
+    // const { x, y } = useMouse()
+
+    ({ x: this.x, y: this.y } = use(Mouse).toRefs())
+
+    // this.mouse = use(Mouse)
   }
 
   words = 'saying some words...'
@@ -51,6 +31,11 @@ export class $Test {
   say (i: number) {
     console.log(this.words)
   }
+
+
+  // get x () { return this.mouse.x }
+
+  // get y () { return this.mouse.y }
 
   x = 0
   y = 0
@@ -63,13 +48,13 @@ export class Test {
 
   capsule = $Test // detached
   constructor (emit: any, private n: number) {
-    this.useCapsule(arguments)
+    this.initCapsule(arguments)
     this.$emit = emit
   }
 
   init () {
     watch(this, newValue => {
-      console.log('newValue', newValue)
+      // console.log('newValue', newValue)
     })
   }
 
@@ -86,7 +71,6 @@ export class Test {
   get email () {
     return this.$.app.router.$.user.email
   }
-
 
   beforeMount () {
     console.log('# ' + this.n + ' before mounting...')
