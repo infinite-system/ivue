@@ -5,12 +5,14 @@ import { setup, use } from '@/index'
 
 import AppComponent from "./App.vue";
 import { App } from '@/App/App';
+import { Auth } from '@/App/Auth/Auth';
 
 const app = use(App).load()
 setup({ router: app.router })
+use(Auth)
 
 const vue = createApp(AppComponent);
-console.log('app.router', app.router)
+
 vue.use(app.router)
 
 vue.component('VueDd', VueDd)

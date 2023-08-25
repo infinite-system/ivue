@@ -4,7 +4,7 @@ import { TApp } from "./TApp";
 import { TMessage } from './TMessage'
 import { TRouter } from './TRouter'
 import { ParentIVueTests } from "./ParentIVueTests";
-import { watch } from "vue";
+import { onUnmounted, toRaw, watch, onBeforeUnmount } from "vue";
 import { generateHugeArray } from "@/App/Generators/generators";
 import { TField } from "./TField";
 import { use, init, IVUE, unraw, before } from "@/index";
@@ -55,7 +55,7 @@ export class IVueTests extends ParentIVueTests {
 
   transientField3!: TField
 
-  transientFields: TField[] = []
+  transientFields: TField[] | null = []
 
   init () {
 
@@ -94,8 +94,19 @@ export class IVueTests extends ParentIVueTests {
       }
 
 
+      console.log('this.transientFields.length', this.transientFields.length)
       this.timeTaken = Date.now() - start;
     })
+
+
+    onBeforeUnmount(() => {
+      console.log('unload the fields')
+    
+
+      // if ('transientFields' in this) this.transientFields = null
+      // this.transientFields = null
+    })
+
     console.log('this.transientField1', this.transientField1)
     console.log('this.transientField2', this.transientField2)
 

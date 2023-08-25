@@ -31,6 +31,7 @@ export {
   // config
   config,
   setup,
+  
   // ivue
   ivue,
   iobj,

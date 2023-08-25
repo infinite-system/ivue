@@ -2,7 +2,8 @@
 import { use } from '@/index'
 import { Mouse } from './tests/Mouse';
 import { IVueTests } from "./tests/IVueTests";
-use(IVueTests)
+
+
 </script>
 <template>
   <router-view />

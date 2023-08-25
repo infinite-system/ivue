@@ -1,4 +1,4 @@
-import { reactive, markRaw, effectScope, type EffectScope } from 'vue'
+import { reactive, markRaw, effectScope, type EffectScope, getCurrentScope, isReadonly, toRaw } from 'vue';
 
 import type { MappingScope, MappingType, IVue, AnyClass, InferredArgs, Intercept, Null } from './types/core';
 
@@ -11,6 +11,9 @@ import { runConstructorIntercept, intercepts, behaviorMethodHandler, IVUE } from
 import { safeClassName } from './utils/safe-class-name';
 
 import { tryOnScopeDispose } from '@vueuse/core';
+
+import { disposeGarbage } from './utils/dispose-garbage';
+
 
 /**
  * Kernel Mapping
@@ -81,27 +84,27 @@ export class Kernel {
   /**
    * Transiet mappings storage.
    */
-  private transients = new Map()
+  private transients = new WeakMap()
 
   /**
    * Singleton mappings storage.
    */
-  private singletons = new Map()
+  private singletons = new WeakMap()
 
   /**
    * Singleton instances storage.
    */
-  private instances = new Map()
+  private instances = new WeakMap()
 
   /**
    * Subscribers
    */
-  subscribers: Map<AnyClass, number> = new Map()
+  subscribers: WeakMap<AnyClass, number> = new WeakMap()
 
   /**
    * Vue EffectScopes for garbage collection.
    */
-  effectScopes: Map<AnyClass, EffectScope> = new Map()
+  effectScopes: WeakMap<AnyClass, EffectScope> = new WeakMap()
 
   /**
    * Current mapping being set.
@@ -246,7 +249,7 @@ export class Kernel {
    */
   use<T extends AnyClass> (className: T, ...args: InferredArgs<T>): IVue<T> {
 
-    let instance, mapping: Mapping, scope: Null<EffectScope>
+    let vue: IVue<T> | null, mapping: Mapping, scope: Null<EffectScope>
 
     const dispose = () => {
 
@@ -254,15 +257,22 @@ export class Kernel {
       this.subscribers.set(className, subscribersLowered)
 
       if (this.effectScopes.has(className) && subscribersLowered <= 0) {
+
         this.effectScopes.get(className)?.stop()
-        instance = scope = null
+
+        console.log('delete instance', className.name, subscribersLowered)
+
+        if (vue) {
+          disposeGarbage(vue, getPrototypeGetters(vue.constructor.prototype), 'ivue.kernel.use()')
+        }
+
+        vue = scope = null
         if (mapping) mapping.effectScope = null
 
         this.effectScopes.delete(className)
         this.instances.delete(className)
       }
     }
-
 
     this.subscribers.set(className, (this.subscribers.get(className) || 0) + 1)
 
@@ -287,19 +297,21 @@ export class Kernel {
         )
       }
 
-      scope = mapping.effectScope = effectScope(true)
+      // Create effect scope
+      scope = mapping.effectScope = effectScope(!!getCurrentScope())
+      
+      // Create instance
+      vue = scope.run(() => mapping.onInit(mapping, ...args))
 
+      // Save effect scope
       this.effectScopes.set(className, scope)
 
-      // Create instance
-      instance = scope.run(() => mapping.onInit(mapping, ...args))
-
       // Save instance
-      this.instances.set(className, instance)
+      this.instances.set(className, vue)
 
       tryOnScopeDispose(dispose)
 
-      return instance
+      return vue as IVue<T>
 
     } else {
 
@@ -307,7 +319,6 @@ export class Kernel {
 
       return this.instances.get(className)
     }
-
   }
 
   /**
@@ -334,19 +345,20 @@ export class Kernel {
       )
     }
 
-    let scope: Null<EffectScope> = mapping.effectScope = effectScope(true)
+    let scope: Null<EffectScope> = mapping.effectScope = effectScope(!!getCurrentScope())
 
     let vue = scope.run(() => mapping.onInit(mapping, ...args))
 
     tryOnScopeDispose(() => {
-      scope?.stop()
+      scope?.stop();
+      disposeGarbage(vue, getPrototypeGetters(vue.constructor.prototype), 'ivue.kernel.init()')
       scope = vue = mapping.effectScope = null
     })
 
     return vue
-
   }
 }
+
 
 __Kernel__()
 
@@ -369,7 +381,7 @@ export function onInit<T extends AnyClass> (mapping: Mapping, ...args: InferredA
   // @ts-ignore
   const obj = new mapping.to(...args)
 
-  // IVUE handling
+  // Behavior handling
   const getters = getPrototypeGetters(mapping.to.prototype)
   if (typeof obj.constructor.behavior === 'object') {
     for (const prop in obj.constructor.behavior) {
@@ -407,7 +419,7 @@ export function ivueOnInit<T extends AnyClass> (mapping: Mapping, ...args: Infer
   }
 
   const getters = getPrototypeGetters(mapping.to.prototype)
-  const vue = mapping.effectScope?.run(() => ivueTransform(reactive(Reflect.construct(mapping.to, args)), getters, mapping.effectScope as EffectScope, ...args))
+  let vue = mapping.effectScope?.run(() => ivueTransform(reactive(Reflect.construct(mapping.to, args)), getters, mapping.effectScope as EffectScope, ...args))
 
   // Behavior hanlding
   if (typeof vue.constructor.behavior === 'object') {
@@ -433,7 +445,7 @@ export function ivueOnInit<T extends AnyClass> (mapping: Mapping, ...args: Infer
   }
 
   // .init() exists? Run it, reactive references can already be used inside .init()
-  if (typeof vue.init === 'function') mapping.effectScope?.run(async () => await vue.init())
+  if (typeof vue.init === 'function') mapping.effectScope?.run(() => vue.init())
 
   return vue
 }
@@ -447,16 +459,13 @@ export function ivueOnInit<T extends AnyClass> (mapping: Mapping, ...args: Infer
  */
 export function ivueInversify (ctx: any, obj: any, ...args: any) {
 
-  let scope: Null<EffectScope> = effectScope(true)
+  let scope: Null<EffectScope> = effectScope(!!getCurrentScope())
 
   let vue = ivueTransform(reactive(Object.create(obj)), getPrototypeGetters(Reflect.getPrototypeOf(obj)), scope, ...args)
 
-  if (typeof vue.init === 'function') scope.run(async () => await vue.init())
+  if (typeof vue.init === 'function') scope.run(() => vue.init())
 
-  tryOnScopeDispose(() => {
-    scope?.stop()
-    scope = vue = null
-  })
+  tryOnScopeDispose(() => (scope?.stop(), scope = vue = null))
 
   return vue
 }

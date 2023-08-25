@@ -79,7 +79,7 @@ function _extend<K, V> (target: any, sources: any[], parents: Map<K, V> | null |
         target[key] = source[key]
       }
     }
-  }
-  
+  } 
+
   return _extend(target, sources, parents);
 }

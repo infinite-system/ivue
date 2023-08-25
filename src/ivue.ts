@@ -1,9 +1,11 @@
-import { computed, reactive, toRef, type ComputedRef, effectScope, type EffectScope } from 'vue';
+import { computed, reactive, toRef, type ComputedRef, effectScope, type EffectScope, getCurrentScope, toRaw } from 'vue';
 import type { IVue, IVueToRefsObj, AnyClass, InferredArgs, Getters } from "./types/core";
 import { IVUE } from "./behavior";
 import { getPrototypeGetters, getInstanceGetters } from './utils/getters'
 import { tryOnScopeDispose } from '@vueuse/core';
 import type { Null } from './types/core';
+import { disposeGarbage } from './utils/dispose-garbage';
+
 /**
  * Create ivue instance from class constructor.
  * 
@@ -12,15 +14,17 @@ import type { Null } from './types/core';
  * @returns @see IVue<T>
  */
 export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>): IVue<T> {
-  let scope:  Null<EffectScope> = effectScope()
-  
-  let vue = ivueTransform(reactive(Reflect.construct(className, args)), getPrototypeGetters(className.prototype), scope, ...args)
-  
-  if (typeof vue.init === 'function') scope.run(async () => await vue.init())
+  let scope: Null<EffectScope> = effectScope(!!getCurrentScope())
+
+  let getters = getPrototypeGetters(className.prototype)
+  let vue = ivueTransform(reactive(Reflect.construct(className, args)), getters, scope, ...args)
+
+  if (typeof vue.init === 'function') scope.run(() => vue.init())
 
   tryOnScopeDispose(() => {
-    scope?.stop()
-    scope = vue = null
+    scope?.stop() 
+    disposeGarbage(vue, getters, 'ivue()')
+    getters = scope = vue = null
   })
 
   return vue
@@ -33,15 +37,17 @@ export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>
  * @returns 
  */
 export function iobj<T extends object> (obj: T): T & IVueToRefsObj<T> {
-  let scope: Null<EffectScope> = effectScope()
-  
-  let vue = ivueTransform(reactive(obj), getInstanceGetters(obj), scope)
-  
-  if (typeof vue.init === 'function') scope.run(async () => await vue.init())
-  
+  let scope: Null<EffectScope> = effectScope(!!getCurrentScope())
+
+  let getters: Getters | null = getInstanceGetters(obj)
+  let vue = ivueTransform(reactive(obj), getters, scope)
+
+  if (typeof vue.init === 'function') scope.run(() => vue.init())
+
   tryOnScopeDispose(() => {
-    scope?.stop()
-    scope = vue = null
+    scope?.stop() 
+    disposeGarbage(vue, getters, 'ivue()')
+    getters = scope = vue = null
   })
 
   return vue
@@ -95,7 +101,7 @@ export function ivueTransform (vue: any, getters: Getters, scope: EffectScope, .
     enumerable: false,
     configurable: true,
     /**
-     * Convert from reacive to refs, will convert the all the properties
+     * Convert from reacive to refs, will convert all the properties
      * or just the ones specified in the filter.
      * 
      * @params ...props: string[] (optional) object property names in string form which will be converted to refs.

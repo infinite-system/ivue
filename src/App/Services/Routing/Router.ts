@@ -8,7 +8,7 @@ import type { Null, AnyObj, Params } from '@/types/core';
 import type { Router as VueRouter } from 'vue-router'
 
 const __$Router__ = ($ = $Router.prototype) => ([
-  // Access
+  // Other
   $.user,
   $.$message,
   // Data
@@ -102,7 +102,9 @@ export class $Router {
       const routeDefinition: any = {
         name: route.name,
         path: route.path,
-        meta: { secure: route.secure },
+        meta: { 
+          secure: route.secure 
+        },
         component: route.component
       }
 

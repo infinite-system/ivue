@@ -52,9 +52,9 @@ export class Test {
     this.$emit = emit
   }
 
-  init () {
+  async init () {
     watch(this, newValue => {
-      // console.log('newValue', newValue)
+      console.log('newValue', newValue)
     })
   }
 

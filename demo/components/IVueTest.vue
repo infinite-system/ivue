@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, provide } from 'vue'
+import { computed, provide, onUnmounted, onBeforeUnmount, getCurrentInstance, onMounted } from 'vue';
 import { IVueTests } from "../tests/IVueTests";
-import { bind, use, init, pre } from '@/index'
-
+import { bind, use, init, pre, kernel } from '@/index'
 import SubComponent2 from './SubComponent2.vue'
 import TraitsComponent from './TraitsComponent.vue'
 import { Mouse } from '../tests/Mouse';
+import { getPrototypeGetters } from '../../src/utils/getters';
 
-const vm: IVueTests = use(IVueTests)
+let vm: IVueTests = use(IVueTests)
 provide('mouse', init(Mouse))
 const localComputedValue = computed(() => {
   return vm.computedVariable?.[0]?.test + ' + local append'
@@ -18,6 +18,12 @@ const hugeId = 2646049
 function hey () {
   console.log('yo')
 }
+onMounted(() => console.log('kernel.instances.get(IVueTests)', kernel.instances.get(IVueTests)))
+onBeforeUnmount(() => {
+  
+  
+})
+onUnmounted(() => console.log('kernel.instances.get(IVueTests)', kernel.instances.get(IVueTests)))
 </script>
 <template>
   <div style="width:900px; margin:0 auto;">
@@ -103,7 +109,7 @@ function hey () {
       test:<input v-model="el.test" /> test2: <input v-model="el.test2" />
     </div>
     <br />
-    <h2>Aync Function Test</h2>
+    <h2>Async Function Test</h2>
     <hr />
     <span>Loader: <span v-if="vm.loading">loading...</span></span><br />
     <span>Result: {{ vm.result }}</span><br />
