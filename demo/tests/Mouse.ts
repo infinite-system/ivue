@@ -19,8 +19,11 @@ function bound(method: Function, obj: any){
 }
 
 export class $Mouse {
+
   x = 0
+  
   y = 0
+  
   async init () {
     // const update = (event: MouseEvent) => {
     //   this.x = event.pageX
@@ -52,6 +55,7 @@ export class $Mouse {
     // console.log('mounted---')
     window.addEventListener('mousemove', bound(this.update, this))
   }
+  
   unmounted () {
     // console.log('unmounted---', this.update.bind(this) === this.update.bind(this))
     window.removeEventListener('mousemove', bound(this.update, this))

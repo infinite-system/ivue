@@ -5,7 +5,7 @@ export class TUser {
 
   get app () { return use(TApp) }
 
-  email = ''
+  email = 'a'
   token = ''
 
   get upperCaseEmail () {

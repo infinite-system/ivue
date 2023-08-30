@@ -5,7 +5,7 @@ import { Router } from '@/App/Services/Routing/Router'
 import { Navigation } from './Navigation'
 import { use } from '@/index'
 
-const v = use(Navigation)
+const v = use(Navigation, 'test')
 const router = use(Router)
 </script>
 <template>
@@ -17,10 +17,13 @@ const router = use(Router)
   Router:
 
   {{ router.currentRoute.name }}
-
+  <br />
   <button @click="router.push({ name: 'login' })">Login</button>
   <br />
-  <button @click="v.router?.push({ name: 'ivue' })">ivue</button>
+  <button @click="router.push({ name: 'ivue', query:{test:1} })">ivue</button>
+
+<br />
+  <button @click="router.push({ name: 'use-test', query:{test:1} })">composable test</button>
 
   <div class="navigation-container">
     <div

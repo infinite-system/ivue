@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, provide, onUnmounted, onBeforeUnmount, getCurrentInstance, onMounted } from 'vue';
 import { IVueTests } from "../tests/IVueTests";
-import { bind, use, init, pre, kernel } from '@/index'
+import { bind, ivue, use, init, pre, kernel } from '@/index'
 import SubComponent2 from './SubComponent2.vue'
 import TraitsComponent from './TraitsComponent.vue'
 import { Mouse } from '../tests/Mouse';
@@ -18,18 +18,21 @@ const hugeId = 2646049
 function hey () {
   console.log('yo')
 }
-onMounted(() => console.log('kernel.instances.get(IVueTests)', kernel.instances.get(IVueTests)))
-onBeforeUnmount(() => {
+// onMounted(() => console.log('kernel.instances.get(IVueTests)', kernel.instances.get(IVueTests)))
+// onBeforeUnmount(() => {
   
   
-})
-onUnmounted(() => console.log('kernel.instances.get(IVueTests)', kernel.instances.get(IVueTests)))
+// })
+// onUnmounted(() => console.log('kernel.instances.get(IVueTests)', kernel.instances.get(IVueTests)))
 </script>
 <template>
+
+<h2>Sub Component Test</h2>
+    <router-view @testEmit="hey"></router-view>
   <div style="width:900px; margin:0 auto;">
 
     <h1>ivue - Infinite Vue - Implementation Tests</h1>
-    <!--  <vue-dd v-model="vm" get-all-properties/>-->
+<!-- <vue-dd v-model="vm" get-all-properties/> -->
 
     <h2>Class Inheritance Tests</h2>
 
@@ -97,7 +100,7 @@ onUnmounted(() => console.log('kernel.instances.get(IVueTests)', kernel.instance
     <div v-for="el in vm.auth.originalVariable">
       test:<input v-model="el.test" /> test2: <input v-model="el.test2" />
     </div>
-    <!--  <vue-dd v-model="pres.reactiveVar" />-->
+
     <br />
     <strong>vm.computedVariable:</strong>
     <div v-for="el in vm.computedVariable">
@@ -145,7 +148,10 @@ onUnmounted(() => console.log('kernel.instances.get(IVueTests)', kernel.instance
       :dark="false"
       :open-level="2"
     />
-
+    <div v-if="vm.transientFields?.[0]">
+Email: {{ vm.transientFields?.[0]?.email }}<br /> {{ vm.transientFields[10].x }}
+</div>
+    <input type="text" v-model="vm.app.user.email" />
     <h2>Private prop test</h2>
     <div>vm.x: {{ vm.x }}
       <button @click="vm.x++">Increase</button>
@@ -167,8 +173,6 @@ onUnmounted(() => console.log('kernel.instances.get(IVueTests)', kernel.instance
       </button>
     </div>
     <br />
-    <h2>Sub Component Test</h2>
-    <SubComponent2 @testEmit="hey" />
     <br />
     <br />
     <TraitsComponent />

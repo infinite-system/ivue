@@ -1,6 +1,6 @@
 import TreeModel from 'tree-model'
 import { Router } from '../Routing/Router'
-import { Traits, UseRoute, UseRouter, use } from '@/index'
+import { Traits, UseCapsule, UseRoute, UseRouter, use } from '@/index'
 
 export class $Navigation {
 
@@ -8,6 +8,10 @@ export class $Navigation {
 
   get active () {
     return this.tree().all((node) => node.model.id === this.router.active.name)[0]
+  }
+
+  constructor(self, arg1: string) {
+    console.log('arg1', arg1)
   }
 
   tree () {
@@ -31,7 +35,10 @@ export class $Navigation {
 
 export class Navigation {
 
-  get $ () { return use($Navigation) }
+  $!: $Navigation
+  constructor(arg1: string) {
+    this.$ = use($Navigation, this, ...arguments)
+  }
 
   get menu () {
 

@@ -14,4 +14,5 @@ export class TRouter {
 
   get $ () { return use($TRouter) }
 
+  test = 1
 }

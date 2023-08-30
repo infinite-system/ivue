@@ -29,7 +29,7 @@ const react = reactive(obj)
 </script>
 <template>
   <!--  {{ t.app.i }}-->
-
+<div>
   Injected mouse: {{ mouse }} <br />
 
   <div>Sub Component: Hello:
@@ -40,4 +40,5 @@ const react = reactive(obj)
   </div>
   <button @click="v.$emit('testEmit')">Emit</button>
   <button @click="v.$.say(1)">Say</button>
+</div>
 </template>

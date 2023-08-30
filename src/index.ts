@@ -10,7 +10,7 @@ import { config, setup } from "./config"
 
 import { ivue, iobj, ivueTransform } from "./ivue"
 
-import { Mapping, Kernel, kernel, ivueOnInit, ivueInversify, bind, get, make, use, init } from "./kernel"
+import { Mapping, Kernel, kernel, ivueInversify, bind, get, make, use, init } from "./kernel"
 
 import { IVUE, after, before } from "./behavior"
 
@@ -40,7 +40,6 @@ export {
   // Kernel
   Mapping,   // class
   Kernel,    // class
-  ivueOnInit,
   ivueInversify,
   kernel,
   bind,

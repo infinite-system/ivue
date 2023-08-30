@@ -1,10 +1,10 @@
-import { computed, reactive, toRef, type ComputedRef, effectScope, type EffectScope, getCurrentScope, toRaw } from 'vue';
-import type { IVue, IVueToRefsObj, AnyClass, InferredArgs, Getters } from "./types/core";
+import { computed, reactive, toRef, effectScope, type EffectScope, getCurrentScope, onScopeDispose } from 'vue';
+
+import type { Null, IVue, IVueToRefsObj, AnyClass, InferredArgs, Getters, Computeds } from "./types/core";
+
 import { IVUE } from "./behavior";
-import { getPrototypeGetters, getInstanceGetters } from './utils/getters'
-import { tryOnScopeDispose } from '@vueuse/core';
-import type { Null } from './types/core';
-import { disposeGarbage } from './utils/dispose-garbage';
+
+import { getPrototypeGetters, getInstanceGetters, getters as g } from './utils/getters'
 
 /**
  * Create ivue instance from class constructor.
@@ -14,22 +14,86 @@ import { disposeGarbage } from './utils/dispose-garbage';
  * @returns @see IVue<T>
  */
 export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>): IVue<T> {
-  let scope: Null<EffectScope> = effectScope(!!getCurrentScope())
-
-  let getters = getPrototypeGetters(className.prototype)
-  let vue = ivueTransform(reactive(Reflect.construct(className, args)), getters, scope, ...args)
-
-  if (typeof vue.init === 'function') scope.run(() => vue.init())
-
-  tryOnScopeDispose(() => {
-    scope?.stop() 
-    disposeGarbage(vue, getters, 'ivue()')
-    getters = scope = vue = null
+  /**
+   * Define context variables.
+   */
+  let current: any = getCurrentScope(),
+    scope: EffectScope = effectScope(!!current),
+    getters = getPrototypeGetters(className.prototype),
+    computeds: any = getters.length ? {} : null
+  /**
+   * Initialize ivue reactive.
+   * 
+   * This function is the same inside init(), ivue(), iobj() and ivueTransform() functions.
+   * It is copied over for performance reasons.
+   * 
+   * The key idea is to keep this function as simple as possible.
+   */
+  // @ts-ignore
+  let vue = new Proxy(reactive(new className(...args)), {
+    get (target, prop) {
+      /**
+       * Is the prop a getter?
+       */
+      if (
+        prop !== 'constructor' // Prop is not a constructor
+        && prop in getters.values // Prop is a getter
+        && vue.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
+      ) {
+        /**
+         * Convert getters to computeds lazily.
+         */
+        if (prop in computeds) {
+          /**
+           * Computed defined? Return .value of the computed.
+           */
+          return computeds[prop].value
+        } else {
+          /*
+           * Computed not defined? Define and run `.get` method inside computed while `.bind(vue)`.
+           */
+          scope?.run(() => computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
+          /**
+           * Return .value
+           */
+          return computeds[prop].value
+        }
+      }
+      /**
+       * toRefs() implementation.
+       */
+      if (prop === 'toRefs') {
+        return ivueToRefs(vue, getters, computeds, scope)
+      }
+      /**
+       * Return the default reactive vue prop.
+       */
+      return target[prop]
+    }
   })
-
+  /**
+   * Functional way to perform the same as above, but less performant:
+   * vue = ivueTransform(reactive(new className(...args)), getters, computeds, scope, ...args)
+   */
+  /**
+   * Does vue.init() exist? Run it, reactive references can already be used inside .init()
+   */
+  if ('init' in vue) scope.run(() => vue.init())
+  /**
+   * Advanced garabage collection and disposal mechanism.
+   */
+  current ? onScopeDispose(() => {
+    scope?.stop()
+    let prop
+    for (prop in vue) delete vue[prop]
+    for (prop in computeds) delete computeds[prop]
+    current = (scope as any) = getters = computeds = vue = prop = null
+  }) : null
+  /**
+   * Return ivue instance.
+   */
   return vue
 }
-
 /**
  * Create ivue instance from an object.
  * 
@@ -37,22 +101,33 @@ export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>
  * @returns 
  */
 export function iobj<T extends object> (obj: T): T & IVueToRefsObj<T> {
-  let scope: Null<EffectScope> = effectScope(!!getCurrentScope())
-
-  let getters: Getters | null = getInstanceGetters(obj)
-  let vue = ivueTransform(reactive(obj), getters, scope)
-
-  if (typeof vue.init === 'function') scope.run(() => vue.init())
-
-  tryOnScopeDispose(() => {
-    scope?.stop() 
-    disposeGarbage(vue, getters, 'ivue()')
-    getters = scope = vue = null
-  })
-
+  /**
+   * Define context variables.
+   */
+  let current: Null<EffectScope | undefined> = getCurrentScope(),
+    scope: Null<EffectScope> = effectScope(!!current),
+    getters: Getters | null = getInstanceGetters(obj),
+    computeds: Computeds | any = getters.length ? {} : null,
+    vue = ivueTransform(reactive(obj), getters, computeds, scope)
+  /**
+   * Does vue.init() exist? Run it, reactive references can already be used inside .init()
+   */
+  if ('init' in vue) scope.run(() => vue.init())
+  /**
+   * Advanced garabage collection and disposal mechanism.
+   */
+  current ? onScopeDispose(() => {
+    scope?.stop()
+    let prop
+    for (prop in vue) delete vue[prop]
+    for (prop in computeds) delete computeds[prop]
+    current = scope = getters = computeds = (obj as any) = vue = prop = null
+  }) : null
+  /**
+   * Return ivue instance.
+   */
   return vue
 }
-
 /**
  * Pure VueJS Reactive Observable Class-based Architecture System.
  *
@@ -60,108 +135,164 @@ export function iobj<T extends object> (obj: T): T & IVueToRefsObj<T> {
  * @param getters
  * @param args Arguments are available when used via ivue(obj, ...args)
  */
-export function ivueTransform (vue: any, getters: Getters, scope: EffectScope, ...args: undefined[]) {
-
-  let computeds: Record<string, ComputedRef>
-
-  // let scope: any;
-  if (getters.length) {
-    // console.log('scope in ivue')
-    // Only initialize these if there are getters to save on memory
-    // https://stackoverflow.com/questions/44222017/memory-overhead-of-empty-array-vs-undefined-var
-    computeds = {}
-
-    for (const prop in getters.values) {
-      if (vue.constructor?.behavior?.[prop] === IVUE.OFF) {
-        Object.defineProperty(vue, prop, getters.values[prop]) // reset back to initial
-        continue // skip if OFF
-      }
-
-      // Handle getter as Vue computed()
-      Object.defineProperty(vue, prop, {
-        enumerable: true,
-        configurable: true,
-        // Convert getter to computed
-        get: function () {
-          if (prop in computeds) {
-            return computeds[prop].value // Computed defined? return the .value of the computed
-          } else {
-            // Computed not defined? Define and run .get method inside computed while .bind(vue)
-            scope.run(() => computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
-            return computeds[prop].value
-          }
-        },
-        set: getters.values[prop].set?.bind(vue)
-      })
-    }
-  }
-
-
-  Object.defineProperty(vue, 'toRefs', {
-    enumerable: false,
-    configurable: true,
-    /**
-     * Convert from reacive to refs, will convert all the properties
-     * or just the ones specified in the filter.
-     * 
-     * @params ...props: string[] (optional) object property names in string form which will be converted to refs.
-     */
-    value: function (...props: string[]) {
-      const result: Record<string | symbol, any> = {}
-
-      if (props.length) {
-        const propsLength = props.length
-        for (let i = 0; i < propsLength; i++) {
-          const prop = props[i]
-          if (prop in getters.values) {
-            if (prop in computeds) {
-              result[prop] = computeds[prop]
-            } else {
-              scope.run(() => result[prop] = computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
-            }
-          } else {
-            if (typeof vue[prop] === 'function') {
-              result[prop] = vue[prop].bind(vue) // Bind method to vue, makes destructuring work
-            } else {
-              result[prop] = toRef(vue, prop)
-            }
-          }
+export function ivueTransform (vue: any, getters: Getters, computeds: Computeds, scope: EffectScope, ...args: undefined[]) {
+  /**
+   * Initialize ivue reactive.
+   * 
+   * This function is the same inside init(), ivue(), iobj() and ivueTransform() functions.
+   * It is copied over for performance reasons.
+   * 
+   * The key idea is to keep this function as simple as possible.
+   */
+  return new Proxy(vue, {
+    get (target, prop) {
+      /**
+       * Is the prop a getter?
+       */
+      if (
+        prop !== 'constructor' // Prop is not a constructor
+        && prop in getters.values // Prop is a getter
+        && vue.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
+      ) {
+        /**
+         * Convert getters to computeds lazily.
+         */
+        if (prop in computeds) {
+          /**
+           * Computed defined? Return .value of the computed.
+           */
+          return computeds[prop].value
+        } else {
+          /*
+           * Computed not defined? Define and run `.get` method inside computed while `.bind(vue)`.
+           */
+          scope?.run(() => computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
+          /**
+           * Return .value
+           */
+          return computeds[prop].value
         }
-      } else {
-        // Convert props
-        for (const prop in vue) {
-          // Skip a getter, it might be a computed, accessing it will cause a computation
-          if (prop in getters.values) continue;
+      }
+      /**
+       * toRefs() implementation.
+       */
+      if (prop === 'toRefs') {
+        return ivueToRefs(vue, getters, computeds, scope)
+      }
+      /**
+       * Return the default reactive vue prop.
+       */
+      return target[prop]
+    }
+  })
+}
+/**
+ * Convert reactive to refs.
+ * 
+ * @param vue @see IVue
+ * @param getters @see Getters
+ * @param computeds @see Computeds
+ * @param scope @see EffectScope
+ * @returns 
+ */
+export function ivueToRefs<T extends AnyClass> (vue: IVue<T>, getters: Getters, computeds: Computeds, scope: EffectScope) {
 
-          if (typeof vue[prop] === 'function') {
-            result[prop] = vue[prop].bind(vue) // Bind method to vue, makes destructuring work
+  return function (...props: string[]) {
+    /**
+     * Resulting refs store.
+     */
+    const result: Record<string | symbol, any> = {}
+    /**
+     * Output specific props only, if props are specified.
+     */
+    if (props.length) {
+      for (let i = 0; i < props.length; i++) {
+        const prop = props[i]
+        /**
+         * Handle getters.
+         */
+        if (prop in getters.values) {
+          if (prop in computeds) {
+            /**
+             * Store whole vue computed with .value
+             */
+            result[prop] = computeds[prop]
           } else {
+            /**
+             * Initialize & store vue computed.
+             */
+            scope.run(() => result[prop] = computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
+          }
+        } else {
+          if (typeof vue[prop] === 'function') {
+            /**
+             * Bind method to vue, makes method destructuring point to right instance.
+             */
+            result[prop] = vue[prop].bind(vue)
+          } else {
+            /**
+             * Convert simple reactive prop to a Ref.
+             */
             result[prop] = toRef(vue, prop)
           }
         }
+      }
+    } else {
+      /**
+       * Convert simple enumerable props.
+       */
+      for (const prop in vue) {
+        /**
+         * Skip a getter, it might be a computed, accessing it will cause a computation.
+         */
+        if (prop in getters.values) continue;
 
-        // Convert getters
-        for (const prop in getters.values) {
-          if (prop in computeds) {
-            result[prop] = computeds[prop]
-          } else {
-            scope.run(() => result[prop] = computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
-          }
+        if (typeof vue[prop] === 'function') {
+          /**
+           * Bind method to vue, makes method destructuring point to right instance.
+           */
+          result[prop] = vue[prop].bind(vue)
+        } else {
+          /**
+           * Convert simple reactive prop to a Ref.
+           */
+          result[prop] = toRef(vue, prop)
         }
       }
-
-      // Return a Proxy to correctly proxy the method calls to the vue object.
-      return new Proxy(vue, {
-        get: (target, key): any => {
-          if (key in result) {
-            return result[key] // return ref
-          } else if (key in target) { // check for methods in vue itself
-            return target[key].bind(vue) // Bind method to vue, makes destructuring work
-          }
+      /**
+       * Convert getters (non enumerable by default in JS).
+       */
+      for (const prop in getters.values) {
+        if (prop in computeds) {
+          /**
+           * Store whole vue computed with .value
+           */
+          result[prop] = computeds[prop]
+        } else {
+          /**
+           * Initialize vue computed.
+           */
+          scope.run(() => result[prop] = computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
         }
-      })
+      }
     }
-  })
-
-  return vue
+    /**
+     * Return a Proxy to correctly forward the method calls to the vue object.
+     */
+    return new Proxy(vue, {
+      get: (target, key): any => {
+        if (key in result) {
+          /**
+           * Return a Ref.
+           */
+          return result[key]
+        } else if (key in target) {
+          /**
+           * Return a bound to vue method property, makes destructuring point to right instance.
+           */
+          return target[key].bind(vue)
+        }
+      }
+    })
+  }
 }

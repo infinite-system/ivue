@@ -22,6 +22,8 @@ export class $Test {
     // const { x, y } = useMouse()
 
     ({ x: this.x, y: this.y } = use(Mouse).toRefs())
+    // ({ x: this.x, y: this.y } = refs(use(Mouse)))
+    this.mouse = use(Mouse)
 
     // this.mouse = use(Mouse)
   }
@@ -60,12 +62,12 @@ export class Test {
 
   get x () {
     console.log('this.$.x', this.$.x)
-    return this.$.x
+    return this.$.mouse.x
   }
 
   get y () {
     console.log('this.$.y', this.$.y)
-    return this.$.y
+    return this.$.mouse.y
   }
 
   get email () {

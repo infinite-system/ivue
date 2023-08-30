@@ -1,5 +1,5 @@
 import type { Mapping } from '../kernel'
-import { ivueTransform } from '../ivue';
+import type { ComputedRef } from 'vue';
 
 export type AnyClass = abstract new (...args: any) => any;
 
@@ -29,11 +29,11 @@ export type MappingType = 'generic' | 'ivue' | any
 export type InferredArgs<T> = T extends { new(...args: infer P): any } ? P : never[]
 
 export type Getters = { 
-  values: { [x: string]: PropertyDescriptor; }, 
+  values: { [x: string | symbol | number]: PropertyDescriptor; }, 
   length: number 
 }
 
-export type Intercept = {
+export interface Intercept {
   return: any,
   mapping: Mapping,
   name?: string,
@@ -62,3 +62,6 @@ export type Null<T> = T | null
 export type AnyObj = Record<string | number | symbol, any>
 
 export type Params<T extends (...args: any) => any> = Parameters<T>
+
+
+export type Computeds = Record<string | symbol | number, ComputedRef>

@@ -20,12 +20,11 @@ export const intercepts: InterceptsMap = {
  * @param intercept 
  * @return
  */
-export function runConstructorIntercept (
+export function interceptConstructor (
   type: keyof InterceptsMap, obj: any, intercept: Intercept
 ) {
   const fns = intercepts[type].get(obj) as InterceptsFns
-  const fnsLength = fns.length
-  for (let i = 0; i < fnsLength; i++)
+  for (let i = 0; i < fns?.length; i++)
     if (true === fns[i](intercept, ...intercept.args))
       return intercept.return
 }
@@ -71,7 +70,7 @@ function addIntercept (type: keyof InterceptsMap, fn: InterceptFn, callback: any
  * @param scoped  Whether we want to enable scope disposal for memory leak control.
  * @returns       Function or Class to attach the intercept event function to.
  */
-function autoBindIntercept (to: Function | [Class, Function], scoped: boolean): InterceptFn {
+function autobindIntercept (to: Function | [Class, Function], scoped: boolean): InterceptFn {
 
   if (Array.isArray(to)) {
 
@@ -123,7 +122,7 @@ export function before (
     scoped: false
   }
 ) {
-  addIntercept('before', autoBindIntercept(to, opts.scoped), callback, opts)
+  addIntercept('before', autobindIntercept(to, opts.scoped), callback, opts)
 }
 
 /**
@@ -141,7 +140,7 @@ export function after (
     scoped: false
   }
 ) {
-  addIntercept('after', autoBindIntercept(to, opts.scoped), callback, opts)
+  addIntercept('after', autobindIntercept(to, opts.scoped), callback, opts)
 }
 
 /**
@@ -153,20 +152,20 @@ export function after (
  * @param args
  * @param intercept
  */
-export function runIntercept (type: keyof InterceptsMap, self: Class, prop: string, args: any[], intercept: Intercept) {
-  // Intercepts runner, processes multiple intercepts assigned to the method.
+export function interceptMethod (type: keyof InterceptsMap, self: Class, prop: string, args: any[], intercept: Intercept) {
+  
+  // Run intercepts that are attached to the prototype of the self object
   let fns: InterceptsFns = intercepts[type].get(self.constructor.prototype[prop])
-  let fnsLength = fns?.length
-  for (let i = 0; i < fnsLength; i++) {
+  for (let i = 0; i < fns?.length; i++) {
     if (true === fns[i](intercept, ...args))
-      return true // return true, to short circuit the execution chain
+      return true // return true -> to short circuit the execution chain
   }
 
+  // Run intercepts that are attached to the instance of self itself
   fns = intercepts[type].get(self[prop])
-  fnsLength = fns?.length
-  for (let i = 0; i < fnsLength; i++) {
+  for (let i = 0; i < fns?.length; i++) {
     if (true === fns[i](intercept, ...args))
-      return true // return true, to short circuit the execution chain
+      return true // return true -> to short circuit the execution chain
   }
 
   // If there is no short circuit, we should return undefined like a function without a return
@@ -202,7 +201,7 @@ export enum IVUE {
  * @param self
  * @param prop
  */
-export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping, type: IVUE, func: Function, self: Class, prop: string) {
+export function changeMethodBehavior<T extends AnyClass> (mapping: Mapping, type: IVUE, func: Function, self: Class, prop: string, scope: EffectScope, intercept: Intercept) {
   // Define a default void return
   let result = void (0)
   // Handle basic scoped most often scenario early
@@ -212,33 +211,33 @@ export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping, typ
     // and it will be auto garbage collected on scope destruction
     return Object.defineProperty(self, prop, {
       value: function (...args: any) {
-        let scope: Null<EffectScope> = effectScope()
         scope.run(() => result = func.bind(self)(...args))
-        tryOnScopeDispose(() => {
-          scope?.stop()
-          scope = null
-          result = void (0)
-        })
         return result
       },
+      writable: true,
+      configurable: true,
       enumerable: false
     })
   }
 
-  // Handle interceptable methods
-  // Define the common intercept processor:
-  const processIntercept = (...args: any) => {
+  /**
+   * Process the interceptable methods.
+   * 
+   * @param args 
+   * @returns 
+   */
+  const processMethodIntercept = (...args: any) => {
 
-    const intercept: Intercept = { mapping, self, return: result, name: prop, args, }
+    intercept = { mapping, self, return: result, name: prop, args }
 
-    if (true === runIntercept('before', self, prop, args, intercept))
-      return intercept.return // short circuit, if intercept returns false
+    if (true === interceptMethod('before', self, prop, args, intercept))
+      return intercept.return // short circuit, if intercept returns true
 
     result = func.bind(self)(...args)
     intercept.return = result
 
-    if (true === runIntercept('after', self, prop, args, intercept))
-      return intercept.return // short circuit, if intercept returns false
+    if (true === interceptMethod('after', self, prop, args, intercept))
+      return intercept.return // short circuit, if intercept returns true
 
     return intercept.return
   }
@@ -248,8 +247,10 @@ export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping, typ
       // Basic, fast, non-scoped intercepts
       return Object.defineProperty(self, prop, {
         value: function (...args: any) {
-          return processIntercept(...args)
+          return processMethodIntercept(...args)
         },
+        writable: true,
+        configurable: true,
         enumerable: false
       })
     case IVUE.SCOPED_INTERCEPT:
@@ -257,15 +258,11 @@ export function behaviorMethodHandler<T extends AnyClass> (mapping: Mapping, typ
       // and it will be auto garbage collected on scope destruction
       return Object.defineProperty(self, prop, {
         value: function (...args: any) {
-          let scope: Null<EffectScope> = effectScope()
-          scope.run(() => result = processIntercept(...args))
-          tryOnScopeDispose(() => {
-            scope?.stop()
-            scope = null
-            result = void (0)
-          })
+          scope.run(() => result = processMethodIntercept(...args))
           return result
         },
+        writable: true,
+        configurable: true,
         enumerable: false
       })
   }

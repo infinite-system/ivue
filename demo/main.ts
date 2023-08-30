@@ -8,7 +8,8 @@ import { App } from '@/App/App';
 import { Auth } from '@/App/Auth/Auth';
 
 const app = use(App).load()
-setup({ router: app.router })
+setup({ router: app.router, debug: true })
+
 use(Auth)
 
 const vue = createApp(AppComponent);

@@ -4,7 +4,7 @@ import type { Getters } from '../types/core'
  * Store all getters for each class prototype processed by getPrototypeGetters.
  * @see getPrototypeGetters
  */
-const getters = new Map()
+export const getters = new Map()
 
 /**
  * Get getters of a class instance and the total number of them.

@@ -24,10 +24,21 @@ export default [
     component: () => import('@/App/Home/Home.vue'),
   },
   {
-    name: 'ivue',
     path: '/ivue',
     secure: false,
     component: () => import('../../../../demo/components/IVueTest.vue'),
+    children: [{
+      name: 'ivue',
+      path: '',
+      secure: false,
+      component:() => import('../../../../demo/components/SubComponent2.vue'),
+    }]
+  },
+  {
+    path: '/use-test',
+    name: 'use-test',
+    secure: false,
+    component: () => import('../../../../demo/components/useIVueTest.vue'),
   },
   {
     name: '*',

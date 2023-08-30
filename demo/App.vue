@@ -1,16 +1,19 @@
-<script setup>
+<script setup lang="ts">
 import { use } from '@/index'
-import { Mouse } from './tests/Mouse';
-import { IVueTests } from "./tests/IVueTests";
-
-
+// import { Mouse } from './tests/Mouse';
+// import { IVueTests } from "./tests/IVueTests";
+import { TApp } from './tests/TApp';
+const app = use(TApp)
 </script>
 <template>
+  <vue-dd v-model="app" name="app" open-level="1" />
   <router-view />
 </template>
 <style>
 @import 'https://fonts.googleapis.com/css?family=Montserrat:400,700,400italic,700italic';
 @import 'https://www.w3schools.com/w3css/4/w3.css';
+
+
 
 body {
   font-family: 'Montserrat';

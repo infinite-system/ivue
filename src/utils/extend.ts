@@ -12,7 +12,7 @@ import { isObject, isPromise } from "./is";
  * @param sources array
  */
 export function extend (target: any, ...sources: any[]) {
-  let parents: any = new Map() // parents object to detect circular references
+  let parents: any = new WeakMap() // parents object to detect circular references
   const result = _extend(target, [...sources], parents);
   // parents = undefined // flush the parents map upon completion
   return result

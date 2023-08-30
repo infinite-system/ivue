@@ -63,7 +63,7 @@ export class $Router {
     // console.log('this.flatRoutes', this.flatRoutes)
 
     this.routeConfig = this.setup(this.routes)
-    // console.log('routeConfig', routeConfig)
+    console.log('routeConfig', this.routeConfig)
 
     this.router = createRouter({ history: createWebHistory(), routes: this.routes })
 

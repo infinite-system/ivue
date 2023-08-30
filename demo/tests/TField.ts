@@ -3,6 +3,7 @@ import { IVUE } from "@/index";
 import { use, init } from "@/index";
 import { App } from "@/App/App";
 import { TRouter } from "./TRouter";
+import { TApp } from "./TApp";
 
 export class Mouse {
 
@@ -24,16 +25,18 @@ export class Mouse {
 
 export class TField {
 
-  app = use(App)
+  get app () { return  use(TApp) }
 
-  router = use(TRouter)
+  get router () { return  use(TRouter) }
 
-  static behavior: any = {
-    init: IVUE.SCOPED_INTERCEPT,
-    runWithIntercept: IVUE.INTERCEPT
-  }
+  _prop = 0
+  // static behavior: any = {
+  //   init: IVUE.SCOPED_INTERCEPT,
+  //   runWithIntercept: IVUE.INTERCEPT
+  // }
 
-  constructor (private _prop: number, private buildMouse = true) {}
+  // constructor (private _prop: number, private buildMouse = true) {}
+
 
   get prop () {
     return this._prop
@@ -44,43 +47,20 @@ export class TField {
   }
 
   get email () {
-    return this.app.router.$.user.email
+    return this.app.user.email
   }
 
-  x: number
+  x: number = 0
 
-  y: number
+  y: number = 0
 
   update: (event) => {}
 
-  mouse: Mouse
 
-  init () {
-
-    // if (this.buildMouse) {
-    //
-    //   // console.log('init')
-    //   watch(() => this.prop, newVal => {
-    //     console.log('newVal', newVal)
-    //   })
-    //
-    //   // eslint-disable-next-line no-unexpected-multiline
-    //   const mouse = init(Mouse).toRefs();
-    //
-    //   ({
-    //     x: this.x,
-    //     y: this.y,
-    //   } = mouse)
-    //
-    // }
-    // const { update, x } = mouse
-    // // console.log('/**/iRefs(UseMouse)', iRefs(UseMouse).update({x:0,y:0}))
-    //
-    // setTimeout(() => {
-    //   update({ pageX: 1000, pageY: 1000 })
-    // }, 1000)
-
-    return this
+  init() {
+    watch(() => this.x, n => {
+      console.log('n', n)
+    })
   }
 
   interceptableValue = 'testing'

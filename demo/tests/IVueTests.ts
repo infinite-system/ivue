@@ -7,7 +7,7 @@ import { ParentIVueTests } from "./ParentIVueTests";
 import { onUnmounted, toRaw, watch, onBeforeUnmount } from "vue";
 import { generateHugeArray } from "@/App/Generators/generators";
 import { TField } from "./TField";
-import { use, init, IVUE, unraw, before } from "@/index";
+import { use, init, IVUE, unraw, before, ivue } from "@/index";
 
 export class IVueTests extends ParentIVueTests {
 
@@ -18,12 +18,9 @@ export class IVueTests extends ParentIVueTests {
 
   get auth () { return use(TAuth) }
 
-  get app () { console.log('changing'); return use(TApp) }
-
-  get message () { return use(TMessage) }
+  get app () { return use(TApp) }
 
   get router () { return use(TRouter) }
-
 
   private _x = 1
 
@@ -70,38 +67,40 @@ export class IVueTests extends ParentIVueTests {
     //   // return false
     // })
 
-    TField.behavior = {
+    // TField.behavior = {
       // ...Field.behavior,
       // interceptable: IVUE.INTERCEPT
-    }
+    // }
 
-    this.transientField3 = init(TField, 11)
+    this.transientField3 = ivue(TField, 11)
     console.log('this.transientField3', this.transientField3)
 
-    this.transientField1 = init(TField, 23)
-    this.transientField2 = init(TField, 5)
+    this.transientField1 = ivue(TField, 23)
+    this.transientField2 = ivue(TField, 5)
 
     this.timeTaken = 0
 
     const start = Date.now();
 
-    setTimeout(() => {
+    // setTimeout(() => {
 
 
-      for (let i = 0; i < 500000; i++) {
+      for (let i = 0; i < 50_000; i++) {
         // this.transientFields.push(ivueMake(new Field(i)))
-        this.transientFields.push(init(TField, i, false))
+        this.transientFields.push(init(TField))
       }
-
 
       console.log('this.transientFields.length', this.transientFields.length)
       this.timeTaken = Date.now() - start;
-    })
+    // })
 
-
+    const interval = setInterval(() => {
+      this.transientFields[10].x++
+    }, 1000)
     onBeforeUnmount(() => {
       console.log('unload the fields')
     
+      clearInterval(interval)
 
       // if ('transientFields' in this) this.transientFields = null
       // this.transientFields = null
@@ -120,8 +119,8 @@ export class IVueTests extends ParentIVueTests {
 
     this.transientField1.interceptable()
 
-    this.transientField1.init()
-    this.transientField2.init()
+    // this.transientField1.init()
+    // this.transientField2.init()
 
 
     // watch(this, (state) => {
