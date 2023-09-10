@@ -28,7 +28,7 @@ import { UseTick } from './traits/UseTick';
 import { UseVue } from './traits/UseVue';
 
 export {
-  // config
+  // Config
   config,
   setup,
   
@@ -49,7 +49,7 @@ export {
   init,
 
   // Behavior
-  IVUE,  // enum
+  IVUE,      // enum
   before,
   after,
 
@@ -65,7 +65,7 @@ export {
   UseTick,
   UseVue,
 
-  // utils
+  // Utils
   raw,
   unraw,
   Traits,

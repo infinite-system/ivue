@@ -50,7 +50,7 @@ export class Test {
 
   capsule = $Test // detached
   constructor (emit: any, private n: number) {
-    this.initCapsule(arguments)
+    this.useCapsule(arguments)
     this.$emit = emit
   }
 

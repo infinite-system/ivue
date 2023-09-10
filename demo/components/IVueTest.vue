@@ -8,7 +8,7 @@ import { Mouse } from '../tests/Mouse';
 import { getPrototypeGetters } from '../../src/utils/getters';
 
 let vm: IVueTests = use(IVueTests)
-provide('mouse', init(Mouse))
+provide('mouse', ivue(Mouse))
 const localComputedValue = computed(() => {
   return vm.computedVariable?.[0]?.test + ' + local append'
 })

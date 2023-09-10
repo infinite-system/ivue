@@ -11,42 +11,24 @@ const propertiesMap = new WeakMap()
  * @param getters @see Getters
  * @param name string
  */
-export const disposeGarbage = <T extends AnyClass> (vue: IVue<T> | any, getters: Getters | null, name: string) => {
+export const disposeGarbage = <T extends AnyClass> (vue: IVue<T> | any) => {
+  // Deep garbage collection, gives really amazing performance in Opera as well as Google Chrome.
+  // Opera seems to perform better though with cleaning up the garbage more effeciently and more.
 
-  // We do not want to crash the whole program, because of garbage collection
-  // That's why we wrap it in a try/catch
+  let instance = toRaw(vue)
+  let props: any = Object.getOwnPropertyNames(instance)
 
-  let prop
-  // try {
-    // Deep garbage collection, gives really amazing performance in Opera as well as Google Chrome.
-    // Opera seems to perform better though with cleaning up the garbage more effeciently and more.
+  for (let i = 0; i < props.length; i++) {
+    delete instance[props[i]]
+  }
 
-    // let instance = toRaw(vue)
-    // let props =  Object.getOwnPropertyNames(instance)
-    
-    // for (let i = 0; i < props.length; i++) {
-    //   delete instance[props[i]]
-    // }
-
-    // // Faster but less thorough garbage collection:
-    // // Will remove only enumerable properties.
-    for (prop in vue) {
-    //   // if ('value' in vue[prop]){
-    //   delete vue[prop]
-    //   // }
-      
-        delete vue[prop]
-    }
-
-    // // Unset roots for gc engine to collect and dispose
-    // instance = null
-    // getters = null
-    prop = null
-
-  // } catch (e) {
-
-    // console.warn(`${name} garbage collector had a problem wiping 
-    // out a property from ${vue?.constructor?.name}'s object: [${String(prop)}], this is likely an ivue internals bug.`, e)
+  // Faster but less thorough garbage collection:
+  // Will remove only enumerable properties.
+  // for (prop in vue) {
+  //   delete vue[prop]
   // }
 
+  // Unset roots for gc engine to collect and dispose
+  instance = null
+  props = null
 }

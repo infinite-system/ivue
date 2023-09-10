@@ -1,4 +1,4 @@
-import { reactive, markRaw, effectScope, type EffectScope, getCurrentScope, onScopeDispose, computed, getCurrentInstance } from 'vue';
+import { reactive, markRaw, effectScope, type EffectScope, getCurrentScope, computed, getCurrentInstance, onScopeDispose } from 'vue';
 
 import type { MappingScope, MappingType, IVue, AnyClass, InferredArgs, Intercept, Null, Getters, Computeds } from './types/core';
 
@@ -265,8 +265,7 @@ export class Kernel {
     /**
      * Define context variables.
      */
-    let
-      current: Null<EffectScope | undefined> = getCurrentScope(),
+    let current: Null<EffectScope | undefined> = getCurrentScope(),
       scope: Null<EffectScope>,
       mapping: Mapping | any,
       vue: IVue<T> | any,
@@ -299,9 +298,11 @@ export class Kernel {
          */
         let prop
         if (vue) for (prop in vue) delete vue[prop]
-        if (computeds) for (prop in computeds) computeds[prop] = null
-        if (intercept) for (prop in intercept) intercept[prop] = null
-        if (fns) for (prop in fns) fns[prop] = null
+        if (computeds) for (prop in computeds) delete computeds[prop]
+        if (intercept) for (prop in intercept) delete intercept[prop]
+        if (fns) for (prop in fns) delete fns[prop]
+
+        if (vue) disposeGarbage(vue)
         /**
          * Dispose objects to null for gc to be able to collect and dispose.
          */
@@ -359,7 +360,7 @@ export class Kernel {
       /**
        * Create & save effect scope.
        */
-      scope = effectScope(!!getCurrentScope())
+      scope = effectScope(!!current)
       this.effectScopes.set(className, scope)
       /**
        * Run before constructor() intercept functions.
@@ -378,7 +379,7 @@ export class Kernel {
        * Class getters list and computeds store.
        */
       getters = getPrototypeGetters(mapping.to.prototype)
-      computeds = getters.length ? {} : null
+      computeds = getters.size ? {} : null
       /**
        * Initialize ivue reactive.
        * 
@@ -389,13 +390,12 @@ export class Kernel {
        */
       // @ts-ignore
       let vue = new Proxy(reactive(new className(...args)), {
-        get (target, prop) {
+        get (target, prop): any {
           /**
            * Is the prop a getter?
            */
           if (
-            prop !== 'constructor' // Prop is not a constructor
-            && prop in getters.values // Prop is a getter
+            getters.has(prop) // Prop is a getter
             && vue.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
           ) {
             /**
@@ -410,7 +410,7 @@ export class Kernel {
               /*
                * Computed not defined? Define and run `.get` method inside computed while `.bind(vue)`.
                */
-              scope?.run(() => computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
+              scope?.run(() => computeds[prop] = computed(() => getters.get(prop).get!.bind(vue)()))
               /**
                * Return .value
                */
@@ -441,7 +441,7 @@ export class Kernel {
          * Loop through behavior assigned properties
          */
         for (const prop in vue.constructor.behavior) {
-          if (prop in getters.values) continue // Skip getters to not cause a computation
+          if (getters.has(prop)) continue // Skip getters to not cause a computation
           /**
            * Is prop a function?
            */
@@ -536,8 +536,7 @@ export class Kernel {
     /**
      * Define context variables.
      */
-    let
-      current: Null<EffectScope | undefined> = getCurrentScope(),
+    let current: Null<EffectScope | undefined> = getCurrentScope(),
       scope: Null<EffectScope> = effectScope(!!current),
       intercept: Intercept | any,
       computeds: Computeds | any,
@@ -558,7 +557,7 @@ export class Kernel {
      * Class getters list and computeds store.
      */
     let getters = getPrototypeGetters(mapping.to.prototype)
-    computeds = getters.length ? {} : null
+    computeds = getters.size ? {} : null
     /**
      * Initialize ivue reactive.
      * 
@@ -574,8 +573,7 @@ export class Kernel {
          * Convert getters to computeds lazily.
          */
         if (
-          prop !== 'constructor' // Prop is not a constructor
-          && prop in getters.values // Prop is a getter
+          getters.has(prop) // Prop is a getter
           && vue.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
         ) {
           if (prop in computeds) {
@@ -587,7 +585,7 @@ export class Kernel {
             /*
              * Computed not defined? Define and run `.get` method inside computed while `.bind(vue)`.
              */
-            scope?.run(() => computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
+            scope?.run(() => computeds[prop] = computed(() => getters.get(prop).get!.bind(vue)()))
             /**
              * Return .value
              */
@@ -618,7 +616,7 @@ export class Kernel {
        * Loop through behavior assigned properties.
        */
       for (const prop in vue.constructor.behavior) {
-        if (prop in getters.values) continue // Skip getters to not cause a computation
+        if (getters.has(prop)) continue // Skip getters to not cause a computation
         /**
          * Is prop a function?
          */
@@ -674,15 +672,17 @@ export class Kernel {
       scope?.stop();
       let prop
       // Dispose object props of object under the vue reactive proxy
-      for (prop in vue) delete vue[prop]
+      disposeGarbage(vue)
       // Dispose object props of utility objects properties
-      if (intercept) for (prop in intercept) intercept[prop] = null
-      if (computeds) for (prop in computeds) computeds[prop] = null
-      if (fns) for (prop in fns) fns[prop] = null
+      if (intercept) for (prop in intercept) delete intercept[prop]
+      if (computeds) for (prop in computeds) delete computeds[prop]
+      if (fns) for (prop in fns) delete fns[prop]
       // Dispose all used objects to null
       current = scope = vue = mapping = computeds = intercept = fns = prop = null
     }) : null
-    // Return
+    /**
+     * Return instance.
+     */
     return vue
   }
 }
@@ -725,7 +725,7 @@ export function onInit<T extends AnyClass> (mapping: Mapping, ...args: InferredA
      * Loop through behavior assigned properties.
      */
     for (const prop in obj.constructor.behavior) {
-      if (prop in getters.values) continue // Skip getters to not cause a computation
+      if (getters.has(prop)) continue // Skip getters to not cause a computation
       /**
        * Is prop a function?
        */
@@ -783,7 +783,7 @@ export function ivueInversify (ctx: any, obj: any, ...args: any) {
 
   tryOnScopeDispose(() => {
     scope?.stop()
-    disposeGarbage(vue, getters, 'ivueInversify()')
+    disposeGarbage(vue)
     scope = vue = null
   })
 

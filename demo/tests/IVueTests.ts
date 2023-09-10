@@ -68,8 +68,8 @@ export class IVueTests extends ParentIVueTests {
     // })
 
     // TField.behavior = {
-      // ...Field.behavior,
-      // interceptable: IVUE.INTERCEPT
+    // ...Field.behavior,
+    // interceptable: IVUE.INTERCEPT
     // }
 
     this.transientField3 = ivue(TField, 11)
@@ -82,24 +82,22 @@ export class IVueTests extends ParentIVueTests {
 
     const start = Date.now();
 
-    // setTimeout(() => {
 
+    for (let i = 0; i < 50_000; i++) {
+      // this.transientFields.push(ivueMake(new Field(i)))
+      this.transientFields.push(init(TField))
+    }
 
-      for (let i = 0; i < 50_000; i++) {
-        // this.transientFields.push(ivueMake(new Field(i)))
-        this.transientFields.push(init(TField))
-      }
+    console.log('this.transientFields.length', this.transientFields.length)
+    this.timeTaken = Date.now() - start;
 
-      console.log('this.transientFields.length', this.transientFields.length)
-      this.timeTaken = Date.now() - start;
-    // })
 
     const interval = setInterval(() => {
       this.transientFields[10].x++
     }, 1000)
     onBeforeUnmount(() => {
       console.log('unload the fields')
-    
+
       clearInterval(interval)
 
       // if ('transientFields' in this) this.transientFields = null
@@ -124,7 +122,7 @@ export class IVueTests extends ParentIVueTests {
 
 
     // watch(this, (state) => {
-      // console.log('changed', state)
+    // console.log('changed', state)
     // })
 
     //

@@ -4,7 +4,7 @@ import type { Null, IVue, IVueToRefsObj, AnyClass, InferredArgs, Getters, Comput
 
 import { IVUE } from "./behavior";
 
-import { getPrototypeGetters, getInstanceGetters, getters as g } from './utils/getters'
+import { getPrototypeGetters, getInstanceGetters } from './utils/getters'
 
 /**
  * Create ivue instance from class constructor.
@@ -20,7 +20,7 @@ export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>
   let current: any = getCurrentScope(),
     scope: EffectScope = effectScope(!!current),
     getters = getPrototypeGetters(className.prototype),
-    computeds: any = getters.length ? {} : null
+    computeds: any = getters.size ? {} : null
   /**
    * Initialize ivue reactive.
    * 
@@ -36,8 +36,7 @@ export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>
        * Is the prop a getter?
        */
       if (
-        prop !== 'constructor' // Prop is not a constructor
-        && prop in getters.values // Prop is a getter
+        getters.has(prop) // Prop is a getter
         && vue.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
       ) {
         /**
@@ -52,7 +51,7 @@ export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>
           /*
            * Computed not defined? Define and run `.get` method inside computed while `.bind(vue)`.
            */
-          scope?.run(() => computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
+          scope?.run(() => computeds[prop] = computed(() => getters.get(prop).get!.bind(vue)()))
           /**
            * Return .value
            */
@@ -107,7 +106,7 @@ export function iobj<T extends object> (obj: T): T & IVueToRefsObj<T> {
   let current: Null<EffectScope | undefined> = getCurrentScope(),
     scope: Null<EffectScope> = effectScope(!!current),
     getters: Getters | null = getInstanceGetters(obj),
-    computeds: Computeds | any = getters.length ? {} : null,
+    computeds: Computeds | any = getters.size ? {} : null,
     vue = ivueTransform(reactive(obj), getters, computeds, scope)
   /**
    * Does vue.init() exist? Run it, reactive references can already be used inside .init()
@@ -150,8 +149,7 @@ export function ivueTransform (vue: any, getters: Getters, computeds: Computeds,
        * Is the prop a getter?
        */
       if (
-        prop !== 'constructor' // Prop is not a constructor
-        && prop in getters.values // Prop is a getter
+        getters.has(prop) // Prop is a getter
         && vue.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
       ) {
         /**
@@ -166,7 +164,7 @@ export function ivueTransform (vue: any, getters: Getters, computeds: Computeds,
           /*
            * Computed not defined? Define and run `.get` method inside computed while `.bind(vue)`.
            */
-          scope?.run(() => computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
+          scope?.run(() => computeds[prop] = computed(() => getters.get(prop)?.get!.bind(vue)()))
           /**
            * Return .value
            */
@@ -211,7 +209,7 @@ export function ivueToRefs<T extends AnyClass> (vue: IVue<T>, getters: Getters, 
         /**
          * Handle getters.
          */
-        if (prop in getters.values) {
+        if (getters.has(prop)) {
           if (prop in computeds) {
             /**
              * Store whole vue computed with .value
@@ -221,7 +219,7 @@ export function ivueToRefs<T extends AnyClass> (vue: IVue<T>, getters: Getters, 
             /**
              * Initialize & store vue computed.
              */
-            scope.run(() => result[prop] = computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
+            scope.run(() => result[prop] = computeds[prop] = computed(() => getters.get(prop)?.get!.bind(vue)()))
           }
         } else {
           if (typeof vue[prop] === 'function') {
@@ -245,7 +243,7 @@ export function ivueToRefs<T extends AnyClass> (vue: IVue<T>, getters: Getters, 
         /**
          * Skip a getter, it might be a computed, accessing it will cause a computation.
          */
-        if (prop in getters.values) continue;
+        if (getters.has(prop)) continue;
 
         if (typeof vue[prop] === 'function') {
           /**
@@ -262,7 +260,7 @@ export function ivueToRefs<T extends AnyClass> (vue: IVue<T>, getters: Getters, 
       /**
        * Convert getters (non enumerable by default in JS).
        */
-      for (const prop in getters.values) {
+      getters.forEach((getter, prop) => {
         if (prop in computeds) {
           /**
            * Store whole vue computed with .value
@@ -272,9 +270,9 @@ export function ivueToRefs<T extends AnyClass> (vue: IVue<T>, getters: Getters, 
           /**
            * Initialize vue computed.
            */
-          scope.run(() => result[prop] = computeds[prop] = computed(() => getters.values[prop].get!.bind(vue)()))
+          scope.run(() => result[prop] = computeds[prop] = computed(() => getter.get!.bind(vue)()))
         }
-      }
+      })
     }
     /**
      * Return a Proxy to correctly forward the method calls to the vue object.

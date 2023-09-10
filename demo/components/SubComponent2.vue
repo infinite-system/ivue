@@ -8,8 +8,9 @@ export default {
 import { getCurrentScope } from 'vue'
 import { init } from '@/index';
 import { Test } from '../tests/Test'
-import { Mouse } from 'demo/tests/Mouse';
+import { Mouse } from '../tests/Mouse';
 import { inject, reactive, toRaw } from 'vue'
+import { ivue } from '../../src/ivue';
 const emit = defineEmits<{
   (event: 'testEmit'): void
 }>()
@@ -18,9 +19,9 @@ const emit = defineEmits<{
 const mouse: Mouse = inject('mouse') as Mouse
 
 console.log('getCurrentScope', getCurrentScope())
-const v = init(Test, emit, 1)
-const v2 = init(Test, emit, 2)
-const v3 = init(Test, emit, 3)
+const v = ivue(Test, emit, 1)
+const v2 = ivue(Test, emit, 2)
+const v3 = ivue(Test, emit, 3)
 const obj = { test: 1 }
 const react = reactive(obj)
 // setTimeout(() => {

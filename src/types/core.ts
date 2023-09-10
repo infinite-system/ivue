@@ -28,10 +28,7 @@ export type MappingType = 'generic' | 'ivue' | any
 
 export type InferredArgs<T> = T extends { new(...args: infer P): any } ? P : never[]
 
-export type Getters = { 
-  values: { [x: string | symbol | number]: PropertyDescriptor; }, 
-  length: number 
-}
+export type Getters = Map<string | symbol | number, PropertyDescriptor>
 
 export interface Intercept {
   return: any,

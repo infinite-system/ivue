@@ -66,11 +66,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/infinite-system/infinite-vue"
+    "url": "https://github.com/infinite-system/ivue"
   },
-  "homepage": "https://github.com/infinite-system/infinite-vue",
+  "homepage": "https://github.com/infinite-system/ivue",
   "bugs": {
-    "url": "https://github.com/infinite-system/infinite-vue/issues",
+    "url": "https://github.com/infinite-system/ivue/issues",
     "email": "ekalashnikov@gmail.com"
   },
   "keywords": [
