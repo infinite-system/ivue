@@ -5,9 +5,9 @@ Advanced State Management & Class Architecture for Vue 3+.
 ## Install
 
 ```sh
-// Using npm
+# Using npm
 npm i ivue
-// or yarn
+# or yarn
 yarn add ivue
 ```
 
