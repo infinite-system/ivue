@@ -5,7 +5,10 @@ Advanced State Management & Class Architecture for Vue 3+.
 ## Install
 
 ```sh
-yarn add infinite-vue
+// Using npm
+npm i ivue
+// or yarn
+yarn add ivue
 ```
 
 ## Run Dev Server
