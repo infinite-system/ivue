@@ -8,8 +8,16 @@ import { onUnmounted, toRaw, watch, onBeforeUnmount } from "vue";
 import { generateHugeArray } from "@/App/Generators/generators";
 import { TField } from "./TField";
 import { use, init, IVUE, unraw, before, ivue } from "@/index";
+import type { ComponentPublicInstance } from 'vue';
 
 export class IVueTests extends ParentIVueTests {
+
+  test = 1
+  setTest(value){
+    this.test = value
+  }
+
+  instance
 
   static behavior = {
     init: IVUE.SCOPED_INTERCEPT,
@@ -55,6 +63,8 @@ export class IVueTests extends ParentIVueTests {
   transientFields: TField[] | null = []
 
   init () {
+
+    console.log('init')
 
     watch(() => this.primitive, newValue => {
       if (newValue === 10) {

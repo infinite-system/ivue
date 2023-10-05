@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, provide, onUnmounted, onBeforeUnmount, getCurrentInstance, onMounted } from 'vue';
+import { computed, provide, onUnmounted, onBeforeUnmount, getCurrentInstance, onMounted, markRaw } from 'vue';
 import { IVueTests } from "../tests/IVueTests";
 import { bind, ivue, use, init, pre, kernel } from '@/index'
 import SubComponent2 from './SubComponent2.vue'
@@ -7,12 +7,15 @@ import TraitsComponent from './TraitsComponent.vue'
 import { Mouse } from '../tests/Mouse';
 import { getPrototypeGetters } from '../../src/utils/getters';
 
+console.log('loaded')
 let vm: IVueTests = use(IVueTests)
 provide('mouse', ivue(Mouse))
 const localComputedValue = computed(() => {
   return vm.computedVariable?.[0]?.test + ' + local append'
 })
 
+vm.setTest('yes')
+console.log(vm.test)
 const hugeId = 2646049
 
 function hey () {

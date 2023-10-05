@@ -273,6 +273,7 @@ export class Kernel {
       computeds: Computeds | any,
       intercept: Intercept | any,
       fns: any
+      console.log('className', className.name)
     /**
      * Advanced garabage collection and disposal mechanism.
      */
@@ -802,10 +803,11 @@ export const bind = kernel.bind.bind(kernel)
 /**
  * Kernel container getters for plain JavaScript classes.
  */
-export const get = kernel.get.bind(kernel)   // for singletons
-export const make = kernel.make.bind(kernel) // for transients
+export  const get: <T extends AnyClass> (className: T, ...args: InferredArgs<T>) => InstanceType<T> = kernel.get.bind(kernel)
+export  const make: <T extends AnyClass> (className: T, ...args: InferredArgs<T>) => InstanceType<T> = kernel.make.bind(kernel)
+
 /**
  * Kernel container getters for ivue reactive JavaScript classes.
  */
-export const use = kernel.use.bind(kernel) // for singletons
-export const init = kernel.init.bind(kernel) // for transients
+export  const use: <T extends AnyClass>(className: T, ...args: InferredArgs<T>) => IVue<T> = kernel.use.bind(kernel);
+export  const init: <T extends AnyClass>(className: T, ...args: InferredArgs<T>) => IVue<T> = kernel.init.bind(kernel);

@@ -1,4 +1,5 @@
 import { createApp } from "vue";
+import { mount, type VueWrapper} from '@vue/test-utils'
 import { vi } from 'vitest'
 import { setup, bind, use } from '@/index'
 import AppComponent from "../../demo/App.vue";
@@ -11,6 +12,7 @@ import { Router } from './Services/Routing/Router'
 import { Auth } from './Auth/Auth.js'
 
 import { SingleBooksResultStub } from './Stubs/SingleBooksResultStub'
+import { VueDd } from "vue-dd";
 
 export class BlackBox {
 
@@ -22,7 +24,7 @@ export class BlackBox {
 
   router!: Router
 
-  vue!: ReturnType<typeof createApp>
+  vue!: VueWrapper
 
   init() {
 
@@ -32,12 +34,17 @@ export class BlackBox {
     this.app = use(App).load()
     setup({ router: this.app.router })
     
-    // this.vue = createApp(AppComponent);
+    this.vue = mount(AppComponent, {
+      global: {
+        components: {VueDd},
+        plugins: [this.app.router]
+      }
+    });
     
-    // console.log('router', this.app.router)
+    // // console.log('router', this.app.router)
     // this.vue.use(this.app.router)
     
-    // this.vue.mount("#app");
+    // this.vue.mount(document.createElement("div"));
 
 
     // Object.defineProperty(Router.prototype, 'push', {

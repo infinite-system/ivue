@@ -1,4 +1,4 @@
-import { unref } from 'vue';
+import { getCurrentScope, unref } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router'
 import { Traits, UseCapsule, use } from '@/index'
 import { $Message } from '../Message/Message'
@@ -6,6 +6,7 @@ import { User } from '../../Auth/User'
 import type { RouteLocationNormalized } from 'vue-router';
 import type { Null, AnyObj, Params } from '@/types/core';
 import type { Router as VueRouter } from 'vue-router'
+
 
 const __$Router__ = ($ = $Router.prototype) => ([
   // Other
@@ -63,7 +64,7 @@ export class $Router {
     // console.log('this.flatRoutes', this.flatRoutes)
 
     this.routeConfig = this.setup(this.routes)
-    console.log('routeConfig', this.routeConfig)
+    // console.log('routeConfig', this.routeConfig)
 
     this.router = createRouter({ history: createWebHistory(), routes: this.routes })
 

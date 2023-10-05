@@ -39,6 +39,7 @@ function _extend<K, V> (target: any, sources: any[], parents: Map<K, V> | null |
   if (isObject(target) && isObject(source)) {
 
     for (const key in source) {
+
       if (isObject(source[key]) && source[key].constructor.name === 'Object') {
         // detect circular references using Map parents object
         if (parents.has(source[key])) {
@@ -65,10 +66,10 @@ function _extend<K, V> (target: any, sources: any[], parents: Map<K, V> | null |
                 target[key] = source[key]
               } else {
                 // Only simple objects can extend the target
-                if (target[key].constructor.name !== 'Object') {
-                  target[key] = source[key]
-                } else {
+                if (target[key].constructor === Object) {
                   _extend(target[key], [source[key]], parents)
+                } else {
+                  target[key] = source[key]
                 }
               }
             }
