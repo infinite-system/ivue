@@ -20,12 +20,9 @@ export function getPrototypeGetters (proto: object | null) {
 
   const props: any[] = []
 
-  while (proto && proto.constructor.name !== 'Object') {
-    props.push.apply(props, Object.entries(
-      Object.getOwnPropertyDescriptors(proto)
-    ))
-    proto = Object.getPrototypeOf(proto.constructor.prototype)
-  }
+  props.push.apply(props, Object.entries(
+    Object.getOwnPropertyDescriptors(proto)
+  ));
 
   const getters: Getters = new Map()
 
