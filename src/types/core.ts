@@ -15,11 +15,11 @@ export type IVue<T extends AnyClass> = InstanceType<T> & IVueToRefs<T>
  * @see ivueTransform
  */
 export interface IVueToRefs<T extends AnyClass> {
-  toRefs: (props: (keyof T)[]) => InstanceType<T>
+  toRefs: (props: (keyof InstanceType<T>)[] | undefined) => InstanceType<T>
 }
 
 export interface IVueToRefsObj<T extends object> {
-  toRefs: (...args: any) => T
+  toRefs: (props: (keyof T)[] | undefined) => T
 }
 
 export type MappingScope = 'singleton' | 'transient'

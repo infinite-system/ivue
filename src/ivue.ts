@@ -195,7 +195,7 @@ export function ivueTransform (vue: any, getters: Getters, computeds: Computeds,
  */
 export function ivueToRefs<T extends AnyClass> (vue: IVue<T>, getters: Getters, computeds: Computeds, scope: EffectScope) {
 
-  return function (props: (keyof T)[]) {
+  return function (props: (keyof InstanceType<T>)[] | undefined) {
     /**
      * Resulting refs store.
      */
@@ -203,7 +203,7 @@ export function ivueToRefs<T extends AnyClass> (vue: IVue<T>, getters: Getters, 
     /**
      * Output specific props only, if props are specified.
      */
-    if (props.length) {
+    if (Array.isArray(props) && props.length) {
       for (let i = 0; i < props.length; i++) {
         const prop = props[i]
         /**
