@@ -1,4 +1,5 @@
 import { computed, reactive, toRef, effectScope, type EffectScope, getCurrentScope, onScopeDispose } from 'vue';
+import type { ToRefs } from 'vue';
 
 import type { Null, IVue, IVueToRefsObj, AnyClass, InferredArgs, Getters, Computeds } from "./types/core";
 
@@ -134,7 +135,7 @@ export function iobj<T extends object> (obj: T): T & IVueToRefsObj<T> {
  * @param getters
  * @param args Arguments are available when used via ivue(obj, ...args)
  */
-export function ivueTransform (vue: any, getters: Getters, computeds: Computeds, scope: EffectScope, ...args: undefined[]) {
+export function ivueTransform<T extends AnyClass>(vue: any, getters: Getters, computeds: Computeds, scope: EffectScope): IVue<T> {
   /**
    * Initialize ivue reactive.
    * 
@@ -195,7 +196,7 @@ export function ivueTransform (vue: any, getters: Getters, computeds: Computeds,
  */
 export function ivueToRefs<T extends AnyClass> (vue: IVue<T>, getters: Getters, computeds: Computeds, scope: EffectScope) {
 
-  return function (props: (keyof InstanceType<T>)[] | undefined) {
+  return function (props?: (keyof InstanceType<T>)[]): ToRefs<InstanceType<T>> {
     /**
      * Resulting refs store.
      */

@@ -1,5 +1,5 @@
 import type { Mapping } from '../kernel'
-import type { ComputedRef } from 'vue';
+import type { ComputedRef, ToRefs } from 'vue';
 
 export type AnyClass = abstract new (...args: any) => any;
 
@@ -15,11 +15,11 @@ export type IVue<T extends AnyClass> = InstanceType<T> & IVueToRefs<T>
  * @see ivueTransform
  */
 export interface IVueToRefs<T extends AnyClass> {
-  toRefs: (props: (keyof InstanceType<T>)[] | undefined) => InstanceType<T>
+  toRefs: (props?: (keyof InstanceType<T>)[]) => ToRefs<InstanceType<T>>
 }
 
 export interface IVueToRefsObj<T extends object> {
-  toRefs: (props: (keyof T)[] | undefined) => T
+  toRefs: (props?: (keyof T)[]) => ToRefs<T>
 }
 
 export type MappingScope = 'singleton' | 'transient'

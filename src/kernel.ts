@@ -778,7 +778,7 @@ export function ivueInversify (ctx: any, obj: any, ...args: any) {
 
   let computeds: Computeds | any = getters.value ? {} : null
 
-  let vue = ivueTransform(reactive(Object.create(obj)), getters, computeds, scope, ...args)
+  let vue = ivueTransform(reactive(Object.create(obj)), getters, computeds, scope)
 
   if (typeof vue.init === 'function') scope.run(() => vue.init())
 
