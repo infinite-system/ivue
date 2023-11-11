@@ -15,7 +15,7 @@ export type IVue<T extends AnyClass> = InstanceType<T> & IVueToRefs<T>
  * @see ivueTransform
  */
 export interface IVueToRefs<T extends AnyClass> {
-  toRefs: (...args: any) => InstanceType<T>
+  toRefs: (props: (keyof T)[]) => InstanceType<T>
 }
 
 export interface IVueToRefsObj<T extends object> {
