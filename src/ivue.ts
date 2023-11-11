@@ -195,11 +195,11 @@ export function ivueTransform (vue: any, getters: Getters, computeds: Computeds,
  */
 export function ivueToRefs<T extends AnyClass> (vue: IVue<T>, getters: Getters, computeds: Computeds, scope: EffectScope) {
 
-  return function (...props: string[]) {
+  return function (props: (keyof T)[]) {
     /**
      * Resulting refs store.
      */
-    const result: Record<string | symbol, any> = {}
+    const result: Record<string | number | symbol, any> = {}
     /**
      * Output specific props only, if props are specified.
      */
