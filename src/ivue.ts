@@ -32,13 +32,13 @@ export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>
    */
   // @ts-ignore
   let vue = new Proxy(reactive(new className(...args)), {
-    get (target, prop) {
+    get (target, prop): any {
       /**
        * Is the prop a getter?
        */
       if (
         getters.has(prop) // Prop is a getter
-        && vue.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
+        && vue?.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
       ) {
         /**
          * Convert getters to computeds lazily.
@@ -68,7 +68,7 @@ export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>
       /**
        * Return the default reactive vue prop.
        */
-      return target[prop]
+      return target?.[prop]
     }
   })
   /**
