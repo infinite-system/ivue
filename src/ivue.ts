@@ -151,7 +151,7 @@ export function ivueTransform<T extends AnyClass>(vue: any, getters: Getters, co
        */
       if (
         getters.has(prop) // Prop is a getter
-        && vue.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
+        && vue?.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
       ) {
         /**
          * Convert getters to computeds lazily.
@@ -181,7 +181,7 @@ export function ivueTransform<T extends AnyClass>(vue: any, getters: Getters, co
       /**
        * Return the default reactive vue prop.
        */
-      return target[prop]
+      return target?.[prop]
     }
   })
 }

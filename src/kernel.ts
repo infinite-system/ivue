@@ -569,13 +569,13 @@ export class Kernel {
      */
     // @ts-ignore
     let vue = new Proxy(reactive(new className(...args)), {
-      get (target, prop) {
+      get (target, prop): any {
         /**
          * Convert getters to computeds lazily.
          */
         if (
           getters.has(prop) // Prop is a getter
-          && vue.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
+          && vue?.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
         ) {
           if (prop in computeds) {
             /**
@@ -602,7 +602,7 @@ export class Kernel {
         /**
          * Return default reactive vue prop.
          */
-        return target[prop]
+        return target?.[prop]
       }
     })
     /**
