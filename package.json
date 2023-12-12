@@ -1,6 +1,6 @@
 {
   "name": "ivue",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "ivue – Infinite Vue. Advanced State Management & Class Architecture for Vue 3+.",
   "exports": {
     ".": {
