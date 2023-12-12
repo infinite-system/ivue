@@ -397,7 +397,7 @@ export class Kernel {
            */
           if (
             getters.has(prop) // Prop is a getter
-            && vue.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
+            && vue?.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
           ) {
             /**
              * Convert getters to computeds lazily.
@@ -427,7 +427,7 @@ export class Kernel {
           /**
            * Return the default reactive vue prop.
            */
-          return target[prop]
+          return target && target?.[prop]
         }
       })
       /**
@@ -602,7 +602,7 @@ export class Kernel {
         /**
          * Return default reactive vue prop.
          */
-        return target?.[prop]
+        return target && target?.[prop]
       }
     })
     /**

@@ -68,7 +68,7 @@ export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>
       /**
        * Return the default reactive vue prop.
        */
-      return target?.[prop]
+      return target && target?.[prop]
     }
   })
   /**
@@ -181,7 +181,7 @@ export function ivueTransform<T extends AnyClass>(vue: any, getters: Getters, co
       /**
        * Return the default reactive vue prop.
        */
-      return target?.[prop]
+      return target && target?.[prop]
     }
   })
 }
