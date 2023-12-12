@@ -39,6 +39,7 @@ export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>
       if (
         getters.has(prop) // Prop is a getter
         && vue?.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
+        && computeds
       ) {
         /**
          * Convert getters to computeds lazily.
@@ -68,7 +69,7 @@ export function ivue<T extends AnyClass> (className: T, ...args: InferredArgs<T>
       /**
        * Return the default reactive vue prop.
        */
-      return target && target?.[prop]
+      return target?.[prop]
     }
   })
   /**
@@ -152,6 +153,7 @@ export function ivueTransform<T extends AnyClass>(vue: any, getters: Getters, co
       if (
         getters.has(prop) // Prop is a getter
         && vue?.constructor?.behavior?.[prop] !== IVUE.OFF // Prop is not disabled
+        && computeds
       ) {
         /**
          * Convert getters to computeds lazily.
@@ -181,7 +183,7 @@ export function ivueTransform<T extends AnyClass>(vue: any, getters: Getters, co
       /**
        * Return the default reactive vue prop.
        */
-      return target && target?.[prop]
+      return target?.[prop]
     }
   })
 }
