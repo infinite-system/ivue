@@ -13,6 +13,7 @@ export default mergeConfig(
       transformMode: {
         web: [/\.[jt]sx$/],
       },
+      reporters: ['default', 'html']
     }
   })
 )

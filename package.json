@@ -2,6 +2,7 @@
   "name": "ivue",
   "version": "0.1.12-beta.0",
   "description": "ivue – Infinite Vue. Advanced State Management & Class Architecture for Vue 3+.",
+  "type": "module",
   "exports": {
     ".": {
       "require": "./dist/index.umd.js",
@@ -18,6 +19,7 @@
     "build": "run-p type-check build-only",
     "preview": "vite preview",
     "test": "vitest --reporter=verbose",
+    "test:unit:ui": "vitest --coverage.enabled=true --ui --reporter=verbose",
     "build-only": "rm -rf ./dist/* && vite build",
     "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
@@ -33,6 +35,9 @@
     "@types/node": "^18.16.8",
     "@vitejs/plugin-vue": "^4.2.3",
     "@vitejs/plugin-vue-jsx": "^3.0.1",
+    "@vitest/coverage-c8": "^0.33.0",
+    "@vitest/coverage-v8": "^2.0.5",
+    "@vitest/ui": "^2.0.5",
     "@vue/eslint-config-typescript": "^11.0.3",
     "@vue/test-utils": "^2.3.2",
     "@vue/tsconfig": "^0.4.0",
@@ -55,7 +60,7 @@
     "typescript": "~5.0.4",
     "vite": "^4.3.5",
     "vite-plugin-dts": "^2.3.0",
-    "vitest": "^0.31.0",
+    "vitest": "^2.0.5",
     "vue": "^3.3.4",
     "vue-dd": "^1.6.4",
     "vue-router": "^4.2.4",

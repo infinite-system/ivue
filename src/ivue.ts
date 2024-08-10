@@ -1,136 +1,199 @@
+/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ComputedRef, ToRef, EffectScope, UnwrapNestedRefs } from 'vue';
-import { computed, reactive, toRef, effectScope, getCurrentScope, onScopeDispose } from 'vue';
+import type {
+  ComputedRef,
+  ExtractPropTypes,
+  ToRef,
+  UnwrapNestedRefs,
+} from 'vue';
+import { computed, reactive, toRef } from 'vue';
 
 /** Types */
-export type IVue<T extends AnyClass> = InstanceType<T> & IVueToRefs<T>;
 
-export interface IVueToRefs<T extends AnyClass> {
-  toRefs: IVueToRefsFn<T>
+export type IVue<T extends AnyClass> = InstanceType<T> & ExtendWithToRefs<T>;
+
+export interface ExtendWithToRefs<T extends AnyClass> {
+  toRefs: IVueToRefsFn<T>;
 }
 
-export type IVueToRefsFn<T> = (props?: (keyof T)[]) => IVueToRefsReturn<T>;
+export type IVueToRefsFn<T extends AnyClass> = (
+  props?: (keyof InstanceType<T>)[]
+) => IVueToRefsFnReturn<InstanceType<T>>;
 
-export type IVueToRefsReturn<T = any> = {
+export type IVueToRefsFnReturn<T = any> = {
   [K in keyof T]: T[K] extends Function ? T[K] : ToRef<T[K]>;
 };
 
+export type UnwrapComposable<T extends (...args: any[]) => any> =
+  UnwrapNestedRefs<ReturnType<T>>;
+
+export type ExtractEmitTypes<T extends Record<string, any>> =
+  UnionToIntersection<
+    RecordToUnion<{
+      [K in keyof T]: (evt: K, ...args: Parameters<T[K]>) => void;
+    }>
+  >;
+
+export type ExtractPropDefaultTypes<O> = {
+  [K in keyof O]: ValueOf<ExtractPropTypes<O>, K>;
+};
+
+export type ExtendSlots<T> = PrefixKeys<T, 'before--'> &
+  T &
+  PrefixKeys<T, 'after--'>;
+
+/** Helper Types. */
+
 export type AnyClass = abstract new (...args: any[]) => any;
 
-export type Getters = Map<string, PropertyDescriptor>;
+export type Descriptors = Map<string, PropertyDescriptor>;
 
 export type Computeds = Record<string, ComputedRef>;
 
-export type InferredArgs<T> = T extends { new(...args: infer P): any } ? P : never[];
+export type InferredArgs<T> = T extends { new (...args: infer P): any }
+  ? P
+  : never[];
 
-export type UnRef<T extends (...args: any[]) => any> = UnwrapNestedRefs<ReturnType<T>>;
+export type PrefixKeys<T, P extends string | undefined = undefined> = {
+  [K in Extract<keyof T, string> as P extends string ? `${P}${K}` : K]: T[K];
+};
+
+export type IFnParameter<
+  T extends Record<any, any>,
+  P extends keyof T,
+  K extends number
+> = FnParameter<ValueOf<T, P>, K>;
+
+export type FnParameter<
+  F extends (...args: any[]) => any,
+  K extends number
+> = Parameters<F>[K];
+
+export type UnionToIntersection<U> = (
+  U extends any ? (k: U) => void : never
+) extends (k: infer I) => void
+  ? I
+  : never;
+
+export type RecordToUnion<T extends Record<string, any>> = T[keyof T];
+
+export type ValueOf<T extends Record<any, any>, K> = T[K];
+
+/** Types End. */
 
 /**
- * Store all getters for each class prototype processed by
- * @see {getAllClassGetters}
+ * Store all descriptors for each class prototype processed by
+ * @see {getAllClassDescriptors}
  */
-export const gettersMap = new Map()
+export const descriptorsMap = new Map();
 
 /**
- * Get getters of a class prototype chain as a Map.
+ * Get descriptors of an entire class prototype chain as a Map.
+ * Completely emulates JavaScript class inheritance chain for getters and setters.
  *
- * @param proto
- * @return {Getters}
+ * @param className
+ * @return {Descriptors}
  */
-export function getAllClassGetters(className: AnyClass): Getters {
-  let prototype = className.prototype;
-
-  /* Retrieve getters from cache */
-  if (gettersMap.has(className)) {
-    return gettersMap.get(className)
+export function getAllClassDescriptors(className: AnyClass): Descriptors {
+  /* Retrieve descriptors from cache */
+  if (descriptorsMap.has(className)) {
+    return descriptorsMap.get(className);
   }
 
-  const getters: Getters = new Map()
+  const savedDescriptors: Descriptors = new Map();
 
+  let prototype = className.prototype;
   while (prototype.constructor !== Object) {
-    Object.entries(Object.getOwnPropertyDescriptors(prototype))
-      .forEach((p) => {
-        if (!getters.has(p[0]) && typeof p[1].get === 'function') {
-          getters.set(p[0], p[1]);
+    Object.entries(Object.getOwnPropertyDescriptors(prototype)).forEach(
+      ([propertyName, currentDescriptor]) => {
+        const savedDescriptor = savedDescriptors.get(propertyName);
+        /** Emulate inheritance chain of getters and setters. */
+        if (
+          savedDescriptor !== currentDescriptor &&
+          (currentDescriptor?.get || currentDescriptor?.set)
+        ) {
+          /** Overwrite descriptors if they were already set. */
+          if (savedDescriptor?.get)
+            currentDescriptor.get = savedDescriptor?.get;
+          if (savedDescriptor?.set)
+            currentDescriptor.set = savedDescriptor?.set;
+
+          /** Store descriptors. */
+          savedDescriptors.set(propertyName, currentDescriptor);
         }
-      });
+      }
+    );
+    /** Walk up the prototype chain. */
     prototype = Object.getPrototypeOf(prototype);
   }
 
-  /** Save getters in the getters map. */
-  gettersMap.set(className, getters);
+  /** Save descriptors in the descriptors map for each class. */
+  descriptorsMap.set(className, savedDescriptors);
 
-  return getters;
+  return savedDescriptors;
 }
 
 /**
  * Infinite Vue (ivue) class reactive initializer.
+ *
  * Converts class instance to a reactive object,
- * where getters are converted to computeds.
- * 
- * You can turn off computed behaviour by adding static 
+ * where descriptors are converted to computeds.
+ *
+ * You can turn off computed behaviour by adding static
  * ivue object and setting the getter props to false.
  * class ClassName {
  *    static ivue = {
  *      getter: false
  *    }
- *    // Will be a standard JS non-computed getter
+ *    // .getter -> will be a standard JS non-computed getter
  *    get getter () { return 'hello world'; }
  * }
- * 
+ *
  * @param className Any Class
  * @param args Class constructor arguments that you would pass to a `new AnyClass(args...)`
  * @returns {IVue<T>}
  */
-export function init<T extends AnyClass>(className: T, ...args: InferredArgs<T>): IVue<T> {
-
-  let
-    currentScope: EffectScope | undefined | null = getCurrentScope(),
-    activeScope: EffectScope | null = effectScope(!!currentScope),
-    getters: Getters | null = getAllClassGetters(className),
-    computeds: Computeds | any = getters?.size ? {} : null;
+export default function ivue<T extends AnyClass>(
+  className: T,
+  ...args: InferredArgs<T>
+): IVue<T> {
+  const descriptors: Descriptors | null = getAllClassDescriptors(className);
+  const computeds: Computeds | any = descriptors?.size ? {} : null;
 
   // @ts-expect-error Abstract class initialization
-  let vue = reactive(new className(...args));
+  const vue = reactive(new className(...args));
 
-  /** Setup getters as computeds. */
-  for (const [prop, descriptor] of getters) {
+  /** Setup descriptors as computeds. */
+  for (const [prop, descriptor] of descriptors) {
     /* If prop exists on static getter className.ivue[prop]
-     * We do not convert it to computed. Because sometimes 
+     * We do not convert it to computed. Because sometimes
      * we want a normal getter. */
-    if ((className as any)?.ivue?.[prop] !== undefined) continue;
-    /** Convert getter to computed. */
+    if ((className as any)?.ivue?.[prop] === false) continue;
+    /** Convert descriptor to computed. */
     Object.defineProperty(vue, prop, {
-      get() {
-        return prop in computeds
-          /** Get the existing computed, because we are in reactive scope, .value will auto unwrap itself. */
-          ? computeds[prop]
-          /** Create the computed and return it, because we are in reactive scope, .value will auto unwrap itself. */
-          : computeds[prop] = activeScope?.run(() => computed(descriptor.get?.bind(vue) as any))
-      },
+      get: descriptor.get
+        ? () =>
+            prop in computeds
+              ? /** Get the existing computed, because we are in reactive scope, .value will auto unwrap itself. */
+                computeds[prop]
+              : /** Create the computed and return it, because we are in reactive scope, .value will auto unwrap itself. */
+                (computeds[prop] = computed({
+                  get: descriptor.get?.bind(vue) as any,
+                  set: descriptor.set?.bind(vue),
+                } as any))
+        : undefined,
       set: descriptor.set?.bind(vue),
-      enumerable: false
+      enumerable: false,
     });
   }
 
   Object.defineProperty(vue, 'toRefs', {
-    get: () => ivueToRefs(vue, getters as Getters, computeds, activeScope as EffectScope),
-    enumerable: false
+    get: () => ivueToRefs(vue, descriptors as Descriptors, computeds),
+    enumerable: false,
   });
 
   /** Run ivue .init() initializer method, if it exists in the class. */
-  if ('init' in vue) activeScope.run(() => vue.init());
-
-  /** Advanced Garabage Collection and Disposal Mechanism. */
-  currentScope ? onScopeDispose(() => {
-    activeScope?.stop();
-
-    let prop;
-    for (prop in vue) delete vue[prop];
-    for (prop in computeds) delete computeds[prop];
-
-    currentScope = activeScope = getters = computeds = vue = prop = null;
-  }) : null;
+  if ('init' in vue) vue.init();
 
   return vue;
 }
@@ -139,64 +202,72 @@ export function init<T extends AnyClass>(className: T, ...args: InferredArgs<T>)
  * Store all props for each class prototype processed by:
  * @see {getAllClassProperties}
  */
-export const propsMap = new Map();
+export const propsMap: Map<object, Set<string> | any> = new Map();
 
 /**
- * Similar to Object.getOwnPropertyNames(obj) but including 
- * the properties of the entire prototype chain.
+ * Get properties of an entire class prototype chain as a Map.
  */
 export function getAllClassProperties(obj: object): Set<string> {
-
   /* Retrieve props from cache */
   if (propsMap.has(obj.constructor)) {
-    return propsMap.get(obj.constructor)
+    return propsMap.get(obj.constructor);
   }
+
+  const originalConstructor = obj.constructor;
 
   const allProps: Set<string> = new Set();
   do {
-    Object.getOwnPropertyNames(obj)
-      /* 'caller', 'callee', 'arguments', 'constructor' are 
+    Object.getOwnPropertyNames(obj).forEach((prop) => {
+      /* 'caller', 'callee', 'arguments', 'constructor' are
        * special object properties, so should be skipped. */
-      .filter(prop => !['caller', 'callee', 'arguments', 'constructor'].includes(prop))
-      .forEach(prop => allProps.add(prop));
+      if (!['caller', 'callee', 'arguments', 'constructor'].includes(prop)) {
+        allProps.add(prop);
+      }
+    });
     obj = Object.getPrototypeOf(obj);
   } while (obj.constructor !== Object);
 
-  /** Save getters in the getters map. */
-  propsMap.set(obj.constructor, allProps);
+  /** Save props in the props map. */
+  propsMap.set(originalConstructor, allProps);
 
   return allProps;
 }
 
 /**
  * Convert reactive ivue class to Vue 3 refs.
- * 
+ *
  * @param vue @see IVue
- * @param getters @see Getters
+ * @param descriptors @see Descriptors
  * @param computeds @see Computeds
- * @param activeScope @see EffectScope
  * @returns {IVueToRefs<T>['toRefs']}
  */
-export function ivueToRefs<T extends AnyClass>(vue: IVue<T>, getters: Getters, computeds: Computeds, activeScope: EffectScope): IVueToRefs<T>['toRefs'] {
-
-  return function (props?: (keyof InstanceType<T>)[]): IVueToRefsReturn<InstanceType<T>> {
+export function ivueToRefs<T extends AnyClass>(
+  vue: IVue<T>,
+  descriptors: Descriptors,
+  computeds: Computeds
+): ExtendWithToRefs<T>['toRefs'] {
+  return function (
+    props?: (keyof InstanceType<T>)[]
+  ): IVueToRefsFnReturn<InstanceType<T>> {
     /** Resulting refs store. */
-    const result: Record<string | number | symbol, any> = {}
+    const result: Record<string | number | symbol, any> = {};
 
     /** Output specific props only, if props are specified. */
     if (Array.isArray(props) && props.length) {
-
       for (let i = 0; i < props.length; i++) {
-
         const prop = props[i] as any;
-        /** Handle getters. */
-        if (getters.has(prop)) {
+        /** Handle descriptors. */
+        if (descriptors.has(prop)) {
           if (prop in computeds) {
-            /** Store whole vue computed with .value */
+            /** Return vue computed with .value from computeds store. */
             result[prop] = computeds[prop];
           } else {
             /** Initialize & store vue computed. */
-            activeScope.run(() => result[prop] = computeds[prop] = computed(getters.get(prop)?.get?.bind(vue) as any));
+            const descriptor = descriptors.get(prop);
+            result[prop] = computeds[prop] = computed({
+              get: descriptor?.get?.bind(vue) as any,
+              set: descriptor?.set?.bind(vue),
+            } as any);
           }
         } else {
           /** Handle methods. */
@@ -211,27 +282,25 @@ export function ivueToRefs<T extends AnyClass>(vue: IVue<T>, getters: Getters, c
       }
     } else {
       /** Convert all props to refs and leave functions as is. */
-      const allProps = getAllClassProperties(vue);
+      let allProps: null | Set<string> = new Set(getAllClassProperties(vue));
 
-      /** Remove constructor and ivue specific props. */
-      allProps.delete('constructor');
-      allProps.delete('toRefs');
-      allProps.delete('init');
-
-      /** Convert getters (non enumerable by default in JS). */
-      getters.forEach((getter, prop) => {
+      /** Convert descriptors (non enumerable by default in JS). */
+      descriptors.forEach((descriptor, prop) => {
         if (prop in computeds) {
-          /** Store whole vue computed with .value */
+          /** Return vue computed with .value from computeds store. */
           result[prop] = computeds[prop];
         } else {
           /** Initialize vue computed ref & store it in result. */
-          result[prop] = activeScope.run(() => computeds[prop] = computed(getter.get?.bind(vue) as any));
+          result[prop] = computeds[prop] = computed({
+            get: descriptor.get?.bind(vue) as any,
+            set: descriptor.set?.bind(vue),
+          } as any);
         }
-        /** Delete getters from props as they were already processed. */
-        allProps.delete(prop as string);
+        /** Delete descriptor from props as it was already processed. */
+        allProps?.delete(prop as string);
       });
 
-      allProps.forEach(prop => {
+      allProps.forEach((prop) => {
         if (typeof vue[prop] === 'function') {
           /** Bind method to vue, makes method destructuring point to right instance. */
           result[prop] = vue[prop].bind(vue);
@@ -239,9 +308,14 @@ export function ivueToRefs<T extends AnyClass>(vue: IVue<T>, getters: Getters, c
           /** Convert simple reactive prop to a Ref. */
           result[prop] = toRef(vue, prop);
         }
+        /** Delete prop from props as it was already processed. */
+        allProps?.delete(prop as string);
       });
+
+      /** Memory optimization. */
+      allProps = null;
     }
 
-    return result as IVueToRefsReturn<InstanceType<T>>;
-  }
+    return result as IVueToRefsFnReturn<InstanceType<T>>;
+  };
 }
