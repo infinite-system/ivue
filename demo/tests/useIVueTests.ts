@@ -25,7 +25,7 @@ export function useIVueTests () {
   
   // setTimeout(() => {
 
-    for (let i = 0; i < 50_000; i++) {
+    for (let i = 0; i < 200_000; i++) {
       transientFields.value.push(useField())
     }
 

@@ -35,11 +35,10 @@ export default defineConfig({
         },
 
       })],
-      external: ["vue", "vue-router"],
+      external: ["vue"],
       output: {
         globals: {
-          vue: "Vue",
-          "vue-router": "VueRouter"
+          vue: "Vue"
         },
       },
     },

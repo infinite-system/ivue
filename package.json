@@ -23,8 +23,7 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "peerDependencies": {
-    "vue": "^3.0.0",
-    "vue-router": "^4.0.0"
+    "vue": "^3.0.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.2.0",

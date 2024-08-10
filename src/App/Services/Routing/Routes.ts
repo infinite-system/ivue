@@ -26,7 +26,7 @@ export default [
   {
     path: '/ivue',
     secure: false,
-    component: () => import('../../../../demo/components/IVueTest.vue'),
+    component: () => import('../../../../demo/components/IVueTest2.vue'),
     children: [{
       name: 'ivue',
       path: '',

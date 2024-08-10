@@ -23,7 +23,7 @@ export class $Auth {
       this.user.email = email
       this.user.token = login.result.token
     }
-
+//
     return this.$message.unpack(login)
   }
 

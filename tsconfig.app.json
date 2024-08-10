@@ -13,7 +13,6 @@
     "node_modules"
   ],
   "compilerOptions": {
-    "outDir": "target",
     /* enable decorators & inversify*/
     "target": "ES2015",
     "module": "es2020",
@@ -27,7 +26,6 @@
     ],
     "incremental": false,
     "skipLibCheck": true,
-    "declaration": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "noUnusedLocals": true,

@@ -16,7 +16,7 @@ export const useField = ()  => {
   })
 
   const _prop = ref(0)
-
+  const buildMouse = ref(true);
   const x = ref(0)
   const y = ref(1)
 
@@ -41,7 +41,7 @@ export const useField = ()  => {
 
   const prop = computed({
     get () {
-      _prop.value
+      return _prop.value
     },
     set (v) {
       _prop.value = v
@@ -64,6 +64,7 @@ export const useField = ()  => {
   })
 
   return {
+    buildMouse,
     app,
     router,
     _prop,

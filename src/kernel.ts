@@ -2,7 +2,7 @@ import { reactive, markRaw, effectScope, type EffectScope, getCurrentScope, comp
 
 import type { MappingScope, MappingType, IVue, AnyClass, InferredArgs, Intercept, Null, Getters, Computeds } from './types/core';
 
-import { ivueToRefs, ivueTransform } from './ivue';
+import { ivueToRefs } from './ivue';
 
 import { getPrototypeGetters } from './utils/getters'
 
@@ -272,8 +272,7 @@ export class Kernel {
       getters: Getters | any,
       computeds: Computeds | any,
       intercept: Intercept | any,
-      fns: any
-      console.log('className', className.name)
+      fns: any;
     /**
      * Advanced garabage collection and disposal mechanism.
      */
@@ -428,7 +427,7 @@ export class Kernel {
           /**
            * Return the default reactive vue prop.
            */
-          return target?.[prop]
+          return target[prop]
         }
       })
       /**
@@ -604,7 +603,7 @@ export class Kernel {
         /**
          * Return default reactive vue prop.
          */
-        return target?.[prop]
+        return target[prop]
       }
     })
     /**

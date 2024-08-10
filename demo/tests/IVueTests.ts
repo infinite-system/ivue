@@ -60,7 +60,7 @@ export class IVueTests extends ParentIVueTests {
 
   transientField3!: TField
 
-  transientFields: TField[] | null = []
+  transientFields: TField[]  = []
 
   init () {
 
@@ -93,9 +93,9 @@ export class IVueTests extends ParentIVueTests {
     const start = Date.now();
 
 
-    for (let i = 0; i < 50_000; i++) {
+    for (let i = 0; i < 200_000; i++) {
       // this.transientFields.push(ivueMake(new Field(i)))
-      this.transientFields.push(init(TField))
+      this.transientFields.push(new TField(1, false).init())
     }
 
     console.log('this.transientFields.length', this.transientFields.length)

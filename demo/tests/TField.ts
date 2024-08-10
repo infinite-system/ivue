@@ -1,4 +1,4 @@
-import { watch, onMounted, onUnmounted } from "vue";
+import { watch, onMounted, onUnmounted, reactive } from "vue";
 import { IVUE } from "@/index";
 import { use, init } from "@/index";
 import { App } from "@/App/App";
@@ -29,13 +29,14 @@ export class TField {
 
   get router () { return  use(TRouter) }
 
-  _prop = 0
   // static behavior: any = {
   //   init: IVUE.SCOPED_INTERCEPT,
   //   runWithIntercept: IVUE.INTERCEPT
   // }
 
-  // constructor (private _prop: number, private buildMouse = true) {}
+  constructor (private _prop: number, private buildMouse = true) {
+    return reactive(this) as TField;
+  }
 
 
   get prop () {
@@ -54,13 +55,14 @@ export class TField {
 
   y: number = 0
 
-  update: (event) => {}
+  update(event) {}
 
 
   init() {
     watch(() => this.x, n => {
       console.log('n', n)
     })
+    return this;
   }
 
   interceptableValue = 'testing'
