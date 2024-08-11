@@ -1,21 +1,41 @@
 import { fileURLToPath, URL } from 'node:url'
+
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import pkg from "./package.json";
 import dts from "vite-plugin-dts";
-import { resolve } from 'node:path';
+import pkg from "./package.json";
+import libCss from 'vite-plugin-libcss';
 
-import { terser } from 'rollup-plugin-terser';
+export const vueDocsPlugin = () => ({
+  name: "vue-docs",
+  transform (code: any, id: any) {
+    if (!/vue&type=docs/.test(id)) return;
+    return `export default ''`;
+  }
+});
+
 // https://vitejs.dev/config/
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
+  server: {
+    fs: {
+      allow: ['..']
+    }
+  },
   plugins: [
     vue(),
     dts({
       cleanVueFileName: true,
     }),
+    vueDocsPlugin(),
+    libCss()
   ],
   build: {
-    minify: 'terser',
+    cssCodeSplit: true,
     lib: {
       entry: "./src/index.ts",
       formats: ["es", "umd"],
@@ -24,17 +44,6 @@ export default defineConfig({
       fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {
-      plugins: [terser({
-        format: {
-          comments: false,
-        },
-
-        mangle: {
-          keep_classnames: false,
-          reserved: [],
-        },
-
-      })],
       external: ["vue"],
       output: {
         globals: {
@@ -43,12 +52,4 @@ export default defineConfig({
       },
     },
   },
-  server: {
-    port: 5010
-  },
-  resolve: {
-    alias: [
-      { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
-    ]
-  }
 })

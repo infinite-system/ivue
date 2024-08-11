@@ -1,11 +1,9 @@
 import { createApp } from "vue";
-import { VueDd } from "vue-dd";
-import router from "./router";
+import { install } from "../src/index";
 import App from "./App.vue";
 
 const app = createApp(App);
-app.use(router);
 
-app.component("VueDd", VueDd);
+install(app);
 
 app.mount("#app");
