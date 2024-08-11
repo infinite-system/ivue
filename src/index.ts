@@ -441,7 +441,7 @@ export function isClass(val: any): boolean {
  * @param typedProps Props declared in defineComponent() style with type and possibly required declared, but without default
  * @returns Props declared in defineComponent() style with all properties having default property declared.
  */
-export function createPropsWithDefaults<T extends VuePropsObject>(
+export function propsWithDefaults<T extends VuePropsObject>(
   defaults: Record<string, any>,
   typedProps: T
 ): VuePropsWithDefaults<T> {
