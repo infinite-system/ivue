@@ -2,12 +2,25 @@
 
 ## About
 
-**ivue** is an elegant class based composable architecture for Vue 3, that unlocks infinite scalability for Vue 3 based apps.
+**ivue** is a TypeScript classes based composable architecture for Vue 3, that unlocks infinite scalability for Vue 3 based apps. It allows you to extend the regular Vue 3 in a simple and elegant way.
 
 ## Features
-Features:
-- Fully Extendible Classes
-- Fully Extendible Props
-- Fully Extendible Emits
-- Fully Extendible Slots
-- Fully Extendible Components
+&ndash; Simple & Elegant Architecture<br />
+&ndash; Extendible Classes aligned with TypeScript Class design<br />
+&ndash; Extendible Props Defaults<br />
+&ndash; Extendible Emits<br />
+&ndash; Extendible Slots<br />
+&ndash; Extendible Components<br />
+&ndash; Improves DX by elegantly dealing with .value in the background<br />
+&ndash; Can be used both as a Store and a View Model for Components<br />
+&ndash; Provides Full TypeScript Support<br />
+&ndash; 100% Tested<br />
+&ndash; Zero dependencies except Vue 3<br />
+&ndash; Only 1kb in size!<br />
+&ndash; Production Ready<br />
+
+## How Does it Work
+
+## Examples
+
+## Documentation
