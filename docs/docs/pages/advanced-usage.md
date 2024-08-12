@@ -27,11 +27,6 @@ import CounterExternalRefs from '../components/examples/CounterExternalRefs.vue'
 import CounterInternalRefs from '../components/examples/CounterInternalRefs.vue'
 import CounterComposables from '../components/examples/CounterComposables.vue'
 import CounterComposablesDestructuring from '../components/examples/CounterComposablesDestructuring.vue'
-import CounterInsideComposables from '../components/examples/CounterInsideComposables.vue'
-import CounterComputeds from '../components/examples/CounterComputeds.vue'
-import CounterComputedsDisabled from '../components/examples/CounterComputedsDisabled.vue'
-import CounterWatch from '../components/examples/CounterWatch.vue'
-import CounterLifecycleHooks from '../components/examples/CounterLifecycleHooks.vue'
 
 // <For CounterWithPropsAndEmits example start>
 function onIncrement(value: number) {
@@ -65,13 +60,11 @@ Classic Counter example built with `ivue`
 :::
 
 :::details For this example we initialize the component like this:
-
 ```vue
 <template>
   <CounterBasic />
 </template>
 ```
-
 :::
 
 ### Result:
@@ -89,13 +82,11 @@ See the highlighted sections related to props.
 :::
 
 :::details For this example we initialize the component like this:
-
 ```vue
 <template>
   <CounterWithProps :initial-count="5" />
 </template>
 ```
-
 :::
 
 ### Result:
@@ -104,14 +95,13 @@ See the highlighted sections related to props.
 
 ## Using Emits
 
-See the highlighted sections related to using emits.
+See the highlighted sections related to `defineExpose`
 
 ::: code-group
 <<< @/components/examples/CounterWithPropsAndEmits.vue{9-11,14,17,23,31 vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
-
 ```vue
 <script setup lang="ts">
 function onIncrement(value: number) {
@@ -122,7 +112,6 @@ function onIncrement(value: number) {
   <CounterWithPropsAndEmits :initial-count="5" @increment="onIncrement" />
 </template>
 ```
-
 :::
 
 ### Result:
@@ -163,7 +152,6 @@ function onIncrement(value: number) {
   <CounterInternalRefs />
 </template>
 ```
-
 :::
 
 ### Result:
@@ -180,7 +168,6 @@ See the highlighted sections related to `defineExpose`.
 :::
 
 :::details For this example we initialize the component like this:
-
 ```vue
 <script setup lang="ts">
 const defineExposeRef = ref<CounterDefineExposeClass | null>(null);
@@ -203,7 +190,6 @@ function decrement() {
   <CounterDefineExpose />
 </template>
 ```
-
 :::
 
 ### Result:
@@ -211,12 +197,6 @@ function decrement() {
 <button class="button" @click="increment">Increment via Component Ref from Parent Component</button><br />
 <button class="button" @click="decrement">Decrement via Component Ref from Parent Component</button>
 <CounterDefineExpose ref="defineExposeRef" />
-
-### Selecting the properties to allow for `defineExpose()`
-
-::: code-group
-<<< @/components/examples/CounterDefineExposeAdvanced.vue{9,23 vue:line-numbers}
-:::
 
 ## Using Composables
 
@@ -226,21 +206,17 @@ See the highlighted sections related to composable usage.
 :::
 
 :::details For this example we initialize the component like this:
-
 ```vue
 <template>
   <CounterComposables />
 </template>
 ```
-
 :::
 
 ### Result:
-
 <CounterComposables />
 
 ### Destructuring composable into the class
-
 See the highlighted sections related to destructuring composable usage.
 
 ::: code-group
@@ -249,119 +225,12 @@ See the highlighted sections related to destructuring composable usage.
 :::
 
 :::details For this example we initialize the component like this:
-
 ```vue
 <template>
   <CounterComposablesDestructuring />
 </template>
 ```
-
 :::
 
 ### Result:
-
 <CounterComposablesDestructuring />
-
-## Using Inside Composables
-
-See the highlighted sections related to using `ivue` inside a composable.
-
-::: code-group
-<<< @/components/examples/CounterInsideComposables.vue{14 vue:line-numbers}
-:::
-
-:::details For this example we initialize the component like this:
-
-```vue
-<template>
-  <CounterInsideComposables />
-</template>
-```
-
-:::
-
-### Result:
-
-<CounterInsideComposables />
-
-
-## Using Computeds
-
-Getters are converted to computeds in `ivue`.<br />
-See the highlighted sections related to getters.
-
-::: code-group
-<<< @/components/examples/CounterComputeds.vue{10,13,23,24 vue:line-numbers}
-:::
-
-:::details For this example we initialize the component like this:
-```vue
-<template>
-  <CounterComputeds />
-</template>
-```
-:::
-
-### Result:
-<CounterComputeds />
-
-### Disable computed behavior for certain getters in `ivue`.<br />
-You can disable computed getters via `static ivue = { getter: false }`, see below:
-
-::: code-group
-<<< @/components/examples/CounterComputedsDisabled.vue{10-12 vue:line-numbers}
-:::
-
-The result of this example is identical to the above.
-
-
-
-## Using Watch
-
-To use `watch`, `watchEffect`, `onMounted` and other reactive functions, declare `.init()` method in the class.
-See the highlighted sections related to using `init()` below:
-
-::: code-group
-<<< @/components/examples/CounterWatch.vue{6-12 vue:line-numbers}
-:::
-
-:::details For this example we initialize the component like this:
-
-```vue
-<template>
-  <CounterWatch />
-</template>
-```
-
-:::
-
-### Result:
-
-<CounterWatch />
-
-
-
-## Using Lifecycle Hooks
-
-To use `onMounted`, `onBeforeMount` and other lifecycle, declare `.init()` method in the class.
-See the highlighted sections related to using `init()` below:
-
-::: tip NOTICE:
-`init()` method can be declared as `async` if needed.
-:::
-
-::: code-group
-<<< @/components/examples/CounterLifecycleHooks.vue{7-9 vue:line-numbers}
-:::
-
-:::details For this example we initialize the component like this:
-
-```vue
-<template>
-  <CounterLifecycleHooks />
-</template>
-```
-:::
-
-### Result:
-<CounterLifecycleHooks />

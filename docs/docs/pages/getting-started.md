@@ -16,3 +16,17 @@ npm i ivue
 pnpm i ivue
 ```
 
+## Install by Copying
+
+`ivue` is designed to be easily shareable and installable so if you are running TypeScript, you can just copy the `index.ts` rename it to 
+`ivue.ts` in your repo and you are done:
+:::details Click to expand the latest `ivue` source code to copy
+
+:::code-group
+<<< ../../../src/index.ts{ts:line-numbers} [ivue.ts]
+:::
+Or [Copy from GitHub](https://github.com/infinite-system/ivue/blob/main/src/index.ts)
+
+::: tip NOTE
+This installation path is recommended only if you quickly want to tinker with the internals of ivue, as you won't be getting the latest updates. Also note that this code comes from github `main` branch latest which might also be in beta and not fully pushed to `npm`.
+:::

@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue'
 import dts from "vite-plugin-dts";
 import pkg from "./package.json";
 import libCss from 'vite-plugin-libcss';
+import { terser } from 'rollup-plugin-terser';
 
 export const vueDocsPlugin = () => ({
   name: "vue-docs",
@@ -45,6 +46,9 @@ export default defineConfig({
     },
     rollupOptions: {
       external: ["vue"],
+      plugins:[
+        terser()
+      ],
       output: {
         globals: {
           vue: "Vue"

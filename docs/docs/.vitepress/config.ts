@@ -1,11 +1,16 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig } from 'vitepress';
 
 // https://vitepress.vuejs.org/config/app-configs
 export default defineConfig({
+  titleTemplate: ':title | Infinite Vue ∞ ivue',
   themeConfig: {
-    siteTitle: 'ivue ∞ Infinite Vue',
+    siteTitle: 'Infinite Vue ∞ ivue',
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/infinite-system/ivue' },
+      { icon: 'twitter', link: 'https://x.com/evgenykalash' },
+    ],
     search: {
-      provider: 'local'
+      provider: 'local',
     },
     sidebar: [
       {
@@ -25,31 +30,39 @@ export default defineConfig({
           { text: 'Using Props', link: '/pages/usage#using-props' },
           { text: 'Using Emits', link: '/pages/usage#using-emits' },
           { text: 'Using Refs', link: '/pages/usage#using-refs' },
-          { text: 'Using Define Expose', link: '/pages/usage#using-define-expose' },
+          {
+            text: 'Using Define Expose',
+            link: '/pages/usage#using-define-expose',
+          },
           { text: 'Using Composables', link: '/pages/usage#using-composables' },
-          { text: 'Using .init()', link: '/pages/usage#using-composables' },
-          { text: 'Using .toRefs()', link: '/pages/usage#using-composables' },
+          { text: 'Using Inside Composables', link: '/pages/usage#using-inside-composables' },
+          { text: 'Using Computeds', link: '/pages/usage#using-computeds' },
+          { text: 'Using Watch', link: '/pages/usage#using-watch' },
+          { text: 'Using Lifecycle Hooks', link: '/pages/usage#using-lifecycle-hooks' },
         ],
       },
       {
         collapsed: false,
         text: 'Advanced Usage',
         items: [
-          { text: 'Extend Classes', link: '/pages/usage' },
-          { text: 'Extend Props', link: '/pages/usage' },
-          { text: 'Extend Emits', link: '/pages/usage' },
-          { text: 'Extend Slots', link: '/pages/usage' },
-          { text: 'Extend Components', link: '/pages/usage' },
+          { text: 'Extend Props Defaults', link: '/pages/advanced-usage' },
+          { text: 'Extend Props', link: '/pages/advanced-usage' },
+          { text: 'Extend Emits', link: '/pages/advanced-usage' },
+          { text: 'Extend Slots', link: '/pages/advanced-usage' },
+          { text: 'Extend Classes', link: '/pages/advanced-usage' },
+          { text: 'Extend Components', link: '/pages/advanced-usage' },
         ],
       },
       {
         collapsed: false,
         text: 'Recommendations',
         items: [
-          { text: "Dos and Don'ts", link: '/pages/dos-and-donts' },
+          { text: "Dos and Don'ts", link: '/pages/recommendations#dos-and-donts' },
+          { text: "constructor() vs init()", link: '/pages/recommendations#dos-and-donts' },
+          { text: "Casting Types", link: '/pages/recommendations#dos-and-donts' },
+          { text: "Naming Convetions", link: '/pages/recommendations#dos-and-donts' },
         ],
       },
-      
 
       {
         collapsed: false,
@@ -64,26 +77,28 @@ export default defineConfig({
       {
         collapsed: false,
         text: 'Utility Functions',
-        items: [
-          { text: 'propsWithDefaults', link: '/api/propsWithDefaults' },
-        ],
+        items: [{ text: 'propsWithDefaults', link: '/api/propsWithDefaults' }],
       },
-      
+
       {
         text: 'Utility Types',
         items: [
-          { text: 'ExtractPropDefaultTypes', link: '/types/ExtractPropDefaultTypes' },
+          {
+            text: 'ExtractPropDefaultTypes',
+            link: '/types/ExtractPropDefaultTypes',
+          },
           { text: 'ExtractEmitTypes', link: '/types/ExtractEmitTypes' },
           { text: 'ExtendSlots', link: '/types/ExtendSlots' },
           { text: 'UnwrapComposable', link: '/types/UnwrapComposable' },
         ],
       },
-    ]
+    ],
   },
   base: '/ivue/',
-  vite: { // To make vue-dd work, see https://github.com/vuetifyjs/vuetify/discussions/15735
+  vite: {
+    // To make vue-dd work, see https://github.com/vuetifyjs/vuetify/discussions/15735
     ssr: {
-      noExternal: ["vue-dd"]
-    }
-  }
-})
+      noExternal: ['vue-dd'],
+    },
+  },
+});

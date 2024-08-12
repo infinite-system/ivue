@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ComputedRef, ExtractPropTypes, ToRef } from 'vue';
-import { computed, reactive, toRef, UnwrapRef } from 'vue';
+import { UnwrapRef, computed, reactive, toRef } from 'vue';
 
 /** Types */
 /**
@@ -53,7 +53,9 @@ export type ExtractEmitTypes<T extends Record<string, any>> =
 /**
  * Extract properties as all assigned properties because they have defaults.
  */
-export type ExtractPropDefaultTypes<O> = RequiredProperties<O>;
+export type ExtractPropDefaultTypes<O> = {
+  [K in keyof O]: ValueOf<ExtractPropTypes<O>, K>;
+};
 
 /**
  * Extend slots interface T with prefixed 'before--' & 'after--' slots to create fully extensible flexible slots.
@@ -119,15 +121,6 @@ export type UnionToIntersection<U> = (
  * Convert Record to Union Type.
  */
 export type RecordToUnion<T extends Record<string, any>> = T[keyof T];
-
-/**
- * Required Properties converts an interface with possible
- * optionally assigned properties like: { optional?: any; }
- * to a definitevely defined interface.
- */
-export type RequiredProperties<O> = {
-  [K in keyof O]: ValueOf<ExtractPropTypes<O>, K>;
-};
 
 /**
  * Gets object T property by key [K].

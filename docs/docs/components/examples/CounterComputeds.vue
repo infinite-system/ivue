@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ivue, UnwrapComposable } from 'ivue';
-import { useMouse } from '@vueuse/core';
+import { ivue } from 'ivue';
 
 class Counter {
   count = ref(0) as unknown as number;
   increment() {
     this.count++;
   }
-  mouse = useMouse() as unknown as UnwrapComposable<typeof useMouse>
+  get doubleCount() {
+    return this.count * 2;
+  }
+  get quadCount() {
+    return this.doubleCount * 2;
+  }
 }
 
 const counter = ivue(Counter);
@@ -16,5 +20,6 @@ const counter = ivue(Counter);
 <template>
   <a href="javascript:void(0)" @click="() => counter.increment()">Increment</a>
   Count: {{ counter.count }} <br />
-  Mouse: X: {{ counter.mouse.x }}, Y: {{ counter.mouse.y }}
+  Double Count: {{ counter.doubleCount }} <br />
+  Quad Count: {{ counter.quadCount }} <br />
 </template>
