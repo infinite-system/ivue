@@ -98,7 +98,7 @@ See the highlighted sections related to props.
 See the highlighted sections related to `defineExpose`
 
 ::: code-group
-<<< @/components/examples/CounterWithPropsAndEmits.vue{9-11,14,17,31 vue:line-numbers}
+<<< @/components/examples/CounterWithPropsAndEmits.vue{9-11,14,17,23,31 vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
