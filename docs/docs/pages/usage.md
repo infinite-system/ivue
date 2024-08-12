@@ -58,17 +58,20 @@ Classic Counter example built with `ivue`
 ::: code-group
 <<< @/components/examples/CounterBasic.vue{15 vue:line-numbers}
 :::
+
 :::details For this example we initialize the component like this:
+```vue
 <template>
-<CounterBasic />
+  <CounterBasic />
 </template>
+```
 :::
 
 ### Result:
 
 <CounterBasic />
 ::: warning NOTICE: JavaScript Class Caveat
- See `() => counter.increment()`. You cannot simply use `counter.increment` to refer to the method when it was defined as a object of a class, because that method would not know that it has to be bound to `counter`. You have to either use `() => counter.increment()` or `counter.increment.bind(counter)`, but the latter example is too verbose, so the preferred more readable way is to use an arrow function.
+ See `() => counter.increment()`. You cannot simply use `counter.increment` to refer to the method when it was defined as an object of a class, because that method would not know that it has to be bound to `counter`. You have to either use `() => counter.increment()` or `counter.increment.bind(counter)`, but the latter example is too verbose, so the preferred more readable way is to use an arrow function.
 :::
 
 ## Using Props
@@ -77,10 +80,13 @@ See the highlighted sections related to props.
 ::: code-group
 <<< @/components/examples/CounterWithProps.vue{5-8,11-12,24 vue:line-numbers}
 :::
+
 :::details For this example we initialize the component like this:
+```vue
 <template>
-<CounterWithProps :initial-count="5" />
+  <CounterWithProps :initial-count="5" />
 </template>
+```
 :::
 
 ### Result:
@@ -94,8 +100,8 @@ See the highlighted sections related to `defineExpose`
 ::: code-group
 <<< @/components/examples/CounterWithPropsAndEmits.vue{9-11,14,17,31 vue:line-numbers}
 :::
-:::details For this example we initialize the component like this:
 
+:::details For this example we initialize the component like this:
 ```vue
 <script setup lang="ts">
 function onIncrement(value: number) {
@@ -106,7 +112,6 @@ function onIncrement(value: number) {
   <CounterWithPropsAndEmits :initial-count="5" @increment="onIncrement" />
 </template>
 ```
-
 :::
 
 ### Result:
@@ -115,7 +120,7 @@ function onIncrement(value: number) {
 
 ## Using Refs
 
-### Refs Defined Externally Outside of ivue
+### Refs defined externally in the component outside of the class.
 
 ::: code-group
 <<< @/components/examples/CounterExternalRefs.vue{5,8,12,16,24 vue:line-numbers}
@@ -134,11 +139,12 @@ function onIncrement(value: number) {
 
 <CounterExternalRefs />
 
-### Refs Defined Inside of ivue class
+### Refs defined internally inside of the class.
 
 ::: code-group
 <<< @/components/examples/CounterInternalRefs.vue{7,15,25 vue:line-numbers}
 :::
+
 :::details For this example we initialize the component like this:
 
 ```vue
@@ -146,7 +152,6 @@ function onIncrement(value: number) {
   <CounterInternalRefs />
 </template>
 ```
-
 :::
 
 ### Result:
@@ -156,10 +161,12 @@ function onIncrement(value: number) {
 ## Using Define Expose
 
 See the highlighted sections related to `defineExpose`.
+
 ::: code-group
 <<< @/components/examples/CounterDefineExpose.vue{8 vue:line-numbers}
 <<< @/components/examples/CounterDefineExposeClass.ts{ts:line-numbers}
 :::
+
 :::details For this example we initialize the component like this:
 ```vue
 <script setup lang="ts">
@@ -197,6 +204,7 @@ See the highlighted sections related to composable usage.
 ::: code-group
 <<< @/components/examples/CounterComposables.vue{4,11,19 vue:line-numbers}
 :::
+
 :::details For this example we initialize the component like this:
 ```vue
 <template>
@@ -210,10 +218,12 @@ See the highlighted sections related to composable usage.
 
 ### Destructuring composable into the class
 See the highlighted sections related to destructuring composable usage.
+
 ::: code-group
 <<< @/components/examples/CounterComposablesDestructuring.vue{4,10,20-21,23-24,27-32 vue:line-numbers}
 <<< @/components/examples/functions/useMouse.ts{ts:line-numbers} [functions/useMouse.ts]
 :::
+
 :::details For this example we initialize the component like this:
 ```vue
 <template>

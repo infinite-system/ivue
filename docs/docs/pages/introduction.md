@@ -43,7 +43,7 @@ By using TypeScript we are able to infer the arguments of the main `ivue` initia
 
 `ivue` initializer function returns a reactive object with getters converted to computeds and adds `.toRefs()` method to the object, `.toRefs()` allows the object to be converted to native composable structure, so it can interoperate as a composable if needed.
 
-`ivue` aims to be opaque and minimal, just doing the minimum to convert a class to a reactive object, leaving the rest to be implemented using Vue 3 composition api inside an initializer function called `.init()` 
+`ivue` aims to be opaque and minimal, just doing the minimum to convert a class to a reactive object, leaving the rest to be implemented using Vue 3 Composition API inside an initializer function called `.init()` 
 
 You can read more about `ivue` internal architecture in <Button href="/pages/how-it-works" label="How it works?" /> page.
 

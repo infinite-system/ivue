@@ -16,12 +16,12 @@ class Counter {
     this.count++;
   }
 
-  // x, y are properties that will be destructured into this class
-  x!: UseMouse['x']; // Unwrapped Ref<number> becomes -> number
-  y!: UseMouse['y']; // Unwrapped Ref<number> becomes -> number
+  // x, y are Refs that will be unwrapped and destructured into this class
+  x: UseMouse['x']; // Unwrapped Ref<number> becomes -> number
+  y: UseMouse['y']; // Unwrapped Ref<number> becomes -> number
   
-  sum!: UseMouse['sum']; // 'sum' method that will be destructured into this class on construct()
-  total!: UseMouse['total'];  // 'total' method that will be destructured into this class on construct()
+  sum: UseMouse['sum']; // 'sum' method that will be destructured into this class on construct()
+  total: UseMouse['total'];  // 'total' computed Ref that will also be destructured into this class on construct()
 
   constructor() {
     ({
