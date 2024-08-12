@@ -1,15 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type {
-  ComputedRef,
-  ExtractPropTypes,
-  ToRef,
-  UnwrapNestedRefs,
-} from 'vue';
-import { computed, reactive, toRef } from 'vue';
+import type { ComputedRef, ExtractPropTypes, ToRef } from 'vue';
+import { computed, reactive, toRef, UnwrapRef } from 'vue';
 
 /** Types */
-/** 
+/**
  * IVue core reactive instance type with an extended .toRefs() method added.
  */
 export type IVue<T extends AnyClass> = InstanceType<T> & ExtendWithToRefs<T>;
@@ -39,8 +34,11 @@ export type IVueToRefsFnReturn<T = any> = {
 /**
  * Unwraps the returned Refs of composable method T to a reactive type definition.
  */
-export type UnwrapComposable<T extends (...args: any[]) => any> =
-  UnwrapNestedRefs<ReturnType<T>>;
+export type UnwrapComposable<T extends (...args: any[]) => any> = {
+  [K in keyof ReturnType<T>]: UnwrapRef<ReturnType<T>>[K] extends Function
+    ? UnwrapRef<ReturnType<T>>[K] // Handle function
+    : UnwrapRef<ReturnType<T>>[K]['value']; // Handle property
+};
 
 /**
  * Extracts object defined emit types by converting them to a plain interface
@@ -122,8 +120,8 @@ export type UnionToIntersection<U> = (
  */
 export type RecordToUnion<T extends Record<string, any>> = T[keyof T];
 
-/** 
- * Required Properties converts an interface with possible 
+/**
+ * Required Properties converts an interface with possible
  * optionally assigned properties like: { optional?: any; }
  * to a definitevely defined interface.
  */
@@ -376,7 +374,6 @@ export function ivueToRefs<T extends AnyClass>(
   };
 }
 
-
 /**
  * Vue props interface in defineComponent() style.
  */
@@ -399,7 +396,7 @@ export type VuePropsWithDefaults<T extends VuePropsObject> = {
 /**
  * Determines if the value is a JavaScript Class.
  * Note that class is a class function in JavaScript.
- * 
+ *
  * @param val Any value
  * @returns boolean If it's a JavaScript Class returns true
  */
@@ -409,7 +406,8 @@ export function isClass(val: any): boolean {
   if (!val.prototype) return false; // Arrow function, so not a class
 
   // Finally -> distinguish between a normal function and a class function
-  if (Object.getOwnPropertyDescriptor(val, 'prototype')?.writable) { // Has writable prototype
+  if (Object.getOwnPropertyDescriptor(val, 'prototype')?.writable) {
+    // Has writable prototype
     return false; // Normal function
   } else {
     return true; // Class -> Not a function
@@ -418,13 +416,13 @@ export function isClass(val: any): boolean {
 
 /**
  * Creates props with defaults in defineComponent() style.
- * 
- * Merge defaults regular object with Vue types object 
+ *
+ * Merge defaults regular object with Vue types object
  * declared in defineComponent() style.
- * 
+ *
  * This is made so that the defaults can be declared "as they are"
  * without requiring objects to be function callbacks returning an object.
- * 
+ *
  * // You don't need to wrap objects in () => ({ nest: { nest :{} } })
  * // You can just delcare them normally.
  * const defaults = {
@@ -432,11 +430,11 @@ export function isClass(val: any): boolean {
  *      nest
  *    }
  * }
- * 
- * This function will create the Vue expected callbacks for Objects, Arrays & Classes 
- * but leave primitive properties and functions intact so that 
+ *
+ * This function will create the Vue expected callbacks for Objects, Arrays & Classes
+ * but leave primitive properties and functions intact so that
  * the final object is fully defineComponent() style compatible.
- * 
+ *
  * @param defaults Regular object of default key -> values
  * @param typedProps Props declared in defineComponent() style with type and possibly required declared, but without default
  * @returns Props declared in defineComponent() style with all properties having default property declared.
@@ -447,7 +445,7 @@ export function propsWithDefaults<T extends VuePropsObject>(
 ): VuePropsWithDefaults<T> {
   for (const prop in typedProps) {
     if (typeof defaults?.[prop] === 'object' && defaults?.[prop] !== null) {
-      /** Handle Arrays & Objects -> wrap them with an arrow function. */ 
+      /** Handle Arrays & Objects -> wrap them with an arrow function. */
       typedProps[prop].default = () => defaults?.[prop];
     } else {
       if (isClass(defaults?.[prop])) {

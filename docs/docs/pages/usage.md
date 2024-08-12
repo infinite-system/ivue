@@ -25,6 +25,8 @@ import CounterDefineExpose from '../components/examples/CounterDefineExpose.vue'
 import CounterDefineExposeClass from '../components/examples/CounterDefineExposeClass'
 import CounterExternalRefs from '../components/examples/CounterExternalRefs.vue'
 import CounterInternalRefs from '../components/examples/CounterInternalRefs.vue'
+import CounterComposables from '../components/examples/CounterComposables.vue'
+import CounterComposablesDestructuring from '../components/examples/CounterComposablesDestructuring.vue'
 
 // <For CounterWithPropsAndEmits example start>
 function onIncrement(value: number) {
@@ -73,7 +75,7 @@ Classic Counter example built with `ivue`
 
 See the highlighted sections related to props.
 ::: code-group
-<<< @/components/examples/CounterWithProps.vue{5-8,15-16,24 vue:line-numbers}
+<<< @/components/examples/CounterWithProps.vue{5-8,11-12,24 vue:line-numbers}
 :::
 :::details For this example we initialize the component like this:
 <template>
@@ -90,7 +92,7 @@ See the highlighted sections related to props.
 See the highlighted sections related to `defineExpose`
 
 ::: code-group
-<<< @/components/examples/CounterWithPropsAndEmits.vue{9-11,14,20,22,31 vue:line-numbers}
+<<< @/components/examples/CounterWithPropsAndEmits.vue{9-11,14,17,31 vue:line-numbers}
 :::
 :::details For this example we initialize the component like this:
 
@@ -113,10 +115,10 @@ function onIncrement(value: number) {
 
 ## Using Refs
 
-### Refs Defined Outside of ivue
+### Refs Defined Externally Outside of ivue
 
 ::: code-group
-<<< @/components/examples/CounterExternalRefs.vue{vue:line-numbers}
+<<< @/components/examples/CounterExternalRefs.vue{5,8,12,16,24 vue:line-numbers}
 :::
 :::details For this example we initialize the component like this:
 
@@ -135,7 +137,7 @@ function onIncrement(value: number) {
 ### Refs Defined Inside of ivue class
 
 ::: code-group
-<<< @/components/examples/CounterInternalRefs.vue{vue:line-numbers}
+<<< @/components/examples/CounterInternalRefs.vue{7,15,25 vue:line-numbers}
 :::
 :::details For this example we initialize the component like this:
 
@@ -155,7 +157,7 @@ function onIncrement(value: number) {
 
 See the highlighted sections related to `defineExpose`.
 ::: code-group
-<<< @/components/examples/CounterDefineExpose.vue{17 vue:line-numbers}
+<<< @/components/examples/CounterDefineExpose.vue{8 vue:line-numbers}
 <<< @/components/examples/CounterDefineExposeClass.ts{ts:line-numbers}
 :::
 :::details For this example we initialize the component like this:
@@ -191,9 +193,9 @@ function decrement() {
 
 ## Using Composables
 
-Counter example built with `ivue` with passed in props and emits, see the highlighted sections related to emits.
+See the highlighted sections related to composable usage.
 ::: code-group
-<<< @/components/examples/CounterComposables.vue{17 vue:line-numbers}
+<<< @/components/examples/CounterComposables.vue{4,11,19 vue:line-numbers}
 :::
 :::details For this example we initialize the component like this:
 ```vue
@@ -205,3 +207,20 @@ Counter example built with `ivue` with passed in props and emits, see the highli
 
 ### Result:
 <CounterComposables />
+
+### Destructuring composable into the class
+See the highlighted sections related to destructuring composable usage.
+::: code-group
+<<< @/components/examples/CounterComposablesDestructuring.vue{4,10,20-21,23-24,27-32 vue:line-numbers}
+<<< @/components/examples/functions/useMouse.ts{ts:line-numbers} [functions/useMouse.ts]
+:::
+:::details For this example we initialize the component like this:
+```vue
+<template>
+  <CounterComposablesDestructuring />
+</template>
+```
+:::
+
+### Result:
+<CounterComposablesDestructuring />

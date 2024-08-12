@@ -12,11 +12,11 @@ import Button from './components/Button.vue'
 ## Features
 <div style="padding-left:20px;">
 &ndash; Simple & Elegant Architecture<br />
-&ndash; Extensible Classes aligned with TypeScript Class design<br />
-&ndash; Extensible Props Defaults<br />
-&ndash; Extensible Emits<br />
-&ndash; Extensible Slots<br />
-&ndash; Extensible Components<br />
+&ndash; Extend Classes aligned with TypeScript Class design<br />
+&ndash; Extend Props Defaults<br />
+&ndash; Extend Emits<br />
+&ndash; Extend Slots<br />
+&ndash; Extend Components<br />
 &ndash; Improves DX by elegantly dealing with .value in the background<br />
 &ndash; Can be used both as a Store and a View Model for Components<br />
 &ndash; Provides Full TypeScript Support<br />

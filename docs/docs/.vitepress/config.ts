@@ -21,30 +21,41 @@ export default defineConfig({
         collapsed: false,
         text: 'Usage',
         items: [
-          { text: 'Basic Usage', link: '/pages/usage' },
-          { text: 'Using Props', link: '/pages/usage' },
-          { text: 'Using Emits', link: '/pages/usage' },
-          { text: 'Using Refs', link: '/pages/usage' },
-          { text: 'Using Define Expose', link: '/pages/usage' },
-          { text: 'Using Composables', link: '/pages/usage' },
+          { text: 'Basic Usage', link: '/pages/usage#basic-usage' },
+          { text: 'Using Props', link: '/pages/usage#using-props' },
+          { text: 'Using Emits', link: '/pages/usage#using-emits' },
+          { text: 'Using Refs', link: '/pages/usage#using-refs' },
+          { text: 'Using Define Expose', link: '/pages/usage#using-define-expose' },
+          { text: 'Using Composables', link: '/pages/usage#using-composables' },
+          { text: 'Using .init()', link: '/pages/usage#using-composables' },
+          { text: 'Using .toRefs()', link: '/pages/usage#using-composables' },
         ],
       },
       {
         collapsed: false,
         text: 'Advanced Usage',
         items: [
-          { text: 'Using Class Inheritance', link: '/pages/usage' },
-          { text: 'Extensible Props', link: '/pages/usage' },
-          { text: 'Extensible Emits', link: '/pages/usage' },
-          { text: 'Extensible Slots', link: '/pages/usage' },
+          { text: 'Extend Classes', link: '/pages/usage' },
+          { text: 'Extend Props', link: '/pages/usage' },
+          { text: 'Extend Emits', link: '/pages/usage' },
+          { text: 'Extend Slots', link: '/pages/usage' },
+          { text: 'Extend Components', link: '/pages/usage' },
         ],
       },
+      {
+        collapsed: false,
+        text: 'Recommendations',
+        items: [
+          { text: "Dos and Don'ts", link: '/pages/dos-and-donts' },
+        ],
+      },
+      
 
       {
         collapsed: false,
         text: 'Core Functions',
         items: [
-          { text: 'ivue', link: '/api/init' },
+          { text: 'ivue()', link: '/api/init' },
           { text: '.init()', link: '/api/init' },
           { text: '.toRefs()', link: '/api/init' },
         ],
@@ -61,10 +72,10 @@ export default defineConfig({
       {
         text: 'Utility Types',
         items: [
-          { text: 'UnwrapComposable', link: '/types/UnwrapComposable' },
-          { text: 'ExtractEmitTypes', link: '/types/ExtractEmitTypes' },
           { text: 'ExtractPropDefaultTypes', link: '/types/ExtractPropDefaultTypes' },
+          { text: 'ExtractEmitTypes', link: '/types/ExtractEmitTypes' },
           { text: 'ExtendSlots', link: '/types/ExtendSlots' },
+          { text: 'UnwrapComposable', link: '/types/UnwrapComposable' },
         ],
       },
     ]

@@ -8,13 +8,13 @@ class Counter {
   increment() {
     this.count++;
   }
-  mouse = useMouse() as UnwrapComposable<typeof useMouse>
+  mouse = useMouse() as unknown as UnwrapComposable<typeof useMouse>
 }
 
 const counter = ivue(Counter);
 </script>
 <template>
-  <a href="javascript:void" @click="() => counter.increment()">Increment</a>
+  <a href="javascript:void(0)" @click="() => counter.increment()">Increment</a>
   Count: {{ counter.count }} <br />
-  Mouse: X:{{ counter.mouse.x }}, Y: {{ counter.mouse.y }}
+  Mouse: X: {{ counter.mouse.x }}, Y: {{ counter.mouse.y }}
 </template>
