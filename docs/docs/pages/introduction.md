@@ -58,5 +58,5 @@ You can read more about `ivue` internal architecture in <Button href="/pages/how
 
 ## When to use Infinite Vue?
 
-When complexity of your app or components becomes very high using `ivue` can become a natural choice to deal with that complexity. Because `.value` is abstracted away in `ivue`, everything is simply a reactive object of Refs.
+When the complexity of your app or components becomes very high using `ivue` can become a natural choice to deal with that complexity. Because `.value` is abstracted away in `ivue`, everything is simply a reactive object of Refs.
 
