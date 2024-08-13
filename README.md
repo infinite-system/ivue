@@ -21,12 +21,10 @@
 
 ## What is ivue?
 
-## **ivue** is
-<div style="padding-left:20px; font-size: 1.2rem; line-height: 2rem;">
+**ivue** is &ndash;
 &ndash;&nbsp; Simple like Options API<br />
 &ndash;&nbsp; Flexible like Composition API<br />
 &ndash;&nbsp; Extensible like TypeScript Classes API<br />
-</div>
 
 **ivue** is a powerful tool because it fully aligns itself with JavaScript / TypeScript Class API.
 
