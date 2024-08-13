@@ -2,7 +2,7 @@
 
 ## About
 
-**ivue** is a TypeScript classes based composable architecture for Vue 3, that unlocks infinite scalability for Vue 3 based apps. It allows you to extend the regular Vue 3 in a simple and elegant way.
+`ivue` is a TypeScript classes based composable architecture for Vue 3, that unlocks infinite scalability for Vue 3 based apps. It allows you to extend the regular Vue 3 in a simple and elegant way.
 
 ## Features
 &ndash; Simple & Elegant Architecture<br />
@@ -21,20 +21,20 @@
 
 ## What is ivue?
 
-**ivue** is &ndash;
+`ivue` is &ndash;<br />
 &ndash;&nbsp; Simple like Options API<br />
 &ndash;&nbsp; Flexible like Composition API<br />
 &ndash;&nbsp; Extensible like TypeScript Classes API<br />
 
-**ivue** is a powerful tool because it fully aligns itself with JavaScript / TypeScript Class API.
+`ivue` is a powerful tool because it fully aligns itself with JavaScript / TypeScript Class API.
 
-**ivue** gives you a class based Composable capabilities with Inheritance and all the power of TypeScript Classes.
+`ivue` gives you a class based Composable capabilities with Inheritance and all the power of TypeScript Classes.
 
-**ivue** mitigates the downsides of both Composition API and Options API, uses only their strengths and brings back Object Oriented Programming to allow the development of complex and scalable apps.
+`ivue` mitigates the downsides of both Composition API and Options API, uses only their strengths and brings back Object Oriented Programming to allow the development of complex and scalable apps.
 
-**ivue** is fully interoperable with Composition API and does not work against, but rather with it, so you can use all of ecosystems composables seamlessly.
+`ivue` is fully interoperable with Composition API and does not work against, but rather with it, so you can use all of ecosystems composables seamlessly.
 
-**ivue** also offers a set of functions and utility types to make extensible & exportable props defaults, extensible emits and extensible slots possible.
+`ivue` also offers a set of functions and utility types to make extensible & exportable props defaults, extensible emits and extensible slots possible.
 
 
 ## Examples
