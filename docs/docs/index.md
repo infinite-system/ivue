@@ -2,7 +2,7 @@
 import Button from './components/Button.vue'
 
 </script>
-# Documentation
+# Infinite Vue Documentation
 
 
 ## About

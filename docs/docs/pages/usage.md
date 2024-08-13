@@ -1,37 +1,20 @@
-<style>
-  .button { 
-    padding: 5px 10px; 
-    border-color: var(--vp-custom-block-details-border);
-    color: var(--vp-custom-block-details-text);
-    background-color: var(--vp-custom-block-details-bg);
-    border-radius: 5px;  
-    margin-bottom: 2px;
-    transition: 0.5s;
-  }
-  .button:hover { 
-    opacity: 0.8;
-  }
-  .button:active { 
-    opacity:0.9;
-  }
-</style>
 <script setup lang="ts">
 import { ref } from 'vue';
 
-import CounterBasic from '../components/examples/CounterBasic.vue'
-import CounterWithProps from '../components/examples/CounterWithProps.vue'
-import CounterWithPropsAndEmits from '../components/examples/CounterWithPropsAndEmits.vue'
-import CounterDefineExpose from '../components/examples/CounterDefineExpose.vue'
-import CounterDefineExposeClass from '../components/examples/CounterDefineExposeClass'
-import CounterExternalRefs from '../components/examples/CounterExternalRefs.vue'
-import CounterInternalRefs from '../components/examples/CounterInternalRefs.vue'
-import CounterComposables from '../components/examples/CounterComposables.vue'
-import CounterComposablesDestructuring from '../components/examples/CounterComposablesDestructuring.vue'
-import CounterInsideComposables from '../components/examples/CounterInsideComposables.vue'
-import CounterComputeds from '../components/examples/CounterComputeds.vue'
-import CounterComputedsDisabled from '../components/examples/CounterComputedsDisabled.vue'
-import CounterWatch from '../components/examples/CounterWatch.vue'
-import CounterLifecycleHooks from '../components/examples/CounterLifecycleHooks.vue'
+import CounterBasic from '../components/usage/CounterBasic.vue'
+import CounterWithProps from '../components/usage/CounterWithProps.vue'
+import CounterWithPropsAndEmits from '../components/usage/CounterWithPropsAndEmits.vue'
+import CounterDefineExpose from '../components/usage/CounterDefineExpose.vue'
+import CounterDefineExposeClass from '../components/usage/CounterDefineExposeClass'
+import CounterExternalRefs from '../components/usage/CounterExternalRefs.vue'
+import CounterInternalRefs from '../components/usage/CounterInternalRefs.vue'
+import CounterComposables from '../components/usage/CounterComposables.vue'
+import CounterComposablesDestructuring from '../components/usage/CounterComposablesDestructuring.vue'
+import CounterInsideComposables from '../components/usage/CounterInsideComposables.vue'
+import CounterComputeds from '../components/usage/CounterComputeds.vue'
+import CounterComputedsDisabled from '../components/usage/CounterComputedsDisabled.vue'
+import CounterWatch from '../components/usage/CounterWatch.vue'
+import CounterLifecycleHooks from '../components/usage/CounterLifecycleHooks.vue'
 
 // <For CounterWithPropsAndEmits example start>
 function onIncrement(value: number) {
@@ -61,7 +44,7 @@ Using ivue is very simple, but you need to understand a few principles. See the 
 
 Classic Counter example built with `ivue`
 ::: code-group
-<<< @/components/examples/CounterBasic.vue{15 vue:line-numbers}
+<<< @/components/usage/CounterBasic.vue{15 vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -74,7 +57,7 @@ Classic Counter example built with `ivue`
 
 :::
 
-### Result:
+<div style="font-size: 18px; font-weight: 500;">Result</div>
 
 <CounterBasic />
 ::: warning NOTICE: JavaScript Class Caveat
@@ -85,7 +68,7 @@ Classic Counter example built with `ivue`
 
 See the highlighted sections related to props.
 ::: code-group
-<<< @/components/examples/CounterWithProps.vue{5-8,11-12,24 vue:line-numbers}
+<<< @/components/usage/CounterWithProps.vue{5-8,11-12,24 vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -98,7 +81,7 @@ See the highlighted sections related to props.
 
 :::
 
-### Result:
+<div style="font-size: 18px; font-weight: 500;">Result</div>
 
 <CounterWithProps :initial-count="5" />
 
@@ -107,7 +90,7 @@ See the highlighted sections related to props.
 See the highlighted sections related to using emits.
 
 ::: code-group
-<<< @/components/examples/CounterWithPropsAndEmits.vue{9-11,14,17,23,31 vue:line-numbers}
+<<< @/components/usage/CounterWithPropsAndEmits.vue{9-11,14,17,23,31 vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -125,7 +108,7 @@ function onIncrement(value: number) {
 
 :::
 
-### Result:
+<div style="font-size: 18px; font-weight: 500;">Result</div>
 
 <CounterWithPropsAndEmits :initial-count="5" @increment="onIncrement" />
 
@@ -134,7 +117,7 @@ function onIncrement(value: number) {
 ### Refs defined externally in the component outside of the class.
 
 ::: code-group
-<<< @/components/examples/CounterExternalRefs.vue{5,8,12,16,24 vue:line-numbers}
+<<< @/components/usage/CounterExternalRefs.vue{5,8,12,16,24 vue:line-numbers}
 :::
 :::details For this example we initialize the component like this:
 
@@ -146,14 +129,14 @@ function onIncrement(value: number) {
 
 :::
 
-### Result:
+<div style="font-size: 18px; font-weight: 500;">Result</div>
 
 <CounterExternalRefs />
 
 ### Refs defined internally inside of the class.
 
 ::: code-group
-<<< @/components/examples/CounterInternalRefs.vue{7,15,25 vue:line-numbers}
+<<< @/components/usage/CounterInternalRefs.vue{7,15,25 vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -166,17 +149,18 @@ function onIncrement(value: number) {
 
 :::
 
-### Result:
+<div style="font-size: 18px; font-weight: 500;">Result</div>
 
 <CounterInternalRefs />
 
 ## Using Define Expose
 
+### Use class as interface for `defineExpose()`
 See the highlighted sections related to `defineExpose`.
 
 ::: code-group
-<<< @/components/examples/CounterDefineExpose.vue{8 vue:line-numbers}
-<<< @/components/examples/CounterDefineExposeClass.ts{ts:line-numbers}
+<<< @/components/usage/CounterDefineExpose.vue{8 vue:line-numbers}
+<<< @/components/usage/CounterDefineExposeClass.ts{ts:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -206,23 +190,25 @@ function decrement() {
 
 :::
 
-### Result:
+<div style="font-size: 18px; font-weight: 500;">Result</div>
 
 <button class="button" @click="increment">Increment via Component Ref from Parent Component</button><br />
 <button class="button" @click="decrement">Decrement via Component Ref from Parent Component</button>
 <CounterDefineExpose ref="defineExposeRef" />
 
-### Selecting the properties to allow for `defineExpose()`
+### Pick allowed interface properties for `defineExpose()`
 
 ::: code-group
-<<< @/components/examples/CounterDefineExposeAdvanced.vue{9,23 vue:line-numbers}
+<<< @/components/usage/CounterDefineExposeAdvanced.vue{9,23 vue:line-numbers}
 :::
 
 ## Using Composables
 
+### Assign a composable to a class property
+
 See the highlighted sections related to composable usage.
 ::: code-group
-<<< @/components/examples/CounterComposables.vue{4,11,19 vue:line-numbers}
+<<< @/components/usage/CounterComposables.vue{4,11,19 vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -235,7 +221,7 @@ See the highlighted sections related to composable usage.
 
 :::
 
-### Result:
+<div style="font-size: 18px; font-weight: 500;">Result</div>
 
 <CounterComposables />
 
@@ -244,8 +230,8 @@ See the highlighted sections related to composable usage.
 See the highlighted sections related to destructuring composable usage.
 
 ::: code-group
-<<< @/components/examples/CounterComposablesDestructuring.vue{4,10,20-21,23-24,27-32 vue:line-numbers}
-<<< @/components/examples/functions/useMouse.ts{ts:line-numbers} [functions/useMouse.ts]
+<<< @/components/usage/CounterComposablesDestructuring.vue{4,10,20-21,23-24,27-32 vue:line-numbers}
+<<< @/components/usage/functions/useMouse.ts{ts:line-numbers} [functions/useMouse.ts]
 :::
 
 :::details For this example we initialize the component like this:
@@ -258,7 +244,7 @@ See the highlighted sections related to destructuring composable usage.
 
 :::
 
-### Result:
+<div style="font-size: 18px; font-weight: 500;">Result</div>
 
 <CounterComposablesDestructuring />
 
@@ -267,7 +253,7 @@ See the highlighted sections related to destructuring composable usage.
 See the highlighted sections related to using `ivue` inside a composable.
 
 ::: code-group
-<<< @/components/examples/CounterInsideComposables.vue{14 vue:line-numbers}
+<<< @/components/usage/CounterInsideComposables.vue{14 vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -280,18 +266,18 @@ See the highlighted sections related to using `ivue` inside a composable.
 
 :::
 
-### Result:
+<div style="font-size: 18px; font-weight: 500;">Result</div>
 
 <CounterInsideComposables />
 
 
 ## Using Computeds
 
-Getters are converted to computeds in `ivue`.<br />
+### Getters are computeds in `ivue` unless disabled.<br />
 See the highlighted sections related to getters.
 
 ::: code-group
-<<< @/components/examples/CounterComputeds.vue{10,13,23,24 vue:line-numbers}
+<<< @/components/usage/CounterComputeds.vue{10,13,23,24 vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -302,14 +288,14 @@ See the highlighted sections related to getters.
 ```
 :::
 
-### Result:
+<div style="font-size: 18px; font-weight: 500;">Result</div>
 <CounterComputeds />
 
 ### Disable computed behavior for certain getters in `ivue`.<br />
 You can disable computed getters via `static ivue = { getter: false }`, see below:
 
 ::: code-group
-<<< @/components/examples/CounterComputedsDisabled.vue{10-12 vue:line-numbers}
+<<< @/components/usage/CounterComputedsDisabled.vue{10-12 vue:line-numbers}
 :::
 
 The result of this example is identical to the above.
@@ -318,11 +304,11 @@ The result of this example is identical to the above.
 
 ## Using Watch
 
-To use `watch`, `watchEffect`, `onMounted` and other reactive functions, declare `.init()` method in the class.
+To use `watch`, `watchEffect`, and other reactive functions, declare `.init()` method in the class.
 See the highlighted sections related to using `init()` below:
 
 ::: code-group
-<<< @/components/examples/CounterWatch.vue{6-12 vue:line-numbers}
+<<< @/components/usage/CounterWatch.vue{6-13 vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -335,7 +321,7 @@ See the highlighted sections related to using `init()` below:
 
 :::
 
-### Result:
+<div style="font-size: 18px; font-weight: 500;">Result</div>
 
 <CounterWatch />
 
@@ -351,7 +337,7 @@ See the highlighted sections related to using `init()` below:
 :::
 
 ::: code-group
-<<< @/components/examples/CounterLifecycleHooks.vue{7-9 vue:line-numbers}
+<<< @/components/usage/CounterLifecycleHooks.vue{7-9 vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -363,5 +349,5 @@ See the highlighted sections related to using `init()` below:
 ```
 :::
 
-### Result:
+<div style="font-size: 18px; font-weight: 500;">Result</div>
 <CounterLifecycleHooks />

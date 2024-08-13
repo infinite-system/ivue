@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Button from '../components/Button.vue'
 </script>
-# What is Infinite Vue (ivue) ?
+# What is Infinite Vue?
 
 ## The Problem
 
@@ -11,7 +11,7 @@ While providing greater flexibility and composability the Composition API has it
 
 As you may know, `reactvity-transform` macros were an attempt to mitigate those issues, which turned out to create even more issues, and was discontinued. 
 
-See: https://vuejs.org/guide/extras/reactivity-transform.html
+See: [VueJs.org &ndash; Reactivity Transform](https://vuejs.org/guide/extras/reactivity-transform.html)
 
 ## `ivue` is
 <div style="padding-left:20px; font-size: 1.2rem; line-height: 2rem;">

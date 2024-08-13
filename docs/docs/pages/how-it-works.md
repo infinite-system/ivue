@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CounterBasic from '../components/examples/CounterBasic.vue'
+import CounterBasic from '../components/usage/CounterBasic.vue'
 </script>
 # How it works?
 
@@ -35,6 +35,8 @@ The main `ivue()` initializer function uses TypeScript to be able to infer and v
 `ivue` recommends all class properties to be defined as `ref()` to be able to interoperate with `defineExpose()`, if you simply pass reactive props which are not Refs through `defineExpose()`, they will lose reactivity. `ref()` refs just like computed refs get flattened into the `reactive()` object, so there is no need to worry about using `.value`. The `ref()` refs are necessary just internally for Vue 3 to know which refs to keep reactive, and we just convert the types back to their normal types as if they have no reactivity at all, so `Ref<number>` is `number` in `ivue`, so rather than going in the direction of complexifying the types, we are going in the opposite direction towards simplification.
 
 `ivue` recommends all class functions, getters and setters to be defined in plain full function style (not arrow functions), this allows all `ivue` classes to be extensible at any point. By using plain standard functions, getters and setters allows for any getter, setter, function or property to be overriden by extending this class. Arrow functions break full extensibility of classes, so avoid using them inside of classes.
+
+See: [More Guidelines](/pages/guidelines.html)
 
 ## Minimal API Surface Area
 

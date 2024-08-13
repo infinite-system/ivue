@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ComputedRef, ExtractPropTypes, ToRef } from 'vue';
+import type { ComputedRef, ExtractPropTypes, Ref, ToRef } from 'vue';
 import { UnwrapRef, computed, reactive, toRef } from 'vue';
 
 /** Types */
@@ -21,13 +21,13 @@ export interface ExtendWithToRefs<T extends AnyClass> {
  */
 export type IVueToRefsFn<T extends AnyClass> = (
   props?: (keyof InstanceType<T>)[]
-) => IVueToRefsFnReturn<InstanceType<T>>;
+) => IVueRefs<InstanceType<T>>;
 
 /**
  * Converts a class properties to a composable .value Refs using ToRef vue type,
  * also knows NOT to convert functions to .value Refs but to leave them as is.
  */
-export type IVueToRefsFnReturn<T = any> = {
+export type IVueRefs<T = any> = {
   [K in keyof T]: T[K] extends Function ? T[K] : ToRef<T[K]>;
 };
 
@@ -37,7 +37,9 @@ export type IVueToRefsFnReturn<T = any> = {
 export type UnwrapComposable<T extends (...args: any[]) => any> = {
   [K in keyof ReturnType<T>]: UnwrapRef<ReturnType<T>>[K] extends Function
     ? UnwrapRef<ReturnType<T>>[K] // Handle function
-    : UnwrapRef<ReturnType<T>>[K]['value']; // Handle property
+    : UnwrapRef<ReturnType<T>>[K] extends Ref
+    ? UnwrapRef<ReturnType<T>>[K]['value']
+    : UnwrapRef<ReturnType<T>>[K]; // Handle property
 };
 
 /**
@@ -295,7 +297,7 @@ export function ivueToRefs<T extends AnyClass>(
 ): ExtendWithToRefs<T>['toRefs'] {
   return function (
     props?: (keyof InstanceType<T>)[]
-  ): IVueToRefsFnReturn<InstanceType<T>> {
+  ): IVueRefs<InstanceType<T>> {
     /** Resulting refs store. */
     const result: Record<string | number | symbol, any> = {};
 
@@ -363,7 +365,7 @@ export function ivueToRefs<T extends AnyClass>(
       allProps = null;
     }
 
-    return result as IVueToRefsFnReturn<InstanceType<T>>;
+    return result as IVueRefs<InstanceType<T>>;
   };
 }
 
