@@ -19,7 +19,25 @@
 &ndash; Only 1kb in size!<br />
 &ndash; Production Ready<br />
 
-## How Does it Work
+## What is ivue?
+
+## **ivue** is
+<div style="padding-left:20px; font-size: 1.2rem; line-height: 2rem;">
+&ndash;&nbsp; Simple like Options API<br />
+&ndash;&nbsp; Flexible like Composition API<br />
+&ndash;&nbsp; Extensible like TypeScript Classes API<br />
+</div>
+
+**ivue** is a powerful tool because it fully aligns itself with JavaScript / TypeScript Class API.
+
+**ivue** gives you a class based Composable capabilities with Inheritance and all the power of TypeScript Classes.
+
+**ivue** mitigates the downsides of both Composition API and Options API, uses only their strengths and brings back Object Oriented Programming to allow the development of complex and scalable apps.
+
+**ivue** is fully interoperable with Composition API and does not work against, but rather with it, so you can use all of ecosystems composables seamlessly.
+
+**ivue** also offers a set of functions and utility types to make extensible & exportable props defaults, extensible emits and extensible slots possible.
+
 
 ## Examples
 

@@ -92,7 +92,7 @@ export default defineConfig({
           },
         ],
       },
-
+      { text: 'API' },
       {
         collapsed: false,
         text: 'Core Functions',
@@ -112,6 +112,7 @@ export default defineConfig({
       },
 
       {
+        collapsed: false,
         text: 'Utility Types',
         items: [
           {
@@ -121,6 +122,14 @@ export default defineConfig({
           { text: 'ExtractEmitTypes', link: '/pages/api#extractemittypes' },
           { text: 'ExtendSlots', link: '/pages/api#extendslots' },
           { text: 'UnwrapComposable', link: '/pages/api#unwrapcomposable' },
+        ],
+      },
+      
+      {
+        collapsed: false,
+        text: 'Source Code',
+        items: [
+          { text: 'Browse Code', link: '/pages/browse-code' },
         ],
       },
     ],

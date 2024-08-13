@@ -52,7 +52,7 @@ Utility Types help to achieve the rest of `ivue` capabilities
 Or [See on GitHub](https://github.com/infinite-system/ivue/blob/main/src/index.ts)
 
 ## 100% Vue 3 Compatible
-`.toRefs()` allows the object to be converted to native composable structure with full `.value`s, so it can interoperate with native composables if needed. `.toRefs()` is also often used to get refs for `v-bind()` in css styles.
+`.toRefs()` allows the object to be converted to Vue 3 native composable structure with full `.value`s, so it can interoperate with native composables if needed. `.toRefs()` is also often used to get refs for `v-bind()` in css styles.
 
 ## 100% TypeScript Support
 
