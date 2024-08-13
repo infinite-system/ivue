@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+
+.VPNavBarTitle {
+  font-family: 'Public Sans';
+}
+
+.VPNavBarTitle a span {
+  font-size: 22px !important;
+}
+
+body {
+  font-family: 'Public Sans'; 
+}
+
+.button { 
+  padding: 5px 10px; 
+  border-color: var(--vp-custom-block-details-border);
+  color: var(--vp-custom-block-details-text);
+  background-color: var(--vp-custom-block-details-bg);
+  border-radius: 5px;  
+  margin-bottom: 2px;
+  transition: 0.5s;
+}
+.button:hover { 
+  opacity: 0.8;
+}
+.button:active { 
+  opacity:0.9;
+}
