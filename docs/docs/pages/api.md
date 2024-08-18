@@ -24,7 +24,7 @@ Core `ivue(className, ...args)` initializer is able to infer and validate the co
 
 `ivue()` replicates native JavaScript / TypeScript class implementation by extending descriptors (getters and setters) up the whole prototype chain thus supporting classical inheritance.
 
-Returns: `<IVue<T>>` or `ivue` `reactive()` object of an `AnyClass` class with flattened (de-Refed) `Refs` and `ComputedRefs` as properties.
+**Returns:** `<IVue<T>>` or `ivue` `reactive()` object of an `AnyClass` class with flattened (de-Refed) `Refs` and `ComputedRefs` as properties.
 
 ### .init()
 
@@ -41,7 +41,7 @@ Returns: `<IVue<T>>` or `ivue` `reactive()` object of an `AnyClass` class with f
 You can make `init()` method `async` if you need `await` functionality.
 :::
 
-Returns: `void | Promise<void>`
+**Returns:** `void | Promise<void>`
 
 ### .toRefs()
 
@@ -60,7 +60,7 @@ const { width, height } = ivue(Box).toRefs(['width', 'height']);
 This improves performance if `box` has many other properties that we do not need.
 :::
 
-Returns: `IVueRefs<InstanceType<T>>`
+**Returns:** `IVueRefs<InstanceType<T>>`
 
 ## Utility Functions
 
@@ -77,7 +77,7 @@ export function propsWithDefaults<T extends VuePropsObject>(
 
 Combines statically written defaults object with the runtime type definition of Vue 3 props.
 
-Returns: `VuePropsWithDefaults<T>`
+**Returns:** `VuePropsWithDefaults<T>`
 
 ## Utility Types
 
@@ -99,7 +99,7 @@ Extracts types of a runtime emits declaration.
 
 Allows you to extend slots of a given slot interface.
 
-### UnwrapComposable
+### UseComposable
 
 ---
 

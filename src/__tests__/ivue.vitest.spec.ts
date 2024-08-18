@@ -468,20 +468,19 @@ describe('ivue', () => {
         },
       };
 
-      /** Params Defaults */
+      /** Example Params Defaults */
       const defaults: ExtractPropDefaultTypes<typeof defaultTypes> = {
-        updatePath: '',
-        updateEntity: false, // { updateEntity: true } will enable updating of entity if { fetchEntity: 'entity_name' } is set; { updateEntity: 'another_entity' } can enable updating an entity with another fields template
-        updateFieldsTemplate: [],
-        updateFieldsParams: {
+        updatePath: '', // String
+        updateEntity: false, // Boolean
+        updateFieldsTemplate: [], // Array
+        updateFieldsParams: { // Object
           active: true,
         },
-        updateLabel: '',
-        /** Drag and Drop */
-        draggable: true,
+        updateLabel: 'Update Item', // String
+        draggable: true, // Boolean
         /** Runtime Class Runner */
-        runner: SampleClass,
-        fn: () => {},
+        runner: SampleClass, // Class
+        fn: () => {}, // Function
       };
 
       const _propsWithDefaults = propsWithDefaults(defaults, defaultTypes);
@@ -512,6 +511,7 @@ describe('ivue', () => {
       expect(isClass((_propsWithDefaults.runner.default as () => any)())).toBe(
         true
       );
+      
       // Function
       expect(_propsWithDefaults.fn.default).toBeTypeOf('function');
       expect(isClass((_propsWithDefaults.fn.default as () => any)())).toBe(

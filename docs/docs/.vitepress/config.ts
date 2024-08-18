@@ -121,7 +121,7 @@ export default defineConfig({
           },
           { text: 'ExtractEmitTypes', link: '/pages/api#extractemittypes' },
           { text: 'ExtendSlots', link: '/pages/api#extendslots' },
-          { text: 'UnwrapComposable', link: '/pages/api#unwrapcomposable' },
+          { text: 'UseComposable', link: '/pages/api#UseComposable' },
         ],
       },
       

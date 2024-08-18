@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ivue, UnwrapComposable } from 'ivue';
 import { useMouse } from '@vueuse/core';
+import { ivue, iref, iuse } from '../../../../src/index';
 
 class Counter {
-  count = ref(0) as unknown as number;
+  count = iref(0);
   increment() {
     this.count++;
   }
-  mouse = useMouse() as unknown as UnwrapComposable<typeof useMouse>
+  mouse = iuse(useMouse());
 }
 
 const counter = ivue(Counter);

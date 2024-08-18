@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ivue, type UnwrapComposable } from 'ivue';
 import { useMouse } from './functions/useMouse';
+import { ivue, type UseComposable } from '@/ivue';
 
 /**
- * Use the ivue Utility Type: UnwrapComposable<typeof YourComposableFunctionName>
+ * Use the ivue Utility Type: UseComposable<typeof YourComposableFunctionName>
  * to get he resulting unwrapped composable properties and functions.
  */
-type UseMouse = UnwrapComposable<typeof useMouse>;
+type UseMouse = UseComposable<typeof useMouse>;
 
 class Counter {
   count = ref(0) as unknown as number;

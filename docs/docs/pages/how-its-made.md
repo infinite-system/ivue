@@ -19,11 +19,14 @@ After many iterations where I created a whole inversion of control library for `
 
 In that sweep of clarity, I got rid of 95% of the code that was just extra stuff and not the essence and left only `3` core functions: `ivue()`, `.init()`, `.toRefs()` only which are necessary to do everything `ivue` is set out to do.
 
+Use Composition API composables inside `init()` function.
+
 ## Minimalism
 
 Thus `ivue` has minimal surface area of the API making it very robust and easy to test.
 By default `ivue` does not rely on decorators, though you can use decorators if you wish to.
 
 ## The Rest is Up To You
+`ivue` is like a small mustard seed core for the big tree trunk of Class Based Reactive applications to be built around it, that's why the path of utter simplicity was chosen.
+Everything else like an Inversion of Control (IOC) system, Traits, Mixins, Decorators can be built around the core `ivue` architecture and is upto the community of enthusiatic open source contributors, please share with us your vision of how you and all of can use `ivue` better.
 
-Everythign else like an Inversion of Control (IoC) system, Traits, Mixins, Decorators can be built around the core `ivue` architecture and is upto the community of enthusiatic open source contributors. 

@@ -7,10 +7,32 @@
 ## Dos and Don'ts
 
 ```ts
+type UseMouse = UseComposable<typeof useMouse>;
 /**
  * Example of a properly defined ivue class.
  */
 class Counter {
+  /** ✅ Properly declared unwrapped composable. */
+  mouse: UseMouse;
+
+  constructor(public props: CounterProps, public emit: CounterEmit) {
+    this.mouse = useMouse() as unknown as UseMouse // ✅ Properly declared unwrapped composable.
+  }
+
+  /** ✅ Properly declared init function. */
+  init() {
+    /** ✅ Properly set lifecycle hook. */
+    onMounted(() => {
+      this.count = 4;
+    });
+
+    /** ✅ Properly set watch function */
+    watch(() => this.count, (newCount) => {
+      if (newCount === 5) {
+        alert('You reached the count of ' + newCount + '!');
+      }
+    })
+  }
   /**
    * Use ref() for the property and cast it to number
    * because refs auto-unwrap inside reactive().
@@ -59,19 +81,20 @@ Next, we convert the types back to their normal types as if they have no reactiv
 `ivue` recommends all class functions to be defined in plain full function style (not arrow functions), this allows all `ivue` classes to be extensible at any point. By using plain standard functions, it allows the developer to be able to override them at any time by simply extending the class.
 
 ### Do not use arrow functions in class declarations
-:::warning 
+
+:::warning
 Arrow functions break full extensibility of classes because they carry their own context at the point of declaration, so avoid using them inside of `ivue` classes.
 :::
 
 ## constructor() vs .init()
 
-
 #### Use `constructor()` to assign properties of the class and cast Refs to Unwrapped bare types. <br />
+
 #### Use `.init()` to declare reactive state functions like `watch`, `watchEffect`, and lifecycle hooks like `onMounted`, `onBeforeMount` etc, do assignments of reactive properties, since `init()` already has access to `reactive()` state through `this`.<br />
 
 <hr />
 
-Inside the `constructor()` method you still have access to non-reactive state, because when `constructor()` is initialized, it does NOT yet have access to the reactive properties of the class, since it was not yet converted to `reactive()` by `ivue`, so if you use the properties like Refs or ComputedRefs inside `constructor()` you would have to use them with the `.value`. 
+Inside the `constructor()` method you still have access to non-reactive state, because when `constructor()` is initialized, it does NOT yet have access to the reactive properties of the class, since it was not yet converted to `reactive()` by `ivue`, so if you use the properties like Refs or ComputedRefs inside `constructor()` you would have to use them with the `.value`.
 
 As a general rule, there is no need to manipulate the values in the `constructor()`, use constructor only for assigning the properties and casting the types of those assigned properties to the unwrapped (de-Refed) final state of the resulting `reactive()` object.
 
@@ -103,4 +126,3 @@ To match that unwrapping behavior, our class needs to Unwrap (or de-Ref) the typ
 ## Naming Conventions
 
 To benefit from the full power of `ivue`, it is recommended to extract the classes into separate files. What has been an effective pattern is to name the classes and put them right beside components in the same folder that these classes are being used with. So if you have `CounterComponent.vue` component, it can have a class inside `CounterComponentClass.ts`, and you can store props, emits, and other runtime definitions inside `CounterComponentProps.ts`.
-
