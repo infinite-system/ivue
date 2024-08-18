@@ -21,7 +21,7 @@
 
 ## What is ivue?
 ## `ivue` is
-<div style="padding-left:20px; font-size: 1.2rem; line-height: 2rem;">
+
 &ndash;&nbsp; Simple like Options API<br />
 &ndash;&nbsp; Flexible like Composition API<br />
 &ndash;&nbsp; Extensible like TypeScript Class API<br />
@@ -31,7 +31,8 @@
 &ndash;&nbsp; 100% Type Safe<br />
 &ndash;&nbsp; Production Ready<br />
 &ndash;&nbsp; Just <code>1.1kb</code> gzipped!<br />
-</div>
+
+
 
 `ivue` is a powerful tool because it fully aligns itself with JavaScript / TypeScript Class API.
 
