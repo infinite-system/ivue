@@ -47,9 +47,9 @@ Utility Types help to achieve the rest of `ivue` capabilities
 
 :::details Click to see the whole latest `ivue` source code from github main branch below:
 :::code-group
-<<< ../../../src/index.ts{ts:line-numbers} [ivue.ts]
+<<< ../../../src/ivue.ts{ts:line-numbers} [ivue.ts]
 :::
-Or [See on GitHub](https://github.com/infinite-system/ivue/blob/main/src/index.ts)
+Or [See on GitHub](https://github.com/infinite-system/ivue/blob/main/src/ivue.ts)
 
 ## 100% Vue 3 Compatible
 `.toRefs()` allows the object to be converted to Vue 3 native composable structure with full `.value`s, so it can interoperate with native composables if needed. `.toRefs()` is also often used to get refs for `v-bind()` in css styles.

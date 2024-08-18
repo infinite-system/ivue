@@ -23,9 +23,9 @@ pnpm i ivue
 :::details Click to expand the latest `ivue` source code to copy
 
 :::code-group
-<<< ../../../src/index.ts{ts:line-numbers} [ivue.ts]
+<<< ../../../src/ivue.ts{ts:line-numbers} [ivue.ts]
 :::
-Or [Copy from GitHub](https://github.com/infinite-system/ivue/blob/main/src/index.ts)
+Or [Copy from GitHub](https://github.com/infinite-system/ivue/blob/main/src/ivue.ts)
 
 ::: tip NOTE
 This installation path is recommended only if you quickly want to tinker with the internals of ivue, as you won't be getting the latest updates. Also note that this code comes from github `main` branch latest which might also be in beta and not fully published to `npm`.

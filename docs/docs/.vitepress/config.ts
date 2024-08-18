@@ -98,6 +98,8 @@ export default defineConfig({
         text: 'Core Functions',
         items: [
           { text: 'ivue()', link: '/pages/api#ivue' },
+          { text: 'iref()', link: '/pages/api#iref' },
+          { text: 'iuse()', link: '/pages/api#iuse' },
           { text: '.init()', link: '/pages/api#init' },
           { text: '.toRefs()', link: '/pages/api#torefs' },
         ],

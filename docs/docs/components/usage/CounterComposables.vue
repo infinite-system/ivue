@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMouse } from '@vueuse/core';
-import { ivue, iref, iuse } from '../../../../src/index';
+import { ivue, iref, iuse } from '../../../../src/ivue';
 
 class Counter {
   count = iref(0);

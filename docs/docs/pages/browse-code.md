@@ -2,7 +2,7 @@
 aside: false
 ---
 # Source code
-Or [Browse the source code on GitHub](https://github.com/infinite-system/ivue/blob/main/src/index.ts)
+Or [Browse the source code on GitHub](https://github.com/infinite-system/ivue/blob/main/src/ivue.ts)
 
 ## Install by Copying
 
@@ -14,5 +14,5 @@ This installation path is recommended only if you quickly want to tinker with th
 :::
 
 :::code-group
-<<< ../../../src/index.ts{ts:line-numbers} [ivue.ts]
+<<< ../../../src/ivue.ts{ts:line-numbers} [ivue.ts]
 :::
