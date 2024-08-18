@@ -11,7 +11,7 @@
 &ndash; Extend Emits<br />
 &ndash; Extend Slots<br />
 &ndash; Extend Components<br />
-&ndash; Improves DX by elegantly dealing with .value in the background<br />
+&ndash; Improves DX by elegantly dealing with `.value` in the background<br />
 &ndash; Can be used both as a Store and a View Model for Components<br />
 &ndash; Zero dependencies except Vue 3<br />
 
@@ -22,9 +22,9 @@
 &ndash;&nbsp; Flexible like Composition API<br />
 &ndash;&nbsp; Extensible like TypeScript Class API<br />
 &ndash;&nbsp; Feature Complete, Minimal, Opaque & Unobtrusive<br />
+&ndash;&nbsp; 100% TypeScript Support<br />
 &ndash;&nbsp; 100% Vue 3 Compatible<br />
-&ndash;&nbsp; 100% Test Covered<br />
-&ndash;&nbsp; 100% Type Safe<br />
+&ndash;&nbsp; 100% Unit Tested<br />
 &ndash;&nbsp; Production Ready<br />
 &ndash;&nbsp; Just <code>1.1kb</code> gzipped!<br />
 
