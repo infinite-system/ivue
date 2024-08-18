@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ivue } from 'ivue';
+import { ivue, iref } from 'ivue';
 
 class Counter {
-  count = ref(0) as unknown as number;
-  span = ref(null) as unknown as HTMLElement | null;
+  count = iref(0);
+  span = iref<HTMLElement | null>(null);
   increment() {
     this.count++;
     (this.span as HTMLElement).innerHTML = String(this.count + 1);
@@ -17,7 +16,7 @@ const { span } = counter.toRefs(['span']);
  * Or you can use `const { span } = counter.toRefs();`
  * but `const { span } = counter.toRefs(['span']);` is more performant
  * because we are only looping through 1 property instead of all of them.
- */ 
+ */
 </script>
 <template>
   <a href="javascript:void(0)" @click="() => counter.increment()">Increment</a>

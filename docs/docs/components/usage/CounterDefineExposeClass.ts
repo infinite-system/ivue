@@ -1,7 +1,7 @@
-import { ref } from 'vue';
+import { iref } from 'ivue';
 
 export default class Counter {
-  count = ref(0) as unknown as number;
+  count = iref(0);
   increment() {
     this.count++;
   }

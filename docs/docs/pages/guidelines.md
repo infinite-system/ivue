@@ -12,45 +12,53 @@ type UseMouse = UseComposable<typeof useMouse>;
  * Example of a properly defined ivue class.
  */
 class Counter {
-  /** ✅ Properly declared unwrapped composable. */
+  /** ✓ Properly declared unwrapped composable. */
   mouse: UseMouse;
 
+  /** 
+   * ✓ Properly declared DOM Ref. 
+   * ✓ Custom declared type of HTMLElement or null
+  */
+  spanElementRef = iref<HTMLElement | null>(null); 
+
   constructor(public props: CounterProps, public emit: CounterEmit) {
-    this.mouse = useMouse() as unknown as UseMouse // ✅ Properly declared unwrapped composable.
+    /** ✓ Properly declared auto-unwrapped composable. */ 
+    this.mouse = iuse(useMouse()); 
   }
 
-  /** ✅ Properly declared init function. */
+  /** ✓ Properly declared init function. */
   init() {
-    /** ✅ Properly set lifecycle hook. */
+    /** ✓ Properly set lifecycle hook. */
     onMounted(() => {
       this.count = 4;
     });
 
-    /** ✅ Properly set watch function */
+    /** ✓ Properly set watch function */
     watch(() => this.count, (newCount) => {
       if (newCount === 5) {
         alert('You reached the count of ' + newCount + '!');
       }
     })
   }
-  /**
-   * Use ref() for the property and cast it to number
-   * because refs auto-unwrap inside reactive().
-   */
-  count = ref(0) as unknown as number; // ✅
 
   /**
-   * Use ref() for the property and cast it to number
+   * Use iref() for the property to be auto cast to number
    * because refs auto-unwrap inside reactive().
    */
-  timesClicked = ref(0) as unknown as number; // ✅
+  count = iref(0); // ✓ Properly inferred type -> number
 
-  /** ✅ Properly declared function (not arrow function). */
+  /**
+   * Use iref() for the property to be auto cast to number
+   * because refs auto-unwrap inside reactive().
+   */
+  timesClicked = iref(0); // ✓ Properly inferred type -> number
+
+  /** ✓ Properly declared function (not arrow function). */
   increment() {
     this.count++;
   }
 
-  /** ✅ Properly declared function (not arrow function). */
+  /** ✓ Properly declared function (not arrow function). */
   click() {
     this.increment();
     this.timesClicked++;
@@ -61,11 +69,14 @@ class Counter {
    */
   increment = () => this.count++ ❌
 
-  /** ✅ Properly declared computed getter. */
+  /** ✓ Properly declared computed getter. */
   get doubleCount() {
     return this.count * 2;
   }
 }
+
+/** ✓ Properly intilized IVUE class runner. */
+const counter = ivue(Counter, props, emit);
 ```
 
 ### Use ref() for properties

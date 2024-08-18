@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { ivue } from 'ivue';
+import { ivue, iref, iuse } from 'ivue';
 
 type SpanRef = HTMLElement | null;
 
 class Counter {
-  constructor(public span: SpanRef) {
+  constructor(public span?: SpanRef) {
     // Do not do this in the constructor() because this.span 
     // still refers to this.span.value here:
     // onMounted(() => { 
@@ -19,17 +19,17 @@ class Counter {
       (this.span as HTMLElement/*✅*/).innerHTML = 'Initial span text!';
     });
   }
-  count = ref(0) as unknown as number;
+  count = iref(0);
   increment() {
     this.count++;
     (this.span as HTMLElement).innerHTML = String(this.count + 1);
   }
 }
 
-const span = ref<SpanRef>();
+const span = ref<SpanRef>(null);
 const counter = ivue(
   Counter,
-  span as unknown as SpanRef /** Unwrap Ref Manually */
+  iuse(span)
 );
 
 defineExpose<Counter>(counter);

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ivue } from 'ivue';
+import { ivue, iref } from 'ivue';
 
 interface CounterProps {
   initialCount: number;
@@ -11,7 +10,7 @@ class Counter {
   constructor(public props: CounterProps) {
     this.count = this.props.initialCount;
   }
-  count = ref(0) as unknown as number;
+  count = iref(0);
   increment() {
     this.count++;
   }

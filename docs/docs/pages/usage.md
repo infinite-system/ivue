@@ -231,7 +231,7 @@ See the highlighted sections related to destructuring composable usage.
 
 ::: code-group
 <<< @/components/usage/CounterComposablesDestructuring.vue{4,10,20-21,23-24,27-32 vue:line-numbers}
-<<< @/components/usage/functions/useMouse.ts{ts:line-numbers} [functions/useMouse.ts]
+<<< @/components/usage/functions/useCustomMouse.ts{ts:line-numbers} [functions/useCustomMouse.ts]
 :::
 
 :::details For this example we initialize the component like this:

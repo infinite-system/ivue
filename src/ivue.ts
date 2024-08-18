@@ -1,12 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type {
-  ComputedRef,
-  ExtractPropTypes,
-  ToRef,
-  UnwrapNestedRefs,
-} from 'vue';
+import type { ComputedRef, ExtractPropTypes, Ref, ToRef } from 'vue';
 import { UnwrapRef, computed, reactive, ref, toRef } from 'vue';
+import type { Ref as DemiRef } from 'vue-demi';
 
 /** Types */
 /**
@@ -37,16 +33,33 @@ export type IVueRefs<T = any> = {
 };
 
 /**
- * Unwraps the returned Refs of composable method T to a reactive type definition.
+ * Unwraps Refs Recursively, helps resolve fully the bare value types of any type T
+ * because sometimes the Refs are returned as they are with `.value` from computeds,
+ * thus inferring nested ComputedRef<ComputedRef<ComputedRef<Ref>>> types, which
+ * are difficult to fully resolve to bare values without this utility.
+ * Also support Vue 3 Demi for vue-use library support.
  */
-export type UseComposableReturn<T extends Object> = {
-  [K in keyof T]: T[K] extends { value: any }
-    ? T[K]['value'] // Handle Ref
-    : T[K]; // Handle property
-};
+export type UnwrapRefRecursively<T = any> = T extends Ref | DemiRef
+  ? UnwrapRefRecursively<T['value']>
+  : T;
 
-export type UseComposable<T extends (...args: any[]) => any> =
-  UseComposableReturn<ReturnType<T>>;
+/**
+ * Helper type for UseComposable.
+ */
+export type UnwrapComposableReturn<T> = T extends Ref | DemiRef
+  ? UnwrapRefRecursively<T>
+  : {
+      [K in keyof T]: T[K] extends Ref | DemiRef
+        ? UnwrapRefRecursively<T[K]>
+        : T[K];
+    };
+
+/**
+ * Fully unwraps to bare value types any Vue 3 composable return definition type.
+ */
+export type UseComposable<T extends (...args: any[]) => any> = UnwrapComposableReturn<
+  ReturnType<T>
+>;
 
 /**
  * Extracts object defined emit types by converting them to a plain interface
@@ -314,10 +327,8 @@ export function iref<T>(val?: T): UnwrapRef<T> {
  * `iuse` stands for composable.
  * Returns unwrapped composable type definition without the Refs.
  */
-export function iuse<T extends Object>(
-  val?: T
-): UseComposableReturn<UnwrapNestedRefs<T>> {
-  return val as unknown as UseComposableReturn<UnwrapNestedRefs<T>>;
+export function iuse<T>(val?: T): UnwrapComposableReturn<T> {
+  return val as unknown as UnwrapComposableReturn<T>;
 }
 
 /**

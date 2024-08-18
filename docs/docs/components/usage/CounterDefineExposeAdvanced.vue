@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ivue } from 'ivue';
-import { ref } from 'vue';
+import { ivue, iref } from 'ivue';
 
 /** 
  * See that only 'count', 'increment' properties are picked 
@@ -9,7 +8,7 @@ import { ref } from 'vue';
 export type CounterExposed = Pick<Counter, 'count' | 'increment'>;
 
 class Counter {
-  count = ref(0) as unknown as number;
+  count = iref(0);
   increment() {
     this.count++;
   }

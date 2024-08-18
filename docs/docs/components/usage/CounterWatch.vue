@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { ivue } from 'ivue';
+import { watch } from 'vue';
+import { ivue, iref } from 'ivue';
 
 class Counter {
   init() {
     /** Note that we use this.count as a reactive prop in the watch() function */
-    watch(() => this.count, (newCount) => {
-      if (newCount === 5) {
-        alert('You already clicked 5 times!');
+    watch(
+      () => this.count,
+      (newCount) => {
+        if (newCount === 5) {
+          alert('You already clicked 5 times!');
+        }
       }
-    });
+    );
   }
-  count = ref(0) as unknown as number;
+  count = iref(0);
   increment() {
     this.count++;
   }

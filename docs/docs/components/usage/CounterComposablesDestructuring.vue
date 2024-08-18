@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useMouse } from './functions/useMouse';
-import { ivue, type UseComposable } from '@/ivue';
+import { useCustomMouse } from './functions/useCustomMouse';
+
+import { ivue, iuse, iref, type UseComposable } from 'ivue';
 
 /**
  * Use the ivue Utility Type: UseComposable<typeof YourComposableFunctionName>
  * to get he resulting unwrapped composable properties and functions.
  */
-type UseMouse = UseComposable<typeof useMouse>;
+type UseMouse = UseComposable<typeof useCustomMouse>;
 
 class Counter {
-  count = ref(0) as unknown as number;
+  count = iref(0);
 
   increment() {
     this.count++;
@@ -29,7 +29,7 @@ class Counter {
       y: this.y,
       sum: this.sum,
       total: this.total
-    } = useMouse() as unknown as UseMouse);
+    } = iuse(useCustomMouse()));
   }
 }
 
@@ -38,7 +38,7 @@ const counter = ivue(Counter);
 <template>
   <a href="javascript:void(0)" @click="() => counter.increment()">Increment</a>
   Count: {{ counter.count }} <br />
-  Mouse: X: {{ counter.x }}, Y: {{ counter.y }} 
+  Mouse X: {{ counter.x }}, Y: {{ counter.y }} 
   <br />
   Total (computed): {{ counter.total }}
   <br />

@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ivue } from 'ivue';
+import { ivue, iref, iuse } from 'ivue';
 
 type SpanRef = HTMLElement | null;
 
 class Counter {
   constructor(public span: SpanRef) {}
-  count = ref(0) as unknown as number;
+  count = iref(0);
   increment() {
     this.count++;
     (this.span as HTMLElement).innerHTML = String(this.count + 1);
   }
 }
 
-const span = ref<SpanRef>();
-const counter = ivue(Counter, span as unknown as SpanRef /** Unwrap Ref Manually */);
+const span = ref<SpanRef>(null);
+const counter = ivue(Counter, iuse(span));
 
 defineExpose<Counter>(counter);
 </script>

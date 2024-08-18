@@ -8,7 +8,7 @@ import {
   isClass,
   ivue,
   propsWithDefaults,
-} from '../index';
+} from '../ivue';
 
 class Basic {
   id = ref('id') as unknown as string;

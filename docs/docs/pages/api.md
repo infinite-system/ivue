@@ -26,6 +26,14 @@ Core `ivue(className, ...args)` initializer is able to infer and validate the co
 
 **Returns:** `<IVue<T>>` or `ivue` `reactive()` object of an `AnyClass` class with flattened (de-Refed) `Refs` and `ComputedRefs` as properties.
 
+### iref()
+
+Create a regular `vue` Ref but cast the type to the internal unreactive type, because properties auto-unwrap in `reactive()` object that is being created by `ivue` upon initialization.
+
+### iuse()
+
+This function unwraps the type of any composable return to the bare values without `.value`, because properties auto-unwrap in `reactive()` object that is being created by `ivue` upon initialization.
+
 ### .init()
 
 ---
@@ -34,11 +42,11 @@ Core `ivue(className, ...args)` initializer is able to infer and validate the co
 `init()` has access to the reactive state of the object via `this`.
 
 :::warning NOTICE
-`.init()` method shoud not have any parameters. You should never need to run this method manually.
+`.init()` method has no arguments and you should never need to run this method manually.
 :::
 
 :::tip NEED ASYNC/AWAIT?
-You can make `init()` method `async` if you need `await` functionality.
+Use `async init()` if you need `await` functionality.
 :::
 
 **Returns:** `void | Promise<void>`

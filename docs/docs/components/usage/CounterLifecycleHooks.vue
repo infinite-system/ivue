@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { ivue } from 'ivue';
+import { onMounted } from 'vue';
+import { ivue, iref } from 'ivue';
 
 class Counter {
   init() {
@@ -8,7 +8,7 @@ class Counter {
       this.count = 100;
     });
   }
-  count = ref(0) as unknown as number;
+  count = iref(0);
   increment() {
     this.count++;
   }

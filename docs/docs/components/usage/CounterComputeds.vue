@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ivue } from 'ivue';
+import { ivue, iref } from 'ivue';
 
 class Counter {
-  count = ref(0) as unknown as number;
+  count = iref(0);
   increment() {
     this.count++;
   }
