@@ -25,7 +25,7 @@
 &ndash;&nbsp; Simple like Options API<br />
 &ndash;&nbsp; Flexible like Composition API<br />
 &ndash;&nbsp; Extensible like TypeScript Class API<br />
-&ndash;&nbsp; Feature Complete, yet Minimal, Opaque & Unobtrusive<br />
+&ndash;&nbsp; Feature Complete, Minimal, Opaque & Unobtrusive<br />
 &ndash;&nbsp; 100% Vue 3 Compatible<br />
 &ndash;&nbsp; 100% Test Covered<br />
 &ndash;&nbsp; 100% Type Safe<br />
