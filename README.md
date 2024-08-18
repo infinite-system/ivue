@@ -13,11 +13,7 @@
 &ndash; Extend Components<br />
 &ndash; Improves DX by elegantly dealing with .value in the background<br />
 &ndash; Can be used both as a Store and a View Model for Components<br />
-&ndash; Provides Full TypeScript Support<br />
-&ndash; 100% Tested<br />
 &ndash; Zero dependencies except Vue 3<br />
-&ndash; Only 1kb in size!<br />
-&ndash; Production Ready<br />
 
 ## What is ivue?
 ## `ivue` is
