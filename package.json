@@ -1,6 +1,6 @@
 {
   "name": "ivue",
-  "version": "1.1.18",
+  "version": "1.1.19",
   "description": "Infinite Vue – Class Based Architecture for Vue 3",
   "type": "module",
   "exports": {
