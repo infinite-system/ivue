@@ -5,7 +5,7 @@
 
 ## Core Functions
 
-### ivue()
+### `ivue()`
 
 ---
 
@@ -26,15 +26,15 @@ Core `ivue(className, ...args)` initializer is able to infer and validate the co
 
 **Returns:** `<IVue<T>>` or `ivue` `reactive()` object of an `AnyClass` class with flattened (de-Refed) `Refs` and `ComputedRefs` as properties.
 
-### iref()
+### `iref()`
 
 Create a regular `vue` Ref but cast the type to the internal unreactive type, because properties auto-unwrap in `reactive()` object that is being created by `ivue` upon initialization.
 
-### iuse()
+### `iuse()`
 
 This function unwraps the type of any composable return to the bare values without `.value`, because properties auto-unwrap in `reactive()` object that is being created by `ivue` upon initialization.
 
-### .init()
+### `.init()`
 
 ---
 
@@ -51,7 +51,7 @@ Use `async init()` if you need `await` functionality.
 
 **Returns:** `void | Promise<void>`
 
-### .toRefs()
+### `.toRefs()`
 
 ---
 
@@ -72,7 +72,7 @@ This improves performance if `box` has many other properties that we do not need
 
 ## Utility Functions
 
-### propsWithDefaults()
+### `propsWithDefaults()`
 
 ---
 
@@ -89,25 +89,25 @@ Combines statically written defaults object with the runtime type definition of 
 
 ## Utility Types
 
-### ExtractPropDefaultTypes
+### `ExtractPropDefaultTypes`
 
 Extracts types of the default types definition. This type can be used to validate against the actual defaults definition to make sure both definitions are in sync.
 
 ---
 
-### ExtractEmitTypes
+### `ExtractEmitTypes`
 
 ---
 
 Extracts types of a runtime emits declaration.
 
-### ExtendSlots
+### `ExtendSlots`
 
 ---
 
 Allows you to extend slots of a given slot interface.
 
-### UseComposable
+### `UseComposable`
 
 ---
 

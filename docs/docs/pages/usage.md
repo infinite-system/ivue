@@ -10,6 +10,7 @@ import CounterExternalRefs from '../components/usage/CounterExternalRefs.vue'
 import CounterInternalRefs from '../components/usage/CounterInternalRefs.vue'
 import CounterComposables from '../components/usage/CounterComposables.vue'
 import CounterComposablesDestructuring from '../components/usage/CounterComposablesDestructuring.vue'
+import CounterComposablesIvueDestructuring from '../components/usage/CounterComposablesIvueDestructuring.vue'
 import CounterInsideComposables from '../components/usage/CounterInsideComposables.vue'
 import CounterComputeds from '../components/usage/CounterComputeds.vue'
 import CounterComputedsDisabled from '../components/usage/CounterComputedsDisabled.vue'
@@ -270,6 +271,27 @@ See the highlighted sections related to using `ivue` inside a composable.
 
 <CounterInsideComposables />
 
+## Using `ivue` Composables
+
+See the highlighted sections related to using `ivue` based composables.
+
+::: code-group
+<<< @/components/usage/CounterComposablesIvueDestructuring.vue{14 vue:line-numbers}
+:::
+
+:::details For this example we initialize the component like this:
+
+```vue
+<template>
+  <CounterComposablesIvueDestructuring />
+</template>
+```
+
+:::
+
+<div style="font-size: 18px; font-weight: 500;">Result</div>
+
+<CounterComposablesIvueDestructuring />
 
 ## Using Computeds
 
@@ -305,7 +327,7 @@ The result of this example is identical to the above.
 ## Using Watch
 
 To use `watch`, `watchEffect`, and other reactive functions, declare `.init()` method in the class.
-See the highlighted sections related to using `.init()` below:
+See the highlighted sections related to using `init()` below:
 
 ::: code-group
 <<< @/components/usage/CounterWatch.vue{6-13 vue:line-numbers}
@@ -330,10 +352,10 @@ See the highlighted sections related to using `.init()` below:
 ## Using Lifecycle Hooks
 
 To use `onMounted`, `onBeforeMount` and other lifecycle hooks, declare `.init()` method in the class.
-See the highlighted sections related to using `.init()` below:
+See the highlighted sections related to using `init()` below:
 
 ::: tip NOTICE:
-`.init()` method can be declared as `async` if needed.
+`init()` method can be declared as `async` if needed.
 :::
 
 ::: code-group

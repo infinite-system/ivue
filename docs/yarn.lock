@@ -2193,10 +2193,10 @@ isexe@^2.0.0:
   resolved "https://registry.yarnpkg.com/isexe/-/isexe-2.0.0.tgz#e8fbf374dc556ff8947a10dcb0572d633f2cfa10"
   integrity sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==
 
-ivue@^1.1.19:
-  version "1.1.19"
-  resolved "https://registry.yarnpkg.com/ivue/-/ivue-1.1.19.tgz#f92e6663d0851295857f89a6505c46ec98cd1964"
-  integrity sha512-pTDco1yNL71qHSGPMrSsisCI00jR18vzFosrMcbGGXZMHm4hWYO1eV0vX3aRwmNXJMKw3GtS4cpOGcFMgOlMDA==
+ivue@^1.1.20:
+  version "1.1.20"
+  resolved "https://registry.yarnpkg.com/ivue/-/ivue-1.1.20.tgz#bd5f2c6ea2a07166c5807833e93c8a01928db31f"
+  integrity sha512-DOrpKNwuCtzJlB06ncDpNiePYoDhSiO9gPdWIhchGrJ8cbncl+rOpDJxwROL8+82mIbK0D57dGdnrZkEcp6wzw==
 
 js-tokens@^4.0.0:
   version "4.0.0"

@@ -46,6 +46,14 @@ export default defineConfig({
             text: 'Using Lifecycle Hooks',
             link: '/pages/usage#using-lifecycle-hooks',
           },
+          {
+            text: 'Using Pinia Store',
+            link: '/pages/usage#using-pinia-store',
+          },
+          {
+            text: 'Using Quasar Framework',
+            link: '/pages/usage#using-quasar-framework',
+          },
         ],
       },
 
@@ -126,13 +134,11 @@ export default defineConfig({
           { text: 'UseComposable', link: '/pages/api#UseComposable' },
         ],
       },
-      
+
       {
         collapsed: false,
         text: 'Source Code',
-        items: [
-          { text: 'Browse Code', link: '/pages/browse-code' },
-        ],
+        items: [{ text: 'Browse Code', link: '/pages/browse-code' }],
       },
     ],
   },

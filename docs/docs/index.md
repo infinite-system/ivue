@@ -2,29 +2,42 @@
 import Button from './components/Button.vue'
 
 </script>
-# Infinite Vue Documentation
+# <span style="font-family: 'Public Sans'; ">ivue ∞ Infinite Vue</span> Documentation
 
 
 ## About
 
-**Infinite Vue &ndash; ivue** is a class based composable architecture for Vue 3, that unlocks infinite scalability for Vue 3 based apps. It allows you to extend the regular Vue 3 in a simple and elegant way.
+**<span style="font-family: 'Public Sans'; font-size: 125%;">ivue ∞ Infinite Vue</span>** is a class based composable architecture for Vue 3, that unlocks infinite scalability for Vue 3 based apps. It allows you to extend the regular Vue 3 in a simple and elegant Object Oriented way.
+
+## `ivue` is
+
+
+<div style="padding-left:20px; font-size: 20px; line-height: 32px;">
+∞&nbsp; Simple like Options API<br />
+∞&nbsp; Flexible like Composition API<br />
+∞&nbsp; Extensible like TypeScript Class API<br />
+∞&nbsp; Robust, Minimal, Opaque & Unobtrusive<br />
+∞&nbsp; 100% VSCode / Intellij IDE Autocomplete Intellisence<br />
+∞&nbsp; 100% Vue 3 Compatible<br />
+∞&nbsp; 100% Test Covered<br />
+∞&nbsp; 100% Type Safe<br />
+∞&nbsp; Production Ready<br />
+∞&nbsp; Just <code>1.1kb</code> gzipped!<br />
+</div>
+
 
 ## Features
-<div style="padding-left:20px;">
-&ndash; Simple & Elegant Architecture<br />
-&ndash; Extensible Classes using JavaScript / TypeScript native Class API<br />
-&ndash; Extensible Props And Props Defaults<br />
-&ndash; Extensible Emits<br />
-&ndash; Extensible Slots<br />
-&ndash; Extensible Components<br />
-&ndash; Improves DX by elegantly dealing with `.value` in the background<br />
-&ndash; Can be used both as a Store and a ViewModel for Components<br />
-&ndash; Provides Full TypeScript Support<br />
-&ndash; Extends Vue 3 TypeScript Capability<br />
-&ndash; 100% Tested<br />
-&ndash; Zero dependencies except Vue 3<br />
-&ndash; Only 1kb(gzipped) in size!<br />
-&ndash; Production Ready<br />
+<div style="padding-left:20px; font-size: 18px;line-height: 28px; ">
+&mdash;&nbsp; Extensible Classes using JavaScript / TypeScript native Class API<br />
+&mdash;&nbsp; Improves DX by elegantly dealing with `.value`<br />
+&mdash;&nbsp; Extensible Props Defaults<br />
+&mdash;&nbsp; Extensible Emits<br />
+&mdash;&nbsp; Extensible Slots<br />
+&mdash;&nbsp; Fully Extensible Components<br />
+&mdash;&nbsp; Can be used as a Global Store and a ViewModel for Components<br />
+&mdash;&nbsp; Provides Full TypeScript Support<br />
+&mdash;&nbsp; Extends Vue 3 TypeScript Capability<br />
+&mdash;&nbsp; Zero dependencies except Vue 3<br />
 </div>
 
 ## Next Step

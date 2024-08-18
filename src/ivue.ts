@@ -57,9 +57,8 @@ export type UnwrapComposableReturn<T> = T extends Ref | DemiRef
 /**
  * Fully unwraps to bare value types any Vue 3 composable return definition type.
  */
-export type UseComposable<T extends (...args: any[]) => any> = UnwrapComposableReturn<
-  ReturnType<T>
->;
+export type UseComposable<T extends (...args: any[]) => any> =
+  UnwrapComposableReturn<ReturnType<T>>;
 
 /**
  * Extracts object defined emit types by converting them to a plain interface
@@ -313,9 +312,8 @@ export function getAllClassProperties(obj: object): Set<string> {
 }
 
 /**
- * `iref` is an unwrapped type alias for Vue ref() function.
- * `iref` does not alter the behavior of ref(), but simply
- * transforms the type to an unwrapped ref value.
+ * `iref()` is an alias for Vue ref() function but returns an unwrapped type without the .value
+ * `iref()` does not alter the behavior of ref(), but simply transforms the type to an unwrapped raw value.
  * @param val
  * @returns
  */
@@ -324,11 +322,23 @@ export function iref<T>(val?: T): UnwrapRef<T> {
 }
 
 /**
- * `iuse` stands for composable.
- * Returns unwrapped composable type definition without the Refs.
+ * `iuse()` converts the types of a Composable / Ref to pure raw type definition.
+ * Returns for all properties of an object an unwrapped raw type definition, 
+ * unwraps direct Refs & ComputedRefs as well.
+ * 
+ * If AnyClass is supplied into `iuse(AnyClass, ...args)`, and that class's ...args,
+ * it returns a '.toRefs()` object for all properties but casts its own type as raw type.
  */
-export function iuse<T>(val?: T): UnwrapComposableReturn<T> {
-  return val as unknown as UnwrapComposableReturn<T>;
+export function iuse<T extends AnyClass | Object>(
+  val?: T,
+  ...args: InferredArgs<T>
+): T extends AnyClass ? IVue<T> : UnwrapComposableReturn<T> {
+  return isClass(val)
+    ? ivue(
+        val as T extends AnyClass ? T : never,
+        ...(args as InferredArgs<T>)
+      ).toRefs()
+    : (val as unknown as UnwrapComposableReturn<T>);
 }
 
 /**
