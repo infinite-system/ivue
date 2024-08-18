@@ -21,10 +21,10 @@
 &ndash;&nbsp; Simple like Options API<br />
 &ndash;&nbsp; Flexible like Composition API<br />
 &ndash;&nbsp; Extensible like TypeScript Class API<br />
-&ndash;&nbsp; Feature Complete, Minimal, Opaque & Unobtrusive<br />
+&ndash;&nbsp; Feature Complete, Minimal, Opaque & Elegant Architecture<br />
 &ndash;&nbsp; 100% TypeScript Support<br />
 &ndash;&nbsp; 100% Vue 3 Compatible<br />
-&ndash;&nbsp; 100% Unit Tested<br />
+&ndash;&nbsp; 100% Test Covered<br />
 &ndash;&nbsp; Production Ready<br />
 &ndash;&nbsp; Just <code>1.1kb</code> gzipped!<br />
 
