@@ -101,7 +101,7 @@ Arrow functions break full extensibility of classes because they carry their own
 
 #### Use `constructor()` to assign properties of the class and cast Refs to Unwrapped bare types. <br />
 
-#### Use `.init()` to declare reactive state functions like `watch`, `watchEffect`, and lifecycle hooks like `onMounted`, `onBeforeMount` etc, do assignments of reactive properties, since `init()` already has access to `reactive()` state through `this`.<br />
+#### Use `.init()` to declare reactive state functions like `watch`, `watchEffect`, and lifecycle hooks like `onMounted`, `onBeforeMount` etc, do assignments of reactive properties, since `.init()` already has access to `reactive()` state through `this`.<br />
 
 <hr />
 

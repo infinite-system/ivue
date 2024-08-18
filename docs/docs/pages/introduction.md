@@ -17,7 +17,13 @@ See: [VueJs.org &ndash; Reactivity Transform](https://vuejs.org/guide/extras/rea
 <div style="padding-left:20px; font-size: 1.2rem; line-height: 2rem;">
 &ndash;&nbsp; Simple like Options API<br />
 &ndash;&nbsp; Flexible like Composition API<br />
-&ndash;&nbsp; Extensible like TypeScript Classes API<br />
+&ndash;&nbsp; Extensible like TypeScript Class API<br />
+&ndash;&nbsp; Feature Complete, yet Minimal, Opaque & Unobtrusive<br />
+&ndash;&nbsp; 100% Vue 3 Compatible<br />
+&ndash;&nbsp; 100% Test Covered<br />
+&ndash;&nbsp; 100% Type Safe<br />
+&ndash;&nbsp; Production Ready<br />
+&ndash;&nbsp; Just <code>1.1kb</code> gzipped!<br />
 </div>
 
 `ivue` is a powerful tool because it fully aligns itself with JavaScript / TypeScript Class API.

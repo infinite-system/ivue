@@ -305,7 +305,7 @@ The result of this example is identical to the above.
 ## Using Watch
 
 To use `watch`, `watchEffect`, and other reactive functions, declare `.init()` method in the class.
-See the highlighted sections related to using `init()` below:
+See the highlighted sections related to using `.init()` below:
 
 ::: code-group
 <<< @/components/usage/CounterWatch.vue{6-13 vue:line-numbers}
@@ -329,11 +329,11 @@ See the highlighted sections related to using `init()` below:
 
 ## Using Lifecycle Hooks
 
-To use `onMounted`, `onBeforeMount` and other lifecycle, declare `.init()` method in the class.
-See the highlighted sections related to using `init()` below:
+To use `onMounted`, `onBeforeMount` and other lifecycle hooks, declare `.init()` method in the class.
+See the highlighted sections related to using `.init()` below:
 
 ::: tip NOTICE:
-`init()` method can be declared as `async` if needed.
+`.init()` method can be declared as `async` if needed.
 :::
 
 ::: code-group

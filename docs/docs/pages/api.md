@@ -39,7 +39,7 @@ This function unwraps the type of any composable return to the bare values witho
 ---
 
 `.init()` method is auto-run on `ivue()` initialization after `constructor()` is run.
-`init()` has access to the reactive state of the object via `this`.
+`.init()` has access to the reactive state of the object via `this`.
 
 :::warning NOTICE
 `.init()` method has no arguments and you should never need to run this method manually.
@@ -61,7 +61,7 @@ function toRefs(props?: (keyof InstanceType<T>)[]): IVueRefs<InstanceType<T>>;
 
 Converts an `ivue` object to a Vue 3 Composable with nested refs.
 
-:::tip You can pass the name of the properties to `toRefs(properties)`
+:::tip You can pass the name of the properties to `.toRefs(properties)`
 ```ts
 const { width, height } = ivue(Box).toRefs(['width', 'height']);
 ```

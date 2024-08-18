@@ -19,7 +19,7 @@ After many iterations where I created a whole inversion of control library for `
 
 In that sweep of clarity, I got rid of 95% of the code that was just extra stuff and not the essence and left only `3` core functions: `ivue()`, `.init()`, `.toRefs()` only which are necessary to do everything `ivue` is set out to do.
 
-Use Composition API composables inside `init()` function.
+Use Composition API composables inside `.init()` function.
 
 ## Minimalism
 
