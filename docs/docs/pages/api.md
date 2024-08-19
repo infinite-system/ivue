@@ -22,7 +22,7 @@ Core `ivue(className, ...args)` initializer is able to infer and validate the co
 
 `ivue()` initializer function returns an extended Vue 3 `reactive()` object in which getters and setters are internally converted to computeds and adds `.toRefs()` method to the created object. Computeds auto-unwrap themselves when they are accessed as a reactive object property, so the `.value` properties and computeds get flattened in the resulting object and do not require `.value` to be accessed.
 
-`ivue()` replicates native JavaScript / TypeScript class implementation by extending descriptors (getters and setters) up the whole prototype chain thus supporting classical inheritance.
+`ivue()` replicates native JavaScript / TypeScript class implementation by extending descriptors (getters and setters) up the whole prototype ancestors chain thus supporting classical inheritance.
 
 **Returns:** `<IVue<T>>` or `ivue` `reactive()` object of an `AnyClass` class with flattened (de-Refed) `Refs` and `ComputedRefs` as properties.
 

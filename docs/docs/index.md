@@ -29,16 +29,23 @@ import Button from './components/Button.vue'
 ## Features
 <div style="padding-left:20px; font-size: 18px;line-height: 28px; ">
 &mdash;&nbsp; Extensible Classes using JavaScript / TypeScript native Class API<br />
-&mdash;&nbsp; Improves DX by elegantly dealing with `.value`<br />
-&mdash;&nbsp; Extensible Props Defaults<br />
-&mdash;&nbsp; Extensible Emits<br />
-&mdash;&nbsp; Extensible Slots<br />
-&mdash;&nbsp; Fully Extensible Components<br />
 &mdash;&nbsp; Can be used as a Global Store and a ViewModel for Components<br />
-&mdash;&nbsp; Provides Full TypeScript Support<br />
+&mdash;&nbsp; Enhances Extensibility of Props Defaults, Props, Slots<br />
+&mdash;&nbsp; Improves DX by elegantly dealing with <code>.value</code><br />
+&mdash;&nbsp; Allows for Fully Extensible Component Architecture<br />
 &mdash;&nbsp; Extends Vue 3 TypeScript Capability<br />
 &mdash;&nbsp; Zero dependencies except Vue 3<br />
 </div>
+
+
+
+## Philosophy
+<center>
+Perfection is achieved, not when there is nothing more to add, <br />
+but when there is nothing left to take away.  
+
+<div style="padding-top: 5px; color:#888; font-size: 90%;">― Antoine de Saint-Exupéry</div>
+</center>
 
 ## Next Step
 

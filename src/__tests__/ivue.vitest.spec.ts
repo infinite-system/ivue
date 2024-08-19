@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PropType, isReactive, ref } from 'vue';
+import { PropType, isReactive } from 'vue';
 
 import {
   ExtractPropDefaultTypes,
@@ -7,15 +7,16 @@ import {
   getAllClassProperties,
   isClass,
   ivue,
+  iref,
   propsWithDefaults,
 } from '../ivue';
 
 class Basic {
-  id = ref('id') as unknown as string;
+  id = iref('id');
 }
 
 class Bit {
-  _testProperty = ref('test-value') as unknown as string;
+  _testProperty = iref('test-value');
   /** Setter without a getter. */
   set testProperty(value: string) {
     this._testProperty = value;
@@ -23,15 +24,15 @@ class Bit {
 }
 
 class Item extends Bit {
-  _width = ref(5) as unknown as number;
-  unit = ref('px') as unknown as string;
+  _width = iref(5);
+  unit = iref('px');
   get width(): string {
     return this._width + this.unit;
   }
   set width(value: number) {
     this._width = value;
   }
-  _height = ref(5) as unknown as number;
+  _height = iref(5);
   get height(): string {
     return this._height + this.unit;
   }
@@ -41,29 +42,29 @@ class Item extends Bit {
 }
 
 class ProductItem extends Item {
-  _productType = ref('generic') as unknown as string;
+  _productType = iref('generic');
   get productType() {
     return this._productType;
   }
   set productType(value) {
     this._productType = value;
   }
-  _productFit = ref('perfect-fit') as unknown as string;
+  _productFit = iref('perfect-fit');
   get productFit() {
     return this._productFit;
   }
-  _productId = ref(0) as unknown as number;
+  _productId = iref(0);
   set productId(value: number) {
     this._productId = 0;
   }
-  _productFeel = ref('sleek') as unknown as string;
+  _productFeel = iref('sleek');
   public get productFeel() {
     return this._productFeel;
   }
 }
 
 class StoreItem extends ProductItem {
-  _productType = ref('store') as unknown as string;
+  _productType = iref('store');
   get productType() {
     const prefix = super.productFeel ?? '';
     return (prefix ? prefix + ':' : '') + this._productType;
@@ -74,9 +75,9 @@ class StoreItem extends ProductItem {
 }
 
 class RetailStoreItem extends StoreItem {
-  _productType = ref('retail') as unknown as string;
+  _productType = iref('retail');
   /** Do not overwrite productType getter here, on purpose. */
-  productHistory = ref([]);
+  productHistory = iref([]);
   get testProperty() {
     return this._testProperty;
   }
@@ -89,9 +90,9 @@ let computedCalls = 0;
 let notComputedCalls = 0;
 
 class Entity {
-  _key = ref(0) as unknown as number;
-  height = ref(0) as unknown as number;
-  width = ref(0) as unknown as number;
+  _key = iref(0);
+  height = iref(0);
+  width = iref(0);
   constructor(height: number, width = 5) {
     this.height = height;
     this.width = width;
@@ -240,23 +241,23 @@ describe('ivue', () => {
       expect(item.width).toBe('10px');
     });
 
-    it('parent getters from the prototype chain are working', () => {
+    it('parent getters from the prototype ancestors chain are working', () => {
       const item = ivue(RetailStoreItem);
 
       expect(item.productType).toBe('sleek:retail');
     });
 
-    it('parent setters from the prototype chain are working', () => {
+    it('parent setters from the prototype ancestors chain are working', () => {
       const item = ivue(RetailStoreItem);
 
       expect(item.productType).toBe('sleek:retail');
       /** SET VIA SETTER */
-      // @ts-expect-error ivue supports setting set and get separately in different levels of class prototype chain
+      // @ts-expect-error ivue supports setting set and get separately in different levels of class prototype ancestors chain
       item.productType = 'new-retail';
       expect(item.productType).toBe('sleek:new-retail');
     });
 
-    it('parent setters that are set at different levels in the prototype chain work together in harmony', () => {
+    it('parent setters that are set at different levels in the prototype ancestors chain work together in harmony', () => {
       const item = ivue(RetailStoreItem);
       /**
        * Setter for product feel is set on @see {StoreItem} class,
@@ -273,7 +274,7 @@ describe('ivue', () => {
 
       expect(item._testProperty).toBe('test-value');
       /** SET VIA SETTER */
-      // @ts-expect-error ivue supports setting set and get separately in different levels of class prototype chain
+      // @ts-expect-error ivue supports setting set and get separately in different levels of class prototype ancestors chain
       item.testProperty = 'new-test-value';
       expect(item._testProperty).toBe('new-test-value');
     });

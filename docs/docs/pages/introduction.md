@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Button from '../components/Button.vue'
 </script>
-# What is Infinite Vue?
+# What is <span style="font-family: 'Public Sans'; ">ivue ∞ Infinite Vue</span>?
 
 ## The Problem
 
@@ -53,7 +53,7 @@ While procedural programming has its strength, it also comes with its own weakne
 
 ## Infinite Vue Class Achitecture
 
-`ivue` replicates native JavaScript / TypeScript class implementation by extending descriptors (getters and setters) up the whole prototype chain thus supporting classical inheritance.
+`ivue` replicates native JavaScript / TypeScript class implementation by extending descriptors (getters and setters) up the whole prototype ancestors chain thus supporting classical inheritance.
 
 By using TypeScript we are able to infer the arguments of the main `ivue()` initializer function and pass the arguments to the constructor.
 

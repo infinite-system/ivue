@@ -33,7 +33,7 @@ export type IVueRefs<T = any> = {
 };
 
 /**
- * Unwraps Refs Recursively, helps resolve fully the bare value types of any type T
+ * Unwraps Ref Recursively, helps resolve fully the bare value types of any type T
  * because sometimes the Refs are returned as they are with `.value` from computeds,
  * thus inferring nested ComputedRef<ComputedRef<ComputedRef<Ref>>> types, which
  * are difficult to fully resolve to bare values without this utility.
@@ -166,7 +166,7 @@ export type ValueOf<T extends Record<any, any>, K> = T[K];
 export const descriptorsMap = new Map();
 
 /**
- * Get descriptors of an entire class prototype chain as a Map.
+ * Get descriptors of an entire class prototype ancestors chain as a Map.
  * Completely emulates JavaScript class inheritance chain for getters and setters.
  *
  * @param className
@@ -201,7 +201,7 @@ export function getAllClassDescriptors(className: AnyClass): Descriptors {
         }
       }
     );
-    /** Walk up the prototype chain. */
+    /** Walk up the prototype ancestors chain. */
     prototype = Object.getPrototypeOf(prototype);
   }
 
@@ -283,7 +283,7 @@ export function ivue<T extends AnyClass>(
 export const propsMap: Map<object, Set<string> | any> = new Map();
 
 /**
- * Get properties of an entire class prototype chain as a Map.
+ * Get properties of an entire class prototype ancestors chain as a Map.
  */
 export function getAllClassProperties(obj: object): Set<string> {
   /* Retrieve props from cache */
@@ -314,28 +314,31 @@ export function getAllClassProperties(obj: object): Set<string> {
 /**
  * `iref()` is an alias for Vue ref() function but returns an unwrapped type without the .value
  * `iref()` does not alter the behavior of ref(), but simply transforms the type to an unwrapped raw value.
- * @param val
- * @returns
+ * @param val T
+ * @returns {UnwrapRef<T>}
  */
 export function iref<T>(val?: T): UnwrapRef<T> {
   return ref(val) as unknown as UnwrapRef<T>;
 }
 
 /**
- * `iuse()` converts the types of a Composable / Ref to pure raw type definition.
+ * Two modes of operation: 
+ * 1. `iuse()` converts the types of a Composable / Ref to pure raw type definition.
  * Returns for all properties of an object an unwrapped raw type definition, 
  * unwraps direct Refs & ComputedRefs as well.
  * 
- * If AnyClass is supplied into `iuse(AnyClass, ...args)`, and that class's ...args,
- * it returns a '.toRefs()` object for all properties but casts its own type as raw type.
+ * 2. If AnyClass is supplied into `iuse(AnyClass, ...args)` and that class's ...args,
+ * it returns a 'ivue(AnyClass, ...args).toRefs()` object for all properties but casts 
+ * their types as raw (no-Ref) types to fit with reactive() structure of the 
+ * ivue wrapper class context.
  */
 export function iuse<T extends AnyClass | Object>(
   val?: T,
   ...args: InferredArgs<T>
-): T extends AnyClass ? IVue<T> : UnwrapComposableReturn<T> {
+): T extends AnyClass ? InstanceType<T> : UnwrapComposableReturn<T> {
   return isClass(val)
     ? ivue(
-        val as T extends AnyClass ? T : never,
+        val as T extends AnyClass ? T : any,
         ...(args as InferredArgs<T>)
       ).toRefs()
     : (val as unknown as UnwrapComposableReturn<T>);
