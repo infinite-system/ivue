@@ -249,6 +249,30 @@ See the highlighted sections related to destructuring composable usage.
 
 <CounterComposablesDestructuring />
 
+### Using `ivue` Composables With Destructuring
+
+See the highlighted sections related to using `ivue` based composables.
+
+::: code-group
+<<< @/components/usage/CounterComposablesIvueDestructuring.vue{14 vue:line-numbers}
+<<< @/components/usage/classes/CustomMouse.ts{ts:line-numbers} [classes/CustomMouse.ts]
+:::
+
+:::details For this example we initialize the component like this:
+
+```vue
+<template>
+  <CounterComposablesIvueDestructuring />
+</template>
+```
+
+:::
+
+<div style="font-size: 18px; font-weight: 500;">Result</div>
+
+<CounterComposablesIvueDestructuring />
+
+
 ## Using Inside Composables
 
 See the highlighted sections related to using `ivue` inside a composable.
@@ -270,28 +294,6 @@ See the highlighted sections related to using `ivue` inside a composable.
 <div style="font-size: 18px; font-weight: 500;">Result</div>
 
 <CounterInsideComposables />
-
-## Using `ivue` Composables
-
-See the highlighted sections related to using `ivue` based composables.
-
-::: code-group
-<<< @/components/usage/CounterComposablesIvueDestructuring.vue{14 vue:line-numbers}
-:::
-
-:::details For this example we initialize the component like this:
-
-```vue
-<template>
-  <CounterComposablesIvueDestructuring />
-</template>
-```
-
-:::
-
-<div style="font-size: 18px; font-weight: 500;">Result</div>
-
-<CounterComposablesIvueDestructuring />
 
 ## Using Computeds
 

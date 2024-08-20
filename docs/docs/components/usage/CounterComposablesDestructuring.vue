@@ -7,7 +7,7 @@ import { ivue, iuse, iref, type UseComposable } from 'ivue';
  * Use the ivue Utility Type: UseComposable<typeof YourComposableFunctionName>
  * to get he resulting unwrapped composable properties and functions.
  */
-type UseMouse = UseComposable<typeof useCustomMouse>;
+type UseCustomMouse = UseComposable<typeof useCustomMouse>;
 
 class Counter {
   count = iref(0);
@@ -16,12 +16,17 @@ class Counter {
     this.count++;
   }
 
-  // x, y are Refs that will be unwrapped and destructured into this class
-  x: UseMouse['x']; // Unwrapped Ref<number> becomes -> number
-  y: UseMouse['y']; // Unwrapped Ref<number> becomes -> number
+  /**
+   * 'x', 'y', 'sum', 'total' are Refs that will be unwrapped to their bare raw types and destructured into the class.
+   * Even though unwrapped (de-Refed), they will maintain their behavior as Refs and thus will maintain reactivity 
+   * and at the same time get destructured into this class root level scope because 
+   * Vue 3's `reactive()` Proxy will be able to resolve those Refs internally.
+   */
+  x: UseCustomMouse['x']; // Unwrapped Ref<number> becomes -> number
+  y: UseCustomMouse['y']; // Unwrapped Ref<number> becomes -> number
   
-  sum: UseMouse['sum']; // 'sum' method that will be destructured into this class on construct()
-  total: UseMouse['total'];  // 'total' computed Ref that will also be destructured into this class on construct()
+  sum: UseCustomMouse['sum']; // 'sum' method that will be destructured into this class on construct()
+  total: UseCustomMouse['total'];  // 'total' computed Ref that will also be destructured into this class on construct()
 
   constructor() {
     ({
@@ -29,7 +34,7 @@ class Counter {
       y: this.y,
       sum: this.sum,
       total: this.total
-    } = iuse(useCustomMouse()));
+    } = iuse(useCustomMouse(5)));
   }
 }
 

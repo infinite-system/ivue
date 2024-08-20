@@ -1,18 +1,23 @@
 import { useMouse } from '@vueuse/core';
-import { iuse,  type UseComposable } from 'ivue';
+import { iref, iuse, type UseComposable } from 'ivue';
 
-type UseMouse = UseComposable<typeof useMouse>
+type UseMouse = UseComposable<typeof useMouse>;
 
 export class CustomMouse {
-  
   x: UseMouse['x'];
   y: UseMouse['y'];
 
-  constructor(public test: number) {
-    ({ x: this.x, y: this.y } = iuse(useMouse()))
+  _sum = iref(0);
+
+  constructor(public requiredProp: number) {
+    ({ x: this.x, y: this.y } = iuse(useMouse()));
   }
-  
+
+  sum() {
+    this._sum = this.x + this.y + this.requiredProp;
+  }
+
   get total() {
-    return this.x + this.y;
+    return this._sum;
   }
 }

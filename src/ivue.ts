@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ComputedRef, ExtractPropTypes, Ref, ToRef } from 'vue';
-import { UnwrapRef, computed, reactive, ref, toRef } from 'vue';
+import { computed, reactive, ref, toRef } from 'vue';
 import type { Ref as DemiRef } from 'vue-demi';
 
 /** Types */
@@ -44,7 +44,7 @@ export type UnwrapRefRecursively<T = any> = T extends Ref | DemiRef
   : T;
 
 /**
- * Helper type for UseComposable.
+ * Helper type for UseComposable, unwraps any type of Vue 3 composable down to its bare types.
  */
 export type UnwrapComposableReturn<T> = T extends Ref | DemiRef
   ? UnwrapRefRecursively<T>
@@ -57,8 +57,9 @@ export type UnwrapComposableReturn<T> = T extends Ref | DemiRef
 /**
  * Fully unwraps to bare value types any Vue 3 composable return definition type.
  */
-export type UseComposable<T extends (...args: any[]) => any> =
-  UnwrapComposableReturn<ReturnType<T>>;
+export type UseComposable<T extends AnyFn> = UnwrapComposableReturn<
+  ReturnType<T>
+>;
 
 /**
  * Extracts object defined emit types by converting them to a plain interface
@@ -86,17 +87,22 @@ export type ExtendSlots<T> = PrefixKeys<T, 'before--'> &
 
 /** Helper Types. */
 /**
+ * Any JavaScript function of any type.
+ */
+export type AnyFn = (...args: any[]) => any;
+
+/**
  * Any JavaScript class of any type.
  */
 export type AnyClass = abstract new (...args: any[]) => any;
 
 /**
- * Descriptors map.
+ * Descriptors map type.
  */
 export type Descriptors = Map<string, PropertyDescriptor>;
 
 /**
- * Computeds hash map.
+ * Computeds hash map type.
  */
 export type Computeds = Record<string, ComputedRef>;
 
@@ -134,10 +140,7 @@ export type IFnParameter<
 /**
  * Get function arguments Parmeters<F> parameter by key K
  */
-export type FnParameter<
-  F extends (...args: any[]) => any,
-  K extends number
-> = Parameters<F>[K];
+export type FnParameter<F extends AnyFn, K extends number> = Parameters<F>[K];
 
 /**
  * Convert Union Type to Intersection Type.
@@ -317,31 +320,45 @@ export function getAllClassProperties(obj: object): Set<string> {
  * @param val T
  * @returns {UnwrapRef<T>}
  */
-export function iref<T>(val?: T): UnwrapRef<T> {
-  return ref(val) as unknown as UnwrapRef<T>;
-}
+export const iref = ref as <T = any>(value?: T) => T;
 
 /**
- * Two modes of operation: 
- * 1. `iuse()` converts the types of a Composable / Ref to pure raw type definition.
- * Returns for all properties of an object an unwrapped raw type definition, 
- * unwraps direct Refs & ComputedRefs as well.
- * 
- * 2. If AnyClass is supplied into `iuse(AnyClass, ...args)` and that class's ...args,
- * it returns a 'ivue(AnyClass, ...args).toRefs()` object for all properties but casts 
- * their types as raw (no-Ref) types to fit with reactive() structure of the 
- * ivue wrapper class context.
+ * Three modes of operation:
+ * 1. `iuse(useComposable(arg, arg2, arg3, ...))` converts the return types of a Composable / Ref to pure raw type definition.
+ * Returns for all properties of an object an unwrapped raw type definition,
+ * unwraps direct Refs & ComputedRefs as well down to their raw types.
+ *
+ * 2. `iuse(useComposable, arg, arg2, arg3, ...)` for cleaner syntax for #1, it does exactly the same thing but
+ * here the TypeScript inference works for composable function arguments to assist you with intellisence,
+ * like they work for constructor arguments in the cause of `ivue()` core function,
+ * making the API cleaner to look at and make it compatible with how this function operates with classes, see #3.
+ *
+ * 3. `iuse(AnyClass, ...args)` If AnyClass is supplied and that class's arguments into `iuse(AnyClass, ...args)`,
+ * it returns an 'ivue(AnyClass, ...args).toRefs()` object for all properties but casts
+ * their types as raw (no-Ref) types to fit with reactive() structure of the ivue class context.
  */
-export function iuse<T extends AnyClass | Object>(
-  val?: T,
-  ...args: InferredArgs<T>
-): T extends AnyClass ? InstanceType<T> : UnwrapComposableReturn<T> {
-  return isClass(val)
-    ? ivue(
-        val as T extends AnyClass ? T : any,
-        ...(args as InferredArgs<T>)
-      ).toRefs()
-    : (val as unknown as UnwrapComposableReturn<T>);
+export function iuse<T extends AnyClass | AnyFn | Object>(
+  classFunctionObject?: T,
+  ...args: T extends AnyClass
+    ? InferredArgs<T>
+    : T extends AnyFn
+    ? Parameters<T extends (...args: any[]) => any ? T : any>
+    : any
+): T extends AnyClass
+  ? InstanceType<T>
+  : T extends AnyFn
+  ? UseComposable<T>
+  : UnwrapComposableReturn<T> {
+  return typeof classFunctionObject === 'function'
+    ? isClass(classFunctionObject)
+      ? ivue(
+          classFunctionObject as T extends AnyClass ? T : any,
+          ...(args as InferredArgs<T extends AnyClass ? T : any>)
+        ).toRefs()
+      : (classFunctionObject as AnyFn)(
+          ...(args as Parameters<T extends AnyFn ? AnyFn : any>)
+        )
+    : (classFunctionObject as unknown as UnwrapComposableReturn<T>);
 }
 
 /**
@@ -352,7 +369,7 @@ export function iuse<T extends AnyClass | Object>(
  * @param computeds @see Computeds
  * @returns {ExtendWithToRefs<T>['toRefs']}
  */
-export function ivueToRefs<T extends AnyClass>(
+function ivueToRefs<T extends AnyClass>(
   vue: IVue<T>,
   descriptors: Descriptors,
   computeds: Computeds

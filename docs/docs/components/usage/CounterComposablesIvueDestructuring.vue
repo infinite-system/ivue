@@ -10,15 +10,23 @@ class Counter {
     this.count++;
   }
 
-  // x, y are Refs that will be unwrapped and destructured into this class
+
+  /**
+   * 'x', 'y', 'total' are Refs that will be unwrapped to their bare raw types and destructured into the class.
+   * Even though unwrapped (de-Refed), they will maintain their behavior as Refs and thus will maintain reactivity 
+   * and at the same time get destructured into this class root level scope because 
+   * Vue 3's `reactive()` Proxy will be able to resolve those Refs internally.
+   */
   x: CustomMouse['x']; // Unwrapped Ref<number> becomes -> number
   y: CustomMouse['y']; // Unwrapped Ref<number> becomes -> number
-  total: CustomMouse['total']; // Unwrapped Ref<number> becomes -> number
+  total: CustomMouse['total']; // Unwrapped ComputedRef<number> becomes -> number
+  sum: CustomMouse['sum']; // Function remains a function
 
   constructor() {
     ({
       x: this.x,
       y: this.y,
+      sum: this.sum,
       total: this.total,
     } = iuse(CustomMouse, 5));
   }
@@ -33,4 +41,5 @@ const counter = ivue(Counter);
   <br />
   Total (computed): {{ counter.total }}
   <br />
+  <button class="button" @click="() => counter.sum()">Click This Big Sum Button To Total X + Y</button>
 </template>
