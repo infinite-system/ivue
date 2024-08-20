@@ -34,7 +34,7 @@ class Counter {
       y: this.y,
       sum: this.sum,
       total: this.total
-    } = iuse(useCustomMouse(5)));
+    } = iuse(useCustomMouse, 5));
   }
 }
 

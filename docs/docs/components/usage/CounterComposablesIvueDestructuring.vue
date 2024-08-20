@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CustomMouse } from './classes/CustomMouse';
 
-import { ivue, iref, iuse } from 'ivue';
+import { ivue, iref } from '../../../../src/ivue';
 
 class Counter {
   count = iref(0);
@@ -10,11 +10,10 @@ class Counter {
     this.count++;
   }
 
-
   /**
    * 'x', 'y', 'total' are Refs that will be unwrapped to their bare raw types and destructured into the class.
-   * Even though unwrapped (de-Refed), they will maintain their behavior as Refs and thus will maintain reactivity 
-   * and at the same time get destructured into this class root level scope because 
+   * Even though unwrapped (de-Refed), they will maintain their behavior as Refs and thus will maintain reactivity
+   * and at the same time get destructured into this class root level scope because
    * Vue 3's `reactive()` Proxy will be able to resolve those Refs internally.
    */
   x: CustomMouse['x']; // Unwrapped Ref<number> becomes -> number
@@ -28,7 +27,7 @@ class Counter {
       y: this.y,
       sum: this.sum,
       total: this.total,
-    } = iuse(CustomMouse, 5));
+    } = ivue(CustomMouse, 5).toRefs(true));
   }
 }
 
@@ -41,5 +40,7 @@ const counter = ivue(Counter);
   <br />
   Total (computed): {{ counter.total }}
   <br />
-  <button class="button" @click="() => counter.sum()">Click This Big Sum Button To Total X + Y</button>
+  <button class="button" @click="() => counter.sum()">
+    Click This Big Sum Button To Total X + Y
+  </button>
 </template>

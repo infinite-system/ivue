@@ -7,8 +7,8 @@ class Counter {
   increment() {
     this.count++;
   }
-  mouse = iuse(useMouse());
-  pointer = iuse(usePointer());
+  mouse = iuse(useMouse);
+  pointer = iuse(usePointer);
 }
 
 const counter = ivue(Counter);

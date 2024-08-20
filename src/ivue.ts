@@ -18,11 +18,20 @@ export interface ExtendWithToRefs<T extends AnyClass> {
 }
 
 /**
- * .toRefs() method type definition converts reactive class properties to composable .value properties.
+ * Type definition for `.toRefs()` method converts reactive class properties to composable .value properties.
+ * But if unwrap = true is specified, the refs will be unwrapped refs available to be merged with the the root class properties.
  */
-export type IVueToRefsFn<T extends AnyClass> = (
-  props?: (keyof InstanceType<T>)[]
-) => IVueRefs<InstanceType<T>>;
+export interface IVueToRefsFn<T extends AnyClass> {
+  <P extends keyof InstanceType<T>, B extends boolean>(
+    props: P[],
+    unwrap?: B
+  ): B extends true
+    ? Pick<InstanceType<T>, P>
+    : Pick<IVueRefs<InstanceType<T>>, P>;
+  (props: true): InstanceType<T>;
+  (props: false): IVueRefs<InstanceType<T>>;
+  (): IVueRefs<InstanceType<T>>;
+}
 
 /**
  * Converts a class properties to a composable .value Refs using ToRef vue type,
@@ -315,8 +324,8 @@ export function getAllClassProperties(obj: object): Set<string> {
 }
 
 /**
- * `iref()` is an alias for Vue ref() function but returns an unwrapped type without the .value
- * `iref()` does not alter the behavior of ref(), but simply transforms the type to an unwrapped raw value.
+ * `iref()` is an alias for Vue ref() function but returns an unwrap type without the .value
+ * `iref()` does not alter the behavior of ref(), but simply transforms the type to an unwrap raw value.
  * @param val T
  * @returns {UnwrapRef<T>}
  */
@@ -325,7 +334,7 @@ export const iref = ref as <T = any>(value?: T) => T;
 /**
  * Three modes of operation:
  * 1. `iuse(useComposable(arg, arg2, arg3, ...))` converts the return types of a Composable / Ref to pure raw type definition.
- * Returns for all properties of an object an unwrapped raw type definition,
+ * Returns for all properties of an object an unwrap raw type definition,
  * unwraps direct Refs & ComputedRefs as well down to their raw types.
  *
  * 2. `iuse(useComposable, arg, arg2, arg3, ...)` for cleaner syntax for #1, it does exactly the same thing but
@@ -337,7 +346,7 @@ export const iref = ref as <T = any>(value?: T) => T;
  * it returns an 'ivue(AnyClass, ...args).toRefs()` object for all properties but casts
  * their types as raw (no-Ref) types to fit with reactive() structure of the ivue class context.
  */
-export function iuse<T extends AnyClass | AnyFn | Object>(
+export function iuse<T extends AnyClass | AnyFn | Object | any>(
   classFunctionObject?: T,
   ...args: T extends AnyClass
     ? InferredArgs<T>
@@ -375,13 +384,14 @@ function ivueToRefs<T extends AnyClass>(
   computeds: Computeds
 ): ExtendWithToRefs<T>['toRefs'] {
   return function (
-    props?: (keyof InstanceType<T>)[]
-  ): IVueRefs<InstanceType<T>> {
+    props?: (keyof InstanceType<T>)[] | boolean,
+    unwrap?: boolean
+  ): any /** @see {ReturnType<IVueToRefsFn<T>>} */ {
     /** Resulting refs store. */
     const result: Record<string | number | symbol, any> = {};
 
     /** Output specific props only, if props are specified. */
-    if (Array.isArray(props) && props.length) {
+    if (Array.isArray(props)) {
       for (let i = 0; i < props.length; i++) {
         const prop = props[i] as any;
         /** Handle descriptors. */
@@ -442,7 +452,7 @@ function ivueToRefs<T extends AnyClass>(
       allProps = null;
     }
 
-    return result as IVueRefs<InstanceType<T>>;
+    return result as any;
   };
 }
 

@@ -10,7 +10,7 @@ export class CustomMouse {
   _sum = iref(0);
 
   constructor(public requiredProp: number) {
-    ({ x: this.x, y: this.y } = iuse(useMouse()));
+    ({ x: this.x, y: this.y } = iuse(useMouse));
   }
 
   sum() {

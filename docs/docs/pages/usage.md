@@ -11,6 +11,7 @@ import CounterInternalRefs from '../components/usage/CounterInternalRefs.vue'
 import CounterComposables from '../components/usage/CounterComposables.vue'
 import CounterComposablesDestructuring from '../components/usage/CounterComposablesDestructuring.vue'
 import CounterComposablesIvueDestructuring from '../components/usage/CounterComposablesIvueDestructuring.vue'
+import CounterComposablesIvue from '../components/usage/CounterComposablesIvue.vue'
 import CounterInsideComposables from '../components/usage/CounterInsideComposables.vue'
 import CounterComputeds from '../components/usage/CounterComputeds.vue'
 import CounterComputedsDisabled from '../components/usage/CounterComputedsDisabled.vue'
@@ -69,7 +70,7 @@ Classic Counter example built with `ivue`
 
 See the highlighted sections related to props.
 ::: code-group
-<<< @/components/usage/CounterWithProps.vue{5-8,11-12,24 vue:line-numbers}
+<<< @/components/usage/CounterWithProps.vue{vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -91,7 +92,7 @@ See the highlighted sections related to props.
 See the highlighted sections related to using emits.
 
 ::: code-group
-<<< @/components/usage/CounterWithPropsAndEmits.vue{9-11,14,17,23,31 vue:line-numbers}
+<<< @/components/usage/CounterWithPropsAndEmits.vue{vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -118,7 +119,7 @@ function onIncrement(value: number) {
 ### Refs defined externally in the component outside of the class.
 
 ::: code-group
-<<< @/components/usage/CounterExternalRefs.vue{5,8,12,16,24 vue:line-numbers}
+<<< @/components/usage/CounterExternalRefs.vue{vue:line-numbers}
 :::
 :::details For this example we initialize the component like this:
 
@@ -137,7 +138,7 @@ function onIncrement(value: number) {
 ### Refs defined internally inside of the class.
 
 ::: code-group
-<<< @/components/usage/CounterInternalRefs.vue{7,15,25 vue:line-numbers}
+<<< @/components/usage/CounterInternalRefs.vue{vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -160,7 +161,7 @@ function onIncrement(value: number) {
 See the highlighted sections related to `defineExpose`.
 
 ::: code-group
-<<< @/components/usage/CounterDefineExpose.vue{8 vue:line-numbers}
+<<< @/components/usage/CounterDefineExpose.vue{vue:line-numbers}
 <<< @/components/usage/CounterDefineExposeClass.ts{ts:line-numbers}
 :::
 
@@ -200,7 +201,7 @@ function decrement() {
 ### Pick allowed interface properties for `defineExpose()`
 
 ::: code-group
-<<< @/components/usage/CounterDefineExposeAdvanced.vue{9,23 vue:line-numbers}
+<<< @/components/usage/CounterDefineExposeAdvanced.vue{vue:line-numbers}
 :::
 
 ## Using Composables
@@ -209,7 +210,7 @@ function decrement() {
 
 See the highlighted sections related to composable usage.
 ::: code-group
-<<< @/components/usage/CounterComposables.vue{4,11,19 vue:line-numbers}
+<<< @/components/usage/CounterComposables.vue{vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -231,7 +232,7 @@ See the highlighted sections related to composable usage.
 See the highlighted sections related to destructuring composable usage.
 
 ::: code-group
-<<< @/components/usage/CounterComposablesDestructuring.vue{4,10,20-21,23-24,27-32 vue:line-numbers}
+<<< @/components/usage/CounterComposablesDestructuring.vue{vue:line-numbers}
 <<< @/components/usage/functions/useCustomMouse.ts{ts:line-numbers} [functions/useCustomMouse.ts]
 :::
 
@@ -249,12 +250,36 @@ See the highlighted sections related to destructuring composable usage.
 
 <CounterComposablesDestructuring />
 
-### Using `ivue` Composables With Destructuring
 
-See the highlighted sections related to using `ivue` based composables.
+### Using `ivue` Composables Directly
+
+Using `ivue` based composables assigned to a class property:
 
 ::: code-group
-<<< @/components/usage/CounterComposablesIvueDestructuring.vue{14 vue:line-numbers}
+<<< @/components/usage/CounterComposablesIvue.vue{vue:line-numbers}
+<<< @/components/usage/classes/CustomMouse.ts{ts:line-numbers} [classes/CustomMouse.ts]
+:::
+
+:::details For this example we initialize the component like this:
+
+```vue
+<template>
+  <CounterComposablesIvue />
+</template>
+```
+
+:::
+
+<div style="font-size: 18px; font-weight: 500;">Result</div>
+
+<CounterComposablesIvue />
+
+### Using `ivue` Composables With Destructuring
+
+See the sections related to using `ivue` based composables initialized through class destructuring assignment.
+
+::: code-group
+<<< @/components/usage/CounterComposablesIvueDestructuring.vue{vue:line-numbers}
 <<< @/components/usage/classes/CustomMouse.ts{ts:line-numbers} [classes/CustomMouse.ts]
 :::
 
@@ -278,7 +303,7 @@ See the highlighted sections related to using `ivue` based composables.
 See the highlighted sections related to using `ivue` inside a composable.
 
 ::: code-group
-<<< @/components/usage/CounterInsideComposables.vue{14 vue:line-numbers}
+<<< @/components/usage/CounterInsideComposables.vue{vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -301,7 +326,7 @@ See the highlighted sections related to using `ivue` inside a composable.
 See the highlighted sections related to getters.
 
 ::: code-group
-<<< @/components/usage/CounterComputeds.vue{10,13,23,24 vue:line-numbers}
+<<< @/components/usage/CounterComputeds.vue{vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -319,7 +344,7 @@ See the highlighted sections related to getters.
 You can disable computed getters via `static ivue = { getter: false }`, see below:
 
 ::: code-group
-<<< @/components/usage/CounterComputedsDisabled.vue{10-12 vue:line-numbers}
+<<< @/components/usage/CounterComputedsDisabled.vue{vue:line-numbers}
 :::
 
 The result of this example is identical to the above.
