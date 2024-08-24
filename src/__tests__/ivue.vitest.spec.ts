@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PropType, isReactive } from 'vue';
+import { PropType, isReactive, ref } from 'vue';
 
 import {
   ExtractPropDefaultTypes,
@@ -9,6 +9,7 @@ import {
   ivue,
   iref,
   propsWithDefaults,
+  iuse,
 } from '../ivue';
 
 class Basic {
@@ -431,6 +432,58 @@ describe('ivue', () => {
       expect(notComputedCalls).toBe(3); // Always incrementing
     });
   });
+  describe('core functions', () => {
+    let useComposable = () => {
+      return {
+        x: ref(0),
+        y: ref(0)
+      }
+    }
+    it('iref returns standard ref with .value but unwraps type', () => {
+      const bool = iref(true);
+      const str = iref('string');
+
+      // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
+      expect(bool.value).toBe(true);
+      // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
+      expect(str.value).toBe('string');
+    });
+
+    it('iuse(Object) returns standard ref with .value but unwraps type', () => {
+      const iuseComposable = iuse(useComposable());
+
+      // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
+      expect(iuseComposable.x.value).toBe(0)
+      // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
+      expect(iuseComposable.y.value).toBe(0);
+    });
+
+    it('iuse(Class, ...ClassProps) returns standard ref with .value but unwraps type', () => {
+      const iuseComposable = iuse(Item);
+      // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
+      expect(iuseComposable._width.value).toBe(5)
+      // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
+      expect(iuseComposable.unit.value).toBe('px');
+
+      const iuseComposable2 = iuse(Entity, 100);
+      // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
+      expect(iuseComposable2.height.value).toBe(100)
+      // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
+      expect(iuseComposable2.width.value).toBe(5);
+    });
+
+    it('iuse(Function, ...FunctionProps) returns standard ref with .value but unwraps type', () => {
+      
+      
+      const iuseComposable = iuse(useComposable);
+
+      // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
+      expect(iuseComposable.x.value).toBe(0)
+      // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
+      expect(iuseComposable.y.value).toBe(0);
+    });
+  });
+  
 
   describe('util functions', () => {
     it('isClass correctly determines if a value is a class', () => {
@@ -474,7 +527,8 @@ describe('ivue', () => {
         updatePath: '', // String
         updateEntity: false, // Boolean
         updateFieldsTemplate: [], // Array
-        updateFieldsParams: { // Object
+        updateFieldsParams: {
+          // Object
           active: true,
         },
         updateLabel: 'Update Item', // String
@@ -496,23 +550,23 @@ describe('ivue', () => {
       expect(_propsWithDefaults.updateFieldsTemplate.default).toBeTypeOf(
         'function'
       );
-      expect( 
+      expect(
         Array.isArray(
           (_propsWithDefaults.updateFieldsTemplate.default as () => any)()
         )
       ).toBe(true);
-      
+
       // Object
-      expect( 
+      expect(
         (_propsWithDefaults.updateFieldsParams.default as () => any)().active
       ).toBe(true);
-      
+
       // Class
       expect(_propsWithDefaults.runner.default).toBeTypeOf('function');
       expect(isClass((_propsWithDefaults.runner.default as () => any)())).toBe(
         true
       );
-      
+
       // Function
       expect(_propsWithDefaults.fn.default).toBeTypeOf('function');
       expect(isClass((_propsWithDefaults.fn.default as () => any)())).toBe(

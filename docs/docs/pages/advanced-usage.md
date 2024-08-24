@@ -9,3 +9,4 @@
 ## Extend Slots
 ## Extend Classes
 ## Extend Components
+## Convert Legacy Classes to Reactive Classes with `ivue` {#legacy-to-reactive}

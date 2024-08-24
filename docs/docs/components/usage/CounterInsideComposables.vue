@@ -21,6 +21,8 @@ function useCounter() {
 const { count, increment } = useCounter();
 </script>
 <template>
-  <a href="javascript:void(0)" @click="increment">Increment</a>
+  <a href="javascript:void(0)" @click="increment">
+    Increment
+  </a>
   Count: {{ count }} <br />
 </template>

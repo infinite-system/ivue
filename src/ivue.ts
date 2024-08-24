@@ -19,15 +19,21 @@ export interface ExtendWithToRefs<T extends AnyClass> {
 
 /**
  * Type definition for `.toRefs()` method converts reactive class properties to composable .value properties.
- * But if unwrap = true is specified, the refs will be unwrapped refs available to be merged with the the root class properties.
+ * But if props = true OR unwrap = true is specified, the refs will be unwrapped refs to be able to be merged with the the root class properties without losing reactivity.
  */
 export interface IVueToRefsFn<T extends AnyClass> {
-  <P extends keyof InstanceType<T>, B extends boolean>(
+  <P extends keyof InstanceType<T>>(props: P[]): Pick<
+    IVueRefs<InstanceType<T>>,
+    P
+  >;
+  <P extends keyof InstanceType<T>>(props: P[], unwrap: false): Pick<
+    IVueRefs<InstanceType<T>>,
+    P
+  >;
+  <P extends keyof InstanceType<T>>(
     props: P[],
-    unwrap?: B
-  ): B extends true
-    ? Pick<InstanceType<T>, P>
-    : Pick<IVueRefs<InstanceType<T>>, P>;
+    unwrap: true
+  ): Pick<InstanceType<T>, P>;
   (props: true): InstanceType<T>;
   (props: false): IVueRefs<InstanceType<T>>;
   (): IVueRefs<InstanceType<T>>;
@@ -53,9 +59,9 @@ export type UnwrapRefRecursively<T = any> = T extends Ref | DemiRef
   : T;
 
 /**
- * Helper type for UseComposable, unwraps any type of Vue 3 composable down to its bare types.
+ * Helper type for Use type, unwraps any type of Vue 3 composable down to its bare types.
  */
-export type UnwrapComposableReturn<T> = T extends Ref | DemiRef
+export type Unwrap<T> = T extends Ref | DemiRef
   ? UnwrapRefRecursively<T>
   : {
       [K in keyof T]: T[K] extends Ref | DemiRef
@@ -66,9 +72,7 @@ export type UnwrapComposableReturn<T> = T extends Ref | DemiRef
 /**
  * Fully unwraps to bare value types any Vue 3 composable return definition type.
  */
-export type UseComposable<T extends AnyFn> = UnwrapComposableReturn<
-  ReturnType<T>
->;
+export type Use<T = any> = Unwrap<T extends AnyFn ? ReturnType<T> : T>;
 
 /**
  * Extracts object defined emit types by converting them to a plain interface
@@ -324,17 +328,17 @@ export function getAllClassProperties(obj: object): Set<string> {
 }
 
 /**
- * `iref()` is an alias for Vue ref() function but returns an unwrap type without the .value
- * `iref()` does not alter the behavior of ref(), but simply transforms the type to an unwrap raw value.
+ * `iref()` is an alias for Vue ref() function but returns an unwrapped type without the .value
+ * `iref()` does not alter the behavior of ref(), but simply transforms the type to an unwrapped raw value.
  * @param val T
- * @returns {UnwrapRef<T>}
+ * @returns {T}
  */
 export const iref = ref as <T = any>(value?: T) => T;
 
 /**
  * Three modes of operation:
- * 1. `iuse(useComposable(arg, arg2, arg3, ...))` converts the return types of a Composable / Ref to pure raw type definition.
- * Returns for all properties of an object an unwrap raw type definition,
+ * 1. `iuse(useComposable(arg, arg2, arg3, ...))` converts the return types of a Composable / Ref to pure raw unwrapped type definition.
+ * Returns for all properties of an object an unwrapped raw type definition,
  * unwraps direct Refs & ComputedRefs as well down to their raw types.
  *
  * 2. `iuse(useComposable, arg, arg2, arg3, ...)` for cleaner syntax for #1, it does exactly the same thing but
@@ -353,21 +357,19 @@ export function iuse<T extends AnyClass | AnyFn | Object | any>(
     : T extends AnyFn
     ? Parameters<T extends (...args: any[]) => any ? T : any>
     : any
-): T extends AnyClass
-  ? InstanceType<T>
-  : T extends AnyFn
-  ? UseComposable<T>
-  : UnwrapComposableReturn<T> {
+): T extends AnyClass ? InstanceType<T> : Use<T> {
   return typeof classFunctionObject === 'function'
     ? isClass(classFunctionObject)
-      ? ivue(
+      ? /** Run IVUE but return full Refs, yet property 'true' makes `.toRefs(true)` cast the type to the unwrapped raw type definition instead of a `.value` Ref. */
+        ivue(
           classFunctionObject as T extends AnyClass ? T : any,
           ...(args as InferredArgs<T extends AnyClass ? T : any>)
-        ).toRefs()
-      : (classFunctionObject as AnyFn)(
+        ).toRefs(true)
+      : /** Run Vue 3 Standard Composable but also unwrap it to bare raw types. */
+        (classFunctionObject as AnyFn)(
           ...(args as Parameters<T extends AnyFn ? AnyFn : any>)
         )
-    : (classFunctionObject as unknown as UnwrapComposableReturn<T>);
+    : (classFunctionObject as unknown as Unwrap<T>) /** Unwrap any other Object or any type down to its bare types. */;
 }
 
 /**
@@ -385,7 +387,7 @@ function ivueToRefs<T extends AnyClass>(
 ): ExtendWithToRefs<T>['toRefs'] {
   return function (
     props?: (keyof InstanceType<T>)[] | boolean,
-    unwrap?: boolean
+    unwrap?: boolean /** This property helps with TypeScript function definition overloading of return types and is not being used inside the function itself. */
   ): any /** @see {ReturnType<IVueToRefsFn<T>>} */ {
     /** Resulting refs store. */
     const result: Record<string | number | symbol, any> = {};

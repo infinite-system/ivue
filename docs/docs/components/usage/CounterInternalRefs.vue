@@ -19,7 +19,9 @@ const { span } = counter.toRefs(['span']);
  */
 </script>
 <template>
-  <a href="javascript:void(0)" @click="() => counter.increment()">Increment</a>
+  <a href="javascript:void(0)" @click="() => counter.increment()">
+    Increment
+  </a>
   Count: {{ counter.count }}
   <span ref="span"></span>
 </template>

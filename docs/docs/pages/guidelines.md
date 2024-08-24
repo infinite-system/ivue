@@ -7,7 +7,7 @@
 ## Dos and Don'ts
 
 ```ts
-type UseMouse = UseComposable<typeof useMouse>;
+type UseMouse = Use<typeof useMouse>;
 /**
  * Example of a properly defined ivue class.
  */
@@ -23,7 +23,7 @@ class Counter {
 
   constructor(public props: CounterProps, public emit: CounterEmit) {
     /** ✓ Properly declared auto-unwrapped composable. */ 
-    this.mouse = iuse(useMouse()); 
+    this.mouse = iuse(useMouse); 
   }
 
   /** ✓ Properly declared init function. */
@@ -97,22 +97,22 @@ Next, we convert the types back to their normal types as if they have no reactiv
 Arrow functions break full extensibility of classes because they carry their own context at the point of declaration, so avoid using them inside of `ivue` classes.
 :::
 
-## constructor() vs .init()
+## `.constructor()` vs `.init()`
 
-#### Use `constructor()` to assign properties of the class and cast Refs to Unwrapped bare types. <br />
+#### Use `.constructor()` to assign properties of the class and cast Refs to Unwrapped bare types. <br />
 
 #### Use `.init()` to declare reactive state functions like `watch`, `watchEffect`, and lifecycle hooks like `onMounted`, `onBeforeMount` etc, do assignments of reactive properties, since `.init()` already has access to `reactive()` state through `this`.<br />
 
 <hr />
 
-Inside the `constructor()` method you still have access to non-reactive state, because when `constructor()` is initialized, it does NOT yet have access to the reactive properties of the class, since it was not yet converted to `reactive()` by `ivue`, so if you use the properties like Refs or ComputedRefs inside `constructor()` you would have to use them with the `.value`.
+Inside the `.constructor()` method you still have access to non-reactive state, because when `.constructor()` is initialized, it does NOT yet have access to the reactive properties of the class, since it was not yet converted to `reactive()` by `ivue`, so if you use the properties like Refs or ComputedRefs inside `.constructor()` you would have to use them with the `.value`.
 
-As a general rule, there is no need to manipulate the values in the `constructor()`, use constructor only for assigning the properties and casting the types of those assigned properties to the unwrapped (de-Refed) final state of the resulting `reactive()` object.
+As a general rule, there is no need to manipulate the values in the `.constructor()`, use constructor only for assigning the properties and casting the types of those assigned properties to the unwrapped (de-Refed) final state of the resulting `reactive()` object.
 
-**Let's look at a `constructor()` vs `.init()` example:**
+**Let's look at a `.constructor()` vs `.init()` example:**
 
 ::: code-group
-<<< @/components/guidelines/CounterExternalRefsDetailed.vue{5,9-13,16-20,29,32,40 vue:line-numbers}
+<<< @/components/guidelines/CounterExternalRefsDetailed.vue{vue:line-numbers}
 :::
 :::details For this example we initialize the component like this:
 
@@ -132,7 +132,7 @@ As a general rule, there is no need to manipulate the values in the `constructor
 
 The key to working with `ivue` is understanding correctly the way Vue 3 does automatic Unwrapping of Refs when they are passed into the `reactive()` object. In that regard we are not relying on some magic `ivue` behavior but rather the default behavior of `reactive()` Vue 3 function.
 
-To match that unwrapping behavior, our class needs to Unwrap (or de-Ref) the types of Composables, Refs, ComputedRefs, if they are being passed into the constructor, to get their raw basic types those Refs are pointing to, so that you can start operating in the `ivue` environment, where there is no need to worry about `.value`. This unwrapping should be mainly done inside the `constructor()` method.
+To match that unwrapping behavior, our class needs to Unwrap (or de-Ref) the types of Composables, Refs, ComputedRefs, if they are being passed into the constructor, to get their raw basic types those Refs are pointing to, so that you can start operating in the `ivue` environment, where there is no need to worry about `.value`. This unwrapping should be mainly done inside the `.constructor()` method.
 
 ## Naming Conventions
 

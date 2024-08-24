@@ -1,7 +1,7 @@
 import { useMouse } from '@vueuse/core';
-import { iref, iuse, type UseComposable } from 'ivue';
+import { iref, iuse, type Use } from 'ivue';
 
-type UseMouse = UseComposable<typeof useMouse>;
+type UseMouse = Use<typeof useMouse>;
 
 export class CustomMouse {
   x: UseMouse['x'];

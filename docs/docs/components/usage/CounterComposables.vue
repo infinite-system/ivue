@@ -14,13 +14,15 @@ class Counter {
 const counter = ivue(Counter);
 </script>
 <template>
-  <a href="javascript:void(0)" @click="() => counter.increment()">Increment</a>
+  <a href="javascript:void(0)" @click="() => counter.increment()">
+    Increment
+  </a>
   Count: {{ counter.count }} <br />
   <br />
   Mouse: <br />
   X: {{ counter.mouse.x }} <br />
-  Y: {{ counter.mouse.y }} <br />  
-<br />
+  Y: {{ counter.mouse.y }} <br />
+  <br />
   Pointer: <br />
   X: {{ counter.pointer.x }} <br />
   Y: {{ counter.pointer.y }} <br />

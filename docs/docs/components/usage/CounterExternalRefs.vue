@@ -19,7 +19,9 @@ const counter = ivue(Counter, iuse(span));
 defineExpose<Counter>(counter);
 </script>
 <template>
-  <a href="javascript:void(0)" @click="() => counter.increment()">Increment</a>
-  Count: {{ counter.count }} 
+  <a href="javascript:void(0)" @click="() => counter.increment()">
+    Increment
+  </a>
+  Count: {{ counter.count }}
   <span ref="span"></span>
 </template>

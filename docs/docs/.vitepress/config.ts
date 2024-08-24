@@ -66,7 +66,7 @@ export default defineConfig({
             link: '/pages/guidelines#dos-and-don-ts',
           },
           {
-            text: 'constructor() vs .init()',
+            text: '.constructor() vs .init()',
             link: '/pages/guidelines#constructor-vs-init',
           },
           {
@@ -98,9 +98,12 @@ export default defineConfig({
             text: 'Extend Components',
             link: '/pages/advanced-usage#extend-components',
           },
+          {
+            text: 'Convert Legacy Classes to Reactive Classes with ivue',
+            link: '/pages/advanced-usage#legacy-to-reactive',
+          },
         ],
       },
-      { text: 'API' },
       {
         collapsed: false,
         text: 'Core Functions',
@@ -108,11 +111,29 @@ export default defineConfig({
           { text: 'ivue()', link: '/pages/api#ivue' },
           { text: 'iref()', link: '/pages/api#iref' },
           { text: 'iuse()', link: '/pages/api#iuse' },
+        ],
+      },
+      {
+        collapsed: false,
+        text: 'Core Methods',
+        items: [
+          { text: '.constructor()', link: '/pages/api#constructor' },
           { text: '.init()', link: '/pages/api#init' },
           { text: '.toRefs()', link: '/pages/api#torefs' },
         ],
       },
 
+      {
+        collapsed: false,
+        text: 'Core Types',
+        items: [
+          {
+            text: 'IVue',
+            link: '/pages/api#IVue',
+          },
+          { text: 'Use', link: '/pages/api#Use' },
+        ],
+      },
       {
         collapsed: false,
         text: 'Utility Functions',
@@ -131,10 +152,8 @@ export default defineConfig({
           },
           { text: 'ExtractEmitTypes', link: '/pages/api#extractemittypes' },
           { text: 'ExtendSlots', link: '/pages/api#extendslots' },
-          { text: 'UseComposable', link: '/pages/api#UseComposable' },
         ],
       },
-
       {
         collapsed: false,
         text: 'Source Code',

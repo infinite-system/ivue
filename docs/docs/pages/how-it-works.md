@@ -4,26 +4,6 @@ import CounterBasic from '../components/usage/CounterBasic.vue'
 
 # How it works?
 
-## What ivue is NOT?
-
-To understand how ivue works and how it does it, it is important to understand what it does not do.
-
-::: info `ivue` is different from other class based libraries
-&mdash; &nbsp;`ivue` does NOT inherit from a base Class.<br />
-&mdash; &nbsp;`ivue` does NOT use Decorators to achieve its objectives.<br />
-&mdash; &nbsp;`ivue` does NOT alter Vue 3 underlying behavior, but rather relies on it.<br />
-&mdash; &nbsp;`ivue` is NOT the same as Class Components (though you can build components with it).<br />
-&mdash; &nbsp;`ivue` aims to be opaque, by giving the developer the Class API reactivity system.<br />
-&mdash; &nbsp;`ivue` omits custom implementations of IOC Container, Decorators & Mixins, etc. by design.<br />
-&mdash; &nbsp;`ivue` enforces a sane default standard of operation to contain the ever flexible Class API.<br />
-:::
-
-::: tip IVUE IMPLEMENTS MINIMAL API ARCHITECTURE
-Things like IOC Container, Decorators, Traits, Mixins, etc. were omitted by design to slim down the surface area and scope of `ivue` core purpose, which was JavaScript / TypeScript Class API based reactivity. Any Traits, Decorators & IOC Container can be built around it using third-party libraries or roll your own systems. You are more than welcome to contribute in this area!
-:::
-
-## How it works?
-
 ```ts
 export function ivue<T extends AnyClass>(
   className: T,

@@ -35,21 +35,35 @@ See: [VueJs.org &ndash; Reactivity Transform](https://vuejs.org/guide/extras/rea
 
 `ivue` is fully interoperable with Composition API and does not work against, but rather with it, so you can use all of ecosystems composables seamlessly.
 
-`ivue` also offers a set of functions and utility types to make extensible & exportable props defaults, extensible emits and extensible slots possible.
+`ivue` also offers a set of functions and utility types to make extensible & exportable props defaults, extensible emits, extensible slots, etc. and much more possible.
 
+`ivue` aims to be opaque, by giving the developer the Class API reactivity system.
 
-## Classes in the Ecosystem
+`ivue` omits custom implementations of IOC Container, Decorators, Mixins, etc. by design.
+
+`ivue` enforces a sane default standard of operation to contain the ever flexible Class API.
+
+`ivue` uses Powerful Cutting Edge TypeScript to transform Vue 3 Refs to their base types, infer Class constructor arguments, infer Composable return types and function arguments and much more, making Object Oriented DX Experience with Vue 3 a breeze.
+
+## OOP and TypeScript Class API in the Ecosystem
 
 With failed implementations of classes in React and also failed implementations using class components in Vue 2 / 3, the ecosystem decided that classes are bad and moved to pure procedural designs. 
 
 While procedural programming has its strength, it also comes with its own weaknesses, like lack of inheritance, lack of `this` context, and thus lack of true composition.
 
-::: info IVUE IS DIFFERENT
-&ndash; &nbsp;`ivue` does NOT inherit from a base class<br />
-&ndash; &nbsp;`ivue` does NOT use decorators to achieve its objectives<br />
-&ndash; &nbsp;`ivue` does NOT alter Vue 3 underlying behavior<br />
-&ndash; &nbsp;`ivue` is NOT the same as class components (though you can build components with it)<br />
+## `ivue` is different
+
+&mdash; &nbsp;`ivue` does NOT inherit from a base Class.<br />
+&mdash; &nbsp;`ivue` does NOT use Decorators to achieve its objectives.<br />
+&mdash; &nbsp;`ivue` does NOT alter Vue 3 underlying behavior, but rather relies on it.<br />
+&mdash; &nbsp;`ivue` is NOT Class Components (though you can build components with it).<br />
+
+
+::: tip IVUE IMPLEMENTS MINIMAL API ARCHITECTURE
+Things like IOC Container, Decorators, Traits, Mixins, etc. were omitted by design to slim down the surface area and scope of `ivue` core purpose, which was JavaScript / TypeScript Class API based reactivity. Any Traits, Decorators & IOC Container can be built around it using third-party libraries or roll your own systems. You are more than welcome to contribute in this area!
 :::
+
+
 
 ## Infinite Vue Class Achitecture
 

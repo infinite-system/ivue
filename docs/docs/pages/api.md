@@ -32,13 +32,18 @@ Create a regular `vue` Ref but cast the type to the internal unreactive type, be
 
 ### `iuse()`
 
+
 This function unwraps the type of any composable return to the bare values without `.value`, because properties auto-unwrap in `reactive()` object that is being created by `ivue` upon initialization.
+
+## Core Methods
+### `.constructor()`
+Native Class API `.constructor()` is mainly used to assign and cast Vue 3 Refs back to their original types. `.constructor()` should not be used to work with reactive state. Use `.init()` for reactive purposes.
 
 ### `.init()`
 
 ---
 
-`.init()` method is auto-run on `ivue()` initialization after `constructor()` is run.
+`.init()` method is auto-run on `ivue()` initialization after `.constructor()` is run.
 `.init()` has access to the reactive state of the object via `this`.
 
 :::warning NOTICE
@@ -70,6 +75,13 @@ This improves performance if `box` has many other properties that we do not need
 
 **Returns:** `IVueRefs<InstanceType<T>>`
 
+## Core Types
+
+### `IVue` {#IVue}
+
+### `Use` {#Use}
+
+
 ## Utility Functions
 
 ### `propsWithDefaults()`
@@ -89,6 +101,10 @@ Combines statically written defaults object with the runtime type definition of 
 
 ## Utility Types
 
+---
+
+Extracts and unwraps (de-Refs) the real types of Vue 3 composable definition to make it compatible with `ivue`.
+
 ### `ExtractPropDefaultTypes`
 
 Extracts types of the default types definition. This type can be used to validate against the actual defaults definition to make sure both definitions are in sync.
@@ -107,8 +123,3 @@ Extracts types of a runtime emits declaration.
 
 Allows you to extend slots of a given slot interface.
 
-### `UseComposable`
-
----
-
-Extracts and unwraps (de-Refs) the real types of Vue 3 composable definition to make it compatible with `ivue`.

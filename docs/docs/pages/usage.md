@@ -46,7 +46,7 @@ Using ivue is very simple, but you need to understand a few principles. See the 
 
 Classic Counter example built with `ivue`
 ::: code-group
-<<< @/components/usage/CounterBasic.vue{15 vue:line-numbers}
+<<< @/components/usage/CounterBasic.vue{vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -206,7 +206,7 @@ function decrement() {
 
 ## Using Composables
 
-### Assign a composable to a class property
+### Assign Vue 3 Composable to a class property
 
 See the highlighted sections related to composable usage.
 ::: code-group
@@ -227,7 +227,7 @@ See the highlighted sections related to composable usage.
 
 <CounterComposables />
 
-### Destructuring composable into the class
+### Destructure Vue 3 Composable into the class
 
 See the highlighted sections related to destructuring composable usage.
 
@@ -251,7 +251,7 @@ See the highlighted sections related to destructuring composable usage.
 <CounterComposablesDestructuring />
 
 
-### Using `ivue` Composables Directly
+### Assign `ivue` Composables to a class property
 
 Using `ivue` based composables assigned to a class property:
 
@@ -274,7 +274,7 @@ Using `ivue` based composables assigned to a class property:
 
 <CounterComposablesIvue />
 
-### Using `ivue` Composables With Destructuring
+### Destructure `ivue` Composables Into Class Scope
 
 See the sections related to using `ivue` based composables initialized through class destructuring assignment.
 
@@ -357,7 +357,7 @@ To use `watch`, `watchEffect`, and other reactive functions, declare `.init()` m
 See the highlighted sections related to using `init()` below:
 
 ::: code-group
-<<< @/components/usage/CounterWatch.vue{6-13 vue:line-numbers}
+<<< @/components/usage/CounterWatch.vue{vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:
@@ -386,7 +386,7 @@ See the highlighted sections related to using `init()` below:
 :::
 
 ::: code-group
-<<< @/components/usage/CounterLifecycleHooks.vue{7-9 vue:line-numbers}
+<<< @/components/usage/CounterLifecycleHooks.vue{vue:line-numbers}
 :::
 
 :::details For this example we initialize the component like this:

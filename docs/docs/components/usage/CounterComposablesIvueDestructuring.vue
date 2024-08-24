@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CustomMouse } from './classes/CustomMouse';
 
-import { ivue, iref } from '../../../../src/ivue';
+import { ivue, iref } from 'ivue';
 
 class Counter {
   count = iref(0);
@@ -34,7 +34,9 @@ class Counter {
 const counter = ivue(Counter);
 </script>
 <template>
-  <a href="javascript:void(0)" @click="() => counter.increment()">Increment</a>
+  <a href="javascript:void(0)" @click="() => counter.increment()">
+    Increment
+  </a>
   Count: {{ counter.count }} <br />
   Mouse X: {{ counter.x }}, Y: {{ counter.y }}
   <br />
