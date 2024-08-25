@@ -75,7 +75,7 @@ class Counter {
   }
 }
 
-/** ✓ Properly intilized IVUE class runner. */
+/** ✓ Properly initialized IVUE class runner. */
 const counter = ivue(Counter, props, emit);
 ```
 

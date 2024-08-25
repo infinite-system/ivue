@@ -7,9 +7,9 @@ The original inspiration for `ivue` comes from `MobX` React state management lib
 
 ##  Epiphany
 
-After building several ports from `MobX` state management library to `VueJS` to reactivity system I realized that Vue itself is far superior in its design and perfomance and can solve the same problem without relying on second hand-library, but for that my evolution of understanding of how JavaScript getters and setters work needed to happen. 
+After building several ports from `MobX` state management library to `VueJS` to reactivity system I realized that Vue itself is far superior in its design and performance and can solve the same problem without relying on second hand-library, but for that my evolution of understanding of how JavaScript getters and setters work needed to happen. 
 
-And one lucky and sunny day driving back from work in an eureka moment of light it occured to me how to use Vue 3 computeds in place of getters in classes (Yes, apparently my brain does coding while driving a car).
+And one lucky and sunny day driving back from work in an eureka moment of light it occurred to me how to use Vue 3 computeds in place of getters in classes (Yes, apparently my brain does coding while driving a car).
 
 `ivue` relies on this very simple discovery of how to elegantly convert getters into Vue 3 computeds.
 
@@ -28,5 +28,5 @@ By default `ivue` does not rely on decorators, though you can use decorators if 
 
 ## The Rest is Up To You
 `ivue` is like a small mustard seed core for the big tree trunk of Class Based Reactive applications to be built around it, that's why the path of utter simplicity was chosen.
-Everything else like an Inversion of Control (IOC) system, Traits, Mixins, Decorators can be built around the core `ivue` architecture and is upto the community of enthusiatic open source contributors, please share with us your vision of how you and all of can use `ivue` better.
+Everything else like an Inversion of Control (IOC) system, Traits, Mixins, Decorators can be built around the core `ivue` architecture and is up to the community of enthusiastic open source contributors, please share with us your vision of how you and all of can use `ivue` better.
 

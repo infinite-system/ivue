@@ -65,7 +65,7 @@ Things like IOC Container, Decorators, Traits, Mixins, etc. were omitted by desi
 
 
 
-## Infinite Vue Class Achitecture
+## Infinite Vue Class Architecture
 
 `ivue` replicates native JavaScript / TypeScript class implementation by extending descriptors (getters and setters) up the whole prototype ancestors chain thus supporting classical inheritance.
 

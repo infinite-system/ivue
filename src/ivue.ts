@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ComputedRef, ExtractPropTypes, Ref, ToRef } from 'vue';
-import { computed, reactive, ref, toRef } from 'vue';
+import { computed, reactive, ref, shallowRef, toRef } from 'vue';
 import type { Ref as DemiRef } from 'vue-demi';
 
 /** Types */
@@ -334,6 +334,14 @@ export function getAllClassProperties(obj: object): Set<string> {
  * @returns {T}
  */
 export const iref = ref as <T = any>(value?: T) => T;
+
+/**
+ * `ishallowRef()` is an alias for Vue shallowRef() function but returns an unwrapped type without the .value
+ * `ishallowRef()` does not alter the behavior of shallowRef(), but simply transforms the type to an unwrapped raw value.
+ * @param val T
+ * @returns {T}
+ */
+export const ishallowRef = shallowRef as <T = any>(value?: T) => T;
 
 /**
  * Three modes of operation:

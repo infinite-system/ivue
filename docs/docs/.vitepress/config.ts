@@ -110,6 +110,7 @@ export default defineConfig({
         items: [
           { text: 'ivue()', link: '/pages/api#ivue' },
           { text: 'iref()', link: '/pages/api#iref' },
+          { text: 'ishallowRef()', link: '/pages/api#ishallowref' },
           { text: 'iuse()', link: '/pages/api#iuse' },
         ],
       },

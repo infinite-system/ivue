@@ -28,7 +28,11 @@ Core `ivue(className, ...args)` initializer is able to infer and validate the co
 
 ### `iref()`
 
-Create a regular `vue` Ref but cast the type to the internal unreactive type, because properties auto-unwrap in `reactive()` object that is being created by `ivue` upon initialization.
+Is simply an alias to Vue 3 `ref()` function but casts the type to the internal unreactive type, because properties auto-unwrap in `reactive()` object that is being created by `ivue` upon initialization.
+
+### `ishallowRef()`
+
+Is simply an alias Vue 3 `shallowRef()` function but casts the type to the internal unreactive type, because properties auto-unwrap in `reactive()` object that is being created by `ivue` upon initialization.
 
 ### `iuse()`
 
