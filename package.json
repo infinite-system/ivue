@@ -1,25 +1,25 @@
 {
   "name": "ivue",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Infinite Vue – Class Based Architecture for Vue 3",
   "type": "module",
   "exports": {
     ".": {
       "require": "./dist/index.umd.js",
       "import": "./dist/index.es.js",
-      "types": "./dist/src/index.d.ts"
+      "types": "./dist/index.d.ts"
     }
   },
   "main": "./dist/index.umd.js",
   "module": "./dist/index.es.js",
-  "types": "./dist/src/index.d.ts",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "dev": "vite dev --host",
     "test": "vitest --coverage.enabled=true --reporter=verbose --ui",
     "coverage": "vitest run --coverage",
     "cypress": "cypress run --component",
     "cypress:headed": "cypress run --component --browser chrome --headed --no-exit",
-    "build": "vite build",
+    "build": "tsc --p ./tsconfig.json && vite build",
     "release": "yarn build && yarn publish"
   },
   "peerDependencies": {
