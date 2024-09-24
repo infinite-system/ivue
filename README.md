@@ -42,7 +42,6 @@
 
 `ivue` also offers a set of functions and utility types to make extensible & exportable props defaults, extensible emits and extensible slots possible.
 
+## Full Documentation
 
-## Examples
-
-## Documentation
+See: https://infinite-system.github.io/ivue/
