@@ -40,6 +40,11 @@ jobs:
       - name: yarn install
         uses: borales/actions-yarn@v4
         with:
+         cmd: install # will run `yarn install` command
+         dir: ''
+      - name: yarn install
+        uses: borales/actions-yarn@v4
+        with:
           cmd: install # will run `yarn install` command
           dir: 'docs'
       - name: deploy docs

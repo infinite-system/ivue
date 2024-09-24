@@ -247,7 +247,7 @@ export default defineConfig({
     configFile: './vite.config.ts', // This is IMPORTANT, otherwise @/* paths do not get resolved!
     // To make vue-dd work, see https://github.com/vuetifyjs/vuetify/discussions/15735
     ssr: {
-      noExternal: ['vue-dd', 'vue'],
+      noExternal: ['vue-dd'],
     },
   },
 });
