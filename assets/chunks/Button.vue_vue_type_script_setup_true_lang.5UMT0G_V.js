@@ -1,0 +1,1 @@
+import{u as n,I as t,J as a,N as i,af as l}from"./framework.BdEz2lsW.js";const r=["href"],f=n({__name:"Button",props:{href:String,label:String,inline:{type:Boolean,default:!0}},setup(e){return(o,s)=>(t(),a("a",{href:"/ivue"+e.href,style:l(`inline: ${e.inline};`)},i(e.label),13,r))}});export{f as _};

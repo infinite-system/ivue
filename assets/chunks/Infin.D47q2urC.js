@@ -1,0 +1,1 @@
+import{j as s}from"./theme.BdLk8B6w.js";import{I as e,P as a,z as r}from"./framework.BdEz2lsW.js";const l={__name:"Infin",setup(n){return(o,t)=>(e(),a(r(s),{class:"col-shrink self-top q-pr-sm q-pt-sm",size:"12px",name:"all_inclusive"}))}};export{l as default};

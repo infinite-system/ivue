@@ -1,0 +1,1 @@
+import{M as s,z as c}from"./index.es.BgmpHtBi.js";import{u,I as i,J as a,N as m,z as o}from"./framework.BdEz2lsW.js";const f=u({__name:"CounterBasic",setup(p){class e{constructor(){this.count=c(0)}increment(){this.count++}}const t=s(e);return(r,n)=>(i(),a("button",{onClick:n[0]||(n[0]=()=>o(t).increment())}," Count: "+m(o(t).count),1))}});export{f as _};

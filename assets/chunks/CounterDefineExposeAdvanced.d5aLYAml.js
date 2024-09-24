@@ -1,0 +1,1 @@
+import{M as r,z as s}from"./index.es.BgmpHtBi.js";import{u as c,N as u,z as a}from"./framework.BdEz2lsW.js";const f=c({__name:"CounterDefineExposeAdvanced",setup(i,{expose:e}){class n{constructor(){this.count=s(0)}increment(){this.count++}decrement(){this.count--}}const t=r(n);return e(t),(o,p)=>"Count: "+u(a(t).count)}});export{f as default};

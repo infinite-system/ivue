@@ -1,0 +1,1 @@
+import{aP as t}from"./framework.BdEz2lsW.js";import{z as r,W as i}from"./index.es.BgmpHtBi.js";class h{constructor(s){this.requiredProp=s,this._sum=r(0),{x:this.x,y:this.y}=i(t)}sum(){this._sum=this.x+this.y+this.requiredProp}get total(){return this._sum}}export{h as C};
