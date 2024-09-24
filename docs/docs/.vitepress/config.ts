@@ -5,6 +5,8 @@ import {
   transformerTwoslash,
 } from '@shikijs/vitepress-twoslash';
 
+import pkg from "../../../package.json";
+
 // https://vitepress.vuejs.org/config/app-configs
 export default defineConfig({
   appearance: 'dark',
@@ -43,7 +45,7 @@ export default defineConfig({
   themeConfig: {
     logo: '/ivue-logo.png',
     outline: 'deep',
-    siteTitle: '1.5.7',
+    siteTitle: pkg.version,
     socialLinks: [
       { icon: 'github', link: 'https://github.com/infinite-system/ivue' },
       { icon: 'twitter', link: 'https://x.com/evgenykalash' },
