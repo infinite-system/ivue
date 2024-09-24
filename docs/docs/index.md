@@ -6,7 +6,7 @@ import Button from './components/Button.vue'
 
 <div style="padding:0px 0 30px 0;"><img src="/ivue-logo.png" width="135" /></div>
 
-# <span style="font-family: 'Public Sans'; "><strong>Infinite Vue &mdash; Documentation</strong></span>
+# <span style="font-family: 'Public Sans'; "><strong>Infinite Vue — Documentation</strong></span>
 
 ## About
 
