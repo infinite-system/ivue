@@ -1,11 +1,49 @@
 import { defineConfig } from 'vitepress';
 
+import {
+  defaultHoverInfoProcessor,
+  transformerTwoslash,
+} from '@shikijs/vitepress-twoslash';
+
 // https://vitepress.vuejs.org/config/app-configs
 export default defineConfig({
+  appearance: 'dark',
   titleTemplate: ':title | Infinite Vue ∞ ivue',
+  markdown: {
+    theme: {
+      light: 'one-light',
+      dark: 'dracula-soft',
+    },
+    codeTransformers: [
+      transformerTwoslash({
+        twoslashOptions: {
+          vfsRoot: '../',
+          compilerOptions: {
+            baseUrl: './',
+            paths: {
+              "@/*": ["../*"]
+            }
+          }
+        },
+        errorRendering: 'hover',
+        processHoverInfo(info) {
+          return (
+            defaultHoverInfoProcessor(info)
+              // Remove shiki_core namespace
+              .replace(/_shikijs_core\w*\./g, '')
+          );
+        },
+      }),
+    ],
+    linkify: false,
+    toc: {
+      level: [2, 3, 4],
+    },
+  },
   themeConfig: {
+    logo: '/ivue-logo.png',
     outline: 'deep',
-    siteTitle: 'ivue ∞ Infinite Vue',
+    siteTitle: '1.5.7',
     socialLinks: [
       { icon: 'github', link: 'https://github.com/infinite-system/ivue' },
       { icon: 'twitter', link: 'https://x.com/evgenykalash' },
@@ -13,14 +51,76 @@ export default defineConfig({
     search: {
       provider: 'local',
     },
+    nav: [
+      {
+        text: 'Docs',
+        activeMatch: `/`,
+        link: '/',
+      },
+      {
+        text: 'API',
+        activeMatch: `^/api/`,
+        link: '/api/',
+      },
+      {
+        text: 'Playground',
+        link: 'https://play.vuejs.org',
+      },
+      {
+        text: 'About',
+        activeMatch: `^/about/`,
+        items: [
+          { text: 'FAQ', link: '/about/faq' },
+          { text: 'Team', link: '/about/team' },
+          { text: 'Releases', link: '/about/releases' },
+          {
+            text: 'Community Guide',
+            link: '/about/community-guide',
+          },
+          { text: 'Code of Conduct', link: '/about/coc' },
+          { text: 'Privacy Policy', link: '/about/privacy' },
+          {
+            text: 'The Documentary',
+            link: 'https://www.youtube.com/watch?v=OrxmtDw4pVI',
+          },
+        ],
+      },
+    ],
     sidebar: [
       {
         collapsed: false,
-        text: 'Guide',
+        text: 'Introduction',
         items: [
           { text: 'What is ivue?', link: '/pages/introduction' },
           { text: 'How it works?', link: '/pages/how-it-works' },
           { text: 'Getting Started', link: '/pages/getting-started' },
+        ],
+      },
+
+      {
+        collapsed: false,
+        text: 'Guide',
+        items: [
+          {
+            text: "Dos and Don'ts",
+            link: '/pages/guidelines#dos-and-don-ts',
+          },
+          {
+            text: 'constructor() vs .init()',
+            link: '/pages/guidelines#constructor-vs-init',
+          },
+          {
+            text: 'Unwrapping Refs',
+            link: '/pages/guidelines#unwrapping-refs',
+          },
+          {
+            text: 'Naming Conventions',
+            link: '/pages/guidelines#naming-conventions',
+          },
+          {
+            text: 'Playground',
+            link: '/pages/playground',
+          },
         ],
       },
       {
@@ -57,28 +157,6 @@ export default defineConfig({
         ],
       },
 
-      {
-        collapsed: false,
-        text: 'Guidelines',
-        items: [
-          {
-            text: "Dos and Don'ts",
-            link: '/pages/guidelines#dos-and-don-ts',
-          },
-          {
-            text: '.constructor() vs .init()',
-            link: '/pages/guidelines#constructor-vs-init',
-          },
-          {
-            text: 'Unwrapping Refs',
-            link: '/pages/guidelines#unwrapping-refs',
-          },
-          {
-            text: 'Naming Conventions',
-            link: '/pages/guidelines#naming-conventions',
-          },
-        ],
-      },
       {
         collapsed: false,
         text: 'Advanced Usage',
@@ -118,7 +196,7 @@ export default defineConfig({
         collapsed: false,
         text: 'Core Methods',
         items: [
-          { text: '.constructor()', link: '/pages/api#constructor' },
+          { text: 'constructor()', link: '/pages/api#constructor' },
           { text: '.init()', link: '/pages/api#init' },
           { text: '.toRefs()', link: '/pages/api#torefs' },
         ],
@@ -164,6 +242,7 @@ export default defineConfig({
   },
   base: '/ivue/',
   vite: {
+    configFile: './vite.config.ts', // This is IMPORTANT, otherwise @/* paths do not get resolved!
     // To make vue-dd work, see https://github.com/vuetifyjs/vuetify/discussions/15735
     ssr: {
       noExternal: ['vue-dd'],

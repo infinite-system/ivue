@@ -12,7 +12,7 @@ export default mergeConfig(
       root: fileURLToPath(new URL("./", import.meta.url)),
       reporters: ["default", "html", "verbose"],
       coverage: {
-        include: ['src/**']
+        include: ['lib/**']
       } 
     },
   })

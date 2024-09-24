@@ -25,6 +25,6 @@ const counter = ivue(Counter);
 <template>
   <a href="javascript:void(0)" @click="() => counter.increment()">
     Increment
-  </a>
+  </a><br />
   Count: {{ counter.count }} (Click 5 times to get an alert)
 </template>

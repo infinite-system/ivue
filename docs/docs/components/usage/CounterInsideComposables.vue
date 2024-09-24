@@ -10,19 +10,13 @@ class Counter {
 
 function useCounter() {
   /** Convert ivue Counter to a composable with .toRefs() */
-  const { count, increment } = ivue(Counter).toRefs();
-
-  return {
-    count,
-    increment,
-  };
+  return ivue(Counter).toRefs();
 }
 
 const { count, increment } = useCounter();
 </script>
 <template>
-  <a href="javascript:void(0)" @click="increment">
-    Increment
-  </a>
-  Count: {{ count }} <br />
+  <button @click="() => increment()">
+    Count: {{ count }}
+  </button>
 </template>

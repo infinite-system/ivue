@@ -25,6 +25,6 @@ const counter = ivue(Counter, props);
 <template>
   <a href="javascript:void(0)" @click="() => counter.increment()">
     Increment
-  </a>
+  </a><br />
   Count: {{ counter.count }}
 </template>

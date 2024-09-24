@@ -3,7 +3,7 @@ import { ivue, iref } from 'ivue';
 
 class Counter {
   count = iref(0);
-  span = iref<HTMLElement | null>(null);
+  span = iref<HTMLElement>();
   increment() {
     this.count++;
     (this.span as HTMLElement).innerHTML = String(this.count + 1);
@@ -19,9 +19,8 @@ const { span } = counter.toRefs(['span']);
  */
 </script>
 <template>
+  Count: {{ counter.count }} <span ref="span"></span><br />
   <a href="javascript:void(0)" @click="() => counter.increment()">
     Increment
   </a>
-  Count: {{ counter.count }}
-  <span ref="span"></span>
 </template>

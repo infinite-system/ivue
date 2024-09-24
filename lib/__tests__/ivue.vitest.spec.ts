@@ -25,19 +25,19 @@ class Bit {
 }
 
 class Item extends Bit {
-  _width = iref(5);
+  _width = iref(5) as unknown as string | number;
   unit = iref('px');
   get width(): string {
     return this._width + this.unit;
   }
-  set width(value: number) {
+  set width(value: number | string) {
     this._width = value;
   }
-  _height = iref(5);
+  _height = iref(5) as unknown as string | number;
   get height(): string {
     return this._height + this.unit;
   }
-  set height(value: number) {
+  set height(value: number | string) {
     this._height = value;
   }
 }
@@ -83,7 +83,7 @@ class RetailStoreItem extends StoreItem {
     return this._testProperty;
   }
   calculateSize() {
-    return this._height + this._width;
+    return (this._height as number) + (this._width as number);
   }
 }
 
@@ -433,7 +433,7 @@ describe('ivue', () => {
     });
   });
   describe('core functions', () => {
-    let useComposable = () => {
+    const useComposable = () => {
       return {
         x: ref(0),
         y: ref(0)

@@ -1,51 +1,51 @@
 <script setup lang="ts">
+import { QIcon } from 'quasar';
+import Infin from './components/Infin.vue';
 import Button from './components/Button.vue'
-
 </script>
-# <span style="font-family: 'Public Sans'; ">ivue ∞ Infinite Vue</span> Documentation
 
+<div style="padding:0px 0 30px 0;"><img src="/ivue-logo.png" width="135" /></div>
+
+# <span style="font-family: 'Public Sans'; "><strong>Infinite Vue &mdash; Documentation</strong></span>
 
 ## About
 
-**<span style="font-family: 'Public Sans'; font-size: 125%;">ivue ∞ Infinite Vue</span>** is a class based composable architecture for Vue 3, that unlocks infinite scalability for Vue 3 based apps. It allows you to extend the regular Vue 3 in a simple and elegant Object Oriented way.
+**<span style="font-family: 'Public Sans'; font-size: 125%;">Infinite Vue ∞ ivue</span>** is a class based reactivity architecture for Vue 3. It unlocks infinite scalability for Vue 3 apps, by allowing us to use Vue 3 reactivity system with native classes. 
 
-## `ivue` is
+**ivue** abstracts away *.value* for a succinct reactive class API, identical to the native JavaScript / TypeScript Class API. ivue allows observable reactive programming using classes supporting full inheritance, encapsulation and polymorphism, while converting the class object to a reactive object.
 
+Under the hood all the class properties are converted to *reactive Refs* and all the getters of the class are converted to *computeds*, making declaration of computeds very simple in ivue.
 
-<div style="padding-left:20px; font-size: 20px; line-height: 32px;">
-∞&nbsp; Simple like Options API<br />
-∞&nbsp; Flexible like Composition API<br />
-∞&nbsp; Extensible like TypeScript Class API<br />
-∞&nbsp; Robust, Minimal, Opaque & Unobtrusive<br />
-∞&nbsp; 100% VSCode / Intellij IDE Autocomplete Intellisence<br />
-∞&nbsp; 100% Vue 3 Compatible<br />
-∞&nbsp; 100% Test Covered<br />
-∞&nbsp; 100% Type Safe<br />
-∞&nbsp; Production Ready<br />
-∞&nbsp; Just <code>1.1kb</code> gzipped!<br />
-</div>
-
+This allows for creation of very advanced reactive systems because now you can operate in pure JavaScript / TypeScript, decreasing the mental load by not needing to use *.value* and focus on the business logic instead.
 
 ## Features
-<div style="padding-left:20px; font-size: 18px;line-height: 28px; ">
-&mdash;&nbsp; Extensible Classes using JavaScript / TypeScript native Class API<br />
-&mdash;&nbsp; Can be used as a Global Store and a ViewModel for Components<br />
-&mdash;&nbsp; Enhances Extensibility of Props Defaults, Props, Slots<br />
-&mdash;&nbsp; Improves DX by elegantly dealing with <code>.value</code><br />
-&mdash;&nbsp; Allows for Fully Extensible Component Architecture<br />
-&mdash;&nbsp; Extends Vue 3 TypeScript Capability<br />
-&mdash;&nbsp; Zero dependencies except Vue 3<br />
+<div style="padding-left: 5px; font-size: 17px; line-height: 28px; " class="q-gutter-y-sm">
+  <div class="row">
+    <Infin class="" /><div class="col">Extensible Classes using JavaScript / TypeScript native Class API</div>
+  </div>
+  <div class="row">
+    <Infin /><div class="col">Can be used as a Global Store and a ViewModel for Components</div>
+  </div>
+  <div class="row">
+    <Infin /><div class="col">Improves DX by elegantly dealing with <i>.value</i></div>
+  </div>
+  <div class="row">
+    <Infin /><div class="col">Extends Vue 3 TypeScript Capability</div>
+  </div>
+  <div class="row">
+    <Infin /><div class="col">Enhances Extensibility of Props Defaults, Props, Slots</div>
+  </div>
+  <div class="row">
+    <Infin /><div class="col">Allows for Fully Extensible Component Architecture</div>
+  </div>
 </div>
 
-
-
 ## Philosophy
-<center>
-Perfection is achieved, not when there is nothing more to add, <br />
-but when there is nothing left to take away.  
-
-<div style="padding-top: 5px; color:#888; font-size: 90%;">― Antoine de Saint-Exupéry</div>
-</center>
+<div style="text-align:center; line-height: 30px;">
+  Perfection is achieved, not when there is nothing more to add, <br />
+  but when there is nothing left to take away.  
+  <div style="padding-top: 5px; color:#888; font-size: 90%;">― Antoine de Saint-Exupéry</div>
+</div>
 
 ## Next Step
 

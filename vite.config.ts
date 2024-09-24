@@ -7,14 +7,6 @@ import pkg from "./package.json";
 import libCss from 'vite-plugin-libcss';
 import { terser } from 'rollup-plugin-terser';
 
-export const vueDocsPlugin = () => ({
-  name: "vue-docs",
-  transform (code: any, id: any) {
-    if (!/vue&type=docs/.test(id)) return;
-    return `export default ''`;
-  }
-});
-
 // https://vitejs.dev/config/
 export default defineConfig({
   resolve: {
@@ -32,13 +24,12 @@ export default defineConfig({
     dts({
       cleanVueFileName: true,
     }),
-    vueDocsPlugin(),
     libCss()
   ],
   build: {
     cssCodeSplit: true,
     lib: {
-      entry: "./src/index.ts",
+      entry: "./lib/index.ts",
       formats: ["es", "umd"],
       // the name expose in umd mode
       name: pkg.name,

@@ -118,6 +118,10 @@ function onIncrement(value: number) {
 
 ### Refs defined externally in the component outside of the class.
 
+```ts twoslash
+<!--@include: @/components/usage/CounterExternalRefs.vue{2,19}-->
+```
+
 ::: code-group
 <<< @/components/usage/CounterExternalRefs.vue{vue:line-numbers}
 :::

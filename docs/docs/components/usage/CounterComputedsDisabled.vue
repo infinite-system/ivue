@@ -24,10 +24,10 @@ class Counter {
 const counter = ivue(Counter);
 </script>
 <template>
+  Count: {{ counter.count }} <br />
   <a href="javascript:void(0)" @click="() => counter.increment()">
     Increment
-  </a>
-  Count: {{ counter.count }} <br />
+  </a><br />
   Double Count: {{ counter.doubleCount }} <br />
   Quad Count: {{ counter.quadCount }} <br />
 </template>

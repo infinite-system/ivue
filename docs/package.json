@@ -3,27 +3,36 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vitepress dev docs",
+    "dev": "vitepress dev docs --host",
     "build": "vitepress build docs",
     "serve": "vitepress serve docs",
     "preview": "vitepress build docs && vitepress serve docs",
     "deploy": "node scripts/gh-pages-deploy.js"
   },
   "devDependencies": {
+    "@chronicstone/array-query": "^1.0.1",
+    "@quasar/vite-plugin": "^1.7.0",
+    "@shikijs/vitepress-twoslash": "^1.17.7",
     "@typescript-eslint/eslint-plugin": "^5.10.0",
     "@typescript-eslint/parser": "^5.10.0",
+    "@vitejs/plugin-vue": "^5.1.3",
+    "@vue/repl": "4.3.0",
+    "axios": "^1.7.7",
     "cpy-cli": "^4.2.0",
     "eslint": "^8.10.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-vue": "^9.14.1",
     "execa": "^8.0.0",
-    "ivue": "^1.2.4",
+    "floating-vue": "^5.2.2",
+    "sass": "^1.33.0",
+    "sass-embedded": "^1.78.0",
+    "twoslash-vue": "^0.2.11",
     "typescript": "^4.5.4",
     "vite-plugin-dynamic-import": "^1.5.0",
-    "vite-tsconfig-paths": "^4.3.2",
-    "vitepress": "^1.0.0",
-    "vue": "3.2.44",
+    "vite-tsconfig-paths": "^5.0.1",
+    "vitepress": "^1.3.4",
+    "vue": "3.3.6",
     "vue-dd": "1.6.7",
     "vue-use": "^0.2.0"
   },
@@ -33,5 +42,11 @@
         "@algolia/client-search"
       ]
     }
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.16.12",
+    "ivue": "^1.5.7",
+    "pinia": "^2.2.2",
+    "quasar": "^2.16.11"
   }
 }

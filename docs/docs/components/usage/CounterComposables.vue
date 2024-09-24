@@ -14,10 +14,10 @@ class Counter {
 const counter = ivue(Counter);
 </script>
 <template>
+  Count: {{ counter.count }} <br />
   <a href="javascript:void(0)" @click="() => counter.increment()">
     Increment
-  </a>
-  Count: {{ counter.count }} <br />
+  </a><br />
   <br />
   Mouse: <br />
   X: {{ counter.mouse.x }} <br />

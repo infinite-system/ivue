@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { useCustomMouse } from './functions/useCustomMouse';
-
+// @include: useCustomMouse
+// ---cut---
 import { ivue, iuse, iref, type Use } from 'ivue';
+import { useCustomMouse } from '@/components/usage/functions/useCustomMouse';
 
 /**
  * Use the ivue Utility Type: Use<typeof YourComposableFunctionName>
@@ -41,10 +42,10 @@ class Counter {
 const counter = ivue(Counter);
 </script>
 <template>
+  Count: {{ counter.count }} <br />
   <a href="javascript:void(0)" @click="() => counter.increment()">
     Increment
-  </a>
-  Count: {{ counter.count }} <br />
+  </a><br />
   Mouse X: {{ counter.x }}, Y: {{ counter.y }}
   <br />
   Total (computed): {{ counter.total }}

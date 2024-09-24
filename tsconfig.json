@@ -17,8 +17,9 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["vitest/globals"],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["lib/*"]
     }
   },
+  "include": ["lib"],
   "exclude": ["dist", "node_modules"]
 }

@@ -2,10 +2,8 @@
 import { ref } from 'vue';
 import { ivue, iref, iuse } from 'ivue';
 
-type SpanRef = HTMLElement | null;
-
 class Counter {
-  constructor(public span: SpanRef) {}
+  constructor(public span?: HTMLElement) {}
   count = iref(0);
   increment() {
     this.count++;
@@ -13,15 +11,13 @@ class Counter {
   }
 }
 
-const span = ref<SpanRef>(null);
+const span = ref<HTMLElement>();
 const counter = ivue(Counter, iuse(span));
 
 defineExpose<Counter>(counter);
 </script>
 <template>
-  <a href="javascript:void(0)" @click="() => counter.increment()">
-    Increment
-  </a>
-  Count: {{ counter.count }}
-  <span ref="span"></span>
+  <button @click="() => counter.increment()">
+    Count: {{ counter.count }} + 1 = <span ref="span"></span>
+  </button>
 </template>

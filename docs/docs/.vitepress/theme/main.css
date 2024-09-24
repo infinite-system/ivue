@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap');
 
 .VPNavBarTitle {
   font-family: 'Public Sans';
@@ -6,10 +7,15 @@
 
 .VPNavBarTitle a span {
   font-size: 22px !important;
+  font-weight: 300;
+  padding-left: 5px;
+  letter-spacing: 1px;
 }
 
 body {
-  /* font-family: 'Public Sans';  */
+  font-family: 'Inter'; 
+  line-height: 1.2rem !important;
+  font-size: 100%;
 }
 
 .button { 
@@ -26,4 +32,25 @@ body {
 }
 .button:active { 
   opacity:0.9;
+}
+
+.VPLink p.text {
+  font-size: 13px;
+  line-height: 1rem;
+  margin-bottom: 4px;
+}
+
+.vp-doc h2 {
+  margin-top: 25px;
+}
+.vp-doc :not(pre) > code {
+  padding: 1px 4px;
+  letter-spacing: 0px;
+  background-color: rgba(142, 150, 170, 0);
+  font-size: 100%;
+  /* font-family: 'JetBrains Mono'; */
+}
+
+code {
+  /* font-family: 'JetBrains Mono'; */
 }

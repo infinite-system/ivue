@@ -11,8 +11,7 @@ class Counter {
 const counter = ivue(Counter);
 </script>
 <template>
-  <a href="javascript:void(0)" @click="() => counter.increment()">
-    Increment
-  </a>
-  Count: {{ counter.count }}
+  <button @click="() => counter.increment()">
+    Count: {{ counter.count }}
+  </button>
 </template>

@@ -2,18 +2,16 @@
 import { onMounted, ref } from 'vue';
 import { ivue, iref, iuse } from 'ivue';
 
-type SpanRef = HTMLElement | null;
-
 class Counter {
-  constructor(public span?: SpanRef) {
-    // Do not do this in the constructor() because this.span 
+  constructor(public span?: HTMLElement) {
+    // ❌ Do not do this in the constructor() because this.span 
     // still refers to this.span.value here:
     // onMounted(() => { 
     //   (this.span as HTMLElement /*❌*/).innerHTML = 'Initial span text!';
     // });
   }
   init() {
-    // Do this inside init() because this.span (.value) is now
+    // ✅ Do this inside init() because this.span (.value) is now
     // flattened & (this) is now reactive():
     onMounted(() => {
       (this.span as HTMLElement/*✅*/).innerHTML = 'Initial span text!';
@@ -26,7 +24,8 @@ class Counter {
   }
 }
 
-const span = ref<SpanRef>(null);
+const span = ref<HTMLElement>();
+
 const counter = ivue(
   Counter,
   iuse(span)
@@ -35,7 +34,7 @@ const counter = ivue(
 defineExpose<Counter>(counter);
 </script>
 <template>
-  <a href="javascript:void(0)" @click="() => counter.increment()">Increment</a>
+  <a href="javascript:void(0)" @click="() => counter.increment()">Increment</a><br />
   Count: {{ counter.count }} <br />
   <span ref="span"></span>
 </template>

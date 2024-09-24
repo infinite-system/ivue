@@ -40,14 +40,14 @@ Is simply an alias Vue 3 `shallowRef()` function but casts the type to the inter
 This function unwraps the type of any composable return to the bare values without `.value`, because properties auto-unwrap in `reactive()` object that is being created by `ivue` upon initialization.
 
 ## Core Methods
-### `.constructor()`
-Native Class API `.constructor()` is mainly used to assign and cast Vue 3 Refs back to their original types. `.constructor()` should not be used to work with reactive state. Use `.init()` for reactive purposes.
+### `constructor()`
+Native Class API `constructor()` is mainly used to assign and cast Vue 3 Refs back to their original types. `constructor()` should not be used to work with reactive state. Use `.init()` for reactive purposes.
 
 ### `.init()`
 
 ---
 
-`.init()` method is auto-run on `ivue()` initialization after `.constructor()` is run.
+`.init()` method is auto-run on `ivue()` initialization after `constructor()` is run.
 `.init()` has access to the reactive state of the object via `this`.
 
 :::warning NOTICE

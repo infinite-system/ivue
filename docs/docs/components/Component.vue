@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ivue } from "../../../src/ivue";
+import { ivue } from "../../../lib/ivue";
 import { VueDd } from "vue-dd";
 import { ref } from 'vue';
 

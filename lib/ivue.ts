@@ -8,20 +8,15 @@ import type { Ref as DemiRef } from 'vue-demi';
 /**
  * IVue core reactive instance type with an extended .toRefs() method added.
  */
-export type IVue<T extends AnyClass> = InstanceType<T> & ExtendWithToRefs<T>;
-
-/**
- * Extend with .toRefs() method, so that a reactive class can be converted to a composable definition.
- */
-export interface ExtendWithToRefs<T extends AnyClass> {
+export type IVue<T extends AnyClass> = InstanceType<T> & {
   toRefs: IVueToRefsFn<T>;
-}
+};
 
 /**
  * Type definition for `.toRefs()` method converts reactive class properties to composable .value properties.
  * But if props = true OR unwrap = true is specified, the refs will be unwrapped refs to be able to be merged with the the root class properties without losing reactivity.
  */
-export interface IVueToRefsFn<T extends AnyClass> {
+interface IVueToRefsFn<T extends AnyClass> {
   <P extends keyof InstanceType<T>>(props: P[]): Pick<
     IVueRefs<InstanceType<T>>,
     P
@@ -30,10 +25,10 @@ export interface IVueToRefsFn<T extends AnyClass> {
     IVueRefs<InstanceType<T>>,
     P
   >;
-  <P extends keyof InstanceType<T>>(
-    props: P[],
-    unwrap: true
-  ): Pick<InstanceType<T>, P>;
+  <P extends keyof InstanceType<T>>(props: P[], unwrap: true): Pick<
+    InstanceType<T>,
+    P
+  >;
   (props: true): InstanceType<T>;
   (props: false): IVueRefs<InstanceType<T>>;
   (): IVueRefs<InstanceType<T>>;
@@ -43,7 +38,7 @@ export interface IVueToRefsFn<T extends AnyClass> {
  * Converts a class properties to a composable .value Refs using ToRef vue type,
  * also knows NOT to convert functions to .value Refs but to leave them as is.
  */
-export type IVueRefs<T = any> = {
+export type IVueRefs<T> = {
   [K in keyof T]: T[K] extends Function ? T[K] : ToRef<T[K]>;
 };
 
@@ -54,14 +49,14 @@ export type IVueRefs<T = any> = {
  * are difficult to fully resolve to bare values without this utility.
  * Also support Vue 3 Demi for vue-use library support.
  */
-export type UnwrapRefRecursively<T = any> = T extends Ref | DemiRef
+type UnwrapRefRecursively<T = any> = T extends Ref | DemiRef
   ? UnwrapRefRecursively<T['value']>
   : T;
 
 /**
- * Helper type for Use type, unwraps any type of Vue 3 composable down to its bare types.
+ * Helper type for Use type, unwraps any type of Vue 3 composable return object down to its bare types.
  */
-export type Unwrap<T> = T extends Ref | DemiRef
+type UnwrapComposableRefs<T> = T extends Ref | DemiRef
   ? UnwrapRefRecursively<T>
   : {
       [K in keyof T]: T[K] extends Ref | DemiRef
@@ -72,7 +67,9 @@ export type Unwrap<T> = T extends Ref | DemiRef
 /**
  * Fully unwraps to bare value types any Vue 3 composable return definition type.
  */
-export type Use<T = any> = Unwrap<T extends AnyFn ? ReturnType<T> : T>;
+export type Use<T = any> = T extends Ref | DemiRef
+  ? UnwrapRefRecursively<T>
+  : UnwrapComposableRefs<T extends AnyFn ? ReturnType<T> : T>;
 
 /**
  * Extracts object defined emit types by converting them to a plain interface
@@ -112,12 +109,12 @@ export type AnyClass = abstract new (...args: any[]) => any;
 /**
  * Descriptors map type.
  */
-export type Descriptors = Map<string, PropertyDescriptor>;
+type Descriptors = Map<string, PropertyDescriptor>;
 
 /**
  * Computeds hash map type.
  */
-export type Computeds = Record<string, ComputedRef>;
+type Computeds = Record<string, ComputedRef>;
 
 /**
  * Infer paramaters of a constructor function of a Class.
@@ -296,7 +293,7 @@ export function ivue<T extends AnyClass>(
  * Store all props for each class prototype processed by:
  * @see {getAllClassProperties}
  */
-export const propsMap: Map<object, Set<string> | any> = new Map();
+const propsMap: Map<object, Set<string> | any> = new Map();
 
 /**
  * Get properties of an entire class prototype ancestors chain as a Map.
@@ -377,7 +374,7 @@ export function iuse<T extends AnyClass | AnyFn | Object | any>(
         (classFunctionObject as AnyFn)(
           ...(args as Parameters<T extends AnyFn ? AnyFn : any>)
         )
-    : (classFunctionObject as unknown as Unwrap<T>) /** Unwrap any other Object or any type down to its bare types. */;
+    : (classFunctionObject as unknown as Use<T>) /** Unwrap any other Object or any type down to its bare types. */;
 }
 
 /**
@@ -392,7 +389,7 @@ function ivueToRefs<T extends AnyClass>(
   vue: IVue<T>,
   descriptors: Descriptors,
   computeds: Computeds
-): ExtendWithToRefs<T>['toRefs'] {
+): IVueToRefsFn<T> {
   return function (
     props?: (keyof InstanceType<T>)[] | boolean,
     unwrap?: boolean /** This property helps with TypeScript function definition overloading of return types and is not being used inside the function itself. */

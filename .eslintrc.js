@@ -93,7 +93,7 @@ module.exports = {
         groups: [['builtin', 'external', 'internal']],
         pathGroups: [
           {
-            pattern: 'src/**',
+            pattern: 'lib/**',
             group: 'internal',
             position: 'after',
           },

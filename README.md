@@ -2,7 +2,7 @@
 
 ## About
 
-`ivue` is a TypeScript class based composable architecture for Vue 3, that unlocks infinite scalability for Vue 3 based apps. It allows you to extend the regular Vue 3 in a simple and elegant way.
+`ivue` is a TypeScript class based composable architecture for Vue 3, that unlocks infinite scalability for Vue 3 based apps. It allows you to extend regular Vue 3 in a simple and elegant way.
 
 ## Features
 &ndash; Simple & Elegant Architecture<br />
@@ -22,12 +22,13 @@
 &ndash;&nbsp; Flexible like Composition API<br />
 &ndash;&nbsp; Extensible like TypeScript Class API<br />
 &ndash;&nbsp; Robust, Minimal, Opaque & Unobtrusive<br />
+&ndash;&nbsp; Pure Object Oriented Reactivity System based on Vue 3 Composition API<br />
 &ndash;&nbsp; 100% Vue 3 Compatible<br />
 &ndash;&nbsp; 100% Test Covered<br />
 &ndash;&nbsp; 100% Type Safe<br />
 &ndash;&nbsp; Production Ready<br />
 &ndash;&nbsp; Just <code>1.1kb</code> gzipped!<br />
-&ndash;&nbsp; 100% VSCode / Intellij IDE Auto-complete Intellisence<br />
+&ndash;&nbsp; 100% VSCode / Intellij IDE Auto-complete Intellisense<br />
 
 
 
