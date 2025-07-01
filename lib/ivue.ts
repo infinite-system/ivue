@@ -72,7 +72,7 @@ export type Use<T = any> = T extends Ref | DemiRef
   : UnwrapComposableRefs<T extends AnyFn ? ReturnType<T> : T>;
 
 /**
- * Extracts object defined emit types by converting them to a plain interface
+ * Extracts object defined emit types by converting them to a plain interface.
  */
 export type ExtractEmitTypes<T extends Record<string, any>> =
   UnionToIntersection<
@@ -104,12 +104,12 @@ export type AnyFn = (...args: any[]) => any;
 /**
  * Any JavaScript class of any type.
  */
-export type AnyClass = abstract new (...args: any[]) => any;
+export type AnyClass = new (...args: any[]) => any;
 
 /**
- * Descriptors map type.
+ * Accessors map type.
  */
-type Descriptors = Map<string, PropertyDescriptor>;
+type Accessors = Map<string, PropertyDescriptor>;
 
 /**
  * Computeds hash map type.
@@ -135,7 +135,7 @@ export type PrefixKeys<T, P extends string | undefined = undefined> = {
  */
 export type IFnParameters<
   T extends Record<any, any>,
-  K extends string
+  K extends keyof T
 > = Parameters<Required<Pick<T, K>>[K]>;
 
 /**
@@ -173,62 +173,58 @@ export type ValueOf<T extends Record<any, any>, K> = T[K];
 /** Types End. */
 
 /**
- * Store all descriptors for each class prototype processed by
- * @see {getAllClassDescriptors}
+ * Stores accessors for each class prototype processed by
+ * @see {getAllClassAccessors}. Uses WeakMap to allow garbage collection
+ * of unused class accessors, ensuring memory efficiency in long-running applications.
  */
-export const descriptorsMap = new Map();
+export let accessorsMap = new WeakMap<object, Accessors>();
 
 /**
- * Get descriptors of an entire class prototype ancestors chain as a Map.
+ * Get accessors of an entire class prototype ancestors chain as a Map.
  * Completely emulates JavaScript class inheritance chain for getters and setters.
  *
  * @param className
- * @return {Descriptors}
+ * @return {Accessors}
  */
-export function getAllClassDescriptors(className: AnyClass): Descriptors {
-  /* Retrieve descriptors from cache */
-  if (descriptorsMap.has(className)) {
-    return descriptorsMap.get(className);
+export function getAllClassAccessors(className: AnyClass): Accessors {
+  if (accessorsMap.has(className)) {
+    return accessorsMap.get(className) as Accessors;
   }
 
-  const savedDescriptors: Descriptors = new Map();
-
+  const savedAccessors: Accessors = new Map();
   let prototype = className.prototype;
-  while (prototype.constructor !== Object) {
-    Object.entries(Object.getOwnPropertyDescriptors(prototype)).forEach(
-      ([propertyName, currentDescriptor]) => {
-        const savedDescriptor = savedDescriptors.get(propertyName);
-        /** Emulate inheritance chain of getters and setters. */
-        if (
-          savedDescriptor !== currentDescriptor &&
-          (currentDescriptor?.get || currentDescriptor?.set)
-        ) {
-          /** Overwrite descriptors if they were already set. */
-          if (savedDescriptor?.get)
-            currentDescriptor.get = savedDescriptor?.get;
-          if (savedDescriptor?.set)
-            currentDescriptor.set = savedDescriptor?.set;
 
-          /** Store descriptors. */
-          savedDescriptors.set(propertyName, currentDescriptor);
-        }
+  while (prototype && prototype !== Object.prototype) {
+    const accessors = Object.getOwnPropertyDescriptors(prototype);
+
+    for (const [propertyName, descriptor] of Object.entries(accessors)) {
+      const isAccessor = descriptor.get || descriptor.set;
+
+      if (!isAccessor) continue;
+
+      // Only add if it hasn't been defined yet (i.e. subclass overrides win)
+      if (!savedAccessors.has(propertyName)) {
+        savedAccessors.set(propertyName, {
+          get: descriptor.get,
+          set: descriptor.set,
+          enumerable: descriptor.enumerable,
+          configurable: descriptor.configurable,
+        });
       }
-    );
-    /** Walk up the prototype ancestors chain. */
+    }
+
     prototype = Object.getPrototypeOf(prototype);
   }
 
-  /** Save descriptors in the descriptors map for each class. */
-  descriptorsMap.set(className, savedDescriptors);
-
-  return savedDescriptors;
+  accessorsMap.set(className, savedAccessors);
+  return savedAccessors;
 }
 
 /**
  * Infinite Vue (ivue) class reactive initializer.
  *
  * Converts class instance to a reactive object,
- * where descriptors are converted to computeds.
+ * where accessors are converted to computeds.
  *
  * You can turn off computed behaviour by adding static
  * ivue object and setting the getter props to false.
@@ -248,14 +244,14 @@ export function ivue<T extends AnyClass>(
   className: T,
   ...args: InferredArgs<T>
 ): IVue<T> {
-  const descriptors: Descriptors = getAllClassDescriptors(className);
-  const computeds: Computeds | any = descriptors?.size ? {} : null;
+  const accessors: Accessors = getAllClassAccessors(className);
+  const computeds: Computeds | any = accessors?.size ? {} : null;
 
-  // @ts-expect-error Abstract class initialization
+  /** Create a reactive instance of the class. */
   const vue = reactive(new className(...args));
 
-  /** Setup descriptors as computeds. */
-  for (const [prop, descriptor] of descriptors) {
+  /** Setup accessors as computeds. */
+  for (const [prop, descriptor] of accessors) {
     /* If prop exists on static getter className.ivue[prop]
      * We do not convert it to computed. Because sometimes
      * we want a normal getter. */
@@ -279,7 +275,7 @@ export function ivue<T extends AnyClass>(
   }
 
   Object.defineProperty(vue, 'toRefs', {
-    get: () => ivueToRefs(vue, descriptors as Descriptors, computeds),
+    get: () => ivueToRefs(vue, accessors as Accessors, computeds),
     enumerable: false,
   });
 
@@ -290,18 +286,19 @@ export function ivue<T extends AnyClass>(
 }
 
 /**
- * Store all props for each class prototype processed by:
- * @see {getAllClassProperties}
+ * Stores properties for each class prototype processed by
+ * @see {getAllClassProperties}. Uses WeakMap to allow garbage collection
+ * of unused class properties, ensuring memory efficiency in long-running applications.
  */
-const propsMap: Map<object, Set<string> | any> = new Map();
+export let propsMap: WeakMap<object, Set<string>> = new WeakMap();
 
 /**
  * Get properties of an entire class prototype ancestors chain as a Map.
  */
 export function getAllClassProperties(obj: object): Set<string> {
-  /* Retrieve props from cache */
+  /* Retrieve props from cache. */
   if (propsMap.has(obj.constructor)) {
-    return propsMap.get(obj.constructor);
+    return propsMap.get(obj.constructor) as Set<string>;
   }
 
   const originalConstructor = obj.constructor;
@@ -374,27 +371,27 @@ export function iuse<T extends AnyClass | AnyFn | Object | any>(
         (classFunctionObject as AnyFn)(
           ...(args as Parameters<T extends AnyFn ? AnyFn : any>)
         )
-    : /** Unwrap any other Object or any type down to its bare types. */
-      (classFunctionObject as unknown as T extends AnyClass
+    : (classFunctionObject as unknown as T extends AnyClass
         ? InstanceType<T>
-        : Use<T>);
+        : Use<T>) /** Unwrap any other Object or any type down to its bare types. */;
 }
 
 /**
  * Convert reactive ivue class to Vue 3 refs.
  *
  * @param vue @see IVue
- * @param descriptors @see Descriptors
+ * @param accessors @see Accessors
  * @param computeds @see Computeds
  * @returns {ExtendWithToRefs<T>['toRefs']}
  */
 function ivueToRefs<T extends AnyClass>(
   vue: IVue<T>,
-  descriptors: Descriptors,
+  accessors: Accessors,
   computeds: Computeds
 ): IVueToRefsFn<T> {
   return function (
     props?: (keyof InstanceType<T>)[] | boolean,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     unwrap?: boolean /** This property helps with TypeScript function definition overloading of return types and is not being used inside the function itself. */
   ): any /** @see {ReturnType<IVueToRefsFn<T>>} */ {
     /** Resulting refs store. */
@@ -404,14 +401,14 @@ function ivueToRefs<T extends AnyClass>(
     if (Array.isArray(props)) {
       for (let i = 0; i < props.length; i++) {
         const prop = props[i] as any;
-        /** Handle descriptors. */
-        if (descriptors.has(prop)) {
+        /** Handle accessors. */
+        if (accessors.has(prop)) {
           if (prop in computeds) {
             /** Return vue computed with .value from computeds store. */
             result[prop] = computeds[prop];
           } else {
             /** Initialize & store vue computed. */
-            const descriptor = descriptors.get(prop);
+            const descriptor = accessors.get(prop);
             result[prop] = computeds[prop] = computed({
               get: descriptor?.get?.bind(vue) as any,
               set: descriptor?.set?.bind(vue),
@@ -432,8 +429,8 @@ function ivueToRefs<T extends AnyClass>(
       /** Convert all props to refs and leave functions as is. */
       let allProps: null | Set<string> = new Set(getAllClassProperties(vue));
 
-      /** Convert descriptors (non enumerable by default in JS). */
-      descriptors.forEach((descriptor, prop) => {
+      /** Convert accessors (non enumerable by default in JS). */
+      accessors.forEach((descriptor, prop) => {
         if (prop in computeds) {
           /** Return vue computed with .value from computeds store. */
           result[prop] = computeds[prop];
@@ -550,6 +547,30 @@ export function propsWithDefaults<T extends VuePropsObject>(
     }
   }
   return typedProps as VuePropsWithDefaults<T>;
+}
+
+/**
+ * Clears a specific class's accessors from the cache or resets the entire cache.
+ * Useful for SSR or HMR to ensure immediate memory release.
+ */
+export function clearAccessorsMap(className?: AnyClass) {
+  if (className) {
+    accessorsMap.delete(className);
+  } else {
+    accessorsMap = new WeakMap();
+  }
+}
+
+/**
+ * Clears a specific class's properties from the cache or resets the entire cache.
+ * Useful for SSR or HMR to ensure immediate memory release.
+ */
+export function clearPropsMap(classConstructor?: object) {
+  if (classConstructor) {
+    propsMap.delete(classConstructor);
+  } else {
+    propsMap = new WeakMap();
+  }
 }
 
 /** Necessary ivue.ts to be treated as a module. */

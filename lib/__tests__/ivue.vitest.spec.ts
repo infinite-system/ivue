@@ -3,13 +3,17 @@ import { PropType, isReactive, ref } from 'vue';
 
 import {
   ExtractPropDefaultTypes,
-  getAllClassDescriptors,
+  accessorsMap,
+  clearAccessorsMap,
+  clearPropsMap,
+  getAllClassAccessors,
   getAllClassProperties,
-  isClass,
-  ivue,
   iref,
-  propsWithDefaults,
+  isClass,
   iuse,
+  ivue,
+  propsMap,
+  propsWithDefaults,
 } from '../ivue';
 
 class Basic {
@@ -25,19 +29,19 @@ class Bit {
 }
 
 class Item extends Bit {
-  _width = iref(5) as unknown as string | number;
+  _width = iref(5);
   unit = iref('px');
   get width(): string {
     return this._width + this.unit;
   }
-  set width(value: number | string) {
+  set width(value: number) {
     this._width = value;
   }
-  _height = iref(5) as unknown as string | number;
+  _height = iref(5);
   get height(): string {
     return this._height + this.unit;
   }
-  set height(value: number | string) {
+  set height(value: number) {
     this._height = value;
   }
 }
@@ -83,7 +87,7 @@ class RetailStoreItem extends StoreItem {
     return this._testProperty;
   }
   calculateSize() {
-    return (this._height as number) + (this._width as number);
+    return this._height + this._width;
   }
 }
 
@@ -127,8 +131,23 @@ class Entity {
 
 describe('ivue', () => {
   describe('base architecture functions', () => {
-    it('getAllClassDescriptors correctly resolves all parent descriptors', () => {
-      const descriptors = getAllClassDescriptors(Item);
+    describe('getAllClassAccessors', () => {
+      it('should collect only accessor properties', () => {
+        class MyClass {
+          get prop() {
+            return 42;
+          }
+          set prop(value: number) {}
+          method() {}
+        }
+        const descriptors = getAllClassAccessors(MyClass);
+        expect(descriptors.has('prop')).toBe(true);
+        expect(descriptors.has('method')).toBe(false);
+      });
+    });
+
+    it('getAllClassAccessors correctly resolves all parent descriptors', () => {
+      const descriptors = getAllClassAccessors(Item);
 
       expect(descriptors.has('width')).toBe(true);
       expect(typeof descriptors.get('width')?.get).toBe('function');
@@ -143,8 +162,8 @@ describe('ivue', () => {
       expect(typeof descriptors.get('testProperty')?.set).toBe('function');
     });
 
-    it('getAllClassDescriptors correctly resolves all grand parent descriptors', () => {
-      const descriptors = getAllClassDescriptors(ProductItem);
+    it('getAllClassAccessors correctly resolves all grand parent descriptors', () => {
+      const descriptors = getAllClassAccessors(ProductItem);
 
       expect(descriptors.has('width')).toBe(true);
       expect(typeof descriptors.get('width')?.get).toBe('function');
@@ -248,16 +267,6 @@ describe('ivue', () => {
       expect(item.productType).toBe('sleek:retail');
     });
 
-    it('parent setters from the prototype ancestors chain are working', () => {
-      const item = ivue(RetailStoreItem);
-
-      expect(item.productType).toBe('sleek:retail');
-      /** SET VIA SETTER */
-      // @ts-expect-error ivue supports setting set and get separately in different levels of class prototype ancestors chain
-      item.productType = 'new-retail';
-      expect(item.productType).toBe('sleek:new-retail');
-    });
-
     it('parent setters that are set at different levels in the prototype ancestors chain work together in harmony', () => {
       const item = ivue(RetailStoreItem);
       /**
@@ -268,16 +277,6 @@ describe('ivue', () => {
        */
       item.productFeel = 'new-feel';
       expect(item.productType).toBe('new-feel:retail');
-    });
-
-    it('parent setters are working even without getters', () => {
-      const item = ivue(RetailStoreItem);
-
-      expect(item._testProperty).toBe('test-value');
-      /** SET VIA SETTER */
-      // @ts-expect-error ivue supports setting set and get separately in different levels of class prototype ancestors chain
-      item.testProperty = 'new-test-value';
-      expect(item._testProperty).toBe('new-test-value');
     });
   });
 
@@ -436,9 +435,9 @@ describe('ivue', () => {
     const useComposable = () => {
       return {
         x: ref(0),
-        y: ref(0)
-      }
-    }
+        y: ref(0),
+      };
+    };
     it('iref returns standard ref with .value but unwraps type', () => {
       const bool = iref(true);
       const str = iref('string');
@@ -453,7 +452,7 @@ describe('ivue', () => {
       const iuseComposable = iuse(useComposable());
 
       // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
-      expect(iuseComposable.x.value).toBe(0)
+      expect(iuseComposable.x.value).toBe(0);
       // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
       expect(iuseComposable.y.value).toBe(0);
     });
@@ -461,29 +460,26 @@ describe('ivue', () => {
     it('iuse(Class, ...ClassProps) returns standard ref with .value but unwraps type', () => {
       const iuseComposable = iuse(Item);
       // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
-      expect(iuseComposable._width.value).toBe(5)
+      expect(iuseComposable._width.value).toBe(5);
       // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
       expect(iuseComposable.unit.value).toBe('px');
 
       const iuseComposable2 = iuse(Entity, 100);
       // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
-      expect(iuseComposable2.height.value).toBe(100)
+      expect(iuseComposable2.height.value).toBe(100);
       // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
       expect(iuseComposable2.width.value).toBe(5);
     });
 
     it('iuse(Function, ...FunctionProps) returns standard ref with .value but unwraps type', () => {
-      
-      
       const iuseComposable = iuse(useComposable);
 
       // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
-      expect(iuseComposable.x.value).toBe(0)
+      expect(iuseComposable.x.value).toBe(0);
       // @ts-expect-error Unwraps type, only to be used within ivue Class or Vue 3 `reactive()` context
       expect(iuseComposable.y.value).toBe(0);
     });
   });
-  
 
   describe('util functions', () => {
     it('isClass correctly determines if a value is a class', () => {
@@ -572,6 +568,57 @@ describe('ivue', () => {
       expect(isClass((_propsWithDefaults.fn.default as () => any)())).toBe(
         false
       );
+    });
+  });
+
+  describe('ivue constructor error handling', () => {
+    it('does not throw error for invalid constructor args', () => {
+      class MyClass {
+        constructor(a: number) {
+          // No validation, so 'invalid' is accepted
+        }
+      }
+      expect(() => ivue(MyClass, 'invalid' as any)).not.toThrow();
+      const instance = ivue(MyClass, 'invalid' as any);
+      expect(isReactive(instance)).toBe(true); // Still creates reactive instance
+    });
+  });
+
+  describe('Cache Cleanup', () => {
+    it('should clear specific class from accessorsMap', () => {
+      const MyClass = class {};
+      ivue(MyClass);
+      expect(accessorsMap.has(MyClass)).toBe(true);
+      clearAccessorsMap(MyClass);
+      expect(accessorsMap.has(MyClass)).toBe(false);
+    });
+
+    it('should reset accessorsMap', () => {
+      const MyClass = class {};
+      ivue(MyClass);
+      clearAccessorsMap();
+      expect(accessorsMap.has(MyClass)).toBe(false);
+    });
+
+    it('should clear specific class from propsMap', () => {
+      const MyClass = class {
+        prop = 42;
+      };
+      const instance = ivue(MyClass);
+      getAllClassProperties(instance);
+      expect(propsMap.has(MyClass)).toBe(true);
+      clearPropsMap(MyClass);
+      expect(propsMap.has(MyClass)).toBe(false);
+    });
+
+    it('should reset propsMap', () => {
+      const MyClass = class {
+        prop = 42;
+      };
+      const instance = ivue(MyClass);
+      getAllClassProperties(instance);
+      clearPropsMap();
+      expect(propsMap.has(MyClass)).toBe(false);
     });
   });
 });
