@@ -1,8 +1,10 @@
-import { computed, ref } from 'vue';
+import { computed, ref, type Ref } from 'vue';
 import { useMouse } from '@vueuse/core';
 
+type UseMouse = { x: Ref<number>; y: Ref<number> };
+
 export function useCustomMouse(requiredProp: number) {
-  const { x, y } = useMouse();
+  const { x, y }: UseMouse = useMouse();
 
   const _sum = ref(0);
 
@@ -11,14 +13,13 @@ export function useCustomMouse(requiredProp: number) {
   }
 
   const total = computed(() => {
-    // Returning without .value, not entirely correctly, but will still work in Vue template.
-    // This is to test the impressive IVue unwrapping capabilities of deeply nested and confusing Refs
-    return _sum;
+    return _sum.value;
   });
 
   return {
     x,
     y,
+    _sum,
     sum,
     total,
   };

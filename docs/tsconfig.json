@@ -17,7 +17,10 @@
     "types": ["vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./docs/*"]
+      "@/*": ["./docs/*"],
+      "vue": ["node_modules/vue"],
+      "vue-demi": ["node_modules/vue-demi"],
+      "@vueuse/core": ["node_modules/@vueuse/core"]
     }
   },
   "exclude": ["docs/.vitepress/dist", "docs/.vitepress/cache"]

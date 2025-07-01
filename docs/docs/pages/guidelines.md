@@ -20,10 +20,32 @@ const chooseContact = ref({
 
 ## Dos and Don'ts
 
-```ts twoslash
-<!--@include: ./test.ts-->
-// ttest
+<div class="visually-hidden">
+
+```ts twoslash include ivue [ivue.ts]
+<!--@include: ../../../lib/ivue.ts -->
 ```
+
+```ts twoslash include useMouse [useMouse.ts]
+<!--@include: ./useMouse.ts -->
+```
+
+</div>
+
+
+::: code-group
+```ts twoslash [proper-ivue.ts]
+<!--@include: ./test.ts-->
+```
+
+```ts twoslash [useMouse.ts]
+<!--@include: ./useMouse.ts -->
+```
+
+```ts twoslash [ivue.ts]
+<!--@include: ../../../lib/ivue.ts -->
+```
+:::
 
 ### Use ref() for properties
 

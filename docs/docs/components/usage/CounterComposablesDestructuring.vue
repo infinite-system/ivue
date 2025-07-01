@@ -1,4 +1,6 @@
 <script setup lang="ts">
+// @filename: node_modules/@types/ivue/index.d.ts
+// @include: ivue
 // @include: useCustomMouse
 // ---cut---
 import { ivue, iuse, iref, type Use } from 'ivue';

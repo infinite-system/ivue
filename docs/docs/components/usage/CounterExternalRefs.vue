@@ -1,4 +1,7 @@
 <script setup lang="ts">
+// @filename: node_modules/@types/ivue/index.d.ts
+// @include: ivue
+// ---cut---
 import { ref } from 'vue';
 import { ivue, iref, iuse } from 'ivue';
 

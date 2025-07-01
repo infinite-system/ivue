@@ -374,7 +374,10 @@ export function iuse<T extends AnyClass | AnyFn | Object | any>(
         (classFunctionObject as AnyFn)(
           ...(args as Parameters<T extends AnyFn ? AnyFn : any>)
         )
-    : (classFunctionObject as unknown as Use<T>) /** Unwrap any other Object or any type down to its bare types. */;
+    : /** Unwrap any other Object or any type down to its bare types. */
+      (classFunctionObject as unknown as T extends AnyClass
+        ? InstanceType<T>
+        : Use<T>);
 }
 
 /**

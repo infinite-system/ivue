@@ -1,7 +1,12 @@
+// @filename: node_modules/@types/ivue/index.d.ts
+// @include: ivue
+// @include: useMouse
+// ---cut---
 import { defineProps, defineEmits, onMounted, watch } from 'vue';
 import { type Use, ivue, iref, iuse } from 'ivue';
-import { useMouse } from '@vueuse/core';
+import { useMouse } from './useMouse';
 
+// Properly declared unwrapped composable. 
 type UseMouse = Use<typeof useMouse>;
 
 interface CounterProps {
@@ -14,32 +19,33 @@ interface CounterEmits {
 
 const props = defineProps<CounterProps>();
 const emit = defineEmits<CounterEmits>();
+
 /**
  * Example of a properly defined ivue class.
  */
 class Counter {
-  /** ✓ Properly declared unwrapped composable. */
+  // Properly declared unwrapped composable. 
   mouse: UseMouse;
 
-  /**
-   * ✓ Properly declared DOM Ref.
-   * ✓ Custom declared type of HTMLElement or null
-   */
+  // Properly declared DOM Ref. 
   spanElementRef = iref<HTMLElement | null>(null);
 
   constructor(public props: CounterProps, public emit: CounterEmits) {
-    /** ✓ Properly declared auto-unwrapped composable. */
+    // Properly declared auto-unwrapped composable.
     this.mouse = iuse(useMouse);
   }
 
-  /** ✓ Properly declared init function. */
+  /**
+   * Properly declared ivue init() function 
+   * used to initialize Vue lifecycle hooks.
+   */
   init() {
-    /** ✓ Properly set lifecycle hook. */
+    // Properly set lifecycle hook.
     onMounted(() => {
       this.count = 4;
     });
 
-    /** ✓ Properly set watch function */
+    // Properly set watch function.
     watch(
       () => this.count,
       (newCount: number) => {
@@ -50,37 +56,29 @@ class Counter {
     );
   }
 
-  /**
-   * Use iref() for the property to be auto cast to number
-   * because refs auto-unwrap inside reactive().
-   */
-  count = iref(0); // ✓ Properly inferred type -> number
+  count = iref(0); // Properly declared Ref with auto inferred type -> number 
 
-  /**
-   * Use iref() for the property to be auto cast to number
-   * because refs auto-unwrap inside reactive().
-   */
-  timesClicked = iref(0); // ✓ Properly inferred type -> number
+  timesClicked = iref(0); // Properly declared Ref with auto inferred type -> number 
 
-  /** ✓ Properly declared function (not arrow function). */
+  // Properly declared function (not arrow function).
   increment() {
     this.count++;
   }
 
-  /** ✓ Properly declared function (not arrow function). */
+  // Properly declared function (not arrow function).
   click() {
     this.increment();
     this.timesClicked++;
   }
 
-  /** ✓ Properly declared computed getter. */
+  // Properly declared computed getter.
   get doubleCount() {
     return this.count * 2;
   }
 }
 
-/** ✓ Properly initialized IVUE class runner. */
+// Properly initialized ivue class.
 const counter = ivue(Counter, props, emit);
 
 counter.count;
-//      ^|
+//     ^|

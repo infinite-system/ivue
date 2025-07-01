@@ -62,6 +62,9 @@
     "vue-demi": "^0.14.10",
     "vue-router": "^4.1.6"
   },
+  "resolutions": {
+    "vue": "^3.3.6"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/infinite-system/ivue"
