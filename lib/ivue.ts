@@ -1,8 +1,21 @@
-/* eslint-disable @typescript-eslint/ban-types */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ComputedRef, ExtractPropTypes, Ref, ToRef } from 'vue';
-import { computed, reactive, ref, shallowRef, toRef } from 'vue';
+import { computed, markRaw, reactive, ref, shallowRef, toRef } from 'vue';
 import type { Ref as DemiRef } from 'vue-demi';
+
+/** Cached global methods. */
+const isArray = Array.isArray;
+const createObject = Object.create;
+const defineProperty = Object.defineProperty;
+const getPrototypeOf = Object.getPrototypeOf;
+const getOwnPropertyNames = Object.getOwnPropertyNames;
+const getOwnPropertySymbols = Object.getOwnPropertySymbols;
+const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+const getOwnPropertyDescriptors = Object.getOwnPropertyDescriptors;
+// Safely curry Object.prototype.toString so we can call it like objectPrototypeToString(val)
+const objectPrototypeToString = Object.prototype.toString.call.bind(
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  Object.prototype.toString
+) as any;
 
 /** Types */
 /**
@@ -10,26 +23,47 @@ import type { Ref as DemiRef } from 'vue-demi';
  */
 export type IVue<T extends AnyClass> = InstanceType<T> & {
   toRefs: IVueToRefsFn<T>;
+  clone: IVueClone<T>;
 };
+
+/**
+ * Type definition for `.clone()` method creates a deep clone of the ivue instance.
+ */
+export type IVueClone<T extends AnyClass> = (
+  ...cloneArgs: CloneArgsFor<InstanceType<T>>
+) => IVue<T>;
 
 /**
  * Type definition for `.toRefs()` method converts reactive class properties to composable .value properties.
  * But if props = true OR unwrap = true is specified, the refs will be unwrapped refs to be able to be merged with the the root class properties without losing reactivity.
  */
+/** Extract only non-method keys from a type */
+type NonMethodKeys<T> = {
+  [K in keyof T]: T[K] extends AnyFn ? never : K;
+}[keyof T];
+
+/** Create a type with only data properties and accessors */
+type DataProperties<T> = Pick<T, NonMethodKeys<T>>;
+
+/**
+ * Simplified IVueToRefsFn that only works with data properties
+ */
 interface IVueToRefsFn<T extends AnyClass> {
-  <P extends keyof InstanceType<T>>(props: P[]): Pick<
-    IVueRefs<InstanceType<T>>,
-    P
-  >;
-  <P extends keyof InstanceType<T>>(props: P[], unwrap: false): Pick<
-    IVueRefs<InstanceType<T>>,
-    P
-  >;
-  <P extends keyof InstanceType<T>>(props: P[], unwrap: true): Pick<
-    InstanceType<T>,
-    P
-  >;
-  (props: true): InstanceType<T>;
+  <P extends keyof IVueRefs<InstanceType<T>>>(
+    props: P[]
+  ): Pick<IVueRefs<InstanceType<T>>, P>;
+
+  <P extends keyof IVueRefs<InstanceType<T>>>(
+    props: P[],
+    unwrap: false
+  ): Pick<IVueRefs<InstanceType<T>>, P>;
+
+  <P extends keyof DataProperties<InstanceType<T>>>(
+    props: P[],
+    unwrap: true
+  ): Pick<DataProperties<InstanceType<T>>, P>;
+
+  (props: true): DataProperties<InstanceType<T>>;
   (props: false): IVueRefs<InstanceType<T>>;
   (): IVueRefs<InstanceType<T>>;
 }
@@ -39,7 +73,7 @@ interface IVueToRefsFn<T extends AnyClass> {
  * also knows NOT to convert functions to .value Refs but to leave them as is.
  */
 export type IVueRefs<T> = {
-  [K in keyof T]: T[K] extends Function ? T[K] : ToRef<T[K]>;
+  [K in keyof T as T[K] extends AnyFn ? never : K]: ToRef<T[K]>;
 };
 
 /**
@@ -131,12 +165,91 @@ export type PrefixKeys<T, P extends string | undefined = undefined> = {
 };
 
 /**
- * Get Interface's property's function arguments Parmeters<F>
+ * Get function arguments Parmeters<F> parameter by key K
+ */
+export type FnParameter<F extends AnyFn, K extends number> = Parameters<F>[K];
+
+/**
+ * Convert Union Type to Intersection Type.
+ */
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+  k: infer I
+) => void
+  ? I
+  : never;
+
+/**
+ * Convert Record to Union Type.
+ */
+type RecordToUnion<T extends Record<string, any>> = T[keyof T];
+
+/**
+ * Gets object T property by key [K].
+ */
+type ValueOf<T extends Record<any, any>, K> = T[K];
+
+/**
+ * Props Map Value type.
+ */
+type PropsMapValue = {
+  allProps: Map<string, PropKind>;
+  onlyProps: Set<string>;
+};
+
+/**
+ * Accessors and Methods map type.
+ */
+type AccessorsMethodsMap = {
+  accessors: Accessors;
+  methods: Set<string>;
+};
+
+export type IVueInstanceBase = {
+  init?: (...args: any[]) => void;
+};
+
+/**
+ * IVue static configuration interface.
+ */
+export interface IVueStaticConfig<T> {
+  ivueGlobalStore?: boolean;
+  ivueCloneByReference?: Set<keyof T>;
+  ivueDisableReactivity?: Set<keyof T>;
+}
+
+/**
+ * IVue constructor type.
+ */
+export type IVueConstructor<T> = new (...args: any[]) => T;
+
+/**
+ * IVue class type with static configuration.
+ */
+export type IVueClass<T> = IVueConstructor<T> & IVueStaticConfig<T>;
+
+/**
+ * Get IVue init() method arguments IVueInitArgs<T>
+ */
+export type IVueInitArgs<T extends IVueInstanceBase> = T['init'] extends (
+  ...args: any[]
+) => any
+  ? Parameters<T['init']>
+  : never;
+
+/**
+ * Get Interface's method keys MethodKeys<T>
+ */
+type MethodKeys<T> = {
+  [P in keyof T]: T[P] extends (...args: any[]) => any ? P : never;
+}[keyof T];
+
+/**
+ * Get Interface's property's function arguments Parameters<F>
  */
 export type IFnParameters<
-  T extends Record<any, any>,
-  K extends keyof T
-> = Parameters<Required<Pick<T, K>>[K]>;
+  T extends Record<any, any> | InstanceType<AnyClass>,
+  K extends MethodKeys<T>
+> = Parameters<Extract<Required<Pick<T, K>>[K], AnyFn>>;
 
 /**
  * Get Interface's [T] property's [P] function arguments Parmeters<F> parameter by key [K]
@@ -147,78 +260,132 @@ export type IFnParameter<
   K extends number
 > = FnParameter<ValueOf<T, P>, K>;
 
-/**
- * Get function arguments Parmeters<F> parameter by key K
- */
-export type FnParameter<F extends AnyFn, K extends number> = Parameters<F>[K];
+export type IVueDeepCloneArgsMap = Map<AnyClass, any[]>;
 
-/**
- * Convert Union Type to Intersection Type.
- */
-export type UnionToIntersection<U> = (
-  U extends any ? (k: U) => void : never
-) extends (k: infer I) => void
-  ? I
-  : never;
-
-/**
- * Convert Record to Union Type.
- */
-export type RecordToUnion<T extends Record<string, any>> = T[keyof T];
-
-/**
- * Gets object T property by key [K].
- */
-export type ValueOf<T extends Record<any, any>, K> = T[K];
+type CloneArgsFor<T> = T extends {
+  init: (isClone: boolean, ...rest: infer A) => any;
+}
+  ? A
+  : [];
 /** Types End. */
+
+export const IVUE_INSTANCE_SYMBOL = Symbol('IVUE_INSTANCE');
 
 /**
  * Stores accessors for each class prototype processed by
- * @see {getAllClassAccessors}. Uses WeakMap to allow garbage collection
+ * @see {getClassAccessorsMethodsMap}. Uses WeakMap to allow garbage collection
  * of unused class accessors, ensuring memory efficiency in long-running applications.
  */
-export let accessorsMap = new WeakMap<object, Accessors>();
+export let accessorsMethodsMaps = new WeakMap<object, AccessorsMethodsMap>();
 
 /**
  * Get accessors of an entire class prototype ancestors chain as a Map.
  * Completely emulates JavaScript class inheritance chain for getters and setters.
  *
  * @param className
- * @return {Accessors}
+ * @return {AccessorsMethodsMap}
  */
-export function getAllClassAccessors(className: AnyClass): Accessors {
-  if (accessorsMap.has(className)) {
-    return accessorsMap.get(className) as Accessors;
+const getClassAccessorsMethodsMap = (
+  className: AnyClass
+): AccessorsMethodsMap => {
+  if (accessorsMethodsMaps.has(className)) {
+    return accessorsMethodsMaps.get(className) as AccessorsMethodsMap;
   }
 
   const savedAccessors: Accessors = new Map();
+  const savedMethods: Set<string> = new Set();
+
   let prototype = className.prototype;
-
   while (prototype && prototype !== Object.prototype) {
-    const accessors = Object.getOwnPropertyDescriptors(prototype);
+    const accessors = getOwnPropertyDescriptors(prototype);
+    for (const propertyName in accessors) {
+      if (propertyName === 'constructor') continue;
+      const descriptor = accessors[propertyName];
+      if (descriptor.get || descriptor.set) {
+        // Only add if it hasn't been defined yet (i.e. subclass overrides win)
+        if (!savedAccessors.has(propertyName)) {
+          savedAccessors.set(propertyName, descriptor);
+        }
+      } else if (typeof descriptor.value === 'function') {
+        savedMethods.add(propertyName);
+      }
+    }
+    prototype = getPrototypeOf(prototype);
+  }
 
-    for (const [propertyName, descriptor] of Object.entries(accessors)) {
-      const isAccessor = descriptor.get || descriptor.set;
+  const propertyMap = {
+    accessors: savedAccessors,
+    methods: savedMethods
+  };
+  accessorsMethodsMaps.set(className, propertyMap);
 
-      if (!isAccessor) continue;
+  return propertyMap;
+};
 
-      // Only add if it hasn't been defined yet (i.e. subclass overrides win)
-      if (!savedAccessors.has(propertyName)) {
-        savedAccessors.set(propertyName, {
-          get: descriptor.get,
-          set: descriptor.set,
-          enumerable: descriptor.enumerable,
-          configurable: descriptor.configurable,
-        });
+/**
+ * Property kind enum for distinguishing between data properties and accessors.
+ */
+const enum PropKind {
+  Data = 0,
+  Accessor = 2
+}
+
+/**
+ * Stores properties for each class prototype processed by
+ * @see {getClassPropertiesAccessorsMap}. Uses WeakMap to allow garbage collection
+ * of unused class properties, ensuring memory efficiency in long-running applications.
+ */
+export let propertiesAccessorsMaps: WeakMap<object, PropsMapValue> =
+  new WeakMap();
+
+/**
+ * 'caller', 'callee', 'arguments', 'constructor' are
+ * special object properties, so should be skipped.
+ * Also skip 'toRefs' as it's added by ivue and not part of the class itself.
+ */
+const skipProps = new Set(['caller', 'callee', 'arguments', 'constructor']);
+
+/**
+ * Get properties of an entire class prototype ancestors chain as a Map.
+ */
+const getClassPropertiesAccessorsMap = (obj: object): PropsMapValue => {
+  const constructor = obj.constructor;
+  /* Retrieve props from cache. */
+  if (propertiesAccessorsMaps.has(constructor)) {
+    return propertiesAccessorsMaps.get(constructor) as PropsMapValue;
+  }
+
+  const { accessors, methods } =
+    accessorsMethodsMaps.get(constructor) ??
+    getClassAccessorsMethodsMap(constructor as AnyClass);
+
+  const onlyProps = new Set<string>();
+  const allProps: Map<string, PropKind> = new Map();
+
+  do {
+    const propertyNames = getOwnPropertyNames(obj);
+    for (let i = 0, j = propertyNames.length; i < j; i++) {
+      const property = propertyNames[i];
+
+      if (skipProps.has(property)) continue; // Skip special properties
+      if (allProps.has(property)) continue; // Already defined in subclass, skip it
+
+      if (accessors.has(property)) {
+        allProps.set(property, PropKind.Accessor);
+      } else if (!methods.has(property)) {
+        onlyProps.add(property);
+        allProps.set(property, PropKind.Data);
       }
     }
 
-    prototype = Object.getPrototypeOf(prototype);
-  }
+    obj = getPrototypeOf(obj);
+  } while (obj && obj.constructor !== Object);
 
-  accessorsMap.set(className, savedAccessors);
-  return savedAccessors;
-}
+  const result = { allProps, onlyProps };
+  propertiesAccessorsMaps.set(constructor, result);
+
+  return result;
+};
 
 /**
  * Infinite Vue (ivue) class reactive initializer.
@@ -240,92 +407,208 @@ export function getAllClassAccessors(className: AnyClass): Accessors {
  * @param args Class constructor arguments that you would pass to a `new AnyClass(args...)`
  * @returns {IVue<T>}
  */
-export function ivue<T extends AnyClass>(
+export const ivue = <T extends AnyClass>(
   className: T,
   ...args: InferredArgs<T>
-): IVue<T> {
-  const accessors: Accessors = getAllClassAccessors(className);
-  const computeds: Computeds | any = accessors?.size ? {} : null;
+): IVue<T> => {
+  const { accessors, methods } = getClassAccessorsMethodsMap(className);
+  const computeds: Computeds | any = accessors?.size
+    ? createObject(null)
+    : null;
 
   /** Create a reactive instance of the class. */
   const vue = reactive(new className(...args));
 
   /** Setup accessors as computeds. */
   for (const [prop, descriptor] of accessors) {
-    /* If prop exists on static getter className.ivue[prop]
-     * We do not convert it to computed. Because sometimes
-     * we want a normal getter. */
-    if ((className as any)?.ivue?.[prop] === false) continue;
     /** Convert descriptor to computed. */
-    Object.defineProperty(vue, prop, {
-      get: descriptor.get
-        ? () =>
-            prop in computeds
-              ? /** Get the existing computed, because we are in reactive scope, .value will auto unwrap itself. */
-                computeds[prop]
-              : /** Create the computed and return it, because we are in reactive scope, .value will auto unwrap itself. */
-                (computeds[prop] = computed({
-                  get: descriptor.get?.bind(vue) as any,
-                  set: descriptor.set?.bind(vue),
-                } as any))
-        : undefined,
-      set: descriptor.set?.bind(vue),
-      enumerable: false,
+    defineProperty(vue, prop, {
+      get: () =>
+        computeds[prop] ??
+        (computeds[prop] = computed({
+          get: descriptor.get?.bind(vue) as unknown,
+          set: descriptor.set?.bind(vue)
+        } as any)) /** Create the computed and return it, because we are in reactive scope, .value will auto unwrap itself. */,
+      enumerable: descriptor.enumerable,
+      configurable: descriptor.configurable
     });
   }
 
-  Object.defineProperty(vue, 'toRefs', {
-    get: () => ivueToRefs(vue, accessors as Accessors, computeds),
+  /** Disable reactivity for specified properties. */
+  const nonReactiveProps = (className as any)?.ivueDisableReactivity;
+  if (nonReactiveProps) {
+    for (const prop of nonReactiveProps) {
+      const descriptor = accessors.get(prop);
+      if (descriptor) {
+        defineProperty(vue, prop, {
+          get: descriptor.get?.bind(vue),
+          set: descriptor.set?.bind(vue),
+          enumerable: descriptor.enumerable,
+          configurable: descriptor.configurable
+        });
+      } else {
+        vue[prop] = markRaw(vue[prop]);
+      }
+    }
+  }
+
+  // In ivue(), for method binding:
+  const methodDescriptor: PropertyDescriptor = {
+    writable: true,
+    configurable: true,
+    enumerable: false
+  };
+  /** Bind all methods to the vue instance. */
+  for (const methodName of methods) {
+    methodDescriptor.value = vue[methodName].bind(vue);
+    defineProperty(vue, methodName, methodDescriptor);
+  }
+
+  /** Define .toRefs() method on the vue instance. */
+  defineProperty(vue, 'toRefs', {
+    get: (() => {
+      /** Lazy loaded toRefs function cache. */
+      let toRefsFn: IVueToRefsFn<T> | null = null;
+      return () =>
+        toRefsFn ?? (toRefsFn = ivueToRefs(vue, accessors, computeds));
+    })(),
+    enumerable: false
+  });
+
+  /** Define .clone() method on the vue instance. */
+  defineProperty(vue, 'clone', {
+    value: (...cloneArgs: CloneArgsFor<InstanceType<T>>) =>
+      ivueClone(className, args, vue, accessors, methods, cloneArgs),
+    enumerable: false
+  });
+
+  /** Mark as ivue instance */
+  defineProperty(vue, IVUE_INSTANCE_SYMBOL, {
+    value: true,
     enumerable: false,
+    configurable: false,
+    writable: false
   });
 
   /** Run ivue .init() initializer method, if it exists in the class. */
-  if ('init' in vue) vue.init();
+  vue?.init?.(false);
 
   return vue;
-}
+};
 
-/**
- * Stores properties for each class prototype processed by
- * @see {getAllClassProperties}. Uses WeakMap to allow garbage collection
- * of unused class properties, ensuring memory efficiency in long-running applications.
- */
-export let propsMap: WeakMap<object, Set<string>> = new WeakMap();
+const ivueClone = <T extends AnyClass>(
+  className: T,
+  args: InferredArgs<T>,
+  vueSrc: IVue<T>,
+  accessors: Accessors,
+  methods: Set<string>,
+  cloneArgs: CloneArgsFor<InstanceType<T>> = [] as CloneArgsFor<InstanceType<T>>
+): IVue<T> => {
+  const computeds: Computeds | any = accessors?.size
+    ? createObject(null)
+    : null;
 
-/**
- * Get properties of an entire class prototype ancestors chain as a Map.
- */
-export function getAllClassProperties(obj: object): Set<string> {
-  /* Retrieve props from cache. */
-  if (propsMap.has(obj.constructor)) {
-    return propsMap.get(obj.constructor) as Set<string>;
+  /** Create a reactive instance of the class. */
+  const vue = reactive(new className(...args));
+  const { onlyProps } = getClassPropertiesAccessorsMap(vue);
+
+  /** Clone properties. */
+  const cloneByRef = (className as any).ivueCloneByReference;
+  const deepCloneArgs = activeDeepCloneArgsMap.get(className);
+
+  if (cloneByRef) {
+    for (const prop of onlyProps) {
+      vue[prop] = cloneByRef.has(prop)
+        ? vueSrc[prop]
+        : deepClone(vueSrc[prop], deepCloneArgs);
+    }
+  } else {
+    for (const prop of onlyProps) {
+      vue[prop] = deepClone(vueSrc[prop], deepCloneArgs);
+    }
   }
 
-  const originalConstructor = obj.constructor;
-
-  const allProps: Set<string> = new Set();
-  do {
-    Object.getOwnPropertyNames(obj).forEach((prop) => {
-      /* 'caller', 'callee', 'arguments', 'constructor' are
-       * special object properties, so should be skipped. */
-      if (!['caller', 'callee', 'arguments', 'constructor'].includes(prop)) {
-        allProps.add(prop);
-      }
+  /** Setup accessors as computeds. */
+  for (const [prop, descriptor] of accessors) {
+    /** Convert descriptor to computed. */
+    defineProperty(vue, prop, {
+      get: () =>
+        computeds[prop] ??
+        (computeds[prop] = computed({
+          get: descriptor.get?.bind(vue) as unknown,
+          set: descriptor.set?.bind(vue)
+        } as any)) /** Create the computed and return it, because we are in reactive scope, .value will auto unwrap itself. */,
+      enumerable: descriptor.enumerable,
+      configurable: descriptor.configurable
     });
-    obj = Object.getPrototypeOf(obj);
-  } while (obj.constructor !== Object);
+  }
 
-  /** Save props in the props map. */
-  propsMap.set(originalConstructor, allProps);
+  /** Disable reactivity for specified properties. */
+  const nonReactiveProps = (className as any)?.ivueDisableReactivity;
+  if (nonReactiveProps) {
+    for (const prop of nonReactiveProps) {
+      const descriptor = accessors.get(prop);
+      if (descriptor) {
+        defineProperty(vue, prop, {
+          get: descriptor.get?.bind(vue),
+          set: descriptor.set?.bind(vue),
+          enumerable: descriptor.enumerable,
+          configurable: descriptor.configurable
+        });
+      } else {
+        vue[prop] = markRaw(vue[prop]);
+      }
+    }
+  }
 
-  return allProps;
-}
+  /** Bind all methods to the vue instance. */
+  const methodDescriptor: PropertyDescriptor = {
+    writable: true,
+    configurable: true,
+    enumerable: false
+  };
+  for (const methodName of methods) {
+    methodDescriptor.value = vue[methodName].bind(vue);
+    defineProperty(vue, methodName, methodDescriptor);
+  }
+
+  /** Define .toRefs() method on the vue instance. */
+  defineProperty(vue, 'toRefs', {
+    get: (() => {
+      /** Lazy loaded toRefs function cache. */
+      let toRefsFn: IVueToRefsFn<T> | null = null;
+      return () =>
+        toRefsFn ?? (toRefsFn = ivueToRefs(vue, accessors, computeds));
+    })(),
+    enumerable: false
+  });
+
+  /** Define .clone() method on the vue instance. */
+  defineProperty(vue, 'clone', {
+    value: (...cloneArgs: CloneArgsFor<InstanceType<T>>) =>
+      ivueClone(className, args, vue, accessors, methods, cloneArgs),
+    enumerable: false
+  });
+
+  /** Mark as ivue instance */
+  defineProperty(vue, IVUE_INSTANCE_SYMBOL, {
+    value: true,
+    enumerable: false,
+    configurable: false,
+    writable: false
+  });
+
+  /** Run ivue .init() initializer method, if it exists in the class. */
+  vue?.init?.(true, ...cloneArgs);
+
+  return vue;
+};
 
 /**
  * `iref()` is an alias for Vue ref() function but returns an unwrapped type without the .value
  * `iref()` does not alter the behavior of ref(), but simply transforms the type to an unwrapped raw value.
  * @param val T
- * @returns {T}
+ * @returns {T} Ref but with type unwrapped
  */
 export const iref = ref as <T = any>(value?: T) => T;
 
@@ -333,48 +616,20 @@ export const iref = ref as <T = any>(value?: T) => T;
  * `ishallowRef()` is an alias for Vue shallowRef() function but returns an unwrapped type without the .value
  * `ishallowRef()` does not alter the behavior of shallowRef(), but simply transforms the type to an unwrapped raw value.
  * @param val T
- * @returns {T}
+ * @returns {T} ShallowRef but with type unwrapped
  */
 export const ishallowRef = shallowRef as <T = any>(value?: T) => T;
 
 /**
- * Three modes of operation:
- * 1. `iuse(useComposable(arg, arg2, arg3, ...))` converts the return types of a Composable / Ref to pure raw unwrapped type definition.
- * Returns for all properties of an object an unwrapped raw type definition,
- * unwraps direct Refs & ComputedRefs as well down to their raw types.
+ * `iuse()` is a helper function that unwraps any Vue 3 composable return type down to its bare types.
  *
- * 2. `iuse(useComposable, arg, arg2, arg3, ...)` for cleaner syntax for #1, it does exactly the same thing but
- * here the TypeScript inference works for composable function arguments to assist you with intellisence,
- * like they work for constructor arguments in the cause of `ivue()` core function,
- * making the API cleaner to look at and make it compatible with how this function operates with classes, see #3.
+ * It does not alter the behavior of the composable, but simply transforms the type to an unwrapped raw value.
  *
- * 3. `iuse(AnyClass, ...args)` If AnyClass is supplied and that class's arguments into `iuse(AnyClass, ...args)`,
- * it returns an 'ivue(AnyClass, ...args).toRefs()` object for all properties but casts
- * their types as raw (no-Ref) types to fit with reactive() structure of the ivue class context.
+ * @param obj Any Vue 3 composable return type or any object or any type
+ * @returns {Use<T>} Composable with types unwrapped
  */
-export function iuse<T extends AnyClass | AnyFn | Object | any>(
-  classFunctionObject?: T,
-  ...args: T extends AnyClass
-    ? InferredArgs<T>
-    : T extends AnyFn
-    ? Parameters<T extends (...args: any[]) => any ? T : any>
-    : any
-): T extends AnyClass ? InstanceType<T> : Use<T> {
-  return typeof classFunctionObject === 'function'
-    ? isClass(classFunctionObject)
-      ? /** Run IVUE but return full Refs, yet property 'true' makes `.toRefs(true)` cast the type to the unwrapped raw type definition instead of a `.value` Ref. */
-        ivue(
-          classFunctionObject as T extends AnyClass ? T : any,
-          ...(args as InferredArgs<T extends AnyClass ? T : any>)
-        ).toRefs(true)
-      : /** Run Vue 3 Standard Composable but also unwrap it to bare raw types. */
-        (classFunctionObject as AnyFn)(
-          ...(args as Parameters<T extends AnyFn ? AnyFn : any>)
-        )
-    : (classFunctionObject as unknown as T extends AnyClass
-        ? InstanceType<T>
-        : Use<T>) /** Unwrap any other Object or any type down to its bare types. */;
-}
+export const iuse = <T extends object>(obj: T): Use<T> =>
+  obj as unknown as Use<T>; /** Unwrap any other Object or any type down to its bare types. */
 
 /**
  * Convert reactive ivue class to Vue 3 refs.
@@ -384,84 +639,64 @@ export function iuse<T extends AnyClass | AnyFn | Object | any>(
  * @param computeds @see Computeds
  * @returns {ExtendWithToRefs<T>['toRefs']}
  */
-function ivueToRefs<T extends AnyClass>(
+const ivueToRefs = <T extends AnyClass>(
   vue: IVue<T>,
   accessors: Accessors,
   computeds: Computeds
-): IVueToRefsFn<T> {
+): IVueToRefsFn<T> => {
+  /** Caches for toRefs function */
+  /** Cached accessor function */
+  const getAccessor = accessors.get.bind(accessors);
+  /** Get all class properties */
+  const { allProps } = getClassPropertiesAccessorsMap(vue);
+  /** The actual toRefs function returned. */
   return function (
-    props?: (keyof InstanceType<T>)[] | boolean,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    props: (string & keyof InstanceType<T>)[] | boolean = false,
     unwrap?: boolean /** This property helps with TypeScript function definition overloading of return types and is not being used inside the function itself. */
   ): any /** @see {ReturnType<IVueToRefsFn<T>>} */ {
     /** Resulting refs store. */
-    const result: Record<string | number | symbol, any> = {};
+    const result: Record<string, any> = {};
 
-    /** Output specific props only, if props are specified. */
-    if (Array.isArray(props)) {
-      for (let i = 0; i < props.length; i++) {
-        const prop = props[i] as any;
-        /** Handle accessors. */
-        if (accessors.has(prop)) {
-          if (prop in computeds) {
-            /** Return vue computed with .value from computeds store. */
-            result[prop] = computeds[prop];
-          } else {
-            /** Initialize & store vue computed. */
-            const descriptor = accessors.get(prop);
-            result[prop] = computeds[prop] = computed({
-              get: descriptor?.get?.bind(vue) as any,
-              set: descriptor?.set?.bind(vue),
-            } as any);
-          }
-        } else {
-          /** Handle methods. */
-          if (typeof vue[prop] === 'function') {
-            /** Bind method to vue, makes method destructuring point to right instance. */
-            result[prop] = vue[prop].bind(vue);
-          } else {
-            /** Convert simple reactive prop to a Ref. */
-            result[prop] = toRef(vue, prop);
-          }
-        }
+    /** Convert all props to refs and leave functions as is. */
+    if (isArray(props)) {
+      for (const prop of props) {
+        const kind = allProps.get(prop);
+        resolveIvueToRefs(result, prop, kind, vue, getAccessor, computeds);
       }
     } else {
-      /** Convert all props to refs and leave functions as is. */
-      let allProps: null | Set<string> = new Set(getAllClassProperties(vue));
-
-      /** Convert accessors (non enumerable by default in JS). */
-      accessors.forEach((descriptor, prop) => {
-        if (prop in computeds) {
-          /** Return vue computed with .value from computeds store. */
-          result[prop] = computeds[prop];
-        } else {
-          /** Initialize vue computed ref & store it in result. */
-          result[prop] = computeds[prop] = computed({
-            get: descriptor.get?.bind(vue) as any,
-            set: descriptor.set?.bind(vue),
-          } as any);
-        }
-        /** Delete descriptor from props as it was already processed. */
-        allProps?.delete(prop as string);
-      });
-
-      allProps.forEach((prop) => {
-        if (typeof vue[prop] === 'function') {
-          /** Bind method to vue, makes method destructuring point to right instance. */
-          result[prop] = vue[prop].bind(vue);
-        } else {
-          /** Convert simple reactive prop to a Ref. */
-          result[prop] = toRef(vue, prop);
-        }
-      });
-
-      /** Memory optimization. */
-      allProps = null;
+      for (const [prop, kind] of allProps.entries()) {
+        resolveIvueToRefs(result, prop, kind, vue, getAccessor, computeds);
+      }
     }
 
-    return result as any;
+    return result as any; /** @see {ReturnType<IVueToRefsFn<T>>} */
   };
-}
+};
+
+/**
+ * Resolve property to ref, method or computed and assign it to result.
+ * @private
+ */
+const resolveIvueToRefs = (
+  result: Record<string, any>,
+  prop: string,
+  kind: PropKind | undefined,
+  vue: IVue<any>,
+  getAccessor: Accessors['get'],
+  computeds: Record<string, ComputedRef<any>>
+): void => {
+  if (kind === PropKind.Accessor) {
+    const descriptor = getAccessor(prop) as PropertyDescriptor;
+    result[prop] =
+      computeds[prop] ??
+      (computeds[prop] = computed({
+        get: descriptor.get?.bind(vue) as unknown,
+        set: descriptor.set?.bind(vue)
+      } as any));
+  } else if (kind === PropKind.Data) {
+    result[prop] = toRef(vue, prop);
+  }
+};
 
 /**
  * Vue props interface in defineComponent() style.
@@ -489,19 +724,19 @@ export type VuePropsWithDefaults<T extends VuePropsObject> = {
  * @param val Any value
  * @returns boolean If it's a JavaScript Class returns true
  */
-export function isClass(val: any): boolean {
+export const isClass = (val: any): boolean => {
   if (typeof val !== 'function') return false; // Not a function, so not a class function either
 
   if (!val.prototype) return false; // Arrow function, so not a class
 
   // Finally -> distinguish between a normal function and a class function
-  if (Object.getOwnPropertyDescriptor(val, 'prototype')?.writable) {
+  if (getOwnPropertyDescriptor(val, 'prototype')?.writable) {
     // Has writable prototype
     return false; // Normal function
   } else {
     return true; // Class -> Not a function
   }
-}
+};
 
 /**
  * Creates props with defaults in defineComponent() style.
@@ -528,50 +763,286 @@ export function isClass(val: any): boolean {
  * @param typedProps Props declared in defineComponent() style with type and possibly required declared, but without default
  * @returns Props declared in defineComponent() style with all properties having default property declared.
  */
-export function propsWithDefaults<T extends VuePropsObject>(
+export const propsWithDefaults = <T extends VuePropsObject>(
   defaults: Record<string, any>,
-  typedProps: T
-): VuePropsWithDefaults<T> {
+  typedProps: T,
+  deepCloneArgs: IVueDeepCloneArgsMap | undefined = undefined
+): VuePropsWithDefaults<T> => {
   for (const prop in typedProps) {
-    if (typeof defaults?.[prop] === 'object' && defaults?.[prop] !== null) {
+    const def = defaults?.[prop];
+    const typed = typedProps[prop];
+
+    /** Skip if prop is required — Vue will enforce it at runtime */
+    if (typed.required) continue;
+
+    /** Skip if default is undefined */
+    if (def === undefined) continue;
+
+    if (typeof def === 'object' && def !== null) {
       /** Handle Arrays & Objects -> wrap them with an arrow function. */
-      typedProps[prop].default = () => defaults?.[prop];
+      typedProps[prop].default = () => deepClone(def, deepCloneArgs);
     } else {
-      if (isClass(defaults?.[prop])) {
+      if (isClass(def)) {
         /** Handle JavaScript Classes -> wrap them with an arrow function */
-        typedProps[prop].default = () => defaults?.[prop];
+        typedProps[prop].default = () => def;
       } else {
         /** Handle JavaScript Function And All primitive properties -> output directly */
-        typedProps[prop].default = defaults?.[prop];
+        typedProps[prop].default = def;
       }
     }
   }
   return typedProps as VuePropsWithDefaults<T>;
+};
+
+/**
+ * Copies all own string & symbol keys with descriptors; does NOT invoke getters
+ * @private
+ * @param source The source object to copy properties from.
+ * @param target The target object to copy properties to.
+ * @param seen A WeakMap to track seen objects for circular reference handling.
+ */
+const copyOwnProps = (
+  source: any,
+  target: any,
+  deepCloneArgs: IVueDeepCloneArgsMap | undefined,
+  seen: WeakMap<object, any>
+) => {
+  const names = getOwnPropertyNames(source);
+  for (let i = 0, j = names.length; i < j; i++) {
+    const key = names[i];
+    const descriptor = getOwnPropertyDescriptor(
+      source,
+      key
+    ) as PropertyDescriptor;
+    if ('value' in descriptor) {
+      descriptor.value = deepClone(descriptor.value, deepCloneArgs, seen);
+    }
+    defineProperty(target, key, descriptor);
+  }
+
+  const symbols = getOwnPropertySymbols(source);
+  for (let i = 0, j = symbols.length; i < j; i++) {
+    const symbol = symbols[i];
+    const descriptor = getOwnPropertyDescriptor(
+      source,
+      symbol
+    ) as PropertyDescriptor;
+    if ('value' in descriptor) {
+      descriptor.value = deepClone(descriptor.value, deepCloneArgs, seen);
+    }
+    defineProperty(target, symbol as any, descriptor);
+  }
+};
+
+/**
+ * Class name enum for supported types in deepClone.
+ */
+enum ClassName {
+  URL = 1,
+  RegExp = 2,
+  Error = 3,
+  WeakMap = 4,
+  WeakSet = 5,
+  FormData = 6,
+  URLSearchParams = 7,
+  ArrayBuffer = 8,
+  Promise = 9,
+  DataView = 10
 }
 
 /**
- * Clears a specific class's accessors from the cache or resets the entire cache.
- * Useful for SSR or HMR to ensure immediate memory release.
+ * Get class name enum value for an object.
+ * @private
  */
-export function clearAccessorsMap(className?: AnyClass) {
-  if (className) {
-    accessorsMap.delete(className);
-  } else {
-    accessorsMap = new WeakMap();
-  }
-}
+const getClassName = (source: object): ClassName | 0 => {
+  const className = objectPrototypeToString(source).slice(8, -1) || 0;
+  return ClassName[className as keyof typeof ClassName] || 0;
+};
+
+export let activeDeepCloneArgsMap = new WeakMap<
+  AnyClass,
+  IVueDeepCloneArgsMap
+>();
 
 /**
- * Clears a specific class's properties from the cache or resets the entire cache.
- * Useful for SSR or HMR to ensure immediate memory release.
+ * Deep clones an object, handling circular references.
+ * Supports cloning of Maps, Sets, Dates, RegExps, Arrays, plain objects, and class instances.
+ * @private
+ * @param source The object to deep clone.
+ * @param seen A WeakMap to track seen objects for circular reference handling.
+ * @returns A deep clone of the input object.
  */
-export function clearPropsMap(classConstructor?: object) {
-  if (classConstructor) {
-    propsMap.delete(classConstructor);
-  } else {
-    propsMap = new WeakMap();
+export const deepClone = (
+  source: any,
+  deepCloneArgs?: IVueDeepCloneArgsMap,
+  seen: WeakMap<object, any> = new WeakMap()
+): any => {
+  // Hoist null check to earliest possible point
+  if (source == null) return source;
+
+  const sourceType = typeof source;
+  if (sourceType !== 'object') return source;
+
+  // Handle circular references early
+  if (seen.has(source)) return seen.get(source);
+
+  /** Arrays — hottest non-POJO path */
+  if (isArray(source)) {
+    const length = source.length;
+    const out: any[] = new Array(length);
+    seen.set(source, out);
+    for (let i = 0; i < length; i++) {
+      out[i] = deepClone(source[i], deepCloneArgs, seen);
+    }
+    return out;
   }
-}
+
+  const prototype = getPrototypeOf(source);
+  /** Plain Objects (Object.prototype or null) — hottest object path */
+  if (prototype === Object.prototype || prototype === null) {
+    const out: any = createObject(prototype);
+    seen.set(source, out);
+    copyOwnProps(source, out, deepCloneArgs, seen);
+    return out;
+  } else if (source[IVUE_INSTANCE_SYMBOL]) {
+    let out = createObject(prototype);
+    const srcClass = source.constructor as IVueClass<any>;
+    if (srcClass.ivueGlobalStore) {
+      out = source; // Do not clone global stores, return the same instance
+      seen.set(source, out);
+    } else if (deepCloneArgs?.has(srcClass)) {
+      activeDeepCloneArgsMap.set(srcClass, deepCloneArgs);
+      try {
+        out = source.clone(...(deepCloneArgs.get(srcClass) ?? []));
+      } finally {
+        activeDeepCloneArgsMap.delete(srcClass);
+      }
+    } else {
+      out = source.clone();
+    }
+    seen.set(source, out);
+    return out;
+  } else if (source instanceof Map) {
+    const constructor = (source as any).constructor as AnyClass; // Support subclassed Maps
+    const out = new constructor();
+    seen.set(source, out);
+    for (const [key, value] of source) {
+      out.set(
+        deepClone(key, deepCloneArgs, seen),
+        deepClone(value, deepCloneArgs, seen)
+      );
+    }
+    return out;
+  } else if (source instanceof Set) {
+    const constructor = (source as any).constructor as AnyClass; // Support subclassed Sets
+    const out = new constructor();
+    seen.set(source, out);
+    for (const value of source) out.add(deepClone(value, deepCloneArgs, seen));
+    return out;
+  } else if (source instanceof Date) {
+    return new Date(source.getTime());
+  }
+
+  const className = getClassName(source);
+  switch (className) {
+    case ClassName.URL: {
+      const out = new URL(source.toString());
+      seen.set(source, out);
+      return out;
+    }
+    case ClassName.RegExp: {
+      const clone = new RegExp(source.source, source.flags);
+      clone.lastIndex = source.lastIndex;
+      return clone;
+    }
+    case ClassName.Error: {
+      let error: any;
+      try {
+        error = new (source.constructor as AnyClass)(source.message);
+      } catch {
+        // fallback: preserve prototype without calling ctor
+        error = createObject(getPrototypeOf(source));
+      }
+      seen.set(source, error);
+      copyOwnProps(source, error, deepCloneArgs, seen);
+      return error;
+    }
+    case ClassName.WeakMap: {
+      const out = new WeakMap();
+      seen.set(source, out);
+      return out;
+    }
+    case ClassName.WeakSet: {
+      const out = new WeakSet();
+      seen.set(source, out);
+      return out;
+    }
+    case ClassName.FormData: {
+      const out = new FormData();
+      seen.set(source, out);
+      for (const [k, v] of source.entries()) out.append(k, v);
+      return out;
+    }
+    case ClassName.URLSearchParams: {
+      const out = new URLSearchParams(source.toString());
+      seen.set(source, out);
+      return out;
+    }
+    case ClassName.ArrayBuffer: {
+      const out = source.slice(0); // Copies bytes
+      seen.set(source, out);
+      return out;
+    }
+    case ClassName.Promise: {
+      /** Promises — cannot truly clone, preserve same reference */
+      seen.set(source, source);
+      return source;
+    }
+    case ClassName.DataView: {
+      /** Clone the underlying buffer and then re-wrap it */
+      const bufferCopy = source.buffer.slice(0);
+      const out = new DataView(
+        bufferCopy,
+        source.byteOffset,
+        source.byteLength
+      );
+      seen.set(source, out);
+      return out;
+    }
+    default: {
+      if (ArrayBuffer.isView(source) && !(source instanceof DataView)) {
+        // Typed array clone (Int8Array, Float32Array, etc.)
+        const constructor = source.constructor as AnyClass;
+        const out = new constructor(source); // Deep copy of the underlying buffer
+        seen.set(source, out);
+        return out;
+      } else {
+        const out = createObject(prototype);
+        copyOwnProps(source, out, deepCloneArgs, seen);
+        seen.set(source, out);
+        return out;
+      }
+    }
+  }
+};
+
+/**
+ * Clears the accessorsMethodsMaps, and propertiesAccessorsMaps WeakMaps.
+ * Useful for SSR scenarios where you want to reset the cache between requests.
+ * Also useful for testing purposes to ensure a clean state.
+ */
+export const clearCache = () => {
+  accessorsMethodsMaps = new WeakMap();
+  propertiesAccessorsMaps = new WeakMap();
+  activeDeepCloneArgsMap = new WeakMap();
+};
+
+/** Exported for testing purposes. */
+export const __test__ = {
+  copyOwnProps,
+  getClassAccessorsMethodsMap,
+  getClassPropertiesAccessorsMap
+};
 
 /** Necessary ivue.ts to be treated as a module. */
 export {};

@@ -19,7 +19,9 @@
     "coverage": "vitest run --coverage",
     "cypress": "cypress run --component",
     "cypress:headed": "cypress run --component --browser chrome --headed --no-exit",
-    "build": "tsc --p ./tsconfig.json && vite build",
+    "build": "tsc --version;tsc --p ./tsconfig.json && vite build",
+    "build:demo": "tsc --p ./tsconfig.json && vite build demo",
+    "preview:demo": "npm run build:demo && vite preview demo --host",
     "release": "yarn build && yarn publish"
   },
   "peerDependencies": {
@@ -41,6 +43,8 @@
     "@vitest/coverage-v8": "^2.0.5",
     "@vitest/ui": "^2.0.5",
     "@vue/test-utils": "^2.2.7",
+    "@vueuse/core": "^14.0.0",
+    "bind-decorator": "^1.0.11",
     "cpy-cli": "^4.2.0",
     "cypress": "^12.3.0",
     "eslint": "^8.10.0",
@@ -49,16 +53,17 @@
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-storybook": "^0.6.12",
     "eslint-plugin-vue": "^9.14.1",
+    "i": "^0.3.7",
     "jsdom": "^21.0.0",
+    "npm": "^11.6.2",
     "rollup-plugin-terser": "^7.0.2",
-    "typescript": "^4.5.4",
+    "typescript": "^5.9.3",
     "vite": "^4.0.4",
     "vite-plugin-dts": "^1.7.1",
     "vite-plugin-dynamic-import": "^1.5.0",
-    "vite-plugin-libcss": "^1.0.5",
     "vite-tsconfig-paths": "^4.3.2",
     "vitest": "^2.0.5",
-    "vue": "^3.2.45",
+    "vue": "^3.5.22",
     "vue-demi": "^0.14.10",
     "vue-router": "^4.1.6"
   },
@@ -92,6 +97,5 @@
     "lib",
     "dist"
   ],
-  "license": "MIT",
-  "dependencies": {}
+  "license": "MIT"
 }
