@@ -13,18 +13,18 @@ import { RouterLink, RouterView } from 'vue-router';
         ivue Benchmark
       </RouterLink>
       <RouterLink 
+        to="/class-composable-benchmark" 
+        class="text-lg font-semibold" 
+        active-class="text-blue-400"
+      >
+      Class Composable Benchmark
+      </RouterLink>
+      <RouterLink 
         to="/composable-benchmark" 
         class="text-lg font-semibold" 
         active-class="text-blue-400"
       >
-        Composable Benchmark
-      </RouterLink>
-      <RouterLink 
-        to="/reactive-composable-benchmark" 
-        class="text-lg font-semibold" 
-        active-class="text-blue-400"
-      >
-        Reactive Composable Benchmark
+        Legacy Composable Benchmark
       </RouterLink>
     </div>
   </nav>

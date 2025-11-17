@@ -21,6 +21,7 @@
     "cypress:headed": "cypress run --component --browser chrome --headed --no-exit",
     "build": "tsc --version;tsc --p ./tsconfig.json && vite build",
     "build:demo": "tsc --p ./tsconfig.json && vite build demo",
+    "dev:demo": "vite demo --host",
     "preview:demo": "npm run build:demo && vite preview demo --host",
     "release": "yarn build && yarn publish"
   },

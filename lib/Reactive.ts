@@ -1,4 +1,4 @@
-import { isRef, toRaw } from 'vue';
+import { isRef, toRaw, type Ref } from 'vue';
 
 const prototypeHasOwnProperty = Object.prototype.hasOwnProperty.call.bind(
   Object.prototype.hasOwnProperty
@@ -30,19 +30,11 @@ function convertToLazyBoundMethod(proto: any, key: string, superKey: symbol) {
     enumerable: false,
 
     get(this: any) {
-      const instance = toRaw(this);
-      if (instance[superKey]) {
-        return instance[superKey];
-      }
-
-      const bound = originalFn.bind(instance);
-      instance[superKey] = bound;
-      return bound;
+      return toRaw(this)[superKey] ?? (toRaw(this)[superKey] = originalFn.bind(toRaw(this)));
     },
 
     set(this: any, newFn: any) {
-      const instance = toRaw(this);
-      instance[superKey] = newFn;
+      toRaw(this)[superKey] = newFn;
     },
   });
 }
@@ -58,29 +50,37 @@ function convertToLazyComputed<T extends object>(
   const originalGetter = desc.get;
   const originalSetter = desc.set;
 
+  const cacheWhole = key[0] === '$'; // <── FAST test
+
+  const get = cacheWhole
+    ? function (this: any) {
+        const instance = toRaw(this);
+        if (superKey in instance) {
+          return instance[superKey];
+        }
+        const cacheResult = originalGetter.call(instance);
+        instance[superKey] = cacheResult;
+        return cacheResult;
+      }
+    : function (this: any) {
+        const instance = toRaw(this);
+        if (superKey in instance) {
+          return instance[superKey];
+        }
+
+        const maybeRef = originalGetter.call(instance);
+        if (isRef(maybeRef)) {
+          instance[superKey] = maybeRef;
+        }
+        return maybeRef;
+      };
+
   defineProperty(proto, key, {
     configurable: true,
     enumerable: false,
 
-    get(this: any) {
-      const instance = toRaw(this);
-      if (instance[superKey]) {
-        return instance[superKey];
-      }
-
-      const maybeRef = originalGetter.call(instance);
-      if (isRef(maybeRef)) {
-        instance[superKey] = maybeRef;
-      }
-      return maybeRef;
-    },
-    set(this: any, newValue: any) {
-      const instance = toRaw(this);
-      console.log('Setting computed property:', key, 'to', newValue);
-      if (originalSetter) {
-        originalSetter.call(instance, newValue);
-      }
-    },
+    get,
+    set: originalSetter || undefined,
   });
 }
 
@@ -125,29 +125,33 @@ export function Reactive<C extends new (...args: any) => any>(
 // Keys that are getters (exclude methods)
 // ----------------------------
 type GetterKeys<T> = {
-  [K in keyof T]:
-    T[K] extends (...args: any[]) => any ? never :
-    T[K] extends undefined ? never :
-    K
+  [K in keyof T]: T[K] extends (...args: any[]) => any
+    ? never
+    : T[K] extends undefined
+    ? never
+    : K;
 }[keyof T];
 
 /** Extract getter return */
-type GetterReturn<T, K extends keyof T> =
-  T[K] extends (...args: any[]) => any ? never : T[K];
+type GetterReturn<T, K extends keyof T> = T[K] extends (...args: any[]) => any
+  ? never
+  : T[K];
 
 /** A computed with a setter has a `set` method on the ref */
-type WritableComputedLike = { set: (...args: any[]) => any };
+type WritableComputedLike = Ref<any> & { set: (...args: any[]) => any };
 
 /** Determine if a getter should be writable */
-type IsWritableGetter<R> =
-  R extends import('vue').Ref<any> ? true :
-  R extends WritableComputedLike ? true :
-  false;
+type IsWritableGetter<R> = R extends Ref<any>
+  ? true
+  : R extends WritableComputedLike
+  ? true
+  : false;
 
 /** The real logic */
 type WritableGetters<T> = {
-  [K in GetterKeys<T> as IsWritableGetter<GetterReturn<T, K>> extends true ? K : never
-    ]-?: T[K];
+  [K in GetterKeys<T> as IsWritableGetter<GetterReturn<T, K>> extends true
+    ? K
+    : never]-?: T[K];
 };
 
 // ----------------------------

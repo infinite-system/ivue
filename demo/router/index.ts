@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import IvueBenchmark from '../components/IvueBenchmark.vue';
+import ClassComposableBenchmark from '../components/ClassComposableBenchmark.vue';
 import ComposableBenchmark from '../components/ComposableBenchmark.vue';
-import ReactiveComposableBenchmark from '../components/ReactiveComposableBenchmark.vue';
 
 const routes = [
   {
@@ -15,14 +15,14 @@ const routes = [
     component: IvueBenchmark
   },
   {
+    path: '/class-composable-benchmark',
+    name: 'ClassComposableBenchmark',
+    component: ClassComposableBenchmark
+  },
+  {
     path: '/composable-benchmark',
     name: 'ComposableBenchmark',
     component: ComposableBenchmark
-  },
-  {
-    path: '/reactive-composable-benchmark',
-    name: 'ReactiveComposableBenchmark',
-    component: ReactiveComposableBenchmark
   }
 ];
 
