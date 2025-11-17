@@ -30,7 +30,9 @@ function convertToLazyBoundMethod(proto: any, key: string, superKey: symbol) {
     enumerable: false,
 
     get(this: any) {
-      return toRaw(this)[superKey] ?? (toRaw(this)[superKey] = originalFn.bind(toRaw(this)));
+      const raw =
+        (this as any).__ivue_raw || ((this as any).__ivue_raw = toRaw(this));
+      return raw[superKey] ?? (raw[superKey] = originalFn.bind(raw));
     },
 
     set(this: any, newFn: any) {
