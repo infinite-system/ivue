@@ -5,11 +5,11 @@ const numItems = ref(1000000);
 const items = ref<Array<UseItem.Instance>>([]);
 const initTime = ref(0);
 
-const numFuncRuns = ref(100_000_000);
+const numFuncRuns = ref(1_000_000);
 const funcRunTime = ref(0);
 
 const a = new UseItem.Class({ id: 1 });
-a.area.value = 10;
+
 
 const { funcTest } = a;
 // The benchmark function
@@ -40,7 +40,7 @@ watch(numItems, createItems, { immediate: true });
 const runFuncTest = () => {
   const startTime = performance.now();
   for (let i = 0; i < numFuncRuns.value; i++) {
-    a.funcTest();
+    funcTest();
   }
   funcRunTime.value = performance.now() - startTime;
   console.log(`Func test time: ${funcRunTime.value.toFixed(2)}ms`);
@@ -51,7 +51,7 @@ watch(numFuncRuns, runFuncTest, { immediate: true });
 <template>
   <div class="space-y-4">
     <h1 class="text-2xl font-bold text-blue-600">Class Composable Benchmark</h1>
-
+{{ a.yo }}
     <div>
       <label for="numItems" class="block text-sm font-medium text-gray-700"
         >Number of Instances:</label
@@ -107,6 +107,9 @@ watch(numFuncRuns, runFuncTest, { immediate: true });
         | Parent: {{ item.parentValue }}
 
         | GrandParent: {{ item.awesomeValue }}
+        | Inherit Test: {{ item.inheritTest }}
+
+        | Yo: {{ item.yo }}
       </div>
     </div>
   </div>

@@ -1,0 +1,186 @@
+import { isRef, toRaw, type Ref } from 'vue';
+
+const prototypeHasOwnProperty = Object.prototype.hasOwnProperty.call.bind(
+  Object.prototype.hasOwnProperty
+);
+const getPrototypeOf = Object.getPrototypeOf;
+const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+const defineProperty = Object.defineProperty;
+const getOwnPropertyNames = Object.getOwnPropertyNames;
+const objectPrototype = Object.prototype;
+
+// Internal marker to avoid wrapping the same method multiple times
+
+
+const RAW = Symbol('raw');
+function getSuperKey(proto: any, key: string): symbol {
+  // Force prototype shadowing, never let it inherit
+  if (!prototypeHasOwnProperty(proto, '__ivue_sk')) {
+    proto.__ivue_sk = {};
+  }
+
+  const map = proto.__ivue_sk;
+  return map[key] || (map[key] = Symbol(key));
+}
+const IVUE_METHOD_WRAPPED = Symbol('ivue_method_wrapped');
+function convertToPrototypeMethod(proto: any, key: string, superKey: symbol) {
+  const desc = getOwnPropertyDescriptor(proto, key);
+  if (!desc || typeof desc.value !== 'function') return;
+
+  const currentFn = desc.value as any;
+
+  // Already wrapped? Skip to avoid recursion / double wrapping.
+  if (currentFn && currentFn[IVUE_METHOD_WRAPPED]) return;
+
+  const originalFn = currentFn as Function;
+
+  // Thin wrapper that always dispatches via the symbol slot
+  const wrapper = function ivueMethodWrapper(this: any, ...args: any[]) {
+    return originalFn.call(
+      this[RAW] ?? (this[RAW] = toRaw(this)),
+      ...args
+    );
+  };
+
+  // Mark wrapper so we don't wrap it again
+  defineProperty(wrapper, IVUE_METHOD_WRAPPED, {
+    value: true,
+    writable: false,
+    configurable: false,
+    enumerable: false,
+  });
+
+  defineProperty(proto, key, {
+    configurable: true,
+    enumerable: desc.enumerable ?? false,
+    writable: true,
+    value: wrapper,
+  });
+}
+
+function convertToLazyComputed<T extends object>(
+  proto: T,
+  key: string,
+  superKey: symbol
+) {
+  const desc = getOwnPropertyDescriptor(proto, key);
+  if (!desc || typeof desc.get !== 'function') return;
+
+  const originalGetter = desc.get;
+  const originalSetter = desc.set;
+
+  const cacheWhole = key[0] === '$'; // <── FAST test
+
+  const get = cacheWhole
+    ? function (this: any) {
+        const instance = toRaw(this);
+        if (superKey in instance) {
+          return instance[superKey];
+        }
+        const cacheResult = originalGetter.call(instance);
+        instance[superKey] = cacheResult;
+        return cacheResult;
+      }
+    : function (this: any) {
+        const instance = toRaw(this);
+        if (superKey in instance) {
+          return instance[superKey];
+        }
+
+        const maybeRef = originalGetter.call(instance);
+        if (isRef(maybeRef)) {
+          instance[superKey] = maybeRef;
+        }
+        return maybeRef;
+      };
+
+  defineProperty(proto, key, {
+    configurable: true,
+    enumerable: false,
+
+    get,
+    set: originalSetter || undefined,
+  });
+}
+
+export function Reactive<C extends new (...args: any) => any>(
+  targetClass: C
+): ReactiveClass<C> & { Instance: ReactiveInstance<InstanceType<C>> } {
+  const chain: any[] = [];
+
+  let targetPrototype = targetClass.prototype;
+  while (targetPrototype && targetPrototype !== objectPrototype) {
+    chain.push(targetPrototype);
+    targetPrototype = getPrototypeOf(targetPrototype);
+  }
+
+  chain.reverse();
+
+  for (const prototype of chain) {
+    const names = getOwnPropertyNames(prototype);
+
+    for (const key of names) {
+      if (key === 'constructor') continue;
+      const desc = getOwnPropertyDescriptor(prototype, key);
+      if (!desc) continue;
+
+      const superKey = getSuperKey(prototype, key);
+
+      if (typeof desc.value === 'function') {
+        convertToPrototypeMethod(prototype, key, superKey);
+      } else if (desc.get) {
+        convertToLazyComputed(prototype, key, superKey);
+      }
+    }
+  }
+  return targetClass as any;
+}
+
+// ----------------------------
+// Writable getters only
+// ----------------------------
+
+// ----------------------------
+// Keys that are getters (exclude methods)
+// ----------------------------
+type GetterKeys<T> = {
+  [K in keyof T]: T[K] extends (...args: any[]) => any
+    ? never
+    : T[K] extends undefined
+    ? never
+    : K;
+}[keyof T];
+
+/** Extract getter return */
+type GetterReturn<T, K extends keyof T> = T[K] extends (...args: any[]) => any
+  ? never
+  : T[K];
+
+/** A computed with a setter has a `set` method on the ref */
+type WritableComputedLike = Ref<any> & { set: (...args: any[]) => any };
+
+/** Determine if a getter should be writable */
+type IsWritableGetter<R> = R extends Ref<any>
+  ? true
+  : R extends WritableComputedLike
+  ? true
+  : false;
+
+/** The real logic */
+type WritableGetters<T> = {
+  [K in GetterKeys<T> as IsWritableGetter<GetterReturn<T, K>> extends true
+    ? K
+    : never]-?: T[K];
+};
+
+// ----------------------------
+// ReactiveInstance type
+// ----------------------------
+export type ReactiveInstance<T> = T & WritableGetters<T>;
+
+// ----------------------------
+// Constructor type
+// ----------------------------
+export type ReactiveClass<C extends new (...args: any) => any> = new (
+  ...args: ConstructorParameters<C>
+) => ReactiveInstance<InstanceType<C>>;

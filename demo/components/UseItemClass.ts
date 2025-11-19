@@ -151,13 +151,19 @@ class $UseItem extends Parent.$Class {
     alert(v);
   }
 
-  get yo() {
-    return 'yo';
+  get inheritTest() {
+    return super.inheritTest + ' + extended in UseItem ' + this.width.value;
   }
 
-  // set yo(v:any) {
-  //   console.log('setting yo', v);
-  // }
+  get yo() {
+    return computed(() => {
+      return 'yo value is ' + Math.random();
+    });
+  }
+
+  set yo(v:any) {
+    console.log('setting yo', v);
+  }
 }
 
 export namespace UseItem {

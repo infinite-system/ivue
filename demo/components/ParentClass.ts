@@ -1,16 +1,24 @@
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Reactive } from '../../lib/Reactive';
 import { GrandParent } from './GrandParentClass';
 import { test } from './UseItemClass';
-
 
 export const parentSomething = ref('parent something!');
 
 export const something = ref(1234);
 
 class $Parent extends GrandParent.$Class {
+  // variable = ref('parent variableas');
 
-  variable = ref('parent variableas');
+  constructor() {
+    super();
+    // this.init();
+  }
+
+  init() {
+    watch(this.parentValue, this.onWatchParentValue);
+  }
+
   get value() {
     return ref(42);
   }
@@ -40,9 +48,12 @@ class $Parent extends GrandParent.$Class {
     this.parentValue.value = 'PARENT VALUE!!: ' + Math.random();
   }
 
+  onWatchParentValue(v: any) {
+    alert('Parent Value: ' + v);
+  }
 
-  createNewAlert(v: number) {
-    alert('Parent Alert Height Changed: ' + v);
+  get inheritTest() {
+    return super.inheritTest + ' + extended in Parent';
   }
 }
 
@@ -51,7 +62,7 @@ export namespace Parent {
   export const $Class = $Parent;
   export type $Instance = InstanceType<typeof $Class>;
   export type $Constructor = typeof $Class;
-  
+
   // Reactive class
   export const Class = Reactive($Parent);
   export type Instance = typeof Class.Instance;

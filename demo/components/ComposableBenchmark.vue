@@ -7,7 +7,7 @@ const items = ref<ReturnType<typeof useItem>[]>([]);
 const initTime = ref(0);
 
 
-const numFuncRuns = ref(100_000_000);
+const numFuncRuns = ref(1_000_000);
 const funcRunTime = ref(0);
 
 

@@ -13,6 +13,7 @@
     "@chronicstone/array-query": "^1.0.1",
     "@quasar/vite-plugin": "^1.7.0",
     "@shikijs/vitepress-twoslash": "^3.2.2",
+    "@types/lodash": "^4.17.20",
     "@typescript-eslint/eslint-plugin": "^5.10.0",
     "@typescript-eslint/parser": "^5.10.0",
     "@vitejs/plugin-vue": "^5.1.3",

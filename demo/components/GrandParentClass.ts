@@ -29,6 +29,10 @@ class $GrandParent {
   update() {
     this.awesomeValue.value = 'GRAND AWESOME ' + Math.random();
   }
+
+  get inheritTest() { 
+    return 'inherited from GrandParent';
+  }
 }
 
 export namespace GrandParent {

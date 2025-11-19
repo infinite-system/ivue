@@ -17,8 +17,6 @@ import { formatUpdatePayload } from '@/utils/entity';
 import { notifyErrorMessage, parseErrorMessage } from '@/utils/error';
 import { IFnParameter, Use, iref, iuse } from 'ivue';
 import {
-  formatPgArrayOfValues,
-  formatPgValue,
   snakeToClean,
 } from '@/utils/string';
 
@@ -27,7 +25,6 @@ import {
   BlChooseContactFieldProps,
 } from './BlChooseContactFieldProps';
 import type {
-  BlChooseFieldVariant,
   IChooseFieldEmits,
   IChooseFieldProps,
 } from './BlChooseFieldProps';
