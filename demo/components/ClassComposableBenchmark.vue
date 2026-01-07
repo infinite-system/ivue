@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { UseItem } from './UseItemClass';
+import { Child } from './ChildClass';
 const numItems = ref(1000000);
-const items = ref<Array<UseItem.Instance>>([]);
+const items = ref<Array<Child.Instance>>([]);
 const initTime = ref(0);
 
 const numFuncRuns = ref(1_000_000);
 const funcRunTime = ref(0);
 
-const a = new UseItem.Class({ id: 1 });
+const a = new Child.Class({ id: 1 });
 
 
 const { funcTest } = a;
@@ -18,7 +18,7 @@ const createItems = () => {
   const newItems = [];
   for (let i = 0; i < numItems.value; i++) {
     // Create N instances by calling the composable function
-    newItems.push(new UseItem.Class({ id: i }));
+    newItems.push(new Child.Class({ id: i }));
   }
   items.value = newItems;
   initTime.value = performance.now() - startTime;
@@ -39,8 +39,8 @@ watch(numItems, createItems, { immediate: true });
 
 const runFuncTest = () => {
   const startTime = performance.now();
-  for (let i = 0; i < numFuncRuns.value; i++) {
-    funcTest();
+  for (let i = 0, j = numFuncRuns.value; i < j; i++) {
+    a.funcTest();
   }
   funcRunTime.value = performance.now() - startTime;
   console.log(`Func test time: ${funcRunTime.value.toFixed(2)}ms`);
@@ -95,7 +95,7 @@ watch(numFuncRuns, runFuncTest, { immediate: true });
         class="p-2 border rounded-md bg-gray-50"
       >
         <button
-          @click="item.update()"
+          @click="item.update"
           class="ml-2 rounded bg-blue-500 px-2 py-1 text-xs text-white"
         >
           Update

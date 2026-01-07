@@ -1,7 +1,7 @@
 import { computed, ref, Ref, ComputedRef, reactive, watch } from 'vue';
 import { defaultEntityFields } from './bigObject';
 
-type UseItem = ReturnType<typeof useItem>;
+type Child = ReturnType<typeof useItem>;
 
 export const useItem = (
   props: { id: number },

@@ -1,7 +1,7 @@
-import { computed, ref, watch } from 'vue';
+import { computed as $, ref, watch } from 'vue';
 import { Reactive } from '../../lib/Reactive';
 import { GrandParent } from './GrandParentClass';
-import { test } from './UseItemClass';
+import { test } from './ChildClass';
 
 export const parentSomething = ref('parent something!');
 
@@ -28,7 +28,7 @@ class $Parent extends GrandParent.$Class {
   }
 
   get area() {
-    return computed(
+    return $(
       () =>
         this.value.value * 2 +
         ' xxx!! ' +
@@ -38,6 +38,10 @@ class $Parent extends GrandParent.$Class {
     );
   }
 
+  get amazing() {
+    return $(() => 'amazing ' + this.area.value + ' !!!');
+  }
+
   get parentValue() {
     return ref('parent value');
   }
@@ -45,6 +49,7 @@ class $Parent extends GrandParent.$Class {
   update() {
     super.update();
     this.test.value.value.value = Math.random() * 100;
+    this.something.value = Math.random() * 1000;
     this.parentValue.value = 'PARENT VALUE!!: ' + Math.random();
   }
 
@@ -58,13 +63,7 @@ class $Parent extends GrandParent.$Class {
 }
 
 export namespace Parent {
-  // Raw class
   export const $Class = $Parent;
-  export type $Instance = InstanceType<typeof $Class>;
-  export type $Constructor = typeof $Class;
-
-  // Reactive class
   export const Class = Reactive($Parent);
   export type Instance = typeof Class.Instance;
-  export type Constructor = typeof Class;
 }

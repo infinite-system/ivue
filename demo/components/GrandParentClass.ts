@@ -1,9 +1,8 @@
-import { computed, ref } from 'vue';
+import { computed as $, ref } from 'vue';
 import { Reactive } from '../../lib/Reactive';
 
 import { something } from './ParentClass';
-import { test2 } from './UseItemClass'; 
-
+import { test2 } from './ChildClass';
 
 class $GrandParent {
   get something() {
@@ -21,26 +20,22 @@ class $GrandParent {
   get awesomeValue() {
     return ref('awesome');
   }
+
   get area() {
-    return computed(() => {
-      return this.grandValue.value * 3 + ' grand';
-    });
+    return $(() => this.grandValue.value * 3 + ' grand ');
   }
+
   update() {
     this.awesomeValue.value = 'GRAND AWESOME ' + Math.random();
   }
 
-  get inheritTest() { 
+  get inheritTest() {
     return 'inherited from GrandParent';
   }
 }
 
 export namespace GrandParent {
-  // Raw class
   export const $Class = $GrandParent;
-  export type $Instance = InstanceType<typeof $Class>;
-  
-  // Reactive class
   export const Class = Reactive($GrandParent);
   export type Instance = typeof Class.Instance;
 }

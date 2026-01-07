@@ -1,6 +1,10 @@
-import { computed, ref, shallowRef, watch, WritableComputedRef } from 'vue';
-import { Reactive } from '../../lib/Reactive';
 import { useMouse } from '@vueuse/core';
+import {
+  computed as $,
+  ref,
+  shallowRef
+} from 'vue';
+import { Reactive } from '../../lib/Reactive';
 
 import { defaultEntityFields } from './bigObject';
 import { Parent, parentSomething } from './ParentClass';
@@ -11,6 +15,7 @@ export const test = ref({
   },
 });
 test.value.value.value = 34;
+
 export const test2 = {
   value: ref({
     value: {
@@ -20,7 +25,7 @@ export const test2 = {
 };
 test2.value.value.value.value = 34;
 
-class $UseItem extends Parent.$Class {
+class $Child extends Parent.$Class {
   constructor(props: { id: number }) {
     super();
     this.id = props.id;
@@ -76,11 +81,11 @@ class $UseItem extends Parent.$Class {
   }
 
   get area() {
-    return computed({
+    return $({
       get: () => {
         return (
           this.width.value * this.height.value +
-          ' super:' +
+          ' super!!!:' +
           '[' +
           (super.area.value + super.area.value) +
           '] '
@@ -97,16 +102,12 @@ class $UseItem extends Parent.$Class {
   }
 
   get area2() {
-    return computed(() => this.width2.value * this.height2.value);
+    return $(() => this.width2.value * this.height2.value);
   }
 
   get area3() {
-    return computed(() => this.width3.value * this.height3.value);
+    return $(() => this.width3.value * this.height3.value);
   }
-
-  // get test() {
-  //   return Math.random() * 100;
-  // }
 
   // A method
   update() {
@@ -135,6 +136,7 @@ class $UseItem extends Parent.$Class {
   update6() {
     this.width3.value = Math.random() * 100;
   }
+  
   update7() {
     this.width.value = Math.random() * 100;
   }
@@ -152,26 +154,20 @@ class $UseItem extends Parent.$Class {
   }
 
   get inheritTest() {
-    return super.inheritTest + ' + extended in UseItem ' + this.width.value;
+    return super.inheritTest + ' + extended in Child ' + this.width.value;
   }
 
   get yo() {
-    return computed(() => {
-      return 'yo value is ' + Math.random();
-    });
+    return $(() => 'yo value is ' + Math.random());
   }
 
-  set yo(v:any) {
+  set yo(v: any) {
     console.log('setting yo', v);
   }
 }
 
-export namespace UseItem {
-  // Raw class
-  export const $Class = $UseItem;
-  export type $Instance = InstanceType<typeof $Class>;
-
-  // Reactive class
-  export const Class = Reactive($UseItem);
+export namespace Child {
+  export const $Class = $Child;
+  export const Class = Reactive($Child);
   export type Instance = typeof Class.Instance;
 }

@@ -817,7 +817,6 @@ const copyOwnProps = (
     if ('value' in descriptor) {
       descriptor.value = deepClone(descriptor.value, deepCloneArgs, seen);
     }
-    defineProperty(target, key, descriptor);
   }
 
   const symbols = getOwnPropertySymbols(source);

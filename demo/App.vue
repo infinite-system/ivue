@@ -1,5 +1,22 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router';
+
+import { Child } from './components/ChildClass';
+import { kernel } from '../lib/Kernel';
+import { Reactive } from '../lib/Reactive';
+import { computed } from 'vue';
+
+class ChildClassExtended extends Child.$Class {
+  get yo() {
+    return computed(() => 'Hello from extended class!!!!!');
+  }
+}
+
+kernel.set('@core/Child', Reactive(ChildClassExtended));
+
+setTimeout(() => {
+  kernel.set('@core/Child', Child.$Class);
+}, 5000);
 </script>
 
 <template>

@@ -35,7 +35,7 @@ watch(numItems, createItems, { immediate: true });
 
 const runFuncTest = () => {
   const startTime = performance.now();
-  for (let i = 0; i < numFuncRuns.value; i++) {
+  for (let i = 0, j = numFuncRuns.value; i < j; i++) {
     funcTest();
   }
   funcRunTime.value = performance.now() - startTime;
