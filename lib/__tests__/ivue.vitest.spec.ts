@@ -12,7 +12,7 @@ import {
   iuse,
   ivue,
   propertiesAccessorsMaps,
-  propsWithDefaults
+  propsWithDefaults,
 } from '../ivue';
 const {
   copyOwnProps,
@@ -1151,7 +1151,41 @@ describe('ivue', () => {
       expect(a.routeNameUpper).toBe('CHILD-ROUTER');
       expect(b.routeNameUpper).toBe('CHILD-ROUTER');
     });
+    it('covers the else path: standard object fields in ivueDisableReactivity are marked raw', () => {
+      // 1. Define a class with a standard field (NOT a getter)
+      class RawFieldTest {
+        // This is a plain instance field.
+        // It is NOT in the prototype accessors map, so it falls to the 'else' block.
+        data = { 
+          secret: 'raw-value',
+          nested: { id: 1 } 
+        };
 
+        // We explicitly verify that the code marks this specific field as raw
+        static ivueDisableReactivity = new Set(['data']);
+      }
+
+      const instance = ivue(RawFieldTest).clone();
+
+      // 2. Access the property
+      const val = instance.data;
+
+      // 3. Verify values are correct
+      expect(val.secret).toBe('raw-value');
+
+      // 4. CRITICAL: The instance itself is reactive...
+      expect(isReactive(instance)).toBe(true);
+
+      // 5. ...but the property content hit the 'else' block and became marked raw.
+      // Because it is marked raw, Vue will NOT create a proxy for it.
+      expect(isReactive(val)).toBe(false);
+      
+      // If 'markRaw' was NOT called, accessing instance.data (an object) 
+      // from a reactive parent would normally return a reactive proxy.
+      // The fact that it returns a plain object proves the 'else' block executed.
+      expect(val.nested).toBeDefined();
+      expect(isReactive(val.nested)).toBe(false); 
+    });
     it('disables computed conversion for keys in ivueDisableReactivity', () => {
       let getterCallCountA = 0;
       let getterCallCountB = 0;
@@ -1571,9 +1605,7 @@ describe('ivue', () => {
         } as const;
 
         // tell deepClone: when you see ServiceStore, call .clone(1234)
-        const deepCloneArgs = new Map([
-          [ServiceStore, [1234]],
-        ]);
+        const deepCloneArgs = new Map([[ServiceStore, [1234]]]);
 
         deepClone(service, deepCloneArgs); // warm up cache
         const result = propsWithDefaults(
@@ -1639,6 +1671,160 @@ describe('ivue', () => {
 
       // 'b' had no default in defaults, so still no "default"
       expect('default' in result.b).toBe(false);
+    });
+
+    describe('Special Types & Binary Data', () => {
+      describe('Error Handling', () => {
+        it('clones standard Error objects with message and custom props', () => {
+          const err = new Error('Something went wrong');
+          (err as any).code = 500;
+          (err as any).details = { retry: true };
+
+          const clone = deepClone(err);
+
+          expect(clone).not.toBe(err);
+          expect(clone).toBeInstanceOf(Error);
+          expect(clone.message).toBe('Something went wrong');
+          // Custom props should be copied
+          expect(clone.code).toBe(500);
+          expect(clone.details).not.toBe((err as any).details);
+          expect(clone.details.retry).toBe(true);
+        });
+
+        it('clones Custom Error classes', () => {
+          class AppError extends Error {
+            isFatal = true;
+          }
+          const err = new AppError('Fatal crash');
+          const clone = deepClone(err);
+
+          expect(clone).not.toBe(err);
+          expect(clone).toBeInstanceOf(AppError); // Preserves prototype
+          expect(clone.message).toBe('Fatal crash');
+          expect(clone.isFatal).toBe(true);
+        });
+
+        it('handles circular references attached to Errors', () => {
+          const err = new Error('Loop');
+          (err as any).self = err; // Circular ref
+
+          const clone = deepClone(err);
+
+          expect(clone.message).toBe('Loop');
+          expect(clone.self).toBe(clone); // Should point to the clone, not original
+        });
+      });
+
+      describe('Uncloneable Types (Reference Preservation)', () => {
+        it('returns the exact same Promise instance', () => {
+          const p = Promise.resolve(1);
+          const clone = deepClone(p);
+          expect(clone).toBe(p);
+        });
+
+        it('returns the exact same WeakMap instance', () => {
+          const wm = new WeakMap();
+          const clone = deepClone(wm);
+          expect(clone).toBe(wm);
+        });
+
+        it('returns the exact same WeakSet instance', () => {
+          const ws = new WeakSet();
+          const clone = deepClone(ws);
+          expect(clone).toBe(ws);
+        });
+
+        it('preserves references even when nested', () => {
+          const p = Promise.resolve();
+          const wm = new WeakMap();
+          const obj = { p, wm };
+
+          const clone = deepClone(obj);
+
+          expect(clone).not.toBe(obj);
+          expect(clone.p).toBe(p); // Same promise
+          expect(clone.wm).toBe(wm); // Same weakmap
+        });
+      });
+
+      describe('Binary Data', () => {
+        it('clones ArrayBuffer with new memory reference but same content', () => {
+          const buffer = new ArrayBuffer(8);
+          const view = new Int32Array(buffer);
+          view[0] = 123;
+          view[1] = 456;
+
+          const clone = deepClone(buffer);
+
+          expect(clone).toBeInstanceOf(ArrayBuffer);
+          expect(clone).not.toBe(buffer);
+          expect(clone.byteLength).toBe(8);
+
+          // Check content
+          const cloneView = new Int32Array(clone);
+          expect(cloneView[0]).toBe(123);
+          expect(cloneView[1]).toBe(456);
+
+          // Verify independence
+          cloneView[0] = 999;
+          expect(view[0]).toBe(123);
+        });
+
+        it('clones TypedArrays (Int32Array) deeply', () => {
+          const arr = new Int32Array([10, 20, 30]);
+          const clone = deepClone(arr);
+
+          expect(clone).toBeInstanceOf(Int32Array);
+          expect(clone).not.toBe(arr);
+          expect(clone).toEqual(arr);
+          expect(clone.length).toBe(3);
+          expect(clone[0]).toBe(10);
+
+          // Modify clone, original stays same
+          clone[0] = 999;
+          expect(arr[0]).toBe(10);
+        });
+
+        it('clones Uint8Array deeply', () => {
+          const arr = new Uint8Array([255, 0, 128]);
+          const clone = deepClone(arr);
+
+          expect(clone).toBeInstanceOf(Uint8Array);
+          expect(clone).not.toBe(arr);
+          expect(clone[0]).toBe(255);
+        });
+
+        it('clones DataView correctly', () => {
+          const buffer = new ArrayBuffer(4);
+          const view = new DataView(buffer);
+          view.setInt32(0, 123456); // Set value
+
+          const clone = deepClone(view);
+
+          expect(clone).toBeInstanceOf(DataView);
+          expect(clone).not.toBe(view);
+          expect(clone.buffer).not.toBe(view.buffer); // Should clone underlying buffer too
+          expect(clone.getInt32(0)).toBe(123456);
+        });
+
+        it('handles circular refs involving ArrayBuffers (via properties)', () => {
+          // It's rare to attach props to ArrayBuffer, but possible in JS
+          const buf = new ArrayBuffer(2);
+          (buf as any).loop = buf;
+
+          const clone = deepClone(buf);
+          expect(clone).toBeInstanceOf(ArrayBuffer);
+          // Note: The specific implementation for ArrayBuffer usually uses .slice(0)
+          // which creates a NEW buffer. Standard .slice does NOT copy custom properties.
+          // If your deepClone logic for ArrayBuffer looks like:
+          //    const out = source.slice(0);
+          //    seen.set(source, out);
+          //    return out;
+          // Then custom props will be LOST. If you want to keep them, you'd need copyOwnProps.
+          // Based on your snippet, they will be lost. This test asserts that behavior.
+          expect((clone as any).loop).toBeUndefined();
+        });
+      });
     });
   });
 });

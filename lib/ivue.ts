@@ -49,14 +49,15 @@ type DataProperties<T> = Pick<T, NonMethodKeys<T>>;
  * Simplified IVueToRefsFn that only works with data properties
  */
 interface IVueToRefsFn<T extends AnyClass> {
-  <P extends keyof IVueRefs<InstanceType<T>>>(
-    props: P[]
-  ): Pick<IVueRefs<InstanceType<T>>, P>;
+  <P extends keyof IVueRefs<InstanceType<T>>>(props: P[]): Pick<
+    IVueRefs<InstanceType<T>>,
+    P
+  >;
 
-  <P extends keyof IVueRefs<InstanceType<T>>>(
-    props: P[],
-    unwrap: false
-  ): Pick<IVueRefs<InstanceType<T>>, P>;
+  <P extends keyof IVueRefs<InstanceType<T>>>(props: P[], unwrap: false): Pick<
+    IVueRefs<InstanceType<T>>,
+    P
+  >;
 
   <P extends keyof DataProperties<InstanceType<T>>>(
     props: P[],
@@ -315,7 +316,7 @@ const getClassAccessorsMethodsMap = (
 
   const propertyMap = {
     accessors: savedAccessors,
-    methods: savedMethods
+    methods: savedMethods,
   };
   accessorsMethodsMaps.set(className, propertyMap);
 
@@ -327,7 +328,7 @@ const getClassAccessorsMethodsMap = (
  */
 const enum PropKind {
   Data = 0,
-  Accessor = 2
+  Accessor = 2,
 }
 
 /**
@@ -427,10 +428,10 @@ export const ivue = <T extends AnyClass>(
         computeds[prop] ??
         (computeds[prop] = computed({
           get: descriptor.get?.bind(vue) as unknown,
-          set: descriptor.set?.bind(vue)
+          set: descriptor.set?.bind(vue),
         } as any)) /** Create the computed and return it, because we are in reactive scope, .value will auto unwrap itself. */,
       enumerable: descriptor.enumerable,
-      configurable: descriptor.configurable
+      configurable: descriptor.configurable,
     });
   }
 
@@ -444,9 +445,10 @@ export const ivue = <T extends AnyClass>(
           get: descriptor.get?.bind(vue),
           set: descriptor.set?.bind(vue),
           enumerable: descriptor.enumerable,
-          configurable: descriptor.configurable
+          configurable: descriptor.configurable,
         });
       } else {
+        console.log('des  criptor', prop, descriptor);
         vue[prop] = markRaw(vue[prop]);
       }
     }
@@ -456,7 +458,7 @@ export const ivue = <T extends AnyClass>(
   const methodDescriptor: PropertyDescriptor = {
     writable: true,
     configurable: true,
-    enumerable: false
+    enumerable: false,
   };
   /** Bind all methods to the vue instance. */
   for (const methodName of methods) {
@@ -472,14 +474,14 @@ export const ivue = <T extends AnyClass>(
       return () =>
         toRefsFn ?? (toRefsFn = ivueToRefs(vue, accessors, computeds));
     })(),
-    enumerable: false
+    enumerable: false,
   });
 
   /** Define .clone() method on the vue instance. */
   defineProperty(vue, 'clone', {
     value: (...cloneArgs: CloneArgsFor<InstanceType<T>>) =>
       ivueClone(className, args, vue, accessors, methods, cloneArgs),
-    enumerable: false
+    enumerable: false,
   });
 
   /** Mark as ivue instance */
@@ -487,7 +489,7 @@ export const ivue = <T extends AnyClass>(
     value: true,
     enumerable: false,
     configurable: false,
-    writable: false
+    writable: false,
   });
 
   /** Run ivue .init() initializer method, if it exists in the class. */
@@ -536,10 +538,10 @@ const ivueClone = <T extends AnyClass>(
         computeds[prop] ??
         (computeds[prop] = computed({
           get: descriptor.get?.bind(vue) as unknown,
-          set: descriptor.set?.bind(vue)
+          set: descriptor.set?.bind(vue),
         } as any)) /** Create the computed and return it, because we are in reactive scope, .value will auto unwrap itself. */,
       enumerable: descriptor.enumerable,
-      configurable: descriptor.configurable
+      configurable: descriptor.configurable,
     });
   }
 
@@ -553,7 +555,7 @@ const ivueClone = <T extends AnyClass>(
           get: descriptor.get?.bind(vue),
           set: descriptor.set?.bind(vue),
           enumerable: descriptor.enumerable,
-          configurable: descriptor.configurable
+          configurable: descriptor.configurable,
         });
       } else {
         vue[prop] = markRaw(vue[prop]);
@@ -565,7 +567,7 @@ const ivueClone = <T extends AnyClass>(
   const methodDescriptor: PropertyDescriptor = {
     writable: true,
     configurable: true,
-    enumerable: false
+    enumerable: false,
   };
   for (const methodName of methods) {
     methodDescriptor.value = vue[methodName].bind(vue);
@@ -580,14 +582,14 @@ const ivueClone = <T extends AnyClass>(
       return () =>
         toRefsFn ?? (toRefsFn = ivueToRefs(vue, accessors, computeds));
     })(),
-    enumerable: false
+    enumerable: false,
   });
 
   /** Define .clone() method on the vue instance. */
   defineProperty(vue, 'clone', {
     value: (...cloneArgs: CloneArgsFor<InstanceType<T>>) =>
       ivueClone(className, args, vue, accessors, methods, cloneArgs),
-    enumerable: false
+    enumerable: false,
   });
 
   /** Mark as ivue instance */
@@ -595,7 +597,7 @@ const ivueClone = <T extends AnyClass>(
     value: true,
     enumerable: false,
     configurable: false,
-    writable: false
+    writable: false,
   });
 
   /** Run ivue .init() initializer method, if it exists in the class. */
@@ -691,7 +693,7 @@ const resolveIvueToRefs = (
       computeds[prop] ??
       (computeds[prop] = computed({
         get: descriptor.get?.bind(vue) as unknown,
-        set: descriptor.set?.bind(vue)
+        set: descriptor.set?.bind(vue),
       } as any));
   } else if (kind === PropKind.Data) {
     result[prop] = toRef(vue, prop);
@@ -795,67 +797,31 @@ export const propsWithDefaults = <T extends VuePropsObject>(
 };
 
 /**
- * Copies all own string & symbol keys with descriptors; does NOT invoke getters
- * @private
- * @param source The source object to copy properties from.
- * @param target The target object to copy properties to.
- * @param seen A WeakMap to track seen objects for circular reference handling.
+ * Copies own properties (including symbols and non-enumerable) from source to target.
+ * Recursively deep clones values, but preserves getters/setters as-is.
  */
-const copyOwnProps = (
+export const copyOwnProps = (
   source: any,
   target: any,
   deepCloneArgs: IVueDeepCloneArgsMap | undefined,
   seen: WeakMap<object, any>
 ) => {
-  const names = getOwnPropertyNames(source);
-  for (let i = 0, j = names.length; i < j; i++) {
-    const key = names[i];
-    const descriptor = getOwnPropertyDescriptor(
-      source,
-      key
-    ) as PropertyDescriptor;
-    if ('value' in descriptor) {
-      descriptor.value = deepClone(descriptor.value, deepCloneArgs, seen);
+  // 1. Get all descriptors (String keys AND Symbol keys)
+  const descriptors = Object.getOwnPropertyDescriptors(source);
+
+  // 2. Iterate over all keys returned by Reflect (safety for Proxies/Environments)
+  for (const key of Reflect.ownKeys(descriptors)) {
+    const desc = descriptors[key as any];
+
+    // 3. If it is a data descriptor (has a value), we must deep clone the value.
+    //    We do NOT clone getters/setters (we copy the function reference).
+    if ('value' in desc) {
+      desc.value = deepClone(desc.value, deepCloneArgs, seen);
     }
+
+    // 4. Define on target
+    Object.defineProperty(target, key, desc);
   }
-
-  const symbols = getOwnPropertySymbols(source);
-  for (let i = 0, j = symbols.length; i < j; i++) {
-    const symbol = symbols[i];
-    const descriptor = getOwnPropertyDescriptor(
-      source,
-      symbol
-    ) as PropertyDescriptor;
-    if ('value' in descriptor) {
-      descriptor.value = deepClone(descriptor.value, deepCloneArgs, seen);
-    }
-    defineProperty(target, symbol as any, descriptor);
-  }
-};
-
-/**
- * Class name enum for supported types in deepClone.
- */
-enum ClassName {
-  URL = 1,
-  RegExp = 2,
-  Error = 3,
-  WeakMap = 4,
-  WeakSet = 5,
-  FormData = 6,
-  URLSearchParams = 7,
-  ArrayBuffer = 8,
-  Promise = 9,
-  DataView = 10
-}
-
-/**
- * Get class name enum value for an object.
- * @private
- */
-const getClassName = (source: object): ClassName | 0 => {
-  const className = objectPrototypeToString(source).slice(8, -1) || 0;
-  return ClassName[className as keyof typeof ClassName] || 0;
 };
 
 export let activeDeepCloneArgsMap = new WeakMap<
@@ -863,53 +829,45 @@ export let activeDeepCloneArgsMap = new WeakMap<
   IVueDeepCloneArgsMap
 >();
 
-/**
- * Deep clones an object, handling circular references.
- * Supports cloning of Maps, Sets, Dates, RegExps, Arrays, plain objects, and class instances.
- * @private
- * @param source The object to deep clone.
- * @param seen A WeakMap to track seen objects for circular reference handling.
- * @returns A deep clone of the input object.
- */
 export const deepClone = (
   source: any,
   deepCloneArgs?: IVueDeepCloneArgsMap,
   seen: WeakMap<object, any> = new WeakMap()
 ): any => {
-  // Hoist null check to earliest possible point
-  if (source == null) return source;
-
-  const sourceType = typeof source;
-  if (sourceType !== 'object') return source;
-
-  // Handle circular references early
+  // --- TIER 1: The "Every Call" Checks (Fastest) ---
+  if (source == null || typeof source !== 'object') return source;
   if (seen.has(source)) return seen.get(source);
 
-  /** Arrays — hottest non-POJO path */
+  // --- TIER 2: The "Hottest" Collection (Arrays) ---
   if (isArray(source)) {
-    const length = source.length;
-    const out: any[] = new Array(length);
+    const len = source.length;
+    const out = new Array(len);
     seen.set(source, out);
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < len; i++) {
       out[i] = deepClone(source[i], deepCloneArgs, seen);
     }
     return out;
   }
 
+  // --- TIER 3: The "Hottest" Objects (Plain Objects) ---
   const prototype = getPrototypeOf(source);
-  /** Plain Objects (Object.prototype or null) — hottest object path */
   if (prototype === Object.prototype || prototype === null) {
-    const out: any = createObject(prototype);
+    const out = createObject(prototype);
     seen.set(source, out);
     copyOwnProps(source, out, deepCloneArgs, seen);
     return out;
-  } else if (source[IVUE_INSTANCE_SYMBOL]) {
-    let out = createObject(prototype);
+  }
+
+  // --- TIER 4: IVue Special Logic (Your Framework) ---
+  // Checked here because it's specific to your domain
+  if (source[IVUE_INSTANCE_SYMBOL]) {
     const srcClass = source.constructor as IVueClass<any>;
     if (srcClass.ivueGlobalStore) {
-      out = source; // Do not clone global stores, return the same instance
-      seen.set(source, out);
-    } else if (deepCloneArgs?.has(srcClass)) {
+      seen.set(source, source);
+      return source;
+    }
+    let out;
+    if (deepCloneArgs?.has(srcClass)) {
       activeDeepCloneArgsMap.set(srcClass, deepCloneArgs);
       try {
         out = source.clone(...(deepCloneArgs.get(srcClass) ?? []));
@@ -921,108 +879,81 @@ export const deepClone = (
     }
     seen.set(source, out);
     return out;
-  } else if (source instanceof Map) {
-    const constructor = (source as any).constructor as AnyClass; // Support subclassed Maps
-    const out = new constructor();
-    seen.set(source, out);
-    for (const [key, value] of source) {
-      out.set(
-        deepClone(key, deepCloneArgs, seen),
-        deepClone(value, deepCloneArgs, seen)
-      );
-    }
-    return out;
-  } else if (source instanceof Set) {
-    const constructor = (source as any).constructor as AnyClass; // Support subclassed Sets
-    const out = new constructor();
-    seen.set(source, out);
-    for (const value of source) out.add(deepClone(value, deepCloneArgs, seen));
-    return out;
-  } else if (source instanceof Date) {
-    return new Date(source.getTime());
   }
 
-  const className = getClassName(source);
-  switch (className) {
-    case ClassName.URL: {
-      const out = new URL(source.toString());
-      seen.set(source, out);
-      return out;
-    }
-    case ClassName.RegExp: {
-      const clone = new RegExp(source.source, source.flags);
-      clone.lastIndex = source.lastIndex;
-      return clone;
-    }
-    case ClassName.Error: {
-      let error: any;
-      try {
-        error = new (source.constructor as AnyClass)(source.message);
-      } catch {
-        // fallback: preserve prototype without calling ctor
-        error = createObject(getPrototypeOf(source));
-      }
-      seen.set(source, error);
-      copyOwnProps(source, error, deepCloneArgs, seen);
-      return error;
-    }
-    case ClassName.WeakMap: {
-      const out = new WeakMap();
-      seen.set(source, out);
-      return out;
-    }
-    case ClassName.WeakSet: {
-      const out = new WeakSet();
-      seen.set(source, out);
-      return out;
-    }
-    case ClassName.FormData: {
-      const out = new FormData();
-      seen.set(source, out);
-      for (const [k, v] of source.entries()) out.append(k, v);
-      return out;
-    }
-    case ClassName.URLSearchParams: {
-      const out = new URLSearchParams(source.toString());
-      seen.set(source, out);
-      return out;
-    }
-    case ClassName.ArrayBuffer: {
-      const out = source.slice(0); // Copies bytes
-      seen.set(source, out);
-      return out;
-    }
-    case ClassName.Promise: {
-      /** Promises — cannot truly clone, preserve same reference */
-      seen.set(source, source);
-      return source;
-    }
-    case ClassName.DataView: {
-      /** Clone the underlying buffer and then re-wrap it */
-      const bufferCopy = source.buffer.slice(0);
-      const out = new DataView(
-        bufferCopy,
-        source.byteOffset,
-        source.byteLength
-      );
-      seen.set(source, out);
-      return out;
-    }
-    default: {
-      if (ArrayBuffer.isView(source) && !(source instanceof DataView)) {
-        // Typed array clone (Int8Array, Float32Array, etc.)
-        const constructor = source.constructor as AnyClass;
-        const out = new constructor(source); // Deep copy of the underlying buffer
-        seen.set(source, out);
-        return out;
-      } else {
-        const out = createObject(prototype);
-        copyOwnProps(source, out, deepCloneArgs, seen);
-        seen.set(source, out);
-        return out;
-      }
-    }
+  // --- TIER 5: Common Built-ins (Sorted by Likelihood) ---
+  // instanceof is fast, but order matters slightly for CPU branch prediction
+  if (source instanceof Date) {
+    return new Date(source.getTime());
   }
+  if (source instanceof Map) {
+    const out = new (source.constructor as any)();
+    seen.set(source, out);
+    for (const [k, v] of source) {
+      out.set(
+        deepClone(k, deepCloneArgs, seen),
+        deepClone(v, deepCloneArgs, seen)
+      );
+    }
+    return out;
+  }
+  if (source instanceof Set) {
+    const out = new (source.constructor as any)();
+    seen.set(source, out);
+    for (const v of source) {
+      out.add(deepClone(v, deepCloneArgs, seen));
+    }
+    return out;
+  }
+
+  // --- TIER 6: Rare / Heavy Objects (The "Slow" Tail) ---
+  if (source instanceof RegExp) {
+    const out = new RegExp(source.source, source.flags);
+    out.lastIndex = source.lastIndex;
+    return out;
+  }
+  if (source instanceof Error) {
+    const out = new (source.constructor as any)(source.message);
+    seen.set(source, out);
+    copyOwnProps(source, out, deepCloneArgs, seen);
+    return out;
+  }
+  if (
+    source instanceof Promise ||
+    source instanceof WeakMap ||
+    source instanceof WeakSet
+  ) {
+    seen.set(source, source);
+    return source;
+  }
+  if (source instanceof DataView) {
+    // Clone the underlying buffer to ensure deep copy
+    const out = new DataView(
+      source.buffer.slice(0),
+      source.byteOffset,
+      source.byteLength
+    );
+    seen.set(source, out);
+    return out;
+  }
+  // Binary data (less common in UI state, but supported)
+  if (ArrayBuffer.isView(source) && !(source instanceof DataView)) {
+    const out = new (source.constructor as any)(source);
+    seen.set(source, out);
+    return out;
+  }
+  if (source instanceof ArrayBuffer) {
+    const out = source.slice(0);
+    seen.set(source, out);
+    return out;
+  }
+
+  // --- TIER 7: Final Fallback (Custom User Classes) ---
+  // If it's a class instance not handled above
+  const out = createObject(prototype);
+  seen.set(source, out);
+  copyOwnProps(source, out, deepCloneArgs, seen);
+  return out;
 };
 
 /**
@@ -1040,7 +971,7 @@ export const clearCache = () => {
 export const __test__ = {
   copyOwnProps,
   getClassAccessorsMethodsMap,
-  getClassPropertiesAccessorsMap
+  getClassPropertiesAccessorsMap,
 };
 
 /** Necessary ivue.ts to be treated as a module. */

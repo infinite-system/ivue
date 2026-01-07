@@ -1,115 +1,148 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { Child } from './ChildClass';
-const numItems = ref(1000000);
-const items = ref<Array<Child.Instance>>([]);
-const initTime = ref(0);
+import { InteractiveBox } from './InteractiveBox';
 
-const numFuncRuns = ref(1_000_000);
+// --- Benchmark Configuration ---
+const numItems = ref(1000000); // 1 Million instances
+const numFuncRuns = ref(1000000); // 1 Million function calls
+
+const items = ref<Array<InteractiveBox.Instance>>([]);
+const initTime = ref(0);
 const funcRunTime = ref(0);
 
-const a = new Child.Class({ id: 1 });
+// Create a single standalone instance for function benchmarking
+const benchmarkInstance = new InteractiveBox.Class({ id: 9999 });
 
-
-const { funcTest } = a;
-// The benchmark function
+/**
+ * 1. Instantiation Benchmark
+ * Creates 'N' Class instances to test memory and init speed.
+ */
 const createItems = () => {
   const startTime = performance.now();
-  const newItems = [];
+  
+  // Use a temporary array to avoid Vue reactivity overhead during the loop
+  const newItems = new Array(numItems.value);
+  
   for (let i = 0; i < numItems.value; i++) {
-    // Create N instances by calling the composable function
-    newItems.push(new Child.Class({ id: i }));
+    newItems[i] = new InteractiveBox.Class({ id: i });
   }
+  
   items.value = newItems;
   initTime.value = performance.now() - startTime;
 
-  console.log('newItems', newItems[0]);
-  console.log(`Composable init time: ${initTime.value.toFixed(2)}ms`);
+  console.log('Sample Item:', newItems[0]);
+  console.log(`Composable Init: ${initTime.value.toFixed(2)}ms for ${numItems.value} items`);
 };
 
-setInterval(() => {
-  // items.value[0].yo = '1';
-}, 2000);
-document.title = 'Class Composable Benchmark';
-const test = {
-  prop: ref('testing'),
-};
-// Re-run the benchmark when the number changes
-watch(numItems, createItems, { immediate: true });
-
-const runFuncTest = () => {
+/**
+ * 2. Method Execution Benchmark
+ * Runs a math-heavy method 'N' times to test prototype lookup speed.
+ */
+const runPhysicsTest = () => {
   const startTime = performance.now();
-  for (let i = 0, j = numFuncRuns.value; i < j; i++) {
-    a.funcTest();
+  const limit = numFuncRuns.value;
+  
+  for (let i = 0; i < limit; i++) {
+    benchmarkInstance.calculatePhysics();
   }
+  
   funcRunTime.value = performance.now() - startTime;
-  console.log(`Func test time: ${funcRunTime.value.toFixed(2)}ms`);
+  console.log(`Physics Test: ${funcRunTime.value.toFixed(2)}ms for ${limit} runs`);
 };
-watch(numFuncRuns, runFuncTest, { immediate: true });
+
+// Triggers
+watch(numItems, createItems, { immediate: true });
+watch(numFuncRuns, runPhysicsTest, { immediate: true });
+
+document.title = 'Class Reactivity Benchmark';
 </script>
 
 <template>
-  <div class="space-y-4">
-    <h1 class="text-2xl font-bold text-blue-600">Class Composable Benchmark</h1>
-{{ a.yo }}
-    <div>
-      <label for="numItems" class="block text-sm font-medium text-gray-700"
-        >Number of Instances:</label
-      >
-      <input
-        type="number"
-        v-model.number="numItems"
-        id="numItems"
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-      />
+  <div class="p-6 space-y-6 max-w-4xl mx-auto font-sans text-slate-800">
+    
+    <div class="border-b pb-4">
+      <h1 class="text-3xl font-bold text-indigo-600">Reactivity Benchmark</h1>
+      <p class="text-slate-500 mt-1">Testing Deep Inheritance & Reactive Classes</p>
     </div>
 
-    <div class="text-lg">
-      Created
-      <strong class="text-blue-600">{{ items.length }}</strong> instances in
-      <strong class="text-blue-600">{{ initTime.toFixed(2) }}ms</strong>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-lg">
+      
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Instance Count</label>
+        <input
+          type="number"
+          v-model.number="numItems"
+          class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2"
+        />
+        <div class="mt-3 text-sm">
+          Created <span class="font-mono font-bold text-indigo-600">{{ items.length }}</span> objects in 
+          <span class="font-mono font-bold text-green-600">{{ initTime.toFixed(2) }}ms</span>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Physics Calculations</label>
+        <div class="flex gap-2">
+          <button
+            @click="runPhysicsTest"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+          >
+            Run Benchmark
+          </button>
+        </div>
+        <div class="mt-3 text-sm">
+          Ran <span class="font-mono font-bold text-indigo-600">{{ numFuncRuns }}</span> ops in 
+          <span class="font-mono font-bold text-green-600">{{ funcRunTime.toFixed(2) }}ms</span>
+        </div>
+      </div>
     </div>
 
-    <div class="text-lg">
-      Func Test: Ran<br />
-      <button
-        @click="runFuncTest"
-        class="ml-2 rounded bg-blue-500 px-2 py-1 text-xs text-white"
-      >
-        Run Func Test
-      </button>
-      <strong class="text-blue-600">{{ numFuncRuns }}</strong> function calls in
-      <strong class="text-blue-600">{{ funcRunTime.toFixed(2) }}ms</strong>
-    </div>
-    <p class="text-sm text-gray-600">
-      Open your browser's memory profiler and compare!
+    <p class="text-xs text-gray-500 italic">
+      * Check your browser's Performance Monitor to see memory usage.
     </p>
 
-    <!-- Render a few items to ensure reactivity works -->
-    <div class="mt-4 space-y-2">
-      <h2 class="text-xl font-semibold">Sample (first 10):</h2>
-
+    <div class="space-y-4">
+      <h2 class="text-xl font-semibold border-b pb-2">Live Inspector (First 5)</h2>
+      
       <div
-        v-for="item in items.slice(0, 10)"
+        v-for="item in items.slice(0, 5)"
         :key="item.id"
-        class="p-2 border rounded-md bg-gray-50"
+        class="flex flex-col gap-2 p-4 border border-slate-200 rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow"
       >
-        <button
-          @click="item.update"
-          class="ml-2 rounded bg-blue-500 px-2 py-1 text-xs text-white"
-        >
-          Update
-        </button>
-        WIDTH: {{ item.width }} | Test: {{ item.parentSomething2 }} X:
-        {{ item.x }} | Y: {{ item.y }} | HEIGHT: {{ item.height }} | Area:
-        {{ item.area }}
+        <div class="flex justify-between items-center">
+          <span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">ID: {{ item.id }}</span>
+          <button
+            @click="item.refreshState()"
+            class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded transition-colors"
+          >
+            Randomize State
+          </button>
+        </div>
 
-        | Parent: {{ item.parentValue }}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-2">
+          <div>
+            <span class="text-gray-500 text-xs block">Mouse (Composable)</span>
+            X: {{ item.mouseX }} / Y: {{ item.mouseY }}
+          </div>
+          <div>
+            <span class="text-gray-500 text-xs block">Geometry (Ref)</span>
+            {{ item.width }}w &times; {{ item.height }}h
+          </div>
+          <div>
+            <span class="text-gray-500 text-xs block">Area (Computed)</span>
+            {{ item.area }} px²
+          </div>
+          <div>
+            <span class="text-gray-500 text-xs block">Inheritance Chain</span>
+            <span class="text-xs text-slate-600 truncate block" :title="item.typeChain">
+              {{ item.typeChain }}
+            </span>
+          </div>
+        </div>
 
-        | GrandParent: {{ item.awesomeValue }}
-        | Inherit Test: {{ item.inheritTest }}
-
-        | Yo: {{ item.yo }}
+        <div class="mt-2 p-2 bg-slate-50 rounded text-xs font-mono text-slate-600 break-all">
+          <strong class="text-indigo-600">Deep Diagnostic:</strong> {{ item.diagnosticSummary }}
+        </div>
       </div>
     </div>
   </div>
