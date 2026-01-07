@@ -8,14 +8,9 @@ const createObject = Object.create;
 const defineProperty = Object.defineProperty;
 const getPrototypeOf = Object.getPrototypeOf;
 const getOwnPropertyNames = Object.getOwnPropertyNames;
-const getOwnPropertySymbols = Object.getOwnPropertySymbols;
 const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
 const getOwnPropertyDescriptors = Object.getOwnPropertyDescriptors;
-// Safely curry Object.prototype.toString so we can call it like objectPrototypeToString(val)
-const objectPrototypeToString = Object.prototype.toString.call.bind(
-  // eslint-disable-next-line @typescript-eslint/unbound-method
-  Object.prototype.toString
-) as any;
+
 
 /** Types */
 /**
