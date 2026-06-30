@@ -11,8 +11,11 @@ node_modules
 .DS_Store
 dist
 demo/dist-demo
+dist-demo
 dist-ssr
 coverage
+# Vitest HTML report (reporters: ["html"]) — generated build artifacts
+html
 *.local
 
 /cypress/videos/

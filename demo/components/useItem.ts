@@ -60,8 +60,11 @@ export const useItem = (
       alert('New Width:' + v);
     }
 
+    // Parity with the v2 InteractiveBox.calculatePhysics(): read two reactive
+    // values + identical math, so the two "function call" benchmarks compare
+    // equivalent work (native direct ref access vs v2 getter-indirected access).
     const funcTest = () => {
-      return Math.random() * 100;
+      return Math.sqrt(Math.pow(width.value, 2) + Math.pow(height.value, 2)) * Math.random();
     }
 
     // watch(width, createAlert);

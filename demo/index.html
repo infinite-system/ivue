@@ -1,13 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MyComponent</title>
+    <title>ivue · Reactive Class Playground</title>
+
+    <!-- Tailwind Play CDN (demo only) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      }
+      code,
+      pre,
+      .font-mono {
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+      }
+      body {
+        -webkit-font-smoothing: antialiased;
+        background:
+          radial-gradient(1100px 600px at 100% -10%, rgba(99, 102, 241, 0.15), transparent 60%),
+          radial-gradient(900px 500px at -10% 0%, rgba(16, 185, 129, 0.12), transparent 55%),
+          #0b1020;
+      }
+      /* nice range sliders */
+      input[type='range'] {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 8px;
+        border-radius: 9999px;
+        background: rgba(148, 163, 184, 0.25);
+        outline: none;
+      }
+      input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 22px;
+        height: 22px;
+        border-radius: 9999px;
+        background: #fff;
+        border: 3px solid #6366f1;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+        cursor: pointer;
+      }
+    </style>
   </head>
 
-  <body>
+  <body class="h-full text-slate-100">
     <div id="app"></div>
     <script type="module" src="./main.ts"></script>
   </body>
