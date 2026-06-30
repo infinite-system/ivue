@@ -1,0 +1,76 @@
+/**
+ * ivue v2 docs — brand theme
+ * Indigo → emerald, matching the playground.
+ */
+:root {
+  --vp-c-brand-1: #6366f1;
+  --vp-c-brand-2: #5457e6;
+  --vp-c-brand-3: #4f46e5;
+  --vp-c-brand-soft: rgba(99, 102, 241, 0.14);
+
+  --vp-c-tip-1: var(--vp-c-brand-1);
+  --vp-c-tip-soft: var(--vp-c-brand-soft);
+
+  /* Home hero gradient */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #818cf8 30%, #34d399);
+
+  --vp-home-hero-image-background-image: linear-gradient(
+    -45deg,
+    #6366f1 30%,
+    #34d399
+  );
+  --vp-home-hero-image-filter: blur(48px);
+}
+
+.dark {
+  --vp-c-brand-1: #818cf8;
+  --vp-c-brand-2: #6366f1;
+  --vp-c-brand-3: #4f46e5;
+  --vp-c-brand-soft: rgba(129, 140, 248, 0.16);
+}
+
+/* Slightly larger, friendlier hero on big screens */
+@media (min-width: 640px) {
+  :root {
+    --vp-home-hero-image-background-image: linear-gradient(
+      -45deg,
+      #6366f1 30%,
+      #34d399 70%
+    );
+  }
+}
+
+/* Feature cards: subtle lift + brand ring on hover */
+.VPFeature {
+  transition: transform 0.18s ease, border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.VPFeature:hover {
+  transform: translateY(-2px);
+  border-color: var(--vp-c-brand-1);
+  box-shadow: 0 12px 30px -12px var(--vp-c-brand-soft);
+}
+
+/* Inline code in brand tint */
+:not(pre) > code {
+  color: var(--vp-c-brand-1);
+}
+
+/* A compact "pill" used in markdown via <span class="pill"> */
+.pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+  border: 1px solid var(--vp-c-brand-soft);
+}
+
+/* Tighten custom blocks a touch */
+.custom-block.tip {
+  border-color: var(--vp-c-brand-1);
+}
