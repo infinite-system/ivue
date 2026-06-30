@@ -20,6 +20,9 @@
       "@/*": ["lib/*"]
     }
   },
-  "include": ["lib"],
+  "include": ["lib", "**/*.md"],
+  "vueCompilerOptions": {
+    "vitePressExtensions": [".md"]
+  },
   "exclude": ["dist", "node_modules"]
 }

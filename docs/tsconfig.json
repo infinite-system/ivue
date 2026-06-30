@@ -1,27 +1,38 @@
 {
   "compilerOptions": {
     "module": "ESNext",
-    "target": "es2016",
+    "target": "ESNext",
     "lib": ["DOM", "ESNext"],
     "strict": true,
     "esModuleInterop": true,
     "incremental": false,
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "noUnusedLocals": true,
     "strictNullChecks": true,
     "allowJs": true,
     "noEmit": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["vitest/globals"],
+    "types": ["vitepress/client", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./docs/*"],
-      "vue": ["node_modules/vue"],
-      "vue-demi": ["node_modules/vue-demi"],
-      "@vueuse/core": ["node_modules/@vueuse/core"]
+      "vue": ["./node_modules/vue"],
+      "vue-demi": ["./node_modules/vue-demi"],
+      "@vueuse/core": ["./node_modules/@vueuse/core"]
     }
+  },
+  "include": [
+    "docs/**/*.ts",
+    "docs/**/*.js",
+    "docs/**/*.vue",
+    "docs/**/*.md",
+    "docs/.vitepress/**/*.ts",
+    "docs/.vitepress/**/*.js"
+  ],
+  "vueCompilerOptions": {
+    "vitePressExtensions": [".md"]
   },
   "exclude": ["docs/.vitepress/dist", "docs/.vitepress/cache"]
 }
