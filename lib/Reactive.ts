@@ -1,4 +1,4 @@
-import { toRaw, isRef, type Ref } from 'vue';
+import { effectScope, isRef, toRaw, watch, type Ref } from 'vue';
 
 /**
  * Constants & Helpers
@@ -14,37 +14,25 @@ const objectPrototype = Object.prototype;
 const getOwnPropertySymbols = Object.getOwnPropertySymbols;
 
 const $stopEffects = '$stopEffects';
+const $watch = '$watch';
 const fn = 'function';
-const RAW = Symbol('ivue_raw');
-const SK_MAP = '__ivue_sk'; // Store for cache keys
-const PROCESSED = Symbol('ivue_processed'); // Flag to mark prototype as "Reactified"
+const RAW = Symbol('ivue_raw'); // Per-instance back-pointer to the raw object
+const SCOPE = Symbol('ivue_scope'); // Lazily-created per-instance effect scope
+const PROCESSED = Symbol('ivue_processed'); // Flag to mark a prototype as "Reactified"
 
 /**
- * Get unique symbol key for super method/property.
+ * Convert a method to a lazy-bound prototype method.
+ *
+ * The bound function is created once, on first access, and cached on the raw
+ * object under a unique per-(prototype,key) symbol — giving referentially
+ * stable, correctly-bound methods with zero per-instance construction cost.
  */
-function getSuperKey(proto: any, key: string): symbol {
-  // Ensure the map exists on this specific prototype (shadowing parents)
-  if (!prototypeHasOwnProperty(proto, SK_MAP)) {
-    defineProperty(proto, SK_MAP, {
-      value: {},
-      configurable: true,
-      enumerable: false,
-      writable: true,
-    });
-  }
-  const map = proto[SK_MAP];
-  return map[key] || (map[key] = Symbol(key));
-}
-
-/**
- * Convert method to a lazy-bound prototype method.
- */
-function convertToLazyBoundMethod(proto: any, key: string, superKey: symbol) {
-  const desc = getOwnPropertyDescriptor(proto, key);
-  if (!desc || typeof desc.value !== fn) return;
-
-  const originalFn = desc.value;
-
+function convertToLazyBoundMethod(
+  proto: any,
+  key: string,
+  superKey: symbol,
+  originalFn: (...args: any[]) => any
+) {
   defineProperty(proto, key, {
     configurable: true,
     enumerable: false,
@@ -59,25 +47,27 @@ function convertToLazyBoundMethod(proto: any, key: string, superKey: symbol) {
 }
 
 /**
- * Convert a property to a lazy-computed property.
+ * Convert a getter to a lazy-computed property.
+ *
+ * Only ever called when the descriptor has a getter, so `originalGetter` is
+ * always defined here. A getter that returns a Ref/computed is cached (stable
+ * reactive identity); a getter that returns a plain value de-optimizes back to
+ * a native getter on the prototype, removing all overhead for future instances.
  */
-function convertToLazyComputed<T extends object>(
-  proto: T,
+function convertToLazyComputed(
+  proto: any,
   key: string,
-  superKey: symbol
+  superKey: symbol,
+  originalGetter: (this: any) => any,
+  originalSetter: ((this: any, v: any) => any) | undefined
 ) {
-  const desc = getOwnPropertyDescriptor(proto, key);
-  const originalGetter = desc?.get;
-  const originalSetter = desc?.set;
-
-  // Optimization: Properties starting with $ are assumed singletons
+  // Optimization: Properties starting with $ are assumed singletons.
   const cacheWhole = key[0] === '$';
 
-  // DEV WARNING: Setter/Getter mismatch
-  if (import.meta.env.DEV && originalGetter && originalSetter) {
+  // DEV WARNING: Getter returns a Ref but the setter is a standard value setter.
+  if (import.meta.env.DEV && originalSetter) {
     try {
-      const testVal = originalGetter.call({});
-      if (isRef(testVal)) {
+      if (isRef(originalGetter.call({}))) {
         console.warn(
           `[ivue] API conflict on "${key}": Getter returns Ref but Setter is standard.`
         );
@@ -88,13 +78,13 @@ function convertToLazyComputed<T extends object>(
   const newGetter = function (this: any) {
     const raw = toRaw(this);
 
-    // 1. Check Cache
+    // 1. Check cache
     if (superKey in raw) return raw[superKey];
 
-    // 2. Execute Original
-    const result = originalGetter!.call(raw);
+    // 2. Execute original
+    const result = originalGetter.call(raw);
 
-    // 3. Handle Result
+    // 3. Handle result
     if (cacheWhole) {
       // Cache result forever (Singleton pattern)
       raw[superKey] = result;
@@ -105,16 +95,14 @@ function convertToLazyComputed<T extends object>(
       // Cache Ref instance (Reactivity pattern)
       raw[superKey] = result;
     } else {
-      // DE-OPTIMIZATION: It's just a value. Restore original getter on prototype.
-      // This removes overhead for all future calls on this prototype.
+      // DE-OPTIMIZATION: It's just a value. Restore a native getter on the
+      // prototype, removing the wrapper overhead for all future instances.
       defineProperty(proto, key, {
         configurable: true,
         enumerable: false,
-        get: originalGetter
-          ? function (this: any) {
-              return originalGetter.call(toRaw(this));
-            }
-          : undefined,
+        get(this: any) {
+          return originalGetter.call(toRaw(this));
+        },
         set: originalSetter
           ? function (this: any, v: any) {
               return originalSetter.call(toRaw(this), v);
@@ -129,7 +117,7 @@ function convertToLazyComputed<T extends object>(
   defineProperty(proto, key, {
     configurable: true,
     enumerable: false,
-    get: originalGetter ? newGetter : undefined,
+    get: newGetter,
     set: originalSetter
       ? function (this: any, v: any) {
           return originalSetter.call(toRaw(this), v);
@@ -141,7 +129,7 @@ function convertToLazyComputed<T extends object>(
 /**
  * Create a reactive class.
  * @param targetClass The class to make reactive.
- * @returns A reactive version of the class.
+ * @returns A reactive version of the class (the same class, transformed in place).
  */
 export function Reactive<C extends new (...args: any) => any>(
   targetClass: C
@@ -158,7 +146,7 @@ export function Reactive<C extends new (...args: any) => any>(
   chain.reverse();
 
   for (const prototype of chain) {
-    // OPTIMIZATION: Skip if this prototype layer is already "Reactified"
+    // OPTIMIZATION: Skip if this prototype layer is already "Reactified".
     // This handles diamond inheritance and multiple Reactive children safely.
     if (prototypeHasOwnProperty(prototype, PROCESSED)) continue;
 
@@ -166,15 +154,17 @@ export function Reactive<C extends new (...args: any) => any>(
 
     for (const key of names) {
       if (key === 'constructor') continue;
-      const desc = getOwnPropertyDescriptor(prototype, key);
-      if (!desc) continue;
+      const desc = getOwnPropertyDescriptor(prototype, key)!;
 
-      const superKey = getSuperKey(prototype, key);
+      // A fresh symbol per (prototype, key). Because each prototype level gets
+      // its own symbol, a child override and its `super` counterpart cache
+      // under different keys and never collide.
+      const superKey = Symbol(key);
 
       if (typeof desc.value === fn) {
-        convertToLazyBoundMethod(prototype, key, superKey);
+        convertToLazyBoundMethod(prototype, key, superKey, desc.value);
       } else if (desc.get) {
-        convertToLazyComputed(prototype, key, superKey);
+        convertToLazyComputed(prototype, key, superKey, desc.get, desc.set);
       }
     }
 
@@ -186,8 +176,30 @@ export function Reactive<C extends new (...args: any) => any>(
     });
   }
 
-  // Inject cleanup
+  // Inject teardown + watch helpers (once per class)
   if (!prototypeHasOwnProperty(targetClass.prototype, $stopEffects)) {
+    /**
+     * Register a watcher in this instance's lazily-created effect scope.
+     * The scope is allocated only on first use, so pure-data classes that
+     * never watch pay nothing. Has the same signature as Vue's `watch`.
+     */
+    defineProperty(targetClass.prototype, $watch, {
+      enumerable: false,
+      configurable: true,
+      writable: true,
+      value: function (this: any, ...args: any[]) {
+        const raw = toRaw(this);
+        const scope =
+          raw[SCOPE] ?? (raw[SCOPE] = effectScope(true /* detached */));
+        return scope.run(() => (watch as any)(...args));
+      },
+    });
+
+    /**
+     * Tear down the instance: stop its effect scope (any watchers created via
+     * $watch), run a user `stopEffects()` hook if present, and drop all cached
+     * cells so refs/computeds become collectable.
+     */
     defineProperty(targetClass.prototype, $stopEffects, {
       enumerable: false,
       configurable: true,
@@ -196,14 +208,12 @@ export function Reactive<C extends new (...args: any) => any>(
         const raw = toRaw(this);
         if (typeof raw.stopEffects === fn) raw.stopEffects();
 
+        const scope = raw[SCOPE];
+        if (scope) scope.stop();
+
         const symbols = getOwnPropertySymbols(raw);
         for (const symbol of symbols) {
           if (symbol === RAW) continue;
-          const cached = raw[symbol];
-          // Stop computed/effect if present
-          if (cached && cached.effect && typeof cached.effect.stop === fn) {
-            cached.effect.stop();
-          }
           delete raw[symbol];
         }
       },
@@ -273,8 +283,14 @@ export const isClass = (val: any): boolean => {
  * but leave primitive properties and functions intact so that
  * the final object is fully defineComponent() style compatible.
  *
+ * The default cloner is the native `structuredClone` (zero-dependency, handles
+ * plain data, Map/Set/Date/typed arrays, circular refs). For defaults that
+ * contain class instances or functions — which `structuredClone` cannot clone —
+ * pass a `customCloner` such as lodash `cloneDeep`.
+ *
  * @param defaults Regular object of default key -> values
  * @param typedProps Props declared in defineComponent() style with type and possibly required declared, but without default
+ * @param customCloner Optional cloner used for object/array defaults (defaults to structuredClone)
  * @returns Props declared in defineComponent() style with all properties having default property declared.
  */
 export const propsWithDefaults = <T extends VuePropsObject>(
@@ -331,7 +347,12 @@ type WritableGetters<T> = {
 };
 
 export type ReactiveInstance<T> = T &
-  WritableGetters<T> & { $stopEffects: () => void };
+  WritableGetters<T> & {
+    /** Register a watcher in the instance's lazy effect scope (same signature as Vue `watch`). */
+    $watch: typeof watch;
+    /** Stop the instance's effect scope, run user `stopEffects()`, and drop cached cells. */
+    $stopEffects: () => void;
+  };
 
 export type ReactiveClass<C extends new (...args: any) => any> = new (
   ...args: ConstructorParameters<C>

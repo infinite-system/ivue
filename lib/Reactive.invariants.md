@@ -173,11 +173,13 @@ de-opts …* (with and without a setter).
 chain, including `super.x` / `super.x.value`, with no collision between a parent's
 cached cell and a child's.
 
-**Mechanism.** `getSuperKey(proto, key)` allocates a **per-prototype** symbol map
-(`SK_MAP`, created shadowing parents at lines 27–34) and a distinct `Symbol(key)`
-per prototype level (line 36). So `Base.prototype`'s cache for `summary` and
-`Child.prototype`'s cache for `summary` live under different symbols on the same
-instance. Chain processed base→child (A2).
+**Mechanism.** During processing, each `(prototype, key)` is assigned a fresh
+`Symbol(key)` in the `Reactive` loop. Because every prototype level is processed
+independently, `Base.prototype`'s cache for `summary` and `Child.prototype`'s
+cache for `summary` live under different symbols on the same instance. Chain
+processed base→child (A2). (Earlier versions memoized these symbols in a
+per-prototype `SK_MAP`; a fresh `Symbol(key)` per level is inherently
+collision-free and needs no map.)
 
 **Guarantees.** A child computed can call `super.summary.value` and receive the
 *parent's* cell, not its own — enabling the demo's
@@ -193,31 +195,42 @@ with super.x.value*; *… cached under different symbols (no collision)*.
 
 ---
 
-### A8. Deterministic teardown
+### A8. Deterministic teardown (scope-based)
 
-**Statement.** `$stopEffects()` releases every per-instance reactive cell the
-engine cached, and is installed exactly once per class.
+**Statement.** The engine installs two helpers per class, exactly once: `$watch`
+registers watchers in a lazily-created per-instance effect scope, and
+`$stopEffects()` stops that scope, runs a user `stopEffects()` hook, and drops
+every cached cell.
 
-**Mechanism.** Injected only if absent (`if (!prototypeHasOwnProperty(targetClass.prototype, $stopEffects)`,
-line 190). It calls a user `stopEffects()` hook if present (line 197), then
-iterates the raw object's own symbols, skips `RAW` (line 202), stops any cell that
-exposes `effect.stop()` (lines 204–206), and deletes every cache symbol (line 207).
+**Mechanism.** Both are injected only if absent (guarded by
+`prototypeHasOwnProperty(targetClass.prototype, $stopEffects)`). `$watch` does
+`(raw[SCOPE] ??= effectScope(true)).run(() => watch(...))` — the scope is
+allocated on first use only. `$stopEffects` calls the user hook if present, calls
+`raw[SCOPE].stop()` if a scope exists, then iterates the raw object's own symbols,
+skips `RAW`, and deletes every cache symbol (including the scope).
 
-**Guarantees.** Cached computeds/methods are dropped so they become
-garbage-collectable; a class can expose its own `stopEffects()` for extra cleanup;
-re-accessing a member after teardown re-materializes it fresh (A4 resets).
+**Guarantees.** Watchers created via `$watch` are stopped deterministically.
+Cached refs/computeds/methods are dropped so they become garbage-collectable; a
+class can expose its own `stopEffects()` for extra cleanup; re-accessing a member
+after teardown re-materializes it fresh (A4 resets). **Pure-data instances that
+never call `$watch` allocate no scope at all** — teardown stays pay-for-what-you-use
+(A5).
 
-**Impossible if true.** Teardown cannot leave the `RAW` anchor in a broken state;
-it cannot run twice from a double `Reactive()` call.
+**Why scope-based, not `effect.stop()`.** In Vue 3.5+, `computed().effect.stop` no
+longer exists, and refs/lazy-computeds need no explicit stop — they are collected
+once dereferenced (clearing the cache suffices). The only thing that genuinely
+needs stopping is user-created watchers, which is exactly what the effect scope
+owns. So the engine stops the *scope*, not individual cells.
 
-**Scope limit (see "Known limits").** Under **Vue 3.5+**, `computed().effect.stop`
-no longer exists, so the `effect.stop()` call is skipped for computeds — teardown
-becomes "clear the cache" rather than "force-stop the effect". Raw `watch()` calls
-created inside `init()`/constructors are **not** tracked by `$stopEffects` at all.
+**Impossible if true.** A `$watch`-registered watcher cannot survive
+`$stopEffects()`; teardown cannot leave the `RAW` anchor in a broken state; the
+helpers cannot be installed twice from a double `Reactive()` call.
 
-**Tests.** *$stopEffects teardown › clears cached computeds …*, *… deletes cached
-bound methods …*, *… calls a user-defined stopEffects() hook*, *… invokes
-effect.stop() when a cached value exposes one*, *… injected only once*.
+**Tests.** *$watch + lazy effect scope › a watcher … fires on change*, *… stops
+watchers created via $watch*, *… pure-data instances never allocate a scope*, *…
+reuses the same scope*; *$stopEffects teardown › clears cached computeds …*, *…
+deletes cached bound methods …*, *… calls a user-defined stopEffects() hook*, *…
+injected only once*.
 
 ---
 
@@ -329,15 +342,16 @@ is logically impossible in any language, not a limitation of this pattern.
 
 These are deliberately listed so the invariants above are not over-read:
 
-1. **Vue 3.5 teardown (A8).** `computed().effect.stop` was removed in Vue 3.5, so
-   `$stopEffects` clears caches but does not force-stop computed effects. For hard
-   teardown of *subscriptions* (render effects, watchers), rely on component
-   unmount or wrap effects in an `effectScope`.
-2. **Untracked `watch()` (A8).** Raw `watch()`/`watchEffect()` created in
-   `init()`/constructor bodies (e.g. demo `Container.ts`) are not registered with
-   `$stopEffects` and will leak unless created inside an `effectScope` whose stop
-   you call. Recommended hardening: create per-instance effects in a scope and
-   stop it from a user `stopEffects()` hook.
+1. **Use `$watch` for tracked teardown (A8).** Watchers registered with the
+   engine's `$watch` are owned by the instance's effect scope and stopped by
+   `$stopEffects`. A **raw** `watch()`/`watchEffect()` created directly (e.g. the
+   demo `Container.ts` calls `watch(...)` in `init()`) is *not* in that scope and
+   leaks unless you create it via `this.$watch(...)` or your own `effectScope`.
+   For component-scoped instances, the active component scope already stops
+   synchronously-created watchers on unmount, so `$stopEffects` is optional there.
+2. **Computeds rely on GC, not `stop()` (A8).** Lazy computeds are collected once
+   dereferenced (and use lazy subscription in Vue 3.5), so the engine does not call
+   `effect.stop()` on them; clearing the cache + dropping the instance is enough.
 3. **Circular inheritance (B11).** Only cross-references are solved; circular
    `extends` remains impossible by construction.
 4. **`.value` ergonomics.** Reactive state is accessed with `.value` outside of a
@@ -348,7 +362,8 @@ These are deliberately listed so the invariants above are not over-read:
 
 ## Coverage
 
-`lib/__tests__/Reactive.vitest.spec.ts` — 39 tests, **100% of functions and
-99.45% of lines** of `lib/Reactive.ts`. The single uncovered line (the `: undefined`
-getter fallback in the de-opt `defineProperty`) is structurally unreachable: the
-de-opt branch only executes inside a getter that, by definition, exists.
+`lib/__tests__/Reactive.vitest.spec.ts` — **100% statements, 100% branches, 100%
+functions, 100% lines** of `lib/Reactive.ts`. The dead defensive branches that
+previously blocked full coverage (the `originalGetter ? … : undefined` fallbacks,
+the redundant `!desc` guards, and the `getSuperKey` memoization) were removed by
+construction during the refactor rather than ignored.

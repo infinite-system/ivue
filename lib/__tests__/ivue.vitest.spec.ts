@@ -1828,3 +1828,60 @@ describe('ivue', () => {
     });
   });
 });
+
+describe('ivue coverage edge cases', () => {
+  it('propsWithDefaults skips a required prop even when a default exists', () => {
+    const typed = {
+      a: { type: String, required: true },
+      b: { type: Number },
+    };
+    const out = propsWithDefaults({ a: 'ignored', b: 2 }, { ...typed }) as Record<
+      string,
+      any
+    >;
+    // required → the `if (typed.required) continue` branch is taken
+    expect('default' in out.a).toBe(false);
+    expect(out.b.default).toBe(2);
+  });
+
+  it('ivueDisableReactivity preserves BOTH getter and setter for an accessor', () => {
+    class WithRW {
+      static ivueDisableReactivity = new Set<keyof WithRW>(['rw']);
+      _v = 1;
+      get rw() {
+        return this._v;
+      }
+      set rw(value: number) {
+        this._v = value;
+      }
+    }
+
+    // ivue() path: descriptor has get AND set → both `?.bind(vue)` branches run
+    const a = ivue(WithRW);
+    expect(a.rw).toBe(1);
+    a.rw = 5;
+    expect(a.rw).toBe(5);
+
+    // clone() path exercises the same branch in ivueClone()
+    const b = a.clone();
+    expect(b.rw).toBe(5);
+    b.rw = 9;
+    expect(b.rw).toBe(9);
+    expect(a.rw).toBe(5); // isolation
+  });
+
+  it('deepClone tolerates a deepCloneArgs entry mapped to undefined (uses [])', () => {
+    class Svc {
+      value = 1;
+      init(_isClone?: boolean, v = 7) {
+        this.value = v;
+      }
+    }
+    const svc = ivue(Svc);
+    // has(Svc) === true but get(Svc) === undefined → the `?? []` fallback runs
+    const deepCloneArgs = new Map<any, any[]>([[Svc, undefined as any]]);
+    const cloned = deepClone(svc, deepCloneArgs);
+    // clone() called with no args → init(true) default → value = 7
+    expect(cloned.value).toBe(7);
+  });
+});

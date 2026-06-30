@@ -353,6 +353,117 @@ describe('Reactive()', () => {
     });
   });
 
+  describe('deep inheritance (parent / grandparent / great-grandparent)', () => {
+    // L1 (great-grandparent) -> L2 -> L3 -> L4 (child)
+    class L1 {
+      get base() {
+        return ref(10);
+      }
+      get tag() {
+        return computed(() => `L1:${(this as any).base.value}`);
+      }
+      get name() {
+        return 'L1';
+      }
+      greet() {
+        return 'hi-L1';
+      }
+    }
+    class L2 extends L1 {
+      get tag() {
+        return computed(() => `L2(${super.tag.value})`);
+      }
+      get name() {
+        return super.name + '>L2';
+      }
+      greet() {
+        return super.greet() + '/L2';
+      }
+    }
+    class L3 extends L2 {
+      get extra() {
+        return ref(5);
+      }
+      get tag() {
+        return computed(() => `L3[${super.tag.value}]`);
+      }
+      get name() {
+        return super.name + '>L3';
+      }
+    }
+    class L4 extends L3 {
+      get tag() {
+        return computed(() => `L4{${super.tag.value}}`);
+      }
+      get name() {
+        return super.name + '>L4';
+      }
+      // computed in the child aggregating refs declared 3 and 1 levels up
+      get sum() {
+        return computed(() => (this as any).base.value + (this as any).extra.value);
+      }
+      greet() {
+        return super.greet() + '/L4';
+      }
+    }
+    Reactive(L4);
+
+    it('computed super-chains resolve through 4 levels', () => {
+      const d: any = new L4();
+      // L4 wraps L3 wraps L2 wraps L1
+      expect(d.tag.value).toBe('L4{L3[L2(L1:10)]}');
+    });
+
+    it('plain-getter (de-opt) super-chains resolve through 4 levels', () => {
+      const d: any = new L4();
+      expect(d.name).toBe('L1>L2>L3>L4');
+    });
+
+    it('refs declared in ancestors are inherited and aggregated by a child computed', () => {
+      const d: any = new L4();
+      expect(d.base.value).toBe(10); // from great-grandparent
+      expect(d.extra.value).toBe(5); // from grandparent
+      expect(d.sum.value).toBe(15);
+    });
+
+    it('mutating an ANCESTOR ref re-runs the full computed chain (reactivity through inheritance)', () => {
+      const d: any = new L4();
+      expect(d.tag.value).toBe('L4{L3[L2(L1:10)]}');
+      expect(d.sum.value).toBe(15);
+
+      d.base.value = 20; // great-grandparent ref
+      expect(d.tag.value).toBe('L4{L3[L2(L1:20)]}'); // chain recomputed
+      expect(d.sum.value).toBe(25);
+
+      d.extra.value = 7; // grandparent ref
+      expect(d.sum.value).toBe(27);
+    });
+
+    it('each level resolves correctly as a standalone instance', () => {
+      expect((new L2() as any).tag.value).toBe('L2(L1:10)');
+      expect((new L3() as any).tag.value).toBe('L3[L2(L1:10)]');
+      expect((new L2() as any).name).toBe('L1>L2');
+      expect((new L3() as any).name).toBe('L1>L2>L3');
+    });
+
+    it('every level caches its own computed under a distinct symbol (no shadow collision)', () => {
+      const d: any = new L4();
+      d.tag.value; // materializes L4, L3, L2, L1 caches via the super chain
+      // 4 distinct computed cache symbols (+ base ref once it is read)
+      d.base.value;
+      const symbols = Object.getOwnPropertySymbols(d).filter(
+        (s) => s !== (Object.getOwnPropertySymbols(d).find((x) => x.toString() === 'Symbol(ivue_raw)'))
+      );
+      // at least the four tag-cells + base must coexist
+      expect(Object.getOwnPropertySymbols(d).length).toBeGreaterThanOrEqual(5);
+    });
+
+    it('super method calls chain through 3 levels', () => {
+      const d: any = new L4();
+      expect(d.greet()).toBe('hi-L1/L2/L4'); // L3 does not override greet()
+    });
+  });
+
   describe('idempotence (PROCESSED flag)', () => {
     it('calling Reactive twice on the same class is safe and a no-op the 2nd time', () => {
       class Foo {
@@ -452,6 +563,20 @@ describe('Reactive()', () => {
       // Probe threw before isRef() check → no warning emitted.
       expect(warn).not.toHaveBeenCalled();
     });
+
+    it('does not probe or warn when not in DEV', () => {
+      vi.stubEnv('DEV', false);
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      class ProdConflict {
+        get y() {
+          return ref(5);
+        }
+        set y(_v: number) {}
+      }
+      Reactive(ProdConflict);
+      expect(warn).not.toHaveBeenCalled();
+      vi.unstubAllEnvs();
+    });
   });
 
   describe('$stopEffects teardown', () => {
@@ -479,23 +604,7 @@ describe('Reactive()', () => {
       expect(Object.getOwnPropertySymbols(toRaw(inst)).length).toBeGreaterThan(0);
     });
 
-    it('invokes effect.stop() when a cached reactive value exposes one (Vue <=3.4 shape)', () => {
-      // Vue 3.5 computeds no longer expose effect.stop(), so we use a faux ref
-      // that satisfies isRef() AND carries a stoppable effect to cover the line.
-      const stop = vi.fn();
-      const fauxRef: any = { __v_isRef: true, value: 1, effect: { stop } };
-      class Store {
-        get faux() {
-          return fauxRef;
-        }
-      }
-      const inst: any = new (Reactive(Store))();
-      inst.faux; // isRef(fauxRef) === true → cached under a symbol
-      (inst as any).$stopEffects();
-      expect(stop).toHaveBeenCalledTimes(1);
-    });
-
-    it('deletes cached bound methods (no .effect) without error', () => {
+    it('deletes cached bound methods without error', () => {
       class Store {
         ping() {
           return 'pong';
@@ -558,6 +667,107 @@ describe('Reactive()', () => {
         '$stopEffects'
       );
       expect(desc1!.value).toBe(desc2!.value);
+    });
+  });
+
+  describe('$watch + lazy effect scope', () => {
+    it('a watcher registered via $watch fires on change', () => {
+      class Store {
+        get count() {
+          return ref(0);
+        }
+      }
+      const inst: any = new (Reactive(Store))();
+      const seen: number[] = [];
+      inst.$watch(
+        () => inst.count.value,
+        (v: number) => seen.push(v),
+        { flush: 'sync' }
+      );
+      inst.count.value = 1;
+      inst.count.value = 2;
+      expect(seen).toEqual([1, 2]);
+    });
+
+    it('$stopEffects stops watchers created via $watch', () => {
+      class Store {
+        get count() {
+          return ref(0);
+        }
+      }
+      const inst: any = new (Reactive(Store))();
+      const seen: number[] = [];
+      inst.$watch(
+        () => inst.count.value,
+        (v: number) => seen.push(v),
+        { flush: 'sync' }
+      );
+      inst.count.value = 1;
+      expect(seen).toEqual([1]);
+
+      inst.$stopEffects();
+
+      inst.count.value = 2; // scope stopped → no more callbacks
+      expect(seen).toEqual([1]);
+    });
+
+    it('pure-data instances never allocate a scope (zero overhead)', () => {
+      class Store {
+        get count() {
+          return ref(0);
+        }
+        bump() {
+          return 1;
+        }
+      }
+      const inst: any = new (Reactive(Store))();
+      inst.count.value;
+      inst.bump();
+      // No scope symbol exists because $watch was never called.
+      const hasScope = Object.getOwnPropertySymbols(inst).some(
+        (s) => s.toString() === 'Symbol(ivue_scope)'
+      );
+      expect(hasScope).toBe(false);
+      // $stopEffects is still safe with no scope present
+      expect(() => inst.$stopEffects()).not.toThrow();
+    });
+
+    it('reuses the same scope across multiple $watch calls', () => {
+      class Store {
+        get a() {
+          return ref(0);
+        }
+        get b() {
+          return ref(0);
+        }
+      }
+      const inst: any = new (Reactive(Store))();
+      const seen: string[] = [];
+      inst.$watch(() => inst.a.value, () => seen.push('a'), { flush: 'sync' });
+      inst.$watch(() => inst.b.value, () => seen.push('b'), { flush: 'sync' }); // reuses scope
+      inst.a.value = 1;
+      inst.b.value = 1;
+      expect(seen).toEqual(['a', 'b']);
+      // Both watchers stop together via the single shared scope
+      inst.$stopEffects();
+      inst.a.value = 2;
+      inst.b.value = 2;
+      expect(seen).toEqual(['a', 'b']);
+    });
+  });
+
+  describe('exotic prototype chains', () => {
+    it('handles a chain that bottoms out at null (no Object.prototype)', () => {
+      function NullBase(this: any) {}
+      NullBase.prototype = Object.create(null); // proto chain ends at null
+      class Child extends (NullBase as any) {
+        get x() {
+          return ref(7);
+        }
+      }
+      const R = Reactive(Child as any);
+      const inst: any = new R();
+      expect(inst.x.value).toBe(7); // walked past the null-proto base safely
     });
   });
 });
