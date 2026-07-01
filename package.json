@@ -17,6 +17,7 @@
     "dev": "vite dev --host",
     "test": "vitest --coverage.enabled=true --reporter=verbose --ui",
     "coverage": "vitest run --coverage",
+    "bench": "vitest bench --run",
     "cypress": "cypress run --component",
     "cypress:headed": "cypress run --component --browser chrome --headed --no-exit",
     "build": "tsc --version;tsc --p ./tsconfig.json && vite build",
