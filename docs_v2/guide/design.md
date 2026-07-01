@@ -54,18 +54,30 @@ simultaneously, you've found the invariant instead of patching symptoms. The pro
 is that you can delete the engine's per-level "super key" bookkeeping and deep
 inheritance keeps working — the guarantee was load-bearing on its own.
 
-## The field left these on the table
+## Why the field left classes
 
-The ecosystem moved away from classes for reasons that had nothing to do with the
-difficulty above: **logic reuse** (composables compose across unrelated components,
-inheritance can't), **TypeScript** (the class libraries of the era leaned on
-experimental **decorators**, not TS itself — TS predates Vue and Vue 3 is written in
-it), and **composition-over-inheritance** as a stated philosophy.
+Two forces pushed the ecosystem off classes, and both **are** the difficulty — not
+a substitute for it.
 
-Betting on composition is not the same as these problems being solved. They stayed
-hard, and the handful of projects that attacked them shipped partial answers. ivue
-solves the whole set — and does it without the two things that sank the earlier
-attempts: **no decorators**, and **no coupling to the component**.
+**Inheritance got abused.** Deep, fragile hierarchies gave OOP a bad name, and
+"composition over inheritance" was the recoil. But the recoil threw out the class,
+not just the misuse.
+
+**Classes were hard to make work well — and that's the real reason.** React's own
+Hooks motivation says it outright: classes "confuse both people and machines" —
+`this` binding is a constant source of bugs; you *remember* to bind your handlers or
+`this` is `undefined` at runtime. That's before you add reactive state, the
+per-instance cost, and the `() => this.method()` tax at every call site. Making a
+class behave *cheaply and correctly* was hard enough that the entire field walked
+away rather than solve it.
+
+Logic reuse and decorator/TypeScript friction (decorators, not TS itself — TS
+predates Vue and Vue 3 is written in it) piled on. But the difficulty was the ground
+under all of it. **ivue is the answer to that difficulty** — the exact problems that
+drove people off classes, binding and per-instance cost and reactive inheritance,
+are the ones the [table above](#the-problems-ivue-solves) closes, without the two
+mistakes that doomed the earlier attempts: **no decorators**, and **no class as
+component**.
 
 ## Class ≠ component
 
