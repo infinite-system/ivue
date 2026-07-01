@@ -99,5 +99,4 @@ non-functions. Used internally by `propsWithDefaults`; exported for convenience.
 ## Invariants spec
 
 The full, rigorous specification of the engine — each guarantee, its mechanism,
-and what it makes impossible — lives in the repo at
-[`lib/Reactive.invariants.md`](https://github.com/infinite-system/ivue/blob/main/lib/Reactive.invariants.md).
+and what it makes impossible — is on the [Invariants](/reference/invariants) page.

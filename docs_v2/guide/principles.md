@@ -78,7 +78,7 @@ pay-for-what-you-use. See [Teardown](/guide/teardown).
 ---
 
 ::: info Want the formal version?
-These are the user-facing form of the engine's invariants. The repository ships a
-rigorous specification — mechanism, guarantees, and what each one makes
-*impossible* — in [`lib/Reactive.invariants.md`](https://github.com/infinite-system/ivue/blob/main/lib/Reactive.invariants.md).
+These are the user-facing form of the engine's invariants. For the rigorous
+specification — mechanism, guarantees, and what each one makes *impossible* — see
+[Invariants](/reference/invariants).
 :::

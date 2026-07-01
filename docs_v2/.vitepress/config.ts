@@ -54,6 +54,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'What is ivue?', link: '/guide/introduction' },
+            { text: 'Design & Philosophy', link: '/guide/design' },
             { text: 'Principles', link: '/guide/principles' },
             { text: 'Getting Started', link: '/guide/getting-started' },
           ],
@@ -80,7 +81,10 @@ export default defineConfig({
         {
           text: 'Reference',
           collapsed: false,
-          items: [{ text: 'API', link: '/api/' }],
+          items: [
+            { text: 'API', link: '/api/' },
+            { text: 'Invariants', link: '/reference/invariants' },
+          ],
         },
       ],
     },
