@@ -1,32 +1,30 @@
 ---
 title: Invariants
-description: The structural specification of the Reactive() engine — every guarantee, its mechanism, what it makes impossible, and the test that proves it.
+description: The structural specification of the Reactive() engine — every guarantee, why it holds, and what it makes impossible.
 outline: [2, 3]
 ---
 
 # Invariants
 
 This is the structural specification of the `Reactive()` engine: the guarantees the
-implementation maintains, *why* each one holds, and — crucially — what each one
-makes **impossible**. An invariant that only says what *can* happen is a
-description; an invariant that also says what *cannot* happen is a contract you can
-test against. Each entry below lists both.
+implementation maintains, *why* each holds, and — crucially — what each makes
+**impossible**. An invariant that only says what *can* happen is a description; one
+that also says what *cannot* is a contract you can test against.
 
 `Reactive(Class)` reduces to a single idea:
 
-> **Transform a plain class's prototype exactly once so that its getters become
+> Transform a plain class's prototype exactly once so that its getters become
 > lazily-cached reactive cells and its methods become lazily-bound functions —
-> while the instances themselves stay plain objects with zero per-instance
-> reactive cost.**
+> while the instances stay plain objects with zero per-instance reactive cost.
 
 Everything else is a consequence of making that idea safe under inheritance,
 proxies, hot-reload, and circular imports.
 
 ::: info Source
 A cleaned version of the in-repo spec at
-[`lib/Reactive.invariants.md`](https://github.com/infinite-system/ivue/blob/main/lib/Reactive.invariants.md),
-kept alongside the source. Tests live in `lib/__tests__/Reactive.vitest.spec.ts`
-(100% statements / branches / functions / lines).
+[`lib/Reactive.invariants.md`](https://github.com/infinite-system/ivue/blob/main/lib/Reactive.invariants.md).
+Tests live in `lib/__tests__/Reactive.vitest.spec.ts` (100% statements / branches /
+functions / lines).
 :::
 
 ## Runtime invariants
@@ -35,177 +33,141 @@ Intrinsic to `Reactive()` itself.
 
 ### Identity preservation
 
-**Statement.** `Reactive(Class)` returns the *same* constructor it was given
-(mutated in place), never a wrapper or subclass.
+> `Reactive(Class)` returns the *same* constructor it was given — mutated in place,
+> never a wrapper or subclass.
 
-**Mechanism.** The function transforms `Class.prototype` and returns the class
-unchanged.
+It transforms `Class.prototype` and hands the class back unchanged, so
+`Reactive(X) === X` and `instanceof` still works. The raw class and the reactive
+class share one prototype lineage — which is what lets a child `extends ParentRawClass`
+and still inherit the reactive behaviour (see *Inheritance & super fidelity* and
+*Circular-import & HMR robustness*).
 
-**Guarantees.** `Reactive(X) === X`. `instanceof` still works. The raw class and
-the reactive class share one prototype lineage, which is what lets a child
-`extends ParentRawClass` and still inherit the reactive behaviour (see *Inheritance
-& super fidelity* and *Circular-import & HMR robustness*).
-
-**Impossible if true.** There can be no "reactive copy" with a divergent prototype;
-you can never end up with two class identities for one declaration; `x instanceof Class`
-cannot break after transformation.
+**Rules out** — two class identities for one declaration; a "reactive copy" with a
+divergent prototype; `x instanceof Class` breaking after transformation.
 
 ### Idempotent, process-once transformation
 
-**Statement.** Each prototype level in the chain is transformed at most once,
-regardless of how many times `Reactive()` is called or through how many subclasses
-a base is reached.
+> Each prototype level is transformed at most once — however many times `Reactive()`
+> is called, and through however many subclasses a base is reached.
 
-**Mechanism.** A per-prototype `PROCESSED` symbol flag; the chain loop skips any
-prototype already carrying it. The chain is walked base → child so ancestors are
-always settled before descendants.
+A per-prototype `PROCESSED` flag makes the chain loop skip anything already
+transformed, and the chain is walked base → child so ancestors settle first. Calling
+`Reactive()` again is a safe no-op; a base transformed in its own module is skipped
+when a child in another module transforms itself — which is what makes the per-file
+authoring pattern correct.
 
-**Guarantees.** Calling `Reactive()` again is a safe no-op. A base class transformed
-in its own module is **not** re-transformed when a child in another module calls
-`Reactive()` on itself — the child's chain walk hits the base's `PROCESSED` flag and
-skips it. This is what makes the per-file authoring pattern correct.
-
-**Impossible if true.** A getter cannot be double-wrapped; `$stopEffects` cannot be
-installed twice; diamond/shared-base layouts cannot transform inconsistently
-depending on load order.
+**Rules out** — double-wrapped getters; `$stopEffects` installed twice; diamond /
+shared-base layouts transforming differently by load order.
 
 ### Raw-anchored single source of truth
 
-**Statement.** All per-instance state the engine creates — cached refs, cached
-computeds, bound methods, the `RAW` back-pointer — lives on `toRaw(this)`, never on
-a Vue reactive proxy of the instance.
+> Every cache the engine creates — refs, computeds, bound methods, the back-pointer
+> — lives on `toRaw(this)`, never on a reactive proxy of the instance.
 
-**Mechanism.** Every getter/method resolves `toRaw(this)` first and keys its cache
-by per-prototype symbols (see *Stable lazy identity* and *Inheritance & super
-fidelity*).
+Each getter and method resolves `toRaw(this)` first and keys its cache by
+per-prototype symbols. So whether you use an instance directly or wrap it in
+`reactive(new Class())`, reads and writes land on one canonical cell per
+`(instance, key)`. Through a proxy Vue also auto-unwraps a returned ref, so you read
+it without `.value` — but it's still the same cell on the raw object.
 
-**Guarantees.** Whether an instance is used directly (`new Class()`) or wrapped in
-`reactive(new Class())`, reads and writes resolve to one canonical storage and one
-cached cell per `(instance, key)`. Through a proxy, Vue additionally auto-unwraps a
-returned ref, so you read the value without `.value`; the underlying cell is the
-same one on the raw object.
-
-**Impossible if true.** You cannot get two different refs for the same property via
-proxy-vs-raw access; a write through the proxy cannot land on a different cell than
-a read through the raw object; caches cannot leak onto the proxy and escape
-teardown.
+**Rules out** — two different refs for one property via proxy-vs-raw access; a proxy
+write landing on a different cell than a raw read; caches leaking onto the proxy and
+escaping teardown.
 
 ### Stable lazy identity
 
-**Statement.** Each reactive getter is materialized at most once per instance and
-returns the identical ref/computed on every later read; each method returns the
-identical bound function on every access.
+> Each getter materializes once per instance and returns the identical ref/computed
+> thereafter; each method returns the identical bound function on every access.
 
-**Mechanism.** The computed getter caches under a symbol and short-circuits on a
-cache hit; the method getter caches the bound function on first access.
+The computed getter caches under a symbol and short-circuits on a hit; the method
+getter caches its bound function on first access. That referential stability is what
+keeps `watch(() => inst.area.value, …)` attached and makes a method safe to pass as
+an event handler.
 
-**Guarantees.** Referential stability. A `watch(() => inst.area.value, …)` stays
-attached because `inst.area` is always the same computed. A method is safe as an
-event handler or dependency because its identity never changes between renders.
-
-**Impossible if true.** A property cannot return a fresh ref on each read (which
-would drop watchers and break two-way bindings); `inst.method !== inst.method`
-cannot happen.
+**Rules out** — a property handing back a fresh ref each read (which would drop
+watchers and break two-way bindings); `inst.method !== inst.method`.
 
 ### Pay-for-what-you-use materialization
 
-**Statement.** Construction performs zero reactive work. No proxy is created, no
-ref/computed is allocated, no method is bound until the first access of that member.
+> Construction does zero reactive work — no proxy, no ref, no computed, no bound
+> method until the first access of that member.
 
-**Mechanism.** All work happens in prototype getters; `new Class()` only runs the
-user constructor. Instances are never passed to `reactive()` by the engine.
+Everything happens in prototype getters; `new Class()` only runs your constructor,
+and the engine never passes an instance to `reactive()`. So N instances cost N plain
+`new` calls, and instances created but never touched carry essentially no overhead.
+*(Measured: 100k instances allocate in ~0.7 ms, vs ~37–43 ms for `reactive()` /
+composables and ~169 ms for ivue v1.)*
 
-**Guarantees.** Creating N instances costs N plain `new` calls. Instances created
-but never touched (off-screen list items, pooled entities) carry essentially no
-reactive overhead. *(Measured: 100k instances allocate in ~0.7 ms vs ~37–43 ms for
-`reactive()`/composables and ~169 ms for ivue v1.)*
-
-**Impossible if true.** Instantiation cost cannot scale with the number of reactive
-members declared on the class; an unused getter cannot allocate a computed.
+**Rules out** — instantiation cost scaling with the number of reactive members
+declared; an unused getter allocating a computed.
 
 ### Self-erasing overhead
 
-**Statement.** A getter that returns a *non-ref* plain value is detected on first
-access and the engine's wrapper is removed — the original getter is restored on the
-prototype for all future instances.
+> A getter that returns a plain (non-ref) value is detected on first access, and the
+> engine's wrapper is removed — the native getter is restored on the prototype for
+> all future instances.
 
-**Mechanism.** When the first access sees a non-ref result, it redefines the
-prototype property back to a thin native getter (routed through `toRaw(this)`),
-preserving the setter if one exists.
+When the first read sees a non-ref, it redefines the property back to a thin native
+getter (still routed through `toRaw(this)`, and keeping the setter if one exists).
+Getters used for plain derived values converge to native cost — you don't pay
+reactive machinery for non-reactive getters.
 
-**Guarantees.** Getters used for plain derived values converge toward native getter
-cost; you don't pay reactive-cell machinery for non-reactive getters.
-
-**Impossible if true.** A plain-value getter cannot keep paying wrapper/cache
-overhead forever; it cannot be cached as a fake "ref".
+**Rules out** — a plain-value getter paying wrapper/cache overhead forever; a plain
+value cached as a fake "ref".
 
 ### Inheritance & super fidelity
 
-**Statement.** Getters and methods resolve correctly across the full prototype
-chain, including `super.x` / `super.x.value`, with no collision between a parent's
-cached cell and a child's.
+> Getters and methods resolve correctly across the whole prototype chain, including
+> `super.x` / `super.x.value`, with no collision between a parent's cached cell and a
+> child's.
 
-**Mechanism.** During processing, each `(prototype, key)` is assigned a fresh
-`Symbol(key)`. Because every level is processed independently, a base's cache for
-`summary` and a child's cache for `summary` live under different symbols on the same
-instance. (Earlier versions memoized these symbols in a map; a fresh `Symbol` per
-level is inherently collision-free and needs none.)
+Each `(prototype, key)` gets a fresh `Symbol(key)` during processing, so a base's
+`summary` and a child's `summary` cache under different symbols on the same instance.
+A child computed can call `super.summary.value` and get the *parent's* cell, not its
+own; overrides at different levels cooperate exactly as in native classes.
 
-**Guarantees.** A child computed can call `super.summary.value` and receive the
-*parent's* cell, not its own. Overridden getters/setters at different levels
-cooperate exactly as in native classes.
-
-**Impossible if true.** `super.x` cannot resolve back to the child's own cached
-value (which would infinite-loop or return the wrong layer); a parent and child
-sharing a property name cannot clobber each other's cache.
+**Rules out** — `super.x` resolving back to the child's own value (an infinite loop
+or the wrong layer); a parent and child sharing a name clobbering each other's cache.
 
 ### Deterministic teardown
 
-**Statement.** The engine installs two helpers per class, once: `$watch` registers
-watchers in a lazily-created per-instance effect scope, and `$stopEffects()` stops
-that scope, runs a user `stopEffects()` hook, and drops every cached cell.
+> The engine installs two helpers per class, once: `$watch` registers watchers in a
+> lazily-created per-instance effect scope, and `$stopEffects()` stops that scope,
+> runs a user `stopEffects()` hook, and drops every cached cell.
 
-**Mechanism.** `$watch` does `(raw[SCOPE] ??= effectScope(true)).run(() => watch(...))`
-— the scope is allocated on first use only. `$stopEffects` runs the user hook if
-present, stops the scope if one exists, then deletes every cache symbol (skipping
-the `RAW` anchor).
+`$watch` does `(raw[SCOPE] ??= effectScope(true)).run(() => watch(...))` — the scope
+exists only after the first `$watch`. `$stopEffects` runs your hook, stops the scope
+if there is one, then deletes every cache symbol (keeping the `RAW` anchor).
+Re-accessing a member afterward re-materializes it fresh, and **instances that never
+`$watch` allocate no scope at all**.
 
-**Guarantees.** Watchers created via `$watch` are stopped deterministically. Cached
-cells are dropped so they become collectable; re-accessing a member after teardown
-re-materializes it fresh. **Pure-data instances that never call `$watch` allocate no
-scope at all** — teardown stays pay-for-what-you-use.
+Why a scope and not `effect.stop()`: in Vue 3.5+ `computed().effect.stop` is gone,
+and refs / lazy-computeds are collected once dereferenced. The only thing that
+genuinely needs stopping is user watchers — exactly what the scope owns.
 
-**Why scope-based, not `effect.stop()`.** In Vue 3.5+, `computed().effect.stop` no
-longer exists, and refs/lazy-computeds need no explicit stop — they're collected
-once dereferenced. The only thing that genuinely needs stopping is user watchers,
-which is exactly what the effect scope owns. So the engine stops the *scope*, not
-individual cells.
-
-**Impossible if true.** A `$watch`-registered watcher cannot survive `$stopEffects()`;
-teardown cannot break the `RAW` anchor; the helpers cannot be installed twice.
+**Rules out** — a `$watch`-registered watcher surviving `$stopEffects()`; teardown
+breaking the `RAW` anchor; the helpers installed twice.
 
 ### `$`-prefixed singletons
 
-**Statement.** A getter whose name starts with `$` is cached *whole, forever* on
-first access — even if its result is not a ref.
+> A getter whose name starts with `$` is cached *whole, forever* on first access —
+> even when its result isn't a ref.
 
-**Mechanism.** A `$` prefix sets a "cache whole" flag; the result is stored and
-returned without the `isRef` check.
-
-**Guarantees.** The canonical "create this composable/service once per instance"
-slot, e.g. `get $mouse() { return useMouse() }`. The getter runs once; later reads
+The `$` prefix flips a "cache whole" flag, so the result is stored and returned
+without the `isRef` check. It's the canonical "create this composable/service once
+per instance" slot — `get $mouse() { return useMouse() }` runs once, and later reads
 return the same object.
 
-**Impossible if true.** A `$`-getter cannot re-run its body on each access (which
-would create a new composable/subscription every read).
+**Rules out** — a `$`-getter re-running its body on each access (a new composable /
+subscription every read).
 
 ## Module & import invariants
 
-These aren't lines of code inside `Reactive()`; they're properties of the
-**authoring convention** the engine is designed for, made *correct* by the runtime
-invariants above (chiefly *Identity preservation* and *Idempotent transformation*).
-They're why v2 handles cross-file hierarchies and circular imports where v1 doesn't.
-See [Modules & Imports](/guide/modules) for the practical guide.
+Not lines of code inside `Reactive()`, but properties of the **authoring convention**
+the engine is designed for — made correct by the runtime invariants above (chiefly
+*Identity preservation* and *Idempotent transformation*). They're why v2 handles
+cross-file hierarchies and circular imports where v1 doesn't. See
+[Modules & Imports](/guide/modules) for the practical guide.
 
 ```ts
 export namespace Thing {
@@ -227,57 +189,49 @@ export var Thing;
 
 ### Module-load-time, per-file transformation
 
-**Statement.** Each class is transformed in its own module at load time, and the
-transformations compose across files without coordination — shared ancestors are
-transformed once, by whichever module loads first.
+> Each class is transformed in its own module at load time, and the transforms
+> compose across files with no coordination — shared ancestors transform once, by
+> whichever module loads first.
 
-**Mechanism.** `Reactive($Thing)` runs as the module's top-level side effect.
-Because the transform is idempotent and identity-preserving, a base transformed in
-`Base.ts` and reached again through a child's chain walk is detected as `PROCESSED`
-and skipped — yet the child still inherits the installed reactive getters via the
-shared prototype.
+`Reactive($Thing)` runs as the module's top-level side effect. Because the transform
+is idempotent and identity-preserving, a base already transformed in `Base.ts` is
+detected and skipped when a child's chain walk reaches it — yet the child still
+inherits the installed getters through the shared prototype. So parent, grandparent
+and child can live in separate files, and editing one re-runs only that module's
+(idempotent) `Reactive()` call, so HMR never desyncs the chain. (v1 builds its maps
+at instantiation time keyed by identity; when one file in a multi-file hierarchy
+reloads, identities across the boundary fall out of sync — which is why v1
+hierarchies live in one file.)
 
-**Guarantees.** Parent, grandparent and child can live in **separate files**.
-Editing one file re-runs only that module's `Reactive()` call, which is idempotent,
-so HMR doesn't desynchronize the chain. (v1 builds its accessor maps at
-*instantiation* time keyed by class identity; when one file in a multi-file
-hierarchy hot-reloads, identities across the boundary fall out of sync — which is
-why v1 hierarchies live in a single file.)
-
-**Impossible if true.** A multi-file hierarchy cannot end up partially transformed;
-re-running a module cannot double-wrap an inherited getter.
+**Rules out** — a multi-file hierarchy ending up partially transformed; a module
+reload double-wrapping an inherited getter.
 
 ### Circular-import & HMR robustness
 
-**Statement.** Exposing the class through a namespace object as two members —
-`$Class` (raw, for `extends`) and `Class` (reactive, for `new`) — lets
-cross-referencing modules resolve each other regardless of load order.
+> Exposing the class as two namespace members — `$Class` (raw, for `extends`) and
+> `Class` (reactive, for `new`) — lets cross-referencing modules resolve each other
+> in any load order.
 
-**Mechanism.** The namespace binding is a **hoisted `var`**, not a `const`/`class`
-(which sit in the temporal dead zone during circular evaluation). An importer always
-receives a live reference to the namespace *object* and reads `.Class` / `.$Class`
-**lazily**, at the point of use. Method bodies that do `new Other.Class()` run at
-call time, by which point every namespace is fully populated — so "A's methods use
-B, B's methods use A" cycles resolve in either order.
+The namespace binding is a hoisted `var`, not a `const` / `class` in the temporal
+dead zone, so an importer always gets a live reference to the namespace *object* and
+reads `.Class` / `.$Class` lazily at the point of use. Method bodies that do
+`new Other.Class()` run at call time, by which point every namespace is populated —
+so "A's methods use B, B's use A" resolves either way. Combined with identity
+preservation, one constructor identity is used everywhere, so `instanceof` and
+equality stay consistent across modules.
 
-**Guarantees.** The common form of circular dependency between domain classes
-(mutual *references* that normally throw `Cannot access 'X' before initialization`)
-is eliminated. Combined with identity preservation, one constructor identity is used
-everywhere, so `instanceof` and equality checks stay consistent across modules.
+**Rules out** — a mutual cross-reference between two class modules throwing
+`Cannot access 'X' before initialization` purely from import order.
 
-**Impossible if true.** A mutual cross-reference between two class modules cannot
-throw a TDZ error purely due to import ordering.
-
-**Scope limit.** This solves circular *references*, not circular *inheritance*.
+*Scope limit:* this solves circular *references*, not circular *inheritance* —
 `class $A extends B.$Class` still evaluates `B.$Class` at A's load time, so a true
-`A extends B` / `B extends A` cycle is impossible — but that's impossible in any
-language, not a limitation of the pattern.
+`A extends B` / `B extends A` cycle is impossible (in any language, not just here).
 
 ## Known limits
 
 Listed deliberately, so the invariants above aren't over-read:
 
-1. **Use `$watch` for tracked teardown.** A **raw** `watch()`/`watchEffect()`
+1. **Use `$watch` for tracked teardown.** A **raw** `watch()` / `watchEffect()`
    created directly is not in the instance's scope and leaks unless you use
    `this.$watch(...)` or your own `effectScope`. For component-scoped instances, the
    active component scope already stops synchronously-created watchers on unmount.
@@ -287,5 +241,5 @@ Listed deliberately, so the invariants above aren't over-read:
 3. **Circular inheritance.** Only cross-references are solved; circular `extends`
    remains impossible by construction.
 4. **`.value` ergonomics.** Reactive state is read with `.value` outside a
-   `reactive()`/template auto-unwrap context — the one ergonomic cost relative to
+   `reactive()` / template auto-unwrap context — the one ergonomic cost relative to
    v1's proxy model.
