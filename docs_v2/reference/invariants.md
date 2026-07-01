@@ -23,17 +23,17 @@ Everything else is a consequence of making that idea safe under inheritance,
 proxies, hot-reload, and circular imports.
 
 ::: info Source
-This mirrors the in-repo spec at
+A cleaned version of the in-repo spec at
 [`lib/Reactive.invariants.md`](https://github.com/infinite-system/ivue/blob/main/lib/Reactive.invariants.md),
-which is kept alongside the source. Tests live in `lib/__tests__/Reactive.vitest.spec.ts`
+kept alongside the source. Tests live in `lib/__tests__/Reactive.vitest.spec.ts`
 (100% statements / branches / functions / lines).
 :::
 
-## Part A — Runtime invariants
+## Runtime invariants
 
 Intrinsic to `Reactive()` itself.
 
-### A1 · Identity preservation
+### Identity preservation
 
 **Statement.** `Reactive(Class)` returns the *same* constructor it was given
 (mutated in place), never a wrapper or subclass.
@@ -43,13 +43,14 @@ unchanged.
 
 **Guarantees.** `Reactive(X) === X`. `instanceof` still works. The raw class and
 the reactive class share one prototype lineage, which is what lets a child
-`extends ParentRawClass` and still inherit the reactive behaviour (see A7, B11).
+`extends ParentRawClass` and still inherit the reactive behaviour (see *Inheritance
+& super fidelity* and *Circular-import & HMR robustness*).
 
 **Impossible if true.** There can be no "reactive copy" with a divergent prototype;
 you can never end up with two class identities for one declaration; `x instanceof Class`
 cannot break after transformation.
 
-### A2 · Idempotent, process-once transformation
+### Idempotent, process-once transformation
 
 **Statement.** Each prototype level in the chain is transformed at most once,
 regardless of how many times `Reactive()` is called or through how many subclasses
@@ -62,20 +63,21 @@ always settled before descendants.
 **Guarantees.** Calling `Reactive()` again is a safe no-op. A base class transformed
 in its own module is **not** re-transformed when a child in another module calls
 `Reactive()` on itself — the child's chain walk hits the base's `PROCESSED` flag and
-skips it. This is what makes the per-file authoring pattern (B10) correct.
+skips it. This is what makes the per-file authoring pattern correct.
 
 **Impossible if true.** A getter cannot be double-wrapped; `$stopEffects` cannot be
 installed twice; diamond/shared-base layouts cannot transform inconsistently
 depending on load order.
 
-### A3 · Raw-anchored single source of truth
+### Raw-anchored single source of truth
 
 **Statement.** All per-instance state the engine creates — cached refs, cached
 computeds, bound methods, the `RAW` back-pointer — lives on `toRaw(this)`, never on
 a Vue reactive proxy of the instance.
 
 **Mechanism.** Every getter/method resolves `toRaw(this)` first and keys its cache
-by per-prototype symbols (A4/A7).
+by per-prototype symbols (see *Stable lazy identity* and *Inheritance & super
+fidelity*).
 
 **Guarantees.** Whether an instance is used directly (`new Class()`) or wrapped in
 `reactive(new Class())`, reads and writes resolve to one canonical storage and one
@@ -88,7 +90,7 @@ proxy-vs-raw access; a write through the proxy cannot land on a different cell t
 a read through the raw object; caches cannot leak onto the proxy and escape
 teardown.
 
-### A4 · Stable lazy identity
+### Stable lazy identity
 
 **Statement.** Each reactive getter is materialized at most once per instance and
 returns the identical ref/computed on every later read; each method returns the
@@ -105,7 +107,7 @@ event handler or dependency because its identity never changes between renders.
 would drop watchers and break two-way bindings); `inst.method !== inst.method`
 cannot happen.
 
-### A5 · Pay-for-what-you-use materialization
+### Pay-for-what-you-use materialization
 
 **Statement.** Construction performs zero reactive work. No proxy is created, no
 ref/computed is allocated, no method is bound until the first access of that member.
@@ -121,7 +123,7 @@ reactive overhead. *(Measured: 100k instances allocate in ~0.7 ms vs ~37–43 ms
 **Impossible if true.** Instantiation cost cannot scale with the number of reactive
 members declared on the class; an unused getter cannot allocate a computed.
 
-### A6 · Self-erasing overhead
+### Self-erasing overhead
 
 **Statement.** A getter that returns a *non-ref* plain value is detected on first
 access and the engine's wrapper is removed — the original getter is restored on the
@@ -137,7 +139,7 @@ cost; you don't pay reactive-cell machinery for non-reactive getters.
 **Impossible if true.** A plain-value getter cannot keep paying wrapper/cache
 overhead forever; it cannot be cached as a fake "ref".
 
-### A7 · Inheritance & `super` fidelity
+### Inheritance & super fidelity
 
 **Statement.** Getters and methods resolve correctly across the full prototype
 chain, including `super.x` / `super.x.value`, with no collision between a parent's
@@ -157,7 +159,7 @@ cooperate exactly as in native classes.
 value (which would infinite-loop or return the wrong layer); a parent and child
 sharing a property name cannot clobber each other's cache.
 
-### A8 · Deterministic teardown (scope-based)
+### Deterministic teardown
 
 **Statement.** The engine installs two helpers per class, once: `$watch` registers
 watchers in a lazily-created per-instance effect scope, and `$stopEffects()` stops
@@ -170,8 +172,8 @@ the `RAW` anchor).
 
 **Guarantees.** Watchers created via `$watch` are stopped deterministically. Cached
 cells are dropped so they become collectable; re-accessing a member after teardown
-re-materializes it fresh (A4 resets). **Pure-data instances that never call `$watch`
-allocate no scope at all** — teardown stays pay-for-what-you-use (A5).
+re-materializes it fresh. **Pure-data instances that never call `$watch` allocate no
+scope at all** — teardown stays pay-for-what-you-use.
 
 **Why scope-based, not `effect.stop()`.** In Vue 3.5+, `computed().effect.stop` no
 longer exists, and refs/lazy-computeds need no explicit stop — they're collected
@@ -182,7 +184,7 @@ individual cells.
 **Impossible if true.** A `$watch`-registered watcher cannot survive `$stopEffects()`;
 teardown cannot break the `RAW` anchor; the helpers cannot be installed twice.
 
-### A9 · `$`-prefixed singletons
+### `$`-prefixed singletons
 
 **Statement.** A getter whose name starts with `$` is cached *whole, forever* on
 first access — even if its result is not a ref.
@@ -197,13 +199,13 @@ return the same object.
 **Impossible if true.** A `$`-getter cannot re-run its body on each access (which
 would create a new composable/subscription every read).
 
-## Part B — Module / import invariants
+## Module & import invariants
 
 These aren't lines of code inside `Reactive()`; they're properties of the
-**authoring convention** the engine is designed for, made *correct* by the Part-A
-invariants (chiefly A1 identity and A2 process-once). They're why v2 handles
-cross-file hierarchies and circular imports where v1 doesn't. See
-[Modules & Imports](/guide/modules) for the practical guide.
+**authoring convention** the engine is designed for, made *correct* by the runtime
+invariants above (chiefly *Identity preservation* and *Idempotent transformation*).
+They're why v2 handles cross-file hierarchies and circular imports where v1 doesn't.
+See [Modules & Imports](/guide/modules) for the practical guide.
 
 ```ts
 export namespace Thing {
@@ -223,17 +225,17 @@ export var Thing;
 })(Thing || (Thing = {}));
 ```
 
-### B10 · Module-load-time, per-file transformation
+### Module-load-time, per-file transformation
 
 **Statement.** Each class is transformed in its own module at load time, and the
 transformations compose across files without coordination — shared ancestors are
 transformed once, by whichever module loads first.
 
 **Mechanism.** `Reactive($Thing)` runs as the module's top-level side effect.
-Because of A2 (process-once) and A1 (identity), a base transformed in `Base.ts` and
-reached again through a child's chain walk is detected as `PROCESSED` and skipped —
-yet the child still inherits the installed reactive getters via the shared
-prototype.
+Because the transform is idempotent and identity-preserving, a base transformed in
+`Base.ts` and reached again through a child's chain walk is detected as `PROCESSED`
+and skipped — yet the child still inherits the installed reactive getters via the
+shared prototype.
 
 **Guarantees.** Parent, grandparent and child can live in **separate files**.
 Editing one file re-runs only that module's `Reactive()` call, which is idempotent,
@@ -245,7 +247,7 @@ why v1 hierarchies live in a single file.)
 **Impossible if true.** A multi-file hierarchy cannot end up partially transformed;
 re-running a module cannot double-wrap an inherited getter.
 
-### B11 · Circular-import & HMR robustness
+### Circular-import & HMR robustness
 
 **Statement.** Exposing the class through a namespace object as two members —
 `$Class` (raw, for `extends`) and `Class` (reactive, for `new`) — lets
@@ -260,8 +262,8 @@ B, B's methods use A" cycles resolve in either order.
 
 **Guarantees.** The common form of circular dependency between domain classes
 (mutual *references* that normally throw `Cannot access 'X' before initialization`)
-is eliminated. Combined with A1, one constructor identity is used everywhere, so
-`instanceof` and equality checks stay consistent across modules.
+is eliminated. Combined with identity preservation, one constructor identity is used
+everywhere, so `instanceof` and equality checks stay consistent across modules.
 
 **Impossible if true.** A mutual cross-reference between two class modules cannot
 throw a TDZ error purely due to import ordering.

@@ -1,66 +1,93 @@
 ---
 title: Design & Philosophy
-description: Why the ecosystem left classes, what it actually got wrong (coupling class to component), and how ivue re-integrates classes into Vue reactivity by working with JavaScript's grain.
+description: The hard problems ivue solves — cheap instantiation, cheap bound methods, reactive inheritance, cross-file HMR, circular imports, writable-getter types — and why solving them together is the achievement.
 ---
 
 # Design & Philosophy
 
-ivue exists to answer one question honestly: **can classes be a first-class way to
-build Vue reactivity — not a component wrapper, but a real reactive unit — without
-paying for it?** The short version is yes, but only if you solve several problems
-at once. This page is the reasoning behind the engine.
+ivue makes classes a first-class way to build Vue reactivity — a real reactive
+unit, not a component wrapper — with no penalty. Getting there meant solving a set
+of problems that actively fight each other, each one hard in its own right. ivue
+solves them all, and charges a single, erasable cost for the lot.
 
-## Why the ecosystem left classes
+## The problems ivue solves
 
-It's tempting to say classes were abandoned because they were slow or because
-reactive inheritance was hard. That's mostly a myth. The real reasons were:
+Every item below has sunk a class-reactivity attempt on its own. Most projects that
+tried nailed one or two and shipped the rest with rough edges. ivue solves the whole
+set.
 
-- **Logic reuse.** Composables compose stateful logic across unrelated components;
-  mixins and class inheritance couldn't do that cleanly. This was the dominant
-  motivation, and it's an *organization* argument, not a performance one.
-- **TypeScript ergonomics.** The class approaches of the era (`vue-class-component`,
-  `vue-property-decorator`) leaned on **experimental decorators**, and decorator-based
-  typing was fragile and unstable. Note the culprit: not TypeScript — TypeScript
-  predates Vue and Vue 3 is *written* in it — but **decorators specifically**.
-- **A design philosophy.** "Composition over inheritance" is a deliberate,
-  decades-old stance, not a concession. Deep hierarchies have real downsides.
+| Problem | Why it's hard | In ivue |
+|---|---|---|
+| **Per-instance cost** | A `reactive()` proxy per object is expensive; eager computeds pay for every property up front. | Instances are **plain**, refs/computeds are lazy → **55–250× cheaper to create.** |
+| **Cheap bound methods** | Bind per instance and you allocate a function per method per object; don't bind and `this` breaks on detach. | Methods stay on the prototype, **bound lazily on first use and cached** → cheap, correct, referentially stable. |
+| **Reactive reads** | Any indirection over a raw ref costs something. | `this.x.value` through a getter — **~5× a raw ref, hoistable to native speed**. The one cost, and it's erasable. |
+| **Reactive inheritance** | Prototype-based reactivity collides cached cells and breaks `super`. | **Deep computed chains with `super.x.value`**, reactivity propagating through every level. |
+| **Cross-file class HMR** | Editing a parent in another file desyncs prototype links and identities. | An idempotent, per-file transform **survives HMR**. |
+| **Circular imports** | Mutual class references throw `Cannot access 'X' before initialization`. | The namespace pattern **resolves references in any load order**. |
+| **Writable-getter types** | `get x()` is *read-only* in TypeScript. | Mapped types **re-declare ref-returning getters as writable** — the requirement that produced the circular-safe module shape. |
+| **Deterministic teardown** | Track and stop every effect per instance, with no cost for those that have none. | `$watch` + `$stopEffects` — scoped cleanup, **zero cost for instances that never watch**. |
 
-So composables didn't win by solving performance, inheritance, or HMR. They won by
-being better at *their* problem — ad-hoc logic reuse and clean TS — which was never
-the problem classes were uniquely good at. Classes were left on the table for
-reasons that had little to do with reactivity mechanics.
+**Bound methods deserve a closer look, because everyone underestimates it.** In plain
+Vue and React you cannot pass `this.method` — you write `() => this.method()` or
+`this.method.bind(this)` at every call site, and the day someone forgets, `this` is
+`undefined` at runtime and the bug ships. Bind in the constructor instead and you
+allocate a fresh function per method per instance, discarding the shared prototype;
+use arrow class fields and you get the same per-instance closures *plus* you lose
+prototype override. ivue ends the whole saga: methods live on the prototype, get
+bound **lazily** on first access, and are **cached** on the instance — so `this.method`
+is always correct, always the same reference, and costs one bind only for the methods
+you actually use. The `() => this.method()` wrapper, and the class of bug behind it,
+is gone.
 
-## The mistake that actually soured people
+## Why it's hard: the problems fight each other
 
-The class approaches made one concrete error: **they welded the class to the
-component.** In `vue-class-component` and React class components, the class *was*
-the component — bound to lifecycle, render, and props-as-`this`. You couldn't have
-a plain reactive *model* that wasn't also a framework component. React especially
-drowned in it: binding, lifecycle sprawl, higher-order-component hell.
+Any one of these is a weekend. The reason the *set* stayed unsolved is that they
+**interact**. The prototype transform that enables inheritance is the same mechanism
+that breaks identity, HMR, and types. The caching that makes reads cheap is what
+makes `super` and teardown tricky. The types you need for writable getters dictate
+how you're even allowed to export the class.
 
-ivue's first design decision is to undo exactly this:
+Solving them in isolation is trivial. Solving them so they *all hold at once* —
+cheaply, with a single residual cost and no exceptions bolted on — is the real
+problem, and it is very hard. When one structure makes every constraint true
+simultaneously, you've found the invariant instead of patching symptoms. The proof
+is that you can delete the engine's per-level "super key" bookkeeping and deep
+inheritance keeps working — the guarantee was load-bearing on its own.
+
+## The field left these on the table
+
+The ecosystem moved away from classes for reasons that had nothing to do with the
+difficulty above: **logic reuse** (composables compose across unrelated components,
+inheritance can't), **TypeScript** (the class libraries of the era leaned on
+experimental **decorators**, not TS itself — TS predates Vue and Vue 3 is written in
+it), and **composition-over-inheritance** as a stated philosophy.
+
+Betting on composition is not the same as these problems being solved. They stayed
+hard, and the handful of projects that attacked them shipped partial answers. ivue
+solves the whole set — and does it without the two things that sank the earlier
+attempts: **no decorators**, and **no coupling to the component**.
+
+## Class ≠ component
+
+The old class approaches made one fatal error: they **welded the class to the
+component**. In `vue-class-component` and React class components, the class *was* the
+component — bound to lifecycle, render, and props-as-`this`. You could never have a
+plain reactive *model* that wasn't also a framework component. React drowned in it:
+binding, lifecycle sprawl, HOC hell.
+
+ivue's first decision undoes exactly that:
 
 > **A class is a reactive unit — a store, a view-model, a domain entity — usable
 > anywhere. It is never itself a component.**
 
-That single decoupling is why classes feel good in ivue and felt heavy before.
-
 ## Work with JavaScript's grain
 
-The old attempts fought the language (decorators, proxies-per-instance, `this`
-gymnastics). ivue works *with* it:
+The old attempts fought the language. ivue works with it: no decorators; state is a
+getter returning `ref()` / `computed()`; a one-time prototype rewrite instead of a
+compile-time macro; plain instances instead of a proxy each.
 
-- **No decorators.** State is a getter returning `ref()` / `computed()`. The
-  transform is a one-time prototype rewrite, not a compile-time macro.
-- **Plain instances.** No `reactive()` proxy per object; reactivity is the refs you
-  return, materialized lazily. That's where the creation speed comes from.
-- **Types make getters writable.** A bare `get x()` is *read-only* in TypeScript.
-  ivue's mapped types detect getters that return a `Ref` and re-declare those keys
-  as writable, so `inst.x.value = …` type-checks.
-
-That last point produced an unexpected gift. Surfacing the corrected instance type
-requires exporting a **`const`** (whose type carries the writable remapping) rather
-than the class directly:
+The types even paid a dividend. Surfacing the *writable* instance type requires
+exporting a **`const`** (whose type carries the remapping), not the class directly:
 
 ```ts
 export namespace Thing {
@@ -70,16 +97,15 @@ export namespace Thing {
 }
 ```
 
-A TypeScript `namespace` compiles to a **hoisted `var`** — which is exactly what
-makes [circular imports resolve in any order](/guide/modules). The *type*
-requirement forced a module shape that *happened* to be circular-safe. Solving one
-constraint paid off another — the signature of a design that found its invariant
-rather than patching symptoms.
+A TypeScript `namespace` compiles to a **hoisted `var`** — precisely what makes
+[circular imports resolve in any order](/guide/modules). The type requirement forced
+a module shape that was also circular-safe. One constraint's solution paying off
+another's is the mark of a design built on an invariant, not a pile of patches.
 
 ## Classes for structure, composables for units
 
-ivue is not anti-composable. The opposite: composables are the **building blocks
-inside** classes.
+ivue is not anti-composable — it runs *on* composables. They're the building blocks
+inside classes:
 
 ```ts
 class $Pointer {
@@ -89,34 +115,15 @@ class $Pointer {
 ```
 
 The class contributes what composables lack — identity, structure, inheritance,
-encapsulation. The composable contributes what it's great at — small, reusable
-logic that doesn't need to be a class. The decade of ecosystem work on composables
-isn't ivue's rival; it's ivue's substrate.
+encapsulation. The composable contributes small, reusable logic. The ecosystem's
+decade of composable work isn't ivue's rival; it's its substrate.
 
-## Solve the conjunction, not the pieces
+## Built for structure at scale
 
-Any one of these is easy: make instantiation cheap, *or* make inheritance work,
-*or* keep methods cheap, *or* survive HMR, *or* get the types right. The hard part
-is all of them **at once**, because the constraints fight — the prototype transform
-that enables inheritance is the same thing that usually breaks identity and HMR.
+ivue is at its best where reactive state is **structured, plentiful, and
+inheritance-shaped** — entities, editors, graphs, virtual-scrolled lists — and where
+you want real OOP in your reactivity: polymorphic, `super`-callable, cached
+derivations across an inheritance chain, which signal frameworks don't attempt.
+Composables still handle small, local logic — and ivue hosts them when they do.
 
-Finding a single structure that satisfies every constraint with only a tiny
-residual cost is what "finding the invariant" means. ivue's residual cost is one
-thing: reads go through a getter, so `this.x.value` is a little slower than a raw
-closure ref — erasable in [hot loops](/guide/performance#hot-loops) by hoisting.
-Everything else is paid for.
-
-## Where ivue fits
-
-Honestly: it's a power tool, not a universal default.
-
-- **Reach for ivue** when you have *structured, many-instance, inheritance-shaped*
-  reactive state — entities, editors, graphs, virtual-scrolled lists — and you want
-  real OOP in your reactivity.
-- **Reach for plain composables** for small, local, ad-hoc logic reuse. ivue won't
-  fight you there — it'll host them.
-
-ivue didn't beat composition; it re-opened a road the ecosystem left for unrelated
-reasons, and paved it — decoupled from the component, aligned with the language, and
-correct across the whole set of problems at once. For a deeper, formal treatment of
-the guarantees, see [Invariants](/reference/invariants).
+For the formal treatment of every guarantee, see [Invariants](/reference/invariants).
