@@ -1,3 +1,8 @@
+---
+title: Computed & Watch
+description: Cached computeds that recompute only on dependency change, and this.$watch — a scoped watcher with Vue's watch signature and clean teardown.
+---
+
 # Computed & Watch
 
 ## Computed

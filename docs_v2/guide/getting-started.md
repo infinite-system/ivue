@@ -1,3 +1,8 @@
+---
+title: Getting Started
+description: Install ivue, write your first reactive class with getters returning ref()/computed(), and use it in a Vue component.
+---
+
 # Getting Started
 
 ## Install

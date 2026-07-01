@@ -1,3 +1,8 @@
+---
+title: Inheritance & super
+description: Deep computed chains, super.x.value, and reactivity that propagates through every level — plus the one native-JS accessor difference from ivue v1.
+---
+
 # Inheritance & `super`
 
 Reactive classes inherit like native classes — across as many levels as you like.

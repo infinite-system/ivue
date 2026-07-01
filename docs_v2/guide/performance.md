@@ -1,3 +1,8 @@
+---
+title: Performance
+description: The honest numbers — v2 is 55–253× faster to create, ~5× slower on hot state reads, and how to erase that read cost with a one-line hoist.
+---
+
 # Performance
 
 v2's design is one trade: **defer everything**. No proxy, no eager refs, no

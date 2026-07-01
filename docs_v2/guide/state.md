@@ -1,3 +1,8 @@
+---
+title: Reactive State
+description: Declare state as getters returning ref, shallowRef or computed. Covers writable computeds, stable bound methods, $-singletons, and private fields.
+---
+
 # Reactive State
 
 In v2 you declare state as **getters that return refs**. That single convention

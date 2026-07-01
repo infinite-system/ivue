@@ -1,3 +1,8 @@
+---
+title: Modules & Imports
+description: The $Class / Class namespace pattern — cross-file class hierarchies with working HMR, and circular imports that resolve in any load order.
+---
+
 # Modules & Imports
 
 For multi-file class hierarchies, ivue v2 uses a small **namespace pattern** that

@@ -1,3 +1,8 @@
+---
+title: API Reference
+description: Reactive(), instance.$watch, instance.$stopEffects, propsWithDefaults, isClass, and the ReactiveInstance / ReactiveClass types.
+---
+
 # API Reference
 
 ## `Reactive(Class)`

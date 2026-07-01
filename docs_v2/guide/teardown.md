@@ -1,3 +1,8 @@
+---
+title: Teardown
+description: $watch registers watchers in a lazy per-instance effect scope; $stopEffects stops it, runs your hook, and clears caches — with zero cost for pure-data instances.
+---
+
 # Teardown
 
 `Reactive()` injects two helpers on every class: **`$watch`** and

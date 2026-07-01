@@ -1,3 +1,8 @@
+---
+title: What is ivue?
+description: ivue builds Vue 3 reactivity from plain TypeScript classes. Meet Reactive() — the v2 engine — and see how it differs from the v1 ivue() approach.
+---
+
 # What is ivue?
 
 **ivue** (Infinite Vue) lets you build Vue 3 reactivity out of plain TypeScript

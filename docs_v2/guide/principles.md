@@ -1,3 +1,8 @@
+---
+title: Principles
+description: The seven guarantees behind ivue v2 — plain instances, lazy cached state, self-optimizing getters, native inheritance, composable modules, and scoped teardown.
+---
+
 # Principles
 
 Everything ivue v2 does follows from a handful of guarantees. Knowing them is

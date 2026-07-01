@@ -1,3 +1,8 @@
+---
+title: Migrating from v1
+description: A mechanical map from ivue v1 (ivue(), iref, no .value) to v2 (Reactive(), getters returning refs, .value) — what v2 drops, adds, and how to phase the move.
+---
+
 # Migrating from v1
 
 v1 and v2 express the same idea. The mechanical differences are small and

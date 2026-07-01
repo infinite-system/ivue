@@ -11,9 +11,17 @@ export default defineConfig({
 
   head: [
     ['meta', { name: 'theme-color', content: '#6366f1' }],
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:title', content: 'ivue — class-based reactivity for Vue 3' }],
+    ['meta', { property: 'og:description', content: 'Write plain classes. Get fine-grained reactivity. Pay nothing per instance.' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
     [
-      'meta',
-      { property: 'og:title', content: 'ivue — class-based reactivity for Vue 3' },
+      'link',
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap',
+      },
     ],
   ],
 
