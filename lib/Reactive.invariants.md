@@ -29,7 +29,7 @@ Line references are to `lib/Reactive.ts`. Tests are in
 (mutated in place), never a wrapper or subclass.
 
 **Mechanism.** The function transforms `Class.prototype` and returns
-`targetClass` unchanged (`return targetClass as any`, line 213).
+`targetClass` unchanged (`return targetClass as any`, line 263).
 
 **Guarantees.** `Reactive(X) === X`. `instanceof` still works. The raw class and
 the reactive class share one prototype lineage, which is what lets a child
@@ -51,8 +51,8 @@ a base is reached.
 
 **Mechanism.** Per-prototype `PROCESSED` symbol flag; the chain loop skips any
 prototype already carrying it (`if (prototypeHasOwnProperty(prototype, PROCESSED)) continue`,
-line 163; marked at lines 182–186). The chain is walked base→child
-(`chain.reverse()`, line 158) so ancestors are always settled before descendants.
+line 191; marked at lines 212–217). The chain is walked base→child
+(`chain.reverse()`, line 186) so ancestors are always settled before descendants.
 
 **Guarantees.** Calling `Reactive()` again is a safe no-op. A base class
 transformed in its own module is **not** re-transformed when a child in another
@@ -76,9 +76,24 @@ cannot produce inconsistent transformation depending on load order.
 cached computeds, bound methods, and the `RAW` back-pointer — lives on
 `toRaw(this)`, never on a Vue reactive proxy of the instance.
 
-**Mechanism.** Method getter resolves `const raw = this[RAW] ?? (this[RAW] = toRaw(this))`
-(line 52); computed getter and `$stopEffects` use `toRaw(this)` (lines 89, 196).
-Caches are keyed by per-prototype symbols (A4/A7).
+**Mechanism.** Every engine entry point — method get/set, computed getter,
+de-opted getter/setter, `$watch`, `$stopEffects` — resolves the true raw via
+`resolveRaw()` (lines 44–61): try `toRaw(this)` first (unwraps a genuine Vue
+reactive chain in one step, and stamps the per-instance `RAW` back-pointer on
+the raw), then fall back to the back-pointer for anything `toRaw()` cannot see
+through — chiefly Vue's component **expose proxy**, which does not answer
+`__v_raw`. The pointer itself is normalized with `toRaw()` on the way out,
+because a symbol-keyed OBJECT read through a reactive proxy comes back
+deep-wrapped (`reactive(raw)`). Caches are keyed by per-prototype symbols
+(A4/A7).
+
+Neither primitive suffices alone — `toRaw()` misses foreign proxies, and the
+raw pointer read through a reactive proxy comes back wrapped. The engine once
+used `this[RAW] ?? toRaw(this)` directly; after the pointer was stamped, the
+first access of any OTHER method through the proxy bound that method to the
+wrapped pointer and cached it on the true raw — poisoning the cache with
+ref-unwrapping `this` semantics (`this.x.value` crashed for every caller
+because `this.x` auto-unwrapped to the plain value).
 
 **Guarantees.** Whether an instance is used directly (`new Class()`) or wrapped in
 `reactive(new Class())`, reads and writes resolve to one canonical storage and
@@ -89,9 +104,15 @@ underlying cell is still the same one on the raw object.
 **Impossible if true.** You cannot get two different refs for the same property on
 the same instance via proxy-vs-raw access; a write through the proxy cannot
 silently land on a different cell than a read through the raw object; caches
-cannot leak onto the proxy and escape teardown.
+cannot leak onto the proxy and escape teardown; a method (or computed closure)
+cannot be bound to a ref-unwrapping proxy and cached — regardless of which
+proxy chain (reactive wrapper, expose proxy) performed the first access.
 
-**Test.** *lazy-bound methods › works when the instance IS wrapped in reactive() (toRaw anchoring)*.
+**Tests.** *lazy-bound methods › works when the instance IS wrapped in reactive() (toRaw anchoring)*;
+*raw resolution through proxy chains (resolveRaw) › a method first-accessed
+through reactive() AFTER the pointer is stamped still binds to the raw (no
+cache poisoning)*; *… › resolves the true raw through an opaque foreign proxy
+(component expose-proxy shape)*.
 
 ---
 
@@ -102,9 +123,9 @@ returns the identical ref/computed on every subsequent read; each method returns
 the identical bound function on every access.
 
 **Mechanism.** Computed getter caches under a symbol and short-circuits on
-`if (superKey in raw) return raw[superKey]` (line 92, store at 106). Method getter
+`if (superKey in raw) return raw[superKey]` (line 122, store at 136). Method getter
 caches the bound function: `raw[superKey] ?? (raw[superKey] = originalFn.bind(raw))`
-(line 53).
+(lines 80–81).
 
 **Guarantees.** Referential stability. A `watch(() => inst.area.value, …)` stays
 attached because `inst.area` is always the same computed. A method is safe to pass
@@ -151,7 +172,7 @@ the prototype for all future instances.
 
 **Mechanism.** In the computed getter, the `else` branch (not `isRef(result)`)
 redefines the prototype property back to a thin getter that calls
-`originalGetter.call(toRaw(this))` (lines 107–124), preserving the setter if one
+`originalGetter.call(resolveRaw(this))` (lines 140–151), preserving the setter if one
 exists.
 
 **Guarantees.** Getters used for plain derived values converge toward native
@@ -239,8 +260,8 @@ injected only once*.
 **Statement.** A getter whose name starts with `$` is cached *whole, forever* on
 first access — even if its result is not a ref.
 
-**Mechanism.** `cacheWhole = key[0] === '$'` (line 74); when set, the result is
-stored and returned without the `isRef` check (lines 98–102).
+**Mechanism.** `cacheWhole = key[0] === '$'` (line 105); when set, the result is
+stored and returned without the `isRef` check (lines 128–132).
 
 **Guarantees.** The canonical "create this composable/service exactly once per
 instance" slot, e.g. `get $mouse() { return useMouse() }`. The original getter
@@ -363,7 +384,8 @@ These are deliberately listed so the invariants above are not over-read:
 ## Coverage
 
 `lib/__tests__/Reactive.vitest.spec.ts` — **100% statements, 100% branches, 100%
-functions, 100% lines** of `lib/Reactive.ts`. The dead defensive branches that
+functions, 100% lines** of `lib/Reactive.ts` (including every `resolveRaw`
+branch, via the *raw resolution through proxy chains* regression tests). The dead defensive branches that
 previously blocked full coverage (the `originalGetter ? … : undefined` fallbacks,
 the redundant `!desc` guards, and the `getSuperKey` memoization) were removed by
 construction during the refactor rather than ignored.

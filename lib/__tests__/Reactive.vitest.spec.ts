@@ -169,9 +169,12 @@ describe('Reactive()', () => {
       const b: any = new R();
       expect(b.answer).toBe(42);
       expect(calls).toBeGreaterThanOrEqual(3);
-      // Not cached as a ref under any symbol — it's a normal getter now.
+      // The getter's VALUE is not cached under any symbol — only the
+      // engine's RAW back-pointer (stamped on first access by resolveRaw)
+      // may exist on the instance.
       const syms = Object.getOwnPropertySymbols(a);
-      expect(syms.length).toBe(0);
+      expect(syms.map((s) => s.toString())).toEqual(['Symbol(ivue_raw)']);
+      expect((a as any)[syms[0]]).toBe(a);
     });
 
     it('getter+setter returning a plain value de-opts but keeps the setter wired', () => {
@@ -285,6 +288,83 @@ describe('Reactive()', () => {
     });
   });
 
+  describe('raw resolution through proxy chains (resolveRaw)', () => {
+    // REGRESSION: the engine once resolved the raw as
+    // `this[RAW] ?? (this[RAW] = toRaw(this))`. Reading the symbol-keyed
+    // RAW back-pointer through a Vue reactive proxy DEEP-WRAPS the returned
+    // object (`reactive(raw)`), so once the pointer was stamped, the first
+    // access of any OTHER method through the proxy bound that method to the
+    // PROXY and cached it on the true raw — after which `this.x.value`
+    // crashed for every caller, because the proxy auto-unwraps refs.
+    it('a method first-accessed through reactive() AFTER the pointer is stamped still binds to the raw (no cache poisoning)', () => {
+      class Box {
+        get count() {
+          return ref(0);
+        }
+        inc() {
+          this.count.value++;
+        }
+        dec() {
+          this.count.value--;
+        }
+      }
+      const RBox = Reactive(Box);
+      const inst: any = new RBox();
+      const p: any = reactive(inst);
+
+      // First method access — pointer unstamped — bound correctly and
+      // stamps the RAW back-pointer.
+      void p.inc;
+      // Second method's FIRST access happens with the pointer stamped:
+      // this is the poisoning path.
+      const dec = p.dec;
+      expect(() => dec()).not.toThrow();
+      expect(inst.count.value).toBe(-1);
+      // The cached function keeps working from every access path.
+      p.inc();
+      inst.inc();
+      expect(inst.count.value).toBe(1);
+    });
+
+    // Vue's component expose proxy is a plain (non-Vue-reactive) Proxy that
+    // does not answer `__v_raw`, so `toRaw()` cannot see through it; the
+    // engine must fall back to the RAW back-pointer — and normalize it,
+    // because the pointer read through the chain comes back deep-wrapped.
+    it('resolves the true raw through an opaque foreign proxy (component expose-proxy shape)', () => {
+      class Box {
+        get count() {
+          return ref(0);
+        }
+        inc() {
+          this.count.value++;
+        }
+        dec() {
+          this.count.value--;
+        }
+      }
+      const RBox = Reactive(Box);
+      const inst: any = new RBox();
+      const p: any = reactive(inst);
+      void p.inc; // stamp the pointer via the normal component path
+
+      const foreign: any = new Proxy(p, {
+        get(target, key, receiver) {
+          if (key === '__v_raw') return undefined; // opaque to toRaw()
+          return Reflect.get(target, key, receiver); // accessors run with this=foreign
+        },
+      });
+
+      // First access of `dec` happens THROUGH the foreign chain.
+      const dec = foreign.dec;
+      expect(() => dec()).not.toThrow();
+      expect(inst.count.value).toBe(-1);
+      // Ref cells materialized through the foreign chain land on the raw.
+      expect(foreign.count).toBe(-1); // auto-unwrapped via the reactive layer
+      inst.inc();
+      expect(inst.count.value).toBe(0);
+    });
+  });
+
   describe('inheritance & super chains', () => {
     it('resolves getters across a 3-level chain with super.x.value', () => {
       class Base {
@@ -334,7 +414,9 @@ describe('Reactive()', () => {
       const inst: any = new (Reactive(Child))();
       expect(inst.val.value).toBe(11);
       // Both a base-level and child-level cache symbol exist on the instance.
-      expect(Object.getOwnPropertySymbols(inst).length).toBeGreaterThanOrEqual(2);
+      expect(Object.getOwnPropertySymbols(inst).length).toBeGreaterThanOrEqual(
+        2,
+      );
     });
 
     it('inherited methods bind correctly', () => {
@@ -400,7 +482,9 @@ describe('Reactive()', () => {
       }
       // computed in the child aggregating refs declared 3 and 1 levels up
       get sum() {
-        return computed(() => (this as any).base.value + (this as any).extra.value);
+        return computed(
+          () => (this as any).base.value + (this as any).extra.value,
+        );
       }
       greet() {
         return super.greet() + '/L4';
@@ -452,7 +536,11 @@ describe('Reactive()', () => {
       // 4 distinct computed cache symbols (+ base ref once it is read)
       d.base.value;
       const symbols = Object.getOwnPropertySymbols(d).filter(
-        (s) => s !== (Object.getOwnPropertySymbols(d).find((x) => x.toString() === 'Symbol(ivue_raw)'))
+        (s) =>
+          s !==
+          Object.getOwnPropertySymbols(d).find(
+            (x) => x.toString() === 'Symbol(ivue_raw)',
+          ),
       );
       // at least the four tag-cells + base must coexist
       expect(Object.getOwnPropertySymbols(d).length).toBeGreaterThanOrEqual(5);
@@ -601,7 +689,9 @@ describe('Reactive()', () => {
       expect(c2.value).toBe(4);
       // no cache symbols should survive teardown (until re-access creates them)
       // (c2 access above re-created exactly one)
-      expect(Object.getOwnPropertySymbols(toRaw(inst)).length).toBeGreaterThan(0);
+      expect(Object.getOwnPropertySymbols(toRaw(inst)).length).toBeGreaterThan(
+        0,
+      );
     });
 
     it('deletes cached bound methods without error', () => {
@@ -659,12 +749,12 @@ describe('Reactive()', () => {
       Reactive(Store);
       const desc1 = Object.getOwnPropertyDescriptor(
         Store.prototype,
-        '$stopEffects'
+        '$stopEffects',
       );
       Reactive(Store); // must not redefine
       const desc2 = Object.getOwnPropertyDescriptor(
         Store.prototype,
-        '$stopEffects'
+        '$stopEffects',
       );
       expect(desc1!.value).toBe(desc2!.value);
     });
@@ -682,7 +772,7 @@ describe('Reactive()', () => {
       inst.$watch(
         () => inst.count.value,
         (v: number) => seen.push(v),
-        { flush: 'sync' }
+        { flush: 'sync' },
       );
       inst.count.value = 1;
       inst.count.value = 2;
@@ -700,7 +790,7 @@ describe('Reactive()', () => {
       inst.$watch(
         () => inst.count.value,
         (v: number) => seen.push(v),
-        { flush: 'sync' }
+        { flush: 'sync' },
       );
       inst.count.value = 1;
       expect(seen).toEqual([1]);
@@ -725,7 +815,7 @@ describe('Reactive()', () => {
       inst.bump();
       // No scope symbol exists because $watch was never called.
       const hasScope = Object.getOwnPropertySymbols(inst).some(
-        (s) => s.toString() === 'Symbol(ivue_scope)'
+        (s) => s.toString() === 'Symbol(ivue_scope)',
       );
       expect(hasScope).toBe(false);
       // $stopEffects is still safe with no scope present
@@ -743,8 +833,16 @@ describe('Reactive()', () => {
       }
       const inst: any = new (Reactive(Store))();
       const seen: string[] = [];
-      inst.$watch(() => inst.a.value, () => seen.push('a'), { flush: 'sync' });
-      inst.$watch(() => inst.b.value, () => seen.push('b'), { flush: 'sync' }); // reuses scope
+      inst.$watch(
+        () => inst.a.value,
+        () => seen.push('a'),
+        { flush: 'sync' },
+      );
+      inst.$watch(
+        () => inst.b.value,
+        () => seen.push('b'),
+        { flush: 'sync' },
+      ); // reuses scope
       inst.a.value = 1;
       inst.b.value = 1;
       expect(seen).toEqual(['a', 'b']);
@@ -823,7 +921,10 @@ describe('propsWithDefaults()', () => {
       nul: { type: Object },
     };
     const defaults = { s: 'x', n: 5, b: true, fn, nul: null };
-    const out = propsWithDefaults(defaults, { ...typed }) as Record<string, any>;
+    const out = propsWithDefaults(defaults, { ...typed }) as Record<
+      string,
+      any
+    >;
     expect(out.s.default).toBe('x');
     expect(out.n.default).toBe(5);
     expect(out.b.default).toBe(true);
@@ -834,7 +935,10 @@ describe('propsWithDefaults()', () => {
   it('wraps object/array defaults in a factory that structuredClones', () => {
     const typed = { o: { type: Object }, a: { type: Array } };
     const defaults = { o: { nested: { k: 1 } }, a: [1, 2, 3] };
-    const out = propsWithDefaults(defaults, { ...typed }) as Record<string, any>;
+    const out = propsWithDefaults(defaults, { ...typed }) as Record<
+      string,
+      any
+    >;
 
     expect(typeof out.o.default).toBe('function');
     const o1 = out.o.default();
@@ -870,7 +974,10 @@ describe('propsWithDefaults()', () => {
     }
     const typed = { c: { type: Object } };
     const defaults = { c: Cool };
-    const out = propsWithDefaults(defaults, { ...typed }) as Record<string, any>;
+    const out = propsWithDefaults(defaults, { ...typed }) as Record<
+      string,
+      any
+    >;
     expect(typeof out.c.default).toBe('function');
     expect(out.c.default()).toBe(Cool); // not instantiated, not cloned
   });

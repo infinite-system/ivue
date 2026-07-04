@@ -4,7 +4,7 @@ import { effectScope, isRef, toRaw, watch, type Ref } from 'vue';
  * Constants & Helpers
  */
 const prototypeHasOwnProperty = Object.prototype.hasOwnProperty.call.bind(
-  Object.prototype.hasOwnProperty
+  Object.prototype.hasOwnProperty,
 );
 const getPrototypeOf = Object.getPrototypeOf;
 const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
@@ -21,6 +21,46 @@ const SCOPE = Symbol('ivue_scope'); // Lazily-created per-instance effect scope
 const PROCESSED = Symbol('ivue_processed'); // Flag to mark a prototype as "Reactified"
 
 /**
+ * Resolve the TRUE raw instance from whatever `this` the engine was entered
+ * with — the raw object itself, a Vue `reactive()` proxy, or a foreign proxy
+ * chain such as Vue's component expose proxy.
+ *
+ * Neither primitive is sufficient alone:
+ *
+ * - `toRaw(this)` cannot unwrap a foreign (non-Vue-reactive) proxy — e.g.
+ *   Vue's component expose proxy — so it can return the proxy unchanged.
+ * - The RAW back-pointer read through a Vue reactive proxy comes back
+ *   DEEP-WRAPPED: a reactive proxy wraps symbol-keyed object reads in
+ *   `reactive(raw)`. Binding a method (or computed closure) to that wrapped
+ *   value poisons the per-instance cache with ref-unwrapping `this`
+ *   semantics — `this.x.value` then crashes, because `this.x` auto-unwraps
+ *   to the plain value.
+ *
+ * So: try `toRaw()` first (one step for the common reactive-proxy path —
+ * consulting the pointer first costs a wrap+unwrap round-trip per access),
+ * and fall back to the pointer, normalized with `toRaw()`, for everything
+ * `toRaw()` cannot see through.
+ */
+function resolveRaw(self: any) {
+  const unwrapped = toRaw(self);
+  if (unwrapped !== self) {
+    // Genuine Vue reactive proxy. Stamp the back-pointer (once, directly on
+    // the raw — no proxy set traps) so foreign proxy chains can still
+    // resolve the true raw through it.
+    return unwrapped[RAW] ?? (unwrapped[RAW] = unwrapped);
+  }
+  // `self` is the raw object itself, or a foreign proxy over it.
+  const viaPointer = self[RAW];
+  if (viaPointer) {
+    // A pointer read through a proxy chain may come back deep-wrapped —
+    // normalize; on the raw object it is already the raw itself.
+    return viaPointer === self ? viaPointer : toRaw(viaPointer);
+  }
+  // First-ever engine access on a plain raw instance (direct `new Class()`).
+  return (self[RAW] = self);
+}
+
+/**
  * Convert a method to a lazy-bound prototype method.
  *
  * The bound function is created once, on first access, and cached on the raw
@@ -31,17 +71,17 @@ function convertToLazyBoundMethod(
   proto: any,
   key: string,
   superKey: symbol,
-  originalFn: (...args: any[]) => any
+  originalFn: (...args: any[]) => any,
 ) {
   defineProperty(proto, key, {
     configurable: true,
     enumerable: false,
     get(this: any) {
-      const raw = this[RAW] ?? (this[RAW] = toRaw(this));
+      const raw = resolveRaw(this);
       return raw[superKey] ?? (raw[superKey] = originalFn.bind(raw));
     },
     set(this: any, newFn: any) {
-      toRaw(this)[superKey] = newFn;
+      resolveRaw(this)[superKey] = newFn;
     },
   });
 }
@@ -59,7 +99,7 @@ function convertToLazyComputed(
   key: string,
   superKey: symbol,
   originalGetter: (this: any) => any,
-  originalSetter: ((this: any, v: any) => any) | undefined
+  originalSetter: ((this: any, v: any) => any) | undefined,
 ) {
   // Optimization: Properties starting with $ are assumed singletons.
   const cacheWhole = key[0] === '$';
@@ -69,14 +109,14 @@ function convertToLazyComputed(
     try {
       if (isRef(originalGetter.call({}))) {
         console.warn(
-          `[ivue] API conflict on "${key}": Getter returns Ref but Setter is standard.`
+          `[ivue] API conflict on "${key}": Getter returns Ref but Setter is standard.`,
         );
       }
     } catch (e) {}
   }
 
   const newGetter = function (this: any) {
-    const raw = toRaw(this);
+    const raw = resolveRaw(this);
 
     // 1. Check cache
     if (superKey in raw) return raw[superKey];
@@ -101,11 +141,11 @@ function convertToLazyComputed(
         configurable: true,
         enumerable: false,
         get(this: any) {
-          return originalGetter.call(toRaw(this));
+          return originalGetter.call(resolveRaw(this));
         },
         set: originalSetter
           ? function (this: any, v: any) {
-              return originalSetter.call(toRaw(this), v);
+              return originalSetter.call(resolveRaw(this), v);
             }
           : undefined,
       });
@@ -120,7 +160,7 @@ function convertToLazyComputed(
     get: newGetter,
     set: originalSetter
       ? function (this: any, v: any) {
-          return originalSetter.call(toRaw(this), v);
+          return originalSetter.call(resolveRaw(this), v);
         }
       : undefined,
   });
@@ -132,7 +172,7 @@ function convertToLazyComputed(
  * @returns A reactive version of the class (the same class, transformed in place).
  */
 export function Reactive<C extends new (...args: any) => any>(
-  targetClass: C
+  targetClass: C,
 ): ReactiveClass<C> & { Instance: ReactiveInstance<InstanceType<C>> } {
   const chain: any[] = [];
 
@@ -188,7 +228,7 @@ export function Reactive<C extends new (...args: any) => any>(
       configurable: true,
       writable: true,
       value: function (this: any, ...args: any[]) {
-        const raw = toRaw(this);
+        const raw = resolveRaw(this);
         const scope =
           raw[SCOPE] ?? (raw[SCOPE] = effectScope(true /* detached */));
         return scope.run(() => (watch as any)(...args));
@@ -205,7 +245,7 @@ export function Reactive<C extends new (...args: any) => any>(
       configurable: true,
       writable: true,
       value: function (this: any) {
-        const raw = toRaw(this);
+        const raw = resolveRaw(this);
         if (typeof raw.stopEffects === fn) raw.stopEffects();
 
         const scope = raw[SCOPE];
@@ -297,7 +337,7 @@ export const propsWithDefaults = <T extends VuePropsObject>(
   defaults: Record<string, any>,
   typedProps: T,
   // Optional: Allows user to pass a custom cloner if structuredClone isn't enough
-  customCloner?: (val: any) => any
+  customCloner?: (val: any) => any,
 ): VuePropsWithDefaults<T> => {
   for (const prop in typedProps) {
     const def = defaults?.[prop];
@@ -326,24 +366,23 @@ type GetterKeys<T> = {
   [K in keyof T]: T[K] extends (...args: any[]) => any
     ? never
     : T[K] extends undefined
-    ? never
-    : K;
+      ? never
+      : K;
 }[keyof T];
 
 type GetterReturn<T, K extends keyof T> = T[K] extends (...args: any[]) => any
   ? never
   : T[K];
 type WritableComputedLike = Ref<any> & { set: (...args: any[]) => any };
-type IsWritableGetter<R> = R extends Ref<any>
-  ? true
-  : R extends WritableComputedLike
-  ? true
-  : false;
+type IsWritableGetter<R> =
+  R extends Ref<any> ? true : R extends WritableComputedLike ? true : false;
 
 type WritableGetters<T> = {
-  [K in GetterKeys<T> as IsWritableGetter<GetterReturn<T, K>> extends true
-    ? K
-    : never]-?: T[K];
+  [
+    K in GetterKeys<T> as IsWritableGetter<GetterReturn<T, K>> extends true
+      ? K
+      : never
+  ]-?: T[K];
 };
 
 export type ReactiveInstance<T> = T &
