@@ -1,18 +1,18 @@
 ---
 title: Performance
-description: The honest numbers — v2 is 55–253× faster to create, ~18× lighter per instance, ~5× slower on hot state reads, and how to erase that read cost with a one-line hoist.
+description: The honest numbers. v2 creates instances 55–253× faster, uses up to 18× less memory per instance, and reads state ~5× slower in hot loops — a cost you can erase with a one-line hoist.
 ---
 
 # Performance
 
-v2's design is one trade: **defer everything**. No proxy, no eager refs, no
-binding until first access. That makes creation extraordinarily cheap and pushes
-a small cost to read-time.
+v2's design is one trade: **defer everything**. No proxy. No eager refs. No
+binding until first access. Creation becomes extremely cheap. Reads pay a
+small cost.
 
 ## Creation is nearly free
 
-Creating an instance is a plain `new` — the refs/computeds don't exist until you
-touch them. Measured on one machine, 100k instances:
+Creating an instance is a plain `new`. Refs and computeds do not exist until
+you touch them. Measured on one machine:
 
 | creating 100k instances    | time       | v2 is           |
 | -------------------------- | ---------- | --------------- |
@@ -21,20 +21,22 @@ touch them. Measured on one machine, 100k instances:
 | native composable factory  | 42.8 ms    | **64× faster**  |
 | v1 `ivue(Class)`           | 169 ms     | **253× faster** |
 
-At 10M instances v2 still scales linearly: ~50 ms to allocate, ~1 s to also
-materialize a ref + computed on each, ~2.9 s for full **four-level** hierarchies
-(40M+ cells). Unused instances cost essentially nothing — ideal for large lists
-and virtual scrolling.
+v2 scales linearly at 10M instances: ~50 ms to allocate, ~1 s to also
+materialize a ref and a computed on each, ~2.9 s for full **four-level**
+hierarchies (40M+ cells). Unused instances cost almost nothing. This is ideal
+for large lists and virtual scrolling.
 
 ## Memory: derivations weigh nothing
 
-Every eager `computed()` costs real bytes **per instance** — the
-`ComputedRefImpl`, its dependency links, and the closure — even when all it
-memoizes is trivial math. In v2, derivations live once on the prototype as
-plain getters; an instance holds only the state cells it actually materialized.
+Every eager `computed()` costs real bytes **per instance**. You pay for the
+`ComputedRefImpl`, its dependency links, and the closure. You pay even when
+all it memoizes is trivial math.
 
-Measured on Vue 3.5, identical shape (10 state refs + 60 trivial derivations,
-one full read pass), 20k instances:
+v2 stores derivations once, on the prototype, as plain getters. An instance
+holds only the state cells it has actually materialized.
+
+Measured on Vue 3.5 with an identical shape — 10 state refs, 60 trivial
+derivations, one full read pass, 20k instances:
 
 | authoring style                    | heap per instance | v2 is             |
 | ---------------------------------- | ----------------- | ----------------- |
@@ -42,43 +44,46 @@ one full read pass), 20k instances:
 | composable — 60 plain closures     | 12.8 KB           | **7.7× lighter**  |
 | composable — 60 eager `computed()` | 31.1 KB           | **18.6× lighter** |
 
-That's ≈300 bytes per trivial computed and ≈190 bytes per closure, per
-instance, paid at creation whether the value is ever read. The middle row is
-the sharp one: even skipping `computed()` inside a composable still costs
-7.7×, because **closures allocate per instance** — only prototype getters are
-shared. Skipping memoization is a policy win; the prototype is the structural
-win; v2 stacks both by default.
+A trivial computed costs ≈300 bytes per instance. A closure costs ≈190. Both
+are paid at creation, whether the value is ever read or not.
 
-Scaled up: a 1,000-row grid of components this shape drops from ~31 MB to
-~1.7 MB of reactivity cells (10k virtualized items: ~311 MB → ~17 MB), and the
-creation-burst GC pressure shrinks with it.
+The middle row is the sharp one. Skipping `computed()` inside a composable
+still costs 7.7×, because **closures allocate per instance**. Only prototype
+getters are shared. Skipping memoization is a policy win. The prototype is
+the structural win. v2 stacks both by default.
 
-Where it doesn't matter: singletons (one store with 60 computeds is 31 KB,
-total), and components whose heap is dominated by vnodes and DOM rather than
-reactivity cells. Reach for [`computed()`](/guide/computed-watch) per getter
-only where memoization or render-suppression earns its ~300 bytes.
+Scaled up: a 1,000-row grid of these components drops from ~31 MB to ~1.7 MB
+of reactivity cells. For 10k virtualized items: ~311 MB → ~17 MB. The GC
+pressure of creation bursts shrinks with it.
+
+This doesn't matter everywhere. A singleton store with 60 computeds costs
+31 KB, total. And in many components, vnodes and DOM dominate the heap, not
+reactivity cells. Use [`computed()`](/guide/computed-watch) where memoization
+or render suppression earns its ~300 bytes.
 
 ## Reads cost a little more
 
-State lives behind a getter, so each `this.x.value` does a tiny bit of indirection
-(`toRaw` + a cache lookup) before reaching the ref. A native composable reads its
-closure ref directly. On a hot loop dominated by reads, identical bodies:
+State lives behind a getter. Each `this.x.value` does a small indirection
+before reaching the ref: a `toRaw` call and a cache lookup. A native
+composable reads its closure ref directly.
+
+On a hot loop dominated by reads, with identical bodies:
 
 | 10M method calls         | time    | per call |
 | ------------------------ | ------- | -------- |
 | native composable `fn()` | ~48 ms  | ~4.8 ns  |
 | v2 `inst.method()`       | ~240 ms | ~24 ns   |
 
-So a method that hammers reactive state is ~5× the per-call cost of a native
-closure. **Method dispatch is not the cost** — caching the method vs. retrieving
-it each call is the same; it's the getter-indirected reads inside.
+A method that hammers reactive state costs ~5× more per call than a native
+closure. **Method dispatch is not the cost.** The getter-indirected reads
+inside the method are.
 
-In absolute terms 24 ns is nothing — this only matters when you call something
+In absolute terms, 24 ns is nothing. It only matters when you call something
 millions of times.
 
 ## Hot loops
 
-When you do have such a loop, hoist the ref out of the getter once:
+When you do have such a loop, hoist the refs out of the getters once:
 
 ```ts
 calculate() {
@@ -91,12 +96,13 @@ calculate() {
 }
 ```
 
-Now the inner loop reads refs directly and runs at native speed.
+The inner loop now reads refs directly and runs at native speed.
 
 ## The mental model
 
 - **v2**: cheap to create, light in memory, slightly costlier to read.
 - **v1 / native composable**: costlier to create, heavier per instance, cheap to read.
 
-Pick by your workload. Most apps create and render far more than they hot-loop, so
-v2's creation win dominates — and the read cost is erasable where it isn't.
+Pick by workload. Most apps create and render far more than they hot-loop, so
+v2's creation win usually dominates. Where it doesn't, the read cost is
+erasable.
