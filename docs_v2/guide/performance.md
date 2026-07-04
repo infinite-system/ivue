@@ -14,12 +14,12 @@ a small cost to read-time.
 Creating an instance is a plain `new` — the refs/computeds don't exist until you
 touch them. Measured on one machine, 100k instances:
 
-|                            | allocate 100k | vs v2       |
-| -------------------------- | ------------- | ----------- |
-| **v2 `new Class()`**       | **0.7 ms**    | —           |
-| native `reactive(new X())` | 36.7 ms       | 55× slower  |
-| native composable factory  | 42.8 ms       | 64× slower  |
-| v1 `ivue(Class)`           | 169 ms        | 253× slower |
+| creating 100k instances    | time       | v2 is           |
+| -------------------------- | ---------- | --------------- |
+| **v2 `new Class()`**       | **0.7 ms** | —               |
+| native `reactive(new X())` | 36.7 ms    | **55× faster**  |
+| native composable factory  | 42.8 ms    | **64× faster**  |
+| v1 `ivue(Class)`           | 169 ms     | **253× faster** |
 
 At 10M instances v2 still scales linearly: ~50 ms to allocate, ~1 s to also
 materialize a ref + computed on each, ~2.9 s for full **four-level** hierarchies
@@ -36,11 +36,11 @@ plain getters; an instance holds only the state cells it actually materialized.
 Measured on Vue 3.5, identical shape (10 state refs + 60 trivial derivations,
 one full read pass), 20k instances:
 
-| authoring style                    | heap per instance | vs v2 |
-| ---------------------------------- | ----------------- | ----- |
-| composable — 60 eager `computed()` | 31.1 KB           | 18.6× |
-| composable — 60 plain closures     | 12.8 KB           | 7.7×  |
-| **v2 class — 60 plain getters**    | **1.7 KB**        | —     |
+| authoring style                    | heap per instance | v2 is             |
+| ---------------------------------- | ----------------- | ----------------- |
+| **v2 class — 60 plain getters**    | **1.7 KB**        | —                 |
+| composable — 60 plain closures     | 12.8 KB           | **7.7× lighter**  |
+| composable — 60 eager `computed()` | 31.1 KB           | **18.6× lighter** |
 
 That's ≈300 bytes per trivial computed and ≈190 bytes per closure, per
 instance, paid at creation whether the value is ever read. The middle row is
