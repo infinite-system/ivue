@@ -1,54 +1,157 @@
 ---
 title: Migrating from v1
-description: A mechanical map from ivue v1 (ivue(), iref, no .value) to v2 (Reactive(), getters returning refs, .value) — what v2 drops, adds, and how to phase the move.
+description: A mechanical map from ivue v1 to v2 — and the minimal recipe. Convert only mutable state to ref-getters, leave derived getters plain, wrap in reactive() at the component boundary, memoize surgically with computed().
 ---
 
 # Migrating from v1
 
 v1 and v2 express the same idea. The mechanical differences are small and
-predictable.
+predictable — and smaller than they first look: **only mutable state requires
+conversion.** Derived getters stay getters, methods change only where they touch
+converted state, and a migrated component's template can stay byte-identical.
 
 ## The core change
 
-| v1 | v2 |
-|---|---|
-| `ivue(MyClass, ...args)` | `new MyClass()` (after `Reactive(MyClass)`) |
-| field `x = iref(0)` | getter `get x() { return ref(0) }` |
-| read `inst.x` | read `inst.x.value` |
-| getter auto-becomes computed | getter returns `computed(...)` explicitly |
+| v1                                      | v2                                                                                |
+| --------------------------------------- | --------------------------------------------------------------------------------- |
+| `ivue(MyClass, ...args)`                | `new MyClass()` (after `Reactive(MyClass)`)                                       |
+| state field `x = iref(0)`               | getter `get x() { return ref(0) }`                                                |
+| read `inst.x`                           | read `inst.x.value`                                                               |
+| derived getter (auto-became a computed) | stays a **plain getter** — `computed()` is a per-getter opt-in, not a requirement |
 
 ```ts
 // v1
 class Counter {
-  count = iref(0)
-  get double() { return this.count * 2 }
-  inc() { this.count++ }
+  count = iref(0);
+  get double() {
+    return this.count * 2;
+  }
+  inc() {
+    this.count++;
+  }
 }
-const c = ivue(Counter)
-c.count            // 0
+const c = ivue(Counter);
+c.count; // 0
 ```
 
 ```ts
-// v2
+// v2 — `double` is NOT wrapped in computed(); it only gained `.value`
+// where it reads the converted state.
 class $Counter {
-  get count()  { return ref(0) }
-  get double() { return computed(() => this.count.value * 2) }
-  inc() { this.count.value++ }
+  get count() {
+    return ref(0);
+  }
+  get double() {
+    return this.count.value * 2;
+  }
+  inc() {
+    this.count.value++;
+  }
 }
-const Counter = Reactive($Counter)
-const c = new Counter()
-c.count.value      // 0
+const Counter = Reactive($Counter);
+const c = new Counter();
+c.count.value; // 0
 ```
+
+## The minimal recipe
+
+Conversion effort scales with a class's **mutable-state surface**, not its line
+count. Member by member:
+
+| member kind                                | work needed                                                                             |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| mutable state field                        | → `get x() { return ref(init) }` + `.value` at use sites — **the only mandatory churn** |
+| derived getter                             | keep as a plain getter; touch only lines that read converted state                      |
+| getter/setter pair                         | keep — the engine de-optimizes it and preserves the setter                              |
+| method                                     | edit only lines that touch converted state                                              |
+| constants, config objects, injected stores | keep as plain fields                                                                    |
+| template-ref holder                        | → `get el() { return ref(null) }`, destructured off the raw instance in the SFC         |
+
+Why plain derived getters stay fully reactive: on first access the engine sees
+the getter return a non-ref and **de-optimizes** it back to a native prototype
+getter (invariant A6) — from then on it is ordinary JavaScript. Vue's tracking
+never needed a `computed()` node in the middle: when a render effect calls the
+getter chain, execution is synchronous inside that effect, so every reactive
+**leaf** it reads — props, refs via `.value`, reactive objects, stores —
+subscribes the effect directly. A source changes → the effect re-runs → the
+getters re-derive. Dependencies are re-collected on every run, so conditional
+branches always track the branch they last took.
+
+::: tip Validated at scale
+A 2,100-line production player class migrated by converting ~25 state fields.
+Its ~60 derived getters and the component's entire template needed no changes.
+:::
+
+## Derive-on-render, memoize surgically
+
+Plain derived getters give a component a **React-like render model**: each time
+a render runs, everything it touches is re-derived from current state — no
+staleness, no cache invalidation to reason about. Unlike React, **Vue's
+fine-grained invalidation still decides _when_ a render happens**, so only
+components whose dependencies changed re-derive at all. You get React's
+simplicity inside the render, Vue's precision around it.
+
+Then tighten surgically — `computed()` is your `useMemo`. Wrap a getter when:
+
+- the derivation is genuinely **expensive** (filtering/sorting large arrays,
+  heavy string building);
+- an unchanged result should **suppress re-renders** — a Vue 3.4+ computed stops
+  propagation when the recomputed value is equal, a plain getter cannot;
+- you need a **stable ref identity** to hand to `watch`, a prop, or a composable.
+
+The measured trade (2M-op benchmarks): when a dependency actually changed, a
+plain-getter chain and a computed chain cost about the same (~300 ns — the
+computed swaps re-derivation cost for graph bookkeeping). The computed only wins
+the **clean** read — ~2 ns cache hit vs ~120 ns re-derivation — which in a
+template amortizes to microseconds per render. Meanwhile every eager
+`computed()` is a per-instance allocation paid at creation, read or not.
+Default to plain; memoize where a profile or a render-suppression need says so.
+
+## The reactive() boundary (template-heavy components)
+
+Wrap the instance once, at the component boundary:
+
+```vue
+<script setup>
+const raw = new Player(props, model, emit);
+const player = reactive(raw); // one raw-anchored store (invariant A3)
+player.init(); // v2 has no auto-init — call lifecycle explicitly in setup
+
+// Template-ref targets: getters on the RAW instance return the actual refs.
+const { scroller, videoEl } = raw;
+defineExpose(player);
+</script>
+```
+
+- Inside class methods `this` is the **raw** instance — state via `.value`,
+  near-plain-JS read speed, no proxy in the way.
+- Through `player.` the reactive proxy **auto-unwraps** refs, so templates and
+  `v-model` bindings read and write without `.value` — exactly like v1.
+- A v1 component migrated this way keeps its `<template>` block byte-identical.
+
+## Two passes
+
+1. **Correctness pass — this is the whole migration.** Convert state fields to
+   ref-getters and let the type-checker walk you to every `.value` site
+   (`Ref<number>` arithmetic errors surface every miss). Replace raw `watch()`
+   with `this.$watch`. Verify behavior; ship.
+2. **Perf pass — optional, later.** Profile. Wrap the few hot or
+   render-suppressing derived getters in `computed()`. A local, per-getter
+   decision — nothing else moves.
+
+Adopt `Reactive()` for brand-new classes immediately; migrate existing v1
+classes opportunistically as you touch them.
 
 ## What v2 drops on purpose
 
-- **`init()`** — use the constructor; lifecycle belongs to the component.
-- **`.toRefs()`** — unnecessary: getters already *are* refs, so `const { count } = inst`
-  gives you the ref directly.
+- **`init()`** — no auto-call; use the constructor, or call your own `init()`
+  explicitly from `setup()` (lifecycle belongs to the component).
+- **`.toRefs()`** — unnecessary: getters already _are_ refs, so
+  `const { count } = raw` gives you the ref directly.
 - **`.clone()` / `propsWithDefaults` deep clone** — not built into the core. v2
   ships `propsWithDefaults(defaults, typed, cloner?)` using `structuredClone` by
-  default, with a `cloner` override (pass lodash `cloneDeep` for class-instance or
-  function defaults). Port `clone()` yourself if you rely on it.
+  default, with a `cloner` override (pass lodash `cloneDeep` for class-instance
+  or function defaults). Port `clone()` yourself if you rely on it.
 
 ## What v2 adds
 
@@ -59,17 +162,12 @@ c.count.value      // 0
 
 ## Behavioral notes
 
-- Instances are **plain** (`isReactive(inst) === false`). If you wrap one in
-  `reactive()`, Vue auto-unwraps the refs returned from getters, so you read
-  without `.value` through the proxy — but you rarely need to.
+- Instances are **plain** (`isReactive(inst) === false`). Wrapping one in
+  `reactive()` at the component boundary is the supported ergonomic mode — reads
+  and writes still resolve to one raw-anchored store per instance.
 - A getter at one level + setter at another are **not merged** (native JS
   semantics). Use a single getter returning a writable computed instead
   ([Inheritance](/guide/inheritance#one-difference-from-native-js-and-v1)).
-
-## Suggested approach
-
-1. Adopt `Reactive()` for new classes now.
-2. Convert fields → getters returning `ref()`; add `.value` at use sites (an editor
-   "hide `.value`" hint keeps source clean; AI-assisted refactors make this quick).
-3. Replace raw `watch()` with `this.$watch`.
-4. If you need `clone()`/`toRefs()`, port them onto v2 before retiring v1.
+- Mutable state **must** live in ref cells. A plain field written from a method
+  (a raw write) triggers nothing — no dependency edge exists. The plain fields
+  that remain after migration should be constants and configuration.
