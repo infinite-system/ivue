@@ -54,16 +54,23 @@ Three rules, in order:
 
 ## Why the template needs a view at all
 
-Vue has **three** ref-unwrapping mechanisms, and it's easy to credit the
+Vue has **four** ref-unwrapping mechanisms, and it's easy to credit the
 wrong one:
 
 | mechanism                                                        | scope                                                                  |
 | ---------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | `<script setup>` binding unwrap (`proxyRefs` on the setup state) | **top-level bindings only** — `{{ foo }}` where `foo = ref()`          |
 | compiler `isRef` assist for `v-model`                            | **bare identifiers only** — `v-model="foo"`, never `v-model="obj.foo"` |
+| interpolation display unwrap (`toDisplayString`, Vue 3.5+)       | **`{{ }}` text output only** — no binding position gets it            |
 | `reactive()` deep proxy unwrapping                               | any depth — but costs a deep proxy on every read                       |
 
-A nested path like `player.menuShown` gets help from none of the first two:
+The third one is the trap: `{{ player.someRef }}` renders the value, which
+makes a quick visual check look like nested unwrapping works everywhere. It
+doesn't — verified against 3.5.14, 3.5.39 (latest stable), and the
+3.6.0-beta.17 via SSR renders: every actual binding position below receives
+the naked Ref on all three versions.
+
+A nested path like `player.menuShown` gets help from none of the cheap mechanisms:
 the compiler emits a plain property read and a plain assignment. On a raw
 instance, that read leaks the **Ref object** — and reads fail _silently_:
 
