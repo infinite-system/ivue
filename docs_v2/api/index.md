@@ -50,6 +50,9 @@ toRaw(player) === raw // true
 ```
 
 Not `reactive()`: no deep conversion, returned objects are never wrapped.
+Where Vue's own unwrapping is four partial mechanisms with seams between
+them, `iuse()` restores one uniform rule at the boundary: top-level refs of
+this object unwrap everywhere — reads and writes.
 See [Components & Templates](/guide/components).
 
 ## `instance.$watch(source, cb, options?)`

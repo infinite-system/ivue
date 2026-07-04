@@ -59,12 +59,12 @@ wrong one:
 
 | mechanism                                                        | scope                                                                  |
 | ---------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `<script setup>` binding unwrap (`proxyRefs` on the setup state) | **top-level bindings only** — `{{ foo }}` where `foo = ref()`          |
+| `<script setup>` binding unwrap (`proxyRefs` on the setup state) | **top-level bindings only** — `{{ foo }}`{v-pre} where `foo = ref()`          |
 | compiler `isRef` assist for `v-model`                            | **bare identifiers only** — `v-model="foo"`, never `v-model="obj.foo"` |
-| interpolation display unwrap (`toDisplayString`, Vue 3.5+)       | **`{{ }}` text output only** — no binding position gets it            |
+| interpolation display unwrap (`toDisplayString`, Vue 3.5+)       | **`{{ }}`{v-pre} text output only** — no binding position gets it            |
 | `reactive()` deep proxy unwrapping                               | any depth — but costs a deep proxy on every read                       |
 
-The third one is the trap: `{{ player.someRef }}` renders the value, which
+The third one is the trap: `{{ player.someRef }}`{v-pre} renders the value, which
 makes a quick visual check look like nested unwrapping works everywhere. It
 doesn't — verified against 3.5.14, 3.5.39 (latest stable), and the
 3.6.0-beta.17 via SSR renders: every actual binding position below receives
@@ -92,10 +92,31 @@ the getter and subscribes to the refs/props/stores it reads. That works
 identically raw. In a real 89-binding production template, 80 bindings were
 plain getters and methods; the view exists for the other 9.
 
-## What `iuse()` is
+## `iuse()` restores the uniform rule
 
-A **shallow** ref-unwrapping proxy — the same treatment Vue gives a
-`setup()` return, applied to the instance:
+Each of Vue's four mechanisms is locally defensible: top-level unwrapping is
+cheap and predictable; the compiler cannot statically know whether `obj.foo`
+is a ref (and guarding every member-expression write would tax every
+template); printing `[object Object]` helps nobody; `reactive()` is complete
+but deep. The critique that sticks is that they were added independently and
+**do not compose into a rule** — there is no true sentence of the form "refs
+unwrap when X" for Vue as a whole. And the display unwrap actively masks the
+seams: interpolation succeeding is exactly what convinces you the other
+positions work.
+
+To be fair, idiomatic Vue rarely feels this. Composables return flat bags of
+refs destructured at top level; stores are reactive proxies. The seams show
+precisely when you hold **plain objects containing refs** — which is not a
+thing mainstream Vue code does, and exactly what a Reactive instance is, on
+purpose: raw instances are where the creation and memory wins come from.
+
+`iuse()` is not a workaround for those seams — it is the **uniform rule Vue
+never states**, restored at one declared edge:
+
+> **Top-level refs of this object unwrap everywhere — reads and writes.**
+
+Mechanically it is a **shallow** ref-unwrapping proxy — the same treatment
+Vue gives a `setup()` return, applied to the instance:
 
 - ref-returning getters → unwrapped on read; assignment redirects to `.value`
 - plain getters and methods → pass straight through, `this` = the raw instance
@@ -104,7 +125,9 @@ A **shallow** ref-unwrapping proxy — the same treatment Vue gives a
 
 It is **not** `reactive()`: no deep conversion, returned objects are never
 wrapped, and nothing about the instance changes — `isReactive(raw)` stays
-`false`.
+`false`. Inside the class it is raw and `.value`-explicit; at the template
+edge it is uniformly unwrapped. One rule per side of the boundary, instead
+of four partial ones.
 
 ## The measured cost
 
