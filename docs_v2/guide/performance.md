@@ -26,6 +26,10 @@ materialize a ref and a computed on each, ~2.9 s for full **four-level**
 hierarchies (40M+ cells). Unused instances cost almost nothing. This is ideal
 for large lists and virtual scrolling.
 
+Don't take the table's word for it — run it on your own machine:
+
+<DemoPerf />
+
 ## Memory: derivations weigh nothing
 
 Every eager `computed()` costs real bytes **per instance**. You pay for the

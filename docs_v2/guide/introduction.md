@@ -11,7 +11,8 @@ engine is **1,052 bytes gzipped** with zero dependencies.
 
 `Reactive()` transforms a class's prototype **once**:
 
-- **getters** that return `ref()` / `computed()` become lazily cached reactive cells,
+- **getters** that return `ref()` become lazily cached state cells,
+- **plain derived getters** stay plain and re-derive on render (`computed()` is a per-getter opt-in),
 - **methods** become lazily bound functions,
 
 and instances stay **ordinary objects**. No `reactive()` proxy wraps them. No
@@ -19,11 +20,11 @@ work happens at construction.
 
 ```ts
 import { Reactive } from 'ivue'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
 class $Timer {
   get seconds() { return ref(0) }
-  get label() { return computed(() => `${this.seconds.value}s`) }
+  get label() { return `${this.seconds.value}s` } // derived: plain getter
   tick() { this.seconds.value++ }
 }
 export const Timer = Reactive($Timer)
@@ -33,7 +34,7 @@ export const Timer = Reactive($Timer)
 const t = new Timer()
 t.tick()
 t.seconds.value // 1
-t.label.value   // "1s"
+t.label         // "1s", re-derived on read
 ```
 
 ## Why classes?

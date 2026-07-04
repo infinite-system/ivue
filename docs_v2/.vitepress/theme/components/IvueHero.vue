@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 // The real engine. Not a mock: this file ships as the library.
 import { Reactive } from '../../../../lib/Reactive';
 
@@ -7,8 +7,9 @@ class $Counter {
   get count() {
     return ref(0);
   }
+  // Derived value: a plain getter. No computed() for simple math.
   get double() {
-    return computed(() => this.count.value * 2);
+    return this.count.value * 2;
   }
   inc() {
     this.count.value++;
@@ -28,7 +29,7 @@ const fired = ref(0);
 let stop: (() => void) | undefined;
 
 onMounted(() => {
-  stop = c.$watch(
+  stop = watch(
     () => c.count.value,
     (v: number, o: number) => {
       lastChange.value = `${o} → ${v}`;
@@ -81,7 +82,7 @@ onUnmounted(() => {
       <div class="ivh-demo" aria-label="Live counter demo">
         <pre class="code" aria-hidden="true"><code><span class="kw">class</span> <span class="cl">$Counter</span> {
   <span class="kw">get</span> <span class="fn">count</span>()  { <span class="kw">return</span> <span class="fn">ref</span>(<span class="nu">0</span>) }
-  <span class="kw">get</span> <span class="fn">double</span>() { <span class="kw">return</span> <span class="fn">computed</span>(() <span class="kw">=></span> <span class="kw">this</span>.count.value * <span class="nu">2</span>) }
+  <span class="kw">get</span> <span class="fn">double</span>() { <span class="kw">return</span> <span class="kw">this</span>.count.value * <span class="nu">2</span> }
   <span class="fn">inc</span>() { <span class="kw">this</span>.count.value++ }
 }
 <span class="kw">export const</span> <span class="cl">Counter</span> = <span class="fn">Reactive</span>(<span class="cl">$Counter</span>)</code></pre>
@@ -93,8 +94,8 @@ onUnmounted(() => {
               <div class="n"><span :key="c.count.value" class="pop">{{ c.count.value }}</span></div>
             </div>
             <div class="val">
-              <div class="k">double <span class="dim">(computed)</span></div>
-              <div class="n"><span :key="c.double.value" class="pop">{{ c.double.value }}</span></div>
+              <div class="k">double <span class="dim">(plain getter)</span></div>
+              <div class="n"><span :key="c.double" class="pop">{{ c.double }}</span></div>
             </div>
           </div>
           <div class="controls">
@@ -103,7 +104,7 @@ onUnmounted(() => {
             <button class="ctl ghost" type="button" @click="c.reset">Reset</button>
           </div>
           <div class="watchline" aria-live="polite">
-            <code>$watch</code>
+            <code>watch</code>
             <span v-if="fired">{{ lastChange }} &middot; fired {{ fired }}&times;</span>
             <span v-else class="dim">waiting for the first change</span>
           </div>

@@ -15,7 +15,9 @@ function Reactive<C>(targetClass: C): ReactiveClass<C> & { Instance: ReactiveIns
 ```
 
 - Getters returning `ref()`/`computed()` become lazily-cached reactive cells.
-- Getters returning plain values de-optimize to native getters.
+- Getters returning plain values de-optimize to native prototype getters — the
+  recommended default for simple derivations (memoize with `computed()` only
+  when the work is expensive or you need render suppression).
 - Getters named `$…` are cached whole (singletons).
 - Methods become lazily-bound, referentially-stable functions.
 - Injects `$watch` and `$stopEffects` on the prototype.

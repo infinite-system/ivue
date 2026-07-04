@@ -54,11 +54,11 @@ that single move. <a href="/guide/principles">Read the principles.</a>
 
 ```ts:no-line-numbers
 import { Reactive } from 'ivue'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
 class $Counter {
   get count()  { return ref(0) }
-  get double() { return computed(() => this.count.value * 2) }
+  get double() { return this.count.value * 2 }  // derived: plain getter
   inc() { this.count.value++ }
 }
 
@@ -66,8 +66,8 @@ export const Counter = Reactive($Counter)
 
 const c = new Counter()
 c.inc()
-c.count.value   // 1
-c.double.value  // 2
+c.count.value  // 1
+c.double       // 2, re-derived on read; computed() is opt-in
 ```
 
 </div>

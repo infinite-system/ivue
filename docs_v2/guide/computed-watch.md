@@ -1,28 +1,59 @@
 ---
 title: Computed & Watch
-description: Cached computeds that recompute only on dependency change, and this.$watch — a scoped watcher with Vue's watch signature and clean teardown.
+description: Plain getters derive reactively with zero per-instance cost; computed() is the surgical opt-in. Plus this.$watch, the scoped watcher with clean teardown.
 ---
 
 # Computed & Watch
 
-## Computed
+## Derived values: plain getters by default
 
-Covered in [Reactive State](/guide/state#computed) — a getter returning
-`computed()`. Two things worth repeating:
-
-- It's **cached** and recomputes only when its dependencies change.
-- Each instance and each inheritance level caches its own computed under a
-  distinct key, so overrides and `super` never collide
-  ([Inheritance](/guide/inheritance)).
+The most important thing on this page: **you usually don't need `computed()`.**
+A plain getter is already reactive.
 
 ```ts
 class $Cart {
   get items() { return ref<{ price: number }[]>([]) }
-  get total() {
-    return computed(() => this.items.value.reduce((s, i) => s + i.price, 0))
-  }
+  get total() { return this.items.value.reduce((s, i) => s + i.price, 0) }
 }
 ```
+
+When a render (or watcher) reads `total`, execution runs synchronously inside
+that effect — so every reactive leaf the getter touches subscribes the effect
+directly. A source changes, the effect re-runs, the getter re-derives.
+Dependencies re-collect on every run, so conditional branches always track
+correctly.
+
+The payoff is memory. A plain getter lives once on the prototype and weighs
+**zero bytes per instance**. Every eager `computed()` costs ~300 bytes per
+instance at creation, read or not — 60 of them on a 10k-row list is ~300 MB
+of pure bookkeeping avoided. Full numbers in
+[Memory](/guide/performance#memory-derivations-weigh-nothing).
+
+## computed(): your useMemo
+
+Wrap a getter in `computed()` when memoization earns its bytes:
+
+- the derivation is genuinely **expensive** (sorting/filtering large arrays,
+  heavy string building);
+- an unchanged result should **suppress re-renders** — a Vue 3.4+ computed
+  stops propagation when the value is equal, a plain getter cannot;
+- you need a **stable ref identity** to hand to `watch`, a prop, or a
+  composable.
+
+```ts
+get sorted() {
+  return computed(() => [...this.items.value].sort(byPrice))
+}
+```
+
+Each instance and each inheritance level caches its computed under a distinct
+key, so overrides and `super` never collide
+([Inheritance](/guide/inheritance)).
+
+See both side by side — the plain getter re-derives freely while the
+computed's body only runs when its dependency actually changes:
+
+<DemoDerived />
 
 ## Watch
 

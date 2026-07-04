@@ -36,6 +36,11 @@ leaf.base.value = 20
 leaf.tag.value  // "Leaf{Mid(Base:20)}"
 ```
 
+Plain getters chain through `super` the same way — and a plain getter on the
+child can read refs from any ancestor level. Try it:
+
+<DemoInheritance />
+
 ## Why it doesn't collide
 
 When `Reactive()` processes the prototype chain, each `(prototype, key)` gets its

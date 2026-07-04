@@ -43,15 +43,20 @@ Nothing is created until first access. After that it's cached on the instance:
 - a method is bound once, then returned identically (referentially stable — safe
   as an event handler).
 
-## 4. Self-optimizing
+## 4. Derive with plain getters; the engine self-optimizes
 
-If a getter returns a **plain value** instead of a ref, ivue detects it on first
-access and restores a native getter on the prototype — removing all overhead for
-that property forever. You don't pay reactive machinery for non-reactive getters.
+Derived values are **plain getters by default**, not `computed()`:
 
 ```ts
-get kind() { return 'box' } // de-optimizes to a normal getter automatically
+get area() { return this.w.value * this.h.value } // reactive, zero allocation
 ```
+
+On first access the engine sees a non-ref result and restores a native getter
+on the prototype — from then on it is ordinary JavaScript, re-derived inside
+whatever effect reads it. Plain getters live once on the prototype and weigh
+**nothing per instance**; every eager `computed()` costs ~300 bytes per
+instance whether it is ever read or not. Memoize surgically —
+[when it earns it](/guide/computed-watch#computed-your-usememo).
 
 ## 5. Native inheritance & `super`
 

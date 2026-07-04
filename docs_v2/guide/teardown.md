@@ -44,7 +44,10 @@ It does three things, in order:
 2. stops the effect scope — **every** watcher created via `$watch`,
 3. clears all cached refs/computeds/methods so the instance can be collected.
 
-After teardown, accessing a member re-materializes it fresh.
+After teardown, accessing a member re-materializes it fresh. The whole
+lifecycle, live:
+
+<DemoTeardown />
 
 ## Auto-cleanup with the component
 

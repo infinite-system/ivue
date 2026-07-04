@@ -112,6 +112,11 @@ getter (still routed through `toRaw(this)`, and keeping the setter if one exists
 Getters used for plain derived values converge to native cost — you don't pay
 reactive machinery for non-reactive getters.
 
+This invariant is what makes **plain derived getters the recommended authoring
+mode**: derive with ordinary getters (zero bytes per instance, re-derived inside
+whatever effect reads them), and opt into `computed()` only where memoization
+earns its allocation.
+
 **Rules out** — a plain-value getter paying wrapper/cache overhead forever; a plain
 value cached as a fake "ref".
 

@@ -1,6 +1,6 @@
 ---
 title: Reactive State
-description: Declare state as getters returning ref, shallowRef or computed. Covers writable computeds, stable bound methods, $-singletons, and private fields.
+description: Declare state as ref-getters, derive with plain getters, memoize surgically with computed(). Covers writable computeds, stable bound methods, $-singletons, and private fields.
 ---
 
 # Reactive State
@@ -34,20 +34,53 @@ get rows() { return shallowRef<Row[]>([]) }
 inst.rows.value = nextRows   // triggers; deep mutations do not
 ```
 
-## computed
+## Derived values: plain getters first
 
-A getter returning `computed()` is a derived value. Read it with `.value`.
+Derive with a **plain getter** by default. No `computed()`:
 
 ```ts
 class $Box {
   get w() { return ref(4) }
   get h() { return ref(3) }
-  get area() { return computed(() => this.w.value * this.h.value) }
+  get area() { return this.w.value * this.h.value } // plain getter
 }
 ```
 
-`area` is cached and recomputes only when `w` or `h` change — standard Vue
-computed semantics.
+It stays fully reactive: whatever effect reads `area` — a render, a watcher —
+reads `w` and `h` underneath and subscribes to them directly. Change a source
+and the effect re-runs.
+
+Why this is the default:
+
+- **Zero memory per instance.** A plain getter lives once, on the prototype.
+  Every `computed()` allocates ~300 bytes per instance, paid at creation,
+  read or not. Sixty computeds on 10k instances is real megabytes — see
+  [Memory](/guide/performance#memory-derivations-weigh-nothing).
+- **Zero staleness.** The value re-derives whenever it's read. Nothing to
+  invalidate, nothing to reason about.
+- **The engine helps.** On first access it sees a non-ref result and restores
+  a native prototype getter — from then on it's ordinary JavaScript.
+
+<DemoState />
+
+## computed(): the surgical opt-in
+
+Wrap a getter in `computed()` when the memoization earns its bytes:
+
+```ts
+get sorted() {
+  return computed(() => [...this.rows.value].sort(byScore)) // expensive: memoize
+}
+```
+
+Reach for it when:
+
+- the derivation is genuinely **expensive** (sorting/filtering large arrays);
+- an unchanged result should **suppress re-renders** (Vue 3.4+ computeds stop
+  propagation on equal values, plain getters cannot);
+- you need a **stable ref identity** to hand to `watch`, a prop, or a composable.
+
+Read it with `.value` — standard Vue computed semantics.
 
 ### Writable computed
 
