@@ -169,6 +169,67 @@ component's scope — own their cleanup in your `stopEffects()` hook so
 [`$stopEffects`](/guide/teardown) tears them down.
 :::
 
+## Generic classes
+
+TypeScript cannot carry a generic parameter through a wrapping call — there
+are no higher-kinded types. So this loses `T`:
+
+```ts
+// ✗ T collapses to its constraint (BaseItem) at every `new` site
+export const Scroller = Reactive(
+  class $Scroller<T extends BaseItem> {
+    /* ... */
+  },
+);
+```
+
+The fix comes from the engine's identity guarantee: `Reactive(X)` returns the
+**same constructor** it was given, transformed in place. So export the class
+directly, and call `Reactive()` as a side effect:
+
+```ts
+// ✓ the exported binding keeps <T> fully intact
+export class Scroller<T extends BaseItem> {
+  get items() {
+    return ref<T[]>([]);
+  }
+  pick(index: number) {
+    return this.items.value[index];
+  }
+}
+
+Reactive(Scroller); // transform in place — identity preserved
+
+const s = new Scroller<PostItem>(); // T flows through untouched
+```
+
+Runtime is identical to any other `Reactive()` class. The one trade-off is in
+typing: the instance type is the plain class, so `$watch` and `$stopEffects`
+don't appear on it. If a generic class needs them, cast at the call site:
+
+```ts
+(s as ReactiveInstance<Scroller<PostItem>>).$stopEffects();
+```
+
+Inside a namespace the same idiom applies — assign `$Class` and `Class` to
+the same transformed binding:
+
+```ts
+class $Scroller<T extends BaseItem> {
+  /* ... */
+}
+Reactive($Scroller);
+
+export namespace Scroller {
+  export const $Class = $Scroller; // both fully generic —
+  export const Class = $Scroller; // same constructor, already transformed
+}
+```
+
+There is no `ReactiveGeneric` helper, on purpose: without higher-kinded types
+it would need per-arity overloads and still couldn't infer `T` through — pure
+ceremony over the same cast. The side-effect call is the standard.
+
 ## One-off classes
 
 A truly standalone class — no inheritance, no cycles, one consumer — can skip
