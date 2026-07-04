@@ -1,6 +1,6 @@
 ---
 title: Migrating from v1
-description: A mechanical map from ivue v1 to v2 — and the minimal recipe. Convert only mutable state to ref-getters, leave derived getters plain, wrap in reactive() at the component boundary, memoize surgically with computed().
+description: A mechanical map from ivue v1 to v2 — and the minimal recipe. Convert only mutable state to ref-getters, leave derived getters plain, expose to templates through the iuse() shallow view, memoize surgically with computed().
 ---
 
 # Migrating from v1
@@ -107,27 +107,48 @@ template amortizes to microseconds per render. Meanwhile every eager
 `computed()` is a per-instance allocation paid at creation, read or not.
 Default to plain; memoize where a profile or a render-suppression need says so.
 
-## The reactive() boundary (template-heavy components)
+## The template boundary: `iuse()`
 
-Wrap the instance once, at the component boundary:
+Templates want to read state without `.value` and let `v-model` write into
+refs. That sugar does **not** require `reactive()` — wrapping the instance in
+a deep reactive proxy re-introduces exactly the per-read proxy cost v2 avoids.
+Use `iuse()` instead: a shallow ref-unwrapping view, the same treatment Vue
+gives a `setup()` return, at a fraction of the cost.
 
 ```vue
 <script setup>
-const raw = new Player(props, model, emit);
-const player = reactive(raw); // reads and writes resolve to the same raw-anchored cells
-player.init(); // v2 has no auto-init — call lifecycle explicitly in setup
+import { iuse } from 'ivue'
+
+const raw = new Player.Class(props, model, emit)
+const player = iuse(raw) // shallow view — the instance stays completely raw
+player.init() // v2 has no auto-init — call lifecycle explicitly in setup
 
 // Template-ref targets: getters on the RAW instance return the actual refs.
-const { scroller, videoEl } = raw;
-defineExpose(player);
+const { scroller, videoEl } = raw
+defineExpose(player)
 </script>
 ```
 
-- Inside class methods `this` is the **raw** instance — state via `.value`,
-  near-plain-JS read speed, no proxy in the way.
-- Through `player.` the reactive proxy **auto-unwraps** refs, so templates and
-  `v-model` bindings read and write without `.value` — exactly like v1.
-- A v1 component migrated this way keeps its `<template>` block byte-identical.
+What each member kind does through the view:
+
+- **ref-returning getters** — auto-unwrapped on read; assignment redirects
+  into `.value`, so `v-model="player.menuShown"` works.
+- **plain derived getters** — run on the raw instance inside the reading
+  effect. They are reactive **by leaf tracking alone**: the render effect
+  subscribes to the refs/props/stores the getter reads. No wrapper of any
+  kind was ever what made them reactive.
+- **methods** — engine-bound to the raw instance. The view answers
+  `__v_raw`, so `toRaw()` sees straight through it.
+
+A template that only binds refs, computeds, and methods (no plain getters)
+can skip the view entirely — destructure off the raw instance and let
+setup-return unwrapping do the rest. Plain getters are the reason `iuse()`
+exists: destructuring them would snapshot a dead value.
+
+::: warning Earlier revisions of this guide suggested `reactive(raw)` here
+That works, but pays Vue's deep-proxy tax on every template read and
+deep-wraps returned objects. `iuse()` replaces it. Migrating is one line.
+:::
 
 ## Two passes
 
@@ -162,9 +183,9 @@ classes opportunistically as you touch them.
 
 ## Behavioral notes
 
-- Instances are **plain** (`isReactive(inst) === false`). Wrapping one in
-  `reactive()` at the component boundary is the supported ergonomic mode — reads
-  and writes still resolve to one raw-anchored store per instance.
+- Instances are **plain** (`isReactive(inst) === false`) and stay plain: the
+  template reads them through the `iuse()` shallow view. All reads and writes
+  resolve to one raw-anchored store per instance.
 - A getter at one level + setter at another are **not merged** (native JS
   semantics). Use a single getter returning a writable computed instead
   ([Inheritance](/guide/inheritance#one-difference-from-native-js-and-v1)).
