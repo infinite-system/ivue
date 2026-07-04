@@ -120,8 +120,8 @@ gives a `setup()` return, at a fraction of the cost.
 import { iuse } from 'ivue'
 
 const raw = new Player.Class(props, model, emit)
+raw.init() // v2 has no auto-init — lifecycle runs RAW-side, before any view
 const player = iuse(raw) // shallow view — the instance stays completely raw
-player.init() // v2 has no auto-init — call lifecycle explicitly in setup
 
 // Template-ref targets: getters on the RAW instance return the actual refs.
 const { scroller, videoEl } = raw
@@ -143,7 +143,9 @@ What each member kind does through the view:
 A template that only binds refs, computeds, and methods (no plain getters)
 can skip the view entirely — destructure off the raw instance and let
 setup-return unwrapping do the rest. Plain getters are the reason `iuse()`
-exists: destructuring them would snapshot a dead value.
+exists: destructuring them would snapshot a dead value. Full wiring,
+failure-mode catalogue, and measured costs:
+[Components & Templates](/guide/components).
 
 ::: warning Earlier revisions of this guide suggested `reactive(raw)` here
 That works, but pays Vue's deep-proxy tax on every template read and

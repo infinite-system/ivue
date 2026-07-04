@@ -76,6 +76,7 @@ export default defineConfig({
           items: [
             { text: 'Reactive State', link: '/guide/state' },
             { text: 'Computed & Watch', link: '/guide/computed-watch' },
+            { text: 'Components & Templates', link: '/guide/components' },
             { text: 'Inheritance & super', link: '/guide/inheritance' },
             { text: 'Modules & Imports', link: '/guide/modules' },
             { text: 'Teardown', link: '/guide/teardown' },

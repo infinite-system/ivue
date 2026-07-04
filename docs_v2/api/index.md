@@ -31,6 +31,27 @@ const Counter = Reactive(class {
 new Counter().inc()
 ```
 
+## `iuse(instance)`
+
+Shallow ref-unwrapping view over a Reactive instance, for templates and
+external consumers. Top-level ref-returning getters unwrap on read;
+assignment redirects into `.value` (so `v-model="view.open"` works); plain
+getters and methods pass through with `this` = the raw instance. Answers
+`__v_raw`, so `toRaw(view)` returns the raw instance and the engine resolves
+correctly through the view.
+
+```ts
+const raw = new Player.Class()
+raw.init()
+const player = iuse(raw)
+player.open        // boolean (unwrapped)
+player.open = true // lands in the ref
+toRaw(player) === raw // true
+```
+
+Not `reactive()`: no deep conversion, returned objects are never wrapped.
+See [Components & Templates](/guide/components).
+
 ## `instance.$watch(source, cb, options?)`
 
 Same signature as Vue's [`watch`](https://vuejs.org/api/reactivity-core.html#watch).

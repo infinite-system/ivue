@@ -85,6 +85,21 @@ inside the method are.
 In absolute terms, 24 ns is nothing. It only matters when you call something
 millions of times.
 
+## The template boundary
+
+Templates read instances through the [`iuse()` shallow view](/guide/components).
+Measured per read, same machine:
+
+| access path          | raw     | through `iuse` | through `reactive()` |
+| -------------------- | ------- | -------------- | -------------------- |
+| plain derived getter | 13.7 ns | **24.3 ns**    | 75.4 ns              |
+| ref-getter           | 4.1 ns  | **22.6 ns**    | 59.5 ns              |
+| method               | 4.0 ns  | **22.1 ns**    | 60.3 ns              |
+
+The view costs ~10–18 ns per template read — ~3× cheaper than a `reactive()`
+wrapper — and is paid only when a render actually runs. A 150-binding
+template pays ~2 µs per render. Class internals run raw and pay nothing.
+
 ## Hot loops
 
 When you do have such a loop, hoist the refs out of the getters once:
