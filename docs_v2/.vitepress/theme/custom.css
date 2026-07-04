@@ -73,37 +73,6 @@
   letter-spacing: -0.02em;
 }
 
-/* ---------- Hero ---------- */
-.VPHero .name {
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-.VPHero .name .clip {
-  background: var(--ivue-grad-text);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-.VPHero .text {
-  font-weight: 750;
-  letter-spacing: -0.028em;
-  line-height: 1.08;
-}
-@media (min-width: 640px) {
-  .VPHero .text {
-    font-size: 58px;
-  }
-}
-.VPHero .tagline {
-  color: var(--vp-c-text-2);
-  font-size: 1.06rem;
-  line-height: 1.65;
-  max-width: 34rem;
-}
-.VPHero .image-src {
-  filter: drop-shadow(0 12px 48px rgba(99, 102, 241, 0.35));
-}
-
 /* Buttons */
 .VPButton.brand {
   background: linear-gradient(120deg, #6366f1, #4f46e5);
@@ -413,61 +382,4 @@
   border-color: var(--vp-c-brand-1);
 }
 
-/* ---------- Motion (opt-in only) ---------- */
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes ix-rise {
-    from {
-      opacity: 0;
-      transform: translateY(18px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  @keyframes ix-grad {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-  @keyframes ix-float {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  .VPHero .name,
-  .VPHero .text,
-  .VPHero .tagline,
-  .VPHero .actions {
-    animation: ix-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-  .VPHero .text {
-    animation-delay: 0.08s;
-  }
-  .VPHero .tagline {
-    animation-delay: 0.16s;
-  }
-  .VPHero .actions {
-    animation-delay: 0.24s;
-  }
-  .VPHero .image {
-    animation: ix-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
-  }
-  .VPHero .image-src {
-    animation: ix-float 7s ease-in-out 1.2s infinite;
-  }
-  .VPHero .name .clip {
-    animation: ix-grad 9s ease-in-out infinite;
-  }
-}
+/* Hero motion lives in IvueHero.vue (scoped, reduced-motion gated). */

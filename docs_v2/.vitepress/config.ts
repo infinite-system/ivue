@@ -1,6 +1,17 @@
 import { defineConfig } from 'vitepress';
 
 export default defineConfig({
+  vite: {
+    resolve: {
+      // The home hero imports the real engine from ../lib/Reactive.ts.
+      // One Vue copy for both the docs and the lib, or tracking breaks.
+      dedupe: ['vue'],
+    },
+    server: {
+      fs: { allow: ['../..'] },
+    },
+  },
+
   title: 'ivue',
   titleTemplate: ':title — Infinite Vue',
   description:

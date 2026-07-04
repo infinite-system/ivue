@@ -3,24 +3,6 @@ layout: home
 title: 'Plain classes. Full reactivity. One kilobyte.'
 description: 'ivue turns native TypeScript classes into fine-grained Vue 3 reactivity. No proxy per instance, no decorators, nothing paid until first access.'
 
-hero:
-  name: ivue
-  text: 'Plain classes. Full reactivity. One kilobyte.'
-  tagline: 'Native TypeScript classes become fine-grained Vue 3 state. No proxy per instance. No decorators. Nothing paid until first access.'
-  image:
-    src: /mark.svg
-    alt: ivue infinity mark
-  actions:
-    - theme: brand
-      text: Get Started
-      link: /guide/getting-started
-    - theme: alt
-      text: What is ivue?
-      link: /guide/introduction
-    - theme: alt
-      text: GitHub
-      link: https://github.com/infinite-system/ivue
-
 features:
   - title: Native class API
     details: extends, super, getters, setters, private fields. Real inheritance, encapsulation and polymorphism, all reactive.
