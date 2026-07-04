@@ -4,7 +4,7 @@ export default defineConfig({
   title: 'ivue',
   titleTemplate: ':title — Infinite Vue',
   description:
-    'Reactive classes for Vue 3. Plain instances, fine-grained reactivity, zero per-instance proxy.',
+    'Class-based reactivity for Vue 3. Plain classes, full reactivity, one kilobyte.',
   lang: 'en-US',
   cleanUrls: true,
   lastUpdated: true,
@@ -13,14 +13,14 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#6366f1' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'ivue — class-based reactivity for Vue 3' }],
-    ['meta', { property: 'og:description', content: 'Write plain classes. Get fine-grained reactivity. Pay nothing per instance.' }],
+    ['meta', { property: 'og:description', content: 'Plain classes. Full reactivity. One kilobyte.' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
     [
       'link',
       {
         rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap',
+        href: 'https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400..600&display=swap',
       },
     ],
   ],

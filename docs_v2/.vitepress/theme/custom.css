@@ -1,26 +1,29 @@
 /**
- * ivue v2 docs — brand theme
- * Indigo → emerald, matching the playground.
+ * ivue docs — design system
+ * Identity: indigo → emerald over deep space. Type: Geist / Geist Mono.
+ * Motion: CSS-only, gated behind prefers-reduced-motion.
  */
+
+/* ---------- Tokens ---------- */
 :root {
-  --vp-c-brand-1: #6366f1;
-  --vp-c-brand-2: #5457e6;
-  --vp-c-brand-3: #4f46e5;
+  --vp-c-brand-1: #5458e8;
+  --vp-c-brand-2: #4f46e5;
+  --vp-c-brand-3: #4338ca;
   --vp-c-brand-soft: rgba(99, 102, 241, 0.14);
+
+  --ivue-emerald: #10b981;
+  --ivue-grad: linear-gradient(120deg, #6366f1 10%, #34d399 90%);
+  --ivue-grad-text: linear-gradient(105deg, #818cf8 20%, #6366f1 45%, #34d399 95%);
 
   --vp-c-tip-1: var(--vp-c-brand-1);
   --vp-c-tip-soft: var(--vp-c-brand-soft);
 
-  /* Typography */
-  --vp-font-family-base: 'Inter', ui-sans-serif, system-ui, -apple-system,
-    'Segoe UI', Roboto, sans-serif;
-  --vp-font-family-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo,
-    monospace;
+  --vp-font-family-base: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --vp-font-family-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
 
-  /* Home hero gradient */
   --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(120deg, #818cf8 30%, #34d399);
-  --vp-home-hero-image-background-image: linear-gradient(-45deg, #6366f1 30%, #34d399 70%);
+  --vp-home-hero-name-background: var(--ivue-grad-text);
+  --vp-home-hero-image-background-image: linear-gradient(-45deg, rgba(99, 102, 241, 0.75) 30%, rgba(52, 211, 153, 0.65) 70%);
   --vp-home-hero-image-filter: blur(56px);
 }
 
@@ -31,69 +34,363 @@
   --vp-c-brand-soft: rgba(129, 140, 248, 0.16);
   --vp-c-bg: #0b1020;
   --vp-c-bg-alt: #0e1424;
+  --vp-c-bg-soft: #141a2e;
+  --vp-c-divider: rgba(148, 163, 184, 0.14);
 }
 
-/* ---- Hero ---- */
-.VPHero .name {
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-.VPHero .text {
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-.VPHero .tagline {
-  color: var(--vp-c-text-2);
-  font-size: 1.05rem;
-  line-height: 1.6;
+@media (min-width: 640px) {
+  :root {
+    --vp-home-hero-image-filter: blur(68px);
+  }
 }
 
-/* ---- Feature cards ---- */
-.VPFeature {
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-  border-radius: 14px;
-}
-.VPFeature:hover {
-  transform: translateY(-3px);
-  border-color: var(--vp-c-brand-1);
-  box-shadow: 0 16px 40px -18px var(--vp-c-brand-soft);
-}
-.VPFeature .icon {
-  background: var(--vp-c-brand-soft) !important;
-  font-size: 22px !important;
-}
-.VPFeature .title {
-  letter-spacing: -0.01em;
-}
-
-/* ---- Headings ---- */
+/* ---------- Global type ---------- */
 .vp-doc h1 {
   letter-spacing: -0.03em;
+  font-weight: 750;
 }
 .vp-doc h2 {
   letter-spacing: -0.02em;
+  font-weight: 650;
   padding-top: 20px;
 }
-/* Lead paragraph directly under an h1 */
+.vp-doc h3 {
+  letter-spacing: -0.01em;
+}
 .vp-doc h1 + p {
-  font-size: 1.12rem;
+  font-size: 1.11rem;
   line-height: 1.7;
   color: var(--vp-c-text-2);
 }
-
-/* ---- Inline code ---- */
 :not(pre) > code {
   color: var(--vp-c-brand-1);
   font-weight: 500;
 }
 
-/* ---- Code blocks: a touch more contrast + rounded ---- */
-.vp-doc div[class*='language-'] {
-  border-radius: 12px;
-  border: 1px solid var(--vp-c-divider);
+/* ---------- Nav ---------- */
+.VPNavBarTitle .title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-/* ---- Tables ---- */
+/* ---------- Hero ---------- */
+.VPHero .name {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.VPHero .name .clip {
+  background: var(--ivue-grad-text);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.VPHero .text {
+  font-weight: 750;
+  letter-spacing: -0.028em;
+  line-height: 1.08;
+}
+@media (min-width: 640px) {
+  .VPHero .text {
+    font-size: 58px;
+  }
+}
+.VPHero .tagline {
+  color: var(--vp-c-text-2);
+  font-size: 1.06rem;
+  line-height: 1.65;
+  max-width: 34rem;
+}
+.VPHero .image-src {
+  filter: drop-shadow(0 12px 48px rgba(99, 102, 241, 0.35));
+}
+
+/* Buttons */
+.VPButton.brand {
+  background: linear-gradient(120deg, #6366f1, #4f46e5);
+  border: none;
+  font-weight: 600;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+.VPButton.brand:hover {
+  background: linear-gradient(120deg, #6366f1, #4f46e5);
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.55);
+}
+.VPButton.alt {
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+.VPButton.alt:hover {
+  transform: translateY(-1px);
+  border-color: var(--vp-c-brand-1);
+}
+.VPButton:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ---------- Feature cards ---------- */
+.VPFeature {
+  border-radius: 14px;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.VPFeature:hover {
+  transform: translateY(-3px);
+  border-color: var(--vp-c-brand-1);
+  box-shadow: 0 18px 44px -20px rgba(99, 102, 241, 0.35);
+}
+.VPFeature .title {
+  letter-spacing: -0.01em;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.VPFeature .title::before {
+  content: '';
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--ivue-grad);
+}
+.VPFeature .details {
+  line-height: 1.65;
+}
+/* quiet tint variation so the grid is not six identical panels */
+.VPFeatures .items .item:nth-child(2) .VPFeature,
+.VPFeatures .items .item:nth-child(6) .VPFeature {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(99, 102, 241, 0.09), transparent 55%),
+    var(--vp-c-bg-soft);
+}
+.VPFeatures .items .item:nth-child(3) .VPFeature,
+.VPFeatures .items .item:nth-child(5) .VPFeature {
+  background:
+    radial-gradient(120% 90% at 0% 100%, rgba(52, 211, 153, 0.08), transparent 55%),
+    var(--vp-c-bg-soft);
+}
+
+/* ---------- Home sections ---------- */
+.ix {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.ix section,
+.ix-section {
+  padding: 72px 0 0;
+}
+@media (min-width: 768px) {
+  .ix section,
+  .ix-section {
+    padding-top: 104px;
+  }
+}
+.ix h2 {
+  font-size: clamp(1.65rem, 3.4vw, 2.35rem);
+  font-weight: 720;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  border: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.ix .lead {
+  color: var(--vp-c-text-2);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  max-width: 44rem;
+  margin: 0;
+}
+
+/* Quote */
+.ix-quote {
+  text-align: center;
+  max-width: 46rem;
+  margin: 0 auto;
+}
+.ix-quote::before {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 2px;
+  margin: 0 auto 40px;
+  border-radius: 2px;
+  background: var(--ivue-grad);
+}
+.ix-quote blockquote {
+  border: none;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(1.35rem, 2.8vw, 1.8rem);
+  font-weight: 320;
+  line-height: 1.5;
+  letter-spacing: -0.012em;
+  color: var(--vp-c-text-1);
+}
+.ix-quote cite {
+  display: block;
+  margin-top: 22px;
+  font-style: normal;
+  font-size: 0.92rem;
+  color: var(--vp-c-text-3);
+}
+
+/* Stat band */
+.ix-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 28px 20px;
+  margin-top: 44px;
+  padding-top: 40px;
+  border-top: 1px solid var(--vp-c-divider);
+}
+.ix-stat .n {
+  font-size: clamp(1.7rem, 3.2vw, 2.3rem);
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  background: var(--ivue-grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1.15;
+}
+.ix-stat .l {
+  margin-top: 4px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--vp-c-text-2);
+}
+
+/* Two-up tables / columns */
+.ix-cols {
+  display: grid;
+  gap: 28px;
+  margin-top: 28px;
+}
+@media (min-width: 768px) {
+  .ix-cols {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+}
+.ix-cols h3 {
+  margin: 0 0 10px;
+  font-size: 1.02rem;
+  font-weight: 640;
+  letter-spacing: -0.01em;
+}
+.ix-cols table {
+  margin: 0;
+}
+.ix-cols .foot {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  color: var(--vp-c-text-3);
+}
+
+/* Code split */
+.ix-idea {
+  display: grid;
+  gap: 28px;
+  align-items: center;
+}
+@media (min-width: 960px) {
+  .ix-idea {
+    grid-template-columns: 5fr 7fr;
+    gap: 56px;
+  }
+}
+.ix-idea div[class*='language-'] {
+  margin: 0;
+  border-radius: 14px;
+  border: 1px solid var(--vp-c-divider);
+  box-shadow: 0 24px 70px -30px rgba(99, 102, 241, 0.35);
+}
+
+/* Solved checklist */
+.ix-solved {
+  display: grid;
+  gap: 14px 40px;
+  margin-top: 30px;
+}
+@media (min-width: 768px) {
+  .ix-solved {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.ix-solved .item {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+}
+.ix-solved .item::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--ivue-grad);
+  transform: translateY(-1px);
+}
+.ix-solved .item strong {
+  color: var(--vp-c-text-1);
+  font-weight: 620;
+}
+
+/* Start-here cards */
+.ix-start {
+  display: grid;
+  gap: 16px;
+  margin-top: 30px;
+}
+@media (min-width: 768px) {
+  .ix-start {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.ix-start a {
+  display: block;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 14px;
+  padding: 22px 22px 20px;
+  background: var(--vp-c-bg-soft);
+  text-decoration: none;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.ix-start a:hover {
+  transform: translateY(-3px);
+  border-color: var(--vp-c-brand-1);
+  box-shadow: 0 18px 44px -20px rgba(99, 102, 241, 0.35);
+}
+.ix-start .t {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--vp-c-text-1);
+}
+.ix-start .d {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--vp-c-text-2);
+}
+.ix-start .go {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--vp-c-brand-1);
+}
+
+.ix-end {
+  padding-bottom: 96px;
+}
+
+/* ---------- Doc content polish ---------- */
 .vp-doc table {
   display: table;
   width: 100%;
@@ -108,49 +405,69 @@
   color: var(--vp-c-text-1);
   font-weight: 600;
 }
-
-/* ---- Custom containers ---- */
+.vp-doc div[class*='language-'] {
+  border-radius: 12px;
+  border: 1px solid var(--vp-c-divider);
+}
 .custom-block.tip {
   border-color: var(--vp-c-brand-1);
 }
 
-/* ---- Reusable inline pieces (used in markdown) ---- */
-.pill {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 9999px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 18px;
-  background: var(--vp-c-brand-soft);
-  color: var(--vp-c-brand-1);
-  border: 1px solid var(--vp-c-brand-soft);
-}
+/* ---------- Motion (opt-in only) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes ix-rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes ix-grad {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  @keyframes ix-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
 
-/* Home "stat" row */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  margin: 8px 0 4px;
-}
-.stat {
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 14px;
-  padding: 18px 20px;
-  background: var(--vp-c-bg-soft);
-}
-.stat .n {
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  background: linear-gradient(120deg, var(--vp-c-brand-1), #34d399);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.stat .l {
-  font-size: 13px;
-  color: var(--vp-c-text-2);
-  margin-top: 2px;
+  .VPHero .name,
+  .VPHero .text,
+  .VPHero .tagline,
+  .VPHero .actions {
+    animation: ix-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .VPHero .text {
+    animation-delay: 0.08s;
+  }
+  .VPHero .tagline {
+    animation-delay: 0.16s;
+  }
+  .VPHero .actions {
+    animation-delay: 0.24s;
+  }
+  .VPHero .image {
+    animation: ix-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  }
+  .VPHero .image-src {
+    animation: ix-float 7s ease-in-out 1.2s infinite;
+  }
+  .VPHero .name .clip {
+    animation: ix-grad 9s ease-in-out infinite;
+  }
 }
