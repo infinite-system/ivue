@@ -69,7 +69,7 @@ count. Member by member:
 
 Why plain derived getters stay fully reactive: on first access the engine sees
 the getter return a non-ref and **de-optimizes** it back to a native prototype
-getter (invariant A6) — from then on it is ordinary JavaScript. Vue's tracking
+getter — from then on it is ordinary JavaScript. Vue's tracking
 never needed a `computed()` node in the middle: when a render effect calls the
 getter chain, execution is synchronous inside that effect, so every reactive
 **leaf** it reads — props, refs via `.value`, reactive objects, stores —
@@ -114,7 +114,7 @@ Wrap the instance once, at the component boundary:
 ```vue
 <script setup>
 const raw = new Player(props, model, emit);
-const player = reactive(raw); // one raw-anchored store (invariant A3)
+const player = reactive(raw); // reads and writes resolve to the same raw-anchored cells
 player.init(); // v2 has no auto-init — call lifecycle explicitly in setup
 
 // Template-ref targets: getters on the RAW instance return the actual refs.
