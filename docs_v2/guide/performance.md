@@ -91,15 +91,16 @@ The standard is the raw instance — templates read cells as `.value` at the
 raw column's cost. Wrapper costs shown for comparison; both wrappers were
 retired ([Components & Templates](/guide/components)). Measured per read:
 
-| access path          | raw     | through `iuse` | through `reactive()` |
-| -------------------- | ------- | -------------- | -------------------- |
-| plain derived getter | 13.7 ns | **24.3 ns**    | 75.4 ns              |
-| ref-getter           | 4.1 ns  | **22.6 ns**    | 59.5 ns              |
-| method               | 4.0 ns  | **22.1 ns**    | 60.3 ns              |
+| access path          | **raw (the standard)** | shallow unwrap proxy | `reactive()` |
+| -------------------- | ---------------------- | -------------------- | ------------ |
+| plain derived getter | **13.7 ns**            | 24.3 ns              | 75.4 ns      |
+| ref-getter           | **4.1 ns**             | 22.6 ns              | 59.5 ns      |
+| method               | **4.0 ns**             | 22.1 ns              | 60.3 ns      |
 
-Raw access pays 4–14 ns — no wrapper on the path at all. Class internals
-and templates run at the same column. The wrapper rows exist only as the
-receipts for why they lost.
+Raw access pays 4–14 ns — no proxy on the path at all. Class internals and
+templates run at the same column. The wrapper columns exist only as the
+receipts for why they lost — a `proxyRefs`-style shallow view costs ~2–5×,
+`reactive()` ~6–15×.
 
 ## Hot loops
 
