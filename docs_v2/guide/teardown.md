@@ -5,7 +5,7 @@ description: $watch registers watchers in a lazy per-instance effect scope; $sto
 
 # Teardown
 
-`Reactive()` injects two helpers on every class: **`$watch`** and
+`Reactive()` injects three helpers on every class: **`$watch`**, **`$watchEffect`**, and
 **`$stopEffects`**. Together they give deterministic cleanup with zero cost for
 instances that never need it.
 
@@ -41,7 +41,7 @@ inst.$stopEffects()
 It does three things, in order:
 
 1. runs your `stopEffects()` method if you defined one (extra cleanup hook),
-2. stops the effect scope — **every** watcher created via `$watch`,
+2. stops the effect scope — **every** watcher created via `$watch` / `$watchEffect`,
 3. clears all cached refs/computeds/methods so the instance can be collected.
 
 After teardown, accessing a member re-materializes it fresh. The whole
@@ -73,7 +73,7 @@ which is exactly what the effect scope owns. So ivue stops the *scope*, not
 individual cells — correct, and nothing to leak.
 
 ::: tip Rule of thumb
-Create watchers with `this.$watch`. Call `$stopEffects()` (or wire
+Create watchers with `this.$watch` / `this.$watchEffect`. Call `$stopEffects()` (or wire
 `onScopeDispose`) when the instance outlives its creating component. Pure-data
 models need nothing.
 :::

@@ -20,7 +20,7 @@ function Reactive<C>(targetClass: C): ReactiveClass<C> & { Instance: ReactiveIns
   when the work is expensive or you need render suppression).
 - Getters named `$…` are cached whole (singletons).
 - Methods become lazily-bound, referentially-stable functions.
-- Injects `$watch` and `$stopEffects` on the prototype.
+- Injects `$watch`, `$watchEffect` and `$stopEffects` on the prototype.
 - **Idempotent** — safe to call multiple times and across an inheritance chain.
 
 ```ts
@@ -69,14 +69,24 @@ const stop = inst.$watch(() => inst.count.value, (v, old) => { /* ... */ })
 stop() // stop just this watcher
 ```
 
-The effect scope is allocated on first `$watch` only.
+The effect scope is allocated on the first `$watch`/`$watchEffect` only.
+
+## `instance.$watchEffect(effect, options?)`
+
+Vue's `watchEffect`, registered in the same lazy per-instance scope.
+Returns the stop handle. Never wrap a `watchEffect` inside `$watch` —
+this is the symmetric primitive.
+
+```ts
+inst.$watchEffect(() => render(inst.w.value, inst.h.value))
+```
 
 ## `instance.$stopEffects()`
 
 Disposes the instance:
 
 1. runs a user `stopEffects()` method if present,
-2. stops the effect scope (all `$watch` watchers),
+2. stops the effect scope (all `$watch` / `$watchEffect` watchers),
 3. clears all cached cells.
 
 ```ts
@@ -120,7 +130,7 @@ non-functions. Used internally by `propsWithDefaults`; exported for convenience.
 
 | Type | Meaning |
 |---|---|
-| `ReactiveInstance<T>` | `T` + `$watch` + `$stopEffects` + writable-getter keys |
+| `ReactiveInstance<T>` | `T` + `$watch` + `$watchEffect` + `$stopEffects` + writable-getter keys |
 | `ReactiveClass<C>` | constructor producing a `ReactiveInstance` |
 | `VuePropsObject` | `Record<string, { type; default?; required? }>` |
 | `VuePropsWithDefaults<T>` | `T` with every prop's `default` present |

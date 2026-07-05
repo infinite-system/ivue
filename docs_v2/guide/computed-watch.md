@@ -76,13 +76,40 @@ class $Search {
 }
 ```
 
-::: warning Use `this.$watch`, not a raw `watch()`
-A raw `watch()` / `watchEffect()` created in a method is **not** owned by the
-instance's scope and won't be stopped by `$stopEffects` — it leaks unless you
-stop it yourself. Prefer `this.$watch`. (If the instance is created during a
-component's `setup()`, watchers created synchronously there are also stopped by
-the component on unmount.)
+::: tip Which watcher, where
+An instance created during a component's `setup()` can use plain `watch()` /
+`watchEffect()` freely — Vue's component scope owns watchers created
+synchronously there and stops them on unmount. `$watch` / `$watchEffect`
+exist for everything else: instances that **outlive a component** (module
+singletons, entities created in callbacks or async code) register into the
+instance's own scope, so `$stopEffects()` tears them down deterministically.
+Never wrap a `watchEffect` inside `$watch` — `$watchEffect` is the
+symmetric primitive.
 :::
+
+## `$watchEffect`
+
+The `watchEffect` twin — same lazy per-instance scope, same teardown:
+
+```ts
+this.$watchEffect(() => {
+  render(this.width.value, this.height.value)
+})
+```
+
+## Watching plain getters — yes, it works
+
+`watch(() => inst.someDerived, cb)` works on the **raw** instance — no
+`reactive()` wrapper, no cell required. Not intuitive, but structural: a
+watch *source* is a function executed **inside the watcher's effect**; the
+plain getter's body runs there, and its leaf reads (refs via `.value`,
+props, stores) subscribe the watcher directly. The getter is a transparent
+corridor — the same mechanism that makes plain getters reactive in
+templates. It holds through the expose surface too:
+`watch(() => playerRef.value.someDerivedPx, cb)` fires exactly when the
+getter's actual leaves change (verified live). What does NOT work is
+snapshotting: `watch(inst.someDerived, cb)` passes a dead value — the
+source must be the function form.
 
 `$watch` returns Vue's stop handle, so you can stop a single watcher without
 tearing down the instance:

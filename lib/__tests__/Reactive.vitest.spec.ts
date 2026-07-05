@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   computed,
+  nextTick,
   isReactive,
   isRef,
   reactive,
@@ -1064,5 +1065,60 @@ describe('iuse (shallow template view)', () => {
     view.label = holder; // isRef(value) -> plain assignment, slot now holds the ref
     expect(isRef(inst.label)).toBe(true);
     expect(view.label).toBe('c'); // and reads unwrap it
+  });
+});
+
+describe('$watchEffect (scoped watchEffect)', () => {
+  it('runs immediately, re-runs on dep change, and is stopped by $stopEffects', async () => {
+    class Box {
+      get n() {
+        return ref(1);
+      }
+    }
+    const R = Reactive(Box);
+    const inst: any = new R();
+    let runs = 0;
+    let last = 0;
+    inst.$watchEffect(() => {
+      runs++;
+      last = inst.n.value;
+    });
+    expect(runs).toBe(1);
+    expect(last).toBe(1);
+    inst.n.value = 5;
+    await nextTick();
+    expect(runs).toBe(2);
+    expect(last).toBe(5);
+    inst.$stopEffects();
+    inst.n.value = 9;
+    await nextTick();
+    expect(runs).toBe(2); // scope stopped — no further runs
+  });
+
+  it('returns a stop handle and shares the $watch scope', async () => {
+    class Box {
+      get n() {
+        return ref(0);
+      }
+    }
+    const R = Reactive(Box);
+    const inst: any = new R();
+    let effectRuns = 0;
+    let watchRuns = 0;
+    const stop = inst.$watchEffect(() => {
+      effectRuns++;
+      void inst.n.value;
+    });
+    inst.$watch(
+      () => inst.n.value,
+      () => {
+        watchRuns++;
+      }
+    );
+    stop(); // individual stop, scope stays alive
+    inst.n.value = 3;
+    await nextTick();
+    expect(effectRuns).toBe(1); // stopped
+    expect(watchRuns).toBe(1); // sibling watcher in the same scope still fires
   });
 });

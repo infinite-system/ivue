@@ -3,6 +3,7 @@ import {
   isRef,
   toRaw,
   watch,
+  watchEffect,
   type Ref,
   type ShallowUnwrapRef,
 } from 'vue';
@@ -22,6 +23,7 @@ const getOwnPropertySymbols = Object.getOwnPropertySymbols;
 
 const $stopEffects = '$stopEffects';
 const $watch = '$watch';
+const $watchEffect = '$watchEffect';
 const fn = 'function';
 const RAW = Symbol('ivue_raw'); // Per-instance back-pointer to the raw object
 const SCOPE = Symbol('ivue_scope'); // Lazily-created per-instance effect scope
@@ -243,6 +245,22 @@ export function Reactive<C extends new (...args: any) => any>(
     });
 
     /**
+     * Register a watchEffect in the same lazy per-instance scope. The
+     * symmetric primitive to $watch — never wrap watchEffect inside $watch.
+     */
+    defineProperty(targetClass.prototype, $watchEffect, {
+      enumerable: false,
+      configurable: true,
+      writable: true,
+      value: function (this: any, ...args: any[]) {
+        const raw = resolveRaw(this);
+        const scope =
+          raw[SCOPE] ?? (raw[SCOPE] = effectScope(true /* detached */));
+        return scope.run(() => (watchEffect as any)(...args));
+      },
+    });
+
+    /**
      * Tear down the instance: stop its effect scope (any watchers created via
      * $watch), run a user `stopEffects()` hook if present, and drop all cached
      * cells so refs/computeds become collectable.
@@ -396,6 +414,8 @@ export type ReactiveInstance<T> = T &
   WritableGetters<T> & {
     /** Register a watcher in the instance's lazy effect scope (same signature as Vue `watch`). */
     $watch: typeof watch;
+    /** Register a watchEffect in the instance's lazy effect scope (same signature as Vue `watchEffect`). */
+    $watchEffect: typeof watchEffect;
     /** Stop the instance's effect scope, run user `stopEffects()`, and drop cached cells. */
     $stopEffects: () => void;
   };
