@@ -211,24 +211,30 @@ don't appear on it. If a generic class needs them, cast at the call site:
 (s as ReactiveInstance<Scroller<PostItem>>).$stopEffects();
 ```
 
-Inside a namespace the same idiom applies — assign `$Class` and `Class` to
-the same transformed binding:
+Inside a namespace, keep the standard shape — call `Reactive()` inline and
+cast `Class` back to the raw constructor type so `<T>` survives; `Instance`
+applies `ReactiveInstance` explicitly (a generic `typeof Class.Instance`
+cannot exist without higher-kinded types):
 
 ```ts
 class $Scroller<T extends BaseItem> {
   /* ... */
 }
-Reactive($Scroller);
 
 export namespace Scroller {
-  export const $Class = $Scroller; // both fully generic —
-  export const Class = $Scroller; // same constructor, already transformed
+  export const $Class = $Scroller;
+  export const Class = Reactive($Scroller) as unknown as typeof $Scroller;
+  export type Instance<T extends BaseItem> = ReactiveInstance<$Scroller<T>>;
 }
 ```
 
+The cast is sound because of identity preservation: `Reactive($Scroller)`
+returns `$Scroller` itself, so the runtime value already IS the raw
+constructor — only the collapsed return TYPE is being corrected.
+
 There is no `ReactiveGeneric` helper, on purpose: without higher-kinded types
 it would need per-arity overloads and still couldn't infer `T` through — pure
-ceremony over the same cast. The side-effect call is the standard.
+ceremony over the same cast.
 
 ## One-off classes
 
