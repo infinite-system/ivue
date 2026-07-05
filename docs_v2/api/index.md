@@ -50,10 +50,13 @@ toRaw(player) === raw // true
 ```
 
 Not `reactive()`: no deep conversion, returned objects are never wrapped.
-Where Vue's own unwrapping is four partial mechanisms with seams between
-them, `iuse()` restores one uniform rule at the boundary: top-level refs of
-this object unwrap everywhere — reads and writes.
-See [Components & Templates](/guide/components).
+
+::: warning Optional — not the standard
+The standard is the raw instance with `.value` in templates
+([Components & Templates](/guide/components)). `iuse()` remains as an
+interop shim; note its type view inherits `readonly` from get-only
+accessors, so template writes through it need `Instance`-based typing.
+:::
 
 ## `instance.$watch(source, cb, options?)`
 

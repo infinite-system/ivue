@@ -87,8 +87,9 @@ millions of times.
 
 ## The template boundary
 
-Templates read instances through the [`iuse()` shallow view](/guide/components).
-Measured per read, same machine:
+The standard is the raw instance — templates read cells as `.value` at the
+raw column's cost. Wrapper costs shown for comparison; both wrappers were
+retired ([Components & Templates](/guide/components)). Measured per read:
 
 | access path          | raw     | through `iuse` | through `reactive()` |
 | -------------------- | ------- | -------------- | -------------------- |
@@ -96,9 +97,9 @@ Measured per read, same machine:
 | ref-getter           | 4.1 ns  | **22.6 ns**    | 59.5 ns              |
 | method               | 4.0 ns  | **22.1 ns**    | 60.3 ns              |
 
-The view costs ~10–18 ns per template read — ~3× cheaper than a `reactive()`
-wrapper — and is paid only when a render actually runs. A 150-binding
-template pays ~2 µs per render. Class internals run raw and pay nothing.
+Raw access pays 4–14 ns — no wrapper on the path at all. Class internals
+and templates run at the same column. The wrapper rows exist only as the
+receipts for why they lost.
 
 ## Hot loops
 

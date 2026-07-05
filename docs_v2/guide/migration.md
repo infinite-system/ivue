@@ -107,49 +107,32 @@ template amortizes to microseconds per render. Meanwhile every eager
 `computed()` is a per-instance allocation paid at creation, read or not.
 Default to plain; memoize where a profile or a render-suppression need says so.
 
-## The template boundary: `iuse()`
+## The template boundary: `.value`
 
-Templates want to read state without `.value` and let `v-model` write into
-refs. That sugar does **not** require `reactive()` — wrapping the instance in
-a deep reactive proxy re-introduces exactly the per-read proxy cost v2 avoids.
-Use `iuse()` instead: a shallow ref-unwrapping view, the same treatment Vue
-gives a `setup()` return, at a fraction of the cost.
+There is no wrapper at the component boundary. The instance stays raw and
+templates access cells as `.value` — same rule as the class body:
 
 ```vue
 <script setup>
-import { iuse } from 'ivue'
-
-const raw = new Player.Class(props, model, emit)
-raw.init() // v2 has no auto-init — lifecycle runs RAW-side, before any view
-const player = iuse(raw) // shallow view — the instance stays completely raw
-
-// Template-ref targets: getters on the RAW instance return the actual refs.
-const { scroller, videoEl } = raw
-defineExpose(player)
+const player = new Player.Class(props, model, emit)
+const { videoEl } = player // destructure ONLY template-ref targets
+defineExpose(player as Player.Instance)
 </script>
+<template>
+  <q-menu v-model="player.menuShown.value" />
+  <div :style="{ width: player.postWidthPx }">{{ player.title }}</div>
+</template>
 ```
 
-What each member kind does through the view:
+Every missed `.value` is a compile error — the type-checker walks you
+through the whole template. Full rationale, the expose-surface semantics,
+and the `Instance` typing law: [Components & Templates](/guide/components).
 
-- **ref-returning getters** — auto-unwrapped on read; assignment redirects
-  into `.value`, so `v-model="player.menuShown"` works.
-- **plain derived getters** — run on the raw instance inside the reading
-  effect. They are reactive **by leaf tracking alone**: the render effect
-  subscribes to the refs/props/stores the getter reads. No wrapper of any
-  kind was ever what made them reactive.
-- **methods** — engine-bound to the raw instance. The view answers
-  `__v_raw`, so `toRaw()` sees straight through it.
-
-A template that only binds refs, computeds, and methods (no plain getters)
-can skip the view entirely — destructure off the raw instance and let
-setup-return unwrapping do the rest. Plain getters are the reason `iuse()`
-exists: destructuring them would snapshot a dead value. Full wiring,
-failure-mode catalogue, and measured costs:
-[Components & Templates](/guide/components).
-
-::: warning Earlier revisions of this guide suggested `reactive(raw)` here
-That works, but pays Vue's deep-proxy tax on every template read and
-deep-wraps returned objects. `iuse()` replaces it. Migrating is one line.
+::: warning Earlier revisions taught `reactive(raw)` and later an `iuse()` view here
+Both work at runtime but were retired: `reactive()` pays a deep-proxy tax on
+every template read, and any shallow unwrap view inherits `readonly` from
+get-only accessors, so template writes type-error. The raw instance with
+`.value` has neither problem.
 :::
 
 ## Two passes
