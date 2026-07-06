@@ -49,6 +49,66 @@ class PlainCell {
   cssClass = 'empty';
 }
 
+// --- Arm D: hand-rolled vanilla — manual dirty-flag memoization, no library.
+// The "what would I actually write in bare JS/React" baseline. Getters/setters
+// (not fields) hold the logic, so — unlike Angular/MobX's field-declared
+// observables — this DOES compose correctly across `extends`/`super`; the
+// cost is that every cached slot + dirty flag is a real per-instance field,
+// assigned eagerly at construction, and every dependent flag must be
+// invalidated BY HAND on every write. Miss one edge and you get a silently
+// stale value — the bookkeeping a reactive engine automates away.
+class VanillaCell {
+  #raw = '';
+  #value = '';
+  #valueDirty = true;
+  #display = '';
+  #displayDirty = true;
+  #isEmpty = true;
+  #isEmptyDirty = true;
+  #cssClass = 'empty';
+  #cssClassDirty = true;
+
+  get raw() {
+    return this.#raw;
+  }
+  set raw(v) {
+    this.#raw = v;
+    // manual invalidation: every dependent field, by hand, every write
+    this.#valueDirty = true;
+    this.#displayDirty = true;
+    this.#isEmptyDirty = true;
+    this.#cssClassDirty = true;
+  }
+  get value() {
+    if (this.#valueDirty) {
+      this.#value = this.#raw + '!';
+      this.#valueDirty = false;
+    }
+    return this.#value;
+  }
+  get display() {
+    if (this.#displayDirty) {
+      this.#display = this.value.toUpperCase();
+      this.#displayDirty = false;
+    }
+    return this.#display;
+  }
+  get isEmpty() {
+    if (this.#isEmptyDirty) {
+      this.#isEmpty = this.#raw.length === 0;
+      this.#isEmptyDirty = false;
+    }
+    return this.#isEmpty;
+  }
+  get cssClass() {
+    if (this.#cssClassDirty) {
+      this.#cssClass = this.isEmpty ? 'empty' : 'filled';
+      this.#cssClassDirty = false;
+    }
+    return this.#cssClass;
+  }
+}
+
 function bench(label, Ctor) {
   const arr = new Array(N);
   if (global.gc) global.gc();
@@ -83,9 +143,11 @@ console.log(`N = ${N.toLocaleString()} cells, node ${process.version}\n`);
 
 bench('Angular signals (4 eager computed)', AngularCell);
 bench('ivue class (1 computed, never read)', IvueCell);
+bench('Vanilla (manual dirty-flag, no library)', VanillaCell);
 bench('Plain POJO (fields assigned)', PlainCell);
 
 console.log('\n--- second pass (warm, JIT-settled) ---');
 bench('Angular signals (4 eager computed)', AngularCell);
 bench('ivue class (1 computed, never read)', IvueCell);
+bench('Vanilla (manual dirty-flag, no library)', VanillaCell);
 bench('Plain POJO (fields assigned)', PlainCell);

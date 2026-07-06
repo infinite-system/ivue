@@ -185,29 +185,39 @@ The per-member policy is the part no other pattern offers: `value` pays
 `display` and `cssClass` pay nothing because they are nanosecond string
 work. **You choose the price per member, per class — not per app.**
 
-## Isn't this just what Angular Signals already do?
+## Isn't this just what Angular Signals (or hand-rolled JS) already do?
 
 Angular is the framework most associated with class-oriented, fine-grained
-reactivity, so it's a fair question. Measured directly — same machine,
-identical cell shape (one raw value, four derived values chained off it,
-one memoized, never read; full protocol, machine notes, and a reproducible
-script in [`bench/angular-comparison/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/bench/angular-comparison/RESULTS.md)):
+reactivity, so it's a fair question — and if you'd rather skip a library
+entirely, a competent hand-rolled vanilla class (manual dirty-flag
+caching, no dependency) is the other honest baseline. Measured directly —
+same machine, identical cell shape (one raw value, four derived values
+chained off it, one memoized, never read; full protocol, machine notes,
+and reproducible scripts in
+[`bench/angular-comparison/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/bench/angular-comparison/RESULTS.md)):
 
 |                                            | bytes/cell | creation, 100k cells |
 | ------------------------------------------ | ---------: | -------------------: |
-| Angular, 4 eager `computed()` fields       |      2,152 |             73–79 ms |
-| **ivue**, 1 `computed()` + 3 plain getters |     **24** |       **1.1–1.4 ms** |
-| plain POJO (fields actually assigned)      |         64 |           1.8–2.1 ms |
+| Angular, 4 eager `computed()` fields       |      2,152 |             72–79 ms |
+| **ivue**, 1 `computed()` + 3 plain getters |     **24** |       **1.0–1.1 ms** |
+| Vanilla, manual dirty-flag (no library)    |         96 |           1.9–2.8 ms |
+| plain POJO (fields actually assigned)      |         64 |           1.3–2.1 ms |
 
-**~90× less memory, ~55–70× faster creation.** Two things explain it.
-First, Angular's idiomatic pattern is the same one Vue composables use:
-`signal()`/`computed()` declared as **class fields** allocate at
-construction, per instance, whether the field is ever read or not —
-Signals changed how dependencies are _tracked_, not _when_ they're
+**~90× less memory, ~55–70× faster creation than Angular. ~4× less
+memory, ~2× faster than the best hand-rolled version.** A few things
+explain it. First, Angular's idiomatic pattern is the same one Vue
+composables use: `signal()`/`computed()` declared as **class fields**
+allocate at construction, per instance, whether the field is ever read or
+not — Signals changed how dependencies are _tracked_, not _when_ they're
 _allocated_. Second, the sharper number: an untouched ivue instance has
 **zero own properties** — nothing assigned, anywhere — so it comes in
 under even a plain object that dutifully stores its field values. There is
-nothing worth reclaiming, because nothing was ever allocated.
+nothing worth reclaiming, because nothing was ever allocated. The vanilla
+arm sits between the two: no proxy or signal-node overhead (just booleans,
+so it beats Angular by ~22×), but every cached slot _and_ every dirty flag
+is still a real field declared upfront — 9 of them per cell — so every
+instance pays for every slot whether it's ever read or not. Only ivue
+gets to skip declaring the slot in the first place.
 
 Fields have a second cost, past memory: **they don't survive
 inheritance.**
@@ -236,6 +246,19 @@ many subclass levels as the model needs ("Inheritance & `super` fidelity"
 in [`lib/Reactive.invariants.md`](https://github.com/infinite-system/ivue/blob/main/lib/Reactive.invariants.md)) — the getter placement is the whole
 difference.
 
+The vanilla arm makes a subtler point about that same difference. Its
+memoization logic lives in getters/setters, not fields — so `super.total`
+_does_ resolve; structurally, it composes. But the first honest attempt at
+writing that composition (not a contrived example — the actual first
+draft of the test) produced a silent stale value: a subclass's cache has
+no way to _know_ it transitively depends on a value two levels up unless
+every setter along the way is manually re-overridden to propagate
+invalidation. Miss one edge and `total` just quietly returns the wrong
+number — no crash, no warning. ivue has no edges to wire by hand, because
+there's no manual dirty flag: a read happens inside Vue's reactivity
+system, which discovers the _real_ dependency at read time, however deep
+the `super` chain runs.
+
 One more shape of the same idea: Angular's dependency injection has a
 real, documented escape hatch for circular references between injectables
 — `forwardRef(() => Service)` — because its DI graph resolves eagerly
@@ -249,10 +272,14 @@ not the same as a room the bomb can't be planted in.
 This is a narrow claim, held to the same discipline as the rest of this
 page: Angular Signals are a genuine, recent, directionally-correct move
 toward fine-grained reactivity — evidence the industry is converging on
-this idea, not evidence against it. The comparison above is scoped to the
-reactive primitive's allocation policy and inheritance composability, not
-a verdict on Angular the framework, which brings routing, forms, and a
-decade of production hardening ivue does not have.
+this idea, not evidence against it — and a one-off hand-rolled class with
+a single derived value is often the right amount of ceremony. The
+comparison above is scoped to three things this bench measures:
+per-instance allocation policy, whether a derived value composes across an
+inheritance boundary, and — where it does compose — whether that
+composition is safe from silent staleness without a real dependency graph.
+It is not a verdict on Angular the framework, which brings routing, forms,
+and a decade of production hardening ivue does not have.
 
 ## What a model layer requires — and where it comes from
 

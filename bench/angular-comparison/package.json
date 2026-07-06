@@ -2,10 +2,11 @@
   "name": "ivue-angular-comparison-bench",
   "private": true,
   "type": "module",
-  "description": "Isolated comparison bench: Angular Signals vs ivue vs plain POJO. Kept out of the main package's dependency tree on purpose.",
+  "description": "Isolated comparison bench: Angular Signals vs ivue vs hand-rolled vanilla vs plain POJO. Kept out of the main package's dependency tree on purpose.",
   "scripts": {
     "bench": "node --expose-gc bench.mjs",
-    "inherit-test": "node inherit-test.mjs"
+    "inherit-test": "node inherit-test.mjs",
+    "vanilla-inherit-test": "node vanilla-inherit-test.mjs"
   },
   "dependencies": {
     "@angular/core": "^22.0.0",
