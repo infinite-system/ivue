@@ -137,14 +137,71 @@ lean — 1 ref + 4 computeds — so 100k of them fit without OOM.)
   bytes/ms will differ on other CPUs/engines, but the **ratios** are the load-
   bearing result.
 
+## 1M cells (follow-up: 40 cols × 25,000 rows)
+
+Same machine, same protocol, same script — only the row count changed
+(`measure.mjs` is parametrized; the 100k configuration above remains the
+default and stays reproducible). Prediction under test: linear scaling from
+100k → ivue ~57 MB, composable ~773 MB.
+
+### Median results (3 runs, 1,000,000 cells)
+
+| Arm                | Model heap (virtualized) | Bytes/cell | Model heap (all materialized) | Bytes/cell (mat.) |     Creation | Mounted DOM cells |     Reactivity     | OOM  |
+| ------------------ | -----------------------: | ---------: | ----------------------------: | ----------------: | -----------: | ----------------: | :----------------: | :--: |
+| **A — composable** |             **757.7 MB** |        758 |                    1,083.7 MB |             1,084 | **406.8 ms** |               960 |      ✅ pass       | none |
+| **B — ivue**       |              **41.7 MB** |         42 |                      388.3 MB |               388 |  **57.2 ms** |               960 |      ✅ pass       | none |
+| **C — POJO floor** |              **40.5 MB** |         41 |                             — |                 — |      53.3 ms |               960 | n/a (non-reactive) | none |
+
+Heap deltas were again bit-stable across runs; creation varied composable
+367.8–447.8 ms, ivue 53.0–62.1 ms, POJO 44.9–55.9 ms. Reactivity verified at
+row 12,500 in every run of both reactive arms. `jsHeapSizeLimit` was ~4.4 GB;
+the composable peaked at ~1.08 GB fully materialized — heavy, but **no OOM and
+no tab crash**, so the crash-ceiling bisection built into `measure.mjs` was
+never triggered. At 1M cells ivue holds **18.2× less memory** than the
+composable and creates the model **7.1× faster**, sitting **1.2 MB (~3%)**
+above the non-reactive POJO floor.
+
+### Linearity (100k → 1M, ×10 cells)
+
+| Metric                                          |              Composable |                   ivue |                   POJO |
+| ----------------------------------------------- | ----------------------: | ---------------------: | ---------------------: |
+| Heap, predicted linear from 100k                |                  773 MB |                  57 MB |                  45 MB |
+| Heap, actual @1M                                | 757.7 MB (0.98× linear) | 41.7 MB (0.73× linear) | 40.5 MB (0.90× linear) |
+| **Marginal heap per added cell** (Δheap ÷ 900k) |          **756 B/cell** |        **40.0 B/cell** |        **40.0 B/cell** |
+| Materialized heap ×(1M/100k)                    |                   9.87× |                  9.63× |                      — |
+| Creation ×(1M/100k)                             |                    5.4× |                   5.0× |                   5.2× |
+
+- **Heap scales linearly — or better.** The composable landed within 2% of the
+  linear prediction (773 → 757.7 MB). ivue came in _under_ its 57 MB
+  prediction at 41.7 MB: the 100k figure carried a fixed, non-scaling
+  component (the ~960 rendered cells' materialized refs/computeds + viewport
+  DOM, roughly 1–4 MB) which amortizes at 1M. The marginal-cost row is the
+  clean number: each additional cell costs the composable **756 bytes** and
+  ivue **40.0 bytes — exactly the POJO marginal cost**. An unrendered ivue
+  cell is, to the byte, as cheap as a plain object; the composable pays ~19×
+  the POJO marginal cost for every cell whether rendered or not.
+- **Creation time scales _sub_-linearly in every arm** (~5× cost for ×10
+  cells) — no GC-pressure blow-up was observed at 1M; the 100k runs carry
+  proportionally more one-time JIT-warmup cost. Neither arm scales worse than
+  linear on this machine at these sizes. The **ratio** between arms is stable:
+  ivue creates the 1M model 7.1× faster (vs 6.6× at 100k), and remains
+  statistically at the POJO floor.
+- **Crash ceiling: none found at 1M.** The composable model survives 1M cells
+  on this machine (~758 MB model heap under a ~4.4 GB tab limit). Extrapolating
+  its ~756 B/cell marginal cost against that limit suggests its ceiling is in
+  the low millions of cells, but that was not probed; `measure.mjs` bisects it
+  automatically if a target size ever crashes.
+
 ## Reproduce
 
 ```bash
 # from the ivue repo root
 npx vite demo --host --port 5180        # serve the demo (any free port)
-node demo/grid/measure.mjs http://localhost:5180
+node demo/grid/measure.mjs http://localhost:5180          # 100k cells (default, 2500 rows)
+node demo/grid/measure.mjs http://localhost:5180 25000    # 1M cells (25,000 rows)
 ```
 
 `measure.mjs` requires Playwright from the realized worktree
 (`.../convert-player-to-ivue2/app/node_modules`), where Chromium is already
-installed.
+installed. The second argument (or `GRID_ROWS`) sets the row count at 40
+columns; both the 100k and 1M configurations above are exact invocations.
