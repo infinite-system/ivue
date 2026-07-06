@@ -14,7 +14,7 @@ reactive class.
 function Reactive<C>(targetClass: C): ReactiveClass<C> & { Instance: ReactiveInstance<InstanceType<C>> }
 ```
 
-- Getters returning `ref()`/`computed()` become lazily-cached reactive cells.
+- Getters returning `ref()`/`computed()` become lazily-cached Refs/Computeds.
 - Getters returning plain values de-optimize to native prototype getters — the
   recommended default for simple derivations (memoize with `computed()` only
   when the work is expensive or you need render suppression).
@@ -87,7 +87,7 @@ Disposes the instance:
 
 1. runs a user `stopEffects()` method if present,
 2. stops the effect scope (all `$watch` / `$watchEffect` watchers),
-3. clears all cached cells.
+3. clears all cached Refs/Computeds.
 
 ```ts
 inst.$stopEffects()

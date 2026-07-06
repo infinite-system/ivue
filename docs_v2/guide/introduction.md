@@ -11,7 +11,7 @@ engine is **1,052 bytes gzipped** with zero dependencies.
 
 `Reactive()` transforms a class's prototype **once**:
 
-- **getters** that return `ref()` become lazily cached state cells,
+- **getters** that return `ref()` become lazily cached Refs,
 - **plain derived getters** stay plain and re-derive on render (`computed()` is a per-getter opt-in),
 - **methods** become lazily bound functions,
 

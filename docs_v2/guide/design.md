@@ -21,7 +21,7 @@ set.
 | **Per-instance cost** | A `reactive()` proxy per object is expensive; eager computeds pay for every property up front. | Instances are **plain**, refs/computeds are lazy → **55–250× cheaper to create.** |
 | **Cheap bound methods** | Bind per instance and you allocate a function per method per object; don't bind and `this` breaks on detach. | Methods stay on the prototype, **bound lazily on first use and cached** → cheap, correct, referentially stable. |
 | **Reactive reads** | Any indirection over a raw ref costs something. | `this.x.value` through a getter — **~5× a raw ref, hoistable to native speed**. The one cost, and it's erasable. |
-| **Reactive inheritance** | Prototype-based reactivity collides cached cells and breaks `super`. | **Deep computed chains with `super.x.value`**, reactivity propagating through every level. |
+| **Reactive inheritance** | Prototype-based reactivity collides cached Refs/Computeds and breaks `super`. | **Deep computed chains with `super.x.value`**, reactivity propagating through every level. |
 | **Cross-file class HMR** | Editing a parent in another file desyncs prototype links and identities. | An idempotent, per-file transform **survives HMR**. |
 | **Circular imports** | Mutual class references throw `Cannot access 'X' before initialization`. | The namespace pattern **resolves references in any load order**. |
 | **Writable-getter types** | `get x()` is *read-only* in TypeScript. | Mapped types **re-declare ref-returning getters as writable** — the requirement that produced the circular-safe module shape. |

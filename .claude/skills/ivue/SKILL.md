@@ -1,13 +1,13 @@
 ---
 name: ivue
-description: Use when writing or editing ivue2 `Reactive()` classes, converting a Vue component or composable to ivue2, or resolving any `.value`-in-template, `defineExpose`/`reactive()` instance-typing, `ReactiveInstance`/`Instance`, `$watch`/`$watchEffect`, or namespace-export question — the operating manual for Vue 3 class-based reactivity where state is ref-getters, derived values are plain getters, and cells are `.value` everywhere.
+description: Use when writing or editing ivue2 `Reactive()` classes, converting a Vue component or composable to ivue2, or resolving any `.value`-in-template, `defineExpose`/`reactive()` instance-typing, `ReactiveInstance`/`Instance`, `$watch`/`$watchEffect`, or namespace-export question — the operating manual for Vue 3 class-based reactivity where state is ref-getters, derived values are plain getters, and Refs/Computeds are `.value` everywhere.
 ---
 
 # ivue2 (`Reactive`) — Operating Manual
 
 Author reactive Vue 3 logic as a plain `class $X`, then export `Reactive($X)`.
 The engine transforms the prototype once: ref-returning getters become cached
-cells, plain getters de-optimize to native getters (reactive via leaf
+Refs/Computeds, plain getters de-optimize to native getters (reactive via leaf
 tracking), methods become stable bound functions. Instances stay plain objects.
 Follow the rules below exactly — every deviation is either a compile error or a
 silent no-op at runtime.
@@ -89,7 +89,7 @@ class $Box {
   }
 
   // CONSTANTS / CONFIG — plain fields ONLY. A plain field written from a method
-  // triggers NOTHING (no cell, no dependency edge). Never store mutable state here.
+  // triggers NOTHING (no Ref/Computed, no dependency edge). Never store mutable state here.
   baseWidth = 400;
 
   // METHODS — plain; engine-binds to raw (stable identity, safe as handlers).
@@ -132,7 +132,7 @@ defineExpose(box as Box.Instance);
 </script>
 
 <template>
-  <!-- Cells are .value — reads AND writes (compiler-checked) -->
+  <!-- Refs/Computeds are .value — reads AND writes (compiler-checked) -->
   <q-menu v-model="box.open.value" :target="box.anchor.value" />
   <div v-if="box.open.value" :style="{ width: box.widthPx }">
     {{ box.title }}
@@ -149,7 +149,7 @@ defineExpose(box as Box.Instance);
 | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `class $X` + `export namespace X { $Class; Class = Reactive($X); Instance }` | export a bare `Reactive(class {...})` for anything that grows a parent/dependent       |
 | mutable state = `get x() { return ref(v) }`                                  | put mutable state in a plain field — writes trigger nothing                            |
-| read/write cells with `.value` inside the class AND in templates             | write `this.x = v` / `box.x = v` for a cell — it clobbers the ref or no-ops            |
+| read/write Refs/Computeds with `.value` inside the class AND in templates             | write `this.x = v` / `box.x = v` for a Ref/Computed — it clobbers the ref or no-ops            |
 | derive with a PLAIN getter                                                   | wrap every derivation in `computed()` — pays ~300 bytes/instance for nothing           |
 | `computed()` only for expensive / render-suppressing / stable-handle needs   | reach for `computed()` by default                                                      |
 | inject stores via `private get $store() { return useStore() }`               | `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles |
@@ -184,14 +184,14 @@ until mount — use `?.` in watch getters).
 | Error / symptom                                                                                             | Fix                                                      |
 | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | `Cannot assign to 'x' because it is a read-only property` (on an exposed/`reactive()`/template-ref surface) | type that surface through `X.Instance`                   |
-| `Type 'boolean' is not assignable to type 'Ref<boolean>'`                                                   | missing `.value` on a cell write — `x.flag.value = true` |
+| `Type 'boolean' is not assignable to type 'Ref<boolean>'`                                                   | missing `.value` on a Ref/Computed write — `x.flag.value = true` |
 | `'X' is possibly null` on a template ref in a watch getter                                                  | add `?.` — `watch(() => x.el.value?.foo, cb)`            |
-| template write crashes / no-ops at runtime on the raw instance                                              | you wrote `x.cell = v`; write `x.cell.value = v`         |
+| template write crashes / no-ops at runtime on the raw instance                                              | you wrote `x.Ref/Computed = v`; write `x.Ref/Computed.value = v`         |
 
 ## 5. Watch rules
 
 - `watch(() => inst.plainGetter, cb)` works on a RAW instance — no `reactive()`
-  wrapper, no cell needed. The getter body runs inside the watcher's effect, so
+  wrapper, no Ref/Computed needed. The getter body runs inside the watcher's effect, so
   its leaf reads subscribe directly (non-intuitive but structural).
 - The source MUST be the FUNCTION form. `watch(inst.plainGetter, cb)` passes a
   dead snapshot and never fires.
@@ -201,7 +201,7 @@ until mount — use `?.` in watch getters).
   in callbacks or async code): use `this.$watch` / `this.$watchEffect`. These
   register in a shared lazy per-instance `effectScope`, torn down by
   `$stopEffects()` (which also runs a user `stopEffects()` hook and clears
-  cached cells). Pure-data instances that never watch allocate no scope.
+  cached Refs/Computeds). Pure-data instances that never watch allocate no scope.
 - NEVER wrap `watchEffect` inside `$watch` — `$watchEffect` is the symmetric primitive.
 - Wire component-lifecycle instances to auto-teardown:
   `getCurrentScope() && onScopeDispose(() => this.$stopEffects())`.
@@ -238,12 +238,12 @@ whichever file loads first.
 ## 7. Self-review checklist (run over your ivue2 diff)
 
 - [ ] Every mutable state member is `get x() { return ref(...) }` — no mutable plain fields.
-- [ ] Inside the class, every cell read/write uses `.value`; plain fields are constants/config only.
+- [ ] Inside the class, every Ref/Computed read/write uses `.value`; plain fields are constants/config only.
 - [ ] Derived values are PLAIN getters; `computed()` appears only for expensive / render-suppressing / stable-handle cases.
 - [ ] Stores/composables are injected via `private get $store() { return useStore() }`, not field initializers.
 - [ ] The class is exported through the namespace (`$Class` / `Class = Reactive($X)` / `Instance`); generics cast `Class` and hand-apply `ReactiveInstance` to `Instance<T>`.
 - [ ] The SFC does `new X.Class(...)` once — no `reactive()` wrapper, no unwrap view.
-- [ ] Every template cell access uses `.value` (reads AND writes: `v-model`, `v-if`, `:prop`, `@click(...args.value)`); plain getters/methods are plain.
+- [ ] Every template Ref/Computed access uses `.value` (reads AND writes: `v-model`, `v-if`, `:prop`, `@click(...args.value)`); plain getters/methods are plain.
 - [ ] Only `ref="..."` targets are destructured off the instance.
 - [ ] `defineExpose(x as X.Instance)`; consumers type the ref as `ShallowUnwrapRef<X.Instance>`.
 - [ ] Watch sources are the FUNCTION form; `this.$watch`/`this.$watchEffect` used for component-outliving instances; no `watchEffect` wrapped in `$watch`.

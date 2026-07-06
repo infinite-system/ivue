@@ -1,6 +1,6 @@
 ---
 title: Components & Templates
-description: The settled standard — raw instance in setup, cells are .value everywhere, destructure only template-ref targets, and type every unwrapping surface (defineExpose, reactive) through Instance.
+description: The settled standard — raw instance in setup, Refs/Computeds are .value everywhere, destructure only template-ref targets, and type every unwrapping surface (defineExpose, reactive) through Instance.
 ---
 
 # Components & Templates
@@ -8,7 +8,7 @@ description: The settled standard — raw instance in setup, cells are .value ev
 A Reactive instance is a plain object. One rule governs every surface you
 control:
 
-> **Members live on the instance. Cells (refs/computeds) are `.value` —
+> **Members live on the instance. Refs/Computeds are `.value` —
 > class, setup, and template alike. Destructure only what Vue itself
 > requires: template-ref targets.**
 
@@ -25,7 +25,7 @@ defineExpose(player as Player.Instance)
 </script>
 
 <template>
-  <!-- cells: .value, reads and writes — compiler-checked -->
+  <!-- Refs/Computeds: .value, reads and writes — compiler-checked -->
   <q-menu v-model="player.menuShown.value" :target="player.menuElement.value" />
   <!-- plain derived getters and methods: plain access -->
   <div :style="{ width: player.postWidthPx }">{{ player.title }}</div>
@@ -43,7 +43,7 @@ All the candidates were tried on a 2,100-line production component:
 | --- | --- |
 | `reactive(instance)` in setup | deep-proxy tax (~75ns/read) and deep-wrapping of returned objects |
 | a shallow unwrap view (`iuse`) | TS marks get-only accessors `readonly`; the homomorphic unwrap types preserve it — template writes error, curable only with stacked type machinery |
-| destructure everything | plain derived getters own no cell — destructuring snapshots a dead value; the template splits into two namespaces with a hand-maintained list |
+| destructure everything | plain derived getters own no Ref/Computed — destructuring snapshots a dead value; the template splits into two namespaces with a hand-maintained list |
 | **raw + `.value`** | **nothing** — every miss is a compile error; zero runtime cost; zero upkeep |
 
 `.value` is not noise; it is the local, machine-checked marker that a member
@@ -99,7 +99,7 @@ What genuinely does NOT survive expose — the folklore, scoped correctly:
 
 ## reactive() interop
 
-Wrapping an instance in `reactive()` works (state is raw-anchored, one cell
+Wrapping an instance in `reactive()` works (state is raw-anchored, one Ref/Computed
 per member regardless of access path), and the same typing law applies: the
 runtime proxy unwraps reads and redirects ref writes, so type the wrapped
 value through `Instance` or writes will hit preserved-readonly errors:
@@ -113,7 +113,7 @@ Prefer not wrapping at all — the raw instance plus `.value` is the standard;
 
 ## The one mental model
 
-- **Owner side** (class, setup, own template): cells are `.value`; plain
+- **Owner side** (class, setup, own template): Refs/Computeds are `.value`; plain
   getters and methods are plain. One namespace, marker at the use site,
   enforced by the compiler.
 - **Public side** (expose, `reactive()` interop): unwrapped reads, ref

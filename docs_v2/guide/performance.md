@@ -23,7 +23,7 @@ you touch them. Measured on one machine:
 
 v2 scales linearly at 10M instances: ~50 ms to allocate, ~1 s to also
 materialize a ref and a computed on each, ~2.9 s for full **four-level**
-hierarchies (40M+ cells). Unused instances cost almost nothing. This is ideal
+hierarchies (40M+ Refs/Computeds). Unused instances cost almost nothing. This is ideal
 for large lists and virtual scrolling.
 
 Don't take the table's word for it — run it on your own machine:
@@ -37,7 +37,7 @@ Every eager `computed()` costs real bytes **per instance**. You pay for the
 all it memoizes is trivial math.
 
 v2 stores derivations once, on the prototype, as plain getters. An instance
-holds only the state cells it has actually materialized.
+holds only the Refs it has actually materialized.
 
 Measured on Vue 3.5 with an identical shape — 10 state refs, 60 trivial
 derivations, one full read pass, 20k instances:
@@ -57,12 +57,12 @@ getters are shared. Skipping memoization is a policy win. The prototype is
 the structural win. v2 stacks both by default.
 
 Scaled up: a 1,000-row grid of these components drops from ~31 MB to ~1.7 MB
-of reactivity cells. For 10k virtualized items: ~311 MB → ~17 MB. The GC
+of Refs/Computeds. For 10k virtualized items: ~311 MB → ~17 MB. The GC
 pressure of creation bursts shrinks with it.
 
 This doesn't matter everywhere. A singleton store with 60 computeds costs
 31 KB, total. And in many components, vnodes and DOM dominate the heap, not
-reactivity cells. Use [`computed()`](/guide/computed-watch) where memoization
+Refs/Computeds. Use [`computed()`](/guide/computed-watch) where memoization
 or render suppression earns its ~300 bytes.
 
 ## Reads cost a little more
@@ -87,7 +87,7 @@ millions of times.
 
 ## The template boundary
 
-The standard is the raw instance — templates read cells as `.value` at the
+The standard is the raw instance — templates read Refs/Computeds as `.value` at the
 raw column's cost. Wrapper costs shown for comparison; both wrappers were
 retired ([Components & Templates](/guide/components)). Measured per read:
 

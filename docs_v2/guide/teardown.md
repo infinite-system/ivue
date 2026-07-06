@@ -70,7 +70,7 @@ Under Vue 3.5+, `computed().effect.stop` no longer exists, and lazy computeds /
 refs don't need explicit stopping — they're collected once the instance is
 dereferenced. The only thing that genuinely needs stopping is **user watchers**,
 which is exactly what the effect scope owns. So ivue stops the *scope*, not
-individual cells — correct, and nothing to leak.
+individual Refs/Computeds — correct, and nothing to leak.
 
 ::: tip Rule of thumb
 Create watchers with `this.$watch` / `this.$watchEffect`. Call `$stopEffects()` (or wire

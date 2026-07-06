@@ -110,7 +110,7 @@ Default to plain; memoize where a profile or a render-suppression need says so.
 ## The template boundary: `.value`
 
 There is no wrapper at the component boundary. The instance stays raw and
-templates access cells as `.value` — same rule as the class body:
+templates access Refs/Computeds as `.value` — same rule as the class body:
 
 ```vue
 <script setup>
@@ -174,6 +174,6 @@ classes opportunistically as you touch them.
 - A getter at one level + setter at another are **not merged** (native JS
   semantics). Use a single getter returning a writable computed instead
   ([Inheritance](/guide/inheritance#one-difference-from-native-js-and-v1)).
-- Mutable state **must** live in ref cells. A plain field written from a method
+- Mutable state **must** live in ref Refs/Computeds. A plain field written from a method
   (a raw write) triggers nothing — no dependency edge exists. The plain fields
   that remain after migration should be constants and configuration.

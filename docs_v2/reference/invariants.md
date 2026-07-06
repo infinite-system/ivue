@@ -14,7 +14,7 @@ that also says what *cannot* is a contract you can test against.
 `Reactive(Class)` reduces to a single idea:
 
 > Transform a plain class's prototype exactly once so that its getters become
-> lazily-cached reactive cells and its methods become lazily-bound functions —
+> lazily-cached Refs/Computeds and its methods become lazily-bound functions —
 > while the instances stay plain objects with zero per-instance reactive cost.
 
 Everything else is a consequence of making that idea safe under inheritance,
@@ -66,12 +66,12 @@ shared-base layouts transforming differently by load order.
 
 Each getter and method resolves `toRaw(this)` first and keys its cache by
 per-prototype symbols. So whether you use an instance directly or wrap it in
-`reactive(new Class())`, reads and writes land on one canonical cell per
+`reactive(new Class())`, reads and writes land on one canonical Ref/Computed per
 `(instance, key)`. Through a proxy Vue also auto-unwraps a returned ref, so you read
-it without `.value` — but it's still the same cell on the raw object.
+it without `.value` — but it's still the same Ref/Computed on the raw object.
 
 **Rules out** — two different refs for one property via proxy-vs-raw access; a proxy
-write landing on a different cell than a raw read; caches leaking onto the proxy and
+write landing on a different Ref/Computed than a raw read; caches leaking onto the proxy and
 escaping teardown.
 
 ### Stable lazy identity
@@ -123,12 +123,12 @@ value cached as a fake "ref".
 ### Inheritance & super fidelity
 
 > Getters and methods resolve correctly across the whole prototype chain, including
-> `super.x` / `super.x.value`, with no collision between a parent's cached cell and a
+> `super.x` / `super.x.value`, with no collision between a parent's cached Ref/Computed and a
 > child's.
 
 Each `(prototype, key)` gets a fresh `Symbol(key)` during processing, so a base's
 `summary` and a child's `summary` cache under different symbols on the same instance.
-A child computed can call `super.summary.value` and get the *parent's* cell, not its
+A child computed can call `super.summary.value` and get the *parent's* Ref/Computed, not its
 own; overrides at different levels cooperate exactly as in native classes.
 
 **Rules out** — `super.x` resolving back to the child's own value (an infinite loop
@@ -138,7 +138,7 @@ or the wrong layer); a parent and child sharing a name clobbering each other's c
 
 > The engine installs two helpers per class, once: `$watch` registers watchers in a
 > lazily-created per-instance effect scope, and `$stopEffects()` stops that scope,
-> runs a user `stopEffects()` hook, and drops every cached cell.
+> runs a user `stopEffects()` hook, and drops every cached Ref/Computed.
 
 `$watch` does `(raw[SCOPE] ??= effectScope(true)).run(() => watch(...))` — the scope
 exists only after the first `$watch`. `$stopEffects` runs your hook, stops the scope

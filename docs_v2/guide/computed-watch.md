@@ -100,7 +100,7 @@ this.$watchEffect(() => {
 ## Watching plain getters — yes, it works
 
 `watch(() => inst.someDerived, cb)` works on the **raw** instance — no
-`reactive()` wrapper, no cell required. Not intuitive, but structural: a
+`reactive()` wrapper, no Ref/Computed required. Not intuitive, but structural: a
 watch *source* is a function executed **inside the watcher's effect**; the
 plain getter's body runs there, and its leaf reads (refs via `.value`,
 props, stores) subscribe the watcher directly. The getter is a transparent
