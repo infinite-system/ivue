@@ -201,7 +201,8 @@ node demo/grid/measure.mjs http://localhost:5180          # 100k cells (default,
 node demo/grid/measure.mjs http://localhost:5180 25000    # 1M cells (25,000 rows)
 ```
 
-`measure.mjs` requires Playwright from the realized worktree
-(`.../convert-player-to-ivue2/app/node_modules`), where Chromium is already
-installed. The second argument (or `GRID_ROWS`) sets the row count at 40
-columns; both the 100k and 1M configurations above are exact invocations.
+`measure.mjs` uses `playwright`, a devDependency of this repo — run
+`npm install` once, then `npx playwright install chromium` to download the
+browser binary. The second argument (or `GRID_ROWS`) sets the row count at
+40 columns; both the 100k and 1M configurations above are exact
+invocations.

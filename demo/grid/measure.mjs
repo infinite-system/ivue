@@ -1,10 +1,11 @@
 /**
  * Flagship grid benchmark — rigorous heap + creation-time measurement.
  *
- * Uses the Playwright install from the realized worktree (chromium already
- * downloaded there). Launches HEADLESS chromium with --expose-gc so window.gc()
- * exists and --enable-precise-memory-info so performance.memory.usedJSHeapSize
- * is byte-accurate.
+ * Requires `playwright` (a devDependency of this repo — `npm install`, then
+ * `npx playwright install chromium` once to download the browser binary).
+ * Launches HEADLESS chromium with --expose-gc so window.gc() exists and
+ * --enable-precise-memory-info so performance.memory.usedJSHeapSize is
+ * byte-accurate.
  *
  * Protocol per arm (repeated RUNS times, median reported):
  *   navigate → wait ready → gc×3 → read heap (baseline)
@@ -25,12 +26,7 @@
  * and the full protocol re-runs at ~90% of the ceiling with a clearly-labeled
  * linear extrapolation back to the target.
  */
-import { createRequire } from 'module';
-
-const PW_BASE =
-  '/home/parallels/dev/realized/.claude/worktrees/convert-player-to-ivue2/app/package.json';
-const require = createRequire(PW_BASE);
-const { chromium } = require('playwright');
+import { chromium } from 'playwright';
 
 const BASE =
   process.argv[2] || process.env.GRID_BASE || 'http://localhost:5180';
