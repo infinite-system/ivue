@@ -12,6 +12,9 @@ export const COLS = 40;
 export const ROWS = 2500;
 export const CELL_COUNT = COLS * ROWS; // 100,000
 
+/** The scaled-up option — 40 columns × 25,000 rows = 1,000,000 cells. */
+export const ROWS_1M = 25000;
+
 /** Row-windowing geometry (identical for every arm). */
 export const ROW_HEIGHT = 28; // px
 export const VIEWPORT_HEIGHT = 448; // px  → ~16 rows on screen

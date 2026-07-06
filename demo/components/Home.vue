@@ -35,14 +35,14 @@ const cards = [
     tag: 'grid · ivue',
     accent: 'indigo',
     title: 'Grid — ivue Model',
-    desc: '100,000-cell virtualized spreadsheet. Each cell is a Reactive() class $Cell: ref-getter + plain getters + one hot computed. Lazy, tens of MB.',
+    desc: '100k- or 1M-cell virtualized spreadsheet (you pick). Each cell is a Reactive() class $Cell: ref-getter + plain getters + one hot computed. Lazy, tens of MB.',
   },
   {
     to: '/grid-composable',
     tag: 'grid · composable',
     accent: 'sky',
     title: 'Grid — Composable Model',
-    desc: 'The same 100,000-cell grid, but every cell eagerly builds a ref + four computeds. Idiomatic composable-per-entity — and hundreds of MB.',
+    desc: 'The same 100k/1M grid, but every cell eagerly builds a ref + four computeds. Idiomatic composable-per-entity — and hundreds of MB.',
   },
   {
     to: '/grid-pojo',

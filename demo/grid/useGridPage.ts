@@ -47,8 +47,16 @@ export function useGridPage<T extends ReactiveCellLike>(
   /** Count of cell nodes currently mounted in the DOM (viewport-sized). */
   const mountedCells = computed(() => win.visibleRows.value.length * COLS);
 
-  /** Build the whole model up front and time ONLY the instance creation. */
+  /** Total cells in the current model (0 before creation). */
+  const modelCells = computed(() => model.value.length * COLS);
+
+  /**
+   * Build the whole model up front and time ONLY the instance creation.
+   * Re-clickable: creating again simply replaces the model (old one is GC'd),
+   * so you can switch between the 100k and 1M sizes live.
+   */
   function createModel(rowCount: number = ROWS) {
+    editing.value = null;
     const t0 = performance.now();
     const rows: T[][] = new Array(rowCount);
     for (let r = 0; r < rowCount; r++) {
@@ -146,6 +154,7 @@ export function useGridPage<T extends ReactiveCellLike>(
     hasModel,
     creationMs,
     mountedCells,
+    modelCells,
     // windowing
     scrollEl,
     totalHeight: win.totalHeight,

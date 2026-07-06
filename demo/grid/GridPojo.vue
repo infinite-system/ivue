@@ -5,6 +5,7 @@ import {
   COLS,
   OVERSCAN,
   ROWS,
+  ROWS_1M,
   ROW_HEIGHT,
   VIEWPORT_HEIGHT,
   colLabel,
@@ -100,7 +101,7 @@ document.title = 'Grid · POJO floor';
         Grid — POJO Floor
       </h1>
       <p class="max-w-3xl text-sm leading-relaxed text-slate-400">
-        100,000 cells as plain
+        100,000 — or 1,000,000 — cells as plain
         <code class="text-slate-300">{ row, col, raw }</code> objects. No refs,
         no computeds — derived values are pure functions at render time. The
         theoretical minimum; edits do <em>not</em> re-render (non-reactive by
@@ -112,12 +113,23 @@ document.title = 'Grid · POJO floor';
       class="flex flex-wrap items-center gap-4 rounded-2xl bg-white/5 p-4 ring-1 ring-white/10"
     >
       <button
-        class="rounded-lg bg-slate-500 px-4 py-2 text-sm font-bold text-white shadow-lg transition hover:bg-slate-600 disabled:opacity-40"
-        :disabled="hasModel"
+        class="rounded-lg bg-slate-500 px-4 py-2 text-sm font-bold text-white shadow-lg transition hover:bg-slate-600"
         @click="createModel()"
       >
-        {{ hasModel ? 'model created' : 'create model (100k)' }}
+        create model (100k)
       </button>
+      <button
+        class="rounded-lg bg-slate-600 px-4 py-2 text-sm font-bold text-white shadow-lg ring-1 ring-slate-300/40 transition hover:bg-slate-700"
+        @click="createModel(ROWS_1M)"
+      >
+        create model (1M)
+      </button>
+      <div v-if="hasModel" class="flex items-baseline gap-2">
+        <span class="text-2xl font-extrabold tabular-nums text-white">{{
+          (model.length * COLS).toLocaleString()
+        }}</span>
+        <span class="text-xs text-slate-400">cells in model</span>
+      </div>
       <div class="flex items-baseline gap-2">
         <span class="text-2xl font-extrabold tabular-nums text-slate-300">{{
           creationMs.toFixed(1)
@@ -175,7 +187,8 @@ document.title = 'Grid · POJO floor';
       class="rounded-2xl border border-dashed border-white/10 p-12 text-center text-sm text-slate-500"
     >
       No model yet — click
-      <span class="font-semibold text-slate-300">create model (100k)</span> to
+      <span class="font-semibold text-slate-300">create model (100k)</span> or
+      <span class="font-semibold text-slate-300">create model (1M)</span> to
       build it.
     </div>
   </section>

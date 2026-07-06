@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import './grid.css';
 import { Cell } from './IvueCell';
-import { initialRaw } from './cell-logic';
+import { ROWS_1M, initialRaw } from './cell-logic';
 import { useGridPage } from './useGridPage';
 
 const g = useGridPage('ivue', (r, c) => new Cell.Class(r, c, initialRaw(r, c)));
@@ -25,7 +25,7 @@ document.title = 'Grid · ivue model';
         Grid — ivue Model
       </h1>
       <p class="max-w-3xl text-sm leading-relaxed text-slate-400">
-        100,000 cells. Each cell is a
+        100,000 — or 1,000,000 — cells. Each cell is a
         <code class="text-indigo-300">Reactive()</code> class: raw is a
         ref-getter, display / isNumber / cssClass are <em>plain</em> getters (0
         bytes), and only the hot
@@ -40,12 +40,23 @@ document.title = 'Grid · ivue model';
       class="flex flex-wrap items-center gap-4 rounded-2xl bg-white/5 p-4 ring-1 ring-white/10"
     >
       <button
-        class="rounded-lg bg-indigo-500 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 transition hover:bg-indigo-600 disabled:opacity-40"
-        :disabled="g.hasModel.value"
+        class="rounded-lg bg-indigo-500 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 transition hover:bg-indigo-600"
         @click="g.createModel()"
       >
-        {{ g.hasModel.value ? 'model created' : 'create model (100k)' }}
+        create model (100k)
       </button>
+      <button
+        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 ring-1 ring-indigo-300/40 transition hover:bg-indigo-700"
+        @click="g.createModel(ROWS_1M)"
+      >
+        create model (1M)
+      </button>
+      <div v-if="g.hasModel.value" class="flex items-baseline gap-2">
+        <span class="text-2xl font-extrabold tabular-nums text-white">{{
+          g.modelCells.value.toLocaleString()
+        }}</span>
+        <span class="text-xs text-slate-400">cells in model</span>
+      </div>
       <div class="flex items-baseline gap-2">
         <span class="text-2xl font-extrabold tabular-nums text-indigo-300">{{
           g.creationMs.value.toFixed(1)
@@ -118,7 +129,8 @@ document.title = 'Grid · ivue model';
       class="rounded-2xl border border-dashed border-white/10 p-12 text-center text-sm text-slate-500"
     >
       No model yet — click
-      <span class="font-semibold text-indigo-300">create model (100k)</span> to
+      <span class="font-semibold text-indigo-300">create model (100k)</span> or
+      <span class="font-semibold text-indigo-300">create model (1M)</span> to
       build it.
     </div>
   </section>

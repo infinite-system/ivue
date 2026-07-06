@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import './grid.css';
 import { createComposableCell } from './composableCell';
-import { initialRaw } from './cell-logic';
+import { ROWS_1M, initialRaw } from './cell-logic';
 import { useGridPage } from './useGridPage';
 
 const g = useGridPage('composable', (r, c) =>
@@ -27,7 +27,8 @@ document.title = 'Grid · Composable model';
         Grid — Composable Model
       </h1>
       <p class="max-w-3xl text-sm leading-relaxed text-slate-400">
-        100,000 cells. Every cell is a factory that eagerly builds a
+        100,000 — or 1,000,000 — cells. Every cell is a factory that eagerly
+        builds a
         <code class="text-sky-300">ref()</code> plus four
         <code class="text-sky-300">computed()</code>s (display · isNumber ·
         cssClass · numericValue). Rendering is virtualized — but the whole model
@@ -40,12 +41,24 @@ document.title = 'Grid · Composable model';
       class="flex flex-wrap items-center gap-4 rounded-2xl bg-white/5 p-4 ring-1 ring-white/10"
     >
       <button
-        class="rounded-lg bg-sky-500 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-sky-500/25 transition hover:bg-sky-600 disabled:opacity-40"
-        :disabled="g.hasModel.value"
+        class="rounded-lg bg-sky-500 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-sky-500/25 transition hover:bg-sky-600"
         @click="g.createModel()"
       >
-        {{ g.hasModel.value ? 'model created' : 'create model (100k)' }}
+        create model (100k)
       </button>
+      <button
+        class="rounded-lg bg-sky-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-sky-500/25 ring-1 ring-sky-300/40 transition hover:bg-sky-700"
+        title="~758 MB model heap — the eager composable cost at 1M cells"
+        @click="g.createModel(ROWS_1M)"
+      >
+        create model (1M)
+      </button>
+      <div v-if="g.hasModel.value" class="flex items-baseline gap-2">
+        <span class="text-2xl font-extrabold tabular-nums text-white">{{
+          g.modelCells.value.toLocaleString()
+        }}</span>
+        <span class="text-xs text-slate-400">cells in model</span>
+      </div>
       <div class="flex items-baseline gap-2">
         <span class="text-2xl font-extrabold tabular-nums text-sky-300">{{
           g.creationMs.value.toFixed(1)
@@ -118,8 +131,9 @@ document.title = 'Grid · Composable model';
       class="rounded-2xl border border-dashed border-white/10 p-12 text-center text-sm text-slate-500"
     >
       No model yet — click
-      <span class="font-semibold text-sky-300">create model (100k)</span> to
-      build it.
+      <span class="font-semibold text-sky-300">create model (100k)</span> or
+      <span class="font-semibold text-sky-300">create model (1M)</span> to build
+      it.
     </div>
   </section>
 </template>
