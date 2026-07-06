@@ -66,8 +66,8 @@ export default defineConfig({
       {
         text: 'v2',
         items: [
+          { text: 'Operating Manual', link: '/guide/standard' },
           { text: 'The Reactive Model Layer', link: '/guide/model-layer' },
-          { text: 'The Standard (cheatsheet)', link: '/guide/standard' },
           { text: 'Performance', link: '/guide/performance' },
           { text: 'Benchmarks', link: '/guide/benchmarks' },
         ],
@@ -102,8 +102,8 @@ export default defineConfig({
           text: 'Going Deeper',
           collapsed: false,
           items: [
+            { text: 'Operating Manual', link: '/guide/standard' },
             { text: 'The Reactive Model Layer', link: '/guide/model-layer' },
-            { text: 'The Standard (cheatsheet)', link: '/guide/standard' },
             { text: 'Performance', link: '/guide/performance' },
             { text: 'Benchmarks', link: '/guide/benchmarks' },
           ],
