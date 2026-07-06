@@ -7,6 +7,7 @@ import ComposableBenchmark from '../components/ComposableBenchmark.vue';
 import GridComposable from '../grid/GridComposable.vue';
 import GridIvue from '../grid/GridIvue.vue';
 import GridPojo from '../grid/GridPojo.vue';
+import GridFormula from '../formula/GridFormula.vue';
 
 const routes = [
   {
@@ -49,6 +50,11 @@ const routes = [
     path: '/grid-pojo',
     name: 'GridPojo',
     component: GridPojo,
+  },
+  {
+    path: '/grid-formula',
+    name: 'GridFormula',
+    component: GridFormula,
   },
 ];
 

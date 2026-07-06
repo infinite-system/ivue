@@ -1,0 +1,44 @@
+/* Formula-grid additions on top of the shared grid.css.
+   Formula cells get a faint tint so the ~half of the grid that is live
+   formulas is visually distinct from the numeric source data. */
+
+.gc-cell.gc-formula {
+  background: rgba(99, 102, 241, 0.06);
+}
+.gc-cell.gc-formula:hover {
+  background: rgba(99, 102, 241, 0.16);
+}
+
+/* A formula that evaluated to an error (#DIV/0!, #REF!, #VALUE! …). */
+.gc-err {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+/* The spreadsheet-style formula bar. */
+.fx-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 0.5rem;
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px;
+}
+.fx-bar .fx-name {
+  color: #818cf8;
+  font-weight: 700;
+  min-width: 48px;
+}
+.fx-bar .fx-val {
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fx-bar .fx-empty {
+  color: #475569;
+}

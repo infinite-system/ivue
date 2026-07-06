@@ -21,6 +21,12 @@ const links = [
     tag: 'vue',
     accent: 'sky',
   },
+  {
+    to: '/grid-formula',
+    label: 'Grid · Formula',
+    tag: 'grid',
+    accent: 'emerald',
+  },
   { to: '/grid-ivue', label: 'Grid · ivue', tag: 'grid', accent: 'indigo' },
   {
     to: '/grid-composable',
