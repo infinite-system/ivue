@@ -5,7 +5,7 @@ description: Declare state as ref-getters, derive with plain getters, memoize su
 
 # Reactive State
 
-In v2 you declare state as **getters that return refs**. That single convention
+In ivue you declare state as **getters that return refs**. That single convention
 is what makes instances plain and creation lazy.
 
 ## ref

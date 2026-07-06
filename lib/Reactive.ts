@@ -5,7 +5,6 @@ import {
   watch,
   watchEffect,
   type Ref,
-  type ShallowUnwrapRef,
 } from 'vue';
 
 /**
@@ -424,39 +423,3 @@ export type ReactiveClass<C extends new (...args: any) => any> = new (
   ...args: ConstructorParameters<C>
 ) => ReactiveInstance<InstanceType<C>>;
 
-/**
- * Shallow ref-unwrapping view over a Reactive instance, for templates.
- *
- * The sugar `reactive(instance)` was previously suggested for — reading
- * `view.count` as a number instead of a Ref, `v-model` writes landing in
- * `.value` — WITHOUT Vue's deep reactive proxy. One shallow trap per
- * property read (same treatment Vue gives a setup() return), no deep
- * conversion, returned objects never re-wrapped.
- *
- * - ref-returning getters: auto-unwrapped on read; assignment redirects to
- *   `.value` (v-model works).
- * - plain derived getters: run on the RAW instance inside the reading
- *   effect; reactivity comes from leaf tracking — no wrapper needed.
- * - methods: engine-bound to the raw instance. The view answers `__v_raw`,
- *   so `toRaw()` (and the engine's resolveRaw) see straight through it —
- *   cache poisoning through this view is impossible.
- */
-export function iuse<T extends object>(instance: T): ShallowUnwrapRef<T> {
-  const raw: any = toRaw(instance);
-  return new Proxy(raw, {
-    get(target, key) {
-      if (key === '__v_raw') return target;
-      const value = target[key];
-      return isRef(value) ? value.value : value;
-    },
-    set(target, key, value) {
-      const current = target[key];
-      if (isRef(current) && !isRef(value)) {
-        current.value = value;
-        return true;
-      }
-      target[key] = value;
-      return true;
-    },
-  });
-}

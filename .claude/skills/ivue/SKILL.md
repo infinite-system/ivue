@@ -1,9 +1,9 @@
 ---
 name: ivue
-description: Use when writing or editing ivue2 `Reactive()` classes, converting a Vue component or composable to ivue2, or resolving any `.value`-in-template, `defineExpose`/`reactive()` instance-typing, `ReactiveInstance`/`Instance`, `$watch`/`$watchEffect`, or namespace-export question — the operating manual for Vue 3 class-based reactivity where state is ref-getters, derived values are plain getters, and Refs/Computeds are `.value` everywhere.
+description: Use when writing or editing ivue `Reactive()` classes, converting a Vue component or composable to ivue, or resolving any `.value`-in-template, `defineExpose`/`reactive()` instance-typing, `ReactiveInstance`/`Instance`, `$watch`/`$watchEffect`, or namespace-export question — the operating manual for Vue 3 class-based reactivity where state is ref-getters, derived values are plain getters, and Refs/Computeds are `.value` everywhere.
 ---
 
-# ivue2 (`Reactive`) — Operating Manual
+# ivue (`Reactive`) — Operating Manual
 
 Author reactive Vue 3 logic as a plain `class $X`, then export `Reactive($X)`.
 The engine transforms the prototype once: ref-returning getters become cached
@@ -15,7 +15,7 @@ silent no-op at runtime.
 ## 1. The class template (copy this shape)
 
 ```ts
-import { Reactive } from 'ivue'; // in this app: 'src/utils/ivue2'
+import { Reactive } from 'ivue'; // in this app: 'src/utils/ivue'
 import { ref, shallowRef, computed, toRef, type Ref } from 'vue';
 import { useProjectStore } from 'src/stores/project.store';
 
@@ -156,7 +156,7 @@ defineExpose(box as Box.Instance);
 | `new X.Class(props, emit)` — raw instance everywhere                         | wrap in `reactive(inst)` or an `iuse()`/unwrap view as the standard                    |
 | destructure ONLY `ref="el"` targets                                          | destructure plain getters — snapshots a dead value                                     |
 | `defineExpose(box as X.Instance)`                                            | `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers       |
-| constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — v2 never calls it                         |
+| constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — ivue never calls it                         |
 
 ## 4. The unwrapping-surface typing law
 
@@ -235,7 +235,7 @@ Each file calls `Reactive()` on its own class safely: it is idempotent per
 prototype level and HMR-safe; a shared ancestor is transformed once, by
 whichever file loads first.
 
-## 7. Self-review checklist (run over your ivue2 diff)
+## 7. Self-review checklist (run over your ivue diff)
 
 - [ ] Every mutable state member is `get x() { return ref(...) }` — no mutable plain fields.
 - [ ] Inside the class, every Ref/Computed read/write uses `.value`; plain fields are constants/config only.

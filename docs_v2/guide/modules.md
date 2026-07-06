@@ -71,11 +71,9 @@ engine detects that and skips it. Every file can safely call `Reactive()` on
 its own class. Shared ancestors are processed exactly once, by whichever file
 loads first.
 
-This is also why v2 hierarchies survive **cross-file hot-reload**. Editing one
+This is also why ivue hierarchies survive **cross-file hot-reload**. Editing one
 file re-runs only that file's `Reactive()` call, which is a no-op on
-already-processed ancestors. (v1 builds its reactivity at _instantiation_
-time, so a v1 hierarchy has to live in a single file to stay consistent under
-HMR.)
+already-processed ancestors.
 
 ## Circular imports: immune by construction
 
@@ -112,7 +110,7 @@ write `new B.Class()` inside a method body. The member is read at call time,
 through a live binding, when everything is loaded. This is what actually
 resolves "A's methods use B, B's methods use A", in **any load order**.
 
-**3. The authoring convention finishes the job.** In v2, state and
+**3. The authoring convention finishes the job.** In ivue, state and
 derivations are _getters_ — bodies that run on first access, not at load, not
 even at construction. The convention itself pushes the entire surface of a
 class to the safest rung of the ladder. Immunity doesn't come from one trick;

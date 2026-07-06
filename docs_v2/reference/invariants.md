@@ -96,7 +96,7 @@ Everything happens in prototype getters; `new Class()` only runs your constructo
 and the engine never passes an instance to `reactive()`. So N instances cost N plain
 `new` calls, and instances created but never touched carry essentially no overhead.
 *(Measured: 100k instances allocate in ~0.7 ms, vs ~37–43 ms for `reactive()` /
-composables and ~169 ms for ivue v1.)*
+composables and ~169 ms for an eager class engine.)*
 
 **Rules out** — instantiation cost scaling with the number of reactive members
 declared; an unused getter allocating a computed.
@@ -170,8 +170,8 @@ subscription every read).
 
 Not lines of code inside `Reactive()`, but properties of the **authoring convention**
 the engine is designed for — made correct by the runtime invariants above (chiefly
-*Identity preservation* and *Idempotent transformation*). They're why v2 handles
-cross-file hierarchies and circular imports where v1 doesn't. See
+*Identity preservation* and *Idempotent transformation*). They're why ivue handles
+cross-file hierarchies and circular imports where instantiation-time engines don't. See
 [Modules & Imports](/guide/modules) for the practical guide.
 
 ```ts
@@ -203,7 +203,7 @@ is idempotent and identity-preserving, a base already transformed in `Base.ts` i
 detected and skipped when a child's chain walk reaches it — yet the child still
 inherits the installed getters through the shared prototype. So parent, grandparent
 and child can live in separate files, and editing one re-runs only that module's
-(idempotent) `Reactive()` call, so HMR never desyncs the chain. (v1 builds its maps
+(idempotent) `Reactive()` call, so HMR never desyncs the chain. (an engine that builds its maps
 at instantiation time keyed by identity; when one file in a multi-file hierarchy
 reloads, identities across the boundary fall out of sync — which is why v1
 hierarchies live in one file.)
@@ -247,4 +247,4 @@ Listed deliberately, so the invariants above aren't over-read:
    remains impossible by construction.
 4. **`.value` ergonomics.** Reactive state is read with `.value` outside a
    `reactive()` / template auto-unwrap context — the one ergonomic cost relative to
-   v1's proxy model.
+   a proxy-based model.

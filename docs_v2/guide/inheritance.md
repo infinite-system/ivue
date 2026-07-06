@@ -65,17 +65,17 @@ A middle class is a complete reactive class too:
 new (Reactive($Mid))().tag.value  // "Mid(Base:10)"
 ```
 
-## One difference from native JS (and v1)
+## One difference from native JS
 
-ivue v2 follows **native JS** accessor semantics: a setter-only accessor on a
+ivue follows **native JS** accessor semantics: a setter-only accessor on a
 child shadows an inherited getter. So *splitting* a `get` on one level and a `set`
-on another (which ivue **v1** merged into one computed) does **not** merge in v2.
+on another (which some engines merge into one computed) does **not** merge in ivue.
 
-In v2 you don't need to — express writable state as a single getter returning a
+In ivue you don't need to — express writable state as a single getter returning a
 ref or a writable computed:
 
 ```ts
-// v2 way — getter + writable computed in one place
+// ivue way — getter + writable computed in one place
 get _feel() { return ref('sleek') }
 get feel()  {
   return computed({ get: () => this._feel.value, set: v => this._feel.value = v })

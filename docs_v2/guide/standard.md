@@ -1,18 +1,18 @@
 ---
 title: The Standard (Operating Manual)
-description: The complete ivue2 operating manual — annotated class and SFC templates, DO/NEVER table, the unwrapping-surface typing law with error fixes, watch rules, and a review checklist. The same manual we ship to AI agents.
+description: The complete ivue operating manual — annotated class and SFC templates, DO/NEVER table, the unwrapping-surface typing law with error fixes, watch rules, and a review checklist. The same manual we ship to AI agents.
 ---
 
-# The Standard — ivue2 Operating Manual
+# The Standard — ivue Operating Manual
 
 This page is the library's operating manual, verbatim. It is the same
 document we ship to AI coding agents as the `/ivue` skill
 (`.claude/skills/ivue/SKILL.md`) — because the instructions that make an
-agent write correct ivue2 turn out to be exactly the reference a human
+agent write correct ivue turn out to be exactly the reference a human
 wants open in a second tab. Everything here is production-proven; the
 *why* behind each rule lives in the guide chapters.
 
-# ivue2 (`Reactive`) — Operating Manual
+# ivue (`Reactive`) — Operating Manual
 
 Author reactive Vue 3 logic as a plain `class $X`, then export `Reactive($X)`.
 The engine transforms the prototype once: ref-returning getters become cached
@@ -24,7 +24,7 @@ silent no-op at runtime.
 ## 1. The class template (copy this shape)
 
 ```ts
-import { Reactive } from 'ivue'; // in this app: 'src/utils/ivue2'
+import { Reactive } from 'ivue'; // in this app: 'src/utils/ivue'
 import { ref, shallowRef, computed, toRef, type Ref } from 'vue';
 import { useProjectStore } from 'src/stores/project.store';
 
@@ -165,7 +165,7 @@ defineExpose(box as Box.Instance);
 | `new X.Class(props, emit)` — raw instance everywhere                         | wrap in `reactive(inst)` or an `iuse()`/unwrap view as the standard                    |
 | destructure ONLY `ref="el"` targets                                          | destructure plain getters — snapshots a dead value                                     |
 | `defineExpose(box as X.Instance)`                                            | `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers       |
-| constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — v2 never calls it                         |
+| constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — ivue never calls it                         |
 
 ## 4. The unwrapping-surface typing law
 
@@ -244,7 +244,7 @@ Each file calls `Reactive()` on its own class safely: it is idempotent per
 prototype level and HMR-safe; a shared ancestor is transformed once, by
 whichever file loads first.
 
-## 7. Self-review checklist (run over your ivue2 diff)
+## 7. Self-review checklist (run over your ivue diff)
 
 - [ ] Every mutable state member is `get x() { return ref(...) }` — no mutable plain fields.
 - [ ] Inside the class, every Ref/Computed read/write uses `.value`; plain fields are constants/config only.

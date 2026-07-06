@@ -12,7 +12,6 @@ import {
 
 import {
   isClass,
-  iuse,
   propsWithDefaults,
   Reactive,
   type ReactiveInstance,
@@ -995,78 +994,7 @@ describe('propsWithDefaults()', () => {
 
 
 });
-describe('iuse (shallow template view)', () => {
-  it('unwraps top-level refs on read; writes redirect into .value (v-model shape)', () => {
-    class Box {
-      get open() {
-        return ref(false);
-      }
-    }
-    const R = Reactive(Box);
-    const inst: any = new R();
-    const view: any = iuse(inst);
-    expect(view.open).toBe(false); // unwrapped read
-    view.open = true; // v-model write
-    expect(inst.open.value).toBe(true); // landed in the ref
-    expect(view.open).toBe(true);
-  });
 
-  it('plain derived getters stay reactive through the view (leaf tracking, no wrapper)', () => {
-    class Box {
-      get count() {
-        return ref(1);
-      }
-      get double() {
-        return this.count.value * 2; // plain getter — de-opts
-      }
-    }
-    const R = Reactive(Box);
-    const inst: any = new R();
-    const view: any = iuse(inst);
-    const observed = computed(() => view.double);
-    expect(observed.value).toBe(2);
-    inst.count.value = 21; // change the leaf
-    expect(observed.value).toBe(42); // effect re-ran through the view
-  });
-
-  it('is __v_raw-transparent: toRaw sees through, methods bind the raw (no poisoning)', () => {
-    class Box {
-      get count() {
-        return ref(0);
-      }
-      inc() {
-        this.count.value++;
-      }
-      dec() {
-        this.count.value--;
-      }
-    }
-    const R = Reactive(Box);
-    const inst: any = new R();
-    const view: any = iuse(inst);
-    expect(toRaw(view)).toBe(inst);
-    // First-ever engine access happens THROUGH the view — the poisoning shape.
-    const dec = view.dec;
-    expect(() => dec()).not.toThrow();
-    expect(inst.count.value).toBe(-1);
-    expect(view.inc).toBe(inst.inc); // same bound method, cached on the raw
-  });
-
-  it('non-ref slots assign normally (set else-branch)', () => {
-    class Box {
-      label = 'a'; // plain writable field
-    }
-    const R = Reactive(Box);
-    const inst: any = new R();
-    const view: any = iuse(inst);
-    view.label = 'b'; // current is not a ref -> plain assignment
-    expect(inst.label).toBe('b');
-    const holder = ref('c');
-    view.label = holder; // isRef(value) -> plain assignment, slot now holds the ref
-    expect(isRef(inst.label)).toBe(true);
-    expect(view.label).toBe('c'); // and reads unwrap it
-  });
-});
 
 describe('$watchEffect (scoped watchEffect)', () => {
   it('runs immediately, re-runs on dep change, and is stopped by $stopEffects', async () => {

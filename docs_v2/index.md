@@ -86,12 +86,12 @@ c.double       // 2, re-derived on read; computed() is opt-in
 
 ### Creating 100k instances
 
-| | time | v2 is |
+| | time | ivue is |
 | --- | --- | --- |
-| **v2 `new Class()`** | **0.7 ms** | |
+| **ivue `new Class()`** | **0.7 ms** | |
 | native `reactive()` | 36.7 ms | **55× faster** |
 | composable factory | 42.8 ms | **64× faster** |
-| v1 `ivue(Class)` | 169 ms | **253× faster** |
+| eager class engine (unreleased v1) | 169 ms | **253× faster** |
 
 <p class="foot">Refs and computeds do not exist until first access.</p>
 
@@ -101,9 +101,9 @@ c.double       // 2, re-derived on read; computed() is opt-in
 
 ### Heap per instance, same shape
 
-| | heap | v2 is |
+| | heap | ivue is |
 | --- | --- | --- |
-| **v2 class, 60 getters** | **1.7 KB** | |
+| **ivue class, 60 getters** | **1.7 KB** | |
 | composable, 60 closures | 12.8 KB | **7.7× lighter** |
 | composable, 60 computeds | 31.1 KB | **18.6× lighter** |
 
@@ -141,7 +141,7 @@ c.double       // 2, re-derived on read; computed() is opt-in
 <div class="ix-start">
   <a href="/guide/introduction">
     <div class="t">What is ivue?</div>
-    <div class="d">The idea, the engine, and how v2 relates to v1.</div>
+    <div class="d">The idea and the engine.</div>
     <span class="go">Read →</span>
   </a>
   <a href="/guide/getting-started">
@@ -149,11 +149,7 @@ c.double       // 2, re-derived on read; computed() is opt-in
     <div class="d">Install, write your first reactive class, use it in a component.</div>
     <span class="go">Build →</span>
   </a>
-  <a href="/guide/migration">
-    <div class="t">Migrating from v1</div>
-    <div class="d">The minimal recipe: convert state only, derive on render.</div>
-    <span class="go">Migrate →</span>
-  </a>
+  
 </div>
 
 </section>

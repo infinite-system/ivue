@@ -14,7 +14,7 @@ npm i ivue vue
 ivue has no runtime dependencies of its own; it works with any Vue 3.x.
 
 ::: tip Hide `.value` while coding
-v2 state is read with `.value`. If you'd rather not see it, the
+ivue state is read with `.value`. If you'd rather not see it, the
 [Vue plugin for VS Code / WebStorm](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
 ecosystem includes inlay-hint and "hide `.value`" options that keep your source
 clean.

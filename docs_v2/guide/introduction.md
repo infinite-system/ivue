@@ -1,6 +1,6 @@
 ---
 title: What is ivue?
-description: 'ivue builds Vue 3 reactivity from plain TypeScript classes. One kilobyte, zero dependencies, native inheritance. Meet Reactive(), the v2 engine.'
+description: 'ivue builds Vue 3 reactivity from plain TypeScript classes. One kilobyte, zero dependencies, native inheritance. Meet Reactive(), the ivue engine.'
 ---
 
 # What is ivue?
@@ -54,29 +54,9 @@ class $Pointer {
 }
 ```
 
-## ivue v1 vs v2
-
-ivue ships two engines. They express the same idea differently.
-
-| | **v1 — `ivue()`** | **v2 — `Reactive()`** |
-|---|---|---|
-| How | wraps each instance in Vue `reactive()` | transforms the prototype once; instances stay plain |
-| State | fields via `iref()`, no `.value` | getters return `ref()`, read with `.value` |
-| Creation | a proxy + eager computeds per instance | a bare `new`; state is lazy |
-| Memory | per-instance computeds | derivations shared on the prototype, up to **18.6× lighter** |
-| Modules | hierarchy in one file (HMR) | cross-file hierarchies, circular-import immunity |
-| Extras | `.clone()`, `.toRefs()`, `init()` | lean core: `$watch`, `$stopEffects` |
-
-::: tip Which should I use?
-**v2** for everything new, and for anything with many instances or deep
-structure. **v1** where you rely on `.clone()` / `.toRefs()` today. The
-[migration](/guide/migration) is smaller than it looks: only mutable state
-converts.
-:::
-
 ## The trade, in one line
 
-v2 is **cheap to create and light to hold, slightly costlier to read**: state
+ivue is **cheap to create and light to hold, slightly costlier to read**: state
 sits behind a getter, so hot loops pay ~5× per read over a raw closure ref.
 One [hoist line](/guide/performance#hot-loops) erases it. Everything else is
 free.
