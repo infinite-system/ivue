@@ -42,7 +42,7 @@ All the candidates were tried on a 2,100-line production component:
 | regime | how it failed |
 | --- | --- |
 | `reactive(instance)` in setup | deep-proxy tax (~75ns/read) and deep-wrapping of returned objects |
-| a shallow unwrap view (`iuse`) | TS marks get-only accessors `readonly`; the homomorphic unwrap types preserve it — template writes error, curable only with stacked type machinery |
+| a shallow unwrap view (`proxyRefs`-style) | TS marks get-only accessors `readonly`; the homomorphic unwrap types preserve it — template writes error, curable only with stacked type machinery |
 | destructure everything | plain derived getters own no Ref/Computed — destructuring snapshots a dead value; the template splits into two namespaces with a hand-maintained list |
 | **raw + `.value`** | **nothing** — every miss is a compile error; zero runtime cost; zero upkeep |
 

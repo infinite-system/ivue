@@ -55,6 +55,54 @@ computed's body only runs when its dependency actually changes:
 
 <DemoDerived />
 
+## Watching plain getters — yes, it works
+
+You do not need a Ref or a Computed to watch a derived value.
+`watch(() => inst.someDerived, cb)` works on the **raw** instance — no
+`reactive()` wrapper anywhere:
+
+```ts
+import { watch } from 'vue'
+import { Reactive } from 'ivue'
+
+class $Invoice {
+  get qty() { return ref(2) }
+  get price() { return ref(50) }
+
+  // plain getters — no Refs/Computeds of their own
+  get subtotal() { return this.qty.value * this.price.value }
+  get totalLabel() { return `$${(this.subtotal * 1.13).toFixed(2)}` }
+}
+export namespace Invoice {
+  export const $Class = $Invoice
+  export const Class = Reactive($Invoice)
+  export type Instance = typeof Class.Instance
+}
+
+const inv = new Invoice.Class()
+
+// ✓ watching a plain getter on the RAW instance — fires on any leaf change
+watch(() => inv.totalLabel, (label) => console.log('total:', label))
+
+inv.qty.value = 3      // → "total: $169.50"
+inv.price.value = 40   // → "total: $135.60"
+
+// ✓ also works through a component boundary (template ref / expose):
+watch(() => invoiceRef.value?.totalLabel, onTotalChange)
+
+// ✗ the ONE mistake: snapshotting — this passes a dead string, never fires
+watch(inv.totalLabel, onTotalChange)
+```
+
+Not intuitive, but structural: a watch **source is a function executed
+inside the watcher's effect**. `totalLabel` runs there, reads `subtotal`,
+which reads `qty.value` and `price.value` — and those leaf reads subscribe
+the watcher directly. The getter chain is a transparent corridor — the same
+leaf-tracking that makes plain getters reactive in templates, so it survives
+any number of getters deep and passes straight through the expose surface
+(verified live in production). The only hard rule: the source must be the
+**function form** — `() => inst.x`, never `inst.x`.
+
 ## Watch
 
 Use the engine-injected **`this.$watch`** to react to changes. It has the same
@@ -97,20 +145,6 @@ this.$watchEffect(() => {
 })
 ```
 
-## Watching plain getters — yes, it works
-
-`watch(() => inst.someDerived, cb)` works on the **raw** instance — no
-`reactive()` wrapper, no Ref/Computed required. Not intuitive, but structural: a
-watch *source* is a function executed **inside the watcher's effect**; the
-plain getter's body runs there, and its leaf reads (refs via `.value`,
-props, stores) subscribe the watcher directly. The getter is a transparent
-corridor — the same mechanism that makes plain getters reactive in
-templates. It holds through the expose surface too:
-`watch(() => playerRef.value.someDerivedPx, cb)` fires exactly when the
-getter's actual leaves change (verified live). What does NOT work is
-snapshotting: `watch(inst.someDerived, cb)` passes a dead value — the
-source must be the function form.
-
 `$watch` returns Vue's stop handle, so you can stop a single watcher without
 tearing down the instance:
 
@@ -120,9 +154,3 @@ const stop = this.$watch(() => this.query.value, onChange)
 stop()
 ```
 
-## watchEffect-style
-
-Need `watchEffect`? Run it inside the same scope by calling Vue's `watchEffect`
-from within a `$watch`-style helper, or create your own `effectScope`. For most
-cases `this.$watch(source, cb)` is enough — see
-[Teardown](/guide/teardown) for the full lifecycle.

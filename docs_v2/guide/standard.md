@@ -162,7 +162,7 @@ defineExpose(box as Box.Instance);
 | derive with a PLAIN getter                                                   | wrap every derivation in `computed()` — pays ~300 bytes/instance for nothing           |
 | `computed()` only for expensive / render-suppressing / stable-handle needs   | reach for `computed()` by default                                                      |
 | inject stores via `private get $store() { return useStore() }`               | `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles |
-| `new X.Class(props, emit)` — raw instance everywhere                         | wrap in `reactive(inst)` or an `iuse()`/unwrap view as the standard                    |
+| `new X.Class(props, emit)` — raw instance everywhere                         | wrap in `reactive(inst)` or any shallow-unwrap view as the standard                    |
 | destructure ONLY `ref="el"` targets                                          | destructure plain getters — snapshots a dead value                                     |
 | `defineExpose(box as X.Instance)`                                            | `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers       |
 | constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — ivue never calls it                         |
