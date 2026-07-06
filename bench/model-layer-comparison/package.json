@@ -2,18 +2,20 @@
   "name": "ivue-model-layer-comparison-bench",
   "private": true,
   "type": "module",
-  "description": "Isolated comparison bench: Angular Signals, MobX, Svelte 5 runes, hand-rolled vanilla, ivue, and plain POJO. Kept out of the main package's dependency tree on purpose.",
+  "description": "Isolated comparison bench: Angular Signals, MobX, Svelte 5 runes, Solid.js, hand-rolled vanilla, ivue, and plain POJO. Kept out of the main package's dependency tree on purpose.",
   "scripts": {
-    "bench": "node --expose-gc bench.mjs",
+    "bench": "node --expose-gc --conditions=browser bench.mjs",
     "inherit-test": "node inherit-test.mjs",
     "vanilla-inherit-test": "node vanilla-inherit-test.mjs",
     "mobx-inherit-test": "node mobx-inherit-test.mjs",
     "compile-svelte": "node compile-svelte.mjs",
-    "svelte-inherit-test": "node svelte-inherit-test.mjs"
+    "svelte-inherit-test": "node svelte-inherit-test.mjs",
+    "solid-compose-test": "node --conditions=browser solid-compose-test.mjs"
   },
   "dependencies": {
     "@angular/core": "^22.0.0",
     "mobx": "^6.16.1",
+    "solid-js": "^1.9.14",
     "svelte": "^5.56.4",
     "vue": "^3.5.0"
   }

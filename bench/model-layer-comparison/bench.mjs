@@ -8,10 +8,33 @@
 import { signal, computed } from '@angular/core';
 import { ref, computed as vueComputed } from 'vue';
 import { makeAutoObservable } from 'mobx';
+import { createSignal, createMemo, createRoot } from 'solid-js';
 import { SvelteCell } from './svelte-cell.compiled.mjs';
 import { Reactive } from '../../dist/index.es.js';
 
 const N = 100_000;
+
+// --- Arm F: Solid.js, idiomatic usage — a factory function, not a class.
+// Solid has no class-based reactivity idiom at all (no ref()/signal() to
+// attach to a field); its own docs distinguish "derived signals" (plain
+// functions — cheap, uncached) from createMemo (only for expensive
+// derivations) — the SAME plain-vs-memoized split ivue makes, just
+// function-shaped instead of getter-shaped. One memo for the hot value,
+// three plain functions for the rest, matching every other arm's shape.
+//
+// IMPORTANT: run with `node --conditions=browser` (see package.json).
+// Node's default export-map resolution picks solid-js's SSR build
+// (dist/server.cjs), a non-reactive stub — createMemo() silently never
+// re-runs under it. --conditions=browser forces the real client engine,
+// the one actual users get; verified live before trusting any number.
+function createSolidCell() {
+  const [raw, setRaw] = createSignal('');
+  const value = createMemo(() => raw() + '!'); // the one hot value, memoized
+  const display = () => value().toUpperCase(); // plain derived function
+  const isEmpty = () => raw().length === 0; // plain derived function
+  const cssClass = () => (isEmpty() ? 'empty' : 'filled'); // plain derived function
+  return { raw, setRaw, value, display, isEmpty, cssClass };
+}
 
 // --- Arm E: MobX, idiomatic usage — makeAutoObservable(this) in the
 // constructor, the API MobX's own docs recommend by default. It introspects
@@ -136,16 +159,7 @@ class VanillaCell {
   }
 }
 
-function bench(label, Ctor) {
-  const arr = new Array(N);
-  if (global.gc) global.gc();
-  const before = process.memoryUsage().heapUsed;
-  const t0 = process.hrtime.bigint();
-  for (let i = 0; i < N; i++) arr[i] = new Ctor();
-  const t1 = process.hrtime.bigint();
-  if (global.gc) global.gc();
-  const after = process.memoryUsage().heapUsed;
-  const ms = Number(t1 - t0) / 1e6;
+function report(label, before, after, ms) {
   const bytesPerCell = (after - before) / N;
   console.log(
     label.padEnd(34),
@@ -158,7 +172,38 @@ function bench(label, Ctor) {
     'bytes/cell:',
     bytesPerCell.toFixed(1).padStart(8),
   );
+}
+
+function bench(label, Ctor) {
+  const arr = new Array(N);
+  if (global.gc) global.gc();
+  const before = process.memoryUsage().heapUsed;
+  const t0 = process.hrtime.bigint();
+  for (let i = 0; i < N; i++) arr[i] = new Ctor();
+  const t1 = process.hrtime.bigint();
+  if (global.gc) global.gc();
+  const after = process.memoryUsage().heapUsed;
+  report(label, before, after, Number(t1 - t0) / 1e6);
   return arr.length; // keep alive so GC can't collect before measurement
+}
+
+// Solid has no `new` — factory-function arm, same measurement, all 100k
+// instances built inside one createRoot (idiomatic: avoids Solid's
+// "created outside a root" disposal warning).
+function benchFactory(label, factory) {
+  let arr;
+  if (global.gc) global.gc();
+  const before = process.memoryUsage().heapUsed;
+  const t0 = process.hrtime.bigint();
+  createRoot(() => {
+    arr = new Array(N);
+    for (let i = 0; i < N; i++) arr[i] = factory();
+  });
+  const t1 = process.hrtime.bigint();
+  if (global.gc) global.gc();
+  const after = process.memoryUsage().heapUsed;
+  report(label, before, after, Number(t1 - t0) / 1e6);
+  return arr.length;
 }
 
 if (!global.gc) {
@@ -171,6 +216,7 @@ console.log(`N = ${N.toLocaleString()} cells, node ${process.version}\n`);
 bench('MobX (makeAutoObservable)', MobxCell);
 bench('Angular signals (4 eager computed)', AngularCell);
 bench('Svelte 5 runes ($state/$derived)', SvelteCell);
+benchFactory('Solid.js (createMemo + 3 plain fns)', createSolidCell);
 bench('ivue class (1 computed, never read)', IvueCell);
 bench('Vanilla (manual dirty-flag, no library)', VanillaCell);
 bench('Plain POJO (fields assigned)', PlainCell);
@@ -179,6 +225,7 @@ console.log('\n--- second pass (warm, JIT-settled) ---');
 bench('MobX (makeAutoObservable)', MobxCell);
 bench('Angular signals (4 eager computed)', AngularCell);
 bench('Svelte 5 runes ($state/$derived)', SvelteCell);
+benchFactory('Solid.js (createMemo + 3 plain fns)', createSolidCell);
 bench('ivue class (1 computed, never read)', IvueCell);
 bench('Vanilla (manual dirty-flag, no library)', VanillaCell);
 bench('Plain POJO (fields assigned)', PlainCell);
