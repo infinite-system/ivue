@@ -49,6 +49,64 @@ the DOM does. So the fork, before ivue, was:
    from the model. No `watch` on an entity. No derived values. You write
    your own dependency engine.
 
+## The natural rebuttal: just lazy-load the composable cells
+
+A fair objection to the fork above: option 1 doesn't have to be *eager*.
+Keep a plain-data backing store (the arm-C floor below), materialize
+composable cells only around the viewport, and evict them as they scroll
+away. Memory solved — reactivity kept. Right?
+
+Try to build it, and you're reinventing ivue's laziness by hand, at much
+higher cost:
+
+- **A synchronization protocol.** Every materialize is a copy-in from the
+  backing store; every evict is a copy-out. You now own a coherence
+  contract — never lose a write in the gap between them. This is a
+  database buffer pool, hand-built inside a view-model.
+- **An identity crisis.** A `watch()` attached to an evicted cell's ref
+  dies silently. The cell that scrolls back into view is a *different
+  object* — every watcher, every equality check, every selection
+  reference across an eviction boundary quietly breaks.
+- **The formula hole.** `SUM(A1:A25000)` touches 25,000 cells regardless
+  of the viewport. Either the formula forces mass materialization (the
+  memory spike returns, now with churn on every recalc), or it reads the
+  backing store directly — at which point recalc isn't reactive anymore
+  and you're back to hand-rolled dirty tracking. The model exits Vue
+  through the side door you just built.
+
+Every one of these mechanisms is real engineering — it's what production
+web spreadsheets actually do. And every line of it exists *solely* to work
+around eager allocation cost.
+
+An ivue instance is that lazy overlay, built into the object itself, for
+free. An untouched member costs nothing to begin with, so there is no
+second representation to synchronize, no eviction to schedule, no watcher
+that dies at a boundary — the instance a watcher attaches to is the
+instance forever. And a whole-column formula just reads `.value` through
+a million cells, live, because the cells are already there, resting at
+the floor. Measured end-to-end on a 1,000,000-cell virtualized grid (composable vs.
+ivue vs. a non-reactive POJO control; full protocol, machine notes, and
+raw numbers in `demo/grid/RESULTS.md` in this repository):
+
+| | marginal heap per added cell | at 1M cells |
+| --- | --- | --- |
+| composable, eager | 756 B/cell | 757.7 MB |
+| **ivue** | **40.0 B/cell** | **41.7 MB** |
+| plain POJO (non-reactive control) | 40.0 B/cell | 40.5 MB |
+
+**ivue's marginal cost matches the non-reactive POJO to the byte.** An
+unrendered ivue cell is, for memory purposes, indistinguishable from a
+plain object that was never going to be reactive at all — except it is.
+That is what "no eviction policy required" means in a number: there is
+nothing worth reclaiming.
+
+The one place this doesn't fully dissolve: at some scale the *data*
+itself — not the reactivity graph — outgrows a single tab, and needs
+server-backed windowing. That is true identically in every architecture.
+ivue's contribution is that the reactive layer is never the reason you get
+there — at 40 bytes marginal, reactivity rides along at the floor no
+matter how far the data scales.
+
 ## The third option
 
 An ivue class is the missing shape: **every entity fully inside Vue
