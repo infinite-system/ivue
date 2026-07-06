@@ -185,6 +185,75 @@ The per-member policy is the part no other pattern offers: `value` pays
 `display` and `cssClass` pay nothing because they are nanosecond string
 work. **You choose the price per member, per class — not per app.**
 
+## Isn't this just what Angular Signals already do?
+
+Angular is the framework most associated with class-oriented, fine-grained
+reactivity, so it's a fair question. Measured directly — same machine,
+identical cell shape (one raw value, four derived values chained off it,
+one memoized, never read; full protocol, machine notes, and a reproducible
+script in `bench/angular-comparison/RESULTS.md` in this repository):
+
+|                                            | bytes/cell | creation, 100k cells |
+| ------------------------------------------ | ---------: | -------------------: |
+| Angular, 4 eager `computed()` fields       |      2,152 |             73–79 ms |
+| **ivue**, 1 `computed()` + 3 plain getters |     **24** |       **1.1–1.4 ms** |
+| plain POJO (fields actually assigned)      |         64 |           1.8–2.1 ms |
+
+**~90× less memory, ~55–70× faster creation.** Two things explain it.
+First, Angular's idiomatic pattern is the same one Vue composables use:
+`signal()`/`computed()` declared as **class fields** allocate at
+construction, per instance, whether the field is ever read or not —
+Signals changed how dependencies are _tracked_, not _when_ they're
+_allocated_. Second, the sharper number: an untouched ivue instance has
+**zero own properties** — nothing assigned, anywhere — so it comes in
+under even a plain object that dutifully stores its field values. There is
+nothing worth reclaiming, because nothing was ever allocated.
+
+Fields have a second cost, past memory: **they don't survive
+inheritance.**
+
+```ts
+class Base {
+  a = signal(1);
+  total = computed(() => this.a() + 10);
+}
+class Sub extends Base {
+  b = signal(2);
+  total = computed(() => this.b() + 100); // looks like an override — isn't
+}
+
+new Sub().total(); // 102 — Base's contribution is gone, silently
+```
+
+A class field is an own-property assigned in the constructor, never a
+prototype member — `Sub.prototype` never held `total`; neither did
+`Base.prototype`. There is no `super.total` to call, so the second
+declaration doesn't override the first, it just clobbers it on the
+instance. This isn't an Angular bug — it's what happens to _any_ reactive
+primitive declared as a field rather than a getter, in any framework. ivue
+getters are real prototype members, so `super.x.value` composes across as
+many subclass levels as the model needs (invariant A7, "Inheritance &
+`super` fidelity," in `lib/Reactive.invariants.md`) — the getter placement
+is the whole difference.
+
+One more shape of the same idea: Angular's dependency injection has a
+real, documented escape hatch for circular references between injectables
+— `forwardRef(() => Service)` — because its DI graph resolves eagerly
+enough that a cycle can crash without it. ivue never needed an equivalent.
+Not because cycles are resolved more cleverly, but because the namespace
+pattern ([Modules & Imports](/guide/modules)) makes the failure mode
+unreachable in the first place — a hoisted `var` binding exists before any
+cross-module reference is ever dereferenced. A tool that defuses a bomb is
+not the same as a room the bomb can't be planted in.
+
+This is a narrow claim, held to the same discipline as the rest of this
+page: Angular Signals are a genuine, recent, directionally-correct move
+toward fine-grained reactivity — evidence the industry is converging on
+this idea, not evidence against it. The comparison above is scoped to the
+reactive primitive's allocation policy and inheritance composability, not
+a verdict on Angular the framework, which brings routing, forms, and a
+decade of production hardening ivue does not have.
+
 ## What a model layer requires — and where it comes from
 
 None of this was bolted on for models; each requirement is an engine
