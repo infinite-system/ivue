@@ -53,7 +53,8 @@ export default defineConfig({
         items: [
           { text: 'Why v2', link: '/guide/introduction#ivue-v1-vs-v2' },
           { text: 'Migrate from v1', link: '/guide/migration' },
-          { text: 'Performance', link: '/guide/performance' },
+          { text: 'The Standard (cheatsheet)', link: '/guide/standard' },
+            { text: 'Performance', link: '/guide/performance' },
         ],
       },
     ],
@@ -86,6 +87,7 @@ export default defineConfig({
           text: 'Going Deeper',
           collapsed: false,
           items: [
+            { text: 'The Standard (cheatsheet)', link: '/guide/standard' },
             { text: 'Performance', link: '/guide/performance' },
             { text: 'Migrating from v1', link: '/guide/migration' },
           ],
