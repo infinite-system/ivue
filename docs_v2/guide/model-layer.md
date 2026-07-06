@@ -1,17 +1,17 @@
 ---
 title: The Reactive Model Layer
-description: "Vue has state solutions at two scales — component-scoped composables and singleton stores. ivue adds the missing third: a domain model of thousands of live entities inside Vue reactivity, at plain-object prices."
+description: 'Vue has state solutions at two scales — component-scoped composables and singleton stores. ivue adds the missing third: a domain model of thousands of live entities inside Vue reactivity, at plain-object prices.'
 ---
 
 # The Reactive Model Layer
 
 Vue's ecosystem answers "where does state live?" at exactly two scales:
 
-| scale | tool | shape |
-| --- | --- | --- |
-| component-scoped | composables | a bag of refs per component instance |
-| app-wide singletons | Pinia stores | one reactive object per concern |
-| **many live entities** | **—** | *(the gap)* |
+| scale                  | tool         | shape                                |
+| ---------------------- | ------------ | ------------------------------------ |
+| component-scoped       | composables  | a bag of refs per component instance |
+| app-wide singletons    | Pinia stores | one reactive object per concern      |
+| **many live entities** | **—**        | _(the gap)_                          |
 
 Nothing serves the third scale: **a domain model** — ten thousand rows,
 a hundred thousand spreadsheet cells, every node in an editor graph — where
@@ -23,35 +23,42 @@ to close it.
 
 It isn't a missing library; it's an allocation policy. A composable is a
 closure — every `ref()` and `computed()` inside it **must** allocate at
-call time, per instance. Measured (Vue 3.5, an entity shape of 10 refs +
-60 derived values):
+call time, per instance. Measured end-to-end on a virtualized grid
+(composable-per-cell vs. an ivue class vs. a non-reactive POJO control;
+full protocol and machine notes in `demo/grid/RESULTS.md`):
 
-| model built from | heap per entity | 100k entities |
-| --- | --- | --- |
-| composables, eager `computed()` | 31.1 KB | **~3 GB** |
-| composables, plain closures | 12.8 KB | ~1.3 GB |
-| **ivue class** | **1.7 KB touched / ~0.15 KB untouched** | **~15–20 MB** |
+| model built from                  | 100k cells | 1M cells    | marginal cost   |
+| --------------------------------- | ---------- | ----------- | --------------- |
+| composable, eager `computed()`    | 77.3 MB    | 757.7 MB    | 756 B/cell      |
+| **ivue class**                    | **5.7 MB** | **41.7 MB** | **40.0 B/cell** |
+| plain POJO (non-reactive control) | 4.5 MB     | 40.5 MB     | 40.0 B/cell     |
 
-At entity counts, eager allocation is not slow — it is *excluded*. Which
-is why every serious big-model Vue app makes the same move: **exile the
-model from reactivity.** Plain POJOs, hand-rolled dirty tracking, a
-custom recompute engine — and Vue demoted to a paint layer over it. (This
-is how production web spreadsheets are actually built.)
+This is a lean cell (one input Ref, a handful of derived values, one hot
+formula promoted to `computed()`) — real spreadsheet cells tend to carry
+more derived state, which widens the gap further. Even at this modest
+shape, the composable model is already most of a gigabyte at 1M rows: not
+technically impossible to allocate, but expensive enough — in heap,
+in GC pauses, in the stampede every sort/filter/paste re-triggers — that
+it dictates the rest of the architecture. Which is why every serious
+big-model Vue app makes the same move: **exile the model from
+reactivity.** Plain POJOs, hand-rolled dirty tracking, a custom recompute
+engine — and Vue demoted to a paint layer over it. (This is how
+production web spreadsheets are actually built.)
 
-Virtualization does not rescue the composable model: it caps *mounted
-components*, but a model outlives the viewport — formulas reference
+Virtualization does not rescue the composable model: it caps _mounted
+components_, but a model outlives the viewport — formulas reference
 off-screen entities, sorting touches every row, an edited entity's state
 must survive scrolling away. The model exists at full size no matter what
 the DOM does. So the fork, before ivue, was:
 
 1. **Reactive model** → gigabytes at entity scale.
-2. **Plain-data model** → tractable memory, but Vue reactivity is *gone*
+2. **Plain-data model** → tractable memory, but Vue reactivity is _gone_
    from the model. No `watch` on an entity. No derived values. You write
    your own dependency engine.
 
 ## The natural rebuttal: just lazy-load the composable cells
 
-A fair objection to the fork above: option 1 doesn't have to be *eager*.
+A fair objection to the fork above: option 1 doesn't have to be _eager_.
 Keep a plain-data backing store (the arm-C floor below), materialize
 composable cells only around the viewport, and evict them as they scroll
 away. Memory solved — reactivity kept. Right?
@@ -64,8 +71,8 @@ higher cost:
   contract — never lose a write in the gap between them. This is a
   database buffer pool, hand-built inside a view-model.
 - **An identity crisis.** A `watch()` attached to an evicted cell's ref
-  dies silently. The cell that scrolls back into view is a *different
-  object* — every watcher, every equality check, every selection
+  dies silently. The cell that scrolls back into view is a _different
+  object_ — every watcher, every equality check, every selection
   reference across an eviction boundary quietly breaks.
 - **The formula hole.** `SUM(A1:A25000)` touches 25,000 cells regardless
   of the viewport. Either the formula forces mass materialization (the
@@ -75,7 +82,7 @@ higher cost:
   through the side door you just built.
 
 Every one of these mechanisms is real engineering — it's what production
-web spreadsheets actually do. And every line of it exists *solely* to work
+web spreadsheets actually do. And every line of it exists _solely_ to work
 around eager allocation cost.
 
 An ivue instance is that lazy overlay, built into the object itself, for
@@ -88,11 +95,11 @@ the floor. Measured end-to-end on a 1,000,000-cell virtualized grid (composable 
 ivue vs. a non-reactive POJO control; full protocol, machine notes, and
 raw numbers in `demo/grid/RESULTS.md` in this repository):
 
-| | marginal heap per added cell | at 1M cells |
-| --- | --- | --- |
-| composable, eager | 756 B/cell | 757.7 MB |
-| **ivue** | **40.0 B/cell** | **41.7 MB** |
-| plain POJO (non-reactive control) | 40.0 B/cell | 40.5 MB |
+|                                   | marginal heap per added cell | at 1M cells |
+| --------------------------------- | ---------------------------- | ----------- |
+| composable, eager                 | 756 B/cell                   | 757.7 MB    |
+| **ivue**                          | **40.0 B/cell**              | **41.7 MB** |
+| plain POJO (non-reactive control) | 40.0 B/cell                  | 40.5 MB     |
 
 **ivue's marginal cost matches the non-reactive POJO to the byte.** An
 unrendered ivue cell is, for memory purposes, indistinguishable from a
@@ -100,7 +107,7 @@ plain object that was never going to be reactive at all — except it is.
 That is what "no eviction policy required" means in a number: there is
 nothing worth reclaiming.
 
-The one place this doesn't fully dissolve: at some scale the *data*
+The one place this doesn't fully dissolve: at some scale the _data_
 itself — not the reactivity graph — outgrows a single tab, and needs
 server-backed windowing. That is true identically in every architecture.
 ivue's contribution is that the reactive layer is never the reason you get
@@ -117,32 +124,45 @@ the entities you actually look at materialize exactly the Refs they use.
 
 ```ts
 // cell.ts — one spreadsheet cell, one of 100,000
-import { computed, ref } from 'vue'
-import { Reactive } from 'ivue'
+import { computed, ref } from 'vue';
+import { Reactive } from 'ivue';
 
 class $Cell {
-  constructor(public sheet: Sheet.Instance, public key: string) {}
+  constructor(
+    public sheet: Sheet.Instance,
+    public key: string,
+  ) {}
 
-  get raw() { return ref('') }            // what the user typed
-  get editing() { return ref(false) }
+  get raw() {
+    return ref('');
+  } // what the user typed
+  get editing() {
+    return ref(false);
+  }
 
   // hot path, real dependency graph -> promoted to computed():
   // memoized, watchable, and equality-stops propagation
   get value() {
-    return computed(() => evaluate(this.raw.value, this.sheet))
+    return computed(() => evaluate(this.raw.value, this.sheet));
   }
 
   // everything else: plain getters — zero bytes per cell, re-derived
   // on read, reactive through leaf tracking
-  get display() { return format(this.value.value) }
-  get isFormula() { return this.raw.value.startsWith('=') }
-  get cssClass() { return this.isFormula ? 'cell--formula' : 'cell--plain' }
+  get display() {
+    return format(this.value.value);
+  }
+  get isFormula() {
+    return this.raw.value.startsWith('=');
+  }
+  get cssClass() {
+    return this.isFormula ? 'cell--formula' : 'cell--plain';
+  }
 }
 
 export namespace Cell {
-  export const $Class = $Cell
-  export const Class = Reactive($Cell)
-  export type Instance = typeof Class.Instance
+  export const $Class = $Cell;
+  export const Class = Reactive($Cell);
+  export type Instance = typeof Class.Instance;
 }
 ```
 
@@ -153,11 +173,11 @@ model is live:
 ```ts
 // anywhere — a cell is watchable like any Vue source,
 // including its PLAIN getters (leaf tracking, no wrapper needed):
-watch(() => grid.cell('B7').display, syncToServer)
+watch(() => grid.cell('B7').display, syncToServer);
 
 // the formula engine subscribes to exactly the cells a formula reads,
 // because computed() collects real dependencies:
-grid.cell('C1').raw.value = '=SUM(A1:A99999)'
+grid.cell('C1').raw.value = '=SUM(A1:A99999)';
 ```
 
 The per-member policy is the part no other pattern offers: `value` pays
@@ -170,23 +190,24 @@ work. **You choose the price per member, per class — not per app.**
 None of this was bolted on for models; each requirement is an engine
 invariant doing double duty:
 
-| a model layer needs | the invariant that provides it |
-| --- | --- |
-| thousands of cheap instances | lazy materialization — construction is plain `new` |
-| entity hierarchies across files | prototype-level idempotent `Reactive()`, `super` fidelity |
-| entities referencing each other | namespace exports — circular imports resolve at first access |
-| watch any entity, any derived value | leaf tracking — plain getters are valid `watch` sources |
-| stable handles for hot paths | per-member `computed()` promotion |
-| deterministic disposal | `$stopEffects` + the lazy per-instance scope |
-| survives every proxy boundary | raw anchoring + the `Instance` typing law |
+| a model layer needs                 | the invariant that provides it                               |
+| ----------------------------------- | ------------------------------------------------------------ |
+| thousands of cheap instances        | lazy materialization — construction is plain `new`           |
+| entity hierarchies across files     | prototype-level idempotent `Reactive()`, `super` fidelity    |
+| entities referencing each other     | namespace exports — circular imports resolve at first access |
+| watch any entity, any derived value | leaf tracking — plain getters are valid `watch` sources      |
+| stable handles for hot paths        | per-member `computed()` promotion                            |
+| deterministic disposal              | `$stopEffects` + the lazy per-instance scope                 |
+| survives every proxy boundary       | raw anchoring + the `Instance` typing law                    |
 
-## Boundaries — where this claim does *not* apply
+## Boundaries — where this claim does _not_ apply
 
 - **Singletons don't care.** One settings store with sixty computeds is
   31 KB, total. Keep using Pinia for app-wide concerns; the model layer is
-  for *populations* of entities.
+  for _populations_ of entities.
 - **Data is not reduced.** The strings, numbers and ASTs your entities hold
-  cost the same everywhere — the ~50× is the *reactivity graph share*.
+  cost the same everywhere — the measured 13–18× (19× marginal, per cell)
+  is the _reactivity graph share_, on top of identical data.
 - **Promote sparingly.** Turn every plain getter into `computed()` and you
   have rebuilt the eager model, byte for byte. The win is the default,
   not the engine alone.
@@ -196,7 +217,7 @@ invariant doing double duty:
 > **ivue makes the model layer a first-class citizen of Vue reactivity —
 > 100,000 live entities for the price of plain objects.**
 
-It is the only arrangement where the *whole* model stays inside Vue's
+It is the only arrangement where the _whole_ model stays inside Vue's
 reactivity at plain-data prices: reactive-model Vue pays gigabytes,
 plain-model Vue pays with hand-rolled dirty tracking, ivue pays neither.
 The [performance page](/guide/performance) has the measured receipts; the
