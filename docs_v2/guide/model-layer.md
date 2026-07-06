@@ -332,6 +332,142 @@ memory. The comparison is scoped to what happens as that pattern scales:
 more derived values, more subclass levels, more places a dependency edge
 can be missed.
 
+## What about MobX?
+
+MobX is the library most associated with "classes plus observables" —
+arguably ivue's closest spiritual ancestor. Its recommended default,
+`makeAutoObservable(this)` in the constructor, is measured the same way
+(full protocol in
+[`bench/model-layer-comparison/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/bench/model-layer-comparison/RESULTS.md)):
+
+|                                            | bytes/cell | creation, 100k cells |
+| ------------------------------------------ | ---------: | -------------------: |
+| MobX, `makeAutoObservable`                 |      3,706 |           249–297 ms |
+| **ivue**, 1 `computed()` + 3 plain getters |     **24** |       **0.8–1.1 ms** |
+| plain POJO (fields actually assigned)      |         64 |           1.2–1.7 ms |
+
+**~154× less memory than MobX — heavier than Angular, and by a wide
+margin the slowest arm measured anywhere in this comparison, Angular
+included.** The reason is structural, not incidental: `makeAutoObservable`
+has to _introspect_ `this` at construction — walk its own properties and
+its prototype's getters, and classify each one as observable, computed,
+or a plain method — for every single instance, every time. Angular's
+fields and Svelte's compiled runes both pay a fixed per-field allocation;
+MobX pays a runtime classification cost _on top of_ allocation, which is
+why it's not just heavier but categorically slower to construct than
+everything else measured.
+
+Inheritance is where MobX's default API stops being usable at all:
+
+```js
+class Base {
+  a = 1;
+  constructor() {
+    makeAutoObservable(this);
+  }
+  get total() {
+    return this.a + 10;
+  }
+}
+class Sub extends Base {
+  b = 2;
+  constructor() {
+    super();
+    makeAutoObservable(this);
+  }
+  get total() {
+    return super.total + this.b + 100;
+  }
+}
+
+new Sub();
+// [MobX] 'makeAutoObservable' can only be used for
+// classes that don't have a superclass
+```
+
+That's not a bug report — it's MobX's own documented restriction, thrown
+immediately, on every subclass, unconditionally. There is an escape
+hatch: `makeObservable(this, { total: computed })` in `Base`, and
+`makeObservable(this, { total: override })` in `Sub`, does compose
+correctly (`total` re-derives to the right value after a base-level
+write). But it costs exactly the ceremony you'd expect — every subclass
+must explicitly re-declare an annotation for every inherited member it
+touches, using MobX's own `override` marker, at every level of the
+hierarchy, forever.
+
+Credit where due: refusing outright is more honest than Angular's silent
+clobbering — nobody ships a MobX class hierarchy that quietly loses data
+without noticing the thrown error first. But it means MobX's flagship
+ergonomic feature, `makeAutoObservable`, is unavailable the moment a
+model needs inheritance at all — precisely the shape a domain model
+layer needs most.
+
+## What about Svelte 5's runes in classes?
+
+Svelte 5 added universal reactivity — `$state`/`$derived` work inside a
+plain class, not just inside a component, a real documented feature
+("universal reactivity"), and the closest thing to ivue's own bet that
+any mainstream framework currently ships. Same protocol, same machine
+(full detail in the same
+[`bench/model-layer-comparison/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/bench/model-layer-comparison/RESULTS.md)):
+
+|                                            | bytes/cell | creation, 100k cells |
+| ------------------------------------------ | ---------: | -------------------: |
+| Svelte 5, `$state`/`$derived`              |        880 |             20–22 ms |
+| **ivue**, 1 `computed()` + 3 plain getters |     **24** |       **0.8–1.1 ms** |
+| plain POJO (fields actually assigned)      |         64 |           1.2–1.7 ms |
+
+**~37× less memory, ~20–27× faster creation.** Lighter than Angular or
+MobX by a wide margin, and the mechanism is visible in what the compiler
+actually emits. Source:
+
+```js
+class Cell {
+  raw = $state('');
+  value = $derived(this.raw + '!');
+}
+```
+
+Compiled output (excerpt):
+
+```js
+class Cell {
+  #raw = $.state('');
+  get raw() {
+    return $.get(this.#raw);
+  }
+  set raw(v) {
+    $.set(this.#raw, v, true);
+  }
+  #value = $.derived(() => this.raw + '!');
+  get value() {
+    return $.get(this.#value);
+  }
+}
+```
+
+The compiler lowers every rune field to a **real prototype getter/setter**
+— not a raw field the way Angular's source stays. That single choice is
+why Svelte is the _only other arm in this whole comparison, besides ivue,
+that composes correctly across inheritance_: `super.total` resolves
+through the prototype exactly like a native getter, and because the
+underlying `$derived` is a genuine reactive computation — not a
+hand-maintained dirty flag — it re-derives correctly on its own. Verified
+live: after a base-level write, a subclass's derived total updates from
+113 to 117, no staleness, no manual wiring, no thrown error.
+
+What the compiler doesn't change is _when_ the underlying signal gets
+allocated. `#raw` and `#value` are still private class fields — real
+per-instance storage, declared upfront in the class body — so
+`$.state()`/`$.derived()` run at construction for every instance, whether
+the getter is ever touched or not. Compiling away the ergonomics of
+writing runes as fields doesn't compile away the timing of allocation;
+only ivue's lazy, first-access materialization does that. Put plainly:
+**Svelte 5 is the one framework that got the inheritance half of this
+argument right independently** — proof the industry can arrive at
+"getters, not fields" without a runtime prototype transform at all. It
+just hasn't (yet) made the other half — laziness — free.
+
 ## What a model layer requires — and where it comes from
 
 None of this was bolted on for models; each requirement is an engine
