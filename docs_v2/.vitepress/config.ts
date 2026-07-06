@@ -51,7 +51,8 @@ export default defineConfig({
       {
         text: 'v2',
         items: [
-          { text: 'The Standard (cheatsheet)', link: '/guide/standard' },
+          { text: 'The Reactive Model Layer', link: '/guide/model-layer' },
+            { text: 'The Standard (cheatsheet)', link: '/guide/standard' },
             { text: 'Performance', link: '/guide/performance' },
         ],
       },
@@ -85,6 +86,7 @@ export default defineConfig({
           text: 'Going Deeper',
           collapsed: false,
           items: [
+            { text: 'The Reactive Model Layer', link: '/guide/model-layer' },
             { text: 'The Standard (cheatsheet)', link: '/guide/standard' },
             { text: 'Performance', link: '/guide/performance' },
           ],
