@@ -103,11 +103,14 @@ any number of getters deep and passes straight through the expose surface
 (verified live in production). The only hard rule: the source must be the
 **function form** — `() => inst.x`, never `inst.x`.
 
-## Watch
+## `$watch`
 
-Use the engine-injected **`this.$watch`** to react to changes. It has the same
-signature as Vue's `watch`, but registers the watcher in the instance's effect
-scope so [`$stopEffects`](/guide/teardown) can clean it up.
+**For watchers on instances that live outside a component.** Inside
+`setup()`, plain `watch()` is fine — the component scope owns and stops it.
+But a module singleton, or an instance created in a callback or async code,
+has no component scope; a plain `watch()` there leaks. `this.$watch` is the
+fix: same signature as Vue's `watch`, registered in the instance's own lazy
+effect scope, torn down by [`$stopEffects`](/guide/teardown).
 
 ```ts
 class $Search {
@@ -124,15 +127,9 @@ class $Search {
 }
 ```
 
-::: tip Which watcher, where
-An instance created during a component's `setup()` can use plain `watch()` /
-`watchEffect()` freely — Vue's component scope owns watchers created
-synchronously there and stops them on unmount. `$watch` / `$watchEffect`
-exist for everything else: instances that **outlive a component** (module
-singletons, entities created in callbacks or async code) register into the
-instance's own scope, so `$stopEffects()` tears them down deterministically.
-Never wrap a `watchEffect` inside `$watch` — `$watchEffect` is the
-symmetric primitive.
+::: tip
+Need effect-style instead of source/callback? Use
+[`$watchEffect`](#watcheffect) — never wrap a `watchEffect` inside `$watch`.
 :::
 
 ## `$watchEffect`
