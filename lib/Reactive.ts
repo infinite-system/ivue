@@ -244,8 +244,7 @@ export function Reactive<C extends new (...args: any) => any>(
     });
 
     /**
-     * Register a watchEffect in the same lazy per-instance scope. The
-     * symmetric primitive to $watch — never wrap watchEffect inside $watch.
+     * Register a watchEffect in the same lazy per-instance scope.
      */
     defineProperty(targetClass.prototype, $watchEffect, {
       enumerable: false,

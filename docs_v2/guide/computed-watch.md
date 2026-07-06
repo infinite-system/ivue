@@ -129,7 +129,7 @@ class $Search {
 
 ::: tip
 Need effect-style instead of source/callback? Use
-[`$watchEffect`](#watcheffect) — never wrap a `watchEffect` inside `$watch`.
+[`$watchEffect`](#watcheffect).
 :::
 
 ## `$watchEffect`

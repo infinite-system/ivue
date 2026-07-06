@@ -47,8 +47,7 @@ The effect scope is allocated on the first `$watch`/`$watchEffect` only.
 ## `instance.$watchEffect(effect, options?)`
 
 Vue's `watchEffect`, registered in the same lazy per-instance scope.
-Returns the stop handle. Never wrap a `watchEffect` inside `$watch` —
-this is the symmetric primitive.
+Returns the stop handle.
 
 ```ts
 inst.$watchEffect(() => render(inst.w.value, inst.h.value))
