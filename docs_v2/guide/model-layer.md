@@ -463,10 +463,86 @@ per-instance storage, declared upfront in the class body — so
 the getter is ever touched or not. Compiling away the ergonomics of
 writing runes as fields doesn't compile away the timing of allocation;
 only ivue's lazy, first-access materialization does that. Put plainly:
-**Svelte 5 is the one framework that got the inheritance half of this
-argument right independently** — proof the industry can arrive at
-"getters, not fields" without a runtime prototype transform at all. It
-just hasn't (yet) made the other half — laziness — free.
+**Svelte 5 is the one framework with classes that got the inheritance
+half of this argument right independently** — proof the industry can
+arrive at "getters, not fields" without a runtime prototype transform at
+all. It just hasn't (yet) made the other half — laziness — free.
+
+## What about Solid.js?
+
+Solid.js is famously the leanest fine-grained reactive engine in the JS
+ecosystem — often at the top of render/DOM-update benchmarks — so it's
+the sharpest test of this whole argument. One wrinkle first: **Solid has
+no class-based reactivity idiom at all.** There's no `signal()` or `ref()`
+to attach to a field; Solid's own docs use plain factory functions, and
+even distinguish an unmemoized "derived signal" (a plain function) from
+`createMemo` (for expensive derivations) — the _exact same plain-vs-memoized
+split ivue makes_, arrived at independently. So the fair comparison isn't
+a class — it's Solid's own idiom, a factory function, benchmarked the same
+way (full protocol in
+[`bench/model-layer-comparison/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/bench/model-layer-comparison/RESULTS.md)):
+
+|                                            | bytes/cell | creation, 100k cells |
+| ------------------------------------------ | ---------: | -------------------: |
+| Solid.js, `createMemo` + 3 plain functions |        985 |             16–23 ms |
+| **ivue**, 1 `computed()` + 3 plain getters |     **24** |       **0.7–1.1 ms** |
+| plain POJO (fields actually assigned)      |         64 |           1.3–2.5 ms |
+
+**~41× less memory than Solid** — and this is the one genuinely
+surprising number in the entire comparison: Solid lands _heavier than
+Svelte 5_, despite using ivue's own philosophy and despite its reputation.
+The reason isn't a knock on Solid's engine — it's the factory-function
+idiom itself:
+
+```js
+function createSolidCell() {
+  const [raw, setRaw] = createSignal('');
+  const value = createMemo(() => raw() + '!'); // the one hot value
+  const display = () => value().toUpperCase(); // plain function
+  // …
+  return { raw, setRaw, value, display /* … */ };
+}
+```
+
+Every call allocates a fresh set of closures — `raw`, `setRaw`, `value`,
+and every plain-function derivation — because a closure captures its own
+scope on every invocation. A class getter is defined **once**, on the
+prototype, shared by every instance that will ever exist; a closure is
+defined **fresh, per call, forever**. That's the same tax Vue's own
+composables pay (measured on `demo/grid`), and it's intrinsic to
+factory-function authoring, not specific to Solid. On top of that,
+`createMemo` still allocates a real computation node per instance — the
+same allocate-at-construction policy Angular's fields and Svelte's
+compiled backing fields share.
+
+Solid's design point is components — many short-lived signals, created
+and torn down with the DOM nodes that own them, read very often over a
+short lifetime. A model layer is the opposite shape: comparatively few
+reads, but potentially millions of long-lived instances. Solid simply
+has no authoring surface built for that shape, because it has no
+classes at all.
+
+Inheritance doesn't apply in the usual sense either, and that's not a
+weakness — it's a different answer to the same question. Composition in
+Solid happens by one factory function calling another and reading its
+return value:
+
+```js
+function createSub() {
+  const base = createBase();
+  const [b, setB] = createSignal(2);
+  const total = createMemo(() => base.total() + b() + 100);
+  return { ...base, b, setB, total };
+}
+```
+
+There's no class to clobber, so this composes correctly by construction —
+Solid's tracking is based on which signals are _actually read_, not on
+any class or `super` mechanism. Verified live: a base-level write
+propagates correctly through to the composed total, no staleness, no
+special handling required. The tradeoff is everything classes buy
+elsewhere — polymorphism, method overriding, one shared type across a
+hierarchy — which factory composition doesn't offer by design.
 
 ## What a model layer requires — and where it comes from
 
