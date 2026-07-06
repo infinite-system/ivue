@@ -7,7 +7,7 @@ description: 'ivue builds Vue 3 reactivity from plain TypeScript classes. One ki
 
 **ivue** (Infinite Vue) builds Vue 3 reactivity out of plain TypeScript
 classes. Real inheritance. Real encapsulation. Real polymorphism. The whole
-engine is **1,052 bytes gzipped** with zero dependencies.
+engine is **1.1kb gzipped** with zero dependencies.
 
 `Reactive()` transforms a class's prototype **once**:
 

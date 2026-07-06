@@ -1,2 +1,1 @@
-export * from './ivue';
-// export * from './Reactive';
+export * from './Reactive';

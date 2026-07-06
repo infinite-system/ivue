@@ -9,7 +9,7 @@ features:
   - title: Zero-cost creation
     details: Instances are plain objects. State materializes on first access. Creation runs 55 to 253× faster than the alternatives.
   - title: One kilobyte
-    details: 1,052 bytes gzipped. Zero dependencies. 100% test coverage. Small enough to read in one sitting.
+    details: 1.1kb gzipped. Zero dependencies. 100% test coverage. Small enough to read in one sitting.
   - title: Store or ViewModel
     details: The same class serves as a global store, a component ViewModel, or a domain model. One mental model everywhere.
   - title: Composition API, fully compatible
@@ -27,7 +27,7 @@ features:
 <cite>Antoine de Saint-Exupéry</cite>
 
 <div class="ix-stats">
-  <div class="ix-stat"><div class="n">1,052 B</div><div class="l">the whole engine, gzipped</div></div>
+  <div class="ix-stat"><div class="n">1.1kb</div><div class="l">the whole engine, gzipped</div></div>
   <div class="ix-stat"><div class="n">0</div><div class="l">dependencies</div></div>
   <div class="ix-stat"><div class="n">100%</div><div class="l">test coverage, every metric</div></div>
   <div class="ix-stat"><div class="n">50 ms</div><div class="l">to create 10 million instances</div></div>

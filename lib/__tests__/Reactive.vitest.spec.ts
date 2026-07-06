@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { Ref } from 'vue';
 import {
   computed,
   nextTick,
@@ -119,9 +120,9 @@ describe('Reactive()', () => {
         get x() {
           return this._b; // returns the ref → cached, no de-opt
         }
-        set x(v: number) {
-          sets.push(v);
-          this._b.value = v; // standard setter writes through
+        set x(v: number | Ref<number>) {
+          sets.push(v as number);
+          this._b.value = v as number; // standard setter writes through
         }
       }
       const inst: any = new (Reactive(WithSetter))();
@@ -543,8 +544,8 @@ describe('Reactive()', () => {
             (x) => x.toString() === 'Symbol(ivue_raw)',
           ),
       );
-      // at least the four tag-cells + base must coexist
-      expect(Object.getOwnPropertySymbols(d).length).toBeGreaterThanOrEqual(5);
+      // at least the four tag Refs + base must coexist (RAW pointer excluded)
+      expect(symbols.length).toBeGreaterThanOrEqual(5);
     });
 
     it('super method calls chain through 3 levels', () => {
@@ -628,8 +629,8 @@ describe('Reactive()', () => {
         get y() {
           return ref(5); // returns Ref...
         }
-        set y(_v: number) {
-          // ...but setter is "standard" (doesn't accept a Ref)
+        set y(_v: number | Ref<number>) {
+          // ...but setter is "standard" (treats the value as a number)
         }
       }
       Reactive(Conflict);
@@ -660,7 +661,7 @@ describe('Reactive()', () => {
         get y() {
           return ref(5);
         }
-        set y(_v: number) {}
+        set y(_v: number | Ref<number>) {}
       }
       Reactive(ProdConflict);
       expect(warn).not.toHaveBeenCalled();
