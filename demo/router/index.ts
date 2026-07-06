@@ -4,6 +4,9 @@ import WatchDemo from '../components/WatchDemo.vue';
 import IvueBenchmark from '../components/IvueBenchmark.vue';
 import ClassComposableBenchmark from '../components/ClassComposableBenchmark.vue';
 import ComposableBenchmark from '../components/ComposableBenchmark.vue';
+import GridComposable from '../grid/GridComposable.vue';
+import GridIvue from '../grid/GridIvue.vue';
+import GridPojo from '../grid/GridPojo.vue';
 
 const routes = [
   {
@@ -31,6 +34,21 @@ const routes = [
     path: '/composable-benchmark',
     name: 'ComposableBenchmark',
     component: ComposableBenchmark,
+  },
+  {
+    path: '/grid-composable',
+    name: 'GridComposable',
+    component: GridComposable,
+  },
+  {
+    path: '/grid-ivue',
+    name: 'GridIvue',
+    component: GridIvue,
+  },
+  {
+    path: '/grid-pojo',
+    name: 'GridPojo',
+    component: GridPojo,
   },
 ];
 

@@ -30,6 +30,27 @@ const cards = [
     title: 'Native Composable',
     desc: 'The idiomatic Vue 3 baseline — a factory eagerly creating ref()/computed() per instance. The reference point for both engines.',
   },
+  {
+    to: '/grid-ivue',
+    tag: 'grid · ivue',
+    accent: 'indigo',
+    title: 'Grid — ivue Model',
+    desc: '100,000-cell virtualized spreadsheet. Each cell is a Reactive() class $Cell: ref-getter + plain getters + one hot computed. Lazy, tens of MB.',
+  },
+  {
+    to: '/grid-composable',
+    tag: 'grid · composable',
+    accent: 'sky',
+    title: 'Grid — Composable Model',
+    desc: 'The same 100,000-cell grid, but every cell eagerly builds a ref + four computeds. Idiomatic composable-per-entity — and hundreds of MB.',
+  },
+  {
+    to: '/grid-pojo',
+    tag: 'grid · floor',
+    accent: 'sky',
+    title: 'Grid — POJO Floor',
+    desc: 'The same grid as plain non-reactive objects. The memory floor both reactive arms are measured against.',
+  },
 ];
 
 const accentRing: Record<string, string> = {
