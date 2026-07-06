@@ -8,6 +8,7 @@ import DemoDerived from './components/DemoDerived.vue';
 import DemoInheritance from './components/DemoInheritance.vue';
 import DemoTeardown from './components/DemoTeardown.vue';
 import DemoPerf from './components/DemoPerf.vue';
+import GridBenchmark from './components/grid/GridBenchmark.vue';
 import './custom.css';
 
 export default {
@@ -24,5 +25,6 @@ export default {
     app.component('DemoInheritance', DemoInheritance);
     app.component('DemoTeardown', DemoTeardown);
     app.component('DemoPerf', DemoPerf);
+    app.component('GridBenchmark', GridBenchmark);
   },
 } satisfies Theme;

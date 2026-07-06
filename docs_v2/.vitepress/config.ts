@@ -23,10 +23,25 @@ export default defineConfig({
   head: [
     ['meta', { name: 'theme-color', content: '#6366f1' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:title', content: 'ivue — class-based reactivity for Vue 3' }],
-    ['meta', { property: 'og:description', content: 'Plain classes. Full reactivity. One kilobyte.' }],
+    [
+      'meta',
+      {
+        property: 'og:title',
+        content: 'ivue — class-based reactivity for Vue 3',
+      },
+    ],
+    [
+      'meta',
+      {
+        property: 'og:description',
+        content: 'Plain classes. Full reactivity. One kilobyte.',
+      },
+    ],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
-    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
+    [
+      'link',
+      { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+    ],
     [
       'link',
       {
@@ -52,8 +67,9 @@ export default defineConfig({
         text: 'v2',
         items: [
           { text: 'The Reactive Model Layer', link: '/guide/model-layer' },
-            { text: 'The Standard (cheatsheet)', link: '/guide/standard' },
-            { text: 'Performance', link: '/guide/performance' },
+          { text: 'Benchmarks', link: '/guide/benchmarks' },
+          { text: 'The Standard (cheatsheet)', link: '/guide/standard' },
+          { text: 'Performance', link: '/guide/performance' },
         ],
       },
     ],
@@ -87,6 +103,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'The Reactive Model Layer', link: '/guide/model-layer' },
+            { text: 'Benchmarks', link: '/guide/benchmarks' },
             { text: 'The Standard (cheatsheet)', link: '/guide/standard' },
             { text: 'Performance', link: '/guide/performance' },
           ],
