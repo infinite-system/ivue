@@ -20,7 +20,7 @@ import { ref, shallowRef, computed, toRef, type Ref } from 'vue';
 import { useProjectStore } from 'src/stores/project.store';
 
 class $Box {
-  // Constructor IS init — there is no init() method. Args are props/model/emit.
+  // Constructor runs in setup context — lifecycle hooks register here.
   // Lifecycle hooks + watchers registered here run in setup() context.
   constructor(
     public props: BoxProps,
