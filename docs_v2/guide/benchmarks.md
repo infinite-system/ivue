@@ -39,7 +39,7 @@ gc-forced or run in isolation. The numbers below are the controlled
 measurement: 3 runs per arm, median reported, headless Chromium, heap read
 via `window.gc()` ×3 + `performance.memory.usedJSHeapSize`, one fresh page
 load per arm. Full protocol, caveats and raw numbers in
-`demo/grid/RESULTS.md`.
+[`demo/grid/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/demo/grid/RESULTS.md).
 
 ### 100,000 cells (40 cols × 2,500 rows)
 
@@ -88,8 +88,9 @@ delta forces every cell's derived values to materialize once (the "all
 materialized" columns), for an apples-to-apples worst case. Repeated 3×,
 median reported. Full protocol, the machine spec, and every caveat (what the
 delta does and doesn't include, why heap is bit-stable but creation time
-varies run-to-run) are in `demo/grid/RESULTS.md`. The measurement script
-itself — reusable against your own machine — is `demo/grid/measure.mjs`:
+varies run-to-run) are in [`demo/grid/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/demo/grid/RESULTS.md). The measurement
+script itself — reusable against your own machine — is
+[`demo/grid/measure.mjs`](https://github.com/infinite-system/ivue/blob/main/demo/grid/measure.mjs):
 
 ```bash
 # from the ivue repo root

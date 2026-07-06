@@ -79,7 +79,7 @@ class $Box {
     }); // writable computed = the ONLY way to pair a get+set on one member
   }
 
-  // STORE / COMPOSABLE — `$`-getter caches WHOLE, forever, per instance (A9).
+  // STORE / COMPOSABLE — `$`-getter caches WHOLE, forever, per instance.
   // Resolves on first touch (after Pinia/app ready); circular-import safe.
   private get $project() {
     return useProjectStore();

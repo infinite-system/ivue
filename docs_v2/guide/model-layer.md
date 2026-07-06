@@ -25,7 +25,7 @@ It isn't a missing library; it's an allocation policy. A composable is a
 closure — every `ref()` and `computed()` inside it **must** allocate at
 call time, per instance. Measured end-to-end on a virtualized grid
 (composable-per-cell vs. an ivue class vs. a non-reactive POJO control;
-full protocol and machine notes in `demo/grid/RESULTS.md`):
+full protocol and machine notes in [`demo/grid/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/demo/grid/RESULTS.md)):
 
 | model built from                  | 100k cells | 1M cells    | marginal cost   |
 | --------------------------------- | ---------- | ----------- | --------------- |
@@ -93,7 +93,7 @@ instance forever. And a whole-column formula just reads `.value` through
 a million cells, live, because the cells are already there, resting at
 the floor. Measured end-to-end on a 1,000,000-cell virtualized grid (composable vs.
 ivue vs. a non-reactive POJO control; full protocol, machine notes, and
-raw numbers in `demo/grid/RESULTS.md` in this repository):
+raw numbers in [`demo/grid/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/demo/grid/RESULTS.md)):
 
 |                                   | marginal heap per added cell | at 1M cells |
 | --------------------------------- | ---------------------------- | ----------- |
@@ -191,7 +191,7 @@ Angular is the framework most associated with class-oriented, fine-grained
 reactivity, so it's a fair question. Measured directly — same machine,
 identical cell shape (one raw value, four derived values chained off it,
 one memoized, never read; full protocol, machine notes, and a reproducible
-script in `bench/angular-comparison/RESULTS.md` in this repository):
+script in [`bench/angular-comparison/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/bench/angular-comparison/RESULTS.md)):
 
 |                                            | bytes/cell | creation, 100k cells |
 | ------------------------------------------ | ---------: | -------------------: |
@@ -232,9 +232,9 @@ declaration doesn't override the first, it just clobbers it on the
 instance. This isn't an Angular bug — it's what happens to _any_ reactive
 primitive declared as a field rather than a getter, in any framework. ivue
 getters are real prototype members, so `super.x.value` composes across as
-many subclass levels as the model needs (invariant A7, "Inheritance &
-`super` fidelity," in `lib/Reactive.invariants.md`) — the getter placement
-is the whole difference.
+many subclass levels as the model needs ("Inheritance & `super` fidelity"
+in [`lib/Reactive.invariants.md`](https://github.com/infinite-system/ivue/blob/main/lib/Reactive.invariants.md)) — the getter placement is the whole
+difference.
 
 One more shape of the same idea: Angular's dependency injection has a
 real, documented escape hatch for circular references between injectables

@@ -23,7 +23,7 @@ proxies, hot-reload, and circular imports.
 ::: info Source
 A cleaned version of the in-repo spec at
 [`lib/Reactive.invariants.md`](https://github.com/infinite-system/ivue/blob/main/lib/Reactive.invariants.md).
-Tests live in `lib/__tests__/Reactive.vitest.spec.ts` (100% statements / branches /
+Tests live in [`lib/__tests__/Reactive.vitest.spec.ts`](https://github.com/infinite-system/ivue/blob/main/lib/__tests__/Reactive.vitest.spec.ts) (100% statements / branches /
 functions / lines).
 :::
 

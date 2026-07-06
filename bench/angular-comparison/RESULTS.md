@@ -88,9 +88,9 @@ This is not a defect specific to Angular — it is what happens to _any_
 reactive primitive declared as a class field rather than a class getter,
 in any framework. ivue's getters are real prototype members, so
 `super.x.value` composes across as many subclass levels as needed (see
-[`lib/Reactive.invariants.md`](../../lib/Reactive.invariants.md), invariant
-A7, "Inheritance & `super` fidelity") — the getter placement is the whole
-difference.
+"Inheritance & `super` fidelity" in
+[`lib/Reactive.invariants.md`](../../lib/Reactive.invariants.md)) — the
+getter placement is the whole difference.
 
 ## Scope
 

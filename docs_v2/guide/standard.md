@@ -6,11 +6,12 @@ description: The complete ivue operating manual — annotated class and SFC temp
 # The Standard — ivue Operating Manual
 
 This page is the library's operating manual, verbatim. It is the same
-document we ship to AI coding agents as the `/ivue` skill
-(`.claude/skills/ivue/SKILL.md`) — because the instructions that make an
-agent write correct ivue turn out to be exactly the reference a human
-wants open in a second tab. Everything here is production-proven; the
-*why* behind each rule lives in the guide chapters.
+document we ship to AI coding agents as the `/ivue` skill —
+[`.claude/skills/ivue/SKILL.md`](https://github.com/infinite-system/ivue/blob/main/.claude/skills/ivue/SKILL.md)
+— because the instructions that make an agent write correct ivue turn out
+to be exactly the reference a human wants open in a second tab. Everything
+here is production-proven; the _why_ behind each rule lives in the guide
+chapters.
 
 # ivue (`Reactive`) — Operating Manual
 
@@ -88,7 +89,7 @@ class $Box {
     }); // writable computed = the ONLY way to pair a get+set on one member
   }
 
-  // STORE / COMPOSABLE — `$`-getter caches WHOLE, forever, per instance (A9).
+  // STORE / COMPOSABLE — `$`-getter caches WHOLE, forever, per instance.
   // Resolves on first touch (after Pinia/app ready); circular-import safe.
   private get $project() {
     return useProjectStore();
@@ -158,14 +159,14 @@ defineExpose(box as Box.Instance);
 | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `class $X` + `export namespace X { $Class; Class = Reactive($X); Instance }` | export a bare `Reactive(class {...})` for anything that grows a parent/dependent       |
 | mutable state = `get x() { return ref(v) }`                                  | put mutable state in a plain field — writes trigger nothing                            |
-| read/write Refs/Computeds with `.value` inside the class AND in templates             | write `this.x = v` / `box.x = v` for a Ref/Computed — it clobbers the ref or no-ops            |
+| read/write Refs/Computeds with `.value` inside the class AND in templates    | write `this.x = v` / `box.x = v` for a Ref/Computed — it clobbers the ref or no-ops    |
 | derive with a PLAIN getter                                                   | wrap every derivation in `computed()` — pays ~300 bytes/instance for nothing           |
 | `computed()` only for expensive / render-suppressing / stable-handle needs   | reach for `computed()` by default                                                      |
 | inject stores via `private get $store() { return useStore() }`               | `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles |
 | `new X.Class(props, emit)` — raw instance everywhere                         | wrap in `reactive(inst)` or any shallow-unwrap view as the standard                    |
 | destructure ONLY `ref="el"` targets                                          | destructure plain getters — snapshots a dead value                                     |
 | `defineExpose(box as X.Instance)`                                            | `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers       |
-| constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — ivue never calls it                         |
+| constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — ivue never calls it                       |
 
 ## 4. The unwrapping-surface typing law
 
@@ -190,12 +191,12 @@ until mount — use `?.` in watch getters).
 
 ### Common compile errors → fixes
 
-| Error / symptom                                                                                             | Fix                                                      |
-| ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `Cannot assign to 'x' because it is a read-only property` (on an exposed/`reactive()`/template-ref surface) | type that surface through `X.Instance`                   |
+| Error / symptom                                                                                             | Fix                                                              |
+| ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `Cannot assign to 'x' because it is a read-only property` (on an exposed/`reactive()`/template-ref surface) | type that surface through `X.Instance`                           |
 | `Type 'boolean' is not assignable to type 'Ref<boolean>'`                                                   | missing `.value` on a Ref/Computed write — `x.flag.value = true` |
-| `'X' is possibly null` on a template ref in a watch getter                                                  | add `?.` — `watch(() => x.el.value?.foo, cb)`            |
-| template write crashes / no-ops at runtime on the raw instance                                              | you wrote `x.Ref/Computed = v`; write `x.Ref/Computed.value = v`         |
+| `'X' is possibly null` on a template ref in a watch getter                                                  | add `?.` — `watch(() => x.el.value?.foo, cb)`                    |
+| template write crashes / no-ops at runtime on the raw instance                                              | you wrote `x.Ref/Computed = v`; write `x.Ref/Computed.value = v` |
 
 ## 5. Watch rules
 
