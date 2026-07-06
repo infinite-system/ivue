@@ -192,7 +192,7 @@ reactivity, so it's a fair question. Measured directly — same machine,
 identical cell shape (one raw value, four derived values chained off it,
 one memoized, never read; full protocol, machine notes, and a reproducible
 script in
-[`bench/angular-comparison/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/bench/angular-comparison/RESULTS.md)):
+[`bench/model-layer-comparison/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/bench/model-layer-comparison/RESULTS.md)):
 
 |                                            | bytes/cell | creation, 100k cells |
 | ------------------------------------------ | ---------: | -------------------: |
@@ -264,7 +264,7 @@ baseline isn't a framework at all: it's a hand-rolled class with manual
 dirty-flag caching, the pattern a competent developer actually writes.
 Same protocol as above, same machine, same cell shape (full detail in the
 same
-[`bench/angular-comparison/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/bench/angular-comparison/RESULTS.md)):
+[`bench/model-layer-comparison/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/bench/model-layer-comparison/RESULTS.md)):
 
 |                                            | bytes/cell | creation, 100k cells |
 | ------------------------------------------ | ---------: | -------------------: |

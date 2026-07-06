@@ -7,9 +7,36 @@
 
 import { signal, computed } from '@angular/core';
 import { ref, computed as vueComputed } from 'vue';
+import { makeAutoObservable } from 'mobx';
+import { SvelteCell } from './svelte-cell.compiled.mjs';
 import { Reactive } from '../../dist/index.es.js';
 
 const N = 100_000;
+
+// --- Arm E: MobX, idiomatic usage — makeAutoObservable(this) in the
+// constructor, the API MobX's own docs recommend by default. It introspects
+// the instance at construction time to classify every member (observable /
+// computed / action), which is exactly the per-instance "scan and build"
+// cost a prototype-transform engine (ivue) never pays — ivue transforms the
+// PROTOTYPE once; MobX instruments each INSTANCE, every time.
+class MobxCell {
+  raw = '';
+  constructor() {
+    makeAutoObservable(this);
+  }
+  get value() {
+    return this.raw + '!';
+  }
+  get display() {
+    return this.value.toUpperCase();
+  }
+  get isEmpty() {
+    return this.raw.length === 0;
+  }
+  get cssClass() {
+    return this.isEmpty ? 'empty' : 'filled';
+  }
+}
 
 // --- Arm A: Angular Signals, idiomatic usage (fields, per the Angular docs) ---
 class AngularCell {
@@ -141,13 +168,17 @@ if (!global.gc) {
 
 console.log(`N = ${N.toLocaleString()} cells, node ${process.version}\n`);
 
+bench('MobX (makeAutoObservable)', MobxCell);
 bench('Angular signals (4 eager computed)', AngularCell);
+bench('Svelte 5 runes ($state/$derived)', SvelteCell);
 bench('ivue class (1 computed, never read)', IvueCell);
 bench('Vanilla (manual dirty-flag, no library)', VanillaCell);
 bench('Plain POJO (fields assigned)', PlainCell);
 
 console.log('\n--- second pass (warm, JIT-settled) ---');
+bench('MobX (makeAutoObservable)', MobxCell);
 bench('Angular signals (4 eager computed)', AngularCell);
+bench('Svelte 5 runes ($state/$derived)', SvelteCell);
 bench('ivue class (1 computed, never read)', IvueCell);
 bench('Vanilla (manual dirty-flag, no library)', VanillaCell);
 bench('Plain POJO (fields assigned)', PlainCell);
