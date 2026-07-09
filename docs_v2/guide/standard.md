@@ -372,7 +372,53 @@ Same law at three granularities — nothing exists until observed: getters
 price MEMBERS, keyed collections price KEYS. (Proven at 20M cells / 4.7
 bytes each — see the flyweight grid.)
 
-## 10. Self-review checklist (run over your ivue diff)
+## 10. Spacing is information
+
+Contiguity says "same kind of thing"; a blank line says "the kind changes,
+or complexity rises." Spend the signal deliberately — a blanket
+newline-between-everything rule makes air mean nothing.
+
+```ts
+// state block — CONTIGUOUS: reads as the instance's STATE TABLE
+get sheet() {
+  return shallowRef<Sheet | null>(null);
+}
+get scrollTop() {
+  return ref(0);
+}
+get editing() {
+  return ref<{ row: number; col: number } | null>(null);
+}
+
+// derived block — contiguous: the windowing math as ONE visual unit
+get totalHeight() {
+  return Math.min(this.naturalHeight, MAX_SCROLL_HEIGHT);
+}
+get startRow() {
+  return Math.max(0, Math.floor(this.virtualTop / ROW_HEIGHT) - OVERSCAN);
+}
+
+/** A doc comment needs air — blank line before it. */
+get offsetY() {
+  return this.scrollTop.value - (this.virtualTop - this.startRow * ROW_HEIGHT);
+}
+```
+
+- **Declaration-like getters** (state refs, one-expression deriveds):
+  contiguous within their group — a `get x() { return ref(0) }` is morally
+  a field, and fields read as a struct-like table you absorb at a glance.
+  The GROUP is the unit, not the member.
+- **Blank line the moment a member carries a doc comment or multi-line
+  logic** — comments and paragraphs of code need air.
+- **Blank line + `// ---- section ----` banner between categories**
+  (state → derived → methods) — the boundary that actually matters.
+- **Methods: always separated** — they are paragraphs, not table rows.
+
+Not machine-enforceable (linters can't tell a ref-getter from a method, and
+Prettier expands getters past the single-line exemptions) — hold it as a
+convention and check it in review.
+
+## 11. Self-review checklist (run over your ivue diff)
 
 - [ ] Every mutable state member is `get x() { return ref(...) }` — no mutable plain fields.
 - [ ] Inside the class, every Ref/Computed read/write uses `.value`; plain fields are constants/config only.
@@ -388,3 +434,4 @@ bytes each — see the flyweight grid.)
 - [ ] Every `computed()`/constructor-watch CALLBACK delegates to a method (`computed(() => this.recalc())`) — no logic inlined in reactive closures; the arrow form, never `computed(this.method)`.
 - [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices and specs included — no single-letter names, no name meaning different things in different methods.
 - [ ] Keyed/sparse state uses the Map-of-refs shape (get-or-create on read, peek-only bump on write, explicit release path) — never one getter per key, never a deep `reactive()` collection.
+- [ ] Spacing carries meaning: declaration-like getters contiguous within their group; blank lines only where a doc comment / multi-line body / category boundary begins; methods always separated.
