@@ -105,6 +105,10 @@ export default defineConfig({
           items: [
             { text: 'Operating Manual', link: '/guide/standard' },
             { text: 'The Reactive Model Layer', link: '/guide/model-layer' },
+            {
+              text: 'The Engine Under the Idiom',
+              link: '/guide/engine-under-the-idiom',
+            },
             { text: 'Performance', link: '/guide/performance' },
             { text: 'Benchmarks', link: '/guide/benchmarks' },
           ],
