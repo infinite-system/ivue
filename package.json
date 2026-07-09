@@ -16,6 +16,10 @@
   "scripts": {
     "dev": "vite demo --host",
     "dev:demo": "vite demo --host",
+    "dev:flyweight": "vite sketch/flyweight-grid --host",
+    "build:flyweight": "vite build sketch/flyweight-grid",
+    "preview:flyweight": "vite preview sketch/flyweight-grid --host",
+    "measure:flyweight": "node sketch/flyweight-grid/measure.mjs",
     "dev:docs": "npm --prefix docs_v2 run dev -- --port 5174",
     "test": "vitest --coverage.enabled=true --reporter=verbose --ui",
     "coverage": "vitest run --coverage",
