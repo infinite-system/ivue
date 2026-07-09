@@ -1,6 +1,6 @@
 ---
 title: Benchmarks
-description: 'A live, in-browser 100k/1M-cell virtualized grid — the same model built three ways (composable, ivue, plain POJO) — plus the measured heap and creation-time numbers behind the claim.'
+description: 'A live, in-browser 100k/1M-cell virtualized grid — the same model built three ways (composable, ivue, plain POJO) — plus a working 100k-cell spreadsheet with real Excel formulas whose dependency graph Vue discovers by itself.'
 ---
 
 # Benchmarks
@@ -77,6 +77,76 @@ Both reactive arms pass live reactivity verification in every run: editing a
 cell after scrolling away and back re-renders the new value and its row's Σ
 recomputes. The POJO arm's edit mutates the data but does not re-render —
 reported, not asserted, since it has no reactivity by design.
+
+## The formula grid: real formulas, discovered dependencies
+
+The grids above prove the memory claim with a toy derivation. The formula
+grid replaces the toy cell with a real one: a working spreadsheet whose cells
+hold **actual Excel-formula syntax** — `=A1+B2`, `=SUM(A1:D1)`,
+`=IF(A1>0,B1,C1)` — parsed and evaluated by the real
+[`fast-formula-parser`](https://www.npmjs.com/package/fast-formula-parser)
+package (280 Excel-compatible functions, not a stub).
+
+The load-bearing fact: **there is no hand-built dependency graph anywhere.**
+Each cell's `value` is the one `computed()`; the shared parser's
+`onCell`/`onRange` hooks read referenced cells' `value.value` *while that
+computed is evaluating*, so Vue records those reads as its dependencies. Edit
+a cell and every dependent formula invalidates and recomputes, cascading
+through the graph, with no manual invalidation call. This is the
+[formula hole](/guide/model-layer) closed: the model stays at full size, at
+the memory floor, and whole-range formulas just read through it.
+
+And it is not 100k trivial formulas: **52.5% of the 100,000 cells are
+cross-referencing formulas** — arithmetic, `SUM`/`AVERAGE` ranges,
+conditionals, a 50-row running-sum cascade, a cross-column mesh.
+
+### The numbers (3 runs, median, same protocol)
+
+| Metric                        | Formula grid | Toy ivue grid |
+| ----------------------------- | -----------: | ------------: |
+| Model heap (virtualized)      |  **8.36 MB** |       5.70 MB |
+| Bytes/cell (virtualized)      |           84 |            57 |
+| Model heap (all materialized) |     48.11 MB |      40.30 MB |
+| Creation time                 |      17.1 ms |       11.4 ms |
+| Verification                  | **ALL PASS** |          pass |
+
+**At 1M cells (virtualized):** 68.41 MB — **68 B/cell**, created in 104 ms,
+with a marginal cost of ~67 B per added cell.
+
+The +27 B/cell over the toy grid is accounted for, not hand-waved: the
+formula **strings themselves** (52,500 formulas averaging ~13 chars are
+simply longer than `-142.39` — real formulas are real bytes) and one `sheet`
+back-pointer per cell. The materialized delta (+5.15 MB) is the **actual
+dependency graph**: each formula computed subscribes to 1–4 other cells'
+computeds — live cross-cell edges at ~100 B per formula cell. That is the
+feature, priced honestly. Even carrying real formula text and a live
+dependency graph, the formula grid virtualizes to **8.4 MB — still ~9× under
+the composable arm's 77.3 MB for the toy cell**.
+
+### What the verification proves
+
+Every check runs in Playwright against the live DOM, asserted on every run:
+
+- **Evaluation is correct** — `=SUM(A1:D1)`, `=AVERAGE(A1:D1)` and friends
+  produce the arithmetic truth; bad references and `1/0` yield the real
+  `#VALUE!` / `#DIV/0!` errors.
+- **Conditional dependencies shift.** For `=IF(A1>0, B1, C1)`, the dependency
+  set Vue tracks is `{A1, C1}` while A1 < 0 and **provably shifts** to
+  `{A1, B1}` when A1 crosses zero — editing the off-branch cell leaves the
+  formula untouched; editing the live branch moves it.
+- **The cascade is live in the DOM.** Editing one input updated a running-sum
+  cell five links down the chain in the rendered page, with no manual
+  re-render.
+
+Full write-up, machine notes, honest-cost accounting and caveats:
+[`demo/formula/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/demo/formula/RESULTS.md).
+
+```bash
+# from the ivue repo root — the interactive playground
+npx vite demo --host --port 5182     # then open /grid-formula
+node demo/formula/measure.mjs http://localhost:5182         # 100k protocol
+node demo/formula/measure.mjs http://localhost:5182 25000   # 1M cells
+```
 
 ## Methodology
 

@@ -91,7 +91,10 @@ second representation to synchronize, no eviction to schedule, no watcher
 that dies at a boundary — the instance a watcher attaches to is the
 instance forever. And a whole-column formula just reads `.value` through
 a million cells, live, because the cells are already there, resting at
-the floor. Measured end-to-end on a 1,000,000-cell virtualized grid (composable vs.
+the floor — proven by a working
+[100k-cell spreadsheet with real Excel formulas](/guide/benchmarks#the-formula-grid-real-formulas-discovered-dependencies)
+whose dependency graph Vue discovers on its own.
+Measured end-to-end on a 1,000,000-cell virtualized grid (composable vs.
 ivue vs. a non-reactive POJO control; full protocol, machine notes, and
 raw numbers in [`demo/grid/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/demo/grid/RESULTS.md)):
 
