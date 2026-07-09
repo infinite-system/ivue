@@ -297,6 +297,46 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
     sheet.write(0, 0, old === null ? '' : String(old));
   });
 
+  it('viewport eviction releases far rows; kept + re-observed rows stay correct', () => {
+    // Materialize formulas in two far-apart bands.
+    const nearE = num(sheet.valueAt(1000, 4)); // E1001 (band A: rows ~1000)
+    void sheet.valueAt(800_000, 4); // E800001 (band B: far away)
+    const beforeEvict = sheet.stats().formulaComputeds;
+
+    // Keep band A (with margin); band B must be released.
+    const released = sheet.evictOutsideRows(500, 2000);
+    expect(released).toBeGreaterThan(0);
+    expect(sheet.stats().formulaComputeds).toBeLessThan(beforeEvict);
+
+    // KEPT cell still live: its input edit still propagates.
+    let runs = 0;
+    const stop = watch(
+      () => sheet.valueAt(1000, 4),
+      () => runs++,
+      { flush: 'sync' },
+    );
+    const oldA = sheet.rawAt(1000, 0);
+    const oldNum = typeof oldA === 'number' ? oldA : 0;
+    sheet.write(1000, 0, String(oldNum + 3));
+    expect(runs).toBe(1);
+    expect(num(sheet.valueAt(1000, 4))).toBeCloseTo(nearE + 3, 8);
+    stop();
+    sheet.write(1000, 0, oldA === null ? '' : String(oldA));
+
+    // RELEASED cell re-materializes fresh and CORRECT — including a write
+    // that happened while it was unobserved (peek-only bump hit nothing).
+    const oldFarA = sheet.rawAt(800_000, 0);
+    const oldFarNum = typeof oldFarA === 'number' ? oldFarA : 0;
+    sheet.write(800_000, 0, String(oldFarNum + 7));
+    const farB = sheet.rawAt(800_000, 1);
+    const farBNum = typeof farB === 'number' ? farB : 0;
+    expect(num(sheet.valueAt(800_000, 4))).toBeCloseTo(
+      oldFarNum + 7 + farBNum,
+      8,
+    );
+    sheet.write(800_000, 0, oldFarA === null ? '' : String(oldFarA));
+  });
+
   it('release drops the overlay; ground truth and correctness survive', () => {
     const s1 = sheet.stats();
     expect(s1.fineRefs + s1.blockRefs + s1.formulaComputeds).toBeGreaterThan(0);

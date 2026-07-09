@@ -550,6 +550,41 @@ class $FlyweightSheet {
     }
   }
 
+  /**
+   * Viewport-tied eviction: release overlay entries (fine refs + formula
+   * computeds) for all rows OUTSIDE [keepStart, keepEnd]. Row-scoped and
+   * column-agnostic. Block refs are kept (bounded: ≤ blockCount × cols).
+   *
+   * SAFETY relies on dependency LOCALITY: a released fine ref / computed
+   * must not have live dependents outside the kept range. In this layout
+   * the longest dependency reach is the running-sum chain (RUNSUM_BLOCK =
+   * 50 rows), so callers must keep a margin ≥ that around the viewport.
+   * A production impl replaces this with refcounts; documented boundary.
+   *
+   * Correctness after release is by re-materialization: the next
+   * observation of a released cell creates a fresh ref/computed over the
+   * unchanged ground truth.
+   */
+  evictOutsideRows(keepStart: number, keepEnd: number): number {
+    let released = 0;
+    for (const [k, e] of this.formulaCache) {
+      const row = k % this.rows;
+      if (row < keepStart || row > keepEnd) {
+        e.stop();
+        this.formulaCache.delete(k);
+        released++;
+      }
+    }
+    for (const k of this.cellVersions.keys()) {
+      const row = k % this.rows;
+      if (row < keepStart || row > keepEnd) {
+        this.cellVersions.delete(k);
+        released++;
+      }
+    }
+    return released;
+  }
+
   /** Drop the entire overlay (watchers stopped). Ground truth untouched. */
   releaseAll(): void {
     for (const e of this.formulaCache.values()) e.stop();

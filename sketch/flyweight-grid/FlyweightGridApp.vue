@@ -7,7 +7,7 @@
  * census (fine refs / block refs / formula computeds) is live in the header:
  * watch it stay tiny while you scroll a 20M-cell document.
  */
-import { computed, onMounted, ref, shallowRef } from 'vue';
+import { computed, onMounted, ref, shallowRef, watch } from 'vue';
 import './grid.css';
 import {
   COLS,
@@ -84,6 +84,27 @@ const visibleRows = computed(() => {
     rows.push({ r, cells });
   }
   return rows;
+});
+
+/**
+ * Viewport-tied eviction: as the window moves, release overlay entries for
+ * rows far outside it (margin 512 rows ≫ the 50-row running-sum reach, the
+ * layout's longest dependency). Debounced so a fast flick doesn't thrash;
+ * memory stays O(viewport) instead of O(rows-ever-visited).
+ */
+const EVICT_MARGIN_ROWS = 512;
+let evictTimer: ReturnType<typeof setTimeout> | null = null;
+watch(startRow, () => {
+  if (evictTimer) clearTimeout(evictTimer);
+  evictTimer = setTimeout(() => {
+    const s = sheet.value;
+    if (!s) return;
+    s.evictOutsideRows(
+      Math.max(0, startRow.value - EVICT_MARGIN_ROWS),
+      endRow.value + EVICT_MARGIN_ROWS,
+    );
+    pollCensus();
+  }, 300);
 });
 
 // --- observation census (polled — it's diagnostics, not model state) ---
