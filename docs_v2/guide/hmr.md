@@ -21,7 +21,9 @@ replacement of a **class under its live instances**.)_
 | ------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | a **method** body                                 | live instances run the new code on the next call — state intact                                    |
 | a **derived getter**                              | recomputes with the new logic on the next read — state intact                                      |
-| an **added / removed member**                     | appears on / disappears from live instances immediately                                            |
+| an **added member**                      | appears on live instances immediately                                   |
+| a **removed member**                     | tombstoned in dev (keeps its last implementation) so stale closures never crash; gone after remount/reload |
+| an **inlined `computed(...)` body** or a **`$`-singleton** | owning components remount automatically — a graft cannot reach closures already cached on instances |
 | a **ref-getter initializer** (`ref(5)`→`ref(10)`) | live instances _keep their current state_ (that's the point); new instances start at the new value |
 | a **class field** or **constructor**              | only the _owning components_ remount; replacements are built by the new constructor                |
 | a **template** (`.vue`)                           | Vue's own re-render — state intact (unchanged)                                                     |
@@ -127,9 +129,22 @@ classic contract untouched: same class in, same class out.
 - **Ref-getter initializer edits apply forward-only.** Live state is
   deliberately preserved; remount (navigate away/back) when you want the new
   initial value on the current screen.
-- **Computeds with inlined logic** hold their old closure until the instance
-  is recreated. Thin computeds that delegate to methods — already the ivue
-  convention — pick up new behavior instantly, because methods graft.
+- **Computeds with inlined logic can't be grafted** — the computed object
+  (and its closure) is cached per instance. The engine *detects* such edits
+  and automatically remounts the owners instead of leaving live instances
+  silently stale. Thin computeds that delegate to methods — already the
+  ivue convention — graft live with state preserved, because the closure is
+  just a pointer: `computed(() => this.recalc())` picks up a new `recalc`
+  instantly. The rule underneath: **closures freeze at creation; prototype
+  lookups stay live.** Keep logic where lookups can reach it.
+- **"Unthinning" is safe.** Moving logic from a method back into a computed
+  (deleting the method) is the nastiest edit shape: the old closure cached
+  on live instances still calls the deleted method. Removed members are
+  therefore tombstoned — the last implementation stays reachable until the
+  automatic remount converges — so this never throws.
+- **Changing a member's kind** (method ↔ getter) re-keys its per-instance
+  cache and remounts the owners — a cached bound method is not a ref, and
+  vice versa.
 - **Native `#private` fields** are brand-checked per class declaration and
   don't mix with grafting — use TypeScript `private` (the ivue convention).
 - **Inheritance chains** currently escalate instead of grafting.
