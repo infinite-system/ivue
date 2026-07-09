@@ -14,7 +14,9 @@
   "module": "./dist/index.es.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "vite dev --host",
+    "dev": "vite demo --host",
+    "dev:demo": "vite demo --host",
+    "dev:docs": "npm --prefix docs_v2 run dev -- --port 5174",
     "test": "vitest --coverage.enabled=true --reporter=verbose --ui",
     "coverage": "vitest run --coverage",
     "bench": "vitest bench --run",
@@ -22,8 +24,9 @@
     "cypress:headed": "cypress run --component --browser chrome --headed --no-exit",
     "build": "tsc --version;tsc --p ./tsconfig.json && vite build",
     "build:demo": "tsc --p ./tsconfig.json && vite build demo",
-    "dev:demo": "vite demo --host",
+    "build:docs": "npm --prefix docs_v2 run build",
     "preview:demo": "npm run build:demo && vite preview demo --host",
+    "preview:docs": "npm --prefix docs_v2 run preview",
     "release": "yarn build && yarn publish"
   },
   "peerDependencies": {
