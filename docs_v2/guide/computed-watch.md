@@ -12,8 +12,12 @@ A plain getter is already reactive.
 
 ```ts
 class $Cart {
-  get items() { return ref<{ price: number }[]>([]) }
-  get total() { return this.items.value.reduce((s, i) => s + i.price, 0) }
+  get items() {
+    return ref<{ price: number }[]>([]);
+  }
+  get total() {
+    return this.items.value.reduce((s, i) => s + i.price, 0);
+  }
 }
 ```
 
@@ -50,6 +54,48 @@ Each instance and each inheritance level caches its computed under a distinct
 key, so overrides and `super` never collide
 ([Inheritance](/guide/inheritance)).
 
+### Point the computed at a method
+
+Prefer the **thin** form: the computed is only the caching shell, and the
+logic lives in a method.
+
+```ts
+// ✅ THIN — the closure is a pointer; the logic lives on the prototype
+get sorted() {
+  return computed(() => this.sortItems())
+}
+sortItems() {
+  return [...this.items.value].sort(byPrice)
+}
+
+// ❌ FAT — the logic is frozen into a per-instance closure
+get sorted() {
+  return computed(() => [...this.items.value].sort(byPrice))
+}
+```
+
+A computed is a _cache_, not a home for logic — and the thin form is what
+makes that doctrine mechanical:
+
+- **Hot reload.** Closures freeze at creation; prototype lookups stay live.
+  Edit `sortItems` and every live instance runs the new code on the next
+  read — the old closure happily dials a method whose implementation was
+  swapped behind it. Edit a fat computed's body and the owning components
+  must remount, because no engine can reach inside a closure that is
+  already cached on your instances ([HMR](/guide/hmr)).
+- **Memory.** The thin closure captures nothing but the instance — a
+  pointer-sized hop to logic that exists **once per class** on the
+  prototype. A fat closure invites per-instance captures: any local you
+  reference from the getter's scope stays alive for as long as the
+  instance does. The thin form's footprint is the guaranteed minimum by
+  construction.
+- **Testability & reuse.** `inst.sortItems()` is directly callable in a
+  test and from other methods — no reactive plumbing required to exercise
+  the logic.
+
+Reactivity is unaffected: the method's reads (`this.items.value`) are
+tracked through the computed's evaluation exactly as if they were inlined.
+
 See both side by side — the plain getter re-derives freely while the
 computed's body only runs when its dependency actually changes:
 
@@ -62,36 +108,47 @@ You do not need a Ref or a Computed to watch a derived value.
 `reactive()` wrapper anywhere:
 
 ```ts
-import { watch } from 'vue'
-import { Reactive } from 'ivue'
+import { watch } from 'vue';
+import { Reactive } from 'ivue';
 
 class $Invoice {
-  get qty() { return ref(2) }
-  get price() { return ref(50) }
+  get qty() {
+    return ref(2);
+  }
+  get price() {
+    return ref(50);
+  }
 
   // plain getters — no Refs/Computeds of their own
-  get subtotal() { return this.qty.value * this.price.value }
-  get totalLabel() { return `$${(this.subtotal * 1.13).toFixed(2)}` }
+  get subtotal() {
+    return this.qty.value * this.price.value;
+  }
+  get totalLabel() {
+    return `$${(this.subtotal * 1.13).toFixed(2)}`;
+  }
 }
 export namespace Invoice {
-  export const $Class = $Invoice
-  export const Class = Reactive($Invoice)
-  export type Instance = typeof Class.Instance
+  export const $Class = $Invoice;
+  export const Class = Reactive($Invoice);
+  export type Instance = typeof Class.Instance;
 }
 
-const inv = new Invoice.Class()
+const inv = new Invoice.Class();
 
 // ✓ watching a plain getter on the RAW instance — fires on any leaf change
-watch(() => inv.totalLabel, (label) => console.log('total:', label))
+watch(
+  () => inv.totalLabel,
+  (label) => console.log('total:', label),
+);
 
-inv.qty.value = 3      // → "total: $169.50"
-inv.price.value = 40   // → "total: $135.60"
+inv.qty.value = 3; // → "total: $169.50"
+inv.price.value = 40; // → "total: $135.60"
 
 // ✓ also works through a component boundary (template ref / expose):
-watch(() => invoiceRef.value?.totalLabel, onTotalChange)
+watch(() => invoiceRef.value?.totalLabel, onTotalChange);
 
 // ✗ the ONE mistake: snapshotting — this passes a dead string, never fires
-watch(inv.totalLabel, onTotalChange)
+watch(inv.totalLabel, onTotalChange);
 ```
 
 Not intuitive, but structural: a watch **source is a function executed
@@ -114,15 +171,21 @@ effect scope, torn down by [`$stopEffects`](/guide/teardown).
 
 ```ts
 class $Search {
-  get query() { return ref('') }
-  get results() { return ref<string[]>([]) }
+  get query() {
+    return ref('');
+  }
+  get results() {
+    return ref<string[]>([]);
+  }
 
   constructor() {
     this.$watch(
       () => this.query.value,
-      (q) => { this.results.value = runSearch(q) },
+      (q) => {
+        this.results.value = runSearch(q);
+      },
       { debounce: 0 },
-    )
+    );
   }
 }
 ```
@@ -138,16 +201,15 @@ The `watchEffect` twin — same lazy per-instance scope, same teardown:
 
 ```ts
 this.$watchEffect(() => {
-  render(this.width.value, this.height.value)
-})
+  render(this.width.value, this.height.value);
+});
 ```
 
 `$watch` returns Vue's stop handle, so you can stop a single watcher without
 tearing down the instance:
 
 ```ts
-const stop = this.$watch(() => this.query.value, onChange)
+const stop = this.$watch(() => this.query.value, onChange);
 // ...later
-stop()
+stop();
 ```
-

@@ -14,9 +14,9 @@ small cost.
 Creating an instance is a plain `new`. Refs and computeds do not exist until
 you touch them. Measured on one machine:
 
-| creating 100k instances    | time       | ivue is           |
+| creating 100k instances    | time       | ivue is         |
 | -------------------------- | ---------- | --------------- |
-| **ivue `new Class()`**       | **0.7 ms** | —               |
+| **ivue `new Class()`**     | **0.7 ms** | —               |
 | native `reactive(new X())` | 36.7 ms    | **55× faster**  |
 | native composable factory  | 42.8 ms    | **64× faster**  |
 | v1 `ivue(Class)`           | 169 ms     | **253× faster** |
@@ -42,9 +42,9 @@ holds only the Refs it has actually materialized.
 Measured on Vue 3.5 with an identical shape — 10 state refs, 60 trivial
 derivations, one full read pass, 20k instances:
 
-| authoring style                    | heap per instance | ivue is             |
+| authoring style                    | heap per instance | ivue is           |
 | ---------------------------------- | ----------------- | ----------------- |
-| **ivue class — 60 plain getters**    | **1.7 KB**        | —                 |
+| **ivue class — 60 plain getters**  | **1.7 KB**        | —                 |
 | composable — 60 plain closures     | 12.8 KB           | **7.7× lighter**  |
 | composable — 60 eager `computed()` | 31.1 KB           | **18.6× lighter** |
 
@@ -65,6 +65,25 @@ This doesn't matter everywhere. A singleton store with 60 computeds costs
 Refs/Computeds. Use [`computed()`](/guide/computed-watch) where memoization
 or render suppression earns its ~300 bytes.
 
+The same rule extends to the computeds you _do_ cache: point them at
+methods — `computed(() => this.recalc())` — instead of inlining the logic.
+The per-instance closure is then a pointer-sized hop to code that exists
+once per class on the prototype, and it can never accidentally capture
+getter-scope locals that would otherwise live as long as the instance —
+the guaranteed-minimum footprint
+([the thin convention](/guide/computed-watch#point-the-computed-at-a-method)),
+and the shape that hot-reloads onto live instances ([HMR](/guide/hmr)).
+
+## The whole engine is ~1.1 kB
+
+The entire runtime — lazy ref-getters, method binding, inheritance/`super`
+resolution, teardown, `$watch`/`$watchEffect`, **and the full
+hot-reload-for-classes engine** — ships as **1.1 kB gzipped** (ES build).
+The HMR machinery costs production literally zero bytes: every call site is
+gated on the statically-replaceable `import.meta.env.DEV`, so bundlers
+dead-code-eliminate all of it — verified by grepping the built output, not
+assumed. Dev gets class grafting; prod gets the same 1.1 kB it always had.
+
 ## Reads cost a little more
 
 State lives behind a getter. Each `this.x.value` does a small indirection
@@ -76,7 +95,7 @@ On a hot loop dominated by reads, with identical bodies:
 | 10M method calls         | time    | per call |
 | ------------------------ | ------- | -------- |
 | native composable `fn()` | ~48 ms  | ~4.8 ns  |
-| ivue `inst.method()`       | ~240 ms | ~24 ns   |
+| ivue `inst.method()`     | ~240 ms | ~24 ns   |
 
 A method that hammers reactive state costs ~5× more per call than a native
 closure. **Method dispatch is not the cost.** The getter-indirected reads
