@@ -32,7 +32,7 @@ import {
   type Ref,
   type WatchStopHandle,
 } from 'vue';
-import { Reactive } from '../../../lib/Reactive';
+import { ivueHotUpdate, Reactive } from '../../../lib/Reactive';
 import {
   BLOCK_ROWS,
   BLOCK_SHIFT,
@@ -599,4 +599,12 @@ export namespace FlyweightSheet {
   export const $Class = $FlyweightSheet;
   export const Class = Reactive($FlyweightSheet);
   export type Instance = typeof Class.Instance;
+}
+
+if (import.meta.hot) {
+  // ivue HMR: edits to this module graft onto the LIVE sheet/cells — the
+  // 20M-cell ground truth, observation overlay and scroll position all
+  // survive while methods swap. The capability WASM engines structurally
+  // lack: their code and their memory die together.
+  import.meta.hot.accept((mod) => ivueHotUpdate?.(import.meta.hot, mod));
 }

@@ -83,6 +83,28 @@ to virtual offset (~2.4 : 1 at 1M rows). All 1,000,000 rows reachable,
 verified headless and by hand. Same f32 invariant the ivue virtual-scroller
 neutralizes with scroll-origin rebasing.
 
+## Hot-swapping the engine under the data (demonstrated)
+
+The flyweight model composes with ivue's class HMR into a capability that
+compiled/WASM engines structurally cannot offer — their code and their
+linear memory die together on rebuild; here, methods graft under typed
+arrays that never move. Demonstrated live on the dev server, one page,
+never reloaded:
+
+1. 20M-cell model created (63 ms), scrolled to row ~500,000;
+   `SUM(A1:A1000000)` = −92,541.84.
+2. `fastAggregate` edited ON DISK (every SUM +1,000,000) → Vite HMR →
+   ivue grafts onto the LIVE sheet. Page not reloaded, model intact,
+   scroll identical, observation census byte-identical.
+3. One cell edit → block invalidation → recompute through the GRAFTED
+   engine: total = 907,478.16 (baseline + 1,000,000 + the cell delta).
+4. Engine reverted on disk → second graft → original math returns on the
+   same living model: −92,520.84.
+
+Formula-engine iteration over live production-scale data, with zero state
+loss — the workflow a native/WASM charting or spreadsheet engine cannot
+have at any price.
+
 ## Where this architecture shines next
 
 The workload shape this sketch proves — **huge, fast-growing data; a tiny
