@@ -10,13 +10,23 @@ before every read, 3 runs, medians. Script: `measure.mjs`. Heap deltas were
 
 ## The numbers
 
-| Metric                                     |                                                       Value |
-| ------------------------------------------ | ----------------------------------------------------------: |
-| Model creation (20,000,000 cells)          |                                                 **68.3 ms** |
-| Model heap                                 |                                                **89.59 MB** |
-| **Bytes per cell**                         |                                                  **4.70 B** |
-| After visiting 30 viewports across 1M rows |                                100.15 MB (+10.6 MB overlay) |
-| Observation census after those 30 views    | 16,798 fine refs · 735 block refs · 9,130 formula computeds |
+| Metric                            | dev (pre-eviction) | **production (with eviction)** |
+| --------------------------------- | -----------------: | -----------------------------: |
+| Model creation (20,000,000 cells) |            68.3 ms |                    **67.1 ms** |
+| Model heap                        |           89.59 MB |                   **89.48 MB** |
+| **Bytes per cell**                |             4.70 B |                     **4.69 B** |
+| After 30 viewports across 1M rows |          100.15 MB |                   **89.78 MB** |
+| Census after those 30 views       | 16,798 fine · 9,130 computeds | **556 fine · 302 computeds** |
+
+**Memory is O(viewport), not O(rows-ever-visited)**: with debounced
+viewport-tied eviction (release rows outside window ± 512 — a margin ≫ the
+50-row running-sum reach, the layout's longest dependency), thirty
+far-apart viewports leave **+0.3 MB** of overlay — one window's worth.
+Released cells re-materialize correctly on re-observation, including writes
+made while they were unobserved (proven in the suite, 12/12). Dev vs prod
+being near-identical on creation/heap is itself informative: typed arrays
+don't care about dev-mode checks; prod mainly removes Vue's dev warnings
+and ivue's HMR slot indirection from hot call paths.
 
 Verified live in the DOM on every protocol run: bottom-row (row 1,000,000)
 arithmetic correct, a single-cell edit cascades into rendered dependents,
@@ -37,14 +47,19 @@ rest is one byte of kind tag plus (for data cells) eight bytes of Float64 —
 and it is still fully reactive, formula-capable, and editable the moment
 anything observes it.
 
-## What the +10.6 MB after scrolling is
+## Lifecycle: why eviction and not GC
 
-The observation overlay, priced per the design: ~9,130 formula computeds
-(≈1.2 KB each with their derived-write watchers) + 16,798 fine refs + 735
-block refs, accumulated across 30 far-apart viewports. This is the
-documented manual-eviction boundary — `releaseAll()`/`releaseFormula()`
-exist; a production impl ties release to viewport departure. Ground truth
-never grows.
+The overlay cannot garbage-collect on its own: the sheet's Maps hold strong
+references, and every formula computed carries its derived-write watcher —
+a permanent subscriber. Vue 3.5's lazy computeds are what make explicit
+eviction SAFE: when a row scrolls out, the component's render effect drops
+its subscription automatically, so stopping the bridge watcher and deleting
+the Map entry leaves the whole subgraph unreachable → collected.
+`evictOutsideRows` does exactly that on window movement (debounced), with a
+locality margin ≥ the longest dependency reach in the layout; refcounting
+is the production-grade generalization (documented boundary). Ground truth
+never grows either way — the pre-eviction dev column's +10.6 MB was purely
+this overlay accumulating (~350 KB per distinct viewport visited).
 
 ## Scroll-wall note (found live, fixed)
 
