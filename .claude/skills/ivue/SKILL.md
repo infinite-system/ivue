@@ -304,7 +304,65 @@ for (let r = r1; r <= r2; r++)        for (let row = startRow; row <= endRow; ro
 watch(c, (nv, ov) => …)               watch(value, (newValue, oldValue) => this.onChanged(…))
 ```
 
-## 9. Self-review checklist (run over your ivue diff)
+## 9. Keyed reactivity — the third state shape
+
+Ref-getters express NAMED members; `shallowRef` expresses wholesale-replaced
+structures. When state is KEYED — sparse, unbounded, indexed by ids or
+coordinates unknown until runtime (cells by (row,col), entities by id, rows
+of a stream) — a getter per key is impossible. Hold **collections of
+reactive primitives as plain values** and materialize per observation:
+
+```ts
+class $Sheet {
+  // Plain readonly fields — the COLLECTIONS aren't reactive; their VALUES are.
+  private readonly cellVersions = new Map<number, Ref<number>>();
+
+  /** READ path: get-OR-CREATE, then subscribe — observation materializes. */
+  private trackCell(cellKey: number): void {
+    let versionRef = this.cellVersions.get(cellKey);
+    if (!versionRef) {
+      versionRef = ref(0);
+      this.cellVersions.set(cellKey, versionRef);
+    }
+    void versionRef.value; // subscribes whatever effect is currently running
+  }
+
+  /** WRITE path: PEEK-ONLY — unobserved keys allocate nothing, notify no one. */
+  private bumpCell(cellKey: number): void {
+    const versionRef = this.cellVersions.get(cellKey);
+    if (versionRef) versionRef.value++;
+  }
+}
+```
+
+The read/write ASYMMETRY is the pattern: reads get-or-create (cost is priced
+by observation), writes peek (existence is free). Rules that keep it honest:
+
+- Ground truth lives in plain storage (typed arrays, Maps); the refs are
+  VERSION SIGNALS, not value holders — bump to invalidate, readers re-derive.
+- Per-key cached computeds follow the same shape (`Map<key, ComputedRef>`),
+  bodies delegating to methods (§7), and MUST have an explicit release/
+  eviction path — keyed overlays cannot GC on their own (the Map holds
+  strong refs; attached watchers subscribe permanently).
+- Coarse tiers are the same pattern at lower resolution: one ref covering
+  many keys (a block of rows, a whole-collection version counter) for
+  subscribers that span many keys — one integer where naive design puts a
+  million nodes.
+- No wrapper needed: `ref()`/`computed()` are first-class values from
+  `@vue/reactivity`; Maps of them inside a `Reactive()` class compose with
+  everything (methods stay bound, HMR grafts, `$watch` works).
+
+| state shape                  | expression                                            |
+| ---------------------------- | ----------------------------------------------------- |
+| named members                | `get x() { return ref(v) }`                           |
+| wholesale-replaced structure | `get rows() { return shallowRef<Row[]>([]) }`         |
+| keyed / sparse / unbounded   | `Map<key, Ref>` + get-or-create track, peek-only bump |
+
+Same law at three granularities — nothing exists until observed: getters
+price MEMBERS, keyed collections price KEYS. (Proven at 20M cells / 4.7
+bytes each — see the flyweight grid.)
+
+## 10. Self-review checklist (run over your ivue diff)
 
 - [ ] Every mutable state member is `get x() { return ref(...) }` — no mutable plain fields.
 - [ ] Inside the class, every Ref/Computed read/write uses `.value`; plain fields are constants/config only.
@@ -319,3 +377,4 @@ watch(c, (nv, ov) => …)               watch(value, (newValue, oldValue) => thi
 - [ ] Lifecycle hooks / init logic live in the constructor (no `init()` expecting auto-call); template refs guarded with `?.` where read pre-mount.
 - [ ] Every `computed()`/constructor-watch CALLBACK delegates to a method (`computed(() => this.recalc())`) — no logic inlined in reactive closures; the arrow form, never `computed(this.method)`.
 - [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices and specs included — no single-letter names, no name meaning different things in different methods.
+- [ ] Keyed/sparse state uses the Map-of-refs shape (get-or-create on read, peek-only bump on write, explicit release path) — never one getter per key, never a deep `reactive()` collection.

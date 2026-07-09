@@ -64,7 +64,9 @@ de-optimize to native prototype getters, and reads are tracked through
 whatever effect performs them. Create per render, drop on scroll, zero loss —
 the reactive state lives on the sheet's overlay, not on the facade.
 
-**3. A two-tier sparse overlay.** Fine per-cell version refs for point
+**3. A two-tier sparse overlay** (the
+[keyed-reactivity shape](/guide/state#keyed-reactivity-the-third-shape)).
+Fine per-cell version refs for point
 observers (rendered cells, single-cell formula references — conditional
 dependencies still shift with the executed branch); coarse per-4,096-row
 _block_ refs for large ranges — `=SUM(A1:A1000000)` costs **245 edges, not a

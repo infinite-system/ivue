@@ -149,3 +149,70 @@ class $Cache {
   read() { this.#hits++; return this.value.value }
 }
 ```
+
+## Keyed reactivity: the third shape
+
+Ref-getters express **named** state — members you can list when you author
+the class. `shallowRef` expresses **wholesale-replaced** structures. There is
+a third shape the getter syntax cannot reach: **keyed state** — sparse,
+unbounded, indexed by ids or coordinates unknown until runtime (cells of a
+sheet, rows of a stream, entities by id). You cannot write a getter per key.
+
+The pattern: hold **collections of reactive primitives as plain values**, and
+materialize them per observation.
+
+```ts
+class $Sheet {
+  // Plain readonly fields — the COLLECTIONS aren't reactive; their VALUES are.
+  private readonly cellVersions = new Map<number, Ref<number>>();
+
+  /** READ path: get-OR-CREATE, then subscribe — observation materializes. */
+  private trackCell(cellKey: number): void {
+    let versionRef = this.cellVersions.get(cellKey);
+    if (!versionRef) {
+      versionRef = ref(0);
+      this.cellVersions.set(cellKey, versionRef);
+    }
+    void versionRef.value; // subscribes whatever effect is currently running
+  }
+
+  /** WRITE path: PEEK-ONLY — unobserved keys allocate nothing, notify no one. */
+  private bumpCell(cellKey: number): void {
+    const versionRef = this.cellVersions.get(cellKey);
+    if (versionRef) versionRef.value++;
+  }
+}
+```
+
+The read/write **asymmetry is the pattern**: reads get-or-create (so cost is
+priced by observation), writes peek (so mere existence is free). Four rules
+keep it honest:
+
+- **Ground truth lives in plain storage** (typed arrays, Maps). The refs are
+  *version signals*, not value holders — bump to invalidate, let readers
+  re-derive from ground truth.
+- **Cached computeds per key** follow the same shape
+  (`Map<key, ComputedRef>`), with bodies that
+  [delegate to methods](/guide/computed-watch#point-the-computed-at-a-method)
+  and an **explicit release path** — keyed overlays cannot garbage-collect on
+  their own (the Map holds strong references; attached watchers subscribe
+  permanently), so eviction is part of the design, not an afterthought.
+- **Coarse tiers are the same pattern at lower resolution**: one ref covering
+  many keys — a 4,096-row block, or a single version counter for a whole
+  collection — for subscribers that span many keys. One integer where naive
+  design would put a million nodes.
+- **No wrapper needed.** `ref()`/`computed()` are first-class values from
+  `@vue/reactivity`; storing them in Maps inside a `Reactive()` class
+  composes with everything — methods stay bound, HMR grafts, `$watch` works.
+
+| state shape                    | expression                                              |
+| ------------------------------ | ------------------------------------------------------- |
+| named members                  | `get x() { return ref(v) }`                             |
+| wholesale-replaced structure   | `get rows() { return shallowRef<Row[]>([]) }`           |
+| keyed / sparse / unbounded     | `Map<key, Ref>` + get-or-create track, peek-only bump   |
+
+Each shape is the same law at a different granularity — *nothing exists
+until observed*: getters price **members**, keyed collections price
+**keys**. Proven at scale in
+[the Flyweight Pattern](/guide/flyweight): 20,000,000 live formula-capable
+cells at 4.7 bytes each, with the overlay evicted as observation moves.
