@@ -8,6 +8,10 @@ reactive. Nothing outside `sketch/flyweight-grid/` touched; `demo/formula/`
 reference only. Demo: `npx vite sketch/flyweight-grid --host`; measure:
 `node sketch/flyweight-grid/measure.mjs <url>`.
 
+The structural spec — reality vs chosen invariants and the impossibility
+boundary — lives in `Flyweight.invariants.md`; this document carries the
+mechanisms, `RESULTS.md` the measurements.
+
 ## The law this design descends from
 
 > **Everything costs proportional to what's observed; nothing costs
