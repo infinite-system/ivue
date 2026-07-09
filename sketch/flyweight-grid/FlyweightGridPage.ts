@@ -3,7 +3,9 @@
  * manual. The composition-API version of this logic carried seven
  * `computed()`s; under the doctrine exactly ONE survives (`visibleRows`,
  * render suppression) — every other derivation is a plain getter at zero
- * bytes per instance.
+ * bytes per instance. The one computed is THIN: its body is a pointer to
+ * `buildVisibleRows()`, so window-building logic hot-grafts onto the live
+ * page (closures freeze at creation; prototype lookups stay live).
  */
 import {
   computed,
@@ -29,7 +31,7 @@ import { FlyweightCell } from './model/FlyweightCell';
 import { FlyweightSheet } from './model/FlyweightSheet';
 
 export interface PageRow {
-  r: number;
+  row: number;
   cells: FlyweightCell.Instance[];
 }
 
@@ -52,18 +54,7 @@ class $FlyweightGridPage {
     // component scope owns and stops it on unmount.
     watch(
       () => this.startRow,
-      () => {
-        if (this.evictTimer) clearTimeout(this.evictTimer);
-        this.evictTimer = setTimeout(() => {
-          const s = this.sheet.value;
-          if (!s) return;
-          s.evictOutsideRows(
-            Math.max(0, this.startRow - EVICT_MARGIN_ROWS),
-            this.endRow + EVICT_MARGIN_ROWS,
-          );
-          this.pollCensus();
-        }, 300);
-      },
+      () => this.scheduleEviction(),
     );
 
     onMounted(() => {
@@ -95,7 +86,7 @@ class $FlyweightGridPage {
     return ref<HTMLElement | null>(null);
   }
   get editing() {
-    return ref<{ r: number; c: number } | null>(null);
+    return ref<{ row: number; col: number } | null>(null);
   }
   get draft() {
     return ref('');
@@ -141,9 +132,12 @@ class $FlyweightGridPage {
     return Math.max(0, Math.floor(this.virtualTop / ROW_HEIGHT) - OVERSCAN);
   }
   get endRow() {
-    const visible = Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT);
+    const visibleCount = Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT);
     return this.sheet.value
-      ? Math.min(this.sheet.value.rows, this.startRow + visible + OVERSCAN * 2)
+      ? Math.min(
+          this.sheet.value.rows,
+          this.startRow + visibleCount + OVERSCAN * 2,
+        )
       : 0;
   }
   /** Pin the window band under the physical scroll position (degenerates
@@ -162,52 +156,63 @@ class $FlyweightGridPage {
    * returns the same array instance and the v-for never re-patches.
    */
   get visibleRows(): ComputedRef<PageRow[]> {
-    return computed(() => {
-      const s = this.sheet.value;
-      if (!s) return [] as PageRow[];
-      const rows: PageRow[] = [];
-      for (let r = this.startRow; r < this.endRow; r++) {
-        const cells: FlyweightCell.Instance[] = new Array(COLS);
-        for (let c = 0; c < COLS; c++)
-          cells[c] = new FlyweightCell.Class(s, r, c);
-        rows.push({ r, cells });
-      }
-      return rows;
-    });
+    return computed(() => this.buildVisibleRows());
+  }
+
+  private buildVisibleRows(): PageRow[] {
+    const sheet = this.sheet.value;
+    if (!sheet) return [];
+    const pageRows: PageRow[] = [];
+    for (let row = this.startRow; row < this.endRow; row++) {
+      const cells: FlyweightCell.Instance[] = new Array(COLS);
+      for (let col = 0; col < COLS; col++)
+        cells[col] = new FlyweightCell.Class(sheet, row, col);
+      pageRows.push({ row, cells });
+    }
+    return pageRows;
   }
 
   /** Live full-column totals (block tier: 245 edges each). liveFormula is
    *  cached on the sheet, so rebuilding this array per render is pointer
    *  work — a plain getter suffices. */
-  get totals(): { label: string; c: ComputedRef<CellValue> }[] {
-    const s = this.sheet.value;
-    if (!s) return [];
+  get totals(): { label: string; total: ComputedRef<CellValue> }[] {
+    const sheet = this.sheet.value;
+    if (!sheet) return [];
+    const lastRow = sheet.rows;
     return [
-      { label: `SUM(A1:A${s.rows})`, c: s.liveFormula(`SUM(A1:A${s.rows})`) },
       {
-        label: `AVERAGE(B1:B${s.rows})`,
-        c: s.liveFormula(`AVERAGE(B1:B${s.rows})`),
+        label: `SUM(A1:A${lastRow})`,
+        total: sheet.liveFormula(`SUM(A1:A${lastRow})`),
       },
-      { label: `SUM(D1:D${s.rows})`, c: s.liveFormula(`SUM(D1:D${s.rows})`) },
+      {
+        label: `AVERAGE(B1:B${lastRow})`,
+        total: sheet.liveFormula(`AVERAGE(B1:B${lastRow})`),
+      },
+      {
+        label: `SUM(D1:D${lastRow})`,
+        total: sheet.liveFormula(`SUM(D1:D${lastRow})`),
+      },
     ];
   }
 
   get activeRef() {
-    const e = this.editing.value;
-    return e ? colLabel(e.c) + (e.r + 1) : '';
+    const editing = this.editing.value;
+    return editing ? colLabel(editing.col) + (editing.row + 1) : '';
   }
   get activeSource() {
-    const e = this.editing.value;
-    return e && this.sheet.value ? this.sheet.value.sourceAt(e.r, e.c) : '';
+    const editing = this.editing.value;
+    return editing && this.sheet.value
+      ? this.sheet.value.sourceAt(editing.row, editing.col)
+      : '';
   }
 
   // ------------------------------------------------------------ methods
   createModel() {
     this.editing.value = null;
-    const t0 = performance.now();
-    const s = new FlyweightSheet.Class(ROWS_1M, COLS);
-    this.creationMs.value = performance.now() - t0;
-    this.sheet.value = s;
+    const startedAt = performance.now();
+    const sheet = new FlyweightSheet.Class(ROWS_1M, COLS);
+    this.creationMs.value = performance.now() - startedAt;
+    this.sheet.value = sheet;
     this.pollCensus();
     // eslint-disable-next-line no-console
     console.log(
@@ -215,41 +220,55 @@ class $FlyweightGridPage {
     );
   }
 
-  onScroll(e: Event) {
-    this.scrollTop.value = (e.target as HTMLElement).scrollTop;
+  onScroll(event: Event) {
+    this.scrollTop.value = (event.target as HTMLElement).scrollTop;
   }
 
-  isEditing(r: number, c: number) {
-    const e = this.editing.value;
-    return !!e && e.r === r && e.c === c;
+  isEditing(row: number, col: number) {
+    const editing = this.editing.value;
+    return !!editing && editing.row === row && editing.col === col;
   }
 
   edit(cell: FlyweightCell.Instance) {
-    this.editing.value = { r: cell.row, c: cell.col };
+    this.editing.value = { row: cell.row, col: cell.col };
     this.draft.value = cell.source;
   }
 
   commitEdit() {
-    const e = this.editing.value;
-    if (e && this.sheet.value)
-      this.sheet.value.write(e.r, e.c, this.draft.value);
+    const editing = this.editing.value;
+    if (editing && this.sheet.value)
+      this.sheet.value.write(editing.row, editing.col, this.draft.value);
     this.editing.value = null;
   }
 
   pollCensus() {
-    const s = this.sheet.value;
-    if (s) this.census.value = s.stats();
+    const sheet = this.sheet.value;
+    if (sheet) this.census.value = sheet.stats();
   }
 
-  scrollToRow(r: number) {
-    const el = this.scrollEl.value;
-    if (!this.sheet.value || !el) return;
-    const px = (r * ROW_HEIGHT - VIEWPORT_HEIGHT / 2) / this.scrollScale;
+  scheduleEviction() {
+    if (this.evictTimer) clearTimeout(this.evictTimer);
+    this.evictTimer = setTimeout(() => {
+      const sheet = this.sheet.value;
+      if (!sheet) return;
+      sheet.evictOutsideRows(
+        Math.max(0, this.startRow - EVICT_MARGIN_ROWS),
+        this.endRow + EVICT_MARGIN_ROWS,
+      );
+      this.pollCensus();
+    }, 300);
+  }
+
+  scrollToRow(row: number) {
+    const scrollEl = this.scrollEl.value;
+    if (!this.sheet.value || !scrollEl) return;
+    const targetPx =
+      (row * ROW_HEIGHT - VIEWPORT_HEIGHT / 2) / this.scrollScale;
     const clamped = Math.max(
       0,
-      Math.min(px, this.totalHeight - VIEWPORT_HEIGHT),
+      Math.min(targetPx, this.totalHeight - VIEWPORT_HEIGHT),
     );
-    el.scrollTop = clamped;
+    scrollEl.scrollTop = clamped;
     this.scrollTop.value = clamped;
   }
 
@@ -262,18 +281,20 @@ class $FlyweightGridPage {
       hasModel: () => this.hasModel,
       creationMs: () => this.creationMs.value,
       stats: () => (this.sheet.value ? this.sheet.value.stats() : null),
-      scrollToRow: (r: number) => this.scrollToRow(r),
-      editCell: (r: number, c: number, v: string) =>
-        this.sheet.value?.write(r, c, v),
-      cellText: (r: number, c: number) => {
-        const el = document.querySelector(
-          `[data-grid-cell][data-row="${r}"][data-col="${c}"]`,
+      scrollToRow: (row: number) => this.scrollToRow(row),
+      editCell: (row: number, col: number, input: string) =>
+        this.sheet.value?.write(row, col, input),
+      cellText: (row: number, col: number) => {
+        const cellEl = document.querySelector(
+          `[data-grid-cell][data-row="${row}"][data-col="${col}"]`,
         );
-        return el ? (el.textContent || '').trim() : null;
+        return cellEl ? (cellEl.textContent || '').trim() : null;
       },
-      cellValue: (r: number, c: number) => {
-        const v = this.sheet.value?.valueAt(r, c);
-        return v && typeof v === 'object' ? String(v) : (v ?? null);
+      cellValue: (row: number, col: number) => {
+        const value = this.sheet.value?.valueAt(row, col);
+        return value && typeof value === 'object'
+          ? String(value)
+          : (value ?? null);
       },
       startRow: () => this.startRow,
     };

@@ -50,15 +50,15 @@ export type CellValue =
   number | string | boolean | null | { _error?: string; error?: string };
 
 /** Spreadsheet column label: 0→A, 25→Z, 26→AA … */
-export function colLabel(n: number): string {
-  let s = '';
-  let x = n + 1;
-  while (x > 0) {
-    const m = (x - 1) % 26;
-    s = String.fromCharCode(65 + m) + s;
-    x = Math.floor((x - 1) / 26);
+export function colLabel(colIndex: number): string {
+  let label = '';
+  let remaining = colIndex + 1;
+  while (remaining > 0) {
+    const letterIndex = (remaining - 1) % 26;
+    label = String.fromCharCode(65 + letterIndex) + label;
+    remaining = Math.floor((remaining - 1) / 26);
   }
-  return s;
+  return label;
 }
 
 /** Which columns hold numeric source data (the rest are formula patterns). */
@@ -75,8 +75,8 @@ export function isDataCol(col: number): boolean {
 export function numDataValue(row: number, col: number): number | null {
   const seed = row * COLS + col;
   if (seed % 13 === 5) return null;
-  const v = ((seed * 2654435761) % 100000) / 100 - 500; // −500 … 500
-  return Math.round(v * 100) / 100;
+  const value = ((seed * 2654435761) % 100000) / 100 - 500; // −500 … 500
+  return Math.round(value * 100) / 100;
 }
 
 /**
@@ -112,19 +112,19 @@ export function patternSource(row: number, col: number): string | null {
 
 /** 1-based column index from a spreadsheet label: A→1, Z→26, AA→27 … */
 export function colIndexFromLabel(label: string): number {
-  let x = 0;
-  for (let i = 0; i < label.length; i++)
-    x = x * 26 + (label.charCodeAt(i) - 64);
-  return x;
+  let index = 0;
+  for (let position = 0; position < label.length; position++)
+    index = index * 26 + (label.charCodeAt(position) - 64);
+  return index;
 }
 
 export interface SimpleAggregate {
   fn: 'SUM' | 'AVERAGE' | 'MIN' | 'MAX' | 'COUNT';
-  /** 1-based, parser convention. */
-  r1: number;
-  c1: number;
-  r2: number;
-  c2: number;
+  /** 1-based bounds, parser convention. */
+  startRow: number;
+  startCol: number;
+  endRow: number;
+  endCol: number;
 }
 
 const AGG_RE =
@@ -138,21 +138,22 @@ const AGG_RE =
  * 10k cells → 40s @ 200k) — bulk aggregation belongs to the columnar layer.
  */
 export function matchSimpleAggregate(body: string): SimpleAggregate | null {
-  const m = AGG_RE.exec(body);
-  if (!m) return null;
-  const fn = m[1].toUpperCase() as SimpleAggregate['fn'];
-  const c1 = colIndexFromLabel(m[2].toUpperCase());
-  const r1 = parseInt(m[3], 10);
-  const c2 = colIndexFromLabel(m[4].toUpperCase());
-  const r2 = parseInt(m[5], 10);
-  if (r1 < 1 || c1 < 1 || r2 < r1 || c2 < c1) return null;
-  return { fn, r1, c1, r2, c2 };
+  const match = AGG_RE.exec(body);
+  if (!match) return null;
+  const fn = match[1].toUpperCase() as SimpleAggregate['fn'];
+  const startCol = colIndexFromLabel(match[2].toUpperCase());
+  const startRow = parseInt(match[3], 10);
+  const endCol = colIndexFromLabel(match[4].toUpperCase());
+  const endRow = parseInt(match[5], 10);
+  if (startRow < 1 || startCol < 1 || endRow < startRow || endCol < startCol)
+    return null;
+  return { fn, startRow, startCol, endRow, endCol };
 }
 
 /** Does literal text start (after leading spaces) with '='? */
 export function isFormulaText(text: string): boolean {
-  const t = text.trimStart();
-  return t.length > 0 && t[0] === '=';
+  const trimmed = text.trimStart();
+  return trimmed.length > 0 && trimmed[0] === '=';
 }
 
 /** Strip the leading '=' to get the formula body. */
@@ -173,10 +174,10 @@ export function isFormulaError(
 
 /** Resolve a NON-formula literal: '' → null, numeric → number, else text. */
 export function evalLiteral(text: string): CellValue {
-  const t = text.trim();
-  if (t.length === 0) return null;
-  const n = Number(t);
-  return !Number.isNaN(n) && Number.isFinite(n) ? n : text;
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return null;
+  const numeric = Number(trimmed);
+  return !Number.isNaN(numeric) && Number.isFinite(numeric) ? numeric : text;
 }
 
 /** Display string for a resolved value. */

@@ -109,6 +109,7 @@ export default defineConfig({
               text: 'The Engine Under the Idiom',
               link: '/guide/engine-under-the-idiom',
             },
+            { text: 'The Flyweight Pattern', link: '/guide/flyweight' },
             { text: 'Performance', link: '/guide/performance' },
             { text: 'Benchmarks', link: '/guide/benchmarks' },
           ],

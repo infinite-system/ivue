@@ -62,14 +62,15 @@ interface RangeRef {
 interface Column {
   kind: Uint8Array;
   /** Allocated on the first numeric write — formula columns never pay. */
-  nums: Float64Array | null;
+  numbers: Float64Array | null;
   /** Sparse: typed text AND user-edited formula sources (pattern overrides). */
   text: Map<number, string>;
 }
 
 interface FormulaEntry {
-  c: ComputedRef<CellValue>;
-  stop: WatchStopHandle;
+  value: ComputedRef<CellValue>;
+  /** Stops the derived-write bridge watcher (see formulaValue). */
+  stopBridge: WatchStopHandle;
 }
 
 class $FlyweightSheet {
@@ -83,6 +84,7 @@ class $FlyweightSheet {
   private readonly cellVersions = new Map<number, Ref<number>>();
   private readonly blockVersions = new Map<number, Ref<number>>();
   private readonly formulaCache = new Map<number, FormulaEntry>();
+  private readonly adHocCache = new Map<string, ComputedRef<CellValue>>();
 
   /** Blocks per column (fine↔coarse key math). */
   private readonly blockCount: number;
@@ -103,34 +105,34 @@ class $FlyweightSheet {
     // numerically (no string round-trips — this is the whole creation cost);
     // formula columns are a single Uint8Array.fill.
     const columns: Column[] = new Array(cols);
-    for (let c = 0; c < cols; c++) {
+    for (let col = 0; col < cols; col++) {
       const kind = new Uint8Array(rows);
-      let nums: Float64Array | null = null;
-      if (isDataCol(c)) {
-        nums = new Float64Array(rows);
-        for (let r = 0; r < rows; r++) {
-          const v = numDataValue(r, c);
-          if (v !== null) {
-            kind[r] = Kind.Number;
-            nums[r] = v;
+      let numbers: Float64Array | null = null;
+      if (isDataCol(col)) {
+        numbers = new Float64Array(rows);
+        for (let row = 0; row < rows; row++) {
+          const value = numDataValue(row, col);
+          if (value !== null) {
+            kind[row] = Kind.Number;
+            numbers[row] = value;
           } // blanks stay Kind.Blank
         }
       } else {
         kind.fill(Kind.Formula);
       }
-      columns[c] = { kind, nums, text: new Map() };
+      columns[col] = { kind, numbers, text: new Map() };
     }
     this.columns = columns;
 
     this.parser = new FormulaParser({
-      onCell: (r) => this.pointValue(r.row, r.col),
-      onRange: (r) => this.rangeValues(r as RangeRef),
+      onCell: (cellRef) => this.pointValue(cellRef.row, cellRef.col),
+      onRange: (rangeRef) => this.rangeValues(rangeRef as RangeRef),
     });
   }
 
   // ------------------------------------------------------------------ keys
 
-  private key(row: number, col: number): number {
+  private cellKey(row: number, col: number): number {
     return col * this.rows + row;
   }
 
@@ -142,47 +144,47 @@ class $FlyweightSheet {
 
   /** Subscribe the current effect to a cell (get-OR-CREATE — observation). */
   private trackCell(row: number, col: number): void {
-    const k = this.key(row, col);
-    let v = this.cellVersions.get(k);
-    if (!v) {
-      v = ref(0);
-      this.cellVersions.set(k, v);
+    const cellKey = this.cellKey(row, col);
+    let versionRef = this.cellVersions.get(cellKey);
+    if (!versionRef) {
+      versionRef = ref(0);
+      this.cellVersions.set(cellKey, versionRef);
     }
-    void v.value;
+    void versionRef.value;
   }
 
   /** Subscribe the current effect to a block (get-or-create — observation). */
-  private trackBlock(bk: number): void {
-    let v = this.blockVersions.get(bk);
-    if (!v) {
-      v = ref(0);
-      this.blockVersions.set(bk, v);
+  private trackBlock(blockKey: number): void {
+    let versionRef = this.blockVersions.get(blockKey);
+    if (!versionRef) {
+      versionRef = ref(0);
+      this.blockVersions.set(blockKey, versionRef);
     }
-    void v.value;
+    void versionRef.value;
   }
 
   /** Notify a cell's observers — PEEK-ONLY (unobserved cells cost nothing). */
   private bumpCell(row: number, col: number): void {
-    const v = this.cellVersions.get(this.key(row, col));
-    if (v) v.value++;
+    const versionRef = this.cellVersions.get(this.cellKey(row, col));
+    if (versionRef) versionRef.value++;
   }
 
   /** Notify a block's observers — peek-only. */
   private bumpBlock(row: number, col: number): void {
-    const v = this.blockVersions.get(this.blockKey(row, col));
-    if (v) v.value++;
+    const versionRef = this.blockVersions.get(this.blockKey(row, col));
+    if (versionRef) versionRef.value++;
   }
 
   // -------------------------------------------------------------- raw reads
 
   /** UNTRACKED ground-truth value (blank→null). No refs, no observation. */
   rawAt(row: number, col: number): CellValue {
-    const c = this.columns[col];
-    switch (c.kind[row]) {
+    const column = this.columns[col];
+    switch (column.kind[row]) {
       case Kind.Number:
-        return c.nums![row];
+        return column.numbers![row];
       case Kind.Text:
-        return c.text.get(row) ?? '';
+        return column.text.get(row) ?? '';
       case Kind.Formula:
         return this.sourceAt(row, col); // raw view of a formula = its source
       default:
@@ -192,12 +194,12 @@ class $FlyweightSheet {
 
   /** The literal text of a cell (formula source / number text / text). */
   sourceAt(row: number, col: number): string {
-    const c = this.columns[col];
-    const override = c.text.get(row);
+    const column = this.columns[col];
+    const override = column.text.get(row);
     if (override !== undefined) return override;
-    switch (c.kind[row]) {
+    switch (column.kind[row]) {
       case Kind.Number:
-        return String(c.nums![row]);
+        return String(column.numbers![row]);
       case Kind.Formula:
         return patternSource(row, col) ?? '';
       default:
@@ -226,9 +228,9 @@ class $FlyweightSheet {
   }
 
   /** onCell seam (1-based, like the parser). */
-  private pointValue(row1: number, col1: number): CellValue {
-    if (this.tracer) this.tracer.push([row1, col1]);
-    return this.valueAt(row1 - 1, col1 - 1);
+  private pointValue(oneBasedRow: number, oneBasedCol: number): CellValue {
+    if (this.tracer) this.tracer.push([oneBasedRow, oneBasedCol]);
+    return this.valueAt(oneBasedRow - 1, oneBasedCol - 1);
   }
 
   /**
@@ -238,82 +240,97 @@ class $FlyweightSheet {
    * (transitive observation, priced) whose derived-write watchers keep the
    * block tier truthful.
    */
-  private rangeValues(refRange: RangeRef): CellValue[][] {
-    const r1 = refRange.from.row - 1;
-    const c1 = refRange.from.col - 1;
-    const r2 = Math.min(refRange.to.row - 1, this.rows - 1);
-    const c2 = Math.min(refRange.to.col - 1, this.cols - 1);
-    const size = (r2 - r1 + 1) * (c2 - c1 + 1);
+  private rangeValues(range: RangeRef): CellValue[][] {
+    const startRow = range.from.row - 1;
+    const startCol = range.from.col - 1;
+    const endRow = Math.min(range.to.row - 1, this.rows - 1);
+    const endCol = Math.min(range.to.col - 1, this.cols - 1);
+    const cellCount = (endRow - startRow + 1) * (endCol - startCol + 1);
 
     if (this.tracer) {
-      for (let r = r1; r <= r2; r++)
-        for (let c = c1; c <= c2; c++) this.tracer.push([r + 1, c + 1]);
+      for (let row = startRow; row <= endRow; row++)
+        for (let col = startCol; col <= endCol; col++)
+          this.tracer.push([row + 1, col + 1]);
     }
 
-    const out: CellValue[][] = [];
+    const values: CellValue[][] = [];
 
-    if (size <= FINE_RANGE_LIMIT) {
-      for (let r = r1; r <= r2; r++) {
-        const rowArr: CellValue[] = [];
-        for (let c = c1; c <= c2; c++) rowArr.push(this.valueAt(r, c));
-        out.push(rowArr);
+    if (cellCount <= FINE_RANGE_LIMIT) {
+      for (let row = startRow; row <= endRow; row++) {
+        const rowValues: CellValue[] = [];
+        for (let col = startCol; col <= endCol; col++)
+          rowValues.push(this.valueAt(row, col));
+        values.push(rowValues);
       }
-      return out;
+      return values;
     }
 
     // Coarse tier: subscribe every covered block (tracked), …
-    const bFrom = r1 >> BLOCK_SHIFT;
-    const bTo = r2 >> BLOCK_SHIFT;
-    for (let c = c1; c <= c2; c++) {
-      for (let b = bFrom; b <= bTo; b++) {
-        this.trackBlock(c * this.blockCount + b);
+    const firstBlock = startRow >> BLOCK_SHIFT;
+    const lastBlock = endRow >> BLOCK_SHIFT;
+    for (let col = startCol; col <= endCol; col++) {
+      for (let block = firstBlock; block <= lastBlock; block++) {
+        this.trackBlock(col * this.blockCount + block);
       }
     }
 
     // …then read with tracking paused (no fine edges from this range).
     pauseTracking();
     try {
-      for (let r = r1; r <= r2; r++) {
-        const rowArr: CellValue[] = [];
-        for (let c = c1; c <= c2; c++) {
-          rowArr.push(
-            this.columns[c].kind[r] === Kind.Formula
-              ? this.formulaValue(r, c).value
-              : this.rawAt(r, c),
+      for (let row = startRow; row <= endRow; row++) {
+        const rowValues: CellValue[] = [];
+        for (let col = startCol; col <= endCol; col++) {
+          rowValues.push(
+            this.columns[col].kind[row] === Kind.Formula
+              ? this.formulaValue(row, col).value
+              : this.rawAt(row, col),
           );
         }
-        out.push(rowArr);
+        values.push(rowValues);
       }
     } finally {
       resetTracking();
     }
-    return out;
+    return values;
   }
 
   // ------------------------------------------------------------- formulas
 
   /**
    * The cached computed for a formula cell — created on first observation.
-   * The attached sync watcher is the DERIVED-WRITE BRIDGE: when the value
-   * changes, bump the cell's block so coarse subscribers invalidate even
-   * though the underlying write happened somewhere else entirely.
+   * THIN on purpose (the computed and watcher bodies are pointers to
+   * methods): closures freeze at creation, prototype lookups stay live, so
+   * evaluation and bridge logic stay hot-graftable under live sheets.
    */
   private formulaValue(row: number, col: number): ComputedRef<CellValue> {
-    const k = this.key(row, col);
-    let e = this.formulaCache.get(k);
-    if (!e) {
-      const c = computed<CellValue>(() => this.evaluateCell(row, col));
-      const stop = watch(
-        c,
-        (nv, ov) => {
-          if (nv !== ov) this.bumpBlock(row, col);
-        },
+    const cellKey = this.cellKey(row, col);
+    let entry = this.formulaCache.get(cellKey);
+    if (!entry) {
+      const value = computed<CellValue>(() => this.evaluateCell(row, col));
+      const stopBridge = watch(
+        value,
+        (newValue, oldValue) =>
+          this.onFormulaValueChanged(row, col, newValue, oldValue),
         { flush: 'sync' },
       );
-      e = { c, stop };
-      this.formulaCache.set(k, e);
+      entry = { value, stopBridge };
+      this.formulaCache.set(cellKey, entry);
     }
-    return e.c;
+    return entry.value;
+  }
+
+  /**
+   * The DERIVED-WRITE BRIDGE: when a formula's value changes, bump the
+   * cell's block so coarse subscribers invalidate even though the
+   * underlying write happened somewhere else entirely.
+   */
+  private onFormulaValueChanged(
+    row: number,
+    col: number,
+    newValue: CellValue,
+    oldValue: CellValue,
+  ): void {
+    if (newValue !== oldValue) this.bumpBlock(row, col);
   }
 
   /** Evaluate a cell by its CURRENT kind (formulas through the parser). */
@@ -323,13 +340,13 @@ class $FlyweightSheet {
     const kind = this.columns[col].kind[row];
     if (kind !== Kind.Formula) return this.rawAt(row, col);
 
-    const src = this.sourceAt(row, col);
-    const body = stripFormula(src);
+    const source = this.sourceAt(row, col);
+    const body = stripFormula(source);
     if (body.trim().length === 0) return null;
 
-    const k = this.key(row, col);
-    if (this.evaluating.has(k)) return new FormulaError('#REF!');
-    this.evaluating.add(k);
+    const cellKey = this.cellKey(row, col);
+    if (this.evaluating.has(cellKey)) return new FormulaError('#REF!');
+    this.evaluating.add(cellKey);
     try {
       // COLUMNAR FAST PATH: a bare aggregate over one range is computed
       // linearly over ground truth with the SAME reactive semantics (fine
@@ -338,50 +355,52 @@ class $FlyweightSheet {
       // measured 27ms @ 10k cells → 40s @ 200k — so bulk aggregation
       // belongs to the columnar layer, exactly as desktop engines
       // special-case their range ops.
-      const agg = matchSimpleAggregate(body);
-      if (agg) return this.fastAggregate(agg);
+      const aggregate = matchSimpleAggregate(body);
+      if (aggregate) return this.fastAggregate(aggregate);
       return this.parser.parse(body, {
         row: row + 1,
         col: col + 1,
         sheet: 'Sheet1',
       }) as CellValue;
-    } catch (err) {
-      return err instanceof (FormulaError as unknown as Function)
-        ? (err as CellValue)
+    } catch (error) {
+      return error instanceof (FormulaError as unknown as Function)
+        ? (error as CellValue)
         : new FormulaError('#ERROR!');
     } finally {
-      this.evaluating.delete(k);
+      this.evaluating.delete(cellKey);
     }
   }
 
   /**
    * A live ad-hoc formula over the sheet (the demo's totals bar) — a cached
    * computed evaluating `body` through the same parser/seams, so a large
-   * range inside it costs blocks, not cells.
+   * range inside it costs blocks, not cells. Thin: the computed is a
+   * pointer to evaluateAdHocFormula, so formula-engine edits graft onto
+   * totals that are already on screen.
    */
-  private readonly adHoc = new Map<string, ComputedRef<CellValue>>();
-
   liveFormula(body: string): ComputedRef<CellValue> {
-    let c = this.adHoc.get(body);
-    if (!c) {
-      c = computed<CellValue>(() => {
-        try {
-          const agg = matchSimpleAggregate(body);
-          if (agg) return this.fastAggregate(agg);
-          return this.parser.parse(body, {
-            row: 1,
-            col: 1,
-            sheet: 'Sheet1',
-          }) as CellValue;
-        } catch (err) {
-          return err instanceof (FormulaError as unknown as Function)
-            ? (err as CellValue)
-            : new FormulaError('#ERROR!');
-        }
-      });
-      this.adHoc.set(body, c);
+    let cached = this.adHocCache.get(body);
+    if (!cached) {
+      cached = computed<CellValue>(() => this.evaluateAdHocFormula(body));
+      this.adHocCache.set(body, cached);
     }
-    return c;
+    return cached;
+  }
+
+  private evaluateAdHocFormula(body: string): CellValue {
+    try {
+      const aggregate = matchSimpleAggregate(body);
+      if (aggregate) return this.fastAggregate(aggregate);
+      return this.parser.parse(body, {
+        row: 1,
+        col: 1,
+        sheet: 'Sheet1',
+      }) as CellValue;
+    } catch (error) {
+      return error instanceof (FormulaError as unknown as Function)
+        ? (error as CellValue)
+        : new FormulaError('#ERROR!');
+    }
   }
 
   /**
@@ -392,20 +411,20 @@ class $FlyweightSheet {
    * aggregate; blanks/text are skipped (COUNT counts numbers, Excel-style);
    * an error value propagates.
    */
-  private fastAggregate(agg: SimpleAggregate): CellValue {
-    const r1 = agg.r1 - 1;
-    const c1 = agg.c1 - 1;
-    const r2 = Math.min(agg.r2 - 1, this.rows - 1);
-    const c2 = Math.min(agg.c2 - 1, this.cols - 1);
-    const size = (r2 - r1 + 1) * (c2 - c1 + 1);
-    const fine = size <= FINE_RANGE_LIMIT;
+  private fastAggregate(aggregate: SimpleAggregate): CellValue {
+    const startRow = aggregate.startRow - 1;
+    const startCol = aggregate.startCol - 1;
+    const endRow = Math.min(aggregate.endRow - 1, this.rows - 1);
+    const endCol = Math.min(aggregate.endCol - 1, this.cols - 1);
+    const cellCount = (endRow - startRow + 1) * (endCol - startCol + 1);
+    const isFineTier = cellCount <= FINE_RANGE_LIMIT;
 
-    if (!fine) {
-      const bFrom = r1 >> BLOCK_SHIFT;
-      const bTo = r2 >> BLOCK_SHIFT;
-      for (let c = c1; c <= c2; c++) {
-        for (let b = bFrom; b <= bTo; b++) {
-          this.trackBlock(c * this.blockCount + b);
+    if (!isFineTier) {
+      const firstBlock = startRow >> BLOCK_SHIFT;
+      const lastBlock = endRow >> BLOCK_SHIFT;
+      for (let col = startCol; col <= endCol; col++) {
+        for (let block = firstBlock; block <= lastBlock; block++) {
+          this.trackBlock(col * this.blockCount + block);
         }
       }
       pauseTracking();
@@ -415,28 +434,28 @@ class $FlyweightSheet {
       let count = 0;
       let min = Infinity;
       let max = -Infinity;
-      for (let c = c1; c <= c2; c++) {
-        const column = this.columns[c];
-        for (let r = r1; r <= r2; r++) {
-          let v: CellValue;
-          if (fine) {
-            v = this.valueAt(r, c);
-          } else if (column.kind[r] === Kind.Formula) {
-            v = this.formulaValue(r, c).value;
+      for (let col = startCol; col <= endCol; col++) {
+        const column = this.columns[col];
+        for (let row = startRow; row <= endRow; row++) {
+          let cellValue: CellValue;
+          if (isFineTier) {
+            cellValue = this.valueAt(row, col);
+          } else if (column.kind[row] === Kind.Formula) {
+            cellValue = this.formulaValue(row, col).value;
           } else {
-            v = this.rawAt(r, c);
+            cellValue = this.rawAt(row, col);
           }
-          if (typeof v === 'number') {
-            sum += v;
+          if (typeof cellValue === 'number') {
+            sum += cellValue;
             count++;
-            if (v < min) min = v;
-            if (v > max) max = v;
-          } else if (isFormulaError(v)) {
-            return v; // errors propagate, Excel-style
+            if (cellValue < min) min = cellValue;
+            if (cellValue > max) max = cellValue;
+          } else if (isFormulaError(cellValue)) {
+            return cellValue; // errors propagate, Excel-style
           }
         }
       }
-      switch (agg.fn) {
+      switch (aggregate.fn) {
         case 'SUM':
           return sum;
         case 'AVERAGE':
@@ -451,7 +470,7 @@ class $FlyweightSheet {
           return new FormulaError('#VALUE!'); // unreachable — union is exhaustive
       }
     } finally {
-      if (!fine) resetTracking();
+      if (!isFineTier) resetTracking();
     }
   }
 
@@ -462,24 +481,24 @@ class $FlyweightSheet {
    * Never allocates reactive state (peek-only bumps).
    */
   write(row: number, col: number, input: string): void {
-    const c = this.columns[col];
-    const t = input.trim();
+    const column = this.columns[col];
+    const trimmed = input.trim();
     if (isFormulaText(input)) {
-      c.kind[row] = Kind.Formula;
-      c.text.set(row, input);
-    } else if (t.length === 0) {
-      c.kind[row] = Kind.Blank;
-      c.text.delete(row);
+      column.kind[row] = Kind.Formula;
+      column.text.set(row, input);
+    } else if (trimmed.length === 0) {
+      column.kind[row] = Kind.Blank;
+      column.text.delete(row);
     } else {
-      const n = Number(t);
-      if (!Number.isNaN(n) && Number.isFinite(n)) {
-        if (!c.nums) c.nums = new Float64Array(this.rows);
-        c.kind[row] = Kind.Number;
-        c.nums[row] = n;
-        c.text.delete(row);
+      const numeric = Number(trimmed);
+      if (!Number.isNaN(numeric) && Number.isFinite(numeric)) {
+        if (!column.numbers) column.numbers = new Float64Array(this.rows);
+        column.kind[row] = Kind.Number;
+        column.numbers[row] = numeric;
+        column.text.delete(row);
       } else {
-        c.kind[row] = Kind.Text;
-        c.text.set(row, input);
+        column.kind[row] = Kind.Text;
+        column.text.set(row, input);
       }
     }
     this.bumpCell(row, col);
@@ -494,36 +513,40 @@ class $FlyweightSheet {
    * the set IS the live dependency set (and visibly SHIFTS across an IF's
    * branch boundary). 1-based in/out, like the formula grid's traceDeps.
    */
-  traceDeps(row1: number, col1: number): Array<[number, number]> {
-    const row = row1 - 1;
-    const col = col1 - 1;
+  traceDeps(oneBasedRow: number, oneBasedCol: number): Array<[number, number]> {
+    const row = oneBasedRow - 1;
+    const col = oneBasedCol - 1;
     if (this.columns[col]?.kind[row] !== Kind.Formula) return [];
     const body = stripFormula(this.sourceAt(row, col));
     if (body.trim().length === 0) return [];
 
-    const prev = this.tracer;
+    const previousTracer = this.tracer;
     this.tracer = [];
     pauseTracking();
     try {
-      this.parser.parse(body, { row: row1, col: col1, sheet: 'Sheet1' });
+      this.parser.parse(body, {
+        row: oneBasedRow,
+        col: oneBasedCol,
+        sheet: 'Sheet1',
+      });
     } catch {
       /* keep whatever reads happened before the error */
     } finally {
       resetTracking();
     }
     const recorded = this.tracer;
-    this.tracer = prev;
+    this.tracer = previousTracer;
 
-    const seen = new Set<number>();
-    const deps: Array<[number, number]> = [];
-    for (const [r, c] of recorded) {
-      const k = r * (this.cols + 1) + c;
-      if (!seen.has(k)) {
-        seen.add(k);
-        deps.push([r, c]);
+    const seenKeys = new Set<number>();
+    const dependencies: Array<[number, number]> = [];
+    for (const [row1, col1] of recorded) {
+      const dedupeKey = row1 * (this.cols + 1) + col1;
+      if (!seenKeys.has(dedupeKey)) {
+        seenKeys.add(dedupeKey);
+        dependencies.push([row1, col1]);
       }
     }
-    return deps;
+    return dependencies;
   }
 
   /** The observation census — the law, measurable. */
@@ -532,7 +555,7 @@ class $FlyweightSheet {
       fineRefs: this.cellVersions.size,
       blockRefs: this.blockVersions.size,
       formulaComputeds: this.formulaCache.size,
-      adHocFormulas: this.adHoc.size,
+      adHocFormulas: this.adHocCache.size,
     };
   }
 
@@ -542,11 +565,11 @@ class $FlyweightSheet {
    * DESIGN.md honest boundaries.
    */
   releaseFormula(row: number, col: number): void {
-    const k = this.key(row, col);
-    const e = this.formulaCache.get(k);
-    if (e) {
-      e.stop();
-      this.formulaCache.delete(k);
+    const cellKey = this.cellKey(row, col);
+    const entry = this.formulaCache.get(cellKey);
+    if (entry) {
+      entry.stopBridge();
+      this.formulaCache.delete(cellKey);
     }
   }
 
@@ -567,18 +590,18 @@ class $FlyweightSheet {
    */
   evictOutsideRows(keepStart: number, keepEnd: number): number {
     let released = 0;
-    for (const [k, e] of this.formulaCache) {
-      const row = k % this.rows;
+    for (const [cellKey, entry] of this.formulaCache) {
+      const row = cellKey % this.rows;
       if (row < keepStart || row > keepEnd) {
-        e.stop();
-        this.formulaCache.delete(k);
+        entry.stopBridge();
+        this.formulaCache.delete(cellKey);
         released++;
       }
     }
-    for (const k of this.cellVersions.keys()) {
-      const row = k % this.rows;
+    for (const cellKey of this.cellVersions.keys()) {
+      const row = cellKey % this.rows;
       if (row < keepStart || row > keepEnd) {
-        this.cellVersions.delete(k);
+        this.cellVersions.delete(cellKey);
         released++;
       }
     }
@@ -587,11 +610,11 @@ class $FlyweightSheet {
 
   /** Drop the entire overlay (watchers stopped). Ground truth untouched. */
   releaseAll(): void {
-    for (const e of this.formulaCache.values()) e.stop();
+    for (const entry of this.formulaCache.values()) entry.stopBridge();
     this.formulaCache.clear();
     this.cellVersions.clear();
     this.blockVersions.clear();
-    this.adHoc.clear();
+    this.adHocCache.clear();
   }
 }
 

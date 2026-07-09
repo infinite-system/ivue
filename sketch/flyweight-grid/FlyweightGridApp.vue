@@ -60,8 +60,13 @@ document.title = 'Flyweight Grid · 20×1,000,000 (ivue sketch)';
     <template v-if="page.hasModel">
       <!-- Live totals over the FULL million rows (block tier: 245 edges each) -->
       <div class="fw-totals">
-        <span v-for="t in page.totals" :key="t.label" class="fw-total">
-          <code>{{ t.label }}</code> = <b>{{ displayOf(t.c.value) }}</b>
+        <span
+          v-for="entry in page.totals"
+          :key="entry.label"
+          class="fw-total"
+        >
+          <code>{{ entry.label }}</code> =
+          <b>{{ displayOf(entry.total.value) }}</b>
         </span>
       </div>
 
@@ -76,8 +81,12 @@ document.title = 'Flyweight Grid · 20×1,000,000 (ivue sketch)';
         <div class="gc-inner">
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
-            <div v-for="c in COLS" :key="c" class="gc-cell gc-head-cell">
-              {{ colLabel(c - 1) }}
+            <div
+              v-for="col in COLS"
+              :key="col"
+              class="gc-cell gc-head-cell"
+            >
+              {{ colLabel(col - 1) }}
             </div>
           </div>
           <div class="gc-viewport" :style="{ height: page.totalHeight + 'px' }">
@@ -86,13 +95,15 @@ document.title = 'Flyweight Grid · 20×1,000,000 (ivue sketch)';
               :style="{ transform: `translateY(${page.offsetY}px)` }"
             >
               <div
-                v-for="row in page.visibleRows.value"
-                :key="row.r"
+                v-for="pageRow in page.visibleRows.value"
+                :key="pageRow.row"
                 class="gc-row"
               >
-                <div class="gc-rownum">{{ (row.r + 1).toLocaleString() }}</div>
+                <div class="gc-rownum">
+                  {{ (pageRow.row + 1).toLocaleString() }}
+                </div>
                 <div
-                  v-for="cell in row.cells"
+                  v-for="cell in pageRow.cells"
                   :key="cell.col"
                   class="gc-cell"
                   :class="cell.cssClass"

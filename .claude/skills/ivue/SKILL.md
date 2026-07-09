@@ -235,7 +235,76 @@ Each file calls `Reactive()` on its own class safely: it is idempotent per
 prototype level and HMR-safe; a shared ancestor is transformed once, by
 whichever file loads first.
 
-## 7. Self-review checklist (run over your ivue diff)
+## 7. computed() and watch callbacks delegate to methods (HMR-streamlined)
+
+A reactive closure's body is FROZEN at creation — it is cached per instance
+and no hot update can reach inside it. A prototype lookup is evaluated at
+call time — it stays live forever. So: **closures are pointers; logic lives
+in methods.**
+
+```ts
+// ✅ THIN — the closure only dials a method; edits hot-graft onto LIVE
+//    instances with all state preserved
+get sorted() {
+  return computed(() => this.sortItems());
+}
+sortItems() {
+  return [...this.items.value].sort(byPrice);
+}
+
+// ✅ same rule for watch callbacks wired in constructors
+watch(value, (newValue, oldValue) => this.onValueChanged(newValue, oldValue));
+
+// ❌ FAT — logic frozen into a per-instance closure: editing this body
+//    forces a component remount (the engine detects it and escalates —
+//    never silently stale — but you lose live-state grafting)
+get sorted() {
+  return computed(() => [...this.items.value].sort(byPrice));
+}
+```
+
+Also buys: guaranteed-minimum memory (the thin closure captures nothing but
+the instance — a fat closure silently pins any getter-scope local for the
+instance's lifetime) and direct testability (`inst.sortItems()`).
+Reactivity is unaffected — reads inside the method are tracked through the
+computed's evaluation exactly as if inlined.
+
+Do NOT "optimize" the arrow away to `computed(this.sortItems)`: it works
+(ivue methods are lazy-bound) but Vue 3.4+ passes the previous value as the
+getter's first argument, so a method that later gains an optional parameter
+silently receives stale data. Always the arrow.
+
+`$`-prefixed singleton getters are frozen caches too — keep their bodies to
+a single composable/service call (`return useThing()`), nothing more.
+
+## 8. Naming: unfold to the domain
+
+Readable code is the product. In ivue classes the class shape already reads
+like prose — don't ruin it with letter soup:
+
+- **No single-letter or abbreviated identifiers** — including loop indices
+  and callback parameters. `row`/`col`, not `r`/`c`; `cell`, `cellValue`,
+  `entry`, `versionRef`, `aggregate`, `newValue`/`oldValue`, not
+  `c`/`v`/`e`/`agg`/`nv`/`ov`.
+- **The one-letter-many-meanings failure mode is the reason.** A file where
+  `c` means cell in one method, column in the next, and cellValue in a
+  third makes every reader re-derive the type system in their head. Named
+  after the domain, the ambiguity cannot exist.
+- **Booleans are predicates** (`isFineTier`, `hasModel`); counts say what
+  they count (`observerRuns`, `releasedCount`); prior values are
+  `originalX`/`previousX`, not `old`/`prev` alone.
+- Abbreviate only when the abbreviation IS the domain term (`px`, `id`,
+  `fx`, A1-notation like `startRow`/`endCol`).
+- Tests are code — the same rules apply to specs.
+
+```ts
+// ❌ before                          // ✅ after
+const v = this.cellVersions.get(k);   const versionRef = this.cellVersions.get(cellKey);
+for (let r = r1; r <= r2; r++)        for (let row = startRow; row <= endRow; row++)
+watch(c, (nv, ov) => …)               watch(value, (newValue, oldValue) => this.onChanged(…))
+```
+
+## 9. Self-review checklist (run over your ivue diff)
 
 - [ ] Every mutable state member is `get x() { return ref(...) }` — no mutable plain fields.
 - [ ] Inside the class, every Ref/Computed read/write uses `.value`; plain fields are constants/config only.
@@ -248,3 +317,5 @@ whichever file loads first.
 - [ ] `defineExpose(x as X.Instance)`; consumers type the ref as `ShallowUnwrapRef<X.Instance>`.
 - [ ] Watch sources are the FUNCTION form; `this.$watch`/`this.$watchEffect` used for component-outliving instances; no `watchEffect` wrapped in `$watch`.
 - [ ] Lifecycle hooks / init logic live in the constructor (no `init()` expecting auto-call); template refs guarded with `?.` where read pre-mount.
+- [ ] Every `computed()`/constructor-watch CALLBACK delegates to a method (`computed(() => this.recalc())`) — no logic inlined in reactive closures; the arrow form, never `computed(this.method)`.
+- [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices and specs included — no single-letter names, no name meaning different things in different methods.
