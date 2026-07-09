@@ -1,6 +1,6 @@
 ---
 title: The Standard (Operating Manual)
-description: The complete ivue operating manual — annotated class and SFC templates, DO/NEVER table, the unwrapping-surface typing law with error fixes, watch rules, and a review checklist. The same manual we ship to AI agents.
+description: The complete ivue operating manual — annotated class and SFC templates, DO/NEVER table, the unwrapping-surface typing law, watch rules, thin-closure delegation, naming guidelines, keyed reactivity, and the review checklist. The same manual we ship to AI agents.
 ---
 
 # The Standard — ivue Operating Manual
@@ -159,14 +159,14 @@ defineExpose(box as Box.Instance);
 | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `class $X` + `export namespace X { $Class; Class = Reactive($X); Instance }` | export a bare `Reactive(class {...})` for anything that grows a parent/dependent       |
 | mutable state = `get x() { return ref(v) }`                                  | put mutable state in a plain field — writes trigger nothing                            |
-| read/write Refs/Computeds with `.value` inside the class AND in templates    | write `this.x = v` / `box.x = v` for a Ref/Computed — it clobbers the ref or no-ops    |
+| read/write Refs/Computeds with `.value` inside the class AND in templates             | write `this.x = v` / `box.x = v` for a Ref/Computed — it clobbers the ref or no-ops            |
 | derive with a PLAIN getter                                                   | wrap every derivation in `computed()` — pays ~300 bytes/instance for nothing           |
 | `computed()` only for expensive / render-suppressing / stable-handle needs   | reach for `computed()` by default                                                      |
 | inject stores via `private get $store() { return useStore() }`               | `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles |
 | `new X.Class(props, emit)` — raw instance everywhere                         | wrap in `reactive(inst)` or any shallow-unwrap view as the standard                    |
 | destructure ONLY `ref="el"` targets                                          | destructure plain getters — snapshots a dead value                                     |
 | `defineExpose(box as X.Instance)`                                            | `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers       |
-| constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — ivue never calls it                       |
+| constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — ivue never calls it                         |
 
 ## 4. The unwrapping-surface typing law
 
@@ -191,12 +191,12 @@ until mount — use `?.` in watch getters).
 
 ### Common compile errors → fixes
 
-| Error / symptom                                                                                             | Fix                                                              |
-| ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `Cannot assign to 'x' because it is a read-only property` (on an exposed/`reactive()`/template-ref surface) | type that surface through `X.Instance`                           |
+| Error / symptom                                                                                             | Fix                                                      |
+| ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `Cannot assign to 'x' because it is a read-only property` (on an exposed/`reactive()`/template-ref surface) | type that surface through `X.Instance`                   |
 | `Type 'boolean' is not assignable to type 'Ref<boolean>'`                                                   | missing `.value` on a Ref/Computed write — `x.flag.value = true` |
-| `'X' is possibly null` on a template ref in a watch getter                                                  | add `?.` — `watch(() => x.el.value?.foo, cb)`                    |
-| template write crashes / no-ops at runtime on the raw instance                                              | you wrote `x.Ref/Computed = v`; write `x.Ref/Computed.value = v` |
+| `'X' is possibly null` on a template ref in a watch getter                                                  | add `?.` — `watch(() => x.el.value?.foo, cb)`            |
+| template write crashes / no-ops at runtime on the raw instance                                              | you wrote `x.Ref/Computed = v`; write `x.Ref/Computed.value = v`         |
 
 ## 5. Watch rules
 
@@ -245,7 +245,134 @@ Each file calls `Reactive()` on its own class safely: it is idempotent per
 prototype level and HMR-safe; a shared ancestor is transformed once, by
 whichever file loads first.
 
-## 7. Self-review checklist (run over your ivue diff)
+## 7. computed() and watch callbacks delegate to methods (HMR-streamlined)
+
+A reactive closure's body is FROZEN at creation — it is cached per instance
+and no hot update can reach inside it. A prototype lookup is evaluated at
+call time — it stays live forever. So: **closures are pointers; logic lives
+in methods.**
+
+```ts
+// ✅ THIN — the closure only dials a method; edits hot-graft onto LIVE
+//    instances with all state preserved
+get sorted() {
+  return computed(() => this.sortItems());
+}
+sortItems() {
+  return [...this.items.value].sort(byPrice);
+}
+
+// ✅ same rule for watch callbacks wired in constructors
+watch(value, (newValue, oldValue) => this.onValueChanged(newValue, oldValue));
+
+// ❌ FAT — logic frozen into a per-instance closure: editing this body
+//    forces a component remount (the engine detects it and escalates —
+//    never silently stale — but you lose live-state grafting)
+get sorted() {
+  return computed(() => [...this.items.value].sort(byPrice));
+}
+```
+
+Also buys: guaranteed-minimum memory (the thin closure captures nothing but
+the instance — a fat closure silently pins any getter-scope local for the
+instance's lifetime) and direct testability (`inst.sortItems()`).
+Reactivity is unaffected — reads inside the method are tracked through the
+computed's evaluation exactly as if inlined.
+
+Do NOT "optimize" the arrow away to `computed(this.sortItems)`: it works
+(ivue methods are lazy-bound) but Vue 3.4+ passes the previous value as the
+getter's first argument, so a method that later gains an optional parameter
+silently receives stale data. Always the arrow.
+
+`$`-prefixed singleton getters are frozen caches too — keep their bodies to
+a single composable/service call (`return useThing()`), nothing more.
+
+## 8. Naming: unfold to the domain
+
+Readable code is the product. In ivue classes the class shape already reads
+like prose — don't ruin it with letter soup:
+
+- **No single-letter or abbreviated identifiers** — including loop indices
+  and callback parameters. `row`/`col`, not `r`/`c`; `cell`, `cellValue`,
+  `entry`, `versionRef`, `aggregate`, `newValue`/`oldValue`, not
+  `c`/`v`/`e`/`agg`/`nv`/`ov`.
+- **The one-letter-many-meanings failure mode is the reason.** A file where
+  `c` means cell in one method, column in the next, and cellValue in a
+  third makes every reader re-derive the type system in their head. Named
+  after the domain, the ambiguity cannot exist.
+- **Booleans are predicates** (`isFineTier`, `hasModel`); counts say what
+  they count (`observerRuns`, `releasedCount`); prior values are
+  `originalX`/`previousX`, not `old`/`prev` alone.
+- Abbreviate only when the abbreviation IS the domain term (`px`, `id`,
+  `fx`, A1-notation like `startRow`/`endCol`).
+- Tests are code — the same rules apply to specs.
+
+```ts
+// ❌ before                          // ✅ after
+const v = this.cellVersions.get(k);   const versionRef = this.cellVersions.get(cellKey);
+for (let r = r1; r <= r2; r++)        for (let row = startRow; row <= endRow; row++)
+watch(c, (nv, ov) => …)               watch(value, (newValue, oldValue) => this.onChanged(…))
+```
+
+## 9. Keyed reactivity — the third state shape
+
+Ref-getters express NAMED members; `shallowRef` expresses wholesale-replaced
+structures. When state is KEYED — sparse, unbounded, indexed by ids or
+coordinates unknown until runtime (cells by (row,col), entities by id, rows
+of a stream) — a getter per key is impossible. Hold **collections of
+reactive primitives as plain values** and materialize per observation:
+
+```ts
+class $Sheet {
+  // Plain readonly fields — the COLLECTIONS aren't reactive; their VALUES are.
+  private readonly cellVersions = new Map<number, Ref<number>>();
+
+  /** READ path: get-OR-CREATE, then subscribe — observation materializes. */
+  private trackCell(cellKey: number): void {
+    let versionRef = this.cellVersions.get(cellKey);
+    if (!versionRef) {
+      versionRef = ref(0);
+      this.cellVersions.set(cellKey, versionRef);
+    }
+    void versionRef.value; // subscribes whatever effect is currently running
+  }
+
+  /** WRITE path: PEEK-ONLY — unobserved keys allocate nothing, notify no one. */
+  private bumpCell(cellKey: number): void {
+    const versionRef = this.cellVersions.get(cellKey);
+    if (versionRef) versionRef.value++;
+  }
+}
+```
+
+The read/write ASYMMETRY is the pattern: reads get-or-create (cost is priced
+by observation), writes peek (existence is free). Rules that keep it honest:
+
+- Ground truth lives in plain storage (typed arrays, Maps); the refs are
+  VERSION SIGNALS, not value holders — bump to invalidate, readers re-derive.
+- Per-key cached computeds follow the same shape (`Map<key, ComputedRef>`),
+  bodies delegating to methods (§7), and MUST have an explicit release/
+  eviction path — keyed overlays cannot GC on their own (the Map holds
+  strong refs; attached watchers subscribe permanently).
+- Coarse tiers are the same pattern at lower resolution: one ref covering
+  many keys (a block of rows, a whole-collection version counter) for
+  subscribers that span many keys — one integer where naive design puts a
+  million nodes.
+- No wrapper needed: `ref()`/`computed()` are first-class values from
+  `@vue/reactivity`; Maps of them inside a `Reactive()` class compose with
+  everything (methods stay bound, HMR grafts, `$watch` works).
+
+| state shape                  | expression                                            |
+| ---------------------------- | ----------------------------------------------------- |
+| named members                | `get x() { return ref(v) }`                           |
+| wholesale-replaced structure | `get rows() { return shallowRef<Row[]>([]) }`         |
+| keyed / sparse / unbounded   | `Map<key, Ref>` + get-or-create track, peek-only bump |
+
+Same law at three granularities — nothing exists until observed: getters
+price MEMBERS, keyed collections price KEYS. (Proven at 20M cells / 4.7
+bytes each — see the flyweight grid.)
+
+## 10. Self-review checklist (run over your ivue diff)
 
 - [ ] Every mutable state member is `get x() { return ref(...) }` — no mutable plain fields.
 - [ ] Inside the class, every Ref/Computed read/write uses `.value`; plain fields are constants/config only.
@@ -258,3 +385,6 @@ whichever file loads first.
 - [ ] `defineExpose(x as X.Instance)`; consumers type the ref as `ShallowUnwrapRef<X.Instance>`.
 - [ ] Watch sources are the FUNCTION form; `this.$watch`/`this.$watchEffect` used for component-outliving instances; no `watchEffect` wrapped in `$watch`.
 - [ ] Lifecycle hooks / init logic live in the constructor (no `init()` expecting auto-call); template refs guarded with `?.` where read pre-mount.
+- [ ] Every `computed()`/constructor-watch CALLBACK delegates to a method (`computed(() => this.recalc())`) — no logic inlined in reactive closures; the arrow form, never `computed(this.method)`.
+- [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices and specs included — no single-letter names, no name meaning different things in different methods.
+- [ ] Keyed/sparse state uses the Map-of-refs shape (get-or-create on read, peek-only bump on write, explicit release path) — never one getter per key, never a deep `reactive()` collection.
