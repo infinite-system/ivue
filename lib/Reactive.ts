@@ -1,11 +1,4 @@
-import {
-  effectScope,
-  isRef,
-  toRaw,
-  watch,
-  watchEffect,
-  type Ref,
-} from 'vue';
+import { effectScope, isRef, toRaw, watch, watchEffect, type Ref } from 'vue';
 
 /**
  * Constants & Helpers
@@ -24,9 +17,97 @@ const $stopEffects = '$stopEffects';
 const $watch = '$watch';
 const $watchEffect = '$watchEffect';
 const fn = 'function';
-const RAW = Symbol('ivue_raw'); // Per-instance back-pointer to the raw object
-const SCOPE = Symbol('ivue_scope'); // Lazily-created per-instance effect scope
-const PROCESSED = Symbol('ivue_processed'); // Flag to mark a prototype as "Reactified"
+// Identity symbols are GLOBAL (`Symbol.for`): any partial re-execution of
+// this module (a Vite HMR cascade, a second copy in an odd bundling setup)
+// must agree with objects stamped by a previous execution. Private
+// `Symbol()` identities made old stamps unreadable to new code — the
+// post-hot-update wedge ("Cannot set properties of undefined (setting
+// 'value')") was exactly that disagreement.
+const RAW = Symbol.for('ivue.raw'); // Per-instance back-pointer to the raw object
+const SCOPE = Symbol.for('ivue.scope'); // Lazily-created per-instance effect scope
+const PROCESSED = Symbol.for('ivue.processed'); // Flag to mark a prototype as "Reactified"
+
+/* -------------------------------------------------------------------------
+ * HMR (dev-only) — hot reload for classes.
+ *
+ * The runtime contract mirrors Vue's own component HMR (stable identity +
+ * self-accepting modules + an upgrade procedure for live instances), applied
+ * at class granularity — and it can go further than Vue: because ivue
+ * separates STATE (ref-getters → per-instance cached refs, own properties)
+ * from BEHAVIOR (methods/getters on the prototype) syntactically, a behavior
+ * edit can be applied to LIVE instances with all state preserved. Vue must
+ * reset component state on any script edit; ivue only needs a remount for
+ * constructor-level changes.
+ *
+ * How it works:
+ *  1. `Reactive()` registers each class in a global registry keyed by class
+ *     name (opt-in override via the `hmrId` param). The first registration
+ *     becomes the CANONICAL identity — the only class object the page ever
+ *     holds. What Reactive returns is a construct-trap proxy over it.
+ *  2. A class module that self-accepts (`import.meta.hot.accept()`)
+ *     re-executes on edit; its fresh class hits the registry and is treated
+ *     as a DONOR: its raw prototype members are re-processed onto the
+ *     canonical prototype (hmrGraft). Instance caches survive because the
+ *     per-(prototype,key) symbols are reused; method calls route through
+ *     per-key SLOTS, so even bound references handed out long ago (event
+ *     listeners, timer callbacks) run the new implementation immediately.
+ *  3. NEW instances are built by the LATEST donor constructor (the construct
+ *     trap), so constructor edits apply to anything created after the edit —
+ *     a component remount is enough; a full page reload never is required.
+ *
+ * Modules that do NOT self-accept still benefit: when their importing SFC
+ * boundary reloads, the re-executed `Reactive()` call grafts instead of
+ * minting a second identity — stale-class ghosts are impossible either way.
+ * ---------------------------------------------------------------------- */
+
+const HMR_REGISTRY = Symbol.for('ivue.hmr.registry'); // globalThis → Map<id, HmrEntry>
+const HMR_KEYS = Symbol.for('ivue.hmr.keys'); // prototype → Map<key, superKey>
+const HMR_SLOTS = Symbol.for('ivue.hmr.slots'); // prototype → Map<key, {fn}>
+
+type HmrSlot = { fn: (...args: any[]) => any };
+
+interface HmrEntry {
+  /** First-registered class — the ONE identity the page ever references. */
+  canonical: any;
+  /** Most recent donor — its constructor builds all NEW instances. */
+  latest: any;
+  /** What Reactive() returns: a construct-trap proxy over `canonical`. */
+  proxy: any;
+}
+
+const hmrRegistry = (): Map<string, HmrEntry> =>
+  ((globalThis as any)[HMR_REGISTRY] ??= new Map());
+
+/**
+ * HMR machinery arms only where hot updates can actually happen: Vite dev
+ * serve provides `import.meta.hot` to every served module. Vitest ALSO
+ * provides a full hot object (it runs modules through Vite), so tests are
+ * excluded explicitly via `import.meta.env.TEST` — in test/SSR/prod
+ * environments Reactive() keeps its classic contract: the SAME class is
+ * returned, no proxy, no registry, no slot indirection. Tests exercising
+ * the graft force it on via `globalThis[Symbol.for('ivue.hmr.force')]`.
+ */
+const hmrActive = (): boolean =>
+  (import.meta.env.DEV && !import.meta.env.TEST && !!import.meta.hot) ||
+  !!(globalThis as any)[Symbol.for('ivue.hmr.force')];
+
+/**
+ * Own-scoped per-prototype bookkeeping map. A plain `proto[symbol] ??=`
+ * READS THROUGH THE PROTOTYPE CHAIN, which would hand a CHILD level its
+ * PARENT's map — child methods would overwrite parent slots (infinite
+ * recursion on `super` calls) and reuse parent superKeys (the shadow
+ * collisions the per-level symbols exist to prevent).
+ */
+function ownHmrMap(proto: any, symbol: symbol): Map<string, any> {
+  if (!prototypeHasOwnProperty(proto, symbol)) {
+    defineProperty(proto, symbol, {
+      configurable: true,
+      enumerable: false,
+      value: new Map(),
+    });
+  }
+  return proto[symbol];
+}
 
 /**
  * Resolve the TRUE raw instance from whatever `this` the engine was entered
@@ -81,12 +162,31 @@ function convertToLazyBoundMethod(
   superKey: symbol,
   originalFn: (...args: any[]) => any,
 ) {
+  let makeBound: (raw: any) => (...args: any[]) => any = (raw) =>
+    originalFn.bind(raw);
+  if (import.meta.env.DEV && hmrActive()) {
+    // HMR: route calls through a per-(prototype, key) SLOT holding the
+    // latest implementation. The cached per-instance "bound method" is a
+    // stable wrapper reading the slot, so references handed out long ago
+    // (event listeners, timer callbacks, debounced fns) stay valid for
+    // removeEventListener AND run grafted code immediately. Dev-serve only:
+    // everywhere else keeps the zero-indirection direct bind.
+    const slots: Map<string, HmrSlot> = ownHmrMap(proto, HMR_SLOTS);
+    let slot = slots.get(key);
+    if (slot) slot.fn = originalFn;
+    else slots.set(key, (slot = { fn: originalFn }));
+    const live = slot;
+    makeBound = (raw) =>
+      function (this: any, ...args: any[]) {
+        return live.fn.apply(raw, args);
+      };
+  }
   defineProperty(proto, key, {
     configurable: true,
     enumerable: false,
     get(this: any) {
       const raw = resolveRaw(this);
-      return raw[superKey] ?? (raw[superKey] = originalFn.bind(raw));
+      return raw[superKey] ?? (raw[superKey] = makeBound(raw));
     },
     set(this: any, newFn: any) {
       resolveRaw(this)[superKey] = newFn;
@@ -175,13 +275,134 @@ function convertToLazyComputed(
 }
 
 /**
+ * HMR graft (dev-only): re-apply a re-executed module's class ("donor") onto
+ * the canonical identity, member by member. superKeys are REUSED so
+ * per-instance caches survive: cached state refs are kept (a changed
+ * ref-getter initializer intentionally does NOT reset live state), and
+ * cached bound-method wrappers keep working through their slot with the new
+ * implementation active immediately. Returns false when grafting would be
+ * unsafe — the donor then stays un-HMR'd (reload-needed behavior, never
+ * corruption).
+ */
+function hmrGraft(entry: HmrEntry, donor: any): boolean {
+  const canonical = entry.canonical;
+  const cProto = canonical.prototype;
+  const dProto = donor.prototype;
+
+  if (
+    getPrototypeOf(cProto) !== objectPrototype ||
+    getPrototypeOf(dProto) !== objectPrototype
+  ) {
+    console.warn(
+      `[ivue] HMR: "${canonical.name}" uses inheritance — hot update not applied; reload the page.`,
+    );
+    return false;
+  }
+
+  const skip = new Set(['constructor', $stopEffects, $watch, $watchEffect]);
+  const donorNames = getOwnPropertyNames(dProto);
+  const canonicalNames = getOwnPropertyNames(cProto).filter(
+    (k) => !skip.has(k),
+  );
+
+  // Name-collision guard: the registry keys by class name (unless an
+  // explicit hmrId was given); two unrelated classes sharing one would
+  // otherwise graft into each other. Unrelated classes share almost no
+  // member names — refuse instead. (A legitimate near-total rewrite also
+  // lands here and simply degrades to reload-needed.)
+  if (canonicalNames.length > 3) {
+    let shared = 0;
+    for (const k of canonicalNames) if (donorNames.includes(k)) shared++;
+    if (shared / canonicalNames.length < 0.3) {
+      console.warn(
+        `[ivue] HMR: "${canonical.name}" re-registered with mostly different members — assuming a class-name collision; hot update not applied. Pass an explicit hmrId to Reactive() to disambiguate.`,
+      );
+      return false;
+    }
+  }
+
+  const hmrKeys: Map<string, symbol> = ownHmrMap(cProto, HMR_KEYS);
+  const slots: Map<string, HmrSlot> | undefined = prototypeHasOwnProperty(
+    cProto,
+    HMR_SLOTS,
+  )
+    ? cProto[HMR_SLOTS]
+    : undefined;
+
+  // Removed members.
+  for (const key of canonicalNames) {
+    if (donorNames.includes(key)) continue;
+    delete cProto[key];
+    hmrKeys.delete(key);
+    slots?.delete(key);
+  }
+
+  // Added / changed members: re-run the engine's per-member processing on
+  // the canonical prototype with the donor's RAW descriptors (the donor is
+  // never processed itself — its descriptors are the source of originals).
+  for (const key of donorNames) {
+    if (skip.has(key)) continue;
+    const desc = getOwnPropertyDescriptor(dProto, key)!;
+    let superKey = hmrKeys.get(key);
+    if (!superKey) {
+      superKey = Symbol(key);
+      hmrKeys.set(key, superKey);
+    }
+    if (typeof desc.value === fn) {
+      convertToLazyBoundMethod(cProto, key, superKey, desc.value);
+    } else if (desc.get) {
+      convertToLazyComputed(cProto, key, superKey, desc.get, desc.set);
+    } else {
+      defineProperty(cProto, key, desc);
+    }
+  }
+
+  // Statics: keep external `Canonical.STATIC` readers current. (New method
+  // bodies close over the donor module's scope and read donor statics
+  // directly, so this is for outside readers only.)
+  for (const key of getOwnPropertyNames(donor)) {
+    if (key === 'prototype' || key === 'name' || key === 'length') continue;
+    const desc = getOwnPropertyDescriptor(donor, key);
+    if (!desc) continue;
+    try {
+      defineProperty(canonical, key, desc);
+    } catch (e) {
+      /* non-configurable static — leave the original */
+    }
+  }
+
+  entry.latest = donor;
+  console.info(
+    `[ivue] HMR: grafted "${canonical.name}" — live instances keep their state and run the new code.`,
+  );
+  return true;
+}
+
+/**
  * Create a reactive class.
  * @param targetClass The class to make reactive.
+ * @param hmrId Optional stable identity for dev HMR (defaults to the class
+ * name). Only needed when two Reactive classes share a name.
  * @returns A reactive version of the class (the same class, transformed in place).
  */
 export function Reactive<C extends new (...args: any) => any>(
   targetClass: C,
+  hmrId?: string,
 ): ReactiveClass<C> & { Instance: ReactiveInstance<InstanceType<C>> } {
+  // HMR: a re-executing class module registers a NEW class object under an
+  // id we have seen — graft it onto the canonical identity instead of
+  // letting a second identity loose (see hmrGraft).
+  if (import.meta.env.DEV && hmrActive()) {
+    const entry = hmrRegistry().get(hmrId ?? targetClass.name);
+    if (
+      entry &&
+      entry.canonical !== targetClass &&
+      hmrGraft(entry, targetClass)
+    ) {
+      return entry.proxy;
+    }
+  }
+
   const chain: any[] = [];
 
   let targetPrototype = targetClass.prototype;
@@ -200,6 +421,14 @@ export function Reactive<C extends new (...args: any) => any>(
 
     const names = getOwnPropertyNames(prototype);
 
+    // HMR: remember key→superKey per prototype so a later graft reuses them
+    // and per-instance caches survive the swap. OWN-scoped per level — see
+    // ownHmrMap.
+    const hmrKeys: Map<string, symbol> | null =
+      import.meta.env.DEV && hmrActive()
+      ? ownHmrMap(prototype, HMR_KEYS)
+      : null;
+
     for (const key of names) {
       if (key === 'constructor') continue;
       const desc = getOwnPropertyDescriptor(prototype, key)!;
@@ -207,7 +436,11 @@ export function Reactive<C extends new (...args: any) => any>(
       // A fresh symbol per (prototype, key). Because each prototype level gets
       // its own symbol, a child override and its `super` counterpart cache
       // under different keys and never collide.
-      const superKey = Symbol(key);
+      let superKey = hmrKeys?.get(key);
+      if (!superKey) {
+        superKey = Symbol(key);
+        hmrKeys?.set(key, superKey);
+      }
 
       if (typeof desc.value === fn) {
         convertToLazyBoundMethod(prototype, key, superKey, desc.value);
@@ -281,6 +514,36 @@ export function Reactive<C extends new (...args: any) => any>(
         }
       },
     });
+  }
+
+  // HMR: hand out a construct-trap proxy as the ONE public identity. New
+  // instances must always be built by the LATEST donor constructor —
+  // without this, even a component remount after an edit would run the
+  // original constructor (v1 wiring under v2 methods). `new.target` stays
+  // the proxy, so instances get the CANONICAL (grafted) prototype while the
+  // latest constructor body + field initializers run.
+  if (import.meta.env.DEV && hmrActive()) {
+    const registry = hmrRegistry();
+    const id = hmrId ?? targetClass.name;
+    const existing = registry.get(id);
+    if (existing) {
+      // Same class re-Reactive()d → its proxy; a graft-refused donor
+      // (collision/inheritance) → hand it back bare, un-HMR'd.
+      return existing.canonical === targetClass
+        ? existing.proxy
+        : (targetClass as any);
+    }
+    const entry: HmrEntry = {
+      canonical: targetClass,
+      latest: targetClass,
+      proxy: null,
+    };
+    entry.proxy = new Proxy(targetClass as any, {
+      construct: (_target, args, newTarget) =>
+        Reflect.construct(entry.latest, args, newTarget),
+    });
+    registry.set(id, entry);
+    return entry.proxy;
   }
 
   return targetClass as any;
@@ -421,4 +684,3 @@ export type ReactiveInstance<T> = T &
 export type ReactiveClass<C extends new (...args: any) => any> = new (
   ...args: ConstructorParameters<C>
 ) => ReactiveInstance<InstanceType<C>>;
-

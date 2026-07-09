@@ -175,7 +175,7 @@ describe('Reactive()', () => {
       // engine's RAW back-pointer (stamped on first access by resolveRaw)
       // may exist on the instance.
       const syms = Object.getOwnPropertySymbols(a);
-      expect(syms.map((s) => s.toString())).toEqual(['Symbol(ivue_raw)']);
+      expect(syms.map((s) => s.toString())).toEqual(['Symbol(ivue.raw)']);
       expect((a as any)[syms[0]]).toBe(a);
     });
 
@@ -541,7 +541,7 @@ describe('Reactive()', () => {
         (s) =>
           s !==
           Object.getOwnPropertySymbols(d).find(
-            (x) => x.toString() === 'Symbol(ivue_raw)',
+            (x) => x.toString() === 'Symbol(ivue.raw)',
           ),
       );
       // at least the four tag Refs + base must coexist (RAW pointer excluded)

@@ -25,22 +25,31 @@ Line references are to `lib/Reactive.ts`. Tests are in
 
 ### Identity preservation
 
-**Statement.** `Reactive(Class)` returns the _same_ constructor it was given
-(mutated in place), never a wrapper or subclass.
+**Statement.** `Reactive(Class)` returns ONE stable identity for the class's
+whole lifetime. In test/SSR/prod that is the _same_ constructor it was given
+(mutated in place — never a wrapper or subclass). In Vite dev serve (HMR
+armed — see _Hot-swap continuity_) it is a construct-trap proxy over that
+same constructor: a deliberate, dev-only exception whose entire purpose is to
+make the identity survive module re-executions too.
 
-**Mechanism.** The function transforms `Class.prototype` and returns
-`targetClass` unchanged (`return targetClass as any`, line 263).
+**Mechanism.** The function transforms `Class.prototype` in place and returns
+`targetClass` (prod/test) or the registered proxy (dev serve, `hmrActive()`).
 
-**Guarantees.** `Reactive(X) === X`. `instanceof` still works. The raw class and
-the reactive class share one prototype lineage, which is what lets a child
-`extends ParentRawClass` and still inherit the reactive behaviour (see
-_Inheritance & `super` fidelity_ and the namespace-split invariant, both below).
+**Guarantees.** `Reactive(X) === X` outside dev serve. In every environment:
+`instanceof` works (the proxy exposes the same `prototype`), the raw class
+and the reactive class share one prototype lineage — which is what lets a
+child `extends ParentRawClass` and still inherit the reactive behaviour (see
+_Inheritance & `super` fidelity_ and the namespace-split invariant, both
+below) — and repeated `Reactive(X)` calls return the identical object.
 
 **Impossible if true.** There can be no "reactive copy" with a divergent
-prototype; you can never end up with two class identities for one declaration;
-`x instanceof Class` cannot break after transformation.
+prototype; you can never end up with two class identities for one declaration
+— **not even across hot updates**; `x instanceof Class` cannot break after
+transformation.
 
-**Test.** _identity & return value › returns the SAME class reference_.
+**Test.** _identity & return value › returns the SAME class reference_ (the
+classic contract; HMR-armed identity is covered by
+_ReactiveHmr › preserves identity, state and updates behavior_).
 
 ---
 
@@ -274,6 +283,46 @@ runs once; later reads return the same object.
 would create a new composable/subscription every read).
 
 **Test.** _$-prefixed singletons › caches the WHOLE result forever_.
+
+---
+
+### Hot-swap continuity (HMR — dev serve only)
+
+**Statement.** When a self-accepting class module re-executes under Vite dev
+serve, the new class is **grafted onto the canonical identity**: live
+instances keep all their state and immediately run the new behaviour; new
+instances are built by the latest constructor. No second class identity ever
+exists; a full page reload is never required. Everywhere else (test, SSR,
+prod) this machinery does not exist at runtime — call sites are gated on the
+statically-replaceable `import.meta.env.DEV`, so production bundles contain
+**zero** HMR code (verified by grepping `dist/` after a build).
+
+**Mechanism.** A `globalThis` registry keyed by class name (or explicit
+`hmrId`) marks the first registration canonical; `hmrGraft()` re-runs the
+per-member processing on the canonical prototype with the donor's raw
+descriptors, REUSING per-(prototype, key) symbols so per-instance caches
+survive; method calls route through per-key SLOTS so bound references handed
+out long ago (event listeners) run new code; a construct-trap proxy builds
+new instances with the latest constructor. Identity symbols are
+`Symbol.for` — any partial module re-execution agrees with old stamps.
+
+**Guarantees.** This is _more_ than Vue's own HMR can offer: Vue must reset
+component state on any script edit (setup is an opaque closure); ivue's
+syntactic state/behaviour split lets behaviour edits land on live instances
+with state intact. Unsafe grafts (inheritance chains, suspected name
+collisions) are refused loudly and degrade to reload-needed — never to
+corruption. Un-accepting modules still graft when their component boundary
+reloads, so stale-class ghosts are impossible either way.
+
+**Impossible if true.** Two class identities for one declaration across hot
+updates; a hot update that silently resets live instance state; a listener
+holding a bound method that keeps running stale code after an edit; any HMR
+instruction reaching a production bundle.
+
+**Test.** `lib/__tests__/ReactiveHmr.vitest.spec.ts` (graft semantics,
+state preservation, bound-reference continuity, latest-constructor
+instances, collision/inheritance refusal, `$watch` survival). The Vite
+plugin that injects module self-acceptance lives in `lib/hmr-plugin.ts`.
 
 ---
 
