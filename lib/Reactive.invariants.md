@@ -291,8 +291,13 @@ would create a new composable/subscription every read).
 **Statement.** When a self-accepting class module re-executes under Vite dev
 serve, the new class is **grafted onto the canonical identity**: live
 instances keep all their state and immediately run the new behaviour; new
-instances are built by the latest constructor. No second class identity ever
-exists; a full page reload is never required. Everywhere else (test, SSR,
+instances are built by the latest constructor. Constructor-level edits
+(ctor body, field initializers, statics) escalate AUTOMATICALLY: the graft
+diffs a constructor signature and the module's accept callback
+(`ivueHotUpdate`) invalidates the module, remounting just the owning
+components — which rebuild through the construct trap with the new
+constructor. No second class identity ever exists; a full page reload is
+never required. Everywhere else (test, SSR,
 prod) this machinery does not exist at runtime — call sites are gated on the
 statically-replaceable `import.meta.env.DEV`, so production bundles contain
 **zero** HMR code (verified by grepping `dist/` after a build).

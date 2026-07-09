@@ -73,6 +73,14 @@ interface HmrEntry {
   latest: any;
   /** What Reactive() returns: a construct-trap proxy over `canonical`. */
   proxy: any;
+  /** Constructor-level signature of `latest` (see hmrCtorSignature). */
+  ctorSig: string;
+  /** Set by a graft whose constructor-level code changed: live instances
+   *  keep v1 wiring, so the module's accept callback should escalate to
+   *  `hot.invalidate()` → the owning components remount → the construct
+   *  trap builds replacements with the latest constructor. Consumed by
+   *  ivueHotUpdate(). */
+  remountNeeded: boolean;
 }
 
 const hmrRegistry = (): Map<string, HmrEntry> =>
@@ -90,6 +98,84 @@ const hmrRegistry = (): Map<string, HmrEntry> =>
 const hmrActive = (): boolean =>
   (import.meta.env.DEV && !import.meta.env.TEST && !!import.meta.hot) ||
   !!(globalThis as any)[Symbol.for('ivue.hmr.force')];
+
+/**
+ * Constructor-level signature: the class source text with every PROTOTYPE
+ * member's exact source stripped out. `String(class)` alone would flag any
+ * method edit; member sources are verbatim substrings of the class text, so
+ * what remains after removal is precisely constructor body + class-field
+ * initializers + statics + syntax glue — the parts a graft CANNOT apply to
+ * live instances. Must be computed from RAW (unprocessed) descriptors:
+ * donors always qualify; the first registration computes it before the
+ * prototype is transformed.
+ */
+function hmrCtorSignature(klass: any): string {
+  let text = String(klass);
+  const proto = klass.prototype;
+  for (const key of getOwnPropertyNames(proto)) {
+    if (key === 'constructor') continue;
+    const desc = getOwnPropertyDescriptor(proto, key)!;
+    if (typeof desc.value === fn)
+      text = text.split(String(desc.value)).join('');
+    if (desc.get) text = text.split(String(desc.get)).join('');
+    if (desc.set) text = text.split(String(desc.set)).join('');
+  }
+  // The class NAME is part of the header text but not constructor-level
+  // code: donors legitimately carry different names (renames, test donors
+  // registered under an explicit hmrId) without their wiring changing.
+  if (klass.name) text = text.split(klass.name).join('');
+  return text;
+}
+
+/**
+ * Module-side half of constructor-edit escalation. Wire the self-accept as
+ *
+ *   import.meta.hot.accept((mod) => ivueHotUpdate(import.meta.hot, mod));
+ *
+ * (the hmr-plugin injects exactly this). After the re-executed module has
+ * grafted its classes, this checks whether any of the module's Reactive
+ * classes had a CONSTRUCTOR-level change — grafting covers behavior, but
+ * live instances keep their v1 constructor wiring (watchers, listeners,
+ * field values created at construction). If so, `hot.invalidate()` bubbles
+ * the update to the importing component boundaries: Vue remounts JUST those
+ * components, and the construct trap builds the replacements with the
+ * latest constructor. The page itself never reloads. A bare
+ * `hot.accept()` (no callback) still grafts — constructor edits then need a
+ * manual remount, exactly Vue-minus semantics.
+ */
+export function ivueHotUpdate(hot: any, mod: any): void {
+  if (!import.meta.env.DEV || !hot) return;
+  const registry = hmrRegistry();
+  // Collect the module's exported values, one nesting level deep (the ivue
+  // namespace convention exports { $Class, Class } objects).
+  const candidates = new Set<any>();
+  if (mod && typeof mod === 'object') {
+    for (const key of Object.keys(mod)) {
+      const value = (mod as any)[key];
+      candidates.add(value);
+      if (value && typeof value === 'object') {
+        for (const inner of Object.keys(value)) candidates.add(value[inner]);
+      }
+    }
+  }
+  let remount = false;
+  for (const entry of registry.values()) {
+    if (!entry.remountNeeded) continue;
+    // Match precisely when the module namespace is inspectable; if Vite
+    // handed us no namespace (failed re-evaluation edge), escalate any
+    // pending flag rather than strand a stale instance.
+    if (candidates.size === 0 || candidates.has(entry.proxy)) {
+      entry.remountNeeded = false;
+      remount = true;
+    }
+  }
+  if (remount && typeof hot.invalidate === fn) {
+    console.info(
+      '[ivue] HMR: constructor-level change — remounting owner components (instances rebuilt with the new constructor).',
+    );
+    hot.invalidate();
+  }
+}
 
 /**
  * Own-scoped per-prototype bookkeeping map. A plain `proto[symbol] ??=`
@@ -371,6 +457,18 @@ function hmrGraft(entry: HmrEntry, donor: any): boolean {
     }
   }
 
+  // Constructor-level diff: the graft above covers behavior, but live
+  // instances keep their v1 constructor wiring (watchers, listeners, field
+  // values created at construction). Flag for escalation — consumed by
+  // ivueHotUpdate() in the module's accept callback, which invalidates the
+  // module so the owning components remount and rebuild instances through
+  // the construct trap (latest constructor).
+  const donorSig = hmrCtorSignature(donor);
+  if (donorSig !== entry.ctorSig) {
+    entry.remountNeeded = true;
+  }
+  entry.ctorSig = donorSig;
+
   entry.latest = donor;
   console.info(
     `[ivue] HMR: grafted "${canonical.name}" — live instances keep their state and run the new code.`,
@@ -392,6 +490,7 @@ export function Reactive<C extends new (...args: any) => any>(
   // HMR: a re-executing class module registers a NEW class object under an
   // id we have seen — graft it onto the canonical identity instead of
   // letting a second identity loose (see hmrGraft).
+  let hmrSig = '';
   if (import.meta.env.DEV && hmrActive()) {
     const entry = hmrRegistry().get(hmrId ?? targetClass.name);
     if (
@@ -401,6 +500,10 @@ export function Reactive<C extends new (...args: any) => any>(
     ) {
       return entry.proxy;
     }
+    // First registration (or a refused donor): capture the
+    // constructor-level signature BEFORE processing wraps the prototype
+    // descriptors — see hmrCtorSignature.
+    hmrSig = hmrCtorSignature(targetClass);
   }
 
   const chain: any[] = [];
@@ -426,8 +529,8 @@ export function Reactive<C extends new (...args: any) => any>(
     // ownHmrMap.
     const hmrKeys: Map<string, symbol> | null =
       import.meta.env.DEV && hmrActive()
-      ? ownHmrMap(prototype, HMR_KEYS)
-      : null;
+        ? ownHmrMap(prototype, HMR_KEYS)
+        : null;
 
     for (const key of names) {
       if (key === 'constructor') continue;
@@ -537,6 +640,8 @@ export function Reactive<C extends new (...args: any) => any>(
       canonical: targetClass,
       latest: targetClass,
       proxy: null,
+      ctorSig: hmrSig,
+      remountNeeded: false,
     };
     entry.proxy = new Proxy(targetClass as any, {
       construct: (_target, args, newTarget) =>

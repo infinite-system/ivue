@@ -42,11 +42,18 @@ export interface IvueHmrOptions {
   include?: RegExp;
   /** Files to skip (default: node_modules). */
   exclude?: RegExp;
+  /**
+   * Module specifier the injected code imports `ivueHotUpdate` from
+   * (default: 'ivue'). Point it at your local engine copy if you vendor
+   * Reactive.ts (e.g. 'src/utils/ivue2').
+   */
+  runtime?: string;
 }
 
 export default function ivueHmr(options: IvueHmrOptions = {}): Plugin {
   const include = options.include ?? /\.[jt]sx?$/;
   const exclude = options.exclude ?? /node_modules/;
+  const runtime = options.runtime ?? 'ivue';
   return {
     name: 'ivue-hmr',
     apply: 'serve',
@@ -59,8 +66,13 @@ export default function ivueHmr(options: IvueHmrOptions = {}): Plugin {
       return {
         code:
           code +
-          '\n// injected by ivue-hmr: self-accept so class edits graft onto live instances\n' +
-          'if (import.meta.hot) {\n  import.meta.hot.accept();\n}\n',
+          '\n// injected by ivue-hmr: self-accept so class edits graft onto\n' +
+          '// live instances; constructor-level edits escalate to a component\n' +
+          '// remount via ivueHotUpdate (imports are hoisted — EOF is fine).\n' +
+          `import { ivueHotUpdate as __ivueHotUpdate } from '${runtime}';\n` +
+          'if (import.meta.hot) {\n' +
+          '  import.meta.hot.accept((mod) => __ivueHotUpdate?.(import.meta.hot, mod));\n' +
+          '}\n',
         map: null,
       };
     },

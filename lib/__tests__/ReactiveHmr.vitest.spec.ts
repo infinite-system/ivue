@@ -20,7 +20,12 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
 
-import { Reactive } from '../Reactive';
+import { ivueHotUpdate, Reactive } from '../Reactive';
+
+const registryEntry = (id: string) =>
+  (
+    (globalThis as any)[Symbol.for('ivue.hmr.registry')] as Map<string, any>
+  ).get(id);
 
 describe('Reactive HMR graft', () => {
   // The HMR machinery arms only where hot updates exist (`import.meta.hot`,
@@ -170,6 +175,103 @@ describe('Reactive HMR graft', () => {
     expect(again).not.toBe(Child);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('inheritance'));
     warn.mockRestore();
+  });
+
+  it('flags constructor-level changes for remount — but not behavior edits', () => {
+    class $Wired {
+      x = 1;
+      constructor() {
+        this.x = 1;
+      }
+      m() {
+        return 'v1';
+      }
+    }
+    Reactive($Wired, 'hmr.test.Wired');
+    const entry = registryEntry('hmr.test.Wired');
+    expect(entry.remountNeeded).toBe(false);
+
+    // Behavior-only edit: method body changed, ctor/fields identical.
+    class $WiredV2 {
+      x = 1;
+      constructor() {
+        this.x = 1;
+      }
+      m() {
+        return 'v2';
+      }
+    }
+    Reactive($WiredV2 as any, 'hmr.test.Wired');
+    expect(entry.remountNeeded).toBe(false);
+
+    // Constructor-body edit → flagged.
+    class $WiredV3 {
+      x = 1;
+      constructor() {
+        this.x = 2;
+      }
+      m() {
+        return 'v2';
+      }
+    }
+    Reactive($WiredV3 as any, 'hmr.test.Wired');
+    expect(entry.remountNeeded).toBe(true);
+    entry.remountNeeded = false;
+
+    // Field-initializer edit → flagged (fields are constructor territory).
+    class $WiredV4 {
+      x = 5;
+      constructor() {
+        this.x = 2;
+      }
+      m() {
+        return 'v2';
+      }
+    }
+    Reactive($WiredV4 as any, 'hmr.test.Wired');
+    expect(entry.remountNeeded).toBe(true);
+  });
+
+  it('ivueHotUpdate escalates flagged modules to hot.invalidate exactly once', () => {
+    class $Esc {
+      wired = 0;
+      constructor() {
+        this.wired = 1;
+      }
+      m() {
+        return 1;
+      }
+    }
+    const Esc = Reactive($Esc, 'hmr.test.Esc');
+    class $EscV2 {
+      wired = 0;
+      constructor() {
+        this.wired = 2;
+      }
+      m() {
+        return 1;
+      }
+    }
+    Reactive($EscV2 as any, 'hmr.test.Esc');
+    const entry = registryEntry('hmr.test.Esc');
+    expect(entry.remountNeeded).toBe(true);
+
+    // Namespace-convention module shape: { Esc: { $Class, Class } }.
+    const hot = { invalidate: vi.fn(), accept: vi.fn() };
+    ivueHotUpdate(hot, { Esc: { $Class: $EscV2, Class: Esc } });
+    expect(hot.invalidate).toHaveBeenCalledTimes(1);
+    expect(entry.remountNeeded).toBe(false);
+
+    // Idempotent: nothing pending → no second invalidate.
+    ivueHotUpdate(hot, { Esc: { $Class: $EscV2, Class: Esc } });
+    expect(hot.invalidate).toHaveBeenCalledTimes(1);
+
+    // An unrelated module's callback must not consume other flags.
+    entry.remountNeeded = true;
+    ivueHotUpdate(hot, { Other: { Class: class {} } });
+    expect(hot.invalidate).toHaveBeenCalledTimes(1);
+    expect(entry.remountNeeded).toBe(true);
+    entry.remountNeeded = false;
   });
 
   it('keeps $watch/$stopEffects working across a graft', () => {
