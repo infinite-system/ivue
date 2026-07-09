@@ -314,9 +314,14 @@ new instances with the latest constructor. Identity symbols are
 **Guarantees.** This is _more_ than Vue's own HMR can offer: Vue must reset
 component state on any script edit (setup is an opaque closure); ivue's
 syntactic state/behaviour split lets behaviour edits land on live instances
-with state intact. Unsafe grafts (inheritance chains, suspected name
-collisions) are refused loudly and degrade to reload-needed — never to
-corruption. Un-accepting modules still graft when their component boundary
+with state intact. Edits a graft cannot express escalate to the
+same surgical remount: inlined-`computed` bodies and `$`-singletons (their
+closures are cached per instance — detected by signature), and member kind
+flips (method ↔ getter — the cache is re-keyed so shapes never mix).
+Removed members are tombstoned (last implementation stays reachable) so
+frozen closures never crash in the escalation window. Unsafe grafts
+(inheritance chains, suspected name collisions) are refused loudly and
+degrade to reload-needed — never to corruption. Un-accepting modules still graft when their component boundary
 reloads, so stale-class ghosts are impossible either way.
 
 **Impossible if true.** Two class identities for one declaration across hot

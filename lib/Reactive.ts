@@ -75,6 +75,8 @@ interface HmrEntry {
   proxy: any;
   /** Constructor-level signature of `latest` (see hmrCtorSignature). */
   ctorSig: string;
+  /** Frozen-cache member signature of `latest` (see hmrFrozenSignature). */
+  frozenSig: string;
   /** Set by a graft whose constructor-level code changed: live instances
    *  keep v1 wiring, so the module's accept callback should escalate to
    *  `hot.invalidate()` → the owning components remount → the construct
@@ -98,6 +100,21 @@ const hmrRegistry = (): Map<string, HmrEntry> =>
 const hmrActive = (): boolean =>
   (import.meta.env.DEV && !import.meta.env.TEST && !!import.meta.hot) ||
   !!(globalThis as any)[Symbol.for('ivue.hmr.force')];
+
+/**
+ * Normalize source text for signature comparison: strip comments and
+ * collapse whitespace so comment-only and formatting-only edits never flag
+ * a remount (they cannot change wiring). Best-effort regex stripping — a
+ * string literal containing `//` may be over-trimmed, which at worst makes
+ * two DIFFERENT texts compare equal for edits inside that literal's tail;
+ * dev-only and vanishingly rare.
+ */
+function hmrNormalize(text: string): string {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/[^\n]*/g, '')
+    .replace(/\s+/g, '');
+}
 
 /**
  * Constructor-level signature: the class source text with every PROTOTYPE
@@ -124,6 +141,34 @@ function hmrCtorSignature(klass: any): string {
   // code: donors legitimately carry different names (renames, test donors
   // registered under an explicit hmrId) without their wiring changing.
   if (klass.name) text = text.split(klass.name).join('');
+  return hmrNormalize(text);
+}
+
+/**
+ * Frozen-cache member signature: the concatenated sources of every getter
+ * whose per-instance cache a graft CANNOT refresh — `$`-prefixed singletons
+ * (cached whole, forever) and getters that create a `computed(...)` (the
+ * computed object is cached on the instance and its CLOSURE keeps the old
+ * module's logic; see the HMR docs' "closures freeze, prototype lookups
+ * stay live" rule). When one of these changes, grafting would leave live
+ * instances SILENTLY stale — the worst outcome — so the graft escalates to
+ * a component remount instead. Ref-getters are deliberately excluded:
+ * keeping their live cache IS state preservation. Getters that delegate to
+ * methods don't trip this (the method grafts), which is the convention to
+ * prefer for hot paths.
+ */
+function hmrFrozenSignature(klass: any): string {
+  let text = '';
+  const proto = klass.prototype;
+  for (const key of getOwnPropertyNames(proto)) {
+    if (key === 'constructor') continue;
+    const desc = getOwnPropertyDescriptor(proto, key)!;
+    if (!desc.get) continue;
+    const src = String(desc.get);
+    if (key[0] === '$' || /\bcomputed\s*\(/.test(src)) {
+      text += key + ':' + hmrNormalize(src) + '\n';
+    }
+  }
   return text;
 }
 
@@ -415,13 +460,15 @@ function hmrGraft(entry: HmrEntry, donor: any): boolean {
     ? cProto[HMR_SLOTS]
     : undefined;
 
-  // Removed members.
-  for (const key of canonicalNames) {
-    if (donorNames.includes(key)) continue;
-    delete cProto[key];
-    hmrKeys.delete(key);
-    slots?.delete(key);
-  }
+  // Removed members are TOMBSTONED, not deleted: frozen closures cached on
+  // live instances (inlined computeds, $-singletons) may still call them —
+  // deleting the prototype property crashes those closures in the window
+  // before an escalation remount lands (or forever under a bare accept()):
+  // "this.someMethod is not a function". The tombstone keeps the LAST
+  // implementation reachable; closures created after the edit never
+  // reference it, so behavior converges once instances are rebuilt.
+  // Dev-only residue. A re-added member reuses its superKey, so instance
+  // caches survive remove→re-add round trips.
 
   // Added / changed members: re-run the engine's per-member processing on
   // the canonical prototype with the donor's RAW descriptors (the donor is
@@ -429,12 +476,26 @@ function hmrGraft(entry: HmrEntry, donor: any): boolean {
   for (const key of donorNames) {
     if (skip.has(key)) continue;
     const desc = getOwnPropertyDescriptor(dProto, key)!;
+    const isMethod = typeof desc.value === fn;
     let superKey = hmrKeys.get(key);
+    // Kind flip (method ↔ getter): the per-instance cache under the old
+    // superKey holds the WRONG SHAPE for the new kind — a cached bound
+    // wrapper is not a ref, and vice versa. Re-key so live lookups
+    // materialize fresh, and escalate (stale closures may still use the
+    // old shape).
+    if (
+      superKey &&
+      (slots?.has(key) ?? false) !== isMethod &&
+      (isMethod || desc.get)
+    ) {
+      superKey = undefined;
+      entry.remountNeeded = true;
+    }
     if (!superKey) {
       superKey = Symbol(key);
       hmrKeys.set(key, superKey);
     }
-    if (typeof desc.value === fn) {
+    if (isMethod) {
       convertToLazyBoundMethod(cProto, key, superKey, desc.value);
     } else if (desc.get) {
       convertToLazyComputed(cProto, key, superKey, desc.get, desc.set);
@@ -469,6 +530,15 @@ function hmrGraft(entry: HmrEntry, donor: any): boolean {
   }
   entry.ctorSig = donorSig;
 
+  // Frozen-cache members (cached computeds, $-singletons): a graft cannot
+  // reach the closures already cached on live instances — escalate instead
+  // of leaving the edit silently stale.
+  const donorFrozenSig = hmrFrozenSignature(donor);
+  if (donorFrozenSig !== entry.frozenSig) {
+    entry.remountNeeded = true;
+  }
+  entry.frozenSig = donorFrozenSig;
+
   entry.latest = donor;
   console.info(
     `[ivue] HMR: grafted "${canonical.name}" — live instances keep their state and run the new code.`,
@@ -491,6 +561,7 @@ export function Reactive<C extends new (...args: any) => any>(
   // id we have seen — graft it onto the canonical identity instead of
   // letting a second identity loose (see hmrGraft).
   let hmrSig = '';
+  let hmrFrozen = '';
   if (import.meta.env.DEV && hmrActive()) {
     const entry = hmrRegistry().get(hmrId ?? targetClass.name);
     if (
@@ -500,10 +571,10 @@ export function Reactive<C extends new (...args: any) => any>(
     ) {
       return entry.proxy;
     }
-    // First registration (or a refused donor): capture the
-    // constructor-level signature BEFORE processing wraps the prototype
-    // descriptors — see hmrCtorSignature.
+    // First registration (or a refused donor): capture the signatures
+    // BEFORE processing wraps the prototype descriptors.
     hmrSig = hmrCtorSignature(targetClass);
+    hmrFrozen = hmrFrozenSignature(targetClass);
   }
 
   const chain: any[] = [];
@@ -641,6 +712,7 @@ export function Reactive<C extends new (...args: any) => any>(
       latest: targetClass,
       proxy: null,
       ctorSig: hmrSig,
+      frozenSig: hmrFrozen,
       remountNeeded: false,
     };
     entry.proxy = new Proxy(targetClass as any, {
