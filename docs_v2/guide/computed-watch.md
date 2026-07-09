@@ -60,17 +60,12 @@ Prefer the **thin** form: the computed is only the caching shell, and the
 logic lives in a method.
 
 ```ts
-// ✅ THINNEST — no closure at all: pass the method itself
+// ✅ THIN — the closure is a pointer; the logic lives on the prototype
 get sorted() {
-  return computed(this.sortItems)
+  return computed(() => this.sortItems())
 }
 sortItems() {
   return [...this.items.value].sort(byPrice)
-}
-
-// ✅ THIN — an arrow, when the method needs arguments
-get filtered() {
-  return computed(() => this.filterBy(this.query.value))
 }
 
 // ❌ FAT — the logic is frozen into a per-instance closure
@@ -79,14 +74,15 @@ get sorted() {
 }
 ```
 
-`computed(this.sortItems)` is safe **only in ivue**: methods are
-lazy-bound, so the reference carries its instance — in a vanilla class this
-is the classic detached-`this` bug. It also skips the arrow allocation
-entirely: the computed's getter *is* the per-instance bound method the
-engine caches anyway. One rule: use it for **zero-parameter methods only** —
-since Vue 3.4 a computed getter receives the previous value as its first
-argument, which would silently fill an optional parameter. Methods that
-take arguments get the thin arrow instead.
+::: warning Why not `computed(this.sortItems)` without the arrow?
+It works in ivue — methods are lazy-bound, so the reference carries its
+instance (in a vanilla class this is the classic detached-`this` bug), and
+it even hot-grafts. But since Vue 3.4 a computed getter **receives the
+previous value as its first argument** — so the day someone gives the
+method an optional parameter, that parameter silently receives stale data.
+No error, just wrong results. The arrow is refactor-proof and idiomatic:
+always use it.
+:::
 
 A computed is a _cache_, not a home for logic — and the thin form is what
 makes that doctrine mechanical:
