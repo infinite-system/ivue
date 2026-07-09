@@ -61,6 +61,18 @@ is the production-grade generalization (documented boundary). Ground truth
 never grows either way — the pre-eviction dev column's +10.6 MB was purely
 this overlay accumulating (~350 KB per distinct viewport visited).
 
+## Field note: the steady-state ceiling
+
+Observed on a desktop Chrome (whole-renderer task-manager numbers, which
+include V8 reserve + DOM + compositor on top of the JS heap): idle
+~190–200 MB, and under sustained aggressive scrolling across the million
+rows the process **never exceeded ~327 MB** before collapsing back on rest.
+That ceiling is a steady-state equilibrium, not a tuned cache: resident
+overlay is bounded by (scroll velocity × debounce window × per-viewport
+cost) + GC slack — every term a constant — so the ceiling is
+**document-size-independent**. A 40M-cell sheet pays a higher floor
+(more ground truth) but the same breathing amplitude.
+
 ## Scroll-wall note (found live, fixed)
 
 Chrome's compositor does scroll math in float32: a 28M-px scroller stops
