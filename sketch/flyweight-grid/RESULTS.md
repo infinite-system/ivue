@@ -83,6 +83,37 @@ to virtual offset (~2.4 : 1 at 1M rows). All 1,000,000 rows reachable,
 verified headless and by hand. Same f32 invariant the ivue virtual-scroller
 neutralizes with scroll-origin rebasing.
 
+## Where this architecture shines next
+
+The workload shape this sketch proves — **huge, fast-growing data; a tiny
+observed window; live derivations over both** — is not a spreadsheet
+specialty. Candidates for the next demo, in rough order of impact:
+
+1. **AI trace / token-stream viewer** (the marquee). Agent runs and LLM
+   streams produce exactly this shape: hundreds of thousands of tokens,
+   tool calls, and log events appended at high frequency, of which the user
+   watches one scrolling window. Appends land in columnar storage as
+   peek-only writes — **a token arriving costs ~nothing until someone looks
+   at it** — while live derivations (running token counts, cost meters,
+   per-tool aggregates, error scans) ride the block tier. Today's chat UIs
+   choke on their own transcript length for exactly the cost-∝-exists
+   reason this design deletes. A million-token conversation at a flat
+   viewport cost would be a category demo.
+2. **Log / observability tail** — same stream shape plus search: the
+   columnar fast path is a natural home for grep-like scans and windowed
+   aggregations over millions of rows (Σ errors/min as a live formula).
+3. **Dataframe viewer** (notebooks, DuckDB/Arrow results) — Arrow columns
+   ARE typed arrays; the ground-truth layer could adopt them zero-copy,
+   making ivue the reactive display layer over real analytics data.
+4. **Time-series / trading dashboards** — high-frequency appends,
+   window-priced charts, derived indicators as live formulas over blocks.
+5. **Collaborative grids** — remote edits are peek-only writes too:
+   a thousand collaborators mutating cells you aren't looking at cost you
+   nothing until you scroll there.
+
+Common thread: anywhere data grows faster than attention, observation-priced
+reactivity turns "it slows down as it fills up" into a flat line.
+
 ## Honest scope
 
 - Heap deltas measure the tab's JS heap for model + overlay + demo UI state;
