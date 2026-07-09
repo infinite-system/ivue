@@ -29,18 +29,46 @@ const creationMs = ref(0);
 const scrollEl = ref<HTMLElement | null>(null);
 const scrollTop = ref(0);
 const visibleCount = Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT);
-const totalHeight = computed(() =>
+
+/**
+ * Scroll has physical walls: Chrome's compositor does scroll math in
+ * FLOAT32, which loses 1-px integers past 2^24 = 16,777,216 px — a 28M px
+ * scroller stops scrolling at ~row 599,186 (observed live as "can't get
+ * past 600k"). Firefox additionally caps element height at ~17.9M px.
+ * Cap the PHYSICAL height under both walls and map scroll ratio → virtual
+ * offset (the scaled scrollbar every big-grid engine uses). At 1M rows the
+ * ratio is ~2.4 : 1 — wheel feel is intact. Same f32 invariant the ivue
+ * virtual-scroller solves with scroll-origin rebasing (renderBias).
+ */
+const MAX_SCROLL_HEIGHT = 12_000_000;
+const naturalHeight = computed(() =>
   sheet.value ? sheet.value.rows * ROW_HEIGHT : 0,
 );
+const totalHeight = computed(() =>
+  Math.min(naturalHeight.value, MAX_SCROLL_HEIGHT),
+);
+const scrollScale = computed(() =>
+  naturalHeight.value > totalHeight.value
+    ? (naturalHeight.value - VIEWPORT_HEIGHT) /
+      (totalHeight.value - VIEWPORT_HEIGHT)
+    : 1,
+);
+/** Where we are in CONTENT space (0 … naturalHeight − viewport). */
+const virtualTop = computed(() => scrollTop.value * scrollScale.value);
 const startRow = computed(() =>
-  Math.max(0, Math.floor(scrollTop.value / ROW_HEIGHT) - OVERSCAN),
+  Math.max(0, Math.floor(virtualTop.value / ROW_HEIGHT) - OVERSCAN),
 );
 const endRow = computed(() =>
   sheet.value
     ? Math.min(sheet.value.rows, startRow.value + visibleCount + OVERSCAN * 2)
     : 0,
 );
-const offsetY = computed(() => startRow.value * ROW_HEIGHT);
+/** Pin the window band under the (physical) scroll position: the row that
+ *  lives at virtualTop must appear exactly at scrollTop. Degenerates to
+ *  startRow × ROW_HEIGHT when scale = 1. */
+const offsetY = computed(
+  () => scrollTop.value - (virtualTop.value - startRow.value * ROW_HEIGHT),
+);
 function onScroll(e: Event) {
   scrollTop.value = (e.target as HTMLElement).scrollTop;
 }
@@ -70,6 +98,39 @@ function pollCensus() {
 }
 onMounted(() => {
   setInterval(pollCensus, 500);
+  // Measurement/verification harness (same idea as the reference grids).
+  (window as any).__fw = {
+    rows: () => (sheet.value ? sheet.value.rows : 0),
+    cols: COLS,
+    createModel: () => createModel(),
+    hasModel: () => hasModel.value,
+    creationMs: () => creationMs.value,
+    stats: () => (sheet.value ? sheet.value.stats() : null),
+    scrollToRow: (r: number) => {
+      const s = sheet.value;
+      if (!s || !scrollEl.value) return;
+      const px =
+        (r * ROW_HEIGHT - VIEWPORT_HEIGHT / 2) / scrollScale.value;
+      const clamped = Math.max(
+        0,
+        Math.min(px, totalHeight.value - VIEWPORT_HEIGHT),
+      );
+      scrollEl.value.scrollTop = clamped;
+      scrollTop.value = clamped;
+    },
+    editCell: (r: number, c: number, v: string) => sheet.value?.write(r, c, v),
+    cellText: (r: number, c: number) => {
+      const el = document.querySelector(
+        `[data-grid-cell][data-row="${r}"][data-col="${c}"]`,
+      );
+      return el ? (el.textContent || '').trim() : null;
+    },
+    cellValue: (r: number, c: number) => {
+      const v = sheet.value?.valueAt(r, c);
+      return v && typeof v === 'object' ? String(v) : (v ?? null);
+    },
+    startRow: () => startRow.value,
+  };
 });
 
 // --- totals bar: live ad-hoc formulas over the FULL 1M-row data columns ---
@@ -197,6 +258,9 @@ document.title = 'Flyweight Grid · 20×1,000,000 (ivue sketch)';
                   :key="cell.col"
                   class="gc-cell"
                   :class="cell.cssClass"
+                  data-grid-cell
+                  :data-row="cell.row"
+                  :data-col="cell.col"
                   :title="cell.source"
                   @click="edit(cell)"
                 >

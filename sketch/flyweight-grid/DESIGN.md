@@ -1,13 +1,12 @@
 # Flyweight Columnar Grid — 20 columns × 1,000,000 rows
 
-Status: WORKING — model layer + demo UI, all structural proofs green AT FULL
-SCALE (11/11 tests over a live 20,000,000-cell sheet; repo suite 161/161).
-Measured on first landing: **20M cells created in ~420 ms with zero reactive
-allocations; the whole proof suite — including a 1M-cell SUM, the derived
-bridge, conditional shifts and cycles — completes in ~550 ms.** Nothing
-outside `sketch/flyweight-grid/` is touched; `demo/formula/` was reference
-only. Demo: `npx vite sketch/flyweight-grid --host` (also `vite build`
-verified).
+Status: WORKING & MEASURED — 11/11 structural proofs over a live
+20,000,000-cell sheet (repo suite 161/161), demo UI user-verified across
+all 1M rows, heap protocol complete (see RESULTS.md): **68 ms creation,
+89.6 MB model heap = 4.7 B/cell** — 8.5× below the plain-POJO floor, fully
+reactive. Nothing outside `sketch/flyweight-grid/` touched; `demo/formula/`
+reference only. Demo: `npx vite sketch/flyweight-grid --host`; measure:
+`node sketch/flyweight-grid/measure.mjs <url>`.
 
 ## The law this design descends from
 
