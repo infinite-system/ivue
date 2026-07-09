@@ -1,0 +1,205 @@
+/* Minimal standalone styles for the flyweight grid sketch (own copy — the
+   demo directory's css is reference-only). Dark, dense, spreadsheet-ish. */
+:root {
+  color-scheme: dark;
+}
+body {
+  margin: 0;
+  background: #0b1020;
+  color: #cbd5e1;
+  font:
+    14px/1.45 ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+.fw-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+}
+h1 {
+  color: #fff;
+  font-size: 26px;
+  margin: 0 0 4px;
+}
+h1 small {
+  color: #818cf8;
+  font-weight: 600;
+}
+.fw-sub {
+  color: #94a3b8;
+  max-width: 70ch;
+  margin: 0 0 16px;
+}
+.fw-sub em {
+  color: #c7d2fe;
+  font-style: normal;
+  font-weight: 600;
+}
+.fw-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+.fw-btn {
+  background: #6366f1;
+  color: #fff;
+  font-weight: 700;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.fw-btn:hover {
+  background: #4f46e5;
+}
+.fw-stat {
+  font-size: 12px;
+  color: #94a3b8;
+}
+.fw-stat b {
+  color: #fff;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.fw-totals {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 10px;
+  font-size: 13px;
+}
+.fw-total code {
+  color: #a5b4fc;
+}
+.fw-total b {
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.fx-bar {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 6px 12px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+}
+.fx-name {
+  color: #818cf8;
+  font-weight: 700;
+  min-width: 60px;
+}
+.fx-val {
+  color: #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gc-grid-scroll {
+  height: 448px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: #0e142a;
+}
+.gc-inner {
+  width: max-content;
+  min-width: 100%;
+}
+.gc-head {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #141b36;
+}
+.gc-head-cell {
+  color: #818cf8;
+  font-weight: 700;
+  text-align: center;
+}
+.gc-viewport {
+  position: relative;
+  overflow: hidden;
+}
+.gc-rows {
+  will-change: transform;
+}
+.gc-row {
+  display: flex;
+  height: 28px;
+}
+.gc-rownum {
+  width: 84px;
+  flex: 0 0 84px;
+  padding: 4px 8px;
+  color: #64748b;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  text-align: right;
+}
+.gc-cell {
+  width: 96px;
+  flex: 0 0 96px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: cell;
+}
+.gc-edit {
+  width: 100%;
+  background: #1e293b;
+  border: 1px solid #6366f1;
+  color: #fff;
+  font: inherit;
+  padding: 0 2px;
+  border-radius: 3px;
+  outline: none;
+}
+.gc-pos {
+  color: #86efac;
+}
+.gc-neg {
+  color: #fca5a5;
+}
+.gc-zero {
+  color: #475569;
+}
+.gc-text {
+  color: #e2e8f0;
+}
+.gc-err {
+  color: #f87171;
+  font-weight: 700;
+}
+.gc-formula {
+  background: rgba(99, 102, 241, 0.07);
+}
+.fw-empty {
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 48px;
+  text-align: center;
+  color: #64748b;
+}
