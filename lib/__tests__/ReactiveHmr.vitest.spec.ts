@@ -472,6 +472,94 @@ describe('Reactive HMR graft', () => {
     expect(live.total.value).toBe(150);
   });
 
+  it('re-registering the SAME class returns the identical proxy (identity claim under HMR)', () => {
+    class $Same {
+      m() {
+        return 1;
+      }
+    }
+    const first = Reactive($Same, 'hmr.test.Same');
+    const second = Reactive($Same, 'hmr.test.Same');
+    expect(second).toBe(first);
+  });
+
+  it('grafts plain data prototype properties and statics', () => {
+    class $S {
+      m() {
+        return 1;
+      }
+      n() {
+        return 2;
+      }
+    }
+    ($S as any).LIMIT = 10;
+    const S = Reactive($S, 'hmr.test.Statics');
+    const live = new S() as any;
+
+    class $SV2 {
+      m() {
+        return 1;
+      }
+      n() {
+        return 3;
+      }
+    }
+    ($SV2 as any).LIMIT = 20;
+    // A plain (non-function, non-getter) prototype data property exercises
+    // the pass-through descriptor branch of the graft.
+    Object.defineProperty($SV2.prototype, 'plainData', {
+      value: 42,
+      writable: true,
+      enumerable: false,
+      configurable: true,
+    });
+    Reactive($SV2 as any, 'hmr.test.Statics');
+
+    expect(live.n()).toBe(3);
+    expect(live.plainData).toBe(42);
+    expect((S as any).LIMIT).toBe(20); // statics copied for outside readers
+  });
+
+  it('grafts a getters-only class (no method slots ever created)', () => {
+    class $G {
+      get a() {
+        return ref(1);
+      }
+      get b() {
+        return this.a.value + 1;
+      }
+    }
+    const G = Reactive($G, 'hmr.test.GettersOnly');
+    const live = new G() as any;
+    expect(live.b).toBe(2);
+    class $GV2 {
+      get a() {
+        return ref(1);
+      }
+      get b() {
+        return this.a.value + 10;
+      }
+    }
+    Reactive($GV2 as any, 'hmr.test.GettersOnly');
+    expect(live.b).toBe(11); // grafted derived getter, state kept
+  });
+
+  it('leaves a non-configurable static untouched instead of throwing', () => {
+    class $F {
+      m() {}
+      n() {}
+    }
+    Object.defineProperty($F, 'FROZEN', { value: 1, configurable: false });
+    const F = Reactive($F, 'hmr.test.FrozenStatic');
+    class $FV2 {
+      m() {}
+      n() {}
+    }
+    ($FV2 as any).FROZEN = 2;
+    expect(() => Reactive($FV2 as any, 'hmr.test.FrozenStatic')).not.toThrow();
+    expect((F as any).FROZEN).toBe(1); // original kept, graft survived
+  });
+
   it('keeps $watch/$stopEffects working across a graft', () => {
     class $Watched {
       get value() {

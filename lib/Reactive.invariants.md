@@ -16,8 +16,10 @@ you can test against. Each entry below lists both.
 Everything else is a consequence of making that idea safe under inheritance,
 proxies, hot-reload, and circular imports.
 
-Line references are to `lib/Reactive.ts`. Tests are in
-`lib/__tests__/Reactive.vitest.spec.ts`.
+References name functions and tests rather than line numbers — symbols
+survive edits, line numbers don't. Tests are in
+`lib/__tests__/Reactive.vitest.spec.ts` (core) and
+`lib/__tests__/ReactiveHmr.vitest.spec.ts` (hot-swap).
 
 ---
 
@@ -59,10 +61,10 @@ _ReactiveHmr › preserves identity, state and updates behavior_).
 regardless of how many times `Reactive()` is called or through how many subclasses
 a base is reached.
 
-**Mechanism.** Per-prototype `PROCESSED` symbol flag; the chain loop skips any
-prototype already carrying it (`if (prototypeHasOwnProperty(prototype, PROCESSED)) continue`,
-line 191; marked at lines 212–217). The chain is walked base→child
-(`chain.reverse()`, line 186) so ancestors are always settled before descendants.
+**Mechanism.** Per-prototype `PROCESSED` symbol flag; the chain loop in
+`Reactive()` skips any prototype already carrying it and marks each level
+after processing. The chain is walked base→child (`chain.reverse()`) so
+ancestors are always settled before descendants.
 
 **Guarantees.** Calling `Reactive()` again is a safe no-op. A base class
 transformed in its own module is **not** re-transformed when a child in another
@@ -89,7 +91,7 @@ cached computeds, bound methods, and the `RAW` back-pointer — lives on
 
 **Mechanism.** Every engine entry point — method get/set, computed getter,
 de-opted getter/setter, `$watch`, `$stopEffects` — resolves the true raw via
-`resolveRaw()` (lines 44–61): try `toRaw(this)` first (unwraps a genuine Vue
+`resolveRaw()`: try `toRaw(this)` first (unwraps a genuine Vue
 reactive chain in one step, and stamps the per-instance `RAW` back-pointer on
 the raw), then fall back to the back-pointer for anything `toRaw()` cannot see
 through — chiefly Vue's component **expose proxy**, which does not answer
@@ -133,10 +135,10 @@ cache poisoning)_; _… › resolves the true raw through an opaque foreign prox
 returns the identical ref/computed on every subsequent read; each method returns
 the identical bound function on every access.
 
-**Mechanism.** Computed getter caches under a symbol and short-circuits on
-`if (superKey in raw) return raw[superKey]` (line 122, store at 136). Method getter
-caches the bound function: `raw[superKey] ?? (raw[superKey] = originalFn.bind(raw))`
-(lines 80–81).
+**Mechanism.** The computed getter (`convertToLazyComputed`) caches under a
+symbol and short-circuits on `if (superKey in raw) return raw[superKey]`.
+The method getter (`convertToLazyBoundMethod`) caches the bound function on
+first access the same way.
 
 **Guarantees.** Referential stability. A `watch(() => inst.area.value, …)` stays
 attached because `inst.area` is always the same computed. A method is safe to pass
@@ -183,7 +185,7 @@ the prototype for all future instances.
 
 **Mechanism.** In the computed getter, the `else` branch (not `isRef(result)`)
 redefines the prototype property back to a thin getter that calls
-`originalGetter.call(resolveRaw(this))` (lines 140–151), preserving the setter if one
+`originalGetter.call(resolveRaw(this))`, preserving the setter if one
 exists.
 
 **Guarantees.** Getters used for plain derived values converge toward native
@@ -272,8 +274,8 @@ injected only once_.
 **Statement.** A getter whose name starts with `$` is cached _whole, forever_ on
 first access — even if its result is not a ref.
 
-**Mechanism.** `cacheWhole = key[0] === '$'` (line 105); when set, the result is
-stored and returned without the `isRef` check (lines 128–132).
+**Mechanism.** `cacheWhole = key[0] === '$'` in `convertToLazyComputed`;
+when set, the result is stored and returned without the `isRef` check.
 
 **Guarantees.** The canonical "create this composable/service exactly once per
 instance" slot, e.g. `get $mouse() { return useMouse() }`. The original getter
@@ -287,6 +289,16 @@ would create a new composable/subscription every read).
 ---
 
 ### Hot-swap continuity (HMR — dev serve only)
+
+**The law underneath** (this section's generator): **closures freeze at
+creation; prototype lookups stay live.** Everything a live instance reaches
+through a lookup evaluated at call time — prototype members, method slots,
+its own cached refs — can be swapped under it; everything captured into a
+closure at creation time cannot. Every mechanism below (grafting, slots,
+tombstones, frozen-cache escalation) and the companion authoring convention
+(thin computeds that delegate to methods — see
+`docs_v2/guide/computed-watch.md`, "Point the computed at a method") is a direct
+consequence of which side of that line a piece of code lives on.
 
 **Statement.** When a self-accepting class module re-executes under Vite dev
 serve, the new class is **grafted onto the canonical identity**: live
@@ -329,10 +341,13 @@ updates; a hot update that silently resets live instance state; a listener
 holding a bound method that keeps running stale code after an edit; any HMR
 instruction reaching a production bundle.
 
-**Test.** `lib/__tests__/ReactiveHmr.vitest.spec.ts` (graft semantics,
+**Test.** `lib/__tests__/ReactiveHmr.vitest.spec.ts` — graft semantics,
 state preservation, bound-reference continuity, latest-constructor
-instances, collision/inheritance refusal, `$watch` survival). The Vite
-plugin that injects module self-acceptance lives in `lib/hmr-plugin.ts`.
+instances, constructor/frozen-cache escalation discrimination, tombstoned
+removals (including the live-found "unthin" crash as a named regression),
+kind-flip re-keying, direct-method-reference grafting, statics, and the
+collision/inheritance refusal paths. The Vite plugin that injects module
+self-acceptance lives in `lib/hmr-plugin.ts`.
 
 ---
 
@@ -445,14 +460,25 @@ These are deliberately listed so the invariants above are not over-read:
 4. **`.value` ergonomics.** Reactive state is accessed with `.value` outside of a
    `reactive()`/template auto-unwrap context. This is the one ergonomic cost
    relative to ivue v1's proxy model.
+5. **Hot-swap is class-granular** (see _Hot-swap continuity_, above). A
+   self-accepting module's NON-class exports (helpers, constants) are served
+   stale to modules that imported them before the edit — the classic
+   self-accept caveat. Keep Reactive classes in dedicated modules (the
+   namespace convention already does this) or opt the file out of
+   self-acceptance. Removed members are tombstoned in dev, so a deleted
+   member remains callable (last implementation) until a remount — dev-only
+   residue, never in production or tests.
 
 ---
 
 ## Coverage
 
-`lib/__tests__/Reactive.vitest.spec.ts` — **100% statements, 100% branches, 100%
-functions, 100% lines** of `lib/Reactive.ts` (including every `resolveRaw`
-branch, via the _raw resolution through proxy chains_ regression tests). The dead defensive branches that
-previously blocked full coverage (the `originalGetter ? … : undefined` fallbacks,
-the redundant `!desc` guards, and the `getSuperKey` memoization) were removed by
-construction during the refactor rather than ignored.
+`lib/__tests__/Reactive.vitest.spec.ts` + `lib/__tests__/ReactiveHmr.vitest.spec.ts`
+(150 tests) — **100% statements, 100% functions, 100% lines** of
+`lib/Reactive.ts`, branches 97%. The remaining partial branches are named,
+not ignored: the environment-constant HMR arming gate
+(`import.meta.env.DEV` / `TEST` / `import.meta.hot` are fixed values inside
+any given environment) and `?? fallback` arms unreachable under test
+(descriptor reads on own keys, anonymous-class name fallbacks). Every
+reachable behavioral branch — including every `resolveRaw` path, every graft
+path, and both escalation signatures — is exercised.
