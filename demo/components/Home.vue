@@ -51,6 +51,13 @@ const cards = [
     title: 'Grid — POJO Floor',
     desc: 'The same grid as plain non-reactive objects. The memory floor both reactive arms are measured against.',
   },
+  {
+    to: '/grid-formula',
+    tag: 'grid · formula',
+    accent: 'emerald',
+    title: 'Grid — Real Excel Formulas',
+    desc: 'A working 100k/1M-cell spreadsheet: =SUM(A1:D1), =IF(A1>0,B1,C1), running sums — parsed by fast-formula-parser, with the dependency graph discovered by Vue itself. Edit a cell, watch dependents cascade.',
+  },
 ];
 
 const accentRing: Record<string, string> = {

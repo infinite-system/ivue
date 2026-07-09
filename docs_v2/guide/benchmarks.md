@@ -100,6 +100,16 @@ And it is not 100k trivial formulas: **52.5% of the 100,000 cells are
 cross-referencing formulas** — arithmetic, `SUM`/`AVERAGE` ranges,
 conditionals, a 50-row running-sum cascade, a cross-column mesh.
 
+### Try it
+
+The exact `Sheet`/`FormulaCell` model the measurements were run on, live.
+The parser loads on demand when you click — nothing runs until then. Edit
+`A1` and watch its dependents cascade; select `I1` (the `IF`) and flip
+`A1`'s sign to watch the tracked dependency set shift branches in the
+formula bar.
+
+<FormulaGrid />
+
 ### The numbers (3 runs, median, same protocol)
 
 | Metric                        | Formula grid | Toy ivue grid |
