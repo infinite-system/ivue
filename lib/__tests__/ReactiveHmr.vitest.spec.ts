@@ -433,6 +433,45 @@ describe('Reactive HMR graft', () => {
     expect(registryEntry('hmr.test.Single').remountNeeded).toBe(true);
   });
 
+  it('computed(this.method) — the thinnest form — grafts live with no escalation', () => {
+    class $D {
+      get base() {
+        return ref(2);
+      }
+      calc() {
+        return this.base.value * 10;
+      }
+      // No arrow at all: ivue methods are lazy-BOUND, so the reference
+      // carries its instance — and in dev it reads the HMR slot at call
+      // time, so grafts land through it.
+      get total() {
+        return computed(this.calc);
+      }
+    }
+    const D = Reactive($D, 'hmr.test.DirectRef');
+    const live = new D() as any;
+    expect(live.total.value).toBe(20);
+
+    class $DV2 {
+      get base() {
+        return ref(2);
+      }
+      calc() {
+        return this.base.value * 50;
+      }
+      get total() {
+        return computed(this.calc);
+      }
+    }
+    Reactive($DV2 as any, 'hmr.test.DirectRef');
+
+    // The getter's own source is unchanged → no frozen-cache escalation…
+    expect(registryEntry('hmr.test.DirectRef').remountNeeded).toBe(false);
+    // …and the LIVE cached computed runs the NEW method through the slot.
+    live.base.value = 3;
+    expect(live.total.value).toBe(150);
+  });
+
   it('keeps $watch/$stopEffects working across a graft', () => {
     class $Watched {
       get value() {
