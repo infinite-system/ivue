@@ -481,109 +481,39 @@
    reading flow; the cell reserves a right gutter so text never collides. */
 .iv-ck {
   display: inline-block;
-  vertical-align: -3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 5px;
-  background: rgba(52, 211, 153, 0.12);
-  border: 1px solid rgba(52, 211, 153, 0.35);
+  vertical-align: -4px;
+  width: 21px;
+  height: 21px;
+  border-radius: 7px;
+  background: rgba(52, 211, 153, 0.14);
+  border: 1px solid rgba(52, 211, 153, 0.4);
   position: relative;
 }
 .iv-ck::after {
   content: '';
   position: absolute;
-  left: 5px;
-  top: 2.5px;
-  width: 4px;
-  height: 7px;
+  left: 7px;
+  top: 3.5px;
+  width: 5px;
+  height: 10px;
   border-right: 2px solid var(--ivue-emerald);
   border-bottom: 2px solid var(--ivue-emerald);
   transform: rotate(45deg);
 }
-/* Problem grid (Design & Philosophy): the moat's fused-monolith language,
-   expanded for doc pages — muted "why it's hard", emerald-ruled solution. */
-.iv-probs {
+/* "In ivue" solution cells: green wash, big check in a fixed left slot so
+   every text line indents uniformly (no wrap-around). */
+.vp-doc td:has(> .iv-ck) {
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  margin: 28px 0 8px;
-  background: var(--vp-c-divider);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 16px;
-  overflow: hidden;
+  padding-left: 48px;
+  background: rgba(52, 211, 153, 0.07);
 }
-.iv-probs::before {
-  content: '';
+.dark .vp-doc td:has(> .iv-ck) {
+  background: rgba(52, 211, 153, 0.08);
+}
+.vp-doc td > .iv-ck {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--ivue-grad);
-  z-index: 1;
-}
-@media (max-width: 767px) {
-  .iv-probs {
-    grid-template-columns: 1fr;
-  }
-}
-.iv-probs .item {
-  display: flex;
-  flex-direction: column;
-  padding: 20px 22px 20px;
-  background: var(--vp-c-bg);
-  transition: background 0.18s ease;
-}
-.dark .iv-probs .item {
-  background: var(--vp-c-bg-alt);
-}
-.iv-probs .item:hover {
-  background: var(--vp-c-brand-soft);
-}
-.iv-probs .hd {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 650;
-  font-size: 1rem;
-  letter-spacing: -0.01em;
-  color: var(--vp-c-text-1);
-}
-.iv-probs .hd .iv-ck {
-  margin-left: auto;
-  flex: none;
-}
-.iv-probs .hard {
-  margin: 8px 0 0;
-  font-size: 0.88rem;
-  line-height: 1.55;
-  color: var(--vp-c-text-2);
-}
-.iv-probs .fix {
-  margin: 12px 0 0;
-  padding: 9px 14px;
-  border-left: 2px solid var(--ivue-emerald);
-  border-radius: 0 8px 8px 0;
-  background: rgba(52, 211, 153, 0.06);
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: var(--vp-c-text-1);
-  margin-top: auto;
-  align-self: stretch;
-}
-.iv-probs .fix,
-.iv-probs .hard {
-  max-width: none;
-}
-.iv-probs .item .hard {
-  flex: none;
-}
-.iv-probs .item .fix {
-  margin-top: 12px;
-}
-.iv-probs code {
-  font-size: 0.78rem;
+  left: 14px;
+  top: 13px;
 }
 
 /* Hero motion lives in IvueHero.vue (scoped, reduced-motion gated). */

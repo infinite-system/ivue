@@ -16,48 +16,16 @@ Every item below has sunk a class-reactivity attempt on its own. Most projects t
 tried nailed one or two and shipped the rest with rough edges. ivue solves the whole
 set.
 
-<div class="iv-probs">
-  <div class="item">
-    <div class="hd">Per-instance cost <span class="iv-ck" aria-hidden="true"></span></div>
-    <p class="hard">A <code>reactive()</code> proxy per object is expensive; eager computeds pay for every property up front.</p>
-    <p class="fix">Instances are <strong>plain</strong>, refs and computeds are lazy: <strong>55–250× cheaper to create</strong>.</p>
-  </div>
-  <div class="item">
-    <div class="hd">Cheap bound methods <span class="iv-ck" aria-hidden="true"></span></div>
-    <p class="hard">Bind per instance and you allocate a function per method per object; don't bind and <code>this</code> breaks on detach.</p>
-    <p class="fix">Methods stay on the prototype, <strong>bound lazily on first use and cached</strong>: cheap, correct, referentially stable.</p>
-  </div>
-  <div class="item">
-    <div class="hd">Reactive reads <span class="iv-ck" aria-hidden="true"></span></div>
-    <p class="hard">Any indirection over a raw ref costs something.</p>
-    <p class="fix"><code>this.x.value</code> through a getter: <strong>~5× a raw ref, hoistable to native speed</strong>. The one cost, and it's erasable.</p>
-  </div>
-  <div class="item">
-    <div class="hd">Reactive inheritance <span class="iv-ck" aria-hidden="true"></span></div>
-    <p class="hard">Prototype-based reactivity collides cached Refs/Computeds and breaks <code>super</code>.</p>
-    <p class="fix"><strong>Deep computed chains with <code>super.x.value</code></strong>, reactivity propagating through every level.</p>
-  </div>
-  <div class="item">
-    <div class="hd">Cross-file class HMR <span class="iv-ck" aria-hidden="true"></span></div>
-    <p class="hard">Editing a parent in another file desyncs prototype links and identities.</p>
-    <p class="fix">An idempotent, per-file transform <strong>survives HMR</strong>: behavior edits graft onto live instances.</p>
-  </div>
-  <div class="item">
-    <div class="hd">Circular imports <span class="iv-ck" aria-hidden="true"></span></div>
-    <p class="hard">Mutual class references throw <code>Cannot access 'X' before initialization</code>.</p>
-    <p class="fix">The namespace pattern <strong>resolves references in any load order</strong>.</p>
-  </div>
-  <div class="item">
-    <div class="hd">Writable-getter types <span class="iv-ck" aria-hidden="true"></span></div>
-    <p class="hard"><code>get x()</code> is <em>read-only</em> in TypeScript.</p>
-    <p class="fix">Mapped types <strong>re-declare ref-returning getters as writable</strong> — the requirement that produced the circular-safe module shape.</p>
-  </div>
-  <div class="item">
-    <div class="hd">Deterministic teardown <span class="iv-ck" aria-hidden="true"></span></div>
-    <p class="hard">Track and stop every effect per instance, with no cost for those that have none.</p>
-    <p class="fix"><code>$watch</code> + <code>$stopEffects</code>: scoped cleanup, <strong>zero cost for instances that never watch</strong>.</p>
-  </div>
-</div>
+| Problem | Why it's hard | In ivue |
+|---|---|---|
+| **Per-instance cost** | A `reactive()` proxy per object is expensive; eager computeds pay for every property up front. | <span class="iv-ck" aria-hidden="true"></span> Instances are **plain**, refs/computeds are lazy → **55–250× cheaper to create.** |
+| **Cheap bound methods** | Bind per instance and you allocate a function per method per object; don't bind and `this` breaks on detach. | <span class="iv-ck" aria-hidden="true"></span> Methods stay on the prototype, **bound lazily on first use and cached** → cheap, correct, referentially stable. |
+| **Reactive reads** | Any indirection over a raw ref costs something. | <span class="iv-ck" aria-hidden="true"></span> `this.x.value` through a getter — **~5× a raw ref, hoistable to native speed**. The one cost, and it's erasable. |
+| **Reactive inheritance** | Prototype-based reactivity collides cached Refs/Computeds and breaks `super`. | <span class="iv-ck" aria-hidden="true"></span> **Deep computed chains with `super.x.value`**, reactivity propagating through every level. |
+| **Cross-file class HMR** | Editing a parent in another file desyncs prototype links and identities. | <span class="iv-ck" aria-hidden="true"></span> An idempotent, per-file transform **survives HMR**: behavior edits graft onto live instances. |
+| **Circular imports** | Mutual class references throw `Cannot access 'X' before initialization`. | <span class="iv-ck" aria-hidden="true"></span> The namespace pattern **resolves references in any load order**. |
+| **Writable-getter types** | `get x()` is *read-only* in TypeScript. | <span class="iv-ck" aria-hidden="true"></span> Mapped types **re-declare ref-returning getters as writable** — the requirement that produced the circular-safe module shape. |
+| **Deterministic teardown** | Track and stop every effect per instance, with no cost for those that have none. | <span class="iv-ck" aria-hidden="true"></span> `$watch` + `$stopEffects` — scoped cleanup, **zero cost for instances that never watch**. |
 
 **Bound methods deserve a closer look, because everyone underestimates it.** In plain
 Vue and React you cannot pass `this.method` — you write `() => this.method()` or
