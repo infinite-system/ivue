@@ -54,7 +54,9 @@ just works.
 ```ts
 class $A { greet() { return 'A' } }
 class $B extends $A { greet() { return super.greet() + '>B' } }
-new (Reactive($B))().greet() // "A>B"
+const B = Reactive($B)
+
+new B().greet() // "A>B"
 ```
 
 ## Each level is usable on its own
@@ -62,7 +64,9 @@ new (Reactive($B))().greet() // "A>B"
 A middle class is a complete reactive class too:
 
 ```ts
-new (Reactive($Mid))().tag.value  // "Mid(Base:10)"
+const Mid = Reactive($Mid)
+
+new Mid().tag.value  // "Mid(Base:10)"
 ```
 
 ## One difference from native JS

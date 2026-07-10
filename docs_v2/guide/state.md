@@ -15,7 +15,9 @@ class $Box {
   get width() { return ref(100) }
   get tags() { return ref<string[]>([]) }
 }
-const box = new (Reactive($Box))()
+const Box = Reactive($Box)
+
+const box = new Box()
 
 box.width.value        // 100
 box.width.value = 250  // write
@@ -104,12 +106,14 @@ correct — even when detached:
 
 ```ts
 class $Box {
-  get w() { return ref(1) }
-  grow() { this.w.value++ }
+  get width() { return ref(1) }
+  grow() { this.width.value++ }
 }
-const box = new (Reactive($Box))()
+const Box = Reactive($Box)
+
+const box = new Box()
 const { grow } = box   // detached
-grow()                 // still updates box.w
+grow()                 // still updates box.width
 box.grow === box.grow  // true — referentially stable
 ```
 
