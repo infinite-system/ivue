@@ -107,7 +107,9 @@ get celsius() {
 get fahrenheit() {
   return computed({
     get: () => this.celsius.value * 9 / 5 + 32,
-    set: (fahrenheit: number) => { this.celsius.value = (fahrenheit - 32) * 5 / 9 },
+    set: (fahrenheit: number) => {
+      this.celsius.value = ((fahrenheit - 32) * 5) / 9
+    },
   })
 }
 // instance.fahrenheit.value = 100  → updates celsius

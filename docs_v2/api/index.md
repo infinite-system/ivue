@@ -42,7 +42,10 @@ Registers the watcher in the instance's lazily-created effect scope and returns 
 stop handle.
 
 ```ts
-const stop = inst.$watch(() => inst.count.value, (v, old) => { /* ... */ })
+const stop = instance.$watch(
+  () => instance.count.value,
+  (count, oldCount) => console.log(count, oldCount),
+)
 stop() // stop just this watcher
 ```
 
@@ -54,7 +57,7 @@ Vue's `watchEffect`, registered in the same lazy per-instance scope.
 Returns the stop handle.
 
 ```ts
-inst.$watchEffect(() => render(inst.w.value, inst.h.value))
+instance.$watchEffect(() => render(instance.width.value, instance.height.value))
 ```
 
 ## `instance.$stopEffects()`
@@ -66,7 +69,7 @@ Disposes the instance:
 3. clears all cached Refs/Computeds.
 
 ```ts
-inst.$stopEffects()
+instance.$stopEffects()
 ```
 
 ## `propsWithDefaults(defaults, typedProps, cloner?)`
