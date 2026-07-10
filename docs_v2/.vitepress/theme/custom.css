@@ -476,13 +476,14 @@
   border-color: var(--vp-c-brand-1);
 }
 
-/* Reusable inline check badge for doc tables (the moat's .ck, portable) */
+/* Reusable check badge for doc tables (the moat's .ck, portable).
+   Inside a table cell it hangs as a bottom-right corner stamp, out of the
+   reading flow; the cell reserves a right gutter so text never collides. */
 .iv-ck {
   display: inline-block;
   vertical-align: -3px;
   width: 16px;
   height: 16px;
-  margin-right: 2px;
   border-radius: 5px;
   background: rgba(52, 211, 153, 0.12);
   border: 1px solid rgba(52, 211, 153, 0.35);
@@ -498,6 +499,15 @@
   border-right: 2px solid var(--ivue-emerald);
   border-bottom: 2px solid var(--ivue-emerald);
   transform: rotate(45deg);
+}
+.vp-doc td:has(> .iv-ck) {
+  position: relative;
+  padding-right: 34px;
+}
+.vp-doc td > .iv-ck {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
 }
 
 /* Hero motion lives in IvueHero.vue (scoped, reduced-motion gated). */
