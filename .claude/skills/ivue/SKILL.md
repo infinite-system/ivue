@@ -5,7 +5,7 @@ description: Use when writing or editing ivue `Reactive()` classes, converting a
 
 # ivue (`Reactive`) — Operating Manual
 
-Author reactive Vue 3 logic as a plain `class $X`, then export `Reactive($X)`.
+Author reactive Vue 3 logic as a plain `class $X`, then export `Class = Reactive($Class)` through `namespace X`.
 The engine transforms the prototype once: ref-returning getters become cached
 Refs/Computeds, plain getters de-optimize to native getters (reactive via leaf
 tracking), methods become stable bound functions. Instances stay plain objects.
@@ -16,20 +16,23 @@ silent no-op at runtime.
 
 ```ts
 import { Reactive } from 'ivue'; // in this app: 'src/utils/ivue'
-import { ref, shallowRef, computed, toRef, type Ref } from 'vue';
+import { ref, shallowRef, computed, watch, toRef, type Ref } from 'vue';
 import { useProjectStore } from 'src/stores/project.store';
 
 class $Box {
-  // Constructor runs in setup context — lifecycle hooks register here.
-  // Lifecycle hooks + watchers registered here run in setup() context.
+  // Constructor runs in setup() context — register lifecycle hooks and
+  // watchers here. Component-scoped instance (created in setup): plain
+  // watch/watchEffect — the component scope stops them on unmount.
+  // (this.$watch is ONLY for instances that OUTLIVE the component — see
+  // the singleton variant below.)
   constructor(
     public props: BoxProps,
     public emit: BoxEmits,
   ) {
-    this.$watch(
+    watch(
       () => this.w.value,
-      (w) => this.onResize(w),
-    ); // scoped watcher
+      (width, oldWidth) => this.onResize(width, oldWidth),
+    );
   }
 
   // MUTABLE STATE — getter returning ref()/shallowRef(). `this` is RAW: read
@@ -64,18 +67,18 @@ class $Box {
 
   // computed() — SURGICAL opt-in only: expensive work, render-suppression by
   // value-equality, or a stable ref handle for watch/props (~300 bytes/instance).
+  // THIN closures (§7): the computed only dials a method — logic stays on the
+  // prototype, hot-graftable, minimum footprint.
   get sorted() {
-    return computed(() => [...this.rows.value].sort(byScore));
+    return computed(() => this.sortRows());
   }
   get celsius() {
     return ref(20);
   }
   get fahrenheit() {
     return computed({
-      get: () => (this.celsius.value * 9) / 5 + 32,
-      set: (f: number) => {
-        this.celsius.value = ((f - 32) * 5) / 9;
-      },
+      get: () => this.celsiusToFahrenheit(),
+      set: (fahrenheit: number) => this.setFromFahrenheit(fahrenheit),
     }); // writable computed = the ONLY way to pair a get+set on one member
   }
 
@@ -93,10 +96,23 @@ class $Box {
   baseWidth = 400;
 
   // METHODS — plain; engine-binds to raw (stable identity, safe as handlers).
+  // Reactive-closure bodies above delegate HERE (§7).
   grow() {
     this.w.value++;
   }
-  onResize(w: number) {
+
+  sortRows() {
+    return [...this.rows.value].sort(byScore);
+  }
+
+  celsiusToFahrenheit() {
+    return (this.celsius.value * 9) / 5 + 32;
+  }
+  setFromFahrenheit(fahrenheit: number) {
+    this.celsius.value = ((fahrenheit - 32) * 5) / 9;
+  }
+
+  onResize(width: number, oldWidth: number) {
     /* ... */
   }
 }
@@ -108,6 +124,55 @@ export namespace Box {
   export const Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
+```
+
+For an instance that OUTLIVES any component — a module singleton, an entity
+created in a callback — watchers go in the instance's OWN scope, and the
+owner of its lifetime disposes it:
+
+```ts
+class $Session {
+  get user() {
+    return ref<User | null>(null);
+  }
+
+  // Outliving instance: $watch/$watchEffect register in the instance's lazy
+  // effectScope — there is no component scope here to reap plain watch.
+  constructor() {
+    this.$watch(
+      () => this.user.value,
+      (user, previousUser) => this.onUserChanged(user, previousUser),
+    );
+    this.$watchEffect(() => this.persist());
+    // If constructed INSIDE some scope, auto-wire teardown instead:
+    //   getCurrentScope() && onScopeDispose(() => this.$stopEffects());
+  }
+
+  // Optional hook — $stopEffects() calls this FIRST: put non-Vue cleanup
+  // here (sockets, listeners from composables first-touched after setup).
+  stopEffects() {
+    this.disconnect();
+  }
+
+  onUserChanged(user: User | null, previousUser: User | null) {
+    /* ... */
+  }
+  persist() {
+    /* ... */
+  }
+  disconnect() {
+    /* ... */
+  }
+}
+
+export namespace Session {
+  export const $Class = $Session;
+  export const Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+}
+
+// The owner disposes: stops the scope, runs stopEffects(), clears caches.
+session.$stopEffects();
 ```
 
 ## 2. The SFC wiring template (copy this shape)
@@ -147,7 +212,7 @@ defineExpose(box as Box.Instance);
 
 | DO                                                                           | NEVER                                                                                  |
 | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `class $X` + `export namespace X { $Class; Class = Reactive($X); Instance }` | export a bare `Reactive(class {...})` for anything that grows a parent/dependent       |
+| `class $X` + `export namespace X { $Class; Class = Reactive($Class); Instance }` | export a bare `Reactive(class {...})` for anything that grows a parent/dependent       |
 | mutable state = `get x() { return ref(v) }`                                  | put mutable state in a plain field — writes trigger nothing                            |
 | read/write Refs/Computeds with `.value` inside the class AND in templates             | write `this.x = v` / `box.x = v` for a Ref/Computed — it clobbers the ref or no-ops            |
 | derive with a PLAIN getter                                                   | wrap every derivation in `computed()` — pays ~300 bytes/instance for nothing           |
@@ -157,6 +222,7 @@ defineExpose(box as Box.Instance);
 | destructure ONLY `ref="el"` targets                                          | destructure plain getters — snapshots a dead value                                     |
 | `defineExpose(box as X.Instance)`                                            | `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers       |
 | constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — ivue never calls it                         |
+| plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |
 
 ## 4. The unwrapping-surface typing law
 
@@ -188,23 +254,29 @@ until mount — use `?.` in watch getters).
 | `'X' is possibly null` on a template ref in a watch getter                                                  | add `?.` — `watch(() => x.el.value?.foo, cb)`            |
 | template write crashes / no-ops at runtime on the raw instance                                              | you wrote `x.Ref/Computed = v`; write `x.Ref/Computed.value = v`         |
 
-## 5. Watch rules
+## 5. Watch rules — and WHICH watch
+
+| the instance is…                                              | use                                                                                              |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| component-scoped (created in `setup()`)                        | plain `watch` / `watchEffect` — the component scope stops them on unmount                         |
+| component-outliving (module singleton, created in a callback)  | `this.$watch` / `this.$watchEffect` — the instance's lazy scope; disposed by `$stopEffects()`     |
 
 - `watch(() => inst.plainGetter, cb)` works on a RAW instance — no `reactive()`
   wrapper, no Ref/Computed needed. The getter body runs inside the watcher's effect, so
   its leaf reads subscribe directly (non-intuitive but structural).
 - The source MUST be the FUNCTION form. `watch(inst.plainGetter, cb)` passes a
   dead snapshot and never fires.
-- Inside `setup()`, plain `watch` / `watchEffect` are fine — the component scope
-  stops synchronously-created watchers on unmount.
-- For instances that OUTLIVE their component (module singletons, entities made
-  in callbacks or async code): use `this.$watch` / `this.$watchEffect`. These
-  register in a shared lazy per-instance `effectScope`, torn down by
-  `$stopEffects()` (which also runs a user `stopEffects()` hook and clears
-  cached Refs/Computeds). Pure-data instances that never watch allocate no scope.
+- `$stopEffects()` stops the instance scope, runs your optional `stopEffects()`
+  hook, then clears cached Refs/Computeds; instances that never `$watch` allocate no
+  scope. Every outliving instance needs an OWNER that calls it — or, when
+  constructed inside some scope, auto-wire:
+  `getCurrentScope() && onScopeDispose(() => this.$stopEffects());`
+- Do NOT default to `this.$watch` in a component-scoped constructor: the
+  component scope cannot see the instance scope, so without `$stopEffects`
+  wiring that watcher outlives unmount.
 - NEVER wrap `watchEffect` inside `$watch` — `$watchEffect` is the symmetric primitive.
-- Wire component-lifecycle instances to auto-teardown:
-  `getCurrentScope() && onScopeDispose(() => this.$stopEffects())`.
+- Watch CALLBACKS delegate to methods (§7):
+  `watch(source, (newValue, oldValue) => this.onChanged(newValue, oldValue))`.
 
 ## 6. Generics + circular imports (brief)
 
@@ -414,12 +486,12 @@ convention and check it in review.
 - [ ] Inside the class, every Ref/Computed read/write uses `.value`; plain fields are constants/config only.
 - [ ] Derived values are PLAIN getters; `computed()` appears only for expensive / render-suppressing / stable-handle cases.
 - [ ] Stores/composables are injected via `private get $store() { return useStore() }`, not field initializers.
-- [ ] The class is exported through the namespace (`$Class` / `Class = Reactive($X)` / `Instance`); generics cast `Class` and hand-apply `ReactiveInstance` to `Instance<T>`.
+- [ ] The class is exported through the namespace (`$Class` / `Class = Reactive($Class)` / `Instance`); generics cast `Class` and hand-apply `ReactiveInstance` to `Instance<T>`.
 - [ ] The SFC does `new X.Class(...)` once — no `reactive()` wrapper, no unwrap view.
 - [ ] Every template Ref/Computed access uses `.value` (reads AND writes: `v-model`, `v-if`, `:prop`, `@click(...args.value)`); plain getters/methods are plain.
 - [ ] Only `ref="..."` targets are destructured off the instance.
 - [ ] `defineExpose(x as X.Instance)`; consumers type the ref as `ShallowUnwrapRef<X.Instance>`.
-- [ ] Watch sources are the FUNCTION form; `this.$watch`/`this.$watchEffect` used for component-outliving instances; no `watchEffect` wrapped in `$watch`.
+- [ ] Watch sources are the FUNCTION form; component-scoped constructors use plain `watch`/`watchEffect`; `this.$watch`/`this.$watchEffect` only for component-outliving instances — each with a dispose path (`$stopEffects()` owner or `onScopeDispose` auto-wire); no `watchEffect` wrapped in `$watch`.
 - [ ] Lifecycle hooks / init logic live in the constructor (no `init()` expecting auto-call); template refs guarded with `?.` where read pre-mount.
 - [ ] Every `computed()`/constructor-watch CALLBACK delegates to a method (`computed(() => this.recalc())`) — no logic inlined in reactive closures; the arrow form, never `computed(this.method)`.
 - [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices and specs included — no single-letter names, no name meaning different things in different methods.
