@@ -118,9 +118,9 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'What is ivue?', link: '/guide/introduction' },
+            { text: 'Getting Started', link: '/guide/getting-started' },
             { text: 'Design & Philosophy', link: '/guide/design' },
             { text: 'Principles', link: '/guide/principles' },
-            { text: 'Getting Started', link: '/guide/getting-started' },
           ],
         },
         {
