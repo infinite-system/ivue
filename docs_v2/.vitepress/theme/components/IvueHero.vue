@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { withBase } from 'vitepress';
 // The real engine. Not a mock: this file ships as the library.
 import { Reactive } from '../../../../lib/Reactive';
 
@@ -76,8 +77,8 @@ onUnmounted(() => {
           per instance. No decorators. Nothing paid until first access.
         </p>
         <div class="ivh-actions">
-          <a class="btn brand" href="/guide/getting-started">Get Started</a>
-          <a class="btn alt" href="/guide/introduction">What is ivue?</a>
+          <a class="btn brand" :href="withBase('/guide/getting-started')">Get Started</a>
+          <a class="btn alt" :href="withBase('/guide/introduction')">What is ivue?</a>
         </div>
       </div>
 

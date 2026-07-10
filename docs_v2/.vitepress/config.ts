@@ -12,6 +12,8 @@ export default defineConfig({
     },
   },
 
+  base: '/ivue/', // served at https://infinite-system.github.io/ivue/
+
   title: 'ivue',
   titleTemplate: ':title — Infinite Vue',
   description:
@@ -21,7 +23,7 @@ export default defineConfig({
   lastUpdated: true,
 
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/ivue/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#6366f1' }],
     ['meta', { property: 'og:type', content: 'website' }],
     [
@@ -61,6 +63,22 @@ export default defineConfig({
       // checklist. Rendered CHECKED regardless of source state: the skill
       // source keeps `[ ]` (the AI runs the checklist), while the docs read
       // as "the standard satisfies all of these".
+      // Raw-HTML anchors in markdown (homepage sections) are NOT base-prefixed
+      // by VitePress the way markdown links are — rewrite them here so they
+      // work in dev and under the /ivue/ base in production.
+      md.core.ruler.push('base-prefix-raw-html', (state) => {
+        const base = '/ivue/';
+        const rewrite = (html: string) =>
+          html.replace(/(href|src)="\/(?!ivue\/|\/)/g, `$1="${base}`);
+        for (const token of state.tokens) {
+          if (token.type === 'html_block') token.content = rewrite(token.content);
+          if (token.type !== 'inline' || !token.children) continue;
+          for (const child of token.children) {
+            if (child.type === 'html_inline') child.content = rewrite(child.content);
+          }
+        }
+      });
+
       md.core.ruler.after('inline', 'task-lists', (state) => {
         const tokens = state.tokens;
         for (let i = 2; i < tokens.length; i++) {

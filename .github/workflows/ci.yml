@@ -24,8 +24,9 @@ jobs:
           cmd: test # will run `yarn test` command
           # dir: 'ivue'
   docs-deploy:
-    name: deploy docs
+    name: deploy docs (v2)
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
 
@@ -37,21 +38,14 @@ jobs:
       - name: Setup git
         run: |
           git config user.name "Evgeny Kalashnikov" && git config user.email "ekalashnikov@gmail.com"
-      - name: yarn install
-        uses: borales/actions-yarn@v4
-        with:
-         cmd: install # will run `yarn install` command
-         dir: ''
-      - name: yarn install
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: install # will run `yarn install` command
-          dir: 'docs'
-      - name: deploy docs
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: deploy # will run `yarn deploy` command
-          dir: 'docs'
+      - name: install root deps
+        run: yarn install
+      - name: install docs_v2 deps
+        run: npm install --prefix docs_v2
+      - name: build docs_v2
+        run: npm run build:docs
+      - name: deploy docs_v2 to gh-pages
+        run: node docs_v2/scripts/gh-pages-deploy.js
 #  docs-deploy:
 #    name: Deploying to gh-pages
 #    runs-on: ubuntu-latest
