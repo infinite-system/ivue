@@ -133,7 +133,7 @@ Generic classes: `ShallowUnwrapRef<Player.Instance<T>>`.
 ## reactive() interop
 
 Wrapping an instance in `reactive()` works (state is raw-anchored, one Ref/Computed
-per member regardless of access path), and the same typing law applies: the
+per member regardless of access path), and the same typing invariant applies: the
 runtime proxy unwraps reads and redirects ref writes, so type the wrapped
 value through `Instance` or writes will hit preserved-readonly errors:
 

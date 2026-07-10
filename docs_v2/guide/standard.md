@@ -1,6 +1,6 @@
 ---
 title: The Standard (Operating Manual)
-description: The complete ivue operating manual — annotated class and SFC templates, DO/NEVER table, the unwrapping-surface typing law, watch rules, thin-closure delegation, naming guidelines, keyed reactivity, and the review checklist. The same manual we ship to AI agents.
+description: The complete ivue operating manual — annotated class and SFC templates, DO/NEVER table, the unwrapping-surface typing invariant, watch rules, thin-closure delegation, naming guidelines, keyed reactivity, and the review checklist. The same manual we ship to AI agents.
 ---
 
 # The Standard — ivue Operating Manual
@@ -282,7 +282,7 @@ call site. Rules that keep it clean:
 | constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — ivue never calls it                         |
 | plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |
 
-## The unwrapping-surface typing law
+## The unwrapping-surface typing invariant
 
 Vue's expose proxy and `reactive()` unwrap ref READS and redirect ref WRITES
 into `.value` at runtime — but TypeScript keeps get-only accessors `readonly`
@@ -495,7 +495,7 @@ by observation), writes peek (existence is free). Rules that keep it honest:
 | wholesale-replaced structure | `get rows() { return shallowRef<Row[]>([]) }`         |
 | keyed / sparse / unbounded   | `Map<key, Ref>` + get-or-create track, peek-only bump |
 
-Same law at three granularities — nothing exists until observed: getters
+Same invariant at three granularities — nothing exists until observed: getters
 price MEMBERS, keyed collections price KEYS. (Proven at 20M cells / 4.7
 bytes each — see the flyweight grid.)
 

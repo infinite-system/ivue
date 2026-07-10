@@ -6,7 +6,7 @@ is a consequence of one of these — change the system _here_ first and let the
 code follow. Mechanisms live in `DESIGN.md`; measurements in `RESULTS.md`;
 tests in `__tests__/FlyweightSheet.vitest.spec.ts`.
 
-The master law, which every entry below either enables or holds:
+The master invariant, which every entry below either enables or holds:
 
 > **Everything costs proportional to what's observed; nothing costs
 > proportional to what exists.**
@@ -21,7 +21,7 @@ the reverse.
 
 # Reality invariants — discovered; obey or it breaks
 
-## Observation Is the Only Tracker _(the enabler of the master law)_
+## Observation Is the Only Tracker _(the enabler of the master invariant)_
 
 Vue records dependencies at **execution time**: whatever a running effect
 reads, it subscribes to; whatever it never reads **cannot** subscribe it.

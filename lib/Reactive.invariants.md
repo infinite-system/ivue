@@ -290,7 +290,7 @@ would create a new composable/subscription every read).
 
 ### Hot-swap continuity (HMR — dev serve only)
 
-**The law underneath** (this section's generator): **closures freeze at
+**The invariant underneath** (this section's generator): **closures freeze at
 creation; prototype lookups stay live.** Everything a live instance reaches
 through a lookup evaluated at call time — prototype members, method slots,
 its own cached refs — can be swapped under it; everything captured into a

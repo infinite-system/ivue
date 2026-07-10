@@ -12,15 +12,15 @@ The structural spec — reality vs chosen invariants and the impossibility
 boundary — lives in `Flyweight.invariants.md`; this document carries the
 mechanisms, `RESULTS.md` the measurements.
 
-## The law this design descends from
+## The invariant this design descends from
 
 > **Everything costs proportional to what's observed; nothing costs
 > proportional to what exists.**
 
-The formula grid (`demo/formula`) obeys this law for refs and computeds —
+The formula grid (`demo/formula`) obeys this invariant for refs and computeds —
 but its 1M `FormulaCell` _instances_ still exist eagerly, and at 20M cells
 (~67 B/cell marginal) that's a ~1.3–2.7 GB wall of cell objects. This sketch
-extends the law one level deeper: **the cells themselves don't exist until
+extends the invariant one level deeper: **the cells themselves don't exist until
 observed.** Ground truth is columnar typed storage; cell objects are
 transient flyweight facades; reactivity is a sparse overlay that materializes
 per observation.

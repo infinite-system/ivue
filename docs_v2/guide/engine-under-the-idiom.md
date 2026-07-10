@@ -138,14 +138,14 @@ Consequences observed in production, not projected:
 A real invariant gets rediscovered from independent directions:
 
 - **Solid.js** documents it outright: derived values are plain functions;
-  `createMemo` only when memoization pays. Same law, closure-geometry
+  `createMemo` only when memoization pays. Same invariant, closure-geometry
   dialect ([the full comparison](/guide/model-layer#what-about-solid-js)).
 - **Vue 3.4** shipped equality-based propagation stops for computeds — the
   team optimizing the cache tax the idiom institutionalized.
 - **MobX** made `computed` opt-in decoration over plain class getters a
   decade ago — different engine, same geometry conclusion.
 
-ivue's contribution is not the law — it is expressing the law _inside
+ivue's contribution is not the invariant — it is expressing the invariant _inside
 Vue's own engine_, unmodified, so a Vue codebase gets it without changing
 frameworks: zero patches, standard `ref()`/`computed()`/`watch` underneath,
 1.1 kB of glue.

@@ -165,7 +165,7 @@ The grids above price the cell **instance**.
 (`sketch/flyweight-grid/`, working and measured, structural proofs run at
 full scale): ground truth lives in columnar typed arrays,
 cell objects are disposable three-field facades created per render, and
-reactivity is a sparse overlay that materializes per observation. One law
+reactivity is a sparse overlay that materializes per observation. One invariant
 governs all of it:
 
 > **Everything costs proportional to what's observed; nothing costs

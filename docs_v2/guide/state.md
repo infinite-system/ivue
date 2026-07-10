@@ -215,7 +215,7 @@ keep it honest:
 | wholesale-replaced structure   | `get rows() { return shallowRef<Row[]>([]) }`           |
 | keyed / sparse / unbounded     | `Map<key, Ref>` + get-or-create track, peek-only bump   |
 
-Each shape is the same law at a different granularity — *nothing exists
+Each shape is the same invariant at a different granularity — *nothing exists
 until observed*: getters price **members**, keyed collections price
 **keys**. Proven at scale in
 [the Flyweight Pattern](/guide/flyweight): 20,000,000 live formula-capable

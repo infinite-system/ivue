@@ -528,3 +528,60 @@
   accent-color: var(--vp-c-brand-1);
   vertical-align: -2px;
 }
+
+/* Invariant blockquotes — the docs' punchy one-line theses. Every `>` quote in the
+   guide/reference is one of these, so the element itself carries the style. */
+.vp-doc blockquote {
+  position: relative;
+  margin: 28px 0;
+  padding: 18px 24px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgba(99, 102, 241, 0.1), transparent 55%),
+    radial-gradient(130% 160% at 100% 100%, rgba(52, 211, 153, 0.07), transparent 55%),
+    var(--vp-c-bg-soft);
+  overflow: hidden;
+}
+.vp-doc blockquote::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--ivue-grad);
+}
+.vp-doc blockquote > p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.7;
+  letter-spacing: -0.006em;
+  color: var(--vp-c-text-1);
+}
+.vp-doc blockquote > p + p {
+  margin-top: 10px;
+}
+.vp-doc blockquote > p strong {
+  font-weight: 650;
+}
+:root:not(.dark) .vp-doc blockquote {
+  border-color: rgba(99, 102, 241, 0.25);
+  background:
+    radial-gradient(130% 160% at 0% 0%, rgba(99, 102, 241, 0.07), transparent 55%),
+    radial-gradient(130% 160% at 100% 100%, rgba(52, 211, 153, 0.06), transparent 55%),
+    var(--vp-c-bg-soft);
+}
+
+/* ...except the homepage Saint-Exupéry quote, which has its own treatment. */
+.ix .ix-quote blockquote {
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+}
+.ix .ix-quote blockquote::before {
+  display: none;
+}

@@ -560,7 +560,7 @@ invariant doing double duty:
 | watch any entity, any derived value | leaf tracking — plain getters are valid `watch` sources      |
 | stable handles for hot paths        | per-member `computed()` promotion                            |
 | deterministic disposal              | `$stopEffects` + the lazy per-instance scope                 |
-| survives every proxy boundary       | raw anchoring + the `Instance` typing law                    |
+| survives every proxy boundary       | raw anchoring + the `Instance` typing invariant                    |
 
 ## Boundaries — where this claim does _not_ apply
 
