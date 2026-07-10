@@ -105,7 +105,7 @@ class $Box {
 // (you `new` it — same constructor by identity); Instance = the writable type.
 export namespace Box {
   export const $Class = $Box;
-  export const Class = Reactive($Box);
+  export const Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 ```
@@ -221,7 +221,7 @@ class $Scroller<T extends BaseItem> {
 
 export namespace Scroller {
   export const $Class = $Scroller;
-  export const Class = Reactive($Scroller) as unknown as typeof $Scroller; // keeps <T> at `new` sites
+  export const Class = Reactive($Class) as unknown as typeof $Class; // keeps <T> at `new` sites
   export type Instance<T extends BaseItem> = ReactiveInstance<$Scroller<T>>;
 }
 // consumer of a template ref: ShallowUnwrapRef<Scroller.Instance<T>>

@@ -70,7 +70,7 @@ import { ivueHotUpdate, Reactive } from 'ivue';
 
 export namespace Player {
   export const $Class = $Player;
-  export const Class = Reactive($Player);
+  export const Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 

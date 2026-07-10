@@ -29,6 +29,6 @@ class $BaseElement {
 
 export namespace BaseElement {
   export const $Class = $BaseElement;
-  export const Class = Reactive($BaseElement);
+  export const Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

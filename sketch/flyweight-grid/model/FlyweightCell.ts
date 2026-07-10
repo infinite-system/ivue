@@ -56,7 +56,7 @@ class $FlyweightCell {
 
 export namespace FlyweightCell {
   export const $Class = $FlyweightCell;
-  export const Class = Reactive($FlyweightCell);
+  export const Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 

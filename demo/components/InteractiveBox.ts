@@ -96,6 +96,6 @@ class $InteractiveBox extends Container.$Class {
 
 export namespace InteractiveBox {
   export const $Class = $InteractiveBox;
-  export const Class = Reactive($InteractiveBox);
+  export const Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

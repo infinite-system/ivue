@@ -30,7 +30,7 @@ class $BaseElement {
 
 export namespace BaseElement {
   export const $Class = $BaseElement; // raw — children `extends` this
-  export const Class = Reactive($BaseElement); // reactive — you `new` this
+  export const Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance;
 }
 ```
@@ -48,7 +48,7 @@ class $Container extends BaseElement.$Class {
 
 export namespace Container {
   export const $Class = $Container;
-  export const Class = Reactive($Container);
+  export const Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 ```
@@ -97,7 +97,7 @@ a hoisted `var` filled in by an IIFE:
 export var Container;
 ((C) => {
   C.$Class = $Container;
-  C.Class = Reactive($Container);
+  C.Class = Reactive(C.$Class);
 })(Container || (Container = {}));
 ```
 
@@ -221,7 +221,7 @@ class $Scroller<T extends BaseItem> {
 
 export namespace Scroller {
   export const $Class = $Scroller;
-  export const Class = Reactive($Scroller) as unknown as typeof $Scroller;
+  export const Class = Reactive($Class) as unknown as typeof $Class;
   export type Instance<T extends BaseItem> = ReactiveInstance<$Scroller<T>>;
 }
 ```

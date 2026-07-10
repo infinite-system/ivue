@@ -303,7 +303,7 @@ class $FlyweightGridPage {
 
 export namespace FlyweightGridPage {
   export const $Class = $FlyweightGridPage;
-  export const Class = Reactive($FlyweightGridPage);
+  export const Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 

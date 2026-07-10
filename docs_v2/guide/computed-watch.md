@@ -139,7 +139,7 @@ class $Invoice {
 }
 export namespace Invoice {
   export const $Class = $Invoice;
-  export const Class = Reactive($Invoice);
+  export const Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 

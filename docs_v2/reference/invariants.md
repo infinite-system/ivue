@@ -177,7 +177,7 @@ cross-file hierarchies and circular imports where instantiation-time engines don
 ```ts
 export namespace Thing {
   export const $Class = $Thing          // RAW class — children `extends` this
-  export const Class  = Reactive($Thing) // REACTIVE class — you `new` this
+  export const Class  = Reactive($Class) // REACTIVE class — you `new` this
   export type Instance = typeof Class.Instance
 }
 ```
@@ -188,7 +188,7 @@ A TypeScript `namespace` compiles to a **hoisted `var` populated by an IIFE**:
 export var Thing;
 ((Thing) => {
   Thing.$Class = $Thing;
-  Thing.Class  = Reactive($Thing);
+  Thing.Class = Reactive(Thing.$Class);
 })(Thing || (Thing = {}));
 ```
 

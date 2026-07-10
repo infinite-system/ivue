@@ -65,6 +65,6 @@ class $Cell {
 
 export namespace Cell {
   export const $Class = $Cell;
-  export const Class = Reactive($Cell);
+  export const Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

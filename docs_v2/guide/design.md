@@ -29,7 +29,7 @@ set.
 
 ## Why it's hard: the problems fight each other
 
-Any one of these is a weekend. The reason the *set* stayed unsolved is that they
+The reason the *set* stayed unsolved is that they
 **interact**. The prototype transform that enables inheritance is the same mechanism
 that breaks identity, HMR, and types. The caching that makes reads cheap is what
 makes `super` and teardown tricky. The types you need for writable getters dictate
@@ -38,19 +38,25 @@ how you're even allowed to export the class.
 Solving them in isolation is trivial. Solving them so they *all hold at once* —
 cheaply, with a single residual cost and no exceptions bolted on — is the real
 problem, and it is very hard. When one structure makes every constraint true
-simultaneously, you've found the invariant instead of patching symptoms. The proof
-is that you can delete the engine's per-level "super key" bookkeeping and deep
-inheritance keeps working — the guarantee was load-bearing on its own.
+simultaneously, you've found the invariant instead of patching symptoms. 
 
 ### One of them, in full: bound methods
 
-**Everyone underestimates this one.** In plain
-Vue and React you cannot pass `this.method` — you write `() => this.method()` or
+> **Everyone underestimates this one.** 
+
+In plain JavaScript, Vue, React you cannot pass `this.method` around — you write `() => this.method()` or
 `this.method.bind(this)` at every call site, and the day someone forgets, `this` is
-`undefined` at runtime and the bug ships. Bind in the constructor instead and you
-allocate a fresh function per method per instance, discarding the shared prototype;
-use arrow class fields and you get the same per-instance closures *plus* you lose
-prototype override. ivue ends the whole saga: methods live on the prototype, get
+`undefined` at runtime and the bug ships. 
+
+**The problem becomes two-fold:**
+
+If you bind each method in the constructor instead and you allocate a fresh function per method per instance that's another tax and you lose the shared prototype.
+
+If you use arrow class functions as arrow functions are bound by default you get the same per-instance closures overhead and you lose
+prototype override.
+
+
+ivue ends the whole saga: methods live on the prototype, get
 bound **lazily** on first access, and are **cached** on the instance — so `this.method`
 is always correct, always the same reference, and costs one bind only for the methods
 you actually use. The `() => this.method()` wrapper, and the class of bug behind it,
@@ -73,8 +79,7 @@ per-instance cost, and the `() => this.method()` tax at every call site. Making 
 class behave *cheaply and correctly* was hard enough that the entire field walked
 away rather than solve it.
 
-Logic reuse and decorator/TypeScript friction (decorators, not TS itself — TS
-predates Vue and Vue 3 is written in it) piled on. But the difficulty was the ground
+Logic reuse and decorator vs TypeScript friction piled on. But the difficulty was the ground
 under all of it. **ivue is the answer to that difficulty** — the exact problems that
 drove people off classes, binding and per-instance cost and reactive inheritance,
 are the ones the [table above](#the-problems-ivue-solves) closes, without the two
@@ -125,7 +130,13 @@ inside classes:
 class $Pointer {
   get $mouse() { return useMouse() }   // a composable, hosted
   get x() { return this.$mouse.x }
+  get y() { return this.$mouse.y }
 }
+const Pointer = Reactive($Pointer);
+const { x, y } = new Pointer();
+<template>
+{{ x }}, {{ y }}
+</template>
 ```
 
 The class contributes what composables lack — identity, structure, inheritance,

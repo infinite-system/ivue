@@ -115,7 +115,7 @@ class $Box {
 // (you `new` it — same constructor by identity); Instance = the writable type.
 export namespace Box {
   export const $Class = $Box;
-  export const Class = Reactive($Box);
+  export const Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 ```
@@ -157,7 +157,7 @@ defineExpose(box as Box.Instance);
 
 | DO                                                                           | NEVER                                                                                  |
 | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `class $X` + `export namespace X { $Class; Class = Reactive($X); Instance }` | export a bare `Reactive(class {...})` for anything that grows a parent/dependent       |
+| `class $X` + `export namespace X { $Class; Class = Reactive($Class); Instance }` | export a bare `Reactive(class {...})` for anything that grows a parent/dependent       |
 | mutable state = `get x() { return ref(v) }`                                  | put mutable state in a plain field — writes trigger nothing                            |
 | read/write Refs/Computeds with `.value` inside the class AND in templates             | write `this.x = v` / `box.x = v` for a Ref/Computed — it clobbers the ref or no-ops            |
 | derive with a PLAIN getter                                                   | wrap every derivation in `computed()` — pays ~300 bytes/instance for nothing           |
@@ -231,7 +231,7 @@ class $Scroller<T extends BaseItem> {
 
 export namespace Scroller {
   export const $Class = $Scroller;
-  export const Class = Reactive($Scroller) as unknown as typeof $Scroller; // keeps <T> at `new` sites
+  export const Class = Reactive($Class) as unknown as typeof $Class; // keeps <T> at `new` sites
   export type Instance<T extends BaseItem> = ReactiveInstance<$Scroller<T>>;
 }
 // consumer of a template ref: ShallowUnwrapRef<Scroller.Instance<T>>
@@ -424,7 +424,7 @@ convention and check it in review.
 - [ ] Inside the class, every Ref/Computed read/write uses `.value`; plain fields are constants/config only.
 - [ ] Derived values are PLAIN getters; `computed()` appears only for expensive / render-suppressing / stable-handle cases.
 - [ ] Stores/composables are injected via `private get $store() { return useStore() }`, not field initializers.
-- [ ] The class is exported through the namespace (`$Class` / `Class = Reactive($X)` / `Instance`); generics cast `Class` and hand-apply `ReactiveInstance` to `Instance<T>`.
+- [ ] The class is exported through the namespace (`$Class` / `Class = Reactive($Class)` / `Instance`); generics cast `Class` and hand-apply `ReactiveInstance` to `Instance<T>`.
 - [ ] The SFC does `new X.Class(...)` once — no `reactive()` wrapper, no unwrap view.
 - [ ] Every template Ref/Computed access uses `.value` (reads AND writes: `v-model`, `v-if`, `:prop`, `@click(...args.value)`); plain getters/methods are plain.
 - [ ] Only `ref="..."` targets are destructured off the instance.

@@ -620,7 +620,7 @@ class $FlyweightSheet {
 
 export namespace FlyweightSheet {
   export const $Class = $FlyweightSheet;
-  export const Class = Reactive($FlyweightSheet);
+  export const Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 
