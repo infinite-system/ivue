@@ -1,47 +1,129 @@
-## ivue &ndash; Infinite Vue &nbsp; &nbsp; [![npm](https://img.shields.io/npm/v/ivue.svg)](https://www.npmjs.com/package/ivue) [![build status](https://github.com/infinite-system/ivue/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/infinite-system/ivue/actions/workflows/ci.yml)
+# ivue — Infinite Vue &nbsp; [![npm](https://img.shields.io/npm/v/ivue.svg)](https://www.npmjs.com/package/ivue) [![build status](https://github.com/infinite-system/ivue/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/infinite-system/ivue/actions/workflows/ci.yml)
 
-## About
+**Plain classes. Full reactivity. One kilobyte.**
 
-`ivue` is a TypeScript class based composable architecture for Vue 3, that unlocks infinite scalability for Vue 3 based apps. It allows you to extend regular Vue 3 in a simple and elegant way.
+ivue builds Vue 3 reactivity out of plain TypeScript classes. Real
+inheritance, real encapsulation, real polymorphism — on ordinary objects,
+with nothing paid until first access. The whole engine is **1.1kb gzipped**
+with zero dependencies.
 
-## Features
-&ndash; Simple & Elegant Architecture<br />
-&ndash; Extend Classes aligned with TypeScript Class design<br />
-&ndash; Extend Props Defaults<br />
-&ndash; Extend Emits<br />
-&ndash; Extend Slots<br />
-&ndash; Extend Components<br />
-&ndash; Improves DX by elegantly dealing with `.value` in the background<br />
-&ndash; Can be used both as a Store and a View Model for Components<br />
-&ndash; Zero dependencies except Vue 3<br />
+```ts
+import { Reactive } from 'ivue';
+import { ref } from 'vue';
 
-## What is ivue?
-## `ivue` is
+class $Counter {
+  get count()  { return ref(0) }
+  get double() { return this.count.value * 2 }  // plain getter — derives on read
+  inc() { this.count.value++ }
+}
 
-&ndash;&nbsp; Simple like Options API<br />
-&ndash;&nbsp; Flexible like Composition API<br />
-&ndash;&nbsp; Extensible like TypeScript Class API<br />
-&ndash;&nbsp; Robust, Minimal, Opaque & Unobtrusive<br />
-&ndash;&nbsp; Pure Object Oriented Reactivity System based on Vue 3 Composition API<br />
-&ndash;&nbsp; 100% Vue 3 Compatible<br />
-&ndash;&nbsp; 100% Test Covered<br />
-&ndash;&nbsp; 100% Type Safe<br />
-&ndash;&nbsp; Production Ready<br />
-&ndash;&nbsp; Just <code>1.1kb</code> gzipped!<br />
-&ndash;&nbsp; 100% VSCode / Intellij IDE Auto-complete Intellisense<br />
+export const Counter = Reactive($Counter);
 
+const counter = new Counter();
+counter.inc();
+counter.count.value  // 1
+counter.double       // 2, re-derived on read
+```
 
+## One idea, carried through
 
-`ivue` is a powerful tool because it fully aligns itself with JavaScript / TypeScript Class API.
+`Reactive()` transforms a class **once**. A getter returning `ref()` becomes
+state: created on first touch, cached, stable forever. A plain getter stays
+plain and re-derives on every read — reactive with zero allocation. Methods
+bind themselves once, to the right `this`. Instances stay ordinary objects:
+no proxy wraps them, no work happens at construction.
 
-`ivue` gives you a class based Composable capabilities with Inheritance and all the power of TypeScript Classes.
+Inheritance, hot reload, teardown, speed — consequences of that one move.
 
-`ivue` mitigates the downsides of both Composition API and Options API, uses only their strengths and brings back Object Oriented Programming to allow the development of complex and scalable apps.
+## In a component
 
-`ivue` is fully interoperable with Composition API and does not work against, but rather with it, so you can use all of ecosystems composables seamlessly.
+```vue
+<script setup lang="ts">
+import { Counter } from './Counter';
 
-`ivue` also offers a set of functions and utility types to make extensible & exportable props defaults, extensible emits and extensible slots possible.
+const counter = new Counter();
 
-## Full Documentation
+// the state destructure — every Ref the template touches, unwrapped uniformly
+const { count } = counter;
+</script>
 
-See: https://infinite-system.github.io/ivue/
+<template>
+  <button @click="counter.inc()">{{ count }} · double {{ counter.double }}</button>
+</template>
+```
+
+The same class serves as a global store, a component ViewModel, or a domain
+model. Composables plug straight in — the entire Vue ecosystem works inside
+your classes:
+
+```ts
+import { useMouse } from '@vueuse/core';
+
+class $Pointer {
+  private get $mouse() { return useMouse() }  // created once, encapsulated
+  get x() { return this.$mouse.x }
+  get y() { return this.$mouse.y }
+}
+```
+
+## The numbers
+
+Measured, not promised — method and live in-browser benchmarks in
+[the docs](https://infinite-system.github.io/ivue/).
+
+| creating 100k instances | time | ivue is |
+| --- | --- | --- |
+| **ivue `new Class()`** | **0.7 ms** | the baseline |
+| native `reactive()` | 36.7 ms | **55× faster** |
+| composable factory | 42.8 ms | **64× faster** |
+
+| heap per instance, same shape | heap | ivue is |
+| --- | --- | --- |
+| **ivue class, 60 getters** | **1.7 KB** | the baseline |
+| composable, 60 closures | 12.8 KB | **7.7× lighter** |
+| composable, 60 computeds | 31.1 KB | **18.6× lighter** |
+
+Taken all the way down: a fully reactive spreadsheet model holding
+**20,000,000 live cells at 4.7 bytes each** — 8.5× below the plain-object
+floor — because in ivue, everything costs proportional to what's *observed*,
+nothing costs proportional to what *exists*.
+
+## Hard problems, solved together
+
+Each of these sank earlier class-reactivity attempts. ivue ships all of them
+as one coherent design:
+
+- **Bound methods** — `this.method` is always correct, always the same reference.
+- **Reactive inheritance** — deep `super.x.value` chains resolve level-safe.
+- **Hot reload for classes** — behavior edits graft onto live instances, state intact.
+- **Circular imports** — the namespace pattern resolves mutual references in any load order.
+- **Writable getter types** — ref-returning getters type as writable; instances fully inferred.
+- **Deterministic teardown** — `$watch` scopes per instance, `$stopEffects()` cleans up.
+- **Memory** — derivations are shared prototype getters, not per-instance allocations.
+- **Hot paths** — reads hoist to native ref speed with one line where it matters.
+
+## Built for humans and AI
+
+ivue ships with an [Operating Manual](https://infinite-system.github.io/ivue/guide/standard) —
+the complete authoring standard as annotated templates, rules, and a review
+checklist. It reads as documentation and works as a drop-in skill for AI
+coding agents, so generated code follows the same standard your team writes.
+
+## A note on the size
+
+The v1 README said `1.1kb gzipped`. This engine — rewritten from scratch on a
+different architecture: lazy prototype transform instead of per-instance
+proxies, hot-reload grafting included — is **exactly 1.1kb gzipped** again.
+Completely different, precisely the same weight.
+
+> *Perfection is achieved, not when there is nothing more to add, but when
+> there is nothing left to take away.* — Antoine de Saint-Exupéry
+
+## Documentation
+
+Full guide, principles, live benchmarks, and the API reference:
+**https://infinite-system.github.io/ivue/**
+
+## License
+
+[MIT](./LICENSE)
