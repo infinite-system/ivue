@@ -45,14 +45,56 @@ shared base behavior, overridable pieces, encapsulated internals, a clear
 `super`, `private`, getters and setters. ivue makes them reactive without
 taking any of it away.
 
-And classes host composables, not replace them:
+And classes **host** composables, not replace them. Here the entire
+`useMouse` composable is an implementation detail; the class's public
+surface is two refs:
 
 ```ts
+// pointer.ts
+import { Reactive } from 'ivue';
+import { useMouse } from '@vueuse/core';
+
 class $Pointer {
-  get $mouse() { return useMouse() }   // a composable, created once per instance
-  get x() { return this.$mouse.x }
+  // the composable is an implementation detail — created once, held forever
+  private get $mouse() {
+    return useMouse();
+  }
+
+  // the public surface: two refs
+  get x() {
+    return this.$mouse.x;
+  }
+  get y() {
+    return this.$mouse.y;
+  }
+}
+
+export namespace Pointer {
+  export const $Class = $Pointer; // raw — children `extends` this
+  export const Class = Reactive($Class); // reactive — you `new` this
+  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 }
 ```
+
+```vue
+<script setup lang="ts">
+import { Pointer } from './pointer';
+
+// the state destructure
+const { x, y } = new Pointer.Class();
+</script>
+
+<template>Mouse: {{ x }}, {{ y }}</template>
+```
+
+Live — this pad reads `{ x, y }` from a `Pointer` instance:
+
+<DemoPointer />
+
+`private` means what it always means: consumers of `Pointer` see `x` and
+`y`, never the composable. And because the destructure runs in `setup`, the
+composable materializes inside the component's scope — `useMouse`'s
+listeners are cleaned up on unmount, for free.
 
 ## The trade, in one line
 

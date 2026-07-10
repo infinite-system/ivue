@@ -115,8 +115,24 @@ closure. **Method dispatch is not the cost.** The getter-indirected reads
 inside the method are.
 
 In absolute terms, 24 ns is nothing. It only matters when you call something
-millions of times — and when it does, a one-line hoist erases the entire
-gap ([Hot loops](#hot-loops)).
+millions of times — and when it does, one hoist erases the entire gap.
+
+## Hot loops
+
+When you do have such a loop, hoist the refs out of the getters once:
+
+```ts
+calculate() {
+  const width = this.width, height = this.height  // hoist: one getter access each
+  let sum = 0
+  for (let i = 0; i < 1e7; i++) {
+    sum += Math.sqrt(width.value ** 2 + height.value ** 2)  // direct ref reads now
+  }
+  return sum
+}
+```
+
+The inner loop now reads refs directly and runs at native speed.
 
 ## The template boundary
 
@@ -136,23 +152,6 @@ receipts for why they lost — a `proxyRefs`-style shallow view costs ~2–5×,
 `reactive()` ~6–15×. The authoring standard reads state as destructured setup
 bindings — direct `.value` reads on the same cells, i.e. the raw column
 ([Components & Templates](/guide/components)).
-
-## Hot loops
-
-When you do have such a loop, hoist the refs out of the getters once:
-
-```ts
-calculate() {
-  const width = this.width, height = this.height  // hoist: one getter access each
-  let sum = 0
-  for (let i = 0; i < 1e7; i++) {
-    sum += Math.sqrt(width.value ** 2 + height.value ** 2)  // direct ref reads now
-  }
-  return sum
-}
-```
-
-The inner loop now reads refs directly and runs at native speed.
 
 ## The mental model
 

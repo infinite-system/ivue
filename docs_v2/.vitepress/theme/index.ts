@@ -15,6 +15,7 @@ import DemoState from './components/DemoState.vue';
 import DemoDerived from './components/DemoDerived.vue';
 import DemoInheritance from './components/DemoInheritance.vue';
 import DemoTeardown from './components/DemoTeardown.vue';
+import DemoPointer from './components/DemoPointer.vue';
 import DemoPerf from './components/DemoPerf.vue';
 import GridBenchmark from './components/grid/GridBenchmark.vue';
 import FormulaGrid from './components/grid/FormulaGrid.vue';
@@ -33,6 +34,7 @@ export default {
     app.component('DemoDerived', DemoDerived);
     app.component('DemoInheritance', DemoInheritance);
     app.component('DemoTeardown', DemoTeardown);
+    app.component('DemoPointer', DemoPointer);
     app.component('DemoPerf', DemoPerf);
     app.component('GridBenchmark', GridBenchmark);
     app.component('FormulaGrid', FormulaGrid);
