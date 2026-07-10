@@ -45,7 +45,7 @@ Wrap a getter in `computed()` when memoization earns its bytes:
   composable.
 
 ```ts
-get sorted() {
+get sortedItems() {
   return computed(() => [...this.items.value].sort(byPrice))
 }
 ```
@@ -61,7 +61,7 @@ logic lives in a method.
 
 ```ts
 // ✅ THIN — the closure is a pointer; the logic lives on the prototype
-get sorted() {
+get sortedItems() {
   return computed(() => this.sortItems())
 }
 sortItems() {
@@ -69,7 +69,7 @@ sortItems() {
 }
 
 // ❌ FAT — the logic is frozen into a per-instance closure
-get sorted() {
+get sortedItems() {
   return computed(() => [...this.items.value].sort(byPrice))
 }
 ```

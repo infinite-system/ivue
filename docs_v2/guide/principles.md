@@ -64,7 +64,7 @@ When memoization earns its ~300 bytes per instance, wrap the getter in
 `computed()` — it is your `useMemo`:
 
 ```ts
-get sorted() { return computed(() => this.sortItems()) } // cached derived
+get sortedItems() { return computed(() => this.sortItems()) } // cached derived
 sortItems() { return [...this.items.value].sort(byPrice) }
 ```
 

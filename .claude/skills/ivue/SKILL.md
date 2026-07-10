@@ -70,7 +70,7 @@ class $Box {
   // THIN closures (see "computed() and watch callbacks delegate to methods"):
   // the computed only dials a method — logic stays on the
   // prototype, hot-graftable, minimum footprint.
-  get sorted() {
+  get sortedRows() {
     return computed(() => this.sortRows());
   }
   get celsius() {
@@ -198,7 +198,7 @@ const {
   anchor,
   celsius,
   // computed refs
-  sorted,
+  sortedRows,
   fahrenheit,
   // element refs
   boxEl,
@@ -366,7 +366,7 @@ in methods.**
 ```ts
 // ✅ THIN — the closure only dials a method; edits hot-graft onto LIVE
 //    instances with all state preserved
-get sorted() {
+get sortedItems() {
   return computed(() => this.sortItems());
 }
 sortItems() {
@@ -379,7 +379,7 @@ watch(value, (newValue, oldValue) => this.onValueChanged(newValue, oldValue));
 // ❌ FAT — logic frozen into a per-instance closure: editing this body
 //    forces a component remount (the engine detects it and escalates —
 //    never silently stale — but you lose live-state grafting)
-get sorted() {
+get sortedItems() {
   return computed(() => [...this.items.value].sort(byPrice));
 }
 ```

@@ -70,7 +70,7 @@ Why this is the default:
 Wrap a getter in `computed()` when the memoization earns its bytes:
 
 ```ts
-get sorted() {
+get sortedRows() {
   return computed(() => [...this.rows.value].sort(byScore)) // expensive: memoize
 }
 ```
