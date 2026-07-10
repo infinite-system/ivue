@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-description: Install ivue, write your first reactive class with ref-getters and plain derived getters, and use it in a Vue component.
+description: Install ivue, enable hot reload for classes with one Vite plugin line, write your first reactive class with ref-getters and plain derived getters, and use it in a Vue component.
 ---
 
 # Getting Started
@@ -19,6 +19,30 @@ ivue state is read with `.value`. If you'd rather not see it, the
 ecosystem includes inlay-hint and "hide `.value`" options that keep your source
 clean.
 :::
+
+## Enable hot reload for classes
+
+One plugin line in `vite.config.ts` gives your classes real HMR — edit a
+method or getter and the new behavior grafts onto **live instances, state
+intact**, no page reload:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import ivueHmr from 'ivue/lib/hmr-plugin';
+
+export default defineConfig({
+  plugins: [vue(), ivueHmr()],
+});
+```
+
+The plugin only marks modules that call `Reactive(...)` as HMR boundaries;
+it runs in the dev server only, and production builds contain **zero** HMR
+code. Optional — everything else on this page works without it — but it's
+one line, and it's the difference between tweaking a method live and
+re-clicking through your app after every save. Details, the manual
+three-line alternative, and how the grafting works: [HMR](/guide/hmr).
 
 ## Your first reactive class
 
