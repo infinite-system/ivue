@@ -163,8 +163,8 @@ export default defineConfig({
           text: 'Reference',
           collapsed: false,
           items: [
-            { text: 'API', link: '/api/' },
             { text: 'Invariants', link: '/reference/invariants' },
+            { text: 'API', link: '/api/' },
           ],
         },
       ],
