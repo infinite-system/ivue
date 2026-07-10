@@ -76,8 +76,8 @@ higher cost:
   reference across an eviction boundary quietly breaks.
 - **The formula hole.** `SUM(A1:A25000)` touches 25,000 cells regardless
   of the viewport. Either the formula forces mass materialization (the
-  memory spike returns, now with churn on every recalc), or it reads the
-  backing store directly — at which point recalc isn't reactive anymore
+  memory spike returns, now with churn on every recalculation), or it reads the
+  backing store directly — at which point recalculation isn't reactive anymore
   and you're back to hand-rolled dirty tracking. The model exits Vue
   through the side door you just built.
 

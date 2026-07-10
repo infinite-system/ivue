@@ -138,7 +138,7 @@ runtime proxy unwraps reads and redirects ref writes, so type the wrapped
 value through `Instance` or writes will hit preserved-readonly errors:
 
 ```ts
-const r = reactive(inst as Player.Instance) // writes typecheck as they behave
+const wrapped = reactive(player as Player.Instance) // writes typecheck as they behave
 ```
 
 Prefer not wrapping at all — the raw instance plus destructured state is the

@@ -12,7 +12,8 @@ instances that never need it.
 ## `$watch`
 
 Same signature as Vue's `watch`, but it registers the watcher in the instance's
-**lazily-created** effect scope:
+**lazily-created, detached** effect scope — owned by the instance, not by
+whatever component happened to construct it:
 
 ```ts
 class $Player {
@@ -35,7 +36,7 @@ free.
 Call it to dispose an instance:
 
 ```ts
-inst.$stopEffects()
+instance.$stopEffects()
 ```
 
 It does three things, in order:
@@ -51,18 +52,41 @@ lifecycle, live:
 
 ## Auto-cleanup with the component
 
-If an instance lives and dies with a component, wire it to the component's scope
-so teardown is automatic on unmount:
+If an instance lives and dies with one component, it doesn't need `$watch` at
+all. Use plain `watch`/`watchEffect` in the constructor: constructed during
+setup, those land in the **component's** effect scope, and Vue reaps them on
+unmount. Nothing to wire, nothing to call:
+
+```ts
+import { watch } from 'vue'
+
+class $Widget {
+  constructor() {
+    watch(() => this.hp.value, (hp) => this.onHpChange(hp)) // dies with the component
+  }
+}
+```
+
+The `$watch` scope is detached **by design** — so a component can construct a
+long-lived instance (a session, a store) and unmount without killing its
+watchers. The price of that freedom is that unmount never cleans a `$watch`;
+some owner must call `$stopEffects()`.
+
+For a class that uses `$watch` because *some* owners keep it alive longer, but
+is *also* created inside components, bridge the two worlds in the constructor:
 
 ```ts
 import { getCurrentScope, onScopeDispose } from 'vue'
 
-class $Widget {
+class $Session {
   constructor() {
     getCurrentScope() && onScopeDispose(() => this.$stopEffects())
   }
 }
 ```
+
+When a component scope is there, disposal rides its unmount; when there isn't
+one, the line is a no-op and the explicit owner calls `$stopEffects()`.
 
 ## Why not just `effect.stop()`?
 
@@ -73,7 +97,8 @@ which is exactly what the effect scope owns. So ivue stops the *scope*, not
 individual Refs/Computeds — correct, and nothing to leak.
 
 ::: tip Rule of thumb
-Create watchers with `this.$watch` / `this.$watchEffect`. Call `$stopEffects()` (or wire
-`onScopeDispose`) when the instance outlives its creating component. Pure-data
-models need nothing.
+Component-lifetime instance → plain `watch`/`watchEffect` in the constructor;
+the component cleans up. Outliving instance → `this.$watch`/`this.$watchEffect`
+plus an owner that calls `$stopEffects()` (or the `onScopeDispose` bridge).
+Pure-data models need nothing.
 :::

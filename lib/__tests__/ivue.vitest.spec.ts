@@ -955,36 +955,36 @@ describe('ivue', () => {
     });
 
     it('mirrors default flags for class accessors: enumerable=false, configurable=true', () => {
-      const inst = ivue(Flags);
-      const d = Object.getOwnPropertyDescriptor(inst, 'hidden');
+      const instance = ivue(Flags);
+      const d = Object.getOwnPropertyDescriptor(instance, 'hidden');
 
       expect(d?.enumerable).toBe(false);
       expect(d?.configurable).toBe(true);
-      expect(isEnumerable(inst, 'hidden')).toBe(false);
+      expect(isEnumerable(instance, 'hidden')).toBe(false);
     });
 
     it('preserves enumerable=true from prototype on the reactive instance', () => {
-      const inst = ivue(Flags);
-      const d = Object.getOwnPropertyDescriptor(inst, 'visible');
+      const instance = ivue(Flags);
+      const d = Object.getOwnPropertyDescriptor(instance, 'visible');
 
       expect(d?.enumerable).toBe(true);
-      expect(isEnumerable(inst, 'visible')).toBe(true);
+      expect(isEnumerable(instance, 'visible')).toBe(true);
 
       // sanity check: hidden is not in keys; visible is
-      const keys = Object.keys(inst);
+      const keys = Object.keys(instance);
       expect(keys.includes('visible')).toBe(true);
       expect(keys.includes('hidden')).toBe(false);
     });
 
     it('preserves configurable=false from prototype (cannot redefine)', () => {
-      const inst = ivue(Flags);
-      const d = Object.getOwnPropertyDescriptor(inst, 'locked');
+      const instance = ivue(Flags);
+      const d = Object.getOwnPropertyDescriptor(instance, 'locked');
 
       expect(d?.configurable).toBe(false);
 
       // Attempting to redefine should throw a TypeError
       expect(() =>
-        Object.defineProperty(inst, 'locked', {
+        Object.defineProperty(instance, 'locked', {
           get() {
             return 99;
           },
@@ -993,14 +993,14 @@ describe('ivue', () => {
     });
 
     it('configurable=true allows redefining accessor on the reactive instance', () => {
-      const inst = ivue(Flags);
+      const instance = ivue(Flags);
 
       // Before redefine
       // @ts-expect-error anyway
-      expect(inst.visible).toBe(2);
+      expect(instance.visible).toBe(2);
 
       // Redefine should succeed (configurable=true)
-      Object.defineProperty(inst, 'visible', {
+      Object.defineProperty(instance, 'visible', {
         get() {
           return 42;
         },
@@ -1009,10 +1009,10 @@ describe('ivue', () => {
       });
 
       // @ts-expect-error anyway
-      expect(inst.visible).toBe(42);
+      expect(instance.visible).toBe(42);
 
       // And flags remain as set on redefinition
-      const d = Object.getOwnPropertyDescriptor(inst, 'visible');
+      const d = Object.getOwnPropertyDescriptor(instance, 'visible');
       expect(d?.enumerable).toBe(true);
       expect(d?.configurable).toBe(true);
     });
@@ -1033,13 +1033,13 @@ describe('ivue', () => {
         x = iref(7); // normal data
       }
 
-      const inst = ivue(WithSymbol);
+      const instance = ivue(WithSymbol);
 
       // sanity: Vue proxy still has the symbol (we won’t surface it)
-      expect(inst[S]).toBe(123);
+      expect(instance[S]).toBe(123);
 
       // our property collector should not list symbols
-      const { allProps } = getClassPropertiesAccessorsMap(inst);
+      const { allProps } = getClassPropertiesAccessorsMap(instance);
       // only string keys
       for (const k of allProps.keys()) {
         expect(typeof k).toBe('string');
@@ -1048,7 +1048,7 @@ describe('ivue', () => {
       expect(allProps.has('method')).toBe(false);
 
       // toRefs() should not expose symbol-backed fields
-      const r = inst.toRefs();
+      const r = instance.toRefs();
       expect('x' in r).toBe(true);
       expect('method' in r).toBe(false);
       expect(Object.getOwnPropertySymbols(r).length).toBe(0);

@@ -1,96 +1,246 @@
 ---
 title: Inheritance & super
-description: Deep computed chains, super.x.value, and reactivity that propagates through every level — plus the one native-JS accessor difference from ivue v1.
+description: A real three-file hierarchy under the namespace pattern — plain-getter chains through super, same-name computeds that never collide, a receipt built level by level, and import cycles solved by construction.
 ---
 
 # Inheritance & `super`
 
-Reactive classes inherit like native classes — across as many levels as you like.
-Computeds, refs, methods and `super` all resolve correctly through the chain.
+Reactive classes inherit like native classes — any depth, across files.
+Refs, plain getters, computeds, methods and `super` all resolve correctly
+through the chain, because instances **are** native objects with a
+transformed prototype chain.
 
-## Deep computed chains
+The best way to see it is a hierarchy doing real work — a pricing chain.
+`Product` knows its price. `SaleProduct` applies a discount. `TaxedProduct`
+adds tax. Each level refines `total` through `super` and appends its own
+line to the receipt.
 
-```ts
-class $Base {
-  get base() { return ref(10) }
-  get tag()  { return computed(() => `Base:${this.base.value}`) }
-}
-class $Mid extends $Base {
-  get tag()  { return computed(() => `Mid(${super.tag.value})`) }
-}
-class $Leaf extends $Mid {
-  get tag()  { return computed(() => `Leaf{${super.tag.value}}`) }
-  get sum()  { return computed(() => this.base.value + 1) } // reads a grandparent ref
-}
-const Leaf = Reactive($Leaf)
+## Three levels, three files
 
-const leaf = new Leaf()
-leaf.tag.value  // "Leaf{Mid(Base:10)}"
-```
-
-`super.tag.value` walks up to each ancestor's computed. Mutating an **ancestor**
-ref re-runs the whole chain:
+Each file exports the [namespace pattern](/guide/modules): the raw class for
+extending, the reactive class for instantiating.
 
 ```ts
-leaf.base.value = 20
-leaf.tag.value  // "Leaf{Mid(Base:20)}"
+// product.ts
+import { Reactive } from 'ivue';
+import { ref } from 'vue';
+
+class $Product {
+  get title() {
+    return ref('Mechanical keyboard');
+  }
+  get price() {
+    return ref(48);
+  }
+
+  get total(): number {
+    return this.price.value;
+  }
+
+  receipt(): string[] {
+    return [`${this.title.value} — $${this.price.value.toFixed(2)}`];
+  }
+}
+
+export namespace Product {
+  export const $Class = $Product;
+  export const Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+}
 ```
 
-Plain getters chain through `super` the same way — and a plain getter on the
-child can read refs from any ancestor level. Try it:
+```ts
+// sale-product.ts
+import { Reactive } from 'ivue';
+import { ref } from 'vue';
+import { Product } from './product';
+
+class $SaleProduct extends Product.$Class {
+  get discount() {
+    return ref(0.2);
+  }
+
+  get total(): number {
+    return super.total * (1 - this.discount.value);
+  }
+
+  receipt(): string[] {
+    return [
+      ...super.receipt(),
+      `sale −${Math.round(this.discount.value * 100)}%`,
+    ];
+  }
+}
+
+export namespace SaleProduct {
+  export const $Class = $SaleProduct;
+  export const Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+}
+```
+
+```ts
+// taxed-product.ts
+import { Reactive } from 'ivue';
+import { ref } from 'vue';
+import { SaleProduct } from './sale-product';
+
+class $TaxedProduct extends SaleProduct.$Class {
+  get taxRate() {
+    return ref(0.1);
+  }
+
+  get total(): number {
+    return super.total * (1 + this.taxRate.value);
+  }
+
+  receipt(): string[] {
+    return [
+      ...super.receipt(),
+      `tax +${Math.round(this.taxRate.value * 100)}%`,
+      `due — $${this.total.toFixed(2)}`,
+    ];
+  }
+}
+
+export namespace TaxedProduct {
+  export const $Class = $TaxedProduct;
+  export const Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+}
+```
+
+Each level is made of the three shapes every ivue class is made of, and each
+shape chains through `super` natively: **state** as ref-getters (`price`,
+`discount`, `taxRate` — each level owns its own), a **derivation** as a plain
+getter (`total` — each level refines `super.total`), and a **method**
+(`receipt` — each level extends `super.receipt()`).
+
+## One instance, every level live
+
+```ts
+const product = new TaxedProduct.Class();
+
+product.total     // 42.24 — 48 × 0.80 × 1.10
+product.receipt();
+// [ 'Mechanical keyboard — $48.00',
+//   'sale −20%',
+//   'tax +10%',
+//   'due — $42.24' ]
+
+product.price.value = 60;     // write to the GRANDPARENT's ref
+product.total                 // 52.80 — the whole chain re-derived
+
+product.discount.value = 0.5; // write to the middle level
+product.total                 // 33.00
+```
+
+Look at what `total` is: a **plain-getter chain**, three levels deep, zero
+`computed()` allocations, nothing stored per instance — and fully reactive.
+Any effect that reads `product.total` reads `price`, `discount` and
+`taxRate` underneath and subscribes to all three, straight through the
+chain ([derive with plain getters](/guide/state#derived-values-plain-getters-first)).
+A template showing the receipt re-renders on a write to any level:
 
 <DemoInheritance />
 
-## Why it doesn't collide
+The demo runs the exact three files above — they live in the docs theme as
+`product.ts`, `sale-product.ts` and `taxed-product.ts` and are imported the
+same way you would in an app.
 
-When `Reactive()` processes the prototype chain, each `(prototype, key)` gets its
-own cache symbol. So `$Base`'s `tag` and `$Leaf`'s `tag` live under **different**
-keys on the same instance — the child's cached computed and the `super` computed
-it calls coexist instead of overwriting each other. No special configuration; it
-just works.
+## Each level is a complete class
 
-## Methods and `super`
+A middle class isn't scaffolding — it's a usable reactive class of its own:
 
 ```ts
-class $A { greet() { return 'A' } }
-class $B extends $A { greet() { return super.greet() + '>B' } }
-const B = Reactive($B)
+const saleProduct = new SaleProduct.Class();
 
-new B().greet() // "A>B"
+saleProduct.total     // 38.40 — discounted, never taxed
+saleProduct.receipt() // two lines, not four
 ```
 
-## Each level is usable on its own
+## Same-name computeds never collide
 
-A middle class is a complete reactive class too:
+When levels *do* memoize — an expensive derivation refined at more than one
+level — the child's computed calls the parent's through `super`, and both
+live on the same instance:
 
 ```ts
-const Mid = Reactive($Mid)
+class $Report {
+  get rows() {
+    return shallowRef<Row[]>([]);
+  }
+  get stats() {
+    return computed(() => this.summarize()); // expensive scan: memoize
+  }
+  summarize(): Stats {
+    /* ... */
+  }
+}
 
-new Mid().tag.value  // "Mid(Base:10)"
+class $YearReport extends $Report {
+  get stats() {
+    return computed(() => this.withTotals(super.stats.value));
+  }
+  withTotals(stats: Stats): Stats {
+    /* ... */
+  }
+}
 ```
+
+This works because of how the cache is keyed: when `Reactive()` processes
+the prototype chain, each `(prototype, key)` pair gets its **own cache
+symbol** on the instance. `$Report`'s `stats` and `$YearReport`'s `stats`
+are different cells — the child's cached computed and the `super` computed
+it reads coexist instead of overwriting each other. No configuration; it's
+structural.
+
+## Files, cycles, hot reload — solved underneath
+
+Cross-file hierarchies are the normal case, and the namespace pattern makes
+them boring:
+
+- **Every file calls `Reactive()` on its own class — safely.** The transform
+  is idempotent: when `taxed-product.ts` processes its chain, `$SaleProduct`
+  and `$Product` are already done and get skipped. Any load order produces
+  the identical result.
+- **Hot reload never desyncs.** Editing `sale-product.ts` re-runs only that
+  file's `Reactive()` call; ancestors keep their processed prototypes and
+  live instances keep their state ([HMR](/guide/hmr)).
+- **Import cycles are solved fundamentally, not managed.** Hierarchies grow
+  into webs — products reference carts, carts create products — and webs
+  eventually close into cycles. Under the namespace pattern every
+  cross-module reference lives in a getter or method body: code that runs at
+  **first access**, when every module in the cycle finished loading long
+  ago. The immunity is structural, in any load order — not an
+  import-ordering discipline you have to maintain
+  ([Circular imports: immune by construction](/guide/modules#circular-imports-immune-by-construction)).
 
 ## One difference from native JS
 
 ivue follows **native JS** accessor semantics: a setter-only accessor on a
-child shadows an inherited getter. So *splitting* a `get` on one level and a `set`
-on another (which some engines merge into one computed) does **not** merge in ivue.
+child shadows an inherited getter. So *splitting* a `get` on one level and a
+`set` on another (which some engines merge into one computed) does **not**
+merge in ivue.
 
-In ivue you don't need to — express writable state as a single getter returning a
-ref or a writable computed:
+In ivue you don't need to split — writable derived state is one getter
+returning a writable computed:
 
 ```ts
-// ivue way — getter + writable computed in one place
-get _feel() { return ref('sleek') }
-get feel()  {
-  return computed({ get: () => this._feel.value, set: v => this._feel.value = v })
+class $Thermostat {
+  get celsius() {
+    return ref(20);
+  }
+  get fahrenheit() {
+    return computed({
+      get: () => this.celsius.value * 9 / 5 + 32,
+      set: (fahrenheit: number) => {
+        this.celsius.value = ((fahrenheit - 32) * 5) / 9;
+      },
+    });
+  }
 }
 ```
 
-Everything else — overrides, `super`, reactivity through the chain — matches v1.
-
-## Extending across files
-
-When parent and child live in different files, use the
-[namespace module pattern](/guide/modules) so children extend the raw class and
-each file calls `Reactive()` on its own class. The idempotent transform makes
-shared ancestors safe to process once.
+Everything else — overrides, `super`, reactivity through the chain — matches
+native class semantics exactly.

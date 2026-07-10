@@ -33,7 +33,7 @@ Use `shallowRef` for large structures you replace rather than mutate deeply:
 ```ts
 get rows() { return shallowRef<Row[]>([]) }
 // ...
-inst.rows.value = nextRows   // triggers; deep mutations do not
+instance.rows.value = nextRows   // triggers; deep mutations do not
 ```
 
 ## Derived values: plain getters first
@@ -96,7 +96,7 @@ get fahrenheit() {
     set: (fahrenheit: number) => { this.celsius.value = (fahrenheit - 32) * 5 / 9 },
   })
 }
-// inst.fahrenheit.value = 100  → updates celsius
+// instance.fahrenheit.value = 100  → updates celsius
 ```
 
 ## Methods

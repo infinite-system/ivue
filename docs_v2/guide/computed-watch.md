@@ -99,7 +99,7 @@ makes that doctrine mechanical:
   reference from the getter's scope stays alive for as long as the
   instance does. The thin form's footprint is the guaranteed minimum by
   construction.
-- **Testability & reuse.** `inst.sortItems()` is directly callable in a
+- **Testability & reuse.** `instance.sortItems()` is directly callable in a
   test and from other methods — no reactive plumbing required to exercise
   the logic.
 
@@ -114,7 +114,7 @@ computed's body only runs when its dependency actually changes:
 ## Watching plain getters — yes, it works
 
 You do not need a Ref or a Computed to watch a derived value.
-`watch(() => inst.someDerived, cb)` works on the **raw** instance — no
+`watch(() => instance.someDerived, cb)` works on the **raw** instance — no
 `reactive()` wrapper anywhere:
 
 ```ts
@@ -122,7 +122,7 @@ import { watch } from 'vue';
 import { Reactive } from 'ivue';
 
 class $Invoice {
-  get qty() {
+  get quantity() {
     return ref(2);
   }
   get price() {
@@ -131,7 +131,7 @@ class $Invoice {
 
   // plain getters — no Refs/Computeds of their own
   get subtotal() {
-    return this.qty.value * this.price.value;
+    return this.quantity.value * this.price.value;
   }
   get totalLabel() {
     return `$${(this.subtotal * 1.13).toFixed(2)}`;
@@ -139,32 +139,32 @@ class $Invoice {
 }
 const Invoice = Reactive($Invoice);
 
-const inv = new Invoice();
+const invoice = new Invoice();
 
 // ✓ watching a plain getter on the RAW instance — fires on any leaf change
 watch(
-  () => inv.totalLabel,
+  () => invoice.totalLabel,
   (label) => console.log('total:', label),
 );
 
-inv.qty.value = 3; // → "total: $169.50"
-inv.price.value = 40; // → "total: $135.60"
+invoice.quantity.value = 3; // → "total: $169.50"
+invoice.price.value = 40; // → "total: $135.60"
 
 // ✓ also works through a component boundary (template ref / expose):
 watch(() => invoiceRef.value?.totalLabel, onTotalChange);
 
 // ✗ the ONE mistake: snapshotting — this passes a dead string, never fires
-watch(inv.totalLabel, onTotalChange);
+watch(invoice.totalLabel, onTotalChange);
 ```
 
 Not intuitive, but structural: a watch **source is a function executed
 inside the watcher's effect**. `totalLabel` runs there, reads `subtotal`,
-which reads `qty.value` and `price.value` — and those leaf reads subscribe
+which reads `quantity.value` and `price.value` — and those leaf reads subscribe
 the watcher directly. The getter chain is a transparent corridor — the same
 leaf-tracking that makes plain getters reactive in templates, so it survives
 any number of getters deep and passes straight through the expose surface
 (verified live in production). The only hard rule: the source must be the
-**function form** — `() => inst.x`, never `inst.x`.
+**function form** — `() => instance.someDerived`, never `instance.someDerived`.
 
 ## `$watch`
 

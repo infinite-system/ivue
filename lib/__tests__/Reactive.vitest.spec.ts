@@ -55,11 +55,11 @@ describe('Reactive()', () => {
         }
       }
       const RFoo = Reactive(Foo);
-      const inst = new RFoo();
+      const instance = new RFoo();
       // No deep reactive proxy is created per instance.
-      expect(isReactive(inst)).toBe(false);
+      expect(isReactive(instance)).toBe(false);
       // toRaw() on a plain instance returns the instance itself.
-      expect(toRaw(inst)).toBe(inst);
+      expect(toRaw(instance)).toBe(instance);
     });
   });
 
@@ -70,13 +70,13 @@ describe('Reactive()', () => {
           return ref(100);
         }
       }
-      const inst = new (Reactive(Box))();
-      const r1 = (inst as any).width;
-      const r2 = (inst as any).width;
+      const instance = new (Reactive(Box))();
+      const r1 = (instance as any).width;
+      const r2 = (instance as any).width;
       expect(isRef(r1)).toBe(true);
       expect(r1).toBe(r2); // exact same ref → stable reactive cell
       r1.value = 250;
-      expect((inst as any).width.value).toBe(250); // write survives
+      expect((instance as any).width.value).toBe(250); // write survives
     });
 
     it('different instances get different ref instances', () => {
@@ -106,11 +106,11 @@ describe('Reactive()', () => {
           return computed(() => (this as any).w.value * 2);
         }
       }
-      const inst: any = new (Reactive(Box))();
-      expect(inst.depth.value).toBe(10);
-      expect(inst.area.value).toBe(8);
-      inst.w.value = 5;
-      expect(inst.area.value).toBe(10); // computed reacts
+      const instance: any = new (Reactive(Box))();
+      expect(instance.depth.value).toBe(10);
+      expect(instance.area.value).toBe(8);
+      instance.w.value = 5;
+      expect(instance.area.value).toBe(10); // computed reacts
     });
 
     it('keeps the prototype setter wired for a ref-returning getter (assign via property)', () => {
@@ -125,11 +125,11 @@ describe('Reactive()', () => {
           this._b.value = v as number; // standard setter writes through
         }
       }
-      const inst: any = new (Reactive(WithSetter))();
-      expect(inst.x.value).toBe(1); // getter returns the cached ref
-      inst.x = 7; // prototype setter → originalSetter.call(toRaw(this), 7)
+      const instance: any = new (Reactive(WithSetter))();
+      expect(instance.x.value).toBe(1); // getter returns the cached ref
+      instance.x = 7; // prototype setter → originalSetter.call(toRaw(this), 7)
       expect(sets).toEqual([7]);
-      expect(inst.x.value).toBe(7);
+      expect(instance.x.value).toBe(7);
     });
 
     it('writable computed getter (get/set on the computed) works via .value', () => {
@@ -146,11 +146,11 @@ describe('Reactive()', () => {
           });
         }
       }
-      const inst: any = new (Reactive(Box))();
-      expect(inst.label.value).toBe('w=2');
-      inst.label.value = 'set 42';
-      expect(inst.w.value).toBe(42);
-      expect(inst.label.value).toBe('w=42');
+      const instance: any = new (Reactive(Box))();
+      expect(instance.label.value).toBe('w=2');
+      instance.label.value = 'set 42';
+      expect(instance.w.value).toBe(42);
+      expect(instance.label.value).toBe('w=42');
     });
   });
 
@@ -211,13 +211,13 @@ describe('Reactive()', () => {
           return { tag: 'svc', n: 1 }; // a plain object, not a ref
         }
       }
-      const inst: any = new (Reactive(WithService))();
-      const s1 = inst.$service;
-      const s2 = inst.$service;
+      const instance: any = new (Reactive(WithService))();
+      const s1 = instance.$service;
+      const s2 = instance.$service;
       expect(s1).toBe(s2); // same object cached
       expect(created).toBe(1); // original getter ran exactly once
       s1.n = 99;
-      expect(inst.$service.n).toBe(99); // mutations persist on the singleton
+      expect(instance.$service.n).toBe(99); // mutations persist on the singleton
     });
   });
 
@@ -230,9 +230,9 @@ describe('Reactive()', () => {
           return this.count;
         }
       }
-      const inst: any = new (Reactive(Counter))();
-      const m1 = inst.inc;
-      const m2 = inst.inc;
+      const instance: any = new (Reactive(Counter))();
+      const m1 = instance.inc;
+      const m2 = instance.inc;
       expect(typeof m1).toBe('function');
       expect(m1).toBe(m2); // stable identity → safe as event handler / dep
     });
@@ -245,11 +245,11 @@ describe('Reactive()', () => {
           return this.count;
         }
       }
-      const inst: any = new (Reactive(Counter))();
-      const { inc } = inst; // detached
+      const instance: any = new (Reactive(Counter))();
+      const { inc } = instance; // detached
       expect(inc()).toBe(11);
       expect(inc()).toBe(12);
-      expect(inst.count).toBe(12);
+      expect(instance.count).toBe(12);
     });
 
     it('method can be overridden per-instance via the setter', () => {
@@ -311,8 +311,8 @@ describe('Reactive()', () => {
         }
       }
       const RBox = Reactive(Box);
-      const inst: any = new RBox();
-      const p: any = reactive(inst);
+      const instance: any = new RBox();
+      const p: any = reactive(instance);
 
       // First method access — pointer unstamped — bound correctly and
       // stamps the RAW back-pointer.
@@ -321,11 +321,11 @@ describe('Reactive()', () => {
       // this is the poisoning path.
       const dec = p.dec;
       expect(() => dec()).not.toThrow();
-      expect(inst.count.value).toBe(-1);
+      expect(instance.count.value).toBe(-1);
       // The cached function keeps working from every access path.
       p.inc();
-      inst.inc();
-      expect(inst.count.value).toBe(1);
+      instance.inc();
+      expect(instance.count.value).toBe(1);
     });
 
     // Vue's component expose proxy is a plain (non-Vue-reactive) Proxy that
@@ -345,8 +345,8 @@ describe('Reactive()', () => {
         }
       }
       const RBox = Reactive(Box);
-      const inst: any = new RBox();
-      const p: any = reactive(inst);
+      const instance: any = new RBox();
+      const p: any = reactive(instance);
       void p.inc; // stamp the pointer via the normal component path
 
       const foreign: any = new Proxy(p, {
@@ -359,11 +359,11 @@ describe('Reactive()', () => {
       // First access of `dec` happens THROUGH the foreign chain.
       const dec = foreign.dec;
       expect(() => dec()).not.toThrow();
-      expect(inst.count.value).toBe(-1);
+      expect(instance.count.value).toBe(-1);
       // Ref cells materialized through the foreign chain land on the raw.
       expect(foreign.count).toBe(-1); // auto-unwrapped via the reactive layer
-      inst.inc();
-      expect(inst.count.value).toBe(0);
+      instance.inc();
+      expect(instance.count.value).toBe(0);
     });
   });
 
@@ -396,10 +396,10 @@ describe('Reactive()', () => {
           return super.chain + '->Leaf';
         }
       }
-      const inst: any = new (Reactive(Leaf))();
-      expect(inst.summary.value).toBe('{Leaf>(Mid>[Base:div])}');
+      const instance: any = new (Reactive(Leaf))();
+      expect(instance.summary.value).toBe('{Leaf>(Mid>[Base:div])}');
       // de-opt plain-value getter chain via super
-      expect(inst.chain).toBe('Base->Mid->Leaf');
+      expect(instance.chain).toBe('Base->Mid->Leaf');
     });
 
     it('super computed and child computed are cached under different symbols (no collision)', () => {
@@ -413,10 +413,10 @@ describe('Reactive()', () => {
           return computed(() => 10 + super.val.value);
         }
       }
-      const inst: any = new (Reactive(Child))();
-      expect(inst.val.value).toBe(11);
+      const instance: any = new (Reactive(Child))();
+      expect(instance.val.value).toBe(11);
       // Both a base-level and child-level cache symbol exist on the instance.
-      expect(Object.getOwnPropertySymbols(inst).length).toBeGreaterThanOrEqual(
+      expect(Object.getOwnPropertySymbols(instance).length).toBeGreaterThanOrEqual(
         2,
       );
     });
@@ -432,8 +432,8 @@ describe('Reactive()', () => {
           return this.hello() + '+child';
         }
       }
-      const inst: any = new (Reactive(Child))();
-      expect(inst.world()).toBe('base+child');
+      const instance: any = new (Reactive(Child))();
+      expect(instance.world()).toBe('base+child');
     });
   });
 
@@ -567,9 +567,9 @@ describe('Reactive()', () => {
       const A = Reactive(Foo);
       const B = Reactive(Foo); // second pass must not double-wrap
       expect(A).toBe(B);
-      const inst: any = new B();
-      expect(inst.x.value).toBe(1);
-      expect(inst.m()).toBe(2);
+      const instance: any = new B();
+      expect(instance.x.value).toBe(1);
+      expect(instance.m()).toBe(2);
     });
 
     it('Reactive(Parent) then Reactive(Child) skips the already-processed parent proto', () => {
@@ -585,9 +585,9 @@ describe('Reactive()', () => {
         }
       }
       const RChild = Reactive(Child as any);
-      const inst: any = new RChild();
-      expect(inst.p.value).toBe('p'); // parent getter still works (processed once)
-      expect(inst.c.value).toBe('c');
+      const instance: any = new RChild();
+      expect(instance.p.value).toBe('p'); // parent getter still works (processed once)
+      expect(instance.c.value).toBe('c');
     });
   });
 
@@ -605,10 +605,10 @@ describe('Reactive()', () => {
           return ref(this._v);
         }
       }
-      const inst: any = new (Reactive(SetterOnly))();
-      inst.sink = 55;
+      const instance: any = new (Reactive(SetterOnly))();
+      instance.sink = 55;
       expect(received).toBe(55);
-      expect(inst._v).toBe(55);
+      expect(instance._v).toBe(55);
     });
 
     it('plain instance data fields are untouched', () => {
@@ -616,9 +616,9 @@ describe('Reactive()', () => {
         name = 'hello';
         nums = [1, 2, 3];
       }
-      const inst: any = new (Reactive(Data))();
-      expect(inst.name).toBe('hello');
-      expect(inst.nums).toEqual([1, 2, 3]);
+      const instance: any = new (Reactive(Data))();
+      expect(instance.name).toBe('hello');
+      expect(instance.nums).toEqual([1, 2, 3]);
     });
   });
 
@@ -679,19 +679,19 @@ describe('Reactive()', () => {
           return computed(() => (this as any).x.value * 2);
         }
       }
-      const inst: any = new (Reactive(Store))();
-      const c = inst.doubled; // materialize + cache the computed
+      const instance: any = new (Reactive(Store))();
+      const c = instance.doubled; // materialize + cache the computed
       expect(c.value).toBe(4);
 
-      (inst as ReactiveInstance<Store>).$stopEffects();
+      (instance as ReactiveInstance<Store>).$stopEffects();
 
       // caches cleared → a fresh computed is produced on next access
-      const c2 = inst.doubled;
+      const c2 = instance.doubled;
       expect(c2).not.toBe(c);
       expect(c2.value).toBe(4);
       // no cache symbols should survive teardown (until re-access creates them)
       // (c2 access above re-created exactly one)
-      expect(Object.getOwnPropertySymbols(toRaw(inst)).length).toBeGreaterThan(
+      expect(Object.getOwnPropertySymbols(toRaw(instance)).length).toBeGreaterThan(
         0,
       );
     });
@@ -702,11 +702,11 @@ describe('Reactive()', () => {
           return 'pong';
         }
       }
-      const inst: any = new (Reactive(Store))();
-      const m1 = inst.ping; // cache a bound fn (has no .effect)
+      const instance: any = new (Reactive(Store))();
+      const m1 = instance.ping; // cache a bound fn (has no .effect)
       expect(m1()).toBe('pong');
-      (inst as any).$stopEffects();
-      const m2 = inst.ping; // re-bound after cache clear
+      (instance as any).$stopEffects();
+      const m2 = instance.ping; // re-bound after cache clear
       expect(m2).not.toBe(m1);
       expect(m2()).toBe('pong');
     });
@@ -721,9 +721,9 @@ describe('Reactive()', () => {
           stopped++;
         }
       }
-      const inst: any = new (Reactive(Store))();
-      inst.x; // materialize a cache entry
-      (inst as any).$stopEffects();
+      const instance: any = new (Reactive(Store))();
+      instance.x; // materialize a cache entry
+      (instance as any).$stopEffects();
       expect(stopped).toBe(1);
     });
 
@@ -736,10 +736,10 @@ describe('Reactive()', () => {
           return ref(9);
         }
       }
-      const inst: any = new (Reactive(Store))();
-      inst.m(); // sets the RAW anchor symbol + a bound-method symbol
-      inst.r; // sets a ref cache symbol
-      expect(() => inst.$stopEffects()).not.toThrow();
+      const instance: any = new (Reactive(Store))();
+      instance.m(); // sets the RAW anchor symbol + a bound-method symbol
+      instance.r; // sets a ref cache symbol
+      expect(() => instance.$stopEffects()).not.toThrow();
     });
 
     it('$stopEffects is injected only once (idempotent re-Reactive)', () => {
@@ -769,15 +769,15 @@ describe('Reactive()', () => {
           return ref(0);
         }
       }
-      const inst: any = new (Reactive(Store))();
+      const instance: any = new (Reactive(Store))();
       const seen: number[] = [];
-      inst.$watch(
-        () => inst.count.value,
+      instance.$watch(
+        () => instance.count.value,
         (v: number) => seen.push(v),
         { flush: 'sync' },
       );
-      inst.count.value = 1;
-      inst.count.value = 2;
+      instance.count.value = 1;
+      instance.count.value = 2;
       expect(seen).toEqual([1, 2]);
     });
 
@@ -787,19 +787,19 @@ describe('Reactive()', () => {
           return ref(0);
         }
       }
-      const inst: any = new (Reactive(Store))();
+      const instance: any = new (Reactive(Store))();
       const seen: number[] = [];
-      inst.$watch(
-        () => inst.count.value,
+      instance.$watch(
+        () => instance.count.value,
         (v: number) => seen.push(v),
         { flush: 'sync' },
       );
-      inst.count.value = 1;
+      instance.count.value = 1;
       expect(seen).toEqual([1]);
 
-      inst.$stopEffects();
+      instance.$stopEffects();
 
-      inst.count.value = 2; // scope stopped → no more callbacks
+      instance.count.value = 2; // scope stopped → no more callbacks
       expect(seen).toEqual([1]);
     });
 
@@ -812,16 +812,16 @@ describe('Reactive()', () => {
           return 1;
         }
       }
-      const inst: any = new (Reactive(Store))();
-      inst.count.value;
-      inst.bump();
+      const instance: any = new (Reactive(Store))();
+      instance.count.value;
+      instance.bump();
       // No scope symbol exists because $watch was never called.
-      const hasScope = Object.getOwnPropertySymbols(inst).some(
+      const hasScope = Object.getOwnPropertySymbols(instance).some(
         (s) => s.toString() === 'Symbol(ivue_scope)',
       );
       expect(hasScope).toBe(false);
       // $stopEffects is still safe with no scope present
-      expect(() => inst.$stopEffects()).not.toThrow();
+      expect(() => instance.$stopEffects()).not.toThrow();
     });
 
     it('reuses the same scope across multiple $watch calls', () => {
@@ -833,25 +833,25 @@ describe('Reactive()', () => {
           return ref(0);
         }
       }
-      const inst: any = new (Reactive(Store))();
+      const instance: any = new (Reactive(Store))();
       const seen: string[] = [];
-      inst.$watch(
-        () => inst.a.value,
+      instance.$watch(
+        () => instance.a.value,
         () => seen.push('a'),
         { flush: 'sync' },
       );
-      inst.$watch(
-        () => inst.b.value,
+      instance.$watch(
+        () => instance.b.value,
         () => seen.push('b'),
         { flush: 'sync' },
       ); // reuses scope
-      inst.a.value = 1;
-      inst.b.value = 1;
+      instance.a.value = 1;
+      instance.b.value = 1;
       expect(seen).toEqual(['a', 'b']);
       // Both watchers stop together via the single shared scope
-      inst.$stopEffects();
-      inst.a.value = 2;
-      inst.b.value = 2;
+      instance.$stopEffects();
+      instance.a.value = 2;
+      instance.b.value = 2;
       expect(seen).toEqual(['a', 'b']);
     });
   });
@@ -866,8 +866,8 @@ describe('Reactive()', () => {
         }
       }
       const R = Reactive(Child as any);
-      const inst: any = new R();
-      expect(inst.x.value).toBe(7); // walked past the null-proto base safely
+      const instance: any = new R();
+      expect(instance.x.value).toBe(7); // walked past the null-proto base safely
     });
   });
 });
@@ -1005,21 +1005,21 @@ describe('$watchEffect (scoped watchEffect)', () => {
       }
     }
     const R = Reactive(Box);
-    const inst: any = new R();
+    const instance: any = new R();
     let runs = 0;
     let last = 0;
-    inst.$watchEffect(() => {
+    instance.$watchEffect(() => {
       runs++;
-      last = inst.n.value;
+      last = instance.n.value;
     });
     expect(runs).toBe(1);
     expect(last).toBe(1);
-    inst.n.value = 5;
+    instance.n.value = 5;
     await nextTick();
     expect(runs).toBe(2);
     expect(last).toBe(5);
-    inst.$stopEffects();
-    inst.n.value = 9;
+    instance.$stopEffects();
+    instance.n.value = 9;
     await nextTick();
     expect(runs).toBe(2); // scope stopped — no further runs
   });
@@ -1031,21 +1031,21 @@ describe('$watchEffect (scoped watchEffect)', () => {
       }
     }
     const R = Reactive(Box);
-    const inst: any = new R();
+    const instance: any = new R();
     let effectRuns = 0;
     let watchRuns = 0;
-    const stop = inst.$watchEffect(() => {
+    const stop = instance.$watchEffect(() => {
       effectRuns++;
-      void inst.n.value;
+      void instance.n.value;
     });
-    inst.$watch(
-      () => inst.n.value,
+    instance.$watch(
+      () => instance.n.value,
       () => {
         watchRuns++;
       }
     );
     stop(); // individual stop, scope stays alive
-    inst.n.value = 3;
+    instance.n.value = 3;
     await nextTick();
     expect(effectRuns).toBe(1); // stopped
     expect(watchRuns).toBe(1); // sibling watcher in the same scope still fires

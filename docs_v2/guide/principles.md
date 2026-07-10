@@ -29,7 +29,7 @@ You declare reactive state as a getter returning `ref()`, `shallowRef()` or
 
 ```ts
 get width() { return ref(100) }   // declaration
-inst.width.value = 250            // read & write
+instance.width.value = 250            // read & write
 ```
 
 The getter body runs **at most once per instance** — the returned ref is cached

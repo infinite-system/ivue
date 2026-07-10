@@ -277,7 +277,7 @@ call site. Rules that keep it clean:
 | derive with a PLAIN getter                                                   | wrap every derivation in `computed()` — pays ~300 bytes/instance for nothing           |
 | `computed()` only for expensive / render-suppressing / stable-handle needs   | reach for `computed()` by default                                                      |
 | inject stores via `private get $store() { return useStore() }`               | `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles |
-| `new X.Class(props, emit)` — raw instance everywhere                         | wrap in `reactive(inst)` or any shallow-unwrap view as the standard                    |
+| `new X.Class(props, emit)` — raw instance everywhere                         | wrap in `reactive(instance)` or any shallow-unwrap view as the standard                    |
 | destructure ALL template-touched Refs/Computeds + element refs, grouped | destructure plain getters or methods — snapshots a dead value / loses nothing but clarity |
 | state bindings in templates; dotted `box.x` only for plain getters/methods | reach a Ref through the instance in a template — `v-if="box.someRef"` is always-truthy |
 | `defineExpose(box as X.Instance)`                                            | `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers       |
@@ -296,7 +296,7 @@ the TYPE of every unwrapping surface.
 - Producing an exposed instance: `defineExpose(box as X.Instance)`.
 - Consuming a template ref to it: `ShallowUnwrapRef<X.Instance>`
   (generic: `ShallowUnwrapRef<X.Instance<T>>`).
-- Wrapping at an interop boundary: `reactive(inst as X.Instance)` (concession, not the standard).
+- Wrapping at an interop boundary: `reactive(instance as X.Instance)` (concession, not the standard).
 
 Across expose, verified live: reads arrive unwrapped; ref-writes DO redirect
 (there is a write path); methods arrive engine-bound to raw; and PLAIN GETTERS
@@ -321,10 +321,10 @@ until mount — use `?.` in watch getters).
 | component-scoped (created in `setup()`)                        | plain `watch` / `watchEffect` — the component scope stops them on unmount                         |
 | component-outliving (module singleton, created in a callback)  | `this.$watch` / `this.$watchEffect` — the instance's lazy scope; disposed by `$stopEffects()`     |
 
-- `watch(() => inst.plainGetter, cb)` works on a RAW instance — no `reactive()`
+- `watch(() => instance.plainGetter, cb)` works on a RAW instance — no `reactive()`
   wrapper, no Ref/Computed needed. The getter body runs inside the watcher's effect, so
   its leaf reads subscribe directly (non-intuitive but structural).
-- The source MUST be the FUNCTION form. `watch(inst.plainGetter, cb)` passes a
+- The source MUST be the FUNCTION form. `watch(instance.plainGetter, cb)` passes a
   dead snapshot and never fires.
 - `$stopEffects()` stops the instance scope, runs your optional `stopEffects()`
   hook, then clears cached Refs/Computeds; instances that never `$watch` allocate no
@@ -404,7 +404,7 @@ get sorted() {
 
 Also buys: guaranteed-minimum memory (the thin closure captures nothing but
 the instance — a fat closure silently pins any getter-scope local for the
-instance's lifetime) and direct testability (`inst.sortItems()`).
+instance's lifetime) and direct testability (`instance.sortItems()`).
 Reactivity is unaffected — reads inside the method are tracked through the
 computed's evaluation exactly as if inlined.
 
@@ -560,7 +560,7 @@ convention and check it in review.
 - [ ] `defineExpose(x as X.Instance)`; consumers type the ref as `ShallowUnwrapRef<X.Instance>`.
 - [ ] Watch sources are the FUNCTION form; component-scoped constructors use plain `watch`/`watchEffect`; `this.$watch`/`this.$watchEffect` only for component-outliving instances — each with a dispose path (`$stopEffects()` owner or `onScopeDispose` auto-wire); no `watchEffect` wrapped in `$watch`.
 - [ ] Lifecycle hooks / init logic live in the constructor (no `init()` expecting auto-call); template refs guarded with `?.` where read pre-mount.
-- [ ] Every `computed()`/constructor-watch CALLBACK delegates to a method (`computed(() => this.recalc())`) — no logic inlined in reactive closures; the arrow form, never `computed(this.method)`.
+- [ ] Every `computed()`/constructor-watch CALLBACK delegates to a method (`computed(() => this.recalculate())`) — no logic inlined in reactive closures; the arrow form, never `computed(this.method)`.
 - [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices and specs included — no single-letter names, no name meaning different things in different methods.
 - [ ] Keyed/sparse state uses the Map-of-refs shape (get-or-create on read, peek-only bump on write, explicit release path) — never one getter per key, never a deep `reactive()` collection.
 - [ ] Spacing carries meaning: declaration-like getters contiguous within their group; blank lines only where a doc comment / multi-line body / category boundary begins; methods always separated.

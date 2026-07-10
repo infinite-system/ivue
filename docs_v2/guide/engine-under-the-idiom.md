@@ -97,7 +97,7 @@ that forced `computed()` in closures are all met for free:
 | ---------------------- | ------------------------ | --------------------------- |
 | stays live             | only `computed()`/fn     | getter re-runs per read     |
 | reads like a value     | only `computed()`        | getter — `cart.total`       |
-| costs nothing per inst | ✗ (closure or cell each) | prototype — shared, 0 bytes |
+| costs nothing per instance | ✗ (closure or cell each) | prototype — shared, 0 bytes |
 
 That's the entire excavation. The class shape doesn't add a capability to
 Vue — it gives Vue's _existing_ cheapest mode an ergonomic syntax, at which

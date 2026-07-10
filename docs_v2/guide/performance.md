@@ -75,7 +75,7 @@ Refs/Computeds. Use [`computed()`](/guide/computed-watch) where memoization
 or render suppression earns its ~300 bytes.
 
 The same rule extends to the computeds you _do_ cache: point them at
-methods — `computed(() => this.recalc())` — instead of inlining the logic.
+methods — `computed(() => this.recalculate())` — instead of inlining the logic.
 The per-instance closure is then a pointer-sized hop to code that exists
 once per class on the prototype, and it can never accidentally capture
 getter-scope locals that would otherwise live as long as the instance —
@@ -108,7 +108,7 @@ On a hot loop dominated by reads, with identical bodies:
 | 10M method calls         | time    | per call |
 | ------------------------ | ------- | -------- |
 | native composable `fn()` | ~48 ms  | ~4.8 ns  |
-| ivue `inst.method()`     | ~240 ms | ~24 ns   |
+| ivue `instance.method()`     | ~240 ms | ~24 ns   |
 
 A method that hammers reactive state costs ~5× more per call than a native
 closure. **Method dispatch is not the cost.** The getter-indirected reads

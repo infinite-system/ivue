@@ -134,7 +134,7 @@ classic contract untouched: same class in, same class out.
   and automatically remounts the owners instead of leaving live instances
   silently stale. Thin computeds that delegate to methods — already the
   ivue convention — graft live with state preserved, because the closure is
-  just a pointer: `computed(() => this.recalc())` picks up a new `recalc`
+  just a pointer: `computed(() => this.recalculate())` picks up a new `recalculate`
   instantly. The rule underneath: **closures freeze at creation; prototype
   lookups stay live.** Keep logic where lookups can reach it.
 - **"Unthinning" is safe.** Moving logic from a method back into a computed

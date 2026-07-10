@@ -140,13 +140,13 @@ symbol and short-circuits on `if (superKey in raw) return raw[superKey]`.
 The method getter (`convertToLazyBoundMethod`) caches the bound function on
 first access the same way.
 
-**Guarantees.** Referential stability. A `watch(() => inst.area.value, …)` stays
-attached because `inst.area` is always the same computed. A method is safe to pass
+**Guarantees.** Referential stability. A `watch(() => instance.area.value, …)` stays
+attached because `instance.area` is always the same computed. A method is safe to pass
 as an event handler or a dependency because its identity does not change between
 renders.
 
 **Impossible if true.** A property cannot return a fresh ref on each read (which
-would drop watchers and break two-way bindings); `inst.method !== inst.method`
+would drop watchers and break two-way bindings); `instance.method !== instance.method`
 cannot happen.
 
 **Tests.** _lazy reactive getters › caches the SAME ref instance across accesses_;
@@ -173,7 +173,7 @@ reactive members declared on the class; an unused getter cannot allocate a
 computed.
 
 **Test.** _identity & return value › instances are plain (NOT a reactive proxy)_
-(asserts `isReactive(inst) === false` and `toRaw(inst) === inst`).
+(asserts `isReactive(instance) === false` and `toRaw(instance) === instance`).
 
 ---
 
