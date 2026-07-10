@@ -107,8 +107,6 @@ export default defineConfig({
           },
           { text: 'Performance by Design', link: '/guide/performance' },
           { text: 'Benchmarks', link: '/guide/benchmarks' },
-          { text: 'The Reactive Model Layer', link: '/guide/model-layer' },
-          { text: 'The Flyweight Pattern', link: '/guide/flyweight' },
         ],
       },
     ],
