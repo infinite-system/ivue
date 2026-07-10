@@ -38,15 +38,18 @@ silent no-op at runtime.
 
 ```ts
 import { Reactive } from 'ivue'; // in this app: 'src/utils/ivue'
-import { ref, shallowRef, computed, watch, toRef, type Ref } from 'vue';
+import { ref, shallowRef, computed, watch, onMounted, toRef, type Ref } from 'vue';
 import { useProjectStore } from 'src/stores/project.store';
 
 class $Box {
-  // Constructor runs in setup() context — register lifecycle hooks and
-  // watchers here. Component-scoped instance (created in setup): plain
-  // watch/watchEffect — the component scope stops them on unmount.
+  // Constructor runs SYNCHRONOUSLY where you `new` — in setup() that means
+  // the constructor body IS setup code, and the whole toolbox works here:
+  // - plain watch/watchEffect land in the COMPONENT's scope (reaped on unmount);
+  // - lifecycle hooks (onMounted, onUnmounted, …) register against the
+  //   mounting component — full lifecycle access, zero wiring;
+  // - callbacks delegate to methods (the thin-closure rule).
   // (this.$watch is ONLY for instances that OUTLIVE the component — see
-  // the singleton variant below.)
+  // the singleton variant below. Lifecycle hooks NEVER belong in those.)
   constructor(
     public props: BoxProps,
     public emit: BoxEmits,
@@ -55,6 +58,7 @@ class $Box {
       () => this.height.value,
       (height, oldHeight) => this.onResize(height, oldHeight),
     );
+    onMounted(() => this.focusBox());
   }
 
   // MUTABLE STATE — getter returning ref()/shallowRef(). `this` is RAW: read
@@ -122,6 +126,10 @@ class $Box {
   // Reactive-closure bodies above delegate HERE (the thin-closure rule).
   grow() {
     this.height.value++;
+  }
+
+  focusBox() {
+    this.boxEl.value?.focus();
   }
 
   sortRows() {
