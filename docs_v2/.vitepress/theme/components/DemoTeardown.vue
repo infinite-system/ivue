@@ -43,6 +43,8 @@ class $Sensor {
 }
 const Sensor = Reactive($Sensor);
 const s: any = new Sensor();
+// state manifest
+const { temp, watching, fired, last } = s;
 onUnmounted(() => s.$stopEffects());
 </script>
 
@@ -54,17 +56,17 @@ onUnmounted(() => s.$stopEffects());
     <div class="d-vals">
       <div>
         <div class="d-k">temp</div>
-        <div class="d-n">{{ s.temp.value }}&deg;</div>
+        <div class="d-n">{{ temp }}&deg;</div>
       </div>
       <div>
         <div class="d-k">watcher</div>
-        <div class="d-n" :class="s.watching.value ? 'grad' : ''">
-          {{ s.watching.value ? 'ON' : 'off' }}
+        <div class="d-n" :class="watching ? 'grad' : ''">
+          {{ watching ? 'ON' : 'off' }}
         </div>
       </div>
       <div>
         <div class="d-k">fired</div>
-        <div class="d-n">{{ s.fired.value }}&times;</div>
+        <div class="d-n">{{ fired }}&times;</div>
       </div>
     </div>
     <div class="d-row">
@@ -73,7 +75,7 @@ onUnmounted(() => s.$stopEffects());
         type="range"
         min="0"
         max="40"
-        v-model.number="s.temp.value"
+        v-model.number="temp"
         aria-label="temperature"
       />
     </div>
@@ -81,12 +83,12 @@ onUnmounted(() => s.$stopEffects());
       <button
         class="d-btn primary"
         type="button"
-        @click="s.watching.value ? s.stop() : s.start()"
+        @click="watching ? s.stop() : s.start()"
       >
-        {{ s.watching.value ? 'Stop watch' : 'Start $watch' }}
+        {{ watching ? 'Stop watch' : 'Start $watch' }}
       </button>
       <button class="d-btn" type="button" @click="s.dispose">Dispose ($stopEffects)</button>
-      <span v-if="s.last.value" class="d-mono"><code>$watch</code> {{ s.last.value }}</span>
+      <span v-if="last" class="d-mono"><code>$watch</code> {{ last }}</span>
     </div>
   </DemoBox>
 </template>

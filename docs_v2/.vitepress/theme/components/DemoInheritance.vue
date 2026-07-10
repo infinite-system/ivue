@@ -40,6 +40,8 @@ class $Leaf extends $Mid {
 }
 const Leaf = Reactive($Leaf);
 const leaf: any = new Leaf();
+// state manifest
+const { tag, base, extra } = leaf;
 </script>
 
 <template>
@@ -47,15 +49,15 @@ const leaf: any = new Leaf();
     title="Three levels, one instance"
     note="tag is a computed chain calling super.tag.value through every level. sum is a plain getter reading a grandparent ref. Mutate an ancestor and both stay correct."
   >
-    <div class="d-mono chain">{{ leaf.tag.value }}</div>
+    <div class="d-mono chain">{{ tag }}</div>
     <div class="d-vals">
       <div>
         <div class="d-k">base &middot; grandparent ref</div>
-        <div class="d-n">{{ leaf.base.value }}</div>
+        <div class="d-n">{{ base }}</div>
       </div>
       <div>
         <div class="d-k">extra &middot; own ref</div>
-        <div class="d-n">{{ leaf.extra.value }}</div>
+        <div class="d-n">{{ extra }}</div>
       </div>
       <div>
         <div class="d-k">sum &middot; plain getter</div>
@@ -63,8 +65,8 @@ const leaf: any = new Leaf();
       </div>
     </div>
     <div class="d-row">
-      <button class="d-btn primary" type="button" @click="leaf.base.value += 10">base +10</button>
-      <button class="d-btn" type="button" @click="leaf.extra.value += 5">extra +5</button>
+      <button class="d-btn primary" type="button" @click="base += 10">base +10</button>
+      <button class="d-btn" type="button" @click="extra += 5">extra +5</button>
       <span class="d-mono">{{ leaf.name }}</span>
     </div>
   </DemoBox>

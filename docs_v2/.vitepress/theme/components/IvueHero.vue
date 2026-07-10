@@ -24,13 +24,15 @@ class $Counter {
 const Counter = Reactive($Counter);
 
 const c: any = new Counter();
+// the state manifest — every Ref the template touches
+const { count } = c;
 const lastChange = ref('');
 const fired = ref(0);
 let stop: (() => void) | undefined;
 
 onMounted(() => {
   stop = watch(
-    () => c.count.value,
+    () => count.value,
     (v: number, o: number) => {
       lastChange.value = `${o} → ${v}`;
       fired.value++;
@@ -91,7 +93,7 @@ onUnmounted(() => {
           <div class="vals">
             <div class="val">
               <div class="k">count</div>
-              <div class="n"><span :key="c.count.value" class="pop">{{ c.count.value }}</span></div>
+              <div class="n"><span :key="count" class="pop">{{ count }}</span></div>
             </div>
             <div class="val">
               <div class="k">double <span class="dim">(plain getter)</span></div>

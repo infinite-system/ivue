@@ -36,12 +36,14 @@ class $Thermo {
 }
 const Thermo = Reactive($Thermo);
 const t: any = new Thermo();
+// state manifest
+const { celsius, status } = t;
 
 onMounted(() => {
   fahrRunsShown.value = fahrRuns;
   statusRunsShown.value = statusRuns;
   watch(
-    [() => t.celsius.value, ticks],
+    [() => celsius.value, ticks],
     () => {
       fahrRunsShown.value = fahrRuns;
       statusRunsShown.value = statusRuns;
@@ -59,7 +61,7 @@ onMounted(() => {
     <div class="d-vals">
       <div>
         <div class="d-k">celsius</div>
-        <div class="d-n">{{ t.celsius.value }}&deg;</div>
+        <div class="d-n">{{ celsius }}&deg;</div>
       </div>
       <div>
         <div class="d-k">fahrenheit &middot; plain getter</div>
@@ -68,7 +70,7 @@ onMounted(() => {
       </div>
       <div>
         <div class="d-k">status &middot; computed()</div>
-        <div class="d-n">{{ t.status.value }}</div>
+        <div class="d-n">{{ status }}</div>
         <div class="d-mono">body ran {{ statusRunsShown }}&times;</div>
       </div>
     </div>
@@ -78,7 +80,7 @@ onMounted(() => {
         type="range"
         min="-5"
         max="35"
-        v-model.number="t.celsius.value"
+        v-model.number="celsius"
         aria-label="celsius"
       />
       <button class="d-btn" @click="ticks++">re-render ({{ ticks }})</button>

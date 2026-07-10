@@ -20,6 +20,8 @@ class $Counter {
 }
 const Counter = Reactive($Counter);
 const c: any = new Counter();
+// state manifest
+const { count } = c;
 </script>
 
 <template>
@@ -30,7 +32,7 @@ const c: any = new Counter();
     <div class="d-vals">
       <div>
         <div class="d-k">count</div>
-        <div class="d-n">{{ c.count.value }}</div>
+        <div class="d-n">{{ count }}</div>
       </div>
       <div>
         <div class="d-k">double &middot; plain getter</div>

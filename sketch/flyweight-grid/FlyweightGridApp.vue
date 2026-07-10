@@ -13,8 +13,19 @@ import { FlyweightGridPage } from './FlyweightGridPage';
 
 const page = new FlyweightGridPage.Class();
 
-// Only template-ref targets get destructured off the controller.
-const { scrollEl } = page;
+// THE STATE MANIFEST — every Ref/Computed the template touches, grouped.
+// Plain getters (hasModel, modelCells, totals, offsets…) and methods stay
+// dotted on the instance.
+const {
+  // state
+  creationMs,
+  census,
+  draft,
+  // computeds
+  visibleRows,
+  // element refs
+  scrollEl,
+} = page;
 
 document.title = 'Flyweight Grid · 20×1,000,000 (ivue sketch)';
 </script>
@@ -40,18 +51,18 @@ document.title = 'Flyweight Grid · 20×1,000,000 (ivue sketch)';
           ><b>{{ page.modelCells.toLocaleString() }}</b> cells</span
         >
         <span class="fw-stat"
-          ><b>{{ page.creationMs.value.toFixed(1) }}</b> ms create</span
+          ><b>{{ creationMs.toFixed(1) }}</b> ms create</span
         >
         <span class="fw-stat"
-          ><b>{{ page.census.value.fineRefs.toLocaleString() }}</b> fine
+          ><b>{{ census.fineRefs.toLocaleString() }}</b> fine
           refs</span
         >
         <span class="fw-stat"
-          ><b>{{ page.census.value.blockRefs.toLocaleString() }}</b> block
+          ><b>{{ census.blockRefs.toLocaleString() }}</b> block
           refs</span
         >
         <span class="fw-stat"
-          ><b>{{ page.census.value.formulaComputeds.toLocaleString() }}</b>
+          ><b>{{ census.formulaComputeds.toLocaleString() }}</b>
           formula computeds</span
         >
       </template>
@@ -95,7 +106,7 @@ document.title = 'Flyweight Grid · 20×1,000,000 (ivue sketch)';
               :style="{ transform: `translateY(${page.offsetY}px)` }"
             >
               <div
-                v-for="pageRow in page.visibleRows.value"
+                v-for="pageRow in visibleRows"
                 :key="pageRow.row"
                 class="gc-row"
               >
@@ -116,7 +127,7 @@ document.title = 'Flyweight Grid · 20×1,000,000 (ivue sketch)';
                   <input
                     v-if="page.isEditing(cell.row, cell.col)"
                     class="gc-edit"
-                    v-model="page.draft.value"
+                    v-model="draft"
                     autofocus
                     @blur="page.commitEdit()"
                     @keyup.enter="page.commitEdit()"

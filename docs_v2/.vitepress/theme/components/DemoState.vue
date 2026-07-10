@@ -21,6 +21,8 @@ class $Box {
 }
 const Box = Reactive($Box);
 const b: any = new Box();
+// state manifest
+const { width, height } = b;
 </script>
 
 <template>
@@ -31,11 +33,11 @@ const b: any = new Box();
     <div class="d-vals">
       <div>
         <div class="d-k">width</div>
-        <div class="d-n">{{ b.width.value }}</div>
+        <div class="d-n">{{ width }}</div>
       </div>
       <div>
         <div class="d-k">height</div>
-        <div class="d-n">{{ b.height.value }}</div>
+        <div class="d-n">{{ height }}</div>
       </div>
       <div>
         <div class="d-k">area &middot; plain getter</div>
@@ -48,7 +50,7 @@ const b: any = new Box();
         type="range"
         min="40"
         max="240"
-        v-model.number="b.width.value"
+        v-model.number="width"
         aria-label="width"
       />
       <input
@@ -56,7 +58,7 @@ const b: any = new Box();
         type="range"
         min="40"
         max="200"
-        v-model.number="b.height.value"
+        v-model.number="height"
         aria-label="height"
       />
       <button class="d-btn" type="button" @click="b.randomize">Randomize</button>

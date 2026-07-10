@@ -3,6 +3,9 @@ import { shallowRef } from 'vue';
 import { WatchModel } from './WatchModel';
 
 // A plain (non-proxy) Reactive instance. shallowRef lets us swap it on dispose.
+// INSTANCE-SWAPPING component: dispose() replaces the instance, so state is
+// NOT destructured (bindings would go stale) — the documented exception to
+// the state-manifest standard; dotted access throughout.
 const model = shallowRef(new WatchModel.Class());
 
 const statusRing: Record<string, string> = {

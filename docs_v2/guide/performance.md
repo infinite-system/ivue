@@ -132,7 +132,9 @@ retired ([Components & Templates](/guide/components)). Measured per read:
 Raw access pays 4–14 ns — no proxy on the path at all. Class internals and
 templates run at the same column. The wrapper columns exist only as the
 receipts for why they lost — a `proxyRefs`-style shallow view costs ~2–5×,
-`reactive()` ~6–15×.
+`reactive()` ~6–15×. The authoring standard reads state as destructured setup
+bindings — direct `.value` reads on the same cells, i.e. the raw column
+([Components & Templates](/guide/components)).
 
 ## Hot loops
 

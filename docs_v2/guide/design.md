@@ -111,7 +111,7 @@ exporting a **`const`** (whose type carries the remapping), not the class direct
 ```ts
 export namespace Thing {
   export const $Class = $Thing
-  export const Class  = Reactive($Thing)
+  export const Class = Reactive($Class)
   export type Instance = typeof Class.Instance
 }
 ```
@@ -128,14 +128,14 @@ inside classes:
 
 ```ts
 class $Pointer {
-  get $mouse() { return useMouse() }   // a composable, hosted
-  get x() { return this.$mouse.x }
-  get y() { return this.$mouse.y }
+  private get $mouse() { return useMouse() } // a composable, hosted
+  get x() { return this.$mouse.x }   // cached ref
+  get y() { return this.$mouse.y }   // cached ref
 }
 const Pointer = Reactive($Pointer);
 const { x, y } = new Pointer();
 <template>
-{{ x }}, {{ y }}
+Mouse: {{ x }}, {{ y }}
 </template>
 ```
 
