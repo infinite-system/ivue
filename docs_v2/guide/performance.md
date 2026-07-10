@@ -115,7 +115,8 @@ closure. **Method dispatch is not the cost.** The getter-indirected reads
 inside the method are.
 
 In absolute terms, 24 ns is nothing. It only matters when you call something
-millions of times.
+millions of times — and when it does, a one-line hoist erases the entire
+gap ([Hot loops](#hot-loops)).
 
 ## The template boundary
 
