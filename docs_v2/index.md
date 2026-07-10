@@ -20,6 +20,73 @@ features:
 
 <div class="ix">
 
+<section>
+
+## Hard problems, solved together
+
+<p class="lead">Each of these sank earlier class-reactivity attempts. Solving one or two is easy. ivue ships all of them as one coherent design.</p>
+
+<div class="ix-moat">
+  <div class="cell">
+    <span class="ck" aria-hidden="true"></span>
+    <div class="tx">
+      <strong>Bound methods</strong>
+      <p><code>this.method</code> is always correct, always the same reference. The wrapper-arrow era ends.</p>
+    </div>
+  </div>
+  <div class="cell">
+    <span class="ck" aria-hidden="true"></span>
+    <div class="tx">
+      <strong>Reactive inheritance</strong>
+      <p>Deep <code>super.x.value</code> chains resolve level-safe. Reactivity flows through every layer.</p>
+    </div>
+  </div>
+  <div class="cell">
+    <span class="ck" aria-hidden="true"></span>
+    <div class="tx">
+      <strong>Hot reload for classes</strong>
+      <p>Behavior edits graft onto live instances, state intact. Multi-file hierarchies never desync.</p>
+    </div>
+  </div>
+  <div class="cell">
+    <span class="ck" aria-hidden="true"></span>
+    <div class="tx">
+      <strong>Circular imports</strong>
+      <p>The namespace pattern resolves mutual references in any load order.</p>
+    </div>
+  </div>
+  <div class="cell">
+    <span class="ck" aria-hidden="true"></span>
+    <div class="tx">
+      <strong>Writable getter types</strong>
+      <p>Ref-returning getters type as writable. Instances are fully inferred.</p>
+    </div>
+  </div>
+  <div class="cell">
+    <span class="ck" aria-hidden="true"></span>
+    <div class="tx">
+      <strong>Deterministic teardown</strong>
+      <p><code>$watch</code> scopes per instance, <code>$stopEffects</code> cleans up. Pure data pays nothing.</p>
+    </div>
+  </div>
+  <div class="cell">
+    <span class="ck" aria-hidden="true"></span>
+    <div class="tx">
+      <strong>Memory</strong>
+      <p>Derivations are shared prototype getters, not per-instance allocations.</p>
+    </div>
+  </div>
+  <div class="cell">
+    <span class="ck" aria-hidden="true"></span>
+    <div class="tx">
+      <strong>Hot paths</strong>
+      <p>Reads hoist to native ref speed with one line where it matters.</p>
+    </div>
+  </div>
+</div>
+
+</section>
+
 <section class="ix-quote">
 
 > Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away.
@@ -111,73 +178,6 @@ c.double       // 2, re-derived on read; computed() is opt-in
 
 </div>
 
-</div>
-
-</section>
-
-<section>
-
-## Hard problems, solved together
-
-<p class="lead">Each of these sank earlier class-reactivity attempts. Solving one or two is easy. ivue ships all of them as one coherent design.</p>
-
-<div class="ix-moat">
-  <div class="cell">
-    <span class="ck" aria-hidden="true"></span>
-    <div class="tx">
-      <strong>Bound methods</strong>
-      <p><code>this.method</code> is always correct, always the same reference. The wrapper-arrow era ends.</p>
-    </div>
-  </div>
-  <div class="cell">
-    <span class="ck" aria-hidden="true"></span>
-    <div class="tx">
-      <strong>Reactive inheritance</strong>
-      <p>Deep <code>super.x.value</code> chains resolve level-safe. Reactivity flows through every layer.</p>
-    </div>
-  </div>
-  <div class="cell">
-    <span class="ck" aria-hidden="true"></span>
-    <div class="tx">
-      <strong>Hot reload for classes</strong>
-      <p>Behavior edits graft onto live instances, state intact. Multi-file hierarchies never desync.</p>
-    </div>
-  </div>
-  <div class="cell">
-    <span class="ck" aria-hidden="true"></span>
-    <div class="tx">
-      <strong>Circular imports</strong>
-      <p>The namespace pattern resolves mutual references in any load order.</p>
-    </div>
-  </div>
-  <div class="cell">
-    <span class="ck" aria-hidden="true"></span>
-    <div class="tx">
-      <strong>Writable getter types</strong>
-      <p>Ref-returning getters type as writable. Instances are fully inferred.</p>
-    </div>
-  </div>
-  <div class="cell">
-    <span class="ck" aria-hidden="true"></span>
-    <div class="tx">
-      <strong>Deterministic teardown</strong>
-      <p><code>$watch</code> scopes per instance, <code>$stopEffects</code> cleans up. Pure data pays nothing.</p>
-    </div>
-  </div>
-  <div class="cell">
-    <span class="ck" aria-hidden="true"></span>
-    <div class="tx">
-      <strong>Memory</strong>
-      <p>Derivations are shared prototype getters, not per-instance allocations.</p>
-    </div>
-  </div>
-  <div class="cell">
-    <span class="ck" aria-hidden="true"></span>
-    <div class="tx">
-      <strong>Hot paths</strong>
-      <p>Reads hoist to native ref speed with one line where it matters.</p>
-    </div>
-  </div>
 </div>
 
 </section>
