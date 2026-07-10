@@ -338,7 +338,6 @@ until mount — use `?.` in watch getters).
   Component-coupled classes ONLY; never in stores/entities that outlive
   components. If the class is also constructed outside components, guard:
   `getCurrentInstance() && onMounted(() => this.onMount());`
-- NEVER wrap `watchEffect` inside `$watch` — `$watchEffect` is the symmetric primitive.
 - Watch CALLBACKS delegate to methods (the thin-closure rule):
   `watch(source, (newValue, oldValue) => this.onChanged(newValue, oldValue))`.
 
@@ -562,7 +561,7 @@ convention and check it in review.
 - [ ] The SFC destructures ALL template-touched Refs/Computeds + element refs (grouped: state refs / computed refs / element refs); templates use state bindings and dotted access ONLY for plain getters/methods — no Ref reached through the instance in a template, no state name shadowing a prop.
 - [ ] Nothing but Refs/Computeds/element-ref targets is destructured (never plain getters/methods); v-for item cells stay dotted with `.value`; instance-swapping components don't destructure at all.
 - [ ] `defineExpose(x as X.Instance)`; consumers type the ref as `ShallowUnwrapRef<X.Instance>`.
-- [ ] Watch sources are the FUNCTION form; component-scoped constructors use plain `watch`/`watchEffect`; `this.$watch`/`this.$watchEffect` only for component-outliving instances — each with a dispose path (`$stopEffects()` owner or `onScopeDispose` auto-wire); no `watchEffect` wrapped in `$watch`.
+- [ ] Watch sources are the FUNCTION form; component-scoped constructors use plain `watch`/`watchEffect`; `this.$watch`/`this.$watchEffect` only for component-outliving instances — each with a dispose path (`$stopEffects()` owner or `onScopeDispose` auto-wire).
 - [ ] Lifecycle hooks / init logic live in the constructor (no `init()` expecting auto-call); template refs guarded with `?.` where read pre-mount.
 - [ ] Every `computed()`/constructor-watch CALLBACK delegates to a method (`computed(() => this.recalculate())`) — no logic inlined in reactive closures; the arrow form, never `computed(this.method)`.
 - [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices and specs included — no single-letter names, no name meaning different things in different methods.
