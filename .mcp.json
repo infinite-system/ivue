@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--cdp-endpoint",
+        "http://localhost:9222",
+        "--isolated",
+        "--ignore-https-errors",
+        "--viewport-size",
+        "1440,900",
+        "--output-dir",
+        "tmp/playwright"
+      ]
+    }
+  }
+}
