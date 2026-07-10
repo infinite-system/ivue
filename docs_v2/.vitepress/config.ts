@@ -21,6 +21,7 @@ export default defineConfig({
   lastUpdated: true,
 
   head: [
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#6366f1' }],
     ['meta', { property: 'og:type', content: 'website' }],
     [

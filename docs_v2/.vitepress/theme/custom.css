@@ -278,37 +278,91 @@
   box-shadow: 0 24px 70px -30px rgba(99, 102, 241, 0.35);
 }
 
-/* Solved checklist */
-.ix-solved {
+/* The moat — one fused block: 8 solved problems, one coherent design */
+.ix-moat {
+  position: relative;
   display: grid;
-  gap: 14px 40px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
   margin-top: 30px;
+  background: var(--vp-c-divider);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 16px;
+  overflow: hidden;
 }
-@media (min-width: 768px) {
-  .ix-solved {
-    grid-template-columns: 1fr 1fr;
+/* one gradient hairline crowning the whole block */
+.ix-moat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ivue-grad);
+  z-index: 1;
+}
+@media (max-width: 1023px) {
+  .ix-moat {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
-.ix-solved .item {
+@media (max-width: 599px) {
+  .ix-moat {
+    grid-template-columns: 1fr;
+  }
+}
+.ix-moat .cell {
   display: flex;
   gap: 12px;
-  align-items: baseline;
-  font-size: 0.98rem;
-  line-height: 1.6;
+  align-items: flex-start;
+  padding: 20px 20px 18px;
+  background: var(--vp-c-bg);
+  transition: background 0.18s ease;
+}
+.dark .ix-moat .cell {
+  background: var(--vp-c-bg-alt);
+}
+.ix-moat .cell:hover {
+  background: var(--vp-c-brand-soft);
+}
+/* CSS-drawn gradient check badge — no icon font, no svg path */
+.ix-moat .ck {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 7px;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  position: relative;
+}
+.ix-moat .ck::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 3.5px;
+  width: 5px;
+  height: 10px;
+  border-right: 2px solid var(--ivue-emerald);
+  border-bottom: 2px solid var(--ivue-emerald);
+  transform: rotate(45deg);
+}
+.ix-moat .tx strong {
+  display: block;
+  font-size: 0.97rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  color: var(--vp-c-text-1);
+}
+.ix-moat .tx p {
+  margin: 5px 0 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
   color: var(--vp-c-text-2);
 }
-.ix-solved .item::before {
-  content: '';
-  flex: none;
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--ivue-grad);
-  transform: translateY(-1px);
-}
-.ix-solved .item strong {
-  color: var(--vp-c-text-1);
-  font-weight: 620;
+.ix-moat .tx code {
+  font-size: 0.78rem;
 }
 
 /* Start-here cards */
@@ -353,6 +407,10 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--vp-c-brand-1);
+  transition: transform 0.18s ease;
+}
+.ix-start a:hover .go {
+  transform: translateX(3px);
 }
 
 .ix-end {
