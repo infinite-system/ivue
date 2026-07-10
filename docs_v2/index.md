@@ -115,10 +115,13 @@ features:
 <div>
 
 <p class="lead">
-<code>Reactive()</code> transforms a class once. Getters that return refs become
-lazily cached state. Methods bind themselves on first touch. Instances stay
-plain objects. Everything else, inheritance, teardown, speed, falls out of
-that single move. <a href="/guide/principles">Read the principles.</a>
+<code>Reactive()</code> transforms a class once. A getter returning
+<code>ref()</code> becomes state: created on first touch, cached, stable
+forever. A plain getter stays plain and re-derives on every read, reactive
+with zero allocation. Methods bind themselves once, to the right
+<code>this</code>. Instances stay ordinary objects. Inheritance, hot reload,
+teardown, speed: consequences of that one move.
+<a href="/guide/principles">Read the principles.</a>
 </p>
 
 </div>
@@ -129,7 +132,7 @@ import { ref } from 'vue'
 
 class $Counter {
   get count()  { return ref(0) }
-  get double() { return this.count.value * 2 }  // derived: plain getter
+  get double() { return this.count.value * 2 }  // plain getter
   inc() { this.count.value++ }
 }
 
@@ -138,7 +141,7 @@ export const Counter = Reactive($Counter)
 const c = new Counter()
 c.inc()
 c.count.value  // 1
-c.double       // 2, re-derived on read; computed() is opt-in
+c.double       // 2, re-derived on read
 ```
 
 </div>
@@ -159,7 +162,7 @@ c.double       // 2, re-derived on read; computed() is opt-in
 
 | | time | ivue is |
 | --- | --- | --- |
-| **ivue `new Class()`** | **0.7 ms** | |
+| **ivue `new Class()`** | **0.7 ms** | <span class="ix-base">the baseline</span> |
 | native `reactive()` | 36.7 ms | **55× faster** |
 | composable factory | 42.8 ms | **64× faster** |
 | eager class engine (unreleased v1) | 169 ms | **253× faster** |
@@ -174,7 +177,7 @@ c.double       // 2, re-derived on read; computed() is opt-in
 
 | | heap | ivue is |
 | --- | --- | --- |
-| **ivue class, 60 getters** | **1.7 KB** | |
+| **ivue class, 60 getters** | **1.7 KB** | <span class="ix-base">the baseline</span> |
 | composable, 60 closures | 12.8 KB | **7.7× lighter** |
 | composable, 60 computeds | 31.1 KB | **18.6× lighter** |
 

@@ -274,6 +274,18 @@
   font-size: 0.88rem;
   color: var(--vp-c-text-3);
 }
+/* "the baseline" pill in the ivue row of the comparison tables */
+.ix-base {
+  display: inline-block;
+  padding: 1px 9px;
+  border-radius: 999px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 11px;
+  line-height: 18px;
+  color: var(--vp-c-text-3);
+  border: 1px solid var(--vp-c-divider);
+  white-space: nowrap;
+}
 
 /* Code split */
 .ix-idea {
