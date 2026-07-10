@@ -103,4 +103,5 @@ sits behind a getter, so hot loops pay ~5× per read over a raw closure ref.
 One [hoist line](/guide/performance#hot-loops) erases it. Everything else is
 free.
 
-Next: the [principles](/guide/principles) that make it work.
+Next: [get started](/guide/getting-started) — or read the
+[principles](/guide/principles) that make it work.
