@@ -34,7 +34,7 @@ tracking), methods become stable bound functions. Instances stay plain objects.
 Follow the rules below exactly — every deviation is either a compile error or a
 silent no-op at runtime.
 
-## 1. The class template (copy this shape)
+## The class template (copy this shape)
 
 ```ts
 import { Reactive } from 'ivue'; // in this app: 'src/utils/ivue'
@@ -52,22 +52,22 @@ class $Box {
     public emit: BoxEmits,
   ) {
     watch(
-      () => this.w.value,
-      (width, oldWidth) => this.onResize(width, oldWidth),
+      () => this.height.value,
+      (height, oldHeight) => this.onResize(height, oldHeight),
     );
   }
 
   // MUTABLE STATE — getter returning ref()/shallowRef(). `this` is RAW: read
   // AND write via .value. shallowRef for big structures you REPLACE wholesale.
-  get w() {
+  get height() {
     return ref(4);
   }
   get rows() {
     return shallowRef<Row[]>([]);
   } // deep mutations do NOT trigger
 
-  // TEMPLATE-REF TARGET — a ref(null); the SFC destructures it for ref="el".
-  get el() {
+  // TEMPLATE-REF TARGET — a ref(null); the SFC destructures it for ref="boxEl".
+  get boxEl() {
     return ref<HTMLElement | null>(null);
   }
 
@@ -81,7 +81,7 @@ class $Box {
 
   // DERIVED — PLAIN getter, NO computed(). Reactive via leaf tracking; 0 bytes/instance.
   get area() {
-    return this.w.value * this.rows.value.length;
+    return this.width * this.height.value; // prop × ref — both leaf-tracked
   }
   get widthPx() {
     return this.width + 'px';
@@ -89,7 +89,8 @@ class $Box {
 
   // computed() — SURGICAL opt-in only: expensive work, render-suppression by
   // value-equality, or a stable ref handle for watch/props (~300 bytes/instance).
-  // THIN closures (§7): the computed only dials a method — logic stays on the
+  // THIN closures (see "computed() and watch callbacks delegate to methods"):
+  // the computed only dials a method — logic stays on the
   // prototype, hot-graftable, minimum footprint.
   get sorted() {
     return computed(() => this.sortRows());
@@ -118,9 +119,9 @@ class $Box {
   baseWidth = 400;
 
   // METHODS — plain; engine-binds to raw (stable identity, safe as handlers).
-  // Reactive-closure bodies above delegate HERE (§7).
+  // Reactive-closure bodies above delegate HERE (the thin-closure rule).
   grow() {
-    this.w.value++;
+    this.height.value++;
   }
 
   sortRows() {
@@ -134,7 +135,7 @@ class $Box {
     this.celsius.value = ((fahrenheit - 32) * 5) / 9;
   }
 
-  onResize(width: number, oldWidth: number) {
+  onResize(height: number, oldHeight: number) {
     /* ... */
   }
 }
@@ -197,7 +198,7 @@ export namespace Session {
 session.$stopEffects();
 ```
 
-## 2. The SFC wiring template (copy this shape)
+## The SFC wiring template (copy this shape)
 
 ```vue
 <script lang="ts" setup>
@@ -212,7 +213,7 @@ const emit = defineEmits(['change']);
 const box = new Box.Class(props, model, emit);
 
 // Destructure ONLY template-ref targets — the getter returns the stable ref itself.
-const { el } = box;
+const { boxEl } = box;
 
 // Type the expose surface through Instance — it strips readonly so ref-writes typecheck.
 defineExpose(box as Box.Instance);
@@ -226,11 +227,11 @@ defineExpose(box as Box.Instance);
   </div>
   <!-- Plain getters and methods: plain access, NO .value -->
   <button @click="box.grow()">grow {{ box.area }}</button>
-  <input ref="el" />
+  <input ref="boxEl" />
 </template>
 ```
 
-## 3. DO / NEVER
+## DO / NEVER
 
 | DO                                                                           | NEVER                                                                                  |
 | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
@@ -241,12 +242,12 @@ defineExpose(box as Box.Instance);
 | `computed()` only for expensive / render-suppressing / stable-handle needs   | reach for `computed()` by default                                                      |
 | inject stores via `private get $store() { return useStore() }`               | `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles |
 | `new X.Class(props, emit)` — raw instance everywhere                         | wrap in `reactive(inst)` or any shallow-unwrap view as the standard                    |
-| destructure ONLY `ref="el"` targets                                          | destructure plain getters — snapshots a dead value                                     |
+| destructure ONLY `ref="boxEl"` targets                                          | destructure plain getters — snapshots a dead value                                     |
 | `defineExpose(box as X.Instance)`                                            | `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers       |
 | constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — ivue never calls it                         |
 | plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |
 
-## 4. The unwrapping-surface typing law
+## The unwrapping-surface typing law
 
 Vue's expose proxy and `reactive()` unwrap ref READS and redirect ref WRITES
 into `.value` at runtime — but TypeScript keeps get-only accessors `readonly`
@@ -273,10 +274,10 @@ until mount — use `?.` in watch getters).
 | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | `Cannot assign to 'x' because it is a read-only property` (on an exposed/`reactive()`/template-ref surface) | type that surface through `X.Instance`                   |
 | `Type 'boolean' is not assignable to type 'Ref<boolean>'`                                                   | missing `.value` on a Ref/Computed write — `x.flag.value = true` |
-| `'X' is possibly null` on a template ref in a watch getter                                                  | add `?.` — `watch(() => x.el.value?.foo, cb)`            |
+| `'X' is possibly null` on a template ref in a watch getter                                                  | add `?.` — `watch(() => x.boxEl.value?.foo, cb)`            |
 | template write crashes / no-ops at runtime on the raw instance                                              | you wrote `x.Ref/Computed = v`; write `x.Ref/Computed.value = v`         |
 
-## 5. Watch rules — and WHICH watch
+## Watch rules — and WHICH watch
 
 | the instance is…                                              | use                                                                                              |
 | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -297,10 +298,10 @@ until mount — use `?.` in watch getters).
   component scope cannot see the instance scope, so without `$stopEffects`
   wiring that watcher outlives unmount.
 - NEVER wrap `watchEffect` inside `$watch` — `$watchEffect` is the symmetric primitive.
-- Watch CALLBACKS delegate to methods (§7):
+- Watch CALLBACKS delegate to methods (the thin-closure rule):
   `watch(source, (newValue, oldValue) => this.onChanged(newValue, oldValue))`.
 
-## 6. Generics + circular imports (brief)
+## Generics + circular imports (brief)
 
 Generic class — `ReactiveClass<C>` cannot carry `<T>` (no higher-kinded types),
 but `Reactive(X) === X` by identity, so cast `Class` back to the raw
@@ -329,7 +330,7 @@ Each file calls `Reactive()` on its own class safely: it is idempotent per
 prototype level and HMR-safe; a shared ancestor is transformed once, by
 whichever file loads first.
 
-## 7. computed() and watch callbacks delegate to methods (HMR-streamlined)
+## computed() and watch callbacks delegate to methods (HMR-streamlined)
 
 A reactive closure's body is FROZEN at creation — it is cached per instance
 and no hot update can reach inside it. A prototype lookup is evaluated at
@@ -371,7 +372,7 @@ silently receives stale data. Always the arrow.
 `$`-prefixed singleton getters are frozen caches too — keep their bodies to
 a single composable/service call (`return useThing()`), nothing more.
 
-## 8. Naming: unfold to the domain
+## Naming: unfold to the domain
 
 Readable code is the product. In ivue classes the class shape already reads
 like prose — don't ruin it with letter soup:
@@ -398,7 +399,7 @@ for (let r = r1; r <= r2; r++)        for (let row = startRow; row <= endRow; ro
 watch(c, (nv, ov) => …)               watch(value, (newValue, oldValue) => this.onChanged(…))
 ```
 
-## 9. Keyed reactivity — the third state shape
+## Keyed reactivity — the third state shape
 
 Ref-getters express NAMED members; `shallowRef` expresses wholesale-replaced
 structures. When state is KEYED — sparse, unbounded, indexed by ids or
@@ -435,7 +436,7 @@ by observation), writes peek (existence is free). Rules that keep it honest:
 - Ground truth lives in plain storage (typed arrays, Maps); the refs are
   VERSION SIGNALS, not value holders — bump to invalidate, readers re-derive.
 - Per-key cached computeds follow the same shape (`Map<key, ComputedRef>`),
-  bodies delegating to methods (§7), and MUST have an explicit release/
+  bodies delegating to methods (the thin-closure rule), and MUST have an explicit release/
   eviction path — keyed overlays cannot GC on their own (the Map holds
   strong refs; attached watchers subscribe permanently).
 - Coarse tiers are the same pattern at lower resolution: one ref covering
@@ -456,7 +457,7 @@ Same law at three granularities — nothing exists until observed: getters
 price MEMBERS, keyed collections price KEYS. (Proven at 20M cells / 4.7
 bytes each — see the flyweight grid.)
 
-## 10. Spacing is information
+## Spacing is information
 
 Contiguity says "same kind of thing"; a blank line says "the kind changes,
 or complexity rises." Spend the signal deliberately — a blanket
@@ -502,7 +503,7 @@ Not machine-enforceable (linters can't tell a ref-getter from a method, and
 Prettier expands getters past the single-line exemptions) — hold it as a
 convention and check it in review.
 
-## 11. Self-review checklist (run over your ivue diff)
+## Self-review checklist (run over your ivue diff)
 
 - [ ] Every mutable state member is `get x() { return ref(...) }` — no mutable plain fields.
 - [ ] Inside the class, every Ref/Computed read/write uses `.value`; plain fields are constants/config only.
