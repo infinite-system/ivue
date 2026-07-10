@@ -92,7 +92,10 @@ export default defineConfig({
     siteTitle: 'ivue',
 
     nav: [
-      { text: 'Guide', link: '/guide/introduction', activeMatch: '/guide/' },
+      { text: 'Guide', link: '/guide/introduction', activeMatch: '/guide/(?!standard|benchmarks)' },
+      { text: 'Getting Started', link: '/guide/getting-started' },
+      { text: 'Manual', link: '/guide/standard', activeMatch: '/guide/standard' },
+      { text: 'Benchmarks', link: '/guide/benchmarks', activeMatch: '/guide/benchmarks' },
       { text: 'API', link: '/api/', activeMatch: '/api/' },
       {
         text: 'v2',
