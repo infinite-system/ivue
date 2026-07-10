@@ -18,14 +18,14 @@ set.
 
 | Problem | Why it's hard | In ivue |
 |---|---|---|
-| **Per-instance cost** | A `reactive()` proxy per object is expensive; eager computeds pay for every property up front. | Instances are **plain**, refs/computeds are lazy → **55–250× cheaper to create.** |
-| **Cheap bound methods** | Bind per instance and you allocate a function per method per object; don't bind and `this` breaks on detach. | Methods stay on the prototype, **bound lazily on first use and cached** → cheap, correct, referentially stable. |
-| **Reactive reads** | Any indirection over a raw ref costs something. | `this.x.value` through a getter — **~5× a raw ref, hoistable to native speed**. The one cost, and it's erasable. |
-| **Reactive inheritance** | Prototype-based reactivity collides cached Refs/Computeds and breaks `super`. | **Deep computed chains with `super.x.value`**, reactivity propagating through every level. |
-| **Cross-file class HMR** | Editing a parent in another file desyncs prototype links and identities. | An idempotent, per-file transform **survives HMR**. |
-| **Circular imports** | Mutual class references throw `Cannot access 'X' before initialization`. | The namespace pattern **resolves references in any load order**. |
-| **Writable-getter types** | `get x()` is *read-only* in TypeScript. | Mapped types **re-declare ref-returning getters as writable** — the requirement that produced the circular-safe module shape. |
-| **Deterministic teardown** | Track and stop every effect per instance, with no cost for those that have none. | `$watch` + `$stopEffects` — scoped cleanup, **zero cost for instances that never watch**. |
+| **Per-instance cost** | A `reactive()` proxy per object is expensive; eager computeds pay for every property up front. | <span class="iv-ck" aria-hidden="true"></span> Instances are **plain**, refs/computeds are lazy → **55–250× cheaper to create.** |
+| **Cheap bound methods** | Bind per instance and you allocate a function per method per object; don't bind and `this` breaks on detach. | <span class="iv-ck" aria-hidden="true"></span> Methods stay on the prototype, **bound lazily on first use and cached** → cheap, correct, referentially stable. |
+| **Reactive reads** | Any indirection over a raw ref costs something. | <span class="iv-ck" aria-hidden="true"></span> `this.x.value` through a getter — **~5× a raw ref, hoistable to native speed**. The one cost, and it's erasable. |
+| **Reactive inheritance** | Prototype-based reactivity collides cached Refs/Computeds and breaks `super`. | <span class="iv-ck" aria-hidden="true"></span> **Deep computed chains with `super.x.value`**, reactivity propagating through every level. |
+| **Cross-file class HMR** | Editing a parent in another file desyncs prototype links and identities. | <span class="iv-ck" aria-hidden="true"></span> An idempotent, per-file transform **survives HMR**. |
+| **Circular imports** | Mutual class references throw `Cannot access 'X' before initialization`. | <span class="iv-ck" aria-hidden="true"></span> The namespace pattern **resolves references in any load order**. |
+| **Writable-getter types** | `get x()` is *read-only* in TypeScript. | <span class="iv-ck" aria-hidden="true"></span> Mapped types **re-declare ref-returning getters as writable** — the requirement that produced the circular-safe module shape. |
+| **Deterministic teardown** | Track and stop every effect per instance, with no cost for those that have none. | <span class="iv-ck" aria-hidden="true"></span> `$watch` + `$stopEffects` — scoped cleanup, **zero cost for instances that never watch**. |
 
 **Bound methods deserve a closer look, because everyone underestimates it.** In plain
 Vue and React you cannot pass `this.method` — you write `() => this.method()` or
