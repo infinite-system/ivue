@@ -13,6 +13,18 @@ to be exactly the reference a human wants open in a second tab. Everything
 here is production-proven; the _why_ behind each rule lives in the guide
 chapters.
 
+::: info How examples in these docs are written
+**A filename comment (`// player.ts`) marks a template**: full canonical
+form — namespace export, thin computeds for real logic — safe to copy as a
+file. **No filename means a fragment**: the minimum that proves the point,
+so mechanism stays visible; lift the idea, not the file. Costless
+conventions hold everywhere — `$Name` raw classes, plain getters for
+derivation, `computed()` only where it earns its bytes. One deliberate
+exception: [Getting Started](/guide/getting-started)'s first class uses the
+one-off form and points to [Modules & Imports](/guide/modules) for the
+standard.
+:::
+
 # ivue (`Reactive`) — Operating Manual
 
 Author reactive Vue 3 logic as a plain `class $X`, then export `Reactive($X)`.

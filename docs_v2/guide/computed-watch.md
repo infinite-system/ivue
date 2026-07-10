@@ -137,13 +137,9 @@ class $Invoice {
     return `$${(this.subtotal * 1.13).toFixed(2)}`;
   }
 }
-export namespace Invoice {
-  export const $Class = $Invoice;
-  export const Class = Reactive($Class);
-  export type Instance = typeof Class.Instance;
-}
+const Invoice = Reactive($Invoice);
 
-const inv = new Invoice.Class();
+const inv = new Invoice();
 
 // ✓ watching a plain getter on the RAW instance — fires on any leaf change
 watch(
