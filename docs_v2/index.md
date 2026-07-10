@@ -152,7 +152,7 @@ counter.double       // 2, re-derived on read
 
 ## The numbers
 
-<p class="lead">Measured, not promised. Method and full tables in <a href="/guide/performance">Performance</a>.</p>
+<p class="lead">Measured, not promised. Method and full tables in <a href="/guide/performance">Performance by Design</a>.</p>
 
 <div class="ix-cols">
 

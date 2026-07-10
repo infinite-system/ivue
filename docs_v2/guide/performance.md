@@ -1,9 +1,9 @@
 ---
-title: Performance
+title: Performance by Design
 description: The honest numbers. ivue creates instances 55–253× faster, uses up to 18× less memory per instance, and reads state ~5× slower in hot loops — a cost you can erase with a one-line hoist.
 ---
 
-# Performance
+# Performance by Design
 
 ivue's design is one trade: **defer everything**. No proxy. No eager refs. No
 binding until first access. Creation becomes extremely cheap. Reads pay a

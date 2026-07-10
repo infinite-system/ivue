@@ -98,8 +98,13 @@ export default defineConfig({
         text: 'v2',
         items: [
           { text: 'Operating Manual', link: '/guide/standard' },
+          {
+            text: 'The Engine Under the Idiom',
+            link: '/guide/engine-under-the-idiom',
+          },
           { text: 'The Reactive Model Layer', link: '/guide/model-layer' },
-          { text: 'Performance', link: '/guide/performance' },
+          { text: 'The Flyweight Pattern', link: '/guide/flyweight' },
+          { text: 'Performance by Design', link: '/guide/performance' },
           { text: 'Benchmarks', link: '/guide/benchmarks' },
         ],
       },
@@ -135,13 +140,13 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'Operating Manual', link: '/guide/standard' },
-            { text: 'The Reactive Model Layer', link: '/guide/model-layer' },
             {
               text: 'The Engine Under the Idiom',
               link: '/guide/engine-under-the-idiom',
             },
+            { text: 'The Reactive Model Layer', link: '/guide/model-layer' },
             { text: 'The Flyweight Pattern', link: '/guide/flyweight' },
-            { text: 'Performance', link: '/guide/performance' },
+            { text: 'Performance by Design', link: '/guide/performance' },
             { text: 'Benchmarks', link: '/guide/benchmarks' },
           ],
         },

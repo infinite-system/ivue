@@ -9,7 +9,7 @@ description: 'A live, in-browser 100k/1M-cell virtualized grid — the same mode
 thousands of live, individually-reactive entities — has a structural memory
 cost in idiomatic Vue, and that ivue's laziness erases it. This page is the
 receipt: a real, reproducible, end-to-end measurement, not a microbenchmark.
-[Performance](/guide/performance) covers the micro-level numbers (creation of
+[Performance by Design](/guide/performance) covers the micro-level numbers (creation of
 isolated instances, per-read cost); this page covers what happens when you
 build an actual grid out of them.
 
@@ -255,5 +255,5 @@ node demo/grid/measure.mjs http://localhost:5180 25000  # 1M cells
 
 - [The Reactive Model Layer](/guide/model-layer) — why this gap is
   structural, and why ivue closes it.
-- [Performance](/guide/performance) — the micro-level numbers: isolated
+- [Performance by Design](/guide/performance) — the micro-level numbers: isolated
   instance creation, per-instance memory, hot-loop read cost.
