@@ -339,10 +339,25 @@ until mount — use `?.` in watch getters).
 - Watch CALLBACKS delegate to methods (the thin-closure rule):
   `watch(source, (newValue, oldValue) => this.onChanged(newValue, oldValue))`.
 
-## Generics + circular imports (brief)
+## Circular imports: immune by construction
 
-Generic class — `ReactiveClass<C>` cannot carry `<T>` (no higher-kinded types),
-but `Reactive(X) === X` by identity, so cast `Class` back to the raw
+The hoisted-namespace + getter convention makes cross-module cycles a
+non-event — no ordering discipline, no `forwardRef`-style workarounds:
+
+- Cross-references (`new Other.Class()` in a method, a store read in a
+  `$`-getter) resolve at FIRST ACCESS, when every module in the cycle has
+  long finished loading — any load order works.
+- Each file calls `Reactive()` on its own class safely: it is idempotent per
+  prototype level and HMR-safe; a shared ancestor is transformed once, by
+  whichever file loads first.
+- The one thing that stays impossible is circular `extends` — it evaluates
+  at load time, and is logically impossible in any language, not a limit of
+  the pattern.
+
+## Generic classes (brief)
+
+`ReactiveClass<C>` cannot carry `<T>` through (no higher-kinded types), but
+`Reactive(X) === X` by identity — so cast `Class` back to the raw
 constructor and apply `ReactiveInstance` explicitly for `Instance`:
 
 ```ts
@@ -359,14 +374,6 @@ export namespace Scroller {
 }
 // consumer of a template ref: ShallowUnwrapRef<Scroller.Instance<T>>
 ```
-
-Circular imports — the hoisted-namespace + getter convention is immune by
-construction: cross-references (`new Other.Class()` in a method) resolve at
-first access, when every module is loaded. Circular `extends` remains
-impossible (it evaluates at load time — logically impossible in any language).
-Each file calls `Reactive()` on its own class safely: it is idempotent per
-prototype level and HMR-safe; a shared ancestor is transformed once, by
-whichever file loads first.
 
 ## computed() and watch callbacks delegate to methods (HMR-streamlined)
 
