@@ -178,23 +178,32 @@
 }
 
 /* Quote */
+.ix section.ix-quote {
+  padding-top: 48px;
+}
+@media (min-width: 768px) {
+  .ix section.ix-quote {
+    padding-top: 64px;
+  }
+}
 .ix-quote {
   text-align: center;
-  max-width: 44rem;
+  max-width: 42rem;
   margin: 0 auto;
 }
 .ix-quote::before {
   content: '\201C';
   display: block;
-  height: 54px;
+  height: 48px;
   margin: 0 auto 8px;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 88px;
+  font-size: 78px;
   line-height: 1.08;
   background: var(--ivue-grad-text);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  opacity: 0.55;
 }
 .ix-quote blockquote {
   border: none;
@@ -202,21 +211,22 @@
   padding: 0;
   font-family: Georgia, 'Times New Roman', serif;
   font-style: italic;
-  font-size: clamp(1.5rem, 3.4vw, 2.15rem);
+  font-size: clamp(1.3rem, 2.9vw, 1.8rem);
   font-weight: 400;
-  line-height: 1.42;
-  letter-spacing: -0.008em;
-  color: var(--vp-c-text-1);
+  line-height: 1.5;
+  letter-spacing: 0.005em;
+  color: var(--vp-c-text-2);
   text-wrap: balance;
 }
 .ix-quote cite {
   display: block;
-  margin-top: 20px;
+  margin-top: 18px;
   font-style: normal;
-  font-size: 0.82rem;
-  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--vp-c-text-3);
+  opacity: 0.8;
 }
 .ix-quote cite::before {
   content: '\2014\00A0';
