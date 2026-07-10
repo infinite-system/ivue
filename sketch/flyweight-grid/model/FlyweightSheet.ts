@@ -130,8 +130,7 @@ class $FlyweightSheet {
     });
   }
 
-  // ------------------------------------------------------------------ keys
-
+  // --- keys ---
   private cellKey(row: number, col: number): number {
     return col * this.rows + row;
   }
@@ -140,8 +139,7 @@ class $FlyweightSheet {
     return col * this.blockCount + (row >> BLOCK_SHIFT);
   }
 
-  // -------------------------------------------------- version-ref plumbing
-
+  // --- version-ref plumbing ---
   /** Subscribe the current effect to a cell (get-OR-CREATE — observation). */
   private trackCell(row: number, col: number): void {
     const cellKey = this.cellKey(row, col);
@@ -175,8 +173,7 @@ class $FlyweightSheet {
     if (versionRef) versionRef.value++;
   }
 
-  // -------------------------------------------------------------- raw reads
-
+  // --- raw reads ---
   /** UNTRACKED ground-truth value (blank→null). No refs, no observation. */
   rawAt(row: number, col: number): CellValue {
     const column = this.columns[col];
@@ -211,8 +208,7 @@ class $FlyweightSheet {
     return this.columns[col].kind[row] as Kind;
   }
 
-  // ----------------------------------------------------------- tracked reads
-
+  // --- tracked reads ---
   /**
    * The TRACKED point read — what rendered cells, facades and onCell use.
    * Formula cells resolve through their cached computed (which carries its
@@ -294,8 +290,7 @@ class $FlyweightSheet {
     return values;
   }
 
-  // ------------------------------------------------------------- formulas
-
+  // --- formulas ---
   /**
    * The cached computed for a formula cell — created on first observation.
    * THIN on purpose (the computed and watcher bodies are pointers to
@@ -474,8 +469,7 @@ class $FlyweightSheet {
     }
   }
 
-  // --------------------------------------------------------------- writes
-
+  // --- writes ---
   /**
    * THE single write path. O(1) storage update + O(observers) notification.
    * Never allocates reactive state (peek-only bumps).
@@ -505,8 +499,7 @@ class $FlyweightSheet {
     this.bumpBlock(row, col);
   }
 
-  // ----------------------------------------------------------- diagnostics
-
+  // --- diagnostics ---
   /**
    * Which cells does (row,col)'s formula CURRENTLY read? Re-parses once with
    * the read-tap on — it walks the same onCell/onRange path Vue tracks, so

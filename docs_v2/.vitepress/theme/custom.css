@@ -517,3 +517,14 @@
 }
 
 /* Hero motion lives in IvueHero.vue (scoped, reduced-motion gated). */
+
+/* GFM task-list checkboxes (standard.md self-review checklist) */
+.vp-doc li.task-item {
+  list-style: none;
+  margin-left: -1.25rem;
+}
+.vp-doc li.task-item .task-checkbox {
+  margin-right: 8px;
+  accent-color: var(--vp-c-brand-1);
+  vertical-align: -2px;
+}

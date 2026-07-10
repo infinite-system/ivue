@@ -55,6 +55,36 @@ export default defineConfig({
   markdown: {
     lineNumbers: true,
     theme: { light: 'github-light', dark: 'one-dark-pro' },
+    config(md) {
+      // GFM task lists: render `- [ ]` / `- [x]` as checkboxes (tickable in
+      // the browser, not persisted) — used by the standard.md self-review
+      // checklist. Rendered CHECKED regardless of source state: the skill
+      // source keeps `[ ]` (the AI runs the checklist), while the docs read
+      // as "the standard satisfies all of these".
+      md.core.ruler.after('inline', 'task-lists', (state) => {
+        const tokens = state.tokens;
+        for (let i = 2; i < tokens.length; i++) {
+          const token = tokens[i];
+          if (
+            token.type !== 'inline' ||
+            !token.children?.length ||
+            tokens[i - 1].type !== 'paragraph_open' ||
+            tokens[i - 2].type !== 'list_item_open'
+          ) {
+            continue;
+          }
+          const first = token.children[0];
+          if (first.type !== 'text') continue;
+          const match = /^\[([ xX])\] /.exec(first.content);
+          if (!match) continue;
+          first.content = first.content.slice(4);
+          const checkbox = new state.Token('html_inline', '', 0);
+          checkbox.content = '<input type="checkbox" class="task-checkbox" checked> ';
+          token.children.unshift(checkbox);
+          tokens[i - 2].attrJoin('class', 'task-item');
+        }
+      });
+    },
   },
 
   themeConfig: {

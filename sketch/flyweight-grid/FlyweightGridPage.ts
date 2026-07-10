@@ -71,7 +71,7 @@ class $FlyweightGridPage {
     }
   }
 
-  // ------------------------------------------------------------- state
+  // --- state ---
   get sheet() {
     return shallowRef<FlyweightSheet.Instance | null>(null);
   }
@@ -101,11 +101,11 @@ class $FlyweightGridPage {
     });
   }
 
-  // --------------------------------------- non-reactive infra (timers)
+  // --- non-reactive infra (timers) ---
   private censusTimer: ReturnType<typeof setInterval> | null = null;
   private evictTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // ------------------------------------------------ derived (plain getters)
+  // --- derived (plain getters) ---
   get hasModel() {
     return this.sheet.value !== null;
   }
@@ -206,7 +206,7 @@ class $FlyweightGridPage {
       : '';
   }
 
-  // ------------------------------------------------------------ methods
+  // --- methods ---
   createModel() {
     this.editing.value = null;
     const startedAt = performance.now();

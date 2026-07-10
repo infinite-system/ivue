@@ -118,12 +118,10 @@ class $Box {
   }
 }
 
-// NAMESPACE EXPORT — $Class = raw (children `extends` it); Class = Reactive()
-// (you `new` it — same constructor by identity); Instance = the writable type.
 export namespace Box {
-  export const $Class = $Box;
-  export const Class = Reactive($Class);
-  export type Instance = typeof Class.Instance;
+  export const $Class = $Box; // raw — children `extends` this
+  export const Class = Reactive($Class); // reactive — you `new` this
+  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 }
 ```
 
@@ -167,9 +165,9 @@ class $Session {
 }
 
 export namespace Session {
-  export const $Class = $Session;
-  export const Class = Reactive($Class);
-  export type Instance = typeof Class.Instance;
+  export const $Class = $Session; // raw — children `extends` this
+  export const Class = Reactive($Class); // reactive — you `new` this
+  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 }
 
 // The owner disposes: stops the scope, runs stopEffects(), clears caches.
@@ -517,7 +515,7 @@ get offsetY() {
   The GROUP is the unit, not the member.
 - **Blank line the moment a member carries a doc comment or multi-line
   logic** — comments and paragraphs of code need air.
-- **Blank line + `// ---- section ----` banner between categories**
+- **Blank line + `// --- section ---` banner between categories**
   (state → derived → methods) — the boundary that actually matters.
 - **Methods: always separated** — they are paragraphs, not table rows.
 
