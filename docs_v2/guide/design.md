@@ -27,18 +27,6 @@ set.
 | **Writable-getter types** | `get x()` is *read-only* in TypeScript. | <span class="iv-ck" aria-hidden="true"></span> Mapped types **re-declare ref-returning getters as writable** — the requirement that produced the circular-safe module shape. |
 | **Deterministic teardown** | Track and stop every effect per instance, with no cost for those that have none. | <span class="iv-ck" aria-hidden="true"></span> `$watch` + `$stopEffects` — scoped cleanup, **zero cost for instances that never watch**. |
 
-**Bound methods deserve a closer look, because everyone underestimates it.** In plain
-Vue and React you cannot pass `this.method` — you write `() => this.method()` or
-`this.method.bind(this)` at every call site, and the day someone forgets, `this` is
-`undefined` at runtime and the bug ships. Bind in the constructor instead and you
-allocate a fresh function per method per instance, discarding the shared prototype;
-use arrow class fields and you get the same per-instance closures *plus* you lose
-prototype override. ivue ends the whole saga: methods live on the prototype, get
-bound **lazily** on first access, and are **cached** on the instance — so `this.method`
-is always correct, always the same reference, and costs one bind only for the methods
-you actually use. The `() => this.method()` wrapper, and the class of bug behind it,
-is gone.
-
 ## Why it's hard: the problems fight each other
 
 Any one of these is a weekend. The reason the *set* stayed unsolved is that they
@@ -53,6 +41,20 @@ problem, and it is very hard. When one structure makes every constraint true
 simultaneously, you've found the invariant instead of patching symptoms. The proof
 is that you can delete the engine's per-level "super key" bookkeeping and deep
 inheritance keeps working — the guarantee was load-bearing on its own.
+
+### One of them, in full: bound methods
+
+**Everyone underestimates this one.** In plain
+Vue and React you cannot pass `this.method` — you write `() => this.method()` or
+`this.method.bind(this)` at every call site, and the day someone forgets, `this` is
+`undefined` at runtime and the bug ships. Bind in the constructor instead and you
+allocate a fresh function per method per instance, discarding the shared prototype;
+use arrow class fields and you get the same per-instance closures *plus* you lose
+prototype override. ivue ends the whole saga: methods live on the prototype, get
+bound **lazily** on first access, and are **cached** on the instance — so `this.method`
+is always correct, always the same reference, and costs one bind only for the methods
+you actually use. The `() => this.method()` wrapper, and the class of bug behind it,
+is gone.
 
 ## Why the field left classes
 
