@@ -214,6 +214,22 @@
   padding-top: 40px;
   border-top: 1px solid var(--vp-c-divider);
 }
+/* Standalone band directly under the features: the punchline row.
+   No divider hairline, tighter to the cards above. */
+.ix .ix-statband {
+  padding-top: 36px;
+}
+@media (min-width: 768px) {
+  .ix .ix-statband {
+    padding-top: 48px;
+  }
+}
+.ix-statband .ix-stats {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  text-align: center;
+}
 .ix-stat .n {
   font-size: clamp(1.7rem, 3.2vw, 2.3rem);
   font-weight: 750;

@@ -20,6 +20,25 @@ features:
 
 <div class="ix">
 
+<section class="ix-statband">
+
+<div class="ix-stats">
+  <div class="ix-stat"><div class="n">1.1kb</div><div class="l">the whole engine, gzipped</div></div>
+  <div class="ix-stat"><div class="n">0</div><div class="l">dependencies</div></div>
+  <div class="ix-stat"><div class="n">100%</div><div class="l">test coverage, every metric</div></div>
+  <div class="ix-stat"><div class="n">50 ms</div><div class="l">to create 10 million instances</div></div>
+</div>
+
+</section>
+
+<section class="ix-quote">
+
+> Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away.
+
+<cite>Antoine de Saint-Exupéry</cite>
+
+</section>
+
 <section>
 
 ## Hard problems, solved together
@@ -83,21 +102,6 @@ features:
       <p>Reads hoist to native ref speed with one line where it matters.</p>
     </div>
   </div>
-</div>
-
-</section>
-
-<section class="ix-quote">
-
-> Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away.
-
-<cite>Antoine de Saint-Exupéry</cite>
-
-<div class="ix-stats">
-  <div class="ix-stat"><div class="n">1.1kb</div><div class="l">the whole engine, gzipped</div></div>
-  <div class="ix-stat"><div class="n">0</div><div class="l">dependencies</div></div>
-  <div class="ix-stat"><div class="n">100%</div><div class="l">test coverage, every metric</div></div>
-  <div class="ix-stat"><div class="n">50 ms</div><div class="l">to create 10 million instances</div></div>
 </div>
 
 </section>
