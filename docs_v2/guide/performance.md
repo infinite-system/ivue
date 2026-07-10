@@ -30,6 +30,15 @@ Don't take the table's word for it — run it on your own machine:
 
 <DemoPerf />
 
+::: info The embed measures production semantics
+This page runs on a dev server, where ivue's [class HMR](/guide/hmr) arms a
+construct-trap proxy that costs ~11× on bare instantiation (0.6 ms → 6.7 ms
+per 100k — dev only; production bundles contain zero HMR code, verified by
+grepping `dist/`). The docs opt out via
+`globalThis[Symbol.for('ivue.hmr.disable')]` so the numbers you measure here
+are the numbers production pays.
+:::
+
 ## Memory: derivations weigh nothing
 
 Every eager `computed()` costs real bytes **per instance**. You pay for the

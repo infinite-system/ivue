@@ -148,6 +148,12 @@ classic contract untouched: same class in, same class out.
 - **Native `#private` fields** are brand-checked per class declaration and
   don't mix with grafting — use TypeScript `private` (the ivue convention).
 - **Inheritance chains** currently escalate instead of grafting.
+- **Dev-mode instantiation costs ~11×** (construct-trap proxy; measured
+  0.6 ms → 6.7 ms per 100k bare `new`) — irrelevant for apps, visible in
+  dev-server micro-benchmarks. Production pays zero;
+  benchmarks running under a dev server can opt out with
+  `globalThis[Symbol.for('ivue.hmr.disable')] = true` before any
+  `Reactive()` call.
 
 ## Field notes
 

@@ -95,10 +95,18 @@ const hmrRegistry = (): Map<string, HmrEntry> =>
  * excluded explicitly via `import.meta.env.TEST` — in test/SSR/prod
  * environments Reactive() keeps its classic contract: the SAME class is
  * returned, no proxy, no registry, no slot indirection. Tests exercising
- * the graft force it on via `globalThis[Symbol.for('ivue.hmr.force')]`.
+ * the graft force it on via `globalThis[Symbol.for('ivue.hmr.force')]`;
+ * benchmarks that must measure PRODUCTION semantics inside a dev server
+ * opt out via `globalThis[Symbol.for('ivue.hmr.disable')]` (the dev-only
+ * construct-trap proxy costs ~11× on bare instantiation — measured 0.6ms
+ * → 6.7ms per 100k — which prod never pays; set the flag BEFORE any
+ * Reactive() call).
  */
 const hmrActive = (): boolean =>
-  (import.meta.env.DEV && !import.meta.env.TEST && !!import.meta.hot) ||
+  (!(globalThis as any)[Symbol.for('ivue.hmr.disable')] &&
+    import.meta.env.DEV &&
+    !import.meta.env.TEST &&
+    !!import.meta.hot) ||
   !!(globalThis as any)[Symbol.for('ivue.hmr.force')];
 
 /**

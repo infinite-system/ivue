@@ -1,3 +1,11 @@
+// The docs' live demos are BENCHMARKS — they must measure production
+// semantics, not dev scaffolding. In dev serve, ivue's class-HMR arms a
+// construct-trap proxy (~11× on bare instantiation; production pays zero —
+// it is DCE'd). Opt the whole docs app out BEFORE any Reactive() call.
+(globalThis as unknown as Record<symbol, boolean>)[
+  Symbol.for('ivue.hmr.disable')
+] = true;
+
 import DefaultTheme from 'vitepress/theme';
 import type { Theme } from 'vitepress';
 import { h } from 'vue';
