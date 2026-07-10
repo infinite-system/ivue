@@ -55,11 +55,19 @@ import { Reactive } from 'ivue'
 import { ref } from 'vue'
 
 class $Counter {
-  get count() { return ref(0) }
-  get double() { return this.count.value * 2 } // derived: plain getter
+  get count() {
+    return ref(0)
+  }
+  get double() {
+    return this.count.value * 2 // derived: plain getter
+  }
 
-  inc() { this.count.value++ }
-  reset() { this.count.value = 0 }
+  inc() {
+    this.count.value++
+  }
+  reset() {
+    this.count.value = 0
+  }
 }
 
 export const Counter = Reactive($Counter)

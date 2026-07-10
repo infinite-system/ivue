@@ -76,13 +76,17 @@ instance, not by whatever component happened to construct it:
 
 ```ts
 class $Enemy {
-  get hp() { return ref(100) }
+  get hp() {
+    return ref(100)
+  }
   constructor() {
     this.$watch(() => this.hp.value, (hp) => {
       if (hp <= 0) this.die()
     })
   }
-  die() { /* ... */ }
+  die() {
+    /* ... */
+  }
 }
 ```
 

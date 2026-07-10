@@ -12,9 +12,15 @@ import { Reactive } from 'ivue';
 import { ref } from 'vue';
 
 class $Counter {
-  get count()  { return ref(0) }
-  get double() { return this.count.value * 2 }  // plain getter — derives on read
-  inc() { this.count.value++ }
+  get count() {
+    return ref(0)
+  }
+  get double() {
+    return this.count.value * 2 // plain getter — derives on read
+  }
+  inc() {
+    this.count.value++
+  }
 }
 
 export const Counter = Reactive($Counter);
@@ -60,9 +66,15 @@ your classes:
 import { useMouse } from '@vueuse/core';
 
 class $Pointer {
-  private get $mouse() { return useMouse() }  // created once, encapsulated
-  get x() { return this.$mouse.x }
-  get y() { return this.$mouse.y }
+  private get $mouse() {
+    return useMouse() // created once, encapsulated
+  }
+  get x() {
+    return this.$mouse.x
+  }
+  get y() {
+    return this.$mouse.y
+  }
 }
 ```
 

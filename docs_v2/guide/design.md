@@ -128,9 +128,15 @@ inside classes:
 
 ```ts
 class $Pointer {
-  private get $mouse() { return useMouse() } // a composable, hosted
-  get x() { return this.$mouse.x }   // cached ref
-  get y() { return this.$mouse.y }   // cached ref
+  private get $mouse() {
+    return useMouse() // a composable, hosted
+  }
+  get x() {
+    return this.$mouse.x // cached ref
+  }
+  get y() {
+    return this.$mouse.y // cached ref
+  }
 }
 const Pointer = Reactive($Pointer);
 const { x, y } = new Pointer();

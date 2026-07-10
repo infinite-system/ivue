@@ -25,8 +25,12 @@ function Reactive<C>(targetClass: C): ReactiveClass<C> & { Instance: ReactiveIns
 
 ```ts
 const Counter = Reactive(class {
-  get count() { return ref(0) }
-  inc() { this.count.value++ }
+  get count() {
+    return ref(0)
+  }
+  inc() {
+    this.count.value++
+  }
 })
 new Counter().inc()
 ```

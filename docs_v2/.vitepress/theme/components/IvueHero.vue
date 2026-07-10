@@ -84,9 +84,15 @@ onUnmounted(() => {
 
       <div class="ivh-demo" aria-label="Live counter demo">
         <pre class="code" aria-hidden="true"><code><span class="kw">class</span> <span class="cl">$Counter</span> {
-  <span class="kw">get</span> <span class="fn">count</span>()  { <span class="kw">return</span> <span class="fn">ref</span>(<span class="nu">0</span>) }
-  <span class="kw">get</span> <span class="fn">double</span>() { <span class="kw">return</span> <span class="kw">this</span>.count.value * <span class="nu">2</span> }
-  <span class="fn">inc</span>() { <span class="kw">this</span>.count.value++ }
+  <span class="kw">get</span> <span class="fn">count</span>() {
+    <span class="kw">return</span> <span class="fn">ref</span>(<span class="nu">0</span>)
+  }
+  <span class="kw">get</span> <span class="fn">double</span>() {
+    <span class="kw">return</span> <span class="kw">this</span>.count.value * <span class="nu">2</span>
+  }
+  <span class="fn">inc</span>() {
+    <span class="kw">this</span>.count.value++
+  }
 }
 <span class="kw">export const</span> <span class="cl">Counter</span> = <span class="fn">Reactive</span>(<span class="cl">$Counter</span>)</code></pre>
 

@@ -23,9 +23,15 @@ import { Reactive } from 'ivue'
 import { ref } from 'vue'
 
 class $Timer {
-  get seconds() { return ref(0) }
-  get label() { return `${this.seconds.value}s` } // derived: plain getter
-  tick() { this.seconds.value++ }
+  get seconds() {
+    return ref(0)
+  }
+  get label() {
+    return `${this.seconds.value}s` // derived: plain getter
+  }
+  tick() {
+    this.seconds.value++
+  }
 }
 export const Timer = Reactive($Timer)
 ```

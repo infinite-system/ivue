@@ -18,17 +18,17 @@ const { price, discount, taxRate } = product;
         {{ line }}
       </div>
     </div>
-    <div class="d-vals">
+    <div class="d-vals d-vals-2col">
       <div>
-        <div class="d-k">price &middot; Product ref</div>
+        <div class="d-k">price &middot; Product</div>
         <div class="d-n">${{ price }}</div>
       </div>
       <div>
-        <div class="d-k">discount &middot; SaleProduct ref</div>
+        <div class="d-k">discount &middot; SaleProduct</div>
         <div class="d-n">{{ Math.round(discount * 100) }}%</div>
       </div>
       <div>
-        <div class="d-k">tax &middot; TaxedProduct ref</div>
+        <div class="d-k">tax &middot; TaxedProduct</div>
         <div class="d-n">{{ Math.round(taxRate * 100) }}%</div>
       </div>
       <div>
@@ -55,6 +55,12 @@ const { price, discount, taxRate } = product;
 </template>
 
 <style scoped>
+.dbx .d-vals.d-vals-2col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.d-vals .d-k {
+  white-space: nowrap;
+}
 .receipt {
   margin-bottom: 16px;
   padding: 12px 16px;

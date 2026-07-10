@@ -28,7 +28,9 @@ You declare reactive state as a getter returning `ref()`, `shallowRef()` or
 `computed()`, and read/write through `.value`.
 
 ```ts
-get width() { return ref(100) }   // declaration
+get width() {
+  return ref(100) // declaration
+}
 instance.width.value = 250            // read & write
 ```
 
@@ -48,7 +50,9 @@ Nothing is created until first access. After that it's cached on the instance:
 Derived values are **plain getters by default**, not `computed()`:
 
 ```ts
-get area() { return this.width.value * this.height.value } // reactive, zero allocation
+get area() {
+  return this.width.value * this.height.value // reactive, zero allocation
+}
 ```
 
 On first access the engine sees a non-ref result and restores a native getter
@@ -64,8 +68,12 @@ When memoization earns its ~300 bytes per instance, wrap the getter in
 `computed()` — it is your `useMemo`:
 
 ```ts
-get sortedItems() { return computed(() => this.sortItems()) } // cached derived
-sortItems() { return [...this.items.value].sort(byPrice) }
+get sortedItems() {
+  return computed(() => this.sortItems()) // cached derived
+}
+sortItems() {
+  return [...this.items.value].sort(byPrice)
+}
 ```
 
 Reach for it when the derivation is genuinely **expensive**, when an

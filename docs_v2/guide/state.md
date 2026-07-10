@@ -12,8 +12,12 @@ is what makes instances plain and creation lazy.
 
 ```ts
 class $Box {
-  get width() { return ref(100) }
-  get tags() { return ref<string[]>([]) }
+  get width() {
+    return ref(100)
+  }
+  get tags() {
+    return ref<string[]>([])
+  }
 }
 const Box = Reactive($Box)
 
@@ -31,7 +35,9 @@ The getter runs once per instance; the same ref is returned forever after.
 Use `shallowRef` for large structures you replace rather than mutate deeply:
 
 ```ts
-get rows() { return shallowRef<Row[]>([]) }
+get rows() {
+  return shallowRef<Row[]>([])
+}
 // ...
 instance.rows.value = nextRows   // triggers; deep mutations do not
 ```
@@ -42,9 +48,15 @@ Derive with a **plain getter** by default. No `computed()`:
 
 ```ts
 class $Box {
-  get width() { return ref(4) }
-  get height() { return ref(3) }
-  get area() { return this.width.value * this.height.value } // plain getter
+  get width() {
+    return ref(4)
+  }
+  get height() {
+    return ref(3)
+  }
+  get area() {
+    return this.width.value * this.height.value // plain getter
+  }
 }
 ```
 
@@ -89,7 +101,9 @@ Read it with `.value` — standard Vue computed semantics.
 Return a computed with `get`/`set` to make a two-way derived value:
 
 ```ts
-get celsius() { return ref(20) }
+get celsius() {
+  return ref(20)
+}
 get fahrenheit() {
   return computed({
     get: () => this.celsius.value * 9 / 5 + 32,
@@ -106,8 +120,12 @@ correct — even when detached:
 
 ```ts
 class $Box {
-  get width() { return ref(1) }
-  grow() { this.width.value++ }
+  get width() {
+    return ref(1)
+  }
+  grow() {
+    this.width.value++
+  }
 }
 const Box = Reactive($Box)
 
@@ -124,7 +142,9 @@ access and turns it back into a normal getter (zero overhead, see
 [Principles](/guide/principles#derive-with-plain-getters-the-engine-self-optimizes)):
 
 ```ts
-get kind() { return 'box' }   // just a normal getter
+get kind() {
+  return 'box' // just a normal getter
+}
 ```
 
 ## `$`-prefixed singletons
@@ -136,9 +156,15 @@ ideal for "create this composable/service once per instance":
 import { useMouse } from '@vueuse/core'
 
 class $Pointer {
-  get $mouse() { return useMouse() }  // created once, reused
-  get x() { return this.$mouse.x }
-  get y() { return this.$mouse.y }
+  get $mouse() {
+    return useMouse() // created once, reused
+  }
+  get x() {
+    return this.$mouse.x
+  }
+  get y() {
+    return this.$mouse.y
+  }
 }
 ```
 
@@ -149,8 +175,13 @@ Regular class privates work as encapsulated, non-reactive instance state:
 ```ts
 class $Cache {
   #hits = 0
-  get value() { return ref(0) }
-  read() { this.#hits++; return this.value.value }
+  get value() {
+    return ref(0)
+  }
+  read() {
+    this.#hits++
+    return this.value.value
+  }
 }
 ```
 
