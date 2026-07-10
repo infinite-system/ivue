@@ -16,7 +16,7 @@ class $Cart {
     return ref<{ price: number }[]>([]);
   }
   get total() {
-    return this.items.value.reduce((s, i) => s + i.price, 0);
+    return this.items.value.reduce((sum, item) => sum + item.price, 0);
   }
 }
 ```
@@ -187,8 +187,8 @@ class $Search {
   constructor() {
     this.$watch(
       () => this.query.value,
-      (q) => {
-        this.results.value = runSearch(q);
+      (query) => {
+        this.results.value = runSearch(query);
       },
       { debounce: 0 },
     );

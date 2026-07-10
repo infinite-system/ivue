@@ -142,12 +142,12 @@ When you do have such a loop, hoist the refs out of the getters once:
 
 ```ts
 calculate() {
-  const w = this.w, h = this.h        // hoist: one getter access each
-  let s = 0
+  const width = this.width, height = this.height  // hoist: one getter access each
+  let sum = 0
   for (let i = 0; i < 1e7; i++) {
-    s += Math.sqrt(w.value ** 2 + h.value ** 2)   // direct ref reads now
+    sum += Math.sqrt(width.value ** 2 + height.value ** 2)  // direct ref reads now
   }
-  return s
+  return sum
 }
 ```
 

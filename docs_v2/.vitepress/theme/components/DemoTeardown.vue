@@ -42,10 +42,10 @@ class $Sensor {
   }
 }
 const Sensor = Reactive($Sensor);
-const s: any = new Sensor();
+const sensor: any = new Sensor();
 // state manifest
-const { temp, watching, fired, last } = s;
-onUnmounted(() => s.$stopEffects());
+const { temp, watching, fired, last } = sensor;
+onUnmounted(() => sensor.$stopEffects());
 </script>
 
 <template>
@@ -83,11 +83,11 @@ onUnmounted(() => s.$stopEffects());
       <button
         class="d-btn primary"
         type="button"
-        @click="watching ? s.stop() : s.start()"
+        @click="watching ? sensor.stop() : sensor.start()"
       >
         {{ watching ? 'Stop watch' : 'Start $watch' }}
       </button>
-      <button class="d-btn" type="button" @click="s.dispose">Dispose ($stopEffects)</button>
+      <button class="d-btn" type="button" @click="sensor.dispose">Dispose ($stopEffects)</button>
       <span v-if="last" class="d-mono"><code>$watch</code> {{ last }}</span>
     </div>
   </DemoBox>

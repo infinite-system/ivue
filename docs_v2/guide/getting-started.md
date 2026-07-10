@@ -60,7 +60,7 @@ import { Counter } from './counter'
 
 const counter = new Counter()
 
-// the state manifest: every Ref/Computed the template touches, destructured
+// destructure every Ref/Computed the template touches
 const { count } = counter
 </script>
 
@@ -70,7 +70,7 @@ const { count } = counter
 </template>
 ```
 
-That's it — `count` is the real ref, destructured straight off the instance (naked in the template, state at a glance); `counter.double` re-derives on every render; `counter.inc` is a stable
+That's it — `count` is the real ref, destructured straight off the instance (a state binding: unwrapped in the template, state at a glance); `counter.double` re-derives on every render; `counter.inc` is a stable
 bound method. The component re-renders when `count` changes, exactly as if you'd
 written refs by hand. Here is that exact class, running on this page:
 

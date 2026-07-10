@@ -39,7 +39,7 @@ class $Cart {
   }
   // No computed(). No graph node. Fully reactive.
   get total() {
-    return this.items.value.reduce((s, i) => s + i.price, 0);
+    return this.items.value.reduce((sum, item) => sum + item.price, 0);
   }
 }
 ```

@@ -15,8 +15,8 @@ in `reactive()`. Reactivity comes only from the `ref()` / `computed()` you retur
 from getters — opt-in, per property.
 
 ```ts
-const c = new Counter()
-isReactive(c) // false
+const counter = new Counter()
+isReactive(counter) // false
 ```
 
 **Why it matters:** creating an instance costs a plain `new`. A million unused
@@ -48,7 +48,7 @@ Nothing is created until first access. After that it's cached on the instance:
 Derived values are **plain getters by default**, not `computed()`:
 
 ```ts
-get area() { return this.w.value * this.h.value } // reactive, zero allocation
+get area() { return this.width.value * this.height.value } // reactive, zero allocation
 ```
 
 On first access the engine sees a non-ref result and restores a native getter

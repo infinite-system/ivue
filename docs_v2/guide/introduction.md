@@ -31,10 +31,10 @@ export const Timer = Reactive($Timer)
 ```
 
 ```ts
-const t = new Timer()
-t.tick()
-t.seconds.value // 1
-t.label         // "1s", re-derived on read
+const timer = new Timer()
+timer.tick()
+timer.seconds.value // 1
+timer.label         // "1s", re-derived on read
 ```
 
 ## Why classes?

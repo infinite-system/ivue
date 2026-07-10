@@ -190,7 +190,7 @@ const emit = defineEmits(['change']);
 // No reactive() wrapper, no unwrap view. Constructor runs init in setup context.
 const box = new Box.Class(props, model, emit);
 
-// THE STATE MANIFEST — one destructure, grouped. Every Ref/Computed the
+// THE STATE DESTRUCTURE — one statement, grouped. Every Ref/Computed the
 // template touches is listed here; each binding IS the cached cell (stable
 // identity), and setup bindings unwrap uniformly in EVERY template position.
 // NEVER destructure plain getters or methods (snapshots a dead value).
@@ -211,7 +211,7 @@ defineExpose(box as Box.Instance);
 </script>
 
 <template>
-  <!-- Destructured state: naked bindings — reads AND writes compiler-unwrapped -->
+  <!-- State bindings — reads AND writes compiler-unwrapped -->
   <q-menu v-model="open" :target="anchor" />
   <div v-if="open" :style="{ width: box.widthPx }">
     {{ box.title }} — {{ fahrenheit }}°F
@@ -222,21 +222,20 @@ defineExpose(box as Box.Instance);
 </template>
 ```
 
-The template's two access styles carry meaning: **naked identifier = a state
-cell** (destructured Ref/Computed), **dotted `box.x` = a derivation or an
+The template's two access styles carry meaning: **a state binding = a destructured Ref/Computed**, **dotted `box.x` = a derivation or an
 action** (plain getter / method) — the class's own anatomy, visible at the
 call site. Rules that keep it clean:
 
-- The manifest is TOTAL: every Ref/Computed the template touches is
+- The destructure is TOTAL: every Ref/Computed the template touches is
   destructured; a Ref is NEVER reached through the instance in the template
   (interpolating `box.someRef` renders via display-unwrap, but
-  `v-if="box.someRef"` is always-truthy — the seam the manifest abolishes).
+  `v-if="box.someRef"` is always-truthy — the seam the total destructure abolishes).
 - In the `<script setup>` BODY, destructured bindings are refs — use
   `.value` there as everywhere else. Inside `<template>` only, the compiler
   unwraps them.
 - **v-for item cells stay dotted with `.value`** (`cell.raw.value`) — you
-  cannot destructure a thousand collection items; the manifest governs the
-  component's own instance state.
+  cannot destructure a thousand collection items; the destructure governs
+  the component's own instance state.
 - **Instance-swapping components keep dotted access**: if the component
   replaces its instance (`model.value = new X.Class()`), destructured
   bindings would go stale — don't destructure what you swap.
@@ -244,7 +243,7 @@ call site. Rules that keep it clean:
   a `defineProps` prop silently shadows it in the template (setup bindings
   win). Rare by construction: the class consumes props through prop-getters,
   so prop-derived values stay DOTTED (`box.width`, `box.widthPx`) and never
-  compete with naked state names.
+  compete with state-binding names.
 
 ## DO / NEVER
 
@@ -257,8 +256,8 @@ call site. Rules that keep it clean:
 | `computed()` only for expensive / render-suppressing / stable-handle needs   | reach for `computed()` by default                                                      |
 | inject stores via `private get $store() { return useStore() }`               | `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles |
 | `new X.Class(props, emit)` — raw instance everywhere                         | wrap in `reactive(inst)` or any shallow-unwrap view as the standard                    |
-| destructure the TOTAL state manifest (every template-touched Ref/Computed + element refs), grouped | destructure plain getters or methods — snapshots a dead value / loses nothing but clarity |
-| naked bindings for state in templates; dotted `box.x` only for plain getters/methods | reach a Ref through the instance in a template — `v-if="box.someRef"` is always-truthy |
+| destructure ALL template-touched Refs/Computeds + element refs, grouped | destructure plain getters or methods — snapshots a dead value / loses nothing but clarity |
+| state bindings in templates; dotted `box.x` only for plain getters/methods | reach a Ref through the instance in a template — `v-if="box.someRef"` is always-truthy |
 | `defineExpose(box as X.Instance)`                                            | `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers       |
 | constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — ivue never calls it                         |
 | plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |
@@ -274,7 +273,7 @@ the TYPE of every unwrapping surface.
 
 - Producing an exposed instance: `defineExpose(box as X.Instance)`.
 - Consuming a template ref to it: `ShallowUnwrapRef<X.Instance>`
-  (generic: `ShallowUnwrapRef<Scroller.Instance<T>>`).
+  (generic: `ShallowUnwrapRef<X.Instance<T>>`).
 - Wrapping at an interop boundary: `reactive(inst as X.Instance)` (concession, not the standard).
 
 Across expose, verified live: reads arrive unwrapped; ref-writes DO redirect
@@ -534,7 +533,7 @@ convention and check it in review.
 - [ ] Stores/composables are injected via `private get $store() { return useStore() }`, not field initializers.
 - [ ] The class is exported through the namespace (`$Class` / `Class = Reactive($Class)` / `Instance`); generics cast `Class` and hand-apply `ReactiveInstance` to `Instance<T>`.
 - [ ] The SFC does `new X.Class(...)` once — no `reactive()` wrapper, no unwrap view.
-- [ ] The SFC destructures the TOTAL state manifest (grouped: state / computeds / element refs); templates use naked bindings for state and dotted access ONLY for plain getters/methods — no Ref reached through the instance in a template, no state name shadowing a prop.
+- [ ] The SFC destructures ALL template-touched Refs/Computeds + element refs (grouped: state / computeds / element refs); templates use state bindings and dotted access ONLY for plain getters/methods — no Ref reached through the instance in a template, no state name shadowing a prop.
 - [ ] Nothing but Refs/Computeds/element-ref targets is destructured (never plain getters/methods); v-for item cells stay dotted with `.value`; instance-swapping components don't destructure at all.
 - [ ] `defineExpose(x as X.Instance)`; consumers type the ref as `ShallowUnwrapRef<X.Instance>`.
 - [ ] Watch sources are the FUNCTION form; component-scoped constructors use plain `watch`/`watchEffect`; `this.$watch`/`this.$watchEffect` only for component-outliving instances — each with a dispose path (`$stopEffects()` owner or `onScopeDispose` auto-wire); no `watchEffect` wrapped in `$watch`.

@@ -23,9 +23,9 @@ class $Counter {
 }
 const Counter = Reactive($Counter);
 
-const c: any = new Counter();
+const counter: any = new Counter();
 // the state manifest — every Ref the template touches
-const { count } = c;
+const { count } = counter;
 const lastChange = ref('');
 const fired = ref(0);
 let stop: (() => void) | undefined;
@@ -42,7 +42,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   stop?.();
-  c.$stopEffects();
+  counter.$stopEffects();
 });
 </script>
 
@@ -97,13 +97,13 @@ onUnmounted(() => {
             </div>
             <div class="val">
               <div class="k">double <span class="dim">(plain getter)</span></div>
-              <div class="n"><span :key="c.double" class="pop">{{ c.double }}</span></div>
+              <div class="n"><span :key="counter.double" class="pop">{{ counter.double }}</span></div>
             </div>
           </div>
           <div class="controls">
-            <button class="ctl minus" type="button" @click="c.dec">&minus;1</button>
-            <button class="ctl plus" type="button" @click="c.inc">+1</button>
-            <button class="ctl ghost" type="button" @click="c.reset">Reset</button>
+            <button class="ctl minus" type="button" @click="counter.dec">&minus;1</button>
+            <button class="ctl plus" type="button" @click="counter.inc">+1</button>
+            <button class="ctl ghost" type="button" @click="counter.reset">Reset</button>
           </div>
           <div class="watchline" aria-live="polite">
             <code>watch</code>

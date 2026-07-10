@@ -54,8 +54,8 @@ export namespace Container {
 ```
 
 ```ts
-const c = new Container.Class();
-c.summary.value; // "Container >> [1]"
+const container = new Container.Class();
+container.summary.value; // "Container >> [1]"
 ```
 
 Use this shape for every class module. Codebases don't stay small: classes

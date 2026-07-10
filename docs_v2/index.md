@@ -138,10 +138,10 @@ class $Counter {
 
 export const Counter = Reactive($Counter)
 
-const c = new Counter()
-c.inc()
-c.count.value  // 1
-c.double       // 2, re-derived on read
+const counter = new Counter()
+counter.inc()
+counter.count.value  // 1
+counter.double       // 2, re-derived on read
 ```
 
 </div>

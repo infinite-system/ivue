@@ -35,9 +35,9 @@ class $Thermo {
   }
 }
 const Thermo = Reactive($Thermo);
-const t: any = new Thermo();
+const thermo: any = new Thermo();
 // state manifest
-const { celsius, status } = t;
+const { celsius, status } = thermo;
 
 onMounted(() => {
   fahrRunsShown.value = fahrRuns;
@@ -65,7 +65,7 @@ onMounted(() => {
       </div>
       <div>
         <div class="d-k">fahrenheit &middot; plain getter</div>
-        <div class="d-n grad">{{ t.fahrenheit }}&deg;</div>
+        <div class="d-n grad">{{ thermo.fahrenheit }}&deg;</div>
         <div class="d-mono">body ran {{ fahrRunsShown }}&times;</div>
       </div>
       <div>

@@ -42,14 +42,14 @@ Derive with a **plain getter** by default. No `computed()`:
 
 ```ts
 class $Box {
-  get w() { return ref(4) }
-  get h() { return ref(3) }
-  get area() { return this.w.value * this.h.value } // plain getter
+  get width() { return ref(4) }
+  get height() { return ref(3) }
+  get area() { return this.width.value * this.height.value } // plain getter
 }
 ```
 
 It stays fully reactive: whatever effect reads `area` — a render, a watcher —
-reads `w` and `h` underneath and subscribes to them directly. Change a source
+reads `width` and `height` underneath and subscribes to them directly. Change a source
 and the effect re-runs.
 
 Why this is the default:
@@ -93,7 +93,7 @@ get celsius() { return ref(20) }
 get fahrenheit() {
   return computed({
     get: () => this.celsius.value * 9 / 5 + 32,
-    set: (f: number) => { this.celsius.value = (f - 32) * 5 / 9 },
+    set: (fahrenheit: number) => { this.celsius.value = (fahrenheit - 32) * 5 / 9 },
   })
 }
 // inst.fahrenheit.value = 100  → updates celsius

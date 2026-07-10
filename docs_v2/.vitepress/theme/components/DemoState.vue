@@ -20,9 +20,9 @@ class $Box {
   }
 }
 const Box = Reactive($Box);
-const b: any = new Box();
+const box: any = new Box();
 // state manifest
-const { width, height } = b;
+const { width, height } = box;
 </script>
 
 <template>
@@ -41,7 +41,7 @@ const { width, height } = b;
       </div>
       <div>
         <div class="d-k">area &middot; plain getter</div>
-        <div class="d-n grad">{{ b.area.toLocaleString() }}</div>
+        <div class="d-n grad">{{ box.area.toLocaleString() }}</div>
       </div>
     </div>
     <div class="d-row">
@@ -61,7 +61,7 @@ const { width, height } = b;
         v-model.number="height"
         aria-label="height"
       />
-      <button class="d-btn" type="button" @click="b.randomize">Randomize</button>
+      <button class="d-btn" type="button" @click="box.randomize">Randomize</button>
     </div>
   </DemoBox>
 </template>
