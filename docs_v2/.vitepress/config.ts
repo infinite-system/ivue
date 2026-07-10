@@ -135,7 +135,7 @@ export default defineConfig({
             { text: 'Inheritance & super', link: '/guide/inheritance' },
             { text: 'Modules & Imports', link: '/guide/modules' },
             { text: 'Lifecycle & Teardown', link: '/guide/lifecycle-teardown' },
-            { text: 'HMR — Hot Reload for Classes', link: '/guide/hmr' },
+            { text: 'HMR: Hot Reload for Classes', link: '/guide/hmr' },
           ],
         },
         {
