@@ -29,7 +29,11 @@ export default mergeConfig(
       reporters: ["default", "html", "verbose"],
       server: {
         deps: {
-          inline: ["@vue/test-utils"],
+          // vue-demi/@vueuse externalized would load Vue's CJS build while
+          // the code under test uses the ESM build — two reactivity
+          // instances, silent tracking failures. Inline them all so vite
+          // resolves ONE vue everywhere.
+          inline: ["@vue/test-utils", "@vueuse/core", "@vueuse/shared", "vue-demi"],
         },
       },
       coverage: {
