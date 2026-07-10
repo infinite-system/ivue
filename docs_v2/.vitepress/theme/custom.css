@@ -126,6 +126,11 @@
   line-height: 1.65;
 }
 /* quiet tint variation so the grid is not six identical panels */
+/* Breathing room between the hero and the feature cards */
+.VPHome .VPFeatures {
+  padding-top: 48px;
+}
+
 .VPFeatures .items .item:nth-child(2) .VPFeature,
 .VPFeatures .items .item:nth-child(6) .VPFeature {
   background:
