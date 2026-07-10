@@ -36,7 +36,7 @@ class $Thermo {
 }
 const Thermo = Reactive($Thermo);
 const thermo: any = new Thermo();
-// state manifest
+// the state destructure
 const { celsius, status } = thermo;
 
 onMounted(() => {

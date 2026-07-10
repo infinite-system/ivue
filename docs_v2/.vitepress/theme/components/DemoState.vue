@@ -21,7 +21,7 @@ class $Box {
 }
 const Box = Reactive($Box);
 const box: any = new Box();
-// state manifest
+// the state destructure
 const { width, height } = box;
 </script>
 

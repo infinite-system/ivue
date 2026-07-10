@@ -13,15 +13,15 @@ import { FlyweightGridPage } from './FlyweightGridPage';
 
 const page = new FlyweightGridPage.Class();
 
-// THE STATE MANIFEST — every Ref/Computed the template touches, grouped.
+// THE STATE DESTRUCTURE — every Ref/Computed the template touches, grouped.
 // Plain getters (hasModel, modelCells, totals, offsets…) and methods stay
 // dotted on the instance.
 const {
-  // state
+  // state refs
   creationMs,
   census,
   draft,
-  // computeds
+  // computed refs
   visibleRows,
   // element refs
   scrollEl,

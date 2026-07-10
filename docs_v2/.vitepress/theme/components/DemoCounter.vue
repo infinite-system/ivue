@@ -20,7 +20,7 @@ class $Counter {
 }
 const Counter = Reactive($Counter);
 const counter: any = new Counter();
-// state manifest
+// the state destructure
 const { count } = counter;
 </script>
 

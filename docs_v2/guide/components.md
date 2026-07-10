@@ -21,10 +21,10 @@ const player = new Player.Class(props, model, emit)
 
 // THE STATE DESTRUCTURE — the component's reactive signature, in one place.
 const {
-  // state
+  // state refs
   menuShown,
   volume,
-  // computeds
+  // computed refs
   sortedChapters,
   // element refs
   videoEl,
@@ -127,16 +127,8 @@ import type { ShallowUnwrapRef } from 'vue'
 type PlayerExposed = ShallowUnwrapRef<Player.Instance>
 ```
 
-(Generic classes: `ShallowUnwrapRef<X.Instance<T>>`.)
+Generic classes: `ShallowUnwrapRef<Player.Instance<T>>`.
 
-What genuinely does NOT survive expose — the folklore, scoped correctly:
-
-1. **Snapshots**: `const x = ref.value.someGetter` at setup is a dead value.
-   Read inside the effect, every run.
-2. **Plain data fields** (constants, config): never reactive anywhere — no
-   leaves, nothing to track.
-3. **Pre-mount null**: template refs are `null` until mount — use `?.` in
-   watch getters.
 
 ## reactive() interop
 

@@ -24,7 +24,7 @@ class $Counter {
 const Counter = Reactive($Counter);
 
 const counter: any = new Counter();
-// the state manifest — every Ref the template touches
+// the state destructure — every Ref the template touches
 const { count } = counter;
 const lastChange = ref('');
 const fired = ref(0);

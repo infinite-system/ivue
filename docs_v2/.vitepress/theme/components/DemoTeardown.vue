@@ -43,7 +43,7 @@ class $Sensor {
 }
 const Sensor = Reactive($Sensor);
 const sensor: any = new Sensor();
-// state manifest
+// the state destructure
 const { temp, watching, fired, last } = sensor;
 onUnmounted(() => sensor.$stopEffects());
 </script>

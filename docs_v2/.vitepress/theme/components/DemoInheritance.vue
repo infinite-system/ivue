@@ -40,7 +40,7 @@ class $Leaf extends $Mid {
 }
 const Leaf = Reactive($Leaf);
 const leaf: any = new Leaf();
-// state manifest
+// the state destructure
 const { tag, base, extra } = leaf;
 </script>
 

@@ -121,7 +121,7 @@ box.grow === box.grow  // true — referentially stable
 
 A getter that returns a **non-ref** value is fine — ivue detects it on first
 access and turns it back into a normal getter (zero overhead, see
-[Principles #4](/guide/principles#_4-self-optimizing)):
+[Principles](/guide/principles#derive-with-plain-getters-the-engine-self-optimizes)):
 
 ```ts
 get kind() { return 'box' }   // just a normal getter
