@@ -121,7 +121,10 @@ forever. A plain getter stays plain and re-derives on every read, reactive
 with zero allocation. Methods bind themselves once, to the right
 <code>this</code>. Instances stay ordinary objects. Inheritance, hot reload,
 teardown, speed: consequences of that one move.
-<a href="/guide/principles">Read the principles.</a>
+</p>
+
+<p class="lead">
+<a href="/guide/principles">Read the principles →</a>
 </p>
 
 </div>
