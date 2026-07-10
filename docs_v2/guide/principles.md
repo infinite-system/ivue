@@ -96,7 +96,7 @@ in any order and survive cross-file HMR.
 `$watch` registers watchers in a **lazily-created** per-instance effect scope;
 `$stopEffects` stops that scope, runs an optional `stopEffects()` hook, and clears
 the caches. Instances that never `$watch` allocate no scope — teardown stays
-pay-for-what-you-use. See [Teardown](/guide/teardown).
+pay-for-what-you-use. See [Lifecycle & Teardown](/guide/lifecycle-teardown).
 
 ---
 

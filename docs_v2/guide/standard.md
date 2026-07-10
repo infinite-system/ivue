@@ -332,6 +332,12 @@ until mount — use `?.` in watch getters).
 - Do NOT default to `this.$watch` in a component-scoped constructor: the
   component scope cannot see the instance scope, so without `$stopEffects`
   wiring that watcher outlives unmount.
+- Lifecycle hooks (`onMounted`, `onUnmounted`, …) follow the same split: the
+  constructor runs synchronously where you `new`, so in a component-scoped
+  class they register against the mounting component — full setup toolbox.
+  Component-coupled classes ONLY; never in stores/entities that outlive
+  components. If the class is also constructed outside components, guard:
+  `getCurrentInstance() && onMounted(() => this.onMount());`
 - NEVER wrap `watchEffect` inside `$watch` — `$watchEffect` is the symmetric primitive.
 - Watch CALLBACKS delegate to methods (the thin-closure rule):
   `watch(source, (newValue, oldValue) => this.onChanged(newValue, oldValue))`.

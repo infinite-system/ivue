@@ -173,7 +173,7 @@ any number of getters deep and passes straight through the expose surface
 But a module singleton, or an instance created in a callback or async code,
 has no component scope; a plain `watch()` there leaks. `this.$watch` is the
 fix: same signature as Vue's `watch`, registered in the instance's own lazy
-effect scope, torn down by [`$stopEffects`](/guide/teardown).
+effect scope, torn down by [`$stopEffects`](/guide/lifecycle-teardown).
 
 ```ts
 class $Search {
