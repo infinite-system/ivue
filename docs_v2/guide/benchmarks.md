@@ -158,6 +158,74 @@ node demo/formula/measure.mjs http://localhost:5182         # 100k protocol
 node demo/formula/measure.mjs http://localhost:5182 25000   # 1M cells
 ```
 
+## The flyweight grid: 20 million cells
+
+The grids above price the cell **instance**. The flyweight sketch
+(`sketch/flyweight-grid/`, working and measured, structural proofs run at
+full scale) removes even that: ground truth lives in columnar typed arrays,
+cell objects are disposable three-field facades created per render, and
+reactivity is a sparse overlay that materializes per observation. One law
+governs all of it:
+
+> **Everything costs proportional to what's observed; nothing costs
+> proportional to what exists.**
+
+**20 columns × 1,000,000 rows = 20,000,000 live cells**, ~55% real
+Excel-syntax formulas, same parser, same gc-forced 3-run protocol:
+
+| Metric                              | measured (production build) |
+| ----------------------------------- | --------------------------: |
+| Model creation, 20,000,000 cells    |                  **67.1 ms** |
+| Model heap                          |                 **89.48 MB** |
+| **Bytes per cell**                  |                   **4.7 B** |
+| After 30 viewports across 1M rows   |        +0.3 MB of overlay   |
+| Full-column `SUM(A1:A1000000)`      |    live, 245 block edges    |
+
+That last pair is the architecture: memory is **O(viewport), not
+O(rows-ever-visited)** — viewport-tied eviction returns scrolled-away
+overlay to the collector, and released cells re-materialize correctly on
+re-observation. A write to a cell nobody is observing allocates nothing and
+notifies no one. And because behavior lives on prototypes, the formula
+engine was **hot-swapped under the live 20M-cell model** — edited on disk,
+grafted by [class HMR](/guide/hmr), totals recomputed through the new
+engine, zero state loss. A compiled/WASM engine cannot do that at any
+price: its code and its memory die together.
+
+### The per-cell cost ladder
+
+Every rung measured, same machine family, same protocol:
+
+| a live cell, at rest                 | bytes/cell | what the cell is             |
+| ------------------------------------ | ---------: | ---------------------------- |
+| composable (idiomatic Vue)           |       ~758 | closures + eager ref/computeds |
+| ivue instance grid (formula)         |        ~67 | plain object + lazy overlay  |
+| plain POJO (no reactivity at all)    |        ~40 | `{ row, col, raw }`          |
+| **ivue flyweight columnar**          |    **4.7** | 1 B kind + 8 B Float64, shared |
+
+The flyweight sits **8.5× below the "theoretical floor"** — because the
+floor was never plain objects; it was ground truth. A cell at rest is one
+byte of kind tag plus eight bytes of number, and it is still fully
+reactive, formula-capable and editable the moment anything observes it.
+For scale: Google Sheets caps at 10M cells — this 20M-cell document cannot
+be created there (architectural comparison, not a benchmark).
+
+Status, honestly: a **sketch** — measured, verified in the DOM down to row
+1,000,000, its structural suite green at real scale, but not yet packaged
+as a shipping layer. The full material lives in the repo:
+[`RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/sketch/flyweight-grid/RESULTS.md)
+(measurements, the steady-state memory ceiling, the hot-swap demo),
+[`DESIGN.md`](https://github.com/infinite-system/ivue/blob/main/sketch/flyweight-grid/DESIGN.md)
+(mechanisms, including the discovered O(n²) parser-aggregation finding and
+the columnar fast path), and
+[`Flyweight.invariants.md`](https://github.com/infinite-system/ivue/blob/main/sketch/flyweight-grid/Flyweight.invariants.md)
+(the structural spec and its impossibility boundary).
+
+```bash
+# standalone demo, from the ivue repo root
+npx vite sketch/flyweight-grid --host
+node sketch/flyweight-grid/measure.mjs <url>
+```
+
 ## Methodology
 
 Per arm: navigate fresh, wait for the model-not-yet-built state, force

@@ -187,6 +187,17 @@ c.double       // 2, re-derived on read
 
 </div>
 
+### What a live cell costs at rest
+
+| | bytes/cell | what the cell is |
+| --- | --- | --- |
+| composable (idiomatic Vue) | ~758 | closures + eager ref/computeds |
+| ivue instance grid | ~67 | plain object + lazy overlay |
+| plain POJO, no reactivity | ~40 | `{ row, col, raw }` |
+| **ivue flyweight columnar** | **4.7** | 1 B kind + 8 B Float64, shared |
+
+<p class="foot">Measured end-to-end on live grids up to 20,000,000 cells — fully reactive at 8.5× below the plain-object floor. The receipts run in your browser: <a href="/guide/benchmarks">Benchmarks</a>.</p>
+
 </section>
 
 <section class="ix-end">

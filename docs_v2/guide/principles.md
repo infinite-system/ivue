@@ -1,11 +1,11 @@
 ---
 title: Principles
-description: The seven guarantees behind ivue — plain instances, lazy cached state, self-optimizing getters, native inheritance, composable modules, and scoped teardown.
+description: The eight guarantees behind ivue — plain instances, lazy cached state, plain derived getters, surgical computed(), native inheritance, composable modules, and scoped teardown.
 ---
 
 # Principles
 
-Everything ivue does follows from a handful of guarantees. Knowing them is
+Everything ivue does follows from eight guarantees. Knowing them is
 enough to predict its behavior in any situation.
 
 ## 1. Plain instances, no proxy
@@ -58,14 +58,32 @@ whatever effect reads it. Plain getters live once on the prototype and weigh
 instance whether it is ever read or not. Memoize surgically —
 [when it earns it](/guide/computed-watch#computed-your-usememo).
 
-## 5. Native inheritance & `super`
+## 5. `computed()` is a cache — apply it surgically
+
+When memoization earns its ~300 bytes per instance, wrap the getter in
+`computed()` — it is your `useMemo`:
+
+```ts
+get sorted() { return computed(() => this.sortItems()) } // cached derived
+sortItems() { return [...this.items.value].sort(byPrice) }
+```
+
+Reach for it when the derivation is genuinely **expensive**, when an
+unchanged result should **suppress re-renders** (a Vue 3.4+ computed stops
+propagation on equal values; a plain getter cannot), or when you need a
+**stable ref identity** to hand to `watch`, a prop, or a composable. Keep it
+**thin**: the computed is the caching shell, the logic lives in a method on
+the prototype — testable, hot-graftable, minimum footprint. See
+[Computed & Watch](/guide/computed-watch#computed-your-usememo).
+
+## 6. Native inheritance & `super`
 
 Processing runs base → child, and every `(prototype, key)` gets its own cache
 symbol. So a child's computed and the `super` computed it calls cache separately
 and never collide — `super.x.value` resolves through the whole chain exactly like
 native classes. See [Inheritance](/guide/inheritance).
 
-## 6. Modules compose; circular references resolve
+## 7. Modules compose; circular references resolve
 
 Each class is transformed in its own file at load time, and the transform is
 idempotent — shared ancestors are processed once, no matter the import order. The
@@ -73,7 +91,7 @@ idempotent — shared ancestors are processed once, no matter the import order. 
 classes through a hoisted object, so mutual cross-references between files resolve
 in any order and survive cross-file HMR.
 
-## 7. Teardown is scope-based
+## 8. Teardown is scope-based
 
 `$watch` registers watchers in a **lazily-created** per-instance effect scope;
 `$stopEffects` stops that scope, runs an optional `stopEffects()` hook, and clears
