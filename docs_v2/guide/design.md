@@ -126,7 +126,11 @@ another's is the mark of a design built on an invariant, not a pile of patches.
 ivue is not anti-composable — it runs *on* composables. They're the building blocks
 inside classes:
 
-```ts
+```vue
+<script setup lang="ts">
+import { Reactive } from 'ivue'
+import { useMouse } from '@vueuse/core'
+
 class $Pointer {
   private get $mouse() {
     return useMouse() // a composable, hosted
@@ -138,11 +142,13 @@ class $Pointer {
     return this.$mouse.y // cached ref
   }
 }
-const Pointer = Reactive($Pointer);
-const { x, y } = new Pointer();
-<template>
-Mouse: {{ x }}, {{ y }}
-</template>
+const Pointer = Reactive($Pointer)
+
+// the state destructure
+const { x, y } = new Pointer()
+</script>
+
+<template>Mouse: {{ x }}, {{ y }}</template>
 ```
 
 The class contributes what composables lack — identity, structure, inheritance,
