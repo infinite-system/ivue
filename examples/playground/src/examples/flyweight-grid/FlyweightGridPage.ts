@@ -17,7 +17,7 @@ import {
   watch,
   type ComputedRef,
 } from 'vue';
-import { ivueHotUpdate, Reactive } from '../../lib/Reactive';
+import { ivueHotUpdate, Reactive } from '../../ivue';
 import {
   COLS,
   OVERSCAN,

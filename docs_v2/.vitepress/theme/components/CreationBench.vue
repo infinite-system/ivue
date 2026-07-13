@@ -3,7 +3,7 @@
  * The demo app's class/composable primitive benchmark, ported into the
  * docs. The model — InteractiveBox, a three-level Reactive() hierarchy
  * with a hosted composable — is imported dynamically on first run from
- * `demo/components/`, unchanged; only this chrome lives here. Nothing
+ * the playground's `benchmarks` example, unchanged; only this chrome lives here. Nothing
  * executes at build or on page load.
  */
 import { ref } from 'vue';
@@ -20,7 +20,7 @@ async function runBench() {
   isRunning.value = true;
   await new Promise((resolve) => setTimeout(resolve, 30)); // let the button paint
   const { InteractiveBox } = await import(
-    '../../../../demo/components/InteractiveBox'
+    '@examples/benchmarks/model/InteractiveBox'
   );
 
   // 1. creation — instances retained in an array, nothing elidable

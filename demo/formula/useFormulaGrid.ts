@@ -10,7 +10,7 @@
  *     extended with `deps()` so the conditional-dependency shift can be proven.
  */
 import { computed, onMounted, ref, shallowRef } from 'vue';
-import { Sheet } from './Sheet';
+import { Sheet } from '../../examples/playground/src/examples/formula-grid/Sheet';
 import {
   COLS,
   OVERSCAN,
@@ -18,7 +18,7 @@ import {
   ROW_HEIGHT,
   VIEWPORT_HEIGHT,
   colLabel,
-} from './formula-logic';
+} from '../../examples/playground/src/examples/formula-grid/formula-logic';
 import { useRowWindow } from '../grid/useRowWindow';
 
 /** A1-style label for a 1-based (row,col). */

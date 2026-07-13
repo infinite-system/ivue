@@ -174,7 +174,7 @@ npm run measure:formula -- http://localhost:5182 25000 # 1M cells
 
 The grids above price the cell **instance**.
 [The flyweight pattern](/guide/flyweight) removes even that
-(`sketch/flyweight-grid/`, working and measured, structural proofs run at
+(`examples/playground/src/examples/flyweight-grid/`, working and measured, structural proofs run at
 full scale): ground truth lives in columnar typed arrays,
 cell objects are disposable three-field facades created per render, and
 reactivity is a sparse overlay that materializes per observation. One invariant
@@ -233,12 +233,12 @@ as a shipping layer. The pattern itself — how observation pricing works and
 where it applies beyond spreadsheets — is
 [The Flyweight Pattern](/guide/flyweight); the raw material lives in the
 repo:
-[`RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/sketch/flyweight-grid/RESULTS.md)
+[`RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/examples/playground/src/examples/flyweight-grid/RESULTS.md)
 (measurements, the steady-state memory ceiling, the hot-swap demo),
-[`DESIGN.md`](https://github.com/infinite-system/ivue/blob/main/sketch/flyweight-grid/DESIGN.md)
+[`DESIGN.md`](https://github.com/infinite-system/ivue/blob/main/examples/playground/src/examples/flyweight-grid/DESIGN.md)
 (mechanisms, including the discovered O(n²) parser-aggregation finding and
 the columnar fast path), and
-[`Flyweight.invariants.md`](https://github.com/infinite-system/ivue/blob/main/sketch/flyweight-grid/Flyweight.invariants.md)
+[`Flyweight.invariants.md`](https://github.com/infinite-system/ivue/blob/main/examples/playground/src/examples/flyweight-grid/Flyweight.invariants.md)
 (the structural spec and its impossibility boundary).
 
 ```bash

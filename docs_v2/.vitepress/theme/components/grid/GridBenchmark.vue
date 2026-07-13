@@ -17,10 +17,10 @@
  */
 import { computed, ref } from 'vue';
 import DemoBox from '../DemoBox.vue';
-import './grid.css';
-import { Cell } from './IvueCell';
-import { createComposableCell } from './composableCell';
-import { createPojoCell } from './pojoCell';
+import '@examples/benchmarks/grid.css';
+import { Cell } from '@examples/benchmarks/IvueCell';
+import { createComposableCell } from '@examples/benchmarks/composableCell';
+import { createPojoCell } from '@examples/benchmarks/pojoCell';
 import {
   COLS,
   ROWS,
@@ -32,8 +32,8 @@ import {
   displayOf,
   isNumberOf,
   numericOf,
-} from './cell-logic';
-import { useGridArm } from './useGridArm';
+} from '@examples/benchmarks/cell-logic';
+import { useGridArm } from '@examples/benchmarks/useGridArm';
 
 type Arm = 'composable' | 'ivue' | 'pojo';
 

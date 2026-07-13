@@ -32,7 +32,7 @@ import {
   type Ref,
   type WatchStopHandle,
 } from 'vue';
-import { ivueHotUpdate, Reactive } from '../../../lib/Reactive';
+import { ivueHotUpdate, Reactive } from '../../../ivue';
 import {
   BLOCK_ROWS,
   BLOCK_SHIFT,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { InteractiveBox } from './InteractiveBox';
+import { InteractiveBox } from '../../examples/playground/src/examples/benchmarks/model/InteractiveBox';
 
 // --- Benchmark Configuration ---
 const numItems = ref(100000);

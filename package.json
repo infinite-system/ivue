@@ -25,10 +25,10 @@
   "scripts": {
     "dev": "vite demo --host",
     "dev:demo": "vite demo --host",
-    "dev:flyweight": "vite sketch/flyweight-grid --host",
-    "build:flyweight": "vite build sketch/flyweight-grid",
-    "preview:flyweight": "vite preview sketch/flyweight-grid --host",
-    "measure:flyweight": "node sketch/flyweight-grid/measure.mjs",
+    "dev:flyweight": "vite examples/playground --port 5181 --host",
+    "build:flyweight": "vite build examples/playground",
+    "preview:flyweight": "vite preview examples/playground --port 5181 --host",
+    "measure:flyweight": "node examples/playground/src/examples/flyweight-grid/measure.mjs",
     "measure:formula": "node demo/formula/measure.mjs",
     "measure:grid": "node demo/grid/measure.mjs",
     "dev:docs": "npm --prefix docs_v2 run dev -- --port 5174",
@@ -46,7 +46,10 @@
     "build:plugin": "esbuild lib/hmr-plugin.ts --format=esm --platform=node --outfile=dist/hmr-plugin.mjs && tsc lib/hmr-plugin.ts --declaration --emitDeclarationOnly --skipLibCheck --moduleResolution bundler --module esnext --target esnext --outDir dist",
     "sync:skill": "node -e \"const fs=require('fs');fs.mkdirSync('skills/ivue',{recursive:true});fs.copyFileSync('.claude/skills/ivue/SKILL.md','skills/ivue/SKILL.md')\"",
     "prepack": "npm run sync:skill",
-    "sync:examples": "node -e \"require('fs').copyFileSync('lib/Reactive.ts','examples/playground/src/ivue.ts')\""
+    "sync:examples": "node -e \"require('fs').copyFileSync('lib/Reactive.ts','examples/playground/src/ivue.ts')\"",
+    "dev:playground": "vite examples/playground --host",
+    "build:playground": "vite build examples/playground",
+    "preview:playground": "vite preview examples/playground --host"
   },
   "peerDependencies": {
     "vue": "^3.0.0",

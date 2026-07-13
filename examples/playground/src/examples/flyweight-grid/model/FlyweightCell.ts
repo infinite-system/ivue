@@ -12,7 +12,7 @@
  * The reference `FormulaCell` (demo/formula) holds its own ref + computed;
  * this holds NOTHING — that is the flyweight move.
  */
-import { ivueHotUpdate, Reactive } from '../../../lib/Reactive';
+import { ivueHotUpdate, Reactive } from '../../../ivue';
 import { Kind, cssOf, displayOf, type CellValue } from '../flyweight-logic';
 import type { FlyweightSheet } from './FlyweightSheet';
 

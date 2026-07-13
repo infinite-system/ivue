@@ -1,65 +1,27 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
-import { Reactive } from '../../../../lib/Reactive';
+import { ref } from 'vue';
 import DemoBox from './DemoBox.vue';
+import {
+  benchIvue,
+  benchReactive,
+  benchComposable,
+} from '@examples/benchmarks/creationBench';
 
-class $V2 {
-  get w() {
-    return ref(1);
-  }
-  get h() {
-    return ref(2);
-  }
-  get area() {
-    return this.w.value * this.h.value;
-  }
-}
-const V2 = Reactive($V2);
-
-class Plain {
-  w = 1;
-  h = 2;
-  get area() {
-    return this.w * this.h;
-  }
-}
-const useBox = () => {
-  const w = ref(1);
-  const h = ref(2);
-  const area = computed(() => w.value * h.value);
-  return { w, h, area };
-};
-
-const N = 100_000;
 const ivueMs = ref<number | null>(null);
 const reactiveMs = ref<number | null>(null);
 const composableMs = ref<number | null>(null);
 const running = ref(false);
-
-// Every instance is retained in a pre-allocated array and touched after
-// timing — the JIT cannot elide the allocations (a discarded `sink = ...`
-// loop gets optimized away and reports fantasy numbers like 0.0 ms).
-function bench(make: () => unknown): number {
-  const instances = new Array(N);
-  const t0 = performance.now();
-  for (let i = 0; i < N; i++) instances[i] = make();
-  const elapsed = performance.now() - t0;
-  let alive = 0;
-  for (let i = 0; i < N; i += 997) if (instances[i]) alive++;
-  if (alive < 0) throw new Error('unreachable');
-  return elapsed;
-}
 
 async function run() {
   running.value = true;
   ivueMs.value = reactiveMs.value = composableMs.value = null;
   // let the button paint before blocking
   await new Promise((resolve) => setTimeout(resolve, 30));
-  ivueMs.value = bench(() => new V2());
+  ivueMs.value = benchIvue();
   await new Promise((resolve) => setTimeout(resolve, 30));
-  reactiveMs.value = bench(() => reactive(new Plain()));
+  reactiveMs.value = benchReactive();
   await new Promise((resolve) => setTimeout(resolve, 30));
-  composableMs.value = bench(() => useBox());
+  composableMs.value = benchComposable();
   running.value = false;
 }
 

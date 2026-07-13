@@ -1,5 +1,5 @@
 import { computed as $, ref, watch } from 'vue';
-import { Reactive } from '../../lib/Reactive';
+import { Reactive } from '../../../ivue';
 import { BaseElement } from './BaseElement';
 
 // A shared global state (simulating global config)

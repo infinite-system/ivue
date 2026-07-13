@@ -1,6 +1,6 @@
 import { useMouse } from '@vueuse/core';
 import { computed as $, ref, shallowRef } from 'vue';
-import { Reactive } from '../../lib/Reactive';
+import { Reactive } from '../../../ivue';
 import { Container, GlobalTheme } from './Container';
 
 class $InteractiveBox extends Container.$Class {

@@ -5,6 +5,9 @@ import { manifest as lifecycle } from './lifecycle/manifest';
 import { manifest as inheritance } from './inheritance/manifest';
 import { manifest as pointer } from './pointer/manifest';
 import { manifest as virtualScroller } from './virtual-scroller/manifest';
+import { manifest as flyweightGrid } from './flyweight-grid/manifest';
+import { manifest as formulaGrid } from './formula-grid/manifest';
+import { manifest as benchmarks } from './benchmarks/manifest';
 
 export interface ExampleEntry {
   slug: string;
@@ -29,4 +32,13 @@ export const examples: ExampleEntry[] = [
     ...virtualScroller,
     load: () => import('./virtual-scroller/VirtualScrollerExample.vue'),
   },
+  {
+    ...flyweightGrid,
+    load: () => import('./flyweight-grid/FlyweightGridExample.vue'),
+  },
+  {
+    ...formulaGrid,
+    load: () => import('./formula-grid/FormulaGridExample.vue'),
+  },
+  { ...benchmarks, load: () => import('./benchmarks/BenchmarksExample.vue') },
 ];

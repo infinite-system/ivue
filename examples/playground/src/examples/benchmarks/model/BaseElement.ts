@@ -1,5 +1,5 @@
 import { computed as $, ref } from 'vue';
-import { Reactive } from '../../lib/Reactive';
+import { Reactive } from '../../../ivue';
 
 class $BaseElement {
   // A simple reactive state for the base element

@@ -17,7 +17,7 @@
  * allocates a Ref or a Computed. That laziness is the whole point.
  */
 import { computed, ref, type ComputedRef } from 'vue';
-import { Reactive } from '../../lib/Reactive';
+import { Reactive } from '../../ivue';
 import type { Sheet } from './Sheet';
 import {
   type CellValue,

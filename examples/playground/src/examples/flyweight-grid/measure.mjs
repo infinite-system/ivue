@@ -15,12 +15,12 @@
  *   bottom row values, an edit cascading into the rendered DOM, and the
  *   full-column totals reacting to a single cell edit.
  *
- *   node sketch/flyweight-grid/measure.mjs [baseURL]
- *   node sketch/flyweight-grid/measure.mjs http://localhost:5181
+ *   node examples/playground/src/examples/flyweight-grid/measure.mjs [baseURL]
+ *   node examples/playground/src/examples/flyweight-grid/measure.mjs http://localhost:5181
  */
 import { chromium } from 'playwright';
 
-const BASE = process.argv[2] || 'http://localhost:5181';
+const BASE = process.argv[2] || 'http://localhost:5181/#/flyweight-grid';
 const RUNS = 3;
 const ROWS = 1_000_000;
 const COLS = 20;

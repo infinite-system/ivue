@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import '../grid/grid.css';
-import './formula.css';
-import { ROWS_1M } from './formula-logic';
+import '../../examples/playground/src/examples/formula-grid/formula.css';
+import { ROWS_1M } from '../../examples/playground/src/examples/formula-grid/formula-logic';
 import { useFormulaGrid } from './useFormulaGrid';
 
 const g = useFormulaGrid();

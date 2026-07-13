@@ -17,7 +17,7 @@
  * allocates a Ref or a Computed. That laziness is the whole point of the arm.
  */
 import { computed, ref } from 'vue';
-import { Reactive } from '../../../../../lib/Reactive';
+import { Reactive } from '../../ivue';
 import { cssOf, displayOf, isNumberOf, numericOf } from './cell-logic';
 
 class $Cell {

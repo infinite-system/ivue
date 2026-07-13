@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * The flyweight grid (sketch/flyweight-grid), embedded live in the docs.
+ * The flyweight grid (examples/playground, flyweight-grid), embedded live in the docs.
  *
  * The ENTIRE app is imported dynamically inside the click handler — model,
  * page class, grid chrome, and the fast-formula-parser it pulls in.
@@ -21,7 +21,7 @@ async function loadGrid() {
   loadError.value = '';
   try {
     const module = await import(
-      '../../../../../sketch/flyweight-grid/FlyweightGridApp.vue'
+      '@examples/flyweight-grid/FlyweightGridApp.vue'
     );
     gridApp.value = module.default;
   } catch (error) {
