@@ -75,7 +75,8 @@ onUnmounted(() => {
         </h1>
         <p class="ivh-tag">
           Native TypeScript classes become fine-grained Vue 3 state. No proxy
-          per instance. No decorators. Nothing paid until first access.
+          per instance. No decorators. No component coupling. Nothing paid
+          until first access.
         </p>
         <div class="ivh-actions">
           <a class="btn brand" :href="withBase('/guide/getting-started')">Get Started</a>
