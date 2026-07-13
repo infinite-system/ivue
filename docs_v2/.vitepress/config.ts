@@ -205,7 +205,7 @@ export default defineConfig({
           ],
         },
         {
-          text: 'Examples',
+          text: 'Basic Examples',
           collapsed: false,
           items: [
             { text: 'Overview & Playground', link: '/examples/' },
