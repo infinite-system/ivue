@@ -218,7 +218,7 @@ const activeDeps = computed(() => {
   margin: 12px 0 0;
   font-size: 0.86rem;
   line-height: 1.55;
-  color: #8b95b5;
+  color: var(--vp-c-text-2);
 }
 .fg-hint code {
   color: #a5b4fc;
@@ -241,6 +241,6 @@ const activeDeps = computed(() => {
 .fg-mounted {
   margin-top: 8px;
   font-size: 11px;
-  color: #8b95b5;
+  color: var(--vp-c-text-2);
 }
 </style>

@@ -363,7 +363,7 @@ const pojoCls = (cell: { raw: string }) =>
   margin: 12px 0 0;
   font-size: 0.86rem;
   line-height: 1.5;
-  color: var(--vp-c-text-3, #8b95b5);
+  color: var(--vp-c-text-3);
 }
 .gb-warning {
   color: #f5a524;
@@ -379,7 +379,7 @@ const pojoCls = (cell: { raw: string }) =>
   position: relative;
   padding: 12px 14px 13px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, currentColor 4%, transparent);
   border: 1px solid rgba(148, 163, 184, 0.16);
   border-left-width: 3px;
 }
@@ -393,7 +393,7 @@ const pojoCls = (cell: { raw: string }) =>
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #8b95b5;
+  color: var(--vp-c-text-2);
 }
 .gb-label {
   font-size: 11.5px;
@@ -413,12 +413,12 @@ const pojoCls = (cell: { raw: string }) =>
   margin-left: 3px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #8b95b5;
+  color: var(--vp-c-text-2);
 }
 .gb-compare-sub {
   margin-top: 2px;
   font-size: 11px;
-  color: #8b95b5;
+  color: var(--vp-c-text-2);
 }
 .gb-compare-heap {
   margin-top: 8px;
@@ -465,7 +465,7 @@ const pojoCls = (cell: { raw: string }) =>
   font-weight: 650;
   cursor: pointer;
   color: #9aa5c6;
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, currentColor 4%, transparent);
   border: 1px solid rgba(148, 163, 184, 0.2);
   transition:
     transform 0.15s ease,
@@ -503,6 +503,6 @@ const pojoCls = (cell: { raw: string }) =>
 .gb-mounted-note {
   margin-top: 8px;
   font-size: 11px;
-  color: #8b95b5;
+  color: var(--vp-c-text-2);
 }
 </style>

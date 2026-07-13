@@ -10,7 +10,7 @@ date: 2026-07
 
 The whole ivue engine — lazy state, method binding, reactive inheritance
 with `super`, teardown, `$watch`, and the complete hot-reload-for-classes
-machinery — ships as **1,131 bytes gzipped**. Zero dependencies. 100% test
+machinery — ships as **1,148 bytes gzipped**. Zero dependencies. 100% test
 coverage, every metric, every file.
 
 That number is not a compression trophy. It's a *diagnosis*. Size is what

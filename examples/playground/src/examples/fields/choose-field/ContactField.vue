@@ -35,7 +35,12 @@ const avatarSize = computed(() => (props.compact ? 20 : 32));
   >
     <!-- CONTACT OPTION: avatar + name (+ email in full mode) -->
     <template #option="scope">
-      <q-item v-bind="scope.itemProps" :dense="props.compact">
+      <q-item
+        v-bind="scope.itemProps"
+        :dense="props.compact"
+        class="contact-field__option"
+        :class="{ 'contact-field__option--compact': props.compact }"
+      >
         <q-item-section avatar>
           <ContactAvatar :name="scope.opt?.name ?? ''" :size="avatarSize" />
         </q-item-section>
@@ -57,7 +62,7 @@ const avatarSize = computed(() => (props.compact ? 20 : 32));
         icon-remove="close"
         :tabindex="scope.tabindex"
         color="white"
-        text-color="primary"
+        text-color="dark"
         class="contact-field__chip"
         @remove="() => scope.removeAtIndex(scope.index)"
       >
@@ -76,8 +81,21 @@ const avatarSize = computed(() => (props.compact ? 20 : 32));
 </template>
 
 <style>
+/* Quasar reserves 56px for avatar sections — far too much air between the
+   avatar and the name. Tighten it; tighter still in compact mode. */
+.contact-field__option {
+  padding-left: 10px;
+}
+.contact-field__option .q-item__section--avatar {
+  min-width: 0;
+  padding-right: 10px;
+}
+.contact-field__option--compact .q-item__section--avatar {
+  padding-right: 7px;
+}
+
 .contact-field__chip {
-  padding: 3px 8px 3px 3px;
+  padding: 4px 10px 4px 4px;
 }
 
 .contact-field__chip-avatar {

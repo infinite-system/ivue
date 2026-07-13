@@ -95,13 +95,14 @@ defineExpose(choose as ChooseField.Instance);
           <q-chip
             v-if="choose.useChips"
             :key="scope.index"
+            class="ivue-choose__chip"
             removable
             dense
             size="14px"
             icon-remove="close"
             :tabindex="scope.tabindex"
             color="white"
-            text-color="primary"
+            text-color="dark"
             :class="choose.chipClass"
             @remove="() => scope.removeAtIndex(scope.index)"
           >
@@ -125,7 +126,7 @@ defineExpose(choose as ChooseField.Instance);
               flat
               square
               dense
-              size="sm"
+              class="ivue-choose__variant-btn"
               :icon="variant.icon"
               :color="choose.isActiveVariant(index) ? 'primary' : 'grey-8'"
               :class="{ 'ivue-choose__variant--active': activeVariantIndex === index }"
@@ -140,12 +141,24 @@ defineExpose(choose as ChooseField.Instance);
       <template v-else-if="slot === 'option'">
         <slot name="before--option" v-bind="scope || {}" />
         <slot name="option" v-bind="scope || {}">
-          <q-item v-bind="scope.itemProps" :class="choose.optionClass">
+          <q-item
+            v-bind="scope.itemProps"
+            class="ivue-choose__option"
+            :class="choose.optionClass"
+          >
             <q-item-section v-if="choose.optionIconOf(scope.opt)" avatar>
               <q-icon :name="choose.optionIconOf(scope.opt)" />
             </q-item-section>
             <q-item-section>
-              <q-item-label>{{ choose.optionLabelOf(scope.opt) }}</q-item-label>
+              <q-item-label v-if="scope.opt?.createTerm">
+                {{ choose.createLabel || 'Create new' }}
+                <span class="ivue-choose__create-term">{{
+                  scope.opt.createTerm
+                }}</span>
+              </q-item-label>
+              <q-item-label v-else>
+                {{ choose.optionLabelOf(scope.opt) }}
+              </q-item-label>
               <q-item-label v-if="choose.optionDescriptionOf(scope.opt)" caption>
                 {{ choose.optionDescriptionOf(scope.opt) }}
               </q-item-label>
@@ -165,7 +178,7 @@ defineExpose(choose as ChooseField.Instance);
               flat
               square
               dense
-              size="sm"
+              class="ivue-choose__variant-btn"
               :icon="variant.icon"
               :color="choose.isActiveVariant(index) ? 'primary' : 'grey-8'"
               @click="choose.setVariant(index)"
@@ -235,13 +248,34 @@ defineExpose(choose as ChooseField.Instance);
   background: #f3f3f3;
   margin: 3px 3px 3px 0;
   border: 1px solid #dae6ea;
-  padding: 2px 8px;
+  padding: 3px 12px;
 }
 
 .ivue-choose .q-chip.ivue-chip__singular {
   background: none;
   border: none;
-  padding-left: 0;
+  padding-left: 4px;
+}
+
+/* avatar chips carry their own image at the left edge — tight left padding */
+.ivue-choose .q-chip--dense.contact-field__chip {
+  padding: 3px 10px 3px 4px;
+}
+
+/* the to-be-created value renders as a round chip-like token */
+.ivue-choose__create-term {
+  display: inline-block;
+  padding: 1px 12px;
+  margin-left: 4px;
+  border: 1px solid currentColor;
+  border-radius: 50px;
+  font-weight: 500;
+}
+
+/* Quasar reserves 56px for icon sections — a comfortable 10px gap instead */
+.ivue-choose__option .q-item__section--avatar {
+  min-width: 0;
+  padding-right: 10px;
 }
 
 .ivue-choose__variants {
@@ -255,4 +289,14 @@ defineExpose(choose as ChooseField.Instance);
 .ivue-choose__variant--active {
   background: rgba(0, 0, 0, 0.06);
 }
+
+.ivue-choose__variant-btn {
+  font-size: 13px;
+  padding: 7px 16px;
+}
+.ivue-choose__variant-btn .q-icon {
+  font-size: 18px;
+  margin-right: 6px;
+}
+
 </style>

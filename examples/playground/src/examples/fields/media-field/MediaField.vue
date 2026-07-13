@@ -121,9 +121,38 @@ defineExpose(media as MediaField.Instance);
           v-for="(row, index) in media.displayFiles"
           :key="row.id"
           class="media-field__item"
+          :class="{ 'media-field__item--dragging': media.dragIndex.value === index }"
+          :draggable="media.canSort"
+          @dragstart="media.onRowDragStart(index)"
+          @dragover.prevent
+          @drop.prevent="media.onRowDrop(index)"
+          @dragend="media.dragIndex.value = null"
         >
           <slot name="before--item" :row="row" :index="index" :field="media" />
           <slot name="item" :row="row" :index="index" :field="media">
+            <!-- SORT BUTTONS — visible on hover, like the original -->
+            <div v-if="media.canSort" class="media-field__sort" @click.stop>
+              <q-btn
+                icon="arrow_upward"
+                flat
+                size="xs"
+                round
+                :disable="index === 0"
+                @click="media.fileMoveUp(index)"
+              >
+                <q-tooltip class="bg-grey-9">Move up</q-tooltip>
+              </q-btn>
+              <q-btn
+                icon="arrow_downward"
+                flat
+                size="xs"
+                round
+                :disable="index === media.displayFiles.length - 1"
+                @click="media.fileMoveDown(index)"
+              >
+                <q-tooltip class="bg-grey-9">Move down</q-tooltip>
+              </q-btn>
+            </div>
             <!-- THUMBNAIL BOX -->
             <div
               class="media-field__thumb"
@@ -311,7 +340,7 @@ defineExpose(media as MediaField.Instance);
 
 .media-field__dropzone {
   position: relative;
-  border: 1px dashed color-mix(in srgb, currentColor 28%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
   border-radius: 6px;
   background: color-mix(in srgb, currentColor 3%, transparent);
   transition: border-color 0.2s, background 0.2s;
@@ -349,7 +378,7 @@ defineExpose(media as MediaField.Instance);
 
 .media-field__empty-types {
   margin-top: 2px;
-  font-size: 11px;
+  font-size: 13px;
   color: color-mix(in srgb, currentColor 45%, transparent);
 }
 
@@ -516,14 +545,14 @@ defineExpose(media as MediaField.Instance);
   color: color-mix(in srgb, currentColor 60%, transparent);
 }
 
-/* Add-more affordance — a dashed full-width row. */
+/* Add-more affordance — a solid full-width row. */
 .media-field__add {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   padding: 8px;
-  border: 1px dashed color-mix(in srgb, currentColor 25%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
   border-radius: 4px;
   cursor: pointer;
   color: color-mix(in srgb, currentColor 60%, transparent);
@@ -535,7 +564,8 @@ defineExpose(media as MediaField.Instance);
 }
 
 .media-field__add-label {
-  font-size: 11px;
+  font-size: 13.5px;
+  font-weight: 500;
 }
 
 .media-field__progress {
@@ -565,5 +595,20 @@ defineExpose(media as MediaField.Instance);
 
 .media-field__bottom--error {
   color: var(--q-negative, #c10015);
+}
+
+/* sort buttons: hidden until the row is hovered, like the original */
+.media-field__sort {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  visibility: hidden;
+  opacity: 0.7;
+}
+.media-field__item:hover .media-field__sort {
+  visibility: visible;
+}
+.media-field__item--dragging {
+  opacity: 0.45;
 }
 </style>

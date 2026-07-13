@@ -21,7 +21,7 @@ defineProps<{ title: string; note?: string }>();
   margin: 24px 0;
   border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.18);
-  background: #0d1226;
+  background: var(--vp-c-bg-soft);
   box-shadow: 0 22px 60px -28px rgba(99, 102, 241, 0.4);
   overflow: hidden;
 }
@@ -31,7 +31,7 @@ defineProps<{ title: string; note?: string }>();
   gap: 10px;
   padding: 12px 18px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-  background: rgba(255, 255, 255, 0.02);
+  background: color-mix(in srgb, currentColor 3%, transparent);
 }
 .dot {
   width: 8px;
@@ -43,13 +43,13 @@ defineProps<{ title: string; note?: string }>();
   font-weight: 640;
   font-size: 0.92rem;
   letter-spacing: -0.01em;
-  color: #e2e8f6;
+  color: var(--vp-c-text-1);
 }
 .badge {
   margin-left: auto;
   font-family: var(--vp-font-family-mono);
   font-size: 10.5px;
-  color: #8b95b5;
+  color: var(--vp-c-text-3);
 }
 .dbx-body {
   padding: 18px;
@@ -57,10 +57,10 @@ defineProps<{ title: string; note?: string }>();
 .dbx-note {
   padding: 10px 18px 13px;
   border-top: 1px solid rgba(148, 163, 184, 0.14);
-  background: rgba(255, 255, 255, 0.02);
+  background: color-mix(in srgb, currentColor 3%, transparent);
   font-size: 0.82rem;
   line-height: 1.5;
-  color: #8b95b5;
+  color: var(--vp-c-text-2);
 }
 
 /* shared control styles for demos (deep so children can use them) */
@@ -72,7 +72,7 @@ defineProps<{ title: string; note?: string }>();
 .dbx :deep(.d-k) {
   font-family: var(--vp-font-family-mono);
   font-size: 11px;
-  color: #8b95b5;
+  color: var(--vp-c-text-2);
 }
 .dbx :deep(.d-n) {
   margin-top: 2px;
@@ -80,7 +80,7 @@ defineProps<{ title: string; note?: string }>();
   font-weight: 750;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-  color: #fff;
+  color: var(--vp-c-text-1);
   line-height: 1.15;
 }
 .dbx :deep(.d-n.grad) {
@@ -104,9 +104,9 @@ defineProps<{ title: string; note?: string }>();
   font-weight: 650;
   font-size: 0.92rem;
   cursor: pointer;
-  color: #cbd5f0;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  color: var(--vp-c-text-1);
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  border: 1px solid var(--vp-c-divider);
   transition: transform 0.15s ease, filter 0.15s ease, border-color 0.15s ease;
 }
 .dbx :deep(.d-btn.primary) {
@@ -131,7 +131,7 @@ defineProps<{ title: string; note?: string }>();
 .dbx :deep(.d-mono) {
   font-family: var(--vp-font-family-mono);
   font-size: 12px;
-  color: #9aa5c6;
+  color: var(--vp-c-text-2);
 }
 .dbx :deep(.d-mono code) {
   color: #34d399;

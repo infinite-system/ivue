@@ -395,6 +395,9 @@
   background: var(--vp-c-bg-alt);
 }
 .ix-moat .cell:hover {
+  background: rgba(99, 102, 241, 0.07);
+}
+.dark .ix-moat .cell:hover {
   background: var(--vp-c-brand-soft);
 }
 /* CSS-drawn gradient check badge — no icon font, no svg path */

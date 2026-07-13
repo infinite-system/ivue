@@ -67,6 +67,20 @@ onUnmounted(() => {
 
     <div class="ivh-inner">
       <div class="ivh-copy">
+        <img
+          class="ivh-lockup ivh-lockup--light"
+          :src="withBase('/brand-lockup-light.png')"
+          alt="ivue — Infinite Vue"
+          width="384"
+          height="146"
+        />
+        <img
+          class="ivh-lockup ivh-lockup--dark"
+          :src="withBase('/brand-lockup-dark.png')"
+          alt="ivue — Infinite Vue"
+          width="384"
+          height="146"
+        />
         <h1 class="ivh-title">
           <span class="row">Plain classes.</span>
           <span class="row">Full reactivity.</span>
@@ -174,7 +188,7 @@ onUnmounted(() => {
   width: min(880px, 92vw);
   height: auto;
   transform: translate(-50%, -50%);
-  opacity: 0.05;
+  opacity: 0.16;
 }
 .dark .mark {
   opacity: 0.07;
@@ -197,6 +211,19 @@ onUnmounted(() => {
 }
 
 /* ---- copy ---- */
+.ivh-lockup {
+  display: none;
+  width: min(252px, 58vw);
+  height: auto;
+  margin: 0 0 18px -6px;
+}
+:root:not(.dark) .ivh-lockup--light {
+  display: block;
+}
+.dark .ivh-lockup--dark {
+  display: block;
+}
+
 .ivh-title {
   margin: 0;
   font-size: clamp(1.9rem, 4.3vw, 2.9rem);

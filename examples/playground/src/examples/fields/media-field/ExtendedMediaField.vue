@@ -45,9 +45,9 @@ const vFocus = {
     <template #after--header="{ field }">
       <div v-if="field.hasFiles" class="extended-media__toolbar">
         <q-btn
-          dense
           flat
           size="11px"
+          class="extended-media__sort-btn"
           :icon="field.sortModeIcon"
           :label="field.sortModeLabel"
           @click="field.toggleSortMode()"
@@ -356,5 +356,13 @@ const vFocus = {
   border: 0;
   border-bottom: 1px solid var(--q-primary, #1976d2);
   padding: 0 0 1px;
+}
+
+.extended-media__sort-btn {
+  padding: 2px 12px;
+}
+.extended-media__sort-btn .q-icon {
+  font-size: 15px;
+  margin-right: 5px;
 }
 </style>

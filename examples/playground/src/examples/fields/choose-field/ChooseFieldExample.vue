@@ -119,11 +119,11 @@ const {
           hint="Type a new tag and create it — POSTs to the backend"
           fetch-path="/tag"
           create-path="/tag"
-          create-label="Create tag"
           option-label="name"
           use-input
           multiple
           use-chips
+          round-chips
           clearable
         />
       </section>

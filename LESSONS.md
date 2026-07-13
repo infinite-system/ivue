@@ -81,6 +81,24 @@ number was a **harness artifact, not library behavior** — when a number
 - Production size gate: the engine is ~1.1 KB gzipped — re-verify the build
   size after any engine edit; DCE regressions are silent.
 
+## Component authoring (fields, props architecture)
+
+- **Shared prop-descriptor mutation was a live bug.** `{ ...baseParamsTypes }`
+  copies the outer object but every inner `{ type }` descriptor stays shared;
+  a mutating `propsWithDefaults` then rewrote the BASE component's defaults
+  when a wrapper applied different ones (every plain ChooseField silently
+  inherited ContactField's `fetchPath: '/contact'` and listed contacts).
+  `propsWithDefaults` is now non-mutating (copies descriptors) and the spec
+  asserts non-mutation. Cost: engine 1,131 → 1,148 B gzipped.
+- **A standalone app absorbed into another app must shed its global CSS.**
+  The flyweight sketch's `body`/`h1`/`:root{color-scheme}` rules rode into
+  the docs bundle and painted the whole site dark in light mode. Scope every
+  absorbed app's chrome under its root class (`.fw-page`).
+- Quasar in a host app: import `quasar.css` inside a CSS `@layer` — layered
+  rules lose to the host's unlayered ones, so Quasar's body-level resets
+  can't restyle the shell while `.q-*` components keep their look. Portals
+  (menus/dialogs) stay styled because the layer is still global.
+
 ## Docs writing (full rules: `.claude/skills/write-docs/SKILL.md`)
 
 - Timeless present — never contrast against a draft state the reader never

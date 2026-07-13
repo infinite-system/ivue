@@ -1,10 +1,11 @@
-/* Minimal standalone styles for the flyweight grid sketch (own copy — the
-   demo directory's css is reference-only). Dark, dense, spreadsheet-ish. */
-:root {
+/* Styles for the flyweight grid example. Dark, dense, spreadsheet-ish —
+   and SCOPED under .fw-page: this file rides in host apps (the docs, the
+   playground), so it must never restyle body/heading elements globally. */
+.fw-page {
   color-scheme: dark;
-}
-body {
-  margin: 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
   background: #0b1020;
   color: #cbd5e1;
   font:
@@ -12,17 +13,14 @@ body {
     system-ui,
     sans-serif;
 }
-.fw-page {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 24px;
-}
-h1 {
+.fw-page h1 {
   color: #fff;
   font-size: 26px;
   margin: 0 0 4px;
+  border: none;
+  padding: 0;
 }
-h1 small {
+.fw-page h1 small {
   color: #818cf8;
   font-weight: 600;
 }

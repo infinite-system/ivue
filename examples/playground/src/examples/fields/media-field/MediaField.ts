@@ -107,6 +107,13 @@ export class $MediaField {
   }
 
   // --- derived ---
+  get canSort() {
+    return this.multiple && this.isInteractive && this.files.value.length > 1;
+  }
+  get dragIndex() {
+    return ref<number | null>(null);
+  }
+
   get isInteractive() {
     return !this.props.readonly && !this.props.disable;
   }
@@ -212,6 +219,42 @@ export class $MediaField {
 
   /** Hook for subclasses — runs after hydration replaces the list. */
   onFilesLoaded(rows: MediaItem[]) {}
+
+  moveFile(fromIndex: number, toIndex: number) {
+    const list = this.files.value;
+    if (
+      fromIndex === toIndex ||
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= list.length ||
+      toIndex >= list.length
+    ) {
+      return;
+    }
+    const [moved] = list.splice(fromIndex, 1);
+    list.splice(toIndex, 0, moved);
+    this.files.value = [...list];
+    this.emitModel();
+  }
+
+  fileMoveUp(index: number) {
+    this.moveFile(index, index - 1);
+  }
+
+  fileMoveDown(index: number) {
+    this.moveFile(index, index + 1);
+  }
+
+  onRowDragStart(index: number) {
+    this.dragIndex.value = index;
+  }
+
+  onRowDrop(index: number) {
+    if (this.dragIndex.value !== null) {
+      this.moveFile(this.dragIndex.value, index);
+    }
+    this.dragIndex.value = null;
+  }
 
   emitModel() {
     const rows = this.files.value;

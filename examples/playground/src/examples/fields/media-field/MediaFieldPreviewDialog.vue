@@ -57,6 +57,16 @@ class $MediaFieldPreviewDialog {
   get activeExtension() {
     return this.activeFile ? this.field.fileExtension(this.activeFile) : '';
   }
+  get isRenamingActive() {
+    return (
+      !!this.activeFile && this.field.renameId.value === this.activeFile.id
+    );
+  }
+
+  beginRename() {
+    if (this.activeFile) this.field.startRename(this.activeFile);
+  }
+
   get maximizeIcon() {
     return this.isMaximized.value ? 'close_fullscreen' : 'open_in_full';
   }
@@ -120,6 +130,9 @@ const emit = defineEmits<MediaFieldPreviewDialogEmits>();
 
 const dialog = new MediaFieldPreviewDialog.Class(props, emit);
 
+// the field's rename draft drives the footer's inline editor
+const { renameDraft } = props.field;
+
 const {
   // state refs
   isImageLoading,
@@ -174,9 +187,31 @@ defineExpose(dialog as MediaFieldPreviewDialog.Instance);
       <!-- FOOTER -->
       <div class="media-preview__footer" v-if="dialog.activeFile">
         <div class="media-preview__details">
-          <div class="media-preview__name" :title="dialog.activeFile.name">
+          <div
+            v-if="!dialog.isRenamingActive"
+            class="media-preview__name"
+            :class="{ 'media-preview__name--editable': dialog.field.canRename }"
+            :title="dialog.activeFile.name"
+            @click="dialog.beginRename()"
+          >
             {{ dialog.activeFile.name }}
+            <q-icon
+              v-if="dialog.field.canRename"
+              name="edit"
+              size="14px"
+              class="media-preview__name-edit"
+            />
           </div>
+          <input
+            v-else
+            class="media-preview__name-input"
+            :value="renameDraft"
+            autofocus
+            @input="(event: any) => (renameDraft = event.target.value)"
+            @keyup.enter="dialog.field.commitRename()"
+            @keyup.esc="dialog.field.cancelRename()"
+            @blur="dialog.field.commitRename()"
+          />
           <div class="media-preview__meta">
             {{ dialog.activeExtension }} — {{ dialog.activeSizeLabel }}
           </div>
@@ -300,6 +335,11 @@ defineExpose(dialog as MediaFieldPreviewDialog.Instance);
   background: #fff;
 }
 
+.body--dark .media-preview__footer {
+  background: #1a2032;
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
 .media-preview__details {
   min-width: 0;
 }
@@ -310,6 +350,29 @@ defineExpose(dialog as MediaFieldPreviewDialog.Instance);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #212121;
+}
+
+.body--dark .media-preview__name {
+  color: #e8ecf8;
+}
+
+.media-preview__name--editable {
+  cursor: pointer;
+}
+.media-preview__name-edit {
+  opacity: 0.45;
+  margin-left: 4px;
+}
+.media-preview__name-input {
+  font-size: 15px;
+  font-weight: 500;
+  width: 100%;
+  background: transparent;
+  color: inherit;
+  border: none;
+  border-bottom: 1px solid currentColor;
+  outline: none;
 }
 
 .media-preview__meta {

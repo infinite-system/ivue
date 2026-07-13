@@ -1021,13 +1021,23 @@ describe('propsWithDefaults()', () => {
     expect(out.c.default()).toBe(Cool); // not instantiated, not cloned
   });
 
-  it('mutates prop descriptor objects in place (adds default only)', () => {
+  it('never mutates the input descriptors — shared type maps stay clean', () => {
+    // Descriptors are routinely SHARED between props maps via spread
+    // (`{ ...baseParamsTypes }` copies the outer object only). A mutating
+    // implementation would rewrite the base component's defaults when a
+    // wrapper applies different ones.
     const typed = { a: { type: Number }, b: { type: String } };
     const aRef = typed.a;
     const out = propsWithDefaults({ a: 1 }, typed);
-    expect(out.a).toBe(aRef); // same object, augmented
+    expect(out.a).not.toBe(aRef); // copied, not augmented in place
     expect(out.a.default).toBe(1);
+    expect('default' in aRef).toBe(false); // the shared input is untouched
     expect('default' in out.b).toBe(false);
+
+    // the wrapper scenario: same descriptors, different defaults
+    const wrapperOut = propsWithDefaults({ a: 2 }, { ...typed });
+    expect(wrapperOut.a.default).toBe(2);
+    expect(out.a.default).toBe(1); // base defaults survive
   });
 
 

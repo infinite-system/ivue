@@ -53,8 +53,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid color-mix(in srgb, currentColor 9%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 9%, transparent);
 }
 
 .gc-rownum {
@@ -62,7 +62,7 @@
   flex: 0 0 64px;
   color: #64748b;
   text-align: right;
-  background: rgba(255, 255, 255, 0.02);
+  background: color-mix(in srgb, currentColor 3%, transparent);
   position: sticky;
   left: 0;
   z-index: 2;
@@ -84,7 +84,7 @@
   color: #e2e8f0;
   font-weight: 600;
   text-align: right;
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, currentColor 4%, transparent);
 }
 
 .gc-head-cell {

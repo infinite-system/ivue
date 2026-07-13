@@ -871,24 +871,31 @@ export const propsWithDefaults = <T extends VuePropsObject>(
   // Optional: Allows user to pass a custom cloner if structuredClone isn't enough
   customCloner?: (val: any) => any,
 ): VuePropsWithDefaults<T> => {
+  // NON-MUTATING: descriptor objects are routinely SHARED between props
+  // maps (`{ ...baseParamsTypes, extra }` — the spread copies the outer
+  // object but every inner `{ type }` descriptor stays the same reference).
+  // Writing `.default` in place would silently rewrite the base component's
+  // defaults; each descriptor is copied instead.
+  const result: Record<string, any> = {};
   for (const prop in typedProps) {
     const def = defaults?.[prop];
     const typed = typedProps[prop];
+    result[prop] = { ...typed };
 
     if (typed.required || def === undefined) continue;
 
     if (typeof def === 'object' && def !== null) {
-      typedProps[prop].default = () =>
+      result[prop].default = () =>
         customCloner ? customCloner(def) : structuredClone(def);
     } else {
       if (isClass(def)) {
-        typedProps[prop].default = () => def;
+        result[prop].default = () => def;
       } else {
-        typedProps[prop].default = def;
+        result[prop].default = def;
       }
     }
   }
-  return typedProps as VuePropsWithDefaults<T>;
+  return result as VuePropsWithDefaults<T>;
 };
 
 /**

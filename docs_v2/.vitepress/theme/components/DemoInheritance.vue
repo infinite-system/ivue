@@ -65,7 +65,7 @@ const { price, discount, taxRate } = product;
   margin-bottom: 16px;
   padding: 12px 16px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, currentColor 4%, transparent);
   border: 1px solid rgba(148, 163, 184, 0.16);
   font-size: 13px !important;
   color: #7dd3fc !important;

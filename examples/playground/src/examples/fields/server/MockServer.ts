@@ -269,22 +269,51 @@ export const mockServerTransport: ServerTransport = {
  * server already holds, not just uploading new files.
  */
 export async function ensureSeedMedia(): Promise<MediaRow[]> {
+  // Versioned: bumping SEED_VERSION replaces stale artwork cached in the
+  // visitor's IndexedDB from an earlier deploy.
+  const SEED_VERSION = 'v2';
+  const seedPrefix = `seed-${SEED_VERSION}-`;
+  const staleSeeds = collections.media.filter(
+    (row: MediaRow) => row.key.startsWith('seed-') && !row.key.startsWith(seedPrefix),
+  );
+  for (const stale of staleSeeds) {
+    await deleteBlob(stale.key);
+    collections.media.splice(collections.media.indexOf(stale), 1);
+  }
   const existingSeeds = collections.media.filter((row: MediaRow) =>
-    row.key.startsWith('seed-'),
+    row.key.startsWith(seedPrefix),
   );
   if (existingSeeds.length) {
     return Promise.all(existingSeeds.map(hydrateMediaRow));
   }
   const artworks = [
-    { name: 'aurora.svg', from: '#6366f1', to: '#34d399' },
-    { name: 'ember.svg', from: '#f59e0b', to: '#ef4444' },
-    { name: 'tide.svg', from: '#0ea5e9', to: '#8b5cf6' },
+    {
+      name: 'aurora.svg',
+      from: '#6366f1',
+      to: '#34d399',
+      // mountains under a star
+      icon: '<path d="M60 340 L170 180 L240 270 L300 200 L420 340 Z" fill="rgba(255,255,255,0.85)"/><path d="M240 96 l14 34 36 3 -27 24 8 36 -31 -19 -31 19 8 -36 -27 -24 36 -3 z" fill="rgba(255,255,255,0.95)"/>',
+    },
+    {
+      name: 'ember.svg',
+      from: '#f59e0b',
+      to: '#ef4444',
+      // a flame
+      icon: '<path d="M240 110 C 300 170 320 210 320 260 A 80 80 0 0 1 160 260 C 160 225 180 200 200 180 C 198 215 214 228 228 230 C 214 190 222 150 240 110 Z" fill="rgba(255,255,255,0.9)"/>',
+    },
+    {
+      name: 'tide.svg',
+      from: '#0ea5e9',
+      to: '#8b5cf6',
+      // waves
+      icon: '<g stroke="rgba(255,255,255,0.9)" stroke-width="22" stroke-linecap="round" fill="none"><path d="M90 210 q 37 -44 75 0 t 75 0 75 0 75 0"/><path d="M90 280 q 37 -44 75 0 t 75 0 75 0 75 0"/></g>',
+    },
   ];
   const seeded: MediaRow[] = [];
   for (const [index, art] of artworks.entries()) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${art.from}"/><stop offset="1" stop-color="${art.to}"/></linearGradient></defs><rect width="480" height="480" fill="url(#g)"/><circle cx="240" cy="240" r="120" fill="rgba(255,255,255,0.22)"/></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${art.from}"/><stop offset="1" stop-color="${art.to}"/></linearGradient></defs><rect width="480" height="480" fill="url(#g)"/>${art.icon}</svg>`;
     const blob = new Blob([svg], { type: 'image/svg+xml' });
-    const key = `seed-${index + 1}`;
+    const key = `${seedPrefix}${index + 1}`;
     await putBlob(key, blob);
     const row: MediaRow = {
       id: key,

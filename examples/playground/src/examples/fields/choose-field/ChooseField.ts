@@ -528,9 +528,15 @@ class $ChooseField {
     if (!this.searchTerm.value.trim()) return;
     const [firstOption] = this.displayedOptions.value;
     if ((firstOption as KeyValueRow)?.value === CREATE_OPTION_VALUE) return;
+    const term = this.searchTerm.value.trim();
+    const text = `${this.createLabel || 'Create new'} '${term}'`;
     this.displayedOptions.value = [
       {
-        label: `${this.createLabel}: "${this.searchTerm.value.trim()}"`,
+        // label under BOTH the default key and the active optionLabel key,
+        // so custom option-label props still render the affordance text
+        label: text,
+        ...(this.props.optionLabel ? { [this.props.optionLabel]: text } : {}),
+        createTerm: term,
         icon: 'add',
         value: CREATE_OPTION_VALUE,
       },
@@ -546,6 +552,16 @@ class $ChooseField {
   async createOption() {
     const name = this.searchTerm.value.trim();
     if (!this.canCreate || !name) return;
+    // Duplicate guard: an option with the same label (case-insensitive)
+    // already loaded or already selected gets SELECTED, never re-created.
+    const existing = this.findOptionByLabel(name);
+    if (existing) {
+      this.searchTerm.value = '';
+      this.selectEl.value?.updateInputValue('', true);
+      this.applyFilter('');
+      if (!this.isSelectedOption(existing)) this.selectCreated(existing);
+      return;
+    }
     this.creating.value = true;
     try {
       const created = await ServerApi.postCustom(this.createPath, { name });
@@ -559,6 +575,35 @@ class $ChooseField {
     } finally {
       this.creating.value = false;
     }
+  }
+
+  findOptionByLabel(label: string): KeyValueRow | undefined {
+    const wanted = label.trim().toLowerCase();
+    const pools: any[] = [
+      ...this.fetchedOptions.value,
+      ...(Array.isArray(this.props.modelValue)
+        ? this.props.modelValue
+        : this.props.modelValue
+          ? [this.props.modelValue]
+          : []),
+    ];
+    return pools.find(
+      (option) =>
+        String(this.optionLabelOf(option)).trim().toLowerCase() === wanted,
+    );
+  }
+
+  isSelectedOption(option: KeyValueRow): boolean {
+    const selected = Array.isArray(this.props.modelValue)
+      ? this.props.modelValue
+      : this.props.modelValue
+        ? [this.props.modelValue]
+        : [];
+    return selected.some(
+      (entry: any) =>
+        this.optionValueOf(entry) === this.optionValueOf(option) &&
+        this.optionLabelOf(entry) === this.optionLabelOf(option),
+    );
   }
 
   selectCreated(created: KeyValueRow) {

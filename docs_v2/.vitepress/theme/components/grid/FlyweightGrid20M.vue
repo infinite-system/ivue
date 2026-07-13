@@ -62,7 +62,7 @@ async function loadGrid() {
   margin: 0 0 14px;
   font-size: 13.5px;
   line-height: 1.65;
-  color: #8b95b5;
+  color: var(--vp-c-text-2);
 }
 .fwl-error {
   margin-top: 10px;
