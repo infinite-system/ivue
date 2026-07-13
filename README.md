@@ -54,9 +54,13 @@ class $Counter {
   }
 }
 
-export const Counter = Reactive($Counter);
+export namespace Counter {
+  export const $Class = $Counter; // raw — children `extends` this
+  export const Class = Reactive($Class); // reactive — you `new` this
+  export type Instance = typeof Class.Instance; // the unwrapping-surface type
+}
 
-const counter = new Counter();
+const counter = new Counter.Class();
 counter.increment();
 counter.count.value  // 1
 counter.double       // 2, re-derived on read
@@ -68,7 +72,7 @@ In a component:
 <script setup lang="ts">
 import { Counter } from './Counter';
 
-const counter = new Counter();
+const counter = new Counter.Class();
 
 // the state destructure — every Ref the template touches, unwrapped uniformly
 const { count } = counter;
@@ -89,7 +93,8 @@ checklist. It reads as documentation and works as a drop-in skill for AI
 coding agents, so generated code follows the same standard your team writes:
 
 ```sh
-npx ivue skill   # installs .claude/skills/ivue/SKILL.md, version-locked
+npx ivue skill        # installs .claude/skills/ivue/SKILL.md, version-locked
+npx ivue skill --all  # + Codex/Cursor/Copilot where already in use
 ```
 
 ## Hard problems, solved together
