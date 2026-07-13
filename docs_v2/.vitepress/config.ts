@@ -118,7 +118,7 @@ export default defineConfig({
       {
         text: 'v2',
         items: [
-          { text: 'Operating Manual', link: '/guide/standard' },
+          { text: 'The Standard Operating Manual', link: '/guide/standard' },
           {
             text: 'The Engine Under the Idiom',
             link: '/guide/engine-under-the-idiom',
@@ -159,7 +159,7 @@ export default defineConfig({
           text: 'Going Deeper',
           collapsed: false,
           items: [
-            { text: 'Operating Manual', link: '/guide/standard' },
+            { text: 'The Standard Operating Manual', link: '/guide/standard' },
             {
               text: 'The Engine Under the Idiom',
               link: '/guide/engine-under-the-idiom',
