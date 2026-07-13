@@ -114,30 +114,21 @@ features:
 
 <div>
 
-<p class="lead">
+<p class="lead ix-idea__p">
 <code>Reactive()</code> transforms a class once — the prototype, not the
-instances. A getter returning <code>ref()</code> becomes state: created on
-first touch, cached, stable forever. A plain getter stays plain and
-re-derives on every read, reactive with zero allocation. Methods bind
-themselves once, to the right <code>this</code>.
+instances. Ref-getters become state, created on first touch. Plain getters
+re-derive on every read, reactive with zero allocation. Methods bind once,
+to the right <code>this</code>. Instances stay ordinary objects: a plain
+<code>new</code>, no proxy, nothing paid until first access.
 </p>
 
-<p class="lead">
-Instances stay ordinary objects: no proxy wraps them, no per-instance
-closures, no work at construction. Creating one is a plain <code>new</code> —
-which is why a million of them take 22 ms, and why unused state costs
-nothing at all.
+<p class="lead ix-idea__p">
+Everything else falls out of that one move — inheritance, hot reload,
+deterministic teardown, speed. Not features bolted on; consequences of
+where things live.
 </p>
 
-<p class="lead">
-Everything else falls out of that one move. Inheritance works because
-prototypes already know how to inherit. Hot reload works because behavior
-lives on the prototype, where an edit can graft without touching state.
-Teardown is deterministic because every instance owns its effect scope.
-Speed is not an optimization pass — it is the shape of the design.
-</p>
-
-<p class="lead">
+<p class="lead ix-idea__link">
 <a href="/guide/principles">Read the Principles →</a>
 </p>
 

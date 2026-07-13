@@ -397,11 +397,19 @@
 .ix-moat .cell:hover {
   /* OPAQUE mix over the page bg — a transparent tint lets the grid
      container (the grey "borders" layer) bleed through and read as dark */
-  background: color-mix(in srgb, #7dd3fc 10%, var(--vp-c-bg));
+  background: color-mix(in srgb, #7dd3fc 24%, var(--vp-c-bg));
 }
 .dark .ix-moat .cell:hover {
   background: var(--vp-c-brand-soft);
 }
+.ix-idea__p + .ix-idea__p {
+  margin-top: 16px;
+}
+
+.ix-idea__link {
+  margin-top: 30px;
+}
+
 /* CSS-drawn gradient check badge — no icon font, no svg path */
 .ix-moat .ck {
   flex: none;
