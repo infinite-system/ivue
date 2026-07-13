@@ -184,7 +184,9 @@ with one line.
 ## The mental model
 
 - **ivue**: cheap to create, light in memory, slightly costlier to read (several-fold per hot-loop read, erased by hoisting).
-- **ivue v1 (unreleased) / native composable**: costlier to create, heavier per instance, cheap to read.
+- **native composable**: costlier to create, heavier per instance, cheap to read.
+- **ivue v1 (unreleased)**: pays at both ends — eager creation AND every read
+  through a `reactive()` proxy, the most expensive column in the table above.
 
 Pick by workload. Most apps create and render far more than they hot-loop, so
 ivue's creation win usually dominates. Where it doesn't, the read cost is
