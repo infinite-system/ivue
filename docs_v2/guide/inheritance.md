@@ -20,7 +20,9 @@ line to the receipt.
 Each file exports the [namespace pattern](/guide/modules): the raw class for
 extending, the reactive class for instantiating.
 
-```ts
+::: code-group
+
+```ts [Product.ts]
 // Product.ts
 import { Reactive } from 'ivue';
 import { ref } from 'vue';
@@ -49,7 +51,7 @@ export namespace Product {
 }
 ```
 
-```ts
+```ts [SaleProduct.ts]
 // SaleProduct.ts
 import { Reactive } from 'ivue';
 import { ref } from 'vue';
@@ -79,7 +81,7 @@ export namespace SaleProduct {
 }
 ```
 
-```ts
+```ts [TaxedProduct.ts]
 // TaxedProduct.ts
 import { Reactive } from 'ivue';
 import { ref } from 'vue';
@@ -109,6 +111,8 @@ export namespace TaxedProduct {
   export type Instance = typeof Class.Instance;
 }
 ```
+
+:::
 
 Each level is made of the three shapes every ivue class is made of, and each
 shape chains through `super` natively: **state** as ref-getters (`price`,
@@ -144,8 +148,9 @@ A template showing the receipt re-renders on a write to any level:
 
 <DemoInheritance />
 
-The demo runs the exact three files above — they live in the docs theme as
-`Product.ts`, `SaleProduct.ts` and `TaxedProduct.ts` and are imported the
+The demo runs the exact three files above — they live in the
+[playground](https://github.com/infinite-system/ivue/tree/main/examples/playground)
+as `Product.ts`, `SaleProduct.ts` and `TaxedProduct.ts` and are imported the
 same way you would in an app.
 
 ## Each level is a complete class
