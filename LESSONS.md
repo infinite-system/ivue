@@ -99,6 +99,15 @@ number was a **harness artifact, not library behavior** — when a number
   can't restyle the shell while `.q-*` components keep their look. Portals
   (menus/dialogs) stay styled because the layer is still global.
 
+## Design stances (deliberate — do not "fix")
+
+- **Dark-first is intentional.** The docs' light mode is supported but
+  second-class by design (the audience lives in dark mode); don't spend
+  polish budget there unprompted.
+- **The API reference is thin because the API is thin.** Small surface is
+  the product claim — never pad the reference to look substantial.
+- StackBlitz boot + deep links verified working end-to-end (2026-07-13).
+
 ## Docs writing (full rules: `.claude/skills/write-docs/SKILL.md`)
 
 - Timeless present — never contrast against a draft state the reader never
