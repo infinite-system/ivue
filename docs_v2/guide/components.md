@@ -81,6 +81,26 @@ there, as everywhere outside a template.
   silently shadows it (setup bindings win). Rare by construction: the class
   consumes props through prop-getters, so prop-derived values stay dotted
   (`player.width`, `player.widthPx`) and never compete with state names.
+- **No logic in template expressions.** A condition written inline —
+  `v-if="items.length && !loading && mode === 'edit'"` — has no name, no
+  home, and no test. It lives on the class as a plain getter whose name
+  says what it *means*:
+
+  ```ts
+  get canEditItems() {
+    return this.items.value.length > 0 && !this.loading.value && this.mode.value === 'edit';
+  }
+  ```
+
+  ```vue-html
+  <section v-if="player.canEditItems">
+  ```
+
+  In ordinary Vue this discipline costs a `computed()` per condition, so
+  templates fill with anonymous boolean soup. Here a
+  [named plain getter costs zero bytes](/guide/computed-watch#derived-values-plain-getters-by-default),
+  so the encapsulated form is strictly cheaper than the mess. Templates
+  read as prose — bindings, names, events — never expressions.
 
 ## How the standard got here
 

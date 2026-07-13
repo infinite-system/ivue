@@ -33,6 +33,12 @@ instance at creation, read or not — 60 of them on a 10k-row list is ~300 MB
 of pure bookkeeping avoided. Full numbers in
 [Memory](/guide/performance#memory-derivations-weigh-nothing).
 
+Because derivations are free, they absorb what templates elsewhere carry
+inline: every `v-if` combination, comparison and ternary becomes a **named**
+plain getter (`canEditItems`, not `items.length && !loading && …`). The
+condition gains a name, a single home, and testability — and costs nothing
+([the template rule](/guide/components#the-rules-that-keep-it-clean)).
+
 ## computed(): your useMemo
 
 Wrap a getter in `computed()` when memoization earns its bytes:

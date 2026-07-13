@@ -225,6 +225,15 @@ call site. Rules that keep it clean:
   win). Rare by construction: the class consumes props through prop-getters,
   so prop-derived values stay DOTTED (`box.width`, `box.widthPx`) and never
   compete with state-binding names.
+- **No logic in template expressions — name it as a derived getter.**
+  `v-if="items.length && !loading && mode === 'edit'"` is an anti-pattern:
+  the condition has no name, duplicates across call sites, and its pieces
+  can't be tested. Every combination, comparison or ternary lives on the
+  class as a PLAIN getter whose name says what the condition MEANS —
+  `v-if="box.canEditItems"`. In ordinary Vue this discipline costs a
+  `computed()` per condition, so nobody keeps it; here a named plain getter
+  costs zero bytes, so there is no excuse. Templates read as prose:
+  bindings, names, and events — never expressions.
 
 ## The outliving instance (module singleton, entity)
 
