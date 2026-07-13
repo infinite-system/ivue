@@ -91,7 +91,7 @@ features:
   <div class="cell">
     <span class="ck" aria-hidden="true"></span>
     <div class="tx">
-      <strong>Memory</strong>
+      <strong>Minimal memory footprint</strong>
       <p>Derivations are shared prototype getters, not per-instance allocations.</p>
     </div>
   </div>

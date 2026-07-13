@@ -108,7 +108,7 @@ as one coherent design:
 - **Circular imports** — the namespace pattern resolves mutual references in any load order.
 - **Writable getter types** — ref-returning getters type as writable; instances fully inferred.
 - **Deterministic teardown** — `$watch` scopes per instance, `$stopEffects()` cleans up.
-- **Memory** — derivations are shared prototype getters, not per-instance allocations.
+- **Minimal memory footprint** — derivations are shared prototype getters, not per-instance allocations.
 - **Hot paths** — reads hoist to native ref speed with one line where it matters.
 
 ## One idea, carried through
