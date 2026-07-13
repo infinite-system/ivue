@@ -132,6 +132,7 @@ export default defineConfig({
       { text: 'Manual', link: '/guide/standard', activeMatch: '/guide/standard' },
       { text: 'Benchmarks', link: '/guide/benchmarks', activeMatch: '/guide/benchmarks' },
       { text: 'API', link: '/api/', activeMatch: '/api/' },
+      { text: 'Blog', link: '/blog/', activeMatch: '/blog/' },
       {
         text: 'v2',
         items: [
