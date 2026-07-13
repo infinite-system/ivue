@@ -15,8 +15,8 @@ import {
   ivueHotUpdate,
   Reactive,
   type ReactiveInstance
-} from './ivue';
-import { Lenis } from './lenis/lenis';
+} from '../../ivue';
+import { Lenis } from '../../lenis/lenis';
 import type { BaseItem } from './VirtualScroller.types';
 import type {
   ItemContext,

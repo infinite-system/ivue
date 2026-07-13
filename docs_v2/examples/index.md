@@ -59,18 +59,18 @@ so each block scrolls inside itself. The demo wrapper is docs code;
 everything else is the production component.
 
 ::: code-group
-<<< ../../examples/virtual-scroller/src/VirtualScroller.ts [VirtualScroller.ts]
-<<< ../../examples/virtual-scroller/src/VirtualScroller.vue [VirtualScroller.vue]
-<<< ../../examples/virtual-scroller/src/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
 <<< @/.vitepress/theme/components/examples/ExampleVirtualScroller.vue [demo wrapper]
 :::
 
 The example is a **standalone Vite app** at
-[`examples/virtual-scroller/`](https://github.com/infinite-system/ivue/tree/main/examples/virtual-scroller)
+[`examples/playground/`](https://github.com/infinite-system/ivue/tree/main/examples/playground)
 — the customized Lenis (virtual-limit support over the stock engine) is
 vendored inside it. Run it without cloning anything:
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/virtual-scroller" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
 — StackBlitz imports the folder straight from GitHub, so every push
 redeploys the example automatically.
 

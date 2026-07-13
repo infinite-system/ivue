@@ -1,0 +1,163 @@
+<script setup lang="ts">
+import { defineAsyncComponent, type Component } from 'vue';
+import { Playground } from './Playground';
+
+const playground = new Playground.Class();
+
+// the state destructure — every Ref the template touches, grouped
+const {
+  // state refs
+  route,
+} = playground;
+
+// route components are lazy — a route never loads the others' code
+const routeComponents: Record<string, Component> = Object.fromEntries(
+  playground.examples.map((example) => [
+    example.slug,
+    defineAsyncComponent(example.load),
+  ]),
+);
+</script>
+
+<template>
+  <div class="shell">
+    <aside class="sidebar">
+      <h1>ivue playground</h1>
+      <p class="tagline">every doc example, one deployable app</p>
+      <nav>
+        <button
+          v-for="example in playground.examples"
+          :key="example.slug"
+          type="button"
+          :class="{ active: example.slug === playground.activeExample.slug }"
+          @click="playground.navigate(example.slug)"
+        >
+          <span class="title">{{ example.title }}</span>
+          <span class="blurb">{{ example.blurb }}</span>
+        </button>
+      </nav>
+    </aside>
+    <section class="stage">
+      <header class="stage-header">
+        <h2>{{ playground.activeExample.title }}</h2>
+        <a
+          href="https://infinite-system.github.io/ivue/"
+          target="_blank"
+          rel="noreferrer"
+          >docs ↗</a
+        >
+      </header>
+      <div class="stage-body">
+        <component
+          :is="routeComponents[playground.activeExample.slug]"
+          :key="route || playground.activeExample.slug"
+        />
+      </div>
+    </section>
+  </div>
+</template>
+
+<style>
+* {
+  margin: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #0d1226;
+  color: #b7c0dc;
+}
+.shell {
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+}
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  padding: 18px 14px;
+  border-right: 1px solid rgba(148, 163, 184, 0.16);
+  overflow-y: auto;
+}
+.sidebar h1 {
+  font-size: 16px;
+  color: #fff;
+}
+.tagline {
+  margin: 4px 0 16px;
+  font-size: 12px;
+  color: #64748b;
+}
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sidebar nav button {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sidebar nav button:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.sidebar nav button.active {
+  border-color: rgba(99, 102, 241, 0.45);
+  background: rgba(99, 102, 241, 0.1);
+}
+.sidebar nav .title {
+  font-size: 13.5px;
+  color: #dbe1f4;
+  font-weight: 600;
+}
+.sidebar nav .blurb {
+  font-size: 12px;
+  color: #8b95b5;
+  line-height: 1.45;
+}
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.stage-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+.stage-header h2 {
+  font-size: 16px;
+  color: #fff;
+}
+.stage-header a {
+  font-size: 12.5px;
+  color: #7dd3fc;
+  text-decoration: none;
+}
+.stage-body {
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 720px) {
+  .shell {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    max-height: 40vh;
+    border-right: none;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  }
+}
+</style>

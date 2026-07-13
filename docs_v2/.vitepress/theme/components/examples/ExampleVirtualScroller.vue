@@ -7,9 +7,9 @@
  */
 import { ref } from 'vue';
 import DemoBox from '../DemoBox.vue';
-import VirtualScroller from '../../../../../examples/virtual-scroller/src/VirtualScroller.vue';
-import type { VirtualScrollerExposedUnwrapped } from '../../../../../examples/virtual-scroller/src/VirtualScroller.vue';
-import type { BaseItem } from '../../../../../examples/virtual-scroller/src/VirtualScroller.types';
+import VirtualScroller from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue';
+import type { VirtualScrollerExposedUnwrapped } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue';
+import type { BaseItem } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.types';
 
 const ITEM_COUNT = 1_000_000;
 
