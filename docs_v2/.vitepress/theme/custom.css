@@ -406,8 +406,8 @@
   margin-top: 16px;
 }
 
-.ix-idea__link {
-  margin-top: 30px;
+.ix .ix-idea__link {
+  margin-top: 20px;
 }
 
 /* CSS-drawn gradient check badge — no icon font, no svg path */
