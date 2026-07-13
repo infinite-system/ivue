@@ -70,8 +70,9 @@ what a hand-written Quasar wrapper gives you, and it falls out of the
 :::
 
 The props architecture — one typed params object, one plain defaults
-object, merged by `propsWithDefaults()` — has its own guide:
-[Props with Defaults](/guide/props-defaults).
+object, merged by `propsWithDefaults()`, spread and re-defaulted by
+`ContactField` — has its own guide:
+[Extensible Props](/guide/extensible-props).
 
 ## The backend path
 
