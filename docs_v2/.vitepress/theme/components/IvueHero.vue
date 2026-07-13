@@ -240,26 +240,28 @@ onUnmounted(() => {
   background: linear-gradient(
     110deg,
     #7dd3fc 0%,
-    #c7d2fe 20%,
-    #ffffff 40%,
-    #c7d2fe 60%,
-    #93e6d0 80%,
+    #7dd3fc 38%,
+    #eaf6ff 47%,
+    #ffffff 50%,
+    #eaf6ff 53%,
+    #7dd3fc 62%,
     #7dd3fc 100%
   );
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: ivh-shine 6.5s linear infinite;
+  animation: ivh-shine 4s linear infinite;
 }
 :root:not(.dark) .ivh-title .shine {
   background-image: linear-gradient(
     110deg,
     #0ea5e9 0%,
-    #6366f1 20%,
-    #94b8ff 40%,
-    #6366f1 60%,
-    #10b981 80%,
+    #0ea5e9 38%,
+    #7fc9f7 47%,
+    #b3e2ff 50%,
+    #7fc9f7 53%,
+    #0ea5e9 62%,
     #0ea5e9 100%
   );
   -webkit-background-clip: text;
@@ -499,26 +501,28 @@ onUnmounted(() => {
   background: linear-gradient(
     110deg,
     #7dd3fc 0%,
-    #c7d2fe 20%,
-    #ffffff 40%,
-    #c7d2fe 60%,
-    #93e6d0 80%,
+    #7dd3fc 38%,
+    #eaf6ff 47%,
+    #ffffff 50%,
+    #eaf6ff 53%,
+    #7dd3fc 62%,
     #7dd3fc 100%
   );
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: ivh-shine 6.5s linear infinite;
+  animation: ivh-shine 4s linear infinite;
 }
 :root:not(.dark) .ivh-title .shine {
   background-image: linear-gradient(
     110deg,
     #0ea5e9 0%,
-    #6366f1 20%,
-    #94b8ff 40%,
-    #6366f1 60%,
-    #10b981 80%,
+    #0ea5e9 38%,
+    #7fc9f7 47%,
+    #b3e2ff 50%,
+    #7fc9f7 53%,
+    #0ea5e9 62%,
     #0ea5e9 100%
   );
   -webkit-background-clip: text;
