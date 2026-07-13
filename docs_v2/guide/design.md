@@ -43,7 +43,7 @@ set.
     <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>An idempotent, per-file transform <strong>survives HMR</strong>: behavior edits graft onto live instances.</span></p>
   </div>
   <div class="iv-problem">
-    <strong class="iv-problem__title">Circular imports</strong>
+    <strong class="iv-problem__title">Circular imports hell</strong>
     <p class="iv-problem__hard">Mutual class references throw <code>Cannot access 'X' before initialization</code>.</p>
     <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>The namespace pattern <strong>resolves references in any load order</strong>.</span></p>
   </div>
