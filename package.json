@@ -1,14 +1,23 @@
 {
   "name": "ivue",
   "version": "1.6.1",
-  "description": "Infinite Vue – Class Based Architecture for Vue 3",
+  "description": "Infinite Vue \u2013 Class Based Architecture for Vue 3",
   "type": "module",
   "exports": {
     ".": {
-      "require": "./dist/index.umd.js",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.es.js",
-      "types": "./dist/index.d.ts"
-    }
+      "require": "./dist/index.umd.js"
+    },
+    "./hmr-plugin": {
+      "types": "./dist/hmr-plugin.d.ts",
+      "import": "./dist/hmr-plugin.mjs"
+    },
+    "./lib/hmr-plugin": {
+      "types": "./dist/hmr-plugin.d.ts",
+      "import": "./dist/hmr-plugin.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.umd.js",
   "module": "./dist/index.es.js",
@@ -28,12 +37,15 @@
     "bench": "vitest bench --run",
     "cypress": "cypress run --component",
     "cypress:headed": "cypress run --component --browser chrome --headed --no-exit",
-    "build": "tsc --version;tsc --p ./tsconfig.json && vite build",
+    "build": "tsc --version;tsc --p ./tsconfig.json && vite build && npm run build:plugin",
     "build:demo": "tsc --p ./tsconfig.json && vite build demo",
     "build:docs": "npm --prefix docs_v2 run build",
     "preview:demo": "npm run build:demo && vite preview demo --host",
     "preview:docs": "npm --prefix docs_v2 run preview",
-    "release": "yarn build && yarn publish"
+    "release": "yarn build && yarn publish",
+    "build:plugin": "esbuild lib/hmr-plugin.ts --format=esm --platform=node --outfile=dist/hmr-plugin.mjs && tsc lib/hmr-plugin.ts --declaration --emitDeclarationOnly --skipLibCheck --moduleResolution bundler --module esnext --target esnext --outDir dist",
+    "sync:skill": "node -e \"const fs=require('fs');fs.mkdirSync('skills/ivue',{recursive:true});fs.copyFileSync('.claude/skills/ivue/SKILL.md','skills/ivue/SKILL.md')\"",
+    "prepack": "npm run sync:skill"
   },
   "peerDependencies": {
     "vue": "^3.0.0",
@@ -109,7 +121,12 @@
   },
   "files": [
     "lib",
-    "dist"
+    "dist",
+    "bin",
+    "skills"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "bin": {
+    "ivue": "bin/ivue.mjs"
+  }
 }

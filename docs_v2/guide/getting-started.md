@@ -31,7 +31,7 @@ intact**, no page reload:
 // vite.config.ts
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import ivueHmr from 'ivue/lib/hmr-plugin';
+import ivueHmr from 'ivue/hmr-plugin';
 
 export default defineConfig({
   plugins: [vue(), ivueHmr()],
@@ -44,6 +44,19 @@ code. Optional — everything else on this page works without it — but it's
 one line, and it's the difference between tweaking a method live and
 re-clicking through your app after every save. Details, the manual
 three-line alternative, and how the grafting works: [HMR](/guide/hmr).
+
+## Give your AI the standard
+
+If AI agents write code in your project, hand them the same manual this
+site publishes as [The Standard](/guide/standard) — one command, and the
+copy is version-locked to your installed ivue:
+
+```sh
+npx ivue skill
+```
+
+It lands at `.claude/skills/ivue/SKILL.md`, travels with your repo through
+git, and one teammate installing it equips everyone.
 
 ## Your first reactive class
 

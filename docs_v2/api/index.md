@@ -114,7 +114,7 @@ behavior edits graft onto live instances with their state intact
 
 ```ts
 // vite.config.ts
-import ivueHmr from 'ivue/lib/hmr-plugin'
+import ivueHmr from 'ivue/hmr-plugin'
 
 export default defineConfig({
   plugins: [vue(), ivueHmr()],

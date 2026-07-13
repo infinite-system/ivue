@@ -12,6 +12,18 @@ to be exactly the reference a human wants open in a second tab. Everything
 here is production-proven; the _why_ behind each rule lives in the guide
 chapters.
 
+::: info Install it as a skill
+One command copies this exact document into your project, version-locked
+to the ivue you have installed — agents pick it up from
+`.claude/skills/ivue/`:
+
+```sh
+npx ivue skill
+```
+
+Evaluating before adopting? `npx degit infinite-system/ivue/.claude/skills/ivue .claude/skills/ivue` grabs the latest from the repo instead.
+:::
+
 # ivue `Reactive`
 
 Author reactive Vue 3 logic as a plain `class $X`, then export `Class = Reactive($Class)` through `namespace X`.

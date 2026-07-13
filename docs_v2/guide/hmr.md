@@ -51,7 +51,7 @@ The distinction Vue must guess at, ivue reads off the syntax.
 ```ts
 // vite.config.ts
 import vue from '@vitejs/plugin-vue';
-import ivueHmr from 'ivue/lib/hmr-plugin';
+import ivueHmr from 'ivue/hmr-plugin';
 
 export default defineConfig({
   plugins: [vue(), ivueHmr()],

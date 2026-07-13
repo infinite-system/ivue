@@ -120,7 +120,11 @@ as one coherent design:
 ivue ships with an [Operating Manual](https://infinite-system.github.io/ivue/guide/standard) —
 the complete authoring standard as annotated templates, rules, and a review
 checklist. It reads as documentation and works as a drop-in skill for AI
-coding agents, so generated code follows the same standard your team writes.
+coding agents, so generated code follows the same standard your team writes:
+
+```sh
+npx ivue skill   # installs .claude/skills/ivue/SKILL.md, version-locked
+```
 
 ## A note on the size
 
