@@ -7,6 +7,13 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/vscode-hand-rolled-decade">
+    <img class="thumb" src="/blog/vscode-hand-rolled-decade.png" alt="VS Code spent a decade hand-rolling reactive classes" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <h3>VS Code spent a decade hand-rolling reactive classes</h3>
+      <p>Emitters, disposables, DI decorators — and since 2022 its own signals system. Every subsystem maps to one ivue feature.</p>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/introducing-ivue">
     <img class="thumb" src="/blog/introducing-ivue.png" alt="Introducing ivue: plain classes, full reactivity, one kilobyte" width="1200" height="630" loading="lazy" />
     <div class="body">
