@@ -93,7 +93,7 @@ Every code block is teaching code — someone WILL copy it.
 
 - **The skill is the source; standard.md is the mirror.** Edit
   `.claude/skills/ivue/SKILL.md`, then resplice `docs_v2/guide/standard.md`
-  from the `# ivue (\`Reactive\`)` marker and assert the
+  from the `# ivue \`Reactive\`` marker and assert the
   bodies are byte-identical. Never edit the mirror directly.
 - VitePress traps: literal `{{ }}` in prose SSR-compiles as interpolation
   (rephrase or v-pre); raw-HTML `href`/`src` are not base-prefixed (the

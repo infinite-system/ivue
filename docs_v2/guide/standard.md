@@ -12,7 +12,7 @@ to be exactly the reference a human wants open in a second tab. Everything
 here is production-proven; the _why_ behind each rule lives in the guide
 chapters.
 
-# ivue (`Reactive`)
+# ivue `Reactive`
 
 Author reactive Vue 3 logic as a plain `class $X`, then export `Class = Reactive($Class)` through `namespace X`.
 The engine transforms the prototype once: ref-returning getters become cached

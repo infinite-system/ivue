@@ -3,7 +3,7 @@ name: ivue
 description: Use when writing or editing ivue `Reactive()` classes, converting a Vue component or composable to ivue, or resolving any `.value`-in-template, `defineExpose`/`reactive()` instance-typing, `ReactiveInstance`/`Instance`, `$watch`/`$watchEffect`, or namespace-export question — the operating manual for Vue 3 class-based reactivity where state is ref-getters, derived values are plain getters, and Refs/Computeds are `.value` everywhere.
 ---
 
-# ivue (`Reactive`)
+# ivue `Reactive`
 
 Author reactive Vue 3 logic as a plain `class $X`, then export `Class = Reactive($Class)` through `namespace X`.
 The engine transforms the prototype once: ref-returning getters become cached
