@@ -180,6 +180,7 @@ export default defineConfig({
             { text: 'Lifecycle & Teardown', link: '/guide/lifecycle-teardown' },
             { text: 'Inheritance & super', link: '/guide/inheritance' },
             { text: 'Modules & Imports', link: '/guide/modules' },
+            { text: 'Props with Defaults', link: '/guide/props-defaults' },
             { text: 'HMR: Hot Reload for Classes', link: '/guide/hmr' },
           ],
         },

@@ -20,5 +20,5 @@ export async function installQuasar() {
     // @ts-expect-error — css side-effect imports have no types
     import('@quasar/extras/material-icons/material-icons.css'),
   ]);
-  app.use(Quasar, {});
+  app.use(Quasar, { config: { dark: true } }); // match the playground's dark shell
 }

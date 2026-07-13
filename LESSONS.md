@@ -55,6 +55,12 @@ number was a **harness artifact, not library behavior** — when a number
 - `echo 'x' >> file` glues onto the last line when the file lacks a trailing
   newline — check before appending (this once corrupted .gitignore).
 - Docs dev server runs at `localhost:5174/ivue/` — the `/ivue/` base matters.
+- **This repo's lockfile is `yarn.lock`.** `npm install` (npm ≥10) silently
+  REWRITES yarn.lock and prunes every package not in package.json — 307
+  packages once vanished in one install. Adding pure-JS deps with
+  `npm install --ignore-scripts` is safe for the shared node_modules (no
+  native rebuilds), but re-run tests + all builds after, and never commit a
+  package-lock.json here.
 
 ## Library / packaging
 
