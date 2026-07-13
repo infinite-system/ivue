@@ -1,13 +1,14 @@
 ---
-title: Extensible Props
-description: 'Classes extend — so their props must extend too. The params/defaults architecture: one typed props object, one plain defaults object, merged by propsWithDefaults(), spread and overridden by wrapping components.'
+title: Extensible Components
+description: 'Classes extend — so props, emits and slots must extend with them. The params/defaults architecture: typed props + plain defaults merged by propsWithDefaults(), ExtractEmitTypes for emits, ExtendSlots for wrappable slots.'
 ---
 
-# Extensible Props
+# Extensible Components
 
 ivue components are classes, and classes extend. A `ContactField` that
-extends the choose-field machinery needs to extend its **props** the same
-way — inherit the whole surface, override a few defaults, add its own.
+extends the choose-field machinery needs its **entire surface** to extend
+with it — props inherited, re-defaulted and grown; emits carried through;
+slots wrappable rather than replaced.
 Vue's `withDefaults(defineProps<T>())` macro cannot express that: its
 defaults are locked inside a compiler transform, invisible to any wrapper.
 
