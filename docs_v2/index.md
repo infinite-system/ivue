@@ -211,15 +211,16 @@ counter.double       // 2, re-derived on read
 
 <div>
 
-### Heap per instance, same shape
+### Heap at 1,000,000 instances
 
-| | heap | ivue is |
+| | per instance | one million |
 | --- | --- | --- |
-| **ivue class, 60 getters** | **1.7 KB** | <span class="ix-base">the baseline</span> |
-| composable, 60 closures | 12.8 KB | **7.7× lighter** |
-| composable, 60 computeds | 31.1 KB | **18.6× lighter** |
+| **ivue class, 60 getters** | **1.7 KB** | <span class="ix-base">runs — 1.66 GB</span> |
+| `reactive()`, fields + getters | 0.18 KB | runs — pays at creation & every read |
+| composable, 60 closures | 10.3 KB | **OOM** at ~10.3 GB |
+| composable, 60 computeds | 28.6 KB | **OOM** at ~28.6 GB |
 
-<p class="foot">Derivations live on the prototype. They weigh nothing per instance.</p>
+<p class="foot">Derivations live on the prototype — they weigh nothing per instance. Only ivue finishes the million on a 10 GB heap.</p>
 
 </div>
 

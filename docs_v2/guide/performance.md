@@ -1,6 +1,6 @@
 ---
 title: Performance by Design
-description: The honest numbers. ivue creates instances 6–132× faster, uses up to 18× less memory per instance, and reads state several-fold slower in hot loops — a cost you can erase with a one-line hoist.
+description: The honest numbers. ivue creates instances 6–132× faster, uses up to 17× less memory per instance, and reads state several-fold slower in hot loops — a cost you can erase with a one-line hoist.
 ---
 
 # Performance by Design
@@ -45,29 +45,40 @@ all it memoizes is trivial math.
 ivue stores derivations once, on the prototype, as plain getters. An instance
 holds only the Refs it has actually materialized.
 
-Measured on Vue 3.5 with an identical shape — 10 state refs, 60 trivial
-derivations, one full read pass, 20k instances:
+Measured on Vue 3.5 (Node 22, gc-forced heap deltas, every instance
+retained and fully read once) with an identical shape — 10 state refs, 60
+trivial derivations. Per-instance figures are taken at each arm's **largest
+population that survives a 10 GB heap**: ivue completes the full million;
+the alternatives cannot.
 
-| authoring style                    | heap per instance | ivue is                                   |
-| ---------------------------------- | ----------------- | ----------------------------------------- |
-| **ivue class — 60 plain getters**  | **1.7 KB**        | <span class="ix-base">the baseline</span> |
-| composable — 60 plain closures     | 12.8 KB           | **7.7× lighter**  |
-| composable — 60 eager `computed()` | 31.1 KB           | **18.6× lighter** |
+| authoring style, at 1,000,000 instances | heap per instance | one million instances                     |
+| ---------------------------------------- | ----------------- | ----------------------------------------- |
+| **ivue class — 60 plain getters**        | **1.7 KB**        | <span class="ix-base">runs — 1.66 GB</span> |
+| `reactive(new X())` — plain fields + getters | 0.18 KB       | runs — 177 MB                              |
+| composable — 60 plain closures           | 10.3 KB           | **out of memory** (~10.3 GB; measured at 500k) |
+| composable — 60 eager `computed()`       | 28.6 KB           | **out of memory** (~28.6 GB; measured at 200k) |
 
-A trivial computed costs ≈300 bytes per instance. A closure costs ≈190. Both
-are paid at creation, whether the value is ever read or not.
+Per-instance cost is flat across scales — 1.70 KB at 20k and at 1,000,000 —
+so the ratios are structural: closures weigh **6×** and eager computeds
+**17×** what ivue pays. The `reactive()` row is honestly the lightest at
+rest — a proxy allocates nothing until an effect subscribes — but its bill
+comes due elsewhere: creation runs 22× slower at a million instances, and
+every read pays the proxy for the lifetime of the object (both measured on
+this page). ivue's 1.7 KB buys refs that read at raw speed. A trivial computed costs ≈300 bytes per instance. A
+closure costs ≈150. Both are paid at creation, whether the value is ever
+read or not.
 
 The middle row is the sharp one. Skipping `computed()` inside a composable
-still costs 7.7×, because **closures allocate per instance**. Only prototype
+still costs 6×, because **closures allocate per instance**. Only prototype
 getters are shared. Skipping memoization is a policy win. The prototype is
 the structural win. ivue stacks both by default.
 
-Scaled up: a 1,000-row grid of these components drops from ~31 MB to ~1.7 MB
-of Refs/Computeds. For 10k virtualized items: ~311 MB → ~17 MB. The GC
+Scaled up: a 1,000-row grid of these components drops from ~29 MB to ~1.7 MB
+of Refs/Computeds. For 10k virtualized items: ~286 MB → ~17 MB. The GC
 pressure of creation bursts shrinks with it.
 
 This doesn't matter everywhere. A singleton store with 60 computeds costs
-31 KB, total. And in many components, vnodes and DOM dominate the heap, not
+29 KB, total. And in many components, vnodes and DOM dominate the heap, not
 Refs/Computeds. Use [`computed()`](/guide/computed-watch) where memoization
 or render suppression earns its ~300 bytes.
 
