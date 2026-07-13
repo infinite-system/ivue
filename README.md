@@ -59,11 +59,6 @@ export namespace Counter {
   export const Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // the unwrapping-surface type
 }
-
-const counter = new Counter.Class();
-counter.increment();
-counter.count.value  // 1
-counter.double       // 2, re-derived on read
 ```
 
 In a component:
