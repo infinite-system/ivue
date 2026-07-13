@@ -409,8 +409,8 @@ onUnmounted(() => {
     100% { background-position: 0% 50%; }
   }
   @keyframes ivh-pop {
-    from { transform: scale(1.18); opacity: 0.4; }
-    to { transform: scale(1); opacity: 1; }
+    from { transform: scale(1.12); }
+    to { transform: scale(1); }
   }
   .ivh-title {
     animation: ivh-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
