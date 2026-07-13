@@ -117,4 +117,4 @@ non-functions. Used internally by `propsWithDefaults`; exported for convenience.
 ## Invariants spec
 
 The full, rigorous specification of the engine — each guarantee, its mechanism,
-and what it makes impossible — is on the [Invariants](/reference/invariants) page.
+and what it makes impossible — is on the [Invariant-Based Design](/reference/invariants) page.

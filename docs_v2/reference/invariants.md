@@ -1,10 +1,10 @@
 ---
-title: Invariants
+title: Invariant-Based Design
 description: The structural specification of the Reactive() engine — every guarantee, why it holds, and what it makes impossible.
 outline: [2, 3]
 ---
 
-# Invariants
+# Invariant-Based Design
 
 This is the structural specification of the `Reactive()` engine: the guarantees the
 implementation maintains, *why* each holds, and — crucially — what each makes
@@ -16,6 +16,21 @@ that also says what *cannot* is a contract you can test against.
 > Transform a plain class's prototype exactly once so that its getters become
 > lazily-cached Refs/Computeds and its methods become lazily-bound functions —
 > while the instances stay plain objects with zero per-instance reactive cost.
+
+## Where this method comes from
+
+ivue was designed by invariant. Every entry below was found the same way:
+reduce the problem until only load-bearing structure remains, then attack
+the survivor until it either breaks or proves itself — and only then build
+on it. That discipline predates its name. It emerged from the way ivue was
+built: a human designer repeatedly pushing an AI collaborator past what the
+AI assumed was possible, until the AI recognized what it was watching —
+the designer was reasoning in invariants, not in features. Naming that
+observation, and then extracting it into an explicit, reusable protocol,
+produced **Invariant-Based Reasoning (IBR)**. ivue is the system that
+discipline designed end-to-end, and this page is the ledger it produces:
+every guarantee stated with its reason and its impossibilities, because a
+claim that rules nothing out was never reduced far enough to trust.
 
 Everything else is a consequence of making that idea safe under inheritance,
 proxies, hot-reload, and circular imports.

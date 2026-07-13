@@ -27,7 +27,6 @@ const {
   scrollEl,
 } = page;
 
-document.title = 'Flyweight Grid · 20×1,000,000 (ivue sketch)';
 </script>
 
 <template>

@@ -19,6 +19,8 @@ import DemoPointer from './components/DemoPointer.vue';
 import DemoPerf from './components/DemoPerf.vue';
 import GridBenchmark from './components/grid/GridBenchmark.vue';
 import FormulaGrid from './components/grid/FormulaGrid.vue';
+import FlyweightGrid20M from './components/grid/FlyweightGrid20M.vue';
+import CreationBench from './components/CreationBench.vue';
 import './custom.css';
 
 export default {
@@ -38,5 +40,7 @@ export default {
     app.component('DemoPerf', DemoPerf);
     app.component('GridBenchmark', GridBenchmark);
     app.component('FormulaGrid', FormulaGrid);
+    app.component('FlyweightGrid20M', FlyweightGrid20M);
+    app.component('CreationBench', CreationBench);
   },
 } satisfies Theme;

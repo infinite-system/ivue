@@ -20,7 +20,7 @@ set.
 |---|---|---|
 | **Per-instance cost** | A `reactive()` proxy per object is expensive; eager computeds pay for every property up front. | <span class="iv-ck" aria-hidden="true"></span> Instances are **plain**, refs/computeds are lazy → **55–250× cheaper to create.** |
 | **Cheap bound methods** | Bind per instance and you allocate a function per method per object; don't bind and `this` breaks on detach. | <span class="iv-ck" aria-hidden="true"></span> Methods stay on the prototype, **bound lazily on first use and cached** → cheap, correct, referentially stable. |
-| **Reactive reads** | Any indirection over a raw ref costs something. | <span class="iv-ck" aria-hidden="true"></span> `this.x.value` through a getter — **~5× a raw ref, hoistable to native speed**. The one cost, and it's erasable. |
+| **Reactive reads** | Any indirection over a raw ref costs something. | <span class="iv-ck" aria-hidden="true"></span> `this.x.value` through a getter — **several-fold over a raw ref, hoistable to native speed**. The one cost, and it's erasable. |
 | **Reactive inheritance** | Prototype-based reactivity collides cached Refs/Computeds and breaks `super`. | <span class="iv-ck" aria-hidden="true"></span> **Deep computed chains with `super.x.value`**, reactivity propagating through every level. |
 | **Cross-file class HMR** | Editing a parent in another file desyncs prototype links and identities. | <span class="iv-ck" aria-hidden="true"></span> An idempotent, per-file transform **survives HMR**: behavior edits graft onto live instances. |
 | **Circular imports** | Mutual class references throw `Cannot access 'X' before initialization`. | <span class="iv-ck" aria-hidden="true"></span> The namespace pattern **resolves references in any load order**. |
@@ -163,4 +163,4 @@ you want real OOP in your reactivity: polymorphic, `super`-callable, cached
 derivations across an inheritance chain, which signal frameworks don't attempt.
 Composables still handle small, local logic — and ivue hosts them when they do.
 
-For the formal treatment of every guarantee, see [Invariants](/reference/invariants).
+For the formal treatment of every guarantee, see [Invariant-Based Design](/reference/invariants).

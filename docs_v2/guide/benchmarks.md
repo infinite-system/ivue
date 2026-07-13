@@ -1,5 +1,7 @@
 ---
 title: Interactive Benchmarks
+aside: false
+pageClass: benchmarks-wide
 description: 'A live, in-browser 100k/1M-cell virtualized grid — the same model built three ways (composable, ivue, plain POJO) — plus a working 100k-cell spreadsheet with real Excel formulas whose dependency graph Vue discovers by itself.'
 ---
 
@@ -13,8 +15,18 @@ receipt: a real, reproducible, end-to-end measurement, not a microbenchmark.
 isolated instances, per-read cost); this page covers what happens when you
 build an actual grid out of them.
 
-The same 40-column virtualized spreadsheet grid is built three ways from
-identical seeded data:
+**The live benchmarks on this page:**
+
+- [The grid, one model three ways](#try-it) — 100k/1M cells: composable vs ivue vs plain objects
+- [The formula grid](#the-formula-grid-real-formulas-discovered-dependencies) — real Excel formulas, a dependency graph Vue discovers by itself
+- [The flyweight grid](#the-flyweight-grid-20-million-cells) — 20,000,000 live cells at 4.7 bytes each
+- [The primitives](#the-primitives-interactive) — instance creation and method dispatch
+- [Methodology](#methodology) — how every number was taken, and how to reproduce them
+
+## The grid: one model, three ways
+
+The first benchmark builds the same 40-column virtualized spreadsheet grid
+three ways from identical seeded data:
 
 - **Composable** — the idiomatic Vue 3 "composable per entity": every cell
   eagerly allocates a `ref()` plus four `computed()`s.
@@ -153,9 +165,9 @@ Full write-up, machine notes, honest-cost accounting and caveats:
 
 ```bash
 # from the ivue repo root — the interactive playground
-npx vite demo --host --port 5182     # then open /grid-formula
-node demo/formula/measure.mjs http://localhost:5182         # 100k protocol
-node demo/formula/measure.mjs http://localhost:5182 25000   # 1M cells
+npm run dev:demo -- --port 5182                        # then open /grid-formula
+npm run measure:formula -- http://localhost:5182       # 100k protocol
+npm run measure:formula -- http://localhost:5182 25000 # 1M cells
 ```
 
 ## The flyweight grid: 20 million cells
@@ -170,6 +182,11 @@ governs all of it:
 
 > **Everything costs proportional to what's observed; nothing costs
 > proportional to what exists.**
+
+Run it here — the code loads on demand, then one click creates all twenty
+million cells in your browser:
+
+<FlyweightGrid20M />
 
 **20 columns × 1,000,000 rows = 20,000,000 live cells**, ~55% real
 Excel-syntax formulas, same parser, same gc-forced 3-run protocol:
@@ -226,9 +243,17 @@ the columnar fast path), and
 
 ```bash
 # standalone demo, from the ivue repo root
-npx vite sketch/flyweight-grid --host
-node sketch/flyweight-grid/measure.mjs <url>
+npm run dev:flyweight
+npm run measure:flyweight -- <url>
 ```
+
+## The primitives, interactive
+
+The grids above measure whole models. This one measures the two primitive
+costs underneath them — creating instances of a real three-level class
+hierarchy, and calling a prototype-bound method that reads reactive state:
+
+<CreationBench />
 
 ## Methodology
 
@@ -246,9 +271,9 @@ script itself — reusable against your own machine — is
 
 ```bash
 # from the ivue repo root
-npx vite demo --host --port 5180
-node demo/grid/measure.mjs http://localhost:5180        # 100k cells
-node demo/grid/measure.mjs http://localhost:5180 25000  # 1M cells
+npm run dev:demo -- --port 5180
+npm run measure:grid -- http://localhost:5180        # 100k cells
+npm run measure:grid -- http://localhost:5180 25000  # 1M cells
 ```
 
 ## See also

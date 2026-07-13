@@ -638,3 +638,11 @@
 .VPFeatures .details .feature-inline-link:hover {
   text-decoration: underline;
 }
+
+/* Interactive Benchmarks: wide, aside-free layout so the grids get room */
+.benchmarks-wide .content {
+  max-width: 1104px !important;
+}
+.benchmarks-wide .content-container {
+  max-width: none !important;
+}
