@@ -6,7 +6,8 @@ import { Pointer } from '@examples/pointer/Pointer';
 
 // the state destructure — materializes $mouse inside the component's scope,
 // so its listeners are cleaned up on unmount
-const { x, y } = new Pointer.Class();
+const pointer = new Pointer.Class();
+const { x, y } = pointer;
 
 // presentation only: map the class's page coordinates into the pad
 const padEl = ref<HTMLElement | null>(null);
@@ -41,11 +42,11 @@ const inside = computed(
     <div class="d-vals">
       <div>
         <div class="d-k">x &middot; page</div>
-        <div class="d-n">{{ x }}</div>
+        <div class="d-n">{{ pointer.pageX }}</div>
       </div>
       <div>
         <div class="d-k">y &middot; page</div>
-        <div class="d-n">{{ y }}</div>
+        <div class="d-n">{{ pointer.pageY }}</div>
       </div>
     </div>
   </DemoBox>

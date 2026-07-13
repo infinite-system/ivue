@@ -1,29 +1,26 @@
 <script setup lang="ts">
 import { Pointer } from './Pointer';
 
-// the state destructure — materializes $mouse inside the component's scope,
-// so its listeners are cleaned up on unmount
-const {
-  // state refs
-  x,
-  y,
-} = new Pointer.Class();
+// materializes $mouse inside the component's scope, so its listeners are
+// cleaned up on unmount
+const pointer = new Pointer.Class();
 </script>
 
 <template>
   <div class="pane">
     <p class="note">
-      The component destructures x and y from a Pointer instance. useMouse
-      lives inside the class — private, created once on the first read.
+      useMouse lives inside the class — private, created once on the first
+      read. The readouts are pageX/pageY, plain getters that round the raw
+      coordinates to whole pixels.
     </p>
     <div class="vals">
       <div>
         <div class="k">x · page</div>
-        <div class="n">{{ x }}</div>
+        <div class="n">{{ pointer.pageX }}</div>
       </div>
       <div>
         <div class="k">y · page</div>
-        <div class="n">{{ y }}</div>
+        <div class="n">{{ pointer.pageY }}</div>
       </div>
     </div>
   </div>

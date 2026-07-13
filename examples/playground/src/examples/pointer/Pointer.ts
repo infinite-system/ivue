@@ -15,6 +15,15 @@ class $Pointer {
   get y() {
     return this.$mouse.y;
   }
+
+  // display derivations — touch events report fractional page coordinates
+  // (23.333…); whole pixels are what a readout wants
+  get pageX() {
+    return Math.round(this.x.value);
+  }
+  get pageY() {
+    return Math.round(this.y.value);
+  }
 }
 
 export namespace Pointer {
