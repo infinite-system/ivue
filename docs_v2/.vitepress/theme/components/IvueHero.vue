@@ -54,8 +54,8 @@ onUnmounted(() => {
       <div class="blob blob-b" />
       <svg class="mark" viewBox="0 0 48 48" fill="none">
         <path
-          d="M24 24 C24 15.4, 9.6 15.4, 9.6 24 C9.6 32.6, 24 32.6, 24 24 C24 15.4, 38.4 15.4, 38.4 24 C38.4 32.6, 24 32.6, 24 24"
-          stroke="url(#ivh-g)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+          d="M24 24 C 19 17, 10.6 17.6, 10.6 24 C 10.6 30.4, 19 31, 24 24 C 29 17, 37.4 17.6, 37.4 24 C 37.4 30.4, 29 31, 24 24 Z"
+          stroke="url(#ivh-g)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
         <defs>
           <linearGradient id="ivh-g" x1="8" y1="14" x2="40" y2="34" gradientUnits="userSpaceOnUse">
             <stop stop-color="#818CF8" />
