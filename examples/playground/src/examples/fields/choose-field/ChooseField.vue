@@ -240,6 +240,10 @@ defineExpose(choose as ChooseField.Instance);
 
 .ivue-choose__selected {
   margin-right: 4px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ivue-choose .q-chip--dense {

@@ -96,6 +96,11 @@ const avatarSize = computed(() => (props.compact ? 20 : 32));
 
 .contact-field__chip {
   padding: 4px 10px 4px 4px;
+  /* never wider than the field — long emails ellipsize instead */
+  max-width: 100%;
+}
+.contact-field__chip .q-chip__content {
+  min-width: 0;
 }
 
 .contact-field__chip-avatar {
@@ -104,12 +109,17 @@ const avatarSize = computed(() => (props.compact ? 20 : 32));
 
 .contact-field__chip-name {
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .contact-field__chip-email {
   margin-left: 6px;
   opacity: 0.65;
   font-size: 0.85em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .contact-field--compact .q-field__control {
