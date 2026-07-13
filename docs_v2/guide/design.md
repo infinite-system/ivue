@@ -16,16 +16,48 @@ Every item below has sunk a class-reactivity attempt on its own. Most projects t
 tried nailed one or two and shipped the rest with rough edges. ivue solves the whole
 set.
 
-| Problem | Why it's hard | In ivue |
-|---|---|---|
-| **Per-instance cost** | A `reactive()` proxy per object is expensive; eager computeds pay for every property up front. | <span class="iv-ck" aria-hidden="true"></span> Instances are **plain**, refs/computeds are lazy → **6–132× cheaper to create.** |
-| **Cheap bound methods** | Bind per instance and you allocate a function per method per object; don't bind and `this` breaks on detach. | <span class="iv-ck" aria-hidden="true"></span> Methods stay on the prototype, **bound lazily on first use and cached** → cheap, correct, referentially stable. |
-| **Reactive reads** | Any indirection over a raw ref costs something. | <span class="iv-ck" aria-hidden="true"></span> `this.x.value` through a getter — **several-fold over a raw ref, hoistable to native speed**. The one cost, and it's erasable. |
-| **Reactive inheritance** | Prototype-based reactivity collides cached Refs/Computeds and breaks `super`. | <span class="iv-ck" aria-hidden="true"></span> **Deep computed chains with `super.x.value`**, reactivity propagating through every level. |
-| **Cross-file class HMR** | Editing a parent in another file desyncs prototype links and identities. | <span class="iv-ck" aria-hidden="true"></span> An idempotent, per-file transform **survives HMR**: behavior edits graft onto live instances. |
-| **Circular imports** | Mutual class references throw `Cannot access 'X' before initialization`. | <span class="iv-ck" aria-hidden="true"></span> The namespace pattern **resolves references in any load order**. |
-| **Writable-getter types** | `get x()` is *read-only* in TypeScript. | <span class="iv-ck" aria-hidden="true"></span> Mapped types **re-declare ref-returning getters as writable** — the requirement that produced the circular-safe module shape. |
-| **Deterministic teardown** | Track and stop every effect per instance, with no cost for those that have none. | <span class="iv-ck" aria-hidden="true"></span> `$watch` + `$stopEffects` — scoped cleanup, **zero cost for instances that never watch**. |
+<div class="iv-problems">
+  <div class="iv-problem">
+    <strong class="iv-problem__title">Per-instance cost</strong>
+    <p class="iv-problem__hard">A <code>reactive()</code> proxy per object is expensive; eager computeds pay for every property up front.</p>
+    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>Instances are <strong>plain</strong>, refs/computeds are lazy → <strong>6–132× cheaper to create.</strong></span></p>
+  </div>
+  <div class="iv-problem">
+    <strong class="iv-problem__title">Cheap bound methods</strong>
+    <p class="iv-problem__hard">Bind per instance and you allocate a function per method per object; don't bind and <code>this</code> breaks on detach.</p>
+    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>Methods stay on the prototype, <strong>bound lazily on first use and cached</strong> → cheap, correct, referentially stable.</span></p>
+  </div>
+  <div class="iv-problem">
+    <strong class="iv-problem__title">Reactive reads</strong>
+    <p class="iv-problem__hard">Any indirection over a raw ref costs something.</p>
+    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span><code>this.x.value</code> through a getter — <strong>several-fold over a raw ref, hoistable to native speed</strong>. The one cost, and it's erasable.</span></p>
+  </div>
+  <div class="iv-problem">
+    <strong class="iv-problem__title">Reactive inheritance</strong>
+    <p class="iv-problem__hard">Prototype-based reactivity collides cached Refs/Computeds and breaks <code>super</code>.</p>
+    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span><strong>Deep computed chains with <code>super.x.value</code></strong>, reactivity propagating through every level.</span></p>
+  </div>
+  <div class="iv-problem">
+    <strong class="iv-problem__title">Cross-file class HMR</strong>
+    <p class="iv-problem__hard">Editing a parent in another file desyncs prototype links and identities.</p>
+    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>An idempotent, per-file transform <strong>survives HMR</strong>: behavior edits graft onto live instances.</span></p>
+  </div>
+  <div class="iv-problem">
+    <strong class="iv-problem__title">Circular imports</strong>
+    <p class="iv-problem__hard">Mutual class references throw <code>Cannot access 'X' before initialization</code>.</p>
+    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>The namespace pattern <strong>resolves references in any load order</strong>.</span></p>
+  </div>
+  <div class="iv-problem">
+    <strong class="iv-problem__title">Writable-getter types</strong>
+    <p class="iv-problem__hard"><code>get x()</code> is <em>read-only</em> in TypeScript.</p>
+    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>Mapped types <strong>re-declare ref-returning getters as writable</strong> — the requirement that produced the circular-safe module shape.</span></p>
+  </div>
+  <div class="iv-problem">
+    <strong class="iv-problem__title">Deterministic teardown</strong>
+    <p class="iv-problem__hard">Track and stop every effect per instance, with no cost for those that have none.</p>
+    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span><code>$watch</code> + <code>$stopEffects</code> — scoped cleanup, <strong>zero cost for instances that never watch</strong>.</span></p>
+  </div>
+</div>
 
 ## Why it's hard: the problems fight each other
 
