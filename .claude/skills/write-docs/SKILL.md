@@ -63,10 +63,16 @@ Every code block is teaching code — someone WILL copy it.
   namespace export with its three inline comments, the grouped state
   destructure in SFCs.
 - **Example tiers**: a block with a filename comment (`// product.ts`) is a
-  TEMPLATE — full canon, namespace pattern, everything. A block without a
-  filename is a FRAGMENT — the minimum that proves the point, but still
-  obeying every costless convention (naming, `.value`, multi-line form).
-  Never write a "quick" example that models a banned pattern.
+  TEMPLATE — full canonical form: namespace export, thin computeds for real
+  logic, safe to copy as a file. A block without a filename is a FRAGMENT —
+  the minimum that proves the point, so the mechanism stays visible; the
+  reader lifts the idea, not the file. Costless conventions hold in BOTH
+  tiers — `$Name` raw classes, plain getters for derivation, `computed()`
+  only where it earns its bytes, domain naming, `.value`, multi-line form.
+  Never write a "quick" example that models a banned pattern. One deliberate
+  exception exists: Getting Started's first class uses the one-off
+  `Reactive(class ...)` form and points to Modules & Imports for the
+  standard.
 - SFC fragments are complete SFCs: `<script setup lang="ts">` present, a
   real `<template>` — never a floating template tag in a ts fence.
 - If the docs demo a component live, the demo imports the SAME files the
