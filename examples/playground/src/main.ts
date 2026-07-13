@@ -1,4 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
+import { registerApp } from './quasar-loader';
 
-createApp(App).mount('#app');
+const app = createApp(App);
+registerApp(app); // field routes install Quasar lazily on first entry
+app.mount('#app');

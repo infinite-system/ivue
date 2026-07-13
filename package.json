@@ -1,7 +1,7 @@
 {
   "name": "ivue",
   "version": "1.6.1",
-  "description": "Infinite Vue \u2013 Class Based Architecture for Vue 3",
+  "description": "Infinite Vue – Class Based Architecture for Vue 3",
   "type": "module",
   "exports": {
     ".": {
@@ -63,6 +63,7 @@
   "devDependencies": {
     "@cypress/vite-dev-server": "^5.0.2",
     "@cypress/vue": "^5.0.3",
+    "@quasar/extras": "^2.0.2",
     "@types/lodash": "^4.17.20",
     "@typescript-eslint/eslint-plugin": "^5.10.0",
     "@typescript-eslint/parser": "^5.10.0",
@@ -86,6 +87,7 @@
     "jsdom": "^21.0.0",
     "npm": "^11.6.2",
     "playwright": "^1.61.1",
+    "quasar": "^2.21.3",
     "rollup-plugin-terser": "^7.0.2",
     "typescript": "^5.9.3",
     "vite": "^4.0.4",
