@@ -245,7 +245,7 @@ Listed deliberately, so the invariants above aren't over-read:
 
 ## Where this method comes from
 
-ivue was designed by invariant. Every entry on this page was found the same
+ivue was designed using Invariant-Based Reasoning. Every entry on this page was found the same
 way: reduce the problem until only load-bearing structure remains, attack
 the survivor until it either breaks or proves itself, and only then build
 on it.
