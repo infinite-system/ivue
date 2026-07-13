@@ -115,16 +115,30 @@ features:
 <div>
 
 <p class="lead">
-<code>Reactive()</code> transforms a class once. A getter returning
-<code>ref()</code> becomes state: created on first touch, cached, stable
-forever. A plain getter stays plain and re-derives on every read, reactive
-with zero allocation. Methods bind themselves once, to the right
-<code>this</code>. Instances stay ordinary objects. Inheritance, hot reload,
-teardown, speed: consequences of that one move.
+<code>Reactive()</code> transforms a class once — the prototype, not the
+instances. A getter returning <code>ref()</code> becomes state: created on
+first touch, cached, stable forever. A plain getter stays plain and
+re-derives on every read, reactive with zero allocation. Methods bind
+themselves once, to the right <code>this</code>.
 </p>
 
 <p class="lead">
-<a href="/guide/principles">Read the principles →</a>
+Instances stay ordinary objects: no proxy wraps them, no per-instance
+closures, no work at construction. Creating one is a plain <code>new</code> —
+which is why a million of them take 22 ms, and why unused state costs
+nothing at all.
+</p>
+
+<p class="lead">
+Everything else falls out of that one move. Inheritance works because
+prototypes already know how to inherit. Hot reload works because behavior
+lives on the prototype, where an edit can graft without touching state.
+Teardown is deterministic because every instance owns its effect scope.
+Speed is not an optimization pass — it is the shape of the design.
+</p>
+
+<p class="lead">
+<a href="/guide/principles">Read the Principles →</a>
 </p>
 
 </div>
