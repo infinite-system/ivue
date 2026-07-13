@@ -1,4 +1,12 @@
-import { effectScope, isRef, toRaw, watch, watchEffect, type Ref } from 'vue';
+import {
+  effectScope,
+  isRef,
+  toRaw,
+  watch,
+  watchEffect,
+  type ExtractPropTypes,
+  type Ref,
+} from 'vue';
 
 /**
  * Constants & Helpers
@@ -922,3 +930,73 @@ export type ReactiveInstance<T> = T &
 export type ReactiveClass<C extends new (...args: any) => any> = new (
   ...args: ConstructorParameters<C>
 ) => ReactiveInstance<InstanceType<C>>;
+
+/**
+ * Component-authoring type utilities (types only — erased at build time).
+ * These complement `propsWithDefaults` for the params/defaults component
+ * architecture: object-declared emits, extensible slots, and precise
+ * handler-parameter extraction.
+ */
+
+/** Any JavaScript function of any type. */
+export type AnyFn = (...args: any[]) => any;
+
+/** Convert Record to Union Type. */
+export type RecordToUnion<T extends Record<string, any>> = T[keyof T];
+
+/** Gets object T property by key K. */
+export type ValueOf<T extends Record<any, any>, K extends keyof T> = T[K];
+
+/** Convert Union Type to Intersection Type. */
+export type UnionToIntersection<U> = (
+  U extends any ? (k: U) => void : never
+) extends (k: infer I) => void
+  ? I
+  : never;
+
+/** Prefix keys of an interface T with a prefix P. */
+export type PrefixKeys<T, P extends string | undefined = undefined> = {
+  [K in Extract<keyof T, string> as P extends string ? `${P}${K}` : K]: T[K];
+};
+
+/** Extracts object-declared emit validators into the emit-function interface. */
+export type ExtractEmitTypes<T extends Record<string, any>> =
+  UnionToIntersection<
+    RecordToUnion<{
+      [K in keyof T]: (evt: K, ...args: Parameters<T[K]>) => void;
+    }>
+  >;
+
+/**
+ * Extract properties as all-assigned (non-optional) because every one of
+ * them carries a default.
+ */
+export type ExtractPropDefaultTypes<O> = {
+  [K in keyof O]: K extends keyof ExtractPropTypes<O>
+    ? ExtractPropTypes<O>[K]
+    : never;
+};
+
+/**
+ * Extend a slots interface T with prefixed 'before--' & 'after--' slots to
+ * create fully extensible wrapped components.
+ */
+export type ExtendSlots<T> = PrefixKeys<T, 'before--'> &
+  T &
+  PrefixKeys<T, 'after--'>;
+
+/** Get function arguments Parameters<F> parameter by index K. */
+export type FnParameter<F extends AnyFn, K extends number> = Parameters<F>[K];
+
+/** Get interface T property K's function arguments as Parameters. */
+export type IFnParameters<
+  T extends Record<any, any>,
+  K extends string,
+> = Parameters<Required<Pick<T, K>>[K]>;
+
+/** Get interface T property P's function parameter by index K. */
+export type IFnParameter<
+  T extends Record<any, any>,
+  P extends keyof T,
+  K extends number,
+> = FnParameter<NonNullable<T[P]> extends AnyFn ? NonNullable<T[P]> : never, K>;
