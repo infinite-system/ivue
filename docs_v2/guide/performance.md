@@ -47,16 +47,16 @@ holds only the Refs it has actually materialized.
 
 Measured on Vue 3.5 (Node 22, gc-forced heap deltas, every instance
 retained and fully read once) with an identical shape — 10 state refs, 60
-trivial derivations. Per-instance figures are taken at each arm's **largest
-population that survives a 10 GB heap**: ivue completes the full million;
-the alternatives cannot.
+trivial derivations. Per-instance figures come
+from the full million where it survives a 10 GB heap (ivue, `reactive()`),
+and from 100,000 instances where a million cannot (the composables).
 
 | authoring style, at 1,000,000 instances | heap per instance | one million instances                     |
 | ---------------------------------------- | ----------------- | ----------------------------------------- |
 | **ivue class — 60 plain getters**        | **1.7 KB**        | <span class="ix-base">runs — 1.66 GB</span> |
 | `reactive(new X())` — plain fields + getters | 0.18 KB       | runs — 177 MB                              |
-| composable — 60 plain closures           | 10.3 KB           | **out of memory** (~10.3 GB; measured at 500k) |
-| composable — 60 eager `computed()`       | 28.6 KB           | **out of memory** (~28.6 GB; measured at 200k) |
+| composable — 60 plain closures           | 10.3 KB           | **out of memory** (~10.3 GB; measured at 100k) |
+| composable — 60 eager `computed()`       | 28.6 KB           | **out of memory** (~28.6 GB; measured at 100k) |
 
 Per-instance cost is flat across scales — 1.70 KB at 20k and at 1,000,000 —
 so the ratios are structural: closures weigh **6×** and eager computeds
