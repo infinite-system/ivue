@@ -258,9 +258,9 @@ onUnmounted(() => {
     110deg,
     #0ea5e9 0%,
     #0ea5e9 38%,
-    #99f6e4 47%,
-    #6ee7b7 50%,
-    #99f6e4 53%,
+    #bde7ff 47%,
+    #f3faff 50%,
+    #bde7ff 53%,
     #0ea5e9 62%,
     #0ea5e9 100%
   );
@@ -523,9 +523,9 @@ onUnmounted(() => {
     110deg,
     #0ea5e9 0%,
     #0ea5e9 38%,
-    #99f6e4 47%,
-    #6ee7b7 50%,
-    #99f6e4 53%,
+    #bde7ff 47%,
+    #f3faff 50%,
+    #bde7ff 53%,
     #0ea5e9 62%,
     #0ea5e9 100%
   );
