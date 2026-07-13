@@ -84,7 +84,7 @@ pageClass: blog-index
     <div class="body">
       <div class="meta"><span class="date">July 2026</span></div>
       <h2>The scrollbar is code</h2>
-      <p class="excerpt">100,000 rows where scrolling itself is virtual — Lenis owns the physics, the DOM holds a dozen rows, nothing costs O(total).</p>
+      <p class="excerpt">1,000,000 rows where scrolling itself is virtual — Lenis owns the physics, the DOM holds a dozen rows, nothing costs O(total).</p>
       <span class="go">Read the post →</span>
     </div>
   </a>

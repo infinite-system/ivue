@@ -756,11 +756,16 @@
   color: var(--vp-c-brand-1);
 }
 
-/* Examples page: huge source files scroll inside their own block, and the
-   code-group tab row stays visible while you do */
-.examples-page div[class*='language-'] pre {
+/* Examples page: huge source files scroll inside their own block — the
+   WRAPPER scrolls (one scrollbar; line numbers travel with the code), and
+   the code-group tab row stays visible while you do */
+.examples-page div[class*='language-'] {
   max-height: 68vh;
   overflow-y: auto;
+}
+.examples-page div[class*='language-'] pre {
+  max-height: none;
+  overflow-y: visible;
 }
 .examples-page .vp-code-group .tabs {
   position: sticky;

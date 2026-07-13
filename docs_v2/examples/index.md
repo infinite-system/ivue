@@ -1,6 +1,6 @@
 ---
 title: Examples
-description: Production-extracted, full-complexity ivue examples — starting with a 100,000-row virtual scroller driven by a customized Lenis, its scroll math and momentum feel intact.
+description: Production-extracted, full-complexity ivue examples — starting with a 1,000,000-row virtual scroller driven by a customized Lenis, its scroll math and momentum feel intact.
 aside: false
 pageClass: benchmarks-wide examples-page
 ---
@@ -15,7 +15,7 @@ Real components, extracted from production — not toy snippets. Each example
 ships the actual files an application runs, wired to demo data, with the
 full source on the page.
 
-## Virtual scroller: 100,000 rows on Lenis
+## Virtual scroller: 1,000,000 rows on Lenis
 
 A virtualized list where **scrolling itself is virtual**: a customized
 [Lenis](https://github.com/darkroomengineering/lenis) drives the position
@@ -40,7 +40,7 @@ instance, constructed in `setup()` and torn down by the component scope.
 import VirtualScroller from './virtual-scroller/VirtualScroller.vue'
 import type { BaseItem } from './virtual-scroller/VirtualScroller.types'
 
-const items = ref<BaseItem[]>(loadRows()) // any size — 100k is routine
+const items = ref<BaseItem[]>(loadRows()) // any size — 1M is routine
 </script>
 
 <template>

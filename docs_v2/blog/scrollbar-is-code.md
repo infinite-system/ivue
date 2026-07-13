@@ -1,6 +1,6 @@
 ---
 title: "The scrollbar is code"
-description: A 100,000-row list where scrolling itself is virtual — Lenis drives position over translateY, the DOM holds a dozen rows, and nothing costs O(total).
+description: A 1,000,000-row list where scrolling itself is virtual — Lenis drives position over translateY, the DOM holds a dozen rows, and nothing costs O(total).
 date: 2026-07
 ---
 
@@ -13,12 +13,12 @@ import ExampleVirtualScroller from '../.vitepress/theme/components/examples/Exam
 ![The scrollbar is code](/blog/scrollbar-is-code.png)
 
 The browser's scrollbar has one requirement you cannot negotiate away: to
-scroll a tall document natively, the DOM has to *be* tall. At 100,000
-rows that means a multi-million-pixel layer the compositor must carry,
+scroll a tall document natively, the DOM has to *be* tall. At a million
+rows that means a fifty-million-pixel layer the compositor must carry,
 native scroll anchoring fighting your virtualization, and physics you
 don't control.
 
-So this list fires the browser from the job. Scrolling is **virtual**: a
+So this million-row list fires the browser from the job. Scrolling is **virtual**: a
 customized [Lenis](https://github.com/darkroomengineering/lenis) owns
 position, momentum and touch feel, driving a `translateY` — while the DOM
 holds a dozen rows between two spacer `div`s. The scroll range comes from
