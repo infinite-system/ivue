@@ -7,9 +7,11 @@ features:
   - title: Native class API
     details: extends, super, getters, setters, private fields. Real inheritance, encapsulation and polymorphism, all reactive.
   - title: Zero-cost creation
-    details: Instances are plain objects. State materializes on first access. Creation runs 55 to 253× faster than the alternatives.
+    details: Instances are plain objects. State materializes on first access. Creating a million of them takes 22 ms — 6 to 132× faster than the alternatives.
+    link: /guide/performance
+    linkText: Performance by Design
   - title: One kilobyte
-    details: 1.1kb gzipped. Zero dependencies. 100% test coverage. Small enough to read in one sitting.
+    details: 1.1kb gzipped. Zero dependencies. 100% test coverage. Stripped to the load-bearing core — an API you can hold in your head.
   - title: Store or ViewModel
     details: The same class serves as a global store, a component ViewModel, or a domain model. One mental model everywhere.
   - title: Composition API, fully compatible
@@ -26,7 +28,7 @@ features:
   <div class="ix-stat"><div class="n">1.1kb</div><div class="l">the whole engine, gzipped</div></div>
   <div class="ix-stat"><div class="n">0</div><div class="l">dependencies</div></div>
   <div class="ix-stat"><div class="n">100%</div><div class="l">test coverage, every metric</div></div>
-  <div class="ix-stat"><div class="n">50 ms</div><div class="l">to create 10 million instances</div></div>
+  <div class="ix-stat"><div class="n">22 ms</div><div class="l">to create 1 million instances</div></div>
 </div>
 
 </section>
@@ -140,7 +142,7 @@ class $Counter {
   get double() {
     return this.count.value * 2 // plain getter
   }
-  inc() {
+  increment() {
     this.count.value++
   }
 }
@@ -148,7 +150,7 @@ class $Counter {
 export const Counter = Reactive($Counter)
 
 const counter = new Counter()
-counter.inc()
+counter.increment()
 counter.count.value  // 1
 counter.double       // 2, re-derived on read
 ```
@@ -159,7 +161,31 @@ counter.double       // 2, re-derived on read
 
 <section>
 
-## The numbers
+## Start here
+
+<div class="ix-start">
+  <a href="/guide/introduction">
+    <div class="t">What is ivue?</div>
+    <div class="d">The idea and the engine.</div>
+    <span class="go">Read →</span>
+  </a>
+  <a href="/guide/getting-started">
+    <div class="t">Getting Started</div>
+    <div class="d">Install, write your first reactive class, use it in a component.</div>
+    <span class="go">Build →</span>
+  </a>
+  <a href="/guide/benchmarks">
+    <div class="t">Benchmarks</div>
+    <div class="d">A 100k-cell grid built three ways, and a spreadsheet with real Excel formulas — live, in your browser.</div>
+    <span class="go">Run →</span>
+  </a>
+</div>
+
+</section>
+
+<section class="ix-end">
+
+## Performance numbers
 
 <p class="lead">Measured, not promised. Method and full tables in <a href="/guide/performance">Performance by Design</a>.</p>
 
@@ -167,16 +193,16 @@ counter.double       // 2, re-derived on read
 
 <div>
 
-### Creating 100k instances
+### Creating 1,000,000 instances
 
 | | time | ivue is |
 | --- | --- | --- |
-| **ivue `new Class()`** | **0.7 ms** | <span class="ix-base">the baseline</span> |
-| native `reactive()` | 36.7 ms | **55× faster** |
-| composable factory | 42.8 ms | **64× faster** |
-| eager class engine (unreleased v1) | 169 ms | **253× faster** |
+| **ivue `new Class()`** | **21.7 ms** | <span class="ix-base">the baseline</span> |
+| composable factory | 139 ms | **6.4× faster** |
+| native `reactive()` | 470 ms | **22× faster** |
+| eager class engine (unreleased v1) | 2,861 ms | **132× faster** |
 
-<p class="foot">Refs and computeds do not exist until first access.</p>
+<p class="foot">Refs and computeds do not exist until first access. Median of runs with every instance retained.</p>
 
 </div>
 
@@ -209,28 +235,6 @@ counter.double       // 2, re-derived on read
 
 </section>
 
-<section class="ix-end">
 
-## Start here
-
-<div class="ix-start">
-  <a href="/guide/introduction">
-    <div class="t">What is ivue?</div>
-    <div class="d">The idea and the engine.</div>
-    <span class="go">Read →</span>
-  </a>
-  <a href="/guide/getting-started">
-    <div class="t">Getting Started</div>
-    <div class="d">Install, write your first reactive class, use it in a component.</div>
-    <span class="go">Build →</span>
-  </a>
-  <a href="/guide/benchmarks">
-    <div class="t">Benchmarks</div>
-    <div class="d">A 100k-cell grid built three ways, and a spreadsheet with real Excel formulas — live, in your browser.</div>
-    <span class="go">Run →</span>
-  </a>
-</div>
-
-</section>
 
 </div>

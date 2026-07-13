@@ -123,6 +123,7 @@ export default defineConfig({
             text: 'The Engine Under the Idiom',
             link: '/guide/engine-under-the-idiom',
           },
+          { text: 'The Model Layer, Measured', link: '/guide/model-layer' },
           { text: 'Performance by Design', link: '/guide/performance' },
           { text: 'Benchmarks', link: '/guide/benchmarks' },
         ],
@@ -163,15 +164,21 @@ export default defineConfig({
               text: 'The Engine Under the Idiom',
               link: '/guide/engine-under-the-idiom',
             },
+          ],
+        },
+        {
+          text: 'Performance',
+          collapsed: false,
+          items: [
+            { text: 'The Model Layer, Measured', link: '/guide/model-layer' },
             { text: 'Performance by Design', link: '/guide/performance' },
             { text: 'Benchmarks', link: '/guide/benchmarks' },
           ],
         },
         {
-          text: 'At Scale',
+          text: 'Advanced Patterns',
           collapsed: false,
           items: [
-            { text: 'The Reactive Model Layer', link: '/guide/model-layer' },
             { text: 'The Flyweight Pattern', link: '/guide/flyweight' },
           ],
         },

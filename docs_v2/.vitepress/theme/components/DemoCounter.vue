@@ -11,7 +11,7 @@ class $Counter {
   get double() {
     return this.count.value * 2;
   }
-  inc() {
+  increment() {
     this.count.value++;
   }
   reset() {
@@ -40,7 +40,7 @@ const { count } = counter;
       </div>
     </div>
     <div class="d-row">
-      <button class="d-btn primary" type="button" @click="counter.inc">+1</button>
+      <button class="d-btn primary" type="button" @click="counter.increment">+1</button>
       <button class="d-btn" type="button" @click="counter.reset">Reset</button>
     </div>
   </DemoBox>

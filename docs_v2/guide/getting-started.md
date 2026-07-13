@@ -62,7 +62,7 @@ class $Counter {
     return this.count.value * 2 // derived: plain getter
   }
 
-  inc() {
+  increment() {
     this.count.value++
   }
   reset() {
@@ -97,12 +97,12 @@ const { count } = counter
 </script>
 
 <template>
-  <button @click="counter.inc">{{ count }} → {{ counter.double }}</button>
+  <button @click="counter.increment">{{ count }} → {{ counter.double }}</button>
   <button @click="counter.reset">reset</button>
 </template>
 ```
 
-That's it — `count` is the real ref, destructured straight off the instance (a state binding: unwrapped in the template, state at a glance); `counter.double` re-derives on every render; `counter.inc` is a stable
+That's it — `count` is the real ref, destructured straight off the instance (a state binding: unwrapped in the template, state at a glance); `counter.double` re-derives on every render; `counter.increment` is a stable
 bound method. The component re-renders when `count` changes, exactly as if you'd
 written refs by hand. Here is that exact class, running on this page:
 
@@ -113,7 +113,7 @@ written refs by hand. Here is that exact class, running on this page:
 - `new Counter()` created a **plain object** — no proxy.
 - The first time you read `count`, its `ref(0)` was created and cached — the destructured binding IS that cached ref.
 - `counter.double` is a plain getter — dotted in the template, because dotted means derivation. The render effect reads it, subscribes to `count` underneath, and re-derives on change. No allocation.
-- `counter.inc` was bound to the instance once and reused.
+- `counter.increment` was bound to the instance once and reused.
 
 Read the [Principles](/guide/principles) for the full picture, or jump to
 [Reactive State](/guide/state).

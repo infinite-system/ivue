@@ -1,9 +1,9 @@
 ---
-title: The Reactive Model Layer
+title: The Model Layer, Measured
 description: 'Vue has state solutions at two scales — component-scoped composables and singleton stores. ivue adds the missing third: a domain model of thousands of live entities inside Vue reactivity, at plain-object prices.'
 ---
 
-# The Reactive Model Layer
+# The Model Layer, Measured
 
 Vue's ecosystem answers "where does state live?" at exactly two scales:
 

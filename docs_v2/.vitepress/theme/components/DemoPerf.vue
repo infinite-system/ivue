@@ -31,43 +31,43 @@ const useBox = () => {
 };
 
 const N = 100_000;
-const v2ms = ref<number | null>(null);
+const ivueMs = ref<number | null>(null);
 const reactiveMs = ref<number | null>(null);
 const composableMs = ref<number | null>(null);
 const running = ref(false);
 
-function bench(fn: () => void): number {
+// Every instance is retained in a pre-allocated array and touched after
+// timing — the JIT cannot elide the allocations (a discarded `sink = ...`
+// loop gets optimized away and reports fantasy numbers like 0.0 ms).
+function bench(make: () => unknown): number {
+  const instances = new Array(N);
   const t0 = performance.now();
-  fn();
-  return performance.now() - t0;
+  for (let i = 0; i < N; i++) instances[i] = make();
+  const elapsed = performance.now() - t0;
+  let alive = 0;
+  for (let i = 0; i < N; i += 997) if (instances[i]) alive++;
+  if (alive < 0) throw new Error('unreachable');
+  return elapsed;
 }
 
 async function run() {
   running.value = true;
-  v2ms.value = reactiveMs.value = composableMs.value = null;
+  ivueMs.value = reactiveMs.value = composableMs.value = null;
   // let the button paint before blocking
-  await new Promise((r) => setTimeout(r, 30));
-  let sink: any;
-  v2ms.value = bench(() => {
-    for (let i = 0; i < N; i++) sink = new V2();
-  });
-  await new Promise((r) => setTimeout(r, 30));
-  reactiveMs.value = bench(() => {
-    for (let i = 0; i < N; i++) sink = reactive(new Plain());
-  });
-  await new Promise((r) => setTimeout(r, 30));
-  composableMs.value = bench(() => {
-    for (let i = 0; i < N; i++) sink = useBox();
-  });
-  void sink;
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  ivueMs.value = bench(() => new V2());
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  reactiveMs.value = bench(() => reactive(new Plain()));
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  composableMs.value = bench(() => useBox());
   running.value = false;
 }
 
 const fmt = (v: number | null) => (v === null ? '·' : `${v.toFixed(1)} ms`);
 const ratio = (v: number | null) =>
-  v === null || v2ms.value === null || v2ms.value === 0
+  v === null || ivueMs.value === null || ivueMs.value === 0
     ? ''
-    : `${(v / v2ms.value).toFixed(0)}× slower`;
+    : `${(v / ivueMs.value).toFixed(1)}× slower`;
 </script>
 
 <template>
@@ -77,8 +77,8 @@ const ratio = (v: number | null) =>
   >
     <div class="d-vals">
       <div>
-        <div class="d-k">v2 &middot; new Class()</div>
-        <div class="d-n grad">{{ fmt(v2ms) }}</div>
+        <div class="d-k">ivue &middot; new Class()</div>
+        <div class="d-n grad">{{ fmt(ivueMs) }}</div>
       </div>
       <div>
         <div class="d-k">reactive(new X()) <span v-if="reactiveMs !== null">&middot; {{ ratio(reactiveMs) }}</span></div>
@@ -91,7 +91,7 @@ const ratio = (v: number | null) =>
     </div>
     <div class="d-row">
       <button class="d-btn primary" type="button" :disabled="running" @click="run">
-        {{ running ? 'Running…' : v2ms === null ? 'Run the benchmark' : 'Run again' }}
+        {{ running ? 'Running…' : ivueMs === null ? 'Run the benchmark' : 'Run again' }}
       </button>
     </div>
   </DemoBox>

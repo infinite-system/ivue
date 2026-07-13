@@ -105,7 +105,7 @@ listeners are cleaned up on unmount, for free.
 ## The trade, in one line
 
 ivue is **cheap to create and light to hold, slightly costlier to read**: state
-sits behind a getter, so hot loops pay ~5× per read over a raw closure ref.
+sits behind a getter, so hot loops pay ~4× per read over a raw closure ref.
 One [hoist line](/guide/performance#hot-loops) erases it. Everything else is
 free.
 

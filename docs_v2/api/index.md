@@ -28,11 +28,11 @@ const Counter = Reactive(class {
   get count() {
     return ref(0)
   }
-  inc() {
+  increment() {
     this.count.value++
   }
 })
-new Counter().inc()
+new Counter().increment()
 ```
 
 ## `instance.$watch(source, cb, options?)`

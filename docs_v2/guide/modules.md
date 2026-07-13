@@ -245,7 +245,7 @@ export default Reactive(
     get count() {
       return ref(0);
     }
-    inc() {
+    increment() {
       this.count.value++;
     }
   },

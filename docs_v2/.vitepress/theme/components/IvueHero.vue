@@ -12,10 +12,10 @@ class $Counter {
   get double() {
     return this.count.value * 2;
   }
-  inc() {
+  increment() {
     this.count.value++;
   }
-  dec() {
+  decrement() {
     this.count.value--;
   }
   reset() {
@@ -70,6 +70,7 @@ onUnmounted(() => {
         <h1 class="ivh-title">
           <span class="row">Plain classes.</span>
           <span class="row">Full reactivity.</span>
+          <span class="row">Performance by design.</span>
           <span class="row grad">One kilobyte.</span>
         </h1>
         <p class="ivh-tag">
@@ -90,7 +91,7 @@ onUnmounted(() => {
   <span class="kw">get</span> <span class="fn">double</span>() {
     <span class="kw">return</span> <span class="kw">this</span>.count.value * <span class="nu">2</span>
   }
-  <span class="fn">inc</span>() {
+  <span class="fn">increment</span>() {
     <span class="kw">this</span>.count.value++
   }
 }
@@ -108,8 +109,8 @@ onUnmounted(() => {
             </div>
           </div>
           <div class="controls">
-            <button class="ctl minus" type="button" @click="counter.dec">&minus;1</button>
-            <button class="ctl plus" type="button" @click="counter.inc">+1</button>
+            <button class="ctl minus" type="button" @click="counter.decrement">&minus;1</button>
+            <button class="ctl plus" type="button" @click="counter.increment">+1</button>
             <button class="ctl ghost" type="button" @click="counter.reset">Reset</button>
           </div>
           <div class="watchline" aria-live="polite">
@@ -197,10 +198,10 @@ onUnmounted(() => {
 /* ---- copy ---- */
 .ivh-title {
   margin: 0;
-  font-size: clamp(2.5rem, 6.2vw, 4.1rem);
+  font-size: clamp(1.9rem, 4.3vw, 2.9rem);
   font-weight: 800;
   letter-spacing: -0.035em;
-  line-height: 1.04;
+  line-height: 1.08;
   border: none;
   padding: 0;
 }

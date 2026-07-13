@@ -18,7 +18,7 @@ class $Counter {
   get double() {
     return this.count.value * 2 // plain getter — derives on read
   }
-  inc() {
+  increment() {
     this.count.value++
   }
 }
@@ -26,7 +26,7 @@ class $Counter {
 export const Counter = Reactive($Counter);
 
 const counter = new Counter();
-counter.inc();
+counter.increment();
 counter.count.value  // 1
 counter.double       // 2, re-derived on read
 ```
@@ -54,7 +54,7 @@ const { count } = counter;
 </script>
 
 <template>
-  <button @click="counter.inc()">{{ count }} · double {{ counter.double }}</button>
+  <button @click="counter.increment()">{{ count }} · double {{ counter.double }}</button>
 </template>
 ```
 
@@ -83,11 +83,11 @@ class $Pointer {
 Measured, not promised — method and live in-browser benchmarks in
 [the docs](https://infinite-system.github.io/ivue/).
 
-| creating 100k instances | time | ivue is |
+| creating 1,000,000 instances | time | ivue is |
 | --- | --- | --- |
-| **ivue `new Class()`** | **0.7 ms** | the baseline |
-| native `reactive()` | 36.7 ms | **55× faster** |
-| composable factory | 42.8 ms | **64× faster** |
+| **ivue `new Class()`** | **21.7 ms** | the baseline |
+| composable factory | 139 ms | **6.4× faster** |
+| native `reactive()` | 470 ms | **22× faster** |
 
 | heap per instance, same shape | heap | ivue is |
 | --- | --- | --- |

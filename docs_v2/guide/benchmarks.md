@@ -5,7 +5,7 @@ description: 'A live, in-browser 100k/1M-cell virtualized grid — the same mode
 
 # Benchmarks
 
-[The Reactive Model Layer](/guide/model-layer) argues that a domain model —
+[The Model Layer, Measured](/guide/model-layer) argues that a domain model —
 thousands of live, individually-reactive entities — has a structural memory
 cost in idiomatic Vue, and that ivue's laziness erases it. This page is the
 receipt: a real, reproducible, end-to-end measurement, not a microbenchmark.
@@ -253,7 +253,7 @@ node demo/grid/measure.mjs http://localhost:5180 25000  # 1M cells
 
 ## See also
 
-- [The Reactive Model Layer](/guide/model-layer) — why this gap is
+- [The Model Layer, Measured](/guide/model-layer) — why this gap is
   structural, and why ivue closes it.
 - [Performance by Design](/guide/performance) — the micro-level numbers: isolated
   instance creation, per-instance memory, hot-loop read cost.
