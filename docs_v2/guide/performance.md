@@ -171,7 +171,7 @@ over 10-million-iteration loops:
 | ref-getter access    | **9.6 ns**                           | 47.0 ns              | 72.4 ns      |
 | method access        | **3.8 ns**                           | 42.3 ns              | 68.5 ns      |
 
-The first column IS ivue, and its numbers include the engine's own
+The first column is ivue, and its numbers include the engine's own
 indirection — the `toRaw` call and cache lookup behind every getter. For
 scale: a native class getter reads in ~0.3 ns and a native ref read in
 ~1.3 ns. So raw ivue access pays 4–23 ns with no wrapper proxy on the
