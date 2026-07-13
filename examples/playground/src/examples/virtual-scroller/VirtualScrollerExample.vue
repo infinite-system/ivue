@@ -26,7 +26,8 @@ const {
           :class="{ playing: example.isAutoPlaying }"
           @click="example.toggleAutoPlay()"
         >
-          {{ example.isAutoPlaying ? '⏸ autoplay on — scroll up to stop' : '▶ autoplay' }}
+          <span class="btn-icon">{{ example.isAutoPlaying ? '⏸' : '▶' }}</span>
+          {{ example.isAutoPlaying ? 'autoplay on — scroll up to stop' : 'autoplay' }}
         </button>
         <button type="button" @click="example.jumpTo(499999)">
           jump to #500,000
@@ -88,6 +89,9 @@ nav button {
 }
 nav button:hover {
   border-color: #6366f1;
+}
+nav .btn-icon {
+  margin-right: 6px;
 }
 nav button.playing {
   border-color: rgba(52, 211, 153, 0.7);

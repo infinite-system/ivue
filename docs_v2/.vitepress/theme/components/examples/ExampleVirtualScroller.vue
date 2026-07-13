@@ -118,7 +118,8 @@ function toggleAutoPlay() {
         type="button"
         @click="toggleAutoPlay"
       >
-        {{ isAutoPlaying ? '⏸ pause autoplay' : '▶ autoplay' }}
+        <span class="evs-btn-icon">{{ isAutoPlaying ? '⏸' : '▶' }}</span>
+        {{ isAutoPlaying ? 'pause autoplay' : 'autoplay' }}
       </button>
     </div>
   </DemoBox>
@@ -147,6 +148,9 @@ function toggleAutoPlay() {
   font-weight: 700;
 }
 
+.evs-btn-icon {
+  margin-right: 6px;
+}
 .d-btn.evs-playing {
   border-color: rgba(52, 211, 153, 0.6);
   background: rgba(52, 211, 153, 0.1);
