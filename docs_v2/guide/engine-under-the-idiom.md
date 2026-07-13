@@ -122,7 +122,7 @@ Consequences observed in production, not projected:
   documentation.
 - **Instance cost collapses.** Derivations weigh nothing per instance, so
   10k-row virtualized lists stop paying megabytes of bookkeeping —
-  [6–132× faster creation, up to 17× less memory](/guide/performance).
+  [6–132× faster creation, up to 10× less live heap](/guide/performance).
 - **The graph stays constant-size.** Reactive-graph size stops scaling
   with feature count or data size; it scales with _how many caches you
   deliberately bought_. Complexity becomes locally auditable — each new

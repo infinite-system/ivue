@@ -211,16 +211,16 @@ counter.double       // 2, re-derived on read
 
 <div>
 
-### Heap at 1,000,000 instances
+### Memory heap at 100,000 instances
 
-| | per instance | one million |
+| | per live instance | at 1,000,000 |
 | --- | --- | --- |
-| **ivue class, 60 getters** | **1.7 KB** | <span class="ix-base">runs — 1.66 GB</span> |
-| `reactive()`, fields + getters | 0.18 KB | runs — pays at creation & every read |
-| composable, 60 closures | 10.3 KB | **OOM** at ~10.3 GB |
-| composable, 60 computeds | 28.6 KB | **OOM** at ~28.6 GB |
+| **ivue class, 60 getters** | **3.7 KB** | <span class="ix-base">runs — 3.64 GB</span> |
+| composable, 60 closures | 12.3 KB | **OOM** ~12.3 GB |
+| `reactive()`, fields + getters | 17.5 KB | **OOM** ~17.5 GB |
+| composable, 60 computeds | 35.7 KB | **OOM** ~35.7 GB |
 
-<p class="foot">Derivations live on the prototype — they weigh nothing per instance. Only ivue finishes the million on a 10 GB heap.</p>
+<p class="foot">Every instance observed by its own effect — live, not at-rest. Derivations live on the prototype; only ivue finishes the million on a 10 GB heap.</p>
 
 </div>
 

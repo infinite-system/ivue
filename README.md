@@ -89,12 +89,12 @@ Measured, not promised — method and live in-browser benchmarks in
 | composable factory | 139 ms | **6.4× faster** |
 | native `reactive()` | 470 ms | **22× faster** |
 
-| heap at 1,000,000 instances | per instance | one million |
+| memory heap at 100,000 live instances | per instance | at 1,000,000 |
 | --- | --- | --- |
-| **ivue class, 60 getters** | **1.7 KB** | runs — 1.66 GB |
-| `reactive()`, fields + getters | 0.18 KB | runs — pays at creation & every read |
-| composable, 60 closures | 10.3 KB | **OOM** at ~10.3 GB |
-| composable, 60 computeds | 28.6 KB | **OOM** at ~28.6 GB |
+| **ivue class, 60 getters** | **3.7 KB** | runs — 3.64 GB |
+| composable, 60 closures | 12.3 KB | **OOM** ~12.3 GB |
+| `reactive()`, fields + getters | 17.5 KB | **OOM** ~17.5 GB |
+| composable, 60 computeds | 35.7 KB | **OOM** ~35.7 GB |
 
 Taken all the way down: a fully reactive spreadsheet model holding
 **20,000,000 live cells at 4.7 bytes each** — 8.5× below the plain-object
