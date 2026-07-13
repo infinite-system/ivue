@@ -70,7 +70,7 @@ features:
   <div class="cell">
     <span class="ck" aria-hidden="true"></span>
     <div class="tx">
-      <strong>Circular imports</strong>
+      <strong>Circular import immunity</strong>
       <p>The namespace pattern resolves mutual references in any load order.</p>
     </div>
   </div>

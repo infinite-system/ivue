@@ -104,7 +104,7 @@ as one coherent design:
 - **Bound methods** — `this.method` is always correct, always the same reference.
 - **Reactive inheritance** — deep `super.x.value` chains resolve level-safe.
 - **Hot reload for classes** — behavior edits graft onto live instances, state intact.
-- **Circular imports** — the namespace pattern resolves mutual references in any load order.
+- **Circular import immunity** — the namespace pattern resolves mutual references in any load order.
 - **Writable getter types** — ref-returning getters type as writable; instances fully inferred.
 - **Deterministic teardown** — `$watch` scopes per instance, `$stopEffects()` cleans up.
 - **Minimal memory footprint** — derivations are shared prototype getters, not per-instance allocations.
