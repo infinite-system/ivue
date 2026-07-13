@@ -57,7 +57,8 @@ body {
   font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
   /* explicit so Quasar's layered body reset can never re-metric the shell */
   line-height: 1.45;
-  background: #0d1226;
+  /* the docs' dark palette, exactly */
+  background: #0b1020;
   color: #b7c0dc;
 }
 .shell {
@@ -69,7 +70,8 @@ body {
   width: 260px;
   flex-shrink: 0;
   padding: 18px 14px;
-  border-right: 1px solid rgba(148, 163, 184, 0.16);
+  border-right: 1px solid rgba(148, 163, 184, 0.14);
+  background: #0e1424;
   overflow-y: auto;
 }
 .sidebar h1 {
