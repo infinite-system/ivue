@@ -60,6 +60,21 @@ class $VirtualScrollerExample {
   jumpTo(index: number) {
     this.scroller.value?.scrollToIndex(index, undefined, true, 12);
   }
+
+  // DERIVED — reads the scroller's reactive autoplay state through expose.
+  get isAutoPlaying() {
+    return this.scroller.value?.isAutoPlaying ?? false;
+  }
+
+  toggleAutoPlay() {
+    const scroller = this.scroller.value;
+    if (!scroller) return;
+    if (this.isAutoPlaying) {
+      scroller.stopAutoPlay();
+    } else {
+      scroller.startAutoPlay(0);
+    }
+  }
 }
 
 export namespace VirtualScrollerExample {

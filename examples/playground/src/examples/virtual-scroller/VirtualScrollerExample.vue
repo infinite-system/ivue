@@ -21,6 +21,13 @@ const {
         {{ example.renderedCount }} in the DOM
       </p>
       <nav>
+        <button
+          type="button"
+          :class="{ playing: example.isAutoPlaying }"
+          @click="example.toggleAutoPlay()"
+        >
+          {{ example.isAutoPlaying ? '⏸ autoplay on — scroll up to stop' : '▶ autoplay' }}
+        </button>
         <button type="button" @click="example.jumpTo(499999)">
           jump to #500,000
         </button>
@@ -36,6 +43,8 @@ const {
         v-model="items"
         :assumed-height="56"
         :padding-quantity="10"
+        auto-play
+        :auto-play-delay="800"
       >
         <template #item="{ item }">
           <div class="row">
@@ -79,6 +88,11 @@ nav button {
 }
 nav button:hover {
   border-color: #6366f1;
+}
+nav button.playing {
+  border-color: rgba(52, 211, 153, 0.7);
+  background: rgba(52, 211, 153, 0.12);
+  color: #6ee7b7;
 }
 .example-body {
   flex: 1;

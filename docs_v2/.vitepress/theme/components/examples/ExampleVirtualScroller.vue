@@ -5,7 +5,7 @@
  * extracted from an app where they drive 100k-item feeds. Only this
  * wrapper (the data and the chrome) is docs code.
  */
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import DemoBox from '../DemoBox.vue';
 import VirtualScroller from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue';
 import type { VirtualScrollerExposedUnwrapped } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue';
@@ -51,7 +51,9 @@ function buildItems(): BaseItem[] {
 
 const items = ref<BaseItem[]>(buildItems());
 const scroller = ref<VirtualScrollerExposedUnwrapped<BaseItem> | null>(null);
-const isAutoPlaying = ref(false);
+
+// the scroller's own reactive state — flips off when the reader scrolls up
+const isAutoPlaying = computed(() => scroller.value?.isAutoPlaying ?? false);
 
 function jumpTo(index: number) {
   scroller.value?.scrollToIndex(index, undefined, true, 12);
@@ -64,7 +66,6 @@ function toggleAutoPlay() {
   } else {
     scroller.value.startAutoPlay(0);
   }
-  isAutoPlaying.value = !isAutoPlaying.value;
 }
 </script>
 
@@ -90,6 +91,8 @@ function toggleAutoPlay() {
         v-model="items"
         :assumed-height="56"
         :padding-quantity="10"
+        auto-play
+        :auto-play-delay="800"
       >
         <template #item="{ item }">
           <div class="evs-row">

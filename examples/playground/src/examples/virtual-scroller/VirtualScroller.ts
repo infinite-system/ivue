@@ -187,6 +187,12 @@ class $VirtualScroller<T extends BaseItem> {
     return ref('down');
   }
 
+  /** Reactive autoplay state — true while the reading creep is armed.
+   *  Consumers bind buttons to it; a user scroll UP flips it off. */
+  get isAutoPlaying() {
+    return ref(false);
+  }
+
   /** Measured pixel heights by item index (unmeasured fall back to assumedHeight). */
   get measuredHeights() {
     return ref<Record<number, number>>({});
@@ -998,6 +1004,15 @@ class $VirtualScroller<T extends BaseItem> {
   private autoRepeatTimeout;
 
   onVirtualScroll({ deltaY }) {
+    // Scrolling UP is the reader taking over — autoplay stops outright
+    // (the frame loop re-arms below for the manual scroll itself).
+    // Scrolling DOWN is reading intent — autoplay re-arms by itself and
+    // the settle chain below resumes the creep once the input rests.
+    if (this.isAutoPlaying.value && deltaY < 0) {
+      this.stopAutoPlay();
+    } else if (!this.isAutoPlaying.value && deltaY > 0) {
+      this.isAutoPlaying.value = true;
+    }
     this.virtualScrolling = true;
     clearTimeout(this.virtualScrollTimeout);
     this.scrollElementInner.value.style.transitionDuration = '0s';
@@ -1009,8 +1024,11 @@ class $VirtualScroller<T extends BaseItem> {
       this.lenis.time = 0;
       this.frame = requestAnimationFrame(this.loop);
     }
-    clearTimeout(this.autoscrollTimeout);
-    this.autoscrollTimeout = setTimeout(this.play, 3);
+    if (this.isAutoPlaying.value) {
+      // input settles → the creep resumes; never re-arms when not playing
+      clearTimeout(this.autoscrollTimeout);
+      this.autoscrollTimeout = setTimeout(this.play, 3);
+    }
 
     this.virtualScrollTimeout = setTimeout(() => {
       this.virtualScrolling = false;
@@ -1027,6 +1045,10 @@ class $VirtualScroller<T extends BaseItem> {
   }
 
   startAutoPlay(delay = 500, callback = () => {}) {
+    this.isAutoPlaying.value = true;
+    // A prior up-scroll leaves direction 'up', which gates the creep off —
+    // pressing play IS the intent to read downward again.
+    this.scrollDirection.value = 'down';
     if (this.lenis) this.lenis.time = 0;
     this.frame = requestAnimationFrame(this.loop);
     this.autoscrollTimeout = setTimeout(() => {
@@ -1036,6 +1058,7 @@ class $VirtualScroller<T extends BaseItem> {
   }
 
   stopAutoPlay(callback = () => {}) {
+    this.isAutoPlaying.value = false;
     cancelAnimationFrame(this.frame);
     this.frame = null;
     cancelAnimationFrame(this.creepFrame);
