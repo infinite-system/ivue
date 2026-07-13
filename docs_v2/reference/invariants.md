@@ -236,16 +236,10 @@ equality stay consistent across modules.
 
 Listed deliberately, so the invariants above aren't over-read:
 
-1. **Use `$watch` for tracked teardown.** A **raw** `watch()` / `watchEffect()`
-   created directly is not in the instance's scope and leaks unless you use
-   `this.$watch(...)` or your own `effectScope`. For component-scoped instances, the
-   active component scope already stops synchronously-created watchers on unmount.
-2. **Computeds rely on GC, not `stop()`.** Lazy computeds are collected once
+1. **Computeds rely on GC, not `stop()`.** Lazy computeds are collected once
    dereferenced (and use lazy subscription in Vue 3.5), so the engine doesn't call
    `effect.stop()` on them — clearing the cache and dropping the instance is enough.
-3. **Circular inheritance.** Only cross-references are solved; circular `extends`
-   remains impossible by construction.
-4. **`.value` ergonomics.** Reactive state is read with `.value` outside a
+2. **`.value` ergonomics.** Reactive state is read with `.value` outside a
    `reactive()` / template auto-unwrap context — the one ergonomic cost relative to
    a proxy-based model.
 
