@@ -32,8 +32,18 @@
   color: var(--vp-c-text-1) !important;
   border-color: var(--vp-c-divider) !important;
 }
+/* big value numbers (and inputs inside them, e.g. the project name) —
+   :not(.grad) spares the gradient-clipped variant its transparent color */
+.field-embed .n:not(.grad) {
+  color: var(--vp-c-text-1) !important;
+}
 .field-embed .btn {
   color: var(--vp-c-text-1) !important;
   border-color: var(--vp-c-divider) !important;
   background: var(--vp-c-bg) !important;
+}
+.field-embed .btn.primary {
+  color: #fff !important;
+  border-color: transparent !important;
+  background: linear-gradient(120deg, #6366f1, #4f46e5) !important;
 }
