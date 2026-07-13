@@ -513,8 +513,10 @@ defineExpose(media as MediaField.Instance);
 /* Meta line — extension badge + size + status. */
 .media-field__meta {
   display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
   align-items: center;
-  gap: 8px;
+  gap: 4px 8px;
   font-size: 11px;
   color: color-mix(in srgb, currentColor 55%, transparent);
 }

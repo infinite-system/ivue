@@ -395,7 +395,7 @@
   background: var(--vp-c-bg-alt);
 }
 .ix-moat .cell:hover {
-  background: rgba(99, 102, 241, 0.07);
+  background: rgba(125, 211, 252, 0.14);
 }
 .dark .ix-moat .cell:hover {
   background: var(--vp-c-brand-soft);
