@@ -639,10 +639,12 @@
   text-decoration: underline;
 }
 
-/* Interactive Benchmarks: wide, aside-free layout so the grids get room */
-.benchmarks-wide .content {
+/* Interactive Benchmarks: wide, aside-free layout so the grids get room.
+   Scoped to .VPDoc — the navbar has its own .content element that a bare
+   `.benchmarks-wide .content` selector would strangle. */
+.benchmarks-wide .VPDoc .content {
   max-width: 1104px !important;
 }
-.benchmarks-wide .content-container {
+.benchmarks-wide .VPDoc .content-container {
   max-width: none !important;
 }
