@@ -101,7 +101,10 @@ class $Box {
     return computed({
       get: () => this.celsiusToFahrenheit(),
       set: (fahrenheit: number) => this.setFromFahrenheit(fahrenheit),
-    }); // writable computed = the ONLY way to pair a get+set on one member
+    }); // writable computed — the only way to give a COMPUTED a setter.
+    // A native `get x() / set x(value)` accessor pair works too; pick the
+    // computed form when the member must be a ref handle (v-model target,
+    // watch source, destructured state binding).
   }
 
   // STORE / COMPOSABLE — `$`-getter caches WHOLE, forever, per instance.
