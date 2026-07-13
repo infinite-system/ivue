@@ -217,6 +217,14 @@ export default defineConfig({
               text: 'Virtual Scroller on Lenis',
               link: '/examples/virtual-scroller',
             },
+            {
+              text: 'Formula Grid — 1M Cells',
+              link: '/examples/formula-grid',
+            },
+            {
+              text: 'Flyweight Grid — 20M Cells',
+              link: '/examples/flyweight-grid',
+            },
           ],
         },
         {

@@ -1,0 +1,48 @@
+---
+title: 'Example: Flyweight grid — 20,000,000 cells'
+description: 'Columnar ground truth in typed arrays, disposable cell facades per render, a sparse reactive overlay that materializes per observation — 20M cells at 4.7 bytes each.'
+aside: false
+pageClass: benchmarks-wide examples-page
+---
+
+# Flyweight grid: 20,000,000 cells
+
+Ground truth lives in columnar typed arrays; rendered cells are disposable
+flyweight facades created per render pass; a sparse reactive overlay
+materializes per observation and evicts with the viewport. ~55% of cells
+hold real Excel-syntax formulas. Everything costs proportional to what is
+**observed** — never to what exists.
+
+Nothing downloads until you click — the model code and the formula parser
+load on demand, then one more click creates all 20,000,000 cells in your
+browser.
+
+<ClientOnly>
+  <FlyweightGrid20M />
+</ClientOnly>
+
+## What to notice
+
+- **Creation fills ~95 MB of typed arrays** — not 20 million objects. The
+  reactive layer allocates only for cells something actually observes.
+- **Edit a cell at row 1,000,000** and the column totals react — the
+  dependency graph is discovered per observation, not precomputed.
+- The measured protocol, numbers and design live in
+  [`RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/examples/playground/src/examples/flyweight-grid/RESULTS.md)
+  and
+  [`DESIGN.md`](https://github.com/infinite-system/ivue/blob/main/examples/playground/src/examples/flyweight-grid/DESIGN.md);
+  the deeper story is in [The Flyweight Pattern guide](/guide/flyweight).
+
+## The source
+
+The heart of the pattern — the sheet (columnar ground truth + sparse
+overlay) and the cell facade:
+
+::: code-group
+<<< ../../examples/playground/src/examples/flyweight-grid/model/FlyweightSheet.ts [FlyweightSheet.ts]
+<<< ../../examples/playground/src/examples/flyweight-grid/model/FlyweightCell.ts [FlyweightCell.ts]
+<<< ../../examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts [FlyweightGridPage.ts]
+:::
+
+<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Fflyweight-grid%2Fmodel%2FFlyweightSheet.ts&initialPath=%2F%23%2Fflyweight-grid" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+— the playground boots with this example's route and file active.

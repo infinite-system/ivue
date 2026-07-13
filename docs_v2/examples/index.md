@@ -32,7 +32,10 @@ push redeploys everything.
 
 - **[Virtual scroller on Lenis](/examples/virtual-scroller)** — 1,000,000
   rows, a handful of divs; scrolling itself is virtual.
-- **[The flyweight grid](/guide/flyweight)** — 20,000,000 cells, fully
-  reactive at 4.7 bytes per cell.
+- **[The formula grid](/examples/formula-grid)** — real Excel-syntax
+  formulas over a virtualized million-cell sheet, dependency graph
+  discovered by Vue.
+- **[The flyweight grid](/examples/flyweight-grid)** — 20,000,000 cells,
+  fully reactive at 4.7 bytes per cell.
 - **[Benchmarks](/guide/benchmarks)** — creation, method dispatch, the
   formula grid and the cell-grid comparison, run live in your browser.
