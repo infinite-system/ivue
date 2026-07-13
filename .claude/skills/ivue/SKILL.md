@@ -53,8 +53,8 @@ class $Box {
     return ref<HTMLElement | null>(null);
   }
 
-  // PROPS — plain getters, one per prop the class consumes.
-  // Reactively tracked through the props proxy (leaf tracking). THE pattern for props.
+  // PROPS Pattern — plain getters, one per prop the class consumes.
+  // Reactively tracked through the props proxy (leaf tracking).
   get width() {
     return this.props.width;
   }
@@ -67,6 +67,14 @@ class $Box {
   get items() {
     return toRef(() => this.props.items);
   } // when you need a ref handle
+
+  // The pattern's extra capability: refine the SUPPLIED prop into the prop
+  // the template actually needs — mixing other props, state, and constants,
+  // all still leaf-tracked. The template reads the refinement, never the
+  // raw prop; the prop is an INPUT to the model, not wired to the view.
+  get displayTitle() {
+    return this.title || `Box ${this.width}×${this.height.value}`;
+  }
 
   // DERIVED — PLAIN getter, NO computed().
   // Reactive via leaf tracking; 0 bytes/instance.
@@ -181,7 +189,7 @@ defineExpose(box as Box.Instance);
        fahrenheit is the writable computed: v-model writes through its setter. -->
   <input ref="boxEl" v-model.number="fahrenheit" :disabled="box.isDisabled" />
   <div v-if="height > 4">
-    {{ box.title }} — {{ celsius }}°C is {{ fahrenheit }}°F
+    {{ box.displayTitle }} — {{ celsius }}°C is {{ fahrenheit }}°F
   </div>
   <ul :style="{ width: box.widthPx }">
     <li v-for="row in sortedRows" :key="row.id">{{ row.name }}</li>
