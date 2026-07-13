@@ -257,10 +257,13 @@ call site. Rules that keep it clean:
   the condition has no name, duplicates across call sites, and its pieces
   can't be tested. Every combination, comparison or ternary lives on the
   class as a PLAIN getter whose name says what the condition MEANS —
-  `v-if="box.canEditItems"`. In ordinary Vue this discipline costs a
-  `computed()` per condition, so nobody keeps it; here a named plain getter
-  costs zero bytes, so there is no excuse. Templates read as prose:
-  bindings, names, and events — never expressions.
+  `v-if="box.canEditItems"`. When the condition takes an argument (per-item
+  in a `v-for`), the same rule wears its method form —
+  `v-if="media.fileExists(index)"` — still a name, still no inline logic.
+  In ordinary Vue this discipline costs a `computed()` per condition, so
+  nobody keeps it; here a named plain getter costs zero bytes, so there is
+  no excuse. Templates read as prose: bindings, names, and events — never
+  expressions.
 
 ## The outliving instance (module singleton, entity)
 
@@ -607,7 +610,7 @@ convention and check it in review.
 - [ ] The class is exported through the namespace (`$Class` / `Class = Reactive($Class)` / `Instance`); generics cast `Class` and hand-apply `ReactiveInstance` to `Instance<T>`.
 - [ ] The SFC does `new X.Class(...)` once — no `reactive()` wrapper, no unwrap view.
 - [ ] The SFC destructures ALL template-touched Refs/Computeds + element refs (grouped: state refs / computed refs / element refs); templates use state bindings and dotted access ONLY for plain getters/methods — no Ref reached through the instance in a template, no state name shadowing a prop.
-- [ ] Template expressions carry NO logic — every `&&`/`||`/comparison/ternary condition is a NAMED plain getter on the class (`v-if="box.canEditItems"`, never `v-if="a && b"`).
+- [ ] Template expressions carry NO logic — every `&&`/`||`/comparison/ternary condition is a NAMED plain getter, or a NAMED method when it takes an argument (`v-if="box.canEditItems"`, `v-if="media.fileExists(index)"` — never `v-if="a && b"`).
 - [ ] Nothing but Refs/Computeds/element-ref targets is destructured (never plain getters/methods); v-for item cells stay dotted with `.value`; instance-swapping components don't destructure at all.
 - [ ] `defineExpose(x as X.Instance)`; consumers type the ref as `ShallowUnwrapRef<X.Instance>`.
 - [ ] Watch sources are the FUNCTION form; component-scoped constructors use plain `watch`/`watchEffect`; `this.$watch`/`this.$watchEffect` only for component-outliving instances — each with a dispose path (`$stopEffects()` owner or `onScopeDispose` auto-wire).

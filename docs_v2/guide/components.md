@@ -96,6 +96,10 @@ there, as everywhere outside a template.
   <section v-if="player.canEditItems">
   ```
 
+  When the condition takes an argument — per item in a `v-for` — the same
+  rule wears its method form: `v-if="media.fileExists(index)"`. Still a
+  name, still no inline logic.
+
   In ordinary Vue this discipline costs a `computed()` per condition, so
   templates fill with anonymous boolean soup. Here a
   [named plain getter costs zero bytes](/guide/computed-watch#derived-values-plain-getters-by-default),
