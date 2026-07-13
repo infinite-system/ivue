@@ -82,11 +82,13 @@ export default defineConfig({
       // as "the standard satisfies all of these".
       // Raw-HTML anchors in markdown (homepage sections) are NOT base-prefixed
       // by VitePress the way markdown links are — rewrite them here so they
-      // work in dev and under the /ivue/ base in production.
+      // work in dev and under the /ivue/ base in production. href ONLY:
+      // src attributes are asset URLs that VitePress resolves (public dir +
+      // base) itself — prefixing them breaks that resolution.
       md.core.ruler.push('base-prefix-raw-html', (state) => {
         const base = '/ivue/';
         const rewrite = (html: string) =>
-          html.replace(/(href|src)="\/(?!ivue\/|\/)/g, `$1="${base}`);
+          html.replace(/(href)="\/(?!ivue\/|\/)/g, `$1="${base}`);
         for (const token of state.tokens) {
           if (token.type === 'html_block') token.content = rewrite(token.content);
           if (token.type !== 'inline' || !token.children) continue;

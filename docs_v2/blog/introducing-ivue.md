@@ -6,6 +6,8 @@ date: 2026-07
 
 # Introducing ivue: plain classes, full reactivity, one kilobyte
 
+![Introducing ivue](/blog/introducing-ivue.png)
+
 Here is an uncomfortable reading of the last decade of frontend history:
 the field did not abandon classes because classes failed. It abandoned
 them because making classes work — cheaply, reactively, correctly — was

@@ -1,21 +1,109 @@
 ---
 title: Blog
 aside: false
+pageClass: blog-index
 ---
 
 # Blog
 
 <div class="blog-list">
   <a class="blog-card" href="/blog/introducing-ivue">
-    <div class="meta"><span class="date">July 2026</span></div>
-    <h2>Introducing ivue: plain classes, full reactivity, one kilobyte</h2>
-    <p class="excerpt">
-      The field did not abandon classes because classes failed — it
-      abandoned them because making classes work was hard, and it is easier
-      to canonize a retreat than to admit one. Why the model layer was the
-      real casualty, the heresy about computed(), and the measured numbers
-      behind a 1.1 kB answer.
-    </p>
-    <span class="go">Read the post →</span>
+    <img class="thumb" src="/blog/introducing-ivue.png" alt="Introducing ivue: plain classes, full reactivity, one kilobyte" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>Introducing ivue: plain classes, full reactivity, one kilobyte</h2>
+      <p class="excerpt">The field did not abandon classes because classes failed — it is easier to canonize a retreat than to admit one. The launch post.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/rented-objects">
+    <img class="thumb" src="/blog/rented-objects.png" alt="Your objects are rented from the framework" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>Your objects are rented from the framework</h2>
+      <p class="excerpt">If your domain logic only exists while a component is mounted, you lease your objects. On evicting the landlord.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/computed-is-a-cache">
+    <img class="thumb" src="/blog/computed-is-a-cache.png" alt="computed() is a cache, not a derivation" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>computed() is a cache, not a derivation</h2>
+      <p class="excerpt">Vue's derivation primitive was always the tracked read. Memoizing everything by default was never neutral — just unexamined.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/twenty-million-cells">
+    <img class="thumb" src="/blog/twenty-million-cells.png" alt="The 20,000,000-cell document" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>The 20,000,000-cell document</h2>
+      <p class="excerpt">A spreadsheet Google Sheets cannot represent, fully reactive at 4.7 bytes per cell — create it in your browser right now.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/hot-reload-for-logic">
+    <img class="thumb" src="/blog/hot-reload-for-logic.png" alt="Hot reload was never about components" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>Hot reload was never about components</h2>
+      <p class="excerpt">The state you care about lives in your logic. Edit a method and watch live instances run the new code, state intact.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/one-kilobyte-feature">
+    <img class="thumb" src="/blog/one-kilobyte-feature.png" alt="One kilobyte is a feature" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>One kilobyte is a feature</h2>
+      <p class="excerpt">1.1 kB is not a compression trophy — it is what remains when a design stops needing machinery. Small enough to know.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/this-method-era">
+    <img class="thumb" src="/blog/this-method-era.png" alt="this.method, finally safe to pass" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>this.method, finally safe to pass</h2>
+      <p class="excerpt">A decade of () => this.method() wrappers and shipped undefined-this bugs — ended by one lazy bind on the prototype.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/inheritance-exile">
+    <img class="thumb" src="/blog/inheritance-exile.png" alt="Inheritance didn't deserve the exile" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>Inheritance didn't deserve the exile</h2>
+      <p class="excerpt">Composition-over-inheritance corrected an abuse, then outlawed a tool. A reactive pricing chain shows what the recoil cost.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/scrollbar-is-code">
+    <img class="thumb" src="/blog/scrollbar-is-code.png" alt="The scrollbar is code" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>The scrollbar is code</h2>
+      <p class="excerpt">100,000 rows where scrolling itself is virtual — Lenis owns the physics, the DOM holds a dozen rows, nothing costs O(total).</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/organs-not-skeletons">
+    <img class="thumb" src="/blog/organs-not-skeletons.png" alt="Composables are organs, not skeletons" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>Composables are organs, not skeletons</h2>
+      <p class="excerpt">The ecosystem's decade of composables is the substrate, not the rival. Classes give the body a spine.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/measured-not-promised">
+    <img class="thumb" src="/blog/measured-not-promised.png" alt="Measured, not promised" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>Measured, not promised</h2>
+      <p class="excerpt">Benchmarks lie by default — dead code, unobserved heaps, harness tax. The three times our own harnesses lied to us.</p>
+      <span class="go">Read the post →</span>
+    </div>
   </a>
 </div>
