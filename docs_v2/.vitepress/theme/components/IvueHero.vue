@@ -251,7 +251,7 @@ onUnmounted(() => {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: ivh-shine 4s linear infinite;
+  animation: ivh-shine 14s linear infinite;
 }
 :root:not(.dark) .ivh-title .shine {
   background-image: linear-gradient(
@@ -268,11 +268,15 @@ onUnmounted(() => {
   background-clip: text;
 }
 @keyframes ivh-shine {
-  from {
+  /* one 4s sweep, then a 10s rest — the gradient is periodic, so the
+     resting frame and the restarting frame are identical */
+  0% {
     background-position: 0% 0;
   }
-  to {
-    /* exactly one gradient period — the loop point is invisible */
+  28.57% {
+    background-position: -200% 0;
+  }
+  100% {
     background-position: -200% 0;
   }
 }
@@ -512,7 +516,7 @@ onUnmounted(() => {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: ivh-shine 4s linear infinite;
+  animation: ivh-shine 14s linear infinite;
 }
 :root:not(.dark) .ivh-title .shine {
   background-image: linear-gradient(
@@ -529,11 +533,15 @@ onUnmounted(() => {
   background-clip: text;
 }
 @keyframes ivh-shine {
-  from {
+  /* one 4s sweep, then a 10s rest — the gradient is periodic, so the
+     resting frame and the restarting frame are identical */
+  0% {
     background-position: 0% 0;
   }
-  to {
-    /* exactly one gradient period — the loop point is invisible */
+  28.57% {
+    background-position: -200% 0;
+  }
+  100% {
     background-position: -200% 0;
   }
 }
