@@ -189,7 +189,8 @@ counter.double       // 2, re-derived on read
 
 <p class="lead">
 <a href="/guide/model-layer">ivue vs the World →</a> — ivue against the alternatives, head to head.<br />
-<a href="/guide/performance">Performance by Design →</a> — method and full tables.
+<a href="/guide/performance">Performance by Design →</a> — method and full tables.<br />
+<a href="/guide/benchmarks">Interactive Benchmarks →</a> — five live benchmarks, running in your browser.
 </p>
 
 <div class="ix-cols">
@@ -238,7 +239,7 @@ live, formula-capable reactive state — built four ways, then weighed.
 | plain JavaScript object, no reactivity | ~40 | `{ row, col, raw }` |
 | **ivue flyweight columnar** | **4.7** | 1 B kind + 8 B Float64, shared |
 
-<p class="foot">Measured end-to-end on live grids up to 20,000,000 cells — fully reactive at 8.5× below the plain-object floor. The receipts run in your browser: <a href="/guide/benchmarks">Interactive Benchmarks</a>.</p>
+<p class="foot">Measured end-to-end on live grids up to 20,000,000 cells — fully reactive at 8.5× below the plain-object floor. The receipts run in your browser: <a href="/guide/benchmarks">Interactive Benchmarks →</a></p>
 
 </section>
 
