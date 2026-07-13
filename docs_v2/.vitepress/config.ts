@@ -139,16 +139,16 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/introduction', activeMatch: '/guide/(?!standard|benchmarks)' },
       { text: 'Getting Started', link: '/guide/getting-started' },
-      { text: 'Manual', link: '/guide/standard', activeMatch: '/guide/standard' },
+      { text: 'Standard', link: '/guide/standard', activeMatch: '/guide/standard' },
       { text: 'Benchmarks', link: '/guide/benchmarks', activeMatch: '/guide/benchmarks' },
       { text: 'API', link: '/api/', activeMatch: '/api/' },
       { text: 'Blog', link: '/blog/', activeMatch: '/blog/' },
       {
         text: 'v2',
         items: [
-          { text: 'The Standard Operating Manual', link: '/guide/standard' },
+          { text: 'Standard Operating Manual', link: '/guide/standard' },
           {
-            text: 'The Engine Under the Idiom',
+            text: 'Engine Under the Idiom',
             link: '/guide/engine-under-the-idiom',
           },
           { text: 'ivue vs the World', link: '/guide/model-layer' },
@@ -187,9 +187,9 @@ export default defineConfig({
           text: 'Going Deeper',
           collapsed: false,
           items: [
-            { text: 'The Standard Operating Manual', link: '/guide/standard' },
+            { text: 'Standard Operating Manual', link: '/guide/standard' },
             {
-              text: 'The Engine Under the Idiom',
+              text: 'Engine Under the Idiom',
               link: '/guide/engine-under-the-idiom',
             },
           ],
@@ -208,11 +208,17 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'Overview & Playground', link: '/examples/' },
-            { text: 'Counter', link: '/examples/counter' },
+            { text: 'Classic Counter Example', link: '/examples/counter' },
             { text: 'Plain getter vs computed()', link: '/examples/derived' },
             { text: '$watch & $stopEffects', link: '/examples/lifecycle' },
             { text: 'Inheritance chain', link: '/examples/inheritance' },
             { text: 'Composable in a class', link: '/examples/pointer' },
+          ],
+        },
+        {
+          text: 'Advanced Examples',
+          collapsed: false,
+          items: [
             {
               text: 'Virtual Scroller on Lenis',
               link: '/examples/virtual-scroller',
@@ -231,7 +237,7 @@ export default defineConfig({
           text: 'Advanced Patterns',
           collapsed: false,
           items: [
-            { text: 'The Flyweight Pattern', link: '/guide/flyweight' },
+            { text: 'Flyweight Pattern', link: '/guide/flyweight' },
           ],
         },
         {
