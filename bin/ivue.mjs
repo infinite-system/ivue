@@ -32,7 +32,8 @@ if (command !== 'skill') {
     --cursor            .cursor/rules/ivue.mdc
     --copilot           .github/instructions/ivue.instructions.md
     --agents            a managed section in AGENTS.md
-    --all               all of the above
+    --all               Claude + every vendor whose footprint exists
+                        (.cursor/, .github/, AGENTS.md) — creates nothing new
   --force overwrites locally modified copies.`);
   process.exit(command === undefined || command === 'help' ? 0 : 1);
 }
@@ -77,31 +78,44 @@ function install(relativePath, content, label) {
   console.log(`ivue: ${label} installed at ${relativePath} (ivue v${version}).`);
 }
 
-const wantCursor = flags.includes('--cursor');
-const wantCopilot = flags.includes('--copilot');
-const wantAgents = flags.includes('--agents');
+// Explicit flags always install (creating the folder is the point).
+// --all is detect-and-equip: vendor targets only where their footprint
+// already exists — it never scaffolds a tool you don't use. Claude is the
+// native format and installs in every mode.
 const wantAll = flags.includes('--all');
+const detected = (marker) => existsSync(join(process.cwd(), marker));
+const skipped = (label, marker, flag) =>
+  console.log(`ivue: ${label} skipped — no ${marker} here (pass ${flag} to create it).`);
+
+const wantCursor = flags.includes('--cursor') || (wantAll && detected('.cursor'));
+const wantCopilot = flags.includes('--copilot') || (wantAll && detected('.github'));
+const wantAgents = flags.includes('--agents') || (wantAll && detected('AGENTS.md'));
 const wantClaude =
-  wantAll || (!wantCursor && !wantCopilot && !wantAgents) || flags.includes('--claude');
+  wantAll ||
+  flags.includes('--claude') ||
+  (!flags.includes('--cursor') && !flags.includes('--copilot') && !flags.includes('--agents'));
 
 if (wantClaude) {
   install('.claude/skills/ivue/SKILL.md', skillText, 'Claude skill');
 }
-if (wantCursor || wantAll) {
+if (wantAll && !wantCursor) skipped('Cursor rule', '.cursor/', '--cursor');
+if (wantAll && !wantCopilot) skipped('Copilot instructions', '.github/', '--copilot');
+if (wantAll && !wantAgents) skipped('AGENTS.md section', 'AGENTS.md', '--agents');
+if (wantCursor) {
   install(
     '.cursor/rules/ivue.mdc',
     `---\ndescription: ${skillDescription}\nglobs:\nalwaysApply: false\n---\n\n${skillBody}`,
     'Cursor rule',
   );
 }
-if (wantCopilot || wantAll) {
+if (wantCopilot) {
   install(
     '.github/instructions/ivue.instructions.md',
     `---\napplyTo: '**/*.{ts,tsx,vue}'\n---\n\n${skillBody}`,
     'Copilot instructions',
   );
 }
-if (wantAgents || wantAll) {
+if (wantAgents) {
   // AGENTS.md is shared and user-owned — manage only a marked section.
   const startMarker = '<!-- ivue:skill:start -->';
   const endMarker = '<!-- ivue:skill:end -->';

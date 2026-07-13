@@ -53,7 +53,7 @@ copy is version-locked to your installed ivue:
 
 ```sh
 npx ivue skill        # Claude Code
-npx ivue skill --all  # + Cursor, Copilot, AGENTS.md
+npx ivue skill --all  # + Cursor/Copilot/AGENTS.md where already in use
 ```
 
 It lands in your repo (`.claude/skills/ivue/`, `.cursor/rules/`, …),

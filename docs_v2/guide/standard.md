@@ -19,11 +19,13 @@ to the ivue you have installed — agents pick it up from
 
 ```sh
 npx ivue skill          # Claude Code — .claude/skills/ivue/
-npx ivue skill --all    # + Cursor, Copilot, and an AGENTS.md section
+npx ivue skill --all    # + every agent whose footprint exists in the repo
 ```
 
 The content is identical for every agent — only the discovery format
-differs (`--cursor`, `--copilot`, `--agents` install individually).
+differs. `--all` detects what you use (`.cursor/`, `.github/`, `AGENTS.md`)
+and never scaffolds a tool you don't; `--cursor`, `--copilot` and
+`--agents` install their target explicitly.
 Evaluating before adopting? `npx degit infinite-system/ivue/.claude/skills/ivue .claude/skills/ivue` grabs the latest from the repo instead.
 :::
 
