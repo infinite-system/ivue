@@ -1,6 +1,6 @@
 ---
 title: Performance by Design
-description: The honest numbers. ivue creates instances 6–132× faster, holds live instances at up to 10× less heap, and reads state several-fold slower in hot loops — a cost you can erase with a one-line hoist.
+description: The honest numbers. ivue creates instances 6–132× faster, holds live instances at up to 5× less heap, and reads state several-fold slower in hot loops — a cost you can erase with a one-line hoist.
 ---
 
 # Performance by Design
@@ -45,43 +45,41 @@ all it memoizes is trivial math.
 ivue stores derivations once, on the prototype, as plain getters. An instance
 holds only the Refs it has actually materialized.
 
-Measured on Vue 3.5 (Node 22, gc-forced heap deltas, every instance
-retained) with an identical shape — 10 state refs, 60 trivial derivations —
+Measured on Vue 3.5 (Node 22, gc-forced heap deltas, 100,000 instances
+retained) with an identical shape — 10 state refs, 30 trivial derivations —
 and every instance **observed**: its full read pass runs inside its own
 subscribing effect, one effect per instance in every arm. Live means
 observed; a heap number taken without a subscriber flatters the lazy and
 hides dependency storage.
 
-| authoring style, at 100,000 instances    | heap per instance | at 1,000,000                              |
-| ---------------------------------------- | ----------------- | ----------------------------------------- |
-| **ivue class — 60 plain getters**        | **3.7 KB**        | <span class="ix-base">runs — 3.64 GB</span> |
-| composable — 60 plain closures           | 12.3 KB           | **out of memory** (~12.3 GB)               |
-| `reactive(new X())` — fields + getters   | 17.5 KB           | **out of memory** (~17.5 GB)               |
-| composable — 60 eager `computed()`       | 35.7 KB           | **out of memory** (~35.7 GB)               |
+| authoring style, 100,000 live instances  | heap per instance | 100k total   | ivue is                                   |
+| ---------------------------------------- | ----------------- | ------------ | ----------------------------------------- |
+| **ivue class — 30 plain getters**        | **3.7 KB**        | **364 MB**   | <span class="ix-base">the baseline</span> |
+| composable — 30 plain closures           | 8.0 KB            | 781 MB       | **2.1× lighter**                           |
+| `reactive(new X())` — fields + getters   | 10.4 KB           | 1.02 GB      | **2.8× lighter**                           |
+| composable — 30 eager `computed()`       | 19.7 KB           | 1.93 GB      | **5.3× lighter**                           |
 
-Per-instance cost is flat across scales (identical at 20k, 100k and — for
-ivue — the full million), so the ratios are structural: closures weigh
-**3.3×**, `reactive()` **4.7×**, and eager computeds **9.6×** what ivue
-pays. The `reactive()` number deserves its own sentence: the proxy is
-nearly free at rest (0.18 KB — nothing allocates until something
-subscribes), but the first effect that observes an instance allocates
-dependency storage for **every tracked key**, and with 60 proxy-tracked
-getters that lands at 17.5 KB — on top of creation that runs 22× slower at
-a million instances and reads that pay the proxy forever. ivue's refs
-subscribe at the leaf: 10 refs, 10 dependencies, 3.7 KB, raw-speed reads. An eager computed costs ≈390 bytes per instance under observation. A plain
-closure costs ≈150. Both are paid whether the value is ever read or not.
+Per-instance cost is flat across scales, so the ratios are structural. The
+`reactive()` number deserves its own sentence: the proxy is nearly free at
+rest (nothing allocates until something subscribes), but the first effect
+that observes an instance allocates dependency storage for **every tracked
+key** — every field and every proxy-tracked getter — and that lands at
+10.4 KB, on top of creation that runs 22× slower at a million instances
+and reads that pay the proxy forever. ivue's refs subscribe at the leaf:
+10 refs, 10 dependencies, 3.7 KB, raw-speed reads. An eager computed costs ≈390 bytes per instance under observation. A plain
+closure costs ≈145. Both are paid whether the value is ever read or not.
 
 The closures row is the sharp one. Skipping `computed()` inside a
-composable still costs 3.3×, because **closures allocate per instance**.
+composable still costs 2.1×, because **closures allocate per instance**.
 Only prototype getters are shared. Skipping memoization is a policy win.
 The prototype is the structural win. ivue stacks both by default.
 
-Scaled up: a 1,000-row grid of these components drops from ~36 MB to
-~3.7 MB of live reactive state. For 10k virtualized items: ~357 MB →
+Scaled up: a 1,000-row grid of these components drops from ~20 MB to
+~3.7 MB of live reactive state. For 10k virtualized items: ~197 MB →
 ~37 MB. The GC pressure of creation bursts shrinks with it.
 
-This doesn't matter everywhere. A singleton store with 60 computeds costs
-36 KB, total. And in many components, vnodes and DOM dominate the heap, not
+This doesn't matter everywhere. A singleton store with 30 computeds costs
+20 KB, total. And in many components, vnodes and DOM dominate the heap, not
 Refs/Computeds. Use [`computed()`](/guide/computed-watch) where memoization
 or render suppression earns its ~300 bytes.
 
