@@ -18,9 +18,12 @@ to the ivue you have installed — agents pick it up from
 `.claude/skills/ivue/`:
 
 ```sh
-npx ivue skill
+npx ivue skill          # Claude Code — .claude/skills/ivue/
+npx ivue skill --all    # + Cursor, Copilot, and an AGENTS.md section
 ```
 
+The content is identical for every agent — only the discovery format
+differs (`--cursor`, `--copilot`, `--agents` install individually).
 Evaluating before adopting? `npx degit infinite-system/ivue/.claude/skills/ivue .claude/skills/ivue` grabs the latest from the repo instead.
 :::
 

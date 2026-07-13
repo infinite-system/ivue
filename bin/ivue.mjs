@@ -25,9 +25,15 @@ function fail(message) {
 if (command !== 'skill') {
   console.log(`ivue — commands:
 
-  npx ivue skill [--force]   install the ivue operating manual as an agent
-                             skill at .claude/skills/ivue/SKILL.md
-                             (--force overwrites local modifications)`);
+  npx ivue skill [targets] [--force]
+
+  Installs the ivue operating manual for coding agents. Targets:
+    (none) / --claude   .claude/skills/ivue/SKILL.md
+    --cursor            .cursor/rules/ivue.mdc
+    --copilot           .github/instructions/ivue.instructions.md
+    --agents            a managed section in AGENTS.md
+    --all               all of the above
+  --force overwrites locally modified copies.`);
   process.exit(command === undefined || command === 'help' ? 0 : 1);
 }
 
@@ -44,25 +50,82 @@ const sourcePath = [
 if (!sourcePath) fail('SKILL.md not found in the installed package.');
 
 const skillText = readFileSync(sourcePath, 'utf8');
-const targetDir = join(process.cwd(), '.claude', 'skills', 'ivue');
-const targetPath = join(targetDir, 'SKILL.md');
+// the manual's body, without the Claude skill frontmatter
+const skillBody = skillText.replace(/^---\n[\s\S]*?\n---\n+/, '');
+const skillDescription =
+  /description:\s*([^\n]+)/.exec(skillText)?.[1] ??
+  'The ivue operating manual.';
 
-if (existsSync(targetPath)) {
-  const existing = readFileSync(targetPath, 'utf8');
-  if (existing === skillText) {
-    console.log(`ivue: skill already up to date (ivue v${version}).`);
-    process.exit(0);
+/** Write one target idempotently; refuse to clobber local edits sans --force. */
+function install(relativePath, content, label) {
+  const targetPath = join(process.cwd(), relativePath);
+  if (existsSync(targetPath)) {
+    const existing = readFileSync(targetPath, 'utf8');
+    if (existing === content) {
+      console.log(`ivue: ${label} already up to date (ivue v${version}).`);
+      return;
+    }
+    if (!force) {
+      fail(
+        `${relativePath} exists and differs from ivue v${version}'s copy.\n` +
+          '      Re-run with --force to overwrite it.',
+      );
+    }
   }
-  if (!force) {
-    fail(
-      `.claude/skills/ivue/SKILL.md exists and differs from ivue v${version}'s copy.\n` +
-        '      Re-run with --force to overwrite it.',
-    );
-  }
+  mkdirSync(dirname(targetPath), { recursive: true });
+  writeFileSync(targetPath, content);
+  console.log(`ivue: ${label} installed at ${relativePath} (ivue v${version}).`);
 }
 
-mkdirSync(targetDir, { recursive: true });
-writeFileSync(targetPath, skillText);
-console.log(
-  `ivue: skill installed at .claude/skills/ivue/SKILL.md (matches ivue v${version}).`,
-);
+const wantCursor = flags.includes('--cursor');
+const wantCopilot = flags.includes('--copilot');
+const wantAgents = flags.includes('--agents');
+const wantAll = flags.includes('--all');
+const wantClaude =
+  wantAll || (!wantCursor && !wantCopilot && !wantAgents) || flags.includes('--claude');
+
+if (wantClaude) {
+  install('.claude/skills/ivue/SKILL.md', skillText, 'Claude skill');
+}
+if (wantCursor || wantAll) {
+  install(
+    '.cursor/rules/ivue.mdc',
+    `---\ndescription: ${skillDescription}\nglobs:\nalwaysApply: false\n---\n\n${skillBody}`,
+    'Cursor rule',
+  );
+}
+if (wantCopilot || wantAll) {
+  install(
+    '.github/instructions/ivue.instructions.md',
+    `---\napplyTo: '**/*.{ts,tsx,vue}'\n---\n\n${skillBody}`,
+    'Copilot instructions',
+  );
+}
+if (wantAgents || wantAll) {
+  // AGENTS.md is shared and user-owned — manage only a marked section.
+  const startMarker = '<!-- ivue:skill:start -->';
+  const endMarker = '<!-- ivue:skill:end -->';
+  const section = `${startMarker}\n<!-- managed by \`npx ivue skill --agents\` — edits inside are overwritten -->\n\n${skillBody}\n${endMarker}`;
+  const agentsPath = join(process.cwd(), 'AGENTS.md');
+  if (existsSync(agentsPath)) {
+    const existing = readFileSync(agentsPath, 'utf8');
+    const start = existing.indexOf(startMarker);
+    const end = existing.indexOf(endMarker);
+    if (start !== -1 && end !== -1) {
+      const updated =
+        existing.slice(0, start) + section + existing.slice(end + endMarker.length);
+      if (updated === existing) {
+        console.log(`ivue: AGENTS.md section already up to date (ivue v${version}).`);
+      } else {
+        writeFileSync(agentsPath, updated);
+        console.log(`ivue: AGENTS.md section updated (ivue v${version}).`);
+      }
+    } else {
+      writeFileSync(agentsPath, existing.trimEnd() + '\n\n' + section + '\n');
+      console.log(`ivue: AGENTS.md section appended (ivue v${version}).`);
+    }
+  } else {
+    writeFileSync(agentsPath, section + '\n');
+    console.log(`ivue: AGENTS.md created (ivue v${version}).`);
+  }
+}

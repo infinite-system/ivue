@@ -52,11 +52,12 @@ site publishes as [The Standard](/guide/standard) — one command, and the
 copy is version-locked to your installed ivue:
 
 ```sh
-npx ivue skill
+npx ivue skill        # Claude Code
+npx ivue skill --all  # + Cursor, Copilot, AGENTS.md
 ```
 
-It lands at `.claude/skills/ivue/SKILL.md`, travels with your repo through
-git, and one teammate installing it equips everyone.
+It lands in your repo (`.claude/skills/ivue/`, `.cursor/rules/`, …),
+travels through git, and one teammate installing it equips everyone.
 
 ## Your first reactive class
 
