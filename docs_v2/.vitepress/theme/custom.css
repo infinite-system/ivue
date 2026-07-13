@@ -146,9 +146,13 @@
 
 /* ---------- Home sections ---------- */
 .ix {
-  max-width: 1152px;
-  margin: 0 auto;
-  padding: 0 24px;
+  /* VitePress's vp-doc container already provides the centered 1152px
+     content box (1280 cap − 64px side padding) — the SAME box the hero
+     aligns to. Any width or padding here double-constrains and indents
+     every section 24px past the hero. */
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 .ix section,
 .ix-section {
