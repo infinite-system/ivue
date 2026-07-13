@@ -648,3 +648,30 @@
 .benchmarks-wide .VPDoc .content-container {
   max-width: none !important;
 }
+
+/* ---------- Mobile guard rails ---------- */
+@media (max-width: 719px) {
+  /* the desktop polish sets display:table for full-width rounded corners —
+     small screens get VitePress's scroll-in-place behavior back */
+  .vp-doc table {
+    display: block;
+    overflow-x: auto;
+  }
+  /* code blocks keep breathing room instead of running flush to the glass
+     (VitePress full-bleeds them with negative margins on small screens) */
+  .vp-doc div[class*='language-'] {
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 8px;
+  }
+}
+/* homepage sections: grid children may not force the page wider than the
+   viewport; fences scroll inside themselves */
+.ix-idea > div,
+.ix div[class*='language-'] {
+  min-width: 0;
+  max-width: 100%;
+}
+.ix div[class*='language-'] pre {
+  overflow-x: auto;
+}
