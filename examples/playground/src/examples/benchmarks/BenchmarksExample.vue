@@ -1,69 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import {
-  INSTANCE_COUNT,
-  benchIvue,
-  benchReactive,
-  benchComposable,
-} from './creationBench';
+import { BenchmarksExample, CALL_COUNT } from './BenchmarksExample';
+import { INSTANCE_COUNT } from './creationBench';
 
-const ivueMs = ref<number | null>(null);
-const reactiveMs = ref<number | null>(null);
-const composableMs = ref<number | null>(null);
-const running = ref(false);
+const bench = new BenchmarksExample.Class();
 
-const CALL_COUNT = 200_000;
-const boxCreationMs = ref<number | null>(null);
-const methodMs = ref<number | null>(null);
-const boxRunning = ref(false);
-
-async function runCreation() {
-  running.value = true;
-  ivueMs.value = reactiveMs.value = composableMs.value = null;
-  // let the button paint before blocking
-  await new Promise((resolve) => setTimeout(resolve, 30));
-  ivueMs.value = benchIvue();
-  await new Promise((resolve) => setTimeout(resolve, 30));
-  reactiveMs.value = benchReactive();
-  await new Promise((resolve) => setTimeout(resolve, 30));
-  composableMs.value = benchComposable();
-  running.value = false;
-}
-
-async function runInteractiveBox() {
-  boxRunning.value = true;
-  await new Promise((resolve) => setTimeout(resolve, 30));
-  const { InteractiveBox } = await import('./model/InteractiveBox');
-
-  // 1. creation — instances retained in an array, nothing elidable
-  const instances = new Array(INSTANCE_COUNT);
-  const creationStart = performance.now();
-  for (let index = 0; index < INSTANCE_COUNT; index++) {
-    instances[index] = new InteractiveBox.Class({ id: index });
-  }
-  boxCreationMs.value = performance.now() - creationStart;
-  let alive = 0;
-  for (let index = 0; index < INSTANCE_COUNT; index += 997) {
-    if (instances[index]) alive++;
-  }
-  if (alive < 0) throw new Error('unreachable');
-
-  // 2. method dispatch — one instance, a prototype-bound method, N calls
-  const benchmarkInstance = instances[0];
-  const methodStart = performance.now();
-  for (let index = 0; index < CALL_COUNT; index++) {
-    benchmarkInstance.calculatePhysics();
-  }
-  methodMs.value = performance.now() - methodStart;
-  boxRunning.value = false;
-}
-
-const fmt = (value: number | null) =>
-  value === null ? '—' : `${value.toFixed(1)} ms`;
-const ratio = (value: number | null) =>
-  value === null || ivueMs.value === null || ivueMs.value === 0
-    ? ''
-    : `${(value / ivueMs.value).toFixed(1)}× slower`;
+// the state destructure
+const {
+  // state refs
+  ivueMs,
+  reactiveMs,
+  composableMs,
+  running,
+  boxCreationMs,
+  methodMs,
+  boxRunning,
+} = bench;
 </script>
 
 <template>
@@ -76,21 +27,23 @@ const ratio = (value: number | null) =>
     <div class="vals">
       <div>
         <div class="k">ivue · new Class()</div>
-        <div class="n grad">{{ fmt(ivueMs) }}</div>
+        <div class="n grad">{{ bench.format(ivueMs) }}</div>
       </div>
       <div>
         <div class="k">
           reactive(new X())
-          <span v-if="reactiveMs !== null">· {{ ratio(reactiveMs) }}</span>
+          <span v-if="reactiveMs !== null">· {{ bench.ratio(reactiveMs) }}</span>
         </div>
-        <div class="n">{{ fmt(reactiveMs) }}</div>
+        <div class="n">{{ bench.format(reactiveMs) }}</div>
       </div>
       <div>
         <div class="k">
           composable factory
-          <span v-if="composableMs !== null">· {{ ratio(composableMs) }}</span>
+          <span v-if="composableMs !== null">
+            · {{ bench.ratio(composableMs) }}
+          </span>
         </div>
-        <div class="n">{{ fmt(composableMs) }}</div>
+        <div class="n">{{ bench.format(composableMs) }}</div>
       </div>
     </div>
     <div class="row">
@@ -98,7 +51,7 @@ const ratio = (value: number | null) =>
         class="btn primary"
         type="button"
         :disabled="running"
-        @click="runCreation"
+        @click="bench.runCreation()"
       >
         {{
           running
@@ -121,11 +74,11 @@ const ratio = (value: number | null) =>
         <div class="k">
           create {{ INSTANCE_COUNT.toLocaleString() }} InteractiveBoxes
         </div>
-        <div class="n grad">{{ fmt(boxCreationMs) }}</div>
+        <div class="n grad">{{ bench.format(boxCreationMs) }}</div>
       </div>
       <div>
         <div class="k">{{ CALL_COUNT.toLocaleString() }} method calls</div>
-        <div class="n">{{ fmt(methodMs) }}</div>
+        <div class="n">{{ bench.format(methodMs) }}</div>
       </div>
     </div>
     <div class="row">
@@ -133,7 +86,7 @@ const ratio = (value: number | null) =>
         class="btn primary"
         type="button"
         :disabled="boxRunning"
-        @click="runInteractiveBox"
+        @click="bench.runInteractiveBox()"
       >
         {{
           boxRunning

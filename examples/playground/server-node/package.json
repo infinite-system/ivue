@@ -1,0 +1,20 @@
+{
+  "name": "ivue-field-server",
+  "private": true,
+  "type": "module",
+  "description": "Reference backend for the playground field components — disk or S3 storage.",
+  "scripts": {
+    "start": "node server.ts",
+    "start:s3": "STORAGE=s3 node server.ts"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.0",
+    "express-fileupload": "^1.5.0",
+    "sharp": "^0.33.0"
+  },
+  "optionalDependencies": {
+    "@aws-sdk/client-s3": "^3.600.0",
+    "@aws-sdk/s3-request-presigner": "^3.600.0"
+  }
+}

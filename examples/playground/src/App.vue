@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { defineAsyncComponent, type Component } from 'vue';
 import { Playground } from './Playground';
 
 const playground = new Playground.Class();
@@ -9,14 +8,6 @@ const {
   // state refs
   route,
 } = playground;
-
-// route components are lazy — a route never loads the others' code
-const routeComponents: Record<string, Component> = Object.fromEntries(
-  playground.examples.map((example) => [
-    example.slug,
-    defineAsyncComponent(example.load),
-  ]),
-);
 </script>
 
 <template>
@@ -49,7 +40,7 @@ const routeComponents: Record<string, Component> = Object.fromEntries(
       </header>
       <div class="stage-body">
         <component
-          :is="routeComponents[playground.activeExample.slug]"
+          :is="playground.activeComponent"
           :key="route || playground.activeExample.slug"
         />
       </div>

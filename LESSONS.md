@@ -97,6 +97,12 @@ number was a **harness artifact, not library behavior** — when a number
 
 ## Unified playground (examples/playground)
 
+- **Everything in an example is written in ivue — including the bootstrap.**
+  Route SFCs, demo wrappers, the app shell that displays an example: all of
+  it uses the class + namespace + state-destructure standard, never plain
+  script-setup ref soup. The examples ARE the advertisement; a wrapper
+  written the "ordinary" way undercuts the claim on the page.
+
 - **The playground must be self-contained.** StackBlitz's github import
   mounts ONLY `examples/playground/` — any import reaching outside that
   folder works locally and breaks on StackBlitz. Engine access goes through

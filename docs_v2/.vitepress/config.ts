@@ -220,15 +220,15 @@ export default defineConfig({
           collapsed: false,
           items: [
             {
-              text: 'Virtual Scroller on Lenis',
+              text: 'Virtual Scroller: 1M Items',
               link: '/examples/virtual-scroller',
             },
             {
-              text: 'Formula Grid — 1M Cells',
+              text: 'Formula Grid: 1M Cells',
               link: '/examples/formula-grid',
             },
             {
-              text: 'Flyweight Grid — 20M Cells',
+              text: 'Flyweight Grid: 20M Cells',
               link: '/examples/flyweight-grid',
             },
           ],

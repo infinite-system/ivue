@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { defineAsyncComponent, ref, type Component } from 'vue';
 import { Reactive } from './ivue';
 import { examples, type ExampleEntry } from './examples';
 
@@ -14,8 +14,15 @@ class $Playground {
     return ref(this.readHash());
   }
 
-  // CONSTANTS — the manifest registry; plain field, never mutated.
+  // CONSTANTS — the manifest registry and its lazy route components;
+  // plain fields, never mutated. A route never loads the others' code.
   examples = examples;
+  routeComponents: Record<string, Component> = Object.fromEntries(
+    examples.map((example) => [
+      example.slug,
+      defineAsyncComponent(example.load),
+    ]),
+  );
 
   // DERIVED — plain getters, reactive via leaf tracking.
   get activeExample(): ExampleEntry {
@@ -23,6 +30,10 @@ class $Playground {
       this.examples.find((example) => example.slug === this.route.value) ??
       this.examples[0]
     );
+  }
+
+  get activeComponent(): Component {
+    return this.routeComponents[this.activeExample.slug];
   }
 
   readHash() {

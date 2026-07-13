@@ -1,36 +1,22 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
-import { Thermo } from './Thermo';
+import { DerivedExample } from './DerivedExample';
 
-const thermo = new Thermo.Class();
+const view = new DerivedExample.Class();
+const thermo = view.thermo;
 
-// the state destructure
+// the state destructure — the view's refs AND the model's refs, grouped
+const {
+  // state refs
+  ticks,
+  fahrenheitRunsShown,
+  statusRunsShown,
+} = view;
 const {
   // state refs
   celsius,
   // computed refs
   status,
 } = thermo;
-
-// Unrelated state — changing it re-renders the demo without touching celsius.
-const ticks = ref(0);
-
-// The run counters are plain fields, so a post-flush watcher mirrors them
-// into refs the template can display.
-const fahrenheitRunsShown = ref(0);
-const statusRunsShown = ref(0);
-onMounted(() => {
-  fahrenheitRunsShown.value = thermo.fahrenheitRuns;
-  statusRunsShown.value = thermo.statusRuns;
-  watch(
-    [() => celsius.value, ticks],
-    () => {
-      fahrenheitRunsShown.value = thermo.fahrenheitRuns;
-      statusRunsShown.value = thermo.statusRuns;
-    },
-    { flush: 'post' },
-  );
-});
 </script>
 
 <template>
@@ -66,7 +52,7 @@ onMounted(() => {
         v-model.number="celsius"
         aria-label="celsius"
       />
-      <button class="btn" type="button" @click="ticks++">
+      <button class="btn" type="button" @click="view.reRender()">
         re-render ({{ ticks }})
       </button>
     </div>
