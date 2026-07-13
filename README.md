@@ -1,8 +1,8 @@
 <p align="center">
   <a href="https://infinite-system.github.io/ivue/">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs_v2/public/brand-lockup-dark.png">
-      <img src="docs_v2/public/brand-lockup-light.png" alt="ivue — Infinite Vue" width="340">
+      <source media="(prefers-color-scheme: dark)" srcset="docs_v2/public/brand-lockup-dark.png?v=2">
+      <img src="docs_v2/public/brand-lockup-light.png?v=2" alt="ivue — Infinite Vue" width="340">
     </picture>
   </a>
 </p>
