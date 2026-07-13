@@ -1,86 +1,38 @@
 ---
 title: Examples
-description: Production-extracted, full-complexity ivue examples — starting with a 1,000,000-row virtual scroller driven by a customized Lenis, its scroll math and momentum feel intact.
-aside: false
-pageClass: benchmarks-wide examples-page
+description: 'Every ivue example lives in one deployable playground app — each docs page imports the same files the app runs, and one StackBlitz link boots them all.'
 ---
-
-<script setup>
-import ExampleVirtualScroller from '../.vitepress/theme/components/examples/ExampleVirtualScroller.vue'
-</script>
 
 # Examples
 
-Real components, extracted from production — not toy snippets. Each example
-ships the actual files an application runs, wired to demo data, with the
-full source on the page.
+Every example on this site is a real, running component — and they all live
+in **one app**: the
+[playground](https://github.com/infinite-system/ivue/tree/main/examples/playground).
+Each docs page below embeds its example live and shows the exact playground
+files as code; StackBlitz boots the whole collection from GitHub, so every
+push redeploys everything.
 
-## Virtual scroller: 1,000,000 rows on Lenis
+<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground" target="_blank" rel="noreferrer">Open the whole playground in StackBlitz ⚡</a>
 
-A virtualized list where **scrolling itself is virtual**: a customized
-[Lenis](https://github.com/darkroomengineering/lenis) drives the position
-over `translateY` instead of native scroll, so momentum, touch feel and
-wheel behavior are owned by code — while the DOM holds only the visible
-window between two spacer `div`s. Heights are estimated until rows are
-seen, captured one-shot as rows enter and leave, and every operation stays
-O(window): nothing ever costs O(total items).
+## Start small
 
-The class is a single ivue `Reactive()` unit — template refs, prop refs,
-scroll state, the windowing math and the Lenis lifecycle all live on one
-instance, constructed in `setup()` and torn down by the component scope.
+- **[Counter](/examples/counter)** — your first class: one ref, a
+  plain-getter derivation, two methods.
+- **[Plain getter vs computed()](/examples/derived)** — the same derivation
+  both ways, with live run counters proving whose body runs when.
+- **[$watch & $stopEffects](/examples/lifecycle)** — an instance-scoped
+  watcher started, stopped and disposed by hand.
+- **[Inheritance chain](/examples/inheritance)** — three files, three
+  levels, one instance; `total` refines through `super.total` with zero
+  computeds.
+- **[Composable in a class](/examples/pointer)** — `useMouse` hosted
+  privately; consumers see two refs and nothing else.
 
-<ClientOnly>
-  <ExampleVirtualScroller />
-</ClientOnly>
+## Full-complexity
 
-### Using it
-
-```vue
-<script setup lang="ts">
-import VirtualScroller from './virtual-scroller/VirtualScroller.vue'
-import type { BaseItem } from './virtual-scroller/VirtualScroller.types'
-
-const items = ref<BaseItem[]>(loadRows()) // any size — 1M is routine
-</script>
-
-<template>
-  <VirtualScroller v-model="items" :assumed-height="56" :padding-quantity="10">
-    <template #item="{ item }">
-      <article>{{ item.body }}</article>
-    </template>
-  </VirtualScroller>
-</template>
-```
-
-### The source
-
-The exact files running above, tabbed — the class alone is ~1,200 lines,
-so each block scrolls inside itself. The demo wrapper is docs code;
-everything else is the production component.
-
-::: code-group
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
-<<< @/.vitepress/theme/components/examples/ExampleVirtualScroller.vue [demo wrapper]
-:::
-
-The example is a **standalone Vite app** at
-[`examples/playground/`](https://github.com/infinite-system/ivue/tree/main/examples/playground)
-— the customized Lenis (virtual-limit support over the stock engine) is
-vendored inside it. Run it without cloning anything:
-
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
-— StackBlitz imports the folder straight from GitHub, so every push
-redeploys the example automatically.
-
-### What to notice
-
-- **Rows in the DOM** stays at the window size while you fly through
-  100,000 items — watch the counter while scrolling.
-- **Jumps converge.** A jump lands on an estimated position, then re-applies
-  as the fresh window measures in — watch the landing settle onto row
-  #50,000.
-- **The scrollbar is code.** `overflow-anchor: none` and a `translateZ`
-  compositor layer keep the browser out of the way; Lenis takes its clamp
-  from the computed content height, not the DOM.
+- **[Virtual scroller on Lenis](/examples/virtual-scroller)** — 1,000,000
+  rows, a handful of divs; scrolling itself is virtual.
+- **[The flyweight grid](/guide/flyweight)** — 20,000,000 cells, fully
+  reactive at 4.7 bytes per cell.
+- **[Benchmarks](/guide/benchmarks)** — creation, method dispatch, the
+  formula grid and the cell-grid comparison, run live in your browser.

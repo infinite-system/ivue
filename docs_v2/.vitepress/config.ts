@@ -207,7 +207,16 @@ export default defineConfig({
           text: 'Examples',
           collapsed: false,
           items: [
-            { text: 'Virtual Scroller on Lenis', link: '/examples/' },
+            { text: 'Overview & Playground', link: '/examples/' },
+            { text: 'Counter', link: '/examples/counter' },
+            { text: 'Plain getter vs computed()', link: '/examples/derived' },
+            { text: '$watch & $stopEffects', link: '/examples/lifecycle' },
+            { text: 'Inheritance chain', link: '/examples/inheritance' },
+            { text: 'Composable in a class', link: '/examples/pointer' },
+            {
+              text: 'Virtual Scroller on Lenis',
+              link: '/examples/virtual-scroller',
+            },
           ],
         },
         {
