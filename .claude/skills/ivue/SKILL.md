@@ -53,8 +53,8 @@ class $Box {
     return ref<HTMLElement | null>(null);
   }
 
-  // PROPS — plain getters, one per prop the class consumes; reactively
-  // tracked through the props proxy (leaf tracking). THE pattern for props.
+  // PROPS — plain getters, one per prop the class consumes.
+  // Reactively tracked through the props proxy (leaf tracking). THE pattern for props.
   get width() {
     return this.props.width;
   }
