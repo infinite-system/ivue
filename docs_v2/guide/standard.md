@@ -1,12 +1,11 @@
 ---
-title: The Standard (Operating Manual)
+title: The Standard
 description: The complete ivue operating manual — annotated class and SFC templates, DO/NEVER table, the unwrapping-surface typing invariant, watch rules, thin-closure delegation, naming guidelines, keyed reactivity, and the review checklist. The same manual we ship to AI agents.
 ---
 
-# The Standard — ivue Operating Manual
+# The Standard
 
-This page is the library's operating manual, verbatim. It is the same
-document we ship to AI coding agents as the `/ivue` skill —
+This page ships to AI coding agents verbatim, as the `/ivue` skill —
 [`.claude/skills/ivue/SKILL.md`](https://github.com/infinite-system/ivue/blob/main/.claude/skills/ivue/SKILL.md)
 — because the instructions that make an agent write correct ivue turn out
 to be exactly the reference a human wants open in a second tab. Everything
