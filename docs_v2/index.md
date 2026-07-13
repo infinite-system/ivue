@@ -1,7 +1,7 @@
 ---
 layout: home
 title: 'Plain classes. Full reactivity. One kilobyte.'
-description: 'ivue turns native TypeScript classes into fine-grained Vue 3 reactivity. No proxy per instance, no decorators, nothing paid until first access.'
+description: 'ivue turns native TypeScript classes into fine-grained Vue 3 reactivity. No proxy per instance, no decorators, no component coupling, nothing paid until first access.'
 
 features:
   - title: Native class API
