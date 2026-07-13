@@ -82,7 +82,7 @@ and the shape that hot-reloads onto live instances ([HMR](/guide/hmr)).
 
 At document scale the same invariant goes one level deeper: the flyweight columnar
 model holds **20,000,000 live cells at 4.7 bytes each**, fully reactive —
-[Benchmarks](/guide/benchmarks#the-flyweight-grid-20-million-cells).
+[Interactive Benchmarks](/guide/benchmarks#the-flyweight-grid-20-million-cells).
 
 ## The whole engine is ~1.1 kB
 

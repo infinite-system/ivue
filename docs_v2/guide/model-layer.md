@@ -1,9 +1,9 @@
 ---
-title: The Model Layer, Measured
+title: ivue vs the World
 description: 'Vue has state solutions at two scales — component-scoped composables and singleton stores. ivue adds the missing third: a domain model of thousands of live entities inside Vue reactivity, at plain-object prices.'
 ---
 
-# The Model Layer, Measured
+# ivue vs the World
 
 Vue's ecosystem answers "where does state live?" at exactly two scales:
 
@@ -18,6 +18,15 @@ a hundred thousand spreadsheet cells, every node in an editor graph — where
 each entity should be individually reactive: watchable, derivable,
 inheritable. This page is about why that gap exists, and why ivue happens
 to close it.
+
+**The head-to-head sections:**
+
+- [ivue vs Vue composables](#the-natural-rebuttal-just-lazy-load-the-composable-cells)
+- [ivue vs Angular Signals](#isn-t-this-just-what-angular-signals-already-do)
+- [ivue vs hand-rolled JavaScript](#or-skip-the-library-entirely-—-how-close-does-hand-rolled-js-get)
+- [ivue vs MobX](#what-about-mobx)
+- [ivue vs Svelte 5 runes](#what-about-svelte-5-s-runes-in-classes)
+- [ivue vs Solid.js](#what-about-solid-js)
 
 ## Why the gap is structural
 

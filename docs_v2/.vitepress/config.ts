@@ -123,9 +123,9 @@ export default defineConfig({
             text: 'The Engine Under the Idiom',
             link: '/guide/engine-under-the-idiom',
           },
-          { text: 'The Model Layer, Measured', link: '/guide/model-layer' },
+          { text: 'ivue vs the World', link: '/guide/model-layer' },
           { text: 'Performance by Design', link: '/guide/performance' },
-          { text: 'Benchmarks', link: '/guide/benchmarks' },
+          { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
         ],
       },
     ],
@@ -170,9 +170,9 @@ export default defineConfig({
           text: 'Performance',
           collapsed: false,
           items: [
-            { text: 'The Model Layer, Measured', link: '/guide/model-layer' },
+            { text: 'ivue vs the World', link: '/guide/model-layer' },
             { text: 'Performance by Design', link: '/guide/performance' },
-            { text: 'Benchmarks', link: '/guide/benchmarks' },
+            { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
           ],
         },
         {

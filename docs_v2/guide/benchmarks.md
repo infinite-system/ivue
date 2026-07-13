@@ -1,11 +1,11 @@
 ---
-title: Benchmarks
+title: Interactive Benchmarks
 description: 'A live, in-browser 100k/1M-cell virtualized grid — the same model built three ways (composable, ivue, plain POJO) — plus a working 100k-cell spreadsheet with real Excel formulas whose dependency graph Vue discovers by itself.'
 ---
 
-# Benchmarks
+# Interactive Benchmarks
 
-[The Model Layer, Measured](/guide/model-layer) argues that a domain model —
+[ivue vs the World](/guide/model-layer) argues that a domain model —
 thousands of live, individually-reactive entities — has a structural memory
 cost in idiomatic Vue, and that ivue's laziness erases it. This page is the
 receipt: a real, reproducible, end-to-end measurement, not a microbenchmark.
@@ -253,7 +253,7 @@ node demo/grid/measure.mjs http://localhost:5180 25000  # 1M cells
 
 ## See also
 
-- [The Model Layer, Measured](/guide/model-layer) — why this gap is
+- [ivue vs the World](/guide/model-layer) — why this gap is
   structural, and why ivue closes it.
 - [Performance by Design](/guide/performance) — the micro-level numbers: isolated
   instance creation, per-instance memory, hot-loop read cost.

@@ -173,7 +173,7 @@ counter.double       // 2, re-derived on read
     <span class="go">Build →</span>
   </a>
   <a href="/guide/benchmarks">
-    <div class="t">Benchmarks</div>
+    <div class="t">Interactive Benchmarks</div>
     <div class="d">A 100k-cell grid built three ways, and a spreadsheet with real Excel formulas — live, in your browser.</div>
     <span class="go">Run →</span>
   </a>
@@ -188,7 +188,7 @@ counter.double       // 2, re-derived on read
 <p class="lead">Measured, not promised.</p>
 
 <p class="lead">
-<a href="/guide/model-layer">The Model Layer, Measured →</a> — ivue against the alternatives, head to head.<br />
+<a href="/guide/model-layer">ivue vs the World →</a> — ivue against the alternatives, head to head.<br />
 <a href="/guide/performance">Performance by Design →</a> — method and full tables.
 </p>
 
@@ -237,7 +237,7 @@ live, formula-capable reactive state — built four ways, then weighed.
 | plain JavaScript object, no reactivity | ~40 | `{ row, col, raw }` |
 | **ivue flyweight columnar** | **4.7** | 1 B kind + 8 B Float64, shared |
 
-<p class="foot">Measured end-to-end on live grids up to 20,000,000 cells — fully reactive at 8.5× below the plain-object floor. The receipts run in your browser: <a href="/guide/benchmarks">Benchmarks</a>.</p>
+<p class="foot">Measured end-to-end on live grids up to 20,000,000 cells — fully reactive at 8.5× below the plain-object floor. The receipts run in your browser: <a href="/guide/benchmarks">Interactive Benchmarks</a>.</p>
 
 </section>
 
