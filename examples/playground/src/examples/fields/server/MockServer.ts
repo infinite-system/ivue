@@ -263,6 +263,46 @@ export const mockServerTransport: ServerTransport = {
   },
 };
 
+/**
+ * Seed the media store with server-preexisting images (SVG blobs) so demos
+ * can show a field HYDRATING an existing model from ids — loading media the
+ * server already holds, not just uploading new files.
+ */
+export async function ensureSeedMedia(): Promise<MediaRow[]> {
+  const existingSeeds = collections.media.filter((row: MediaRow) =>
+    row.key.startsWith('seed-'),
+  );
+  if (existingSeeds.length) {
+    return Promise.all(existingSeeds.map(hydrateMediaRow));
+  }
+  const artworks = [
+    { name: 'aurora.svg', from: '#6366f1', to: '#34d399' },
+    { name: 'ember.svg', from: '#f59e0b', to: '#ef4444' },
+    { name: 'tide.svg', from: '#0ea5e9', to: '#8b5cf6' },
+  ];
+  const seeded: MediaRow[] = [];
+  for (const [index, art] of artworks.entries()) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${art.from}"/><stop offset="1" stop-color="${art.to}"/></linearGradient></defs><rect width="480" height="480" fill="url(#g)"/><circle cx="240" cy="240" r="120" fill="rgba(255,255,255,0.22)"/></svg>`;
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const key = `seed-${index + 1}`;
+    await putBlob(key, blob);
+    const row: MediaRow = {
+      id: key,
+      key,
+      name: art.name,
+      mimetype: 'image/svg+xml',
+      size: blob.size,
+      url: '',
+      thumbnailUrl: '',
+      createdAt: new Date().toISOString(),
+    };
+    collections.media.push(row);
+    seeded.push(await hydrateMediaRow(row));
+  }
+  saveCollections(collections);
+  return seeded;
+}
+
 /** Wipe the sandbox back to seed data (used by the demo's reset button). */
 export async function resetMockServer() {
   localStorage.removeItem(STORAGE_KEY);

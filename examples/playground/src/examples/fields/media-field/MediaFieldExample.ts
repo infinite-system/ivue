@@ -6,12 +6,26 @@
 import { ref } from 'vue';
 import { Reactive } from '../../../ivue';
 import { ServerApi, type MediaRow } from '../server/ServerApi';
-import { mockServerTransport, resetMockServer } from '../server/MockServer';
+import {
+  ensureSeedMedia,
+  mockServerTransport,
+  resetMockServer,
+} from '../server/MockServer';
 
 ServerApi.use(mockServerTransport);
 
 class $MediaFieldExample {
+  // Preexisting media: the server already holds these images — the field
+  // receives bare IDS and hydrates the rows itself. Stock QUploader has no
+  // such path; it only knows files picked in the session.
+  constructor() {
+    this.loadPreexisting();
+  }
+
   // MUTABLE STATE — one model per showcased variation.
+  get preloadedMedia() {
+    return ref<(MediaRow | string)[]>([]);
+  }
   get avatarMedia() {
     return ref<MediaRow | null>(null);
   }
@@ -28,6 +42,12 @@ class $MediaFieldExample {
     return ref(false);
   }
 
+  async loadPreexisting() {
+    const seeded = await ensureSeedMedia();
+    // hand the field IDS ONLY — it fetches the rows through ServerApi
+    this.preloadedMedia.value = seeded.map((row) => row.id);
+  }
+
   async resetSandbox() {
     this.resetting.value = true;
     await resetMockServer();
@@ -35,6 +55,7 @@ class $MediaFieldExample {
     this.galleryMedia.value = [];
     this.documentMedia.value = [];
     this.extendedMedia.value = [];
+    await this.loadPreexisting();
     this.resetting.value = false;
   }
 }

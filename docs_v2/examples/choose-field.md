@@ -15,9 +15,12 @@ A select field the way production apps actually need it: debounced
 server-side search, page-based infinite scroll, switchable dataset
 variants, chips with removal, inline creation of missing options, icon and
 description rendering, and extensible `before--`/`after--` slots around
-every inherited QSelect slot. It is one ivue class driving one SFC —
-extracted from a production application built on ivue, with the app's
-service layer swapped for the playground's [ServerApi](#the-backend-path).
+every inherited QSelect slot. It is a **Quasar-based extension** — one
+ivue class driving one SFC around Quasar's `QSelect` — and the working
+proof that ivue slots straight into an existing UI framework rather than
+replacing it. Extracted from a production application built on ivue, with
+the app's service layer swapped for the playground's
+[ServerApi](#the-backend-path).
 
 Eight configurations of the same class, live — from a static plain list to
 avatar-chip multi-select with backend search:

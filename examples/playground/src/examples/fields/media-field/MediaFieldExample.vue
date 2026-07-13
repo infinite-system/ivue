@@ -8,6 +8,7 @@ const example = new MediaFieldExample.Class();
 // the state destructure
 const {
   // state refs
+  preloadedMedia,
   avatarMedia,
   galleryMedia,
   documentMedia,
@@ -27,6 +28,17 @@ const {
     </p>
 
     <div class="field-grid">
+      <section>
+        <h3>Preexisting media — hydrated from the server</h3>
+        <MediaField
+          v-model="preloadedMedia"
+          label="Attached earlier"
+          hint="The model starts as bare IDs; the field fetches the rows itself — stock QUploader has no such path"
+          accept="image/*"
+          multiple
+        />
+      </section>
+
       <section>
         <h3>Single image</h3>
         <MediaField

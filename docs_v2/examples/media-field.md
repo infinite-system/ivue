@@ -11,10 +11,14 @@ import ExampleMediaField from '../.vitepress/theme/components/examples/ExampleMe
 
 # Advanced Media Uploader
 
-A complete media field: drag-and-drop or picked uploads, a thumbnail tile
-grid, a lightbox preview dialog, rename, download and delete — extracted
-from a production application built on ivue, with the app's service layer
-swapped for the playground's ServerApi. In the playground the bytes land
+A complete media field — a **Quasar-based extension**, built from Quasar
+controls and driven by one ivue class, showing how ivue works WITH an
+existing UI framework: drag-and-drop or picked uploads, per-file rows with
+inline rename, a lightbox preview dialog, download and delete, and —
+missing from Quasar's stock uploader — **preexisting media**: hand the
+field bare server ids and it hydrates the rows itself. Extracted from a
+production application built on ivue, with the app's service layer swapped
+for the playground's ServerApi. In the playground the bytes land
 in **your browser's IndexedDB** with canvas-generated thumbnails; against
 the reference server the same component uploads to disk or S3 with
 [sharp](https://sharp.pixelplumbing.com/)-generated thumbnails.
@@ -54,6 +58,10 @@ getters, all of it ([Inheritance & super](/guide/inheritance)) — so
 
 ## What to notice in the playground
 
+- **The preexisting-media section starts full.** Its model is three bare
+  ids; the field fetched the rows from the backend on its own — the
+  attach-existing-documents flow every real app needs and stock
+  `QUploader` cannot express.
 - **Drop several images at once** — each uploads through ServerApi,
   thumbnails appear as the backend responds.
 - **Click a tile** for the lightbox: prev/next, name, size, download.

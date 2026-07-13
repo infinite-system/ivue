@@ -4,7 +4,9 @@
 // Two extension mechanisms are showcased here:
 //   1. The `runner` prop swaps the driving CLASS (any MediaField subclass).
 //   2. Every slot has `before--`/`after--` variants (ExtendSlots) — a parent
-//      injects templates at any point without duplicating this file.
+//      injects templates at any point without duplicating this file — and the
+//      `item` slot REPLACES the whole per-file row (ExtendedMediaField.vue
+//      swaps the list rows for a square-tile grid through it).
 // ExtendedMediaField.vue uses BOTH at once.
 import {
   QBadge,
@@ -47,11 +49,6 @@ const {
 } = media;
 
 defineExpose(media as MediaField.Instance);
-
-/** Autofocus the rename input the moment it renders (used as v-focus). */
-const vFocus = {
-  mounted: (element: HTMLInputElement) => element.focus(),
-};
 </script>
 
 <template>
@@ -118,17 +115,16 @@ const vFocus = {
         <slot name="after--empty" :field="media" />
       </template>
 
-      <!-- THUMBNAIL GRID -->
-      <div v-else class="media-field__grid">
+      <!-- FILE LIST — v1-style rows: [thumb] [name / caption / meta] [remove] -->
+      <div v-else class="media-field__list">
         <div
           v-for="(row, index) in media.displayFiles"
           :key="row.id"
           class="media-field__item"
-          :style="media.thumbnailStyle"
         >
           <slot name="before--item" :row="row" :index="index" :field="media" />
           <slot name="item" :row="row" :index="index" :field="media">
-            <!-- THUMBNAIL / FILE-TYPE ICON -->
+            <!-- THUMBNAIL BOX -->
             <div
               class="media-field__thumb"
               :class="{ 'media-field__thumb--clickable': media.canPreview }"
@@ -140,93 +136,39 @@ const vFocus = {
                 :alt="row.name"
                 class="media-field__thumb-image"
               />
-              <div v-else class="media-field__thumb-placeholder">
-                <q-icon :name="media.fileIcon(row)" size="30px" color="grey-6" />
-                <span class="media-field__thumb-extension">
-                  {{ media.fileExtension(row) }}
-                </span>
+              <div v-else class="media-field__thumb-extension">
+                {{ media.fileExtension(row) }}
               </div>
 
-              <!-- HOVER ACTIONS -->
-              <div class="media-field__actions" @click.stop>
-                <slot
-                  name="before--item-actions"
-                  :row="row"
-                  :index="index"
-                  :field="media"
-                />
-                <slot
-                  name="item-actions"
-                  :row="row"
-                  :index="index"
-                  :field="media"
+              <!-- DOWNLOAD — overlays the thumb's bottom-right corner -->
+              <div class="media-field__thumb-download" @click.stop>
+                <q-btn
+                  v-if="media.canDownload"
+                  dense
+                  unelevated
+                  size="10px"
+                  padding="2px 4px"
+                  icon="download"
+                  class="media-field__download-btn"
+                  @click="media.downloadFile(row)"
                 >
-                  <q-btn
-                    v-if="media.canPreview"
-                    dense
-                    flat
-                    round
-                    size="10px"
-                    icon="visibility"
-                    color="white"
-                    @click="media.openPreview(index)"
-                  >
-                    <q-tooltip class="bg-grey-9">Preview</q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    v-if="media.canDownload"
-                    dense
-                    flat
-                    round
-                    size="10px"
-                    icon="download"
-                    color="white"
-                    @click="media.downloadFile(row)"
-                  >
-                    <q-tooltip class="bg-grey-9">Download</q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    v-if="media.canRename"
-                    dense
-                    flat
-                    round
-                    size="10px"
-                    icon="edit"
-                    color="white"
-                    @click="media.startRename(row)"
-                  >
-                    <q-tooltip class="bg-grey-9">Rename</q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    v-if="media.canRemove"
-                    dense
-                    flat
-                    round
-                    size="10px"
-                    icon="close"
-                    color="white"
-                    @click="media.removeFile(row)"
-                  >
-                    <q-tooltip class="bg-grey-9">Remove</q-tooltip>
-                  </q-btn>
-                </slot>
-                <slot
-                  name="after--item-actions"
-                  :row="row"
-                  :index="index"
-                  :field="media"
-                />
+                  <q-tooltip class="bg-grey-9">Download</q-tooltip>
+                </q-btn>
               </div>
             </div>
 
-            <!-- NAME / RENAME / SIZE -->
-            <div class="media-field__item-footer">
+            <!-- FILE DETAILS -->
+            <div class="media-field__details">
+              <!-- FILE NAME — inline rename (v1 borderless input) -->
               <input
-                v-if="renameId === row.id"
-                v-model="renameDraft"
-                v-focus
-                class="media-field__rename-input"
-                placeholder="File name"
+                v-if="media.canRename"
+                class="media-field__filename-input"
+                placeholder="File Name"
+                type="text"
+                :value="renameId === row.id ? renameDraft : row.name"
+                :title="row.name"
+                @focus="media.startRename(row)"
+                @input="renameDraft = ($event.target as HTMLInputElement).value"
                 @keydown.enter.prevent="media.commitRename()"
                 @keydown.esc="media.cancelRename()"
                 @blur="media.commitRename()"
@@ -234,21 +176,82 @@ const vFocus = {
               <div v-else class="media-field__item-name" :title="row.name">
                 {{ row.name }}
               </div>
-              <div class="media-field__item-size">{{ media.sizeLabel(row) }}</div>
+
+              <!-- FILE CAPTION -->
+              <input
+                v-if="media.canRenameCaption"
+                v-model="row.caption"
+                class="media-field__filename-input media-field__caption-line"
+                placeholder="File Caption"
+                type="text"
+                @keydown.enter="(event) => event.preventDefault()"
+              />
+              <div v-else-if="row.caption" class="media-field__caption-line">
+                {{ row.caption }}
+              </div>
+
+              <!-- EXTENSION BADGE / SIZE / STATUS -->
+              <div class="media-field__meta">
+                <q-badge
+                  color="grey-3"
+                  text-color="black"
+                  class="media-field__meta-extension"
+                  :label="media.fileExtension(row)"
+                />
+                <span class="media-field__meta-size">
+                  {{ media.sizeLabel(row) }}
+                </span>
+                <span class="media-field__meta-status">
+                  <q-icon name="check_circle" size="12px" color="positive" />
+                  Uploaded
+                </span>
+              </div>
+            </div>
+
+            <!-- ROW ACTIONS — remove at the far right, top-aligned -->
+            <div class="media-field__row-side" @click.stop>
+              <slot
+                name="before--item-actions"
+                :row="row"
+                :index="index"
+                :field="media"
+              />
+              <slot
+                name="item-actions"
+                :row="row"
+                :index="index"
+                :field="media"
+              />
+              <slot
+                name="after--item-actions"
+                :row="row"
+                :index="index"
+                :field="media"
+              />
+              <q-btn
+                v-if="media.canRemove"
+                dense
+                flat
+                round
+                size="10px"
+                icon="close"
+                @click="media.removeFile(row)"
+              >
+                <q-tooltip class="bg-grey-9">Remove</q-tooltip>
+              </q-btn>
             </div>
           </slot>
           <slot name="after--item" :row="row" :index="index" :field="media" />
         </div>
 
-        <!-- ADD-MORE TILE -->
+        <!-- ADD-MORE AFFORDANCE -->
         <div
           v-if="media.canAddMore"
-          class="media-field__item media-field__add-tile"
-          :style="media.thumbnailStyle"
+          class="media-field__add"
           @click="media.pickFiles()"
         >
-          <q-icon name="add" size="26px" color="grey-6" />
-          <span class="media-field__add-label">Add</span>
+          <q-icon name="attach_file" size="16px" />
+          <span class="media-field__add-label">Add files</span>
         </div>
       </div>
 
@@ -350,29 +353,46 @@ const vFocus = {
   color: color-mix(in srgb, currentColor 45%, transparent);
 }
 
-.media-field__grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px;
-}
+/* --- v1 LIST-ROW LAYOUT --- */
 
-.media-field--dense .media-field__grid {
-  gap: 6px;
+.media-field__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   padding: 6px;
 }
 
-.media-field__item {
-  flex: 0 0 auto;
+.media-field--dense .media-field__list {
+  gap: 2px;
+  padding: 4px;
 }
 
+/* Each file is a full-width horizontal row. */
+.media-field__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 5px 6px;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.media-field__item:hover {
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+/* Thumbnail box — v1: max-width 120px, height 60px, inset-shadow well. */
 .media-field__thumb {
   position: relative;
-  aspect-ratio: 1 / 1;
+  flex: 0 0 120px;
+  max-width: 120px;
+  height: 60px;
   border-radius: 4px;
   overflow: hidden;
   background: color-mix(in srgb, currentColor 8%, transparent);
-  box-shadow: inset 0 0 10px 2px color-mix(in srgb, currentColor 6%, transparent);
+  box-shadow: inset 2px 0 10px 5px
+    color-mix(in srgb, currentColor 7%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -385,81 +405,132 @@ const vFocus = {
 .media-field__thumb-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
   display: block;
 }
 
-.media-field__thumb-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
 .media-field__thumb-extension {
-  font-size: 11px;
+  font-size: 24px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: color-mix(in srgb, currentColor 55%, transparent);
+  color: color-mix(in srgb, currentColor 45%, transparent);
 }
 
-.media-field__actions {
+.media-field__thumb-download {
   position: absolute;
-  inset: auto 0 0 0;
+  right: 4px;
+  bottom: 4px;
+}
+
+.media-field__download-btn {
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  color: var(--q-primary, #1976d2);
+}
+
+/* Details column — name / caption / meta line. */
+.media-field__details {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   gap: 2px;
-  padding: 3px 2px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.media-field__item:hover .media-field__actions {
-  opacity: 1;
-}
-
-.media-field__item-footer {
-  padding: 4px 2px 0;
+  font-size: 12px;
+  padding-top: 2px;
 }
 
 .media-field__item-name {
-  font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.media-field__item-size {
-  font-size: 11px;
-  color: color-mix(in srgb, currentColor 50%, transparent);
-}
-
-.media-field__rename-input {
+/* v1 inline-rename input — borderless; the border materializes on row hover. */
+.media-field__filename-input {
   width: 100%;
   font-size: 12px;
+  color: inherit;
   background: none;
   outline: none;
   border: 0;
-  border-bottom: 1px solid var(--q-primary, #1976d2);
+  border-bottom: 1px solid transparent;
+  line-height: 14px;
   padding: 0 0 1px;
+  transition: border-color 0.3s;
 }
 
-.media-field__add-tile {
-  aspect-ratio: 1 / 1;
-  border: 1px dashed color-mix(in srgb, currentColor 25%, transparent);
-  border-radius: 4px;
+.media-field__item:hover .media-field__filename-input {
+  border-bottom-color: color-mix(in srgb, currentColor 22%, transparent);
+}
+
+.media-field__item:hover .media-field__filename-input:hover {
+  border-bottom-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.media-field__filename-input:focus,
+.media-field__item:hover .media-field__filename-input:focus {
+  border-bottom-color: var(--q-primary, #1976d2);
+}
+
+.media-field__caption-line {
+  color: color-mix(in srgb, currentColor 55%, transparent);
+}
+
+.media-field__caption-line::placeholder {
+  color: color-mix(in srgb, currentColor 35%, transparent);
+}
+
+/* Meta line — extension badge + size + status. */
+.media-field__meta {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: color-mix(in srgb, currentColor 55%, transparent);
+}
+
+.media-field__meta-extension {
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.media-field__meta-size {
+  text-transform: uppercase;
+}
+
+.media-field__meta-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  text-transform: uppercase;
+}
+
+/* Remove button cluster — far right, top-aligned. */
+.media-field__row-side {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  align-self: flex-start;
+  color: color-mix(in srgb, currentColor 60%, transparent);
+}
+
+/* Add-more affordance — a dashed full-width row. */
+.media-field__add {
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 6px;
+  padding: 8px;
+  border: 1px dashed color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 4px;
   cursor: pointer;
   color: color-mix(in srgb, currentColor 60%, transparent);
   transition: border-color 0.2s;
 }
 
-.media-field__add-tile:hover {
+.media-field__add:hover {
   border-color: var(--q-primary, #1976d2);
 }
 
