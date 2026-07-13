@@ -30,6 +30,8 @@ push redeploys everything.
 
 ## Full-complexity
 
+- **[Store Pattern](/examples/store-pattern)** — a global store is a class
+  plus a singleton composable; optional reactive() view, fully typed.
 - **[Advanced Select Field](/examples/choose-field)** — a Quasar-based
   extension: server search, pagination, variants, chips, create-new — one
   class, 54 plain getters, one computed.

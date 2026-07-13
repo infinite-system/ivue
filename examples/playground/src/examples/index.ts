@@ -5,6 +5,7 @@ import { manifest as lifecycle } from './lifecycle/manifest';
 import { manifest as inheritance } from './inheritance/manifest';
 import { manifest as pointer } from './pointer/manifest';
 import { manifest as virtualScroller } from './virtual-scroller/manifest';
+import { manifest as storePattern } from './store-pattern/manifest';
 import { manifest as chooseField } from './fields/choose-field/manifest';
 import { manifest as mediaField } from './fields/media-field/manifest';
 import { manifest as flyweightGrid } from './flyweight-grid/manifest';
@@ -32,6 +33,10 @@ const withQuasar = (load: () => Promise<{ default: Component }>) => {
 };
 
 export const examples: ExampleEntry[] = [
+  {
+    ...storePattern,
+    load: () => import('./store-pattern/StorePatternExample.vue'),
+  },
   {
     ...chooseField,
     load: withQuasar(

@@ -220,6 +220,7 @@ export default defineConfig({
           text: 'Advanced Examples',
           collapsed: false,
           items: [
+            { text: 'Store Pattern', link: '/examples/store-pattern' },
             {
               text: 'Advanced Select Field',
               link: '/examples/choose-field',
