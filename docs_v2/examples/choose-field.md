@@ -57,8 +57,6 @@ what a hand-written Quasar wrapper gives you, and it falls out of the
   (people / companies) without remounting.
 - **Create** appears when nothing matches; it POSTs and selects the new
   row.
-- **The hint breathes.** The hint line is spaced like a native Quasar
-  field's — a small thing that most wrappers get wrong.
 
 ## The source
 
