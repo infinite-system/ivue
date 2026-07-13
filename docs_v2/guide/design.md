@@ -96,8 +96,7 @@ is gone.
 
 ## Why the field left classes
 
-Two forces pushed the ecosystem off classes, and both **are** the difficulty — not
-a substitute for it.
+Two forces pushed the ecosystem off classes:
 
 **Inheritance got abused.** Deep, fragile hierarchies gave OOP a bad name, and
 "composition over inheritance" was the recoil. But the recoil threw out the class,
