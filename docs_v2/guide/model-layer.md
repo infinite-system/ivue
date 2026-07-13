@@ -23,7 +23,7 @@ to close it.
 
 - [ivue vs Vue composables](#the-natural-rebuttal-just-lazy-load-the-composable-cells)
 - [ivue vs Angular Signals](#isn-t-this-just-what-angular-signals-already-do)
-- [ivue vs hand-rolled JavaScript](#or-skip-the-library-entirely-—-how-close-does-hand-rolled-js-get)
+- [ivue vs React (hand-rolled JavaScript)](#or-skip-the-library-entirely-—-how-close-does-hand-rolled-js-get)
 - [ivue vs MobX](#what-about-mobx)
 - [ivue vs Svelte 5 runes](#what-about-svelte-5-s-runes-in-classes)
 - [ivue vs Solid.js](#what-about-solid-js)
