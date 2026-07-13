@@ -14,6 +14,10 @@
   <a href="https://github.com/infinite-system/ivue/actions/workflows/ci.yml"><img src="https://github.com/infinite-system/ivue/actions/workflows/ci.yml/badge.svg?branch=main" alt="build status"></a>
 </p>
 
+<p align="center">
+  <strong>Docs: <a href="https://infinite-system.github.io/ivue/">infinite-system.github.io/ivue</a></strong>
+</p>
+
 ivue builds Vue 3 reactivity out of plain TypeScript classes. Real
 inheritance, real encapsulation, real polymorphism — on ordinary objects,
 with nothing paid until first access. The whole engine is **1.1kb gzipped**
