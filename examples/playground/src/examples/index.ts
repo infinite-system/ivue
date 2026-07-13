@@ -57,12 +57,12 @@ export const examples: ExampleEntry[] = [
     load: () => import('./virtual-scroller/VirtualScrollerExample.vue'),
   },
   {
-    ...flyweightGrid,
-    load: () => import('./flyweight-grid/FlyweightGridExample.vue'),
-  },
-  {
     ...formulaGrid,
     load: () => import('./formula-grid/FormulaGridExample.vue'),
+  },
+  {
+    ...flyweightGrid,
+    load: () => import('./flyweight-grid/FlyweightGridExample.vue'),
   },
   { ...benchmarks, load: () => import('./benchmarks/BenchmarksExample.vue') },
 ];
