@@ -185,7 +185,7 @@ counter.double       // 2, re-derived on read
 
 ## Performance numbers
 
-<p class="lead">Measured, not promised. Method and full tables in <a href="/guide/performance">Performance by Design</a>.</p>
+<p class="lead">Measured, not promised. ivue against the alternatives, head to head: <a href="/guide/model-layer">The Model Layer, Measured →</a>. Method and full tables: <a href="/guide/performance">Performance by Design →</a>.</p>
 
 <div class="ix-cols">
 
@@ -221,6 +221,9 @@ counter.double       // 2, re-derived on read
 </div>
 
 ### What a live cell costs at rest
+
+A stress test at document scale: a spreadsheet grid where every cell is
+live, formula-capable reactive state — built four ways, then weighed.
 
 | | bytes/cell | what the cell is |
 | --- | --- | --- |
