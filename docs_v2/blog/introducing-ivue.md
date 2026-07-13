@@ -45,8 +45,8 @@ construction.
 
 Not for lack of trying. Class-based reactivity keeps sinking on a set of
 problems that fight each other: per-instance cost, `this`-binding,
-reactive inheritance through `super`, hot reload across files, circular
-imports, and TypeScript marking every getter read-only. Solving any one is
+reactive inheritance through `super`, hot reload across files, and
+circular imports. Solving any one is
 easy; the earlier attempts each nailed one or two and shipped the rest as
 sharp edges — or made the fatal move of turning the class *into* the
 component. The full story is in
