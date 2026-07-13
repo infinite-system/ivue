@@ -526,6 +526,9 @@ class $ChooseField {
   prependCreateOptionRow() {
     if (!this.canCreate || !this.createEntityAsOption) return;
     if (!this.searchTerm.value.trim()) return;
+    // An option with this exact label already exists (loaded or selected):
+    // offer nothing to create — selecting it is the only correct action.
+    if (this.findOptionByLabel(this.searchTerm.value)) return;
     const [firstOption] = this.displayedOptions.value;
     if ((firstOption as KeyValueRow)?.value === CREATE_OPTION_VALUE) return;
     const term = this.searchTerm.value.trim();
