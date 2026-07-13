@@ -241,9 +241,9 @@ onUnmounted(() => {
     110deg,
     #7dd3fc 0%,
     #7dd3fc 38%,
-    #eaf6ff 47%,
-    #ffffff 50%,
-    #eaf6ff 53%,
+    #6ee7b7 47%,
+    #34d399 50%,
+    #6ee7b7 53%,
     #7dd3fc 62%,
     #7dd3fc 100%
   );
@@ -258,9 +258,9 @@ onUnmounted(() => {
     110deg,
     #0ea5e9 0%,
     #0ea5e9 38%,
-    #7fc9f7 47%,
-    #b3e2ff 50%,
-    #7fc9f7 53%,
+    #2dd4bf 47%,
+    #10b981 50%,
+    #2dd4bf 53%,
     #0ea5e9 62%,
     #0ea5e9 100%
   );
@@ -502,9 +502,9 @@ onUnmounted(() => {
     110deg,
     #7dd3fc 0%,
     #7dd3fc 38%,
-    #eaf6ff 47%,
-    #ffffff 50%,
-    #eaf6ff 53%,
+    #6ee7b7 47%,
+    #34d399 50%,
+    #6ee7b7 53%,
     #7dd3fc 62%,
     #7dd3fc 100%
   );
@@ -519,9 +519,9 @@ onUnmounted(() => {
     110deg,
     #0ea5e9 0%,
     #0ea5e9 38%,
-    #7fc9f7 47%,
-    #b3e2ff 50%,
-    #7fc9f7 53%,
+    #2dd4bf 47%,
+    #10b981 50%,
+    #2dd4bf 53%,
     #0ea5e9 62%,
     #0ea5e9 100%
   );
