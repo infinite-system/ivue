@@ -10,8 +10,10 @@ pageClass: blog-index
   <a class="blog-card" href="/blog/vscode-hand-rolled-decade">
     <img class="thumb" src="/blog/vscode-hand-rolled-decade.png" alt="VS Code spent a decade hand-rolling reactive classes" width="1200" height="630" loading="lazy" />
     <div class="body">
-      <h3>VS Code spent a decade hand-rolling reactive classes</h3>
-      <p>Emitters, disposables, DI decorators — and since 2022 its own signals system. Every subsystem maps to one ivue feature.</p>
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>VS Code spent a decade hand-rolling reactive classes</h2>
+      <p class="excerpt">Emitters, disposables, DI decorators — and since 2022 its own signals system. Every subsystem maps to one ivue feature.</p>
+      <span class="go">Read the post →</span>
     </div>
   </a>
   <a class="blog-card" href="/blog/introducing-ivue">
