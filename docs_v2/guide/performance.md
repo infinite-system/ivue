@@ -153,9 +153,11 @@ JIT inline a single hot function reference. The same trick works across
 instances (`const grow = box.grow`) because the bound function never
 changes identity.
 
-In templates, handlers fire per click, not per million — hoisting buys
-nothing there. Keep methods dotted in templates: dotted access is what
-marks them as actions.
+In templates, event handlers fire per click, not per million — hoisting
+buys nothing for those; keep them dotted (dotted access is what marks them
+as actions). The one template case that earns the hoist is a method called
+per row of a large `v-for` — there, destructuring the method is the same
+measured win.
 
 ## The template boundary
 

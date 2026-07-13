@@ -65,7 +65,12 @@ there, as everywhere outside a template.
   total-destructure rule abolishes the seam rather than memorizing it.
 - **Never destructure plain getters or methods.** A plain getter owns no
   Ref — destructuring snapshots a dead value. Methods lose nothing but the
-  naming signal. Both stay dotted.
+  naming signal. Both stay dotted. One measured exception: a method called
+  inside a render-hot path — per row of a large `v-for`, per cell of a
+  grid — may be destructured for speed. Methods are identity-stable, and
+  the hoisted call runs at native closure speed (~1.4 ns vs ~4 ns dotted,
+  [Hot loops](/guide/performance#hot-loops)). Spend the naming signal only
+  where a profiler says so.
 - **v-for item cells stay dotted with `.value`** (`cell.raw.value`) — a
   thousand collection items cannot be destructured; the destructure governs the
   component's own instance.

@@ -222,6 +222,10 @@ call site. Rules that keep it clean:
 - **v-for item cells stay dotted with `.value`** (`cell.raw.value`) — you
   cannot destructure a thousand collection items; the destructure governs
   the component's own instance state.
+- Perf escape (measured): a METHOD called in a render-hot path (per row of
+  a large v-for) may be destructured — methods are identity-stable and the
+  hoisted call runs at closure speed (~1.4 vs ~4 ns dotted). Reserve it for
+  profiled hot paths; everywhere else methods stay dotted (the naming signal).
 - **Instance-swapping components keep dotted access**: if the component
   replaces its instance (`model.value = new X.Class()`), destructured
   bindings would go stale — don't destructure what you swap.
