@@ -6,7 +6,7 @@ pageClass: benchmarks-wide examples-page
 ---
 
 <script setup>
-import ExampleVirtualScroller from '../.vitepress/theme/components/examples/virtual-scroller/ExampleVirtualScroller.vue'
+import ExampleVirtualScroller from '../.vitepress/theme/components/examples/ExampleVirtualScroller.vue'
 </script>
 
 # Examples
@@ -59,15 +59,20 @@ so each block scrolls inside itself. The demo wrapper is docs code;
 everything else is the production component.
 
 ::: code-group
-<<< @/.vitepress/theme/components/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
-<<< @/.vitepress/theme/components/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
-<<< @/.vitepress/theme/components/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
-<<< @/.vitepress/theme/components/examples/virtual-scroller/ExampleVirtualScroller.vue [demo wrapper]
+<<< ../../examples/virtual-scroller/src/VirtualScroller.ts [VirtualScroller.ts]
+<<< ../../examples/virtual-scroller/src/VirtualScroller.vue [VirtualScroller.vue]
+<<< ../../examples/virtual-scroller/src/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
+<<< @/.vitepress/theme/components/examples/ExampleVirtualScroller.vue [demo wrapper]
 :::
 
-The customized Lenis (virtual-limit support over the stock engine) is
-vendored alongside —
-[browse it in the repo](https://github.com/infinite-system/ivue/tree/main/docs_v2/.vitepress/theme/components/examples/virtual-scroller/lenis).
+The example is a **standalone Vite app** at
+[`examples/virtual-scroller/`](https://github.com/infinite-system/ivue/tree/main/examples/virtual-scroller)
+— the customized Lenis (virtual-limit support over the stock engine) is
+vendored inside it. Run it without cloning anything:
+
+<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/virtual-scroller" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+— StackBlitz imports the folder straight from GitHub, so every push
+redeploys the example automatically.
 
 ### What to notice
 

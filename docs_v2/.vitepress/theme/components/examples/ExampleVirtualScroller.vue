@@ -6,10 +6,10 @@
  * wrapper (the data and the chrome) is docs code.
  */
 import { ref } from 'vue';
-import DemoBox from '../../DemoBox.vue';
-import VirtualScroller from './VirtualScroller.vue';
-import type { VirtualScrollerExposedUnwrapped } from './VirtualScroller.vue';
-import type { BaseItem } from './VirtualScroller.types';
+import DemoBox from '../DemoBox.vue';
+import VirtualScroller from '../../../../../examples/virtual-scroller/src/VirtualScroller.vue';
+import type { VirtualScrollerExposedUnwrapped } from '../../../../../examples/virtual-scroller/src/VirtualScroller.vue';
+import type { BaseItem } from '../../../../../examples/virtual-scroller/src/VirtualScroller.types';
 
 const ITEM_COUNT = 100_000;
 

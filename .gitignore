@@ -34,3 +34,5 @@ html
 /PLAN.md
 tmp
 skills
+examples/*/node_modules
+examples/*/dist
