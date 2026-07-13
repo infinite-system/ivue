@@ -21,6 +21,20 @@ deletes it with Backspace — the source keeps the real `.value`; only the
 rendering folds.
 :::
 
+## Give your AI the standard
+
+If AI agents write code in your project, hand them the same manual this
+site publishes as [The Standard](/guide/standard) — one command, and the
+copy is version-locked to your installed ivue:
+
+```sh
+npx ivue skill        # Claude Code
+npx ivue skill --all  # + Cursor/Copilot/AGENTS.md where already in use
+```
+
+It lands in your repo (`.claude/skills/ivue/`, `.cursor/rules/`, …),
+travels through git, and one teammate installing it equips everyone.
+
 ## Enable hot reload for classes
 
 One plugin line in `vite.config.ts` gives your classes real HMR — edit a
@@ -44,20 +58,6 @@ code. Optional — everything else on this page works without it — but it's
 one line, and it's the difference between tweaking a method live and
 re-clicking through your app after every save. Details, the manual
 three-line alternative, and how the grafting works: [HMR](/guide/hmr).
-
-## Give your AI the standard
-
-If AI agents write code in your project, hand them the same manual this
-site publishes as [The Standard](/guide/standard) — one command, and the
-copy is version-locked to your installed ivue:
-
-```sh
-npx ivue skill        # Claude Code
-npx ivue skill --all  # + Cursor/Copilot/AGENTS.md where already in use
-```
-
-It lands in your repo (`.claude/skills/ivue/`, `.cursor/rules/`, …),
-travels through git, and one teammate installing it equips everyone.
 
 ## Your first reactive class
 
