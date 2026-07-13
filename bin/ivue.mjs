@@ -31,7 +31,8 @@ if (command !== 'skill') {
     (none) / --claude   .claude/skills/ivue/SKILL.md
     --cursor            .cursor/rules/ivue.mdc
     --copilot           .github/instructions/ivue.instructions.md
-    --agents            a managed section in AGENTS.md
+    --agents / --codex  a managed section in AGENTS.md (Codex CLI,
+                        Windsurf, Gemini CLI and others read this file)
     --all               Claude + every vendor whose footprint exists
                         (.cursor/, .github/, AGENTS.md) — creates nothing new
   --force overwrites locally modified copies.`);
@@ -89,11 +90,17 @@ const skipped = (label, marker, flag) =>
 
 const wantCursor = flags.includes('--cursor') || (wantAll && detected('.cursor'));
 const wantCopilot = flags.includes('--copilot') || (wantAll && detected('.github'));
-const wantAgents = flags.includes('--agents') || (wantAll && detected('AGENTS.md'));
+const wantAgents =
+  flags.includes('--agents') ||
+  flags.includes('--codex') || // Codex CLI reads AGENTS.md — same target
+  (wantAll && detected('AGENTS.md'));
 const wantClaude =
   wantAll ||
   flags.includes('--claude') ||
-  (!flags.includes('--cursor') && !flags.includes('--copilot') && !flags.includes('--agents'));
+  (!flags.includes('--cursor') &&
+    !flags.includes('--copilot') &&
+    !flags.includes('--agents') &&
+    !flags.includes('--codex'));
 
 if (wantClaude) {
   install('.claude/skills/ivue/SKILL.md', skillText, 'Claude skill');
