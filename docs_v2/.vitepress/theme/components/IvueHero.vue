@@ -71,20 +71,20 @@ onUnmounted(() => {
           class="ivh-lockup ivh-lockup--light"
           :src="withBase('/brand-lockup-light.png')"
           alt="ivue — Infinite Vue"
-          width="384"
-          height="146"
+          width="392"
+          height="128"
         />
         <img
           class="ivh-lockup ivh-lockup--dark"
           :src="withBase('/brand-lockup-dark.png')"
           alt="ivue — Infinite Vue"
-          width="384"
-          height="146"
+          width="392"
+          height="128"
         />
         <h1 class="ivh-title">
           <span class="row">Plain classes.</span>
           <span class="row">Full reactivity.</span>
-          <span class="row">Infinite scalability.</span>
+          <span class="row shine">Infinite scalability.</span>
           <span class="row grad">One kilobyte.</span>
         </h1>
         <p class="ivh-tag">
@@ -236,6 +236,50 @@ onUnmounted(() => {
 .ivh-title .row {
   display: block;
 }
+.ivh-title .shine {
+  background: linear-gradient(
+    110deg,
+    #7dd3fc 0%,
+    #c7d2fe 20%,
+    #ffffff 40%,
+    #c7d2fe 60%,
+    #93e6d0 80%,
+    #7dd3fc 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: ivh-shine 6.5s linear infinite;
+}
+:root:not(.dark) .ivh-title .shine {
+  background-image: linear-gradient(
+    110deg,
+    #0ea5e9 0%,
+    #6366f1 20%,
+    #94b8ff 40%,
+    #6366f1 60%,
+    #10b981 80%,
+    #0ea5e9 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+@keyframes ivh-shine {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    /* exactly one gradient period — the loop point is invisible */
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ivh-title .shine {
+    animation: none;
+  }
+}
+
 .ivh-title .grad {
   background: linear-gradient(105deg, #818cf8 15%, #6366f1 45%, #34d399 95%);
   background-size: 200% 100%;
@@ -451,7 +495,51 @@ onUnmounted(() => {
   .ivh-demo {
     animation: ivh-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
   }
-  .ivh-title .grad {
+  .ivh-title .shine {
+  background: linear-gradient(
+    110deg,
+    #7dd3fc 0%,
+    #c7d2fe 20%,
+    #ffffff 40%,
+    #c7d2fe 60%,
+    #93e6d0 80%,
+    #7dd3fc 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: ivh-shine 6.5s linear infinite;
+}
+:root:not(.dark) .ivh-title .shine {
+  background-image: linear-gradient(
+    110deg,
+    #0ea5e9 0%,
+    #6366f1 20%,
+    #94b8ff 40%,
+    #6366f1 60%,
+    #10b981 80%,
+    #0ea5e9 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+@keyframes ivh-shine {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    /* exactly one gradient period — the loop point is invisible */
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ivh-title .shine {
+    animation: none;
+  }
+}
+
+.ivh-title .grad {
     animation: ivh-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both, ivh-grad 9s ease-in-out 1s infinite;
   }
   .pop {
