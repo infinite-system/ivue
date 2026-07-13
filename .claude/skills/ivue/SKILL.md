@@ -141,6 +141,78 @@ export namespace Box {
 }
 ```
 
+## The SFC wiring template (copy this shape)
+
+```vue
+<script lang="ts" setup>
+import { Box } from './Box';
+
+const props = withDefaults(defineProps<BoxProps>(), { width: 400 });
+const emit = defineEmits<BoxEmits>();
+
+// ONE raw instance — the same object drives template, emits payloads, expose.
+// No reactive() wrapper, no unwrap view. Constructor runs init in setup context.
+const box = new Box.Class(props, emit);
+
+// THE STATE DESTRUCTURE — one statement, grouped. Every Ref/Computed the
+// template touches is listed here; each binding IS the cached cell (stable
+// identity), and setup bindings unwrap uniformly in EVERY template position.
+// NEVER destructure plain getters or methods (snapshots a dead value).
+const {
+  // state refs
+  height,
+  celsius,
+  // computed refs
+  sortedRows,
+  fahrenheit,
+  // element refs
+  boxEl,
+} = box;
+
+// Type the expose surface through Instance — it strips readonly so ref-writes typecheck.
+defineExpose(box as Box.Instance);
+</script>
+
+<template>
+  <!-- State bindings — reads AND writes compiler-unwrapped.
+       fahrenheit is the writable computed: v-model writes through its setter. -->
+  <input ref="boxEl" v-model.number="fahrenheit" :disabled="box.isDisabled" />
+  <div v-if="height > 4">
+    {{ box.title }} — {{ celsius }}°C is {{ fahrenheit }}°F
+  </div>
+  <ul :style="{ width: box.widthPx }">
+    <li v-for="row in sortedRows" :key="row.id">{{ row.name }}</li>
+  </ul>
+  <!-- Plain getters and methods: DOTTED on the instance, no .value -->
+  <button @click="box.grow()">grow — area {{ box.area }}</button>
+</template>
+```
+
+The template's two access styles carry meaning: **a state binding = a destructured Ref/Computed**, **dotted `box.x` = a derivation or an
+action** (plain getter / method) — the class's own anatomy, visible at the
+call site. Rules that keep it clean:
+
+- The destructure is TOTAL: every Ref/Computed the template touches is
+  destructured; a Ref is NEVER reached through the instance in the template
+  (interpolating `box.someRef` renders via display-unwrap, but
+  `v-if="box.someRef"` is always-truthy — the seam the total destructure abolishes).
+- In the `<script setup>` BODY, destructured bindings are refs — use
+  `.value` there as everywhere else. Inside `<template>` only, the compiler
+  unwraps them.
+- **v-for item cells stay dotted with `.value`** (`cell.raw.value`) — you
+  cannot destructure a thousand collection items; the destructure governs
+  the component's own instance state.
+- **Instance-swapping components keep dotted access**: if the component
+  replaces its instance (`model.value = new X.Class()`), destructured
+  bindings would go stale — don't destructure what you swap.
+- **Don't shadow props.** A destructured state binding with the same name as
+  a `defineProps` prop silently shadows it in the template (setup bindings
+  win). Rare by construction: the class consumes props through prop-getters,
+  so prop-derived values stay DOTTED (`box.width`, `box.widthPx`) and never
+  compete with state-binding names.
+
+## The outliving instance (module singleton, entity)
+
 For an instance that OUTLIVES any component — a module singleton, an entity
 created in a callback — watchers go in the instance's OWN scope, and the
 owner of its lifetime disposes it:
@@ -189,75 +261,6 @@ export namespace Session {
 // The owner disposes: stops the scope, runs stopEffects(), clears caches.
 session.$stopEffects();
 ```
-
-## The SFC wiring template (copy this shape)
-
-```vue
-<script lang="ts" setup>
-import { Box } from './Box';
-
-const props = withDefaults(defineProps<BoxProps>(), { width: 400 });
-const model = defineModel<Data>('modelValue', { required: true });
-const emit = defineEmits(['change']);
-
-// ONE raw instance — the same object drives template, emits payloads, expose.
-// No reactive() wrapper, no unwrap view. Constructor runs init in setup context.
-const box = new Box.Class(props, model, emit);
-
-// THE STATE DESTRUCTURE — one statement, grouped. Every Ref/Computed the
-// template touches is listed here; each binding IS the cached cell (stable
-// identity), and setup bindings unwrap uniformly in EVERY template position.
-// NEVER destructure plain getters or methods (snapshots a dead value).
-const {
-  // state refs
-  open,
-  anchor,
-  celsius,
-  // computed refs
-  sortedRows,
-  fahrenheit,
-  // element refs
-  boxEl,
-} = box;
-
-// Type the expose surface through Instance — it strips readonly so ref-writes typecheck.
-defineExpose(box as Box.Instance);
-</script>
-
-<template>
-  <!-- State bindings — reads AND writes compiler-unwrapped -->
-  <q-menu v-model="open" :target="anchor" />
-  <div v-if="open" :style="{ width: box.widthPx }">
-    {{ box.title }} — {{ fahrenheit }}°F
-  </div>
-  <!-- Plain getters and methods: DOTTED on the instance, no .value -->
-  <button @click="box.grow()">grow {{ box.area }}</button>
-  <input ref="boxEl" />
-</template>
-```
-
-The template's two access styles carry meaning: **a state binding = a destructured Ref/Computed**, **dotted `box.x` = a derivation or an
-action** (plain getter / method) — the class's own anatomy, visible at the
-call site. Rules that keep it clean:
-
-- The destructure is TOTAL: every Ref/Computed the template touches is
-  destructured; a Ref is NEVER reached through the instance in the template
-  (interpolating `box.someRef` renders via display-unwrap, but
-  `v-if="box.someRef"` is always-truthy — the seam the total destructure abolishes).
-- In the `<script setup>` BODY, destructured bindings are refs — use
-  `.value` there as everywhere else. Inside `<template>` only, the compiler
-  unwraps them.
-- **v-for item cells stay dotted with `.value`** (`cell.raw.value`) — you
-  cannot destructure a thousand collection items; the destructure governs
-  the component's own instance state.
-- **Instance-swapping components keep dotted access**: if the component
-  replaces its instance (`model.value = new X.Class()`), destructured
-  bindings would go stale — don't destructure what you swap.
-- **Don't shadow props.** A destructured state binding with the same name as
-  a `defineProps` prop silently shadows it in the template (setup bindings
-  win). Rare by construction: the class consumes props through prop-getters,
-  so prop-derived values stay DOTTED (`box.width`, `box.widthPx`) and never
-  compete with state-binding names.
 
 ## DO / NEVER
 
