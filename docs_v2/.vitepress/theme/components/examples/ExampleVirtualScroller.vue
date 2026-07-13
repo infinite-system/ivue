@@ -112,8 +112,13 @@ function toggleAutoPlay() {
       <button class="d-btn" type="button" @click="jumpTo(0)">
         back to the top
       </button>
-      <button class="d-btn" type="button" @click="toggleAutoPlay">
-        {{ isAutoPlaying ? 'stop autoplay' : 'autoplay' }}
+      <button
+        class="d-btn"
+        :class="{ 'evs-playing': isAutoPlaying }"
+        type="button"
+        @click="toggleAutoPlay"
+      >
+        {{ isAutoPlaying ? '⏸ pause autoplay' : '▶ autoplay' }}
       </button>
     </div>
   </DemoBox>
@@ -140,5 +145,11 @@ function toggleAutoPlay() {
 .evs-row :deep(b) {
   color: #7dd3fc;
   font-weight: 700;
+}
+
+.d-btn.evs-playing {
+  border-color: rgba(52, 211, 153, 0.6);
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
 }
 </style>
