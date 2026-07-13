@@ -2,7 +2,7 @@
 title: Interactive Benchmarks
 aside: false
 pageClass: benchmarks-wide
-description: 'A live, in-browser 100k/1M-cell virtualized grid — the same model built three ways (composable, ivue, plain POJO) — plus a working 100k-cell spreadsheet with real Excel formulas whose dependency graph Vue discovers by itself.'
+description: 'Five live, in-browser benchmarks — a 100k/1M-cell grid built three ways, a spreadsheet with real Excel formulas, the 20,000,000-cell flyweight grid, and the creation/method primitives — all running the shipped engine.'
 ---
 
 # Interactive Benchmarks

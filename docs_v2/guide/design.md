@@ -18,7 +18,7 @@ set.
 
 | Problem | Why it's hard | In ivue |
 |---|---|---|
-| **Per-instance cost** | A `reactive()` proxy per object is expensive; eager computeds pay for every property up front. | <span class="iv-ck" aria-hidden="true"></span> Instances are **plain**, refs/computeds are lazy → **55–250× cheaper to create.** |
+| **Per-instance cost** | A `reactive()` proxy per object is expensive; eager computeds pay for every property up front. | <span class="iv-ck" aria-hidden="true"></span> Instances are **plain**, refs/computeds are lazy → **6–132× cheaper to create.** |
 | **Cheap bound methods** | Bind per instance and you allocate a function per method per object; don't bind and `this` breaks on detach. | <span class="iv-ck" aria-hidden="true"></span> Methods stay on the prototype, **bound lazily on first use and cached** → cheap, correct, referentially stable. |
 | **Reactive reads** | Any indirection over a raw ref costs something. | <span class="iv-ck" aria-hidden="true"></span> `this.x.value` through a getter — **several-fold over a raw ref, hoistable to native speed**. The one cost, and it's erasable. |
 | **Reactive inheritance** | Prototype-based reactivity collides cached Refs/Computeds and breaks `super`. | <span class="iv-ck" aria-hidden="true"></span> **Deep computed chains with `super.x.value`**, reactivity propagating through every level. |
