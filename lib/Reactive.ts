@@ -120,16 +120,57 @@ const hmrActive = (): boolean =>
 /**
  * Normalize source text for signature comparison: strip comments and
  * collapse whitespace so comment-only and formatting-only edits never flag
- * a remount (they cannot change wiring). Best-effort regex stripping — a
- * string literal containing `//` may be over-trimmed, which at worst makes
- * two DIFFERENT texts compare equal for edits inside that literal's tail;
- * dev-only and vanishingly rare.
+ * a remount (they cannot change wiring). A small state-tracking scan, not
+ * regexes: string and template literals are copied VERBATIM (escapes
+ * included), so `//` inside a string is never mistaken for a comment and
+ * whitespace inside a string still counts as a real change. Remaining
+ * imprecision (regex literals containing quotes; a backtick nested inside
+ * a template interpolation) errs toward flagging a remount — never toward
+ * silently equating two different texts. Dev-only path.
  */
 function hmrNormalize(text: string): string {
-  return text
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/\/\/[^\n]*/g, '')
-    .replace(/\s+/g, '');
+  let out = '';
+  let i = 0;
+  const n = text.length;
+  while (i < n) {
+    const ch = text[i];
+    const next = text[i + 1];
+    if (ch === '/' && next === '/') {
+      while (i < n && text[i] !== '\n') i++;
+      continue;
+    }
+    if (ch === '/' && next === '*') {
+      i += 2;
+      while (i < n && !(text[i] === '*' && text[i + 1] === '/')) i++;
+      i += 2;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      out += ch;
+      i++;
+      while (i < n) {
+        const c = text[i];
+        out += c;
+        i++;
+        if (c === '\\') {
+          if (i < n) {
+            out += text[i];
+            i++;
+          }
+          continue;
+        }
+        if (c === ch) break;
+      }
+      continue;
+    }
+    if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') {
+      i++;
+      continue;
+    }
+    out += ch;
+    i++;
+  }
+  return out;
 }
 
 /**

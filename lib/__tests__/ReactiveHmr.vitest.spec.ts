@@ -306,6 +306,73 @@ describe('Reactive HMR graft', () => {
     expect(entry.remountNeeded).toBe(true);
   });
 
+  it('signature normalization respects string literals (scanner, not regex)', () => {
+    // `//` inside a constructor string is NOT a comment — the tail after it
+    // must still count toward the signature.
+    class $Urls {
+      endpoint = 'https://v1.example';
+      constructor() {
+        this.endpoint = 'https://v1.example';
+      }
+    }
+    Reactive($Urls, 'hmr.test.Urls');
+    const entry = registryEntry('hmr.test.Urls');
+    expect(entry.remountNeeded).toBe(false);
+
+    class $UrlsV2 {
+      endpoint = 'https://v2.example'; // change AFTER the // inside the string
+      constructor() {
+        this.endpoint = 'https://v2.example';
+      }
+    }
+    Reactive($UrlsV2 as any, 'hmr.test.Urls');
+    expect(entry.remountNeeded).toBe(true);
+    entry.remountNeeded = false;
+
+    // Whitespace INSIDE a string literal is a real change, not formatting.
+    class $Spaced {
+      label = 'a b';
+      constructor() {
+        this.label = 'a b';
+      }
+    }
+    Reactive($Spaced, 'hmr.test.Spaced');
+    const spacedEntry = registryEntry('hmr.test.Spaced');
+    expect(spacedEntry.remountNeeded).toBe(false);
+
+    class $SpacedV2 {
+      label = 'ab';
+      constructor() {
+        this.label = 'ab';
+      }
+    }
+    Reactive($SpacedV2 as any, 'hmr.test.Spaced');
+    expect(spacedEntry.remountNeeded).toBe(true);
+  });
+
+  it('block comments are formatting; escaped quotes stay inside their string', () => {
+    // Built from RAW SOURCE via new Function — the test transform strips
+    // comments and rewrites escapes in ordinary class literals, so only
+    // this route delivers real comment/escape text to the normalizer
+    // (matching vite dev, where sources keep their comments).
+    const build = (comment: string, tail: string) =>
+      new Function(
+        `return class { constructor() { /* ${comment} */ this.note = "it\\"s${tail}"; } }`,
+      )();
+
+    Reactive(build('wiring v1', ''), 'hmr.test.Commented');
+    const entry = registryEntry('hmr.test.Commented');
+    expect(entry.remountNeeded).toBe(false);
+
+    // Block-comment-only edit — no wiring change, no remount.
+    Reactive(build('reworded, same wiring', ''), 'hmr.test.Commented');
+    expect(entry.remountNeeded).toBe(false);
+
+    // Edit AFTER the escaped quote inside the string — real change, flagged.
+    Reactive(build('reworded, same wiring', ' v3'), 'hmr.test.Commented');
+    expect(entry.remountNeeded).toBe(true);
+  });
+
   it('ivueHotUpdate escalates flagged modules to hot.invalidate exactly once', () => {
     class $Esc {
       wired = 0;
