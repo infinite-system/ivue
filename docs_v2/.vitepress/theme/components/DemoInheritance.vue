@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import DemoBox from './DemoBox.vue';
-import { TaxedProduct } from './pricing/TaxedProduct';
+import { TaxedProduct } from '@examples/inheritance/TaxedProduct';
 
 const product = new TaxedProduct.Class();
 

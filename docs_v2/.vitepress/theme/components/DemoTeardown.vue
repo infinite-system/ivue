@@ -1,51 +1,12 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue';
-import { Reactive } from '../../../../lib/Reactive';
+import { onUnmounted } from 'vue';
 import DemoBox from './DemoBox.vue';
+import { Sensor } from '@examples/lifecycle/Sensor';
 
-class $Sensor {
-  get temp() {
-    return ref(20);
-  }
-  get watching() {
-    return ref(false);
-  }
-  get fired() {
-    return ref(0);
-  }
-  get last() {
-    return ref('');
-  }
-
-  #stop?: () => void;
-
-  start() {
-    if (this.watching.value) return;
-    this.watching.value = true;
-    // $watch registers in the instance's lazy effect scope
-    this.#stop = (this as any).$watch(
-      () => this.temp.value,
-      (v: number, o: number) => {
-        this.fired.value++;
-        this.last.value = `${o} → ${v}`;
-      },
-    );
-  }
-  stop() {
-    this.#stop?.();
-    this.#stop = undefined;
-    this.watching.value = false;
-  }
-  dispose() {
-    (this as any).$stopEffects(); // stops the scope, clears every cached cell
-    this.watching.value = false; // fresh cells materialize on next access
-  }
-}
-const Sensor = Reactive($Sensor);
-const sensor: any = new Sensor();
+const sensor = new Sensor.Class();
 // the state destructure
-const { temp, watching, fired, last } = sensor;
-onUnmounted(() => sensor.$stopEffects());
+const { temp, watching, fired, lastChange } = sensor;
+onUnmounted(() => (sensor as any).$stopEffects());
 </script>
 
 <template>
@@ -88,7 +49,7 @@ onUnmounted(() => sensor.$stopEffects());
         {{ watching ? 'Stop watch' : 'Start $watch' }}
       </button>
       <button class="d-btn" type="button" @click="sensor.dispose">Dispose ($stopEffects)</button>
-      <span v-if="last" class="d-mono"><code>$watch</code> {{ last }}</span>
+      <span v-if="lastChange" class="d-mono"><code>$watch</code> {{ lastChange }}</span>
     </div>
   </DemoBox>
 </template>

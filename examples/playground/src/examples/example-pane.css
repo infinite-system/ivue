@@ -1,0 +1,79 @@
+/* shared presentation for the simple example panes */
+.pane {
+  max-width: 640px;
+  padding: 24px 20px;
+}
+.note {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #8b95b5;
+}
+.vals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.k {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  white-space: nowrap;
+}
+.n {
+  font-size: 26px;
+  font-weight: 700;
+  color: #dbe1f4;
+  font-variant-numeric: tabular-nums;
+}
+.n.grad {
+  background: linear-gradient(120deg, #34d399, #6366f1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.mono {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: #8b95b5;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.btn {
+  padding: 7px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #dbe1f4;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.btn:hover {
+  border-color: #6366f1;
+}
+.btn.primary {
+  border-color: rgba(99, 102, 241, 0.6);
+  background: rgba(99, 102, 241, 0.18);
+}
+.slider {
+  flex: 1;
+  min-width: 140px;
+  accent-color: #6366f1;
+}
+.receipt {
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #b7c0dc;
+}

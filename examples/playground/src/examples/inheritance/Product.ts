@@ -1,5 +1,5 @@
 // Product.ts — level 1: knows its title and price.
-import { Reactive } from '../../../../../lib/Reactive';
+import { Reactive } from '../../ivue';
 import { ref } from 'vue';
 
 class $Product {

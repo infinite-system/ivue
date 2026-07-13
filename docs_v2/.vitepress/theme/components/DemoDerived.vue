@@ -1,52 +1,28 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import { Reactive } from '../../../../lib/Reactive';
+import { onMounted, ref, watch } from 'vue';
 import DemoBox from './DemoBox.vue';
+import { Thermo } from '@examples/derived/Thermo';
 
-// Plain (non-reactive) counters: incrementing them inside getter bodies is
-// side-effect-free for the graph. A post-flush watcher mirrors them into refs.
-let fahrRuns = 0;
-let statusRuns = 0;
-const fahrRunsShown = ref(0);
-const statusRunsShown = ref(0);
+const thermo = new Thermo.Class();
+// the state destructure
+const { celsius, status } = thermo;
 
 // Unrelated state — changing it re-renders the demo without touching celsius.
 const ticks = ref(0);
 
-class $Thermo {
-  get celsius() {
-    return ref(21);
-  }
-  // Plain getter: re-derives on EVERY render — even unrelated ones.
-  get fahrenheit() {
-    fahrRuns++;
-    return Math.round((this.celsius.value * 9) / 5 + 32);
-  }
-  // computed(): memoized — its body runs only when celsius actually changed.
-  get status() {
-    return computed(() => {
-      statusRuns++;
-      const c = this.celsius.value;
-      if (c < 10) return 'Cold';
-      if (c < 18) return 'Cool';
-      if (c < 26) return 'Comfortable';
-      return 'Warm';
-    });
-  }
-}
-const Thermo = Reactive($Thermo);
-const thermo: any = new Thermo();
-// the state destructure
-const { celsius, status } = thermo;
+// The run counters are plain (non-reactive) fields on the class; a
+// post-flush watcher mirrors them into refs the template can display.
+const fahrRunsShown = ref(0);
+const statusRunsShown = ref(0);
 
 onMounted(() => {
-  fahrRunsShown.value = fahrRuns;
-  statusRunsShown.value = statusRuns;
+  fahrRunsShown.value = thermo.fahrenheitRuns;
+  statusRunsShown.value = thermo.statusRuns;
   watch(
     [() => celsius.value, ticks],
     () => {
-      fahrRunsShown.value = fahrRuns;
-      statusRunsShown.value = statusRuns;
+      fahrRunsShown.value = thermo.fahrenheitRuns;
+      statusRunsShown.value = thermo.statusRuns;
     },
     { flush: 'post' },
   );

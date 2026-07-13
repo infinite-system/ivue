@@ -1,5 +1,5 @@
 // TaxedProduct.ts — level 3: adds tax on top of the discounted total.
-import { Reactive } from '../../../../../lib/Reactive';
+import { Reactive } from '../../ivue';
 import { ref } from 'vue';
 import { SaleProduct } from './SaleProduct';
 

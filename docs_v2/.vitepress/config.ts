@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitepress';
 
 export default defineConfig({
@@ -6,6 +7,13 @@ export default defineConfig({
       // The home hero imports the real engine from ../lib/Reactive.ts.
       // One Vue copy for both the docs and the lib, or tracking breaks.
       dedupe: ['vue'],
+      alias: {
+        // The playground is the canonical source of every example — docs
+        // demos import the SAME classes the example pages show as code.
+        '@examples': fileURLToPath(
+          new URL('../../examples/playground/src/examples', import.meta.url),
+        ),
+      },
     },
     server: {
       fs: { allow: ['../..'] },

@@ -1,5 +1,5 @@
 // SaleProduct.ts — level 2: applies a discount to whatever the parent says.
-import { Reactive } from '../../../../../lib/Reactive';
+import { Reactive } from '../../ivue';
 import { ref } from 'vue';
 import { Product } from './Product';
 

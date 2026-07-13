@@ -1,5 +1,5 @@
 // Pointer.ts — a class HOSTING a composable: private inside, two refs outside.
-import { Reactive } from '../../../../lib/Reactive';
+import { Reactive } from '../../ivue';
 import { useMouse } from '@vueuse/core';
 
 class $Pointer {

@@ -1,25 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Reactive } from '../../../../lib/Reactive';
 import DemoBox from './DemoBox.vue';
+import { Counter } from '@examples/counter/Counter';
 
-class $Counter {
-  get count() {
-    return ref(0);
-  }
-  // Derived value: a plain getter. No computed() needed for simple math.
-  get double() {
-    return this.count.value * 2;
-  }
-  increment() {
-    this.count.value++;
-  }
-  reset() {
-    this.count.value = 0;
-  }
-}
-const Counter = Reactive($Counter);
-const counter: any = new Counter();
+const counter = new Counter.Class();
 // the state destructure
 const { count } = counter;
 </script>

@@ -1,4 +1,9 @@
 import type { Component } from 'vue';
+import { manifest as counter } from './counter/manifest';
+import { manifest as derived } from './derived/manifest';
+import { manifest as lifecycle } from './lifecycle/manifest';
+import { manifest as inheritance } from './inheritance/manifest';
+import { manifest as pointer } from './pointer/manifest';
 import { manifest as virtualScroller } from './virtual-scroller/manifest';
 
 export interface ExampleEntry {
@@ -12,6 +17,14 @@ export interface ExampleEntry {
 // Adding an example = one folder with a manifest + one entry here.
 // Every route component is lazy — a route never pays for the others.
 export const examples: ExampleEntry[] = [
+  { ...counter, load: () => import('./counter/CounterExample.vue') },
+  { ...derived, load: () => import('./derived/DerivedExample.vue') },
+  { ...lifecycle, load: () => import('./lifecycle/LifecycleExample.vue') },
+  {
+    ...inheritance,
+    load: () => import('./inheritance/InheritanceExample.vue'),
+  },
+  { ...pointer, load: () => import('./pointer/PointerExample.vue') },
   {
     ...virtualScroller,
     load: () => import('./virtual-scroller/VirtualScrollerExample.vue'),
