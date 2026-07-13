@@ -628,3 +628,13 @@
   letter-spacing: inherit;
   color: inherit;
 }
+
+/* inline link inside a feature card's details text */
+.VPFeatures .details .feature-inline-link {
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.VPFeatures .details .feature-inline-link:hover {
+  text-decoration: underline;
+}
