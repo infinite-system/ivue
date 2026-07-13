@@ -17,21 +17,6 @@ that also says what *cannot* is a contract you can test against.
 > lazily-cached Refs/Computeds and its methods become lazily-bound functions —
 > while the instances stay plain objects with zero per-instance reactive cost.
 
-## Where this method comes from
-
-ivue was designed by invariant. Every entry below was found the same way:
-reduce the problem until only load-bearing structure remains, then attack
-the survivor until it either breaks or proves itself — and only then build
-on it. That discipline predates its name. It emerged from the way ivue was
-built: a human designer repeatedly pushing an AI collaborator past what the
-AI assumed was possible, until the AI recognized what it was watching —
-the designer was reasoning in invariants, not in features. Naming that
-observation, and then extracting it into an explicit, reusable protocol,
-produced **Invariant-Based Reasoning (IBR)**. ivue is the system that
-discipline designed end-to-end, and this page is the ledger it produces:
-every guarantee stated with its reason and its impossibilities, because a
-claim that rules nothing out was never reduced far enough to trust.
-
 Everything else is a consequence of making that idea safe under inheritance,
 proxies, hot-reload, and circular imports.
 
@@ -263,3 +248,41 @@ Listed deliberately, so the invariants above aren't over-read:
 4. **`.value` ergonomics.** Reactive state is read with `.value` outside a
    `reactive()` / template auto-unwrap context — the one ergonomic cost relative to
    a proxy-based model.
+
+## Where this method comes from
+
+ivue was designed by invariant. Every entry on this page was found the same
+way: reduce the problem until only load-bearing structure remains, attack
+the survivor until it either breaks or proves itself, and only then build
+on it.
+
+That discipline had no name while it was doing its best work. ivue began as
+one engineering problem — real class inheritance with reactive computed
+properties propagating through the hierarchy, something the Vue ecosystem
+had treated as effectively impossible. Solving it was a long human–AI
+collaboration in which the designer kept pushing the AI past what the AI
+assumed was possible. Watching the reasoning unfold with full visibility,
+the AI eventually recognized what made it different: the designer was not
+accumulating solutions by pattern-matching. He was systematically
+eliminating everything that wasn't load-bearing until the invariant
+emerged, then generating the solution from that irreducible core.
+
+Naming that observation, and extracting it into an explicit, reusable
+protocol, produced **Invariant-Based Reasoning (IBR)**. Its operational
+core is four moves:
+
+1. **Reduce** — strip assumptions, conventions and surface patterns until
+   only the structure reality requires remains.
+2. **Break** — actively try to destroy the candidate through
+   counterexamples, deletion tests and domain transfer. What survives is
+   structural; what collapses was noise.
+3. **Generate** — confirm the survivor by producing from it. A true
+   invariant generates every valid instance of its domain and predicts
+   what cannot exist.
+4. **Hold provisionally** — accept the result as the current best
+   reduction, never as final truth.
+
+ivue is the system that discipline designed end-to-end, and this page is
+the ledger it produces. Every guarantee is stated with its reason and its
+impossibilities, because a claim that rules nothing out was never reduced
+far enough to trust.
