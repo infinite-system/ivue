@@ -185,7 +185,12 @@ counter.double       // 2, re-derived on read
 
 ## Performance numbers
 
-<p class="lead">Measured, not promised. ivue against the alternatives, head to head: <a href="/guide/model-layer">The Model Layer, Measured →</a>. Method and full tables: <a href="/guide/performance">Performance by Design →</a>.</p>
+<p class="lead">Measured, not promised.</p>
+
+<p class="lead">
+<a href="/guide/model-layer">The Model Layer, Measured →</a> — ivue against the alternatives, head to head.<br />
+<a href="/guide/performance">Performance by Design →</a> — method and full tables.
+</p>
 
 <div class="ix-cols">
 
@@ -229,7 +234,7 @@ live, formula-capable reactive state — built four ways, then weighed.
 | --- | --- | --- |
 | composable (idiomatic Vue) | ~758 | closures + eager ref/computeds |
 | ivue instance grid | ~67 | plain object + lazy overlay |
-| plain POJO, no reactivity | ~40 | `{ row, col, raw }` |
+| plain JavaScript object, no reactivity | ~40 | `{ row, col, raw }` |
 | **ivue flyweight columnar** | **4.7** | 1 B kind + 8 B Float64, shared |
 
 <p class="foot">Measured end-to-end on live grids up to 20,000,000 cells — fully reactive at 8.5× below the plain-object floor. The receipts run in your browser: <a href="/guide/benchmarks">Benchmarks</a>.</p>
