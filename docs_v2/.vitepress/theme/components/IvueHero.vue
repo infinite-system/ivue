@@ -70,7 +70,7 @@ onUnmounted(() => {
         <h1 class="ivh-title">
           <span class="row">Plain classes.</span>
           <span class="row">Full reactivity.</span>
-          <span class="row">Performance by design.</span>
+          <span class="row">Infinite scalability.</span>
           <span class="row grad">One kilobyte.</span>
         </h1>
         <p class="ivh-tag">

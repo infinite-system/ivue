@@ -7,7 +7,7 @@ features:
   - title: Native class API
     details: extends, super, getters, setters, private fields. Real inheritance, encapsulation and polymorphism, all reactive.
   - title: Zero-cost creation
-    details: Instances are plain objects. State materializes on first access. Creating a million of them takes 22 ms — 6 to 132× faster than the alternatives.
+    details: Instances are plain objects. A million of them take 22 ms — 6 to 132× faster than the alternatives.
     link: /guide/performance
     linkText: Performance by Design
   - title: One kilobyte
