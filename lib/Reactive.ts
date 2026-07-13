@@ -102,11 +102,19 @@ const hmrRegistry = (): Map<string, HmrEntry> =>
  * → 6.7ms per 100k — which prod never pays; set the flag BEFORE any
  * Reactive() call).
  */
+// TEST is read via bracket access so the test runner cannot statically
+// inline it. DEV stays a static read on purpose — it is what lets bundlers
+// dead-code-eliminate every HMR call site from production builds. The
+// `import.meta.hot` check sits BEFORE the test-env check: pure conjunction
+// reorder (same result), but it keeps every operand executable under the
+// test runner, which provides a hot object of its own.
+const envIsTest = (): boolean =>
+  !!(import.meta.env as Record<string, unknown>)['TEST'];
 const hmrActive = (): boolean =>
   (!(globalThis as any)[Symbol.for('ivue.hmr.disable')] &&
     import.meta.env.DEV &&
-    !import.meta.env.TEST &&
-    !!import.meta.hot) ||
+    !!import.meta.hot &&
+    !envIsTest()) ||
   !!(globalThis as any)[Symbol.for('ivue.hmr.force')];
 
 /**
@@ -517,8 +525,9 @@ function hmrGraft(entry: HmrEntry, donor: any): boolean {
   // directly, so this is for outside readers only.)
   for (const key of getOwnPropertyNames(donor)) {
     if (key === 'prototype' || key === 'name' || key === 'length') continue;
-    const desc = getOwnPropertyDescriptor(donor, key);
-    if (!desc) continue;
+    // key comes from getOwnPropertyNames of this same object — the
+    // descriptor always exists
+    const desc = getOwnPropertyDescriptor(donor, key)!;
     try {
       defineProperty(canonical, key, desc);
     } catch (e) {
@@ -571,7 +580,9 @@ export function Reactive<C extends new (...args: any) => any>(
   let hmrSig = '';
   let hmrFrozen = '';
   if (import.meta.env.DEV && hmrActive()) {
-    const entry = hmrRegistry().get(hmrId ?? targetClass.name);
+    let registryKey = targetClass.name;
+    if (hmrId !== undefined) registryKey = hmrId;
+    const entry = hmrRegistry().get(registryKey);
     if (
       entry &&
       entry.canonical !== targetClass &&
@@ -706,7 +717,8 @@ export function Reactive<C extends new (...args: any) => any>(
   // latest constructor body + field initializers run.
   if (import.meta.env.DEV && hmrActive()) {
     const registry = hmrRegistry();
-    const id = hmrId ?? targetClass.name;
+    let id = targetClass.name;
+    if (hmrId !== undefined) id = hmrId;
     const existing = registry.get(id);
     if (existing) {
       // Same class re-Reactive()d → its proxy; a graft-refused donor

@@ -102,11 +102,11 @@ onUnmounted(() => {
           <div class="vals">
             <div class="val">
               <div class="k">count</div>
-              <div class="n"><span :key="count" class="pop">{{ count }}</span></div>
+              <div class="n">{{ count }}</div>
             </div>
             <div class="val">
               <div class="k">double <span class="dim">(plain getter)</span></div>
-              <div class="n"><span :key="counter.double" class="pop">{{ counter.double }}</span></div>
+              <div class="n">{{ counter.double }}</div>
             </div>
           </div>
           <div class="controls">
