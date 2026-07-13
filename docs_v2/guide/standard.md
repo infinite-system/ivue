@@ -62,7 +62,7 @@ class $Box {
     return ref<HTMLElement | null>(null);
   }
 
-  // PROPS — plain getters; tracked through the props proxy (leaf tracking).
+  // PROPS — plain getters; reactively tracked through the props proxy (leaf tracking).
   get width() {
     return this.props.width;
   }
@@ -70,7 +70,8 @@ class $Box {
     return toRef(() => this.props.items);
   } // when you need a ref handle
 
-  // DERIVED — PLAIN getter, NO computed(). Reactive via leaf tracking; 0 bytes/instance.
+  // DERIVED — PLAIN getter, NO computed().
+  // Reactive via leaf tracking; 0 bytes/instance.
   get area() {
     return this.width * this.height.value; // prop × ref — both leaf-tracked
   }
