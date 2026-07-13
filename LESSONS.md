@@ -95,6 +95,22 @@ number was a **harness artifact, not library behavior** — when a number
   rendering the row number from a `position` field — unique strings per row
   cost hundreds of MB. Measured result: 12 DOM rows, ~201 MB total page heap.
 
+## Unified playground (examples/playground)
+
+- **The playground must be self-contained.** StackBlitz's github import
+  mounts ONLY `examples/playground/` — any import reaching outside that
+  folder works locally and breaks on StackBlitz. Engine access goes through
+  the synced `src/ivue.ts`; everything else lives under `src/examples/`.
+- **A nested `tsconfig.json` with a relative `extends` poisons vite builds.**
+  Absorbing a standalone vite app into another app's `src/` tree makes
+  esbuild pick up the nested tsconfig and fail on its now-wrong `extends`
+  path — delete the absorbed app's chrome (tsconfig, vite.config,
+  index.html, main.ts, env.d.ts); the host app provides all of it.
+- The v1 Quasar fields (BlChooseField/BlChooseContactField/BlMediaField,
+  in git history at `be701dd:docs/docs/components/field/`) are ~4,900 lines
+  coupled to the Blackline app (API services, stores, auth, axios boot) —
+  porting them is a stub-the-backend project, not a file conversion.
+
 ## Process
 
 - **Verify before claiming**: browser-drive every live embed, screenshot both
