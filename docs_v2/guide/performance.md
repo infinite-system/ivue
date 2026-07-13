@@ -1,6 +1,6 @@
 ---
 title: Performance by Design
-description: The honest numbers. ivue creates instances 6–132× faster, uses up to 18× less memory per instance, and reads state ~4× slower in hot loops — a cost you can erase with a one-line hoist.
+description: The honest numbers. ivue creates instances 6–132× faster, uses up to 18× less memory per instance, and reads state several-fold slower in hot loops — a cost you can erase with a one-line hoist.
 ---
 
 # Performance by Design
@@ -98,21 +98,17 @@ assumed. Dev gets class grafting; prod gets the same 1.1 kB it always had.
 
 State lives behind a getter. Each `this.x.value` does a small indirection
 before reaching the ref: a `toRaw` call and a cache lookup. A native
-composable reads its closure ref directly. Measured over 10-million-read
-loops (median of runs):
+composable reads its closure ref directly. Measured with the loop inside
+the timed region, one million iterations, median of 9 runs (Node 22, V8):
 
-| per operation                          | ivue       | native      |
-| -------------------------------------- | ---------- | ----------- |
-| ref read (`instance.width` → the ref)  | **8.4 ns** | ~2.1 ns     |
-| method call (body reads a ref)         | **9.6 ns** | ~5.2 ns     |
+| per operation                            | ivue        | native     |
+| ---------------------------------------- | ----------- | ---------- |
+| ref read (`instance.width.value`)        | **~10 ns**  | ~1.3 ns    |
+| method call (body reads a ref)           | **~4 ns**   | ~1.2 ns    |
 
-A read that goes through a ref-getter costs about 4× a native closure read.
-**Method dispatch is not the main cost** — the getter-indirected reads inside
-the method are, plus a smaller tax explained under
-[the template boundary](#the-template-boundary).
-
-In absolute terms, 10 ns is nothing. It only matters when you call something
-millions of times — and when it does, one hoist erases the entire gap.
+A read through a ref-getter costs several times a native closure read. In
+absolute terms these are nanoseconds — they only matter when something runs
+millions of times. And when it does, one hoist erases the entire gap.
 
 ## Hot loops
 
@@ -135,21 +131,31 @@ calculate() {
 
 The inner loop now reads refs directly and runs at native speed.
 
-### Hoisting methods doesn't pay
+### Methods hoist the same way
 
-Methods are referentially stable, so hoisting one is always *safe* —
-`const grow = instance.grow` in a function, or destructured into a
-template. But it buys nothing measurable: a dotted call costs 9.6 ns and a
-hoisted call 9.3 ns. The lookup was never the cost (method *access* is
-3.2 ns — the bound function is cached on the instance after first touch).
-The remaining gap to a native closure (~5.2 ns) is the **bound-function
-call itself**, which no hoist can remove. When a loop genuinely needs
-closure parity, hoist the refs and inline the method's body — the refs are
-where the money is.
+Methods are referentially stable, so a method hoists exactly like a ref —
+and it pays. In a clean one-million-call loop, `instance.grow()` costs
+~4 ns per call while the hoisted form runs at ~1.4 ns — **closure parity**:
 
-In templates this never matters at all: handlers fire per click, not per
-million. Keep methods dotted there — dotted access is what marks them as
-actions.
+```ts
+processAll() {
+  // hoist once: the bound function is the same reference forever
+  const grow = this.grow;
+
+  for (let i = 0; i < 1e6; i++) {
+    grow(); // per-call property lookup gone — native closure speed
+  }
+}
+```
+
+The win comes from removing the per-call property access and letting the
+JIT inline a single hot function reference. The same trick works across
+instances (`const grow = box.grow`) because the bound function never
+changes identity.
+
+In templates, handlers fire per click, not per million — hoisting buys
+nothing there. Keep methods dotted in templates: dotted access is what
+marks them as actions.
 
 ## The template boundary
 
@@ -161,23 +167,23 @@ over 10-million-iteration loops:
 
 | access path          | **ivue raw instance (the standard)** | shallow unwrap proxy | `reactive()` |
 | -------------------- | ------------------------------------ | -------------------- | ------------ |
-| plain derived getter | **25.1 ns**                          | 75.5 ns              | 91.7 ns      |
-| ref-getter access    | **8.4 ns**                           | 57.7 ns              | 76.2 ns      |
-| method access        | **3.2 ns**                           | 47.4 ns              | 67.5 ns      |
+| plain derived getter | **23.4 ns**                          | 68.2 ns              | 125.1 ns     |
+| ref-getter access    | **9.6 ns**                           | 47.0 ns              | 72.4 ns      |
+| method access        | **3.8 ns**                           | 42.3 ns              | 68.5 ns      |
 
 The first column IS ivue, and its numbers include the engine's own
 indirection — the `toRaw` call and cache lookup behind every getter. For
-scale: a native class getter reads in ~2.0 ns. So raw ivue access pays
-3–25 ns with no wrapper proxy on the path, and the wrapper columns are
-the receipts for why they lost — a `proxyRefs`-style shallow view costs
-~3–15×, `reactive()` ~4–21× *on top of* the standard. One more honest
-number: *calling* a method (not just reaching it) costs ~9.6 ns versus
-~2.1 ns for a native method — the cached bound function's call overhead,
-covered under [Hot loops](#hot-loops).
+scale: a native class getter reads in ~0.3 ns and a native ref read in
+~1.3 ns. So raw ivue access pays 4–23 ns with no wrapper proxy on the
+path, and the wrapper columns are the receipts for why they lost — a
+`proxyRefs`-style shallow view costs ~3–11×, `reactive()` ~5–18× *on top
+of* the standard. And every one of these costs is the hoistable kind —
+[Hot loops](#hot-loops) shows both refs and methods reaching native speed
+with one line.
 
 ## The mental model
 
-- **ivue**: cheap to create, light in memory, slightly costlier to read (~4× per hot-loop read, erasable).
+- **ivue**: cheap to create, light in memory, slightly costlier to read (several-fold per hot-loop read, erased by hoisting).
 - **ivue v1 (unreleased) / native composable**: costlier to create, heavier per instance, cheap to read.
 
 Pick by workload. Most apps create and render far more than they hot-loop, so
