@@ -9,6 +9,7 @@ import {
   ref,
   shallowRef,
   toRaw,
+  watch,
 } from 'vue';
 
 import {
@@ -199,6 +200,42 @@ describe('Reactive()', () => {
       b.x = 123;
       expect(b.x).toBe(123);
       expect(a.x).toBe(99);
+    });
+
+    it('native accessor pair over reactive state stays fully reactive (no computed)', async () => {
+      class Thermo {
+        get celsius() {
+          return ref(20);
+        }
+        // plain derived getter + native setter — the accessor-pair form
+        get fahrenheit() {
+          return (this.celsius.value * 9) / 5 + 32;
+        }
+        set fahrenheit(value: number) {
+          this.celsius.value = ((value - 32) * 5) / 9;
+        }
+      }
+      const R = Reactive(Thermo);
+      const thermo: any = new R();
+      expect(thermo.fahrenheit).toBe(68);
+
+      // watch the plain derived getter on the RAW instance
+      const seen: number[] = [];
+      watch(
+        () => thermo.fahrenheit,
+        (fahrenheit: number) => seen.push(fahrenheit),
+        { flush: 'sync' },
+      );
+
+      thermo.fahrenheit = 212; // native setter writes through to the ref
+      expect(thermo.celsius.value).toBeCloseTo(100, 10);
+      expect(thermo.fahrenheit).toBeCloseTo(212, 10);
+      expect(seen.length).toBe(1);
+      expect(seen[0]).toBeCloseTo(212, 10);
+
+      thermo.celsius.value = 0; // writing the source ref re-fires too
+      expect(seen.length).toBe(2);
+      expect(seen[1]).toBeCloseTo(32, 10);
     });
   });
 
