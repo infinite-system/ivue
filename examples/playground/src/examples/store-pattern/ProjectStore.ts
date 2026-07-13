@@ -12,10 +12,13 @@ export interface ProjectTask {
 
 export type TaskFilter = 'all' | 'active' | 'done';
 
+const STORAGE_KEY = 'ivue-example-project-store';
+
 class $ProjectStore {
   // Outliving instance: the store outlives every component, so watchers
   // registered here use $watch/$watchEffect (the instance's own scope).
   constructor() {
+    this.hydrate();
     this.$watchEffect(() => this.persist());
   }
 
@@ -71,11 +74,33 @@ class $ProjectStore {
     this.filter.value = filter;
   }
 
+  /** Restore a previous visit's state — reload the page and it holds. */
+  hydrate() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      const state = JSON.parse(saved);
+      if (typeof state.projectName === 'string') {
+        this.projectName.value = state.projectName;
+      }
+      if (Array.isArray(state.tasks)) this.tasks.value = state.tasks;
+    } catch {
+      /* corrupted storage — keep the seed state */
+    }
+  }
+
+  /** The $watchEffect in the constructor re-runs this whenever the name or
+   *  the task list changes — its reads ARE the subscription. */
   persist() {
-    // stands in for an API call / localStorage write — the $watchEffect in
-    // the constructor re-runs this whenever tasks or the name change
-    void this.projectName.value;
-    void this.tasks.value;
+    const state = {
+      projectName: this.projectName.value,
+      tasks: this.tasks.value,
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      /* storage unavailable — the store still works in memory */
+    }
   }
 }
 
