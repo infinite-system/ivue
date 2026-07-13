@@ -15,7 +15,7 @@ Each class file exports a namespace with two members. The **raw** class is for
 extending. The **reactive** class is for instantiating:
 
 ```ts
-// base-element.ts
+// BaseElement.ts
 import { Reactive } from 'ivue';
 import { ref, computed } from 'vue';
 
@@ -36,9 +36,9 @@ export namespace BaseElement {
 ```
 
 ```ts
-// container.ts
+// Container.ts
 import { Reactive } from 'ivue';
-import { BaseElement } from './base-element';
+import { BaseElement } from './BaseElement';
 
 class $Container extends BaseElement.$Class {
   get summary() {

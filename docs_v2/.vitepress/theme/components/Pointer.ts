@@ -1,4 +1,4 @@
-// pointer.ts — a class HOSTING a composable: private inside, two refs outside.
+// Pointer.ts — a class HOSTING a composable: private inside, two refs outside.
 import { Reactive } from '../../../../lib/Reactive';
 import { useMouse } from '@vueuse/core';
 

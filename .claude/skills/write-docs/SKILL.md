@@ -62,8 +62,8 @@ Every code block is teaching code — someone WILL copy it.
   `newValue`/`oldValue`), thin closures delegating to methods, the
   namespace export with its three inline comments, the grouped state
   destructure in SFCs.
-- **Example tiers**: a block with a filename comment (`// product.ts`) is a
-  TEMPLATE — full canonical form: namespace export, thin computeds for real
+- **Example tiers**: a block with a filename comment (`// Product.ts`) is a
+  TEMPLATE — full canonical form (class files are PascalCase): namespace export, thin computeds for real
   logic, safe to copy as a file. A block without a filename is a FRAGMENT —
   the minimum that proves the point, so the mechanism stays visible; the
   reader lifts the idea, not the file. Costless conventions hold in BOTH

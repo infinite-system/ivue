@@ -194,6 +194,13 @@ export default defineConfig({
           ],
         },
         {
+          text: 'Examples',
+          collapsed: false,
+          items: [
+            { text: 'Virtual Scroller on Lenis', link: '/examples/' },
+          ],
+        },
+        {
           text: 'Advanced Patterns',
           collapsed: false,
           items: [

@@ -732,3 +732,15 @@
   font-weight: 600;
   color: var(--vp-c-brand-1);
 }
+
+/* Examples page: huge source files scroll inside their own block, and the
+   code-group tab row stays visible while you do */
+.examples-page div[class*='language-'] pre {
+  max-height: 68vh;
+  overflow-y: auto;
+}
+.examples-page .vp-code-group .tabs {
+  position: sticky;
+  top: var(--vp-nav-height);
+  z-index: 5;
+}

@@ -56,7 +56,7 @@ And classes **host** composables, not replace them. Here the entire
 surface is two refs:
 
 ```ts
-// pointer.ts
+// Pointer.ts
 import { Reactive } from 'ivue';
 import { useMouse } from '@vueuse/core';
 
@@ -84,7 +84,7 @@ export namespace Pointer {
 
 ```vue
 <script setup lang="ts">
-import { Pointer } from './pointer';
+import { Pointer } from './Pointer';
 
 // the state destructure
 const { x, y } = new Pointer.Class();

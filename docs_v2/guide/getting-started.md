@@ -65,7 +65,7 @@ Write a normal class. Declare state as getters returning `ref()`; derive with pl
 Wrap it with `Reactive()`.
 
 ```ts
-// counter.ts
+// Counter.ts
 import { Reactive } from 'ivue'
 import { ref } from 'vue'
 
@@ -103,7 +103,7 @@ and just `Reactive(class Counter { … })`.)
 
 ```vue
 <script setup lang="ts">
-import { Counter } from './counter'
+import { Counter } from './Counter'
 
 const counter = new Counter()
 

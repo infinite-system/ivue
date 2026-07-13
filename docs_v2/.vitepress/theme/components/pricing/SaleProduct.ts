@@ -1,7 +1,7 @@
-// sale-product.ts — level 2: applies a discount to whatever the parent says.
+// SaleProduct.ts — level 2: applies a discount to whatever the parent says.
 import { Reactive } from '../../../../../lib/Reactive';
 import { ref } from 'vue';
-import { Product } from './product';
+import { Product } from './Product';
 
 class $SaleProduct extends Product.$Class {
   get discount() {

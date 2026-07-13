@@ -1,0 +1,62 @@
+<script lang="ts" setup generic="T extends any">
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+
+export interface VirtualScrollerItem {
+  index: number;
+}
+
+export interface VirtualScrollItemEmits {
+  (e: 'sizeUpdated', height: number): void;
+}
+
+defineProps<VirtualScrollerItem>();
+
+const emit = defineEmits<VirtualScrollItemEmits>();
+
+const item = ref<HTMLElement | null>(null);
+
+/**
+ * ONE-SHOT height capture — deliberately not a ResizeObserver. Items render
+ * in normal flow, so the browser positions them at their real height with no
+ * bookkeeping; the parent only needs heights for its spacer/estimate math.
+ * Capture once on mount (seeds the estimate the moment the item enters the
+ * window — keeps window-local index→position math as accurate as the old
+ * always-observed map) and once right before unmount (the final height — the
+ * only one that matters once the item leaves the window). Continuous
+ * observation is what caused measurable jitter at 100k items: bursts of
+ * resize callbacks during scroll, each invalidating geometry.
+ */
+const capture = () => {
+  const el = item.value;
+  if (!el) return;
+  // Heights are recorded in LAYOUT px: an ancestor transform scale (the
+  // post card scales to fit the window) shrinks every rect readout, and a
+  // height map built from scaled values diverges from the real flow by the
+  // scale factor — landing every index-targeted jump short. Derive the
+  // current scale from the parent stack's rect-to-layout ratio and divide
+  // it out.
+  const parent = el.parentElement;
+  const scale =
+    parent && parent.offsetHeight > 0
+      ? parent.getBoundingClientRect().height / parent.offsetHeight
+      : 1;
+  const height = el.getBoundingClientRect().height;
+  emit('sizeUpdated', scale > 0 ? height / scale : height);
+};
+
+onMounted(capture);
+onBeforeUnmount(capture);
+</script>
+<template>
+  <div ref="item" class="virtual-scroller__item" :aria-rowindex="index + 1">
+    <slot />
+  </div>
+</template>
+<style>
+.virtual-scroller__item {
+  /* flow-root contains child margins (as the old absolutely-positioned
+     items did via their own block formatting context), so flow stacking
+     reproduces the exact same geometry the measured `top` offsets had. */
+  display: flow-root;
+}
+</style>

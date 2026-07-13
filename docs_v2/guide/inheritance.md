@@ -21,7 +21,7 @@ Each file exports the [namespace pattern](/guide/modules): the raw class for
 extending, the reactive class for instantiating.
 
 ```ts
-// product.ts
+// Product.ts
 import { Reactive } from 'ivue';
 import { ref } from 'vue';
 
@@ -50,10 +50,10 @@ export namespace Product {
 ```
 
 ```ts
-// sale-product.ts
+// SaleProduct.ts
 import { Reactive } from 'ivue';
 import { ref } from 'vue';
-import { Product } from './product';
+import { Product } from './Product';
 
 class $SaleProduct extends Product.$Class {
   get discount() {
@@ -80,10 +80,10 @@ export namespace SaleProduct {
 ```
 
 ```ts
-// taxed-product.ts
+// TaxedProduct.ts
 import { Reactive } from 'ivue';
 import { ref } from 'vue';
-import { SaleProduct } from './sale-product';
+import { SaleProduct } from './SaleProduct';
 
 class $TaxedProduct extends SaleProduct.$Class {
   get taxRate() {
@@ -145,7 +145,7 @@ A template showing the receipt re-renders on a write to any level:
 <DemoInheritance />
 
 The demo runs the exact three files above — they live in the docs theme as
-`product.ts`, `sale-product.ts` and `taxed-product.ts` and are imported the
+`Product.ts`, `SaleProduct.ts` and `TaxedProduct.ts` and are imported the
 same way you would in an app.
 
 ## Each level is a complete class
@@ -201,10 +201,10 @@ Cross-file hierarchies are the normal case, and the namespace pattern makes
 them boring:
 
 - **Every file calls `Reactive()` on its own class — safely.** The transform
-  is idempotent: when `taxed-product.ts` processes its chain, `$SaleProduct`
+  is idempotent: when `TaxedProduct.ts` processes its chain, `$SaleProduct`
   and `$Product` are already done and get skipped. Any load order produces
   the identical result.
-- **Hot reload never desyncs.** Editing `sale-product.ts` re-runs only that
+- **Hot reload never desyncs.** Editing `SaleProduct.ts` re-runs only that
   file's `Reactive()` call; ancestors keep their processed prototypes and
   live instances keep their state ([HMR](/guide/hmr)).
 - **Import cycles are solved fundamentally, not managed.** Hierarchies grow

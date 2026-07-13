@@ -135,7 +135,7 @@ majority of a huge model is carried as nearly-inert plain objects, while
 the entities you actually look at materialize exactly the Refs they use.
 
 ```ts
-// cell.ts — one spreadsheet cell, one of 100,000
+// Cell.ts — one spreadsheet cell, one of 100,000
 import { computed, ref } from 'vue';
 import { Reactive } from 'ivue';
 

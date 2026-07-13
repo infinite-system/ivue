@@ -1,4 +1,4 @@
-// product.ts — level 1: knows its title and price.
+// Product.ts — level 1: knows its title and price.
 import { Reactive } from '../../../../../lib/Reactive';
 import { ref } from 'vue';
 
