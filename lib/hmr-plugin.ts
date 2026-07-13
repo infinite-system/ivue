@@ -48,12 +48,23 @@ export interface IvueHmrOptions {
    * Reactive.ts (e.g. 'src/utils/ivue2').
    */
   runtime?: string;
+  /**
+   * High-performance dev mode: instead of arming class HMR, set
+   * `globalThis[Symbol.for('ivue.hmr.disable')]` before any `Reactive()`
+   * call, so dev instances are constructed at PRODUCTION speed (no
+   * construct-trap proxy — ~11× cheaper on bare `new`). Class edits then
+   * fall back to Vite's normal propagation (component remount / reload).
+   * Wire it to an env flag for a per-terminal switch:
+   *   ivueHmr({ fast: !!process.env.IVUE_FAST })
+   */
+  fast?: boolean;
 }
 
 export default function ivueHmr(options: IvueHmrOptions = {}): Plugin {
   const include = options.include ?? /\.[jt]sx?$/;
   const exclude = options.exclude ?? /node_modules/;
   const runtime = options.runtime ?? 'ivue';
+  const fast = options.fast ?? false;
   return {
     name: 'ivue-hmr',
     apply: 'serve',
@@ -61,6 +72,21 @@ export default function ivueHmr(options: IvueHmrOptions = {}): Plugin {
     transform(code, id) {
       if (!include.test(id) || exclude.test(id)) return;
       if (!/\bReactive\s*\(/.test(code)) return;
+      if (fast) {
+        // Prepend (never append): the flag must be set before this module's
+        // own Reactive() calls run. Imports are hoisted above it either way,
+        // and the engine reads the symbol lazily at each Reactive() call, so
+        // first-transformed-module-wins is sufficient. No self-accept is
+        // injected — with grafting disabled it would silently serve stale
+        // classes; edits propagate to component boundaries instead.
+        return {
+          code:
+            '// injected by ivue-hmr (fast): production-speed instances in dev\n' +
+            "globalThis[Symbol.for('ivue.hmr.disable')] = true;\n" +
+            code,
+          map: null,
+        };
+      }
       if (code.includes('import.meta.hot')) return;
       if (code.includes('@ivue-no-hmr')) return;
       return {

@@ -82,6 +82,42 @@ if (import.meta.hot) {
 A bare `import.meta.hot.accept()` also works — behavior edits still hot-swap;
 you only lose the automatic remount for constructor edits.
 
+## High-performance dev mode
+
+Class HMR has one real dev-time cost: the construct-trap proxy that lets
+remounted components pick up the newest class version. It makes a bare
+`new` about 11× slower in dev — production never pays it. When a session
+is about perf work rather than behavior editing, trade class HMR away and
+get production-speed instances in dev:
+
+```ts
+// vite.config.ts
+export default defineConfig({
+  plugins: [vue(), ivueHmr({ fast: true })],
+});
+```
+
+`fast: true` sets `globalThis[Symbol.for('ivue.hmr.disable')]` before any
+`Reactive()` call runs, so the engine never arms the trap. Class edits then
+fall back to Vite's normal propagation (component remount or reload);
+everything else about dev — component HMR, CSS, devtools — is untouched.
+Wire it to an env flag for a per-terminal switch:
+
+```ts
+// vite.config.ts
+plugins: [vue(), ivueHmr({ fast: !!process.env.IVUE_FAST })],
+```
+
+```jsonc
+// package.json
+"dev":      "vite",
+"dev:fast": "IVUE_FAST=1 vite"
+```
+
+Note that simply *removing* the plugin does not do this — the engine arms
+its dev machinery on its own; the plugin's `fast` mode is what injects the
+opt-out.
+
 ## How it works
 
 The runtime contract mirrors Vue's own component HMR — stable identity,
