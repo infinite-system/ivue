@@ -30,6 +30,11 @@ push redeploys everything.
 
 ## Full-complexity
 
+- **[Advanced Select Field](/examples/choose-field)** — server search,
+  pagination, variants, chips, create-new — one class, 54 plain getters,
+  one computed.
+- **[Advanced Media Uploader](/examples/media-field)** — drag-drop
+  uploads, thumbnails, lightbox — plus a class-extended variant.
 - **[Virtual scroller on Lenis](/examples/virtual-scroller)** — 1,000,000
   rows, a handful of divs; scrolling itself is virtual.
 - **[The formula grid](/examples/formula-grid)** — real Excel-syntax

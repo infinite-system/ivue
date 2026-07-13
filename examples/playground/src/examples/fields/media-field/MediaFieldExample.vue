@@ -26,7 +26,7 @@ const {
       with sharp-generated thumbnails.
     </p>
 
-    <div class="field-stack">
+    <div class="field-grid">
       <section>
         <h3>Single image</h3>
         <MediaField
@@ -97,15 +97,19 @@ const {
 .pane-fields {
   max-width: 920px;
 }
-.field-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 26px;
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 24px 26px;
+  align-items: start;
 }
-.field-stack h3 {
+.field-grid h3 {
   margin: 0 0 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #dbe1f4;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #f1f5ff;
 }
 </style>

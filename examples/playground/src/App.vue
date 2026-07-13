@@ -55,6 +55,8 @@ const {
 }
 body {
   font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* explicit so Quasar's layered body reset can never re-metric the shell */
+  line-height: 1.45;
   background: #0d1226;
   color: #b7c0dc;
 }

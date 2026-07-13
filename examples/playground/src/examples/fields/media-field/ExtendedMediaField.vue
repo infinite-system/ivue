@@ -120,7 +120,7 @@ const emit = defineEmits(mediaFieldEmits) as MediaFieldEmits;
 
 .extended-media__caption {
   font-size: 11px;
-  color: rgba(0, 0, 0, 0.55);
+  color: color-mix(in srgb, currentColor 60%, transparent);
   cursor: text;
   white-space: nowrap;
   overflow: hidden;
@@ -128,7 +128,7 @@ const emit = defineEmits(mediaFieldEmits) as MediaFieldEmits;
 }
 
 .extended-media__caption--empty {
-  color: rgba(0, 0, 0, 0.3);
+  color: color-mix(in srgb, currentColor 35%, transparent);
   font-style: italic;
 }
 

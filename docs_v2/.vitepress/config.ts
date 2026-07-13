@@ -221,6 +221,14 @@ export default defineConfig({
           collapsed: false,
           items: [
             {
+              text: 'Advanced Select Field',
+              link: '/examples/choose-field',
+            },
+            {
+              text: 'Advanced Media Uploader',
+              link: '/examples/media-field',
+            },
+            {
               text: 'Virtual Scroller: 1M Items',
               link: '/examples/virtual-scroller',
             },

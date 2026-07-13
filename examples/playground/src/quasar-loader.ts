@@ -15,10 +15,8 @@ export async function installQuasar() {
   installed = true;
   const [{ Quasar }] = await Promise.all([
     import('quasar'),
-    // @ts-expect-error — css side-effect imports have no types
-    import('quasar/dist/quasar.css'),
-    // @ts-expect-error — css side-effect imports have no types
-    import('@quasar/extras/material-icons/material-icons.css'),
+    // layered so Quasar's body-level resets never restyle the shell
+    import('./quasar-layered.css'),
   ]);
   app.use(Quasar, { config: { dark: true } }); // match the playground's dark shell
 }

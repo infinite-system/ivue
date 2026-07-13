@@ -21,6 +21,7 @@ import GridBenchmark from './components/grid/GridBenchmark.vue';
 import FormulaGrid from './components/grid/FormulaGrid.vue';
 import FlyweightGrid20M from './components/grid/FlyweightGrid20M.vue';
 import CreationBench from './components/CreationBench.vue';
+import { registerDocsApp } from './quasar-docs-loader';
 import './custom.css';
 
 export default {
@@ -31,6 +32,8 @@ export default {
     });
   },
   enhanceApp({ app }) {
+    registerDocsApp(app); // field embeds install Quasar lazily
+
     app.component('DemoCounter', DemoCounter);
     app.component('DemoState', DemoState);
     app.component('DemoDerived', DemoDerived);

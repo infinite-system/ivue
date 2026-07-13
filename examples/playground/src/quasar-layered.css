@@ -1,0 +1,8 @@
+/* Quasar's stylesheet includes body-level resets that would restyle the
+   host app (sidebar line-heights, typography). Importing it into a CSS
+   layer demotes ALL of it below the app's unlayered styles — Quasar
+   components keep their look (nothing else styles .q-*), while the shell
+   keeps its own. Portal elements (menus, dialogs) stay styled because the
+   layer is still global. */
+@import 'quasar/dist/quasar.css' layer(quasar);
+@import '@quasar/extras/material-icons/material-icons.css' layer(quasar);

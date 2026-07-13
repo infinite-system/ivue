@@ -1,0 +1,39 @@
+/* Docs embed frame for the playground field examples — theme-aware: the
+   frame and the example panes' text follow the VitePress light/dark toggle
+   (Quasar's own dark mode is mirrored by quasar-docs-loader). */
+.field-embed {
+  margin: 20px 0;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 14px;
+  background: var(--vp-c-bg-soft);
+  overflow: hidden;
+}
+.field-embed__loading,
+.field-embed__error {
+  margin: 0;
+  padding: 28px 20px;
+  font-size: 13px;
+  color: var(--vp-c-text-2);
+}
+.field-embed__error {
+  color: #f87171;
+}
+/* the example panes bring their own padding; neutralize page-width caps
+   and remap their dark-shell palette onto the docs theme variables */
+.field-embed .pane {
+  max-width: none;
+}
+.field-embed .note,
+.field-embed .mono {
+  color: var(--vp-c-text-2) !important;
+}
+.field-embed h3,
+.field-embed .k {
+  color: var(--vp-c-text-1) !important;
+  border-color: var(--vp-c-divider) !important;
+}
+.field-embed .btn {
+  color: var(--vp-c-text-1) !important;
+  border-color: var(--vp-c-divider) !important;
+  background: var(--vp-c-bg) !important;
+}

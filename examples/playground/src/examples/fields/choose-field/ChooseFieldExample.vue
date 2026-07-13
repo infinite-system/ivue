@@ -172,9 +172,12 @@ const {
 }
 .field-grid h3 {
   margin: 0 0 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #dbe1f4;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #f1f5ff;
 }
 /* Quasar renders on a light-first palette; keep fields readable on the
    playground's dark shell. */

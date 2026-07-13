@@ -24,13 +24,15 @@ value.
 | native `reactive(new X())`   | 470 ms      | **22× faster**                            |
 | v1 `ivue(Class)`             | 2,861 ms    | **132× faster**                           |
 
-At 100,000 instances: 1.7 ms for ivue, 46.3 ms for the composable factory,
-28.8 ms for `reactive()`, 169 ms for v1. Note the two alternatives swap
-places as the population grows — proxy registration costs compound with
-scale, closures don't. ivue itself scales near-linearly (1.7 ms → 21.7 ms
-for 10× the instances), because a plain `new` allocates one object and
-nothing else. Unused instances cost almost nothing. This is ideal for large
-lists and virtual scrolling.
+The same run at 100,000 instances: **1.7 ms** for ivue, 46.3 ms for the
+composable factory, 28.8 ms for `reactive()`, 169 ms for v1. Between the
+two scales the alternatives swap places — at 100k `reactive()` beats the
+closure factory, at 1M it costs over three times more — because proxy
+registration compounds with population while closures grow linearly. ivue
+itself scales near-linearly (1.7 ms → 21.7 ms for 10× the instances),
+because a plain `new` allocates one object and nothing else. Unused
+instances cost almost nothing. This is ideal for large lists and virtual
+scrolling.
 
 Don't take the table's word for it — run it in your own browser:
 

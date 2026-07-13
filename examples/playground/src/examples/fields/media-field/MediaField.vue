@@ -295,7 +295,7 @@ const vFocus = {
 
 .media-field__label {
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.6);
+  color: color-mix(in srgb, currentColor 70%, transparent);
 }
 
 .media-field--error .media-field__label {
@@ -308,9 +308,9 @@ const vFocus = {
 
 .media-field__dropzone {
   position: relative;
-  border: 1px dashed rgba(0, 0, 0, 0.24);
+  border: 1px dashed color-mix(in srgb, currentColor 28%, transparent);
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.02);
+  background: color-mix(in srgb, currentColor 3%, transparent);
   transition: border-color 0.2s, background 0.2s;
 }
 
@@ -341,13 +341,13 @@ const vFocus = {
 .media-field__empty-hint {
   margin-top: 6px;
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.6);
+  color: color-mix(in srgb, currentColor 70%, transparent);
 }
 
 .media-field__empty-types {
   margin-top: 2px;
   font-size: 11px;
-  color: rgba(0, 0, 0, 0.4);
+  color: color-mix(in srgb, currentColor 45%, transparent);
 }
 
 .media-field__grid {
@@ -368,10 +368,11 @@ const vFocus = {
 
 .media-field__thumb {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   border-radius: 4px;
   overflow: hidden;
-  background: #eceff1;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  box-shadow: inset 0 0 10px 2px color-mix(in srgb, currentColor 6%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -398,7 +399,8 @@ const vFocus = {
 .media-field__thumb-extension {
   font-size: 11px;
   letter-spacing: 1px;
-  color: #90a4ae;
+  text-transform: uppercase;
+  color: color-mix(in srgb, currentColor 55%, transparent);
 }
 
 .media-field__actions {
@@ -430,7 +432,7 @@ const vFocus = {
 
 .media-field__item-size {
   font-size: 11px;
-  color: rgba(0, 0, 0, 0.45);
+  color: color-mix(in srgb, currentColor 50%, transparent);
 }
 
 .media-field__rename-input {
@@ -444,8 +446,8 @@ const vFocus = {
 }
 
 .media-field__add-tile {
-  aspect-ratio: 4 / 3;
-  border: 1px dashed rgba(0, 0, 0, 0.2);
+  aspect-ratio: 1 / 1;
+  border: 1px dashed color-mix(in srgb, currentColor 25%, transparent);
   border-radius: 4px;
   display: flex;
   flex-direction: column;
@@ -453,7 +455,7 @@ const vFocus = {
   justify-content: center;
   gap: 2px;
   cursor: pointer;
-  color: #90a4ae;
+  color: color-mix(in srgb, currentColor 60%, transparent);
   transition: border-color 0.2s;
 }
 
@@ -474,7 +476,7 @@ const vFocus = {
   right: 8px;
   bottom: 6px;
   font-size: 11px;
-  color: rgba(0, 0, 0, 0.5);
+  color: color-mix(in srgb, currentColor 55%, transparent);
 }
 
 /*
@@ -487,7 +489,7 @@ const vFocus = {
   font-size: 12px;
   line-height: 1;
   min-height: 18px;
-  color: rgba(0, 0, 0, 0.54);
+  color: color-mix(in srgb, currentColor 60%, transparent);
 }
 
 .media-field__bottom--error {
