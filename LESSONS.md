@@ -130,6 +130,13 @@ number was a **harness artifact, not library behavior** — when a number
 
 ## Unified playground (examples/playground)
 
+- **Playground example order MUST match the docs sidebar example order.**
+  The `examples` array in `examples/playground/src/examples/index.ts` drives
+  the StackBlitz/playground sidebar; keep it in the SAME order the docs
+  `config.ts` lists them (Basic Examples top → Advanced Examples), so a
+  visitor arriving from a docs page finds the playground laid out the same
+  way. Adding an example = update both, in the same slot.
+
 - **Everything in an example is written in ivue — including the bootstrap.**
   Route SFCs, demo wrappers, the app shell that displays an example: all of
   it uses the class + namespace + state-destructure standard, never plain
