@@ -30,10 +30,10 @@ push redeploys everything.
 
 ## Full-complexity
 
-- **[Store Pattern](/examples/store-pattern)** — a global store is a class
-  plus a singleton composable; optional reactive() view, fully typed.
-- **[Plugin Kernel](/examples/kernel-pattern)** — construction binds to a
-  name, so a plugin extends any class through a 15-line registry.
+- **[Class Store](/examples/class-store)** — a class-based alternative to
+  Pinia stores; optional reactive() view, fully typed.
+- **[Extensible Kernel](/examples/extensible-kernel)** — construction binds to a
+  namespaced class key, so plugins extend notifications and their children.
 - **[Advanced Select Field](/examples/choose-field)** — a Quasar-based
   extension: server search, pagination, variants, chips, create-new — one
   class, 54 plain getters, one computed.

@@ -219,7 +219,7 @@ them boring:
   **first access**, when every module in the cycle finished loading long
   ago. The immunity is structural, in any load order — not an
   import-ordering discipline you have to maintain
-  ([Circular imports: immune by construction](/guide/modules#circular-imports-immune-by-construction)).
+  ([Circular references resolve by construction](/guide/modules#circular-references-resolve-by-construction)).
 
 ## One difference from native JS
 

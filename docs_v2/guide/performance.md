@@ -1,13 +1,16 @@
 ---
 title: Performance by Design
-description: The honest numbers. ivue creates instances 6–132× faster, holds live instances at up to 5× less heap, and reads state several-fold slower in hot loops — a cost you can erase with a one-line hoist.
+description: The honest numbers. ivue creates instances 6–132× faster, holds live instances at up to 5× less heap, reads 3–18× faster than proxy-wrapped objects, and hoists hot paths to native speed.
 ---
 
 # Performance by Design
 
-ivue's design is one trade: **defer everything**. No proxy. No eager refs. No
-binding until first access. Creation becomes extremely cheap. Reads pay a
-small cost.
+ivue's design is one move: **defer everything**. No proxy. No eager refs. No
+binding until first access. Creation becomes extremely cheap, observed state
+stays small, and ordinary object access avoids proxy indirection. The only
+faster read path is a direct handle already held in a closure or local
+variable; stable ivue refs and methods hoist to that same path when a hot loop
+needs it.
 
 ## Creation is nearly free
 
@@ -108,21 +111,42 @@ gated on the statically-replaceable `import.meta.env.DEV`, so bundlers
 dead-code-eliminate all of it — verified by grepping the built output, not
 assumed. Dev gets class grafting; prod gets the same 1.1 kB it always had.
 
-## Reads cost a little more
+## Raw access avoids proxy overhead
 
-State lives behind a getter. Each `this.x.value` does a small indirection
-before reaching the ref: a `toRaw` call and a cache lookup. A native
-composable reads its closure ref directly. Measured with the loop inside
-the timed region, one million iterations, median of 9 runs (Node 22, V8):
+The standard is the raw ivue instance — templates read state through
+destructured bindings and behavior through dotted access. Wrapper costs are
+shown for comparison; both wrappers were retired
+([Components & Templates](/guide/components)). Measured per read over
+10-million-iteration loops (Node 22, V8, Vue 3.5):
 
-| per operation                            | ivue        | native     |
-| ---------------------------------------- | ----------- | ---------- |
-| ref read (`instance.width.value`)        | **~10 ns**  | ~1.3 ns    |
-| method call (body reads a ref)           | **~4 ns**   | ~1.2 ns    |
+| access path          | **ivue raw instance (the standard)** | shallow unwrap proxy | `reactive()` |
+| -------------------- | ------------------------------------ | -------------------- | ------------ |
+| plain derived getter | **23.4 ns**                          | 68.2 ns              | 125.1 ns     |
+| ref-getter access    | **9.6 ns**                           | 47.0 ns              | 72.4 ns      |
+| method access        | **3.8 ns**                           | 42.3 ns              | 68.5 ns      |
 
-A read through a ref-getter costs several times a native closure read. In
-absolute terms these are nanoseconds — they only matter when something runs
-millions of times. And when it does, one hoist erases the entire gap.
+The first column includes ivue's own getter work — a `toRaw` call and cache
+lookup — but no proxy sits between the caller and the object. A shallow
+unwrap proxy costs 3–11× the raw ivue path; `reactive()` costs 5–18×. That is
+the ordinary architectural comparison: ivue creates less indirection and
+reads through less indirection.
+
+## The direct-access floor
+
+A ref already held in a closure or local variable performs no property
+lookup. It is the irreducible floor. Measured with the loop inside the timed
+region, one million iterations, median of 9 runs (Node 22, V8):
+
+| per operation                     | dotted ivue | direct handle |
+| --------------------------------- | ----------- | ------------- |
+| ref read (`instance.width.value`) | **~10 ns**  | ~1.3 ns       |
+| method call                       | **~4 ns**   | ~1.2 ns       |
+
+This comparison isolates the remaining getter/property hop; it does not make
+ivue slower than proxy-based reactive objects. Ordinary application reads pay
+single-digit nanoseconds for methods and about ten for state. Only a loop
+performing the same access millions of times can measure the difference — and
+stable identity lets that loop remove it.
 
 ## Hot loops
 
@@ -173,37 +197,16 @@ as actions). The one template case that earns the hoist is a method called
 per row of a large `v-for` — there, destructuring the method is the same
 measured win.
 
-## The template boundary
-
-The standard is the raw ivue instance — templates read state through
-destructured bindings and behavior through dotted access, all at the first
-column's cost. Wrapper costs shown for comparison; both wrappers were
-retired ([Components & Templates](/guide/components)). Measured per read
-over 10-million-iteration loops:
-
-| access path          | **ivue raw instance (the standard)** | shallow unwrap proxy | `reactive()` |
-| -------------------- | ------------------------------------ | -------------------- | ------------ |
-| plain derived getter | **23.4 ns**                          | 68.2 ns              | 125.1 ns     |
-| ref-getter access    | **9.6 ns**                           | 47.0 ns              | 72.4 ns      |
-| method access        | **3.8 ns**                           | 42.3 ns              | 68.5 ns      |
-
-The first column is ivue, and its numbers include the engine's own
-indirection — the `toRaw` call and cache lookup behind every getter. For
-scale: a native class getter reads in ~0.3 ns and a native ref read in
-~1.3 ns. So raw ivue access pays 4–23 ns with no wrapper proxy on the
-path, and the wrapper columns are the receipts for why they lost — a
-`proxyRefs`-style shallow view costs ~3–11×, `reactive()` ~5–18× *on top
-of* the standard. And every one of these costs is the hoistable kind —
-[Hot loops](#hot-loops) shows both refs and methods reaching native speed
-with one line.
-
 ## The mental model
 
-- **ivue**: cheap to create, light in memory, slightly costlier to read (several-fold per hot-loop read, erased by hoisting).
-- **native composable**: costlier to create, heavier per instance, cheap to read.
-- **ivue v1 (unreleased)**: pays at both ends — eager creation AND every read
-  through a `reactive()` proxy, the most expensive column in the table above.
+- **Against proxy objects:** raw ivue access is 3–18× faster because no
+  shallow or deep proxy mediates the read.
+- **Against a direct closure ref:** dotted ivue access has one getter/cache
+  hop; the closure starts at the direct-access floor.
+- **In hot paths:** stable refs and methods hoist once, so repeated work runs
+  at direct-ref or closure speed.
 
-Pick by workload. Most apps create and render far more than they hot-loop, so
-ivue's creation win usually dominates. Where it doesn't, the read cost is
-erasable.
+The result is not allocation performance purchased with permanently slower
+reads. ivue combines plain-object construction, observation-priced memory,
+proxy-free ordinary access, and an explicit path to native speed where a
+profiler shows repetition matters.

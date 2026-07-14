@@ -13,8 +13,8 @@ the question ends: `computed()`. It's in every tutorial, every codebase,
 every muscle. It is also — structurally — the wrong default.
 
 Vue's actual derivation primitive is the **tracked read**. Any function
-that reads reactive state inside an effect subscribes to that state,
-automatically, for free. That's the whole engine. `computed()` is a
+that reads reactive state inside an effect subscribes to that state without
+creating a separate derivation node. That's the whole engine. `computed()` is a
 *cache* bolted on top: ~300–400 bytes per instance, allocated at creation,
 paid whether the value is ever read or not, in exchange for memoization
 you almost never need on `firstName + ' ' + lastName`.
@@ -30,7 +30,7 @@ class $Box {
     return ref(3);
   }
   get area() {
-    return this.width.value * this.height.value; // plain getter — 0 bytes
+    return this.width.value * this.height.value; // 0 bytes per instance
   }
 }
 ```

@@ -91,8 +91,8 @@ class $Enemy {
 ```
 
 The scope is allocated **only on the first `$watch` call**. A pure-data instance
-that never watches allocates no scope at all — so creating millions of them stays
-free.
+that never watches allocates no scope at all, so watcher infrastructure adds no
+per-instance allocation to a population that never uses it.
 
 ## `$stopEffects`
 

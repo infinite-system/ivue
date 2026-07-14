@@ -222,7 +222,7 @@ class $Sheet {
 ```
 
 The read/write **asymmetry is the pattern**: reads get-or-create (so cost is
-priced by observation), writes peek (so mere existence is free). Four rules
+priced by observation), while writes to unobserved keys allocate no signal. Four rules
 keep it honest:
 
 - **Ground truth lives in plain storage** (typed arrays, Maps). The refs are

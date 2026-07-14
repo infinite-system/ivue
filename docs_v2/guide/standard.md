@@ -392,10 +392,10 @@ until mount — use `?.` in watch getters).
 - Watch CALLBACKS delegate to methods (the thin-closure rule):
   `watch(source, (newValue, oldValue) => this.onChanged(newValue, oldValue))`.
 
-## Circular imports: immune by construction
+## Circular references resolve by construction
 
-The hoisted-namespace + getter convention makes cross-module cycles a
-non-event — no ordering discipline, no `forwardRef`-style workarounds:
+The hoisted-namespace + getter convention makes late cross-module references
+safe without ordering discipline or `forwardRef`-style workarounds:
 
 - Cross-references (`new Other.Class()` in a method, a store read in a
   `$`-getter) resolve at FIRST ACCESS, when every module in the cycle has
@@ -403,9 +403,10 @@ non-event — no ordering discipline, no `forwardRef`-style workarounds:
 - Each file calls `Reactive()` on its own class safely: it is idempotent per
   prototype level and HMR-safe; a shared ancestor is transformed once, by
   whichever file loads first.
-- The one thing that stays impossible is circular `extends` — it evaluates
-  at load time, and is logically impossible in any language, not a limit of
-  the pattern.
+- Eager top-level dereferences can still fail; the convention keeps
+  cross-references inside late method and getter bodies. Circular `extends`
+  stays impossible because it evaluates at load time and both parents cannot
+  exist first.
 
 ## Generic classes (brief)
 
@@ -529,7 +530,7 @@ class $Sheet {
 ```
 
 The read/write ASYMMETRY is the pattern: reads get-or-create (cost is priced
-by observation), writes peek (existence is free). Rules that keep it honest:
+by observation), while writes to unobserved keys allocate no signal. Rules that keep it honest:
 
 - Ground truth lives in plain storage (typed arrays, Maps); the refs are
   VERSION SIGNALS, not value holders — bump to invalidate, readers re-derive.

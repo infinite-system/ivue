@@ -6,9 +6,10 @@ description: The hard problems ivue solves — cheap instantiation, cheap bound 
 # Design & Philosophy
 
 ivue makes classes a first-class way to build Vue reactivity — a real reactive
-unit, not a component wrapper — with no penalty. Getting there meant solving a set
-of problems that actively fight each other, each one hard in its own right. ivue
-solves them all, and charges a single, erasable cost for the lot.
+unit, not a component wrapper. Getting there meant solving a set of problems
+that actively fight each other, each one hard in its own right. One structure
+solves the set: shared prototype behavior, observation-priced state, and raw
+instance access with stable handles for hot paths.
 
 ## The problems ivue solves
 
@@ -29,8 +30,8 @@ set.
   </div>
   <div class="iv-problem">
     <strong class="iv-problem__title">Reactive reads</strong>
-    <p class="iv-problem__hard">Any indirection over a raw ref costs something.</p>
-    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span><code>this.x.value</code> through a getter — <strong>several-fold over a raw ref, hoistable to native speed</strong>. The one cost, and it's erasable.</span></p>
+    <p class="iv-problem__hard">A proxy makes every object read cross a runtime interception layer.</p>
+    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>Raw ivue access is <strong>3–18× faster than proxy-wrapped access</strong>; stable refs and methods hoist to direct-handle speed.</span></p>
   </div>
   <div class="iv-problem">
     <strong class="iv-problem__title">Reactive inheritance</strong>
@@ -45,7 +46,7 @@ set.
   <div class="iv-problem">
     <strong class="iv-problem__title">Circular imports hell</strong>
     <p class="iv-problem__hard">Mutual class references throw <code>Cannot access 'X' before initialization</code>.</p>
-    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>The namespace pattern <strong>resolves references in any load order</strong>.</span></p>
+    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>The namespace pattern and late dereference <strong>resolve circular cross-references in any load order</strong>.</span></p>
   </div>
   <div class="iv-problem">
     <strong class="iv-problem__title">Writable-getter types</strong>
@@ -55,7 +56,7 @@ set.
   <div class="iv-problem">
     <strong class="iv-problem__title">Deterministic teardown</strong>
     <p class="iv-problem__hard">Track and stop every effect per instance, with no cost for those that have none.</p>
-    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span><code>$watch</code> + <code>$stopEffects</code> — scoped cleanup, <strong>zero cost for instances that never watch</strong>.</span></p>
+    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span><code>$watch</code> + <code>$stopEffects</code> — scoped cleanup; instances that never watch allocate <strong>no effect scope</strong>.</span></p>
   </div>
 </div>
 
@@ -68,7 +69,7 @@ makes `super` and teardown tricky. The types you need for writable getters dicta
 how you're even allowed to export the class.
 
 Solving them in isolation is trivial. Solving them so they *all hold at once* —
-cheaply, with a single residual cost and no exceptions bolted on — is the real
+cheaply, without a second proxy or object graph bolted on — is the real
 problem, and it is very hard. When one structure makes every constraint true
 simultaneously, you've found the invariant instead of patching symptoms. 
 

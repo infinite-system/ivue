@@ -8,8 +8,8 @@ description: Edit a method or getter and watch live instances run the new code w
 Edit a Reactive class while your app runs, and **live instances keep their
 state and run the new code** — no remount, no page reload, no lost scroll
 position or half-filled form. This is a capability Vue's own HMR structurally
-cannot offer for script edits, and ivue gets it almost for free from its core
-design.
+cannot offer for script edits, and ivue derives it from the same prototype
+structure used by its runtime design.
 
 _(Terminology: the industry acronym HMR stands for Hot Module **Replacement**
 — replacing a module in a running page. What ivue adds on top is hot

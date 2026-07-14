@@ -1,16 +1,17 @@
 ---
 title: The Engine Under the Idiom
-description: Vue's reactivity engine has a native, zero-cost derivation mode that the standard idiom hides — computed() is a cache annotation, not a derivation primitive. The class shape excavates what was always there.
+description: Vue's reactivity engine can track a derived value without allocating a separate derivation node — computed() is a cache annotation, not the derivation primitive. The class shape exposes what was always there.
 ---
 
 # The Engine Under the Idiom
 
 ivue's central discovery is not a technique. It is a claim about Vue itself:
 
-> **Vue's reactivity engine has a native, zero-cost mode for derived values —
+> **Vue's reactivity engine has a native, zero-node mode for derived values —
 > and the standard idiom hides it.** `computed()` was never the derivation
 > primitive. It is a _cache annotation_. The derivation primitive is the
-> tracked read, and it flows through plain functions for free.
+> tracked read, and it flows through plain functions without creating another
+> reactive node.
 
 ivue doesn't patch Vue, wrap Vue, or compete with Vue. It changes the
 _authoring geometry_ so the engine's cheapest mode becomes the default
@@ -45,7 +46,7 @@ class $Cart {
 ```
 
 A template reading `cart.total` re-renders when `items` changes — with
-**zero** reactive machinery for `total` itself. No `ComputedRefImpl`, no
+**zero per-instance reactive machinery** for `total` itself. No `ComputedRefImpl`, no
 dependency links, no invalidation bookkeeping, no per-instance bytes. The
 engine has supported this since Vue 3.0 — it is a direct consequence of how
 tracking works, not a feature anyone had to add.
@@ -91,7 +92,8 @@ geometry_. The engine's cheapest mode simply has no syntax there.
 A class has the one thing a closure lacks: a **prototype** — a place where
 a derived value can live _once_, stay _live_ (getters re-execute per read),
 and read like a value (`cart.total`, no parentheses). The three requirements
-that forced `computed()` in closures are all met for free:
+that forced `computed()` in closures are all met without per-instance
+derivation machinery:
 
 | requirement            | closure                  | class                       |
 | ---------------------- | ------------------------ | --------------------------- |

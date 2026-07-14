@@ -83,8 +83,8 @@ decision is the eviction notice:
 Along the way, one more assumption refused to survive measurement:
 that `computed()` is how you derive values. It isn't. Vue's actual
 derivation primitive is the **tracked read** — any function that reads
-reactive state inside an effect subscribes to it, automatically, for
-free. `computed()` is a *cache* bolted onto that primitive, and a cache
+reactive state inside an effect subscribes to it without a separate
+derivation node. `computed()` is a *cache* bolted onto that primitive, and a cache
 costs real bytes per instance, paid at creation, whether the value is
 ever read or not. Idiomatic Vue memoizes everything by default — which
 is why, measured at 100,000 live instances, the composable-per-entity
@@ -107,8 +107,9 @@ Every number runs live, in your browser, on the shipped engine:
 - **20,000,000 formula-capable spreadsheet cells at 4.7 bytes per cell** —
   a document Google Sheets cannot represent, created in front of you when
   you click ([Interactive Benchmarks](/guide/benchmarks)).
-- And the one honest cost, stated with its own numbers: hot-loop reads pay
-  several-fold over a raw closure ref, erased by a one-line hoist
+- **Raw reads avoid proxy overhead** — measured access is 3–18× faster than
+  shallow or deep proxy wrappers. A direct closure ref is the remaining
+  performance floor; hot loops reach it with a one-line hoist
   ([Performance by Design](/guide/performance)).
 
 There is also the thing that shouldn't be possible: edit a method and the

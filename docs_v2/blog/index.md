@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/win-by-reduction">
+    <img class="thumb" src="/blog/win-by-reduction.png" alt="Win by reduction. Win by construction." width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>Win by reduction. Win by construction.</h2>
+      <p class="excerpt">The strongest architecture does not manage complexity more efficiently. It removes the conditions that create it, then makes the remaining guarantees structural.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/vscode-hand-rolled-decade">
     <img class="thumb" src="/blog/vscode-hand-rolled-decade.png" alt="VS Code spent a decade hand-rolling reactive classes" width="1200" height="630" loading="lazy" />
     <div class="body">

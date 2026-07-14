@@ -221,8 +221,8 @@ export default defineConfig({
           text: 'Advanced Examples',
           collapsed: false,
           items: [
-            { text: 'Store Pattern', link: '/examples/store-pattern' },
-            { text: 'Plugin Kernel', link: '/examples/kernel-pattern' },
+            { text: 'Class Store', link: '/examples/class-store' },
+            { text: 'Extensible Kernel', link: '/examples/extensible-kernel' },
             {
               text: 'Advanced Select Field',
               link: '/examples/choose-field',

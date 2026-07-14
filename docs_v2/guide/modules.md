@@ -1,13 +1,13 @@
 ---
 title: Modules & Imports
-description: The namespace pattern is the standard way to export ivue classes. Cross-file hierarchies, hot-reload that never desyncs, and circular imports that cannot break — plus $-getters for store injection.
+description: The namespace pattern is the standard way to export ivue classes. Cross-file hierarchies, hot-reload that never desyncs, and circular cross-references resolved at first access — plus $-getters for store injection.
 ---
 
 # Modules & Imports
 
 **Export every class through the namespace pattern.** It costs three lines. In
 return you get cross-file inheritance, hot-reload that never desyncs, and
-immunity to circular imports.
+circular cross-references that resolve after module initialization.
 
 ## The pattern
 
@@ -75,18 +75,19 @@ This is also why ivue hierarchies survive **cross-file hot-reload**. Editing one
 file re-runs only that file's `Reactive()` call, which is a no-op on
 already-processed ancestors.
 
-## Circular imports: immune by construction
+## Circular references resolve by construction
 
-A circular import only crashes when a cross-module reference **executes too
-early**. There are exactly three moments a reference can execute:
+A module cycle only crashes when a cross-module reference **executes too
+early**. There are three moments a reference can execute:
 
 | moment           | example                                       | in a cycle        |
 | ---------------- | --------------------------------------------- | ----------------- |
 | module load      | `extends B.$Class`, top-level `new B.Class()` | can crash         |
 | construction     | field initializer `store = useStore()`        | can crash         |
-| **first access** | **getter and method bodies**                  | **never crashes** |
+| **first access** | **getter and method bodies**                  | **safe after initialization** |
 
-By first access, every module in the cycle finished loading long ago. So the
+In the ivue convention, application code first accesses the relationship
+after the modules finish loading. So the
 whole strategy is one idea: **move every cross-module reference to the latest
 possible moment.** Three mechanisms conspire to do it:
 
@@ -117,9 +118,11 @@ class to the safest rung of the ladder. Immunity doesn't come from one trick;
 it comes from the whole pattern making every dangerous moment late.
 
 ::: info Scope
-This solves circular _references_ — the common case. It does not enable
-circular _inheritance_ (`A extends B` and `B extends A`). That is impossible
-in any language, not a limitation of the pattern.
+This solves circular _references_ expressed through late getter and method
+bodies — the common application case. An eager top-level read can still fail,
+and the convention deliberately excludes it. Circular _inheritance_
+(`A extends B` and `B extends A`) remains impossible because both parents
+would have to exist first.
 :::
 
 ## Injecting stores and composables: the `$` slot

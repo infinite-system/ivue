@@ -1,15 +1,17 @@
 ---
-title: 'Example: Store Pattern'
-description: 'A global store is a class plus a singleton composable — useProjectStore() returns one shared ivue instance, with an optional reactive() view typed through Store.Instance.'
+title: 'Example: Class Store'
+description: 'A class-based alternative to Pinia stores — useProjectStore() returns one shared ivue instance, with an optional reactive() view typed through Store.Instance.'
 aside: false
 pageClass: benchmarks-wide examples-page
 ---
 
 <script setup>
-import ExampleStorePattern from '../.vitepress/theme/components/examples/ExampleStorePattern.vue'
+import ExampleClassStore from '../.vitepress/theme/components/examples/ExampleClassStore.vue'
 </script>
 
-# Store Pattern
+# Class Store
+
+**A class-based alternative to Pinia stores.**
 
 A global store needs three things: shared state, derived values, and
 actions. An ivue class already is all three — so the entire store
@@ -31,10 +33,10 @@ Three independent components below share the store with zero props between
 them — type a task in the first panel and watch the other two react:
 
 <ClientOnly>
-  <ExampleStorePattern />
+  <ExampleClassStore />
 </ClientOnly>
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Fstore-pattern%2FProjectStore.ts&initialPath=%2F%23%2Fstore-pattern" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Fclass-store%2FProjectStore.ts&initialPath=%2F%23%2Fclass-store" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
 — boots the playground on this example's route with the store class open.
 
 ## The optional reactive() view
@@ -75,9 +77,9 @@ Both views read and write the SAME cells — pick per consumer, not per app.
 ## The source
 
 ::: code-group
-<<< ../../examples/playground/src/examples/store-pattern/ProjectStore.ts [ProjectStore.ts]
-<<< ../../examples/playground/src/examples/store-pattern/TaskBoard.vue [TaskBoard.vue]
-<<< ../../examples/playground/src/examples/store-pattern/ProjectStats.vue [ProjectStats.vue]
-<<< ../../examples/playground/src/examples/store-pattern/ReactiveViewPanel.vue [ReactiveViewPanel.vue]
-<<< ../../examples/playground/src/examples/store-pattern/StorePatternExample.vue [demo route]
+<<< ../../examples/playground/src/examples/class-store/ProjectStore.ts [ProjectStore.ts]
+<<< ../../examples/playground/src/examples/class-store/TaskBoard.vue [TaskBoard.vue]
+<<< ../../examples/playground/src/examples/class-store/ProjectStats.vue [ProjectStats.vue]
+<<< ../../examples/playground/src/examples/class-store/ReactiveViewPanel.vue [ReactiveViewPanel.vue]
+<<< ../../examples/playground/src/examples/class-store/ClassStoreExample.vue [demo route]
 :::

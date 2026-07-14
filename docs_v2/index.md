@@ -232,6 +232,20 @@ counter.double       // 2, re-derived on read
 
 </div>
 
+### Proxy-free reads
+
+The standard uses raw instances. Measured on Node 22, V8 and Vue 3.5 over
+10-million-iteration loops, ordinary ivue access stays below both proxy
+alternatives:
+
+| access path | **ivue raw** | shallow proxy | `reactive()` |
+| --- | ---: | ---: | ---: |
+| plain derived getter | **23.4 ns** | 68.2 ns | 125.1 ns |
+| ref-getter access | **9.6 ns** | 47.0 ns | 72.4 ns |
+| method access | **3.8 ns** | 42.3 ns | 68.5 ns |
+
+<p class="foot">A direct closure ref remains faster than a dotted property read. Stable ivue refs and methods hoist once outside a hot loop, reducing repeated access to the same direct-handle path.</p>
+
 ### What a live cell costs at rest
 
 A stress test at document scale: a spreadsheet grid where every cell is

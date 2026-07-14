@@ -4,8 +4,8 @@ import { manifest as derived } from './derived/manifest';
 import { manifest as lifecycle } from './lifecycle/manifest';
 import { manifest as inheritance } from './inheritance/manifest';
 import { manifest as pointer } from './pointer/manifest';
-import { manifest as storePattern } from './store-pattern/manifest';
-import { manifest as kernelPattern } from './kernel-pattern/manifest';
+import { manifest as classStore } from './class-store/manifest';
+import { manifest as extensibleKernel } from './extensible-kernel/manifest';
 import { manifest as chooseField } from './fields/choose-field/manifest';
 import { manifest as mediaField } from './fields/media-field/manifest';
 import { manifest as virtualScroller } from './virtual-scroller/manifest';
@@ -50,12 +50,12 @@ export const examples: ExampleEntry[] = [
   { ...pointer, load: () => import('./pointer/PointerExample.vue') },
   // Advanced
   {
-    ...storePattern,
-    load: () => import('./store-pattern/StorePatternExample.vue'),
+    ...classStore,
+    load: () => import('./class-store/ClassStoreExample.vue'),
   },
   {
-    ...kernelPattern,
-    load: () => import('./kernel-pattern/KernelExample.vue'),
+    ...extensibleKernel,
+    load: () => import('./extensible-kernel/ExtensibleKernelExample.vue'),
   },
   {
     ...chooseField,

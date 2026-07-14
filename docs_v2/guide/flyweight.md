@@ -59,7 +59,7 @@ looks at it.**
 
 **2. Flyweight facades.** The entity class holds three fields —
 `(sheet, row, col)` — plus plain getters delegating to the sheet. ivue makes
-facades free at rest: no getter runs at construction, plain getters
+the reactive portion zero-allocation at rest: no getter runs at construction, plain getters
 de-optimize to native prototype getters, and reads are tracked through
 whatever effect performs them. Create per render, drop on scroll, zero loss —
 the reactive state lives on the sheet's overlay, not on the facade.

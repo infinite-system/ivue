@@ -1,7 +1,8 @@
-// kernel.ts — the extensible-class registry. ~40 lines, no DI container.
+// kernel.ts — the complete extensible-class registry, with no DI container.
 //
-// A class opts in with kernel.defineClass('Name', Namespace); plugins extend
-// it with kernel.registerClass('Name', Base => class extends Base {}); at boot
+// A class opts in with kernel.defineClass('core/Name', Namespace); plugins
+// extend it with kernel.registerClass('core/Name', Base => class extends Base
+// {}); at boot
 // kernel.sealClassGraph() composes every plugin and re-parents every
 // extends-chain in topological order, so `new X.Class()` — read live off the
 // namespace, zero lookup — always produces the fully-extended class, super
@@ -30,7 +31,7 @@ const nodeByClass = () => {
 };
 
 export const kernel = {
-  /** A class opts into extensibility: register its name + namespace. */
+  /** Register an owner-namespaced key (`namespace/Class`) and namespace. */
   defineClass(name: string, ns: Extensible) {
     const parentClass = Object.getPrototypeOf(ns.$Class.prototype)?.constructor;
     nodes.set(name, {

@@ -18,6 +18,10 @@ engine is **1.1kb gzipped** with zero dependencies.
 and instances stay **ordinary objects**. No `reactive()` proxy wraps them. No
 work happens at construction.
 
+> **The prototype carries behavior once. Each instance materializes only the
+> state somebody observes. Raw access avoids a proxy, and stable handles let
+> hot paths reduce to direct-ref speed.**
+
 ```ts
 import { Reactive } from 'ivue'
 import { ref } from 'vue'
@@ -99,15 +103,29 @@ Live — this pad reads `{ x, y }` from a `Pointer` instance:
 
 `private` means what it always means: consumers of `Pointer` see `x` and
 `y`, never the composable. And because the destructure runs in `setup`, the
-composable materializes inside the component's scope — `useMouse`'s
-listeners are cleaned up on unmount, for free.
+composable materializes inside the component's scope — Vue owns its lifetime
+and removes `useMouse`'s listeners on unmount.
 
-## The trade, in one line
+## Where ivue fits
 
-ivue is **cheap to create and light to hold, slightly costlier to read**: state
-sits behind a getter, so hot loops pay several-fold per read over a raw closure ref.
-One [hoist line](/guide/performance#hot-loops) erases it. Everything else is
-free.
+ivue earns its conventions when state has structure and population: domain
+entities, editor models, documents, graphs, virtualized collections, and
+view-models with inheritance or long lifetimes. In those systems, prototype-
+shared behavior and observation-priced state compound across every instance.
+
+A small component-local interaction or one singleton store may not need that
+object model. Composables remain the natural unit for small reusable logic,
+and Pinia remains a good home for app-wide singleton concerns. ivue hosts both
+when a structured class needs them.
+
+## The performance shape, in one line
+
+ivue is **cheap to create, light to hold, and faster to read than a
+proxy-mediated object**. Measured on Node 22 and Vue 3.5, raw ivue member
+access is 3–18× faster than the shallow and deep proxy alternatives. A direct
+closure ref remains the irreducible floor; when a million-iteration loop
+needs that floor, one [hoist line](/guide/performance#hot-loops) gives ivue
+the same direct handle and erases the getter hop.
 
 Next: [get started](/guide/getting-started) — or read the
 [principles](/guide/principles) that make it work.

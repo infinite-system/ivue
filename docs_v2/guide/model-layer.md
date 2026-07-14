@@ -94,8 +94,8 @@ Every one of these mechanisms is real engineering — it's what production
 web spreadsheets actually do. And every line of it exists _solely_ to work
 around eager allocation cost.
 
-An ivue instance is that lazy overlay, built into the object itself, for
-free. An untouched member costs nothing to begin with, so there is no
+An ivue instance carries that lazy overlay in the object model itself, with
+no eager reactive allocation. An untouched member allocates no cell, so there is no
 second representation to synchronize, no eviction to schedule, no watcher
 that dies at a boundary — the instance a watcher attaches to is the
 instance forever. And a whole-column formula just reads `.value` through
@@ -588,9 +588,12 @@ invariant doing double duty:
 > **ivue makes the model layer a first-class citizen of Vue reactivity —
 > 100,000 live entities for the price of plain objects.**
 
-It is the only arrangement where the _whole_ model stays inside Vue's
-reactivity at plain-data prices: reactive-model Vue pays gigabytes,
-plain-model Vue pays with hand-rolled dirty tracking, ivue pays neither.
+Among the Vue-compatible arrangements measured on this page, ivue is the
+only one where the _whole_ model stays inside Vue's reactivity at
+approximately plain-data allocation cost. Reactive-model Vue pays for a
+large dependency graph; plain-model Vue pays with hand-rolled dirty
+tracking; ivue materializes the reactive overlay only where observation
+requires it.
 The [performance page](/guide/performance) has the measured receipts; the
 [Components & Templates](/guide/components) page has the wiring; the rest
 of this guide has the discipline that keeps the price low.

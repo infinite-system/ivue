@@ -246,9 +246,9 @@ class $EditorGroupModel {
 First-touch resolution *is* lazy initialization; module-level singletons
 through composable functions *are* the registry; and cross-module cycles
 dissolve because every cross-reference lives in a getter body that runs
-long after all modules load — [immunity by construction](/guide/modules#circular-imports-immune-by-construction),
+long after all modules load — [late resolution by construction](/guide/modules#circular-references-resolve-by-construction),
 not by injector indirection. The
-[Store Pattern example](/examples/store-pattern) is this service layer in
+[Class Store example](/examples/class-store) is this service layer in
 miniature: the class is the service, one line makes it a singleton, and
 nothing resolves until first use.
 
