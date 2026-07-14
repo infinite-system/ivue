@@ -2,16 +2,24 @@
 import { KernelExample } from './KernelExample';
 
 const example = new KernelExample.Class();
+
+// the state destructure
+const {
+  // state refs
+  tabs,
+  graph,
+} = example;
 </script>
 
 <template>
   <div class="pane pane-wide">
     <p class="note">
-      Construction binds to a NAME, not a class. Toggle a plugin: it extends
-      whatever class is registered under 'Tab' and re-registers it, so every
-      tab you add afterwards is the extended class — super chains, reactive
-      state and all. Plugins stack. No DI container, no decorators; the whole
-      system is a 15-line kernel.
+      Construction binds to a NAME. Toggle a plugin: the kernel resets,
+      re-registers the active plugins, seals the class graph, and rebuilds
+      every tab — the production flow (register → seal → mount), re-run on
+      change. Plugins stack, and PinnedTab (which extends Tab) inherits Tab's
+      plugins because seal re-parents its chain. `new Tab.Class()` never does
+      a lookup — it reads the live binding the kernel rewrote.
     </p>
 
     <div class="kx-plugins">
@@ -23,31 +31,23 @@ const example = new KernelExample.Class();
         :class="{ primary: example.isActive(plugin.id) }"
         @click="example.togglePlugin(plugin.id)"
       >
-        {{ example.isActive(plugin.id) ? '● ' : '○ ' }}{{ plugin.label }}
+        {{ example.isActive(plugin.id) ? '● ' : '○ ' }}{{ plugin.label }} plugin
       </button>
     </div>
 
-    <p class="mono kx-summary">
-      new tabs will be: <strong>{{ example.activeSummary }}</strong>
-    </p>
-
     <div class="row" style="margin-bottom: 16px">
-      <button class="btn primary" type="button" @click="example.addTab()">
-        + Add tab
+      <button class="btn primary" type="button" @click="example.addTab('tab')">
+        + Tab
       </button>
-      <button
-        class="btn"
-        type="button"
-        :disabled="!example.hasTabs"
-        @click="example.remakeAll()"
-      >
-        Re-make all through kernel
+      <button class="btn" type="button" @click="example.addTab('pinned')">
+        + Pinned tab
       </button>
+      <span class="mono">active: {{ example.activeSummary }}</span>
     </div>
 
     <div class="kx-tabs">
       <div
-        v-for="tab in example.tabs.value"
+        v-for="tab in tabs"
         :key="tab.title"
         class="kx-tab"
         :style="{ borderLeftColor: tab.accent }"
@@ -72,7 +72,20 @@ const example = new KernelExample.Class();
             {{ badge }}
           </span>
         </div>
-        <div v-else class="kx-tab__plain mono">base tab — no plugins</div>
+        <div v-else class="kx-tab__plain mono">base — no plugins</div>
+      </div>
+    </div>
+
+    <div class="kx-graph">
+      <div class="kx-graph__label mono">kernel.getClassGraph()</div>
+      <div v-for="node in graph" :key="node.name" class="kx-graph__row mono">
+        <strong>{{ node.name }}</strong>
+        <span v-if="node.extends" class="kx-graph__dim">
+          extends {{ node.extends }}</span
+        >
+        <span v-if="node.plugins.length" class="kx-graph__plugins">
+          ◂ {{ node.plugins.join(' ◂ ') }}</span
+        >
       </div>
     </div>
   </div>
@@ -90,16 +103,11 @@ const example = new KernelExample.Class();
   gap: 8px;
   margin-bottom: 12px;
 }
-.kx-summary {
-  margin: 0 0 16px;
-}
-.kx-summary strong {
-  color: #dbe1f4;
-}
 .kx-tabs {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
   gap: 12px;
+  margin-bottom: 20px;
 }
 .kx-tab {
   padding: 12px 14px;
@@ -145,5 +153,27 @@ const example = new KernelExample.Class();
 .kx-tab__plain {
   margin-top: 8px;
   font-size: 11px;
+}
+.kx-graph {
+  padding: 14px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.kx-graph__label {
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+.kx-graph__row {
+  font-size: 12.5px;
+  color: #dbe1f4;
+  padding: 2px 0;
+}
+.kx-graph__dim {
+  color: #8b95b5;
+}
+.kx-graph__plugins {
+  color: #34d399;
 }
 </style>

@@ -1,86 +1,92 @@
-// KernelExample.ts — the demo view-model, in ivue. It toggles plugins,
-// rebuilds the kernel registration from the base + active plugins, and
-// constructs tabs through makeTab() so new tabs pick up whatever is live.
+// KernelExample.ts — the demo view-model, in ivue. Each plugin toggle is a
+// mini-reboot: reset the kernel, register the active plugins, seal the class
+// graph, then reconstruct the visible tabs — exactly the production flow
+// (register → seal → mount), run again on change.
 import { ref, shallowRef } from 'vue';
 import { Reactive } from '../../ivue';
 import { kernel } from './kernel';
-import { $Tab, makeTab, type TabInstance } from './Tab';
+import { Tab } from './Tab';
+import { PinnedTab } from './PinnedTab';
 import { timestampPlugin, priorityPlugin, type TabPlugin } from './plugins';
 
+type Kind = 'tab' | 'pinned';
 interface PluginEntry {
   id: string;
   label: string;
-  apply: TabPlugin;
+  make: TabPlugin;
+}
+interface GraphNode {
+  name: string;
+  extends: string | null;
+  plugins: string[];
 }
 
 class $KernelExample {
   #counter = 0;
 
   constructor() {
-    // The kernel is a module singleton — a previous visit may have left a
-    // registration. Rebuild from the current (empty) plugin set so this
-    // route always starts on the base class.
-    this.rebuildRegistration();
-    this.addTab();
+    this.reboot();
+    this.addTab('tab');
+    this.addTab('pinned');
   }
 
   get tabs() {
-    return shallowRef<TabInstance[]>([]);
+    return shallowRef<any[]>([]);
   }
   get active() {
     return ref<Record<string, boolean>>({ timestamp: false, priority: false });
   }
+  get graph() {
+    return shallowRef<GraphNode[]>([]);
+  }
 
-  // CONSTANTS — the available plugins; plain field, never mutated.
   plugins: PluginEntry[] = [
-    { id: 'timestamp', label: 'Timestamp plugin', apply: timestampPlugin },
-    { id: 'priority', label: 'Priority plugin', apply: priorityPlugin },
+    { id: 'timestamp', label: 'Timestamp', make: timestampPlugin },
+    { id: 'priority', label: 'Priority', make: priorityPlugin },
   ];
 
-  // DERIVED — plain getters.
-  get activeLabels(): string[] {
-    return this.plugins
-      .filter((plugin) => this.active.value[plugin.id])
-      .map((plugin) => plugin.label);
-  }
   get activeSummary(): string {
-    return this.activeLabels.length
-      ? this.activeLabels.join(' + ')
-      : 'the base class only';
-  }
-  get hasTabs(): boolean {
-    return this.tabs.value.length > 0;
-  }
-
-  /** Compose the active plugins over the base and register the result. */
-  rebuildRegistration() {
-    let TabClass: typeof $Tab = $Tab;
-    for (const plugin of this.plugins) {
-      if (this.active.value[plugin.id]) TabClass = plugin.apply(TabClass);
-    }
-    kernel.set('Tab', TabClass);
-  }
-
-  togglePlugin(id: string) {
-    this.active.value = { ...this.active.value, [id]: !this.active.value[id] };
-    this.rebuildRegistration();
+    const on = this.plugins.filter((plugin) => this.active.value[plugin.id]);
+    return on.length ? on.map((plugin) => plugin.label).join(' + ') : 'none';
   }
 
   isActive(id: string): boolean {
     return !!this.active.value[id];
   }
 
-  addTab() {
-    this.tabs.value = [...this.tabs.value, makeTab(`Tab ${++this.#counter}`)];
+  /** register → seal → reconstruct: the whole boot, re-run on any change. */
+  reboot() {
+    kernel.reset();
+    for (const plugin of this.plugins) {
+      if (this.active.value[plugin.id]) {
+        kernel.registerClass('Tab', plugin.make, plugin.label);
+      }
+    }
+    kernel.sealClassGraph();
+    this.graph.value = kernel.getClassGraph();
+    this.tabs.value = this.tabs.value.map((tab) =>
+      this.build(tab.__kind, tab.title),
+    );
   }
 
-  /** Re-construct every existing tab through the kernel — retrofit the
-   *  current plugin set onto tabs made before it was installed. */
-  remakeAll() {
-    this.tabs.value = this.tabs.value.map((tab) => makeTab(tab.title));
+  togglePlugin(id: string) {
+    this.active.value = { ...this.active.value, [id]: !this.active.value[id] };
+    this.reboot();
   }
 
-  closeTab(tab: TabInstance) {
+  build(kind: Kind, title: string) {
+    const instance =
+      kind === 'pinned' ? new PinnedTab.Class(title) : new Tab.Class(title);
+    (instance as any).__kind = kind;
+    return instance;
+  }
+
+  addTab(kind: Kind) {
+    const label = kind === 'pinned' ? 'Pinned' : 'Tab';
+    this.tabs.value = [...this.tabs.value, this.build(kind, `${label} ${++this.#counter}`)];
+  }
+
+  closeTab(tab: any) {
     this.tabs.value = this.tabs.value.filter((existing) => existing !== tab);
   }
 }
