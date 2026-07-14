@@ -164,3 +164,7 @@ number was a **harness artifact, not library behavior** — when a number
   layout changes.
 - CLI `--all`-style flags detect-and-equip existing tool footprints; they
   never scaffold vendor folders the project doesn't use (see `bin/ivue.mjs`).
+- **Teardown must survive user cleanup failures.** A throwing `stopEffects()`
+  hook once prevented the instance scope from stopping and left cached cells
+  alive. Keep scope shutdown and cache deletion in `finally` paths, propagate
+  the original hook error, and test both outcomes together.

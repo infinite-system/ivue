@@ -744,15 +744,19 @@ export function Reactive<C extends new (...args: any) => any>(
       writable: true,
       value: function (this: any) {
         const raw = resolveRaw(this);
-        if (typeof raw.stopEffects === fn) raw.stopEffects();
-
-        const scope = raw[SCOPE];
-        if (scope) scope.stop();
-
-        const symbols = getOwnPropertySymbols(raw);
-        for (const symbol of symbols) {
-          if (symbol === RAW) continue;
-          delete raw[symbol];
+        try {
+          if (typeof raw.stopEffects === fn) raw.stopEffects();
+        } finally {
+          try {
+            const scope = raw[SCOPE];
+            if (scope) scope.stop();
+          } finally {
+            const symbols = getOwnPropertySymbols(raw);
+            for (const symbol of symbols) {
+              if (symbol === RAW) continue;
+              delete raw[symbol];
+            }
+          }
         }
       },
     });
