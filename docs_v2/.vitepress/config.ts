@@ -143,6 +143,7 @@ export default defineConfig({
       { text: 'Benchmarks', link: '/guide/benchmarks', activeMatch: '/guide/benchmarks' },
       { text: 'API', link: '/api/', activeMatch: '/api/' },
       { text: 'Blog', link: '/blog/', activeMatch: '/blog/' },
+      { text: 'Community', link: '/community', activeMatch: '/community' },
       {
         text: 'v2',
         items: [
@@ -256,6 +257,7 @@ export default defineConfig({
           items: [
             { text: 'Invariant-Based Design', link: '/reference/invariants' },
             { text: 'API', link: '/api/' },
+            { text: 'Community', link: '/community' },
           ],
         },
       ],
