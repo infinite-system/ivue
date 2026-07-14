@@ -42,6 +42,20 @@ with zero dependencies.
 npm i ivue vue
 ```
 
+## Built for humans and AI
+
+ivue ships with an [Operating Manual](https://infinite-system.github.io/ivue/guide/standard) —
+the complete authoring standard as annotated templates, rules, and a review
+checklist. It reads as documentation and works as a drop-in skill for AI
+coding agents, so generated code follows the same standard your team writes:
+
+```sh
+npx ivue skill        # installs .claude/skills/ivue/SKILL.md, version-locked
+npx ivue skill --all  # + Codex/Cursor/Copilot where already in use
+```
+
+### Usage
+
 ```ts
 import { Reactive } from 'ivue';
 import { ref } from 'vue';
@@ -83,18 +97,6 @@ const { count } = counter;
 ```
 
 Full walkthrough: [Getting Started](https://infinite-system.github.io/ivue/guide/getting-started).
-
-## Built for humans and AI
-
-ivue ships with an [Operating Manual](https://infinite-system.github.io/ivue/guide/standard) —
-the complete authoring standard as annotated templates, rules, and a review
-checklist. It reads as documentation and works as a drop-in skill for AI
-coding agents, so generated code follows the same standard your team writes:
-
-```sh
-npx ivue skill        # installs .claude/skills/ivue/SKILL.md, version-locked
-npx ivue skill --all  # + Codex/Cursor/Copilot where already in use
-```
 
 ## Hard problems, solved together
 
