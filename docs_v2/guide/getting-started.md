@@ -16,8 +16,7 @@ ivue has no runtime dependencies of its own; it works with any Vue 3.x.
 ::: tip Hide `.value` while coding
 ivue state is read with `.value`. If you'd rather not see it, the
 [ivue-hide-value](https://marketplace.visualstudio.com/items?itemName=systems-infinite.ivue-hide-value)
-VS Code extension visually folds every `.value` to a middot and smartly
-deletes it with Backspace — the source keeps the real `.value`; only the
+VS Code extension visually folds every `.value` to a middot — the source keeps the real `.value`; only the
 rendering folds.
 :::
 

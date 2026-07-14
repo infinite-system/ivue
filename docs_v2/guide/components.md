@@ -124,7 +124,7 @@ the destructure list shrank from "everything" to "the state surface" — small
 enough to be a feature. The rejected regimes stay rejected for the same
 measured reasons as before.
 
-## defineExpose and the expose surface
+## defineExpose() and the expose surface
 
 Vue delivers an exposed instance to parents through its **expose proxy**,
 which is `proxyRefs`-based. Verified behavior:
