@@ -67,8 +67,9 @@ and the effect re-runs.
 Why this is the default:
 
 - **Zero memory per instance.** A plain getter lives once, on the prototype.
-  Every `computed()` allocates ~300 bytes per instance, paid at creation,
-  read or not. Sixty computeds on 10k instances is real megabytes — see
+  An ivue `computed()` materializes only when that getter is first read, then
+  costs ~300 bytes on that instance. Sixty observed computeds on 10k instances
+  is real megabytes — see
   [Memory](/guide/performance#memory-derivations-weigh-nothing).
 - **Zero staleness.** The value re-derives whenever it's read. Nothing to
   invalidate, nothing to reason about.
@@ -141,7 +142,7 @@ box.grow === box.grow  // true — referentially stable
 
 A getter that returns a **non-ref** value is fine — ivue detects it on first
 access and turns it back into a normal getter (zero overhead, see
-[Principles](/guide/principles#derive-with-plain-getters-the-engine-self-optimizes)):
+[Fundamental Principles](/guide/principles#derive-with-plain-getters-the-engine-self-optimizes)):
 
 ```ts
 get kind() {
@@ -169,6 +170,12 @@ class $Pointer {
   }
 }
 ```
+
+"Forever" means for that instance's owned lifetime. Component-scoped instances
+need no explicit model teardown: Vue stops setup-owned effects on unmount, and
+the instance becomes collectible when nothing else retains it. The owner of a
+component-outliving model calls `$stopEffects()`, which clears these caches and
+the instance's watchers.
 
 ## Private fields
 

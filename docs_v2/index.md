@@ -129,34 +129,45 @@ where things live.
 </p>
 
 <p class="lead ix-idea__link">
-<a href="/guide/principles">Read the Principles →</a>
+<a href="/guide/principles">Read the Fundamental Principles →</a>
 </p>
 
 </div>
+
+<div class="ix-code-window">
+  <div class="ix-code-window__chrome">
+    <span class="ix-code-window__lights" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </span>
+    <strong>Cart.ts</strong>
+  </div>
 
 ```ts:no-line-numbers
 import { Reactive } from 'ivue'
 import { ref } from 'vue'
 
-class $Counter {
-  get count() {
-    return ref(0)
+class $Cart {
+  get items() {
+    return ref<{ price: number }[]>([])
   }
-  get double() {
-    return this.count.value * 2 // plain getter
+  get total() {
+    return this.items.value.reduce((sum, item) => sum + item.price, 0)
   }
-  increment() {
-    this.count.value++
+  add(price: number) {
+    this.items.value.push({ price })
   }
 }
 
-export const Counter = Reactive($Counter)
+export namespace Cart {
+  export const $Class = $Cart // raw — children `extends` this
+  export const Class = Reactive($Class) // reactive — you `new` this
+  export type Instance = typeof Class.Instance // expose & reactive() interop
+}
 
-const counter = new Counter()
-counter.increment()
-counter.count.value  // 1
-counter.double       // 2, re-derived on read
+const cart = new Cart.Class()
 ```
+
+</div>
 
 </div>
 

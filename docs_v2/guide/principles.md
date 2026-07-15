@@ -1,9 +1,9 @@
 ---
-title: Principles
-description: The eight guarantees behind ivue — plain instances, lazy cached state, plain derived getters, surgical computed(), native inheritance, composable modules, and scoped teardown.
+title: Fundamental Principles
+description: The eight guarantees behind ivue — plain instances, lazy cached state, plain derived getters, surgical computed(), composable modules, native inheritance, and scoped teardown.
 ---
 
-# Principles
+# Fundamental Principles
 
 Everything ivue does follows from eight guarantees. Knowing them is
 enough to predict its behavior in any situation.
@@ -58,8 +58,8 @@ get area() {
 On first access the engine sees a non-ref result and restores a native getter
 on the prototype — from then on it is ordinary JavaScript, re-derived inside
 whatever effect reads it. Plain getters live once on the prototype and weigh
-**nothing per instance**; every eager `computed()` costs ~300 bytes per
-instance whether it is ever read or not. Memoize surgically —
+**nothing per instance**. An ivue `computed()` is also lazy, but once observed
+its cache costs ~300 bytes on that instance. Memoize surgically —
 [when it earns it](/guide/computed-watch#computed-your-usememo).
 
 ## `computed()` is a cache — apply it surgically
@@ -84,13 +84,6 @@ propagation on equal values; a plain getter cannot), or when you need a
 the prototype — testable, hot-graftable, minimum footprint. See
 [Computed & Watch](/guide/computed-watch#computed-your-usememo).
 
-## Native inheritance & `super`
-
-Processing runs base → child, and every `(prototype, key)` gets its own cache
-symbol. So a child's computed and the `super` computed it calls cache separately
-and never collide — `super.x.value` resolves through the whole chain exactly like
-native classes. See [Inheritance](/guide/inheritance).
-
 ## Modules compose; circular references resolve
 
 Each class is transformed in its own file at load time, and the transform is
@@ -98,6 +91,13 @@ idempotent — shared ancestors are processed once, no matter the import order. 
 [namespace pattern](/guide/modules) (`$Class` raw + `Class` reactive) exposes
 classes through a hoisted object, so mutual cross-references between files resolve
 in any order and survive cross-file HMR.
+
+## Native inheritance & `super`
+
+Processing runs base → child, and every `(prototype, key)` gets its own cache
+symbol. So a child's computed and the `super` computed it calls cache separately
+and never collide — `super.x.value` resolves through the whole chain exactly like
+native classes. See [Inheritance](/guide/inheritance).
 
 ## Teardown is scope-based
 

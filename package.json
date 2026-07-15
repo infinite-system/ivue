@@ -52,7 +52,7 @@
     "preview:playground": "vite preview examples/playground --host"
   },
   "peerDependencies": {
-    "vue": "^3.0.0",
+    "vue": "^3.2.0",
     "vue-demi": "*"
   },
   "peerDependenciesMeta": {

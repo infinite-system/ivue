@@ -48,17 +48,15 @@ records every `show()` call in a separate event stream without changing the toas
 `ErrorNotification` inherits both plugins even though its class is declared
 before they register.
 
-## Why this is much smaller and much faster than Angular-style DI
+## Why this is much smaller and removes Angular-style runtime resolution
 
-Angular-style DI builds a second runtime graph: tokens choose providers,
-scopes choose lifetimes, factories mediate construction, and the container
-resolves that graph for every object it creates.
+Angular-style DI builds and resolves a second runtime graph: tokens choose
+providers, scopes choose lifetimes, and factories mediate construction.
 
 ivue uses the graph JavaScript already has. Modules hold references,
 prototypes hold inheritance, and a namespace's live `Class` binding selects
-the implementation. The kernel seals that graph once at boot. Afterward,
-construction is a property read plus native `new`, and method calls are native
-prototype dispatch. No container participates in either path.
+the implementation. The kernel seals that graph once at boot; afterward,
+construction is a live binding plus native `new`. No container participates.
 
 That is the reduction: **compose once, then disappear.** Contextual providers,
 request scopes, and runtime service selection still require DI machinery. When

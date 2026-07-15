@@ -41,5 +41,5 @@ else.
 > Perfection is achieved, not when there is nothing more to add, but when
 > there is nothing left to take away.
 
-The subtraction is the product. [Principles](/guide/principles) lists
+The subtraction is the product. [Fundamental Principles](/guide/principles) lists
 what survived it.

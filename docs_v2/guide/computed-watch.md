@@ -28,9 +28,11 @@ Dependencies re-collect on every run, so conditional branches always track
 correctly.
 
 The payoff is memory. A plain getter lives once on the prototype and weighs
-**zero bytes per instance**. Every eager `computed()` costs ~300 bytes per
-instance at creation, read or not — 60 of them on a 10k-row list is ~300 MB
-of pure bookkeeping avoided. Full numbers in
+**zero bytes per instance**. In ivue, a getter returning `computed()` is lazy:
+its ~300-byte cell is paid only on instances that first read it. By contrast,
+computed fields and ordinary composables allocate eagerly. Sixty observed
+computeds on a 10k-row list is ~300 MB of bookkeeping; untouched ivue members
+allocate nothing. Full numbers in
 [Memory](/guide/performance#memory-derivations-weigh-nothing).
 
 Because derivations add zero bytes per instance, they absorb what templates elsewhere carry

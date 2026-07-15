@@ -185,7 +185,8 @@ export default defineConfig({
             { text: 'What is ivue?', link: '/guide/introduction' },
             { text: 'Getting Started', link: '/guide/getting-started' },
             { text: 'Design & Philosophy', link: '/guide/design' },
-            { text: 'Principles', link: '/guide/principles' },
+            { text: 'Fundamental Principles', link: '/guide/principles' },
+            { text: 'Standard Operating Manual', link: '/guide/standard' },
           ],
         },
         {
@@ -196,17 +197,16 @@ export default defineConfig({
             { text: 'Computed & Watch', link: '/guide/computed-watch' },
             { text: 'Components & Templates', link: '/guide/components' },
             { text: 'Lifecycle & Teardown', link: '/guide/lifecycle-teardown' },
-            { text: 'Inheritance & super', link: '/guide/inheritance' },
             { text: 'Modules & Imports', link: '/guide/modules' },
+            { text: 'Inheritance & super', link: '/guide/inheritance' },
             { text: 'Extensible Components', link: '/guide/extensible-components' },
             { text: 'HMR: Hot Reload for Classes', link: '/guide/hmr' },
           ],
         },
         {
-          text: 'Going Deeper',
+          text: 'Internals',
           collapsed: false,
           items: [
-            { text: 'Standard Operating Manual', link: '/guide/standard' },
             {
               text: 'Engine Under the Idiom',
               link: '/guide/engine-under-the-idiom',
@@ -238,7 +238,7 @@ export default defineConfig({
           text: 'Advanced Examples',
           collapsed: false,
           items: [
-            { text: 'Class Store', link: '/examples/class-store' },
+            { text: 'Pinia Store Alternative', link: '/examples/class-store' },
             { text: 'Extensible Kernel', link: '/examples/extensible-kernel' },
             {
               text: 'Advanced Select Field',

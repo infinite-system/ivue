@@ -347,11 +347,52 @@
     gap: 56px;
   }
 }
-.ix-idea div[class*='language-'] {
-  margin: 0;
-  border-radius: 14px;
+.ix-code-window {
+  min-width: 0;
+  overflow: hidden;
   border: 1px solid var(--vp-c-divider);
-  box-shadow: 0 24px 70px -30px rgba(99, 102, 241, 0.35);
+  border-radius: 14px;
+  background: var(--vp-code-block-bg);
+}
+.ix-code-window__chrome {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--vp-c-divider);
+  color: var(--vp-c-text-2);
+  font-family: var(--vp-font-family-mono);
+  font-size: 11px;
+}
+.ix-code-window__chrome strong {
+  font-weight: 600;
+}
+.ix-code-window__lights {
+  display: flex;
+  gap: 5px;
+}
+.ix-code-window__lights > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vp-c-text-3);
+  opacity: 0.45;
+}
+.vp-doc .ix-code-window div[class*='language-'] {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+.vp-doc .ix-code-window div[class*='language-'] pre {
+  border-radius: 0;
+}
+.ix-code-window div[class*='language-'] > .lang {
+  display: none;
+}
+.ix-code-window div[class*='language-'] code {
+  font-size: 13px;
 }
 
 /* The moat — one fused block: 8 solved problems, one coherent design */

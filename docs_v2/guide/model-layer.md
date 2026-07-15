@@ -247,8 +247,8 @@ declaration doesn't override the first, it just clobbers it on the
 instance. This isn't an Angular bug — it's what happens to _any_ reactive
 primitive declared as a field rather than a getter, in any framework. ivue
 getters are real prototype members, so `super.x.value` composes across as
-many subclass levels as the model needs ("Inheritance & `super` fidelity"
-in [`lib/Reactive.invariants.md`](https://github.com/infinite-system/ivue/blob/main/lib/Reactive.invariants.md)) — the getter placement is the whole
+many subclass levels as the model needs
+([Inheritance & `super` fidelity](/reference/invariants#inheritance-super-fidelity)) — the getter placement is the whole
 difference.
 
 One more shape of the same idea: Angular's dependency injection has a

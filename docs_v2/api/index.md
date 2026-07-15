@@ -1,6 +1,6 @@
 ---
 title: API Reference
-description: The complete public surface — Reactive() and its hmrId parameter, instance.$watch / $watchEffect / $stopEffects, the ivueHmr Vite plugin with fast mode, ivueHotUpdate, propsWithDefaults, isClass, and the ReactiveInstance / ReactiveClass types.
+description: The complete public surface — runtime functions, class and component types, the HMR plugin, and optional type utilities.
 ---
 
 # API Reference
@@ -131,6 +131,9 @@ export default defineConfig({
 A file that already references `import.meta.hot`, or carries an
 `@ivue-no-hmr` comment, is left alone.
 
+The plugin subpath also exports `IvueHmrOptions`, the interface represented
+by the table above.
+
 ## `ivueHotUpdate(hot, mod)`
 
 The runtime half of the hot-update handshake — the function the plugin's
@@ -193,12 +196,51 @@ keeps being useful.
 
 ## Types
 
+All types are erased from production output. The first group supports ivue's
+extensible-component architecture directly; the later groups are available
+when an application needs their narrower transformations.
+
+### Extensible component types
+
+| Type | Meaning |
+|---|---|
+| `ExtractPropDefaultTypes<O>` | Extracts the resolved prop values from a Vue runtime props object and marks every key as assigned, matching a defaults object consumed by `propsWithDefaults()` |
+| `ExtractEmitTypes<T>` | Converts an object of emit validators into the overloaded emit function accepted by `defineEmits` and class constructors |
+| `ExtendSlots<T>` | Keeps every slot in `T` and adds typed `before--*` and `after--*` extension slots around each one |
+
+These three types keep inherited props, emits, and slots aligned as a component
+grows. The complete pattern and examples live in
+[Extensible Components](/guide/extensible-components).
+
+### Reactive class types
+
 | Type | Meaning |
 |---|---|
 | `ReactiveInstance<T>` | `T` plus `$watch`/`$watchEffect`/`$stopEffects`, with ref-returning getters re-typed as **writable** — the type of every unwrapping surface (`defineExpose`, `reactive()` interop) |
-| `ReactiveClass<C>` | a constructor producing `ReactiveInstance`s |
-| `VuePropsObject` | `Record<string, { type; default?; required? }>` |
-| `VuePropsWithDefaults<T>` | `T` with every prop\'s `default` present |
+| `ReactiveClass<C>` | Preserves `C`'s constructor parameters and produces `ReactiveInstance<InstanceType<C>>` |
+
+### Props utility types
+
+| Type | Meaning |
+|---|---|
+| `VuePropsObject` | The runtime-props shape accepted by `propsWithDefaults()`: `Record<string, { type; default?; required? }>` |
+| `VuePropsWithDefaults<T>` | The output shape of `propsWithDefaults()`, with every descriptor's `default` key present in the type |
+
+### General utility types
+
+These exports are optional conveniences. Applications can use their own
+equivalents without changing how ivue works.
+
+| Type | Meaning |
+|---|---|
+| `AnyFn` | Any callable function type |
+| `RecordToUnion<T>` | Converts a record into the union of its value types |
+| `ValueOf<T, K>` | Selects the value type at key `K` |
+| `UnionToIntersection<U>` | Converts a union into an intersection |
+| `PrefixKeys<T, P>` | Remaps every string key in `T` with prefix `P` |
+| `FnParameter<F, K>` | Selects parameter `K` from function `F` |
+| `IFnParameters<T, K>` | Extracts the full parameter tuple from function member `K` of `T` |
+| `IFnParameter<T, P, K>` | Selects parameter `K` from function member `P` of `T`, including optional members |
 
 ## The formal specification
 

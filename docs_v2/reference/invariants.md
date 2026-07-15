@@ -21,10 +21,10 @@ Everything else is a consequence of making that idea safe under inheritance,
 proxies, hot-reload, and circular imports.
 
 ::: info Source
-A cleaned version of the in-repo spec at
-[`lib/Reactive.invariants.md`](https://github.com/infinite-system/ivue/blob/main/lib/Reactive.invariants.md).
-Tests live in [`lib/__tests__/Reactive.vitest.spec.ts`](https://github.com/infinite-system/ivue/blob/main/lib/__tests__/Reactive.vitest.spec.ts) (100% statements / branches /
-functions / lines).
+This page is the single canonical invariant specification. The implementation
+lives in [`lib/Reactive.ts`](https://github.com/infinite-system/ivue/blob/main/lib/Reactive.ts);
+the core and HMR suites live beside it and maintain 100% statement, branch,
+function, and line coverage.
 :::
 
 ## Runtime invariants
@@ -33,14 +33,13 @@ Intrinsic to `Reactive()` itself.
 
 ### Identity preservation
 
-> `Reactive(Class)` returns the *same* constructor it was given — mutated in place,
-> never a wrapper or subclass.
+> `Reactive(Class)` preserves one constructor identity for the class's lifetime.
 
-It transforms `Class.prototype` and hands the class back unchanged, so
-`Reactive(X) === X` and `instanceof` still works. The raw class and the reactive
-class share one prototype lineage — which is what lets a child `extends ParentRawClass`
-and still inherit the reactive behaviour (see *Inheritance & super fidelity* and
-*Circular-import & HMR robustness*).
+It transforms `Class.prototype` in place. In production, SSR, and tests it hands
+the same class back unchanged, so `Reactive(X) === X`. During Vite class HMR it
+returns one stable construct-trap proxy over that class; hot module executions
+feed donor implementations into the same canonical identity. In every mode,
+`instanceof` and the prototype lineage remain intact.
 
 **Rules out** — two class identities for one declaration; a "reactive copy" with a
 divergent prototype; `x instanceof Class` breaking after transformation.
@@ -64,11 +63,11 @@ shared-base layouts transforming differently by load order.
 > Every cache the engine creates — refs, computeds, bound methods, the back-pointer
 > — lives on `toRaw(this)`, never on a reactive proxy of the instance.
 
-Each getter and method resolves `toRaw(this)` first and keys its cache by
-per-prototype symbols. So whether you use an instance directly or wrap it in
-`reactive(new Class())`, reads and writes land on one canonical Ref/Computed per
-`(instance, key)`. Through a proxy Vue also auto-unwraps a returned ref, so you read
-it without `.value` — but it's still the same Ref/Computed on the raw object.
+Each getter and method calls `resolveRaw(this)`: it first asks Vue's `toRaw()`,
+then falls back to an engine back-pointer for foreign proxy layers such as a
+component expose proxy. Caches use per-prototype symbols. Whether an instance is
+used directly, wrapped in `reactive()`, or reached through an expose proxy, every
+path lands on one canonical Ref/Computed per `(instance, key)`.
 
 **Rules out** — two different refs for one property via proxy-vs-raw access; a proxy
 write landing on a different Ref/Computed than a raw read; caches leaking onto the proxy and
@@ -166,6 +165,28 @@ return the same object.
 **Rules out** — a `$`-getter re-running its body on each access (a new composable /
 subscription every read).
 
+### Hot-swap continuity
+
+> During Vite development, behavior edits reach live instances without replacing
+> their state; edits that cannot be grafted escalate to an owner remount.
+
+The first registered class is canonical. A re-executed module contributes a donor
+whose members are processed onto that canonical prototype. Cache symbols are
+reused, and bound methods route through dev-only implementation slots, so existing
+refs and even previously detached method references stay live. New instances use
+the newest constructor through the stable construct trap.
+
+Closures already cached on an instance cannot be rewritten. Constructor changes,
+inlined-computed changes, `$`-singleton changes, and member-kind changes therefore
+invalidate the module so Vue remounts the owning components. Inheritance grafts
+and ambiguous class-name collisions are refused rather than applied unsafely.
+Every HMR call site is gated by `import.meta.env.DEV`, so production contains none
+of the registry, proxy, slot, or graft machinery.
+
+**Rules out** — stale duplicate class identities after a hot update; a live bound
+handler continuing to run an old method; an unsafe edit silently corrupting a live
+instance; HMR machinery surviving a production build.
+
 ## Module & import invariants
 
 Not lines of code inside `Reactive()`, but properties of the **authoring convention**
@@ -202,11 +223,9 @@ export var Thing;
 is idempotent and identity-preserving, a base already transformed in `Base.ts` is
 detected and skipped when a child's chain walk reaches it — yet the child still
 inherits the installed getters through the shared prototype. So parent, grandparent
-and child can live in separate files, and editing one re-runs only that module's
-(idempotent) `Reactive()` call, so HMR never desyncs the chain. (an engine that builds its maps
-at instantiation time keyed by identity; when one file in a multi-file hierarchy
-reloads, identities across the boundary fall out of sync — which is why v1
-hierarchies live in one file.)
+and child can live in separate files. Re-running a module cannot double-transform
+an ancestor; in HMR mode, inheritance edits follow the explicit remount boundary
+described above rather than desynchronizing a partially grafted chain.
 
 **Rules out** — a multi-file hierarchy ending up partially transformed; a module
 reload double-wrapping an inherited getter.

@@ -30,7 +30,7 @@ push redeploys everything.
 
 ## Full-complexity
 
-- **[Class Store](/examples/class-store)** — a class-based alternative to
+- **[Pinia Store Alternative](/examples/class-store)** — a class-based alternative to
   Pinia stores; optional reactive() view, fully typed.
 - **[Extensible Kernel](/examples/extensible-kernel)** — construction binds to a
   namespaced class key, so plugins extend notifications and their children.

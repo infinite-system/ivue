@@ -1,5 +1,5 @@
 ---
-title: 'Example: Class Store'
+title: 'Example: Pinia Store Alternative'
 description: 'A class-based alternative to Pinia stores — useProjectStore() returns one shared ivue instance, with an optional reactive() view typed through Store.Instance.'
 aside: false
 pageClass: benchmarks-wide examples-page
@@ -9,7 +9,7 @@ pageClass: benchmarks-wide examples-page
 import ExampleClassStore from '../.vitepress/theme/components/examples/ExampleClassStore.vue'
 </script>
 
-# Class Store
+# Pinia Store Alternative
 
 **A class-based alternative to Pinia stores.**
 
