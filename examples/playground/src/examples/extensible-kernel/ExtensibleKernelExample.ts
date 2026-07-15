@@ -7,8 +7,8 @@ import { ErrorNotification } from './ErrorNotification';
 import { kernel } from './kernel';
 import { Notification } from './Notification';
 import {
-  analyticsPlugin,
-  priorityPlugin,
+  activityPlugin,
+  stickyPlugin,
   type NotificationPlugin,
 } from './plugins';
 
@@ -36,7 +36,6 @@ class $ExtensibleKernelExample {
   constructor() {
     this.reboot();
     this.addNotification('notification');
-    this.addNotification('error');
     const countdownTimer = window.setInterval(() => this.tick(), 1000);
     onUnmounted(() => window.clearInterval(countdownTimer));
   }
@@ -45,7 +44,7 @@ class $ExtensibleKernelExample {
     return shallowRef<NotificationEntry[]>([]);
   }
   get activePlugins() {
-    return ref<Record<string, boolean>>({ analytics: false, priority: true });
+    return ref<Record<string, boolean>>({ activity: false, sticky: true });
   }
   get graph() {
     return shallowRef<GraphNode[]>([]);
@@ -53,24 +52,24 @@ class $ExtensibleKernelExample {
   get nextNotificationId() {
     return ref(0);
   }
-  get analyticsLog() {
+  get activityLog() {
     return ref<string[]>([]);
   }
 
   plugins: PluginEntry[] = [
     {
-      id: 'priority',
-      label: 'Priority Plugin',
-      description: 'Changes toast lifetime and visual priority.',
+      id: 'sticky',
+      label: 'Sticky Plugin',
+      description: 'Keeps toasts visible until they are dismissed.',
       enabledEffect: 'Gold accent · pinned · auto-dismiss disabled',
-      make: priorityPlugin,
+      make: stickyPlugin,
     },
     {
-      id: 'analytics',
-      label: 'Analytics Plugin',
+      id: 'activity',
+      label: 'Activity Plugin',
       description: 'Observes toast delivery without changing the toast UI.',
       enabledEffect: 'Every SHOW appears in the event stream',
-      make: analyticsPlugin,
+      make: activityPlugin,
     },
   ];
 
@@ -82,11 +81,11 @@ class $ExtensibleKernelExample {
   get hasVisibleNotifications() {
     return this.visibleNotifications.length > 0;
   }
-  get hasAnalyticsEvents() {
-    return this.analyticsLog.value.length > 0;
+  get hasActivityEvents() {
+    return this.activityLog.value.length > 0;
   }
-  get isAnalyticsActive() {
-    return this.isPluginActive('analytics');
+  get isActivityActive() {
+    return this.isPluginActive('activity');
   }
 
   isPluginActive(pluginId: string) {
@@ -109,7 +108,7 @@ class $ExtensibleKernelExample {
   reboot() {
     const visibleNotifications = this.visibleNotifications;
     kernel.reset();
-    this.analyticsLog.value = [];
+    this.activityLog.value = [];
     for (const plugin of this.plugins) {
       if (this.isPluginActive(plugin.id)) {
         kernel.registerClass('core/Notification', plugin.make, plugin.label);
@@ -137,8 +136,8 @@ class $ExtensibleKernelExample {
   ): NotificationEntry {
     const notification =
       kind === 'error'
-        ? new ErrorNotification.Class(message, this.recordAnalytics)
-        : new Notification.Class(message, this.recordAnalytics);
+        ? new ErrorNotification.Class(message, this.recordActivity)
+        : new Notification.Class(message, this.recordActivity);
     notification.show();
     return { id, kind, notification };
   }
@@ -164,8 +163,8 @@ class $ExtensibleKernelExample {
     this.notifications.value = this.visibleNotifications;
   }
 
-  recordAnalytics(event: string) {
-    this.analyticsLog.value = [...this.analyticsLog.value, event];
+  recordActivity(event: string) {
+    this.activityLog.value = [...this.activityLog.value, event];
   }
 }
 

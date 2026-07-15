@@ -107,6 +107,12 @@ point `computed()` collapses back to what it always was: a surgical opt-in
 for the rare derivation where caching pays
 ([when, exactly](/guide/computed-watch#computed-your-usememo)).
 
+The transformation happens once per prototype; steady execution remains
+stable, ordinary JavaScript property access. [Performance by
+Design](/guide/performance#designed-for-native-jit-shapes) explains how
+that structure gives modern just-in-time compilers consistent shapes to
+specialize without making runtime optimization part of ivue's correctness.
+
 ## What falls out
 
 Consequences observed in production, not projected:

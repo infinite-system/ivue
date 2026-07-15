@@ -17,6 +17,7 @@
  */
 import { computed, ref } from 'vue';
 import DemoBox from '../DemoBox.vue';
+import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import '@examples/benchmarks/grid.css';
 import { Cell } from '@examples/benchmarks/IvueCell';
 import { createComposableCell } from '@examples/benchmarks/composableCell';
@@ -141,6 +142,10 @@ const pojoCls = (cell: { raw: string }) =>
     <p v-if="!hasAny" class="gb-hint">
       Nothing built yet — click a button above.
     </p>
+    <p v-else class="gb-hint">
+      Best measured fully reactive result. POJO is the non-reactive floor.
+      <BenchmarkWinner placement="after" />
+    </p>
 
     <!-- Comparison strip: creation time + measured heap, side by side -->
     <div v-if="hasAny" class="gb-compare">
@@ -156,14 +161,18 @@ const pojoCls = (cell: { raw: string }) =>
         </div>
         <div class="gb-compare-num">
           {{ controllers[a.key].creationMs.value.toFixed(1)
-          }}<span class="gb-unit">ms</span>
+          }}<span class="gb-unit">ms</span
+          ><BenchmarkWinner v-if="a.key === 'ivue'" placement="after" />
         </div>
         <div class="gb-compare-sub">
           to create
           {{ controllers[a.key].modelCells.value.toLocaleString() }} cells
         </div>
         <div class="gb-compare-heap">
-          <span class="gb-heap-num">{{ heapFor(a.key) }}</span>
+          <span class="gb-heap-num"
+            >{{ heapFor(a.key)
+            }}<BenchmarkWinner v-if="a.key === 'ivue'" placement="after"
+          /></span>
           <span class="gb-heap-label">measured heap &middot; RESULTS.md</span>
         </div>
       </div>

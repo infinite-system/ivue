@@ -840,6 +840,17 @@
   margin: 8px 0 8px;
 }
 
+/* ---------- Benchmark winner key ---------- */
+.VPDoc .benchmark-legend {
+  display: flex;
+  align-items: center;
+  margin: 12px 0 14px;
+  color: var(--vp-c-text-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
 /* ---------- Community page ---------- */
 .VPDoc .cm-channels {
   display: grid;

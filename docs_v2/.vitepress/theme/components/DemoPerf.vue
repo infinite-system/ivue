@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import DemoBox from './DemoBox.vue';
+import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import {
   benchIvue,
   benchReactive,
@@ -40,20 +41,44 @@ const ratio = (v: number | null) =>
     <div class="d-vals">
       <div>
         <div class="d-k">ivue &middot; new Class()</div>
-        <div class="d-n grad">{{ fmt(ivueMs) }}</div>
+        <div class="d-n grad">
+          {{ fmt(ivueMs)
+          }}<BenchmarkWinner v-if="ivueMs !== null" placement="after" />
+        </div>
       </div>
       <div>
-        <div class="d-k">reactive(new X()) <span v-if="reactiveMs !== null">&middot; {{ ratio(reactiveMs) }}</span></div>
+        <div class="d-k">
+          reactive(new X())
+          <span v-if="reactiveMs !== null"
+            >&middot; {{ ratio(reactiveMs) }}</span
+          >
+        </div>
         <div class="d-n">{{ fmt(reactiveMs) }}</div>
       </div>
       <div>
-        <div class="d-k">composable factory <span v-if="composableMs !== null">&middot; {{ ratio(composableMs) }}</span></div>
+        <div class="d-k">
+          composable factory
+          <span v-if="composableMs !== null"
+            >&middot; {{ ratio(composableMs) }}</span
+          >
+        </div>
         <div class="d-n">{{ fmt(composableMs) }}</div>
       </div>
     </div>
     <div class="d-row">
-      <button class="d-btn primary" type="button" :disabled="running" @click="run">
-        {{ running ? 'Running…' : ivueMs === null ? 'Run the benchmark' : 'Run again' }}
+      <button
+        class="d-btn primary"
+        type="button"
+        :disabled="running"
+        @click="run"
+      >
+        {{
+          running
+            ? 'Running…'
+            : ivueMs === null
+              ? 'Run the benchmark'
+              : 'Run again'
+        }}
       </button>
     </div>
   </DemoBox>

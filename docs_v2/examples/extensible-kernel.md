@@ -1,6 +1,6 @@
 ---
 title: 'Example: Extensible Kernel'
-description: 'Construction binds to a namespaced class key. Priority Plugin and Analytics Plugin extend notifications through a small registry; sealing preserves super chains, reactive getters, and child inheritance with zero lookup at the call site.'
+description: 'Construction binds to a namespaced class key. Sticky Plugin and Activity Plugin extend notifications through a small registry; sealing preserves super chains, reactive getters, and child inheritance with zero lookup at the call site.'
 aside: false
 pageClass: benchmarks-wide examples-page
 ---
@@ -11,9 +11,9 @@ import ExampleExtensibleKernel from '../.vitepress/theme/components/examples/Exa
 
 # Extensible Kernel
 
-This is a working toast application. Its Priority Plugin is enabled on load,
-so the first two toasts stay visible. Turn Priority Plugin off to restore their
-eight-second auto-dismiss countdown. Turn Analytics Plugin on to send each new
+This is a working toast application. Its Sticky Plugin is enabled on load,
+so the first toast stays visible. Turn Sticky Plugin off to restore its
+eight-second auto-dismiss countdown. Turn Activity Plugin on to send each new
 toast's `SHOW` event into the event stream.
 
 <ClientOnly>
@@ -32,7 +32,7 @@ relationships it needs.
 The central idea is that **construction binds to a namespaced class key**.
 The key follows the form `namespace/Class`, where the namespace owns the
 class. The core application therefore defines `core/Notification`. An
-analytics plugin from another vendor still registers against
+activity plugin from another vendor still registers against
 `core/Notification` because it extends the core application's class.
 
 At boot, the kernel *seals* the graph — it composes every plugin and
@@ -42,37 +42,27 @@ inheritance intact. Construction reads a live namespace binding, so the call
 site performs no registry lookup. Plugin dispatch adds no steady-state layer:
 after boot, method calls follow the native prototype chain.
 
-Priority Plugin replaces the ordinary toast lifetime: each toast gets a gold
-accent and remains visible until the user dismisses it. Analytics Plugin
+Sticky Plugin replaces the ordinary toast lifetime: each toast gets a gold
+accent and remains visible until the user dismisses it. Activity Plugin
 records every `show()` call in a separate event stream without changing the toast UI.
 `ErrorNotification` inherits both plugins even though its class is declared
 before they register.
 
-## Why this is smaller than Angular-style DI
+## Why this is much smaller and much faster than Angular-style DI
 
-A general dependency-injection container maintains a parallel runtime graph:
-tokens select providers, scopes select lifetimes, factories mediate
-construction, and the container resolves dependencies when an object is
-requested. That machinery is necessary when the container owns the
-relationships.
+Angular-style DI builds a second runtime graph: tokens choose providers,
+scopes choose lifetimes, factories mediate construction, and the container
+resolves that graph for every object it creates.
 
-ivue keeps those relationships in JavaScript. Inheritance already lives in
-the prototype graph. Cross-module references live in getter and method bodies,
-so they resolve on first access after module initialization. The namespace's
-`Class` member is a live construction binding. The kernel therefore has one
-narrow job: decide which composed class that binding names after plugins
-register.
+ivue uses the graph JavaScript already has. Modules hold references,
+prototypes hold inheritance, and a namespace's live `Class` binding selects
+the implementation. The kernel seals that graph once at boot. Afterward,
+construction is a property read plus native `new`, and method calls are native
+prototype dispatch. No container participates in either path.
 
-Sealing performs that work once at boot. The cost scales with class definitions
-and plugin registrations, then amortizes across every instance. Construction
-afterward is a property read and native `new`; method dispatch is native
-prototype dispatch. The kernel does not traverse a provider graph in either
-path.
-
-This reduction has a boundary. Applications that need contextual providers,
-request scopes, or runtime service selection still need machinery for those
-requirements. The extensible kernel removes runtime mediation only where the
-module and prototype graphs already express the relationship.
+That is the reduction: **compose once, then disappear.** Contextual providers,
+request scopes, and runtime service selection still require DI machinery. When
+the module and prototype graphs already express the relationship, they do not.
 
 ## What a plugin toggle does
 
@@ -113,9 +103,9 @@ notification class, it targets `core/Notification`.
 
 ## Plugins add concrete behavior
 
-Each plugin extends the class it receives. Priority Plugin refines plain
+Each plugin extends the class it receives. Sticky Plugin refines plain
 getters to pin and restyle notifications, then overrides `tick()` to disable
-auto-dismiss. Analytics Plugin overrides `show()`, delegates through
+auto-dismiss. Activity Plugin overrides `show()`, delegates through
 `super`, and sends the event to the example's reactive event stream. Sealing
 stacks both classes in registration order.
 
@@ -132,8 +122,8 @@ JavaScript's dynamic `super` lookup then follows the sealed chain.
 - **`new Notification.Class()` performs no lookup.** It reads the live
   namespace binding. After boot, construction follows the same class every
   time.
-- **Each plugin has one visible responsibility.** Priority Plugin changes the
-  accent and replaces auto-dismiss with a pinned lifetime. Analytics Plugin
+- **Each plugin has one visible responsibility.** Sticky Plugin changes the
+  accent and replaces auto-dismiss with a pinned lifetime. Activity Plugin
   records each `show()` call in the event stream.
 - **The child follows the base class.** `ErrorNotification` receives both
   plugins through the re-parented inheritance chain.

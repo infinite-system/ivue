@@ -36,10 +36,12 @@ call time, per instance. Measured end-to-end on a virtualized grid
 (composable-per-cell vs. an ivue class vs. a non-reactive POJO control;
 full protocol and machine notes in [`demo/grid/RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/demo/grid/RESULTS.md)):
 
+<p class="benchmark-legend">Best measured result among fully reactive implementations. Non-reactive controls mark the floor. <BenchmarkWinner placement="after" /></p>
+
 | model built from                  | 100k cells | 1M cells    | marginal cost   |
 | --------------------------------- | ---------- | ----------- | --------------- |
 | composable, eager `computed()`    | 77.3 MB    | 757.7 MB    | 756 B/cell      |
-| **ivue class**                    | **5.7 MB** | **41.7 MB** | **40.0 B/cell** |
+| **ivue class**                    | <strong>5.7 MB <BenchmarkWinner placement="after" /></strong> | <strong>41.7 MB <BenchmarkWinner placement="after" /></strong> | <strong>40.0 B/cell <BenchmarkWinner placement="after" /></strong> |
 | plain POJO (non-reactive control) | 4.5 MB     | 40.5 MB     | 40.0 B/cell     |
 
 This is a lean cell (one input Ref, a handful of derived values, one hot
@@ -110,7 +112,7 @@ raw numbers in [`demo/grid/RESULTS.md`](https://github.com/infinite-system/ivue/
 |                                   | marginal heap per added cell | at 1M cells |
 | --------------------------------- | ---------------------------- | ----------- |
 | composable, eager                 | 756 B/cell                   | 757.7 MB    |
-| **ivue**                          | **40.0 B/cell**              | **41.7 MB** |
+| **ivue**                          | <strong>40.0 B/cell <BenchmarkWinner placement="after" /></strong> | <strong>41.7 MB <BenchmarkWinner placement="after" /></strong> |
 | plain POJO (non-reactive control) | 40.0 B/cell                  | 40.5 MB     |
 
 **ivue's marginal cost matches the non-reactive POJO to the byte.** An
@@ -209,7 +211,7 @@ script in
 |                                            | bytes/cell | creation, 100k cells |
 | ------------------------------------------ | ---------: | -------------------: |
 | Angular, 4 eager `computed()` fields       |      2,152 |             72–79 ms |
-| **ivue**, 1 `computed()` + 3 plain getters |     **24** |       **1.0–1.1 ms** |
+| **ivue**, 1 `computed()` + 3 plain getters | <strong><BenchmarkWinner />24</strong> | <strong><BenchmarkWinner />1.0–1.1 ms</strong> |
 | plain POJO (fields actually assigned)      |         64 |           1.3–2.1 ms |
 
 **~90× less memory, ~55–70× faster creation.** Two things explain it.
@@ -281,7 +283,7 @@ same
 |                                            | bytes/cell | creation, 100k cells |
 | ------------------------------------------ | ---------: | -------------------: |
 | Vanilla, manual dirty-flag (no library)    |         96 |           1.9–2.8 ms |
-| **ivue**, 1 `computed()` + 3 plain getters |     **24** |       **1.0–1.1 ms** |
+| **ivue**, 1 `computed()` + 3 plain getters | <strong><BenchmarkWinner />24</strong> | <strong><BenchmarkWinner />1.0–1.1 ms</strong> |
 | plain POJO (fields actually assigned)      |         64 |           1.3–2.1 ms |
 
 ```js
@@ -355,7 +357,7 @@ arguably ivue's closest spiritual ancestor. Its recommended default,
 |                                            | bytes/cell | creation, 100k cells |
 | ------------------------------------------ | ---------: | -------------------: |
 | MobX, `makeAutoObservable`                 |      3,706 |           249–297 ms |
-| **ivue**, 1 `computed()` + 3 plain getters |     **24** |       **0.8–1.1 ms** |
+| **ivue**, 1 `computed()` + 3 plain getters | <strong><BenchmarkWinner />24</strong> | <strong><BenchmarkWinner />0.8–1.1 ms</strong> |
 | plain POJO (fields actually assigned)      |         64 |           1.2–1.7 ms |
 
 **~154× less memory than MobX — heavier than Angular, and by a wide
@@ -426,7 +428,7 @@ any mainstream framework currently ships. Same protocol, same machine
 |                                            | bytes/cell | creation, 100k cells |
 | ------------------------------------------ | ---------: | -------------------: |
 | Svelte 5, `$state`/`$derived`              |        880 |             20–22 ms |
-| **ivue**, 1 `computed()` + 3 plain getters |     **24** |       **0.8–1.1 ms** |
+| **ivue**, 1 `computed()` + 3 plain getters | <strong><BenchmarkWinner />24</strong> | <strong><BenchmarkWinner />0.8–1.1 ms</strong> |
 | plain POJO (fields actually assigned)      |         64 |           1.2–1.7 ms |
 
 **~37× less memory, ~20–27× faster creation.** Lighter than Angular or
@@ -497,7 +499,7 @@ way (full protocol in
 |                                            | bytes/cell | creation, 100k cells |
 | ------------------------------------------ | ---------: | -------------------: |
 | Solid.js, `createMemo` + 3 plain functions |        985 |             16–23 ms |
-| **ivue**, 1 `computed()` + 3 plain getters |     **24** |       **0.7–1.1 ms** |
+| **ivue**, 1 `computed()` + 3 plain getters | <strong><BenchmarkWinner />24</strong> | <strong><BenchmarkWinner />0.7–1.1 ms</strong> |
 | plain POJO (fields actually assigned)      |         64 |           1.3–2.5 ms |
 
 **~41× less memory than Solid** — and this is the one genuinely

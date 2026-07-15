@@ -42,6 +42,8 @@ Click a button — it builds all three models at once, from the same data, so
 every number below is directly comparable. Nothing runs until you click:
 this is a live embed of the shipped engine, not a video.
 
+<p class="benchmark-legend">Best measured result among fully reactive implementations. The POJO control marks the non-reactive floor. <BenchmarkWinner placement="after" /></p>
+
 <GridBenchmark />
 
 ## The measured numbers
@@ -58,7 +60,7 @@ load per arm. Full protocol, caveats and raw numbers in
 | Arm        | Model heap (virtualized) | Bytes/cell | Model heap (all materialized) | Bytes/cell (mat.) |    Creation |
 | ---------- | -----------------------: | ---------: | ----------------------------: | ----------------: | ----------: |
 | Composable |                  77.3 MB |        773 |                      109.8 MB |             1,098 |     75.1 ms |
-| **ivue**   |               **5.7 MB** |     **57** |                   **40.3 MB** |           **403** | **11.4 ms** |
+| **ivue**   | <strong><BenchmarkWinner />5.7 MB</strong> | <strong><BenchmarkWinner />57</strong> | <strong><BenchmarkWinner />40.3 MB</strong> | <strong><BenchmarkWinner />403</strong> | <strong><BenchmarkWinner />11.4 ms</strong> |
 | POJO floor |                   4.5 MB |         45 |                             — |                 — |     10.3 ms |
 
 ### 1,000,000 cells (40 cols × 25,000 rows)
@@ -66,7 +68,7 @@ load per arm. Full protocol, caveats and raw numbers in
 | Arm        | Model heap (virtualized) | Bytes/cell | Model heap (all materialized) | Bytes/cell (mat.) |    Creation |
 | ---------- | -----------------------: | ---------: | ----------------------------: | ----------------: | ----------: |
 | Composable |                 757.7 MB |        758 |                    1,083.7 MB |             1,084 |    406.8 ms |
-| **ivue**   |              **41.7 MB** |     **42** |                  **388.3 MB** |           **388** | **57.2 ms** |
+| **ivue**   | <strong><BenchmarkWinner />41.7 MB</strong> | <strong><BenchmarkWinner />42</strong> | <strong><BenchmarkWinner />388.3 MB</strong> | <strong><BenchmarkWinner />388</strong> | <strong><BenchmarkWinner />57.2 ms</strong> |
 | POJO floor |                  40.5 MB |         41 |                             — |                 — |     53.3 ms |
 
 ### The sharpest number: marginal cost per added cell
@@ -76,7 +78,7 @@ the per-cell cost. The result:
 
 | Metric                           |     Composable |            ivue |            POJO |
 | -------------------------------- | -------------: | --------------: | --------------: |
-| **Marginal heap per added cell** | **756 B/cell** | **40.0 B/cell** | **40.0 B/cell** |
+| **Marginal heap per added cell** | **756 B/cell** | <strong><BenchmarkWinner />40.0 B/cell</strong> | **40.0 B/cell** |
 
 **ivue's marginal cost matches the non-reactive POJO floor to the byte.** An
 unrendered ivue cell costs exactly what a plain object would have cost —
@@ -218,7 +220,7 @@ Every rung measured, same machine family, same protocol:
 | composable (idiomatic Vue)           |       ~758 | closures + eager ref/computeds |
 | ivue instance grid (formula)         |        ~67 | plain object + lazy overlay  |
 | plain POJO (no reactivity at all)    |        ~40 | `{ row, col, raw }`          |
-| **ivue flyweight columnar**          |    **4.7** | 1 B kind + 8 B Float64, shared |
+| **ivue flyweight columnar**          | <strong><BenchmarkWinner />4.7</strong> | 1 B kind + 8 B Float64, shared |
 
 The flyweight sits **8.5× below the "theoretical floor"** — because the
 floor was never plain objects; it was ground truth. A cell at rest is one

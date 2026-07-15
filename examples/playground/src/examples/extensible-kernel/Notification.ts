@@ -8,7 +8,7 @@ import { kernel } from './kernel';
 export class $Notification {
   constructor(
     public message: string,
-    public reportAnalytics: (event: string) => void,
+    public reportActivity: (event: string) => void,
   ) {}
 
   get isDismissed() {

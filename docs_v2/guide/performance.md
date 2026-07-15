@@ -20,9 +20,11 @@ the JIT can optimize away — as the median of 7 runs (Node 22, Vue 3.5). All
 four columns share the same member shape: two state members and one derived
 value.
 
+<p class="benchmark-legend">Best measured result among fully reactive implementations. Non-reactive controls mark the floor. <BenchmarkWinner placement="after" /></p>
+
 | creating 1,000,000 instances | time        | ivue is                                   |
 | ---------------------------- | ----------- | ----------------------------------------- |
-| **ivue `new Class()`**       | **21.7 ms** | <span class="ix-base">the baseline</span> |
+| **ivue `new Class()`**       | <strong>21.7 ms <BenchmarkWinner placement="after" /></strong> | <span class="ix-base">the baseline</span> |
 | native composable factory    | 139 ms      | **6.4× faster**                           |
 | native `reactive(new X())`   | 470 ms      | **22× faster**                            |
 | v1 `ivue(Class)`             | 2,861 ms    | **132× faster**                           |
@@ -59,7 +61,7 @@ hides dependency storage.
 
 | authoring style, 100,000 live instances  | heap per instance | 100k total   | ivue is                                   |
 | ---------------------------------------- | ----------------- | ------------ | ----------------------------------------- |
-| **ivue class — 30 plain getters**        | **3.7 KB**        | **364 MB**   | <span class="ix-base">the baseline</span> |
+| **ivue class — 30 plain getters**        | <strong>3.7 KB <BenchmarkWinner placement="after" /></strong> | <strong>364 MB <BenchmarkWinner placement="after" /></strong> | <span class="ix-base">the baseline</span> |
 | composable — 30 plain closures           | 8.0 KB            | 781 MB       | **2.1× lighter**                           |
 | `reactive(new X())` — fields + getters   | 10.4 KB           | 1.02 GB      | **2.8× lighter**                           |
 | composable — 30 eager `computed()`       | 19.7 KB           | 1.93 GB      | **5.3× lighter**                           |
@@ -121,9 +123,9 @@ shown for comparison; both wrappers were retired
 
 | access path          | **ivue raw instance (the standard)** | shallow unwrap proxy | `reactive()` |
 | -------------------- | ------------------------------------ | -------------------- | ------------ |
-| plain derived getter | **23.4 ns**                          | 68.2 ns              | 125.1 ns     |
-| ref-getter access    | **9.6 ns**                           | 47.0 ns              | 72.4 ns      |
-| method access        | **3.8 ns**                           | 42.3 ns              | 68.5 ns      |
+| plain derived getter | <strong>23.4 ns <BenchmarkWinner placement="after" /></strong> | 68.2 ns              | 125.1 ns     |
+| ref-getter access    | <strong>9.6 ns <BenchmarkWinner placement="after" /></strong> | 47.0 ns              | 72.4 ns      |
+| method access        | <strong>3.8 ns <BenchmarkWinner placement="after" /></strong> | 42.3 ns              | 68.5 ns      |
 
 The first column includes ivue's own getter work — a `toRaw` call and cache
 lookup — but no proxy sits between the caller and the object. A shallow
@@ -139,8 +141,8 @@ region, one million iterations, median of 9 runs (Node 22, V8):
 
 | per operation                     | dotted ivue | direct handle |
 | --------------------------------- | ----------- | ------------- |
-| ref read (`instance.width.value`) | **~10 ns**  | ~1.3 ns       |
-| method call                       | **~4 ns**   | ~1.2 ns       |
+| ref read (`instance.width.value`) | **~10 ns**  | <strong>~1.3 ns <BenchmarkWinner placement="after" /></strong> |
+| method call                       | **~4 ns**   | <strong>~1.2 ns <BenchmarkWinner placement="after" /></strong> |
 
 This comparison isolates the remaining getter/property hop; it does not make
 ivue slower than proxy-based reactive objects. Ordinary application reads pay
@@ -196,6 +198,37 @@ buys nothing for those; keep them dotted (dotted access is what marks them
 as actions). The one template case that earns the hoist is a method called
 per row of a large `v-for` — there, destructuring the method is the same
 measured win.
+
+## Designed for native JIT shapes
+
+A just-in-time compiler (JIT) turns repeatedly executed JavaScript into
+specialized machine code while the application runs. ivue does not require a
+JIT for correctness. It gives one unusually favorable input: stable,
+ordinary JavaScript structures.
+
+After first access, an ivue model consists of:
+
+- plain instances with repeated object shapes;
+- stable prototypes and native method dispatch;
+- symbol-keyed own properties holding lazy state;
+- identity-stable refs and bound functions;
+- plain getters for uncached derivation;
+- no per-instance proxy handler or steady-state plugin registry dispatch.
+
+The prototype transformation happens once. Repeated execution then sees the
+same getters, cache slots, functions, and object shapes, giving a modern
+JavaScript engine consistent structures it can specialize. Hoisting a ref or
+method goes one step further: the hot loop receives the stable handle directly
+and removes the property lookup from its repeated work.
+
+This is alignment, not a performance promise. Whether an engine inlines a
+particular call depends on the engine, version, warm-up, call-site shapes, and
+surrounding code. The measured numbers on this page belong to their stated
+Node and V8 environment; the architectural guarantee is that ivue leaves
+ordinary JavaScript behind for the engine to optimize.
+
+> ivue remains correct without a JIT. A JIT only specializes the stable native
+> structures ivue leaves behind.
 
 ## The mental model
 

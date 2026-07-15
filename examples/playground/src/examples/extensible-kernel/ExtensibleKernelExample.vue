@@ -5,7 +5,7 @@ const example = new ExtensibleKernelExample.Class();
 
 const {
   // state refs
-  analyticsLog,
+  activityLog,
   graph,
 } = example;
 </script>
@@ -58,14 +58,14 @@ const {
                 <div class="kx-toast__title-row">
                   <strong>{{ entry.notification.kind }}</strong>
                   <span v-if="entry.notification.isPinned" class="kx-pin">
-                    Priority Plugin · pinned
+                    Sticky Plugin · pinned
                   </span>
                 </div>
                 <p>{{ entry.notification.message }}</p>
                 <div class="kx-toast__lifetime">
                   <span>{{ entry.notification.lifetimeLabel }}</span>
-                  <span v-if="example.isAnalyticsActive" class="kx-tracked">
-                    Analytics Plugin recorded SHOW
+                  <span v-if="example.isActivityActive" class="kx-tracked">
+                    Activity Plugin recorded SHOW
                   </span>
                 </div>
                 <div
@@ -129,26 +129,26 @@ const {
       </div>
     </section>
 
-    <section class="kx-output" aria-labelledby="analytics-heading">
+    <section class="kx-output" aria-labelledby="activity-heading">
       <div class="kx-output__head">
         <div>
-          <span class="kx-output__label">Analytics Plugin output</span>
-          <h3 id="analytics-heading">SHOW event stream</h3>
+          <span class="kx-output__label">Activity Plugin output</span>
+          <h3 id="activity-heading">SHOW event stream</h3>
         </div>
         <span
           class="kx-output__state"
-          :class="{ 'kx-output__state--active': example.isAnalyticsActive }"
+          :class="{ 'kx-output__state--active': example.isActivityActive }"
         >
-          Analytics Plugin {{ example.pluginState('analytics') }}
+          Activity Plugin {{ example.pluginState('activity') }}
         </span>
       </div>
-      <ol v-if="example.hasAnalyticsEvents" class="kx-events mono">
-        <li v-for="(event, eventIndex) in analyticsLog" :key="eventIndex">
+      <ol v-if="example.hasActivityEvents" class="kx-events mono">
+        <li v-for="(event, eventIndex) in activityLog" :key="eventIndex">
           {{ event }}
         </li>
       </ol>
       <p v-else class="kx-output__empty mono">
-        No events. Enable Analytics Plugin, then show a toast.
+        No events. Enable Activity Plugin, then show a toast.
       </p>
     </section>
 
@@ -333,7 +333,7 @@ const {
 }
 .kx-app-canvas {
   position: relative;
-  min-height: 330px;
+  min-height: 360px;
   padding: 20px;
   background:
     radial-gradient(circle at 30% 15%, rgba(99, 102, 241, 0.09), transparent 35%),

@@ -21,6 +21,7 @@ import GridBenchmark from './components/grid/GridBenchmark.vue';
 import FormulaGrid from './components/grid/FormulaGrid.vue';
 import FlyweightGrid20M from './components/grid/FlyweightGrid20M.vue';
 import CreationBench from './components/CreationBench.vue';
+import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import { registerDocsApp } from './quasar-docs-loader';
 import './custom.css';
 
@@ -45,5 +46,6 @@ export default {
     app.component('FormulaGrid', FormulaGrid);
     app.component('FlyweightGrid20M', FlyweightGrid20M);
     app.component('CreationBench', CreationBench);
+    app.component('BenchmarkWinner', BenchmarkWinner);
   },
 } satisfies Theme;

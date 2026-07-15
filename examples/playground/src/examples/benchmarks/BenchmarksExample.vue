@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { BenchmarksExample, CALL_COUNT } from './BenchmarksExample';
 import { INSTANCE_COUNT } from './creationBench';
+import BenchmarkWinner from './BenchmarkWinner.vue';
 
 const bench = new BenchmarksExample.Class();
 
@@ -27,12 +28,17 @@ const {
     <div class="vals">
       <div>
         <div class="k">ivue · new Class()</div>
-        <div class="n grad">{{ bench.format(ivueMs) }}</div>
+        <div class="n grad">
+          {{ bench.format(ivueMs)
+          }}<BenchmarkWinner v-if="ivueMs !== null" placement="after" />
+        </div>
       </div>
       <div>
         <div class="k">
           reactive(new X())
-          <span v-if="reactiveMs !== null">· {{ bench.ratio(reactiveMs) }}</span>
+          <span v-if="reactiveMs !== null"
+            >· {{ bench.ratio(reactiveMs) }}</span
+          >
         </div>
         <div class="n">{{ bench.format(reactiveMs) }}</div>
       </div>
@@ -64,10 +70,10 @@ const {
     </div>
 
     <p class="note" style="margin-top: 28px">
-      InteractiveBox is a three-level Reactive() hierarchy hosting a
-      composable. Creation stays plain-object cheap because nothing
-      materializes until first access; the method benchmark hammers a
-      prototype-bound method with reactive reads inside.
+      InteractiveBox is a three-level Reactive() hierarchy hosting a composable.
+      Creation stays plain-object cheap because nothing materializes until first
+      access; the method benchmark hammers a prototype-bound method with
+      reactive reads inside.
     </p>
     <div class="vals">
       <div>

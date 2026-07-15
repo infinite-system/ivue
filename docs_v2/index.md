@@ -198,6 +198,8 @@ counter.double       // 2, re-derived on read
 <a href="/guide/benchmarks">Interactive Benchmarks →</a> — five live benchmarks, running in your browser.
 </p>
 
+<p class="benchmark-legend">Best measured result among fully reactive implementations. Non-reactive controls mark the floor. <BenchmarkWinner placement="after" /></p>
+
 <div class="ix-cols">
 
 <div>
@@ -206,7 +208,7 @@ counter.double       // 2, re-derived on read
 
 | | time | ivue is |
 | --- | --- | --- |
-| **ivue `new Class()`** | **21.7 ms** | <span class="ix-base">the baseline</span> |
+| **ivue `new Class()`** | <strong>21.7 ms <BenchmarkWinner placement="after" /></strong> | <span class="ix-base">the baseline</span> |
 | composable factory | 139 ms | **6.4× faster** |
 | native `reactive()` | 470 ms | **22× faster** |
 | eager class engine (unreleased v1) | 2,861 ms | **132× faster** |
@@ -221,7 +223,7 @@ counter.double       // 2, re-derived on read
 
 | | per live instance | 100k total |
 | --- | --- | --- |
-| **ivue class, 30 getters** | **3.7 KB** | <span class="ix-base">364 MB</span> |
+| **ivue class, 30 getters** | <strong>3.7 KB <BenchmarkWinner placement="after" /></strong> | <span class="ix-base">364 MB <BenchmarkWinner placement="after" /></span> |
 | composable, 30 closures | 8.0 KB | 781 MB |
 | `reactive()`, fields + getters | 10.4 KB | 1.02 GB |
 | composable, 30 computeds | 19.7 KB | 1.93 GB |
@@ -240,9 +242,9 @@ alternatives:
 
 | access path | **ivue raw** | shallow proxy | `reactive()` |
 | --- | ---: | ---: | ---: |
-| plain derived getter | **23.4 ns** | 68.2 ns | 125.1 ns |
-| ref-getter access | **9.6 ns** | 47.0 ns | 72.4 ns |
-| method access | **3.8 ns** | 42.3 ns | 68.5 ns |
+| plain derived getter | <strong><BenchmarkWinner />23.4 ns</strong> | 68.2 ns | 125.1 ns |
+| ref-getter access | <strong><BenchmarkWinner />9.6 ns</strong> | 47.0 ns | 72.4 ns |
+| method access | <strong><BenchmarkWinner />3.8 ns</strong> | 42.3 ns | 68.5 ns |
 
 <p class="foot">A direct closure ref remains faster than a dotted property read. Stable ivue refs and methods hoist once outside a hot loop, reducing repeated access to the same direct-handle path.</p>
 
@@ -256,7 +258,7 @@ live, formula-capable reactive state — built four ways, then weighed.
 | composable (idiomatic Vue) | ~758 | closures + eager ref/computeds |
 | ivue instance grid | ~67 | plain object + lazy overlay |
 | plain JavaScript object, no reactivity | ~40 | `{ row, col, raw }` |
-| **ivue flyweight columnar** | **4.7** | 1 B kind + 8 B Float64, shared |
+| **ivue flyweight columnar** | <strong>4.7 <BenchmarkWinner placement="after" /></strong> | 1 B kind + 8 B Float64, shared |
 
 <p class="foot">Measured end-to-end on live grids up to 20,000,000 cells — fully reactive at 8.5× below the plain-object floor. The receipts run in your browser: <a href="/guide/benchmarks">Interactive Benchmarks →</a></p>
 

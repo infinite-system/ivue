@@ -37,12 +37,14 @@ bit-identical across runs (full receipts in the sketch's `RESULTS.md`):
 
 The per-cell cost ladder, all arms measured with the same protocol:
 
+<p class="benchmark-legend">Best measured result among fully reactive implementations. The POJO control marks the non-reactive floor. <BenchmarkWinner placement="after" /></p>
+
 | Arm                              | bytes/cell | what a cell IS at rest         |
 | -------------------------------- | ---------: | ------------------------------ |
 | Composable (idiomatic Vue)       |       ~758 | closures + eager ref/computeds |
 | ivue instance grid               |        ~67 | object + lazy overlay          |
 | Plain POJO floor (no reactivity) |        ~40 | `{ row, col, raw }`            |
-| **Flyweight columnar**           |    **4.7** | 1 B kind + 8 B number ÷ shared |
+| **Flyweight columnar**           | <strong><BenchmarkWinner />4.7</strong> | 1 B kind + 8 B number ÷ shared |
 
 **8.5× below the "theoretical floor"** — because the floor was never plain
 objects; it was ground truth. And still fully reactive, formula-capable, and

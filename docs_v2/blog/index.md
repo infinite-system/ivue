@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/the-object-should-tell-the-truth">
+    <img class="thumb" src="/blog/the-object-should-tell-the-truth.png" alt="The object should tell the truth" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>The object should tell the truth</h2>
+      <p class="excerpt">State is explicit. Caching is intentional. Everything else stays pure. An ivue class makes the runtime semantics of an object visible in its source.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/win-by-reduction">
     <img class="thumb" src="/blog/win-by-reduction.png" alt="Win by reduction. Win by construction." width="1200" height="630" loading="lazy" />
     <div class="body">

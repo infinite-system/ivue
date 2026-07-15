@@ -7,15 +7,15 @@ export type NotificationPlugin = (
   Base: typeof $Notification,
 ) => typeof $Notification;
 
-export const analyticsPlugin: NotificationPlugin = (Base) =>
+export const activityPlugin: NotificationPlugin = (Base) =>
   class extends Base {
     show() {
       super.show();
-      this.reportAnalytics(`SHOW · ${this.kind} · ${this.message}`);
+      this.reportActivity(`SHOW · ${this.kind} · ${this.message}`);
     }
   };
 
-export const priorityPlugin: NotificationPlugin = (Base) =>
+export const stickyPlugin: NotificationPlugin = (Base) =>
   class extends Base {
     get accent() {
       return '#f59e0b';
@@ -28,6 +28,6 @@ export const priorityPlugin: NotificationPlugin = (Base) =>
     }
 
     tick() {
-      // Priority Plugin replaces auto-dismiss: the countdown intentionally stops.
+      // Sticky Plugin replaces auto-dismiss: the countdown intentionally stops.
     }
   };
