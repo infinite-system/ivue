@@ -31,6 +31,23 @@ export default defineConfig({
   lastUpdated: true,
 
   head: [
+    [
+      'script',
+      {},
+      `(() => {
+        const reloadKey = 'ivue:deployment-reload';
+
+        window.addEventListener('vite:preloadError', (event) => {
+          if (sessionStorage.getItem(reloadKey)) return;
+
+          event.preventDefault();
+          sessionStorage.setItem(reloadKey, Date.now().toString());
+          window.location.reload();
+        });
+
+        window.setTimeout(() => sessionStorage.removeItem(reloadKey), 10_000);
+      })();`,
+    ],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/ivue/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#6366f1' }],
     ['meta', { property: 'og:type', content: 'website' }],
