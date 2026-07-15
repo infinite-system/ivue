@@ -306,6 +306,67 @@ describe('Reactive HMR graft', () => {
     expect(entry.remountNeeded).toBe(true);
   });
 
+  it('remounts native #private classes even when their source is unchanged', () => {
+    class $Secret {
+      #value = 7;
+      read() {
+        return this.#value;
+      }
+    }
+    const Secret = Reactive($Secret, 'hmr.test.PrivateBrand');
+    const live = new Secret();
+    expect(live.read()).toBe(7);
+
+    // Same declaration, same initializer, same public method source — but a
+    // fresh evaluation still creates a distinct JavaScript private brand.
+    class $SecretV2 {
+      #value = 7;
+      read() {
+        return this.#value;
+      }
+    }
+    Reactive($SecretV2 as any, 'hmr.test.PrivateBrand');
+    const entry = registryEntry('hmr.test.PrivateBrand');
+    expect(entry.remountNeeded).toBe(true);
+    expect(entry.hasPrivateBrand).toBe(true);
+
+    const hot = { invalidate: vi.fn() };
+    ivueHotUpdate(hot, { Secret: { Class: Secret } });
+    expect(hot.invalidate).toHaveBeenCalledOnce();
+    expect(entry.remountNeeded).toBe(false);
+
+    // The construct trap already points at the donor, so the instance made
+    // by the owner remount carries the donor brand and runs donor methods.
+    const rebuilt = new Secret();
+    expect(rebuilt.read()).toBe(7);
+  });
+
+  it('does not mistake hashes in literals for native private declarations', () => {
+    class $Hashes {
+      pattern = /\\#[a-z/]/gi;
+      label = '#private-looking';
+      heading = `# also private-looking`;
+      version() {
+        return 1;
+      }
+    }
+    Reactive($Hashes, 'hmr.test.HashLiterals');
+    const entry = registryEntry('hmr.test.HashLiterals');
+
+    class $HashesV2 {
+      pattern = /\\#[a-z/]/gi;
+      label = '#private-looking';
+      heading = `# also private-looking`;
+      version() {
+        return 2;
+      }
+    }
+    Reactive($HashesV2 as any, 'hmr.test.HashLiterals');
+
+    expect(entry.hasPrivateBrand).toBe(false);
+    expect(entry.remountNeeded).toBe(false);
+  });
+
   it('signature normalization respects string literals (scanner, not regex)', () => {
     // `//` inside a constructor string is NOT a comment — the tail after it
     // must still count toward the signature.

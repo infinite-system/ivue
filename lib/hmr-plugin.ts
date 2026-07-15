@@ -90,10 +90,10 @@ export default function ivueHmr(options: IvueHmrOptions = {}): Plugin {
       if (code.includes('import.meta.hot')) return;
       if (code.includes('@ivue-no-hmr')) return;
       return {
-        code:
+          code:
           code +
           '\n// injected by ivue-hmr: self-accept so class edits graft onto\n' +
-          '// live instances; constructor-level edits escalate to a component\n' +
+          '// live instances; rebuild-required edits escalate to a component\n' +
           '// remount via ivueHotUpdate (imports are hoisted — EOF is fine).\n' +
           `import { ivueHotUpdate as __ivueHotUpdate } from '${runtime}';\n` +
           'if (import.meta.hot) {\n' +

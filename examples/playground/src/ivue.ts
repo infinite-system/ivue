@@ -44,8 +44,8 @@ const PROCESSED = Symbol.for('ivue.processed'); // Flag to mark a prototype as "
  * separates STATE (ref-getters → per-instance cached refs, own properties)
  * from BEHAVIOR (methods/getters on the prototype) syntactically, a behavior
  * edit can be applied to LIVE instances with all state preserved. Vue must
- * reset component state on any script edit; ivue only needs a remount for
- * constructor-level changes.
+ * reset component state on any script edit; ivue only needs a remount when
+ * instance-bound wiring or a native-private brand must be rebuilt.
  *
  * How it works:
  *  1. `Reactive()` registers each class in a global registry keyed by class
@@ -85,8 +85,12 @@ interface HmrEntry {
   ctorSig: string;
   /** Frozen-cache member signature of `latest` (see hmrFrozenSignature). */
   frozenSig: string;
-  /** Set by a graft whose constructor-level code changed: live instances
-   *  keep v1 wiring, so the module's accept callback should escalate to
+  /** Whether `latest` declares a native #private member. Every fresh class
+   *  declaration creates a new private brand, so its instances cannot keep
+   *  running donor methods after a live graft. */
+  hasPrivateBrand: boolean;
+  /** Set by an update that requires new instances: live instances keep v1
+   *  wiring/brands, so the module's accept callback should escalate to
    *  `hot.invalidate()` → the owning components remount → the construct
    *  trap builds replacements with the latest constructor. Consumed by
    *  ivueHotUpdate(). */
@@ -191,7 +195,7 @@ function hmrNormalize(text: string): string {
  * donors always qualify; the first registration computes it before the
  * prototype is transformed.
  */
-function hmrCtorSignature(klass: any): string {
+function hmrClassShell(klass: any): string {
   let text = String(klass);
   const proto = klass.prototype;
   for (const key of getOwnPropertyNames(proto)) {
@@ -206,7 +210,79 @@ function hmrCtorSignature(klass: any): string {
   // code: donors legitimately carry different names (renames, test donors
   // registered under an explicit hmrId) without their wiring changing.
   if (klass.name) text = text.split(klass.name).join('');
-  return hmrNormalize(text);
+  return text;
+}
+
+function hmrCtorSignature(klass: any): string {
+  return hmrNormalize(hmrClassShell(klass));
+}
+
+/**
+ * Native private members carry a brand unique to EACH evaluation of their
+ * class declaration. A donor method that mentions `#member` therefore throws
+ * on an old instance even when the private declaration's source is unchanged.
+ * Detect the declaration itself at class-body depth; strings, templates,
+ * comments and regex literals may contain `#` without creating a brand.
+ */
+function hmrHasPrivateBrand(klass: any): boolean {
+  const text = hmrClassShell(klass);
+  let braces = 0;
+  let previous = '';
+  let i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    const next = text[i + 1];
+    if (ch === '/' && next === '/') {
+      while (i < text.length && text[i] !== '\n') i++;
+      continue;
+    }
+    if (ch === '/' && next === '*') {
+      i += 2;
+      while (
+        i < text.length &&
+        !(text[i] === '*' && text[i + 1] === '/')
+      )
+        i++;
+      i += 2;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      const quote = ch;
+      i++;
+      while (i < text.length) {
+        const current = text[i++];
+        if (current === '\\') i++;
+        else if (current === quote) break;
+      }
+      previous = 'x';
+      continue;
+    }
+    if (
+      ch === '/' &&
+      (!previous || '=([{,:;!?&|+-*%^~<>'.includes(previous))
+    ) {
+      let inCharacterClass = false;
+      i++;
+      while (i < text.length) {
+        const current = text[i++];
+        if (current === '\\') i++;
+        else if (current === '[') inCharacterClass = true;
+        else if (current === ']') inCharacterClass = false;
+        else if (current === '/' && !inCharacterClass) {
+          while (/[a-z]/i.test(text[i])) i++;
+          break;
+        }
+      }
+      previous = 'x';
+      continue;
+    }
+    if (ch === '{') braces++;
+    else if (ch === '}') braces--;
+    else if (ch === '#' && braces === 1) return true;
+    if (!/\s/.test(ch)) previous = ch;
+    i++;
+  }
+  return false;
 }
 
 /**
@@ -244,14 +320,14 @@ function hmrFrozenSignature(klass: any): string {
  *
  * (the hmr-plugin injects exactly this). After the re-executed module has
  * grafted its classes, this checks whether any of the module's Reactive
- * classes had a CONSTRUCTOR-level change — grafting covers behavior, but
- * live instances keep their v1 constructor wiring (watchers, listeners,
- * field values created at construction). If so, `hot.invalidate()` bubbles
- * the update to the importing component boundaries: Vue remounts JUST those
- * components, and the construct trap builds the replacements with the
- * latest constructor. The page itself never reloads. A bare
- * `hot.accept()` (no callback) still grafts — constructor edits then need a
- * manual remount, exactly Vue-minus semantics.
+ * classes require NEW INSTANCES — grafting covers ordinary behavior, but
+ * live instances keep their v1 constructor wiring and native-private brands.
+ * If so, `hot.invalidate()` bubbles the update to the importing component
+ * boundaries: Vue remounts JUST those components, and the construct trap
+ * builds the replacements with the latest constructor. The page itself never
+ * reloads. A bare
+ * `hot.accept()` (no callback) still grafts — rebuild-required edits then
+ * need a manual remount, exactly Vue-minus semantics.
  */
 export function ivueHotUpdate(hot: any, mod: any): void {
   if (!import.meta.env.DEV || !hot) return;
@@ -281,7 +357,7 @@ export function ivueHotUpdate(hot: any, mod: any): void {
   }
   if (remount && typeof hot.invalidate === fn) {
     console.info(
-      '[ivue] HMR: constructor-level change — remounting owner components (instances rebuilt with the new constructor).',
+      '[ivue] HMR: instance rebuild required — remounting owner components.',
     );
     hot.invalidate();
   }
@@ -480,7 +556,11 @@ function convertToLazyComputed(
  * unsafe — the donor then stays un-HMR'd (reload-needed behavior, never
  * corruption).
  */
-function hmrGraft(entry: HmrEntry, donor: any): boolean {
+function hmrGraft(
+  entry: HmrEntry,
+  donor: any,
+  donorHasPrivateBrand: boolean,
+): boolean {
   const canonical = entry.canonical;
   const cProto = canonical.prototype;
   const dProto = donor.prototype;
@@ -516,6 +596,15 @@ function hmrGraft(entry: HmrEntry, donor: any): boolean {
       return false;
     }
   }
+
+  // A native private brand belongs to one exact class declaration. Even an
+  // unchanged `#member` is a NEW brand when Vite evaluates the donor class,
+  // so donor methods cannot safely run on old instances. Keep the normal
+  // graft (new instances need the donor methods on the canonical prototype),
+  // but synchronously escalate through ivueHotUpdate before the browser can
+  // observe those methods on a live owner.
+  const privateRemount = entry.hasPrivateBrand || donorHasPrivateBrand;
+  if (privateRemount) entry.remountNeeded = true;
 
   const hmrKeys: Map<string, symbol> = ownHmrMap(cProto, HMR_KEYS);
   const slots: Map<string, HmrSlot> | undefined = prototypeHasOwnProperty(
@@ -606,8 +695,11 @@ function hmrGraft(entry: HmrEntry, donor: any): boolean {
   entry.frozenSig = donorFrozenSig;
 
   entry.latest = donor;
+  entry.hasPrivateBrand = donorHasPrivateBrand;
   console.info(
-    `[ivue] HMR: grafted "${canonical.name}" — live instances keep their state and run the new code.`,
+    privateRemount
+      ? `[ivue] HMR: "${canonical.name}" uses native #private — owner remount required.`
+      : `[ivue] HMR: grafted "${canonical.name}" — live instances keep their state and run the new code.`,
   );
   return true;
 }
@@ -628,14 +720,16 @@ export function Reactive<C extends new (...args: any) => any>(
   // letting a second identity loose (see hmrGraft).
   let hmrSig = '';
   let hmrFrozen = '';
+  let hmrPrivate = false;
   if (import.meta.env.DEV && hmrActive()) {
+    hmrPrivate = hmrHasPrivateBrand(targetClass);
     let registryKey = targetClass.name;
     if (hmrId !== undefined) registryKey = hmrId;
     const entry = hmrRegistry().get(registryKey);
     if (
       entry &&
       entry.canonical !== targetClass &&
-      hmrGraft(entry, targetClass)
+      hmrGraft(entry, targetClass, hmrPrivate)
     ) {
       return entry.proxy;
     }
@@ -786,6 +880,7 @@ export function Reactive<C extends new (...args: any) => any>(
       proxy: null,
       ctorSig: hmrSig,
       frozenSig: hmrFrozen,
+      hasPrivateBrand: hmrPrivate,
       remountNeeded: false,
     };
     entry.proxy = new Proxy(targetClass as any, {

@@ -258,7 +258,15 @@ Listed deliberately, so the invariants above aren't over-read:
 1. **Computeds rely on GC, not `stop()`.** Lazy computeds are collected once
    dereferenced (and use lazy subscription in Vue 3.5), so the engine doesn't call
    `effect.stop()` on them — clearing the cache and dropping the instance is enough.
-2. **`.value` ergonomics.** Reactive state is read with `.value` outside a
+2. **Component and model lifetimes differ.** Watchers created synchronously with
+   plain `watch()` inside component setup belong to Vue's component scope and stop
+   on unmount. Component-outliving models use `$watch` / `$watchEffect`, and their
+   owners call `$stopEffects()`.
+3. **Native `#private` fields do not hot-graft.** They work normally outside class
+   HMR, but their JavaScript brand belongs to one class declaration. ivue detects
+   them and remounts the owning components on update; use TypeScript `private` when
+   live behavior grafting with state preservation is required.
+4. **`.value` ergonomics.** Reactive state is read with `.value` outside a
    `reactive()` / template auto-unwrap context — the one ergonomic cost relative to
    a proxy-based model.
 

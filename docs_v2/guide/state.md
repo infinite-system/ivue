@@ -194,6 +194,13 @@ class $Cache {
 }
 ```
 
+Native `#private` fields work in production, tests, and ordinary reloads.
+They do not support ivue's live class grafting because JavaScript brand-checks
+them against the exact class declaration. During class HMR, ivue detects the
+brand and automatically remounts the owning components so their instances are
+rebuilt; the page does not reload. Use TypeScript `private` when edits must graft
+onto live instances with their state intact.
+
 ## Keyed reactivity: the third shape
 
 Ref-getters express **named** state — members you can list when you author

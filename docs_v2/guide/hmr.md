@@ -26,6 +26,7 @@ replacement of a **class under its live instances**.)_
 | an **inlined `computed(...)` body** or a **`$`-singleton** | owning components remount automatically — a graft cannot reach closures already cached on instances |
 | a **ref-getter initializer** (`ref(5)`→`ref(10)`) | live instances _keep their current state_ (that's the point); new instances start at the new value |
 | a **class field** or **constructor**              | only the _owning components_ remount; replacements are built by the new constructor                |
+| a class with native **`#private`** members        | only the _owning components_ remount; each class evaluation creates a new private brand             |
 | a **template** (`.vue`)                           | Vue's own re-render — state intact (unchanged)                                                     |
 
 Compare with vanilla Vue: any script edit — a handler tweak, one changed
@@ -80,7 +81,7 @@ if (import.meta.hot) {
 ```
 
 A bare `import.meta.hot.accept()` also works — behavior edits still hot-swap;
-you only lose the automatic remount for constructor edits.
+you only lose automatic remounts for edits that require rebuilt instances.
 
 ## High-performance dev mode
 
@@ -140,12 +141,12 @@ class granularity:
 4. **New instances always get the newest constructor.** `Reactive()` returns
    a construct-trap proxy (dev only) that builds instances with the latest
    donor's constructor while keeping the canonical prototype.
-5. **Constructor edits escalate honestly.** A graft can't rewire a living
-   instance's constructor work (watchers, listeners, field values), so the
-   graft diffs a constructor-level signature; on change, `ivueHotUpdate`
-   invalidates the module and your framework remounts _just the owning
-   components_ — which rebuild through the trap with the new constructor.
-   The page itself never reloads.
+5. **Instance-bound edits escalate honestly.** A graft can't rewire a living
+   instance's constructor work (watchers, listeners, field values), and a
+   freshly evaluated native `#private` member carries a new JavaScript brand.
+   The engine detects both cases; `ivueHotUpdate` invalidates the module and
+   your framework remounts _just the owning components_, which rebuild through
+   the trap with the new constructor. The page itself never reloads.
 
 Unsafe grafts refuse loudly and degrade to reload-needed, never corruption:
 inheritance chains aren't grafted, and two unrelated same-named classes are
@@ -181,8 +182,9 @@ classic contract untouched: same class in, same class out.
 - **Changing a member's kind** (method ↔ getter) re-keys its per-instance
   cache and remounts the owners — a cached bound method is not a ref, and
   vice versa.
-- **Native `#private` fields** are brand-checked per class declaration and
-  don't mix with grafting — use TypeScript `private` (the ivue convention).
+- **Native `#private` fields** are brand-checked per class declaration. ivue
+  detects their presence and remounts the owners on every class update; use
+  TypeScript `private` when the update must preserve live instance state.
 - **Inheritance chains** currently escalate instead of grafting.
 - **Dev-mode instantiation costs ~11×** (construct-trap proxy; measured
   0.6 ms → 6.7 ms per 100k bare `new`) — irrelevant for apps, visible in

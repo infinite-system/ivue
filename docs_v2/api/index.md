@@ -139,7 +139,7 @@ by the table above.
 The runtime half of the hot-update handshake — the function the plugin's
 injected code calls with the re-executed module. It grafts the module's
 Reactive classes onto their canonical identities and escalates
-constructor-level changes to a component remount. You only call it yourself
+updates that require new instances to a component remount. You only call it yourself
 when wiring HMR manually:
 
 ```ts

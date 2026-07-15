@@ -78,6 +78,11 @@ number was a **harness artifact, not library behavior** — when a number
 - String processing on user source (hmrNormalize): a state-tracking scanner
   beats regex — the regex version collapsed whitespace **inside string
   literals**, silently corrupting semantics.
+- **Native `#private` brands change on every class evaluation, even when the
+  source is identical.** Class HMR must treat the presence of a native private
+  member as rebuild-required and invalidate the owner boundary; grafting donor
+  methods onto old branded instances throws. Source detection must ignore `#`
+  inside strings, templates, comments, and regex literals.
 - Production size gate: the engine is ~1.1 KB gzipped — re-verify the build
   size after any engine edit; DCE regressions are silent.
 
