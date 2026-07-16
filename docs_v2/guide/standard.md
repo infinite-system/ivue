@@ -43,7 +43,15 @@ silent no-op at runtime.
 
 ```ts
 import { Reactive } from 'ivue'; // in this app: 'src/utils/ivue'
-import { ref, shallowRef, computed, watch, onMounted, toRef, type Ref } from 'vue';
+import {
+  ref,
+  shallowRef,
+  computed,
+  watch,
+  onMounted,
+  toRef,
+  type Ref,
+} from 'vue';
 import { useProjectStore } from 'src/stores/project.store';
 
 class $Box {
@@ -237,9 +245,11 @@ call site. Rules that keep it clean:
 - In the `<script setup>` BODY, destructured bindings are refs — use
   `.value` there as everywhere else. Inside `<template>` only, the compiler
   unwraps them.
-- **v-for item cells stay dotted with `.value`** (`cell.raw.value`) — you
-  cannot destructure a thousand collection items; the destructure governs
-  the component's own instance state.
+- **The remaining `.value` boundary:** top-level component state is
+  destructured and auto-unwrapped. Collection items and slot props are nested
+  values, so Vue does not auto-unwrap their Ref fields; use
+  `item.title.value`. This is ivue's principal syntax tradeoff, preserving
+  direct, allocation-free reads where lists are hottest.
 - Perf escape (measured): a METHOD called in a render-hot path (per row of
   a large v-for) may be destructured — methods are identity-stable and the
   hoisted call runs at closure speed (~1.4 vs ~4 ns dotted). Reserve it for
@@ -318,19 +328,19 @@ session.$stopEffects();
 
 ## DO / NEVER
 
-| DO                                                                           | NEVER                                                                                  |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `class $X` + `export namespace X { $Class; Class = Reactive($Class); Instance }` | export a bare `Reactive(class {...})` for anything that grows a parent/dependent       |
-| mutable state = `get x() { return ref(v) }`                                  | put mutable state in a plain field — writes trigger nothing                            |
-| `.value` for every Ref/Computed inside the class and in the script body       | write `this.x = v` for a Ref/Computed in the class — it clobbers the ref or no-ops     |
-| derive with a PLAIN getter                                                   | wrap every derivation in `computed()` — pays ~300 bytes/instance for nothing           |
-| `computed()` only for expensive / render-suppressing / stable-handle needs   | reach for `computed()` by default                                                      |
-| inject stores via `private get $store() { return useStore() }`               | `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles |
-| `new X.Class(props, emit)` — raw instance everywhere                         | wrap in `reactive(instance)` or any shallow-unwrap view as the standard                    |
-| destructure ALL template-touched Refs/Computeds + element refs, grouped | destructure plain getters or methods — snapshots a dead value / loses nothing but clarity |
-| state bindings in templates; dotted `box.x` only for plain getters/methods | reach a Ref through the instance in a template — `v-if="box.someRef"` is always-truthy |
-| `defineExpose(box as X.Instance)`                                            | `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers       |
-| constructor runs init; register hooks/watchers there                         | add an `init()` method expecting auto-call — ivue never calls it                         |
+| DO                                                                                                               | NEVER                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `class $X` + `export namespace X { $Class; Class = Reactive($Class); Instance }`                                 | export a bare `Reactive(class {...})` for anything that grows a parent/dependent           |
+| mutable state = `get x() { return ref(v) }`                                                                      | put mutable state in a plain field — writes trigger nothing                                |
+| `.value` for every Ref/Computed inside the class and in the script body                                          | write `this.x = v` for a Ref/Computed in the class — it clobbers the ref or no-ops         |
+| derive with a PLAIN getter                                                                                       | wrap every derivation in `computed()` — pays ~300 bytes/instance for nothing               |
+| `computed()` only for expensive / render-suppressing / stable-handle needs                                       | reach for `computed()` by default                                                          |
+| inject stores via `private get $store() { return useStore() }`                                                   | `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles     |
+| `new X.Class(props, emit)` — raw instance everywhere                                                             | wrap in `reactive(instance)` or any shallow-unwrap view as the standard                    |
+| destructure ALL template-touched Refs/Computeds + element refs, grouped                                          | destructure plain getters or methods — snapshots a dead value / loses nothing but clarity  |
+| state bindings in templates; dotted `box.x` only for plain getters/methods                                       | reach a Ref through the instance in a template — `v-if="box.someRef"` is always-truthy     |
+| `defineExpose(box as X.Instance)`                                                                                | `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers           |
+| constructor runs init; register hooks/watchers there                                                             | add an `init()` method expecting auto-call — ivue never calls it                           |
 | plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |
 
 ## The unwrapping-surface typing invariant
@@ -356,19 +366,19 @@ until mount — use `?.` in watch getters).
 
 ### Common compile errors → fixes
 
-| Error / symptom                                                                                             | Fix                                                      |
-| ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `Cannot assign to 'x' because it is a read-only property` (on an exposed/`reactive()`/template-ref surface) | type that surface through `X.Instance`                   |
+| Error / symptom                                                                                             | Fix                                                              |
+| ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `Cannot assign to 'x' because it is a read-only property` (on an exposed/`reactive()`/template-ref surface) | type that surface through `X.Instance`                           |
 | `Type 'boolean' is not assignable to type 'Ref<boolean>'`                                                   | missing `.value` on a Ref/Computed write — `x.flag.value = true` |
-| `'X' is possibly null` on a template ref in a watch getter                                                  | add `?.` — `watch(() => x.boxEl.value?.foo, cb)`            |
-| template write crashes / no-ops at runtime on the raw instance                                              | you wrote `x.Ref/Computed = v`; write `x.Ref/Computed.value = v`         |
+| `'X' is possibly null` on a template ref in a watch getter                                                  | add `?.` — `watch(() => x.boxEl.value?.foo, cb)`                 |
+| template write crashes / no-ops at runtime on the raw instance                                              | you wrote `x.Ref/Computed = v`; write `x.Ref/Computed.value = v` |
 
 ## Watch rules — and WHICH watch
 
-| the instance is…                                              | use                                                                                              |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| component-scoped (created in `setup()`)                        | plain `watch` / `watchEffect` — the component scope stops them on unmount                         |
-| component-outliving (module singleton, created in a callback)  | `this.$watch` / `this.$watchEffect` — the instance's lazy scope; disposed by `$stopEffects()`     |
+| the instance is…                                              | use                                                                                           |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| component-scoped (created in `setup()`)                       | plain `watch` / `watchEffect` — the component scope stops them on unmount                     |
+| component-outliving (module singleton, created in a callback) | `this.$watch` / `this.$watchEffect` — the instance's lazy scope; disposed by `$stopEffects()` |
 
 - `watch(() => instance.plainGetter, cb)` works on a RAW instance — no `reactive()`
   wrapper, no Ref/Computed needed. The getter body runs inside the watcher's effect, so

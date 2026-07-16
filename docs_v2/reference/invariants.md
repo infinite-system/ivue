@@ -7,9 +7,9 @@ outline: [2, 3]
 # Invariant-Based Design
 
 This is the structural specification of the `Reactive()` engine: the guarantees the
-implementation maintains, *why* each holds, and — crucially — what each makes
-**impossible**. An invariant that only says what *can* happen is a description; one
-that also says what *cannot* is a contract you can test against.
+implementation maintains, _why_ each holds, and — crucially — what each makes
+**impossible**. An invariant that only says what _can_ happen is a description; one
+that also says what _cannot_ is a contract you can test against.
 
 `Reactive(Class)` reduces to a single idea:
 
@@ -92,8 +92,8 @@ watchers and break two-way bindings); `inst.method !== inst.method`.
 Everything happens in prototype getters; `new Class()` only runs your constructor,
 and the engine never passes an instance to `reactive()`. So N instances cost N plain
 `new` calls, and instances created but never touched carry essentially no overhead.
-*(Measured: 100k instances allocate in ~0.7 ms, vs ~37–43 ms for `reactive()` /
-composables and ~169 ms for an eager class engine.)*
+_(Measured: 100k instances allocate in ~0.7 ms, vs ~37–43 ms for `reactive()` /
+composables and ~169 ms for an eager class engine.)_
 
 **Rules out** — instantiation cost scaling with the number of reactive members
 declared; an unused getter allocating a computed.
@@ -125,7 +125,7 @@ value cached as a fake "ref".
 
 Each `(prototype, key)` gets a fresh `Symbol(key)` during processing, so a base's
 `summary` and a child's `summary` cache under different symbols on the same instance.
-A child computed can call `super.summary.value` and get the *parent's* Ref/Computed, not its
+A child computed can call `super.summary.value` and get the _parent's_ Ref/Computed, not its
 own; overrides at different levels cooperate exactly as in native classes.
 
 **Rules out** — `super.x` resolving back to the child's own value (an infinite loop
@@ -152,7 +152,7 @@ breaking the `RAW` anchor; the helpers installed twice.
 
 ### `$`-prefixed singletons
 
-> A getter whose name starts with `$` is cached *whole, forever* on first access —
+> A getter whose name starts with `$` is cached _whole, forever_ on first access —
 > even when its result isn't a ref.
 
 The `$` prefix flips a "cache whole" flag, so the result is stored and returned
@@ -181,15 +181,15 @@ behavior; an HMR classification branch inside `Reactive()`.
 
 Not lines of code inside `Reactive()`, but properties of the **authoring convention**
 the engine is designed for — made correct by the runtime invariants above (chiefly
-*Identity preservation* and *Idempotent transformation*). They're why ivue handles
+_Identity preservation_ and _Idempotent transformation_). They're why ivue handles
 cross-file hierarchies and circular imports where instantiation-time engines don't. See
 [Modules & Imports](/guide/modules) for the practical guide.
 
 ```ts
 export namespace Thing {
-  export const $Class = $Thing          // RAW class — children `extends` this
-  export let Class  = Reactive($Class) // REACTIVE class — you `new` this
-  export type Instance = typeof Class.Instance
+  export const $Class = $Thing; // RAW class — children `extends` this
+  export let Class = Reactive($Class); // REACTIVE class — you `new` this
+  export type Instance = typeof Class.Instance;
 }
 ```
 
@@ -226,7 +226,7 @@ reload double-wrapping an inherited getter.
 > in any load order.
 
 The namespace binding is a hoisted `var`, not a `const` / `class` in the temporal
-dead zone, so an importer always gets a live reference to the namespace *object* and
+dead zone, so an importer always gets a live reference to the namespace _object_ and
 reads `.Class` / `.$Class` lazily at the point of use. Method bodies that do
 `new Other.Class()` run at call time, by which point every namespace is populated —
 so "A's methods use B, B's use A" resolves either way. Combined with identity
@@ -236,7 +236,7 @@ equality stay consistent across modules.
 **Rules out** — a mutual cross-reference between two class modules throwing
 `Cannot access 'X' before initialization` purely from import order.
 
-*Scope limit:* this solves circular *references*, not circular *inheritance* —
+_Scope limit:_ this solves circular _references_, not circular _inheritance_ —
 `class $A extends B.$Class` still evaluates `B.$Class` at A's load time, so a true
 `A extends B` / `B extends A` cycle is impossible (in any language, not just here).
 
@@ -254,9 +254,11 @@ Listed deliberately, so the invariants above aren't over-read:
 3. **Native `#private` fields belong to one declaration.** They work in every
    environment. Vue reconstruction after a script edit creates the replacement
    declaration and its matching instances together.
-4. **`.value` ergonomics.** Reactive state is read with `.value` outside a
-   `reactive()` / template auto-unwrap context — the one ergonomic cost relative to
-   a proxy-based model.
+4. **`.value` ergonomics.** Top-level component state is destructured and
+   auto-unwrapped. Collection items and slot props are nested values, so Vue
+   does not auto-unwrap their Ref fields; use `item.title.value`. This is
+   ivue's principal syntax tradeoff relative to a proxy-based model, preserving
+   direct, allocation-free reads where lists are hottest.
 
 ## Where this method comes from
 

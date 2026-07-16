@@ -32,6 +32,9 @@ push redeploys everything.
 
 - **[Pinia Store Alternative](/examples/class-store)** — a class-based alternative to
   Pinia stores; optional reactive() view, fully typed.
+- **[Workspace Platform](/examples/workspace-platform)** — a ClickUp-scale
+  application graph with list and board views, filters, workload, task editing,
+  comments, and activity over the same ivue domain objects.
 - **[Extensible Kernel](/examples/extensible-kernel)** — construction binds to a
   namespaced class key, so plugins extend notifications and their children.
 - **[Advanced Select Field](/examples/choose-field)** — a Quasar-based

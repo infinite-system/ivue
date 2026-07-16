@@ -239,6 +239,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'Pinia Store Alternative', link: '/examples/class-store' },
+            { text: 'Workspace Platform', link: '/examples/workspace-platform' },
             { text: 'Extensible Kernel', link: '/examples/extensible-kernel' },
             {
               text: 'Advanced Select Field',

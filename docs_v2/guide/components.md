@@ -59,7 +59,7 @@ there, as everywhere outside a template.
 - **The destructure is total.** Every Ref/Computed the template touches is
   destructured; none is ever reached through the instance in a template.
   This is load-bearing, not stylistic: Vue's conveniences unwrap
-  instance-reached refs in *some* positions only — `{{ player.someRef }}`{v-pre}
+  instance-reached refs in _some_ positions only — `{{ player.someRef }}`{v-pre}
   renders via display-unwrap while `v-if="player.someRef"` is always-truthy.
   Destructured setup bindings unwrap **uniformly in every position**, so the
   total-destructure rule abolishes the seam rather than memorizing it.
@@ -71,9 +71,14 @@ there, as everywhere outside a template.
   the hoisted call runs at native closure speed (~1.4 ns vs ~4 ns dotted,
   [Hot loops](/guide/performance#hot-loops)). Spend the naming signal only
   where a profiler says so.
-- **v-for item cells stay dotted with `.value`** (`cell.raw.value`) — a
-  thousand collection items cannot be destructured; the destructure governs the
-  component's own instance.
+
+::: info The remaining `.value` boundary
+Top-level component state is destructured and auto-unwrapped. Collection items
+and slot props are nested values, so Vue does not auto-unwrap their Ref fields;
+use `item.title.value`. This is ivue's principal syntax tradeoff, preserving
+direct, allocation-free reads where lists are hottest.
+:::
+
 - **Instance-swapping components don't destructure.** If the component
   replaces its instance (`model.value = new X.Class()`), bindings would go
   stale — keep dotted access there.
@@ -84,7 +89,7 @@ there, as everywhere outside a template.
 - **No logic in template expressions.** A condition written inline —
   `v-if="items.length && !loading && mode === 'edit'"` — has no name, no
   home, and no test. It lives on the class as a plain getter whose name
-  says what it *means*:
+  says what it _means_:
 
   ```ts
   get canEditItems() {
@@ -110,13 +115,13 @@ there, as everywhere outside a template.
 
 Every regime was tried on a 2,100-line production component:
 
-| regime | verdict |
-| --- | --- |
-| `reactive(instance)` in setup | rejected — deep-proxy tax (~75ns/read), deep-wraps returned objects |
-| a shallow unwrap view (`proxyRefs`-style) | rejected — TS keeps get-only accessors `readonly` through the unwrap types; template writes error |
-| destructure **everything** | rejected — plain derived getters own no Ref/Computed; destructuring snapshots dead values, and 60+ derived getters make a hand-maintained monster |
-| raw + `.value` in templates | the previous standard — sound and compiler-checked, but it taxed every template read and marked *ref-ness* rather than the distinction that matters |
-| **raw + destructured state** | **the standard** — state bindings / dotted behavior, uniform unwrap in all positions, zero runtime cost, and the destructure doubles as the component's state signature |
+| regime                                    | verdict                                                                                                                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `reactive(instance)` in setup             | rejected — deep-proxy tax (~75ns/read), deep-wraps returned objects                                                                                                     |
+| a shallow unwrap view (`proxyRefs`-style) | rejected — TS keeps get-only accessors `readonly` through the unwrap types; template writes error                                                                       |
+| destructure **everything**                | rejected — plain derived getters own no Ref/Computed; destructuring snapshots dead values, and 60+ derived getters make a hand-maintained monster                       |
+| raw + `.value` in templates               | the previous standard — sound and compiler-checked, but it taxed every template read and marked _ref-ness_ rather than the distinction that matters                     |
+| **raw + destructured state**              | **the standard** — state bindings / dotted behavior, uniform unwrap in all positions, zero runtime cost, and the destructure doubles as the component's state signature |
 
 What changed between the last two rows is the [plain-getter
 doctrine](/guide/computed-watch): once derivations stopped being computeds,
@@ -132,32 +137,31 @@ which is `proxyRefs`-based. Verified behavior:
 - **reads of ref/computed getters arrive unwrapped** (`exposed.open` is a
   `boolean`);
 - **writes to ref-backed members redirect into `.value`** — `exposed.open =
-  true` lands in the underlying ref (there IS a write path);
+true` lands in the underlying ref (there IS a write path);
 - **methods arrive engine-bound to the raw instance**;
 - **plain derived getters remain fully reactive**: their bodies execute
-  inside the *reader's* effect, so leaf tracking passes straight through
+  inside the _reader's_ effect, so leaf tracking passes straight through
   the proxy. `watch(() => playerRef.value.someDerivedPx, cb)` works — it
   fires whenever the getter's actual leaves change.
 
 The typing must match that runtime. TS marks get-only accessors `readonly`
 and the unwrap types preserve it — so an exposed surface typed from the raw
-class *forbids* writes the runtime allows. `Instance`
+class _forbids_ writes the runtime allows. `Instance`
 (`typeof Class.Instance`, i.e. `ReactiveInstance`) strips the readonly via
 its writable-getter remap. Hence the rule:
 
 ```ts
-defineExpose(player as Player.Instance)
+defineExpose(player as Player.Instance);
 ```
 
 and for a consumer holding the ref, the surface type is:
 
 ```ts
-import type { ShallowUnwrapRef } from 'vue'
-type PlayerExposed = ShallowUnwrapRef<Player.Instance>
+import type { ShallowUnwrapRef } from 'vue';
+type PlayerExposed = ShallowUnwrapRef<Player.Instance>;
 ```
 
 Generic classes: `ShallowUnwrapRef<Player.Instance<T>>`.
-
 
 ## reactive() interop
 
@@ -167,7 +171,7 @@ runtime proxy unwraps reads and redirects ref writes, so type the wrapped
 value through `Instance` or writes will hit preserved-readonly errors:
 
 ```ts
-const wrapped = reactive(player as Player.Instance) // writes typecheck as they behave
+const wrapped = reactive(player as Player.Instance); // writes typecheck as they behave
 ```
 
 Prefer not wrapping at all — the raw instance plus destructured state is the
