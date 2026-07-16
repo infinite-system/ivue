@@ -1,6 +1,6 @@
 ---
 title: The Namespace Pattern, Crystallized
-description: A capability needs one canonical object, one mutable class slot, and late dependency reads. The pattern resolves circular references and supports composition without requiring a DI container or a framework.
+description: A capability needs one canonical object, one mutable class slot, and late dependency reads. A tiny Static() adapter adds passable Node callbacks without a DI container or custom module runtime.
 search: false
 ---
 
@@ -38,7 +38,8 @@ class $Orders {
 }
 
 export namespace Orders {
-  export let Class = $Orders;
+  export const $Class = $Orders;
+  export let Class = Static($Class);
 }
 ```
 
@@ -48,8 +49,8 @@ Application code reaches the selected capability through one public address:
 Orders.Class.submit(orderId);
 ```
 
-`Orders` remains stable while `Orders.Class` may change during boot, a test, or
-a hot update. An ordinary class export is sufficient when nothing needs to
+`Orders` remains stable while `Orders.Class` may change during boot or a test.
+An ordinary class export is sufficient when nothing needs to
 replace or compose the class.
 
 ## The JavaScript form exposes the primitive
@@ -97,9 +98,12 @@ which property is the foundation and which property is the selection.
 
 Most backend modules are collections of functions. A static capability class
 keeps that allocation-free shape while adding inheritance, `super`, and a
-replaceable class address:
+replaceable class address. The experimental `Static()` adapter makes its
+methods safe to retain as callbacks:
 
 ```ts
+import { Static } from './Static';
+
 class $Users {
   static find(userId: string) {
     return database.users.find(userId);
@@ -107,7 +111,8 @@ class $Users {
 }
 
 export namespace Users {
-  export let Class = $Users;
+  export const $Class = $Users;
+  export let Class = Static($Class);
 }
 ```
 
@@ -150,10 +155,11 @@ This produces two guarantees.
 module reads the other's `Class` slot while the module graph is initializing.
 The getter body runs later, so both module bindings are ready.
 
-### Live resolution
+### Selected resolution
 
-The getter does not retain `Users.Class`. A test, plugin kernel, or hot-update
-runtime may change that selection. The next getter read returns the new class.
+The getter does not retain `Users.Class`. A test or boot-time plugin kernel may
+change that selection before the application begins dispatching work. Runtime
+composition is then sealed until process restart.
 
 The circularity invariant is precise:
 
@@ -163,7 +169,165 @@ A method body is late for the same reason. A named getter earns its place when
 the dependency appears throughout the class or belongs in the capability's
 readable anatomy.
 
-## Retained handlers keep the namespace read live
+## Objection models use the namespace without `Static()`
+
+Objection models are stateful instance constructors with a framework-owned
+static protocol. Give them the namespace's late selection point, but leave
+their static methods untouched:
+
+```ts
+// User.model.ts
+import { Model } from 'objection';
+import { Orders } from './Order.model';
+
+class $User extends Model {
+  static tableName = 'users';
+
+  static get relationMappings() {
+    return {
+      orders: {
+        relation: Model.HasManyRelation,
+        modelClass: Orders.Class,
+        join: {
+          from: 'users.id',
+          to: 'orders.user_id',
+        },
+      },
+    };
+  }
+}
+
+export namespace Users {
+  export const $Class = $User;
+  export let Class = $Class;
+  export type Instance = InstanceType<typeof Class>;
+}
+```
+
+The other side follows the same rule:
+
+```ts
+// Order.model.ts
+import { Model } from 'objection';
+import { Users } from './User.model';
+
+class $Order extends Model {
+  static tableName = 'orders';
+
+  static get relationMappings() {
+    return {
+      user: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Users.Class,
+        join: {
+          from: 'orders.user_id',
+          to: 'users.id',
+        },
+      },
+    };
+  }
+}
+
+export namespace Orders {
+  export const $Class = $Order;
+  export let Class = $Class;
+  export type Instance = InstanceType<typeof Class>;
+}
+```
+
+The dot in `Orders.Class` does not create lateness. The
+`relationMappings` getter does. Objection calls the getter after module
+initialization; only then does the object literal read the selected related
+class.
+
+This follows Objection's native contract: `relationMappings` may be an object,
+function, or getter, and `modelClass` may be a model constructor or module
+path. See [Objection's static relation properties](https://vincit.github.io/objection.js/api/model/static-properties.html#static-relationmappings).
+
+The corresponding static field is eager and remains unsafe in a cycle:
+
+```ts
+static relationMappings = {
+  orders: {
+    modelClass: Orders.Class, // read during class initialization
+  },
+};
+```
+
+### Why a getter sometimes appeared insufficient
+
+A static import always begins loading its target module. Under CommonJS it
+becomes a top-level `require()`. The relation getter postpones the imported
+value read, but it does not postpone execution of the target module.
+
+Path-valued `modelClass`, a thunk containing `require()`, or a `lazyImport()`
+inside the getter adds a second kind of lateness by postponing module loading:
+
+| Relation form | Target module loads | Class value reads |
+|---|---|---|
+| Static field with imported class | during initialization | during initialization |
+| Getter with imported class | during module-graph loading | when Objection reads the getter |
+| Getter with path, thunk, or `lazyImport()` | when the relation resolves | when the relation resolves |
+| Getter with `Related.Class` | during module-graph loading | when Objection reads the getter |
+
+The namespace form does not need to postpone module loading. Its portability
+comes from the export shape:
+
+```ts
+export namespace Orders {
+  export const $Class = $Order;
+  export let Class = $Class;
+}
+```
+
+Under CommonJS, a named-import transform retains the module's exports object;
+the later getter reaches its completed `Orders.Class` property. Under ESM,
+`Orders` is a live exported binding and the later getter reaches the same
+selected property. The namespace is therefore one stable exported address in
+both module systems. ESM is not required.
+
+What must remain late is the **read**, not the export. Do not copy the selected
+class into another module-level binding or default export:
+
+```ts
+const OrderClass = Orders.Class; // eager snapshot — loses the invariant
+export default Orders.Class; // eager snapshot — loses later selection
+```
+
+CommonJS may temporarily expose a partially initialized exports object during
+a cycle, while ESM may leave an exported binding uninitialized during module
+evaluation. Neither is a problem when no participant reads the namespace until
+the relation getter runs. This works when the invariant covers the entire
+cycle: no participant reads another participant's value while the graph is
+loading.
+
+A native Node ESM project uses emitted extensions in relative specifiers, such
+as `./Order.model.js` under `moduleResolution: "NodeNext"`, but that is a module
+configuration detail rather than the source of the circularity guarantee.
+
+### Migration rule
+
+Replace model-to-model path loaders with ordinary imports of the exported
+namespace when all edges in the cycle follow these rules:
+
+- Every relation map that reads another model is a getter or method.
+- Every `modelClass` reads `Related.Class` inside that late body.
+- No module snapshots `Related.Class` into a top-level binding or export.
+- Decorators, mixins, static fields, schemas, and module-top-level factories do
+  not inspect related classes during initialization.
+- Circular inheritance and recursive construction remain forbidden.
+- Boot-time model selection finishes before the first Objection query.
+
+If a path or `lazyImport()` remains necessary, it identifies an eager module
+edge outside the relation getter. Isolate that decorator, initializer, factory,
+or side effect instead of making loader indirection the default model grammar.
+
+Do not pass Objection models through `Static()`. Objection creates instances,
+owns inherited static behavior, and may create specialized model subclasses.
+Call model statics as members—`Users.Class.query()`—and reserve `Static()` for
+stateless capability classes whose methods escape as callbacks.
+
+## Retained handlers choose a class generation
 
 Static methods are ordinary JavaScript functions. Calling one as a member
 supplies the selected class as `this`:
@@ -172,14 +336,26 @@ supplies the selected class as `this`:
 Orders.Class.submit(userId);
 ```
 
-Passing the function alone does not preserve that receiver. It also freezes
-the implementation selected during route registration:
+Passing an ordinary static method alone does not preserve that receiver:
+
+```ts
+router.post('/orders', Orders.$Class.submit);
+```
+
+`Static()` binds the selected method on first read, so direct registration is
+safe:
 
 ```ts
 router.post('/orders', Orders.Class.submit);
 ```
 
-A thin namespace closure preserves both properties:
+The retained function belongs to the class selected during route
+registration. Boot composition therefore finishes before callbacks escape.
+After an edit, the Node process owner restarts and registers callbacks from one
+fresh generation.
+
+A forwarding closure is still available when an application deliberately
+changes providers while the process remains live:
 
 ```ts
 router.post('/orders', (request) =>
@@ -187,16 +363,13 @@ router.post('/orders', (request) =>
 );
 ```
 
-Each request reads `Orders.Class`, calls `submit` as a member, and therefore
-observes kernel replacement or hot update. No method-binding runtime is
-required for the static-first backend shape.
+That live-read behavior is optional. It is not the default Node development
+contract.
 
 ivue provides a stronger instance-method contract on the frontend.
 `Reactive()` turns instance methods into lazily bound, referentially stable
-functions. Vite and Vue reconstruct the owning component after script edits,
-so each retained method belongs to one coherent class generation. That is a
-Vue lifecycle capability around the same class model, not a requirement of the
-namespace invariant.
+functions. `Static()` applies the smaller static equivalent to backend
+capability classes. Each adapter retains only its runtime's required behavior.
 
 ## What the pattern removes from DI
 
@@ -211,7 +384,7 @@ features:
 | Provider selection | `Orders.Class = SelectedOrders` |
 | Dependency resolution | `static get Orders() { return Orders.Class; }` |
 | Invocation | native static member call |
-| Boot-time composition | a kernel assigns `Class` once |
+| Boot-time composition | a kernel assigns `Static(SelectedClass)` once |
 
 There is no string token, decorator, reflection metadata, provider array, or
 second runtime object graph. The module graph names the capability. The getter
@@ -228,28 +401,26 @@ The kernel retains the foundation and applies extensions from that foundation
 on every seal:
 
 ```ts
-type ClassCapability = {
-  Class: typeof $Orders;
-};
+function composeOrders() {
+  let SelectedOrders = Orders.$Class;
 
-function extendOrders(capability: ClassCapability) {
-  const Base = capability.Class;
-
-  capability.Class = class AuditedOrders extends Base {
+  SelectedOrders = class AuditedOrders extends SelectedOrders {
     static submit(userId: string) {
       audit(userId);
       return super.submit(userId);
     }
   };
+
+  Orders.Class = Static(SelectedOrders);
 }
 ```
 
 Static `super.submit()` retains the derived class as `this`. The base method's
 `this.Users` therefore continues to resolve through the final selected class.
 
-A complete kernel stores the original base privately, gathers every extension,
-and assigns one composed result. It never extends an already extended result
-during a repeated seal.
+A complete kernel starts from `$Class`, gathers every raw extension, and calls
+`Static()` once on the composed result. It never extends an already selected
+result during a repeated seal.
 
 ## When `$Class` belongs in the public namespace
 
@@ -261,7 +432,7 @@ class $Notification {}
 
 export namespace Notification {
   export const $Class = $Notification;
-  export let Class = $Class;
+  export let Class = Static($Class);
 }
 
 class $ErrorNotification extends Notification.$Class {}
@@ -277,8 +448,8 @@ The forms are additive:
 | Required capability | Namespace surface |
 |---|---|
 | Ordinary class | no namespace required |
-| Replaceable static capability | `let Class = $Orders` |
-| Public raw inheritance | `const $Class` + `let Class` |
+| Replaceable static capability | `const $Class` + `let Class` |
+| Passable static methods | `const $Class` + `let Class = Static($Class)` |
 | Vue class reactivity | `$Class` + `let Class = Reactive($Class)` + `Instance` |
 
 The canonical ivue form keeps `Class` mutable even when no kernel is installed:
@@ -297,11 +468,11 @@ compose the slot without changing those consumers.
 ## Provider choice and lifetime remain separate
 
 Static capability classes have no instance lifetime. Stateful classes still
-need an explicit owner:
+need an explicit owner and remain ordinary instance classes:
 
 ```ts
 class $Application {
-  readonly orders = new Orders.Class();
+  readonly worker = new OrderWorker.Class();
 }
 ```
 
@@ -320,7 +491,10 @@ structural contradiction valid:
 - A top-level `Other.Class` snapshot remains eager.
 - A static field initialized from `Other.Class` snapshots the provider.
 - Decorators and module side effects may still read dependencies too early.
-- A detached static method that uses `this` still needs a member-call boundary.
+- A method detached from raw `$Class` still loses static `this`; retained
+  callbacks use the selected `Static()` class.
+- A selected static callback remains attached to one class generation; it does
+  not follow a later `Class` assignment.
 
 These are eager edges or genuine logical recursion. The pattern removes hidden
 load-order discipline without hiding impossible graphs behind a container.
@@ -331,15 +505,16 @@ The shared class grammar allows each runtime to add only its required adapter:
 
 ```text
 canonical namespace object + mutable Class slot + late reads
-├── Node: static capability classes and slot replacement
-├── stateful Node: explicit owners and optional instance adaptation
+├── Node: Static() capability classes and process restart
+├── stateful Node: ordinary instances with explicit owners
 ├── ivue: Reactive() and Vue-facing Instance typing
 ├── plugins: boot-time class composition
-└── development: environment-specific hot update
+└── development: reconstruction by the existing runtime owner
 ```
 
 The namespace is not an ivue convention exported to Node. ivue and Node are
 different expressions generated from the same smaller invariant.
 
-The [Node Class HMR design](/guide/node-class-hmr?experiment=1) follows the
-static-first form into a long-running backend process.
+[Static Classes for Node](/guide/node-static-runtime?experiment=1) contains the
+working transform and benchmarks. [Node Development by Restart](/guide/node-class-hmr?experiment=1)
+defines why the experiment stops before a custom HMR runtime.

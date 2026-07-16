@@ -1,40 +1,47 @@
 ---
 name: node-namespace
-description: Author and refactor TypeScript Node.js backends around static capability classes, mutable class namespaces, late dependency getters, boot-time composition, and live provider replacement. Use for backend modules, circular imports, plugin kernels, route or queue handlers, test doubles, and designs that would otherwise introduce DI tokens, decorators, forwardRef, or container resolution.
+description: Author and refactor TypeScript Node.js backends around static capability classes, mutable class namespaces, late dependency getters, lazy-bound static methods, native inheritance, and boot-time composition. Use for backend modules, circular imports, route or queue callbacks, plugin kernels, test doubles, and designs that would otherwise introduce DI tokens, decorators, forwardRef, or service instances that only hold methods.
 ---
 
 # Node Namespace
 
-Author backend modules as static capability classes by default. A capability
-class is an inheritable function bag: it holds behavior but no instance state.
-Export it through one canonical namespace with one mutable `Class` slot.
+Author stateless backend modules as static capability classes. Export one raw
+inheritance foundation and one selected callback-safe class through a canonical
+namespace.
+
+Use the tested `Static()` reference at
+[`experiments/node-namespace/Static.ts`](../../../experiments/node-namespace/Static.ts).
+Keep it local to the backend until this experiment becomes a package.
 
 ## Canonical capability module
 
 ```ts
+import { Static } from '../runtime/Static';
+import { Users } from './Users';
+
 class $Orders {
   static get Users() {
     return Users.Class;
   }
 
-  static submit(userId: string) {
-    return this.Users.find(userId);
+  static submit(request: OrderRequest) {
+    return this.Users.find(request.params.userId);
   }
 }
 
 export namespace Orders {
-  export let Class = $Orders;
+  export const $Class = $Orders; // raw — declared inheritance extends this
+  export let Class = Static($Class); // selected — callbacks read this
 }
 ```
 
-Use this shape for commands, queries, validation, mapping, orchestration, route
-logic, and other modules that would otherwise export a bag of functions.
+Use this shape for commands, queries, validation, mapping, orchestration,
+routes, and other modules that would otherwise export a function bag.
 
-Use an ordinary function or class export when replacement and composition are
-not requirements. Do not add a namespace that provides no live-selection
-service.
+Use an ordinary function or class export when the module needs no circular
+dependency seam, selection, inheritance, or retained method callback.
 
-## Read every dependency late
+## Read dependencies late
 
 Import the namespace, then read its `Class` inside a static getter or method:
 
@@ -44,96 +51,110 @@ static get Users() {
 }
 ```
 
-The read occurs after module initialization and observes later provider
-replacement. Apply these constraints:
+Apply these constraints:
 
-- Never assign `const Selected = Other.Class` at module scope.
-- Never snapshot `Other.Class` in a static field.
+- Keep every cross-module class read inside a getter or method body.
+- Never snapshot `Other.Class` at module scope or in a static field.
 - Never perform cross-module work in decorators or static initialization.
 - Permit circular imports only when every cross-module value edge is late.
-- Reject circular inheritance and recursive calls; lateness cannot make either
-  structure valid.
+- Reject circular inheritance and recursive construction; lateness cannot make
+  either structure valid.
 
-Use a method body directly when a named dependency getter adds no clarity. Both
-forms are late. The getter earns its name when several methods use the same
-capability or when it belongs in the class's readable anatomy.
+Use a direct method-body read when a named dependency getter adds no clarity.
+Both expressions are late.
 
-## Retained callbacks read through the namespace
+## Pass selected methods directly
 
-Invoke a static method as a member so JavaScript supplies the selected class as
-`this`:
-
-```ts
-Orders.Class.submit(userId);
-```
-
-When a router, timer, event emitter, or queue retains a callback, delegate
-through a thin namespace closure:
-
-```ts
-router.post('/orders', (request) =>
-  Orders.Class.submit(request.params.userId),
-);
-```
-
-Each invocation reads the current `Orders.Class`, preserves static `this`, and
-observes kernel or hot-runtime replacement.
-
-Do not pass a static method detached when it uses `this`:
+`Static()` binds a selected static method on first read and replaces the lazy
+accessor with that ordinary bound function. Register it directly:
 
 ```ts
 router.post('/orders', Orders.Class.submit);
+queue.consume('orders', Orders.Class.submit);
 ```
 
-A detached static method that never uses `this` can execute, but the retained
-reference still freezes the selected implementation. Prefer the namespace
-closure wherever live replacement is part of the contract.
+Do not pass a method from raw `$Class`; raw static methods lose `this` when
+detached.
 
-Static capability classes need no lazy method binding.
+The retained function belongs to the class selected during registration. It
+does not follow a later `Orders.Class` assignment. Finish composition before
+callbacks escape, and let normal process restart register a fresh generation
+after source edits.
 
-## Compose through the kernel
+Treat `Class` as mutable during boot and tests, then sealed for the process
+generation. Never implement plugins as runtime toggles by default.
 
-Register every namespace before plugin composition:
+Use a forwarding closure only when live provider changes are an explicit
+application requirement:
 
 ```ts
-kernel.defineClass('app/Orders', Orders);
-
-kernel.registerClass('app/Orders', (Base) =>
-  class AuditedOrders extends Base {
-    static submit(userId: string) {
-      audit(userId);
-      return super.submit(userId);
-    }
-  },
-);
-
-kernel.sealClassGraph();
+router.post('/orders', (request) => Orders.Class.submit(request));
 ```
 
-Require the kernel to retain the original class at `defineClass()` time. Start
-every seal from that stored base, apply extensions in deterministic order, then
-assign the result to `namespace.Class`.
+That closure adds live selection. It is not the default authoring shape.
 
-Static `super` preserves the derived class as `this`, so base methods continue
-to resolve dependency getters through the final selected class.
+## Preserve raw inheritance
 
-Expose a raw `$Class` only when application modules inherit from the declared
-foundation outside the kernel:
+Extend `$Class`, then apply `Static()` to the child:
 
 ```ts
-class $Notification {}
+class $PriorityOrders extends Orders.$Class {
+  static override submit(request: OrderRequest) {
+    audit(request);
+    return super.submit(request);
+  }
+}
 
-export namespace Notification {
-  export const $Class = $Notification;
-  export let Class = $Class;
+export namespace PriorityOrders {
+  export const $Class = $PriorityOrders;
+  export let Class = Static($Class);
 }
 ```
 
-Keep `$Class` immutable. Only `Class` is a provider slot.
+Never extend `Orders.Class`. The selected class owns bound public methods;
+`$Class` remains the untouched native `super` chain.
 
-## Use instances only for actual identity
+## Compose before selection
 
-Choose an instance class when the object has genuine state, identity, lifetime,
+Apply plugin extensions to raw classes, then select once:
+
+```ts
+let SelectedOrders = Orders.$Class;
+
+for (const extendOrders of orderExtensions) {
+  SelectedOrders = extendOrders(SelectedOrders);
+}
+
+Orders.Class = Static(SelectedOrders);
+```
+
+Require the kernel to retain each original `$Class`, apply extensions in
+deterministic order, and start every seal from that foundation. Never extend a
+previously selected or previously extended result.
+
+Use this boot sequence:
+
+```text
+load modules
+→ compose raw classes
+→ assign Static() selections
+→ register retained callbacks
+→ listen
+```
+
+## Let Node own restart
+
+Use the project's existing watcher to restart the process after edits. Do not
+add module invalidation, donor generations, method grafting, callback
+forwarding registries, or state migration to this pattern.
+
+The namespace shape makes a clean restart dependable because cross-module
+values resolve after initialization. Production and development execute the
+same capability classes and selected methods.
+
+## Use instances only for identity
+
+Choose an instance class when an object has genuine state, identity, lifetime,
 or disposal:
 
 ```ts
@@ -146,51 +167,88 @@ class $OrderWorker {
 }
 
 export namespace OrderWorker {
-  export let Class = $OrderWorker;
+  export const $Class = $OrderWorker;
+  export let Class = $Class;
 }
 ```
 
-Give every long-lived instance an explicit owner. The owner constructs,
-replaces, and disposes it. Provider choice and instance lifetime remain
-separate responsibilities.
+Give every long-lived instance an explicit owner. Do not route stateful
+instance classes through `Static()`.
 
-Use contextual DI or explicit parameters when provider choice varies by
-request, tenant, session, or runtime data. One global `Class` slot represents
-one application-wide selection.
+Use explicit context or scoped DI when provider choice varies by request,
+tenant, session, or runtime data. One global `Class` slot represents one
+application-wide selection.
 
-## Hot replacement follows ownership
+## Use model namespaces without `Static()`
 
-A static capability update replaces the complete selected class:
+ORM models such as Objection models are stateful constructors with a
+framework-owned static protocol. Use the namespace to make related model reads
+late, but do not transform their inherited static API:
 
 ```ts
-Orders.Class = UpdatedOrders;
+class $User extends Model {
+  static get relationMappings() {
+    return {
+      orders: {
+        relation: Model.HasManyRelation,
+        modelClass: Orders.Class,
+        join: {
+          from: 'users.id',
+          to: 'orders.user_id',
+        },
+      },
+    };
+  }
+}
+
+export namespace Users {
+  export const $Class = $User;
+  export let Class = $Class;
+  export type Instance = InstanceType<typeof Class>;
+}
 ```
 
-The next namespace closure observes it. No instance migration, prototype
-grafting, or bound-method dispatch slot is required.
+The getter creates the lateness; `.Class` supplies the selected value. Never
+put a cross-model `.Class` read in an eager static relation field.
 
-A stateful instance update reconstructs its explicit owner. Do not combine old
-instance state with methods from a newly evaluated declaration. Constructor
-wiring, fields, closures, inheritance, and native private brands move together
-as one generation.
+The exported namespace is the cross-module indirection in both module systems.
+A CommonJS named-import transform retains the module exports object; ESM
+retains a live exported binding. The getter later reaches the completed
+`Related.Class` property in either case. ESM is not required.
 
-Do not claim Node class HMR exists unless the project supplies a module runner,
-canonical namespace registry, plugin recomposition, transactional slot update,
-and owner-reconstruction path for stateful instances. The namespace shape
-enables that runtime; it does not invalidate Node modules by itself.
+A static import still starts loading its target. Namespace imports remain safe
+only when every value edge in the circular graph is late: decorators, mixins,
+static fields, schemas, and top-level factories must not inspect the related
+class during initialization. Never snapshot `Related.Class` into a top-level
+binding or default export.
 
-## Keep process resources outside replaceable capabilities
+Replace path-valued `modelClass`, thunked `require()`, and `lazyImport()` with
+ordinary namespace imports once the whole cycle satisfies that invariant. If
+a loader workaround remains necessary, find the eager module edge outside the
+relation getter. Finish any boot-time model selection before the first ORM
+query, then call model statics as members such as `Users.Class.query()`.
 
-Put HTTP listeners, database pools, socket registries, and other process-owned
-resources in a stable composition root. Static capability classes late-read or
-receive those resources. They do not create them in module top-level side
-effects.
+## Keep resources in the composition root
 
-This keeps replacement cheap and makes ordinary shutdown and testing explicit.
+Keep HTTP listeners, database pools, socket registries, workers, and shutdown
+ownership outside capability classes. Late-read or pass those resources from a
+stable composition root. Avoid module-top-level process side effects.
 
-## Testing provider replacement
+Use TypeScript `private static` for class-internal members accessed through
+polymorphic `this`. It is an authoring-time restriction backed by an ordinary
+runtime property, so it works through the selected subclass. Use `protected
+static` when subclasses or plugins need direct access.
 
-Restore global provider slots after every test:
+Use module closures or root-owned services when capability data must remain
+private at runtime. Avoid `this.#member` in static capability classes: a
+selected class is a subclass of `$Class`, while native static `#private` brands
+only the declaring class and rejects the subclass receiver. Lexical access such
+as `$Orders.#member` remains valid but is deliberately non-polymorphic.
+Instance `#private` fields are unaffected.
+
+## Test provider selection
+
+Select test classes before registering callbacks and restore the global slot:
 
 ```ts
 const ProductionOrders = Orders.Class;
@@ -200,48 +258,33 @@ afterEach(() => {
 });
 
 it('uses a test provider', () => {
-  Orders.Class = class TestOrders extends ProductionOrders {
-    static submit() {
+  class $TestOrders extends Orders.$Class {
+    static override submit() {
       return 'test-order';
     }
-  };
+  }
 
-  expect(Orders.Class.submit('ignored')).toBe('test-order');
+  Orders.Class = Static($TestOrders);
+  expect(Orders.Class.submit()).toBe('test-order');
 });
 ```
 
 Do not mutate one global provider concurrently from parallel tests. Use
-isolated workers, isolated module graphs, or a scoped test kernel when
-parallelism is required.
-
-## Keep frontend and backend adapters separate
-
-Share the namespace invariant, not environment machinery:
-
-- Node default: static capability class and explicit slot replacement.
-- Stateful Node: explicit instance ownership and reconstruction.
-- ivue: `$Class`, `let Class = Reactive($Class)`, and Vue-facing `Instance`
-  typing.
-- Universal core: canonical ids, provider slots, plugin composition, and
-  transactional replacement.
-
-Never import Vue into a backend capability merely to preserve the frontend
-export shape. Delete runtime-specific members until only the capabilities the
-backend uses remain.
+isolated workers or isolated module graphs when parallel selection is needed.
 
 ## Self-review
 
-- [ ] Stateless backend modules use static capability classes by default.
-- [ ] Every replaceable capability exports one namespace with mutable `Class`.
-- [ ] Cross-module classes are read only inside static getters or methods.
-- [ ] No top-level provider snapshot, construction, decorator read, or process
-      side effect creates an eager dependency edge.
-- [ ] Retained callbacks delegate through the canonical namespace.
-- [ ] The kernel captures the original class before mutating `Class`.
-- [ ] Plugin extensions use static inheritance and deterministic ordering.
-- [ ] Instances exist only for genuine state, identity, lifetime, or disposal.
-- [ ] Every long-lived instance has an explicit reconstruction owner.
+- [ ] Stateless modules use static capability classes.
+- [ ] Each capability exports immutable `$Class` and mutable selected `Class`.
+- [ ] Every selected static class is created through `Static($Class)`.
+- [ ] Cross-module class values are read only inside getters or methods.
+- [ ] No top-level snapshot, decorator read, or process side effect creates an
+      eager dependency edge.
+- [ ] Retained callbacks come from selected `Class`, never raw `$Class`.
+- [ ] Declared children extend `$Class`, never selected `Class`.
+- [ ] Kernel extensions compose raw classes before one final `Static()` call.
+- [ ] The process watcher owns source-edit restart; no live HMR runtime appears.
+- [ ] Instances exist only for state, identity, lifetime, or disposal.
+- [ ] ORM models use late namespace reads without `Static()`.
 - [ ] Context-varying dependencies use explicit context or scoped DI.
-- [ ] Tests restore provider slots and do not race global mutations.
-- [ ] Hot-update claims include module invalidation, transactional replacement,
-      owner reconstruction, and final cold-start verification.
+- [ ] Tests restore provider slots and avoid concurrent global mutation.

@@ -29,7 +29,11 @@ const links = [
     link: '/guide/namespace-pattern',
   },
   {
-    text: 'Node Class HMR — Design',
+    text: 'Static Classes for Node',
+    link: '/guide/node-static-runtime',
+  },
+  {
+    text: 'Node Development by Restart',
     link: '/guide/node-class-hmr',
   },
 ];
