@@ -81,7 +81,7 @@ unchanged result should **suppress re-renders** (a Vue 3.4+ computed stops
 propagation on equal values; a plain getter cannot), or when you need a
 **stable ref identity** to hand to `watch`, a prop, or a composable. Keep it
 **thin**: the computed is the caching shell, the logic lives in a method on
-the prototype — testable, hot-graftable, minimum footprint. See
+the prototype — named, testable, reusable, minimum footprint. See
 [Computed & Watch](/guide/computed-watch#computed-your-usememo).
 
 ## Modules compose; circular references resolve
@@ -90,7 +90,7 @@ Each class is transformed in its own file at load time, and the transform is
 idempotent — shared ancestors are processed once, no matter the import order. The
 [namespace pattern](/guide/modules) (`$Class` raw + `Class` reactive) exposes
 classes through a hoisted object, so mutual cross-references between files resolve
-in any order and survive cross-file HMR.
+in any order. Vite and Vue rebuild the affected owner after script edits.
 
 ## Native inheritance & `super`
 

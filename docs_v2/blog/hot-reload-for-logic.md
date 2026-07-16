@@ -1,52 +1,67 @@
 ---
-title: "Hot reload was never about components"
-description: Frameworks hot-reload templates and call it developer experience. The state you actually care about lives in your logic — and now it survives edits too.
+title: 'Development should run production'
+description: A dev-only proxy can preserve state across edits, but it also creates a second execution model. ivue lets Vue own reconstruction so development exercises the production engine directly.
 date: 2026-07
 ---
 
-# Hot reload was never about components
+# Development should run production
 
-![Hot reload was never about components](/blog/hot-reload-for-logic.png)
+![Development should run production](/blog/hot-reload-for-logic.png)
 
-Every framework demos the same magic: edit a template, watch the button
-change color, no refresh. Impressive — until you notice what it protects.
-Component HMR preserves *component* state. The state that takes you ten
-minutes to reconstruct — the half-built document, the deep scroll
-position, the twelve-step editor session — lives in your **logic**, and
-editing logic has always meant losing it.
+Hot module replacement is seductive because every piece of state it preserves
+feels like progress. That convenience has a price when a library must introduce
+a different runtime to provide it.
 
-ivue hot-reloads *classes*. Edit a method, and the new behavior grafts
-onto **live instances with their state intact**:
+A class-grafting engine needs a stable class registry, a construct proxy, live
+method slots, source signatures, collision detection, private-brand detection,
+and rules for deciding which edits can mutate a living object. Development then
+runs through machinery production never executes.
 
-```ts
-step(delta: number) {
-  this.celsius.value = clamp(this.celsius.value + delta);
-  // ← edit this line; every live thermostat runs the new code
-  //   on the next call, still holding its temperature
-}
-```
+ivue takes the smaller contract:
 
-No remount. No lost refs. The instance you were debugging is still the
-instance you're debugging, one method smarter.
+> Development executes the production engine. Vue owns the reconstruction
+> boundary after a script edit.
 
-The reason this works is the architecture, not a trick: in ivue, **state
-lives per instance** (materialized refs) and **behavior lives on the
-prototype** (methods, plain getters). A prototype can be swapped under
-living objects — so a behavior edit is, structurally, a prototype-level
-change, and the engine performs exactly that swap. Constructor-level
-edits — the ones that genuinely change wiring — are detected by signature
-and escalate to a component remount instead of going silently stale. The
-detector is honest enough that comment-only edits never trigger it, and
-a changed space inside a string always does.
-
-Setup is one line, and there's a `fast` mode that trades class HMR for
-production-speed instances when you're benchmarking instead of editing:
+`Reactive()` transforms and returns the input class in every environment.
+Methods use the same direct lazy bind. Construction uses the same native `new`.
+Instances remain the same plain objects.
 
 ```ts
-plugins: [vue(), ivueHmr()],           // class HMR
-plugins: [vue(), ivueHmr({ fast: true })] // production-speed dev
+const counter = new Counter.Class();
+
+counter.increment === counter.increment; // true
+counter instanceof Counter.Class; // true
 ```
 
-The full mechanics — grafting, escalation, the 20M-cell live-swap story —
-are in [HMR: Hot Reload for Classes](/guide/hmr). Your state deserves to
-survive your edits.
+There is no development class proxy hidden behind either expression.
+
+When a template changes, Vue applies its normal state-preserving template HMR.
+When a class or component script changes, Vite reaches the Vue boundary and Vue
+reconstructs the affected owner. Constructor wiring, refs, computeds, bound
+methods, inheritance, and native private brands all come from one class
+generation.
+
+That reconstruction loses component-owned state after a script edit. It also
+removes the harder failure: a hybrid object whose old state and closures run
+against a partially replaced prototype.
+
+The same reduction improves performance work. A benchmark opened under the dev
+server exercises ivue's production construction and method-dispatch path. Vue's
+development diagnostics still exist, but ivue adds no proxy or live-slot branch
+that must be disabled before measuring the library itself.
+
+The setup is simply Vue's setup:
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+  plugins: [vue()],
+});
+```
+
+This is less magical and more exact. Hot reload remains a development transport;
+it does not become a second class runtime. The full ownership behavior is in
+[Development & HMR](/guide/hmr).

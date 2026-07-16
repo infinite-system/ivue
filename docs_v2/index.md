@@ -63,8 +63,8 @@ features:
   <div class="cell">
     <span class="ck" aria-hidden="true"></span>
     <div class="tx">
-      <strong>Hot reload for classes</strong>
-      <p>Behavior edits graft onto live instances, state intact. Multi-file hierarchies never desync.</p>
+      <strong>Development parity</strong>
+      <p>The same class identity, direct method binding, and engine branches run in development and production.</p>
     </div>
   </div>
   <div class="cell">
@@ -123,7 +123,7 @@ to the right <code>this</code>. Instances stay ordinary objects: a plain
 </p>
 
 <p class="lead ix-idea__p">
-Everything else falls out of that one move — inheritance, hot reload,
+Everything else falls out of that one move — inheritance, development parity,
 deterministic teardown, speed. Not features bolted on; consequences of
 where things live.
 </p>
@@ -160,7 +160,7 @@ class $Cart {
 
 export namespace Cart {
   export const $Class = $Cart // raw — children `extends` this
-  export const Class = Reactive($Class) // reactive — you `new` this
+  export let Class = Reactive($Class) // reactive — you `new` this
   export type Instance = typeof Class.Instance // expose & reactive() interop
 }
 

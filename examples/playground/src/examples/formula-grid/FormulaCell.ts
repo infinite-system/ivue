@@ -84,6 +84,6 @@ class $FormulaCell {
 
 export namespace FormulaCell {
   export const $Class = $FormulaCell;
-  export const Class = Reactive($Class);
+  export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

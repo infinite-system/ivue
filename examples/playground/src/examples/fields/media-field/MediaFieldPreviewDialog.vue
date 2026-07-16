@@ -117,7 +117,7 @@ class $MediaFieldPreviewDialog {
 
 export namespace MediaFieldPreviewDialog {
   export const $Class = $MediaFieldPreviewDialog;
-  export const Class = Reactive($Class);
+  export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 </script>

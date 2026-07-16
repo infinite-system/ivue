@@ -200,7 +200,7 @@ export default defineConfig({
             { text: 'Modules & Imports', link: '/guide/modules' },
             { text: 'Inheritance & super', link: '/guide/inheritance' },
             { text: 'Extensible Components', link: '/guide/extensible-components' },
-            { text: 'HMR: Hot Reload for Classes', link: '/guide/hmr' },
+            { text: 'Development & HMR', link: '/guide/hmr' },
           ],
         },
         {

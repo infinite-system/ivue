@@ -1,4 +1,4 @@
 interface:
   display_name: "Node Namespace"
-  short_description: "Author circular-safe Node class services"
-  default_prompt: "Use $node-namespace to build this Node.js backend with mutable class namespaces and late dependency getters."
+  short_description: "Author static Node capability classes"
+  default_prompt: "Use $node-namespace to build this Node.js backend with static capability classes, mutable namespaces, and late dependency getters."

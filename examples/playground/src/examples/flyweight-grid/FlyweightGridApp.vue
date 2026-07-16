@@ -4,8 +4,7 @@
  *
  * The SFC is now a thin shell per the ivue operating manual: ONE raw
  * `FlyweightGridPage` instance drives the template; only the template-ref
- * target is destructured. All logic lives on the class — hot-graftable
- * under the live model like everything else here.
+ * target is destructured. All logic lives as named methods on the class.
  */
 import './grid.css';
 import { COLS, colLabel, displayOf } from './flyweight-logic';

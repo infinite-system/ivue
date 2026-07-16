@@ -32,11 +32,9 @@ and evicts when the viewport moves away. A write to a cell nobody is
 watching allocates nothing and notifies no one. Twenty million cells
 exist; only the few hundred you can see cost anything.
 
-And because behavior lives on prototypes, the formula engine was
-**hot-swapped underneath this exact 20M-cell model** — edited on disk,
-grafted onto the live instances, totals recomputed through the new code,
-zero state lost. A compiled reactivity system cannot do that at any
-price: its code and its memory die together.
+Development uses the same engine path as production. Editing the sheet model
+reconstructs its Vue owner, applying one complete class generation instead of
+running new behavior against an old 20M-cell instance.
 
 The pattern is reusable, not a stunt: [The Flyweight
 Pattern](/guide/flyweight) walks the architecture, and [Reactive

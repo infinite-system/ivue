@@ -45,14 +45,12 @@ row's render effect already unsubscribed, so stop-watcher + Map-delete
 leaves the subgraph unreachable → collected.
 **Test:** _viewport eviction releases far rows_; _release drops the overlay_.
 
-## Closures Freeze at Creation; Prototype Lookups Stay Live
+## Cached Closures Delegate to Named Methods
 
-A reactive closure cached on an instance keeps its birth-module's logic
-forever; a `this.method()` call inside it resolves fresh every time. Hence
-every computed/watcher body in the sketch is a pointer to a method — which
-is why the formula engine hot-grafts under a live 20M-cell model (the
-capability WASM engines structurally lack: their code and memory die
-together).
+A reactive closure cached on an instance remains small: every computed and
+watcher body delegates to a named prototype method. Logic stays directly
+testable and cannot accidentally capture getter-scope values for the lifetime
+of the sheet.
 
 ## Scroll Physics Are Float32 and Capped
 
@@ -152,7 +150,6 @@ If the invariants hold, none of these can exist:
   (both scale with the live observation set)
 - a dead-branch edit recomputing a conditional formula
 - a stale facade (facades hold nothing)
-- a formula-engine deploy that loses live model state (grafting)
 - a document-size cap that is architectural rather than raw-heap-bound
 
 A change that introduces any of the above is breaking an invariant, not

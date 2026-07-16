@@ -92,7 +92,7 @@ class $Workspace {
 
 export namespace Workspace {
   export const $Class = $Workspace; // raw — children `extends` this
-  export const Class = Reactive($Class); // reactive — you `new` this
+  export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // exposed instance type
 }
 

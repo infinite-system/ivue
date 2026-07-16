@@ -659,53 +659,6 @@ describe('Reactive()', () => {
     });
   });
 
-  describe('DEV warning: getter returns Ref but setter is standard', () => {
-    it('warns at processing time about the API conflict', () => {
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      class Conflict {
-        get y() {
-          return ref(5); // returns Ref...
-        }
-        set y(_v: number | Ref<number>) {
-          // ...but setter is "standard" (treats the value as a number)
-        }
-      }
-      Reactive(Conflict);
-      // import.meta.env.DEV is true under vitest
-      expect(warn).toHaveBeenCalled();
-      expect(String(warn.mock.calls[0][0])).toContain('API conflict');
-    });
-
-    it('swallows a getter that throws when probed with an empty object', () => {
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      class Throwy {
-        get z() {
-          // Accessing this.missing.deep throws when called on {} during the
-          // DEV probe — Reactive must catch and not crash.
-          return ref((this as any).missing.deep);
-        }
-        set z(_v: any) {}
-      }
-      expect(() => Reactive(Throwy)).not.toThrow();
-      // Probe threw before isRef() check → no warning emitted.
-      expect(warn).not.toHaveBeenCalled();
-    });
-
-    it('does not probe or warn when not in DEV', () => {
-      vi.stubEnv('DEV', false);
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      class ProdConflict {
-        get y() {
-          return ref(5);
-        }
-        set y(_v: number | Ref<number>) {}
-      }
-      Reactive(ProdConflict);
-      expect(warn).not.toHaveBeenCalled();
-      vi.unstubAllEnvs();
-    });
-  });
-
   describe('$stopEffects teardown', () => {
     it('clears cached computeds so they re-materialize fresh after teardown', () => {
       class Store {

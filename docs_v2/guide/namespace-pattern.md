@@ -193,9 +193,10 @@ required for the static-first backend shape.
 
 ivue provides a stronger instance-method contract on the frontend.
 `Reactive()` turns instance methods into lazily bound, referentially stable
-functions. During ivue HMR, retained method references also dispatch through a
-live implementation slot. That is a Vue adapter capability around the same
-class model, not a requirement of the namespace invariant.
+functions. Vite and Vue reconstruct the owning component after script edits,
+so each retained method belongs to one coherent class generation. That is a
+Vue lifecycle capability around the same class model, not a requirement of the
+namespace invariant.
 
 ## What the pattern removes from DI
 

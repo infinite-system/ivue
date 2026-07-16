@@ -40,8 +40,7 @@ of you.
 
 All of it lives on **one ivue class**: template refs, prop refs, scroll
 state, the windowing math, the Lenis lifecycle — constructed in
-`setup()`, torn down by the component scope, hot-reloadable like
-everything else. This is not a demo component; it's extracted from
+`setup()` and torn down by the component scope. This is not a demo component; it's extracted from
 production, where it drives feeds this size daily.
 
 The full tabbed source — the ~1,200-line class included — is on the

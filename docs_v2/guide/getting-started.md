@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-description: Install ivue, give your AI the standard, enable class HMR, write a reactive class, use it in a Vue component, and see the result.
+description: Install ivue, give your AI the standard, confirm the production-parity development setup, write a reactive class, use it in a Vue component, and see the result.
 ---
 
 # Getting Started
@@ -29,29 +29,25 @@ npx ivue skill --all  # + Codex/Cursor/Copilot where already in use
 It lands in your repo (`.claude/skills/ivue/`, `.cursor/rules/`, …),
 travels through git, and one teammate installing it equips everyone.
 
-## Enable hot reload for classes
+## Development needs no ivue plugin
 
-One plugin line in `vite.config.ts` gives your classes real HMR — edit a
-method or getter and the new behavior grafts onto **live instances, state
-intact**, no page reload:
+Use Vite's normal Vue plugin. ivue runs the same engine path in development
+and production:
 
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import ivueHmr from 'ivue/hmr-plugin';
 
 export default defineConfig({
-  plugins: [vue(), ivueHmr()],
+  plugins: [vue()],
 });
 ```
 
-The plugin only marks modules that call `Reactive(...)` as HMR boundaries;
-it runs in the dev server only, and production builds contain **zero** HMR
-code. Optional — everything else on this page works without it — but it's
-one line, and it's the difference between tweaking a method live and
-re-clicking through your app after every save. Details, the manual
-three-line alternative, and how the grafting works: [HMR](/guide/hmr).
+Vite and Vue reconstruct the affected component after a class or script edit,
+so constructor wiring, cached state, methods, inheritance, and private fields
+all come from one class generation. Template-only edits retain Vue's normal
+state-preserving HMR. See [Development & HMR](/guide/hmr).
 
 ## Your first reactive class
 
@@ -81,7 +77,7 @@ class $Counter {
 
 export namespace Counter {
   export const $Class = $Counter // raw — children `extends` this
-  export const Class = Reactive($Class) // reactive — you `new` this
+  export let Class = Reactive($Class) // reactive, replaceable — you `new` this
   export type Instance = typeof Class.Instance // defineExpose type & reactive() interop
 }
 ```
@@ -95,7 +91,7 @@ is expensive or you need render suppression. See
 The `$`-prefixed raw class (`Counter.$Class`) is what children `extends`;
 the transformed class (`Counter.Class`) is what you `new`. This three-line
 [namespace export](/guide/modules) keeps the class ready for inheritance,
-cross-file references, and HMR as the codebase grows.
+cross-file references, and later kernel composition as the codebase grows.
 
 ## Use it in a component
 

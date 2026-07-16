@@ -1,6 +1,6 @@
 ---
 title: Design & Philosophy
-description: The hard problems ivue solves — cheap instantiation, cheap bound methods, reactive inheritance, cross-file HMR, circular imports, writable-getter types — and why solving them together is the achievement.
+description: The hard problems ivue solves — cheap instantiation, cheap bound methods, reactive inheritance, production-parity development, circular imports, and writable-getter types — and why solving them together is the achievement.
 ---
 
 # Design & Philosophy
@@ -39,9 +39,9 @@ set.
     <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span><strong>Deep computed chains with <code>super.x.value</code></strong>, reactivity propagating through every level.</span></p>
   </div>
   <div class="iv-problem">
-    <strong class="iv-problem__title">Cross-file class HMR</strong>
-    <p class="iv-problem__hard">Editing a parent in another file desyncs prototype links and identities.</p>
-    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>An idempotent, per-file transform <strong>survives HMR</strong>: behavior edits graft onto live instances.</span></p>
+    <strong class="iv-problem__title">Development parity</strong>
+    <p class="iv-problem__hard">A dev-only proxy or dispatch layer makes local behavior and performance differ from production.</p>
+    <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span><code>Reactive()</code> runs <strong>one execution path in every environment</strong>; Vue reconstructs the owner after script edits.</span></p>
   </div>
   <div class="iv-problem">
     <strong class="iv-problem__title">Circular imports hell</strong>
@@ -64,7 +64,7 @@ set.
 
 The reason the *set* stayed unsolved is that they
 **interact**. The prototype transform that enables inheritance is the same mechanism
-that breaks identity, HMR, and types. The caching that makes reads cheap is what
+that makes identity and types difficult. The caching that makes reads cheap is what
 makes `super` and teardown tricky. The types you need for writable getters dictate
 how you're even allowed to export the class.
 
@@ -143,7 +143,7 @@ exporting a **`const`** (whose type carries the remapping), not the class direct
 ```ts
 export namespace Thing {
   export const $Class = $Thing
-  export const Class = Reactive($Class)
+  export let Class = Reactive($Class)
   export type Instance = typeof Class.Instance
 }
 ```

@@ -25,8 +25,7 @@ cell is dropped, so state re-materializes fresh on the next access.
 - **Dispose is total.** After `$stopEffects()`, the old cells are gone;
   touching any ref-getter materializes a fresh cell.
 - The watch callback delegates to a method (`onTempChanged`) — the
-  thin-closure rule keeps logic on the prototype, hot-reloadable and
-  directly testable.
+  thin-closure rule keeps logic named on the prototype and directly testable.
 
 ## The source
 

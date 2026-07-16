@@ -144,6 +144,6 @@ export class $ExtendedMediaField extends MediaField.$Class {
 
 export namespace ExtendedMediaField {
   export const $Class = $ExtendedMediaField;
-  export const Class = Reactive($Class);
+  export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

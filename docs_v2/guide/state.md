@@ -194,12 +194,11 @@ class $Cache {
 }
 ```
 
-Native `#private` fields work in production, tests, and ordinary reloads.
-They do not support ivue's live class grafting because JavaScript brand-checks
-them against the exact class declaration. During class HMR, ivue detects the
-brand and automatically remounts the owning components so their instances are
-rebuilt; the page does not reload. Use TypeScript `private` when edits must graft
-onto live instances with their state intact.
+Native `#private` fields work in development, tests, SSR, and production.
+JavaScript brand-checks them against their exact class declaration. Vue owner
+reconstruction after a script edit creates the new declaration and its matching
+brand together, so ivue needs no private-field detection or alternate update
+path.
 
 ## Keyed reactivity: the third shape
 
@@ -254,7 +253,7 @@ keep it honest:
   design would put a million nodes.
 - **No wrapper needed.** `ref()`/`computed()` are first-class values from
   `@vue/reactivity`; storing them in Maps inside a `Reactive()` class
-  composes with everything — methods stay bound, HMR grafts, `$watch` works.
+  composes with everything — methods stay bound and `$watch` works.
 
 | state shape                    | expression                                              |
 | ------------------------------ | ------------------------------------------------------- |

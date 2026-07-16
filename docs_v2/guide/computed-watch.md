@@ -84,8 +84,8 @@ get sortedItems() {
 
 ::: warning Why not `computed(this.sortItems)` without the arrow?
 It works in ivue — methods are lazy-bound, so the reference carries its
-instance (in a vanilla class this is the classic detached-`this` bug), and
-it even hot-grafts. But since Vue 3.4 a computed getter **receives the
+instance (in a vanilla class this is the classic detached-`this` bug). But
+since Vue 3.4 a computed getter **receives the
 previous value as its first argument** — so the day someone gives the
 method an optional parameter, that parameter silently receives stale data.
 No error, just wrong results. The arrow is refactor-proof and idiomatic:
@@ -95,12 +95,6 @@ always use it.
 A computed is a _cache_, not a home for logic — and the thin form is what
 makes that doctrine mechanical:
 
-- **Hot reload.** Closures freeze at creation; prototype lookups stay live.
-  Edit `sortItems` and every live instance runs the new code on the next
-  read — the old closure happily dials a method whose implementation was
-  swapped behind it. Edit a fat computed's body and the owning components
-  must remount, because no engine can reach inside a closure that is
-  already cached on your instances ([HMR](/guide/hmr)).
 - **Memory.** The thin closure captures nothing but the instance — a
   pointer-sized hop to logic that exists **once per class** on the
   prototype. A fat closure invites per-instance captures: any local you

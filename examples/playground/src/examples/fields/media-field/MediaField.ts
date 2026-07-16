@@ -507,6 +507,6 @@ export class $MediaField {
 
 export namespace MediaField {
   export const $Class = $MediaField; // raw — children `extends` this
-  export const Class = Reactive($Class); // reactive — you `new` this
+  export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance;
 }

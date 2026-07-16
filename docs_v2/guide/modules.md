@@ -1,12 +1,12 @@
 ---
 title: Modules & Imports
-description: The namespace pattern is the standard way to export ivue classes. Cross-file hierarchies, hot-reload that never desyncs, and circular cross-references resolved at first access — plus $-getters for store injection.
+description: The namespace pattern is the standard way to export ivue classes. It gives cross-file hierarchies a fixed raw foundation, a replaceable runtime class, and circular cross-references that resolve at first access.
 ---
 
 # Modules & Imports
 
 **Export every class through the namespace pattern.** It costs three lines. In
-return you get cross-file inheritance, hot-reload that never desyncs, and
+return you get cross-file inheritance, a replaceable runtime class, and
 circular cross-references that resolve after module initialization.
 
 ## The pattern
@@ -30,7 +30,7 @@ class $BaseElement {
 
 export namespace BaseElement {
   export const $Class = $BaseElement; // raw — children `extends` this
-  export const Class = Reactive($Class); // reactive — you `new` this
+  export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 }
 ```
@@ -48,7 +48,7 @@ class $Container extends BaseElement.$Class {
 
 export namespace Container {
   export const $Class = $Container;
-  export const Class = Reactive($Class);
+  export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 ```
@@ -71,9 +71,9 @@ engine detects that and skips it. Every file can safely call `Reactive()` on
 its own class. Shared ancestors are processed exactly once, by whichever file
 loads first.
 
-This is also why ivue hierarchies survive **cross-file hot-reload**. Editing one
-file re-runs only that file's `Reactive()` call, which is a no-op on
-already-processed ancestors.
+The mutable `Class` slot also leaves a stable seam for tests and an optional
+composition kernel. Consumers keep constructing `Container.Class` regardless
+of which implementation the application selects.
 
 ## Circular references resolve by construction
 
@@ -224,7 +224,7 @@ class $Scroller<T extends BaseItem> {
 
 export namespace Scroller {
   export const $Class = $Scroller;
-  export const Class = Reactive($Class) as unknown as typeof $Class;
+  export let Class = Reactive($Class) as unknown as typeof $Class;
   export type Instance<T extends BaseItem> = ReactiveInstance<$Scroller<T>>;
 }
 ```

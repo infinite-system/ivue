@@ -22,6 +22,6 @@ class $SaleProduct extends Product.$Class {
 
 export namespace SaleProduct {
   export const $Class = $SaleProduct;
-  export const Class = Reactive($Class);
+  export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

@@ -25,8 +25,8 @@ far-apart viewports leave **+0.3 MB** of overlay — one window's worth.
 Released cells re-materialize correctly on re-observation, including writes
 made while they were unobserved (proven in the suite, 12/12). Dev vs prod
 being near-identical on creation/heap is itself informative: typed arrays
-don't care about dev-mode checks; prod mainly removes Vue's dev warnings
-and ivue's HMR slot indirection from hot call paths.
+do not care about Vue's development diagnostics, and ivue runs the same
+construction and method-binding path in both environments.
 
 Verified live in the DOM on every protocol run: bottom-row (row 1,000,000)
 arithmetic correct, a single-cell edit cascades into rendered dependents,
@@ -83,27 +83,12 @@ to virtual offset (~2.4 : 1 at 1M rows). All 1,000,000 rows reachable,
 verified headless and by hand. Same f32 invariant the ivue virtual-scroller
 neutralizes with scroll-origin rebasing.
 
-## Hot-swapping the engine under the data (demonstrated)
+## Development parity
 
-The flyweight model composes with ivue's class HMR into a capability that
-compiled/WASM engines structurally cannot offer — their code and their
-linear memory die together on rebuild; here, methods graft under typed
-arrays that never move. Demonstrated live on the dev server, one page,
-never reloaded:
-
-1. 20M-cell model created (63 ms), scrolled to row ~500,000;
-   `SUM(A1:A1000000)` = −92,541.84.
-2. `fastAggregate` edited ON DISK (every SUM +1,000,000) → Vite HMR →
-   ivue grafts onto the LIVE sheet. Page not reloaded, model intact,
-   scroll identical, observation census byte-identical.
-3. One cell edit → block invalidation → recompute through the GRAFTED
-   engine: total = 907,478.16 (baseline + 1,000,000 + the cell delta).
-4. Engine reverted on disk → second graft → original math returns on the
-   same living model: −92,520.84.
-
-Formula-engine iteration over live production-scale data, with zero state
-loss — the workflow a native/WASM charting or spreadsheet engine cannot
-have at any price.
+The development server uses ivue's production class path: native construction,
+plain instances, and direct lazy-bound methods. Editing the sheet model makes
+Vite and Vue reconstruct the example owner, applying one complete class
+generation instead of retaining a hybrid 20M-cell instance.
 
 ## Where this architecture shines next
 

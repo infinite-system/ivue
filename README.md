@@ -74,7 +74,7 @@ class $Counter {
 
 export namespace Counter {
   export const $Class = $Counter; // raw — children `extends` this
-  export const Class = Reactive($Class); // reactive — you `new` this
+  export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // the unwrapping-surface type
 }
 ```
@@ -105,7 +105,7 @@ as one coherent design:
 
 - **Bound methods** — `this.method` is always correct, always the same reference.
 - **Reactive inheritance** — deep `super.x.value` chains resolve level-safe.
-- **Hot reload for classes** — behavior edits graft onto live instances, state intact.
+- **Development parity** — the same class identity, direct binding, and engine branches in development and production.
 - **Circular import immunity** — the namespace pattern resolves mutual references in any load order.
 - **Writable getter types** — ref-returning getters type as writable; instances fully inferred.
 - **Deterministic teardown** — `$watch` scopes per instance, `$stopEffects()` cleans up.
@@ -120,7 +120,7 @@ plain and re-derives on every read — reactive with zero allocation. Methods
 bind themselves once, to the right `this`. Instances stay ordinary objects:
 no proxy wraps them, no work happens at construction.
 
-Inheritance, hot reload, teardown, speed — consequences of that one move.
+Inheritance, teardown, development parity, speed — consequences of that one move.
 
 Composables plug straight in — the entire Vue ecosystem works inside your
 classes:
@@ -166,10 +166,9 @@ nothing costs proportional to what *exists*.
 
 ## A note on the size
 
-The v1 README said `1.1kb gzipped`. This engine — rewritten from scratch on a
-different architecture: lazy prototype transform instead of per-instance
-proxies, hot-reload grafting included — is **1.1kb gzipped** again.
-Completely different, precisely the same weight.
+The complete engine is **1.1kb gzipped**: lazy prototype transformation,
+bound methods, inheritance, lifecycle ownership, and the public utilities.
+Development uses that same engine without a second hot-update execution path.
 
 > *Perfection is achieved, not when there is nothing more to add, but when
 > there is nothing left to take away.* — Antoine de Saint-Exupéry

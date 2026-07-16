@@ -21,6 +21,6 @@ class $Product {
 
 export namespace Product {
   export const $Class = $Product; // raw — children `extends` this
-  export const Class = Reactive($Class); // reactive — you `new` this
+  export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 }

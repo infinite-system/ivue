@@ -86,12 +86,10 @@ climbing.
   linear columnar fast path for bare `SUM/AVERAGE/MIN/MAX/COUNT(range)` (same
   observation semantics) closed a five-orders-of-magnitude gap — the same
   reason desktop engines special-case range ops.
-- **Hot-swapping the engine under the data.** The sheet is an ivue class, so
-  [class HMR](/guide/hmr) grafts formula-engine edits onto the _live_
-  20M-cell model — demonstrated: page never reloaded, ground truth and
-  census byte-identical, next recompute ran the new math. Compiled/WASM
-  engines structurally cannot offer this: their code and their memory die
-  together on rebuild.
+- **The development model stays honest.** The 20M-cell example runs the same
+  ivue construction and method-binding path in development and production.
+  Script edits rebuild their owner through Vue instead of mixing one live
+  model generation with another.
 - **The scroll walls are physical.** Chrome's compositor does scroll math in
   float32 (dead past 2^24 px ≈ row 599,186 of a 28px-row grid); Firefox caps
   element height at ~17.9M px. The scaled scrollbar (capped physical height,

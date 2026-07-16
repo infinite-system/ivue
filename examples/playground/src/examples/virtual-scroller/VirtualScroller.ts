@@ -11,11 +11,7 @@ import {
 } from 'vue';
 
 import { useElementSize, useResizeObserver } from '@vueuse/core';
-import {
-  ivueHotUpdate,
-  Reactive,
-  type ReactiveInstance
-} from '../../ivue';
+import { Reactive, type ReactiveInstance } from '../../ivue';
 import { Lenis } from '../../lenis/lenis';
 import type { BaseItem } from './VirtualScroller.types';
 import type {
@@ -360,9 +356,8 @@ class $VirtualScroller<T extends BaseItem> {
   }
 
   get scrollHeight() {
-    // THIN computed — the caching shell only; the logic lives in a method
-    // so an edit hot-grafts onto live instances (closures freeze, prototype
-    // lookups stay live — see the ivue HMR docs).
+    // THIN computed — the caching shell only; the logic stays named in a
+    // directly testable method on the prototype.
     return computed(() => this.computeScrollHeight());
   }
 
@@ -1193,7 +1188,7 @@ class $VirtualScroller<T extends BaseItem> {
  */
 export namespace VirtualScroller {
   export const $Class = $VirtualScroller;
-  export const Class = Reactive(
+  export let Class = Reactive(
     $VirtualScroller
   ) as unknown as typeof $VirtualScroller;
   export type Instance<T extends BaseItem> = ReactiveInstance<
@@ -1202,15 +1197,3 @@ export namespace VirtualScroller {
 }
 
 export type VirtualScrollerReturn<T extends BaseItem> = $VirtualScroller<T>;
-
-if (import.meta.hot) {
-  // ivue HMR: self-accept so an edit stops propagating here. The module
-  // re-executes and Reactive($VirtualScroller) grafts the new members onto
-  // the canonical class — live scrollers keep their state (scroll position,
-  // measured heights, cursor) and run the new behavior immediately. See the
-  // HMR section in src/utils/ivue2.ts.
-  // Optional-call: during a transiently mixed module graph (old engine
-  // cached, new module code) the import can be undefined — degrade to a
-  // plain graft instead of throwing inside the accept callback.
-  import.meta.hot.accept((mod) => ivueHotUpdate?.(import.meta.hot, mod));
-}

@@ -18,12 +18,12 @@ that also says what *cannot* is a contract you can test against.
 > while the instances stay plain objects with zero per-instance reactive cost.
 
 Everything else is a consequence of making that idea safe under inheritance,
-proxies, hot-reload, and circular imports.
+proxies, environment parity, and circular imports.
 
 ::: info Source
 This page is the single canonical invariant specification. The implementation
 lives in [`lib/Reactive.ts`](https://github.com/infinite-system/ivue/blob/main/lib/Reactive.ts);
-the core and HMR suites live beside it and maintain 100% statement, branch,
+the core and adversarial suites live beside it and maintain 100% statement, branch,
 function, and line coverage.
 :::
 
@@ -35,10 +35,8 @@ Intrinsic to `Reactive()` itself.
 
 > `Reactive(Class)` preserves one constructor identity for the class's lifetime.
 
-It transforms `Class.prototype` in place. In production, SSR, and tests it hands
-the same class back unchanged, so `Reactive(X) === X`. During Vite class HMR it
-returns one stable construct-trap proxy over that class; hot module executions
-feed donor implementations into the same canonical identity. In every mode,
+It transforms `Class.prototype` in place and returns the same class in
+development, tests, SSR, and production, so `Reactive(X) === X`. In every mode,
 `instanceof` and the prototype lineage remain intact.
 
 **Rules out** — two class identities for one declaration; a "reactive copy" with a
@@ -165,27 +163,19 @@ return the same object.
 **Rules out** — a `$`-getter re-running its body on each access (a new composable /
 subscription every read).
 
-### Hot-swap continuity
+### Environment parity
 
-> During Vite development, behavior edits reach live instances without replacing
-> their state; edits that cannot be grafted escalate to an owner remount.
+> Development, tests, SSR, and production execute one `Reactive()` class path.
 
-The first registered class is canonical. A re-executed module contributes a donor
-whose members are processed onto that canonical prototype. Cache symbols are
-reused, and bound methods route through dev-only implementation slots, so existing
-refs and even previously detached method references stay live. New instances use
-the newest constructor through the stable construct trap.
+The engine contains no environment-specific class registry, construct proxy,
+method dispatch slot, or source-signature classifier. Vite and Vue own module
+replacement and reconstruct the affected component after script edits. Each
+instance therefore contains state, constructor wiring, closures, private brands,
+and prototype behavior from one class generation.
 
-Closures already cached on an instance cannot be rewritten. Constructor changes,
-inlined-computed changes, `$`-singleton changes, and member-kind changes therefore
-invalidate the module so Vue remounts the owning components. Inheritance grafts
-and ambiguous class-name collisions are refused rather than applied unsafely.
-Every HMR call site is gated by `import.meta.env.DEV`, so production contains none
-of the registry, proxy, slot, or graft machinery.
-
-**Rules out** — stale duplicate class identities after a hot update; a live bound
-handler continuing to run an old method; an unsafe edit silently corrupting a live
-instance; HMR machinery surviving a production build.
+**Rules out** — development-only class identity; benchmark results that include
+an ivue-only dev proxy; a hybrid instance combining old state with new class
+behavior; an HMR classification branch inside `Reactive()`.
 
 ## Module & import invariants
 
@@ -198,7 +188,7 @@ cross-file hierarchies and circular imports where instantiation-time engines don
 ```ts
 export namespace Thing {
   export const $Class = $Thing          // RAW class — children `extends` this
-  export const Class  = Reactive($Class) // REACTIVE class — you `new` this
+  export let Class  = Reactive($Class) // REACTIVE class — you `new` this
   export type Instance = typeof Class.Instance
 }
 ```
@@ -223,14 +213,13 @@ export var Thing;
 is idempotent and identity-preserving, a base already transformed in `Base.ts` is
 detected and skipped when a child's chain walk reaches it — yet the child still
 inherits the installed getters through the shared prototype. So parent, grandparent
-and child can live in separate files. Re-running a module cannot double-transform
-an ancestor; in HMR mode, inheritance edits follow the explicit remount boundary
-described above rather than desynchronizing a partially grafted chain.
+and child can live in separate files. Vite and Vue reconstruct the affected owner
+after a script edit, applying the newly evaluated hierarchy as one generation.
 
 **Rules out** — a multi-file hierarchy ending up partially transformed; a module
 reload double-wrapping an inherited getter.
 
-### Circular-import & HMR robustness
+### Circular-import robustness
 
 > Exposing the class as two namespace members — `$Class` (raw, for `extends`) and
 > `Class` (reactive, for `new`) — lets cross-referencing modules resolve each other
@@ -262,10 +251,9 @@ Listed deliberately, so the invariants above aren't over-read:
    plain `watch()` inside component setup belong to Vue's component scope and stop
    on unmount. Component-outliving models use `$watch` / `$watchEffect`, and their
    owners call `$stopEffects()`.
-3. **Native `#private` fields do not hot-graft.** They work normally outside class
-   HMR, but their JavaScript brand belongs to one class declaration. ivue detects
-   them and remounts the owning components on update; use TypeScript `private` when
-   live behavior grafting with state preservation is required.
+3. **Native `#private` fields belong to one declaration.** They work in every
+   environment. Vue reconstruction after a script edit creates the replacement
+   declaration and its matching instances together.
 4. **`.value` ergonomics.** Reactive state is read with `.value` outside a
    `reactive()` / template auto-unwrap context — the one ergonomic cost relative to
    a proxy-based model.

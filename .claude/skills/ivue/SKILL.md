@@ -89,7 +89,7 @@ class $Box {
   // value-equality, or a stable ref handle for watch/props (~300 bytes/instance).
   // THIN closures (see "computed() and watch callbacks delegate to methods"):
   // the computed only dials a method — logic stays on the
-  // prototype, hot-graftable, minimum footprint.
+  // prototype, directly testable, minimum footprint.
   get sortedRows() {
     return computed(() => this.sortRows());
   }
@@ -147,7 +147,7 @@ class $Box {
 
 export namespace Box {
   export const $Class = $Box; // raw — children `extends` this
-  export const Class = Reactive($Class); // reactive — you `new` this
+  export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 }
 ```
@@ -281,7 +281,7 @@ class $Session {
 
 export namespace Session {
   export const $Class = $Session; // raw — children `extends` this
-  export const Class = Reactive($Class); // reactive — you `new` this
+  export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 }
 
@@ -374,7 +374,7 @@ safe without ordering discipline or `forwardRef`-style workarounds:
   `$`-getter) resolve at FIRST ACCESS, when every module in the cycle has
   long finished loading — any load order works.
 - Each file calls `Reactive()` on its own class safely: it is idempotent per
-  prototype level and HMR-safe; a shared ancestor is transformed once, by
+  prototype level; a shared ancestor is transformed once, by
   whichever file loads first.
 - Eager top-level dereferences can still fail; the convention keeps
   cross-references inside late method and getter bodies. Circular `extends`
@@ -396,22 +396,20 @@ class $Scroller<T extends BaseItem> {
 
 export namespace Scroller {
   export const $Class = $Scroller;
-  export const Class = Reactive($Class) as unknown as typeof $Class; // keeps <T> at `new` sites
+  export let Class = Reactive($Class) as unknown as typeof $Class; // keeps <T> at `new` sites
   export type Instance<T extends BaseItem> = ReactiveInstance<$Scroller<T>>;
 }
 // consumer of a template ref: ShallowUnwrapRef<Scroller.Instance<T>>
 ```
 
-## computed() and watch callbacks delegate to methods (HMR-streamlined)
+## computed() and watch callbacks delegate to methods
 
-A reactive closure's body is FROZEN at creation — it is cached per instance
-and no hot update can reach inside it. A prototype lookup is evaluated at
-call time — it stays live forever. So: **closures are pointers; logic lives
-in methods.**
+A reactive closure is cached per instance. Keep that closure as a small
+pointer to behavior on the prototype: **closures connect; methods contain
+logic.**
 
 ```ts
-// ✅ THIN — the closure only dials a method; edits hot-graft onto LIVE
-//    instances with all state preserved
+// ✅ THIN — the closure only delegates; logic stays named and testable
 get sortedItems() {
   return computed(() => this.sortItems());
 }
@@ -422,9 +420,7 @@ sortItems() {
 // ✅ same rule for watch callbacks wired in constructors
 watch(value, (newValue, oldValue) => this.onValueChanged(newValue, oldValue));
 
-// ❌ FAT — logic frozen into a per-instance closure: editing this body
-//    forces a component remount (the engine detects it and escalates —
-//    never silently stale — but you lose live-state grafting)
+// ❌ FAT — logic is anonymous and duplicated inside the cached closure
 get sortedItems() {
   return computed(() => [...this.items.value].sort(byPrice));
 }
@@ -517,7 +513,7 @@ by observation), while writes to unobserved keys allocate no signal. Rules that 
   million nodes.
 - No wrapper needed: `ref()`/`computed()` are first-class values from
   `@vue/reactivity`; Maps of them inside a `Reactive()` class compose with
-  everything (methods stay bound, HMR grafts, `$watch` works).
+  everything (methods stay bound and `$watch` works).
 
 | state shape                  | expression                                            |
 | ---------------------------- | ----------------------------------------------------- |

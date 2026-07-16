@@ -135,11 +135,10 @@ Consequences observed in production, not projected:
   with feature count or data size; it scales with _how many caches you
   deliberately bought_. Complexity becomes locally auditable — each new
   getter's cost is readable off its body.
-- **Hot reload beyond Vue's own.** Behavior living on prototypes (not in
-  closures) is what makes [class grafting](/guide/hmr) possible — edits
-  land on live instances with state intact, which `setup()`'s opaque
-  closure structurally cannot offer. The same geometry, paying again in a
-  domain it wasn't designed for.
+- **Development matches production.** The engine uses native construction and
+  direct method binding in every environment. Vite and Vue rebuild the owner
+  after script edits, so no development proxy or dispatch layer changes the
+  class geometry being tested ([Development & HMR](/guide/hmr)).
 
 ## Convergence — others keep finding the same invariant
 

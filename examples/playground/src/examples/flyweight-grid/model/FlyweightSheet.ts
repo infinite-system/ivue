@@ -32,7 +32,7 @@ import {
   type Ref,
   type WatchStopHandle,
 } from 'vue';
-import { ivueHotUpdate, Reactive } from '../../../ivue';
+import { Reactive } from '../../../ivue';
 import {
   BLOCK_ROWS,
   BLOCK_SHIFT,
@@ -293,9 +293,8 @@ class $FlyweightSheet {
   // --- formulas ---
   /**
    * The cached computed for a formula cell — created on first observation.
-   * THIN on purpose (the computed and watcher bodies are pointers to
-   * methods): closures freeze at creation, prototype lookups stay live, so
-   * evaluation and bridge logic stay hot-graftable under live sheets.
+   * THIN on purpose: the computed and watcher bodies are small pointers to
+   * named, directly testable methods on the prototype.
    */
   private formulaValue(row: number, col: number): ComputedRef<CellValue> {
     const cellKey = this.cellKey(row, col);
@@ -369,9 +368,8 @@ class $FlyweightSheet {
   /**
    * A live ad-hoc formula over the sheet (the demo's totals bar) — a cached
    * computed evaluating `body` through the same parser/seams, so a large
-   * range inside it costs blocks, not cells. Thin: the computed is a
-   * pointer to evaluateAdHocFormula, so formula-engine edits graft onto
-   * totals that are already on screen.
+   * range inside it costs blocks, not cells. Thin: the computed is a pointer
+   * to the named, directly testable evaluateAdHocFormula method.
    */
   liveFormula(body: string): ComputedRef<CellValue> {
     let cached = this.adHocCache.get(body);
@@ -613,14 +611,6 @@ class $FlyweightSheet {
 
 export namespace FlyweightSheet {
   export const $Class = $FlyweightSheet;
-  export const Class = Reactive($Class);
+  export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
-}
-
-if (import.meta.hot) {
-  // ivue HMR: edits to this module graft onto the LIVE sheet/cells — the
-  // 20M-cell ground truth, observation overlay and scroll position all
-  // survive while methods swap. The capability WASM engines structurally
-  // lack: their code and their memory die together.
-  import.meta.hot.accept((mod) => ivueHotUpdate?.(import.meta.hot, mod));
 }

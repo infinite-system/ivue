@@ -3,9 +3,8 @@
  * manual. The composition-API version of this logic carried seven
  * `computed()`s; under the doctrine exactly ONE survives (`visibleRows`,
  * render suppression) — every other derivation is a plain getter at zero
- * bytes per instance. The one computed is THIN: its body is a pointer to
- * `buildVisibleRows()`, so window-building logic hot-grafts onto the live
- * page (closures freeze at creation; prototype lookups stay live).
+ * bytes per instance. The one computed is THIN: its body delegates to the
+ * directly testable `buildVisibleRows()` method.
  */
 import {
   computed,
@@ -17,7 +16,7 @@ import {
   watch,
   type ComputedRef,
 } from 'vue';
-import { ivueHotUpdate, Reactive } from '../../ivue';
+import { Reactive } from '../../ivue';
 import {
   COLS,
   OVERSCAN,
@@ -303,12 +302,6 @@ class $FlyweightGridPage {
 
 export namespace FlyweightGridPage {
   export const $Class = $FlyweightGridPage;
-  export const Class = Reactive($Class);
+  export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
-}
-
-if (import.meta.hot) {
-  // ivue HMR: behavior edits graft onto the live page controller;
-  // constructor/state-shape edits remount just this component.
-  import.meta.hot.accept((mod) => ivueHotUpdate?.(import.meta.hot, mod));
 }

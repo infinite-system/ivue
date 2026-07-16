@@ -205,11 +205,9 @@ That last pair is the architecture: memory is **O(viewport), not
 O(rows-ever-visited)** — viewport-tied eviction returns scrolled-away
 overlay to the collector, and released cells re-materialize correctly on
 re-observation. A write to a cell nobody is observing allocates nothing and
-notifies no one. And because behavior lives on prototypes, the formula
-engine was **hot-swapped under the live 20M-cell model** — edited on disk,
-grafted by [class HMR](/guide/hmr), totals recomputed through the new
-engine, zero state loss. A compiled/WASM engine cannot do that at any
-price: its code and its memory die together.
+notifies no one. Development exercises this same production engine path;
+class or script edits reconstruct the owning example through Vue rather than
+introducing a benchmark-only dispatch layer.
 
 ### The per-cell cost ladder
 

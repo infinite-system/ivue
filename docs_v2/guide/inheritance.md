@@ -46,7 +46,7 @@ class $Product {
 
 export namespace Product {
   export const $Class = $Product; // raw — children `extends` this
-  export const Class = Reactive($Class); // reactive — you `new` this
+  export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 }
 ```
@@ -76,7 +76,7 @@ class $SaleProduct extends Product.$Class {
 
 export namespace SaleProduct {
   export const $Class = $SaleProduct;
-  export const Class = Reactive($Class);
+  export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 ```
@@ -107,7 +107,7 @@ class $TaxedProduct extends SaleProduct.$Class {
 
 export namespace TaxedProduct {
   export const $Class = $TaxedProduct;
-  export const Class = Reactive($Class);
+  export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 ```
@@ -200,7 +200,7 @@ are different cells — the child's cached computed and the `super` computed
 it reads coexist instead of overwriting each other. No configuration; it's
 structural.
 
-## Files, cycles, hot reload — solved underneath
+## Files and cycles — solved underneath
 
 Cross-file hierarchies are the normal case, and the namespace pattern makes
 them boring:
@@ -209,9 +209,9 @@ them boring:
   is idempotent: when `TaxedProduct.ts` processes its chain, `$SaleProduct`
   and `$Product` are already done and get skipped. Any load order produces
   the identical result.
-- **Hot reload never desyncs.** Editing `SaleProduct.ts` re-runs only that
-  file's `Reactive()` call; ancestors keep their processed prototypes and
-  live instances keep their state ([HMR](/guide/hmr)).
+- **Script edits rebuild coherently.** Vite and Vue reconstruct the affected
+  owner from the newly evaluated hierarchy. Development uses the same
+  `Reactive()` execution path as production ([Development & HMR](/guide/hmr)).
 - **Import cycles are solved fundamentally, not managed.** Hierarchies grow
   into webs — products reference carts, carts create products — and webs
   eventually close into cycles. Under the namespace pattern every

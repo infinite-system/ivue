@@ -1,212 +1,147 @@
 ---
-title: HMR — Hot Reload for Classes
-description: Edit a method or getter and watch live instances run the new code with all their state intact — beyond what Vue's own HMR can do for script edits. Constructor edits surgically remount only the owning components. Production pays zero bytes.
+title: Development & HMR
+description: ivue uses one Reactive() execution path in development, test, SSR, and production. Vite and Vue rebuild the owning component after class-module edits, keeping every class generation coherent without a dev-only proxy or grafting runtime.
 ---
 
-# HMR — Hot Reload for Classes
+# Development & HMR
 
-Edit a Reactive class while your app runs, and **live instances keep their
-state and run the new code** — no remount, no page reload, no lost scroll
-position or half-filled form. This is a capability Vue's own HMR structurally
-cannot offer for script edits, and ivue derives it from the same prototype
-structure used by its runtime design.
+> Development runs the production engine: same class, same direct method
+> binding, same branches, same performance semantics.
 
-_(Terminology: the industry acronym HMR stands for Hot Module **Replacement**
-— replacing a module in a running page. What ivue adds on top is hot
-replacement of a **class under its live instances**.)_
-
-## What you get
-
-| You edit…                                         | What happens                                                                                       |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| a **method** body                                 | live instances run the new code on the next call — state intact                                    |
-| a **derived getter**                              | recomputes with the new logic on the next read — state intact                                      |
-| an **added member**                      | appears on live instances immediately                                   |
-| a **removed member**                     | tombstoned in dev (keeps its last implementation) so stale closures never crash; gone after remount/reload |
-| an **inlined `computed(...)` body** or a **`$`-singleton** | owning components remount automatically — a graft cannot reach closures already cached on instances |
-| a **ref-getter initializer** (`ref(5)`→`ref(10)`) | live instances _keep their current state_ (that's the point); new instances start at the new value |
-| a **class field** or **constructor**              | only the _owning components_ remount; replacements are built by the new constructor                |
-| a class with native **`#private`** members        | only the _owning components_ remount; each class evaluation creates a new private brand             |
-| a **template** (`.vue`)                           | Vue's own re-render — state intact (unchanged)                                                     |
-
-Compare with vanilla Vue: any script edit — a handler tweak, one changed
-line in `setup()` — reloads **every mounted instance** of that component,
-state reset. Edit a shared composable and every component importing it
-remounts at once. Vue has no choice: `setup()` is one opaque closure, so it
-cannot know your edit was "just behavior".
-
-ivue can know, because the class syntax _is_ the information:
-
-- **State** lives in ref-getters → materialized as per-instance cached refs
-  (own properties).
-- **Behavior** lives in methods and plain getters → on the prototype, shared.
-
-A behavior edit is therefore, structurally, a prototype-level change — and a
-prototype can be swapped under living instances without touching their state.
-The distinction Vue must guess at, ivue reads off the syntax.
-
-## Setup
-
-**With the Vite plugin** (recommended — zero per-file boilerplate):
+ivue requires no HMR plugin. Use the normal Vue plugin:
 
 ```ts
 // vite.config.ts
+import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import ivueHmr from 'ivue/hmr-plugin';
 
 export default defineConfig({
-  plugins: [vue(), ivueHmr()],
-  // vendored engine copy? point the injected import at it:
-  // plugins: [vue(), ivueHmr({ runtime: 'src/utils/ivue2' })],
+  plugins: [vue()],
 });
 ```
 
-The plugin appends a self-accept to every module that calls `Reactive(...)`
-(dev server only; add a `@ivue-no-hmr` comment to opt a file out).
+When a class module changes, Vite follows the import graph to an accepting Vue
+boundary. Vue reconstructs the affected component and its setup-owned class
+instance. When no narrower boundary can accept the update, Vite reloads the
+page.
 
-**Manually** — three lines at the bottom of a class module:
+Every class edit follows that same coherent lifecycle:
+
+- method and getter edits;
+- constructor and field edits;
+- native `#private` edits;
+- inheritance changes;
+- added, removed, or renamed members.
+
+The new instance contains one generation of state, constructor wiring,
+closures, private brands, and prototype behavior. ivue does not combine old
+instance state with a newly evaluated class body.
+
+## Template edits still preserve state
+
+Vue owns SFC template HMR. Editing only a template updates its render function
+while Vue preserves component state where its normal HMR rules permit it.
+
+Editing the class or component script rebuilds the affected owner. This matches
+the lifecycle developers already receive from ordinary Vue setup code:
+
+```text
+template edit     → Vue updates rendering and preserves state
+class/script edit → Vue reconstructs the affected owner
+unsafe boundary   → Vite reloads the page
+```
+
+No ivue-specific configuration changes that pipeline.
+
+## Why reconstruction is the complete operation
+
+A class instance combines several kinds of generation-specific state:
+
+- field initializers and constructor side effects;
+- cached refs, computeds, and singleton getters;
+- bound method references;
+- inheritance and `super` relationships;
+- native private brands;
+- watchers, listeners, and lifecycle registration.
+
+Replacing only prototype methods creates a hybrid object: old state and wiring
+running new behavior. Supporting that hybrid requires a class registry,
+construct proxy, live method slots, source signatures, edit classification,
+collision handling, and remount escalation.
+
+Owner reconstruction applies the complete new declaration. It needs none of
+that machinery and cannot silently retain an incompatible old fragment.
+
+## Production parity
+
+`Reactive()` has one implementation across environments:
+
+| Property | Development | Test / SSR | Production |
+|---|---|---|---|
+| Returned constructor | input class | input class | input class |
+| Construction | native `new` | native `new` | native `new` |
+| Instance | plain object | plain object | plain object |
+| Method binding | direct lazy bind | direct lazy bind | direct lazy bind |
+| Class registry | none | none | none |
+| Construct proxy | none | none | none |
+| Live method slot | none | none | none |
+
+Vue's own development build and Vite still provide their normal diagnostics
+and module graph. The ivue engine adds no development-only execution path.
+Benchmarks run during development therefore exercise the same ivue class
+semantics as a production build.
+
+## Ownership determines the reload boundary
+
+A class constructed in component setup belongs to that component. Vue unmounts
+the owner, runs its normal cleanup, and constructs the replacement.
+
+An instance that outlives components needs an explicit owner in ordinary code
+and during development. Its owner calls `$stopEffects()` when replacing or
+disposing it:
 
 ```ts
-import { ivueHotUpdate, Reactive } from 'ivue';
+let session = new Session.Class();
 
-export namespace Player {
-  export const $Class = $Player;
-  export const Class = Reactive($Class);
-  export type Instance = typeof Class.Instance;
+function replaceSession() {
+  session.$stopEffects();
+  session = new Session.Class();
 }
-
-if (import.meta.hot) {
-  import.meta.hot.accept((mod) => ivueHotUpdate?.(import.meta.hot, mod));
-}
 ```
 
-A bare `import.meta.hot.accept()` also works — behavior edits still hot-swap;
-you only lose automatic remounts for edits that require rebuilt instances.
+Module singletons and process-wide browser resources may push an update to a
+page reload. That is the honest boundary when no component owns their complete
+lifecycle. Durable development state belongs in a store, persistence layer, or
+an explicitly managed external resource rather than in a partially upgraded
+class instance.
 
-## High-performance dev mode
+## Bound methods remain safe within one generation
 
-Class HMR has one real dev-time cost: the construct-trap proxy that lets
-remounted components pick up the newest class version. It makes a bare
-`new` about 11× slower in dev — production never pays it. When a session
-is about perf work rather than behavior editing, trade class HMR away and
-get production-speed instances in dev:
+ivue methods are lazily bound and referentially stable:
 
 ```ts
-// vite.config.ts
-export default defineConfig({
-  plugins: [vue(), ivueHmr({ fast: true })],
-});
+button.addEventListener('click', counter.increment);
+
+counter.increment === counter.increment; // true
 ```
 
-`fast: true` sets `globalThis[Symbol.for('ivue.hmr.disable')]` before any
-`Reactive()` call runs, so the engine never arms the trap. Class edits then
-fall back to Vite's normal propagation (component remount or reload);
-everything else about dev — component HMR, CSS, devtools — is untouched.
-Wire it to an env flag for a per-terminal switch:
+When Vue rebuilds the owner, cleanup removes callbacks retained by the old
+owner and the new owner registers methods from the new instance. Constructor
+callbacks and computed closures continue to delegate through thin closures for
+clarity, direct testing, and minimum captured state—not for cross-generation
+grafting.
 
-```ts
-// vite.config.ts
-plugins: [vue(), ivueHmr({ fast: !!process.env.IVUE_FAST })],
-```
+## Troubleshooting the ordinary HMR pipeline
 
-```jsonc
-// package.json
-"dev":      "vite",
-"dev:fast": "IVUE_FAST=1 vite"
-```
+HMR remains a pipeline: editor → file watcher → Vite websocket → module graph →
+Vue boundary. If an edit does not appear:
 
-Note that simply *removing* the plugin does not do this — the engine arms
-its dev machinery on its own; the plugin's `fast` mode is what injects the
-opt-out.
+1. confirm Vite logs the file change;
+2. inspect the browser console for an invalidation or reload message;
+3. confirm the importing component is mounted;
+4. check reverse proxies and remote development hosts for websocket support;
+5. reload once to distinguish a transport failure from application behavior.
 
-## How it works
-
-The runtime contract mirrors Vue's own component HMR — stable identity,
-self-accepting modules, an upgrade procedure for live instances — applied at
-class granularity:
-
-1. **One identity, forever.** The first `Reactive(Class)` registration is
-   canonical. When your edited module re-executes, its fresh class is treated
-   as a _donor_: its members are re-processed onto the canonical prototype
-   (`hmrGraft`), and `Reactive()` returns the same identity it always has.
-   Two class objects for one declaration cannot exist — not even across hot
-   updates — so stale-class ghosts are impossible by construction.
-2. **State survives because cache keys survive.** Per-instance refs are
-   cached under per-`(prototype, key)` symbols, and grafts _reuse_ them: your
-   live refs, computeds and effect scopes carry straight through.
-3. **Even old bound references run new code.** Method calls route through
-   per-key slots (dev only), so a handler you registered with
-   `addEventListener` — or handed to a scroller, a timer, a debounce — stays
-   referentially valid _and_ executes the grafted implementation immediately.
-4. **New instances always get the newest constructor.** `Reactive()` returns
-   a construct-trap proxy (dev only) that builds instances with the latest
-   donor's constructor while keeping the canonical prototype.
-5. **Instance-bound edits escalate honestly.** A graft can't rewire a living
-   instance's constructor work (watchers, listeners, field values), and a
-   freshly evaluated native `#private` member carries a new JavaScript brand.
-   The engine detects both cases; `ivueHotUpdate` invalidates the module and
-   your framework remounts _just the owning components_, which rebuild through
-   the trap with the new constructor. The page itself never reloads.
-
-Unsafe grafts refuse loudly and degrade to reload-needed, never corruption:
-inheritance chains aren't grafted, and two unrelated same-named classes are
-detected (pass an explicit id — `Reactive(Class, 'my/stable-id')` — if you
-genuinely have name collisions).
-
-## Production pays nothing
-
-Every HMR call site is gated on the statically-replaceable
-`import.meta.env.DEV`, so production bundles contain **zero** HMR machinery —
-no registry, no proxy, no slots, no graft. This is verified by building and
-grepping `dist/`, not assumed. In tests and SSR, `Reactive()` keeps its
-classic contract untouched: same class in, same class out.
-
-## Honest boundaries
-
-- **Ref-getter initializer edits apply forward-only.** Live state is
-  deliberately preserved; remount (navigate away/back) when you want the new
-  initial value on the current screen.
-- **Computeds with inlined logic can't be grafted** — the computed object
-  (and its closure) is cached per instance. The engine *detects* such edits
-  and automatically remounts the owners instead of leaving live instances
-  silently stale. Thin computeds that delegate to methods — already the
-  ivue convention — graft live with state preserved, because the closure is
-  just a pointer: `computed(() => this.recalculate())` picks up a new `recalculate`
-  instantly. The rule underneath: **closures freeze at creation; prototype
-  lookups stay live.** Keep logic where lookups can reach it.
-- **"Unthinning" is safe.** Moving logic from a method back into a computed
-  (deleting the method) is the nastiest edit shape: the old closure cached
-  on live instances still calls the deleted method. Removed members are
-  therefore tombstoned — the last implementation stays reachable until the
-  automatic remount converges — so this never throws.
-- **Changing a member's kind** (method ↔ getter) re-keys its per-instance
-  cache and remounts the owners — a cached bound method is not a ref, and
-  vice versa.
-- **Native `#private` fields** are brand-checked per class declaration. ivue
-  detects their presence and remounts the owners on every class update; use
-  TypeScript `private` when the update must preserve live instance state.
-- **Inheritance chains** currently escalate instead of grafting.
-- **Dev-mode instantiation costs ~11×** (construct-trap proxy; measured
-  0.6 ms → 6.7 ms per 100k bare `new`) — irrelevant for apps, visible in
-  dev-server micro-benchmarks. Production pays zero;
-  benchmarks running under a dev server can opt out with
-  `globalThis[Symbol.for('ivue.hmr.disable')] = true` before any
-  `Reactive()` call.
-
-## Field notes
-
-This system was built and verified live inside a production reader
-application: an instance parked **4.1 million pixels deep** into a
-99,925-paragraph document survived four consecutive hot updates — same
-object, scroll position and measured-layout state intact, event listeners
-running new code each time — and a constructor edit remounted exactly one
-component while its parent (and the page) never blinked. The unit suite
-covers graft semantics, bound-reference continuity, escalation
-discrimination, and the refusal paths.
-
-One practical note from that battlefield: HMR is a _pipeline_ — editor →
-file watcher → dev-server websocket → module accept → ivue graft. If edits
-don't arrive at all, check the front of the pipe first: bind-mounted Docker
-setups usually need `server.watch.usePolling`, and Vite's DNS-rebinding
-protection (`server.allowedHosts`) must include any custom dev hostnames or
-the HMR websocket is silently rejected while pages load fine.
+A remote page may load successfully while its HMR websocket is blocked. That
+transport issue is independent of ivue because ivue installs no HMR transport
+or accept boundary of its own.

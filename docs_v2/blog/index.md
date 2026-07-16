@@ -71,11 +71,11 @@ pageClass: blog-index
     </div>
   </a>
   <a class="blog-card" href="/blog/hot-reload-for-logic">
-    <img class="thumb" src="/blog/hot-reload-for-logic.png" alt="Hot reload was never about components" width="1200" height="630" loading="lazy" />
+    <img class="thumb" src="/blog/hot-reload-for-logic.png" alt="Development should run production" width="1200" height="630" loading="lazy" />
     <div class="body">
       <div class="meta"><span class="date">July 2026</span></div>
-      <h2>Hot reload was never about components</h2>
-      <p class="excerpt">The state you care about lives in your logic. Edit a method and watch live instances run the new code, state intact.</p>
+      <h2>Development should run production</h2>
+      <p class="excerpt">One class identity, one direct binding path, zero dev-only branches. Vue already owns the rebuild boundary.</p>
       <span class="go">Read the post →</span>
     </div>
   </a>

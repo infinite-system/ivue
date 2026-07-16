@@ -170,6 +170,6 @@ class $ExtensibleKernelExample {
 
 export namespace ExtensibleKernelExample {
   export const $Class = $ExtensibleKernelExample; // raw — children `extends` this
-  export const Class = Reactive($Class); // reactive — you `new` this
+  export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // expose & reactive() interop
 }

@@ -1,28 +1,24 @@
 ---
 name: node-namespace
-description: Author and refactor TypeScript Node.js backends around mutable class namespaces, late dependency getters, boot-time class composition, and HMR-safe prototype behavior. Use for backend service classes, circular imports, plugin kernels, provider replacement, route or queue handlers, service ownership, test doubles, and designs that would otherwise introduce DI tokens, decorators, forwardRef, or container resolution.
+description: Author and refactor TypeScript Node.js backends around static capability classes, mutable class namespaces, late dependency getters, boot-time composition, and live provider replacement. Use for backend modules, circular imports, plugin kernels, route or queue handlers, test doubles, and designs that would otherwise introduce DI tokens, decorators, forwardRef, or container resolution.
 ---
 
 # Node Namespace
 
-Author each application-wide class capability behind one canonical namespace
-with one mutable constructor. Resolve cross-module dependencies through getters
-or method bodies so imports may cycle without eager value reads.
+Author backend modules as static capability classes by default. A capability
+class is an inheritable function bag: it holds behavior but no instance state.
+Export it through one canonical namespace with one mutable `Class` slot.
 
-## Canonical class module
-
-Use this form when a kernel, plugin, test, or hot-update runtime may replace the
-class:
+## Canonical capability module
 
 ```ts
 class $Orders {
-  get Users() {
-    return UserService.Class;
+  static get Users() {
+    return Users.Class;
   }
 
-  submit(orderId: string) {
-    const users = new this.Users();
-    return users.findForOrder(orderId);
+  static submit(userId: string) {
+    return this.Users.find(userId);
   }
 }
 
@@ -31,72 +27,82 @@ export namespace Orders {
 }
 ```
 
-Keep `$Orders` module-private so its unique runtime name remains useful in stack
-traces. Export only the live `Class` slot. Let the kernel capture the original
-constructor internally when registering the namespace.
+Use this shape for commands, queries, validation, mapping, orchestration, route
+logic, and other modules that would otherwise export a bag of functions.
 
-Use an ordinary `export class Orders` when replacement and composition are not
-requirements. Do not add a namespace that provides no live-selection service.
+Use an ordinary function or class export when replacement and composition are
+not requirements. Do not add a namespace that provides no live-selection
+service.
 
 ## Read every dependency late
 
-Import the namespace, then read its `Class` only inside a getter or method:
+Import the namespace, then read its `Class` inside a static getter or method:
 
 ```ts
-get UserService() {
-  return UserService.Class;
+static get Users() {
+  return Users.Class;
 }
 ```
 
-This read occurs after module initialization and observes later provider
+The read occurs after module initialization and observes later provider
 replacement. Apply these constraints:
 
 - Never assign `const Selected = Other.Class` at module scope.
-- Never snapshot `Other.Class` in an instance field.
-- Never construct another service at module scope.
-- Keep cross-module work out of decorators and static initializers.
-- Permit circular imports only when every value edge is late.
-- Reject circular inheritance and recursive construction; lateness cannot make
-  either structure valid.
+- Never snapshot `Other.Class` in a static field.
+- Never perform cross-module work in decorators or static initialization.
+- Permit circular imports only when every cross-module value edge is late.
+- Reject circular inheritance and recursive calls; lateness cannot make either
+  structure valid.
 
 Use a method body directly when a named dependency getter adds no clarity. Both
-forms are late; the getter earns its name when the class uses the dependency in
-several places or when the dependency is part of the model's readable anatomy.
+forms are late. The getter earns its name when several methods use the same
+capability or when it belongs in the class's readable anatomy.
 
-## Keep provider choice separate from lifetime
+## Retained callbacks read through the namespace
 
-A dependency getter answers which constructor is selected. It does not decide
-how many instances exist or how long they live.
-
-Let an explicit owner choose the lifetime:
+Invoke a static method as a member so JavaScript supplies the selected class as
+`this`:
 
 ```ts
-class $Application {
-  readonly orders = new Orders.Class();
-}
+Orders.Class.submit(userId);
 ```
 
-Use the composition root for application singletons. Use request construction
-for request-scoped services. Accept an existing instance when another owner
-controls the lifetime. Do not allocate a new service on every getter read unless
-the dependency is intentionally transient.
+When a router, timer, event emitter, or queue retains a callback, delegate
+through a thin namespace closure:
 
-Use contextual DI or explicit parameters when provider choice varies by request,
-tenant, session, or runtime data. A single global `Class` slot represents one
-application-wide choice; do not stretch it into a contextual container.
+```ts
+router.post('/orders', (request) =>
+  Orders.Class.submit(request.params.userId),
+);
+```
 
-## Register and seal through the kernel
+Each invocation reads the current `Orders.Class`, preserves static `this`, and
+observes kernel or hot-runtime replacement.
 
-Register every namespace before any plugin composition:
+Do not pass a static method detached when it uses `this`:
+
+```ts
+router.post('/orders', Orders.Class.submit);
+```
+
+A detached static method that never uses `this` can execute, but the retained
+reference still freezes the selected implementation. Prefer the namespace
+closure wherever live replacement is part of the contract.
+
+Static capability classes need no lazy method binding.
+
+## Compose through the kernel
+
+Register every namespace before plugin composition:
 
 ```ts
 kernel.defineClass('app/Orders', Orders);
 
 kernel.registerClass('app/Orders', (Base) =>
   class AuditedOrders extends Base {
-    submit(orderId: string) {
-      audit(orderId);
-      return super.submit(orderId);
+    static submit(userId: string) {
+      audit(userId);
+      return super.submit(userId);
     }
   },
 );
@@ -104,12 +110,15 @@ kernel.registerClass('app/Orders', (Base) =>
 kernel.sealClassGraph();
 ```
 
-Require the kernel to retain the original constructor at `defineClass()` time.
-Start every seal from that stored base, compose extensions, then assign the
-result to `namespace.Class`.
+Require the kernel to retain the original class at `defineClass()` time. Start
+every seal from that stored base, apply extensions in deterministic order, then
+assign the result to `namespace.Class`.
 
-Expose a raw `$Class` in the namespace only when application modules must inherit
-from the declared foundation outside the kernel:
+Static `super` preserves the derived class as `this`, so base methods continue
+to resolve dependency getters through the final selected class.
+
+Expose a raw `$Class` only when application modules inherit from the declared
+foundation outside the kernel:
 
 ```ts
 class $Notification {}
@@ -122,62 +131,66 @@ export namespace Notification {
 
 Keep `$Class` immutable. Only `Class` is a provider slot.
 
-## Use thin closures at retained-callback boundaries
+## Use instances only for actual identity
 
-Call methods normally inside the backend:
-
-```ts
-orders.submit(orderId);
-```
-
-When a router, timer, event emitter, or queue retains a callback, delegate
-through a thin closure:
+Choose an instance class when the object has genuine state, identity, lifetime,
+or disposal:
 
 ```ts
-router.post('/orders', (request) =>
-  orders.submit(request.params.orderId),
-);
+class $OrderWorker {
+  constructor(private readonly queue: OrderQueue) {}
+
+  run() {
+    return this.queue.take();
+  }
+}
+
+export namespace OrderWorker {
+  export let Class = $OrderWorker;
+}
 ```
 
-The closure preserves `this` and looks up `orders.submit` on every invocation,
-so a prototype graft becomes visible without route re-registration.
+Give every long-lived instance an explicit owner. The owner constructs,
+replaces, and disposes it. Provider choice and instance lifetime remain
+separate responsibilities.
 
-Do not pass an ordinary method detached:
+Use contextual DI or explicit parameters when provider choice varies by
+request, tenant, session, or runtime data. One global `Class` slot represents
+one application-wide selection.
+
+## Hot replacement follows ownership
+
+A static capability update replaces the complete selected class:
 
 ```ts
-router.post('/orders', orders.submit);
+Orders.Class = UpdatedOrders;
 ```
 
-Do not default to `.bind(orders)` for hot-reloadable handlers; a bound function
-retains the implementation selected at bind time.
+The next namespace closure observes it. No instance migration, prototype
+grafting, or bound-method dispatch slot is required.
 
-Use an optional lazy stable binder only when an API requires the same callback
-identity for subscription and removal, debouncing, or cancellation. Method
-binding is a callback-boundary capability, not part of dependency resolution.
-
-## Keep class behavior graftable
-
-Place replaceable behavior on the prototype:
-
-- Use ordinary methods and accessors.
-- Avoid arrow-function fields for service behavior; they are per-instance and
-  require owner reconstruction after an edit.
-- Keep constructors focused on instance wiring.
-- Keep module top level declarative and side-effect free.
-- Put process resources such as listeners, pools, and socket registries in a
-  stable owner outside replaceable service generations.
-- Treat constructor, field-initializer, native `#private`, member-kind, and
-  inheritance edits as rebuild-required.
-- Treat native addon, environment, Node flag, and global patch changes as
-  process-restart boundaries.
+A stateful instance update reconstructs its explicit owner. Do not combine old
+instance state with methods from a newly evaluated declaration. Constructor
+wiring, fields, closures, inheritance, and native private brands move together
+as one generation.
 
 Do not claim Node class HMR exists unless the project supplies a module runner,
-stable class registry, update classifier, and owner-rebuild path. The namespace
-shape enables that runtime; it does not implement module invalidation alone.
+canonical namespace registry, plugin recomposition, transactional slot update,
+and owner-reconstruction path for stateful instances. The namespace shape
+enables that runtime; it does not invalidate Node modules by itself.
+
+## Keep process resources outside replaceable capabilities
+
+Put HTTP listeners, database pools, socket registries, and other process-owned
+resources in a stable composition root. Static capability classes late-read or
+receive those resources. They do not create them in module top-level side
+effects.
+
+This keeps replacement cheap and makes ordinary shutdown and testing explicit.
 
 ## Testing provider replacement
 
-Restore global provider slots after each test:
+Restore global provider slots after every test:
 
 ```ts
 const ProductionOrders = Orders.Class;
@@ -188,62 +201,47 @@ afterEach(() => {
 
 it('uses a test provider', () => {
   Orders.Class = class TestOrders extends ProductionOrders {
-    submit() {
+    static submit() {
       return 'test-order';
     }
   };
 
-  expect(new Orders.Class().submit('ignored')).toBe('test-order');
+  expect(Orders.Class.submit('ignored')).toBe('test-order');
 });
 ```
 
-Do not mutate one global provider concurrently from parallel tests. Use isolated
-workers, isolated module graphs, or a scoped test kernel when parallelism is
-required.
-
-## Type instance surfaces only when needed
-
-Construction infers the instance automatically:
-
-```ts
-const orders = new Orders.Class();
-```
-
-Name the type only at an API boundary:
-
-```ts
-export type OrdersInstance = InstanceType<typeof Orders.Class>;
-```
-
-Do not export an `Instance` alias by reflex. Unlike Vue expose proxies, an
-ordinary Node class has no unwrapping type mismatch to repair.
+Do not mutate one global provider concurrently from parallel tests. Use
+isolated workers, isolated module graphs, or a scoped test kernel when
+parallelism is required.
 
 ## Keep frontend and backend adapters separate
 
-Share the namespace grammar, not environment machinery:
+Share the namespace invariant, not environment machinery:
 
-- Node: `let Class = $Orders`, explicit service ownership.
-- ivue: `$Class`, `Class = Reactive($Class)`, and Vue-facing `Instance` typing.
-- Universal core: stable ids, provider slots, plugin composition, update
-  classification, and prototype grafting.
+- Node default: static capability class and explicit slot replacement.
+- Stateful Node: explicit instance ownership and reconstruction.
+- ivue: `$Class`, `let Class = Reactive($Class)`, and Vue-facing `Instance`
+  typing.
+- Universal core: canonical ids, provider slots, plugin composition, and
+  transactional replacement.
 
-Never import Vue into a backend class merely to preserve the frontend export
-shape. Delete runtime-specific members until only the capabilities the backend
-uses remain.
+Never import Vue into a backend capability merely to preserve the frontend
+export shape. Delete runtime-specific members until only the capabilities the
+backend uses remain.
 
 ## Self-review
 
+- [ ] Stateless backend modules use static capability classes by default.
 - [ ] Every replaceable capability exports one namespace with mutable `Class`.
-- [ ] The implementation class has a unique module-local `$Domain` name.
+- [ ] Cross-module classes are read only inside static getters or methods.
+- [ ] No top-level provider snapshot, construction, decorator read, or process
+      side effect creates an eager dependency edge.
+- [ ] Retained callbacks delegate through the canonical namespace.
 - [ ] The kernel captures the original class before mutating `Class`.
-- [ ] Cross-module constructors are read only inside getters or methods.
-- [ ] No top-level construction, provider snapshot, decorator read, or static
-      initializer creates an eager dependency edge.
-- [ ] Provider choice and instance lifetime have separate owners.
+- [ ] Plugin extensions use static inheritance and deterministic ordering.
+- [ ] Instances exist only for genuine state, identity, lifetime, or disposal.
+- [ ] Every long-lived instance has an explicit reconstruction owner.
 - [ ] Context-varying dependencies use explicit context or scoped DI.
-- [ ] Retained callbacks use thin closures unless stable callback identity is
-      specifically required.
-- [ ] Replaceable behavior lives on the prototype, not arrow-function fields.
 - [ ] Tests restore provider slots and do not race global mutations.
-- [ ] Hot-update claims include module invalidation, safe classification,
-      owner reconstruction, and a final cold-start verification.
+- [ ] Hot-update claims include module invalidation, transactional replacement,
+      owner reconstruction, and final cold-start verification.

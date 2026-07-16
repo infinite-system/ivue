@@ -1,6 +1,6 @@
 ---
 title: Node Class HMR — Runtime Design
-description: A design for replacing static capability classes inside a live Node.js process, with prototype grafting and selective reconstruction reserved for stateful instance services.
+description: A design for replacing static capability classes inside a live Node.js process, with explicit owner reconstruction reserved for stateful instance services.
 search: false
 ---
 
@@ -24,7 +24,7 @@ re-evaluates the module, recomposes its plugins, and assigns the new class to
 the existing namespace object's mutable `Class` slot.
 
 No service instance exists to migrate. No method needs binding. No prototype
-needs grafting.
+needs mutation.
 
 ## Static capability classes are the default
 
@@ -208,18 +208,8 @@ kernel.mount('app/OrderWorker', {
 });
 ```
 
-The runtime has two safe update responses for these owners.
-
-### Behavior graft
-
-An ordinary instance method or accessor lives on the prototype. A donor method
-descriptor may be copied onto one canonical prototype, allowing existing
-instances to preserve state while subsequent calls run new behavior.
-
-Detached instance methods require either thin owner closures or a development
-wrapper that dispatches through a mutable method slot. A production-only lazy
-binder may install a direct bound function on first access, but that function
-cannot observe later method replacement.
+The runtime reconstructs these owners instead of combining an old object with a
+new class declaration.
 
 ### Selective owner rebuild
 
@@ -236,9 +226,9 @@ because only the owner knows lifetime, disposal, and valid state migration.
 
 | Edit | Static capability | Stateful instance class |
 |---|---|---|
-| Method body | Replace selected class | Graft prototype method |
-| Getter body | Replace selected class | Graft prototype accessor |
-| Added or removed member | Replace selected class | Graft or tombstone |
+| Method body | Replace selected class | Rebuild owner |
+| Getter body | Replace selected class | Rebuild owner |
+| Added or removed member | Replace selected class | Rebuild owner |
 | Constructor or instance field | Usually unused | Rebuild owner |
 | Native `#private` member | Replace selected class | Rebuild owner |
 | Method ↔ accessor | Replace selected class | Rebuild owner |
@@ -328,7 +318,7 @@ therefore provides circular safety and live provider selection together.
 shared namespace invariant
 ├── browser: Reactive() + Vue component ownership
 ├── server default: static class replacement
-├── server stateful: instance graft or owner rebuild
+├── server stateful: explicit owner rebuild
 ├── plugins: boot-time class composition
 └── development: environment-specific module runner
 ```
@@ -379,8 +369,8 @@ The design reduces into four independently testable layers:
    recomposition, and transactional `Class` replacement.
 2. **Node runner:** file watching, module generations, dependency invalidation,
    stable export ids, and evaluation rollback.
-3. **Instance extension:** prototype grafting, explicit owners, disposal,
-   reconstruction, and dispatch boundaries.
+3. **Instance extension:** explicit owners, disposal, reconstruction, state
+   migration, and dispatch boundaries.
 4. **Universal adapters:** share the namespace and composition core with
    Vite/Vue while keeping environment lifecycles separate.
 

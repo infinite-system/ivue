@@ -1,6 +1,6 @@
 ---
 title: API Reference
-description: The complete public surface — runtime functions, class and component types, the HMR plugin, and optional type utilities.
+description: The complete public surface — runtime functions plus the class, component, and utility types that support them.
 ---
 
 # API Reference
@@ -9,7 +9,7 @@ The entire public surface of the library, one entry per export. The *why*
 behind each design lives in the guide; this page is the contract. Every
 signature below ships in the 1.1 kB build.
 
-## `Reactive(Class, hmrId?)`
+## `Reactive(Class)`
 
 Transforms a class's prototype **in place** — once, idempotently — and
 returns the same constructor, typed as a reactive class.
@@ -17,7 +17,6 @@ returns the same constructor, typed as a reactive class.
 ```ts
 function Reactive<C>(
   targetClass: C,
-  hmrId?: string,
 ): ReactiveClass<C> & { Instance: ReactiveInstance<InstanceType<C>> }
 ```
 
@@ -37,10 +36,6 @@ What the transform does:
 - Injects `$watch`, `$watchEffect` and `$stopEffects` on the prototype.
 - **Idempotent** — safe to call many times and at every level of an
   inheritance chain; each prototype is processed once.
-
-`hmrId` names the class in the hot-reload registry when the class name
-alone is ambiguous — two unrelated classes sharing a name would otherwise
-refuse to hot-update ([HMR](/guide/hmr)).
 
 ```ts
 class $Counter {
@@ -104,60 +99,6 @@ instance.$stopEffects()
 ```
 
 Accessing a member afterwards re-materializes it fresh.
-
-## `ivueHmr(options?)` — Vite plugin
-
-Hot reload for classes with zero per-file boilerplate. The plugin marks
-every module that calls `Reactive(...)` as a hot-update boundary, so
-behavior edits graft onto live instances with their state intact
-([HMR](/guide/hmr)). Dev-server only; production builds are untouched.
-
-```ts
-// vite.config.ts
-import ivueHmr from 'ivue/hmr-plugin'
-
-export default defineConfig({
-  plugins: [vue(), ivueHmr()],
-})
-```
-
-| Option | Default | Meaning |
-|---|---|---|
-| `include` | `/\.[jt]sx?$/` | files considered for injection |
-| `exclude` | `/node_modules/` | files skipped |
-| `runtime` | `'ivue'` | module the injected code imports from — point it at a vendored engine copy |
-| `fast` | `false` | high-performance dev mode: skip class HMR and construct instances at production speed ([details](/guide/hmr#high-performance-dev-mode)) |
-
-A file that already references `import.meta.hot`, or carries an
-`@ivue-no-hmr` comment, is left alone.
-
-The plugin subpath also exports `IvueHmrOptions`, the interface represented
-by the table above.
-
-## `ivueHotUpdate(hot, mod)`
-
-The runtime half of the hot-update handshake — the function the plugin's
-injected code calls with the re-executed module. It grafts the module's
-Reactive classes onto their canonical identities and escalates
-updates that require new instances to a component remount. You only call it yourself
-when wiring HMR manually:
-
-```ts
-import { ivueHotUpdate, Reactive } from 'ivue'
-
-export namespace Player {
-  export const $Class = $Player
-  export const Class = Reactive($Class)
-  export type Instance = typeof Class.Instance
-}
-
-if (import.meta.hot) {
-  import.meta.hot.accept((mod) => ivueHotUpdate(import.meta.hot, mod))
-}
-```
-
-In a production build the function compiles to an empty shell — the entire
-HMR machinery is dead-code-eliminated.
 
 ## `propsWithDefaults(defaults, typedProps, cloner?)`
 

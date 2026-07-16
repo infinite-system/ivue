@@ -33,6 +33,10 @@ const links = [
     link: '/guide/node-class-hmr',
   },
 ];
+
+function isActive(link: string) {
+  return route.path === withBase(link);
+}
 </script>
 
 <template>
@@ -41,9 +45,9 @@ const links = [
     <a
       v-for="item in links"
       :key="item.link"
-      :class="{ active: route.path === item.link }"
+      :class="{ active: isActive(item.link) }"
       :href="`${withBase(item.link)}?experiment=1`"
-      :aria-current="route.path === item.link ? 'page' : undefined"
+      :aria-current="isActive(item.link) ? 'page' : undefined"
     >
       {{ item.text }}
     </a>

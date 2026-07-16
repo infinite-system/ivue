@@ -68,6 +68,6 @@ class $Container extends BaseElement.$Class {
 
 export namespace Container {
   export const $Class = $Container;
-  export const Class = Reactive($Class);
+  export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

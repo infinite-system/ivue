@@ -112,12 +112,11 @@ Every number runs live, in your browser, on the shipped engine:
   performance floor; hot loops reach it with a one-line hoist
   ([Performance by Design](/guide/performance)).
 
-There is also the thing that shouldn't be possible: edit a method and the
-new behavior **grafts onto live instances with their state intact** —
-because state lives per instance and behavior lives on the prototype, and
-a prototype can be swapped under living objects ([HMR](/guide/hmr)). A
-compiled reactivity system cannot do this at any price; its code and its
-memory die together.
+Development is deliberately unsurprising: `Reactive()` returns the input
+class and uses native construction in development exactly as it does in
+production. Vite and Vue rebuild the affected owner after a script edit, so
+one instance never mixes state and behavior from different class generations
+([Development & HMR](/guide/hmr)).
 
 ## What this is really about
 

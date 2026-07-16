@@ -33,6 +33,6 @@ class $ExampleFieldEmbed {
 
 export namespace ExampleFieldEmbed {
   export const $Class = $ExampleFieldEmbed; // raw — children `extends` this
-  export const Class = Reactive($Class); // reactive — you `new` this
+  export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 }

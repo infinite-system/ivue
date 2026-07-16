@@ -96,8 +96,7 @@ The per-instance closure is then a pointer-sized hop to code that exists
 once per class on the prototype, and it can never accidentally capture
 getter-scope locals that would otherwise live as long as the instance —
 the guaranteed-minimum footprint
-([the thin convention](/guide/computed-watch#point-the-computed-at-a-method)),
-and the shape that hot-reloads onto live instances ([HMR](/guide/hmr)).
+([the thin convention](/guide/computed-watch#point-the-computed-at-a-method)).
 
 At document scale the same invariant goes one level deeper: the flyweight columnar
 model holds **20,000,000 live cells at 4.7 bytes each**, fully reactive —
@@ -106,12 +105,9 @@ model holds **20,000,000 live cells at 4.7 bytes each**, fully reactive —
 ## The whole engine is ~1.1 kB
 
 The entire runtime — lazy ref-getters, method binding, inheritance/`super`
-resolution, teardown, `$watch`/`$watchEffect`, **and the full
-hot-reload-for-classes engine** — ships as **1.1 kB gzipped** (ES build).
-The HMR machinery costs production literally zero bytes: every call site is
-gated on the statically-replaceable `import.meta.env.DEV`, so bundlers
-dead-code-eliminate all of it — verified by grepping the built output, not
-assumed. Dev gets class grafting; prod gets the same 1.1 kB it always had.
+resolution, teardown, and `$watch`/`$watchEffect` — ships as **1.1 kB gzipped**
+(ES build). Development, test, SSR, and production execute the same ivue engine
+path: no development registry, construct proxy, or live method dispatch layer.
 
 ## Raw access avoids proxy overhead
 

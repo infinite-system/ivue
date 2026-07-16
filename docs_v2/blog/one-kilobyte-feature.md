@@ -9,9 +9,8 @@ date: 2026-07
 ![One kilobyte is a feature](/blog/one-kilobyte-feature.png)
 
 The whole ivue engine — lazy state, method binding, reactive inheritance
-with `super`, teardown, `$watch`, and the complete hot-reload-for-classes
-machinery — ships as **1,148 bytes gzipped**. Zero dependencies. 100% test
-coverage, every metric, every file.
+with `super`, teardown, and `$watch` — ships as **1,120 bytes gzipped**.
+Zero dependencies. 100% test coverage, every metric, every file.
 
 That number is not a compression trophy. It's a *diagnosis*. Size is what
 a design weighs after you stop paying for machinery it never needed:
@@ -22,8 +21,8 @@ a design weighs after you stop paying for machinery it never needed:
   scheduler for work that never happens.
 - No compiler — the transform is a one-time prototype rewrite at runtime,
   so there is no build-step apparatus riding along.
-- No HMR in production — every dev-only call site is statically erased,
-  verified by grepping the shipped bundle.
+- No second development engine — local work exercises the same class identity,
+  native construction, and direct method binding as production.
 
 What a kilobyte buys you in practice is **auditability**. You can read
 the entire engine before lunch and know — not trust, *know* — what
