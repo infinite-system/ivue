@@ -1,6 +1,8 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitepress';
 
+const deployedCommit = process.env.GITHUB_SHA ?? '';
+
 export default defineConfig({
   vite: {
     resolve: {
@@ -35,17 +37,149 @@ export default defineConfig({
       'script',
       {},
       `(() => {
-        const reloadKey = 'ivue:deployment-reload';
+        const retryParam = '__ivue_deployment';
+        const chunkReloadKey = 'ivue:deployment-chunk-reload';
+        const deployedCommit = ${JSON.stringify(deployedCommit)};
+        const currentUrl = new URL(window.location.href);
+
+        const navigateFresh = () => {
+          const freshUrl = new URL(window.location.href);
+          freshUrl.searchParams.set(retryParam, Date.now().toString());
+          window.location.replace(freshUrl.href);
+        };
+
+        const isNotFound =
+          document.title.startsWith('404') &&
+          document.querySelector('meta[name="description"]')?.content ===
+            'Not Found';
+
+        const showDeploymentWait = () => {
+          const mount = () => {
+            if (document.getElementById('ivue-deployment-wait')) return;
+
+            const wait = document.createElement('div');
+            const panel = document.createElement('div');
+            const mark = document.createElement('img');
+            const title = document.createElement('strong');
+            const detail = document.createElement('span');
+            const dark = document.documentElement.classList.contains('dark');
+
+            wait.id = 'ivue-deployment-wait';
+            wait.style.cssText =
+              'position:fixed;inset:0;z-index:2147483647;display:grid;' +
+              'place-items:center;background:' +
+              (dark ? '#11131b' : '#f7f8fc') +
+              ';color:' +
+              (dark ? '#f1f3fb' : '#1d2433') +
+              ';font-family:Geist,Inter,ui-sans-serif,system-ui,sans-serif';
+            panel.style.cssText =
+              'display:grid;justify-items:center;gap:10px;text-align:center';
+            mark.src = '/ivue/mark.svg';
+            mark.alt = '';
+            mark.width = 42;
+            mark.height = 42;
+            title.textContent = 'Updating documentation…';
+            title.style.cssText = 'font-size:17px;letter-spacing:-.02em';
+            detail.textContent = 'Waiting for the latest deployment.';
+            detail.style.cssText =
+              'color:' + (dark ? '#9ca3b8' : '#778096') + ';font-size:12px';
+
+            panel.append(mark, title, detail);
+            wait.append(panel);
+            document.body.append(wait);
+          };
+
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', mount, { once: true });
+          } else {
+            mount();
+          }
+        };
+
+        const deploymentIsPending = async () => {
+          if (!deployedCommit) return false;
+
+          try {
+            const response = await fetch(
+              'https://api.github.com/repos/infinite-system/ivue/branches/main',
+              {
+                cache: 'no-store',
+                headers: { Accept: 'application/vnd.github+json' },
+              },
+            );
+            if (!response.ok) return false;
+
+            const branch = await response.json();
+            return Boolean(
+              branch.commit?.sha && branch.commit.sha !== deployedCommit,
+            );
+          } catch {
+            return false;
+          }
+        };
 
         window.addEventListener('vite:preloadError', (event) => {
-          if (sessionStorage.getItem(reloadKey)) return;
+          if (sessionStorage.getItem(chunkReloadKey)) return;
 
           event.preventDefault();
-          sessionStorage.setItem(reloadKey, Date.now().toString());
-          window.location.reload();
+          sessionStorage.setItem(chunkReloadKey, Date.now().toString());
+          navigateFresh();
         });
 
-        window.setTimeout(() => sessionStorage.removeItem(reloadKey), 10_000);
+        window.setTimeout(
+          () => sessionStorage.removeItem(chunkReloadKey),
+          10_000,
+        );
+
+        if (isNotFound) {
+          const recoverDuringDeployment = async () => {
+            if (!(await deploymentIsPending())) return;
+
+            showDeploymentWait();
+
+            let attempts = 0;
+            const maxAttempts = 36;
+
+            const retryWhenDeployed = async () => {
+              attempts++;
+
+              const probeUrl = new URL(window.location.href);
+              probeUrl.searchParams.set(retryParam, Date.now().toString());
+
+              try {
+                const response = await fetch(probeUrl.href, {
+                  method: 'HEAD',
+                  cache: 'no-store',
+                });
+
+                if (response.ok) {
+                  window.location.replace(probeUrl.href);
+                  return;
+                }
+              } catch {}
+
+              if (attempts < maxAttempts) {
+                window.setTimeout(retryWhenDeployed, 5_000);
+              } else {
+                document.getElementById('ivue-deployment-wait')?.remove();
+              }
+            };
+
+            window.setTimeout(retryWhenDeployed, 2_000);
+          };
+
+          void recoverDuringDeployment();
+          return;
+        }
+
+        if (currentUrl.searchParams.has(retryParam)) {
+          currentUrl.searchParams.delete(retryParam);
+          window.history.replaceState(
+            window.history.state,
+            '',
+            currentUrl.href,
+          );
+        }
       })();`,
     ],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/ivue/logo.svg' }],
