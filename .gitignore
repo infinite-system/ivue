@@ -33,6 +33,6 @@ html
 
 /PLAN.md
 tmp
-skills
+/skills
 examples/*/node_modules
 examples/*/dist

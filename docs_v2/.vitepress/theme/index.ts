@@ -21,6 +21,7 @@ import GridBenchmark from './components/grid/GridBenchmark.vue';
 import FormulaGrid from './components/grid/FormulaGrid.vue';
 import FlyweightGrid20M from './components/grid/FlyweightGrid20M.vue';
 import CreationBench from './components/CreationBench.vue';
+import ExperimentalDocs from './components/ExperimentalDocs.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import { registerDocsApp } from './quasar-docs-loader';
 import './custom.css';
@@ -30,6 +31,7 @@ export default {
   Layout() {
     return h(DefaultTheme.Layout, null, {
       'home-hero-before': () => h(IvueHero),
+      'sidebar-nav-after': () => h(ExperimentalDocs),
     });
   },
   enhanceApp({ app }) {
