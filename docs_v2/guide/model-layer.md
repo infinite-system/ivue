@@ -21,12 +21,14 @@ to close it.
 
 **The head-to-head sections:**
 
-- [ivue vs Vue composables](#the-natural-rebuttal-just-lazy-load-the-composable-cells)
-- [ivue vs Angular Signals](#isn-t-this-just-what-angular-signals-already-do)
-- [ivue vs React (hand-rolled JavaScript)](#or-skip-the-library-entirely-—-how-close-does-hand-rolled-js-get)
-- [ivue vs MobX](#what-about-mobx)
-- [ivue vs Svelte 5 runes](#what-about-svelte-5-s-runes-in-classes)
-- [ivue vs Solid.js](#what-about-solid-js)
+<ul class="ivue-vs-framework-list">
+  <li><a href="#the-natural-rebuttal-just-lazy-load-the-composable-cells">ivue vs Vue composables</a></li>
+  <li><a href="#isn-t-this-just-what-angular-signals-already-do">ivue vs Angular Signals</a></li>
+  <li><a href="#or-skip-the-library-entirely-—-how-close-does-hand-rolled-js-get">ivue vs React (hand-rolled JavaScript)</a></li>
+  <li><a href="#what-about-mobx">ivue vs MobX</a></li>
+  <li><a href="#what-about-svelte-5-s-runes-in-classes">ivue vs Svelte 5 runes</a></li>
+  <li><a href="#what-about-solid-js">ivue vs Solid.js</a></li>
+</ul>
 
 ## Why the gap is structural
 
