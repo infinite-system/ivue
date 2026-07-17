@@ -1,16 +1,20 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { withBase } from 'vitepress';
 
 const ready = ref(false);
 const fallback = ref(false);
 const fallbackMessage = ref('');
 const reloadKey = 'ivue:stackblitz-coi-reload';
-const embedRetryKey = 'ivue:stackblitz-embed-retry';
 const embedAttempt = ref(0);
 let embedRetryTimer: number | undefined;
 const fullScreenUrl =
   'https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Findex.ts&initialpath=%2F';
+const embedUrl = computed(
+  () =>
+    'https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?embed=1&file=src%2Fexamples%2Findex.ts&initialpath=%2F&view=both&hidedevtools=1&hideNavigation=1&showSidebar=1&ivueRetry=' +
+    embedAttempt.value,
+);
 
 function showFallback(message: string) {
   fallbackMessage.value = message;
@@ -20,10 +24,7 @@ function showFallback(message: string) {
 function startEmbed() {
   ready.value = true;
 
-  if (sessionStorage.getItem(embedRetryKey) === '1') return;
-
   embedRetryTimer = window.setTimeout(() => {
-    sessionStorage.setItem(embedRetryKey, '1');
     embedAttempt.value = 1;
   }, 10_000);
 }
@@ -91,8 +92,7 @@ onBeforeUnmount(() => {
   <div v-if="ready" class="stackblitz-playground">
     <iframe
       title="ivue examples playground in StackBlitz"
-      :key="embedAttempt"
-      src="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?embed=1&file=src%2Fexamples%2Findex.ts&initialpath=%2F&view=both&hidedevtools=1&hideNavigation=1&showSidebar=1"
+      :src="embedUrl"
       allow="clipboard-read; clipboard-write; cross-origin-isolated; fullscreen"
       credentialless
     />
