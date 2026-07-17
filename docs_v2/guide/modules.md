@@ -125,6 +125,21 @@ and the convention deliberately excludes it. Circular _inheritance_
 would have to exist first.
 :::
 
+## Normal HMR needs no second runtime
+
+Class HMR usually breaks before state preservation is even relevant: a reload can
+leave a child class holding an old parent, or make a dependency read before its
+replacement module has finished initializing. The namespace pattern removes
+those eager class-value edges. Each module can re-evaluate, and the next late
+`Other.Class` read reaches the coherent class graph Vite has just loaded.
+
+That means ivue relies on **normal Vite replacement**, not a custom runtime
+that grafts methods into live instances. A reload gives new construction and
+future late reads the new classes. It deliberately does **not** promise to
+mutate existing instances or preserve their local state across a class edit.
+The benefit is one runtime model in development and production, with no
+development-only class graph to maintain.
+
 ## Injecting stores and composables: the `$` slot
 
 A getter whose name starts with `$` is cached **whole, forever, per instance**

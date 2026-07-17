@@ -771,6 +771,19 @@
   color: var(--vp-c-brand-1);
   font-weight: 600;
 }
+.stackblitz-spinner {
+  width: 26px;
+  height: 26px;
+  border: 2px solid color-mix(in srgb, var(--vp-c-brand-1) 22%, transparent);
+  border-top-color: var(--vp-c-brand-1);
+  border-radius: 50%;
+  animation: stackblitz-spin 700ms linear infinite;
+}
+@keyframes stackblitz-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* A full editor needs the benchmark layout, not the prose column. */
 .stackblitz-wide .VPDoc .content {

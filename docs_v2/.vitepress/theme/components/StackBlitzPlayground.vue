@@ -85,6 +85,9 @@ onMounted(async () => {
         Open full screen in StackBlitz ⚡
       </a>
     </template>
-    <span v-else>Preparing the isolated StackBlitz workspace…</span>
+    <template v-else>
+      <span class="stackblitz-spinner" aria-hidden="true"></span>
+      <span>Preparing the isolated StackBlitz workspace…</span>
+    </template>
   </div>
 </template>
