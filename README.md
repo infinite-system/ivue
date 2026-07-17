@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://infinite-system.github.io/ivue/">
+  <a href="https://ivue.dev/">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="docs_v2/public/brand-lockup-dark.png">
       <img src="docs_v2/public/brand-lockup-light.png" alt="ivue — Infinite Vue" width="340">
@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <strong>Docs: <a href="https://infinite-system.github.io/ivue/">infinite-system.github.io/ivue</a></strong>
+  <strong>Docs: <a href="https://ivue.dev/">ivue.dev</a></strong>
 </p>
 
 ivue builds Vue 3 reactivity out of plain TypeScript classes. Real
@@ -44,7 +44,7 @@ npm i ivue vue
 
 ## Built for humans and AI
 
-ivue ships with an [Operating Manual](https://infinite-system.github.io/ivue/guide/standard) —
+ivue ships with an [Operating Manual](https://ivue.dev/guide/standard) —
 the complete authoring standard as annotated templates, rules, and a review
 checklist. It reads as documentation and works as a drop-in skill for AI
 coding agents, so generated code follows the same standard your team writes:
@@ -96,7 +96,7 @@ const { count } = counter;
 </template>
 ```
 
-Full walkthrough: [Getting Started](https://infinite-system.github.io/ivue/guide/getting-started).
+Full walkthrough: [Getting Started](https://ivue.dev/guide/getting-started).
 
 ## Hard problems, solved together
 
@@ -144,7 +144,7 @@ class $Pointer {
 ## The numbers
 
 Measured, not promised — method and live in-browser benchmarks in
-[the docs](https://infinite-system.github.io/ivue/guide/benchmarks).
+[the docs](https://ivue.dev/guide/benchmarks).
 
 | creating 1,000,000 instances | time | ivue is |
 | --- | --- | --- |
@@ -178,7 +178,7 @@ Development uses that same engine without a second hot-update execution path.
 Full guide, principles, live benchmarks, advanced examples (a 1,000,000-row
 virtual scroller, a 20,000,000-cell flyweight grid, production-grade Quasar
 field components), and the API reference:
-**https://infinite-system.github.io/ivue/**
+**https://ivue.dev/**
 
 ## License
 
