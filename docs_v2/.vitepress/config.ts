@@ -298,10 +298,10 @@ export default defineConfig({
     nav: [
       {
         text: 'Guide',
-        activeMatch: '/guide/(introduction|engine-under-the-idiom|getting-started|design|principles)',
+        activeMatch: '^/(engine|guide/(introduction|getting-started|design|principles))',
         items: [
           { text: 'What is ivue?', link: '/guide/introduction' },
-          { text: 'The Engine', link: '/guide/engine-under-the-idiom' },
+          { text: 'The Engine', link: '/engine' },
           { text: 'Getting Started', link: '/guide/getting-started' },
           { text: 'Design & Philosophy', link: '/guide/design' },
           { text: 'Fundamental Principles', link: '/guide/principles' },
@@ -414,7 +414,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'What is ivue?', link: '/guide/introduction' },
-            { text: 'The Engine', link: '/guide/engine-under-the-idiom' },
+            { text: 'The Engine', link: '/engine' },
             { text: 'Getting Started', link: '/guide/getting-started' },
             { text: 'Design & Philosophy', link: '/guide/design' },
             { text: 'Fundamental Principles', link: '/guide/principles' },

@@ -90,7 +90,7 @@ ever read or not. Idiomatic Vue memoizes everything by default — which
 is why, measured at 100,000 live instances, the composable-per-entity
 pattern holds 5.3× the heap of the identical model written as an ivue
 class, where derivations are plain prototype getters weighing nothing
-([The Engine](/guide/engine-under-the-idiom)).
+([The Engine](/engine)).
 
 The default was never neutral. It was just unexamined.
 
