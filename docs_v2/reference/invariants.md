@@ -251,10 +251,7 @@ Listed deliberately, so the invariants above aren't over-read:
    plain `watch()` inside component setup belong to Vue's component scope and stop
    on unmount. Component-outliving models use `$watch` / `$watchEffect`, and their
    owners call `$stopEffects()`.
-3. **Native `#private` fields belong to one declaration.** They work in every
-   environment. Vue reconstruction after a script edit creates the replacement
-   declaration and its matching instances together.
-4. **`.value` ergonomics.** Top-level component state is destructured and
+3. **`.value` ergonomics.** Top-level component state is destructured and
    auto-unwrapped. Collection items and slot props are nested values, so Vue
    does not auto-unwrap their Ref fields; use `item.title.value`. This is
    ivue's principal syntax tradeoff relative to a proxy-based model, preserving
