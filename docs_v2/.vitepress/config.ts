@@ -22,7 +22,8 @@ export default defineConfig({
     },
   },
 
-  base: '/ivue/', // served at https://infinite-system.github.io/ivue/
+  base: '/', // served at https://ivue.dev/
+  site: 'https://ivue.dev',
 
   title: 'ivue',
   titleTemplate: ':title — Infinite Vue',
@@ -37,7 +38,7 @@ export default defineConfig({
       'script',
       {},
       `(() => {
-        const docsBase = '/ivue/';
+        const docsBase = '/';
         const retryParam = '__ivue_deployment';
         const chunkReloadKey = 'ivue:deployment-chunk-reload';
         const routeReloadKey = 'ivue:deployment-route-reload';
@@ -78,7 +79,7 @@ export default defineConfig({
               ';font-family:Geist,Inter,ui-sans-serif,system-ui,sans-serif';
             panel.style.cssText =
               'display:grid;justify-items:center;gap:10px;text-align:center';
-            mark.src = '/ivue/mark.svg';
+            mark.src = '/mark.svg';
             mark.alt = '';
             mark.width = 42;
             mark.height = 42;
@@ -237,7 +238,7 @@ export default defineConfig({
         }
       })();`,
     ],
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/ivue/logo.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#6366f1' }],
     ['meta', { property: 'og:type', content: 'website' }],
     [
@@ -258,7 +259,7 @@ export default defineConfig({
       'meta',
       {
         property: 'og:image',
-        content: 'https://infinite-system.github.io/ivue/og-image.png',
+        content: 'https://ivue.dev/og-image.png',
       },
     ],
     ['meta', { property: 'og:image:width', content: '1200' }],
@@ -268,7 +269,7 @@ export default defineConfig({
       'meta',
       {
         name: 'twitter:image',
-        content: 'https://infinite-system.github.io/ivue/og-image.png',
+        content: 'https://ivue.dev/og-image.png',
       },
     ],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
@@ -294,24 +295,6 @@ export default defineConfig({
       // checklist. Rendered CHECKED regardless of source state: the skill
       // source keeps `[ ]` (the AI runs the checklist), while the docs read
       // as "the standard satisfies all of these".
-      // Raw-HTML anchors in markdown (homepage sections) are NOT base-prefixed
-      // by VitePress the way markdown links are — rewrite them here so they
-      // work in dev and under the /ivue/ base in production. href ONLY:
-      // src attributes are asset URLs that VitePress resolves (public dir +
-      // base) itself — prefixing them breaks that resolution.
-      md.core.ruler.push('base-prefix-raw-html', (state) => {
-        const base = '/ivue/';
-        const rewrite = (html: string) =>
-          html.replace(/(href)="\/(?!ivue\/|\/)/g, `$1="${base}`);
-        for (const token of state.tokens) {
-          if (token.type === 'html_block') token.content = rewrite(token.content);
-          if (token.type !== 'inline' || !token.children) continue;
-          for (const child of token.children) {
-            if (child.type === 'html_inline') child.content = rewrite(child.content);
-          }
-        }
-      });
-
       md.core.ruler.after('inline', 'task-lists', (state) => {
         const tokens = state.tokens;
         for (let i = 2; i < tokens.length; i++) {
