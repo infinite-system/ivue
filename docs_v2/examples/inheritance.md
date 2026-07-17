@@ -19,6 +19,22 @@ exports its own `Reactive()` wrapper through the namespace.
   <DemoInheritance />
 </ClientOnly>
 
+### What to notice
+
+- **Zero computeds.** This `total` chain is entirely plain getters — reactive
+  through leaf tracking, with no per-instance allocation at any level.
+- **Write anywhere, everything re-derives.** Push `price`, deepen the
+  discount or toggle the tax — the receipt and total update from whichever
+  level you touched.
+
+### Plain-getter source
+
+::: code-group
+<<< ../../examples/playground/src/examples/inheritance/Product.ts [Product.ts]
+<<< ../../examples/playground/src/examples/inheritance/SaleProduct.ts [SaleProduct.ts]
+<<< ../../examples/playground/src/examples/inheritance/TaxedProduct.ts [TaxedProduct.ts]
+:::
+
 ## The computed chain
 
 The same hierarchy can memoize at every level. Each class owns a different
@@ -29,25 +45,24 @@ computed named `total`, and each child refines the parent cell through
   <DemoComputedInheritance />
 </ClientOnly>
 
-## What to notice
+### What to notice
 
-- **Zero computeds.** The whole `total` chain is plain getters — reactive
-  through leaf tracking, no per-instance allocation at any level.
-- **Write anywhere, everything re-derives.** Push `price`, deepen the
-  discount or toggle the tax — the receipt and total update from whichever
-  level you touched.
 - **Same-name computeds coexist.** The computed version retains three cached
   `total` cells on one instance; each prototype level owns its own cache key.
 
-## The source
+### Computed source
 
 ::: code-group
-<<< ../../examples/playground/src/examples/inheritance/Product.ts [Product.ts]
-<<< ../../examples/playground/src/examples/inheritance/SaleProduct.ts [SaleProduct.ts]
-<<< ../../examples/playground/src/examples/inheritance/TaxedProduct.ts [TaxedProduct.ts]
 <<< ../../examples/playground/src/examples/inheritance/ComputedProduct.ts [ComputedProduct.ts]
 <<< ../../examples/playground/src/examples/inheritance/ComputedSaleProduct.ts [ComputedSaleProduct.ts]
 <<< ../../examples/playground/src/examples/inheritance/ComputedTaxedProduct.ts [ComputedTaxedProduct.ts]
+:::
+
+## Playground wrapper
+
+The standalone playground renders both hierarchies on one route:
+
+::: code-group
 <<< ../../examples/playground/src/examples/inheritance/InheritanceExample.vue [InheritanceExample.vue]
 :::
 
