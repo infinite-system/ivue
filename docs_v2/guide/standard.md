@@ -18,6 +18,7 @@ to the ivue you have installed — agents pick it up from
 `.claude/skills/ivue/`:
 
 ```sh
+npm install ivue        # first — the CLI ships inside the package
 npx ivue skill          # Claude Code — .claude/skills/ivue/
 npx ivue skill --all    # + every agent whose footprint exists in the repo
 ```
@@ -30,6 +31,8 @@ and never scaffolds a tool you don't; `--cursor`, `--copilot` and
 Evaluating before adopting? `npx degit infinite-system/ivue/.claude/skills/ivue .claude/skills/ivue` grabs the latest from the repo instead.
 :::
 
+<p class="skill-begins" aria-hidden="true"><span>Skill begins</span></p>
+
 # ivue `Reactive`
 
 Author reactive Vue 3 logic as a plain `class $X`, then export `Class = Reactive($Class)` through `namespace X`.
@@ -38,6 +41,20 @@ Refs/Computeds, plain getters de-optimize to native getters (reactive via leaf
 tracking), methods become stable bound functions. Instances stay plain objects.
 Follow the rules below exactly — every deviation is either a compile error or a
 silent no-op at runtime.
+
+## Setup — ivue must be installed
+
+`import { Reactive } from 'ivue'` resolves only when the package is a
+dependency. Before writing ivue code, check `package.json` for `ivue`; if it
+is missing, install it with the project's package manager:
+
+```sh
+npm install ivue   # or: yarn add ivue / pnpm add ivue / bun add ivue
+```
+
+Some apps vendor the engine instead — a local module such as
+`src/utils/ivue.ts` re-exporting `Reactive`. If one exists, import from that
+path and skip the install; never add the dependency alongside a vendored copy.
 
 ## The class template (copy this shape)
 
@@ -55,14 +72,17 @@ import {
 import { useProjectStore } from 'src/stores/project.store';
 
 class $Box {
-  // Constructor runs SYNCHRONOUSLY where you `new` — in setup() that means
-  // the constructor body IS setup code, and the whole toolbox works here:
-  // - plain watch/watchEffect land in the COMPONENT's scope (reaped on unmount);
-  // - lifecycle hooks (onMounted, onUnmounted, …) register against the
-  //   mounting component — full lifecycle access, zero wiring;
+  // Constructor runs SYNCHRONOUSLY where you `new` — in setup() that
+  // means the constructor body IS setup code, and the whole toolbox
+  // works here:
+  // - plain watch/watchEffect land in the COMPONENT's scope (reaped
+  //   on unmount);
+  // - lifecycle hooks (onMounted, onUnmounted, …) register against
+  //   the mounting component — full lifecycle access, zero wiring;
   // - callbacks delegate to methods (the thin-closure rule).
-  // (this.$watch is ONLY for instances that OUTLIVE the component — see
-  // the singleton variant below. Lifecycle hooks NEVER belong in those.)
+  // (this.$watch is ONLY for instances that OUTLIVE the component —
+  // see the singleton variant below. Lifecycle hooks NEVER belong in
+  // those.)
   constructor(
     public props: BoxProps,
     public emit: BoxEmits,
@@ -74,8 +94,9 @@ class $Box {
     onMounted(() => this.focusBox());
   }
 
-  // MUTABLE STATE — getter returning ref()/shallowRef(). `this` is RAW: read
-  // AND write via .value. shallowRef for big structures you REPLACE wholesale.
+  // MUTABLE STATE — getter returning ref()/shallowRef(). `this` is
+  // RAW: read AND write via .value. shallowRef for big structures you
+  // REPLACE wholesale.
   get height() {
     return ref(4);
   }
@@ -83,7 +104,8 @@ class $Box {
     return shallowRef<Row[]>([]);
   } // deep mutations do NOT trigger
 
-  // TEMPLATE-REF TARGET — a ref(null); the SFC destructures it for ref="boxEl".
+  // TEMPLATE-REF TARGET — a ref(null); the SFC destructures it for
+  // ref="boxEl".
   get boxEl() {
     return ref<HTMLElement | null>(null);
   }
@@ -103,10 +125,11 @@ class $Box {
     return toRef(() => this.props.items);
   } // when you need a ref handle
 
-  // The pattern's extra capability: refine the SUPPLIED prop into the prop
-  // the template actually needs — mixing other props, state, and constants,
-  // all still leaf-tracked. The template reads the refinement, never the
-  // raw prop; the prop is an INPUT to the model, not wired to the view.
+  // The pattern's extra capability: refine the SUPPLIED prop into
+  // the prop the template actually needs — mixing other props, state,
+  // and constants, all still leaf-tracked. The template reads the
+  // refinement, never the raw prop; the prop is an INPUT to the
+  // model, not wired to the view.
   get displayTitle() {
     return this.title || `Box ${this.width}×${this.height.value}`;
   }
@@ -114,17 +137,19 @@ class $Box {
   // DERIVED — PLAIN getter, NO computed().
   // Reactive via leaf tracking; 0 bytes/instance.
   get area() {
-    return this.width * this.height.value; // prop × ref — both leaf-tracked
+    // prop × ref — both leaf-tracked
+    return this.width * this.height.value;
   }
   get widthPx() {
     return this.width + 'px';
   }
 
-  // computed() — SURGICAL opt-in only: expensive work, render-suppression by
-  // value-equality, or a stable ref handle for watch/props (~300 bytes/instance).
-  // THIN closures (see "computed() and watch callbacks delegate to methods"):
-  // the computed only dials a method — logic stays on the
-  // prototype, directly testable, minimum footprint.
+  // computed() — SURGICAL opt-in only: expensive work,
+  // render-suppression by value-equality, or a stable ref handle for
+  // watch/props (~300 bytes/instance). THIN closures (see "computed()
+  // and watch callbacks delegate to methods"): the computed only
+  // dials a method — logic stays on the prototype, directly testable,
+  // minimum footprint.
   get sortedRows() {
     return computed(() => this.sortRows());
   }
@@ -136,13 +161,14 @@ class $Box {
       get: () => this.celsiusToFahrenheit(),
       set: (fahrenheit: number) => this.setFromFahrenheit(fahrenheit),
     }); // writable computed — the only way to give a COMPUTED a setter.
-    // A native `get x() / set x(value)` accessor pair works too; pick the
-    // computed form when the member must be a ref handle (v-model target,
-    // watch source, destructured state binding).
+    // A native `get x() / set x(value)` accessor pair works too;
+    // pick the computed form when the member must be a ref handle
+    // (v-model target, watch source, destructured state binding).
   }
 
-  // STORE / COMPOSABLE — `$`-getter caches WHOLE, forever, per instance.
-  // Resolves on first touch (after Pinia/app ready); circular-import safe.
+  // STORE / COMPOSABLE — `$`-getter caches WHOLE, forever, per
+  // instance. Resolves on first touch (after Pinia/app ready);
+  // circular-import safe.
   private get $project() {
     return useProjectStore();
   }
@@ -150,12 +176,14 @@ class $Box {
     return this.$project.projectId;
   }
 
-  // CONSTANTS / CONFIG — plain fields ONLY. A plain field written from a method
-  // triggers NOTHING (no Ref/Computed, no dependency edge). Never store mutable state here.
+  // CONSTANTS / CONFIG — plain fields ONLY. A plain field written
+  // from a method triggers NOTHING (no Ref/Computed, no dependency
+  // edge). Never store mutable state here.
   baseWidth = 400;
 
-  // METHODS — plain; engine-binds to raw (stable identity, safe as handlers).
-  // Reactive-closure bodies above delegate HERE (the thin-closure rule).
+  // METHODS — plain; engine-binds to raw (stable identity, safe as
+  // handlers). Reactive-closure bodies above delegate HERE (the
+  // thin-closure rule).
   grow() {
     this.height.value++;
   }
@@ -183,9 +211,33 @@ class $Box {
 export namespace Box {
   export const $Class = $Box; // raw — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
-  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
+  // the type of every unwrapping surface (defineExpose, reactive())
+  export type Instance = typeof Class.Instance;
 }
 ```
+
+### The optional `Model` line (domain entity graphs)
+
+When classes hold and pass RAW instances of each other — entity
+collections, method parameters, factory returns — the namespace grows a
+fourth line:
+
+```ts
+export namespace Task {
+  export const $Class = $Task;
+  export let Class = Reactive($Class);
+  // raw-instance type — collections, parameters, returns
+  export type Model = InstanceType<typeof Class>;
+  // the type of every unwrapping surface (defineExpose, reactive())
+  export type Instance = typeof Class.Instance;
+}
+```
+
+`Model` is the raw-instance type (Refs stay Refs; `.value` access) —
+use it for `shallowRef<Task.Model[]>` collections and
+`workloadPercent(member: Member.Model)` parameters. `Instance` remains
+ONLY for unwrapping surfaces (defineExpose, reactive(), template refs);
+never type a raw collection with it.
 
 ## The SFC wiring template (copy this shape)
 
@@ -196,14 +248,16 @@ import { Box } from './Box';
 const props = withDefaults(defineProps<BoxProps>(), { width: 400 });
 const emit = defineEmits<BoxEmits>();
 
-// ONE raw instance — the same object drives template, emits payloads, expose.
-// No reactive() wrapper, no unwrap view. Constructor runs init in setup context.
+// ONE raw instance — the same object drives template, emits
+// payloads, and expose. No reactive() wrapper, no unwrap view. The
+// constructor runs init in setup context.
 const box = new Box.Class(props, emit);
 
-// THE STATE DESTRUCTURE — one statement, grouped. Every Ref/Computed the
-// template touches is listed here; each binding IS the cached cell (stable
-// identity), and setup bindings unwrap uniformly in EVERY template position.
-// NEVER destructure plain getters or methods (snapshots a dead value).
+// THE STATE DESTRUCTURE — one statement, grouped. Every Ref/Computed
+// the template touches is listed here; each binding IS the cached
+// cell (stable identity), and setup bindings unwrap uniformly in
+// EVERY template position. NEVER destructure plain getters or
+// methods (snapshots a dead value).
 const {
   // state refs
   height,
@@ -215,14 +269,20 @@ const {
   boxEl,
 } = box;
 
-// Type the expose surface through Instance — it strips readonly so ref-writes typecheck.
+// Type the expose surface through Instance — it strips readonly so
+// ref-writes typecheck.
 defineExpose(box as Box.Instance);
 </script>
 
 <template>
   <!-- State bindings — reads AND writes compiler-unwrapped.
-       fahrenheit is the writable computed: v-model writes through its setter. -->
-  <input ref="boxEl" v-model.number="fahrenheit" :disabled="box.isDisabled" />
+       fahrenheit is the writable computed: v-model writes through
+       its setter. -->
+  <input
+    ref="boxEl"
+    v-model.number="fahrenheit"
+    :disabled="box.isDisabled"
+  />
   <div v-if="height > 4">
     {{ box.displayTitle }} — {{ celsius }}°C is {{ fahrenheit }}°F
   </div>
@@ -233,6 +293,50 @@ defineExpose(box as Box.Instance);
   <button @click="box.grow()">grow — area {{ box.area }}</button>
 </template>
 ```
+
+## One template, one logic owner
+
+Every behavioral SFC has exactly one ivue class as its template logic owner.
+`<script setup>` is the wiring boundary only:
+
+- import dependencies;
+- call compiler macros (`defineProps`, `defineEmits`, `defineExpose`);
+- construct `new X.Class(...)` once;
+- destructure the Ref/Computed bindings the template consumes.
+
+Do not place component-local `ref`, `computed`, `watch`, lifecycle hooks, or
+free functions beside that instance. State belongs in ref-getters, derivations
+belong in plain getters, setup work belongs in the constructor, and event
+handlers belong in methods — even when the handler only normalizes a DOM event
+before delegating to a domain model.
+
+When building on a class-backed component, **extend its class, not its
+`<script setup>`**. Add behavior to the existing class when it belongs to the
+same component contract. When it is a real specialization, subclass the raw
+class and publish the normal namespace:
+
+```ts
+class $SearchBox extends Box.$Class {
+  clearSearch() {
+    this.search.value = '';
+  }
+}
+
+export namespace SearchBox {
+  export const $Class = $SearchBox;
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+}
+```
+
+Never create a parallel behavior layer of setup functions around an existing
+class. That splits ownership, hides behavior from inheritance, and makes the
+template depend on two architectures.
+
+A genuinely markup-only leaf may remain classless; do not manufacture an
+empty class for static presentation. The moment the component owns state,
+derivation, setup behavior, or an event handler, it has crossed the boundary
+and needs one class.
 
 The template's two access styles carry meaning: **a state binding = a destructured Ref/Computed**, **dotted `box.x` = a derivation or an
 action** (plain getter / method) — the class's own anatomy, visible at the
@@ -287,8 +391,9 @@ class $Session {
     return ref<User | null>(null);
   }
 
-  // Outliving instance: $watch/$watchEffect register in the instance's lazy
-  // effectScope — there is no component scope here to reap plain watch.
+  // Outliving instance: $watch/$watchEffect register in the
+  // instance's lazy effectScope — there is no component scope here
+  // to reap plain watch.
   constructor() {
     this.$watch(
       () => this.user.value,
@@ -299,8 +404,9 @@ class $Session {
     //   getCurrentScope() && onScopeDispose(() => this.$stopEffects());
   }
 
-  // Optional hook — $stopEffects() calls this FIRST: put non-Vue cleanup
-  // here (sockets, listeners from composables first-touched after setup).
+  // Optional hook — $stopEffects() calls this FIRST: put non-Vue
+  // cleanup here (sockets, listeners from composables first-touched
+  // after setup).
   stopEffects() {
     this.disconnect();
   }
@@ -319,29 +425,31 @@ class $Session {
 export namespace Session {
   export const $Class = $Session; // raw — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
-  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
+  // the type of every unwrapping surface (defineExpose, reactive())
+  export type Instance = typeof Class.Instance;
 }
 
-// The owner disposes: stops the scope, runs stopEffects(), clears caches.
+// The owner disposes: stops the scope, runs stopEffects(), and
+// clears caches.
 session.$stopEffects();
 ```
 
 ## DO / NEVER
 
-| DO                                                                                                               | NEVER                                                                                      |
-| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `class $X` + `export namespace X { $Class; Class = Reactive($Class); Instance }`                                 | export a bare `Reactive(class {...})` for anything that grows a parent/dependent           |
-| mutable state = `get x() { return ref(v) }`                                                                      | put mutable state in a plain field — writes trigger nothing                                |
-| `.value` for every Ref/Computed inside the class and in the script body                                          | write `this.x = v` for a Ref/Computed in the class — it clobbers the ref or no-ops         |
-| derive with a PLAIN getter                                                                                       | wrap every derivation in `computed()` — pays ~300 bytes/instance for nothing               |
-| `computed()` only for expensive / render-suppressing / stable-handle needs                                       | reach for `computed()` by default                                                          |
-| inject stores via `private get $store() { return useStore() }`                                                   | `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles     |
-| `new X.Class(props, emit)` — raw instance everywhere                                                             | wrap in `reactive(instance)` or any shallow-unwrap view as the standard                    |
-| destructure ALL template-touched Refs/Computeds + element refs, grouped                                          | destructure plain getters or methods — snapshots a dead value / loses nothing but clarity  |
-| state bindings in templates; dotted `box.x` only for plain getters/methods                                       | reach a Ref through the instance in a template — `v-if="box.someRef"` is always-truthy     |
-| `defineExpose(box as X.Instance)`                                                                                | `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers           |
-| constructor runs init; register hooks/watchers there                                                             | add an `init()` method expecting auto-call — ivue never calls it                           |
-| plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |
+| DO | NEVER |
+| --- | --- |
+| ✅ `class $X` + `export namespace X { $Class; Class = Reactive($Class); Instance }` | ❌ export a bare `Reactive(class {...})` for anything that grows a parent/dependent |
+| ✅ mutable state = `get x() { return ref(v) }` | ❌ put mutable state in a plain field — writes trigger nothing |
+| ✅ `.value` for every Ref/Computed inside the class and in the script body | ❌ write `this.x = v` for a Ref/Computed in the class — it clobbers the ref or no-ops |
+| ✅ derive with a PLAIN getter | ❌ wrap every derivation in `computed()` — pays ~300 bytes/instance for nothing |
+| ✅ `computed()` only for expensive / render-suppressing / stable-handle needs | ❌ reach for `computed()` by default |
+| ✅ inject stores via `private get $store() { return useStore() }` | ❌ `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles |
+| ✅ `new X.Class(props, emit)` — raw instance everywhere | ❌ wrap in `reactive(instance)` or any shallow-unwrap view as the standard |
+| ✅ destructure ALL template-touched Refs/Computeds + element refs, grouped | ❌ destructure plain getters or methods — snapshots a dead value / loses nothing but clarity |
+| ✅ state bindings in templates; dotted `box.x` only for plain getters/methods | ❌ reach a Ref through the instance in a template — `v-if="box.someRef"` is always-truthy |
+| ✅ `defineExpose(box as X.Instance)` | ❌ `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers |
+| ✅ constructor runs init; register hooks/watchers there | ❌ add an `init()` method expecting auto-call — ivue never calls it |
+| ✅ plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | ❌ default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |
 
 ## The unwrapping-surface typing invariant
 
@@ -366,12 +474,12 @@ until mount — use `?.` in watch getters).
 
 ### Common compile errors → fixes
 
-| Error / symptom                                                                                             | Fix                                                              |
-| ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `Cannot assign to 'x' because it is a read-only property` (on an exposed/`reactive()`/template-ref surface) | type that surface through `X.Instance`                           |
-| `Type 'boolean' is not assignable to type 'Ref<boolean>'`                                                   | missing `.value` on a Ref/Computed write — `x.flag.value = true` |
-| `'X' is possibly null` on a template ref in a watch getter                                                  | add `?.` — `watch(() => x.boxEl.value?.foo, cb)`                 |
-| template write crashes / no-ops at runtime on the raw instance                                              | you wrote `x.Ref/Computed = v`; write `x.Ref/Computed.value = v` |
+| Error / symptom | Fix |
+| --- | --- |
+| ❌ `Cannot assign to 'x' because it is a read-only property` (on an exposed/`reactive()`/template-ref surface) | ✅ type that surface through `X.Instance` |
+| ❌ `Type 'boolean' is not assignable to type 'Ref<boolean>'` | ✅ missing `.value` on a Ref/Computed write — `x.flag.value = true` |
+| ❌ `'X' is possibly null` on a template ref in a watch getter | ✅ add `?.` — `watch(() => x.boxEl.value?.foo, cb)` |
+| ❌ template write crashes / no-ops at runtime on the raw instance | ✅ you wrote `x.Ref/Computed = v`; write `x.Ref/Computed.value = v` |
 
 ## Watch rules — and WHICH watch
 
@@ -433,8 +541,10 @@ class $Scroller<T extends BaseItem> {
 
 export namespace Scroller {
   export const $Class = $Scroller;
-  export let Class = Reactive($Class) as unknown as typeof $Class; // keeps <T> at `new` sites
-  export type Instance<T extends BaseItem> = ReactiveInstance<$Scroller<T>>;
+  // the cast keeps <T> available at `new` sites
+  export let Class = Reactive($Class) as unknown as typeof $Class;
+  export type Instance<T extends BaseItem> =
+    ReactiveInstance<$Scroller<T>>;
 }
 // consumer of a template ref: ShallowUnwrapRef<Scroller.Instance<T>>
 ```
@@ -455,7 +565,9 @@ sortItems() {
 }
 
 // ✅ same rule for watch callbacks wired in constructors
-watch(value, (newValue, oldValue) => this.onValueChanged(newValue, oldValue));
+watch(value, (newValue, oldValue) =>
+  this.onValueChanged(newValue, oldValue),
+);
 
 // ❌ FAT — logic is anonymous and duplicated inside the cached closure
 get sortedItems() {
@@ -498,10 +610,14 @@ like prose — don't ruin it with letter soup:
 - Tests are code — the same rules apply to specs.
 
 ```ts
-// ❌ before                          // ✅ after
-const v = this.cellVersions.get(k);   const versionRef = this.cellVersions.get(cellKey);
-for (let r = r1; r <= r2; r++)        for (let row = startRow; row <= endRow; row++)
-watch(c, (nv, ov) => …)               watch(value, (newValue, oldValue) => this.onChanged(…))
+// ❌ const v = this.cellVersions.get(k);
+// ✅ const versionRef = this.cellVersions.get(cellKey);
+
+// ❌ for (let r = r1; r <= r2; r++)
+// ✅ for (let row = startRow; row <= endRow; row++)
+
+// ❌ watch(c, (nv, ov) => …)
+// ✅ watch(value, (newValue, oldValue) => this.onChanged(…))
 ```
 
 ## Keyed reactivity — the third state shape
@@ -514,20 +630,28 @@ reactive primitives as plain values** and materialize per observation:
 
 ```ts
 class $Sheet {
-  // Plain readonly fields — the COLLECTIONS aren't reactive; their VALUES are.
+  // Plain readonly fields — the COLLECTIONS aren't reactive;
+  // their VALUES are.
   private readonly cellVersions = new Map<number, Ref<number>>();
 
-  /** READ path: get-OR-CREATE, then subscribe — observation materializes. */
+  /**
+   * READ path: get-OR-CREATE, then subscribe — observation
+   * materializes.
+   */
   private trackCell(cellKey: number): void {
     let versionRef = this.cellVersions.get(cellKey);
     if (!versionRef) {
       versionRef = ref(0);
       this.cellVersions.set(cellKey, versionRef);
     }
-    void versionRef.value; // subscribes whatever effect is currently running
+    // subscribes whatever effect is currently running
+    void versionRef.value;
   }
 
-  /** WRITE path: PEEK-ONLY — unobserved keys allocate nothing, notify no one. */
+  /**
+   * WRITE path: PEEK-ONLY — unobserved keys allocate nothing,
+   * notify no one.
+   */
   private bumpCell(cellKey: number): void {
     const versionRef = this.cellVersions.get(cellKey);
     if (versionRef) versionRef.value++;
@@ -585,12 +709,13 @@ get totalHeight() {
   return Math.min(this.naturalHeight, MAX_SCROLL_HEIGHT);
 }
 get startRow() {
-  return Math.max(0, Math.floor(this.virtualTop / ROW_HEIGHT) - OVERSCAN);
+  return Math.floor(this.virtualTop / ROW_HEIGHT);
 }
 
 /** A doc comment needs air — blank line before it. */
 get offsetY() {
-  return this.scrollTop.value - (this.virtualTop - this.startRow * ROW_HEIGHT);
+  const windowTop = this.virtualTop - this.startRow * ROW_HEIGHT;
+  return this.scrollTop.value - windowTop;
 }
 ```
 
@@ -616,6 +741,7 @@ convention and check it in review.
 - [ ] Stores/composables are injected via `private get $store() { return useStore() }`, not field initializers.
 - [ ] The class is exported through the namespace (`$Class` / `Class = Reactive($Class)` / `Instance`); generics cast `Class` and hand-apply `ReactiveInstance` to `Instance<T>`.
 - [ ] The SFC does `new X.Class(...)` once — no `reactive()` wrapper, no unwrap view.
+- [ ] `<script setup>` is wiring only: no component-local Ref/Computed, watcher, lifecycle hook, or free function beside the class instance; extend an existing class-backed component through its class, never through parallel setup behavior.
 - [ ] The SFC destructures ALL template-touched Refs/Computeds + element refs (grouped: state refs / computed refs / element refs); templates use state bindings and dotted access ONLY for plain getters/methods — no Ref reached through the instance in a template, no state name shadowing a prop.
 - [ ] Template expressions carry NO logic — every `&&`/`||`/comparison/ternary condition is a NAMED plain getter, or a NAMED method when it takes an argument (`v-if="box.canEditItems"`, `v-if="media.fileExists(index)"` — never `v-if="a && b"`).
 - [ ] Nothing but Refs/Computeds/element-ref targets is destructured (never plain getters/methods); v-for item cells stay dotted with `.value`; instance-swapping components don't destructure at all.

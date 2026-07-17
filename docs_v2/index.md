@@ -175,22 +175,94 @@ const cart = new Cart.Class()
 
 <section>
 
+<div class="ix-standard-hero">
+
+<p class="ix-standard-hero__eyebrow">The Standard</p>
+
+## One Standard — for humans and AI
+
+<div class="ix-idea ix-standard">
+
+<div>
+
+<p class="lead ix-idea__p">
+Every class on this site is written one way. The
+<strong>Standard Operating Manual</strong> defines that way — the full class
+template, the SFC wiring, every DO and NEVER — one canonical document that
+reads as a guide and executes as an instruction set.
+</p>
+
+<p class="lead ix-idea__p">
+Read it once, and you can review any ivue code on sight. Install it once,
+and your AI agent writes canonical ivue from the first prompt.
+</p>
+
+<p class="ix-standard-hero__actions">
+<a class="ix-standard-hero__cta" href="/guide/standard">Read the Standard →</a>
+</p>
+
+</div>
+
+<div class="ix-code-window">
+  <div class="ix-code-window__chrome">
+    <span class="ix-code-window__lights" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </span>
+    <strong>Terminal</strong>
+  </div>
+
+```sh:no-line-numbers
+# install ivue
+npm i ivue
+
+# teach your Claude Code
+npx ivue skill
+
+# + Cursor, Codex, Gemini…
+npx ivue skill --all
+```
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section>
+
 ## Start here
 
 <div class="ix-start">
   <a href="/guide/introduction">
     <div class="t">What is ivue?</div>
-    <div class="d">The idea and the engine.</div>
+    <div class="d">The idea in five minutes: plain classes, full reactivity, nothing else.</div>
     <span class="go">Read →</span>
+  </a>
+  <a href="/guide/engine-under-the-idiom">
+    <div class="t">The Engine</div>
+    <div class="d">How one prototype transformation turns getters into lazy refs — the whole runtime, explained.</div>
+    <span class="go">Look inside →</span>
   </a>
   <a href="/guide/getting-started">
     <div class="t">Getting Started</div>
     <div class="d">Install, write your first reactive class, use it in a component.</div>
     <span class="go">Build →</span>
   </a>
+  <a href="/examples/">
+    <div class="t">Examples</div>
+    <div class="d">From a counter to a 20-million-cell grid — every example live, with its real source.</div>
+    <span class="go">Explore →</span>
+  </a>
+  <a href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground" target="_blank" rel="noreferrer">
+    <div class="t">StackBlitz Playground</div>
+    <div class="d">The whole example collection booted in your browser — edit anything, watch it react.</div>
+    <span class="go">Open ⚡</span>
+  </a>
   <a href="/guide/benchmarks">
     <div class="t">Interactive Benchmarks</div>
-    <div class="d">A 100k-cell grid built three ways, and a spreadsheet with real Excel formulas — live, in your browser.</div>
+    <div class="d">Creation, dispatch, formula grids and a million-cell sheet — measured live, in your browser.</div>
     <span class="go">Run →</span>
   </a>
 </div>

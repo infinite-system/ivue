@@ -20,42 +20,42 @@ set.
 <div class="iv-problems">
   <div class="iv-problem">
     <strong class="iv-problem__title">Per-instance cost</strong>
-    <p class="iv-problem__hard">A <code>reactive()</code> proxy per object is expensive; eager computeds pay for every property up front.</p>
+    <p class="iv-problem__hard"><span class="iv-x" aria-hidden="true"></span><span>A <code>reactive()</code> proxy per object is expensive; eager computeds pay for every property up front.</span></p>
     <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>Instances are <strong>plain</strong>, refs/computeds are lazy → <strong>6–132× cheaper to create.</strong></span></p>
   </div>
   <div class="iv-problem">
     <strong class="iv-problem__title">Cheap bound methods</strong>
-    <p class="iv-problem__hard">Bind per instance and you allocate a function per method per object; don't bind and <code>this</code> breaks on detach.</p>
+    <p class="iv-problem__hard"><span class="iv-x" aria-hidden="true"></span><span>Bind per instance and you allocate a function per method per object; don't bind and <code>this</code> breaks on detach.</span></p>
     <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>Methods stay on the prototype, <strong>bound lazily on first use and cached</strong> → cheap, correct, referentially stable.</span></p>
   </div>
   <div class="iv-problem">
     <strong class="iv-problem__title">Reactive reads</strong>
-    <p class="iv-problem__hard">A proxy makes every object read cross a runtime interception layer.</p>
+    <p class="iv-problem__hard"><span class="iv-x" aria-hidden="true"></span><span>A proxy makes every object read cross a runtime interception layer.</span></p>
     <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>Raw ivue access is <strong>3–18× faster than proxy-wrapped access</strong>; stable refs and methods hoist to direct-handle speed.</span></p>
   </div>
   <div class="iv-problem">
     <strong class="iv-problem__title">Reactive inheritance</strong>
-    <p class="iv-problem__hard">Prototype-based reactivity collides cached Refs/Computeds and breaks <code>super</code>.</p>
+    <p class="iv-problem__hard"><span class="iv-x" aria-hidden="true"></span><span>Prototype-based reactivity collides cached Refs/Computeds and breaks <code>super</code>.</span></p>
     <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span><strong>Deep computed chains with <code>super.x.value</code></strong>, reactivity propagating through every level.</span></p>
   </div>
   <div class="iv-problem">
     <strong class="iv-problem__title">Development parity</strong>
-    <p class="iv-problem__hard">A dev-only proxy or dispatch layer makes local behavior and performance differ from production.</p>
+    <p class="iv-problem__hard"><span class="iv-x" aria-hidden="true"></span><span>A dev-only proxy or dispatch layer makes local behavior and performance differ from production.</span></p>
     <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span><code>Reactive()</code> runs <strong>one execution path in every environment</strong>; Vue reconstructs the owner after script edits.</span></p>
   </div>
   <div class="iv-problem">
     <strong class="iv-problem__title">Circular imports hell</strong>
-    <p class="iv-problem__hard">Mutual class references throw <code>Cannot access 'X' before initialization</code>.</p>
+    <p class="iv-problem__hard"><span class="iv-x" aria-hidden="true"></span><span>Mutual class references throw <code>Cannot access 'X' before initialization</code> — at first load, and again on hot reload when update order reshuffles.</span></p>
     <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>The namespace pattern and late dereference <strong>resolve circular cross-references in any load order</strong>.</span></p>
   </div>
   <div class="iv-problem">
     <strong class="iv-problem__title">Writable-getter types</strong>
-    <p class="iv-problem__hard"><code>get x()</code> is <em>read-only</em> in TypeScript.</p>
+    <p class="iv-problem__hard"><span class="iv-x" aria-hidden="true"></span><span><code>get x()</code> is <em>read-only</em> in TypeScript.</span></p>
     <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span>Mapped types <strong>re-declare ref-returning getters as writable</strong> — the requirement that produced the circular-safe module shape.</span></p>
   </div>
   <div class="iv-problem">
     <strong class="iv-problem__title">Deterministic teardown</strong>
-    <p class="iv-problem__hard">Track and stop every effect per instance, with no cost for those that have none.</p>
+    <p class="iv-problem__hard"><span class="iv-x" aria-hidden="true"></span><span>Track and stop every effect per instance, with no cost for those that have none.</span></p>
     <p class="iv-problem__solved"><span class="iv-ck" aria-hidden="true"></span><span><code>$watch</code> + <code>$stopEffects</code> — scoped cleanup; instances that never watch allocate <strong>no effect scope</strong>.</span></p>
   </div>
 </div>

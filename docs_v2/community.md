@@ -19,6 +19,11 @@ Each channel has a job — picking the right one gets you answered fastest:
       <stop offset="0.5" stop-color="#2dd4bf" />
       <stop offset="1" stop-color="#34d399" />
     </linearGradient>
+    <linearGradient id="cm-profile-icon-gradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38bdf8" />
+      <stop offset="0.55" stop-color="#60a5fa" />
+      <stop offset="1" stop-color="#818cf8" />
+    </linearGradient>
   </defs>
 </svg>
 
@@ -111,7 +116,11 @@ New releases, benchmark runs, and examples land on
   <div class="cm-author__body">
     <span class="cm-author__eyebrow">Built from production</span>
     <strong>Evgeny Kalashnikov</strong>
-    <span class="cm-author__role">Lead Software Engineer @ Blackline, Adhoc Studio</span>
+    <span class="cm-author__role">
+      <span class="cm-author__role-title">Lead Software Engineer</span>
+      <span class="cm-author__role-separator">@</span>
+      <span class="cm-author__role-company">Blackline, Adhoc Studio</span>
+    </span>
     <nav class="cm-author__links" aria-label="Evgeny Kalashnikov online">
       <a class="cm-author__link" href="https://x.com/evgenykalash" target="_blank" rel="noreferrer">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.9 2H22l-6.78 7.75L23.2 22h-6.25l-4.9-7.64L5.36 22H2.24l7.25-8.29L1.84 2h6.32l4.43 6.98L18.9 2Zm-1.1 18h1.73L7.22 3.9H5.36L17.8 20Z"/></svg>

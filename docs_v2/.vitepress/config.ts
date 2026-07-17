@@ -45,6 +45,7 @@ export default defineConfig({
         const retryParam = '__ivue_deployment';
         const chunkReloadKey = 'ivue:deployment-chunk-reload';
         const routeReloadKey = 'ivue:deployment-route-reload';
+        const deploymentToastKey = 'ivue:deployment-toast';
         const routeNotFoundEvent = 'ivue:route-not-found';
         const deployedCommit = ${JSON.stringify(deployedCommit)};
         const currentUrl = new URL(window.location.href);
@@ -60,6 +61,50 @@ export default defineConfig({
           document.title.startsWith('404') &&
           document.querySelector('meta[name="description"]')?.content ===
             'Not Found';
+
+        const showDeploymentToast = () => {
+          if (
+            !deployedCommit ||
+            sessionStorage.getItem(deploymentToastKey) !== deployedCommit
+          ) {
+            return;
+          }
+
+          sessionStorage.removeItem(deploymentToastKey);
+
+          const mount = () => {
+            const toast = document.createElement('div');
+            const mark = document.createElement('img');
+            const copy = document.createElement('span');
+            const title = document.createElement('strong');
+            const detail = document.createElement('span');
+
+            toast.className = 'ivue-deployment-toast';
+            toast.setAttribute('role', 'status');
+            toast.setAttribute('aria-live', 'polite');
+            toast.setAttribute('aria-atomic', 'true');
+
+            mark.src = '/mark.svg';
+            mark.alt = '';
+            mark.width = 36;
+            mark.height = 36;
+            copy.className = 'ivue-deployment-toast__copy';
+            title.textContent = 'Fresh ivue docs just landed';
+            detail.textContent =
+              'Built in the open. You’re now on the latest version.';
+
+            copy.append(title, detail);
+            toast.append(mark, copy);
+            document.body.append(toast);
+            window.setTimeout(() => toast.remove(), 6_000);
+          };
+
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', mount, { once: true });
+          } else {
+            mount();
+          }
+        };
 
         const deploymentIsPending = async () => {
           if (!deployedCommit) return false;
@@ -139,6 +184,7 @@ export default defineConfig({
                 )?.content;
 
                 if (liveCommit && liveCommit !== deployedCommit) {
+                  sessionStorage.setItem(deploymentToastKey, liveCommit);
                   navigateFresh();
                   return;
                 }
@@ -204,6 +250,7 @@ export default defineConfig({
           );
         }
 
+        showDeploymentToast();
         void recoverDuringDeployment();
       })();`,
     ],
@@ -260,11 +307,35 @@ export default defineConfig({
     lineNumbers: true,
     theme: { light: 'github-light', dark: 'one-dark-pro' },
     config(md) {
-      // GFM task lists: render `- [ ]` / `- [x]` as checkboxes (tickable in
-      // the browser, not persisted) — used by the standard.md self-review
-      // checklist. Rendered CHECKED regardless of source state: the skill
-      // source keeps `[ ]` (the AI runs the checklist), while the docs read
-      // as "the standard satisfies all of these".
+      // GFM task lists: render `- [ ]` / `- [x]` as checkboxes — used by
+      // the standard.md self-review checklist. Rendered UNCHECKED so the
+      // reader can tick items off while reviewing their own diff in the
+      // browser (ticks are not persisted).
+      // Table cells that open with a ✅ / ❌ verdict marker (the DO/NEVER
+      // table): strip the marker and tag the cell, so the theme draws a
+      // styled badge instead of a raw emoji. The markers stay in the
+      // markdown source — each cell is self-describing for AI agents even
+      // when read outside the table.
+      md.core.ruler.after('inline', 'verdict-cells', (state) => {
+        const tokens = state.tokens;
+        for (let i = 1; i < tokens.length; i++) {
+          const token = tokens[i];
+          const cellOpen = tokens[i - 1];
+          if (token.type !== 'inline' || !token.children?.length) continue;
+          if (cellOpen.type !== 'td_open') continue;
+          const first = token.children[0];
+          if (first.type !== 'text') continue;
+          const verdict = first.content.startsWith('✅ ')
+            ? 'do-cell'
+            : first.content.startsWith('❌ ')
+              ? 'never-cell'
+              : '';
+          if (!verdict) continue;
+          first.content = first.content.slice(2);
+          cellOpen.attrJoin('class', verdict);
+        }
+      });
+
       md.core.ruler.after('inline', 'task-lists', (state) => {
         const tokens = state.tokens;
         for (let i = 2; i < tokens.length; i++) {
@@ -283,7 +354,7 @@ export default defineConfig({
           if (!match) continue;
           first.content = first.content.slice(4);
           const checkbox = new state.Token('html_inline', '', 0);
-          checkbox.content = '<input type="checkbox" class="task-checkbox" checked> ';
+          checkbox.content = '<input type="checkbox" class="task-checkbox"> ';
           token.children.unshift(checkbox);
           tokens[i - 2].attrJoin('class', 'task-item');
         }

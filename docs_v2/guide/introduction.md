@@ -12,7 +12,7 @@ engine is **1.1kb gzipped** with zero dependencies.
 `Reactive()` transforms a class's prototype **once**:
 
 - **getters** that return `ref()` become lazily cached Refs,
-- **plain derived getters** stay plain and re-derive on render (`computed()` is a per-getter opt-in),
+- **derived getters** stay plain — `computed()` is opt-in, per getter,
 - **methods** become lazily bound functions,
 
 and instances stay **ordinary objects**. No `reactive()` proxy wraps them. No

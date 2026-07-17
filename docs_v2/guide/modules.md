@@ -9,7 +9,7 @@ description: The namespace pattern is the standard way to export ivue classes. I
 return you get cross-file inheritance, a replaceable runtime class, and
 circular cross-references that resolve after module initialization.
 
-## The pattern
+## The Namespace Pattern
 
 Each class file exports a namespace with two members. The **raw** class is for
 extending. The **reactive** class is for instantiating:
@@ -31,7 +31,8 @@ class $BaseElement {
 export namespace BaseElement {
   export const $Class = $BaseElement; // raw — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
-  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
+  // the type of every unwrapping surface (defineExpose, reactive())
+  export type Instance = typeof Class.Instance;
 }
 ```
 
@@ -62,6 +63,42 @@ Use this shape for every class module. Codebases don't stay small: classes
 grow parents, split into files, and start referencing each other. The
 namespace costs the same three lines on day one, and it never needs migrating
 later.
+
+### The optional `Model` line
+
+Domain models that hold and pass **raw instances** around — entity
+collections, method parameters, factory returns — extend the namespace with
+a fourth line:
+
+```ts
+export namespace Task {
+  export const $Class = $Task;
+  export let Class = Reactive($Class);
+  // raw-instance type — collections, parameters, returns
+  export type Model = InstanceType<typeof Class>;
+  // the type of every unwrapping surface (defineExpose, reactive())
+  export type Instance = typeof Class.Instance;
+}
+```
+
+`Model` is the raw-instance type: Refs stay Refs, reads and writes go
+through `.value` — exactly how class code handles instances. Use it
+wherever one class stores or accepts another:
+
+```ts
+get tasks() {
+  return shallowRef<Task.Model[]>([]);
+}
+
+workloadPercent(member: Member.Model) {
+  /* ... */
+}
+```
+
+`Instance` remains the type of unwrapping surfaces only (`defineExpose`,
+`reactive()`, template refs). The
+[Workspace Platform example](/examples/workspace-platform) runs a whole
+entity graph — workspace, projects, members, tasks — on this shape.
 
 ## Why each file calls Reactive()
 
@@ -155,7 +192,7 @@ class $Order {
   }
 
   get canShip() {
-    return computed(() => this.$project.isActive && this.$user.isVerified);
+    return this.$project.isActive && this.$user.isVerified;
   }
 }
 ```
@@ -240,7 +277,8 @@ class $Scroller<T extends BaseItem> {
 export namespace Scroller {
   export const $Class = $Scroller;
   export let Class = Reactive($Class) as unknown as typeof $Class;
-  export type Instance<T extends BaseItem> = ReactiveInstance<$Scroller<T>>;
+  export type Instance<T extends BaseItem> =
+    ReactiveInstance<$Scroller<T>>;
 }
 ```
 

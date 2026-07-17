@@ -86,6 +86,91 @@
   }
 }
 
+/* ---------- Fresh deployment toast ---------- */
+.ivue-deployment-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  z-index: 1000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: min(390px, calc(100vw - 32px));
+  padding: 12px 16px 13px 12px;
+  border: 1px solid color-mix(in srgb, var(--ivue-emerald) 30%, var(--vp-c-divider));
+  border-radius: 13px;
+  color: var(--vp-c-text-1);
+  background: color-mix(in srgb, var(--vp-c-bg) 94%, transparent);
+  box-shadow: 0 16px 45px rgba(5, 10, 25, 0.2);
+  backdrop-filter: blur(14px);
+  animation: ivue-deployment-toast 5.8s ease both;
+}
+.ivue-deployment-toast::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--ivue-grad);
+  transform-origin: left;
+  animation: ivue-deployment-toast-progress 5.5s linear both;
+}
+.ivue-deployment-toast > img {
+  flex: none;
+  width: 36px;
+  height: 36px;
+}
+.ivue-deployment-toast__copy {
+  min-width: 0;
+}
+.ivue-deployment-toast__copy strong,
+.ivue-deployment-toast__copy > span {
+  display: block;
+}
+.ivue-deployment-toast__copy strong {
+  font-size: 0.86rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.ivue-deployment-toast__copy > span {
+  margin-top: 2px;
+  color: var(--vp-c-text-2);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+@keyframes ivue-deployment-toast {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 14px) scale(0.98);
+  }
+  10%,
+  82% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(0.99);
+  }
+}
+@keyframes ivue-deployment-toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ivue-deployment-toast,
+  .ivue-deployment-toast::after {
+    animation: none;
+  }
+}
+
 /* Buttons */
 .VPButton.brand {
   background: linear-gradient(120deg, #6366f1, #4f46e5);
@@ -360,6 +445,112 @@
     gap: 56px;
   }
 }
+/* The Standard band: text leads, the terminal is the punchline */
+@media (min-width: 960px) {
+  .ix-idea.ix-standard {
+    grid-template-columns: 7fr 5fr;
+  }
+}
+
+/* ===== The Standard hero panel ===== */
+.ix .ix-standard-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  padding: clamp(28px, 4.5vw, 52px);
+  /* gradient border: opaque panel paint in the padding box, brand gradient
+     in the border box — one element, no wrapper */
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--vp-c-bg), var(--vp-c-bg)) padding-box,
+    linear-gradient(
+        120deg,
+        rgba(99, 102, 241, 0.55),
+        rgba(45, 212, 191, 0.35) 55%,
+        rgba(52, 211, 153, 0.55)
+      )
+      border-box;
+}
+.dark .ix .ix-standard-hero {
+  background:
+    linear-gradient(var(--vp-c-bg-alt), var(--vp-c-bg-alt)) padding-box,
+    linear-gradient(
+        120deg,
+        rgba(129, 140, 248, 0.5),
+        rgba(45, 212, 191, 0.28) 55%,
+        rgba(52, 211, 153, 0.5)
+      )
+      border-box;
+}
+/* soft brand glows in opposite corners — decoration only */
+.ix .ix-standard-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(620px 320px at 10% -10%, rgba(99, 102, 241, 0.09), transparent 62%),
+    radial-gradient(560px 320px at 96% 110%, rgba(52, 211, 153, 0.09), transparent 62%);
+}
+.dark .ix .ix-standard-hero::before {
+  background:
+    radial-gradient(620px 320px at 10% -10%, rgba(99, 102, 241, 0.17), transparent 62%),
+    radial-gradient(560px 320px at 96% 110%, rgba(52, 211, 153, 0.13), transparent 62%);
+}
+.ix .ix-standard-hero > * {
+  position: relative; /* content above the glow layer */
+}
+.ix .ix-standard-hero__eyebrow {
+  margin: 0 0 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  background: var(--ivue-grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  width: max-content;
+}
+.ix .ix-standard-hero h2 {
+  margin-bottom: 18px;
+}
+.ix .ix-standard-hero__actions {
+  margin: 26px 0 0;
+}
+.ix .ix-standard-hero__cta {
+  display: inline-block;
+  padding: 10px 24px;
+  border-radius: 999px;
+  /* one shade deeper than --ivue-grad so white text holds ≥4.5:1 contrast
+     across the whole pill */
+  background: linear-gradient(120deg, #4f46e5 10%, #059669 70%, #047857 95%);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.ix .ix-standard-hero__cta:hover {
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px -14px rgba(52, 211, 153, 0.55);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ix .ix-standard-hero__cta,
+  .ix .ix-standard-hero__cta:hover {
+    transition: none;
+    transform: none;
+  }
+}
+/* inside the panel the terminal floats on the wash — keep its own border */
+.ix .ix-standard-hero .ix-code-window {
+  background: var(--vp-c-bg);
+}
+.dark .ix .ix-standard-hero .ix-code-window {
+  background: var(--vp-code-block-bg);
+}
 .ix-code-window {
   min-width: 0;
   overflow: hidden;
@@ -404,7 +595,9 @@
 .ix-code-window div[class*='language-'] > .lang {
   display: none;
 }
-.ix-code-window div[class*='language-'] code {
+.vp-doc .ix-code-window div[class*='language-'] code {
+  /* .vp-doc prefix: outweigh VitePress's responsive code-size rule, which
+     otherwise bumps this to 16px under 960px and overflows the window */
   font-size: 13px;
 }
 
@@ -627,10 +820,17 @@
   letter-spacing: -0.01em;
 }
 .VPDoc .iv-problem__hard {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
   margin: 6px 0 10px;
   font-size: 0.84rem;
   line-height: 1.55;
   color: var(--vp-c-text-2);
+}
+.VPDoc .iv-problem__hard .iv-x {
+  flex: none;
+  margin-top: 1px;
 }
 .VPDoc .iv-problem__solved {
   display: flex;
@@ -668,6 +868,35 @@
   border-bottom: 2px solid var(--ivue-emerald);
   transform: rotate(45deg);
 }
+
+/* The red counterpart — CSS-drawn × badge for problem statements */
+.iv-x {
+  display: inline-block;
+  vertical-align: -4px;
+  width: 21px;
+  height: 21px;
+  border-radius: 7px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  position: relative;
+}
+.iv-x::before,
+.iv-x::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 11px;
+  height: 2px;
+  border-radius: 1px;
+  background: #ef4444;
+}
+.iv-x::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.iv-x::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
 /* "In ivue" solution cells: green wash, big check in a fixed left slot so
    every text line indents uniformly (no wrap-around). */
 .vp-doc td:has(> .iv-ck) {
@@ -686,15 +915,101 @@
 
 /* Hero motion lives in IvueHero.vue (scoped, reduced-motion gated). */
 
-/* GFM task-list checkboxes (standard.md self-review checklist) */
+/* GFM task-list checkboxes (standard.md self-review checklist) —
+   hand-rolled: tick them while reviewing a diff; not persisted */
 .vp-doc li.task-item {
   list-style: none;
   margin-left: -1.25rem;
 }
 .vp-doc li.task-item .task-checkbox {
-  margin-right: 8px;
-  accent-color: var(--vp-c-brand-1);
-  vertical-align: -2px;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-right: 7px;
+  border: 1.5px solid var(--vp-c-text-3);
+  border-radius: 6px;
+  background: var(--vp-c-bg);
+  cursor: pointer;
+  vertical-align: -5px;
+  transition: border-color 0.15s ease, background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.vp-doc li.task-item .task-checkbox:hover {
+  border-color: var(--vp-c-brand-1);
+}
+.vp-doc li.task-item .task-checkbox:focus-visible {
+  outline: none;
+  border-color: var(--vp-c-brand-1);
+  box-shadow: 0 0 0 3px var(--vp-c-brand-soft);
+}
+.vp-doc li.task-item .task-checkbox:checked {
+  border-color: transparent;
+  /* white check over the brand gradient — layered backgrounds */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.2 6.4 4.8 9l5-6' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+    var(--ivue-grad);
+  background-size:
+    12px 12px,
+    cover;
+  background-position: center, center;
+  background-repeat: no-repeat;
+}
+/* checked items read as done — dim the line so the open ones stand out */
+.vp-doc li.task-item:has(.task-checkbox:checked) {
+  color: var(--vp-c-text-3);
+  transition: color 0.15s ease;
+}
+
+/* "Skill begins" divider — marks where standard.md switches from docs
+   preamble to the verbatim mirrored skill */
+.vp-doc .skill-begins {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 44px 0 28px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-3);
+}
+.vp-doc .skill-begins::before,
+.vp-doc .skill-begins::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--vp-c-divider);
+}
+
+/* DO / NEVER verdict cells — the source carries ✅/❌ markers (self-
+   describing for agents); the pipeline swaps them for these badges */
+.vp-doc td.do-cell,
+.vp-doc td.never-cell {
+  vertical-align: top;
+}
+.vp-doc td.do-cell::before,
+.vp-doc td.never-cell::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 9px;
+  border-radius: 6px;
+  vertical-align: -4px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 10px 10px;
+}
+.vp-doc td.do-cell::before {
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  background-color: rgba(52, 211, 153, 0.12);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M1.8 6.4 4.6 9.2l5.6-6.4' fill='none' stroke='%2310b981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.vp-doc td.never-cell::before {
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background-color: rgba(239, 68, 68, 0.1);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 2.6l6.8 6.8M9.4 2.6l-6.8 6.8' fill='none' stroke='%23ef4444' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
 /* Invariant blockquotes — the docs' punchy one-line theses. Every `>` quote in the
@@ -1121,23 +1436,31 @@
   color: var(--vp-c-text-2);
 }
 .VPDoc .cm-author__role {
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.35em;
   margin-top: 5px;
   width: fit-content;
-  color: #4f46e5;
-  background: linear-gradient(105deg, #6366f1 5%, #0891b2 52%, #059669 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   font-family: var(--vp-font-family-base);
   font-size: 0.79rem;
   font-weight: 350;
   letter-spacing: 0.01em;
   line-height: 1.55;
 }
-.dark .VPDoc .cm-author__role {
+.VPDoc .cm-author__role-title {
+  color: #4f46e5;
+}
+.VPDoc .cm-author__role-separator {
+  color: var(--vp-c-text-3);
+}
+.VPDoc .cm-author__role-company {
+  color: #059669;
+}
+.dark .VPDoc .cm-author__role-title {
   color: #93c5fd;
-  background-image: linear-gradient(105deg, #a5b4fc 5%, #67e8f9 52%, #6ee7b7 100%);
+}
+.dark .VPDoc .cm-author__role-company {
+  color: #6ee7b7;
 }
 .VPDoc .cm-author__links {
   display: flex;
@@ -1172,7 +1495,7 @@
   height: 13px;
 }
 .VPDoc .cm-author__link svg path {
-  fill: url('#cm-icon-gradient');
+  fill: url('#cm-profile-icon-gradient');
 }
 @media (max-width: 520px) {
   .VPDoc .cm-author {
