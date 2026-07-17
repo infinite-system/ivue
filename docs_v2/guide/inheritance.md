@@ -153,6 +153,41 @@ The demo runs the exact three files above — they live in the
 as `Product.ts`, `SaleProduct.ts` and `TaxedProduct.ts` and are imported the
 same way you would in an app.
 
+## The same chain, cached at every level
+
+The first hierarchy deliberately chooses plain getters because its arithmetic
+is cheap. When a derivation is expensive enough to memoize, inheritance keeps
+the same native shape: every level returns a `computed()`, and the child reads
+the parent's cached cell through `super.total.value`.
+
+::: code-group
+<<< ../../examples/playground/src/examples/inheritance/ComputedProduct.ts [ComputedProduct.ts]
+<<< ../../examples/playground/src/examples/inheritance/ComputedSaleProduct.ts [ComputedSaleProduct.ts]
+<<< ../../examples/playground/src/examples/inheritance/ComputedTaxedProduct.ts [ComputedTaxedProduct.ts]
+:::
+
+The deepest instance now contains **three different computeds named `total`**:
+
+```ts
+const product = new ComputedTaxedProduct.Class();
+
+product.baseTotal          // 48.00 — ComputedProduct.total
+product.discountedTotal    // 38.40 — ComputedSaleProduct.total
+product.total.value        // 42.24 — ComputedTaxedProduct.total
+```
+
+Each `(prototype, key)` pair receives its own cache symbol. The base,
+discounted, and taxed cells coexist on the same object; `super.total.value`
+selects the parent cell instead of resolving back to the child's override.
+Changing price invalidates all three stages, changing discount invalidates the
+last two, and changing tax invalidates only the final stage.
+
+<DemoComputedInheritance />
+
+Use the plain-getter version for cheap derivations and this computed version
+when caching has measured value. The inheritance guarantee is identical; only
+the cost model changes.
+
 ## Each level is a complete class
 
 A middle class isn't scaffolding — it's a usable reactive class of its own:
@@ -163,42 +198,6 @@ const saleProduct = new SaleProduct.Class();
 saleProduct.total     // 38.40 — discounted, never taxed
 saleProduct.receipt() // two lines, not four
 ```
-
-## Same-name computeds never collide
-
-When levels *do* memoize — an expensive derivation refined at more than one
-level — the child's computed calls the parent's through `super`, and both
-live on the same instance:
-
-```ts
-class $Report {
-  get rows() {
-    return shallowRef<Row[]>([]);
-  }
-  get stats() {
-    return computed(() => this.summarize()); // expensive scan: memoize
-  }
-  summarize(): Stats {
-    /* ... */
-  }
-}
-
-class $YearReport extends $Report {
-  get stats() {
-    return computed(() => this.withTotals(super.stats.value));
-  }
-  withTotals(stats: Stats): Stats {
-    /* ... */
-  }
-}
-```
-
-This works because of how the cache is keyed: when `Reactive()` processes
-the prototype chain, each `(prototype, key)` pair gets its **own cache
-symbol** on the instance. `$Report`'s `stats` and `$YearReport`'s `stats`
-are different cells — the child's cached computed and the `super` computed
-it reads coexist instead of overwriting each other. No configuration; it's
-structural.
 
 ## Files and cycles — solved underneath
 

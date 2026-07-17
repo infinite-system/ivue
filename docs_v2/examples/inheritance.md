@@ -1,10 +1,11 @@
 ---
 title: 'Example: Inheritance chain'
-description: 'Product → SaleProduct → TaxedProduct — three files, three levels, one instance; total is a plain-getter super chain that allocates zero computeds.'
+description: 'Two three-level inheritance chains: zero-allocation plain getters and same-name computeds that coexist through super.total.value.'
 ---
 
 <script setup>
 import DemoInheritance from '../.vitepress/theme/components/DemoInheritance.vue'
+import DemoComputedInheritance from '../.vitepress/theme/components/DemoComputedInheritance.vue'
 </script>
 
 # Inheritance chain
@@ -18,6 +19,16 @@ exports its own `Reactive()` wrapper through the namespace.
   <DemoInheritance />
 </ClientOnly>
 
+## The computed chain
+
+The same hierarchy can memoize at every level. Each class owns a different
+computed named `total`, and each child refines the parent cell through
+`super.total.value`:
+
+<ClientOnly>
+  <DemoComputedInheritance />
+</ClientOnly>
+
 ## What to notice
 
 - **Zero computeds.** The whole `total` chain is plain getters — reactive
@@ -25,6 +36,8 @@ exports its own `Reactive()` wrapper through the namespace.
 - **Write anywhere, everything re-derives.** Push `price`, deepen the
   discount or toggle the tax — the receipt and total update from whichever
   level you touched.
+- **Same-name computeds coexist.** The computed version retains three cached
+  `total` cells on one instance; each prototype level owns its own cache key.
 
 ## The source
 
@@ -32,6 +45,9 @@ exports its own `Reactive()` wrapper through the namespace.
 <<< ../../examples/playground/src/examples/inheritance/Product.ts [Product.ts]
 <<< ../../examples/playground/src/examples/inheritance/SaleProduct.ts [SaleProduct.ts]
 <<< ../../examples/playground/src/examples/inheritance/TaxedProduct.ts [TaxedProduct.ts]
+<<< ../../examples/playground/src/examples/inheritance/ComputedProduct.ts [ComputedProduct.ts]
+<<< ../../examples/playground/src/examples/inheritance/ComputedSaleProduct.ts [ComputedSaleProduct.ts]
+<<< ../../examples/playground/src/examples/inheritance/ComputedTaxedProduct.ts [ComputedTaxedProduct.ts]
 <<< ../../examples/playground/src/examples/inheritance/InheritanceExample.vue [InheritanceExample.vue]
 :::
 

@@ -6,6 +6,7 @@ import DemoCounter from './components/DemoCounter.vue';
 import DemoState from './components/DemoState.vue';
 import DemoDerived from './components/DemoDerived.vue';
 import DemoInheritance from './components/DemoInheritance.vue';
+import DemoComputedInheritance from './components/DemoComputedInheritance.vue';
 import DemoTeardown from './components/DemoTeardown.vue';
 import DemoPointer from './components/DemoPointer.vue';
 import DemoPerf from './components/DemoPerf.vue';
@@ -33,6 +34,7 @@ export default {
     app.component('DemoState', DemoState);
     app.component('DemoDerived', DemoDerived);
     app.component('DemoInheritance', DemoInheritance);
+    app.component('DemoComputedInheritance', DemoComputedInheritance);
     app.component('DemoTeardown', DemoTeardown);
     app.component('DemoPointer', DemoPointer);
     app.component('DemoPerf', DemoPerf);
