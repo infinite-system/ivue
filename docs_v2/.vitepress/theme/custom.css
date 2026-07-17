@@ -755,6 +755,7 @@
 }
 .stackblitz-preparing {
   display: grid;
+  align-content: center;
   gap: 12px;
   min-height: 580px;
   place-items: center;
