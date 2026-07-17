@@ -37,6 +37,14 @@ number was a **harness artifact, not library behavior** — when a number
 - Scope wide CSS to `.VPDoc`: `.benchmarks-wide .content` once matched the
   navbar's `.content` and broke it.
 - Dead in-page anchors do NOT fail the build — check linked anchors in built HTML.
+- **Deployment 404 recovery must observe client-side route failures.** VitePress
+  catches a missing page chunk, retries its cached `hashmap.json`, and can render
+  its 404 component without re-running any startup script. A document-load-only
+  404 check therefore misses the exact stale-deployment failure that a manual
+  refresh fixes. Hook `router.onAfterRouteChange`, and distinguish a stale
+  failure from a genuine 404 by checking whether the requested route exists in
+  the current `__VP_HASH_MAP__`; hard-reload a known route once, with a session
+  guard.
 - Code-block scrolling: the `div[class*='language-']` wrapper owns
   `max-height` + `overflow-y: auto`; the inner `pre` must stay
   `overflow-y: visible` — otherwise double scrollbars and desynced line numbers.

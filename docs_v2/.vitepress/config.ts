@@ -37,10 +37,14 @@ export default defineConfig({
       'script',
       {},
       `(() => {
+        const docsBase = '/ivue/';
         const retryParam = '__ivue_deployment';
         const chunkReloadKey = 'ivue:deployment-chunk-reload';
+        const routeReloadKey = 'ivue:deployment-route-reload';
+        const routeNotFoundEvent = 'ivue:route-not-found';
         const deployedCommit = ${JSON.stringify(deployedCommit)};
         const currentUrl = new URL(window.location.href);
+        let deploymentRecoveryStarted = false;
 
         const navigateFresh = () => {
           const freshUrl = new URL(window.location.href);
@@ -118,6 +122,84 @@ export default defineConfig({
           }
         };
 
+        const routeExistsInCurrentBuild = (href) => {
+          const hashMap = window.__VP_HASH_MAP__;
+          if (!hashMap) return false;
+
+          let pagePath = new URL(href, window.location.href).pathname;
+          if (!pagePath.startsWith(docsBase)) return false;
+
+          pagePath = pagePath
+            .replace(/\\.html$/, '')
+            .replace(/\\/$/, '/index')
+            .slice(docsBase.length)
+            .replace(/\\//g, '_');
+
+          let pageKey = (pagePath || 'index').toLowerCase() + '.md';
+          if (Object.prototype.hasOwnProperty.call(hashMap, pageKey)) return true;
+
+          pageKey = pageKey.endsWith('_index.md')
+            ? pageKey.slice(0, -9) + '.md'
+            : pageKey.slice(0, -3) + '_index.md';
+          return Object.prototype.hasOwnProperty.call(hashMap, pageKey);
+        };
+
+        const recoverDuringDeployment = async () => {
+          if (deploymentRecoveryStarted) return;
+          deploymentRecoveryStarted = true;
+
+          if (!(await deploymentIsPending())) {
+            deploymentRecoveryStarted = false;
+            return;
+          }
+
+          showDeploymentWait();
+
+          let attempts = 0;
+          const maxAttempts = 36;
+
+          const retryWhenDeployed = async () => {
+            attempts++;
+
+            const probeUrl = new URL(window.location.href);
+            probeUrl.searchParams.set(retryParam, Date.now().toString());
+
+            try {
+              const response = await fetch(probeUrl.href, {
+                method: 'HEAD',
+                cache: 'no-store',
+              });
+
+              if (response.ok) {
+                window.location.replace(probeUrl.href);
+                return;
+              }
+            } catch {}
+
+            if (attempts < maxAttempts) {
+              window.setTimeout(retryWhenDeployed, 5_000);
+            } else {
+              document.getElementById('ivue-deployment-wait')?.remove();
+              deploymentRecoveryStarted = false;
+            }
+          };
+
+          window.setTimeout(retryWhenDeployed, 2_000);
+        };
+
+        const recoverNotFound = (href) => {
+          if (
+            routeExistsInCurrentBuild(href) &&
+            !sessionStorage.getItem(routeReloadKey)
+          ) {
+            sessionStorage.setItem(routeReloadKey, Date.now().toString());
+            navigateFresh();
+            return;
+          }
+
+          void recoverDuringDeployment();
+        };
+
         window.addEventListener('vite:preloadError', (event) => {
           if (sessionStorage.getItem(chunkReloadKey)) return;
 
@@ -131,44 +213,17 @@ export default defineConfig({
           10_000,
         );
 
+        window.addEventListener(routeNotFoundEvent, (event) => {
+          recoverNotFound(event.detail?.href ?? window.location.href);
+        });
+
+        window.setTimeout(
+          () => sessionStorage.removeItem(routeReloadKey),
+          10_000,
+        );
+
         if (isNotFound) {
-          const recoverDuringDeployment = async () => {
-            if (!(await deploymentIsPending())) return;
-
-            showDeploymentWait();
-
-            let attempts = 0;
-            const maxAttempts = 36;
-
-            const retryWhenDeployed = async () => {
-              attempts++;
-
-              const probeUrl = new URL(window.location.href);
-              probeUrl.searchParams.set(retryParam, Date.now().toString());
-
-              try {
-                const response = await fetch(probeUrl.href, {
-                  method: 'HEAD',
-                  cache: 'no-store',
-                });
-
-                if (response.ok) {
-                  window.location.replace(probeUrl.href);
-                  return;
-                }
-              } catch {}
-
-              if (attempts < maxAttempts) {
-                window.setTimeout(retryWhenDeployed, 5_000);
-              } else {
-                document.getElementById('ivue-deployment-wait')?.remove();
-              }
-            };
-
-            window.setTimeout(retryWhenDeployed, 2_000);
-          };
-
-          void recoverDuringDeployment();
+          recoverNotFound(window.location.href);
           return;
         }
 

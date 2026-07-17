@@ -27,8 +27,23 @@ export default {
       'sidebar-nav-after': () => h(ExperimentalDocs),
     });
   },
-  enhanceApp({ app }) {
+  enhanceApp({ app, router }) {
     registerDocsApp(app); // field embeds install Quasar lazily
+
+    if (typeof window !== 'undefined') {
+      const onAfterRouteChange = router.onAfterRouteChange;
+      router.onAfterRouteChange = async (to) => {
+        await onAfterRouteChange?.(to);
+
+        if (router.route.data.isNotFound) {
+          window.dispatchEvent(
+            new CustomEvent('ivue:route-not-found', {
+              detail: { href: to },
+            }),
+          );
+        }
+      };
+    }
 
     app.component('DemoCounter', DemoCounter);
     app.component('DemoState', DemoState);
