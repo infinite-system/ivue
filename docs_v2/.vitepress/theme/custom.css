@@ -73,6 +73,19 @@
   letter-spacing: -0.02em;
 }
 
+@media (min-width: 960px) {
+  .VPNavBar .VPNavBarSearch {
+    padding-left: 47px;
+  }
+  .VPNavBar .VPNavBarSearch .DocSearch-Button {
+    width: 184px;
+    height: 42px;
+  }
+  .VPNavBar .VPNavBarSearch .DocSearch-Button-Keys {
+    margin-left: auto;
+  }
+}
+
 /* Buttons */
 .VPButton.brand {
   background: linear-gradient(120deg, #6366f1, #4f46e5);

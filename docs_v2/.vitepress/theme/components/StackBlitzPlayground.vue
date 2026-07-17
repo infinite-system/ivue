@@ -41,14 +41,33 @@ function startEmbed() {
   }, embedRetryDelay);
 }
 
-function settlesWithin(
-  promise: Promise<unknown>,
+function activatesWithin(
+  registration: ServiceWorkerRegistration,
   timeout: number,
 ): Promise<boolean> {
-  return Promise.race([
-    promise.then(() => true, () => false),
-    new Promise<boolean>((resolve) => window.setTimeout(resolve, timeout, false)),
-  ]);
+  const worker =
+    registration.active ?? registration.waiting ?? registration.installing;
+
+  if (!worker) return Promise.resolve(false);
+  if (worker.state === 'activated') return Promise.resolve(true);
+
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(() => finish(false), timeout);
+
+    const onStateChange = () => {
+      if (worker.state === 'activated') finish(true);
+      if (worker.state === 'redundant') finish(false);
+    };
+
+    const finish = (activated: boolean) => {
+      window.clearTimeout(timer);
+      worker.removeEventListener('statechange', onStateChange);
+      resolve(activated);
+    };
+
+    worker.addEventListener('statechange', onStateChange);
+    onStateChange();
+  });
 }
 
 onMounted(async () => {
@@ -76,12 +95,12 @@ onMounted(async () => {
   }
 
   try {
-    await navigator.serviceWorker.register(
+    const registration = await navigator.serviceWorker.register(
       withBase('/examples/coi-serviceworker.js'),
     );
-    const workerIsReady = await settlesWithin(navigator.serviceWorker.ready, 5_000);
+    const workerIsActive = await activatesWithin(registration, 15_000);
 
-    if (!workerIsReady) {
+    if (!workerIsActive) {
       showFallback(
         'The embedded StackBlitz workspace could not start in this browser.',
       );
