@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ivue Open Graph image</title>
+    <style>
+      @font-face {
+        font-family: 'Geist';
+        font-style: normal;
+        font-weight: 300 800;
+        font-display: block;
+        src: url('https://fonts.gstatic.com/s/geist/v5/gyByhwUxId8gMEwcGFU.woff2')
+          format('woff2');
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        font-family: 'Geist', sans-serif;
+        background:
+          radial-gradient(
+            circle at 7% 2%,
+            rgba(103, 108, 220, 0.16),
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at 104% 104%,
+            rgba(21, 139, 144, 0.2),
+            transparent 48%
+          ),
+          linear-gradient(116deg, #181c40 0%, #090d23 54%, #082a35 100%);
+      }
+
+      .card {
+        position: relative;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+      }
+
+      .hero-mark {
+        position: absolute;
+        z-index: 0;
+        top: -212px;
+        /* The visible stroke ends at x=38.7 in the 48-unit viewBox. This
+           places that edge at 1112px, aligned with the metric row. */
+        left: 225px;
+        width: 1100px;
+        height: 1100px;
+        opacity: 0.045;
+        pointer-events: none;
+      }
+
+      .lockup {
+        position: absolute;
+        z-index: 1;
+        top: 54px;
+        left: 88px;
+        width: 265px;
+        height: auto;
+      }
+
+      .headline {
+        position: absolute;
+        z-index: 1;
+        top: 184px;
+        left: 88px;
+        margin: 0;
+        color: #f0f2ff;
+        font-size: 70px;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+      }
+
+      .headline span {
+        display: block;
+        width: max-content;
+      }
+
+      .headline .scalability {
+        background: linear-gradient(
+          105deg,
+          #7dd3fc 0%,
+          #38bdf8 72%,
+          #7dd3fc 100%
+        );
+        background-clip: text;
+        color: transparent;
+      }
+
+      .headline .kilobyte {
+        background: linear-gradient(
+          105deg,
+          #818cf8 4%,
+          #3b82f6 47%,
+          #34d399 100%
+        );
+        background-clip: text;
+        color: transparent;
+      }
+
+      .metrics {
+        position: absolute;
+        z-index: 1;
+        right: 88px;
+        bottom: 90px;
+        left: 88px;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        color: #9198c6;
+        font-size: 26px;
+        font-weight: 400;
+        letter-spacing: -0.025em;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .metrics strong {
+        color: #f0f2ff;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <svg class="hero-mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <path
+          d="M24 24 C 19 17, 10.6 17.6, 10.6 24 C 10.6 30.4, 19 31, 24 24 C 29 17, 37.4 17.6, 37.4 24 C 37.4 30.4, 29 31, 24 24 Z"
+          stroke="url(#hero-mark-gradient)"
+          stroke-width="2.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <defs>
+          <linearGradient
+            id="hero-mark-gradient"
+            x1="8"
+            y1="14"
+            x2="40"
+            y2="34"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stop-color="#818cf8" />
+            <stop offset="1" stop-color="#34d399" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <img
+        class="lockup"
+        src="../public/brand-lockup-dark.png"
+        alt="ivue — Infinite Vue"
+      />
+
+      <h1 class="headline">
+        <span>Plain classes.</span>
+        <span>Full reactivity.</span>
+        <span class="scalability">Infinite scalability.</span>
+        <span class="kilobyte">One kilobyte.</span>
+      </h1>
+
+      <div class="metrics">
+        <span><strong>1.1 kB</strong> gzipped</span>
+        <span><strong>0</strong> dependencies</span>
+        <span><strong>100%</strong> test coverage</span>
+        <span><strong>22 ms</strong> / 1M instances</span>
+      </div>
+    </main>
+  </body>
+</html>
