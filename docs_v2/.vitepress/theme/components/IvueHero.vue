@@ -287,8 +287,8 @@ onUnmounted(() => {
 }
 
 .ivh-title .grad {
-  background: linear-gradient(105deg, #818cf8 15%, #6366f1 45%, #34d399 95%);
-  background-size: 200% 100%;
+  width: max-content;
+  background: linear-gradient(105deg, #818cf8 4%, #3b82f6 47%, #34d399 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -480,11 +480,6 @@ onUnmounted(() => {
       transform: translateY(0);
     }
   }
-  @keyframes ivh-grad {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
   @keyframes ivh-pop {
     from { transform: scale(1.12); }
     to { transform: scale(1); }
@@ -551,9 +546,6 @@ onUnmounted(() => {
   }
 }
 
-.ivh-title .grad {
-    animation: ivh-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both, ivh-grad 9s ease-in-out 1s infinite;
-  }
   .pop {
     animation: ivh-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
