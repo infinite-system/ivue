@@ -1,10 +1,10 @@
 ---
-title: Invariant-Based Design
+title: The Invariants Behind ivue
 description: The structural specification of the Reactive() engine — every guarantee, why it holds, and what it makes impossible.
 outline: [2, 3]
 ---
 
-# Invariant-Based Design
+# The Invariants Behind ivue
 
 This is the structural specification of the `Reactive()` engine: the guarantees the
 implementation maintains, _why_ each holds, and — crucially — what each makes

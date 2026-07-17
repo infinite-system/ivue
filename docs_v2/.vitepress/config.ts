@@ -402,8 +402,8 @@ export default defineConfig({
           text: 'Reference',
           collapsed: false,
           items: [
-            { text: 'Invariant-Based Design', link: '/reference/invariants' },
-            { text: 'API', link: '/api/' },
+            { text: 'API Reference', link: '/api/' },
+            { text: 'Invariants Behind ivue', link: '/reference/invariants' },
             { text: 'Community', link: '/community' },
           ],
         },
@@ -449,8 +449,8 @@ export default defineConfig({
           text: 'Reference',
           collapsed: false,
           items: [
-            { text: 'Invariant-Based Design', link: '/reference/invariants' },
-            { text: 'API', link: '/api/' },
+            { text: 'API Reference', link: '/api/' },
+            { text: 'Invariants Behind ivue', link: '/reference/invariants' },
             { text: 'Community', link: '/community' },
           ],
         },
