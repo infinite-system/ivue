@@ -2,17 +2,22 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { withBase } from 'vitepress';
 
+declare const __IVUE_DEPLOYED_COMMIT__: string;
+
 const ready = ref(false);
 const fallback = ref(false);
 const fallbackMessage = ref('');
 const reloadKey = 'ivue:stackblitz-coi-reload';
 const embedAttempt = ref(0);
 let embedRetryTimer: number | undefined;
+const deployedRef = __IVUE_DEPLOYED_COMMIT__ || 'main';
+const stackBlitzProjectUrl =
+  `https://stackblitz.com/github/infinite-system/ivue/tree/${deployedRef}/examples/playground`;
 const fullScreenUrl =
-  'https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Findex.ts&initialpath=%2F';
+  `${stackBlitzProjectUrl}?file=src%2Fexamples%2Findex.ts&initialpath=%2F`;
 const embedUrl = computed(
   () =>
-    'https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?embed=1&file=src%2Fexamples%2Findex.ts&initialpath=%2F&view=both&hidedevtools=1&hideNavigation=1&showSidebar=1&ivueRetry=' +
+    `${stackBlitzProjectUrl}?embed=1&file=src%2Fexamples%2Findex.ts&initialpath=%2F&view=both&hidedevtools=1&hideNavigation=1&showSidebar=1&ivueRetry=` +
     embedAttempt.value,
 );
 

@@ -5,6 +5,9 @@ const deployedCommit = process.env.GITHUB_SHA ?? '';
 
 export default defineConfig({
   vite: {
+    define: {
+      __IVUE_DEPLOYED_COMMIT__: JSON.stringify(deployedCommit),
+    },
     resolve: {
       // The home hero imports the real engine from ../lib/Reactive.ts.
       // One Vue copy for both the docs and the lib, or tracking breaks.
@@ -57,49 +60,6 @@ export default defineConfig({
           document.title.startsWith('404') &&
           document.querySelector('meta[name="description"]')?.content ===
             'Not Found';
-
-        const showDeploymentWait = () => {
-          const mount = () => {
-            if (document.getElementById('ivue-deployment-wait')) return;
-
-            const wait = document.createElement('div');
-            const panel = document.createElement('div');
-            const mark = document.createElement('img');
-            const title = document.createElement('strong');
-            const detail = document.createElement('span');
-            const dark = document.documentElement.classList.contains('dark');
-
-            wait.id = 'ivue-deployment-wait';
-            wait.style.cssText =
-              'position:fixed;inset:0;z-index:2147483647;display:grid;' +
-              'place-items:center;background:' +
-              (dark ? '#11131b' : '#f7f8fc') +
-              ';color:' +
-              (dark ? '#f1f3fb' : '#1d2433') +
-              ';font-family:Geist,Inter,ui-sans-serif,system-ui,sans-serif';
-            panel.style.cssText =
-              'display:grid;justify-items:center;gap:10px;text-align:center';
-            mark.src = '/mark.svg';
-            mark.alt = '';
-            mark.width = 42;
-            mark.height = 42;
-            title.textContent = 'Updating documentation…';
-            title.style.cssText = 'font-size:17px;letter-spacing:-.02em';
-            detail.textContent = 'Waiting for the latest deployment.';
-            detail.style.cssText =
-              'color:' + (dark ? '#9ca3b8' : '#778096') + ';font-size:12px';
-
-            panel.append(mark, title, detail);
-            wait.append(panel);
-            document.body.append(wait);
-          };
-
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', mount, { once: true });
-          } else {
-            mount();
-          }
-        };
 
         const deploymentIsPending = async () => {
           if (!deployedCommit) return false;
@@ -154,8 +114,6 @@ export default defineConfig({
             return;
           }
 
-          showDeploymentWait();
-
           let attempts = 0;
           const maxAttempts = 36;
 
@@ -190,7 +148,6 @@ export default defineConfig({
             if (attempts < maxAttempts) {
               window.setTimeout(retryWhenDeployed, 5_000);
             } else {
-              document.getElementById('ivue-deployment-wait')?.remove();
               deploymentRecoveryStarted = false;
             }
           };
