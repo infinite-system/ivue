@@ -8,7 +8,14 @@ const ready = ref(false);
 const fallback = ref(false);
 const fallbackMessage = ref('');
 const reloadKey = 'ivue:stackblitz-coi-reload';
+
+// StackBlitz's first embedded GitHub import sometimes stalls before the
+// workspace boots. Changing this query value after ten seconds forces one
+// fresh iframe navigation, which lets StackBlitz reuse the import it just
+// prepared. Keep this to one retry: it is a first-load workaround, not a
+// polling loop, and the commit-pinned project URL must otherwise stay stable.
 const embedAttempt = ref(0);
+const embedRetryDelay = 10_000;
 let embedRetryTimer: number | undefined;
 const deployedRef = __IVUE_DEPLOYED_COMMIT__ || 'main';
 const stackBlitzProjectUrl =
@@ -31,7 +38,7 @@ function startEmbed() {
 
   embedRetryTimer = window.setTimeout(() => {
     embedAttempt.value = 1;
-  }, 10_000);
+  }, embedRetryDelay);
 }
 
 function settlesWithin(
