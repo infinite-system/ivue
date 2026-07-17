@@ -1,9 +1,9 @@
 ---
-title: The Engine Under the Idiom
+title: The Engine
 description: Vue's reactivity engine can track a derived value without allocating a separate derivation node — computed() is a cache annotation, not the derivation primitive. The class shape exposes what was always there.
 ---
 
-# The Engine Under the Idiom
+# The Engine
 
 ivue's central discovery is not a technique. It is a claim about Vue itself:
 

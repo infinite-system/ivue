@@ -14,6 +14,16 @@ function showFallback(message: string) {
   fallback.value = true;
 }
 
+function settlesWithin(
+  promise: Promise<unknown>,
+  timeout: number,
+): Promise<boolean> {
+  return Promise.race([
+    promise.then(() => true, () => false),
+    new Promise<boolean>((resolve) => window.setTimeout(resolve, timeout, false)),
+  ]);
+}
+
 onMounted(async () => {
   if (window.crossOriginIsolated) {
     sessionStorage.removeItem(reloadKey);
@@ -42,7 +52,15 @@ onMounted(async () => {
     await navigator.serviceWorker.register(
       withBase('/examples/coi-serviceworker.js'),
     );
-    await navigator.serviceWorker.ready;
+    const workerIsReady = await settlesWithin(navigator.serviceWorker.ready, 5_000);
+
+    if (!workerIsReady) {
+      showFallback(
+        'The embedded StackBlitz workspace could not start in this browser.',
+      );
+      return;
+    }
+
     sessionStorage.setItem(reloadKey, '1');
     window.location.reload();
   } catch {

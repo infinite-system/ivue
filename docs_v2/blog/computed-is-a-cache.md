@@ -51,5 +51,5 @@ render suppression on equal values, a stable ref handle — and let the
 tracked read do what it always did.
 
 The full argument, with the engine internals:
-[The Engine Under the Idiom](/guide/engine-under-the-idiom). The heresy is
+[The Engine](/guide/engine-under-the-idiom). The heresy is
 measured, not rhetorical.

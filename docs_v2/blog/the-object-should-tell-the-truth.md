@@ -193,5 +193,5 @@ That is the ivue 2 object model in one sentence:
 > everywhere else.**
 
 Continue with [`computed()` is a cache, not a derivation](/blog/computed-is-a-cache)
-for the engine-level argument, or [The Engine Under the Idiom](/guide/engine-under-the-idiom)
+for the engine-level argument, or [The Engine](/guide/engine-under-the-idiom)
 for the complete mechanics and measured costs.

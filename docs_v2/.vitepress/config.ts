@@ -345,9 +345,10 @@ export default defineConfig({
     nav: [
       {
         text: 'Guide',
-        activeMatch: '/guide/(introduction|getting-started|design|principles)',
+        activeMatch: '/guide/(introduction|engine-under-the-idiom|getting-started|design|principles)',
         items: [
           { text: 'What is ivue?', link: '/guide/introduction' },
+          { text: 'The Engine', link: '/guide/engine-under-the-idiom' },
           { text: 'Getting Started', link: '/guide/getting-started' },
           { text: 'Design & Philosophy', link: '/guide/design' },
           { text: 'Fundamental Principles', link: '/guide/principles' },
@@ -434,6 +435,16 @@ export default defineConfig({
             { text: 'Flyweight Grid: 20M Cells', link: '/examples/flyweight-grid' },
           ],
         },
+        {
+          text: 'Going Deeper',
+          collapsed: false,
+          items: [
+            { text: 'ivue vs the World', link: '/guide/model-layer' },
+            { text: 'Performance by Design', link: '/guide/performance' },
+            { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
+            { text: 'The Flyweight Pattern', link: '/guide/flyweight' },
+          ],
+        },
       ],
       '/': [
         {
@@ -441,6 +452,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'What is ivue?', link: '/guide/introduction' },
+            { text: 'The Engine', link: '/guide/engine-under-the-idiom' },
             { text: 'Getting Started', link: '/guide/getting-started' },
             { text: 'Design & Philosophy', link: '/guide/design' },
             { text: 'Fundamental Principles', link: '/guide/principles' },
@@ -462,28 +474,12 @@ export default defineConfig({
           ],
         },
         {
-          text: 'Internals',
-          collapsed: false,
-          items: [
-            {
-              text: 'Engine Under the Idiom',
-              link: '/guide/engine-under-the-idiom',
-            },
-          ],
-        },
-        {
-          text: 'Performance',
+          text: 'Going Deeper',
           collapsed: false,
           items: [
             { text: 'ivue vs the World', link: '/guide/model-layer' },
             { text: 'Performance by Design', link: '/guide/performance' },
             { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
-          ],
-        },
-        {
-          text: 'Advanced Patterns',
-          collapsed: false,
-          items: [
             { text: 'Flyweight Pattern', link: '/guide/flyweight' },
           ],
         },

@@ -17,9 +17,9 @@ columnar typed storage; entity objects are disposable facades created per
 render; reactivity is a sparse overlay that materializes per observation —
 and is _evicted_ when observation moves away.
 
-The proof is a working spreadsheet —
-[`examples/playground/src/examples/flyweight-grid`](https://github.com/infinite-system/ivue/tree/main/examples/playground/src/examples/flyweight-grid)
-— **20 columns × 1,000,000 rows = 20,000,000 live cells**, ~55% real
+The proof is a working spreadsheet — the
+[live Flyweight Grid example](/examples/flyweight-grid) — **20 columns ×
+1,000,000 rows = 20,000,000 live cells**, ~55% real
 Excel-syntax formulas evaluated by `fast-formula-parser` with Vue-discovered
 dependencies. A document _twice Google Sheets' 10M-cell hard cap_.
 
