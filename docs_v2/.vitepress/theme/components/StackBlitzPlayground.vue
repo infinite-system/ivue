@@ -1,0 +1,72 @@
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import { withBase } from 'vitepress';
+
+const ready = ref(false);
+const fallback = ref(false);
+const fallbackMessage = ref('');
+const reloadKey = 'ivue:stackblitz-coi-reload';
+const fullScreenUrl =
+  'https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Findex.ts&initialpath=%2F';
+
+function showFallback(message: string) {
+  fallbackMessage.value = message;
+  fallback.value = true;
+}
+
+onMounted(async () => {
+  if (window.crossOriginIsolated) {
+    sessionStorage.removeItem(reloadKey);
+    ready.value = true;
+    return;
+  }
+
+  if (!window.isSecureContext) {
+    showFallback(
+      'The embedded workspace needs HTTPS. Open the full StackBlitz workspace while using this local server.',
+    );
+    return;
+  }
+
+  if (!('serviceWorker' in navigator)) {
+    showFallback('This browser cannot prepare the embedded StackBlitz workspace.');
+    return;
+  }
+
+  if (sessionStorage.getItem(reloadKey) === '1') {
+    showFallback('This browser cannot prepare the embedded StackBlitz workspace.');
+    return;
+  }
+
+  try {
+    await navigator.serviceWorker.register(
+      withBase('/examples/coi-serviceworker.js'),
+    );
+    await navigator.serviceWorker.ready;
+    sessionStorage.setItem(reloadKey, '1');
+    window.location.reload();
+  } catch {
+    showFallback('The embedded StackBlitz workspace could not be prepared.');
+  }
+});
+</script>
+
+<template>
+  <div v-if="ready" class="stackblitz-playground">
+    <iframe
+      title="ivue examples playground in StackBlitz"
+      src="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?embed=1&file=src%2Fexamples%2Findex.ts&initialpath=%2F&view=both&hidedevtools=1&hideNavigation=1&showSidebar=1"
+      allow="clipboard-read; clipboard-write; cross-origin-isolated; fullscreen"
+      credentialless
+    />
+  </div>
+  <div v-else class="stackblitz-preparing" role="status">
+    <template v-if="fallback">
+      <span>{{ fallbackMessage }}</span>
+      <a :href="fullScreenUrl" target="_blank" rel="noreferrer">
+        Open full screen in StackBlitz ⚡
+      </a>
+    </template>
+    <span v-else>Preparing the isolated StackBlitz workspace…</span>
+  </div>
+</template>

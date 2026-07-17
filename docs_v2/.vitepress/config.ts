@@ -343,29 +343,98 @@ export default defineConfig({
     siteTitle: 'ivue',
 
     nav: [
-      { text: 'Guide', link: '/guide/introduction', activeMatch: '/guide/(?!standard|benchmarks)' },
-      { text: 'Getting Started', link: '/guide/getting-started' },
-      { text: 'Standard', link: '/guide/standard', activeMatch: '/guide/standard' },
-      { text: 'Benchmarks', link: '/guide/benchmarks', activeMatch: '/guide/benchmarks' },
-      { text: 'API', link: '/api/', activeMatch: '/api/' },
-      { text: 'Blog', link: '/blog/', activeMatch: '/blog/' },
-      { text: 'Community', link: '/community', activeMatch: '/community' },
       {
-        text: 'v2',
+        text: 'Guide',
+        activeMatch: '/guide/(introduction|getting-started|design|principles)',
         items: [
-          { text: 'Standard Operating Manual', link: '/guide/standard' },
+          { text: 'What is ivue?', link: '/guide/introduction' },
+          { text: 'Getting Started', link: '/guide/getting-started' },
+          { text: 'Design & Philosophy', link: '/guide/design' },
+          { text: 'Fundamental Principles', link: '/guide/principles' },
+        ],
+      },
+      {
+        text: 'Examples',
+        activeMatch: '/examples/',
+        items: [
+          { text: 'Overview & Playground', link: '/examples/' },
+          { text: 'StackBlitz Playground', link: '/examples/stackblitz' },
           {
-            text: 'Engine Under the Idiom',
-            link: '/guide/engine-under-the-idiom',
+            text: 'Start Small',
+            items: [
+              { text: 'Classic Counter Example', link: '/examples/counter' },
+              { text: 'Plain getter vs computed()', link: '/examples/derived' },
+              { text: '$watch & $stopEffects', link: '/examples/lifecycle' },
+              { text: 'Inheritance chain', link: '/examples/inheritance' },
+              { text: 'Composable in a class', link: '/examples/pointer' },
+            ],
           },
+          {
+            text: 'Full Complexity',
+            items: [
+              { text: 'Pinia Store Alternative', link: '/examples/class-store' },
+              { text: 'Workspace Platform', link: '/examples/workspace-platform' },
+              { text: 'Extensible Kernel', link: '/examples/extensible-kernel' },
+              { text: 'Advanced Select Field', link: '/examples/choose-field' },
+              { text: 'Advanced Media Uploader', link: '/examples/media-field' },
+              { text: 'Virtual Scroller: 1M Items', link: '/examples/virtual-scroller' },
+              { text: 'Formula Grid: 1M Cells', link: '/examples/formula-grid' },
+              { text: 'Flyweight Grid: 20M Cells', link: '/examples/flyweight-grid' },
+            ],
+          },
+        ],
+      },
+      {
+        text: 'Performance',
+        activeMatch: '/guide/(model-layer|performance|benchmarks)',
+        items: [
           { text: 'ivue vs the World', link: '/guide/model-layer' },
           { text: 'Performance by Design', link: '/guide/performance' },
           { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
         ],
       },
+      { text: 'Standard', link: '/guide/standard', activeMatch: '/guide/standard' },
+      { text: 'API', link: '/api/', activeMatch: '/api/' },
+      { text: 'Blog', link: '/blog/', activeMatch: '/blog/' },
+      { text: 'Community', link: '/community', activeMatch: '/community' },
     ],
 
     sidebar: {
+      '/examples/': [
+        {
+          text: 'Playground',
+          collapsed: false,
+          items: [
+            { text: 'Overview & Playground', link: '/examples/' },
+            { text: 'StackBlitz Playground', link: '/examples/stackblitz' },
+          ],
+        },
+        {
+          text: 'Start Small',
+          collapsed: false,
+          items: [
+            { text: 'Classic Counter Example', link: '/examples/counter' },
+            { text: 'Plain getter vs computed()', link: '/examples/derived' },
+            { text: '$watch & $stopEffects', link: '/examples/lifecycle' },
+            { text: 'Inheritance chain', link: '/examples/inheritance' },
+            { text: 'Composable in a class', link: '/examples/pointer' },
+          ],
+        },
+        {
+          text: 'Full Complexity',
+          collapsed: false,
+          items: [
+            { text: 'Pinia Store Alternative', link: '/examples/class-store' },
+            { text: 'Workspace Platform', link: '/examples/workspace-platform' },
+            { text: 'Extensible Kernel', link: '/examples/extensible-kernel' },
+            { text: 'Advanced Select Field', link: '/examples/choose-field' },
+            { text: 'Advanced Media Uploader', link: '/examples/media-field' },
+            { text: 'Virtual Scroller: 1M Items', link: '/examples/virtual-scroller' },
+            { text: 'Formula Grid: 1M Cells', link: '/examples/formula-grid' },
+            { text: 'Flyweight Grid: 20M Cells', link: '/examples/flyweight-grid' },
+          ],
+        },
+      ],
       '/': [
         {
           text: 'Introduction',
@@ -409,47 +478,6 @@ export default defineConfig({
             { text: 'ivue vs the World', link: '/guide/model-layer' },
             { text: 'Performance by Design', link: '/guide/performance' },
             { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
-          ],
-        },
-        {
-          text: 'Basic Examples',
-          collapsed: false,
-          items: [
-            { text: 'Overview & Playground', link: '/examples/' },
-            { text: 'Classic Counter Example', link: '/examples/counter' },
-            { text: 'Plain getter vs computed()', link: '/examples/derived' },
-            { text: '$watch & $stopEffects', link: '/examples/lifecycle' },
-            { text: 'Inheritance chain', link: '/examples/inheritance' },
-            { text: 'Composable in a class', link: '/examples/pointer' },
-          ],
-        },
-        {
-          text: 'Advanced Examples',
-          collapsed: false,
-          items: [
-            { text: 'Pinia Store Alternative', link: '/examples/class-store' },
-            { text: 'Workspace Platform', link: '/examples/workspace-platform' },
-            { text: 'Extensible Kernel', link: '/examples/extensible-kernel' },
-            {
-              text: 'Advanced Select Field',
-              link: '/examples/choose-field',
-            },
-            {
-              text: 'Advanced Media Uploader',
-              link: '/examples/media-field',
-            },
-            {
-              text: 'Virtual Scroller: 1M Items',
-              link: '/examples/virtual-scroller',
-            },
-            {
-              text: 'Formula Grid: 1M Cells',
-              link: '/examples/formula-grid',
-            },
-            {
-              text: 'Flyweight Grid: 20M Cells',
-              link: '/examples/flyweight-grid',
-            },
           ],
         },
         {

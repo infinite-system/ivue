@@ -46,6 +46,11 @@ jobs:
         run: npm run build:docs
       - name: deploy docs_v2 to gh-pages
         run: node docs_v2/scripts/gh-pages-deploy.js
+      - name: warm StackBlitz playground
+        run: >-
+          curl --fail --location --retry 3 --retry-all-errors --max-time 60
+          --output /dev/null
+          'https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?embed=1&file=src%2Fexamples%2Findex.ts&initialpath=%2F&view=both&hidedevtools=1&hideNavigation=1&showSidebar=1'
 #  docs-deploy:
 #    name: Deploying to gh-pages
 #    runs-on: ubuntu-latest

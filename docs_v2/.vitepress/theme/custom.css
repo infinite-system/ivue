@@ -737,6 +737,55 @@
   text-decoration: underline;
 }
 
+/* Full editor lives on its own page: eager here, never paid by ordinary docs. */
+.stackblitz-playground {
+  margin: 24px 0;
+  overflow: hidden;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 14px;
+  background: var(--vp-c-bg-soft);
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+}
+.stackblitz-playground iframe {
+  display: block;
+  width: 100%;
+  height: min(760px, calc(100vh - 170px));
+  min-height: 580px;
+  border: 0;
+}
+.stackblitz-preparing {
+  display: grid;
+  gap: 12px;
+  min-height: 580px;
+  place-items: center;
+  margin: 24px 0;
+  padding: 32px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 14px;
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-2);
+  font-size: 0.95rem;
+  text-align: center;
+}
+.stackblitz-preparing a {
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
+}
+
+/* A full editor needs the benchmark layout, not the prose column. */
+.stackblitz-wide .VPDoc .content {
+  max-width: 1104px !important;
+}
+.stackblitz-wide .VPDoc .content-container {
+  max-width: none !important;
+}
+.stackblitz-wide .VPDoc.has-aside .main {
+  width: 100%;
+}
+.stackblitz-wide .VPDoc .aside {
+  display: none;
+}
+
 /* Interactive Benchmarks: wide, aside-free layout so the grids get room.
    Scoped to .VPDoc — the navbar has its own .content element that a bare
    `.benchmarks-wide .content` selector would strangle. */

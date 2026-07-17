@@ -14,6 +14,9 @@ push redeploys everything.
 
 <a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground" target="_blank" rel="noreferrer">Open the whole playground in StackBlitz ⚡</a>
 
+Or use the [embedded StackBlitz Playground](/examples/stackblitz) without
+leaving the docs.
+
 ## Start small
 
 - **[Counter](/examples/counter)** — your first class: one ref, a
