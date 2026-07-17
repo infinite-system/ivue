@@ -162,18 +162,28 @@ export default defineConfig({
           const retryWhenDeployed = async () => {
             attempts++;
 
-            const probeUrl = new URL(window.location.href);
+            const probeUrl = new URL(docsBase, window.location.origin);
             probeUrl.searchParams.set(retryParam, Date.now().toString());
 
             try {
               const response = await fetch(probeUrl.href, {
-                method: 'HEAD',
                 cache: 'no-store',
               });
 
               if (response.ok) {
-                window.location.replace(probeUrl.href);
-                return;
+                const html = await response.text();
+                const probeDocument = new DOMParser().parseFromString(
+                  html,
+                  'text/html',
+                );
+                const liveCommit = probeDocument.querySelector(
+                  'meta[name="ivue-deployment"]',
+                )?.content;
+
+                if (liveCommit && liveCommit !== deployedCommit) {
+                  navigateFresh();
+                  return;
+                }
               }
             } catch {}
 
@@ -236,8 +246,11 @@ export default defineConfig({
             currentUrl.href,
           );
         }
+
+        void recoverDuringDeployment();
       })();`,
     ],
+    ['meta', { name: 'ivue-deployment', content: deployedCommit }],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#6366f1' }],
     ['meta', { property: 'og:type', content: 'website' }],
@@ -426,6 +439,15 @@ export default defineConfig({
             { text: 'Performance by Design', link: '/guide/performance' },
             { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
             { text: 'The Flyweight Pattern', link: '/guide/flyweight' },
+          ],
+        },
+        {
+          text: 'Reference',
+          collapsed: false,
+          items: [
+            { text: 'Invariant-Based Design', link: '/reference/invariants' },
+            { text: 'API', link: '/api/' },
+            { text: 'Community', link: '/community' },
           ],
         },
       ],
