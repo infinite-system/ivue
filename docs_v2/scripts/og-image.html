@@ -65,7 +65,7 @@
       .lockup {
         position: absolute;
         z-index: 1;
-        top: 68px;
+        top: 74px;
         /* Compensate for the PNG's transparent inset so its visible edge
            aligns with the headline's 88px guide. */
         left: 81.6px;
@@ -117,7 +117,7 @@
         position: absolute;
         z-index: 1;
         right: 88px;
-        bottom: 90px;
+        bottom: 84px;
         left: 88px;
         display: flex;
         align-items: baseline;
@@ -133,6 +133,10 @@
       .metrics strong {
         color: #f0f2ff;
         font-weight: 700;
+      }
+
+      .metric-size {
+        transform: translateX(4px);
       }
     </style>
   </head>
@@ -174,7 +178,7 @@
       </h1>
 
       <div class="metrics">
-        <span><strong>1.1 kB</strong> gzipped</span>
+        <span class="metric-size"><strong>1.1 kB</strong> gzipped</span>
         <span><strong>0</strong> dependencies</span>
         <span><strong>100%</strong> test coverage</span>
         <span><strong>22 ms</strong> / 1M instances</span>

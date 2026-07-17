@@ -403,7 +403,7 @@ export default defineConfig({
     sidebar: {
       '/examples/': [
         {
-          text: 'Playground',
+          text: 'Examples',
           collapsed: false,
           items: [
             { text: 'Overview & Playground', link: '/examples/' },

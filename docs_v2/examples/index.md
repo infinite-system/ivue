@@ -17,6 +17,22 @@ push redeploys everything.
 Or use the [embedded StackBlitz Playground](/examples/stackblitz) without
 leaving the docs.
 
+## Run the playground locally
+
+The same app is in the repository, with every example in one navigable
+workspace:
+
+```bash
+git clone https://github.com/infinite-system/ivue.git
+cd ivue
+yarn install
+yarn dev:playground
+```
+
+Open the Vite URL printed in the terminal (usually `http://localhost:5173`),
+then use the app's sidebar to switch between examples. Edit the classes or
+templates and Vite will update the running playground.
+
 ## Start small
 
 - **[Counter](/examples/counter)** — your first class: one ref, a
