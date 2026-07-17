@@ -46,11 +46,6 @@ jobs:
         run: npm run build:docs
       - name: deploy docs_v2 to gh-pages
         run: node docs_v2/scripts/gh-pages-deploy.js
-      - name: warm StackBlitz playground
-        continue-on-error: true
-        run: |
-          npx playwright install --with-deps chromium
-          node docs_v2/scripts/warm-stackblitz.mjs
 #  docs-deploy:
 #    name: Deploying to gh-pages
 #    runs-on: ubuntu-latest
