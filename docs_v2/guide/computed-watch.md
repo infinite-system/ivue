@@ -198,11 +198,6 @@ class $Search {
 }
 ```
 
-::: tip
-Need effect-style instead of source/callback? Use
-[`$watchEffect`](#watcheffect).
-:::
-
 ## `$watchEffect`
 
 The `watchEffect` twin — same lazy per-instance scope, same teardown:
