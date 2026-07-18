@@ -964,11 +964,37 @@
 }
 
 /* ===== Gradient links — the "One kilobyte" treatment ===== */
+/* Registered stop colors so the hover gradient MORPHS (plain
+   background-image gradients cannot transition; registered custom
+   properties can). Browsers without @property snap instead — fine. */
+@property --link-stop-1 {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #a78bfa;
+}
+@property --link-stop-2 {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #818cf8;
+}
+@property --link-stop-3 {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #2dd4bf;
+}
 /* Prose links only (paragraphs, list items, table cells). Component
    links — cards, buttons, chips — and links wrapping a code chip keep
    their own styling; heading anchors stay theme-default. */
 .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)) {
-  background: var(--ivue-grad-link);
+  --link-stop-1: #a78bfa;
+  --link-stop-2: #818cf8;
+  --link-stop-3: #2dd4bf;
+  background: linear-gradient(
+    165deg,
+    var(--link-stop-1) 10%,
+    var(--link-stop-2) 45%,
+    var(--link-stop-3) 95%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -976,18 +1002,32 @@
   /* the text is transparent, so the underline needs its own color */
   text-decoration-color: rgba(129, 140, 248, 0.45);
   text-underline-offset: 3px;
-  transition: text-decoration-color 0.2s ease, filter 0.2s ease;
+  transition:
+    --link-stop-1 0.3s ease,
+    --link-stop-2 0.3s ease,
+    --link-stop-3 0.3s ease,
+    text-decoration-color 0.3s ease,
+    filter 0.3s ease;
 }
+/* hover melts into a monotonic indigo family — the text reads as one
+   highlighted piece; darker in light mode for contrast on white */
 .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)):hover {
-  filter: brightness(1.12);
-  text-decoration-color: rgba(45, 212, 191, 0.75);
+  --link-stop-1: #6d5ce8;
+  --link-stop-2: #6366f1;
+  --link-stop-3: #4f46e5;
+  text-decoration-color: rgba(99, 102, 241, 0.75);
 }
 /* the ethereal glow — dark mode only */
 .dark .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)) {
   filter: drop-shadow(0 0 10px rgba(129, 140, 248, 0.35));
 }
+/* …and a brighter monotonic periwinkle on dark hover */
 .dark .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)):hover {
-  filter: brightness(1.12) drop-shadow(0 0 12px rgba(45, 212, 191, 0.5));
+  --link-stop-1: #c4b5fd;
+  --link-stop-2: #b1b8fd;
+  --link-stop-3: #a5b4fc;
+  text-decoration-color: rgba(165, 180, 252, 0.75);
+  filter: drop-shadow(0 0 12px rgba(165, 180, 252, 0.5));
 }
 
 /* Sidebar: the current page wears the same gradient (+ glow in dark) */
