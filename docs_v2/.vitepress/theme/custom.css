@@ -118,7 +118,10 @@
 }
 
 @media (min-width: 960px) {
-  .VPNavBar .VPNavBarSearch {
+  /* .home only: the offset aligns the search box with the homepage's
+     centered content; sidebar layouts have their own left rhythm and
+     the extra padding reads as a gap there */
+  .VPNavBar.home .VPNavBarSearch {
     padding-left: 47px;
   }
   .VPNavBar .VPNavBarSearch .DocSearch-Button {
