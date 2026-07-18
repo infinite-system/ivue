@@ -25,17 +25,10 @@ boundary. Vue reconstructs the affected component and its setup-owned class
 instance. When no narrower boundary can accept the update, Vite reloads the
 page.
 
-Every class edit follows that same coherent lifecycle:
-
-- method and getter edits;
-- constructor and field edits;
-- native `#private` edits;
-- inheritance changes;
-- added, removed, or renamed members.
-
-The new instance contains one generation of state, constructor wiring,
-closures, private brands, and prototype behavior. ivue does not combine old
-instance state with a newly evaluated class body.
+Every class edit — whatever it touches — follows that same coherent
+lifecycle. The new instance contains one generation of state, constructor
+wiring, closures, and prototype behavior; ivue never combines old instance
+state with a newly evaluated class body.
 
 ## Template edits still preserve state
 

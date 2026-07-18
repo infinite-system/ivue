@@ -145,8 +145,8 @@ load modules
 ## Let Node own restart
 
 Use the project's existing watcher to restart the process after edits. Do not
-add module invalidation, donor generations, method grafting, callback
-forwarding registries, or state migration to this pattern.
+add hot-swap machinery to this pattern — no module invalidation, no method
+replacement inside live objects, no state migration between generations.
 
 The namespace shape makes a clean restart dependable because cross-module
 values resolve after initialization. Production and development execute the
