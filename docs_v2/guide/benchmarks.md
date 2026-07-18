@@ -17,11 +17,15 @@ build an actual grid out of them.
 
 **The live benchmarks on this page:**
 
+<div class="ix-example-list">
+
 - [The grid, one model three ways](#try-it) — 100k/1M cells: composable vs ivue vs plain objects
 - [The formula grid](#the-formula-grid-real-formulas-discovered-dependencies) — real Excel formulas, a dependency graph Vue discovers by itself
 - [The flyweight grid](#the-flyweight-grid-20-million-cells) — 20,000,000 live cells at 4.7 bytes each
 - [The primitives](#the-primitives-interactive) — instance creation and method dispatch
 - [Methodology](#methodology) — how every number was taken, and how to reproduce them
+
+</div>
 
 ## The grid: one model, three ways
 
