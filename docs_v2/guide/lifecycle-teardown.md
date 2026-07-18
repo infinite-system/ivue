@@ -113,6 +113,71 @@ lifecycle, live:
 
 <DemoTeardown />
 
+## Teardown is a full reset — deactivate, then re-activate
+
+`$stopEffects()` does not only kill watchers — it returns the instance to
+the **empty pre-first-touch state**. Computeds are dropped along with refs
+(their cached cells are deleted, so they become collectable), and the
+effect scope itself is discarded, so a later `$watch` allocates a fresh
+one. Touching any member re-materializes it lazily, exactly like a
+newly-constructed instance. Two consequences define how to use this:
+
+- **Ref state is lost.** A re-materialized ref starts from its getter's
+  initial value — durable truth must live outside the disposable overlay,
+  in plain fields or a store.
+- **The constructor does not re-run.** Watchers registered there stay
+  dead; a re-armable instance registers them in a method instead.
+
+That turns disposal into a repeatable **deactivate/re-activate cycle** —
+the tool for windowing *reactivity* over a large retained model (a
+million-row list where only visible rows deserve live effects):
+
+```ts
+// Row.ts
+import { ref } from 'vue'
+import { Reactive } from 'ivue'
+
+class $Row {
+  // GROUND TRUTH — a plain record: survives teardown, costs nothing
+  constructor(public record: RowRecord) {}
+
+  // overlay — re-seeds FROM the record on every re-materialization
+  get isExpanded() {
+    return ref(this.record.expanded)
+  }
+
+  // watchers live here, NOT in the constructor — so they can re-arm
+  activate() {
+    this.$watch(
+      () => this.isExpanded.value,
+      (expanded) => this.persist(expanded),
+    )
+  }
+
+  persist(expanded: boolean) {
+    this.record.expanded = expanded
+  }
+
+  deactivate() {
+    this.$stopEffects()
+  }
+}
+
+export namespace Row {
+  export const $Class = $Row // raw — children `extends` this
+  export let Class = Reactive($Class) // reactive — you `new` this
+  // the type of every unwrapping surface (defineExpose, reactive())
+  export type Instance = typeof Class.Instance
+}
+```
+
+`deactivate()` drops the row to zero reactive weight — a plain object
+holding a record pointer. `activate()` re-arms the watchers; the first
+template touch re-materializes refs seeded from the record. The cycle
+repeats indefinitely. This is the same invariant the
+[flyweight grid](/guide/flyweight) pushes to its extreme: ground truth in
+plain storage, reactivity as a disposable overlay priced by observation.
+
 ## Detached by design — and the bridge
 
 The `$watch` scope is detached **on purpose** — so a component can construct
