@@ -178,6 +178,19 @@ number was a **harness artifact, not library behavior** — when a number
   (`overflow-y: auto`), never by growing the page; Lenis wraps its own
   element, so nothing in the playground needs body scroll.
 
+## Deployment (gh-pages)
+
+- **Deploys must be append-only for hashed assets.** The orphan force-push
+  once replaced the whole site each deploy, deleting the previous build's
+  content-hashed chunks — a tab loaded before the deploy 404'd on its next
+  lazy import (webpack world calls this ChunkLoadError-after-deploy). The
+  deploy script carries the previous gh-pages `assets/` forward
+  (`asset-retention.json` ages files out after 14 days). Platforms like
+  Netlify/Vercel provide this natively via immutable deploy snapshots;
+  GitHub Pages does not. Complementary, not redundant: the in-page
+  recovery script still covers stale-HTML windows and tabs older than the
+  retention window.
+
 ## Process
 
 - **Verify before claiming**: browser-drive every live embed, screenshot both
