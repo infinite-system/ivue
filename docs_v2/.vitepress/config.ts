@@ -501,7 +501,7 @@ export default defineConfig({
           ],
         },
         {
-          text: 'Other Pages',
+          text: 'Relevant Pages',
           collapsed: false,
           items: [
             {
