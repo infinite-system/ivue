@@ -524,20 +524,20 @@
   display: inline-block;
   padding: 10px 24px;
   border-radius: 999px;
-  /* light pill — deep indigo text holds ≥4.5:1 across the wash */
-  background: linear-gradient(120deg, #e0e7ff 10%, #ccfbf1 90%);
-  color: #3730a3;
+  /* one shade deeper than --ivue-grad so white text holds ≥4.5:1 contrast
+     across the whole pill */
+  background: linear-gradient(120deg, #4f46e5 10%, #059669 70%, #047857 95%);
+  color: #fff;
   font-size: 0.95rem;
   font-weight: 650;
   letter-spacing: -0.01em;
   text-decoration: none;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 .ix .ix-standard-hero__cta:hover {
-  color: #3730a3;
-  filter: brightness(1.04);
+  color: #fff;
   transform: translateY(-2px);
-  box-shadow: 0 14px 34px -14px rgba(129, 140, 248, 0.6);
+  box-shadow: 0 14px 34px -14px rgba(52, 211, 153, 0.55);
 }
 @media (prefers-reduced-motion: reduce) {
   .ix .ix-standard-hero__cta,
