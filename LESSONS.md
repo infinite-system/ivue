@@ -169,6 +169,14 @@ number was a **harness artifact, not library behavior** — when a number
   in git history at `be701dd:docs/docs/components/field/`) are ~4,900 lines
   coupled to the Blackline app (API services, stores, auth, axios boot) —
   porting them is a stub-the-backend project, not a file conversion.
+- **The app shell must have a HARD viewport height — the virtual scroller
+  requires a bounded container.** Switching `.shell` to `min-height` (for a
+  sticky sidebar) made the stage's height content-driven, and the scroller
+  sizes its render window from its container: bigger container → more rows
+  rendered → bigger container. Measured runaway: 2,565 → 5,265 DOM items in
+  12s of autoplay. Tall examples scroll inside `.stage-body`
+  (`overflow-y: auto`), never by growing the page; Lenis wraps its own
+  element, so nothing in the playground needs body scroll.
 
 ## Process
 
