@@ -14,12 +14,19 @@
   --ivue-emerald: #10b981;
   --ivue-grad: linear-gradient(120deg, #6366f1 10%, #34d399 90%);
   --ivue-grad-text: linear-gradient(105deg, #818cf8 20%, #6366f1 45%, #34d399 95%);
-  /* link gradient stops: blue family, deliberately distinct from the
-     indigo code chips; light mode darker for contrast on white, dark
-     mode brighter */
+  /* ===== Link system tokens — THE place to tune links ============
+     Blue family, deliberately distinct from the indigo code chips.
+     Rest gradient, monotonic hover family, underline tints, and the
+     dark-mode grounding shadow; each overridable per theme below. */
   --ivue-link-1: #2563eb;
   --ivue-link-2: #1d4ed8;
   --ivue-link-3: #0369a1;
+  --ivue-link-hover-1: #1d4ed8;
+  --ivue-link-hover-2: #1e40af;
+  --ivue-link-hover-3: #1e3a8a;
+  --ivue-link-underline: rgba(59, 130, 246, 0.45);
+  --ivue-link-underline-hover: rgba(29, 78, 216, 0.75);
+  --ivue-link-shadow: none;
 
   --vp-c-tip-1: var(--vp-c-brand-1);
   --vp-c-tip-soft: var(--vp-c-brand-soft);
@@ -37,6 +44,12 @@
   --ivue-link-1: #60a5fa;
   --ivue-link-2: #3b82f6;
   --ivue-link-3: #0ea5e9;
+  --ivue-link-hover-1: #93c5fd;
+  --ivue-link-hover-2: #85c1fd;
+  --ivue-link-hover-3: #7dd3fc;
+  --ivue-link-underline: rgba(96, 165, 250, 0.45);
+  --ivue-link-underline-hover: rgba(147, 197, 253, 0.75);
+  --ivue-link-shadow: drop-shadow(0 1px 1px rgba(2, 6, 23, 0.55));
   --vp-c-brand-1: #818cf8;
   --vp-c-brand-2: #6366f1;
   --vp-c-brand-3: #4f46e5;
@@ -74,6 +87,8 @@
 :not(pre) > code {
   color: var(--vp-c-brand-1);
   font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 6px;
 }
 
 /* ---------- Nav ---------- */
@@ -202,6 +217,16 @@
 }
 .VPButton:active {
   transform: translateY(0) scale(0.98);
+}
+/* press feedback for every button-like surface — same reaction the
+   live demo buttons give */
+.ix .ix-standard-hero__cta:active {
+  transform: translateY(0) scale(0.97);
+}
+.ix-start a:active,
+.blog-card:active,
+.VPFeature:active {
+  transform: translateY(-1px) scale(0.985);
 }
 
 /* ---------- Feature cards ---------- */
@@ -747,12 +772,11 @@
   color: var(--vp-c-text-2);
 }
 .ix-start .go {
+  /* painted by the link system; layout only */
   display: inline-block;
   margin-top: 14px;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--vp-c-brand-1);
-  transition: transform 0.18s ease;
 }
 .ix-start a:hover .go {
   transform: translateX(3px);
@@ -977,26 +1001,37 @@
 @property --link-stop-1 {
   syntax: '<color>';
   inherits: false;
-  initial-value: #a78bfa;
+  initial-value: #2563eb;
 }
 @property --link-stop-2 {
   syntax: '<color>';
   inherits: false;
-  initial-value: #818cf8;
+  initial-value: #1d4ed8;
 }
 @property --link-stop-3 {
   syntax: '<color>';
   inherits: false;
-  initial-value: #14c4dd;
+  initial-value: #0369a1;
 }
-/* Prose links only (paragraphs, list items, table cells). Component
-   links — cards, buttons, chips — and links wrapping a code chip keep
-   their own styling; heading anchors stay theme-default. */
+/* ===== The link system ==========================================
+   Every declaration reads from the --ivue-link-* tokens; tune colors
+   there (per theme), never here. Two behaviors share one paint:
+   - ALWAYS-ON surfaces wear the gradient at rest and melt to the
+     monotonic hover family (prose, chip links, CTAs, go-arrows);
+   - REVEAL surfaces render as plain text at rest and morph to the
+     gradient on hover/active (sidebar, nav, outline, pagers). */
+
+/* the shared paint: gradient-clipped text, 0.3s stop morph */
 .vp-doc :is(p, li, td) > a:not([class]):not(:has(code)),
-.vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)) {
-  --link-stop-1: var(--ivue-link-1);
-  --link-stop-2: var(--ivue-link-2);
-  --link-stop-3: var(--ivue-link-3);
+.vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)),
+.vp-doc :is(p, li, td) a:not([class]) > code,
+a.feature-inline-link,
+.ix-start .go,
+.blog-card .go,
+.VPSidebar .VPSidebarItem.is-link > .item .link > .text,
+.VPNavBar .VPNavBarMenuLink,
+.VPDocAsideOutline .outline-link,
+.VPDocFooter .pager-link .title {
   background: linear-gradient(
     155deg,
     var(--link-stop-1) 10%,
@@ -1006,116 +1041,86 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-decoration: underline;
-  /* the text is transparent, so the underline needs its own color */
-  text-decoration-color: rgba(59, 130, 246, 0.45);
-  text-underline-offset: 3px;
+  filter: var(--ivue-link-shadow);
   transition:
     --link-stop-1 0.3s ease,
     --link-stop-2 0.3s ease,
     --link-stop-3 0.3s ease,
     text-decoration-color 0.3s ease,
-    filter 0.3s ease;
-}
-/* hover melts into a monotonic indigo family — the text reads as one
-   highlighted piece; darker in light mode for contrast on white */
-.vp-doc :is(p, li, td) > a:not([class]):not(:has(code)):hover,
-.vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)):hover {
-  --link-stop-1: #1d4ed8;
-  --link-stop-2: #1e40af;
-  --link-stop-3: #1e3a8a;
-  text-decoration-color: rgba(29, 78, 216, 0.75);
-}
-/* the ethereal glow — dark mode only */
-.dark .vp-doc :is(p, li, td) > a:not([class]):not(:has(code)),
-.dark .vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)) {
-  filter: drop-shadow(0 1px 1px rgba(2, 6, 23, 0.55));
-}
-/* …and a brighter monotonic periwinkle on dark hover */
-.dark .vp-doc :is(p, li, td) > a:not([class]):not(:has(code)):hover,
-.dark .vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)):hover {
-  --link-stop-1: #93c5fd;
-  --link-stop-2: #85c1fd;
-  --link-stop-3: #7dd3fc;
-  text-decoration-color: rgba(147, 197, 253, 0.75);
-  filter: drop-shadow(0 1px 1px rgba(2, 6, 23, 0.55));
+    transform 0.18s ease;
 }
 
-/* Sidebar: the current page and hovered items wear the same gradient
-   (+ glow in dark), morphing in over 0.3s. Every link text is always
-   gradient-clipped — at rest the stops resolve to the plain text
-   color, so only hover/active reveal the colors; that is what lets
-   the change transition. The .is-link tier is required — VitePress's
-   own active-item rule carries it and would out-specify the
-   transparent color, leaving only the glow visible. */
-.VPSidebar .VPSidebarItem.is-link > .item .link > .text {
+/* ALWAYS-ON: rest = the gradient */
+.vp-doc :is(p, li, td) > a:not([class]):not(:has(code)),
+.vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)),
+.vp-doc :is(p, li, td) a:not([class]) > code,
+a.feature-inline-link,
+.ix-start .go,
+.blog-card .go {
+  --link-stop-1: var(--ivue-link-1);
+  --link-stop-2: var(--ivue-link-2);
+  --link-stop-3: var(--ivue-link-3);
+}
+/* …hover = the monotonic highlight family */
+.vp-doc :is(p, li, td) > a:not([class]):not(:has(code)):hover,
+.vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)):hover,
+.vp-doc :is(p, li, td) a:not([class]):hover > code,
+a.feature-inline-link:hover,
+.ix-start a:hover .go,
+.blog-card:hover .go {
+  --link-stop-1: var(--ivue-link-hover-1);
+  --link-stop-2: var(--ivue-link-hover-2);
+  --link-stop-3: var(--ivue-link-hover-3);
+}
+
+/* REVEAL: rest = the surface's plain text color */
+.VPSidebar .VPSidebarItem.is-link > .item .link > .text,
+.VPDocAsideOutline .outline-link {
   --link-stop-1: var(--vp-c-text-2);
   --link-stop-2: var(--vp-c-text-2);
   --link-stop-3: var(--vp-c-text-2);
-  background: linear-gradient(
-    155deg,
-    var(--link-stop-1) 10%,
-    var(--link-stop-2) 45%,
-    var(--link-stop-3) 95%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  transition:
-    --link-stop-1 0.3s ease,
-    --link-stop-2 0.3s ease,
-    --link-stop-3 0.3s ease,
-    filter 0.3s ease;
 }
+.VPNavBar .VPNavBarMenuLink,
+.VPDocFooter .pager-link .title {
+  --link-stop-1: var(--vp-c-text-1);
+  --link-stop-2: var(--vp-c-text-1);
+  --link-stop-3: var(--vp-c-text-1);
+}
+/* …hover/active = the gradient. color re-asserted: VitePress's own
+   hover/active rules tie or beat the base selector and would repaint
+   the text solid brand over the clip */
 .VPSidebar .VPSidebarItem.is-link.is-active > .item .link > .text,
-.VPSidebar .VPSidebarItem.is-link > .item .link:hover > .text {
+.VPSidebar .VPSidebarItem.is-link > .item .link:hover > .text,
+.VPNavBar .VPNavBarMenuLink:hover,
+.VPNavBar .VPNavBarMenuLink.active,
+.VPDocAsideOutline .outline-link:hover,
+.VPDocAsideOutline .outline-link.active,
+.VPDocFooter .pager-link:hover .title {
   --link-stop-1: var(--ivue-link-1);
   --link-stop-2: var(--ivue-link-2);
   --link-stop-3: var(--ivue-link-3);
-  /* re-assert: VitePress's own active rule ties the base selector and
-     wins on order, repainting the text solid brand */
   color: transparent;
-}
-.dark .VPSidebar .VPSidebarItem.is-link.is-active > .item .link > .text,
-.dark .VPSidebar .VPSidebarItem.is-link > .item .link:hover > .text {
-  filter: drop-shadow(0 1px 1px rgba(2, 6, 23, 0.55));
 }
 
-/* Links wrapping a code chip (e.g. a linked file path): the chip
-   background moves to the anchor so the gradient can clip to the code
-   text alone — same morph as prose links */
+/* prose extras: the underline needs its own color under transparent
+   text */
+.vp-doc :is(p, li, td) > a:not([class]):not(:has(code)),
+.vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)) {
+  text-decoration: underline;
+  text-decoration-color: var(--ivue-link-underline);
+  text-underline-offset: 3px;
+}
+.vp-doc :is(p, li, td) > a:not([class]):not(:has(code)):hover,
+.vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)):hover {
+  text-decoration-color: var(--ivue-link-underline-hover);
+}
+
+/* links wrapping a code chip: the chip background moves to the anchor
+   so the gradient can clip to the code text alone */
 .vp-doc :is(p, li, td) a:not([class]):has(> code) {
   background-color: var(--vp-code-bg);
-  border-radius: 4px;
+  border-radius: 6px;
   text-decoration: none;
-}
-.vp-doc :is(p, li, td) a:not([class]) > code {
-  --link-stop-1: var(--ivue-link-1);
-  --link-stop-2: var(--ivue-link-2);
-  --link-stop-3: var(--ivue-link-3);
-  background: linear-gradient(
-    155deg,
-    var(--link-stop-1) 10%,
-    var(--link-stop-2) 45%,
-    var(--link-stop-3) 95%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  transition:
-    --link-stop-1 0.3s ease,
-    --link-stop-2 0.3s ease,
-    --link-stop-3 0.3s ease;
-}
-.vp-doc :is(p, li, td) a:not([class]):hover > code {
-  --link-stop-1: #1d4ed8;
-  --link-stop-2: #1e40af;
-  --link-stop-3: #1e3a8a;
-}
-.dark .vp-doc :is(p, li, td) a:not([class]):hover > code {
-  --link-stop-1: #93c5fd;
-  --link-stop-2: #85c1fd;
-  --link-stop-3: #7dd3fc;
 }
 
 /* Examples index — lemniscate logo tiles replace the default bullets */
@@ -1256,40 +1261,9 @@
   color: inherit;
 }
 
-/* inline CTA link (feature cards, examples index) — gradient like
-   prose links; the class opts it back in past the :not([class]) guard */
+/* inline CTA link — painted by the link system; only layout here */
 a.feature-inline-link {
-  --link-stop-1: var(--ivue-link-1);
-  --link-stop-2: var(--ivue-link-2);
-  --link-stop-3: var(--ivue-link-3);
-  background: linear-gradient(
-    155deg,
-    var(--link-stop-1) 10%,
-    var(--link-stop-2) 45%,
-    var(--link-stop-3) 95%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
   font-weight: 600;
-  transition:
-    --link-stop-1 0.3s ease,
-    --link-stop-2 0.3s ease,
-    --link-stop-3 0.3s ease,
-    filter 0.3s ease;
-}
-a.feature-inline-link:hover {
-  --link-stop-1: #1d4ed8;
-  --link-stop-2: #1e40af;
-  --link-stop-3: #1e3a8a;
-}
-.dark a.feature-inline-link {
-  filter: drop-shadow(0 1px 1px rgba(2, 6, 23, 0.55));
-}
-.dark a.feature-inline-link:hover {
-  --link-stop-1: #93c5fd;
-  --link-stop-2: #85c1fd;
-  --link-stop-3: #7dd3fc;
 }
 .VPFeatures .details .feature-inline-link {
   color: transparent;
@@ -1472,9 +1446,9 @@ a.feature-inline-link:hover {
   color: var(--vp-c-text-2);
 }
 .blog-card .go {
+  /* painted by the link system; layout only */
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--vp-c-brand-1);
 }
 
 /* Examples page: huge source files scroll inside their own block — the
