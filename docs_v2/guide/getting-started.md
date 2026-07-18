@@ -8,7 +8,7 @@ description: Install ivue, give your AI the standard, confirm the production-par
 ## Install
 
 ```sh
-npm i ivue vue
+npm install ivue
 ```
 
 ivue has no runtime dependencies of its own and supports Vue 3.2 or newer.
