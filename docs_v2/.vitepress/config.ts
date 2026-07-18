@@ -501,22 +501,28 @@ export default defineConfig({
           ],
         },
         {
-          text: 'Going Deeper',
+          text: 'Other Pages',
           collapsed: false,
           items: [
-            { text: 'ivue vs the World', link: '/guide/model-layer' },
-            { text: 'Performance by Design', link: '/guide/performance' },
-            { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
-            { text: 'The Flyweight Pattern', link: '/guide/flyweight' },
-          ],
-        },
-        {
-          text: 'Reference',
-          collapsed: false,
-          items: [
-            { text: 'API Reference', link: '/api/' },
-            { text: 'Invariants Behind ivue', link: '/reference/invariants' },
-            { text: 'Community', link: '/community' },
+            {
+              text: 'Going Deeper',
+              collapsed: false,
+              items: [
+                { text: 'ivue vs the World', link: '/guide/model-layer' },
+                { text: 'Performance by Design', link: '/guide/performance' },
+                { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
+                { text: 'The Flyweight Pattern', link: '/guide/flyweight' },
+              ],
+            },
+            {
+              text: 'Reference',
+              collapsed: false,
+              items: [
+                { text: 'API Reference', link: '/api/' },
+                { text: 'Invariants Behind ivue', link: '/reference/invariants' },
+                { text: 'Community', link: '/community' },
+              ],
+            },
           ],
         },
       ],
