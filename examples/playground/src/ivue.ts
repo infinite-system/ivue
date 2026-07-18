@@ -98,14 +98,16 @@ function convertToLazyBoundMethod(
 }
 
 /**
- * Convert a getter to a lazy-computed property.
+ * Convert a getter to a lazily-cached Ref cell.
  *
  * Only ever called when the descriptor has a getter, so `originalGetter` is
- * always defined here. A getter that returns a Ref/computed is cached (stable
- * reactive identity); a getter that returns a plain value de-optimizes back to
- * a native getter on the prototype, removing all overhead for future instances.
+ * always defined here. A getter that returns any Ref — ref(), shallowRef(),
+ * computed() (a ComputedRef IS a Ref) — is cached under the instance symbol
+ * (stable reactive identity); a getter that returns a plain value
+ * de-optimizes back to a native getter on the prototype, removing all
+ * overhead for future instances.
  */
-function convertToLazyComputed(
+function convertToLazyRef(
   proto: any,
   key: string,
   superKey: symbol,
@@ -204,7 +206,7 @@ export function Reactive<C extends new (...args: any) => any>(
       if (typeof desc.value === fn) {
         convertToLazyBoundMethod(prototype, key, superKey, desc.value);
       } else if (desc.get) {
-        convertToLazyComputed(prototype, key, superKey, desc.get, desc.set);
+        convertToLazyRef(prototype, key, superKey, desc.get, desc.set);
       }
     }
 
