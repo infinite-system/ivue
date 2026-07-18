@@ -44,5 +44,5 @@ overlay) and the cell facade:
 <<< ../../examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts [FlyweightGridPage.ts]
 :::
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Fflyweight-grid%2Fmodel%2FFlyweightSheet.ts&initialPath=%2F%23%2Fflyweight-grid" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fflyweight-grid%2Fmodel%2FFlyweightSheet.ts&path=%2F%23%2Fflyweight-grid">Open in StackBlitz ⚡</a>
 — the playground boots with this example's route and file active.

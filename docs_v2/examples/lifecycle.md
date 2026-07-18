@@ -34,5 +34,5 @@ cell is dropped, so state re-materializes fresh on the next access.
 <<< ../../examples/playground/src/examples/lifecycle/LifecycleExample.vue [LifecycleExample.vue]
 :::
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Flifecycle%2FSensor.ts&initialPath=%2F%23%2Flifecycle" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Flifecycle%2FSensor.ts&path=%2F%23%2Flifecycle">Open in StackBlitz ⚡</a>
 — the playground boots with this example's route and file active.

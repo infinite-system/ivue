@@ -20,11 +20,26 @@ let embedRetryTimer: number | undefined;
 const deployedRef = __IVUE_DEPLOYED_COMMIT__ || 'main';
 const stackBlitzProjectUrl =
   `https://stackblitz.com/github/infinite-system/ivue/tree/${deployedRef}/examples/playground`;
-const fullScreenUrl =
-  `${stackBlitzProjectUrl}?file=src%2Fexamples%2Findex.ts&initialpath=%2F`;
+
+// Example pages deep-link here with ?file= and ?path=, so the embed
+// opens on that example's class with its route running.
+const embedFile = ref('src/examples/index.ts');
+const embedPath = ref('/');
+if (typeof window !== 'undefined') {
+  const params = new URLSearchParams(window.location.search);
+  const requestedFile = params.get('file');
+  const requestedPath = params.get('path');
+  if (requestedFile) embedFile.value = requestedFile;
+  if (requestedPath) embedPath.value = requestedPath;
+}
+
+const fullScreenUrl = computed(
+  () =>
+    `${stackBlitzProjectUrl}?file=${encodeURIComponent(embedFile.value)}&initialpath=${encodeURIComponent(embedPath.value)}`,
+);
 const embedUrl = computed(
   () =>
-    `${stackBlitzProjectUrl}?embed=1&file=src%2Fexamples%2Findex.ts&initialpath=%2F&view=both&hidedevtools=1&hideNavigation=1&showSidebar=1&ivueRetry=` +
+    `${stackBlitzProjectUrl}?embed=1&file=${encodeURIComponent(embedFile.value)}&initialpath=${encodeURIComponent(embedPath.value)}&view=both&hidedevtools=1&hideNavigation=1&showSidebar=1&ivueRetry=` +
     embedAttempt.value,
 );
 

@@ -33,5 +33,5 @@ The demo above runs these exact files from the playground:
 <<< ../../examples/playground/src/examples/counter/CounterExample.vue [CounterExample.vue]
 :::
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Fcounter%2FCounter.ts&initialPath=%2F%23%2Fcounter" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fcounter%2FCounter.ts&path=%2F%23%2Fcounter">Open in StackBlitz ⚡</a>
 — the playground boots with this example's route and file active.

@@ -66,7 +66,7 @@ The standalone playground renders both hierarchies on one route:
 <<< ../../examples/playground/src/examples/inheritance/InheritanceExample.vue [InheritanceExample.vue]
 :::
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Finheritance%2FTaxedProduct.ts&initialPath=%2F%23%2Finheritance" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Finheritance%2FTaxedProduct.ts&path=%2F%23%2Finheritance">Open in StackBlitz ⚡</a>
 — the playground boots with this example's route and file active.
 
 For the full story of why inheritance works this way, read the

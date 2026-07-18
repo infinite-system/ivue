@@ -36,7 +36,7 @@ them — type a task in the first panel and watch the other two react:
   <ExampleClassStore />
 </ClientOnly>
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Fclass-store%2FProjectStore.ts&initialPath=%2F%23%2Fclass-store" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fclass-store%2FProjectStore.ts&path=%2F%23%2Fclass-store">Open in StackBlitz ⚡</a>
 — boots the playground on this example's route with the store class open.
 
 ## The optional reactive() view

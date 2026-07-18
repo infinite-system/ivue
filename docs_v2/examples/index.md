@@ -12,7 +12,7 @@ Each docs page below embeds its example live and shows the exact playground
 files as code; StackBlitz boots the whole collection from GitHub, so every
 push redeploys everything.
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground" target="_blank" rel="noreferrer">Open the whole playground in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz">Open the whole playground in StackBlitz ⚡</a>
 
 Or use the [embedded StackBlitz Playground](/examples/stackblitz) without
 leaving the docs.

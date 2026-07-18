@@ -23,7 +23,7 @@ updates from the same ivue objects.
   <ExampleWorkspacePlatform />
 </ClientOnly>
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Fworkspace-platform%2FWorkspace.ts&initialPath=%2F%23%2Fworkspace-platform" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fworkspace-platform%2FWorkspace.ts&path=%2F%23%2Fworkspace-platform">Open in StackBlitz ⚡</a>
 
 ## One graph, several interfaces
 

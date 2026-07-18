@@ -29,7 +29,7 @@ avatar-chip multi-select with backend search:
   <ExampleChooseField />
 </ClientOnly>
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Ffields%2Fchoose-field%2FChooseField.ts&initialPath=%2F%23%2Fchoose-field" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Ffields%2Fchoose-field%2FChooseField.ts&path=%2F%23%2Fchoose-field">Open in StackBlitz ⚡</a>
 — boots the playground on this example's route with the class open.
 
 ## The performance story

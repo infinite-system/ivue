@@ -27,7 +27,7 @@ the reference server the same component uploads to disk or S3 with
   <ExampleMediaField />
 </ClientOnly>
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Ffields%2Fmedia-field%2FMediaField.ts&initialPath=%2F%23%2Fmedia-field" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Ffields%2Fmedia-field%2FMediaField.ts&path=%2F%23%2Fmedia-field">Open in StackBlitz ⚡</a>
 — boots the playground on this example's route with the class open.
 
 ## The performance story

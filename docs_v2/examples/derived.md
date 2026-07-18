@@ -34,5 +34,5 @@ show exactly when each body executes.
 <<< ../../examples/playground/src/examples/derived/DerivedExample.vue [DerivedExample.vue]
 :::
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Fderived%2FThermo.ts&initialPath=%2F%23%2Fderived" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fderived%2FThermo.ts&path=%2F%23%2Fderived">Open in StackBlitz ⚡</a>
 — the playground boots with this example's route and file active.

@@ -31,5 +31,5 @@ The public surface is two refs — `x` and `y`.
 <<< ../../examples/playground/src/examples/pointer/PointerExample.vue [PointerExample.vue]
 :::
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Fpointer%2FPointer.ts&initialPath=%2F%23%2Fpointer" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fpointer%2FPointer.ts&path=%2F%23%2Fpointer">Open in StackBlitz ⚡</a>
 — the playground boots with this example's route and file active.

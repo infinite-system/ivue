@@ -64,7 +64,7 @@ The example lives in the unified playground at
 — the customized Lenis (virtual-limit support over the stock engine) is
 vendored inside it. Run it without cloning anything:
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Fvirtual-scroller%2FVirtualScroller.ts&initialPath=%2F%23%2Fvirtual-scroller" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fvirtual-scroller%2FVirtualScroller.ts&path=%2F%23%2Fvirtual-scroller">Open in StackBlitz ⚡</a>
 — StackBlitz imports the folder straight from GitHub, so every push
 redeploys the example automatically.
 

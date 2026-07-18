@@ -20,7 +20,7 @@ toast's `SHOW` event into the event stream.
   <ExampleExtensibleKernel />
 </ClientOnly>
 
-<a class="feature-inline-link" href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground?file=src%2Fexamples%2Fextensible-kernel%2Fkernel.ts&initialPath=%2F%23%2Fextensible-kernel" target="_blank" rel="noreferrer">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fextensible-kernel%2Fkernel.ts&path=%2F%23%2Fextensible-kernel">Open in StackBlitz ⚡</a>
 
 ## How it works
 
