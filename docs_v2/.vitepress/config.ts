@@ -298,7 +298,7 @@ export default defineConfig({
       'link',
       {
         rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400..600&family=Source+Code+Pro:wght@400..600&display=swap',
+        href: 'https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400..600&family=IBM+Plex+Mono:wght@400;500;600&display=swap',
       },
     ],
   ],
