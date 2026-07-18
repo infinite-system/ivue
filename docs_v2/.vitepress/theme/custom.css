@@ -1030,14 +1030,19 @@
   filter: drop-shadow(0 0 8px rgba(165, 180, 252, 0.4));
 }
 
-/* Sidebar: the current page wears the same gradient (+ glow in dark) */
-.VPSidebarItem.is-active > .item .link > .text {
+/* Sidebar: the current page and hovered items wear the same gradient
+   (+ glow in dark). The .is-link tier is required — VitePress's own
+   active-item rule carries it and would out-specify the transparent
+   color, leaving only the glow visible. */
+.VPSidebar .VPSidebarItem.is-link.is-active > .item .link > .text,
+.VPSidebar .VPSidebarItem.is-link > .item .link:hover > .text {
   background: var(--ivue-grad-link);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-.dark .VPSidebarItem.is-active > .item .link > .text {
+.dark .VPSidebar .VPSidebarItem.is-link.is-active > .item .link > .text,
+.dark .VPSidebar .VPSidebarItem.is-link > .item .link:hover > .text {
   filter: drop-shadow(0 0 6px rgba(129, 140, 248, 0.3));
 }
 
