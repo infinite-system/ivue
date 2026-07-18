@@ -15,7 +15,7 @@
   --ivue-grad: linear-gradient(120deg, #6366f1 10%, #34d399 90%);
   --ivue-grad-text: linear-gradient(105deg, #818cf8 20%, #6366f1 45%, #34d399 95%);
   /* link gradient: purple → indigo → cyan, near-vertical */
-  --ivue-grad-link: linear-gradient(165deg, #a78bfa 10%, #818cf8 45%, #14c4dd 95%);
+  --ivue-grad-link: linear-gradient(155deg, #a78bfa 10%, #818cf8 45%, #14c4dd 95%);
 
   --vp-c-tip-1: var(--vp-c-brand-1);
   --vp-c-tip-soft: var(--vp-c-brand-soft);
@@ -991,7 +991,7 @@
   --link-stop-2: #818cf8;
   --link-stop-3: #14c4dd;
   background: linear-gradient(
-    165deg,
+    155deg,
     var(--link-stop-1) 10%,
     var(--link-stop-2) 45%,
     var(--link-stop-3) 95%
@@ -1046,7 +1046,7 @@
   --link-stop-2: var(--vp-c-text-2);
   --link-stop-3: var(--vp-c-text-2);
   background: linear-gradient(
-    165deg,
+    155deg,
     var(--link-stop-1) 10%,
     var(--link-stop-2) 45%,
     var(--link-stop-3) 95%
@@ -1087,7 +1087,7 @@
   --link-stop-2: #818cf8;
   --link-stop-3: #14c4dd;
   background: linear-gradient(
-    165deg,
+    155deg,
     var(--link-stop-1) 10%,
     var(--link-stop-2) 45%,
     var(--link-stop-3) 95%
@@ -1256,7 +1256,7 @@ a.feature-inline-link {
   --link-stop-2: #818cf8;
   --link-stop-3: #14c4dd;
   background: linear-gradient(
-    165deg,
+    155deg,
     var(--link-stop-1) 10%,
     var(--link-stop-2) 45%,
     var(--link-stop-3) 95%
