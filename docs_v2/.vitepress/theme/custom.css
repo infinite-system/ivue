@@ -14,11 +14,12 @@
   --ivue-emerald: #10b981;
   --ivue-grad: linear-gradient(120deg, #6366f1 10%, #34d399 90%);
   --ivue-grad-text: linear-gradient(105deg, #818cf8 20%, #6366f1 45%, #34d399 95%);
-  /* link gradient stops: purple → indigo → deep blue; light mode runs
-     darker for contrast on white, dark mode brighter */
-  --ivue-link-1: #7c3aed;
-  --ivue-link-2: #4f46e5;
-  --ivue-link-3: #0284c7;
+  /* link gradient stops: blue family, deliberately distinct from the
+     indigo code chips; light mode darker for contrast on white, dark
+     mode brighter */
+  --ivue-link-1: #2563eb;
+  --ivue-link-2: #1d4ed8;
+  --ivue-link-3: #0369a1;
 
   --vp-c-tip-1: var(--vp-c-brand-1);
   --vp-c-tip-soft: var(--vp-c-brand-soft);
@@ -33,9 +34,9 @@
 }
 
 .dark {
-  --ivue-link-1: #a78bfa;
-  --ivue-link-2: #818cf8;
-  --ivue-link-3: #14c4dd;
+  --ivue-link-1: #60a5fa;
+  --ivue-link-2: #3b82f6;
+  --ivue-link-3: #0ea5e9;
   --vp-c-brand-1: #818cf8;
   --vp-c-brand-2: #6366f1;
   --vp-c-brand-3: #4f46e5;
@@ -1007,7 +1008,7 @@
   color: transparent;
   text-decoration: underline;
   /* the text is transparent, so the underline needs its own color */
-  text-decoration-color: rgba(129, 140, 248, 0.45);
+  text-decoration-color: rgba(59, 130, 246, 0.45);
   text-underline-offset: 3px;
   transition:
     --link-stop-1 0.3s ease,
@@ -1020,10 +1021,10 @@
    highlighted piece; darker in light mode for contrast on white */
 .vp-doc :is(p, li, td) > a:not([class]):not(:has(code)):hover,
 .vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)):hover {
-  --link-stop-1: #6d5ce8;
-  --link-stop-2: #6366f1;
-  --link-stop-3: #4f46e5;
-  text-decoration-color: rgba(99, 102, 241, 0.75);
+  --link-stop-1: #1d4ed8;
+  --link-stop-2: #1e40af;
+  --link-stop-3: #1e3a8a;
+  text-decoration-color: rgba(29, 78, 216, 0.75);
 }
 /* the ethereal glow — dark mode only */
 .dark .vp-doc :is(p, li, td) > a:not([class]):not(:has(code)),
@@ -1033,10 +1034,10 @@
 /* …and a brighter monotonic periwinkle on dark hover */
 .dark .vp-doc :is(p, li, td) > a:not([class]):not(:has(code)):hover,
 .dark .vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)):hover {
-  --link-stop-1: #c4b5fd;
-  --link-stop-2: #b1b8fd;
-  --link-stop-3: #a5b4fc;
-  text-decoration-color: rgba(165, 180, 252, 0.75);
+  --link-stop-1: #93c5fd;
+  --link-stop-2: #85c1fd;
+  --link-stop-3: #7dd3fc;
+  text-decoration-color: rgba(147, 197, 253, 0.75);
   filter: drop-shadow(0 1px 1px rgba(2, 6, 23, 0.55));
 }
 
@@ -1107,14 +1108,14 @@
     --link-stop-3 0.3s ease;
 }
 .vp-doc :is(p, li, td) a:not([class]):hover > code {
-  --link-stop-1: #6d5ce8;
-  --link-stop-2: #6366f1;
-  --link-stop-3: #4f46e5;
+  --link-stop-1: #1d4ed8;
+  --link-stop-2: #1e40af;
+  --link-stop-3: #1e3a8a;
 }
 .dark .vp-doc :is(p, li, td) a:not([class]):hover > code {
-  --link-stop-1: #c4b5fd;
-  --link-stop-2: #b1b8fd;
-  --link-stop-3: #a5b4fc;
+  --link-stop-1: #93c5fd;
+  --link-stop-2: #85c1fd;
+  --link-stop-3: #7dd3fc;
 }
 
 /* Examples index — lemniscate logo tiles replace the default bullets */
@@ -1278,17 +1279,17 @@ a.feature-inline-link {
     filter 0.3s ease;
 }
 a.feature-inline-link:hover {
-  --link-stop-1: #6d5ce8;
-  --link-stop-2: #6366f1;
-  --link-stop-3: #4f46e5;
+  --link-stop-1: #1d4ed8;
+  --link-stop-2: #1e40af;
+  --link-stop-3: #1e3a8a;
 }
 .dark a.feature-inline-link {
   filter: drop-shadow(0 1px 1px rgba(2, 6, 23, 0.55));
 }
 .dark a.feature-inline-link:hover {
-  --link-stop-1: #c4b5fd;
-  --link-stop-2: #b1b8fd;
-  --link-stop-3: #a5b4fc;
+  --link-stop-1: #93c5fd;
+  --link-stop-2: #85c1fd;
+  --link-stop-3: #7dd3fc;
 }
 .VPFeatures .details .feature-inline-link {
   color: transparent;
