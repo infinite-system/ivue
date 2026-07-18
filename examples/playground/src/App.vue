@@ -63,8 +63,10 @@ body {
 }
 .shell {
   display: flex;
-  height: 100vh;
-  height: 100dvh;
+  /* min-height, not height: tall examples grow the page and keep the
+     body as the scroll container (the Lenis example depends on it) */
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 .sidebar {
   width: 260px;
@@ -72,7 +74,32 @@ body {
   padding: 18px 14px;
   border-right: 1px solid rgba(148, 163, 184, 0.14);
   background: #0e1424;
+  /* pinned to the viewport while the stage scrolls — the list is
+     always reachable, scrolling internally past viewport height */
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  align-self: flex-start;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+.sidebar::-webkit-scrollbar {
+  width: 10px;
+}
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  /* inset ring in the sidebar's own background — the thumb reads as
+     part of the panel, not a browser control */
+  border: 3px solid #0e1424;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.34);
 }
 .sidebar h1 {
   font-size: 16px;
@@ -150,6 +177,7 @@ body {
   }
   .sidebar {
     width: 100%;
+    height: auto;
     max-height: 40vh;
     border-right: none;
     border-bottom: 1px solid rgba(148, 163, 184, 0.16);
