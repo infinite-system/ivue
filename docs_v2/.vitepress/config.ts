@@ -150,11 +150,14 @@ export default defineConfig({
           return Object.prototype.hasOwnProperty.call(hashMap, pageKey);
         };
 
-        const recoverDuringDeployment = async () => {
+        const recoverDuringDeployment = async (assetsAreMissing) => {
           if (deploymentRecoveryStarted) return;
           deploymentRecoveryStarted = true;
 
-          if (!(await deploymentIsPending())) {
+          // When assets are known-missing, poll unconditionally: the
+          // GitHub API may be rate-limited, or the deploy may already
+          // be finished with this page simply holding the stale build.
+          if (!assetsAreMissing && !(await deploymentIsPending())) {
             deploymentRecoveryStarted = false;
             return;
           }
@@ -214,17 +217,47 @@ export default defineConfig({
           void recoverDuringDeployment();
         };
 
-        window.addEventListener('vite:preloadError', (event) => {
-          if (sessionStorage.getItem(chunkReloadKey)) return;
+        // Both dynamic-import failures (vite:preloadError) and static
+        // module-script/stylesheet 404s funnel here. First failure: one
+        // cache-busted reload. If assets are STILL missing right after
+        // that reload (a mid-flight deploy: old hashed files deleted,
+        // new HTML not yet propagated), don't go silent — poll until
+        // the new build is live, then navigate. The guard is a
+        // timestamp, not a one-shot, so recovery re-arms by itself.
+        const handleAssetFailure = () => {
+          const lastReload = Number(
+            sessionStorage.getItem(chunkReloadKey) || 0,
+          );
 
+          if (Date.now() - lastReload > 15_000) {
+            sessionStorage.setItem(chunkReloadKey, Date.now().toString());
+            navigateFresh();
+            return;
+          }
+
+          void recoverDuringDeployment(true);
+        };
+
+        window.addEventListener('vite:preloadError', (event) => {
           event.preventDefault();
-          sessionStorage.setItem(chunkReloadKey, Date.now().toString());
-          navigateFresh();
+          handleAssetFailure();
         });
 
-        window.setTimeout(
-          () => sessionStorage.removeItem(chunkReloadKey),
-          10_000,
+        window.addEventListener(
+          'error',
+          (event) => {
+            const target = event.target;
+            if (!target || !target.tagName) return;
+            if (target.tagName !== 'SCRIPT' && target.tagName !== 'LINK') {
+              return;
+            }
+
+            const assetUrl = target.src || target.href || '';
+            if (!assetUrl.includes('/assets/')) return;
+
+            handleAssetFailure();
+          },
+          true,
         );
 
         window.addEventListener(routeNotFoundEvent, (event) => {
