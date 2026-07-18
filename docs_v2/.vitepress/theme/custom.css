@@ -1575,7 +1575,7 @@ a.feature-inline-link {
 .VPDoc .cm-channel {
   display: block;
   padding: 16px 18px;
-  border: 1px solid var(--vp-c-divider);
+  border: 1px solid color-mix(in srgb, var(--ivue-link-accent) 35%, var(--vp-c-divider));
   border-radius: 12px;
   background: var(--vp-c-bg-soft);
   text-decoration: none;
@@ -1583,11 +1583,11 @@ a.feature-inline-link {
   transition: border-color 0.18s ease, transform 0.18s ease;
 }
 .VPDoc .cm-channel:hover {
-  border-color: var(--vp-c-brand-1);
+  border-color: var(--ivue-link-accent);
   transform: translateY(-1px);
 }
 .VPDoc .cm-channel strong {
-  color: var(--vp-c-text-1);
+  color: var(--ivue-link-2);
 }
 .VPDoc .cm-channel__title {
   display: flex;
@@ -1600,7 +1600,7 @@ a.feature-inline-link {
   height: 20px;
 }
 .VPDoc .cm-channel__icon path {
-  fill: url('#cm-icon-gradient');
+  fill: var(--ivue-link-accent);
 }
 .VPDoc .cm-channel p {
   margin: 6px 0 0;
@@ -1712,9 +1712,9 @@ a.feature-inline-link {
   align-items: center;
   gap: 5px;
   padding: 4px 8px;
-  border: 1px solid var(--vp-c-divider);
+  border: 1px solid color-mix(in srgb, var(--ivue-link-accent) 35%, var(--vp-c-divider));
   border-radius: 7px;
-  color: var(--vp-c-text-2);
+  color: var(--ivue-link-2);
   background: color-mix(in srgb, var(--vp-c-bg) 34%, transparent);
   font-size: 0.7rem;
   font-weight: 500;
@@ -1723,9 +1723,9 @@ a.feature-inline-link {
   transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
 }
 .VPDoc .cm-author__link:hover {
-  color: var(--vp-c-text-1);
-  border-color: color-mix(in srgb, var(--ivue-emerald) 60%, var(--vp-c-divider));
-  background: color-mix(in srgb, var(--ivue-emerald) 8%, var(--vp-c-bg-soft));
+  color: var(--ivue-link-1);
+  border-color: var(--ivue-link-accent);
+  background: color-mix(in srgb, var(--ivue-link-accent) 8%, var(--vp-c-bg-soft));
   transform: translateY(-1px);
 }
 .VPDoc .cm-author__link svg {
@@ -1734,7 +1734,7 @@ a.feature-inline-link {
   height: 13px;
 }
 .VPDoc .cm-author__link svg path {
-  fill: url('#cm-profile-icon-gradient');
+  fill: var(--ivue-link-accent);
 }
 @media (max-width: 520px) {
   .VPDoc .cm-author {
