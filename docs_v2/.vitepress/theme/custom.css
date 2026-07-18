@@ -1042,12 +1042,9 @@ a.feature-inline-link,
 .VPNav .VPFlyout .button .text,
 .VPDocAsideOutline .outline-link,
 .VPDocFooter .pager-link .title {
-  background: linear-gradient(
-    155deg,
-    var(--link-stop-1) 10%,
-    var(--link-stop-2) 45%,
-    var(--link-stop-3) 95%
-  );
+  /* solid fill of the family's dark stop (the gradient experiment is
+     retired) — the clip + registered-property morph machinery stays */
+  background: var(--link-stop-2);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
