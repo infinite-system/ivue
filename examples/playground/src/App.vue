@@ -153,6 +153,12 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  /* load-bearing in the narrow (column) layout: a flex item's automatic
+     minimum size is its CONTENT height, so without this flex:1 cannot
+     bound the stage — the scroller's container becomes content-sized
+     and the render-window feedback loop returns (mobile/StackBlitz
+     narrow pane only; the row layout bounds height via stretch). */
+  min-height: 0;
 }
 .stage-header {
   display: flex;

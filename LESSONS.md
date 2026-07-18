@@ -176,7 +176,11 @@ number was a **harness artifact, not library behavior** — when a number
   rendered → bigger container. Measured runaway: 2,565 → 5,265 DOM items in
   12s of autoplay. Tall examples scroll inside `.stage-body`
   (`overflow-y: auto`), never by growing the page; Lenis wraps its own
-  element, so nothing in the playground needs body scroll.
+  element, so nothing in the playground needs body scroll. The narrow
+  (column) layout needs `min-height: 0` on `.stage` too — a flex item's
+  automatic minimum size is its content height, so without it `flex: 1`
+  cannot bound the stage and the same runaway returns ONLY under 720px
+  (the StackBlitz narrow preview pane) while desktop tests pass.
 
 ## Deployment (gh-pages)
 
