@@ -149,7 +149,7 @@ A template showing the receipt re-renders on a write to any level:
 <DemoInheritance />
 
 The demo runs the exact three files above — they live in the
-[playground](https://github.com/infinite-system/ivue/tree/main/examples/playground)
+[playground on GitHub](https://github.com/infinite-system/ivue/tree/main/examples/playground)
 as `Product.ts`, `SaleProduct.ts` and `TaxedProduct.ts` and are imported the
 same way you would in an app.
 

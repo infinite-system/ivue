@@ -7,7 +7,7 @@ description: 'Every ivue example lives in one deployable playground app — each
 
 Every example on this site is a real, running component — and they all live
 in **one app**: the
-[playground](https://github.com/infinite-system/ivue/tree/main/examples/playground).
+[playground on GitHub](https://github.com/infinite-system/ivue/tree/main/examples/playground).
 Each docs page below embeds its example live and shows the exact playground
 files as code; StackBlitz boots the whole collection from GitHub, so every
 push redeploys everything.
