@@ -1039,12 +1039,17 @@ a.feature-inline-link,
   background-clip: text;
   color: transparent;
   filter: var(--ivue-link-shadow);
+  /* !important: VitePress's scoped rules ([data-v-*]) out-rank this
+     selector and would replace the transition, killing the 0.3s stop
+     morph; their background/opacity transitions are folded in */
   transition:
     --link-stop-1 0.3s ease,
     --link-stop-2 0.3s ease,
     --link-stop-3 0.3s ease,
     text-decoration-color 0.3s ease,
-    transform 0.18s ease;
+    background-color 0.25s ease,
+    opacity 0.25s ease,
+    transform 0.18s ease !important;
 }
 
 /* ALWAYS-ON: rest = the gradient */
@@ -1053,10 +1058,25 @@ a.feature-inline-link,
 .vp-doc :is(p, li, td) a:not([class]) > code,
 a.feature-inline-link,
 .ix-start .go,
-.blog-card .go {
+.blog-card .go,
+.VPDocFooter .pager-link .title {
   --link-stop-1: var(--ivue-link-1);
   --link-stop-2: var(--ivue-link-2);
   --link-stop-3: var(--ivue-link-3);
+}
+/* pager titles rest on the gradient; VitePress's scoped rule would
+   repaint them solid brand (same [data-v-*] fight as the sidebar) */
+.VPDocFooter .pager-link .title {
+  color: transparent !important;
+}
+/* CTA links sit inside .vp-doc, whose own a / a:hover color rules
+   out-rank the shared paint in the production bundle */
+a.feature-inline-link {
+  color: transparent !important;
+}
+/* pager card hover border follows the link family (scoped-rule fight) */
+.VPDocFooter .pager-link:hover {
+  border-color: var(--ivue-link-accent) !important;
 }
 /* …hover = the monotonic highlight family */
 .vp-doc :is(p, li, td) > a:not([class]):not(:has(code)):hover,
@@ -1064,7 +1084,8 @@ a.feature-inline-link,
 .vp-doc :is(p, li, td) a:not([class]):hover > code,
 a.feature-inline-link:hover,
 .ix-start a:hover .go,
-.blog-card:hover .go {
+.blog-card:hover .go,
+.VPDocFooter .pager-link:hover .title {
   --link-stop-1: var(--ivue-link-hover-1);
   --link-stop-2: var(--ivue-link-hover-2);
   --link-stop-3: var(--ivue-link-hover-3);
@@ -1079,8 +1100,7 @@ a.feature-inline-link:hover,
 }
 .VPNavBar .VPNavBarMenuLink,
 .VPNav .VPMenu .VPMenuLink .link,
-.VPNav .VPFlyout .button .text,
-.VPDocFooter .pager-link .title {
+.VPNav .VPFlyout .button .text {
   --link-stop-1: var(--vp-c-text-1);
   --link-stop-2: var(--vp-c-text-1);
   --link-stop-3: var(--vp-c-text-1);
@@ -1093,11 +1113,10 @@ a.feature-inline-link:hover,
 .VPNavBar .VPNavBarMenuLink:hover,
 .VPNavBar .VPNavBarMenuLink.active,
 .VPNav .VPMenu .VPMenuLink .link:hover,
-.VPNav .VPMenu .VPMenuLink.active .link,
+.VPNav .VPMenu .VPMenuLink .link.active,
 .VPNav .VPFlyout:hover .button .text,
 .VPDocAsideOutline .outline-link:hover,
-.VPDocAsideOutline .outline-link.active,
-.VPDocFooter .pager-link:hover .title {
+.VPDocAsideOutline .outline-link.active {
   --link-stop-1: var(--ivue-link-1);
   --link-stop-2: var(--ivue-link-2);
   --link-stop-3: var(--ivue-link-3);

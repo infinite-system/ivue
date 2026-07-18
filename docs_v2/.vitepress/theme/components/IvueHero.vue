@@ -333,7 +333,7 @@ onUnmounted(() => {
 }
 .btn.alt:hover {
   transform: translateY(-1px);
-  border-color: var(--vp-c-brand-1);
+  border-color: var(--ivue-link-accent);
 }
 .btn:active,
 .btn.brand:active,
