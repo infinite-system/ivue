@@ -258,20 +258,7 @@ export default defineConfig({
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#6366f1' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    [
-      'meta',
-      {
-        property: 'og:title',
-        content: 'ivue — class-based reactivity for Vue 3',
-      },
-    ],
-    [
-      'meta',
-      {
-        property: 'og:description',
-        content: 'Plain classes. Full reactivity. One kilobyte.',
-      },
-    ],
+    // og:title / og:description / og:url are per-page — see transformHead
     [
       'meta',
       {
@@ -302,6 +289,27 @@ export default defineConfig({
       },
     ],
   ],
+
+  // Per-page social cards: link previews (WhatsApp, Slack, X…) read
+  // og:* from the static HTML, so every page emits its own title,
+  // description and canonical URL. The shared og:image stays global.
+  transformHead({ pageData }) {
+    const isHome = pageData.frontmatter.layout === 'home';
+    const title = isHome
+      ? 'ivue — class-based reactivity for Vue 3'
+      : `${pageData.title} — Infinite Vue`;
+    const description =
+      pageData.description ||
+      'Class-based reactivity for Vue 3. Plain classes, full reactivity, one kilobyte.';
+    const path = pageData.relativePath
+      .replace(/(^|\/)index\.md$/, '$1')
+      .replace(/\.md$/, '');
+    return [
+      ['meta', { property: 'og:title', content: title }],
+      ['meta', { property: 'og:description', content: description }],
+      ['meta', { property: 'og:url', content: `https://ivue.dev/${path}` }],
+    ];
+  },
 
   markdown: {
     lineNumbers: true,
