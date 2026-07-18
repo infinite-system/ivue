@@ -63,10 +63,13 @@ body {
 }
 .shell {
   display: flex;
-  /* min-height, not height: tall examples grow the page and keep the
-     body as the scroll container (the Lenis example depends on it) */
-  min-height: 100vh;
-  min-height: 100dvh;
+  /* HARD viewport height — load-bearing. The virtual scroller sizes
+     its window from its container; a content-driven shell (min-height)
+     creates a feedback loop: bigger container → more rows rendered →
+     bigger container, accumulating thousands of DOM items. Tall
+     examples scroll inside .stage-body instead of growing the page. */
+  height: 100vh;
+  height: 100dvh;
 }
 .sidebar {
   width: 260px;
@@ -74,21 +77,16 @@ body {
   padding: 18px 14px;
   border-right: 1px solid rgba(148, 163, 184, 0.14);
   background: #0e1424;
-  /* pinned to the viewport while the stage scrolls — the list is
-     always reachable, scrolling internally past viewport height */
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  height: 100dvh;
-  align-self: flex-start;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
 }
-.sidebar::-webkit-scrollbar {
+.sidebar::-webkit-scrollbar,
+.stage-body::-webkit-scrollbar {
   width: 10px;
 }
-.sidebar::-webkit-scrollbar-track {
+.sidebar::-webkit-scrollbar-track,
+.stage-body::-webkit-scrollbar-track {
   background: transparent;
 }
 .sidebar::-webkit-scrollbar-thumb {
@@ -98,7 +96,13 @@ body {
      part of the panel, not a browser control */
   border: 3px solid #0e1424;
 }
-.sidebar::-webkit-scrollbar-thumb:hover {
+.stage-body::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  border: 3px solid #0b1020;
+}
+.sidebar::-webkit-scrollbar-thumb:hover,
+.stage-body::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.34);
 }
 .sidebar h1 {
@@ -169,6 +173,11 @@ body {
 .stage-body {
   flex: 1;
   min-height: 0;
+  /* tall examples scroll HERE, not the page — the sidebar and header
+     stay put, and the example list is always in reach */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
 }
 
 @media (max-width: 720px) {
