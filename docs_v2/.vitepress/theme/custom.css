@@ -98,7 +98,7 @@
 .VPDoc .vp-doc :not(pre) > code {
   color: var(--ivue-code-color);
   font-weight: 500;
-  padding: 0 6px;
+  padding: 1.5px 6px;
   border-radius: 6px;
 }
 
