@@ -192,6 +192,6 @@ That is the ivue 2 object model in one sentence:
 > **Reactive where persistence is real. Memoized where caching is earned. Pure
 > everywhere else.**
 
-Continue with [`computed()` is a cache, not a derivation](/blog/computed-is-a-cache)
+Continue with [computed() is a cache, not a derivation](/blog/computed-is-a-cache)
 for the engine-level argument, or [The Engine](/engine)
 for the complete mechanics and measured costs.
