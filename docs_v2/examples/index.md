@@ -35,6 +35,8 @@ templates and Vite will update the running playground.
 
 ## Start small
 
+<div class="ix-example-list">
+
 - **[Counter](/examples/counter)** — your first class: one ref, a
   plain-getter derivation, two methods.
 - **[Plain getter vs computed()](/examples/derived)** — the same derivation
@@ -47,7 +49,11 @@ templates and Vite will update the running playground.
 - **[Composable in a class](/examples/pointer)** — `useMouse` hosted
   privately; consumers see two refs and nothing else.
 
+</div>
+
 ## Full-complexity
+
+<div class="ix-example-list">
 
 - **[Pinia Store Alternative](/examples/class-store)** — a class-based alternative to
   Pinia stores; optional reactive() view, fully typed.
@@ -71,3 +77,5 @@ templates and Vite will update the running playground.
   fully reactive at 4.7 bytes per cell.
 - **[Benchmarks](/guide/benchmarks)** — creation, method dispatch, the
   formula grid and the cell-grid comparison, run live in your browser.
+
+</div>

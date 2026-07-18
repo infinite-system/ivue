@@ -524,20 +524,20 @@
   display: inline-block;
   padding: 10px 24px;
   border-radius: 999px;
-  /* one shade deeper than --ivue-grad so white text holds ≥4.5:1 contrast
-     across the whole pill */
-  background: linear-gradient(120deg, #4f46e5 10%, #059669 70%, #047857 95%);
-  color: #fff;
+  /* light pill — deep indigo text holds ≥4.5:1 across the wash */
+  background: linear-gradient(120deg, #e0e7ff 10%, #ccfbf1 90%);
+  color: #3730a3;
   font-size: 0.95rem;
   font-weight: 650;
   letter-spacing: -0.01em;
   text-decoration: none;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 .ix .ix-standard-hero__cta:hover {
-  color: #fff;
+  color: #3730a3;
+  filter: brightness(1.04);
   transform: translateY(-2px);
-  box-shadow: 0 14px 34px -14px rgba(52, 211, 153, 0.55);
+  box-shadow: 0 14px 34px -14px rgba(129, 140, 248, 0.6);
 }
 @media (prefers-reduced-motion: reduce) {
   .ix .ix-standard-hero__cta,
@@ -985,7 +985,8 @@
 /* Prose links only (paragraphs, list items, table cells). Component
    links — cards, buttons, chips — and links wrapping a code chip keep
    their own styling; heading anchors stay theme-default. */
-.vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)) {
+.vp-doc :is(p, li, td) > a:not([class]):not(:has(code)),
+.vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)) {
   --link-stop-1: #a78bfa;
   --link-stop-2: #818cf8;
   --link-stop-3: #22d3ee;
@@ -1011,39 +1012,126 @@
 }
 /* hover melts into a monotonic indigo family — the text reads as one
    highlighted piece; darker in light mode for contrast on white */
-.vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)):hover {
+.vp-doc :is(p, li, td) > a:not([class]):not(:has(code)):hover,
+.vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)):hover {
   --link-stop-1: #6d5ce8;
   --link-stop-2: #6366f1;
   --link-stop-3: #4f46e5;
   text-decoration-color: rgba(99, 102, 241, 0.75);
 }
 /* the ethereal glow — dark mode only */
-.dark .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)) {
-  filter: drop-shadow(0 0 6px rgba(129, 140, 248, 0.28));
+.dark .vp-doc :is(p, li, td) > a:not([class]):not(:has(code)),
+.dark .vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)) {
+  filter: drop-shadow(0 0 4px rgba(129, 140, 248, 0.2));
 }
 /* …and a brighter monotonic periwinkle on dark hover */
-.dark .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)):hover {
+.dark .vp-doc :is(p, li, td) > a:not([class]):not(:has(code)):hover,
+.dark .vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)):hover {
   --link-stop-1: #c4b5fd;
   --link-stop-2: #b1b8fd;
   --link-stop-3: #a5b4fc;
   text-decoration-color: rgba(165, 180, 252, 0.75);
-  filter: drop-shadow(0 0 8px rgba(165, 180, 252, 0.4));
+  filter: drop-shadow(0 0 6px rgba(165, 180, 252, 0.3));
 }
 
 /* Sidebar: the current page and hovered items wear the same gradient
-   (+ glow in dark). The .is-link tier is required — VitePress's own
-   active-item rule carries it and would out-specify the transparent
-   color, leaving only the glow visible. */
-.VPSidebar .VPSidebarItem.is-link.is-active > .item .link > .text,
-.VPSidebar .VPSidebarItem.is-link > .item .link:hover > .text {
-  background: var(--ivue-grad-link);
+   (+ glow in dark), morphing in over 0.3s. Every link text is always
+   gradient-clipped — at rest the stops resolve to the plain text
+   color, so only hover/active reveal the colors; that is what lets
+   the change transition. The .is-link tier is required — VitePress's
+   own active-item rule carries it and would out-specify the
+   transparent color, leaving only the glow visible. */
+.VPSidebar .VPSidebarItem.is-link > .item .link > .text {
+  --link-stop-1: var(--vp-c-text-2);
+  --link-stop-2: var(--vp-c-text-2);
+  --link-stop-3: var(--vp-c-text-2);
+  background: linear-gradient(
+    165deg,
+    var(--link-stop-1) 10%,
+    var(--link-stop-2) 45%,
+    var(--link-stop-3) 95%
+  );
   -webkit-background-clip: text;
   background-clip: text;
+  color: transparent;
+  transition:
+    --link-stop-1 0.3s ease,
+    --link-stop-2 0.3s ease,
+    --link-stop-3 0.3s ease,
+    filter 0.3s ease;
+}
+.VPSidebar .VPSidebarItem.is-link.is-active > .item .link > .text,
+.VPSidebar .VPSidebarItem.is-link > .item .link:hover > .text {
+  --link-stop-1: #a78bfa;
+  --link-stop-2: #818cf8;
+  --link-stop-3: #22d3ee;
+  /* re-assert: VitePress's own active rule ties the base selector and
+     wins on order, repainting the text solid brand */
   color: transparent;
 }
 .dark .VPSidebar .VPSidebarItem.is-link.is-active > .item .link > .text,
 .dark .VPSidebar .VPSidebarItem.is-link > .item .link:hover > .text {
-  filter: drop-shadow(0 0 6px rgba(129, 140, 248, 0.3));
+  filter: drop-shadow(0 0 4px rgba(129, 140, 248, 0.22));
+}
+
+/* Links wrapping a code chip (e.g. a linked file path): the chip
+   background moves to the anchor so the gradient can clip to the code
+   text alone — same morph as prose links */
+.vp-doc :is(p, li, td) a:not([class]):has(> code) {
+  background-color: var(--vp-code-bg);
+  border-radius: 4px;
+  text-decoration: none;
+}
+.vp-doc :is(p, li, td) a:not([class]) > code {
+  --link-stop-1: #a78bfa;
+  --link-stop-2: #818cf8;
+  --link-stop-3: #22d3ee;
+  background: linear-gradient(
+    165deg,
+    var(--link-stop-1) 10%,
+    var(--link-stop-2) 45%,
+    var(--link-stop-3) 95%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition:
+    --link-stop-1 0.3s ease,
+    --link-stop-2 0.3s ease,
+    --link-stop-3 0.3s ease;
+}
+.vp-doc :is(p, li, td) a:not([class]):hover > code {
+  --link-stop-1: #6d5ce8;
+  --link-stop-2: #6366f1;
+  --link-stop-3: #4f46e5;
+}
+.dark .vp-doc :is(p, li, td) a:not([class]):hover > code {
+  --link-stop-1: #c4b5fd;
+  --link-stop-2: #b1b8fd;
+  --link-stop-3: #a5b4fc;
+}
+
+/* Examples index — lemniscate logo tiles replace the default bullets */
+.vp-doc .ix-example-list ul {
+  list-style: none;
+  padding-left: 2px;
+}
+.vp-doc .ix-example-list li {
+  position: relative;
+  padding-left: 31px;
+}
+.vp-doc .ix-example-list li + li {
+  margin-top: 10px;
+}
+.vp-doc .ix-example-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.22em;
+  width: 19px;
+  height: 19px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none'%3E%3Cdefs%3E%3ClinearGradient id='ivg' x1='8' y1='14' x2='40' y2='34' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%2338BDF8'/%3E%3Cstop offset='0.5' stop-color='%232DD4BF'/%3E%3Cstop offset='1' stop-color='%2334D399'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='12' fill='%230D1226'/%3E%3Crect x='0.5' y='0.5' width='47' height='47' rx='11.5' stroke='white' stroke-opacity='0.08'/%3E%3Cpath d='M24 24 C 19 17, 10.6 17.6, 10.6 24 C 10.6 30.4, 19 31, 24 24 C 29 17, 37.4 17.6, 37.4 24 C 37.4 30.4, 29 31, 24 24 Z' stroke='url(%23ivg)' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 
 /* "Skill begins" divider — marks where standard.md switches from docs
@@ -1161,14 +1249,45 @@
   color: inherit;
 }
 
-/* inline link inside a feature card's details text */
+/* inline CTA link (feature cards, examples index) — gradient like
+   prose links; the class opts it back in past the :not([class]) guard */
+a.feature-inline-link {
+  --link-stop-1: #a78bfa;
+  --link-stop-2: #818cf8;
+  --link-stop-3: #22d3ee;
+  background: linear-gradient(
+    165deg,
+    var(--link-stop-1) 10%,
+    var(--link-stop-2) 45%,
+    var(--link-stop-3) 95%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 600;
+  transition:
+    --link-stop-1 0.3s ease,
+    --link-stop-2 0.3s ease,
+    --link-stop-3 0.3s ease,
+    filter 0.3s ease;
+}
+a.feature-inline-link:hover {
+  --link-stop-1: #6d5ce8;
+  --link-stop-2: #6366f1;
+  --link-stop-3: #4f46e5;
+}
+.dark a.feature-inline-link {
+  filter: drop-shadow(0 0 4px rgba(129, 140, 248, 0.2));
+}
+.dark a.feature-inline-link:hover {
+  --link-stop-1: #c4b5fd;
+  --link-stop-2: #b1b8fd;
+  --link-stop-3: #a5b4fc;
+}
 .VPFeatures .details .feature-inline-link {
-  color: var(--vp-c-brand-1);
+  color: transparent;
   font-weight: 600;
   white-space: nowrap;
-}
-.VPFeatures .details .feature-inline-link:hover {
-  text-decoration: underline;
 }
 
 /* Full editor lives on its own page: eager here, never paid by ordinary docs. */
