@@ -260,6 +260,25 @@ export default defineConfig({
           true,
         );
 
+        // Bare dynamic imports (chunks Vite emits WITHOUT the preload
+        // helper) fail as plain promise rejections — no vite:preloadError,
+        // no element error event. The rejection message is the only signal.
+        window.addEventListener('unhandledrejection', (event) => {
+          const reason = event.reason;
+          const message = String(
+            (reason && reason.message) || reason || '',
+          ).toLowerCase();
+          if (
+            !message.includes('dynamically imported module') &&
+            !message.includes('importing a module script failed')
+          ) {
+            return;
+          }
+
+          event.preventDefault();
+          handleAssetFailure();
+        });
+
         window.addEventListener(routeNotFoundEvent, (event) => {
           recoverNotFound(event.detail?.href ?? window.location.href);
         });
