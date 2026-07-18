@@ -255,7 +255,7 @@ npx ivue skill --all
     <div class="d">From a counter to a 20-million-cell grid — every example live, with its real source.</div>
     <span class="go">Explore →</span>
   </a>
-  <a href="https://stackblitz.com/github/infinite-system/ivue/tree/main/examples/playground" target="_blank" rel="noreferrer">
+  <a href="/examples/stackblitz">
     <div class="t">StackBlitz Playground</div>
     <div class="d">The whole example collection booted in your browser — edit anything, watch it react.</div>
     <span class="go">Open ⚡</span>

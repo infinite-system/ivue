@@ -27,6 +27,9 @@
   --ivue-link-underline: rgba(59, 130, 246, 0.45);
   --ivue-link-underline-hover: rgba(29, 78, 216, 0.75);
   --ivue-link-shadow: none;
+  /* card hover accents (borders + glows) follow the link family */
+  --ivue-link-accent: #2563eb;
+  --ivue-link-glow: rgba(37, 99, 235, 0.3);
 
   --vp-c-tip-1: var(--vp-c-brand-1);
   --vp-c-tip-soft: var(--vp-c-brand-soft);
@@ -50,6 +53,8 @@
   --ivue-link-underline: rgba(96, 165, 250, 0.45);
   --ivue-link-underline-hover: rgba(147, 197, 253, 0.75);
   --ivue-link-shadow: drop-shadow(0 1px 1px rgba(2, 6, 23, 0.55));
+  --ivue-link-accent: #60a5fa;
+  --ivue-link-glow: rgba(59, 130, 246, 0.38);
   --vp-c-brand-1: #818cf8;
   --vp-c-brand-2: #6366f1;
   --vp-c-brand-3: #4f46e5;
@@ -218,16 +223,6 @@
 .VPButton:active {
   transform: translateY(0) scale(0.98);
 }
-/* press feedback for every button-like surface — same reaction the
-   live demo buttons give */
-.ix .ix-standard-hero__cta:active {
-  transform: translateY(0) scale(0.97);
-}
-.ix-start a:active,
-.blog-card:active,
-.VPFeature:active {
-  transform: translateY(-1px) scale(0.985);
-}
 
 /* ---------- Feature cards ---------- */
 .VPFeature {
@@ -236,8 +231,8 @@
 }
 .VPFeature:hover {
   transform: translateY(-3px);
-  border-color: var(--vp-c-brand-1);
-  box-shadow: 0 18px 44px -20px rgba(99, 102, 241, 0.35);
+  border-color: var(--ivue-link-accent);
+  box-shadow: 0 18px 44px -20px var(--ivue-link-glow);
 }
 .VPFeature .title {
   letter-spacing: -0.01em;
@@ -757,8 +752,8 @@
 }
 .ix-start a:hover {
   transform: translateY(-3px);
-  border-color: var(--vp-c-brand-1);
-  box-shadow: 0 18px 44px -20px rgba(99, 102, 241, 0.35);
+  border-color: var(--ivue-link-accent);
+  box-shadow: 0 18px 44px -20px var(--ivue-link-glow);
 }
 .ix-start .t {
   font-weight: 650;
@@ -1030,6 +1025,8 @@ a.feature-inline-link,
 .blog-card .go,
 .VPSidebar .VPSidebarItem.is-link > .item .link > .text,
 .VPNavBar .VPNavBarMenuLink,
+.VPNav .VPMenu .VPMenuLink .link,
+.VPNav .VPFlyout .button .text,
 .VPDocAsideOutline .outline-link,
 .VPDocFooter .pager-link .title {
   background: linear-gradient(
@@ -1081,6 +1078,8 @@ a.feature-inline-link:hover,
   --link-stop-3: var(--vp-c-text-2);
 }
 .VPNavBar .VPNavBarMenuLink,
+.VPNav .VPMenu .VPMenuLink .link,
+.VPNav .VPFlyout .button .text,
 .VPDocFooter .pager-link .title {
   --link-stop-1: var(--vp-c-text-1);
   --link-stop-2: var(--vp-c-text-1);
@@ -1093,13 +1092,19 @@ a.feature-inline-link:hover,
 .VPSidebar .VPSidebarItem.is-link > .item .link:hover > .text,
 .VPNavBar .VPNavBarMenuLink:hover,
 .VPNavBar .VPNavBarMenuLink.active,
+.VPNav .VPMenu .VPMenuLink .link:hover,
+.VPNav .VPMenu .VPMenuLink.active .link,
+.VPNav .VPFlyout:hover .button .text,
 .VPDocAsideOutline .outline-link:hover,
 .VPDocAsideOutline .outline-link.active,
 .VPDocFooter .pager-link:hover .title {
   --link-stop-1: var(--ivue-link-1);
   --link-stop-2: var(--ivue-link-2);
   --link-stop-3: var(--ivue-link-3);
-  color: transparent;
+  /* !important is load-bearing: VitePress's scoped rules carry a
+     [data-v-*] attribute (+1 specificity) and repaint the text solid
+     brand in the production bundle — dev CSS order hides it */
+  color: transparent !important;
 }
 
 /* prose extras: the underline needs its own color under transparent
@@ -1686,4 +1691,19 @@ a.feature-inline-link {
   .VPDoc .cm-author {
     flex-direction: column;
   }
+}
+
+/* ===== Press feedback (must stay LAST: at equal specificity these
+   fight the :hover transforms defined above, and the later rule wins
+   the cascade — earlier placement silently loses the click compress) */
+.ix .ix-standard-hero__cta:active {
+  transform: translateY(0) scale(0.96);
+}
+.ix-start a:active,
+.blog-card:active,
+.VPFeature:active {
+  transform: translateY(-1px) scale(0.98);
+}
+a.feature-inline-link:active {
+  transform: scale(0.97);
 }
