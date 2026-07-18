@@ -14,6 +14,8 @@
   --ivue-emerald: #10b981;
   --ivue-grad: linear-gradient(120deg, #6366f1 10%, #34d399 90%);
   --ivue-grad-text: linear-gradient(105deg, #818cf8 20%, #6366f1 45%, #34d399 95%);
+  /* link gradient: purple → indigo → blue-leaning teal, steeper angle */
+  --ivue-grad-link: linear-gradient(165deg, #a78bfa 10%, #818cf8 45%, #2dd4bf 95%);
 
   --vp-c-tip-1: var(--vp-c-brand-1);
   --vp-c-tip-soft: var(--vp-c-brand-soft);
@@ -966,7 +968,7 @@
    links — cards, buttons, chips — and links wrapping a code chip keep
    their own styling; heading anchors stay theme-default. */
 .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)) {
-  background: var(--ivue-grad-text);
+  background: var(--ivue-grad-link);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -978,19 +980,19 @@
 }
 .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)):hover {
   filter: brightness(1.12);
-  text-decoration-color: rgba(52, 211, 153, 0.75);
+  text-decoration-color: rgba(45, 212, 191, 0.75);
 }
 /* the ethereal glow — dark mode only */
 .dark .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)) {
   filter: drop-shadow(0 0 10px rgba(129, 140, 248, 0.35));
 }
 .dark .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)):hover {
-  filter: brightness(1.12) drop-shadow(0 0 12px rgba(52, 211, 153, 0.5));
+  filter: brightness(1.12) drop-shadow(0 0 12px rgba(45, 212, 191, 0.5));
 }
 
 /* Sidebar: the current page wears the same gradient (+ glow in dark) */
 .VPSidebarItem.is-active > .item .link > .text {
-  background: var(--ivue-grad-text);
+  background: var(--ivue-grad-link);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
