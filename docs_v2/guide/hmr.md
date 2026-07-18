@@ -1,6 +1,6 @@
 ---
 title: Development & HMR
-description: ivue uses one Reactive() execution path in development, test, SSR, and production. Vite and Vue rebuild the owning component after class-module edits, keeping every class generation coherent without a dev-only proxy or grafting runtime.
+description: ivue uses one Reactive() execution path in development, test, SSR, and production. Vite and Vue rebuild the owning component after class-module edits, keeping every class generation coherent without any dev-only runtime.
 ---
 
 # Development & HMR
@@ -53,25 +53,6 @@ unsafe boundary   → Vite reloads the page
 
 No ivue-specific configuration changes that pipeline.
 
-## Why reconstruction is the complete operation
-
-A class instance combines several kinds of generation-specific state:
-
-- field initializers and constructor side effects;
-- cached refs, computeds, and singleton getters;
-- bound method references;
-- inheritance and `super` relationships;
-- native private brands;
-- watchers, listeners, and lifecycle registration.
-
-Replacing only prototype methods creates a hybrid object: old state and wiring
-running new behavior. Supporting that hybrid requires a class registry,
-construct proxy, live method slots, source signatures, edit classification,
-collision handling, and remount escalation.
-
-Owner reconstruction applies the complete new declaration. It needs none of
-that machinery and cannot silently retain an incompatible old fragment.
-
 ## Production parity
 
 `Reactive()` has one implementation across environments:
@@ -82,9 +63,6 @@ that machinery and cannot silently retain an incompatible old fragment.
 | Construction | native `new` | native `new` | native `new` |
 | Instance | plain object | plain object | plain object |
 | Method binding | direct lazy bind | direct lazy bind | direct lazy bind |
-| Class registry | none | none | none |
-| Construct proxy | none | none | none |
-| Live method slot | none | none | none |
 
 Vue's own development build and Vite still provide their normal diagnostics
 and module graph. The ivue engine adds no development-only execution path.
@@ -128,8 +106,7 @@ counter.increment === counter.increment; // true
 When Vue rebuilds the owner, cleanup removes callbacks retained by the old
 owner and the new owner registers methods from the new instance. Constructor
 callbacks and computed closures continue to delegate through thin closures for
-clarity, direct testing, and minimum captured state—not for cross-generation
-grafting.
+clarity, direct testing, and minimum captured state.
 
 ## Troubleshooting the ordinary HMR pipeline
 
