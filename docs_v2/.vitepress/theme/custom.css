@@ -961,6 +961,44 @@
   transition: color 0.15s ease;
 }
 
+/* ===== Gradient links — the "One kilobyte" treatment ===== */
+/* Prose links only (paragraphs, list items, table cells). Component
+   links — cards, buttons, chips — and links wrapping a code chip keep
+   their own styling; heading anchors stay theme-default. */
+.vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)) {
+  background: var(--ivue-grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-decoration: underline;
+  /* the text is transparent, so the underline needs its own color */
+  text-decoration-color: rgba(129, 140, 248, 0.45);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s ease, filter 0.2s ease;
+}
+.vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)):hover {
+  filter: brightness(1.12);
+  text-decoration-color: rgba(52, 211, 153, 0.75);
+}
+/* the ethereal glow — dark mode only */
+.dark .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)) {
+  filter: drop-shadow(0 0 10px rgba(129, 140, 248, 0.35));
+}
+.dark .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)):hover {
+  filter: brightness(1.12) drop-shadow(0 0 12px rgba(52, 211, 153, 0.5));
+}
+
+/* Sidebar: the current page wears the same gradient (+ glow in dark) */
+.VPSidebarItem.is-active > .item .link > .text {
+  background: var(--ivue-grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dark .VPSidebarItem.is-active > .item .link > .text {
+  filter: drop-shadow(0 0 9px rgba(129, 140, 248, 0.4));
+}
+
 /* "Skill begins" divider — marks where standard.md switches from docs
    preamble to the verbatim mirrored skill */
 .vp-doc .skill-begins {
