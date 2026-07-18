@@ -319,7 +319,7 @@ onUnmounted(() => {
 }
 .btn.brand {
   color: #fff;
-  background: linear-gradient(120deg, #3b82f6 10%, #1d4ed8 55%, #1e40af 95%);
+  background: #2563eb;
 }
 .btn.brand:hover {
   filter: brightness(1.08);
