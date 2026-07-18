@@ -1120,6 +1120,12 @@ a.feature-inline-link:hover,
   --link-stop-2: var(--vp-c-text-2);
   --link-stop-3: var(--vp-c-text-2);
 }
+/* the flyout chevron draws via a currentColor mask — the transparent
+   clip color on .text would erase it, so it gets its own color */
+.VPNav .VPFlyout .button .text .text-icon,
+.VPNav .VPFlyout .button .text [class*='vpi-'] {
+  color: var(--vp-c-text-2);
+}
 .VPNavBar .VPNavBarMenuLink,
 .VPNav .VPMenu .VPMenuLink .link,
 .VPNav .VPFlyout .button .text {
