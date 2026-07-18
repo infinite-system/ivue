@@ -1587,7 +1587,11 @@ a.feature-inline-link {
   transform: translateY(-1px);
 }
 .VPDoc .cm-channel strong {
-  color: var(--ivue-link-2);
+  color: var(--vp-c-text-1);
+  transition: color 0.18s ease;
+}
+.VPDoc .cm-channel:hover strong {
+  color: var(--ivue-link-1);
 }
 .VPDoc .cm-channel__title {
   display: flex;
