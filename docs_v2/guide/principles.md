@@ -111,5 +111,5 @@ pay-for-what-you-use. See [Lifecycle & Teardown](/guide/lifecycle-teardown).
 ::: info Want the formal version?
 These are the user-facing form of the engine's invariants. For the rigorous
 specification — mechanism, guarantees, and what each one makes *impossible* — see
-[Invariant-Based Design](/reference/invariants).
+[The Invariants Behind ivue](/reference/invariants).
 :::

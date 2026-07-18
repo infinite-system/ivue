@@ -186,4 +186,4 @@ equivalents without changing how ivue works.
 ## The formal specification
 
 Each guarantee the engine maintains — its mechanism, and what it makes
-impossible — is on the [Invariant-Based Design](/reference/invariants) page.
+impossible — is on the [The Invariants Behind ivue](/reference/invariants) page.

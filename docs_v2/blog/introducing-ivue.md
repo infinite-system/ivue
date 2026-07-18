@@ -133,7 +133,7 @@ hand-rolled JavaScript is [ivue vs the World](/guide/model-layer). The
 authoring standard — the same document we ship to AI coding agents as a
 skill — is [The Standard Operating Manual](/guide/standard). And the
 method that produced all of it has its own story, told at the end of
-[Invariant-Based Design](/reference/invariants).
+[The Invariants Behind ivue](/reference/invariants).
 
 ## Start
 

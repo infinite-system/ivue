@@ -195,4 +195,4 @@ you want real OOP in your reactivity: polymorphic, `super`-callable, cached
 derivations across an inheritance chain, which signal frameworks don't attempt.
 Composables still handle small, local logic — and ivue hosts them when they do.
 
-For the formal treatment of every guarantee, see [Invariant-Based Design](/reference/invariants).
+For the formal treatment of every guarantee, see [The Invariants Behind ivue](/reference/invariants).
