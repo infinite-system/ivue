@@ -1166,7 +1166,12 @@ a.feature-inline-link:hover,
 .vp-doc :is(p, li, td) a:not([class]):has(> code) {
   background-color: var(--vp-code-bg);
   border-radius: 6px;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: var(--ivue-link-underline);
+  text-underline-offset: 4px;
+}
+.vp-doc :is(p, li, td) a:not([class]):has(> code):hover {
+  text-decoration-color: var(--ivue-link-underline-hover);
 }
 
 /* Examples index — lemniscate logo tiles replace the default bullets */
