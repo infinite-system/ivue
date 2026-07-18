@@ -319,12 +319,12 @@ onUnmounted(() => {
 }
 .btn.brand {
   color: #fff;
-  background: #2563eb;
+  background: linear-gradient(120deg, #6366f1, #4f46e5);
 }
 .btn.brand:hover {
   filter: brightness(1.08);
   transform: translateY(-1px);
-  box-shadow: 0 12px 32px -12px rgba(59, 130, 246, 0.65);
+  box-shadow: 0 12px 32px -12px rgba(99, 102, 241, 0.6);
 }
 .btn.alt {
   color: var(--vp-c-text-1);

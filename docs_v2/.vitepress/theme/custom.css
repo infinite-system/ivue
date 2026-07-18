@@ -35,7 +35,7 @@
   --vp-c-tip-soft: var(--vp-c-brand-soft);
 
   --vp-font-family-base: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --vp-font-family-mono: 'IBM Plex Mono', 'Geist Mono', ui-monospace, monospace;
+  --vp-font-family-mono: 'Geist Mono', ui-monospace, monospace;
   /* inline code chip color — distinct from blue links and body text */
   --ivue-code-color: #7c3aed;
   /* light mode's default chip background is too faint under the mono */
@@ -566,9 +566,8 @@
   display: inline-block;
   padding: 10px 24px;
   border-radius: 999px;
-  /* one shade deeper than --ivue-grad so white text holds ≥4.5:1 contrast
-     across the whole pill */
-  background: linear-gradient(120deg, #4f46e5 10%, #059669 70%, #047857 95%);
+  /* the hero's indigo action gradient — one button language */
+  background: linear-gradient(120deg, #6366f1, #4f46e5);
   color: #fff;
   font-size: 0.95rem;
   font-weight: 650;
@@ -579,7 +578,7 @@
 .ix .ix-standard-hero__cta:hover {
   color: #fff;
   transform: translateY(-2px);
-  box-shadow: 0 14px 34px -14px rgba(52, 211, 153, 0.55);
+  box-shadow: 0 14px 34px -14px rgba(99, 102, 241, 0.6);
 }
 @media (prefers-reduced-motion: reduce) {
   .ix .ix-standard-hero__cta,
