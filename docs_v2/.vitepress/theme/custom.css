@@ -1019,7 +1019,7 @@
 }
 /* the ethereal glow — dark mode only */
 .dark .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)) {
-  filter: drop-shadow(0 0 10px rgba(129, 140, 248, 0.35));
+  filter: drop-shadow(0 0 6px rgba(129, 140, 248, 0.28));
 }
 /* …and a brighter monotonic periwinkle on dark hover */
 .dark .vp-doc :is(p, li, td) > a:not(.header-anchor):not(:has(code)):hover {
@@ -1027,7 +1027,7 @@
   --link-stop-2: #b1b8fd;
   --link-stop-3: #a5b4fc;
   text-decoration-color: rgba(165, 180, 252, 0.75);
-  filter: drop-shadow(0 0 12px rgba(165, 180, 252, 0.5));
+  filter: drop-shadow(0 0 8px rgba(165, 180, 252, 0.4));
 }
 
 /* Sidebar: the current page wears the same gradient (+ glow in dark) */
@@ -1038,7 +1038,7 @@
   color: transparent;
 }
 .dark .VPSidebarItem.is-active > .item .link > .text {
-  filter: drop-shadow(0 0 9px rgba(129, 140, 248, 0.4));
+  filter: drop-shadow(0 0 6px rgba(129, 140, 248, 0.3));
 }
 
 /* "Skill begins" divider — marks where standard.md switches from docs
