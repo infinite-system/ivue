@@ -38,6 +38,8 @@
   --vp-font-family-mono: 'IBM Plex Mono', 'Geist Mono', ui-monospace, monospace;
   /* inline code chip color — distinct from blue links and body text */
   --ivue-code-color: #7c3aed;
+  /* light mode's default chip background is too faint under the mono */
+  --vp-code-bg: rgba(116, 124, 148, 0.2);
 
   --vp-home-hero-name-color: transparent;
   --vp-home-hero-name-background: var(--ivue-grad-text);
@@ -58,6 +60,8 @@
   --ivue-link-accent: #60a5fa;
   --ivue-link-glow: rgba(59, 130, 246, 0.38);
   --ivue-code-color: #a78bfa;
+  /* dark keeps VitePress's adaptive chip background */
+  --vp-code-bg: var(--vp-c-default-soft);
   --vp-c-brand-1: #818cf8;
   --vp-c-brand-2: #6366f1;
   --vp-c-brand-3: #4f46e5;
