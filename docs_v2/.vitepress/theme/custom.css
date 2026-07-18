@@ -15,7 +15,7 @@
   --ivue-grad: linear-gradient(120deg, #6366f1 10%, #34d399 90%);
   --ivue-grad-text: linear-gradient(105deg, #818cf8 20%, #6366f1 45%, #34d399 95%);
   /* link gradient: purple → indigo → cyan, near-vertical */
-  --ivue-grad-link: linear-gradient(165deg, #a78bfa 10%, #818cf8 45%, #22d3ee 95%);
+  --ivue-grad-link: linear-gradient(165deg, #a78bfa 10%, #818cf8 45%, #14c4dd 95%);
 
   --vp-c-tip-1: var(--vp-c-brand-1);
   --vp-c-tip-soft: var(--vp-c-brand-soft);
@@ -980,7 +980,7 @@
 @property --link-stop-3 {
   syntax: '<color>';
   inherits: false;
-  initial-value: #22d3ee;
+  initial-value: #14c4dd;
 }
 /* Prose links only (paragraphs, list items, table cells). Component
    links — cards, buttons, chips — and links wrapping a code chip keep
@@ -989,7 +989,7 @@
 .vp-doc :is(p, li, td) > strong > a:not([class]):not(:has(code)) {
   --link-stop-1: #a78bfa;
   --link-stop-2: #818cf8;
-  --link-stop-3: #22d3ee;
+  --link-stop-3: #14c4dd;
   background: linear-gradient(
     165deg,
     var(--link-stop-1) 10%,
@@ -1064,7 +1064,7 @@
 .VPSidebar .VPSidebarItem.is-link > .item .link:hover > .text {
   --link-stop-1: #a78bfa;
   --link-stop-2: #818cf8;
-  --link-stop-3: #22d3ee;
+  --link-stop-3: #14c4dd;
   /* re-assert: VitePress's own active rule ties the base selector and
      wins on order, repainting the text solid brand */
   color: transparent;
@@ -1085,7 +1085,7 @@
 .vp-doc :is(p, li, td) a:not([class]) > code {
   --link-stop-1: #a78bfa;
   --link-stop-2: #818cf8;
-  --link-stop-3: #22d3ee;
+  --link-stop-3: #14c4dd;
   background: linear-gradient(
     165deg,
     var(--link-stop-1) 10%,
@@ -1254,7 +1254,7 @@
 a.feature-inline-link {
   --link-stop-1: #a78bfa;
   --link-stop-2: #818cf8;
-  --link-stop-3: #22d3ee;
+  --link-stop-3: #14c4dd;
   background: linear-gradient(
     165deg,
     var(--link-stop-1) 10%,
