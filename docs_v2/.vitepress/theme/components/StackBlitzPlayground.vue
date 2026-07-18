@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { withBase } from 'vitepress';
 
 declare const __IVUE_DEPLOYED_COMMIT__: string;
@@ -14,9 +14,28 @@ const reloadKey = 'ivue:stackblitz-coi-reload';
 // fresh iframe navigation, which lets StackBlitz reuse the import it just
 // prepared. Keep this to one retry: it is a first-load workaround, not a
 // polling loop, and the commit-pinned project URL must otherwise stay stable.
+// The retry fires ONLY when the workspace has not booted: the StackBlitz
+// SDK handshake (sdk.connect) resolves exactly when the embed is alive —
+// a successful first load cancels the timer instead of reloading.
 const embedAttempt = ref(0);
 const embedRetryDelay = 10_000;
 let embedRetryTimer: number | undefined;
+const embedFrame = ref<HTMLIFrameElement | null>(null);
+let embedBooted = false;
+
+async function watchEmbedBoot() {
+  const frame = embedFrame.value;
+  if (!frame) return;
+
+  try {
+    const { default: sdk } = await import('@stackblitz/sdk');
+    await sdk.connect(frame);
+    embedBooted = true;
+    window.clearTimeout(embedRetryTimer);
+  } catch {
+    // no handshake — the retry timer stays armed and decides
+  }
+}
 const deployedRef = __IVUE_DEPLOYED_COMMIT__ || 'main';
 const stackBlitzProjectUrl =
   `https://stackblitz.com/github/infinite-system/ivue/tree/${deployedRef}/examples/playground`;
@@ -50,9 +69,12 @@ function showFallback(message: string) {
 
 function startEmbed() {
   ready.value = true;
+  void nextTick(() => watchEmbedBoot());
 
   embedRetryTimer = window.setTimeout(() => {
+    if (embedBooted) return;
     embedAttempt.value = 1;
+    void nextTick(() => watchEmbedBoot());
   }, embedRetryDelay);
 }
 
@@ -137,6 +159,7 @@ onBeforeUnmount(() => {
 <template>
   <div v-if="ready" class="stackblitz-playground">
     <iframe
+      ref="embedFrame"
       title="ivue examples playground in StackBlitz"
       :src="embedUrl"
       allow="clipboard-read; clipboard-write; cross-origin-isolated; fullscreen"

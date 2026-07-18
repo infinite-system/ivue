@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "vitepress": "^1.6.3"
+  },
+  "dependencies": {
+    "@stackblitz/sdk": "^1.11.1"
   }
 }
