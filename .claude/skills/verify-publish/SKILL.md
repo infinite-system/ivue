@@ -26,9 +26,11 @@ seat.
    `node -e "console.log(require('./node_modules/ivue/package.json').version)"`
 
 3. **Tarball contents** — `ls node_modules/ivue` must show `dist`,
-   `bin`, `skills`; `dist/` must contain `index.es.js`, `index.umd.js`,
-   and the `.d.ts` files. Gzip `dist/index.es.js` and confirm the size
-   matches the release's measured number.
+   `bin`, `skills`; `dist/` must contain both entries in both formats —
+   `index.es.js` + `index.cjs`, `extras.es.js` + `extras.cjs` — and the
+   `.d.ts` files for each. Gzip `dist/index.es.js` (the 1.1 kB core) and
+   `dist/extras.es.js`, and confirm both match the release's measured
+   numbers.
 
 4. **Runtime smoke test** — a `smoke.mjs` run with plain `node`,
    importing from `'ivue'` (the registry copy). Assert at minimum:
@@ -42,6 +44,14 @@ seat.
      was never called
    - `propsWithDefaults` wraps object/array defaults in factories;
      `isClass` discriminates
+
+   And for the `ivue/extras` entry:
+   - `import { Static } from 'ivue/extras'` resolves (ESM) and
+     `require('ivue/extras')` resolves (CJS) — same for the core entry;
+   - `Static(X)` returns a subclass of `X` and leaves `X` untouched;
+   - a bound static has stable identity and survives detachment
+     (`const method = Class.method; method()` keeps `this`);
+   - the static inheritance walk applies and child overrides win.
 
 5. **Skill installer** — in the consumer repo:
 
