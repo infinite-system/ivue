@@ -1,6 +1,6 @@
 {
   "name": "ivue",
-  "version": "1.6.1",
+  "version": "2.0.0",
   "description": "Infinite Vue – Class Based Architecture for Vue 3",
   "type": "module",
   "exports": {
@@ -37,7 +37,7 @@
     "render:form-header": "node docs_v2/scripts/brand-image-generator.mjs form-header",
     "preview:demo": "npm run build:demo && vite preview demo --host",
     "preview:docs": "npm --prefix docs_v2 run preview",
-    "release": "yarn build && yarn publish",
+    "release": "npm run build && npm publish",
     "sync:skill": "node -e \"const fs=require('fs');fs.mkdirSync('skills/ivue',{recursive:true});fs.copyFileSync('.claude/skills/ivue/SKILL.md','skills/ivue/SKILL.md')\"",
     "prepack": "npm run sync:skill",
     "sync:examples": "node -e \"require('fs').copyFileSync('lib/Reactive.ts','examples/playground/src/ivue.ts')\"",
