@@ -19,7 +19,6 @@ const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
 const defineProperty = Object.defineProperty;
 const getOwnPropertyNames = Object.getOwnPropertyNames;
 const objectPrototype = Object.prototype;
-const getOwnPropertySymbols = Object.getOwnPropertySymbols;
 
 const $stopEffects = '$stopEffects';
 const $watch = '$watch';
@@ -30,6 +29,7 @@ const fn = 'function';
 const RAW = Symbol.for('ivue.raw'); // Per-instance back-pointer to the raw object
 const SCOPE = Symbol.for('ivue.scope'); // Lazily-created per-instance effect scope
 const PROCESSED = Symbol.for('ivue.processed'); // Flag to mark a prototype as "Reactified"
+const CACHE_KEYS = Symbol.for('ivue.cacheKeys'); // Per-prototype ivue instance-cache keys
 
 /**
  * Resolve the TRUE raw instance from whatever `this` the engine was entered
@@ -193,22 +193,34 @@ export function Reactive<C extends new (...args: any) => any>(
     if (prototypeHasOwnProperty(prototype, PROCESSED)) continue;
 
     const names = getOwnPropertyNames(prototype);
+    const cacheKeys: symbol[] = [];
 
     for (const key of names) {
       if (key === 'constructor') continue;
       const desc = getOwnPropertyDescriptor(prototype, key)!;
 
-      // A fresh symbol per (prototype, key). Because each prototype level gets
-      // its own symbol, a child override and its `super` counterpart cache
-      // under different keys and never collide.
-      const superKey = Symbol(key);
-
       if (typeof desc.value === fn) {
+        // A fresh symbol per (prototype,key). Because each prototype level gets
+        // its own symbol, a child override and its `super` counterpart cache
+        // under different keys and never collide.
+        const superKey = Symbol(key);
+        cacheKeys.push(superKey);
         convertToLazyBoundMethod(prototype, key, superKey, desc.value);
       } else if (desc.get) {
+        const superKey = Symbol(key);
+        cacheKeys.push(superKey);
         convertToLazyRef(prototype, key, superKey, desc.get, desc.set);
       }
     }
+
+    // Record this prototype layer's ivue-created instance cache keys once.
+    // Teardown can then remove only engine-owned cells while preserving any
+    // unrelated symbol properties attached by consumers.
+    defineProperty(prototype, CACHE_KEYS, {
+      configurable: false,
+      enumerable: false,
+      value: cacheKeys,
+    });
 
     // Mark this specific prototype level as processed
     defineProperty(prototype, PROCESSED, {
@@ -270,10 +282,18 @@ export function Reactive<C extends new (...args: any) => any>(
             const scope = raw[SCOPE];
             if (scope) scope.stop();
           } finally {
-            const symbols = getOwnPropertySymbols(raw);
-            for (const symbol of symbols) {
-              if (symbol === RAW) continue;
-              delete raw[symbol];
+            // SCOPE is ivue-owned but is not a method/getter cache key.
+            delete raw[SCOPE];
+
+            // Each processed prototype records the symbols it may cache on an
+            // instance. Walk Child -> Base and remove only those known keys.
+            let prototype = getPrototypeOf(raw);
+            while (prototype && prototype !== objectPrototype) {
+              if (prototypeHasOwnProperty(prototype, CACHE_KEYS)) {
+                const cacheKeys = prototype[CACHE_KEYS] as readonly symbol[];
+                for (const cacheKey of cacheKeys) delete raw[cacheKey];
+              }
+              prototype = getPrototypeOf(prototype);
             }
           }
         }

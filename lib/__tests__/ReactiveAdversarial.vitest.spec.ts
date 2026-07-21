@@ -35,6 +35,45 @@ describe('Reactive adversarial boundaries', () => {
     expect(store.count).not.toBe(originalCount);
   });
 
+  it('teardown clears only engine cache keys — consumer symbols survive', () => {
+    const consumerSymbol = Symbol('consumer-metadata');
+
+    class $Parent {
+      get inherited() {
+        return ref('parent');
+      }
+    }
+
+    class $Child extends $Parent {
+      get own() {
+        return ref('child');
+      }
+
+      grow() {
+        return this.own.value;
+      }
+    }
+
+    const Child = Reactive($Child);
+    const child: any = new Child();
+
+    // materialize cells on BOTH prototype layers + a bound method
+    const inheritedCell = child.inherited;
+    const ownCell = child.own;
+    const boundGrow = child.grow;
+    // a symbol the engine did NOT create — foreign metadata on the instance
+    child[consumerSymbol] = 'must survive';
+
+    child.$stopEffects();
+
+    // engine cells across the whole chain are gone: fresh identities
+    expect(child.inherited).not.toBe(inheritedCell);
+    expect(child.own).not.toBe(ownCell);
+    expect(child.grow).not.toBe(boundGrow);
+    // the consumer's symbol is untouched
+    expect(child[consumerSymbol]).toBe('must survive');
+  });
+
   it('can allocate a fresh watcher scope after teardown', () => {
     class $Store {
       get count() {
