@@ -275,16 +275,13 @@ export function Reactive<C extends new (...args: any) => any>(
 
           // Each processed prototype's PROCESSED marker carries the
           // symbols it may cache on an instance. Walk Child -> Base and
-          // remove only those known keys. (`!== true` tolerates a level
-          // processed by an older engine copy whose marker is a bare
-          // boolean — its keys are unknown and stay.)
+          // remove only those known keys.
           let prototype = getPrototypeOf(raw);
           while (prototype && prototype !== objectPrototype) {
             const cacheKeys = prototype[PROCESSED] as
               | readonly symbol[]
-              | true
               | undefined;
-            if (cacheKeys && cacheKeys !== true) {
+            if (cacheKeys) {
               for (const cacheKey of cacheKeys) delete raw[cacheKey];
             }
             prototype = getPrototypeOf(prototype);
