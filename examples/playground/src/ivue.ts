@@ -14,6 +14,7 @@ import {
 const hasOwn = Object.hasOwn;
 const getPrototypeOf = Object.getPrototypeOf;
 const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+const getOwnPropertyNames = Object.getOwnPropertyNames;
 const defineProperty = Object.defineProperty;
 const objectPrototype = Object.prototype;
 
@@ -187,7 +188,7 @@ export function Reactive<C extends new (...args: any) => any>(
     // This handles diamond inheritance and multiple Reactive children safely.
     if (hasOwn(prototype, PROCESSED)) continue;
 
-    const names = Object.getOwnPropertyNames(prototype);
+    const names = getOwnPropertyNames(prototype);
     const cacheKeys: symbol[] = [];
 
     for (const key of names) {
