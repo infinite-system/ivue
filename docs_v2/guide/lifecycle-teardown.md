@@ -102,16 +102,46 @@ Call it to dispose an instance:
 instance.$stopEffects()
 ```
 
-It does three things, in order:
+It does two things, in order:
 
-1. runs your `stopEffects()` method if you defined one (extra cleanup hook),
-2. stops the effect scope — **every** watcher created via `$watch` / `$watchEffect`,
-3. clears all cached refs/computeds/methods so the instance can be collected.
+1. stops the effect scope — **every** watcher created via `$watch` / `$watchEffect`,
+2. clears all cached refs/computeds/methods so the instance can be collected.
+
+There are **no hooks** — ivue never calls your code, at construction (no
+auto-`init()`) or at teardown. Richer cleanup composes as an ordinary
+method — see below.
 
 After teardown, accessing a member re-materializes it fresh. The whole
 lifecycle, live:
 
 <DemoTeardown />
+
+### Richer cleanup: an ordinary method, no hooks
+
+Non-Vue resources — sockets, event listeners, timers, subscriptions from
+composables — need cleanup the engine cannot know about. The pattern is
+plain composition: a method of yours (call it `dispose()`, `cleanup()`,
+whatever fits the domain) does its own work **first, while state is still
+alive**, then resets the engine:
+
+```ts
+class $Session {
+  get socket() {
+    return ref<WebSocket | null>(null);
+  }
+
+  // an ordinary method — the owner calls it like any other
+  dispose() {
+    this.socket.value?.close();
+    this.$stopEffects();
+  }
+}
+```
+
+No reserved names, no auto-calls, nothing to memorize: teardown is a call
+you write, exactly like construction is a constructor you write. A generic
+owner that only knows the engine API can still call `$stopEffects()`
+directly — it just resets the reactive overlay and nothing else.
 
 ## Teardown is a full reset — deactivate, then re-activate
 

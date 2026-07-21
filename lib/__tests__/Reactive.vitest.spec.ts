@@ -701,20 +701,23 @@ describe('Reactive()', () => {
       expect(m2()).toBe('pong');
     });
 
-    it('calls a user-defined stopEffects() hook if present', () => {
-      let stopped = 0;
+    it('never auto-calls user methods on teardown — no hooks, by design', () => {
+      let called = 0;
       class Store {
         get x() {
           return ref(1);
         }
+        // an ordinary method that HAPPENS to be named like the old hook —
+        // ivue must not invoke it (ivue never calls user code)
         stopEffects() {
-          stopped++;
+          called++;
         }
       }
       const instance: any = new (Reactive(Store))();
-      instance.x; // materialize a cache entry
+      const originalX = instance.x; // materialize a cache entry
       (instance as any).$stopEffects();
-      expect(stopped).toBe(1);
+      expect(called).toBe(0);
+      expect(instance.x).not.toBe(originalX); // teardown still complete
     });
 
     it('skips the RAW symbol while iterating (no crash on the raw anchor)', () => {

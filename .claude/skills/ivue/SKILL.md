@@ -374,11 +374,12 @@ class $Session {
     //   getCurrentScope() && onScopeDispose(() => this.$stopEffects());
   }
 
-  // Optional hook — $stopEffects() calls this FIRST: put non-Vue
-  // cleanup here (sockets, listeners from composables first-touched
-  // after setup).
-  stopEffects() {
+  // CLEANUP composes as an ORDINARY method — no hooks, no reserved
+  // names, ivue never auto-calls your code. Do the non-Vue work
+  // (sockets, listeners from composables), then reset the engine.
+  dispose() {
     this.disconnect();
+    this.$stopEffects();
   }
 
   onUserChanged(user: User | null, previousUser: User | null) {
@@ -399,9 +400,8 @@ export namespace Session {
   export type Instance = typeof Class.Instance;
 }
 
-// The owner disposes: stops the scope, runs stopEffects(), and
-// clears caches.
-session.$stopEffects();
+// The owner disposes — the class's own method, like any other:
+session.dispose();
 ```
 
 ## DO / NEVER
@@ -420,6 +420,7 @@ session.$stopEffects();
 | ✅ `defineExpose(box as X.Instance)` | ❌ `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers |
 | ✅ constructor runs init; register hooks/watchers there | ❌ add an `init()` method expecting auto-call — ivue never calls it |
 | ✅ plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | ❌ default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |
+| ✅ compose cleanup as an ordinary method — `dispose() { /* non-Vue cleanup */ this.$stopEffects(); }` | ❌ expect a teardown hook — ivue auto-calls NOTHING (no `init()`, no `stopEffects()`) |
 
 ## The unwrapping-surface typing invariant
 
@@ -463,10 +464,11 @@ until mount — use `?.` in watch getters).
   its leaf reads subscribe directly (non-intuitive but structural).
 - The source MUST be the FUNCTION form. `watch(instance.plainGetter, cb)` passes a
   dead snapshot and never fires.
-- `$stopEffects()` stops the instance scope, runs your optional `stopEffects()`
-  hook, then clears cached Refs/Computeds; instances that never `$watch` allocate no
-  scope. Every outliving instance needs an OWNER that calls it — or, when
-  constructed inside some scope, auto-wire:
+- `$stopEffects()` stops the instance scope and clears cached Refs/Computeds;
+  instances that never `$watch` allocate no scope. There are NO hooks — richer
+  cleanup is an ordinary method that does its work and then calls
+  `$stopEffects()` itself. Every outliving instance needs an OWNER that calls
+  it — or, when constructed inside some scope, auto-wire:
   `getCurrentScope() && onScopeDispose(() => this.$stopEffects());`
 - Do NOT default to `this.$watch` in a component-scoped constructor: the
   component scope cannot see the instance scope, so without `$stopEffects`

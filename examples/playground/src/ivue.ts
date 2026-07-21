@@ -219,8 +219,8 @@ export function Reactive<C extends new (...args: any) => any>(
   // IDEMPOTENCY SENTINEL only — one key stands for the whole trio, so a
   // repeated Reactive() call (diamond imports, duplicate bundled engine
   // copies) skips re-injection. It is NOT override protection: the $-helper
-  // names are reserved engine API (custom teardown goes in the
-  // `stopEffects()` hook, never by shadowing the $ layer).
+  // names are reserved engine API (richer cleanup is an ordinary method
+  // that calls $stopEffects() itself — ivue never auto-calls user code).
   if (!hasOwn(targetClass.prototype, '$stopEffects')) {
     /**
      * Register a watcher in this instance's lazily-created effect scope.
@@ -256,8 +256,9 @@ export function Reactive<C extends new (...args: any) => any>(
 
     /**
      * Tear down the instance: stop its effect scope (any watchers created via
-     * $watch), run a user `stopEffects()` hook if present, and drop all cached
-     * cells so refs/computeds become collectable.
+     * $watch) and drop all cached cells so refs/computeds become collectable.
+     * No hooks — ivue never calls user code; compose richer cleanup as an
+     * ordinary method that does its own work and then calls $stopEffects().
      */
     defineProperty(targetClass.prototype, '$stopEffects', {
       enumerable: false,
@@ -266,31 +267,27 @@ export function Reactive<C extends new (...args: any) => any>(
       value: function (this: any) {
         const raw = resolveRaw(this);
         try {
-          if (typeof raw.stopEffects === 'function') raw.stopEffects();
+          const scope = raw[SCOPE];
+          if (scope) scope.stop();
         } finally {
-          try {
-            const scope = raw[SCOPE];
-            if (scope) scope.stop();
-          } finally {
-            // SCOPE is ivue-owned but is not a method/getter cache key.
-            delete raw[SCOPE];
+          // SCOPE is ivue-owned but is not a method/getter cache key.
+          delete raw[SCOPE];
 
-            // Each processed prototype's PROCESSED marker carries the
-            // symbols it may cache on an instance. Walk Child -> Base and
-            // remove only those known keys. (`!== true` tolerates a level
-            // processed by an older engine copy whose marker is a bare
-            // boolean — its keys are unknown and stay.)
-            let prototype = getPrototypeOf(raw);
-            while (prototype && prototype !== objectPrototype) {
-              const cacheKeys = prototype[PROCESSED] as
-                | readonly symbol[]
-                | true
-                | undefined;
-              if (cacheKeys && cacheKeys !== true) {
-                for (const cacheKey of cacheKeys) delete raw[cacheKey];
-              }
-              prototype = getPrototypeOf(prototype);
+          // Each processed prototype's PROCESSED marker carries the
+          // symbols it may cache on an instance. Walk Child -> Base and
+          // remove only those known keys. (`!== true` tolerates a level
+          // processed by an older engine copy whose marker is a bare
+          // boolean — its keys are unknown and stay.)
+          let prototype = getPrototypeOf(raw);
+          while (prototype && prototype !== objectPrototype) {
+            const cacheKeys = prototype[PROCESSED] as
+              | readonly symbol[]
+              | true
+              | undefined;
+            if (cacheKeys && cacheKeys !== true) {
+              for (const cacheKey of cacheKeys) delete raw[cacheKey];
             }
+            prototype = getPrototypeOf(prototype);
           }
         }
       },
@@ -435,7 +432,7 @@ export type ReactiveInstance<T> = T &
     $watch: typeof watch;
     /** Register a watchEffect in the instance's lazy effect scope (same signature as Vue `watchEffect`). */
     $watchEffect: typeof watchEffect;
-    /** Stop the instance's effect scope, run user `stopEffects()`, and drop cached cells. */
+    /** Stop the instance's effect scope and drop cached cells. */
     $stopEffects: () => void;
   };
 

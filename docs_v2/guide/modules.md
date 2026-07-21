@@ -218,8 +218,9 @@ standard cross-request rule for module state, not a new hazard.
 
 **Effect-creating composables.** `get $mouse() { return useMouse() }` may be
 first-touched after `setup()` finishes. Its listeners then live outside the
-component's scope — own their cleanup in your `stopEffects()` hook so
-[`$stopEffects`](/guide/lifecycle-teardown) tears them down.
+component's scope — own their cleanup in an ordinary dispose method that
+does its work and then calls
+[`$stopEffects()`](/guide/lifecycle-teardown).
 :::
 
 ## Generic classes

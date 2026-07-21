@@ -4,16 +4,24 @@ import { Reactive } from '../Reactive';
 import { Kernel } from '../kernel';
 
 describe('Reactive adversarial boundaries', () => {
-  it('finishes teardown when the user cleanup hook throws', () => {
+  it('richer cleanup composes as an ordinary method calling $stopEffects', () => {
     const observed: number[] = [];
+    let closed = 0;
 
     class $Store {
       get count() {
         return ref(0);
       }
 
-      stopEffects() {
-        throw new Error('socket cleanup failed');
+      // the composition pattern: no reserved names, no auto-calls —
+      // the class's own dispose() does its work, then resets the engine
+      dispose() {
+        this.closeSocket();
+        (this as any).$stopEffects();
+      }
+
+      closeSocket() {
+        closed++;
       }
     }
 
@@ -28,11 +36,13 @@ describe('Reactive adversarial boundaries', () => {
 
     originalCount.value = 1;
     expect(observed).toEqual([1]);
-    expect(() => store.$stopEffects()).toThrow('socket cleanup failed');
 
+    store.dispose();
+
+    expect(closed).toBe(1);
     originalCount.value = 2;
-    expect(observed).toEqual([1]);
-    expect(store.count).not.toBe(originalCount);
+    expect(observed).toEqual([1]); // watcher dead
+    expect(store.count).not.toBe(originalCount); // cells reset
   });
 
   it('teardown clears only engine cache keys — consumer symbols survive', () => {

@@ -88,17 +88,18 @@ instance.$watchEffect(() => render(instance.width.value, instance.height.value))
 
 Disposes the instance, in order:
 
-1. runs your `stopEffects()` method if you defined one — the hook for
-   non-Vue cleanup (sockets, subscriptions);
-2. stops the effect scope — every `$watch` / `$watchEffect` watcher;
-3. clears all cached Refs/Computeds and bound methods, so the instance can
+1. stops the effect scope — every `$watch` / `$watchEffect` watcher;
+2. clears all cached Refs/Computeds and bound methods, so the instance can
    be garbage-collected.
 
 ```ts
 instance.$stopEffects()
 ```
 
-Accessing a member afterwards re-materializes it fresh.
+Accessing a member afterwards re-materializes it fresh. There are no
+teardown hooks — richer cleanup is an ordinary method of yours that does
+its own work and then calls `$stopEffects()`
+([Lifecycle & Teardown](/guide/lifecycle-teardown)).
 
 ## `propsWithDefaults(defaults, typedProps, cloner?)`
 

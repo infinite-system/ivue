@@ -204,5 +204,7 @@ number was a **harness artifact, not library behavior** — when a number
   never scaffold vendor folders the project doesn't use (see `bin/ivue.mjs`).
 - **Teardown must survive user cleanup failures.** A throwing `stopEffects()`
   hook once prevented the instance scope from stopping and left cached cells
-  alive. Keep scope shutdown and cache deletion in `finally` paths, propagate
-  the original hook error, and test both outcomes together.
+  alive. The hook itself was later removed (ivue auto-calls NOTHING — richer
+  cleanup composes as an ordinary method calling `$stopEffects()`), but the
+  discipline stays: keep scope shutdown and cache deletion in `finally` paths
+  so a throwing `scope.stop()` can never leak cached cells.
