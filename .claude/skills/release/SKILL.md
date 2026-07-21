@@ -50,6 +50,23 @@ git tag -a ivue@2.0.0 -m "ivue 2.0.0 — <one-line highlight>" <commit>
   `.claude/skills/ivue/SKILL.md` → `skills/ivue/SKILL.md` into the
   tarball. Offer `npm pack --dry-run` as a pre-flight instead.
 
+## Release notes — always hand the user paste-ready text
+
+After tagging, ALWAYS produce release-notes text in the final message so
+the user can paste it straight into the GitHub release for the tag
+(title + body). Build it from the real history — `git log <previous
+ivue@ tag>..<bump commit> --oneline` — never from memory alone.
+
+- **Title**: `ivue@X.Y.Z — <the one-line story of the release>`.
+- **Body shape**: a short lead paragraph saying what the release IS;
+  then `### Breaking` (omit when none) with each break stating the old
+  behavior, the new behavior, and the migration; then `### Changed` /
+  `### Fixed` bullets in plain sentences (no bare commit hashes); close
+  with the measured numbers when the engine changed — gzipped size and
+  coverage, stated as measurements.
+- Write for a reader who was not in the sessions: no internal codenames,
+  no draft history — the same timeless-present discipline as the docs.
+
 ## Order of operations (summary)
 
 1. Gates green → 2. bump `package.json` → 3. `chore(release): X.Y.Z`
