@@ -3,11 +3,18 @@
  */
 import { describe, expect, it } from 'vitest';
 import * as packageEntry from '../index';
+import * as extrasEntry from '../extras';
 import { Kernel, kernel } from '../kernel';
 
 describe('package entry (index.ts)', () => {
   it('re-exports the engine surface', () => {
     expect(typeof packageEntry.Reactive).toBe('function');
+  });
+});
+
+describe('extras entry (extras.ts)', () => {
+  it('re-exports the toolkit beyond the core', () => {
+    expect(typeof extrasEntry.Static).toBe('function');
   });
 });
 

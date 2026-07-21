@@ -30,11 +30,18 @@ export default defineConfig({
     minify: 'esbuild',
     cssCodeSplit: true,
     lib: {
-      entry: './lib/index.ts',
-      formats: ['es', 'umd'],
-      // the name expose in umd mode
+      // Multi-entry: the reactive core stays alone in `ivue` (the 1.1 kB
+      // gate measures dist/index.es.js); the toolkit beyond the core ships
+      // from `ivue/extras`. UMD cannot do multi-entry, so the require()
+      // path is plain CJS.
+      entry: {
+        index: './lib/index.ts',
+        extras: './lib/extras.ts',
+      },
+      formats: ['es', 'cjs'],
       name: pkg.name,
-      fileName: (format) => `index.${format}.js`,
+      fileName: (format, entryName) =>
+        format === 'es' ? `${entryName}.es.js` : `${entryName}.cjs`,
     },
     rollupOptions: {
       external: ['vue'],
