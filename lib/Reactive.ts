@@ -11,13 +11,10 @@ import {
 /**
  * Constants & Helpers
  */
-const prototypeHasOwnProperty = Object.prototype.hasOwnProperty.call.bind(
-  Object.prototype.hasOwnProperty,
-);
+const hasOwn = Object.hasOwn;
 const getPrototypeOf = Object.getPrototypeOf;
 const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
 const defineProperty = Object.defineProperty;
-const getOwnPropertyNames = Object.getOwnPropertyNames;
 const objectPrototype = Object.prototype;
 
 const $stopEffects = '$stopEffects';
@@ -28,8 +25,10 @@ const fn = 'function';
 // stamped by another copy of the engine.
 const RAW = Symbol.for('ivue.raw'); // Per-instance back-pointer to the raw object
 const SCOPE = Symbol.for('ivue.scope'); // Lazily-created per-instance effect scope
-const PROCESSED = Symbol.for('ivue.processed'); // Flag to mark a prototype as "Reactified"
-const CACHE_KEYS = Symbol.for('ivue.cacheKeys'); // Per-prototype ivue instance-cache keys
+// Marks a prototype level as "Reactified"; its VALUE is the list of
+// engine-created instance-cache symbols for that level, so teardown can
+// remove exactly the engine's cells and nothing else.
+const PROCESSED = Symbol.for('ivue.processed');
 
 /**
  * Resolve the TRUE raw instance from whatever `this` the engine was entered
@@ -190,9 +189,9 @@ export function Reactive<C extends new (...args: any) => any>(
   for (const prototype of chain) {
     // OPTIMIZATION: Skip if this prototype layer is already "Reactified".
     // This handles diamond inheritance and multiple Reactive children safely.
-    if (prototypeHasOwnProperty(prototype, PROCESSED)) continue;
+    if (hasOwn(prototype, PROCESSED)) continue;
 
-    const names = getOwnPropertyNames(prototype);
+    const names = Object.getOwnPropertyNames(prototype);
     const cacheKeys: symbol[] = [];
 
     for (const key of names) {
@@ -213,25 +212,15 @@ export function Reactive<C extends new (...args: any) => any>(
       }
     }
 
-    // Record this prototype layer's ivue-created instance cache keys once.
-    // Teardown can then remove only engine-owned cells while preserving any
-    // unrelated symbol properties attached by consumers.
-    defineProperty(prototype, CACHE_KEYS, {
-      configurable: false,
-      enumerable: false,
-      value: cacheKeys,
-    });
-
-    // Mark this specific prototype level as processed
+    // Mark this prototype level as processed; the marker carries the
+    // level's engine cache keys (see PROCESSED above).
     defineProperty(prototype, PROCESSED, {
-      configurable: false,
-      enumerable: false,
-      value: true,
+      value: cacheKeys,
     });
   }
 
   // Inject teardown + watch helpers (once per class)
-  if (!prototypeHasOwnProperty(targetClass.prototype, $stopEffects)) {
+  if (!hasOwn(targetClass.prototype, $stopEffects)) {
     /**
      * Register a watcher in this instance's lazily-created effect scope.
      * The scope is allocated only on first use, so pure-data classes that
@@ -285,12 +274,18 @@ export function Reactive<C extends new (...args: any) => any>(
             // SCOPE is ivue-owned but is not a method/getter cache key.
             delete raw[SCOPE];
 
-            // Each processed prototype records the symbols it may cache on an
-            // instance. Walk Child -> Base and remove only those known keys.
+            // Each processed prototype's PROCESSED marker carries the
+            // symbols it may cache on an instance. Walk Child -> Base and
+            // remove only those known keys. (`!== true` tolerates a level
+            // processed by an older engine copy whose marker is a bare
+            // boolean — its keys are unknown and stay.)
             let prototype = getPrototypeOf(raw);
             while (prototype && prototype !== objectPrototype) {
-              if (prototypeHasOwnProperty(prototype, CACHE_KEYS)) {
-                const cacheKeys = prototype[CACHE_KEYS] as readonly symbol[];
+              const cacheKeys = prototype[PROCESSED] as
+                | readonly symbol[]
+                | true
+                | undefined;
+              if (cacheKeys && cacheKeys !== true) {
                 for (const cacheKey of cacheKeys) delete raw[cacheKey];
               }
               prototype = getPrototypeOf(prototype);
