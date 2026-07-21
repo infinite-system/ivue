@@ -17,10 +17,6 @@ const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
 const defineProperty = Object.defineProperty;
 const objectPrototype = Object.prototype;
 
-const $stopEffects = '$stopEffects';
-const $watch = '$watch';
-const $watchEffect = '$watchEffect';
-const fn = 'function';
 // Identity symbols are global so every bundled copy agrees with objects
 // stamped by another copy of the engine.
 const RAW = Symbol.for('ivue.raw'); // Per-instance back-pointer to the raw object
@@ -198,7 +194,7 @@ export function Reactive<C extends new (...args: any) => any>(
       if (key === 'constructor') continue;
       const desc = getOwnPropertyDescriptor(prototype, key)!;
 
-      if (typeof desc.value === fn) {
+      if (typeof desc.value === 'function') {
         // A fresh symbol per (prototype,key). Because each prototype level gets
         // its own symbol, a child override and its `super` counterpart cache
         // under different keys and never collide.
@@ -219,14 +215,19 @@ export function Reactive<C extends new (...args: any) => any>(
     });
   }
 
-  // Inject teardown + watch helpers (once per class)
-  if (!hasOwn(targetClass.prototype, $stopEffects)) {
+  // Inject the $watch/$watchEffect/$stopEffects helpers. The guard is an
+  // IDEMPOTENCY SENTINEL only — one key stands for the whole trio, so a
+  // repeated Reactive() call (diamond imports, duplicate bundled engine
+  // copies) skips re-injection. It is NOT override protection: the $-helper
+  // names are reserved engine API (custom teardown goes in the
+  // `stopEffects()` hook, never by shadowing the $ layer).
+  if (!hasOwn(targetClass.prototype, '$stopEffects')) {
     /**
      * Register a watcher in this instance's lazily-created effect scope.
      * The scope is allocated only on first use, so pure-data classes that
      * never watch pay nothing. Has the same signature as Vue's `watch`.
      */
-    defineProperty(targetClass.prototype, $watch, {
+    defineProperty(targetClass.prototype, '$watch', {
       enumerable: false,
       configurable: true,
       writable: true,
@@ -241,7 +242,7 @@ export function Reactive<C extends new (...args: any) => any>(
     /**
      * Register a watchEffect in the same lazy per-instance scope.
      */
-    defineProperty(targetClass.prototype, $watchEffect, {
+    defineProperty(targetClass.prototype, '$watchEffect', {
       enumerable: false,
       configurable: true,
       writable: true,
@@ -258,14 +259,14 @@ export function Reactive<C extends new (...args: any) => any>(
      * $watch), run a user `stopEffects()` hook if present, and drop all cached
      * cells so refs/computeds become collectable.
      */
-    defineProperty(targetClass.prototype, $stopEffects, {
+    defineProperty(targetClass.prototype, '$stopEffects', {
       enumerable: false,
       configurable: true,
       writable: true,
       value: function (this: any) {
         const raw = resolveRaw(this);
         try {
-          if (typeof raw.stopEffects === fn) raw.stopEffects();
+          if (typeof raw.stopEffects === 'function') raw.stopEffects();
         } finally {
           try {
             const scope = raw[SCOPE];
