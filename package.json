@@ -40,6 +40,7 @@
     "build:docs": "npm run sync:examples && npm --prefix docs_v2 run build",
     "render:og": "node docs_v2/scripts/brand-image-generator.mjs og",
     "render:form-header": "node docs_v2/scripts/brand-image-generator.mjs form-header",
+    "render:banner": "node docs_v2/scripts/brand-image-generator.mjs blog",
     "preview:demo": "npm run build:demo && vite preview demo --host",
     "preview:docs": "npm --prefix docs_v2 run preview",
     "release": "npm run build && npm publish",

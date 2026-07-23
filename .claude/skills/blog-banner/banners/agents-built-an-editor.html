@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(900px 500px at 20% -10%, rgba(99, 102, 241, 0.22), transparent 60%),
+      radial-gradient(1000px 600px at 105% 115%, rgba(34, 211, 238, 0.16), transparent 55%),
+      #050a18;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.07) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(800px 500px at 50% 45%, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(800px 500px at 50% 45%, black 30%, transparent 75%);
+  }
+  .terminal {
+    position: absolute; left: 90px; top: 96px;
+    width: 640px; height: 438px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(10, 18, 40, 0.96), rgba(6, 11, 26, 0.98));
+    border: 1px solid rgba(96, 165, 250, 0.45);
+    box-shadow:
+      0 0 90px rgba(59, 130, 246, 0.35),
+      0 0 26px rgba(59, 130, 246, 0.25),
+      inset 0 0 50px rgba(30, 58, 138, 0.25);
+  }
+  .titlebar {
+    height: 46px; display: flex; align-items: center; gap: 9px;
+    padding: 0 20px; border-bottom: 1px solid rgba(96, 165, 250, 0.25);
+  }
+  .dot { width: 13px; height: 13px; border-radius: 50%; opacity: 0.9; }
+  .dot.red { background: #f87171; } .dot.yellow { background: #fbbf24; } .dot.green { background: #34d399; }
+  .tab {
+    margin-left: 18px; font-size: 15px; color: #93c5fd;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(96, 165, 250, 0.35);
+    padding: 4px 14px; border-radius: 7px;
+  }
+  .code { padding: 26px 30px; font-size: 19px; line-height: 1.85; }
+  .ln { color: #334a77; display: inline-block; width: 38px; user-select: none; }
+  .kw { color: #818cf8; } .cls { color: #67e8f9; } .fn { color: #60a5fa; }
+  .cm { color: #3d5d9c; } .base { color: #b7cdf3; }
+  .caret {
+    display: inline-block; width: 10px; height: 22px; vertical-align: -4px;
+    background: #22d3ee; box-shadow: 0 0 14px rgba(34, 211, 238, 0.9);
+  }
+  .right { position: absolute; left: 790px; top: 150px; width: 340px; }
+  .brand {
+    font-size: 30px; letter-spacing: 0.06em; color: #7da4e8;
+    margin-bottom: 26px;
+  }
+  .brand b { color: #e0ecff; }
+  .headline {
+    font-size: 40px; line-height: 1.22; color: #eaf2ff; font-weight: 700;
+    text-shadow: 0 0 34px rgba(59, 130, 246, 0.45);
+    margin-bottom: 30px;
+  }
+  .headline .glow { color: #67e8f9; text-shadow: 0 0 30px rgba(34, 211, 238, 0.75); }
+  .sub { font-size: 21px; line-height: 1.6; color: #7e9cd0; }
+  .beam {
+    position: absolute; top: 315px; left: 700px; width: 120px; height: 2px;
+    background: linear-gradient(90deg, rgba(34, 211, 238, 0), rgba(34, 211, 238, 0.9), rgba(34, 211, 238, 0));
+    box-shadow: 0 0 18px rgba(34, 211, 238, 0.8);
+  }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="terminal">
+    <div class="titlebar">
+      <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+      <span class="tab">Editor.ts — invar</span>
+    </div>
+    <div class="code">
+      <div><span class="ln">1</span><span class="cm">// 292 commits. 153 files. One computed().</span></div>
+      <div><span class="ln">2</span><span class="kw">class</span> <span class="cls">$Editor</span> <span class="base">{</span></div>
+      <div><span class="ln">3</span><span class="base">&nbsp;&nbsp;</span><span class="kw">get</span> <span class="fn">document</span><span class="base">() {</span></div>
+      <div><span class="ln">4</span><span class="base">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="kw">return</span> <span class="fn">shallowRef</span><span class="base">(</span><span class="kw">new</span> <span class="cls">TextDocument</span><span class="base">());</span></div>
+      <div><span class="ln">5</span><span class="base">&nbsp;&nbsp;}</span></div>
+      <div><span class="ln">6</span><span class="base">}</span></div>
+      <div><span class="ln">7</span></div>
+      <div><span class="ln">8</span><span class="kw">export namespace</span> <span class="cls">Editor</span> <span class="base">{</span></div>
+      <div><span class="ln">9</span><span class="base">&nbsp;&nbsp;</span><span class="kw">export let</span> <span class="cls">Class</span> <span class="base">=</span> <span class="fn">Reactive</span><span class="base">(</span><span class="cls">$Editor</span><span class="base">);</span><span class="caret"></span></div>
+      <div><span class="ln">10</span><span class="base">}</span></div>
+    </div>
+  </div>
+  <div class="beam"></div>
+  <div class="right">
+    <div class="brand">∞ <b>ivue</b> blog</div>
+    <div class="headline">AI agents built a 26,000-line editor <span class="glow">on ivue</span></div>
+    <div class="sub">Zero cycle hacks. One computed(). One seam — on a one-kilobyte model layer.</div>
+  </div>
+</body>
+</html>

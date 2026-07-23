@@ -17,17 +17,30 @@ const modes = {
   },
 };
 
-const [modeName, outputArgument] = process.argv.slice(2);
-const mode = modes[modeName];
+const [modeName, sourceOrOutput, blogOutput] = process.argv.slice(2);
 
-if (!mode) {
+// `blog` renders any banner HTML at the blog's 1200x630:
+//   node docs_v2/scripts/brand-image-generator.mjs blog <source.html> <output.png>
+const mode =
+  modeName === 'blog'
+    ? {
+        source: resolve(process.cwd(), sourceOrOutput ?? ''),
+        output: blogOutput,
+        viewport: { width: 1200, height: 630 },
+      }
+    : modes[modeName];
+const outputArgument = modeName === 'blog' ? blogOutput : sourceOrOutput;
+
+if (!mode || (modeName === 'blog' && (!sourceOrOutput || !blogOutput))) {
   console.error(
-    `Usage: node docs_v2/scripts/brand-image-generator.mjs <${Object.keys(modes).join('|')}> [output]`,
+    `Usage: node docs_v2/scripts/brand-image-generator.mjs <${Object.keys(modes).join('|')}> [output]\n` +
+      '       node docs_v2/scripts/brand-image-generator.mjs blog <source.html> <output.png>',
   );
   process.exit(1);
 }
 
-const source = resolve(scriptDirectory, mode.source);
+const source =
+  modeName === 'blog' ? mode.source : resolve(scriptDirectory, mode.source);
 const output = outputArgument
   ? resolve(process.cwd(), outputArgument)
   : resolve(scriptDirectory, mode.output);
