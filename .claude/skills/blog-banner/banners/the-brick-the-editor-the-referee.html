@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
+      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      #050a18;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+  }
+  .trio {
+    position: absolute; top: 108px; width: 1200px;
+    display: flex; justify-content: center; align-items: center; gap: 30px;
+  }
+  .piece {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+  }
+  .glyph {
+    width: 92px; height: 92px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px;
+    border: 1px solid rgba(96, 165, 250, 0.45);
+    background: linear-gradient(180deg, rgba(10, 18, 40, 0.96), rgba(6, 11, 26, 0.98));
+    box-shadow: 0 0 44px rgba(59, 130, 246, 0.30), inset 0 0 26px rgba(30, 58, 138, 0.25);
+    color: #67e8f9; text-shadow: 0 0 22px rgba(34, 211, 238, 0.7);
+  }
+  .plabel { font-size: 19px; color: #7e9cd0; }
+  .arrow { font-size: 30px; color: #3d5d9c; padding-bottom: 34px; }
+  .title {
+    position: absolute; top: 306px; width: 1200px; text-align: center;
+    font-size: 58px; font-weight: 700; color: #eaf2ff;
+    text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); line-height: 1.2;
+  }
+  .title .glow { color: #67e8f9; text-shadow: 0 0 34px rgba(34, 211, 238, 0.8); }
+  .rule {
+    position: absolute; top: 466px; left: 420px; width: 360px; height: 2px;
+    background: linear-gradient(90deg, rgba(34,211,238,0), rgba(34,211,238,0.85), rgba(34,211,238,0));
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.7);
+  }
+  .footer {
+    position: absolute; top: 496px; width: 1200px; text-align: center;
+    font-size: 22px; color: #52688f;
+  }
+  .footer b { color: #93c5fd; font-weight: 500; }
+  .brand {
+    position: absolute; bottom: 40px; width: 1200px; text-align: center;
+    font-size: 24px; letter-spacing: 0.08em; color: #7da4e8;
+  }
+  .brand b { color: #e0ecff; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="trio">
+    <div class="piece"><div class="glyph">▪</div><div class="plabel">the brick · 1.1 kB</div></div>
+    <div class="arrow">→</div>
+    <div class="piece"><div class="glyph">⌨</div><div class="plabel">the editor · AI-built</div></div>
+    <div class="arrow">→</div>
+    <div class="piece"><div class="glyph">✓</div><div class="plabel">the referee · every commit</div></div>
+  </div>
+  <div class="title">The brick, the editor,<br/>and <span class="glow">the referee</span></div>
+  <div class="rule"></div>
+  <div class="footer">the whole story, in small words — rules, evidence, and bricks that <b>cannot tangle</b></div>
+  <div class="brand">∞ <b>ivue</b> blog</div>
+</body>
+</html>
