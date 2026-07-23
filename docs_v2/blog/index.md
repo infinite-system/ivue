@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/reactive-is-all-you-need">
+    <img class="thumb" src="/blog/reactive-is-all-you-need.png" alt="Reactive() is all you need" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>Reactive() is all you need</h2>
+      <p class="excerpt">Store, composable, service, emitter, view-model — the state-management zoo is one thing with different lifetimes. One transform covers all of them.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/agents-built-an-editor">
     <img class="thumb" src="/blog/agents-built-an-editor.png" alt="AI agents built a 26,000-line code editor on ivue" width="1200" height="630" loading="lazy" />
     <div class="body">
