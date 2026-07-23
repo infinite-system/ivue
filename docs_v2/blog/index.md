@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/agents-built-an-editor">
+    <img class="thumb" src="/blog/agents-built-an-editor.png" alt="AI agents built a 26,000-line code editor on ivue" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>AI agents built a 26,000-line code editor on ivue</h2>
+      <p class="excerpt">Invar: a working terminal editor, written almost entirely by AI agents — zero cycle-breaking hacks, one computed() in the whole codebase, one wiring seam. What a substrate is worth when the author is a machine.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/the-object-should-tell-the-truth">
     <img class="thumb" src="/blog/the-object-should-tell-the-truth.png" alt="The object should tell the truth" width="1200" height="630" loading="lazy" />
     <div class="body">
