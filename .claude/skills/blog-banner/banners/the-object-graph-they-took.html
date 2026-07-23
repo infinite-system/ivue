@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
+      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      #050a18;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+  }
+  .old {
+    position: absolute; top: 92px; width: 1200px; text-align: center;
+    font-size: 21px; color: #52688f;
+  }
+  .old .strike {
+    text-decoration: line-through;
+    text-decoration-color: rgba(248, 113, 113, 0.75);
+    text-decoration-thickness: 2px;
+    padding: 7px 16px; border: 1px solid rgba(82, 104, 143, 0.5); border-radius: 9px;
+    margin: 0 8px;
+  }
+  .title {
+    position: absolute; top: 190px; width: 1200px; text-align: center;
+    font-size: 56px; font-weight: 700; color: #eaf2ff;
+    text-shadow: 0 0 44px rgba(59, 130, 246, 0.5);
+    line-height: 1.2;
+  }
+  .title .glow { color: #67e8f9; text-shadow: 0 0 34px rgba(34, 211, 238, 0.8); }
+  .chain {
+    position: absolute; top: 352px; width: 1200px; text-align: center;
+    font-size: 33px; color: #b7cdf3;
+  }
+  .chain .obj { color: #67e8f9; text-shadow: 0 0 22px rgba(34, 211, 238, 0.55); }
+  .chain .dot { color: #818cf8; }
+  .chain .fn { color: #60a5fa; }
+  .chain .num { color: #f0abfc; }
+  .rule {
+    position: absolute; top: 424px; left: 420px; width: 360px; height: 2px;
+    background: linear-gradient(90deg, rgba(34,211,238,0), rgba(34,211,238,0.85), rgba(34,211,238,0));
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.7);
+  }
+  .footer {
+    position: absolute; top: 462px; width: 1200px; text-align: center;
+    font-size: 22px; color: #52688f; line-height: 1.6;
+  }
+  .footer b { color: #93c5fd; font-weight: 500; }
+  .brand {
+    position: absolute; bottom: 44px; width: 1200px; text-align: center;
+    font-size: 24px; letter-spacing: 0.08em; color: #7da4e8;
+  }
+  .brand b { color: #e0ecff; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="old">
+    <span class="strike">flatten into stores</span>
+    <span class="strike">pass IDs, not references</span>
+    <span class="strike">selector ceremony</span>
+  </div>
+  <div class="title">The object graph<br/>they <span class="glow">took from you</span></div>
+  <div class="chain">
+    <span class="obj">workspaceSet</span><span class="dot">.</span><span class="obj">active</span><span class="dot">.</span><span class="obj">editor</span><span class="dot">.</span><span class="fn">selectLine</span><span class="dot">(</span><span class="num">42</span><span class="dot">)</span>
+  </div>
+  <div class="rule"></div>
+  <div class="footer">two defects fixed by construction · any depth · reactivity rides the hops</div>
+  <div class="brand">∞ <b>ivue</b> blog</div>
+</body>
+</html>

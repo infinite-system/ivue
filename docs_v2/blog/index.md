@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/the-object-graph-they-took">
+    <img class="thumb" src="/blog/the-object-graph-they-took.png" alt="The object graph they took from you" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>The object graph they took from you</h2>
+      <p class="excerpt">Frontend never proved object graphs wrong — it fled two mechanical defects, then canonized the flight. Fix them and workspaceSet.active.editor.selectLine() comes home.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/reactive-is-all-you-need">
     <img class="thumb" src="/blog/reactive-is-all-you-need.png" alt="Reactive() is all you need" width="1200" height="630" loading="lazy" />
     <div class="body">
