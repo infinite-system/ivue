@@ -40,6 +40,11 @@ edited, only replaced.
   center (see any existing banner source for the exact recipe).
 - **Type**: prose in the sans stack (`'Geist', 'DejaVu Sans', 'Inter',
   sans-serif`) — titles, subtitles, labels, footers are NOT monospace.
+  The REAL Geist faces are vendored in `banners/fonts/` (latin woff2
+  subsets, OFL-licensed) and every banner MUST start its `<style>` with
+  the two `@font-face` blocks pointing at them (copy from any existing
+  banner) — the renderer runs offline from file://, so without the
+  vendored faces Chromium silently falls back to DejaVu.
   Monospace (`'Geist Mono', 'DejaVu Sans Mono'`) is reserved for CODE
   REFERENCES only: terminal-window content, expressions/chains, API
   names like `Reactive()` inside a title, lint-rule names, and the
