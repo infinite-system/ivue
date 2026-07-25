@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/the-constraint-that-unlocks">
+    <img class="thumb" src="/blog/the-constraint-that-unlocks.png" alt="The constraint that unlocks" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>The constraint that unlocks</h2>
+      <p class="excerpt">Initialization order is solved in four languages and unsolved in the most-used one. One idiom and a 200-line checker close the gap — then pay three more dividends.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/the-brick-the-editor-the-referee">
     <img class="thumb" src="/blog/the-brick-the-editor-the-referee.png" alt="The brick, the editor, and the referee" width="1200" height="630" loading="lazy" />
     <div class="body">
