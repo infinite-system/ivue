@@ -10,7 +10,7 @@
       radial-gradient(900px 500px at 20% -10%, rgba(99, 102, 241, 0.22), transparent 60%),
       radial-gradient(1000px 600px at 105% 115%, rgba(34, 211, 238, 0.16), transparent 55%),
       #050a18;
-    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-family: 'Geist', 'DejaVu Sans', 'Inter', sans-serif;
     position: relative;
   }
   .grid {
@@ -71,6 +71,8 @@
     background: linear-gradient(90deg, rgba(34, 211, 238, 0), rgba(34, 211, 238, 0.9), rgba(34, 211, 238, 0));
     box-shadow: 0 0 18px rgba(34, 211, 238, 0.8);
   }
+  .mono { font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace; }
+  .code, .tab, .brand { font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace; }
 </style>
 </head>
 <body>
@@ -97,7 +99,7 @@
   <div class="right">
     <div class="brand">∞ <b>ivue</b> blog</div>
     <div class="headline">AI agents built a 26,000-line editor <span class="glow">on ivue</span></div>
-    <div class="sub">Zero cycle hacks. One computed(). One seam — on a one-kilobyte model layer.</div>
+    <div class="sub">Zero cycle hacks. One <span class="mono">computed()</span>. One seam — on a one-kilobyte model layer.</div>
   </div>
 </body>
 </html>

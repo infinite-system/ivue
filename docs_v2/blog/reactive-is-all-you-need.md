@@ -81,7 +81,7 @@ a missing primitive. The primitive stopped being missing.
 
 ## Proof by existence
 
-This is not a thought experiment. [Invar](https://github.com/infinite-system/tui-editor),
+This is not a thought experiment. [Invar](https://github.com/infinite-system/invar),
 the terminal code editor
 [built almost entirely by AI agents](/blog/agents-built-an-editor), is
 25,890 lines with **no store library, no DI container, no emitter, no

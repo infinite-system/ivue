@@ -9,7 +9,7 @@ date: 2026-07
 ![AI agents built a 26,000-line code editor on ivue](/blog/agents-built-an-editor.png)
 
 There is a terminal code editor called
-[Invar](https://github.com/infinite-system/tui-editor) — named after
+[Invar](https://github.com/infinite-system/invar) — named after
 the iron–nickel alloy engineered in 1896 to have near-zero thermal
 expansion; precision clocks were built from it because **it does not
 drift**. The editor has a file tree, a real
@@ -193,7 +193,7 @@ The model layer under all of it is
 
 *The numbers in this post are measured, not promised: file, line,
 commit, and call-site counts come from `find`, `wc`, `git log`, and
-`grep` over [the editor's repository](https://github.com/infinite-system/tui-editor)
+`grep` over [the editor's repository](https://github.com/infinite-system/invar)
 in July 2026 — run them yourself. The reactivity and
 teardown claims about ivue itself are the engine's
 [documented invariants](/reference/invariants), verified by its test

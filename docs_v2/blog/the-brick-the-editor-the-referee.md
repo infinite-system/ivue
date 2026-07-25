@@ -29,7 +29,7 @@ superpower everything below stands on.
 ## 2. The editor
 
 To prove the brick, we built something big out of it:
-[Invar](https://github.com/infinite-system/tui-editor), a real code
+[Invar](https://github.com/infinite-system/invar), a real code
 editor that runs in a terminal — file tree, tabs, git panel with
 side-by-side diffs, language intelligence, an integrated terminal.
 It is fast, it is small, and it is used daily.
@@ -91,7 +91,7 @@ evidence with them: a contribution is reviewable because it *arrives*
 with its contract, its test, and its green referee run.
 
 Software that grows by conversation — and cannot drift while growing.
-The editor is named [Invar](https://github.com/infinite-system/tui-editor)
+The editor is named [Invar](https://github.com/infinite-system/invar)
 after the alloy engineered not to expand under heat. The name is the
 whole thesis.
 
@@ -106,5 +106,5 @@ evidence, and a referee is the first one worth letting the machines
 build in.
 
 The brick is [on npm](https://www.npmjs.com/package/ivue). The editor
-is [on GitHub](https://github.com/infinite-system/tui-editor). The
+is [on GitHub](https://github.com/infinite-system/invar). The
 referee runs on every commit.

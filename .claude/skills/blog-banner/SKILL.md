@@ -38,8 +38,13 @@ edited, only replaced.
   glows — indigo (`rgba(99,102,241,…)`) high, cyan
   (`rgba(34,211,238,…)`) low — plus a faint blue grid masked to the
   center (see any existing banner source for the exact recipe).
-- **Type**: monospace only (`'Geist Mono', 'DejaVu Sans Mono'`) — it
-  is the site's code font and reads as ivue. Headline in near-white
+- **Type**: prose in the sans stack (`'Geist', 'DejaVu Sans', 'Inter',
+  sans-serif`) — titles, subtitles, labels, footers are NOT monospace.
+  Monospace (`'Geist Mono', 'DejaVu Sans Mono'`) is reserved for CODE
+  REFERENCES only: terminal-window content, expressions/chains, API
+  names like `Reactive()` inside a title, lint-rule names, and the
+  `∞ ivue blog` brand mark (a code identity). Use a `.mono` class for
+  inline code tokens inside sans text. Headline in near-white
   `#eaf2ff` with a blue text-shadow; the ONE key phrase in glowing
   cyan `#67e8f9`. Supporting text in muted blue `#7e9cd0`/`#52688f`.
 - **Motifs that already exist** (reuse before inventing): the glowing

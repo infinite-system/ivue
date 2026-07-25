@@ -7,6 +7,24 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/introducing-invar">
+    <img class="thumb" src="/blog/introducing-invar.png" alt="Introducing Invar" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>Introducing Invar</h2>
+      <p class="excerpt">A full IDE in your terminal — git, LSP autocomplete, AI agents that can watch your shell — built almost entirely by AI agents under a mechanical referee, on one kilobyte of ivue.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/the-weakness-was-the-strength">
+    <img class="thumb" src="/blog/the-weakness-was-the-strength.png" alt="The weakness was the strength" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>The weakness was the strength</h2>
+      <p class="excerpt">JavaScript's most-linted properties are the raw material for swappability no static language can reach and no dynamic language ever made safe.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/the-constraint-that-unlocks">
     <img class="thumb" src="/blog/the-constraint-that-unlocks.png" alt="The constraint that unlocks" width="1200" height="630" loading="lazy" />
     <div class="body">

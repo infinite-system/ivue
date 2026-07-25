@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
+      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      #050a18;
+    font-family: 'Geist', 'DejaVu Sans', 'Inter', sans-serif;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+  }
+  .mono { font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace; }
+  .caps {
+    position: absolute; top: 96px; width: 1200px;
+    display: flex; justify-content: center; gap: 18px;
+  }
+  .cap {
+    font-size: 19px; padding: 8px 18px; border-radius: 9px;
+    border: 1px solid rgba(96, 165, 250, 0.4); color: #93c5fd;
+  }
+  .title {
+    position: absolute; top: 208px; width: 1200px; text-align: center;
+    font-size: 84px; font-weight: 750; color: #eaf2ff;
+    text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); letter-spacing: -0.01em;
+  }
+  .title .glow { color: #67e8f9; text-shadow: 0 0 36px rgba(34, 211, 238, 0.8); }
+  .cmd {
+    position: absolute; top: 336px; width: 1200px; text-align: center;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 27px; color: #6ee7b7;
+  }
+  .cmd .prompt { color: #3d5d9c; }
+  .cmd .caret {
+    display: inline-block; width: 13px; height: 26px; vertical-align: -4px; margin-left: 6px;
+    background: #22d3ee; box-shadow: 0 0 14px rgba(34, 211, 238, 0.9);
+  }
+  .sub {
+    position: absolute; top: 404px; width: 1200px; text-align: center;
+    font-size: 24px; color: #7e9cd0; line-height: 1.6;
+  }
+  .rule {
+    position: absolute; top: 486px; left: 420px; width: 360px; height: 2px;
+    background: linear-gradient(90deg, rgba(34,211,238,0), rgba(34,211,238,0.85), rgba(34,211,238,0));
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.7);
+  }
+  .footer {
+    position: absolute; top: 512px; width: 1200px; text-align: center;
+    font-size: 21px; color: #52688f;
+  }
+  .footer b { color: #93c5fd; font-weight: 500; }
+  .brand {
+    position: absolute; bottom: 38px; width: 1200px; text-align: center;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 24px; letter-spacing: 0.08em; color: #7da4e8;
+  }
+  .brand b { color: #e0ecff; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="caps">
+    <span class="cap">file tree</span>
+    <span class="cap">git</span>
+    <span class="cap">LSP</span>
+    <span class="cap">terminal</span>
+    <span class="cap">AI agents</span>
+  </div>
+  <div class="title">Introducing <span class="glow">Invar</span></div>
+  <div class="cmd"><span class="prompt">$</span> iv .<span class="caret"></span></div>
+  <div class="sub">a full IDE in your terminal — built almost entirely by AI agents,<br/>under a mechanical referee, on one kilobyte of ivue</div>
+  <div class="rule"></div>
+  <div class="footer">named after the alloy that <b>does not drift</b></div>
+  <div class="brand">∞ <b>ivue</b> blog</div>
+</body>
+</html>
