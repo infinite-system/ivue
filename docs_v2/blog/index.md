@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/the-zeros-didnt-move">
+    <img class="thumb" src="/blog/the-zeros-didnt-move.png" alt="The editor tripled. The zeros didn't move." width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>The editor tripled. The zeros didn't move.</h2>
+      <p class="excerpt">Three days after we measured Invar at 26,000 lines, it passed 69,000 — six new organs, four agent providers. Every discipline metric we published held. The greps, re-run.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/introducing-invar">
     <img class="thumb" src="/blog/introducing-invar.png" alt="Introducing Invar" width="1200" height="630" loading="lazy" />
     <div class="body">

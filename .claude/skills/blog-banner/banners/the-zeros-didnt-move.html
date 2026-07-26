@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(./fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(./fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
+      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      #050a18;
+    font-family: 'Geist', 'DejaVu Sans', 'Inter', sans-serif;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+  }
+  .mono { font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace; }
+  .growth {
+    position: absolute; top: 96px; width: 1200px; text-align: center;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 30px; color: #7e9cd0;
+  }
+  .growth .from { color: #52688f; }
+  .growth .to { color: #93c5fd; }
+  .growth .arrow { color: #3d5d9c; padding: 0 10px; }
+  .title {
+    position: absolute; top: 196px; width: 1200px; text-align: center;
+    font-size: 62px; font-weight: 750; color: #eaf2ff;
+    text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); line-height: 1.22;
+  }
+  .title .glow { color: #67e8f9; text-shadow: 0 0 34px rgba(34, 211, 238, 0.8); }
+  .zeros {
+    position: absolute; top: 388px; width: 1200px;
+    display: flex; justify-content: center; gap: 22px;
+  }
+  .zero {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 14px 24px; border-radius: 12px;
+    border: 1px solid rgba(52, 211, 153, 0.35);
+  }
+  .zero .digit {
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 42px; color: #34d399; text-shadow: 0 0 22px rgba(52, 211, 153, 0.55);
+  }
+  .zero .what { font-size: 17px; color: #7e9cd0; }
+  .footer {
+    position: absolute; top: 542px; width: 1200px; text-align: center;
+    font-size: 21px; color: #52688f;
+  }
+  .footer b { color: #93c5fd; font-weight: 500; }
+  .brand {
+    position: absolute; bottom: 36px; width: 1200px; text-align: center;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 22px; letter-spacing: 0.08em; color: #7da4e8;
+  }
+  .brand b { color: #e0ecff; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="growth"><span class="from">25,890</span><span class="arrow">→</span><span class="to">68,936 lines</span> · <span class="from">292</span><span class="arrow">→</span><span class="to">743 commits</span> · <span class="to">3 days</span></div>
+  <div class="title">The editor tripled.<br/>The <span class="glow">zeros didn't move.</span></div>
+  <div class="zeros">
+    <div class="zero"><span class="digit">0</span><span class="what">cycle hacks</span></div>
+    <div class="zero"><span class="digit">0</span><span class="what">memo calls</span></div>
+    <div class="zero"><span class="digit">0</span><span class="what">lint suppressions</span></div>
+    <div class="zero"><span class="digit">0</span><span class="what">failing tests</span></div>
+  </div>
+  <div class="footer">396 commits, six new organs, four agent providers — <b>every discipline metric held</b></div>
+  <div class="brand">∞ <b>ivue</b> blog</div>
+</body>
+</html>
