@@ -126,6 +126,76 @@ const props = propsWithDefaults(
 - Required props and primitive/function/class defaults pass through
   unwrapped.
 
+## `Static(Class)` — from `ivue/extras`
+
+The static-side sibling of `Reactive()`, for **stateless capability
+classes** — function bags published behind a namespace's replaceable
+`Class` slot. Imported from the separate `ivue/extras` entry so the
+primary `ivue` entry stays the bare engine.
+
+```ts
+import { Static } from 'ivue/extras';
+```
+
+`Static()` returns a subclass of the given class (the raw class is
+never touched — it stays a clean foundation for `extends`) and
+transforms two member kinds:
+
+- **Static methods bind lazily with stable identity.** `Class.method`
+  is the same function on every read, bound to the receiving class —
+  safe to detach, hand to a router, keep in a registry. Because
+  binding resolves through the receiver at first read, a subclass's
+  overrides are honored.
+- **Get-only static accessors named `$…` become
+  compute-once-per-receiver caches.** The getter body runs on first
+  read through a given class; the result is stored on that receiver
+  and returned forever after. The guard checks **own** properties
+  only, so a parent's cache can never shadow a subclass: each class in
+  a hierarchy derives through its own overrides on its own first read,
+  in any read order.
+
+```ts
+class $ScrollMomentum {
+  // a live knob — subclasses pinch it, so NO $ prefix
+  static get friction() {
+    return 2;
+  }
+
+  // derived once per receiver — the $ prefix is the API
+  static get $atRest() {
+    return { velocity: 0, threshold: this.friction * 10 };
+  }
+
+  static settle(velocity: number) {
+    return Math.abs(velocity) < this.$atRest.threshold;
+  }
+}
+
+export namespace ScrollMomentum {
+  export const $Class = $ScrollMomentum; // raw — children `extends` this
+  export let Class = Static($Class); // bound — you call this
+}
+```
+
+Semantics to rely on:
+
+- **The `$` prefix is the contract**: compute once per receiver. A
+  static getter that must stay live — a knob for test subclasses, a
+  fresh-per-read value — must not use it.
+- **Cached values are frozen, shallowly, always** — in development
+  and production alike. A cached template is shared by every consumer,
+  so in-place mutation would be silent cross-consumer corruption; the
+  freeze converts it into an immediate `TypeError`. The rule to author
+  by: *cache-and-freeze, or return-fresh — never cache-mutable.*
+  (Measured on Node 26: the frozen read is not slower — and the
+  caching getter's warm read costs ~5 ns more than a plain property,
+  invisible at any real call frequency.)
+- **Caching is per receiver**: when a subclass overrides an input,
+  `Sub.$x !== Base.$x`. Compare by value, or through one receiver.
+- Accessor pairs with a setter, getters without the `$` prefix, and
+  instance members are untouched. `Reactive()` owns the instance
+  dimension; never wrap a stateful class in `Static()`.
+
 ## `isClass(value)`
 
 ```ts
