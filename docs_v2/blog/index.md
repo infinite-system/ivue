@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/reduction-to-modularity">
+    <img class="thumb" src="/blog/reduction-to-modularity.png" alt="Reduction to modularity, vibe-coded" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>Reduction to modularity, vibe-coded</h2>
+      <p class="excerpt">In one day, AI agents extracted a monolith's git, markdown, file tree, settings, and keybindings into plugins behind enforced boundaries — directed by one human talking casually. The care didn't come from the model. It was moved into the structure.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/the-zeros-didnt-move">
     <img class="thumb" src="/blog/the-zeros-didnt-move.png" alt="The editor tripled. The zeros didn't move." width="1200" height="630" loading="lazy" />
     <div class="body">
