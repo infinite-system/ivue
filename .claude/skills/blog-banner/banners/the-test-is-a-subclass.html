@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(./fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(./fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
+      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      #050a18;
+    font-family: 'Geist', 'DejaVu Sans', 'Inter', sans-serif;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+  }
+  .mono { font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace; }
+  .old {
+    position: absolute; top: 92px; width: 1200px;
+    display: flex; justify-content: center; gap: 18px;
+  }
+  .strike {
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 19px; padding: 8px 16px; border-radius: 9px;
+    border: 1px solid rgba(82, 104, 143, 0.5); color: #52688f;
+    text-decoration: line-through;
+    text-decoration-color: rgba(248, 113, 113, 0.75);
+    text-decoration-thickness: 2px;
+  }
+  .title {
+    position: absolute; top: 196px; width: 1200px; text-align: center;
+    font-size: 68px; font-weight: 750; color: #eaf2ff;
+    text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); line-height: 1.2;
+  }
+  .title .glow { color: #67e8f9; text-shadow: 0 0 34px rgba(34, 211, 238, 0.8); }
+  .code {
+    position: absolute; top: 318px; width: 1200px; text-align: center;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 26px; color: #b7cdf3;
+  }
+  .code .kw { color: #818cf8; } .code .cls { color: #67e8f9; } .code .base { color: #60a5fa; }
+  .strengths {
+    position: absolute; top: 396px; width: 1200px;
+    display: flex; justify-content: center; gap: 16px;
+  }
+  .strength {
+    font-size: 19px; padding: 9px 18px; border-radius: 9px;
+    border: 1px solid rgba(96, 165, 250, 0.45); color: #93c5fd;
+  }
+  .rule {
+    position: absolute; top: 474px; left: 420px; width: 360px; height: 2px;
+    background: linear-gradient(90deg, rgba(34,211,238,0), rgba(34,211,238,0.85), rgba(34,211,238,0));
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.7);
+  }
+  .footer {
+    position: absolute; top: 502px; width: 1200px; text-align: center;
+    font-size: 21px; color: #52688f;
+  }
+  .footer b { color: #93c5fd; font-weight: 500; }
+  .brand {
+    position: absolute; bottom: 36px; width: 1200px; text-align: center;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 22px; letter-spacing: 0.08em; color: #7da4e8;
+  }
+  .brand b { color: #e0ecff; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="old">
+    <span class="strike">jest.mock()</span>
+    <span class="strike">stub factories</span>
+    <span class="strike">hand-rolled fakes</span>
+  </div>
+  <div class="title">The test is <span class="glow">a subclass</span></div>
+  <div class="code"><span class="kw">class</span> <span class="cls">TinyOutputDriver</span> <span class="kw">extends</span> <span class="base">PtyTestDriver.$Class</span> { … }</div>
+  <div class="strengths">
+    <span class="strength">swap the capability</span>
+    <span class="strength">pinch one knob</span>
+    <span class="strength">plant a defect</span>
+  </div>
+  <div class="rule"></div>
+  <div class="footer">no mock framework — every double is a full citizen, and <b>the compiler checks the fakes</b></div>
+  <div class="brand">∞ <b>ivue</b> blog</div>
+</body>
+</html>

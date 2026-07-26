@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/the-test-is-a-subclass">
+    <img class="thumb" src="/blog/the-test-is-a-subclass.png" alt="The test is a subclass" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>The test is a subclass</h2>
+      <p class="excerpt">Invar's harness never mocks. It substitutes full citizens — swap a capability at its Static() seam, subclass $Class to pinch one knob, plant a defect as a positive control. No mock framework, and the compiler checks the fakes.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/reduction-to-modularity">
     <img class="thumb" src="/blog/reduction-to-modularity.png" alt="Reduction to modularity, vibe-coded" width="1200" height="630" loading="lazy" />
     <div class="body">
