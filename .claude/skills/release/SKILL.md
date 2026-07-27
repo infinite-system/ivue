@@ -50,14 +50,25 @@ git tag -a ivue@2.0.0 -m "ivue 2.0.0 — <one-line highlight>" <commit>
   `.claude/skills/ivue/SKILL.md` → `skills/ivue/SKILL.md` into the
   tarball. Offer `npm pack --dry-run` as a pre-flight instead.
 
-## Release notes — always hand the user paste-ready text
+## Release notes — a file in the repo, then hand the user the text
 
-After tagging, ALWAYS produce release-notes text in the final message so
-the user can paste it straight into the GitHub release for the tag
-(title + body). Build it from the real history — `git log <previous
-ivue@ tag>..<bump commit> --oneline` — never from memory alone.
+Every release's notes live IN THE REPO: `releases/ivue@X.Y.Z.md`, one
+file per release, written BEFORE the bump commit so the tagged tree
+carries its own notes. Build them from the real history — `git log
+<previous ivue@ tag>..<bump commit-to-be> --oneline` — never from
+memory alone. The file starts with an H1 title line
+(`# ivue@X.Y.Z — <one-line story>`) followed by the body.
 
-- **Title**: `ivue@X.Y.Z — <the one-line story of the release>`.
+After tagging, the final message hands the user (1) the same notes for
+review and (2) the one-command GitHub release:
+
+```bash
+gh release create ivue@X.Y.Z -F releases/ivue@X.Y.Z.md \
+  -t "ivue@X.Y.Z — <the one-line story>"
+```
+
+- **Title** (the H1 line): `ivue@X.Y.Z — <the one-line story of the
+  release>`.
 - **Body shape**: a short lead paragraph saying what the release IS;
   then `### Breaking` (omit when none) with each break stating the old
   behavior, the new behavior, and the migration; then `### Changed` /
@@ -69,6 +80,9 @@ ivue@ tag>..<bump commit> --oneline` — never from memory alone.
 
 ## Order of operations (summary)
 
-1. Gates green → 2. bump `package.json` → 3. `chore(release): X.Y.Z`
-commit → 4. `git tag -a ivue@X.Y.Z -m "..." <bump-commit>` → 5. hand off:
-user pushes with `--follow-tags`, user runs `npm run release`.
+1. Gates green → 2. write `releases/ivue@X.Y.Z.md` → 3. bump
+`package.json` → 4. `chore(release): X.Y.Z` commit (bump + notes file
+together) → 5. `git tag -a ivue@X.Y.Z -m "..." <bump-commit>` →
+6. hand off: user pushes with `--follow-tags`, user runs
+`npm run release`, user publishes the GitHub release with
+`gh release create ivue@X.Y.Z -F releases/ivue@X.Y.Z.md -t "<title>"`.
