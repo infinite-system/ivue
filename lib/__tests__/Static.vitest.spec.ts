@@ -1,4 +1,6 @@
+import { ref } from 'vue';
 import { describe, expect, it } from 'vitest';
+import { Reactive } from '../Reactive';
 import { Static } from '../Static';
 
 describe('Static', () => {
@@ -79,6 +81,23 @@ describe('Static', () => {
     const after = Object.getOwnPropertyDescriptor(Config, 'resolve')!;
     expect(after.enumerable).toBe(false);
     expect(Config.resolve('/path')).toBe('https://example.test/path');
+  });
+
+  it('binds symbol-keyed static methods with the same discipline', () => {
+    const describeKind = Symbol('describeKind');
+
+    class $Shape {
+      static kind = 'circle';
+      static [describeKind]() {
+        return `kind:${this.kind}`;
+      }
+    }
+
+    const Shape = Static($Shape);
+    const described = (Shape as any)[describeKind];
+
+    expect((Shape as any)[describeKind]).toBe(described); // identity-stable
+    expect(described()).toBe('kind:circle'); // bound through detachment
   });
 
   it('binds `this` to the wrapped class, so statics compose', () => {
@@ -166,21 +185,26 @@ describe('Static $-cached getters', () => {
     expect(computeRuns).toBe(2); // once per receiver, never shared
   });
 
-  it('freezes cached values — mutation throws instead of corrupting', () => {
-    class $Config {
-      static get $defaults() {
-        return { width: 80 };
+  it('promises stable identity, not immutability — memo tables mutate freely', () => {
+    class $Wrap {
+      static get $memo() {
+        return new Map<string, number>();
+      }
+      static get $state() {
+        return { frame: 0, quiescent: false };
       }
     }
 
-    const Config = Static($Config);
-    const defaults = Config.$defaults;
+    const Wrap = Static($Wrap);
 
-    expect(Object.isFrozen(defaults)).toBe(true);
-    expect(() => {
-      (defaults as any).width = 120;
-    }).toThrow(TypeError);
-    expect(Config.$defaults.width).toBe(80);
+    // a cached Map used as a per-class memo table — the dominant real pattern
+    Wrap.$memo.set('row', 42);
+    expect(Wrap.$memo.get('row')).toBe(42); // same table, mutation retained
+
+    // a cached plain object used as deliberate mutable state
+    Object.assign(Wrap.$state, { frame: 7, quiescent: true });
+    expect(Wrap.$state.frame).toBe(7);
+    expect(Wrap.$state).toBe(Wrap.$state); // identity stable throughout
   });
 
   it('caches primitive results too', () => {
@@ -255,6 +279,87 @@ describe('Static $-cached getters', () => {
     // the subclass's own getter descriptor shadows the caching wrapper
     expect(DarkTheme.$accent).toBe('violet');
     expect(Theme.$accent).toBe('blue');
+  });
+
+  it('method binding is order-correct: parent read first, child dispatch intact', () => {
+    class $Render {
+      static get glyph() {
+        return '-'; // a knob subclasses pinch
+      }
+      static paint() {
+        return this.glyph.repeat(3);
+      }
+    }
+
+    const Render = Static($Render);
+    class DottedRender extends Render {
+      static override get glyph() {
+        return '.';
+      }
+    }
+
+    // PARENT reads first — the named-own-property shape poisoned this order
+    const parentPaint = Render.paint;
+    expect(parentPaint()).toBe('---');
+    expect(DottedRender.paint()).toBe('...'); // child binds itself, chain not shadowed
+    expect(DottedRender.paint).toBe(DottedRender.paint); // still identity-stable
+    expect(Render.paint).toBe(parentPaint);
+  });
+
+  it('method binding is order-correct: child read first, parent unaffected', () => {
+    class $Render {
+      static get glyph() {
+        return '-';
+      }
+      static paint() {
+        return this.glyph.repeat(2);
+      }
+    }
+
+    const Render = Static($Render);
+    class DottedRender extends Render {
+      static override get glyph() {
+        return '.';
+      }
+    }
+
+    expect(DottedRender.paint()).toBe('..');
+    expect(Render.paint()).toBe('--');
+  });
+
+  it('composes with Reactive(): Static(Reactive($Class)) grants both contracts', () => {
+    let derivations = 0;
+
+    class $Channel {
+      get status() {
+        return ref('idle');
+      }
+      announce() {
+        return `channel:${this.status.value}`;
+      }
+      static get $defaults() {
+        derivations++;
+        return { retries: 3 };
+      }
+      static open() {
+        return this.$defaults.retries;
+      }
+    }
+
+    const Channel = Static(Reactive($Channel));
+
+    // instance side: Reactive semantics intact through the Static subclass
+    const channel: any = new Channel();
+    const statusCell = channel.status;
+    expect(statusCell.value).toBe('idle');
+    expect(channel.status).toBe(statusCell); // cached ref cell
+    expect(channel.announce()).toBe('channel:idle');
+
+    // static side: $-cache + bound methods from Static
+    expect(Channel.$defaults).toBe(Channel.$defaults);
+    expect(derivations).toBe(1);
+    const open = Channel.open;
+    expect(open()).toBe(3); // detached, still bound
   });
 
   it('walks the raw inheritance chain — ancestor $-getters cache per receiver', () => {

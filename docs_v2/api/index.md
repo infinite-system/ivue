@@ -179,22 +179,38 @@ export namespace ScrollMomentum {
 
 Semantics to rely on:
 
-- **The `$` prefix is the contract**: compute once per receiver. A
-  static getter that must stay live — a knob for test subclasses, a
-  fresh-per-read value — must not use it.
-- **Cached values are frozen, shallowly, always** — in development
-  and production alike. A cached template is shared by every consumer,
-  so in-place mutation would be silent cross-consumer corruption; the
-  freeze converts it into an immediate `TypeError`. The rule to author
-  by: *cache-and-freeze, or return-fresh — never cache-mutable.*
-  (Measured on Node 26: the frozen read is not slower — and the
-  caching getter's warm read costs ~5 ns more than a plain property,
-  invisible at any real call frequency.)
+- **The `$` prefix promises stable identity per receiver — nothing
+  more.** The getter body runs once per class; every later read
+  returns the same value. Whether that value is immutable config or a
+  deliberately mutable memo table is the author's design — the engine
+  does not freeze it. A static getter that must stay live — a knob for
+  test subclasses, a fresh-per-read value — must not use the prefix.
+  (Measured on Node 26: the caching getter's warm read costs ~5 ns
+  more than a plain property — invisible at any real call frequency.)
 - **Caching is per receiver**: when a subclass overrides an input,
   `Sub.$x !== Base.$x`. Compare by value, or through one receiver.
+  Bound methods follow the same rule — `Sub.method` binds to `Sub`,
+  in any read order.
+- **`$` semantics are granted by the transform.** A raw class, a raw
+  subclass, or a class only passed through `Reactive()` keeps native
+  getter behavior — exactly as an unwrapped class's *instance*
+  `$`-getters aren't cached either. A class that needs instance
+  reactivity **and** static `$`-caches composes the transforms:
+
+  ```ts
+  export namespace Settings {
+    export const $Class = $Settings; // raw — children `extends` this
+    export let Class = Static(Reactive($Class)); // both contracts
+    export type Instance = typeof Class.Instance;
+  }
+  ```
+
+  `Reactive()` transforms the prototype in place; `Static()` wraps the
+  statics around it. Instances of the composed `Class` carry full
+  reactive semantics, and its static surface carries binding and
+  `$`-caching.
 - Accessor pairs with a setter, getters without the `$` prefix, and
-  instance members are untouched. `Reactive()` owns the instance
-  dimension; never wrap a stateful class in `Static()`.
+  instance members are untouched by `Static()`.
 
 ## `isClass(value)`
 

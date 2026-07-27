@@ -8,15 +8,26 @@
  *
  * Get-only static accessors whose name starts with `$` become
  * compute-once-per-receiver caches: the getter body runs on first read
- * through a given class, its (shallowly frozen) result is stored under a
- * symbol OWN property of that receiver, and later reads return the stored
- * value. The `Object.hasOwn` guard never walks the prototype chain, so a
- * parent's cache can never shadow a subclass — each class in a hierarchy
- * derives through its own overrides on its own first read, in ANY read
- * order. The `$` prefix IS the API: a static getter that must stay live
- * (a knob for subclasses to pinch, a fresh-per-read value) must not use
- * it. Cached values are frozen shallowly — cache-and-freeze or
- * return-fresh, never cache-mutable.
+ * through a given class, its result is stored under a symbol OWN property
+ * of that receiver, and later reads return the stored value. The
+ * `Object.hasOwn` guard never walks the prototype chain, so a parent's
+ * cache can never shadow a subclass — each class in a hierarchy derives
+ * through its own overrides on its own first read, in ANY read order.
+ * The `$` prefix IS the API: it promises STABLE IDENTITY per receiver,
+ * nothing more — whether the cached value is then treated as immutable
+ * config or as a mutable memo table is the author's design. A static
+ * getter that must stay live (a knob for subclasses to pinch, a
+ * fresh-per-read value) must not use the prefix.
+ *
+ * Method binding uses the same per-receiver symbol discipline: the bound
+ * function is cached under a symbol own property, never under the method
+ * name — so a parent-first read can never install a parent-bound method
+ * where a subclass's chain lookup would find it.
+ *
+ * `$` semantics are GRANTED BY the transform: a raw class, a raw
+ * subclass, or a class only passed through `Reactive()` keeps native
+ * getter behavior. A class that needs instance reactivity AND static
+ * `$`-caches composes the transforms: `Static(Reactive($Class))`.
  *
  * This is the namespace pattern's backend adapter: canonical namespace +
  * mutable `Class` slot + late reads, for STATELESS capability classes (a
@@ -28,6 +39,8 @@
  * entry stays minimal.
  */
 export type ClassConstructor = new (...arguments_: any[]) => any;
+
+const hasOwn = Object.hasOwn;
 
 export function Static<Class extends ClassConstructor>(targetClass: Class): Class {
   const SelectedClass = class extends targetClass {};
@@ -46,14 +59,22 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
 
       if (typeof descriptor.value === 'function') {
         const method = descriptor.value;
+        const bindKey =
+          typeof key === 'string'
+            ? Symbol.for(`ivue.staticBound.${key}`)
+            : Symbol('ivue.staticBound');
 
         Object.defineProperty(SelectedClass, key, {
           configurable: true,
           enumerable: descriptor.enumerable,
-          get(this: ClassConstructor) {
-            const boundMethod = method.bind(this);
-            Object.defineProperty(this, key, { ...descriptor, value: boundMethod });
-            return boundMethod;
+          get(this: any) {
+            if (!hasOwn(this, bindKey)) {
+              Object.defineProperty(this, bindKey, {
+                configurable: true,
+                value: method.bind(this),
+              });
+            }
+            return this[bindKey];
           },
         });
       } else if (
@@ -69,10 +90,10 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
           configurable: true,
           enumerable: descriptor.enumerable,
           get(this: any) {
-            if (!Object.hasOwn(this, cacheKey)) {
+            if (!hasOwn(this, cacheKey)) {
               Object.defineProperty(this, cacheKey, {
                 configurable: true,
-                value: Object.freeze(getter.call(this)),
+                value: getter.call(this),
               });
             }
             return this[cacheKey];

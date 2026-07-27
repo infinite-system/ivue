@@ -434,9 +434,9 @@ export type ReactiveInstance<T> = T &
     $stopEffects: () => void;
   };
 
-export type ReactiveClass<C extends new (...args: any) => any> = new (
-  ...args: ConstructorParameters<C>
-) => ReactiveInstance<InstanceType<C>>;
+export type ReactiveClass<C extends new (...args: any) => any> = {
+  [Key in keyof C]: C[Key];
+} & (new (...args: ConstructorParameters<C>) => ReactiveInstance<InstanceType<C>>);
 
 /**
  * Component-authoring type utilities (types only — erased at build time).
