@@ -362,6 +362,70 @@ describe('Static $-cached getters', () => {
     expect(open()).toBe(3); // detached, still bound
   });
 
+  it('the anchor shape: $Class = Static($X), Class = Reactive($Class)', () => {
+    class $Panel {
+      constructor(public seed: number) {}
+      get width() {
+        return ref(this.seed);
+      }
+      static get glyph() {
+        return '#'; // live knob
+      }
+      static get $legend() {
+        return { marker: this.glyph.repeat(2) };
+      }
+      static describe() {
+        return this.$legend.marker;
+      }
+    }
+
+    const Anchor = Static($Panel);
+    const Panel = Reactive(Anchor);
+
+    // instance side: full Reactive semantics through the wrapper
+    const panel: any = new Panel(7);
+    const widthCell = panel.width;
+    expect(widthCell.value).toBe(7);
+    expect(panel.width).toBe(widthCell); // cached cell
+    panel.$stopEffects();
+    expect(panel.width).not.toBe(widthCell); // teardown reset works
+
+    // static side: caches + binding live on the same published class
+    expect(Panel.$legend).toBe(Panel.$legend);
+    const describe = Panel.describe;
+    expect(describe()).toBe('##');
+
+    // Reactive() is identity, so anchor and published class are one object
+    expect(Panel).toBe(Anchor);
+  });
+
+  it('a bare double extending the anchor inherits working semantics', () => {
+    class $Momentum {
+      static get friction() {
+        return 2; // knob
+      }
+      static get $atRest() {
+        return { threshold: this.friction * 10 };
+      }
+      static settle() {
+        return this.$atRest.threshold;
+      }
+    }
+
+    const Anchor = Static($Momentum);
+    // the downstream case: a pinch-knob double with NO wrap of its own
+    class TunedMomentum extends Anchor {
+      static override get friction() {
+        return 7;
+      }
+    }
+
+    expect(Anchor.$atRest.threshold).toBe(20); // parent reads FIRST
+    expect(TunedMomentum.$atRest.threshold).toBe(70); // child still derives itself
+    const settle = TunedMomentum.settle;
+    expect(settle()).toBe(70); // inherited method binds to the child, detached
+  });
+
   it('walks the raw inheritance chain — ancestor $-getters cache per receiver', () => {
     class $Base {
       static get scale() {

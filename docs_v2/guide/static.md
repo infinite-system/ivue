@@ -52,10 +52,18 @@ class $GitCommands {
 }
 
 export namespace GitCommands {
-  export const $Class = $GitCommands; // raw — children `extends` this
-  export let Class = Static($Class); // bound — you call this
+  // the ANCHOR: wrapped once, at definition — children `extends` this
+  export const $Class = Static($GitCommands);
+  export let Class = $Class; // selected — you call this; kernels/tests swap it
 }
 ```
+
+**The rule: wrap at the anchor.** A class that declares static members
+publishes a `Static()`-wrapped `$Class`, so everything downstream —
+subclasses, test doubles, plugin extensions — inherits working
+semantics just by extending it. Classes with nothing static to
+transform skip the wrapper entirely (`$Class = $X`), which is why
+`Static()` lives in `ivue/extras` and costs the core path nothing.
 
 Consumers call through the namespace — `GitCommands.Class.stage(path)`
 — and because `Class` is a **mutable binding read late**, the whole
@@ -63,8 +71,10 @@ capability stays replaceable: a kernel, a plugin, or a test installs a
 different class and every call site follows, with no dependency-object
 threading.
 
-`Static()` returns a *subclass* of the raw class. `$Class` is never
-touched — it stays a clean foundation for `extends`.
+`Static()` returns a *subclass* of the raw class — the raw declaration
+is never touched. The wrapped subclass **is** the anchor: `const`, so
+inheritance always pins one immutable foundation regardless of what a
+kernel or test later installs into the mutable `Class` slot.
 
 ## Methods: bound lazily, stable forever
 
@@ -146,33 +156,35 @@ Capability classes need no mock framework — the namespace publishes
 both exports a test needs:
 
 ```ts
-// swap the whole capability at the seam
+// pinch one knob — NO wrapper needed: the anchor's semantics are
+// inherited, and the cache derives through the override per receiver
+class SandboxGit extends GitCommands.$Class {
+  static override get binary() {
+    return '/opt/sandbox/git';
+  }
+}
+
+// swap the whole capability at the seam — the double OVERRIDES a
+// method (a new declaration), so it is wrapped where it is installed
 class $RecordingGit extends GitCommands.$Class {
   static override run(argumentList: readonly string[]) {
     return record(argumentList);
   }
 }
 GitCommands.Class = Static($RecordingGit);
-
-// or pinch one knob — every other code path stays production
-const SandboxGit = Static(
-  class extends GitCommands.$Class {
-    static override get binary() {
-      return '/opt/sandbox/git';
-    }
-  },
-);
 ```
 
-Both doubles follow the one inheritance rule of the pattern:
-**`extends` binds structure, transforms grant semantics.** Inheritance
-always anchors `$Class` — the immutable foundation — and bound methods
-and `$`-caches arrive by applying `Static()` to the double, exactly as
-production classes get them. Nothing ever extends the mutable `Class`
-slot: an `extends` clause is an eager snapshot, so extending `Class`
-would pin the child to whatever generation happened to be selected
-when its module loaded — inheritance silently ordered by load order,
-the disease this pattern exists to cure.
+Because the anchor is already wrapped, the common double — pinching a
+live knob — needs nothing at all: inherited methods bind to the
+double, inherited `$`-caches derive through its overrides, in any read
+order. Only a double that *declares or overrides* transformable
+members (new methods, new `$`-getters) passes through `Static()`
+itself — new declarations always need processing, and the seam-swap
+line is where that naturally happens. Nothing ever extends the mutable
+`Class` slot: an `extends` clause is an eager snapshot, so it would
+pin the child to whatever generation a kernel or the previous test had
+installed — inheritance silently ordered by load order, the disease
+this pattern exists to cure.
 
 The substitute is a full citizen, type-checked against the same
 contract as the real thing — stub drift is a compile error. The full
@@ -244,24 +256,27 @@ pattern replaces the container for global selection only.
 
 ## Composing with `Reactive()`
 
-`$` semantics are **granted by the transform** — a raw class, a raw
-subclass, or a class only passed through `Reactive()` keeps native
-static-getter behavior, exactly as an unwrapped class's *instance*
-`$`-getters aren't cached either. A class that needs instance
-reactivity **and** static `$`-caches composes the transforms:
+`$` semantics are **granted by the transform** — a raw class or a
+class only passed through `Reactive()` keeps native static-getter
+behavior, exactly as an unwrapped class's *instance* `$`-getters
+aren't cached either. A class that needs instance reactivity **and**
+static `$`-caches uses the same anchor rule — wrap the statics at the
+anchor, apply `Reactive()` to it:
 
 ```ts
 export namespace Settings {
-  export const $Class = $Settings; // raw — children `extends` this
-  export let Class = Static(Reactive($Class)); // both contracts
+  // the anchor: statics wrapped once, at definition
+  export const $Class = Static($Settings);
+  // Reactive() transforms the prototype in place — Class === $Class
+  export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
 ```
 
-`Reactive()` transforms the prototype in place; `Static()` wraps the
-statics around it. Instances of the composed `Class` carry full
-reactive semantics; its static surface carries binding and
-`$`-caching.
+Instances of `Class` carry full reactive semantics (the prototype
+chain is transformed in place, teardown included); the static surface
+carries binding and `$`-caching; and children extending `$Class`
+inherit both worlds' foundations.
 
 ## The boundary
 

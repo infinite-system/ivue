@@ -201,15 +201,18 @@ Semantics to rely on:
 
   ```ts
   export namespace Settings {
-    export const $Class = $Settings; // raw — children `extends` this
-    export let Class = Static(Reactive($Class)); // both contracts
+    // the anchor: statics wrapped once, at definition
+    export const $Class = Static($Settings);
+    // Reactive() is in-place — Class === $Class
+    export let Class = Reactive($Class);
     export type Instance = typeof Class.Instance;
   }
   ```
 
-  `Reactive()` transforms the prototype in place; `Static()` wraps the
-  statics around it. Instances of the composed `Class` carry full
-  reactive semantics, and its static surface carries binding and
+  `Static()` wraps the statics at the anchor, so subclasses and test
+  doubles inherit working static semantics by extending `$Class`;
+  `Reactive()` then transforms the prototype in place. Instances carry
+  full reactive semantics; the static surface carries binding and
   `$`-caching.
 - Accessor pairs with a setter, getters without the `$` prefix, and
   instance members are untouched by `Static()`.

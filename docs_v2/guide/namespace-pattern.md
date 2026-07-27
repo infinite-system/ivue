@@ -448,9 +448,14 @@ The forms are additive:
 | Required capability | Namespace surface |
 |---|---|
 | Ordinary class | no namespace required |
-| Replaceable static capability | `const $Class` + `let Class` |
-| Passable static methods | `const $Class` + `let Class = Static($Class)` |
-| Vue class reactivity | `$Class` + `let Class = Reactive($Class)` + `Instance` |
+| Replaceable class | `const $Class = $X` + `let Class = $Class` |
+| Static members (binding + `$`-caches) | `const $Class = Static($X)` + `let Class = $Class` |
+| Vue class reactivity | `const $Class = $X` + `let Class = Reactive($Class)` + `Instance` |
+| Both — statics AND instances | `const $Class = Static($X)` + `let Class = Reactive($Class)` + `Instance` |
+
+The rule that decides between rows is visible in the class body:
+**declare static members → wrap the anchor.** The `Static()` call
+appears exactly where there is something for it to transform.
 
 The canonical ivue form keeps `Class` mutable even when no kernel is installed:
 
