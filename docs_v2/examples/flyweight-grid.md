@@ -31,7 +31,7 @@ browser.
   [`RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/examples/playground/src/examples/flyweight-grid/RESULTS.md)
   and
   [`DESIGN.md`](https://github.com/infinite-system/ivue/blob/main/examples/playground/src/examples/flyweight-grid/DESIGN.md);
-  the deeper story is in [The Flyweight Pattern guide](/guide/flyweight).
+  the deeper story is in [Flyweight Pattern guide](/guide/flyweight).
 
 ## The source
 

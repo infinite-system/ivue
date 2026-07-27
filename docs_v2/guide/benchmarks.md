@@ -235,7 +235,7 @@ Status, honestly: a **sketch** — measured, verified in the DOM down to row
 1,000,000, its structural suite green at real scale, but not yet packaged
 as a shipping layer. The pattern itself — how observation pricing works and
 where it applies beyond spreadsheets — is
-[The Flyweight Pattern](/guide/flyweight); the raw material lives in the
+[Flyweight Pattern](/guide/flyweight); the raw material lives in the
 repo:
 [`RESULTS.md`](https://github.com/infinite-system/ivue/blob/main/examples/playground/src/examples/flyweight-grid/RESULTS.md)
 (measurements, the steady-state memory ceiling, the hot-swap demo),

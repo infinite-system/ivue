@@ -530,7 +530,7 @@ export default defineConfig({
                 { text: 'ivue vs the World', link: '/guide/model-layer' },
                 { text: 'Performance by Design', link: '/guide/performance' },
                 { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
-                { text: 'The Flyweight Pattern', link: '/guide/flyweight' },
+                { text: 'Flyweight Pattern', link: '/guide/flyweight' },
               ],
             },
             {

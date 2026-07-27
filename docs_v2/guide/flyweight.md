@@ -1,9 +1,9 @@
 ---
-title: The Flyweight Pattern
+title: Flyweight Pattern
 description: 20,000,000 live formula-capable cells in 89 MB — 4.7 bytes each — created in 67 ms, with memory that never grows past the viewport. Observation-priced existence, ivue's invariant taken all the way down.
 ---
 
-# The Flyweight Pattern — observation-priced existence
+# Flyweight Pattern — observation-priced existence
 
 Everything in ivue descends from one invariant:
 
