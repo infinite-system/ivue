@@ -14,7 +14,7 @@ circular cross-references that resolve after module initialization.
 The pattern is an invariant bigger than Vue — its crystallized,
 runtime-independent form (the smallest wrapper-less shape, Node
 capability classes, ORM models, kernels) is
-[The Namespace Pattern](/guide/namespace-pattern). This page is its Vue
+[Namespace Pattern](/guide/namespace-pattern). This page is its Vue
 expression.
 
 Each class file exports a namespace with two members. The **raw** class is for

@@ -1,15 +1,43 @@
 ---
-title: The Namespace Pattern
-description: A capability needs one canonical object, one mutable class slot, and late dependency reads — the invariant beneath Reactive() and Static(), from the smallest wrapper-less form to Node capability classes.
+title: Namespace Pattern
+description: A capability needs one canonical object, one mutable class slot, and late dependency reads — the invariant beneath Reactive() and Static(), from ivue's canonical form down to the smallest wrapper-less shape and out to Node capability classes.
 ---
 
-# The Namespace Pattern
+# Namespace Pattern
 
 > A dependency needs a canonical address and a moment of resolution. It needs
 > a container only when the answer varies by runtime context.
 
-The namespace pattern begins below ivue. It does not require Vue, refs,
-`Reactive()`, or even TypeScript namespace syntax. Its invariant is:
+## The canonical ivue form
+
+This is the shape every ivue class ships in — the one the
+[guide](/guide/modules) teaches and the whole standard is built on:
+
+```ts
+export namespace BaseElement {
+  export const $Class = $BaseElement; // raw — children `extends` this
+  export let Class = Reactive($Class); // reactive — you `new` this
+  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
+}
+```
+
+Consumers always construct `new BaseElement.Class()`, and because
+`Class` is a mutable binding, a kernel or a test can later compose the
+slot without changing a single consumer. When the class also declares
+**static members**, the anchor wraps them once, at definition —
+[the anchor rule](/guide/static):
+
+```ts
+export namespace Settings {
+  export const $Class = Static($Settings); // anchor — statics wrapped once
+  export let Class = Reactive($Class); // in-place — Class === $Class
+  export type Instance = typeof Class.Instance;
+}
+```
+
+This page is about what sits *underneath* those forms. The namespace
+pattern begins below ivue: it does not require Vue, refs, `Reactive()`,
+or even TypeScript namespace syntax. Its invariant is:
 
 ```text
 canonical object + mutable Class slot + late dependency read
@@ -111,8 +139,8 @@ class $Users {
 }
 
 export namespace Users {
-  export const $Class = $Users;
-  export let Class = Static($Class);
+  export const $Class = Static($Users); // anchor — statics wrapped once
+  export let Class = $Class; // selected — kernels and tests swap this
 }
 ```
 
@@ -143,7 +171,8 @@ class $Orders {
 }
 
 export namespace Orders {
-  export let Class = $Orders;
+  export const $Class = Static($Orders); // anchor — it declares statics
+  export let Class = $Class;
 }
 ```
 
@@ -336,14 +365,12 @@ supplies the selected class as `this`:
 Orders.Class.submit(userId);
 ```
 
-Passing an ordinary static method alone does not preserve that receiver:
-
-```ts
-router.post('/orders', Orders.$Class.submit);
-```
-
-`Static()` binds the selected method on first read, so direct registration is
-safe:
+Passing a method detached from the raw class declaration does not
+preserve that receiver — which is why the raw class stays
+module-private and the published anchor is `Static()`-wrapped: its
+methods bind on first read, so direct registration is safe.
+Registration reads the **selection**, so the retained callback belongs
+to the composed class, not merely the foundation:
 
 ```ts
 router.post('/orders', Orders.Class.submit);
@@ -397,12 +424,14 @@ multiple providers must coexist.
 
 ## A kernel composes the selected class
 
-The kernel retains the foundation and applies extensions from that foundation
-on every seal:
+The kernel retains the anchor and applies extensions from that
+foundation on every seal. Extensions declare new members, so the
+composed result passes through `Static()` at installation — the same
+line every seam swap writes:
 
 ```ts
 function composeOrders() {
-  let SelectedOrders = Orders.$Class;
+  let SelectedOrders = Orders.$Class; // the immutable anchor
 
   SelectedOrders = class AuditedOrders extends SelectedOrders {
     static submit(userId: string) {
@@ -411,16 +440,18 @@ function composeOrders() {
     }
   };
 
-  Orders.Class = Static(SelectedOrders);
+  Orders.Class = Static(SelectedOrders); // installation wraps
 }
 ```
 
 Static `super.submit()` retains the derived class as `this`. The base method's
 `this.Users` therefore continues to resolve through the final selected class.
 
-A complete kernel starts from `$Class`, gathers every raw extension, and calls
-`Static()` once on the composed result. It never extends an already selected
-result during a repeated seal.
+A complete kernel starts from `$Class`, gathers every extension, and
+calls `Static()` once on the composed result. It never extends an
+already selected result during a repeated seal — and it never extends
+the mutable `Class` slot, whose value is an eager snapshot away from
+load-order drift.
 
 ## When `$Class` belongs in the public namespace
 
@@ -428,18 +459,23 @@ The raw foundation belongs in the public namespace when application modules
 inherit from it directly:
 
 ```ts
-class $Notification {}
+class $Notification {
+  static deliver(message: string) {
+    /* ... */
+  }
+}
 
 export namespace Notification {
-  export const $Class = $Notification;
-  export let Class = Static($Class);
+  export const $Class = Static($Notification); // anchor
+  export let Class = $Class; // selection
 }
 
 class $ErrorNotification extends Notification.$Class {}
 ```
 
-Here `$Class` is an immutable TypeScript contract for declared inheritance.
-`Class` is the runtime selection used for construction or static invocation.
+Here `$Class` is the immutable contract for declared inheritance —
+already wrapped, so `$ErrorNotification` inherits working binding and
+`$`-caches bare. `Class` is the runtime selection used for invocation.
 When every extension goes through the kernel, the kernel may retain the base
 privately instead.
 
@@ -456,19 +492,6 @@ The forms are additive:
 The rule that decides between rows is visible in the class body:
 **declare static members → wrap the anchor.** The `Static()` call
 appears exactly where there is something for it to transform.
-
-The canonical ivue form keeps `Class` mutable even when no kernel is installed:
-
-```ts
-export namespace BaseElement {
-  export const $Class = $BaseElement; // raw — children `extends` this
-  export let Class = Reactive($Class); // reactive — you `new` this
-  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
-}
-```
-
-Consumers always use `new BaseElement.Class()`. A later kernel registration can
-compose the slot without changing those consumers.
 
 ## Provider choice and lifetime remain separate
 
@@ -496,8 +519,8 @@ structural contradiction valid:
 - A top-level `Other.Class` snapshot remains eager.
 - A static field initialized from `Other.Class` snapshots the provider.
 - Decorators and module side effects may still read dependencies too early.
-- A method detached from raw `$Class` still loses static `this`; retained
-  callbacks use the selected `Static()` class.
+- A method detached from the raw class declaration still loses static
+  `this`; anchors and selections bind, raw declarations do not.
 - A selected static callback remains attached to one class generation; it does
   not follow a later `Class` assignment.
 
