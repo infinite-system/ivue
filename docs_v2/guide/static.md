@@ -155,12 +155,24 @@ class $RecordingGit extends GitCommands.$Class {
 GitCommands.Class = Static($RecordingGit);
 
 // or pinch one knob — every other code path stays production
-class SandboxGit extends GitCommands.Class {
-  static override get binary() {
-    return '/opt/sandbox/git';
-  }
-}
+const SandboxGit = Static(
+  class extends GitCommands.$Class {
+    static override get binary() {
+      return '/opt/sandbox/git';
+    }
+  },
+);
 ```
+
+Both doubles follow the one inheritance rule of the pattern:
+**`extends` binds structure, transforms grant semantics.** Inheritance
+always anchors `$Class` — the immutable foundation — and bound methods
+and `$`-caches arrive by applying `Static()` to the double, exactly as
+production classes get them. Nothing ever extends the mutable `Class`
+slot: an `extends` clause is an eager snapshot, so extending `Class`
+would pin the child to whatever generation happened to be selected
+when its module loaded — inheritance silently ordered by load order,
+the disease this pattern exists to cure.
 
 The substitute is a full citizen, type-checked against the same
 contract as the real thing — stub drift is a compile error. The full
