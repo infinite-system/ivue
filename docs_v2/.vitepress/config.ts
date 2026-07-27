@@ -583,6 +583,13 @@ export default defineConfig({
           ],
         },
         {
+          text: 'Extras',
+          collapsed: false,
+          items: [
+            { text: 'Static() — Capability Classes', link: '/guide/static' },
+          ],
+        },
+        {
           text: 'Reference',
           collapsed: false,
           items: [

@@ -131,7 +131,8 @@ const props = propsWithDefaults(
 The static-side sibling of `Reactive()`, for **stateless capability
 classes** — function bags published behind a namespace's replaceable
 `Class` slot. Imported from the separate `ivue/extras` entry so the
-primary `ivue` entry stays the bare engine.
+primary `ivue` entry stays the bare engine. This page is the contract;
+the guide is [Static() — Capability Classes](/guide/static).
 
 ```ts
 import { Static } from 'ivue/extras';
@@ -185,8 +186,9 @@ Semantics to rely on:
   deliberately mutable memo table is the author's design — the engine
   does not freeze it. A static getter that must stay live — a knob for
   test subclasses, a fresh-per-read value — must not use the prefix.
-  (Measured on Node 26: the caching getter's warm read costs ~5 ns
-  more than a plain property — invisible at any real call frequency.)
+  (Measured on Node 26: the caching getter's warm read costs ~4–6 ns
+  more than a plain property — invisible at any real call frequency;
+  in a genuinely hot loop, hoist the value into a local once.)
 - **Caching is per receiver**: when a subclass overrides an input,
   `Sub.$x !== Base.$x`. Compare by value, or through one receiver.
   Bound methods follow the same rule — `Sub.method` binds to `Sub`,

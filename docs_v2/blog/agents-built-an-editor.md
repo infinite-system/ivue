@@ -134,7 +134,7 @@ export namespace Files {
 }
 ```
 
-[`Static()`](/guide/modules) binds the class's methods lazily with
+[`Static()`](/guide/static) binds the class's methods lazily with
 stable identity, and the mutable `Class` slot stays replaceable — by a
 test double, a plugin, a fork — with no dependency-object threading. A
 human team might debate whether one uniform seam beats a bespoke,

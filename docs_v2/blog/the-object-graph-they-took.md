@@ -150,7 +150,7 @@ re-renders when the active workspace changes, the editor swaps, *or*
 the document opens. Nobody wrote a selector for that; the reads are
 the subscription. The second navigates the workspace graph AND
 dereferences a second module's replaceable
-[`Static()`](/guide/modules) seam — `LanguageRegistry.Class` — in the
+[`Static()`](/guide/static) seam — `LanguageRegistry.Class` — in the
 same expression. Under eager binding, that line is a load-order
 lottery ticket. Late-bound, it is just a sentence.
 

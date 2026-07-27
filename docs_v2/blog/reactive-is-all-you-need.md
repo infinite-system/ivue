@@ -86,7 +86,7 @@ the terminal code editor
 [built almost entirely by AI agents](/blog/agents-built-an-editor), is
 25,890 lines with **no store library, no DI container, no emitter, no
 composable layer**: 42 `Reactive()` classes cover every stateful role
-in the table above, 34 [`Static()`](/guide/modules) seams cover the
+in the table above, 34 [`Static()`](/guide/static) seams cover the
 stateless capabilities, and the whole model layer underneath is
 [1.1 kB](/blog/one-kilobyte-feature). The
 [20,000,000-cell spreadsheet](/blog/twenty-million-cells) runs the
