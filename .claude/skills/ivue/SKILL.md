@@ -1,6 +1,6 @@
 ---
 name: ivue
-description: Use when writing or editing ivue `Reactive()` classes, converting a Vue component or composable to ivue, or resolving any `.value`-in-template, `defineExpose`/`reactive()` instance-typing, `ReactiveInstance`/`Instance`, `$watch`/`$watchEffect`, or namespace-export question — the operating manual for Vue 3 class-based reactivity where state is ref-getters, derived values are plain getters, and Refs/Computeds are `.value` everywhere.
+description: Use when writing or editing ivue `Reactive()` classes, converting a Vue component or composable to ivue, or resolving any `.value`-in-template, `defineExpose`/`reactive()` instance-typing, `ReactiveInstance`/`Instance`, `$watch`/`$watchEffect`, or namespace-export question, or any `Static()` capability-class / `$`-cached-static / anchor question — the operating manual for Vue 3 class-based reactivity where state is ref-getters, derived values are plain getters, and Refs/Computeds are `.value` everywhere.
 ---
 
 # ivue `Reactive`
@@ -421,6 +421,7 @@ session.dispose();
 | ✅ constructor runs init; register hooks/watchers there | ❌ add an `init()` method expecting auto-call — ivue never calls it |
 | ✅ plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | ❌ default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |
 | ✅ compose cleanup as an ordinary method — `dispose() { /* non-Vue cleanup */ this.$stopEffects(); }` | ❌ expect a teardown hook — ivue auto-calls NOTHING (no `init()`, no `stopEffects()`) |
+| ✅ a class with static members anchors them: `const $Class = Static($X)` (`ivue/extras`) | ❌ `extends X.Class` — the mutable slot is an eager snapshot of one generation; always extend `$Class` |
 
 ## The unwrapping-surface typing invariant
 
@@ -497,6 +498,57 @@ safe without ordering discipline or `forwardRef`-style workarounds:
   cross-references inside late method and getter bodies. Circular `extends`
   stays impossible because it evaluates at load time and both parents cannot
   exist first.
+
+## `Static()` — the static-side sibling (from `ivue/extras`)
+
+`Reactive()` owns instances. Stateless CAPABILITY classes — function bags for
+files, git, parsers, clocks: never constructed, only called and swapped — use
+`Static()` from the `ivue/extras` entry (separate, so core stays the engine):
+
+- **Static methods bind lazily with stable identity** — detachable, safe as a
+  router/queue/listener callback, bound to the RECEIVING class.
+- **Get-only statics named `$…` compute once PER RECEIVER.** The `$` prefix
+  promises stable identity, NOT immutability — a mutable memo table is a
+  legitimate `$`-cache. Non-`$` static getters stay LIVE: those are the knobs
+  test subclasses pinch.
+
+THE ANCHOR RULE — a class that declares static members wraps them ONCE, at
+`$Class`, so subclasses and test doubles inherit working semantics by
+extending `$Class` bare:
+
+```ts
+import { Static } from 'ivue/extras';
+
+class $GitCommands {
+  static get binary() {
+    return 'git'; // LIVE knob — no $ prefix
+  }
+  static get $environment() {
+    return { LC_ALL: 'C' }; // computed once per receiver
+  }
+  static stage(path: string) {
+    return this.run(['add', '--', path]); // `this` = receiving class
+  }
+}
+
+export namespace GitCommands {
+  export const $Class = Static($GitCommands); // anchor — wrap HERE
+  export let Class = $Class; // selection — kernels/tests swap this
+}
+```
+
+Statics AND reactive instances on one class — anchor the statics, then
+`Reactive()`:
+
+```ts
+export namespace Settings {
+  export const $Class = Static($Settings);
+  export let Class = Reactive($Class); // in-place: Class === $Class
+  export type Instance = typeof Class.Instance;
+}
+```
+
+No static members → no wrapper: `$Class = $X`, the standard form unchanged.
 
 ## Generic classes (brief)
 
@@ -723,4 +775,5 @@ convention and check it in review.
 - [ ] Every `computed()`/constructor-watch CALLBACK delegates to a method (`computed(() => this.recalculate())`) — no logic inlined in reactive closures; the arrow form, never `computed(this.method)`.
 - [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices and specs included — no single-letter names, no name meaning different things in different methods.
 - [ ] Keyed/sparse state uses the Map-of-refs shape (get-or-create on read, peek-only bump on write, explicit release path) — never one getter per key, never a deep `reactive()` collection.
+- [ ] Static members are anchored (`const $Class = Static($X)`); `$`-prefixed static getters are compute-once-per-receiver caches, non-`$` statics stay live knobs, and inheritance extends `$Class` — never the mutable `Class`.
 - [ ] Spacing carries meaning: declaration-like getters contiguous within their group; blank lines only where a doc comment / multi-line body / category boundary begins; methods always separated.
