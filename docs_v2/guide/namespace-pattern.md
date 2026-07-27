@@ -1,16 +1,9 @@
 ---
-title: The Namespace Pattern, Crystallized
-description: A capability needs one canonical object, one mutable class slot, and late dependency reads. A tiny Static() adapter adds passable Node callbacks without a DI container or custom module runtime.
-search: false
+title: The Namespace Pattern
+description: A capability needs one canonical object, one mutable class slot, and late dependency reads — the invariant beneath Reactive() and Static(), from the smallest wrapper-less form to Node capability classes.
 ---
 
-# The Namespace Pattern, Crystallized
-
-::: warning Current exploration
-This page extracts an invariant used by ivue and explores its application
-outside Vue. It is research material, not part of ivue's required operating
-manual.
-:::
+# The Namespace Pattern
 
 > A dependency needs a canonical address and a moment of resolution. It needs
 > a container only when the answer varies by runtime context.
@@ -30,6 +23,9 @@ Each part has one responsibility:
 
 ## The smallest TypeScript form
 
+The invariant needs **no transform at all**. The smallest namespace is a
+raw class and a mutable slot:
+
 ```ts
 class $Orders {
   static submit(orderId: string) {
@@ -38,8 +34,8 @@ class $Orders {
 }
 
 export namespace Orders {
-  export const $Class = $Orders;
-  export let Class = Static($Class);
+  export const $Class = $Orders; // raw — the immutable foundation
+  export let Class = $Class; // selected — replaceable at boot or in tests
 }
 ```
 
@@ -49,9 +45,13 @@ Application code reaches the selected capability through one public address:
 Orders.Class.submit(orderId);
 ```
 
-`Orders` remains stable while `Orders.Class` may change during boot or a test.
-An ordinary class export is sufficient when nothing needs to
-replace or compose the class.
+`Orders` remains stable while `Orders.Class` may change during boot or a
+test. That replaceability is the whole invariant — the adapters are
+**additive, not constitutive**: [`Static()`](/guide/static) joins when
+methods must survive detachment as callbacks (and adds `$`-cached
+getters); `Reactive()` joins when instances need Vue reactivity. And an
+ordinary class export, with no namespace, is sufficient when nothing
+ever needs to replace or compose the class.
 
 ## The JavaScript form exposes the primitive
 
@@ -98,11 +98,11 @@ which property is the foundation and which property is the selection.
 
 Most backend modules are collections of functions. A static capability class
 keeps that allocation-free shape while adding inheritance, `super`, and a
-replaceable class address. The experimental `Static()` adapter makes its
-methods safe to retain as callbacks:
+replaceable class address. The [`Static()`](/guide/static) adapter makes
+its methods safe to retain as callbacks:
 
 ```ts
-import { Static } from './Static';
+import { Static } from 'ivue/extras';
 
 class $Users {
   static find(userId: string) {
@@ -515,6 +515,6 @@ canonical namespace object + mutable Class slot + late reads
 The namespace is not an ivue convention exported to Node. ivue and Node are
 different expressions generated from the same smaller invariant.
 
-[Static Classes for Node](/guide/node-static-runtime?experiment=1) contains the
-working transform and benchmarks. [Node Development by Restart](/guide/node-class-hmr?experiment=1)
-defines why the experiment stops before a custom HMR runtime.
+[Static() — Capability Classes](/guide/static) is the shipped adapter,
+from `ivue/extras`. [Node Development by Restart](/guide/node-class-hmr?experiment=1)
+defines why the pattern stops before a custom HMR runtime.

@@ -25,14 +25,6 @@ onMounted(readExperimentFlag);
 
 const links = [
   {
-    text: 'Namespace Pattern',
-    link: '/guide/namespace-pattern',
-  },
-  {
-    text: 'Static Classes for Node',
-    link: '/guide/node-static-runtime',
-  },
-  {
     text: 'Node Development by Restart',
     link: '/guide/node-class-hmr',
   },

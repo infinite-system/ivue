@@ -124,6 +124,6 @@ The default remains smaller:
 namespace + late getters + Static() + restart
 ```
 
-The [Namespace Pattern](/guide/namespace-pattern?experiment=1) explains the
-cross-runtime invariant. [Static Classes for Node](/guide/node-static-runtime?experiment=1)
+The [Namespace Pattern](/guide/namespace-pattern) explains the
+cross-runtime invariant. [Static() — Capability Classes](/guide/static)
 contains the working transform, tests, benchmarks, and exact scope.

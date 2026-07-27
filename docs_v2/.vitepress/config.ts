@@ -586,6 +586,7 @@ export default defineConfig({
           text: 'Extras',
           collapsed: false,
           items: [
+            { text: 'The Namespace Pattern', link: '/guide/namespace-pattern' },
             { text: 'Static() — Capability Classes', link: '/guide/static' },
           ],
         },

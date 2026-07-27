@@ -168,6 +168,68 @@ doctrine, with its third strength (planting defects as positive
 controls), is
 [The test is a subclass](/blog/the-test-is-a-subclass).
 
+## The backend: Node capability classes
+
+Nothing above is Vue-specific — `Static()` imports no Vue and runs
+anywhere JavaScript does. On a Node backend, where most modules are
+function bags, the same shape becomes the default module grammar. Two
+additions complete it.
+
+**Dependency getters read the live slot.** A capability reaches
+another capability through a static getter, so the cross-module read
+happens when behavior runs — never while the module graph is
+initializing. Imports may be circular; nothing reads eagerly:
+
+```ts
+class $Orders {
+  static get Users() {
+    return Users.Class; // late — and always the SELECTED class
+  }
+
+  static submit(request: OrderRequest) {
+    return this.Users.find(request.params.userId);
+  }
+}
+```
+
+**Retained callbacks are safe — and belong to one generation.**
+Because methods bind lazily with stable identity, direct registration
+works:
+
+```ts
+router.post('/orders', Orders.Class.submit);
+```
+
+The router receives one stable function whose `this` is the class
+selected *at registration time*. A later `Class` assignment does not
+rewrite a callback already stored inside the router — so boot
+composition finishes before callbacks escape:
+
+```text
+load modules → compose raw classes → select each Static() class
+→ register retained callbacks → listen
+```
+
+`Class` is mutable as a **composition slot**, not a runtime feature
+flag: a kernel starts from `$Class`, applies extensions, and calls
+`Static()` once on the composed result. Changing the plugin set
+restarts the process and produces a new sealed generation — why the
+pattern deliberately stops before a custom reload runtime is
+[Node Development by Restart](/guide/node-class-hmr?experiment=1).
+
+**One privacy rule.** Avoid `this.#member` in static capability
+classes: native static `#private` brands only its declaring class, and
+the selected class is a subclass, so polymorphic access rejects it.
+Use TypeScript `private static` for polymorphic encapsulation
+(an authoring-time rule — the selected subclass dispatches fine),
+`protected static` for extension points, and module scope for state
+that must be private at runtime.
+
+One boundary carries over unchanged: a namespace slot is **one
+application-wide answer**. When a provider varies by request, tenant,
+or session, pass that context explicitly or use scoped DI — the
+pattern replaces the container for global selection only.
+
 ## Composing with `Reactive()`
 
 `$` semantics are **granted by the transform** — a raw class, a raw
