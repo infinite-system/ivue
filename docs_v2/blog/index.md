@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/uniformity-is-an-instrument">
+    <img class="thumb" src="/blog/uniformity-is-an-instrument.png" alt="Uniformity is an instrument" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">July 2026</span></div>
+      <h2>Uniformity is an instrument</h2>
+      <p class="excerpt">Consistency is treated as taste. It is a measuring device — deviation is only visible against sameness, so low structural entropy makes a codebase's own defects high-contrast. And the one thing it cannot see.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/the-test-is-a-subclass">
     <img class="thumb" src="/blog/the-test-is-a-subclass.png" alt="The test is a subclass" width="1200" height="630" loading="lazy" />
     <div class="body">
