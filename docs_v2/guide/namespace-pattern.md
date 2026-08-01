@@ -546,3 +546,55 @@ different expressions generated from the same smaller invariant.
 [Static() — Capability Classes](/guide/static) is the shipped adapter,
 from `ivue/extras`. [Node Development by Restart](/guide/node-class-hmr?experiment=1)
 defines why the pattern stops before a custom HMR runtime.
+
+## Reading a class's own statics
+
+`Reactive(X) === X`, so a namespace's `Class` slot IS the class. A getter that
+reads statics through that slot hard-binds to the base class, and a subclass
+override is silently ignored:
+
+```ts
+// ❌ the override never applies
+class $Tooltip {
+  protected get Tooltip() {
+    return Tooltip.Class as unknown as typeof $Tooltip;
+  }
+  static get DWELL_SECONDS() { return 0.4; }
+  protected get dwellSeconds() {
+    return this.Tooltip.DWELL_SECONDS;   // base value forever
+  }
+}
+```
+
+A subclass setting `0.1` still reads `0.4` through this shape. That defeats the
+reason a live (non-`$`) static getter exists: it is the knob a subclass or a
+test double pinches.
+
+Take the first rung that applies.
+
+**1. Nothing outside the instance reads it — delete the static.** A plain
+instance getter costs zero bytes per instance and is overridable by ordinary
+inheritance:
+
+```ts
+protected get dwellSeconds() { return 0.4; }
+```
+
+**2. Something outside reads it — keep the static, read it off the receiver:**
+
+```ts
+protected get dwellSeconds() {
+  return (this.constructor as typeof $Tooltip).DWELL_SECONDS;
+}
+```
+
+`this.constructor` is the actual class: the subclass when subclassed, and a
+class that INHERITS the original when the instance came from `Reactive()`, so
+statics resolve in both cases. TypeScript types `constructor` as `Function`, so
+the single cast is the honest cost.
+
+**3. Overriding must not happen — name the class directly**,
+`$Tooltip.DWELL_SECONDS`, so the code says so.
+
+Never add a `protected get <ClassName>()` self-reference getter. It is a cast
+wearing a getter costume: it looks live and is not.
