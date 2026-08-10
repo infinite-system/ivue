@@ -348,6 +348,23 @@ npx ivue skill --all
 
 </section>
 
+<section class="ix-section">
+
+## ivue in production
+
+<p class="lead">
+<a href="https://github.com/infinite-system/invar">Invar</a> — a full terminal
+IDE built entirely on ivue: hundreds of reactive classes driving the editor,
+workspace search, tasks, terminals, and agents below — in a Bun process with
+no DOM. This is a real frame from the running app.
+</p>
+
+<a href="https://github.com/infinite-system/invar" class="invar-shot">
+  <img src="/invar-screenshot.svg" alt="Invar — a terminal IDE built on ivue: workspace search results, editor, tasks pane, and terminal" loading="lazy" />
+</a>
+
+</section>
+
 
 
 </div>

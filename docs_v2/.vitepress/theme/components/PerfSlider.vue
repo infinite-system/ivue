@@ -39,11 +39,13 @@ onMounted(() => (mounted.value = true));
     @touchstart.passive="onTouchStart"
     @touchend.passive="onTouchEnd"
   >
-    <div
-      class="perf-slider-track"
-      :style="{ transform: `translateX(-${activeIndex * 100}%)` }"
-    >
-      <slot />
+    <div class="perf-slider-viewport">
+      <div
+        class="perf-slider-track"
+        :style="{ transform: `translateX(-${activeIndex * 100}%)` }"
+      >
+        <slot />
+      </div>
     </div>
 
     <button
@@ -79,8 +81,10 @@ onMounted(() => (mounted.value = true));
 <style scoped>
 .perf-slider {
   position: relative;
-  overflow: hidden;
   margin: 24px 0 8px;
+}
+.perf-slider-viewport {
+  overflow: hidden;
 }
 .perf-slider-track {
   display: flex;
