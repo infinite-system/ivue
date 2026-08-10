@@ -373,27 +373,27 @@ flyweight state, and lifecycle discipline, all in one real codebase.
 <PerfSlider>
 
 <figure class="invar-figure">
-  <a href="https://github.com/infinite-system/invar"><img src="/invar-editor.svg" alt="Invar editor with file tree and structure outline" loading="lazy" /></a>
+  <img src="/invar-editor.svg" alt="Invar editor with file tree and structure outline" loading="lazy" />
   <figcaption>The editor — file tree, syntax-highlighted source, structure outline.</figcaption>
 </figure>
 
 <figure class="invar-figure">
-  <a href="https://github.com/infinite-system/invar"><img src="/invar-search.svg" alt="Invar workspace search with streaming results, tasks pane, and terminal" loading="lazy" /></a>
+  <img src="/invar-search.svg" alt="Invar workspace search with streaming results, tasks pane, and terminal" loading="lazy" />
   <figcaption>Workspace search streaming ripgrep results — click a match, land on the line.</figcaption>
 </figure>
 
 <figure class="invar-figure">
-  <a href="https://github.com/infinite-system/invar"><img src="/invar-find.svg" alt="Invar in-file find bar with live matches" loading="lazy" /></a>
+  <img src="/invar-find.svg" alt="Invar in-file find bar with live matches" loading="lazy" />
   <figcaption>In-file find — live match highlighting, case, whole-word, and regex toggles.</figcaption>
 </figure>
 
 <figure class="invar-figure">
-  <a href="https://github.com/infinite-system/invar"><img src="/invar-quickopen.svg" alt="Invar Quick Open fuzzy file picker" loading="lazy" /></a>
+  <img src="/invar-quickopen.svg" alt="Invar Quick Open fuzzy file picker" loading="lazy" />
   <figcaption>Quick Open — fuzzy go-to-file with exact-basename ranking.</figcaption>
 </figure>
 
 <figure class="invar-figure">
-  <a href="https://github.com/infinite-system/invar"><img src="/invar-tasks.svg" alt="Invar tasks pane beside a terminal running the task tracker" loading="lazy" /></a>
+  <img src="/invar-tasks.svg" alt="Invar tasks pane beside a terminal running the task tracker" loading="lazy" />
   <figcaption>The agent fleet's task dashboard — one shared renderer for pane and CLI.</figcaption>
 </figure>
 
