@@ -1763,3 +1763,34 @@ a.feature-inline-link {
 a.feature-inline-link:active {
   transform: scale(0.97);
 }
+
+/* ivue in production — the Invar showcase */
+.invar-production .invar-lead {
+  max-width: 760px;
+  margin: 8px auto 0;
+  text-align: center;
+}
+.invar-production .invar-note {
+  max-width: 680px;
+  margin: 14px auto 6px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--vp-c-text-2);
+  line-height: 1.65;
+}
+.invar-figure {
+  margin: 0;
+}
+.invar-figure img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
+}
+.invar-figure figcaption {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13.5px;
+  color: var(--vp-c-text-2);
+}

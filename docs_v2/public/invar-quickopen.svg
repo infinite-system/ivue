@@ -1,0 +1,525 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1092" font-family="'JetBrains Mono','Fira Code','SF Mono',Menlo,Consolas,monospace" font-size="15.5">
+<rect width="1920" height="1092" fill="#0d1016"/>
+<rect x="0.0" y="0" width="105.6" height="21" fill="#2b2f41"/>
+<rect x="105.6" y="0" width="1814.4" height="21" fill="#16161e"/>
+<rect x="0.0" y="21" width="105.6" height="21" fill="#2b2f41"/>
+<rect x="105.6" y="21" width="1814.4" height="21" fill="#16161e"/>
+<rect x="0.0" y="42" width="1920.0" height="21" fill="#16161e"/>
+<rect x="0.0" y="63" width="393.6" height="21" fill="#16161e"/>
+<rect x="393.6" y="63" width="76.8" height="21" fill="#1e202e"/>
+<rect x="470.4" y="63" width="9.6" height="21" fill="#a9b1d6"/>
+<rect x="480.0" y="63" width="1440.0" height="21" fill="#16161e"/>
+<rect x="0.0" y="84" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="84" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="84" width="57.6" height="21" fill="#16161e"/>
+<rect x="393.6" y="84" width="1123.2" height="21" fill="#2b2f41"/>
+<rect x="1516.8" y="84" width="9.6" height="21" fill="#787c99"/>
+<rect x="1526.4" y="84" width="393.6" height="21" fill="#16161e"/>
+<rect x="0.0" y="105" width="48.0" height="21" fill="#16161e"/>
+<rect x="48.0" y="105" width="278.4" height="21" fill="#2b2f41"/>
+<rect x="326.4" y="105" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="105" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="105" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="105" width="1132.8" height="21" fill="#16161e"/>
+<rect x="1516.8" y="105" width="9.6" height="21" fill="#787c99"/>
+<rect x="1526.4" y="105" width="9.6" height="21" fill="#16161e"/>
+<rect x="1536.0" y="105" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="126" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="126" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="126" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="126" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="126" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="126" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="147" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="147" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="147" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="147" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="147" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="147" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="168" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="168" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="168" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="168" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="168" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="168" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="189" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="189" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="189" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="189" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="189" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="189" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="210" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="210" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="210" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="210" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="210" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="210" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="231" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="231" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="231" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="231" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="231" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="231" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="252" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="252" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="252" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="252" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="252" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="252" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="273" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="273" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="273" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="273" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="273" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="273" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="294" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="294" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="294" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="294" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="294" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="294" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="315" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="315" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="315" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="315" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="315" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="315" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="336" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="336" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="336" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="336" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="336" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="336" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="357" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="357" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="357" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="357" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="357" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="357" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="378" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="378" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="378" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="378" width="28.8" height="21" fill="#1a1b26"/>
+<rect x="384.0" y="378" width="1152.0" height="21" fill="#16161e"/>
+<rect x="1536.0" y="378" width="384.0" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="399" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="399" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="399" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="399" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="420" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="420" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="420" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="420" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="441" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="441" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="441" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="441" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="462" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="462" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="462" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="462" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="483" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="483" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="483" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="483" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="504" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="504" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="504" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="504" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="525" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="525" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="525" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="525" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="546" width="326.4" height="21" fill="#16161e"/>
+<rect x="326.4" y="546" width="9.6" height="21" fill="#787c99"/>
+<rect x="336.0" y="546" width="19.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="546" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="567" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="567" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="588" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="588" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="609" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="609" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="630" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="630" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="651" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="651" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="672" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="672" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="693" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="693" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="714" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="714" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="735" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="735" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="756" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="756" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="777" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="777" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="798" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="798" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="819" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="819" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="840" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="840" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="861" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="861" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="882" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="882" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="903" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="903" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="924" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="924" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="945" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="945" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="966" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="966" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="987" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="987" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="1008" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="1008" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="1029" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="1029" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="1050" width="355.2" height="21" fill="#16161e"/>
+<rect x="355.2" y="1050" width="1564.8" height="21" fill="#1a1b26"/>
+<rect x="0.0" y="1071" width="1920.0" height="21" fill="#16161e"/>
+<text x="0.0" y="15.5" fill="#a9b1d6" textLength="86.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ● invar </text>
+<text x="1891.2" y="15.5" fill="#7aa2f7" textLength="28.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> + </text>
+<text x="0.0" y="36.5" fill="#a9b1d6" textLength="1920.0" lengthAdjust="spacingAndGlyphs" xml:space="preserve">   main                                                                                                                                                                                                 </text>
+<text x="0.0" y="57.5" fill="#a9b1d6" textLength="76.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ⌕ invar</text>
+<text x="384.0" y="57.5" fill="#7aa2f7" textLength="1152.0" lengthAdjust="spacingAndGlyphs" xml:space="preserve">╭─Go to File───────────────────────────────────────────────────────────────────────────────────────────────────────── × </text>
+<text x="1891.2" y="57.5" fill="#a9b1d6" textLength="28.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▧ </text>
+<text x="38.4" y="78.5" fill="#7aa2f7" textLength="307.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve">╭─Files────────────────────────╮</text>
+<text x="345.6" y="78.5" fill="#787c99" textLength="38.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│ ❮ </text>
+<text x="384.0" y="78.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="78.5" fill="#a9b1d6" textLength="76.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve">↗ search</text>
+<text x="1526.4" y="78.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="0.0" y="99.5" fill="#7aa2f7" textLength="48.0" lengthAdjust="spacingAndGlyphs" xml:space="preserve">▎ ≡ │</text>
+<text x="268.8" y="99.5" fill="#7aa2f7" textLength="57.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ↥  ⊙ </text>
+<text x="336.0" y="99.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="99.5" fill="#787c99" textLength="38.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│  n</text>
+<text x="384.0" y="99.5" fill="#7aa2f7" textLength="1132.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│ agent-dispatches/_archive-2026-07-27/briefs/TASK-activity-order.md                                                  </text>
+<text x="1526.4" y="99.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="120.5" fill="#7aa2f7" textLength="288.0" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│ ▸ .claude                   </text>
+<text x="336.0" y="120.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="120.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="120.5" fill="#101014" textLength="28.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve">╭──</text>
+<text x="384.0" y="120.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="120.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-agent-intermittents.md                                             </text>
+<text x="1526.4" y="120.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1536.0" y="120.5" fill="#101014" textLength="384.0" lengthAdjust="spacingAndGlyphs" xml:space="preserve">───────────────────────────────────────╮</text>
+<text x="9.6" y="141.5" fill="#787c99" textLength="28.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ⌕ </text>
+<text x="38.4" y="141.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="141.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ .git                      </text>
+<text x="336.0" y="141.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="141.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="141.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="141.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="141.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-audio-narration.md                                                 </text>
+<text x="1526.4" y="141.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="141.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="9.6" y="162.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">₂</text>
+<text x="38.4" y="162.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="162.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ .invar                    </text>
+<text x="336.0" y="162.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="162.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="162.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="162.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="162.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-autocomplete-identifiers.md                                        </text>
+<text x="1526.4" y="162.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="162.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="9.6" y="183.5" fill="#787c99" textLength="28.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ⑂ </text>
+<text x="38.4" y="183.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="183.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ .perf-history             </text>
+<text x="336.0" y="183.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="183.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="183.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="183.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="183.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-blank-filetree.md                                                  </text>
+<text x="1526.4" y="183.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="183.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="204.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="204.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ .vscode                   </text>
+<text x="336.0" y="204.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="204.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="204.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="204.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="204.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-breadcrumb-up.md                                                   </text>
+<text x="1526.4" y="204.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="204.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="9.6" y="225.5" fill="#787c99" textLength="28.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▣ </text>
+<text x="38.4" y="225.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="225.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ agent-dispatches          </text>
+<text x="336.0" y="225.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="225.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="225.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="225.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="225.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-capability-boot-guard.md                                           </text>
+<text x="1526.4" y="225.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="225.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="246.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="246.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ artifacts                 </text>
+<text x="336.0" y="246.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="246.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="246.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="246.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="246.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-chrome-wave-round2.md                                              </text>
+<text x="1526.4" y="246.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="246.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="9.6" y="267.5" fill="#787c99" textLength="28.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▶ </text>
+<text x="38.4" y="267.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="267.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ dist                      </text>
+<text x="336.0" y="267.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="267.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="267.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="267.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="267.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-chrome-wave-round3-pending.md                                      </text>
+<text x="1526.4" y="267.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="267.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="288.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="288.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ docs                      </text>
+<text x="336.0" y="288.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="288.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="288.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="288.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="288.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-chrome-wave-round3.md                                              </text>
+<text x="1526.4" y="288.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="288.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="9.6" y="309.5" fill="#787c99" textLength="28.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ◉ </text>
+<text x="38.4" y="309.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="309.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ fixtures                  </text>
+<text x="336.0" y="309.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="309.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="309.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="309.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="309.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-chrome-wave.md                                                     </text>
+<text x="1526.4" y="309.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="309.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="330.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="330.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ node_modules              </text>
+<text x="336.0" y="330.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="330.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="330.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="330.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="330.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-class-guard.md                                                     </text>
+<text x="1526.4" y="330.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="330.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="9.6" y="351.5" fill="#787c99" textLength="28.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ⧫ </text>
+<text x="38.4" y="351.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="351.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ reviews                   </text>
+<text x="336.0" y="351.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="351.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="351.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="351.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="351.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-code-folding.md                                                    </text>
+<text x="1526.4" y="351.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="351.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="372.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="372.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ scripts                   </text>
+<text x="336.0" y="372.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="372.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="372.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="372.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="393.6" y="372.5" fill="#a9b1d6" textLength="1123.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> agent-dispatches/_archive-2026-07-27/briefs/TASK-code-wrap.md                                                       </text>
+<text x="1526.4" y="372.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="372.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="393.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="393.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ src                       </text>
+<text x="336.0" y="393.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="393.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="393.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="384.0" y="393.5" fill="#7aa2f7" textLength="1152.0" lengthAdjust="spacingAndGlyphs" xml:space="preserve">╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text>
+<text x="1910.4" y="393.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="414.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="414.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ tmp                       </text>
+<text x="336.0" y="414.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="414.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="414.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="414.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="435.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="435.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ▸ tools                     </text>
+<text x="336.0" y="435.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="435.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="435.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="435.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="456.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="456.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> · .git-blame-ignore-revs    </text>
+<text x="336.0" y="456.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="456.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="456.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="456.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="477.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="477.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ⑂ .gitignore                </text>
+<text x="336.0" y="477.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="477.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="477.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="477.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="498.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="498.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> · .prettierignore           </text>
+<text x="336.0" y="498.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="498.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="498.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="498.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="519.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="519.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> · .prettierrc               </text>
+<text x="336.0" y="519.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="519.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="519.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="519.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="540.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="540.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ AGENTS.md                 </text>
+<text x="336.0" y="540.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="540.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="540.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="540.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="561.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="561.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ⚿ bun.lock                  </text>
+<text x="336.0" y="561.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="561.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="561.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="561.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="582.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="582.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ CLAUDE.md                 </text>
+<text x="336.0" y="582.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="582.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="582.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="582.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="603.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="603.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ CONTRIBUTING.md           </text>
+<text x="336.0" y="603.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="603.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="603.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="603.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="624.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="624.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ design.invariants.md      </text>
+<text x="336.0" y="624.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="624.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="624.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="624.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="645.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="645.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> · LICENSE                   </text>
+<text x="336.0" y="645.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="645.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="645.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="645.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="666.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="666.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ⛃ package.json              </text>
+<text x="336.0" y="666.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="666.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="666.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="666.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="687.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="687.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project-find-replace-desig</text>
+<text x="336.0" y="687.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="687.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="687.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="687.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="708.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="708.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project-inversion-design.m</text>
+<text x="336.0" y="708.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="708.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="708.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="708.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="729.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="729.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.active-priority-ta</text>
+<text x="336.0" y="729.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="729.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="729.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="729.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="750.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="750.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.active-tasks.md   </text>
+<text x="336.0" y="750.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="750.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="750.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="750.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="771.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="771.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.agent-harness.latt</text>
+<text x="336.0" y="771.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="771.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="771.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="771.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="792.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="792.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.agent-harness.md  </text>
+<text x="336.0" y="792.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="792.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="792.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="792.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="813.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="813.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.architecture.md   </text>
+<text x="336.0" y="813.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="813.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="813.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="813.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="834.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="834.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.brief.md          </text>
+<text x="336.0" y="834.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="834.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="834.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="834.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="855.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="855.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.briefing.md       </text>
+<text x="336.0" y="855.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="855.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="855.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="855.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="876.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="876.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.build.md          </text>
+<text x="336.0" y="876.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="876.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="876.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="876.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="897.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="897.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.canvas-census.md  </text>
+<text x="336.0" y="897.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="897.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="897.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="897.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="918.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="918.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.capabilities.md   </text>
+<text x="336.0" y="918.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="918.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="918.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="918.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="939.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="939.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.conductor.archive.</text>
+<text x="336.0" y="939.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="939.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="939.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="939.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="960.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="960.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.conductor.md      </text>
+<text x="336.0" y="960.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="960.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="960.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="960.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="981.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="981.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.conventions.md    </text>
+<text x="336.0" y="981.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="981.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="981.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="981.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="1002.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="1002.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.coverage-deltas.md</text>
+<text x="336.0" y="1002.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="1002.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="1002.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="1002.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="1023.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="1023.5" fill="#a9b1d6" textLength="278.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ✎ project.decisions.md      </text>
+<text x="336.0" y="1023.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="1023.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="1023.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="1023.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="1044.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="48.0" y="1044.5" fill="#787c99" textLength="144.0" lengthAdjust="spacingAndGlyphs" xml:space="preserve">▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄</text>
+<text x="192.0" y="1044.5" fill="#16161e" textLength="134.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve">▄▄▄▄▄▄▄▄▄▄▄▄▄▄</text>
+<text x="336.0" y="1044.5" fill="#7aa2f7" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="345.6" y="1044.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="1044.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="1910.4" y="1044.5" fill="#101014" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="38.4" y="1065.5" fill="#7aa2f7" textLength="307.2" lengthAdjust="spacingAndGlyphs" xml:space="preserve">╰──────────────────────────────╯</text>
+<text x="345.6" y="1065.5" fill="#787c99" textLength="9.6" lengthAdjust="spacingAndGlyphs" xml:space="preserve">│</text>
+<text x="355.2" y="1065.5" fill="#101014" textLength="1564.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve">╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text>
+<text x="0.0" y="1086.5" fill="#787c99" textLength="364.8" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> invar  ·  [Files]  ·  Ctrl+Q/F10 quit</text>
+<text x="1737.6" y="1086.5" fill="#787c99" textLength="182.4" lengthAdjust="spacingAndGlyphs" xml:space="preserve"> ❯  ⚙  ?  12:51  ▥ </text>
+</svg>

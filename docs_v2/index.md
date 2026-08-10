@@ -348,20 +348,52 @@ npx ivue skill --all
 
 </section>
 
-<section class="ix-section">
+<section class="ix-section invar-production">
 
 ## ivue in production
 
-<p class="lead">
-<a href="https://github.com/infinite-system/invar">Invar</a> — a full terminal
-IDE built entirely on ivue: hundreds of reactive classes driving the editor,
-workspace search, tasks, terminals, and agents below — in a Bun process with
-no DOM. This is a real frame from the running app.
+<p class="lead invar-lead">
+<a href="https://github.com/infinite-system/invar">Invar</a> — a full terminal IDE
+built entirely on ivue: hundreds of reactive classes driving the editor, workspace
+search, tasks, terminals, and agents — in a Bun process with no DOM. Every frame
+below is real output from the running app, rendered cell-for-cell from its PTY grid.
 </p>
 
-<a href="https://github.com/infinite-system/invar" class="invar-shot">
-  <img src="/invar-screenshot.svg" alt="Invar — a terminal IDE built on ivue: workspace search results, editor, tasks pane, and terminal" loading="lazy" />
-</a>
+<p class="invar-note">
+Invar is an <strong>alpha, experimental project</strong> — a proving ground for ivue
+beyond the web, and an experiment in <strong>agentic development</strong>: the entire
+editor was built by AI agents using the ivue skill as their base discipline, with
+every module governed by explicit invariants contracts.
+</p>
+
+<PerfSlider>
+
+<figure class="invar-figure">
+  <a href="https://github.com/infinite-system/invar"><img src="/invar-editor.svg" alt="Invar editor with file tree and structure outline" loading="lazy" /></a>
+  <figcaption>The editor — file tree, syntax-highlighted source, structure outline.</figcaption>
+</figure>
+
+<figure class="invar-figure">
+  <a href="https://github.com/infinite-system/invar"><img src="/invar-search.svg" alt="Invar workspace search with streaming results, tasks pane, and terminal" loading="lazy" /></a>
+  <figcaption>Workspace search streaming ripgrep results — click a match, land on the line.</figcaption>
+</figure>
+
+<figure class="invar-figure">
+  <a href="https://github.com/infinite-system/invar"><img src="/invar-find.svg" alt="Invar in-file find bar with live matches" loading="lazy" /></a>
+  <figcaption>In-file find — live match highlighting, case, whole-word, and regex toggles.</figcaption>
+</figure>
+
+<figure class="invar-figure">
+  <a href="https://github.com/infinite-system/invar"><img src="/invar-quickopen.svg" alt="Invar Quick Open fuzzy file picker" loading="lazy" /></a>
+  <figcaption>Quick Open — fuzzy go-to-file with exact-basename ranking.</figcaption>
+</figure>
+
+<figure class="invar-figure">
+  <a href="https://github.com/infinite-system/invar"><img src="/invar-tasks.svg" alt="Invar tasks pane beside a terminal running the task tracker" loading="lazy" /></a>
+  <figcaption>The agent fleet's task dashboard — one shared renderer for pane and CLI.</figcaption>
+</figure>
+
+</PerfSlider>
 
 </section>
 
