@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, useSlots } from 'vue';
+import {
+  ref,
+  computed,
+  useSlots,
+  onMounted,
+  onBeforeUnmount,
+  nextTick,
+} from 'vue';
 
 /**
  * A dependency-free slide carousel. Each direct child element of the default
@@ -11,16 +18,41 @@ import { ref, computed, useSlots } from 'vue';
  */
 const slots = useSlots();
 const activeIndex = ref(0);
+const trackElement = ref<HTMLElement | null>(null);
+const viewportHeight = ref<number | null>(null);
 
 const slideCount = computed(() => {
   const children = slots.default?.() ?? [];
   return children.filter((node) => typeof node.type !== 'symbol').length;
 });
 
+// The viewport's height follows the ACTIVE slide, so a short slide is not
+// padded out to the tallest sibling's height. A ResizeObserver keeps the
+// measurement honest when late content (images, fonts) changes the slide.
+let resizeObserver: ResizeObserver | null = null;
+function measureActiveSlide() {
+  const slide = trackElement.value?.children[activeIndex.value] as
+    | HTMLElement
+    | undefined;
+  if (!slide) return;
+  viewportHeight.value = slide.offsetHeight;
+  if (typeof ResizeObserver !== 'undefined') {
+    resizeObserver?.disconnect();
+    resizeObserver = new ResizeObserver(() => {
+      viewportHeight.value = slide.offsetHeight;
+    });
+    resizeObserver.observe(slide);
+  }
+}
+
 function goTo(index: number) {
   const count = slideCount.value;
   activeIndex.value = ((index % count) + count) % count;
+  nextTick(measureActiveSlide);
 }
+
+onMounted(measureActiveSlide);
+onBeforeUnmount(() => resizeObserver?.disconnect());
 
 function isNarrowScreen(): boolean {
   return (
@@ -48,8 +80,12 @@ function onTouchEnd(event: TouchEvent) {
     @touchstart.passive="onTouchStart"
     @touchend.passive="onTouchEnd"
   >
-    <div class="perf-slider-viewport">
+    <div
+      class="perf-slider-viewport"
+      :style="viewportHeight !== null ? { height: `${viewportHeight}px` } : {}"
+    >
       <div
+        ref="trackElement"
         class="perf-slider-track"
         :style="{ transform: `translateX(-${activeIndex * 100}%)` }"
       >
@@ -95,6 +131,10 @@ function onTouchEnd(event: TouchEvent) {
 }
 .perf-slider-viewport {
   overflow: hidden;
+  transition: height 0.3s cubic-bezier(0.25, 0.8, 0.35, 1);
+}
+.perf-slider-track {
+  align-items: flex-start;
 }
 .perf-slider-track {
   display: flex;
