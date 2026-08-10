@@ -7,6 +7,24 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/three-years-to-reduce">
+    <img class="thumb" src="/blog/three-years-to-reduce.png" alt="Three years to reduce, two weeks to build" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">August 2026</span></div>
+      <h2>Three years to reduce, two weeks to build</h2>
+      <p class="excerpt">Two commit logs, one project: 597 commits over three years finding the generator, then 3,109 in twenty days generating from it — starting the same day the engine reached its final form.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/the-screenshot-is-a-query">
+    <img class="thumb" src="/blog/the-screenshot-is-a-query.png" alt="The screenshot is a query" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">August 2026</span></div>
+      <h2>The screenshot is a query</h2>
+      <p class="excerpt">Invar's README screenshot was never captured — it is an SVG rendered from the live terminal grid, cell by cell. When the UI is data, observation is lossless, and everything downstream inherits it.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/uniformity-is-an-instrument">
     <img class="thumb" src="/blog/uniformity-is-an-instrument.png" alt="Uniformity is an instrument" width="1200" height="630" loading="lazy" />
     <div class="body">
