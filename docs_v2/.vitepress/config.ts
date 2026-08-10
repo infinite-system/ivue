@@ -588,6 +588,7 @@ export default defineConfig({
           items: [
             { text: 'Backend ivue', link: '/guide/backend' },
             { text: 'Computed Seed Pattern', link: '/guide/computed-seed' },
+            { text: 'Keyed Version Signals', link: '/guide/keyed-version-signals' },
           ],
         },
         {

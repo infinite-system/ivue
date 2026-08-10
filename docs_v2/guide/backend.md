@@ -86,9 +86,9 @@ you already have.
 A `computed()` over source state is a cache that invalidates exactly when
 its inputs change — never stale, never over-flushed, lazy until read.
 
-For **keyed** data (users by id, tenants by name), use the version-signal
-shape from the [Flyweight Pattern](/guide/flyweight): plain Maps of refs,
-get-or-create on read, peek-only bump on write.
+For **keyed** data (users by id, tenants by name), use the
+[Keyed Version Signals](/guide/keyed-version-signals) shape: plain Maps
+of refs, get-or-create on read, peek-only bump on write.
 
 ```ts
 class $PermissionsCache {
