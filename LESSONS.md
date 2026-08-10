@@ -63,12 +63,16 @@ number was a **harness artifact, not library behavior** — when a number
 - `echo 'x' >> file` glues onto the last line when the file lacks a trailing
   newline — check before appending (this once corrupted .gitignore).
 - Docs dev server runs at `localhost:5174/ivue/` — the `/ivue/` base matters.
-- **This repo's lockfile is `yarn.lock`.** `npm install` (npm ≥10) silently
-  REWRITES yarn.lock and prunes every package not in package.json — 307
-  packages once vanished in one install. Adding pure-JS deps with
-  `npm install --ignore-scripts` is safe for the shared node_modules (no
-  native rebuilds), but re-run tests + all builds after, and never commit a
-  package-lock.json here.
+- **The repo root has NO lockfile — deliberately (since 2026-08-10).** The
+  fossil yarn.lock (Yarn-1 era) broke Cloudflare's CI by triggering yarn
+  detection against a package.json that had evolved under npm; it is
+  retired, and `packageManager: "npm@..."` in package.json pins the
+  manager for CI. Never commit a root package-lock.json either (root
+  installs are dev-only against the shared node_modules). `docs_v2/` and
+  `examples/playground/` DO carry npm lockfiles — those are the installs
+  CI performs. Adding pure-JS deps with `npm install --ignore-scripts`
+  stays the safe move for the shared node_modules (no native rebuilds);
+  re-run tests + all builds after.
 
 ## Library / packaging
 
@@ -184,16 +188,28 @@ number was a **harness artifact, not library behavior** — when a number
 
 ## Deployment (gh-pages)
 
-- **Deploys must be append-only for hashed assets.** The orphan force-push
-  once replaced the whole site each deploy, deleting the previous build's
-  content-hashed chunks — a tab loaded before the deploy 404'd on its next
-  lazy import (webpack world calls this ChunkLoadError-after-deploy). The
-  deploy script carries the previous gh-pages `assets/` forward
-  (`asset-retention.json` ages files out after 14 days). Platforms like
-  Netlify/Vercel provide this natively via immutable deploy snapshots;
-  GitHub Pages does not. Complementary, not redundant: the in-page
-  recovery script still covers stale-HTML windows and tabs older than the
-  retention window.
+- **Deploys must be append-only for hashed assets — OR atomic with client
+  recovery.** The orphan force-push once replaced the whole site each
+  deploy, deleting the previous build's content-hashed chunks — a tab
+  loaded before the deploy 404'd on its next lazy import
+  (ChunkLoadError-after-deploy). On GitHub Pages we compensated with an
+  append-only deploy script carrying previous `assets/` forward. 2026-08:
+  the site moved to Cloudflare (Workers static assets) — deploys are
+  ATOMIC, the retention script is retired, and the trade flips: no more
+  half-old-half-new CDN windows, but old chunks vanish at the instant of
+  deploy, so the IN-PAGE RECOVERY SCRIPT in docs_v2 config (preloadError +
+  static-404 + unhandledrejection + route-not-found, guarded reload) is
+  now the ONLY defense for tabs open across a deploy. It is load-bearing;
+  never remove it while lazy chunks exist.
+- **Cloudflare deploy config lives in the CF dashboard, not the repo**
+  (the one unversioned piece). Record: project `ivue` (Workers Builds,
+  GitHub-connected, production branch `main`), build command
+  `npm install --prefix docs_v2 && npm install --prefix examples/playground && npm run build:docs`,
+  env `SKIP_DEPENDENCY_INSTALL=1` (docs need NO root install — root
+  lockfile history: fossil yarn.lock retired 2026-08-10). Versioned
+  pieces: `wrangler.jsonc` (assets-only Worker) + `docs_v2/public/_headers`
+  (`!` detach then immutable for /assets/*). Deploys are per-push to
+  main; branch pushes get preview URLs.
 
 ## Process
 
