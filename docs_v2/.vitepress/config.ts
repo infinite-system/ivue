@@ -429,13 +429,21 @@ export default defineConfig({
     nav: [
       {
         text: 'Guide',
-        activeMatch: '^/(engine|guide/(introduction|getting-started|design|principles))',
+        activeMatch: '^/(engine|guide/)',
         items: [
           { text: 'What is ivue?', link: '/guide/introduction' },
           { text: 'The Engine', link: '/engine' },
           { text: 'Getting Started', link: '/guide/getting-started' },
           { text: 'Design & Philosophy', link: '/guide/design' },
           { text: 'Fundamental Principles', link: '/guide/principles' },
+          {
+            text: 'Sections',
+            items: [
+              { text: 'Core — Reactive State', link: '/guide/state' },
+              { text: 'Performance — ivue vs the World', link: '/guide/model-layer' },
+              { text: 'Advanced Patterns — Namespace', link: '/guide/namespace-pattern' },
+            ],
+          },
         ],
       },
       {
