@@ -1794,3 +1794,28 @@ a.feature-inline-link:active {
   font-size: 13.5px;
   color: var(--vp-c-text-2);
 }
+
+/* Sticky header site-wide. VitePress fixes .VPNav only at >=960px; below
+   that the bar scrolls away. Pin it at every width, push content and the
+   mobile local-nav (breadcrumb/hamburger row) down by the bar's height. */
+@media (max-width: 959px) {
+  .VPNav {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--vp-z-index-nav);
+  }
+  .VPNavBar {
+    background-color: var(--vp-nav-bg-color);
+  }
+  .VPLocalNav {
+    top: var(--vp-nav-height) !important;
+  }
+  .VPContent {
+    padding-top: var(--vp-nav-height) !important;
+  }
+  .VPContent.is-home {
+    padding-top: var(--vp-nav-height) !important;
+  }
+}
