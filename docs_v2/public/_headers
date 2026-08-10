@@ -1,7 +1,9 @@
-# Hashed build assets never change — cache forever.
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
-
-# HTML must revalidate so a new deploy is picked up promptly.
+# HTML and everything unhashed must revalidate so deploys are picked up.
 /*
   Cache-Control: public, max-age=0, must-revalidate
+
+# Hashed build assets never change — detach the inherited rule (CF stacks
+# every matching block), then cache forever.
+/assets/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable
