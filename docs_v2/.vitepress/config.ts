@@ -436,6 +436,7 @@ export default defineConfig({
           { text: 'Getting Started', link: '/guide/getting-started' },
           { text: 'Design & Philosophy', link: '/guide/design' },
           { text: 'Fundamental Principles', link: '/guide/principles' },
+          { text: 'Standard Operating Manual', link: '/guide/standard' },
           {
             text: 'Sections',
             items: [
