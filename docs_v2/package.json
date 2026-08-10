@@ -11,6 +11,10 @@
     "vitepress": "^1.6.3"
   },
   "dependencies": {
-    "@stackblitz/sdk": "^1.11.1"
+    "@stackblitz/sdk": "^1.11.1",
+    "@vueuse/core": "^14.4.0",
+    "fast-formula-parser": "^1.0.19",
+    "quasar": "^2.24.0",
+    "vue": "^3.5.41"
   }
 }
