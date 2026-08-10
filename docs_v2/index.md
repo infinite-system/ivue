@@ -283,7 +283,7 @@ npx ivue skill --all
 
 <p class="benchmark-legend">Best measured result among fully reactive implementations. Non-reactive controls mark the floor. <BenchmarkWinner placement="after" /></p>
 
-<div class="ix-cols">
+<PerfSlider>
 
 <div>
 
@@ -315,13 +315,9 @@ npx ivue skill --all
 
 </div>
 
-</div>
+<div>
 
 ### Proxy-free reads
-
-The standard uses raw instances. Measured on Node 22, V8 and Vue 3.5 over
-10-million-iteration loops, ordinary ivue access stays below both proxy
-alternatives:
 
 | access path | **ivue raw** | shallow proxy | `reactive()` |
 | --- | ---: | ---: | ---: |
@@ -329,12 +325,13 @@ alternatives:
 | ref-getter access | <strong><BenchmarkWinner />9.6 ns</strong> | 47.0 ns | 72.4 ns |
 | method access | <strong><BenchmarkWinner />3.8 ns</strong> | 42.3 ns | 68.5 ns |
 
-<p class="foot">A direct closure ref remains faster than a dotted property read. Stable ivue refs and methods hoist once outside a hot loop, reducing repeated access to the same direct-handle path.</p>
+<p class="foot">Node 22, V8, Vue 3.5, 10-million-iteration loops. A direct closure ref remains faster than a dotted read; stable ivue refs and methods hoist once outside a hot loop.</p>
+
+</div>
+
+<div>
 
 ### What a live cell costs at rest
-
-A stress test at document scale: a spreadsheet grid where every cell is
-live, formula-capable reactive state — built four ways, then weighed.
 
 | | bytes/cell | what the cell is |
 | --- | --- | --- |
@@ -344,6 +341,10 @@ live, formula-capable reactive state — built four ways, then weighed.
 | **ivue flyweight columnar** | <strong>4.7 <BenchmarkWinner placement="after" /></strong> | 1 B kind + 8 B Float64, shared |
 
 <p class="foot">Measured end-to-end on live grids up to 20,000,000 cells — fully reactive at 8.5× below the plain-object floor. The receipts run in your browser: <a href="/guide/benchmarks">Interactive Benchmarks →</a></p>
+
+</div>
+
+</PerfSlider>
 
 </section>
 
