@@ -583,6 +583,13 @@ export default defineConfig({
           ],
         },
         {
+          text: 'Advanced Patterns',
+          collapsed: false,
+          items: [
+            { text: 'Backend ivue', link: '/guide/backend' },
+          ],
+        },
+        {
           text: 'Extras',
           collapsed: false,
           items: [
