@@ -524,7 +524,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             {
-              text: 'Going Deeper',
+              text: 'Performance',
               collapsed: false,
               items: [
                 { text: 'ivue vs the World', link: '/guide/model-layer' },
@@ -573,30 +573,24 @@ export default defineConfig({
           ],
         },
         {
-          text: 'Going Deeper',
+          text: 'Performance',
           collapsed: false,
           items: [
             { text: 'ivue vs the World', link: '/guide/model-layer' },
             { text: 'Performance by Design', link: '/guide/performance' },
             { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
-            { text: 'Flyweight Pattern', link: '/guide/flyweight' },
           ],
         },
         {
           text: 'Advanced Patterns',
           collapsed: false,
           items: [
-            { text: 'Backend ivue', link: '/guide/backend' },
+            { text: 'Namespace Pattern', link: '/guide/namespace-pattern' },
             { text: 'Computed Seed Pattern', link: '/guide/computed-seed' },
             { text: 'Keyed Version Signals', link: '/guide/keyed-version-signals' },
-          ],
-        },
-        {
-          text: 'Extras',
-          collapsed: false,
-          items: [
+            { text: 'Flyweight Pattern', link: '/guide/flyweight' },
             { text: 'Static() — Capability Classes', link: '/guide/static' },
-            { text: 'Namespace Pattern', link: '/guide/namespace-pattern' },
+            { text: 'Backend ivue', link: '/guide/backend' },
           ],
         },
         {
