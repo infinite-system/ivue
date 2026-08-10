@@ -134,5 +134,6 @@
   "license": "MIT",
   "bin": {
     "ivue": "bin/ivue.mjs"
-  }
+  },
+  "packageManager": "npm@11.6.2"
 }
