@@ -1842,3 +1842,17 @@ a.feature-inline-link:active {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
 }
+
+/* Two-line hamburger geometry: equal widths, pulled toward center so the
+   pair reads as one glyph rather than two stray marks. */
+.VPNavBarHamburger .container .top,
+.VPNavBarHamburger .container .bottom {
+  width: 16px;
+  left: 0;
+}
+.VPNavBarHamburger .container .top {
+  top: 4px;
+}
+.VPNavBarHamburger .container .bottom {
+  top: 10px;
+}
