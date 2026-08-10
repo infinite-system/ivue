@@ -1,0 +1,12 @@
+// Cloudflare Workers config — ivue.dev docs site as an assets-only Worker.
+// The CF build runs `npm install --prefix docs_v2 && npm run build:docs`,
+// then `npx wrangler deploy` uploads the VitePress dist as static assets.
+// No Worker script: assets-only. Atomic deploys; _headers ships in the dist.
+{
+  "name": "ivue",
+  "compatibility_date": "2026-08-01",
+  "assets": {
+    "directory": "./docs_v2/.vitepress/dist",
+    "not_found_handling": "404-page"
+  }
+}
