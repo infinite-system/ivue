@@ -350,20 +350,24 @@ npx ivue skill --all
 
 <section class="ix-section invar-production">
 
-## ivue in production
+## Beyond the web, at scale
 
 <p class="lead invar-lead">
 <a href="https://github.com/infinite-system/invar">Invar</a> — a full terminal IDE
-built entirely on ivue: hundreds of reactive classes driving the editor, workspace
-search, tasks, terminals, and agents — in a Bun process with no DOM. Every frame
-below is real output from the running app, rendered cell-for-cell from its PTY grid.
+built entirely on ivue: <strong>340+ ivue classes</strong> (nearly 200 of them
+<code>Static()</code> capability classes) driving the editor, workspace search,
+tasks, terminals, and agents — in a Bun process with no DOM. Every frame below is
+real output from the running app, rendered cell-for-cell from its PTY grid.
 </p>
 
 <p class="invar-note">
 Invar is an <strong>alpha, experimental project</strong> — a proving ground for ivue
 beyond the web, and an experiment in <strong>agentic development</strong>: the entire
 editor was built by AI agents using the ivue skill as their base discipline, with
-every module governed by explicit invariants contracts.
+every module governed by explicit invariants contracts. The
+<a href="https://github.com/infinite-system/invar">source</a> is open as a
+study-scale example of ivue architecture — module seams, namespace exports,
+flyweight state, and lifecycle discipline, all in one real codebase.
 </p>
 
 <PerfSlider>
