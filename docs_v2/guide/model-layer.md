@@ -22,12 +22,12 @@ to close it.
 **The head-to-head sections:**
 
 <ul class="ivue-vs-framework-list">
-  <li><a href="#the-natural-rebuttal-just-lazy-load-the-composable-cells">ivue vs Vue composables</a></li>
-  <li><a href="#isn-t-this-just-what-angular-signals-already-do">ivue vs Angular Signals</a></li>
-  <li><a href="#or-skip-the-library-entirely-—-how-close-does-hand-rolled-js-get">ivue vs React (hand-rolled JavaScript)</a></li>
-  <li><a href="#what-about-mobx">ivue vs MobX</a></li>
-  <li><a href="#what-about-svelte-5-s-runes-in-classes">ivue vs Svelte 5 runes</a></li>
-  <li><a href="#what-about-solid-js">ivue vs Solid.js</a></li>
+  <li><a href="#ivue-vs-vue-composables">ivue vs Vue composables</a></li>
+  <li><a href="#ivue-vs-angular-signals">ivue vs Angular Signals</a></li>
+  <li><a href="#ivue-vs-react-hand-rolled-javascript">ivue vs React (hand-rolled JavaScript)</a></li>
+  <li><a href="#ivue-vs-mobx">ivue vs MobX</a></li>
+  <li><a href="#ivue-vs-svelte-5-runes">ivue vs Svelte 5 runes</a></li>
+  <li><a href="#ivue-vs-solid-js">ivue vs Solid.js</a></li>
 </ul>
 
 ## Why the gap is structural
@@ -69,7 +69,9 @@ the DOM does. So the fork, before ivue, was:
    from the model. No `watch` on an entity. No derived values. You write
    your own dependency engine.
 
-## The natural rebuttal: just lazy-load the composable cells
+## ivue vs Vue composables
+
+_The natural rebuttal: "just lazy-load the composable cells."_
 
 A fair objection to the fork above: option 1 doesn't have to be _eager_.
 Keep a plain-data backing store (the arm-C floor below), materialize
@@ -201,7 +203,9 @@ The per-member policy is the part no other pattern offers: `value` pays
 `display` and `cssClass` pay nothing because they are nanosecond string
 work. **You choose the price per member, per class — not per app.**
 
-## Isn't this just what Angular Signals already do?
+## ivue vs Angular Signals
+
+_Isn't this just what Angular Signals already do?_
 
 Angular is the framework most associated with class-oriented, fine-grained
 reactivity, so it's a fair question. Measured directly — same machine,
@@ -271,7 +275,9 @@ reactive primitive's allocation policy and inheritance composability, not
 a verdict on Angular the framework, which brings routing, forms, and a
 decade of production hardening ivue does not have.
 
-## Or skip the library entirely — how close does hand-rolled JS get?
+## ivue vs React (hand-rolled JavaScript)
+
+_Or skip the library entirely — how close does hand-rolled JS get?_
 
 React has no equivalent to `attach a memoized value to an arbitrary
 class` — no `ref()`/`signal()`/`computed()` to reach for outside a
@@ -348,7 +354,7 @@ memory. The comparison is scoped to what happens as that pattern scales:
 more derived values, more subclass levels, more places a dependency edge
 can be missed.
 
-## What about MobX?
+## ivue vs MobX
 
 MobX is the library most associated with "classes plus observables" —
 arguably ivue's closest spiritual ancestor. Its recommended default,
@@ -418,7 +424,9 @@ ergonomic feature, `makeAutoObservable`, is unavailable the moment a
 model needs inheritance at all — precisely the shape a domain model
 layer needs most.
 
-## What about Svelte 5's runes in classes?
+## ivue vs Svelte 5 runes
+
+_What about Svelte 5's runes in classes?_
 
 Svelte 5 added universal reactivity — `$state`/`$derived` work inside a
 plain class, not just inside a component, a real documented feature
@@ -484,7 +492,7 @@ half of this argument right independently** — proof the industry can
 arrive at "getters, not fields" without a runtime prototype transform at
 all. It just hasn't (yet) made the other half — laziness — free.
 
-## What about Solid.js?
+## ivue vs Solid.js
 
 Solid.js is famously the leanest fine-grained reactive engine in the JS
 ecosystem — often at the top of render/DOM-update benchmarks — so it's

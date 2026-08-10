@@ -146,7 +146,7 @@ A real invariant gets rediscovered from independent directions:
 
 - **Solid.js** documents it outright: derived values are plain functions;
   `createMemo` only when memoization pays. Same invariant, closure-geometry
-  dialect ([the full comparison](/guide/model-layer#what-about-solid-js)).
+  dialect ([the full comparison](/guide/model-layer#ivue-vs-solid-js)).
 - **Vue 3.4** shipped equality-based propagation stops for computeds — the
   team optimizing the cache tax the idiom institutionalized.
 - **MobX** made `computed` opt-in decoration over plain class getters a
