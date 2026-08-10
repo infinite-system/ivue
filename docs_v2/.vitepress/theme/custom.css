@@ -1843,16 +1843,20 @@ a.feature-inline-link:active {
   }
 }
 
-/* Two-line hamburger geometry: equal widths, pulled toward center so the
-   pair reads as one glyph rather than two stray marks. */
-.VPNavBarHamburger .container .top,
-.VPNavBarHamburger .container .bottom {
-  width: 16px;
+/* Two-line hamburger geometry: equal widths, no horizontal staircase, and
+   the same positions at rest and on hover (the theme's :hover rules snap
+   tops back apart otherwise). The .active open-X state stays theme-owned. */
+.VPNavBarHamburger:not(.active) .container .top,
+.VPNavBarHamburger:not(.active):hover .top {
+  top: 5px;
   left: 0;
+  width: 16px;
+  transform: translate(0);
 }
-.VPNavBarHamburger .container .top {
-  top: 4px;
-}
-.VPNavBarHamburger .container .bottom {
-  top: 10px;
+.VPNavBarHamburger:not(.active) .container .bottom,
+.VPNavBarHamburger:not(.active):hover .bottom {
+  top: 11px;
+  left: 0;
+  width: 16px;
+  transform: translate(0);
 }
