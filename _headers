@@ -1,0 +1,7 @@
+# Hashed build assets never change — cache forever.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML must revalidate so a new deploy is picked up promptly.
+/*
+  Cache-Control: public, max-age=0, must-revalidate

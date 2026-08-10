@@ -1,0 +1,13 @@
+<svg width="192" height="192" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ivm" x1="8" y1="14" x2="40" y2="34" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A5B4FC"/>
+      <stop offset="0.5" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#34D399"/>
+    </linearGradient>
+  </defs>
+  <path d="M24 24 C24 15.4, 9.6 15.4, 9.6 24 C9.6 32.6, 24 32.6, 24 24 C24 15.4, 38.4 15.4, 38.4 24 C38.4 32.6, 24 32.6, 24 24"
+        stroke="url(#ivm)" stroke-opacity="0.28" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M24 24 C24 15.4, 9.6 15.4, 9.6 24 C9.6 32.6, 24 32.6, 24 24 C24 15.4, 38.4 15.4, 38.4 24 C38.4 32.6, 24 32.6, 24 24"
+        stroke="url(#ivm)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
