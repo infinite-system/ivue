@@ -23,6 +23,7 @@ import BlogAuthor from './components/BlogAuthor.vue';
 import BlogPostNav from './components/BlogPostNav.vue';
 import BlogPostDate from './components/BlogPostDate.vue';
 import NewsletterSignup from './components/NewsletterSignup.vue';
+import BlogArchiveScroller from './components/BlogArchiveScroller.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import { registerDocsApp } from './quasar-docs-loader';
 import './custom.css';
@@ -45,6 +46,7 @@ export default {
         h(BlogAuthor),
         h(NewsletterSignup, { placement: 'doc' }),
         h(BlogPostNav),
+        h(BlogArchiveScroller),
       ],
       'layout-bottom': () => h(NewsletterSignup, { placement: 'toast' }),
     });
