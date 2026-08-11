@@ -70,6 +70,10 @@
   --vp-c-bg-alt: #0e1424;
   --vp-c-bg-soft: #141a2e;
   --vp-c-divider: rgba(148, 163, 184, 0.14);
+  /* navbar hairline + Menu/On-this-page border: VitePress paints these
+     from the gutter var, which defaults to pure black in dark — pull it
+     to a subtle dark blue instead. */
+  --vp-c-gutter: #1b2440;
 }
 
 @media (min-width: 640px) {
@@ -2147,7 +2151,7 @@ a.feature-inline-link:active {
    passes beneath it. */
 @media (max-width: 959px) {
   .VPNav {
-    border-bottom: 1px solid var(--vp-c-divider);
+    border-bottom: 1px solid var(--vp-c-gutter);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
 }
