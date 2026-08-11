@@ -14,6 +14,9 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 22.x
+          # v5 enables npm caching by default, and the cache resolver demands
+          # a lockfile — the root has none by design. Opt out.
+          package-manager-cache: false
 
       # The root deliberately carries no lockfile (docs_v2 and the playground
       # own their npm lockfiles), so plain install — not ci.
