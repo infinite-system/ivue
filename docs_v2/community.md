@@ -134,6 +134,10 @@ New releases, benchmark runs, and examples land on
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.45 3H3.55A.55.55 0 0 0 3 3.55v16.9c0 .3.25.55.55.55h16.9c.3 0 .55-.25.55-.55V3.55a.55.55 0 0 0-.55-.55ZM8.34 18.34H5.66V9.72h2.68v8.62ZM7 8.54a1.56 1.56 0 1 1 0-3.12 1.56 1.56 0 0 1 0 3.12Zm11.35 9.8h-2.67v-4.2c0-1 0-2.3-1.4-2.3-1.4 0-1.62 1.1-1.62 2.23v4.27H9.99V9.72h2.56v1.18h.04c.36-.67 1.22-1.38 2.5-1.38 2.68 0 3.18 1.77 3.18 4.06v4.76Z"/></svg>
         <span>LinkedIn</span>
       </a>
+      <a class="cm-author__link" href="https://forms.gle/Z7L5N8hBYFoLQ8wA9" target="_blank" rel="noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm8 7.35L4.4 6h15.2L12 11.35ZM4 8.24V18h16V8.24l-7.45 5.3a1 1 0 0 1-1.1 0L4 8.24Z"/></svg>
+        <span>Email</span>
+      </a>
     </nav>
     <p>
       ivue was not designed in theory. It was reduced out of a production
