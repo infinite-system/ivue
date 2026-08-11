@@ -1969,11 +1969,20 @@ a.feature-inline-link {
   color: #2dd4bf;
 }
 @media (max-width: 640px) {
-  /* icon-only at rest; the text unrolls leftward when expanded */
+  /* icon-only at rest — a true 44px circle, contents centered */
   .newsletter-pill {
-    padding: 11px;
+    gap: 0;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
     right: 24px;
     bottom: 24px;
+    overflow: hidden;
+  }
+  .newsletter-pill svg {
+    width: 16px;
+    height: 16px;
   }
   .newsletter-pill .newsletter-pill__text {
     display: block;
@@ -1985,12 +1994,13 @@ a.feature-inline-link {
     transition: max-width 0.4s ease, opacity 0.35s ease, margin 0.4s ease;
   }
   .newsletter-pill--expanded {
-    padding: 12px 18px 14px 15px;
+    width: auto;
+    padding: 0 15px 0 13px;
     box-shadow: 0 14px 40px -12px rgba(45, 212, 191, 0.55);
   }
   .newsletter-pill--expanded .newsletter-pill__text {
-    max-width: 160px;
-    margin-left: 2px;
+    max-width: 200px;
+    margin-left: 7px;
     opacity: 1;
   }
 }
@@ -1998,11 +2008,10 @@ a.feature-inline-link {
    bottom while the invitation lasts */
 .newsletter-pill__progress {
   position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 5px;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
   height: 3px;
-  border-radius: 999px;
   background: linear-gradient(90deg, #6366f1, #2dd4bf 60%, #34d399);
   transform-origin: left center;
   animation: newsletter-pill-progress 6s linear forwards;
