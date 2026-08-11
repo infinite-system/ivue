@@ -57,12 +57,12 @@ function formatDate(date: string): string {
       class="blog-post-nav__card blog-post-nav__card--newer"
       :href="withBase(newerPost.url)"
     >
+      <img class="blog-post-nav__thumb" :src="withBase(newerPost.image)" :alt="newerPost.title" loading="lazy" />
       <div class="blog-post-nav__body">
         <span class="blog-post-nav__label">Newer post →</span>
         <span class="blog-post-nav__title">{{ newerPost.title }}</span>
         <span class="blog-post-nav__date">{{ formatDate(newerPost.date) }}</span>
       </div>
-      <img class="blog-post-nav__thumb" :src="withBase(newerPost.image)" :alt="newerPost.title" loading="lazy" />
     </a>
   </nav>
 </template>

@@ -2177,9 +2177,8 @@ a.feature-inline-link {
 }
 .VPDoc .blog-post-nav__card {
   display: flex;
-  gap: 14px;
+  flex-direction: column;
   overflow: hidden;
-  padding: 12px;
   border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
   background: var(--vp-c-bg-soft);
@@ -2194,23 +2193,25 @@ a.feature-inline-link {
 }
 .blog-post-nav__card--newer {
   text-align: right;
-  justify-content: flex-end;
+}
+.blog-post-nav__card--newer .blog-post-nav__body {
+  align-items: flex-end;
 }
 .VPDoc .blog-post-nav__thumb {
-  width: 118px;
-  flex: 0 0 118px;
+  width: 100%;
   aspect-ratio: 1200 / 630;
   object-fit: cover;
-  align-self: center;
   margin: 0;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
+  border: none;
+  border-bottom: 1px solid var(--vp-c-divider);
+  border-radius: 0;
 }
 .blog-post-nav__body {
   display: flex;
   flex-direction: column;
   gap: 3px;
   min-width: 0;
+  padding: 11px 14px 12px;
 }
 .blog-post-nav__label {
   font-size: 11px;
