@@ -60,6 +60,7 @@ path and skip the install; never add the dependency alongside a vendored copy.
 
 ```ts
 import { Reactive } from 'ivue'; // in this app: 'src/utils/ivue'
+import { Static } from 'ivue/extras';
 import {
   ref,
   shallowRef,
@@ -72,6 +73,10 @@ import {
 import { useProjectStore } from 'src/stores/project.store';
 
 class $Box {
+  static get DEFAULT_HEIGHT() {
+    return 4;
+  }
+
   // Constructor runs SYNCHRONOUSLY where you `new` — in setup() that
   // means the constructor body IS setup code, and the whole toolbox
   // works here:
@@ -98,7 +103,7 @@ class $Box {
   // RAW: read AND write via .value. shallowRef for big structures you
   // REPLACE wholesale.
   get height() {
-    return ref(4);
+    return ref((this.constructor as typeof $Box).DEFAULT_HEIGHT);
   }
   get rows() {
     return shallowRef<Row[]>([]);
@@ -176,11 +181,6 @@ class $Box {
     return this.$project.projectId;
   }
 
-  // CONSTANTS / CONFIG — plain fields ONLY. A plain field written
-  // from a method triggers NOTHING (no Ref/Computed, no dependency
-  // edge). Never store mutable state here.
-  baseWidth = 400;
-
   // METHODS — plain; engine-binds to raw (stable identity, safe as
   // handlers). Reactive-closure bodies above delegate HERE (the
   // thin-closure rule).
@@ -209,7 +209,7 @@ class $Box {
 }
 
 export namespace Box {
-  export const $Class = $Box; // raw — children `extends` this
+  export const $Class = Static($Box); // static anchor — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   // the type of every unwrapping surface (defineExpose, reactive())
   export type Instance = typeof Class.Instance;
@@ -580,6 +580,50 @@ export namespace Settings {
 
 No static members → no wrapper: `$Class = $X`, the standard form unchanged.
 
+## Reading your own statics — the ladder
+
+`Reactive(X) === X`, so a namespace's `Class` slot IS the base class. A getter
+that reads statics through it therefore hard-binds to the base and silently
+IGNORES a subclass override — the exact opposite of what a live (non-`$`)
+static getter is for:
+
+```ts
+// ❌ three members, a double cast, and the override never applies
+protected get Tooltip() {
+  return Tooltip.Class as unknown as typeof $Tooltip;
+}
+public static get TOOLTIP_DWELL_SECONDS() { return 0.4; }
+protected get tooltipDwellSeconds() {
+  return this.Tooltip.TOOLTIP_DWELL_SECONDS;   // base value forever
+}
+```
+
+Measured: a subclass setting `0.1` still reads `0.4` through this shape.
+
+Take the first rung that applies:
+
+1. **Nothing outside the instance reads it** → delete the static. A plain
+   instance getter is zero bytes per instance and natively overridable:
+   ```ts
+   protected get tooltipDwellSeconds() { return 0.4; }
+   ```
+2. **Something outside reads it** (tests pinching the knob, another class)
+   → keep the static and read it live off the receiver:
+   ```ts
+   protected get tooltipDwellSeconds() {
+     return (this.constructor as typeof $Tooltip).TOOLTIP_DWELL_SECONDS;
+   }
+   ```
+   `this.constructor` is the actual class: the subclass when subclassed, and
+   an engine class that INHERITS `$Class` for a plain reactive instance, so
+   statics resolve in both cases. TypeScript types `constructor` as
+   `Function`, so the one cast is required and is the honest cost.
+3. **Overriding must NOT happen** → name the class directly,
+   `$Tooltip.TOOLTIP_DWELL_SECONDS`, and let the code say so.
+
+Never introduce a `protected get <ClassName>()` self-reference getter. It is a
+cast wearing a getter costume: it looks live and is not.
+
 ## Generic classes (brief)
 
 `ReactiveClass<C>` cannot carry `<T>` through (no higher-kinded types), but
@@ -746,6 +790,27 @@ Contiguity says "same kind of thing"; a blank line says "the kind changes,
 or complexity rises." Spend the signal deliberately — a blanket
 newline-between-everything rule makes air mean nothing.
 
+Class members use one order: static members → constructor → state getters →
+prop getters → derived getters → methods. The constructor is the first
+instance member. Comments and invariant annotations can precede the member
+they describe.
+
+Constants use one form per role:
+
+| Role | Form |
+| --- | --- |
+| Tunable or overridable class constant | `static get SCREAMING_SNAKE_CASE()` |
+| Protocol or byte constant on a hot path, never overridden | `static readonly SCREAMING_SNAKE_CASE` with a one-line hot-path comment |
+| Contributor or pane identity data | Instance `readonly lowerCamelCase` field |
+| Extensible constructed dependency | Field assigned from a prototype `createX()` factory method |
+| Any other supposed constant | Defect: choose the real role or remove it |
+
+Read live statics through the receiving class. JavaScript dispatches getter
+and prototype method overrides while a parent constructor runs. A subclass
+field initializer runs only after `super()` returns. It cannot change parent
+construction. This mechanism makes getters safe tunables and `createX()`
+methods safe construction seams.
+
 ```ts
 // state block — CONTIGUOUS: reads as the instance's STATE TABLE
 get sheet() {
@@ -790,7 +855,7 @@ convention and check it in review.
 ## Self-review checklist (run over your ivue diff)
 
 - [ ] Every mutable state member is `get x() { return ref(...) }` — no mutable plain fields.
-- [ ] Inside the class, every Ref/Computed read/write uses `.value`; plain fields are constants/config only.
+- [ ] Inside the class, every Ref/Computed read/write uses `.value`; every plain field matches one role in the constants table.
 - [ ] Derived values are PLAIN getters; `computed()` appears only for expensive / render-suppressing / stable-handle cases.
 - [ ] Stores/composables are injected via `private get $store() { return useStore() }`, not field initializers.
 - [ ] The class is exported through the namespace (`$Class` / `Class = Reactive($Class)` / `Instance`); generics cast `Class` and hand-apply `ReactiveInstance` to `Instance<T>`.
@@ -806,4 +871,5 @@ convention and check it in review.
 - [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices and specs included — no single-letter names, no name meaning different things in different methods.
 - [ ] Keyed/sparse state uses the Map-of-refs shape (get-or-create on read, peek-only bump on write, explicit release path) — never one getter per key, never a deep `reactive()` collection.
 - [ ] Static members are anchored (`const $Class = Static($X)`); `$`-prefixed static getters are compute-once-per-receiver caches, non-`$` statics stay live knobs, and inheritance extends `$Class` — never the mutable `Class`.
+- [ ] Static members precede the constructor; the constructor precedes state, prop, and derived getters; methods come last.
 - [ ] Spacing carries meaning: declaration-like getters contiguous within their group; blank lines only where a doc comment / multi-line body / category boundary begins; methods always separated.

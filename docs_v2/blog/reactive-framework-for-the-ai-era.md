@@ -52,7 +52,7 @@ is deterministic. A failure class an agent
 cannot express is a failure class nobody has to catch.
 
 **A standard small enough to transmit whole.** The entire discipline
-fits in the [779-line Standard Operating
+fits in the [845-line Standard Operating
 Manual](/guide/standard) — installable into an agent with one
 command:
 
