@@ -2018,8 +2018,10 @@ a.feature-inline-link {
    bottom while the invitation lasts */
 .newsletter-pill__progress {
   position: absolute;
-  left: 0;
-  right: 0;
+  /* inset past the corner curves — a full-width bar gets clipped along
+     the rounded border and leaves a fleck riding the left edge */
+  left: 16px;
+  right: 16px;
   bottom: 0;
   height: 3px;
   border-radius: 999px;
