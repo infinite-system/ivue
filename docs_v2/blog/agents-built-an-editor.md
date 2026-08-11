@@ -200,3 +200,13 @@ in July 2026 — run them yourself. The reactivity and
 teardown claims about ivue itself are the engine's
 [documented invariants](/reference/invariants), verified by its test
 suite at 100% coverage.*
+
+---
+
+**Update — August 2026.** The 26,000 lines in the title were true for
+about nine days. The editor now measures roughly **144,000 lines of
+TypeScript — 94,000 of them editor source**, the rest its colocated
+tests — and every discipline metric held while it grew. The
+re-measurements are in
+[The editor tripled. The zeros didn't move.](/blog/the-zeros-didnt-move),
+and the current census lives on the [Invar page](/examples/invar).
