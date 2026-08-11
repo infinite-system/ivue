@@ -23,12 +23,7 @@ worked is a series on the blog, starting with
 [Introducing Invar](/blog/introducing-invar) and
 [AI agents built an editor](/blog/agents-built-an-editor).
 
-## The frames below are real
-
-Every screenshot on this page is live output from the running app —
-rendered cell-for-cell from its PTY grid to SVG, per-cell colors and
-styles intact. Nothing is mocked and nothing is captured; the images are
-queries against the program's own state.
+## A look inside
 
 <PerfSlider>
 
