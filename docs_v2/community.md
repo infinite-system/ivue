@@ -188,6 +188,20 @@ on every page, and naming them is a pleasure:
     </span>
     <p>Framework-agnostic UI architecture and model–view separation, taught as a testable discipline — the school of thought behind the model layer.</p>
   </a>
+  <a class="cm-channel" href="https://www.linkedin.com/company/blacklineapp/posts/" target="_blank" rel="noreferrer">
+    <span class="cm-channel__title">
+      <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 21V7l8-4 8 4v14h-6v-5h-4v5H4Zm2-2h2v-5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v5h2V8.24l-6-3-6 3V19Z"/></svg>
+      <strong>Blackline</strong>
+    </span>
+    <p>Where ivue works for a living — the first version was implemented and battle-tested here, in production, before it was ever a library.</p>
+  </a>
+  <a class="cm-channel" href="https://www.linkedin.com/company/adhoc-studio/posts/" target="_blank" rel="noreferrer">
+    <span class="cm-channel__title">
+      <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 3 7v2h18V7l-9-5Zm-7 9v7H3v2h18v-2h-2v-7h-2v7h-3v-7h-4v7H7v-7H5Z"/></svg>
+      <strong>Adhoc Studio</strong>
+    </span>
+    <p>The studio where ivue's ideas were shaped against real client work — every pattern on this site survived a shipping deadline first.</p>
+  </a>
   </div>
 </section>
 </div>
