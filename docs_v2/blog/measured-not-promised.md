@@ -16,19 +16,24 @@ them. Building ivue's numbers, our own harnesses lied to us three times.
 This post is the confession log, because the failure modes live in your
 benchmarks too.
 
-**Lie one: the JIT deleted the competition.** Our first creation
-benchmark wrote instances into one overwritten variable. V8's escape
-analysis elided the competitors' allocations entirely — `reactive()`
-"created" 100,000 proxies in 0.0 ms — while ivue's opaque construction
-kept honestly paying. The fix: every instance retained in an array,
-touched after timing. Nothing the optimizer can discard.
+**Lie one: the results nobody read.** Our first creation benchmark
+overwrote every instance into a single variable and never read one of
+them. An optimizing JIT is free to skip work whose results are provably
+unused — and it exercised that freedom *unevenly* across the variants,
+timing some at a literal 0.0 ms. Whatever that clock measured, it was
+not creation. The fix: every instance retained in an array and touched
+after the timer stops, so each variant pays its full price and the
+comparison compares one thing.
 
-**Lie two: the unobserved heap.** Our first memory benchmark read
-instances *outside any effect* — and `reactive()` looked impossibly
-light, because a proxy allocates its dependency storage only when
-something subscribes. Live objects are *observed* objects. Re-measured
-with every instance read inside its own subscribing effect, the proxy's
-real bill arrived: dependency maps for every tracked key.
+**Lie two: the empty-shell heap.** Our first memory benchmark
+snapshotted instances that nothing had ever read. Reactive systems
+defer their real allocation to first use — ivue materializes its cells
+on first touch, and a proxy builds its tracking structures as reads
+get tracked — so an untouched heap compares empty shells, not working
+objects, and flatters whichever side defers more. Re-measured after a
+full read pass inside a subscribing effect, every variant carried its
+true working weight, and only then did the per-instance numbers mean
+anything.
 
 **Lie three: the harness tax.** Timing operations through a per-call
 closure added a constant cost to every variant — large enough to hide a

@@ -2088,6 +2088,16 @@ a.feature-inline-link {
   background: var(--vp-c-brand-1);
 }
 
+/* blog sidebar: each post reads as its own entry — dotted separators
+   (scoped by the All-posts link only the blog rail carries) */
+.VPSidebar:has(a[href="/blog/"]) .VPSidebarItem.level-1 {
+  border-bottom: 1px dotted var(--vp-c-divider);
+  padding: 3px 0;
+}
+.VPSidebar:has(a[href="/blog/"]) .VPSidebarItem.level-1:last-child {
+  border-bottom: none;
+}
+
 /* back-to-blog link atop posts — phones only */
 .blog-back {
   display: none;
