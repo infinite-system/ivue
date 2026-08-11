@@ -20,7 +20,7 @@ const isBlogPost = computed(
       height="76"
     />
     <div class="cm-author__body">
-      <span class="cm-author__eyebrow">Written by</span>
+      <span class="cm-author__eyebrow">Author</span>
       <strong>Evgeny Kalashnikov</strong>
       <span class="cm-author__role">
         <span class="cm-author__role-title">Lead Software Engineer</span>

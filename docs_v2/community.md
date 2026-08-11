@@ -114,7 +114,7 @@ New releases, benchmark runs, and examples land on
 <div class="cm-author">
   <img class="cm-avatar" src="/avatars/evgeny.png" alt="Evgeny Kalashnikov" width="76" height="76" />
   <div class="cm-author__body">
-    <span class="cm-author__eyebrow">Built from production</span>
+    <span class="cm-author__eyebrow">Author</span>
     <strong>Evgeny Kalashnikov</strong>
     <span class="cm-author__role">
       <span class="cm-author__role-title">Lead Software Engineer</span>
