@@ -49,12 +49,13 @@ onMounted(() => {
 // "Subscribe to news" with a timing-out progress bar, then folds back.
 // Blog posts never roll out — the inline form already sits down there.
 const ROLLOUT_MILLISECONDS = 6_000;
+const ROLLOUT_SESSION_KEY = 'ivue-newsletter-rollout';
 const rolledOut = ref(false);
-let rolloutSpent = false;
 let rolloutTimer: ReturnType<typeof setTimeout> | undefined;
 
 function onPageScroll() {
-  if (rolloutSpent || rolledOut.value) return;
+  if (rolledOut.value) return;
+  if (sessionStorage.getItem(ROLLOUT_SESSION_KEY)) return;
   if (isBlogPost.value || subscribed.value || toastVisible.value) return;
   if (!window.matchMedia('(max-width: 640px)').matches) return;
   const remaining =
@@ -62,7 +63,7 @@ function onPageScroll() {
     window.innerHeight -
     window.scrollY;
   if (remaining > 90) return;
-  rolloutSpent = true;
+  sessionStorage.setItem(ROLLOUT_SESSION_KEY, '1');
   rolledOut.value = true;
   rolloutTimer = setTimeout(
     () => (rolledOut.value = false),
@@ -70,11 +71,11 @@ function onPageScroll() {
   );
 }
 
-// a new page gets a fresh rollout
+// navigating away mid-rollout folds it; the session flag means it will
+// not re-arm until a fresh visit
 watch(
   () => route.path,
   () => {
-    rolloutSpent = false;
     rolledOut.value = false;
     clearTimeout(rolloutTimer);
   },
