@@ -490,6 +490,12 @@ export default defineConfig({
               { text: 'Flyweight Grid: 20M Cells', link: '/examples/flyweight-grid' },
             ],
           },
+          {
+            text: 'Full Applications',
+            items: [
+              { text: 'Invar — Terminal IDE', link: '/examples/invar' },
+            ],
+          },
         ],
       },
       {
