@@ -130,7 +130,7 @@ function subscribe() {
           </defs>
           <rect width="48" height="48" rx="12" fill="#0D1226" />
           <path
-            d="M24 24 C 19 17, 10.6 17.6, 10.6 24 C 10.6 30.4, 19 31, 24 24 C 29 17, 37.4 17.6, 37.4 24 C 37.4 30.4, 29 31, 24 24 Z"
+            d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
             stroke="url(#newsletter-mark-gradient)"
             stroke-width="2.8"
             stroke-linecap="round"
