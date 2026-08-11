@@ -1859,6 +1859,21 @@ a.feature-inline-link {
   0% { transform: skewX(-18deg) translateX(-160%); }
   100% { transform: skewX(-18deg) translateX(320%); }
 }
+.newsletter__button-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.newsletter__plane {
+  width: 14px;
+  height: 14px;
+  filter: drop-shadow(0 1px 2px rgba(2, 6, 23, 0.45));
+  transition: transform 0.2s ease;
+}
+.newsletter__form button:hover .newsletter__plane {
+  transform: translate(2px, -2px);
+}
 .newsletter__message {
   margin: 8px 0 0;
   font-size: 12px;
