@@ -1737,7 +1737,8 @@ a.feature-inline-link {
 }
 .newsletter__label {
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: 0;
+  line-height: 1.4;
   font-family: var(--vp-font-family-mono);
   font-size: 10px;
   letter-spacing: 0.14em;
@@ -1807,17 +1808,30 @@ a.feature-inline-link {
 .newsletter__form button:active {
   transform: translateY(1px) scale(0.99);
 }
-/* button's own shine on hover */
+/* button's own shine on hover: a soft glossy band with a bright core,
+   eased so it accelerates in and glides out */
 .newsletter__button-shine {
   position: absolute;
-  inset: -40% auto -40% -30%;
-  width: 30%;
-  transform: rotate(20deg) translateX(-140%);
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  inset: -60% auto -60% 0;
+  width: 55%;
+  transform: skewX(-18deg) translateX(-160%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.14) 30%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0.14) 70%,
+    transparent
+  );
+  filter: blur(1px);
   pointer-events: none;
 }
 .newsletter__form button:hover .newsletter__button-shine {
-  animation: newsletter-shine 0.7s ease forwards;
+  animation: newsletter-button-shine 0.85s cubic-bezier(0.25, 0.6, 0.35, 1) forwards;
+}
+@keyframes newsletter-button-shine {
+  0% { transform: skewX(-18deg) translateX(-160%); }
+  100% { transform: skewX(-18deg) translateX(320%); }
 }
 .newsletter__message {
   margin: 8px 0 0;
