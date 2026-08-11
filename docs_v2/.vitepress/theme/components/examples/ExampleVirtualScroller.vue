@@ -88,6 +88,7 @@ function toggleAutoPlay() {
     <div class="evs-frame">
       <VirtualScroller
         ref="scroller"
+        scrollbar
         v-model="items"
         :assumed-height="56"
         :padding-quantity="10"

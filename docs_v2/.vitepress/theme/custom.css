@@ -2022,9 +2022,6 @@ a.feature-inline-link {
   border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
   background: var(--vp-c-bg-soft);
-  /* rows fade at the edges so the loop reads as continuous */
-  mask-image: linear-gradient(to bottom, transparent, black 9%, black 91%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 9%, black 91%, transparent);
 }
 .VPDoc .blog-archive__row {
   width: 100%;
@@ -2071,33 +2068,12 @@ a.feature-inline-link {
   font-size: 11px;
   color: var(--vp-c-text-3);
 }
-/* the virtual scrollbar: visible, draggable, driven by class geometry */
-.blog-archive__track {
-  position: absolute;
-  top: 10px;
-  bottom: 10px;
-  right: 6px;
-  width: 12px;
-  cursor: pointer;
-  touch-action: none;
-}
-.blog-archive__track::before {
-  content: '';
-  position: absolute;
-  inset: 0 4px;
-  border-radius: 999px;
-  background: var(--vp-c-divider);
-}
-.blog-archive__thumb {
-  position: absolute;
-  left: 2px;
-  right: 2px;
-  border-radius: 999px;
+/* brand-tint the scroller's built-in scrollbar inside the archive */
+.blog-archive .virtual-scroller__thumb {
   background: color-mix(in srgb, var(--vp-c-brand-1) 55%, var(--vp-c-divider));
-  transition: background 0.15s ease;
 }
-.blog-archive__track:hover .blog-archive__thumb,
-.blog-archive__thumb.dragging {
+.blog-archive .virtual-scroller__track:hover .virtual-scroller__thumb,
+.blog-archive .virtual-scroller__thumb.dragging {
   background: var(--vp-c-brand-1);
 }
 

@@ -906,6 +906,36 @@ class $VirtualScroller<T extends BaseItem> {
     this.scrollElement.value.scrollTop = 0;
   }
 
+  /** Scrollbar geometry over the VIRTUAL position (native scrollTop stays
+   *  0 by design, so a native scrollbar can never exist here). Fraction of
+   *  the track the thumb occupies — floored so a million-item list still
+   *  presents a grabbable thumb. */
+  get scrollbarThumbFraction() {
+    const total = this.scrollHeight.value;
+    const container = this.containerOuterHeight.value;
+    if (!total || !container || total <= container) return 0;
+    return Math.max(container / total, 0.08);
+  }
+
+  /** 0..1 progress of the thumb along its travel range. */
+  get scrollbarProgress() {
+    const total = this.scrollHeight.value;
+    const scrollable = total - this.containerOuterHeight.value;
+    if (scrollable <= 0) return 0;
+    const position = parseFloat(String(this.scrollPosition.value)) || 0;
+    return Math.min(Math.max(position / scrollable, 0), 1);
+  }
+
+  /** Seek to a 0..1 track fraction through the full scrollToIndex pipeline
+   *  (spacer rebase + converge loop) — a raw lenis.scrollTo would translate
+   *  content out of the viewport without rebasing the window. */
+  seekToFraction(fraction: number) {
+    const lastIndex = this.items.value.length - 1;
+    if (lastIndex < 0) return;
+    const clamped = Math.min(Math.max(fraction, 0), 1);
+    this.scrollToIndex(Math.round(clamped * lastIndex), undefined, false);
+  }
+
   /** Stop handle for the latest scrollToIndex re-apply watcher (see below). */
   private stopScrollToIndexReapply: (() => void) | null = null;
 

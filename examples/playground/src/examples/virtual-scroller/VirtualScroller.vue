@@ -3,6 +3,7 @@ import type { ShallowUnwrapRef } from 'vue';
 
 import type { VirtualScrollerReturn } from './VirtualScroller';
 import { VirtualScroller } from './VirtualScroller';
+import { ref } from 'vue';
 import type { BaseItem } from './VirtualScroller.types';
 import VirtualScrollerItem from './VirtualScrollerItem.vue';
 
@@ -41,6 +42,8 @@ export interface ItemContext<T extends BaseItem> {
 
 export interface VirtualScrollerProps<T extends BaseItem> {
   modelValue: T[];
+  /** Render the built-in draggable scrollbar over the VIRTUAL position. */
+  scrollbar?: boolean;
   autoPlay?: boolean;
   autoPlayDelay?: number;
   autoRepeat?: boolean;
@@ -56,6 +59,7 @@ export interface VirtualScrollerProps<T extends BaseItem> {
 </script>
 <script lang="ts" setup generic="T extends BaseItem">
 const props = withDefaults(defineProps<VirtualScrollerProps<T>>(), {
+  scrollbar: false,
   autoPlay: false,
   autoPlayDelay: 500,
   autoRepeat: true,
@@ -86,6 +90,34 @@ const {
 } = virtualScroller;
 
 defineExpose(virtualScroller as VirtualScroller.Instance<T>);
+
+// Scrollbar drag: local gesture state only — geometry and seeking live on
+// the class (scrollbarThumbFraction / scrollbarProgress / seekToFraction).
+const scrollbarDragging = ref(false);
+
+function seekToPointer(event: PointerEvent) {
+  const track = (event.currentTarget as HTMLElement).closest(
+    '.virtual-scroller__track'
+  ) as HTMLElement;
+  if (!track) return;
+  const rect = track.getBoundingClientRect();
+  virtualScroller.seekToFraction((event.clientY - rect.top) / rect.height);
+}
+
+function onTrackPointerDown(event: PointerEvent) {
+  virtualScroller.stopAutoPlay();
+  scrollbarDragging.value = true;
+  (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  seekToPointer(event);
+}
+
+function onTrackPointerMove(event: PointerEvent) {
+  if (scrollbarDragging.value) seekToPointer(event);
+}
+
+function onTrackPointerUp() {
+  scrollbarDragging.value = false;
+}
 </script>
 <template>
   <div ref="scrollElement" class="virtual-scroller" @scroll="virtualScroller.onScroll">
@@ -112,6 +144,27 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
       </div>
       <div :style="{ height: virtualScroller.trailingSpacerPx }"></div>
     </div>
+    <div
+      v-if="props.scrollbar && virtualScroller.scrollbarThumbFraction > 0"
+      class="virtual-scroller__track"
+      @pointerdown="onTrackPointerDown"
+      @pointermove="onTrackPointerMove"
+      @pointerup="onTrackPointerUp"
+      @pointercancel="onTrackPointerUp"
+    >
+      <div
+        class="virtual-scroller__thumb"
+        :class="{ dragging: scrollbarDragging }"
+        :style="{
+          height: virtualScroller.scrollbarThumbFraction * 100 + '%',
+          top:
+            virtualScroller.scrollbarProgress *
+              (1 - virtualScroller.scrollbarThumbFraction) *
+              100 +
+            '%'
+        }"
+      ></div>
+    </div>
   </div>
 </template>
 <style>
@@ -125,6 +178,35 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
      scrollTop whenever the spacers change, fighting the Lenis-driven
      translateY (scroll is virtual; scrollTop must stay 0). */
   overflow-anchor: none;
+}
+.virtual-scroller__track {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  right: 6px;
+  width: 12px;
+  cursor: pointer;
+  touch-action: none;
+  z-index: 1;
+}
+.virtual-scroller__track::before {
+  content: '';
+  position: absolute;
+  inset: 0 4px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.18);
+}
+.virtual-scroller__thumb {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.45);
+  transition: background 0.15s ease;
+}
+.virtual-scroller__track:hover .virtual-scroller__thumb,
+.virtual-scroller__thumb.dragging {
+  background: rgba(148, 163, 184, 0.75);
 }
 .virtual-scroller::-webkit-scrollbar {
   /* WebKit */

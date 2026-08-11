@@ -69,52 +69,6 @@ watch(viewport, (element) => {
 
 onBeforeUnmount(() => observer?.disconnect());
 
-// ---- the visible, draggable scrollbar over VIRTUAL position ----
-const dragging = ref(false);
-
-const geometry = computed(() => {
-  const instance = scroller.value;
-  if (!instance) return null;
-  const total = Number(instance.scrollHeight) || 0;
-  const container = Number(instance.containerHeight) || 0;
-  if (total <= container || container === 0) return null;
-  const position = parseFloat(String(instance.scrollPosition)) || 0;
-  const thumbFraction = Math.max(container / total, 0.08);
-  const travel = 1 - thumbFraction;
-  const progress = Math.min(position / (total - container), 1);
-  return {
-    thumbHeightPercent: thumbFraction * 100,
-    thumbTopPercent: progress * travel * 100,
-  };
-});
-
-function seekToPointer(event: PointerEvent) {
-  const instance = scroller.value;
-  const track = (event.currentTarget as HTMLElement).closest('.blog-archive__track') as HTMLElement;
-  if (!instance || !track) return;
-  const rect = track.getBoundingClientRect();
-  const fraction = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
-  // scrollToIndex runs the class's full seek pipeline (spacer rebase +
-  // converge loop) — a raw lenis.scrollTo would translate content out of
-  // the viewport without rebasing the window.
-  const lastIndex = archiveItems.value.length - 1;
-  instance.scrollToIndex(Math.round(fraction * lastIndex), undefined, false);
-}
-
-function onTrackPointerDown(event: PointerEvent) {
-  scroller.value?.stopAutoPlay();
-  dragging.value = true;
-  (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-  seekToPointer(event);
-}
-
-function onTrackPointerMove(event: PointerEvent) {
-  if (dragging.value) seekToPointer(event);
-}
-
-function onTrackPointerUp() {
-  dragging.value = false;
-}
 </script>
 
 <template>
@@ -129,6 +83,7 @@ function onTrackPointerUp() {
           :padding-quantity="4"
           :auto-play="false"
           auto-repeat
+          scrollbar
         >
           <template #item="{ item }">
             <a
@@ -143,20 +98,6 @@ function onTrackPointerUp() {
             </a>
           </template>
         </VirtualScroller>
-        <div
-          class="blog-archive__track"
-          @pointerdown="onTrackPointerDown"
-          @pointermove="onTrackPointerMove"
-          @pointerup="onTrackPointerUp"
-          @pointercancel="onTrackPointerUp"
-        >
-          <div
-            v-if="geometry"
-            class="blog-archive__thumb"
-            :class="{ dragging }"
-            :style="{ height: geometry.thumbHeightPercent + '%', top: geometry.thumbTopPercent + '%' }"
-          ></div>
-        </div>
       </div>
     </ClientOnly>
   </section>
