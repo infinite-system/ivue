@@ -1730,11 +1730,6 @@ a.feature-inline-link {
     0 0 0 1px rgba(99, 102, 241, 0.08),
     0 14px 40px -18px rgba(45, 212, 191, 0.35);
 }
-/* the shine lives on the button only — see newsletter__button-shine */
-@keyframes newsletter-shine {
-  0% { transform: rotate(18deg) translateX(-160%); }
-  100% { transform: rotate(18deg) translateX(520%); }
-}
 .newsletter__label {
   display: block;
   margin-bottom: 0;
