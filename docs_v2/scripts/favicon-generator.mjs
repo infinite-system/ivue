@@ -33,6 +33,9 @@ const targets = [
   { file: 'icon-192.png', size: 192, page: tilePage(logoSvg), transparent: true },
   { file: 'icon-512.png', size: 512, page: tilePage(logoSvg), transparent: true },
   { file: 'apple-touch-icon.png', size: 180, page: applePage, transparent: false },
+  // Android adaptive icons mask to circle/squircle; a full-bleed variant with
+  // the mark inside the 80% safe zone survives every launcher shape.
+  { file: 'icon-512-maskable.png', size: 512, page: applePage, transparent: false },
 ];
 
 const browser = await chromium.launch();
