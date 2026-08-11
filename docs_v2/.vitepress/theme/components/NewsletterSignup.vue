@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vitepress';
 
 // Paste the Mailchimp embedded-form action URL here once the audience
@@ -7,18 +7,20 @@ import { useRoute } from 'vitepress';
 // The component converts it to the post-json JSONP endpoint itself.
 const MAILCHIMP_ACTION = '';
 
-const props = defineProps<{ placement: 'toast' | 'aside' | 'doc' }>();
+const props = defineProps<{ placement: 'toast' | 'aside' | 'doc' | 'cta' }>();
 
 const route = useRoute();
 const isBlogPost = computed(
   () => /^\/blog\/.+/.test(route.path) && !route.path.endsWith('/blog/'),
 );
 
-// The pill/toast rides every page (blog posts included — icon only
-// there); the aside/doc inline variants show ONLY on blog posts.
-const belongsHere = computed(() =>
-  props.placement === 'toast' ? true : isBlogPost.value,
-);
+// toast+pill ride every page (desktop); the mobile in-flow CTA closes
+// every NON-blog page; the aside/doc inline variants are blog-only.
+const belongsHere = computed(() => {
+  if (props.placement === 'toast') return true;
+  if (props.placement === 'cta') return !isBlogPost.value;
+  return isBlogPost.value;
+});
 
 const SUBSCRIBED_KEY = 'ivue-newsletter-subscribed';
 const DISMISSED_KEY = 'ivue-newsletter-dismissed';
@@ -37,7 +39,6 @@ onMounted(() => {
   mounted.value = true;
   subscribed.value = Boolean(localStorage.getItem(SUBSCRIBED_KEY));
   if (subscribed.value) return;
-  window.addEventListener('scroll', onPageScroll, { passive: true });
   const dismissedAt = Number(localStorage.getItem(DISMISSED_KEY) ?? 0);
   if (Date.now() - dismissedAt < DISMISS_DAYS * 86_400_000) return;
   window.setTimeout(() => {
@@ -45,46 +46,7 @@ onMounted(() => {
   }, 9_000);
 });
 
-// ---- bottom-of-page rollout (mobile): the pill unrolls leftward into
-// "Subscribe to news" with a timing-out progress bar, then folds back.
-// Blog posts never roll out — the inline form already sits down there.
-const ROLLOUT_MILLISECONDS = 6_000;
-const ROLLOUT_SESSION_KEY = 'ivue-newsletter-rollout';
-const rolledOut = ref(false);
-let rolloutTimer: ReturnType<typeof setTimeout> | undefined;
 
-function onPageScroll() {
-  if (rolledOut.value) return;
-  if (sessionStorage.getItem(ROLLOUT_SESSION_KEY)) return;
-  if (isBlogPost.value || subscribed.value || toastVisible.value) return;
-  if (!window.matchMedia('(max-width: 640px)').matches) return;
-  const remaining =
-    document.documentElement.scrollHeight -
-    window.innerHeight -
-    window.scrollY;
-  if (remaining > 90) return;
-  sessionStorage.setItem(ROLLOUT_SESSION_KEY, '1');
-  rolledOut.value = true;
-  rolloutTimer = setTimeout(
-    () => (rolledOut.value = false),
-    ROLLOUT_MILLISECONDS,
-  );
-}
-
-// navigating away mid-rollout folds it; the session flag means it will
-// not re-arm until a fresh visit
-watch(
-  () => route.path,
-  () => {
-    rolledOut.value = false;
-    clearTimeout(rolloutTimer);
-  },
-);
-
-onBeforeUnmount(() => {
-  window.removeEventListener('scroll', onPageScroll);
-  clearTimeout(rolloutTimer);
-});
 
 function dismiss() {
   toastVisible.value = false;
@@ -103,8 +65,6 @@ const pillVisible = computed(
 );
 
 function openFromPill() {
-  rolledOut.value = false;
-  clearTimeout(rolloutTimer);
   state.value = 'idle';
   message.value = '';
   toastVisible.value = true;
@@ -145,16 +105,30 @@ function subscribe() {
 </script>
 
 <template>
+  <button
+    v-if="placement === 'cta' && belongsHere && state !== 'done'"
+    type="button"
+    class="newsletter-cta"
+    @click="toastVisible = true"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm8 7.35L4.4 6h15.2L12 11.35ZM4 8.24V18h16V8.24l-7.45 5.3a1 1 0 0 1-1.1 0L4 8.24Z"/></svg>
+    Subscribe to Newsletter
+  </button>
   <Transition name="newsletter-slide">
     <div
-      v-if="belongsHere && (placement !== 'toast' || toastVisible)"
+      v-if="
+        belongsHere &&
+        (placement === 'aside' ||
+          placement === 'doc' ||
+          ((placement === 'toast' || placement === 'cta') && toastVisible))
+      "
       class="newsletter"
-      :class="`newsletter--${placement}`"
+      :class="placement === 'cta' ? 'newsletter--toast' : `newsletter--${placement}`"
       role="complementary"
       aria-label="Newsletter signup"
     >
       <button
-        v-if="placement === 'toast'"
+        v-if="placement === 'toast' || placement === 'cta'"
         type="button"
         class="newsletter__close"
         aria-label="Dismiss"
@@ -224,13 +198,11 @@ function subscribe() {
       v-if="pillVisible"
       type="button"
       class="newsletter-pill"
-      :class="{ 'newsletter-pill--expanded': rolledOut }"
       aria-label="Open newsletter signup"
       @click="openFromPill"
     >
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm8 7.35L4.4 6h15.2L12 11.35ZM4 8.24V18h16V8.24l-7.45 5.3a1 1 0 0 1-1.1 0L4 8.24Z"/></svg>
-      <span class="newsletter-pill__text">{{ rolledOut ? 'Subscribe to Newsletter' : 'Newsletter' }}</span>
-      <span v-if="rolledOut" class="newsletter-pill__progress" aria-hidden="true"></span>
+      <span class="newsletter-pill__text">Newsletter</span>
     </button>
   </Transition>
 </template>

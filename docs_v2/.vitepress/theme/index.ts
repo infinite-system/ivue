@@ -47,6 +47,7 @@ export default {
         h(BlogPostNav),
         h(BlogArchiveScroller),
         h(NewsletterSignup, { placement: 'doc' }),
+        h(NewsletterSignup, { placement: 'cta' }),
       ],
       'layout-bottom': () => h(NewsletterSignup, { placement: 'toast' }),
     });
