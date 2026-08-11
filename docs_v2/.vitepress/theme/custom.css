@@ -2136,6 +2136,13 @@ a.feature-inline-link {
 .blog-post .VPDocFooter {
   margin-top: 24px;
 }
+/* …and reads as metadata, not content */
+.blog-post .VPDocFooter .last-updated,
+.blog-post .VPLastUpdated {
+  font-size: 12px;
+  color: var(--vp-c-text-3);
+  opacity: 0.75;
+}
 @media (max-width: 640px) {
   .blog-post .VPDocFooter {
     margin-top: 10px;
