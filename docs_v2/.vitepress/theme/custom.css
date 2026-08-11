@@ -1721,9 +1721,11 @@ a.feature-inline-link {
   overflow: hidden;
   border: 1px solid transparent;
   border-radius: 14px;
-  padding: 11px 16px 12px;
-  /* gradient ring: card surface in padding-box, brand sweep in border-box */
+  padding: 13px 16px 12px;
+  /* gradient ring: card surface in padding-box, brand sweep in border-box —
+     plus the banner-style indigo glow bleeding in from the top edge */
   background:
+    radial-gradient(240px 130px at 50% -25%, rgba(99, 102, 241, 0.28), transparent 62%) padding-box,
     linear-gradient(var(--vp-c-bg-soft), var(--vp-c-bg-soft)) padding-box,
     linear-gradient(120deg, #6366f1, #2dd4bf 55%, #34d399) border-box;
   box-shadow:
@@ -1765,7 +1767,18 @@ a.feature-inline-link {
 .newsletter__row {
   display: grid;
   grid-template-columns: 2fr 3fr;
-  gap: 7px;
+}
+/* the pair reads as one segmented field: flush edges, outer radius only */
+.newsletter__row input:first-child {
+  border-radius: 9px 0 0 9px;
+  border-right: none;
+}
+.newsletter__row input:last-child {
+  border-radius: 0 9px 9px 0;
+}
+.newsletter__row input:focus {
+  position: relative;
+  z-index: 1;
 }
 .newsletter__form input {
   min-width: 0;
@@ -1789,6 +1802,7 @@ a.feature-inline-link {
   border-radius: 9px;
   background: linear-gradient(105deg, #6366f1, #2dd4bf 70%, #34d399);
   color: #f4f9ff;
+  text-shadow: 0 1px 2px rgba(2, 6, 23, 0.45);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -1932,9 +1946,17 @@ a.feature-inline-link {
 .newsletter--aside {
   margin-top: 20px;
 }
-/* the aside is narrow — stack the pair there */
+/* the aside is narrow — stack the pair there, flush vertically */
 .newsletter--aside .newsletter__row {
   grid-template-columns: 1fr;
+}
+.newsletter--aside .newsletter__row input:first-child {
+  border-radius: 9px 9px 0 0;
+  border-right: 1px solid var(--vp-c-divider);
+  border-bottom: none;
+}
+.newsletter--aside .newsletter__row input:last-child {
+  border-radius: 0 0 9px 9px;
 }
 /* after-article variant: only while the aside is hidden */
 .newsletter--doc {
