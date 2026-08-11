@@ -40,10 +40,9 @@ const state = ref<'idle' | 'sending' | 'done' | 'error'>('idle');
 const message = ref('');
 
 onMounted(() => {
-  if (props.placement !== 'toast') return;
   mounted.value = true;
   subscribed.value = Boolean(localStorage.getItem(SUBSCRIBED_KEY));
-  if (subscribed.value) return;
+  if (props.placement !== 'toast' || subscribed.value) return;
   const dismissedAt = Number(localStorage.getItem(DISMISSED_KEY) ?? 0);
   if (Date.now() - dismissedAt < DISMISS_DAYS * 86_400_000) return;
   window.setTimeout(() => {
@@ -110,30 +109,21 @@ function subscribe() {
 </script>
 
 <template>
-  <button
-    v-if="placement === 'cta' && belongsHere && state !== 'done'"
-    type="button"
-    class="newsletter-cta"
-    @click="toastVisible = true"
-  >
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm8 7.35L4.4 6h15.2L12 11.35ZM4 8.24V18h16V8.24l-7.45 5.3a1 1 0 0 1-1.1 0L4 8.24Z"/></svg>
-    Subscribe to Newsletter
-  </button>
   <Transition name="newsletter-slide">
     <div
       v-if="
         belongsHere &&
-        (placement === 'aside' ||
-          placement === 'doc' ||
-          ((placement === 'toast' || placement === 'cta') && toastVisible))
+        (placement === 'toast'
+          ? toastVisible
+          : !(mounted && subscribed))
       "
       class="newsletter"
-      :class="placement === 'cta' ? 'newsletter--toast' : `newsletter--${placement}`"
+      :class="`newsletter--${placement}`"
       role="complementary"
       aria-label="Newsletter signup"
     >
       <button
-        v-if="placement === 'toast' || placement === 'cta'"
+        v-if="placement === 'toast'"
         type="button"
         class="newsletter__close"
         aria-label="Dismiss"
