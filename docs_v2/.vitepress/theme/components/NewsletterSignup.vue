@@ -14,10 +14,15 @@ const isBlogPost = computed(
   () => /^\/blog\/.+/.test(route.path) && !route.path.endsWith('/blog/'),
 );
 
+// The whole feature is dormant until Mailchimp is configured: no form,
+// no pill, no toast. Paste MAILCHIMP_ACTION and it goes live site-wide
+// on the next deploy — so the list captures from its first minute.
 // toast shows everywhere EXCEPT blog posts (they carry the inline form);
 // aside/doc variants show ONLY on blog posts.
-const belongsHere = computed(() =>
-  props.placement === 'toast' ? !isBlogPost.value : isBlogPost.value,
+const belongsHere = computed(
+  () =>
+    Boolean(MAILCHIMP_ACTION) &&
+    (props.placement === 'toast' ? !isBlogPost.value : isBlogPost.value),
 );
 
 const SUBSCRIBED_KEY = 'ivue-newsletter-subscribed';
@@ -66,11 +71,7 @@ function openFromPill() {
 
 function subscribe() {
   if (!email.value || state.value === 'sending') return;
-  if (!MAILCHIMP_ACTION) {
-    state.value = 'error';
-    message.value = 'Signups open very soon — follow @evgenykalash on X meanwhile.';
-    return;
-  }
+  if (!MAILCHIMP_ACTION) return; // unreachable — the form only renders configured
   state.value = 'sending';
   const endpoint = MAILCHIMP_ACTION.replace('/post?', '/post-json?');
   const callbackName = `ivueNewsletterCallback${Date.now()}`;
