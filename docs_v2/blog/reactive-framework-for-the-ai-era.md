@@ -102,14 +102,13 @@ behavior agents will get differently each time.
 
 ## The evidence is not hypothetical
 
-This argument has a [running proof](/examples/invar): a full
+This argument has a running proof: a full
 terminal IDE — 94,054 source lines, 345 classes, built by an agent
 fleet in twenty days on this exact substrate. The discipline numbers held while it tripled: zero import
 cycles, zero module-level state, ten `computed()` calls, one
 hundred percent class-shape conformance — each zero enforced
 mechanically, on every merge. And the part that matters most for
-this article's claim: the agents were not imitating examples. They [derived patterns no human had shown
-them](/blog/patterns-the-author-never-wrote), because what they
+this article's claim: the agents were not imitating examples. They derived patterns no human had shown them, because what they
 were given was not a catalog but a model.
 
 ## The human counterweight
