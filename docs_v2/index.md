@@ -366,7 +366,7 @@ Invar is an <strong>alpha, experimental project</strong> — a proving ground fo
 beyond the web, and an experiment in <strong>agentic development</strong>: the entire
 editor was built by AI agents using the ivue skill as their base discipline, with
 every module governed by explicit invariants contracts. The
-<a href="https://github.com/infinite-system/invar">source</a> is open as a
+source is open as a
 study-scale example of ivue architecture — module seams, namespace exports,
 flyweight state, and lifecycle discipline, all in one real codebase.
 </p>
