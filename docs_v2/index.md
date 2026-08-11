@@ -354,8 +354,9 @@ npx ivue skill --all
 
 <p class="lead invar-lead">
 <a href="https://github.com/infinite-system/invar">Invar</a> — a full terminal IDE
-built entirely on ivue: <strong>340+ ivue classes</strong> (nearly 200 of them
-<code>Static()</code> capability classes) driving the editor, workspace search,
+built entirely on ivue: <strong>340+ ivue classes</strong> — nearly 200
+<code>Static()</code> capability classes and about 80 <code>Reactive()</code>
+models — driving the editor, workspace search,
 tasks, terminals, and agents — in a Bun process with no DOM. Every frame below is
 real output from the running app, rendered cell-for-cell from its PTY grid.
 </p>

@@ -209,6 +209,7 @@ Counted 2026-08-11, over 94,054 source lines and 372 files:
 module-level functions:      0
 module-level variables:      0
 $-cached static getters:    78
+Reactive() sites:           79
 Static() capability sites: 198
 ```
 
