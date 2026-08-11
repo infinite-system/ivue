@@ -350,10 +350,7 @@ export default defineConfig({
   // prev/next pager would walk into "What is ivue?". BlogPostNav (under
   // the author card) provides older/newer navigation instead.
   transformPageData(pageData) {
-    if (
-      pageData.relativePath.startsWith('blog/') &&
-      pageData.relativePath !== 'blog/index.md'
-    ) {
+    if (pageData.relativePath.startsWith('blog/')) {
       pageData.frontmatter.prev = false;
       pageData.frontmatter.next = false;
     }
