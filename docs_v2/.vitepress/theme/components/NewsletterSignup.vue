@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, useId } from 'vue';
 import { useRoute } from 'vitepress';
 
 // Paste the Mailchimp embedded-form action URL here once the audience
@@ -8,6 +8,11 @@ import { useRoute } from 'vitepress';
 const MAILCHIMP_ACTION = '';
 
 const props = defineProps<{ placement: 'toast' | 'aside' | 'doc' | 'cta' }>();
+
+// The card renders in several placements at once (aside + doc on blog
+// posts, one hidden by CSS) — a shared gradient id would resolve into the
+// display:none instance and paint nothing. Every instance gets its own.
+const markGradientId = useId();
 
 const route = useRoute();
 const isBlogPost = computed(
@@ -140,9 +145,9 @@ function subscribe() {
           <rect x="0.5" y="0.5" width="47" height="47" rx="11.5" stroke="white" stroke-opacity="0.08" />
           <path
             d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
-            stroke="url(#newsletter-mark-gradient)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+            :stroke="`url(#${markGradientId})`" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
           <defs>
-            <linearGradient id="newsletter-mark-gradient" x1="8" y1="14" x2="40" y2="34" gradientUnits="userSpaceOnUse">
+            <linearGradient :id="markGradientId" x1="8" y1="14" x2="40" y2="34" gradientUnits="userSpaceOnUse">
               <stop stop-color="#818CF8" />
               <stop offset="1" stop-color="#34D399" />
             </linearGradient>
