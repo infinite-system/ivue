@@ -78,7 +78,7 @@ decision is the eviction notice:
 > A class is a reactive unit — a store, a view-model, a domain entity —
 > usable anywhere. It is never itself a component.
 
-## The heresy about `computed()`
+## The `computed()` assumption
 
 Along the way, one more assumption refused to survive measurement:
 that `computed()` is how you derive values. It isn't. Vue's actual
