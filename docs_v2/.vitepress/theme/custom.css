@@ -1739,10 +1739,9 @@ a.feature-inline-link {
   margin-bottom: 7px;
 }
 .newsletter__mark {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   flex: none;
-  border-radius: 9px;
 }
 .newsletter__heading {
   display: flex;
