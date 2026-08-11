@@ -13,6 +13,7 @@ import { data as posts } from '../../../blog/blog.data.mjs';
 interface ArchiveItem extends BaseItem {
   url: string;
   title: string;
+  excerpt: string;
   date: string;
   current: boolean;
 }
@@ -32,6 +33,7 @@ const archiveItems = computed<ArchiveItem[]>(() => {
     position: '',
     url: post.url,
     title: post.title,
+    excerpt: post.excerpt,
     date: post.date,
     current: post.url === currentUrl,
   }));
@@ -136,6 +138,7 @@ function onTrackPointerUp() {
               :aria-current="item.current ? 'page' : undefined"
             >
               <span class="blog-archive__title">{{ item.title }}</span>
+              <span class="blog-archive__excerpt">{{ item.excerpt }}</span>
               <span class="blog-archive__date">{{ formatDate(item.date) }}</span>
             </a>
           </template>

@@ -2042,14 +2042,21 @@ a.feature-inline-link {
   color: var(--vp-c-brand-1);
 }
 .blog-archive__title {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: none;
   white-space: nowrap;
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--vp-c-text-1);
   transition: color 0.15s ease;
+}
+.blog-archive__excerpt {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  color: var(--vp-c-text-3);
 }
 .VPDoc .blog-archive__row--current {
   background: var(--vp-c-brand-soft);
