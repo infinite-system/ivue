@@ -239,7 +239,7 @@ use, under Bun, with [no Vue component in
 sight](/guide/backend) — the classes, the refs, and the watch
 semantics are the whole runtime.
 
-## The boundary, honestly
+## The gaps the census found
 
 Not every surface is governed yet: Invar's file tree has no watcher
 *and* no floor — it refreshes by explicit command, and an external

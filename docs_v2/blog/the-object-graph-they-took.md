@@ -163,8 +163,8 @@ was about the defects. It was never about the shape.
 
 ## What stays true
 
-The boundary, stated plainly, because a claim this shaped earns its
-keep by what it rules out:
+A claim this shaped earns its keep by what it rules out, so here is
+what stays ruled out:
 
 - **Circular `extends` stays impossible** — a class can't be its own
   ancestor. That is logic, not a limitation; no pattern restores it.

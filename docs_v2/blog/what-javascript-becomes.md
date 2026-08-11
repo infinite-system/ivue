@@ -177,22 +177,12 @@ conventions with AST censuses — a stricter dialect of JavaScript,
 run without forking the language, [measured at
 zero](/blog/the-zeros-didnt-move) continuously.
 
-## The boundary, honestly
+## A conjunction, not a coronation
 
-This is a claim about a *conjunction*, not a coronation. Java's
-type system, the JVM's decades of runtime engineering, Erlang's
-preemptive concurrency, Scala's expressiveness — none of that is
-touched by anything here, and a team choosing a language weighs all
-of it. Three narrower cautions too. A discipline is not a
-guarantee: unenforced, it erodes — the gates are part of the
-result, not an accessory. Other dynamic languages could walk some
-of this road — Python's descriptors and Ruby's open classes are
-real material — and the claim is only that none has, not that none
-could. And "userland" cuts both ways: what a convention grants, an
-undisciplined dependency can ignore.
-
-What survives those cautions is still the strangest sentence in
-this series: **the scripting language everyone mocked ends up as
+This claims a combination of properties — Java keeps its type
+system, Erlang keeps its concurrency, and a discipline only holds
+where it is enforced, which is why the gates are part of the
+result. With the scope set, the sentence stands: **the scripting language everyone mocked ends up as
 the only mainstream language holding managed-runtime linking,
 live-image classes, receiver-aware static storage, and transparent
 reactive objects at once — and it holds them in userland.** The

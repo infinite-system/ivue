@@ -64,16 +64,13 @@ cheap, then construct.** The reduction is reusable; the fortnight is
 repeatable. Invar was the first two-week build on this substrate.
 There is no reason it is the last.
 
-## The boundary, honestly
+## What one log can and cannot say
 
-One log is not a controlled experiment. The three years also bought
-domain knowledge that surely sped the twenty days; agent capability
-in 2026 is not what it was in 2023; and a second product would be
-needed to separate "the substrate is generative" from "the author knew
-exactly what to build." The claim this history *does* support is
-narrower and still unusual: the tempo change arrived **at the tag**,
-not gradually — and every discipline metric
-[held at speed](/blog/the-zeros-didnt-move). Whatever was finished on
-2026-07-21, it was the thing that had been missing.
+The three years bought domain knowledge too, and 2026 agents are
+not 2023 agents — but neither explains the shape of the data: the
+tempo change arrived **at the tag**, not gradually, and every
+discipline metric [held at speed](/blog/the-zeros-didnt-move).
+Whatever was finished on 2026-07-21, it was the thing that had been
+missing.
 
 Both logs are public. The dates are one `git log` away.

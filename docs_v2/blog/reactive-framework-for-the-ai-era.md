@@ -119,11 +119,10 @@ compensate for variance with experience and care, indefinitely and
 expensively. An agent cannot compensate, so the structure has to —
 and once the structure does, humans get the same gift: code where the care lives in the shape, not in the reviewer.
 
-The boundary, honestly: this is one substrate and
-one project's evidence — agents do
-ship on messy codebases too, given enough tokens and retries. The
-claim is economic, not absolute: every unit of variance is tokens
-spent fighting the framework instead of building the product, and the tempo data says the exchange rate is steep.
+The claim is economic, and it is blunt: every unit of variance is
+tokens an agent spends fighting the framework instead of building
+your product — and the tempo data says that exchange rate is
+steep.
 
 ## What frameworks compete on now
 

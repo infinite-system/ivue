@@ -133,15 +133,10 @@ to run on your own docs:
 > catalog. If they do things you never showed them — and those
 > things are *correct* — you wrote a generator.
 
-The boundary, honestly: the central claim here — "the author never
-used these patterns by hand" — is testimony, not a measurement, and
-this is one project with one author; a second substrate with a
-second fleet would be needed to separate "generators transfer" from
-"this generator transferred." What is measurable is on the record:
-the manual is 779 lines; the derived patterns are
-[in the tree](/blog/reactivity-is-an-allocator), cited by file and
-line; and the contracts that selected them
-[run on every merge](/blog/the-zeros-didnt-move).
+And none of it is hidden: the manual is 779 lines, the derived
+patterns sit [in the tree](/blog/reactivity-is-an-allocator) cited
+by file and line, and the contracts that selected them
+[run on every merge](/blog/the-zeros-didnt-move). Check any of it.
 
 Three years to write five thousand words. Machines took it from
 there — to places the five thousand words never went, which is how

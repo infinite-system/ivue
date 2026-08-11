@@ -215,8 +215,8 @@ Reactive() classes:         79
 Static() capability classes: 198
 ```
 
-The zero is stricter than it had to be. The honest boundary of this
-pattern is that **the target is state, not constants** — a frozen
+The zero is stricter than it had to be. The pattern's real target
+is **state, not constants** — a frozen
 lookup table at module scope harms nobody. Invar draws the line past
 even that: its validation constants — regular expressions, a
 reserved-name `Set` — live as static getters on the class that
