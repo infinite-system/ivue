@@ -30,7 +30,7 @@ the same doorstep, and it is worth being precise about why.
 
 ## What a stochastic author actually needs
 
-An agent is a [stochastic rule-follower](/blog/agents-built-an-editor):
+An agent is a stochastic rule-follower:
 fluent, tireless, and drifting. Every property below exists to
 convert drift into something harmless, visible, or impossible.
 
@@ -45,13 +45,12 @@ check instead of a careful reviewer.
 
 **Correctness by construction, not vigilance.** The classic
 review-burden failure classes — unbound `this`, initialization
-order, [circular imports](/blog/circular-imports-dissolved), leaked
-watchers, [module-level state](/blog/module-level-state) — are
+order, circular imports, leaked watchers, module-level state — are
 exactly the mistakes a tireless generator makes tirelessly. ivue's
 answer is never "be careful": methods bind
-[lazily and permanently](/blog/this-method-era), cycles resolve
-[by construction](/blog/circular-imports-dissolved), teardown is
-[deterministic](/guide/lifecycle-teardown). A failure class an agent
+lazily and permanently, [cycles resolve by
+construction](/blog/circular-imports-dissolved), teardown is
+deterministic. A failure class an agent
 cannot express is a failure class nobody has to catch.
 
 **A standard small enough to transmit whole.** The entire discipline
@@ -69,8 +68,7 @@ distinction](/blog/patterns-the-author-never-wrote) becomes
 economic. A big framework transmits as examples, and examples teach
 imitation. A small model transmits as *rules*, and rules teach
 derivation — agents holding the ivue standard produced correct
-patterns [its own author had never
-written](/blog/patterns-the-author-never-wrote). You cannot fit a
+patterns its own author had never written. You cannot fit a
 sprawling API into a context window and have it survive; you can
 fit a generator.
 
@@ -79,9 +77,7 @@ object graph — `workspaceSet.active.editor.selectLine` — with no
 store indirection between the agent and the state. In
 [Invar](/examples/invar), that graph is queryable *from outside the
 process* by dotted path: agents verify their own work by asking the
-program, not by parsing screenshots. When
-[the object tells the truth](/blog/the-object-should-tell-the-truth),
-the agent can read it.
+program, not by parsing screenshots. When the object tells the truth, the agent can read it.
 
 **Edits that land on live state.** ivue's thin-closure rule means
 logic lives on the prototype, so an agent's edit
@@ -108,16 +104,13 @@ behavior agents will get differently each time.
 
 This argument has a [running proof](/examples/invar): a full
 terminal IDE — 94,054 source lines, 345 classes, built by an agent
-fleet [in twenty days](/blog/three-years-to-reduce) on this exact
-substrate. The discipline numbers
-[held while it tripled](/blog/the-zeros-didnt-move): zero import
+fleet in twenty days on this exact substrate. The discipline numbers held while it tripled: zero import
 cycles, zero module-level state, ten `computed()` calls, one
 hundred percent class-shape conformance — each zero enforced
 mechanically, on every merge. And the part that matters most for
-this article's claim: the agents were not imitating examples. They
-[derived patterns no human had
-shown them](/blog/patterns-the-author-never-wrote), because what
-they were given was not a catalog but a model.
+this article's claim: the agents were not imitating examples. They [derived patterns no human had shown
+them](/blog/patterns-the-author-never-wrote), because what they
+were given was not a catalog but a model.
 
 ## The human counterweight
 
@@ -128,17 +121,14 @@ for on human teams for decades. Agents did not create these
 virtues; they removed the tolerance for their absence. A human can
 compensate for variance with experience and care, indefinitely and
 expensively. An agent cannot compensate, so the structure has to —
-and once the structure does, humans get the same gift: code where
-[the care lives in the shape](/blog/reduction-to-modularity), not
-in the reviewer.
+and once the structure does, humans get the same gift: code where the care lives in the shape, not in the reviewer.
 
 The boundary, honestly: this is one substrate and
-[one project's evidence](/blog/three-years-to-reduce) — agents do
+one project's evidence — agents do
 ship on messy codebases too, given enough tokens and retries. The
 claim is economic, not absolute: every unit of variance is tokens
-spent fighting the framework instead of building the product, and
-[the tempo data](/blog/the-zeros-didnt-move) says the exchange rate
-is steep.
+spent fighting the framework instead of building the product, and [the tempo data](/blog/the-zeros-didnt-move) says the
+exchange rate is steep.
 
 ## What frameworks compete on now
 
@@ -150,7 +140,7 @@ subtraction: fewer idioms, fewer bytes, fewer possible mistakes.
 
 ivue got there by accident of honesty — three years of deleting
 everything that did not have to exist, finished
-[the same day the agents arrived](/blog/three-years-to-reduce). The
+the same day the agents arrived. The
 result is a reactive framework whose entire contract an agent can
 hold, whose violations a script can see, and whose failure classes
 are not reviewed away but *gone*.
