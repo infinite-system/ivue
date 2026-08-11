@@ -1732,6 +1732,23 @@ a.feature-inline-link {
     0 0 0 1px rgba(99, 102, 241, 0.08),
     0 14px 40px -18px rgba(45, 212, 191, 0.35);
 }
+.newsletter__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+.newsletter__mark {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 9px;
+}
+.newsletter__heading {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 .newsletter__label {
   display: block;
   margin-bottom: 0;
@@ -1744,7 +1761,7 @@ a.feature-inline-link {
 }
 .newsletter__title {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 0;
   font-size: 16px;
   font-weight: 750;
   letter-spacing: -0.01em;

@@ -114,8 +114,34 @@ function subscribe() {
         aria-label="Dismiss"
         @click="dismiss"
       >×</button>
-      <span class="newsletter__label">ivue newsletter</span>
-      <span class="newsletter__title">Follow the frontier</span>
+      <div class="newsletter__head">
+        <svg
+          class="newsletter__mark"
+          viewBox="0 0 48 48"
+          fill="none"
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id="newsletter-mark-gradient" x1="8" y1="14" x2="40" y2="34" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#38BDF8" />
+              <stop offset="0.5" stop-color="#2DD4BF" />
+              <stop offset="1" stop-color="#34D399" />
+            </linearGradient>
+          </defs>
+          <rect width="48" height="48" rx="12" fill="#0D1226" />
+          <path
+            d="M24 24 C 19 17, 10.6 17.6, 10.6 24 C 10.6 30.4, 19 31, 24 24 C 29 17, 37.4 17.6, 37.4 24 C 37.4 30.4, 29 31, 24 24 Z"
+            stroke="url(#newsletter-mark-gradient)"
+            stroke-width="2.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <div class="newsletter__heading">
+          <span class="newsletter__label">ivue newsletter</span>
+          <span class="newsletter__title">Follow the frontier</span>
+        </div>
+      </div>
       <p class="newsletter__pitch">
         New patterns, releases, and measured numbers from the edge of
         what JavaScript can do — only when something real ships.
