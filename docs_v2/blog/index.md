@@ -7,6 +7,24 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/circular-imports-dissolved">
+    <img class="thumb" src="/blog/circular-imports-dissolved.png" alt="Circular imports, dissolved" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">August 2026</span></div>
+      <h2>Circular imports, dissolved</h2>
+      <p class="excerpt">JavaScript's oldest structural wound was never about the cycle — it was about the clock. Move every cross-module reference from load time to first access and the failure class becomes inexpressible: 372 files, deeply cyclic domain, zero import cycles.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
+  <a class="blog-card" href="/blog/module-level-state">
+    <img class="thumb" src="/blog/module-level-state.png" alt="Module-level state is a bug" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">August 2026</span></div>
+      <h2>Module-level state is a bug</h2>
+      <p class="excerpt">The most normal line in JavaScript — const cache = new Map() — is an eager, global, unowned singleton with no seam. Static() flips every property at once: lazy, inherited, overridable, per receiver. A 94,000-line codebase runs at zero — and boots by proving it.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/three-years-to-reduce">
     <img class="thumb" src="/blog/three-years-to-reduce.png" alt="Three years to reduce, two weeks to build" width="1200" height="630" loading="lazy" />
     <div class="body">

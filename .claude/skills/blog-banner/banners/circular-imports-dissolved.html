@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(./fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(./fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
+      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      #050a18;
+    font-family: 'Geist', 'DejaVu Sans', 'Inter', sans-serif;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+  }
+  .mono { font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace; }
+  /* the cycle: three modules in a loop, edges resolving at first access */
+  .cycle {
+    position: absolute; top: 74px; left: 0; width: 1200px;
+    display: flex; justify-content: center; align-items: center; gap: 20px;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 26px;
+  }
+  .node {
+    padding: 12px 24px; border-radius: 10px;
+    color: #cfe3ff;
+    background: rgba(96, 165, 250, 0.12);
+    border: 1px solid rgba(96, 165, 250, 0.4);
+  }
+  .edge { color: #67e8f9; text-shadow: 0 0 18px rgba(34, 211, 238, 0.7); font-size: 30px; }
+  .loop {
+    color: #67e8f9; text-shadow: 0 0 18px rgba(34, 211, 238, 0.7); font-size: 30px;
+  }
+  .cyclenote {
+    position: absolute; top: 148px; width: 1200px; text-align: center;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 17px; color: #5f7fb3; letter-spacing: 0.04em;
+  }
+  .title {
+    position: absolute; top: 224px; width: 1200px; text-align: center;
+    font-size: 76px; font-weight: 750; color: #eaf2ff;
+    text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); letter-spacing: -0.015em;
+  }
+  .title .glow { color: #67e8f9; text-shadow: 0 0 36px rgba(34, 211, 238, 0.8); }
+  .sub {
+    position: absolute; top: 336px; width: 1200px; text-align: center;
+    font-size: 25px; color: #7e9cd0; line-height: 1.55;
+  }
+  .stats {
+    position: absolute; top: 434px; width: 1200px;
+    display: flex; justify-content: center; gap: 18px;
+  }
+  .stat {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 13px 22px; border-radius: 11px;
+    border: 1px solid rgba(96, 165, 250, 0.4);
+  }
+  .stat .n {
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 27px; color: #67e8f9; text-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+  }
+  .stat .l { font-size: 16px; color: #7e9cd0; }
+  .brand {
+    position: absolute; bottom: 34px; width: 1200px; text-align: center;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 22px; letter-spacing: 0.08em; color: #7da4e8;
+  }
+  .brand b { color: #e0ecff; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="cycle">
+    <span class="node">Customer</span>
+    <span class="edge">⟶</span>
+    <span class="node">Order</span>
+    <span class="edge">⟶</span>
+    <span class="node">Customer</span>
+    <span class="loop">⟲</span>
+  </div>
+  <div class="cyclenote">every reference resolves at first access — after loading is over</div>
+  <div class="title">Circular imports, <span class="glow">dissolved</span></div>
+  <div class="sub">the cycle was never the problem — the clock was.<br/>load-time reads made structurally impossible, not carefully avoided</div>
+  <div class="stats">
+    <div class="stat"><span class="n">372</span><span class="l">files, cyclic domain</span></div>
+    <div class="stat"><span class="n">0</span><span class="l">value-import cycles</span></div>
+    <div class="stat"><span class="n">0</span><span class="l">forwardRef</span></div>
+    <div class="stat"><span class="n">0</span><span class="l">load-order rules</span></div>
+  </div>
+  <div class="brand">∞ <b>ivue</b> blog</div>
+</body>
+</html>
