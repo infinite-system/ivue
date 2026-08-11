@@ -1740,7 +1740,7 @@ a.feature-inline-link {
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--vp-c-text-3);
+  color: var(--vp-c-text-1);
 }
 .newsletter__title {
   display: block;
