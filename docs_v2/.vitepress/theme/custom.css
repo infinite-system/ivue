@@ -1678,11 +1678,17 @@ a.feature-inline-link {
   color: var(--vp-c-text-2);
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.18s ease, background-color 0.18s ease;
+  transition: color 0.18s ease, background-color 0.18s ease, transform 0.1s ease;
 }
 .blog-share__button:hover {
   color: var(--vp-c-brand-1);
   background: var(--vp-c-brand-soft);
+}
+/* press feedback: compress + brighten so every tap visibly answers */
+.blog-share__button:active {
+  transform: scale(0.94);
+  color: var(--vp-c-brand-1);
+  background: color-mix(in srgb, var(--vp-c-brand-1) 22%, var(--vp-c-brand-soft));
 }
 .blog-share__button svg {
   width: 15px;
