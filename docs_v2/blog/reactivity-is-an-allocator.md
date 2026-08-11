@@ -239,19 +239,13 @@ use, under Bun, with [no Vue component in
 sight](/guide/backend) — the classes, the refs, and the watch
 semantics are the whole runtime.
 
-## The gaps the census found
+## Not "wrap the backend in refs"
 
-Not every surface is governed yet: Invar's file tree has no watcher
-*and* no floor — it refreshes by explicit command, and an external
-`git checkout` shows in the git panel within five seconds while the
-tree waits for a keypress. The census that produced this article
-made that gap visible, which is what censuses are for. And the
-inversion deserves its warning label: none of this is "wrap the
-backend in refs." Naive reactivity at the OS boundary — a ref per
-path, a watcher per file — buys memory churn, event storms, and
-untrustworthy silence. The discipline is precisely the three idioms
-*plus* the floor, and the coarse signals are load-bearing: this
-works because the graph is sparse.
+The inversion deserves its warning label: naive reactivity at the
+OS boundary — a ref per path, a watcher per file — buys memory
+churn, event storms, and untrustworthy silence. The discipline is
+precisely the three idioms *plus* the floor, and the coarse signals
+are load-bearing: this works because the graph is sparse.
 
 What survives is the reframe. Reactivity was never really about
 pixels — it is a machine for keeping derived state consistent with
