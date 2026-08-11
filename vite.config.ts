@@ -2,7 +2,6 @@ import { fileURLToPath, URL } from 'node:url';
 
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import dts from 'vite-plugin-dts';
 import pkg from './package.json';
 // import libCss from 'vite-plugin-libcss';
 import { terser } from 'rollup-plugin-terser';
@@ -21,9 +20,17 @@ export default defineConfig({
   },
   plugins: [
     vue(),
-    dts({
-      cleanVueFileName: true,
-    }),
+    // vite-plugin-dts is a build-only concern (d.ts emission), and merely
+    // IMPORTING it pulls @microsoft/api-extractor, whose current releases
+    // break under our pinned plugin version on fresh installs. Load it only
+    // when actually building the library — never under vitest.
+    ...(process.env.VITEST
+      ? []
+      : [
+          (await import('vite-plugin-dts')).default({
+            cleanVueFileName: true,
+          }),
+        ]),
     // libCss(),
   ],
   build: {
