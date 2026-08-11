@@ -5,8 +5,11 @@ description: 'Where to get help, report bugs, share feedback, and follow ivue �
 
 # Community
 
-ivue is built in the open, extracted from production, and maintained by a
-real person who reads everything below.
+ivue is built in the open — extracted from production, sharpened in
+public, and maintained by a real human who reads every message that
+lands on this page. Whether you're here to ask a question, report
+something weird, or just see how deep the rabbit hole goes: welcome.
+Pull up a chair.
 
 ## Get help, talk shop
 
@@ -147,4 +150,45 @@ New releases, benchmark runs, and examples land on
       smallest form: plain classes, full reactivity, one kilobyte.
     </p>
   </div>
+</div>
+
+## Credits
+
+Every reduction starts from someone else's work.
+These are the people and projects whose ideas ivue is built on —
+gratefully, and by name:
+
+<div class="cm-channel-groups">
+<section class="cm-channel-group">
+  <div class="cm-channels">
+  <a class="cm-channel" href="https://vuejs.org" target="_blank" rel="noreferrer">
+    <span class="cm-channel__title">
+      <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.77 2 12 6.8 9.23 2H1.5L12 20.2 22.5 2h-7.73Zm-9.8 2h3.1L12 10.8 15.93 4h3.1L12 16.2 4.97 4Z"/></svg>
+      <strong>Evan You — Vue</strong>
+    </span>
+    <p>Creator of Vue. The reactivity engine ivue rides on — refs, effects, and the scheduler that makes a 1&nbsp;kB class layer possible at all.</p>
+  </a>
+  <a class="cm-channel" href="https://laravel.com" target="_blank" rel="noreferrer">
+    <span class="cm-channel__title">
+      <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 2 7v10l10 5 10-5V7L12 2Zm0 2.2L19.5 8 12 11.8 4.5 8 12 4.2ZM4 9.6l7 3.5v6.7l-7-3.5V9.6Zm9 10.2v-6.7l7-3.5v6.7l-7 3.5Z"/></svg>
+      <strong>Taylor Otwell — Laravel</strong>
+    </span>
+    <p>The standing proof that developer experience is a feature — API elegance practiced as an engineering discipline, not a garnish.</p>
+  </a>
+  <a class="cm-channel" href="https://mobx.js.org" target="_blank" rel="noreferrer">
+    <span class="cm-channel__title">
+      <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm0 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg>
+      <strong>MobX</strong>
+    </span>
+    <p>Transparent reactive objects, years ahead of the field — the prior art that showed plain-looking classes could be fully observable.</p>
+  </a>
+  <a class="cm-channel" href="https://www.logicroom.co" target="_blank" rel="noreferrer">
+    <span class="cm-channel__title">
+      <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 3.5A3.5 3.5 0 1 1 16.5 20 3.5 3.5 0 0 1 13 16.5Z"/></svg>
+      <strong>Pete Heard — UI Architecture Academy</strong>
+    </span>
+    <p>Framework-agnostic UI architecture and model–view separation, taught as a testable discipline — the school of thought behind the model layer.</p>
+  </a>
+  </div>
+</section>
 </div>

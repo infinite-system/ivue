@@ -24,7 +24,7 @@ baseline to be a defect *from*.
 
 ## What sealing actually looks like
 
-[Invar](https://github.com/infinite-system/invar) — the terminal IDE
+[Invar](/examples/invar) — the terminal IDE
 [AI agents build under contracts and a merge gate](/blog/agents-built-an-editor)
 — takes this to its limit. Every class in 62,401 lines of source is
 published through [the namespace pattern](/guide/namespace-pattern):

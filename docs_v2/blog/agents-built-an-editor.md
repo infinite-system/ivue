@@ -9,7 +9,7 @@ date: 2026-07
 ![AI agents built a 26,000-line code editor on ivue](/blog/agents-built-an-editor.png)
 
 There is a terminal code editor called
-[Invar](https://github.com/infinite-system/invar) — named after
+[Invar](/examples/invar) — named after
 the iron–nickel alloy engineered in 1896 to have near-zero thermal
 expansion; precision clocks were built from it because **it does not
 drift**. The editor has a file tree, a real

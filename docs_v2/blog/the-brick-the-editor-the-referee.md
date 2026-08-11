@@ -29,7 +29,7 @@ superpower everything below stands on.
 ## 2. The editor
 
 To prove the brick, we built something big out of it:
-[Invar](https://github.com/infinite-system/invar), a real code
+[Invar](/examples/invar), a real code
 editor that runs in a terminal — file tree, tabs, git panel with
 side-by-side diffs, language intelligence, an integrated terminal.
 It is fast, it is small, and it is used daily.
@@ -91,7 +91,7 @@ evidence with them: a contribution is reviewable because it *arrives*
 with its contract, its test, and its green referee run.
 
 Software that grows by conversation — and cannot drift while growing.
-The editor is named [Invar](https://github.com/infinite-system/invar)
+The editor is named [Invar](/examples/invar)
 after the alloy engineered not to expand under heat. The name is the
 whole thesis.
 

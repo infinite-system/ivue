@@ -13,7 +13,7 @@ usually done meticulously, by senior humans, over a quarter: draw the
 boundaries, argue about them in design review, migrate one subsystem
 at a time, hold the line in code review forever after.
 
-On July 26, 2026, the [Invar](https://github.com/infinite-system/invar)
+On July 26, 2026, the [Invar](/examples/invar)
 editor went through that entire arc in one day — 76 commits on main,
 every one behind a mechanical merge gate — and the human directing it
 was, in his own words, *vibe coding it*. Messages like "the glyph for

@@ -543,6 +543,13 @@ export default defineConfig({
           ],
         },
         {
+          text: 'Full Applications',
+          collapsed: false,
+          items: [
+            { text: 'Invar — Terminal IDE', link: '/examples/invar' },
+          ],
+        },
+        {
           text: 'Further Reading',
           collapsed: false,
           items: [

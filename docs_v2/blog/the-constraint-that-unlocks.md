@@ -51,7 +51,7 @@ legal, module evaluation is eager, and the traps are always armed.
 
 ## The retrofit
 
-[Invar](https://github.com/infinite-system/invar) — the terminal editor
+[Invar](/examples/invar) — the terminal editor
 that [AI agents built](/blog/agents-built-an-editor) on
 [ivue](/guide/introduction) — runs on both ingredients, in plain
 TypeScript, with no language extension. The recipe is two rules.

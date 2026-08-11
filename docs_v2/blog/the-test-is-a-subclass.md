@@ -9,7 +9,7 @@ date: 2026-07
 ![The test is a subclass](/blog/the-test-is-a-subclass.png)
 
 There is no mock framework anywhere in
-[Invar](https://github.com/infinite-system/invar)'s test
+[Invar](/examples/invar)'s test
 infrastructure. No `jest.mock`, no stub factories, no hand-rolled
 objects pretending to be interfaces. And yet the harness routinely
 runs the editor against a fake language server, measures the inside of

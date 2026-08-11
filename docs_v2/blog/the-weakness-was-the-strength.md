@@ -19,7 +19,7 @@ can assemble. The linters were sanding off the superpower.
 
 ## What the pattern actually is
 
-Every class in [Invar](https://github.com/infinite-system/invar) is
+Every class in [Invar](/examples/invar) is
 published through a namespace with a **mutable binding**:
 
 ```ts

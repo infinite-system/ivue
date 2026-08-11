@@ -127,7 +127,7 @@ managed. Two primitives, any depth. Much of what ships under the name
 
 ## Proof at depth
 
-[Invar](https://github.com/infinite-system/invar), the terminal
+[Invar](/examples/invar), the terminal
 editor [built by AI agents on ivue](/blog/agents-built-an-editor),
 navigates its domain exactly this way. These are production lines from
 its composition root, quoted verbatim:
