@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/reactivity-is-an-allocator">
+    <img class="thumb" src="/blog/reactivity-is-an-allocator.png" alt="Reactivity is an allocator" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">August 2026</span></div>
+      <h2>Reactivity is an allocator</h2>
+      <p class="excerpt">The industry points reactivity at pixels. Invar points it at the operating system: SQLite connections, git subprocesses, LSP servers, and timers exist only while observed. One fs watcher, 21 watch sites, 92 version signals — and a pull floor under every notify channel.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/what-javascript-becomes">
     <img class="thumb" src="/blog/what-javascript-becomes.png" alt="What JavaScript becomes" width="1200" height="630" loading="lazy" />
     <div class="body">
