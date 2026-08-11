@@ -1816,6 +1816,7 @@ a.feature-inline-link {
 .newsletter__form button {
   position: relative;
   overflow: hidden;
+  margin-top: 5px;
   padding: 8px 10px;
   border-radius: 9px;
   background: linear-gradient(105deg, #6366f1, #2dd4bf 70%, #34d399);
@@ -1971,8 +1972,11 @@ a.feature-inline-link {
   .newsletter-pill span {
     display: none;
   }
+  /* raised and tucked right for a natural right-thumb reach */
   .newsletter-pill {
-    padding: 9px;
+    padding: 11px;
+    right: 10px;
+    bottom: 42px;
   }
 }
 
