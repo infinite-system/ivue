@@ -2008,12 +2008,13 @@ a.feature-inline-link {
    bottom while the invitation lasts */
 .newsletter-pill__progress {
   position: absolute;
-  left: 1px;
-  right: 1px;
-  bottom: 1px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   height: 3px;
+  border-radius: 999px;
   background: linear-gradient(90deg, #6366f1, #2dd4bf 60%, #34d399);
-  transform-origin: left center;
+  transform-origin: right center;
   animation: newsletter-pill-progress 6s linear forwards;
 }
 @keyframes newsletter-pill-progress {
