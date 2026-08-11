@@ -1,6 +1,6 @@
 ---
 title: 'Module-level state is a bug'
-description: The most normal line in JavaScript — const cache = new Map() at module scope — is an eager, global, unownable singleton with no seam. Static() replaces it with one declaration that is lazy, inheritable, overridable, and test-isolated. A 94,000-line codebase runs on zero module-level functions and four module-level constants.
+description: The most normal line in JavaScript — const cache = new Map() at module scope — is an eager, global, unownable singleton with no seam. Static() replaces it with one declaration that is lazy, inheritable, overridable, and test-isolated. A 94,000-line codebase runs on zero module-level functions and zero module-level variables.
 date: 2026-08
 ---
 
@@ -97,7 +97,7 @@ The pattern would be a curiosity if it only held memo tables. What
 makes it a substrate is that *one declaration form* absorbs every
 kind of module-level state a real system accumulates.
 [Invar](/blog/introducing-invar) — the 94,000-line terminal IDE
-built on ivue — runs 77 of these getters. A ladder of real cases,
+built on ivue — runs 78 of these getters. A ladder of real cases,
 smallest to strangest:
 
 **A memo table.** The wrap index above is Invar's own text-layout
@@ -203,22 +203,26 @@ serious codebase can run with **no module-level state at all** — and
 one does. Invar's conventions are machine-enforced by AST census
 (checkers that must first detect a planted violation before their
 pass counts — a boundary check that cannot fail is worse than none).
-Counted 2026-08-10, over 94,043 source lines and 372 files:
+Counted 2026-08-11, over 94,054 source lines and 372 files:
 
 ```
 module-level functions:      0
-module-level variables:      4   (all constants — see below)
-$-cached static getters:    77
+module-level variables:      0
+$-cached static getters:    78
 Static() capability sites: 198
 ```
 
-The four surviving module-level declarations are validation
-constants in one manifest file — regular expressions and a reserved-
-name `Set`. Frozen data, not state: nothing writes to them, nothing
-would want to substitute them. That is the boundary drawn honestly —
-**the target is state, not constants.** A pure lookup table at
-module scope harms nobody. The moment a value is written after
-load, or a test wishes it were different, it belongs to a class.
+The zero is stricter than it had to be. The honest boundary of this
+pattern is that **the target is state, not constants** — a frozen
+lookup table at module scope harms nobody. Invar draws the line past
+even that: its validation constants — regular expressions, a
+reserved-name `Set` — live as static getters on the class that
+validates with them, so the metric is not "zero state, with constant
+exceptions." It is zero module-level declarations outright, held
+there by a grammar check that counts every violation by AST. The
+moment a value is written after load, or a test wishes it were
+different, it already belongs to a class — and here, everything
+does.
 
 And the substrate is load-bearing enough that Invar *verifies it at
 boot*: startup constructs a throwaway class with a `$TABLE` getter,
