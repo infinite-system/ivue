@@ -97,10 +97,12 @@ function formatDate(date: string): string {
         loading="lazy"
       />
       <div class="body">
-        <div class="meta"><span class="date">{{ formatDate(post.date) }}</span></div>
         <h2>{{ post.title }}</h2>
         <p class="excerpt">{{ post.excerpt }}</p>
-        <span class="go">Read the post →</span>
+        <div class="foot">
+          <span class="date">{{ formatDate(post.date) }}</span>
+          <span class="go">Read the post →</span>
+        </div>
       </div>
     </a>
   </div>
