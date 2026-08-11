@@ -1,13 +1,13 @@
 ---
 title: 'Invar — a terminal IDE built on ivue'
-description: 'The largest ivue application in existence: a full terminal IDE — editor, workspace search, tasks, terminals, agents — running on ivue classes in a Bun process with no DOM. 94,054 source lines, 345 classes, 35 invariant contracts, zero import cycles.'
+description: 'ivue at full scale: a complete terminal IDE — editor, workspace search, tasks, terminals, agents — running on ivue classes in a Bun process with no DOM. 94,054 source lines, 345 classes, 35 invariant contracts, zero import cycles.'
 pageClass: examples-page
 ---
 
 # Invar — a terminal IDE built on ivue
 
-[Invar](https://github.com/infinite-system/invar) is the largest ivue
-application in existence: a full terminal IDE — editor, file tree,
+[Invar](https://github.com/infinite-system/invar) is ivue at full
+scale: a complete terminal IDE — editor, file tree,
 workspace search, find/replace, git, tasks, terminals, LSP, and agent
 integration — built **entirely on ivue classes**, running under
 Bun in a terminal with no DOM and no Vue components.
