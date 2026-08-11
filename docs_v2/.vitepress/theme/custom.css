@@ -1869,6 +1869,15 @@ a.feature-inline-link {
   gap: 14px;
   margin: 0;
 }
+/* credits: two wide rectangles per row, stacking on narrow screens */
+.VPDoc .cm-channels--credits {
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (max-width: 640px) {
+  .VPDoc .cm-channels--credits {
+    grid-template-columns: 1fr;
+  }
+}
 .VPDoc .cm-icon-defs {
   position: absolute;
   width: 0;

@@ -160,7 +160,7 @@ on every page, and naming them is a pleasure:
 
 <div class="cm-channel-groups">
 <section class="cm-channel-group">
-  <div class="cm-channels">
+  <div class="cm-channels cm-channels--credits">
   <a class="cm-channel" href="https://vuejs.org" target="_blank" rel="noreferrer">
     <span class="cm-channel__title">
       <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.77 2 12 6.8 9.23 2H1.5L12 20.2 22.5 2h-7.73Zm-9.8 2h3.1L12 10.8 15.93 4h3.1L12 16.2 4.97 4Z"/></svg>
