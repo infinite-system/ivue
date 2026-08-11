@@ -2419,8 +2419,14 @@ a.feature-inline-link {
   fill: var(--ivue-link-accent);
 }
 @media (max-width: 520px) {
+  /* stay side-by-side on phones: shrink the avatar, tighten the box */
   .VPDoc .cm-author {
-    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+  }
+  .VPDoc .cm-avatar {
+    width: 54px;
+    height: 54px;
   }
 }
 
