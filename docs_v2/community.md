@@ -181,7 +181,7 @@ on every page, and naming them is a pleasure:
     </span>
     <p>Transparent reactive objects, years ahead of the field — the prior art that showed plain-looking classes could be fully observable.</p>
   </a>
-  <a class="cm-channel" href="https://www.logicroom.co" target="_blank" rel="noreferrer">
+  <a class="cm-channel" href="https://www.linkedin.com/in/pete-heard-lr/" target="_blank" rel="noreferrer">
     <span class="cm-channel__title">
       <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 3.5A3.5 3.5 0 1 1 16.5 20 3.5 3.5 0 0 1 13 16.5Z"/></svg>
       <strong>Pete Heard — UI Architecture Academy</strong>
