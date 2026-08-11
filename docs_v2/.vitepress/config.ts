@@ -3,6 +3,57 @@ import { defineConfig } from 'vitepress';
 
 const deployedCommit = process.env.GITHUB_SHA ?? '';
 
+// Blog sidebar, generated from the posts themselves: frontmatter titles +
+// git-recovered dates (blog-dates.json), newest first, grouped by month.
+import { readdirSync, readFileSync } from 'node:fs';
+import { fileURLToPath as toPath } from 'node:url';
+
+function blogSidebar() {
+  const blogDirectory = toPath(new URL('../blog', import.meta.url));
+  const recordedDates = JSON.parse(
+    readFileSync(`${blogDirectory}/blog-dates.json`, 'utf8'),
+  ) as Record<string, { date: string; timestamp: number }>;
+  const posts = readdirSync(blogDirectory)
+    .filter((entry) => entry.endsWith('.md') && entry !== 'index.md')
+    .map((entry) => {
+      const slug = entry.replace(/\.md$/, '');
+      const source = readFileSync(`${blogDirectory}/${entry}`, 'utf8');
+      const title =
+        source.match(/^title:\s*['"]?(.+?)['"]?\s*$/m)?.[1] ?? slug;
+      const recorded = recordedDates[slug];
+      return {
+        slug,
+        title,
+        date: recorded?.date ?? '2099-01-01',
+        timestamp: recorded?.timestamp ?? Number.MAX_SAFE_INTEGER,
+      };
+    })
+    .sort((first, second) => second.timestamp - first.timestamp);
+
+  const monthGroups = new Map<string, { text: string; link: string }[]>();
+  for (const post of posts) {
+    const month = new Date(post.date + 'T00:00:00Z').toLocaleDateString(
+      'en-US',
+      { year: 'numeric', month: 'long', timeZone: 'UTC' },
+    );
+    if (!monthGroups.has(month)) monthGroups.set(month, []);
+    monthGroups
+      .get(month)!
+      .push({ text: post.title, link: `/blog/${post.slug}` });
+  }
+  return [
+    {
+      text: 'Blog',
+      items: [{ text: 'All posts', link: '/blog/' }],
+    },
+    ...[...monthGroups].map(([month, items]) => ({
+      text: month,
+      collapsed: false,
+      items,
+    })),
+  ];
+}
+
 export default defineConfig({
   vite: {
     define: {
@@ -519,6 +570,7 @@ export default defineConfig({
     ],
 
     sidebar: {
+      '/blog/': blogSidebar(),
       '/examples/': [
         {
           text: 'Examples',
