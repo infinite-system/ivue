@@ -127,5 +127,5 @@ closure ref remains the irreducible floor; when a million-iteration loop
 needs that floor, one [hoist line](/guide/performance#hot-loops) gives ivue
 the same direct handle and erases the getter hop.
 
-Next: [get started](/guide/getting-started) — or read the
-[principles](/guide/principles) that make it work.
+Next: [Getting Started](/guide/getting-started) — or read the
+[Fundamental Principles](/guide/principles) that make it work.
