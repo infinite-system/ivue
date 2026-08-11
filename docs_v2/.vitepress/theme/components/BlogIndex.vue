@@ -33,7 +33,10 @@ function formatDate(date: string): string {
 
 <template>
   <div class="blog-index-toolbar">
-    <span class="blog-count">{{ posts.length }} posts</span>
+    <div class="blog-index-heading">
+      <h1>Blog</h1>
+      <span class="blog-count">{{ posts.length }} posts</span>
+    </div>
     <div class="blog-view-toggle" role="group" aria-label="Display style">
       <button
         type="button"

@@ -1529,7 +1529,21 @@ a.feature-inline-link {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 26px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.blog-index-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.vp-doc .blog-index-heading h1 {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 .blog-count {
   font-family: var(--vp-font-family-mono);
