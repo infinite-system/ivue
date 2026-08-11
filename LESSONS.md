@@ -224,3 +224,21 @@ number was a **harness artifact, not library behavior** — when a number
   cleanup composes as an ordinary method calling `$stopEffects()`), but the
   discipline stays: keep scope shutdown and cache deletion in `finally` paths
   so a throwing `scope.stop()` can never leak cached cells.
+
+## CI: the lockfile-less root vs tool defaults (2026-08-11)
+
+- The root repo has NO lockfile **by design** (docs_v2 and
+  examples/playground own their npm lockfiles). Any tool whose default
+  assumes a lockfile will break here, and the breakage arrives when the
+  tool updates, not when we change anything:
+  - `actions/setup-node@v5` enables npm dependency caching BY DEFAULT and
+    its cache resolver hard-fails without package-lock.json/yarn.lock.
+    Opt out with `package-manager-cache: false` (v5's input; v4 and
+    earlier had caching off by default).
+  - Same family as the Cloudflare yarn-sniffing incident: the fix that
+    holds is declaring intent explicitly (`packageManager` field, explicit
+    cache opt-outs), never relying on a tool's absence-of-config default.
+- CI runs `npm run coverage` (vitest run), NEVER `npm run test` — the
+  test script is vitest's interactive `--ui` mode and hangs headless.
+- Docs deploy is Cloudflare Workers Builds on push to main; CI must not
+  grow a deploy job again.
