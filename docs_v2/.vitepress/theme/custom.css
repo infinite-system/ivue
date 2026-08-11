@@ -2004,7 +2004,7 @@ a.feature-inline-link {
 
 /* date under a blog post's title */
 .vp-doc .blog-post-date {
-  margin: -6px 0 18px;
+  margin: 4px 0 18px;
 }
 .vp-doc .blog-post-date time {
   display: inline-block;
