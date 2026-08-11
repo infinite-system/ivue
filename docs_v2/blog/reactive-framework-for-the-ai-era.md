@@ -38,8 +38,7 @@ convert drift into something harmless, visible, or impossible.
 a human picks a favorite; an agent samples all five across a
 codebase, and every seam between idioms is a place reasoning can
 slip. ivue has one class shape, one export form, one wiring pattern —
-which is why [uniformity works as an
-instrument](/blog/uniformity-is-an-instrument): against total
+which is why uniformity works as an instrument: against total
 sameness, an agent's deviation is high-contrast, catchable by an AST
 check instead of a careful reviewer.
 
@@ -48,9 +47,8 @@ review-burden failure classes — unbound `this`, initialization
 order, circular imports, leaked watchers, module-level state — are
 exactly the mistakes a tireless generator makes tirelessly. ivue's
 answer is never "be careful": methods bind
-lazily and permanently, [cycles resolve by
-construction](/blog/circular-imports-dissolved), teardown is
-deterministic. A failure class an agent
+lazily and permanently, cycles resolve by construction, teardown
+is deterministic. A failure class an agent
 cannot express is a failure class nobody has to catch.
 
 **A standard small enough to transmit whole.** The entire discipline
@@ -81,8 +79,7 @@ program, not by parsing screenshots. When the object tells the truth, the agent 
 
 **Edits that land on live state.** ivue's thin-closure rule means
 logic lives on the prototype, so an agent's edit
-[hot-grafts onto running instances](/blog/hot-reload-for-logic) —
-state intact, no remount, production semantics. The
+hot-grafts onto running instances — state intact, no remount, production semantics. The
 agent-edit-verify loop runs against the live app instead of a
 restart cycle.
 
@@ -126,8 +123,7 @@ The boundary, honestly: this is one substrate and
 one project's evidence — agents do
 ship on messy codebases too, given enough tokens and retries. The
 claim is economic, not absolute: every unit of variance is tokens
-spent fighting the framework instead of building the product, and [the tempo data](/blog/the-zeros-didnt-move) says the
-exchange rate is steep.
+spent fighting the framework instead of building the product, and the tempo data says the exchange rate is steep.
 
 ## What frameworks compete on now
 
