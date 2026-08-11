@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/what-javascript-becomes">
+    <img class="thumb" src="/blog/what-javascript-becomes.png" alt="What JavaScript becomes" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">August 2026</span></div>
+      <h2>What JavaScript becomes</h2>
+      <p class="excerpt">Managed-runtime linking from the JVM, live-image classes from Erlang and Smalltalk, per-receiver static storage with no original anywhere, and transparent reactive objects. Each property exists somewhere; the conjunction exists nowhere else — and it lives in userland.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/circular-imports-dissolved">
     <img class="thumb" src="/blog/circular-imports-dissolved.png" alt="Circular imports, dissolved" width="1200" height="630" loading="lazy" />
     <div class="body">
