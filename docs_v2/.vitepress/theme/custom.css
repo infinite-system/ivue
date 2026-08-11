@@ -1972,13 +1972,23 @@ a.feature-inline-link {
   /* icon-only at rest — a true 44px circle, contents centered */
   .newsletter-pill {
     gap: 0;
-    width: 44px;
+    width: auto;
+    min-width: 44px;
+    max-width: 44px;
     height: 44px;
     padding: 0;
     justify-content: center;
     right: 24px;
     bottom: 24px;
     overflow: hidden;
+    /* max-width carries the roll-out AND the roll-back, so closing is
+       as smooth as opening */
+    transition:
+      max-width 0.4s ease,
+      padding 0.4s ease,
+      color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.12s ease;
   }
   .newsletter-pill svg {
     width: 16px;
@@ -1994,7 +2004,7 @@ a.feature-inline-link {
     transition: max-width 0.4s ease, opacity 0.35s ease, margin 0.4s ease;
   }
   .newsletter-pill--expanded {
-    width: auto;
+    max-width: 280px;
     padding: 0 15px 0 13px;
     box-shadow: 0 14px 40px -12px rgba(45, 212, 191, 0.55);
   }
