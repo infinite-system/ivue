@@ -346,6 +346,19 @@ export default defineConfig({
     ],
   ],
 
+  // Blog posts are not part of the guide's reading order — the default
+  // prev/next pager would walk into "What is ivue?". BlogPostNav (under
+  // the author card) provides older/newer navigation instead.
+  transformPageData(pageData) {
+    if (
+      pageData.relativePath.startsWith('blog/') &&
+      pageData.relativePath !== 'blog/index.md'
+    ) {
+      pageData.frontmatter.prev = false;
+      pageData.frontmatter.next = false;
+    }
+  },
+
   // Per-page social cards: link previews (WhatsApp, Slack, X…) read
   // og:* from the static HTML, so every page emits its own title,
   // description and canonical URL. The shared og:image stays global.
