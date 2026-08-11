@@ -2051,6 +2051,13 @@ a.feature-inline-link {
   color: var(--vp-c-text-1);
   transition: color 0.15s ease;
 }
+.VPDoc .blog-archive__row--current {
+  background: var(--vp-c-brand-soft);
+  box-shadow: inset 3px 0 0 var(--vp-c-brand-1);
+}
+.blog-archive__row--current .blog-archive__title {
+  color: var(--vp-c-brand-1);
+}
 .blog-archive__date {
   flex: none;
   font-family: var(--vp-font-family-mono);

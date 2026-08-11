@@ -14,6 +14,7 @@ interface ArchiveItem extends BaseItem {
   url: string;
   title: string;
   date: string;
+  current: boolean;
 }
 
 const route = useRoute();
@@ -21,18 +22,20 @@ const isBlogPost = computed(
   () => /^\/blog\/.+/.test(route.path) && !route.path.endsWith('/blog/'),
 );
 
-const archiveItems = computed<ArchiveItem[]>(() =>
-  posts
-    .filter((post) => post.url !== route.path.replace(/\.html$/, ''))
-    .map((post) => ({
-      id: post.slug,
-      body: '',
-      position: '',
-      url: post.url,
-      title: post.title,
-      date: post.date,
-    })),
-);
+// posts arrive newest-first from the loader; the current article stays
+// in the list, marked as the one being read.
+const archiveItems = computed<ArchiveItem[]>(() => {
+  const currentUrl = route.path.replace(/\.html$/, '');
+  return posts.map((post) => ({
+    id: post.slug,
+    body: '',
+    position: '',
+    url: post.url,
+    title: post.title,
+    date: post.date,
+    current: post.url === currentUrl,
+  }));
+});
 
 function formatDate(date: string): string {
   return new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', {
@@ -86,12 +89,14 @@ const geometry = computed(() => {
 function seekToPointer(event: PointerEvent) {
   const instance = scroller.value;
   const track = (event.currentTarget as HTMLElement).closest('.blog-archive__track') as HTMLElement;
-  if (!instance || !track || !instance.lenis) return;
+  if (!instance || !track) return;
   const rect = track.getBoundingClientRect();
   const fraction = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
-  const total = Number(instance.scrollHeight) || 0;
-  const container = Number(instance.containerHeight) || 0;
-  instance.lenis.scrollTo(fraction * (total - container), { immediate: true });
+  // scrollToIndex runs the class's full seek pipeline (spacer rebase +
+  // converge loop) — a raw lenis.scrollTo would translate content out of
+  // the viewport without rebasing the window.
+  const lastIndex = archiveItems.value.length - 1;
+  instance.scrollToIndex(Math.round(fraction * lastIndex), undefined, false);
 }
 
 function onTrackPointerDown(event: PointerEvent) {
@@ -124,7 +129,12 @@ function onTrackPointerUp() {
           auto-repeat
         >
           <template #item="{ item }">
-            <a class="blog-archive__row" :href="withBase(item.url)">
+            <a
+              class="blog-archive__row"
+              :class="{ 'blog-archive__row--current': item.current }"
+              :href="withBase(item.url)"
+              :aria-current="item.current ? 'page' : undefined"
+            >
               <span class="blog-archive__title">{{ item.title }}</span>
               <span class="blog-archive__date">{{ formatDate(item.date) }}</span>
             </a>
