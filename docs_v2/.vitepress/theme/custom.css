@@ -1730,37 +1730,26 @@ a.feature-inline-link {
     0 0 0 1px rgba(99, 102, 241, 0.08),
     0 14px 40px -18px rgba(45, 212, 191, 0.35);
 }
-/* the shine: a light band sweeping the card every few seconds */
-.newsletter::after {
-  content: '';
-  position: absolute;
-  top: -60%;
-  bottom: -60%;
-  left: -30%;
-  width: 34%;
-  transform: rotate(18deg) translateX(-140%);
-  background: linear-gradient(
-    100deg,
-    transparent,
-    rgba(148, 197, 253, 0.1) 42%,
-    rgba(186, 230, 253, 0.22) 50%,
-    rgba(148, 197, 253, 0.1) 58%,
-    transparent
-  );
-  animation: newsletter-shine 6.5s ease-in-out infinite;
-  pointer-events: none;
-}
+/* the shine lives on the button only — see newsletter__button-shine */
 @keyframes newsletter-shine {
-  0%, 55% { transform: rotate(18deg) translateX(-160%); }
-  75%, 100% { transform: rotate(18deg) translateX(520%); }
+  0% { transform: rotate(18deg) translateX(-160%); }
+  100% { transform: rotate(18deg) translateX(520%); }
 }
 .newsletter__label {
   display: block;
-  margin-bottom: 6px;
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.42px;
+  margin-bottom: 2px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: var(--vp-c-text-3);
+}
+.newsletter__title {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
   background: linear-gradient(105deg, #818cf8, #2dd4bf 60%, #34d399);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1885,7 +1874,6 @@ a.feature-inline-link {
   .newsletter-slide-leave-active {
     transition: none;
   }
-  .newsletter::after,
   .newsletter__form button:hover .newsletter__button-shine {
     animation: none;
   }

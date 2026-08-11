@@ -114,10 +114,11 @@ function subscribe() {
         aria-label="Dismiss"
         @click="dismiss"
       >×</button>
-      <span class="newsletter__label">Newsletter</span>
+      <span class="newsletter__label">ivue newsletter</span>
+      <span class="newsletter__title">Follow the frontier</span>
       <p class="newsletter__pitch">
-        New posts, releases, and measured numbers — a short email, only
-        when something ships.
+        New patterns, releases, and measured numbers from the edge of
+        what JavaScript can do — only when something real ships.
       </p>
       <form v-if="state !== 'done'" class="newsletter__form" @submit.prevent="subscribe">
         <div class="newsletter__row">
