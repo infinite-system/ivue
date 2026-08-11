@@ -159,7 +159,12 @@ function subscribe() {
           <span class="newsletter__button-shine" aria-hidden="true"></span>
           <span class="newsletter__button-text">
             {{ state === 'sending' ? 'Joining…' : 'Join the list' }}
-            <svg v-if="state !== 'sending'" class="newsletter__plane" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2.4 11.06 21.15 3.4c.9-.37 1.82.47 1.5 1.4l-5.5 16.03c-.33.95-1.63 1.03-2.07.12l-2.9-5.98a1.1 1.1 0 0 0-.51-.51l-5.98-2.9c-.91-.44-.84-1.75.11-2.08Zm3.35 1.1 4.05 1.96c.5.24.9.65 1.15 1.15l1.96 4.04 4.42-12.9L5.75 12.17Z"/></svg>
+            <svg v-if="state !== 'sending'" class="newsletter__plane" viewBox="0 0 24 24" aria-hidden="true">
+              <!-- folded paper plane: three facets, opacity carries the 3D -->
+              <path fill="currentColor" d="M22 3 3 10.5l7.5 1.7L22 3Z" />
+              <path fill="currentColor" fill-opacity="0.72" d="M22 3 10.5 12.2l1.6 8.3L22 3Z" />
+              <path fill="currentColor" fill-opacity="0.45" d="M10.5 12.2l1.6 8.3-2.6-5.4 1-2.9Z" />
+            </svg>
           </span>
         </button>
       </form>
