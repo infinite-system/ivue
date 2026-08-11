@@ -25,6 +25,8 @@ const DISMISSED_KEY = 'ivue-newsletter-dismissed';
 const DISMISS_DAYS = 21;
 
 const toastVisible = ref(false);
+const subscribed = ref(false);
+const mounted = ref(false);
 const name = ref('');
 const email = ref('');
 const state = ref<'idle' | 'sending' | 'done' | 'error'>('idle');
@@ -32,7 +34,9 @@ const message = ref('');
 
 onMounted(() => {
   if (props.placement !== 'toast') return;
-  if (localStorage.getItem(SUBSCRIBED_KEY)) return;
+  mounted.value = true;
+  subscribed.value = Boolean(localStorage.getItem(SUBSCRIBED_KEY));
+  if (subscribed.value) return;
   const dismissedAt = Number(localStorage.getItem(DISMISSED_KEY) ?? 0);
   if (Date.now() - dismissedAt < DISMISS_DAYS * 86_400_000) return;
   window.setTimeout(() => (toastVisible.value = true), 9_000);
@@ -41,6 +45,23 @@ onMounted(() => {
 function dismiss() {
   toastVisible.value = false;
   localStorage.setItem(DISMISSED_KEY, String(Date.now()));
+}
+
+// The pill is the permanent, on-demand doorway: always present on
+// non-blog pages once the card is closed (until the visitor subscribes).
+const pillVisible = computed(
+  () =>
+    props.placement === 'toast' &&
+    mounted.value &&
+    belongsHere.value &&
+    !toastVisible.value &&
+    !subscribed.value,
+);
+
+function openFromPill() {
+  state.value = 'idle';
+  message.value = '';
+  toastVisible.value = true;
 }
 
 function subscribe() {
@@ -63,6 +84,7 @@ function subscribe() {
       state.value = 'done';
       message.value = 'Welcome aboard — see you in the next post.';
       localStorage.setItem(SUBSCRIBED_KEY, '1');
+      subscribed.value = true;
       window.setTimeout(() => (toastVisible.value = false), 2_500);
     } else {
       state.value = 'error';
@@ -124,5 +146,17 @@ function subscribe() {
         {{ message }}
       </p>
     </div>
+  </Transition>
+  <Transition name="newsletter-slide">
+    <button
+      v-if="pillVisible"
+      type="button"
+      class="newsletter-pill"
+      aria-label="Open newsletter signup"
+      @click="openFromPill"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm8 7.35L4.4 6h15.2L12 11.35ZM4 8.24V18h16V8.24l-7.45 5.3a1 1 0 0 1-1.1 0L4 8.24Z"/></svg>
+      <span>Newsletter</span>
+    </button>
   </Transition>
 </template>
