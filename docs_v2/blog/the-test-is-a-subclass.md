@@ -6,6 +6,8 @@ date: 2026-07
 
 # The test is a subclass
 
+<BlogPostDate />
+
 ![The test is a subclass](/blog/the-test-is-a-subclass.png)
 
 There is no mock framework anywhere in

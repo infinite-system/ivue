@@ -6,6 +6,8 @@ date: 2026-08
 
 # Patterns the author never wrote
 
+<BlogPostDate />
+
 ![Patterns the author never wrote](/blog/patterns-the-author-never-wrote.png)
 
 There is a strange admission buried in the Invar story, and it is

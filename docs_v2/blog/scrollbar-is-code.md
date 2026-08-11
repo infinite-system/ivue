@@ -10,6 +10,8 @@ import ExampleVirtualScroller from '../.vitepress/theme/components/examples/Exam
 
 # A million rows, twelve divs
 
+<BlogPostDate />
+
 ![A million rows, twelve divs](/blog/scrollbar-is-code.png)
 
 The browser's native scrollbar has one requirement you cannot negotiate

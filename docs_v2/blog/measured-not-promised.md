@@ -6,6 +6,8 @@ date: 2026-07
 
 # Measured, not promised
 
+<BlogPostDate />
+
 ![Measured, not promised](/blog/measured-not-promised.png)
 
 Every library's benchmarks are flattering. Not because authors lie —

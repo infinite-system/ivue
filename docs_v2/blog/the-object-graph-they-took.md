@@ -6,6 +6,8 @@ date: 2026-07
 
 # The object graph they took from you
 
+<BlogPostDate />
+
 ![The object graph they took from you](/blog/the-object-graph-they-took.png)
 
 Read this expression slowly:

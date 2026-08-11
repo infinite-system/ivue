@@ -6,6 +6,8 @@ date: 2026-07
 
 # this.method, finally safe to pass
 
+<BlogPostDate />
+
 ![this.method, finally safe to pass](/blog/this-method-era.png)
 
 React's Hooks announcement named the enemy honestly: classes "confuse

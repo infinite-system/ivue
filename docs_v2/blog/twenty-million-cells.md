@@ -6,6 +6,8 @@ date: 2026-07
 
 # The 20,000,000-cell document
 
+<BlogPostDate />
+
 ![The 20,000,000-cell document](/blog/twenty-million-cells.png)
 
 Google Sheets caps a spreadsheet at ten million cells. The document below

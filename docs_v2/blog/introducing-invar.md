@@ -6,6 +6,8 @@ date: 2026-07
 
 # Introducing Invar
 
+<BlogPostDate />
+
 ![Introducing Invar](/blog/introducing-invar.png)
 
 Invar is a code editor that lives entirely in your terminal. Not a

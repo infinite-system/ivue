@@ -6,6 +6,8 @@ date: 2026-07
 
 # Your objects are rented from the framework
 
+<BlogPostDate />
+
 ![Your objects are rented from the framework](/blog/rented-objects.png)
 
 Here is a test you can run on any Vue codebase in thirty seconds: find the

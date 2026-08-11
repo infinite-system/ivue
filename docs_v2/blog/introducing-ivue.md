@@ -6,6 +6,8 @@ date: 2026-07
 
 # Introducing ivue: plain classes, full reactivity, one kilobyte
 
+<BlogPostDate />
+
 ![Introducing ivue](/blog/introducing-ivue.png)
 
 Here is an uncomfortable reading of the last decade of frontend history:

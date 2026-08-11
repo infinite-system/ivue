@@ -6,6 +6,8 @@ date: 2026-07
 
 # Development should run production
 
+<BlogPostDate />
+
 ![Development should run production](/blog/hot-reload-for-logic.png)
 
 Hot module replacement is seductive because every piece of state it preserves

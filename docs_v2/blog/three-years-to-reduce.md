@@ -6,6 +6,8 @@ date: 2026-08
 
 # Three years to reduce, two weeks to build
 
+<BlogPostDate />
+
 ![Three years to reduce, two weeks to build](/blog/three-years-to-reduce.png)
 
 Three dates, from two public git logs:

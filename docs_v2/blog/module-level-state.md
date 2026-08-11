@@ -6,6 +6,8 @@ date: 2026-08
 
 # Module-level state is a bug
 
+<BlogPostDate />
+
 ![Module-level state is a bug](/blog/module-level-state.png)
 
 This is the most normal line in JavaScript:
@@ -209,8 +211,8 @@ Counted 2026-08-11, over 94,054 source lines and 372 files:
 module-level functions:      0
 module-level variables:      0
 $-cached static getters:    78
-Reactive() sites:           79
-Static() capability sites: 198
+Reactive() classes:         79
+Static() capability classes: 198
 ```
 
 The zero is stricter than it had to be. The honest boundary of this

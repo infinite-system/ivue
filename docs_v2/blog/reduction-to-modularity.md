@@ -6,6 +6,8 @@ date: 2026-07
 
 # Reduction to modularity, vibe-coded
 
+<BlogPostDate />
+
 ![Reduction to modularity, vibe-coded](/blog/reduction-to-modularity.png)
 
 Modularizing a working application is the kind of refactor that is

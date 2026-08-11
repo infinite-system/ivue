@@ -6,6 +6,8 @@ date: 2026-07
 
 # Reactive() is all you need
 
+<BlogPostDate />
+
 ![Reactive() is all you need](/blog/reactive-is-all-you-need.png)
 
 The most influential machine-learning paper of the last decade is

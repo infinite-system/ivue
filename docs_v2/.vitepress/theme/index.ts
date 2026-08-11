@@ -21,6 +21,7 @@ import BlogIndex from './components/BlogIndex.vue';
 import BlogShare from './components/BlogShare.vue';
 import BlogAuthor from './components/BlogAuthor.vue';
 import BlogPostNav from './components/BlogPostNav.vue';
+import BlogPostDate from './components/BlogPostDate.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import { registerDocsApp } from './quasar-docs-loader';
 import './custom.css';
@@ -72,5 +73,6 @@ export default {
     app.component('BenchmarkWinner', BenchmarkWinner);
     app.component('StackBlitzPlayground', StackBlitzPlayground);
     app.component('BlogIndex', BlogIndex);
+    app.component('BlogPostDate', BlogPostDate);
   },
 } satisfies Theme;

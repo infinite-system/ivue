@@ -6,6 +6,8 @@ date: 2026-07
 
 # One kilobyte is a feature
 
+<BlogPostDate />
+
 ![One kilobyte is a feature](/blog/one-kilobyte-feature.png)
 
 The whole ivue engine — lazy state, method binding, reactive inheritance

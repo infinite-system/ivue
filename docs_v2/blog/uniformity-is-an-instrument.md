@@ -6,6 +6,8 @@ date: 2026-07
 
 # Uniformity is an instrument
 
+<BlogPostDate />
+
 ![Uniformity is an instrument](/blog/uniformity-is-an-instrument.png)
 
 Every team argues about consistency as though it were manners. Naming

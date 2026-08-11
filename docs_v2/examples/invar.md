@@ -67,8 +67,8 @@ census script plus AST checkers; source excludes tests):
 ```
 source lines                94,054   across 372 files, 37 modules
 classes                        345   100% namespace-pattern conforming
-Reactive() sites                79
-Static() capability sites      198
+Reactive() classes              79
+Static() capability classes    198
 invariant contracts             35   (~14,000 lines)
 value-import cycles              0   (Tarjan over the import graph)
 computed() calls                10   (memoization is opt-in)
@@ -90,8 +90,8 @@ patterns from this site's guides, applied at three orders of magnitude:
 - **The [namespace pattern](/guide/namespace-pattern) everywhere** —
   345 classes, one export shape, cross-module references that resolve
   at first access.
-- **[`Reactive()`](/guide/standard) at 79 sites,
-  [`Static()` capability classes](/guide/static) at 198** —
+- **79 [`Reactive()`](/guide/standard) classes,
+  198 [`Static()` capability classes](/guide/static)** —
   file system, subprocesses, PTY file descriptors, and native library
   handles behind `$`-cached static getters.
 - **The [flyweight pattern](/guide/flyweight)** rendering

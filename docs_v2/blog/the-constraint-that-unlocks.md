@@ -6,6 +6,8 @@ date: 2026-07
 
 # The constraint that unlocks
 
+<BlogPostDate />
+
 ![The constraint that unlocks](/blog/the-constraint-that-unlocks.png)
 
 Every JavaScript developer has met the bug. Module A imports B, B

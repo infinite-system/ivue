@@ -6,6 +6,8 @@ date: 2026-08
 
 # Circular imports, dissolved
 
+<BlogPostDate />
+
 ![Circular imports, dissolved](/blog/circular-imports-dissolved.png)
 
 Every JavaScript codebase that grows past a few dozen files meets the

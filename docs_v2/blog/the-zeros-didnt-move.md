@@ -6,6 +6,8 @@ date: 2026-07
 
 # The editor tripled. The zeros didn't move.
 
+<BlogPostDate />
+
 ![The editor tripled. The zeros didn't move.](/blog/the-zeros-didnt-move.png)
 
 Three days ago we published

@@ -6,6 +6,8 @@ date: 2026-08
 
 # What JavaScript becomes
 
+<BlogPostDate />
+
 ![What JavaScript becomes](/blog/what-javascript-becomes.png)
 
 Two articles on this blog prove two properties.

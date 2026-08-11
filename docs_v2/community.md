@@ -154,9 +154,9 @@ New releases, benchmark runs, and examples land on
 
 ## Credits
 
-Every reduction starts from someone else's work.
-These are the people and projects whose ideas ivue is built on —
-gratefully, and by name:
+Nothing here was built alone. A few people and projects permanently
+rewired how I think about software — ivue carries their fingerprints
+on every page, and naming them is a pleasure:
 
 <div class="cm-channel-groups">
 <section class="cm-channel-group">

@@ -6,6 +6,8 @@ date: 2026-07
 
 # computed() is a cache, not a derivation
 
+<BlogPostDate />
+
 ![computed() is a cache, not a derivation](/blog/computed-is-a-cache.png)
 
 Ask a Vue developer how to derive a value and the answer arrives before

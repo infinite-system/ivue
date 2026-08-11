@@ -6,6 +6,8 @@ date: 2026-07
 
 # Inheritance didn't deserve the exile
 
+<BlogPostDate />
+
 ![Inheritance didn't deserve the exile](/blog/inheritance-exile.png)
 
 "Composition over inheritance" began as a correction to a real disease —

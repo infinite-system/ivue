@@ -6,6 +6,8 @@ date: 2026-08
 
 # Reactivity is an allocator
 
+<BlogPostDate />
+
 ![Reactivity is an allocator](/blog/reactivity-is-an-allocator.png)
 
 Ask the industry what reactivity is for and the answer is unanimous:

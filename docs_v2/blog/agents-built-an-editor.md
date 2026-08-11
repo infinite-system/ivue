@@ -6,6 +6,8 @@ date: 2026-07
 
 # AI agents built a 26,000-line code editor on ivue
 
+<BlogPostDate />
+
 ![AI agents built a 26,000-line code editor on ivue](/blog/agents-built-an-editor.png)
 
 There is a terminal code editor called

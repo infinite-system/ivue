@@ -6,6 +6,8 @@ date: 2026-07
 
 # The weakness was the strength
 
+<BlogPostDate />
+
 ![The weakness was the strength](/blog/the-weakness-was-the-strength.png)
 
 [Last time](/blog/the-constraint-that-unlocks) we showed how one idiom

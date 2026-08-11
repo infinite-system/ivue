@@ -6,6 +6,8 @@ date: 2026-07
 
 # The object should tell the truth
 
+<BlogPostDate />
+
 ![A transparent object with explicit state, one cache, and pure paths through it](/blog/the-object-should-tell-the-truth.png)
 
 Look at an object and answer three questions:

@@ -6,6 +6,8 @@ date: 2026-07
 
 # The brick, the editor, and the referee
 
+<BlogPostDate />
+
 ![The brick, the editor, and the referee](/blog/the-brick-the-editor-the-referee.png)
 
 Most posts on this blog argue. This one just tells the story, in the

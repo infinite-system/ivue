@@ -6,6 +6,8 @@ date: 2026-07
 
 # VS Code spent a decade hand-rolling reactive classes
 
+<BlogPostDate />
+
 ![VS Code spent a decade hand-rolling reactive classes](/blog/vscode-hand-rolled-decade.png)
 
 The most influential TypeScript application in the world is not built on

@@ -6,6 +6,8 @@ date: 2026-07
 
 # Win by reduction. Win by construction.
 
+<BlogPostDate />
+
 ![Complexity collapsing into a small, load-bearing structure](/blog/win-by-reduction.png)
 
 Software engineering usually treats complexity as a fact of life. Once a

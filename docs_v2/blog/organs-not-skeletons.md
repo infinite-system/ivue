@@ -6,6 +6,8 @@ date: 2026-07
 
 # Composables are organs, not skeletons
 
+<BlogPostDate />
+
 ![Composables are organs, not skeletons](/blog/organs-not-skeletons.png)
 
 The false choice haunting every "classes vs composables" thread: pick a
