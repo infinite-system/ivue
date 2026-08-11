@@ -113,7 +113,7 @@ dependency injection.
 **It is the hot-swap point.** Every class in the system is published
 through a mutable binding — `export let Class` — and consumed through
 late reads. Nothing cached a constructor at initialization time, so
-[swapping an implementation at runtime](/blog/hot-reload-for-logic)
+[swapping an implementation at runtime](/guide/hmr)
 is safe by construction, not by luck.
 
 **It keeps the graph reshapeable.** When no object froze another

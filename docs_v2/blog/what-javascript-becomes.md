@@ -111,9 +111,9 @@ is also Smalltalk's live image, where classes are ordinary objects
 a running system can rebind. Invar's sealed kernel is this property
 used deliberately — plugins fold subclasses over the slot before
 boot, then the kernel freezes — and
-[hot-reload for logic](/blog/hot-reload-for-logic) is the same
-property used continuously: edit a method, and live instances
-answer with the new body, state intact.
+[development itself](/guide/hmr) uses the same
+property continuously: edit a method, and live instances answer
+with the new body, state intact.
 
 Java and C# fake pieces of this with bytecode agents and
 edit-and-continue debuggers — privileged tooling, bolted to the
