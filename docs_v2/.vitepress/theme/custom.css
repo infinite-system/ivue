@@ -1607,12 +1607,15 @@ a.feature-inline-link {
   flex-direction: column;
   flex: 1;
   min-width: 0;
-  padding: 16px 24px 16px;
+  padding: 24px 26px 18px;
+}
+.vp-doc .blog-row h2 {
+  font-size: 1.32rem;
 }
 .blog-row .excerpt {
   flex: none;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

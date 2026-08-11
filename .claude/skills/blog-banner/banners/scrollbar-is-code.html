@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(./fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(./fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
+      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      #050a18;
+    font-family: 'Geist', 'DejaVu Sans', 'Inter', sans-serif;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+  }
+  .stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 26px; padding: 0 70px 44px;
+    text-align: center;
+  }
+  .eyebrow {
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 19px; letter-spacing: 0.34em; color: #4fd1c5;
+    text-shadow: 0 0 16px rgba(45, 212, 191, 0.5);
+  }
+  .title {
+    font-size: 74px; font-weight: 750; color: #eaf2ff;
+    text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); letter-spacing: -0.015em;
+    line-height: 1.12;
+  }
+  .title .glow { color: #67e8f9; text-shadow: 0 0 36px rgba(34, 211, 238, 0.8); }
+  .sub {
+    font-size: 25px; color: #7e9cd0; line-height: 1.55; max-width: 1000px;
+  }
+  .stats {
+    display: flex; justify-content: center; gap: 18px; margin-top: 8px;
+  }
+  .stat {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 13px 22px; border-radius: 11px;
+    border: 1px solid rgba(96, 165, 250, 0.4);
+  }
+  .stat .n {
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 24px; color: #67e8f9; text-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+  }
+  .stat .l { font-size: 16px; color: #7e9cd0; }
+  .brand {
+    position: absolute; bottom: 34px; width: 1200px; text-align: center;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 22px; letter-spacing: 0.08em; color: #7da4e8;
+  }
+  .brand b { color: #e0ecff; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="stage">
+    <div class="title">The scrollbar <span class="glow">is code</span></div>
+    <div class="sub">a 1,000,000-row list where scrolling itself is virtual — Lenis drives<br/>position over translateY, and nothing costs O(total)</div>
+    <div class="stats">
+      <div class="stat"><span class="n">1M</span><span class="l">rows</span></div>
+      <div class="stat"><span class="n">~12</span><span class="l">DOM nodes</span></div>
+      <div class="stat"><span class="n">O(viewport)</span><span class="l">all costs</span></div>
+      <div class="stat"><span class="n">60 fps</span><span class="l">sustained</span></div>
+    </div>
+  </div>
+  <div class="brand">∞ <b>ivue</b> blog</div>
+</body>
+</html>
