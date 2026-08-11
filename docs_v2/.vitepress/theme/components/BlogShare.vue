@@ -46,9 +46,26 @@ const targets = computed(() => {
 
 const copied = ref(false);
 async function copyLink() {
-  await navigator.clipboard.writeText(shareUrl.value);
-  copied.value = true;
-  setTimeout(() => (copied.value = false), 1600);
+  try {
+    // clipboard API exists only in secure contexts (https / localhost) —
+    // LAN-IP dev sessions need the selection fallback
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(shareUrl.value);
+    } else {
+      const holder = document.createElement('textarea');
+      holder.value = shareUrl.value;
+      holder.style.position = 'fixed';
+      holder.style.opacity = '0';
+      document.body.appendChild(holder);
+      holder.select();
+      document.execCommand('copy');
+      holder.remove();
+    }
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 1600);
+  } catch {
+    /* clipboard refused — leave the label unchanged rather than lie */
+  }
 }
 </script>
 
