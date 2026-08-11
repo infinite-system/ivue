@@ -266,20 +266,50 @@ break.
 
 Claims about module hygiene are usually vibes. This one is a graph
 algorithm. [Invar](/blog/introducing-invar) — the terminal IDE built
-on ivue — is 372 source files across 37 modules, 94,043 lines, with
+on ivue — is 372 source files across 37 modules, 94,054 lines, with
 exactly the kind of domain that produces import-cycle hell:
 workspaces hold documents, documents reach language services,
 language services reach back into workspaces, plugins touch
 everything.
 
-Run Tarjan's strongly-connected-components algorithm over its import
-graph (measured 2026-08-10, `import type` edges excluded from the
-value graph, included in the type graph):
+A codebase's imports form a directed graph: every file is a node,
+and an edge runs from A to B when A imports B. A cycle is any path
+that returns to its start. But "count the cycles" is the wrong
+question to ask that graph — the number of distinct cycles can grow
+*exponentially* with graph size, which is why cycle-listing tools on
+tangled codebases either truncate their output or grind forever. The
+well-posed question is: **how many knots?** A knot — formally a
+*strongly connected component* — is a maximal group of files that
+can all reach each other through imports. Every cycle, however long
+and however many there are, lives entirely inside one knot. Zero
+knots of two or more files means zero cycles — provably, not
+probably.
+
+That question has a famous answer.
+**Tarjan's algorithm** (Robert Tarjan, 1972) finds every strongly
+connected component in a single depth-first traversal — linear in
+files plus imports. Each file gets a visit index on first arrival
+and a *lowlink*: the smallest index reachable from anywhere in its
+subtree. When the traversal finishes a file whose lowlink still
+equals its own index, everything above it on the visit stack peels
+off as one component. One pass, no revisits, mathematically
+complete — it cannot miss a cycle, at any scale.
+
+The whole audit is
+[seventy lines with zero dependencies](https://github.com/infinite-system/ivue/blob/main/docs_v2/scripts/cycle-audit.mjs) —
+walk the tree, regex the imports, run Tarjan twice: once over
+**value imports** (edges that survive compilation) and once over
+**all imports** including `import type` (edges that exist only for
+the type checker and are erased before anything runs). Point it at
+any codebase: `node cycle-audit.mjs src`.
+
+Invar's numbers (measured 2026-08-11; type-declaration files carry
+no value imports and are excluded):
 
 ```
-files analyzed:                 372
-value-import cycles:              0
-type-only cycles:                 4   (largest: 9 files — inert)
+files analyzed:                 371
+value-import knots:               0
+type-only knots:                  4   (largest: 9 files — inert)
 forwardRef sites:                 0
 cycle-breaking dynamic imports:   0
 ```
@@ -297,6 +327,39 @@ manage — has ceased to be a variable. Nobody on that codebase has
 ever debugged an initialization-order crash, drawn an import graph
 on a whiteboard, or extracted a third module to appease a linter.
 The problem is not handled well. It is absent.
+
+### Why zero is normally out of reach
+
+Run any cycle detector against a mature codebase and the normal
+result is dozens of knots — sometimes hundreds. Teams triage the
+list, allowlist the worst offenders, and eventually mute the rule.
+That is not because those teams are careless. It is because, under
+the ordinary way of writing JavaScript, **the value-import graph
+mirrors the domain graph** — a load-time binding per relationship —
+and the domain graph is cyclic. The cycles in the report *are* the
+shape of the model.
+
+Which leaves cleanup with only two levers. Distort the domain —
+merge mutually-referencing files, invert relationships, insert
+indirection layers — and buy zero at the price of the model. Or
+change *when* references resolve, so the domain keeps its shape
+while the load-time graph empties. The ecosystem's tools are all
+partial versions of the second lever applied per crash site; the
+namespace pattern is the second lever applied everywhere, by
+construction.
+
+The two-graph measurement shows the decoupling directly, and this
+is the part a cycle report normally cannot say. The type graph
+still holds four knots — the domain's true cyclic shape, visible to
+the same algorithm, undistorted. The value graph holds zero —
+because a knot needs load-time edges to stand on, and the idiom
+leaves none. In an ordinary codebase those two numbers are chained
+together; here one is the domain and the other is the discipline,
+and they read independently.
+
+We have not measured every codebase, so take the general claim the
+right way around: the script is seventy dependency-free lines — run
+it on yours, and see which lever your zero would need.
 
 ## The cost, honestly
 
