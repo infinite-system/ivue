@@ -210,3 +210,11 @@ tests — and every discipline metric held while it grew. The
 re-measurements are in
 [The editor tripled. The zeros didn't move.](/blog/the-zeros-didnt-move),
 and the current census lives on the [Invar page](/examples/invar).
+
+The story kept going, too:
+[three years of reduction, then a two-week build](/blog/three-years-to-reduce) —
+what the tempo data says about substrates;
+[patterns the author never wrote](/blog/patterns-the-author-never-wrote) —
+the agents derived designs no human had shown them; and
+[reactivity as an allocator](/blog/reactivity-is-an-allocator) — the
+editor's backend runs on the same graph that paints it.
