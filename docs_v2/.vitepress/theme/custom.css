@@ -1721,7 +1721,7 @@ a.feature-inline-link {
   overflow: hidden;
   border: 1px solid transparent;
   border-radius: 14px;
-  padding: 11px 16px 16px;
+  padding: 11px 16px 12px;
   /* gradient ring: card surface in padding-box, brand sweep in border-box */
   background:
     linear-gradient(var(--vp-c-bg-soft), var(--vp-c-bg-soft)) padding-box,
