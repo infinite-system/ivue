@@ -25,8 +25,8 @@ workspace:
 ```bash
 git clone https://github.com/infinite-system/ivue.git
 cd ivue
-yarn install
-yarn dev:playground
+npm install
+npm run dev:playground
 ```
 
 Open the Vite URL printed in the terminal (usually `http://localhost:5173`),
