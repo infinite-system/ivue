@@ -24,6 +24,7 @@ import BlogPostNav from './components/BlogPostNav.vue';
 import BlogPostDate from './components/BlogPostDate.vue';
 import NewsletterSignup from './components/NewsletterSignup.vue';
 import BlogArchiveScroller from './components/BlogArchiveScroller.vue';
+import BlogBackLink from './components/BlogBackLink.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import { registerDocsApp } from './quasar-docs-loader';
 import './custom.css';
@@ -37,6 +38,7 @@ export default {
       // Blog articles only (the components gate themselves on the route):
       // share buttons ride the outline aside; on narrower viewports the
       // aside disappears, so a second share row renders after the article.
+      'doc-before': () => h(BlogBackLink),
       'aside-outline-after': () => [
         h(BlogShare, { placement: 'aside' }),
         h(NewsletterSignup, { placement: 'aside' }),

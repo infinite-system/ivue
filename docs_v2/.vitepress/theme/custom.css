@@ -2028,7 +2028,7 @@ a.feature-inline-link {
 }
 /* after-article variant: only while the aside is hidden */
 .newsletter--doc {
-  margin-top: 16px;
+  margin-top: 30px;
 }
 @media (min-width: 1280px) {
   .newsletter--doc {
@@ -2109,6 +2109,41 @@ a.feature-inline-link {
 .blog-archive .virtual-scroller__track:hover .virtual-scroller__thumb,
 .blog-archive .virtual-scroller__thumb.dragging {
   background: var(--vp-c-brand-1);
+}
+
+/* back-to-blog link atop posts — phones only */
+.blog-back {
+  display: none;
+}
+@media (max-width: 640px) {
+  .VPDoc .blog-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--vp-c-brand-1);
+    text-decoration: none;
+  }
+  .VPDoc .blog-back svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+/* the Last-updated footer sits too far from the article's end */
+.blog-post .VPDocFooter {
+  margin-top: 24px;
+}
+@media (max-width: 640px) {
+  .blog-post .VPDocFooter {
+    margin-top: 10px;
+  }
+  .blog-post .blog-share--doc {
+    margin-top: 16px;
+    padding-top: 14px;
+  }
 }
 
 /* date under a blog post's title */

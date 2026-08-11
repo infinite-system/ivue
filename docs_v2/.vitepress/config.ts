@@ -354,6 +354,10 @@ export default defineConfig({
       pageData.frontmatter.prev = false;
       pageData.frontmatter.next = false;
       pageData.frontmatter.editLink = false;
+      if (pageData.relativePath !== 'blog/index.md') {
+        pageData.frontmatter.pageClass =
+          `blog-post ${pageData.frontmatter.pageClass ?? ''}`.trim();
+      }
     }
   },
 
