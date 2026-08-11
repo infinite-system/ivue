@@ -17,6 +17,7 @@ import FlyweightGrid20M from './components/grid/FlyweightGrid20M.vue';
 import CreationBench from './components/CreationBench.vue';
 import ExperimentalDocs from './components/ExperimentalDocs.vue';
 import StackBlitzPlayground from './components/StackBlitzPlayground.vue';
+import BlogIndex from './components/BlogIndex.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import { registerDocsApp } from './quasar-docs-loader';
 import './custom.css';
@@ -62,5 +63,6 @@ export default {
     app.component('CreationBench', CreationBench);
     app.component('BenchmarkWinner', BenchmarkWinner);
     app.component('StackBlitzPlayground', StackBlitzPlayground);
+    app.component('BlogIndex', BlogIndex);
   },
 } satisfies Theme;

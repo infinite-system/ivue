@@ -1039,6 +1039,7 @@
 a.feature-inline-link,
 .ix-start .go,
 .blog-card .go,
+.blog-row .go,
 .VPSidebar .VPSidebarItem.is-link > .item .link > .text,
 .VPNavBar .VPNavBarMenuLink,
 .VPNav .VPMenu .VPMenuLink .link,
@@ -1072,6 +1073,7 @@ a.feature-inline-link,
 a.feature-inline-link,
 .ix-start .go,
 .blog-card .go,
+.blog-row .go,
 .VPDocFooter .pager-link .title {
   --link-stop-1: var(--ivue-link-1);
   --link-stop-2: var(--ivue-link-2);
@@ -1107,6 +1109,7 @@ a.feature-inline-link {
 a.feature-inline-link:hover,
 .ix-start a:hover .go,
 .blog-card:hover .go,
+.blog-row:hover .go,
 .VPDocFooter .pager-link:hover .title {
   --link-stop-1: var(--ivue-link-hover-1);
   --link-stop-2: var(--ivue-link-hover-2);
@@ -1459,12 +1462,15 @@ a.feature-inline-link {
     transform: none;
   }
 }
-.blog-card .thumb {
+.vp-doc .blog-card .thumb {
   display: block;
   width: 100%;
   aspect-ratio: 1200 / 630;
   object-fit: cover;
+  margin: 0;
+  border: none;
   border-bottom: 1px solid var(--vp-c-divider);
+  border-radius: 0;
 }
 .blog-card .body {
   display: flex;
@@ -1472,10 +1478,12 @@ a.feature-inline-link {
   flex: 1;
   padding: 20px 24px 22px;
 }
-.blog-card .meta {
+.blog-card .meta,
+.blog-row .meta {
   margin-bottom: 10px;
 }
-.blog-card .date {
+.blog-card .date,
+.blog-row .date {
   display: inline-block;
   padding: 2px 10px;
   border-radius: 999px;
@@ -1485,7 +1493,8 @@ a.feature-inline-link {
   color: var(--vp-c-brand-1);
   background: var(--vp-c-brand-soft);
 }
-.vp-doc .blog-card h2 {
+.vp-doc .blog-card h2,
+.vp-doc .blog-row h2 {
   margin: 0 0 10px;
   padding: 0;
   border: none;
@@ -1495,7 +1504,8 @@ a.feature-inline-link {
   line-height: 1.3;
   color: var(--vp-c-text-1);
 }
-.blog-card .excerpt {
+.blog-card .excerpt,
+.blog-row .excerpt {
   margin: 0 0 14px;
   flex: 1;
   font-size: 0.9rem;
@@ -1506,6 +1516,119 @@ a.feature-inline-link {
   /* painted by the link system; layout only */
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+/* ---------- Blog index: view toolbar + list style ---------- */
+.blog-index-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 26px;
+}
+.blog-count {
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--vp-c-text-2);
+}
+.blog-view-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  background: var(--vp-c-bg-soft);
+}
+.blog-view-toggle button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 7px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--vp-c-text-2);
+  cursor: pointer;
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+.blog-view-toggle button:hover:not(.active) {
+  color: var(--vp-c-text-1);
+}
+.blog-view-toggle button.active {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+
+.blog-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+.vp-doc .blog-row {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 14px;
+  background: var(--vp-c-bg-soft);
+  text-decoration: none;
+  color: inherit;
+  font-weight: inherit;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.vp-doc .blog-row:hover {
+  transform: translateY(-2px);
+  border-color: var(--ivue-link-accent);
+  box-shadow: 0 14px 36px -18px var(--ivue-link-glow);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vp-doc .blog-row,
+  .vp-doc .blog-row:hover {
+    transition: none;
+    transform: none;
+  }
+}
+/* .vp-doc prefix: must out-rank the in-post hero rule
+   (.vp-doc img[src*='/blog/']) that sizes article images to 100% */
+.vp-doc .blog-row .thumb {
+  display: block;
+  width: 280px;
+  flex: 0 0 280px;
+  aspect-ratio: 1200 / 630;
+  align-self: center;
+  margin: 16px 0 16px 16px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+}
+.blog-row .body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  padding: 16px 24px 16px;
+}
+.blog-row .excerpt {
+  flex: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.blog-row .go {
+  /* painted by the link system; layout only */
+  margin-top: auto;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+@media (max-width: 640px) {
+  .vp-doc .blog-row {
+    flex-direction: column;
+  }
+  .vp-doc .blog-row .thumb {
+    width: calc(100% - 32px);
+    flex: none;
+    margin: 16px 16px 0;
+  }
 }
 
 /* Examples page: huge source files scroll inside their own block — the
