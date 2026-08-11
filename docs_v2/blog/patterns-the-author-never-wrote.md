@@ -1,6 +1,6 @@
 ---
 title: 'Patterns the author never wrote'
-description: Invar is full of ivue patterns that ivue's author never used by hand — the mtime-keyed blame cache, observation-owned connections, the pull floor. Agents derived them from a 779-line operating manual. The difference between a catalog and a generator is that a generator produces instances its author never enumerated.
+description: Invar is full of ivue patterns that ivue's author never used by hand — the mtime-keyed blame cache, observation-owned connections, the pull floor. Agents derived them from the 779-line Standard Operating Manual. The difference between a catalog and a generator is that a generator produces instances its author never enumerated.
 date: 2026-08
 ---
 
@@ -26,9 +26,9 @@ They were shown something smaller.
 
 ## A catalog can only be remixed
 
-Consider what the agents were actually given: a
-[779-line operating manual](/guide/standard) — about five thousand
-words — plus the invariant contracts the fleet accumulates as it
+Consider what the agents were actually given: the
+[Standard Operating Manual](/guide/standard) — 779 lines, about five
+thousand words — plus the invariant contracts the fleet accumulates as it
 works. Not a pattern library. Not a corpus of prior applications.
 The manual states the model: mutable state is a getter returning a
 ref; ground truth stays plain; identity is stable; derivations are
