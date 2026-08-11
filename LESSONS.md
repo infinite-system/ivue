@@ -242,3 +242,17 @@ number was a **harness artifact, not library behavior** — when a number
   test script is vitest's interactive `--ui` mode and hangs headless.
 - Docs deploy is Cloudflare Workers Builds on push to main; CI must not
   grow a deploy job again.
+
+## Deploy command must pin wrangler (2026-08-11)
+
+- The Cloudflare dashboard deploy command was `npx wrangler deploy` —
+  which resolves LATEST wrangler at every deploy. wrangler@4.121.0
+  shipped depending on miniflare@5.20260804.1-alpha, which was never
+  published; every deploy failed with ETARGET until the command was
+  pinned. Fix: `npx wrangler@4.120.1 deploy` (verified: its miniflare
+  5.20260804.0-alpha exists). Bump the pin deliberately, on our
+  schedule.
+- Third instance of the same failure family (setup-node v5 default
+  caching, Cloudflare yarn-sniffing): an unpinned tool default breaks
+  on the TOOL's release schedule, not ours. Anything in the deploy
+  path — dashboard commands included — gets an explicit version.
