@@ -7,6 +7,15 @@ pageClass: blog-index
 # Blog
 
 <div class="blog-list">
+  <a class="blog-card" href="/blog/patterns-the-author-never-wrote">
+    <img class="thumb" src="/blog/patterns-the-author-never-wrote.png" alt="Patterns the author never wrote" width="1200" height="630" loading="lazy" />
+    <div class="body">
+      <div class="meta"><span class="date">August 2026</span></div>
+      <h2>Patterns the author never wrote</h2>
+      <p class="excerpt">Invar is full of ivue patterns that ivue's author never used by hand — derived by agents from a 779-line manual, selected by 35 contracts. A catalog can only be remixed; a generator produces instances its author never enumerated. The difference is testable on your own docs.</p>
+      <span class="go">Read the post →</span>
+    </div>
+  </a>
   <a class="blog-card" href="/blog/reactivity-is-an-allocator">
     <img class="thumb" src="/blog/reactivity-is-an-allocator.png" alt="Reactivity is an allocator" width="1200" height="630" loading="lazy" />
     <div class="body">
