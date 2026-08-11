@@ -1750,7 +1750,7 @@ a.feature-inline-link {
 }
 .newsletter__label {
   display: block;
-  margin-bottom: 0;
+  margin-bottom: -3px;
   padding-top: 3px;
   line-height: 1.4;
   font-family: var(--vp-font-family-mono);
