@@ -1969,14 +1969,54 @@ a.feature-inline-link {
   color: #2dd4bf;
 }
 @media (max-width: 640px) {
-  .newsletter-pill span {
-    display: none;
-  }
-  /* equal inset from both edges */
+  /* icon-only at rest; the text unrolls leftward when expanded */
   .newsletter-pill {
     padding: 11px;
-    right: 16px;
-    bottom: 16px;
+    right: 24px;
+    bottom: 24px;
+  }
+  .newsletter-pill .newsletter-pill__text {
+    display: block;
+    max-width: 0;
+    margin: 0;
+    opacity: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: max-width 0.4s ease, opacity 0.35s ease, margin 0.4s ease;
+  }
+  .newsletter-pill--expanded {
+    padding: 12px 18px 14px 15px;
+    box-shadow: 0 14px 40px -12px rgba(45, 212, 191, 0.55);
+  }
+  .newsletter-pill--expanded .newsletter-pill__text {
+    max-width: 160px;
+    margin-left: 2px;
+    opacity: 1;
+  }
+}
+/* the timeout bar: a rounded gradient sliver draining along the pill's
+   bottom while the invitation lasts */
+.newsletter-pill__progress {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 5px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6366f1, #2dd4bf 60%, #34d399);
+  transform-origin: left center;
+  animation: newsletter-pill-progress 6s linear forwards;
+}
+@keyframes newsletter-pill-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .newsletter-pill__progress {
+    animation: none;
+  }
+  .newsletter-pill .newsletter-pill__text {
+    transition: none;
   }
 }
 
