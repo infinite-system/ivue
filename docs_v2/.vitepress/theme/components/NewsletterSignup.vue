@@ -135,7 +135,7 @@ function subscribe() {
       </div>
       <p class="newsletter__pitch">
         New patterns, releases, and measured numbers from the edge of
-        what JavaScript can do — only when something real ships.
+        what JavaScript can do — every new post, straight to your inbox.
       </p>
       <form v-if="state !== 'done'" class="newsletter__form" @submit.prevent="subscribe">
         <div class="newsletter__row">
