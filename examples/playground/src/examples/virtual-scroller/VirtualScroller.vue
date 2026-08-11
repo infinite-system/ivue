@@ -202,6 +202,12 @@ function onTrackPointerUp() {
   right: 2px;
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.45);
+  /* eased relocation: a fast flick or loop-wrap moves the thumb far in
+     one frame — glide it instead of teleporting */
+  transition: background 0.15s ease, top 0.2s ease-out, height 0.2s ease-out;
+}
+.virtual-scroller__thumb.dragging {
+  /* while the finger owns it, the thumb must stick — no easing lag */
   transition: background 0.15s ease;
 }
 .virtual-scroller__track:hover .virtual-scroller__thumb,
