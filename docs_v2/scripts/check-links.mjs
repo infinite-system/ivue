@@ -61,9 +61,17 @@ for (const file of htmlFiles) {
   const page = file.slice(distDirectory.length);
   for (const match of html.matchAll(linkPattern)) {
     const target = match[1];
-    // external, protocol-relative, mail, data, and pure-hash links are out
-    // of scope (pure-hash = same-page anchor VitePress generated itself)
-    if (/^(https?:)?\/\/|^(mailto|tel|data|javascript):|^#/.test(target)) {
+    // external, protocol-relative, mail, and data links are out of scope
+    if (/^(https?:)?\/\/|^(mailto|tel|data|javascript):/.test(target)) {
+      continue;
+    }
+    // pure-hash link: a same-page anchor — verify against THIS page's ids
+    if (target.startsWith('#')) {
+      checkedCount++;
+      const anchor = decodeURIComponent(target.slice(1));
+      if (anchor && !pageHasAnchor(file, anchor)) {
+        failures.push(`${page}: ${target} (same-page anchor missing)`);
+      }
       continue;
     }
     if (!target.startsWith('/')) continue; // relative asset emitted by vite
