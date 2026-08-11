@@ -117,6 +117,7 @@ function subscribe() {
       <div class="newsletter__head">
         <svg class="newsletter__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
           <rect width="48" height="48" rx="12" fill="#0D1226" />
+          <rect x="0.5" y="0.5" width="47" height="47" rx="11.5" stroke="white" stroke-opacity="0.08" />
           <path
             d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
             stroke="url(#newsletter-mark-gradient)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
