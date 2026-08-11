@@ -240,7 +240,7 @@ npx ivue skill --all
     <div class="d">The idea in five minutes: plain classes, full reactivity, nothing else.</div>
     <span class="go">Read →</span>
   </a>
-  <a href="/guide/engine-under-the-idiom">
+  <a href="/engine">
     <div class="t">The Engine</div>
     <div class="d">How one prototype transformation turns getters into lazy refs — the whole runtime, explained.</div>
     <span class="go">Look inside →</span>
