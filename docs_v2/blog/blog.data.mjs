@@ -4,14 +4,10 @@
 // supplies the git-recovered publication date, because deploy builds run on
 // shallow clones with no usable history.
 import { createContentLoader } from 'vitepress';
-import { readFileSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const blogDirectory = dirname(fileURLToPath(import.meta.url));
-const recordedDates = JSON.parse(
-  readFileSync(resolve(blogDirectory, 'blog-dates.json'), 'utf8'),
-);
+// A real module import (not readFileSync): the bundler tracks it as a
+// dependency, so a date re-sync invalidates a running dev server instead
+// of silently serving the frontmatter fallback until restart.
+import recordedDates from './blog-dates.json';
 
 export default createContentLoader('blog/*.md', {
   transform(pages) {
