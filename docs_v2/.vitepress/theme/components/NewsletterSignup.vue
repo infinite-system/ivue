@@ -1,0 +1,125 @@
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue';
+import { useRoute } from 'vitepress';
+
+// Paste the Mailchimp embedded-form action URL here once the audience
+// exists (Audience → Signup forms → Embedded → the <form action="…">).
+// The component converts it to the post-json JSONP endpoint itself.
+const MAILCHIMP_ACTION = '';
+
+const props = defineProps<{ placement: 'toast' | 'aside' | 'doc' }>();
+
+const route = useRoute();
+const isBlogPost = computed(
+  () => /^\/blog\/.+/.test(route.path) && !route.path.endsWith('/blog/'),
+);
+
+// toast shows everywhere EXCEPT blog posts (they carry the inline form);
+// aside/doc variants show ONLY on blog posts.
+const belongsHere = computed(() =>
+  props.placement === 'toast' ? !isBlogPost.value : isBlogPost.value,
+);
+
+const SUBSCRIBED_KEY = 'ivue-newsletter-subscribed';
+const DISMISSED_KEY = 'ivue-newsletter-dismissed';
+const DISMISS_DAYS = 21;
+
+const toastVisible = ref(false);
+const name = ref('');
+const email = ref('');
+const state = ref<'idle' | 'sending' | 'done' | 'error'>('idle');
+const message = ref('');
+
+onMounted(() => {
+  if (props.placement !== 'toast') return;
+  if (localStorage.getItem(SUBSCRIBED_KEY)) return;
+  const dismissedAt = Number(localStorage.getItem(DISMISSED_KEY) ?? 0);
+  if (Date.now() - dismissedAt < DISMISS_DAYS * 86_400_000) return;
+  window.setTimeout(() => (toastVisible.value = true), 9_000);
+});
+
+function dismiss() {
+  toastVisible.value = false;
+  localStorage.setItem(DISMISSED_KEY, String(Date.now()));
+}
+
+function subscribe() {
+  if (!email.value || state.value === 'sending') return;
+  if (!MAILCHIMP_ACTION) {
+    state.value = 'error';
+    message.value = 'Signups open very soon — follow @evgenykalash on X meanwhile.';
+    return;
+  }
+  state.value = 'sending';
+  const endpoint = MAILCHIMP_ACTION.replace('/post?', '/post-json?');
+  const callbackName = `ivueNewsletterCallback${Date.now()}`;
+  const query =
+    `&EMAIL=${encodeURIComponent(email.value)}` +
+    `&FNAME=${encodeURIComponent(name.value)}` +
+    `&c=${callbackName}`;
+  (window as any)[callbackName] = (response: { result: string; msg: string }) => {
+    delete (window as any)[callbackName];
+    if (response.result === 'success') {
+      state.value = 'done';
+      message.value = 'Welcome aboard — see you in the next post.';
+      localStorage.setItem(SUBSCRIBED_KEY, '1');
+      window.setTimeout(() => (toastVisible.value = false), 2_500);
+    } else {
+      state.value = 'error';
+      message.value = response.msg.replace(/^\d+\s*-\s*/, '');
+    }
+  };
+  const script = document.createElement('script');
+  script.src = endpoint + query;
+  document.body.appendChild(script);
+  script.addEventListener('load', () => script.remove());
+}
+</script>
+
+<template>
+  <Transition name="newsletter-slide">
+    <div
+      v-if="belongsHere && (placement !== 'toast' || toastVisible)"
+      class="newsletter"
+      :class="`newsletter--${placement}`"
+      role="complementary"
+      aria-label="Newsletter signup"
+    >
+      <button
+        v-if="placement === 'toast'"
+        type="button"
+        class="newsletter__close"
+        aria-label="Dismiss"
+        @click="dismiss"
+      >×</button>
+      <span class="newsletter__label">Newsletter</span>
+      <p class="newsletter__pitch">
+        New posts, releases, and measured numbers — a short email, only
+        when something ships.
+      </p>
+      <form v-if="state !== 'done'" class="newsletter__form" @submit.prevent="subscribe">
+        <input
+          v-model="name"
+          type="text"
+          name="FNAME"
+          placeholder="Name"
+          autocomplete="given-name"
+        />
+        <input
+          v-model="email"
+          type="email"
+          name="EMAIL"
+          placeholder="you@work.dev"
+          autocomplete="email"
+          required
+        />
+        <button type="submit" :disabled="state === 'sending'">
+          {{ state === 'sending' ? 'Joining…' : 'Join' }}
+        </button>
+      </form>
+      <p v-if="message" class="newsletter__message" :class="{ error: state === 'error' }">
+        {{ message }}
+      </p>
+    </div>
+  </Transition>
+</template>
