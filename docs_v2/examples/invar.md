@@ -10,7 +10,7 @@ pageClass: examples-page
 application in existence: a full terminal IDE — editor, file tree,
 workspace search, find/replace, git, tasks, terminals, LSP, and agent
 integration — built **entirely on ivue classes**, running under
-[Bun](https://bun.sh) in a terminal with no DOM and no Vue components.
+Bun in a terminal with no DOM and no Vue components.
 The same `Reactive()` and `Static()` that drive the browser examples on
 this site drive every keystroke of it; only the paint target changed.
 
