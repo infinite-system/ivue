@@ -5,11 +5,10 @@ description: 'Where to get help, report bugs, share feedback, and follow ivue �
 
 # Community
 
-ivue is built in the open — extracted from production, sharpened in
-public, and maintained by a real human who reads every message that
-lands on this page. Whether you're here to ask a question, report
-something weird, or just see how deep the rabbit hole goes: welcome.
-Pull up a chair.
+ivue grew out of shipped products, and it keeps growing through the
+conversations below. Bring questions, bug reports, wild ideas, or a
+benchmark you don't believe — there's no ticket queue on the other
+end, just the people who write the code. Welcome in.
 
 ## Get help, talk shop
 
