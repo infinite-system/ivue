@@ -1,67 +1,24 @@
 name: ci
 on: [ push ]
 
+# Docs deploy lives on Cloudflare Workers Builds (GitHub-connected, builds on
+# push to main) — CI only runs the engine's test suite.
 jobs:
   build:
     name: vitest
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Set Node.js 22.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v5
         with:
           node-version: 22.x
 
-      - name: yarn install
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: install # will run `yarn install` command
-          # dir: 'ivue'
+      # The root deliberately carries no lockfile (docs_v2 and the playground
+      # own their npm lockfiles), so plain install — not ci.
+      - name: npm install
+        run: npm install
+
       - name: vitest ivue
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: test # will run `yarn test` command
-          # dir: 'ivue'
-  docs-deploy:
-    name: deploy docs (v2)
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set Node.js 22.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 22.x
-
-      - name: Setup git
-        run: |
-          git config user.name "Evgeny Kalashnikov" && git config user.email "ekalashnikov@gmail.com"
-      - name: install root deps
-        run: yarn install
-      - name: install docs_v2 deps
-        run: npm install --prefix docs_v2
-      - name: build docs_v2
-        run: npm run build:docs
-      - name: deploy docs_v2 to gh-pages
-        run: node docs_v2/scripts/gh-pages-deploy.js
-#  docs-deploy:
-#    name: Deploying to gh-pages
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Setup Node.js for use with actions
-#        uses: actions/setup-node@v2
-#        with:
-#          version: 12.x
-#      - name: Checkout branch
-#        uses: actions/checkout@v2
-#
-#      - name: Clean install dependencies
-#        run: npm ci
-#
-#      - name: Run deploy script
-#        run: |
-#          git config user.name "Evgeny Kalashnikov" && git config user.email "ekalashnikov@gmail.com"
-#
-#          cmd: deploy
+        run: npm run coverage
