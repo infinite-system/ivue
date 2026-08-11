@@ -98,23 +98,26 @@ function subscribe() {
         when something ships.
       </p>
       <form v-if="state !== 'done'" class="newsletter__form" @submit.prevent="subscribe">
-        <input
-          v-model="name"
-          type="text"
-          name="FNAME"
-          placeholder="Name"
-          autocomplete="given-name"
-        />
-        <input
-          v-model="email"
-          type="email"
-          name="EMAIL"
-          placeholder="you@work.dev"
-          autocomplete="email"
-          required
-        />
+        <div class="newsletter__row">
+          <input
+            v-model="name"
+            type="text"
+            name="FNAME"
+            placeholder="Name"
+            autocomplete="given-name"
+          />
+          <input
+            v-model="email"
+            type="email"
+            name="EMAIL"
+            placeholder="you@work.dev"
+            autocomplete="email"
+            required
+          />
+        </div>
         <button type="submit" :disabled="state === 'sending'">
-          {{ state === 'sending' ? 'Joining…' : 'Join' }}
+          <span class="newsletter__button-shine" aria-hidden="true"></span>
+          {{ state === 'sending' ? 'Joining…' : 'Join the list →' }}
         </button>
       </form>
       <p v-if="message" class="newsletter__message" :class="{ error: state === 'error' }">
