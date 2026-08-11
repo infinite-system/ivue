@@ -44,9 +44,9 @@ export default {
       'doc-after': () => [
         h(BlogShare, { placement: 'doc' }),
         h(BlogAuthor),
-        h(NewsletterSignup, { placement: 'doc' }),
         h(BlogPostNav),
         h(BlogArchiveScroller),
+        h(NewsletterSignup, { placement: 'doc' }),
       ],
       'layout-bottom': () => h(NewsletterSignup, { placement: 'toast' }),
     });

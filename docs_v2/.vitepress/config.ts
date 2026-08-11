@@ -353,6 +353,7 @@ export default defineConfig({
     if (pageData.relativePath.startsWith('blog/')) {
       pageData.frontmatter.prev = false;
       pageData.frontmatter.next = false;
+      pageData.frontmatter.editLink = false;
     }
   },
 
