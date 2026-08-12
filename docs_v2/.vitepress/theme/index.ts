@@ -58,9 +58,19 @@ export default {
     registerDocsApp(app); // field embeds install Quasar lazily
 
     if (typeof window !== 'undefined') {
+      // Browser auto-translate must never touch the brand: the nav logo
+      // says "ivue" in every language. Re-tagged after each route change —
+      // covers first paint and late-mounted layouts alike.
+      const shieldBrand = () => {
+        document
+          .querySelector('.VPNavBarTitle')
+          ?.setAttribute('translate', 'no');
+      };
+
       const onAfterRouteChange = router.onAfterRouteChange;
       router.onAfterRouteChange = async (to) => {
         await onAfterRouteChange?.(to);
+        requestAnimationFrame(shieldBrand);
 
         if (router.route.data.isNotFound) {
           window.dispatchEvent(
@@ -70,6 +80,7 @@ export default {
           );
         }
       };
+      requestAnimationFrame(shieldBrand);
     }
 
     app.component('PerfSlider', PerfSlider);
