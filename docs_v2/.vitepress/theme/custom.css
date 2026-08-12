@@ -2104,18 +2104,19 @@ a.feature-inline-link {
   border-bottom: none;
 }
 
-/* The full nav needs ~1150px; between VitePress's 768px hamburger
-   cutoff and that width the bar collides. Tighten item spacing, and
-   below 1240px hand off to the hamburger instead of overflowing. */
+/* The full nav is wide; instead of handing mid-widths to the hamburger,
+   shrink the bar so it genuinely fits: tighter items always, and a
+   narrower search box below 1240px. */
 .VPNavBar .VPNavBarMenuLink {
   padding: 0 9px;
 }
-@media (min-width: 768px) and (max-width: 1239px) {
-  .VPNavBar .VPNavBarMenu {
-    display: none;
+@media (max-width: 1239px) {
+  .VPNavBar .VPNavBarSearch .DocSearch-Button {
+    width: 44px;
   }
-  .VPNavBar .VPNavBarHamburger {
-    display: flex;
+  .VPNavBar .VPNavBarSearch .DocSearch-Button-Placeholder,
+  .VPNavBar .VPNavBarSearch .DocSearch-Button-Keys {
+    display: none;
   }
 }
 
