@@ -2211,6 +2211,15 @@ html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
   letter-spacing: 0;
 }
 
+/* releases index: compact rhythm — entries separate without the canyon */
+.releases-index .vp-doc h2 {
+  margin-top: 26px;
+  padding-top: 20px;
+}
+.releases-index .vp-doc .release-date {
+  margin-top: 12px;
+}
+
 /* releases index: version headings are links — paint them like links */
 .releases-index .vp-doc h2 a {
   color: var(--ivue-link-accent);
