@@ -2104,6 +2104,33 @@ a.feature-inline-link {
   border-bottom: none;
 }
 
+/* releases index: version headings are links — paint them like links */
+.releases-index .vp-doc h2 a {
+  color: var(--ivue-link-accent);
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+.releases-index .vp-doc h2 a:hover {
+  color: var(--ivue-link-hover-2);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* release pages: the sidebar is newest-first, so the pager's "previous"
+   points at the NEWER version — relabel in release terms */
+.release-page .pager-link.prev .desc,
+.release-page .pager-link.next .desc {
+  font-size: 0;
+}
+.release-page .pager-link.prev .desc::before {
+  content: 'Next Release';
+  font-size: 12px;
+}
+.release-page .pager-link.next .desc::before {
+  content: 'Previous Release';
+  font-size: 12px;
+}
+
 /* back-to-blog link atop posts — phones only */
 .blog-back {
   display: none;

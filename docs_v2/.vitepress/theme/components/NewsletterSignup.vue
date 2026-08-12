@@ -165,7 +165,7 @@ function subscribe() {
             v-model="email"
             type="email"
             name="EMAIL"
-            placeholder="you@work.dev"
+            placeholder="Email"
             autocomplete="email"
             required
           />
