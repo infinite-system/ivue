@@ -8,6 +8,30 @@ const deployedCommit = process.env.GITHUB_SHA ?? '';
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath as toPath } from 'node:url';
 
+function releasesSidebar() {
+  const notesDirectory = toPath(new URL('../../releases', import.meta.url));
+  const versions = readdirSync(notesDirectory)
+    .filter((entry) => /^ivue@\d+\.\d+\.\d+\.md$/.test(entry))
+    .map((entry) => entry.slice('ivue@'.length, -'.md'.length))
+    .sort((first, second) => {
+      const a = first.split('.').map(Number);
+      const b = second.split('.').map(Number);
+      return b[0] - a[0] || b[1] - a[1] || b[2] - a[2];
+    });
+  return [
+    {
+      text: 'Releases',
+      items: [
+        { text: 'All releases', link: '/releases/' },
+        ...versions.map((version) => ({
+          text: `ivue@${version}`,
+          link: `/releases/${version}`,
+        })),
+      ],
+    },
+  ];
+}
+
 function blogSidebar() {
   const blogDirectory = toPath(new URL('../blog', import.meta.url));
   const recordedDates = JSON.parse(
@@ -566,12 +590,13 @@ export default defineConfig({
       { text: 'Standard', link: '/guide/standard', activeMatch: '/guide/standard' },
       { text: 'API', link: '/api/', activeMatch: '/api/' },
       { text: 'Blog', link: '/blog/', activeMatch: '/blog/' },
-      { text: 'Releases', link: '/releases', activeMatch: '/releases' },
+      { text: 'Releases', link: '/releases/', activeMatch: '/releases/' },
       { text: 'Community', link: '/community', activeMatch: '/community' },
     ],
 
     sidebar: {
       '/blog/': blogSidebar(),
+      '/releases/': releasesSidebar(),
       '/examples/': [
         {
           text: 'Examples',
