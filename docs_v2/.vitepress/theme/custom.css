@@ -2104,6 +2104,21 @@ a.feature-inline-link {
   border-bottom: none;
 }
 
+/* The full nav needs ~1150px; between VitePress's 768px hamburger
+   cutoff and that width the bar collides. Tighten item spacing, and
+   below 1240px hand off to the hamburger instead of overflowing. */
+.VPNavBar .VPNavBarMenuLink {
+  padding: 0 9px;
+}
+@media (min-width: 768px) and (max-width: 1239px) {
+  .VPNavBar .VPNavBarMenu {
+    display: none;
+  }
+  .VPNavBar .VPNavBarHamburger {
+    display: flex;
+  }
+}
+
 /* NEW badges: nav superscripts (lit by build-time data attributes) and
    the index pill for entries under two weeks old */
 html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog']::after,
