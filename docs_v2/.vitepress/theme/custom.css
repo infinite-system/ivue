@@ -2112,7 +2112,12 @@ a.feature-inline-link {
 }
 @media (max-width: 1239px) {
   .VPNavBar .VPNavBarSearch .DocSearch-Button {
-    width: 44px;
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+  .VPNavBar .VPNavBarSearch .DocSearch-Button .DocSearch-Search-Icon {
+    margin: 0;
   }
   .VPNavBar .VPNavBarSearch .DocSearch-Button-Placeholder,
   .VPNavBar .VPNavBarSearch .DocSearch-Button-Keys {
