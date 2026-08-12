@@ -457,6 +457,11 @@ export default defineConfig({
   // prev/next pager would walk into "What is ivue?". BlogPostNav (under
   // the author card) provides older/newer navigation instead.
   transformPageData(pageData) {
+    // generated release pages must not invite GitHub edits — the source
+    // of truth is the note file in /releases
+    if (pageData.relativePath.startsWith('releases/')) {
+      pageData.frontmatter.editLink = false;
+    }
     if (pageData.relativePath.startsWith('blog/')) {
       pageData.frontmatter.prev = false;
       pageData.frontmatter.next = false;
