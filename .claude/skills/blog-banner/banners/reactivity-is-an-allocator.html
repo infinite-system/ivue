@@ -81,36 +81,15 @@
   }
   .stat .l { font-size: 16px; color: #7e9cd0; }
   .lockup {
-    position: absolute; top: 32px; left: 44px;
-    display: flex; align-items: center; gap: 13px;
+    position: absolute; top: 34px; left: 44px;
   }
-  .lockup svg { width: 52px; height: 52px; }
-  .lockup .word { display: flex; flex-direction: column; }
-  .lockup .word b {
-    font-size: 29px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.02;
-    background: linear-gradient(105deg, #818cf8, #2dd4bf 60%, #34d399);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .lockup .word span {
-    margin-top: 3px; font-size: 10.5px; font-weight: 600;
-    letter-spacing: 0.33em; color: #8fa8cf;
-  }
+  .lockup img { display: block; width: 205px; }
 </style>
 </head>
 <body>
   <div class="grid"></div>
   <div class="lockup">
-    <svg viewBox="0 0 48 48" fill="none">
-      <defs>
-        <linearGradient id="lockup-mark" x1="8" y1="14" x2="40" y2="34" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#38BDF8"/><stop offset="0.5" stop-color="#2DD4BF"/><stop offset="1" stop-color="#34D399"/>
-        </linearGradient>
-      </defs>
-      <rect width="48" height="48" rx="12" fill="#0D1226"/>
-      <rect x="0.5" y="0.5" width="47" height="47" rx="11.5" stroke="white" stroke-opacity="0.08"/>
-      <path d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z" stroke="url(#lockup-mark)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <span class="word"><b>ivue</b><span>INFINITE VUE</span></span>
+    <img src="../../../../docs_v2/public/brand-lockup-dark.png" alt="ivue — Infinite Vue" />
   </div>
 
   <div class="swap">
