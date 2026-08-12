@@ -2110,8 +2110,8 @@ html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog']::after,
 html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
   content: 'NEW';
   position: relative;
-  top: -7px;
-  margin-left: 3px;
+  top: -9px;
+  margin-left: -5px;
   font-size: 8.5px;
   font-weight: 750;
   letter-spacing: 0.05em;

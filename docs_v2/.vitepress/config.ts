@@ -555,7 +555,7 @@ export default defineConfig({
     nav: [
       {
         text: 'Guide',
-        activeMatch: '^/(engine|guide/)',
+        activeMatch: '^/(engine|guide/|api/)',
         items: [
           { text: 'What is ivue?', link: '/guide/introduction' },
           { text: 'The Engine', link: '/engine' },
@@ -563,6 +563,7 @@ export default defineConfig({
           { text: 'Design & Philosophy', link: '/guide/design' },
           { text: 'Fundamental Principles', link: '/guide/principles' },
           { text: 'Standard Operating Manual', link: '/guide/standard' },
+          { text: 'API Reference', link: '/api/' },
           {
             text: 'Sections',
             items: [
@@ -620,7 +621,6 @@ export default defineConfig({
         ],
       },
       { text: 'Standard', link: '/guide/standard', activeMatch: '/guide/standard' },
-      { text: 'API', link: '/api/', activeMatch: '/api/' },
       { text: 'Blog', link: '/blog/', activeMatch: '/blog/' },
       { text: 'Releases', link: '/releases/', activeMatch: '/releases/' },
       { text: 'Community', link: '/community', activeMatch: '/community' },
