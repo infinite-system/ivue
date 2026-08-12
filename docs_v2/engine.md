@@ -118,7 +118,8 @@ specialize without making runtime optimization part of ivue's correctness.
 Consequences observed in production, not projected:
 
 - **A census, not a vibe.** A shipped reader application — virtualized
-  scrolling of 99,925-paragraph documents, seek, search, autoplay, inline
+  scrolling on the same class that [drives 1,000,000 rows live on this
+  site](/examples/virtual-scroller), seek, search, autoplay, inline
   editing — runs on **three** `computed()`s across ~3,900 lines: one
   expensive search sweep, one render-suppressing window snapshot, one
   stable watched handle. Every other derived value in ~170 getters is a
@@ -176,4 +177,5 @@ tracked reads to flow through).
 the doctrine — cache only for expensive work, render suppression, or a
 stable watched handle — leaves you needing `computed()` for a substantial
 fraction of your derived values, this page is wrong. Measured so far: 3 in
-3,902 lines, under production load, at 99,925 items.
+3,902 lines, under production load, on a scroller that
+[runs 1,000,000 rows live](/examples/virtual-scroller).
