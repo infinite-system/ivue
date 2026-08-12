@@ -256,3 +256,18 @@ number was a **harness artifact, not library behavior** — when a number
   caching, Cloudflare yarn-sniffing): an unpinned tool default breaks
   on the TOOL's release schedule, not ours. Anything in the deploy
   path — dashboard commands included — gets an explicit version.
+
+## Terminal-grid SVG screenshots: vectorize box-drawing glyphs (2026-08-12)
+
+- The pty→SVG screenshots showed "dashed" splitters/borders: `│ ─ ╭╮╰╯`
+  were emitted as SVG *text*, and font glyphs don't span the full cell.
+  Real terminals special-case box-drawing characters and stretch them to
+  cell edges — the SVG generator must do the same (vector rects/paths).
+  Fixed in invar's `scripts/harness/screenshot-svg.ts` (`boxShape()`);
+  background rects also carry `shape-rendering="crispEdges"` to prevent
+  antialiasing seams between rows at fractional scales. No overdraw
+  needed — crispEdges + exact geometry renders clean.
+- Debugging trap: the user's "still broken" sightings were the DEPLOYED
+  site serving pre-fix files (commits unpushed). Before tuning a visual
+  fix further, confirm which build the reporter is actually looking at —
+  local dev, local build, or production.
