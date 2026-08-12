@@ -2,10 +2,10 @@
 import { computed, onMounted, ref, useId } from 'vue';
 import { useRoute } from 'vitepress';
 
-// Paste the Mailchimp embedded-form action URL here once the audience
-// exists (Audience → Signup forms → Embedded → the <form action="…">).
-// The component converts it to the post-json JSONP endpoint itself.
-const MAILCHIMP_ACTION = '';
+// The newsletter Worker's public URL (see /newsletter/README.md) — paste
+// it here once the Worker is deployed and signups go live. Empty string
+// keeps the form visible but dormant (soft-fail message on submit).
+const NEWSLETTER_ENDPOINT = '';
 
 const props = defineProps<{ placement: 'toast' | 'aside' | 'doc' | 'cta' }>();
 
@@ -74,23 +74,22 @@ function openFromPill() {
   toastVisible.value = true;
 }
 
-function subscribe() {
+async function subscribe() {
   if (!email.value || state.value === 'sending') return;
-  if (!MAILCHIMP_ACTION) {
+  if (!NEWSLETTER_ENDPOINT) {
     state.value = 'error';
     message.value = 'Signups open very soon — follow @evgenykalash on X meanwhile.';
     return;
   }
   state.value = 'sending';
-  const endpoint = MAILCHIMP_ACTION.replace('/post?', '/post-json?');
-  const callbackName = `ivueNewsletterCallback${Date.now()}`;
-  const query =
-    `&EMAIL=${encodeURIComponent(email.value)}` +
-    `&FNAME=${encodeURIComponent(name.value)}` +
-    `&c=${callbackName}`;
-  (window as any)[callbackName] = (response: { result: string; msg: string }) => {
-    delete (window as any)[callbackName];
-    if (response.result === 'success') {
+  try {
+    const response = await fetch(`${NEWSLETTER_ENDPOINT}/subscribe`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: name.value, email: email.value }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (response.ok) {
       state.value = 'done';
       message.value = 'Welcome aboard — see you in the next post.';
       localStorage.setItem(SUBSCRIBED_KEY, '1');
@@ -98,13 +97,13 @@ function subscribe() {
       window.setTimeout(() => (toastVisible.value = false), 2_500);
     } else {
       state.value = 'error';
-      message.value = response.msg.replace(/^\d+\s*-\s*/, '');
+      message.value =
+        payload.error ?? 'Could not subscribe right now — try again in a minute.';
     }
-  };
-  const script = document.createElement('script');
-  script.src = endpoint + query;
-  document.body.appendChild(script);
-  script.addEventListener('load', () => script.remove());
+  } catch {
+    state.value = 'error';
+    message.value = 'Could not subscribe right now — try again in a minute.';
+  }
 }
 </script>
 
