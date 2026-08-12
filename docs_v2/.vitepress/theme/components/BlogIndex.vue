@@ -92,11 +92,12 @@ function formatDate(date: string): string {
         height="630"
         loading="lazy"
       />
+      <span v-if="isNew(post)" class="new-badge new-badge--thumb">NEW</span>
       <div class="body">
         <h2>{{ post.title }}</h2>
         <p class="excerpt">{{ post.excerpt }}</p>
         <div class="foot">
-          <span class="date">{{ formatDate(post.date) }}<span v-if="isNew(post)" class="new-badge">NEW</span></span>
+          <span class="date">{{ formatDate(post.date) }}</span>
           <span class="go">Read the post →</span>
         </div>
       </div>
@@ -113,11 +114,12 @@ function formatDate(date: string): string {
         height="630"
         loading="lazy"
       />
+      <span v-if="isNew(post)" class="new-badge new-badge--thumb">NEW</span>
       <div class="body">
         <h2>{{ post.title }}</h2>
         <p class="excerpt">{{ post.excerpt }}</p>
         <div class="foot">
-          <span class="date">{{ formatDate(post.date) }}<span v-if="isNew(post)" class="new-badge">NEW</span></span>
+          <span class="date">{{ formatDate(post.date) }}</span>
           <span class="go">Read the post →</span>
         </div>
       </div>

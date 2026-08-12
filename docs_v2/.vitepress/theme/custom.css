@@ -2123,16 +2123,41 @@ html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
 .new-badge {
   display: inline-block;
   margin-left: 7px;
-  padding: 0 7px 0.5px;
+  padding: 0 5px 0.5px;
   line-height: 1.5;
   border-radius: 5px;
   font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 0.05em;
+  font-weight: 550;
+  letter-spacing: 0.06em;
   vertical-align: 2px;
   color: #f4f9ff;
   background: linear-gradient(105deg, #6366f1, #0d9488);
-  text-shadow: 0 1px 1px rgba(2, 6, 23, 0.35);
+  text-shadow: 0 1px 1px rgba(2, 6, 23, 0.18);
+}
+
+/* NEW badge pinned to the banner's top-right corner in the blog index */
+.vp-doc .blog-card,
+.vp-doc .blog-row {
+  position: relative;
+}
+.new-badge--thumb {
+  position: absolute;
+  top: 9px;
+  margin: 0;
+}
+.blog-card .new-badge--thumb {
+  right: 9px;
+}
+.blog-row .new-badge--thumb {
+  left: 360px;
+  transform: translateX(calc(-100% - 9px));
+}
+@media (max-width: 640px) {
+  .blog-row .new-badge--thumb {
+    left: auto;
+    right: 9px;
+    transform: none;
+  }
 }
 
 /* releases index: version headings are links — paint them like links */
