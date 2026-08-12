@@ -550,6 +550,27 @@ export default defineConfig({
           tokens[i - 2].attrJoin('class', 'task-item');
         }
       });
+
+      // Machine-translation hygiene: browser auto-translate (Chrome's
+      // "Translate this page") must never touch code — `Reactive()` or
+      // `$watch` rendered into another language destroys the docs. Every
+      // code element gets translate="no"; prose stays translatable.
+      const defaultCodeInline =
+        md.renderer.rules.code_inline ??
+        ((tokens, idx, options, _env, self) =>
+          self.renderToken(tokens, idx, options));
+      md.renderer.rules.code_inline = (tokens, idx, options, env, self) => {
+        tokens[idx].attrSet('translate', 'no');
+        return defaultCodeInline(tokens, idx, options, env, self);
+      };
+      for (const rule of ['fence', 'code_block'] as const) {
+        const defaultRender = md.renderer.rules[rule]!;
+        md.renderer.rules[rule] = (tokens, idx, options, env, self) =>
+          defaultRender(tokens, idx, options, env, self).replace(
+            /^<(div|pre)/,
+            '<$1 translate="no"',
+          );
+      }
     },
   },
 
