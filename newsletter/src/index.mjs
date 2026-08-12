@@ -5,17 +5,19 @@
 // the ad-hoc /broadcast endpoint are just two writers of the same ledger,
 // so neither can repeat what the other already delivered.
 //
-//   POST /subscribe     {name, email}         — site form → Brevo contact
+// D1 is the audience layer (subscribers + unsubscribes + ledger);
+// Postmark is delivery only — broadcast message stream, batch API.
+//
+//   POST /subscribe     {name, email}         — site form → D1
 //   GET  /unsubscribe   ?email=&token=        — HMAC-signed one-click out
 //   POST /broadcast     {slug}  (Bearer ADMIN_SECRET) — send a post NOW
 //   cron daily                                — each due subscriber gets
 //                                               their oldest unsent post
 
-const BREVO = 'https://api.brevo.com/v3';
+const POSTMARK_BATCH = 'https://api.postmarkapp.com/email/batch';
 
-// Batch size for one Brevo transactional call (messageVersions). Grouping
-// recipients by slug keeps subrequests far under the Workers free-plan cap
-// (50/invocation) no matter how large the list grows.
+// Postmark accepts up to 500 messages per batch call; batching keeps
+// subrequests far under the Workers free-plan cap (50/invocation).
 const SEND_BATCH = 500;
 
 export default {
@@ -49,18 +51,14 @@ async function subscribe(request, env) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))
     return json({ error: 'That email address does not look right.' }, 400);
 
-  const response = await brevo(env, 'POST', '/contacts', {
-    email: address,
-    attributes: { FIRSTNAME: String(name).trim().slice(0, 80) },
-    listIds: [Number(env.BREVO_LIST_ID)],
-    updateEnabled: true, // re-subscribing an existing contact is fine
-  });
-  if (!response.ok) {
-    console.error('brevo /contacts', response.status, await response.text());
-    return json({ error: 'Could not subscribe right now — try again in a minute.' }, 502);
-  }
-  // a returning subscriber cancels any previous unsubscribe
-  await env.DB.prepare('DELETE FROM unsubscribes WHERE email = ?').bind(address).run();
+  await env.DB.batch([
+    env.DB.prepare(
+      'INSERT INTO subscribers (email, name, subscribed_at) VALUES (?, ?, ?) ' +
+        'ON CONFLICT(email) DO UPDATE SET name = excluded.name',
+    ).bind(address, String(name).trim().slice(0, 80), nowSeconds()),
+    // a returning subscriber cancels any previous unsubscribe
+    env.DB.prepare('DELETE FROM unsubscribes WHERE email = ?').bind(address),
+  ]);
   return json({ ok: true });
 }
 
@@ -72,14 +70,9 @@ async function unsubscribe(url, env) {
   if (!address || token !== (await unsubscribeToken(address, env)))
     return new Response('Invalid unsubscribe link.', { status: 400 });
 
-  // local suppression first — it is what sends actually check
   await env.DB.prepare(
     'INSERT OR REPLACE INTO unsubscribes (email, unsubscribed_at) VALUES (?, ?)',
   ).bind(address, nowSeconds()).run();
-  // best-effort mirror into Brevo so both systems agree
-  await brevo(env, 'PUT', `/contacts/${encodeURIComponent(address)}`, {
-    unlinkListIds: [Number(env.BREVO_LIST_ID)],
-  }).catch(() => {});
 
   return new Response(
     `<!doctype html><meta charset="utf-8"><title>Unsubscribed</title>
@@ -154,36 +147,56 @@ async function sendPost(env, post, recipients) {
   let delivered = 0;
   for (let start = 0; start < recipients.length; start += SEND_BATCH) {
     const batch = recipients.slice(start, start + SEND_BATCH);
-    const messageVersions = [];
+    const messages = [];
     for (const recipient of batch) {
-      messageVersions.push({
-        to: [{ email: recipient.email, name: recipient.name || undefined }],
-        params: { UNSUBSCRIBE_URL: await unsubscribeUrl(recipient.email, env) },
+      const unsubscribe = await unsubscribeUrl(recipient.email, env);
+      messages.push({
+        From: `${env.SENDER_NAME} <${env.SENDER_EMAIL}>`,
+        To: recipient.email,
+        Subject: post.title,
+        HtmlBody: renderEmail(post, unsubscribe),
+        MessageStream: env.POSTMARK_STREAM,
+        Headers: [
+          { Name: 'List-Unsubscribe', Value: `<${unsubscribe}>` },
+          { Name: 'List-Unsubscribe-Post', Value: 'List-Unsubscribe=One-Click' },
+        ],
       });
     }
-    const response = await brevo(env, 'POST', '/smtp/email', {
-      sender: { name: env.SENDER_NAME, email: env.SENDER_EMAIL },
-      subject: post.title,
-      htmlContent: renderEmail(post),
-      headers: { 'List-Unsubscribe': '<{{params.UNSUBSCRIBE_URL}}>' },
-      messageVersions,
+    const response = await fetch(POSTMARK_BATCH, {
+      method: 'POST',
+      headers: {
+        'X-Postmark-Server-Token': env.POSTMARK_SERVER_TOKEN,
+        'content-type': 'application/json',
+        accept: 'application/json',
+      },
+      body: JSON.stringify(messages),
     });
     if (!response.ok) {
-      console.error('brevo /smtp/email', response.status, await response.text());
+      console.error('postmark batch', response.status, await response.text());
       continue; // ledger stays unwritten — this batch retries next run
     }
+    // per-message results: ErrorCode 0 = accepted; anything else (e.g.
+    // 406 inactive recipient) is logged and NOT written to the ledger
+    const outcomes = await response.json();
     const timestamp = nowSeconds();
-    const statements = batch.map((recipient) =>
-      env.DB.prepare('INSERT OR IGNORE INTO sends (email, slug, sent_at) VALUES (?, ?, ?)')
-        .bind(recipient.email, post.slug, timestamp),
-    );
-    await env.DB.batch(statements);
-    delivered += batch.length;
+    const statements = [];
+    outcomes.forEach((outcome, index) => {
+      if (outcome.ErrorCode === 0) {
+        statements.push(
+          env.DB.prepare('INSERT OR IGNORE INTO sends (email, slug, sent_at) VALUES (?, ?, ?)')
+            .bind(batch[index].email, post.slug, timestamp),
+        );
+        delivered++;
+      } else {
+        console.error('postmark message', batch[index].email, outcome.ErrorCode, outcome.Message);
+      }
+    });
+    if (statements.length) await env.DB.batch(statements);
   }
   return delivered;
 }
 
-function renderEmail(post) {
+function renderEmail(post, unsubscribe) {
   const dateLine = post.date
     ? new Date(post.date + 'T00:00:00Z').toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC',
@@ -201,7 +214,7 @@ function renderEmail(post) {
     </div>
     <p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#8a94a8">
       You're receiving the ivue newsletter — every post from the archive,
-      one at a time. <a href="{{params.UNSUBSCRIBE_URL}}" style="color:#6b7a99">Unsubscribe</a>
+      one at a time. <a href="${unsubscribe}" style="color:#6b7a99">Unsubscribe</a>
     </p>
   </div>
 </body></html>`;
@@ -216,44 +229,16 @@ async function loadPosts(env) {
 }
 
 async function activeSubscribers(env) {
-  const subscribers = [];
-  for (let offset = 0; ; offset += 500) {
-    const response = await brevo(
-      env, 'GET',
-      `/contacts/lists/${env.BREVO_LIST_ID}/contacts?limit=500&offset=${offset}`,
-    );
-    if (!response.ok) throw new Error(`brevo list contacts ${response.status}`);
-    const page = await response.json();
-    for (const contact of page.contacts ?? []) {
-      if (contact.emailBlacklisted) continue;
-      subscribers.push({
-        email: contact.email.toLowerCase(),
-        name: contact.attributes?.FIRSTNAME ?? '',
-      });
-    }
-    if ((page.contacts ?? []).length < 500) break;
-  }
-  const { results } = await env.DB.prepare('SELECT email FROM unsubscribes').all();
-  const suppressed = new Set(results.map((row) => row.email));
-  return subscribers.filter((subscriber) => !suppressed.has(subscriber.email));
+  const { results } = await env.DB.prepare(
+    'SELECT email, name FROM subscribers WHERE email NOT IN (SELECT email FROM unsubscribes)',
+  ).all();
+  return results;
 }
 
 async function sentSetForSlug(env, slug) {
   const { results } = await env.DB.prepare('SELECT email FROM sends WHERE slug = ?')
     .bind(slug).all();
   return new Set(results.map((row) => row.email));
-}
-
-function brevo(env, method, path, body) {
-  return fetch(`${BREVO}${path}`, {
-    method,
-    headers: {
-      'api-key': env.BREVO_API_KEY,
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
 }
 
 async function unsubscribeToken(address, env) {

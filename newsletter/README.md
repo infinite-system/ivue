@@ -1,7 +1,7 @@
 # ivue newsletter Worker
 
-Subscribe endpoint + send ledger (D1) + daily drip cron. Brevo holds the
-contact list and delivers email; this Worker decides who gets what, when.
+Subscribe endpoint + audience + send ledger (all D1) + daily drip cron.
+Postmark delivers the email; this Worker decides who gets what, when.
 
 **The invariant:** at most one email per (subscriber, post), ever. The
 `sends` table is the invariant; the drip picks each subscriber's **oldest
@@ -13,13 +13,17 @@ Cadence: one email per subscriber at most every `CADENCE_HOURS` (default
 
 ## One-time setup
 
-1. **Brevo account** (free: 300 emails/day) at brevo.com
+1. **Postmark account** at postmarkapp.com ($15/mo for 10k emails after
+   the ~100-email trial; trial only sends to addresses on your own
+   verified domain — perfect for testing this Worker end-to-end free).
 
-   - Create a contact list; put its numeric id in `wrangler.jsonc` →
-     `BREVO_LIST_ID` (Contacts → Lists — the id is in the URL).
-   - Verify the sending domain (Senders & Domains → add `ivue.dev`, set the
-     DKIM/DMARC DNS records it shows — Cloudflare DNS, 5 minutes).
-   - Create an API key (SMTP & API → API keys).
+   - Add **Sender Signature / domain** `ivue.dev` and set the DKIM +
+     Return-Path DNS records it shows (Cloudflare DNS, 5 minutes).
+   - In your server, create a **Broadcasts message stream** (newsletters
+     must not ride the transactional stream — Postmark enforces this).
+     Put its id in `wrangler.jsonc` → `POSTMARK_STREAM` (default id is
+     `broadcasts`).
+   - Copy the **Server API token** (server → API Tokens).
 
 2. **Create the database and apply the schema** (from this directory):
 
@@ -32,7 +36,7 @@ Cadence: one email per subscriber at most every `CADENCE_HOURS` (default
 3. **Secrets:**
 
    ```sh
-   npx wrangler@4.120.1 secret put BREVO_API_KEY
+   npx wrangler@4.120.1 secret put POSTMARK_SERVER_TOKEN
    npx wrangler@4.120.1 secret put ADMIN_SECRET   # long random string
    ```
 
@@ -56,13 +60,12 @@ drip pass instead of waiting for the cron:
 
 ```sh
 curl -X POST "$WORKER/subscribe" -H 'content-type: application/json' \
-  -d '{"name":"Evgeny","email":"you@example.com"}'
-npx wrangler@4.120.1 triggers deploy   # or: dashboard → Trigger cron
+  -d '{"name":"Evgeny","email":"you@ivue.dev"}'
+# dashboard → Workers → ivue-newsletter → Triggers → run cron now
 ```
 
-Check that the email arrives, the **unsubscribe link resolves** (params
-substitution in `htmlContent` — the one Brevo behavior worth an eyeball),
-and the ledger recorded it:
+Check the email arrives in the INBOX (not spam), the unsubscribe link
+works, and the ledger recorded it:
 
 ```sh
 npx wrangler@4.120.1 d1 execute ivue-newsletter --remote \
@@ -88,3 +91,13 @@ The site build emits `https://ivue.dev/blog-index.json`
 slugs, titles, descriptions, dates, sorted oldest-first. Publishing a post
 requires no Worker change: it appears in the index, and everyone who is
 caught up receives it as their next drip email.
+
+## Notes
+
+- Per-message batch outcomes are honored: only `ErrorCode 0` (accepted)
+  writes the ledger; rejected recipients are logged and naturally retried
+  or surfaced. Postmark's own suppression list (hard bounces, spam
+  complaints) blocks on their side in addition to our `unsubscribes`.
+- Subscribers live ONLY in D1 — back up with
+  `npx wrangler@4.120.1 d1 export ivue-newsletter --remote --output=backup.sql`
+  before schema changes.

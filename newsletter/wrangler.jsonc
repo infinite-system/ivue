@@ -1,7 +1,7 @@
-// ivue newsletter Worker — subscribe endpoint, per-subscriber send ledger
+// ivue newsletter Worker — subscribe endpoint, audience + send ledger
 // (D1), and a daily cron that drips the back-catalog oldest-unsent-first.
-// Brevo holds the contact list and delivers the email; this Worker decides
-// who gets what, when — see README.md for the one-time setup.
+// D1 is the audience layer; Postmark delivers the email (broadcast
+// message stream). See README.md for the one-time setup.
 {
   "name": "ivue-newsletter",
   "main": "src/index.mjs",
@@ -25,12 +25,14 @@
     "WORKER_ORIGIN": "https://ivue-newsletter.REPLACE_SUBDOMAIN.workers.dev",
     "SENDER_NAME": "Evgeny from ivue",
     "SENDER_EMAIL": "newsletter@ivue.dev",
-    "BREVO_LIST_ID": "2",
+    // Postmark message stream for bulk mail — MUST be a Broadcasts stream,
+    // never the transactional default ("outbound")
+    "POSTMARK_STREAM": "broadcasts",
     // minimum hours between two emails to the same subscriber (~every other day)
     "CADENCE_HOURS": "40"
   }
   // secrets (set via: npx wrangler@4.120.1 secret put <NAME>):
-  //   BREVO_API_KEY — Brevo → SMTP & API → API keys
-  //   ADMIN_SECRET  — long random string; authorizes /broadcast and signs
-  //                   unsubscribe tokens
+  //   POSTMARK_SERVER_TOKEN — Postmark → your server → API Tokens
+  //   ADMIN_SECRET          — long random string; authorizes /broadcast and
+  //                           signs unsubscribe tokens
 }
