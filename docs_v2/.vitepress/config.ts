@@ -479,7 +479,7 @@ export default defineConfig({
   transformHead({ pageData }) {
     const isHome = pageData.frontmatter.layout === 'home';
     const title = isHome
-      ? 'ivue — class-based reactivity for Vue 3'
+      ? 'ivue — Plain classes. Full reactivity. One kilobyte.'
       : `${pageData.title} — Infinite Vue`;
     const description =
       pageData.description ||

@@ -1,6 +1,7 @@
 ---
 layout: home
-title: 'Plain classes. Full reactivity. One kilobyte.'
+title: 'ivue — Plain classes. Full reactivity. One kilobyte.'
+titleTemplate: false
 description: 'ivue turns native TypeScript classes into fine-grained Vue 3 reactivity. No proxy per instance, no decorators, no component coupling, nothing paid until first access.'
 
 features:
