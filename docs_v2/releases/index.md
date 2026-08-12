@@ -9,10 +9,10 @@ pageClass: releases-index
 
 # Releases
 
-Every release ships its notes in the repository
-([`releases/`](https://github.com/infinite-system/ivue/tree/main/releases)) —
-these pages are generated from them. Install any version with
-`npm i ivue@<version>`.
+Every release ships its notes in the repository — these pages are
+generated from them, and each is mirrored on
+[GitHub Releases](https://github.com/infinite-system/ivue/releases).
+Install any version with `npm i ivue@<version>`.
 
 ## [ivue@2.2.2](/releases/2.2.2) <span class="new-badge">NEW</span> <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.2.2" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-2-2}
 

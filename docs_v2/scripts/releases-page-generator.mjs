@@ -93,10 +93,10 @@ pageClass: releases-index
 
 # Releases
 
-Every release ships its notes in the repository
-([\`releases/\`](https://github.com/infinite-system/ivue/tree/main/releases)) —
-these pages are generated from them. Install any version with
-\`npm i ivue@<version>\`.
+Every release ships its notes in the repository — these pages are
+generated from them, and each is mirrored on
+[GitHub Releases](https://github.com/infinite-system/ivue/releases).
+Install any version with \`npm i ivue@<version>\`.
 
 ${indexEntries
   .map(
