@@ -2181,6 +2181,14 @@ html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
   }
 }
 
+/* release dates: quiet metadata line under each entry / page */
+.vp-doc .release-date {
+  margin: 18px 0 0;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: var(--vp-c-text-3);
+}
 /* GitHub quick links on release pages and the index */
 .vp-doc .release-gh {
   font-size: 13px;
