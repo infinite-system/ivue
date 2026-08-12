@@ -14,7 +14,19 @@ onMounted(() => {
   if (stored === 'cards' || stored === 'list') {
     viewStyle.value = stored;
   }
+  // freshness is judged client-side after mount — no hydration mismatch
+  nowSeconds.value = Math.floor(Date.now() / 1000);
 });
+
+const FRESH_WINDOW_SECONDS = 14 * 86_400;
+const nowSeconds = ref(0);
+
+function isNew(post: { timestamp: number }): boolean {
+  return (
+    nowSeconds.value > 0 &&
+    nowSeconds.value - post.timestamp < FRESH_WINDOW_SECONDS
+  );
+}
 
 function setViewStyle(style: ViewStyle) {
   viewStyle.value = style;
@@ -84,7 +96,7 @@ function formatDate(date: string): string {
         <h2>{{ post.title }}</h2>
         <p class="excerpt">{{ post.excerpt }}</p>
         <div class="foot">
-          <span class="date">{{ formatDate(post.date) }}</span>
+          <span class="date">{{ formatDate(post.date) }}<span v-if="isNew(post)" class="new-badge">NEW</span></span>
           <span class="go">Read the post →</span>
         </div>
       </div>
@@ -105,7 +117,7 @@ function formatDate(date: string): string {
         <h2>{{ post.title }}</h2>
         <p class="excerpt">{{ post.excerpt }}</p>
         <div class="foot">
-          <span class="date">{{ formatDate(post.date) }}</span>
+          <span class="date">{{ formatDate(post.date) }}<span v-if="isNew(post)" class="new-badge">NEW</span></span>
           <span class="go">Read the post →</span>
         </div>
       </div>

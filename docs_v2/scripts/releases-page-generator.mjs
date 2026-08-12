@@ -19,6 +19,17 @@ const notesDirectory = resolve(scriptDirectory, '../../releases');
 const pagesDirectory = resolve(scriptDirectory, '../releases');
 mkdirSync(pagesDirectory, { recursive: true });
 
+// committed release dates (see blog-dates-generator) drive NEW badges,
+// judged against build time — every deploy re-evaluates the window
+const FRESH_WINDOW_SECONDS = 90 * 86_400; // three months
+let releaseDates = {};
+try {
+  releaseDates = JSON.parse(
+    readFileSync(resolve(scriptDirectory, '../releases-dates.json'), 'utf8'),
+  );
+} catch {}
+const nowSeconds = Math.floor(Date.now() / 1000);
+
 const releases = readdirSync(notesDirectory)
   .filter((entry) => /^ivue@\d+\.\d+\.\d+\.md$/.test(entry))
   .map((entry) => {
@@ -83,8 +94,13 @@ these pages are generated from them. Install any version with
 
 ${indexEntries
   .map(
-    ({ version, excerpt }) =>
-      `## [ivue@${version}](/releases/${version}) {#ivue-${version.replaceAll('.', '-')}}\n\n${excerpt}`,
+    ({ version, excerpt }, index) =>
+      `## [ivue@${version}](/releases/${version})${
+        index === 0 &&
+        nowSeconds - (releaseDates[version]?.timestamp ?? 0) < FRESH_WINDOW_SECONDS
+          ? ' <span class="new-badge">NEW</span>'
+          : ''
+      } {#ivue-${version.replaceAll('.', '-')}}\n\n${excerpt}`,
   )
   .join('\n\n')}
 `;

@@ -32,3 +32,25 @@ for (const entry of readdirSync(blogDirectory).sort()) {
 const outputPath = resolve(blogDirectory, 'blog-dates.json');
 writeFileSync(outputPath, JSON.stringify(dates, null, 2) + '\n');
 console.log(`Wrote ${Object.keys(dates).length} post dates to ${outputPath}`);
+
+// Release dates ride the same mechanism: a release's date is the commit
+// that added its note file. Committed for the same shallow-clone reason.
+const notesDirectory = resolve(scriptDirectory, '../../releases');
+const releaseDates = {};
+for (const entry of readdirSync(notesDirectory).sort()) {
+  const match = entry.match(/^ivue@(\d+\.\d+\.\d+)\.md$/);
+  if (!match) continue;
+  const log = execSync(
+    `git log --follow --diff-filter=A --format='%at %as' -- releases/${entry}`,
+    { cwd: repositoryRoot, encoding: 'utf8' },
+  ).trim();
+  const addCommit = log.split('\n').filter(Boolean).pop();
+  if (!addCommit) continue;
+  const [timestamp, date] = addCommit.split(' ');
+  releaseDates[match[1]] = { date, timestamp: Number(timestamp) };
+}
+const releaseOutput = resolve(scriptDirectory, '../releases-dates.json');
+writeFileSync(releaseOutput, JSON.stringify(releaseDates, null, 2) + '\n');
+console.log(
+  `Wrote ${Object.keys(releaseDates).length} release dates to ${releaseOutput}`,
+);

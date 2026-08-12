@@ -3,6 +3,28 @@ import { defineConfig } from 'vitepress';
 
 const deployedCommit = process.env.GITHUB_SHA ?? '';
 
+// Nav NEW badges: lit at build time when the newest post/release is under
+// two weeks old (dates from the committed *-dates.json files).
+const FRESH_WINDOW_SECONDS = 14 * 86_400;
+function newestTimestamp(datesFile: string): number {
+  try {
+    const records = JSON.parse(
+      readFileSync(new URL(datesFile, import.meta.url), 'utf8'),
+    ) as Record<string, { timestamp: number }>;
+    return Math.max(
+      0,
+      ...Object.values(records).map((record) => record.timestamp),
+    );
+  } catch {
+    return 0;
+  }
+}
+const nowSeconds = Math.floor(Date.now() / 1000);
+const hasNewBlog =
+  nowSeconds - newestTimestamp('../blog/blog-dates.json') < FRESH_WINDOW_SECONDS;
+const hasNewRelease =
+  nowSeconds - newestTimestamp('../releases-dates.json') < 90 * 86_400;
+
 // Blog sidebar, generated from the posts themselves: frontmatter titles +
 // git-recovered dates (blog-dates.json), newest first, grouped by month.
 import { readdirSync, readFileSync } from 'node:fs';
@@ -382,6 +404,16 @@ export default defineConfig({
       })();`,
     ],
     ['meta', { name: 'ivue-deployment', content: deployedCommit }],
+    ...((hasNewBlog || hasNewRelease
+      ? [
+          [
+            'script',
+            {},
+            `document.documentElement.dataset.newBlog=${JSON.stringify(hasNewBlog ? '1' : '')};` +
+              `document.documentElement.dataset.newRelease=${JSON.stringify(hasNewRelease ? '1' : '')};`,
+          ],
+        ]
+      : []) as any),
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
     ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32.png' }],
     ['link', { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16.png' }],

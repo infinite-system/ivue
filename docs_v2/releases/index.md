@@ -14,7 +14,7 @@ Every release ships its notes in the repository
 these pages are generated from them. Install any version with
 `npm i ivue@<version>`.
 
-## [ivue@2.2.2](/releases/2.2.2) {#ivue-2-2-2}
+## [ivue@2.2.2](/releases/2.2.2) <span class="new-badge">NEW</span> {#ivue-2-2-2}
 
 Skill release — the engine is byte-identical to 2.2.1; this ships the current Standard Operating Manual to npx ivue skill, which installs the copy bundled with the package.
 

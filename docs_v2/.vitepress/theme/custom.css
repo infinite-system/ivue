@@ -2104,6 +2104,36 @@ a.feature-inline-link {
   border-bottom: none;
 }
 
+/* NEW badges: nav superscripts (lit by build-time data attributes) and
+   the index pill for entries under two weeks old */
+html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog']::after,
+html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
+  content: 'NEW';
+  position: relative;
+  top: -7px;
+  margin-left: 3px;
+  font-size: 8.5px;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  background: linear-gradient(105deg, #818cf8, #2dd4bf 60%, #34d399);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.new-badge {
+  display: inline-block;
+  margin-left: 7px;
+  padding: 1px 7px 2px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  vertical-align: 2px;
+  color: #f4f9ff;
+  background: linear-gradient(105deg, #6366f1, #0d9488);
+  text-shadow: 0 1px 1px rgba(2, 6, 23, 0.35);
+}
+
 /* releases index: version headings are links — paint them like links */
 .releases-index .vp-doc h2 a {
   color: var(--ivue-link-accent);
