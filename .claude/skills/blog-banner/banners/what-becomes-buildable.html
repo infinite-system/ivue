@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(./fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(./fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
+      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      #050a18;
+    font-family: 'Geist', 'DejaVu Sans', 'Inter', sans-serif;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+  }
+  /* five doors, one substrate */
+  .doors {
+    position: absolute; top: 116px; left: 0; width: 1200px;
+    display: flex; justify-content: center; gap: 12px;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+  }
+  .door {
+    padding: 8px 14px; border-radius: 9px; font-size: 15px;
+    white-space: nowrap;
+    color: #8fa8cf;
+    background: rgba(96, 165, 250, 0.10);
+    border: 1px solid rgba(96, 165, 250, 0.32);
+  }
+  .title {
+    position: absolute; top: 240px; width: 1200px; text-align: center;
+    font-size: 76px; font-weight: 750; color: #eaf2ff;
+    text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); letter-spacing: -0.015em;
+  }
+  .title .glow { color: #67e8f9; text-shadow: 0 0 36px rgba(34, 211, 238, 0.8); }
+  .sub {
+    position: absolute; top: 352px; width: 1200px; text-align: center;
+    font-size: 25px; color: #7e9cd0; line-height: 1.55;
+  }
+  .stats {
+    position: absolute; top: 448px; width: 1200px;
+    display: flex; justify-content: center; gap: 18px;
+  }
+  .stat {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 13px 22px; border-radius: 11px;
+    border: 1px solid rgba(96, 165, 250, 0.4);
+  }
+  .stat .n {
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 25px; color: #67e8f9; text-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+  }
+  .stat .l { font-size: 16px; color: #7e9cd0; }
+  .lockup {
+    position: absolute; top: 32px; left: 44px;
+    display: flex; align-items: center; gap: 13px;
+  }
+  .lockup svg { width: 52px; height: 52px; }
+  .lockup .word { display: flex; flex-direction: column; }
+  .lockup .word b {
+    font-size: 29px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.02;
+    background: linear-gradient(105deg, #818cf8, #2dd4bf 60%, #34d399);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lockup .word span {
+    margin-top: 3px; font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.33em; color: #8fa8cf;
+  }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="lockup">
+    <svg viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="lockup-mark" x1="8" y1="14" x2="40" y2="34" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#38BDF8"/><stop offset="0.5" stop-color="#2DD4BF"/><stop offset="1" stop-color="#34D399"/>
+        </linearGradient>
+      </defs>
+      <rect width="48" height="48" rx="12" fill="#0D1226"/>
+      <rect x="0.5" y="0.5" width="47" height="47" rx="11.5" stroke="white" stroke-opacity="0.08"/>
+      <path d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z" stroke="url(#lockup-mark)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="word"><b>ivue</b><span>INFINITE VUE</span></span>
+  </div>
+  <div class="doors">
+    <span class="door">whole-dataset apps</span>
+    <span class="door">live-modified software</span>
+    <span class="door">agent-operable apps</span>
+    <span class="door">reactive control planes</span>
+    <span class="door">rot-proof architecture</span>
+  </div>
+  <div class="title">What becomes <span class="glow">buildable</span></div>
+  <div class="sub">frameworks made views cheap — ivue makes models cheap:<br/>big, long-lived, and legible from outside</div>
+  <div class="stats">
+    <div class="stat"><span class="n">20M</span><span class="l">cells in one tab</span></div>
+    <div class="stat"><span class="n">let Class</span><span class="l">swapped while running</span></div>
+    <div class="stat"><span class="n">the model</span><span class="l">is the machine API</span></div>
+    <div class="stat"><span class="n">0</span><span class="l">rot, by contract</span></div>
+  </div>
+</body>
+</html>
