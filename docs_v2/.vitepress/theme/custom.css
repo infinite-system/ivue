@@ -2185,6 +2185,7 @@ html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
 .vp-doc .release-head {
   display: flex;
   align-items: baseline;
+  justify-content: space-between;
   gap: 14px;
   margin: 14px 0 0;
 }
