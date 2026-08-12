@@ -566,6 +566,7 @@ export default defineConfig({
       { text: 'Standard', link: '/guide/standard', activeMatch: '/guide/standard' },
       { text: 'API', link: '/api/', activeMatch: '/api/' },
       { text: 'Blog', link: '/blog/', activeMatch: '/blog/' },
+      { text: 'Releases', link: '/releases', activeMatch: '/releases' },
       { text: 'Community', link: '/community', activeMatch: '/community' },
     ],
 
