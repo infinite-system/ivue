@@ -14,22 +14,22 @@ Every release ships its notes in the repository
 these pages are generated from them. Install any version with
 `npm i ivue@<version>`.
 
-## [ivue@2.2.2](/releases/2.2.2) <span class="new-badge">NEW</span> {#ivue-2-2-2}
+## [ivue@2.2.2](/releases/2.2.2) <span class="new-badge">NEW</span> <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.2.2" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-2-2}
 
 Skill release — the engine is byte-identical to 2.2.1; this ships the current Standard Operating Manual to npx ivue skill, which installs the copy bundled with the package.
 
-## [ivue@2.2.1](/releases/2.2.1) {#ivue-2-2-1}
+## [ivue@2.2.1](/releases/2.2.1) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.2.1" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-2-1}
 
 Same-day fixes from field evidence against 2.2.0, reported by the first production consumer.
 
-## [ivue@2.2.0](/releases/2.2.0) {#ivue-2-2-0}
+## [ivue@2.2.0](/releases/2.2.0) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.2.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-2-0}
 
 ivue 2.2 teaches Static() — the stateless sibling of Reactive(), from the ivue/extras entry — a second member transform: get-only static accessors named $… become compute-once-per-receiver caches.
 
-## [ivue@2.1.0](/releases/2.1.0) {#ivue-2-1-0}
+## [ivue@2.1.0](/releases/2.1.0) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.1.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-1-0}
 
 ivue 2.1 adds a second package entry, ivue/extras — the toolkit beyond the reactive core. The primary ivue entry stays the bare 1.1 kB engine; extras are paid for only by the code that imports them.
 
-## [ivue@2.0.0](/releases/2.0.0) {#ivue-2-0-0}
+## [ivue@2.0.0](/releases/2.0.0) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.0.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-0-0}
 
 ivue 2.0 is a ground-up rewrite. Reactive(Class) transforms a class's prototype in place — once, idempotently — and returns the same constructor. Instances are plain JavaScript objects: no proxies, no wrappers, no per-instance machinery. State materializes lazily on first access, and everything the engine does fits in 1.1 kB gzipped.

@@ -2160,6 +2160,24 @@ html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
   }
 }
 
+/* GitHub quick links on release pages and the index */
+.vp-doc .release-gh {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ivue-link-accent);
+  text-decoration: none;
+}
+.vp-doc .release-gh:hover {
+  color: var(--ivue-link-hover-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.vp-doc h2 .release-gh--right {
+  float: right;
+  margin-top: 6px;
+  letter-spacing: 0;
+}
+
 /* releases index: version headings are links — paint them like links */
 .releases-index .vp-doc h2 a {
   color: var(--ivue-link-accent);
