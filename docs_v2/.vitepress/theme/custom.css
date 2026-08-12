@@ -2181,6 +2181,17 @@ html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
   }
 }
 
+/* release page head: GitHub link and date on one line under the title */
+.vp-doc .release-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 14px 0 0;
+}
+.vp-doc .release-head .release-date {
+  margin: 0;
+}
+
 /* release dates: quiet metadata line under each entry / page */
 .vp-doc .release-date {
   margin: 18px 0 0;

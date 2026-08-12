@@ -74,12 +74,14 @@ for (const { version, file } of releases) {
   indexEntries.push({ version, excerpt });
 
   const githubUrl = `https://github.com/infinite-system/ivue/releases/tag/ivue%40${version}`;
-  // the GitHub link rides directly under the h1
+  const releasedOn = formatReleaseDate(version);
+  // GitHub link + release date ride directly under the h1
   const withGithub = linked.replace(
     /^(# .+)$/m,
-    `$1\n\n<a class="release-gh" href="${githubUrl}" target="_blank" rel="noreferrer">View on GitHub ↗</a>`,
+    `$1\n\n<p class="release-head"><a class="release-gh" href="${githubUrl}" target="_blank" rel="noreferrer">View on GitHub ↗</a>${
+      releasedOn ? `<span class="release-date">Released ${releasedOn}</span>` : ''
+    }</p>`,
   );
-  const releasedOn = formatReleaseDate(version);
   const page = `---
 title: 'ivue@${version}'
 description: 'Release notes for ivue ${version}.'
@@ -92,7 +94,6 @@ pageClass: release-page
 <a class="blog-back" href="/releases/"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:15px;height:15px"><path fill="currentColor" d="m10.8 12 4.9-4.9-1.4-1.4L8 12l6.3 6.3 1.4-1.4-4.9-4.9Z"/></svg>Back to Releases</a>
 
 ${withGithub}
-${releasedOn ? `\n<p class="release-date">Released ${releasedOn}</p>` : ''}
 `;
   writeFileSync(`${pagesDirectory}/${version}.md`, page);
 }
