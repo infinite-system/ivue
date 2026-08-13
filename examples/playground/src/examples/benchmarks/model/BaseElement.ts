@@ -1,4 +1,4 @@
-import { computed as $, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Reactive } from '../../../ivue';
 
 class $BaseElement {
@@ -13,7 +13,7 @@ class $BaseElement {
 
   // A computed property that will be overridden by children
   get diagnosticSummary() {
-    return $(() => `[Base: ${this.tag.value} (Op: ${this.opacity.value})]`);
+    return computed(() => `[Base: ${this.tag.value} (Op: ${this.opacity.value})]`);
   }
 
   // A basic update method

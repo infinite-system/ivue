@@ -1,4 +1,4 @@
-import { computed as $, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Reactive, type ReactiveInstance } from '../../lib/Reactive';
 
 /**
@@ -20,7 +20,7 @@ class $WatchModel {
 
   // --- two-way computed: editing °F updates °C ---
   get fahrenheit() {
-    return $({
+    return computed({
       get: () => Math.round((this.celsius.value * 9) / 5 + 32),
       set: (f: number) => {
         this.celsius.value = Math.round(((f - 32) * 5) / 9);
@@ -30,7 +30,7 @@ class $WatchModel {
 
   // --- derived classification (read-only computed) ---
   get status() {
-    return $(() => {
+    return computed(() => {
       const c = this.celsius.value;
       if (c <= 0) return { text: 'Freezing', color: 'sky' };
       if (c < 18) return { text: 'Cold', color: 'blue' };

@@ -1,5 +1,5 @@
 import { useMouse } from '@vueuse/core';
-import { computed as $, ref, shallowRef } from 'vue';
+import { computed, ref, shallowRef } from 'vue';
 import { Reactive } from '../../../ivue';
 import { Container, GlobalTheme } from './Container';
 
@@ -46,12 +46,12 @@ class $InteractiveBox extends Container.$Class {
 
   // 1. New Computed: Calculates geometry
   get area() {
-    return $(() => this.width.value * this.height.value);
+    return computed(() => this.width.value * this.height.value);
   }
 
   // 2. Override Computed: Chains up to Container -> BaseElement
   get diagnosticSummary() {
-    return $(
+    return computed(
       () =>
         `[Box #${this.id} Area:${this.area.value}] >> ` +
         super.diagnosticSummary.value
@@ -60,7 +60,7 @@ class $InteractiveBox extends Container.$Class {
 
   // 3. Complex Computed: reactive setter/getter example
   get label() {
-    return $({
+    return computed({
       get: () => `Box-${this.id} (${this.width.value}x${this.height.value})`,
       set: (val: string) => {
         // Reverse logic: parsing a string to set width (just for demo)

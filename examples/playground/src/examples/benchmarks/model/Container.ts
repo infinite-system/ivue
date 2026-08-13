@@ -1,4 +1,4 @@
-import { computed as $, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Reactive } from '../../../ivue';
 import { BaseElement } from './BaseElement';
 
@@ -35,7 +35,7 @@ class $Container extends BaseElement.$Class {
   // INHERITANCE TEST: Overriding the computed property
   // We explicitly call `super.diagnosticSummary.value` to ensure reactivity travels up the chain
   get diagnosticSummary() {
-    return $(
+    return computed(
       () =>
         `{Container: pad=${this.padding.value}} >> ` +
         super.diagnosticSummary.value
@@ -44,7 +44,7 @@ class $Container extends BaseElement.$Class {
 
   // A computed derived from local state
   get layoutString() {
-    return $(
+    return computed(
       () => `Display: ${this.layoutMode.value} | Scale: ${this.scale.value}`
     );
   }
