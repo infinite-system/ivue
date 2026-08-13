@@ -52,6 +52,25 @@ all it memoizes is trivial math.
 ivue stores derivations once, on the prototype, as plain getters. An instance
 holds only the Refs it has actually materialized.
 
+The floor of that claim is measurable at creation time, before anything
+is read. A freshly constructed instance owns nothing but its constructor-
+assigned fields — every getter, computed, and method is shared prototype
+structure, paid once per class. 100,000 bare `{ id }` object literals
+against 100,000 instances of
+[InteractiveBox](/blog/one-kilobyte-feature#the-model-behind-the-benchmark),
+the three-level reactive hierarchy from the creation benchmark (heap
+delta after GC, Node 26 with `--expose-gc`, stable across runs):
+
+| 100,000 of…                          | heap    | per instance |
+| ------------------------------------ | ------- | ------------ |
+| `{ id }` object literal              | 3.04 MB | 31.9 bytes   |
+| `new InteractiveBox.Class({ id })`   | 3.08 MB | 32.2 bytes   |
+
+**1.01×** a bare object literal — the entire hierarchy's members cost
+zero bytes per instance until first access. The numbers below measure
+the other end: instances *live and observed*, refs materialized,
+dependencies subscribed.
+
 Measured on Vue 3.5 (Node 22, gc-forced heap deltas, 100,000 instances
 retained) with an identical shape — 10 state refs, 30 trivial derivations —
 and every instance **observed**: its full read pass runs inside its own
