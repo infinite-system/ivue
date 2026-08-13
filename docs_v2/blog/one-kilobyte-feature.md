@@ -26,134 +26,6 @@ a design weighs after you stop paying for machinery it never needed:
 - No second development engine — local work exercises the same class identity,
   native construction, and direct method binding as production.
 
-## The kilobyte, feature by feature
-
-Every capability in that opening sentence is code you can point to. Here
-is one small telemetry domain exercising all of them — lazy state,
-derived values, method binding, inheritance with `super`, an outliving
-singleton with `$watch` and teardown, and the component wiring:
-
-::: code-group
-
-```ts [src/telemetry/Sensor.ts]
-import { Reactive } from 'ivue';
-import { ref } from 'vue';
-
-class $Sensor {
-  // MUTABLE STATE — a ref-getter. Nothing allocates at `new`; the Ref
-  // materializes on FIRST ACCESS and is cached per instance from then on.
-  get reading() {
-    return ref(0);
-  }
-
-  // DERIVED — a plain getter. Zero bytes per instance, fully reactive
-  // through leaf tracking. No computed() unless the work is expensive.
-  get isCritical() {
-    return this.reading.value > this.threshold;
-  }
-
-  // CONSTANT — plain field. Never mutable state.
-  threshold = 100;
-
-  // METHOD — engine-bound once, on the prototype. Stable identity: safe
-  // to pass as an event handler, compare, or unbind.
-  record(value: number) {
-    this.reading.value = value;
-  }
-}
-
-export namespace Sensor {
-  export const $Class = $Sensor; // raw — children `extends` this
-  export const Class = Reactive($Class); // reactive — you `new` this
-  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
-}
-```
-
-```ts [src/telemetry/PressureSensor.ts]
-import { Reactive } from 'ivue';
-import { Sensor } from './Sensor';
-
-// Native inheritance — extend the RAW class, keep `super`, stay reactive.
-// The engine transforms each prototype level exactly once.
-class $PressureSensor extends Sensor.$Class {
-  record(value: number) {
-    // clamp physically impossible spikes, then delegate up
-    super.record(Math.min(value, this.threshold * 2));
-  }
-}
-
-export namespace PressureSensor {
-  export const $Class = $PressureSensor;
-  export const Class = Reactive($Class);
-  export type Instance = typeof Class.Instance;
-}
-```
-
-```ts [src/telemetry/telemetry.ts]
-import { Reactive } from 'ivue';
-import { PressureSensor } from './PressureSensor';
-
-// A module singleton OUTLIVES every component — so its watcher lives in
-// the instance's own lazy effect scope, not in any component's.
-class $Telemetry {
-  sensor = new PressureSensor.Class();
-
-  constructor() {
-    this.$watch(
-      () => this.sensor.isCritical,
-      (isCritical: boolean) => this.onCriticalChange(isCritical),
-    );
-  }
-
-  // $stopEffects() calls this hook first — non-Vue cleanup goes here.
-  stopEffects() {
-    this.disconnect();
-  }
-
-  onCriticalChange(isCritical: boolean) {
-    /* page the operator */
-  }
-
-  disconnect() {
-    /* close the feed */
-  }
-}
-
-export namespace Telemetry {
-  export const $Class = $Telemetry;
-  export const Class = Reactive($Class);
-  export type Instance = typeof Class.Instance;
-}
-
-export const telemetry = new Telemetry.Class();
-// whoever owns the lifetime disposes it: telemetry.$stopEffects()
-```
-
-```vue [src/components/SensorPanel.vue]
-<script setup lang="ts">
-import { PressureSensor } from '../telemetry/PressureSensor';
-
-// ONE raw instance — no reactive() wrapper, no unwrap view.
-const sensor = new PressureSensor.Class();
-
-// Each destructured binding IS the cached Ref — stable identity,
-// compiler-unwrapped in every template position.
-const { reading } = sensor;
-</script>
-
-<template>
-  <p :class="{ critical: sensor.isCritical }">{{ reading }} kPa</p>
-  <button @click="sensor.record(reading + 5)">pulse</button>
-</template>
-```
-
-:::
-
-Four files, the whole feature list, and nothing imported but `Reactive`
-and `ref`. The engine behind every line of it — the prototype transform,
-the per-instance cell cache, the binding, the scopes — is the 1,120
-bytes.
-
 What a kilobyte buys you in practice is **auditability**. You can read
 the entire engine before lunch and know — not trust, *know* — what
 happens on every property access of every instance you create. When
@@ -164,14 +36,222 @@ Zero dependencies extends the same property down the supply chain: there
 is no transitive tree to audit, no lockfile churn, no upgrade that breaks
 you from three levels below. The engine you read today is the engine that
 runs next year. And the runtime consequences fall out of the same
-subtraction:
+subtraction.
+
+## The model behind the benchmark
+
+The benchmark below creates 100,000 instances — so here is exactly what
+it creates, in full. `InteractiveBox` is a three-level `Reactive()`
+hierarchy: reactive state at every level, `computed()` overrides that
+chain through `super`, a writable computed, a hosted `useMouse()`
+composable, and shared global state. These are the benchmark's actual
+source files (`$` is `computed`, aliased):
+
+::: code-group
+
+```ts [model/BaseElement.ts]
+import { computed as $, ref } from 'vue';
+import { Reactive } from 'ivue';
+
+class $BaseElement {
+  // A simple reactive state for the base element
+  get opacity() {
+    return ref(1.0);
+  }
+
+  get tag() {
+    return ref('div');
+  }
+
+  // A computed property that will be overridden by children
+  get diagnosticSummary() {
+    return $(() => `[Base: ${this.tag.value} (Op: ${this.opacity.value})]`);
+  }
+
+  // A basic update method
+  refreshState() {
+    this.opacity.value = parseFloat(Math.random().toFixed(2));
+  }
+
+  // A getter to test static inheritance chains
+  get typeChain() {
+    return 'BaseElement';
+  }
+}
+
+export namespace BaseElement {
+  export const $Class = $BaseElement; // raw — children `extends` this
+  export let Class = Reactive($Class); // reactive — you `new` this
+  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
+}
+```
+
+```ts [model/Container.ts]
+import { computed as $, ref, watch } from 'vue';
+import { Reactive } from 'ivue';
+import { BaseElement } from './BaseElement';
+
+// A shared global state (simulating global config)
+export const GlobalTheme = ref({
+  primaryColor: 'blue',
+  scaleFactor: 1.0,
+});
+
+class $Container extends BaseElement.$Class {
+  get padding() {
+    return ref(10);
+  }
+
+  get scale() {
+    return ref(1);
+  }
+
+  get layoutMode() {
+    return ref('flex');
+  }
+
+  // INHERITANCE: overriding the computed — `super.diagnosticSummary.value`
+  // carries reactivity up the chain
+  get diagnosticSummary() {
+    return $(
+      () =>
+        `{Container: pad=${this.padding.value}} >> ` +
+        super.diagnosticSummary.value
+    );
+  }
+
+  // A computed derived from local state
+  get layoutString() {
+    return $(
+      () => `Display: ${this.layoutMode.value} | Scale: ${this.scale.value}`
+    );
+  }
+
+  // Overriding the update method
+  refreshState() {
+    super.refreshState();
+    this.padding.value = Math.floor(Math.random() * 50);
+    this.scale.value = parseFloat((Math.random() * 2).toFixed(2));
+    this.layoutMode.value = Math.random() > 0.5 ? 'grid' : 'flex';
+  }
+
+  get typeChain() {
+    return super.typeChain + ' -> Container';
+  }
+}
+
+export namespace Container {
+  export const $Class = $Container;
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+}
+```
+
+```ts [model/InteractiveBox.ts]
+import { useMouse } from '@vueuse/core';
+import { computed as $, ref, shallowRef } from 'vue';
+import { Reactive } from 'ivue';
+import { Container, GlobalTheme } from './Container';
+
+class $InteractiveBox extends Container.$Class {
+  id: number;
+
+  constructor(props: { id: number }) {
+    super();
+    this.id = props.id;
+  }
+
+  // Hosted composable — the private getter caches the hook per instance
+  private get $mouse() {
+    return useMouse();
+  }
+
+  get mouseX() {
+    return this.$mouse.x;
+  }
+  get mouseY() {
+    return this.$mouse.y;
+  }
+
+  get width() {
+    return ref(100);
+  }
+
+  get height() {
+    return ref(100);
+  }
+
+  get depth() {
+    return shallowRef(10);
+  }
+
+  // Accessing the imported global state
+  get globalTheme() {
+    return GlobalTheme;
+  }
+
+  get area() {
+    return $(() => this.width.value * this.height.value);
+  }
+
+  // Override chains up: InteractiveBox -> Container -> BaseElement
+  get diagnosticSummary() {
+    return $(
+      () =>
+        `[Box #${this.id} Area:${this.area.value}] >> ` +
+        super.diagnosticSummary.value
+    );
+  }
+
+  // Writable computed: get + set paired on one member
+  get label() {
+    return $({
+      get: () => `Box-${this.id} (${this.width.value}x${this.height.value})`,
+      set: (val: string) => {
+        const num = parseInt(val.replace(/\D/g, ''));
+        if (!isNaN(num)) this.width.value = num;
+      },
+    });
+  }
+
+  refreshState() {
+    super.refreshState(); // updates Base opacity, Container padding
+    this.width.value = Math.floor(Math.random() * 500);
+    this.height.value = Math.floor(Math.random() * 500);
+    return true;
+  }
+
+  // The method benchmark hammers this: reactive reads inside math
+  calculatePhysics() {
+    return Math.sqrt(
+      Math.pow(this.width.value, 2) + Math.pow(this.height.value, 2)
+    ) * Math.random();
+  }
+
+  get typeChain() {
+    return super.typeChain + ' -> InteractiveBox';
+  }
+}
+
+export namespace InteractiveBox {
+  export const $Class = $InteractiveBox;
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+}
+```
+
+:::
+
+Three levels, ~200 lines, nothing toy about it. Now create 100,000 of
+them:
 
 <CreationBench />
 
-That's a real three-level class hierarchy hosting a composable —
-instantiated 100,000 times in a few milliseconds, because creating an
-ivue instance is a plain `new` that allocates one object and nothing
-else.
+Every `new InteractiveBox.Class({ id })` allocates one plain object and
+nothing else — no proxy, no eager cells, no scheduler. The refs, the
+computeds, and the composable all materialize later, if and when
+something reads them. That is why creation is measured in milliseconds:
+the work simply isn't there.
 
 > Perfection is achieved, not when there is nothing more to add, but when
 > there is nothing left to take away.
