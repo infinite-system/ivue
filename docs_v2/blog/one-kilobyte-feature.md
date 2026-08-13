@@ -49,104 +49,6 @@ source files (`$` is `computed`, aliased):
 
 ::: code-group
 
-```ts [model/BaseElement.ts]
-import { computed as $, ref } from 'vue';
-import { Reactive } from 'ivue';
-
-class $BaseElement {
-  // A simple reactive state for the base element
-  get opacity() {
-    return ref(1.0);
-  }
-
-  get tag() {
-    return ref('div');
-  }
-
-  // A computed property that will be overridden by children
-  get diagnosticSummary() {
-    return $(() => `[Base: ${this.tag.value} (Op: ${this.opacity.value})]`);
-  }
-
-  // A basic update method
-  refreshState() {
-    this.opacity.value = parseFloat(Math.random().toFixed(2));
-  }
-
-  // A getter to test static inheritance chains
-  get typeChain() {
-    return 'BaseElement';
-  }
-}
-
-export namespace BaseElement {
-  export const $Class = $BaseElement; // raw — children `extends` this
-  export let Class = Reactive($Class); // reactive — you `new` this
-  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
-}
-```
-
-```ts [model/Container.ts]
-import { computed as $, ref, watch } from 'vue';
-import { Reactive } from 'ivue';
-import { BaseElement } from './BaseElement';
-
-// A shared global state (simulating global config)
-export const GlobalTheme = ref({
-  primaryColor: 'blue',
-  scaleFactor: 1.0,
-});
-
-class $Container extends BaseElement.$Class {
-  get padding() {
-    return ref(10);
-  }
-
-  get scale() {
-    return ref(1);
-  }
-
-  get layoutMode() {
-    return ref('flex');
-  }
-
-  // INHERITANCE: overriding the computed — `super.diagnosticSummary.value`
-  // carries reactivity up the chain
-  get diagnosticSummary() {
-    return $(
-      () =>
-        `{Container: pad=${this.padding.value}} >> ` +
-        super.diagnosticSummary.value
-    );
-  }
-
-  // A computed derived from local state
-  get layoutString() {
-    return $(
-      () => `Display: ${this.layoutMode.value} | Scale: ${this.scale.value}`
-    );
-  }
-
-  // Overriding the update method
-  refreshState() {
-    super.refreshState();
-    this.padding.value = Math.floor(Math.random() * 50);
-    this.scale.value = parseFloat((Math.random() * 2).toFixed(2));
-    this.layoutMode.value = Math.random() > 0.5 ? 'grid' : 'flex';
-  }
-
-  get typeChain() {
-    return super.typeChain + ' -> Container';
-  }
-}
-
-export namespace Container {
-  export const $Class = $Container;
-  export let Class = Reactive($Class);
-  export type Instance = typeof Class.Instance;
-}
-```
-
 ```ts [model/InteractiveBox.ts]
 import { useMouse } from '@vueuse/core';
 import { computed as $, ref, shallowRef } from 'vue';
@@ -237,6 +139,104 @@ export namespace InteractiveBox {
   export const $Class = $InteractiveBox;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
+}
+```
+
+```ts [model/Container.ts]
+import { computed as $, ref, watch } from 'vue';
+import { Reactive } from 'ivue';
+import { BaseElement } from './BaseElement';
+
+// A shared global state (simulating global config)
+export const GlobalTheme = ref({
+  primaryColor: 'blue',
+  scaleFactor: 1.0,
+});
+
+class $Container extends BaseElement.$Class {
+  get padding() {
+    return ref(10);
+  }
+
+  get scale() {
+    return ref(1);
+  }
+
+  get layoutMode() {
+    return ref('flex');
+  }
+
+  // INHERITANCE: overriding the computed — `super.diagnosticSummary.value`
+  // carries reactivity up the chain
+  get diagnosticSummary() {
+    return $(
+      () =>
+        `{Container: pad=${this.padding.value}} >> ` +
+        super.diagnosticSummary.value
+    );
+  }
+
+  // A computed derived from local state
+  get layoutString() {
+    return $(
+      () => `Display: ${this.layoutMode.value} | Scale: ${this.scale.value}`
+    );
+  }
+
+  // Overriding the update method
+  refreshState() {
+    super.refreshState();
+    this.padding.value = Math.floor(Math.random() * 50);
+    this.scale.value = parseFloat((Math.random() * 2).toFixed(2));
+    this.layoutMode.value = Math.random() > 0.5 ? 'grid' : 'flex';
+  }
+
+  get typeChain() {
+    return super.typeChain + ' -> Container';
+  }
+}
+
+export namespace Container {
+  export const $Class = $Container;
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+}
+```
+
+```ts [model/BaseElement.ts]
+import { computed as $, ref } from 'vue';
+import { Reactive } from 'ivue';
+
+class $BaseElement {
+  // A simple reactive state for the base element
+  get opacity() {
+    return ref(1.0);
+  }
+
+  get tag() {
+    return ref('div');
+  }
+
+  // A computed property that will be overridden by children
+  get diagnosticSummary() {
+    return $(() => `[Base: ${this.tag.value} (Op: ${this.opacity.value})]`);
+  }
+
+  // A basic update method
+  refreshState() {
+    this.opacity.value = parseFloat(Math.random().toFixed(2));
+  }
+
+  // A getter to test static inheritance chains
+  get typeChain() {
+    return 'BaseElement';
+  }
+}
+
+export namespace BaseElement {
+  export const $Class = $BaseElement; // raw — children `extends` this
+  export let Class = Reactive($Class); // reactive — you `new` this
+  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 }
 ```
 
