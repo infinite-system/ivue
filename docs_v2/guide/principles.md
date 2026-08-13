@@ -102,8 +102,9 @@ native classes. See [Inheritance](/guide/inheritance).
 ## Teardown is scope-based
 
 `$watch` registers watchers in a **lazily-created** per-instance effect scope;
-`$stopEffects` stops that scope, runs an optional `stopEffects()` hook, and clears
-the caches. Instances that never `$watch` allocate no scope — teardown stays
+`$stopEffects` stops that scope and clears the caches — ivue never calls your
+code, so richer cleanup is an ordinary method that ends with `$stopEffects()`.
+Instances that never `$watch` allocate no scope — teardown stays
 pay-for-what-you-use. See [Lifecycle & Teardown](/guide/lifecycle-teardown).
 
 ---

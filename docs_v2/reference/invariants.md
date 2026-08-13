@@ -133,15 +133,16 @@ or the wrong layer); a parent and child sharing a name clobbering each other's c
 
 ### Deterministic teardown
 
-> The engine installs two helpers per class, once: `$watch` registers watchers in a
-> lazily-created per-instance effect scope, and `$stopEffects()` stops that scope,
-> runs a user `stopEffects()` hook, and drops every cached Ref/Computed.
+> The engine installs three helpers per class, once: `$watch` and `$watchEffect`
+> register watchers in a lazily-created per-instance effect scope, and
+> `$stopEffects()` stops that scope and drops every cached Ref/Computed.
 
 `$watch` does `(raw[SCOPE] ??= effectScope(true)).run(() => watch(...))` — the scope
-exists only after the first `$watch`. `$stopEffects` runs your hook, stops the scope
-if there is one, then deletes every cache symbol (keeping the `RAW` anchor).
-Re-accessing a member afterward re-materializes it fresh, and **instances that never
-`$watch` allocate no scope at all**.
+exists only after the first `$watch`. `$stopEffects` stops the scope if there is
+one, then deletes every cache symbol (keeping the `RAW` anchor). It calls no user
+code — richer cleanup is an ordinary method that does its own work and then calls
+`$stopEffects()` itself. Re-accessing a member afterward re-materializes it fresh,
+and **instances that never `$watch` allocate no scope at all**.
 
 Why a scope and not `effect.stop()`: in Vue 3.5+ `computed().effect.stop` is gone,
 and refs / lazy-computeds are collected once dereferenced. The only thing that
