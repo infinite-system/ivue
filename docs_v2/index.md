@@ -8,7 +8,7 @@ features:
   - title: Native class API
     details: extends, super, getters, setters, private fields. Real inheritance, encapsulation and polymorphism, all reactive.
   - title: Zero-cost creation
-    details: Instances are plain objects — 1.01× the memory of a bare literal at creation. A million of them take 22 ms — 6 to 132× faster than the alternatives. &nbsp;<a class="feature-inline-link" href="/guide/performance">Performance by Design&nbsp;→</a>
+    details: Instances are plain objects. A million of them take 22 ms — 6 to 132× faster than the alternatives. &nbsp;<a class="feature-inline-link" href="/guide/performance">Performance by Design&nbsp;→</a>
   - title: One kilobyte
     details: 1.1kb gzipped. Zero dependencies. 100% test coverage. Stripped to the load-bearing core — an API you can hold in your head.
   - title: Store or ViewModel
