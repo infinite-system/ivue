@@ -51,7 +51,7 @@ source files (`$` is `computed`, aliased):
 
 ```ts [model/InteractiveBox.ts]
 import { useMouse } from '@vueuse/core';
-import { computed as $, ref, shallowRef } from 'vue';
+import { computed, ref, shallowRef } from 'vue';
 import { Reactive } from 'ivue';
 import { Container, GlobalTheme } from './Container';
 
@@ -93,12 +93,12 @@ class $InteractiveBox extends Container.$Class {
   }
 
   get area() {
-    return $(() => this.width.value * this.height.value);
+    return computed(() => this.width.value * this.height.value);
   }
 
   // Override chains up: InteractiveBox -> Container -> BaseElement
   get diagnosticSummary() {
-    return $(
+    return computed(
       () =>
         `[Box #${this.id} Area:${this.area.value}] >> ` +
         super.diagnosticSummary.value
@@ -107,7 +107,7 @@ class $InteractiveBox extends Container.$Class {
 
   // Writable computed: get + set paired on one member
   get label() {
-    return $({
+    return computed({
       get: () => `Box-${this.id} (${this.width.value}x${this.height.value})`,
       set: (val: string) => {
         const num = parseInt(val.replace(/\D/g, ''));
@@ -143,7 +143,7 @@ export namespace InteractiveBox {
 ```
 
 ```ts [model/Container.ts]
-import { computed as $, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Reactive } from 'ivue';
 import { BaseElement } from './BaseElement';
 
@@ -169,7 +169,7 @@ class $Container extends BaseElement.$Class {
   // INHERITANCE: overriding the computed — `super.diagnosticSummary.value`
   // carries reactivity up the chain
   get diagnosticSummary() {
-    return $(
+    return computed(
       () =>
         `{Container: pad=${this.padding.value}} >> ` +
         super.diagnosticSummary.value
@@ -178,7 +178,7 @@ class $Container extends BaseElement.$Class {
 
   // A computed derived from local state
   get layoutString() {
-    return $(
+    return computed(
       () => `Display: ${this.layoutMode.value} | Scale: ${this.scale.value}`
     );
   }
@@ -204,7 +204,7 @@ export namespace Container {
 ```
 
 ```ts [model/BaseElement.ts]
-import { computed as $, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Reactive } from 'ivue';
 
 class $BaseElement {
@@ -219,7 +219,7 @@ class $BaseElement {
 
   // A computed property that will be overridden by children
   get diagnosticSummary() {
-    return $(() => `[Base: ${this.tag.value} (Op: ${this.opacity.value})]`);
+    return computed(() => `[Base: ${this.tag.value} (Op: ${this.opacity.value})]`);
   }
 
   // A basic update method
