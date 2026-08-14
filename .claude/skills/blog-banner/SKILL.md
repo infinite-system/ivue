@@ -61,6 +61,16 @@ edited, only replaced.
   a claim plus at most one supporting line. Numbers only if they are
   the post's headline numbers. If the banner shows code, the code
   must be valid ivue-standard code (namespace pattern, real API).
+- **Lockup clear zone**: the brand lockup
+  (`brand-lockup-dark.png`, 178px wide at `top: 34; left: 44`) owns
+  the top-left corner — its box runs to roughly `y = 96`. No content
+  may overlap that box, and the FIRST content row below it (motif
+  pills, terminal window, anything) starts at `top: 116px` or lower,
+  so the logo always keeps ≥ 20px of clear air beneath it. Content
+  that sits beside the logo (right of `x ≈ 260`) may ride higher, but
+  never closer than 20px to the lockup's edge. When checking the
+  rendered PNG, the logo touching or crowding content is a fail —
+  re-offset and re-render.
 
 ## Verification loop (mandatory)
 
