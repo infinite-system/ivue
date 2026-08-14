@@ -589,13 +589,13 @@ export default defineConfig({
           { text: 'Design & Philosophy', link: '/guide/design' },
           { text: 'Fundamental Principles', link: '/guide/principles' },
           { text: 'Standard Operating Manual', link: '/guide/standard' },
-          { text: 'API Reference', link: '/api/' },
           {
             text: 'Sections',
             items: [
               { text: 'Core — Reactive State', link: '/guide/state' },
               { text: 'Performance — ivue vs the World', link: '/guide/model-layer' },
               { text: 'Advanced Patterns — Namespace', link: '/guide/namespace-pattern' },
+              { text: 'Reference — API', link: '/api/' },
             ],
           },
         ],
