@@ -2468,6 +2468,25 @@ html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
   margin: 8px 0 8px;
 }
 
+/* While a lazy image is in flight its reserved box shows the ivue mark
+   as a loader: the infinity turns 90° clockwise per beat (infinity → 8 →
+   infinity), each landing emphasized with a small overshoot spring. The
+   loaded banner is opaque and covers the background entirely, so the
+   loader needs no teardown. */
+.vp-doc img[src*='/blog/'][loading='lazy'],
+.blog-index img[loading='lazy'] {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M10.6 24 C10.6 17.6 19 17 24 24 C29 31 37.4 30.4 37.4 24 C37.4 17.6 29 17 24 24 C19 31 10.6 30.4 10.6 24 Z' fill='none' stroke='%236366f1' stroke-width='2.6' stroke-linecap='round'%3E%3CanimateTransform attributeName='transform' type='rotate' values='0 24 24;97 24 24;90 24 24;90 24 24;187 24 24;180 24 24;180 24 24;277 24 24;270 24 24;270 24 24;367 24 24;360 24 24;360 24 24' keyTimes='0;0.1;0.14;0.25;0.35;0.39;0.5;0.6;0.64;0.75;0.85;0.89;1' dur='2.8s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E")
+      center / 76px 76px no-repeat,
+    var(--vp-c-bg-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vp-doc img[src*='/blog/'][loading='lazy'],
+  .blog-index img[loading='lazy'] {
+    background-image: none;
+  }
+}
+
 /* ---------- Benchmark winner key ---------- */
 .VPDoc .benchmark-legend {
   display: flex;
