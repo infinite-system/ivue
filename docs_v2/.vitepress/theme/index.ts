@@ -58,6 +58,16 @@ export default {
     registerDocsApp(app); // field embeds install Quasar lazily
 
     if (typeof window !== 'undefined') {
+      // Deploy-race recovery: a fresh deploy replaces the hashed chunks,
+      // so a tab still running the OLD build dies when client-side
+      // navigation dynamic-imports a chunk that no longer exists. Vite
+      // reports exactly that as vite:preloadError — reload instead, which
+      // fetches the new HTML (max-age=0) and lands on the new build.
+      window.addEventListener('vite:preloadError', (event) => {
+        event.preventDefault();
+        window.location.reload();
+      });
+
       // Browser auto-translate must never touch the brand: the nav logo
       // says "ivue" in every language. Re-tagged after each route change —
       // covers first paint and late-mounted layouts alike.
