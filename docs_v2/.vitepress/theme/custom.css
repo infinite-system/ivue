@@ -818,7 +818,27 @@
   border-bottom: 1px solid var(--vp-c-divider);
 }
 /* the outer frame lives on the edge cells — vertical lines only at the
-   table's own edges, never between columns */
+   table's own edges, never between columns. border-collapse must be
+   separate: collapsed tables ignore cell border-radius, so the corner
+   cells' fills and borders would run square over the table's 10px arc.
+   The corner cells round at 9px — one less than the table — so the
+   inner curve nests inside the outer one instead of overlapping it. */
+.vp-doc table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.vp-doc th:first-child {
+  border-top-left-radius: 9px;
+}
+.vp-doc th:last-child {
+  border-top-right-radius: 9px;
+}
+.vp-doc tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 9px;
+}
+.vp-doc tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 9px;
+}
 .vp-doc th:first-child,
 .vp-doc td:first-child {
   border-left: 1px solid var(--vp-c-divider);
