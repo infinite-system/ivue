@@ -497,6 +497,9 @@ export default defineConfig({
   markdown: {
     lineNumbers: true,
     theme: { light: 'github-light', dark: 'one-dark-pro' },
+    // every markdown ![]() image ships loading="lazy" — blog banners and
+    // in-post screenshots load as the reader scrolls, not up front
+    image: { lazyLoading: true },
     config(md) {
       // GFM task lists: render `- [ ]` / `- [x]` as checkboxes — used by
       // the standard.md self-review checklist. Rendered UNCHECKED so the

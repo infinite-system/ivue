@@ -18,6 +18,7 @@ const isBlogPost = computed(
       alt="Evgeny Kalashnikov"
       width="76"
       height="76"
+      loading="lazy"
     />
     <div class="cm-author__body">
       <span class="cm-author__eyebrow">Author</span>
