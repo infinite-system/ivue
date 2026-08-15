@@ -24,8 +24,8 @@ engine; extras are paid for only by the code that imports them.
   }
 
   export namespace Mailer {
-    export const $Class = $Mailer; // raw — children `extends` this
-    export let Class = Static($Class); // bound — you call this
+    export const $Class = Static($Mailer); // anchor — children `extends` this
+    export let Class = $Class; // selection — kernels/tests swap this
   }
 
   const send = Mailer.Class.send; // detachable — `this` stays correct

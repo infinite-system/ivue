@@ -131,8 +131,8 @@ same three-line shape:
 
 ```ts
 export namespace Files {
-  export const $Class = $Files; // raw — children `extends` this
-  export let Class = Static($Class); // bound — you call this
+  export const $Class = Static($Files); // anchor — children `extends` this
+  export let Class = $Class; // selection — kernels/tests swap this
 }
 ```
 

@@ -21,8 +21,8 @@ class $ScrollMomentum {
 }
 
 export namespace ScrollMomentum {
-  export const $Class = $ScrollMomentum; // raw — children `extends` this
-  export let Class = Static($Class); // bound — you call this
+  export const $Class = Static($ScrollMomentum); // anchor — children `extends` this
+  export let Class = $Class; // selection — kernels/tests swap this
 }
 ```
 
