@@ -817,8 +817,18 @@
   border: none;
   border-bottom: 1px solid var(--vp-c-divider);
 }
-.vp-doc tbody tr:last-child td {
-  border-bottom: none;
+/* the outer frame lives on the edge cells — vertical lines only at the
+   table's own edges, never between columns */
+.vp-doc th:first-child,
+.vp-doc td:first-child {
+  border-left: 1px solid var(--vp-c-divider);
+}
+.vp-doc th:last-child,
+.vp-doc td:last-child {
+  border-right: 1px solid var(--vp-c-divider);
+}
+.vp-doc th {
+  border-top: 1px solid var(--vp-c-divider);
 }
 .vp-doc tbody tr {
   transition: background-color 0.12s ease;
