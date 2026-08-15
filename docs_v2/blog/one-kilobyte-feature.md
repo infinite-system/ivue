@@ -36,16 +36,18 @@ Zero dependencies extends the same property down the supply chain: there
 is no transitive tree to audit, no lockfile churn, no upgrade that breaks
 you from three levels below. The engine you read today is the engine that
 runs next year. And the runtime consequences fall out of the same
-subtraction.
+subtraction:
+
+<CreationBench />
 
 ## The model behind the benchmark
 
-The benchmark below creates 100,000 instances — so here is exactly what
-it creates, in full. `InteractiveBox` is a three-level `Reactive()`
+The benchmark you just ran created 100,000 instances of
+`InteractiveBox` — and it is not a toy. It is a three-level `Reactive()`
 hierarchy: reactive state at every level, `computed()` overrides that
 chain through `super`, a writable computed, a hosted `useMouse()`
-composable, and shared global state. These are the benchmark's actual
-source files (`$` is `computed`, aliased):
+composable, and shared global state. Here it is in full — the
+benchmark's actual source files:
 
 ::: code-group
 
@@ -242,10 +244,7 @@ export namespace BaseElement {
 
 :::
 
-Three levels, ~200 lines, nothing toy about it. Now create 100,000 of
-them:
-
-<CreationBench />
+Three levels, ~200 lines — created in milliseconds, 100,000 at a time.
 
 Every `new InteractiveBox.Class({ id })` allocates one plain object and
 nothing else — no proxy, no eager cells, no scheduler. Look at what an
