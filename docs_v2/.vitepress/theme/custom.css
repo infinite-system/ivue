@@ -810,6 +810,20 @@
   overflow: hidden;
 }
 .vp-doc tr:nth-child(2n) {
+  background: transparent;
+}
+.vp-doc th,
+.vp-doc td {
+  border: none;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+.vp-doc tbody tr:last-child td {
+  border-bottom: none;
+}
+.vp-doc tbody tr {
+  transition: background-color 0.12s ease;
+}
+.vp-doc tbody tr:hover {
   background: var(--vp-c-bg-soft);
 }
 .vp-doc th {
