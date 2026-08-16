@@ -2,6 +2,7 @@
 title: 'The test is a subclass'
 description: Invar's test harness never mocks. It substitutes full citizens — swap the capability at its Static() seam, subclass $Class to pinch one knob, plant a defect as a positive control. No mock framework, no stub drift, and the compiler checks the fakes.
 date: 2026-07
+tags: [patterns, architecture]
 ---
 
 # The test is a subclass

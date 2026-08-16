@@ -2,6 +2,7 @@
 title: 'Three years to reduce, two weeks to build'
 description: Two commit logs, one project. ivue - 597 commits over three years finding the generator. Invar - 3,109 commits in twenty days generating from it, starting the same day the engine reached its final form. Reduction is where the cost lives.
 date: 2026-08
+tags: [story, philosophy]
 ---
 
 # Three years to reduce, two weeks to build

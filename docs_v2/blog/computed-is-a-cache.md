@@ -2,6 +2,7 @@
 title: "computed() is a cache, not a derivation"
 description: Vue's derivation primitive was always the tracked read. Memoizing everything by default was never neutral — it was just unexamined.
 date: 2026-07
+tags: [engine, performance]
 ---
 
 # computed() is a cache, not a derivation

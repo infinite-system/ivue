@@ -2,6 +2,7 @@
 title: 'The object graph they took from you'
 description: Frontend never proved object graphs wrong — it fled two mechanical defects, then canonized the flight as philosophy. Fix the defects and workspaceSet.active.editor.selectLine() comes home.
 date: 2026-07
+tags: [philosophy, javascript]
 ---
 
 # The object graph they took from you

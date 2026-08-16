@@ -2,6 +2,7 @@
 title: 'Patterns the author never wrote'
 description: Invar is full of ivue patterns that ivue's author never used by hand — the mtime-keyed blame cache, observation-owned connections, the pull floor. Agents derived them from the 845-line Standard Operating Manual. The difference between a catalog and a generator is that a generator produces instances its author never enumerated.
 date: 2026-08
+tags: [agents, patterns, invar]
 ---
 
 # Patterns the author never wrote

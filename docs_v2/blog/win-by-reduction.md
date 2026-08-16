@@ -2,6 +2,7 @@
 title: "Win by reduction. Win by construction."
 description: The strongest architecture does not manage complexity more efficiently. It removes the conditions that create it, then makes the remaining guarantees structural.
 date: 2026-07
+tags: [philosophy, architecture]
 ---
 
 # Win by reduction. Win by construction.

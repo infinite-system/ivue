@@ -2,6 +2,7 @@
 title: "Composables are organs, not skeletons"
 description: The ecosystem's decade of composables is not ivue's rival — it's the substrate. Classes give the body a spine; composables keep doing what they do best.
 date: 2026-07
+tags: [patterns, architecture]
 ---
 
 # Composables are organs, not skeletons

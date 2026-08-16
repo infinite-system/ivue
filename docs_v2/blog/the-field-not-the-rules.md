@@ -2,6 +2,7 @@
 title: 'The field, not the rules'
 description: There are two ways to get good code — police it with rules, or reshape the field so bad design has nowhere to stand. ivue and its invariants flip JavaScript's defaults one by one, until the degenerate moves stop existing as moves. 144,000 lines of agent-built proof.
 date: 2026-08
+tags: [philosophy, architecture, agents]
 ---
 
 # The field, not the rules

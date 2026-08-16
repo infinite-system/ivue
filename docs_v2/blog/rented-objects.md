@@ -2,6 +2,7 @@
 title: "Your objects are rented from the framework"
 description: If your domain logic only exists while a component is mounted, you don't own your objects — you lease them. On evicting the landlord.
 date: 2026-07
+tags: [philosophy, javascript]
 ---
 
 # Your objects are rented from the framework

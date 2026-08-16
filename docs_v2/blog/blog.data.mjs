@@ -25,6 +25,7 @@ export default createContentLoader('blog/*.md', {
           slug,
           title: page.frontmatter.title,
           excerpt: page.frontmatter.description,
+          tags: page.frontmatter.tags ?? [],
           image: `/blog/${slug}.png`,
           // A post newer than the committed dates file falls back to its
           // frontmatter month until sync:blog-dates runs.

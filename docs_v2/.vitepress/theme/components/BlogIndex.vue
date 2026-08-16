@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { onMounted } from 'vue';
 import { withBase } from 'vitepress';
 import { data as posts } from '../../../blog/blog.data.mjs';
 
@@ -8,6 +9,59 @@ const VIEW_STORAGE_KEY = 'ivue-blog-view';
 
 // List is the default; the visitor's last choice persists per browser.
 const viewStyle = ref<ViewStyle>('list');
+
+// ---- tag filter ----------------------------------------------------
+// Tags come from post frontmatter; the cloud shows each with its count.
+const activeTag = ref<string | null>(null);
+
+const tagCounts = computed(() => {
+  const counts = new Map<string, number>();
+  for (const post of posts) {
+    for (const tag of post.tags) {
+      counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()].sort(
+    (first, second) => second[1] - first[1] || first[0].localeCompare(second[0]),
+  );
+});
+
+const filteredPosts = computed(() =>
+  activeTag.value
+    ? posts.filter((post) => post.tags.includes(activeTag.value!))
+    : posts,
+);
+
+function toggleTag(tag: string) {
+  activeTag.value = activeTag.value === tag ? null : tag;
+}
+
+// ---- pagination ----------------------------------------------------
+const PAGE_SIZE = 10;
+const page = ref(1);
+
+const pageCount = computed(() =>
+  Math.max(1, Math.ceil(filteredPosts.value.length / PAGE_SIZE)),
+);
+const pagedPosts = computed(() =>
+  filteredPosts.value.slice(
+    (page.value - 1) * PAGE_SIZE,
+    page.value * PAGE_SIZE,
+  ),
+);
+
+// a narrower filter can strand the page index — snap back into range,
+// and any filter change starts from page 1
+watch(activeTag, () => {
+  page.value = 1;
+});
+
+function goToPage(target: number) {
+  page.value = Math.min(Math.max(1, target), pageCount.value);
+  document
+    .querySelector('.blog-index-toolbar')
+    ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 onMounted(() => {
   const stored = localStorage.getItem(VIEW_STORAGE_KEY);
@@ -82,8 +136,30 @@ function formatDate(date: string): string {
     </div>
   </div>
 
+  <div class="blog-tag-cloud" role="group" aria-label="Filter posts by tag">
+    <button
+      v-for="[tag, count] in tagCounts"
+      :key="tag"
+      type="button"
+      class="blog-tag"
+      :class="{ active: activeTag === tag }"
+      :aria-pressed="activeTag === tag"
+      @click="toggleTag(tag)"
+    >
+      {{ tag }}<span class="n">{{ count }}</span>
+    </button>
+    <button
+      v-if="activeTag"
+      type="button"
+      class="blog-tag blog-tag--clear"
+      @click="activeTag = null"
+    >
+      clear ×
+    </button>
+  </div>
+
   <div v-if="viewStyle === 'cards'" class="blog-list">
-    <a v-for="post in posts" :key="post.slug" class="blog-card" :href="withBase(post.url)">
+    <a v-for="post in pagedPosts" :key="post.slug" class="blog-card" :href="withBase(post.url)">
       <img
         class="thumb"
         :src="withBase(post.image)"
@@ -105,7 +181,7 @@ function formatDate(date: string): string {
   </div>
 
   <div v-else class="blog-rows">
-    <a v-for="post in posts" :key="post.slug" class="blog-row" :href="withBase(post.url)">
+    <a v-for="post in pagedPosts" :key="post.slug" class="blog-row" :href="withBase(post.url)">
       <img
         class="thumb"
         :src="withBase(post.image)"
@@ -125,4 +201,34 @@ function formatDate(date: string): string {
       </div>
     </a>
   </div>
+
+  <nav v-if="pageCount > 1" class="blog-pager" aria-label="Blog pages">
+    <button
+      type="button"
+      class="blog-pager__step"
+      :disabled="page === 1"
+      @click="goToPage(page - 1)"
+    >
+      ← Newer
+    </button>
+    <button
+      v-for="pageNumber in pageCount"
+      :key="pageNumber"
+      type="button"
+      class="blog-pager__page"
+      :class="{ active: pageNumber === page }"
+      :aria-current="pageNumber === page ? 'page' : undefined"
+      @click="goToPage(pageNumber)"
+    >
+      {{ pageNumber }}
+    </button>
+    <button
+      type="button"
+      class="blog-pager__step"
+      :disabled="page === pageCount"
+      @click="goToPage(page + 1)"
+    >
+      Older →
+    </button>
+  </nav>
 </template>

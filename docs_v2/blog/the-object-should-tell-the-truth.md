@@ -2,6 +2,7 @@
 title: "The object should tell the truth"
 description: State is explicit. Caching is intentional. Everything else stays pure. An ivue class makes the runtime semantics of an object visible in its source.
 date: 2026-07
+tags: [philosophy, patterns]
 ---
 
 # The object should tell the truth

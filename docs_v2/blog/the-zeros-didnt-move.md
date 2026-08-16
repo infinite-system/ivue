@@ -2,6 +2,7 @@
 title: "The editor tripled. The zeros didn't move."
 description: Three days after we measured Invar at 26,000 lines, it passed 69,000 — 396 commits in three days, six new organs, a multi-provider agent harness. Every discipline metric we published held. A follow-up with the greps re-run.
 date: 2026-07
+tags: [invar, agents, story]
 ---
 
 # The editor tripled. The zeros didn't move.

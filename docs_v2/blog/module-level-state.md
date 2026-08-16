@@ -2,6 +2,7 @@
 title: 'Module-level state is a bug'
 description: The most normal line in JavaScript — const cache = new Map() at module scope — is an eager, global, unownable singleton with no seam. Static() replaces it with one declaration that is lazy, inheritable, overridable, and test-isolated. A 94,000-line codebase runs on zero module-level functions and zero module-level variables.
 date: 2026-08
+tags: [javascript, architecture]
 ---
 
 # Module-level state is a bug

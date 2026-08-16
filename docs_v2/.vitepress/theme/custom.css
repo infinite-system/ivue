@@ -2142,6 +2142,90 @@ a.feature-inline-link {
   background: var(--vp-c-brand-1);
 }
 
+/* blog index: tag cloud + pager */
+.blog-tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 14px 0 20px;
+}
+.blog-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 11px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--vp-c-text-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+.blog-tag .n {
+  font-size: 10.5px;
+  color: var(--vp-c-text-3);
+}
+.blog-tag:hover {
+  color: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+}
+.blog-tag.active {
+  color: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+.blog-tag.active .n {
+  color: var(--vp-c-brand-1);
+}
+.blog-tag--clear {
+  border-style: dashed;
+  color: var(--vp-c-text-3);
+}
+.blog-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 30px 0 8px;
+}
+.blog-pager__page,
+.blog-pager__step {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--vp-c-text-2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+.blog-pager__page:hover,
+.blog-pager__step:hover:not(:disabled) {
+  color: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+}
+.blog-pager__page.active {
+  color: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+.blog-pager__step:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* blog sidebar: each post reads as its own entry — dotted separators
    (scoped by the All-posts link only the blog rail carries) */
 .VPSidebar:has(a[href="/blog/"]) .VPSidebarItem.level-1 {

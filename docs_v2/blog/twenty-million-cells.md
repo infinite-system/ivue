@@ -2,6 +2,7 @@
 title: "The 20,000,000-cell document"
 description: A spreadsheet Google Sheets cannot represent, fully reactive at 4.7 bytes per cell — and you can create it in your browser right now.
 date: 2026-07
+tags: [performance, memory, story]
 ---
 
 # The 20,000,000-cell document
