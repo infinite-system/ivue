@@ -1660,13 +1660,14 @@ a.feature-inline-link {
    (.vp-doc img[src*='/blog/']) that sizes article images to 100% */
 .vp-doc .blog-row .thumb {
   display: block;
-  width: 360px;
-  flex: 0 0 360px;
+  /* 392px puts the box ratio at the rows' natural height, so cover
+     fills the box with a ~2px vertical trim — no side crops (they cut
+     the lockup), no letterbox bars */
+  width: 392px;
+  flex: 0 0 392px;
   aspect-ratio: 1200 / 630;
   align-self: stretch;
-  /* rows run a touch taller than the banner ratio — contain instead of
-     crop, and the spare pixels read as the banner's own dark canvas */
-  object-fit: contain;
+  object-fit: cover;
   background: #050a18;
   margin: 0;
   border: none;

@@ -24,7 +24,63 @@ class $Counter {
 }
 const Counter = Reactive($Counter);
 
+// The shine row types itself: phrase in, hold, delete (faster), next
+// phrase. Same engine as everything else on the page.
+class $Typewriter {
+  phrases = ['Infinite scalability.', 'Ready for the AI era.'];
+  typeDelayMs = 74;
+  deleteDelayMs = 34;
+  holdMs = 3000;
+  restMs = 420;
+  timer: ReturnType<typeof setTimeout> | undefined;
+
+  get headline() {
+    return ref('Infinite scalability.');
+  }
+  get phraseIndex() {
+    return ref(0);
+  }
+  get isDeleting() {
+    return ref(false);
+  }
+
+  start() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    this.schedule(this.holdMs);
+  }
+  stop() {
+    if (this.timer) clearTimeout(this.timer);
+  }
+  schedule(delayMs: number) {
+    this.timer = setTimeout(() => this.tick(), delayMs);
+  }
+  tick() {
+    const target = this.phrases[this.phraseIndex.value];
+    const current = this.headline.value;
+    if (this.isDeleting.value) {
+      if (current.length > 0) {
+        this.headline.value = current.slice(0, -1);
+        this.schedule(this.deleteDelayMs);
+      } else {
+        this.isDeleting.value = false;
+        this.phraseIndex.value =
+          (this.phraseIndex.value + 1) % this.phrases.length;
+        this.schedule(this.restMs);
+      }
+    } else if (current.length < target.length) {
+      this.headline.value = target.slice(0, current.length + 1);
+      this.schedule(this.typeDelayMs);
+    } else {
+      this.isDeleting.value = true;
+      this.schedule(this.holdMs);
+    }
+  }
+}
+const Typewriter = Reactive($Typewriter);
+
 const counter: any = new Counter();
+const typewriter: any = new Typewriter();
+const { headline } = typewriter;
 // the state destructure — every Ref the template touches
 const { count } = counter;
 const lastChange = ref('');
@@ -39,11 +95,14 @@ onMounted(() => {
       fired.value++;
     },
   );
+  typewriter.start();
 });
 
 onUnmounted(() => {
   stop?.();
   counter.$stopEffects();
+  typewriter.stop();
+  typewriter.$stopEffects();
 });
 </script>
 
@@ -84,7 +143,7 @@ onUnmounted(() => {
         <h1 class="ivh-title">
           <span class="row">Plain classes.</span>
           <span class="row">Full reactivity.</span>
-          <span class="row shine">Infinite scalability.</span>
+          <span class="row shine">{{ headline }}<span class="ivh-caret" aria-hidden="true" /></span>
           <span class="row grad">One kilobyte.</span>
         </h1>
         <p class="ivh-tag">
@@ -222,6 +281,26 @@ onUnmounted(() => {
 }
 .dark .ivh-lockup--dark {
   display: block;
+}
+
+.ivh-caret {
+  display: inline-block;
+  width: 0.085em;
+  height: 0.88em;
+  margin-left: 0.06em;
+  vertical-align: -0.08em;
+  background: currentColor;
+  border-radius: 1px;
+  animation: ivh-caret-blink 1.1s steps(1) infinite;
+}
+@keyframes ivh-caret-blink {
+  0%, 54% { opacity: 1; }
+  55%, 100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ivh-caret {
+    display: none;
+  }
 }
 
 .ivh-title {
