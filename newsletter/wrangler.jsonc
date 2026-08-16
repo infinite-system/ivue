@@ -15,7 +15,8 @@
       "binding": "DB",
       "database_name": "ivue-newsletter",
       // paste the id printed by: npx wrangler@4.120.1 d1 create ivue-newsletter
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
     }
   ],
   "vars": {

@@ -25,12 +25,22 @@ Cadence: one email per subscriber at most every `CADENCE_HOURS` (default
      `broadcasts`).
    - Copy the **Server API token** (server → API Tokens).
 
-2. **Create the database and apply the schema** (from this directory):
+2. **Create the database and run migrations** (from this directory):
 
    ```sh
    npx wrangler@4.120.1 d1 create ivue-newsletter
    #   → paste the printed database_id into wrangler.jsonc
-   npx wrangler@4.120.1 d1 execute ivue-newsletter --remote --file=schema.sql
+   npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --remote
+   ```
+
+   Schema lives in `migrations/` as sequential SQL files (same model as
+   Knex migrations: an applied-migrations table in the database, each
+   file runs exactly once). New schema change → new file:
+
+   ```sh
+   npx wrangler@4.120.1 d1 migrations create ivue-newsletter add_thing
+   #   → edit the generated migrations/000N_add_thing.sql
+   npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --remote
    ```
 
 3. **Secrets:**
@@ -53,8 +63,13 @@ Cadence: one email per subscriber at most every `CADENCE_HOURS` (default
    SECOND Workers Builds project on the same GitHub repo —
 
    - Root directory: `newsletter/`
-   - Deploy command: `npx wrangler@4.120.1 deploy`
+   - Deploy command:
+     `npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --remote && npx wrangler@4.120.1 deploy`
    - Build watch paths: `newsletter/**`
+
+   Migrations apply before the new Worker goes live, and already-applied
+   files are skipped — so pushing a migration deploys schema and code
+   together.
 
    From then on `git push` deploys site and Worker independently, each
    only when its own files changed. Secrets and the D1 binding live on

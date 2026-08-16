@@ -1,7 +1,7 @@
--- ivue newsletter ledger + audience. One send row per (subscriber, post)
--- ever — the drip picks each subscriber's oldest unsent post, so a
--- broadcast that jumps the queue is structurally impossible to re-send.
---   apply: npx wrangler@4.120.1 d1 execute ivue-newsletter --remote --file=schema.sql
+-- Migration 0001 — ivue newsletter ledger + audience. One send row per
+-- (subscriber, post) ever — the drip picks each subscriber's oldest
+-- unsent post, so a broadcast that jumps the queue is structurally
+-- impossible to re-send. Applied via wrangler d1 migrations (see README).
 
 -- The audience lives HERE (Postmark has no contact-list product — by
 -- design; the Worker is the audience layer).
