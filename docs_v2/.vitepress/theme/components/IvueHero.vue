@@ -34,7 +34,7 @@ class $Typewriter {
     'One kilobyte.',
     'Zero-cost creation.',
     'Reactive inheritance.',
-    'Circular import immunity.',
+    'Circular imports.',
     'Minimal memory use.',
     'Native class API.',
   ];
@@ -339,7 +339,7 @@ onUnmounted(() => {
 
 .ivh-title {
   margin: 0;
-  font-size: clamp(1.775rem, 4.3vw, 2.775rem);
+  font-size: clamp(1.65rem, 4.3vw, 2.65rem);
   font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 1.08;
