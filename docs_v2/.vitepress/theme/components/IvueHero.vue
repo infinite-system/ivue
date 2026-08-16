@@ -24,11 +24,10 @@ class $Counter {
 }
 const Counter = Reactive($Counter);
 
-// The headline: the top two rows fall in from above (pure CSS), then the
-// bottom two type themselves — the shine row once, the finale row cycling
-// through the capability list forever. Same engine as the whole page.
+// The headline: the top three rows fall in from above (pure CSS); the
+// finale row types itself, cycling through the capability list forever.
+// Same engine as the whole page.
 class $Typewriter {
-  shineLine = 'Infinite scalability.';
   finaleVariants = [
     'Ready for the AI era.',
     'One kilobyte.',
@@ -38,9 +37,7 @@ class $Typewriter {
     'Minimal memory.',
     'Native class API.',
   ];
-  fallLeadMs = 520; // let the fall-in land before typing starts
-  introDelayMs = 30;
-  rowPauseMs = 160;
+  fallLeadMs = 700; // let the fall-ins land before typing starts
   typeDelayMs = 66;
   deleteDelayMs = 32;
   holdMs = 3200;
@@ -49,9 +46,6 @@ class $Typewriter {
 
   // SSR and no-JS render the finished headline; the animation only takes
   // over after mount.
-  get shineText() {
-    return ref(this.shineLine);
-  }
   get finaleText() {
     return ref(this.finaleVariants[0]);
   }
@@ -64,24 +58,12 @@ class $Typewriter {
 
   start() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    this.shineText.value = '';
     this.finaleText.value = '';
-    this.activeRow.value = 2;
-    this.timer = setTimeout(() => this.typeShine(), this.fallLeadMs);
+    this.activeRow.value = 3;
+    this.timer = setTimeout(() => this.typeFinale(), this.fallLeadMs);
   }
   stop() {
     if (this.timer) clearTimeout(this.timer);
-  }
-
-  typeShine() {
-    const current = this.shineText.value;
-    if (current.length < this.shineLine.length) {
-      this.shineText.value = this.shineLine.slice(0, current.length + 1);
-      this.timer = setTimeout(() => this.typeShine(), this.introDelayMs);
-    } else {
-      this.activeRow.value = 3;
-      this.timer = setTimeout(() => this.typeFinale(), this.rowPauseMs);
-    }
   }
 
   typeFinale() {
@@ -111,7 +93,7 @@ const Typewriter = Reactive($Typewriter);
 
 const counter: any = new Counter();
 const typewriter: any = new Typewriter();
-const { shineText, finaleText, activeRow } = typewriter;
+const { finaleText, activeRow } = typewriter;
 // the state destructure — every Ref the template touches
 const { count } = counter;
 const lastChange = ref('');
@@ -174,7 +156,7 @@ onUnmounted(() => {
         <h1 class="ivh-title" aria-label="Plain classes. Full reactivity. Infinite scalability. Ready for the AI era. One kilobyte.">
           <span class="row fall fall-1">Plain classes.</span>
           <span class="row fall fall-2">Full reactivity.</span>
-          <span class="row shine">{{ shineText }}<span v-if="activeRow === 2" class="ivh-caret" aria-hidden="true" /></span>
+          <span class="row shine fall fall-3">Infinite scalability.</span>
           <span class="row grad">{{ finaleText }}<span v-if="activeRow === 3" class="ivh-caret" aria-hidden="true" /></span>
         </h1>
         <p class="ivh-tag">
@@ -368,6 +350,9 @@ onUnmounted(() => {
 }
 .ivh-title .fall-2 {
   animation-delay: 0.14s;
+}
+.ivh-title .fall-3 {
+  animation-delay: 0.28s;
 }
 @media (prefers-reduced-motion: reduce) {
   .ivh-title .fall {
