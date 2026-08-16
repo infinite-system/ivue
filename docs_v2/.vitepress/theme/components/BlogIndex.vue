@@ -10,6 +10,9 @@ const VIEW_STORAGE_KEY = 'ivue-blog-view';
 // List is the default; the visitor's last choice persists per browser.
 const viewStyle = ref<ViewStyle>('list');
 
+// ---- search --------------------------------------------------------
+const searchQuery = ref('');
+
 // ---- tag filter ----------------------------------------------------
 // Tags come from post frontmatter; the cloud shows each with its count.
 const activeTag = ref<string | null>(null);
@@ -26,11 +29,17 @@ const tagCounts = computed(() => {
   );
 });
 
-const filteredPosts = computed(() =>
-  activeTag.value
-    ? posts.filter((post) => post.tags.includes(activeTag.value!))
-    : posts,
-);
+const filteredPosts = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase();
+  return posts.filter(
+    (post) =>
+      (!activeTag.value || post.tags.includes(activeTag.value)) &&
+      (!query ||
+        post.title.toLowerCase().includes(query) ||
+        post.excerpt.toLowerCase().includes(query) ||
+        post.tags.some((tag: string) => tag.includes(query))),
+  );
+});
 
 function toggleTag(tag: string) {
   activeTag.value = activeTag.value === tag ? null : tag;
@@ -52,7 +61,7 @@ const pagedPosts = computed(() =>
 
 // a narrower filter can strand the page index — snap back into range,
 // and any filter change starts from page 1
-watch(activeTag, () => {
+watch([activeTag, searchQuery], () => {
   page.value = 1;
 });
 
@@ -134,6 +143,32 @@ function formatDate(date: string): string {
         Cards
       </button>
     </div>
+  </div>
+
+  <div class="blog-search">
+    <svg class="blog-search__icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+      <circle cx="6.5" cy="6.5" r="4.6" stroke="currentColor" stroke-width="1.6" />
+      <path d="m10.3 10.3 3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+    </svg>
+    <input
+      v-model="searchQuery"
+      type="search"
+      class="blog-search__input"
+      placeholder="Search posts…"
+      aria-label="Search posts"
+    />
+    <button
+      v-if="searchQuery"
+      type="button"
+      class="blog-search__clear"
+      aria-label="Clear search"
+      @click="searchQuery = ''"
+    >
+      ×
+    </button>
+    <span v-if="searchQuery || activeTag" class="blog-search__count">
+      {{ filteredPosts.length }} match{{ filteredPosts.length === 1 ? '' : 'es' }}
+    </span>
   </div>
 
   <div class="blog-tag-cloud" role="group" aria-label="Filter posts by tag">
