@@ -339,7 +339,7 @@ onUnmounted(() => {
 
 .ivh-title {
   margin: 0;
-  font-size: clamp(1.9rem, 4.3vw, 2.9rem);
+  font-size: clamp(1.775rem, 4.3vw, 2.775rem);
   font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 1.08;
