@@ -35,7 +35,7 @@ class $Typewriter {
     'Zero-cost creation.',
     'Reactive super.',
     'Circular imports.',
-    'Minimal memory use.',
+    'Minimal memory.',
     'Native class API.',
   ];
   fallLeadMs = 520; // let the fall-in land before typing starts
