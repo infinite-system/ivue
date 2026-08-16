@@ -1,29 +1,52 @@
 // ivue newsletter Worker.
 //
 // The whole design is one invariant: at most one email per (subscriber,
-// post), ever. The D1 `sends` table IS that invariant; the daily cron and
+// post), ever. The D1 `sends` table IS the invariant; the daily cron and
 // the ad-hoc /broadcast endpoint are just two writers of the same ledger,
 // so neither can repeat what the other already delivered.
 //
 // D1 is the audience layer (subscribers + unsubscribes + ledger);
 // Postmark is delivery only — broadcast message stream, batch API.
 //
-//   POST /subscribe     {name, email}         — site form → D1
+//   POST /subscribe     {name, email, turnstileToken} — site form → D1
 //   GET  /unsubscribe   ?email=&token=        — HMAC-signed one-click out
 //   POST /broadcast     {slug}  (Bearer ADMIN_SECRET) — send a post NOW
 //   cron daily                                — each due subscriber gets
 //                                               their oldest unsent post
 
 const POSTMARK_BATCH = 'https://api.postmarkapp.com/email/batch';
+const TURNSTILE_SITEVERIFY =
+  'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+const TURNSTILE_ACTION = 'newsletter';
 
 // Postmark accepts up to 500 messages per batch call; batching keeps
 // subrequests far under the Workers free-plan cap (50/invocation).
 const SEND_BATCH = 500;
 
+interface Post {
+  slug: string;
+  title: string;
+  description: string;
+  url: string;
+  date: string | null;
+  timestamp: number;
+}
+
+interface Subscriber {
+  email: string;
+  name: string;
+}
+
+interface PostmarkOutcome {
+  ErrorCode: number;
+  Message: string;
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
-    if (request.method === 'OPTIONS') return withCors(new Response(null, { status: 204 }), env);
+    if (request.method === 'OPTIONS')
+      return withCors(new Response(null, { status: 204 }), env);
     try {
       if (url.pathname === '/subscribe' && request.method === 'POST')
         return withCors(await subscribe(request, env), env);
@@ -33,46 +56,119 @@ export default {
         return broadcast(request, env);
       return new Response('Not found', { status: 404 });
     } catch (error) {
-      console.error(error);
-      return withCors(json({ error: 'Something went wrong — try again in a minute.' }, 500), env);
+      console.error(
+        JSON.stringify({
+          event: 'unhandled_error',
+          path: url.pathname,
+          error: String(error),
+        }),
+      );
+      return withCors(
+        json({ error: 'Something went wrong — try again in a minute.' }, 500),
+        env,
+      );
     }
   },
 
-  async scheduled(_event, env, context) {
+  async scheduled(_event, env, context): Promise<void> {
     context.waitUntil(runDrip(env));
   },
-};
+} satisfies ExportedHandler<Env>;
 
 // ---------------------------------------------------------------- subscribe
 
-async function subscribe(request, env) {
-  const { name = '', email = '' } = await request.json().catch(() => ({}));
-  const address = String(email).trim().toLowerCase();
+async function subscribe(request: Request, env: Env): Promise<Response> {
+  const body = (await request.json().catch(() => ({}))) as {
+    name?: string;
+    email?: string;
+    turnstileToken?: string;
+  };
+  const address = String(body.email ?? '')
+    .trim()
+    .toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address))
     return json({ error: 'That email address does not look right.' }, 400);
+
+  // Bot gate — enforced as soon as TURNSTILE_SECRET is set; the form
+  // sends the widget token as turnstileToken. Fails closed.
+  if (env.TURNSTILE_SECRET) {
+    const human = await verifyTurnstile(
+      body.turnstileToken,
+      request.headers.get('CF-Connecting-IP'),
+      env,
+    );
+    if (!human) return json({ error: 'Verification failed — try again.' }, 403);
+  }
 
   await env.DB.batch([
     env.DB.prepare(
       'INSERT INTO subscribers (email, name, subscribed_at) VALUES (?, ?, ?) ' +
         'ON CONFLICT(email) DO UPDATE SET name = excluded.name',
-    ).bind(address, String(name).trim().slice(0, 80), nowSeconds()),
+    ).bind(address, String(body.name ?? '').trim().slice(0, 80), nowSeconds()),
     // a returning subscriber cancels any previous unsubscribe
     env.DB.prepare('DELETE FROM unsubscribes WHERE email = ?').bind(address),
   ]);
   return json({ ok: true });
 }
 
+async function verifyTurnstile(
+  token: string | undefined,
+  clientIp: string | null,
+  env: Env,
+): Promise<boolean> {
+  if (typeof token !== 'string' || token.length === 0 || token.length > 2048)
+    return false;
+  const expectedHostnames = new Set(
+    (env.TURNSTILE_HOSTNAMES ?? '')
+      .split(',')
+      .map((hostname) => hostname.trim())
+      .filter(Boolean),
+  );
+  if (expectedHostnames.size === 0) return false;
+  try {
+    const response = await fetch(TURNSTILE_SITEVERIFY, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      signal: AbortSignal.timeout(10_000),
+      body: new URLSearchParams({
+        secret: env.TURNSTILE_SECRET ?? '',
+        response: token,
+        ...(clientIp ? { remoteip: clientIp } : {}),
+      }),
+    });
+    if (!response.ok) throw new Error(`siteverify ${response.status}`);
+    const result = (await response.json()) as {
+      success: boolean;
+      action?: string;
+      hostname?: string;
+    };
+    return (
+      result.success &&
+      result.action === TURNSTILE_ACTION &&
+      expectedHostnames.has(result.hostname ?? '')
+    );
+  } catch (error) {
+    console.error(
+      JSON.stringify({ event: 'turnstile_verify_failed', error: String(error) }),
+    );
+    return false; // fail closed
+  }
+}
+
 // -------------------------------------------------------------- unsubscribe
 
-async function unsubscribe(url, env) {
+async function unsubscribe(url: URL, env: Env): Promise<Response> {
   const address = (url.searchParams.get('email') ?? '').toLowerCase();
   const token = url.searchParams.get('token') ?? '';
-  if (!address || token !== (await unsubscribeToken(address, env)))
+  const expected = address ? await unsubscribeToken(address, env) : '';
+  if (!address || !(await timingSafeEqualStrings(token, expected)))
     return new Response('Invalid unsubscribe link.', { status: 400 });
 
   await env.DB.prepare(
     'INSERT OR REPLACE INTO unsubscribes (email, unsubscribed_at) VALUES (?, ?)',
-  ).bind(address, nowSeconds()).run();
+  )
+    .bind(address, nowSeconds())
+    .run();
 
   return new Response(
     `<!doctype html><meta charset="utf-8"><title>Unsubscribed</title>
@@ -86,27 +182,37 @@ async function unsubscribe(url, env) {
 
 // ---------------------------------------------------------------- broadcast
 
-async function broadcast(request, env) {
+async function broadcast(request: Request, env: Env): Promise<Response> {
   const authorization = request.headers.get('authorization') ?? '';
-  if (authorization !== `Bearer ${env.ADMIN_SECRET}`)
+  const expected = `Bearer ${env.ADMIN_SECRET}`;
+  if (!(await timingSafeEqualStrings(authorization, expected)))
     return json({ error: 'Unauthorized' }, 401);
 
-  const { slug = '' } = await request.json().catch(() => ({}));
+  const { slug = '' } = (await request.json().catch(() => ({}))) as {
+    slug?: string;
+  };
   const posts = await loadPosts(env);
   const post = posts.find((candidate) => candidate.slug === slug);
   if (!post) return json({ error: `Unknown post slug: ${slug}` }, 400);
 
   const recipients = await activeSubscribers(env);
   const alreadySent = await sentSetForSlug(env, post.slug);
-  const due = recipients.filter((recipient) => !alreadySent.has(recipient.email));
+  const due = recipients.filter(
+    (recipient) => !alreadySent.has(recipient.email),
+  );
 
   const delivered = await sendPost(env, post, due);
-  return json({ ok: true, slug: post.slug, recipients: delivered, skippedAsRepeat: recipients.length - due.length });
+  return json({
+    ok: true,
+    slug: post.slug,
+    recipients: delivered,
+    skippedAsRepeat: recipients.length - due.length,
+  });
 }
 
 // -------------------------------------------------------------------- cron
 
-async function runDrip(env) {
+async function runDrip(env: Env): Promise<void> {
   const posts = await loadPosts(env); // oldest first
   const recipients = await activeSubscribers(env);
   if (!posts.length || !recipients.length) return;
@@ -115,35 +221,53 @@ async function runDrip(env) {
   const now = nowSeconds();
 
   // one query: every (email, slug) already sent + each subscriber's last send
-  const { results } = await env.DB.prepare('SELECT email, slug, sent_at FROM sends').all();
-  const sentByEmail = new Map();
-  const lastSentByEmail = new Map();
+  const { results } = await env.DB.prepare(
+    'SELECT email, slug, sent_at FROM sends',
+  ).all<{ email: string; slug: string; sent_at: number }>();
+  const sentByEmail = new Map<string, Set<string>>();
+  const lastSentByEmail = new Map<string, number>();
   for (const row of results) {
-    if (!sentByEmail.has(row.email)) sentByEmail.set(row.email, new Set());
-    sentByEmail.get(row.email).add(row.slug);
-    lastSentByEmail.set(row.email, Math.max(lastSentByEmail.get(row.email) ?? 0, row.sent_at));
+    let sentSet = sentByEmail.get(row.email);
+    if (!sentSet) {
+      sentSet = new Set();
+      sentByEmail.set(row.email, sentSet);
+    }
+    sentSet.add(row.slug);
+    lastSentByEmail.set(
+      row.email,
+      Math.max(lastSentByEmail.get(row.email) ?? 0, row.sent_at),
+    );
   }
 
   // group due subscribers by the post they are owed — one batched send per slug
-  const queueBySlug = new Map();
+  const queueBySlug = new Map<string, Subscriber[]>();
   for (const recipient of recipients) {
-    if (now - (lastSentByEmail.get(recipient.email) ?? 0) < cadenceSeconds) continue;
+    if (now - (lastSentByEmail.get(recipient.email) ?? 0) < cadenceSeconds)
+      continue;
     const sent = sentByEmail.get(recipient.email) ?? new Set();
     const nextPost = posts.find((candidate) => !sent.has(candidate.slug));
     if (!nextPost) continue; // fully caught up
-    if (!queueBySlug.has(nextPost.slug)) queueBySlug.set(nextPost.slug, []);
-    queueBySlug.get(nextPost.slug).push(recipient);
+    let queue = queueBySlug.get(nextPost.slug);
+    if (!queue) {
+      queue = [];
+      queueBySlug.set(nextPost.slug, queue);
+    }
+    queue.push(recipient);
   }
 
   for (const [slug, group] of queueBySlug) {
     const post = posts.find((candidate) => candidate.slug === slug);
-    await sendPost(env, post, group);
+    if (post) await sendPost(env, post, group);
   }
 }
 
 // ----------------------------------------------------------------- sending
 
-async function sendPost(env, post, recipients) {
+async function sendPost(
+  env: Env,
+  post: Post,
+  recipients: Subscriber[],
+): Promise<number> {
   let delivered = 0;
   for (let start = 0; start < recipients.length; start += SEND_BATCH) {
     const batch = recipients.slice(start, start + SEND_BATCH);
@@ -173,34 +297,51 @@ async function sendPost(env, post, recipients) {
       body: JSON.stringify(messages),
     });
     if (!response.ok) {
-      console.error('postmark batch', response.status, await response.text());
+      console.error(
+        JSON.stringify({
+          event: 'postmark_batch_failed',
+          status: response.status,
+          body: await response.text(),
+        }),
+      );
       continue; // ledger stays unwritten — this batch retries next run
     }
     // per-message results: ErrorCode 0 = accepted; anything else (e.g.
     // 406 inactive recipient) is logged and NOT written to the ledger
-    const outcomes = await response.json();
+    const outcomes = (await response.json()) as PostmarkOutcome[];
     const timestamp = nowSeconds();
     const statements = [];
-    outcomes.forEach((outcome, index) => {
+    for (const [index, outcome] of outcomes.entries()) {
       if (outcome.ErrorCode === 0) {
         statements.push(
-          env.DB.prepare('INSERT OR IGNORE INTO sends (email, slug, sent_at) VALUES (?, ?, ?)')
-            .bind(batch[index].email, post.slug, timestamp),
+          env.DB.prepare(
+            'INSERT OR IGNORE INTO sends (email, slug, sent_at) VALUES (?, ?, ?)',
+          ).bind(batch[index].email, post.slug, timestamp),
         );
         delivered++;
       } else {
-        console.error('postmark message', batch[index].email, outcome.ErrorCode, outcome.Message);
+        console.error(
+          JSON.stringify({
+            event: 'postmark_message_rejected',
+            recipient: batch[index].email,
+            code: outcome.ErrorCode,
+            message: outcome.Message,
+          }),
+        );
       }
-    });
+    }
     if (statements.length) await env.DB.batch(statements);
   }
   return delivered;
 }
 
-function renderEmail(post, unsubscribe) {
+function renderEmail(post: Post, unsubscribe: string): string {
   const dateLine = post.date
     ? new Date(post.date + 'T00:00:00Z').toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'UTC',
       })
     : '';
   return `<!doctype html>
@@ -223,59 +364,87 @@ function renderEmail(post, unsubscribe) {
 
 // ------------------------------------------------------------------ shared
 
-async function loadPosts(env) {
+async function loadPosts(env: Env): Promise<Post[]> {
   const response = await fetch(`${env.SITE_ORIGIN}/blog-index.json`);
   if (!response.ok) throw new Error(`blog-index.json ${response.status}`);
   return response.json(); // sorted oldest-first by the generator
 }
 
-async function activeSubscribers(env) {
+async function activeSubscribers(env: Env): Promise<Subscriber[]> {
   const { results } = await env.DB.prepare(
     'SELECT email, name FROM subscribers WHERE email NOT IN (SELECT email FROM unsubscribes)',
-  ).all();
+  ).all<Subscriber>();
   return results;
 }
 
-async function sentSetForSlug(env, slug) {
-  const { results } = await env.DB.prepare('SELECT email FROM sends WHERE slug = ?')
-    .bind(slug).all();
+async function sentSetForSlug(env: Env, slug: string): Promise<Set<string>> {
+  const { results } = await env.DB.prepare(
+    'SELECT email FROM sends WHERE slug = ?',
+  )
+    .bind(slug)
+    .all<{ email: string }>();
   return new Set(results.map((row) => row.email));
 }
 
-async function unsubscribeToken(address, env) {
-  const key = await crypto.subtle.importKey(
-    'raw', new TextEncoder().encode(env.ADMIN_SECRET),
-    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
-  );
-  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(address));
-  return [...new Uint8Array(signature)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+// Compare secrets without a timing side-channel: hash both to fixed size
+// (no length leak), then constant-time compare.
+async function timingSafeEqualStrings(
+  provided: string,
+  expected: string,
+): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const [providedHash, expectedHash] = await Promise.all([
+    crypto.subtle.digest('SHA-256', encoder.encode(provided)),
+    crypto.subtle.digest('SHA-256', encoder.encode(expected)),
+  ]);
+  return crypto.subtle.timingSafeEqual(providedHash, expectedHash);
 }
 
-async function unsubscribeUrl(address, env) {
+async function unsubscribeToken(address: string, env: Env): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(env.ADMIN_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(address),
+  );
+  return [...new Uint8Array(signature)]
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function unsubscribeUrl(address: string, env: Env): Promise<string> {
   const token = await unsubscribeToken(address, env);
   return `${env.WORKER_ORIGIN}/unsubscribe?email=${encodeURIComponent(address)}&token=${token}`;
 }
 
-function withCors(response, env) {
+function withCors(response: Response, env: Env): Response {
   response.headers.set('access-control-allow-origin', env.SITE_ORIGIN);
   response.headers.set('access-control-allow-methods', 'POST, OPTIONS');
   response.headers.set('access-control-allow-headers', 'content-type');
   return response;
 }
 
-function json(payload, status = 200) {
+function json(payload: unknown, status = 200): Response {
   return new Response(JSON.stringify(payload), {
     status,
     headers: { 'content-type': 'application/json' },
   });
 }
 
-function escapeHtml(text) {
+function escapeHtml(text: string): string {
   return String(text)
-    .replaceAll('&', '&amp;').replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 }
 
-function nowSeconds() {
+function nowSeconds(): number {
   return Math.floor(Date.now() / 1000);
 }

@@ -2142,6 +2142,14 @@ a.feature-inline-link {
   background: var(--vp-c-brand-1);
 }
 
+.newsletter__turnstile {
+  margin: 10px 0 2px;
+  min-height: 0;
+}
+.newsletter__turnstile:empty {
+  display: none;
+}
+
 /* community: subscribe button — opens the toast (desktop) or scrolls to
    the in-flow form (mobile) via the ivue:newsletter-open event */
 .vp-doc .cm-newsletter-btn {

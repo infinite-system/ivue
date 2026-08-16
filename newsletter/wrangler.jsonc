@@ -4,8 +4,13 @@
 // message stream). See README.md for the one-time setup.
 {
 	"name": "ivue-newsletter",
-	"main": "src/index.mjs",
-	"compatibility_date": "2026-08-01",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-08-16",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true,
+		"logs": { "head_sampling_rate": 1 }
+	},
 	"triggers": {
 		// one drip pass per day, 13:00 UTC (morning in the Americas, afternoon EU)
 		"crons": [
@@ -24,7 +29,7 @@
 		"SITE_ORIGIN": "https://ivue.dev",
 		// this Worker's own public URL — printed on first deploy; used in
 		// unsubscribe links (or set a custom route like https://news.ivue.dev)
-		"WORKER_ORIGIN": "https://ivue-newsletter.REPLACE_SUBDOMAIN.workers.dev",
+		"WORKER_ORIGIN": "https://ivue-newsletter.ekalashnikov.workers.dev",
 		"SENDER_NAME": "Evgeny from ivue",
 		"SENDER_EMAIL": "newsletter@ivue.dev",
 		// replies route via Cloudflare Email Routing to a real inbox
@@ -33,7 +38,10 @@
 		// never the transactional default ("outbound")
 		"POSTMARK_STREAM": "broadcasts",
 		// minimum hours between two emails to the same subscriber (~every other day)
-		"CADENCE_HOURS": "40"
+		"CADENCE_HOURS": "40",
+		// Turnstile: hostnames the widget may report (frontend origins).
+		// Verification activates when the TURNSTILE_SECRET secret is set.
+		"TURNSTILE_HOSTNAMES": "ivue.dev"
 	}
 	// secrets (set via: npx wrangler@4.120.1 secret put <NAME>):
 	//   POSTMARK_SERVER_TOKEN — Postmark → your server → API Tokens

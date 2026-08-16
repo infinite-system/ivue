@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, useId } from 'vue';
+import { computed, onMounted, onUnmounted, ref, useId, watch } from 'vue';
 import { useRoute } from 'vitepress';
 
 // The newsletter Worker's public URL (see /newsletter/README.md) — paste
 // it here once the Worker is deployed and signups go live. Empty string
 // keeps the form visible but dormant (soft-fail message on submit).
 const NEWSLETTER_ENDPOINT = '';
+
+// Turnstile sitekey (dashboard → Turnstile → the ivue.dev widget). Empty
+// string skips the widget; the Worker enforces verification only once
+// its TURNSTILE_SECRET is set, so the two roll out together.
+const TURNSTILE_SITE_KEY = '';
 
 const props = defineProps<{ placement: 'toast' | 'aside' | 'doc' | 'cta' }>();
 
@@ -97,6 +102,53 @@ onUnmounted(() => {
   }
 });
 
+// --- Turnstile (explicit render, per-instance widget, reset after each
+// attempt — tokens are single-use) -----------------------------------
+const turnstileElement = ref<HTMLElement | null>(null);
+const turnstileToken = ref('');
+let turnstileWidgetId: string | undefined;
+let turnstileScriptPromise: Promise<void> | undefined;
+
+function loadTurnstileScript(): Promise<void> {
+  turnstileScriptPromise ??= new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src =
+      'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    script.defer = true;
+    script.addEventListener('load', () => resolve());
+    document.head.appendChild(script);
+  });
+  return turnstileScriptPromise;
+}
+
+async function renderTurnstile() {
+  if (!TURNSTILE_SITE_KEY || !turnstileElement.value || turnstileWidgetId)
+    return;
+  await loadTurnstileScript();
+  const turnstile = (window as any).turnstile;
+  if (!turnstile || !turnstileElement.value) return;
+  turnstileWidgetId = turnstile.render(turnstileElement.value, {
+    sitekey: TURNSTILE_SITE_KEY,
+    action: 'newsletter',
+    callback: (token: string) => {
+      turnstileToken.value = token;
+    },
+    'expired-callback': () => {
+      turnstileToken.value = '';
+    },
+  });
+}
+
+function resetTurnstile() {
+  turnstileToken.value = '';
+  if (turnstileWidgetId) (window as any).turnstile?.reset(turnstileWidgetId);
+}
+
+watch(turnstileElement, (element) => {
+  if (element) renderTurnstile();
+});
+
 async function subscribe() {
   if (!email.value || state.value === 'sending') return;
   if (!NEWSLETTER_ENDPOINT) {
@@ -109,7 +161,11 @@ async function subscribe() {
     const response = await fetch(`${NEWSLETTER_ENDPOINT}/subscribe`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: name.value, email: email.value }),
+      body: JSON.stringify({
+        name: name.value,
+        email: email.value,
+        ...(turnstileToken.value ? { turnstileToken: turnstileToken.value } : {}),
+      }),
     });
     const payload = await response.json().catch(() => ({}));
     if (response.ok) {
@@ -126,6 +182,9 @@ async function subscribe() {
   } catch {
     state.value = 'error';
     message.value = 'Could not subscribe right now — try again in a minute.';
+  } finally {
+    // tokens are single-use — a fresh widget state for any retry
+    resetTurnstile();
   }
 }
 </script>
@@ -192,6 +251,11 @@ async function subscribe() {
             required
           />
         </div>
+        <div
+          v-if="TURNSTILE_SITE_KEY"
+          ref="turnstileElement"
+          class="newsletter__turnstile"
+        ></div>
         <button type="submit" :disabled="state === 'sending'">
           <span class="newsletter__button-shine" aria-hidden="true"></span>
           <span class="newsletter__button-text">

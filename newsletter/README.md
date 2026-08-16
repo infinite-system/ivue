@@ -2,6 +2,9 @@
 
 Subscribe endpoint + audience + send ledger (all D1) + daily drip cron.
 Postmark delivers the email; this Worker decides who gets what, when.
+TypeScript — wrangler compiles `src/index.ts` directly; `npx
+wrangler@4.120.1 types` regenerates `worker-configuration.d.ts` (the
+typed Env) after any config change, and `npx tsc --noEmit` typechecks.
 
 **The invariant:** at most one email per (subscriber, post), ever. The
 `sends` table is the invariant; the drip picks each subscriber's **oldest
@@ -78,6 +81,18 @@ Cadence: one email per subscriber at most every `CADENCE_HOURS` (default
 6. **Point the site form at the Worker:** set `NEWSLETTER_ENDPOINT` in
    `docs_v2/.vitepress/theme/components/NewsletterSignup.vue` to the same
    URL, rebuild, deploy the site.
+
+7. **Turnstile (bot gate on /subscribe)** — dashboard → Turnstile → Add
+   widget: hostnames `ivue.dev` (plus `localhost` for dev), mode
+   Managed. Then:
+
+   - sitekey → `TURNSTILE_SITE_KEY` in `NewsletterSignup.vue`
+   - secret → `npx wrangler@4.120.1 secret put TURNSTILE_SECRET`
+
+   Verification activates only when the secret is set (fails closed:
+   token required, action `newsletter`, hostname must be in
+   `TURNSTILE_HOSTNAMES`), so the widget and the gate roll out
+   together. Until then `/subscribe` accepts un-gated requests.
 
 ## Verify before real subscribers
 
