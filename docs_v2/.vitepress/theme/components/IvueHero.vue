@@ -29,7 +29,7 @@ const Counter = Reactive($Counter);
 // Same engine as the whole page.
 class $Typewriter {
   finaleVariants = [
-    'Ready for the AI era.',
+    'Ready for AI era.',
     'One kilobyte.',
     'Zero-cost creation.',
     'Reactive super.',
