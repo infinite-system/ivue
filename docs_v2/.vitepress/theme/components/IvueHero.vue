@@ -30,6 +30,7 @@ const Counter = Reactive($Counter);
 class $Typewriter {
   finaleVariants = [
     'One kilobyte.',
+    'Zero dependencies.',
     'Reactive super.',
     'Circular imports.',
     'Zero-cost creation.',
