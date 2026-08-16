@@ -29,8 +29,8 @@ const Counter = Reactive($Counter);
 // Same engine as the whole page.
 class $Typewriter {
   finaleVariants = [
-    'AI-ready.',
     'One kilobyte.',
+    'AI-ready.',
     'Zero-cost creation.',
     'Reactive super.',
     'Circular imports.',
@@ -153,7 +153,7 @@ onUnmounted(() => {
           width="392"
           height="128"
         />
-        <h1 class="ivh-title" aria-label="Plain classes. Full reactivity. Infinite scalability. AI-ready. One kilobyte.">
+        <h1 class="ivh-title" aria-label="Plain classes. Full reactivity. Infinite scalability. One kilobyte. AI-ready.">
           <span class="row fall fall-1">Plain classes.</span>
           <span class="row fall fall-2">Full reactivity.</span>
           <span class="row shine fall fall-3">Infinite scalability.</span>
