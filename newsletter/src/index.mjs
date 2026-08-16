@@ -152,6 +152,7 @@ async function sendPost(env, post, recipients) {
       const unsubscribe = await unsubscribeUrl(recipient.email, env);
       messages.push({
         From: `${env.SENDER_NAME} <${env.SENDER_EMAIL}>`,
+        ReplyTo: env.REPLY_TO,
         To: recipient.email,
         Subject: post.title,
         HtmlBody: renderEmail(post, unsubscribe),
