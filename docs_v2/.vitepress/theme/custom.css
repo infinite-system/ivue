@@ -1664,10 +1664,10 @@ a.feature-inline-link {
   flex: 0 0 360px;
   aspect-ratio: 1200 / 630;
   align-self: stretch;
-  object-fit: cover;
-  /* rows run a touch taller than the banner ratio, so cover crops the
-     sides — anchor left so the brand lockup never loses its edge */
-  object-position: left center;
+  /* rows run a touch taller than the banner ratio — contain instead of
+     crop, and the spare pixels read as the banner's own dark canvas */
+  object-fit: contain;
+  background: #050a18;
   margin: 0;
   border: none;
   border-right: 1px solid var(--vp-c-divider);
