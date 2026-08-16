@@ -49,6 +49,17 @@ Cadence: one email per subscriber at most every `CADENCE_HOURS` (default
    Paste the printed `*.workers.dev` URL into `wrangler.jsonc` →
    `WORKER_ORIGIN` and deploy once more (unsubscribe links embed it).
 
+5. **Auto-deploy on push** (Cloudflare dashboard, one-time): create a
+   SECOND Workers Builds project on the same GitHub repo —
+
+   - Root directory: `newsletter/`
+   - Deploy command: `npx wrangler@4.120.1 deploy`
+   - Build watch paths: `newsletter/**`
+
+   From then on `git push` deploys site and Worker independently, each
+   only when its own files changed. Secrets and the D1 binding live on
+   the Worker and survive every deploy.
+
 5. **Point the site form at the Worker:** set `NEWSLETTER_ENDPOINT` in
    `docs_v2/.vitepress/theme/components/NewsletterSignup.vue` to the same
    URL, rebuild, deploy the site.
