@@ -3,39 +3,40 @@
 // D1 is the audience layer; Postmark delivers the email (broadcast
 // message stream). See README.md for the one-time setup.
 {
-  "name": "ivue-newsletter",
-  "main": "src/index.mjs",
-  "compatibility_date": "2026-08-01",
-  "triggers": {
-    // one drip pass per day, 13:00 UTC (morning in the Americas, afternoon EU)
-    "crons": ["0 13 * * *"]
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "ivue-newsletter",
-      // paste the id printed by: npx wrangler@4.120.1 d1 create ivue-newsletter
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
-      "migrations_dir": "migrations"
-    }
-  ],
-  "vars": {
-    "SITE_ORIGIN": "https://ivue.dev",
-    // this Worker's own public URL — printed on first deploy; used in
-    // unsubscribe links (or set a custom route like https://news.ivue.dev)
-    "WORKER_ORIGIN": "https://ivue-newsletter.REPLACE_SUBDOMAIN.workers.dev",
-    "SENDER_NAME": "Evgeny from ivue",
-    "SENDER_EMAIL": "newsletter@ivue.dev",
-    // replies route via Cloudflare Email Routing to a real inbox
-    "REPLY_TO": "newsletter@ivue.dev",
-    // Postmark message stream for bulk mail — MUST be a Broadcasts stream,
-    // never the transactional default ("outbound")
-    "POSTMARK_STREAM": "broadcasts",
-    // minimum hours between two emails to the same subscriber (~every other day)
-    "CADENCE_HOURS": "40"
-  }
-  // secrets (set via: npx wrangler@4.120.1 secret put <NAME>):
-  //   POSTMARK_SERVER_TOKEN — Postmark → your server → API Tokens
-  //   ADMIN_SECRET          — long random string; authorizes /broadcast and
-  //                           signs unsubscribe tokens
+	"name": "ivue-newsletter",
+	"main": "src/index.mjs",
+	"compatibility_date": "2026-08-01",
+	"triggers": {
+		// one drip pass per day, 13:00 UTC (morning in the Americas, afternoon EU)
+		"crons": [
+			"0 13 * * *"
+		]
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "ivue-newsletter",
+			"database_id": "52fb9196-7b03-494e-a568-88bc4301f0c5",
+			"migrations_dir": "migrations"
+		}
+	],
+	"vars": {
+		"SITE_ORIGIN": "https://ivue.dev",
+		// this Worker's own public URL — printed on first deploy; used in
+		// unsubscribe links (or set a custom route like https://news.ivue.dev)
+		"WORKER_ORIGIN": "https://ivue-newsletter.REPLACE_SUBDOMAIN.workers.dev",
+		"SENDER_NAME": "Evgeny from ivue",
+		"SENDER_EMAIL": "newsletter@ivue.dev",
+		// replies route via Cloudflare Email Routing to a real inbox
+		"REPLY_TO": "newsletter@ivue.dev",
+		// Postmark message stream for bulk mail — MUST be a Broadcasts stream,
+		// never the transactional default ("outbound")
+		"POSTMARK_STREAM": "broadcasts",
+		// minimum hours between two emails to the same subscriber (~every other day)
+		"CADENCE_HOURS": "40"
+	}
+	// secrets (set via: npx wrangler@4.120.1 secret put <NAME>):
+	//   POSTMARK_SERVER_TOKEN — Postmark → your server → API Tokens
+	//   ADMIN_SECRET          — long random string; authorizes /broadcast and
+	//                           signs unsubscribe tokens
 }
