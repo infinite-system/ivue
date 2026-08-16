@@ -80,6 +80,11 @@ onMounted(() => {
   }
   // freshness is judged client-side after mount — no hydration mismatch
   nowSeconds.value = Math.floor(Date.now() / 1000);
+  // in-article tag chips link here as /blog/?tag=x — arrive pre-filtered
+  const requestedTag = new URLSearchParams(window.location.search).get('tag');
+  if (requestedTag && posts.some((post) => post.tags.includes(requestedTag))) {
+    activeTag.value = requestedTag;
+  }
 });
 
 const FRESH_WINDOW_SECONDS = 14 * 86_400;

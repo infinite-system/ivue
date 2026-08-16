@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRoute } from 'vitepress';
+import { useRoute, withBase } from 'vitepress';
 import { data as posts } from '../../../blog/blog.data.mjs';
 
 const route = useRoute();
@@ -22,5 +22,14 @@ const formattedDate = computed(() => {
 <template>
   <p v-if="post" class="blog-post-date">
     <time :datetime="post.date">{{ formattedDate }}</time>
+    <span v-if="post.tags.length" class="blog-post-tags">
+      <a
+        v-for="tag in post.tags"
+        :key="tag"
+        class="blog-post-tag"
+        :href="withBase(`/blog/?tag=${tag}`)"
+        >{{ tag }}</a
+      >
+    </span>
   </p>
 </template>
