@@ -83,9 +83,16 @@ function blogSidebar() {
       { year: 'numeric', month: 'long', timeZone: 'UTC' },
     );
     if (!monthGroups.has(month)) monthGroups.set(month, []);
-    monthGroups
-      .get(month)!
-      .push({ text: post.title, link: `/blog/${post.slug}` });
+    // sidebar text is rendered as HTML — the date rides each title as a
+    // small grey suffix ("Aug 10"), styled via .sb-date in custom.css
+    const shortDate = new Date(post.date + 'T00:00:00Z').toLocaleDateString(
+      'en-US',
+      { month: 'short', day: 'numeric', timeZone: 'UTC' },
+    );
+    monthGroups.get(month)!.push({
+      text: `${post.title} <span class="sb-date">&ndash; ${shortDate}</span>`,
+      link: `/blog/${post.slug}`,
+    });
   }
   return [
     {
