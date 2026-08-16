@@ -3,6 +3,12 @@ title: Community
 description: 'Where to get help, report bugs, share feedback, and follow ivue — plus the person behind it.'
 ---
 
+<script setup>
+function openNewsletter() {
+  window.dispatchEvent(new Event('ivue:newsletter-open'));
+}
+</script>
+
 # Community
 
 ivue grew out of shipped products, and it keeps growing through the
@@ -107,9 +113,14 @@ Every page's source is available in the
 
 ## Follow the work
 
-New releases, benchmark runs, and examples land on
-<a href="https://x.com/evgenykalash" target="_blank" rel="noreferrer">X</a> and in
-[GitHub Releases](https://github.com/infinite-system/ivue/releases).
+New posts, releases, and measured numbers land on the [Blog](/blog/), on
+<a href="https://x.com/evgenykalash" target="_blank" rel="noreferrer">X</a>, and in
+[GitHub Releases](https://github.com/infinite-system/ivue/releases) — or
+have every post delivered:
+
+<button type="button" class="cm-newsletter-btn" @click="openNewsletter">
+  Subscribe to the newsletter
+</button>
 
 ## Who's behind ivue
 

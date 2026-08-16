@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, useId } from 'vue';
+import { computed, onMounted, onUnmounted, ref, useId } from 'vue';
 import { useRoute } from 'vitepress';
 
 // The newsletter Worker's public URL (see /newsletter/README.md) — paste
@@ -73,6 +73,29 @@ function openFromPill() {
   message.value = '';
   toastVisible.value = true;
 }
+
+// Any page can request the signup form via this event (e.g. the
+// community page's subscribe button). Where the mobile in-flow form is
+// on the page, scroll to it; otherwise pop the desktop toast.
+function onOpenRequested() {
+  const inFlowForm = document.querySelector<HTMLElement>('.newsletter--cta');
+  if (inFlowForm && inFlowForm.offsetParent !== null) {
+    inFlowForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  openFromPill();
+}
+
+onMounted(() => {
+  if (props.placement === 'toast') {
+    window.addEventListener('ivue:newsletter-open', onOpenRequested);
+  }
+});
+onUnmounted(() => {
+  if (props.placement === 'toast') {
+    window.removeEventListener('ivue:newsletter-open', onOpenRequested);
+  }
+});
 
 async function subscribe() {
   if (!email.value || state.value === 'sending') return;

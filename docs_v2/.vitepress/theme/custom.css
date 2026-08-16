@@ -2142,6 +2142,31 @@ a.feature-inline-link {
   background: var(--vp-c-brand-1);
 }
 
+/* community: subscribe button — opens the toast (desktop) or scrolls to
+   the in-flow form (mobile) via the ivue:newsletter-open event */
+.vp-doc .cm-newsletter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 9px;
+  background: linear-gradient(120deg, #6366f1, #14b8a6);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.35);
+  transition:
+    filter 0.15s ease,
+    transform 0.15s ease;
+}
+.vp-doc .cm-newsletter-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
 /* in-article tag chips, riding the date line */
 .vp-doc .blog-post-date .blog-post-tags {
   display: inline-flex;
