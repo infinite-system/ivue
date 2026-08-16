@@ -1,14 +1,14 @@
 ---
-title: 'The dual that appeared by itself'
+title: 'Reactive() and Static() — discovered, not invented'
 description: Reactive() and Static() look like a designed pair — one transform for instances, one for the class object, same late binding, same per-receiver caching, one level apart. Neither was designed to complete the other. The mirror emerged from the same constraints, and emergent duals are load-bearing.
 date: 2026-08
 ---
 
-# The dual that appeared by itself
+# Reactive() and Static() — discovered, not invented
 
 <BlogPostDate />
 
-![The dual that appeared by itself](/blog/the-dual-that-appeared.png)
+![Reactive() and Static() — discovered, not invented](/blog/the-dual-that-appeared.png)
 
 We did not set out to invent a dual.
 

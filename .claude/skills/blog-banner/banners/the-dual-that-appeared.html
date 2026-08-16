@@ -57,17 +57,21 @@
     font-size: 17px; color: #5f7fb3; letter-spacing: 0.04em;
   }
   .title {
-    position: absolute; top: 232px; width: 1200px; text-align: center;
-    font-size: 72px; font-weight: 750; color: #eaf2ff;
+    position: absolute; top: 222px; width: 1200px; text-align: center;
+    font-size: 56px; line-height: 1.2; font-weight: 750; color: #eaf2ff;
     text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); letter-spacing: -0.015em;
   }
   .title .glow { color: #67e8f9; text-shadow: 0 0 36px rgba(34, 211, 238, 0.8); }
+  .title .mono {
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-weight: 600; font-size: 50px;
+  }
   .sub {
-    position: absolute; top: 342px; width: 1200px; text-align: center;
+    position: absolute; top: 388px; width: 1200px; text-align: center;
     font-size: 25px; color: #7e9cd0; line-height: 1.55;
   }
   .stats {
-    position: absolute; top: 466px; width: 1200px;
+    position: absolute; top: 490px; width: 1200px;
     display: flex; justify-content: center; gap: 18px;
   }
   .stat {
@@ -98,7 +102,7 @@
     <span class="half">Static() <span class="lvl">· the class itself</span></span>
   </div>
   <div class="dualnote">same late binding, same stable identity, same per-receiver cache — one level apart</div>
-  <div class="title">The dual that <span class="glow">appeared by itself</span></div>
+  <div class="title"><span class="mono">Reactive()</span> and <span class="mono">Static()</span> —<br/><span class="glow">discovered</span>, not invented</div>
   <div class="sub">neither was designed to complete the other — the same constraints<br/>forced both halves, and the mirror became visible afterward</div>
   <div class="stats">
     <div class="stat"><span class="n">198</span><span class="l">Static() classes</span></div>
