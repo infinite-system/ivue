@@ -1,14 +1,14 @@
 ---
-title: 'The weakness was the strength'
+title: "JavaScript's most-linted features are its superpower"
 description: "JavaScript's most-linted properties — mutable bindings, late-bound dispatch — are the raw material for swappability no static language can reach and no dynamic language ever made safe."
 date: 2026-07
 ---
 
-# The weakness was the strength
+# JavaScript's most-linted features are its superpower
 
 <BlogPostDate />
 
-![The weakness was the strength](/blog/the-weakness-was-the-strength.png)
+![JavaScript's most-linted features are its superpower](/blog/the-weakness-was-the-strength.png)
 
 [Last time](/blog/the-constraint-that-unlocks) we showed how one idiom
 and a small checker gave JavaScript the initialization-order safety of

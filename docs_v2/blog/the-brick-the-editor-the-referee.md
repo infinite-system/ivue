@@ -1,14 +1,14 @@
 ---
-title: 'The brick, the editor, and the referee'
+title: "The whole story, in small words"
 description: The whole story in small words — a one-kilobyte brick, an editor that AI agents built out of it, and the referee that makes AI-built software safe to trust.
 date: 2026-07
 ---
 
-# The brick, the editor, and the referee
+# The whole story, in small words
 
 <BlogPostDate />
 
-![The brick, the editor, and the referee](/blog/the-brick-the-editor-the-referee.png)
+![The whole story, in small words](/blog/the-brick-the-editor-the-referee.png)
 
 Most posts on this blog argue. This one just tells the story, in the
 smallest words we can find — because when we stepped back and looked

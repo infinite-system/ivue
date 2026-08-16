@@ -1,14 +1,14 @@
 ---
-title: 'Uniformity is an instrument'
+title: "Uniformity is a measuring device"
 description: Consistency is treated as taste. It is actually a measuring device — deviation is only visible against sameness, so a codebase with low structural entropy makes its own defects high-contrast. What that buys, and the one thing it cannot see.
 date: 2026-07
 ---
 
-# Uniformity is an instrument
+# Uniformity is a measuring device
 
 <BlogPostDate />
 
-![Uniformity is an instrument](/blog/uniformity-is-an-instrument.png)
+![Uniformity is a measuring device](/blog/uniformity-is-an-instrument.png)
 
 Every team argues about consistency as though it were manners. Naming
 conventions, file layout, one way to do dependency injection — the
