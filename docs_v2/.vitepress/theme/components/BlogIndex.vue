@@ -37,7 +37,8 @@ const filteredPosts = computed(() => {
       (!query ||
         post.title.toLowerCase().includes(query) ||
         post.excerpt.toLowerCase().includes(query) ||
-        post.tags.some((tag: string) => tag.includes(query))),
+        post.tags.some((tag: string) => tag.includes(query)) ||
+        post.searchText.includes(query)),
   );
 });
 

@@ -9,7 +9,23 @@ import { createContentLoader } from 'vitepress';
 // of silently serving the frontmatter fallback until restart.
 import recordedDates from './blog-dates.json';
 
+// Full-content search: the raw markdown collapses to lowercase plain
+// text (frontmatter and images out, code kept — API names are search
+// terms). ~5 KB per post riding the blog index chunk only.
+function toSearchText(src) {
+  return (src ?? '')
+    .replace(/^---[\s\S]*?---/, '')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[#>*_`|-]/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .trim();
+}
+
 export default createContentLoader('blog/*.md', {
+  includeSrc: true,
   transform(pages) {
     return pages
       .filter((page) => !/\/blog\/(index)?(\.html)?$/.test(page.url))
@@ -26,6 +42,7 @@ export default createContentLoader('blog/*.md', {
           title: page.frontmatter.title,
           excerpt: page.frontmatter.description,
           tags: page.frontmatter.tags ?? [],
+          searchText: toSearchText(page.src),
           image: `/blog/${slug}.png`,
           // A post newer than the committed dates file falls back to its
           // frontmatter month until sync:blog-dates runs.
