@@ -319,7 +319,10 @@ onUnmounted(() => {
   height: 0.88em;
   margin-left: 0.06em;
   vertical-align: -0.08em;
-  background: currentColor;
+  /* the shine/grad rows paint text via background-clip with transparent
+     fill, so currentColor is invisible — the caret carries its own brand
+     gradient */
+  background: linear-gradient(180deg, #818cf8, #34d399);
   border-radius: 1px;
   animation: ivh-caret-blink 1.1s steps(1) infinite;
 }
