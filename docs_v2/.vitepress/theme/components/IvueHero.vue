@@ -24,55 +24,87 @@ class $Counter {
 }
 const Counter = Reactive($Counter);
 
-// The shine row types itself: phrase in, hold, delete (faster), next
-// phrase. Same engine as everything else on the page.
+// The headline types itself: all four rows cascade in on load, then the
+// last row cycles forever — One kilobyte. ⇄ Ready for the AI era.
+// Same engine as everything else on the page.
 class $Typewriter {
-  phrases = ['Infinite scalability.', 'Ready for the AI era.'];
-  typeDelayMs = 74;
-  deleteDelayMs = 34;
-  holdMs = 3000;
-  restMs = 420;
+  lines = [
+    'Plain classes.',
+    'Full reactivity.',
+    'Infinite scalability.',
+    'One kilobyte.',
+  ];
+  finaleVariants = ['One kilobyte.', 'Ready for the AI era.'];
+  introDelayMs = 30;
+  rowPauseMs = 160;
+  typeDelayMs = 66;
+  deleteDelayMs = 32;
+  holdMs = 3200;
+  restMs = 380;
   timer: ReturnType<typeof setTimeout> | undefined;
 
-  get headline() {
-    return ref('Infinite scalability.');
+  // SSR and no-JS render the finished headline; the cascade only takes
+  // over after mount.
+  get rows() {
+    return ref([...this.lines]);
   }
-  get phraseIndex() {
+  get activeRow() {
+    return ref(-1); // caret hidden until the cascade starts
+  }
+  get variantIndex() {
     return ref(0);
-  }
-  get isDeleting() {
-    return ref(false);
   }
 
   start() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    this.schedule(this.holdMs);
+    this.rows.value = ['', '', '', ''];
+    this.activeRow.value = 0;
+    this.typeIntroStep(0);
   }
   stop() {
     if (this.timer) clearTimeout(this.timer);
   }
-  schedule(delayMs: number) {
-    this.timer = setTimeout(() => this.tick(), delayMs);
-  }
-  tick() {
-    const target = this.phrases[this.phraseIndex.value];
-    const current = this.headline.value;
-    if (this.isDeleting.value) {
-      if (current.length > 0) {
-        this.headline.value = current.slice(0, -1);
-        this.schedule(this.deleteDelayMs);
-      } else {
-        this.isDeleting.value = false;
-        this.phraseIndex.value =
-          (this.phraseIndex.value + 1) % this.phrases.length;
-        this.schedule(this.restMs);
-      }
-    } else if (current.length < target.length) {
-      this.headline.value = target.slice(0, current.length + 1);
-      this.schedule(this.typeDelayMs);
+
+  typeIntroStep(rowIndex: number) {
+    const target = this.lines[rowIndex];
+    const current = this.rows.value[rowIndex];
+    if (current.length < target.length) {
+      this.rows.value[rowIndex] = target.slice(0, current.length + 1);
+      this.timer = setTimeout(
+        () => this.typeIntroStep(rowIndex),
+        this.introDelayMs,
+      );
+    } else if (rowIndex < this.lines.length - 1) {
+      this.activeRow.value = rowIndex + 1;
+      this.timer = setTimeout(
+        () => this.typeIntroStep(rowIndex + 1),
+        this.rowPauseMs,
+      );
     } else {
-      this.isDeleting.value = true;
-      this.schedule(this.holdMs);
+      this.timer = setTimeout(() => this.deleteFinale(), this.holdMs);
+    }
+  }
+
+  deleteFinale() {
+    const current = this.rows.value[3];
+    if (current.length > 0) {
+      this.rows.value[3] = current.slice(0, -1);
+      this.timer = setTimeout(() => this.deleteFinale(), this.deleteDelayMs);
+    } else {
+      this.variantIndex.value =
+        (this.variantIndex.value + 1) % this.finaleVariants.length;
+      this.timer = setTimeout(() => this.typeFinale(), this.restMs);
+    }
+  }
+
+  typeFinale() {
+    const target = this.finaleVariants[this.variantIndex.value];
+    const current = this.rows.value[3];
+    if (current.length < target.length) {
+      this.rows.value[3] = target.slice(0, current.length + 1);
+      this.timer = setTimeout(() => this.typeFinale(), this.typeDelayMs);
+    } else {
+      this.timer = setTimeout(() => this.deleteFinale(), this.holdMs);
     }
   }
 }
@@ -80,7 +112,7 @@ const Typewriter = Reactive($Typewriter);
 
 const counter: any = new Counter();
 const typewriter: any = new Typewriter();
-const { headline } = typewriter;
+const { rows, activeRow } = typewriter;
 // the state destructure — every Ref the template touches
 const { count } = counter;
 const lastChange = ref('');
@@ -140,11 +172,11 @@ onUnmounted(() => {
           width="392"
           height="128"
         />
-        <h1 class="ivh-title">
-          <span class="row">Plain classes.</span>
-          <span class="row">Full reactivity.</span>
-          <span class="row shine">{{ headline }}<span class="ivh-caret" aria-hidden="true" /></span>
-          <span class="row grad">One kilobyte.</span>
+        <h1 class="ivh-title" aria-label="Plain classes. Full reactivity. Infinite scalability. One kilobyte. Ready for the AI era.">
+          <span class="row">{{ rows[0] }}<span v-if="activeRow === 0" class="ivh-caret" aria-hidden="true" /></span>
+          <span class="row">{{ rows[1] }}<span v-if="activeRow === 1" class="ivh-caret" aria-hidden="true" /></span>
+          <span class="row shine">{{ rows[2] }}<span v-if="activeRow === 2" class="ivh-caret" aria-hidden="true" /></span>
+          <span class="row grad">{{ rows[3] }}<span v-if="activeRow === 3" class="ivh-caret" aria-hidden="true" /></span>
         </h1>
         <p class="ivh-tag">
           Native TypeScript classes become fine-grained Vue 3 state. No proxy
@@ -314,6 +346,9 @@ onUnmounted(() => {
 }
 .ivh-title .row {
   display: block;
+  /* rows empty out during the typewriter cascade — hold each line's
+     height so the headline never jumps */
+  min-height: 1.08em;
 }
 .ivh-title .shine {
   background: linear-gradient(
