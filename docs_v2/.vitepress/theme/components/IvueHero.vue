@@ -24,17 +24,20 @@ class $Counter {
 }
 const Counter = Reactive($Counter);
 
-// The headline types itself: all four rows cascade in on load, then the
-// last row cycles forever — One kilobyte. ⇄ Ready for the AI era.
-// Same engine as everything else on the page.
+// The headline: the top two rows fall in from above (pure CSS), then the
+// bottom two type themselves — the shine row once, the finale row cycling
+// through the capability list forever. Same engine as the whole page.
 class $Typewriter {
-  lines = [
-    'Plain classes.',
-    'Full reactivity.',
-    'Infinite scalability.',
+  shineLine = 'Infinite scalability.';
+  finaleVariants = [
+    'Ready for the AI era.',
     'One kilobyte.',
+    'Zero-cost creation.',
+    'Reactive inheritance.',
+    'Circular import immunity.',
+    'Minimal memory footprint.',
   ];
-  finaleVariants = ['One kilobyte.', 'Ready for the AI era.'];
+  fallLeadMs = 520; // let the fall-in land before typing starts
   introDelayMs = 30;
   rowPauseMs = 160;
   typeDelayMs = 66;
@@ -43,13 +46,16 @@ class $Typewriter {
   restMs = 380;
   timer: ReturnType<typeof setTimeout> | undefined;
 
-  // SSR and no-JS render the finished headline; the cascade only takes
+  // SSR and no-JS render the finished headline; the animation only takes
   // over after mount.
-  get rows() {
-    return ref([...this.lines]);
+  get shineText() {
+    return ref(this.shineLine);
+  }
+  get finaleText() {
+    return ref(this.finaleVariants[0]);
   }
   get activeRow() {
-    return ref(-1); // caret hidden until the cascade starts
+    return ref(-1); // caret hidden until typing starts
   }
   get variantIndex() {
     return ref(0);
@@ -57,38 +63,41 @@ class $Typewriter {
 
   start() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    this.rows.value = ['', '', '', ''];
-    this.activeRow.value = 0;
-    this.typeIntroStep(0);
+    this.shineText.value = '';
+    this.finaleText.value = '';
+    this.activeRow.value = 2;
+    this.timer = setTimeout(() => this.typeShine(), this.fallLeadMs);
   }
   stop() {
     if (this.timer) clearTimeout(this.timer);
   }
 
-  typeIntroStep(rowIndex: number) {
-    const target = this.lines[rowIndex];
-    const current = this.rows.value[rowIndex];
+  typeShine() {
+    const current = this.shineText.value;
+    if (current.length < this.shineLine.length) {
+      this.shineText.value = this.shineLine.slice(0, current.length + 1);
+      this.timer = setTimeout(() => this.typeShine(), this.introDelayMs);
+    } else {
+      this.activeRow.value = 3;
+      this.timer = setTimeout(() => this.typeFinale(), this.rowPauseMs);
+    }
+  }
+
+  typeFinale() {
+    const target = this.finaleVariants[this.variantIndex.value];
+    const current = this.finaleText.value;
     if (current.length < target.length) {
-      this.rows.value[rowIndex] = target.slice(0, current.length + 1);
-      this.timer = setTimeout(
-        () => this.typeIntroStep(rowIndex),
-        this.introDelayMs,
-      );
-    } else if (rowIndex < this.lines.length - 1) {
-      this.activeRow.value = rowIndex + 1;
-      this.timer = setTimeout(
-        () => this.typeIntroStep(rowIndex + 1),
-        this.rowPauseMs,
-      );
+      this.finaleText.value = target.slice(0, current.length + 1);
+      this.timer = setTimeout(() => this.typeFinale(), this.typeDelayMs);
     } else {
       this.timer = setTimeout(() => this.deleteFinale(), this.holdMs);
     }
   }
 
   deleteFinale() {
-    const current = this.rows.value[3];
+    const current = this.finaleText.value;
     if (current.length > 0) {
-      this.rows.value[3] = current.slice(0, -1);
+      this.finaleText.value = current.slice(0, -1);
       this.timer = setTimeout(() => this.deleteFinale(), this.deleteDelayMs);
     } else {
       this.variantIndex.value =
@@ -96,23 +105,12 @@ class $Typewriter {
       this.timer = setTimeout(() => this.typeFinale(), this.restMs);
     }
   }
-
-  typeFinale() {
-    const target = this.finaleVariants[this.variantIndex.value];
-    const current = this.rows.value[3];
-    if (current.length < target.length) {
-      this.rows.value[3] = target.slice(0, current.length + 1);
-      this.timer = setTimeout(() => this.typeFinale(), this.typeDelayMs);
-    } else {
-      this.timer = setTimeout(() => this.deleteFinale(), this.holdMs);
-    }
-  }
 }
 const Typewriter = Reactive($Typewriter);
 
 const counter: any = new Counter();
 const typewriter: any = new Typewriter();
-const { rows, activeRow } = typewriter;
+const { shineText, finaleText, activeRow } = typewriter;
 // the state destructure — every Ref the template touches
 const { count } = counter;
 const lastChange = ref('');
@@ -172,11 +170,11 @@ onUnmounted(() => {
           width="392"
           height="128"
         />
-        <h1 class="ivh-title" aria-label="Plain classes. Full reactivity. Infinite scalability. One kilobyte. Ready for the AI era.">
-          <span class="row">{{ rows[0] }}<span v-if="activeRow === 0" class="ivh-caret" aria-hidden="true" /></span>
-          <span class="row">{{ rows[1] }}<span v-if="activeRow === 1" class="ivh-caret" aria-hidden="true" /></span>
-          <span class="row shine">{{ rows[2] }}<span v-if="activeRow === 2" class="ivh-caret" aria-hidden="true" /></span>
-          <span class="row grad">{{ rows[3] }}<span v-if="activeRow === 3" class="ivh-caret" aria-hidden="true" /></span>
+        <h1 class="ivh-title" aria-label="Plain classes. Full reactivity. Infinite scalability. Ready for the AI era. One kilobyte.">
+          <span class="row fall fall-1">Plain classes.</span>
+          <span class="row fall fall-2">Full reactivity.</span>
+          <span class="row shine">{{ shineText }}<span v-if="activeRow === 2" class="ivh-caret" aria-hidden="true" /></span>
+          <span class="row grad">{{ finaleText }}<span v-if="activeRow === 3" class="ivh-caret" aria-hidden="true" /></span>
         </h1>
         <p class="ivh-tag">
           Native TypeScript classes become fine-grained Vue 3 state. No proxy
@@ -346,9 +344,31 @@ onUnmounted(() => {
 }
 .ivh-title .row {
   display: block;
-  /* rows empty out during the typewriter cascade — hold each line's
-     height so the headline never jumps */
+  /* typed rows empty out before the cascade — hold each line's height
+     so the headline never jumps */
   min-height: 1.08em;
+}
+/* the top two rows fall in from above, subtly */
+@keyframes ivh-fall {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ivh-title .fall {
+  animation: ivh-fall 0.55s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+.ivh-title .fall-2 {
+  animation-delay: 0.14s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ivh-title .fall {
+    animation: none;
+  }
 }
 .ivh-title .shine {
   background: linear-gradient(
