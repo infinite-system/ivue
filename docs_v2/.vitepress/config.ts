@@ -90,7 +90,7 @@ function blogSidebar() {
       { month: 'short', day: 'numeric', timeZone: 'UTC' },
     );
     monthGroups.get(month)!.push({
-      text: `${post.title} <span class="sb-date">&ndash; ${shortDate}</span>`,
+      text: `${post.title} <span class="sb-date">${shortDate}</span>`,
       link: `/blog/${post.slug}`,
     });
   }
