@@ -75,7 +75,7 @@ Cadence: one email per subscriber at most every `CADENCE_HOURS` (default
    only when its own files changed. Secrets and the D1 binding live on
    the Worker and survive every deploy.
 
-5. **Point the site form at the Worker:** set `NEWSLETTER_ENDPOINT` in
+6. **Point the site form at the Worker:** set `NEWSLETTER_ENDPOINT` in
    `docs_v2/.vitepress/theme/components/NewsletterSignup.vue` to the same
    URL, rebuild, deploy the site.
 
