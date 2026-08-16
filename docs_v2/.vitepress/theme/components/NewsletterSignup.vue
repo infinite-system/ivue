@@ -5,12 +5,12 @@ import { useRoute } from 'vitepress';
 // The newsletter Worker's public URL (see /newsletter/README.md) — paste
 // it here once the Worker is deployed and signups go live. Empty string
 // keeps the form visible but dormant (soft-fail message on submit).
-const NEWSLETTER_ENDPOINT = '';
+const NEWSLETTER_ENDPOINT = 'https://ivue-newsletter.ekalashnikov.workers.dev';
 
 // Turnstile sitekey (dashboard → Turnstile → the ivue.dev widget). Empty
 // string skips the widget; the Worker enforces verification only once
 // its TURNSTILE_SECRET is set, so the two roll out together.
-const TURNSTILE_SITE_KEY = '';
+const TURNSTILE_SITE_KEY = '0x4AAAAAAESFVS2C9LMeYZpt';
 
 const props = defineProps<{ placement: 'toast' | 'aside' | 'doc' | 'cta' }>();
 
