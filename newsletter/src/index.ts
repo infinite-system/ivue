@@ -141,12 +141,24 @@ async function verifyTurnstile(
       success: boolean;
       action?: string;
       hostname?: string;
+      'error-codes'?: string[];
     };
-    return (
+    const verdict =
       result.success &&
       result.action === TURNSTILE_ACTION &&
-      expectedHostnames.has(result.hostname ?? '')
-    );
+      expectedHostnames.has(result.hostname ?? '');
+    if (!verdict) {
+      console.error(
+        JSON.stringify({
+          event: 'turnstile_rejected',
+          success: result.success,
+          errorCodes: result['error-codes'] ?? [],
+          action: result.action ?? null,
+          hostname: result.hostname ?? null,
+        }),
+      );
+    }
+    return verdict;
   } catch (error) {
     console.error(
       JSON.stringify({ event: 'turnstile_verify_failed', error: String(error) }),
