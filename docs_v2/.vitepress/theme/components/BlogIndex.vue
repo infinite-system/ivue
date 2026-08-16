@@ -37,7 +37,7 @@ function toggleTag(tag: string) {
 }
 
 // ---- pagination ----------------------------------------------------
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 100;
 const page = ref(1);
 
 const pageCount = computed(() =>
