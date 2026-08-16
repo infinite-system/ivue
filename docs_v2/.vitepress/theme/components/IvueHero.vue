@@ -30,12 +30,11 @@ const Counter = Reactive($Counter);
 class $Typewriter {
   finaleVariants = [
     'One kilobyte.',
-    'AI-ready.',
-    'Zero-cost creation.',
     'Reactive super.',
     'Circular imports.',
+    'Zero-cost creation.',
     'Minimal memory.',
-    'Native class API.',
+    'Built for AI.',
   ];
   fallLeadMs = 700; // let the fall-ins land before typing starts
   typeDelayMs = 66;
@@ -153,7 +152,7 @@ onUnmounted(() => {
           width="392"
           height="128"
         />
-        <h1 class="ivh-title" aria-label="Plain classes. Full reactivity. Infinite scalability. One kilobyte. AI-ready.">
+        <h1 class="ivh-title" aria-label="Plain classes. Full reactivity. Infinite scalability. One kilobyte. Built for AI.">
           <span class="row fall fall-1">Plain classes.</span>
           <span class="row fall fall-2">Full reactivity.</span>
           <span class="row shine fall fall-3">Infinite scalability.</span>
