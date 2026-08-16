@@ -33,7 +33,7 @@ class $Typewriter {
     'Ready for the AI era.',
     'One kilobyte.',
     'Zero-cost creation.',
-    'Reactive inheritance.',
+    'Reactive super.',
     'Circular imports.',
     'Minimal memory use.',
     'Native class API.',
