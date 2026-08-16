@@ -1,14 +1,14 @@
 ---
-title: 'Reduction to modularity, vibe-coded'
+title: 'From monolith to modular design in a day'
 description: In one day, AI agents extracted a monolith's git, markdown, file tree, settings, and keybindings into plugins behind enforced boundaries — directed by one human talking casually. The care didn't come from the model. It was moved into the structure.
 date: 2026-07
 ---
 
-# Reduction to modularity, vibe-coded
+# From monolith to modular design in a day
 
 <BlogPostDate />
 
-![Reduction to modularity, vibe-coded](/blog/reduction-to-modularity.png)
+![From monolith to modular design in a day](/blog/reduction-to-modularity.png)
 
 Modularizing a working application is the kind of refactor that is
 usually done meticulously, by senior humans, over a quarter: draw the
