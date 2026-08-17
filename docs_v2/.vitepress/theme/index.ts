@@ -60,12 +60,38 @@ export default {
     if (typeof window !== 'undefined') {
       // Deploy-race recovery: a fresh deploy replaces the hashed chunks,
       // so a tab still running the OLD build dies when client-side
-      // navigation dynamic-imports a chunk that no longer exists. Vite
-      // reports exactly that as vite:preloadError — reload instead, which
-      // fetches the new HTML (max-age=0) and lands on the new build.
+      // navigation dynamic-imports a chunk that no longer exists. That
+      // failure surfaces through TWO channels — vite's preload helper
+      // emits vite:preloadError, while VitePress's router imports page
+      // modules directly and the failure lands as an unhandled promise
+      // rejection ("Failed to fetch dynamically imported module") that
+      // no handler was catching, leaving a blank page. Reload instead:
+      // the HTML is max-age=0, so the reload lands on the new build.
+      // The sessionStorage guard reloads at most once per half-minute,
+      // so a genuinely dead network cannot loop the tab.
+      const reloadOntoFreshBuild = () => {
+        const RELOAD_STAMP_KEY = 'ivue-deploy-race-reload';
+        const lastReload = Number(
+          sessionStorage.getItem(RELOAD_STAMP_KEY) ?? 0,
+        );
+        if (Date.now() - lastReload < 30_000) return;
+        sessionStorage.setItem(RELOAD_STAMP_KEY, String(Date.now()));
+        window.location.reload();
+      };
       window.addEventListener('vite:preloadError', (event) => {
         event.preventDefault();
-        window.location.reload();
+        reloadOntoFreshBuild();
+      });
+      window.addEventListener('unhandledrejection', (event) => {
+        const message = String(event.reason?.message ?? event.reason ?? '');
+        if (
+          /dynamically imported module|Importing a module script failed|error loading dynamically imported/i.test(
+            message,
+          )
+        ) {
+          event.preventDefault();
+          reloadOntoFreshBuild();
+        }
       });
 
       // Browser auto-translate must never touch the brand: the nav logo
