@@ -657,6 +657,91 @@ silently receives stale data. Always the arrow.
 `$`-prefixed singleton getters are frozen caches too — keep their bodies to
 a single composable/service call (`return useThing()`), nothing more.
 
+## The store pattern: a singleton behind `use()`, injected by `$`-getter
+
+Shared application state (session, navigation, toasts, the current user)
+is a STORE — one ivue class published as a module singleton — never a
+model passed down as a prop. Prop-drilling a shared model
+(`<ChildView :app="app" />`, `constructor(public app: AppModel.Instance)`)
+threads one object through every component and constructor signature it
+crosses; the store pattern deletes the thread.
+
+```ts
+// app/AppStore.ts — the store IS an ivue class; `use()` owns the singleton
+class $AppStore {
+  get authenticated() {
+    return ref(false);
+  }
+
+  notify(message: string) {
+    /* ... */
+  }
+}
+
+export namespace AppStore {
+  export const $Class = $AppStore;
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+
+  let singleton: Instance | null = null;
+  export function use(): Instance {
+    return (singleton ??= new Class());
+  }
+}
+```
+
+Consumers never receive it — they REACH for it:
+
+```ts
+// any model — the `$`-getter caches the store per instance, forever
+class $SubscribersModel {
+  protected get $app() {
+    return AppStore.use();
+  }
+
+  async refresh() {
+    try {
+      /* ... */
+    } catch (error) {
+      this.$app.reportFailure(error);
+    }
+  }
+}
+```
+
+```vue
+<script setup lang="ts">
+// any component — call use() directly; no prop, no provide/inject
+import { AppStore } from '../app/AppStore';
+
+const app = AppStore.use();
+const { authenticated } = app;
+</script>
+
+<template>
+  <button v-if="authenticated" @click="app.logout()">Lock</button>
+</template>
+```
+
+Why this shape and not alternatives:
+
+- **`use()` is lazy** — the singleton constructs on first touch, after the
+  app exists, so module-load order and circular imports stay non-events
+  (the same late-read property as every cross-module reference).
+- **The `$`-getter is the injection point** — cached whole, per instance,
+  on first read. A model names its dependency once; every method reads
+  `this.$app` with zero lookup cost and zero constructor plumbing.
+- **Tests swap the slot, not the callers** — `AppStore.Class = $TestStore`
+  before the first `use()` (or reset the singleton) and every consumer
+  gets the double through the same seam.
+- A store is component-OUTLIVING by definition: watchers inside it use
+  `this.$watch`/`$watchEffect`, never plain `watch`, and lifecycle hooks
+  never belong in it.
+- Pass PROPS for what is genuinely per-instance input (a row, a slug, a
+  config knob). Reach for the STORE for what is genuinely shared. A prop
+  named `app`, `store`, or `session` is the tell that a store is being
+  drilled.
+
 ## Naming: unfold to the domain
 
 Readable code is the product. In ivue classes the class shape already reads
