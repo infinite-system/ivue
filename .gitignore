@@ -1,3 +1,4 @@
+.env
 # Logs
 logs
 *.log
@@ -30,6 +31,8 @@ html
 *.njsproj
 *.sln
 *.sw?
+
+
 
 /PLAN.md
 tmp
