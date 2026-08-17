@@ -23,7 +23,9 @@ async function call(path: string, env: Env, method = 'GET', body?: object) {
 }
 
 describe('AdminApi', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
   it('rejects a wrong or missing bearer on every route', async () => {
     const env = makeTestEnv();

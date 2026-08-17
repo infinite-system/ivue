@@ -14,6 +14,55 @@ drip later — there is no exclusion logic, just the ledger.
 Cadence: one email per subscriber at most every `CADENCE_HOURS` (default
 40h ≈ every other day). A broadcast counts as that day's email.
 
+The Worker is written to invar's ivue class conventions (namespace-pattern
+`Static()` capability classes under `src/modules/`) and doubles as an ivue
+example — see `CONVENTIONS.md` and `scripts/conventions-gate.sh`.
+
+## Admin dashboard (`dashboard/`)
+
+A Vue 3 + ivue application (Reactive view models, Static capabilities —
+built from this repo's own `lib/` source) that manages the whole system:
+subscribers with search/pagination/bulk actions and a per-subscriber
+drawer listing every email they have received, the post catalog with an
+exact-email preview, targeted sends (ledger-checked, explicit force to
+allow a repeat), arm-to-confirm broadcast/drip, the drip plan preview
+(same code path as the cron), and stats.
+
+- **Production**: the Vite build ships as this Worker's static assets —
+  open the Worker origin, paste `ADMIN_SECRET` into the login gate (kept
+  in sessionStorage only; every `/admin/*` call is Bearer-checked
+  timing-safe server-side).
+- **Local dev**: `npx vite newsletter/dashboard` — the dev proxy attaches
+  `ADMIN_SECRET` from `newsletter/.env` server-side (no login screen, the
+  secret never reaches the browser). Point it at a local Worker via
+  `DEV_WORKER_ORIGIN` (defaults to `http://localhost:8787`).
+
+```sh
+# build the dashboard (required before wrangler deploy — assets ride along)
+npx vite build newsletter/dashboard
+
+# quality gate: tsc (Worker + dashboard) + 46-test suite + conventions greps
+newsletter/scripts/conventions-gate.sh
+
+# local end-to-end walk (21 Playwright checks against wrangler dev + local D1)
+npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --local   # from newsletter/
+npx wrangler@4.120.1 dev --port 8787 \
+  --var ADMIN_SECRET:e2e-local-secret --var POSTMARK_SERVER_TOKEN:invalid-local-token
+node newsletter/scripts/e2e-walk.mjs                                # from repo root
+
+# production walk (read-only + one sanctioned test send)
+set -a; . newsletter/.env; set +a
+E2E_ADMIN_SECRET="$ADMIN_SECRET" \
+E2E_BASE_URL=https://ivue-newsletter.ekalashnikov.workers.dev \
+E2E_SEND_TO=newsletter@ivue.dev node newsletter/scripts/prod-walk.mjs
+```
+
+Lists: migration 0002 gives subscribers a `list` column (default
+`newsletter` — the only list the cron drips). The same address may join
+several lists; an unsubscribe suppresses the ADDRESS globally, matching
+Postmark's per-address suppression. `/subscribe` and `/admin/subscribers/add`
+accept an optional `list`; `/broadcast` accepts `{slug, list}`.
+
 ## One-time setup
 
 1. **Postmark account** at postmarkapp.com ($15/mo for 10k emails after

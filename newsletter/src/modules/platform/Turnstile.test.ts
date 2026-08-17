@@ -10,7 +10,9 @@ function stubSiteverify(result: object) {
 }
 
 describe('Turnstile', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
   it('rejects a missing, empty, or oversized token without calling out', async () => {
     const env = makeTestEnv();
@@ -22,7 +24,7 @@ describe('Turnstile', () => {
   });
 
   it('rejects when no hostnames are configured', async () => {
-    const env = makeTestEnv({ TURNSTILE_HOSTNAMES: '' } as Partial<Env>);
+    const env = makeTestEnv({ TURNSTILE_HOSTNAMES: '' });
     expect(await Turnstile.Class.verify('token', null, env)).toBe(false);
   });
 

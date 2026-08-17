@@ -75,8 +75,12 @@ export namespace TestDatabase {
 }
 
 // A complete Env for module tests — fake D1 plus the production var
-// shapes; secrets are test-local strings.
-export function makeTestEnv(overrides: Partial<Env> = {}): Env {
+// shapes; secrets are test-local strings. Overrides accept any string:
+// wrangler's generated Env narrows vars to literal types, and tests
+// need to vary them.
+export function makeTestEnv(
+  overrides: Partial<Record<keyof Env, unknown>> = {},
+): Env {
   return {
     DB: new TestDatabase.Class() as unknown as Env['DB'],
     SITE_ORIGIN: 'https://ivue.dev',

@@ -5,7 +5,9 @@ import { makeTestEnv } from '../../../test/TestDatabase';
 import { installFetchStub, makePost } from '../../../test/Fixtures';
 
 describe('Delivery', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
   it('sends via Postmark, fills the unsubscribe placeholder, writes the ledger', async () => {
     const env = makeTestEnv();

@@ -14,7 +14,9 @@ function postJson(path: string, body: object, authorization?: string) {
 }
 
 describe('PublicApi', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
   it('subscribe validates the address and enrolls (Turnstile off in tests)', async () => {
     const env = makeTestEnv();

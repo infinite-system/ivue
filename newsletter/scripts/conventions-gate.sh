@@ -27,6 +27,12 @@ if ! npx tsc -p dashboard/tsconfig.json >/tmp/newsletter-gate-dashboard-tsc.$$.l
   fail=1
 fi
 rm -f /tmp/newsletter-gate-dashboard-tsc.$$.log
+if ! npx tsc -p tsconfig.test.json >/tmp/newsletter-gate-test-tsc.$$.log 2>&1; then
+  echo "CONVENTIONS FAIL: test-suite tsc reported type errors:"
+  head -20 /tmp/newsletter-gate-test-tsc.$$.log
+  fail=1
+fi
+rm -f /tmp/newsletter-gate-test-tsc.$$.log
 
 # 0.5) TESTS — the unit suite rides the gate (real migrations, real SQL).
 if ! npx vitest run >/tmp/newsletter-gate-tests.$$.log 2>&1; then

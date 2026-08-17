@@ -9,7 +9,7 @@ const subtle = crypto.subtle as SubtleCrypto & {
 if (typeof subtle.timingSafeEqual !== 'function') {
   Object.defineProperty(subtle, 'timingSafeEqual', {
     value: (a: ArrayBuffer, b: ArrayBuffer) =>
-      timingSafeEqual(Buffer.from(a), Buffer.from(b)),
+      timingSafeEqual(new Uint8Array(a), new Uint8Array(b)),
     configurable: true,
   });
 }

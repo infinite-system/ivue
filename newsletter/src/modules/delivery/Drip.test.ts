@@ -66,7 +66,9 @@ describe('Drip.plan (the pure decision the cron and the preview share)', () => {
 });
 
 describe('Drip.run (full pass over real tables and stubbed transports)', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
   it('delivers each due subscriber their oldest unsent post, grouped by slug', async () => {
     const env = makeTestEnv();

@@ -4,7 +4,9 @@ import { makeTestEnv } from '../../../test/TestDatabase';
 import { installFetchStub, makePost } from '../../../test/Fixtures';
 
 describe('Posts', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
   it('load skips posts without emailHtml (deploy-skew guard)', async () => {
     const stale = { ...makePost('stale-post', 1), emailHtml: undefined };
