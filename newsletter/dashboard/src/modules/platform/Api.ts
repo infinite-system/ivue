@@ -107,6 +107,19 @@ class $Api {
     return this.post('/admin/subscribers/remove', { emails, purgeSends });
   }
 
+  static sends(query: {
+    search: string;
+    limit: number;
+    offset: number;
+  }): Promise<SendLogPage> {
+    const parameters = new URLSearchParams({
+      search: query.search,
+      limit: String(query.limit),
+      offset: String(query.offset),
+    });
+    return this.request(`/admin/sends?${parameters}`);
+  }
+
   static send(payload: {
     slug: string;
     emails: string[];
@@ -175,6 +188,15 @@ export interface SendHistoryRow {
   email: string;
   slug: string;
   sentAt: number;
+}
+
+export type SendLogRow = SendHistoryRow;
+
+export interface SendLogPage {
+  total: number;
+  rows: SendLogRow[];
+  limit: number;
+  offset: number;
 }
 
 export interface SubscriberDetail {

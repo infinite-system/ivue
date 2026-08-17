@@ -168,6 +168,7 @@ dashboard/src/modules/app/AppModel.ts
 dashboard/src/modules/subscribers/SubscribersModel.ts
 dashboard/src/modules/posts/PostsModel.ts
 dashboard/src/modules/send/SendModel.ts
+dashboard/src/modules/sends/SendsModel.ts
 dashboard/src/modules/drip/DripModel.ts
 dashboard/src/modules/stats/StatsModel.ts
 dashboard/src/modules/platform/Api.ts

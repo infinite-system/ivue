@@ -98,7 +98,13 @@ export namespace AppModel {
   export type Instance = typeof Class.Instance;
 }
 
-export type ViewName = 'subscribers' | 'posts' | 'send' | 'drip' | 'stats';
+export type ViewName =
+  | 'subscribers'
+  | 'sends'
+  | 'posts'
+  | 'send'
+  | 'drip'
+  | 'stats';
 export type ToastTone = 'info' | 'success' | 'error';
 
 export interface Toast {

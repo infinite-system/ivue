@@ -36,6 +36,8 @@ class $AdminApi {
         return this.remove(request, env);
       case 'POST /admin/send':
         return this.send(request, env);
+      case 'GET /admin/sends':
+        return this.sends(url, env);
       case 'GET /admin/posts':
         return this.posts(env);
       case 'GET /admin/preview':
@@ -150,6 +152,17 @@ class $AdminApi {
       outcomes: report.outcomes,
       skippedAsRepeat: skipped,
     });
+  }
+
+  // The global send log — every (recipient, post) delivery ever, newest
+  // first; search matches recipient or slug.
+  static async sends(url: URL, env: Env): Promise<Response> {
+    const page = await Ledger.Class.page(env, {
+      search: url.searchParams.get('search') ?? '',
+      limit: Number(url.searchParams.get('limit') ?? 50),
+      offset: Number(url.searchParams.get('offset') ?? 0),
+    });
+    return Http.Class.json(page);
   }
 
   static async posts(env: Env): Promise<Response> {

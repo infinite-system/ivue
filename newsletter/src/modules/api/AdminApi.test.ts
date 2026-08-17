@@ -114,6 +114,19 @@ describe('AdminApi', () => {
     expect(forced.delivered).toBe(1);
   });
 
+  it('sends exposes the paged send log with search', async () => {
+    const env = makeTestEnv();
+    await Ledger.Class.record(env, [
+      { email: 'ada@ivue.dev', slug: 'first-post', sentAt: 100 },
+      { email: 'bo@ivue.dev', slug: 'first-post', sentAt: 200 },
+    ]);
+    const log = (await (
+      await call('/admin/sends?search=ada&limit=10', env)
+    ).json()) as { total: number; rows: { email: string; sentAt: number }[] };
+    expect(log.total).toBe(1);
+    expect(log.rows[0]).toMatchObject({ email: 'ada@ivue.dev', sentAt: 100 });
+  });
+
   it('posts strips email bodies; preview serves the exact email html', async () => {
     const env = makeTestEnv();
     installFetchStub({ posts: [makePost('first-post', 1)] });

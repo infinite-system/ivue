@@ -49,6 +49,28 @@ describe('Ledger', () => {
     ).toBe(0);
   });
 
+  it('page lists the send log newest first, searches, and paginates', async () => {
+    const env = makeTestEnv();
+    await Ledger.Class.record(env, [
+      { email: 'a@ivue.dev', slug: 'first-post', sentAt: 100 },
+      { email: 'b@ivue.dev', slug: 'second-post', sentAt: 300 },
+      { email: 'a@ivue.dev', slug: 'second-post', sentAt: 200 },
+    ]);
+    const everything = await Ledger.Class.page(env, {});
+    expect(everything.total).toBe(3);
+    expect(everything.rows.map((row) => row.sentAt)).toEqual([300, 200, 100]);
+
+    const byRecipient = await Ledger.Class.page(env, { search: 'a@ivue' });
+    expect(byRecipient.total).toBe(2);
+
+    const bySlug = await Ledger.Class.page(env, { search: 'second-post' });
+    expect(bySlug.total).toBe(2);
+
+    const pageTwo = await Ledger.Class.page(env, { limit: 2, offset: 2 });
+    expect(pageTwo.rows).toHaveLength(1);
+    expect(pageTwo.rows[0].sentAt).toBe(100);
+  });
+
   it('statsPerPost and totalSends aggregate the ledger', async () => {
     const env = makeTestEnv();
     await Ledger.Class.record(env, [

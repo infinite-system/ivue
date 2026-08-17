@@ -2,6 +2,7 @@
 import { onMounted } from 'vue';
 import { AppModel } from './AppModel';
 import SubscribersView from '../subscribers/SubscribersView.vue';
+import SendsView from '../sends/SendsView.vue';
 import PostsView from '../posts/PostsView.vue';
 import SendView from '../send/SendView.vue';
 import DripView from '../drip/DripView.vue';
@@ -22,6 +23,7 @@ onMounted(() => app.probe());
 
 const TABS = [
   { name: 'subscribers', label: 'Subscribers' },
+  { name: 'sends', label: 'Sent' },
   { name: 'posts', label: 'Posts' },
   { name: 'send', label: 'Send' },
   { name: 'drip', label: 'Drip' },
@@ -81,6 +83,7 @@ const TABS = [
 
     <main v-else class="content">
       <SubscribersView v-if="view === 'subscribers'" :app="app" />
+      <SendsView v-else-if="view === 'sends'" :app="app" />
       <PostsView v-else-if="view === 'posts'" :app="app" />
       <SendView v-else-if="view === 'send'" :app="app" />
       <DripView v-else-if="view === 'drip'" :app="app" />

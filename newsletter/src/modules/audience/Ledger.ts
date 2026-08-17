@@ -67,6 +67,29 @@ class $Ledger {
     );
   }
 
+  // One page of the send log, newest first — the dashboard's "Sent"
+  // tab. `search` matches recipient email OR post slug.
+  static async page(env: Env, query: SendLogQuery): Promise<SendLogPage> {
+    const search = (query.search ?? '').trim();
+    const searchPattern = `%${search}%`;
+    const limit = Math.min(Math.max(1, query.limit ?? 50), 200);
+    const offset = Math.max(0, query.offset ?? 0);
+    const whereClause = "WHERE (?1 = '' OR email LIKE ?2 OR slug LIKE ?2)";
+    const [{ results: rows }, totalRow] = await Promise.all([
+      env.DB.prepare(
+        'SELECT email, slug, sent_at AS sentAt FROM sends ' +
+          whereClause +
+          ' ORDER BY sent_at DESC, email LIMIT ?3 OFFSET ?4',
+      )
+        .bind(search, searchPattern, limit, offset)
+        .all<SendRow>(),
+      env.DB.prepare('SELECT COUNT(*) AS total FROM sends ' + whereClause)
+        .bind(search, searchPattern)
+        .first<{ total: number }>(),
+    ]);
+    return { total: totalRow?.total ?? 0, rows, limit, offset };
+  }
+
   static async statsPerPost(env: Env): Promise<PostSendStats[]> {
     const { results } = await env.DB.prepare(
       'SELECT slug, COUNT(*) AS sendCount, MAX(sent_at) AS lastSentAt ' +
@@ -92,6 +115,19 @@ export interface SendRow {
   email: string;
   slug: string;
   sentAt: number;
+}
+
+export interface SendLogQuery {
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface SendLogPage {
+  total: number;
+  rows: SendRow[];
+  limit: number;
+  offset: number;
 }
 
 export interface PostSendStats {
