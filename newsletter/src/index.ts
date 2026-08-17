@@ -12,6 +12,7 @@
 //   GET  /unsubscribe   ?email=&token=        — HMAC-signed one-click out
 //   POST /broadcast     {slug}  (Bearer ADMIN_SECRET) — send a post NOW
 //   POST /drip          (Bearer ADMIN_SECRET) — run a drip pass on demand
+//   POST /postmark-webhook (Basic auth)       — Postmark suppression sync
 //   cron daily                                — each due subscriber gets
 //                                               their oldest unsent post
 
@@ -60,6 +61,8 @@ export default {
         return broadcast(request, env);
       if (url.pathname === '/drip' && request.method === 'POST')
         return drip(request, env);
+      if (url.pathname === '/postmark-webhook' && request.method === 'POST')
+        return postmarkWebhook(request, env);
       return new Response('Not found', { status: 404 });
     } catch (error) {
       console.error(
@@ -230,6 +233,46 @@ async function broadcast(request: Request, env: Env): Promise<Response> {
     recipients: delivered,
     skippedAsRepeat: recipients.length - due.length,
   });
+}
+
+// Postmark SubscriptionChange webhook: any suppression on their side
+// (their footer link, hard bounce, spam complaint) lands in OUR
+// unsubscribes table, and a reactivation clears it — D1 stays the
+// single source of truth. Configure in Postmark: newsletter stream →
+// Webhooks → Subscription change, with Basic auth postmark/ADMIN_SECRET.
+async function postmarkWebhook(request: Request, env: Env): Promise<Response> {
+  const authorization = request.headers.get('authorization') ?? '';
+  const expected = `Basic ${btoa(`postmark:${env.ADMIN_SECRET}`)}`;
+  if (!(await timingSafeEqualStrings(authorization, expected)))
+    return json({ error: 'Unauthorized' }, 401);
+
+  const event = (await request.json().catch(() => ({}))) as {
+    RecordType?: string;
+    Recipient?: string;
+    SuppressSending?: boolean;
+    SuppressionReason?: string;
+  };
+  if (event.RecordType !== 'SubscriptionChange' || !event.Recipient)
+    return json({ ok: true, ignored: true });
+
+  const address = event.Recipient.toLowerCase();
+  if (event.SuppressSending) {
+    await env.DB.prepare(
+      'INSERT OR REPLACE INTO unsubscribes (email, unsubscribed_at) VALUES (?, ?)',
+    ).bind(address, nowSeconds()).run();
+  } else {
+    await env.DB.prepare('DELETE FROM unsubscribes WHERE email = ?')
+      .bind(address).run();
+  }
+  console.error(
+    JSON.stringify({
+      event: 'postmark_suppression_sync',
+      recipient: address,
+      suppressed: Boolean(event.SuppressSending),
+      reason: event.SuppressionReason ?? null,
+    }),
+  );
+  return json({ ok: true });
 }
 
 // The cron's exact pass, runnable on demand — same auth as /broadcast.
