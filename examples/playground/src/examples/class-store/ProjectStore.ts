@@ -1,6 +1,6 @@
-// ProjectStore.ts — a global store is just an ivue class with a singleton
-// composable. No Pinia, no defineStore, no plugin: the class IS the store,
-// and useProjectStore() hands every caller the same instance.
+// ProjectStore.ts — a global store is just an ivue class published as a
+// module singleton. No Pinia, no defineStore, no plugin: the class IS the
+// store, and ProjectStore.use() hands every caller the same instance.
 import { reactive, ref, shallowRef } from 'vue';
 import { Reactive } from '../../ivue';
 
@@ -108,21 +108,23 @@ export namespace ProjectStore {
   export const $Class = $ProjectStore; // raw — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
-}
 
-let store: InstanceType<typeof ProjectStore.Class> | undefined;
+  let singleton: Instance | null = null;
 
-/** The store composable: every caller receives the SAME instance. */
-export function useProjectStore() {
-  return (store ??= new ProjectStore.Class());
-}
+  /** The store singleton: every caller receives the SAME instance,
+   *  constructed lazily on first touch — after the app exists, immune
+   *  to module-load order. */
+  export function use(): Instance {
+    return (singleton ??= new Class());
+  }
 
-/**
- * Optional `reactive()` view of the same singleton — refs auto-unwrap on
- * read AND write, so consumers drop every `.value`. The cast through
- * `ProjectStore.Instance` is load-bearing: it strips the readonly that TS
- * puts on get-only accessors, so writes typecheck as they behave.
- */
-export function useProjectStoreReactive() {
-  return reactive(useProjectStore() as ProjectStore.Instance);
+  /**
+   * Optional `reactive()` view of the same singleton — refs auto-unwrap
+   * on read AND write, so consumers drop every `.value`. `use()` already
+   * returns the `Instance` type, which strips the readonly that TS puts
+   * on get-only accessors, so writes typecheck as they behave.
+   */
+  export function useReactive() {
+    return reactive(use());
+  }
 }

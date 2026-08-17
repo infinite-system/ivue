@@ -1,11 +1,11 @@
 <script setup lang="ts">
 // The OPTIONAL consumption style: the same singleton wrapped in reactive().
 // Refs auto-unwrap on read AND write — no .value anywhere in this file.
-// The Instance cast inside useProjectStoreReactive() is what makes the
+// The Instance type returned by use() is what makes the
 // writes typecheck (it strips TS's readonly on get-only accessors).
-import { useProjectStoreReactive } from './ProjectStore';
+import { ProjectStore } from './ProjectStore';
 
-const project = useProjectStoreReactive();
+const project = ProjectStore.useReactive();
 </script>
 
 <template>

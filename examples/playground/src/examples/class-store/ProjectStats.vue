@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useProjectStore } from './ProjectStore';
+import { ProjectStore } from './ProjectStore';
 
 // the SAME singleton the TaskBoard writes — no props, no provide/inject
-const project = useProjectStore();
+const project = ProjectStore.use();
 
 // the state destructure
 const {

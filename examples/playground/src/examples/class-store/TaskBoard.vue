@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useProjectStore } from './ProjectStore';
+import { ProjectStore } from './ProjectStore';
 
-const project = useProjectStore();
+const project = ProjectStore.use();
 
 // the state destructure — same rules as any ivue instance
 const {

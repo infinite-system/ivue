@@ -1,6 +1,6 @@
 ---
 title: 'Example: Pinia Store Alternative'
-description: 'A class-based alternative to Pinia stores — useProjectStore() returns one shared ivue instance, with an optional reactive() view typed through Store.Instance.'
+description: 'A class-based alternative to Pinia stores — ProjectStore.use() returns one shared ivue instance, injected into other classes through a cached $-getter, with an optional reactive() view.'
 aside: false
 pageClass: benchmarks-wide examples-page
 ---
@@ -15,19 +15,28 @@ import ExampleClassStore from '../.vitepress/theme/components/examples/ExampleCl
 
 A global store needs three things: shared state, derived values, and
 actions. An ivue class already is all three — so the entire store
-machinery reduces to a **singleton composable**:
+machinery reduces to a **singleton published by its own namespace**:
 
 ```ts
-let store: InstanceType<typeof ProjectStore.Class> | undefined;
+export namespace ProjectStore {
+  export const $Class = $ProjectStore; // raw — children `extends` this
+  export let Class = Reactive($Class); // reactive — you `new` this
+  export type Instance = typeof Class.Instance;
 
-export function useProjectStore() {
-  return (store ??= new ProjectStore.Class());
+  let singleton: Instance | null = null;
+
+  export function use(): Instance {
+    return (singleton ??= new Class());
+  }
 }
 ```
 
 No Pinia, no `defineStore`, no plugin registration. Every component that
-calls `useProjectStore()` receives the same instance; state written in one
-panel renders in every other.
+calls `ProjectStore.use()` receives the same instance; state written in one
+panel renders in every other. Because `use()` constructs the singleton
+lazily — on first touch, after the app exists — module-load order and
+circular imports stay non-events, and the store's name travels with its
+namespace instead of a loose `useX` function.
 
 Three independent components below share the store with zero props between
 them — type a task in the first panel and watch the other two react:
@@ -39,22 +48,62 @@ them — type a task in the first panel and watch the other two react:
 <a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fclass-store%2FProjectStore.ts&path=%2F%23%2Fclass-store">Open in StackBlitz ⚡</a>
 — boots the playground on this example's route with the store class open.
 
+## Injecting the store into other classes
+
+Components call `use()` directly in setup. Other **classes** — view
+models, entities, capability classes — reach the store through a cached
+`$`-getter instead of receiving it as a constructor argument:
+
+```ts
+class $TaskBoardModel {
+  // resolved on first touch, cached per instance, circular-import safe
+  protected get $project() {
+    return ProjectStore.use();
+  }
+
+  get remainingLabel() {
+    return `${this.$project.visibleTasks.length} tasks in view`;
+  }
+
+  completeAll() {
+    for (const task of this.$project.visibleTasks) {
+      this.$project.toggleTask(task.id);
+    }
+  }
+}
+```
+
+This is what keeps shared state out of prop chains: no
+`<ChildView :store="store" />`, no `constructor(public store: …)`
+threading one object through every signature it crosses. A prop named
+`store`, `app`, or `session` is the tell that a store is being drilled —
+pass props for genuinely per-instance input (a row, a slug, a config
+knob), and reach for the store for what is genuinely shared.
+
+Tests swap the seam, not the callers: install a double with
+`ProjectStore.Class = Reactive($TestProjectStore)` before the first
+`use()` and every consumer receives it through the same getter.
+
 ## The optional reactive() view
 
 Some teams prefer store reads without `.value`. The same singleton wraps in
-`reactive()` — refs auto-unwrap on read **and** write — and the cast
-through `ProjectStore.Instance` is load-bearing: it strips the `readonly`
-TypeScript puts on get-only accessors, so writes typecheck exactly as they
-behave at runtime ([the unwrapping-surface invariant](/guide/standard#the-unwrapping-surface-typing-invariant)):
+`reactive()` — refs auto-unwrap on read **and** write. `use()` returns the
+`ProjectStore.Instance` type, and that typing is load-bearing: it strips
+the `readonly` TypeScript puts on get-only accessors, so writes typecheck
+exactly as they behave at runtime
+([the unwrapping-surface invariant](/guide/standard#the-unwrapping-surface-typing-invariant)):
 
 ```ts
-export function useProjectStoreReactive() {
-  return reactive(useProjectStore() as ProjectStore.Instance);
+export namespace ProjectStore {
+  // …the namespace above, plus:
+  export function useReactive() {
+    return reactive(use());
+  }
 }
 ```
 
 ```ts
-const project = useProjectStoreReactive();
+const project = ProjectStore.useReactive();
 
 project.projectName = 'Artemis'; // ref write, no .value
 project.filter = 'done';         // typechecks because of Instance
