@@ -32,12 +32,10 @@ const belongsHere = computed(() => {
   return isBlogPost.value;
 });
 
-const SUBSCRIBED_KEY = 'ivue-newsletter-subscribed';
 const DISMISSED_KEY = 'ivue-newsletter-dismissed';
 const DISMISS_DAYS = 21;
 
 const toastVisible = ref(false);
-const subscribed = ref(false);
 const mounted = ref(false);
 const name = ref('');
 const email = ref('');
@@ -46,16 +44,7 @@ const message = ref('');
 
 onMounted(() => {
   mounted.value = true;
-  // The Worker's unsubscribe page links back here with ?newsletter=signup:
-  // clear the subscribed flag so every signup placement reappears for
-  // this browser — otherwise an unsubscribed reader could never rejoin.
-  if (
-    new URLSearchParams(window.location.search).get('newsletter') === 'signup'
-  ) {
-    localStorage.removeItem(SUBSCRIBED_KEY);
-  }
-  subscribed.value = Boolean(localStorage.getItem(SUBSCRIBED_KEY));
-  if (props.placement !== 'toast' || subscribed.value) return;
+  if (props.placement !== 'toast') return;
   const dismissedAt = Number(localStorage.getItem(DISMISSED_KEY) ?? 0);
   if (Date.now() - dismissedAt < DISMISS_DAYS * 86_400_000) return;
   window.setTimeout(() => {
@@ -71,14 +60,13 @@ function dismiss() {
 }
 
 // The pill is the permanent, on-demand doorway: always present on
-// non-blog pages once the card is closed (until the visitor subscribes).
+// non-blog pages once the card is closed.
 const pillVisible = computed(
   () =>
     props.placement === 'toast' &&
     mounted.value &&
     belongsHere.value &&
-    !toastVisible.value &&
-    !subscribed.value,
+    !toastVisible.value,
 );
 
 function openFromPill() {
@@ -179,8 +167,6 @@ async function subscribe() {
     if (response.ok) {
       state.value = 'done';
       message.value = 'Welcome aboard — see you in the next post.';
-      localStorage.setItem(SUBSCRIBED_KEY, '1');
-      subscribed.value = true;
       window.setTimeout(() => (toastVisible.value = false), 2_500);
     } else {
       state.value = 'error';
@@ -200,12 +186,7 @@ async function subscribe() {
 <template>
   <Transition name="newsletter-slide">
     <div
-      v-if="
-        belongsHere &&
-        (placement === 'toast'
-          ? toastVisible
-          : !(mounted && subscribed))
-      "
+      v-if="belongsHere && (placement !== 'toast' || toastVisible)"
       class="newsletter"
       :class="`newsletter--${placement}`"
       role="complementary"
