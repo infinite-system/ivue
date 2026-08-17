@@ -79,6 +79,24 @@ const { count } = counter;
 
 Full walkthrough: [Getting Started](https://ivue.dev/guide/getting-started).
 
+## Built for humans and AI
+
+ivue ships with a
+[Standard Operating Manual](https://ivue.dev/guide/standard) — the complete
+authoring standard as annotated templates, rules, and a review checklist. It
+reads as documentation and works as a drop-in skill for AI coding agents, so
+generated code follows the same standard your team writes:
+
+```sh
+npx ivue skill        # installs .claude/skills/ivue/SKILL.md, version-locked
+npx ivue skill --all  # + Codex/Cursor/Copilot where already in use
+```
+
+Agents holding the Standard have
+[derived correct patterns its own author never wrote](https://ivue.dev/blog/patterns-the-author-never-wrote) —
+the manual is a generator, not a catalog. The wider argument:
+[Reactive framework for the AI era](https://ivue.dev/blog/reactive-framework-for-the-ai-era).
+
 ## Why classes, why now
 
 - **Native class API** — `extends`, `super`, getters, setters, private
@@ -206,24 +224,6 @@ Taken all the way down: a fully reactive spreadsheet model holding
 **20,000,000 live cells at 4.7 bytes each** — 8.5× below the plain-object
 floor — because in ivue, everything costs proportional to what's *observed*,
 nothing costs proportional to what *exists*.
-
-## Built for humans and AI
-
-ivue ships with a
-[Standard Operating Manual](https://ivue.dev/guide/standard) — the complete
-authoring standard as annotated templates, rules, and a review checklist. It
-reads as documentation and works as a drop-in skill for AI coding agents, so
-generated code follows the same standard your team writes:
-
-```sh
-npx ivue skill        # installs .claude/skills/ivue/SKILL.md, version-locked
-npx ivue skill --all  # + Codex/Cursor/Copilot where already in use
-```
-
-Agents holding the Standard have
-[derived correct patterns its own author never wrote](https://ivue.dev/blog/patterns-the-author-never-wrote) —
-the manual is a generator, not a catalog. The wider argument:
-[Reactive framework for the AI era](https://ivue.dev/blog/reactive-framework-for-the-ai-era).
 
 ## Go deeper
 
