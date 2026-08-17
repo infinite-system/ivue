@@ -11,6 +11,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { codeToHtml } from 'shiki';
 
 const SITE = 'https://ivue.dev';
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -63,9 +64,25 @@ function embedPlaceholder(slug, postUrl, embedIndex) {
   );
 }
 
+// ---- code highlighting ----------------------------------------------
+// Shiki emits spans with INLINE color styles — the one form of syntax
+// highlighting email clients render. Same theme as the site's dark code.
+
+async function highlightedPre(code, lang, hasLabel) {
+  const layout = `margin:0 0 20px;padding:14px 16px;border-radius:${hasLabel ? '0 0 8px 8px' : '8px'};font:12.5px/1.6 ui-monospace,Menlo,monospace;overflow-x:auto;`;
+  try {
+    const html = await codeToHtml(code, { lang, theme: 'one-dark-pro' });
+    return html.replace(/<pre[^>]*?style="/, `<pre style="${layout}`);
+  } catch {
+    const escaped = code
+      .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    return `<pre style="${layout}background:#0d1226;color:#e6edf3"><code>${escaped}</code></pre>`;
+  }
+}
+
 // ---- block-level markdown → inline-styled HTML ----------------------
 
-export function bodyHtml(source, slug, postUrl) {
+export async function bodyHtml(source, slug, postUrl) {
   const body = source
     .replace(/^---[\s\S]*?---/, '')
     .replace(/<BlogPostDate \/>/g, '')
@@ -81,6 +98,7 @@ export function bodyHtml(source, slug, postUrl) {
     const line = lines[index];
     if (!line.trim()) { index++; continue; }
     if (line.startsWith('```')) {
+      const lang = line.match(/^```(\w+)/)?.[1] ?? 'txt';
       const label = line.match(/\[([^\]]+)\]/)?.[1] ?? '';
       const codeLines = [];
       index++;
@@ -89,13 +107,11 @@ export function bodyHtml(source, slug, postUrl) {
         index++;
       }
       index++; // closing fence
-      const code = codeLines.join('\n')
-        .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
       blocks.push(
         (label
           ? `<div style="margin:0 0 0;padding:7px 16px;background:#151a30;color:#8fa8cf;border-radius:8px 8px 0 0;font:11.5px ui-monospace,Menlo,monospace">${label}</div>`
           : '') +
-        `<pre style="margin:0 0 20px;padding:14px 16px;background:#0d1226;color:#e6edf3;border-radius:${label ? '0 0 8px 8px' : '8px'};font:12.5px/1.6 ui-monospace,Menlo,monospace;overflow-x:auto"><code>${code}</code></pre>`,
+        (await highlightedPre(codeLines.join('\n'), lang, Boolean(label))),
       );
       continue;
     }
@@ -210,7 +226,7 @@ function neighborCard(label, post) {
 // ---- the complete email ---------------------------------------------
 // posts: full list sorted oldest-first; the neighbors are chronological.
 
-export function renderEmail(post, allPosts) {
+export async function renderEmail(post, allPosts) {
   const postUrl = `${SITE}/blog/${post.slug}`;
   const bannerUrl = `${SITE}/blog/${post.slug}.png`;
   const dateLine = post.date
@@ -227,11 +243,7 @@ export function renderEmail(post, allPosts) {
 
   return `<!doctype html>
 <html><body style="margin:0;background:#f4f6fb;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px">
-    <a href="${SITE}" style="text-decoration:none">
-      <img src="${SITE}/brand-lockup-light.png" alt="ivue &mdash; Infinite Vue" width="147" height="57" style="display:block;margin:0 0 6px;border:0" />
-    </a>
-    <p style="margin:0 0 18px;font-size:11.5px;letter-spacing:.14em;color:#6b7a99">NEWSLETTER</p>
+  <div style="max-width:560px;margin:0 auto;padding:32px 20px 48px">
     <div style="background:#ffffff;border:1px solid #e3e8f2;border-radius:12px;overflow:hidden">
       <a href="${postUrl}" style="text-decoration:none">
         <img src="${bannerUrl}" alt="${escapeHtml(post.title)}" width="560" style="display:block;width:100%;height:auto;border:0" />
@@ -239,7 +251,7 @@ export function renderEmail(post, allPosts) {
       <div style="padding:26px 32px 30px">
         <h1 style="margin:0 0 8px;font-size:23px;line-height:1.3;color:#101828">${escapeHtml(post.title)}</h1>
         ${dateLine ? `<p style="margin:0 0 22px;font-size:12.5px;color:#8a94a8">${dateLine}</p>` : ''}
-        ${bodyHtml(post.source, post.slug, postUrl)}
+        ${await bodyHtml(post.source, post.slug, postUrl)}
         <a href="${postUrl}" style="display:inline-block;margin:6px 0 0;background:#4f6af0;color:#ffffff;text-decoration:none;font-size:14.5px;font-weight:600;padding:11px 22px;border-radius:8px">Read on ivue.dev &rarr;</a>
       </div>
     </div>
@@ -250,7 +262,9 @@ export function renderEmail(post, allPosts) {
         </td>
         <td style="vertical-align:middle">
           <div style="font-size:10.5px;letter-spacing:.12em;color:#6b7a99;margin:0 0 3px">AUTHOR</div>
-          <div style="font-size:15px;font-weight:600;color:#101828;margin:0 0 3px">Evgeny Kalashnikov</div>
+          <div style="font-size:15px;font-weight:600;color:#101828;margin:0 0 2px">Evgeny Kalashnikov</div>
+          <div style="font-size:12.5px;color:#6b7a99;margin:0 0 4px">Lead Software Engineer @ Blackline, Adhoc Studio</div>
+          <div style="font-size:12.5px;line-height:1.55;color:#3a4459;margin:0 0 6px">Three years reducing Vue reactivity into <a href="${SITE}" style="color:#4f6af0;text-decoration:none">ivue</a>'s one kilobyte &mdash; then watching AI agents build <a href="${SITE}/examples/invar" style="color:#4f6af0;text-decoration:none">Invar</a>, a 94,000-line terminal IDE, on top of it.</div>
           <div style="font-size:12.5px">
             <a href="https://x.com/evgenykalash" style="color:#4f6af0;text-decoration:none">X</a>
             &nbsp;&middot;&nbsp; <a href="https://github.com/infinite-system" style="color:#4f6af0;text-decoration:none">GitHub</a>
@@ -263,7 +277,7 @@ export function renderEmail(post, allPosts) {
     ${older || newer ? `<p style="margin:26px 0 10px;font-size:11.5px;letter-spacing:.14em;color:#6b7a99">MORE FROM THE BLOG</p>` : ''}
     ${neighborCard('NEWER POST', newer)}
     ${neighborCard('OLDER POST', older)}
-    <p style="margin:20px 0 0;font-size:12px;line-height:1.6;color:#8a94a8">
+    <p style="margin:20px 0 8px;font-size:12px;line-height:1.6;color:#8a94a8">
       You're receiving the ivue newsletter — every post from the archive,
       one at a time. <a href="${SITE}/blog/" style="color:#6b7a99">Browse all posts</a>
       &nbsp;&middot;&nbsp; <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7a99">Unsubscribe</a>
@@ -313,5 +327,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error(`unknown slug: ${slug}\nknown: ${posts.map((p) => p.slug).join(', ')}`);
     process.exit(1);
   }
-  process.stdout.write(renderEmail(post, posts));
+  process.stdout.write(await renderEmail(post, posts));
 }

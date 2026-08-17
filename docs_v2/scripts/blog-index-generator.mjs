@@ -16,15 +16,18 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const outputPath = resolve(scriptDirectory, '../public/blog-index.json');
 
 const posts = loadPostsWithSource(); // oldest first — the drip order
-const catalog = posts.map((post) => ({
-  slug: post.slug,
-  title: post.title,
-  description: post.description,
-  url: post.url,
-  date: post.date,
-  timestamp: post.timestamp,
-  emailHtml: renderEmail(post, posts),
-}));
+const catalog = [];
+for (const post of posts) {
+  catalog.push({
+    slug: post.slug,
+    title: post.title,
+    description: post.description,
+    url: post.url,
+    date: post.date,
+    timestamp: post.timestamp,
+    emailHtml: await renderEmail(post, posts),
+  });
+}
 
 writeFileSync(outputPath, JSON.stringify(catalog, null, 2) + '\n');
 console.log(
