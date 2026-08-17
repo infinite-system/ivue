@@ -2,13 +2,18 @@ import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
 import type { DripPlanEntry } from '../platform/Api';
-import type { AppModel } from '../app/AppModel';
+import { AppStore } from '../app/AppStore';
 
 // The drip preview — the exact plan the next cron tick executes, because
 // the Worker computes both from the same Drip.plan().
 class $DripModel {
-  constructor(public app: AppModel.Instance) {
+  constructor() {
     this.load();
+  }
+
+  // the app store — resolved and cached on first touch (store pattern)
+  protected get $app() {
+    return AppStore.use();
   }
 
   get entries() {
@@ -38,7 +43,7 @@ class $DripModel {
       this.entries.value = preview.entries;
       this.cadenceHours.value = preview.cadenceHours;
     } catch (error) {
-      this.app.reportFailure(error);
+      this.$app.reportFailure(error);
     } finally {
       this.loading.value = false;
     }

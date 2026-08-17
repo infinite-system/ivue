@@ -2,13 +2,18 @@ import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
 import type { Stats } from '../platform/Api';
-import type { AppModel } from '../app/AppModel';
+import { AppStore } from '../app/AppStore';
 
 // System stats: list totals, signups over the last 60 days, and sends
 // per post from the ledger.
 class $StatsModel {
-  constructor(public app: AppModel.Instance) {
+  constructor() {
     this.load();
+  }
+
+  // the app store — resolved and cached on first touch (store pattern)
+  protected get $app() {
+    return AppStore.use();
   }
 
   get stats() {
@@ -29,7 +34,7 @@ class $StatsModel {
     try {
       this.stats.value = await Api.Class.stats();
     } catch (error) {
-      this.app.reportFailure(error);
+      this.$app.reportFailure(error);
     } finally {
       this.loading.value = false;
     }

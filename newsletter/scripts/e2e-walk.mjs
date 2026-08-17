@@ -198,6 +198,33 @@ try {
   await shot('detail-drawer');
   await page.click('.drawer .ghost');
 
+  // ---- station 2.5: routing + the send log's slug → preview ----
+  await page.click('.tab[data-tab="sends"]');
+  await page.waitForFunction(
+    () => document.querySelectorAll('[data-view="sends"] .slug').length > 0,
+    undefined,
+    { timeout: 15_000 },
+  );
+  check(
+    'tabs are routes — Sent lives at /sent',
+    new URL(page.url()).pathname === '/sent',
+  );
+  await page.locator('[data-view="sends"] .slug').first().click();
+  await page.waitForSelector('.preview-frame', { timeout: 20_000 });
+  check(
+    'a send-log slug deep-links to the email preview',
+    page.url().includes('/posts?preview='),
+  );
+  await shot('slug-to-preview');
+  await page.goBack();
+  await page.waitForFunction(
+    () => document.querySelector('[data-view="sends"]') !== null,
+  );
+  check(
+    'browser back returns from the preview to the send log',
+    new URL(page.url()).pathname === '/sent',
+  );
+
   // ---- station 3: posts + email preview ----
   await page.click('.tab[data-tab="posts"]');
   await page.waitForSelector('[data-view="posts"] tbody tr', {

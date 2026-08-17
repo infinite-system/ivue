@@ -7,15 +7,20 @@ import type {
   SubscriberDetail,
   SubscriberRow,
 } from '../platform/Api';
-import type { AppModel } from '../app/AppModel';
+import { AppStore } from '../app/AppStore';
 
 // The subscribers table: server-side pagination and search, list filter,
 // bulk selection with unsubscribe/resubscribe/remove, add-subscriber
 // form, and the per-subscriber lens (memberships + every email they have
 // already received).
 class $SubscribersModel {
-  constructor(public app: AppModel.Instance) {
+  constructor() {
     this.refresh();
+  }
+
+  // the app store — resolved and cached on first touch (store pattern)
+  protected get $app() {
+    return AppStore.use();
   }
 
   get PAGE_SIZE() {
@@ -122,7 +127,7 @@ class $SubscribersModel {
       this.applyPage(page);
       this.lists.value = lists;
     } catch (error) {
-      this.app.reportFailure(error);
+      this.$app.reportFailure(error);
     } finally {
       this.loading.value = false;
     }
@@ -203,11 +208,11 @@ class $SubscribersModel {
     if (!emails.length) return;
     try {
       const message = await action(emails);
-      this.app.notify(message, 'success');
+      this.$app.notify(message, 'success');
       this.selectedEmails.value = [];
       await this.refresh();
     } catch (error) {
-      this.app.reportFailure(error);
+      this.$app.reportFailure(error);
     }
   }
 
@@ -220,12 +225,12 @@ class $SubscribersModel {
         name: this.addName.value.trim(),
         list: this.addList.value.trim() || 'newsletter',
       });
-      this.app.notify(`Added ${email}.`, 'success');
+      this.$app.notify(`Added ${email}.`, 'success');
       this.addEmail.value = '';
       this.addName.value = '';
       await this.refresh();
     } catch (error) {
-      this.app.reportFailure(error);
+      this.$app.reportFailure(error);
     }
   }
 
@@ -234,7 +239,7 @@ class $SubscribersModel {
     try {
       this.detail.value = await Api.Class.subscriber(email);
     } catch (error) {
-      this.app.reportFailure(error);
+      this.$app.reportFailure(error);
     } finally {
       this.detailLoading.value = false;
     }

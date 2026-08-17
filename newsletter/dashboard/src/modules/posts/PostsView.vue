@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { PostsModel } from './PostsModel';
+import { AppStore } from '../app/AppStore';
 import { Format } from '../platform/Format';
-import type { AppModel } from '../app/AppModel';
 
-const props = defineProps<{ app: AppModel.Instance }>();
-
-const model = new PostsModel.Class(props.app);
+const app = AppStore.use();
+const model = new PostsModel.Class();
 const {
   // state refs
   posts,
   loading,
-  previewSlug,
   previewHtml,
   previewLoading,
 } = model;
@@ -42,7 +40,7 @@ const {
             <tr
               v-for="post in posts"
               :key="post.slug"
-              :class="{ active: post.slug === previewSlug }"
+              :class="{ active: post.slug === model.previewSlug }"
             >
               <td>
                 <div class="post-title">{{ post.title }}</div>
@@ -50,7 +48,7 @@ const {
               </td>
               <td>{{ Format.Class.date(post.timestamp) }}</td>
               <td>
-                <button class="primary" @click="model.openPreview(post.slug)">
+                <button class="primary" @click="app.openEmailPreview(post.slug)">
                   Preview
                 </button>
               </td>
@@ -59,10 +57,10 @@ const {
         </table>
       </div>
 
-      <div v-if="previewSlug" class="preview card">
+      <div v-if="model.previewSlug" class="preview card">
         <header class="drawer-head">
-          <h2>{{ previewSlug }}</h2>
-          <button class="ghost" @click="model.closePreview()">Close</button>
+          <h2>{{ model.previewSlug }}</h2>
+          <button class="ghost" @click="app.closeEmailPreview()">Close</button>
         </header>
         <p v-if="previewLoading" class="muted">Rendering…</p>
         <iframe

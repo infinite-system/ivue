@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { SendModel } from './SendModel';
-import type { AppModel } from '../app/AppModel';
 
-const props = defineProps<{ app: AppModel.Instance }>();
-
-const model = new SendModel.Class(props.app);
+const model = new SendModel.Class();
 const {
   // state refs
   posts,

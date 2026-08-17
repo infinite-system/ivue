@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { SendsModel } from './SendsModel';
+import { AppStore } from '../app/AppStore';
 import { Format } from '../platform/Format';
-import type { AppModel } from '../app/AppModel';
 
-const props = defineProps<{ app: AppModel.Instance }>();
+const app = AppStore.use();
 
-const model = new SendsModel.Class(props.app);
+const model = new SendsModel.Class();
 const {
   // state refs
   rows,
@@ -54,7 +54,14 @@ const {
           <tr v-for="row in rows" v-else :key="row.email + row.slug">
             <td>{{ Format.Class.dateTime(row.sentAt) }}</td>
             <td>{{ row.email }}</td>
-            <td><span class="slug">{{ row.slug }}</span></td>
+            <td>
+              <button
+                class="linklike slug"
+                @click="app.openEmailPreview(row.slug)"
+              >
+                {{ row.slug }}
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>

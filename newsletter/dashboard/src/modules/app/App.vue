@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { AppModel } from './AppModel';
+import { AppStore } from './AppStore';
 import SubscribersView from '../subscribers/SubscribersView.vue';
 import SendsView from '../sends/SendsView.vue';
 import PostsView from '../posts/PostsView.vue';
@@ -8,7 +8,7 @@ import SendView from '../send/SendView.vue';
 import DripView from '../drip/DripView.vue';
 import StatsView from '../stats/StatsView.vue';
 
-const app = new AppModel.Class();
+const app = AppStore.use();
 const {
   // state refs
   checking,
@@ -20,15 +20,6 @@ const {
 } = app;
 
 onMounted(() => app.probe());
-
-const TABS = [
-  { name: 'subscribers', label: 'Subscribers' },
-  { name: 'sends', label: 'Sent' },
-  { name: 'posts', label: 'Posts' },
-  { name: 'send', label: 'Send' },
-  { name: 'drip', label: 'Drip' },
-  { name: 'stats', label: 'Stats' },
-] as const;
 </script>
 
 <template>
@@ -41,7 +32,7 @@ const TABS = [
       </div>
       <nav v-if="authenticated" class="tabs" aria-label="Sections">
         <button
-          v-for="tab in TABS"
+          v-for="tab in app.TABS"
           :key="tab.name"
           class="tab"
           :class="{ active: view === tab.name }"
@@ -82,12 +73,12 @@ const TABS = [
     </main>
 
     <main v-else class="content">
-      <SubscribersView v-if="view === 'subscribers'" :app="app" />
-      <SendsView v-else-if="view === 'sends'" :app="app" />
-      <PostsView v-else-if="view === 'posts'" :app="app" />
-      <SendView v-else-if="view === 'send'" :app="app" />
-      <DripView v-else-if="view === 'drip'" :app="app" />
-      <StatsView v-else :app="app" />
+      <SubscribersView v-if="view === 'subscribers'" />
+      <SendsView v-else-if="view === 'sends'" />
+      <PostsView v-else-if="view === 'posts'" />
+      <SendView v-else-if="view === 'send'" />
+      <DripView v-else-if="view === 'drip'" />
+      <StatsView v-else />
     </main>
 
     <div class="toasts" aria-live="polite">

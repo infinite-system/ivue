@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { StatsModel } from './StatsModel';
+import { AppStore } from '../app/AppStore';
 import { Format } from '../platform/Format';
-import type { AppModel } from '../app/AppModel';
 
-const props = defineProps<{ app: AppModel.Instance }>();
+const app = AppStore.use();
 
-const model = new StatsModel.Class(props.app);
+const model = new StatsModel.Class();
 const {
   // state refs
   stats,
@@ -65,7 +65,14 @@ const {
                 <td colspan="3" class="muted">Nothing sent yet.</td>
               </tr>
               <tr v-for="entry in stats.perPost" :key="entry.slug">
-                <td><span class="slug">{{ entry.slug }}</span></td>
+                <td>
+                  <button
+                    class="linklike slug"
+                    @click="app.openEmailPreview(entry.slug)"
+                  >
+                    {{ entry.slug }}
+                  </button>
+                </td>
                 <td>{{ entry.sendCount }}</td>
                 <td>{{ Format.Class.dateTime(entry.lastSentAt) }}</td>
               </tr>

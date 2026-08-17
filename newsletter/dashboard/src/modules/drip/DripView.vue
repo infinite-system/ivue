@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { DripModel } from './DripModel';
+import { AppStore } from '../app/AppStore';
 import { Format } from '../platform/Format';
-import type { AppModel } from '../app/AppModel';
 
-const props = defineProps<{ app: AppModel.Instance }>();
+const app = AppStore.use();
 
-const model = new DripModel.Class(props.app);
+const model = new DripModel.Class();
 const {
   // state refs
   entries,
@@ -56,7 +56,13 @@ const {
             <td>{{ entry.email }}</td>
             <td>{{ entry.sentCount }}</td>
             <td>
-              <span v-if="entry.nextSlug" class="slug">{{ entry.nextSlug }}</span>
+              <button
+                v-if="entry.nextSlug"
+                class="linklike slug"
+                @click="app.openEmailPreview(entry.nextSlug)"
+              >
+                {{ entry.nextSlug }}
+              </button>
               <span v-else class="muted">caught up</span>
             </td>
             <td>{{ Format.Class.dateTime(entry.lastSentAt) }}</td>

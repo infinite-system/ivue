@@ -2,15 +2,20 @@ import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
 import type { ListSummary, PostSummary, SendResult } from '../platform/Api';
-import type { AppModel } from '../app/AppModel';
+import { AppStore } from '../app/AppStore';
 
 // Sending: a targeted send (specific post → specific addresses, ledger-
 // checked, with an explicit force-resend), a whole-list broadcast, and
 // the on-demand drip pass. Broadcast and drip arm-then-confirm — one
 // click never mails a list.
 class $SendModel {
-  constructor(public app: AppModel.Instance) {
+  constructor() {
     this.load();
+  }
+
+  // the app store — resolved and cached on first touch (store pattern)
+  protected get $app() {
+    return AppStore.use();
   }
 
   get posts() {
@@ -77,7 +82,7 @@ class $SendModel {
       );
       this.lists.value = lists;
     } catch (error) {
-      this.app.reportFailure(error);
+      this.$app.reportFailure(error);
     }
   }
 
@@ -92,12 +97,12 @@ class $SendModel {
         force: this.force.value,
       });
       this.result.value = report;
-      this.app.notify(
+      this.$app.notify(
         `Delivered ${report.delivered}, skipped as repeat ${report.skippedAsRepeat.length}.`,
         report.delivered > 0 ? 'success' : 'info',
       );
     } catch (error) {
-      this.app.reportFailure(error);
+      this.$app.reportFailure(error);
     } finally {
       this.sending.value = false;
     }
@@ -115,12 +120,12 @@ class $SendModel {
         this.slug.value,
         this.broadcastList.value,
       );
-      this.app.notify(
+      this.$app.notify(
         `Broadcast "${report.slug}": ${report.recipients} sent, ${report.skippedAsRepeat} already had it.`,
         'success',
       );
     } catch (error) {
-      this.app.reportFailure(error);
+      this.$app.reportFailure(error);
     }
   }
 
@@ -132,9 +137,9 @@ class $SendModel {
     this.dripArmed.value = false;
     try {
       const outcome = await Api.Class.dripNow();
-      this.app.notify(`Drip pass delivered ${outcome.delivered}.`, 'success');
+      this.$app.notify(`Drip pass delivered ${outcome.delivered}.`, 'success');
     } catch (error) {
-      this.app.reportFailure(error);
+      this.$app.reportFailure(error);
     }
   }
 

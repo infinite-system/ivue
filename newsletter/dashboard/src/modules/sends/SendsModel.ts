@@ -2,15 +2,20 @@ import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
 import type { SendLogRow } from '../platform/Api';
-import type { AppModel } from '../app/AppModel';
+import { AppStore } from '../app/AppStore';
 
 // The global send log: every (recipient, post) delivery ever recorded in
 // the ledger, newest first, searchable by recipient or slug — sending
 // history as a first-class trackable surface, not just the per-
 // subscriber drawer.
 class $SendsModel {
-  constructor(public app: AppModel.Instance) {
+  constructor() {
     this.refresh();
+  }
+
+  // the app store — resolved and cached on first touch (store pattern)
+  protected get $app() {
+    return AppStore.use();
   }
 
   get PAGE_SIZE() {
@@ -64,7 +69,7 @@ class $SendsModel {
       this.rows.value = page.rows;
       this.total.value = page.total;
     } catch (error) {
-      this.app.reportFailure(error);
+      this.$app.reportFailure(error);
     } finally {
       this.loading.value = false;
     }

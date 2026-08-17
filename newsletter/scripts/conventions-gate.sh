@@ -164,7 +164,7 @@ fi
 #     X.test.ts. Dashboard MODELS ride a shrinking allowlist (below) until
 #     each gains its test; the list only ever SHRINKS.
 untested_dashboard_models_allowlist="
-dashboard/src/modules/app/AppModel.ts
+dashboard/src/modules/app/AppStore.ts
 dashboard/src/modules/subscribers/SubscribersModel.ts
 dashboard/src/modules/posts/PostsModel.ts
 dashboard/src/modules/send/SendModel.ts

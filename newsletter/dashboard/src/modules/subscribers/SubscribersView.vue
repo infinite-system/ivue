@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { SubscribersModel } from './SubscribersModel';
+import { AppStore } from '../app/AppStore';
 import { Format } from '../platform/Format';
-import type { AppModel } from '../app/AppModel';
 
-const props = defineProps<{ app: AppModel.Instance }>();
+const app = AppStore.use();
 
-const model = new SubscribersModel.Class(props.app);
+const model = new SubscribersModel.Class();
 const {
   // state refs
   rows,
@@ -179,7 +179,12 @@ const {
           <p v-if="!detail.history.length" class="muted">Nothing sent yet.</p>
           <ol class="history">
             <li v-for="sent in detail.history" :key="sent.slug">
-              <span class="slug">{{ sent.slug }}</span>
+              <button
+                class="linklike slug"
+                @click="app.openEmailPreview(sent.slug)"
+              >
+                {{ sent.slug }}
+              </button>
               <span class="muted">{{ Format.Class.dateTime(sent.sentAt) }}</span>
             </li>
           </ol>
