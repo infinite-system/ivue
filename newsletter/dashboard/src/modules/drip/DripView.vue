@@ -44,11 +44,13 @@ const {
           </tr>
         </thead>
         <tbody>
-          <tr v-if="loading">
-            <td colspan="5" class="muted">Loading…</td>
-          </tr>
+          <template v-if="loading">
+            <tr v-for="placeholder in 5" :key="placeholder">
+              <td colspan="5"><span class="skeleton"></span></td>
+            </tr>
+          </template>
           <tr v-else-if="!entries.length">
-            <td colspan="5" class="muted">No active subscribers.</td>
+            <td colspan="5" class="empty">No active subscribers.</td>
           </tr>
           <tr v-for="entry in entries" v-else :key="entry.email">
             <td>{{ entry.email }}</td>

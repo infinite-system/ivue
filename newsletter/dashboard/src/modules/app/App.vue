@@ -33,6 +33,7 @@ const TABS = [
   <div class="shell">
     <header class="topbar">
       <div class="brand">
+        <span class="brand-glyph" aria-hidden="true"></span>
         <span class="brand-mark">ivue</span>
         <span class="brand-sub">newsletter admin</span>
       </div>
@@ -59,6 +60,7 @@ const TABS = [
 
     <main v-else-if="!authenticated" class="gate">
       <form class="login card" @submit.prevent="app.login()">
+        <span class="brand-glyph" aria-hidden="true"></span>
         <h1>Unlock the dashboard</h1>
         <p class="muted">
           Paste the admin secret. It stays in this tab's session storage —

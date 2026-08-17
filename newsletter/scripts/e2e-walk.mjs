@@ -38,7 +38,8 @@ async function shot(name) {
     shotDirectory,
     `${String(shotIndex).padStart(2, '0')}-${name}.png`,
   );
-  await page.screenshot({ path, fullPage: false });
+  // fast-forward CSS animations so shots never catch a mid-fade frame
+  await page.screenshot({ path, fullPage: false, animations: 'disabled' });
   console.log(`shot: ${path}`);
 }
 
@@ -259,7 +260,7 @@ try {
   check(
     'drip preview shows due-now subscribers',
     (await page.locator('[data-view="drip"] .statline').innerText()).match(
-      /\d+ due now/,
+      /\d+\s+due now/,
     ) !== null,
   );
   await shot('drip-preview');

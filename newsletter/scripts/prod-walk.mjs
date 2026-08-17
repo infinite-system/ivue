@@ -34,7 +34,8 @@ async function shot(name) {
     shotDirectory,
     `${String(shotIndex).padStart(2, '0')}-${name}.png`,
   );
-  await page.screenshot({ path });
+  // fast-forward CSS animations so shots never catch a mid-fade frame
+  await page.screenshot({ path, animations: 'disabled' });
   console.log(`shot: ${path}`);
 }
 

@@ -81,11 +81,13 @@ const {
           </tr>
         </thead>
         <tbody>
-          <tr v-if="loading">
-            <td colspan="8" class="muted">Loading…</td>
-          </tr>
+          <template v-if="loading">
+            <tr v-for="placeholder in 6" :key="placeholder">
+              <td colspan="8"><span class="skeleton"></span></td>
+            </tr>
+          </template>
           <tr v-else-if="!rows.length">
-            <td colspan="8" class="muted">
+            <td colspan="8" class="empty">
               No subscribers match — clear the search or add one below.
             </td>
           </tr>
