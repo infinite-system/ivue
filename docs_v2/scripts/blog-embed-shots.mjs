@@ -57,6 +57,13 @@ try {
     });
     await page.waitForSelector('.vp-doc', { timeout: 20_000 });
     await page.evaluate(() => document.documentElement.classList.add('dark'));
+    // newsletter surfaces are position:fixed and paint OVER an embed's
+    // bounding box when it sits low in the viewport — keep them out of
+    // every shot
+    await page.addStyleTag({
+      content:
+        '.newsletter, .newsletter-pill { display: none !important; }',
+    });
     await page.waitForTimeout(900); // demos mount client-side
     const embeds = page.locator('.vp-doc .dbx');
     const count = await embeds.count();
