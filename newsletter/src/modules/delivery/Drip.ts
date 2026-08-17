@@ -1,6 +1,7 @@
 import { Static } from 'ivue/extras';
 import { Http } from '../platform/Http';
 import { Posts } from '../content/Posts';
+import { Settings } from '../config/Settings';
 import { Audience } from '../audience/Audience';
 import { Ledger } from '../audience/Ledger';
 import { Delivery } from './Delivery';
@@ -63,7 +64,7 @@ class $Drip {
     if (!posts.length || !recipients.length) return 0;
 
     const sendRows = await Ledger.Class.allRows(env);
-    const cadenceSeconds = Number(env.CADENCE_HOURS) * 3600;
+    const cadenceSeconds = (await Settings.Class.cadenceHours(env)) * 3600;
     const entries = this.plan(
       posts,
       recipients,
@@ -94,26 +95,35 @@ class $Drip {
   }
 
   // The dashboard's preview: the same plan the next cron tick executes.
-  static async preview(env: Env): Promise<DripPlanEntry[]> {
+  static async preview(env: Env): Promise<DripPreview> {
     const posts = await Posts.Class.load(env);
     const recipients = await Audience.Class.active(
       env,
       Audience.Class.DEFAULT_LIST,
     );
     const sendRows = await Ledger.Class.allRows(env);
-    return this.plan(
-      posts,
-      recipients,
-      sendRows,
-      Number(env.CADENCE_HOURS) * 3600,
-      Http.Class.nowSeconds(),
-    );
+    const cadenceHours = await Settings.Class.cadenceHours(env);
+    return {
+      cadenceHours,
+      entries: this.plan(
+        posts,
+        recipients,
+        sendRows,
+        cadenceHours * 3600,
+        Http.Class.nowSeconds(),
+      ),
+    };
   }
 }
 
 export namespace Drip {
   export const $Class = Static($Drip);
   export let Class = $Class;
+}
+
+export interface DripPreview {
+  cadenceHours: number;
+  entries: DripPlanEntry[];
 }
 
 export interface DripPlanEntry {

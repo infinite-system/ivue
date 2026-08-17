@@ -155,6 +155,16 @@ class $Api {
     return this.request('/admin/lists');
   }
 
+  static settings(): Promise<{ cadenceHours: number }> {
+    return this.request('/admin/settings');
+  }
+
+  static saveSettings(settings: {
+    cadenceHours: number;
+  }): Promise<{ ok: boolean; cadenceHours: number }> {
+    return this.post('/admin/settings', settings);
+  }
+
   static stats(): Promise<Stats> {
     return this.request('/admin/stats');
   }

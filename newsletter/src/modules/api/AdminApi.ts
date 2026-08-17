@@ -2,6 +2,7 @@ import { Static } from 'ivue/extras';
 import { Http } from '../platform/Http';
 import { Security } from '../platform/Security';
 import { Posts } from '../content/Posts';
+import { Settings } from '../config/Settings';
 import { Audience } from '../audience/Audience';
 import { Ledger } from '../audience/Ledger';
 import { Delivery } from '../delivery/Delivery';
@@ -46,6 +47,10 @@ class $AdminApi {
         return this.dripPreview(env);
       case 'GET /admin/lists':
         return this.lists(env);
+      case 'GET /admin/settings':
+        return this.settings(env);
+      case 'POST /admin/settings':
+        return this.saveSettings(request, env);
       case 'GET /admin/stats':
         return this.stats(env);
       default:
@@ -184,10 +189,29 @@ class $AdminApi {
   }
 
   static async dripPreview(env: Env): Promise<Response> {
+    return Http.Class.json(await Drip.Class.preview(env));
+  }
+
+  static async settings(env: Env): Promise<Response> {
     return Http.Class.json({
-      cadenceHours: Number(env.CADENCE_HOURS),
-      entries: await Drip.Class.preview(env),
+      cadenceHours: await Settings.Class.cadenceHours(env),
     });
+  }
+
+  static async saveSettings(request: Request, env: Env): Promise<Response> {
+    const body = await Http.Class.readJsonBody<{ cadenceHours: number }>(
+      request,
+    );
+    const cadenceHours = Number(body.cadenceHours);
+    if (!Settings.Class.isValidCadence(cadenceHours))
+      return Http.Class.json(
+        {
+          error: `Cadence must be ${Settings.Class.CADENCE_MINIMUM_HOURS}–${Settings.Class.CADENCE_MAXIMUM_HOURS} hours.`,
+        },
+        400,
+      );
+    await Settings.Class.setCadenceHours(env, cadenceHours);
+    return Http.Class.json({ ok: true, cadenceHours });
   }
 
   static async lists(env: Env): Promise<Response> {

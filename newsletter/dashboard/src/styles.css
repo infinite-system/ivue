@@ -88,6 +88,16 @@ body::before {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  /* the brand is a home button — strip the control chrome */
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.brand:hover:not(:disabled) {
+  background: none;
+  border: 0;
 }
 
 .brand-glyph {
@@ -97,6 +107,14 @@ body::before {
   background: linear-gradient(135deg, var(--accent-strong), var(--accent-2));
   box-shadow: 0 0 14px rgba(99, 102, 241, 0.45);
   flex: none;
+  /* the infinity mark */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .brand-mark {
@@ -408,6 +426,7 @@ label {
   height: 2.4rem;
   border-radius: 10px;
   margin-bottom: 1rem;
+  font-size: 1.7rem;
 }
 
 .login h1 {
@@ -433,6 +452,13 @@ label {
 .table-scroll {
   overflow-x: auto;
   padding: 0;
+}
+
+/* a titled table card: the h2 gets the padding the card gave up */
+.table-scroll > h2 {
+  margin: 0;
+  padding: 0.85rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--panel-edge-soft);
 }
 
 table {
@@ -606,7 +632,7 @@ td {
 }
 
 .addbar {
-  margin-top: 0.25rem;
+  margin-bottom: 1.1rem;
 }
 
 .addbar h2 {
@@ -809,6 +835,29 @@ hr {
 
 .statline .ghost {
   align-self: center;
+}
+
+/* the cadence editor rides the statline as one of its tiles */
+.stat.cadence {
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.stat.cadence label {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.stat.cadence input {
+  width: 4.6rem;
+  min-height: 2.1rem;
+  padding: 0.25rem 0.5rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat.cadence .primary {
+  padding: 0.3rem 0.7rem;
 }
 
 .stats-layout {

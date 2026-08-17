@@ -26,6 +26,22 @@ const {
 
 <template>
   <section class="view" data-view="subscribers">
+    <form class="addbar card" @submit.prevent="model.addSubscriber()">
+      <h2>Add subscriber</h2>
+      <div class="addbar-fields">
+        <input
+          v-model="addEmail"
+          type="email"
+          placeholder="email@example.com"
+          aria-label="New subscriber email"
+          required
+        />
+        <input v-model="addName" placeholder="Name (optional)" aria-label="Name" />
+        <input v-model="addList" placeholder="list" aria-label="List" />
+        <button class="primary" type="submit">Add</button>
+      </div>
+    </form>
+
     <div class="view-head">
       <h1>Subscribers <span class="count">{{ total }}</span></h1>
       <form class="searchbar" @submit.prevent="model.searchNow()">
@@ -138,21 +154,6 @@ const {
       </button>
     </div>
 
-    <form class="addbar card" @submit.prevent="model.addSubscriber()">
-      <h2>Add subscriber</h2>
-      <div class="addbar-fields">
-        <input
-          v-model="addEmail"
-          type="email"
-          placeholder="email@example.com"
-          aria-label="New subscriber email"
-          required
-        />
-        <input v-model="addName" placeholder="Name (optional)" aria-label="Name" />
-        <input v-model="addList" placeholder="list" aria-label="List" />
-        <button class="primary" type="submit">Add</button>
-      </div>
-    </form>
 
     <div v-if="model.drawerOpen" class="drawer-backdrop" @click.self="model.closeDetail()">
       <aside class="drawer card" aria-label="Subscriber detail">

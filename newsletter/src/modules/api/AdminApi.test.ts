@@ -143,6 +143,32 @@ describe('AdminApi', () => {
     expect(markup).not.toContain('{{UNSUBSCRIBE_URL}}');
   });
 
+  it('settings roundtrip: cadence saves, invalid values are refused', async () => {
+    const env = makeTestEnv();
+    const initial = (await (await call('/admin/settings', env)).json()) as {
+      cadenceHours: number;
+    };
+    expect(initial.cadenceHours).toBe(40); // env fallback
+
+    await call('/admin/settings', env, 'POST', { cadenceHours: 24 });
+    const updated = (await (await call('/admin/settings', env)).json()) as {
+      cadenceHours: number;
+    };
+    expect(updated.cadenceHours).toBe(24);
+
+    const refused = await call('/admin/settings', env, 'POST', {
+      cadenceHours: 0,
+    });
+    expect(refused.status).toBe(400);
+
+    // the drip preview reads the stored cadence, not the env var
+    installFetchStub({ posts: [makePost('first-post', 1)] });
+    const plan = (await (await call('/admin/drip-preview', env)).json()) as {
+      cadenceHours: number;
+    };
+    expect(plan.cadenceHours).toBe(24);
+  });
+
   it('drip-preview exposes the plan and stats aggregates the system', async () => {
     const env = makeTestEnv();
     await Audience.Class.enroll(env, 'ada@ivue.dev', 'Ada', 'newsletter');

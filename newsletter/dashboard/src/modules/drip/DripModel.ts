@@ -24,8 +24,26 @@ class $DripModel {
     return ref(0);
   }
 
+  // the editable cadence — saved to the Worker's D1 settings, effective
+  // on the very next drip pass (cron or manual), no deploy involved
+  get cadenceDraft() {
+    return ref('');
+  }
+
+  get savingCadence() {
+    return ref(false);
+  }
+
   get loading() {
     return ref(true);
+  }
+
+  get cadenceDirty() {
+    return Number(this.cadenceDraft.value) !== this.cadenceHours.value;
+  }
+
+  get cadenceSaveDisabled() {
+    return !this.cadenceDirty || this.savingCadence.value;
   }
 
   get dueNowCount() {
@@ -42,10 +60,27 @@ class $DripModel {
       const preview = await Api.Class.dripPreview();
       this.entries.value = preview.entries;
       this.cadenceHours.value = preview.cadenceHours;
+      this.cadenceDraft.value = String(preview.cadenceHours);
     } catch (error) {
       this.$app.reportFailure(error);
     } finally {
       this.loading.value = false;
+    }
+  }
+
+  async saveCadence() {
+    if (this.cadenceSaveDisabled) return;
+    this.savingCadence.value = true;
+    try {
+      const saved = await Api.Class.saveSettings({
+        cadenceHours: Number(this.cadenceDraft.value),
+      });
+      this.$app.notify(`Cadence is now ${saved.cadenceHours}h.`, 'success');
+      await this.load(); // due times shift with the new cadence
+    } catch (error) {
+      this.$app.reportFailure(error);
+    } finally {
+      this.savingCadence.value = false;
     }
   }
 }
