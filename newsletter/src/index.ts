@@ -373,7 +373,20 @@ async function sendPost(
 async function loadPosts(env: Env): Promise<Post[]> {
   const response = await fetch(`${env.SITE_ORIGIN}/blog-index.json`);
   if (!response.ok) throw new Error(`blog-index.json ${response.status}`);
-  return response.json(); // sorted oldest-first by the generator
+  const posts = (await response.json()) as Post[];
+  // deploy-order skew guard: a Worker newer than the deployed site would
+  // read posts without emailHtml — skip them loudly instead of throwing
+  const ready = posts.filter((post) => typeof post.emailHtml === 'string');
+  if (ready.length < posts.length) {
+    console.error(
+      JSON.stringify({
+        event: 'posts_missing_email_html',
+        missing: posts.length - ready.length,
+        hint: 'deploy the site (blog-index.json is stale)',
+      }),
+    );
+  }
+  return ready; // sorted oldest-first by the generator
 }
 
 async function activeSubscribers(env: Env): Promise<Subscriber[]> {
