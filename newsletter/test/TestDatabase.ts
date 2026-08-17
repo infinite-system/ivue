@@ -85,7 +85,7 @@ export function makeTestEnv(
     DB: new TestDatabase.Class() as unknown as Env['DB'],
     SITE_ORIGIN: 'https://ivue.dev',
     WORKER_ORIGIN: 'https://newsletter.test',
-    SENDER_NAME: 'Evgeny from ivue',
+    SENDER_NAME: 'ivue.dev',
     SENDER_EMAIL: 'newsletter@ivue.dev',
     REPLY_TO: 'newsletter@ivue.dev',
     POSTMARK_STREAM: 'newsletter',

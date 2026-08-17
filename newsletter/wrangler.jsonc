@@ -50,7 +50,7 @@
 		// this Worker's own public URL — printed on first deploy; used in
 		// unsubscribe links (or set a custom route like https://news.ivue.dev)
 		"WORKER_ORIGIN": "https://ivue-newsletter.ekalashnikov.workers.dev",
-		"SENDER_NAME": "Evgeny from ivue",
+		"SENDER_NAME": "ivue.dev",
 		"SENDER_EMAIL": "newsletter@ivue.dev",
 		// replies route via Cloudflare Email Routing to a real inbox
 		"REPLY_TO": "newsletter@ivue.dev",
