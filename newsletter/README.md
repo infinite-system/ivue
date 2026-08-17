@@ -24,8 +24,7 @@ Cadence: one email per subscriber at most every `CADENCE_HOURS` (default
      Return-Path DNS records it shows (Cloudflare DNS, 5 minutes).
    - In your server, create a **Broadcasts message stream** (newsletters
      must not ride the transactional stream — Postmark enforces this).
-     Put its id in `wrangler.jsonc` → `POSTMARK_STREAM` (default id is
-     `broadcasts`).
+     Put its id in `wrangler.jsonc` → `POSTMARK_STREAM` (ours: `newsletter`).
    - Copy the **Server API token** (server → API Tokens).
 
 2. **Create the database and run migrations** (from this directory):

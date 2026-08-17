@@ -36,7 +36,7 @@
 		"REPLY_TO": "newsletter@ivue.dev",
 		// Postmark message stream for bulk mail — MUST be a Broadcasts stream,
 		// never the transactional default ("outbound")
-		"POSTMARK_STREAM": "broadcasts",
+		"POSTMARK_STREAM": "newsletter",
 		// minimum hours between two emails to the same subscriber (~every other day)
 		"CADENCE_HOURS": "40",
 		// Turnstile: hostnames the widget may report (frontend origins).
