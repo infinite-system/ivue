@@ -31,6 +31,9 @@ interface Post {
   url: string;
   date: string | null;
   timestamp: number;
+  // the complete email body, rendered at site build time by
+  // docs_v2/scripts/blog-email-renderer.mjs; one placeholder remains
+  emailHtml: string;
 }
 
 interface Subscriber {
@@ -309,7 +312,7 @@ async function sendPost(
         ReplyTo: env.REPLY_TO,
         To: recipient.email,
         Subject: post.title,
-        HtmlBody: renderEmail(post, unsubscribe),
+        HtmlBody: post.emailHtml.replaceAll('{{UNSUBSCRIBE_URL}}', unsubscribe),
         MessageStream: env.POSTMARK_STREAM,
         Headers: [
           { Name: 'List-Unsubscribe', Value: `<${unsubscribe}>` },
@@ -363,33 +366,6 @@ async function sendPost(
     if (statements.length) await env.DB.batch(statements);
   }
   return delivered;
-}
-
-function renderEmail(post: Post, unsubscribe: string): string {
-  const dateLine = post.date
-    ? new Date(post.date + 'T00:00:00Z').toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        timeZone: 'UTC',
-      })
-    : '';
-  return `<!doctype html>
-<html><body style="margin:0;background:#f4f6fb;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
-  <div style="max-width:560px;margin:0 auto;padding:36px 20px">
-    <p style="margin:0 0 22px;font-size:12px;letter-spacing:.14em;color:#6b7a99">IVUE NEWSLETTER</p>
-    <div style="background:#ffffff;border:1px solid #e3e8f2;border-radius:12px;padding:30px 32px">
-      <h1 style="margin:0 0 8px;font-size:23px;line-height:1.3;color:#101828">${escapeHtml(post.title)}</h1>
-      ${dateLine ? `<p style="margin:0 0 18px;font-size:12.5px;color:#8a94a8">${dateLine}</p>` : ''}
-      <p style="margin:0 0 26px;font-size:15.5px;line-height:1.65;color:#3a4459">${escapeHtml(post.description)}</p>
-      <a href="${post.url}" style="display:inline-block;background:#4f6af0;color:#ffffff;text-decoration:none;font-size:14.5px;font-weight:600;padding:11px 22px;border-radius:8px">Read the post &rarr;</a>
-    </div>
-    <p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#8a94a8">
-      You're receiving the ivue newsletter — every post from the archive,
-      one at a time. <a href="${unsubscribe}" style="color:#6b7a99">Unsubscribe</a>
-    </p>
-  </div>
-</body></html>`;
 }
 
 // ------------------------------------------------------------------ shared

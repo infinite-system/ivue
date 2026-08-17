@@ -124,13 +124,26 @@ curl -X POST "$WORKER/broadcast" \
 Sends that post now to everyone who never received it, writes the ledger,
 and reports `{recipients, skippedAsRepeat}`.
 
-## How the drip finds posts
+## How the drip finds posts — and what it sends
 
 The site build emits `https://ivue.dev/blog-index.json`
-(`docs_v2/scripts/blog-index-generator.mjs`, chained into `build:docs`) —
-slugs, titles, descriptions, dates, sorted oldest-first. Publishing a post
-requires no Worker change: it appears in the index, and everyone who is
-caught up receives it as their next drip email.
+(`docs_v2/scripts/blog-index-generator.mjs`, chained into `build:docs`):
+slugs, subjects, dates sorted oldest-first, and each post's COMPLETE
+email HTML, rendered deterministically at build time by
+`docs_v2/scripts/blog-email-renderer.mjs` — lockup header, banner, full
+post body (code blocks, tables, quotes, lists), interactive embeds as
+committed screenshots ("click to view the live example"), author badge,
+and newer/older post cards. The Worker substitutes only the
+per-recipient `{{UNSUBSCRIBE_URL}}` placeholder.
+
+Publishing a post requires no Worker change. If the post embeds an
+interactive component, run `npm run render:embeds` locally after
+`build:docs` and commit the PNG (the Cloudflare build has no browser).
+Preview any post's email:
+
+```sh
+node docs_v2/scripts/blog-email-renderer.mjs <slug> > /tmp/email.html
+```
 
 ## Notes
 
