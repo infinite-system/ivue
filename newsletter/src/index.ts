@@ -11,6 +11,7 @@
 //   POST /subscribe     {name, email, turnstileToken} — site form → D1
 //   GET  /unsubscribe   ?email=&token=        — HMAC-signed one-click out
 //   POST /broadcast     {slug}  (Bearer ADMIN_SECRET) — send a post NOW
+//   POST /drip          (Bearer ADMIN_SECRET) — run a drip pass on demand
 //   cron daily                                — each due subscriber gets
 //                                               their oldest unsent post
 
@@ -54,6 +55,8 @@ export default {
         return unsubscribe(url, env);
       if (url.pathname === '/broadcast' && request.method === 'POST')
         return broadcast(request, env);
+      if (url.pathname === '/drip' && request.method === 'POST')
+        return drip(request, env);
       return new Response('Not found', { status: 404 });
     } catch (error) {
       console.error(
@@ -226,12 +229,21 @@ async function broadcast(request: Request, env: Env): Promise<Response> {
   });
 }
 
+// The cron's exact pass, runnable on demand — same auth as /broadcast.
+async function drip(request: Request, env: Env): Promise<Response> {
+  const authorization = request.headers.get('authorization') ?? '';
+  if (!(await timingSafeEqualStrings(authorization, `Bearer ${env.ADMIN_SECRET}`)))
+    return json({ error: 'Unauthorized' }, 401);
+  const delivered = await runDrip(env);
+  return json({ ok: true, delivered });
+}
+
 // -------------------------------------------------------------------- cron
 
-async function runDrip(env: Env): Promise<void> {
+async function runDrip(env: Env): Promise<number> {
   const posts = await loadPosts(env); // oldest first
   const recipients = await activeSubscribers(env);
-  if (!posts.length || !recipients.length) return;
+  if (!posts.length || !recipients.length) return 0;
 
   const cadenceSeconds = Number(env.CADENCE_HOURS) * 3600;
   const now = nowSeconds();
@@ -271,10 +283,12 @@ async function runDrip(env: Env): Promise<void> {
     queue.push(recipient);
   }
 
+  let delivered = 0;
   for (const [slug, group] of queueBySlug) {
     const post = posts.find((candidate) => candidate.slug === slug);
-    if (post) await sendPost(env, post, group);
+    if (post) delivered += await sendPost(env, post, group);
   }
+  return delivered;
 }
 
 // ----------------------------------------------------------------- sending
