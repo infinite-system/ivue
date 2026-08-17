@@ -282,10 +282,10 @@ export async function renderEmail(post, allPosts) {
     </div>
     <div style="margin:22px 0 0;padding:16px 18px;background:${CARD_BG};border:1px solid ${EDGE};border-radius:12px">
       <table role="presentation" style="border-collapse:collapse"><tr>
-        <td style="vertical-align:middle;padding:0 14px 0 0">
+        <td style="vertical-align:top;padding:2px 14px 0 0">
           <img src="${SITE}/avatars/evgeny.png" alt="Evgeny Kalashnikov" width="54" height="54" style="display:block;border-radius:50%;border:0" />
         </td>
-        <td style="vertical-align:middle">
+        <td style="vertical-align:top">
           <div style="font-size:10.5px;letter-spacing:.12em;color:${MUTED};margin:0 0 3px">AUTHOR</div>
           <div style="font-size:15px;font-weight:600;color:${HEADING};margin:0 0 2px">Evgeny Kalashnikov</div>
           <div style="font-size:12.5px;color:${MUTED};margin:0 0 4px">Lead Software Engineer @ Blackline, Adhoc Studio</div>

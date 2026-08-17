@@ -24,7 +24,9 @@ export default mergeConfig(
     },
     test: {
       environment: "jsdom",
-      exclude: [...configDefaults.exclude, "e2e/*", "**/demo/**"],
+      // newsletter/ has its own vitest config (node env, D1 test adapter,
+      // crypto polyfill) — run it FROM newsletter/, never from the root glob
+      exclude: [...configDefaults.exclude, "e2e/*", "**/demo/**", "newsletter/**"],
       root: fileURLToPath(new URL("./", import.meta.url)),
       reporters: ["default", "html", "verbose"],
       server: {
