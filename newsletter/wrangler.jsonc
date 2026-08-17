@@ -7,6 +7,25 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2026-08-16",
 	"compatibility_flags": ["nodejs_compat"],
+	// the Worker imports ivue's Static() straight from this repo's source
+	"alias": {
+		"ivue/extras": "../lib/extras.ts"
+	},
+	// the admin dashboard (dashboard/ — Vite build) ships as this Worker's
+	// static assets; API paths run the Worker first, everything else is the
+	// dashboard SPA. Build before deploy: npm run build (from dashboard/).
+	"assets": {
+		"directory": "dashboard/dist",
+		"not_found_handling": "single-page-application",
+		"run_worker_first": [
+			"/subscribe",
+			"/unsubscribe",
+			"/broadcast",
+			"/drip",
+			"/postmark-webhook",
+			"/admin/*"
+		]
+	},
 	"observability": {
 		"enabled": true,
 		"logs": { "head_sampling_rate": 1 }

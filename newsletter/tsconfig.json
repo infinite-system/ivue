@@ -7,7 +7,19 @@
     "types": [],
     "strict": true,
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    // the Worker uses ivue's Static() from THIS repo's source; wrangler
+    // resolves the same specifier via its `alias` config
+    "paths": {
+      "ivue/extras": ["../lib/extras.ts"]
+    }
   },
-  "include": ["src/**/*.ts", "worker-configuration.d.ts"]
+  "include": [
+    "src/**/*.ts",
+    "worker-configuration.d.ts",
+    "../lib/extras.ts",
+    "../lib/Static.ts"
+  ],
+  // tests typecheck via tsconfig.test.json (they need node + vitest types)
+  "exclude": ["src/**/*.test.ts"]
 }

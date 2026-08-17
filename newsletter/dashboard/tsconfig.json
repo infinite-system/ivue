@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "paths": {
+      "ivue/extras": ["../../lib/extras.ts"],
+      "ivue": ["../../lib/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "../../lib/**/*.ts"],
+  "exclude": ["../../lib/__tests__"]
+}
