@@ -1,9 +1,11 @@
 # LESSONS.md — hard-won lessons that must not perish
 
-Append-only knowledge base for humans and AI agents working on this repo.
-When a session learns something the hard way (a broken build, a wrong
-published number, a shell trap), it gets a bullet here — with the failure
-that taught it. Read this before touching benchmarks, docs, or releases.
+Knowledge base for humans and AI agents working on this repo. When a
+session learns something the hard way (a broken build, a wrong published
+number, a shell trap), it gets a bullet here — with the failure that
+taught it. Sessions append; periodic curation merges and retires
+superseded entries (history stays in git). Read this before touching
+benchmarks, docs, deploys, or releases.
 
 ## Benchmarking — the escape-proof protocol
 
@@ -63,16 +65,9 @@ number was a **harness artifact, not library behavior** — when a number
 - `echo 'x' >> file` glues onto the last line when the file lacks a trailing
   newline — check before appending (this once corrupted .gitignore).
 - Docs dev server runs at `localhost:5174/ivue/` — the `/ivue/` base matters.
-- **The repo root has NO lockfile — deliberately (since 2026-08-10).** The
-  fossil yarn.lock (Yarn-1 era) broke Cloudflare's CI by triggering yarn
-  detection against a package.json that had evolved under npm; it is
-  retired, and `packageManager: "npm@..."` in package.json pins the
-  manager for CI. Never commit a root package-lock.json either (root
-  installs are dev-only against the shared node_modules). `docs_v2/` and
-  `examples/playground/` DO carry npm lockfiles — those are the installs
-  CI performs. Adding pure-JS deps with `npm install --ignore-scripts`
-  stays the safe move for the shared node_modules (no native rebuilds);
-  re-run tests + all builds after.
+- Adding pure-JS deps: `npm install --ignore-scripts` (no native
+  rebuilds against the shared node_modules); re-run tests + builds after.
+  Lockfile policy lives in "Deployment & CI" below.
 
 ## Library / packaging
 
@@ -186,31 +181,6 @@ number was a **harness artifact, not library behavior** — when a number
   cannot bound the stage and the same runaway returns ONLY under 720px
   (the StackBlitz narrow preview pane) while desktop tests pass.
 
-## Deployment (gh-pages)
-
-- **Deploys must be append-only for hashed assets — OR atomic with client
-  recovery.** The orphan force-push once replaced the whole site each
-  deploy, deleting the previous build's content-hashed chunks — a tab
-  loaded before the deploy 404'd on its next lazy import
-  (ChunkLoadError-after-deploy). On GitHub Pages we compensated with an
-  append-only deploy script carrying previous `assets/` forward. 2026-08:
-  the site moved to Cloudflare (Workers static assets) — deploys are
-  ATOMIC, the retention script is retired, and the trade flips: no more
-  half-old-half-new CDN windows, but old chunks vanish at the instant of
-  deploy, so the IN-PAGE RECOVERY SCRIPT in docs_v2 config (preloadError +
-  static-404 + unhandledrejection + route-not-found, guarded reload) is
-  now the ONLY defense for tabs open across a deploy. It is load-bearing;
-  never remove it while lazy chunks exist.
-- **Cloudflare deploy config lives in the CF dashboard, not the repo**
-  (the one unversioned piece). Record: project `ivue` (Workers Builds,
-  GitHub-connected, production branch `main`), build command
-  `npm install --prefix docs_v2 && npm install --prefix examples/playground && npm run build:docs`,
-  env `SKIP_DEPENDENCY_INSTALL=1` (docs need NO root install — root
-  lockfile history: fossil yarn.lock retired 2026-08-10). Versioned
-  pieces: `wrangler.jsonc` (assets-only Worker) + `docs_v2/public/_headers`
-  (`!` detach then immutable for /assets/*). Deploys are per-push to
-  main; branch pushes get preview URLs.
-
 ## Process
 
 - **Verify before claiming**: browser-drive every live embed, screenshot both
@@ -225,37 +195,55 @@ number was a **harness artifact, not library behavior** — when a number
   discipline stays: keep scope shutdown and cache deletion in `finally` paths
   so a throwing `scope.stop()` can never leak cached cells.
 
-## CI: the lockfile-less root vs tool defaults (2026-08-11)
+## Deployment & CI (Cloudflare Workers)
 
-- The root repo has NO lockfile **by design** (docs_v2 and
-  examples/playground own their npm lockfiles). Any tool whose default
-  assumes a lockfile will break here, and the breakage arrives when the
-  tool updates, not when we change anything:
-  - `actions/setup-node@v5` enables npm dependency caching BY DEFAULT and
-    its cache resolver hard-fails without package-lock.json/yarn.lock.
-    Opt out with `package-manager-cache: false` (v5's input; v4 and
-    earlier had caching off by default).
-  - Same family as the Cloudflare yarn-sniffing incident: the fix that
-    holds is declaring intent explicitly (`packageManager` field, explicit
-    cache opt-outs), never relying on a tool's absence-of-config default.
-- CI runs `npm run coverage` (vitest run), NEVER `npm run test` — the
-  test script is vitest's interactive `--ui` mode and hangs headless.
-- Docs deploy is Cloudflare Workers Builds on push to main; CI must not
-  grow a deploy job again.
+Two git-connected Workers Builds projects deploy on push to `main`
+(branch pushes get preview URLs). Their config lives in the CF
+dashboard — the one unversioned piece — so it is recorded here:
 
-## Deploy command must pin wrangler (2026-08-11)
+- **Site** — project `ivue`, assets-only Worker (root `wrangler.jsonc` +
+  `docs_v2/public/_headers`: `!` detach then immutable for `/assets/*`).
+  Build command:
+  `npm install --prefix docs_v2 && npm install --prefix examples/playground && npm run build:docs`,
+  env `SKIP_DEPENDENCY_INSTALL=1` (docs need NO root install). Deploy
+  command pinned: `npx wrangler@4.120.1 deploy`.
+- **Newsletter** — root directory `newsletter/`, watch paths
+  `newsletter/**`, deploy command
+  `npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --remote && npx wrangler@4.120.1 deploy`.
+  Ops manual: `newsletter/README.md`.
 
-- The Cloudflare dashboard deploy command was `npx wrangler deploy` —
-  which resolves LATEST wrangler at every deploy. wrangler@4.121.0
-  shipped depending on miniflare@5.20260804.1-alpha, which was never
-  published; every deploy failed with ETARGET until the command was
-  pinned. Fix: `npx wrangler@4.120.1 deploy` (verified: its miniflare
-  5.20260804.0-alpha exists). Bump the pin deliberately, on our
-  schedule.
-- Third instance of the same failure family (setup-node v5 default
-  caching, Cloudflare yarn-sniffing): an unpinned tool default breaks
-  on the TOOL's release schedule, not ours. Anything in the deploy
-  path — dashboard commands included — gets an explicit version.
+Lessons that shaped this setup:
+
+- **Deploys are atomic; the in-page recovery script is load-bearing.**
+  Old content-hashed chunks vanish at the instant of deploy, so a tab
+  opened before a deploy 404s on its next lazy import. The recovery
+  layer in docs_v2 config + theme (`vite:preloadError` reload,
+  static-404 + route-not-found + unhandledrejection handling with a
+  session-guarded hard reload) is the ONLY defense — never remove it
+  while lazy chunks exist. (The gh-pages era solved this with an
+  append-only asset-retention script, retired with the CF move.)
+- **Pin every tool in the deploy path — versions AND defaults.** Three
+  incidents, one family: Cloudflare's yarn-sniffing broke on a fossil
+  yarn.lock; `actions/setup-node@v5` turned on lockfile-requiring cache
+  BY DEFAULT (fix: `package-manager-cache: false`); unpinned
+  `npx wrangler deploy` broke when wrangler@4.121.0 shipped with an
+  unpublished miniflare dep (fix: pin 4.120.1; bump deliberately). An
+  unpinned default breaks on the TOOL's release schedule, not ours.
+- **The repo root has NO lockfile — deliberately (2026-08-10).** The
+  fossil yarn.lock triggered yarn detection against an npm-evolved
+  package.json; `packageManager` in package.json pins the manager.
+  Never commit a root package-lock.json (root installs are dev-only
+  against the shared node_modules). `docs_v2/` and
+  `examples/playground/` DO carry npm lockfiles — those are what CI
+  installs.
+- **Wrangler resolves the NEAREST wrangler.jsonc.** Root = the site's
+  assets Worker; `tail`/`deploy` for the newsletter run from
+  `newsletter/`. Site fast-lane deploy from the root is legit
+  (`npm run build:docs && npx wrangler@4.120.1 deploy`) — always build
+  first; push remains the source of truth.
+- CI (`.github/workflows/ci.yml`) runs `npm run coverage`, NEVER
+  `npm run test` (interactive `--ui`, hangs headless). CI must not grow
+  a deploy job — Workers Builds owns deploys.
 
 ## Terminal-grid SVG screenshots: vectorize box-drawing glyphs (2026-08-12)
 
