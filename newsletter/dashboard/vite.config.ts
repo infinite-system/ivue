@@ -30,7 +30,12 @@ export default defineConfig(({ mode }) => {
       port: 5190,
       proxy: {
         '/admin': {
-          target: secrets.DEV_WORKER_ORIGIN || 'http://localhost:8787',
+          // defaults to the LIVE Worker (real data); set DEV_WORKER_ORIGIN
+          // in newsletter/.env (e.g. http://localhost:8787) to target a
+          // local `wrangler dev` instead
+          target:
+            secrets.DEV_WORKER_ORIGIN ||
+            'https://ivue-newsletter.ekalashnikov.workers.dev',
           changeOrigin: true,
           headers: secrets.ADMIN_SECRET
             ? { authorization: `Bearer ${secrets.ADMIN_SECRET}` }
