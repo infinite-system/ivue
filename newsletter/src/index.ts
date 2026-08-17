@@ -131,12 +131,16 @@ async function verifyTurnstile(
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       signal: AbortSignal.timeout(10_000),
       body: new URLSearchParams({
-        secret: env.TURNSTILE_SECRET ?? '',
-        response: token,
+        // trim: a stray newline from `secret put` malforms the request
+        secret: (env.TURNSTILE_SECRET ?? '').trim(),
+        response: token.trim(),
         ...(clientIp ? { remoteip: clientIp } : {}),
       }),
     });
-    if (!response.ok) throw new Error(`siteverify ${response.status}`);
+    if (!response.ok)
+      throw new Error(
+        `siteverify ${response.status}: ${(await response.text()).slice(0, 300)}`,
+      );
     const result = (await response.json()) as {
       success: boolean;
       action?: string;
