@@ -46,6 +46,14 @@ const message = ref('');
 
 onMounted(() => {
   mounted.value = true;
+  // The Worker's unsubscribe page links back here with ?newsletter=signup:
+  // clear the subscribed flag so every signup placement reappears for
+  // this browser — otherwise an unsubscribed reader could never rejoin.
+  if (
+    new URLSearchParams(window.location.search).get('newsletter') === 'signup'
+  ) {
+    localStorage.removeItem(SUBSCRIBED_KEY);
+  }
   subscribed.value = Boolean(localStorage.getItem(SUBSCRIBED_KEY));
   if (props.placement !== 'toast' || subscribed.value) return;
   const dismissedAt = Number(localStorage.getItem(DISMISSED_KEY) ?? 0);

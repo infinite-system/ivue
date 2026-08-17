@@ -73,12 +73,14 @@ class $PublicApi {
 
     await Audience.Class.suppress(env, address);
 
+    // ?newsletter=signup tells the site to clear this browser's
+    // subscribed flag, so the signup placements reappear immediately
     return Http.Class.html(
       `<!doctype html><meta charset="utf-8"><title>Unsubscribed</title>
        <body style="font-family:system-ui;max-width:32rem;margin:15vh auto;padding:0 1rem;color:#1c2432">
        <h1 style="font-size:1.4rem">You're unsubscribed.</h1>
        <p>No more emails from the ivue newsletter. Changed your mind?
-       Sign up again any time at <a href="${env.SITE_ORIGIN}">ivue.dev</a>.</p>`,
+       Sign up again any time at <a href="${env.SITE_ORIGIN}/?newsletter=signup">ivue.dev</a>.</p>`,
     );
   }
 
