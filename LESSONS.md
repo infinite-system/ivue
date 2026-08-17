@@ -271,3 +271,22 @@ number was a **harness artifact, not library behavior** — when a number
   site serving pre-fix files (commits unpushed). Before tuning a visual
   fix further, confirm which build the reporter is actually looking at —
   local dev, local build, or production.
+
+## Newsletter launch debugging chain (2026-08-16)
+
+Four faults, each invisible until instrumented — the fix each time was
+logging the VERDICT, not just the failure:
+
+- Mail-adjacent DNS records must be DNS-only (grey cloud). A proxied
+  CNAME (pm-bounces → pm.mtasv.net) serves Cloudflare proxy IPs, so the
+  provider's verifier never sees the target — and bounce routing would
+  break even if verification passed. TXT records (DKIM) are immune.
+- Turnstile keys both start 0x — `invalid-input-secret` after a working
+  widget almost always means the SITE key was pasted as the secret. The
+  secret needs a reveal click in the dashboard.
+- Postmark scopes streams AND tokens per SERVER. Error 1235 ("stream
+  does not exist") with a stream you can see in the dashboard means the
+  token belongs to a different server than the stream.
+- Wrangler picks up the nearest wrangler.jsonc: `tail`/`deploy` from the
+  repo root hits the site's assets-only Worker. Newsletter commands run
+  from newsletter/ (or --config newsletter/wrangler.jsonc).
