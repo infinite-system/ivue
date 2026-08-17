@@ -1,19 +1,19 @@
 import { Reactive } from 'ivue';
 import { ref } from 'vue';
 import { Api } from '../platform/Api';
+import { AppRouter } from './AppRouter';
 
 // The application store — the ivue store pattern: one module singleton
 // reached through `AppStore.use()`, injected into models via a cached
 // `$`-getter (`get $app() { return AppStore.use(); }`), never passed
-// down as a prop. Holds the session gate, the router, and toasts.
-//
-// Routing is the URL itself: each view is a path (deep-linkable, back/
-// forward native), and the email preview rides /posts?preview=<slug> so
-// a preview is shareable too. The Worker owns GET /drip
-// (run_worker_first), so the drip view routes as /drip-plan.
+// down as a prop. Holds the session gate and toasts; ROUTING belongs to
+// vue-router (AppRouter) — the store only reads and pushes it, so the
+// URL stays the single source of truth for the open view and the open
+// email preview (/posts?preview=<slug>).
 class $AppStore {
-  constructor() {
-    window.addEventListener('popstate', () => this.syncFromLocation());
+  // the router — resolved and cached on first touch
+  protected get $router() {
+    return AppRouter.Class.$router;
   }
 
   get TABS(): { name: ViewName; label: string }[] {
@@ -25,17 +25,6 @@ class $AppStore {
       { name: 'drip', label: 'Drip' },
       { name: 'stats', label: 'Stats' },
     ];
-  }
-
-  get VIEW_ROUTES(): Record<ViewName, string> {
-    return {
-      subscribers: '/',
-      sends: '/sent',
-      posts: '/posts',
-      send: '/send',
-      drip: '/drip-plan',
-      stats: '/stats',
-    };
   }
 
   get checking() {
@@ -54,16 +43,35 @@ class $AppStore {
     return ref('');
   }
 
-  get view() {
-    return ref<ViewName>(this.viewFromLocation());
-  }
-
-  get emailPreviewSlug() {
-    return ref(this.previewSlugFromLocation());
-  }
-
   get toasts() {
     return ref<Toast[]>([]);
+  }
+
+  // ---- routing (derived from the router's reactive currentRoute) ----
+
+  get view(): ViewName {
+    return (this.$router.currentRoute.value.name as ViewName) ?? 'subscribers';
+  }
+
+  get emailPreviewSlug(): string {
+    return String(this.$router.currentRoute.value.query.preview ?? '');
+  }
+
+  isOpen(view: ViewName) {
+    return this.view === view;
+  }
+
+  open(view: ViewName) {
+    this.$router.push({ name: view });
+  }
+
+  // Any post slug, anywhere in the app, opens that post's email preview.
+  openEmailPreview(slug: string) {
+    this.$router.push({ name: 'posts', query: { preview: slug } });
+  }
+
+  closeEmailPreview() {
+    this.$router.push({ name: 'posts' });
   }
 
   // ---- session ----
@@ -98,48 +106,6 @@ class $AppStore {
   logout() {
     Api.Class.forgetSecret();
     this.authenticated.value = false;
-  }
-
-  // ---- routing ----
-
-  viewFromLocation(): ViewName {
-    const path = window.location.pathname.replace(/\/+$/, '') || '/';
-    const match = (
-      Object.entries(this.VIEW_ROUTES) as [ViewName, string][]
-    ).find(([, route]) => route === path);
-    return match ? match[0] : 'subscribers';
-  }
-
-  previewSlugFromLocation(): string {
-    return new URLSearchParams(window.location.search).get('preview') ?? '';
-  }
-
-  syncFromLocation() {
-    this.view.value = this.viewFromLocation();
-    this.emailPreviewSlug.value = this.previewSlugFromLocation();
-  }
-
-  open(view: ViewName) {
-    this.navigate(this.VIEW_ROUTES[view]);
-  }
-
-  isOpen(view: ViewName) {
-    return this.view.value === view;
-  }
-
-  // Any post slug, anywhere in the app, opens that post's email preview.
-  openEmailPreview(slug: string) {
-    this.navigate(`${this.VIEW_ROUTES.posts}?preview=${encodeURIComponent(slug)}`);
-  }
-
-  closeEmailPreview() {
-    this.navigate(this.VIEW_ROUTES.posts);
-  }
-
-  navigate(route: string) {
-    const current = window.location.pathname + window.location.search;
-    if (route !== current) window.history.pushState({}, '', route);
-    this.syncFromLocation();
   }
 
   // ---- toasts ----

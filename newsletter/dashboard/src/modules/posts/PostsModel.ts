@@ -14,7 +14,9 @@ class $PostsModel {
   constructor() {
     this.load();
     watch(
-      () => this.$app.emailPreviewSlug.value,
+      // a plain getter as a watch source — leaf-tracked through the
+      // router's currentRoute ref
+      () => this.$app.emailPreviewSlug,
       (slug) => this.onPreviewSlugChanged(slug),
       { immediate: true },
     );
@@ -42,7 +44,7 @@ class $PostsModel {
   }
 
   get previewSlug() {
-    return this.$app.emailPreviewSlug.value;
+    return this.$app.emailPreviewSlug;
   }
 
   isPreviewed(slug: string) {

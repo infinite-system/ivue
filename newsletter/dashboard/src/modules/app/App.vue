@@ -1,12 +1,7 @@
 <script setup lang="ts">
-import { onMounted, type Component } from 'vue';
-import { AppStore, type ViewName } from './AppStore';
-import SubscribersView from '../subscribers/SubscribersView.vue';
-import SendsView from '../sends/SendsView.vue';
-import PostsView from '../posts/PostsView.vue';
-import SendView from '../send/SendView.vue';
-import DripView from '../drip/DripView.vue';
-import StatsView from '../stats/StatsView.vue';
+import { onMounted } from 'vue';
+import { RouterView } from 'vue-router';
+import { AppStore } from './AppStore';
 
 const app = AppStore.use();
 const {
@@ -15,23 +10,10 @@ const {
   authenticated,
   secretDraft,
   loginError,
-  view,
   toasts,
 } = app;
 
 onMounted(() => app.probe());
-
-// The router outlet's table: route name → view component. Lives HERE,
-// not on the store — the store stays free of .vue imports so it remains
-// constructible in node tests; the outlet owns the rendering concern.
-const VIEW_COMPONENTS: Record<ViewName, Component> = {
-  subscribers: SubscribersView,
-  sends: SendsView,
-  posts: PostsView,
-  send: SendView,
-  drip: DripView,
-  stats: StatsView,
-};
 </script>
 
 <template>
@@ -85,8 +67,7 @@ const VIEW_COMPONENTS: Record<ViewName, Component> = {
     </main>
 
     <main v-else class="content">
-      <!-- the router outlet: the store's route state picks the view -->
-      <component :is="VIEW_COMPONENTS[view]" />
+      <RouterView />
     </main>
 
     <div class="toasts" aria-live="polite">
