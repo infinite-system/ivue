@@ -9,3 +9,20 @@
   never edit the mirror).
 - After docs changes: `npm run build:docs` must pass. After engine changes:
   re-verify the ~1.1 KB gzipped production size and 100% test coverage.
+- **Newsletter** (`newsletter/` — Worker + D1 + Postmark): the ops manual
+  is `newsletter/README.md` (command reference + debug decoder ring at
+  the bottom — read before operating). Two invariants: email CONTENT is
+  rendered at SITE build time (`blog-email-renderer.mjs` →
+  `blog-index.json`), so template changes ship via site push, never
+  Worker deploy; and all newsletter wrangler commands run FROM
+  `newsletter/` — the repo-root `wrangler.jsonc` is the site's
+  assets-only Worker. Wrangler pinned to 4.120.1 everywhere.
+- **New blog post workflow**: write md (with `tags:` frontmatter) →
+  banner (blog-banner skill, view the PNG) → `npm run render:embeds` if
+  the post embeds a demo (local-only; commit PNGs) → `npm run
+  build:docs` → commit → `npm run sync:blog-dates` → commit dates.
+- **Screenshotting**: the Playwright MCP server doesn't connect here —
+  drive playwright via `node -e "require('playwright')…"`, serving the
+  built site with `npx serve docs_v2/.vitepress/dist -l 5188`.
+- Run git commits from the repo root (cwd resets bite path-specs), and
+  never `git push` / `npm publish` — the user does both.
