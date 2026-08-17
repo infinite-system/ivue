@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { AppStore } from './AppStore';
+import { onMounted, type Component } from 'vue';
+import { AppStore, type ViewName } from './AppStore';
 import SubscribersView from '../subscribers/SubscribersView.vue';
 import SendsView from '../sends/SendsView.vue';
 import PostsView from '../posts/PostsView.vue';
@@ -20,6 +20,18 @@ const {
 } = app;
 
 onMounted(() => app.probe());
+
+// The router outlet's table: route name → view component. Lives HERE,
+// not on the store — the store stays free of .vue imports so it remains
+// constructible in node tests; the outlet owns the rendering concern.
+const VIEW_COMPONENTS: Record<ViewName, Component> = {
+  subscribers: SubscribersView,
+  sends: SendsView,
+  posts: PostsView,
+  send: SendView,
+  drip: DripView,
+  stats: StatsView,
+};
 </script>
 
 <template>
@@ -35,7 +47,7 @@ onMounted(() => app.probe());
           v-for="tab in app.TABS"
           :key="tab.name"
           class="tab"
-          :class="{ active: view === tab.name }"
+          :class="{ active: app.isOpen(tab.name) }"
           :data-tab="tab.name"
           @click="app.open(tab.name)"
         >
@@ -73,12 +85,8 @@ onMounted(() => app.probe());
     </main>
 
     <main v-else class="content">
-      <SubscribersView v-if="view === 'subscribers'" />
-      <SendsView v-else-if="view === 'sends'" />
-      <PostsView v-else-if="view === 'posts'" />
-      <SendView v-else-if="view === 'send'" />
-      <DripView v-else-if="view === 'drip'" />
-      <StatsView v-else />
+      <!-- the router outlet: the store's route state picks the view -->
+      <component :is="VIEW_COMPONENTS[view]" />
     </main>
 
     <div class="toasts" aria-live="polite">

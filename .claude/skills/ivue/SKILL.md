@@ -348,6 +348,23 @@ call site. Rules that keep it clean:
   nobody keeps it; here a named plain getter costs zero bytes, so there is
   no excuse. Templates read as prose: bindings, names, and events — never
   expressions.
+- **The rule covers EVERY binding kind, not just `v-if`** — the common
+  leaks are display strings, disabled states, and class objects:
+
+  | leaked into the template | derived on the class |
+  | --- | --- |
+  | interpolating `sending ? 'Sending…' : 'Send to ' + recipients.length` | interpolating `model.sendButtonLabel` |
+  | `:disabled="!model.canSend \|\| sending"` | `:disabled="model.sendDisabled"` |
+  | `:class="{ active: view === tab.name }"` | `:class="{ active: app.isOpen(tab.name) }"` |
+  | `row.name \|\| '—'` in a `v-for` cell | `Format.Class.orDash(row.name)` |
+  | `:style` width from `(day.count / peak) * 100 + '%'` | `:style` width from `model.barWidth(day)` |
+
+  Each right-hand form is a prototype member: unit-testable without
+  mounting anything, greppable by name, typed, and hot-graftable. The
+  one thing that stays in the template is STRUCTURE — `v-if`/`v-else`
+  branching on a named condition or a data field (`v-if="entry.nextSlug"`)
+  and `v-for` over a collection. Branching on data is structure;
+  COMPUTING with data is logic, and logic lives on the class.
 
 ## The outliving instance (module singleton, entity)
 
@@ -417,6 +434,7 @@ session.dispose();
 | ✅ `new X.Class(props, emit)` — raw instance everywhere | ❌ wrap in `reactive(instance)` or any shallow-unwrap view as the standard |
 | ✅ destructure ALL template-touched Refs/Computeds + element refs, grouped | ❌ destructure plain getters or methods — snapshots a dead value / loses nothing but clarity |
 | ✅ state bindings in templates; dotted `box.x` only for plain getters/methods | ❌ reach a Ref through the instance in a template — `v-if="box.someRef"` is always-truthy |
+| ✅ labels, disabled states, and class conditions as named getters/methods (`model.sendButtonLabel`, `model.sendDisabled`) | ❌ ternaries, `\|\|`/`&&` chains, comparisons, or string-building inside template expressions |
 | ✅ `defineExpose(box as X.Instance)` | ❌ `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers |
 | ✅ constructor runs init; register hooks/watchers there | ❌ add an `init()` method expecting auto-call — ivue never calls it |
 | ✅ plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | ❌ default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |

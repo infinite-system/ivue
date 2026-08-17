@@ -45,6 +45,10 @@ class $PostsModel {
     return this.$app.emailPreviewSlug.value;
   }
 
+  isPreviewed(slug: string) {
+    return slug === this.previewSlug;
+  }
+
   async load() {
     try {
       // newest first for the picker — the drip itself goes oldest-first

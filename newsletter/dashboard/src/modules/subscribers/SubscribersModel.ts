@@ -82,6 +82,10 @@ class $SubscribersModel {
     return ref(false);
   }
 
+  get drawerOpen() {
+    return Boolean(this.detail.value) || this.detailLoading.value;
+  }
+
   // ---- derived ----
   get pageIndex() {
     return Math.floor(this.offset.value / this.PAGE_SIZE) + 1;

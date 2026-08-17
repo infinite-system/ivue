@@ -5,6 +5,7 @@ export default defineConfig({
   resolve: {
     alias: {
       'ivue/extras': fileURLToPath(new URL('../lib/extras.ts', import.meta.url)),
+      ivue: fileURLToPath(new URL('../lib/index.ts', import.meta.url)),
     },
   },
   // vitest's bundled vite predates node:sqlite — keep it external so Node
@@ -13,7 +14,7 @@ export default defineConfig({
     external: ['node:sqlite'],
   },
   test: {
-    include: ['src/modules/**/*.test.ts'],
+    include: ['src/modules/**/*.test.ts', 'dashboard/src/modules/**/*.test.ts'],
     environment: 'node',
     setupFiles: ['test/setup.ts'],
     server: {

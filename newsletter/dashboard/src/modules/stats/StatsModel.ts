@@ -29,6 +29,11 @@ class $StatsModel {
     return days.reduce((peak, day) => Math.max(peak, day.count), 0);
   }
 
+  signupBarWidth(day: { count: number }) {
+    if (!this.signupPeak) return '0%';
+    return `${(day.count / this.signupPeak) * 100}%`;
+  }
+
   async load() {
     this.loading.value = true;
     try {

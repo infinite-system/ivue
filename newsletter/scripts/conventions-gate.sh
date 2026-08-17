@@ -167,7 +167,6 @@ untested_dashboard_models_allowlist="
 dashboard/src/modules/app/AppStore.ts
 dashboard/src/modules/subscribers/SubscribersModel.ts
 dashboard/src/modules/posts/PostsModel.ts
-dashboard/src/modules/send/SendModel.ts
 dashboard/src/modules/sends/SendsModel.ts
 dashboard/src/modules/drip/DripModel.ts
 dashboard/src/modules/stats/StatsModel.ts

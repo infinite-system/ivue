@@ -110,7 +110,7 @@ const {
                 {{ row.email }}
               </button>
             </td>
-            <td>{{ row.name || '—' }}</td>
+            <td>{{ Format.Class.orDash(row.name) }}</td>
             <td><span class="pill">{{ row.list }}</span></td>
             <td>
               <span v-if="row.unsubscribedAt" class="status off">
@@ -154,7 +154,7 @@ const {
       </div>
     </form>
 
-    <div v-if="detail || detailLoading" class="drawer-backdrop" @click.self="model.closeDetail()">
+    <div v-if="model.drawerOpen" class="drawer-backdrop" @click.self="model.closeDetail()">
       <aside class="drawer card" aria-label="Subscriber detail">
         <p v-if="detailLoading" class="muted">Loading…</p>
         <template v-else-if="detail">

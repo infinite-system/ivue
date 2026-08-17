@@ -1,7 +1,12 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type { ListSummary, PostSummary, SendResult } from '../platform/Api';
+import type {
+  ListSummary,
+  PostSummary,
+  RecipientOutcome,
+  SendResult,
+} from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 
 // Sending: a targeted send (specific post → specific addresses, ledger-
@@ -69,6 +74,48 @@ class $SendModel {
 
   get canSend() {
     return Boolean(this.slug.value) && this.recipients.length > 0;
+  }
+
+  get sendDisabled() {
+    return !this.canSend || this.sending.value;
+  }
+
+  get sendButtonLabel() {
+    if (this.sending.value) return 'Sending…';
+    const count = this.recipients.length;
+    return count ? `Send to ${count}` : 'Send to …';
+  }
+
+  get broadcastDisabled() {
+    return !this.slug.value;
+  }
+
+  get broadcastButtonLabel() {
+    return this.broadcastArmed.value
+      ? 'Really broadcast — click again'
+      : 'Broadcast';
+  }
+
+  get dripButtonLabel() {
+    return this.dripArmed.value
+      ? 'Really run drip — click again'
+      : 'Run drip pass';
+  }
+
+  get anyActionArmed() {
+    return this.broadcastArmed.value || this.dripArmed.value;
+  }
+
+  get skippedSummary() {
+    return this.result.value?.skippedAsRepeat.join(', ') ?? '';
+  }
+
+  outcomeAccepted(outcome: RecipientOutcome) {
+    return outcome.errorCode === 0;
+  }
+
+  outcomeLabel(outcome: RecipientOutcome) {
+    return this.outcomeAccepted(outcome) ? 'accepted' : outcome.message;
   }
 
   async load() {

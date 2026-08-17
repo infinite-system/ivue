@@ -40,7 +40,7 @@ const {
             <tr
               v-for="post in posts"
               :key="post.slug"
-              :class="{ active: post.slug === model.previewSlug }"
+              :class="{ active: model.isPreviewed(post.slug) }"
             >
               <td>
                 <div class="post-title">{{ post.title }}</div>

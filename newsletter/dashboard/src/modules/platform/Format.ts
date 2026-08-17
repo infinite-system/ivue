@@ -22,6 +22,10 @@ class $Format {
     });
   }
 
+  static orDash(text: string | null | undefined): string {
+    return text || '—';
+  }
+
   static relativeDue(unixSeconds: number, now = Date.now() / 1000): string {
     const deltaSeconds = unixSeconds - now;
     if (deltaSeconds <= 0) return 'now';

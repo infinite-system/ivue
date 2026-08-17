@@ -9,11 +9,8 @@ const {
   slug,
   recipientsText,
   force,
-  sending,
   result,
   broadcastList,
-  broadcastArmed,
-  dripArmed,
 } = model;
 </script>
 
@@ -48,24 +45,28 @@ const {
           <input v-model="force" type="checkbox" />
           Force — erase the ledger rows first so a repeat is allowed
         </label>
-        <button class="primary" type="submit" :disabled="!model.canSend || sending">
-          {{ sending ? 'Sending…' : `Send to ${model.recipients.length || '…'}` }}
+        <button class="primary" type="submit" :disabled="model.sendDisabled">
+          {{ model.sendButtonLabel }}
         </button>
 
         <div v-if="result" class="send-result" data-role="send-result">
           <p>
             Delivered <strong>{{ result.delivered }}</strong>
-            <template v-if="result.skippedAsRepeat.length">
-              · skipped as repeat: {{ result.skippedAsRepeat.join(', ') }}
+            <template v-if="model.skippedSummary">
+              · skipped as repeat: {{ model.skippedSummary }}
             </template>
           </p>
           <ul>
             <li
               v-for="outcome in result.outcomes"
               :key="outcome.email"
-              :class="outcome.errorCode === 0 ? 'status on' : 'status off'"
+              class="status"
+              :class="{
+                on: model.outcomeAccepted(outcome),
+                off: !model.outcomeAccepted(outcome),
+              }"
             >
-              {{ outcome.email }} — {{ outcome.errorCode === 0 ? 'accepted' : outcome.message }}
+              {{ outcome.email }} — {{ model.outcomeLabel(outcome) }}
             </li>
           </ul>
         </div>
@@ -81,10 +82,10 @@ const {
         </select>
         <button
           class="danger"
-          :disabled="!slug"
+          :disabled="model.broadcastDisabled"
           @click="model.confirmBroadcast()"
         >
-          {{ broadcastArmed ? 'Really broadcast — click again' : 'Broadcast' }}
+          {{ model.broadcastButtonLabel }}
         </button>
 
         <hr />
@@ -94,13 +95,9 @@ const {
           oldest unsent post.
         </p>
         <button class="danger" @click="model.confirmDrip()">
-          {{ dripArmed ? 'Really run drip — click again' : 'Run drip pass' }}
+          {{ model.dripButtonLabel }}
         </button>
-        <button
-          v-if="broadcastArmed || dripArmed"
-          class="ghost"
-          @click="model.disarm()"
-        >
+        <button v-if="model.anyActionArmed" class="ghost" @click="model.disarm()">
           Cancel
         </button>
       </div>

@@ -43,7 +43,7 @@ const {
               <span class="bar-label">{{ day.day }}</span>
               <span
                 class="bar"
-                :style="{ width: `${(day.count / model.signupPeak) * 100}%` }"
+                :style="{ width: model.signupBarWidth(day) }"
               ></span>
               <span class="bar-count">{{ day.count }}</span>
             </div>

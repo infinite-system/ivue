@@ -123,6 +123,10 @@ class $AppStore {
     this.navigate(this.VIEW_ROUTES[view]);
   }
 
+  isOpen(view: ViewName) {
+    return this.view.value === view;
+  }
+
   // Any post slug, anywhere in the app, opens that post's email preview.
   openEmailPreview(slug: string) {
     this.navigate(`${this.VIEW_ROUTES.posts}?preview=${encodeURIComponent(slug)}`);
