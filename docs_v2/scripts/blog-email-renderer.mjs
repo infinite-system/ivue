@@ -23,20 +23,21 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const blogDirectory = resolve(scriptDirectory, '../blog');
 const embedsDirectory = resolve(scriptDirectory, '../public/blog/embeds');
 
-// ---- the dark palette (one place; every style below reads it) --------
+// ---- the dark palette — the SITE's dark theme (custom.css tokens) ----
+// --vp-c-bg #0b1020 / --vp-c-bg-alt #0e1424 / --vp-c-bg-soft #141a2e
 
-const PAGE_BG = '#0a0d13'; // page behind the card
-const CARD_BG = '#12161f'; // card / panel surface
-const PANEL_BG = '#161c2a'; // quote / inset surface
-const EDGE = '#242c3d'; // card borders
-const EDGE_SOFT = '#1e2634'; // row hairlines
+const PAGE_BG = '#0b1020'; // page behind the card = --vp-c-bg
+const CARD_BG = '#0e1424'; // card surface = --vp-c-bg-alt
+const PANEL_BG = '#141a2e'; // quote / inset surface = --vp-c-bg-soft
+const EDGE = '#28324e'; // card borders
+const EDGE_SOFT = '#1e2740'; // row hairlines
 const HEADING = '#e8edf7';
 const TEXT = '#b6c0d2';
 const MUTED = '#8892a6';
 const FAINT = '#7c8698';
 const LINK = '#8f9cfa'; // indigo, AA on card bg
 const BUTTON_BG = '#5457e0';
-const CODE_BG = '#1c2333'; // inline code chip
+const CODE_BG = '#1c2440'; // inline code chip
 const CODE_TEXT = '#b4bcf8';
 
 // ---- inline markdown → inline-styled HTML ---------------------------
