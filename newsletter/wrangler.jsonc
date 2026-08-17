@@ -5,7 +5,8 @@
 {
 	"name": "ivue-newsletter",
 	"main": "src/index.ts",
-	"compatibility_date": "2026-08-16",
+	// pinned wrangler 4.120.1's local workerd supports dates up to 2026-08-11
+	"compatibility_date": "2026-08-11",
 	"compatibility_flags": ["nodejs_compat"],
 	// the Worker imports ivue's Static() straight from this repo's source
 	"alias": {
