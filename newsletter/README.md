@@ -154,3 +154,68 @@ node docs_v2/scripts/blog-email-renderer.mjs <slug> > /tmp/email.html
 - Subscribers live ONLY in D1 — back up with
   `npx wrangler@4.120.1 d1 export ivue-newsletter --remote --output=backup.sql`
   before schema changes.
+
+## Command reference (everything used to operate this)
+
+All wrangler commands run **from `newsletter/`** — the repo root's
+wrangler.jsonc is the SITE's assets Worker, so root-run `tail`/`deploy`
+hit the wrong Worker. Wrangler pinned to 4.120.1 (LESSONS.md).
+
+```sh
+# ---- deploy & observe -------------------------------------------------
+npx wrangler@4.120.1 deploy            # deploy the newsletter Worker
+npx wrangler@4.120.1 tail              # live logs (run during any test)
+npx wrangler@4.120.1 types             # regenerate typed Env after config edits
+npx tsc --noEmit                       # typecheck the Worker
+
+# ---- database ---------------------------------------------------------
+npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --remote
+npx wrangler@4.120.1 d1 migrations create ivue-newsletter <name>
+npx wrangler@4.120.1 d1 execute ivue-newsletter --remote \
+  --command='SELECT email, name, subscribed_at FROM subscribers'
+npx wrangler@4.120.1 d1 execute ivue-newsletter --remote \
+  --command='SELECT * FROM sends'
+npx wrangler@4.120.1 d1 execute ivue-newsletter --remote \
+  --command='SELECT * FROM unsubscribes'
+npx wrangler@4.120.1 d1 export ivue-newsletter --remote --output=backup.sql
+
+# ---- secrets (take effect immediately, no redeploy) --------------------
+npx wrangler@4.120.1 secret put POSTMARK_SERVER_TOKEN
+npx wrangler@4.120.1 secret put ADMIN_SECRET
+npx wrangler@4.120.1 secret put TURNSTILE_SECRET
+npx wrangler@4.120.1 secret list
+
+# ---- the endpoints ----------------------------------------------------
+WORKER=https://ivue-newsletter.ekalashnikov.workers.dev
+
+# subscribe (Turnstile enforced once TURNSTILE_SECRET is set — browser only then)
+curl -X POST "$WORKER/subscribe" -H 'content-type: application/json' \
+  -d '{"name":"Evgeny","email":"evgeny@ivue.dev"}'
+
+# run a drip pass now (what the 13:00 UTC cron does)
+curl -X POST "$WORKER/drip" -H "authorization: Bearer $ADMIN_SECRET"
+
+# send one post to everyone who never received it
+curl -X POST "$WORKER/broadcast" \
+  -H "authorization: Bearer $ADMIN_SECRET" -H 'content-type: application/json' \
+  -d '{"slug":"circular-imports-dissolved"}'
+
+# unsubscribe links are per-recipient HMAC URLs — take one from a real email
+
+# ---- content pipeline (repo root) --------------------------------------
+npm run sync:blog-index    # re-render all emails into blog-index.json
+node docs_v2/scripts/blog-email-renderer.mjs <slug> > /tmp/email.html  # preview
+npm run render:embeds      # screenshot interactive embeds (local only; commit PNGs)
+npm run build:docs         # full site build + link gate
+
+# ---- site fast-lane deploy (repo ROOT, not newsletter/) ----------------
+# push = source of truth; this is the hotfix lane. ALWAYS build first.
+npm run build:docs && npx wrangler@4.120.1 deploy
+```
+
+Debug decoder ring (from the launch — details in LESSONS.md):
+`siteverify 400` → malformed secret (trim/newline) · `invalid-input-secret`
+→ sitekey pasted as secret · Postmark 1235 → stream and token belong to
+different servers · Cloudflare 1101 on /drip → Worker/site deploy skew
+(stale blog-index.json) · `delivered: 0` → check tail for
+`postmark_message_rejected` / `posts_missing_email_html`.
