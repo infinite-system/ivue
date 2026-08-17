@@ -127,6 +127,10 @@ async function renderTurnstile() {
   turnstileWidgetId = turnstile.render(turnstileElement.value, {
     sitekey: TURNSTILE_SITE_KEY,
     action: 'newsletter',
+    theme: 'dark',
+    // invisible unless Turnstile actually needs the visitor to interact —
+    // the passive "Success!" badge never shows
+    appearance: 'interaction-only',
     callback: (token: string) => {
       turnstileToken.value = token;
     },
