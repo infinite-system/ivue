@@ -97,10 +97,31 @@ export default {
       // Browser auto-translate must never touch the brand: the nav logo
       // says "ivue" in every language. Re-tagged after each route change —
       // covers first paint and late-mounted layouts alike.
+      //
+      // LOGO EVALUATION RIG (temporary): each site section wears one of
+      // the three de-haired logo candidates so they can be compared in
+      // the real header — home/default = sky gradient (current colors),
+      // /guide = brand indigo→emerald, /blog = gradient tile + white.
+      // Once a winner is picked: point logo.svg at it and delete this.
+      const LOGO_CANDIDATES: [prefix: string, source: string][] = [
+        ['/blog', '/logo-tile.svg'],
+        ['/guide', '/logo-indigo.svg'],
+      ];
+      const swapLogo = () => {
+        const logoImage = document.querySelector<HTMLImageElement>(
+          '.VPNavBarTitle .logo',
+        );
+        if (!logoImage) return;
+        const match = LOGO_CANDIDATES.find(([prefix]) =>
+          window.location.pathname.startsWith(prefix),
+        );
+        logoImage.src = match ? match[1] : '/logo-sky.svg';
+      };
       const shieldBrand = () => {
         document
           .querySelector('.VPNavBarTitle')
           ?.setAttribute('translate', 'no');
+        swapLogo();
       };
 
       const onAfterRouteChange = router.onAfterRouteChange;
