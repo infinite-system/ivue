@@ -171,7 +171,8 @@ async function subscribe() {
     if (response.ok) {
       state.value = 'done';
       message.value = 'Welcome aboard — see you in the next post.';
-      window.setTimeout(() => (toastVisible.value = false), 2_500);
+      // long enough to actually read the confirmation
+      window.setTimeout(() => (toastVisible.value = false), 8_000);
     } else {
       state.value = 'error';
       message.value =
@@ -262,7 +263,25 @@ async function subscribe() {
           </span>
         </button>
       </form>
-      <p v-if="message" class="newsletter__message" :class="{ error: state === 'error' }">
+      <div v-if="state === 'done'" class="newsletter__success" role="status">
+        <svg class="newsletter__check" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="11" fill="currentColor" fill-opacity="0.14" />
+          <circle cx="12" cy="12" r="11" stroke="currentColor" stroke-width="1.6" />
+          <path
+            d="M7 12.4 10.4 16 17 8.8"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <p>{{ message }}</p>
+      </div>
+      <p
+        v-else-if="message"
+        class="newsletter__message"
+        :class="{ error: state === 'error' }"
+      >
         {{ message }}
       </p>
     </div>

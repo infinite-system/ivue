@@ -1940,6 +1940,42 @@ a.feature-inline-link {
 .newsletter__message.error {
   color: var(--vp-c-yellow-1, #d97706);
 }
+/* signed-up confirmation: centered, green check, breathing room */
+.newsletter__success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 14px 8px 6px;
+  color: #34d399;
+}
+.newsletter__check {
+  width: 44px;
+  height: 44px;
+  animation: newsletter-check-pop 300ms ease-out;
+}
+.newsletter__success p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--vp-c-text-1);
+}
+@keyframes newsletter-check-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .newsletter__check {
+    animation: none;
+  }
+}
 /* toast: small card pinned bottom-right, slides up; never obstructs */
 .newsletter--toast {
   position: fixed;
