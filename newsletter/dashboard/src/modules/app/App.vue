@@ -20,7 +20,17 @@ onMounted(() => app.probe());
   <div class="shell">
     <header class="topbar">
       <button class="brand" aria-label="Home" @click="app.open('subscribers')">
-        <span class="brand-glyph" aria-hidden="true">∞</span>
+        <span class="brand-glyph" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none">
+            <path
+              d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
+              stroke="#fff"
+              stroke-width="3.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
         <span class="brand-mark">ivue</span>
       </button>
       <nav v-if="authenticated" class="tabs" aria-label="Sections">
@@ -46,7 +56,17 @@ onMounted(() => app.probe());
 
     <main v-else-if="!authenticated" class="gate">
       <form class="login card" @submit.prevent="app.login()">
-        <span class="brand-glyph" aria-hidden="true">∞</span>
+        <span class="brand-glyph" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none">
+            <path
+              d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
+              stroke="#fff"
+              stroke-width="3.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
         <h1>Unlock the dashboard</h1>
         <p class="muted">
           Paste the admin secret. It stays in this tab's session storage —

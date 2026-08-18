@@ -107,14 +107,17 @@ body::before {
   background: linear-gradient(135deg, var(--accent-strong), var(--accent-2));
   box-shadow: 0 0 14px rgba(99, 102, 241, 0.45);
   flex: none;
-  /* the infinity mark */
+  /* the infinity mark — drawn, not typed: the path is geometrically
+     centered where a font glyph sits on a baseline */
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-size: 1.05rem;
-  font-weight: 700;
-  line-height: 1;
+}
+
+.brand-glyph svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .brand-mark {
