@@ -13,25 +13,75 @@ function postJson(path: string, body: object, authorization?: string) {
   });
 }
 
+// a test ExecutionContext that lets us await the waitUntil work
+function makeTestContext() {
+  const pending: Promise<unknown>[] = [];
+  return {
+    context: {
+      waitUntil: (promise: Promise<unknown>) => {
+        pending.push(promise);
+      },
+      passThroughOnException: () => undefined,
+      props: {},
+    } as ExecutionContext,
+    settle: () => Promise.all(pending),
+  };
+}
+
 describe('PublicApi', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it('subscribe validates the address and enrolls (Turnstile off in tests)', async () => {
+  it('subscribe validates, enrolls, and pings the operator (Turnstile off in tests)', async () => {
     const env = makeTestEnv();
+    const postmarkCalls = installFetchStub({});
+    const { context, settle } = makeTestContext();
     const bad = await PublicApi.Class.subscribe(
       postJson('/subscribe', { email: 'not-an-email' }),
       env,
+      context,
     );
     expect(bad.status).toBe(400);
     const good = await PublicApi.Class.subscribe(
       postJson('/subscribe', { email: 'Ada@IVUE.dev', name: 'Ada' }),
       env,
+      context,
     );
     expect(good.status).toBe(200);
     const active = await Audience.Class.active(env, 'newsletter');
     expect(active[0]).toEqual({ email: 'ada@ivue.dev', name: 'Ada' });
+
+    // the notification rode waitUntil: transactional stream, operator inbox
+    await settle();
+    expect(postmarkCalls.notifications).toHaveLength(1);
+    expect(postmarkCalls.notifications[0]).toMatchObject({
+      To: 'evgeny@ivue.dev',
+      Subject: 'New subscriber: ada@ivue.dev',
+      MessageStream: 'outbound',
+    });
+    expect(postmarkCalls.notifications[0].TextBody).toContain(
+      'Active audience: 1',
+    );
+  });
+
+  it('a notification failure never breaks the signup', async () => {
+    const env = makeTestEnv();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new Error('postmark unreachable');
+      }),
+    );
+    const { context, settle } = makeTestContext();
+    const response = await PublicApi.Class.subscribe(
+      postJson('/subscribe', { email: 'a@ivue.dev' }),
+      env,
+      context,
+    );
+    expect(response.status).toBe(200);
+    await settle(); // notifySignup swallows its own failure
+    expect(await Audience.Class.active(env, 'newsletter')).toHaveLength(1);
   });
 
   it('unsubscribe requires a valid HMAC token and suppresses on success', async () => {

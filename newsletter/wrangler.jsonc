@@ -54,6 +54,8 @@
 		"SENDER_EMAIL": "newsletter@ivue.dev",
 		// replies route via Cloudflare Email Routing to a real inbox
 		"REPLY_TO": "newsletter@ivue.dev",
+		// operator notifications (new-signup pings) — transactional stream
+		"NOTIFY_EMAIL": "evgeny@ivue.dev",
 		// Postmark message stream for bulk mail — MUST be a Broadcasts stream,
 		// never the transactional default ("outbound")
 		"POSTMARK_STREAM": "newsletter",

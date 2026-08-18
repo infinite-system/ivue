@@ -25,14 +25,14 @@ import { AdminApi } from './modules/api/AdminApi';
 import { Drip } from './modules/delivery/Drip';
 
 export default {
-  async fetch(request, env): Promise<Response> {
+  async fetch(request, env, context): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === 'OPTIONS')
       return Http.Class.withCors(new Response(null, { status: 204 }), env);
     try {
       if (url.pathname === '/subscribe' && request.method === 'POST')
         return Http.Class.withCors(
-          await PublicApi.Class.subscribe(request, env),
+          await PublicApi.Class.subscribe(request, env, context),
           env,
         );
       if (url.pathname === '/unsubscribe' && request.method === 'GET')

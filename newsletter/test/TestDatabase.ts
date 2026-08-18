@@ -88,6 +88,7 @@ export function makeTestEnv(
     SENDER_NAME: 'ivue.dev',
     SENDER_EMAIL: 'newsletter@ivue.dev',
     REPLY_TO: 'newsletter@ivue.dev',
+    NOTIFY_EMAIL: 'evgeny@ivue.dev',
     POSTMARK_STREAM: 'newsletter',
     CADENCE_HOURS: '40',
     TURNSTILE_HOSTNAMES: 'ivue.dev',

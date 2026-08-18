@@ -24,27 +24,39 @@ export interface FetchStubOptions {
   postmarkStatus?: number;
 }
 
-export interface RecordedPostmarkCall {
-  messages: {
-    To: string;
-    Subject: string;
-    HtmlBody: string;
-    MessageStream: string;
-  }[];
+export interface PostmarkMessage {
+  To: string;
+  Subject: string;
+  HtmlBody?: string;
+  TextBody?: string;
+  MessageStream: string;
 }
 
-// Installs a global fetch stub; returns the record of Postmark calls so
-// tests can assert exactly what would have been sent.
+export interface RecordedPostmarkCall {
+  messages: PostmarkMessage[];
+}
+
+// Installs a global fetch stub; the returned batch record doubles as the
+// notification record via its `notifications` property (single-email
+// endpoint), so existing batch assertions keep their shape.
 export function installFetchStub(
   options: FetchStubOptions,
-): RecordedPostmarkCall[] {
-  const postmarkCalls: RecordedPostmarkCall[] = [];
+): RecordedPostmarkCall[] & { notifications: PostmarkMessage[] } {
+  const postmarkCalls = Object.assign([] as RecordedPostmarkCall[], {
+    notifications: [] as PostmarkMessage[],
+  });
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, requestInit?: RequestInit) => {
       const url = String(input);
       if (url.endsWith('/blog-index.json'))
         return new Response(JSON.stringify(options.posts ?? []));
+      if (url.endsWith('api.postmarkapp.com/email')) {
+        postmarkCalls.notifications.push(
+          JSON.parse(String(requestInit?.body ?? '{}')) as PostmarkMessage,
+        );
+        return new Response(JSON.stringify({ ErrorCode: 0, Message: 'OK' }));
+      }
       if (url.includes('api.postmarkapp.com')) {
         const messages = JSON.parse(
           String(requestInit?.body ?? '[]'),

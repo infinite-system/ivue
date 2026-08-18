@@ -14,10 +14,68 @@ class $Delivery {
     return 'https://api.postmarkapp.com/email/batch';
   }
 
+  static get POSTMARK_EMAIL_URL() {
+    return 'https://api.postmarkapp.com/email';
+  }
+
+  // operator notifications are TRANSACTIONAL mail — Postmark's default
+  // stream, never the broadcast newsletter stream
+  static get NOTIFICATION_STREAM() {
+    return 'outbound';
+  }
+
   // Postmark accepts up to 500 messages per batch call; batching keeps
   // subrequests far under the Workers free-plan cap (50/invocation).
   static get SEND_BATCH_SIZE() {
     return 500;
+  }
+
+  // One line to the operator for every signup. Best-effort by design:
+  // a notification failure is logged and never surfaces to the
+  // subscriber — the signup itself already committed.
+  static async notifySignup(
+    env: Env,
+    subscriber: Subscriber,
+    list: string,
+  ): Promise<void> {
+    try {
+      const audienceSize = await env.DB.prepare(
+        'SELECT COUNT(DISTINCT email) AS total FROM subscribers ' +
+          'WHERE email NOT IN (SELECT email FROM unsubscribes)',
+      ).first<{ total: number }>();
+      const response = await fetch(this.POSTMARK_EMAIL_URL, {
+        method: 'POST',
+        headers: {
+          'X-Postmark-Server-Token': env.POSTMARK_SERVER_TOKEN,
+          'content-type': 'application/json',
+          accept: 'application/json',
+        },
+        body: JSON.stringify({
+          From: `${env.SENDER_NAME} <${env.SENDER_EMAIL}>`,
+          To: env.NOTIFY_EMAIL,
+          Subject: `New subscriber: ${subscriber.email}`,
+          MessageStream: this.NOTIFICATION_STREAM,
+          TextBody:
+            `${subscriber.email}${subscriber.name ? ` (${subscriber.name})` : ''} ` +
+            `joined the "${list}" list.\n\n` +
+            `Active audience: ${audienceSize?.total ?? '?'} subscribers.\n` +
+            `Dashboard: ${env.WORKER_ORIGIN}/`,
+        }),
+      });
+      if (!response.ok) {
+        console.error(
+          JSON.stringify({
+            event: 'signup_notify_failed',
+            status: response.status,
+            body: (await response.text()).slice(0, 300),
+          }),
+        );
+      }
+    } catch (error) {
+      console.error(
+        JSON.stringify({ event: 'signup_notify_failed', error: String(error) }),
+      );
+    }
   }
 
   static async sendPost(

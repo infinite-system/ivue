@@ -17,7 +17,11 @@ class $PublicApi {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   }
 
-  static async subscribe(request: Request, env: Env): Promise<Response> {
+  static async subscribe(
+    request: Request,
+    env: Env,
+    context: ExecutionContext,
+  ): Promise<Response> {
     const body = await Http.Class.readJsonBody<{
       name: string;
       email: string;
@@ -48,13 +52,15 @@ class $PublicApi {
         );
     }
 
-    await Audience.Class.enroll(
-      env,
-      address,
-      String(body.name ?? '')
-        .trim()
-        .slice(0, 80),
-      String(body.list ?? '').trim() || Audience.Class.DEFAULT_LIST,
+    const name = String(body.name ?? '')
+      .trim()
+      .slice(0, 80);
+    const list = String(body.list ?? '').trim() || Audience.Class.DEFAULT_LIST;
+    await Audience.Class.enroll(env, address, name, list);
+    // operator ping rides waitUntil — the subscriber's response never
+    // waits on it, and its failure never surfaces
+    context.waitUntil(
+      Delivery.Class.notifySignup(env, { email: address, name }, list),
     );
     return Http.Class.json({ ok: true });
   }
