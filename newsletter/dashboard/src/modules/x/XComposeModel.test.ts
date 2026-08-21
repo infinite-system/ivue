@@ -12,6 +12,8 @@ beforeEach(() => {
     'fetch',
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.includes('/admin/schedule'))
+        return new Response(JSON.stringify({ upcoming: [], recent: [] }));
       if (url.includes('/admin/settings'))
         return new Response(
           JSON.stringify({
@@ -59,6 +61,19 @@ describe('XComposeModel derivations', () => {
     expect(model.fillTemplate(POST)).toBe(
       'New — One kilobyte is a feature\n\nhttps://ivue.dev/blog/first-post',
     );
+  });
+
+  it('canSchedule needs text, limit, and a FUTURE time — but no credentials', () => {
+    const model = new XComposeModel.Class();
+    model.draft.value = 'Hello';
+    expect(model.canSchedule).toBe(false); // no time picked
+    model.scheduleAt.value = '2099-01-01T09:00';
+    expect(model.canSchedule).toBe(true); // credentials NOT required
+    model.scheduleAt.value = '2001-01-01T09:00';
+    expect(model.canSchedule).toBe(false); // past
+    model.scheduleAt.value = '2099-01-01T09:00';
+    model.draft.value = 'x'.repeat(300);
+    expect(model.canSchedule).toBe(false); // over limit
   });
 
   it('canPost needs text, limit, and credentials; label narrates', () => {

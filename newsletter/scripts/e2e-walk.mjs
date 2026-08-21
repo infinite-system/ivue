@@ -335,6 +335,23 @@ try {
     ),
   );
   await shot('x-composer');
+  // schedule the drafted post far in the future, see it queue, cancel it
+  await page.fill('#x-schedule-at', '2099-01-01T09:00');
+  await page.click('button:has-text("Schedule post")');
+  await page.waitForSelector('.job-queue li', { timeout: 15_000 });
+  check(
+    'scheduling queues the post (visible with cancel)',
+    (await page.locator('.job-queue li').innerText()).includes('2099'),
+  );
+  await shot('x-scheduled');
+  await page.click('.job-queue li button:has-text("Cancel")');
+  await page.waitForFunction(
+    () => document.querySelectorAll('.job-queue li').length === 0,
+  );
+  check(
+    'a pending job cancels cleanly',
+    (await page.locator('.job-queue li').count()) === 0,
+  );
   await page.click('.tab[data-tab="socials-settings"]');
   await page.waitForSelector('[data-view="socials-settings"] #tweet-template', {
     timeout: 15_000,

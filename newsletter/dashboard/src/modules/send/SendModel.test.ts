@@ -15,7 +15,11 @@ beforeEach(() => {
   });
   vi.stubGlobal(
     'fetch',
-    vi.fn(async () => new Response('[]')),
+    vi.fn(async (input: RequestInfo | URL) =>
+      String(input).includes('/admin/schedule')
+        ? new Response(JSON.stringify({ upcoming: [], recent: [] }))
+        : new Response('[]'),
+    ),
   );
 });
 
@@ -77,6 +81,18 @@ describe('SendModel derivations', () => {
     expect(model.outcomeLabel(accepted)).toBe('accepted');
     expect(model.outcomeAccepted(rejected)).toBe(false);
     expect(model.outcomeLabel(rejected)).toBe('inactive recipient');
+  });
+
+  it('canSchedule needs a slug and a future time', () => {
+    const model = new SendModel.Class();
+    model.scheduleAt.value = '2099-01-01T09:00';
+    expect(model.canSchedule).toBe(false); // no slug
+    model.slug.value = 'first-post';
+    expect(model.canSchedule).toBe(true);
+    model.scheduleAt.value = '2001-01-01T09:00';
+    expect(model.canSchedule).toBe(false); // past
+    model.scheduleAt.value = 'garbage';
+    expect(model.scheduleTimeValid).toBe(false);
   });
 
   it('skippedSummary joins the repeat refusals from the last result', () => {

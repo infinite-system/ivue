@@ -5,8 +5,10 @@ import type {
   ListSummary,
   PostSummary,
   RecipientOutcome,
+  ScheduledJob,
   SendResult,
 } from '../platform/Api';
+import { Format } from '../platform/Format';
 import { AppStore } from '../app/AppStore';
 
 // Sending: a targeted send (specific post → specific addresses, ledger-
@@ -55,6 +57,32 @@ class $SendModel {
   // ---- broadcast + drip (arm-then-confirm) ----
   get broadcastList() {
     return ref('newsletter');
+  }
+
+  // ---- scheduling (broadcast kind) ----
+  get scheduleAt() {
+    return ref(''); // datetime-local input value
+  }
+
+  get scheduledJobs() {
+    return shallowRef<ScheduledJob[]>([]);
+  }
+
+  get recentJobs() {
+    return shallowRef<ScheduledJob[]>([]);
+  }
+
+  get scheduleDueAt() {
+    return Format.Class.epochFromLocalInput(this.scheduleAt.value);
+  }
+
+  get scheduleTimeValid() {
+    const dueAt = this.scheduleDueAt;
+    return dueAt !== null && dueAt > Date.now() / 1000;
+  }
+
+  get canSchedule() {
+    return Boolean(this.slug.value) && this.scheduleTimeValid;
   }
 
   get broadcastArmed() {
@@ -128,6 +156,43 @@ class $SendModel {
         (first, second) => second.timestamp - first.timestamp,
       );
       this.lists.value = lists;
+      await this.refreshSchedule();
+    } catch (error) {
+      this.$app.reportFailure(error);
+    }
+  }
+
+  async refreshSchedule() {
+    const jobs = await Api.Class.scheduleList();
+    this.scheduledJobs.value = jobs.upcoming.filter(
+      (job) => job.kind === 'broadcast',
+    );
+    this.recentJobs.value = jobs.recent.filter(
+      (job) => job.kind === 'broadcast',
+    );
+  }
+
+  async scheduleBroadcast() {
+    if (!this.canSchedule) return;
+    try {
+      await Api.Class.schedule({
+        kind: 'broadcast',
+        payload: { slug: this.slug.value, list: this.broadcastList.value },
+        dueAt: this.scheduleDueAt!,
+      });
+      this.$app.notify('Broadcast scheduled.', 'success');
+      this.scheduleAt.value = '';
+      await this.refreshSchedule();
+    } catch (error) {
+      this.$app.reportFailure(error);
+    }
+  }
+
+  async cancelJob(id: number) {
+    try {
+      await Api.Class.scheduleCancel(id);
+      this.$app.notify('Cancelled.', 'info');
+      await this.refreshSchedule();
     } catch (error) {
       this.$app.reportFailure(error);
     }

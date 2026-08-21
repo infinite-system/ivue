@@ -177,6 +177,25 @@ class $Api {
     return this.request('/admin/tweets');
   }
 
+  static schedule(job: {
+    kind: JobKind;
+    payload: Record<string, string>;
+    dueAt: number;
+  }): Promise<{ ok: boolean; job: ScheduledJob }> {
+    return this.post('/admin/schedule', job);
+  }
+
+  static scheduleList(): Promise<{
+    upcoming: ScheduledJob[];
+    recent: ScheduledJob[];
+  }> {
+    return this.request('/admin/schedule');
+  }
+
+  static scheduleCancel(id: number): Promise<{ ok: boolean }> {
+    return this.post('/admin/schedule/cancel', { id });
+  }
+
   static stats(): Promise<Stats> {
     return this.request('/admin/stats');
   }
@@ -297,6 +316,18 @@ export interface TweetRow {
   text: string;
   slug: string | null;
   postedAt: number;
+}
+
+export type JobKind = 'broadcast' | 'tweet';
+
+export interface ScheduledJob {
+  id: number;
+  kind: JobKind;
+  payload: Record<string, string>;
+  dueAt: number;
+  createdAt: number;
+  executedAt: number | null;
+  result: { ok?: boolean; detail?: string; error?: string } | null;
 }
 
 export interface Stats {

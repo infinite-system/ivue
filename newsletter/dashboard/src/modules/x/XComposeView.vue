@@ -11,6 +11,8 @@ const {
   xConfigured,
   postedUrl,
   tweetLog,
+  scheduleAt,
+  scheduledJobs,
   loading,
 } = model;
 </script>
@@ -65,6 +67,30 @@ const {
         <p v-if="postedUrl" class="status on posted-link">
           Posted — <a :href="postedUrl" target="_blank" rel="noopener">view on X</a>
         </p>
+
+        <hr />
+
+        <h2>Schedule instead</h2>
+        <label for="x-schedule-at">When (your timezone)</label>
+        <input id="x-schedule-at" v-model="scheduleAt" type="datetime-local" />
+        <button
+          class="primary"
+          type="button"
+          :disabled="!model.canSchedule"
+          @click="model.scheduleTweet()"
+        >
+          Schedule post
+        </button>
+
+        <ul v-if="scheduledJobs.length" class="job-queue">
+          <li v-for="job in scheduledJobs" :key="job.id">
+            <span class="tweet-text">{{ job.payload.text }}</span>
+            <span class="muted">{{ Format.Class.dateTime(job.dueAt) }}</span>
+            <button class="ghost" type="button" @click="model.cancelJob(job.id)">
+              Cancel
+            </button>
+          </li>
+        </ul>
       </form>
 
       <div class="table-scroll card">

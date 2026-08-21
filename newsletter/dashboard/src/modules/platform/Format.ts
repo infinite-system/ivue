@@ -26,6 +26,16 @@ class $Format {
     return text || '—';
   }
 
+  // a datetime-local input value ("YYYY-MM-DDTHH:mm", browser-local) as
+  // unix seconds; null when empty or unparsable
+  static epochFromLocalInput(value: string): number | null {
+    if (!value) return null;
+    const milliseconds = new Date(value).getTime();
+    return Number.isFinite(milliseconds)
+      ? Math.floor(milliseconds / 1000)
+      : null;
+  }
+
   static relativeDue(unixSeconds: number, now = Date.now() / 1000): string {
     const deltaSeconds = unixSeconds - now;
     if (deltaSeconds <= 0) return 'now';

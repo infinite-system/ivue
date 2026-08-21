@@ -907,6 +907,38 @@ hr {
   max-width: 26rem;
 }
 
+/* the pending-jobs list under each scheduler */
+.job-queue {
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+}
+
+.job-queue li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--panel-edge-soft);
+  font-size: 0.9rem;
+}
+
+.job-queue li:last-child {
+  border-bottom: 0;
+}
+
+.job-queue .tweet-text {
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+input[type='datetime-local'] {
+  color-scheme: dark;
+}
+
 .x-runbook {
   background: #0d1119;
   border: 1px solid var(--panel-edge);

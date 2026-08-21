@@ -2,9 +2,7 @@ import { Static } from 'ivue/extras';
 import { Http } from '../platform/Http';
 import { Security } from '../platform/Security';
 import { Turnstile } from '../platform/Turnstile';
-import { Posts } from '../content/Posts';
 import { Audience } from '../audience/Audience';
-import { Ledger } from '../audience/Ledger';
 import { Delivery } from '../delivery/Delivery';
 import { Drip } from '../delivery/Drip';
 
@@ -95,28 +93,24 @@ class $PublicApi {
     const body = await Http.Class.readJsonBody<{ slug: string; list: string }>(
       request,
     );
-    const slug = String(body.slug ?? '');
-    const posts = await Posts.Class.load(env);
-    const post = Posts.Class.find(posts, slug);
-    if (!post)
-      return Http.Class.json({ error: `Unknown post slug: ${slug}` }, 400);
-
-    const recipients = await Audience.Class.active(
-      env,
-      String(body.list ?? '').trim() || Audience.Class.DEFAULT_LIST,
-    );
-    const alreadySent = await Ledger.Class.sentSetForSlug(env, post.slug);
-    const due = recipients.filter(
-      (recipient) => !alreadySent.has(recipient.email),
-    );
-
-    const report = await Delivery.Class.sendPost(env, post, due);
-    return Http.Class.json({
-      ok: true,
-      slug: post.slug,
-      recipients: report.delivered,
-      skippedAsRepeat: recipients.length - due.length,
-    });
+    try {
+      const report = await Delivery.Class.broadcastPost(
+        env,
+        String(body.slug ?? ''),
+        String(body.list ?? '').trim() || Audience.Class.DEFAULT_LIST,
+      );
+      return Http.Class.json({
+        ok: true,
+        slug: report.slug,
+        recipients: report.delivered,
+        skippedAsRepeat: report.skippedAsRepeat,
+      });
+    } catch (error) {
+      return Http.Class.json(
+        { error: error instanceof Error ? error.message : 'Broadcast failed.' },
+        400,
+      );
+    }
   }
 
   // The cron's exact pass, runnable on demand — same auth as /broadcast.

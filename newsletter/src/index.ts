@@ -23,6 +23,7 @@ import { Http } from './modules/platform/Http';
 import { PublicApi } from './modules/api/PublicApi';
 import { AdminApi } from './modules/api/AdminApi';
 import { Drip } from './modules/delivery/Drip';
+import { Scheduler } from './modules/schedule/Scheduler';
 
 export default {
   async fetch(request, env, context): Promise<Response> {
@@ -64,7 +65,11 @@ export default {
     }
   },
 
-  async scheduled(_event, env, context): Promise<void> {
-    context.waitUntil(Drip.Class.run(env));
+  // Two crons: the daily drip at 13:00 UTC, and a 5-minute tick that
+  // executes due scheduled jobs (broadcasts, X posts). The drip tick
+  // drains the queue too — a job due at 13:00 should not wait.
+  async scheduled(event, env, context): Promise<void> {
+    if (event.cron === '0 13 * * *') context.waitUntil(Drip.Class.run(env));
+    context.waitUntil(Scheduler.Class.runDue(env));
   },
 } satisfies ExportedHandler<Env>;

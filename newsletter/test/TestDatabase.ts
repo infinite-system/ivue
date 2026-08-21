@@ -43,8 +43,12 @@ class $TestStatement {
     return row ?? null;
   }
 
-  async run(): Promise<void> {
-    this.database.prepare(this.sql).run(...(this.parameters as never[]));
+  // mirrors D1's result meta — the scheduler's claim step reads changes
+  async run(): Promise<{ meta: { changes: number } }> {
+    const outcome = this.database
+      .prepare(this.sql)
+      .run(...(this.parameters as never[])) as { changes: number | bigint };
+    return { meta: { changes: Number(outcome.changes) } };
   }
 }
 

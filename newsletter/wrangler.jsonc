@@ -32,9 +32,11 @@
 		"logs": { "head_sampling_rate": 1 }
 	},
 	"triggers": {
-		// one drip pass per day, 13:00 UTC (morning in the Americas, afternoon EU)
+		// daily drip at 13:00 UTC (morning Americas, afternoon EU) + the
+		// 5-minute tick that executes due scheduled jobs
 		"crons": [
-			"0 13 * * *"
+			"0 13 * * *",
+			"*/5 * * * *"
 		]
 	},
 	"d1_databases": [

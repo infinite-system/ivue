@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { SendModel } from './SendModel';
+import { Format } from '../platform/Format';
 
 const model = new SendModel.Class();
 const {
@@ -11,6 +12,8 @@ const {
   force,
   result,
   broadcastList,
+  scheduleAt,
+  scheduledJobs,
 } = model;
 </script>
 
@@ -100,6 +103,38 @@ const {
         <button v-if="model.anyActionArmed" class="ghost" @click="model.disarm()">
           Cancel
         </button>
+
+        <hr />
+
+        <h2>Schedule the broadcast</h2>
+        <p class="muted">
+          Sends the selected post to the list at the chosen time (your
+          timezone). Cancellable until it runs.
+        </p>
+        <label for="broadcast-schedule-at">When</label>
+        <input
+          id="broadcast-schedule-at"
+          v-model="scheduleAt"
+          type="datetime-local"
+        />
+        <button
+          class="primary"
+          :disabled="!model.canSchedule"
+          @click="model.scheduleBroadcast()"
+        >
+          Schedule broadcast
+        </button>
+
+        <ul v-if="scheduledJobs.length" class="job-queue">
+          <li v-for="job in scheduledJobs" :key="job.id">
+            <span class="slug">{{ job.payload.slug }}</span>
+            <span class="muted">→ {{ job.payload.list }},
+              {{ Format.Class.dateTime(job.dueAt) }}</span>
+            <button class="ghost" @click="model.cancelJob(job.id)">
+              Cancel
+            </button>
+          </li>
+        </ul>
       </div>
     </div>
   </section>

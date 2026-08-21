@@ -1,7 +1,8 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type { PostSummary, TweetRow } from '../platform/Api';
+import type { PostSummary, ScheduledJob, TweetRow } from '../platform/Api';
+import { Format } from '../platform/Format';
 import { AppStore } from '../app/AppStore';
 
 // The X composer: pick a post, the template prefills the draft
@@ -63,6 +64,33 @@ class $XComposeModel {
     return shallowRef<TweetRow[]>([]);
   }
 
+  // ---- scheduling (tweet kind) — enqueueing needs no credentials; the
+  // job records a visible failure if they are still absent at run time
+  get scheduleAt() {
+    return ref(''); // datetime-local input value
+  }
+
+  get scheduledJobs() {
+    return shallowRef<ScheduledJob[]>([]);
+  }
+
+  get scheduleDueAt() {
+    return Format.Class.epochFromLocalInput(this.scheduleAt.value);
+  }
+
+  get scheduleTimeValid() {
+    const dueAt = this.scheduleDueAt;
+    return dueAt !== null && dueAt > Date.now() / 1000;
+  }
+
+  get canSchedule() {
+    return (
+      this.draft.value.trim().length > 0 &&
+      !this.overLimit &&
+      this.scheduleTimeValid
+    );
+  }
+
   get loading() {
     return ref(true);
   }
@@ -112,6 +140,7 @@ class $XComposeModel {
       this.template.value = settings.tweetTemplate;
       this.xConfigured.value = settings.xConfigured;
       this.tweetLog.value = log;
+      await this.refreshSchedule();
     } catch (error) {
       this.$app.reportFailure(error);
     } finally {
@@ -158,6 +187,39 @@ class $XComposeModel {
 
   disarm() {
     this.postArmed.value = false;
+  }
+
+  async refreshSchedule() {
+    const jobs = await Api.Class.scheduleList();
+    this.scheduledJobs.value = jobs.upcoming.filter(
+      (job) => job.kind === 'tweet',
+    );
+  }
+
+  async scheduleTweet() {
+    if (!this.canSchedule) return;
+    try {
+      await Api.Class.schedule({
+        kind: 'tweet',
+        payload: { text: this.draft.value.trim(), slug: this.slug.value },
+        dueAt: this.scheduleDueAt!,
+      });
+      this.$app.notify('Post scheduled.', 'success');
+      this.scheduleAt.value = '';
+      await this.refreshSchedule();
+    } catch (error) {
+      this.$app.reportFailure(error);
+    }
+  }
+
+  async cancelJob(id: number) {
+    try {
+      await Api.Class.scheduleCancel(id);
+      this.$app.notify('Cancelled.', 'info');
+      await this.refreshSchedule();
+    } catch (error) {
+      this.$app.reportFailure(error);
+    }
   }
 }
 

@@ -230,6 +230,41 @@ describe('AdminApi', () => {
     ).toBe(400);
   });
 
+  it('schedule endpoints: enqueue, list, cancel; invalid input refused', async () => {
+    const env = makeTestEnv();
+    const dueAt = Math.floor(Date.now() / 1000) + 3600;
+    const created = (await (
+      await call('/admin/schedule', env, 'POST', {
+        kind: 'tweet',
+        payload: { text: 'Hello', slug: '' },
+        dueAt,
+      })
+    ).json()) as { ok: boolean; job: { id: number; dueAt: number } };
+    expect(created.ok).toBe(true);
+    expect(created.job.dueAt).toBe(dueAt);
+
+    const listed = (await (await call('/admin/schedule', env)).json()) as {
+      upcoming: { id: number }[];
+    };
+    expect(listed.upcoming).toHaveLength(1);
+
+    const cancelled = await call('/admin/schedule/cancel', env, 'POST', {
+      id: created.job.id,
+    });
+    expect(cancelled.status).toBe(200);
+    expect(
+      (await call('/admin/schedule/cancel', env, 'POST', { id: created.job.id }))
+        .status,
+    ).toBe(404);
+
+    const refused = await call('/admin/schedule', env, 'POST', {
+      kind: 'tweet',
+      payload: { text: '' },
+      dueAt,
+    });
+    expect(refused.status).toBe(400);
+  });
+
   it('drip-preview exposes the plan and stats aggregates the system', async () => {
     const env = makeTestEnv();
     await Audience.Class.enroll(env, 'ada@ivue.dev', 'Ada', 'newsletter');

@@ -2,6 +2,8 @@ import { Static } from 'ivue/extras';
 import { Http } from '../platform/Http';
 import { Security } from '../platform/Security';
 import { Ledger } from '../audience/Ledger';
+import { Posts } from '../content/Posts';
+import { Audience } from '../audience/Audience';
 import type { Post } from '../content/Posts';
 import type { Subscriber } from '../audience/Audience';
 
@@ -76,6 +78,29 @@ class $Delivery {
         JSON.stringify({ event: 'signup_notify_failed', error: String(error) }),
       );
     }
+  }
+
+  // A whole-list broadcast of one post — the ledger-filtered core shared
+  // by POST /broadcast and the scheduler.
+  static async broadcastPost(
+    env: Env,
+    slug: string,
+    list: string,
+  ): Promise<{ slug: string; delivered: number; skippedAsRepeat: number }> {
+    const posts = await Posts.Class.load(env);
+    const post = Posts.Class.find(posts, slug);
+    if (!post) throw new Error(`Unknown post slug: ${slug}`);
+    const recipients = await Audience.Class.active(env, list);
+    const alreadySent = await Ledger.Class.sentSetForSlug(env, post.slug);
+    const due = recipients.filter(
+      (recipient) => !alreadySent.has(recipient.email),
+    );
+    const report = await this.sendPost(env, post, due);
+    return {
+      slug: post.slug,
+      delivered: report.delivered,
+      skippedAsRepeat: recipients.length - due.length,
+    };
   }
 
   static async sendPost(

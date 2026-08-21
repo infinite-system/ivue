@@ -5,6 +5,8 @@ import { Posts } from '../content/Posts';
 import { Settings } from '../config/Settings';
 import { XPoster } from '../socials/XPoster';
 import { Tweets } from '../socials/Tweets';
+import { Scheduler } from '../schedule/Scheduler';
+import type { JobKind } from '../schedule/Scheduler';
 import { Audience } from '../audience/Audience';
 import { Ledger } from '../audience/Ledger';
 import { Delivery } from '../delivery/Delivery';
@@ -57,6 +59,12 @@ class $AdminApi {
         return this.tweet(request, env);
       case 'GET /admin/tweets':
         return this.tweets(env);
+      case 'POST /admin/schedule':
+        return this.schedule(request, env);
+      case 'GET /admin/schedule':
+        return this.scheduleList(env);
+      case 'POST /admin/schedule/cancel':
+        return this.scheduleCancel(request, env);
       case 'GET /admin/stats':
         return this.stats(env);
       default:
@@ -288,6 +296,43 @@ class $AdminApi {
 
   static async tweets(env: Env): Promise<Response> {
     return Http.Class.json(await Tweets.Class.log(env));
+  }
+
+  static async schedule(request: Request, env: Env): Promise<Response> {
+    const body = await Http.Class.readJsonBody<{
+      kind: JobKind;
+      payload: Record<string, string>;
+      dueAt: number;
+    }>(request);
+    try {
+      const job = await Scheduler.Class.schedule(
+        env,
+        body.kind as JobKind,
+        (body.payload ?? {}) as never,
+        Number(body.dueAt),
+      );
+      return Http.Class.json({ ok: true, job });
+    } catch (error) {
+      return Http.Class.json(
+        { error: error instanceof Error ? error.message : 'Bad schedule.' },
+        400,
+      );
+    }
+  }
+
+  static async scheduleList(env: Env): Promise<Response> {
+    return Http.Class.json(await Scheduler.Class.list(env));
+  }
+
+  static async scheduleCancel(request: Request, env: Env): Promise<Response> {
+    const body = await Http.Class.readJsonBody<{ id: number }>(request);
+    const cancelled = await Scheduler.Class.cancel(env, Number(body.id));
+    if (!cancelled)
+      return Http.Class.json(
+        { error: 'Job not found or already executed.' },
+        404,
+      );
+    return Http.Class.json({ ok: true });
   }
 
   static async lists(env: Env): Promise<Response> {
