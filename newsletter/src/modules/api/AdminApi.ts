@@ -334,6 +334,13 @@ class $AdminApi {
       .filter(Boolean);
     if (texts.length < 2)
       return Http.Class.json({ error: 'A thread needs at least 2 tweets.' }, 400);
+    if (texts.length > XPoster.Class.MAXIMUM_THREAD_TWEETS)
+      return Http.Class.json(
+        {
+          error: `A thread holds at most ${XPoster.Class.MAXIMUM_THREAD_TWEETS} tweets.`,
+        },
+        400,
+      );
     try {
       const result = await XPoster.Class.postThread(
         env,

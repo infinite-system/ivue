@@ -42,6 +42,10 @@ class $XComposeModel {
     return 270;
   }
 
+  get MAXIMUM_THREAD_TWEETS() {
+    return 10;
+  }
+
   get posts() {
     return shallowRef<PostSummary[]>([]);
   }
@@ -162,11 +166,16 @@ class $XComposeModel {
     const tweets = this.threadTweets.value;
     return (
       tweets.length >= 2 &&
+      tweets.length <= this.MAXIMUM_THREAD_TWEETS &&
       tweets.every(
         (tweet, index) =>
           tweet.trim().length > 0 && this.threadRemaining(index) >= 0,
       )
     );
+  }
+
+  get canAddThreadTweet() {
+    return this.threadTweets.value.length < this.MAXIMUM_THREAD_TWEETS;
   }
 
   get draftValid() {
@@ -285,12 +294,16 @@ class $XComposeModel {
   // ---- the thread builder ----
 
   // Greedy packer: paragraphs fill segments up to the limit; an
-  // oversized paragraph splits on sentence boundaries. The article
+  // oversized paragraph splits on sentence boundaries. Content fills at
+  // most MAXIMUM_THREAD_TWEETS - 1 segments (a long article truncates
+  // with an ellipsis — the link is the road to the rest); the article
   // link closes the thread; "n/m " numbering is applied last.
   splitIntoTweets(title: string, plainText: string, url: string): string[] {
     const limit = this.THREAD_SEGMENT_LIMIT;
+    const contentCap = this.MAXIMUM_THREAD_TWEETS - 1;
     const segments: string[] = [];
     let current = title;
+    let truncated = false;
     const pieces = plainText
       .split(/\n\n+/)
       .flatMap((paragraph) =>
@@ -306,18 +319,28 @@ class $XComposeModel {
         current = candidate;
         continue;
       }
-      if (current) segments.push(current);
+      if (current) {
+        if (segments.length >= contentCap - 1) {
+          truncated = true;
+          break;
+        }
+        segments.push(current);
+      }
       current =
         this.weightedLengthOf(piece) <= limit
           ? piece
           : piece.slice(0, limit - 1) + '…';
     }
-    if (current) segments.push(current);
+    if (current && segments.length < contentCap)
+      segments.push(truncated ? `${current} …` : current);
     const closer = `Full article:\n${url}`;
     const last = segments[segments.length - 1];
-    // a thread is minimum two tweets — with a single packed segment the
-    // closer stands alone rather than folding in
+    // the closer folds into the last segment only when it fits AND the
+    // thread is neither truncated (the cut must stay visible, the link
+    // is the road to the rest) nor single-segment (a thread is minimum
+    // two tweets)
     if (
+      !truncated &&
       segments.length > 1 &&
       last &&
       this.weightedLengthOf(`${last}\n\n${closer}`) <= limit

@@ -33,6 +33,10 @@ class $Scheduler {
     if (kind === 'thread') {
       const texts = this.threadTexts(payload as unknown as ThreadPayload);
       if (texts.length < 2) throw new Error('A thread needs at least 2 tweets.');
+      if (texts.length > XPoster.Class.MAXIMUM_THREAD_TWEETS)
+        throw new Error(
+          `A thread holds at most ${XPoster.Class.MAXIMUM_THREAD_TWEETS} tweets.`,
+        );
     }
     await env.DB.prepare(
       'INSERT INTO scheduled_jobs (kind, payload, due_at, created_at) VALUES (?, ?, ?, ?)',

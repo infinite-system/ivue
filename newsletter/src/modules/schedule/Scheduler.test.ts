@@ -130,6 +130,21 @@ describe('Scheduler', () => {
     expect(recent[0].result?.detail).toBe('thread of 3');
   });
 
+  it('a thread over 10 tweets is refused at schedule time', async () => {
+    const env = makeTestEnv();
+    await expect(
+      Scheduler.Class.schedule(
+        env,
+        'thread',
+        {
+          tweets: JSON.stringify(Array.from({ length: 11 }, () => 'tweet')),
+          slug: '',
+        },
+        farFuture(),
+      ),
+    ).rejects.toThrow(/at most 10/);
+  });
+
   it('a thread with fewer than 2 tweets is refused at schedule time', async () => {
     const env = makeTestEnv();
     await expect(

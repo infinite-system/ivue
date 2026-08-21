@@ -142,8 +142,13 @@ const {
               </button>
             </div>
           </div>
-          <button class="ghost" type="button" @click="model.addThreadTweet()">
-            + Add tweet
+          <button
+            class="ghost"
+            type="button"
+            :disabled="!model.canAddThreadTweet"
+            @click="model.addThreadTweet()"
+          >
+            + Add tweet ({{ threadTweets.length }}/{{ model.MAXIMUM_THREAD_TWEETS }})
           </button>
         </template>
 

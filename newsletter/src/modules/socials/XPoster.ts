@@ -27,6 +27,10 @@ class $XPoster {
     return 4; // X's per-tweet cap
   }
 
+  static get MAXIMUM_THREAD_TWEETS() {
+    return 10;
+  }
+
   // The single-tweet entry point: text plus up to 4 site-hosted images
   // (banner, embed screenshots), each fetched and uploaded natively.
   static async postWithImages(
@@ -46,6 +50,10 @@ class $XPoster {
     texts: string[],
     imageUrls: string[] = [],
   ): Promise<ThreadResult> {
+    if (texts.length > this.MAXIMUM_THREAD_TWEETS)
+      throw new Error(
+        `A thread holds at most ${this.MAXIMUM_THREAD_TWEETS} tweets.`,
+      );
     const mediaIds = await this.uploadImages(env, imageUrls);
     const tweetIds: string[] = [];
     for (const [index, text] of texts.entries()) {

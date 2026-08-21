@@ -103,6 +103,23 @@ describe('XComposeModel derivations', () => {
     }
   });
 
+  it('a long article caps the thread at 10, ellipsis marks the cut, link closes', () => {
+    const model = new XComposeModel.Class();
+    const longBody = Array.from(
+      { length: 60 },
+      (_, index) => `Paragraph ${index + 1}: ` + 'substantial sentence here. '.repeat(6).trim(),
+    ).join('\n\n');
+    const tweets = model.splitIntoTweets(
+      'The title',
+      longBody,
+      'https://ivue.dev/blog/first-post',
+    );
+    expect(tweets).toHaveLength(10);
+    expect(tweets[8].endsWith('…')).toBe(true); // the truncation mark
+    expect(tweets[9]).toContain('Full article:');
+    expect(tweets[0].startsWith('1/10 ')).toBe(true);
+  });
+
   it('threadValid requires 2+ segments, all present and within limit', () => {
     const model = new XComposeModel.Class();
     model.mode.value = 'thread';
@@ -114,6 +131,8 @@ describe('XComposeModel derivations', () => {
     expect(model.threadValid).toBe(false); // over limit
     model.threadTweets.value = ['1/2 hello', '   '];
     expect(model.threadValid).toBe(false); // empty segment
+    model.threadTweets.value = Array.from({ length: 11 }, () => 'tweet');
+    expect(model.threadValid).toBe(false); // over the 10 cap
   });
 
   it('fillTemplate substitutes title and url', () => {
