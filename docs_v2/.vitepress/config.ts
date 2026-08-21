@@ -428,24 +428,10 @@ export default defineConfig({
     ['link', { rel: 'manifest', href: '/site.webmanifest' }],
     ['meta', { name: 'theme-color', content: '#6366f1' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    // og:title / og:description / og:url are per-page — see transformHead
-    [
-      'meta',
-      {
-        property: 'og:image',
-        content: 'https://ivue.dev/og-image.png',
-      },
-    ],
-    ['meta', { property: 'og:image:width', content: '1200' }],
-    ['meta', { property: 'og:image:height', content: '630' }],
+    // og:title / og:description / og:url AND the image metas are
+    // per-page (transformHead) — scrapers take the FIRST og:image, so a
+    // global one here would shadow the per-post banners
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    [
-      'meta',
-      {
-        name: 'twitter:image',
-        content: 'https://ivue.dev/og-image.png',
-      },
-    ],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     [
       'link',
@@ -482,7 +468,10 @@ export default defineConfig({
 
   // Per-page social cards: link previews (WhatsApp, Slack, X…) read
   // og:* from the static HTML, so every page emits its own title,
-  // description and canonical URL. The shared og:image stays global.
+  // description and canonical URL. Blog posts additionally point
+  // og:image/twitter:image at their own banner, so a shared post link
+  // renders THAT post's card; everywhere else the global brand image
+  // holds.
   transformHead({ pageData }) {
     const isHome = pageData.frontmatter.layout === 'home';
     const title = isHome
@@ -494,11 +483,22 @@ export default defineConfig({
     const path = pageData.relativePath
       .replace(/(^|\/)index\.md$/, '$1')
       .replace(/\.md$/, '');
-    return [
+    const head: [string, Record<string, string>][] = [
       ['meta', { property: 'og:title', content: title }],
       ['meta', { property: 'og:description', content: description }],
       ['meta', { property: 'og:url', content: `https://ivue.dev/${path}` }],
     ];
+    const blogPost = pageData.relativePath.match(/^blog\/(?!index)([^/]+)\.md$/);
+    const imageUrl = blogPost
+      ? `https://ivue.dev/blog/${blogPost[1]}.png`
+      : 'https://ivue.dev/og-image.png';
+    head.push(
+      ['meta', { property: 'og:image', content: imageUrl }],
+      ['meta', { property: 'og:image:width', content: '1200' }],
+      ['meta', { property: 'og:image:height', content: '630' }],
+      ['meta', { name: 'twitter:image', content: imageUrl }],
+    );
+    return head;
   },
 
   markdown: {

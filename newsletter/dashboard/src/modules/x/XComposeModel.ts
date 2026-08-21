@@ -36,6 +36,35 @@ class $XComposeModel {
     return ref('');
   }
 
+  get contentTemplate() {
+    return ref('');
+  }
+
+  // 'link' = short teaser, X renders the card from the post page's
+  // twitter:image meta; 'content' = article substance in the tweet with
+  // the banner uploaded natively
+  get mode() {
+    return ref<'link' | 'content'>('link');
+  }
+
+  get attachBanner() {
+    return this.mode.value === 'content';
+  }
+
+  get pickedPost() {
+    return (
+      this.posts.value.find(
+        (candidate) => candidate.slug === this.slug.value,
+      ) ?? null
+    );
+  }
+
+  get bannerUrl() {
+    return this.pickedPost && this.attachBanner
+      ? `https://ivue.dev/blog/${this.pickedPost.slug}.png`
+      : '';
+  }
+
   get xConfigured() {
     return ref(false);
   }
@@ -138,6 +167,7 @@ class $XComposeModel {
         (first, second) => second.timestamp - first.timestamp,
       );
       this.template.value = settings.tweetTemplate;
+      this.contentTemplate.value = settings.tweetContentTemplate;
       this.xConfigured.value = settings.xConfigured;
       this.tweetLog.value = log;
       await this.refreshSchedule();
@@ -149,17 +179,30 @@ class $XComposeModel {
   }
 
   fillTemplate(post: PostSummary): string {
-    return this.template.value
+    const template =
+      this.mode.value === 'content'
+        ? this.contentTemplate.value
+        : this.template.value;
+    return template
       .replaceAll('{title}', post.title)
+      .replaceAll('{description}', post.description)
       .replaceAll('{url}', post.url);
   }
 
   pickPost(slug: string) {
     this.slug.value = slug;
-    const post = this.posts.value.find((candidate) => candidate.slug === slug);
-    if (post) this.draft.value = this.fillTemplate(post);
+    this.prefill();
     this.postArmed.value = false;
     this.postedUrl.value = '';
+  }
+
+  setMode(mode: 'link' | 'content') {
+    this.mode.value = mode;
+    this.prefill(); // a mode is a different draft — re-prefill the pick
+  }
+
+  prefill() {
+    if (this.pickedPost) this.draft.value = this.fillTemplate(this.pickedPost);
   }
 
   async confirmPost() {
@@ -174,6 +217,7 @@ class $XComposeModel {
       const result = await Api.Class.tweet({
         text: this.draft.value.trim(),
         slug: this.slug.value,
+        attachBanner: this.attachBanner,
       });
       this.postedUrl.value = result.url;
       this.$app.notify('Posted to X.', 'success');
@@ -201,7 +245,11 @@ class $XComposeModel {
     try {
       await Api.Class.schedule({
         kind: 'tweet',
-        payload: { text: this.draft.value.trim(), slug: this.slug.value },
+        payload: {
+          text: this.draft.value.trim(),
+          slug: this.slug.value,
+          attachBanner: this.attachBanner ? '1' : '',
+        },
         dueAt: this.scheduleDueAt!,
       });
       this.$app.notify('Post scheduled.', 'success');

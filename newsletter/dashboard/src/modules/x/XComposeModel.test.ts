@@ -19,6 +19,7 @@ beforeEach(() => {
           JSON.stringify({
             cadenceHours: 40,
             tweetTemplate: 'New — {title}\n\n{url}',
+            tweetContentTemplate: '{title}\n\n{description}\n\n{url}',
             xConfigured: false,
             sender: {},
           }),
@@ -31,7 +32,7 @@ beforeEach(() => {
 const POST = {
   slug: 'first-post',
   title: 'One kilobyte is a feature',
-  description: '',
+  description: 'What a kilobyte buys you is auditability.',
   url: 'https://ivue.dev/blog/first-post',
   date: null,
   timestamp: 1,
@@ -53,6 +54,22 @@ describe('XComposeModel derivations', () => {
     model.draft.value = 'x'.repeat(281);
     expect(model.overLimit).toBe(true);
     expect(model.remaining).toBe(-1);
+  });
+
+  it('content mode fills from the content template and attaches the banner', () => {
+    const model = new XComposeModel.Class();
+    model.template.value = 'Link: {title} {url}';
+    model.contentTemplate.value = '{title}\n\n{description}\n\n{url}';
+    model.posts.value = [POST];
+    model.pickPost('first-post');
+    expect(model.attachBanner).toBe(false);
+    expect(model.draft.value).toBe(
+      'Link: One kilobyte is a feature https://ivue.dev/blog/first-post',
+    );
+    model.setMode('content'); // re-prefills the picked post
+    expect(model.attachBanner).toBe(true);
+    expect(model.draft.value).toContain('One kilobyte is a feature');
+    expect(model.bannerUrl).toBe('https://ivue.dev/blog/first-post.png');
   });
 
   it('fillTemplate substitutes title and url', () => {

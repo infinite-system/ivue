@@ -18,6 +18,16 @@ class $Settings {
     return 'New on the ivue blog — {title}\n\n{url}';
   }
 
+  static get TWEET_CONTENT_TEMPLATE_KEY() {
+    return 'tweet_content_template';
+  }
+
+  // the content-mode prefill — article substance in the tweet itself,
+  // banner attached natively; {description} joins the placeholders
+  static get TWEET_CONTENT_TEMPLATE_DEFAULT() {
+    return '{title}\n\n{description}\n\n{url}';
+  }
+
   static get CADENCE_MINIMUM_HOURS() {
     return 1;
   }
@@ -48,10 +58,32 @@ class $Settings {
   }
 
   static async setTweetTemplate(env: Env, template: string): Promise<void> {
+    await this.write(env, this.TWEET_TEMPLATE_KEY, this.validTemplate(template));
+  }
+
+  static async tweetContentTemplate(env: Env): Promise<string> {
+    return (
+      (await this.read(env, this.TWEET_CONTENT_TEMPLATE_KEY)) ||
+      this.TWEET_CONTENT_TEMPLATE_DEFAULT
+    );
+  }
+
+  static async setTweetContentTemplate(
+    env: Env,
+    template: string,
+  ): Promise<void> {
+    await this.write(
+      env,
+      this.TWEET_CONTENT_TEMPLATE_KEY,
+      this.validTemplate(template),
+    );
+  }
+
+  static validTemplate(template: string): string {
     const trimmed = template.trim();
     if (!trimmed || trimmed.length > 500)
       throw new Error('Template must be 1–500 characters.');
-    await this.write(env, this.TWEET_TEMPLATE_KEY, trimmed);
+    return trimmed;
   }
 
   static isValidCadence(hours: number): boolean {

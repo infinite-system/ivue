@@ -5,6 +5,7 @@ const model = new SocialsSettingsModel.Class();
 const {
   // state refs
   templateDraft,
+  contentTemplateDraft,
   loading,
 } = model;
 </script>
@@ -18,15 +19,24 @@ const {
     <p v-if="loading" class="muted">Loading…</p>
 
     <div v-else class="settings-layout">
-      <form class="card send-form" @submit.prevent="model.saveTemplate()">
-        <h2>Tweet template</h2>
+      <form class="card send-form" @submit.prevent="model.saveTemplates()">
+        <h2>Tweet templates</h2>
         <p class="muted">
-          Prefills the composer when a post is picked —
-          <span class="slug">{title}</span> and
+          Prefill the composer when a post is picked —
+          <span class="slug">{title}</span>,
+          <span class="slug">{description}</span> and
           <span class="slug">{url}</span> come from the post.
         </p>
-        <label for="tweet-template">Template</label>
-        <textarea id="tweet-template" v-model="templateDraft" rows="4"></textarea>
+        <label for="tweet-template">Link mode (X renders the page's card)</label>
+        <textarea id="tweet-template" v-model="templateDraft" rows="3"></textarea>
+        <label for="tweet-content-template">
+          Content mode (banner uploaded natively)
+        </label>
+        <textarea
+          id="tweet-content-template"
+          v-model="contentTemplateDraft"
+          rows="3"
+        ></textarea>
         <button class="primary" type="submit" :disabled="model.saveDisabled">
           Save
         </button>

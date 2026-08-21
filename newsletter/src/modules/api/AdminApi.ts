@@ -210,6 +210,7 @@ class $AdminApi {
     return Http.Class.json({
       cadenceHours: await Settings.Class.cadenceHours(env),
       tweetTemplate: await Settings.Class.tweetTemplate(env),
+      tweetContentTemplate: await Settings.Class.tweetContentTemplate(env),
       xConfigured: XPoster.Class.credentialsPresent(env),
       // read-only identity — configured in wrangler.jsonc, shown so the
       // settings page states the system's whole posture in one place
@@ -228,6 +229,7 @@ class $AdminApi {
     const body = await Http.Class.readJsonBody<{
       cadenceHours: number;
       tweetTemplate: string;
+      tweetContentTemplate: string;
     }>(request);
     if (body.cadenceHours !== undefined) {
       const cadenceHours = Number(body.cadenceHours);
@@ -240,15 +242,19 @@ class $AdminApi {
         );
       await Settings.Class.setCadenceHours(env, cadenceHours);
     }
-    if (body.tweetTemplate !== undefined) {
-      try {
+    try {
+      if (body.tweetTemplate !== undefined)
         await Settings.Class.setTweetTemplate(env, String(body.tweetTemplate));
-      } catch (error) {
-        return Http.Class.json(
-          { error: error instanceof Error ? error.message : 'Bad template.' },
-          400,
+      if (body.tweetContentTemplate !== undefined)
+        await Settings.Class.setTweetContentTemplate(
+          env,
+          String(body.tweetContentTemplate),
         );
-      }
+    } catch (error) {
+      return Http.Class.json(
+        { error: error instanceof Error ? error.message : 'Bad template.' },
+        400,
+      );
     }
     return this.settings(env);
   }
@@ -267,11 +273,15 @@ class $AdminApi {
     const body = await Http.Class.readJsonBody<{
       text: string;
       slug: string;
+      attachBanner: boolean;
     }>(request);
     const text = String(body.text ?? '').trim();
     if (!text) return Http.Class.json({ error: 'text required' }, 400);
     try {
-      const result = await XPoster.Class.postTweet(env, text);
+      const result = await XPoster.Class.postWithOptionalBanner(env, text, {
+        slug: String(body.slug ?? ''),
+        attachBanner: Boolean(body.attachBanner),
+      });
       await Tweets.Class.record(
         env,
         {

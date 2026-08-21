@@ -907,6 +907,27 @@ hr {
   max-width: 26rem;
 }
 
+.mode-toggle {
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  margin: 0.6rem 0 0.2rem;
+}
+
+.mode-toggle .checkline {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.banner-preview {
+  display: block;
+  width: 100%;
+  max-width: 22rem;
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius-small);
+  margin: 0.5rem 0 0.2rem;
+}
+
 /* the pending-jobs list under each scheduler */
 .job-queue {
   list-style: none;

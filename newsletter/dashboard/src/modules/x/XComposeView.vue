@@ -8,6 +8,7 @@ const {
   posts,
   slug,
   draft,
+  mode,
   xConfigured,
   postedUrl,
   tweetLog,
@@ -48,6 +49,32 @@ const {
             {{ post.title }}
           </option>
         </select>
+        <div class="mode-toggle" role="radiogroup" aria-label="Post style">
+          <label class="checkline">
+            <input
+              type="radio"
+              value="link"
+              :checked="mode === 'link'"
+              @change="model.setMode('link')"
+            />
+            Link — X renders the post's card from the page
+          </label>
+          <label class="checkline">
+            <input
+              type="radio"
+              value="content"
+              :checked="mode === 'content'"
+              @change="model.setMode('content')"
+            />
+            Content — article substance + banner uploaded natively
+          </label>
+        </div>
+        <img
+          v-if="model.bannerUrl"
+          class="banner-preview"
+          :src="model.bannerUrl"
+          alt="Post banner (will be attached)"
+        />
         <label for="x-draft">Draft</label>
         <textarea id="x-draft" v-model="draft" rows="5"></textarea>
         <p class="muted counter" :class="{ error: model.overLimit }">

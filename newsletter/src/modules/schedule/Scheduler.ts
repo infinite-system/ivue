@@ -110,7 +110,14 @@ class $Scheduler {
       }
       if (!XPoster.Class.credentialsPresent(env))
         return { error: 'X credentials not configured' };
-      const tweet = await XPoster.Class.postTweet(env, payload.text.trim());
+      const tweet = await XPoster.Class.postWithOptionalBanner(
+        env,
+        payload.text.trim(),
+        {
+          slug: payload.slug || undefined,
+          attachBanner: payload.attachBanner === '1',
+        },
+      );
       await Tweets.Class.record(
         env,
         {
@@ -154,6 +161,7 @@ export interface BroadcastPayload {
 export interface TweetPayload {
   text: string;
   slug: string;
+  attachBanner?: string; // '1' = fetch + attach the post banner at run time
 }
 
 export interface JobResult {

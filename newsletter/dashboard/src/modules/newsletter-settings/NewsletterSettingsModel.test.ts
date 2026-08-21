@@ -15,6 +15,7 @@ beforeEach(() => {
           JSON.stringify({
             cadenceHours: 40,
             tweetTemplate: 't',
+            tweetContentTemplate: 'ct',
             xConfigured: false,
             sender: { senderEmail: 'newsletter@ivue.dev' },
           }),

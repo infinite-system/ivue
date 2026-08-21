@@ -15,6 +15,7 @@ beforeEach(() => {
           JSON.stringify({
             cadenceHours: 40,
             tweetTemplate: 'New — {title} {url}',
+            tweetContentTemplate: '{title} {description} {url}',
             xConfigured: true,
             sender: {},
           }),

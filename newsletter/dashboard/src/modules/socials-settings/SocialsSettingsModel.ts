@@ -24,6 +24,10 @@ class $SocialsSettingsModel {
     return ref('');
   }
 
+  get contentTemplateDraft() {
+    return ref('');
+  }
+
   get saving() {
     return ref(false);
   }
@@ -35,7 +39,9 @@ class $SocialsSettingsModel {
   get templateDirty() {
     return (
       this.templateDraft.value.trim() !==
-      (this.settings.value?.tweetTemplate ?? '')
+        (this.settings.value?.tweetTemplate ?? '') ||
+      this.contentTemplateDraft.value.trim() !==
+        (this.settings.value?.tweetContentTemplate ?? '')
     );
   }
 
@@ -53,6 +59,7 @@ class $SocialsSettingsModel {
       const settings = await Api.Class.settings();
       this.settings.value = settings;
       this.templateDraft.value = settings.tweetTemplate;
+      this.contentTemplateDraft.value = settings.tweetContentTemplate;
     } catch (error) {
       this.$app.reportFailure(error);
     } finally {
@@ -60,16 +67,18 @@ class $SocialsSettingsModel {
     }
   }
 
-  async saveTemplate() {
+  async saveTemplates() {
     if (this.saveDisabled) return;
     this.saving.value = true;
     try {
       const saved = await Api.Class.saveSettings({
         tweetTemplate: this.templateDraft.value.trim(),
+        tweetContentTemplate: this.contentTemplateDraft.value.trim(),
       });
       this.settings.value = saved;
       this.templateDraft.value = saved.tweetTemplate;
-      this.$app.notify('Tweet template saved.', 'success');
+      this.contentTemplateDraft.value = saved.tweetContentTemplate;
+      this.$app.notify('Tweet templates saved.', 'success');
     } catch (error) {
       this.$app.reportFailure(error);
     } finally {

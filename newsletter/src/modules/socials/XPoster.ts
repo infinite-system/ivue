@@ -10,6 +10,10 @@ class $XPoster {
     return 'https://api.x.com/2/tweets';
   }
 
+  static get MEDIA_UPLOAD_URL() {
+    return 'https://api.x.com/2/media/upload';
+  }
+
   static credentialsPresent(env: Env): boolean {
     return Boolean(
       env.X_API_KEY &&
@@ -19,10 +23,73 @@ class $XPoster {
     );
   }
 
+  // The one entry point callers use: text, optionally with the post's
+  // banner attached natively (fetched from the site, uploaded to X).
+  static async postWithOptionalBanner(
+    env: Env,
+    text: string,
+    options: { slug?: string; attachBanner?: boolean } = {},
+  ): Promise<TweetResult> {
+    let mediaId: string | undefined;
+    if (options.attachBanner && options.slug) {
+      const banner = await fetch(
+        `${env.SITE_ORIGIN}/blog/${options.slug}.png`,
+      );
+      if (!banner.ok)
+        throw new Error(`Banner not found for slug: ${options.slug}`);
+      mediaId = await this.uploadMedia(
+        env,
+        await banner.arrayBuffer(),
+        'image/png',
+      );
+    }
+    return this.postTweet(env, text, { mediaId });
+  }
+
+  // X media upload — multipart form (form fields stay OUT of the OAuth
+  // base string, so the same signer applies)
+  static async uploadMedia(
+    env: Env,
+    bytes: ArrayBuffer,
+    mimeType: string,
+    options: { nonce?: string; timestampSeconds?: number } = {},
+  ): Promise<string> {
+    const authorization = await this.authorizationHeader(
+      env,
+      'POST',
+      this.MEDIA_UPLOAD_URL,
+      options.nonce ?? crypto.randomUUID().replaceAll('-', ''),
+      options.timestampSeconds ?? Math.floor(Date.now() / 1000),
+    );
+    const form = new FormData();
+    form.append('media', new Blob([bytes], { type: mimeType }), 'banner.png');
+    form.append('media_category', 'tweet_image');
+    const response = await fetch(this.MEDIA_UPLOAD_URL, {
+      method: 'POST',
+      headers: { authorization },
+      body: form,
+    });
+    const payload = (await response.json().catch(() => ({}))) as {
+      data?: { id: string };
+      detail?: string;
+    };
+    if (!response.ok || !payload.data?.id)
+      throw new Error(
+        `X rejected the media upload (HTTP ${response.status}): ${
+          payload.detail ?? 'unknown error'
+        }`,
+      );
+    return payload.data.id;
+  }
+
   static async postTweet(
     env: Env,
     text: string,
-    options: { nonce?: string; timestampSeconds?: number } = {},
+    options: {
+      nonce?: string;
+      timestampSeconds?: number;
+      mediaId?: string;
+    } = {},
   ): Promise<TweetResult> {
     const authorization = await this.authorizationHeader(
       env,
@@ -37,7 +104,12 @@ class $XPoster {
         authorization,
         'content-type': 'application/json',
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({
+        text,
+        ...(options.mediaId
+          ? { media: { media_ids: [options.mediaId] } }
+          : {}),
+      }),
     });
     const payload = (await response.json().catch(() => ({}))) as {
       data?: { id: string };

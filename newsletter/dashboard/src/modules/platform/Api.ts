@@ -162,6 +162,7 @@ class $Api {
   static saveSettings(settings: {
     cadenceHours?: number;
     tweetTemplate?: string;
+    tweetContentTemplate?: string;
   }): Promise<AdminSettings> {
     return this.post('/admin/settings', settings);
   }
@@ -169,6 +170,7 @@ class $Api {
   static tweet(payload: {
     text: string;
     slug: string;
+    attachBanner: boolean;
   }): Promise<{ ok: boolean; tweetId: string; url: string }> {
     return this.post('/admin/tweet', payload);
   }
@@ -300,6 +302,7 @@ export interface DripPreviewResponse {
 export interface AdminSettings {
   cadenceHours: number;
   tweetTemplate: string;
+  tweetContentTemplate: string;
   xConfigured: boolean;
   sender: {
     senderName: string;
