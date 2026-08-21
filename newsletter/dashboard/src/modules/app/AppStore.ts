@@ -16,15 +16,29 @@ class $AppStore {
     return AppRouter.Class.$router;
   }
 
-  get TABS(): { name: ViewName; label: string }[] {
+  get DOMAINS(): { name: DomainName; label: string; home: ViewName }[] {
     return [
-      { name: 'subscribers', label: 'Subscribers' },
-      { name: 'sends', label: 'Sent' },
-      { name: 'posts', label: 'Posts' },
-      { name: 'send', label: 'Send' },
-      { name: 'drip', label: 'Drip' },
-      { name: 'stats', label: 'Stats' },
+      { name: 'newsletter', label: 'Newsletter', home: 'subscribers' },
+      { name: 'socials', label: 'Socials', home: 'x' },
     ];
+  }
+
+  get TABS_BY_DOMAIN(): Record<DomainName, { name: ViewName; label: string }[]> {
+    return {
+      newsletter: [
+        { name: 'subscribers', label: 'Subscribers' },
+        { name: 'sends', label: 'Sent' },
+        { name: 'posts', label: 'Posts' },
+        { name: 'send', label: 'Send' },
+        { name: 'drip', label: 'Drip' },
+        { name: 'stats', label: 'Stats' },
+        { name: 'newsletter-settings', label: 'Settings' },
+      ],
+      socials: [
+        { name: 'x', label: 'X' },
+        { name: 'socials-settings', label: 'Settings' },
+      ],
+    };
   }
 
   get checking() {
@@ -57,12 +71,27 @@ class $AppStore {
     return String(this.$router.currentRoute.value.query.preview ?? '');
   }
 
+  get activeDomain(): DomainName {
+    return this.$router.currentRoute.value.path.startsWith('/socials')
+      ? 'socials'
+      : 'newsletter';
+  }
+
   isOpen(view: ViewName) {
     return this.view === view;
   }
 
+  isDomainOpen(domain: DomainName) {
+    return this.activeDomain === domain;
+  }
+
   open(view: ViewName) {
     this.$router.push({ name: view });
+  }
+
+  openDomain(domain: DomainName) {
+    const entry = this.DOMAINS.find((candidate) => candidate.name === domain);
+    if (entry) this.open(entry.home);
   }
 
   // Any post slug, anywhere in the app, opens that post's email preview.
@@ -147,13 +176,17 @@ export namespace AppStore {
   }
 }
 
+export type DomainName = 'newsletter' | 'socials';
 export type ViewName =
   | 'subscribers'
   | 'sends'
   | 'posts'
   | 'send'
   | 'drip'
-  | 'stats';
+  | 'stats'
+  | 'newsletter-settings'
+  | 'x'
+  | 'socials-settings';
 export type ToastTone = 'info' | 'success' | 'error';
 
 export interface Toast {

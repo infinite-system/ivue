@@ -3,6 +3,8 @@ import { Http } from '../platform/Http';
 import { Security } from '../platform/Security';
 import { Posts } from '../content/Posts';
 import { Settings } from '../config/Settings';
+import { XPoster } from '../socials/XPoster';
+import { Tweets } from '../socials/Tweets';
 import { Audience } from '../audience/Audience';
 import { Ledger } from '../audience/Ledger';
 import { Delivery } from '../delivery/Delivery';
@@ -51,6 +53,10 @@ class $AdminApi {
         return this.settings(env);
       case 'POST /admin/settings':
         return this.saveSettings(request, env);
+      case 'POST /admin/tweet':
+        return this.tweet(request, env);
+      case 'GET /admin/tweets':
+        return this.tweets(env);
       case 'GET /admin/stats':
         return this.stats(env);
       default:
@@ -195,23 +201,93 @@ class $AdminApi {
   static async settings(env: Env): Promise<Response> {
     return Http.Class.json({
       cadenceHours: await Settings.Class.cadenceHours(env),
+      tweetTemplate: await Settings.Class.tweetTemplate(env),
+      xConfigured: XPoster.Class.credentialsPresent(env),
+      // read-only identity — configured in wrangler.jsonc, shown so the
+      // settings page states the system's whole posture in one place
+      sender: {
+        senderName: env.SENDER_NAME,
+        senderEmail: env.SENDER_EMAIL,
+        replyTo: env.REPLY_TO,
+        notifyEmail: env.NOTIFY_EMAIL,
+        postmarkStream: env.POSTMARK_STREAM,
+        defaultList: Audience.Class.DEFAULT_LIST,
+      },
     });
   }
 
   static async saveSettings(request: Request, env: Env): Promise<Response> {
-    const body = await Http.Class.readJsonBody<{ cadenceHours: number }>(
-      request,
-    );
-    const cadenceHours = Number(body.cadenceHours);
-    if (!Settings.Class.isValidCadence(cadenceHours))
+    const body = await Http.Class.readJsonBody<{
+      cadenceHours: number;
+      tweetTemplate: string;
+    }>(request);
+    if (body.cadenceHours !== undefined) {
+      const cadenceHours = Number(body.cadenceHours);
+      if (!Settings.Class.isValidCadence(cadenceHours))
+        return Http.Class.json(
+          {
+            error: `Cadence must be ${Settings.Class.CADENCE_MINIMUM_HOURS}–${Settings.Class.CADENCE_MAXIMUM_HOURS} hours.`,
+          },
+          400,
+        );
+      await Settings.Class.setCadenceHours(env, cadenceHours);
+    }
+    if (body.tweetTemplate !== undefined) {
+      try {
+        await Settings.Class.setTweetTemplate(env, String(body.tweetTemplate));
+      } catch (error) {
+        return Http.Class.json(
+          { error: error instanceof Error ? error.message : 'Bad template.' },
+          400,
+        );
+      }
+    }
+    return this.settings(env);
+  }
+
+  // Post to X. 503 until the four X_* secrets exist, so the composer can
+  // ship before the developer-portal dance is done.
+  static async tweet(request: Request, env: Env): Promise<Response> {
+    if (!XPoster.Class.credentialsPresent(env))
       return Http.Class.json(
         {
-          error: `Cadence must be ${Settings.Class.CADENCE_MINIMUM_HOURS}–${Settings.Class.CADENCE_MAXIMUM_HOURS} hours.`,
+          error:
+            'X credentials not configured — set X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET via wrangler secret put.',
         },
-        400,
+        503,
       );
-    await Settings.Class.setCadenceHours(env, cadenceHours);
-    return Http.Class.json({ ok: true, cadenceHours });
+    const body = await Http.Class.readJsonBody<{
+      text: string;
+      slug: string;
+    }>(request);
+    const text = String(body.text ?? '').trim();
+    if (!text) return Http.Class.json({ error: 'text required' }, 400);
+    try {
+      const result = await XPoster.Class.postTweet(env, text);
+      await Tweets.Class.record(
+        env,
+        {
+          tweetId: result.tweetId,
+          text,
+          slug: String(body.slug ?? '') || null,
+        },
+        Http.Class.nowSeconds(),
+      );
+      return Http.Class.json({
+        ok: true,
+        tweetId: result.tweetId,
+        url: `https://x.com/i/status/${result.tweetId}`,
+      });
+    } catch (error) {
+      return Http.Class.json(
+        { error: error instanceof Error ? error.message : 'Tweet failed.' },
+        502,
+      );
+    }
+  }
+
+  static async tweets(env: Env): Promise<Response> {
+    return Http.Class.json(await Tweets.Class.log(env));
   }
 
   static async lists(env: Env): Promise<Response> {

@@ -33,16 +33,16 @@ onMounted(() => app.probe());
         </span>
         <span class="brand-mark">ivue</span>
       </button>
-      <nav v-if="authenticated" class="tabs" aria-label="Sections">
+      <nav v-if="authenticated" class="tabs" aria-label="Domains">
         <button
-          v-for="tab in app.TABS"
-          :key="tab.name"
-          class="tab"
-          :class="{ active: app.isOpen(tab.name) }"
-          :data-tab="tab.name"
-          @click="app.open(tab.name)"
+          v-for="domain in app.DOMAINS"
+          :key="domain.name"
+          class="tab tab--domain"
+          :class="{ active: app.isDomainOpen(domain.name) }"
+          :data-domain="domain.name"
+          @click="app.openDomain(domain.name)"
         >
-          {{ tab.label }}
+          {{ domain.label }}
         </button>
       </nav>
       <button v-if="authenticated" class="ghost" @click="app.logout()">

@@ -155,14 +155,26 @@ class $Api {
     return this.request('/admin/lists');
   }
 
-  static settings(): Promise<{ cadenceHours: number }> {
+  static settings(): Promise<AdminSettings> {
     return this.request('/admin/settings');
   }
 
   static saveSettings(settings: {
-    cadenceHours: number;
-  }): Promise<{ ok: boolean; cadenceHours: number }> {
+    cadenceHours?: number;
+    tweetTemplate?: string;
+  }): Promise<AdminSettings> {
     return this.post('/admin/settings', settings);
+  }
+
+  static tweet(payload: {
+    text: string;
+    slug: string;
+  }): Promise<{ ok: boolean; tweetId: string; url: string }> {
+    return this.post('/admin/tweet', payload);
+  }
+
+  static tweets(): Promise<TweetRow[]> {
+    return this.request('/admin/tweets');
   }
 
   static stats(): Promise<Stats> {
@@ -264,6 +276,27 @@ export interface DripPlanEntry {
 export interface DripPreviewResponse {
   cadenceHours: number;
   entries: DripPlanEntry[];
+}
+
+export interface AdminSettings {
+  cadenceHours: number;
+  tweetTemplate: string;
+  xConfigured: boolean;
+  sender: {
+    senderName: string;
+    senderEmail: string;
+    replyTo: string;
+    notifyEmail: string;
+    postmarkStream: string;
+    defaultList: string;
+  };
+}
+
+export interface TweetRow {
+  tweetId: string;
+  text: string;
+  slug: string | null;
+  postedAt: number;
 }
 
 export interface Stats {

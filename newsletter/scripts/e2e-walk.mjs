@@ -206,14 +206,14 @@ try {
     { timeout: 15_000 },
   );
   check(
-    'tabs are routes — Sent lives at /sent',
-    new URL(page.url()).pathname === '/sent',
+    'tabs are routes — Sent lives at /newsletter/sent',
+    new URL(page.url()).pathname === '/newsletter/sent',
   );
   await page.locator('[data-view="sends"] .slug').first().click();
   await page.waitForSelector('.preview-frame', { timeout: 20_000 });
   check(
     'a send-log slug deep-links to the email preview',
-    page.url().includes('/posts?preview='),
+    page.url().includes('/newsletter/posts?preview='),
   );
   await shot('slug-to-preview');
   await page.goBack();
@@ -222,7 +222,7 @@ try {
   );
   check(
     'browser back returns from the preview to the send log',
-    new URL(page.url()).pathname === '/sent',
+    new URL(page.url()).pathname === '/newsletter/sent',
   );
 
   // ---- station 3: posts + email preview ----
@@ -301,6 +301,49 @@ try {
   check('stats shows list totals', statsText.includes('newsletter'));
   check('stats shows sends per post', statsText.includes('one-kilobyte'));
   await shot('stats');
+
+  // ---- station 6.5: newsletter settings (cadence editor lives here) ----
+  await page.click('.tab[data-tab="newsletter-settings"]');
+  await page.waitForSelector('[data-view="newsletter-settings"] #settings-cadence', {
+    timeout: 15_000,
+  });
+  check(
+    'newsletter settings shows the sender identity readout',
+    (await page.locator('[data-view="newsletter-settings"]').innerText()).includes(
+      'newsletter@ivue.dev',
+    ),
+  );
+  await shot('newsletter-settings');
+
+  // ---- station 6.6: socials domain — composer scaffold + settings ----
+  await page.click('.tab--domain[data-domain="socials"]');
+  await page.waitForSelector('[data-view="x"] #x-draft', { timeout: 15_000 });
+  check(
+    'socials domain routes to the X composer',
+    new URL(page.url()).pathname === '/socials/x',
+  );
+  await page.selectOption('#x-post-picker', { index: 1 });
+  const draftText = await page.locator('#x-draft').inputValue();
+  check(
+    'picking a post prefills the draft from the template',
+    draftText.includes('https://ivue.dev/blog/'),
+  );
+  check(
+    'composer shows the credentials-pending state (no secrets locally)',
+    (await page.locator('[data-view="x"]').innerText()).includes(
+      'Credentials pending',
+    ),
+  );
+  await shot('x-composer');
+  await page.click('.tab[data-tab="socials-settings"]');
+  await page.waitForSelector('[data-view="socials-settings"] #tweet-template', {
+    timeout: 15_000,
+  });
+  await shot('socials-settings');
+  await page.click('.tab--domain[data-domain="newsletter"]');
+  await page.waitForFunction(() =>
+    window.location.pathname.startsWith('/newsletter'),
+  );
 
   // ---- station 7: lock ----
   await page.click('.topbar button.ghost');

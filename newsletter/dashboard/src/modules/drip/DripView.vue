@@ -10,7 +10,6 @@ const {
   // state refs
   entries,
   cadenceHours,
-  cadenceDraft,
   loading,
 } = model;
 </script>
@@ -30,25 +29,6 @@ const {
       <span class="stat">
         <strong>{{ model.caughtUpCount }}</strong> fully caught up
       </span>
-      <form class="stat cadence" @submit.prevent="model.saveCadence()">
-        <label for="cadence-hours">cadence</label>
-        <input
-          id="cadence-hours"
-          v-model="cadenceDraft"
-          type="number"
-          min="1"
-          max="720"
-          aria-label="Cadence in hours"
-        />
-        <span>h</span>
-        <button
-          class="primary"
-          type="submit"
-          :disabled="model.cadenceSaveDisabled"
-        >
-          Save
-        </button>
-      </form>
       <button class="ghost" @click="model.load()">Refresh</button>
     </div>
 

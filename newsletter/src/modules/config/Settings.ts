@@ -9,6 +9,15 @@ class $Settings {
     return 'cadence_hours';
   }
 
+  static get TWEET_TEMPLATE_KEY() {
+    return 'tweet_template';
+  }
+
+  // {title} and {url} are filled by the composer from the picked post
+  static get TWEET_TEMPLATE_DEFAULT() {
+    return 'New on the ivue blog — {title}\n\n{url}';
+  }
+
   static get CADENCE_MINIMUM_HOURS() {
     return 1;
   }
@@ -29,6 +38,20 @@ class $Settings {
         `Cadence must be ${this.CADENCE_MINIMUM_HOURS}–${this.CADENCE_MAXIMUM_HOURS} hours.`,
       );
     await this.write(env, this.CADENCE_KEY, String(hours));
+  }
+
+  static async tweetTemplate(env: Env): Promise<string> {
+    return (
+      (await this.read(env, this.TWEET_TEMPLATE_KEY)) ||
+      this.TWEET_TEMPLATE_DEFAULT
+    );
+  }
+
+  static async setTweetTemplate(env: Env, template: string): Promise<void> {
+    const trimmed = template.trim();
+    if (!trimmed || trimmed.length > 500)
+      throw new Error('Template must be 1–500 characters.');
+    await this.write(env, this.TWEET_TEMPLATE_KEY, trimmed);
   }
 
   static isValidCadence(hours: number): boolean {

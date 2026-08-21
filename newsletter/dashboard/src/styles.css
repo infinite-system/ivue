@@ -840,27 +840,86 @@ hr {
   align-self: center;
 }
 
-/* the cadence editor rides the statline as one of its tiles */
-.stat.cadence {
-  gap: 0.5rem;
-  align-items: center;
+/* ---- domain section tabs (second nav level, inside the content) ---- */
+.subtabs {
+  display: flex;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+  margin: -0.4rem 0 1.2rem;
+  border-bottom: 1px solid var(--panel-edge-soft);
+  padding-bottom: 0.4rem;
 }
 
-.stat.cadence label {
+/* ---- settings ---- */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.settings-layout input[type='number'] {
+  width: 8rem;
+}
+
+.settings-facts {
+  margin: 0.4rem 0 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem 1.1rem;
+  font-size: 0.92rem;
+}
+
+.settings-facts dt {
+  color: var(--muted-text);
+}
+
+.settings-facts dd {
   margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---- X composer ---- */
+.x-pending {
+  border: 1px solid rgba(129, 140, 248, 0.4);
+  background: rgba(129, 140, 248, 0.08);
+  border-radius: var(--radius-small);
+  padding: 0.6rem 0.85rem;
   font-size: 0.9rem;
+  margin-bottom: 0.4rem;
 }
 
-.stat.cadence input {
-  width: 4.6rem;
-  min-height: 2.1rem;
-  padding: 0.25rem 0.5rem;
-  text-align: right;
+.counter {
   font-variant-numeric: tabular-nums;
+  margin: 0.35rem 0 0.8rem;
 }
 
-.stat.cadence .primary {
-  padding: 0.3rem 0.7rem;
+.counter.error {
+  color: var(--danger);
+}
+
+.posted-link {
+  margin-top: 0.8rem;
+}
+
+.tweet-text {
+  white-space: normal;
+  max-width: 26rem;
+}
+
+.x-runbook {
+  background: #0d1119;
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius-small);
+  padding: 0.7rem 0.9rem;
+  font: 0.8rem/1.7 ui-monospace, monospace;
+  overflow-x: auto;
+}
+
+@media (max-width: 900px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stats-layout {

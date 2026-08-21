@@ -169,6 +169,67 @@ describe('AdminApi', () => {
     expect(plan.cadenceHours).toBe(24);
   });
 
+  it('tweet endpoint: 503 without credentials, posts + ledgers with them', async () => {
+    const env = makeTestEnv();
+    const refused = await call('/admin/tweet', env, 'POST', {
+      text: 'Hello',
+    });
+    expect(refused.status).toBe(503);
+
+    const configured = makeTestEnv({
+      X_API_KEY: 'k',
+      X_API_SECRET: 's',
+      X_ACCESS_TOKEN: 't',
+      X_ACCESS_SECRET: 'ts',
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () => new Response(JSON.stringify({ data: { id: '42' } })),
+      ),
+    );
+    const posted = (await (
+      await call('/admin/tweet', configured, 'POST', {
+        text: 'New on the ivue blog',
+        slug: 'first-post',
+      })
+    ).json()) as { ok: boolean; tweetId: string; url: string };
+    expect(posted).toMatchObject({
+      ok: true,
+      tweetId: '42',
+      url: 'https://x.com/i/status/42',
+    });
+    const log = (await (await call('/admin/tweets', configured)).json()) as {
+      tweetId: string;
+      slug: string;
+    }[];
+    expect(log[0]).toMatchObject({ tweetId: '42', slug: 'first-post' });
+  });
+
+  it('settings carries the tweet template and X status; template saves', async () => {
+    const env = makeTestEnv();
+    const initial = (await (await call('/admin/settings', env)).json()) as {
+      tweetTemplate: string;
+      xConfigured: boolean;
+      sender: { senderEmail: string };
+    };
+    expect(initial.tweetTemplate).toContain('{title}');
+    expect(initial.xConfigured).toBe(false);
+    expect(initial.sender.senderEmail).toBe('newsletter@ivue.dev');
+
+    await call('/admin/settings', env, 'POST', {
+      tweetTemplate: 'Read this: {title} {url}',
+    });
+    const updated = (await (await call('/admin/settings', env)).json()) as {
+      tweetTemplate: string;
+    };
+    expect(updated.tweetTemplate).toBe('Read this: {title} {url}');
+    expect(
+      (await call('/admin/settings', env, 'POST', { tweetTemplate: '  ' }))
+        .status,
+    ).toBe(400);
+  });
+
   it('drip-preview exposes the plan and stats aggregates the system', async () => {
     const env = makeTestEnv();
     await Audience.Class.enroll(env, 'ada@ivue.dev', 'Ada', 'newsletter');
