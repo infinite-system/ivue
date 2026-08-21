@@ -170,9 +170,21 @@ class $Api {
   static tweet(payload: {
     text: string;
     slug: string;
-    attachBanner: boolean;
+    imageUrls: string[];
   }): Promise<{ ok: boolean; tweetId: string; url: string }> {
     return this.post('/admin/tweet', payload);
+  }
+
+  static thread(payload: {
+    tweets: string[];
+    slug: string;
+    imageUrls: string[];
+  }): Promise<{ ok: boolean; tweetIds: string[]; url: string }> {
+    return this.post('/admin/thread', payload);
+  }
+
+  static postText(slug: string): Promise<{ slug: string; plainText: string }> {
+    return this.request(`/admin/post-text?slug=${encodeURIComponent(slug)}`);
   }
 
   static tweets(): Promise<TweetRow[]> {
@@ -261,6 +273,7 @@ export interface PostSummary {
   url: string;
   date: string | null;
   timestamp: number;
+  embedImages: string[];
 }
 
 export interface RecipientOutcome {
@@ -321,7 +334,7 @@ export interface TweetRow {
   postedAt: number;
 }
 
-export type JobKind = 'broadcast' | 'tweet';
+export type JobKind = 'broadcast' | 'tweet' | 'thread';
 
 export interface ScheduledJob {
   id: number;

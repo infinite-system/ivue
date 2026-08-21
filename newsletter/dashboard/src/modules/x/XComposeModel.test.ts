@@ -36,6 +36,7 @@ const POST = {
   url: 'https://ivue.dev/blog/first-post',
   date: null,
   timestamp: 1,
+  embedImages: ['https://ivue.dev/blog/embeds/first-post-embed-1.png'],
 };
 
 describe('XComposeModel derivations', () => {
@@ -56,20 +57,63 @@ describe('XComposeModel derivations', () => {
     expect(model.remaining).toBe(-1);
   });
 
-  it('content mode fills from the content template and attaches the banner', () => {
+  it('content mode fills from the content template and selects the banner', () => {
     const model = new XComposeModel.Class();
     model.template.value = 'Link: {title} {url}';
     model.contentTemplate.value = '{title}\n\n{description}\n\n{url}';
     model.posts.value = [POST];
     model.pickPost('first-post');
-    expect(model.attachBanner).toBe(false);
+    expect(model.selectedImages.value).toEqual([]); // link mode: card, no upload
     expect(model.draft.value).toBe(
       'Link: One kilobyte is a feature https://ivue.dev/blog/first-post',
     );
     model.setMode('content'); // re-prefills the picked post
-    expect(model.attachBanner).toBe(true);
     expect(model.draft.value).toContain('One kilobyte is a feature');
-    expect(model.bannerUrl).toBe('https://ivue.dev/blog/first-post.png');
+    expect(model.selectedImages.value).toEqual([
+      'https://ivue.dev/blog/first-post.png',
+    ]);
+    expect(model.availableImages).toEqual([
+      'https://ivue.dev/blog/first-post.png',
+      'https://ivue.dev/blog/embeds/first-post-embed-1.png',
+    ]);
+    model.toggleImage('https://ivue.dev/blog/embeds/first-post-embed-1.png');
+    expect(model.selectedImages.value).toHaveLength(2);
+  });
+
+  it('splitIntoTweets packs paragraphs, numbers segments, closes with the link', () => {
+    const model = new XComposeModel.Class();
+    const paragraphs = [
+      'First paragraph of the article, short and sweet.',
+      'Second paragraph carries a bit more weight and detail. '.repeat(6).trim(),
+      'Third paragraph closes the argument.',
+    ].join('\n\n');
+    const tweets = model.splitIntoTweets(
+      'The title',
+      paragraphs,
+      'https://ivue.dev/blog/first-post',
+    );
+    expect(tweets.length).toBeGreaterThanOrEqual(2);
+    expect(tweets[0].startsWith('1/' + tweets.length)).toBe(true);
+    expect(tweets[0]).toContain('The title');
+    expect(tweets[tweets.length - 1]).toContain(
+      'Full article:\nhttps://ivue.dev/blog/first-post',
+    );
+    for (const [index] of tweets.entries()) {
+      expect(model.weightedLengthOf(tweets[index])).toBeLessThanOrEqual(280);
+    }
+  });
+
+  it('threadValid requires 2+ segments, all present and within limit', () => {
+    const model = new XComposeModel.Class();
+    model.mode.value = 'thread';
+    model.threadTweets.value = ['1/2 hello'];
+    expect(model.threadValid).toBe(false); // one segment
+    model.threadTweets.value = ['1/2 hello', '2/2 world'];
+    expect(model.threadValid).toBe(true);
+    model.threadTweets.value = ['1/2 hello', 'x'.repeat(300)];
+    expect(model.threadValid).toBe(false); // over limit
+    model.threadTweets.value = ['1/2 hello', '   '];
+    expect(model.threadValid).toBe(false); // empty segment
   });
 
   it('fillTemplate substitutes title and url', () => {

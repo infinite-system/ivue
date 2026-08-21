@@ -5,11 +5,16 @@ import type { PostSummary, ScheduledJob, TweetRow } from '../platform/Api';
 import { Format } from '../platform/Format';
 import { AppStore } from '../app/AppStore';
 
-// The X composer: pick a post, the template prefills the draft
-// ({title}/{url} from the pick), the counter weighs links the way X
-// does (every URL flattens to 23 t.co characters), and posting is
-// arm-to-confirm. Until the four X_* secrets exist the Worker answers
-// 503 and the composer shows the pending state instead of a send.
+// The X composer, three modes deep:
+//   link    — short teaser; X renders the card from the post page's
+//             twitter:image meta
+//   content — article substance in one tweet, with up to 4 site images
+//             (banner + embed screenshots) uploaded natively
+//   thread  — the FULL article split into a reply chain, images on the
+//             first tweet, editable per segment before posting
+// The counter weighs links the way X does (every URL = 23 t.co chars).
+// Posting is arm-to-confirm; scheduling needs no credentials (a job
+// records a visible failure if they are absent at run time).
 class $XComposeModel {
   constructor() {
     this.load();
@@ -28,6 +33,15 @@ class $XComposeModel {
     return 23; // every link becomes a t.co URL of fixed length
   }
 
+  get MAXIMUM_IMAGES() {
+    return 4; // X's per-tweet cap
+  }
+
+  // headroom for the thread's "n/m " numbering prefix
+  get THREAD_SEGMENT_LIMIT() {
+    return 270;
+  }
+
   get posts() {
     return shallowRef<PostSummary[]>([]);
   }
@@ -40,29 +54,8 @@ class $XComposeModel {
     return ref('');
   }
 
-  // 'link' = short teaser, X renders the card from the post page's
-  // twitter:image meta; 'content' = article substance in the tweet with
-  // the banner uploaded natively
   get mode() {
-    return ref<'link' | 'content'>('link');
-  }
-
-  get attachBanner() {
-    return this.mode.value === 'content';
-  }
-
-  get pickedPost() {
-    return (
-      this.posts.value.find(
-        (candidate) => candidate.slug === this.slug.value,
-      ) ?? null
-    );
-  }
-
-  get bannerUrl() {
-    return this.pickedPost && this.attachBanner
-      ? `https://ivue.dev/blog/${this.pickedPost.slug}.png`
-      : '';
+    return ref<ComposeMode>('link');
   }
 
   get xConfigured() {
@@ -75,6 +68,18 @@ class $XComposeModel {
 
   get draft() {
     return ref('');
+  }
+
+  get selectedImages() {
+    return shallowRef<string[]>([]);
+  }
+
+  get threadTweets() {
+    return ref<string[]>([]);
+  }
+
+  get threadLoading() {
+    return ref(false);
   }
 
   get posting() {
@@ -93,14 +98,96 @@ class $XComposeModel {
     return shallowRef<TweetRow[]>([]);
   }
 
-  // ---- scheduling (tweet kind) — enqueueing needs no credentials; the
-  // job records a visible failure if they are still absent at run time
   get scheduleAt() {
     return ref(''); // datetime-local input value
   }
 
   get scheduledJobs() {
     return shallowRef<ScheduledJob[]>([]);
+  }
+
+  get loading() {
+    return ref(true);
+  }
+
+  // ---- derived ----
+
+  get pickedPost() {
+    return (
+      this.posts.value.find(
+        (candidate) => candidate.slug === this.slug.value,
+      ) ?? null
+    );
+  }
+
+  get imagesEnabled() {
+    return this.mode.value !== 'link';
+  }
+
+  get availableImages() {
+    if (!this.pickedPost || !this.imagesEnabled) return [];
+    return [
+      `https://ivue.dev/blog/${this.pickedPost.slug}.png`,
+      ...this.pickedPost.embedImages,
+    ];
+  }
+
+  get isThreadMode() {
+    return this.mode.value === 'thread';
+  }
+
+  weightedLengthOf(text: string) {
+    const withoutUrls = text.replace(/https?:\/\/\S+/g, '');
+    const urlCount = (text.match(/https?:\/\/\S+/g) ?? []).length;
+    return [...withoutUrls].length + urlCount * this.URL_WEIGHT;
+  }
+
+  get weightedLength() {
+    return this.weightedLengthOf(this.draft.value);
+  }
+
+  get remaining() {
+    return this.TWEET_LIMIT - this.weightedLength;
+  }
+
+  get overLimit() {
+    return this.remaining < 0;
+  }
+
+  threadRemaining(index: number) {
+    return this.TWEET_LIMIT - this.weightedLengthOf(this.threadTweets.value[index] ?? '');
+  }
+
+  get threadValid() {
+    const tweets = this.threadTweets.value;
+    return (
+      tweets.length >= 2 &&
+      tweets.every(
+        (tweet, index) =>
+          tweet.trim().length > 0 && this.threadRemaining(index) >= 0,
+      )
+    );
+  }
+
+  get draftValid() {
+    return this.isThreadMode
+      ? this.threadValid
+      : this.draft.value.trim().length > 0 && !this.overLimit;
+  }
+
+  get canPost() {
+    return this.draftValid && !this.posting.value && this.xConfigured.value;
+  }
+
+  get postButtonLabel() {
+    if (this.posting.value) return 'Posting…';
+    if (!this.xConfigured.value) return 'Credentials pending';
+    const noun = this.isThreadMode
+      ? `thread (${this.threadTweets.value.length})`
+      : 'to X';
+    return this.postArmed.value
+      ? `Really post ${noun} — click again`
+      : `Post ${noun}`;
   }
 
   get scheduleDueAt() {
@@ -113,47 +200,10 @@ class $XComposeModel {
   }
 
   get canSchedule() {
-    return (
-      this.draft.value.trim().length > 0 &&
-      !this.overLimit &&
-      this.scheduleTimeValid
-    );
+    return this.draftValid && this.scheduleTimeValid;
   }
 
-  get loading() {
-    return ref(true);
-  }
-
-  // X counts every URL as 23 characters regardless of its length
-  get weightedLength() {
-    const withoutUrls = this.draft.value.replace(/https?:\/\/\S+/g, '');
-    const urlCount =
-      (this.draft.value.match(/https?:\/\/\S+/g) ?? []).length;
-    return [...withoutUrls].length + urlCount * this.URL_WEIGHT;
-  }
-
-  get remaining() {
-    return this.TWEET_LIMIT - this.weightedLength;
-  }
-
-  get overLimit() {
-    return this.remaining < 0;
-  }
-
-  get canPost() {
-    return (
-      this.draft.value.trim().length > 0 &&
-      !this.overLimit &&
-      !this.posting.value &&
-      this.xConfigured.value
-    );
-  }
-
-  get postButtonLabel() {
-    if (this.posting.value) return 'Posting…';
-    if (!this.xConfigured.value) return 'Credentials pending';
-    return this.postArmed.value ? 'Really post to X — click again' : 'Post to X';
-  }
+  // ---- loading ----
 
   async load() {
     this.loading.value = true;
@@ -178,6 +228,8 @@ class $XComposeModel {
     }
   }
 
+  // ---- composing ----
+
   fillTemplate(post: PostSummary): string {
     const template =
       this.mode.value === 'content'
@@ -196,14 +248,120 @@ class $XComposeModel {
     this.postedUrl.value = '';
   }
 
-  setMode(mode: 'link' | 'content') {
+  setMode(mode: ComposeMode) {
     this.mode.value = mode;
     this.prefill(); // a mode is a different draft — re-prefill the pick
   }
 
   prefill() {
-    if (this.pickedPost) this.draft.value = this.fillTemplate(this.pickedPost);
+    const post = this.pickedPost;
+    if (!post) return;
+    // default image selection: the banner, when images apply at all
+    this.selectedImages.value = this.imagesEnabled
+      ? [`https://ivue.dev/blog/${post.slug}.png`]
+      : [];
+    if (this.isThreadMode) {
+      this.buildThread();
+      return;
+    }
+    this.draft.value = this.fillTemplate(post);
   }
+
+  isImageSelected(imageUrl: string) {
+    return this.selectedImages.value.includes(imageUrl);
+  }
+
+  toggleImage(imageUrl: string) {
+    if (this.isImageSelected(imageUrl)) {
+      this.selectedImages.value = this.selectedImages.value.filter(
+        (selected) => selected !== imageUrl,
+      );
+      return;
+    }
+    if (this.selectedImages.value.length >= this.MAXIMUM_IMAGES) return;
+    this.selectedImages.value = [...this.selectedImages.value, imageUrl];
+  }
+
+  // ---- the thread builder ----
+
+  // Greedy packer: paragraphs fill segments up to the limit; an
+  // oversized paragraph splits on sentence boundaries. The article
+  // link closes the thread; "n/m " numbering is applied last.
+  splitIntoTweets(title: string, plainText: string, url: string): string[] {
+    const limit = this.THREAD_SEGMENT_LIMIT;
+    const segments: string[] = [];
+    let current = title;
+    const pieces = plainText
+      .split(/\n\n+/)
+      .flatMap((paragraph) =>
+        this.weightedLengthOf(paragraph) > limit
+          ? paragraph.split(/(?<=[.!?])\s+/)
+          : [paragraph],
+      )
+      .map((piece) => piece.trim())
+      .filter(Boolean);
+    for (const piece of pieces) {
+      const candidate = current ? `${current}\n\n${piece}` : piece;
+      if (this.weightedLengthOf(candidate) <= limit) {
+        current = candidate;
+        continue;
+      }
+      if (current) segments.push(current);
+      current =
+        this.weightedLengthOf(piece) <= limit
+          ? piece
+          : piece.slice(0, limit - 1) + '…';
+    }
+    if (current) segments.push(current);
+    const closer = `Full article:\n${url}`;
+    const last = segments[segments.length - 1];
+    // a thread is minimum two tweets — with a single packed segment the
+    // closer stands alone rather than folding in
+    if (
+      segments.length > 1 &&
+      last &&
+      this.weightedLengthOf(`${last}\n\n${closer}`) <= limit
+    ) {
+      segments[segments.length - 1] = `${last}\n\n${closer}`;
+    } else {
+      segments.push(closer);
+    }
+    return segments.map(
+      (segment, index) => `${index + 1}/${segments.length} ${segment}`,
+    );
+  }
+
+  async buildThread() {
+    const post = this.pickedPost;
+    if (!post) return;
+    this.threadLoading.value = true;
+    try {
+      const source = await Api.Class.postText(post.slug);
+      // pre-push blog-index has no plainText yet — description carries
+      const body = source.plainText || post.description;
+      this.threadTweets.value = this.splitIntoTweets(
+        post.title,
+        body,
+        post.url,
+      );
+    } catch (error) {
+      this.$app.reportFailure(error);
+    } finally {
+      this.threadLoading.value = false;
+    }
+  }
+
+  removeThreadTweet(index: number) {
+    this.threadTweets.value = this.threadTweets.value.filter(
+      (_tweet, position) => position !== index,
+    );
+  }
+
+  addThreadTweet() {
+    this.threadTweets.value = [...this.threadTweets.value, ''];
+  }
+
+  // ---- posting ----
 
   async confirmPost() {
     if (!this.canPost) return;
@@ -214,13 +372,23 @@ class $XComposeModel {
     this.postArmed.value = false;
     this.posting.value = true;
     try {
-      const result = await Api.Class.tweet({
-        text: this.draft.value.trim(),
-        slug: this.slug.value,
-        attachBanner: this.attachBanner,
-      });
-      this.postedUrl.value = result.url;
-      this.$app.notify('Posted to X.', 'success');
+      if (this.isThreadMode) {
+        const result = await Api.Class.thread({
+          tweets: this.threadTweets.value.map((tweet) => tweet.trim()),
+          slug: this.slug.value,
+          imageUrls: this.selectedImages.value,
+        });
+        this.postedUrl.value = result.url;
+        this.$app.notify(`Thread of ${result.tweetIds.length} posted.`, 'success');
+      } else {
+        const result = await Api.Class.tweet({
+          text: this.draft.value.trim(),
+          slug: this.slug.value,
+          imageUrls: this.selectedImages.value,
+        });
+        this.postedUrl.value = result.url;
+        this.$app.notify('Posted to X.', 'success');
+      }
       this.tweetLog.value = await Api.Class.tweets();
     } catch (error) {
       this.$app.reportFailure(error);
@@ -233,26 +401,45 @@ class $XComposeModel {
     this.postArmed.value = false;
   }
 
+  // ---- scheduling ----
+
   async refreshSchedule() {
     const jobs = await Api.Class.scheduleList();
     this.scheduledJobs.value = jobs.upcoming.filter(
-      (job) => job.kind === 'tweet',
+      (job) => job.kind === 'tweet' || job.kind === 'thread',
     );
   }
 
-  async scheduleTweet() {
+  async scheduleCurrent() {
     if (!this.canSchedule) return;
     try {
-      await Api.Class.schedule({
-        kind: 'tweet',
-        payload: {
-          text: this.draft.value.trim(),
-          slug: this.slug.value,
-          attachBanner: this.attachBanner ? '1' : '',
-        },
-        dueAt: this.scheduleDueAt!,
-      });
-      this.$app.notify('Post scheduled.', 'success');
+      await Api.Class.schedule(
+        this.isThreadMode
+          ? {
+              kind: 'thread',
+              payload: {
+                tweets: JSON.stringify(
+                  this.threadTweets.value.map((tweet) => tweet.trim()),
+                ),
+                slug: this.slug.value,
+                images: JSON.stringify(this.selectedImages.value),
+              },
+              dueAt: this.scheduleDueAt!,
+            }
+          : {
+              kind: 'tweet',
+              payload: {
+                text: this.draft.value.trim(),
+                slug: this.slug.value,
+                images: JSON.stringify(this.selectedImages.value),
+              },
+              dueAt: this.scheduleDueAt!,
+            },
+      );
+      this.$app.notify(
+        this.isThreadMode ? 'Thread scheduled.' : 'Post scheduled.',
+        'success',
+      );
       this.scheduleAt.value = '';
       await this.refreshSchedule();
     } catch (error) {
@@ -269,6 +456,18 @@ class $XComposeModel {
       this.$app.reportFailure(error);
     }
   }
+
+  jobSummary(job: ScheduledJob) {
+    if (job.kind === 'thread') {
+      try {
+        const tweets = JSON.parse(job.payload.tweets ?? '[]') as string[];
+        return `thread (${tweets.length}) — ${tweets[0] ?? ''}`;
+      } catch {
+        return 'thread';
+      }
+    }
+    return job.payload.text ?? '';
+  }
 }
 
 export namespace XComposeModel {
@@ -276,3 +475,5 @@ export namespace XComposeModel {
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
+
+export type ComposeMode = 'link' | 'content' | 'thread';

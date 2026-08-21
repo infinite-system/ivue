@@ -28,10 +28,16 @@ class $Posts {
     return posts.find((candidate) => candidate.slug === slug);
   }
 
-  // The catalog without email bodies — what list views and pickers need;
-  // emailHtml is tens of kilobytes per post and stays server-side.
+  // The catalog without the heavy bodies — what list views and pickers
+  // need; emailHtml and plainText are kilobytes per post and stay
+  // server-side (plainText travels via /admin/post-text on demand).
   static summaries(posts: Post[]): PostSummary[] {
-    return posts.map(({ emailHtml: _emailHtml, ...summary }) => summary);
+    return posts.map(
+      ({ emailHtml: _emailHtml, plainText: _plainText, ...summary }) => ({
+        ...summary,
+        embedImages: summary.embedImages ?? [],
+      }),
+    );
   }
 }
 
@@ -47,9 +53,15 @@ export interface Post {
   url: string;
   date: string | null;
   timestamp: number;
+  // committed embed screenshots (the X composer's attachable images)
+  embedImages?: string[];
+  // plain-text body rendition — the thread composer's raw material
+  plainText?: string;
   // the complete email body, rendered at site build time; one
   // {{UNSUBSCRIBE_URL}} placeholder remains for the Worker to fill
   emailHtml: string;
 }
 
-export type PostSummary = Omit<Post, 'emailHtml'>;
+export type PostSummary = Omit<Post, 'emailHtml' | 'plainText'> & {
+  embedImages: string[];
+};

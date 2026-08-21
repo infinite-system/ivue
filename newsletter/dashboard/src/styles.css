@@ -928,6 +928,76 @@ hr {
   margin: 0.5rem 0 0.2rem;
 }
 
+/* attachable-image checkboxes */
+.image-picker label {
+  margin-bottom: 0.35rem;
+}
+
+.image-picker__grid {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.image-picker__cell {
+  position: relative;
+  width: 8.4rem;
+  border: 2px solid var(--panel-edge);
+  border-radius: var(--radius-small);
+  overflow: hidden;
+  cursor: pointer;
+  margin: 0;
+}
+
+.image-picker__cell.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.image-picker__cell input {
+  position: absolute;
+  top: 0.3rem;
+  left: 0.3rem;
+  z-index: 1;
+}
+
+.image-picker__cell img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* the thread editor */
+.thread-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.thread-head label {
+  margin: 0.7rem 0 0.25rem;
+}
+
+.thread-segment {
+  margin: 0.45rem 0;
+}
+
+.thread-segment textarea {
+  width: 100%;
+}
+
+.thread-segment__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.thread-segment__meta .counter {
+  margin: 0.15rem 0;
+}
+
 /* the pending-jobs list under each scheduler */
 .job-queue {
   list-style: none;

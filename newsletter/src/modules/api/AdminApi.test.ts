@@ -206,6 +206,50 @@ describe('AdminApi', () => {
     expect(log[0]).toMatchObject({ tweetId: '42', slug: 'first-post' });
   });
 
+  it('thread endpoint: 503 without creds, chains + ledgers with them; post-text serves plainText', async () => {
+    const env = makeTestEnv();
+    expect(
+      (
+        await call('/admin/thread', env, 'POST', {
+          tweets: ['a', 'b'],
+        })
+      ).status,
+    ).toBe(503);
+
+    const configured = makeTestEnv({
+      X_API_KEY: 'k',
+      X_API_SECRET: 's',
+      X_ACCESS_TOKEN: 't',
+      X_ACCESS_SECRET: 'ts',
+      SITE_ORIGIN: 'https://ivue.dev',
+    });
+    const calls = installFetchStub({ posts: [makePost('first-post', 1)] });
+    expect(
+      (
+        await call('/admin/thread', configured, 'POST', {
+          tweets: ['only one'],
+          slug: 'first-post',
+        })
+      ).status,
+    ).toBe(400);
+    const posted = (await (
+      await call('/admin/thread', configured, 'POST', {
+        tweets: ['One', 'Two'],
+        slug: 'first-post',
+        imageUrls: ['https://ivue.dev/blog/first-post.png'],
+      })
+    ).json()) as { ok: boolean; tweetIds: string[] };
+    expect(posted.tweetIds).toHaveLength(2);
+    expect(calls.tweetCalls[1].reply).toEqual({
+      in_reply_to_tweet_id: 'tweet-1',
+    });
+
+    const text = (await (
+      await call('/admin/post-text?slug=first-post', configured)
+    ).json()) as { plainText: string };
+    expect(text.plainText).toContain('Plain text of first-post');
+  });
+
   it('settings carries the tweet template and X status; template saves', async () => {
     const env = makeTestEnv();
     const initial = (await (await call('/admin/settings', env)).json()) as {

@@ -77,6 +77,43 @@ describe('XPoster', () => {
     expect(JSON.parse(captured!.body)).toEqual({ text: 'Hello from ivue' });
   });
 
+  it('postThread chains replies and puts images on the first tweet only', async () => {
+    const { installFetchStub } = await import('../../../test/Fixtures');
+    const calls = installFetchStub({});
+    const result = await XPoster.Class.postThread(
+      makeTestEnv({ ...X_ENV, SITE_ORIGIN: 'https://ivue.dev' }),
+      ['First tweet', 'Second tweet', 'Third tweet'],
+      ['https://ivue.dev/blog/first-post.png'],
+    );
+    expect(result.tweetIds).toEqual(['tweet-1', 'tweet-2', 'tweet-3']);
+    expect(calls.mediaUploads).toHaveLength(1);
+    expect(calls.tweetCalls[0].media).toEqual({ media_ids: ['media-1'] });
+    expect(calls.tweetCalls[0].reply).toBeUndefined();
+    expect(calls.tweetCalls[1].reply).toEqual({
+      in_reply_to_tweet_id: 'tweet-1',
+    });
+    expect(calls.tweetCalls[1].media).toBeUndefined();
+    expect(calls.tweetCalls[2].reply).toEqual({
+      in_reply_to_tweet_id: 'tweet-2',
+    });
+  });
+
+  it('uploadImages caps at 4 and refuses off-site URLs', async () => {
+    const { installFetchStub } = await import('../../../test/Fixtures');
+    const calls = installFetchStub({});
+    const env = makeTestEnv({ ...X_ENV, SITE_ORIGIN: 'https://ivue.dev' });
+    const urls = Array.from(
+      { length: 6 },
+      (_, index) => `https://ivue.dev/blog/embeds/post-embed-${index + 1}.png`,
+    );
+    const mediaIds = await XPoster.Class.uploadImages(env, urls);
+    expect(mediaIds).toHaveLength(4);
+    expect(calls.mediaUploads).toHaveLength(4);
+    await expect(
+      XPoster.Class.uploadImages(env, ['https://evil.example/x.png']),
+    ).rejects.toThrow(/site-hosted/);
+  });
+
   it('surfaces X rejections as errors', async () => {
     vi.stubGlobal(
       'fetch',

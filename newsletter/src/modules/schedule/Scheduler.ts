@@ -13,13 +13,13 @@ import { Tweets } from '../socials/Tweets';
 // instead of retrying blind.
 class $Scheduler {
   static get KINDS() {
-    return ['broadcast', 'tweet'] as const;
+    return ['broadcast', 'tweet', 'thread'] as const;
   }
 
   static async schedule(
     env: Env,
     kind: JobKind,
-    payload: BroadcastPayload | TweetPayload,
+    payload: BroadcastPayload | TweetPayload | ThreadPayload,
     dueAt: number,
   ): Promise<ScheduledJob> {
     if (!this.KINDS.includes(kind)) throw new Error(`Unknown kind: ${kind}`);
@@ -30,6 +30,10 @@ class $Scheduler {
       throw new Error('A broadcast needs a post slug.');
     if (kind === 'tweet' && !(payload as TweetPayload).text?.trim())
       throw new Error('A tweet needs text.');
+    if (kind === 'thread') {
+      const texts = this.threadTexts(payload as unknown as ThreadPayload);
+      if (texts.length < 2) throw new Error('A thread needs at least 2 tweets.');
+    }
     await env.DB.prepare(
       'INSERT INTO scheduled_jobs (kind, payload, due_at, created_at) VALUES (?, ?, ?, ?)',
     )
@@ -99,7 +103,8 @@ class $Scheduler {
   static async execute(env: Env, row: JobRow): Promise<JobResult> {
     try {
       const payload = JSON.parse(row.payload) as BroadcastPayload &
-        TweetPayload;
+        TweetPayload &
+        Partial<ThreadPayload>;
       if (row.kind === 'broadcast') {
         const report = await Delivery.Class.broadcastPost(
           env,
@@ -110,13 +115,27 @@ class $Scheduler {
       }
       if (!XPoster.Class.credentialsPresent(env))
         return { error: 'X credentials not configured' };
-      const tweet = await XPoster.Class.postWithOptionalBanner(
+      if (row.kind === 'thread') {
+        const texts = this.threadTexts(payload as unknown as ThreadPayload);
+        const thread = await XPoster.Class.postThread(
+          env,
+          texts,
+          this.imageUrls(env, payload),
+        );
+        const postedAt = Http.Class.nowSeconds();
+        for (const [index, tweetId] of thread.tweetIds.entries()) {
+          await Tweets.Class.record(
+            env,
+            { tweetId, text: texts[index], slug: payload.slug || null },
+            postedAt,
+          );
+        }
+        return { ok: true, detail: `thread of ${thread.tweetIds.length}` };
+      }
+      const tweet = await XPoster.Class.postWithImages(
         env,
         payload.text.trim(),
-        {
-          slug: payload.slug || undefined,
-          attachBanner: payload.attachBanner === '1',
-        },
+        this.imageUrls(env, payload),
       );
       await Tweets.Class.record(
         env,
@@ -131,6 +150,33 @@ class $Scheduler {
     } catch (error) {
       return { error: error instanceof Error ? error.message : String(error) };
     }
+  }
+
+  static threadTexts(payload: ThreadPayload): string[] {
+    try {
+      const texts = JSON.parse(payload.tweets ?? '[]') as string[];
+      return texts.map((text) => String(text).trim()).filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  // images: JSON array of site-hosted URLs; the legacy attachBanner flag
+  // (pre-multi-image jobs) resolves to the post banner
+  static imageUrls(
+    env: Env,
+    payload: { images?: string; attachBanner?: string; slug?: string },
+  ): string[] {
+    if (payload.images) {
+      try {
+        return (JSON.parse(payload.images) as string[]).map(String);
+      } catch {
+        return [];
+      }
+    }
+    if (payload.attachBanner === '1' && payload.slug)
+      return [`${env.SITE_ORIGIN}/blog/${payload.slug}.png`];
+    return [];
   }
 
   static toJob(row: JobRow): ScheduledJob {
@@ -151,7 +197,7 @@ export namespace Scheduler {
   export let Class = $Class;
 }
 
-export type JobKind = 'broadcast' | 'tweet';
+export type JobKind = 'broadcast' | 'tweet' | 'thread';
 
 export interface BroadcastPayload {
   slug: string;
@@ -161,7 +207,14 @@ export interface BroadcastPayload {
 export interface TweetPayload {
   text: string;
   slug: string;
-  attachBanner?: string; // '1' = fetch + attach the post banner at run time
+  images?: string; // JSON array of site-hosted image URLs
+  attachBanner?: string; // legacy '1' = attach the post banner
+}
+
+export interface ThreadPayload {
+  tweets: string; // JSON array of tweet texts
+  slug: string;
+  images?: string; // JSON array — rides the first tweet
 }
 
 export interface JobResult {

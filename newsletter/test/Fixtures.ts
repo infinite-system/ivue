@@ -13,6 +13,8 @@ export function makePost(slug: string, timestamp: number): Post {
     url: `https://ivue.dev/blog/${slug}`,
     date: '2026-08-01',
     timestamp,
+    embedImages: [`https://ivue.dev/blog/embeds/${slug}-embed-1.png`],
+    plainText: `Plain text of ${slug}.\n\nSecond paragraph of ${slug}.`,
     emailHtml: `<html><body>${slug} — <a href="{{UNSUBSCRIBE_URL}}">unsubscribe</a></body></html>`,
   };
 }
@@ -41,9 +43,15 @@ export interface RecordedPostmarkCall {
 // endpoint), so existing batch assertions keep their shape.
 export function installFetchStub(
   options: FetchStubOptions,
-): RecordedPostmarkCall[] & { notifications: PostmarkMessage[] } {
+): RecordedPostmarkCall[] & {
+  notifications: PostmarkMessage[];
+  mediaUploads: string[];
+  tweetCalls: Record<string, unknown>[];
+} {
   const postmarkCalls = Object.assign([] as RecordedPostmarkCall[], {
     notifications: [] as PostmarkMessage[],
+    mediaUploads: [] as string[],
+    tweetCalls: [] as Record<string, unknown>[],
   });
   vi.stubGlobal(
     'fetch',
@@ -51,6 +59,23 @@ export function installFetchStub(
       const url = String(input);
       if (url.endsWith('/blog-index.json'))
         return new Response(JSON.stringify(options.posts ?? []));
+      if (url.includes('api.x.com/2/media/upload')) {
+        postmarkCalls.mediaUploads.push(url);
+        return new Response(
+          JSON.stringify({ data: { id: `media-${postmarkCalls.mediaUploads.length}` } }),
+        );
+      }
+      if (url.includes('api.x.com/2/tweets')) {
+        const body = JSON.parse(String(requestInit?.body ?? '{}')) as Record<string, unknown>;
+        postmarkCalls.tweetCalls.push(body);
+        return new Response(
+          JSON.stringify({ data: { id: `tweet-${postmarkCalls.tweetCalls.length}` } }),
+        );
+      }
+      if (url.includes('ivue.dev/blog/')) {
+        // banner/embed image fetches — any bytes will do
+        return new Response(new Uint8Array([137, 80, 78, 71]));
+      }
       if (url.endsWith('api.postmarkapp.com/email')) {
         postmarkCalls.notifications.push(
           JSON.parse(String(requestInit?.body ?? '{}')) as PostmarkMessage,

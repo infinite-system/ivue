@@ -335,6 +335,31 @@ try {
     ),
   );
   await shot('x-composer');
+  // thread mode: segments build from the article (or its description
+  // pre-push), each editable with its own counter
+  await page.click('input[value="thread"]');
+  await page.waitForFunction(
+    () => document.querySelectorAll('.thread-segment').length >= 2,
+    undefined,
+    { timeout: 20_000 },
+  );
+  check(
+    'thread mode splits the article into 2+ editable segments',
+    (await page.locator('.thread-segment').count()) >= 2,
+  );
+  check(
+    'the thread closes with the article link',
+    (
+      await page.locator('.thread-segment textarea').last().inputValue()
+    ).includes('https://ivue.dev/blog/'),
+  );
+  check(
+    'image picker offers the banner for the first tweet',
+    (await page.locator('.image-picker__cell').count()) >= 1,
+  );
+  await shot('x-thread');
+  await page.click('input[value="link"]');
+  await page.waitForSelector('#x-draft');
   // schedule the drafted post far in the future, see it queue, cancel it
   await page.fill('#x-schedule-at', '2099-01-01T09:00');
   await page.click('button:has-text("Schedule post")');

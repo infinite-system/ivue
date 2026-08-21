@@ -9,6 +9,8 @@ const {
   slug,
   draft,
   mode,
+  threadTweets,
+  threadLoading,
   xConfigured,
   postedUrl,
   tweetLog,
@@ -57,7 +59,7 @@ const {
               :checked="mode === 'link'"
               @change="model.setMode('link')"
             />
-            Link — X renders the post's card from the page
+            Link — X renders the post's card
           </label>
           <label class="checkline">
             <input
@@ -66,20 +68,85 @@ const {
               :checked="mode === 'content'"
               @change="model.setMode('content')"
             />
-            Content — article substance + banner uploaded natively
+            Content — substance + images
+          </label>
+          <label class="checkline">
+            <input
+              type="radio"
+              value="thread"
+              :checked="mode === 'thread'"
+              @change="model.setMode('thread')"
+            />
+            Thread — the full article, chained
           </label>
         </div>
-        <img
-          v-if="model.bannerUrl"
-          class="banner-preview"
-          :src="model.bannerUrl"
-          alt="Post banner (will be attached)"
-        />
-        <label for="x-draft">Draft</label>
-        <textarea id="x-draft" v-model="draft" rows="5"></textarea>
-        <p class="muted counter" :class="{ error: model.overLimit }">
-          {{ model.remaining }} characters left
-        </p>
+
+        <div v-if="model.availableImages.length" class="image-picker">
+          <label>Images (first tweet, up to {{ model.MAXIMUM_IMAGES }})</label>
+          <div class="image-picker__grid">
+            <label
+              v-for="imageUrl in model.availableImages"
+              :key="imageUrl"
+              class="image-picker__cell"
+              :class="{ selected: model.isImageSelected(imageUrl) }"
+            >
+              <input
+                type="checkbox"
+                :checked="model.isImageSelected(imageUrl)"
+                @change="model.toggleImage(imageUrl)"
+              />
+              <img :src="imageUrl" alt="" loading="lazy" />
+            </label>
+          </div>
+        </div>
+
+        <template v-if="!model.isThreadMode">
+          <label for="x-draft">Draft</label>
+          <textarea id="x-draft" v-model="draft" rows="5"></textarea>
+          <p class="muted counter" :class="{ error: model.overLimit }">
+            {{ model.remaining }} characters left
+          </p>
+        </template>
+
+        <template v-else>
+          <div class="thread-head">
+            <label>Thread — {{ threadTweets.length }} tweets</label>
+            <button
+              class="ghost"
+              type="button"
+              :disabled="threadLoading"
+              @click="model.buildThread()"
+            >
+              {{ threadLoading ? 'Building…' : 'Rebuild from article' }}
+            </button>
+          </div>
+          <div
+            v-for="(tweet, index) in threadTweets"
+            :key="index"
+            class="thread-segment"
+          >
+            <textarea v-model="threadTweets[index]" rows="3"></textarea>
+            <div class="thread-segment__meta">
+              <span
+                class="muted counter"
+                :class="{ error: model.threadRemaining(index) < 0 }"
+              >
+                {{ model.threadRemaining(index) }} left
+              </span>
+              <button
+                class="ghost"
+                type="button"
+                @click="model.removeThreadTweet(index)"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+          <button class="ghost" type="button" @click="model.addThreadTweet()">
+            + Add tweet
+          </button>
+        </template>
+
         <button class="primary" type="submit" :disabled="!model.canPost">
           {{ model.postButtonLabel }}
         </button>
@@ -104,14 +171,14 @@ const {
           class="primary"
           type="button"
           :disabled="!model.canSchedule"
-          @click="model.scheduleTweet()"
+          @click="model.scheduleCurrent()"
         >
-          Schedule post
+          {{ model.isThreadMode ? 'Schedule thread' : 'Schedule post' }}
         </button>
 
         <ul v-if="scheduledJobs.length" class="job-queue">
           <li v-for="job in scheduledJobs" :key="job.id">
-            <span class="tweet-text">{{ job.payload.text }}</span>
+            <span class="tweet-text">{{ model.jobSummary(job) }}</span>
             <span class="muted">{{ Format.Class.dateTime(job.dueAt) }}</span>
             <button class="ghost" type="button" @click="model.cancelJob(job.id)">
               Cancel

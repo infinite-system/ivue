@@ -105,6 +105,43 @@ describe('Scheduler', () => {
     expect(log[0]).toMatchObject({ tweetId: '77', slug: 'first-post' });
   });
 
+  it('runDue posts a due THREAD, chaining and ledgering every tweet', async () => {
+    const env = makeTestEnv({ ...X_ENV, SITE_ORIGIN: 'https://ivue.dev' });
+    const calls = installFetchStub({});
+    await Scheduler.Class.schedule(
+      env,
+      'thread',
+      {
+        tweets: JSON.stringify(['One', 'Two', 'Three']),
+        slug: 'first-post',
+        images: JSON.stringify(['https://ivue.dev/blog/first-post.png']),
+      },
+      farFuture(),
+    );
+    await env.DB.prepare('UPDATE scheduled_jobs SET due_at = 1').run();
+    expect(await Scheduler.Class.runDue(env)).toBe(1);
+    expect(calls.tweetCalls).toHaveLength(3);
+    expect(calls.tweetCalls[2].reply).toEqual({
+      in_reply_to_tweet_id: 'tweet-2',
+    });
+    const log = await Tweets.Class.log(env);
+    expect(log).toHaveLength(3);
+    const { recent } = await Scheduler.Class.list(env);
+    expect(recent[0].result?.detail).toBe('thread of 3');
+  });
+
+  it('a thread with fewer than 2 tweets is refused at schedule time', async () => {
+    const env = makeTestEnv();
+    await expect(
+      Scheduler.Class.schedule(
+        env,
+        'thread',
+        { tweets: JSON.stringify(['only one']), slug: '' },
+        farFuture(),
+      ),
+    ).rejects.toThrow(/at least 2/);
+  });
+
   it('a failing job records its error instead of throwing the tick', async () => {
     const env = makeTestEnv(); // no X credentials
     await Scheduler.Class.schedule(

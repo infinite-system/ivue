@@ -59,6 +59,10 @@ class $AdminApi {
         return this.tweet(request, env);
       case 'GET /admin/tweets':
         return this.tweets(env);
+      case 'POST /admin/thread':
+        return this.thread(request, env);
+      case 'GET /admin/post-text':
+        return this.postText(url, env);
       case 'POST /admin/schedule':
         return this.schedule(request, env);
       case 'GET /admin/schedule':
@@ -273,15 +277,16 @@ class $AdminApi {
     const body = await Http.Class.readJsonBody<{
       text: string;
       slug: string;
-      attachBanner: boolean;
+      imageUrls: string[];
     }>(request);
     const text = String(body.text ?? '').trim();
     if (!text) return Http.Class.json({ error: 'text required' }, 400);
     try {
-      const result = await XPoster.Class.postWithOptionalBanner(env, text, {
-        slug: String(body.slug ?? ''),
-        attachBanner: Boolean(body.attachBanner),
-      });
+      const result = await XPoster.Class.postWithImages(
+        env,
+        text,
+        Array.isArray(body.imageUrls) ? body.imageUrls.map(String) : [],
+      );
       await Tweets.Class.record(
         env,
         {
@@ -306,6 +311,68 @@ class $AdminApi {
 
   static async tweets(env: Env): Promise<Response> {
     return Http.Class.json(await Tweets.Class.log(env));
+  }
+
+  // A thread: each tweet replies to the previous; images ride the
+  // first. Every posted tweet lands in the ledger.
+  static async thread(request: Request, env: Env): Promise<Response> {
+    if (!XPoster.Class.credentialsPresent(env))
+      return Http.Class.json(
+        {
+          error:
+            'X credentials not configured — set X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET via wrangler secret put.',
+        },
+        503,
+      );
+    const body = await Http.Class.readJsonBody<{
+      tweets: string[];
+      slug: string;
+      imageUrls: string[];
+    }>(request);
+    const texts = (Array.isArray(body.tweets) ? body.tweets : [])
+      .map((text) => String(text).trim())
+      .filter(Boolean);
+    if (texts.length < 2)
+      return Http.Class.json({ error: 'A thread needs at least 2 tweets.' }, 400);
+    try {
+      const result = await XPoster.Class.postThread(
+        env,
+        texts,
+        Array.isArray(body.imageUrls) ? body.imageUrls.map(String) : [],
+      );
+      const postedAt = Http.Class.nowSeconds();
+      for (const [index, tweetId] of result.tweetIds.entries()) {
+        await Tweets.Class.record(
+          env,
+          { tweetId, text: texts[index], slug: String(body.slug ?? '') || null },
+          postedAt,
+        );
+      }
+      return Http.Class.json({
+        ok: true,
+        tweetIds: result.tweetIds,
+        url: `https://x.com/i/status/${result.tweetIds[0]}`,
+      });
+    } catch (error) {
+      return Http.Class.json(
+        { error: error instanceof Error ? error.message : 'Thread failed.' },
+        502,
+      );
+    }
+  }
+
+  // The thread composer's raw material — kilobytes, so on demand rather
+  // than riding every /admin/posts response.
+  static async postText(url: URL, env: Env): Promise<Response> {
+    const slug = url.searchParams.get('slug') ?? '';
+    const catalog = await Posts.Class.load(env);
+    const post = Posts.Class.find(catalog, slug);
+    if (!post)
+      return Http.Class.json({ error: `Unknown post slug: ${slug}` }, 404);
+    return Http.Class.json({
+      slug: post.slug,
+      plainText: post.plainText ?? '',
+    });
   }
 
   static async schedule(request: Request, env: Env): Promise<Response> {

@@ -23,27 +23,66 @@ class $XPoster {
     );
   }
 
-  // The one entry point callers use: text, optionally with the post's
-  // banner attached natively (fetched from the site, uploaded to X).
-  static async postWithOptionalBanner(
+  static get MAXIMUM_IMAGES() {
+    return 4; // X's per-tweet cap
+  }
+
+  // The single-tweet entry point: text plus up to 4 site-hosted images
+  // (banner, embed screenshots), each fetched and uploaded natively.
+  static async postWithImages(
     env: Env,
     text: string,
-    options: { slug?: string; attachBanner?: boolean } = {},
+    imageUrls: string[] = [],
   ): Promise<TweetResult> {
-    let mediaId: string | undefined;
-    if (options.attachBanner && options.slug) {
-      const banner = await fetch(
-        `${env.SITE_ORIGIN}/blog/${options.slug}.png`,
-      );
-      if (!banner.ok)
-        throw new Error(`Banner not found for slug: ${options.slug}`);
-      mediaId = await this.uploadMedia(
-        env,
-        await banner.arrayBuffer(),
-        'image/png',
+    const mediaIds = await this.uploadImages(env, imageUrls);
+    return this.postTweet(env, text, { mediaIds });
+  }
+
+  // The thread entry point: each tweet replies to the previous one;
+  // images ride the FIRST tweet. A mid-thread failure reports what
+  // already posted so the operator can pick up by hand.
+  static async postThread(
+    env: Env,
+    texts: string[],
+    imageUrls: string[] = [],
+  ): Promise<ThreadResult> {
+    const mediaIds = await this.uploadImages(env, imageUrls);
+    const tweetIds: string[] = [];
+    for (const [index, text] of texts.entries()) {
+      try {
+        const result = await this.postTweet(env, text, {
+          mediaIds: index === 0 ? mediaIds : undefined,
+          inReplyTo: tweetIds[index - 1],
+        });
+        tweetIds.push(result.tweetId);
+      } catch (error) {
+        throw new Error(
+          `Thread stopped at tweet ${index + 1}/${texts.length}` +
+            (tweetIds.length
+              ? ` — already posted: ${tweetIds.join(', ')}`
+              : '') +
+            ` (${error instanceof Error ? error.message : error})`,
+        );
+      }
+    }
+    return { tweetIds };
+  }
+
+  static async uploadImages(
+    env: Env,
+    imageUrls: string[],
+  ): Promise<string[]> {
+    const mediaIds: string[] = [];
+    for (const imageUrl of imageUrls.slice(0, this.MAXIMUM_IMAGES)) {
+      if (!imageUrl.startsWith(`${env.SITE_ORIGIN}/`))
+        throw new Error(`Image must be site-hosted: ${imageUrl}`);
+      const image = await fetch(imageUrl);
+      if (!image.ok) throw new Error(`Image not found: ${imageUrl}`);
+      mediaIds.push(
+        await this.uploadMedia(env, await image.arrayBuffer(), 'image/png'),
       );
     }
-    return this.postTweet(env, text, { mediaId });
+    return mediaIds;
   }
 
   // X media upload — multipart form (form fields stay OUT of the OAuth
@@ -88,7 +127,8 @@ class $XPoster {
     options: {
       nonce?: string;
       timestampSeconds?: number;
-      mediaId?: string;
+      mediaIds?: string[];
+      inReplyTo?: string;
     } = {},
   ): Promise<TweetResult> {
     const authorization = await this.authorizationHeader(
@@ -106,8 +146,11 @@ class $XPoster {
       },
       body: JSON.stringify({
         text,
-        ...(options.mediaId
-          ? { media: { media_ids: [options.mediaId] } }
+        ...(options.mediaIds?.length
+          ? { media: { media_ids: options.mediaIds } }
+          : {}),
+        ...(options.inReplyTo
+          ? { reply: { in_reply_to_tweet_id: options.inReplyTo } }
           : {}),
       }),
     });
@@ -208,4 +251,8 @@ export namespace XPoster {
 
 export interface TweetResult {
   tweetId: string;
+}
+
+export interface ThreadResult {
+  tweetIds: string[];
 }
