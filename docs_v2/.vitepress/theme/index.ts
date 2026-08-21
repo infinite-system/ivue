@@ -27,6 +27,7 @@ import BlogArchiveScroller from './components/BlogArchiveScroller.vue';
 import BlogBackLink from './components/BlogBackLink.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import { registerDocsApp } from './quasar-docs-loader';
+import { initAnalytics } from './analytics';
 import './custom.css';
 
 export default {
@@ -56,6 +57,7 @@ export default {
   },
   enhanceApp({ app, router }) {
     registerDocsApp(app); // field embeds install Quasar lazily
+    initAnalytics(); // PostHog — production-only, browser-only, async
 
     if (typeof window !== 'undefined') {
       // Deploy-race recovery: a fresh deploy replaces the hashed chunks,

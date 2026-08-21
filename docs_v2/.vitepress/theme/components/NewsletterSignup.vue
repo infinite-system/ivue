@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, useId, watch } from 'vue';
 import { useRoute } from 'vitepress';
+import { captureEvent } from '../analytics';
 
 // The newsletter Worker's public URL (see /newsletter/README.md) — paste
 // it here once the Worker is deployed and signups go live. Empty string
@@ -73,6 +74,7 @@ function openFromPill() {
   state.value = 'idle';
   message.value = '';
   toastVisible.value = true;
+  captureEvent('newsletter_form_opened', { source: 'pill' });
 }
 
 // Any page can request the signup form via this event (e.g. the
@@ -171,6 +173,7 @@ async function subscribe() {
     if (response.ok) {
       state.value = 'done';
       message.value = 'Welcome aboard — see you in the next post.';
+      captureEvent('newsletter_signup', { placement: props.placement });
       // long enough to actually read the confirmation
       window.setTimeout(() => (toastVisible.value = false), 8_000);
     } else {

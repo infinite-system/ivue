@@ -15,6 +15,7 @@
     "@stackblitz/sdk": "^1.11.1",
     "@vueuse/core": "^14.4.0",
     "fast-formula-parser": "^1.0.19",
+    "posthog-js": "^1.418.10",
     "quasar": "^2.24.0",
     "vue": "^3.5.41"
   }
