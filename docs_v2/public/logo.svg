@@ -6,8 +6,10 @@
       <stop offset="1" stop-color="#34D399"/>
     </linearGradient>
   </defs>
-  <rect width="48" height="48" rx="12" fill="#0D1226"/>
-  <rect x="0.5" y="0.5" width="47" height="47" rx="11.5" stroke="white" stroke-opacity="0.08"/>
+  <!-- ONE rect carrying fill AND border. Integer geometry + a full-unit
+       stroke: a half-pixel hairline on fractional coordinates rasterized
+       into lone bright pixels at the corner arcs at nav size -->
+  <rect x="1" y="1" width="46" height="46" rx="11" fill="#0D1226" stroke="white" stroke-opacity="0.05" stroke-width="2"/>
   <path d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
         stroke="url(#ivg)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>
