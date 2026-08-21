@@ -103,6 +103,29 @@ class $AppStore {
     this.$router.push({ name: 'posts' });
   }
 
+  // Any email address, anywhere in the app, opens that subscriber's
+  // modal — history, and the projected pipeline of what arrives next.
+  // The address rides the query string, so the modal overlays whatever
+  // view is open and survives a reload.
+  get subscriberEmail(): string {
+    return String(this.$router.currentRoute.value.query.subscriber ?? '');
+  }
+
+  openSubscriber(email: string) {
+    this.$router.push({
+      query: {
+        ...this.$router.currentRoute.value.query,
+        subscriber: email,
+      },
+    });
+  }
+
+  closeSubscriber() {
+    const { subscriber: _subscriber, ...query } =
+      this.$router.currentRoute.value.query;
+    this.$router.push({ query });
+  }
+
   // ---- session ----
 
   // On load: one probe decides between the app and the login gate. In

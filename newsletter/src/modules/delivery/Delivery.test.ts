@@ -27,6 +27,25 @@ describe('Delivery', () => {
     expect(sent.has('a@ivue.dev')).toBe(true);
   });
 
+  it('welcome email: sends once with the unsubscribe link, ledgers, never repeats', async () => {
+    const env = makeTestEnv();
+    const postmarkCalls = installFetchStub({});
+    await Delivery.Class.sendWelcome(env, { email: 'new@ivue.dev', name: '' });
+    expect(postmarkCalls.notifications).toHaveLength(1);
+    const message = postmarkCalls.notifications[0];
+    expect(message.To).toBe('new@ivue.dev');
+    expect(message.Subject).toBe('Welcome to the ivue newsletter');
+    expect(message.MessageStream).toBe('newsletter');
+    expect(message.HtmlBody).not.toContain('{{UNSUBSCRIBE_URL}}');
+    expect(message.HtmlBody).toContain('/unsubscribe?email=');
+    expect(
+      await Ledger.Class.hasSend(env, 'new@ivue.dev', 'welcome'),
+    ).toBe(true);
+    // a returning subscriber is never re-welcomed — the ledger row guards
+    await Delivery.Class.sendWelcome(env, { email: 'new@ivue.dev', name: '' });
+    expect(postmarkCalls.notifications).toHaveLength(1);
+  });
+
   it('a rejected recipient is reported and NOT written to the ledger', async () => {
     const env = makeTestEnv();
     installFetchStub({

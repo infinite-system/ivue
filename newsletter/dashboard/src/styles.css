@@ -742,6 +742,59 @@ td {
   border-bottom: 0;
 }
 
+/* ---- subscriber modal: the projected pipeline ---- */
+.pipeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pipeline li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--panel-edge-soft);
+  flex-wrap: wrap;
+}
+
+.pipeline li:last-child {
+  border-bottom: 0;
+}
+
+.pipeline li.next {
+  background: color-mix(in srgb, var(--accent, #5457e0) 8%, transparent);
+  border-radius: var(--radius-small);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  margin: 0 -0.5rem;
+}
+
+.pipeline-position {
+  min-width: 1.4rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--muted-text);
+  border: 1px solid var(--panel-edge-soft);
+  border-radius: 999px;
+  padding: 0.05rem 0.3rem;
+}
+
+.cadence-note {
+  font-weight: 400;
+  font-size: 0.78rem;
+  margin-left: 0.5rem;
+}
+
+.pipeline-paused {
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--panel-edge);
+  border-left: 3px solid #b4762a;
+  border-radius: var(--radius-small);
+  color: var(--muted-text);
+  font-size: 0.85rem;
+}
+
 /* ---- posts / preview ---- */
 .posts-layout {
   display: grid;

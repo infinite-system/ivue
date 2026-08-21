@@ -245,6 +245,65 @@ function neighborCard(label, post) {
   );
 }
 
+// ---- the author card (shared by post emails and the welcome email) --
+
+function authorCard() {
+  return (
+    `<div style="margin:22px 0 0;padding:16px 18px;background:${CARD_BG};border:1px solid ${EDGE};border-radius:12px">` +
+    `<table role="presentation" style="border-collapse:collapse"><tr>` +
+    `<td style="vertical-align:top;padding:2px 14px 0 0">` +
+    `<img src="${SITE}/avatars/evgeny.png" alt="Evgeny Kalashnikov" width="54" height="54" style="display:block;border-radius:50%;border:0" />` +
+    `</td>` +
+    `<td style="vertical-align:top">` +
+    `<div style="font-size:10.5px;letter-spacing:.12em;color:${MUTED};margin:0 0 3px">AUTHOR</div>` +
+    `<div style="font-size:15px;font-weight:600;color:${HEADING};margin:0 0 2px">Evgeny Kalashnikov</div>` +
+    `<div style="font-size:12.5px;color:${MUTED};margin:0 0 4px">Lead Software Engineer @ Blackline, Adhoc Studio</div>` +
+    `<div style="font-size:12.5px;line-height:1.55;color:${TEXT};margin:0 0 6px">Three years reducing Vue reactivity into <a href="${SITE}" style="color:${LINK};text-decoration:none">ivue</a>'s one kilobyte &mdash; then watching AI agents build <a href="${SITE}/examples/invar" style="color:${LINK};text-decoration:none">Invar</a>, a 94,000-line terminal IDE, on top of it.</div>` +
+    `<div style="font-size:12.5px">` +
+    `<a href="https://x.com/evgenykalash" style="color:${LINK};text-decoration:none">X</a>` +
+    `&nbsp;&middot;&nbsp; <a href="https://github.com/infinite-system" style="color:${LINK};text-decoration:none">GitHub</a>` +
+    `&nbsp;&middot;&nbsp; <a href="https://www.linkedin.com/in/evgeny-kalashnikov/" style="color:${LINK};text-decoration:none">LinkedIn</a>` +
+    `&nbsp;&middot;&nbsp; <a href="https://forms.gle/Z7L5N8hBYFoLQ8wA9" style="color:${LINK};text-decoration:none">Email</a>` +
+    `</div></td></tr></table></div>`
+  );
+}
+
+// ---- the welcome email ----------------------------------------------
+// Sent once, the moment someone subscribes — rendered at build time
+// like every other email (the Worker fetches /welcome-email.html and
+// fills {{UNSUBSCRIBE_URL}}). It sets the contract: every post from
+// the archive, one at a time, oldest first.
+
+export function renderWelcomeEmail(allPosts) {
+  const newest = allPosts[allPosts.length - 1] ?? null;
+  const first = allPosts[0] ?? null;
+  return `<!doctype html>
+<html style="color-scheme:dark"><head>
+<meta name="color-scheme" content="dark" />
+<meta name="supported-color-schemes" content="dark" />
+</head><body style="margin:0;background:${PAGE_BG};font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+  <div style="max-width:560px;margin:0 auto;padding:32px 20px 48px;background:${PAGE_BG}">
+    <div style="background:${CARD_BG};border:1px solid ${EDGE};border-radius:12px;overflow:hidden">
+      <div style="padding:30px 32px 30px">
+        <div style="font-size:11px;letter-spacing:.16em;color:${MUTED};margin:0 0 10px">IVUE NEWSLETTER</div>
+        <h1 style="margin:0 0 14px;font-size:24px;line-height:1.3;color:${HEADING}">Welcome aboard.</h1>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${TEXT}">You're on the list. Here's the deal: the ivue blog is a running record of reducing Vue reactivity to its invariant core &mdash; measured numbers, real patterns, no fluff. You'll receive <strong style="color:${HEADING}">every post from the archive, one at a time</strong>, from the beginning &mdash; the story in the order it happened.</p>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${TEXT}">Your first post lands with the next delivery pass. Can't wait? The whole archive is open:</p>
+        <a href="${SITE}/blog/" style="display:inline-block;margin:2px 0 6px;background:${BUTTON_BG};color:#ffffff;text-decoration:none;font-size:14.5px;font-weight:600;padding:11px 22px;border-radius:8px">Browse all posts &rarr;</a>
+      </div>
+    </div>
+    ${authorCard()}
+    ${first ? `<p style="margin:26px 0 10px;font-size:11.5px;letter-spacing:.14em;color:${MUTED}">UP FIRST FOR YOU</p>${neighborCard('WHERE THE STORY STARTS', first)}` : ''}
+    ${newest && newest !== first ? neighborCard('LATEST POST', newest) : ''}
+    <p style="margin:20px 0 8px;font-size:12px;line-height:1.6;color:${FAINT}">
+      You're receiving the ivue newsletter — every post from the archive,
+      one at a time. <a href="${SITE}/blog/" style="color:${MUTED}">Browse all posts</a>
+      &nbsp;&middot;&nbsp; <a href="{{UNSUBSCRIBE_URL}}" style="color:${MUTED}">Unsubscribe</a>
+    </p>
+  </div>
+</body></html>`;
+}
+
 // ---- the complete email ---------------------------------------------
 // posts: full list sorted oldest-first; the neighbors are chronological.
 
@@ -280,25 +339,7 @@ export async function renderEmail(post, allPosts) {
         <a href="${postUrl}" style="display:inline-block;margin:6px 0 0;background:${BUTTON_BG};color:#ffffff;text-decoration:none;font-size:14.5px;font-weight:600;padding:11px 22px;border-radius:8px">Read on ivue.dev &rarr;</a>
       </div>
     </div>
-    <div style="margin:22px 0 0;padding:16px 18px;background:${CARD_BG};border:1px solid ${EDGE};border-radius:12px">
-      <table role="presentation" style="border-collapse:collapse"><tr>
-        <td style="vertical-align:top;padding:2px 14px 0 0">
-          <img src="${SITE}/avatars/evgeny.png" alt="Evgeny Kalashnikov" width="54" height="54" style="display:block;border-radius:50%;border:0" />
-        </td>
-        <td style="vertical-align:top">
-          <div style="font-size:10.5px;letter-spacing:.12em;color:${MUTED};margin:0 0 3px">AUTHOR</div>
-          <div style="font-size:15px;font-weight:600;color:${HEADING};margin:0 0 2px">Evgeny Kalashnikov</div>
-          <div style="font-size:12.5px;color:${MUTED};margin:0 0 4px">Lead Software Engineer @ Blackline, Adhoc Studio</div>
-          <div style="font-size:12.5px;line-height:1.55;color:${TEXT};margin:0 0 6px">Three years reducing Vue reactivity into <a href="${SITE}" style="color:${LINK};text-decoration:none">ivue</a>'s one kilobyte &mdash; then watching AI agents build <a href="${SITE}/examples/invar" style="color:${LINK};text-decoration:none">Invar</a>, a 94,000-line terminal IDE, on top of it.</div>
-          <div style="font-size:12.5px">
-            <a href="https://x.com/evgenykalash" style="color:${LINK};text-decoration:none">X</a>
-            &nbsp;&middot;&nbsp; <a href="https://github.com/infinite-system" style="color:${LINK};text-decoration:none">GitHub</a>
-            &nbsp;&middot;&nbsp; <a href="https://www.linkedin.com/in/evgeny-kalashnikov/" style="color:${LINK};text-decoration:none">LinkedIn</a>
-            &nbsp;&middot;&nbsp; <a href="https://forms.gle/Z7L5N8hBYFoLQ8wA9" style="color:${LINK};text-decoration:none">Email</a>
-          </div>
-        </td>
-      </tr></table>
-    </div>
+    ${authorCard()}
     ${older || newer ? `<p style="margin:26px 0 10px;font-size:11.5px;letter-spacing:.14em;color:${MUTED}">MORE FROM THE BLOG</p>` : ''}
     ${neighborCard('NEWER POST', newer)}
     ${neighborCard('OLDER POST', older)}

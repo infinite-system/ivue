@@ -3,3 +3,4 @@ node_modules
 .vitepress/dist
 *.log
 blog-index.json
+public/welcome-email.html

@@ -29,6 +29,27 @@ for (const entry of readdirSync(blogDirectory).sort()) {
   dates[slug] = { date, timestamp: Number(timestamp) };
 }
 
+// Posts added in ONE commit share one git timestamp, which would leave
+// their relative order undefined (every consumer would fall back to
+// filename order). Spread each tied group across one-minute steps so
+// chronology matches the blog page's displayed order: the index sorts
+// newest-first with a stable sort over alphabetical input, so within a
+// tied group the alphabetically FIRST slug displays on top — it gets
+// the LATEST timestamp, the bottom-most keeps the commit's own. The
+// calendar date is untouched (minutes never cross a day boundary).
+const slugsByTimestamp = new Map();
+for (const [slug, record] of Object.entries(dates)) {
+  const group = slugsByTimestamp.get(record.timestamp) ?? [];
+  group.push(slug);
+  slugsByTimestamp.set(record.timestamp, group);
+}
+for (const [timestamp, group] of slugsByTimestamp) {
+  if (group.length < 2) continue;
+  group.sort();
+  for (const [position, slug] of group.entries())
+    dates[slug].timestamp = timestamp + (group.length - 1 - position) * 60;
+}
+
 const outputPath = resolve(blogDirectory, 'blog-dates.json');
 writeFileSync(outputPath, JSON.stringify(dates, null, 2) + '\n');
 console.log(`Wrote ${Object.keys(dates).length} post dates to ${outputPath}`);

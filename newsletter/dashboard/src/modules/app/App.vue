@@ -2,6 +2,7 @@
 import { onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import { AppStore } from './AppStore';
+import SubscriberModal from '../subscriber/SubscriberModal.vue';
 
 const app = AppStore.use();
 const {
@@ -87,6 +88,8 @@ onMounted(() => app.probe());
 
     <main v-else class="content">
       <RouterView />
+      <!-- any email address anywhere opens this — rides ?subscriber= -->
+      <SubscriberModal />
     </main>
 
     <div class="toasts" aria-live="polite">

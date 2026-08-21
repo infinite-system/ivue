@@ -4,15 +4,14 @@ import { Api } from '../platform/Api';
 import type {
   AudiencePage,
   ListSummary,
-  SubscriberDetail,
   SubscriberRow,
 } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 
 // The subscribers table: server-side pagination and search, list filter,
-// bulk selection with unsubscribe/resubscribe/remove, add-subscriber
-// form, and the per-subscriber lens (memberships + every email they have
-// already received).
+// bulk selection with unsubscribe/resubscribe/remove, and the
+// add-subscriber form. A row's email opens the app-wide subscriber
+// modal (subscriber/SubscriberModal.vue) via the route query.
 class $SubscribersModel {
   constructor() {
     this.refresh();
@@ -71,19 +70,6 @@ class $SubscribersModel {
 
   get addList() {
     return ref('newsletter');
-  }
-
-  // ---- detail lens ----
-  get detail() {
-    return shallowRef<SubscriberDetail | null>(null);
-  }
-
-  get detailLoading() {
-    return ref(false);
-  }
-
-  get drawerOpen() {
-    return Boolean(this.detail.value) || this.detailLoading.value;
   }
 
   // ---- derived ----
@@ -238,20 +224,6 @@ class $SubscribersModel {
     }
   }
 
-  async openDetail(email: string) {
-    this.detailLoading.value = true;
-    try {
-      this.detail.value = await Api.Class.subscriber(email);
-    } catch (error) {
-      this.$app.reportFailure(error);
-    } finally {
-      this.detailLoading.value = false;
-    }
-  }
-
-  closeDetail() {
-    this.detail.value = null;
-  }
 }
 
 export namespace SubscribersModel {

@@ -18,9 +18,6 @@ const {
   addEmail,
   addName,
   addList,
-  // detail lens
-  detail,
-  detailLoading,
 } = model;
 </script>
 
@@ -122,7 +119,7 @@ const {
               />
             </td>
             <td>
-              <button class="linklike" @click="model.openDetail(row.email)">
+              <button class="linklike" @click="app.openSubscriber(row.email)">
                 {{ row.email }}
               </button>
             </td>
@@ -152,45 +149,6 @@ const {
       <button :disabled="!model.hasNextPage" @click="model.nextPage()">
         Next →
       </button>
-    </div>
-
-
-    <div v-if="model.drawerOpen" class="drawer-backdrop" @click.self="model.closeDetail()">
-      <aside class="drawer card" aria-label="Subscriber detail">
-        <p v-if="detailLoading" class="muted">Loading…</p>
-        <template v-else-if="detail">
-          <header class="drawer-head">
-            <h2>{{ detail.email }}</h2>
-            <button class="ghost" @click="model.closeDetail()">Close</button>
-          </header>
-          <h3>Lists</h3>
-          <ul class="memberships">
-            <li v-for="membership in detail.memberships" :key="membership.list">
-              <span class="pill">{{ membership.list }}</span>
-              <span v-if="membership.unsubscribedAt" class="status off">
-                unsubscribed {{ Format.Class.date(membership.unsubscribedAt) }}
-              </span>
-              <span v-else class="status on">active</span>
-              <span class="muted">
-                joined {{ Format.Class.date(membership.subscribedAt) }}
-              </span>
-            </li>
-          </ul>
-          <h3>Emails received ({{ detail.history.length }})</h3>
-          <p v-if="!detail.history.length" class="muted">Nothing sent yet.</p>
-          <ol class="history">
-            <li v-for="sent in detail.history" :key="sent.slug">
-              <button
-                class="linklike slug"
-                @click="app.openEmailPreview(sent.slug)"
-              >
-                {{ sent.slug }}
-              </button>
-              <span class="muted">{{ Format.Class.dateTime(sent.sentAt) }}</span>
-            </li>
-          </ol>
-        </template>
-      </aside>
     </div>
   </section>
 </template>

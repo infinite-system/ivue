@@ -52,17 +52,25 @@ describe('PublicApi', () => {
     const active = await Audience.Class.active(env, 'newsletter');
     expect(active[0]).toEqual({ email: 'ada@ivue.dev', name: 'Ada' });
 
-    // the notification rode waitUntil: transactional stream, operator inbox
+    // two sends rode waitUntil: the subscriber's welcome email and the
+    // operator's transactional ping
     await settle();
-    expect(postmarkCalls.notifications).toHaveLength(1);
-    expect(postmarkCalls.notifications[0]).toMatchObject({
-      To: 'evgeny@ivue.dev',
+    expect(postmarkCalls.notifications).toHaveLength(2);
+    const welcome = postmarkCalls.notifications.find(
+      (message) => message.To === 'ada@ivue.dev',
+    );
+    expect(welcome).toMatchObject({
+      Subject: 'Welcome to the ivue newsletter',
+      MessageStream: 'newsletter',
+    });
+    const operatorPing = postmarkCalls.notifications.find(
+      (message) => message.To === 'evgeny@ivue.dev',
+    );
+    expect(operatorPing).toMatchObject({
       Subject: 'New subscriber: ada@ivue.dev',
       MessageStream: 'outbound',
     });
-    expect(postmarkCalls.notifications[0].TextBody).toContain(
-      'Active audience: 1',
-    );
+    expect(operatorPing?.TextBody).toContain('Active audience: 1');
   });
 
   it('a notification failure never breaks the signup', async () => {

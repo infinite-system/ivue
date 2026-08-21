@@ -32,6 +32,78 @@ class $Delivery {
     return 500;
   }
 
+  // The welcome email's ledger slug. Not a blog post: it never appears
+  // in the catalog, so the drip skips it as content — but its ledger row
+  // sets lastSentAt, which makes the FIRST dripped post wait one full
+  // cadence after signup instead of arriving the same day.
+  static get WELCOME_SLUG() {
+    return 'welcome';
+  }
+
+  // The signup welcome email — content rendered at SITE build time
+  // (blog-email-renderer.mjs → /welcome-email.html), fetched here and
+  // personalized with the unsubscribe link only. Sent once per address,
+  // ever: the ledger row is the guard, so a returning subscriber
+  // resumes silently. Best-effort (rides waitUntil like the operator
+  // ping) — a failure logs and the signup stands.
+  static async sendWelcome(env: Env, subscriber: Subscriber): Promise<void> {
+    try {
+      if (await Ledger.Class.hasSend(env, subscriber.email, this.WELCOME_SLUG))
+        return;
+      const response = await fetch(`${env.SITE_ORIGIN}/welcome-email.html`);
+      if (!response.ok)
+        throw new Error(`welcome-email.html ${response.status}`);
+      const template = await response.text();
+      const unsubscribe = await Security.Class.unsubscribeUrl(
+        subscriber.email,
+        env,
+      );
+      const send = await fetch(this.POSTMARK_EMAIL_URL, {
+        method: 'POST',
+        headers: {
+          'X-Postmark-Server-Token': env.POSTMARK_SERVER_TOKEN,
+          'content-type': 'application/json',
+          accept: 'application/json',
+        },
+        body: JSON.stringify({
+          From: `${env.SENDER_NAME} <${env.SENDER_EMAIL}>`,
+          ReplyTo: env.REPLY_TO,
+          To: subscriber.email,
+          Subject: 'Welcome to the ivue newsletter',
+          HtmlBody: template.replaceAll('{{UNSUBSCRIBE_URL}}', unsubscribe),
+          MessageStream: env.POSTMARK_STREAM,
+          Headers: [
+            { Name: 'List-Unsubscribe', Value: `<${unsubscribe}>` },
+            {
+              Name: 'List-Unsubscribe-Post',
+              Value: 'List-Unsubscribe=One-Click',
+            },
+          ],
+        }),
+      });
+      const outcome = (await send.json()) as PostmarkOutcome;
+      if (!send.ok || outcome.ErrorCode !== 0)
+        throw new Error(
+          `Postmark ${send.status}: ${outcome.Message ?? 'welcome rejected'}`,
+        );
+      await Ledger.Class.record(env, [
+        {
+          email: subscriber.email,
+          slug: this.WELCOME_SLUG,
+          sentAt: Http.Class.nowSeconds(),
+        },
+      ]);
+    } catch (error) {
+      console.error(
+        JSON.stringify({
+          event: 'welcome_send_failed',
+          recipient: subscriber.email,
+          error: String(error),
+        }),
+      );
+    }
+  }
+
   // One line to the operator for every signup. Best-effort by design:
   // a notification failure is logged and never surfaces to the
   // subscriber — the signup itself already committed.

@@ -60,6 +60,10 @@ export function installFetchStub(
       const url = String(input);
       if (url.endsWith('/blog-index.json'))
         return new Response(JSON.stringify(options.posts ?? []));
+      if (url.endsWith('/welcome-email.html'))
+        return new Response(
+          '<html><body>Welcome — <a href="{{UNSUBSCRIBE_URL}}">unsubscribe</a></body></html>',
+        );
       if (url.includes('api.x.com/2/media/upload')) {
         postmarkCalls.mediaUploads.push(url);
         return new Response(

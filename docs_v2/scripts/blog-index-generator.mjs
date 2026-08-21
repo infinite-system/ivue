@@ -12,7 +12,11 @@
 import { readdirSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadPostsWithSource, renderEmail } from './blog-email-renderer.mjs';
+import {
+  loadPostsWithSource,
+  renderEmail,
+  renderWelcomeEmail,
+} from './blog-email-renderer.mjs';
 
 const SITE = 'https://ivue.dev';
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -94,3 +98,10 @@ writeFileSync(outputPath, JSON.stringify(catalog, null, 2) + '\n');
 console.log(
   `blog index: ${catalog.length} posts (email HTML + embeds + plain text) → docs_v2/public/blog-index.json`,
 );
+
+// The signup welcome email rides the same build-time pipeline: the
+// Worker fetches https://ivue.dev/welcome-email.html on each signup and
+// fills the per-recipient {{UNSUBSCRIBE_URL}} placeholder.
+const welcomePath = resolve(scriptDirectory, '../public/welcome-email.html');
+writeFileSync(welcomePath, renderWelcomeEmail(posts));
+console.log('welcome email → docs_v2/public/welcome-email.html');

@@ -2,6 +2,7 @@ import { Static } from 'ivue/extras';
 import { Http } from '../platform/Http';
 import { Security } from '../platform/Security';
 import { Posts } from '../content/Posts';
+import type { Post } from '../content/Posts';
 import { Settings } from '../config/Settings';
 import { XPoster } from '../socials/XPoster';
 import { Tweets } from '../socials/Tweets';
@@ -89,13 +90,53 @@ class $AdminApi {
   static async subscriber(url: URL, env: Env): Promise<Response> {
     const address = (url.searchParams.get('email') ?? '').toLowerCase();
     if (!address) return Http.Class.json({ error: 'email required' }, 400);
-    const [memberships, history] = await Promise.all([
+    const [memberships, history, catalog, cadenceHours] = await Promise.all([
       Audience.Class.memberships(env, address),
       Ledger.Class.historyFor(env, address),
+      Posts.Class.load(env),
+      Settings.Class.cadenceHours(env),
     ]);
     if (!memberships.length)
       return Http.Class.json({ error: 'No such subscriber' }, 404);
-    return Http.Class.json({ email: address, memberships, history });
+    return Http.Class.json({
+      email: address,
+      memberships,
+      history,
+      cadenceHours,
+      upcoming: this.upcomingFor(
+        catalog,
+        history,
+        cadenceHours * 3600,
+        Http.Class.nowSeconds(),
+      ),
+    });
+  }
+
+  // The address's remaining pipeline: every catalog post it has not yet
+  // received, in drip order, each with its projected send time — the
+  // drip's own rule (one email per cadence, starting one cadence after
+  // the last send) unrolled to the end of the archive.
+  static upcomingFor(
+    catalog: Post[],
+    history: { slug: string; sentAt: number }[],
+    cadenceSeconds: number,
+    now: number,
+  ): UpcomingSend[] {
+    const sent = new Set(history.map((row) => row.slug));
+    const lastSentAt = history.reduce(
+      (latest, row) => Math.max(latest, row.sentAt),
+      0,
+    );
+    const firstDueAt = lastSentAt
+      ? Math.max(now, lastSentAt + cadenceSeconds)
+      : now;
+    return catalog
+      .filter((post) => !sent.has(post.slug))
+      .map((post, position) => ({
+        slug: post.slug,
+        title: post.title,
+        projectedAt: firstDueAt + position * cadenceSeconds,
+      }));
   }
 
   static async add(request: Request, env: Env): Promise<Response> {
@@ -197,6 +238,19 @@ class $AdminApi {
   // iframe — unsubscribe placeholder neutralized.
   static async preview(url: URL, env: Env): Promise<Response> {
     const slug = url.searchParams.get('slug') ?? '';
+    // the welcome email is a ledger slug but not a catalog post — it
+    // previews from its own build-time asset
+    if (slug === Delivery.Class.WELCOME_SLUG) {
+      const welcome = await fetch(`${env.SITE_ORIGIN}/welcome-email.html`);
+      if (!welcome.ok)
+        return Http.Class.json({ error: 'welcome-email.html missing' }, 404);
+      return Http.Class.html(
+        (await welcome.text()).replaceAll(
+          '{{UNSUBSCRIBE_URL}}',
+          '#unsubscribe-preview',
+        ),
+      );
+    }
     const catalog = await Posts.Class.load(env);
     const post = Posts.Class.find(catalog, slug);
     if (!post)
@@ -461,4 +515,10 @@ class $AdminApi {
 export namespace AdminApi {
   export const $Class = Static($AdminApi);
   export let Class = $Class;
+}
+
+export interface UpcomingSend {
+  slug: string;
+  title: string;
+  projectedAt: number;
 }

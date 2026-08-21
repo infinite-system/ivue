@@ -196,6 +196,37 @@ Preview any post's email:
 node docs_v2/scripts/blog-email-renderer.mjs <slug> > /tmp/email.html
 ```
 
+Drip ORDER is the catalog's timestamp order. Posts added in one commit
+share a git timestamp, so `sync:blog-dates` spreads such a tie across
+one-minute steps matching the blog page's displayed order — timestamps
+stay unique and every consumer (blog page, drip, neighbor cards) agrees
+on one chronology.
+
+## Welcome email (on signup)
+
+`/subscribe` sends a welcome email immediately (best-effort, rides
+`waitUntil`). Content is rendered at SITE build time like every other
+email — `blog-index-generator.mjs` writes
+`https://ivue.dev/welcome-email.html` from
+`renderWelcomeEmail()` in `blog-email-renderer.mjs`; the Worker fetches
+it and fills `{{UNSUBSCRIBE_URL}}`. It ledgers as slug `welcome`, which
+does double duty: a returning subscriber is never re-welcomed, and the
+welcome's `sent_at` makes the FIRST dripped post wait one full cadence
+after signup. Admin-added subscribers (`/admin/subscribers/add`) get NO
+welcome — only the public form triggers it. Preview:
+`/admin/preview?slug=welcome` (also clickable anywhere the dashboard
+shows the `welcome` slug).
+
+## Subscriber pipeline (dashboard)
+
+Any email address in the dashboard (Subscribers table, Sent log) opens
+the subscriber modal — URL-addressable as `?subscriber=<email>` on any
+route. It shows lists/status, full send history, and "Coming up": every
+catalog post the address hasn't received, in drip order, each with its
+projected send time (`GET /admin/subscriber` unrolls the drip's own
+rule — one email per cadence from the last send — to the end of the
+archive). Unsubscribed addresses show a "pipeline paused" banner.
+
 ## Notes
 
 - Per-message batch outcomes are honored: only `ErrorCode 0` (accepted)

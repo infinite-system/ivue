@@ -253,10 +253,18 @@ export interface SendLogPage {
   offset: number;
 }
 
+export interface UpcomingSend {
+  slug: string;
+  title: string;
+  projectedAt: number;
+}
+
 export interface SubscriberDetail {
   email: string;
   memberships: SubscriberRow[];
   history: SendHistoryRow[];
+  cadenceHours: number;
+  upcoming: UpcomingSend[];
 }
 
 export interface ListSummary {

@@ -35,6 +35,21 @@ class $Ledger {
     return results;
   }
 
+  // Has this address already received this slug? — the welcome-email
+  // guard (a returning subscriber is never re-welcomed).
+  static async hasSend(
+    env: Env,
+    address: string,
+    slug: string,
+  ): Promise<boolean> {
+    const row = await env.DB.prepare(
+      'SELECT 1 AS present FROM sends WHERE email = ? AND slug = ? LIMIT 1',
+    )
+      .bind(address, slug)
+      .first<{ present: number }>();
+    return Boolean(row);
+  }
+
   static async record(
     env: Env,
     entries: { email: string; slug: string; sentAt: number }[],

@@ -55,8 +55,11 @@ class $PublicApi {
       .slice(0, 80);
     const list = String(body.list ?? '').trim() || Audience.Class.DEFAULT_LIST;
     await Audience.Class.enroll(env, address, name, list);
-    // operator ping rides waitUntil — the subscriber's response never
-    // waits on it, and its failure never surfaces
+    // welcome email + operator ping ride waitUntil — the subscriber's
+    // response never waits on them, and their failures never surface
+    context.waitUntil(
+      Delivery.Class.sendWelcome(env, { email: address, name }),
+    );
     context.waitUntil(
       Delivery.Class.notifySignup(env, { email: address, name }, list),
     );

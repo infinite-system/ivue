@@ -53,7 +53,11 @@ const {
           </tr>
           <tr v-for="row in rows" v-else :key="row.email + row.slug">
             <td>{{ Format.Class.dateTime(row.sentAt) }}</td>
-            <td>{{ row.email }}</td>
+            <td>
+              <button class="linklike" @click="app.openSubscriber(row.email)">
+                {{ row.email }}
+              </button>
+            </td>
             <td>
               <button
                 class="linklike slug"

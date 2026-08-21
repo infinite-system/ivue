@@ -45,20 +45,73 @@ describe('AdminApi', () => {
     expect(page.rows[0].email).toBe('ada@ivue.dev');
   });
 
-  it('subscriber detail returns memberships plus full send history', async () => {
+  it('subscriber detail returns memberships, history, and the projected pipeline', async () => {
     const env = makeTestEnv();
+    installFetchStub({
+      posts: [makePost('first-post', 1), makePost('second-post', 2), makePost('third-post', 3)],
+    });
     await Audience.Class.enroll(env, 'ada@ivue.dev', 'Ada', 'newsletter');
     await Ledger.Class.record(env, [
       { email: 'ada@ivue.dev', slug: 'first-post', sentAt: 100 },
     ]);
     const detail = (await (
       await call('/admin/subscriber?email=ada@ivue.dev', env)
-    ).json()) as { memberships: unknown[]; history: { slug: string }[] };
+    ).json()) as {
+      memberships: unknown[];
+      history: { slug: string }[];
+      cadenceHours: number;
+      upcoming: { slug: string; title: string; projectedAt: number }[];
+    };
     expect(detail.memberships).toHaveLength(1);
     expect(detail.history[0].slug).toBe('first-post');
+    // the pipeline: unsent posts in drip order, one cadence apart
+    expect(detail.upcoming.map((entry) => entry.slug)).toEqual([
+      'second-post',
+      'third-post',
+    ]);
+    const cadenceSeconds = detail.cadenceHours * 3600;
+    expect(
+      detail.upcoming[1].projectedAt - detail.upcoming[0].projectedAt,
+    ).toBe(cadenceSeconds);
+    // last send was long overdue, so the next one projects to ~now
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    expect(detail.upcoming[0].projectedAt).toBeGreaterThanOrEqual(
+      nowSeconds - 5,
+    );
+    expect(detail.upcoming[0].projectedAt).toBeLessThanOrEqual(nowSeconds + 5);
     expect((await call('/admin/subscriber?email=ghost@x.dev', env)).status).toBe(
       404,
     );
+  });
+
+  it('upcomingFor: a fresh address projects from now; a recent send waits out the cadence', () => {
+    const catalog = [makePost('first-post', 1), makePost('second-post', 2)];
+    const cadenceSeconds = 48 * 3600;
+    const now = 1_000_000;
+    const fresh = AdminApi.Class.upcomingFor(catalog, [], cadenceSeconds, now);
+    expect(fresh.map((entry) => entry.projectedAt)).toEqual([
+      now,
+      now + cadenceSeconds,
+    ]);
+    const recentlyServed = AdminApi.Class.upcomingFor(
+      catalog,
+      [{ slug: 'first-post', sentAt: now - 3600 }],
+      cadenceSeconds,
+      now,
+    );
+    expect(recentlyServed).toHaveLength(1);
+    expect(recentlyServed[0].slug).toBe('second-post');
+    expect(recentlyServed[0].projectedAt).toBe(now - 3600 + cadenceSeconds);
+  });
+
+  it('preview serves the welcome email from its own build-time asset', async () => {
+    const env = makeTestEnv();
+    installFetchStub({});
+    const response = await call('/admin/preview?slug=welcome', env);
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain('Welcome');
+    expect(html).not.toContain('{{UNSUBSCRIBE_URL}}');
   });
 
   it('add, bulk unsubscribe/resubscribe, and remove round-trip', async () => {
