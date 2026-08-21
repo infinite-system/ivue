@@ -9,7 +9,7 @@ const {
   slug,
   draft,
   mode,
-  threadTweets,
+  threadSegments,
   threadLoading,
   xConfigured,
   postedUrl,
@@ -81,7 +81,10 @@ const {
           </label>
         </div>
 
-        <div v-if="model.availableImages.length" class="image-picker">
+        <div
+          v-if="model.availableImages.length && !model.isThreadMode"
+          class="image-picker"
+        >
           <label>Images (first tweet, up to {{ model.MAXIMUM_IMAGES }})</label>
           <div class="image-picker__grid">
             <label
@@ -110,7 +113,7 @@ const {
 
         <template v-else>
           <div class="thread-head">
-            <label>Thread — {{ threadTweets.length }} tweets</label>
+            <label>Thread — {{ threadSegments.length }} tweets</label>
             <button
               class="ghost"
               type="button"
@@ -121,17 +124,40 @@ const {
             </button>
           </div>
           <div
-            v-for="(tweet, index) in threadTweets"
+            v-for="(segment, index) in threadSegments"
             :key="index"
             class="thread-segment"
           >
-            <textarea v-model="threadTweets[index]" rows="3"></textarea>
+            <textarea v-model="threadSegments[index].text" rows="3"></textarea>
+            <div
+              v-if="model.availableImages.length"
+              class="image-picker__grid image-picker__grid--mini"
+            >
+              <label
+                v-for="imageUrl in model.availableImages"
+                :key="imageUrl"
+                class="image-picker__cell"
+                :class="{ selected: model.segmentHasImage(index, imageUrl) }"
+              >
+                <input
+                  type="checkbox"
+                  :checked="model.segmentHasImage(index, imageUrl)"
+                  @change="model.toggleSegmentImage(index, imageUrl)"
+                />
+                <img :src="imageUrl" alt="" loading="lazy" />
+              </label>
+            </div>
             <div class="thread-segment__meta">
               <span
                 class="muted counter"
                 :class="{ error: model.threadRemaining(index) < 0 }"
               >
                 {{ model.threadRemaining(index) }} left
+                <template v-if="segment.imageUrls.length">
+                  · {{ segment.imageUrls.length }} image{{
+                    segment.imageUrls.length > 1 ? 's' : ''
+                  }}
+                </template>
               </span>
               <button
                 class="ghost"
@@ -148,7 +174,7 @@ const {
             :disabled="!model.canAddThreadTweet"
             @click="model.addThreadTweet()"
           >
-            + Add tweet ({{ threadTweets.length }}/{{ model.MAXIMUM_THREAD_TWEETS }})
+            + Add tweet ({{ threadSegments.length }}/{{ model.MAXIMUM_THREAD_TWEETS }})
           </button>
         </template>
 

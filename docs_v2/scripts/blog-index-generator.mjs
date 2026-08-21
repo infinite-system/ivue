@@ -18,16 +18,29 @@ const SITE = 'https://ivue.dev';
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const outputPath = resolve(scriptDirectory, '../public/blog-index.json');
 const embedsDirectory = resolve(scriptDirectory, '../public/blog/embeds');
+const codeDirectory = resolve(scriptDirectory, '../public/blog/code');
 
-// committed embed screenshots, grouped by slug (<slug>-embed-<n>.png)
-const embedsBySlug = new Map();
-for (const entry of readdirSync(embedsDirectory).sort()) {
-  const match = entry.match(/^(.+)-embed-\d+\.png$/);
-  if (!match) continue;
-  const urls = embedsBySlug.get(match[1]) ?? [];
-  urls.push(`${SITE}/blog/embeds/${entry}`);
-  embedsBySlug.set(match[1], urls);
+// committed screenshots, grouped by slug — numeric sort keeps -10
+// after -9, matching document order
+function shotsBySlug(directory, marker, urlPrefix) {
+  const groups = new Map();
+  const entries = readdirSync(directory)
+    .map((entry) => entry.match(new RegExp(`^(.+)-${marker}-(\\d+)\\.png$`)))
+    .filter(Boolean)
+    .sort((first, second) =>
+      first[1] === second[1]
+        ? Number(first[2]) - Number(second[2])
+        : first[1].localeCompare(second[1]),
+    );
+  for (const match of entries) {
+    const urls = groups.get(match[1]) ?? [];
+    urls.push(`${SITE}/${urlPrefix}/${match[0]}`);
+    groups.set(match[1], urls);
+  }
+  return groups;
 }
+const embedsBySlug = shotsBySlug(embedsDirectory, 'embed', 'blog/embeds');
+const codeBySlug = shotsBySlug(codeDirectory, 'code', 'blog/code');
 
 // The body as plain text: markdown noise stripped, code fences and
 // embeds become short markers, links keep their words. Paragraphs stay
@@ -38,6 +51,10 @@ function plainText(source) {
     .replace(/<BlogPostDate \/>/g, '')
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/^# .*$/m, '') // the H1 duplicates the title
+    // a code-group renders ONE visible block (its active tab), and the
+    // code shots follow visibility — the whole group is one marker;
+    // standalone fences (all visible) stay one marker each
+    .replace(/^::: ?code-group[\s\S]*?^:::$/gm, '[code — in the article]')
     .replace(/```[\s\S]*?```/g, '[code — in the article]')
     .replace(/^:::.*$/gm, '')
     .replace(/<ClientOnly>[\s\S]*?<\/ClientOnly>/g, '[live demo — in the article]')
@@ -67,6 +84,7 @@ for (const post of posts) {
     date: post.date,
     timestamp: post.timestamp,
     embedImages: embedsBySlug.get(post.slug) ?? [],
+    codeImages: codeBySlug.get(post.slug) ?? [],
     plainText: plainText(post.source),
     emailHtml: await renderEmail(post, posts),
   });

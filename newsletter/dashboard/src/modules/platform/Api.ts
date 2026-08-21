@@ -176,9 +176,8 @@ class $Api {
   }
 
   static thread(payload: {
-    tweets: string[];
+    tweets: { text: string; imageUrls: string[] }[];
     slug: string;
-    imageUrls: string[];
   }): Promise<{ ok: boolean; tweetIds: string[]; url: string }> {
     return this.post('/admin/thread', payload);
   }
@@ -274,6 +273,7 @@ export interface PostSummary {
   date: string | null;
   timestamp: number;
   embedImages: string[];
+  codeImages: string[];
 }
 
 export interface RecipientOutcome {

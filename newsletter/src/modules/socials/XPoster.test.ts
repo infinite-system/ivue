@@ -77,22 +77,29 @@ describe('XPoster', () => {
     expect(JSON.parse(captured!.body)).toEqual({ text: 'Hello from ivue' });
   });
 
-  it('postThread chains replies and puts images on the first tweet only', async () => {
+  it('postThread chains replies with PER-SEGMENT images', async () => {
     const { installFetchStub } = await import('../../../test/Fixtures');
     const calls = installFetchStub({});
     const result = await XPoster.Class.postThread(
       makeTestEnv({ ...X_ENV, SITE_ORIGIN: 'https://ivue.dev' }),
-      ['First tweet', 'Second tweet', 'Third tweet'],
-      ['https://ivue.dev/blog/first-post.png'],
+      [
+        { text: 'First tweet', imageUrls: ['https://ivue.dev/blog/first-post.png'] },
+        { text: 'Second tweet' },
+        {
+          text: 'Third tweet',
+          imageUrls: ['https://ivue.dev/blog/code/first-post-code-1.png'],
+        },
+      ],
     );
     expect(result.tweetIds).toEqual(['tweet-1', 'tweet-2', 'tweet-3']);
-    expect(calls.mediaUploads).toHaveLength(1);
+    expect(calls.mediaUploads).toHaveLength(2);
     expect(calls.tweetCalls[0].media).toEqual({ media_ids: ['media-1'] });
     expect(calls.tweetCalls[0].reply).toBeUndefined();
     expect(calls.tweetCalls[1].reply).toEqual({
       in_reply_to_tweet_id: 'tweet-1',
     });
     expect(calls.tweetCalls[1].media).toBeUndefined();
+    expect(calls.tweetCalls[2].media).toEqual({ media_ids: ['media-2'] });
     expect(calls.tweetCalls[2].reply).toEqual({
       in_reply_to_tweet_id: 'tweet-2',
     });

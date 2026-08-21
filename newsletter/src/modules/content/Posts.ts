@@ -36,6 +36,7 @@ class $Posts {
       ({ emailHtml: _emailHtml, plainText: _plainText, ...summary }) => ({
         ...summary,
         embedImages: summary.embedImages ?? [],
+        codeImages: summary.codeImages ?? [],
       }),
     );
   }
@@ -55,6 +56,9 @@ export interface Post {
   timestamp: number;
   // committed embed screenshots (the X composer's attachable images)
   embedImages?: string[];
+  // committed code-block screenshots, in document order — aligned 1:1
+  // with plainText's [code] markers
+  codeImages?: string[];
   // plain-text body rendition — the thread composer's raw material
   plainText?: string;
   // the complete email body, rendered at site build time; one
@@ -64,4 +68,5 @@ export interface Post {
 
 export type PostSummary = Omit<Post, 'emailHtml' | 'plainText'> & {
   embedImages: string[];
+  codeImages: string[];
 };

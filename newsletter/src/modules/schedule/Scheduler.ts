@@ -31,9 +31,10 @@ class $Scheduler {
     if (kind === 'tweet' && !(payload as TweetPayload).text?.trim())
       throw new Error('A tweet needs text.');
     if (kind === 'thread') {
-      const texts = this.threadTexts(payload as unknown as ThreadPayload);
-      if (texts.length < 2) throw new Error('A thread needs at least 2 tweets.');
-      if (texts.length > XPoster.Class.MAXIMUM_THREAD_TWEETS)
+      const segments = this.threadSegments(payload as unknown as ThreadPayload);
+      if (segments.length < 2)
+        throw new Error('A thread needs at least 2 tweets.');
+      if (segments.length > XPoster.Class.MAXIMUM_THREAD_TWEETS)
         throw new Error(
           `A thread holds at most ${XPoster.Class.MAXIMUM_THREAD_TWEETS} tweets.`,
         );
@@ -120,17 +121,19 @@ class $Scheduler {
       if (!XPoster.Class.credentialsPresent(env))
         return { error: 'X credentials not configured' };
       if (row.kind === 'thread') {
-        const texts = this.threadTexts(payload as unknown as ThreadPayload);
-        const thread = await XPoster.Class.postThread(
-          env,
-          texts,
-          this.imageUrls(env, payload),
+        const segments = this.threadSegments(
+          payload as unknown as ThreadPayload,
         );
+        const thread = await XPoster.Class.postThread(env, segments);
         const postedAt = Http.Class.nowSeconds();
         for (const [index, tweetId] of thread.tweetIds.entries()) {
           await Tweets.Class.record(
             env,
-            { tweetId, text: texts[index], slug: payload.slug || null },
+            {
+              tweetId,
+              text: segments[index].text,
+              slug: payload.slug || null,
+            },
             postedAt,
           );
         }
@@ -156,10 +159,27 @@ class $Scheduler {
     }
   }
 
-  static threadTexts(payload: ThreadPayload): string[] {
+  // tweets: JSON array of strings (legacy) or {text, imageUrls} objects
+  static threadSegments(
+    payload: ThreadPayload,
+  ): { text: string; imageUrls: string[] }[] {
     try {
-      const texts = JSON.parse(payload.tweets ?? '[]') as string[];
-      return texts.map((text) => String(text).trim()).filter(Boolean);
+      const entries = JSON.parse(payload.tweets ?? '[]') as (
+        | string
+        | { text: string; imageUrls?: string[] }
+      )[];
+      return entries
+        .map((entry) =>
+          typeof entry === 'string'
+            ? { text: entry.trim(), imageUrls: [] }
+            : {
+                text: String(entry.text ?? '').trim(),
+                imageUrls: Array.isArray(entry.imageUrls)
+                  ? entry.imageUrls.map(String)
+                  : [],
+              },
+        )
+        .filter((segment) => segment.text);
     } catch {
       return [];
     }

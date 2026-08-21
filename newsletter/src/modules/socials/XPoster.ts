@@ -42,30 +42,34 @@ class $XPoster {
     return this.postTweet(env, text, { mediaIds });
   }
 
-  // The thread entry point: each tweet replies to the previous one;
-  // images ride the FIRST tweet. A mid-thread failure reports what
-  // already posted so the operator can pick up by hand.
+  // The thread entry point: each tweet replies to the previous one,
+  // and each SEGMENT carries its own images (up to 4 — a code shot or
+  // demo screenshot rides beside the prose that introduces it). A
+  // mid-thread failure reports what already posted so the operator can
+  // pick up by hand.
   static async postThread(
     env: Env,
-    texts: string[],
-    imageUrls: string[] = [],
+    segments: ThreadSegment[],
   ): Promise<ThreadResult> {
-    if (texts.length > this.MAXIMUM_THREAD_TWEETS)
+    if (segments.length > this.MAXIMUM_THREAD_TWEETS)
       throw new Error(
         `A thread holds at most ${this.MAXIMUM_THREAD_TWEETS} tweets.`,
       );
-    const mediaIds = await this.uploadImages(env, imageUrls);
     const tweetIds: string[] = [];
-    for (const [index, text] of texts.entries()) {
+    for (const [index, segment] of segments.entries()) {
       try {
-        const result = await this.postTweet(env, text, {
-          mediaIds: index === 0 ? mediaIds : undefined,
+        const mediaIds = await this.uploadImages(
+          env,
+          segment.imageUrls ?? [],
+        );
+        const result = await this.postTweet(env, segment.text, {
+          mediaIds,
           inReplyTo: tweetIds[index - 1],
         });
         tweetIds.push(result.tweetId);
       } catch (error) {
         throw new Error(
-          `Thread stopped at tweet ${index + 1}/${texts.length}` +
+          `Thread stopped at tweet ${index + 1}/${segments.length}` +
             (tweetIds.length
               ? ` — already posted: ${tweetIds.join(', ')}`
               : '') +
@@ -259,6 +263,11 @@ export namespace XPoster {
 
 export interface TweetResult {
   tweetId: string;
+}
+
+export interface ThreadSegment {
+  text: string;
+  imageUrls?: string[];
 }
 
 export interface ThreadResult {

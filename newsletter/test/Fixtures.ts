@@ -14,6 +14,7 @@ export function makePost(slug: string, timestamp: number): Post {
     date: '2026-08-01',
     timestamp,
     embedImages: [`https://ivue.dev/blog/embeds/${slug}-embed-1.png`],
+    codeImages: [`https://ivue.dev/blog/code/${slug}-code-1.png`],
     plainText: `Plain text of ${slug}.\n\nSecond paragraph of ${slug}.`,
     emailHtml: `<html><body>${slug} — <a href="{{UNSUBSCRIBE_URL}}">unsubscribe</a></body></html>`,
   };

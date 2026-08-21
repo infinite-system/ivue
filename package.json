@@ -1,7 +1,7 @@
 {
   "name": "ivue",
   "version": "2.2.2",
-  "description": "Infinite Vue – Class Based Architecture for Vue 3",
+  "description": "Infinite Vue \u2013 Class Based Architecture for Vue 3",
   "type": "module",
   "exports": {
     ".": {
@@ -47,6 +47,7 @@
     "render:form-header": "node docs_v2/scripts/brand-image-generator.mjs form-header",
     "render:banner": "node docs_v2/scripts/brand-image-generator.mjs blog",
     "render:embeds": "node docs_v2/scripts/blog-embed-shots.mjs",
+    "render:code-shots": "node docs_v2/scripts/blog-code-shots.mjs",
     "sync:blog-dates": "node docs_v2/scripts/blog-dates-generator.mjs",
     "preview:demo": "npm run build:demo && vite preview demo --host",
     "preview:docs": "npm --prefix docs_v2 run preview",

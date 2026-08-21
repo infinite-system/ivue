@@ -325,16 +325,24 @@ class $AdminApi {
         503,
       );
     const body = await Http.Class.readJsonBody<{
-      tweets: string[];
+      tweets: (string | { text: string; imageUrls?: string[] })[];
       slug: string;
-      imageUrls: string[];
     }>(request);
-    const texts = (Array.isArray(body.tweets) ? body.tweets : [])
-      .map((text) => String(text).trim())
-      .filter(Boolean);
-    if (texts.length < 2)
+    const segments = (Array.isArray(body.tweets) ? body.tweets : [])
+      .map((entry) =>
+        typeof entry === 'string'
+          ? { text: entry.trim(), imageUrls: [] }
+          : {
+              text: String(entry.text ?? '').trim(),
+              imageUrls: Array.isArray(entry.imageUrls)
+                ? entry.imageUrls.map(String)
+                : [],
+            },
+      )
+      .filter((segment) => segment.text);
+    if (segments.length < 2)
       return Http.Class.json({ error: 'A thread needs at least 2 tweets.' }, 400);
-    if (texts.length > XPoster.Class.MAXIMUM_THREAD_TWEETS)
+    if (segments.length > XPoster.Class.MAXIMUM_THREAD_TWEETS)
       return Http.Class.json(
         {
           error: `A thread holds at most ${XPoster.Class.MAXIMUM_THREAD_TWEETS} tweets.`,
@@ -342,16 +350,16 @@ class $AdminApi {
         400,
       );
     try {
-      const result = await XPoster.Class.postThread(
-        env,
-        texts,
-        Array.isArray(body.imageUrls) ? body.imageUrls.map(String) : [],
-      );
+      const result = await XPoster.Class.postThread(env, segments);
       const postedAt = Http.Class.nowSeconds();
       for (const [index, tweetId] of result.tweetIds.entries()) {
         await Tweets.Class.record(
           env,
-          { tweetId, text: texts[index], slug: String(body.slug ?? '') || null },
+          {
+            tweetId,
+            text: segments[index].text,
+            slug: String(body.slug ?? '') || null,
+          },
           postedAt,
         );
       }

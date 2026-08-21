@@ -78,8 +78,16 @@ class $XComposeModel {
     return shallowRef<string[]>([]);
   }
 
-  get threadTweets() {
-    return ref<string[]>([]);
+  get threadSegments() {
+    return ref<ThreadSegment[]>([]);
+  }
+
+  get CODE_MARKER() {
+    return '[code — in the article]';
+  }
+
+  get DEMO_MARKER() {
+    return '[live demo — in the article]';
   }
 
   get threadLoading() {
@@ -133,6 +141,7 @@ class $XComposeModel {
     return [
       `https://ivue.dev/blog/${this.pickedPost.slug}.png`,
       ...this.pickedPost.embedImages,
+      ...this.pickedPost.codeImages,
     ];
   }
 
@@ -159,23 +168,26 @@ class $XComposeModel {
   }
 
   threadRemaining(index: number) {
-    return this.TWEET_LIMIT - this.weightedLengthOf(this.threadTweets.value[index] ?? '');
+    return (
+      this.TWEET_LIMIT -
+      this.weightedLengthOf(this.threadSegments.value[index]?.text ?? '')
+    );
   }
 
   get threadValid() {
-    const tweets = this.threadTweets.value;
+    const segments = this.threadSegments.value;
     return (
-      tweets.length >= 2 &&
-      tweets.length <= this.MAXIMUM_THREAD_TWEETS &&
-      tweets.every(
-        (tweet, index) =>
-          tweet.trim().length > 0 && this.threadRemaining(index) >= 0,
+      segments.length >= 2 &&
+      segments.length <= this.MAXIMUM_THREAD_TWEETS &&
+      segments.every(
+        (segment, index) =>
+          segment.text.trim().length > 0 && this.threadRemaining(index) >= 0,
       )
     );
   }
 
   get canAddThreadTweet() {
-    return this.threadTweets.value.length < this.MAXIMUM_THREAD_TWEETS;
+    return this.threadSegments.value.length < this.MAXIMUM_THREAD_TWEETS;
   }
 
   get draftValid() {
@@ -192,7 +204,7 @@ class $XComposeModel {
     if (this.posting.value) return 'Posting…';
     if (!this.xConfigured.value) return 'Credentials pending';
     const noun = this.isThreadMode
-      ? `thread (${this.threadTweets.value.length})`
+      ? `thread (${this.threadSegments.value.length})`
       : 'to X';
     return this.postArmed.value
       ? `Really post ${noun} — click again`
@@ -298,12 +310,47 @@ class $XComposeModel {
   // most MAXIMUM_THREAD_TWEETS - 1 segments (a long article truncates
   // with an ellipsis — the link is the road to the rest); the article
   // link closes the thread; "n/m " numbering is applied last.
-  splitIntoTweets(title: string, plainText: string, url: string): string[] {
+  //
+  // IMAGES: plainText's [code]/[live demo] markers appear in document
+  // order, aligned 1:1 with the committed code/embed screenshots — each
+  // marker attaches its shot to the segment it lands in (the marker
+  // line itself vanishes: the image says it better). Base images
+  // (banner) ride the first segment.
+  splitIntoTweets(
+    title: string,
+    plainText: string,
+    url: string,
+    images: { base?: string[]; code?: string[]; demo?: string[] } = {},
+  ): ThreadSegment[] {
     const limit = this.THREAD_SEGMENT_LIMIT;
     const contentCap = this.MAXIMUM_THREAD_TWEETS - 1;
-    const segments: string[] = [];
+    const segments: ThreadSegment[] = [];
     let current = title;
+    let currentImages: string[] = [...(images.base ?? [])];
     let truncated = false;
+    let codeIndex = 0;
+    let demoIndex = 0;
+    const consumeMarkers = (piece: string): { text: string; attached: string[] } => {
+      const attached: string[] = [];
+      let text = piece;
+      const claim = (marker: string, pool: string[], take: () => number) => {
+        while (text.includes(marker)) {
+          const shot = pool[take()];
+          if (shot) attached.push(shot);
+          text = text.replace(marker, '').trim();
+        }
+      };
+      claim(this.CODE_MARKER, images.code ?? [], () => codeIndex++);
+      claim(this.DEMO_MARKER, images.demo ?? [], () => demoIndex++);
+      return { text, attached };
+    };
+    const pushSegment = () => {
+      segments.push({
+        text: current,
+        imageUrls: [...new Set(currentImages)].slice(0, this.MAXIMUM_IMAGES),
+      });
+      currentImages = [];
+    };
     const pieces = plainText
       .split(/\n\n+/)
       .flatMap((paragraph) =>
@@ -313,7 +360,10 @@ class $XComposeModel {
       )
       .map((piece) => piece.trim())
       .filter(Boolean);
-    for (const piece of pieces) {
+    for (const rawPiece of pieces) {
+      const { text: piece, attached } = consumeMarkers(rawPiece);
+      currentImages.push(...attached);
+      if (!piece) continue; // a marker-only paragraph: image stays, text goes
       const candidate = current ? `${current}\n\n${piece}` : piece;
       if (this.weightedLengthOf(candidate) <= limit) {
         current = candidate;
@@ -324,15 +374,23 @@ class $XComposeModel {
           truncated = true;
           break;
         }
-        segments.push(current);
+        // images attached AFTER the split point belong to the NEW segment
+        const carry = attached;
+        currentImages = currentImages.filter(
+          (image) => !carry.includes(image),
+        );
+        pushSegment();
+        currentImages = carry;
       }
       current =
         this.weightedLengthOf(piece) <= limit
           ? piece
           : piece.slice(0, limit - 1) + '…';
     }
-    if (current && segments.length < contentCap)
-      segments.push(truncated ? `${current} …` : current);
+    if (current && segments.length < contentCap) {
+      current = truncated ? `${current} …` : current;
+      pushSegment();
+    }
     const closer = `Full article:\n${url}`;
     const last = segments[segments.length - 1];
     // the closer folds into the last segment only when it fits AND the
@@ -343,15 +401,16 @@ class $XComposeModel {
       !truncated &&
       segments.length > 1 &&
       last &&
-      this.weightedLengthOf(`${last}\n\n${closer}`) <= limit
+      this.weightedLengthOf(`${last.text}\n\n${closer}`) <= limit
     ) {
-      segments[segments.length - 1] = `${last}\n\n${closer}`;
+      last.text = `${last.text}\n\n${closer}`;
     } else {
-      segments.push(closer);
+      segments.push({ text: closer, imageUrls: [] });
     }
-    return segments.map(
-      (segment, index) => `${index + 1}/${segments.length} ${segment}`,
-    );
+    return segments.map((segment, index) => ({
+      ...segment,
+      text: `${index + 1}/${segments.length} ${segment.text}`,
+    }));
   }
 
   async buildThread() {
@@ -362,10 +421,15 @@ class $XComposeModel {
       const source = await Api.Class.postText(post.slug);
       // pre-push blog-index has no plainText yet — description carries
       const body = source.plainText || post.description;
-      this.threadTweets.value = this.splitIntoTweets(
+      this.threadSegments.value = this.splitIntoTweets(
         post.title,
         body,
         post.url,
+        {
+          base: this.selectedImages.value,
+          code: post.codeImages,
+          demo: post.embedImages,
+        },
       );
     } catch (error) {
       this.$app.reportFailure(error);
@@ -375,13 +439,35 @@ class $XComposeModel {
   }
 
   removeThreadTweet(index: number) {
-    this.threadTweets.value = this.threadTweets.value.filter(
-      (_tweet, position) => position !== index,
+    this.threadSegments.value = this.threadSegments.value.filter(
+      (_segment, position) => position !== index,
     );
   }
 
   addThreadTweet() {
-    this.threadTweets.value = [...this.threadTweets.value, ''];
+    this.threadSegments.value = [
+      ...this.threadSegments.value,
+      { text: '', imageUrls: [] },
+    ];
+  }
+
+  segmentHasImage(index: number, imageUrl: string) {
+    return (this.threadSegments.value[index]?.imageUrls ?? []).includes(
+      imageUrl,
+    );
+  }
+
+  toggleSegmentImage(index: number, imageUrl: string) {
+    const segment = this.threadSegments.value[index];
+    if (!segment) return;
+    const images = segment.imageUrls ?? [];
+    if (images.includes(imageUrl)) {
+      segment.imageUrls = images.filter((image) => image !== imageUrl);
+    } else if (images.length < this.MAXIMUM_IMAGES) {
+      segment.imageUrls = [...images, imageUrl];
+    }
+    // replace the array so the shallow watchers see the change
+    this.threadSegments.value = [...this.threadSegments.value];
   }
 
   // ---- posting ----
@@ -397,9 +483,11 @@ class $XComposeModel {
     try {
       if (this.isThreadMode) {
         const result = await Api.Class.thread({
-          tweets: this.threadTweets.value.map((tweet) => tweet.trim()),
+          tweets: this.threadSegments.value.map((segment) => ({
+            text: segment.text.trim(),
+            imageUrls: segment.imageUrls ?? [],
+          })),
           slug: this.slug.value,
-          imageUrls: this.selectedImages.value,
         });
         this.postedUrl.value = result.url;
         this.$app.notify(`Thread of ${result.tweetIds.length} posted.`, 'success');
@@ -442,10 +530,12 @@ class $XComposeModel {
               kind: 'thread',
               payload: {
                 tweets: JSON.stringify(
-                  this.threadTweets.value.map((tweet) => tweet.trim()),
+                  this.threadSegments.value.map((segment) => ({
+                    text: segment.text.trim(),
+                    imageUrls: segment.imageUrls ?? [],
+                  })),
                 ),
                 slug: this.slug.value,
-                images: JSON.stringify(this.selectedImages.value),
               },
               dueAt: this.scheduleDueAt!,
             }
@@ -483,8 +573,14 @@ class $XComposeModel {
   jobSummary(job: ScheduledJob) {
     if (job.kind === 'thread') {
       try {
-        const tweets = JSON.parse(job.payload.tweets ?? '[]') as string[];
-        return `thread (${tweets.length}) — ${tweets[0] ?? ''}`;
+        const tweets = JSON.parse(job.payload.tweets ?? '[]') as (
+          | string
+          | { text: string }
+        )[];
+        const first = tweets[0];
+        return `thread (${tweets.length}) — ${
+          typeof first === 'string' ? first : (first?.text ?? '')
+        }`;
       } catch {
         return 'thread';
       }
@@ -500,3 +596,8 @@ export namespace XComposeModel {
 }
 
 export type ComposeMode = 'link' | 'content' | 'thread';
+
+export interface ThreadSegment {
+  text: string;
+  imageUrls: string[];
+}

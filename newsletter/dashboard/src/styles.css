@@ -967,6 +967,14 @@ hr {
   height: auto;
 }
 
+.image-picker__grid--mini {
+  margin: 0.35rem 0 0.15rem;
+}
+
+.image-picker__grid--mini .image-picker__cell {
+  width: 4.6rem;
+}
+
 /* the thread editor */
 .thread-head {
   display: flex;
