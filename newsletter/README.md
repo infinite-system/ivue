@@ -32,14 +32,16 @@ allow a repeat), arm-to-confirm broadcast/drip, the drip plan preview
   open the Worker origin, paste `ADMIN_SECRET` into the login gate (kept
   in sessionStorage only; every `/admin/*` call is Bearer-checked
   timing-safe server-side).
-- **Local dev**: `npx vite newsletter/dashboard` — the dev proxy attaches
-  `ADMIN_SECRET` from `newsletter/.env` server-side (no login screen, the
-  secret never reaches the browser). Point it at a local Worker via
-  `DEV_WORKER_ORIGIN` (defaults to `http://localhost:8787`).
+- **Local dev**: `npm run admin` (from the repo root; `--host` exposes it
+  on the LAN) — the dev proxy attaches `ADMIN_SECRET` from
+  `newsletter/.env` server-side (no login screen, the secret never
+  reaches the browser). Defaults to the LIVE Worker (real data); set
+  `DEV_WORKER_ORIGIN=http://localhost:8787` in `newsletter/.env` to
+  target a local `wrangler dev` instead.
 
 ```sh
 # build the dashboard (required before wrangler deploy — assets ride along)
-npx vite build newsletter/dashboard
+npm run build:admin
 
 # quality gate: tsc (Worker + dashboard) + 46-test suite + conventions greps
 newsletter/scripts/conventions-gate.sh

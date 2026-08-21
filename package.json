@@ -29,6 +29,8 @@
     "measure:formula": "node demo/formula/measure.mjs",
     "measure:grid": "node demo/grid/measure.mjs",
     "dev:docs": "npm --prefix docs_v2 run dev -- --port 5174",
+    "admin": "vite newsletter/dashboard --host",
+    "build:admin": "vite build newsletter/dashboard",
     "test": "vitest --coverage.enabled=true --reporter=verbose --ui",
     "coverage": "vitest run --coverage",
     "bench": "vitest bench --run",
