@@ -279,6 +279,7 @@ export function renderWelcomeEmail(allPosts) {
   const first = allPosts[0] ?? null;
   return `<!doctype html>
 <html style="color-scheme:dark"><head>
+<meta charset="utf-8" />
 <meta name="color-scheme" content="dark" />
 <meta name="supported-color-schemes" content="dark" />
 </head><body style="margin:0;background:${PAGE_BG};font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
@@ -324,6 +325,7 @@ export async function renderEmail(post, allPosts) {
 
   return `<!doctype html>
 <html style="color-scheme:dark"><head>
+<meta charset="utf-8" />
 <meta name="color-scheme" content="dark" />
 <meta name="supported-color-schemes" content="dark" />
 </head><body style="margin:0;background:${PAGE_BG};font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
