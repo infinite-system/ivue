@@ -529,6 +529,25 @@ files, git, parsers, clocks: never constructed, only called and swapped — use
   promises stable identity, NOT immutability — a mutable memo table is a
   legitimate `$`-cache. Non-`$` static getters stay LIVE: those are the knobs
   test subclasses pinch.
+- **A SHARED STORE never lives in receiver-space.** Per-receiver caching
+  means a subclass reading `this.$store` silently forks a fresh copy — the
+  registry-fork trap. The store is a `static readonly` FIELD on the
+  declaring class (fields are one reference, inherited, never
+  receiver-cached), and the `$`-getter pins by naming the class:
+  ```ts
+  class $Registry {
+    protected static readonly sharedRegistrations = new Map<object, Registration>();
+    protected static get $registrations() {
+      return this.sharedRegistrations; // the field IS the pin
+    }
+  }
+  ```
+  Fields are one reference on the declaring class, inherited through the
+  prototype chain and never receiver-cached — so plain receiver reads
+  (`this.$store`, `this.constructor.$store`) resolve to the one store with
+  no special case anywhere. The split: per-receiver `$`-caches are for
+  MEMOS and per-class tuning (forking on subclass is the feature);
+  static-field stores are for REGISTRIES and LEDGERS (forking is the bug).
 
 THE ANCHOR RULE — a class that declares static members wraps them ONCE, at
 `$Class`, so subclasses and test doubles inherit working semantics by
