@@ -432,6 +432,17 @@ export default defineConfig({
     // per-page (transformHead) — scrapers take the FIRST og:image, so a
     // global one here would shadow the per-post banners
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    // Cloudflare Web Analytics — manual beacon: the dashboard's
+    // auto-injection cannot rewrite Worker-served responses, so the
+    // snippet lives here (the token is public by design)
+    [
+      'script',
+      {
+        type: 'module',
+        src: 'https://static.cloudflareinsights.com/beacon.min.js',
+        'data-cf-beacon': '{"token": "b8644fc150fa4b50b77e43c020e05e0e"}',
+      },
+    ],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     [
       'link',
