@@ -1940,6 +1940,15 @@ a.feature-inline-link {
 .newsletter__message.error {
   color: var(--vp-c-yellow-1, #d97706);
 }
+/* LOGO EVALUATION RIG (temporary, dies with the rig in theme/index.ts):
+   the tile candidate pairs its white mark with a gradient wordmark */
+.logo-rig-gradient-text .VPNavBarTitle .title > span {
+  background: linear-gradient(90deg, #818cf8, #34d399);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* signed-up confirmation: centered, green check, breathing room */
 .newsletter__success {
   display: flex;

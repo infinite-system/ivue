@@ -116,6 +116,11 @@ export default {
           window.location.pathname.startsWith(prefix),
         );
         logoImage.src = match ? match[1] : '/logo-sky.svg';
+        // the tile candidate also tries gradient "ivue" wordmark text
+        document.documentElement.classList.toggle(
+          'logo-rig-gradient-text',
+          (match?.[1] ?? '') === '/logo-tile.svg',
+        );
       };
       const shieldBrand = () => {
         document
