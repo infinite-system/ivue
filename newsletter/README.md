@@ -1,6 +1,6 @@
 # ivue newsletter Worker
 
-Subscribe endpoint + audience + send ledger (all D1) + daily drip cron.
+Subscribe endpoint + audience + send ledger (all D1) + hourly drip cron.
 Postmark delivers the email; this Worker decides who gets what, when.
 TypeScript — wrangler compiles `src/index.ts` directly; `npx
 wrangler@4.120.1 types` regenerates `worker-configuration.d.ts` (the
@@ -11,8 +11,16 @@ typed Env) after any config change, and `npx tsc --noEmit` typechecks.
 unsent** post, so an ad-hoc `/broadcast` today can never be repeated by the
 drip later — there is no exclusion logic, just the ledger.
 
-Cadence: one email per subscriber at most every `CADENCE_HOURS` (default
-40h ≈ every other day). A broadcast counts as that day's email.
+Cadence: timezone-aware. One email every `CADENCE_DAYS` calendar days
+(default 2), at `SEND_HOUR_LOCAL` (default 9am) in the SUBSCRIBER'S OWN
+timezone — captured from the signup form; unknown zones fall back to
+`DEFAULT_TIMEZONE` (America/Toronto). The cron fires hourly; a
+subscriber is eligible only in the hour matching their local send hour.
+All three knobs live in Newsletter → Settings (D1-stored, env
+fallback), and every LIST can override cadence and send hour (blank =
+inherit). The drip covers all lists; an email on several lists is
+dripped by the first list that carries it. A broadcast counts as that
+day's email (the gate is local calendar days since the last send).
 
 The Worker is written to invar's ivue class conventions (namespace-pattern
 `Static()` capability classes under `src/modules/`) and doubles as an ivue
@@ -274,7 +282,7 @@ WORKER=https://ivue-newsletter.ekalashnikov.workers.dev
 curl -X POST "$WORKER/subscribe" -H 'content-type: application/json' \
   -d '{"name":"Evgeny","email":"evgeny@ivue.dev"}'
 
-# run a drip pass now (what the 13:00 UTC cron does)
+# run a drip pass now (what the hourly cron does)
 curl -X POST "$WORKER/drip" -H "authorization: Bearer $ADMIN_SECRET"
 
 # send one post to everyone who never received it

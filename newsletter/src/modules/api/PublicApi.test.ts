@@ -44,13 +44,21 @@ describe('PublicApi', () => {
     );
     expect(bad.status).toBe(400);
     const good = await PublicApi.Class.subscribe(
-      postJson('/subscribe', { email: 'Ada@IVUE.dev', name: 'Ada' }),
+      postJson('/subscribe', {
+        email: 'Ada@IVUE.dev',
+        name: 'Ada',
+        timezone: 'Europe/Berlin',
+      }),
       env,
       context,
     );
     expect(good.status).toBe(200);
     const active = await Audience.Class.active(env, 'newsletter');
-    expect(active[0]).toEqual({ email: 'ada@ivue.dev', name: 'Ada' });
+    expect(active[0]).toEqual({
+      email: 'ada@ivue.dev',
+      name: 'Ada',
+      timezone: 'Europe/Berlin',
+    });
 
     // two sends rode waitUntil: the subscriber's welcome email and the
     // operator's transactional ping

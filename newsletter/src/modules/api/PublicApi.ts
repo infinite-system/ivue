@@ -1,5 +1,6 @@
 import { Static } from 'ivue/extras';
 import { Http } from '../platform/Http';
+import { LocalTime } from '../platform/LocalTime';
 import { Security } from '../platform/Security';
 import { Turnstile } from '../platform/Turnstile';
 import { Audience } from '../audience/Audience';
@@ -24,6 +25,7 @@ class $PublicApi {
       name: string;
       email: string;
       list: string;
+      timezone: string;
       turnstileToken: string;
     }>(request);
     const address = String(body.email ?? '')
@@ -54,7 +56,10 @@ class $PublicApi {
       .trim()
       .slice(0, 80);
     const list = String(body.list ?? '').trim() || Audience.Class.DEFAULT_LIST;
-    await Audience.Class.enroll(env, address, name, list);
+    // browser-reported IANA zone; invalid/absent stores NULL and the
+    // drip falls back to the default_timezone setting
+    const timezone = LocalTime.Class.normalizeTimezone(body.timezone) || null;
+    await Audience.Class.enroll(env, address, name, list, timezone);
     // welcome email + operator ping ride waitUntil — the subscriber's
     // response never waits on them, and their failures never surface
     context.waitUntil(

@@ -18,7 +18,7 @@ class $Audience {
   // Active recipients of one list: subscribed and not suppressed.
   static async active(env: Env, list: string): Promise<Subscriber[]> {
     const { results } = await env.DB.prepare(
-      'SELECT email, name FROM subscribers WHERE list = ? ' +
+      'SELECT email, name, timezone FROM subscribers WHERE list = ? ' +
         'AND email NOT IN (SELECT email FROM unsubscribes)',
     )
       .bind(list)
@@ -28,18 +28,21 @@ class $Audience {
 
   // Subscribe (public form or admin add). A returning subscriber cancels
   // any previous unsubscribe — the sequence RESUMES, it never restarts,
-  // because the sends ledger survives.
+  // because the sends ledger survives. A known timezone updates; an
+  // unknown one (admin add, curl) never clobbers a captured value.
   static async enroll(
     env: Env,
     address: string,
     name: string,
     list: string,
+    timezone: string | null = null,
   ): Promise<void> {
     await env.DB.batch([
       env.DB.prepare(
-        'INSERT INTO subscribers (email, list, name, subscribed_at) VALUES (?, ?, ?, ?) ' +
-          'ON CONFLICT(email, list) DO UPDATE SET name = excluded.name',
-      ).bind(address, list, name, Http.Class.nowSeconds()),
+        'INSERT INTO subscribers (email, list, name, subscribed_at, timezone) VALUES (?, ?, ?, ?, ?) ' +
+          'ON CONFLICT(email, list) DO UPDATE SET name = excluded.name, ' +
+          'timezone = COALESCE(excluded.timezone, timezone)',
+      ).bind(address, list, name, Http.Class.nowSeconds(), timezone || null),
       env.DB.prepare('DELETE FROM unsubscribes WHERE email = ?').bind(address),
     ]);
   }
@@ -120,6 +123,7 @@ class $Audience {
     const [{ results: rows }, totalRow] = await Promise.all([
       env.DB.prepare(
         'SELECT subscriber.email, subscriber.list, subscriber.name, ' +
+          'subscriber.timezone, ' +
           'subscriber.subscribed_at AS subscribedAt, ' +
           'suppression.unsubscribed_at AS unsubscribedAt, ' +
           '(SELECT COUNT(*) FROM sends WHERE sends.email = subscriber.email) AS sendCount, ' +
@@ -147,6 +151,7 @@ class $Audience {
   ): Promise<SubscriberRow[]> {
     const { results } = await env.DB.prepare(
       'SELECT subscriber.email, subscriber.list, subscriber.name, ' +
+        'subscriber.timezone, ' +
         'subscriber.subscribed_at AS subscribedAt, ' +
         'suppression.unsubscribed_at AS unsubscribedAt, ' +
         '(SELECT COUNT(*) FROM sends WHERE sends.email = subscriber.email) AS sendCount, ' +
@@ -189,6 +194,9 @@ export namespace Audience {
 export interface Subscriber {
   email: string;
   name: string;
+  // IANA zone captured at signup; null/absent = unknown (drip falls
+  // back to the default_timezone setting)
+  timezone?: string | null;
 }
 
 export interface SubscriberRow extends Subscriber {

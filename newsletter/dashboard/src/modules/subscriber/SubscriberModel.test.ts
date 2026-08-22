@@ -27,6 +27,7 @@ function makeDetail(overrides: Partial<SubscriberDetail>): SubscriberDetail {
         email: 'ada@ivue.dev',
         list: 'newsletter',
         name: 'Ada',
+        timezone: 'Europe/Berlin',
         subscribedAt: 100,
         unsubscribedAt: null,
         sendCount: 1,
@@ -34,7 +35,10 @@ function makeDetail(overrides: Partial<SubscriberDetail>): SubscriberDetail {
       },
     ],
     history: [{ email: 'ada@ivue.dev', slug: 'first-post', sentAt: 100 }],
-    cadenceHours: 48,
+    cadenceDays: 2,
+    sendHourLocal: 9,
+    defaultTimezone: 'America/Toronto',
+    timezone: 'Europe/Berlin',
     upcoming: [
       { slug: 'second-post', title: 'Second', projectedAt: 200 },
       { slug: 'third-post', title: 'Third', projectedAt: 300 },
@@ -86,13 +90,13 @@ describe('SubscriberModel derivations', () => {
     expect(model.isFullyCaughtUp).toBe(true);
   });
 
-  it('cadenceLabel narrates days when whole, hours otherwise', () => {
+  it('cadenceLabel narrates days, local hour, and the drip timezone', () => {
     const model = new SubscriberModel.Class();
-    model.detail.value = makeDetail({ cadenceHours: 24 });
-    expect(model.cadenceLabel).toBe('every 1 day');
-    model.detail.value = makeDetail({ cadenceHours: 48 });
-    expect(model.cadenceLabel).toBe('every 2 days');
-    model.detail.value = makeDetail({ cadenceHours: 36 });
-    expect(model.cadenceLabel).toBe('every 36 hours');
+    model.detail.value = makeDetail({});
+    expect(model.cadenceLabel).toBe('every 2 days at 9am — Europe/Berlin');
+    model.detail.value = makeDetail({ cadenceDays: 1, sendHourLocal: 18 });
+    expect(model.cadenceLabel).toBe('every 1 day at 6pm — Europe/Berlin');
+    model.detail.value = makeDetail({ sendHourLocal: 0 });
+    expect(model.cadenceLabel).toBe('every 2 days at 12am — Europe/Berlin');
   });
 });

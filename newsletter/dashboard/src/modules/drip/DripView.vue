@@ -9,7 +9,6 @@ const model = new DripModel.Class();
 const {
   // state refs
   entries,
-  cadenceHours,
   loading,
 } = model;
 </script>
@@ -19,8 +18,8 @@ const {
     <div class="view-head">
       <h1>Drip preview</h1>
       <p class="muted">
-        The exact plan the next cron tick executes — same code path.
-        Cadence: one email per subscriber per {{ cadenceHours }}h.
+        The exact plan the next hourly tick executes — same code path.
+        Schedule: {{ model.scheduleLabel }}.
       </p>
     </div>
 
@@ -37,6 +36,8 @@ const {
         <thead>
           <tr>
             <th>Subscriber</th>
+            <th>List</th>
+            <th>Timezone</th>
             <th>Received</th>
             <th>Next post</th>
             <th>Last email</th>
@@ -46,14 +47,20 @@ const {
         <tbody>
           <template v-if="loading">
             <tr v-for="placeholder in 5" :key="placeholder">
-              <td colspan="5"><span class="skeleton"></span></td>
+              <td colspan="7"><span class="skeleton"></span></td>
             </tr>
           </template>
           <tr v-else-if="!entries.length">
-            <td colspan="5" class="empty">No active subscribers.</td>
+            <td colspan="7" class="empty">No active subscribers.</td>
           </tr>
           <tr v-for="entry in entries" v-else :key="entry.email">
-            <td>{{ entry.email }}</td>
+            <td>
+              <button class="linklike" @click="app.openSubscriber(entry.email)">
+                {{ entry.email }}
+              </button>
+            </td>
+            <td><span class="pill">{{ entry.list }}</span></td>
+            <td class="muted">{{ entry.timezone }}</td>
             <td>{{ entry.sentCount }}</td>
             <td>
               <button

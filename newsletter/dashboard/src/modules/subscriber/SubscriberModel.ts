@@ -69,11 +69,12 @@ class $SubscriberModel {
   }
 
   get cadenceLabel() {
-    const hours = this.detail.value?.cadenceHours ?? 0;
-    if (!hours) return '';
-    return hours % 24 === 0
-      ? `every ${hours / 24} day${hours === 24 ? '' : 's'}`
-      : `every ${hours} hours`;
+    const detail = this.detail.value;
+    if (!detail) return '';
+    const days = detail.cadenceDays;
+    const hour = detail.sendHourLocal;
+    const twelveHour = hour % 12 === 0 ? 12 : hour % 12;
+    return `every ${days} day${days === 1 ? '' : 's'} at ${twelveHour}${hour < 12 ? 'am' : 'pm'} — ${detail.timezone}`;
   }
 
   get isFullyCaughtUp() {

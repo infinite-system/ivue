@@ -39,6 +39,9 @@ const {
             <span class="muted">
               joined {{ Format.Class.date(membership.subscribedAt) }}
             </span>
+            <span class="muted">
+              {{ membership.timezone ?? `${detail.defaultTimezone} (default)` }}
+            </span>
           </li>
         </ul>
 

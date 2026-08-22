@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AdminApi } from './AdminApi';
+import { LocalTime } from '../platform/LocalTime';
 import { Audience } from '../audience/Audience';
 import { Ledger } from '../audience/Ledger';
 import { makeTestEnv } from '../../../test/TestDatabase';
@@ -59,49 +60,69 @@ describe('AdminApi', () => {
     ).json()) as {
       memberships: unknown[];
       history: { slug: string }[];
-      cadenceHours: number;
+      cadenceDays: number;
+      sendHourLocal: number;
+      timezone: string;
       upcoming: { slug: string; title: string; projectedAt: number }[];
     };
     expect(detail.memberships).toHaveLength(1);
     expect(detail.history[0].slug).toBe('first-post');
-    // the pipeline: unsent posts in drip order, one cadence apart
+    expect(detail.timezone).toBe('America/Toronto'); // default-zone fallback
+    // the pipeline: unsent posts in drip order, every slot at the send
+    // hour in the subscriber's zone, cadenceDays local days apart
     expect(detail.upcoming.map((entry) => entry.slug)).toEqual([
       'second-post',
       'third-post',
     ]);
-    const cadenceSeconds = detail.cadenceHours * 3600;
+    for (const entry of detail.upcoming)
+      expect(LocalTime.Class.hourAt(entry.projectedAt, detail.timezone)).toBe(
+        detail.sendHourLocal,
+      );
     expect(
-      detail.upcoming[1].projectedAt - detail.upcoming[0].projectedAt,
-    ).toBe(cadenceSeconds);
-    // last send was long overdue, so the next one projects to ~now
+      LocalTime.Class.dayNumberAt(
+        detail.upcoming[1].projectedAt,
+        detail.timezone,
+      ) -
+        LocalTime.Class.dayNumberAt(
+          detail.upcoming[0].projectedAt,
+          detail.timezone,
+        ),
+    ).toBe(detail.cadenceDays);
+    // last send was long ago — the first slot is the NEXT 9am, within a day
     const nowSeconds = Math.floor(Date.now() / 1000);
     expect(detail.upcoming[0].projectedAt).toBeGreaterThanOrEqual(
-      nowSeconds - 5,
+      nowSeconds - 3600,
     );
-    expect(detail.upcoming[0].projectedAt).toBeLessThanOrEqual(nowSeconds + 5);
+    expect(detail.upcoming[0].projectedAt).toBeLessThanOrEqual(
+      nowSeconds + 25 * 3600,
+    );
     expect((await call('/admin/subscriber?email=ghost@x.dev', env)).status).toBe(
       404,
     );
   });
 
-  it('upcomingFor: a fresh address projects from now; a recent send waits out the cadence', () => {
+  it('upcomingFor: slots land at the send hour, spaced by local calendar days', () => {
     const catalog = [makePost('first-post', 1), makePost('second-post', 2)];
-    const cadenceSeconds = 48 * 3600;
-    const now = 1_000_000;
-    const fresh = AdminApi.Class.upcomingFor(catalog, [], cadenceSeconds, now);
+    const schedule = { cadenceDays: 2, sendHourLocal: 9, defaultTimezone: 'UTC' };
+    const nineAM = Date.UTC(2026, 0, 5, 9) / 1000; // Mon Jan 5, 9am UTC
+    const daySeconds = 86_400;
+
+    const fresh = AdminApi.Class.upcomingFor(catalog, [], 'UTC', schedule, nineAM);
     expect(fresh.map((entry) => entry.projectedAt)).toEqual([
-      now,
-      now + cadenceSeconds,
+      nineAM,
+      nineAM + 2 * daySeconds,
     ]);
+
     const recentlyServed = AdminApi.Class.upcomingFor(
       catalog,
-      [{ slug: 'first-post', sentAt: now - 3600 }],
-      cadenceSeconds,
-      now,
+      [{ slug: 'first-post', sentAt: nineAM - 3600 }], // 8am same local day
+      'UTC',
+      schedule,
+      nineAM,
     );
     expect(recentlyServed).toHaveLength(1);
     expect(recentlyServed[0].slug).toBe('second-post');
-    expect(recentlyServed[0].projectedAt).toBe(now - 3600 + cadenceSeconds);
+    expect(recentlyServed[0].projectedAt).toBe(nineAM + 2 * daySeconds);
   });
 
   it('preview serves the welcome email from its own build-time asset', async () => {
@@ -196,30 +217,66 @@ describe('AdminApi', () => {
     expect(markup).not.toContain('{{UNSUBSCRIBE_URL}}');
   });
 
-  it('settings roundtrip: cadence saves, invalid values are refused', async () => {
+  it('settings roundtrip: drip clock + per-list overrides save, invalid values refused', async () => {
     const env = makeTestEnv();
     const initial = (await (await call('/admin/settings', env)).json()) as {
-      cadenceHours: number;
+      cadenceDays: number;
+      sendHourLocal: number;
+      defaultTimezone: string;
+      listOverrides: Record<string, unknown>;
     };
-    expect(initial.cadenceHours).toBe(40); // env fallback
+    // env fallbacks
+    expect(initial.cadenceDays).toBe(2);
+    expect(initial.sendHourLocal).toBe(9);
+    expect(initial.defaultTimezone).toBe('America/Toronto');
+    expect(initial.listOverrides).toEqual({});
 
-    await call('/admin/settings', env, 'POST', { cadenceHours: 24 });
-    const updated = (await (await call('/admin/settings', env)).json()) as {
-      cadenceHours: number;
-    };
-    expect(updated.cadenceHours).toBe(24);
-
-    const refused = await call('/admin/settings', env, 'POST', {
-      cadenceHours: 0,
+    await call('/admin/settings', env, 'POST', {
+      cadenceDays: 3,
+      sendHourLocal: 7,
+      defaultTimezone: 'Europe/Berlin',
+      listSchedules: { vip: { cadenceDays: 1, sendHourLocal: 18 } },
     });
-    expect(refused.status).toBe(400);
-
-    // the drip preview reads the stored cadence, not the env var
-    installFetchStub({ posts: [makePost('first-post', 1)] });
-    const plan = (await (await call('/admin/drip-preview', env)).json()) as {
-      cadenceHours: number;
+    const updated = (await (await call('/admin/settings', env)).json()) as {
+      cadenceDays: number;
+      sendHourLocal: number;
+      defaultTimezone: string;
+      listOverrides: Record<
+        string,
+        { cadenceDays?: number; sendHourLocal?: number }
+      >;
     };
-    expect(plan.cadenceHours).toBe(24);
+    expect(updated.cadenceDays).toBe(3);
+    expect(updated.sendHourLocal).toBe(7);
+    expect(updated.defaultTimezone).toBe('Europe/Berlin');
+    expect(updated.listOverrides.vip).toEqual({
+      cadenceDays: 1,
+      sendHourLocal: 18,
+    });
+
+    // clearing an override reverts the list to the defaults
+    await call('/admin/settings', env, 'POST', {
+      listSchedules: { vip: { cadenceDays: null, sendHourLocal: null } },
+    });
+    const cleared = (await (await call('/admin/settings', env)).json()) as {
+      listOverrides: Record<string, unknown>;
+    };
+    expect(cleared.listOverrides).toEqual({});
+
+    expect(
+      (await call('/admin/settings', env, 'POST', { cadenceDays: 0 })).status,
+    ).toBe(400);
+    expect(
+      (await call('/admin/settings', env, 'POST', { sendHourLocal: 24 }))
+        .status,
+    ).toBe(400);
+    expect(
+      (
+        await call('/admin/settings', env, 'POST', {
+          defaultTimezone: 'Not/AZone',
+        })
+      ).status,
+    ).toBe(400);
   });
 
   it('tweet endpoint: 503 without credentials, posts + ledgers with them', async () => {
@@ -367,14 +424,19 @@ describe('AdminApi', () => {
     await Audience.Class.enroll(env, 'ada@ivue.dev', 'Ada', 'newsletter');
     installFetchStub({ posts: [makePost('first-post', 1)] });
     const plan = (await (await call('/admin/drip-preview', env)).json()) as {
-      cadenceHours: number;
-      entries: { email: string; sendNow: boolean }[];
+      cadenceDays: number;
+      sendHourLocal: number;
+      entries: { email: string; list: string; timezone: string; dueAt: number }[];
     };
-    expect(plan.cadenceHours).toBe(40);
+    expect(plan.cadenceDays).toBe(2);
+    expect(plan.sendHourLocal).toBe(9);
     expect(plan.entries[0]).toMatchObject({
       email: 'ada@ivue.dev',
-      sendNow: true,
+      list: 'newsletter',
+      timezone: 'America/Toronto',
     });
+    // the projected slot is 9am in the subscriber's (default) zone
+    expect(LocalTime.Class.hourAt(plan.entries[0].dueAt, 'America/Toronto')).toBe(9);
 
     const stats = (await (await call('/admin/stats', env)).json()) as {
       lists: { list: string }[];

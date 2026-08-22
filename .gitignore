@@ -39,3 +39,7 @@ tmp
 /skills
 examples/*/node_modules
 examples/*/dist
+
+# local dev state — never repo content
+newsletter/.wrangler/
+newsletter/e2e-shots/

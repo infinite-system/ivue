@@ -160,7 +160,13 @@ class $Api {
   }
 
   static saveSettings(settings: {
-    cadenceHours?: number;
+    cadenceDays?: number;
+    sendHourLocal?: number;
+    defaultTimezone?: string;
+    listSchedules?: Record<
+      string,
+      { cadenceDays?: number | null; sendHourLocal?: number | null }
+    >;
     tweetTemplate?: string;
     tweetContentTemplate?: string;
   }): Promise<AdminSettings> {
@@ -225,6 +231,7 @@ export interface SubscriberRow {
   email: string;
   list: string;
   name: string;
+  timezone: string | null;
   subscribedAt: number;
   unsubscribedAt: number | null;
   sendCount: number;
@@ -263,7 +270,12 @@ export interface SubscriberDetail {
   email: string;
   memberships: SubscriberRow[];
   history: SendHistoryRow[];
-  cadenceHours: number;
+  cadenceDays: number;
+  sendHourLocal: number;
+  defaultTimezone: string;
+  // the zone the drip actually uses for this address (their own, or
+  // the default fallback)
+  timezone: string;
   upcoming: UpcomingSend[];
 }
 
@@ -308,6 +320,8 @@ export interface BroadcastResult {
 export interface DripPlanEntry {
   email: string;
   name: string;
+  timezone: string;
+  list?: string;
   nextSlug: string | null;
   sentCount: number;
   lastSentAt: number | null;
@@ -315,13 +329,24 @@ export interface DripPlanEntry {
   sendNow: boolean;
 }
 
+export type ListScheduleOverrides = Record<
+  string,
+  { cadenceDays?: number; sendHourLocal?: number }
+>;
+
 export interface DripPreviewResponse {
-  cadenceHours: number;
+  cadenceDays: number;
+  sendHourLocal: number;
+  defaultTimezone: string;
+  listOverrides: ListScheduleOverrides;
   entries: DripPlanEntry[];
 }
 
 export interface AdminSettings {
-  cadenceHours: number;
+  cadenceDays: number;
+  sendHourLocal: number;
+  defaultTimezone: string;
+  listOverrides: ListScheduleOverrides;
   tweetTemplate: string;
   tweetContentTemplate: string;
   xConfigured: boolean;

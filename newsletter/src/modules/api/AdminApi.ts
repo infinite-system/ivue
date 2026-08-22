@@ -4,6 +4,7 @@ import { Security } from '../platform/Security';
 import { Posts } from '../content/Posts';
 import type { Post } from '../content/Posts';
 import { Settings } from '../config/Settings';
+import type { DripSchedule } from '../config/Settings';
 import { XPoster } from '../socials/XPoster';
 import { Tweets } from '../socials/Tweets';
 import { Scheduler } from '../schedule/Scheduler';
@@ -90,36 +91,45 @@ class $AdminApi {
   static async subscriber(url: URL, env: Env): Promise<Response> {
     const address = (url.searchParams.get('email') ?? '').toLowerCase();
     if (!address) return Http.Class.json({ error: 'email required' }, 400);
-    const [memberships, history, catalog, cadenceHours] = await Promise.all([
+    const [memberships, history, catalog] = await Promise.all([
       Audience.Class.memberships(env, address),
       Ledger.Class.historyFor(env, address),
       Posts.Class.load(env),
-      Settings.Class.cadenceHours(env),
     ]);
     if (!memberships.length)
       return Http.Class.json({ error: 'No such subscriber' }, 404);
+    // the pipeline runs on the clock of the list that drips them —
+    // the first membership, matching planAll()'s dedupe order
+    const schedule = await Settings.Class.dripScheduleForList(
+      env,
+      memberships[0].list,
+    );
+    const timezone = Drip.Class.zoneOf(memberships[0], schedule);
     return Http.Class.json({
       email: address,
       memberships,
       history,
-      cadenceHours,
+      ...schedule,
+      timezone,
       upcoming: this.upcomingFor(
         catalog,
         history,
-        cadenceHours * 3600,
+        timezone,
+        schedule,
         Http.Class.nowSeconds(),
       ),
     });
   }
 
   // The address's remaining pipeline: every catalog post it has not yet
-  // received, in drip order, each with its projected send time — the
-  // drip's own rule (one email per cadence, starting one cadence after
-  // the last send) unrolled to the end of the archive.
+  // received, in drip order, each with its projected send slot — the
+  // drip's own rule (hour H local, every N local calendar days)
+  // unrolled to the end of the archive.
   static upcomingFor(
     catalog: Post[],
     history: { slug: string; sentAt: number }[],
-    cadenceSeconds: number,
+    timezone: string,
+    schedule: DripSchedule,
     now: number,
   ): UpcomingSend[] {
     const sent = new Set(history.map((row) => row.slug));
@@ -127,16 +137,21 @@ class $AdminApi {
       (latest, row) => Math.max(latest, row.sentAt),
       0,
     );
-    const firstDueAt = lastSentAt
-      ? Math.max(now, lastSentAt + cadenceSeconds)
-      : now;
+    let previousSendAt = lastSentAt;
+    let fromEpoch = now;
     return catalog
       .filter((post) => !sent.has(post.slug))
-      .map((post, position) => ({
-        slug: post.slug,
-        title: post.title,
-        projectedAt: firstDueAt + position * cadenceSeconds,
-      }));
+      .map((post) => {
+        const projectedAt = Drip.Class.nextDueAt(
+          fromEpoch,
+          previousSendAt,
+          timezone,
+          schedule,
+        );
+        previousSendAt = projectedAt;
+        fromEpoch = projectedAt + 3600;
+        return { slug: post.slug, title: post.title, projectedAt };
+      });
   }
 
   static async add(request: Request, env: Env): Promise<Response> {
@@ -266,7 +281,8 @@ class $AdminApi {
 
   static async settings(env: Env): Promise<Response> {
     return Http.Class.json({
-      cadenceHours: await Settings.Class.cadenceHours(env),
+      ...(await Settings.Class.dripSchedule(env)),
+      listOverrides: await Settings.Class.listOverrides(env),
       tweetTemplate: await Settings.Class.tweetTemplate(env),
       tweetContentTemplate: await Settings.Class.tweetContentTemplate(env),
       xConfigured: XPoster.Class.credentialsPresent(env),
@@ -285,22 +301,34 @@ class $AdminApi {
 
   static async saveSettings(request: Request, env: Env): Promise<Response> {
     const body = await Http.Class.readJsonBody<{
-      cadenceHours: number;
+      cadenceDays: number;
+      sendHourLocal: number;
+      defaultTimezone: string;
+      listSchedules: Record<
+        string,
+        { cadenceDays?: number | null; sendHourLocal?: number | null }
+      >;
       tweetTemplate: string;
       tweetContentTemplate: string;
     }>(request);
-    if (body.cadenceHours !== undefined) {
-      const cadenceHours = Number(body.cadenceHours);
-      if (!Settings.Class.isValidCadence(cadenceHours))
-        return Http.Class.json(
-          {
-            error: `Cadence must be ${Settings.Class.CADENCE_MINIMUM_HOURS}–${Settings.Class.CADENCE_MAXIMUM_HOURS} hours.`,
-          },
-          400,
-        );
-      await Settings.Class.setCadenceHours(env, cadenceHours);
-    }
     try {
+      if (body.cadenceDays !== undefined)
+        await Settings.Class.setCadenceDays(env, Number(body.cadenceDays));
+      if (body.sendHourLocal !== undefined)
+        await Settings.Class.setSendHourLocal(
+          env,
+          Number(body.sendHourLocal),
+        );
+      if (body.defaultTimezone !== undefined)
+        await Settings.Class.setDefaultTimezone(
+          env,
+          String(body.defaultTimezone),
+        );
+      if (body.listSchedules !== undefined)
+        for (const [list, schedule] of Object.entries(
+          body.listSchedules ?? {},
+        ))
+          await Settings.Class.setListSchedule(env, list, schedule ?? {});
       if (body.tweetTemplate !== undefined)
         await Settings.Class.setTweetTemplate(env, String(body.tweetTemplate));
       if (body.tweetContentTemplate !== undefined)

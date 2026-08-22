@@ -65,11 +65,12 @@ export default {
     }
   },
 
-  // Two crons: the daily drip at 13:00 UTC, and a 5-minute tick that
-  // executes due scheduled jobs (broadcasts, X posts). The drip tick
-  // drains the queue too — a job due at 13:00 should not wait.
+  // Two crons: the HOURLY drip tick (each subscriber is eligible only
+  // in the hour matching their local send-hour setting — see Drip), and
+  // a 5-minute tick that executes due scheduled jobs (broadcasts, X
+  // posts). The drip tick drains the queue too.
   async scheduled(event, env, context): Promise<void> {
-    if (event.cron === '0 13 * * *') context.waitUntil(Drip.Class.run(env));
+    if (event.cron === '0 * * * *') context.waitUntil(Drip.Class.run(env));
     context.waitUntil(Scheduler.Class.runDue(env));
   },
 } satisfies ExportedHandler<Env>;

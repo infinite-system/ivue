@@ -20,8 +20,28 @@ class $DripModel {
     return shallowRef<DripPlanEntry[]>([]);
   }
 
-  get cadenceHours() {
+  get cadenceDays() {
     return ref(0);
+  }
+
+  get sendHourLocal() {
+    return ref(0);
+  }
+
+  get defaultTimezone() {
+    return ref('');
+  }
+
+  get scheduleLabel() {
+    const days = this.cadenceDays.value;
+    if (!days) return '';
+    return `one email every ${days} day${days === 1 ? '' : 's'}, at ${this.hourLabel} in each subscriber's own timezone`;
+  }
+
+  get hourLabel() {
+    const hour = this.sendHourLocal.value;
+    const twelveHour = hour % 12 === 0 ? 12 : hour % 12;
+    return `${twelveHour}${hour < 12 ? 'am' : 'pm'}`;
   }
 
 
@@ -42,7 +62,9 @@ class $DripModel {
     try {
       const preview = await Api.Class.dripPreview();
       this.entries.value = preview.entries;
-      this.cadenceHours.value = preview.cadenceHours;
+      this.cadenceDays.value = preview.cadenceDays;
+      this.sendHourLocal.value = preview.sendHourLocal;
+      this.defaultTimezone.value = preview.defaultTimezone;
     } catch (error) {
       this.$app.reportFailure(error);
     } finally {

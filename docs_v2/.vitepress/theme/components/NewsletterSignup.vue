@@ -166,6 +166,9 @@ async function subscribe() {
       body: JSON.stringify({
         name: name.value,
         email: email.value,
+        // the drip sends at the subscriber's LOCAL morning — the browser
+        // knows the IANA zone for free
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? '',
         ...(turnstileToken.value ? { turnstileToken: turnstileToken.value } : {}),
       }),
     });

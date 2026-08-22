@@ -32,10 +32,11 @@
 		"logs": { "head_sampling_rate": 1 }
 	},
 	"triggers": {
-		// daily drip at 13:00 UTC (morning Americas, afternoon EU) + the
-		// 5-minute tick that executes due scheduled jobs
+		// hourly drip tick (subscribers are eligible only in the hour
+		// matching their LOCAL send-hour setting) + the 5-minute tick
+		// that executes due scheduled jobs
 		"crons": [
-			"0 13 * * *",
+			"0 * * * *",
 			"*/5 * * * *"
 		]
 	},
@@ -61,8 +62,12 @@
 		// Postmark message stream for bulk mail — MUST be a Broadcasts stream,
 		// never the transactional default ("outbound")
 		"POSTMARK_STREAM": "newsletter",
-		// minimum hours between two emails to the same subscriber (~every other day)
-		"CADENCE_HOURS": "40",
+		// drip clock defaults (D1 settings override without a deploy):
+		// every N calendar days, at hour H in the subscriber's own zone
+		"CADENCE_DAYS": "2",
+		"SEND_HOUR_LOCAL": "9",
+		// stand-in zone for subscribers with no captured timezone
+		"DEFAULT_TIMEZONE": "America/Toronto",
 		// Turnstile: hostnames the widget may report (frontend origins).
 		// Verification activates when the TURNSTILE_SECRET secret is set.
 		"TURNSTILE_HOSTNAMES": "ivue.dev"
