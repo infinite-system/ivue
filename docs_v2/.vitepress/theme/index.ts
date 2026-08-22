@@ -144,6 +144,7 @@ export default {
     app.component('BenchmarkWinner', BenchmarkWinner);
     app.component('StackBlitzPlayground', StackBlitzPlayground);
     app.component('BlogIndex', BlogIndex);
+    app.component('NewsletterQuickJoin', NewsletterQuickJoin);
     app.component('BlogPostDate', BlogPostDate);
   },
 } satisfies Theme;

@@ -403,6 +403,26 @@ flyweight state, and lifecycle discipline, all in one real codebase.
 
 </section>
 
+<section class="ix-newsletter-hero">
 
+## The future of JavaScript, delivered
+
+<p class="lead ix-newsletter-hero__lead">
+The <a href="/blog/">ivue blog</a> documents the frontier as it is
+built: the architecture behind ivue, the patterns AI agents write with
+it, and the measured numbers behind every claim — from
+<a href="/blog/the-options-api-everyone-wanted">the class JavaScript
+was always waiting for</a> to
+<a href="/blog/bulletproof-class-modules">bulletproof class modules</a>.
+Every post lands in your inbox, one at a time, at your local morning.
+</p>
+
+<NewsletterQuickJoin placement="home-hero" align="center" />
+
+<p class="ix-newsletter-hero__note">
+The whole archive is open — <a href="/blog/">browse the blog →</a>
+</p>
+
+</section>
 
 </div>

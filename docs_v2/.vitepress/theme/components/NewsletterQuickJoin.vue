@@ -114,7 +114,7 @@ async function join() {
     aria-label="Newsletter quick signup"
     @submit.prevent="join()"
   >
-    <span class="quickjoin__lead">Get this blog as a newsletter</span>
+    <span class="quickjoin__lead">Get the blog as a newsletter</span>
     <div class="quickjoin__group">
       <input
         v-model="name"
@@ -280,6 +280,10 @@ async function join() {
   top: calc(100% + 6px);
   right: 0;
   z-index: 5;
+}
+.quickjoin--center .quickjoin__turnstile {
+  right: 50%;
+  transform: translateX(50%);
 }
 .quickjoin--center {
   margin-left: auto;

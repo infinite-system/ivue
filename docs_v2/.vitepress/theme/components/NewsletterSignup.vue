@@ -237,7 +237,7 @@ async function subscribe() {
         v-if="(placement === 'toast' || placement === 'aside') && state !== 'done'"
         class="newsletter__quick-lead"
       >
-        Get this blog as a newsletter
+        Get the blog as a newsletter
       </p>
       <form v-if="state !== 'done'" class="newsletter__form" @submit.prevent="subscribe">
         <div class="newsletter__row">
