@@ -578,6 +578,23 @@ files, git, parsers, clocks: never constructed, only called and swapped — use
   no special case anywhere. The split: per-receiver `$`-caches are for
   MEMOS and per-class tuning (forking on subclass is the feature);
   static-field stores are for REGISTRIES and LEDGERS (forking is the bug).
+  An eager field initializer runs at module load, so it may hold only a
+  dependency-free value (a bare container or literal). A shared value that
+  must CONSTRUCT another namespace's class goes in a `LazyShared` cell
+  (`import { LazyShared } from 'ivue/extras'`): the field eagerly stores
+  the cell (safe — a thunk evaluates nothing at load), the thunk runs on
+  first read (safe — every import cycle has resolved), and memoization
+  lives inside the cell (safe — every access path, subclass receivers and
+  per-receiver `$`-caches included, converges on the ONE constructed
+  singleton):
+  ```ts
+  protected static readonly sharedBackend = new LazyShared(
+    () => new SearchBackend.Class(),
+  );
+  protected static get $backend() {
+    return this.sharedBackend.value;
+  }
+  ```
 
 THE ANCHOR RULE — a class that declares static members wraps them ONCE, at
 `$Class`, so subclasses and test doubles inherit working semantics by

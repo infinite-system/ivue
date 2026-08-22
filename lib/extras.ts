@@ -7,3 +7,4 @@
  *   import { Static } from 'ivue/extras';
  */
 export { Static, type ClassConstructor } from './Static';
+export { LazyShared } from './LazyShared';
