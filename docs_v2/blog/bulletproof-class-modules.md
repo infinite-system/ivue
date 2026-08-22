@@ -30,7 +30,7 @@ map — every value kind, in code.
 > registry, the load-order race, or the stale `this` — each value kind
 > has exactly one home, and every home is safe by construction.
 
-## The map
+## The ivue full transform map
 
 | the value is… | use a | memoized | inheritance |
 | --- | --- | --- | --- |
