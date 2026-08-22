@@ -27,6 +27,7 @@ class $AppStore {
     return {
       newsletter: [
         { name: 'subscribers', label: 'Subscribers' },
+        { name: 'lists', label: 'Lists' },
         { name: 'sends', label: 'Sent' },
         { name: 'posts', label: 'Posts' },
         { name: 'send', label: 'Send' },
@@ -223,6 +224,7 @@ export namespace AppStore {
 export type DomainName = 'newsletter' | 'socials';
 export type ViewName =
   | 'subscribers'
+  | 'lists'
   | 'sends'
   | 'posts'
   | 'send'

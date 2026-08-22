@@ -44,6 +44,10 @@ class $Audience {
           'timezone = COALESCE(excluded.timezone, timezone)',
       ).bind(address, list, name, Http.Class.nowSeconds(), timezone || null),
       env.DB.prepare('DELETE FROM unsubscribes WHERE email = ?').bind(address),
+      // organic lists self-register, so the registry is always complete
+      env.DB.prepare(
+        'INSERT OR IGNORE INTO lists (name, created_at) VALUES (?, ?)',
+      ).bind(list, Http.Class.nowSeconds()),
     ]);
   }
 
@@ -165,13 +169,101 @@ class $Audience {
     return results;
   }
 
+  // valid list names: short lowercase slugs — they ride URLs, settings
+  // keys, and the signup payload
+  static get LIST_NAME_PATTERN() {
+    return /^[a-z0-9][a-z0-9-]{0,39}$/;
+  }
+
+  static normalizeListName(name: unknown): string {
+    const candidate = String(name ?? '')
+      .trim()
+      .toLowerCase();
+    if (!this.LIST_NAME_PATTERN.test(candidate))
+      throw new Error(
+        'List names are 1–40 chars: lowercase letters, digits, dashes.',
+      );
+    return candidate;
+  }
+
+  // Every known list — the registry unioned with anything organically
+  // present on subscriber rows — with membership aggregates. Empty
+  // registered lists appear with zero members.
   static async lists(env: Env): Promise<ListSummary[]> {
     const { results } = await env.DB.prepare(
-      'SELECT list, COUNT(*) AS members, ' +
-        'SUM(CASE WHEN email NOT IN (SELECT email FROM unsubscribes) THEN 1 ELSE 0 END) AS active ' +
-        'FROM subscribers GROUP BY list ORDER BY list',
+      'SELECT registry.name AS list, COUNT(subscriber.email) AS members, ' +
+        'COALESCE(SUM(CASE WHEN subscriber.email NOT IN (SELECT email FROM unsubscribes) THEN 1 ELSE 0 END), 0) AS active ' +
+        'FROM (SELECT name FROM lists UNION SELECT DISTINCT list FROM subscribers) registry ' +
+        'LEFT JOIN subscribers subscriber ON subscriber.list = registry.name ' +
+        'GROUP BY registry.name ORDER BY registry.name',
     ).all<ListSummary>();
     return results;
+  }
+
+  static async createList(env: Env, name: string): Promise<string> {
+    const list = this.normalizeListName(name);
+    const existing = await env.DB.prepare(
+      'SELECT name FROM lists WHERE name = ? ' +
+        'UNION SELECT DISTINCT list FROM subscribers WHERE list = ?',
+    )
+      .bind(list, list)
+      .first<{ name: string }>();
+    if (existing) throw new Error(`List "${list}" already exists.`);
+    await this.registerList(env, list);
+    return list;
+  }
+
+  static async registerList(env: Env, list: string): Promise<void> {
+    await env.DB.prepare(
+      'INSERT OR IGNORE INTO lists (name, created_at) VALUES (?, ?)',
+    )
+      .bind(list, Http.Class.nowSeconds())
+      .run();
+  }
+
+  // Rename everywhere the name lives: registry, subscriber rows, and —
+  // via the caller (AdminApi) — the per-list schedule overrides.
+  static async renameList(env: Env, from: string, to: string): Promise<string> {
+    const source = this.normalizeListName(from);
+    const target = this.normalizeListName(to);
+    if (source === this.DEFAULT_LIST)
+      throw new Error(`"${this.DEFAULT_LIST}" is the default list — it cannot be renamed.`);
+    const collision = await env.DB.prepare(
+      'SELECT name FROM lists WHERE name = ? ' +
+        'UNION SELECT DISTINCT list FROM subscribers WHERE list = ?',
+    )
+      .bind(target, target)
+      .first<{ name: string }>();
+    if (collision) throw new Error(`List "${target}" already exists.`);
+    await env.DB.batch([
+      env.DB.prepare(
+        'INSERT OR IGNORE INTO lists (name, created_at) VALUES (?, ?)',
+      ).bind(target, Http.Class.nowSeconds()),
+      env.DB.prepare('DELETE FROM lists WHERE name = ?').bind(source),
+      env.DB.prepare('UPDATE subscribers SET list = ? WHERE list = ?').bind(
+        target,
+        source,
+      ),
+    ]);
+    return target;
+  }
+
+  // Delete refuses while members remain — moving or removing people is
+  // an explicit, separate operation, never a side effect.
+  static async deleteList(env: Env, name: string): Promise<void> {
+    const list = this.normalizeListName(name);
+    if (list === this.DEFAULT_LIST)
+      throw new Error(`"${this.DEFAULT_LIST}" is the default list — it cannot be deleted.`);
+    const member = await env.DB.prepare(
+      'SELECT email FROM subscribers WHERE list = ? LIMIT 1',
+    )
+      .bind(list)
+      .first<{ email: string }>();
+    if (member)
+      throw new Error(
+        `List "${list}" still has members — move or remove them first.`,
+      );
+    await env.DB.prepare('DELETE FROM lists WHERE name = ?').bind(list).run();
   }
 
   static async signupsByDay(env: Env, days: number): Promise<DayCount[]> {

@@ -250,6 +250,22 @@ class $Settings {
       .run();
   }
 
+  // list management moves/clears any per-list schedule keys with it
+  static async renameListOverrides(
+    env: Env,
+    from: string,
+    to: string,
+  ): Promise<void> {
+    const overrides = (await this.listOverrides(env))[from];
+    await this.clearListOverrides(env, from);
+    if (overrides) await this.setListSchedule(env, to, overrides);
+  }
+
+  static async clearListOverrides(env: Env, list: string): Promise<void> {
+    await this.remove(env, this.listCadenceKey(list));
+    await this.remove(env, this.listSendHourKey(list));
+  }
+
   static async remove(env: Env, key: string): Promise<void> {
     await env.DB.prepare('DELETE FROM settings WHERE key = ?').bind(key).run();
   }

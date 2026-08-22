@@ -25,6 +25,11 @@ class $AppRouter {
             component: () => import('../subscribers/SubscribersView.vue'),
           },
           {
+            path: 'lists',
+            name: 'lists',
+            component: () => import('../lists/ListsView.vue'),
+          },
+          {
             path: 'sent',
             name: 'sends',
             component: () => import('../sends/SendsView.vue'),

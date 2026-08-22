@@ -53,6 +53,12 @@ class $AdminApi {
         return this.dripPreview(env);
       case 'GET /admin/lists':
         return this.lists(env);
+      case 'POST /admin/lists/create':
+        return this.createList(request, env);
+      case 'POST /admin/lists/rename':
+        return this.renameList(request, env);
+      case 'POST /admin/lists/delete':
+        return this.deleteList(request, env);
       case 'GET /admin/settings':
         return this.settings(env);
       case 'POST /admin/settings':
@@ -511,6 +517,59 @@ class $AdminApi {
 
   static async lists(env: Env): Promise<Response> {
     return Http.Class.json(await Audience.Class.lists(env));
+  }
+
+  static async createList(request: Request, env: Env): Promise<Response> {
+    const body = await Http.Class.readJsonBody<{ list: string }>(request);
+    try {
+      const list = await Audience.Class.createList(env, String(body.list ?? ''));
+      return Http.Class.json({ ok: true, list });
+    } catch (error) {
+      return Http.Class.json(
+        { error: error instanceof Error ? error.message : 'Create failed.' },
+        400,
+      );
+    }
+  }
+
+  static async renameList(request: Request, env: Env): Promise<Response> {
+    const body = await Http.Class.readJsonBody<{ from: string; to: string }>(
+      request,
+    );
+    try {
+      const to = await Audience.Class.renameList(
+        env,
+        String(body.from ?? ''),
+        String(body.to ?? ''),
+      );
+      // the list's schedule overrides travel with the new name
+      await Settings.Class.renameListOverrides(
+        env,
+        String(body.from ?? '').trim().toLowerCase(),
+        to,
+      );
+      return Http.Class.json({ ok: true, list: to });
+    } catch (error) {
+      return Http.Class.json(
+        { error: error instanceof Error ? error.message : 'Rename failed.' },
+        400,
+      );
+    }
+  }
+
+  static async deleteList(request: Request, env: Env): Promise<Response> {
+    const body = await Http.Class.readJsonBody<{ list: string }>(request);
+    try {
+      const list = String(body.list ?? '').trim().toLowerCase();
+      await Audience.Class.deleteList(env, list);
+      await Settings.Class.clearListOverrides(env, list);
+      return Http.Class.json({ ok: true });
+    } catch (error) {
+      return Http.Class.json(
+        { error: error instanceof Error ? error.message : 'Delete failed.' },
+        400,
+      );
+    }
   }
 
   static async stats(env: Env): Promise<Response> {

@@ -34,7 +34,11 @@ const {
           required
         />
         <input v-model="addName" placeholder="Name (optional)" aria-label="Name" />
-        <input v-model="addList" placeholder="list" aria-label="List" />
+        <select v-model="addList" aria-label="List">
+          <option v-for="entry in lists" :key="entry.list" :value="entry.list">
+            {{ entry.list }}
+          </option>
+        </select>
         <button class="primary" type="submit">Add</button>
       </div>
     </form>

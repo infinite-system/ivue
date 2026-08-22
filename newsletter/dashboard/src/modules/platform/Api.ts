@@ -155,6 +155,21 @@ class $Api {
     return this.request('/admin/lists');
   }
 
+  static createList(list: string): Promise<{ ok: boolean; list: string }> {
+    return this.post('/admin/lists/create', { list });
+  }
+
+  static renameList(
+    from: string,
+    to: string,
+  ): Promise<{ ok: boolean; list: string }> {
+    return this.post('/admin/lists/rename', { from, to });
+  }
+
+  static deleteList(list: string): Promise<{ ok: boolean }> {
+    return this.post('/admin/lists/delete', { list });
+  }
+
   static settings(): Promise<AdminSettings> {
     return this.request('/admin/settings');
   }

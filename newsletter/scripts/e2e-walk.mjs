@@ -214,6 +214,73 @@ try {
   );
   await page.click('.dialog .ghost');
 
+  // ---- station 4.8: lists management (create → appears empty → delete) ----
+  await page.click('.tab[data-tab="lists"]');
+  await page.waitForSelector('[data-view="lists"] tbody tr', {
+    timeout: 15_000,
+  });
+  check(
+    'lists view routes at /newsletter/lists',
+    new URL(page.url()).pathname === '/newsletter/lists',
+  );
+  // idempotent across walks: clear a leftover test list first
+  const leftoverRow = page.locator('[data-view="lists"] tbody tr', {
+    hasText: 'e2e-list',
+  });
+  if (await leftoverRow.count()) {
+    await leftoverRow.locator('button.danger').click();
+    await page.waitForFunction(
+      () =>
+        !document
+          .querySelector('[data-view="lists"] tbody')
+          ?.textContent?.includes('e2e-list'),
+    );
+  }
+  await page.fill('[data-view="lists"] .addbar input', 'e2e-list');
+  await page.click('[data-view="lists"] .addbar button.primary');
+  await page.waitForFunction(() =>
+    document
+      .querySelector('[data-view="lists"] tbody')
+      ?.textContent?.includes('e2e-list'),
+  );
+  const createdRow = page.locator('[data-view="lists"] tbody tr', {
+    hasText: 'e2e-list',
+  });
+  check(
+    'created list appears with zero members and a delete action',
+    (await createdRow.innerText()).includes('0') &&
+      (await createdRow.locator('button.danger').count()) === 1,
+  );
+  check(
+    'the default list is protected (no delete offered)',
+    (await page
+      .locator('[data-view="lists"] tbody tr', { hasText: 'newsletter' })
+      .first()
+      .locator('button.danger')
+      .count()) === 0,
+  );
+  await shot('lists');
+  await createdRow.locator('button.danger').click();
+  await page.waitForFunction(
+    () =>
+      !document
+        .querySelector('[data-view="lists"] tbody')
+        ?.textContent?.includes('e2e-list'),
+  );
+  check('an empty list deletes cleanly', true);
+  await page.click('.tab[data-tab="subscribers"]');
+  // options in a closed <select> are attached but never "visible"
+  await page.waitForSelector(
+    '[data-view="subscribers"] .addbar select option',
+    { state: 'attached', timeout: 15_000 },
+  );
+  check(
+    'add-subscriber list picker is a select fed by the registry',
+    (await page
+      .locator('[data-view="subscribers"] .addbar select option')
+      .count()) >= 1,
+  );
+
   // ---- station 2.5: routing + the send log's slug → preview ----
   await page.click('.tab[data-tab="sends"]');
   await page.waitForFunction(

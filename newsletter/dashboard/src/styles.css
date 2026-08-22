@@ -742,6 +742,23 @@ td {
   border-bottom: 0;
 }
 
+/* ---- lists management ---- */
+.rename-form {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.rename-form input {
+  width: 11rem;
+}
+
+.list-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
 /* ---- subscriber dialog (centered) ---- */
 .dialog-backdrop {
   position: fixed;

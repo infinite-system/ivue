@@ -419,6 +419,74 @@ describe('AdminApi', () => {
     expect(refused.status).toBe(400);
   });
 
+  it('list management: create, rename (overrides travel), delete guards', async () => {
+    const env = makeTestEnv();
+    await Audience.Class.enroll(env, 'ada@ivue.dev', 'Ada', 'newsletter');
+
+    // create — appears with zero members; duplicates and junk refused
+    await call('/admin/lists/create', env, 'POST', { list: 'VIP ' });
+    let lists = (await (await call('/admin/lists', env)).json()) as {
+      list: string;
+      members: number;
+    }[];
+    expect(lists.map((entry) => entry.list)).toEqual(['newsletter', 'vip']);
+    expect(lists.find((entry) => entry.list === 'vip')?.members).toBe(0);
+    expect(
+      (await call('/admin/lists/create', env, 'POST', { list: 'vip' })).status,
+    ).toBe(400);
+    expect(
+      (await call('/admin/lists/create', env, 'POST', { list: 'Bad Name!' }))
+        .status,
+    ).toBe(400);
+
+    // rename — members and schedule overrides travel with the name
+    await Audience.Class.enroll(env, 'bo@ivue.dev', 'Bo', 'vip');
+    await call('/admin/settings', env, 'POST', {
+      listSchedules: { vip: { sendHourLocal: 18 } },
+    });
+    await call('/admin/lists/rename', env, 'POST', {
+      from: 'vip',
+      to: 'insiders',
+    });
+    lists = (await (await call('/admin/lists', env)).json()) as {
+      list: string;
+      members: number;
+    }[];
+    expect(lists.map((entry) => entry.list)).toEqual([
+      'insiders',
+      'newsletter',
+    ]);
+    expect(lists.find((entry) => entry.list === 'insiders')?.members).toBe(1);
+    const settings = (await (await call('/admin/settings', env)).json()) as {
+      listOverrides: Record<string, { sendHourLocal?: number }>;
+    };
+    expect(settings.listOverrides).toEqual({
+      insiders: { sendHourLocal: 18 },
+    });
+
+    // delete — refused while members remain, allowed once empty; the
+    // default list is protected from both rename and delete
+    expect(
+      (await call('/admin/lists/delete', env, 'POST', { list: 'insiders' }))
+        .status,
+    ).toBe(400);
+    await call('/admin/subscribers/remove', env, 'POST', {
+      emails: ['bo@ivue.dev'],
+      purgeSends: false,
+    });
+    expect(
+      (await call('/admin/lists/delete', env, 'POST', { list: 'insiders' }))
+        .status,
+    ).toBe(200);
+    expect(
+      (await call('/admin/lists/rename', env, 'POST', { from: 'newsletter', to: 'other' })).status,
+    ).toBe(400);
+    expect(
+      (await call('/admin/lists/delete', env, 'POST', { list: 'newsletter' }))
+        .status,
+    ).toBe(400);
+  });
+
   it('drip-preview exposes the plan and stats aggregates the system', async () => {
     const env = makeTestEnv();
     await Audience.Class.enroll(env, 'ada@ivue.dev', 'Ada', 'newsletter');

@@ -19,7 +19,14 @@ subscriber is eligible only in the hour matching their local send hour.
 All three knobs live in Newsletter → Settings (D1-stored, env
 fallback), and every LIST can override cadence and send hour (blank =
 inherit). The drip covers all lists; an email on several lists is
-dripped by the first list that carries it. A broadcast counts as that
+dripped by the first list that carries it.
+
+Lists are first-class (migration 0007's `lists` registry — an empty
+list exists before its first member; organic signups self-register
+their list). Newsletter → Lists manages them: create (lowercase-slug
+names), rename (members and schedule overrides travel), delete (only
+when empty; the default list is protected from both). The
+add-subscriber form picks from the registry. A broadcast counts as that
 day's email (the gate is local calendar days since the last send).
 
 The Worker is written to invar's ivue class conventions (namespace-pattern
