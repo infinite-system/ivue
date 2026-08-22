@@ -28,6 +28,7 @@ import BlogBackLink from './components/BlogBackLink.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import { registerDocsApp } from './quasar-docs-loader';
 import { initAnalytics } from './analytics';
+import { installDeployGuard, reloadIfNotFoundIsStale } from './deploy-guard';
 import './custom.css';
 
 export default {
@@ -60,16 +61,17 @@ export default {
     initAnalytics(); // PostHog — production-only, browser-only, async
 
     if (typeof window !== 'undefined') {
-      // Deploy-race recovery: a fresh deploy replaces the hashed chunks,
-      // so a tab still running the OLD build dies when client-side
-      // navigation dynamic-imports a chunk that no longer exists. That
-      // failure surfaces through TWO channels — vite's preload helper
-      // emits vite:preloadError, while VitePress's router imports page
-      // modules directly and the failure lands as an unhandled promise
-      // rejection ("Failed to fetch dynamically imported module") that
-      // no handler was catching, leaving a blank page. Reload instead:
-      // the HTML is max-age=0, so the reload lands on the new build.
-      // The sessionStorage guard reloads at most once per half-minute,
+      // Deploy-race protection. PRIMARY: the deploy guard gates every
+      // SPA navigation on the hashmap comparison and hard-navigates
+      // stale tabs onto the new build BEFORE anything can 404 (see
+      // deploy-guard.ts — VitePress swallows the import failure
+      // internally, so after-the-fact rescue handlers never see it).
+      installDeployGuard(router);
+
+      // BACKSTOP: for failures that still surface through vite's
+      // preload helper or as unhandled rejections (lazy in-page
+      // components, prefetches), reload onto the new build. The
+      // sessionStorage guard reloads at most once per half-minute,
       // so a genuinely dead network cannot loop the tab.
       const reloadOntoFreshBuild = () => {
         const RELOAD_STAMP_KEY = 'ivue-deploy-race-reload';
@@ -111,6 +113,9 @@ export default {
         requestAnimationFrame(shieldBrand);
 
         if (router.route.data.isNotFound) {
+          // a "404" on a stale build is usually the deploy race, not a
+          // real missing page — the guard reloads if the maps disagree
+          reloadIfNotFoundIsStale();
           window.dispatchEvent(
             new CustomEvent('ivue:route-not-found', {
               detail: { href: to },

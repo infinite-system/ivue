@@ -278,3 +278,31 @@ logging the VERDICT, not just the failure:
 - Wrangler picks up the nearest wrangler.jsonc: `tail`/`deploy` from the
   repo root hits the site's assets-only Worker. Newsletter commands run
   from newsletter/ (or --config newsletter/wrangler.jsonc).
+
+## Deploy-race blank page: VitePress swallows the failure — guard BEFORE navigation
+
+Symptom: a tab running an old build navigates after a deploy and lands
+on a blank/broken page. Rescue handlers on `vite:preloadError` and
+`unhandledrejection` NEVER fire for this: VitePress's router catches
+the failed page import internally (`loadPage` catch), refetches
+hashmap.json, retries, and either renders the not-found fallback or
+mixes new chunks into the old app. After-the-fact rescue is the wrong
+layer.
+
+The fix that works (`docs_v2/.vitepress/theme/deploy-guard.ts`): every
+page inlines `__VP_HASH_MAP__` and the server serves `/hashmap.json`
+with max-age=0 — navigation breaks EXACTLY when they disagree. Gate
+`router.onBeforeRouteChange` (awaited + cancelable) on that comparison
+against the map SNAPSHOTTED AT BOOT (VitePress overwrites
+`window.__VP_HASH_MAP__` on its retry, so the live global lies);
+if stale, cancel and `location.assign` — a full load onto the new
+build. Background checks on `visibilitychange` and bfcache `pageshow`
+pre-arm the verdict. Fail OPEN on network errors.
+
+Testing traps: (1) a quick deploy-A/deploy-B test can FALSE-PASS —
+hashed chunks are immutable-cached, so the old chunk URL often still
+resolves from edge/browser cache minutes after a deploy; assert the
+MECHANISM (probe variable wiped by full reload + guard state), not
+just "page rendered". (2) An 800ms timeout on the pre-nav check
+fail-opened in the first live test; 2500ms is the shipped value.
+Field debugging: `__ivueDeployGuard.state()` / `.check()` in any tab.
