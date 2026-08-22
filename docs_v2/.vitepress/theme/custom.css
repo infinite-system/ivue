@@ -1582,8 +1582,11 @@ a.feature-inline-link {
 }
 .blog-index-heading {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 14px;
+}
+.blog-index-heading .blog-count {
+  transform: translateY(1px); /* optical center beside the big Blog */
 }
 .vp-doc .blog-index-heading h1 {
   margin: 0;

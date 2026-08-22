@@ -146,6 +146,7 @@ async function join() {
   align-items: center;
   gap: 10px;
   margin-left: auto;
+  margin-top: 6px; /* sit on the Blog heading's vertical middle */
   flex-wrap: wrap;
 }
 .quickjoin__lead {
