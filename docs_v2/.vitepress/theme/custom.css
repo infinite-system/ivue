@@ -3078,7 +3078,13 @@ a.feature-inline-link:active {
 .ix-newsletter-hero::before {
   content: '';
   position: absolute;
-  inset: 10% 0 0;
+  /* full-viewport bleed: the glow's box must exceed its ellipses, or
+     the clipped gradient edges read as seams on narrow screens */
+  top: 10%;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
   background:
     radial-gradient(32rem 14rem at 50% 40%, rgba(99, 102, 241, 0.1), transparent 70%),
     radial-gradient(26rem 12rem at 50% 70%, rgba(45, 212, 191, 0.08), transparent 70%);
@@ -3102,4 +3108,11 @@ a.feature-inline-link:active {
 }
 .ix-newsletter-hero .quickjoin {
   position: relative;
+}
+
+/* mobile: icon-only view toggle — the labels skew the row */
+@media (max-width: 640px) {
+  .blog-view-toggle__label {
+    display: none;
+  }
 }
