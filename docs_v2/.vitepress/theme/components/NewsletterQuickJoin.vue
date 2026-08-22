@@ -98,7 +98,7 @@ async function join() {
     aria-label="Newsletter quick signup"
     @submit.prevent="join()"
   >
-    <span class="quickjoin__lead">Join the frontier — this blog, as a newsletter</span>
+    <span class="quickjoin__lead">Get this blog as a newsletter</span>
     <div class="quickjoin__group">
       <input
         v-model="name"
@@ -120,7 +120,7 @@ async function join() {
       <button class="quickjoin__button" type="submit" :disabled="state === 'sending'">
         <span class="newsletter__button-shine" aria-hidden="true"></span>
         <span class="quickjoin__button-text">
-          {{ state === 'sending' ? 'Joining…' : 'Join' }}
+          {{ state === 'sending' ? 'Joining…' : 'Join the frontier' }}
           <svg v-if="state !== 'sending'" class="quickjoin__plane" viewBox="0 0 24 24" aria-hidden="true">
             <!-- folded paper plane: three facets, opacity carries the 3D -->
             <path fill="currentColor" d="M22 3 3 10.5l7.5 1.7L22 3Z" />

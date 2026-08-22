@@ -1835,20 +1835,21 @@ a.feature-inline-link {
 .newsletter__form {
   display: flex;
   flex-direction: column;
+  gap: 9px;
+}
+/* name and email stack as ONE fused field — flush vertically, outer
+   radius only — with the button a breath below */
+.newsletter__row {
+  display: flex;
+  flex-direction: column;
   gap: 0;
 }
-.newsletter__row {
-  display: grid;
-  grid-template-columns: 2fr 3fr;
-}
-/* the whole form reads as ONE block: name|email fused on top, the
-   button fused below — flush edges, outer radius only */
 .newsletter__row input:first-child {
-  border-radius: 9px 0 0 0;
-  border-right: none;
+  border-radius: 9px 9px 0 0;
+  border-bottom: none;
 }
 .newsletter__row input:last-child {
-  border-radius: 0 9px 0 0;
+  border-radius: 0 0 9px 9px;
 }
 .newsletter__row input:focus {
   position: relative;
@@ -1873,7 +1874,7 @@ a.feature-inline-link {
   position: relative;
   overflow: hidden;
   padding: 8px 10px;
-  border-radius: 0 0 9px 9px;
+  border-radius: 9px;
   background: linear-gradient(105deg, #6366f1, #2dd4bf 70%, #34d399);
   color: #f4f9ff;
   text-shadow: 0 1px 2px rgba(2, 6, 23, 0.45);
