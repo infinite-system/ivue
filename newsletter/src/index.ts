@@ -29,12 +29,13 @@ export default {
   async fetch(request, env, context): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === 'OPTIONS')
-      return Http.Class.withCors(new Response(null, { status: 204 }), env);
+      return Http.Class.withCors(new Response(null, { status: 204 }), env, request);
     try {
       if (url.pathname === '/subscribe' && request.method === 'POST')
         return Http.Class.withCors(
           await PublicApi.Class.subscribe(request, env, context),
           env,
+          request,
         );
       if (url.pathname === '/unsubscribe' && request.method === 'GET')
         return PublicApi.Class.unsubscribe(url, env);
@@ -61,6 +62,7 @@ export default {
           500,
         ),
         env,
+        request,
       );
     }
   },

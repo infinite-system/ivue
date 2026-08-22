@@ -10,9 +10,35 @@ describe('Http', () => {
     expect(await response.json()).toEqual({ ok: true });
   });
 
-  it('withCors grants the SITE origin only', () => {
+  it('withCors grants the SITE origin, echoes localhost for dev, never echoes strangers', () => {
     const response = Http.Class.withCors(Http.Class.json({}), makeTestEnv());
     expect(response.headers.get('access-control-allow-origin')).toBe(
+      'https://ivue.dev',
+    );
+
+    const developmentRequest = new Request('https://newsletter.test/subscribe', {
+      method: 'POST',
+      headers: { origin: 'http://localhost:5173' },
+    });
+    const developmentResponse = Http.Class.withCors(
+      Http.Class.json({}),
+      makeTestEnv(),
+      developmentRequest,
+    );
+    expect(
+      developmentResponse.headers.get('access-control-allow-origin'),
+    ).toBe('http://localhost:5173');
+
+    const strangerRequest = new Request('https://newsletter.test/subscribe', {
+      method: 'POST',
+      headers: { origin: 'https://evil.example' },
+    });
+    const strangerResponse = Http.Class.withCors(
+      Http.Class.json({}),
+      makeTestEnv(),
+      strangerRequest,
+    );
+    expect(strangerResponse.headers.get('access-control-allow-origin')).toBe(
       'https://ivue.dev',
     );
   });

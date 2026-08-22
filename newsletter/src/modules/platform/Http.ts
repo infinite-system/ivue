@@ -21,12 +21,20 @@ class $Http {
     return new Response('Not found', { status: 404 });
   }
 
-  // CORS is granted to the SITE origin only — the public subscribe form.
-  // The admin dashboard is same-origin (served by this Worker's assets)
-  // or proxied server-side by the local dev server, so /admin/* never
-  // needs a CORS grant.
-  static withCors(response: Response, env: Env): Response {
-    response.headers.set('access-control-allow-origin', env.SITE_ORIGIN);
+  // CORS is granted to the SITE origin — the public subscribe form —
+  // plus localhost origins, so the docs DEV server can exercise the
+  // real endpoint. The admin dashboard is same-origin (served by this
+  // Worker's assets) or proxied server-side by the local dev server,
+  // so /admin/* never needs a CORS grant.
+  static withCors(response: Response, env: Env, request?: Request): Response {
+    const origin = request?.headers.get('origin') ?? '';
+    const isLocalDevelopment = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(
+      origin,
+    );
+    response.headers.set(
+      'access-control-allow-origin',
+      isLocalDevelopment ? origin : env.SITE_ORIGIN,
+    );
     response.headers.set('access-control-allow-methods', 'POST, OPTIONS');
     response.headers.set('access-control-allow-headers', 'content-type');
     return response;

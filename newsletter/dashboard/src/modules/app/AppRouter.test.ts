@@ -21,6 +21,7 @@ describe('AppRouter', () => {
     expect(leaves).toEqual(
       new Map([
         ['subscribers', '/newsletter/subscribers'],
+        ['lists', '/newsletter/lists'],
         ['sends', '/newsletter/sent'],
         ['posts', '/newsletter/posts'],
         ['send', '/newsletter/send'],

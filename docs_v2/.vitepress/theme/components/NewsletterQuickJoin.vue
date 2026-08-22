@@ -265,7 +265,7 @@ async function join() {
 }
 .quickjoin__error {
   flex-basis: 100%;
-  text-align: right;
+  text-align: center;
   font-size: 12px;
   color: #f66;
 }

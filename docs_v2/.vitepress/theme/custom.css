@@ -1945,6 +1945,7 @@ a.feature-inline-link {
   margin: 8px 0 0;
   font-size: 12px;
   line-height: 1.5;
+  text-align: center;
   color: var(--vp-c-text-2);
 }
 .newsletter__message.error {
