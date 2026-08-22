@@ -168,7 +168,7 @@ variety is the point — where a conventional codebase has module
 constants, init functions, DI registrations, singleton getters, and
 `let instance: T | null = null` guards, this one has a getter with a
 `$` on it, everywhere, [and the uniformity itself becomes an
-instrument](/blog/uniformity-is-an-instrument).
+instrument](/blog/uniformity-is-a-measuring-device).
 
 ## Per-receiver: the property module scope cannot have at any price
 

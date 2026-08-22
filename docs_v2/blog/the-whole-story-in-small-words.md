@@ -9,7 +9,7 @@ tags: [story, agents, invar]
 
 <BlogPostDate />
 
-![The whole story, in small words](/blog/the-brick-the-editor-the-referee.png)
+![The whole story, in small words](/blog/the-whole-story-in-small-words.png)
 
 Most posts on this blog argue. This one just tells the story, in the
 smallest words we can find — because when we stepped back and looked

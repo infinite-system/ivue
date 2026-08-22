@@ -98,7 +98,7 @@ patterns from this site's guides, applied at three orders of magnitude:
   observed](/blog/reactivity-is-an-allocator).
 - **Invariant contracts** — every module ships a `*.invariants.md`
   stating what must hold, what is impossible if it does, and how it is
-  verified: [uniformity as an instrument](/blog/uniformity-is-an-instrument).
+  verified: [uniformity as an instrument](/blog/uniformity-is-a-measuring-device).
 
 **[github.com/infinite-system/invar](https://github.com/infinite-system/invar)** —
 clone it, run `bun start`, and read the modules with the guides open

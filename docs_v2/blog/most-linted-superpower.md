@@ -9,9 +9,9 @@ tags: [javascript, philosophy]
 
 <BlogPostDate />
 
-![JavaScript's most-linted features are its superpower](/blog/the-weakness-was-the-strength.png)
+![JavaScript's most-linted features are its superpower](/blog/most-linted-superpower.png)
 
-[Last time](/blog/the-constraint-that-unlocks) we showed how one idiom
+[Last time](/blog/initialization-order-solved) we showed how one idiom
 and a small checker gave JavaScript the initialization-order safety of
 Swift and the graph discipline of Go. This post makes the stronger
 claim that fell out of writing that one: the properties of JavaScript
@@ -115,7 +115,7 @@ mean a swapped object's consumers update on the next read — reactive
 inheritance, which no dynamic language has); JIT performance
 ([twenty million cells](/blog/twenty-million-cells) says enough); and
 a mechanical referee — the
-[AST grammar and the gate](/blog/the-brick-the-editor-the-referee) —
+[AST grammar and the gate](/blog/the-whole-story-in-small-words) —
 that makes total openness survivable at fleet scale.
 
 Static languages cannot reach the capability. Dynamic languages had

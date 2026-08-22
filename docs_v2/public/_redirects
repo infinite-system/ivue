@@ -1,0 +1,22 @@
+# Permanent redirects for renamed blog slugs. Emailed URLs, X links,
+# and og:image references live forever — every slug rename adds its
+# pair of lines here (page + banner), plus any embed/code shots.
+# Workers static assets serve this file as 301s.
+/blog/reduction-to-modularity /blog/monolith-to-modular-in-a-day 301
+/blog/reduction-to-modularity.png /blog/monolith-to-modular-in-a-day.png 301
+/blog/scrollbar-is-code /blog/a-million-rows-twelve-divs 301
+/blog/scrollbar-is-code.png /blog/a-million-rows-twelve-divs.png 301
+/blog/embeds/scrollbar-is-code-embed-1.png /blog/embeds/a-million-rows-twelve-divs-embed-1.png 301
+/blog/the-brick-the-editor-the-referee /blog/the-whole-story-in-small-words 301
+/blog/the-brick-the-editor-the-referee.png /blog/the-whole-story-in-small-words.png 301
+/blog/the-constraint-that-unlocks /blog/initialization-order-solved 301
+/blog/the-constraint-that-unlocks.png /blog/initialization-order-solved.png 301
+/blog/code/the-constraint-that-unlocks-code-1.png /blog/code/initialization-order-solved-code-1.png 301
+/blog/the-dual-that-appeared /blog/discovered-not-invented 301
+/blog/the-dual-that-appeared.png /blog/discovered-not-invented.png 301
+/blog/the-weakness-was-the-strength /blog/most-linted-superpower 301
+/blog/the-weakness-was-the-strength.png /blog/most-linted-superpower.png 301
+/blog/code/the-weakness-was-the-strength-code-1.png /blog/code/most-linted-superpower-code-1.png 301
+/blog/code/the-weakness-was-the-strength-code-2.png /blog/code/most-linted-superpower-code-2.png 301
+/blog/uniformity-is-an-instrument /blog/uniformity-is-a-measuring-device 301
+/blog/uniformity-is-an-instrument.png /blog/uniformity-is-a-measuring-device.png 301

@@ -9,7 +9,7 @@ tags: [agents, invar, architecture]
 
 <BlogPostDate />
 
-![From monolith to modular design in a day](/blog/reduction-to-modularity.png)
+![From monolith to modular design in a day](/blog/monolith-to-modular-in-a-day.png)
 
 Modularizing a working application is the kind of refactor that is
 usually done meticulously, by senior humans, over a quarter: draw the

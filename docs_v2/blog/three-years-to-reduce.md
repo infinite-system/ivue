@@ -43,7 +43,7 @@ that a verification harness the size of the product itself —
 and could only do so because every class takes the same shape, every
 seam sits in the same place, and the failure classes that eat agent
 sessions (initialization order, unbound methods, memo discipline) had
-been [removed by construction](/blog/the-constraint-that-unlocks)
+been [removed by construction](/blog/initialization-order-solved)
 years earlier.
 
 The tempo did not change because the tools got faster. It changed

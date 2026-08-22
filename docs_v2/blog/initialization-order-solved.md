@@ -9,7 +9,7 @@ tags: [javascript, architecture]
 
 <BlogPostDate />
 
-![Initialization order, solved in userland](/blog/the-constraint-that-unlocks.png)
+![Initialization order, solved in userland](/blog/initialization-order-solved.png)
 
 Every JavaScript developer has met the bug. Module A imports B, B
 imports A, and one of them reads `undefined` where a class should be —

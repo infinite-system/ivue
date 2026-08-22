@@ -9,7 +9,7 @@ tags: [architecture, agents, philosophy]
 
 <BlogPostDate />
 
-![Uniformity is a measuring device](/blog/uniformity-is-an-instrument.png)
+![Uniformity is a measuring device](/blog/uniformity-is-a-measuring-device.png)
 
 Every team argues about consistency as though it were manners. Naming
 conventions, file layout, one way to do dependency injection — the

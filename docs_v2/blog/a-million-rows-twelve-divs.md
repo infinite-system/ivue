@@ -13,7 +13,7 @@ import ExampleVirtualScroller from '../.vitepress/theme/components/examples/Exam
 
 <BlogPostDate />
 
-![A million rows, twelve divs](/blog/scrollbar-is-code.png)
+![A million rows, twelve divs](/blog/a-million-rows-twelve-divs.png)
 
 The browser's native scrollbar has one requirement you cannot negotiate
 away: to scroll a tall document, the DOM has to *be* tall. Scroll

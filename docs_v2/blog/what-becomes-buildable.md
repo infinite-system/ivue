@@ -123,7 +123,7 @@ a wiki page nobody obeys. The discipline built around ivue turns
 architecture into something *executable*: invariant contracts
 stating what must hold, AST censuses counting violations, merge
 gates that reject what the model contradicts —
-[uniformity as a measuring instrument](/blog/uniformity-is-an-instrument),
+[uniformity as a measuring instrument](/blog/uniformity-is-a-measuring-device),
 [zeros that hold while the codebase triples](/blog/the-zeros-didnt-move).
 
 What that opens is a contributor scale that used to be

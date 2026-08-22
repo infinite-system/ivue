@@ -81,7 +81,7 @@ against them.
 
 **A grammar, enforced by AST.** Every production file has the same
 shape — one class, uniform member discipline, everything overridable,
-[no initialization-order traps](/blog/the-constraint-that-unlocks),
+[no initialization-order traps](/blog/initialization-order-solved),
 a colocated test. A ~200-line checker rejects violations at the gate.
 Uniform shape is what makes a fleet of independent builders converge
 instead of drift.
@@ -96,7 +96,7 @@ splitter is hover-lit when the mouse is there."
 The result is software where the [object graph](/blog/the-object-graph-they-took)
 has been restructured wholesale multiple times in a single week, at
 the cost of the diff, because the
-[architecture cannot tangle](/blog/the-brick-the-editor-the-referee)
+[architecture cannot tangle](/blog/the-whole-story-in-small-words)
 and the referee proves each reshape changed nothing it shouldn't.
 
 ## On one kilobyte
@@ -114,7 +114,7 @@ Invar is the existence proof we built for a set of claims that sound
 like slogans until you watch them hold under load: that classes plus
 a referee beat functions plus convention; that total extensibility is
 affordable when behavior is mechanically proven; that JavaScript's
-[dynamism is a strength](/blog/the-weakness-was-the-strength) once it
+[dynamism is a strength](/blog/most-linted-superpower) once it
 has a witness; and that an AI fleet with written contracts can build
 and maintain real software faster than the industry believes — without
 the quality collapse the industry predicts.

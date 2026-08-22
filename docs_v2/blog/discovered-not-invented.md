@@ -9,7 +9,7 @@ tags: [engine, philosophy, patterns]
 
 <BlogPostDate />
 
-![Reactive() and Static() — discovered, not invented](/blog/the-dual-that-appeared.png)
+![Reactive() and Static() — discovered, not invented](/blog/discovered-not-invented.png)
 
 We did not set out to invent a dual.
 

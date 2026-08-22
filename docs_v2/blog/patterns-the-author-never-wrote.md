@@ -97,7 +97,7 @@ a reactive class model into a structure small enough to hand over
 whole. The fortnight that followed was other minds — stochastic
 ones — playing games the author never played, inside rules that
 made the good games easy to find and the bad ones
-[impossible to write](/blog/the-constraint-that-unlocks). Some of
+[impossible to write](/blog/initialization-order-solved). Some of
 those games were better than any the author had on file. That is
 not the author being surpassed. That is the reduction *working*.
 
