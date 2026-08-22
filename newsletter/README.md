@@ -222,8 +222,17 @@ on one chronology.
 The slug IS the post's identity everywhere — sends ledger, tweets
 table, scheduled-job payloads, URLs, banner/shot filenames. There is no
 separate id on purpose (a parallel id would give every post two names
-forever to optimize a rare event). A rename touches five places, in
-this order:
+forever to optimize a rare event).
+
+**The mechanical form** (runs steps 1–4 below, from a clean tree):
+
+```sh
+npm run rename:blog-slug -- <old-slug> <new-slug>   # --dry to preview
+npm run build:docs && npx wrangler@4.120.1 deploy    # then verify 301s
+```
+
+The manual steps, for understanding what the script does and in what
+order:
 
 1. `git mv` the post md, the banner source
    (`.claude/skills/blog-banner/banners/<slug>.html`), the banner PNG,
