@@ -62,7 +62,6 @@ class $Typewriter {
   }
 
   start() {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     this.finaleText.value = '';
     this.activeRow.value = 3;
     this.timer = setTimeout(() => this.typeFinale(), this.fallLeadMs);
