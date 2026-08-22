@@ -773,26 +773,34 @@ files, git, parsers, clocks: never constructed, only called and swapped — use
     }
   }
   ```
-  The split: per-receiver `$`-caches are for MEMOS and per-class tuning
-  (forking on subclass is the feature); static-field stores are for
-  REGISTRIES and LEDGERS (forking is the bug).
-  An eager field initializer runs at module load, so it may hold only a
-  dependency-free value (a bare container or literal). A shared value that
-  must CONSTRUCT another namespace's class goes in a `LazyShared` cell
-  (`import { LazyShared } from 'ivue/extras'`): the field eagerly stores
-  the cell (safe — a thunk evaluates nothing at load), the thunk runs on
-  first read (safe — every import cycle has resolved), and memoization
-  lives inside the cell (safe — every access path, subclass receivers and
-  per-receiver `$`-caches included, converges on the ONE constructed
-  singleton):
-  ```ts
-  protected static readonly sharedBackend = new LazyShared(
-    () => new SearchBackend.Class(),
-  );
-  protected static get $backend() {
-    return this.sharedBackend.value;
-  }
-  ```
+  Two questions place every static value:
+
+  1. **Should a subclass get its own copy?** Yes → per-receiver
+     `$`-cache. That is what memos and per-class tuning want: forking on
+     subclass is the feature. No → it is a SHARED store (a registry, a
+     ledger — forking is the bug), and it lives in a `static readonly`
+     field as above.
+  2. **Shared store: can its initializer run at module load?** A field
+     initializer runs while modules are still loading, so it may only
+     hold a dependency-free value — a bare `new Map()`, a literal. The
+     moment construction needs ANOTHER module's class, the field holds a
+     `LazyShared` cell instead (`import { LazyShared } from
+     'ivue/extras'`), and the `$`-getter reads through it:
+     ```ts
+     protected static readonly sharedBackend = new LazyShared(
+       () => new SearchBackend.Class(),
+     );
+     protected static get $backend() {
+       return this.sharedBackend.value;
+     }
+     ```
+     Each step is safe on its own terms. Storing the cell eagerly is
+     safe because a thunk evaluates nothing at load. Running the thunk
+     on first read is safe because by then every import cycle has
+     resolved. And sharing is safe because the memoized value lives
+     INSIDE the cell — every access path, subclass receivers and
+     per-receiver `$`-caches over the cell included, converges on the
+     one constructed singleton.
 
 THE ANCHOR RULE — a class that declares static members wraps them ONCE, at
 `$Class`, so subclasses and test doubles inherit working semantics by
@@ -873,8 +881,8 @@ Take the first rung that applies:
    ```
    `this.constructor` is the actual class — the subclass when subclassed,
    and an engine class that INHERITS `$Class` for a plain reactive
-   instance — so statics resolve late-bound in both cases (JavaScript's
-   `type(self)`, hand-rolled). TypeScript types `constructor` as bare
+   instance — so statics resolve late-bound in both cases.
+   TypeScript types `constructor` as bare
    `Function`, so ONE cast is unavoidable; `self` is where it lives.
    Never scatter per-site `(this.constructor as typeof $X)` casts: each
    is an unchecked assertion that the class name is right, and the
