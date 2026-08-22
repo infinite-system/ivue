@@ -222,7 +222,6 @@ one name and one override surface: the static.
 
 | the value is… | form |
 | --- | --- |
-| a setting subclasses or test doubles override | non-`$` static getter (stays live) |
 | a memo or per-class tuning — forking on subclass is wanted | `$`-cached static getter |
 | a shared registry or ledger, dependency-free to build | `static readonly` field (the pin) |
 | shared AND constructs another module's class | `static readonly` field holding a `LazyShared` cell |
