@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { onMounted } from 'vue';
 import { withBase } from 'vitepress';
 import { data as posts } from '../../../blog/blog.data.mjs';
+import NewsletterQuickJoin from './NewsletterQuickJoin.vue';
 
 type ViewStyle = 'list' | 'cards';
 const VIEW_STORAGE_KEY = 'ivue-blog-view';
@@ -118,6 +119,33 @@ function formatDate(date: string): string {
       <h1>Blog</h1>
       <span class="blog-count">{{ posts.length }} posts</span>
     </div>
+    <NewsletterQuickJoin />
+  </div>
+
+  <div class="blog-search">
+    <svg class="blog-search__icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+      <circle cx="6.5" cy="6.5" r="4.6" stroke="currentColor" stroke-width="1.6" />
+      <path d="m10.3 10.3 3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+    </svg>
+    <input
+      v-model="searchQuery"
+      type="search"
+      class="blog-search__input"
+      placeholder="Search posts…"
+      aria-label="Search posts"
+    />
+    <button
+      v-if="searchQuery"
+      type="button"
+      class="blog-search__clear"
+      aria-label="Clear search"
+      @click="searchQuery = ''"
+    >
+      ×
+    </button>
+    <span v-if="searchQuery || activeTag" class="blog-search__count">
+      {{ filteredPosts.length }} match{{ filteredPosts.length === 1 ? '' : 'es' }}
+    </span>
     <div class="blog-view-toggle" role="group" aria-label="Display style">
       <button
         type="button"
@@ -149,32 +177,6 @@ function formatDate(date: string): string {
         Cards
       </button>
     </div>
-  </div>
-
-  <div class="blog-search">
-    <svg class="blog-search__icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-      <circle cx="6.5" cy="6.5" r="4.6" stroke="currentColor" stroke-width="1.6" />
-      <path d="m10.3 10.3 3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-    </svg>
-    <input
-      v-model="searchQuery"
-      type="search"
-      class="blog-search__input"
-      placeholder="Search posts…"
-      aria-label="Search posts"
-    />
-    <button
-      v-if="searchQuery"
-      type="button"
-      class="blog-search__clear"
-      aria-label="Clear search"
-      @click="searchQuery = ''"
-    >
-      ×
-    </button>
-    <span v-if="searchQuery || activeTag" class="blog-search__count">
-      {{ filteredPosts.length }} match{{ filteredPosts.length === 1 ? '' : 'es' }}
-    </span>
   </div>
 
   <div class="blog-tag-cloud" role="group" aria-label="Filter posts by tag">

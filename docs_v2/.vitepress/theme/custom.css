@@ -1600,6 +1600,7 @@ a.feature-inline-link {
   color: var(--vp-c-text-2);
 }
 .blog-view-toggle {
+  margin-left: auto;
   display: flex;
   gap: 4px;
   padding: 3px;
