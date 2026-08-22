@@ -120,9 +120,30 @@ class $AppStore {
     });
   }
 
+  // The dialog's tab rides the query too (?subscriberTab=upcoming), so
+  // a tab choice survives reload and back/forward. Sent is the default
+  // and keeps the URL clean (vue-router drops undefined params).
+  get subscriberTab(): SubscriberTabName {
+    return this.$router.currentRoute.value.query.subscriberTab === 'upcoming'
+      ? 'upcoming'
+      : 'sent';
+  }
+
+  openSubscriberTab(tab: SubscriberTabName) {
+    this.$router.push({
+      query: {
+        ...this.$router.currentRoute.value.query,
+        subscriberTab: tab === 'sent' ? undefined : tab,
+      },
+    });
+  }
+
   closeSubscriber() {
-    const { subscriber: _subscriber, ...query } =
-      this.$router.currentRoute.value.query;
+    const {
+      subscriber: _subscriber,
+      subscriberTab: _subscriberTab,
+      ...query
+    } = this.$router.currentRoute.value.query;
     this.$router.push({ query });
   }
 
@@ -211,6 +232,7 @@ export type ViewName =
   | 'x'
   | 'socials-settings';
 export type ToastTone = 'info' | 'success' | 'error';
+export type SubscriberTabName = 'sent' | 'upcoming';
 
 export interface Toast {
   id: number;

@@ -742,6 +742,85 @@ td {
   border-bottom: 0;
 }
 
+/* ---- subscriber dialog (centered) ---- */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 5, 9, 0.62);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  z-index: 40;
+  animation: fade-in 160ms ease-out;
+}
+
+.dialog {
+  width: min(42rem, 96vw);
+  max-height: min(52rem, 88vh);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+  animation: dialog-in 200ms ease-out;
+}
+
+@keyframes dialog-in {
+  from {
+    transform: translateY(0.8rem) scale(0.985);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.dialog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.dialog-head h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.dialog-tabs {
+  display: flex;
+  gap: 0.2rem;
+  margin: 0.9rem 0 0.4rem;
+  border-bottom: 1px solid var(--panel-edge);
+}
+
+.dialog-tab {
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.45rem 0.9rem;
+  color: var(--muted-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dialog-tab:hover {
+  color: var(--text);
+}
+
+.dialog-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.dialog-pane {
+  animation: fade-in 140ms ease-out;
+}
+
 /* ---- subscriber modal: the projected pipeline ---- */
 .pipeline {
   list-style: none;

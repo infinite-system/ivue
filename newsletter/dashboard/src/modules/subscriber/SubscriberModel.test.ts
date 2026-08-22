@@ -90,6 +90,18 @@ describe('SubscriberModel derivations', () => {
     expect(model.isFullyCaughtUp).toBe(true);
   });
 
+  it('tabs: Sent is the default, labels carry counts, openTab routes', () => {
+    const model = new SubscriberModel.Class();
+    expect(model.activeTab).toBe('sent'); // no query param → default
+    expect(model.isTabOpen('sent')).toBe(true);
+    expect(model.isTabOpen('upcoming')).toBe(false);
+    // labels are bare until the detail loads, then carry counts
+    expect(model.tabLabel('sent')).toBe('Sent');
+    model.detail.value = makeDetail({});
+    expect(model.tabLabel('sent')).toBe('Sent (1)');
+    expect(model.tabLabel('upcoming')).toBe('Upcoming (2)');
+  });
+
   it('cadenceLabel narrates days, local hour, and the drip timezone', () => {
     const model = new SubscriberModel.Class();
     model.detail.value = makeDetail({});

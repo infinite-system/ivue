@@ -3,6 +3,7 @@ import { ref, shallowRef, watch } from 'vue';
 import { Api } from '../platform/Api';
 import type { SubscriberDetail } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
+import type { SubscriberTabName } from '../app/AppStore';
 
 // The subscriber modal's model: whichever email address rides the
 // route's `subscriber` query, this loads that address's memberships,
@@ -28,6 +29,34 @@ class $SubscriberModel {
 
   get loading() {
     return ref(false);
+  }
+
+  // ---- tabs (routable — the active tab lives in the URL) ----
+  get TABS(): { name: SubscriberTabName; label: string }[] {
+    return [
+      { name: 'sent', label: 'Sent' },
+      { name: 'upcoming', label: 'Upcoming' },
+    ];
+  }
+
+  get activeTab(): SubscriberTabName {
+    return this.$app.subscriberTab;
+  }
+
+  isTabOpen(tab: SubscriberTabName) {
+    return this.activeTab === tab;
+  }
+
+  openTab(tab: SubscriberTabName) {
+    this.$app.openSubscriberTab(tab);
+  }
+
+  tabLabel(tab: SubscriberTabName) {
+    const label = this.TABS.find((entry) => entry.name === tab)?.label ?? tab;
+    if (!this.detail.value) return label;
+    const count =
+      tab === 'sent' ? this.history.length : this.upcoming.length;
+    return `${label} (${count})`;
   }
 
   // ---- derived ----

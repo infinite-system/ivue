@@ -177,7 +177,7 @@ try {
   );
   await shot('added-subscriber');
 
-  // detail drawer: send history
+  // subscriber dialog: Sent tab (default) + routable Upcoming tab
   await page.fill('[data-view="subscribers"] input[type="search"]', 'evgeny');
   await page.click('.searchbar button.primary');
   await page.waitForFunction(() =>
@@ -186,17 +186,33 @@ try {
       ?.textContent?.includes('evgeny@ivue.dev'),
   );
   await page.click('[data-view="subscribers"] tbody .linklike');
-  await page.waitForSelector('.drawer .history li', { timeout: 10_000 });
-  const historyCount = await page.locator('.drawer .history li').count();
-  check('detail drawer lists the 2 seeded sends', historyCount === 2);
+  await page.waitForSelector('.dialog .history li', { timeout: 10_000 });
+  const historyCount = await page.locator('.dialog .history li').count();
+  check('subscriber dialog opens on Sent and lists the 2 seeded sends', historyCount === 2);
   check(
     'history names the sent posts',
-    (await page.locator('.drawer').innerText()).includes(
+    (await page.locator('.dialog').innerText()).includes(
       'the-field-not-the-rules',
     ),
   );
-  await shot('detail-drawer');
-  await page.click('.drawer .ghost');
+  await page.click('.dialog-tab[data-subscriber-tab="upcoming"]');
+  await page.waitForSelector('.dialog .pipeline li', { timeout: 10_000 });
+  check(
+    'Upcoming tab is routable (?subscriberTab=upcoming in the URL)',
+    new URL(page.url()).searchParams.get('subscriberTab') === 'upcoming',
+  );
+  check(
+    'Upcoming tab projects the pipeline',
+    (await page.locator('.dialog .pipeline li').count()) > 5,
+  );
+  await shot('subscriber-dialog');
+  await page.click('.dialog-tab[data-subscriber-tab="sent"]');
+  await page.waitForSelector('.dialog .history li', { timeout: 10_000 });
+  check(
+    'returning to Sent clears the tab param (clean default URL)',
+    new URL(page.url()).searchParams.get('subscriberTab') === null,
+  );
+  await page.click('.dialog .ghost');
 
   // ---- station 2.5: routing + the send log's slug → preview ----
   await page.click('.tab[data-tab="sends"]');

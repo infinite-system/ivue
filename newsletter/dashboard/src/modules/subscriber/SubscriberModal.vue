@@ -13,11 +13,11 @@ const {
 <template>
   <div
     v-if="model.isOpen"
-    class="drawer-backdrop"
+    class="dialog-backdrop"
     @click.self="model.close()"
   >
-    <aside class="drawer card" aria-label="Subscriber detail">
-      <header class="drawer-head">
+    <aside class="dialog card" aria-label="Subscriber detail">
+      <header class="dialog-head">
         <div>
           <h2>{{ model.email }}</h2>
           <p v-if="model.displayName" class="muted">{{ model.displayName }}</p>
@@ -28,7 +28,6 @@ const {
       <p v-if="loading" class="muted">Loading…</p>
 
       <template v-else-if="detail">
-        <h3>Lists</h3>
         <ul class="memberships">
           <li v-for="membership in detail.memberships" :key="membership.list">
             <span class="pill">{{ membership.list }}</span>
@@ -45,53 +44,66 @@ const {
           </li>
         </ul>
 
-        <h3>
-          Coming up ({{ model.upcoming.length }})
-          <span v-if="model.cadenceLabel" class="muted cadence-note">
-            one email {{ model.cadenceLabel }}
-          </span>
-        </h3>
-        <p v-if="model.isSuppressed" class="pipeline-paused" role="status">
-          Pipeline paused — this address is unsubscribed. Resubscribing
-          resumes right where it left off.
-        </p>
-        <p v-if="model.isFullyCaughtUp" class="muted">
-          All caught up — every post in the archive has been sent.
-        </p>
-        <ol v-else class="pipeline">
-          <li
-            v-for="(entry, position) in model.upcoming"
-            :key="entry.slug"
-            :class="{ next: position === 0 }"
+        <nav class="dialog-tabs" aria-label="Subscriber emails">
+          <button
+            v-for="tab in model.TABS"
+            :key="tab.name"
+            class="dialog-tab"
+            :class="{ active: model.isTabOpen(tab.name) }"
+            :data-subscriber-tab="tab.name"
+            @click="model.openTab(tab.name)"
           >
-            <span v-if="position === 0" class="status on">next</span>
-            <span v-else class="pipeline-position">{{ position + 1 }}</span>
-            <button
-              class="linklike slug"
-              @click="model.openPost(entry.slug)"
-            >
-              {{ entry.slug }}
-            </button>
-            <span class="muted">
-              {{ Format.Class.dateTime(entry.projectedAt) }}
-              ({{ Format.Class.relativeDue(entry.projectedAt) }})
-            </span>
-          </li>
-        </ol>
+            {{ model.tabLabel(tab.name) }}
+          </button>
+        </nav>
 
-        <h3>Emails received ({{ detail.history.length }})</h3>
-        <p v-if="!detail.history.length" class="muted">Nothing sent yet.</p>
-        <ol class="history">
-          <li v-for="sent in detail.history" :key="sent.slug">
-            <button
-              class="linklike slug"
-              @click="model.openPost(sent.slug)"
+        <section v-if="model.isTabOpen('sent')" class="dialog-pane">
+          <p v-if="!detail.history.length" class="muted">Nothing sent yet.</p>
+          <ol class="history">
+            <li v-for="sent in detail.history" :key="sent.slug">
+              <button
+                class="linklike slug"
+                @click="model.openPost(sent.slug)"
+              >
+                {{ sent.slug }}
+              </button>
+              <span class="muted">{{ Format.Class.dateTime(sent.sentAt) }}</span>
+            </li>
+          </ol>
+        </section>
+
+        <section v-else class="dialog-pane">
+          <p v-if="model.cadenceLabel" class="muted cadence-note">
+            one email {{ model.cadenceLabel }}
+          </p>
+          <p v-if="model.isSuppressed" class="pipeline-paused" role="status">
+            Pipeline paused — this address is unsubscribed. Resubscribing
+            resumes right where it left off.
+          </p>
+          <p v-if="model.isFullyCaughtUp" class="muted">
+            All caught up — every post in the archive has been sent.
+          </p>
+          <ol v-else class="pipeline">
+            <li
+              v-for="(entry, position) in model.upcoming"
+              :key="entry.slug"
+              :class="{ next: position === 0 }"
             >
-              {{ sent.slug }}
-            </button>
-            <span class="muted">{{ Format.Class.dateTime(sent.sentAt) }}</span>
-          </li>
-        </ol>
+              <span v-if="position === 0" class="status on">next</span>
+              <span v-else class="pipeline-position">{{ position + 1 }}</span>
+              <button
+                class="linklike slug"
+                @click="model.openPost(entry.slug)"
+              >
+                {{ entry.slug }}
+              </button>
+              <span class="muted">
+                {{ Format.Class.dateTime(entry.projectedAt) }}
+                ({{ Format.Class.relativeDue(entry.projectedAt) }})
+              </span>
+            </li>
+          </ol>
+        </section>
       </template>
     </aside>
   </div>
