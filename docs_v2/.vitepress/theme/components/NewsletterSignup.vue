@@ -226,7 +226,7 @@ async function subscribe() {
         </svg>
         <div class="newsletter__heading">
           <span class="newsletter__label">ivue newsletter</span>
-          <span class="newsletter__title">Follow the frontier</span>
+          <span class="newsletter__title">Join the frontier</span>
         </div>
       </div>
       <p class="newsletter__pitch">
