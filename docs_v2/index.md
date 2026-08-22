@@ -413,7 +413,7 @@ built: the architecture behind ivue, the patterns AI agents write with
 it, and the measured numbers behind every claim — from
 <a href="/blog/the-options-api-everyone-wanted">the class JavaScript
 was always waiting for</a> to
-<a href="/blog/bulletproof-class-modules">bulletproof class modules</a>.
+<a href="/blog/bulletproof-class-modules">Bulletproof class modules</a>.
 Every post lands in your inbox, one at a time, at your local morning.
 </p>
 
