@@ -773,6 +773,7 @@ export default defineConfig({
             { text: 'Keyed Version Signals', link: '/guide/keyed-version-signals' },
             { text: 'Flyweight Pattern', link: '/guide/flyweight' },
             { text: 'Static() — Capability Classes', link: '/guide/static' },
+            { text: 'Caches, Registries & self', link: '/guide/caches-and-registries' },
             { text: 'Backend ivue', link: '/guide/backend' },
           ],
         },
