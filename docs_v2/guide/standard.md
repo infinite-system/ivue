@@ -42,6 +42,12 @@ tracking), methods become stable bound functions. Instances stay plain objects.
 Follow the rules below exactly — every deviation is either a compile error or a
 silent no-op at runtime.
 
+The manual reads in three parts: the **`Reactive()` instance world**
+(the class and SFC templates, ownership, typing, watches, stores, keyed
+state), the **static world** (`Static()`, shared stores, and reading
+your own statics — everything from `ivue/extras`), and the **style
+contract** (naming, spacing, the self-review checklist).
+
 ## Setup — ivue must be installed
 
 `import { Reactive } from 'ivue'` resolves only when the package is a
@@ -77,6 +83,14 @@ class $Box {
     return 4;
   }
 
+  // SELF — the one cast per class. Instance code reads its own statics
+  // through this.self: late-bound to the receiving class (subclass
+  // overrides apply), typed once here instead of per call site. See
+  // "Reading your own statics".
+  protected get self() {
+    return this.constructor as typeof $Box;
+  }
+
   // Constructor runs SYNCHRONOUSLY where you `new` — in setup() that
   // means the constructor body IS setup code, and the whole toolbox
   // works here:
@@ -103,7 +117,7 @@ class $Box {
   // RAW: read AND write via .value. shallowRef for big structures you
   // REPLACE wholesale.
   get height() {
-    return ref((this.constructor as typeof $Box).DEFAULT_HEIGHT);
+    return ref(this.self.DEFAULT_HEIGHT);
   }
   get rows() {
     return shallowRef<Row[]>([]);
@@ -470,6 +484,7 @@ session.dispose();
 | ✅ plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | ❌ default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |
 | ✅ compose cleanup as an ordinary method — `dispose() { /* non-Vue cleanup */ this.$stopEffects(); }` | ❌ expect a teardown hook — ivue auto-calls NOTHING (no `init()`, no `stopEffects()`) |
 | ✅ a class with static members anchors them: `const $Class = Static($X)` (`ivue/extras`) | ❌ `extends X.Class` — the mutable slot is an eager snapshot of one generation; always extend `$Class` |
+| ✅ instance code reads its own statics through `this.self` (the one cast per class); hoist `const self = this.self` for 2+ reads or any loop | ❌ per-site `(this.constructor as typeof $X)` casts — each one is an unchecked class-name assertion |
 
 ## The unwrapping-surface typing invariant
 
@@ -530,176 +545,6 @@ until mount — use `?.` in watch getters).
   `getCurrentInstance() && onMounted(() => this.onMount());`
 - Watch CALLBACKS delegate to methods (the thin-closure rule):
   `watch(source, (newValue, oldValue) => this.onChanged(newValue, oldValue))`.
-
-## Circular references resolve by construction
-
-The hoisted-namespace + getter convention makes late cross-module references
-safe without ordering discipline or `forwardRef`-style workarounds:
-
-- Cross-references (`new Other.Class()` in a method, a store read in a
-  `$`-getter) resolve at FIRST ACCESS, when every module in the cycle has
-  long finished loading — any load order works.
-- Each file calls `Reactive()` on its own class safely: it is idempotent per
-  prototype level; a shared ancestor is transformed once, by
-  whichever file loads first.
-- Eager top-level dereferences can still fail; the convention keeps
-  cross-references inside late method and getter bodies. Circular `extends`
-  stays impossible because it evaluates at load time and both parents cannot
-  exist first.
-
-## `Static()` — the static-side sibling (from `ivue/extras`)
-
-`Reactive()` owns instances. Stateless CAPABILITY classes — function bags for
-files, git, parsers, clocks: never constructed, only called and swapped — use
-`Static()` from the `ivue/extras` entry (separate, so core stays the engine):
-
-- **Static methods bind lazily with stable identity** — detachable, safe as a
-  router/queue/listener callback, bound to the RECEIVING class.
-- **Get-only statics named `$…` compute once PER RECEIVER.** The `$` prefix
-  promises stable identity, NOT immutability — a mutable memo table is a
-  legitimate `$`-cache. Non-`$` static getters stay LIVE: those are the knobs
-  test subclasses pinch.
-- **A SHARED STORE never lives in receiver-space.** Per-receiver caching
-  means a subclass reading `this.$store` silently forks a fresh copy — the
-  registry-fork trap. The store is a `static readonly` FIELD on the
-  declaring class (fields are one reference, inherited, never
-  receiver-cached), and the `$`-getter pins by naming the class:
-  ```ts
-  class $Registry {
-    protected static readonly sharedRegistrations = new Map<object, Registration>();
-    protected static get $registrations() {
-      return this.sharedRegistrations; // the field IS the pin
-    }
-  }
-  ```
-  Fields are one reference on the declaring class, inherited through the
-  prototype chain and never receiver-cached — so plain receiver reads
-  (`this.$store`, `this.constructor.$store`) resolve to the one store with
-  no special case anywhere. The split: per-receiver `$`-caches are for
-  MEMOS and per-class tuning (forking on subclass is the feature);
-  static-field stores are for REGISTRIES and LEDGERS (forking is the bug).
-  An eager field initializer runs at module load, so it may hold only a
-  dependency-free value (a bare container or literal). A shared value that
-  must CONSTRUCT another namespace's class goes in a `LazyShared` cell
-  (`import { LazyShared } from 'ivue/extras'`): the field eagerly stores
-  the cell (safe — a thunk evaluates nothing at load), the thunk runs on
-  first read (safe — every import cycle has resolved), and memoization
-  lives inside the cell (safe — every access path, subclass receivers and
-  per-receiver `$`-caches included, converges on the ONE constructed
-  singleton):
-  ```ts
-  protected static readonly sharedBackend = new LazyShared(
-    () => new SearchBackend.Class(),
-  );
-  protected static get $backend() {
-    return this.sharedBackend.value;
-  }
-  ```
-
-THE ANCHOR RULE — a class that declares static members wraps them ONCE, at
-`$Class`, so subclasses and test doubles inherit working semantics by
-extending `$Class` bare:
-
-```ts
-import { Static } from 'ivue/extras';
-
-class $GitCommands {
-  static get binary() {
-    return 'git'; // LIVE knob — no $ prefix
-  }
-  static get $environment() {
-    return { LC_ALL: 'C' }; // computed once per receiver
-  }
-  static stage(path: string) {
-    return this.run(['add', '--', path]); // `this` = receiving class
-  }
-}
-
-export namespace GitCommands {
-  export const $Class = Static($GitCommands); // anchor — wrap HERE
-  export let Class = $Class; // selection — kernels/tests swap this
-}
-```
-
-Statics AND reactive instances on one class — anchor the statics, then
-`Reactive()`:
-
-```ts
-export namespace Settings {
-  export const $Class = Static($Settings);
-  export let Class = Reactive($Class); // in-place: Class === $Class
-  export type Instance = typeof Class.Instance;
-}
-```
-
-No static members → no wrapper: `$Class = $X`, the standard form unchanged.
-
-## Reading your own statics — the ladder
-
-`Reactive(X) === X`, so a namespace's `Class` slot IS the base class. A getter
-that reads statics through it therefore hard-binds to the base and silently
-IGNORES a subclass override — the exact opposite of what a live (non-`$`)
-static getter is for:
-
-```ts
-// ❌ three members, a double cast, and the override never applies
-protected get Tooltip() {
-  return Tooltip.Class as unknown as typeof $Tooltip;
-}
-public static get TOOLTIP_DWELL_SECONDS() { return 0.4; }
-protected get tooltipDwellSeconds() {
-  return this.Tooltip.TOOLTIP_DWELL_SECONDS;   // base value forever
-}
-```
-
-Measured: a subclass setting `0.1` still reads `0.4` through this shape.
-
-Take the first rung that applies:
-
-1. **Nothing outside the instance reads it** → delete the static. A plain
-   instance getter is zero bytes per instance and natively overridable:
-   ```ts
-   protected get tooltipDwellSeconds() { return 0.4; }
-   ```
-2. **Something outside reads it** (tests pinching the knob, another class)
-   → keep the static and read it live off the receiver:
-   ```ts
-   protected get tooltipDwellSeconds() {
-     return (this.constructor as typeof $Tooltip).TOOLTIP_DWELL_SECONDS;
-   }
-   ```
-   `this.constructor` is the actual class: the subclass when subclassed, and
-   an engine class that INHERITS `$Class` for a plain reactive instance, so
-   statics resolve in both cases. TypeScript types `constructor` as
-   `Function`, so the one cast is required and is the honest cost.
-3. **Overriding must NOT happen** → name the class directly,
-   `$Tooltip.TOOLTIP_DWELL_SECONDS`, and let the code say so.
-
-Never introduce a `protected get <ClassName>()` self-reference getter. It is a
-cast wearing a getter costume: it looks live and is not.
-
-## Generic classes (brief)
-
-`ReactiveClass<C>` cannot carry `<T>` through (no higher-kinded types), but
-`Reactive(X) === X` by identity — so cast `Class` back to the raw
-constructor and apply `ReactiveInstance` explicitly for `Instance`:
-
-```ts
-class $Scroller<T extends BaseItem> {
-  get items() {
-    return ref<T[]>([]);
-  }
-}
-
-export namespace Scroller {
-  export const $Class = $Scroller;
-  // the cast keeps <T> available at `new` sites
-  export let Class = Reactive($Class) as unknown as typeof $Class;
-  export type Instance<T extends BaseItem> =
-    ReactiveInstance<$Scroller<T>>;
-}
-// consumer of a template ref: ShallowUnwrapRef<Scroller.Instance<T>>
-```
 
 ## computed() and watch callbacks delegate to methods
 
@@ -826,37 +671,6 @@ Why this shape and not alternatives:
   named `app`, `store`, or `session` is the tell that a store is being
   drilled.
 
-## Naming: unfold to the domain
-
-Readable code is the product. In ivue classes the class shape already reads
-like prose — don't ruin it with letter soup:
-
-- **No single-letter or abbreviated identifiers** — including loop indices
-  and callback parameters. `row`/`col`, not `r`/`c`; `cell`, `cellValue`,
-  `entry`, `versionRef`, `aggregate`, `newValue`/`oldValue`, not
-  `c`/`v`/`e`/`agg`/`nv`/`ov`.
-- **The one-letter-many-meanings failure mode is the reason.** A file where
-  `c` means cell in one method, column in the next, and cellValue in a
-  third makes every reader re-derive the type system in their head. Named
-  after the domain, the ambiguity cannot exist.
-- **Booleans are predicates** (`isFineTier`, `hasModel`); counts say what
-  they count (`observerRuns`, `releasedCount`); prior values are
-  `originalX`/`previousX`, not `old`/`prev` alone.
-- Abbreviate only when the abbreviation IS the domain term (`px`, `id`,
-  `fx`, A1-notation like `startRow`/`endCol`).
-- Tests are code — the same rules apply to specs.
-
-```ts
-// ❌ const v = this.cellVersions.get(k);
-// ✅ const versionRef = this.cellVersions.get(cellKey);
-
-// ❌ for (let r = r1; r <= r2; r++)
-// ✅ for (let row = startRow; row <= endRow; row++)
-
-// ❌ watch(c, (nv, ov) => …)
-// ✅ watch(value, (newValue, oldValue) => this.onChanged(…))
-```
-
 ## Keyed reactivity — the third state shape
 
 Ref-getters express NAMED members; `shallowRef` expresses wholesale-replaced
@@ -922,6 +736,235 @@ by observation), while writes to unobserved keys allocate no signal. Rules that 
 Same invariant at three granularities — nothing exists until observed: getters
 price MEMBERS, keyed collections price KEYS. (Proven at 20M cells / 4.7
 bytes each — see the flyweight grid.)
+
+## Generic classes (brief)
+
+`ReactiveClass<C>` cannot carry `<T>` through (no higher-kinded types), but
+`Reactive(X) === X` by identity — so cast `Class` back to the raw
+constructor and apply `ReactiveInstance` explicitly for `Instance`:
+
+```ts
+class $Scroller<T extends BaseItem> {
+  get items() {
+    return ref<T[]>([]);
+  }
+}
+
+export namespace Scroller {
+  export const $Class = $Scroller;
+  // the cast keeps <T> available at `new` sites
+  export let Class = Reactive($Class) as unknown as typeof $Class;
+  export type Instance<T extends BaseItem> =
+    ReactiveInstance<$Scroller<T>>;
+}
+// consumer of a template ref: ShallowUnwrapRef<Scroller.Instance<T>>
+```
+
+## Circular references resolve by construction
+
+The hoisted-namespace + getter convention makes late cross-module references
+safe without ordering discipline or `forwardRef`-style workarounds:
+
+- Cross-references (`new Other.Class()` in a method, a store read in a
+  `$`-getter) resolve at FIRST ACCESS, when every module in the cycle has
+  long finished loading — any load order works.
+- Each file calls `Reactive()` on its own class safely: it is idempotent per
+  prototype level; a shared ancestor is transformed once, by
+  whichever file loads first.
+- Eager top-level dereferences can still fail; the convention keeps
+  cross-references inside late method and getter bodies. Circular `extends`
+  stays impossible because it evaluates at load time and both parents cannot
+  exist first.
+
+## `Static()` — the static-side sibling (from `ivue/extras`)
+
+`Reactive()` owns instances. Stateless CAPABILITY classes — function bags for
+files, git, parsers, clocks: never constructed, only called and swapped — use
+`Static()` from the `ivue/extras` entry (separate, so core stays the engine):
+
+- **Static methods bind lazily with stable identity** — detachable, safe as a
+  router/queue/listener callback, bound to the RECEIVING class.
+- **Get-only statics named `$…` compute once PER RECEIVER.** The `$` prefix
+  promises stable identity, NOT immutability — a mutable memo table is a
+  legitimate `$`-cache. Non-`$` static getters stay LIVE: those are the knobs
+  test subclasses pinch.
+- **A SHARED STORE never lives in receiver-space.** Per-receiver caching
+  means a subclass reading `this.$store` silently forks a fresh copy — the
+  registry-fork trap. The store is a `static readonly` FIELD on the
+  declaring class — one reference, inherited through the prototype chain,
+  never receiver-cached — so every receiver read (`this.$store`,
+  `this.constructor.$store`) resolves to the one store with no special
+  case anywhere; the `$`-getter pins by returning the field:
+  ```ts
+  class $Registry {
+    protected static readonly sharedRegistrations = new Map<object, Registration>();
+    protected static get $registrations() {
+      return this.sharedRegistrations; // the field IS the pin
+    }
+  }
+  ```
+  The split: per-receiver `$`-caches are for MEMOS and per-class tuning
+  (forking on subclass is the feature); static-field stores are for
+  REGISTRIES and LEDGERS (forking is the bug).
+  An eager field initializer runs at module load, so it may hold only a
+  dependency-free value (a bare container or literal). A shared value that
+  must CONSTRUCT another namespace's class goes in a `LazyShared` cell
+  (`import { LazyShared } from 'ivue/extras'`): the field eagerly stores
+  the cell (safe — a thunk evaluates nothing at load), the thunk runs on
+  first read (safe — every import cycle has resolved), and memoization
+  lives inside the cell (safe — every access path, subclass receivers and
+  per-receiver `$`-caches included, converges on the ONE constructed
+  singleton):
+  ```ts
+  protected static readonly sharedBackend = new LazyShared(
+    () => new SearchBackend.Class(),
+  );
+  protected static get $backend() {
+    return this.sharedBackend.value;
+  }
+  ```
+
+THE ANCHOR RULE — a class that declares static members wraps them ONCE, at
+`$Class`, so subclasses and test doubles inherit working semantics by
+extending `$Class` bare:
+
+```ts
+import { Static } from 'ivue/extras';
+
+class $GitCommands {
+  static get binary() {
+    return 'git'; // LIVE knob — no $ prefix
+  }
+  static get $environment() {
+    return { LC_ALL: 'C' }; // computed once per receiver
+  }
+  static stage(path: string) {
+    return this.run(['add', '--', path]); // `this` = receiving class
+  }
+}
+
+export namespace GitCommands {
+  export const $Class = Static($GitCommands); // anchor — wrap HERE
+  export let Class = $Class; // selection — kernels/tests swap this
+}
+```
+
+Statics AND reactive instances on one class — anchor the statics, then
+`Reactive()`:
+
+```ts
+export namespace Settings {
+  export const $Class = Static($Settings);
+  export let Class = Reactive($Class); // in-place: Class === $Class
+  export type Instance = typeof Class.Instance;
+}
+```
+
+No static members → no wrapper: `$Class = $X`, the standard form unchanged.
+
+## Reading your own statics — the ladder
+
+`Reactive(X) === X`, so a namespace's `Class` slot IS the base class. A getter
+that reads statics through it therefore hard-binds to the base and silently
+IGNORES a subclass override — the exact opposite of what a live (non-`$`)
+static getter is for:
+
+```ts
+// ❌ three members, a double cast, and the override never applies
+protected get Tooltip() {
+  return Tooltip.Class as unknown as typeof $Tooltip;
+}
+public static get TOOLTIP_DWELL_SECONDS() { return 0.4; }
+protected get tooltipDwellSeconds() {
+  return this.Tooltip.TOOLTIP_DWELL_SECONDS;   // base value forever
+}
+```
+
+Measured: a subclass setting `0.1` still reads `0.4` through this shape.
+
+Take the first rung that applies:
+
+1. **Nothing outside the instance reads it** → delete the static. A plain
+   instance getter is zero bytes per instance and natively overridable:
+   ```ts
+   protected get tooltipDwellSeconds() { return 0.4; }
+   ```
+2. **Something outside reads it** (tests pinching the knob, another class)
+   → keep the static and read it through **`self`** — the one cast per
+   class, declared beside the statics it types:
+   ```ts
+   protected get self() {
+     return this.constructor as typeof $Tooltip;
+   }
+
+   protected get tooltipDwellSeconds() {
+     return this.self.TOOLTIP_DWELL_SECONDS;
+   }
+   ```
+   `this.constructor` is the actual class — the subclass when subclassed,
+   and an engine class that INHERITS `$Class` for a plain reactive
+   instance — so statics resolve late-bound in both cases (JavaScript's
+   `type(self)`, hand-rolled). TypeScript types `constructor` as bare
+   `Function`, so ONE cast is unavoidable; `self` is where it lives.
+   Never scatter per-site `(this.constructor as typeof $X)` casts: each
+   is an unchecked assertion that the class name is right, and the
+   copy-paste error it invites typechecks silently against the wrong
+   statics. Rules that keep `self` honest:
+   - **Plain getter, never `$self`** — a `$`-cache would spend a
+     per-instance slot on what `this.constructor` hands back for free.
+   - **One read → `this.self.X` inline. Two or more reads, or any
+     loop → hoist:** `const self = this.self;` as the first line, then
+     `self.X` throughout. Measured (Node 26): the de-opted `self` getter
+     costs ~2 ns/read over an inline cast — noise for a single read —
+     while the hoisted form runs at ~0.4 ns/iter in loops, CHEAPER than
+     the inline cast, because the engine hoists the class as a loop
+     constant.
+   - **A subclass that adds statics redeclares `self`** with its own
+     `typeof $Sub` (a covariant override); a subclass that only tunes
+     inherited statics needs nothing — `self` is already late-bound.
+   - **`self` is NOT the namespace slot.** `this.self` is the class you
+     were constructed from; `Namespace.Class` is the live mutable slot a
+     kernel may have re-pointed since. Receiver statics (constants,
+     per-class tuning, `$`-caches) read through `self`; late-bound
+     capability dispatch reads through `Namespace.Class`. Blurring them
+     trades typo bugs for staleness bugs.
+3. **Overriding must NOT happen** → name the class directly,
+   `$Tooltip.TOOLTIP_DWELL_SECONDS`, and let the code say so.
+
+Never introduce a `protected get <ClassName>()` self-reference getter. It is a
+cast wearing a getter costume: it looks live and is not — `self` is its
+honest replacement.
+
+## Naming: unfold to the domain
+
+Readable code is the product. In ivue classes the class shape already reads
+like prose — don't ruin it with letter soup:
+
+- **No single-letter or abbreviated identifiers** — including loop indices
+  and callback parameters. `row`/`col`, not `r`/`c`; `cell`, `cellValue`,
+  `entry`, `versionRef`, `aggregate`, `newValue`/`oldValue`, not
+  `c`/`v`/`e`/`agg`/`nv`/`ov`.
+- **The one-letter-many-meanings failure mode is the reason.** A file where
+  `c` means cell in one method, column in the next, and cellValue in a
+  third makes every reader re-derive the type system in their head. Named
+  after the domain, the ambiguity cannot exist.
+- **Booleans are predicates** (`isFineTier`, `hasModel`); counts say what
+  they count (`observerRuns`, `releasedCount`); prior values are
+  `originalX`/`previousX`, not `old`/`prev` alone.
+- Abbreviate only when the abbreviation IS the domain term (`px`, `id`,
+  `fx`, A1-notation like `startRow`/`endCol`).
+- Tests are code — the same rules apply to specs.
+
+```ts
+// ❌ const v = this.cellVersions.get(k);
+// ✅ const versionRef = this.cellVersions.get(cellKey);
+
+// ❌ for (let r = r1; r <= r2; r++)
+// ✅ for (let row = startRow; row <= endRow; row++)
+
+// ❌ watch(c, (nv, ov) => …)
+// ✅ watch(value, (newValue, oldValue) => this.onChanged(…))
+```
 
 ## Spacing is information
 
@@ -1010,5 +1053,6 @@ convention and check it in review.
 - [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices and specs included — no single-letter names, no name meaning different things in different methods.
 - [ ] Keyed/sparse state uses the Map-of-refs shape (get-or-create on read, peek-only bump on write, explicit release path) — never one getter per key, never a deep `reactive()` collection.
 - [ ] Static members are anchored (`const $Class = Static($X)`); `$`-prefixed static getters are compute-once-per-receiver caches, non-`$` statics stay live knobs, and inheritance extends `$Class` — never the mutable `Class`.
+- [ ] Instance reads of own statics go through `this.self` (declared once per class needing it, cast to `typeof $X`, plain getter never `$self`); 2+ reads or loops hoist `const self = this.self`; no per-site `this.constructor` casts; `Namespace.Class` reads stay reserved for late-bound capability dispatch.
 - [ ] Static members precede the constructor; the constructor precedes state, prop, and derived getters; methods come last.
 - [ ] Spacing carries meaning: declaration-like getters contiguous within their group; blank lines only where a doc comment / multi-line body / category boundary begins; methods always separated.

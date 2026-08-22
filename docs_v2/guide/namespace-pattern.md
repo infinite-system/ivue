@@ -580,18 +580,26 @@ inheritance:
 protected get dwellSeconds() { return 0.4; }
 ```
 
-**2. Something outside reads it — keep the static, read it off the receiver:**
+**2. Something outside reads it — keep the static, read it through `self`:**
 
 ```ts
+protected get self() {
+  return this.constructor as typeof $Tooltip;
+}
+
 protected get dwellSeconds() {
-  return (this.constructor as typeof $Tooltip).DWELL_SECONDS;
+  return this.self.DWELL_SECONDS;
 }
 ```
 
 `this.constructor` is the actual class: the subclass when subclassed, and a
 class that INHERITS the original when the instance came from `Reactive()`, so
-statics resolve in both cases. TypeScript types `constructor` as `Function`, so
-the single cast is the honest cost.
+statics resolve in both cases. TypeScript types `constructor` as `Function`,
+so one cast is unavoidable — `self` is where it lives, declared once beside
+the statics it types instead of asserted at every call site. A method that
+reads two or more statics (or reads inside a loop) hoists it first —
+`const self = this.self;` — which measures *faster* than the inline cast,
+because the engine hoists the class as a loop constant.
 
 **3. Overriding must not happen — name the class directly**,
 `$Tooltip.DWELL_SECONDS`, so the code says so.
