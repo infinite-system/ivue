@@ -36,7 +36,6 @@ path and skip the install; never add the dependency alongside a vendored copy.
 
 ```ts
 import { Reactive } from 'ivue'; // in this app: 'src/utils/ivue'
-import { Static } from 'ivue/extras';
 import {
   ref,
   shallowRef,
@@ -49,18 +48,6 @@ import {
 import { useProjectStore } from 'src/stores/project.store';
 
 class $Box {
-  static get DEFAULT_HEIGHT() {
-    return 4;
-  }
-
-  // SELF — the one cast per class. Instance code reads its own statics
-  // through this.self: late-bound to the receiving class (subclass
-  // overrides apply), typed once here instead of per call site. See
-  // "Reading your own statics".
-  protected get self() {
-    return this.constructor as typeof $Box;
-  }
-
   // Constructor runs SYNCHRONOUSLY where you `new` — in setup() that
   // means the constructor body IS setup code, and the whole toolbox
   // works here:
@@ -87,7 +74,7 @@ class $Box {
   // RAW: read AND write via .value. shallowRef for big structures you
   // REPLACE wholesale.
   get height() {
-    return ref(this.self.DEFAULT_HEIGHT);
+    return ref(4);
   }
   get rows() {
     return shallowRef<Row[]>([]);
@@ -193,12 +180,17 @@ class $Box {
 }
 
 export namespace Box {
-  export const $Class = Static($Box); // static anchor — children `extends` this
+  export const $Class = $Box; // raw — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   // the type of every unwrapping surface (defineExpose, reactive())
   export type Instance = typeof Class.Instance;
 }
 ```
+
+A class with NO static members exports exactly this shape. Only a class
+that DECLARES statics anchors them — `export const $Class =
+Static($Box)` — and reads them from instance code through `self`; both
+live in the static-world sections below.
 
 ### The optional `Model` line (domain entity graphs)
 
