@@ -567,8 +567,8 @@ class $Tooltip {
 ```
 
 A subclass setting `0.1` still reads `0.4` through this shape. That defeats the
-reason a live (non-`$`) static getter exists: it is the knob a subclass or a
-test double pinches.
+reason a live (non-`$`) static getter exists: it is the setting a subclass or
+a test double overrides.
 
 Take the first rung that applies.
 

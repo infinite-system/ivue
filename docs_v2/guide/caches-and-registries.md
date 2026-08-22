@@ -168,7 +168,7 @@ The standard is one cast per class, named `self`:
 ```ts
 class $Tooltip {
   static get TOOLTIP_DWELL_SECONDS() {
-    return 0.4; // live knob — tests and subclasses pinch it
+    return 0.4; // stays overridable — no $ prefix, so subclasses and tests can change it
   }
 
   protected get self() {
@@ -222,7 +222,7 @@ one name and one override surface: the static.
 
 | the value is… | form |
 | --- | --- |
-| a live knob tests or subclasses pinch | non-`$` static getter |
+| a setting subclasses or test doubles override | non-`$` static getter (stays live) |
 | a memo or per-class tuning — forking on subclass is wanted | `$`-cached static getter |
 | a shared registry or ledger, dependency-free to build | `static readonly` field (the pin) |
 | shared AND constructs another module's class | `static readonly` field holding a `LazyShared` cell |

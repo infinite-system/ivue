@@ -756,8 +756,8 @@ files, git, parsers, clocks: never constructed, only called and swapped — use
   router/queue/listener callback, bound to the RECEIVING class.
 - **Get-only statics named `$…` compute once PER RECEIVER.** The `$` prefix
   promises stable identity, NOT immutability — a mutable memo table is a
-  legitimate `$`-cache. Non-`$` static getters stay LIVE: those are the knobs
-  test subclasses pinch.
+  legitimate `$`-cache. Non-`$` static getters stay LIVE: the settings a
+  subclass or test double overrides.
 - **A SHARED STORE never lives in receiver-space.** Per-receiver caching
   means a subclass reading `this.$store` silently forks a fresh copy — the
   registry-fork trap. The store is a `static readonly` FIELD on the
@@ -867,7 +867,7 @@ Take the first rung that applies:
    ```ts
    protected get tooltipDwellSeconds() { return 0.4; }
    ```
-2. **Something outside reads it** (tests pinching the knob, another class)
+2. **Something outside reads it** (a test overriding the knob, another class)
    → keep the static and read it through **`self`** — the one cast per
    class, declared beside the statics it types — DIRECTLY at each call
    site:

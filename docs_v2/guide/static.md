@@ -31,7 +31,7 @@ this one seam shape, applied uniformly across the codebase.
 import { Static } from 'ivue/extras';
 
 class $GitCommands {
-  // a LIVE knob — subclasses pinch it, so NO $ prefix
+  // a LIVE knob — subclasses override it, so NO $ prefix
   static get binary() {
     return 'git';
   }
@@ -123,7 +123,7 @@ class $LineWrap {
 Two rules keep the population honest:
 
 - **Knobs are not caches.** A static getter that must stay live — a
-  parameter a test subclass pinches, a value that must be fresh per
+  parameter a test subclass overrides, a value that must be fresh per
   read — must **not** use the `$` prefix. The prefix is the author's
   explicit compute-once marker, exactly as it is for instance
   `$`-getters in `Reactive()`.
@@ -156,7 +156,7 @@ Capability classes need no mock framework — the namespace publishes
 both exports a test needs:
 
 ```ts
-// pinch one knob — NO wrapper needed: the anchor's semantics are
+// override one knob — NO wrapper needed: the anchor's semantics are
 // inherited, and the cache derives through the override per receiver
 class SandboxGit extends GitCommands.$Class {
   static override get binary() {
@@ -174,7 +174,7 @@ class $RecordingGit extends GitCommands.$Class {
 GitCommands.Class = Static($RecordingGit);
 ```
 
-Because the anchor is already wrapped, the common double — pinching a
+Because the anchor is already wrapped, the common double — overriding a
 live knob — needs nothing at all: inherited methods bind to the
 double, inherited `$`-caches derive through its overrides, in any read
 order. Only a double that *declares or overrides* transformable
