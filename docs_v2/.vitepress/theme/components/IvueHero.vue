@@ -37,7 +37,6 @@ class $Typewriter {
     'Reactive super.',
     'Composable.',
     'Circular imports.',
-    'Deterministic.',
     'Zero-cost creation.',
     'Minimal memory.',
     'Bulletproof modules.',
