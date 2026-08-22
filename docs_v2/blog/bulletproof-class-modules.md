@@ -32,7 +32,7 @@ map — every value kind, in code.
 
 ## The map
 
-| the value is… | its home | memoized | inheritance |
+| the value is… | use a | memoized | inheritance |
 | --- | --- | --- | --- |
 | mutable state | ref-getter | per instance, on first touch | subclass overrides the getter |
 | a derivation | plain getter | never allocated — prototype only | `super` works; zero bytes to inherit |
