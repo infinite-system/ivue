@@ -217,6 +217,33 @@ one-minute steps matching the blog page's displayed order — timestamps
 stay unique and every consumer (blog page, drip, neighbor cards) agrees
 on one chronology.
 
+## Renaming a post slug (the runbook)
+
+The slug IS the post's identity everywhere — sends ledger, tweets
+table, scheduled-job payloads, URLs, banner/shot filenames. There is no
+separate id on purpose (a parallel id would give every post two names
+forever to optimize a rare event). A rename touches five places, in
+this order:
+
+1. `git mv` the post md, the banner source
+   (`.claude/skills/blog-banner/banners/<slug>.html`), the banner PNG,
+   and any `<slug>-embed-N.png` / `<slug>-code-N.png` shots; update
+   every cross-reference (`grep -rl <old> docs_v2 --include=*.md`).
+2. Add permanent 301s to `docs_v2/public/_redirects` — the page, the
+   banner PNG, and each shot. Emailed URLs and shared links live
+   forever; redirects are never removed.
+3. COMMIT, then `npm run sync:blog-dates` (git `--follow` tracks the
+   rename only through committed history) and verify the renamed slugs
+   kept their dates.
+4. Migrate D1 (remote AND local):
+   `UPDATE sends SET slug='<new>' WHERE slug='<old>'` — without this
+   the drip sees the post as unsent and RE-MAILS it to everyone who
+   already received it. Also check `tweets.slug` and pending
+   `scheduled_jobs` payloads.
+5. `npm run build:docs`, deploy the site, then verify: old URL 301s,
+   new URL 200s, and `/admin/subscriber` shows the post in history
+   (not upcoming) for someone who received it.
+
 ## Welcome email (on signup)
 
 `/subscribe` sends a welcome email immediately (best-effort, rides
