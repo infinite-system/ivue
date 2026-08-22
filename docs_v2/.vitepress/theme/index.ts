@@ -23,6 +23,7 @@ import BlogAuthor from './components/BlogAuthor.vue';
 import BlogPostNav from './components/BlogPostNav.vue';
 import BlogPostDate from './components/BlogPostDate.vue';
 import NewsletterSignup from './components/NewsletterSignup.vue';
+import NewsletterQuickJoin from './components/NewsletterQuickJoin.vue';
 import BlogArchiveScroller from './components/BlogArchiveScroller.vue';
 import BlogBackLink from './components/BlogBackLink.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
@@ -47,6 +48,7 @@ export default {
       ],
       'doc-after': () => [
         h(BlogShare, { placement: 'doc' }),
+        h(NewsletterQuickJoin, { placement: 'post-footer', align: 'center' }),
         h(BlogAuthor),
         h(BlogPostNav),
         h(BlogArchiveScroller),

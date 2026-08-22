@@ -1,12 +1,27 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useRoute } from 'vitepress';
 import { captureEvent } from '../analytics';
 
-// The one-line signup riding the blog toolbar: Name, Email, [Join].
-// Same endpoint and invisible Turnstile as the full card — this is the
-// fast lane, not a separate system.
+// The one-line signup: Name, Email, [Join the frontier]. Rides the
+// blog toolbar, the blog footer, and the bottom of every post. Same
+// endpoint and invisible Turnstile as the full card — this is the fast
+// lane, not a separate system.
 const NEWSLETTER_ENDPOINT = 'https://ivue-newsletter.ekalashnikov.workers.dev';
 const TURNSTILE_SITE_KEY = '0x4AAAAAAESFVS2C9LMeYZpt';
+
+const props = withDefaults(
+  defineProps<{ placement?: string; align?: 'end' | 'center' | 'start' }>(),
+  { placement: 'blog-inline', align: 'end' },
+);
+
+// post-footer instances mount globally (doc-after slot) — they belong
+// on blog posts only
+const route = useRoute();
+const belongsHere = computed(() => {
+  if (props.placement !== 'post-footer') return true;
+  return /^\/blog\/.+/.test(route.path) && !route.path.endsWith('/blog/');
+});
 
 const name = ref('');
 const email = ref('');
@@ -75,7 +90,7 @@ async function join() {
     const payload = await response.json().catch(() => ({}));
     if (response.ok) {
       state.value = 'done';
-      captureEvent('newsletter_signup', { placement: 'blog-inline' });
+      captureEvent('newsletter_signup', { placement: props.placement });
     } else {
       state.value = 'error';
       message.value =
@@ -93,8 +108,9 @@ async function join() {
 
 <template>
   <form
-    v-if="state !== 'done'"
+    v-if="belongsHere && state !== 'done'"
     class="quickjoin"
+    :class="`quickjoin--${align}`"
     aria-label="Newsletter quick signup"
     @submit.prevent="join()"
   >
@@ -120,7 +136,11 @@ async function join() {
       <button class="quickjoin__button" type="submit" :disabled="state === 'sending'">
         <span class="newsletter__button-shine" aria-hidden="true"></span>
         <span class="quickjoin__button-text">
-          {{ state === 'sending' ? 'Joining…' : 'Join the frontier' }}
+          <template v-if="state === 'sending'">Joining…</template>
+          <template v-else>
+            <span class="quickjoin__button-label--full">Join the frontier</span>
+            <span class="quickjoin__button-label--short">Join</span>
+          </template>
           <svg v-if="state !== 'sending'" class="quickjoin__plane" viewBox="0 0 24 24" aria-hidden="true">
             <!-- folded paper plane: three facets, opacity carries the 3D -->
             <path fill="currentColor" d="M22 3 3 10.5l7.5 1.7L22 3Z" />
@@ -135,7 +155,12 @@ async function join() {
       {{ message }}
     </span>
   </form>
-  <p v-else class="quickjoin quickjoin--done" role="status">
+  <p
+    v-else-if="belongsHere"
+    class="quickjoin quickjoin--done"
+    :class="`quickjoin--${align}`"
+    role="status"
+  >
     ✓ Welcome aboard — see you in your inbox.
   </p>
 </template>
@@ -176,21 +201,22 @@ async function join() {
   z-index: 1;
 }
 .quickjoin__input--name {
-  width: 104px;
+  width: 132px;
   border-radius: 9px 0 0 9px;
   border-right: none;
 }
 .quickjoin__input--email {
   width: 180px;
-  border-radius: 0;
+  border-radius: 0 9px 9px 0;
 }
 .quickjoin__button {
   position: relative;
   overflow: hidden;
   height: 36px;
+  margin-left: 10px;
   padding: 0 16px;
   border: none;
-  border-radius: 0 9px 9px 0;
+  border-radius: 9px;
   background: linear-gradient(105deg, #6366f1, #2dd4bf 70%, #34d399);
   color: #f4f9ff;
   text-shadow: 0 1px 2px rgba(2, 6, 23, 0.45);
@@ -243,8 +269,31 @@ async function join() {
   font-size: 12px;
   color: #f66;
 }
-/* the invisible interaction-only widget holds no space until challenged */
-.quickjoin__turnstile:empty {
+/* the interaction-only widget takes NO flex slot (its hidden iframe
+   would otherwise eat a gap); when Cloudflare challenges, it overlays
+   just below the form */
+.quickjoin {
+  position: relative;
+}
+.quickjoin__turnstile {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 5;
+}
+.quickjoin--center {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 48px;
+  justify-content: center;
+  width: fit-content;
+}
+.quickjoin--start {
+  margin-left: 0;
+  margin-top: 14px;
+  width: fit-content;
+}
+.quickjoin__button-label--short {
   display: none;
 }
 @media (max-width: 1080px) {
@@ -252,13 +301,41 @@ async function join() {
     display: none;
   }
 }
+/* mobile: the form takes its own centered line — short button label,
+   lead back on top, centered */
 @media (max-width: 860px) {
   .quickjoin {
     margin-left: 0;
     flex-basis: 100%;
+    justify-content: center;
   }
   .quickjoin--done {
     margin-left: 0;
+  }
+  .quickjoin__lead {
+    display: block;
+    flex-basis: 100%;
+    text-align: center;
+  }
+  .quickjoin__button-label--full {
+    display: none;
+  }
+  .quickjoin__button-label--short {
+    display: inline;
+  }
+  /* fluid fields — the trio always fits the viewport */
+  .quickjoin__group {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .quickjoin__input--name {
+    width: 34%;
+    min-width: 0;
+  }
+  .quickjoin__input--email {
+    flex: 1;
+    width: auto;
+    min-width: 0;
   }
 }
 </style>

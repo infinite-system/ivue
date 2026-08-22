@@ -225,13 +225,19 @@ async function subscribe() {
           </defs>
         </svg>
         <div class="newsletter__heading">
-          <span class="newsletter__label">ivue newsletter</span>
+          <span class="newsletter__label">ivue blog newsletter</span>
           <span class="newsletter__title">Join the frontier</span>
         </div>
       </div>
       <p class="newsletter__pitch">
         New patterns, releases, and measured numbers from the
         JavaScript frontier — every post, straight to your inbox.
+      </p>
+      <p
+        v-if="(placement === 'toast' || placement === 'aside') && state !== 'done'"
+        class="newsletter__quick-lead"
+      >
+        Get this blog as a newsletter
       </p>
       <form v-if="state !== 'done'" class="newsletter__form" @submit.prevent="subscribe">
         <div class="newsletter__row">

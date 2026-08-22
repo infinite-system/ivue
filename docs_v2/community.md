@@ -4,9 +4,7 @@ description: 'Where to get help, report bugs, share feedback, and follow ivue �
 ---
 
 <script setup>
-function openNewsletter() {
-  window.dispatchEvent(new Event('ivue:newsletter-open'));
-}
+import NewsletterQuickJoin from './.vitepress/theme/components/NewsletterQuickJoin.vue';
 </script>
 
 # Community
@@ -115,12 +113,14 @@ Every page's source is available in the
 
 New posts, releases, and measured numbers land on the [Blog](/blog/), on
 <a href="https://x.com/evgenykalash" target="_blank" rel="noreferrer">X</a>, and in
-[GitHub Releases](https://github.com/infinite-system/ivue/releases) — or
-have every post delivered:
+[GitHub Releases](https://github.com/infinite-system/ivue/releases).
 
-<button type="button" class="cm-newsletter-btn" @click="openNewsletter">
-  Subscribe to the newsletter
-</button>
+## Newsletter
+
+Every post from the blog, delivered one at a time — at your local
+morning:
+
+<NewsletterQuickJoin placement="community" align="start" />
 
 ## Who's behind ivue
 

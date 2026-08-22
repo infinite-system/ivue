@@ -274,4 +274,6 @@ function formatDate(date: string): string {
       Older →
     </button>
   </nav>
+
+  <NewsletterQuickJoin placement="blog-footer" align="center" />
 </template>
