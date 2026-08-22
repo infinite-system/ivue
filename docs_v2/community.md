@@ -115,7 +115,7 @@ New posts, releases, and measured numbers land on the [Blog](/blog/), on
 <a href="https://x.com/evgenykalash" target="_blank" rel="noreferrer">X</a>, and in
 [GitHub Releases](https://github.com/infinite-system/ivue/releases).
 
-## Newsletter
+## Blog Newsletter
 
 Every post from the blog, delivered one at a time — at your local
 morning:
