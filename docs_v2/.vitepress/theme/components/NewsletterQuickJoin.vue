@@ -300,24 +300,27 @@ async function join() {
 .quickjoin__button-label--short {
   display: none;
 }
+/* tablet: the toolbar instance stops squeezing beside the heading —
+   it takes its own centered row, lead intact (the lead is NEVER
+   hidden at any width) */
 @media (max-width: 1080px) {
-  .quickjoin__lead {
-    display: none;
-  }
-}
-/* mobile: the form takes its own centered line — short button label,
-   lead back on top, centered */
-@media (max-width: 860px) {
-  .quickjoin {
-    margin-left: 0;
+  .quickjoin--end {
+    margin-left: auto;
+    margin-right: auto;
     flex-basis: 100%;
     justify-content: center;
   }
-  .quickjoin--done {
+}
+/* mobile: lead on its own centered line, short button label, fluid
+   fields so the trio always fits the viewport */
+@media (max-width: 860px) {
+  .quickjoin {
+    justify-content: center;
+  }
+  .quickjoin--start {
     margin-left: 0;
   }
   .quickjoin__lead {
-    display: block;
     flex-basis: 100%;
     text-align: center;
   }
@@ -327,7 +330,6 @@ async function join() {
   .quickjoin__button-label--short {
     display: inline;
   }
-  /* fluid fields — the trio always fits the viewport */
   .quickjoin__group {
     flex: 1 1 auto;
     min-width: 0;

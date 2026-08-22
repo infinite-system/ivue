@@ -3116,3 +3116,12 @@ a.feature-inline-link:active {
     display: none;
   }
 }
+
+/* the local nav (Menu / Return to top) hides while reading down and
+   returns on scroll-up — one header at a time */
+.VPLocalNav {
+  transition: transform 0.25s ease;
+}
+html.local-nav-hidden .VPLocalNav {
+  transform: translateY(-100%);
+}

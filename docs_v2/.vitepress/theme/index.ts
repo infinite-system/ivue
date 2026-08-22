@@ -100,6 +100,31 @@ export default {
         }
       });
 
+      // The local nav (Menu / Return to top) is a SECOND sticky header —
+      // hide it while reading down, bring it back the moment the reader
+      // scrolls up (the same intent signal mobile browser chrome uses).
+      let lastScrollY = window.scrollY;
+      let localNavTicking = false;
+      window.addEventListener(
+        'scroll',
+        () => {
+          if (localNavTicking) return;
+          localNavTicking = true;
+          requestAnimationFrame(() => {
+            const currentY = window.scrollY;
+            const scrollingDown = currentY > lastScrollY;
+            if (scrollingDown && currentY > 150) {
+              document.documentElement.classList.add('local-nav-hidden');
+            } else if (!scrollingDown) {
+              document.documentElement.classList.remove('local-nav-hidden');
+            }
+            lastScrollY = currentY;
+            localNavTicking = false;
+          });
+        },
+        { passive: true },
+      );
+
       // Browser auto-translate must never touch the brand: the nav logo
       // says "ivue" in every language. Re-tagged after each route change —
       // covers first paint and late-mounted layouts alike.
