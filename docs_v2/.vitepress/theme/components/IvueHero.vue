@@ -31,10 +31,16 @@ class $Typewriter {
   finaleVariants = [
     'One kilobyte.',
     'Zero dependencies.',
+    'Invariant based.',
+    'Rocket fast.',
+    'TypeScript first.',
     'Reactive super.',
+    'Composable.',
     'Circular imports.',
+    'Deterministic.',
     'Zero-cost creation.',
     'Minimal memory.',
+    'Bulletproof modules.',
     'Built for AI.',
   ];
   fallLeadMs = 700; // let the fall-ins land before typing starts
@@ -303,10 +309,14 @@ onUnmounted(() => {
   margin-left: 0.06em;
   vertical-align: -0.08em;
   /* the shine/grad rows paint text via background-clip with transparent
-     fill, so currentColor is invisible — the caret carries its own brand
-     gradient */
-  background: linear-gradient(180deg, #818cf8, #34d399);
+     fill, so currentColor is invisible — the caret carries its own
+     cyan-leaning gradient, a step apart from the text's indigo→green,
+     with a soft glow so it reads as a live cursor */
+  background: linear-gradient(180deg, #67e8f9, #2dd4bf);
   border-radius: 1px;
+  box-shadow:
+    0 0 8px rgba(45, 212, 191, 0.75),
+    0 0 18px rgba(103, 232, 249, 0.45);
   animation: ivh-caret-blink 1.1s steps(1) infinite;
 }
 @keyframes ivh-caret-blink {
