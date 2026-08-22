@@ -580,15 +580,16 @@ inheritance:
 protected get dwellSeconds() { return 0.4; }
 ```
 
-**2. Something outside reads it — keep the static, read it through `self`:**
+**2. Something outside reads it — keep the static, read it through `self`
+directly at each call site:**
 
 ```ts
 protected get self() {
   return this.constructor as typeof $Tooltip;
 }
 
-protected get dwellSeconds() {
-  return this.self.DWELL_SECONDS;
+show() {
+  this.dwellTimer.start(this.self.DWELL_SECONDS);
 }
 ```
 
@@ -600,6 +601,11 @@ the statics it types instead of asserted at every call site. A method that
 reads two or more statics (or reads inside a loop) hoists it first —
 `const self = this.self;` — which measures *faster* than the inline cast,
 because the engine hoists the class as a loop constant.
+
+An instance getter over a static earns its place when it genuinely
+derives — mixing in instance state or transforming the value; a plain read
+stays a direct `this.self.X` at the call site, so the knob keeps one name
+and one override surface (the static).
 
 **3. Overriding must not happen — name the class directly**,
 `$Tooltip.DWELL_SECONDS`, so the code says so.

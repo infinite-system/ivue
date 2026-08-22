@@ -869,16 +869,21 @@ Take the first rung that applies:
    ```
 2. **Something outside reads it** (tests pinching the knob, another class)
    → keep the static and read it through **`self`** — the one cast per
-   class, declared beside the statics it types:
+   class, declared beside the statics it types — DIRECTLY at each call
+   site:
    ```ts
    protected get self() {
      return this.constructor as typeof $Tooltip;
    }
 
-   protected get tooltipDwellSeconds() {
-     return this.self.TOOLTIP_DWELL_SECONDS;
+   show() {
+     this.dwellTimer.start(this.self.TOOLTIP_DWELL_SECONDS);
    }
    ```
+   An instance getter over a static earns its place when it genuinely
+   derives — mixing in instance state or transforming the value; a
+   plain read stays a direct `this.self.X` at the call site, so the
+   knob keeps one name and one override surface (the static).
    `this.constructor` is the actual class — the subclass when subclassed,
    and an engine class that INHERITS `$Class` for a plain reactive
    instance — so statics resolve late-bound in both cases.
