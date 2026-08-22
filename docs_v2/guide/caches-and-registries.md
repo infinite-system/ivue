@@ -230,3 +230,7 @@ one name and one override surface: the static.
 Every row is the same invariant wearing a different constraint: **one
 value, one owner, one override surface** — and construction deferred to
 first use, never module load.
+
+The narrative form of this page — the full transform map across
+`Reactive()` and `Static()`, every scope in working code — is
+[Bulletproof class modules](/blog/bulletproof-class-modules).

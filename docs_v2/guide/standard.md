@@ -31,6 +31,12 @@ and never scaffolds a tool you don't; `--cursor`, `--copilot` and
 Evaluating before adopting? `npx degit infinite-system/ivue/.claude/skills/ivue .claude/skills/ivue` grabs the latest from the repo instead.
 :::
 
+The architecture this manual encodes — every scope memoized, with
+polymorphism, inheritance, and performance intact — is argued in
+narrative form, full code included, in
+[Bulletproof class modules](/blog/bulletproof-class-modules). The blog
+is an extension of these docs, not a side channel.
+
 <p class="skill-begins" aria-hidden="true"><span>Skill begins</span></p>
 
 # ivue `Reactive`
