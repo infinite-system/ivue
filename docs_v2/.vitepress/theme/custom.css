@@ -1812,8 +1812,11 @@ a.feature-inline-link {
   padding-top: 3px;
   line-height: 1.4;
   font-family: var(--vp-font-family-mono);
-  font-size: 9.4px; /* text width ≈128px — matches the title's width */
-  letter-spacing: 0.08em;
+  /* the mono webfont renders at integer sizes only — 9px is the base,
+     and letter-spacing is the fine knob that lands the text width on
+     the title's ~128px (measured live) */
+  font-size: 9px;
+  letter-spacing: 0.155em;
   white-space: nowrap;
   text-transform: uppercase;
   color: var(--vp-c-text-1);
