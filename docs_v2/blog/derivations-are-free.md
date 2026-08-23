@@ -2,7 +2,7 @@
 title: 'Derivations are free. Caches are earned.'
 description: "We finally measured the one thing the doctrine never had a number for: the warm read. A plain getter recomputes every time; computed() reads its cache in 3 nanoseconds. So why is the getter still the right default? Because the crossover has a price — and most derivations never pay it."
 tags: [performance, patterns]
-relatedPosts: [computed-is-a-cache, total-memory-control, the-zeros-didnt-move, twenty-million-cells, measured-not-promised]
+relatedPosts: [computed-is-a-cache, expressiveness-is-no-longer-a-budget, total-memory-control, the-zeros-didnt-move, twenty-million-cells, measured-not-promised]
 date: 2026-08
 ---
 
