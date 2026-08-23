@@ -94,6 +94,8 @@ export function installLinkPreviews() {
 
   let showTimer: number | undefined;
   let currentLink: HTMLAnchorElement | null = null;
+  let pointerX = 0;
+  let pointerY = 0;
 
   const hide = () => {
     window.clearTimeout(showTimer);
@@ -110,7 +112,16 @@ export function installLinkPreviews() {
   image.addEventListener('error', hide);
 
   const reposition = (link: HTMLAnchorElement) => {
-    const rect = link.getBoundingClientRect();
+    // a wrapped inline link's bounding box spans the whole line — use
+    // the line FRAGMENT under the pointer as the anchor instead
+    const fragments = [...link.getClientRects()];
+    const rect =
+      fragments.find(
+        (fragment) =>
+          pointerY >= fragment.top - 2 && pointerY <= fragment.bottom + 2,
+      ) ??
+      fragments[0] ??
+      link.getBoundingClientRect();
     const margin = 10;
     const cardHeight = card.offsetHeight || IMAGE_HEIGHT + 90;
     let left = rect.left + rect.width / 2 - CARD_WIDTH / 2;
@@ -126,6 +137,8 @@ export function installLinkPreviews() {
   };
 
   document.addEventListener('mouseover', (event) => {
+    pointerX = event.clientX;
+    pointerY = event.clientY;
     const link = (event.target as Element | null)?.closest?.(
       '.vp-doc a[href]',
     ) as HTMLAnchorElement | null;
