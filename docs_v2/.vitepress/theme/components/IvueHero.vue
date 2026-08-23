@@ -54,16 +54,12 @@ class $Typewriter {
   get finaleText() {
     return ref(this.finaleVariants[0]);
   }
-  get activeRow() {
-    return ref(-1); // caret hidden until typing starts
-  }
   get variantIndex() {
     return ref(0);
   }
 
   start() {
     this.finaleText.value = '';
-    this.activeRow.value = 3;
     this.timer = setTimeout(() => this.typeFinale(), this.fallLeadMs);
   }
   stop() {
@@ -97,7 +93,7 @@ const Typewriter = Reactive($Typewriter);
 
 const counter: any = new Counter();
 const typewriter: any = new Typewriter();
-const { finaleText, activeRow } = typewriter;
+const { finaleText } = typewriter;
 // the state destructure — every Ref the template touches
 const { count } = counter;
 const lastChange = ref('');
@@ -161,7 +157,7 @@ onUnmounted(() => {
           <span class="row fall fall-1">Plain classes.</span>
           <span class="row fall fall-2">Full reactivity.</span>
           <span class="row shine fall fall-3">Infinite scalability.</span>
-          <span class="row grad">{{ finaleText }}<span v-if="activeRow === 3" class="ivh-caret" aria-hidden="true" /></span>
+          <span class="row grad">{{ finaleText }}<span class="ivh-caret" aria-hidden="true" /></span>
         </h1>
         <p class="ivh-tag">
           Native TypeScript classes become fine-grained Vue 3 state. No proxy
