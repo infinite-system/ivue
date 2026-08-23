@@ -85,8 +85,8 @@ features:
   <div class="cell">
     <span class="ck" aria-hidden="true"></span>
     <div class="tx">
-      <strong>Deterministic teardown</strong>
-      <p><code>$watch</code> scopes per instance, <code>$stopEffects</code> cleans up. Pure data pays nothing.</p>
+      <strong>Total memory control</strong>
+      <p>Cells exist only when observed; <code>$stopEffects</code> releases or suspends them. Pure data pays nothing.</p>
     </div>
   </div>
   <div class="cell">
