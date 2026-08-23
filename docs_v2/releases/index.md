@@ -14,7 +14,11 @@ generated from them, and each is mirrored on
 [GitHub Releases](https://github.com/infinite-system/ivue/releases).
 Install any version with `npm i ivue@<version>`.
 
-## [ivue@2.2.2](/releases/2.2.2) <span class="new-badge">NEW</span> <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.2.2" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-2-2}
+## [ivue@2.3.0](/releases/2.3.0) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.3.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-3-0}
+
+Feature release — one new export, zero breaking changes, and the core engine untouched: ivue/extras gains LazyShared, the cell that closes the last open seam in the class-module system. The primary ivue entry stays the bare 1.1 kB engine.
+
+## [ivue@2.2.2](/releases/2.2.2) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.2.2" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-2-2}
 
 Skill release — the engine is byte-identical to 2.2.1; this ships the current Standard Operating Manual to npx ivue skill, which installs the copy bundled with the package.
 

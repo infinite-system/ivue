@@ -14,7 +14,7 @@ const isBlogPost = computed(
   <div v-if="isBlogPost" class="cm-author blog-author">
     <img
       class="cm-avatar"
-      :src="withBase('/avatars/evgeny.png')"
+      :src="withBase('/avatars/evgeny-avatar.jpg')"
       alt="Evgeny Kalashnikov"
       width="76"
       height="76"
