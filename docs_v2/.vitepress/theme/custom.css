@@ -3050,8 +3050,15 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   border-radius: 50%;
   object-fit: cover;
   object-position: 50% 42%;
-  border: 0;
-  box-shadow: 0 4px 14px rgba(5, 10, 25, 0.18);
+  /* the ivue gradient ring: a transparent border painted by a
+     border-box gradient under a padding-box photo surface */
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--vp-c-bg), var(--vp-c-bg)) padding-box,
+    linear-gradient(120deg, #6366f1, #2dd4bf 55%, #34d399) border-box;
+  box-shadow:
+    0 4px 14px rgba(5, 10, 25, 0.18),
+    0 0 18px rgba(45, 212, 191, 0.22);
 }
 .VPDoc .cm-author p {
   margin: 6px 0 0;

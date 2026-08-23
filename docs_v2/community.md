@@ -125,7 +125,7 @@ other day, at your local morning:
 ## Who's behind ivue
 
 <div class="cm-author">
-  <img class="cm-avatar" src="/avatars/evgeny-avatar.png" alt="Evgeny Kalashnikov" width="76" height="76" />
+  <img class="cm-avatar" src="/avatars/evgeny-avatar.jpg" alt="Evgeny Kalashnikov" width="76" height="76" />
   <div class="cm-author__body">
     <span class="cm-author__eyebrow">Author</span>
     <strong>Evgeny Kalashnikov</strong>
