@@ -12,7 +12,7 @@
  * getters cost zero bytes, creation measures 55-253x faster. New code
  * must never import from this file.
  *
- * Migration guide: https://ivue.dev/guide/model-layer
+ * Migration guide: https://ivue.dev/guide/standard
  */
 
 import type { ComputedRef, ExtractPropTypes, Ref, ToRef } from 'vue';
@@ -417,7 +417,7 @@ const getClassPropertiesAccessorsMap = (obj: object): PropsMapValue => {
  * }
  *
  * @deprecated v1 engine — use `Reactive()` from the main `ivue` entry
- * instead; see https://ivue.dev/guide/model-layer for the migration.
+ * instead; see https://ivue.dev/guide/standard for the migration.
  * @param className Any Class
  * @param args Class constructor arguments that you would pass to a `new AnyClass(args...)`
  * @returns {IVue<T>}
