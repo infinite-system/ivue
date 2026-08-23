@@ -3,6 +3,7 @@ title: "this.method, finally safe to pass"
 description: A decade of () => this.method() wrappers, .bind(this) rituals, and shipped undefined-this bugs — ended by binding methods lazily, once, on the prototype.
 date: 2026-07
 tags: [javascript, engine]
+relatedPosts: [most-linted-superpower, bulletproof-class-modules, reactive-is-all-you-need, what-javascript-becomes]
 ---
 
 # this.method, finally safe to pass

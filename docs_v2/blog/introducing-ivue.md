@@ -3,6 +3,7 @@ title: "Introducing ivue: plain classes, full reactivity, one kilobyte"
 description: The launch post — why the field abandoned classes for the wrong reason, what the derivation primitive actually is, and the measured numbers behind a 1.1 kB answer.
 date: 2026-07
 tags: [engine, story]
+relatedPosts: [one-kilobyte-feature, reactive-is-all-you-need, computed-is-a-cache, the-object-graph-they-took, measured-not-promised, the-options-api-everyone-wanted]
 ---
 
 # Introducing ivue: plain classes, full reactivity, one kilobyte

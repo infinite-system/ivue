@@ -3,6 +3,7 @@ title: "One kilobyte is a feature"
 description: 1.1 kB is not a compression achievement — it is what remains when a design stops needing machinery. Small enough to read, small enough to trust.
 date: 2026-07
 tags: [engine, performance, memory]
+relatedPosts: [introducing-ivue, computed-is-a-cache, measured-not-promised, win-by-reduction, reactive-is-all-you-need]
 ---
 
 # One kilobyte is a feature

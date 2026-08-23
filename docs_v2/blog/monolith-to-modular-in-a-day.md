@@ -3,6 +3,7 @@ title: 'From monolith to modular design in a day'
 description: In one day, AI agents extracted a monolith's git, markdown, file tree, settings, and keybindings into plugins behind enforced boundaries — directed by one human talking casually. The care didn't come from the model. It was moved into the structure.
 date: 2026-07
 tags: [agents, invar, architecture]
+relatedPosts: [the-field-not-the-rules, agents-built-an-editor, uniformity-is-a-measuring-device, patterns-the-author-never-wrote, introducing-invar]
 ---
 
 # From monolith to modular design in a day

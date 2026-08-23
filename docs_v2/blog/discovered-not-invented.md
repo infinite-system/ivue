@@ -3,6 +3,7 @@ title: 'Reactive() and Static() — discovered, not invented'
 description: Reactive() and Static() look like a designed pair — one transform for instances, one for the class object, same late binding, same per-receiver caching, one level apart. Neither was designed to complete the other. The mirror emerged from the same constraints, and emergent duals are load-bearing.
 date: 2026-08
 tags: [engine, philosophy, patterns]
+relatedPosts: [bulletproof-class-modules, reactive-is-all-you-need, win-by-reduction, three-years-to-reduce, module-level-state]
 ---
 
 # Reactive() and Static() — discovered, not invented

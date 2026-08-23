@@ -3,6 +3,7 @@ title: 'A million rows, twelve divs'
 description: A 1,000,000-row list where scrolling itself is virtual — Lenis owns position and momentum, the DOM holds a dozen rows between two spacers, and every operation is O(window). One 1,199-line ivue class runs all of it, live on this page.
 date: 2026-07
 tags: [performance, patterns]
+relatedPosts: [twenty-million-cells, measured-not-promised, reactivity-is-an-allocator, one-kilobyte-feature]
 ---
 
 <script setup>

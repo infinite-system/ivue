@@ -3,6 +3,7 @@ title: "VS Code spent a decade hand-rolling reactive classes"
 description: The most influential TypeScript app is class-OOP with no framework — emitters, disposables, DI decorators, and since 2022 its own signals system. Every one of those subsystems maps to one ivue feature.
 date: 2026-07
 tags: [story, javascript, patterns]
+relatedPosts: [reactive-is-all-you-need, introducing-ivue, the-object-graph-they-took, module-level-state, inheritance-exile]
 ---
 
 # VS Code spent a decade hand-rolling reactive classes

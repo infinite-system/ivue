@@ -3,6 +3,7 @@ title: "Initialization order, solved in userland"
 description: 'Initialization order is a solved problem in four languages and an unsolved one in the most-used language on earth. One idiom and a 200-line checker close the gap — and pay three more dividends.'
 date: 2026-07
 tags: [javascript, architecture]
+relatedPosts: [circular-imports-dissolved, module-level-state, what-javascript-becomes, most-linted-superpower]
 ---
 
 # Initialization order, solved in userland

@@ -3,6 +3,7 @@ title: "Inheritance didn't deserve the exile"
 description: 'The composition-over-inheritance recoil corrected an abuse, then outlawed a tool. Reactive super chains show what it cost.'
 date: 2026-07
 tags: [patterns, javascript]
+relatedPosts: [the-object-graph-they-took, organs-not-skeletons, bulletproof-class-modules, the-test-is-a-subclass]
 ---
 
 # Inheritance didn't deserve the exile

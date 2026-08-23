@@ -3,6 +3,7 @@ title: 'AI agents built a 26,000-line code editor on ivue'
 description: A working terminal code editor, written almost entirely by AI agents — zero cycle-breaking hacks, one computed() in the whole codebase, one wiring seam. What a substrate is worth when the author is a machine.
 date: 2026-07
 tags: [agents, invar, story]
+relatedPosts: [the-zeros-didnt-move, introducing-invar, patterns-the-author-never-wrote, monolith-to-modular-in-a-day, uniformity-is-a-measuring-device]
 ---
 
 # AI agents built a 26,000-line code editor on ivue

@@ -3,6 +3,7 @@ title: 'Reactive() is all you need'
 description: Store libraries, composable factories, service layers, emitters, DI containers — the state-management zoo reduces to plain classes and one prototype transform. The roles were never different things; they were one thing with different lifetimes.
 date: 2026-07
 tags: [engine, patterns]
+relatedPosts: [bulletproof-class-modules, one-kilobyte-feature, discovered-not-invented, organs-not-skeletons, vscode-hand-rolled-decade]
 ---
 
 # Reactive() is all you need

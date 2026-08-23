@@ -3,6 +3,7 @@ title: "Uniformity is a measuring device"
 description: Consistency is treated as taste. It is actually a measuring device — deviation is only visible against sameness, so a codebase with low structural entropy makes its own defects high-contrast. What that buys, and the one thing it cannot see.
 date: 2026-07
 tags: [architecture, agents, philosophy]
+relatedPosts: [the-field-not-the-rules, agents-built-an-editor, the-test-is-a-subclass, reactive-framework-for-the-ai-era, monolith-to-modular-in-a-day]
 ---
 
 # Uniformity is a measuring device

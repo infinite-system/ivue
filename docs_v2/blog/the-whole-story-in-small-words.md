@@ -3,6 +3,7 @@ title: "The whole story, in small words"
 description: The whole story in small words — a one-kilobyte brick, an editor that AI agents built out of it, and the referee that makes AI-built software safe to trust.
 date: 2026-07
 tags: [story, agents, invar]
+relatedPosts: [introducing-ivue, agents-built-an-editor, introducing-invar, the-field-not-the-rules, what-becomes-buildable]
 ---
 
 # The whole story, in small words

@@ -3,6 +3,7 @@ title: "JavaScript's most-linted features are its superpower"
 description: "JavaScript's most-linted properties — mutable bindings, late-bound dispatch — are the raw material for swappability no static language can reach and no dynamic language ever made safe."
 date: 2026-07
 tags: [javascript, philosophy]
+relatedPosts: [what-javascript-becomes, this-method-era, module-level-state, circular-imports-dissolved, the-object-graph-they-took]
 ---
 
 # JavaScript's most-linted features are its superpower

@@ -3,6 +3,7 @@ title: 'What JavaScript becomes'
 description: Managed-runtime linking from the JVM, live-image classes from Erlang and Smalltalk, receiver-aware static storage no static language can express, and transparent reactive objects — one language ends up holding all four, and holds them in userland. The capstone of the series.
 date: 2026-08
 tags: [javascript, philosophy]
+relatedPosts: [circular-imports-dissolved, module-level-state, most-linted-superpower, initialization-order-solved, the-object-graph-they-took, what-becomes-buildable]
 ---
 
 # What JavaScript becomes

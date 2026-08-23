@@ -3,6 +3,7 @@ title: 'Introducing Invar'
 description: 'A full IDE that lives in your terminal — file tree, git, LSP autocomplete, integrated AI agents that can watch your shell — built almost entirely by AI agents under a mechanical referee, on one kilobyte of ivue.'
 date: 2026-07
 tags: [invar, agents, story]
+relatedPosts: [agents-built-an-editor, reactivity-is-an-allocator, the-zeros-didnt-move, monolith-to-modular-in-a-day, patterns-the-author-never-wrote]
 ---
 
 # Introducing Invar

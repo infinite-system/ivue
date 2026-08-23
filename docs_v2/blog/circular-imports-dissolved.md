@@ -3,6 +3,7 @@ title: 'Circular imports, dissolved'
 description: JavaScript's oldest structural wound — module A needs B, B needs A — was never about the cycle. It was about the clock. One idiom moves every cross-module reference from load time to first access, and 372 files with a deeply cyclic domain graph produce zero import cycles. Measured, not promised.
 date: 2026-08
 tags: [javascript, architecture, engine]
+relatedPosts: [initialization-order-solved, module-level-state, most-linted-superpower, what-javascript-becomes, bulletproof-class-modules]
 ---
 
 # Circular imports, dissolved

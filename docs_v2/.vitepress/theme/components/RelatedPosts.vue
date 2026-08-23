@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { useData, withBase } from 'vitepress';
+import { useData, useRoute, withBase } from 'vitepress';
 import { data as posts } from '../../../blog/blog-lite.data.mjs';
 
 // "From the blog" — the aside block that turns reference pages into
@@ -14,6 +14,17 @@ const props = withDefaults(
 );
 
 const { frontmatter, page } = useData();
+const route = useRoute();
+
+// On a blog post the block lists PEERS — "Related posts". On guide
+// pages it is an on-ramp from reference into the blog — "From the
+// blog" says where the reader is being invited.
+const isBlogPost = computed(
+  () => /^\/blog\/.+/.test(route.path) && !route.path.endsWith('/blog/'),
+);
+const heading = computed(() =>
+  isBlogPost.value ? 'Related posts' : 'From the blog',
+);
 
 // frontmatter may list any number of slugs, strongest first. The
 // aside stays capped at three (a calm column, no controls); the doc
@@ -68,7 +79,7 @@ function formatDate(date: string): string {
     :class="`related-posts--${props.variant}`"
     aria-label="Related blog posts"
   >
-    <p class="related-posts__heading">From the blog</p>
+    <p class="related-posts__heading">{{ heading }}</p>
     <a
       v-for="post in relatedPosts"
       :key="post.slug"
@@ -94,7 +105,7 @@ function formatDate(date: string): string {
       class="related-posts__more"
       @click="expanded = true"
     >
-      Show {{ hiddenCount }} more from the blog
+      {{ isBlogPost ? `More related posts (${hiddenCount})` : `Show ${hiddenCount} more from the blog` }}
     </button>
   </nav>
 </template>
@@ -196,5 +207,32 @@ function formatDate(date: string): string {
 .related-posts__more:hover {
   color: var(--vp-c-brand-1);
   border-color: var(--vp-c-brand-1);
+}
+/* mobile: the doc grid collapses to the aside's row form — small
+   thumb beside the title beats stacked full-width cards on a phone */
+@media (max-width: 640px) {
+  .related-posts--doc {
+    display: block;
+  }
+  .related-posts--doc .related-posts__heading {
+    margin-bottom: 10px;
+  }
+  .related-posts--doc .related-posts__item {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+  }
+  .related-posts--doc .related-posts__thumb {
+    width: 76px;
+    height: 40px;
+    aspect-ratio: auto;
+    margin-top: 2px;
+    border-radius: 6px;
+  }
+  .related-posts--doc .related-posts__more {
+    display: block;
+    margin: 8px auto 0;
+  }
 }
 </style>

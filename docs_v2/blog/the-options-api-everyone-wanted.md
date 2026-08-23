@@ -3,6 +3,7 @@ title: The Options API everyone actually wanted
 description: What people loved about the Options API was anatomy — a component you could read. The anatomy was fake. The class is the real one, and it was in the language all along.
 date: 2026-08
 tags: [javascript, patterns, philosophy]
+relatedPosts: [introducing-ivue, the-object-should-tell-the-truth, organs-not-skeletons, the-object-graph-they-took, reactive-is-all-you-need]
 ---
 
 # The Options API everyone actually wanted

@@ -3,6 +3,7 @@ title: 'Reactivity is an allocator'
 description: The industry uses reactivity to update pixels. Invar points it at the operating system — SQLite connections, git subprocesses, LSP servers, sampling timers all exist only while observed. One file system watcher, twenty-one watch sites, ninety-two version signals, and a pull floor under every notify channel. Rendering was just reactivity's first job.
 date: 2026-08
 tags: [invar, architecture, performance]
+relatedPosts: [introducing-invar, patterns-the-author-never-wrote, what-becomes-buildable, the-zeros-didnt-move, computed-is-a-cache]
 ---
 
 # Reactivity is an allocator

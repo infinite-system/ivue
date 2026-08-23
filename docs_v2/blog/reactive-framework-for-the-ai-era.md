@@ -3,6 +3,7 @@ title: 'Reactive framework for the AI era'
 description: Frameworks were designed for human authors — expressiveness, flexibility, choice. The author changed. When agents write most of the code, the ranking of framework virtues inverts — uniformity beats expressiveness, construction beats vigilance, and an engine small enough to hold in one head fits whole into one context window.
 date: 2026-08
 tags: [agents, philosophy]
+relatedPosts: [the-field-not-the-rules, uniformity-is-a-measuring-device, agents-built-an-editor, patterns-the-author-never-wrote, what-becomes-buildable]
 ---
 
 # Reactive framework for the AI era

@@ -3,6 +3,7 @@ title: "Measured, not promised"
 description: Every performance number on this site comes from a measurement we ran — with its method attached, most of them re-runnable right in your browser, on the shipped engine. Measured, not promised. That's the whole idea.
 date: 2026-07
 tags: [performance, philosophy]
+relatedPosts: [twenty-million-cells, a-million-rows-twelve-divs, the-stack-got-faster, one-kilobyte-feature, the-zeros-didnt-move]
 ---
 
 # Measured, not promised

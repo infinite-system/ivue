@@ -3,6 +3,7 @@ title: 'What becomes buildable'
 description: 'Frameworks made views cheap. ivue makes models cheap — big, long-lived, externally legible. Five categories of software that were blocked on exactly that: whole-dataset apps in the browser, software modified while it runs, agent-operable apps, reactive control planes, and architecture that cannot rot.'
 date: 2026-08
 tags: [philosophy, performance, agents]
+relatedPosts: [twenty-million-cells, reactivity-is-an-allocator, the-field-not-the-rules, rented-objects, reactive-framework-for-the-ai-era, agents-built-an-editor]
 ---
 
 # What becomes buildable

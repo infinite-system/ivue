@@ -3,6 +3,7 @@ title: Bulletproof class modules
 description: LazyShared seals the last seam — the full Reactive() + Static() system is now memoizable at every scope, with polymorphism, inheritance, and performance intact. Every value kind, shown in full code.
 date: 2026-08
 tags: [architecture, javascript, patterns]
+relatedPosts: [discovered-not-invented, module-level-state, reactive-is-all-you-need, this-method-era, the-test-is-a-subclass]
 ---
 
 # Bulletproof class modules
