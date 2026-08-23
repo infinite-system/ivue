@@ -14,7 +14,11 @@ generated from them, and each is mirrored on
 [GitHub Releases](https://github.com/infinite-system/ivue/releases).
 Install any version with `npm i ivue@<version>`.
 
-## [ivue@2.3.0](/releases/2.3.0) <span class="new-badge">NEW</span> <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.3.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-3-0}
+## [ivue@2.4.0](/releases/2.4.0) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.4.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-4-0}
+
+Feature release — one option on one verb, zero breaking changes: $stopEffects learns to stop the watchers without forgetting the state, and the suspend/resume lifecycle falls out of a convention the standard already half-taught.
+
+## [ivue@2.3.0](/releases/2.3.0) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.3.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-3-0}
 
 Feature release — one new export, zero breaking changes, and the core engine untouched: ivue/extras gains LazyShared, the cell that closes the last open seam in the class-module system. The primary ivue entry stays the bare 1.1 kB engine.
 
