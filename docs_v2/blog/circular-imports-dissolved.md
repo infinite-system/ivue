@@ -217,8 +217,13 @@ class $TextEditing {
     return Files.Class;
   }
 
+  // the one cast per class — instance code reads statics through it
+  protected get self() {
+    return this.constructor as typeof $TextEditing;
+  }
+
   saveActiveDocument() {
-    return (this.constructor as typeof $TextEditing).Files.write(this.activePath());
+    return this.self.Files.write(this.activePath());
   }
 }
 ```
