@@ -72,7 +72,9 @@
 		"DEFAULT_TIMEZONE": "America/Toronto",
 		// Turnstile: hostnames the widget may report (frontend origins).
 		// Verification activates when the TURNSTILE_SECRET secret is set.
-		"TURNSTILE_HOSTNAMES": "ivue.dev"
+		// localhost + the VM host IP are DEV entries — they only work if
+		// also added to the widget's hostname list in the CF dashboard.
+		"TURNSTILE_HOSTNAMES": "ivue.dev,localhost,10.211.55.7"
 	}
 	// secrets (set via: npx wrangler@4.120.1 secret put <NAME>):
 	//   POSTMARK_SERVER_TOKEN — Postmark → your server → API Tokens
