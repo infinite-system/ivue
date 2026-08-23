@@ -432,7 +432,10 @@ export default defineConfig({
             {},
             `html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog']::after,` +
               `html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after` +
-              `{content:'+${freshBlogCount} NEW' !important;}`,
+              `{content:'+${freshBlogCount} NEW' !important;}` +
+              // the longer text hangs right — pull it back over the word
+              `html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog']::after` +
+              `{margin-left:-13px;}`,
           ],
         ]
       : []) as any),
