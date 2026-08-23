@@ -2538,9 +2538,10 @@ html:not(.dark) .fw-embed .fw-sub {
   width: 320px;
   border-radius: 12px;
   overflow: hidden;
-  background: var(--vp-c-bg-elv, var(--vp-c-bg));
-  border: 1px solid var(--vp-c-divider);
-  box-shadow: 0 12px 36px -10px rgba(5, 10, 25, 0.45);
+  /* blue-family surface, not grey — the card belongs to the banners */
+  background: #f2f6ff;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  box-shadow: 0 12px 36px -10px rgba(30, 41, 90, 0.45);
   opacity: 0;
   transform: translateY(4px);
   pointer-events: none;
@@ -2551,6 +2552,10 @@ html:not(.dark) .fw-embed .fw-sub {
 .ix-link-preview.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+.dark .ix-link-preview {
+  background: #0e1424;
+  border-color: rgba(99, 102, 241, 0.35);
 }
 .ix-link-preview img {
   display: block;
