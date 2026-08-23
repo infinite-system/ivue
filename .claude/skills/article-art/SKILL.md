@@ -16,7 +16,11 @@ between them is the first decision:
 
 - **Hybrid diagram (the DEFAULT for mechanism posts):** an HTML/CSS
   diagram — real code snippets, arrows, timelines, one verdict line —
-  rendered over a dimmed free-form backdrop for atmosphere. Text and
+  rendered over a dimmed free-form backdrop for atmosphere.
+  **Minimum type sizes** (learned the hard way — a 1200px image
+  displays at ~688px in articles, a 57% scale): body/notes ≥ 18px,
+  code/labels ≥ 19px, headings ≥ 23px, verdict ≥ 27px at source.
+  Smaller reads as ~7px on the page. Text first, backdrop second. Text and
   structure MUST be code: image models mangle labels, so anything the
   reader must read is HTML. Source lives in `diagrams/<slug>-diagram-
   <n>.html` beside this file (vendored Geist fonts via
