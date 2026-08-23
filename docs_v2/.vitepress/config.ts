@@ -643,7 +643,7 @@ export default defineConfig({
         text: 'Examples',
         activeMatch: '/examples/',
         items: [
-          { text: 'Overview', link: '/examples/' },
+          { text: 'Examples Overview', link: '/examples/' },
           { text: 'StackBlitz Playground', link: '/examples/stackblitz' },
           {
             text: 'Start Small',
@@ -699,7 +699,7 @@ export default defineConfig({
           text: 'Examples',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/examples/' },
+            { text: 'Examples Overview', link: '/examples/' },
             { text: 'StackBlitz Playground', link: '/examples/stackblitz' },
           ],
         },

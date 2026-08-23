@@ -172,6 +172,30 @@ export default {
         extraMenu.prepend(group);
       };
 
+      // Navbar dropdowns (Guide, Examples, …) are pure :hover flyouts —
+      // after clicking a link the pointer is still over them, so the
+      // menu hangs open over the new page. The closed flag lives on
+      // <html> (route changes re-patch the flyout DOM, so a class on
+      // the flyout itself gets wiped) and clears as soon as the
+      // pointer reaches anything outside a flyout — or a flyout
+      // button is pressed again (the tap path on iPad).
+      const reopenFlyouts = (event: Event) => {
+        if ((event.target as Element | null)?.closest?.('.VPFlyout .menu'))
+          return;
+        document.documentElement.classList.remove('ivue-flyout-closed');
+        document.removeEventListener('mouseover', reopenFlyouts);
+      };
+      document.addEventListener('click', (event) => {
+        const target = event.target as Element | null;
+        if (target?.closest?.('.VPFlyout .button')) {
+          reopenFlyouts(event);
+          return;
+        }
+        if (!target?.closest?.('.VPNavBar .VPFlyout .menu a')) return;
+        document.documentElement.classList.add('ivue-flyout-closed');
+        document.addEventListener('mouseover', reopenFlyouts);
+      });
+
       const onAfterRouteChange = router.onAfterRouteChange;
       router.onAfterRouteChange = async (to) => {
         await onAfterRouteChange?.(to);

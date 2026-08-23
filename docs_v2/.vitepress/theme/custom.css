@@ -2432,6 +2432,19 @@ a.feature-inline-link {
 .ivue-extra-nav {
   display: none;
 }
+/* A flyout that was just clicked closes even though it is still
+   hovered (flag toggled on <html> in theme/index.ts — route changes
+   re-patch the flyout DOM, so the flag cannot live on the flyout). */
+html.ivue-flyout-closed .VPNavBar .VPFlyout .menu {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+/* Nav dropdowns open to the RIGHT of their trigger; the "…" extra
+   menu stays right-aligned (it sits at the screen edge). */
+.VPNavBarMenu .VPFlyout .menu {
+  left: 0;
+  right: auto;
+}
 .ivue-extra-nav .ivue-extra-link {
   display: block;
   border-radius: 6px;
