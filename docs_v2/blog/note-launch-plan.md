@@ -51,3 +51,38 @@ moment credits exist — the composer already has the thread built.
   never in adjectives.
 - **Everywhere:** the newsletter invite is one line, benefit-framed,
   last.
+
+## Podcasts & outreach
+
+The pitch is never "my library" — it's one of two STORIES, picked per
+room:
+
+- **The Vue story** — "the Options API everyone actually wanted:
+  classes weren't broken, they were unconstrained." For Vue-native
+  rooms; controversy is the hook, receipts are the armor.
+- **The agent story** — "AI agents built a 94,000-line terminal IDE
+  by following a one-document standard — here's what makes a codebase
+  agent-legible." Works in ANY dev room, and it's the rising tide.
+
+Targets, in rough order of fit:
+
+- **DejaVue** (Alexander Lichter & Michael Thiessen) — THE Vue
+  podcast; Michael's newsletter is already on the submissions list,
+  so one relationship covers two channels. Vue story.
+- **Views on Vue** (Top End Devs) — interview format, welcomes
+  library authors. Vue story.
+- **PodRocket** (LogRocket) — frontend-general, likes measured-perf
+  angles. Either story.
+- **devtools.fm** — tools-for-developers focus; the Invar + standard
+  angle fits exactly. Agent story.
+- **JS Party / Syntax** — long shots but the agent story is their
+  kind of episode; pitch after HN traction, link the thread.
+- **Conference CFPs** (Vuejs Amsterdam, Vue.js Nation, Nuxt Nation) —
+  the agent story as a talk: "constraints make codebases
+  agent-writable." CFP deadlines run months ahead — submit early,
+  they compound the podcast credibility.
+
+Outreach mechanics: short pitch (three sentences, one link, one
+number), sent AFTER the HN/Reddit wave so there's a thread to point
+at. Podcasters book on proof of audience interest — the launch IS the
+pitch material.
