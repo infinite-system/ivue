@@ -423,17 +423,14 @@ export default defineConfig({
       : []) as any),
     // The blog badge carries the fresh-post COUNT when more than one
     // post is inside the window — the text is known at build time, so
-    // it ships as a static style override. Navbar: "+12" floats over
-    // the word (::before, styled in custom.css); the NEW superscript
-    // stays where it always was. Mobile menu rows have room for the
-    // full inline "+12 NEW".
+    // it ships as a static style override. One "+12 NEW" superscript,
+    // same spot as the plain NEW badge.
     ...((freshBlogCount > 1
       ? [
           [
             'style',
             {},
-            `html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog']::before` +
-              `{content:'+${freshBlogCount}';}` +
+            `html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog']::after,` +
               `html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after` +
               `{content:'+${freshBlogCount} NEW' !important;}`,
           ],

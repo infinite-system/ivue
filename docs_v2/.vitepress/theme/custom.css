@@ -2484,31 +2484,6 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   margin-left: 5px;
   font-size: 9px;
 }
-/* The fresh-post COUNT ("+12") floats OVER the word Blog — absolutely
-   positioned so it occupies zero width and never shifts the nav layout.
-   The content itself is a build-time style in config.ts head (only
-   emitted when more than one post is inside the fresh window). */
-html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog'] {
-  position: relative;
-}
-html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog']::before {
-  content: none;
-  position: absolute;
-  top: 11px;
-  /* centered over the WORD (9px padding + half of "Blog"), not the
-     link box — the NEW superscript widens the box to the right */
-  left: 25px;
-  transform: translateX(-50%);
-  line-height: 1;
-  font-size: 8.5px;
-  font-weight: 750;
-  letter-spacing: 0.05em;
-  background: linear-gradient(105deg, #818cf8, #2dd4bf 60%, #34d399);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  white-space: nowrap;
-}
 .new-badge {
   display: inline-block;
   margin-left: 7px;
