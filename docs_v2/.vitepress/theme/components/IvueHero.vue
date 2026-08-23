@@ -31,16 +31,17 @@ class $Typewriter {
   finaleVariants = [
     'One kilobyte.',
     'Zero dependencies.',
-    'Invariant based.',
-    'Rocket fast.',
-    'TypeScript first.',
     'Reactive super.',
-    'Composable.',
     'Circular imports.',
     'Zero-cost creation.',
     'Minimal memory.',
+    'Rocket fast.',
+    'TypeScript first.',
+    'Composable.',
     'Bulletproof modules.',
     'Built for AI.',
+    'Invariant based.',
+    'Reactive backend.',
   ];
   fallLeadMs = 700; // let the fall-ins land before typing starts
   typeDelayMs = 66;

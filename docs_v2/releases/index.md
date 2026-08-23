@@ -14,9 +14,11 @@ generated from them, and each is mirrored on
 [GitHub Releases](https://github.com/infinite-system/ivue/releases).
 Install any version with `npm i ivue@<version>`.
 
-## [ivue@2.4.0](/releases/2.4.0) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.4.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-4-0}
+## [ivue@2.4.0](/releases/2.4.0) <span class="new-badge">NEW</span> <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.4.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-4-0}
 
 Feature release — one option on one verb, zero breaking changes: $stopEffects learns to stop the watchers without forgetting the state, and the suspend/resume lifecycle falls out of a convention the standard already half-taught.
+
+<p class="release-date">Released August 23, 2026</p>
 
 ## [ivue@2.3.0](/releases/2.3.0) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.3.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-3-0}
 
