@@ -94,7 +94,7 @@
       <div class="line"><span class="kw">const</span> count = ref(0)&nbsp;&nbsp;<span class="kw">// exists NOW, forever</span></div>
       <div class="line hot"><span class="kw">get</span> <span class="glowcode">count</span>() { <span class="kw">return</span> <span class="glowcode">ref(0)</span> }&nbsp;&nbsp;<span class="kw">// exists WHEN ASKED</span></div>
     </div>
-    <div class="title">The ref <span class="glow">behind the getter</span></div>
+    <div class="title">Total <span class="glow">memory control</span></div>
     <div class="sub">separate the name from the cell, and existence itself becomes a managed resource —<br/>values, subscriptions, and now MEMORY, each with an owner and an API.</div>
     <div class="stats">
       <div class="stat"><span class="n">3rd axis</span><span class="l">existence control</span></div>
