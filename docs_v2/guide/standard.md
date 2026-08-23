@@ -424,14 +424,32 @@ class $Session {
   // Outliving instance: $watch/$watchEffect register in the
   // instance's lazy effectScope — there is no component scope here
   // to reap plain watch.
+  // WATCHERS live behind a method, not inline in the constructor —
+  // the constructor calls it once, and the instance can RESTART its
+  // watchers after a keep-state stop (see suspend() below).
   constructor() {
+    this.startWatchers();
+    // If constructed INSIDE some scope, auto-wire teardown instead:
+    //   getCurrentScope() && onScopeDispose(() => this.$stopEffects());
+  }
+
+  startWatchers() {
     this.$watch(
       () => this.user.value,
       (user, previousUser) => this.onUserChanged(user, previousUser),
     );
     this.$watchEffect(() => this.persist());
-    // If constructed INSIDE some scope, auto-wire teardown instead:
-    //   getCurrentScope() && onScopeDispose(() => this.$stopEffects());
+  }
+
+  // SUSPEND / RESUME: { reset: false } stops the watchers ONLY — every
+  // cached cell survives with its current value. startWatchers() in a
+  // fresh scope resumes. (Default $stopEffects() also CLEARS the cells:
+  // the next touch re-runs initializers — disposal is a reset.)
+  suspend() {
+    this.$stopEffects({ reset: false });
+  }
+  resume() {
+    this.startWatchers();
   }
 
   // CLEANUP composes as an ORDINARY method — no hooks, no reserved
@@ -527,7 +545,11 @@ until mount — use `?.` in watch getters).
   its leaf reads subscribe directly (non-intuitive but structural).
 - The source MUST be the FUNCTION form. `watch(instance.plainGetter, cb)` passes a
   dead snapshot and never fires.
-- `$stopEffects()` stops the instance scope and clears cached Refs/Computeds;
+- `$stopEffects()` stops the instance scope and clears cached Refs/Computeds
+  (the next touch re-materializes — disposal is a reset);
+  `$stopEffects({ reset: false })` stops the WATCHERS only — every cached
+  cell survives with its current value, and `startWatchers()` in a fresh
+  scope resumes (the suspend/resume pattern above);
   instances that never `$watch` allocate no scope. There are NO hooks — richer
   cleanup is an ordinary method that does its work and then calls
   `$stopEffects()` itself. Every outliving instance needs an OWNER that calls

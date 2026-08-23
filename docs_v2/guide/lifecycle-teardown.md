@@ -159,6 +159,39 @@ newly-constructed instance. Two consequences define how to use this:
 - **The constructor does not re-run.** Watchers registered there stay
   dead; a re-armable instance registers them in a method instead.
 
+### Keeping the state: `$stopEffects({ reset: false })`
+
+When the cells should *survive* — suspend an entity's side effects while
+it keeps its data — pass `{ reset: false }`: the scope stops (every
+watcher dies), but no cache is cleared. Cell identity and current values
+persist, surviving computeds keep evaluating, and a later `$watch`
+allocates a fresh scope. Pair it with the method-registered watchers
+above and suspend/resume is two one-liners:
+
+```ts
+class $Feed {
+  constructor() {
+    this.startWatchers();
+  }
+
+  startWatchers() {
+    this.$watchEffect(() => this.render());
+  }
+
+  suspend() {
+    this.$stopEffects({ reset: false }); // watchers die, state stays
+  }
+
+  resume() {
+    this.startWatchers(); // fresh scope over the SAME cells
+  }
+
+  render() {
+    /* ... */
+  }
+}
+```
+
 That turns disposal into a repeatable **deactivate/re-activate cycle** —
 the tool for windowing *reactivity* over a large retained model (a
 million-row list where only visible rows deserve live effects):

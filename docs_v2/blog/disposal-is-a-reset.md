@@ -104,6 +104,30 @@ A hook is a contract with an invisible caller. A method is a call you
 can read at the call site. The second one survives refactoring,
 subclassing, and grep.
 
+## When the state should survive
+
+Sometimes the right death is smaller: silence the side effects, keep the
+data. The verb takes the distinction as an option —
+`$stopEffects({ reset: false })` stops every watcher but clears nothing:
+cell identity and current values persist, surviving computeds keep
+evaluating, and a later `$watch` opens a fresh scope over the same
+cells. Register watchers in a method the constructor calls, and
+suspend/resume is two one-liners:
+
+```ts
+suspend() {
+  this.$stopEffects({ reset: false }); // watchers die, state stays
+}
+
+resume() {
+  this.startWatchers(); // fresh scope, same cells
+}
+```
+
+Silencing and forgetting are separable acts; the default bundles them
+because full disposal is the common case — the option unbundles them for
+the suspend/resume lifecycle.
+
 ## The ownership rule
 
 The verb exists for instances that *outlive* components. A

@@ -85,7 +85,7 @@ Returns the stop handle.
 instance.$watchEffect(() => render(instance.width.value, instance.height.value))
 ```
 
-## `instance.$stopEffects()`
+## `instance.$stopEffects(options?)`
 
 Disposes the instance, in order:
 
@@ -94,13 +94,18 @@ Disposes the instance, in order:
    be garbage-collected.
 
 ```ts
-instance.$stopEffects()
+instance.$stopEffects()                 // stop + clear (disposal is a reset)
+instance.$stopEffects({ reset: false }) // stop the watchers ONLY
 ```
 
-Accessing a member afterwards re-materializes it fresh. There are no
-teardown hooks — richer cleanup is an ordinary method of yours that does
-its own work and then calls `$stopEffects()`
-([Lifecycle & Teardown](/guide/lifecycle-teardown)).
+Accessing a member after the default call re-materializes it fresh — the
+initializers run again. With `{ reset: false }` every cached cell survives
+with its current value: the watchers die, the state stays, and the
+instance can `$watch` again in a fresh scope — the suspend/resume pattern
+(keep watcher wiring in a `startWatchers()` method the constructor calls,
+and resuming is one call). There are no teardown hooks — richer cleanup is
+an ordinary method of yours that does its own work and then calls
+`$stopEffects()` ([Lifecycle & Teardown](/guide/lifecycle-teardown)).
 
 ## `propsWithDefaults(defaults, typedProps, cloner?)`
 
