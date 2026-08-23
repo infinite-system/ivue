@@ -23,8 +23,10 @@ viewports see). Pages without the key render nothing.
 - Unknown slugs filter silently — a bad slug degrades to a missing
   card, not a build failure. That is a footgun as much as a feature:
   verify slugs against `docs_v2/blog/*.md` filenames when curating.
-- Curation history: `tmp/related-posts-map.md` (when present) holds
-  the last full scan — map, gaps, and fix-before-linking flags.
+- Curation ledger: `.claude/skills/related-blogs/related-posts-map.md`
+  — the scan that seeded the frontmatter, the post-idea pipeline
+  (gaps + invar-sourced), and fix-before-linking flags. The LIVE map
+  is the frontmatter itself; the ledger records intent and pipeline.
 
 ## Frontmatter form
 
@@ -60,7 +62,8 @@ page's existing frontmatter block.
 Ask: which docs pages does this post narrate? Add its slug to those
 pages' `relatedPosts` (respecting the 3-slot ranking — it may displace
 a weaker match). A post born from a gap in the pipeline usually has
-its target pages named in `tmp/related-posts-map.md` already.
+its target pages named in the ledger already — and shipping it means
+crossing it off there.
 
 ## When a NEW DOCS PAGE lands
 
