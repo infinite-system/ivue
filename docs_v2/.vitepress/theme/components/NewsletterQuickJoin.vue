@@ -255,21 +255,29 @@ async function join() {
   font-size: 12px;
   color: #f66;
 }
-/* the interaction-only widget takes NO flex slot (its hidden iframe
-   would otherwise eat a gap); when Cloudflare challenges, it overlays
-   just below the form */
+/* the challenge rides ITS OWN full-width row: invisible it adds no
+   height (the negative margin cancels the flex gap), and when
+   Cloudflare escalates to the visible check the page pushes down
+   instead of the widget hanging over whatever sits below */
+/* the challenge hangs as a popover ABOVE the form — zero layout
+   cost when invisible, and it never covers the controls below;
+   mobile flips it underneath (see the media block) */
 .quickjoin {
   position: relative;
 }
 .quickjoin__turnstile {
   position: absolute;
-  top: calc(100% + 6px);
+  bottom: calc(100% + 8px);
   right: 0;
-  z-index: 5;
+  z-index: 30;
 }
 .quickjoin--center .quickjoin__turnstile {
   right: 50%;
   transform: translateX(50%);
+}
+.quickjoin--start .quickjoin__turnstile {
+  right: auto;
+  left: 0;
 }
 .quickjoin--center {
   margin-left: auto;
@@ -315,6 +323,13 @@ async function join() {
   }
   .quickjoin__button-label--short {
     display: inline;
+  }
+  .quickjoin__turnstile {
+    bottom: auto;
+    top: calc(100% + 8px);
+    right: 50%;
+    left: auto;
+    transform: translateX(50%);
   }
   .quickjoin__group {
     flex: 1 1 auto;
