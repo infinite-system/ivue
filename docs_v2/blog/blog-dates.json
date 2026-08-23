@@ -111,10 +111,6 @@
     "date": "2026-08-22",
     "timestamp": 1787432429
   },
-  "the-ref-behind-the-getter": {
-    "date": "2026-08-23",
-    "timestamp": 1787478256
-  },
   "the-stack-got-faster": {
     "date": "2026-08-23",
     "timestamp": 1787465917
@@ -142,6 +138,10 @@
   "three-years-to-reduce": {
     "date": "2026-08-10",
     "timestamp": 1786404338
+  },
+  "total-memory-control": {
+    "date": "2026-08-23",
+    "timestamp": 1787478256
   },
   "twenty-million-cells": {
     "date": "2026-07-13",
