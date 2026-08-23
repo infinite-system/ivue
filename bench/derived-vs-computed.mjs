@@ -1,4 +1,5 @@
-// Derived plain getters vs computed(): WARM READ cost, parity shapes.
+// THE comparison: ivue plain getter (template reads `box.out`) vs a
+// normal composable computed() (template reads a destructured binding).
 // REAL ivue classes — genuine ref-getters through Reactive(), the exact
 // shapes the standard prescribes. Three shapes per complexity tier, same
 // derivation logic:
@@ -102,7 +103,8 @@ class $ChainedComputed {
 // ---- raw composable parity shapes ------------------------------------
 function rawTrivial() {
   const a = ref(1);
-  const out = computed(() => a.value + 2);
+  const b = ref(2);
+  const out = computed(() => a.value + b.value);
   return { out, write: (i) => { a.value = i; } };
 }
 function rawMedium() {
