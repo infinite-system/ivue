@@ -3367,7 +3367,8 @@ a.feature-inline-link:active {
   margin: 0 auto 8px;
   max-width: 40rem;
 }
-.ix-newsletter-hero__cadence {
+/* .vp-doc p outranks a bare class and zeroes the auto margins */
+.vp-doc p.ix-newsletter-hero__cadence {
   position: relative;
   margin: 14px auto 6px;
   max-width: 640px;
