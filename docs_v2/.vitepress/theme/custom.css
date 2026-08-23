@@ -3052,7 +3052,7 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   object-position: 50% 42%;
   /* the ivue gradient ring: a transparent border painted by a
      border-box gradient under a padding-box photo surface */
-  border: 2px solid transparent;
+  border: 3px solid transparent;
   background:
     linear-gradient(var(--vp-c-bg), var(--vp-c-bg)) padding-box,
     linear-gradient(120deg, #6366f1, #2dd4bf 55%, #34d399) border-box;
