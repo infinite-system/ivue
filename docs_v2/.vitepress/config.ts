@@ -6,24 +6,24 @@ const deployedCommit = process.env.GITHUB_SHA ?? '';
 // Nav NEW badges: lit at build time when the newest post/release is under
 // two weeks old (dates from the committed *-dates.json files).
 const FRESH_WINDOW_SECONDS = 14 * 86_400;
-function newestTimestamp(datesFile: string): number {
+function recordedTimestamps(datesFile: string): number[] {
   try {
     const records = JSON.parse(
       readFileSync(new URL(datesFile, import.meta.url), 'utf8'),
     ) as Record<string, { timestamp: number }>;
-    return Math.max(
-      0,
-      ...Object.values(records).map((record) => record.timestamp),
-    );
+    return Object.values(records).map((record) => record.timestamp);
   } catch {
-    return 0;
+    return [];
   }
 }
 const nowSeconds = Math.floor(Date.now() / 1000);
-const hasNewBlog =
-  nowSeconds - newestTimestamp('../blog/blog-dates.json') < FRESH_WINDOW_SECONDS;
-const hasNewRelease =
-  nowSeconds - newestTimestamp('../releases-dates.json') < 90 * 86_400;
+const freshBlogCount = recordedTimestamps('../blog/blog-dates.json').filter(
+  (timestamp) => nowSeconds - timestamp < FRESH_WINDOW_SECONDS,
+).length;
+const hasNewBlog = freshBlogCount > 0;
+const hasNewRelease = recordedTimestamps('../releases-dates.json').some(
+  (timestamp) => nowSeconds - timestamp < 90 * 86_400,
+);
 
 // Blog sidebar, generated from the posts themselves: frontmatter titles +
 // git-recovered dates (blog-dates.json), newest first, grouped by month.
@@ -418,6 +418,24 @@ export default defineConfig({
             {},
             `document.documentElement.dataset.newBlog=${JSON.stringify(hasNewBlog ? '1' : '')};` +
               `document.documentElement.dataset.newRelease=${JSON.stringify(hasNewRelease ? '1' : '')};`,
+          ],
+        ]
+      : []) as any),
+    // The blog badge carries the fresh-post COUNT when more than one
+    // post is inside the window — the text is known at build time, so
+    // it ships as a static style override. Navbar: "+12" floats over
+    // the word (::before, styled in custom.css); the NEW superscript
+    // stays where it always was. Mobile menu rows have room for the
+    // full inline "+12 NEW".
+    ...((freshBlogCount > 1
+      ? [
+          [
+            'style',
+            {},
+            `html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog']::before` +
+              `{content:'+${freshBlogCount}';}` +
+              `html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after` +
+              `{content:'+${freshBlogCount} NEW' !important;}`,
           ],
         ]
       : []) as any),

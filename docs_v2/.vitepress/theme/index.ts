@@ -150,10 +150,35 @@ export default {
           ?.setAttribute('translate', 'no');
       };
 
+      // At iPad widths the seven nav items overflow the bar and push the
+      // "…" extra menu out of view. CSS collapses the flat Community link
+      // in that range (custom.css), and this injects Community INTO the
+      // extra flyout — VitePress never puts nav links there itself. The
+      // injected group is visible only in the same range, so wider
+      // viewports never show Community twice. Idempotent; the navbar
+      // persists across routes, so one successful injection is enough.
+      const injectExtraNavLinks = () => {
+        const extraMenu = document.querySelector('.VPNavBarExtra .VPMenu');
+        if (!extraMenu || extraMenu.querySelector('.ivue-extra-nav')) return;
+        const group = document.createElement('div');
+        group.className = 'group ivue-extra-nav';
+        const item = document.createElement('div');
+        const link = document.createElement('a');
+        link.className = 'ivue-extra-link';
+        link.href = '/community';
+        link.textContent = 'Community';
+        item.appendChild(link);
+        group.appendChild(item);
+        extraMenu.prepend(group);
+      };
+
       const onAfterRouteChange = router.onAfterRouteChange;
       router.onAfterRouteChange = async (to) => {
         await onAfterRouteChange?.(to);
-        requestAnimationFrame(shieldBrand);
+        requestAnimationFrame(() => {
+          shieldBrand();
+          injectExtraNavLinks();
+        });
 
         if (router.route.data.isNotFound) {
           // a "404" on a stale build is usually the deploy race, not a
@@ -166,7 +191,10 @@ export default {
           );
         }
       };
-      requestAnimationFrame(shieldBrand);
+      requestAnimationFrame(() => {
+        shieldBrand();
+        injectExtraNavLinks();
+      });
     }
 
     app.component('PerfSlider', PerfSlider);

@@ -2425,8 +2425,43 @@ a.feature-inline-link {
   }
 }
 
+/* iPad widths: the seven items overflow the bar and push the "…" extra
+   menu out of view. Collapse the flat Community link and surface the
+   copy injected into the extra flyout (theme/index.ts) instead — one
+   Community, always reachable, and the "…" stays on screen. */
+.ivue-extra-nav {
+  display: none;
+}
+.ivue-extra-nav .ivue-extra-link {
+  display: block;
+  border-radius: 6px;
+  padding: 0 12px;
+  line-height: 32px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vp-c-text-1);
+  white-space: nowrap;
+  transition:
+    background-color 0.25s,
+    color 0.25s;
+}
+.ivue-extra-nav .ivue-extra-link:hover {
+  color: var(--vp-c-brand-1);
+  background-color: var(--vp-c-default-soft);
+}
+@media (min-width: 768px) and (max-width: 1151px) {
+  .VPNavBarMenu .VPNavBarMenuLink[href='/community'] {
+    display: none;
+  }
+  .ivue-extra-nav {
+    display: block;
+  }
+}
+
 /* NEW badges: nav superscripts (lit by build-time data attributes) and
    the index pill for entries under two weeks old */
+html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after,
+html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after,
 html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog']::after,
 html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
   content: 'NEW';
@@ -2440,6 +2475,39 @@ html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  white-space: nowrap;
+}
+/* Mobile menu rows are full-width — an inline superscript reads better. */
+html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after,
+html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
+  top: -6px;
+  margin-left: 5px;
+  font-size: 9px;
+}
+/* The fresh-post COUNT ("+12") floats OVER the word Blog — absolutely
+   positioned so it occupies zero width and never shifts the nav layout.
+   The content itself is a build-time style in config.ts head (only
+   emitted when more than one post is inside the fresh window). */
+html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog'] {
+  position: relative;
+}
+html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog']::before {
+  content: none;
+  position: absolute;
+  top: 11px;
+  /* centered over the WORD (9px padding + half of "Blog"), not the
+     link box — the NEW superscript widens the box to the right */
+  left: 25px;
+  transform: translateX(-50%);
+  line-height: 1;
+  font-size: 8.5px;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  background: linear-gradient(105deg, #818cf8, #2dd4bf 60%, #34d399);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  white-space: nowrap;
 }
 .new-badge {
   display: inline-block;
