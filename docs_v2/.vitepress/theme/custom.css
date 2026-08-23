@@ -2596,9 +2596,9 @@ html:not(.dark) .fw-embed .fw-sub {
 .VPNavBarMenuLink[href='/guide/standard']::after {
   content: '\2605';
   position: relative;
-  top: -8px;
+  top: -7px;
   margin-left: -1px;
-  font-size: 12px;
+  font-size: 14px;
   color: #f7b500;
   text-shadow: 0 0 5px rgba(247, 181, 0, 0.35);
 }
