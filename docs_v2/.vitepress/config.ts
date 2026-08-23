@@ -153,7 +153,7 @@ export default defineConfig({
   site: 'https://ivue.dev',
 
   title: 'ivue',
-  titleTemplate: ':title — Infinite Vue',
+  titleTemplate: ':title — ivue',
   description:
     'Class-based reactivity for Vue 3. Plain classes, full reactivity, one kilobyte.',
   lang: 'en-US',
