@@ -12,20 +12,29 @@ date: 2026-08
 
 <BlogPostDate />
 
-Ugly code does not come from bad programmers. It comes from somewhere
-much more specific, and once you see the source you can never unsee
-it:
+A language gives you one space, not two. What you can *say* and what
+can *go wrong* live in the same place — every failure mode a
+substrate leaves expressible sits inside your expression space,
+squatting on territory that intent should own. Not because anyone
+writes the failures on purpose, but because everyone must write the
+code that routes around them — and the routing is text, and the text
+crowds out the program.
 
-> Code is ugly exactly where it encodes constraints that are not the
-> program's own.
+So the trade at the heart of this essay is stark:
 
-Every program has an intent with a *shape* — a customer holds orders,
-an order knows its customer, a workspace owns an editor, the editor
-reaches back. That shape is a graph, and it belongs to the domain. The
-notation's whole job is to trace it. When the code reads the way the
-domain thinks, we call it beautiful, and we're not being sentimental —
-we're measuring something: **the residual distance between the shape
-of the intent and the shape of the text.**
+> Make the failure inexpressible, and the intent becomes expressible.
+> The two spaces are one space; what the mine field vacates, meaning
+> occupies.
+
+To see what that buys, start with what intent *is*. Every program has
+an intent with a *shape* — a customer holds orders, an order knows
+its customer, a workspace owns an editor, the editor reaches back.
+That shape is a graph, and it belongs to the domain. The notation's
+whole job is to trace it. When the code reads the way the domain
+thinks, we call it beautiful, and we're not being sentimental — we're
+measuring something: **the residual distance between the shape of the
+intent and the shape of the text.** Code is ugly exactly where it
+encodes constraints that are not the program's own.
 
 ## The alien constraint
 
