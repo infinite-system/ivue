@@ -20,9 +20,10 @@ viewports see). Pages without the key render nothing.
   ONLY. Never import `blog.data.mjs` (the full loader) into the theme:
   it carries ~5 KB of search text per post and belongs to the blog
   index alone.
-- Unknown slugs filter silently — a bad slug degrades to a missing
-  card, not a build failure. That is a footgun as much as a feature:
-  verify slugs against `docs_v2/blog/*.md` filenames when curating.
+- Unknown slugs filter silently at RENDER time (a missing card, not
+  a crash) — but `docs_v2/scripts/check-related-posts.mjs`, chained
+  into `build:docs`, fails the BUILD on any slug that matches no
+  post, so typos and stale references never ship.
 - Curation ledger: `.claude/skills/related-blogs/related-posts-map.md`
   — the scan that seeded the frontmatter, the post-idea pipeline
   (gaps + invar-sourced), and fix-before-linking flags. The LIVE map
@@ -75,14 +76,16 @@ new post (add the idea to the gap pipeline), not a reason to stretch.
 ## When a BLOG SLUG is renamed
 
 `npm run rename:blog-slug -- <old> <new>` already rewrites every
-`relatedPosts` reference (its cross-reference pass sweeps all of
-docs_v2's markdown). Nothing manual — but verify with
-`grep -rn "<old-slug>" docs_v2 --include=*.md | grep -v dist`.
+`relatedPosts` reference (its cross-reference pass sweeps docs_v2 AND
+`.claude/skills` markdown — the curation ledger included). Nothing
+manual — and `check-related-posts` (chained into build:docs) fails the
+build if a stale slug survives anywhere.
 
 ## Verify after curating
 
 1. `npm run build:docs` must pass (loader validates at build).
 2. Spot-check one edited page live or in dist: aside rows AND the
    end-of-content grid both render, thumbs load, links resolve.
-3. Slug typo check: a missing card in the rendered block means a slug
-   that matched nothing — compare against `docs_v2/blog/` filenames.
+3. Slug typos are caught by the build itself
+   (`check-related-posts`); a missing card in a DEV preview before
+   building means the same thing — compare against `docs_v2/blog/`.

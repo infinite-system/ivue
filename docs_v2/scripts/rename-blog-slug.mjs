@@ -116,8 +116,10 @@ for (const [from, to] of moves) run(`git mv "${from}" "${to}"`);
 
 // ---- 2. cross-references ---------------------------------------------
 
+// docs_v2 (posts, relatedPosts frontmatter, cross-links) AND the
+// skills tree (the related-blogs curation ledger, skill examples)
 const markdownFiles = execSync(
-  `grep -rl --include=*.md "${oldSlug}" docs_v2 || true`,
+  `grep -rl --include=*.md "${oldSlug}" docs_v2 .claude/skills || true`,
   { cwd: repositoryRoot, encoding: 'utf8' },
 )
   .split('\n')
