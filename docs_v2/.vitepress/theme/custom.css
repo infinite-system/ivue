@@ -2204,6 +2204,8 @@ a.feature-inline-link {
 .newsletter__turnstile {
   margin: 10px 0 2px;
   min-height: 0;
+  display: flex;
+  justify-content: center;
 }
 .newsletter__turnstile:empty {
   display: none;

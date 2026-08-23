@@ -271,9 +271,16 @@ async function join() {
   right: 0;
   z-index: 20; /* above content, BELOW the sticky navbar (--vp-z-index-nav: 30) */
 }
+/* centered variants (post footer, blog footer) keep the challenge
+   IN-FLOW below the form — there is prose right above them, and a
+   popover would sit on it */
 .quickjoin--center .quickjoin__turnstile {
-  right: 50%;
-  transform: translateX(50%);
+  position: static;
+  transform: none;
+  flex-basis: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: -10px; /* no gap while invisible */
 }
 .quickjoin--start .quickjoin__turnstile {
   right: auto;
