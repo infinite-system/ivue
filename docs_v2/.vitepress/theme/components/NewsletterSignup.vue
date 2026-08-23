@@ -244,6 +244,11 @@ async function subscribe() {
             required
           />
         </div>
+        <div
+          v-if="TURNSTILE_SITE_KEY"
+          ref="turnstileElement"
+          class="newsletter__turnstile"
+        ></div>
         <button type="submit" :disabled="state === 'sending'">
           <span class="newsletter__button-shine" aria-hidden="true"></span>
           <span class="newsletter__button-text">
@@ -256,11 +261,6 @@ async function subscribe() {
             </svg>
           </span>
         </button>
-        <div
-          v-if="TURNSTILE_SITE_KEY"
-          ref="turnstileElement"
-          class="newsletter__turnstile"
-        ></div>
       </form>
       <div v-if="state === 'done'" class="newsletter__success" role="status">
         <svg class="newsletter__check" viewBox="0 0 24 24" fill="none" aria-hidden="true">
