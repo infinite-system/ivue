@@ -1579,6 +1579,9 @@ a.feature-inline-link {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  /* headroom for the Turnstile popover that hangs above the quick-join
+     form — without it the challenge lands on the navbar links */
+  margin-top: 56px;
 }
 .blog-index-heading {
   display: flex;

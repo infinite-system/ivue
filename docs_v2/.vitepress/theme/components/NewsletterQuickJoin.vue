@@ -269,7 +269,7 @@ async function join() {
   position: absolute;
   bottom: calc(100% + 8px);
   right: 0;
-  z-index: 30;
+  z-index: 20; /* above content, BELOW the sticky navbar (--vp-z-index-nav: 30) */
 }
 .quickjoin--center .quickjoin__turnstile {
   right: 50%;
@@ -324,12 +324,15 @@ async function join() {
   .quickjoin__button-label--short {
     display: inline;
   }
+  /* mobile: the challenge joins the flow — its own centered row
+     below the form, pushing content instead of covering it */
   .quickjoin__turnstile {
-    bottom: auto;
-    top: calc(100% + 8px);
-    right: 50%;
-    left: auto;
-    transform: translateX(50%);
+    position: static;
+    transform: none;
+    flex-basis: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: -10px; /* no gap while invisible */
   }
   .quickjoin__group {
     flex: 1 1 auto;
