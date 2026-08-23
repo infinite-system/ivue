@@ -1812,7 +1812,7 @@ a.feature-inline-link {
   padding-top: 3px;
   line-height: 1.4;
   font-family: var(--vp-font-family-mono);
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.08em;
   white-space: nowrap;
   text-transform: uppercase;
