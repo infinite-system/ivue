@@ -1,3 +1,20 @@
+/**
+ * ============================================================
+ *  DEPRECATED — ivue v1 (the reactive-proxy engine)
+ * ============================================================
+ *
+ * This file is the ORIGINAL v1 implementation: `ivue(Class, ...args)`
+ * wraps instances in `reactive()` and converts accessors to computeds.
+ * It is kept in-tree for reference and migration only.
+ *
+ * v2 is `Reactive()` in ./Reactive.ts (the package's main entry) — a
+ * one-time prototype transform: instances stay plain objects, plain
+ * getters cost zero bytes, creation measures 55-253x faster. New code
+ * must never import from this file.
+ *
+ * Migration guide: https://ivue.dev/guide/model-layer
+ */
+
 import type { ComputedRef, ExtractPropTypes, Ref, ToRef } from 'vue';
 import { computed, markRaw, reactive, ref, shallowRef, toRef } from 'vue';
 import type { Ref as DemiRef } from 'vue-demi';
@@ -399,6 +416,8 @@ const getClassPropertiesAccessorsMap = (obj: object): PropsMapValue => {
  *    get getter () { return 'hello world'; }
  * }
  *
+ * @deprecated v1 engine — use `Reactive()` from the main `ivue` entry
+ * instead; see https://ivue.dev/guide/model-layer for the migration.
  * @param className Any Class
  * @param args Class constructor arguments that you would pass to a `new AnyClass(args...)`
  * @returns {IVue<T>}
