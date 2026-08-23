@@ -2964,6 +2964,26 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   width: 20px;
   height: 20px;
 }
+/* Real brand logos in the credits cards: a uniform tile whose colors
+   derive from each logo's own brand (per-card --tile-bg/--tile-border
+   inline) — one shape, six identities. Fixed light-leaning tiles read
+   as chips in BOTH themes, so dark marks stay visible in dark mode. */
+.VPDoc .cm-channel__logo {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+}
+.VPDoc .cm-channel__logo img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
 .VPDoc .cm-channel__icon path {
   fill: var(--ivue-link-accent);
 }

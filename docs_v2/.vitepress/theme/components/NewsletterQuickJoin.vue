@@ -282,9 +282,15 @@ async function join() {
   justify-content: center;
   margin-bottom: -10px; /* no gap while invisible */
 }
+/* start-aligned (community page): the challenge sits IN-FLOW below
+   the form, centered — a popover above would cover the prose */
 .quickjoin--start .quickjoin__turnstile {
-  right: auto;
-  left: 0;
+  position: static;
+  transform: none;
+  flex-basis: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: -10px;
 }
 .quickjoin--center {
   margin-left: auto;

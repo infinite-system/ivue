@@ -125,7 +125,7 @@ other day, at your local morning:
 ## Who's behind ivue
 
 <div class="cm-author">
-  <img class="cm-avatar" src="/avatars/evgeny.png" alt="Evgeny Kalashnikov" width="76" height="76" />
+  <img class="cm-avatar" src="/avatars/evgeny-avatar.png" alt="Evgeny Kalashnikov" width="76" height="76" />
   <div class="cm-author__body">
     <span class="cm-author__eyebrow">Author</span>
     <strong>Evgeny Kalashnikov</strong>
@@ -173,42 +173,42 @@ on every page, and naming them is a pleasure:
   <div class="cm-channels cm-channels--credits">
   <a class="cm-channel" href="https://vuejs.org" target="_blank" rel="noreferrer">
     <span class="cm-channel__title">
-      <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.77 2 12 6.8 9.23 2H1.5L12 20.2 22.5 2h-7.73Zm-9.8 2h3.1L12 10.8 15.93 4h3.1L12 16.2 4.97 4Z"/></svg>
+      <span class="cm-channel__logo" style="--tile-bg:#eaf7f1;--tile-border:rgba(66,184,131,0.45)"><img src="/community/vue.svg" alt="Vue logo" loading="lazy" /></span>
       <strong>Evan You — Vue</strong>
     </span>
     <p>Creator of Vue. The reactivity engine ivue rides on — refs, effects, and the scheduler that makes a 1&nbsp;kB class layer possible at all.</p>
   </a>
   <a class="cm-channel" href="https://laravel.com" target="_blank" rel="noreferrer">
     <span class="cm-channel__title">
-      <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 2 7v10l10 5 10-5V7L12 2Zm0 2.2L19.5 8 12 11.8 4.5 8 12 4.2ZM4 9.6l7 3.5v6.7l-7-3.5V9.6Zm9 10.2v-6.7l7-3.5v6.7l-7 3.5Z"/></svg>
+      <span class="cm-channel__logo" style="--tile-bg:#fdeeea;--tile-border:rgba(255,45,32,0.35)"><img src="/community/laravel.svg" alt="Laravel logo" loading="lazy" /></span>
       <strong>Taylor Otwell — Laravel</strong>
     </span>
     <p>The standing proof that developer experience is a feature — API elegance practiced as an engineering discipline, not a garnish.</p>
   </a>
   <a class="cm-channel" href="https://mobx.js.org" target="_blank" rel="noreferrer">
     <span class="cm-channel__title">
-      <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm0 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg>
+      <span class="cm-channel__logo" style="--tile-bg:#fff2e7;--tile-border:rgba(255,153,85,0.5)"><img src="/community/mobx.svg" alt="MobX logo" loading="lazy" /></span>
       <strong>MobX</strong>
     </span>
     <p>Transparent reactive objects, years ahead of the field — the prior art that showed plain-looking classes could be fully observable.</p>
   </a>
   <a class="cm-channel" href="https://www.linkedin.com/in/pete-heard-lr/" target="_blank" rel="noreferrer">
     <span class="cm-channel__title">
-      <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 3.5A3.5 3.5 0 1 1 16.5 20 3.5 3.5 0 0 1 13 16.5Z"/></svg>
+      <span class="cm-channel__logo" style="--tile-bg:#171132;--tile-border:rgba(224,70,140,0.45)"><img src="/community/logicroom-mark.png" alt="Logic Room logo" loading="lazy" /></span>
       <strong>Pete Heard — UI Architecture Academy</strong>
     </span>
     <p>Framework-agnostic UI architecture and model–view separation, taught as a testable discipline — the school of thought behind the model layer.</p>
   </a>
   <a class="cm-channel" href="https://www.linkedin.com/company/blacklineapp/posts/" target="_blank" rel="noreferrer">
     <span class="cm-channel__title">
-      <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 21V7l8-4 8 4v14h-6v-5h-4v5H4Zm2-2h2v-5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v5h2V8.24l-6-3-6 3V19Z"/></svg>
+      <span class="cm-channel__logo" style="--tile-bg:#e8f1f7;--tile-border:rgba(0,76,114,0.4)"><img src="/community/blackline-mark-black.svg" alt="Blackline logo" loading="lazy" /></span>
       <strong>Blackline</strong>
     </span>
     <p>Where ivue works for a living — the first version was implemented and battle-tested here, in production, before it was ever a library.</p>
   </a>
   <a class="cm-channel" href="https://www.linkedin.com/company/adhoc-studio/posts/" target="_blank" rel="noreferrer">
     <span class="cm-channel__title">
-      <svg class="cm-channel__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 3 7v2h18V7l-9-5Zm-7 9v7H3v2h18v-2h-2v-7h-2v7h-3v-7h-4v7H7v-7H5Z"/></svg>
+      <span class="cm-channel__logo" style="--tile-bg:#f2f1ec;--tile-border:rgba(20,20,20,0.25)"><img src="/community/adhoc-studio.png" alt="Adhoc Studio logo" loading="lazy" /></span>
       <strong>Adhoc Studio</strong>
     </span>
     <p>The studio where ivue's ideas were shaped against real client work — every pattern on this site survived a shipping deadline first.</p>
