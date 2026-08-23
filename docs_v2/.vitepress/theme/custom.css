@@ -2600,7 +2600,7 @@ html:not(.dark) .fw-embed .fw-sub {
   margin-left: 3px;
   font-size: 10px;
   color: #f7b500;
-  text-shadow: 0 0 9px rgba(247, 181, 0, 0.65);
+  text-shadow: 0 0 5px rgba(247, 181, 0, 0.35);
 }
 .VPNavScreenMenuLink[href='/guide/standard']::after {
   content: '\2605';
@@ -2609,7 +2609,7 @@ html:not(.dark) .fw-embed .fw-sub {
   margin-left: 5px;
   font-size: 11px;
   color: #f7b500;
-  text-shadow: 0 0 9px rgba(247, 181, 0, 0.65);
+  text-shadow: 0 0 5px rgba(247, 181, 0, 0.35);
 }
 
 /* NEW badges: nav superscripts (lit by build-time data attributes) and
