@@ -1736,7 +1736,8 @@ a.feature-inline-link {
 }
 .blog-share--aside .blog-share__buttons {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 2px;
 }
 .blog-share__button {
@@ -1751,6 +1752,11 @@ a.feature-inline-link {
   text-decoration: none;
   cursor: pointer;
   transition: color 0.18s ease, background-color 0.18s ease, transform 0.1s ease;
+}
+/* social targets are icon-only (tooltip carries the name); the
+   square padding keeps them comfortable tap targets */
+.blog-share__button--icon {
+  padding: 7px;
 }
 .blog-share__button:hover {
   color: var(--vp-c-brand-1);

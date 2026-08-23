@@ -92,7 +92,7 @@ async function copyLink() {
       <a
         v-for="target in targets"
         :key="target.name"
-        class="blog-share__button"
+        class="blog-share__button blog-share__button--icon"
         :href="target.href"
         target="_blank"
         rel="noreferrer"
@@ -100,7 +100,6 @@ async function copyLink() {
         :title="`Share on ${target.name}`"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" :d="target.icon" /></svg>
-        <span class="blog-share__name">{{ target.name }}</span>
       </a>
       <button
         v-if="nativeShareAvailable"
