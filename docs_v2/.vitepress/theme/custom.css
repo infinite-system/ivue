@@ -2590,6 +2590,28 @@ html:not(.dark) .fw-embed .fw-sub {
   overflow: hidden;
 }
 
+/* The Standard gets a golden star superscript — same position
+   grammar as the NEW badges; its inline width also gives Standard
+   breathing room from Blog. */
+.VPNavBarMenuLink[href='/guide/standard']::after {
+  content: '\2605';
+  position: relative;
+  top: -8px;
+  margin-left: 3px;
+  font-size: 10px;
+  color: #f7b500;
+  text-shadow: 0 0 9px rgba(247, 181, 0, 0.65);
+}
+.VPNavScreenMenuLink[href='/guide/standard']::after {
+  content: '\2605';
+  position: relative;
+  top: -5px;
+  margin-left: 5px;
+  font-size: 11px;
+  color: #f7b500;
+  text-shadow: 0 0 9px rgba(247, 181, 0, 0.65);
+}
+
 /* NEW badges: nav superscripts (lit by build-time data attributes) and
    the index pill for entries under two weeks old */
 html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after,
