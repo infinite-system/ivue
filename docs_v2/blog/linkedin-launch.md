@@ -1,6 +1,7 @@
 ---
 title: 'LinkedIn launch post'
 description: 'The LinkedIn launch post, personal voice — the discovery arc.'
+private: true
 channel: linkedin
 date: 2026-08
 ---

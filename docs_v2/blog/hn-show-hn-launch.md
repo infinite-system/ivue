@@ -1,6 +1,7 @@
 ---
 title: 'Show HN: ivue launch'
 description: 'The Show HN submission: title + the author first comment, posted immediately.'
+private: true
 channel: hn
 date: 2026-08
 ---

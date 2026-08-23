@@ -55,10 +55,10 @@ function plainText(source) {
     .replace(/<BlogPostDate \/>/g, '')
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/^# .*$/m, '') // the H1 duplicates the title
-    // a code-group renders ONE visible block (its active tab), and the
-    // code shots follow visibility — the whole group is one marker;
-    // standalone fences (all visible) stay one marker each
-    .replace(/^::: ?code-group[\s\S]*?^:::$/gm, '[code — in the article]')
+    // EVERY fence becomes a marker — including each tab of a
+    // code-group — matching the code shots, which now capture all tabs
+    // in document order (one shot per fence, 1:1 with these markers)
+    .replace(/^::: ?code-group$/gm, '')
     .replace(/```[\s\S]*?```/g, '[code — in the article]')
     .replace(/^:::.*$/gm, '')
     .replace(/<ClientOnly>[\s\S]*?<\/ClientOnly>/g, '[live demo — in the article]')

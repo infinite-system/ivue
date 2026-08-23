@@ -28,3 +28,14 @@ export function channelOf(source) {
 export function channelOfSlug(slug) {
   return CHANNELS.find((channel) => slug.startsWith(`${channel}-`)) ?? null;
 }
+
+/**
+ * Whether a post is private (excluded from production, the newsletter,
+ * and every public surface): `private: true` frontmatter, or any
+ * `channel:` — channel posts are private by definition, and carry the
+ * explicit flag too as belt-and-suspenders.
+ */
+export function isPrivatePost(source) {
+  const frontmatter = source.match(/^---\n[\s\S]*?\n---/)?.[0] ?? '';
+  return /^private:\s*true\s*$/m.test(frontmatter) || channelOf(source) !== null;
+}

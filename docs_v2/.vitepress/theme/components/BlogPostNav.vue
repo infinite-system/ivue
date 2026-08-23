@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRoute, withBase } from 'vitepress';
-import { data as posts } from '../../../blog/blog.data.mjs';
+import { data as allPosts } from '../../../blog/blog.data.mjs';
+
+// private posts (dev-only artifacts) never appear in prev/next — the
+// walk sees exactly what production publishes
+const posts = allPosts.filter((post) => !post.private);
 
 const route = useRoute();
 const isBlogPost = computed(

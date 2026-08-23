@@ -1,6 +1,7 @@
 ---
 title: 'r/javascript launch post'
 description: 'The r/javascript self-post: the language angle — classes were never constrained.'
+private: true
 channel: reddit
 date: 2026-08
 ---

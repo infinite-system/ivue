@@ -39,7 +39,8 @@ export default createContentLoader('blog/*.md', {
       // timeline only — production data never contains them
       .filter(
         (page) =>
-          process.env.NODE_ENV !== 'production' || !page.frontmatter.channel,
+          process.env.NODE_ENV !== 'production' ||
+          !(page.frontmatter.private || page.frontmatter.channel),
       )
       .map((page) => {
         const slug = page.url
@@ -55,6 +56,7 @@ export default createContentLoader('blog/*.md', {
           excerpt: page.frontmatter.description,
           tags: page.frontmatter.tags ?? [],
           channel: page.frontmatter.channel ?? null,
+          private: !!(page.frontmatter.private || page.frontmatter.channel),
           searchText: toSearchText(page.src),
           // a post without a rendered banner (possible for channel
           // posts) falls back to the index's placeholder thumb

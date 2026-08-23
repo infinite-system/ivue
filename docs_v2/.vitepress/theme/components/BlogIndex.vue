@@ -17,11 +17,11 @@ const viewStyle = ref<ViewStyle>('list');
 // simply never renders there. Default view = exactly what production
 // shows.
 const seeAll = ref(false);
-const channelPostCount = computed(
-  () => posts.filter((post) => post.channel).length,
+const privatePostCount = computed(
+  () => posts.filter((post) => post.private).length,
 );
 const visiblePosts = computed(() =>
-  seeAll.value ? posts : posts.filter((post) => !post.channel),
+  seeAll.value ? posts : posts.filter((post) => !post.private),
 );
 const CHANNEL_LABELS: Record<string, string> = {
   hn: 'HN',
@@ -104,7 +104,7 @@ onMounted(() => {
   if (stored === 'cards' || stored === 'list') {
     viewStyle.value = stored;
   }
-  if (channelPostCount.value > 0) {
+  if (privatePostCount.value > 0) {
     seeAll.value = localStorage.getItem(SEE_ALL_STORAGE_KEY) === '1';
   }
   // freshness is judged client-side after mount — no hydration mismatch
@@ -147,14 +147,14 @@ function formatDate(date: string): string {
       <h1>Blog</h1>
       <span class="blog-count">{{ visiblePosts.length }} posts</span>
       <button
-        v-if="channelPostCount"
+        v-if="privatePostCount"
         type="button"
         class="blog-see-all"
         :class="{ active: seeAll }"
         :aria-pressed="seeAll"
         @click="toggleSeeAll"
       >
-        {{ seeAll ? 'Public view' : `See all +${channelPostCount}` }}
+        {{ seeAll ? 'Public view' : `See all +${privatePostCount}` }}
       </button>
     </div>
     <NewsletterQuickJoin />
@@ -242,7 +242,7 @@ function formatDate(date: string): string {
   <div v-if="viewStyle === 'cards'" class="blog-list">
     <a v-for="post in pagedPosts" :key="post.slug" class="blog-card" :href="withBase(post.url)">
       <div v-if="!post.image" class="thumb thumb--channel">
-        {{ post.channel ? CHANNEL_LABELS[post.channel] : '' }}
+        {{ post.channel ? CHANNEL_LABELS[post.channel] : post.private ? 'PRIVATE' : '' }}
       </div>
       <img
         v-else
@@ -258,7 +258,7 @@ function formatDate(date: string): string {
         <h2>{{ post.title }}</h2>
         <p class="excerpt">{{ post.excerpt }}</p>
         <div class="foot">
-          <span v-if="post.channel" class="channel-chip">{{ CHANNEL_LABELS[post.channel] }}</span>
+          <span v-if="post.private" class="channel-chip">{{ post.channel ? CHANNEL_LABELS[post.channel] : 'PRIVATE' }}</span>
           <span class="date">{{ formatDate(post.date) }}</span>
           <span class="go">Read the post →</span>
         </div>
@@ -269,7 +269,7 @@ function formatDate(date: string): string {
   <div v-else class="blog-rows">
     <a v-for="post in pagedPosts" :key="post.slug" class="blog-row" :href="withBase(post.url)">
       <div v-if="!post.image" class="thumb thumb--channel">
-        {{ post.channel ? CHANNEL_LABELS[post.channel] : '' }}
+        {{ post.channel ? CHANNEL_LABELS[post.channel] : post.private ? 'PRIVATE' : '' }}
       </div>
       <img
         v-else
@@ -285,7 +285,7 @@ function formatDate(date: string): string {
         <h2>{{ post.title }}</h2>
         <p class="excerpt">{{ post.excerpt }}</p>
         <div class="foot">
-          <span v-if="post.channel" class="channel-chip">{{ CHANNEL_LABELS[post.channel] }}</span>
+          <span v-if="post.private" class="channel-chip">{{ post.channel ? CHANNEL_LABELS[post.channel] : 'PRIVATE' }}</span>
           <span class="date">{{ formatDate(post.date) }}</span>
           <span class="go">Read the post →</span>
         </div>

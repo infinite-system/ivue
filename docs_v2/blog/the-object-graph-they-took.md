@@ -73,6 +73,8 @@ and in frontend it stopped being an anti-pattern and became the
 default. Not because anyone chose it on the merits. Because hop two of
 a real object graph could throw depending on import order.
 
+![The confiscated graph: severed references drifting as dim, flat, isolated points — and the same nodes re-linked into one coherent structure, the path from root to leaf lit end to end](/blog/art/the-object-graph-they-took-art-1.png)
+
 ## The homecoming
 
 Both defects die by construction in ivue's

@@ -1,6 +1,7 @@
 ---
 title: 'X launch thread'
 description: 'The nine-tweet launch thread — segments split on horizontal rules, character counts annotated in dev.'
+private: true
 channel: x
 date: 2026-08
 ---

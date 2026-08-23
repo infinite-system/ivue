@@ -17,7 +17,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { codeToHtml } from 'shiki';
-import { channelOf } from './channel-posts.mjs';
+import { isPrivatePost } from './channel-posts.mjs';
 
 const SITE = 'https://ivue.dev';
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -45,6 +45,7 @@ const CODE_TEXT = '#b4bcf8';
 
 function inlineHtml(markdown) {
   return markdown
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // images render only as standalone blocks
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
@@ -109,7 +110,6 @@ export async function bodyHtml(source, slug, postUrl) {
   const body = source
     .replace(/^---[\s\S]*?---/, '')
     .replace(/<BlogPostDate \/>/g, '')
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/^:::.*$/gm, '')
     .replace(/^# .*$/m, '');
@@ -120,6 +120,22 @@ export async function bodyHtml(source, slug, postUrl) {
   while (index < lines.length) {
     const line = lines[index];
     if (!line.trim()) { index++; continue; }
+    // standalone image lines: the banner is skipped (it already heads
+    // the email); every other image — article art, inline figures —
+    // ships as a full-width block, absolute-URL'd to the site
+    const imageMatch = line.trim().match(/^!\[([^\]]*)\]\(([^)\s]+)\)/);
+    if (imageMatch) {
+      const [, altText, imagePath] = imageMatch;
+      index++;
+      if (imagePath === `/blog/${slug}.png`) continue;
+      const imageUrl = imagePath.startsWith('http')
+        ? imagePath
+        : `${SITE}${imagePath}`;
+      blocks.push(
+        `<img src="${imageUrl}" alt="${escapeHtml(altText)}" width="496" style="display:block;width:100%;height:auto;border:1px solid ${EDGE_SOFT};border-radius:8px;margin:0 0 20px" />`,
+      );
+      continue;
+    }
     if (line.startsWith('```')) {
       const lang = line.match(/^```(\w+)/)?.[1] ?? 'txt';
       const label = line.match(/\[([^\]]+)\]/)?.[1] ?? '';
@@ -372,8 +388,8 @@ export function loadPostsWithSource() {
     .map((entry) => {
       const slug = entry.slice(0, -'.md'.length);
       const source = readFileSync(resolve(blogDirectory, entry), 'utf8');
-      // channel posts never enter the newsletter catalog
-      if (channelOf(source)) return null;
+      // private posts never enter the newsletter catalog
+      if (isPrivatePost(source)) return null;
       const record = recordedDates[slug];
       return {
         slug,

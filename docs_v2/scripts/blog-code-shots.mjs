@@ -13,6 +13,8 @@ import { mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { readFileSync } from 'node:fs';
+import { isPrivatePost } from './channel-posts.mjs';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const blogDirectory = resolve(scriptDirectory, '../blog');
@@ -24,9 +26,14 @@ mkdirSync(outputDirectory, { recursive: true });
 // per post could never all be used
 const MAXIMUM_SHOTS_PER_POST = 10;
 
+// optional slug arguments narrow the run: npm run render:code-shots -- <slug…>
+const requestedSlugs = process.argv.slice(2).filter((arg) => !arg.startsWith('-'));
 const slugs = readdirSync(blogDirectory)
   .filter((entry) => entry.endsWith('.md') && entry !== 'index.md')
-  .map((entry) => entry.slice(0, -'.md'.length));
+  // private posts have no production page to screenshot
+  .filter((entry) => !isPrivatePost(readFileSync(resolve(blogDirectory, entry), 'utf8')))
+  .map((entry) => entry.slice(0, -'.md'.length))
+  .filter((slug) => !requestedSlugs.length || requestedSlugs.includes(slug));
 
 const PORT = 5189;
 const server = spawn('npx', ['serve', distDirectory, '-l', String(PORT)], {
@@ -60,10 +67,13 @@ try {
     await page.waitForSelector('.vp-doc', { timeout: 20_000 });
     await page.evaluate(() => document.documentElement.classList.add('dark'));
     await page.addStyleTag({
-      content: '.newsletter, .newsletter-pill { display: none !important; }',
+      // EVERY code-group tab panel is forced visible so ALL tabs get a
+      // shot in document order (tab order) — not just the active one
+      content:
+        '.newsletter, .newsletter-pill { display: none !important; }\n' +
+        ".vp-code-group .blocks div[class*='language-'] { display: block !important; }",
     });
     await page.waitForTimeout(500);
-    // :visible skips inactive code-group tabs (display:none panels)
     const codeBlocks = page.locator(".vp-doc div[class*='language-']:visible");
     const count = Math.min(await codeBlocks.count(), MAXIMUM_SHOTS_PER_POST);
     let taken = 0;

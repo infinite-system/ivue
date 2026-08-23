@@ -17,15 +17,28 @@
   Worker deploy; and all newsletter wrangler commands run FROM
   `newsletter/` — the repo-root `wrangler.jsonc` is the site's
   assets-only Worker. Wrangler pinned to 4.120.1 everywhere.
-- **Channel posts** (private launch/distribution artifacts — HN posts,
-  X threads, Reddit/LinkedIn copy, planning notes) live in
-  `docs_v2/blog/` with frontmatter `channel: hn|reddit|x|linkedin|note`
+- **Private / channel posts** (launch artifacts — HN posts, X threads,
+  Reddit/LinkedIn copy, planning notes) live in `docs_v2/blog/` with
+  frontmatter `private: true` plus `channel: hn|reddit|x|linkedin|note`
   AND the matching slug prefix (`hn-…`, `x-…`); the build validator
-  fails when they disagree. They are dev-server-only: production
-  pages, blog-index.json (newsletter), and blog-dates.json all exclude
-  them. QA them via the blog index "See all" toggle on the dev server;
-  `channel: x` threads split tweets on `---` and get per-segment
-  character counts.
+  fails when channel and prefix disagree. They are dev-server-only:
+  production pages, blog-index.json (newsletter), blog-dates.json,
+  prev/next nav, the archive rail, and related-posts all exclude them
+  (`isPrivatePost` in `docs_v2/scripts/channel-posts.mjs` is the one
+  gate). QA them via the blog index "See all" toggle on the dev
+  server; `channel: x` threads split tweets on `---` and get
+  per-segment character counts.
+- **Article art** (free-form illustrations): drive a codex agent in
+  tmux via `.claude/skills/agent-tmux` and follow
+  `.claude/skills/article-art/SKILL.md` — images land in
+  `docs_v2/public/blog/art/<slug>-art-<n>.png`, embed as standalone
+  markdown image lines, and flow into the newsletter automatically
+  (the email renderer ships every standalone body image; only the
+  banner line is skipped). Curation ledger:
+  `.claude/skills/article-art/art-opportunities.md`.
+- **Code shots** capture EVERY code-group tab (panels forced visible,
+  document order), and plain-text `[code]` markers are 1:1 with them;
+  emails render all tabs inline via shiki.
 - **New blog post workflow**: write md (with `tags:` frontmatter) →
   banner (blog-banner skill, view the PNG) → `npm run render:embeds` if
   the post embeds a demo (local-only; commit PNGs) → `npm run

@@ -8,7 +8,10 @@ import { useRoute, withBase } from 'vitepress';
 import VirtualScroller from '../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue';
 import type { VirtualScrollerExposedUnwrapped } from '../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue';
 import type { BaseItem } from '../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.types';
-import { data as posts } from '../../../blog/blog.data.mjs';
+import { data as allPosts } from '../../../blog/blog.data.mjs';
+
+// private posts (dev-only artifacts) stay out of the archive rail
+const posts = allPosts.filter((post) => !post.private);
 
 interface ArchiveItem extends BaseItem {
   url: string;

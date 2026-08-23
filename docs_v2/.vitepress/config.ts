@@ -58,7 +58,7 @@ function releasesSidebar() {
 // distribution artifacts: visible on the dev server's blog timeline,
 // NEVER built into production — srcExclude keeps them out of pages,
 // search, and sitemap, and every pipeline below skips them.
-import { channelOf } from '../scripts/channel-posts.mjs';
+import { channelOf, isPrivatePost } from '../scripts/channel-posts.mjs';
 const isDevServer = process.argv.includes('dev');
 function channelPostFiles(): string[] {
   const blogDirectory = toPath(new URL('../blog', import.meta.url));
@@ -67,7 +67,7 @@ function channelPostFiles(): string[] {
       (entry) =>
         entry.endsWith('.md') &&
         entry !== 'index.md' &&
-        channelOf(readFileSync(`${blogDirectory}/${entry}`, 'utf8')) !== null,
+        isPrivatePost(readFileSync(`${blogDirectory}/${entry}`, 'utf8')),
     )
     .map((entry) => `blog/${entry}`);
 }
@@ -82,7 +82,7 @@ function blogSidebar() {
     .map((entry) => {
       const slug = entry.replace(/\.md$/, '');
       const source = readFileSync(`${blogDirectory}/${entry}`, 'utf8');
-      if (channelOf(source)) return null;
+      if (isPrivatePost(source)) return null;
       const title =
         source.match(/^title:\s*['"]?(.+?)['"]?\s*$/m)?.[1] ?? slug;
       const recorded = recordedDates[slug];

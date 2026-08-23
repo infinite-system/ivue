@@ -1,6 +1,7 @@
 ---
 title: 'r/vuejs launch post'
 description: 'The r/vuejs self-post: the Options API angle for the Vue crowd.'
+private: true
 channel: reddit
 date: 2026-08
 ---

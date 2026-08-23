@@ -1,6 +1,7 @@
 ---
 title: 'Launch plan & channel notes'
 description: 'Posting order, secondary channels, and tone notes per room for the ivue launch.'
+private: true
 channel: note
 date: 2026-08
 ---
