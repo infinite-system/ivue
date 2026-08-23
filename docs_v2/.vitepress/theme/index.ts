@@ -53,9 +53,9 @@ export default {
       'doc-after': () => [
         h(BlogShare, { placement: 'doc' }),
         h(NewsletterQuickJoin, { placement: 'post-footer', align: 'center' }),
-        h(BlogComments),
         h(BlogAuthor),
         h(BlogPostNav),
+        h(BlogComments),
         h(BlogArchiveScroller),
         h(NewsletterSignup, { placement: 'doc' }),
         h(NewsletterSignup, { placement: 'cta' }),
