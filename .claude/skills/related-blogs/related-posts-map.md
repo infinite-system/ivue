@@ -56,25 +56,41 @@ reference/invariants: the-field-not-the-rules, win-by-reduction, uniformity-is-a
 api/index: one-kilobyte-feature
 # community: none
 
-## Gaps — docs-sourced post pipeline
-B1 Production parity is the feature (no dev runtime)  → guide/hmr (promote page first), node-class-hmr, modules
-B2 State born valid (computed seed; Invar SplitterModel origin) → computed-seed, state, inheritance
-B3 The third state shape (keyed version signals)      → keyed-version-signals, backend, flyweight
-B4 The fork trap: when a cache must not be a cache    → caches-and-registries, static
-B5 Teardown you can prove (deactivate → re-activate)  → lifecycle-teardown, examples/lifecycle
-B6 Props that inherit (propsWithDefaults/ExtractEmitTypes/ExtendSlots) → extensible-components, media-field
-B7 Reactivity on the server                            → backend, keyed-version-signals, namespace-pattern
-B8 The ladder: self vs unchecked constructor casts     → caches-and-registries, static
+## Gaps — docs-sourced post pipeline (full theses)
 
-## C2 — Invar-sourced post ideas
-1. The thunk that survives the cycle (LazyShared full story + cycle guard) → caches-and-registries, namespace-pattern
-2. The census must read zero (retiring the pinned-reads allowlist)         → caches-and-registries, static
-3. Knobs, not pins (ScrollPhysics live static getters + subclass retune)   → static, caches-and-registries
-4. Checkers that refuse to run until they catch a plant (positive controls)→ state, reference/invariants, computed-watch
-5. The contract lives in the file (GENERATOR/SPEC codas, 39 contracts)     → reference/invariants, standard
-6. A bug the tests called a flake (Replay hover + clamp-order wedge)       → lifecycle-teardown, computed-watch
-7. Three minds, one repo (conductor / observer / adversarial review)       → standard; follows uniformity + field-not-rules
-8. Parse, don't grep (ast-query over 345 uniform classes)                  → standard, namespace-pattern
+B1 **"Production parity is the feature" (no dev-only runtime)** — guide/hmr documents an unusual design: one Reactive() execution path across dev, test, SSR and production, no dev-only runtime, no HMR accept boundary of ivue's own, and bound-method identity stable within a generation. Every other class-reactivity system ships a dev shim; the absence of one is a claim worth a post, and no post makes it. Pairs: guide/hmr (promote the parity section out of the generic Vite troubleshooting first), guide/node-class-hmr, guide/modules.
+
+B2 **"State born valid" (the computed seed)** — a complete, unusual mechanism: a ref-getter seeded through the instance's own logic, lazy, inheritance-aware, valid from first read, with a crisp boundary ("a seed runs once, untracked"). Real origin story: Invar's SplitterModel, a renderer-free drag model whose bounds contract is enforced by invariant records. Largest fully-unnarrated page on the site. Pairs: guide/computed-seed, guide/state, guide/inheritance.
+
+B3 **"The third state shape" (keyed version signals)** — the sharpest single idea in the docs: reads get-or-create, writes peek-only, so unobserved keys cost literally nothing; plus coarse/fine tiers and the "this is cache invalidation" backend reframe. Currently only a beat inside reactivity-is-an-allocator (92 version signals) — deserves its own mechanism post with the asymmetry diagrammed. Pairs: guide/keyed-version-signals, guide/backend, guide/flyweight.
+
+B4 **"The fork trap: when a cache must not be a cache"** — a registry in a $-cache forks per subclass and nothing throws: silent, load-order-dependent, with a one-line remedy ("the field IS the pin") plus the self read idiom. bulletproof-class-modules covers LazyShared and the value-kind taxonomy but never tells the fork trap as a defect narrative. Pairs: guide/caches-and-registries, guide/static.
+
+B5 **"Teardown you can prove" (deactivate, then re-activate)** — $stopEffects as a full reset rather than a destroy, the detached-by-design instance and the bridge back to component lifetime, and the explicit "why not just effect.stop()" argument. rented-objects argues WHY you want objects that outlive components; nothing narrates the machinery. Pairs: guide/lifecycle-teardown, examples/lifecycle.
+
+B6 **"Props that inherit"** — propsWithDefaults(), ExtractEmitTypes, ExtendSlots: the answer to "classes extend, so the component surface must extend too," and the explicit rejection of withDefaults(defineProps<T>()) which cannot survive a subclass. The blog is model-layer-heavy; this is the one component-author page with no adjacent narrative, and media-field already demonstrates it at production scale. Pairs: guide/extensible-components, examples/media-field, guide/components.
+
+B7 **"Reactivity on the server"** — four fully-worked patterns (config that propagates instead of restarting, structurally-invalidated caches, live queries over SSE/WebSocket, self-reporting operational state) and one hard boundary (one process). reactivity-is-an-allocator is Invar-in-a-terminal; the general server argument is missing, for readers who will never open Invar. Pairs: guide/backend, guide/keyed-version-signals, guide/namespace-pattern.
+
+B8 **"The ladder" (self vs unchecked constructor casts)** — why `this.constructor as typeof $X` casts are unchecked class-name assertions and what `self` replaces them with, including the measured failure ("a subclass setting 0.1 still reads 0.4" through the Class-slot shape). Pairs: guide/caches-and-registries, guide/static.
+
+## C2 — Invar-sourced post ideas (full theses)
+
+1. **"The thunk that survives the cycle"** — LazyShared in full: an eagerly-stored, dependency-free cell whose thunk runs at first read after every import cycle resolves, memoization sealed INSIDE the cell so no receiver can fork it — and the cycle guard that turns "cell read during its own construction" into a named, retryable error instead of a bare stack overflow. Pairs: guide/caches-and-registries, guide/namespace-pattern.
+
+2. **"The census must read zero"** — Invar deleted its allowlist of pinned static reads on a ruling that read-site pinning protects nothing: fixed identity belongs to the declaration form, not the call site. All thirteen pinned reads flipped to plain receiver reads, with a planted-pin positive control proving the checker still fires. The story of retiring an exception ledger rather than growing it. Pairs: guide/caches-and-registries, guide/static.
+
+3. **"Knobs, not pins"** — ScrollPhysics's motion constants were pinned to the base class; they became live (non-$) static getters, and a subclass-override test proves a child can retune the curve while product identity stays guarded by proof-bound specs. The cleanest small illustration of the $-cached vs live static-getter split. Pairs: guide/static, guide/caches-and-registries.
+
+4. **"Checkers that refuse to run until they catch a plant"** — check-reactive-observation.ts walks the tsc program (not syntax) for three shapes that freeze a live read: constructor-captured Ref reads, module-scope-captured reads, in-place mutation of a shallowRef payload. Report-only against repo code, but it REFUSES to execute until its positive-control plants all flag. Reactivity correctness as a compile-time census. Pairs: guide/state, reference/invariants, guide/computed-watch.
+
+5. **"The contract lives in the file"** — Invar source files carry === GENERATOR === / === SPEC === codas: goal, domain-invariant lines stating impossibility, spec lines naming the exact test that proves each one. 39 invariant contracts across modules, checked mechanically, links carrying record anchors. Documentation that cannot drift because a checker reads it. Pairs: reference/invariants, guide/standard.
+
+6. **"A bug the tests called a flake"** — the Replay hover "flake" was a real product bug (Replay lived outside the root pointer path); and closing a workspace tab wedged because the active-index clamp ran AFTER the entries shrink, so a sync-flushed reader in the gap threw every frame — deterministic in the compiled binary, invisible in dev, caught by a born-red sync-reader regression test. Two war stories about reactive read ordering. Pairs: guide/lifecycle-teardown, guide/computed-watch.
+
+7. **"Three minds, one repo"** — Invar runs a conductor (delegates, merges, verifies by driving), an always-on observer (thirteen lenses, prediction scoring, hard no-execute lines), and an independent structural-adversarial review arm that files its findings as its own tasks. The org chart that makes agent-built software landable, and why it only works on a uniform substrate. Pairs: guide/standard; follows uniformity-is-a-measuring-device and the-field-not-the-rules.
+
+8. **"Parse, don't grep"** — with one structural idiom repeated 345 times, ast-query answers census questions grep cannot: every construction site, every member kind, every deviation from the class template. Uniformity turns the codebase into a queryable database, and agents use that instead of reading files. Pairs: guide/standard, guide/namespace-pattern.
 
 ## Fix-before-linking flags
 - exclude stackblitz + examples/index; minimal example pages cap 1-2 links

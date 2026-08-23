@@ -127,10 +127,6 @@ function formatDate(date: string): string {
   font-weight: 600;
   line-height: 1.35;
   color: var(--vp-c-text-1);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
   transition: color 0.15s ease;
 }
 .related-posts__date {
