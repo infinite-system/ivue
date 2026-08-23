@@ -2973,16 +2973,29 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  background: var(--tile-bg);
-  border: 1px solid var(--tile-border);
+  width: 44px;
+  height: 44px;
 }
 .VPDoc .cm-channel__logo img {
-  width: 26px;
-  height: 26px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
+}
+/* Credit cards are LIGHT in both themes — the real logos sit directly
+   on a soft-white surface at full size, no tiles needed. Text colors
+   are fixed to match the fixed surface. */
+.VPDoc .cm-channels--credits .cm-channel {
+  background: #fbfbf8;
+  border: 1px solid rgba(21, 28, 48, 0.1);
+}
+.VPDoc .cm-channels--credits .cm-channel:hover {
+  border-color: rgba(99, 102, 241, 0.45);
+}
+.VPDoc .cm-channels--credits .cm-channel strong {
+  color: #1b2437;
+}
+.VPDoc .cm-channels--credits .cm-channel p {
+  color: #52607a;
 }
 .VPDoc .cm-channel__icon path {
   fill: var(--ivue-link-accent);
