@@ -735,6 +735,64 @@ describe('Reactive()', () => {
       expect(() => instance.$stopEffects()).not.toThrow();
     });
 
+    it('{ reset: false } stops watchers but every cached cell survives', async () => {
+      class Session {
+        get counter() {
+          return ref(0);
+        }
+        get doubled() {
+          return computed(() => (this as any).counter.value * 2);
+        }
+      }
+      const instance: any = new (Reactive(Session))();
+      let observed = 0;
+      instance.$watchEffect(() => {
+        observed = instance.doubled.value; // first-touches the computed IN the scope
+      });
+      const counterCell = instance.counter;
+      const doubledCell = instance.doubled;
+      instance.counter.value = 21;
+      await nextTick();
+      expect(observed).toBe(42);
+
+      instance.$stopEffects({ reset: false });
+
+      // watchers are dead…
+      instance.counter.value = 100;
+      await nextTick();
+      expect(observed).toBe(42);
+      // …but the cells survive with their CURRENT values (no re-init)
+      expect(instance.counter).toBe(counterCell);
+      expect(instance.doubled).toBe(doubledCell);
+      expect(instance.counter.value).toBe(100);
+      // the surviving computed still evaluates (pull-based past scope death)
+      expect(instance.doubled.value).toBe(200);
+
+      // and a SECOND life works: a fresh scope tracks the old cells
+      let observedAgain = 0;
+      instance.$watch(
+        () => instance.doubled.value,
+        (doubledValue: number) => {
+          observedAgain = doubledValue;
+        },
+      );
+      instance.counter.value = 7;
+      await nextTick();
+      expect(observedAgain).toBe(14);
+    });
+
+    it('default call still resets — cells re-initialize after teardown', () => {
+      class Session {
+        get counter() {
+          return ref(0);
+        }
+      }
+      const instance: any = new (Reactive(Session))();
+      instance.counter.value = 41;
+      instance.$stopEffects();
+      expect(instance.counter.value).toBe(0);
+    });
+
     it('$stopEffects is injected only once (idempotent re-Reactive)', () => {
       class Store {
         m() {

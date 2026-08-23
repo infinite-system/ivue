@@ -257,15 +257,19 @@ export function Reactive<C extends new (...args: any) => any>(
 
     /**
      * Tear down the instance: stop its effect scope (any watchers created via
-     * $watch) and drop all cached cells so refs/computeds become collectable.
-     * No hooks — ivue never calls user code; compose richer cleanup as an
-     * ordinary method that does its own work and then calls $stopEffects().
+     * $watch) and drop all cached cells so refs/computeds become collectable —
+     * the next touch re-materializes fresh cells (disposal is a reset).
+     * Pass { reset: false } to stop the watchers ONLY: every cached cell
+     * survives with its current value, and the instance can $watch again in a
+     * fresh scope. No hooks — ivue never calls user code; compose richer
+     * cleanup as an ordinary method that does its own work and then calls
+     * $stopEffects().
      */
     defineProperty(targetClass.prototype, '$stopEffects', {
       enumerable: false,
       configurable: true,
       writable: true,
-      value: function (this: any) {
+      value: function (this: any, options?: { reset?: boolean }) {
         const raw = resolveRaw(this);
         try {
           const scope = raw[SCOPE];
@@ -274,18 +278,22 @@ export function Reactive<C extends new (...args: any) => any>(
           // SCOPE is ivue-owned but is not a method/getter cache key.
           delete raw[SCOPE];
 
-          // Each processed prototype's PROCESSED marker carries the
-          // symbols it may cache on an instance. Walk Child -> Base and
-          // remove only those known keys.
-          let prototype = getPrototypeOf(raw);
-          while (prototype && prototype !== objectPrototype) {
-            const cacheKeys = prototype[PROCESSED] as
-              | readonly symbol[]
-              | undefined;
-            if (cacheKeys) {
-              for (const cacheKey of cacheKeys) delete raw[cacheKey];
+          // { reset: false } = stop watchers only; cells keep their
+          // values (a `return` here would swallow a throwing stop()).
+          if (options?.reset !== false) {
+            // Each processed prototype's PROCESSED marker carries the
+            // symbols it may cache on an instance. Walk Child -> Base and
+            // remove only those known keys.
+            let prototype = getPrototypeOf(raw);
+            while (prototype && prototype !== objectPrototype) {
+              const cacheKeys = prototype[PROCESSED] as
+                | readonly symbol[]
+                | undefined;
+              if (cacheKeys) {
+                for (const cacheKey of cacheKeys) delete raw[cacheKey];
+              }
+              prototype = getPrototypeOf(prototype);
             }
-            prototype = getPrototypeOf(prototype);
           }
         }
       },
@@ -430,8 +438,10 @@ export type ReactiveInstance<T> = T &
     $watch: typeof watch;
     /** Register a watchEffect in the instance's lazy effect scope (same signature as Vue `watchEffect`). */
     $watchEffect: typeof watchEffect;
-    /** Stop the instance's effect scope and drop cached cells. */
-    $stopEffects: () => void;
+    /** Stop the instance's effect scope and drop cached cells (the next
+     * touch re-materializes). `{ reset: false }` stops watchers only —
+     * every cached cell survives with its current value. */
+    $stopEffects: (options?: { reset?: boolean }) => void;
   };
 
 export type ReactiveClass<C extends new (...args: any) => any> = {
