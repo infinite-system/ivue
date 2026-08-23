@@ -414,6 +414,9 @@ it, and the measured numbers behind every claim — from
 <a href="/blog/the-options-api-everyone-wanted">the class JavaScript
 was always waiting for</a> to
 <a href="/blog/bulletproof-class-modules">Bulletproof class modules</a>.
+</p>
+
+<p class="ix-newsletter-hero__cadence">
 The whole blog lands in your inbox in {{ $archiveDays }} days — one post every other day, at your local morning.
 </p>
 

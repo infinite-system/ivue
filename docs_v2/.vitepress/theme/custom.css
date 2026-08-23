@@ -1842,7 +1842,7 @@ a.feature-inline-link {
      and letter-spacing is the fine knob that lands the text width on
      the title's ~128px (measured live) */
   font-size: 9px;
-  letter-spacing: 0.155em;
+  letter-spacing: 0.13em;
   white-space: nowrap;
   text-transform: uppercase;
   color: var(--vp-c-text-1);
@@ -3366,6 +3366,14 @@ a.feature-inline-link:active {
   position: relative;
   margin: 0 auto 8px;
   max-width: 40rem;
+}
+.ix-newsletter-hero__cadence {
+  position: relative;
+  margin: 14px auto 6px;
+  max-width: 640px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
 }
 .ix-newsletter-hero__note {
   position: relative;
