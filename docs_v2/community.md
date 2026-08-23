@@ -195,7 +195,7 @@ on every page, and naming them is a pleasure:
   <a class="cm-channel" href="https://www.linkedin.com/in/pete-heard-lr/" target="_blank" rel="noreferrer">
     <span class="cm-channel__title">
       <span class="cm-channel__logo"><img src="/community/logicroom-mark.png" alt="Logic Room logo" loading="lazy" /></span>
-      <strong>Pete Heard — UI Architecture Academy</strong>
+      <strong>Pete Heard — UI Academy</strong>
     </span>
     <p>Framework-agnostic UI architecture and model–view separation, taught as a testable discipline — the school of thought behind the model layer.</p>
   </a>
