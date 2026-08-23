@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vitepress';
 import { captureEvent } from '../analytics';
+import { loadTurnstileScript } from '../turnstile';
 
 // The one-line signup: Name, Email, [Join the frontier]. Rides the
 // blog toolbar, the blog footer, and the bottom of every post. Same
@@ -32,21 +33,6 @@ const message = ref('');
 const turnstileElement = ref<HTMLElement | null>(null);
 const turnstileToken = ref('');
 let turnstileWidgetId: string | undefined;
-let turnstileScriptPromise: Promise<void> | undefined;
-
-function loadTurnstileScript(): Promise<void> {
-  turnstileScriptPromise ??= new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.src =
-      'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-    script.async = true;
-    script.defer = true;
-    script.addEventListener('load', () => resolve());
-    document.head.appendChild(script);
-  });
-  return turnstileScriptPromise;
-}
-
 async function renderTurnstile() {
   if (!TURNSTILE_SITE_KEY || !turnstileElement.value || turnstileWidgetId)
     return;

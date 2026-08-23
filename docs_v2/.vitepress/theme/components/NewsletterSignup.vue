@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, useId, watch } from 'vue';
 import { useRoute } from 'vitepress';
 import { captureEvent } from '../analytics';
+import { loadTurnstileScript } from '../turnstile';
 
 // The newsletter Worker's public URL (see /newsletter/README.md) — paste
 // it here once the Worker is deployed and signups go live. Empty string
@@ -105,21 +106,6 @@ onUnmounted(() => {
 const turnstileElement = ref<HTMLElement | null>(null);
 const turnstileToken = ref('');
 let turnstileWidgetId: string | undefined;
-let turnstileScriptPromise: Promise<void> | undefined;
-
-function loadTurnstileScript(): Promise<void> {
-  turnstileScriptPromise ??= new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.src =
-      'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-    script.async = true;
-    script.defer = true;
-    script.addEventListener('load', () => resolve());
-    document.head.appendChild(script);
-  });
-  return turnstileScriptPromise;
-}
-
 async function renderTurnstile() {
   if (!TURNSTILE_SITE_KEY || !turnstileElement.value || turnstileWidgetId)
     return;

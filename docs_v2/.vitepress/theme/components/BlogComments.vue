@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vitepress';
+import { loadTurnstileScript } from '../turnstile';
 
 // Blog comments — served by the newsletter Worker, moderated in its
 // dashboard. Submissions land PENDING; nothing renders here until the
@@ -66,21 +67,6 @@ function formatDate(unixSeconds: number): string {
 const turnstileElement = ref<HTMLElement | null>(null);
 const turnstileToken = ref('');
 let turnstileWidgetId: string | undefined;
-let turnstileScriptPromise: Promise<void> | undefined;
-
-function loadTurnstileScript(): Promise<void> {
-  turnstileScriptPromise ??= new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.src =
-      'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-    script.async = true;
-    script.defer = true;
-    script.addEventListener('load', () => resolve());
-    document.head.appendChild(script);
-  });
-  return turnstileScriptPromise;
-}
-
 async function renderTurnstile() {
   if (!TURNSTILE_SITE_KEY || !turnstileElement.value || turnstileWidgetId)
     return;
