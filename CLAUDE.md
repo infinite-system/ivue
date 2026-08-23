@@ -17,6 +17,15 @@
   Worker deploy; and all newsletter wrangler commands run FROM
   `newsletter/` — the repo-root `wrangler.jsonc` is the site's
   assets-only Worker. Wrangler pinned to 4.120.1 everywhere.
+- **Channel posts** (private launch/distribution artifacts — HN posts,
+  X threads, Reddit/LinkedIn copy, planning notes) live in
+  `docs_v2/blog/` with frontmatter `channel: hn|reddit|x|linkedin|note`
+  AND the matching slug prefix (`hn-…`, `x-…`); the build validator
+  fails when they disagree. They are dev-server-only: production
+  pages, blog-index.json (newsletter), and blog-dates.json all exclude
+  them. QA them via the blog index "See all" toggle on the dev server;
+  `channel: x` threads split tweets on `---` and get per-segment
+  character counts.
 - **New blog post workflow**: write md (with `tags:` frontmatter) →
   banner (blog-banner skill, view the PNG) → `npm run render:embeds` if
   the post embeds a demo (local-only; commit PNGs) → `npm run

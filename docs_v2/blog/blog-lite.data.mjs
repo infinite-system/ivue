@@ -10,6 +10,8 @@ export default createContentLoader('blog/*.md', {
   transform(pages) {
     return pages
       .filter((page) => !/\/blog\/(index)?(\.html)?$/.test(page.url))
+      // channel posts never reach the related-posts surfaces
+      .filter((page) => !page.frontmatter.channel)
       .map((page) => {
         const slug = page.url
           .split('/')

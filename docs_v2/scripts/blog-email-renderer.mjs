@@ -17,6 +17,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { codeToHtml } from 'shiki';
+import { channelOf } from './channel-posts.mjs';
 
 const SITE = 'https://ivue.dev';
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -371,6 +372,8 @@ export function loadPostsWithSource() {
     .map((entry) => {
       const slug = entry.slice(0, -'.md'.length);
       const source = readFileSync(resolve(blogDirectory, entry), 'utf8');
+      // channel posts never enter the newsletter catalog
+      if (channelOf(source)) return null;
       const record = recordedDates[slug];
       return {
         slug,
@@ -382,6 +385,7 @@ export function loadPostsWithSource() {
         timestamp: record?.timestamp ?? 0,
       };
     })
+    .filter(Boolean)
     .sort((first, second) => first.timestamp - second.timestamp);
 }
 

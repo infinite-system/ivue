@@ -54,6 +54,24 @@ function releasesSidebar() {
   ];
 }
 
+// Channel posts (frontmatter `channel: hn|x|…`) are private launch/
+// distribution artifacts: visible on the dev server's blog timeline,
+// NEVER built into production — srcExclude keeps them out of pages,
+// search, and sitemap, and every pipeline below skips them.
+import { channelOf } from '../scripts/channel-posts.mjs';
+const isDevServer = process.argv.includes('dev');
+function channelPostFiles(): string[] {
+  const blogDirectory = toPath(new URL('../blog', import.meta.url));
+  return readdirSync(blogDirectory)
+    .filter(
+      (entry) =>
+        entry.endsWith('.md') &&
+        entry !== 'index.md' &&
+        channelOf(readFileSync(`${blogDirectory}/${entry}`, 'utf8')) !== null,
+    )
+    .map((entry) => `blog/${entry}`);
+}
+
 function blogSidebar() {
   const blogDirectory = toPath(new URL('../blog', import.meta.url));
   const recordedDates = JSON.parse(
@@ -64,6 +82,7 @@ function blogSidebar() {
     .map((entry) => {
       const slug = entry.replace(/\.md$/, '');
       const source = readFileSync(`${blogDirectory}/${entry}`, 'utf8');
+      if (channelOf(source)) return null;
       const title =
         source.match(/^title:\s*['"]?(.+?)['"]?\s*$/m)?.[1] ?? slug;
       const recorded = recordedDates[slug];
@@ -74,6 +93,7 @@ function blogSidebar() {
         timestamp: recorded?.timestamp ?? Number.MAX_SAFE_INTEGER,
       };
     })
+    .filter((post): post is NonNullable<typeof post> => post !== null)
     .sort((first, second) => second.timestamp - first.timestamp);
 
   const monthGroups = new Map<string, { text: string; link: string }[]>();
@@ -139,6 +159,10 @@ export default defineConfig({
   lang: 'en-US',
   cleanUrls: true,
   lastUpdated: true,
+
+  // Channel posts exist only on the dev server — production builds
+  // never emit their pages (and so never index or sitemap them).
+  srcExclude: isDevServer ? [] : channelPostFiles(),
 
   head: [
     [

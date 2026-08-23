@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(./fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(./fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
+      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      #050a18;
+    font-family: 'Geist', 'DejaVu Sans', 'Inter', sans-serif;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+  }
+  .stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 26px; padding: 88px 70px 0;
+    text-align: center;
+  }
+  .room {
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 18px; letter-spacing: 0.12em;
+    padding: 8px 20px; border-radius: 999px;
+    border: 1px solid rgba(96, 165, 250, 0.45); color: #7e9cd0;
+  }
+  .title {
+    font-size: 64px; font-weight: 750; color: #eaf2ff;
+    text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); letter-spacing: -0.015em;
+    line-height: 1.12;
+  }
+  .title .glow { color: #67e8f9; text-shadow: 0 0 36px rgba(34, 211, 238, 0.8); }
+  .sub {
+    font-size: 25px; color: #7e9cd0; line-height: 1.55; max-width: 1000px;
+  }
+  .stats {
+    display: flex; justify-content: center; gap: 18px; margin-top: 6px;
+  }
+  .stat {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 13px 22px; border-radius: 11px;
+    border: 1px solid rgba(96, 165, 250, 0.4);
+  }
+  .stat .n {
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 24px; color: #67e8f9; text-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+  }
+  .stat .l { font-size: 16px; color: #7e9cd0; }
+  .lockup { position: absolute; top: 34px; left: 44px; }
+  .lockup img { display: block; width: 178px; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="lockup">
+    <img src="../../../../docs_v2/public/brand-lockup-dark.png" alt="ivue — Infinite Vue" />
+  </div>
+
+  <div class="stage">
+    <div class="room">LINKEDIN</div>
+    <div class="title">Less code,<br/><span class="glow">more capability</span></div>
+    <div class="sub">three years finding the invariant shape of a class in JavaScript:<br/>every class-era wound closed — and the library got smaller doing it.</div>
+    <div class="stats">
+      <div class="stat"><span class="n">3 years</span><span class="l">of reduction</span></div>
+      <div class="stat"><span class="n">1.1 kB</span><span class="l">gzipped core</span></div>
+      <div class="stat"><span class="n">55–253×</span><span class="l">faster creation</span></div>
+      <div class="stat"><span class="n">94k lines</span><span class="l">built by agents</span></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -26,6 +26,7 @@ import NewsletterSignup from './components/NewsletterSignup.vue';
 import NewsletterQuickJoin from './components/NewsletterQuickJoin.vue';
 import BlogComments from './components/BlogComments.vue';
 import RelatedPosts from './components/RelatedPosts.vue';
+import ChannelNote from './components/ChannelNote.vue';
 import BlogArchiveScroller from './components/BlogArchiveScroller.vue';
 import BlogBackLink from './components/BlogBackLink.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
@@ -46,7 +47,7 @@ export default {
       // Blog articles only (the components gate themselves on the route):
       // share buttons ride the outline aside; on narrower viewports the
       // aside disappears, so a second share row renders after the article.
-      'doc-before': () => h(BlogBackLink),
+      'doc-before': () => [h(BlogBackLink), h(ChannelNote)],
       'aside-outline-after': () => [
         h(RelatedPosts, { variant: 'aside' }),
         h(BlogShare, { placement: 'aside' }),

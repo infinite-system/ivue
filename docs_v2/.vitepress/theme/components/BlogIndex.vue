@@ -7,9 +7,34 @@ import NewsletterQuickJoin from './NewsletterQuickJoin.vue';
 
 type ViewStyle = 'list' | 'cards';
 const VIEW_STORAGE_KEY = 'ivue-blog-view';
+const SEE_ALL_STORAGE_KEY = 'ivue-blog-see-all';
 
 // List is the default; the visitor's last choice persists per browser.
 const viewStyle = ref<ViewStyle>('list');
+
+// Channel posts (private HN/X/… artifacts) exist only in dev-server
+// data — production data never contains them, so the See-all toggle
+// simply never renders there. Default view = exactly what production
+// shows.
+const seeAll = ref(false);
+const channelPostCount = computed(
+  () => posts.filter((post) => post.channel).length,
+);
+const visiblePosts = computed(() =>
+  seeAll.value ? posts : posts.filter((post) => !post.channel),
+);
+const CHANNEL_LABELS: Record<string, string> = {
+  hn: 'HN',
+  reddit: 'REDDIT',
+  x: '𝕏 THREAD',
+  linkedin: 'LINKEDIN',
+  note: 'NOTE',
+};
+
+function toggleSeeAll() {
+  seeAll.value = !seeAll.value;
+  localStorage.setItem(SEE_ALL_STORAGE_KEY, seeAll.value ? '1' : '');
+}
 
 // ---- search --------------------------------------------------------
 const searchQuery = ref('');
@@ -20,7 +45,7 @@ const activeTag = ref<string | null>(null);
 
 const tagCounts = computed(() => {
   const counts = new Map<string, number>();
-  for (const post of posts) {
+  for (const post of visiblePosts.value) {
     for (const tag of post.tags) {
       counts.set(tag, (counts.get(tag) ?? 0) + 1);
     }
@@ -32,7 +57,7 @@ const tagCounts = computed(() => {
 
 const filteredPosts = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
-  return posts.filter(
+  return visiblePosts.value.filter(
     (post) =>
       (!activeTag.value || post.tags.includes(activeTag.value)) &&
       (!query ||
@@ -79,6 +104,9 @@ onMounted(() => {
   if (stored === 'cards' || stored === 'list') {
     viewStyle.value = stored;
   }
+  if (channelPostCount.value > 0) {
+    seeAll.value = localStorage.getItem(SEE_ALL_STORAGE_KEY) === '1';
+  }
   // freshness is judged client-side after mount — no hydration mismatch
   nowSeconds.value = Math.floor(Date.now() / 1000);
   // in-article tag chips link here as /blog/?tag=x — arrive pre-filtered
@@ -117,7 +145,17 @@ function formatDate(date: string): string {
   <div class="blog-index-toolbar">
     <div class="blog-index-heading">
       <h1>Blog</h1>
-      <span class="blog-count">{{ posts.length }} posts</span>
+      <span class="blog-count">{{ visiblePosts.length }} posts</span>
+      <button
+        v-if="channelPostCount"
+        type="button"
+        class="blog-see-all"
+        :class="{ active: seeAll }"
+        :aria-pressed="seeAll"
+        @click="toggleSeeAll"
+      >
+        {{ seeAll ? 'Public view' : `See all +${channelPostCount}` }}
+      </button>
     </div>
     <NewsletterQuickJoin />
   </div>
@@ -203,7 +241,11 @@ function formatDate(date: string): string {
 
   <div v-if="viewStyle === 'cards'" class="blog-list">
     <a v-for="post in pagedPosts" :key="post.slug" class="blog-card" :href="withBase(post.url)">
+      <div v-if="!post.image" class="thumb thumb--channel">
+        {{ post.channel ? CHANNEL_LABELS[post.channel] : '' }}
+      </div>
       <img
+        v-else
         class="thumb"
         :src="withBase(post.image)"
         :alt="post.title"
@@ -216,6 +258,7 @@ function formatDate(date: string): string {
         <h2>{{ post.title }}</h2>
         <p class="excerpt">{{ post.excerpt }}</p>
         <div class="foot">
+          <span v-if="post.channel" class="channel-chip">{{ CHANNEL_LABELS[post.channel] }}</span>
           <span class="date">{{ formatDate(post.date) }}</span>
           <span class="go">Read the post →</span>
         </div>
@@ -225,7 +268,11 @@ function formatDate(date: string): string {
 
   <div v-else class="blog-rows">
     <a v-for="post in pagedPosts" :key="post.slug" class="blog-row" :href="withBase(post.url)">
+      <div v-if="!post.image" class="thumb thumb--channel">
+        {{ post.channel ? CHANNEL_LABELS[post.channel] : '' }}
+      </div>
       <img
+        v-else
         class="thumb"
         :src="withBase(post.image)"
         :alt="post.title"
@@ -238,6 +285,7 @@ function formatDate(date: string): string {
         <h2>{{ post.title }}</h2>
         <p class="excerpt">{{ post.excerpt }}</p>
         <div class="foot">
+          <span v-if="post.channel" class="channel-chip">{{ CHANNEL_LABELS[post.channel] }}</span>
           <span class="date">{{ formatDate(post.date) }}</span>
           <span class="go">Read the post →</span>
         </div>

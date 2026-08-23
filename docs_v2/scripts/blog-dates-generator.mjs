@@ -4,9 +4,10 @@
 // history is not available, so the file — not live git — is what the blog
 // data loader reads. Re-run after adding posts:  npm run sync:blog-dates
 import { execSync } from 'node:child_process';
-import { readdirSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { channelOf } from './channel-posts.mjs';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const blogDirectory = resolve(scriptDirectory, '../blog');
@@ -15,6 +16,9 @@ const repositoryRoot = resolve(scriptDirectory, '../..');
 const dates = {};
 for (const entry of readdirSync(blogDirectory).sort()) {
   if (!entry.endsWith('.md') || entry === 'index.md') continue;
+  // channel posts stay out of the ledger: it feeds the newsletter
+  // pipeline and the public archive count, both public-only
+  if (channelOf(readFileSync(resolve(blogDirectory, entry), 'utf8'))) continue;
   const slug = entry.replace(/\.md$/, '');
   const log = execSync(
     `git log --follow --diff-filter=A --format='%at %as' -- docs_v2/blog/${entry}`,

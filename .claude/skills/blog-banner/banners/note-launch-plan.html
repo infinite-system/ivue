@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(./fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(./fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
+      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      #050a18;
+    font-family: 'Geist', 'DejaVu Sans', 'Inter', sans-serif;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+  }
+  .stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 26px; padding: 88px 70px 0;
+    text-align: center;
+  }
+  .room {
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 18px; letter-spacing: 0.12em;
+    padding: 8px 20px; border-radius: 999px;
+    border: 1px solid rgba(96, 165, 250, 0.45); color: #7e9cd0;
+  }
+  .title {
+    font-size: 64px; font-weight: 750; color: #eaf2ff;
+    text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); letter-spacing: -0.015em;
+    line-height: 1.12;
+  }
+  .title .glow { color: #67e8f9; text-shadow: 0 0 36px rgba(34, 211, 238, 0.8); }
+  .sub {
+    font-size: 25px; color: #7e9cd0; line-height: 1.55; max-width: 980px;
+  }
+  .route {
+    display: flex; align-items: center; gap: 13px; margin-top: 6px;
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace; font-size: 18px;
+  }
+  .stop {
+    padding: 8px 16px; border-radius: 999px;
+    border: 1px solid rgba(96, 165, 250, 0.35); color: #9fb6dd;
+  }
+  .stop.first {
+    border-color: rgba(34, 211, 238, 0.55); color: #67e8f9;
+    text-shadow: 0 0 18px rgba(34, 211, 238, 0.5);
+  }
+  .arrow { color: #3b5a8f; font-size: 20px; }
+  .lockup { position: absolute; top: 34px; left: 44px; }
+  .lockup img { display: block; width: 178px; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="lockup">
+    <img src="../../../../docs_v2/public/brand-lockup-dark.png" alt="ivue — Infinite Vue" />
+  </div>
+
+  <div class="stage">
+    <div class="room">PLAYBOOK</div>
+    <div class="title">The launch <span class="glow">playbook</span></div>
+    <div class="sub">posting order, secondary rooms, and tone notes per room —<br/>receipts everywhere, adjectives nowhere.</div>
+    <div class="route">
+      <span class="stop first">HN</span><span class="arrow">→</span>
+      <span class="stop">r/vuejs</span><span class="arrow">→</span>
+      <span class="stop">LinkedIn</span><span class="arrow">→</span>
+      <span class="stop">r/javascript</span><span class="arrow">→</span>
+      <span class="stop">lobste.rs</span><span class="arrow">→</span>
+      <span class="stop">X</span>
+    </div>
+  </div>
+</body>
+</html>
