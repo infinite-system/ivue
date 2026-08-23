@@ -96,7 +96,7 @@ async function join() {
   <form
     v-if="belongsHere && state !== 'done'"
     class="quickjoin"
-    :class="`quickjoin--${align}`"
+    :class="[`quickjoin--${align}`, `quickjoin--place-${placement}`]"
     aria-label="Newsletter quick signup"
     @submit.prevent="join()"
   >
@@ -144,7 +144,7 @@ async function join() {
   <p
     v-else-if="belongsHere"
     class="quickjoin quickjoin--done"
-    :class="`quickjoin--${align}`"
+    :class="[`quickjoin--${align}`, `quickjoin--place-${placement}`]"
     role="status"
   >
     ✓ Welcome aboard — see you in your inbox.

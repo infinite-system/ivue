@@ -2520,6 +2520,16 @@ html:not(.dark) .fw-embed .fw-sub {
   color: var(--vp-c-text-2);
 }
 
+/* Banner thumbs crop from the TOP-LEFT, never the center: every
+   banner carries the ivue lockup in that corner, so whatever the
+   thumb's aspect, the logo sits in the same spot on every card. */
+.blog-card .thumb,
+.blog-row .thumb,
+.blog-post-nav__thumb,
+.related-posts__thumb {
+  object-position: left top;
+}
+
 /* NEW badges: nav superscripts (lit by build-time data attributes) and
    the index pill for entries under two weeks old */
 html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after,
@@ -3335,6 +3345,10 @@ a.feature-inline-link:active {
 }
 
 /* ---- home: newsletter hero — the blog, front and center ---- */
+/* the hero form hugs the cadence line above it */
+.ix-newsletter-hero .quickjoin--place-home-hero {
+  margin-top: 16px;
+}
 .ix-newsletter-hero {
   position: relative;
   text-align: center;
@@ -3370,7 +3384,7 @@ a.feature-inline-link:active {
 /* .vp-doc p outranks a bare class and zeroes the auto margins */
 .vp-doc p.ix-newsletter-hero__cadence {
   position: relative;
-  margin: 14px auto 6px;
+  margin: 34px auto 0;
   max-width: 640px;
   font-size: 14.5px;
   line-height: 1.6;
