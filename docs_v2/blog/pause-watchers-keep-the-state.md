@@ -1,14 +1,14 @@
 ---
-title: 'Silence without forgetting'
+title: 'Pause the watchers, keep the state'
 description: "An object's lifecycle has a third state between alive and reset: suspended — side effects silent, data intact. ivue 2.4 adds it as one option on the existing verb, and the resume half costs no API at all."
 tags: [engine, patterns]
 relatedPosts: [disposal-is-a-reset, reactivity-is-an-allocator, twenty-million-cells, the-thinnest-possible-layer]
 date: 2026-08
 ---
 
-# Silence without forgetting
+# Pause the watchers, keep the state
 
-![Silence without forgetting](/blog/pause-watchers-keep-the-state.png)
+![Pause the watchers, keep the state](/blog/pause-watchers-keep-the-state.png)
 
 <BlogPostDate />
 
