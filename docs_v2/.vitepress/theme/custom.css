@@ -2599,8 +2599,10 @@ html:not(.dark) .fw-embed .fw-sub {
   top: -7px;
   margin-left: -1px;
   font-size: 14px;
-  color: #f7b500;
-  text-shadow: 0 0 5px rgba(247, 181, 0, 0.35);
+  background: linear-gradient(105deg, #6366f1, #2dd4bf 60%, #34d399);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .VPNavScreenMenuLink[href='/guide/standard']::after {
   content: '\2605';
@@ -2608,8 +2610,10 @@ html:not(.dark) .fw-embed .fw-sub {
   top: -5px;
   margin-left: 3px;
   font-size: 13px;
-  color: #f7b500;
-  text-shadow: 0 0 5px rgba(247, 181, 0, 0.35);
+  background: linear-gradient(105deg, #6366f1, #2dd4bf 60%, #34d399);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* NEW badges: nav superscripts (lit by build-time data attributes) and
