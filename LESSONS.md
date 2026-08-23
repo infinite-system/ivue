@@ -306,3 +306,25 @@ MECHANISM (probe variable wiped by full reload + guard state), not
 just "page rendered". (2) An 800ms timeout on the pre-nav check
 fail-opened in the first live test; 2500ms is the shipped value.
 Field debugging: `__ivueDeployGuard.state()` / `.check()` in any tab.
+
+## GitHub releases go out via gh (2026-08-23)
+
+`gh` (GitHub CLI) is installed on this machine and the user knows how
+to authenticate it (`gh auth login -h github.com`; the keyring token
+occasionally invalidates — `gh auth status` tells you). Release
+tags follow `ivue@X.Y.Z`, matching npm.
+
+The whole release-post flow, after the notes file exists and main is
+pushed:
+
+    gh release create ivue@X.Y.Z --target main \
+      --title "ivue@X.Y.Z — <headline>" \
+      --notes-file releases/ivue@X.Y.Z.md
+
+One command creates the remote tag AND publishes the release with the
+committed notes (they render as markdown). No separate `git tag` /
+push-tags step. The USER runs it — same rule as `git push` and
+`npm publish`: outward publishes are theirs. Agent prepares the notes
+file (`releases/ivue@X.Y.Z.md`), bumps `package.json`, verifies tests
++ gzip size, commits, syncs dates, deploys the docs; the user pushes,
+publishes to npm, and runs the `gh release create`.
