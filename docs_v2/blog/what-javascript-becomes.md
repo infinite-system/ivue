@@ -144,6 +144,8 @@ coarse render effect can drive a whole IDE, and why
 [the object graph came back](/blog/the-object-graph-they-took)
 without a performance bill. One structure, three roles.
 
+![Four language lineages — JVM/CLR linking, PHP receiver statics, Erlang/Smalltalk hot swap, Scala/Kotlin lazy singletons — converging into plain JavaScript, all in userland](/blog/art/what-javascript-becomes-diagram-1.png)
+
 ## The scorecard
 
 | capability | who pioneered it | how they got it | JavaScript, with the discipline |

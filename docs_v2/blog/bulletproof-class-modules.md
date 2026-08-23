@@ -316,6 +316,8 @@ That two-property specification is the entire design. The
 implementation is small enough to print — this is the real source,
 from `ivue/extras`:
 
+![The LazyShared cell: inert at module load, constructed once at first read, memoized inside the cell — every access path converges on one singleton](/blog/art/bulletproof-class-modules-diagram-1.png)
+
 ```ts
 export class LazyShared<T> {
   constructor(private readonly make: () => T) {}

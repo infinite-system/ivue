@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(../../blog-banner/banners/fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(../../blog-banner/banners/fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 720px; overflow: hidden; }
+  body {
+    background: #050a18;
+    font-family: 'Geist', 'DejaVu Sans', sans-serif;
+    position: relative;
+  }
+  .backdrop {
+    position: absolute; inset: 0;
+    background: url(../../../../docs_v2/public/blog/art/bulletproof-class-modules-art-1.png) center / cover;
+    opacity: 0.30;
+  }
+  .veil {
+    position: absolute; inset: 0;
+    background: radial-gradient(900px 560px at 50% 45%, rgba(5, 10, 24, 0.12), rgba(5, 10, 24, 0.8) 85%);
+  }
+  .stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 26px; padding: 40px 70px;
+  }
+  .cell {
+    border-radius: 13px;
+    border: 1px solid rgba(96, 165, 250, 0.5);
+    background: rgba(10, 16, 34, 0.92);
+    box-shadow: 0 0 34px rgba(59, 130, 246, 0.18);
+    padding: 15px 22px;
+    font: 14px/1.8 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    color: #b6c6e4; white-space: pre;
+  }
+  .cell .kw { color: #c678dd; }
+  .cell .id { color: #61afef; }
+  .cell .hot { color: #67e8f9; text-shadow: 0 0 14px rgba(34, 211, 238, 0.55); }
+
+  .paths { display: flex; align-items: center; gap: 40px; }
+  .reader {
+    padding: 9px 18px; border-radius: 999px;
+    border: 1px solid rgba(96, 165, 250, 0.45); color: #9fb6dd;
+    font: 600 14.5px 'Geist Mono', monospace;
+    background: rgba(10, 16, 34, 0.85);
+  }
+  .converge {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+  }
+  .converge .down { color: #3b5a8f; font-size: 24px; line-height: 1; }
+  .one {
+    padding: 11px 26px; border-radius: 11px;
+    border: 1px solid rgba(34, 211, 238, 0.6);
+    color: #67e8f9; font: 700 17px 'Geist', sans-serif;
+    text-shadow: 0 0 18px rgba(34, 211, 238, 0.55);
+    box-shadow: 0 0 30px rgba(34, 211, 238, 0.18);
+    background: rgba(10, 16, 34, 0.9);
+  }
+
+  .timeline { display: flex; align-items: center; }
+  .phase {
+    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    width: 300px; text-align: center;
+  }
+  .phase .dot {
+    width: 15px; height: 15px; border-radius: 999px;
+    border: 2px solid rgba(126, 156, 208, 0.8); background: #0a1022;
+  }
+  .phase.hot .dot {
+    border-color: #67e8f9; background: rgba(34, 211, 238, 0.35);
+    box-shadow: 0 0 18px rgba(34, 211, 238, 0.7);
+  }
+  .phase .label { font-size: 16px; font-weight: 650; color: #cdd9ef; }
+  .phase.hot .label { color: #67e8f9; text-shadow: 0 0 16px rgba(34, 211, 238, 0.5); }
+  .phase .note { font-size: 13px; color: #7e9cd0; line-height: 1.45; }
+  .rail {
+    width: 110px; height: 2px; margin-bottom: 52px;
+    background: linear-gradient(90deg, rgba(126, 156, 208, 0.55), rgba(103, 232, 249, 0.55));
+  }
+  .verdict { font-size: 19px; color: #cdd9ef; }
+  .verdict b { color: #67e8f9; font-weight: 700; text-shadow: 0 0 16px rgba(34, 211, 238, 0.5); }
+</style>
+</head>
+<body>
+  <div class="backdrop"></div>
+  <div class="veil"></div>
+
+  <div class="stage">
+    <div class="cell"><span class="kw">class</span> <span class="id">$SearchRegistry</span> {
+  <span class="kw">protected static readonly</span> <span class="id">shared</span> = <span class="kw">new</span> <span class="hot">LazyShared</span>(() =&gt; <span class="kw">new</span> <span class="id">Backend.Class</span>())
+}</div>
+
+    <div class="timeline">
+      <div class="phase">
+        <span class="dot"></span>
+        <span class="label">module load</span>
+        <span class="note">the cell is stored — the thunk evaluates nothing</span>
+      </div>
+      <div class="rail"></div>
+      <div class="phase hot">
+        <span class="dot"></span>
+        <span class="label">first read</span>
+        <span class="note">the thunk runs once — every import cycle already resolved</span>
+      </div>
+      <div class="rail"></div>
+      <div class="phase">
+        <span class="dot"></span>
+        <span class="label">every read after</span>
+        <span class="note">memoized INSIDE the cell — never on a receiver</span>
+      </div>
+    </div>
+
+    <div class="paths">
+      <span class="reader">Base.$backend</span>
+      <span class="reader">Sub.$backend</span>
+      <span class="reader">per-receiver $-cache</span>
+    </div>
+    <div class="converge">
+      <span class="down">⭨&nbsp;&nbsp;⭣&nbsp;&nbsp;⭩</span>
+      <span class="one">one constructed singleton — nothing forkable at the end of any path</span>
+    </div>
+
+    <div class="verdict">Load-lazy AND unforkable — <b>both properties at once</b>.</div>
+  </div>
+</body>
+</html>

@@ -27,6 +27,8 @@ way down:
 > Everything costs proportional to what's observed; nothing costs
 > proportional to what exists.
 
+![Twenty million cells asleep in the dark; only the observed window is lit, and only the lit window costs anything](/blog/art/twenty-million-cells-art-1.png)
+
 Ground truth lives in columnar typed arrays: one byte of kind tag, eight
 bytes of number, shared across the column. Cell *objects* are disposable
 three-field facades created per render and thrown away. Reactivity is a

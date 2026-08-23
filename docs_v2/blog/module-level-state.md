@@ -53,6 +53,8 @@ and they can specialize what they inherit. It has a receiver — code
 inside it knows *who* it is running as. And it has a seam by
 construction: override the member.
 
+![Module scope versus the class, property by property: name in types, hierarchy, receiver, seam — and at last, lazy shared state without ceremony](/blog/art/module-level-state-diagram-1.png)
+
 What the class lacked was one property module scope had by accident:
 somewhere to put state without ceremony. A `static property = new
 Map()` initializer is *also* eager — it runs when the class is

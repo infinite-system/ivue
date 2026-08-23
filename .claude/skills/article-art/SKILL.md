@@ -8,13 +8,27 @@ description: >-
   that's blog-embed-shots).
 ---
 
-# article-art — free-form illustrations via codex in tmux
+# article-art — diagrams + free-form illustrations
 
-Banners are code (blog-banner skill). Embeds are screenshots. This skill
-covers the THIRD image kind: **free-form conceptual art** rendered by an
-image model — a glowing object graph, a forked path converging, a seam
-being welded. Codex CLI generates these natively (`codex features list`
-→ `image_generation  stable  true`) and saves straight to a path.
+Banners are code (blog-banner skill). Embeds are screenshots. This
+skill covers the THIRD image kind, in two forms — and the choice
+between them is the first decision:
+
+- **Hybrid diagram (the DEFAULT for mechanism posts):** an HTML/CSS
+  diagram — real code snippets, arrows, timelines, one verdict line —
+  rendered over a dimmed free-form backdrop for atmosphere. Text and
+  structure MUST be code: image models mangle labels, so anything the
+  reader must read is HTML. Source lives in `diagrams/<slug>-diagram-
+  <n>.html` beside this file (vendored Geist fonts via
+  `../../blog-banner/banners/fonts/`), backdrop referenced from
+  `docs_v2/public/blog/art/`, rendered with
+  `npm run render:diagram -- <source.html> <output.png> [WxH]`
+  (default 1200x800). Exemplar:
+  `diagrams/circular-imports-dissolved-diagram-1.html`.
+- **Pure free-form art:** only where the metaphor IS the content and
+  labels would add nothing (a lit window in a dark lattice, sparks
+  converging into a seed). Rendered by codex — `codex features list`
+  → `image_generation  stable  true` — saved straight to a path.
 
 ## The pipeline (verified end-to-end 2026-08-22)
 

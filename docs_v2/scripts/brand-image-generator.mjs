@@ -21,6 +21,9 @@ const [modeName, sourceOrOutput, blogOutput] = process.argv.slice(2);
 
 // `blog` renders any banner HTML at the blog's 1200x630:
 //   node docs_v2/scripts/brand-image-generator.mjs blog <source.html> <output.png>
+// `diagram` renders article diagrams at any size (default 1200x800):
+//   node docs_v2/scripts/brand-image-generator.mjs diagram <source.html> <output.png> [WxH]
+const diagramSize = (process.argv[5] ?? '1200x800').match(/^(\d+)x(\d+)$/);
 const mode =
   modeName === 'blog'
     ? {
@@ -28,10 +31,19 @@ const mode =
         output: blogOutput,
         viewport: { width: 1200, height: 630 },
       }
-    : modes[modeName];
-const outputArgument = modeName === 'blog' ? blogOutput : sourceOrOutput;
+    : modeName === 'diagram'
+      ? {
+          source: resolve(process.cwd(), sourceOrOutput ?? ''),
+          output: blogOutput,
+          viewport: diagramSize
+            ? { width: Number(diagramSize[1]), height: Number(diagramSize[2]) }
+            : { width: 1200, height: 800 },
+        }
+      : modes[modeName];
+const isFileMode = modeName === 'blog' || modeName === 'diagram';
+const outputArgument = isFileMode ? blogOutput : sourceOrOutput;
 
-if (!mode || (modeName === 'blog' && (!sourceOrOutput || !blogOutput))) {
+if (!mode || (isFileMode && (!sourceOrOutput || !blogOutput))) {
   console.error(
     `Usage: node docs_v2/scripts/brand-image-generator.mjs <${Object.keys(modes).join('|')}> [output]\n` +
       '       node docs_v2/scripts/brand-image-generator.mjs blog <source.html> <output.png>',
@@ -40,7 +52,7 @@ if (!mode || (modeName === 'blog' && (!sourceOrOutput || !blogOutput))) {
 }
 
 const source =
-  modeName === 'blog' ? mode.source : resolve(scriptDirectory, mode.source);
+  isFileMode ? mode.source : resolve(scriptDirectory, mode.source);
 const output = outputArgument
   ? resolve(process.cwd(), outputArgument)
   : resolve(scriptDirectory, mode.output);

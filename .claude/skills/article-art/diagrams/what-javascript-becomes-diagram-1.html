@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(../../blog-banner/banners/fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(../../blog-banner/banners/fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 720px; overflow: hidden; }
+  body {
+    background: #050a18;
+    font-family: 'Geist', 'DejaVu Sans', sans-serif;
+    position: relative;
+  }
+  .backdrop {
+    position: absolute; inset: 0;
+    background: url(../../../../docs_v2/public/blog/art/what-javascript-becomes-art-1.png) center / cover;
+    opacity: 0.30;
+  }
+  .veil {
+    position: absolute; inset: 0;
+    background: radial-gradient(900px 560px at 50% 45%, rgba(5, 10, 24, 0.15), rgba(5, 10, 24, 0.82) 85%);
+  }
+  .stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 24px; padding: 40px 70px;
+  }
+  .sources { display: flex; gap: 16px; }
+  .source {
+    width: 258px; border-radius: 12px;
+    border: 1px solid rgba(126, 156, 208, 0.4);
+    background: rgba(10, 16, 34, 0.92);
+    padding: 13px 16px 14px;
+  }
+  .source .who {
+    font: 650 14.5px 'Geist Mono', monospace; color: #9fb6dd;
+    margin-bottom: 5px;
+  }
+  .source .what { font-size: 13.5px; color: #b6c6e4; line-height: 1.5; }
+  .source .how { font-size: 12px; color: #7e9cd0; margin-top: 6px; font-style: italic; }
+  .converge {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .converge .arrows { color: #3b5a8f; font-size: 24px; letter-spacing: 26px; padding-left: 26px; line-height: 1; }
+  .runtime {
+    width: 760px; border-radius: 14px;
+    border: 1px solid rgba(34, 211, 238, 0.55);
+    box-shadow: 0 0 34px rgba(34, 211, 238, 0.14);
+    background: rgba(10, 16, 34, 0.92);
+    padding: 16px 26px 18px; text-align: center;
+  }
+  .runtime .title {
+    font: 700 18px 'Geist', sans-serif; color: #67e8f9;
+    text-shadow: 0 0 16px rgba(34, 211, 238, 0.5); margin-bottom: 8px;
+  }
+  .runtime .chips { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .runtime .chip {
+    padding: 7px 13px; border-radius: 999px;
+    border: 1px solid rgba(34, 211, 238, 0.4); color: #8fe9f7;
+    font: 600 13px 'Geist Mono', monospace;
+    background: rgba(14, 24, 48, 0.8);
+  }
+  .verdict { font-size: 19px; color: #cdd9ef; text-align: center; }
+  .verdict b { color: #67e8f9; font-weight: 700; text-shadow: 0 0 16px rgba(34, 211, 238, 0.5); }
+</style>
+</head>
+<body>
+  <div class="backdrop"></div>
+  <div class="veil"></div>
+
+  <div class="stage">
+    <div class="sources">
+      <div class="source">
+        <div class="who">JVM / CLR</div>
+        <div class="what">lazy, order-free class linking</div>
+        <div class="how">needed a language spec + classloader</div>
+      </div>
+      <div class="source">
+        <div class="who">PHP static::</div>
+        <div class="what">receiver-following statics</div>
+        <div class="how">needed a 5.3 language change</div>
+      </div>
+      <div class="source">
+        <div class="who">Erlang · Smalltalk</div>
+        <div class="what">hot-swappable classes</div>
+        <div class="how">needed privileged runtime support</div>
+      </div>
+      <div class="source">
+        <div class="who">Scala · Kotlin</div>
+        <div class="what">lazy singletons</div>
+        <div class="how">needed object / by lazy</div>
+      </div>
+    </div>
+
+    <div class="converge"><div class="arrows">⭨⭣⭣⭩</div></div>
+
+    <div class="runtime">
+      <div class="title">plain JavaScript, with the discipline — all of it in userland</div>
+      <div class="chips">
+        <span class="chip">namespace pattern</span>
+        <span class="chip">Static() storage</span>
+        <span class="chip">$-cached getters</span>
+        <span class="chip">export let Class</span>
+        <span class="chip">Reactive()</span>
+      </div>
+    </div>
+
+    <div class="verdict">Every row that reads "language change" elsewhere reads <b>"a convention" here</b>.</div>
+  </div>
+</body>
+</html>

@@ -111,6 +111,8 @@ cyclic domains* — the model contorted to fit the loader.
 
 ## The reduction: it was never the cycle — it was the clock
 
+![Two modules importing each other, both reading through late getters; the timeline runs from module load (nothing reads) through graph complete to first access, where the reference resolves under any import order](/blog/art/circular-imports-dissolved-diagram-1.png)
+
 Strip the problem to its load-bearing structure and one variable
 remains. A program has two clocks:
 

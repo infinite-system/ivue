@@ -158,6 +158,8 @@ reading the rendered framebuffer, and blocking any commit that
 regresses a contract. Not "the agents were careful" — the gate makes
 carelessness unmergeable.
 
+![The gate pipeline: agent output passes invariant contracts, the real-user-path merge gate, and static checks — carelessness is unmergeable](/blog/art/agents-built-an-editor-diagram-1.png)
+
 That is one lesson generalized: never trust discipline where you can
 install construction. Choose substrates where the failure classes are
 absent, write contracts for what remains, and let gates — not

@@ -29,6 +29,8 @@ same path.
 > A convention says "please don't." A field says "there is no such
 > move." The first is ethics. The second is physics.
 
+![A curved field instead of a flat board: pieces roll along the geometry toward the one convergence point — degenerate moves find no footing](/blog/art/the-field-not-the-rules-art-1.png)
+
 ivue started as a reactivity engine. What it turned into — together with
 the invariants built around it — is a field change: a deliberate
 reshaping of JavaScript's possibility space, flipping the substrate's

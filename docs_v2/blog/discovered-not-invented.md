@@ -115,6 +115,8 @@ The invariants do not merely document good practice — they
 
 Once both transforms existed, larger pieces of architecture simplified.
 
+![Two crystalline structures one level apart, grown separately, mirroring each other exactly across still water](/blog/art/discovered-not-invented-art-1.png)
+
 Classes that represent *capabilities* — filesystem access, subprocesses,
 terminal handles, native libraries — became `Static()` collections of
 methods and `$`-cached resources. Classes that represent *domain

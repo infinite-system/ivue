@@ -50,6 +50,8 @@ The tempo did not change because the tools got faster. It changed
 because the *kind of work* changed. Finding a generator is expensive.
 Running one is nearly free.
 
+![Three years of sparks converging into one seed — then the seed detonates into twenty days of generation](/blog/art/three-years-to-reduce-art-1.png)
+
 ## The conventional schedule, inverted
 
 A ten-person team building an Invar-class IDE by hand prices out to

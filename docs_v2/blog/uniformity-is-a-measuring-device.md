@@ -59,6 +59,8 @@ strictly enforced, and infinitely overridable at every seam.
 
 Four mechanisms turn that dialect into detection:
 
+![Hundreds of identical forms at the same low intensity — the one misaligned form flares, the only shadow in the field](/blog/art/uniformity-is-a-measuring-device-art-1.png)
+
 **A uniform grammar turns semantic violations into syntactic
 anomalies.** If the rule is that system calls live behind a
 `Static()` seam, then a bare `Bun.spawn` inside a backend module is

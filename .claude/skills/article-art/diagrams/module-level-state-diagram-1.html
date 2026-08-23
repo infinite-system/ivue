@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(../../blog-banner/banners/fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(../../blog-banner/banners/fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 720px; overflow: hidden; }
+  body {
+    background: #050a18;
+    font-family: 'Geist', 'DejaVu Sans', sans-serif;
+    position: relative;
+  }
+  .backdrop {
+    position: absolute; inset: 0;
+    background: url(../../../../docs_v2/public/blog/art/module-level-state-art-1.png) center / cover;
+    opacity: 0.30;
+  }
+  .veil {
+    position: absolute; inset: 0;
+    background: radial-gradient(900px 560px at 50% 45%, rgba(5, 10, 24, 0.12), rgba(5, 10, 24, 0.8) 85%);
+  }
+  .stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 28px; padding: 40px 90px;
+  }
+  .containers { display: flex; gap: 30px; }
+  .container {
+    width: 470px; border-radius: 14px;
+    background: rgba(10, 16, 34, 0.92);
+    overflow: hidden;
+  }
+  .container.module { border: 1px solid rgba(126, 156, 208, 0.4); }
+  .container.klass {
+    border: 1px solid rgba(34, 211, 238, 0.55);
+    box-shadow: 0 0 34px rgba(34, 211, 238, 0.14);
+  }
+  .container .head {
+    padding: 11px 20px; font: 650 16px 'Geist Mono', monospace;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.25);
+    background: rgba(30, 41, 70, 0.7);
+  }
+  .container.module .head { color: #9fb6dd; }
+  .container.klass .head { color: #67e8f9; text-shadow: 0 0 14px rgba(34, 211, 238, 0.5); }
+  .row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 20px; font-size: 15px; color: #b6c6e4;
+    border-bottom: 1px solid rgba(40, 50, 78, 0.6);
+  }
+  .row:last-child { border-bottom: none; }
+  .no { color: #f87171; font-weight: 700; }
+  .yes { color: #67e8f9; font-weight: 700; text-shadow: 0 0 12px rgba(34, 211, 238, 0.5); }
+  .dim { color: #7e9cd0; font-size: 13px; }
+  .verdict { font-size: 19px; color: #cdd9ef; text-align: center; line-height: 1.5; }
+  .verdict b { color: #67e8f9; font-weight: 700; text-shadow: 0 0 16px rgba(34, 211, 238, 0.5); }
+</style>
+</head>
+<body>
+  <div class="backdrop"></div>
+  <div class="veil"></div>
+
+  <div class="stage">
+    <div class="containers">
+      <div class="container module">
+        <div class="head">module scope — the sealed jar</div>
+        <div class="row"><span>a name that appears in types</span><span class="no">✗</span></div>
+        <div class="row"><span>a hierarchy — subclasses specialize</span><span class="no">✗</span></div>
+        <div class="row"><span>a receiver — code knows who it runs as</span><span class="no">✗</span></div>
+        <div class="row"><span>a seam — override the member</span><span class="no">✗</span></div>
+        <div class="row"><span>somewhere to put state without ceremony</span><span class="yes">✓ <span class="dim">by accident — and eager</span></span></div>
+      </div>
+      <div class="container klass">
+        <div class="head">the class — a container with a seam</div>
+        <div class="row"><span>a name that appears in types</span><span class="yes">✓</span></div>
+        <div class="row"><span>a hierarchy — subclasses specialize</span><span class="yes">✓</span></div>
+        <div class="row"><span>a receiver — code knows who it runs as</span><span class="yes">✓</span></div>
+        <div class="row"><span>a seam — override the member</span><span class="yes">✓</span></div>
+        <div class="row"><span>somewhere to put state without ceremony</span><span class="yes">✓ <span class="dim">LazyShared — and lazy</span></span></div>
+      </div>
+    </div>
+
+    <div class="verdict">The class was always the better container <b>in kind</b> —<br/>it just couldn't store shared state safely. Now it can.</div>
+  </div>
+</body>
+</html>

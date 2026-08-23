@@ -46,6 +46,7 @@
     "render:og": "node docs_v2/scripts/brand-image-generator.mjs og",
     "render:form-header": "node docs_v2/scripts/brand-image-generator.mjs form-header",
     "render:banner": "node docs_v2/scripts/brand-image-generator.mjs blog",
+    "render:diagram": "node docs_v2/scripts/brand-image-generator.mjs diagram",
     "render:embeds": "node docs_v2/scripts/blog-embed-shots.mjs",
     "render:code-shots": "node docs_v2/scripts/blog-code-shots.mjs",
     "sync:blog-dates": "node docs_v2/scripts/blog-dates-generator.mjs",

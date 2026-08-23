@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(../../blog-banner/banners/fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(../../blog-banner/banners/fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 720px; overflow: hidden; }
+  body {
+    background: #050a18;
+    font-family: 'Geist', 'DejaVu Sans', sans-serif;
+    position: relative;
+  }
+  .backdrop {
+    position: absolute; inset: 0;
+    background: url(../../../../docs_v2/public/blog/art/reactivity-is-an-allocator-art-1.png) center / cover;
+    opacity: 0.28;
+  }
+  .veil {
+    position: absolute; inset: 0;
+    background: radial-gradient(900px 560px at 50% 45%, rgba(5, 10, 24, 0.15), rgba(5, 10, 24, 0.82) 85%);
+  }
+  .stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 22px; padding: 40px 90px;
+  }
+  .tier {
+    width: 940px; border-radius: 14px;
+    background: rgba(10, 16, 34, 0.92);
+    padding: 16px 24px 18px;
+  }
+  .tier .title {
+    font: 700 16px 'Geist', sans-serif; margin-bottom: 4px;
+  }
+  .tier .sub { font-size: 13.5px; color: #7e9cd0; margin-bottom: 13px; }
+  .tier.graph {
+    border: 1px solid rgba(34, 211, 238, 0.55);
+    box-shadow: 0 0 34px rgba(34, 211, 238, 0.14);
+  }
+  .tier.graph .title { color: #67e8f9; text-shadow: 0 0 14px rgba(34, 211, 238, 0.5); }
+  .tier.floor { border: 1px solid rgba(126, 156, 208, 0.4); }
+  .tier.floor .title { color: #9fb6dd; }
+  .chips { display: flex; gap: 12px; flex-wrap: wrap; }
+  .chip {
+    padding: 8px 15px; border-radius: 999px;
+    font: 600 13.5px 'Geist Mono', monospace;
+  }
+  .graph .chip {
+    border: 1px solid rgba(34, 211, 238, 0.45); color: #8fe9f7;
+    background: rgba(14, 24, 48, 0.8);
+  }
+  .floor .chip {
+    border: 1px solid rgba(126, 156, 208, 0.35); color: #9fb6dd;
+    background: rgba(14, 20, 40, 0.8);
+  }
+  .threads {
+    display: flex; gap: 200px; align-items: center;
+    font: 600 13.5px 'Geist Mono', monospace;
+  }
+  .thread { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .thread .arrow { color: #67e8f9; font-size: 22px; line-height: 1; text-shadow: 0 0 12px rgba(34,211,238,0.6); }
+  .thread .tag { color: #7e9cd0; }
+  .verdict { font-size: 19px; color: #cdd9ef; text-align: center; }
+  .verdict b { color: #67e8f9; font-weight: 700; text-shadow: 0 0 16px rgba(34, 211, 238, 0.5); }
+</style>
+</head>
+<body>
+  <div class="backdrop"></div>
+  <div class="veil"></div>
+
+  <div class="stage">
+    <div class="tier graph">
+      <div class="title">the reactive graph — decides WHAT EXISTS</div>
+      <div class="sub">models, derivations, watchers — the government, not the plumbing</div>
+      <div class="chips">
+        <span class="chip">workspace model</span>
+        <span class="chip">open editors</span>
+        <span class="chip">visible panes</span>
+        <span class="chip">watch(() =&gt; …)</span>
+      </div>
+    </div>
+
+    <div class="threads">
+      <div class="thread"><span class="arrow">↓</span><span class="tag">allocate</span></div>
+      <div class="thread"><span class="arrow">↓</span><span class="tag">dispose</span></div>
+      <div class="thread"><span class="arrow">↓</span><span class="tag">command</span></div>
+    </div>
+
+    <div class="tier floor">
+      <div class="title">the OS floor — plain, synchronous, imperative</div>
+      <div class="sub">zero refs, zero signals — handles, buffers, and timers owned outright</div>
+      <div class="chips">
+        <span class="chip">Files — 0 refs</span>
+        <span class="chip">FSWatcher handles</span>
+        <span class="chip">PTY processes</span>
+        <span class="chip">git plumbing</span>
+      </div>
+    </div>
+
+    <div class="verdict">The floor never reacts. <b>Reactivity governs allocation — it is the government, not the plumbing.</b></div>
+  </div>
+</body>
+</html>

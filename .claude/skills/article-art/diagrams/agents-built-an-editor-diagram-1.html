@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(../../blog-banner/banners/fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(../../blog-banner/banners/fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 720px; overflow: hidden; }
+  body {
+    background: #050a18;
+    font-family: 'Geist', 'DejaVu Sans', sans-serif;
+    position: relative;
+  }
+  .backdrop {
+    position: absolute; inset: 0;
+    background: url(../../../../docs_v2/public/blog/art/agents-built-an-editor-art-1.png) center / cover;
+    opacity: 0.30;
+  }
+  .veil {
+    position: absolute; inset: 0;
+    background: radial-gradient(900px 560px at 50% 45%, rgba(5, 10, 24, 0.15), rgba(5, 10, 24, 0.82) 85%);
+  }
+  .stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 30px; padding: 40px 30px;
+  }
+  .flow { display: flex; align-items: stretch; gap: 8px; }
+  .box {
+    display: flex; flex-direction: column; justify-content: center; gap: 6px;
+    border-radius: 12px; padding: 13px 14px; width: 202px;
+    background: rgba(10, 16, 34, 0.92); text-align: center;
+  }
+  .box .t { font: 700 15px 'Geist', sans-serif; }
+  .box .d { font-size: 12.5px; color: #7e9cd0; line-height: 1.5; }
+  .box.stream { border: 1px solid rgba(126, 156, 208, 0.4); }
+  .box.stream .t { color: #9fb6dd; }
+  .gate {
+    border: 1px solid rgba(96, 165, 250, 0.55);
+    box-shadow: 0 0 22px rgba(59, 130, 246, 0.16);
+  }
+  .gate .t { color: #8fb4f7; }
+  .box.merged {
+    border: 1px solid rgba(34, 211, 238, 0.6);
+    box-shadow: 0 0 30px rgba(34, 211, 238, 0.18);
+  }
+  .box.merged .t { color: #67e8f9; text-shadow: 0 0 14px rgba(34, 211, 238, 0.55); }
+  .step { align-self: center; color: #3b5a8f; font-size: 20px; }
+  .rejects {
+    font: 600 13.5px 'Geist Mono', monospace; color: #f87171;
+    display: flex; gap: 56px;
+  }
+  .rejects span { opacity: 0.85; }
+  .verdict { font-size: 19px; color: #cdd9ef; text-align: center; }
+  .verdict b { color: #67e8f9; font-weight: 700; text-shadow: 0 0 16px rgba(34, 211, 238, 0.5); }
+</style>
+</head>
+<body>
+  <div class="backdrop"></div>
+  <div class="veil"></div>
+
+  <div class="stage">
+    <div class="flow">
+      <div class="box stream">
+        <div class="t">agent output</div>
+        <div class="d">nearly all of the code, written at machine volume</div>
+      </div>
+      <span class="step">→</span>
+      <div class="box gate">
+        <div class="t">invariant contracts</div>
+        <div class="d">colocated per module — each rule states what becomes impossible if it holds</div>
+      </div>
+      <span class="step">→</span>
+      <div class="box gate">
+        <div class="t">the merge gate</div>
+        <div class="d">drives the real user path — injects input, reads the framebuffer, blocks regressions</div>
+      </div>
+      <span class="step">→</span>
+      <div class="box gate">
+        <div class="t">static checks</div>
+        <div class="d">enforce the seam — the standard is mechanical, not remembered</div>
+      </div>
+      <span class="step">→</span>
+      <div class="box merged">
+        <div class="t">merged</div>
+        <div class="d">quality as a structural fact, not a per-edit probability</div>
+      </div>
+    </div>
+
+    <div class="rejects">
+      <span>✗ contract regression</span>
+      <span>✗ broken user path</span>
+      <span>✗ seam violation</span>
+    </div>
+
+    <div class="verdict">Not "the agents were careful" — <b>the gate makes carelessness unmergeable</b>.</div>
+  </div>
+</body>
+</html>

@@ -66,6 +66,8 @@ The generator is compact; what it generates can be enormous.
 Reduction finds the smaller structure. Construction turns that structure into
 guarantees.
 
+![The keystone locks into the arch as the scaffolding evaporates — what survives reduction becomes load-bearing](/blog/art/win-by-reduction-art-1.png)
+
 A convention is strongest when following it makes an entire category of
 failure unavailable. The guarantee does not depend on every developer
 remembering a warning at the exact right moment. The program's shape carries

@@ -47,6 +47,8 @@ boundary is imperative, synchronous, and plain.
 > truth stays imperative at the bottom; the reactive graph decides,
 > from above, what exists, what is fresh, and what is believed.
 
+![Two tiers: the reactive graph above decides what exists; the OS floor below stays plain and synchronous — threads drop down to allocate, dispose, command](/blog/art/reactivity-is-an-allocator-diagram-1.png)
+
 Those three decisions — exists, fresh, believed — are three idioms,
 and every backend module composes the same three.
 
