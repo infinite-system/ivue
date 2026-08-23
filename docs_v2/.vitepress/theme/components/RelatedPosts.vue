@@ -102,10 +102,13 @@ function formatDate(date: string): string {
 }
 .related-posts__item {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* thumb rides the title's first line */
   gap: 10px;
   padding: 6px 0;
   text-decoration: none;
+}
+.related-posts--aside .related-posts__thumb {
+  margin-top: 2px; /* optical alignment with the title's cap height */
 }
 .related-posts__thumb {
   flex: none;
