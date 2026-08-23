@@ -1581,7 +1581,13 @@ a.feature-inline-link {
   flex-wrap: wrap;
   /* headroom for the Turnstile popover that hangs above the quick-join
      form — without it the challenge lands on the navbar links */
-  margin-top: 56px;
+  margin-top: 36px;
+}
+@media (max-width: 860px) {
+  /* mobile's challenge is in-flow below the form — no headroom needed */
+  .blog-index-toolbar {
+    margin-top: 0;
+  }
 }
 .blog-index-heading {
   display: flex;
