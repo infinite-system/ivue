@@ -321,7 +321,7 @@ export type VuePropsWithDefaults<T extends VuePropsObject> = {
  * @param val Any value
  * @returns boolean If it's a JavaScript Class returns true
  */
-export const isClass = (val: any): boolean => {
+export function isClass(val: any): boolean {
   if (typeof val !== 'function') return false; // Not a function, so not a class function either
 
   if (!val.prototype) return false; // Arrow function, so not a class
@@ -333,7 +333,7 @@ export const isClass = (val: any): boolean => {
   } else {
     return true; // Class -> Not a function
   }
-};
+}
 /**
  * Creates props with defaults in defineComponent() style.
  *
@@ -365,12 +365,12 @@ export const isClass = (val: any): boolean => {
  * @param customCloner Optional cloner used for object/array defaults (defaults to structuredClone)
  * @returns Props declared in defineComponent() style with all properties having default property declared.
  */
-export const propsWithDefaults = <T extends VuePropsObject>(
+export function propsWithDefaults<T extends VuePropsObject>(
   defaults: Record<string, any>,
   typedProps: T,
   // Optional: Allows user to pass a custom cloner if structuredClone isn't enough
   customCloner?: (val: any) => any,
-): VuePropsWithDefaults<T> => {
+): VuePropsWithDefaults<T> {
   // NON-MUTATING: descriptor objects are routinely SHARED between props
   // maps (`{ ...baseParamsTypes, extra }` — the spread copies the outer
   // object but every inner `{ type }` descriptor stays the same reference).
@@ -396,7 +396,7 @@ export const propsWithDefaults = <T extends VuePropsObject>(
     }
   }
   return result as VuePropsWithDefaults<T>;
-};
+}
 
 /**
  * Type Utilities
