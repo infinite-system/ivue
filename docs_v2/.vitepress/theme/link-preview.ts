@@ -162,4 +162,7 @@ export function installLinkPreviews() {
     { passive: true },
   );
   document.addEventListener('scroll', hide, { passive: true });
+  // SPA navigation keeps the pointer where it was — the card must not
+  // outlive the click
+  document.addEventListener('click', hide, { passive: true });
 }
