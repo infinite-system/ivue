@@ -3082,8 +3082,12 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
      orbiting it forever (a registered-@property conic angle). Browsers
      without @property show the static ring. */
   border: 4px solid transparent;
+  /* a 0.5px white hairline between photo and ring — true hairline on
+     high-DPI, rounds to a soft 1px on 1x displays */
+  padding: 0.5px;
   background:
-    linear-gradient(var(--vp-c-bg), var(--vp-c-bg)) padding-box,
+    linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35))
+      padding-box,
     conic-gradient(
         from var(--avatar-ring-angle),
         rgba(255, 255, 255, 0) 0deg,
