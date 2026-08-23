@@ -119,6 +119,7 @@ function formatDate(date: string): string {
 /* end-of-content variant: a compact card grid */
 .related-posts--doc {
   margin-top: 40px;
+  margin-bottom: 34px;
   padding-top: 24px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -193,7 +194,7 @@ function formatDate(date: string): string {
 .related-posts__more {
   grid-column: 1 / -1;
   justify-self: center;
-  margin-top: 2px;
+  margin-top: -4px; /* pull against the grid gap — the button belongs to the cards */
   padding: 6px 18px;
   border: 1px dashed var(--vp-c-divider);
   border-radius: 999px;
