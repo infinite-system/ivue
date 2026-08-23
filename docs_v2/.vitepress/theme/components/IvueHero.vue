@@ -32,6 +32,7 @@ class $Typewriter {
     'One kilobyte.',
     'Zero dependencies.',
     'Reactive super.',
+    'Memory control.',
     'Circular imports.',
     'Zero-cost creation.',
     'Minimal memory.',
