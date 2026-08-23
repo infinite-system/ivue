@@ -53,18 +53,18 @@ export default {
         h(BlogShare, { placement: 'aside' }),
         h(NewsletterSignup, { placement: 'aside' }),
       ],
-      // Post-page order: author → prev/next → related → comments →
-      // archive → newsletter. Related sits above comments now that its
-      // mobile form is compact rows; comment threads grow unboundedly,
-      // so the curated links stay above the fold of that growth. On
+      // Post-page order: author → related → prev/next → comments →
+      // archive → newsletter. Related rides right after the author
+      // badge (compact rows on mobile); comment threads grow
+      // unboundedly, so the curated links stay above that growth. On
       // guide pages the blog-only components render nothing, so
       // related still lands right after share.
       'doc-after': () => [
         h(BlogShare, { placement: 'doc' }),
         h(NewsletterQuickJoin, { placement: 'post-footer', align: 'center' }),
         h(BlogAuthor),
-        h(BlogPostNav),
         h(RelatedPosts, { variant: 'doc' }),
+        h(BlogPostNav),
         h(BlogComments),
         h(BlogArchiveScroller),
         h(NewsletterSignup, { placement: 'doc' }),
