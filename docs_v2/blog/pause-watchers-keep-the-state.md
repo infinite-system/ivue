@@ -2,7 +2,7 @@
 title: 'Pause the watchers, keep the state'
 description: "An object's lifecycle has a third state between alive and reset: suspended — side effects silent, data intact. ivue 2.4 adds it as one option on the existing verb, and the resume half costs no API at all."
 tags: [engine, patterns]
-relatedPosts: [disposal-is-a-reset, reactivity-is-an-allocator, twenty-million-cells, the-thinnest-possible-layer]
+relatedPosts: [disposal-is-a-reset, release-what-the-gc-cant, reactivity-is-an-allocator, twenty-million-cells, the-thinnest-possible-layer]
 date: 2026-08
 ---
 

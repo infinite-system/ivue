@@ -2,7 +2,7 @@
 title: 'Disposal is a reset'
 description: "Every reactive system answers birth well; death is where they get vague. ivue's $stopEffects is one verb that stops the instance's effects, frees its cells — and leaves the object ready to live again."
 tags: [engine, patterns]
-relatedPosts: [reactivity-is-an-allocator, rented-objects, computed-is-a-cache, bulletproof-class-modules]
+relatedPosts: [release-what-the-gc-cant, reactivity-is-an-allocator, rented-objects, computed-is-a-cache, bulletproof-class-modules]
 date: 2026-08
 ---
 
