@@ -1171,6 +1171,17 @@ a.feature-inline-link:hover,
   --link-stop-2: var(--vp-c-text-2);
   --link-stop-3: var(--vp-c-text-2);
 }
+
+/* "On this page" entries show their FULL heading — a truncated outline
+   defeats the point of an outline. VitePress ellipsizes on one line;
+   wrap instead, with a line-height that reads at two lines. */
+.VPDocAsideOutline .outline-link {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  line-height: 1.5;
+  padding: 5px 0;
+}
 /* the flyout chevron draws via a currentColor mask — the transparent
    clip color on .text would erase it, so it gets its own color */
 .VPNav .VPFlyout .button .text .text-icon,
