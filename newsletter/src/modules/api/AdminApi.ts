@@ -10,6 +10,7 @@ import { Tweets } from '../socials/Tweets';
 import { Scheduler } from '../schedule/Scheduler';
 import type { JobKind } from '../schedule/Scheduler';
 import { Audience } from '../audience/Audience';
+import { Comments } from '../comments/Comments';
 import { Ledger } from '../audience/Ledger';
 import { Delivery } from '../delivery/Delivery';
 import { Drip } from '../delivery/Drip';
@@ -45,6 +46,12 @@ class $AdminApi {
         return this.send(request, env);
       case 'GET /admin/sends':
         return this.sends(url, env);
+      case 'GET /admin/comments':
+        return this.comments(url, env);
+      case 'POST /admin/comments/approve':
+        return this.approveComment(request, env);
+      case 'POST /admin/comments/delete':
+        return this.deleteComment(request, env);
       case 'GET /admin/posts':
         return this.posts(env);
       case 'GET /admin/preview':
@@ -248,6 +255,32 @@ class $AdminApi {
       offset: Number(url.searchParams.get('offset') ?? 0),
     });
     return Http.Class.json(page);
+  }
+
+  // The moderation queue: pending first, optional status filter and
+  // search across slug/name/email/body.
+  static async comments(url: URL, env: Env): Promise<Response> {
+    const page = await Comments.Class.page(env, {
+      status: url.searchParams.get('status') ?? '',
+      search: url.searchParams.get('search') ?? '',
+      limit: Number(url.searchParams.get('limit') ?? 50),
+      offset: Number(url.searchParams.get('offset') ?? 0),
+    });
+    return Http.Class.json(page);
+  }
+
+  static async approveComment(request: Request, env: Env): Promise<Response> {
+    const body = await Http.Class.readJsonBody<{ id: number }>(request);
+    const approved = await Comments.Class.approve(env, Number(body.id));
+    if (!approved) return Http.Class.json({ error: 'No such comment.' }, 404);
+    return Http.Class.json({ ok: true });
+  }
+
+  static async deleteComment(request: Request, env: Env): Promise<Response> {
+    const body = await Http.Class.readJsonBody<{ id: number }>(request);
+    const removed = await Comments.Class.remove(env, Number(body.id));
+    if (!removed) return Http.Class.json({ error: 'No such comment.' }, 404);
+    return Http.Class.json({ ok: true });
   }
 
   static async posts(env: Env): Promise<Response> {

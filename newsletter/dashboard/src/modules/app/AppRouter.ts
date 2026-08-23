@@ -40,6 +40,11 @@ class $AppRouter {
             component: () => import('../posts/PostsView.vue'),
           },
           {
+            path: 'comments',
+            name: 'comments',
+            component: () => import('../comments/CommentsView.vue'),
+          },
+          {
             path: 'send',
             name: 'send',
             component: () => import('../send/SendView.vue'),

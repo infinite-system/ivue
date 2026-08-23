@@ -104,6 +104,51 @@ class $Delivery {
     }
   }
 
+  // One line to the operator for every comment awaiting moderation.
+  // Best-effort like the signup ping — a failure logs and the comment
+  // itself already committed.
+  static async notifyComment(
+    env: Env,
+    comment: { slug: string; name: string; email: string; body: string },
+  ): Promise<void> {
+    try {
+      const response = await fetch(this.POSTMARK_EMAIL_URL, {
+        method: 'POST',
+        headers: {
+          'X-Postmark-Server-Token': env.POSTMARK_SERVER_TOKEN,
+          'content-type': 'application/json',
+          accept: 'application/json',
+        },
+        body: JSON.stringify({
+          From: `${env.SENDER_NAME} <${env.SENDER_EMAIL}>`,
+          To: env.NOTIFY_EMAIL,
+          Subject: `New comment on ${comment.slug} (pending approval)`,
+          MessageStream: this.NOTIFICATION_STREAM,
+          TextBody:
+            `${comment.name} <${comment.email}> commented on ` +
+            `${env.SITE_ORIGIN}/blog/${comment.slug}:\n\n${comment.body}\n\n` +
+            `Approve or delete: ${env.WORKER_ORIGIN}/newsletter/comments`,
+        }),
+      });
+      if (!response.ok) {
+        console.error(
+          JSON.stringify({
+            event: 'comment_notify_failed',
+            status: response.status,
+            body: (await response.text()).slice(0, 300),
+          }),
+        );
+      }
+    } catch (error) {
+      console.error(
+        JSON.stringify({
+          event: 'comment_notify_failed',
+          error: String(error),
+        }),
+      );
+    }
+  }
+
   // One line to the operator for every signup. Best-effort by design:
   // a notification failure is logged and never surfaces to the
   // subscriber — the signup itself already committed.

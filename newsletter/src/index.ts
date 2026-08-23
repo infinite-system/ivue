@@ -8,6 +8,8 @@
 // same ledger, so none can repeat what another already delivered.
 //
 //   POST /subscribe        {name, email, turnstileToken} — site form → D1
+//   POST /comment          {slug, name, email, body} — pending until approved
+//   GET  /comments         ?slug= — approved comments (never emails)
 //   GET  /unsubscribe      ?email=&token=      — HMAC-signed one-click out
 //   POST /broadcast        {slug}   (Bearer ADMIN_SECRET) — send a post NOW
 //   POST /drip             (Bearer ADMIN_SECRET) — run a drip pass on demand
@@ -34,6 +36,18 @@ export default {
       if (url.pathname === '/subscribe' && request.method === 'POST')
         return Http.Class.withCors(
           await PublicApi.Class.subscribe(request, env, context),
+          env,
+          request,
+        );
+      if (url.pathname === '/comment' && request.method === 'POST')
+        return Http.Class.withCors(
+          await PublicApi.Class.comment(request, env, context),
+          env,
+          request,
+        );
+      if (url.pathname === '/comments' && request.method === 'GET')
+        return Http.Class.withCors(
+          await PublicApi.Class.comments(url, env),
           env,
           request,
         );

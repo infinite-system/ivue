@@ -21,6 +21,8 @@
 		"run_worker_first": [
 			"/subscribe",
 			"/unsubscribe",
+			"/comment",
+			"/comments",
 			"/broadcast",
 			"/drip",
 			"/postmark-webhook",

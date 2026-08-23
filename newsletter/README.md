@@ -268,6 +268,18 @@ welcome — only the public form triggers it. Preview:
 `/admin/preview?slug=welcome` (also clickable anywhere the dashboard
 shows the `welcome` slug).
 
+## Blog comments (pending-by-default)
+
+The Worker also serves the blog's comments. `POST /comment`
+(Turnstile-gated like `/subscribe`; optional `subscribe: true` enrolls
+the commenter through the same welcome path) stores the row as
+`pending` — NOTHING renders on the site until it is approved from
+Newsletter → Comments. `GET /comments?slug=` serves approved rows
+only, and its projection never includes the email column — emails are
+operator-only, everywhere. Each submission pings NOTIFY_EMAIL.
+Comment bodies are rendered as plain text on the site (interpolation,
+never HTML).
+
 ## Subscriber pipeline (dashboard)
 
 Any email address in the dashboard (Subscribers table, Sent log) opens

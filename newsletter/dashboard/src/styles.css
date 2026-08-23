@@ -1312,3 +1312,10 @@ input[type='datetime-local'] {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---- comments moderation ---- */
+.comment-body {
+  max-width: 26rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

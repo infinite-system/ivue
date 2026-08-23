@@ -140,6 +140,29 @@ class $Api {
     return this.request('/admin/posts');
   }
 
+  static comments(query: {
+    status: string;
+    search: string;
+    limit: number;
+    offset: number;
+  }): Promise<CommentPage> {
+    const parameters = new URLSearchParams({
+      status: query.status,
+      search: query.search,
+      limit: String(query.limit),
+      offset: String(query.offset),
+    });
+    return this.request(`/admin/comments?${parameters}`);
+  }
+
+  static approveComment(id: number): Promise<{ ok: boolean }> {
+    return this.post('/admin/comments/approve', { id });
+  }
+
+  static deleteComment(id: number): Promise<{ ok: boolean }> {
+    return this.post('/admin/comments/delete', { id });
+  }
+
   static async previewHtml(slug: string): Promise<string> {
     const response = await this.fetchAuthorized(
       `/admin/preview?slug=${encodeURIComponent(slug)}`,
@@ -292,6 +315,23 @@ export interface SubscriberDetail {
   // the default fallback)
   timezone: string;
   upcoming: UpcomingSend[];
+}
+
+export interface CommentRow {
+  id: number;
+  slug: string;
+  name: string;
+  email: string;
+  body: string;
+  submittedAt: number;
+  status: 'pending' | 'approved';
+}
+
+export interface CommentPage {
+  total: number;
+  rows: CommentRow[];
+  limit: number;
+  offset: number;
 }
 
 export interface ListSummary {

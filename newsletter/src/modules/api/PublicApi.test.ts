@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PublicApi } from './PublicApi';
 import { Security } from '../platform/Security';
 import { Audience } from '../audience/Audience';
+import { Comments } from '../comments/Comments';
 import { makeTestEnv } from '../../../test/TestDatabase';
 import { installFetchStub, makePost } from '../../../test/Fixtures';
 
@@ -183,5 +184,102 @@ describe('PublicApi', () => {
       env,
     );
     expect(await Audience.Class.active(env, 'newsletter')).toHaveLength(1);
+  });
+
+  it('comment: lands pending, pings the operator, never surfaces before approval', async () => {
+    const env = makeTestEnv();
+    const postmarkCalls = installFetchStub({});
+    const { context, settle } = makeTestContext();
+
+    const bad = await PublicApi.Class.comment(
+      postJson('/comment', {
+        slug: 'first-post',
+        name: 'Ada',
+        email: 'not-an-email',
+        body: 'hi',
+      }),
+      env,
+      context,
+    );
+    expect(bad.status).toBe(400);
+
+    const good = await PublicApi.Class.comment(
+      postJson('/comment', {
+        slug: 'first-post',
+        name: 'Ada',
+        email: 'ada@ivue.dev',
+        body: 'Great post.',
+      }),
+      env,
+      context,
+    );
+    expect(good.status).toBe(200);
+    expect(await good.json()).toEqual({ ok: true, pending: true });
+
+    // public read: nothing until approved
+    const before = await PublicApi.Class.comments(
+      new URL('https://newsletter.test/comments?slug=first-post'),
+      env,
+    );
+    expect(await before.json()).toEqual([]);
+
+    // operator ping rode waitUntil
+    await settle();
+    const ping = postmarkCalls.notifications.find((message) =>
+      message.Subject.includes('New comment on first-post'),
+    );
+    expect(ping?.To).toBe('evgeny@ivue.dev');
+
+    // approve → public, and the payload NEVER carries an email
+    const page = await Comments.Class.page(env, {});
+    await Comments.Class.approve(env, page.rows[0].id);
+    const after = await PublicApi.Class.comments(
+      new URL('https://newsletter.test/comments?slug=first-post'),
+      env,
+    );
+    const payload = (await after.json()) as Record<string, unknown>[];
+    expect(payload).toHaveLength(1);
+    expect(JSON.stringify(payload)).not.toContain('ivue.dev'); // no email anywhere
+    expect(payload[0].name).toBe('Ada');
+  });
+
+  it('comment: Turnstile fails closed; subscribe flag enrolls through the signup path', async () => {
+    const env = makeTestEnv({ TURNSTILE_SECRET: 'secret' });
+    installFetchStub({});
+    const { context } = makeTestContext();
+    const rejected = await PublicApi.Class.comment(
+      postJson('/comment', {
+        slug: 'first-post',
+        name: 'Ada',
+        email: 'ada@ivue.dev',
+        body: 'hi',
+      }),
+      env,
+      context,
+    );
+    expect(rejected.status).toBe(403);
+
+    // Turnstile off: the subscribe flag enrolls with the timezone
+    const openEnv = makeTestEnv();
+    const { context: openContext, settle } = makeTestContext();
+    await PublicApi.Class.comment(
+      postJson('/comment', {
+        slug: 'first-post',
+        name: 'Ada',
+        email: 'Ada@IVUE.dev',
+        body: 'also subscribe me',
+        subscribe: true,
+        timezone: 'Europe/Berlin',
+      }),
+      openEnv,
+      openContext,
+    );
+    await settle();
+    const active = await Audience.Class.active(openEnv, 'newsletter');
+    expect(active[0]).toEqual({
+      email: 'ada@ivue.dev',
+      name: 'Ada',
+      timezone: 'Europe/Berlin',
+    });
   });
 });

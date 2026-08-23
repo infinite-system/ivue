@@ -30,6 +30,7 @@ class $AppStore {
         { name: 'lists', label: 'Lists' },
         { name: 'sends', label: 'Sent' },
         { name: 'posts', label: 'Posts' },
+        { name: 'comments', label: 'Comments' },
         { name: 'send', label: 'Send' },
         { name: 'drip', label: 'Drip' },
         { name: 'stats', label: 'Stats' },
@@ -227,6 +228,7 @@ export type ViewName =
   | 'lists'
   | 'sends'
   | 'posts'
+  | 'comments'
   | 'send'
   | 'drip'
   | 'stats'

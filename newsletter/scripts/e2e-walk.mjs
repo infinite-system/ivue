@@ -357,6 +357,63 @@ try {
   );
   await shot('send-result');
 
+  // ---- station 4.9: comments moderation (submit → pending → approve → public) ----
+  // idempotent: the walk's own comment is deleted at the end of the station
+  const commentSubmit = await fetch(`${BASE_URL}/comment`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      slug: 'one-kilobyte-feature',
+      name: 'Playwright E2E',
+      email: 'playwright-e2e@example.com',
+      body: 'e2e comment — will be approved then deleted',
+    }),
+  });
+  check('comment submits (Turnstile off locally)', commentSubmit.status === 200);
+  const publicBefore = await (
+    await fetch(`${BASE_URL}/comments?slug=one-kilobyte-feature`)
+  ).json();
+  check(
+    'pending comment is invisible on the public endpoint',
+    !JSON.stringify(publicBefore).includes('e2e comment'),
+  );
+  await page.click('.tab[data-tab="comments"]');
+  await page.waitForFunction(() =>
+    document
+      .querySelector('[data-view="comments"] tbody')
+      ?.textContent?.includes('Playwright E2E'),
+  );
+  check(
+    'comments tab is routable and shows the pending queue',
+    new URL(page.url()).pathname === '/newsletter/comments',
+  );
+  await shot('comments-pending');
+  const pendingRow = page.locator('[data-view="comments"] tbody tr', {
+    hasText: 'Playwright E2E',
+  });
+  await pendingRow.locator('button.primary').click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector('[data-view="comments"] tbody')
+      ?.textContent?.includes('approved'),
+  );
+  const publicAfter = await (
+    await fetch(`${BASE_URL}/comments?slug=one-kilobyte-feature`)
+  ).json();
+  check(
+    'approved comment appears publicly WITHOUT an email field',
+    JSON.stringify(publicAfter).includes('e2e comment') &&
+      !JSON.stringify(publicAfter).includes('playwright-e2e@example.com'),
+  );
+  await pendingRow.locator('button.danger').click();
+  await page.waitForFunction(
+    () =>
+      !document
+        .querySelector('[data-view="comments"] tbody')
+        ?.textContent?.includes('Playwright E2E'),
+  );
+  check('moderation delete removes the comment', true);
+
   // ---- station 5: drip preview ----
   await page.click('.tab[data-tab="drip"]');
   await page.waitForFunction(

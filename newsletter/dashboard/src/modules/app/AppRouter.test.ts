@@ -24,6 +24,7 @@ describe('AppRouter', () => {
         ['lists', '/newsletter/lists'],
         ['sends', '/newsletter/sent'],
         ['posts', '/newsletter/posts'],
+        ['comments', '/newsletter/comments'],
         ['send', '/newsletter/send'],
         ['drip', '/newsletter/drip-plan'],
         ['stats', '/newsletter/stats'],

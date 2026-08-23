@@ -4,6 +4,7 @@ import { LocalTime } from '../platform/LocalTime';
 import { Security } from '../platform/Security';
 import { Turnstile } from '../platform/Turnstile';
 import { Audience } from '../audience/Audience';
+import { Comments } from '../comments/Comments';
 import { Delivery } from '../delivery/Delivery';
 import { Drip } from '../delivery/Drip';
 
@@ -69,6 +70,102 @@ class $PublicApi {
       Delivery.Class.notifySignup(env, { email: address, name }, list),
     );
     return Http.Class.json({ ok: true });
+  }
+
+  // A blog comment: Turnstile-gated exactly like /subscribe, stored
+  // PENDING — nothing shows publicly until the operator approves. The
+  // optional `subscribe` flag enrolls the commenter through the same
+  // path as the signup form (one Turnstile token covers the one
+  // request; the Worker fans out server-side).
+  static async comment(
+    request: Request,
+    env: Env,
+    context: ExecutionContext,
+  ): Promise<Response> {
+    const body = await Http.Class.readJsonBody<{
+      slug: string;
+      name: string;
+      email: string;
+      body: string;
+      subscribe: boolean;
+      timezone: string;
+      turnstileToken: string;
+    }>(request);
+
+    if (env.TURNSTILE_SECRET) {
+      const human = await Turnstile.Class.verify(
+        body.turnstileToken,
+        request.headers.get('CF-Connecting-IP'),
+        env,
+      );
+      if (!human)
+        return Http.Class.json(
+          { error: 'Verification failed — try again.' },
+          403,
+        );
+    }
+
+    try {
+      await Comments.Class.submit(env, {
+        slug: String(body.slug ?? ''),
+        name: String(body.name ?? ''),
+        email: String(body.email ?? ''),
+        body: String(body.body ?? ''),
+      });
+    } catch (error) {
+      return Http.Class.json(
+        {
+          error:
+            error instanceof Error ? error.message : 'Could not submit.',
+        },
+        400,
+      );
+    }
+
+    const commenter = {
+      slug: String(body.slug ?? '').trim(),
+      name: String(body.name ?? '').trim(),
+      email: String(body.email ?? '')
+        .trim()
+        .toLowerCase(),
+      body: String(body.body ?? '').trim(),
+    };
+    context.waitUntil(Delivery.Class.notifyComment(env, commenter));
+
+    if (body.subscribe === true) {
+      const timezone =
+        LocalTime.Class.normalizeTimezone(body.timezone) || null;
+      await Audience.Class.enroll(
+        env,
+        commenter.email,
+        commenter.name,
+        Audience.Class.DEFAULT_LIST,
+        timezone,
+      );
+      context.waitUntil(
+        Delivery.Class.sendWelcome(env, {
+          email: commenter.email,
+          name: commenter.name,
+        }),
+      );
+      context.waitUntil(
+        Delivery.Class.notifySignup(
+          env,
+          { email: commenter.email, name: commenter.name },
+          Audience.Class.DEFAULT_LIST,
+        ),
+      );
+    }
+
+    return Http.Class.json({ ok: true, pending: true });
+  }
+
+  // Approved comments for one post — id, name, body, time. The email
+  // column is structurally absent from the query (see Comments).
+  static async comments(url: URL, env: Env): Promise<Response> {
+    const slug = (url.searchParams.get('slug') ?? '').trim();
+    if (!slug) return Http.Class.json({ error: 'slug required' }, 400);
+    return Http.Class.json(await Comments.Class.approvedFor(env, slug));
   }
 
   static async unsubscribe(url: URL, env: Env): Promise<Response> {
