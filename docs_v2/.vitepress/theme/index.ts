@@ -36,6 +36,7 @@ import { registerDocsApp } from './quasar-docs-loader';
 import recordedBlogDates from '../../blog/blog-dates.json';
 import { initAnalytics } from './analytics';
 import { installDeployGuard, reloadIfNotFoundIsStale } from './deploy-guard';
+import { installLinkPreviews } from './link-preview';
 import './custom.css';
 
 export default {
@@ -92,6 +93,7 @@ export default {
       // deploy-guard.ts — VitePress swallows the import failure
       // internally, so after-the-fact rescue handlers never see it).
       installDeployGuard(router);
+      installLinkPreviews(); // hover cards for internal prose links
 
       // BACKSTOP: for failures that still surface through vite's
       // preload helper or as unhandled rejections (lazy in-page

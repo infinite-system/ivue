@@ -23,6 +23,7 @@ export default createContentLoader('blog/*.md', {
           slug,
           url: page.url,
           title: page.frontmatter.title,
+          excerpt: page.frontmatter.description ?? '',
           image: `/blog/${slug}.png`,
           date: recorded?.date ?? `${page.frontmatter.date}-01`,
         };

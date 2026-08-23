@@ -2530,6 +2530,60 @@ html:not(.dark) .fw-embed .fw-sub {
   object-position: left top;
 }
 
+/* Hover preview cards for internal prose links (link-preview.ts):
+   fixed-position, image on top, title/date/excerpt below. */
+.ix-link-preview {
+  position: fixed;
+  z-index: 60;
+  width: 320px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--vp-c-bg-elv, var(--vp-c-bg));
+  border: 1px solid var(--vp-c-divider);
+  box-shadow: 0 12px 36px -10px rgba(5, 10, 25, 0.45);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+}
+.ix-link-preview.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.ix-link-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+.ix-link-preview__body {
+  padding: 10px 14px 12px;
+}
+.ix-link-preview__title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--vp-c-text-1);
+}
+.ix-link-preview__date {
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  color: var(--vp-c-text-3);
+}
+.ix-link-preview__excerpt {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--vp-c-text-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* NEW badges: nav superscripts (lit by build-time data attributes) and
    the index pill for entries under two weeks old */
 html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after,
