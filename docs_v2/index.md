@@ -414,7 +414,7 @@ it, and the measured numbers behind every claim — from
 <a href="/blog/the-options-api-everyone-wanted">the class JavaScript
 was always waiting for</a> to
 <a href="/blog/bulletproof-class-modules">Bulletproof class modules</a>.
-Every post lands in your inbox, one at a time, at your local morning.
+Every post lands in your inbox, one at a time, every couple of days, at your local morning.
 </p>
 
 <NewsletterQuickJoin placement="home-hero" align="center" />

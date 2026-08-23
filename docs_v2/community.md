@@ -117,8 +117,8 @@ New posts, releases, and measured numbers land on the [Blog](/blog/), on
 
 ## Blog Newsletter
 
-Every post from the blog, delivered one at a time — at your local
-morning:
+Every post from the blog, delivered one at a time, every couple of
+days — at your local morning:
 
 <NewsletterQuickJoin placement="community" align="start" />
 
