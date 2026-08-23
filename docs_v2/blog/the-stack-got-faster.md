@@ -2,7 +2,7 @@
 title: 'The stack got faster. We changed nothing.'
 description: 'Vue 3.6 rewrites reactivity on alien signals; Vapor mode removes the virtual DOM. ivue changes nothing and gets faster on both sides — measured on the RC, and already running 94,000 lines in production.'
 tags: [performance, engine]
-relatedPosts: [reactivity-is-an-allocator, measured-not-promised, introducing-ivue]
+relatedPosts: [reactivity-is-an-allocator, measured-not-promised, introducing-ivue, twenty-million-cells, a-million-rows-twelve-divs]
 date: 2026-08
 ---
 

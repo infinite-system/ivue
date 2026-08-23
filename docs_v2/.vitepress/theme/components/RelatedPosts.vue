@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useData, withBase } from 'vitepress';
 import { data as posts } from '../../../blog/blog-lite.data.mjs';
 
@@ -13,14 +13,43 @@ const props = withDefaults(
   { variant: 'aside' },
 );
 
-const { frontmatter } = useData();
+const { frontmatter, page } = useData();
 
-const relatedPosts = computed(() => {
+// frontmatter may list any number of slugs, strongest first. The
+// aside stays capped at three (a calm column, no controls); the doc
+// grid shows three and expands on demand — a button, not a slider:
+// hidden-by-carousel content barely gets touched, and post pages
+// already have one slider (the archive rail).
+const VISIBLE_COUNT = 3;
+const expanded = ref(false);
+
+const allRelatedPosts = computed(() => {
   const slugs: string[] = frontmatter.value.relatedPosts ?? [];
   return slugs
     .map((slug) => posts.find((post) => post.slug === slug))
     .filter((post): post is (typeof posts)[number] => Boolean(post));
 });
+
+const relatedPosts = computed(() => {
+  if (props.variant === 'aside') return allRelatedPosts.value.slice(0, VISIBLE_COUNT);
+  if (expanded.value) return allRelatedPosts.value;
+  return allRelatedPosts.value.slice(0, VISIBLE_COUNT);
+});
+
+const hiddenCount = computed(() =>
+  props.variant === 'doc' && !expanded.value
+    ? allRelatedPosts.value.length - VISIBLE_COUNT
+    : 0,
+);
+
+// a route change collapses the grid again
+watch(
+  () => page.value.relativePath,
+  () => {
+    expanded.value = false;
+  },
+);
+
 
 function formatDate(date: string): string {
   return new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', {
@@ -59,6 +88,14 @@ function formatDate(date: string): string {
         <span class="related-posts__date">{{ formatDate(post.date) }}</span>
       </span>
     </a>
+    <button
+      v-if="hiddenCount > 0"
+      type="button"
+      class="related-posts__more"
+      @click="expanded = true"
+    >
+      Show {{ hiddenCount }} more from the blog
+    </button>
   </nav>
 </template>
 
@@ -140,6 +177,24 @@ function formatDate(date: string): string {
   color: var(--vp-c-brand-1);
 }
 .related-posts__item:hover .related-posts__thumb {
+  border-color: var(--vp-c-brand-1);
+}
+.related-posts__more {
+  grid-column: 1 / -1;
+  justify-self: center;
+  margin-top: 2px;
+  padding: 6px 18px;
+  border: 1px dashed var(--vp-c-divider);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vp-c-text-2);
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+}
+.related-posts__more:hover {
+  color: var(--vp-c-brand-1);
   border-color: var(--vp-c-brand-1);
 }
 </style>
