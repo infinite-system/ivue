@@ -2602,17 +2602,17 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
 }
 .new-badge--thumb {
   position: absolute;
-  top: 9px;
+  top: 14px;
   margin: 0;
 }
 .blog-card .new-badge--thumb {
-  right: 9px;
+  right: 14px;
 }
 .blog-row .new-badge--thumb {
   /* anchored to the thumb's right edge — must track the thumb width
      set on .vp-doc .blog-row .thumb */
   left: 392px;
-  transform: translateX(calc(-100% - 9px));
+  transform: translateX(calc(-100% - 14px));
 }
 @media (max-width: 640px) {
   .blog-row .new-badge--thumb {
