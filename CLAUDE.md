@@ -36,6 +36,10 @@
   (the email renderer ships every standalone body image; only the
   banner line is skipped). Curation ledger:
   `.claude/skills/article-art/art-opportunities.md`.
+- **Page OG banners**: every non-blog page gets a templated OG image
+  (`npm run render:page-og`, committed to `docs_v2/public/og/`, wired
+  per-page in config.ts transformHead). Re-run locally when a page's
+  title/description changes; blog posts keep bespoke banners.
 - **Code shots** capture EVERY code-group tab (panels forced visible,
   document order), and plain-text `[code]` markers are 1:1 with them;
   emails render all tabs inline via shiki.

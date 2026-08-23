@@ -27,7 +27,7 @@ const hasNewRelease = recordedTimestamps('../releases-dates.json').some(
 
 // Blog sidebar, generated from the posts themselves: frontmatter titles +
 // git-recovered dates (blog-dates.json), newest first, grouped by month.
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath as toPath } from 'node:url';
 
 function releasesSidebar() {
@@ -529,7 +529,7 @@ export default defineConfig({
     const isHome = pageData.frontmatter.layout === 'home';
     const title = isHome
       ? 'ivue — Plain classes. Full reactivity. One kilobyte.'
-      : `${pageData.title} — Infinite Vue`;
+      : `${pageData.title} — ivue`;
     const description =
       pageData.description ||
       'Class-based reactivity for Vue 3. Plain classes, full reactivity, one kilobyte.';
@@ -542,9 +542,18 @@ export default defineConfig({
       ['meta', { property: 'og:url', content: `https://ivue.dev/${path}` }],
     ];
     const blogPost = pageData.relativePath.match(/^blog\/(?!index)([^/]+)\.md$/);
+    // non-blog pages get their templated banner when one is rendered
+    // (npm run render:page-og — committed artifacts in public/og)
+    const pageOgName =
+      pageData.relativePath.replace(/\.md$/, '').replaceAll('/', '-') + '.png';
+    const hasPageOg =
+      !blogPost &&
+      existsSync(toPath(new URL(`../public/og/${pageOgName}`, import.meta.url)));
     const imageUrl = blogPost
       ? `https://ivue.dev/blog/${blogPost[1]}.png`
-      : 'https://ivue.dev/og-image.png';
+      : hasPageOg
+        ? `https://ivue.dev/og/${pageOgName}`
+        : 'https://ivue.dev/og-image.png';
     head.push(
       ['meta', { property: 'og:image', content: imageUrl }],
       ['meta', { property: 'og:image:width', content: '1200' }],
