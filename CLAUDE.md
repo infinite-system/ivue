@@ -43,7 +43,7 @@
 - **Code shots** capture EVERY code-group tab (panels forced visible,
   document order), and plain-text `[code]` markers are 1:1 with them;
   emails render all tabs inline via shiki.
-- **New blog post workflow**: write md (with `tags:` frontmatter) →
+- **New blog post workflow**: TITLE FIRST per .claude/skills/write-article/SKILL.md (generative — the reader's win, never the mechanism) → write md (with `tags:` frontmatter) →
   banner (blog-banner skill, view the PNG) → `npm run render:embeds` if
   the post embeds a demo (local-only; commit PNGs) → `npm run
   build:docs` → commit → `npm run sync:blog-dates` → commit dates.
