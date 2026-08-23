@@ -231,8 +231,8 @@ async function subscribe() {
       </div>
       <p class="newsletter__pitch">
         New patterns, releases, and measured numbers from the
-        JavaScript frontier — every post, one at a time, every other
-        day, at your local morning.
+        JavaScript frontier — the whole blog in {{ $archiveDays }}
+        days, one post every other day, at your local morning.
       </p>
       <p
         v-if="(placement === 'toast' || placement === 'aside') && state !== 'done'"

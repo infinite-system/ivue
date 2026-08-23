@@ -29,6 +29,9 @@ import BlogArchiveScroller from './components/BlogArchiveScroller.vue';
 import BlogBackLink from './components/BlogBackLink.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import { registerDocsApp } from './quasar-docs-loader';
+// the archive's size, for newsletter copy — "the whole blog in N days"
+// recomputes at every build (posts × the every-other-day cadence)
+import recordedBlogDates from '../../blog/blog-dates.json';
 import { initAnalytics } from './analytics';
 import { installDeployGuard, reloadIfNotFoundIsStale } from './deploy-guard';
 import './custom.css';
@@ -62,6 +65,11 @@ export default {
   },
   enhanceApp({ app, router }) {
     registerDocsApp(app); // field embeds install Quasar lazily
+
+    // newsletter copy interpolates these in components AND markdown
+    const archivePostCount = Object.keys(recordedBlogDates).length;
+    app.config.globalProperties.$archivePostCount = archivePostCount;
+    app.config.globalProperties.$archiveDays = archivePostCount * 2;
     initAnalytics(); // PostHog — production-only, browser-only, async
 
     if (typeof window !== 'undefined') {

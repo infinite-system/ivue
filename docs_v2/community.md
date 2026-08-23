@@ -117,8 +117,8 @@ New posts, releases, and measured numbers land on the [Blog](/blog/), on
 
 ## Blog Newsletter
 
-Every post from the blog, delivered one at a time, every other
-day — at your local morning:
+The whole blog, delivered in {{ $archiveDays }} days — one post every
+other day, at your local morning:
 
 <NewsletterQuickJoin placement="community" align="start" />
 
