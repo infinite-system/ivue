@@ -28,9 +28,12 @@ class $Http {
   // so /admin/* never needs a CORS grant.
   static withCors(response: Response, env: Env, request?: Request): Response {
     const origin = request?.headers.get('origin') ?? '';
-    const isLocalDevelopment = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(
-      origin,
-    );
+    // localhost plus the RFC-1918 private ranges — a dev server reached
+    // via LAN IP (VM host, phone on the same network) is still dev
+    const isLocalDevelopment =
+      /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/.test(
+        origin,
+      );
     response.headers.set(
       'access-control-allow-origin',
       isLocalDevelopment ? origin : env.SITE_ORIGIN,

@@ -41,6 +41,35 @@ describe('Http', () => {
     expect(strangerResponse.headers.get('access-control-allow-origin')).toBe(
       'https://ivue.dev',
     );
+
+    // LAN-IP dev servers (VM hosts, phones on the same network) echo too
+    for (const origin of [
+      'http://10.211.55.7:5174',
+      'http://192.168.1.20:5173',
+      'http://172.20.0.2:8080',
+    ]) {
+      const lanRequest = new Request('https://newsletter.test/subscribe', {
+        method: 'POST',
+        headers: { origin },
+      });
+      const lanResponse = Http.Class.withCors(
+        Http.Class.json({}),
+        makeTestEnv(),
+        lanRequest,
+      );
+      expect(lanResponse.headers.get('access-control-allow-origin')).toBe(
+        origin,
+      );
+    }
+    // a PUBLIC address that merely looks numeric is not private
+    const publicRequest = new Request('https://newsletter.test/subscribe', {
+      method: 'POST',
+      headers: { origin: 'http://172.32.0.1' },
+    });
+    expect(
+      Http.Class.withCors(Http.Class.json({}), makeTestEnv(), publicRequest)
+        .headers.get('access-control-allow-origin'),
+    ).toBe('https://ivue.dev');
   });
 
   it('readJsonBody returns an empty object on malformed JSON', async () => {
