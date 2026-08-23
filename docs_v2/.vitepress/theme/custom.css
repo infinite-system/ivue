@@ -2207,6 +2207,11 @@ a.feature-inline-link {
   display: flex;
   justify-content: center;
 }
+/* the narrow ASIDE card clips the 300px widget — left-align so the
+   checkbox (the part that matters) is always visible */
+.newsletter--aside .newsletter__turnstile {
+  justify-content: flex-start;
+}
 .newsletter__turnstile:empty {
   display: none;
 }
