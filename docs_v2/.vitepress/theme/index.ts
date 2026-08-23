@@ -197,12 +197,26 @@ export default {
         document.addEventListener('mouseover', reopenFlyouts);
       });
 
+      // CSS animations play once per element insertion — an SPA
+      // navigation back to a page reuses DOM and the avatar ring's
+      // loader sweep would never replay. Restart it on every visit.
+      const restartAvatarRing = () => {
+        document
+          .querySelectorAll<HTMLElement>('.cm-avatar')
+          .forEach((avatar) => {
+            avatar.style.animation = 'none';
+            void avatar.offsetWidth; // reflow commits the removal
+            avatar.style.animation = '';
+          });
+      };
+
       const onAfterRouteChange = router.onAfterRouteChange;
       router.onAfterRouteChange = async (to) => {
         await onAfterRouteChange?.(to);
         requestAnimationFrame(() => {
           shieldBrand();
           injectExtraNavLinks();
+          restartAvatarRing();
         });
 
         if (router.route.data.isNotFound) {
