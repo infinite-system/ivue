@@ -2488,6 +2488,38 @@ html.ivue-flyout-closed .VPNavBar .VPFlyout .menu {
   }
 }
 
+/* The flyweight embed: the playground app paints its own page
+   background (#0b1020) which shows BETWEEN its rounded panels and
+   fights the DemoBox surface around it — inside the docs the wrapper
+   surface is the one background everywhere. Standalone playground
+   keeps its own. */
+.fw-embed .fw-page {
+  background: transparent;
+}
+/* …and in light mode the app's page-level text (designed light-on-
+   dark) recolors to the docs palette. The grid itself keeps its own
+   dark chrome — that's the component, not the page. */
+html:not(.dark) .fw-embed .fw-page {
+  color: var(--vp-c-text-2);
+}
+html:not(.dark) .fw-embed .fw-stat {
+  color: var(--vp-c-text-3);
+}
+html:not(.dark) .fw-embed .fw-stat b,
+html:not(.dark) .fw-embed .fw-total b,
+html:not(.dark) .fw-embed .fw-empty b,
+html:not(.dark) .fw-embed .fx-val {
+  color: var(--vp-c-text-1);
+}
+html:not(.dark) .fw-embed .fw-total code,
+html:not(.dark) .fw-embed .fx-name,
+html:not(.dark) .fw-embed .fw-sub em {
+  color: #4f46e5;
+}
+html:not(.dark) .fw-embed .fw-sub {
+  color: var(--vp-c-text-2);
+}
+
 /* NEW badges: nav superscripts (lit by build-time data attributes) and
    the index pill for entries under two weeks old */
 html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after,
