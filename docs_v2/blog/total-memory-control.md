@@ -8,7 +8,7 @@ date: 2026-08
 
 # The ref behind the getter
 
-![The ref behind the getter](/blog/the-ref-behind-the-getter.png)
+![The ref behind the getter](/blog/total-memory-control.png)
 
 <BlogPostDate />
 
