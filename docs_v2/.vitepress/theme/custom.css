@@ -3062,21 +3062,7 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   initial-value: 0deg;
   inherits: false;
 }
-@property --avatar-ring-fill {
-  syntax: '<angle>';
-  initial-value: 360deg;
-  inherits: false;
-}
-/* the loader: the ring ACCUMULATES clockwise from the top */
-@keyframes avatar-ring-load {
-  from {
-    --avatar-ring-fill: 0deg;
-  }
-  to {
-    --avatar-ring-fill: 360deg;
-  }
-}
-/* after the fill: a soft glint orbits the band forever */
+/* a soft glint orbits the band forever */
 @keyframes avatar-ring-idle {
   from {
     --avatar-ring-angle: 0deg;
@@ -3092,40 +3078,24 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   border-radius: 50%;
   object-fit: cover;
   object-position: 50% 42%;
-  /* the ivue gradient ring, drawn like a loader: on load the band
-     accumulates clockwise from 12 o'clock (a bg-colored conic CUT
-     layer retreats ahead of the static gradient), then a soft glint
-     orbits the finished ring. Registered-@property angles drive both;
-     browsers without @property show the complete static ring. SPA
-     navigations don't replay CSS animations, so theme/index.ts
-     restarts them on every route visit. */
-  border: 3px solid transparent;
-  /* a half-transparent white rim sits between the photo and the ring:
-     the 2px padding gap is painted frosted white over the ring layers */
-  padding: 2px;
+  /* the ivue gradient ring: static gradient band, with a soft glint
+     orbiting it forever (a registered-@property conic angle). Browsers
+     without @property show the static ring. */
+  border: 4px solid transparent;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.55))
-      padding-box,
-    conic-gradient(
-        from -90deg,
-        rgba(255, 255, 255, 0) 0deg var(--avatar-ring-fill),
-        var(--vp-c-bg) var(--avatar-ring-fill) 360deg
-      )
-      border-box,
+    linear-gradient(var(--vp-c-bg), var(--vp-c-bg)) padding-box,
     conic-gradient(
         from var(--avatar-ring-angle),
         rgba(255, 255, 255, 0) 0deg,
-        rgba(165, 243, 252, 0.5) 26deg,
-        rgba(255, 255, 255, 0.8) 40deg,
-        rgba(165, 243, 252, 0.5) 54deg,
-        rgba(255, 255, 255, 0) 78deg,
+        rgba(165, 243, 252, 0.45) 45deg,
+        rgba(255, 255, 255, 0.85) 72deg,
+        rgba(165, 243, 252, 0.45) 100deg,
+        rgba(255, 255, 255, 0) 145deg,
         rgba(255, 255, 255, 0) 360deg
       )
       border-box,
     linear-gradient(120deg, #6366f1, #2dd4bf 55%, #34d399) border-box;
-  animation:
-    avatar-ring-load 1.5s cubic-bezier(0.45, 0.05, 0.3, 1) 0.25s both,
-    avatar-ring-idle 7s linear 2s infinite;
+  animation: avatar-ring-idle 12s linear infinite;
   box-shadow:
     0 4px 14px rgba(5, 10, 25, 0.18),
     0 0 18px rgba(45, 212, 191, 0.22);

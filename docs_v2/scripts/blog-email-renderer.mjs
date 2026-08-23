@@ -269,7 +269,12 @@ function authorCard() {
     `<div style="margin:22px 0 0;padding:16px 18px;background:${CARD_BG};border:1px solid ${EDGE};border-radius:12px">` +
     `<table role="presentation" style="border-collapse:collapse"><tr>` +
     `<td style="vertical-align:top;padding:2px 14px 0 0">` +
-    `<img src="${SITE}/avatars/evgeny.png" alt="Evgeny Kalashnikov" width="54" height="54" style="display:block;border-radius:50%;border:0" />` +
+    // the site's avatar ring, email-safe: static gradient (no
+    // animation survives email clients), solid-teal fallback where
+    // gradients are stripped
+    `<div style="width:54px;height:54px;padding:4px;border-radius:50%;background-color:#2dd4bf;background-image:linear-gradient(120deg,#6366f1,#2dd4bf 55%,#34d399)">` +
+    `<img src="${SITE}/avatars/evgeny-avatar.jpg" alt="Evgeny Kalashnikov" width="54" height="54" style="display:block;border-radius:50%;border:0" />` +
+    `</div>` +
     `</td>` +
     `<td style="vertical-align:top">` +
     `<div style="font-size:10.5px;letter-spacing:.12em;color:${MUTED};margin:0 0 3px">AUTHOR</div>` +
