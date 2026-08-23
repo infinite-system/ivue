@@ -53,19 +53,19 @@ export default {
         h(BlogShare, { placement: 'aside' }),
         h(NewsletterSignup, { placement: 'aside' }),
       ],
-      // Post-page order runs engagement-first, departure-last: share/
-      // join/author/prev-next/comments belong to THIS page; the related
-      // grid opens the departure zone (a reader who leaves via a
-      // related card never scrolls back), then the archive rail and
-      // newsletter close it. On guide pages the blog-only components
-      // render nothing, so related still lands right after share.
+      // Post-page order: author → prev/next → related → comments →
+      // archive → newsletter. Related sits above comments now that its
+      // mobile form is compact rows; comment threads grow unboundedly,
+      // so the curated links stay above the fold of that growth. On
+      // guide pages the blog-only components render nothing, so
+      // related still lands right after share.
       'doc-after': () => [
         h(BlogShare, { placement: 'doc' }),
         h(NewsletterQuickJoin, { placement: 'post-footer', align: 'center' }),
         h(BlogAuthor),
         h(BlogPostNav),
-        h(BlogComments),
         h(RelatedPosts, { variant: 'doc' }),
+        h(BlogComments),
         h(BlogArchiveScroller),
         h(NewsletterSignup, { placement: 'doc' }),
         h(NewsletterSignup, { placement: 'cta' }),
