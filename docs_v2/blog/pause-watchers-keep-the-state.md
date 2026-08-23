@@ -8,7 +8,7 @@ date: 2026-08
 
 # Silence without forgetting
 
-![Silence without forgetting](/blog/silence-without-forgetting.png)
+![Silence without forgetting](/blog/pause-watchers-keep-the-state.png)
 
 <BlogPostDate />
 

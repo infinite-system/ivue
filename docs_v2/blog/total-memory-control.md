@@ -2,7 +2,7 @@
 title: 'Total memory control'
 description: "In Vue, a ref exists the moment its line runs — name and storage are the same thing. Put the ref behind a getter and they separate: existence itself becomes a managed resource. One indirection, and memory has an API."
 tags: [memory, philosophy]
-relatedPosts: [twenty-million-cells, silence-without-forgetting, disposal-is-a-reset, one-kilobyte-feature, the-thinnest-possible-layer]
+relatedPosts: [twenty-million-cells, pause-watchers-keep-the-state, disposal-is-a-reset, one-kilobyte-feature, the-thinnest-possible-layer]
 date: 2026-08
 ---
 
@@ -107,7 +107,7 @@ ever since, each one looking like a separate capability:
   may install, so [disposal deletes exactly what it created](/blog/disposal-is-a-reset),
   at every level of the inheritance chain. Third.
 - **Suspend/resume exists** — silencing and forgetting
-  [separate into two acts](/blog/silence-without-forgetting) because
+  [separate into two acts](/blog/pause-watchers-keep-the-state) because
   storage was never welded to subscriptions. Fourth.
 
 Four capabilities, one cause. That is what it means to find a real
