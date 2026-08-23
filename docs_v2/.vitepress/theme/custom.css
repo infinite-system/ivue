@@ -3043,6 +3043,28 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   letter-spacing: -0.025em;
   line-height: 1.2;
 }
+
+@property --avatar-ring-angle {
+  syntax: '<angle>';
+  initial-value: 120deg;
+  inherits: false;
+}
+@keyframes avatar-ring-arrive {
+  from {
+    --avatar-ring-angle: -600deg;
+  }
+  to {
+    --avatar-ring-angle: 120deg;
+  }
+}
+@keyframes avatar-ring-idle {
+  from {
+    --avatar-ring-angle: 120deg;
+  }
+  to {
+    --avatar-ring-angle: 480deg;
+  }
+}
 .VPDoc .cm-avatar {
   flex: none;
   width: 76px;
@@ -3051,11 +3073,26 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   object-fit: cover;
   object-position: 50% 42%;
   /* the ivue gradient ring: a transparent border painted by a
-     border-box gradient under a padding-box photo surface */
+     border-box CONIC gradient under a padding-box photo surface. The
+     angle is a registered custom property, so the ring spins while
+     the photo stands still: a fast decelerating sweep on load, then
+     a slow ambient rotation forever. Browsers without @property show
+     the static ring. */
   border: 3px solid transparent;
   background:
     linear-gradient(var(--vp-c-bg), var(--vp-c-bg)) padding-box,
-    linear-gradient(120deg, #6366f1, #2dd4bf 55%, #34d399) border-box;
+    conic-gradient(
+        from var(--avatar-ring-angle),
+        #6366f1,
+        #2dd4bf 40%,
+        #34d399 55%,
+        #818cf8 78%,
+        #6366f1
+      )
+      border-box;
+  animation:
+    avatar-ring-arrive 1.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both,
+    avatar-ring-idle 16s linear 2.2s infinite;
   box-shadow:
     0 4px 14px rgba(5, 10, 25, 0.18),
     0 0 18px rgba(45, 212, 191, 0.22);
