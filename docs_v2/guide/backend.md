@@ -223,4 +223,8 @@ database-layer cousins (incremental view maintenance, realtime sync
 platforms) sell the same invariant as infrastructure, at infrastructure
 cost. ivue occupies the unclaimed middle: **class-grammar signals for
 server domain models, with the lifecycle discipline already worked out,
-on the fastest signal core in the JavaScript ecosystem.**
+on the fastest signal core in the JavaScript ecosystem** — Vue 3.6's
+reactivity, rewritten on [alien
+signals](https://github.com/stackblitz/alien-signals), which ivue rides
+unchanged ([196/196 tests on the 3.6 release candidate, first tracked
+reads ~1.6× faster](/blog/the-stack-got-faster)).
