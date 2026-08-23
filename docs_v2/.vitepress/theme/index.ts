@@ -63,6 +63,9 @@ export default {
         h(NewsletterSignup, { placement: 'doc' }),
         h(NewsletterSignup, { placement: 'cta' }),
       ],
+      // mobile menu: the quick-join rides below the social links
+      'nav-screen-content-after': () =>
+        h(NewsletterQuickJoin, { placement: 'mobile-menu', align: 'center' }),
       'layout-bottom': () => h(NewsletterSignup, { placement: 'toast' }),
     });
   },

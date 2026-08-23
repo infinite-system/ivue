@@ -3144,3 +3144,15 @@ a.feature-inline-link:active {
 html.local-nav-hidden .VPLocalNav {
   transform: translateY(-100%);
 }
+
+/* mobile menu: the quick-join sits below the social links, separated */
+.VPNavScreen .quickjoin {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--vp-c-divider);
+  justify-content: center;
+}
+.VPNavScreen .quickjoin__lead {
+  flex-basis: 100%;
+  text-align: center;
+}
