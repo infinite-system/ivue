@@ -25,6 +25,7 @@ import BlogPostDate from './components/BlogPostDate.vue';
 import NewsletterSignup from './components/NewsletterSignup.vue';
 import NewsletterQuickJoin from './components/NewsletterQuickJoin.vue';
 import BlogComments from './components/BlogComments.vue';
+import RelatedPosts from './components/RelatedPosts.vue';
 import BlogArchiveScroller from './components/BlogArchiveScroller.vue';
 import BlogBackLink from './components/BlogBackLink.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
@@ -47,10 +48,12 @@ export default {
       // aside disappears, so a second share row renders after the article.
       'doc-before': () => h(BlogBackLink),
       'aside-outline-after': () => [
+        h(RelatedPosts, { variant: 'aside' }),
         h(BlogShare, { placement: 'aside' }),
         h(NewsletterSignup, { placement: 'aside' }),
       ],
       'doc-after': () => [
+        h(RelatedPosts, { variant: 'doc' }),
         h(BlogShare, { placement: 'doc' }),
         h(NewsletterQuickJoin, { placement: 'post-footer', align: 'center' }),
         h(BlogAuthor),

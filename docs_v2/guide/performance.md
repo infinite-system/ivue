@@ -1,6 +1,7 @@
 ---
 title: Performance by Design
 description: The honest numbers. ivue creates instances 6–132× faster, holds live instances at up to 5× less heap, reads 3–18× faster than proxy-wrapped objects, and hoists hot paths to native speed.
+relatedPosts: [measured-not-promised, one-kilobyte-feature, twenty-million-cells]
 ---
 
 # Performance by Design

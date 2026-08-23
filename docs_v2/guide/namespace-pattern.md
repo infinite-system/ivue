@@ -1,6 +1,7 @@
 ---
 title: Namespace Pattern
 description: A capability needs one canonical object, one mutable class slot, and late dependency reads — the invariant beneath Reactive() and Static(), from ivue's canonical form down to the smallest wrapper-less shape and out to Node capability classes.
+relatedPosts: [module-level-state, bulletproof-class-modules, circular-imports-dissolved]
 ---
 
 # Namespace Pattern

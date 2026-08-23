@@ -1,6 +1,7 @@
 ---
 title: 'Example: Counter'
 description: 'Your first ivue class — one ref, a plain-getter derivation, two methods — running live, with the exact playground source on the page.'
+relatedPosts: [introducing-ivue, the-whole-story-in-small-words]
 ---
 
 <script setup>

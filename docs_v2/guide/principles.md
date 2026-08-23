@@ -1,6 +1,7 @@
 ---
 title: Fundamental Principles
 description: The eight guarantees behind ivue — plain instances, lazy cached state, plain derived getters, surgical computed(), composable modules, native inheritance, and scoped teardown.
+relatedPosts: [the-object-should-tell-the-truth, computed-is-a-cache, one-kilobyte-feature]
 ---
 
 # Fundamental Principles

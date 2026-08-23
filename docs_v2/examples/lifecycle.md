@@ -1,6 +1,7 @@
 ---
 title: 'Example: $watch & $stopEffects'
 description: 'An instance-scoped watcher started, stopped and disposed by hand — the lifecycle surface for instances that outlive components, driven live.'
+relatedPosts: [rented-objects, reactivity-is-an-allocator]
 ---
 
 <script setup>

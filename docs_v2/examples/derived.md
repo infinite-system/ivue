@@ -1,6 +1,7 @@
 ---
 title: 'Example: Plain getter vs computed()'
 description: 'The same derivation both ways — a plain getter that re-derives per render and a memoized computed() — with live run counters proving whose body runs when.'
+relatedPosts: [computed-is-a-cache, the-object-should-tell-the-truth]
 ---
 
 <script setup>

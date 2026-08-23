@@ -1,6 +1,7 @@
 ---
 title: Components & Templates
 description: The settled standard — raw instance in setup, one grouped state destructure (refs, computeds, element refs), state bindings and dotted behavior in templates, and every unwrapping surface typed through Instance.
+relatedPosts: [the-options-api-everyone-wanted, organs-not-skeletons, rented-objects]
 ---
 
 # Components & Templates

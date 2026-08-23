@@ -2,6 +2,7 @@
 title: Node Development by Restart
 description: The namespace pattern makes class modules load coherently; an existing Node watcher can own code replacement without a second runtime for hot code swapping.
 search: false
+relatedPosts: [what-javascript-becomes, circular-imports-dissolved]
 ---
 
 # Node Development by Restart

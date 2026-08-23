@@ -1,6 +1,7 @@
 ---
 title: Computed Seed Pattern
 description: A ref-getter whose initial value is derived through the instance's own logic — lazy, inheritance-aware, and valid from the first read. State born obeying its contract.
+relatedPosts: [patterns-the-author-never-wrote]
 ---
 
 # Computed Seed Pattern — state born valid

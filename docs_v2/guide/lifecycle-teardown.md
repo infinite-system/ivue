@@ -1,6 +1,7 @@
 ---
 title: Lifecycle & Teardown
 description: The constructor runs wherever you `new` — in setup that means plain watch(), onMounted and the whole lifecycle toolbox register against the component. For instances that outlive components, $watch and $stopEffects give deterministic teardown.
+relatedPosts: [rented-objects, reactivity-is-an-allocator, organs-not-skeletons]
 ---
 
 # Lifecycle & Teardown

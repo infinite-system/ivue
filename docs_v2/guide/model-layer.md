@@ -1,6 +1,7 @@
 ---
 title: ivue vs the World
 description: 'Vue has state solutions at two scales — component-scoped composables and singleton stores. ivue adds the missing third: a domain model of thousands of live entities inside Vue reactivity, at plain-object prices.'
+relatedPosts: [reactive-is-all-you-need, vscode-hand-rolled-decade, the-object-graph-they-took]
 ---
 
 # ivue vs the World

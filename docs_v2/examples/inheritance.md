@@ -1,6 +1,7 @@
 ---
 title: 'Example: Inheritance chain'
 description: 'Two three-level inheritance chains: zero-allocation plain getters and same-name computeds that coexist through super.total.value.'
+relatedPosts: [inheritance-exile]
 ---
 
 <script setup>

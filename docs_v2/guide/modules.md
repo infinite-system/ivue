@@ -1,6 +1,7 @@
 ---
 title: Modules & Imports
 description: The namespace pattern is the standard way to export ivue classes. It gives cross-file hierarchies a fixed raw foundation, a replaceable runtime class, and circular cross-references that resolve at first access.
+relatedPosts: [circular-imports-dissolved, initialization-order-solved, module-level-state]
 ---
 
 # Modules & Imports

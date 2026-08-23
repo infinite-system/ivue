@@ -3,6 +3,7 @@ title: 'Example: Flyweight grid — 20,000,000 cells'
 description: 'Columnar ground truth in typed arrays, disposable cell facades per render, a sparse reactive overlay that materializes per observation — 20M cells at 4.7 bytes each.'
 aside: false
 pageClass: benchmarks-wide examples-page
+relatedPosts: [twenty-million-cells, measured-not-promised]
 ---
 
 # Flyweight grid: 20,000,000 cells

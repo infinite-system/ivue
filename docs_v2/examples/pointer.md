@@ -1,6 +1,7 @@
 ---
 title: 'Example: Composable in a class'
 description: 'useMouse hosted privately inside a class through a $-getter — consumers destructure two refs and never see the composable.'
+relatedPosts: [organs-not-skeletons]
 ---
 
 <script setup>

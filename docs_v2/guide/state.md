@@ -1,6 +1,7 @@
 ---
 title: Reactive State
 description: Declare state as ref-getters, derive with plain getters, memoize surgically with computed(). Covers writable computeds, stable bound methods, $-singletons, and private fields.
+relatedPosts: [the-object-should-tell-the-truth, computed-is-a-cache, this-method-era]
 ---
 
 # Reactive State

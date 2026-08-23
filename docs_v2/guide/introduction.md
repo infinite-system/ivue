@@ -1,6 +1,7 @@
 ---
 title: What is ivue?
 description: 'ivue builds Vue 3 reactivity from plain TypeScript classes. One kilobyte, zero dependencies, native inheritance. Meet Reactive(), the ivue engine.'
+relatedPosts: [introducing-ivue, the-whole-story-in-small-words, one-kilobyte-feature]
 ---
 
 # What is ivue?

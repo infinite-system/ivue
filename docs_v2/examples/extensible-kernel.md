@@ -3,6 +3,7 @@ title: 'Example: Extensible Kernel'
 description: 'Construction binds to a namespaced class key. Sticky Plugin and Activity Plugin extend notifications through a small registry; sealing preserves super chains, reactive getters, and child inheritance with zero lookup at the call site.'
 aside: false
 pageClass: benchmarks-wide examples-page
+relatedPosts: [most-linted-superpower, bulletproof-class-modules, inheritance-exile]
 ---
 
 <script setup>

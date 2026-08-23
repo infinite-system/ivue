@@ -1,6 +1,7 @@
 ---
 title: Computed & Watch
 description: Plain getters derive reactively with zero per-instance cost; computed() is the surgical opt-in. Plus this.$watch, the scoped watcher with clean teardown.
+relatedPosts: [computed-is-a-cache, the-object-should-tell-the-truth]
 ---
 
 # Computed & Watch

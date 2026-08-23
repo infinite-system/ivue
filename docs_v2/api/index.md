@@ -1,6 +1,7 @@
 ---
 title: API Reference
 description: The complete public surface — runtime functions plus the class, component, and utility types that support them.
+relatedPosts: [one-kilobyte-feature]
 ---
 
 # API Reference

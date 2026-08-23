@@ -1,6 +1,7 @@
 ---
 title: Backend ivue
 description: ivue on servers — reactive domain models, structurally correct caches, live queries over SSE/WebSocket, and config that propagates instead of restarting. No DOM, no renderer, same classes.
+relatedPosts: [reactivity-is-an-allocator, what-becomes-buildable, module-level-state]
 ---
 
 # Backend ivue — the same invariant on a server

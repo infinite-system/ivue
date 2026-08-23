@@ -3,6 +3,7 @@ title: 'Example: Workspace Platform'
 description: 'A ClickUp-scale interactive workspace built from ivue domain classes: list and board views, filtering, workload, task editing, comments, and activity over one coherent graph.'
 aside: false
 pageClass: benchmarks-wide examples-page
+relatedPosts: [the-object-graph-they-took, what-becomes-buildable, reactive-is-all-you-need]
 ---
 
 <script setup>

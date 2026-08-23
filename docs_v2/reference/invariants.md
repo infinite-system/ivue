@@ -2,6 +2,7 @@
 title: The Invariants Behind ivue
 description: The structural specification of the Reactive() engine — every guarantee, why it holds, and what it makes impossible.
 outline: [2, 3]
+relatedPosts: [the-field-not-the-rules, win-by-reduction, uniformity-is-a-measuring-device]
 ---
 
 # The Invariants Behind ivue

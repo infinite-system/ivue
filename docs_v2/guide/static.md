@@ -1,6 +1,7 @@
 ---
 title: Static() — Capability Classes
 description: The static-side sibling of Reactive(), from ivue/extras — stateless capability classes behind a replaceable namespace slot, with lazily-bound methods and $-cached static getters, order-correct per receiver.
+relatedPosts: [module-level-state, discovered-not-invented, the-test-is-a-subclass]
 ---
 
 # `Static()` — Capability Classes

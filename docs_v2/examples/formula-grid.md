@@ -3,6 +3,7 @@ title: 'Example: Formula grid'
 description: 'Real Excel-syntax formulas over a virtualized sheet — one shared parser, one computed per cell, the dependency graph discovered by Vue.'
 aside: false
 pageClass: benchmarks-wide examples-page
+relatedPosts: [twenty-million-cells, computed-is-a-cache, measured-not-promised]
 ---
 
 # Formula grid: real formulas, live

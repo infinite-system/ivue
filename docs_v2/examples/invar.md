@@ -2,6 +2,7 @@
 title: 'Invar — a terminal IDE built on ivue'
 description: 'ivue at full scale: a complete terminal IDE — editor, workspace search, tasks, terminals, agents — running on ivue classes in a Bun process with no DOM. 94,054 source lines, 345 classes, 35 invariant contracts, zero import cycles.'
 pageClass: examples-page
+relatedPosts: [introducing-invar, agents-built-an-editor, the-zeros-didnt-move]
 ---
 
 # Invar — a terminal IDE built on ivue

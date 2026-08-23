@@ -1,6 +1,7 @@
 ---
 title: Keyed Version Signals
 description: The third state shape — sparse, unbounded, keyed by ids or coordinates unknown until runtime. Collections of reactive primitives as plain values, priced by observation - reads materialize, writes to the unobserved cost nothing.
+relatedPosts: [reactivity-is-an-allocator, twenty-million-cells, patterns-the-author-never-wrote]
 ---
 
 # Keyed Version Signals — reactivity priced per key

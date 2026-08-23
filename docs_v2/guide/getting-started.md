@@ -1,6 +1,7 @@
 ---
 title: Getting Started
 description: Install ivue, give your AI the standard, confirm the production-parity development setup, write a reactive class, use it in a Vue component, and see the result.
+relatedPosts: [introducing-ivue, reactive-framework-for-the-ai-era, the-whole-story-in-small-words]
 ---
 
 # Getting Started

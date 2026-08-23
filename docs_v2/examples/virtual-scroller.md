@@ -3,6 +3,7 @@ title: 'Example: Virtual Scroller on Lenis'
 description: 'Production-extracted 1,000,000-row virtual scroller driven by a customized Lenis — scroll math and momentum feel intact, full source on the page.'
 aside: false
 pageClass: benchmarks-wide examples-page
+relatedPosts: [a-million-rows-twelve-divs]
 ---
 
 <script setup>

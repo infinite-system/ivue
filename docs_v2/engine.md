@@ -1,6 +1,7 @@
 ---
 title: The Engine
 description: Vue's reactivity engine can track a derived value without allocating a separate derivation node — computed() is a cache annotation, not the derivation primitive. The class shape exposes what was always there.
+relatedPosts: [computed-is-a-cache, discovered-not-invented, introducing-ivue]
 ---
 
 # The Engine

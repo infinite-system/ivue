@@ -3,6 +3,7 @@ title: Interactive Benchmarks
 aside: false
 pageClass: benchmarks-wide
 description: 'Five live, in-browser benchmarks — a 100k/1M-cell grid built three ways, a spreadsheet with real Excel formulas, the 20,000,000-cell flyweight grid, and the creation/method primitives — all running the shipped engine.'
+relatedPosts: [measured-not-promised, twenty-million-cells, a-million-rows-twelve-divs]
 ---
 
 # Interactive Benchmarks

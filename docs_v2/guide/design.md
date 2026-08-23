@@ -1,6 +1,7 @@
 ---
 title: Design & Philosophy
 description: The hard problems ivue solves — cheap instantiation, cheap bound methods, reactive inheritance, production-parity development, circular imports, and writable-getter types — and why solving them together is the achievement.
+relatedPosts: [the-object-graph-they-took, the-options-api-everyone-wanted, win-by-reduction]
 ---
 
 # Design & Philosophy

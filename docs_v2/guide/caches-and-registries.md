@@ -1,6 +1,7 @@
 ---
 title: Caches, Registries & self
 description: Where a class's static values live — per-receiver $-caches, shared static-field registries, LazyShared cells for cross-module construction — and how instance code reads them through self.
+relatedPosts: [module-level-state, the-test-is-a-subclass, initialization-order-solved]
 ---
 
 # Caches, Registries & `self`
