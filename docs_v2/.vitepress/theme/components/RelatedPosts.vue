@@ -152,13 +152,9 @@ watch(
   padding: 6px 0;
   text-decoration: none;
 }
-.related-posts--aside .related-posts__thumb {
-  margin-top: 2px; /* optical alignment with the title's cap height */
-}
-/* single-line titles ride too high next to the 40px thumb — nudge the
-   text block down so title and image read as one row */
-.related-posts--aside .related-posts__body {
-  padding-top: 3px;
+/* sidebar rows: title centers on the thumb's vertical middle */
+.related-posts--aside .related-posts__item {
+  align-items: center;
 }
 .related-posts__thumb {
   flex: none;
