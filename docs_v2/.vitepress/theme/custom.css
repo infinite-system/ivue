@@ -1144,11 +1144,11 @@ a.feature-inline-link {
 /* Edit this page: the ordinary link blue — it's plumbing, not a call
    to action, so it shouldn't stand out from every other link */
 .VPDocFooter .edit-link-button {
-  color: var(--ivue-link-accent) !important;
+  color: var(--ivue-link-2) !important; /* the prose-link family's darker stop */
   transition: color 0.25s ease;
 }
 .VPDocFooter .edit-link-button:hover {
-  color: color-mix(in srgb, var(--ivue-link-accent) 78%, var(--vp-c-text-1)) !important;
+  color: var(--ivue-link-hover-2) !important;
 }
 /* …hover = the monotonic highlight family */
 .vp-doc :is(p, li, td) > a:not([class]):not(:has(code)):hover,
