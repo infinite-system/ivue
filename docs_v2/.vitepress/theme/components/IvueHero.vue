@@ -61,23 +61,11 @@ class $Typewriter {
   }
 
   start() {
-    // iOS: no typing at all — the finished headline is already
-    // rendered (SSR default); leave it and do zero timer work
-    if (this.settlesAfterFirstLine) return;
     this.finaleText.value = '';
     this.timer = setTimeout(() => this.typeFinale(), this.fallLeadMs);
   }
   stop() {
     if (this.timer) clearTimeout(this.timer);
-  }
-
-  // iOS Safari pays real paint cost for the endless cycle (and it
-  // competes with the nav-screen open) — type the first line, stop.
-  get settlesAfterFirstLine() {
-    return (
-      typeof CSS !== 'undefined' &&
-      CSS.supports('-webkit-touch-callout', 'none')
-    );
   }
 
   typeFinale() {
@@ -86,7 +74,7 @@ class $Typewriter {
     if (current.length < target.length) {
       this.finaleText.value = target.slice(0, current.length + 1);
       this.timer = setTimeout(() => this.typeFinale(), this.typeDelayMs);
-    } else if (!this.settlesAfterFirstLine) {
+    } else {
       this.timer = setTimeout(() => this.deleteFinale(), this.holdMs);
     }
   }

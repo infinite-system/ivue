@@ -328,3 +328,29 @@ push-tags step. The USER runs it — same rule as `git push` and
 file (`releases/ivue@X.Y.Z.md`), bumps `package.json`, verifies tests
 + gzip size, commits, syncs dates, deploys the docs; the user pushes,
 publishes to npm, and runs the `gh release create`.
+
+## filter: blur() on large elements is an iOS Safari killer
+
+Symptom: opening the mobile menu on the HOME page felt heavy on
+iPhone Safari — guide/blog/community pages were fine, and the menu is
+identical everywhere. Cause: the hero's two glow blobs carried
+`filter: blur(90px)`. iOS re-rasterizes a gaussian that size on every
+repaint of the region, and the menu opening over the hero forces
+exactly that repaint. Desktop Chromium (even at 6x CPU throttle)
+barely shows it — do NOT trust Chromium timings for iOS paint costs.
+
+Fix: delete the filter. The blobs were already radial gradients
+fading to transparent, so the blur was visually redundant. The rule
+going forward: soft glows are PRE-SOFTENED with gradients, never
+produced by `filter: blur()` on large boxes.
+
+Diagnostic method that found it (after animations, Turnstile,
+transitions, tap-delay and :has() were all falsified): binary-search
+by PAGE, not by feature — "which pages feel slow?" localized it to
+the one page, then the one above-the-fold section, then one property.
+Also learned along the way, all still true and kept: Turnstile defers
+to first form interaction (was mounting an iframe on page load AND
+inside the mobile menu); no `body:has(...)` rules (whole-document
+restyle every time the target mounts); `touch-action: manipulation`
+on tap targets; `content-visibility: auto` on below-fold home
+sections.

@@ -3528,33 +3528,10 @@ a.feature-inline-link:active {
   touch-action: manipulation;
 }
 
-/* iOS Safari (the only engine matching -webkit-touch-callout): the
-   hamburger morph and the menu fade jank on iPhones — open instantly
-   instead of animating */
-@supports (-webkit-touch-callout: none) {
-  .VPNavBarHamburger .container .top,
-  .VPNavBarHamburger .container .middle,
-  .VPNavBarHamburger .container .bottom,
-  .VPNavBarHamburger .container {
-    transition: none !important;
-  }
-  .VPNavScreen,
-  .VPNavScreen.fade-enter-active,
-  .VPNavScreen.fade-leave-active {
-    transition: none !important;
-  }
-  .VPNavScreen .VPNavScreenMenuGroup .items {
-    transition: none !important;
-  }
-  /* background-clip:text + animated background repaints the glyphs
-     every frame on iOS — hold the shine still there (static gradient),
-     and the caret's glowing blink goes with it: the hero is fully
-     static on iOS */
-  .ivh-title .shine,
-  .ivh-caret {
-    animation: none !important;
-  }
-}
+/* (The iOS animation kill-switches that lived here were chasing the
+   wrong suspect — the real menu-open jank was filter: blur(90px) on
+   the hero glow blobs. See LESSONS.md: "filter: blur on large
+   elements". All animations are back to full everywhere.) */
 
 /* NOTE: no body:has(.VPNavScreen) rules here — :has() on body makes
    Safari restyle the whole document the moment the menu mounts, which
