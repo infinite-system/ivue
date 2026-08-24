@@ -2222,7 +2222,7 @@ a.feature-inline-link {
 .VPDocAsideOutline .outline-marker {
   background-color: var(--ivue-link-accent);
   /* re-center the leading-trimmed bar (see installOutlineMarkerSizer) */
-  margin-top: 3px;
+  margin-top: 0;
 }
 .VPDocAsideOutline .outline-link.active {
   color: var(--ivue-link-accent);
