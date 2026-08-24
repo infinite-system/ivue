@@ -137,6 +137,17 @@ watch(turnstileElement, (element) => {
   if (element) renderTurnstile();
 });
 
+// the token arrives async after render — a submit waits for it briefly
+// rather than racing it (the Worker fails closed on a missing token)
+async function awaitTurnstileToken(): Promise<string> {
+  if (!TURNSTILE_SITE_KEY) return '';
+  await renderTurnstile();
+  const deadline = Date.now() + 8000;
+  while (!turnstileToken.value && Date.now() < deadline)
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  return turnstileToken.value;
+}
+
 async function subscribe() {
   if (!email.value || state.value === 'sending') return;
   if (!NEWSLETTER_ENDPOINT) {
@@ -144,7 +155,8 @@ async function subscribe() {
     message.value = 'Signups open very soon — follow @evgenykalash on X meanwhile.';
     return;
   }
-  state.value = 'sending';
+  state.value = 'sending'; // guard double-submits through the token wait
+  await awaitTurnstileToken();
   try {
     const response = await fetch(`${NEWSLETTER_ENDPOINT}/subscribe`, {
       method: 'POST',

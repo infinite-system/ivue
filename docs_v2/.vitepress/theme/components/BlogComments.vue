@@ -286,13 +286,34 @@ async function renderTurnstile() {
 }
 
 watch(turnstileElement, (element) => {
-  if (element) renderTurnstile();
+  if (!element) return;
+  // the top-level form and the inline reply form are DIFFERENT
+  // elements — swapping forms must tear down the old widget or the
+  // new form never gets one (and submits token-less, which the
+  // Worker refuses)
+  if (turnstileWidgetId) {
+    (window as any).turnstile?.remove?.(turnstileWidgetId);
+    turnstileWidgetId = undefined;
+    turnstileToken.value = '';
+  }
+  renderTurnstile();
 });
+
+// render on demand and WAIT for the async token — never race it
+async function awaitTurnstileToken(): Promise<string> {
+  if (!TURNSTILE_SITE_KEY) return '';
+  await renderTurnstile();
+  const deadline = Date.now() + 8000;
+  while (!turnstileToken.value && Date.now() < deadline)
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  return turnstileToken.value;
+}
 
 async function submit() {
   if (!email.value || !body.value.trim() || state.value === 'sending') return;
   state.value = 'sending';
   const target = replyTo.value;
+  await awaitTurnstileToken();
   try {
     const response = await fetch(`${NEWSLETTER_ENDPOINT}/comment`, {
       method: 'POST',

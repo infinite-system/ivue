@@ -61,9 +61,23 @@ function ensureTurnstile() {
   if (!turnstileWidgetId) renderTurnstile();
 }
 
+// The token arrives ASYNC after the widget renders — a fast typist can
+// submit before the callback fires, and the Worker fails closed on a
+// missing token. So a submit renders on demand and WAITS (briefly) for
+// the token instead of racing it.
+async function awaitTurnstileToken(): Promise<string> {
+  if (!TURNSTILE_SITE_KEY) return '';
+  await renderTurnstile();
+  const deadline = Date.now() + 8000;
+  while (!turnstileToken.value && Date.now() < deadline)
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  return turnstileToken.value;
+}
+
 async function join() {
   if (!email.value || state.value === 'sending') return;
   state.value = 'sending';
+  await awaitTurnstileToken();
   try {
     const response = await fetch(`${NEWSLETTER_ENDPOINT}/subscribe`, {
       method: 'POST',
