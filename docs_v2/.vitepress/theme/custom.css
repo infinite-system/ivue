@@ -30,6 +30,9 @@
   /* card hover accents (borders + glows) follow the link family */
   --ivue-link-accent: #2563eb;
   --ivue-link-glow: rgba(37, 99, 235, 0.3);
+  /* the ONE hairline ink: header, sidebar groups, mobile menu rows.
+     Light needs more presence on white (0.5); dark runs 0.3. */
+  --ivue-hairline: color-mix(in srgb, var(--vp-c-gutter) 50%, transparent);
 
   --vp-c-tip-1: var(--vp-c-brand-1);
   --vp-c-tip-soft: var(--vp-c-brand-soft);
@@ -48,6 +51,7 @@
 }
 
 .dark {
+  --ivue-hairline: color-mix(in srgb, var(--vp-c-gutter) 30%, transparent);
   --ivue-link-1: #60a5fa;
   --ivue-link-2: #3b82f6;
   --ivue-link-3: #0ea5e9;
@@ -3457,33 +3461,32 @@ a.feature-inline-link:active {
    VitePress paints it two ways: a border on the bar and a divider-line
    element on docs pages; both get the same translucent ink. */
 .VPNavBar {
-  border-bottom-color: color-mix(
-    in srgb,
-    var(--vp-c-gutter) 30%,
-    transparent
-  ) !important;
+  border-bottom-color: var(--ivue-hairline) !important;
 }
 .VPNavBar .divider-line {
   /* !important: VitePress's scoped .divider-line[data-v-*] rule wins
      the cascade otherwise and keeps the line at full opacity */
-  background-color: color-mix(
-    in srgb,
-    var(--vp-c-gutter) 30%,
-    transparent
-  ) !important;
+  background-color: var(--ivue-hairline) !important;
 }
 /* the sub-nav bar (mobile "Menu / On this page") draws its own line */
 .VPLocalNav {
-  border-bottom-color: color-mix(
-    in srgb,
-    var(--vp-c-gutter) 30%,
-    transparent
-  ) !important;
+  border-bottom-color: var(--ivue-hairline) !important;
 }
 /* home page: the divider WRAPPER paints its own full-opacity line on
    scroll — silence it; the divider-line child carries the 0.3 ink */
 .VPNavBar .divider {
   background-color: transparent !important;
+}
+/* same hairline ink for the sidebar's group separators and the mobile
+   menu's row/group separators */
+.VPSidebar .group {
+  border-top-color: var(--ivue-hairline) !important;
+}
+.VPNavScreen .VPNavScreenMenuGroup {
+  border-bottom-color: var(--ivue-hairline) !important;
+}
+.VPNavScreen .VPNavScreenMenuLink {
+  border-bottom-color: var(--ivue-hairline) !important;
 }
 /* the hairline under the brand in the sidebar column — desktop only;
    on mobile the title lives inside the bar and its border would read
