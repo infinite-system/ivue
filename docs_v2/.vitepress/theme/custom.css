@@ -3429,8 +3429,8 @@ a.feature-inline-link:active {
    passes beneath it. */
 @media (max-width: 959px) {
   .VPNav {
-    border-bottom: 1px solid
-      color-mix(in srgb, var(--vp-c-gutter) 30%, transparent);
+    /* no own border — the navbar's divider-line already paints the
+       0.3-alpha hairline; a second border here doubles the ink */
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
 }
@@ -3456,6 +3456,19 @@ a.feature-inline-link:active {
 }
 /* the sub-nav bar (mobile "Menu / On this page") draws its own line */
 .VPLocalNav {
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--vp-c-gutter) 30%,
+    transparent
+  ) !important;
+}
+/* home page: the divider WRAPPER paints its own full-opacity line on
+   scroll — silence it; the divider-line child carries the 0.3 ink */
+.VPNavBar .divider {
+  background-color: transparent !important;
+}
+/* the hairline under the brand in the sidebar column */
+.VPNavBarTitle.has-sidebar .title {
   border-bottom-color: color-mix(
     in srgb,
     var(--vp-c-gutter) 30%,
