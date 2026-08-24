@@ -2223,6 +2223,8 @@ a.feature-inline-link {
    sync, see installOutlineMarkerSizer in theme/index.ts) ---------- */
 .VPDocAsideOutline .outline-marker {
   background-color: var(--ivue-link-accent);
+  /* re-center the leading-trimmed bar (see installOutlineMarkerSizer) */
+  margin-top: 5px;
 }
 .VPDocAsideOutline .outline-link.active {
   color: var(--ivue-link-accent);

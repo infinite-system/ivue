@@ -232,7 +232,10 @@ export default {
         const active = document.querySelector<HTMLElement>(
           '.VPDocAsideOutline .outline-link.active',
         );
-        if (marker && active) marker.style.height = `${active.offsetHeight}px`;
+        // offsetHeight includes the line box's leading — trim it so the
+        // bar hugs the text (a 5px margin-top in CSS re-centers it)
+        if (marker && active)
+          marker.style.height = `${active.offsetHeight - 10}px`;
       };
       let outlineMarkerObserver: MutationObserver | null = null;
       const watchOutlineMarker = () => {
