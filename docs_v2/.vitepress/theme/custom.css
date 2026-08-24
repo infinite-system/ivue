@@ -3550,7 +3550,7 @@ a.feature-inline-link:active {
 }
 .VPLocalNavOutlineDropdown .outline-link {
   display: block;
-  padding: 4px 12px 4px 16px;
+  padding: 4px 12px 4px 9px;
   line-height: 1.55; /* theme default is 32px — rows were twice the height */
   border-radius: 5px; /* tighter than the panel's own 12px */
   transition:
