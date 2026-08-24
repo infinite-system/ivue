@@ -191,8 +191,6 @@ function formatDate(date: string): string {
 }
 .related-posts__item:hover .related-posts__title {
   color: var(--ivue-link-2);
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .related-posts__item:hover .related-posts__thumb {
   border-color: var(--ivue-link-accent);
