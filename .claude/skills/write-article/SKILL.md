@@ -88,6 +88,28 @@ articles:
   `python3 .claude/skills/ste-expression/scripts/ste-lint.py <draft.md>`
   — delta signal, not a gate; under 2.0 is good.
 
+## Write for the first-time reader
+
+Every article is someone's FIRST contact with ivue — they arrived
+from HN, a search, or a shared link, and they will read this one
+article only. Write accordingly:
+
+- **Name ivue explicitly at first reference to our solution**, with
+  a one-line identity: "ivue, a 1.1 kB class layer over Vue's
+  reactivity" (vary the phrasing, keep the shape: name + what it is
+  + size). Never introduce our work as "the userland fix", "our
+  layer", "the engine", or "we solved this" before the name has
+  appeared — a stranger cannot resolve those references.
+- After the introduction, short references ("ivue", "the engine")
+  are free.
+- **Assume zero prior posts read.** A claim proven elsewhere gets
+  one plain sentence of restatement PLUS the link — the link is for
+  depth, never a prerequisite. If a sentence only makes sense to
+  someone who read another post, rewrite it.
+- The stranger test from the title doctrine applies to the BODY too:
+  scan the draft for any "we/our/the fix" whose antecedent lives in
+  another article or in our heads.
+
 ## Everything after the title
 
 - **Voice**: maker's confidence, measured-not-promised. Every

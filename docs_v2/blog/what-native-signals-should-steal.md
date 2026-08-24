@@ -26,11 +26,14 @@ also explicit about what it leaves out: effects, decorators, and
 reactive objects. How signals attach to the objects your app is made
 of stays framework territory.
 
-We have spent three years in exactly that territory. This month we
-put numbers on all of it. So here is the object layer's field report,
-written for the native-signals conversation. Three problems the graph
-alone does not solve. Three mechanisms that solve them in userland
-today. And what an engine could do with them that no library can.
+We have spent three years in exactly that territory, building
+[ivue](https://ivue.dev) — a 1.1 kB class layer over Vue's
+reactivity, where signals live behind the properties of plain
+classes. This month we put numbers on all of it. So here is the
+object layer's field report, written for the native-signals
+conversation. Three problems the graph alone does not solve. Three
+mechanisms that solve them in userland today. And what an engine
+could do with them that no library can.
 
 ## 1. Lazy existence — when does a cell get to exist?
 
@@ -41,8 +44,8 @@ Fifty signal-backed properties means fifty allocations per `new`.
 That cost structure is why people avoid modeling entities as
 instances today.
 
-The userland fix is [one indirection](/blog/total-memory-control).
-The property is a prototype getter. The cell materializes on first
+ivue's fix is [one indirection](/blog/total-memory-control). The
+property is a prototype getter. The cell materializes on first
 access, cached by the engine that owns the class. Existence becomes a
 managed axis: deferred by default, releasable, rebuildable.
 
