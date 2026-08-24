@@ -102,10 +102,17 @@ Live — this pad reads `{ x, y }` from a `Pointer` instance:
 
 <DemoPointer />
 
+The `$` prefix on `$mouse` is a naming signal: this getter returns a
+**cached container**. `useMouse()` runs exactly once per instance — on the
+first read of `this.$mouse` — and the engine caches the whole returned
+object for the instance's life. Every later read is a cache hit.
+
 `private` means what it always means: consumers of `Pointer` see `x` and
 `y`, never the composable. And because the destructure runs in `setup`, the
 composable materializes inside the component's scope — Vue owns its lifetime
-and removes `useMouse`'s listeners on unmount.
+and removes `useMouse`'s listeners on unmount. The full architecture — both
+directions, including who owns a composable's effects — lives in
+[Composables](/guide/composables).
 
 ## Where ivue fits
 

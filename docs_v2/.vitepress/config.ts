@@ -798,6 +798,7 @@ export default defineConfig({
           items: [
             { text: 'Reactive State', link: '/guide/state' },
             { text: 'Computed & Watch', link: '/guide/computed-watch' },
+            { text: 'Composables', link: '/guide/composables' },
             { text: 'Components & Templates', link: '/guide/components' },
             { text: 'Lifecycle & Teardown', link: '/guide/lifecycle-teardown' },
             { text: 'Modules & Imports', link: '/guide/modules' },
