@@ -132,9 +132,10 @@ watch(
   aspect-ratio: 1200 / 630;
   border-radius: 8px;
 }
-/* breathing room so title/date don't sit flush with the thumb edges */
+/* breathing room so the title doesn't sit flush with the thumb edges */
 .related-posts--doc .related-posts__body {
   padding: 0 8px 4px;
+  text-align: center;
 }
 .related-posts__heading {
   margin: 0 0 10px;
@@ -218,9 +219,11 @@ watch(
     gap: 10px;
     padding: 6px 0;
   }
-  /* row form: the thumb already offsets the text — no extra indent */
+  /* row form: the thumb already offsets the text — no extra indent,
+     and left alignment beside the thumb */
   .related-posts--doc .related-posts__body {
     padding: 0;
+    text-align: left;
   }
   .related-posts--doc .related-posts__thumb {
     width: 76px;
