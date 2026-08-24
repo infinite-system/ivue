@@ -251,7 +251,9 @@ onUnmounted(() => {
 .blob {
   position: absolute;
   border-radius: 999px;
-  filter: blur(90px);
+  /* NO filter: blur() here — the radial gradients below are already
+     soft-edged, and a 90px gaussian re-rasterizes on every repaint of
+     the hero (it was the iOS menu-open jank, home page only) */
 }
 .blob-a {
   width: 560px;
