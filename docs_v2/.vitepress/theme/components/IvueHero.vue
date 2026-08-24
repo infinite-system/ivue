@@ -61,6 +61,9 @@ class $Typewriter {
   }
 
   start() {
+    // iOS: no typing at all — the finished headline is already
+    // rendered (SSR default); leave it and do zero timer work
+    if (this.settlesAfterFirstLine) return;
     this.finaleText.value = '';
     this.timer = setTimeout(() => this.typeFinale(), this.fallLeadMs);
   }

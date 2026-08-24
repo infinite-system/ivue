@@ -2626,6 +2626,17 @@ html:not(.dark) .fw-embed .fw-sub {
   background-clip: text;
   color: transparent;
 }
+/* Mobile menu screen: same blue link family as the desktop nav —
+   VitePress's own hover/active rules there fall back to brand purple */
+.VPNavScreen .VPNavScreenMenuLink:hover,
+.VPNavScreen .VPNavScreenMenuLink.active,
+.VPNavScreen .VPNavScreenMenuGroupLink:hover,
+.VPNavScreen .VPNavScreenMenuGroupLink.active,
+.VPNavScreen .VPNavScreenMenuGroup .button:hover .title,
+.VPNavScreen .VPNavScreenMenuGroup.open .button .title {
+  color: var(--ivue-link-2) !important;
+}
+
 .VPNavScreenMenuLink[href='/guide/standard']::after {
   content: '\2605';
   position: relative;
@@ -3532,8 +3543,11 @@ a.feature-inline-link:active {
     transition: none !important;
   }
   /* background-clip:text + animated background repaints the glyphs
-     every frame on iOS — hold the shine still there (static gradient) */
-  .ivh-title .shine {
+     every frame on iOS — hold the shine still there (static gradient),
+     and the caret's glowing blink goes with it: the hero is fully
+     static on iOS */
+  .ivh-title .shine,
+  .ivh-caret {
     animation: none !important;
   }
 }
