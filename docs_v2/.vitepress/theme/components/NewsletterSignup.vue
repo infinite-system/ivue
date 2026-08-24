@@ -142,7 +142,10 @@ watch(turnstileElement, (element) => {
 async function awaitTurnstileToken(): Promise<string> {
   if (!TURNSTILE_SITE_KEY) return '';
   await renderTurnstile();
-  const deadline = Date.now() + 8000;
+  // 45s: when Cloudflare decides the widget needs INTERACTION, the
+  // visible checkbox appears and a human needs time to click it — the
+  // submit must outwait the challenge, not race it
+  const deadline = Date.now() + 45_000;
   while (!turnstileToken.value && Date.now() < deadline)
     await new Promise((resolve) => setTimeout(resolve, 150));
   return turnstileToken.value;
