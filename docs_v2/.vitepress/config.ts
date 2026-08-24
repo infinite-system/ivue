@@ -654,20 +654,59 @@ export default defineConfig({
       {
         text: 'Guide',
         activeMatch: '^/(engine|guide/|api/)',
+        // mirrors the guide sidebar, section by section
         items: [
-          { text: 'What is ivue?', link: '/guide/introduction' },
-          { text: 'The Engine', link: '/engine' },
-          { text: 'Getting Started', link: '/guide/getting-started' },
-          { text: 'Design & Philosophy', link: '/guide/design' },
-          { text: 'Fundamental Principles', link: '/guide/principles' },
-          { text: 'Standard Operating Manual', link: '/guide/standard' },
           {
-            text: 'Sections',
+            text: 'Introduction',
             items: [
-              { text: 'Core — Reactive State', link: '/guide/state' },
-              { text: 'Performance — ivue vs the World', link: '/guide/model-layer' },
-              { text: 'Advanced Patterns — Namespace', link: '/guide/namespace-pattern' },
-              { text: 'Reference — API', link: '/api/' },
+              { text: 'What is ivue?', link: '/guide/introduction' },
+              { text: 'The Engine', link: '/engine' },
+              { text: 'Getting Started', link: '/guide/getting-started' },
+              { text: 'Design & Philosophy', link: '/guide/design' },
+              { text: 'Fundamental Principles', link: '/guide/principles' },
+              { text: 'Standard Operating Manual', link: '/guide/standard' },
+            ],
+          },
+          {
+            text: 'Core',
+            items: [
+              { text: 'Reactive State', link: '/guide/state' },
+              { text: 'Computed & Watch', link: '/guide/computed-watch' },
+              { text: 'Composables & Stores', link: '/guide/composables' },
+              { text: 'Components & Templates', link: '/guide/components' },
+              { text: 'Lifecycle & Teardown', link: '/guide/lifecycle-teardown' },
+              { text: 'Modules & Imports', link: '/guide/modules' },
+              { text: 'Inheritance & super', link: '/guide/inheritance' },
+              { text: 'Extensible Components', link: '/guide/extensible-components' },
+              { text: 'Development & HMR', link: '/guide/hmr' },
+            ],
+          },
+          {
+            text: 'Performance',
+            items: [
+              { text: 'ivue vs the World', link: '/guide/model-layer' },
+              { text: 'Performance by Design', link: '/guide/performance' },
+              { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
+            ],
+          },
+          {
+            text: 'Advanced Patterns',
+            items: [
+              { text: 'Namespace Pattern', link: '/guide/namespace-pattern' },
+              { text: 'Computed Seed Pattern', link: '/guide/computed-seed' },
+              { text: 'Keyed Version Signals', link: '/guide/keyed-version-signals' },
+              { text: 'Flyweight Pattern', link: '/guide/flyweight' },
+              { text: 'Static() — Capability Classes', link: '/guide/static' },
+              { text: 'Caches, Registries & self', link: '/guide/caches-and-registries' },
+              { text: 'Backend ivue', link: '/guide/backend' },
+            ],
+          },
+          {
+            text: 'Reference',
+            items: [
+              { text: 'API Reference', link: '/api/' },
+              { text: 'Invariants Behind ivue', link: '/reference/invariants' },
+              { text: 'Community', link: '/community' },
             ],
           },
         ],
