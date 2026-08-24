@@ -59,6 +59,35 @@ Bold factual claims are allowed and encouraged when literally true
 ("We changed nothing" was true: zero lines changed). Timidity is a
 title failure equal to vagueness.
 
+## Clarity is the second doctrine (after the title)
+
+The full rules live in the **ste-expression skill** (ASD-STE100,
+ported from Invar) — load it when drafting. What matters most for
+articles:
+
+- **Short, direct sentences.** One point per sentence, aim under 20
+  words. No semicolons — write two sentences. The maker's voice IS
+  short sentences; length is where confidence goes to die.
+- **Em-dash budget.** The house style permits them but they are our
+  top slop marker. One per paragraph at most; prefer a period.
+- **The short common word.** use (not utilize/leverage), start (not
+  initiate), help (not facilitate), about (not regarding). No
+  marketing adjectives — seamless, robust, elegant, world-class are
+  banned; the receipts do the boasting.
+- **The ten-year-old layer — required for every mechanism.** Every
+  benchmark table, every engine behavior, every memory claim gets a
+  version a ten-year-old could say back, next to the exact one ("the
+  cache reads fast, but it charges rent every time the value
+  changes"). This is a proof of comprehension, not dumbing down: if
+  you can't say it simply, you hold a description, not the generator
+  — reduce further before writing. The plain version is ADDED, never
+  substituted: exact numbers, paths, and names stay.
+- **One name for one thing**, across the whole article and its
+  related posts. A second name reads as a second thing.
+- **Lint the draft** before the banner step:
+  `python3 .claude/skills/ste-expression/scripts/ste-lint.py <draft.md>`
+  — delta signal, not a gate; under 2.0 is good.
+
 ## Everything after the title
 
 - **Voice**: maker's confidence, measured-not-promised. Every
