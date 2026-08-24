@@ -3435,13 +3435,6 @@ a.feature-inline-link:active {
   }
 }
 
-/* The Guide flyout mirrors the whole sidebar — on short viewports the
-   list must scroll instead of running off-screen */
-.VPNavBarMenu .VPFlyout .menu {
-  max-height: calc(100vh - 96px);
-  overflow-y: auto;
-}
-
 /* Header hairline at 0.3 alpha — softer separation from the page.
    VitePress paints it two ways: a border on the bar and a divider-line
    element on docs pages; both get the same translucent ink. */
