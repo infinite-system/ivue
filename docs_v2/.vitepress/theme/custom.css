@@ -2569,8 +2569,8 @@ html:not(.dark) .fw-embed .fw-sub {
   cursor: pointer;
 }
 .ix-link-preview.is-visible:hover {
-  border-color: var(--ivue-link-accent);
-  box-shadow: 0 12px 30px -18px var(--ivue-link-glow);
+  /* subtle: a half-strength accent tint on the border, nothing else */
+  border-color: color-mix(in srgb, var(--ivue-link-accent) 50%, transparent);
 }
 .dark .ix-link-preview {
   background: #0e1424;
