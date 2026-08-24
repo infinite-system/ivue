@@ -94,7 +94,13 @@ const {
               <div>{{ row.name }}</div>
               <div class="muted">{{ row.email }}</div>
             </td>
-            <td class="comment-body">{{ row.body }}</td>
+            <td class="comment-body">
+              <div v-if="model.isReply(row)" class="muted">
+                ↳ reply in thread #{{ row.rootId }}
+              </div>
+              <div v-if="row.locked" class="muted">🔒 thread locked</div>
+              {{ row.body }}
+            </td>
             <td>{{ Format.Class.dateTime(row.submittedAt) }}</td>
             <td class="list-actions">
               <button
@@ -104,6 +110,17 @@ const {
                 @click="model.approve(row)"
               >
                 Approve
+              </button>
+              <button
+                :disabled="model.isBusy(row.id)"
+                :title="
+                  row.locked
+                    ? 'Reopen this thread to replies'
+                    : 'Close this thread to new replies'
+                "
+                @click="model.toggleLock(row)"
+              >
+                {{ model.lockLabel(row) }}
               </button>
               <button
                 class="danger"

@@ -163,6 +163,13 @@ class $Api {
     return this.post('/admin/comments/delete', { id });
   }
 
+  static lockComment(
+    id: number,
+    locked: boolean,
+  ): Promise<{ ok: boolean; locked: boolean }> {
+    return this.post('/admin/comments/lock', { id, locked });
+  }
+
   static async previewHtml(slug: string): Promise<string> {
     const response = await this.fetchAuthorized(
       `/admin/preview?slug=${encodeURIComponent(slug)}`,
@@ -325,6 +332,10 @@ export interface CommentRow {
   body: string;
   submittedAt: number;
   status: 'pending' | 'approved';
+  parentId: number | null;
+  rootId: number | null;
+  locked: number;
+  avatarSeed: string;
 }
 
 export interface CommentPage {

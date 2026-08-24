@@ -282,4 +282,142 @@ describe('PublicApi', () => {
       timezone: 'Europe/Berlin',
     });
   });
+
+  // ---- threads: replies, following, unfollowing ----------------------
+
+  async function approvedThread(env: Env, context: ExecutionContext) {
+    await PublicApi.Class.comment(
+      postJson('/comment', {
+        slug: 'first-post',
+        name: 'Ada',
+        email: 'ada@ivue.dev',
+        body: 'The opening comment.',
+      }),
+      env,
+      context,
+    );
+    const page = await Comments.Class.page(env, {});
+    const rootId = page.rows[0].id;
+    await Comments.Class.approve(env, rootId);
+    return rootId;
+  }
+
+  it('comment: a reply carries its thread and lands pending like any other', async () => {
+    const env = makeTestEnv();
+    installFetchStub({});
+    const { context, settle } = makeTestContext();
+    const rootId = await approvedThread(env, context);
+
+    const reply = await PublicApi.Class.comment(
+      postJson('/comment', {
+        slug: 'first-post',
+        name: 'Bo',
+        email: 'bo@ivue.dev',
+        body: 'A reply.',
+        parentId: rootId,
+      }),
+      env,
+      context,
+    );
+    expect(reply.status).toBe(200);
+    await settle();
+
+    const pending = (await Comments.Class.page(env, { status: 'pending' }))
+      .rows[0];
+    expect(pending.parentId).toBe(rootId);
+    expect(pending.rootId).toBe(rootId);
+
+    // …and a reply into a locked thread is refused with a reader-facing reason
+    await Comments.Class.setLocked(env, rootId, true);
+    const refused = await PublicApi.Class.comment(
+      postJson('/comment', {
+        slug: 'first-post',
+        name: 'Cy',
+        email: 'cy@ivue.dev',
+        body: 'let me in',
+        parentId: rootId,
+      }),
+      env,
+      context,
+    );
+    expect(refused.status).toBe(400);
+    expect(await refused.json()).toEqual({
+      error: 'Replies are locked on this thread.',
+    });
+  });
+
+  it('comment-subscription reports following only with a valid thread token', async () => {
+    const env = makeTestEnv();
+    installFetchStub({});
+    const { context } = makeTestContext();
+    const rootId = await approvedThread(env, context);
+    const token = await Security.Class.threadToken(rootId, 'ada@ivue.dev', env);
+
+    const wrong = await PublicApi.Class.commentSubscription(
+      new URL(
+        `https://newsletter.test/comment-subscription?thread=${rootId}&email=ada@ivue.dev&token=nope`,
+      ),
+      env,
+    );
+    expect(wrong.status).toBe(403);
+
+    const right = await PublicApi.Class.commentSubscription(
+      new URL(
+        `https://newsletter.test/comment-subscription?thread=${rootId}&email=ada@ivue.dev&token=${token}`,
+      ),
+      env,
+    );
+    expect(await right.json()).toEqual({ thread: rootId, following: true });
+  });
+
+  it('comment-unsubscribe: GET reports, GET+confirm and POST remove', async () => {
+    const env = makeTestEnv();
+    installFetchStub({});
+    const { context } = makeTestContext();
+    const rootId = await approvedThread(env, context);
+    const token = await Security.Class.threadToken(rootId, 'ada@ivue.dev', env);
+    const query = `thread=${rootId}&email=ada@ivue.dev&token=${token}`;
+
+    // a mail scanner's prefetch must NOT unsubscribe — GET only reports
+    const report = await PublicApi.Class.commentUnsubscribe(
+      new Request(`https://newsletter.test/comment-unsubscribe?${query}`),
+      new URL(`https://newsletter.test/comment-unsubscribe?${query}`),
+      env,
+    );
+    expect(await report.text()).toContain('You follow this comment thread');
+    expect(await Comments.Class.subscribed(env, rootId, 'ada@ivue.dev')).toBe(
+      true,
+    );
+
+    // the site's in-page button
+    const removed = await PublicApi.Class.commentUnsubscribe(
+      postJson('/comment-unsubscribe', {
+        thread: rootId,
+        email: 'ada@ivue.dev',
+        token,
+      }),
+      new URL('https://newsletter.test/comment-unsubscribe'),
+      env,
+    );
+    expect(await removed.json()).toEqual({
+      ok: true,
+      following: false,
+      removed: true,
+    });
+    expect(await Comments.Class.subscribed(env, rootId, 'ada@ivue.dev')).toBe(
+      false,
+    );
+
+    // and a bad token gets nothing
+    const bad = await PublicApi.Class.commentUnsubscribe(
+      postJson('/comment-unsubscribe', {
+        thread: rootId,
+        email: 'ada@ivue.dev',
+        token: 'forged',
+      }),
+      new URL('https://newsletter.test/comment-unsubscribe'),
+      env,
+    );
+    expect(bad.status).toBe(403);
+  });
 });

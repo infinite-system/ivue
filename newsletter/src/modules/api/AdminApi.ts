@@ -52,6 +52,8 @@ class $AdminApi {
         return this.approveComment(request, env);
       case 'POST /admin/comments/delete':
         return this.deleteComment(request, env);
+      case 'POST /admin/comments/lock':
+        return this.lockComment(request, env);
       case 'GET /admin/posts':
         return this.posts(env);
       case 'GET /admin/preview':
@@ -269,11 +271,40 @@ class $AdminApi {
     return Http.Class.json(page);
   }
 
+  // Approval is the ONLY path onto the site — and therefore the only
+  // moment a reply notification may go out. Recipients are the parent
+  // author and anyone @mentioned, each only if they follow the thread
+  // (see Comments.replyRecipients); the thread starter is not on that
+  // list unless one of those makes them so.
   static async approveComment(request: Request, env: Env): Promise<Response> {
     const body = await Http.Class.readJsonBody<{ id: number }>(request);
-    const approved = await Comments.Class.approve(env, Number(body.id));
+    const id = Number(body.id);
+    const approved = await Comments.Class.approve(env, id);
     if (!approved) return Http.Class.json({ error: 'No such comment.' }, 404);
+    const reply = await Comments.Class.rowFor(env, id);
+    if (reply?.parentId) {
+      const rootId = reply.rootId ?? reply.id;
+      const recipients = await Comments.Class.replyRecipients(env, reply);
+      if (recipients.length)
+        await Delivery.Class.notifyReply(env, reply, rootId, recipients);
+    }
     return Http.Class.json({ ok: true });
+  }
+
+  // Lock or unlock a thread — a locked thread renders with its replies
+  // and refuses new ones, server-side as well as in the UI.
+  static async lockComment(request: Request, env: Env): Promise<Response> {
+    const body = await Http.Class.readJsonBody<{
+      id: number;
+      locked: boolean;
+    }>(request);
+    const changed = await Comments.Class.setLocked(
+      env,
+      Number(body.id),
+      body.locked !== false,
+    );
+    if (!changed) return Http.Class.json({ error: 'No such comment.' }, 404);
+    return Http.Class.json({ ok: true, locked: body.locked !== false });
   }
 
   static async deleteComment(request: Request, env: Env): Promise<Response> {

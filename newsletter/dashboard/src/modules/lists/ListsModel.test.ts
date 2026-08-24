@@ -9,7 +9,9 @@ const SETTINGS = {
   sendHourLocal: 9,
   defaultTimezone: 'America/Toronto',
   listOverrides: { vip: { sendHourLocal: 18 } },
-} as AdminSettings;
+  // only the schedule fields matter here; the X/sender fields the type
+  // has since gained are irrelevant to these derivations
+} as unknown as AdminSettings;
 
 beforeEach(() => {
   vi.stubGlobal('sessionStorage', {

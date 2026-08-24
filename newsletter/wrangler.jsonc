@@ -23,6 +23,8 @@
 			"/unsubscribe",
 			"/comment",
 			"/comments",
+			"/comment-subscription",
+			"/comment-unsubscribe",
 			"/broadcast",
 			"/drip",
 			"/postmark-webhook",

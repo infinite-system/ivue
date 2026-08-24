@@ -104,6 +104,72 @@ class $Delivery {
     }
   }
 
+  // A reply landed in a thread someone subscribed to. Sent when the
+  // reply is APPROVED (never on submission — unmoderated text must not
+  // reach a reader's inbox). One mail per recipient, each carrying its
+  // own thread-scoped unsubscribe link.
+  static async notifyReply(
+    env: Env,
+    reply: { id: number; slug: string; name: string; body: string },
+    rootId: number,
+    recipients: { email: string; name: string }[],
+  ): Promise<void> {
+    for (const recipient of recipients) {
+      try {
+        const token = await Security.Class.threadToken(
+          rootId,
+          recipient.email,
+          env,
+        );
+        const query =
+          `?thread=${rootId}&sub=${encodeURIComponent(recipient.email)}` +
+          `&t=${token}#comment-${reply.id}`;
+        const threadUrl = `${env.SITE_ORIGIN}/blog/${reply.slug}${query}`;
+        const stopUrl =
+          `${env.WORKER_ORIGIN}/comment-unsubscribe?thread=${rootId}` +
+          `&email=${encodeURIComponent(recipient.email)}&token=${token}`;
+        const excerpt =
+          reply.body.length > 600 ? `${reply.body.slice(0, 600)}…` : reply.body;
+        const response = await fetch(this.POSTMARK_EMAIL_URL, {
+          method: 'POST',
+          headers: {
+            'X-Postmark-Server-Token': env.POSTMARK_SERVER_TOKEN,
+            'content-type': 'application/json',
+            accept: 'application/json',
+          },
+          body: JSON.stringify({
+            From: `${env.SENDER_NAME} <${env.SENDER_EMAIL}>`,
+            To: recipient.email,
+            Subject: `${reply.name} replied to you on ivue.dev`,
+            MessageStream: this.NOTIFICATION_STREAM,
+            TextBody:
+              `${reply.name} replied in a comment thread you follow:\n\n` +
+              `${excerpt}\n\n` +
+              `Read and reply: ${threadUrl}\n\n` +
+              `— \nYou get this because you asked for replies on that ` +
+              `thread.\nStop following it: ${stopUrl}\n`,
+          }),
+        });
+        if (!response.ok) {
+          console.error(
+            JSON.stringify({
+              event: 'reply_notify_failed',
+              status: response.status,
+              body: (await response.text()).slice(0, 300),
+            }),
+          );
+        }
+      } catch (error) {
+        console.error(
+          JSON.stringify({
+            event: 'reply_notify_failed',
+            error: String(error),
+          }),
+        );
+      }
+    }
+  }
+
   // One line to the operator for every comment awaiting moderation.
   // Best-effort like the signup ping — a failure logs and the comment
   // itself already committed.

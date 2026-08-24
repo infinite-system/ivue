@@ -354,3 +354,18 @@ inside the mobile menu); no `body:has(...)` rules (whole-document
 restyle every time the target mounts); `touch-action: manipulation`
 on tap targets; `content-visibility: auto` on below-fold home
 sections.
+
+## Kill your test servers — the CPU-cap incident
+
+A session left running at once: two `wrangler dev` instances (workerd +
+miniflare + esbuild watchers EACH), an `npx serve`, and an orphaned
+headless Chromium (a Playwright script threw after launch, so
+`browser.close()` never ran — node exits on uncaught rejection and the
+browser survives as an orphan). Together they capped the VM's CPUs and
+forced a reboot.
+
+Rules: one dev server at a time, kill by port when done
+(`kill $(lsof -t -i:PORT)`); wrap Playwright drives in try/finally so
+the browser closes on error; before ending any session that started
+background processes, sweep:
+`ps aux | grep -E "wrangler|workerd|serve|chrom" | grep -v grep`.

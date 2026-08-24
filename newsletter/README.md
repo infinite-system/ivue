@@ -280,6 +280,55 @@ operator-only, everywhere. Each submission pings NOTIFY_EMAIL.
 Comment bodies are rendered as plain text on the site (interpolation,
 never HTML).
 
+### Threads, two levels deep
+
+A submission with `parentId` is a REPLY. Depth stops at two: a reply
+carries `root_id` of its thread and `parent_id` of whoever it answers —
+answering a reply keeps the same root and addresses the person with an
+`@mention` instead of nesting further. The site folds replies (newest
+one visible, the rest behind "Show N earlier replies") so a long
+sub-thread never buries the next top-level comment.
+
+Identity: `avatar_seed` is an HMAC of the address, stamped at submit
+time. It drives the identicon on the site — the same person keeps the
+same avatar everywhere, and the address itself is not derivable from
+what the public endpoint serves.
+
+**Locking.** `POST /admin/comments/lock {id, locked}` (or the Lock
+button in Newsletter → Comments) closes a thread: existing replies stay
+visible, new ones are refused server-side and the UI hides its reply
+buttons. Passing a reply's id locks the thread that reply belongs to.
+
+### Reply notifications (per thread, opt-out)
+
+The comment form pre-checks "Email me replies to this thread" — a row
+in `comment_subscriptions (root_id, email)`. The newsletter opt-in is a
+separate, unchecked box; the two are independent.
+
+Who gets mailed when a reply is APPROVED (never at submission — the
+operator reads it first):
+
+- the author of the comment being answered, and
+- anyone `@mentioned` by name inside that thread,
+
+each only if they follow the thread, and never the reply's own author.
+**The thread starter is not notified for deep replies** unless one of
+those two makes them a recipient — a busy sub-thread cannot spam the
+person who opened the conversation.
+
+Every notification carries two links: the thread on the site
+(`?thread=&sub=&t=` — the site reads the token, says "you follow
+replies on this thread", and offers one click to stop) and a plain
+`/comment-unsubscribe` URL that works with no JS. Tokens are
+HMAC(`comment-thread:<root>:<email>`), so there are no accounts. A bare
+`GET /comment-unsubscribe` only REPORTS the state — a mail scanner's
+prefetch must never unfollow a thread; `confirm=1` (or the site's POST)
+performs it.
+
+New public routes need an entry in `run_worker_first` in
+`wrangler.jsonc` or the assets layer answers them with the dashboard
+SPA shell.
+
 ## Subscriber pipeline (dashboard)
 
 Any email address in the dashboard (Subscribers table, Sent log) opens

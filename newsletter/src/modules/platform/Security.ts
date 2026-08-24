@@ -36,6 +36,17 @@ class $Security {
   }
 
   static async unsubscribeToken(address: string, env: Env): Promise<string> {
+    return this.signature(address, env);
+  }
+
+  static async unsubscribeUrl(address: string, env: Env): Promise<string> {
+    const token = await this.unsubscribeToken(address, env);
+    return `${env.WORKER_ORIGIN}/unsubscribe?email=${encodeURIComponent(address)}&token=${token}`;
+  }
+
+  // HMAC over an arbitrary message with the same key — the general form
+  // the two comment-thread tokens below are built from.
+  static async signature(message: string, env: Env): Promise<string> {
     const key = await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(env.ADMIN_SECRET),
@@ -43,19 +54,51 @@ class $Security {
       false,
       ['sign'],
     );
-    const signature = await crypto.subtle.sign(
+    const signed = await crypto.subtle.sign(
       'HMAC',
       key,
-      new TextEncoder().encode(address),
+      new TextEncoder().encode(message),
     );
-    return [...new Uint8Array(signature)]
+    return [...new Uint8Array(signed)]
       .map((byte) => byte.toString(16).padStart(2, '0'))
       .join('');
   }
 
-  static async unsubscribeUrl(address: string, env: Env): Promise<string> {
-    const token = await this.unsubscribeToken(address, env);
-    return `${env.WORKER_ORIGIN}/unsubscribe?email=${encodeURIComponent(address)}&token=${token}`;
+  // Per-(thread, address) token: proves an unsubscribe link came from
+  // an email we sent, without a session or an account.
+  static async threadToken(
+    rootId: number,
+    address: string,
+    env: Env,
+  ): Promise<string> {
+    return this.signature(
+      `comment-thread:${rootId}:${address.trim().toLowerCase()}`,
+      env,
+    );
+  }
+
+  // A stable, non-reversible handle for one commenter: it drives the
+  // identicon on the site, so the same person keeps the same avatar
+  // across posts while the address itself never leaves the Worker.
+  // This is a DISPLAY value, not a credential — without a configured
+  // secret (local dev) it degrades to a plain digest rather than
+  // failing a comment submission.
+  static async avatarSeed(address: string, env: Env): Promise<string> {
+    const message = `avatar:${address.trim().toLowerCase()}`;
+    const digest = env.ADMIN_SECRET
+      ? await this.signature(message, env)
+      : await this.sha256Hex(message);
+    return digest.slice(0, 16);
+  }
+
+  static async sha256Hex(message: string): Promise<string> {
+    const digest = await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(message),
+    );
+    return [...new Uint8Array(digest)]
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
   }
 }
 

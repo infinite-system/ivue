@@ -8,8 +8,11 @@
 // same ledger, so none can repeat what another already delivered.
 //
 //   POST /subscribe        {name, email, turnstileToken} — site form → D1
-//   POST /comment          {slug, name, email, body} — pending until approved
+//   POST /comment          {slug, name, email, body, parentId?} — pending
 //   GET  /comments         ?slug= — approved comments (never emails)
+//   GET  /comment-subscription ?thread=&email=&token= — do I follow it?
+//   *    /comment-unsubscribe  ?thread=&email=&token= — stop following one
+//                                thread (GET renders, POST is the site's)
 //   GET  /unsubscribe      ?email=&token=      — HMAC-signed one-click out
 //   POST /broadcast        {slug}   (Bearer ADMIN_SECRET) — send a post NOW
 //   POST /drip             (Bearer ADMIN_SECRET) — run a drip pass on demand
@@ -51,6 +54,20 @@ export default {
           env,
           request,
         );
+      if (url.pathname === '/comment-subscription' && request.method === 'GET')
+        return Http.Class.withCors(
+          await PublicApi.Class.commentSubscription(url, env),
+          env,
+          request,
+        );
+      if (url.pathname === '/comment-unsubscribe' && request.method === 'POST')
+        return Http.Class.withCors(
+          await PublicApi.Class.commentUnsubscribe(request, url, env),
+          env,
+          request,
+        );
+      if (url.pathname === '/comment-unsubscribe' && request.method === 'GET')
+        return PublicApi.Class.commentUnsubscribe(request, url, env);
       if (url.pathname === '/unsubscribe' && request.method === 'GET')
         return PublicApi.Class.unsubscribe(url, env);
       if (url.pathname === '/broadcast' && request.method === 'POST')

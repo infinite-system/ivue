@@ -87,6 +87,8 @@ class $PublicApi {
       name: string;
       email: string;
       body: string;
+      parentId: number;
+      subscribeReplies: boolean;
       subscribe: boolean;
       timezone: string;
       turnstileToken: string;
@@ -111,6 +113,10 @@ class $PublicApi {
         name: String(body.name ?? ''),
         email: String(body.email ?? ''),
         body: String(body.body ?? ''),
+        parentId: Number(body.parentId ?? 0) || null,
+        // replies-to-me is opt-OUT (the form pre-checks it); the
+        // newsletter is a separate, opt-IN box
+        subscribeReplies: body.subscribeReplies !== false,
       });
     } catch (error) {
       return Http.Class.json(
@@ -166,6 +172,97 @@ class $PublicApi {
     const slug = (url.searchParams.get('slug') ?? '').trim();
     if (!slug) return Http.Class.json({ error: 'slug required' }, 400);
     return Http.Class.json(await Comments.Class.approvedFor(env, slug));
+  }
+
+  // Does this (thread, address) pair still follow replies? Called by the
+  // site when a reader arrives from a notification email, so the page can
+  // say "you're following this thread" and offer one click to stop. The
+  // token is what authorizes the answer — there are no accounts.
+  static async commentSubscription(url: URL, env: Env): Promise<Response> {
+    const rootId = Number(url.searchParams.get('thread') ?? 0);
+    const address = (url.searchParams.get('email') ?? '').trim().toLowerCase();
+    const token = url.searchParams.get('token') ?? '';
+    if (!rootId || !address)
+      return Http.Class.json({ error: 'thread and email required' }, 400);
+    const expected = await Security.Class.threadToken(rootId, address, env);
+    if (!(await Security.Class.timingSafeEqualStrings(token, expected)))
+      return Http.Class.json({ error: 'Invalid link.' }, 403);
+    return Http.Class.json({
+      thread: rootId,
+      following: await Comments.Class.subscribed(env, rootId, address),
+    });
+  }
+
+  // Stop following one thread. GET renders a page (the plain-text link
+  // in every notification email, works with no JS); POST is the site's
+  // in-page button. Both require the thread token.
+  static async commentUnsubscribe(
+    request: Request,
+    url: URL,
+    env: Env,
+  ): Promise<Response> {
+    const fromBody =
+      request.method === 'POST'
+        ? await Http.Class.readJsonBody<{
+            thread: number;
+            email: string;
+            token: string;
+          }>(request)
+        : ({} as { thread?: number; email?: string; token?: string });
+    const rootId = Number(fromBody.thread ?? url.searchParams.get('thread') ?? 0);
+    const address = String(fromBody.email ?? url.searchParams.get('email') ?? '')
+      .trim()
+      .toLowerCase();
+    const token = String(fromBody.token ?? url.searchParams.get('token') ?? '');
+    const expected =
+      rootId && address
+        ? await Security.Class.threadToken(rootId, address, env)
+        : '';
+    const authorized =
+      Boolean(rootId) &&
+      Boolean(address) &&
+      (await Security.Class.timingSafeEqualStrings(token, expected));
+
+    if (!authorized) {
+      return request.method === 'POST'
+        ? Http.Class.json({ error: 'Invalid link.' }, 403)
+        : new Response('Invalid link.', { status: 400 });
+    }
+
+    // A GET without confirm=1 only REPORTS — mail scanners prefetch
+    // links, and a prefetch must never silently unfollow a thread.
+    if (request.method === 'GET' && url.searchParams.get('confirm') !== '1') {
+      const following = await Comments.Class.subscribed(env, rootId, address);
+      const confirmUrl =
+        `${env.WORKER_ORIGIN}/comment-unsubscribe?thread=${rootId}` +
+        `&email=${encodeURIComponent(address)}&token=${token}&confirm=1`;
+      return Http.Class.html(
+        `<!doctype html><meta charset="utf-8"><title>Comment replies</title>
+         <body style="font-family:system-ui;max-width:32rem;margin:15vh auto;padding:0 1rem;color:#1c2432">
+         ${
+           following
+             ? `<h1 style="font-size:1.4rem">You follow this comment thread.</h1>
+                <p>We email you when someone replies to you there.</p>
+                <p><a href="${confirmUrl}" style="display:inline-block;background:#1d4ed8;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600">Stop following this thread</a></p>`
+             : `<h1 style="font-size:1.4rem">You already stopped following this thread.</h1>
+                <p>No more reply emails from it.</p>`
+         }
+         <p style="color:#5b6478;font-size:.9rem">This only affects that one
+         thread. Your newsletter subscription, if you have one, is separate.</p>`,
+      );
+    }
+
+    const removed = await Comments.Class.unsubscribe(env, rootId, address);
+    if (request.method === 'POST')
+      return Http.Class.json({ ok: true, following: false, removed });
+    return Http.Class.html(
+      `<!doctype html><meta charset="utf-8"><title>Stopped following</title>
+       <body style="font-family:system-ui;max-width:32rem;margin:15vh auto;padding:0 1rem;color:#1c2432">
+       <h1 style="font-size:1.4rem">Done — you stopped following that thread.</h1>
+       <p>No more reply emails from it. Your newsletter subscription, if you
+       have one, is untouched.</p>
+       <p><a href="${env.SITE_ORIGIN}">Back to ivue.dev</a></p>`,
+    );
   }
 
   static async unsubscribe(url: URL, env: Env): Promise<Response> {

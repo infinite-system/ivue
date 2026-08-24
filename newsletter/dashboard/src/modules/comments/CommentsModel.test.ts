@@ -30,6 +30,10 @@ function makeRow(overrides: Partial<CommentRow>): CommentRow {
     body: 'Great post.',
     submittedAt: 100,
     status: 'pending',
+    parentId: null,
+    rootId: 1,
+    locked: 0,
+    avatarSeed: 'aaaaaaaaaaaaaaaa',
     ...overrides,
   };
 }

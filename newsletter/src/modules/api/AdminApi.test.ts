@@ -5,6 +5,7 @@ import { Audience } from '../audience/Audience';
 import { Ledger } from '../audience/Ledger';
 import { makeTestEnv } from '../../../test/TestDatabase';
 import { installFetchStub, makePost } from '../../../test/Fixtures';
+import { Comments } from '../comments/Comments';
 
 const BEARER = 'Bearer test-admin-secret';
 
@@ -512,5 +513,78 @@ describe('AdminApi', () => {
     };
     expect(stats.lists[0].list).toBe('newsletter');
     expect(stats.totalSends).toBe(0);
+  });
+
+  // Approval is the only moment a reply notification may leave: the
+  // text has been read by the operator by then.
+  it('approving a reply emails the answered author, with a thread unsubscribe link', async () => {
+    const env = makeTestEnv();
+    const calls = installFetchStub({});
+    const rootId = await Comments.Class.submit(env, {
+      slug: 'first-post',
+      name: 'Ada',
+      email: 'ada@ivue.dev',
+      body: 'The opening comment.',
+    });
+    await Comments.Class.approve(env, rootId);
+    const replyId = await Comments.Class.submit(env, {
+      slug: 'first-post',
+      name: 'Bo',
+      email: 'bo@ivue.dev',
+      body: 'A reply for Ada.',
+      parentId: rootId,
+    });
+
+    const response = await call('/admin/comments/approve', env, 'POST', {
+      id: replyId,
+    });
+    expect(response.status).toBe(200);
+
+    const notice = calls.notifications.find((message) =>
+      message.To.includes('ada@ivue.dev'),
+    );
+    expect(notice?.Subject).toBe('Bo replied to you on ivue.dev');
+    expect(notice?.TextBody).toContain('A reply for Ada.');
+    // both links: the site thread (with its token) and the plain out
+    expect(notice?.TextBody).toContain(`thread=${rootId}`);
+    expect(notice?.TextBody).toContain('/comment-unsubscribe?thread=');
+    // nobody else was mailed about it
+    expect(
+      calls.notifications.filter((message) =>
+        message.Subject.includes('replied to you'),
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('lock/unlock a thread through the admin route', async () => {
+    const env = makeTestEnv();
+    installFetchStub({});
+    const rootId = await Comments.Class.submit(env, {
+      slug: 'first-post',
+      name: 'Ada',
+      email: 'ada@ivue.dev',
+      body: 'Opening.',
+    });
+    await Comments.Class.approve(env, rootId);
+
+    const locked = await call('/admin/comments/lock', env, 'POST', {
+      id: rootId,
+      locked: true,
+    });
+    expect(await locked.json()).toEqual({ ok: true, locked: true });
+    expect(await Comments.Class.threadLocked(env, rootId)).toBe(true);
+
+    const unlocked = await call('/admin/comments/lock', env, 'POST', {
+      id: rootId,
+      locked: false,
+    });
+    expect(await unlocked.json()).toEqual({ ok: true, locked: false });
+    expect(await Comments.Class.threadLocked(env, rootId)).toBe(false);
+
+    const missing = await call('/admin/comments/lock', env, 'POST', {
+      id: 4242,
+      locked: true,
+    });
+    expect(missing.status).toBe(404);
   });
 });

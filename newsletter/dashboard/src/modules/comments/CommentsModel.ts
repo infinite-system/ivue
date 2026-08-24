@@ -150,6 +150,27 @@ class $CommentsModel {
     });
   }
 
+  // Lock/unlock the THREAD a row belongs to — a locked thread keeps its
+  // replies visible and accepts no new ones (enforced server-side too).
+  async toggleLock(row: CommentRow) {
+    const locking = !row.locked;
+    await this.moderate(row, async () => {
+      await Api.Class.lockComment(row.id, locking);
+      return locking
+        ? 'Thread locked — no new replies.'
+        : 'Thread unlocked — replies open again.';
+    });
+  }
+
+  // a reply belongs to a thread; only the root carries the flag
+  isReply(row: CommentRow) {
+    return Boolean(row.parentId);
+  }
+
+  lockLabel(row: CommentRow) {
+    return row.locked ? 'Unlock' : 'Lock';
+  }
+
   async moderate(row: CommentRow, action: () => Promise<string>) {
     this.busyId.value = row.id;
     try {
