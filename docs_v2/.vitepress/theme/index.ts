@@ -258,6 +258,19 @@ export default {
       };
       requestAnimationFrame(watchOutlineMarker);
 
+      // Tapping the logo while the mobile menu is open: VitePress only
+      // closes the screen on route CHANGE, so from the home page the
+      // menu would stay open over the page. Close it explicitly.
+      document.addEventListener('click', (event) => {
+        if (!(event.target as Element | null)?.closest?.('.VPNavBarTitle'))
+          return;
+        if (document.querySelector('.VPNavScreen')) {
+          document
+            .querySelector<HTMLButtonElement>('.VPNavBarHamburger')
+            ?.click();
+        }
+      });
+
       const onAfterRouteChange = router.onAfterRouteChange;
       router.onAfterRouteChange = async (to) => {
         await onAfterRouteChange?.(to);
