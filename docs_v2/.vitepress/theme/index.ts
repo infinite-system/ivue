@@ -135,6 +135,29 @@ export default {
       // scrolls up (the same intent signal mobile browser chrome uses).
       let lastScrollY = window.scrollY;
       let localNavTicking = false;
+      // An anchor JUMP scrolls down programmatically — that's arrival,
+      // not reading, so the bar must survive it: any in-page anchor
+      // click (TOC, outline dropdown, prose #links) opens a grace
+      // window during which scrolling down never hides the bar.
+      let anchorJumpUntil = 0;
+      const keepLocalNavThroughJump = () => {
+        anchorJumpUntil = Date.now() + 1200;
+        document.documentElement.classList.remove('local-nav-hidden');
+      };
+      document.addEventListener(
+        'click',
+        (event) => {
+          const anchor = (event.target as Element | null)?.closest?.(
+            'a[href*="#"]',
+          ) as HTMLAnchorElement | null;
+          if (!anchor) return;
+          const url = new URL(anchor.href, window.location.origin);
+          if (url.pathname === window.location.pathname && url.hash)
+            keepLocalNavThroughJump();
+        },
+        { passive: true, capture: true },
+      );
+      window.addEventListener('hashchange', keepLocalNavThroughJump);
       window.addEventListener(
         'scroll',
         () => {
@@ -143,7 +166,11 @@ export default {
           requestAnimationFrame(() => {
             const currentY = window.scrollY;
             const scrollingDown = currentY > lastScrollY;
-            if (scrollingDown && currentY > 150) {
+            if (
+              scrollingDown &&
+              currentY > 150 &&
+              Date.now() > anchorJumpUntil
+            ) {
               document.documentElement.classList.add('local-nav-hidden');
             } else if (!scrollingDown) {
               document.documentElement.classList.remove('local-nav-hidden');
