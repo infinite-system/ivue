@@ -3504,6 +3504,15 @@ a.feature-inline-link:active {
   transform: translate(0);
 }
 
+/* Kill the ~300ms tap delay Safari can add while waiting to rule out
+   a double-tap gesture — the single biggest "heavy click" feel on iOS */
+.VPNavBarHamburger,
+.VPNavScreen a,
+.VPNavScreen button,
+.VPLocalNav button {
+  touch-action: manipulation;
+}
+
 /* iOS Safari (the only engine matching -webkit-touch-callout): the
    hamburger morph and the menu fade jank on iPhones — open instantly
    instead of animating */
