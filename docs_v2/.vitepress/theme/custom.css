@@ -3495,6 +3495,35 @@ a.feature-inline-link:active {
   min-width: 0;
 }
 
+/* Mobile outline dropdown: "Return to top" moves to the BOTTOM of the
+   list (thumb-reachable, read the sections first), quieter — small,
+   link-blue, an up arrow, no heavy separator block */
+.VPLocalNavOutlineDropdown .items {
+  display: flex;
+  flex-direction: column;
+}
+.VPLocalNavOutlineDropdown .items .header {
+  order: 2;
+  margin: 4px 0 0 !important;
+  padding: 6px 16px 2px !important;
+  border-bottom: none !important;
+  border-top: 1px solid var(--ivue-hairline);
+}
+.VPLocalNavOutlineDropdown .items .outline {
+  order: 1;
+}
+.VPLocalNavOutlineDropdown .top-link {
+  display: inline-block;
+  padding: 2px 0 !important;
+  font-size: 12px !important;
+  font-weight: 500;
+  color: var(--ivue-link-2) !important;
+  opacity: 0.85;
+}
+.VPLocalNavOutlineDropdown .top-link::before {
+  content: '↑ ';
+}
+
 /* the sub-nav bar (mobile "Menu / On this page") draws its own line */
 .VPLocalNav {
   border-bottom-color: var(--ivue-hairline) !important;
