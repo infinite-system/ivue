@@ -3495,33 +3495,66 @@ a.feature-inline-link:active {
   min-width: 0;
 }
 
-/* Mobile outline dropdown: "Return to top" moves to the BOTTOM of the
-   list (thumb-reachable, read the sections first), quieter — small,
-   link-blue, an up arrow, no heavy separator block */
+/* Mobile outline dropdown: "Return to top" lives at the BOTTOM of the
+   list (thumb-reachable, read the sections first) — right-aligned,
+   quiet, arrow after the words, set apart by a faint overlay instead
+   of a separator. The whole panel sits on the page's own background. */
 .VPLocalNavOutlineDropdown .items {
   display: flex;
   flex-direction: column;
+  background: var(--vp-c-bg) !important;
 }
 .VPLocalNavOutlineDropdown .items .header {
   order: 2;
-  margin: 4px 0 0 !important;
-  padding: 6px 16px 2px !important;
+  display: flex;
+  justify-content: center;
+  margin: 2px 0 0 !important;
+  padding: 0 !important;
   border-bottom: none !important;
-  border-top: 1px solid var(--ivue-hairline);
+  /* the differentiator: a whisper of ink over the page bg, no line */
+  background: color-mix(in srgb, var(--vp-c-text-1) 4%, transparent);
 }
 .VPLocalNavOutlineDropdown .items .outline {
   order: 1;
 }
 .VPLocalNavOutlineDropdown .top-link {
-  display: inline-block;
-  padding: 2px 0 !important;
+  /* the link IS the whole row — the full width reacts to the tap */
+  display: block;
+  flex: 1;
+  text-align: center;
+  padding: 6px 14px !important;
   font-size: 12px !important;
   font-weight: 500;
   color: var(--ivue-link-2) !important;
   opacity: 0.85;
+  transition: background-color 0.3s ease;
 }
-.VPLocalNavOutlineDropdown .top-link::before {
-  content: '↑ ';
+.VPLocalNavOutlineDropdown .top-link:active {
+  background-color: color-mix(in srgb, var(--ivue-link-accent) 14%, transparent);
+  transition-duration: 0.06s;
+}
+.VPLocalNavOutlineDropdown .top-link::after {
+  content: ' ↑';
+}
+/* section rows: a soft chevron leads each, and a tap highlights the
+   WHOLE row — eased in and out, never a snap */
+.VPLocalNavOutlineDropdown .outline-link {
+  display: block;
+  padding: 5px 12px 5px 10px;
+  border-radius: 8px;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+.VPLocalNavOutlineDropdown .outline-link::before {
+  content: '›';
+  margin-right: 8px;
+  color: var(--vp-c-text-3);
+}
+.VPLocalNavOutlineDropdown .outline-link:active {
+  background-color: color-mix(in srgb, var(--ivue-link-accent) 14%, transparent);
+  color: var(--ivue-link-2);
+  transition-duration: 0.06s; /* quick in, slow out */
 }
 
 /* the sub-nav bar (mobile "Menu / On this page") draws its own line */
