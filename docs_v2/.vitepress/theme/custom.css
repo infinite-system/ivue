@@ -3531,6 +3531,19 @@ a.feature-inline-link:active {
   .VPNavScreen .VPNavScreenMenuGroup .items {
     transition: none !important;
   }
+  /* background-clip:text + animated background repaints the glyphs
+     every frame on iOS — hold the shine still there (static gradient) */
+  .ivh-title .shine {
+    animation: none !important;
+  }
+}
+
+/* while the mobile menu is open, the hero has no business animating —
+   pause everything so the screen owns the frame budget */
+body:has(.VPNavScreen) .ivh-title .shine,
+body:has(.VPNavScreen) .ivh-caret,
+body:has(.VPNavScreen) .cm-avatar {
+  animation-play-state: paused !important;
 }
 
 /* ---- home: newsletter hero — the blog, front and center ---- */

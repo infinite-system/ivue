@@ -68,13 +68,22 @@ class $Typewriter {
     if (this.timer) clearTimeout(this.timer);
   }
 
+  // iOS Safari pays real paint cost for the endless cycle (and it
+  // competes with the nav-screen open) — type the first line, stop.
+  get settlesAfterFirstLine() {
+    return (
+      typeof CSS !== 'undefined' &&
+      CSS.supports('-webkit-touch-callout', 'none')
+    );
+  }
+
   typeFinale() {
     const target = this.finaleVariants[this.variantIndex.value];
     const current = this.finaleText.value;
     if (current.length < target.length) {
       this.finaleText.value = target.slice(0, current.length + 1);
       this.timer = setTimeout(() => this.typeFinale(), this.typeDelayMs);
-    } else {
+    } else if (!this.settlesAfterFirstLine) {
       this.timer = setTimeout(() => this.deleteFinale(), this.holdMs);
     }
   }
