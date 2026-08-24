@@ -182,7 +182,7 @@ function formatDate(date: string): string {
   font-size: 12.5px;
   font-weight: 600;
   line-height: 1.35;
-  color: var(--ivue-link-accent);
+  color: var(--ivue-link-2); /* the prose-link family's darker middle stop */
   transition: color 0.15s ease;
 }
 .related-posts__date {
@@ -190,7 +190,7 @@ function formatDate(date: string): string {
   color: var(--vp-c-text-3);
 }
 .related-posts__item:hover .related-posts__title {
-  color: var(--ivue-link-accent);
+  color: var(--ivue-link-2);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
