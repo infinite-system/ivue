@@ -42,9 +42,9 @@ const olderPost = computed(() =>
     >
       <img class="blog-post-nav__thumb" :src="withBase(olderPost.image)" :alt="olderPost.title" loading="lazy" />
       <div class="blog-post-nav__body">
-        <span class="blog-post-nav__label">← Older post</span>
         <span class="blog-post-nav__title">{{ olderPost.title }}</span>
         <span class="blog-post-nav__excerpt">{{ olderPost.excerpt }}</span>
+        <span class="blog-post-nav__label">← Older post</span>
       </div>
     </a>
     <span v-else class="blog-post-nav__spacer" aria-hidden="true"></span>
@@ -55,9 +55,9 @@ const olderPost = computed(() =>
     >
       <img class="blog-post-nav__thumb" :src="withBase(newerPost.image)" :alt="newerPost.title" loading="lazy" />
       <div class="blog-post-nav__body">
-        <span class="blog-post-nav__label">Newer post →</span>
         <span class="blog-post-nav__title">{{ newerPost.title }}</span>
         <span class="blog-post-nav__excerpt">{{ newerPost.excerpt }}</span>
+        <span class="blog-post-nav__label">Newer post →</span>
       </div>
     </a>
   </nav>

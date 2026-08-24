@@ -2953,11 +2953,10 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   border-color: var(--ivue-link-accent);
   box-shadow: 0 12px 30px -18px var(--ivue-link-glow);
 }
-.blog-post-nav__card--newer {
-  text-align: right;
-}
-.blog-post-nav__card--newer .blog-post-nav__body {
-  align-items: flex-end;
+/* both cards read left-aligned; the direction label sits on the
+   bottom line, after the excerpt — right-aligned on the newer card */
+.blog-post-nav__card--newer .blog-post-nav__label {
+  align-self: flex-end;
 }
 .VPDoc .blog-post-nav__thumb {
   width: 100%;
@@ -2976,6 +2975,7 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   padding: 11px 14px 12px;
 }
 .blog-post-nav__label {
+  margin-top: 3px; /* bottom line: a breath after the excerpt */
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
