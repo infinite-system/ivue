@@ -6,6 +6,11 @@ relatedPosts: [computed-is-a-cache, the-object-should-tell-the-truth]
 
 # Computed & Watch
 
+In ivue you derive with **plain getters** — reactive through the tracked
+read, zero bytes per instance. `computed()` is the surgical opt-in for
+work worth caching, and `this.$watch` is the scoped watcher that dies
+with its instance. This page draws the lines between the three.
+
 ## Derived values: plain getters by default
 
 The most important thing on this page: **you usually don't need `computed()`.**
