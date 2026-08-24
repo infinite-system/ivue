@@ -53,9 +53,13 @@ async function renderTurnstile() {
   });
 }
 
-watch(turnstileElement, (element) => {
-  if (element) renderTurnstile();
-});
+// Turnstile is deferred to the FIRST interaction with the form: the
+// widget is invisible until challenged and its token matters only at
+// submit — rendering it on mount put a third-party script + iframe on
+// every homepage visit (felt as menu-open jank on iPhone).
+function ensureTurnstile() {
+  if (!turnstileWidgetId) renderTurnstile();
+}
 
 async function join() {
   if (!email.value || state.value === 'sending') return;
@@ -99,6 +103,8 @@ async function join() {
     :class="[`quickjoin--${align}`, `quickjoin--place-${placement}`]"
     aria-label="Newsletter quick signup"
     @submit.prevent="join()"
+    @focusin.once="ensureTurnstile()"
+    @pointerenter.once="ensureTurnstile()"
   >
     <span class="quickjoin__lead">Get the blog as a newsletter</span>
     <div class="quickjoin__group">
