@@ -1681,13 +1681,23 @@ a.feature-inline-link {
 }
 /* .vp-doc prefix: must out-rank the in-post hero rule
    (.vp-doc img[src*='/blog/']) that sizes article images to 100% */
+/* the thumb width is one token: the NEW badge anchors to it too.
+   392px puts the box ratio at the rows' natural height on desktop, so
+   cover fills the box with a ~2px vertical trim — no side crops (they
+   cut the lockup), no letterbox bars. Tablets (iPad Pro portrait,
+   sidebar open) get a narrower thumb so the title keeps its room. */
+.blog-rows {
+  --row-thumb-width: 392px;
+}
+@media (max-width: 1279px) {
+  .blog-rows {
+    --row-thumb-width: 250px;
+  }
+}
 .vp-doc .blog-row .thumb {
   display: block;
-  /* 392px puts the box ratio at the rows' natural height, so cover
-     fills the box with a ~2px vertical trim — no side crops (they cut
-     the lockup), no letterbox bars */
-  width: 392px;
-  flex: 0 0 392px;
+  width: var(--row-thumb-width);
+  flex: 0 0 var(--row-thumb-width);
   aspect-ratio: 1200 / 630;
   align-self: stretch;
   object-fit: cover;
@@ -1703,6 +1713,24 @@ a.feature-inline-link {
   flex: 1;
   min-width: 0;
   padding: 24px 26px 18px;
+}
+/* tablets (641–1279): the row is too short for a stretched banner to
+   fill without cropping its sides — show the WHOLE banner instead, a
+   framed thumb centered on the text block. (After the base thumb/body
+   rules on purpose: equal specificity, so order decides.) */
+@media (min-width: 641px) and (max-width: 1279px) {
+  .vp-doc .blog-row {
+    align-items: center;
+  }
+  .vp-doc .blog-row .thumb {
+    align-self: center;
+    margin: 16px 0 16px 16px;
+    border: 1px solid var(--vp-c-divider);
+    border-radius: 8px;
+  }
+  .blog-row .body {
+    padding: 18px 22px 16px;
+  }
 }
 
 .blog-row .foot,
@@ -1772,26 +1800,32 @@ a.feature-inline-link {
   height: 15px;
   flex: none;
 }
-/* after-article variant: horizontal row, hidden while the aside shows */
+/* under the author card, every width: ONE inline row — the label,
+   the social icons, then Share… / Copy link closing the line */
 .blog-share--doc {
-  margin-top: 32px;
-  padding-top: 20px;
-  border-top: 1px solid var(--vp-c-divider);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 18px;
+  padding: 0 4px;
+}
+.blog-share--doc .blog-share__label {
+  margin-bottom: 0;
 }
 .blog-share--doc .blog-share__buttons {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
 }
 .blog-share--doc .blog-share__button {
   border: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg-soft);
-  padding: 6px 14px;
+  padding: 6px 12px;
 }
-@media (min-width: 1280px) {
-  .blog-share--doc {
-    display: none;
-  }
+.blog-share--doc .blog-share__button--icon {
+  padding: 7px 8px;
 }
 /* author card under the article */
 .VPDoc .blog-author {
@@ -1876,17 +1910,20 @@ a.feature-inline-link {
   flex-direction: column;
   gap: 8px;
 }
+/* name over email, in EVERY placement (toast, aside, after-article,
+   mobile CTA): the card is narrow everywhere it appears, and one
+   segmented column reads the same in all of them */
 .newsletter__row {
   display: grid;
-  grid-template-columns: 2fr 3fr;
+  grid-template-columns: 1fr;
 }
 /* the pair reads as one segmented field: flush edges, outer radius only */
 .newsletter__row input:first-child {
-  border-radius: 9px 0 0 9px;
-  border-right: none;
+  border-radius: 9px 9px 0 0;
+  border-bottom: none;
 }
 .newsletter__row input:last-child {
-  border-radius: 0 9px 9px 0;
+  border-radius: 0 0 9px 9px;
 }
 .newsletter__row input:focus {
   position: relative;
@@ -2117,21 +2154,9 @@ a.feature-inline-link {
   }
 }
 
-/* aside variant: rides under the share list */
+/* aside variant: rides under the related posts */
 .newsletter--aside {
   margin-top: 20px;
-}
-/* the aside is narrow — stack the pair there, flush vertically */
-.newsletter--aside .newsletter__row {
-  grid-template-columns: 1fr;
-}
-.newsletter--aside .newsletter__row input:first-child {
-  border-radius: 9px 9px 0 0;
-  border-right: 1px solid var(--vp-c-divider);
-  border-bottom: none;
-}
-.newsletter--aside .newsletter__row input:last-child {
-  border-radius: 0 0 9px 9px;
 }
 /* after-article variant: only while the aside is hidden */
 .newsletter--doc {
@@ -2286,6 +2311,15 @@ a.feature-inline-link {
   gap: 10px;
   margin: 16px 0 12px;
 }
+/* icon + input + clear live in one relative box, so the clear button
+   pins to the input's right edge at every width */
+.blog-search__field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 340px;
+  min-width: 0;
+}
 .blog-search__icon {
   position: absolute;
   left: 13px;
@@ -2293,7 +2327,7 @@ a.feature-inline-link {
   pointer-events: none;
 }
 .blog-search__input {
-  flex: 0 1 340px;
+  width: 100%;
   height: 38px;
   padding: 0 34px 0 38px;
   border: 1px solid var(--vp-c-divider);
@@ -2312,7 +2346,7 @@ a.feature-inline-link {
 }
 .blog-search__clear {
   position: absolute;
-  left: 312px;
+  right: 8px;
   width: 22px;
   height: 22px;
   border: none;
@@ -2331,12 +2365,20 @@ a.feature-inline-link {
   color: var(--vp-c-text-3);
 }
 @media (max-width: 640px) {
-  .blog-search__input {
-    flex-basis: 100%;
+  /* the box shares the row with the match count and the icon-only
+     view toggle — fluid, never full-width */
+  .blog-search {
+    gap: 8px;
   }
-  .blog-search__clear {
-    left: auto;
-    right: 10px;
+  .blog-search__field {
+    flex: 1 1 auto;
+    max-width: 68%;
+  }
+  .blog-view-toggle {
+    margin-left: auto;
+  }
+  .blog-view-toggle button {
+    padding: 4px 8px;
   }
 }
 .blog-tag-cloud {
@@ -2431,6 +2473,10 @@ a.feature-inline-link {
 .VPSidebar:has(a[href="/blog/"]) .VPSidebarItem.level-1:last-child {
   border-bottom: none;
 }
+/* post titles are long — one size down from the guide rail */
+.VPSidebar:has(a[href="/blog/"]) .VPSidebarItem.level-1 .link > .text {
+  font-size: 13px;
+}
 /* the date suffix each blog title carries (emitted by blogSidebar()) */
 .VPSidebar .sb-date {
   margin-left: 7px;
@@ -2499,11 +2545,25 @@ html.ivue-flyout-closed .VPNavBar .VPFlyout .menu {
   color: var(--vp-c-brand-1);
   background-color: var(--vp-c-default-soft);
 }
+.ivue-extra-item {
+  display: none;
+}
 @media (min-width: 768px) and (max-width: 1151px) {
   .VPNavBarMenu .VPNavBarMenuLink[href='/community'] {
     display: none;
   }
-  .ivue-extra-nav {
+  .ivue-extra-nav,
+  .ivue-extra-item--community {
+    display: block;
+  }
+}
+/* iPad mini (768–959): even without Community the bar runs out of room
+   and the "…" button gets clipped — Releases moves into the flyout too */
+@media (min-width: 768px) and (max-width: 959px) {
+  .VPNavBarMenu .VPNavBarMenuLink[href='/releases/'] {
+    display: none;
+  }
+  .ivue-extra-item--releases {
     display: block;
   }
 }
@@ -2792,16 +2852,26 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   right: 14px;
 }
 .blog-row .new-badge--thumb {
-  /* anchored to the thumb's right edge — must track the thumb width
-     set on .vp-doc .blog-row .thumb */
-  left: 392px;
+  /* anchored to the thumb's right edge (the thumb width token) */
+  left: var(--row-thumb-width);
   transform: translateX(calc(-100% - 14px));
 }
 @media (max-width: 640px) {
+  /* compact rows: the thumb is inset 10px and 108px wide */
   .blog-row .new-badge--thumb {
-    left: auto;
-    right: 9px;
-    transform: none;
+    top: 16px;
+    left: 118px;
+    transform: translateX(calc(-100% - 6px));
+  }
+}
+/* tablet rows: the framed thumb is inset 16px and vertically centered,
+   so the badge anchors to the thumb box itself */
+@media (min-width: 641px) and (max-width: 1279px) {
+  .blog-row .new-badge--thumb {
+    top: auto;
+    bottom: calc(50% + var(--row-thumb-width) * 630 / 1200 / 2 - 24px);
+    left: calc(var(--row-thumb-width) + 16px);
+    transform: translateX(calc(-100% - 10px));
   }
 }
 
@@ -3011,15 +3081,43 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
     display: none;
   }
 }
+/* phones: LIST is a scan list — small thumb left, title + date right,
+   both centered on the thumb; the excerpt and the read-link go (that
+   is what CARDS are for on a phone) */
 @media (max-width: 640px) {
   .vp-doc .blog-row {
-    flex-direction: column;
+    align-items: center;
+    border-radius: 12px;
   }
   .vp-doc .blog-row .thumb {
-    width: 100%;
-    flex: none;
-    border-right: none;
-    border-bottom: 1px solid var(--vp-c-divider);
+    width: 108px;
+    flex: 0 0 108px;
+    align-self: center;
+    margin: 10px 0 10px 10px;
+    border: 1px solid var(--vp-c-divider);
+    border-radius: 7px;
+  }
+  .blog-row .body {
+    justify-content: center;
+    padding: 10px 14px 10px 12px;
+  }
+  .vp-doc .blog-row h2 {
+    margin: 0 0 4px;
+    font-size: 0.96rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .blog-row .excerpt,
+  .blog-row .go {
+    display: none;
+  }
+  .blog-row .foot {
+    margin-top: 0;
+    justify-content: flex-start;
+    gap: 8px;
   }
 }
 

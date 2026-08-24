@@ -211,7 +211,7 @@ watch(
   }
   .related-posts--doc .related-posts__item {
     flex-direction: row;
-    align-items: flex-start;
+    align-items: center; /* title on the thumb's vertical middle */
     gap: 10px;
     padding: 6px 0;
   }
@@ -225,7 +225,7 @@ watch(
     width: 76px;
     height: 40px;
     aspect-ratio: auto;
-    margin-top: 2px;
+    margin-top: 0;
     border-radius: 6px;
   }
   .related-posts--doc .related-posts__more {

@@ -4,6 +4,7 @@ import { onMounted } from 'vue';
 import { withBase } from 'vitepress';
 import { data as posts } from '../../../blog/blog.data.mjs';
 import NewsletterQuickJoin from './NewsletterQuickJoin.vue';
+import { blogSearchQuery as searchQuery } from '../blog-search-state';
 
 type ViewStyle = 'list' | 'cards';
 const VIEW_STORAGE_KEY = 'ivue-blog-view';
@@ -36,8 +37,8 @@ function toggleSeeAll() {
   localStorage.setItem(SEE_ALL_STORAGE_KEY, seeAll.value ? '1' : '');
 }
 
-// ---- search --------------------------------------------------------
-const searchQuery = ref('');
+// ---- search: the query is shared with the sidebar's search box
+// (blog-search-state.ts) — one ref, two inputs -----------------------
 
 // ---- tag filter ----------------------------------------------------
 // Tags come from post frontmatter; the cloud shows each with its count.
@@ -136,10 +137,14 @@ onMounted(() => {
   // freshness is judged client-side after mount — no hydration mismatch
   nowSeconds.value = Math.floor(Date.now() / 1000);
   // in-article tag chips link here as /blog/?tag=x — arrive pre-filtered
-  const requestedTag = new URLSearchParams(window.location.search).get('tag');
+  const params = new URLSearchParams(window.location.search);
+  const requestedTag = params.get('tag');
   if (requestedTag && posts.some((post) => post.tags.includes(requestedTag))) {
     activeTag.value = requestedTag;
   }
+  // /blog/?q=words — a shareable pre-filled search
+  const requestedQuery = params.get('q');
+  if (requestedQuery) searchQuery.value = requestedQuery;
 });
 
 const FRESH_WINDOW_SECONDS = 14 * 86_400;
@@ -187,26 +192,28 @@ function formatDate(date: string): string {
   </div>
 
   <div class="blog-search">
-    <svg class="blog-search__icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-      <circle cx="6.5" cy="6.5" r="4.6" stroke="currentColor" stroke-width="1.6" />
-      <path d="m10.3 10.3 3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-    </svg>
-    <input
-      v-model="searchQuery"
-      type="search"
-      class="blog-search__input"
-      placeholder="Search posts…"
-      aria-label="Search posts"
-    />
-    <button
-      v-if="searchQuery"
-      type="button"
-      class="blog-search__clear"
-      aria-label="Clear search"
-      @click="searchQuery = ''"
-    >
-      ×
-    </button>
+    <div class="blog-search__field">
+      <svg class="blog-search__icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+        <circle cx="6.5" cy="6.5" r="4.6" stroke="currentColor" stroke-width="1.6" />
+        <path d="m10.3 10.3 3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      </svg>
+      <input
+        v-model="searchQuery"
+        type="search"
+        class="blog-search__input"
+        placeholder="Search posts…"
+        aria-label="Search posts"
+      />
+      <button
+        v-if="searchQuery"
+        type="button"
+        class="blog-search__clear"
+        aria-label="Clear search"
+        @click="searchQuery = ''"
+      >
+        ×
+      </button>
+    </div>
     <span v-if="searchQuery || activeTag" class="blog-search__count">
       {{ filteredPosts.length }} match{{ filteredPosts.length === 1 ? '' : 'es' }}
     </span>

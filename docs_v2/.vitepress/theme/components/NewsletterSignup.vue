@@ -26,10 +26,12 @@ const isBlogPost = computed(
   () => /^\/blog\/.+/.test(route.path) && !route.path.endsWith('/blog/'),
 );
 
-// toast+pill ride every page (desktop); the mobile in-flow CTA closes
-// every NON-blog page; the aside/doc inline variants are blog-only.
+// toast+pill ride every NON-blog-post page (desktop) — a post already
+// carries the card in its aside (or after the article), and the pill
+// would sit on top of it; the mobile in-flow CTA closes every NON-blog
+// page; the aside/doc inline variants are blog-only.
 const belongsHere = computed(() => {
-  if (props.placement === 'toast') return true;
+  if (props.placement === 'toast') return !isBlogPost.value;
   if (props.placement === 'cta') return !isBlogPost.value;
   return isBlogPost.value;
 });

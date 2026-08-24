@@ -114,11 +114,10 @@ function blogSidebar() {
       link: `/blog/${post.slug}`,
     });
   }
+  // The rail's head (All posts + the search box) is a theme component
+  // in the sidebar-nav-before slot (BlogSidebarSearch.vue) — config
+  // items cannot carry an input.
   return [
-    {
-      text: 'Blog',
-      items: [{ text: 'All posts', link: '/blog/' }],
-    },
     ...[...monthGroups].map(([month, items]) => ({
       text: month,
       collapsed: false,

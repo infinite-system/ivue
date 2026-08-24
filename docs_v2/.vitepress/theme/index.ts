@@ -30,6 +30,7 @@ import RelatedPosts from './components/RelatedPosts.vue';
 import ChannelNote from './components/ChannelNote.vue';
 import BlogArchiveScroller from './components/BlogArchiveScroller.vue';
 import BlogBackLink from './components/BlogBackLink.vue';
+import BlogSidebarSearch from './components/BlogSidebarSearch.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import { registerDocsApp } from './quasar-docs-loader';
 // the archive's size, for newsletter copy — "the whole blog in N days"
@@ -45,30 +46,28 @@ export default {
   Layout() {
     return h(DefaultTheme.Layout, null, {
       'home-hero-before': () => h(IvueHero),
+      // blog rail head: All posts + the search box (blog section only)
+      'sidebar-nav-before': () => h(BlogSidebarSearch),
       'sidebar-nav-after': () => h(ExperimentalDocs),
-      // Blog articles only (the components gate themselves on the route):
-      // share buttons ride the outline aside; on narrower viewports the
-      // aside disappears, so a second share row renders after the article.
+      // Blog articles only (the components gate themselves on the route).
       'doc-before': () => [h(BlogBackLink), h(ChannelNote)],
       'aside-outline-after': () => [
         h(RelatedPosts, { variant: 'aside' }),
-        h(BlogShare, { placement: 'aside' }),
         h(NewsletterSignup, { placement: 'aside' }),
       ],
-      // Post-page order: author → related → prev/next → comments →
-      // archive → newsletter. Related rides right after the author
-      // badge (compact rows on mobile); comment threads grow
-      // unboundedly, so the curated links stay above that growth. On
-      // guide pages the blog-only components render nothing, so
-      // related still lands right after share.
+      // Post-page order: author → share → quick-join → related →
+      // prev/next → comments → archive → newsletter. Share sits right
+      // under the author card at every width (one inline row); comment
+      // threads grow unboundedly, so the curated links stay above that
+      // growth. On guide pages the blog-only components render nothing.
       // Published sits directly above VitePress's Last updated line,
       // same style — the date is findable at the bottom, never a
       // freshness verdict at the top (the content is timeless).
       'doc-footer-before': () => h(BlogPublishedDate),
       'doc-after': () => [
         h(BlogAuthor),
-        h(NewsletterQuickJoin, { placement: 'post-footer', align: 'center' }),
         h(BlogShare, { placement: 'doc' }),
+        h(NewsletterQuickJoin, { placement: 'post-footer', align: 'center' }),
         h(RelatedPosts, { variant: 'doc' }),
         h(BlogPostNav),
         h(BlogComments),
@@ -193,23 +192,30 @@ export default {
 
       // At iPad widths the seven nav items overflow the bar and push the
       // "…" extra menu out of view. CSS collapses the flat Community link
-      // in that range (custom.css), and this injects Community INTO the
-      // extra flyout — VitePress never puts nav links there itself. The
-      // injected group is visible only in the same range, so wider
-      // viewports never show Community twice. Idempotent; the navbar
-      // persists across routes, so one successful injection is enough.
+      // below 1152px and the Releases link below 960px (iPad mini), and
+      // this injects both INTO the extra flyout — VitePress never puts
+      // nav links there itself. Each injected row is visible only in
+      // the range where its bar link is hidden, so no width shows a
+      // link twice. Idempotent; the navbar persists across routes, so
+      // one successful injection is enough.
       const injectExtraNavLinks = () => {
         const extraMenu = document.querySelector('.VPNavBarExtra .VPMenu');
         if (!extraMenu || extraMenu.querySelector('.ivue-extra-nav')) return;
         const group = document.createElement('div');
         group.className = 'group ivue-extra-nav';
-        const item = document.createElement('div');
-        const link = document.createElement('a');
-        link.className = 'ivue-extra-link';
-        link.href = '/community';
-        link.textContent = 'Community';
-        item.appendChild(link);
-        group.appendChild(item);
+        for (const [href, text, modifier] of [
+          ['/releases/', 'Releases', 'releases'],
+          ['/community', 'Community', 'community'],
+        ]) {
+          const item = document.createElement('div');
+          item.className = `ivue-extra-item ivue-extra-item--${modifier}`;
+          const link = document.createElement('a');
+          link.className = 'ivue-extra-link';
+          link.href = href;
+          link.textContent = text;
+          item.appendChild(link);
+          group.appendChild(item);
+        }
         extraMenu.prepend(group);
       };
 
@@ -290,7 +296,7 @@ export default {
       // is section-specific — name the section instead. Re-applied on
       // every route change: the component re-renders from config.
       const localNavLabel = (path: string) => {
-        if (path.startsWith('/blog')) return 'Posts';
+        if (path.startsWith('/blog')) return 'Blog Posts';
         if (path.startsWith('/examples')) return 'Examples';
         if (path.startsWith('/releases')) return 'Releases';
         if (

@@ -385,4 +385,35 @@ async function join() {
     min-width: 0;
   }
 }
+/* phones: the trio stacks like the newsletter card's fields — name
+   over email as one segmented column, the button full-width below */
+@media (max-width: 640px) {
+  .quickjoin__group {
+    flex-direction: column;
+    width: 100%;
+  }
+  .quickjoin__input--name,
+  .quickjoin__input--email {
+    width: 100%;
+    height: 40px;
+  }
+  .quickjoin__input--name {
+    border-radius: 9px 9px 0 0;
+    border-right: 1px solid var(--vp-c-divider);
+    border-bottom: none;
+  }
+  .quickjoin__input--email {
+    border-radius: 0 0 9px 9px;
+  }
+  .quickjoin__button {
+    height: 40px;
+    margin: 8px 0 0;
+  }
+  .quickjoin__button-label--full {
+    display: inline;
+  }
+  .quickjoin__button-label--short {
+    display: none;
+  }
+}
 </style>
