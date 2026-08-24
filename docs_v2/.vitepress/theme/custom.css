@@ -3656,8 +3656,9 @@ a.feature-inline-link:active {
 .ix .ix-idea,
 .ix .ix-start,
 .ix .ix-end,
-.ix .invar-production,
-.ix-newsletter-hero {
+.ix .invar-production {
+  /* NOT .ix-newsletter-hero: content-visibility implies paint
+     containment, which clips its 100vw ::before glow to the 46rem box */
   content-visibility: auto;
   contain-intrinsic-size: auto 640px;
 }
