@@ -62,14 +62,6 @@ watch(
 );
 
 
-function formatDate(date: string): string {
-  return new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-}
 </script>
 
 <template>
@@ -96,7 +88,6 @@ function formatDate(date: string): string {
       />
       <span class="related-posts__body">
         <span class="related-posts__title">{{ post.title }}</span>
-        <span class="related-posts__date">{{ formatDate(post.date) }}</span>
       </span>
     </a>
     <button
@@ -184,10 +175,6 @@ function formatDate(date: string): string {
   line-height: 1.35;
   color: var(--ivue-link-2); /* the prose-link family's darker middle stop */
   transition: color 0.15s ease;
-}
-.related-posts__date {
-  font-size: 11px;
-  color: var(--vp-c-text-3);
 }
 .related-posts__item:hover .related-posts__title {
   /* mirror the page's prose-link hover shift */

@@ -2869,12 +2869,11 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
 .blog-post .VPDocFooter {
   margin-top: 24px;
 }
-/* …and reads as metadata, not content */
+/* …and reads as metadata, not content. The native line is replaced by
+   BlogPublishedDate's Published + Last updated block above the footer */
 .blog-post .VPDocFooter .last-updated,
 .blog-post .VPLastUpdated {
-  font-size: 12px;
-  color: var(--vp-c-text-3);
-  opacity: 0.75;
+  display: none;
 }
 @media (max-width: 640px) {
   .blog-post .VPDocFooter {

@@ -20,9 +20,11 @@ const formattedDate = computed(() => {
 </script>
 
 <template>
-  <p v-if="post" class="blog-post-date">
-    <time :datetime="post.date">{{ formattedDate }}</time>
-    <span v-if="post.tags.length" class="blog-post-tags">
+  <!-- the date moved to the doc footer (BlogPublishedDate) — the
+       content is invariant-timeless, so the top of the post leads
+       with tags only; the date stays findable at the bottom -->
+  <p v-if="post && post.tags.length" class="blog-post-date">
+    <span class="blog-post-tags">
       <a
         v-for="tag in post.tags"
         :key="tag"

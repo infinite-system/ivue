@@ -854,6 +854,15 @@ export default defineConfig({
       text: 'Edit this page on GitHub',
     },
 
+    // "Aug 26, 2026, 2:34 AM" — matches the Published line's format
+    lastUpdated: {
+      formatOptions: {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        forceLocale: true,
+      },
+    },
+
     footer: {
       message: 'Released under the MIT License.',
       copyright: 'ivue — Infinite Vue ∞',

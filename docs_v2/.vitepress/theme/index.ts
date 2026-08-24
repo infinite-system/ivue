@@ -20,6 +20,7 @@ import StackBlitzPlayground from './components/StackBlitzPlayground.vue';
 import BlogIndex from './components/BlogIndex.vue';
 import BlogShare from './components/BlogShare.vue';
 import BlogAuthor from './components/BlogAuthor.vue';
+import BlogPublishedDate from './components/BlogPublishedDate.vue';
 import BlogPostNav from './components/BlogPostNav.vue';
 import BlogPostDate from './components/BlogPostDate.vue';
 import NewsletterSignup from './components/NewsletterSignup.vue';
@@ -60,6 +61,10 @@ export default {
       // unboundedly, so the curated links stay above that growth. On
       // guide pages the blog-only components render nothing, so
       // related still lands right after share.
+      // Published sits directly above VitePress's Last updated line,
+      // same style — the date is findable at the bottom, never a
+      // freshness verdict at the top (the content is timeless).
+      'doc-footer-before': () => h(BlogPublishedDate),
       'doc-after': () => [
         h(BlogAuthor),
         h(NewsletterQuickJoin, { placement: 'post-footer', align: 'center' }),

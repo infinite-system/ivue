@@ -27,14 +27,6 @@ const olderPost = computed(() =>
     : null,
 );
 
-function formatDate(date: string): string {
-  return new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  });
-}
 </script>
 
 <template>
@@ -52,7 +44,6 @@ function formatDate(date: string): string {
       <div class="blog-post-nav__body">
         <span class="blog-post-nav__label">← Older post</span>
         <span class="blog-post-nav__title">{{ olderPost.title }}</span>
-        <span class="blog-post-nav__date">{{ formatDate(olderPost.date) }}</span>
       </div>
     </a>
     <span v-else class="blog-post-nav__spacer" aria-hidden="true"></span>
@@ -65,7 +56,6 @@ function formatDate(date: string): string {
       <div class="blog-post-nav__body">
         <span class="blog-post-nav__label">Newer post →</span>
         <span class="blog-post-nav__title">{{ newerPost.title }}</span>
-        <span class="blog-post-nav__date">{{ formatDate(newerPost.date) }}</span>
       </div>
     </a>
   </nav>
