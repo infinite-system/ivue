@@ -1,10 +1,10 @@
 ---
-title: Composables
-description: "How Vue 3 composables and ivue classes fit together: the two architectures for reactive logic, the $-getter that caches a composable per instance, who owns a composable's effects, and how to publish class logic behind a composable-shaped API."
+title: Composables & Stores
+description: "How Vue 3 composables, stores, and ivue classes fit together: the two architectures for reactive logic, the $-getter that caches a composable per instance, who owns a composable's effects, and how to publish class logic behind a composable-shaped API."
 relatedPosts: [computed-is-a-cache, derivations-are-free, total-memory-control, the-object-graph-they-took]
 ---
 
-# Composables
+# Composables & Stores
 
 A **composable** is Vue's unit of reusable reactive logic: a function —
 `useMouse()`, `useLocalStorage()`, `useProjectStore()` — that creates refs,

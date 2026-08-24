@@ -112,7 +112,7 @@ object for the instance's life. Every later read is a cache hit.
 composable materializes inside the component's scope — Vue owns its lifetime
 and removes `useMouse`'s listeners on unmount. The full architecture — both
 directions, including who owns a composable's effects — lives in
-[Composables](/guide/composables).
+[Composables & Stores](/guide/composables).
 
 ## Where ivue fits
 
