@@ -3504,6 +3504,26 @@ a.feature-inline-link:active {
   transform: translate(0);
 }
 
+/* iOS Safari (the only engine matching -webkit-touch-callout): the
+   hamburger morph and the menu fade jank on iPhones — open instantly
+   instead of animating */
+@supports (-webkit-touch-callout: none) {
+  .VPNavBarHamburger .container .top,
+  .VPNavBarHamburger .container .middle,
+  .VPNavBarHamburger .container .bottom,
+  .VPNavBarHamburger .container {
+    transition: none !important;
+  }
+  .VPNavScreen,
+  .VPNavScreen.fade-enter-active,
+  .VPNavScreen.fade-leave-active {
+    transition: none !important;
+  }
+  .VPNavScreen .VPNavScreenMenuGroup .items {
+    transition: none !important;
+  }
+}
+
 /* ---- home: newsletter hero — the blog, front and center ---- */
 /* the hero form hugs the cadence line above it */
 .ix-newsletter-hero .quickjoin--place-home-hero {
