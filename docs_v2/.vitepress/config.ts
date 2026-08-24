@@ -682,14 +682,6 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Performance',
-            items: [
-              { text: 'ivue vs the World', link: '/guide/model-layer' },
-              { text: 'Performance by Design', link: '/guide/performance' },
-              { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
-            ],
-          },
-          {
             text: 'Advanced Patterns',
             items: [
               { text: 'Namespace Pattern', link: '/guide/namespace-pattern' },
@@ -699,6 +691,14 @@ export default defineConfig({
               { text: 'Static() — Capability Classes', link: '/guide/static' },
               { text: 'Caches, Registries & self', link: '/guide/caches-and-registries' },
               { text: 'Backend ivue', link: '/guide/backend' },
+            ],
+          },
+          {
+            text: 'Performance',
+            items: [
+              { text: 'ivue vs the World', link: '/guide/model-layer' },
+              { text: 'Performance by Design', link: '/guide/performance' },
+              { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
             ],
           },
           {
@@ -847,15 +847,6 @@ export default defineConfig({
           ],
         },
         {
-          text: 'Performance',
-          collapsed: false,
-          items: [
-            { text: 'ivue vs the World', link: '/guide/model-layer' },
-            { text: 'Performance by Design', link: '/guide/performance' },
-            { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
-          ],
-        },
-        {
           text: 'Advanced Patterns',
           collapsed: false,
           items: [
@@ -866,6 +857,15 @@ export default defineConfig({
             { text: 'Static() — Capability Classes', link: '/guide/static' },
             { text: 'Caches, Registries & self', link: '/guide/caches-and-registries' },
             { text: 'Backend ivue', link: '/guide/backend' },
+          ],
+        },
+        {
+          text: 'Performance',
+          collapsed: false,
+          items: [
+            { text: 'ivue vs the World', link: '/guide/model-layer' },
+            { text: 'Performance by Design', link: '/guide/performance' },
+            { text: 'Interactive Benchmarks', link: '/guide/benchmarks' },
           ],
         },
         {
