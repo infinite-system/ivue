@@ -2250,6 +2250,7 @@ a.feature-inline-link {
 /* post pages only — the index keeps its compact chips */
 .vp-doc .blog-post-date .blog-post-tags__icon {
   flex: none;
+  margin-left: 6px; /* optical alignment with the banner's left edge */
   color: var(--vp-c-text-3);
 }
 .vp-doc .blog-post-date .blog-post-tag {
