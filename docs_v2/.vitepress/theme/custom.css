@@ -2862,10 +2862,9 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   transform: translateX(calc(-100% - 14px));
 }
 @media (max-width: 640px) {
-  /* compact rows: the thumb is flush left, 152px wide, centered */
+  /* compact rows: the thumb is flush left and top, 152px wide */
   .blog-row .new-badge--thumb {
-    top: auto;
-    bottom: calc(50% + 152px * 630 / 1200 / 2 - 22px);
+    top: 7px;
     left: 152px;
     transform: translateX(calc(-100% - 6px));
   }
@@ -3098,7 +3097,7 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   }
   .vp-doc .blog-row,
   .vp-doc .blog-row:hover {
-    align-items: center;
+    align-items: flex-start;
     border: none;
     border-radius: 0;
     background: none;
@@ -3108,14 +3107,17 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   .vp-doc .blog-row .thumb {
     width: 152px;
     flex: 0 0 152px;
-    align-self: center;
+    align-self: flex-start;
     margin: 0;
     border: 1px solid var(--vp-c-divider);
     border-radius: 8px;
   }
+  /* text at least as tall as the thumb (152 × 630/1200 ≈ 80px): short
+     titles center on it; a taller title starts near its top edge */
   .blog-row .body {
     justify-content: center;
-    padding: 0 0 0 14px;
+    min-height: 80px;
+    padding: 3px 0 0 14px;
   }
   .vp-doc .blog-row h2 {
     margin: 0 0 4px;
