@@ -2473,6 +2473,11 @@ a.feature-inline-link {
 .VPSidebar:has(a[href="/blog/"]) .VPSidebarItem.level-1:last-child {
   border-bottom: none;
 }
+/* rail search (BlogSidebarSearch.vue) hides non-matching posts and
+   emptied months */
+.VPSidebar .blog-rail-hidden {
+  display: none !important;
+}
 /* post titles are long — one size down from the guide rail */
 .VPSidebar:has(a[href="/blog/"]) .VPSidebarItem.level-1 .link > .text {
   font-size: 13px;

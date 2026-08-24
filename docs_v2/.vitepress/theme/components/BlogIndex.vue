@@ -4,7 +4,6 @@ import { onMounted } from 'vue';
 import { withBase } from 'vitepress';
 import { data as posts } from '../../../blog/blog.data.mjs';
 import NewsletterQuickJoin from './NewsletterQuickJoin.vue';
-import { blogSearchQuery as searchQuery } from '../blog-search-state';
 
 type ViewStyle = 'list' | 'cards';
 const VIEW_STORAGE_KEY = 'ivue-blog-view';
@@ -37,8 +36,8 @@ function toggleSeeAll() {
   localStorage.setItem(SEE_ALL_STORAGE_KEY, seeAll.value ? '1' : '');
 }
 
-// ---- search: the query is shared with the sidebar's search box
-// (blog-search-state.ts) — one ref, two inputs -----------------------
+// ---- search (the sidebar has its own, filtering the rail) ----------
+const searchQuery = ref('');
 
 // ---- tag filter ----------------------------------------------------
 // Tags come from post frontmatter; the cloud shows each with its count.
