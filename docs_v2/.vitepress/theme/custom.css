@@ -37,7 +37,7 @@
   --vp-font-family-base: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --vp-font-family-mono: 'Geist Mono', ui-monospace, monospace;
   /* inline code chip color — distinct from blue links and body text */
-  --ivue-code-color: #7c3aed;
+  --ivue-code-color: var(--vp-c-brand-1); /* match home: indigo, not violet */
   /* light mode's default chip background is too faint under the mono */
   --vp-code-bg: rgba(116, 124, 148, 0.2);
 
@@ -59,7 +59,7 @@
   --ivue-link-shadow: drop-shadow(0 1px 1px rgba(2, 6, 23, 0.55));
   --ivue-link-accent: #60a5fa;
   --ivue-link-glow: rgba(59, 130, 246, 0.38);
-  --ivue-code-color: #a78bfa;
+  --ivue-code-color: var(--vp-c-brand-1); /* match home: indigo, not violet */
   /* dark keeps VitePress's adaptive chip background */
   --vp-code-bg: var(--vp-c-default-soft);
   --vp-c-brand-1: #818cf8;
@@ -2627,13 +2627,17 @@ html:not(.dark) .fw-embed .fw-sub {
   color: transparent;
 }
 /* Mobile menu screen: same blue link family as the desktop nav —
-   VitePress's own hover/active rules there fall back to brand purple */
+   VitePress's own hover/active/open/contains-active rules there all
+   fall back to brand purple. The group BUTTON carries the color when
+   its group holds the current page, so hit it in every state. */
 .VPNavScreen .VPNavScreenMenuLink:hover,
 .VPNavScreen .VPNavScreenMenuLink.active,
 .VPNavScreen .VPNavScreenMenuGroupLink:hover,
 .VPNavScreen .VPNavScreenMenuGroupLink.active,
-.VPNavScreen .VPNavScreenMenuGroup .button:hover .title,
-.VPNavScreen .VPNavScreenMenuGroup.open .button .title {
+.VPNavScreen .VPNavScreenMenuGroup.active .button,
+.VPNavScreen .VPNavScreenMenuGroup.open .button,
+.VPNavScreen .VPNavScreenMenuGroup .button[aria-expanded='true'],
+.VPNavScreen .VPNavScreenMenuGroup .button:hover {
   color: var(--ivue-link-2) !important;
 }
 
