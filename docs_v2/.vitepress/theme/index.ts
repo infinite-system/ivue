@@ -292,6 +292,34 @@ export default {
       };
       requestAnimationFrame(labelLocalNav);
 
+      // Jumping via the mobile outline dropdown KEEPS the panel open —
+      // VitePress closes it on item click, which forces a scroll back
+      // up to jump again. Capture the click before its handler, do the
+      // hash-jump ourselves, leave the panel alone (tap-outside and the
+      // chevron still close it).
+      document.addEventListener(
+        'click',
+        (event) => {
+          const link = (event.target as Element | null)?.closest?.(
+            '.VPLocalNavOutlineDropdown .outline-link',
+          ) as HTMLAnchorElement | null;
+          if (!link) return;
+          const anchor = decodeURIComponent(link.hash.slice(1));
+          const target = document.getElementById(anchor);
+          if (!target) return; // let VitePress handle the odd case
+          event.preventDefault();
+          event.stopPropagation();
+          history.pushState(history.state, '', link.href);
+          // clear the sticky bars: navbar + local nav sit above content
+          const stickyOffset = 128;
+          window.scrollTo({
+            top: target.getBoundingClientRect().top + window.scrollY - stickyOffset,
+            behavior: 'smooth',
+          });
+        },
+        { capture: true },
+      );
+
       // Tapping the logo while the mobile menu is open: VitePress only
       // closes the screen on route CHANGE, so from the home page the
       // menu would stay open over the page. Close it explicitly.
