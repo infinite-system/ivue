@@ -2243,9 +2243,14 @@ a.feature-inline-link {
 .vp-doc .blog-post-date .blog-post-tags {
   display: inline-flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
-  margin-left: 12px;
   vertical-align: 1px;
+}
+/* post pages only — the index keeps its compact chips */
+.vp-doc .blog-post-date .blog-post-tags__icon {
+  flex: none;
+  color: var(--vp-c-text-3);
 }
 .vp-doc .blog-post-date .blog-post-tag {
   padding: 1px 9px;
