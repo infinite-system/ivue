@@ -2566,7 +2566,8 @@ html:not(.dark) .fw-embed .fw-sub {
   pointer-events: none;
   transition:
     opacity 0.16s ease,
-    transform 0.16s ease;
+    transform 0.16s ease,
+    border-color 0.3s ease;
 }
 .ix-link-preview.is-visible {
   opacity: 1;
@@ -2576,8 +2577,8 @@ html:not(.dark) .fw-embed .fw-sub {
   cursor: pointer;
 }
 .ix-link-preview.is-visible:hover {
-  /* subtle: a half-strength accent tint on the border, nothing else */
-  border-color: color-mix(in srgb, var(--ivue-link-accent) 50%, transparent);
+  /* whisper: a third-strength accent tint on the border, eased in */
+  border-color: color-mix(in srgb, var(--ivue-link-accent) 35%, transparent);
 }
 .dark .ix-link-preview {
   background: #0e1424;
@@ -3477,6 +3478,14 @@ a.feature-inline-link:active {
 .VPNavBar .divider {
   background-color: transparent !important;
 }
+/* Search joins the blue family: the nav button's hover border and the
+   modal's focus border/highlights all derive from brand-1 inside
+   VitePress — rescope the token to the link blue on those surfaces */
+.DocSearch-Button,
+.VPLocalSearchBox {
+  --vp-c-brand-1: var(--ivue-link-2);
+}
+
 /* same hairline ink for the sidebar's group separators and the mobile
    menu's row/group separators */
 .VPSidebar .group {

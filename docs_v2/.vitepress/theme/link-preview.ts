@@ -152,7 +152,7 @@ export function installLinkPreviews() {
     pointerX = event.clientX;
     pointerY = event.clientY;
     const link = (event.target as Element | null)?.closest?.(
-      '.vp-doc a[href]',
+      '.vp-doc a[href], a.feature-inline-link[href]',
     ) as HTMLAnchorElement | null;
     if (!link || link === currentLink) return;
     hide();
