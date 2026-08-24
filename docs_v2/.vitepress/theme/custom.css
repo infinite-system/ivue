@@ -1544,13 +1544,8 @@ a.feature-inline-link {
 .blog-card .date,
 .blog-row .date {
   display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-family: var(--vp-font-family-mono);
   font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-text-3);
 }
 .vp-doc .blog-card h2,
 .vp-doc .blog-row h2 {
