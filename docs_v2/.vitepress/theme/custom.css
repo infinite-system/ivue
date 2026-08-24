@@ -2857,10 +2857,11 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   transform: translateX(calc(-100% - 14px));
 }
 @media (max-width: 640px) {
-  /* compact rows: the thumb is inset 10px and 108px wide */
+  /* compact rows: the thumb is flush left, 152px wide, centered */
   .blog-row .new-badge--thumb {
-    top: 16px;
-    left: 118px;
+    top: auto;
+    bottom: calc(50% + 152px * 630 / 1200 / 2 - 22px);
+    left: 152px;
     transform: translateX(calc(-100% - 6px));
   }
 }
@@ -3085,21 +3086,31 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
    both centered on the thumb; the excerpt and the read-link go (that
    is what CARDS are for on a phone) */
 @media (max-width: 640px) {
-  .vp-doc .blog-row {
+  /* no card around the row — the thumb and the text ARE the row; the
+     thumb is taller than a two-line title plus its date */
+  .blog-rows {
+    gap: 14px;
+  }
+  .vp-doc .blog-row,
+  .vp-doc .blog-row:hover {
     align-items: center;
-    border-radius: 12px;
+    border: none;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    transform: none;
   }
   .vp-doc .blog-row .thumb {
-    width: 108px;
-    flex: 0 0 108px;
+    width: 152px;
+    flex: 0 0 152px;
     align-self: center;
-    margin: 10px 0 10px 10px;
+    margin: 0;
     border: 1px solid var(--vp-c-divider);
-    border-radius: 7px;
+    border-radius: 8px;
   }
   .blog-row .body {
     justify-content: center;
-    padding: 10px 14px 10px 12px;
+    padding: 0 0 0 14px;
   }
   .vp-doc .blog-row h2 {
     margin: 0 0 4px;
