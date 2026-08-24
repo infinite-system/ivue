@@ -223,6 +223,64 @@ Semantics to rely on:
 - Accessor pairs with a setter, getters without the `$` prefix, and
   instance members are untouched by `Static()`.
 
+## `LazyShared<T>` — from `ivue/extras`
+
+```ts
+class LazyShared<T> {
+  constructor(make: () => T);
+  get value(): T; // constructs on first read, then memoizes
+  reset(): void; // drop the value; the next read constructs again
+}
+```
+
+The safe **shared-store cell** for static classes. It closes a triangle
+no other member kind can:
+
+- A `$`-prefixed static getter caches **per receiver** — right for
+  memos and per-class tuning, wrong for a shared store: a subclass
+  reading `this.$store` silently forks the registry.
+- A plain `static readonly` field is shared and never forks — but its
+  initializer runs at **module load**, so constructing another
+  namespace's class there races import cycles.
+- `LazyShared` is both: the field eagerly stores the CELL (load-safe —
+  a thunk evaluates nothing), the thunk runs on the first `.value`
+  read (cycle-safe — every module in any import cycle has finished
+  loading), and memoization lives inside the cell (fork-safe — no
+  receiver, subclass included, can fork it).
+
+```ts
+import { Static, LazyShared } from 'ivue/extras';
+
+class $SearchRegistry {
+  // ONE backend for the whole hierarchy — the field IS the pin
+  protected static readonly sharedBackend = new LazyShared(
+    () => new SearchBackend.Class(),
+  );
+
+  protected static get $backend() {
+    return this.sharedBackend.value;
+  }
+}
+
+export namespace SearchRegistry {
+  export const $Class = Static($SearchRegistry);
+  export let Class = $Class;
+}
+```
+
+Guarantees:
+
+- A thunk that reads its own cell (directly or through another cell)
+  throws a **named cycle error** instead of a bare stack overflow.
+- A thunk that throws leaves the cell **retryable, never poisoned** —
+  the next read runs the thunk again.
+- `reset()` exists for tests and process recomposition; production
+  code never resets.
+
+The pattern in full — when a shared store beats a `$`-getter, and how
+the two divide the static world — is in
+[Caches, Registries & self](/guide/caches-and-registries).
+
 ## `isClass(value)`
 
 ```ts
