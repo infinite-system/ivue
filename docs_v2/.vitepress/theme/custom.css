@@ -3526,7 +3526,7 @@ a.feature-inline-link:active {
   display: block;
   flex: 1;
   text-align: center;
-  padding: 5px 14px !important;
+  padding: 8px 14px !important;
   font-size: 12px !important;
   line-height: 1.4 !important; /* the inherited 48px line was the "huge" band */
   font-weight: 500;
@@ -3536,18 +3536,23 @@ a.feature-inline-link:active {
 }
 .VPLocalNavOutlineDropdown .top-link:active {
   background-color: color-mix(in srgb, var(--ivue-link-accent) 14%, transparent);
-  transition-duration: 0.06s;
+  transition-duration: 0.18s;
 }
 .VPLocalNavOutlineDropdown .top-link::after {
   content: ' ↑';
 }
 /* section rows: a soft chevron leads each, and a tap highlights the
    WHOLE row — eased in and out, never a snap */
+/* rows run close to the panel edge (the ul's 16px gutter shrinks);
+   the row's own left padding grows so the chevron still breathes */
+.VPLocalNavOutlineDropdown .outline .VPDocOutlineItem {
+  padding: 0 5px !important;
+}
 .VPLocalNavOutlineDropdown .outline-link {
   display: block;
-  padding: 4px 12px 4px 10px;
+  padding: 4px 12px 4px 16px;
   line-height: 1.55; /* theme default is 32px — rows were twice the height */
-  border-radius: 8px;
+  border-radius: 5px; /* tighter than the panel's own 12px */
   transition:
     background-color 0.3s ease,
     color 0.3s ease;
@@ -3560,7 +3565,7 @@ a.feature-inline-link:active {
 .VPLocalNavOutlineDropdown .outline-link:active {
   background-color: color-mix(in srgb, var(--ivue-link-accent) 14%, transparent);
   color: var(--ivue-link-2);
-  transition-duration: 0.06s; /* quick in, slow out */
+  transition-duration: 0.18s; /* eased in, slower out */
 }
 
 /* the sub-nav bar (mobile "Menu / On this page") draws its own line */
