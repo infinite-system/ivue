@@ -11,7 +11,7 @@
   re-verify the ~1.1 KB gzipped production size and 100% test coverage.
 - **Newsletter** (`newsletter/` — Worker + D1 + Postmark): the ops manual
   is `newsletter/README.md` (command reference + debug decoder ring at
-  the bottom — read before operating). Two invariants: email CONTENT is
+  the bottom — read before operating). Comments system design + invariants: `newsletter/COMMENTS.md`. Two invariants: email CONTENT is
   rendered at SITE build time (`blog-email-renderer.mjs` →
   `blog-index.json`), so template changes ship via site push, never
   Worker deploy; and all newsletter wrangler commands run FROM
