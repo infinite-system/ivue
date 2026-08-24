@@ -121,7 +121,7 @@ assumptions, exactly as you would a constructor.
 
 ## Where it comes from
 
-Distilled from [Invar](https://github.com/infinite-system/invar)'s
+Distilled from [Invar](/examples/invar)'s
 `SplitterModel` — a pure, renderer-free drag model whose contract
 ("a reported size stays within its live effective bounds") is enforced by
 invariant records, with the computed seed guaranteeing the contract from

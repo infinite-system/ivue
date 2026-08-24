@@ -20,7 +20,7 @@ so the primary `ivue` entry stays the bare engine:
 import { Static } from 'ivue/extras';
 ```
 
-[Invar](https://github.com/infinite-system/invar), the terminal IDE
+[Invar](/examples/invar), the terminal IDE
 [built by AI agents on ivue](/blog/agents-built-an-editor), runs its
 entire capability layer — files, git, parsers, clipboard, status — on
 this one seam shape, applied uniformly across the codebase.

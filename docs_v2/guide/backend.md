@@ -16,7 +16,7 @@ Node/Bun process is fine: `runtime-dom` touches `document` only when you
 That makes ivue a **server domain-model layer**: reactive state with class
 ergonomics, running headless.
 
-> The proof is not hypothetical. [Invar](https://github.com/infinite-system/invar) — a
+> The proof is not hypothetical. [Invar](/examples/invar) — a
 > full terminal IDE — is hundreds of ivue classes running in a Bun process
 > with no DOM: file watchers, search engines, undo coordinators, PTY
 > servers. Its headless services (a warm app server for agent driving, an
