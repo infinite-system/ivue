@@ -3429,9 +3429,24 @@ a.feature-inline-link:active {
    passes beneath it. */
 @media (max-width: 959px) {
   .VPNav {
-    border-bottom: 1px solid var(--vp-c-gutter);
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--vp-c-gutter) 30%, transparent);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   }
+}
+
+/* Header hairline at 0.3 alpha — softer separation from the page.
+   VitePress paints it two ways: a border on the bar and a divider-line
+   element on docs pages; both get the same translucent ink. */
+.VPNavBar {
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--vp-c-gutter) 30%,
+    transparent
+  ) !important;
+}
+.VPNavBar .divider-line {
+  background-color: color-mix(in srgb, var(--vp-c-gutter) 30%, transparent);
 }
 
 /* Two-line hamburger geometry: equal widths, no horizontal staircase, and
