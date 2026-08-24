@@ -2162,7 +2162,7 @@ a.feature-inline-link {
   overflow: hidden;
   border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
-  background: var(--vp-c-bg-soft);
+  background: var(--vp-c-bg); /* flush with the page — rows read as content, not a widget */
 }
 .VPDoc .blog-archive__row {
   width: 100%;
@@ -2177,7 +2177,7 @@ a.feature-inline-link {
   font-weight: inherit;
 }
 .VPDoc .blog-archive__row:hover .blog-archive__title {
-  color: var(--vp-c-brand-1);
+  color: var(--ivue-link-accent);
 }
 .blog-archive__title {
   flex: none;
@@ -2197,11 +2197,11 @@ a.feature-inline-link {
   color: var(--vp-c-text-3);
 }
 .VPDoc .blog-archive__row--current {
-  background: var(--vp-c-brand-soft);
-  box-shadow: inset 3px 0 0 var(--vp-c-brand-1);
+  background: color-mix(in srgb, var(--ivue-link-accent) 10%, transparent);
+  box-shadow: inset 3px 0 0 var(--ivue-link-accent);
 }
 .blog-archive__row--current .blog-archive__title {
-  color: var(--vp-c-brand-1);
+  color: var(--ivue-link-accent);
 }
 .blog-archive__date {
   flex: none;
@@ -2209,13 +2209,23 @@ a.feature-inline-link {
   font-size: 11px;
   color: var(--vp-c-text-3);
 }
-/* brand-tint the scroller's built-in scrollbar inside the archive */
+/* link-blue tint for the scroller's built-in scrollbar inside the archive */
 .blog-archive .virtual-scroller__thumb {
-  background: color-mix(in srgb, var(--vp-c-brand-1) 55%, var(--vp-c-divider));
+  background: color-mix(in srgb, var(--ivue-link-accent) 55%, var(--vp-c-divider));
 }
 .blog-archive .virtual-scroller__track:hover .virtual-scroller__thumb,
 .blog-archive .virtual-scroller__thumb.dragging {
-  background: var(--vp-c-brand-1);
+  background: var(--ivue-link-accent);
+}
+
+/* ---------- Outline ("On this page") marker: link-blue, sized to the
+   active link's real height (1 or 2 wrapped lines — JS keeps it in
+   sync, see installOutlineMarkerSizer in theme/index.ts) ---------- */
+.VPDocAsideOutline .outline-marker {
+  background-color: var(--ivue-link-accent);
+}
+.VPDocAsideOutline .outline-link.active {
+  color: var(--ivue-link-accent);
 }
 
 .newsletter__turnstile {
@@ -2948,9 +2958,8 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   color: var(--vp-c-text-1);
 }
 .blog-post-nav__date {
-  font-family: var(--vp-font-family-mono);
   font-size: 11px;
-  color: var(--vp-c-brand-1);
+  color: var(--vp-c-text-3);
 }
 @media (max-width: 640px) {
   .blog-post-nav {
@@ -3315,6 +3324,7 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   .VPDoc .cm-avatar {
     width: 54px;
     height: 54px;
+    border-width: 2px;
   }
 }
 

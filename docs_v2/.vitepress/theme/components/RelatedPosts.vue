@@ -141,6 +141,10 @@ function formatDate(date: string): string {
   aspect-ratio: 1200 / 630;
   border-radius: 8px;
 }
+/* breathing room so title/date don't sit flush with the thumb edges */
+.related-posts--doc .related-posts__body {
+  padding: 0 8px 4px;
+}
 .related-posts__heading {
   margin: 0 0 10px;
   font-size: 11px;
@@ -178,7 +182,7 @@ function formatDate(date: string): string {
   font-size: 12.5px;
   font-weight: 600;
   line-height: 1.35;
-  color: var(--vp-c-text-1);
+  color: var(--ivue-link-accent);
   transition: color 0.15s ease;
 }
 .related-posts__date {
@@ -186,10 +190,13 @@ function formatDate(date: string): string {
   color: var(--vp-c-text-3);
 }
 .related-posts__item:hover .related-posts__title {
-  color: var(--vp-c-brand-1);
+  color: var(--ivue-link-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .related-posts__item:hover .related-posts__thumb {
-  border-color: var(--vp-c-brand-1);
+  border-color: var(--ivue-link-accent);
+  box-shadow: 0 12px 30px -18px var(--ivue-link-glow);
 }
 .related-posts__more {
   grid-column: 1 / -1;
@@ -206,8 +213,8 @@ function formatDate(date: string): string {
     border-color 0.2s;
 }
 .related-posts__more:hover {
-  color: var(--vp-c-brand-1);
-  border-color: var(--vp-c-brand-1);
+  color: var(--ivue-link-accent);
+  border-color: var(--ivue-link-accent);
 }
 /* mobile: the doc grid collapses to the aside's row form — small
    thumb beside the title beats stacked full-width cards on a phone */
@@ -223,6 +230,10 @@ function formatDate(date: string): string {
     align-items: flex-start;
     gap: 10px;
     padding: 6px 0;
+  }
+  /* row form: the thumb already offsets the text — no extra indent */
+  .related-posts--doc .related-posts__body {
+    padding: 0;
   }
   .related-posts--doc .related-posts__thumb {
     width: 76px;

@@ -218,6 +218,38 @@ export default {
           });
       };
 
+      // The outline marker ships as a fixed-height bar; when an "On
+      // this page" link wraps to two lines the bar under-covers it.
+      // VitePress moves the marker by writing its style.top on every
+      // active-anchor change — observing that write is the exact
+      // moment to match the marker's height to the active link's real
+      // height. One observer per outline element (it is re-created on
+      // navigation, so re-attach after each route change).
+      const sizeOutlineMarker = () => {
+        const marker = document.querySelector<HTMLElement>(
+          '.VPDocAsideOutline .outline-marker',
+        );
+        const active = document.querySelector<HTMLElement>(
+          '.VPDocAsideOutline .outline-link.active',
+        );
+        if (marker && active) marker.style.height = `${active.offsetHeight}px`;
+      };
+      let outlineMarkerObserver: MutationObserver | null = null;
+      const watchOutlineMarker = () => {
+        outlineMarkerObserver?.disconnect();
+        const marker = document.querySelector<HTMLElement>(
+          '.VPDocAsideOutline .outline-marker',
+        );
+        if (!marker) return;
+        outlineMarkerObserver = new MutationObserver(sizeOutlineMarker);
+        outlineMarkerObserver.observe(marker, {
+          attributes: true,
+          attributeFilter: ['style'],
+        });
+        sizeOutlineMarker();
+      };
+      requestAnimationFrame(watchOutlineMarker);
+
       const onAfterRouteChange = router.onAfterRouteChange;
       router.onAfterRouteChange = async (to) => {
         await onAfterRouteChange?.(to);
@@ -225,6 +257,7 @@ export default {
           shieldBrand();
           injectExtraNavLinks();
           restartAvatarRing();
+          watchOutlineMarker();
         });
 
         if (router.route.data.isNotFound) {
