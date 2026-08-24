@@ -190,7 +190,8 @@ function formatDate(date: string): string {
   color: var(--vp-c-text-3);
 }
 .related-posts__item:hover .related-posts__title {
-  color: var(--ivue-link-2);
+  /* mirror the page's prose-link hover shift */
+  color: var(--ivue-link-hover-2);
 }
 .related-posts__item:hover .related-posts__thumb {
   border-color: var(--ivue-link-accent);
