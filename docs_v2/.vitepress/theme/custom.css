@@ -2564,6 +2564,13 @@ html:not(.dark) .fw-embed .fw-sub {
 .ix-link-preview.is-visible {
   opacity: 1;
   transform: translateY(0);
+  /* the card is a real link — hoverable and clickable */
+  pointer-events: auto;
+  cursor: pointer;
+}
+.ix-link-preview.is-visible:hover {
+  border-color: var(--ivue-link-accent);
+  box-shadow: 0 12px 30px -18px var(--ivue-link-glow);
 }
 .dark .ix-link-preview {
   background: #0e1424;

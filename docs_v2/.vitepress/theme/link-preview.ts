@@ -73,9 +73,11 @@ export function installLinkPreviews() {
   // hover is the whole interaction — never on touch devices
   if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
-  const card = document.createElement('div');
+  // a real anchor: hovering the card keeps it open, clicking navigates
+  // (VitePress's global click handler gives it SPA navigation for free)
+  const card = document.createElement('a');
   card.className = 'ix-link-preview';
-  card.setAttribute('aria-hidden', 'true');
+  card.tabIndex = -1;
   const image = document.createElement('img');
   image.width = CARD_WIDTH;
   image.height = IMAGE_HEIGHT;
@@ -93,15 +95,25 @@ export function installLinkPreviews() {
   document.body.appendChild(card);
 
   let showTimer: number | undefined;
+  let hideTimer: number | undefined;
   let currentLink: HTMLAnchorElement | null = null;
   let pointerX = 0;
   let pointerY = 0;
 
   const hide = () => {
     window.clearTimeout(showTimer);
+    window.clearTimeout(hideTimer);
     currentLink = null;
     card.classList.remove('is-visible');
   };
+  // leaving the link starts a short grace period — long enough to
+  // cross the gap onto the card, which cancels the hide
+  const scheduleHide = () => {
+    window.clearTimeout(hideTimer);
+    hideTimer = window.setTimeout(hide, 140);
+  };
+  card.addEventListener('mouseenter', () => window.clearTimeout(hideTimer));
+  card.addEventListener('mouseleave', scheduleHide);
 
   image.addEventListener('load', () => {
     if (currentLink) {
@@ -151,6 +163,7 @@ export function installLinkPreviews() {
     currentLink = link;
     showTimer = window.setTimeout(() => {
       if (currentLink !== link) return;
+      card.href = link.href;
       titleElement.textContent = info.title;
       dateElement.textContent = info.date ?? '';
       dateElement.style.display = info.date ? '' : 'none';
@@ -170,7 +183,11 @@ export function installLinkPreviews() {
     'mouseout',
     (event) => {
       const link = (event.target as Element | null)?.closest?.('.vp-doc a');
-      if (link && link === currentLink) hide();
+      if (link !== currentLink || !link) return;
+      // heading onto the card keeps it open
+      const destination = event.relatedTarget as Element | null;
+      if (destination && card.contains(destination)) return;
+      scheduleHide();
     },
     { passive: true },
   );
