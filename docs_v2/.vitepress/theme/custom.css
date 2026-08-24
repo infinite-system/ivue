@@ -2564,10 +2564,12 @@ html:not(.dark) .fw-embed .fw-sub {
   opacity: 0;
   transform: translateY(4px);
   pointer-events: none;
+  /* NO border-color here: on the card's very first reveal the browser
+     would animate it from its initial value and the edge reads as
+     briefly missing. The eased hover tint lives on .is-visible. */
   transition:
     opacity 0.16s ease,
-    transform 0.16s ease,
-    border-color 0.3s ease;
+    transform 0.16s ease;
 }
 .ix-link-preview.is-visible {
   opacity: 1;
@@ -2575,6 +2577,10 @@ html:not(.dark) .fw-embed .fw-sub {
   /* the card is a real link — hoverable and clickable */
   pointer-events: auto;
   cursor: pointer;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease,
+    border-color 0.3s ease;
 }
 .ix-link-preview.is-visible:hover {
   /* barely there: a fifth-strength accent tint on the border, eased in */
