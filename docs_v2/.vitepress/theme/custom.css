@@ -1574,7 +1574,7 @@ a.feature-inline-link {
   color: var(--vp-c-text-2);
 }
 .blog-card .excerpt {
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: 3;
 }
 .blog-card .go {
   /* painted by the link system; layout only */
