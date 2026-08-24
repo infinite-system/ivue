@@ -1867,7 +1867,8 @@ a.feature-inline-link {
 .newsletter__quick-lead {
   margin: 0 0 6px;
   font-size: 12.5px;
-  color: var(--vp-c-text-3);
+  font-weight: 500;
+  color: var(--vp-c-text-1);
   text-align: center;
 }
 .newsletter__form {

@@ -185,7 +185,8 @@ async function join() {
 }
 .quickjoin__lead {
   font-size: 12.5px;
-  color: var(--vp-c-text-3);
+  font-weight: 500;
+  color: var(--vp-c-text-1);
   white-space: nowrap;
 }
 /* the trio is ONE segmented block: name | email | join */
