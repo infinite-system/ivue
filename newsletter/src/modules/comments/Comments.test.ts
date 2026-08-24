@@ -289,6 +289,118 @@ describe('Comments', () => {
     expect(await Comments.Class.replyRecipients(env, self)).toEqual([]);
   });
 
+  // ---- the gaps closed on 2026-08-24 (COMMENTS.md G1/G2/G3/G8) -------
+
+  it('G8: approve is idempotent — the second approve reports false', async () => {
+    const env = makeTestEnv();
+    const id = await Comments.Class.submit(env, {
+      slug: 'first-post',
+      name: 'Ada',
+      email: 'ada@ivue.dev',
+      body: 'once',
+    });
+    expect(await Comments.Class.approve(env, id)).toBe(true);
+    expect(await Comments.Class.approve(env, id)).toBe(false); // matched-not-changed trap closed
+  });
+
+  it('G2: the reply subscription is created at APPROVAL, not at submit', async () => {
+    const env = makeTestEnv();
+    const id = await Comments.Class.submit(env, {
+      slug: 'first-post',
+      name: 'Ada',
+      email: 'ada@ivue.dev',
+      body: 'pending for now',
+    });
+    expect(await Comments.Class.subscribed(env, id, 'ada@ivue.dev')).toBe(false);
+    await Comments.Class.approve(env, id);
+    expect(await Comments.Class.subscribed(env, id, 'ada@ivue.dev')).toBe(true);
+    // a comment deleted while pending leaves no subscription behind
+    const doomed = await Comments.Class.submit(env, {
+      slug: 'first-post',
+      name: 'Bo',
+      email: 'bo@ivue.dev',
+      body: 'never approved',
+    });
+    await Comments.Class.remove(env, doomed);
+    expect(await Comments.Class.subscribed(env, doomed, 'bo@ivue.dev')).toBe(false);
+  });
+
+  it('G1: deleting a root removes the whole thread and its subscriptions', async () => {
+    const env = makeTestEnv();
+    const { rootId, replyId } = await thread(env);
+    expect(await Comments.Class.remove(env, rootId)).toBe(true);
+    expect(await Comments.Class.rowFor(env, rootId)).toBe(null);
+    expect(await Comments.Class.rowFor(env, replyId)).toBe(null); // no orphan
+    expect(await Comments.Class.subscribed(env, rootId, 'ada@ivue.dev')).toBe(false);
+    expect(await Comments.Class.subscribed(env, rootId, 'bo@ivue.dev')).toBe(false);
+    expect(await Comments.Class.approvedFor(env, 'first-post')).toEqual([]);
+  });
+
+  it('G1: deleting a reply re-parents its answers onto the root', async () => {
+    const env = makeTestEnv();
+    const { rootId, replyId } = await thread(env);
+    const deepId = await Comments.Class.submit(env, {
+      slug: 'first-post',
+      name: 'Cy',
+      email: 'cy@ivue.dev',
+      body: '@Bo answering you',
+      parentId: replyId,
+    });
+    await Comments.Class.approve(env, deepId);
+    expect(await Comments.Class.remove(env, replyId)).toBe(true);
+    const deep = (await Comments.Class.rowFor(env, deepId))!;
+    expect(deep.parentId).toBe(rootId); // still in the conversation
+    expect(deep.rootId).toBe(rootId);
+    expect(await Comments.Class.remove(env, 4242)).toBe(false);
+  });
+
+  it('G3: an @mention resolves to the EARLIEST holder of that name — never an impostor', async () => {
+    const env = makeTestEnv();
+    const { rootId, replyId } = await thread(env); // Ada (root), Bo (reply)
+    // an impostor joins the thread calling themselves "Ada"
+    const impostorId = await Comments.Class.submit(env, {
+      slug: 'first-post',
+      name: 'Ada',
+      email: 'impostor@evil.dev',
+      body: 'hello, I am also Ada',
+      parentId: rootId,
+    });
+    await Comments.Class.approve(env, impostorId);
+    // Cy mentions @Ada in a reply to Bo
+    const mentionId = await Comments.Class.submit(env, {
+      slug: 'first-post',
+      name: 'Cy',
+      email: 'cy@ivue.dev',
+      body: '@Ada thoughts?',
+      parentId: replyId,
+    });
+    await Comments.Class.approve(env, mentionId);
+    const mention = (await Comments.Class.rowFor(env, mentionId))!;
+    const emails = (await Comments.Class.replyRecipients(env, mention)).map(
+      (recipient) => recipient.email,
+    );
+    expect(emails).toContain('ada@ivue.dev'); // the original Ada
+    expect(emails).toContain('bo@ivue.dev'); // the answered author
+    expect(emails).not.toContain('impostor@evil.dev');
+  });
+
+  it('I16: one email per recipient even when addressed twice (parent AND mentioned)', async () => {
+    const env = makeTestEnv();
+    const { rootId, replyId } = await thread(env);
+    void rootId;
+    const doubleId = await Comments.Class.submit(env, {
+      slug: 'first-post',
+      name: 'Cy',
+      email: 'cy@ivue.dev',
+      body: '@Bo replying to you, Bo — and @Bo again',
+      parentId: replyId, // Bo is the parent author AND mentioned twice
+    });
+    await Comments.Class.approve(env, doubleId);
+    const double = (await Comments.Class.rowFor(env, doubleId))!;
+    const recipients = await Comments.Class.replyRecipients(env, double);
+    expect(recipients).toEqual([{ email: 'bo@ivue.dev', name: 'Bo' }]);
+  });
+
   it('mentionsIn reads names, including multi-word, and ignores punctuation', () => {
     expect(Comments.Class.mentionsIn('hi @Ada, thanks')).toContain('ada');
     expect(Comments.Class.mentionsIn('cc @Ada Lovelace here')).toContain(

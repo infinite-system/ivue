@@ -554,6 +554,17 @@ describe('AdminApi', () => {
         message.Subject.includes('replied to you'),
       ),
     ).toHaveLength(1);
+
+    // G8: a second Approve (stale tab, raw POST) is a 404 and mails NOBODY
+    const again = await call('/admin/comments/approve', env, 'POST', {
+      id: replyId,
+    });
+    expect(again.status).toBe(404);
+    expect(
+      calls.notifications.filter((message) =>
+        message.Subject.includes('replied to you'),
+      ),
+    ).toHaveLength(1);
   });
 
   it('lock/unlock a thread through the admin route', async () => {

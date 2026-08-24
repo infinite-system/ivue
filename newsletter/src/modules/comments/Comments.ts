@@ -87,10 +87,14 @@ class $Comments {
     }
 
     const avatarSeed = await Security.Class.avatarSeed(email, env);
+    // the opt-in is RECORDED now; the subscription row is created at
+    // approval (a comment that never goes public leaves nothing behind)
+    const subscribeReplies = submission.subscribeReplies !== false ? 1 : 0;
     const outcome = await env.DB.prepare(
       'INSERT INTO comments ' +
-        '(slug, name, email, body, submitted_at, status, parent_id, root_id, avatar_seed) ' +
-        "VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?)",
+        '(slug, name, email, body, submitted_at, status, parent_id, root_id, ' +
+        'avatar_seed, subscribe_replies) ' +
+        "VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)",
     )
       .bind(
         slug,
@@ -101,6 +105,7 @@ class $Comments {
         parentId,
         rootId,
         avatarSeed,
+        subscribeReplies,
       )
       .run();
     const id = Number(
@@ -112,11 +117,7 @@ class $Comments {
       await env.DB.prepare('UPDATE comments SET root_id = ? WHERE id = ?')
         .bind(id, id)
         .run();
-      rootId = id;
     }
-
-    if (submission.subscribeReplies !== false && rootId)
-      await this.subscribe(env, rootId, email);
 
     return id;
   }
@@ -129,7 +130,8 @@ class $Comments {
     return env.DB.prepare(
       'SELECT id, slug, name, email, body, submitted_at AS submittedAt, ' +
         'status, parent_id AS parentId, root_id AS rootId, locked, ' +
-        'avatar_seed AS avatarSeed FROM comments WHERE id = ?',
+        'avatar_seed AS avatarSeed, subscribe_replies AS subscribeReplies ' +
+        'FROM comments WHERE id = ?',
     )
       .bind(id)
       .first<CommentRow>();
@@ -217,7 +219,7 @@ class $Comments {
     const rootId = reply.rootId ?? reply.id;
     const { results: participants } = await env.DB.prepare(
       'SELECT id, name, email FROM comments ' +
-        "WHERE root_id = ? AND status = 'approved' AND id != ?",
+        "WHERE root_id = ? AND status = 'approved' AND id != ? ORDER BY id",
     )
       .bind(rootId, reply.id)
       .all<{ id: number; name: string; email: string }>();
@@ -226,11 +228,15 @@ class $Comments {
     const parent = participants.find((row) => row.id === reply.parentId);
     if (parent) addressed.set(parent.email.toLowerCase(), parent.name);
 
+    // A display name is not an identity (anyone can type "Ada"). An
+    // @mention resolves to the EARLIEST participant who used that name
+    // in this thread — the original holder, never a later impostor.
+    // (participants come back in id order.)
     for (const mentioned of this.mentionsIn(reply.body)) {
-      for (const row of participants) {
-        if (row.name.trim().toLowerCase() === mentioned)
-          addressed.set(row.email.toLowerCase(), row.name);
-      }
+      const original = participants.find(
+        (row) => row.name.trim().toLowerCase() === mentioned,
+      );
+      if (original) addressed.set(original.email.toLowerCase(), original.name);
     }
 
     const authorEmail = reply.email.trim().toLowerCase();
@@ -316,21 +322,50 @@ class $Comments {
     return row?.total ?? 0;
   }
 
-  // Approve — the ONLY path onto the public site.
+  // Approve — the ONLY path onto the public site. Returns true exactly
+  // ONCE per comment: the WHERE clause requires 'pending', so a second
+  // approve matches nothing (SQLite's `changes` counts matched rows —
+  // without the status guard a re-approve would report success and the
+  // caller would re-send notifications). The author's reply
+  // subscription is created HERE, from the intent recorded at submit.
   static async approve(env: Env, id: number): Promise<boolean> {
     const outcome = await env.DB.prepare(
-      "UPDATE comments SET status = 'approved' WHERE id = ?",
+      "UPDATE comments SET status = 'approved' WHERE id = ? AND status = 'pending'",
     )
       .bind(id)
       .run();
-    return (outcome as { meta: { changes: number } }).meta.changes > 0;
+    const approved = (outcome as { meta: { changes: number } }).meta.changes > 0;
+    if (!approved) return false;
+    const row = await this.rowFor(env, id);
+    if (row?.subscribeReplies && (row.rootId ?? row.id))
+      await this.subscribe(env, row.rootId ?? row.id, row.email);
+    return true;
   }
 
+  // Delete keeps the thread graph closed (no dangling parent_id /
+  // root_id): deleting a ROOT removes the whole thread and its
+  // subscriptions; deleting a REPLY re-parents the replies that
+  // answered it onto the root, so they stay in the conversation.
   static async remove(env: Env, id: number): Promise<boolean> {
-    const outcome = await env.DB.prepare('DELETE FROM comments WHERE id = ?')
-      .bind(id)
-      .run();
-    return (outcome as { meta: { changes: number } }).meta.changes > 0;
+    const row = await this.rowFor(env, id);
+    if (!row) return false;
+    const rootId = row.rootId ?? row.id;
+    if (!row.parentId) {
+      await env.DB.batch([
+        env.DB.prepare('DELETE FROM comments WHERE root_id = ?').bind(rootId),
+        env.DB.prepare('DELETE FROM comment_subscriptions WHERE root_id = ?').bind(
+          rootId,
+        ),
+      ]);
+      return true;
+    }
+    await env.DB.batch([
+      env.DB.prepare(
+        'UPDATE comments SET parent_id = ? WHERE parent_id = ?',
+      ).bind(rootId, id),
+      env.DB.prepare('DELETE FROM comments WHERE id = ?').bind(id),
+    ]);
+    return true;
   }
 }
 
@@ -354,6 +389,7 @@ export interface CommentRow extends PublicComment {
   slug: string;
   email: string;
   status: 'pending' | 'approved';
+  subscribeReplies?: number;
 }
 
 export interface CommentRecipient {

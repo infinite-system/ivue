@@ -17,7 +17,7 @@ starting point for the invariants work.
 
 ## 1. Data model (D1)
 
-Migrations `0008_comments.sql` + `0009_comment_threads.sql`.
+Migrations `0008_comments.sql` + `0009_comment_threads.sql` + `0010_comment_subscribe_intent.sql`.
 
 ```
 comments
@@ -35,6 +35,8 @@ comments
   locked        INTEGER   -- 0/1, meaningful ONLY on the root row
   avatar_seed   TEXT      -- 16 hex chars; HMAC(ADMIN_SECRET, 'avatar:'+email)
                           -- (plain SHA-256 prefix when no secret — local dev)
+  subscribe_replies INTEGER -- 0/1 opt-in recorded at submit (default 1);
+                          -- the subscription ROW is created at approval
 
 comment_subscriptions
   root_id       INTEGER   -- the thread followed
@@ -62,14 +64,17 @@ Shape rules:
 ```
 submit (POST /comment)          → row INSERTed as 'pending'
                                 → root: UPDATE root_id = id
-                                → reply subscription INSERTed (if opted in)
+                                → subscribe_replies opt-in RECORDED (row created at approve)
                                 → operator notified (NOTIFY_EMAIL)
                                 → NOTHING is public yet
 approve (POST /admin/comments/approve)
-                                → status = 'approved' (the ONLY path to public)
+                                → status = 'approved' (the ONLY path to public;
+                                  guarded by status='pending' → true exactly once)
+                                → author's reply subscription created (if opted in)
                                 → if it is a reply: reply notifications go out NOW
 delete (POST /admin/comments/delete)
-                                → DELETE that one row (see gap G1)
+                                → root: whole thread + its subscriptions
+                                → reply: its answers re-parent to the root
 lock/unlock (POST /admin/comments/lock)
                                 → root.locked = 0/1
 ```
@@ -84,10 +89,9 @@ lock/unlock (POST /admin/comments/lock)
    "Replies are locked on this thread."
 3. `avatar_seed` computed from the email.
 4. INSERT as pending; for a root, second statement sets `root_id = id`.
-5. If `subscribeReplies !== false` (default TRUE — the checkbox is
-   pre-checked; the API treats absence as opt-in), INSERT OR IGNORE the
-   `(root_id, email)` subscription. Note: this happens at SUBMIT time,
-   while the comment is still pending (gap G2).
+5. `subscribe_replies` is recorded (default TRUE — the checkbox is
+   pre-checked; the API treats absence as opt-in). The subscription
+   ROW is created later, in `approve()`.
 
 ### 2.2 `Comments.approvedFor(slug)` — the public projection
 
@@ -114,10 +118,11 @@ Participants = approved rows in the same `root_id`, excluding the reply
 itself. Addressed set:
 
 - the author of `reply.parent_id` (the comment being answered), and
-- every participant whose trimmed, lowercased `name` matches an
-  `@mention` in the reply body (`mentionsIn`: up to three words after
+- for each `@mention` in the body (`mentionsIn`: up to three words after
   `@`, with shorter prefixes also tried so "@Ada Lovelace here" resolves
-  "ada lovelace" AND "ada").
+  "ada lovelace" AND "ada"), the EARLIEST participant (lowest id) whose
+  trimmed, lowercased `name` matches — the original holder of the name,
+  never a later impostor.
 
 Then for each addressed email:
 - drop it if it equals the reply author's email (never mail yourself),
@@ -245,8 +250,10 @@ Stated as if–then. ✅ = enforced by code AND covered by a test.
   slug (checked at submit).
 - I7 ✅ Depth ≤ 2: a reply's `root_id` equals its parent's `root_id`
   (never the parent's id when the parent is itself a reply).
-- I8 ❌ Referential integrity over time: deleting a row does not
-  cascade or re-parent (G1). I6 holds at write time only.
+- I8 ✅ Referential integrity over time: deleting a ROOT deletes the
+  whole thread and its subscriptions; deleting a REPLY re-parents its
+  answers onto the root. No dangling `parent_id`/`root_id` ever
+  (closed 2026-08-24; was G1).
 
 **Locking**
 - I9 ✅ If the root is locked, no new reply is accepted anywhere in
@@ -260,17 +267,13 @@ Stated as if–then. ✅ = enforced by code AND covered by a test.
 - I14 ✅ The reply's own author is never a recipient.
 - I15 ✅ The thread starter receives a deep reply only via I12 (parent
   or mention) — never by virtue of starting the thread.
-- I16 ⚠️ At most one email per recipient per approved reply (dedup by
-  address in `replyRecipients`); tested for the single-recipient case.
-- I17 ❌ Approving is NOT idempotent for notifications. VERIFIED
-  2026-08-24: `approve()` on an already-approved row returns `true`
-  (SQLite's `changes` counts MATCHED rows, not altered ones), so a
-  second Approve click on a reply re-runs `notifyReply` and re-mails
-  every recipient. The dashboard hides the button once approved, so
-  it needs a raw POST or a stale tab to trigger — but the invariant
-  "one approval → at most one notification per recipient" is not
-  enforced server-side. Fix: `WHERE id = ? AND status = 'pending'`
-  (then `changes` is honest), or gate notify on the prior status.
+- I16 ✅ At most one email per recipient per approved reply — tested
+  with the parent author also @mentioned twice.
+- I17 ✅ Approve returns true exactly ONCE per comment
+  (`WHERE id = ? AND status = 'pending'`); a second approve is a 404 and
+  mails nobody. Tested at both the module and the admin-route level
+  (closed 2026-08-24; was G8 — SQLite's `changes` counts MATCHED rows,
+  so the unguarded UPDATE used to report success on re-approve).
 
 **Subscriptions**
 - I18 ✅ Subscription key is `(root_id, email)`; unsubscribe removes
@@ -279,10 +282,10 @@ Stated as if–then. ✅ = enforced by code AND covered by a test.
   safety); only `confirm=1` or POST does.
 - I20 ✅ Thread tokens are scoped to one (thread, email); a forged or
   cross-thread token is rejected (403).
-- I21 ⚠️ Subscription is created at SUBMIT (pending) time. If the
-  comment is later deleted or never approved, the subscription
-  remains (G2) — harmless (they'd get replies to a thread they tried
-  to join) but not what "I commented here" strictly means.
+- I21 ✅ The opt-in is recorded on the row (`subscribe_replies`,
+  migration 0010) but the subscription is CREATED at approval. A
+  comment deleted or never approved leaves no subscription (closed
+  2026-08-24; was G2).
 
 **Bot gate**
 - I22 ✅ With `TURNSTILE_SECRET` set, a missing/invalid token fails
@@ -291,25 +294,17 @@ Stated as if–then. ✅ = enforced by code AND covered by a test.
 
 ## 9. Known gaps / open questions (input to the invariants work)
 
-- **G1 — Orphaned replies on delete.** `remove(id)` deletes ONE row.
-  Deleting a root leaves replies with `root_id`/`parent_id` pointing at
-  nothing: they vanish from the site (client only renders replies
-  under a rendered root) but remain in D1, still notify-eligible, and
-  the dashboard shows "reply in thread #N" for a missing N. Options:
-  cascade delete; or "tombstone" the root (keep row, blank body, mark
-  deleted) so replies survive with "[deleted]"; or re-parent. Decide,
-  then make I8 real.
-- **G2 — Subscription before approval.** See I21. Options: create the
-  subscription at approval time instead (requires remembering the
-  opt-in — add a column), or keep and document.
-- **G3 — Name is not identity.** Anyone can post as "Ada". The avatar
-  seed (from email) is the real identity signal — two "Ada"s get
-  different identicons — but @mention matching is by NAME, so a
-  mention can resolve to an impostor's row and notify the impostor
-  (only if they follow the thread). Consider matching mentions to
-  avatar_seed/email of the *earliest* participant with that name, or
-  rendering `@Name` with the identicon, or disallowing duplicate
-  display names within a thread.
+- ~~G1~~ CLOSED — root delete cascades (thread + subscriptions); reply
+  delete re-parents its answers onto the root. Decision recorded: no
+  tombstones — a removed root removes the conversation it started.
+- ~~G2~~ CLOSED — `subscribe_replies` column records intent at
+  submit; `approve()` creates the subscription.
+- ~~G3~~ CLOSED (narrowly) — an @mention resolves to the EARLIEST
+  participant who used that name in the thread (participants ordered
+  by id), so a later impostor cannot capture a mention. Still open as
+  a UX question: two "Ada"s render with different identicons but the
+  same text; disallowing duplicate names per thread or showing the
+  identicon in the mention chip would make the distinction visible.
 - **G4 — No rate limiting** beyond Turnstile. Pending-by-default means
   spam has no payoff, but D1 rows accumulate.
 - **G5 — Body length only; no link/markdown policy.** Plain text is
@@ -318,10 +313,8 @@ Stated as if–then. ✅ = enforced by code AND covered by a test.
   links (like the newsletter's), but worth stating as a decision.
 - **G7 — `locked` on a non-root row is ignored but possible** if
   someone writes it directly; only `setLocked` normalizes to root.
-- **G8 — Approve is NOT idempotent for notifications** (I17, verified).
-  One-line SQL fix plus a test asserting the second approve returns
-  false and sends nothing. Highest-value gap on this list: it is the
-  only one that can email a reader twice.
+- ~~G8~~ CLOSED — status-guarded UPDATE; tests at module and route
+  level.
 - **G9 — Mention chips list up to 8 participants**; larger threads
   silently truncate the chip row (the textarea still accepts any
   `@Name`).
