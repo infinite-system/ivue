@@ -333,11 +333,6 @@ export function renderWelcomeEmail(allPosts) {
 export async function renderEmail(post, allPosts) {
   const postUrl = `${SITE}/blog/${post.slug}`;
   const bannerUrl = `${SITE}/blog/${post.slug}.png`;
-  const dateLine = post.date
-    ? new Date(post.date + 'T00:00:00Z').toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC',
-      })
-    : '';
   const position = allPosts.findIndex((entry) => entry.slug === post.slug);
   const older = position > 0 ? allPosts[position - 1] : null;
   const newer =
@@ -357,8 +352,7 @@ export async function renderEmail(post, allPosts) {
         <img src="${bannerUrl}" alt="${escapeHtml(post.title)}" width="560" style="display:block;width:100%;height:auto;border:0" />
       </a>
       <div style="padding:26px 32px 30px">
-        <h1 style="margin:0 0 8px;font-size:23px;line-height:1.3;color:${HEADING}">${escapeHtml(post.title)}</h1>
-        ${dateLine ? `<p style="margin:0 0 22px;font-size:12.5px;color:${FAINT}">${dateLine}</p>` : ''}
+        <h1 style="margin:0 0 22px;font-size:23px;line-height:1.3;color:${HEADING}">${escapeHtml(post.title)}</h1>
         ${await bodyHtml(post.source, post.slug, postUrl)}
         <a href="${postUrl}" style="display:inline-block;margin:6px 0 0;background:${BUTTON_BG};color:#ffffff;text-decoration:none;font-size:14.5px;font-weight:600;padding:11px 22px;border-radius:8px">Read on ivue.dev &rarr;</a>
       </div>
