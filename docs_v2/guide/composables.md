@@ -88,8 +88,96 @@ Three things carry the pattern:
   a test can override `$mouse` and every dependent getter follows, because
   the surface is refinement getters, not the raw return object.
 
-The same shape consumes a Pinia store or any `useX()` service — the store
-variant, with its `use()` singleton and test seam, is specified in
+The same shape consumes a Pinia store or any `useX()` service. And when
+the shared thing is yours, the store itself is an ivue class — that is
+the next section.
+
+## Stores: a singleton behind `use()`
+
+Shared application state — session, navigation, toasts, the current
+user — is a **store**: one ivue class, one instance, published behind a
+`use()` function. The store IS a composable to its consumers; the
+singleton is an implementation detail of `use()`:
+
+```ts
+// app/AppStore.ts — the store IS an ivue class; `use()` owns the singleton
+import { Reactive } from 'ivue';
+import { ref } from 'vue';
+
+class $AppStore {
+  get authenticated() {
+    return ref(false);
+  }
+
+  notify(message: string) {
+    /* ... */
+  }
+}
+
+export namespace AppStore {
+  export const $Class = $AppStore; // raw — children `extends` this
+  export let Class = Reactive($Class); // reactive — you `new` this
+  export type Instance = typeof Class.Instance;
+
+  let singleton: Instance | null = null;
+  export function use(): Instance {
+    return (singleton ??= new Class());
+  }
+}
+```
+
+Consumers never receive the store — they reach for it. A model injects
+it through the same `$`-getter as any composable; a component calls
+`use()` directly:
+
+```ts
+// any model — the `$`-getter caches the store per instance, forever
+class $SubscribersModel {
+  protected get $app() {
+    return AppStore.use();
+  }
+
+  async refresh() {
+    try {
+      /* ... */
+    } catch (error) {
+      this.$app.reportFailure(error);
+    }
+  }
+}
+```
+
+```vue
+<script lang="ts" setup>
+// any component — call use() directly; no prop, no provide/inject
+import { AppStore } from '../app/AppStore';
+
+const app = AppStore.use();
+const { authenticated } = app;
+</script>
+
+<template>
+  <button v-if="authenticated" @click="app.logout()">Lock</button>
+</template>
+```
+
+Why this exact shape:
+
+- **`use()` is lazy.** The singleton constructs on first touch, after
+  the app exists — module-load order and
+  [circular imports](/guide/modules) stay non-events.
+- **The `$`-getter is the injection point.** A model names its
+  dependency once; every method reads `this.$app` at cache-hit cost,
+  with no constructor plumbing and no prop-drilling.
+- **Tests swap the slot, not the callers.** Assign
+  `AppStore.Class = $TestStore` before the first `use()` and every
+  consumer gets the double through the same seam.
+- **A store outlives components by definition.** Its watchers use
+  `this.$watch` / `this.$watchEffect`, never plain `watch`, and
+  lifecycle hooks never belong in it — see
+  [Lifecycle & Teardown](/guide/lifecycle-teardown).
+
+The full specification — including when to pass props instead — lives in
 [the standard](/guide/standard#the-store-pattern-a-singleton-behind-use-injected-by-getter).
 
 ## Who owns the composable's effects
@@ -193,7 +281,7 @@ and quietly gets the class architecture's prices: lazy state, zero-byte
 derivations, and a model that can be subclassed, tested through
 [the class seam](/guide/inheritance), and disposed deterministically. For
 an app-wide singleton, the same face returns one shared instance — that is
-exactly the [store pattern](/guide/standard#the-store-pattern-a-singleton-behind-use-injected-by-getter).
+exactly the [store pattern above](#stores-a-singleton-behind-use).
 
 ## Choosing the container
 
