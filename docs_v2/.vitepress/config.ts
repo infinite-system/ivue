@@ -725,12 +725,12 @@ export default defineConfig({
               { text: '$watch & $stopEffects', link: '/examples/lifecycle' },
               { text: 'Inheritance chain', link: '/examples/inheritance' },
               { text: 'Composable in a class', link: '/examples/pointer' },
+              { text: 'Pinia Store Alternative', link: '/examples/class-store' },
             ],
           },
           {
             text: 'Full Complexity',
             items: [
-              { text: 'Pinia Store Alternative', link: '/examples/class-store' },
               { text: 'Workspace Platform', link: '/examples/workspace-platform' },
               { text: 'Extensible Kernel', link: '/examples/extensible-kernel' },
               { text: 'Advanced Select Field', link: '/examples/choose-field' },
@@ -784,13 +784,13 @@ export default defineConfig({
             { text: '$watch & $stopEffects', link: '/examples/lifecycle' },
             { text: 'Inheritance chain', link: '/examples/inheritance' },
             { text: 'Composable in a class', link: '/examples/pointer' },
+            { text: 'Pinia Store Alternative', link: '/examples/class-store' },
           ],
         },
         {
           text: 'Full Complexity',
           collapsed: false,
           items: [
-            { text: 'Pinia Store Alternative', link: '/examples/class-store' },
             { text: 'Workspace Platform', link: '/examples/workspace-platform' },
             { text: 'Extensible Kernel', link: '/examples/extensible-kernel' },
             { text: 'Advanced Select Field', link: '/examples/choose-field' },

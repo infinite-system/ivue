@@ -48,6 +48,8 @@ templates and Vite will update the running playground.
   computeds.
 - **[Composable in a class](/examples/pointer)** — `useMouse` hosted
   privately; consumers see two refs and nothing else.
+- **[Pinia Store Alternative](/examples/class-store)** — a class-based alternative to
+  Pinia stores; optional reactive() view, fully typed.
 
 </div>
 
@@ -55,8 +57,6 @@ templates and Vite will update the running playground.
 
 <div class="ix-example-list">
 
-- **[Pinia Store Alternative](/examples/class-store)** — a class-based alternative to
-  Pinia stores; optional reactive() view, fully typed.
 - **[Workspace Platform](/examples/workspace-platform)** — a ClickUp-scale
   application graph with list and board views, filters, workload, task editing,
   comments, and activity over the same ivue domain objects.

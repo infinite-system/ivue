@@ -3446,7 +3446,21 @@ a.feature-inline-link:active {
   ) !important;
 }
 .VPNavBar .divider-line {
-  background-color: color-mix(in srgb, var(--vp-c-gutter) 30%, transparent);
+  /* !important: VitePress's scoped .divider-line[data-v-*] rule wins
+     the cascade otherwise and keeps the line at full opacity */
+  background-color: color-mix(
+    in srgb,
+    var(--vp-c-gutter) 30%,
+    transparent
+  ) !important;
+}
+/* the sub-nav bar (mobile "Menu / On this page") draws its own line */
+.VPLocalNav {
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--vp-c-gutter) 30%,
+    transparent
+  ) !important;
 }
 
 /* Two-line hamburger geometry: equal widths, no horizontal staircase, and
