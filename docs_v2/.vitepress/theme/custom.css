@@ -59,7 +59,7 @@
   --ivue-link-shadow: drop-shadow(0 1px 1px rgba(2, 6, 23, 0.55));
   --ivue-link-accent: #60a5fa;
   --ivue-link-glow: rgba(59, 130, 246, 0.38);
-  --ivue-code-color: #c678dd; /* shiki one-dark keyword purple — the `class $Feed` purple */
+  --ivue-code-color: #a78bfa;
   /* dark keeps VitePress's adaptive chip background */
   --vp-code-bg: var(--vp-c-default-soft);
   --vp-c-brand-1: #818cf8;
@@ -3552,12 +3552,22 @@ a.feature-inline-link:active {
   }
 }
 
-/* while the mobile menu is open, the hero has no business animating —
-   pause everything so the screen owns the frame budget */
-body:has(.VPNavScreen) .ivh-title .shine,
-body:has(.VPNavScreen) .ivh-caret,
-body:has(.VPNavScreen) .cm-avatar {
-  animation-play-state: paused !important;
+/* NOTE: no body:has(.VPNavScreen) rules here — :has() on body makes
+   Safari restyle the whole document the moment the menu mounts, which
+   is the exact interaction we're protecting. */
+
+/* Home page below-fold sections: skip layout/paint until scrolled
+   near. This is what makes the menu-open scroll-lock cheap — Safari
+   relayouts the page when the body locks, and these sections opt out
+   of that work while off-screen. */
+.ix .ix-moat,
+.ix .ix-idea,
+.ix .ix-start,
+.ix .ix-end,
+.ix .invar-production,
+.ix-newsletter-hero {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 640px;
 }
 
 /* ---- home: newsletter hero — the blog, front and center ---- */
