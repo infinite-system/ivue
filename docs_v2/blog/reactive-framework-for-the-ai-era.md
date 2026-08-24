@@ -8,9 +8,9 @@ relatedPosts: [the-field-not-the-rules, uniformity-is-a-measuring-device, agents
 
 # Reactive framework for the AI era
 
-<BlogPostDate />
-
 ![Reactive framework for the AI era](/blog/reactive-framework-for-the-ai-era.png)
+
+<BlogPostDate />
 
 Every framework you know was designed for a human author. The
 virtues frameworks compete on — expressiveness, flexibility, freedom

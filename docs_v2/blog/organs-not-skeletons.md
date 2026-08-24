@@ -8,9 +8,9 @@ relatedPosts: [reactive-is-all-you-need, the-options-api-everyone-wanted, rented
 
 # Composables are organs, not skeletons
 
-<BlogPostDate />
-
 ![Composables are organs, not skeletons](/blog/organs-not-skeletons.png)
+
+<BlogPostDate />
 
 The false choice haunting every "classes vs composables" thread: pick a
 side. But look at what each is actually *good at*. A composable is a

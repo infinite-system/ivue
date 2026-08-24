@@ -8,9 +8,9 @@ relatedPosts: [twenty-million-cells, reactivity-is-an-allocator, the-field-not-t
 
 # What becomes buildable
 
-<BlogPostDate />
-
 ![What becomes buildable](/blog/what-becomes-buildable.png)
+
+<BlogPostDate />
 
 Every framework generation made *views* cheaper — faster diffing,
 finer signals, less re-rendering. The model layer never got the same

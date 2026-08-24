@@ -8,9 +8,9 @@ relatedPosts: [win-by-reduction, uniformity-is-a-measuring-device, reactive-fram
 
 # The field, not the rules
 
-<BlogPostDate />
-
 ![The field, not the rules](/blog/the-field-not-the-rules.png)
+
+<BlogPostDate />
 
 There are two ways to get good code out of a codebase.
 

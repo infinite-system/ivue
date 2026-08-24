@@ -8,9 +8,9 @@ relatedPosts: [the-object-graph-they-took, organs-not-skeletons, bulletproof-cla
 
 # Inheritance didn't deserve the exile
 
-<BlogPostDate />
-
 ![Inheritance didn't deserve the exile](/blog/inheritance-exile.png)
+
+<BlogPostDate />
 
 "Composition over inheritance" began as a correction to a real disease —
 ten-level hierarchies where changing a base class rippled fear through a

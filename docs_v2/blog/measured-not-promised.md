@@ -8,9 +8,9 @@ relatedPosts: [twenty-million-cells, derivations-are-free, a-million-rows-twelve
 
 # Measured, not promised
 
-<BlogPostDate />
-
 ![Measured, not promised](/blog/measured-not-promised.png)
+
+<BlogPostDate />
 
 Every performance claim on this site comes from a measurement we
 actually ran. That's the whole idea behind the phrase this post is

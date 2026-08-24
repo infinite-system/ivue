@@ -8,9 +8,9 @@ relatedPosts: [bulletproof-class-modules, one-kilobyte-feature, discovered-not-i
 
 # Reactive() is all you need
 
-<BlogPostDate />
-
 ![Reactive() is all you need](/blog/reactive-is-all-you-need.png)
+
+<BlogPostDate />
 
 The most influential machine-learning paper of the last decade is
 famous for its title before its math. *Attention Is All You Need*

@@ -8,9 +8,9 @@ relatedPosts: [introducing-invar, patterns-the-author-never-wrote, what-becomes-
 
 # Reactivity is an allocator
 
-<BlogPostDate />
-
 ![Reactivity is an allocator](/blog/reactivity-is-an-allocator.png)
+
+<BlogPostDate />
 
 Ask the industry what reactivity is for and the answer is unanimous:
 keeping the screen in sync with the data. Signals, stores, virtual

@@ -8,9 +8,9 @@ relatedPosts: [introducing-ivue, agents-built-an-editor, introducing-invar, the-
 
 # The whole story, in small words
 
-<BlogPostDate />
-
 ![The whole story, in small words](/blog/the-whole-story-in-small-words.png)
+
+<BlogPostDate />
 
 Most posts on this blog argue. This one just tells the story, in the
 smallest words we can find — because when we stepped back and looked

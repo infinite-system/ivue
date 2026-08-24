@@ -8,9 +8,9 @@ relatedPosts: [agents-built-an-editor, reactivity-is-an-allocator, uniformity-is
 
 # The editor tripled. The zeros didn't move.
 
-<BlogPostDate />
-
 ![The editor tripled. The zeros didn't move.](/blog/the-zeros-didnt-move.png)
+
+<BlogPostDate />
 
 Three days ago we published
 [measurements of Invar](/blog/agents-built-an-editor) — the terminal

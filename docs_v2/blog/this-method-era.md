@@ -8,9 +8,9 @@ relatedPosts: [most-linted-superpower, bulletproof-class-modules, reactive-is-al
 
 # this.method, finally safe to pass
 
-<BlogPostDate />
-
 ![this.method, finally safe to pass](/blog/this-method-era.png)
+
+<BlogPostDate />
 
 React's Hooks announcement named the enemy honestly: classes "confuse
 both people and machines," and the star witness was `this`. Pass

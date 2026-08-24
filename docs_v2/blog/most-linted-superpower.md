@@ -8,9 +8,9 @@ relatedPosts: [what-javascript-becomes, this-method-era, module-level-state, cir
 
 # JavaScript's most-linted features are its superpower
 
-<BlogPostDate />
-
 ![JavaScript's most-linted features are its superpower](/blog/most-linted-superpower.png)
+
+<BlogPostDate />
 
 [Last time](/blog/initialization-order-solved) we showed how one idiom
 and a small checker gave JavaScript the initialization-order safety of

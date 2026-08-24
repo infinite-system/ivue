@@ -8,9 +8,9 @@ relatedPosts: [the-field-not-the-rules, agents-built-an-editor, uniformity-is-a-
 
 # From monolith to modular design in a day
 
-<BlogPostDate />
-
 ![From monolith to modular design in a day](/blog/monolith-to-modular-in-a-day.png)
+
+<BlogPostDate />
 
 Modularizing a working application is the kind of refactor that is
 usually done meticulously, by senior humans, over a quarter: draw the

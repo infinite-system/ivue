@@ -8,9 +8,9 @@ relatedPosts: [the-object-graph-they-took, what-becomes-buildable, organs-not-sk
 
 # Your objects are rented from the framework
 
-<BlogPostDate />
-
 ![Your objects are rented from the framework](/blog/rented-objects.png)
+
+<BlogPostDate />
 
 Here is a test you can run on any Vue codebase in thirty seconds: find the
 order, the invoice, the document — the *thing* your product is actually

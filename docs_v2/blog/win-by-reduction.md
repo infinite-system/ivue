@@ -8,9 +8,9 @@ relatedPosts: [the-field-not-the-rules, discovered-not-invented, one-kilobyte-fe
 
 # Win by reduction. Win by construction.
 
-<BlogPostDate />
-
 ![Complexity collapsing into a small, load-bearing structure](/blog/win-by-reduction.png)
+
+<BlogPostDate />
 
 Software engineering usually treats complexity as a fact of life. Once a
 system has dependency cycles, lifecycle ambiguity, indirection, caches,

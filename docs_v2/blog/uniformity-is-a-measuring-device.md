@@ -8,9 +8,9 @@ relatedPosts: [the-field-not-the-rules, agents-built-an-editor, the-test-is-a-su
 
 # Uniformity is a measuring device
 
-<BlogPostDate />
-
 ![Uniformity is a measuring device](/blog/uniformity-is-a-measuring-device.png)
+
+<BlogPostDate />
 
 Every team argues about consistency as though it were manners. Naming
 conventions, file layout, one way to do dependency injection — the

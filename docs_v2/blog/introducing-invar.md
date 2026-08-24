@@ -8,9 +8,9 @@ relatedPosts: [agents-built-an-editor, reactivity-is-an-allocator, the-zeros-did
 
 # Introducing Invar
 
-<BlogPostDate />
-
 ![Introducing Invar](/blog/introducing-invar.png)
+
+<BlogPostDate />
 
 Invar is a code editor that lives entirely in your terminal. Not a
 text editor with syntax colors — an IDE: file tree, buffer tabs, a

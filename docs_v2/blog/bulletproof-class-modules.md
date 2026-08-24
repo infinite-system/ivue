@@ -8,9 +8,9 @@ relatedPosts: [discovered-not-invented, module-level-state, reactive-is-all-you-
 
 # Bulletproof class modules
 
-<BlogPostDate />
-
 ![Bulletproof class modules](/blog/bulletproof-class-modules.png)
+
+<BlogPostDate />
 
 Every value a class module can hold wants three things at once: to be
 **computed once** (memoized at the right scope), to stay **overridable**

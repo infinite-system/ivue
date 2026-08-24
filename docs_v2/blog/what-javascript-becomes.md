@@ -8,9 +8,9 @@ relatedPosts: [circular-imports-dissolved, module-level-state, most-linted-super
 
 # What JavaScript becomes
 
-<BlogPostDate />
-
 ![What JavaScript becomes](/blog/what-javascript-becomes.png)
+
+<BlogPostDate />
 
 Two articles on this blog prove two properties.
 [Circular imports, dissolved](/blog/circular-imports-dissolved)

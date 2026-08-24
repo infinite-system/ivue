@@ -8,9 +8,9 @@ relatedPosts: [module-level-state, bulletproof-class-modules, inheritance-exile,
 
 # The test is a subclass
 
-<BlogPostDate />
-
 ![The test is a subclass](/blog/the-test-is-a-subclass.png)
+
+<BlogPostDate />
 
 There is no mock framework anywhere in
 [Invar](/examples/invar)'s test

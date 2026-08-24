@@ -8,9 +8,9 @@ relatedPosts: [reactivity-is-an-allocator, the-field-not-the-rules, agents-built
 
 # Patterns the author never wrote
 
-<BlogPostDate />
-
 ![Patterns the author never wrote](/blog/patterns-the-author-never-wrote.png)
+
+<BlogPostDate />
 
 There is a strange admission buried in the Invar story, and it is
 worth more than all the line counts: the codebase is full of ivue

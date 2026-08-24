@@ -8,9 +8,9 @@ relatedPosts: [bulletproof-class-modules, reactive-is-all-you-need, win-by-reduc
 
 # Reactive() and Static() — discovered, not invented
 
-<BlogPostDate />
-
 ![Reactive() and Static() — discovered, not invented](/blog/discovered-not-invented.png)
+
+<BlogPostDate />
 
 We did not set out to invent a dual.
 

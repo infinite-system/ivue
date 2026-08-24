@@ -8,9 +8,9 @@ relatedPosts: [rented-objects, inheritance-exile, what-javascript-becomes, react
 
 # The object graph they took from you
 
-<BlogPostDate />
-
 ![The object graph they took from you](/blog/the-object-graph-they-took.png)
+
+<BlogPostDate />
 
 Read this expression slowly:
 

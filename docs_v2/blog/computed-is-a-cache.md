@@ -8,9 +8,9 @@ relatedPosts: [derivations-are-free, introducing-ivue, one-kilobyte-feature, the
 
 # computed() is a cache, not a derivation
 
-<BlogPostDate />
-
 ![computed() is a cache, not a derivation](/blog/computed-is-a-cache.png)
+
+<BlogPostDate />
 
 Ask a Vue developer how to derive a value and the answer arrives before
 the question ends: `computed()`. It's in every tutorial, every codebase,

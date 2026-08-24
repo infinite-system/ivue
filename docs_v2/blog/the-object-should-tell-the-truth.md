@@ -8,9 +8,9 @@ relatedPosts: [computed-is-a-cache, bulletproof-class-modules, the-options-api-e
 
 # The object should tell the truth
 
-<BlogPostDate />
-
 ![A transparent object with explicit state, one cache, and pure paths through it](/blog/the-object-should-tell-the-truth.png)
+
+<BlogPostDate />
 
 Look at an object and answer three questions:
 

@@ -8,9 +8,9 @@ relatedPosts: [bulletproof-class-modules, circular-imports-dissolved, the-test-i
 
 # Module-level state is a bug
 
-<BlogPostDate />
-
 ![Module-level state is a bug](/blog/module-level-state.png)
+
+<BlogPostDate />
 
 This is the most normal line in JavaScript:
 

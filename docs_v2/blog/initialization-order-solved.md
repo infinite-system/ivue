@@ -8,9 +8,9 @@ relatedPosts: [circular-imports-dissolved, module-level-state, what-javascript-b
 
 # Initialization order, solved in userland
 
-<BlogPostDate />
-
 ![Initialization order, solved in userland](/blog/initialization-order-solved.png)
+
+<BlogPostDate />
 
 Every JavaScript developer has met the bug. Module A imports B, B
 imports A, and one of them reads `undefined` where a class should be —

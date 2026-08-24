@@ -8,9 +8,9 @@ relatedPosts: [the-zeros-didnt-move, introducing-invar, patterns-the-author-neve
 
 # AI agents built a 26,000-line code editor on ivue
 
-<BlogPostDate />
-
 ![AI agents built a 26,000-line code editor on ivue](/blog/agents-built-an-editor.png)
+
+<BlogPostDate />
 
 There is a terminal code editor called
 [Invar](/examples/invar) — named after

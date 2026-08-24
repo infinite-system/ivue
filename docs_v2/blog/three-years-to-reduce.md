@@ -8,9 +8,9 @@ relatedPosts: [discovered-not-invented, win-by-reduction, agents-built-an-editor
 
 # Three years to reduce, two weeks to build
 
-<BlogPostDate />
-
 ![Three years to reduce, two weeks to build](/blog/three-years-to-reduce.png)
+
+<BlogPostDate />
 
 Three dates, from two public git logs:
 

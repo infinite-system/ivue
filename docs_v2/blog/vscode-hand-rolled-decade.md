@@ -8,9 +8,9 @@ relatedPosts: [reactive-is-all-you-need, introducing-ivue, the-object-graph-they
 
 # VS Code spent a decade hand-rolling reactive classes
 
-<BlogPostDate />
-
 ![VS Code spent a decade hand-rolling reactive classes](/blog/vscode-hand-rolled-decade.png)
+
+<BlogPostDate />
 
 The most influential TypeScript application in the world is not built on
 React, Vue, or any framework. VS Code's core is class-based

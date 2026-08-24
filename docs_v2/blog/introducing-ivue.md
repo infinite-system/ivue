@@ -8,9 +8,9 @@ relatedPosts: [one-kilobyte-feature, reactive-is-all-you-need, computed-is-a-cac
 
 # Introducing ivue: plain classes, full reactivity, one kilobyte
 
-<BlogPostDate />
-
 ![Introducing ivue](/blog/introducing-ivue.png)
+
+<BlogPostDate />
 
 Here is an uncomfortable reading of the last decade of frontend history:
 the field did not abandon classes because classes failed. It abandoned

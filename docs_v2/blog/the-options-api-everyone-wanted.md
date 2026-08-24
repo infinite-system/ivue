@@ -8,9 +8,9 @@ relatedPosts: [introducing-ivue, the-object-should-tell-the-truth, organs-not-sk
 
 # The Options API everyone actually wanted
 
-<BlogPostDate />
-
 ![The Options API everyone actually wanted](/blog/the-options-api-everyone-wanted.png)
+
+<BlogPostDate />
 
 What people loved about the Options API was never the `data` /
 `computed` / `methods` buckets themselves. It was that a component had

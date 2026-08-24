@@ -8,9 +8,9 @@ relatedPosts: [measured-not-promised, a-million-rows-twelve-divs, one-kilobyte-f
 
 # The 20,000,000-cell document
 
-<BlogPostDate />
-
 ![The 20,000,000-cell document](/blog/twenty-million-cells.png)
+
+<BlogPostDate />
 
 Google Sheets caps a spreadsheet at ten million cells. The document below
 holds twenty million — every cell formula-capable, editable, and

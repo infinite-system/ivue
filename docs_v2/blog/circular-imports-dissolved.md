@@ -8,9 +8,9 @@ relatedPosts: [initialization-order-solved, module-level-state, most-linted-supe
 
 # Circular imports, dissolved
 
-<BlogPostDate />
-
 ![Circular imports, dissolved](/blog/circular-imports-dissolved.png)
+
+<BlogPostDate />
 
 Every JavaScript codebase that grows past a few dozen files meets the
 same wall:

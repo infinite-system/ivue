@@ -8,9 +8,9 @@ relatedPosts: [introducing-ivue, computed-is-a-cache, measured-not-promised, win
 
 # One kilobyte is a feature
 
-<BlogPostDate />
-
 ![One kilobyte is a feature](/blog/one-kilobyte-feature.png)
+
+<BlogPostDate />
 
 The whole ivue engine — lazy state, method binding, reactive inheritance
 with `super`, teardown, and `$watch` — ships as **1,120 bytes gzipped**.
