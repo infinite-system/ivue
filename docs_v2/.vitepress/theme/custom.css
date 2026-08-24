@@ -2577,8 +2577,8 @@ html:not(.dark) .fw-embed .fw-sub {
   cursor: pointer;
 }
 .ix-link-preview.is-visible:hover {
-  /* whisper: a third-strength accent tint on the border, eased in */
-  border-color: color-mix(in srgb, var(--ivue-link-accent) 35%, transparent);
+  /* barely there: a fifth-strength accent tint on the border, eased in */
+  border-color: color-mix(in srgb, var(--ivue-link-accent) 20%, transparent);
 }
 .dark .ix-link-preview {
   background: #0e1424;
