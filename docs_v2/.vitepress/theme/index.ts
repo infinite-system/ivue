@@ -280,6 +280,15 @@ export default {
           '.VPLocalNav .menu .menu-text',
         );
         if (text) text.textContent = localNavLabel(window.location.pathname);
+        // …and the outline dropdown beside it names the page instead of
+        // the generic "On this page" (CSS truncates it — see custom.css)
+        const outline = document.querySelector<HTMLElement>(
+          '.VPLocalNavOutlineDropdown .menu-text',
+        );
+        if (outline) {
+          const pageTitle = document.title.replace(/\s+—\s+ivue$/, '').trim();
+          if (pageTitle) outline.textContent = pageTitle;
+        }
       };
       requestAnimationFrame(labelLocalNav);
 

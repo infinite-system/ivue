@@ -3475,6 +3475,26 @@ a.feature-inline-link:active {
      the cascade otherwise and keeps the line at full opacity */
   background-color: var(--ivue-hairline) !important;
 }
+/* The sub-nav's right button carries the PAGE TITLE (set in
+   theme/index.ts). Cap it at 70% of the bar so the section label on
+   the left never gets crowded, and ellipsize the overflow. */
+.VPLocalNav .VPLocalNavOutlineDropdown {
+  min-width: 0;
+  max-width: 70%;
+}
+.VPLocalNav .VPLocalNavOutlineDropdown > button {
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.VPLocalNav .VPLocalNavOutlineDropdown > button .menu-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
 /* the sub-nav bar (mobile "Menu / On this page") draws its own line */
 .VPLocalNav {
   border-bottom-color: var(--ivue-hairline) !important;
