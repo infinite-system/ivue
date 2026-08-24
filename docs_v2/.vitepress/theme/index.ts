@@ -61,9 +61,9 @@ export default {
       // guide pages the blog-only components render nothing, so
       // related still lands right after share.
       'doc-after': () => [
-        h(BlogShare, { placement: 'doc' }),
-        h(NewsletterQuickJoin, { placement: 'post-footer', align: 'center' }),
         h(BlogAuthor),
+        h(NewsletterQuickJoin, { placement: 'post-footer', align: 'center' }),
+        h(BlogShare, { placement: 'doc' }),
         h(RelatedPosts, { variant: 'doc' }),
         h(BlogPostNav),
         h(BlogComments),
