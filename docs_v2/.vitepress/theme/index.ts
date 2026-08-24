@@ -240,7 +240,7 @@ export default {
         // offsetHeight includes the line box's leading — trim it so the
         // bar hugs the text (a 5px margin-top in CSS re-centers it)
         if (marker && active)
-          marker.style.height = `${active.offsetHeight - 10}px`;
+          marker.style.height = `${active.offsetHeight - 14}px`;
       };
       let outlineMarkerObserver: MutationObserver | null = null;
       const watchOutlineMarker = () => {

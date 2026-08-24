@@ -2198,7 +2198,6 @@ a.feature-inline-link {
 }
 .VPDoc .blog-archive__row--current {
   background: color-mix(in srgb, var(--ivue-link-accent) 10%, transparent);
-  box-shadow: inset 3px 0 0 var(--ivue-link-accent);
 }
 .blog-archive__row--current .blog-archive__title {
   color: var(--ivue-link-accent);
@@ -2224,7 +2223,7 @@ a.feature-inline-link {
 .VPDocAsideOutline .outline-marker {
   background-color: var(--ivue-link-accent);
   /* re-center the leading-trimmed bar (see installOutlineMarkerSizer) */
-  margin-top: 5px;
+  margin-top: 3px;
 }
 .VPDocAsideOutline .outline-link.active {
   color: var(--ivue-link-accent);
@@ -2958,8 +2957,12 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
   line-height: 1.35;
   color: var(--vp-c-text-1);
 }
-.blog-post-nav__date {
-  font-size: 11px;
+.blog-post-nav__excerpt {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
   color: var(--vp-c-text-3);
 }
 @media (max-width: 640px) {

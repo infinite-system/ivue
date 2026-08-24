@@ -154,6 +154,11 @@ watch(
 .related-posts--aside .related-posts__thumb {
   margin-top: 2px; /* optical alignment with the title's cap height */
 }
+/* single-line titles ride too high next to the 40px thumb — nudge the
+   text block down so title and image read as one row */
+.related-posts--aside .related-posts__body {
+  padding-top: 3px;
+}
 .related-posts__thumb {
   flex: none;
   width: 76px;
@@ -173,12 +178,8 @@ watch(
   font-size: 12.5px;
   font-weight: 600;
   line-height: 1.35;
-  color: var(--ivue-link-2); /* the prose-link family's darker middle stop */
+  color: var(--vp-c-text-1); /* like the prev/next card titles */
   transition: color 0.15s ease;
-}
-.related-posts__item:hover .related-posts__title {
-  /* mirror the page's prose-link hover shift */
-  color: var(--ivue-link-hover-2);
 }
 .related-posts__item:hover .related-posts__thumb {
   border-color: var(--ivue-link-accent);
