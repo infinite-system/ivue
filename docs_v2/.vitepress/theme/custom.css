@@ -3470,13 +3470,20 @@ a.feature-inline-link:active {
 .VPNavBar .divider {
   background-color: transparent !important;
 }
-/* the hairline under the brand in the sidebar column */
+/* the hairline under the brand in the sidebar column — desktop only;
+   on mobile the title lives inside the bar and its border would read
+   as a second line under the logo */
 .VPNavBarTitle.has-sidebar .title {
-  border-bottom-color: color-mix(
-    in srgb,
-    var(--vp-c-gutter) 30%,
-    transparent
-  ) !important;
+  border-bottom-color: transparent !important;
+}
+@media (min-width: 960px) {
+  .VPNavBarTitle.has-sidebar .title {
+    border-bottom-color: color-mix(
+      in srgb,
+      var(--vp-c-gutter) 30%,
+      transparent
+    ) !important;
+  }
 }
 
 /* Two-line hamburger geometry: equal widths, no horizontal staircase, and
