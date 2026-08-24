@@ -39,7 +39,7 @@
     "cypress:headed": "cypress run --component --browser chrome --headed --no-exit",
     "build": "tsc --version;tsc --p ./tsconfig.json && vite build",
     "build:demo": "tsc --p ./tsconfig.json && vite build demo",
-    "build:docs": "npm run sync:examples && npm run sync:releases && npm run sync:blog-index && npm --prefix docs_v2 run build && npm run check:links && node docs_v2/scripts/check-related-posts.mjs",
+    "build:docs": "npm run sync:examples && npm run sync:releases && npm run sync:blog-index && node docs_v2/scripts/rss-generator.mjs && npm --prefix docs_v2 run build && npm run check:links && node docs_v2/scripts/check-related-posts.mjs",
     "sync:releases": "node docs_v2/scripts/releases-page-generator.mjs",
     "sync:blog-index": "node docs_v2/scripts/blog-index-generator.mjs",
     "check:links": "node docs_v2/scripts/check-links.mjs",

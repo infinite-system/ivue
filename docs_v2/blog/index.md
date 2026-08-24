@@ -2,6 +2,7 @@
 title: Blog
 aside: false
 pageClass: blog-index
+lastUpdated: false
 ---
 
 <!-- Post records come from blog.data.mjs (frontmatter + git-recovered
