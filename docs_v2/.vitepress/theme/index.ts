@@ -258,6 +258,31 @@ export default {
       };
       requestAnimationFrame(watchOutlineMarker);
 
+      // The mobile sub-nav button reads "Menu" from a single config
+      // string (themeConfig.sidebarMenuLabel), but the sidebar it opens
+      // is section-specific — name the section instead. Re-applied on
+      // every route change: the component re-renders from config.
+      const localNavLabel = (path: string) => {
+        if (path.startsWith('/blog')) return 'Posts';
+        if (path.startsWith('/examples')) return 'Examples';
+        if (path.startsWith('/releases')) return 'Releases';
+        if (
+          path.startsWith('/guide') ||
+          path.startsWith('/api') ||
+          path.startsWith('/reference') ||
+          path.startsWith('/engine')
+        )
+          return 'Guide';
+        return 'Menu';
+      };
+      const labelLocalNav = () => {
+        const text = document.querySelector<HTMLElement>(
+          '.VPLocalNav .menu .menu-text',
+        );
+        if (text) text.textContent = localNavLabel(window.location.pathname);
+      };
+      requestAnimationFrame(labelLocalNav);
+
       // Tapping the logo while the mobile menu is open: VitePress only
       // closes the screen on route CHANGE, so from the home page the
       // menu would stay open over the page. Close it explicitly.
@@ -279,6 +304,7 @@ export default {
           injectExtraNavLinks();
           restartAvatarRing();
           watchOutlineMarker();
+          labelLocalNav();
         });
 
         if (router.route.data.isNotFound) {
