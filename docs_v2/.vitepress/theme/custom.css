@@ -3121,10 +3121,6 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
     margin: 0 0 4px;
     font-size: 0.96rem;
     line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
   .blog-row .excerpt,
   .blog-row .go {
