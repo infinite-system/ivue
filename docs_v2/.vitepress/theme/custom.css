@@ -2224,7 +2224,7 @@ a.feature-inline-link {
   color: var(--ivue-link-accent);
 }
 .VPDocAsideOutline .outline-link {
-  font-size: 12px; /* theme default is 14px — quieter rail */
+  font-size: 13px; /* theme default is 14px — quieter rail */
 }
 
 .newsletter__turnstile {
