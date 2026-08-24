@@ -186,6 +186,74 @@ split off to keep the player light. In the getter world the model can
 be maximally expressive and the floor does not move: add a thousand
 instances or a hundred derivations, and you are still under it.
 
+## The frame budget — when cost becomes visible
+
+All of these nanoseconds answer to one clock: the frame. At 60 fps a
+frame is 16.7 ms. At 120 Hz it is 8.3 ms. Vue's diffing, DOM
+patching, and the browser's style, layout, and paint all share that
+window, so the realistic headroom for derivation work is a couple of
+milliseconds per frame. And reactivity only runs on dirty frames.
+Vue batches every write in a frame into one flush, each dirty
+component renders once, and an idle frame costs zero — pull-based
+getters are never polled.
+
+Hold the getter tax against that budget:
+
+| what renders in one dirty frame | getter cost | share of 16.7 ms |
+| --- | --- | --- |
+| 1,000 trivial derivations (24 ns) | 24 µs | 0.14% |
+| 1,000 medium derivations (150 ns) | 150 µs | 0.9% |
+| 100 heavy models × 40 derivations | ~200 µs | 1.2% |
+| 1,000 **heavy** derivations (3.5 µs) | 3.5 ms | **21%** |
+
+You would need about forty thousand trivial getter reads in a single
+frame to spend one millisecond. Only the last row threatens the
+frame, and that row is exactly the one the rule already sends to
+`computed()`.
+
+The frame lens also sharpens what "reads per change" means in a real
+app. In a continuously animating UI, a dependency changes once per
+frame and the render reads once per frame. That is R = 1 sustained,
+the regime where the getter wins every tier. The high ratios that
+make a cache pay off come from somewhere else: **many consumers
+inside one flush**. Ten components, a watcher, and a chained
+derivation all reading the same value after one change is R = 10 in
+a single frame. So count consumers, not time between changes. One
+consumer: getter, always. Two or more consumers of real work:
+computed.
+
+That collapses the doctrine into one frame-shaped rule: keep total
+derivation work under about one millisecond per dirty frame. A
+derivation needs a cache only when its cost times its consumers
+threatens that number. A 3.5 µs reduce read by five components is
+17.5 µs — nothing. The same reduce inside a 1,000-row `v-for` is
+3.5 ms. Cache that one.
+
+## The rare form is the signal
+
+There is a second payoff to making the getter the default, and it
+has nothing to do with speed. It is legibility.
+
+In composable style, `computed()` is the primary way of operating. A
+mature component has thirty of them, so the one wrapping a genuinely
+expensive reduce looks identical to the twenty-nine wrapping
+`firstName + lastName`. Expensive and trivial wear the same syntax.
+Nothing marks the hotspot.
+
+In ivue the default is the plain getter, so a `computed()` in a
+class **is** the marker. It reads as a declaration: this derivation
+is expensive enough to earn a cache. The rare form carries the
+information because it is rare.
+
+The practical consequence: the performance audit becomes a grep.
+Search the codebase for `computed(` and you get the complete
+inventory of self-declared hotspots, each one checkable against the
+crossover rule. Run the same grep in a composable codebase and you
+get every derivation in the app — which is to say, nothing. When a
+convention holds everywhere, the deviation becomes
+[a measuring device](/blog/uniformity-is-a-measuring-device). Here
+the deviation is `computed()`, and what it measures is cost.
+
 ## The rule
 
 The full picture, with nothing hidden: a bare `computed()` will
