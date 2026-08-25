@@ -37,6 +37,7 @@
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative, resolve, dirname, basename } from 'node:path';
 import { execSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 
 // Bump when schema fields or validation semantics change.
@@ -1620,6 +1621,43 @@ function checkRefs(root) {
       }
     }
   }
+  // The tool reads its own constitution: the test file beside this script is
+  // header-validated even though the walk excludes .claude/ — no exclusion
+  // may exempt the checker from the grammar it enforces. Skipped when the
+  // file already sits inside the walked tree.
+  {
+    const selfTestPath = resolve(
+      dirname(fileURLToPath(import.meta.url)),
+      'check_invariants.test.mjs',
+    );
+    const insideRoot = !relative(root, selfTestPath).startsWith('..');
+    const excludedFromWalk = relative(root, dirname(selfTestPath))
+      .replaceAll('\\', '/')
+      .split('/')
+      .some((segment) => EXCLUDED_DIRS.has(segment));
+    if (existsSync(selfTestPath) && (!insideRoot || excludedFromWalk)) {
+      const selfText = readText(selfTestPath);
+      // header-shaped only: the first content is a block comment carrying the
+      // sentinel (a sentinel inside a fixture string deeper in the file is
+      // that suite's DATA, not this file's constitution)
+      const firstBlockEnd = selfText.indexOf('*/');
+      const headerShaped =
+        selfText.trimStart().startsWith('/*') &&
+        firstBlockEnd > 0 &&
+        selfText.slice(0, firstBlockEnd).includes(GENERATOR_SENTINEL);
+      if (headerShaped) {
+        parseTestGeneratorHeader(
+          root,
+          selfTestPath,
+          selfText,
+          orphans,
+          slugsByFile,
+          globalSlugs,
+        );
+      }
+    }
+  }
+
   console.log(
     `${valid} annotation(s) resolved, ${generatorResolved} generator link(s) resolved, ${orphans.length} problem(s)`,
   );
