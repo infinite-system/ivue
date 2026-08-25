@@ -10,6 +10,7 @@ Goal: A Standard gate that cannot certify itself — every one of its thirty-sev
 // domain-invariant: theAnchorIsStaticOnlyWhenStaticsExist — The anchor is Static only when statics exist: if a class declares static members, then its anchor is Static(dollar-X), and if it declares none, then its anchor is the raw class
 // domain-invariant: staticBindsMethodsAndCachesDollarGettersPerReceiver — Static binds methods and caches dollar getters per receiver: if the consumer's Static transforms a class, then its static methods are bound with stable identity and its dollar getters run once per receiver class
 // domain-invariant: aSharedStoreIsAStaticReadonlyField — A shared store is a static readonly field: if a static holds shared state, then the field is readonly, and a dependency constructed at load lives in a LazyShared cell
+// domain-invariant: aDerivedStaticGetterIsLowerCamelCase — A derived static getter is lower camel case: if a static getter derives its value from other members or classes, then its name is lowerCamel, and SCREAMING_SNAKE remains for literal tunable constants
 // domain-invariant: staticReadsGoThroughSelfNotTheBaseClass — Static reads go through self not the base class: if instance code reads its own statics, then it reads this.self, never the base class name or a per-site constructor cast
 // domain-invariant: mutableStateIsARefReturningGetter — Mutable state is a ref-returning getter: if a class holds mutable state, then it is a getter returning ref or shallowRef, never a mutable plain field
 // domain-invariant: aRefIsReadAndWrittenThroughValue — A Ref is read and written through value: if class code writes a Ref getter, then it writes .value, never assigns over the getter
@@ -47,6 +48,7 @@ Impossible if true: a file breaking Construction goes through the namespace Clas
 Impossible if true: a file breaking The anchor is Static only when statics exist passes the gate
 Impossible if true: a file breaking Static binds methods and caches dollar getters per receiver passes the gate
 Impossible if true: a file breaking A shared store is a static readonly field passes the gate
+Impossible if true: a file breaking A derived static getter is lower camel case passes the gate
 Impossible if true: a file breaking Static reads go through self not the base class passes the gate
 Impossible if true: a file breaking Mutable state is a ref-returning getter passes the gate
 Impossible if true: a file breaking A Ref is read and written through value passes the gate
@@ -106,6 +108,7 @@ import {
   aComposableIsInjectedByAOneCallDollarGetter,
   aContractPointerResolvesAndIsProved,
   aDerivationIsAPlainGetterUnlessComputedIsJustified,
+  aDerivedStaticGetterIsLowerCamelCase,
   aGeneratorHeaderCarriesBothRegistersInOrder,
   aGenericReactiveClassCastsItsConstructor,
   aHeaderSymbolIsDeclaredInTheSiblingSource,
@@ -267,11 +270,11 @@ defineExpose(box as Box.Instance);
 `;
 
 // the manifest itself: thirty-seven checks, every one enforced
-test('the manifest names thirty-seven enforced checks by sentence', () => {
-  expect(CHECKS).toHaveLength(37);
+test('the manifest names thirty-eight enforced checks by sentence', () => {
+  expect(CHECKS).toHaveLength(38);
   expect(CHECKS.every((entry) => entry.enforced)).toBe(true);
   expect(CHECKS.every((entry) => /^[A-Z][A-Za-z0-9 -]+$/.test(entry.name))).toBe(true);
-  expect(new Set(CHECKS.map((entry) => entry.name)).size).toBe(37);
+  expect(new Set(CHECKS.map((entry) => entry.name)).size).toBe(38);
 });
 
 // ---------------------------------------------------------------------------
@@ -512,6 +515,22 @@ export namespace Registry {
 }
 `;
   expect(findingsFor(aSharedStoreIsAStaticReadonlyField, gate({ 'src/Box.ts': VALID_CLASS, 'src/Registry.ts': registry }).findings)).toEqual([]);
+});
+
+// ---------------------------------------------------------------------------
+// 9b A derived static getter is lower camel case
+
+// impossible-if-true: aDerivedStaticGetterIsLowerCamelCase — a file breaking A derived static getter is lower camel case passes the gate
+test('rejects a derived static getter in SCREAMING_SNAKE', () => {
+  const derived = STATIC_CLASS.replace('  static now() {', "  static get SCAN_LIMIT_HOURS() {\n    return Number(this.$zone.length) * 24;\n  }\n\n  static now() {");
+  const result = gate({ 'src/Clock.ts': derived });
+  expect(findingsFor(aDerivedStaticGetterIsLowerCamelCase, result.findings)[0]?.message).toMatch(/derives its value — a derived getter is lowerCamel \(`scanLimitHours`\)/);
+});
+
+// domain-invariant: aDerivedStaticGetterIsLowerCamelCase — A derived static getter is lower camel case: if a static getter derives its value from other members or classes, then its name is lowerCamel, and SCREAMING_SNAKE remains for literal tunable constants
+test('accepts a literal SCREAMING_SNAKE getter and a derived lowerCamel one', () => {
+  const honest = STATIC_CLASS.replace('  static now() {', "  static get RETRY_LIMIT() {\n    return 3;\n  }\n\n  static get scanLimitHours() {\n    return Number(this.$zone.length) * 24;\n  }\n\n  static now() {");
+  expect(findingsFor(aDerivedStaticGetterIsLowerCamelCase, gate({ 'src/Clock.ts': honest }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------

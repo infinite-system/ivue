@@ -869,6 +869,36 @@ export const aSharedStoreIsAStaticReadonlyField = check('A shared store is a sta
   return findings;
 });
 
+export const aDerivedStaticGetterIsLowerCamelCase = check('A derived static getter is lower camel case', (context) => {
+  const findings: Finding[] = [];
+  // literal = the tunable-constant form the Standard allows in
+  // SCREAMING_SNAKE; anything reading other members or classes derives
+  const isLiteral = (expression: ts.Expression): boolean => {
+    if (ts.isNumericLiteral(expression) || ts.isStringLiteralLike(expression) || expression.kind === ts.SyntaxKind.TrueKeyword || expression.kind === ts.SyntaxKind.FalseKeyword) return true;
+    if (ts.isPrefixUnaryExpression(expression) && expression.operator === ts.SyntaxKind.MinusToken) return isLiteral(expression.operand);
+    if (ts.isBinaryExpression(expression)) return isLiteral(expression.left) && isLiteral(expression.right);
+    if (ts.isParenthesizedExpression(expression)) return isLiteral(expression.expression);
+    if (ts.isArrayLiteralExpression(expression)) return expression.elements.every((element) => ts.isExpression(element) && isLiteral(element));
+    if (ts.isObjectLiteralExpression(expression)) return expression.properties.every((property) => ts.isPropertyAssignment(property) && isLiteral(property.initializer));
+    if (ts.isAsExpression(expression)) return isLiteral(expression.expression);
+    return false;
+  };
+  for (const unit of context.sources) {
+    const classFile = classFileOf(unit);
+    if (!classFile) continue;
+    for (const member of classFile.rawClass.members) {
+      if (!ts.isGetAccessorDeclaration(member) || !isStatic(member) || !member.body) continue;
+      const name = memberName(member);
+      if (!/^[A-Z][A-Z0-9_]*$/.test(name) || !name.includes('_')) continue;
+      const returned = member.body.statements.find(ts.isReturnStatement)?.expression;
+      if (returned && isLiteral(returned)) continue; // a tunable literal constant keeps its SCREAMING_SNAKE
+      const camel = name.toLowerCase().replace(/_(\w)/g, (whole, letter: string) => letter.toUpperCase());
+      findings.push(finding(aDerivedStaticGetterIsLowerCamelCase, unit, lineOf(unit, member), `static get ${name}() derives its value — a derived getter is lowerCamel (\`${camel}\`); SCREAMING_SNAKE is for literal tunable constants`));
+    }
+  }
+  return findings;
+});
+
 export const staticReadsGoThroughSelfNotTheBaseClass = check('Static reads go through self not the base class', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.sources) {
@@ -1583,6 +1613,7 @@ export const CHECKS: readonly StandardCheck[] = [
   theAnchorIsStaticOnlyWhenStaticsExist,
   staticBindsMethodsAndCachesDollarGettersPerReceiver,
   aSharedStoreIsAStaticReadonlyField,
+  aDerivedStaticGetterIsLowerCamelCase,
   staticReadsGoThroughSelfNotTheBaseClass,
   mutableStateIsARefReturningGetter,
   aRefIsReadAndWrittenThroughValue,
