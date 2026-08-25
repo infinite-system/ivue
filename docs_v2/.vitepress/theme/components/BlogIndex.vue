@@ -173,8 +173,8 @@ function formatDate(date: string): string {
         v-model="searchQuery"
         type="search"
         class="blog-search__input"
-        placeholder="Search blogs…"
-        aria-label="Search blogs"
+        placeholder="Search posts…"
+        aria-label="Search posts"
       />
       <button
         v-if="searchQuery"
