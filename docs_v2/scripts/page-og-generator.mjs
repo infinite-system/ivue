@@ -66,8 +66,13 @@ function escapeHtml(text) {
 }
 
 function bannerHtml(eyebrow, title, description) {
+  // OG cards render at a third of this size in feeds — the type has to
+  // be BIG. Tiers keep the longest titles on ≤3 lines inside 1000px.
   const titleSize =
-    title.length <= 26 ? 62 : title.length <= 44 ? 52 : title.length <= 66 ? 44 : 38;
+    title.length <= 22 ? 92 : title.length <= 36 ? 80 : title.length <= 54 ? 66 : 54;
+  // short blurbs get two large lines; long ones three slightly smaller
+  const descriptionSize = description.length <= 110 ? 32 : 28;
+  const descriptionLines = description.length <= 110 ? 2 : 3;
   return `<!doctype html>
 <html><head><meta charset="utf-8" />
 <style>
@@ -79,8 +84,8 @@ function bannerHtml(eyebrow, title, description) {
   html, body { width: 1200px; height: 630px; overflow: hidden; }
   body {
     background:
-      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
-      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      radial-gradient(900px 520px at 18% -10%, rgba(99, 102, 241, 0.32), transparent 62%),
+      radial-gradient(820px 520px at 90% 115%, rgba(34, 211, 238, 0.18), transparent 58%),
       #050a18;
     font-family: 'Geist', 'DejaVu Sans', 'Inter', sans-serif;
     position: relative;
@@ -88,56 +93,72 @@ function bannerHtml(eyebrow, title, description) {
   .grid {
     position: absolute; inset: 0;
     background-image:
-      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+      linear-gradient(rgba(59, 130, 246, 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.07) 1px, transparent 1px);
     background-size: 48px 48px;
-    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
-    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    mask-image: radial-gradient(900px 520px at 40% 55%, black 20%, transparent 78%);
+    -webkit-mask-image: radial-gradient(900px 520px at 40% 55%, black 20%, transparent 78%);
   }
+  /* a soft glowing infinity, the brand's own mark, anchoring the right */
+  .mark {
+    position: absolute; right: -60px; top: 50%; transform: translateY(-50%);
+    width: 560px; height: 560px;
+    background: radial-gradient(closest-side, rgba(45, 212, 191, 0.16), transparent);
+  }
+  .mark svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.16; }
+  /* left-aligned editorial block: eyebrow / title / beam / description */
   .stage {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 24px; padding: 64px 90px 44px;
-    text-align: center;
+    position: absolute; left: 90px; right: 90px; top: 128px; bottom: 72px;
+    display: flex; flex-direction: column; justify-content: center;
+    align-items: flex-start; gap: 22px;
   }
   .eyebrow {
     font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
-    font-size: 17px; letter-spacing: 0.22em;
-    padding: 8px 20px; border-radius: 999px;
-    border: 1px solid rgba(96, 165, 250, 0.4); color: #7e9cd0;
+    font-size: 19px; letter-spacing: 0.24em; font-weight: 500;
+    padding: 9px 22px; border-radius: 999px;
+    border: 1px solid rgba(96, 165, 250, 0.45); color: #9db6e6;
+    background: rgba(59, 130, 246, 0.08);
   }
   .title {
-    font-size: ${titleSize}px; font-weight: 750; color: #eaf2ff;
-    text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); letter-spacing: -0.015em;
-    line-height: 1.14;
-    max-width: 1020px;
-  }
-  .description {
-    font-size: 24px; color: #7e9cd0; line-height: 1.55; max-width: 940px;
-    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
-    overflow: hidden;
+    font-size: ${titleSize}px; font-weight: 760; color: #eef4ff;
+    text-shadow: 0 0 60px rgba(59, 130, 246, 0.55); letter-spacing: -0.025em;
+    line-height: 1.04;
+    max-width: 1000px;
+    text-wrap: balance;
   }
   .beam {
-    width: 240px; height: 3px; border-radius: 999px; margin-top: 4px;
+    width: 160px; height: 4px; border-radius: 999px; margin: 6px 0 2px;
     background: linear-gradient(90deg, #6366f1, #2dd4bf 60%, #34d399);
-    box-shadow: 0 0 22px rgba(45, 212, 191, 0.6);
+    box-shadow: 0 0 26px rgba(45, 212, 191, 0.7);
+  }
+  .description {
+    font-size: ${descriptionSize}px; color: #a9bde3; line-height: 1.4; max-width: 920px;
+    letter-spacing: -0.005em;
+    display: -webkit-box; -webkit-line-clamp: ${descriptionLines}; -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .lockup { position: absolute; top: 34px; left: 44px; }
   .lockup img { display: block; width: 178px; }
   .site {
     position: absolute; bottom: 30px; right: 44px;
     font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
-    font-size: 15px; color: #52688f;
+    font-size: 17px; color: #6a82ab; letter-spacing: 0.04em;
   }
 </style></head>
 <body>
   <div class="grid"></div>
+  <div class="mark"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+    <path d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
+      stroke="url(#g)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    <defs><linearGradient id="g" x1="8" y1="14" x2="40" y2="34" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#818CF8" /><stop offset="1" stop-color="#34D399" /></linearGradient></defs>
+  </svg></div>
   <div class="lockup"><img src="${pathToFileURL(lockupPath)}" alt="" /></div>
   <div class="stage">
     <div class="eyebrow">${escapeHtml(eyebrow)}</div>
     <div class="title">${escapeHtml(title)}</div>
-    ${description ? `<div class="beam"></div><div class="description">${escapeHtml(description)}</div>` : '<div class="beam"></div>'}
+    <div class="beam"></div>
+    ${description ? `<div class="description">${escapeHtml(description)}</div>` : ''}
   </div>
   <div class="site">ivue.dev</div>
 </body></html>`;
