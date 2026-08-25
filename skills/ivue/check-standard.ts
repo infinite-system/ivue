@@ -2403,15 +2403,20 @@ export namespace Scroller {
   }
 
   /** Run the receiver's whole constitution: every check's red and green
-   * arms through run(), refusing a manifest whose check lacks them. */
-  static prove(options?: { completenessOnly?: boolean }): ProveReport {
+   * arms through run(), refusing a manifest whose check lacks them.
+   * `only` isolates one check by name — its arms and nothing else. */
+  static prove(options?: { completenessOnly?: boolean; only?: string }): ProveReport {
     const problems: string[] = [];
     const ran = { red: 0, green: 0 };
     const proofs = this.proofs;
-    for (const name of Object.keys(proofs)) {
-      if (!this.checks.some((entry) => entry.name === name)) problems.push(`proof without a manifest check: ${name}`);
+    const selected = options?.only ? this.checks.filter((entry) => entry.name === options.only) : this.checks;
+    if (options?.only && !selected.length) problems.push(`prove: unknown check name "${options.only}" — --list names every check`);
+    if (!options?.only) {
+      for (const name of Object.keys(proofs)) {
+        if (!this.checks.some((entry) => entry.name === name)) problems.push(`proof without a manifest check: ${name}`);
+      }
     }
-    for (const check of this.checks) {
+    for (const check of selected) {
       const proof = proofs[check.name];
       if (!proof) {
         problems.push(`${check.name}: no constitution entry — a manifest check carries its claim, impossibility, and both proof arms`);
@@ -2479,7 +2484,8 @@ usage:
                  --test-glob '<glob>' [--test-glob '<glob>'…]
                  [--skip-list <path>]   rows: path<TAB>check name<TAB>reason
   check-standard --list                 print every check name
-  check-standard --prove                run the gate's own constitution
+  check-standard --prove ['<check name>']   run the gate's own constitution
+                                        (name it to isolate one check's arms)
 
 Exit: 0 clean · 1 findings · 2 usage (zero files, unmatched glob, unknown check
 name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
@@ -2501,9 +2507,11 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
           for (const entry of this.checks) console.log(`${entry.enforced ? 'enforced   ' : 'not yet    '} ${entry.name}`);
           return 0;
         } else if (argument === '--prove') {
-          const report = this.prove();
+          const next = argv[index + 1];
+          const only = next !== undefined && !next.startsWith('--') ? argv[++index] : undefined;
+          const report = this.prove(only ? { only } : undefined);
           for (const problem of report.problems) console.error(problem);
-          console.log(`check-standard --prove: ${report.ran.red} red arm(s), ${report.ran.green} green arm(s), ${report.problems.length} problem(s)`);
+          console.log(`check-standard --prove${only ? ` "${only}"` : ''}: ${report.ran.red} red arm(s), ${report.ran.green} green arm(s), ${report.problems.length} problem(s)`);
           return report.problems.length ? 1 : 0;
         } else if (argument === '--source-root') sourceRoots.push(value());
         else if (argument === '--test-glob') testGlobs.push(value());

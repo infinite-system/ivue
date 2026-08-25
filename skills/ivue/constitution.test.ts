@@ -48,6 +48,17 @@ test('every red arm produces its named finding and every green arm stays silent'
   expect(report.ran.green).toBeGreaterThanOrEqual(38);
 });
 
+test('prove isolates one check when asked', () => {
+  const GateClass = Gate.CheckStandard.Class;
+  const report = GateClass.prove({ only: 'A Ref is read and written through value' });
+  expect(report.problems).toEqual([]);
+  expect(report.ran.red).toBe(1);
+  expect(report.ran.green).toBe(1);
+  const unknown = GateClass.prove({ only: 'No such check' });
+  expect(unknown.problems.some((problem) => problem.includes('No such check'))).toBe(true);
+  expect(unknown.ran.red + unknown.ran.green).toBe(0);
+});
+
 // impossible-if-true: $CheckStandard — a check enters the manifest without a red and a green proof arm
 test('an armless check is refused by its own constitution', () => {
   class $ArmlessGate extends Gate.CheckStandard.$Class {
