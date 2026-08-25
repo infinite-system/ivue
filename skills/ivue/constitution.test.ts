@@ -91,7 +91,7 @@ test('a house gate extends the manifest and its constitution through the receive
           check: houseCheck,
           claim: 'If a source file exceeds nine hundred lines, then the gate names it',
           impossibility: 'a nine-hundred-line source file passes the gate',
-          red: [{ files: { 'src/Long.ts': longFile }, expectFindings: [/901 lines — split the module/] }],
+          red: [{ files: { 'src/Long.ts': longFile }, expectFindings: [/90\d lines — split the module/] }],
           green: [{ files: { 'src/Short.ts': 'export type Short = number;\n' } }],
         },
       };

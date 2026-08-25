@@ -26,7 +26,9 @@ export default mergeConfig(
       environment: "jsdom",
       // newsletter/ has its own vitest config (node env, D1 test adapter,
       // crypto polyfill) — run it FROM newsletter/, never from the root glob
-      exclude: [...configDefaults.exclude, "e2e/*", "**/demo/**", "newsletter/**"],
+      // .claude/ holds the invariants checker's node:test suite — it runs
+      // via `node --test`, never through vitest
+      exclude: [...configDefaults.exclude, "e2e/*", "**/demo/**", "newsletter/**", ".claude/**"],
       root: fileURLToPath(new URL("./", import.meta.url)),
       reporters: ["default", "html", "verbose"],
       server: {
