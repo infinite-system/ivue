@@ -2968,7 +2968,7 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
     margin-bottom: 14px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--vp-c-brand-1);
+    color: var(--ivue-link-2);
     text-decoration: none;
   }
   .VPDoc .blog-back svg {
