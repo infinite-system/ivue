@@ -39,8 +39,9 @@
 
   --vp-font-family-base: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --vp-font-family-mono: 'Geist Mono', ui-monospace, monospace;
-  /* inline code chip color — distinct from blue links and body text */
-  --ivue-code-color: var(--vp-c-brand-1); /* match home: indigo, not violet */
+  /* inline code chip color — violet: distinct from blue links, body
+     text, AND the indigo brand chips on the home page */
+  --ivue-code-color: #7c3aed;
   /* light mode's default chip background is too faint under the mono */
   --vp-code-bg: rgba(116, 124, 148, 0.2);
 
@@ -63,7 +64,7 @@
   --ivue-link-shadow: drop-shadow(0 1px 1px rgba(2, 6, 23, 0.55));
   --ivue-link-accent: #60a5fa;
   --ivue-link-glow: rgba(59, 130, 246, 0.38);
-  --ivue-code-color: var(--vp-c-brand-1); /* match home: indigo, not violet */
+  --ivue-code-color: #a78bfa;
   /* dark keeps VitePress's adaptive chip background */
   --vp-code-bg: var(--vp-c-default-soft);
   --vp-c-brand-1: #818cf8;
