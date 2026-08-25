@@ -566,6 +566,15 @@ test('<the negative property, stated as a sentence>', ...)
 test('<the property, stated as a sentence>', ...)
 ```
 
+The Goal line is the generator's purpose: what the mechanism produces and the tension it
+resolves, in the module's own domain words (rows, panes, tokens, matches — never "behavior",
+"consistency", or "this file"). The test: read the Goal alone — a reader must know which
+mechanism this is without the file name; a Goal that fits another file with the name swapped
+is not a Goal. The described register says only what the formal lines cannot (why this
+shape and not the obvious alternative, the direction of use, the caveat a fresh session
+would simplify away, `Open question:` lines for what the tests do not reach); a sentence
+that fits every file belongs in no file.
+
 Every test that proves a claim carries the claim's annotation directly above it. The
 test name states the property. There is no spec register: a proof binding written as a
 row would only repeat the test name beside it. Proof coverage is the checker's question:
