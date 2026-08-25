@@ -1724,17 +1724,49 @@ a.feature-inline-link {
    framed thumb centered on the text block. (After the base thumb/body
    rules on purpose: equal specificity, so order decides.) */
 @media (min-width: 641px) and (max-width: 1279px) {
-  .vp-doc .blog-row {
+  /* same scan-list as phones, scaled up: bare rows, thumb left (whole
+     banner), title + two-line excerpt + date beside it, the text block
+     centered on the thumb */
+  .blog-rows {
+    --row-thumb-width: 220px;
+    gap: 22px;
+  }
+  .vp-doc .blog-row,
+  .vp-doc .blog-row:hover {
     align-items: center;
+    border: none;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    transform: none;
   }
   .vp-doc .blog-row .thumb {
     align-self: center;
-    margin: 16px 0 16px 16px;
+    margin: 0;
     border: 1px solid var(--vp-c-divider);
     border-radius: 8px;
   }
   .blog-row .body {
-    padding: 18px 22px 16px;
+    justify-content: center;
+    padding: 0 0 0 18px;
+  }
+  .vp-doc .blog-row h2 {
+    margin: 0 0 5px;
+    font-size: 1.08rem;
+  }
+  .blog-row .excerpt {
+    margin: 0 0 6px;
+    -webkit-line-clamp: 2;
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+  .blog-row .go {
+    display: none;
+  }
+  .blog-row .foot {
+    margin-top: 0;
+    justify-content: flex-start;
+    gap: 8px;
   }
 }
 
@@ -2874,14 +2906,13 @@ html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
     transform: translateX(calc(-100% - 6px));
   }
 }
-/* tablet rows: the framed thumb is inset 16px and vertically centered,
-   so the badge anchors to the thumb box itself */
+/* tablet rows: the thumb is flush left, vertically centered — pin the
+   badge 8px under the thumb's own top edge */
 @media (min-width: 641px) and (max-width: 1279px) {
   .blog-row .new-badge--thumb {
-    top: auto;
-    bottom: calc(50% + var(--row-thumb-width) * 630 / 1200 / 2 - 24px);
-    left: calc(var(--row-thumb-width) + 16px);
-    transform: translateX(calc(-100% - 10px));
+    top: calc(50% - var(--row-thumb-width) * 630 / 1200 / 2 + 8px);
+    left: var(--row-thumb-width);
+    transform: translateX(calc(-100% - 8px));
   }
 }
 
