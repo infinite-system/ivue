@@ -45,13 +45,21 @@ other, and the checker holds both directions (#678).
   of that comment derives from the generator: a comment that introduces a
   claim absent from the header is the same finding as a test without a
   claim. There is no file-level spec-prose register.
-- DIRECTION. For NEW behavior, the spec precedes the code and git proves
-  it: the header claim and its born-red test enter in a commit BEFORE the
-  implementation that turns them green. Red is the honest state of a
-  declared intent. A claim whose first appearance in history is the same
-  commit as (or later than) its implementation is a description of what
-  was built, not a spec that determined it — intent cannot be recovered
-  from code, only declared before it.
+- DIRECTION. For NEW behavior, the CLAIM precedes the implementation it
+  governs (git is the witness; refinements are new commits, honest
+  history). Code may precede tests — the inner loop stands: assertions
+  prevent regression, they do not discover fixes. A claim that first
+  appears with its implementation is a description, not a spec.
+- BOTH ARMS LIVE IN THE SPEC. The impossibility test is the PERMANENT red
+  arm: it constructs the approach to the forbidden state and asserts the
+  refusal with its reason, forever — generator and impossibility, the
+  same duality as the header itself. For checks, parsers, and guards,
+  keep the violating fixture in the repo: one named test proves the bad
+  fixture is caught on its reason, one proves the clean fixture is
+  silent; both run every gate. The TRANSIENT plant (mutate, watch red,
+  revert) is only for the residue where red requires editing shipped
+  code; it is named in the report AS transient, with its red evidence —
+  a transient plant where a fixture pair was possible is a finding.
 - GROWTH. The invariant: spec count may grow only while defects stay flat.
   Add a test only when it proves a component or caveat not yet proven. When
   a defect appears, the first question is which component or caveat had no
@@ -76,9 +84,13 @@ other, and the checker holds both directions (#678).
 
 ## 2. Born-red, with the plant ASSERTED
 
-- A check is trusted only after it failed on the defect it claims to catch:
-  plant the defect, watch RED on the position/value (not on a timeout),
-  remove, watch GREEN.
+- A check is trusted only after it failed on the defect it claims to catch.
+  PREFER THE RED THAT STAYS: a committed violating fixture with a named
+  catches-it test and a named clean-is-silent test, both permanent, both
+  run every gate. Only where red requires mutating shipped code: plant the
+  defect, watch RED on the position/value (not on a timeout), remove,
+  watch GREEN, and name the plant as transient in the report — a transient
+  plant where a fixture pair was possible is a finding.
 - The plant must be PROVEN APPLIED — grep for it after planting. A replace
   that silently changes nothing births a green, worthless check.
 - The red arm asserts WHY it failed, not just THAT it failed.
