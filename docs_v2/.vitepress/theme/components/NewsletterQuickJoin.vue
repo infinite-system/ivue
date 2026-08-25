@@ -342,6 +342,13 @@ async function join() {
     justify-content: center;
   }
 }
+/* phones: the blog index's footer quick-join is redundant — the full
+   newsletter card (the mobile CTA) renders right after it */
+@media (max-width: 640px) {
+  .quickjoin--place-blog-footer {
+    display: none;
+  }
+}
 /* mobile: lead on its own centered line, short button label, fluid
    fields so the trio always fits the viewport */
 @media (max-width: 860px) {
