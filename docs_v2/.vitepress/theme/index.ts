@@ -296,7 +296,7 @@ export default {
       // is section-specific — name the section instead. Re-applied on
       // every route change: the component re-renders from config.
       const localNavLabel = (path: string) => {
-        if (path.startsWith('/blog')) return 'Newsletters';
+        if (path.startsWith('/blog')) return 'Blogs';
         if (path.startsWith('/examples')) return 'Examples';
         if (path.startsWith('/releases')) return 'Releases';
         if (
