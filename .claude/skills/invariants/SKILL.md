@@ -575,6 +575,15 @@ shape and not the obvious alternative, the direction of use, the caveat a fresh 
 would simplify away, `Open question:` lines for what the tests do not reach); a sentence
 that fits every file belongs in no file.
 
+The Goal and the formal register cohere in both directions: the Goal is the index that turns
+these gears into this mechanism, so every formal line is load-bearing for the Goal (delete
+it and the Goal is no longer reachable — if the Goal survives, the line belongs to another
+mechanism or the Goal is too narrow), and the Goal is reachable from the formal lines alone
+(if it needs a claim the header does not carry, a component is missing or the Goal
+overreaches). The described register carries the direction of use — how these gears combine
+toward this goal — which is why it cannot be templated. Impossible if the header coheres: a
+formal line whose deletion leaves the Goal intact; a Goal that needs a claim the header lacks.
+
 Every test that proves a claim carries the claim's annotation directly above it. The
 test name states the property. There is no spec register: a proof binding written as a
 row would only repeat the test name beside it. Proof coverage is the checker's question:

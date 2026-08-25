@@ -125,7 +125,9 @@ other, and the checker holds both directions (#678).
 
 0. Which header component or caveat does this test prove, and is that
    claim written directly above it? Read the header's Goal alone: can you
-   tell which mechanism this is without the file name?
+   tell which mechanism this is without the file name? Delete each formal
+   line in your head: does the Goal stop being reachable? Does the Goal
+   need any claim the header does not carry?
 1. Can I name the defect this check catches, and did I watch it catch it?
 2. Is the observable the one a user would point at?
 3. Is every wait false at the moment it starts?
