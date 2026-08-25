@@ -2770,9 +2770,9 @@ html:not(.dark) .fw-embed .fw-sub {
 /* NEW badges: nav superscripts (lit by build-time data attributes) and
    the index pill for entries under two weeks old */
 html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after,
-html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after,
+.VPNavScreenMenuLink[href^='/releases']::after,
 html[data-new-blog='1'] .VPNavBarMenuLink[href^='/blog']::after,
-html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
+.VPNavBarMenuLink[href^='/releases']::after {
   content: 'NEW';
   position: relative;
   top: -9px;
@@ -2786,9 +2786,19 @@ html[data-new-release='1'] .VPNavBarMenuLink[href^='/releases']::after {
   color: transparent;
   white-space: nowrap;
 }
+/* Releases carries the LIVE version number (set in config.ts head from
+   package.json), always — not a freshness badge */
+.VPNavBarMenuLink[href^='/releases']::after,
+.VPNavScreenMenuLink[href^='/releases']::after {
+  content: var(--ivue-release-version, 'NEW');
+  letter-spacing: 0.02em;
+}
+.VPNavBarMenuLink[href^='/releases']::after {
+  margin-left: -10px; /* the longer text hangs right — pull it over the word */
+}
 /* Mobile menu rows are full-width — an inline superscript reads better. */
 html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after,
-html[data-new-release='1'] .VPNavScreenMenuLink[href^='/releases']::after {
+.VPNavScreenMenuLink[href^='/releases']::after {
   top: -6px;
   margin-left: 5px;
   font-size: 9px;
@@ -3766,6 +3776,15 @@ a.feature-inline-link:active {
 }
 .VPNavScreen .VPNavScreenMenuGroup {
   border-bottom-color: var(--ivue-hairline) !important;
+}
+/* the Appearance row ships on bg-soft (LIGHTER than the menu in dark
+   mode) — a bright rounded slab that pulls the eye. Sink it instead: a
+   shade DARKER than the page in dark mode, a whisper darker in light. */
+.VPNavScreen .VPNavScreenAppearance {
+  background-color: color-mix(in srgb, var(--vp-c-text-1) 3%, var(--vp-c-bg)) !important;
+}
+.dark .VPNavScreen .VPNavScreenAppearance {
+  background-color: color-mix(in srgb, var(--vp-c-bg) 78%, #000) !important;
 }
 .VPNavScreen .VPNavScreenMenuLink {
   border-bottom-color: var(--ivue-hairline) !important;

@@ -24,6 +24,13 @@ const hasNewBlog = freshBlogCount > 0;
 const hasNewRelease = recordedTimestamps('../releases-dates.json').some(
   (timestamp) => nowSeconds - timestamp < 90 * 86_400,
 );
+// The Releases nav item carries the LIVE version as its superscript
+// (from the package that ships) — always on, never a freshness verdict.
+const liveVersion = (
+  JSON.parse(
+    readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
+  ) as { version: string }
+).version;
 
 // Blog sidebar, generated from the posts themselves: frontmatter titles +
 // git-recovered dates (blog-dates.json), newest first, grouped by month.
@@ -434,6 +441,7 @@ export default defineConfig({
       })();`,
     ],
     ['meta', { name: 'ivue-deployment', content: deployedCommit }],
+    ['style', {}, `:root{--ivue-release-version:'${liveVersion}'}`],
     ...((hasNewBlog || hasNewRelease
       ? [
           [
