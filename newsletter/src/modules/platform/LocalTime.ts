@@ -12,7 +12,7 @@ class $LocalTime {
 
   // one formatter per zone, cached — Intl.DateTimeFormat construction
   // is the expensive part
-  static formatters = new Map<string, Intl.DateTimeFormat>();
+  static readonly formatters = new Map<string, Intl.DateTimeFormat>();
 
   static formatter(timezone: string): Intl.DateTimeFormat {
     let cached = this.formatters.get(timezone);

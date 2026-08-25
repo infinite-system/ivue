@@ -299,7 +299,7 @@ test('rejects a public class without its complete namespace manifest', () => {
   const missingInstance = VALID_CLASS.replace('  export type Instance = typeof Class.Instance;\n', '');
   const result = gate({
     'src/Box.ts': missingInstance,
-    'src/Tools.ts': 'export const tools = { run() { return 1; } };\n',
+    'src/Tools.ts': 'interface Handler { run(): number }\nexport default { run() { return 1; } } satisfies Handler;\n',
   });
   const findings = findingsFor(aPublicClassPublishesItsNamespaceManifest, result.findings);
   expect(findings.map((entry) => entry.message)).toEqual([

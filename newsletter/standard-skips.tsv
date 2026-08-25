@@ -1,0 +1,1 @@
+newsletter/src/index.ts	A public class publishes its namespace manifest	Cloudflare entry adapter: the platform requires export default { fetch, scheduled }; behavior lives on Worker.ts

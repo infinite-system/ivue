@@ -111,7 +111,7 @@ describe('XPoster', () => {
     const env = makeTestEnv({ ...X_ENV, SITE_ORIGIN: 'https://ivue.dev' });
     const urls = Array.from(
       { length: 6 },
-      (_, index) => `https://ivue.dev/blog/embeds/post-embed-${index + 1}.png`,
+      (element, index) => `https://ivue.dev/blog/embeds/post-embed-${index + 1}.png`,
     );
     const mediaIds = await XPoster.Class.uploadImages(env, urls);
     expect(mediaIds).toHaveLength(4);

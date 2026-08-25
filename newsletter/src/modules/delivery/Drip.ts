@@ -26,7 +26,7 @@ import type {
 class $Drip {
   // how far ahead nextDueAt() scans before giving up (hour steps);
   // generous headroom over the largest allowed cadence
-  static get DUE_SCAN_LIMIT_HOURS() {
+  static get dueScanLimitHours() {
     return (Settings.Class.CADENCE_MAXIMUM_DAYS + 2) * 24;
   }
 
@@ -58,7 +58,7 @@ class $Drip {
     schedule: DripSchedule,
   ): number {
     const hourStart = Math.floor(fromEpoch / 3600) * 3600;
-    for (let step = 0; step <= this.DUE_SCAN_LIMIT_HOURS; step++) {
+    for (let step = 0; step <= this.dueScanLimitHours; step++) {
       const candidate = hourStart + step * 3600;
       if (this.isSendSlot(candidate, lastSentAt, timezone, schedule))
         return candidate;

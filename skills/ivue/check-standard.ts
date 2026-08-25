@@ -685,17 +685,27 @@ export const aPublicClassPublishesItsNamespaceManifest = check(
         continue;
       }
       // a file without a `$X` class may still export behavior directly — the
-      // manifest is the only sanctioned public surface for behavior
+      // manifest is the only sanctioned public surface for behavior. A
+      // `satisfies` / `as` / parenthesized wrapper does not hide the object.
+      const unwrap = (expression: ts.Expression): ts.Expression => {
+        let current = expression;
+        while (ts.isSatisfiesExpression(current) || ts.isAsExpression(current) || ts.isParenthesizedExpression(current)) current = current.expression;
+        return current;
+      };
+      const isBehavioralObject = (expression: ts.Expression | undefined): boolean => {
+        if (!expression) return false;
+        const bare = unwrap(expression);
+        return ts.isObjectLiteralExpression(bare) && bare.properties.some((property) => ts.isMethodDeclaration(property) || (ts.isPropertyAssignment(property) && isFunctionLike(property.initializer)));
+      };
       for (const statement of topLevelStatements(unit)) {
         const exported = ts.getCombinedModifierFlags(statement as unknown as ts.Declaration) & ts.ModifierFlags.Export;
         if (ts.isClassDeclaration(statement) && exported)
           findings.push(finding(aPublicClassPublishesItsNamespaceManifest, unit, lineOf(unit, statement), 'a class is exported directly — publish `$X` through `export namespace X`'));
-        if (ts.isExportAssignment(statement) && ts.isObjectLiteralExpression(statement.expression) && statement.expression.properties.some((property) => ts.isMethodDeclaration(property) || (ts.isPropertyAssignment(property) && isFunctionLike(property.initializer))))
+        if (ts.isExportAssignment(statement) && isBehavioralObject(statement.expression))
           findings.push(finding(aPublicClassPublishesItsNamespaceManifest, unit, lineOf(unit, statement), 'a behavioral object is exported directly — behavior belongs to a namespace Static class'));
         if (ts.isVariableStatement(statement) && exported) {
           for (const declaration of statement.declarationList.declarations) {
-            const initializer = declaration.initializer;
-            if (initializer && ts.isObjectLiteralExpression(initializer) && initializer.properties.some((property) => ts.isMethodDeclaration(property) || (ts.isPropertyAssignment(property) && isFunctionLike(property.initializer))))
+            if (isBehavioralObject(declaration.initializer))
               findings.push(finding(aPublicClassPublishesItsNamespaceManifest, unit, lineOf(unit, declaration), 'a behavioral object is exported directly — behavior belongs to a namespace Static class'));
           }
         }
