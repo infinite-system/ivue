@@ -1,0 +1,4 @@
+interface:
+  display_name: 'IBR'
+  short_description: 'Reason with Invariant-Based Reasoning'
+  default_prompt: 'Use $ibr: load the IBR framework (skip if already in context) and apply it to my request.'

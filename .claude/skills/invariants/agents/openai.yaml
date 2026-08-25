@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Invariants'
+  short_description: "Audit changes and contracts against a project's invariants"
+  default_prompt: "Use $invariants to audit this change against the project's reality-based and chosen invariants, following the skill's procedure exactly."
