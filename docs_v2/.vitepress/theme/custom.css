@@ -3863,9 +3863,13 @@ a.feature-inline-link:active {
   left: 50%;
   width: 100vw;
   transform: translateX(-50%);
+  /* both ellipses are anchored from the BOTTOM edge, with their fade-out
+     (transparent at 70% of the radius → 8.4rem / 9.8rem visible) ending
+     above it — so the glow always completes inside the box and never
+     cuts flat where the section ends, whatever the section's height */
   background:
-    radial-gradient(32rem 14rem at 50% 40%, rgba(99, 102, 241, 0.1), transparent 70%),
-    radial-gradient(26rem 12rem at 50% 70%, rgba(45, 212, 191, 0.08), transparent 70%);
+    radial-gradient(32rem 14rem at 50% calc(100% - 20rem), rgba(99, 102, 241, 0.1), transparent 70%),
+    radial-gradient(26rem 12rem at 50% calc(100% - 9.5rem), rgba(45, 212, 191, 0.08), transparent 70%);
   pointer-events: none;
 }
 .ix .ix-newsletter-hero h2 {
