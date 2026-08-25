@@ -3616,6 +3616,20 @@ a.feature-inline-link:active {
   display: flex;
   flex-direction: column;
   background: var(--vp-c-bg) !important;
+  /* the edge is a shade off the panel, not a grey line */
+  border-color: color-mix(in srgb, var(--vp-c-text-1) 7%, var(--vp-c-bg)) !important;
+}
+/* the article's title heads the list (injected in theme/index.ts);
+   the section rows indent beneath it */
+.VPLocalNavOutlineDropdown .ivue-outline-title {
+  order: 0;
+  margin: 0;
+  padding: 12px 16px 4px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--vp-c-text-1);
 }
 .VPLocalNavOutlineDropdown .items .header {
   order: 2;
@@ -3659,7 +3673,10 @@ a.feature-inline-link:active {
 /* rows run close to the panel edge (the ul's 16px gutter shrinks);
    the row's own left padding grows so the chevron still breathes */
 .VPLocalNavOutlineDropdown .outline .VPDocOutlineItem {
-  padding: 0 5px !important;
+  padding: 0 5px 0 18px !important; /* indented under the title */
+}
+.VPLocalNavOutlineDropdown .outline .VPDocOutlineItem .VPDocOutlineItem {
+  padding-left: 12px !important;
 }
 .VPLocalNavOutlineDropdown .outline-link {
   display: block;

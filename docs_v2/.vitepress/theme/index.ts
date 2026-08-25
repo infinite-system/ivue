@@ -325,6 +325,32 @@ export default {
       };
       requestAnimationFrame(labelLocalNav);
 
+      // The outline dropdown's panel (.items) is created on every open —
+      // head it with the article's title so the section rows read as
+      // ITS contents (CSS indents them beneath it). One observer on the
+      // dropdown element; re-attached after each route change.
+      let outlineDropdownObserver: MutationObserver | null = null;
+      const headOutlinePanel = () => {
+        const panel = document.querySelector<HTMLElement>(
+          '.VPLocalNavOutlineDropdown .items',
+        );
+        if (!panel || panel.querySelector('.ivue-outline-title')) return;
+        const pageTitle = document.title.replace(/\s+—\s+ivue$/, '').trim();
+        if (!pageTitle) return;
+        const heading = document.createElement('p');
+        heading.className = 'ivue-outline-title';
+        heading.textContent = pageTitle;
+        panel.prepend(heading);
+      };
+      const watchOutlineDropdown = () => {
+        outlineDropdownObserver?.disconnect();
+        const dropdown = document.querySelector('.VPLocalNavOutlineDropdown');
+        if (!dropdown) return;
+        outlineDropdownObserver = new MutationObserver(headOutlinePanel);
+        outlineDropdownObserver.observe(dropdown, { childList: true });
+      };
+      requestAnimationFrame(watchOutlineDropdown);
+
       // Tapping the logo while the mobile menu is open: VitePress only
       // closes the screen on route CHANGE, so from the home page the
       // menu would stay open over the page. Close it explicitly.
@@ -347,6 +373,7 @@ export default {
           restartAvatarRing();
           watchOutlineMarker();
           labelLocalNav();
+          watchOutlineDropdown();
         });
 
         if (router.route.data.isNotFound) {
