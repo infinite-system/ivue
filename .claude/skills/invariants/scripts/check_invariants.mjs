@@ -98,6 +98,33 @@ const EXCLUDED_DIRECTORY_PATHS = new Set([
   'newsletter/dashboard/dist',
 ]);
 const EXCLUDE_FLAG_PREFIX = '--exclude=';
+// --test-glob=<glob>[,<glob>]: ADDITIONAL root-relative globs whose matches
+// are treated as generator-header test files (default detection is the
+// *.test.ts suffix). This is what lets the checker read a constitution in a
+// .test.mjs file — its own test suite included. `**` any depth, `*` within
+// a segment, `?` one character.
+const TEST_GLOB_FLAG_PREFIX = '--test-glob=';
+const EXTRA_TEST_GLOB_RES = [];
+function testGlobToRegExp(glob) {
+  let pattern = '';
+  for (let index = 0; index < glob.length; index++) {
+    const character = glob[index];
+    if (character === '*') {
+      if (glob[index + 1] === '*') {
+        index++;
+        if (glob[index + 1] === '/') index++;
+        pattern += '(?:.*/)?';
+      } else pattern += '[^/]*';
+    } else if (character === '?') pattern += '[^/]';
+    else pattern += character.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+  }
+  return new RegExp(`^${pattern}$`);
+}
+function isExtraTestFile(root, path) {
+  if (!EXTRA_TEST_GLOB_RES.length) return false;
+  const relativePath = relative(root, path).replaceAll('\\', '/');
+  return EXTRA_TEST_GLOB_RES.some((expression) => expression.test(relativePath));
+}
 const ANNOT_RE =
   /(?<![\w-])invariant:\s*([^(\n]+?)\s*\(([^)\n]*\.invariants\.md)\)/g;
 // annotation-shaped lines that DON'T parse (typo'd suffix, wrong brackets) — flagged, not silent
@@ -1138,7 +1165,7 @@ function parseTestGeneratorHeader(
       subjectPaths.push(resolvedSubject);
     }
   }
-  const sourcePath = path.replace(/\.test\.ts$/, '.ts');
+  const sourcePath = path.replace(/\.test\.(\w+)$/, '.$1');
   let subjectTexts = [];
   let subjectLabel = basename(sourcePath);
   if (subjectPaths.length || subjectBroken) {
@@ -1306,7 +1333,7 @@ function checkTypeScriptGenerator(
       `${where}: // spec: rows are retired; annotate the proving test`,
     );
   }
-  if (path.endsWith('.test.ts')) {
+  if (path.endsWith('.test.ts') || isExtraTestFile(root, path)) {
     parseTestGeneratorHeader(
       root,
       path,
@@ -1427,7 +1454,7 @@ function checkRefs(root) {
     } catch {
       continue;
     }
-    if (p.endsWith('.ts')) {
+    if (p.endsWith('.ts') || isExtraTestFile(root, p)) {
       checkTypeScriptGenerator(
         root,
         p,
@@ -1662,6 +1689,10 @@ usage:
   --exclude=a,b
                root-relative directories the walk never enters, in addition to the
                built-in scratch/build-output list (tmp, dist, …)
+  --test-glob=g[,g]
+               additional root-relative globs treated as generator-header test
+               files (default detection is the *.test.ts suffix) — lets header
+               mode read constitutions in .test.mjs and other layouts
   --version    print version (for diagnosing checker/schema skew between copies)
   --help       this text
 
@@ -1745,6 +1776,13 @@ function main() {
   const pathArg = positional[0];
 
   for (const f of flags) {
+    if (f.startsWith(TEST_GLOB_FLAG_PREFIX)) {
+      for (const glob of f.slice(TEST_GLOB_FLAG_PREFIX.length).split(',')) {
+        const clean = glob.trim().replaceAll('\\', '/');
+        if (clean) EXTRA_TEST_GLOB_RES.push(testGlobToRegExp(clean));
+      }
+      continue;
+    }
     if (f.startsWith(EXCLUDE_FLAG_PREFIX)) {
       for (const path of f.slice(EXCLUDE_FLAG_PREFIX.length).split(',')) {
         const clean = path.trim().replaceAll('\\', '/').replace(/\/+$/, '');

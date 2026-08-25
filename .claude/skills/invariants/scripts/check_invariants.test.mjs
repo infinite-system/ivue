@@ -1616,3 +1616,35 @@ test('usage errors exit 2', () => {
   assert.equal(run([]).code, 2);
   assert.equal(run(['/nonexistent/file.invariants.md']).code, 2);
 });
+
+test('--test-glob treats matched files as header test files beyond the ts suffix', () => {
+  const { dir, cleanup } = tmp();
+  const claim = 'If Demo runs, then one local mechanism owns its value.';
+  const impossible = 'A second local mechanism owns the same value.';
+  const header = testGeneratorHeader({
+    domainClaims: [{ symbol: 'Demo', claim }],
+    impossibleClaims: [impossible],
+  });
+  const proofs = [
+    `// domain-invariant: Demo — ${claim}`,
+    'test("one local mechanism owns the value", () => {});',
+    `// impossible-if-true: Demo — ${impossible}`,
+    'test("a second local mechanism is refused", () => {});',
+  ].join('\n');
+  writeFileSync(join(dir, 'Demo.mjs'), 'class Demo {}\n');
+  // the header is BROKEN (missing described register) so the glob's effect
+  // is observable: unglobbed the file is invisible, globbed it goes red
+  const broken = header.replace('=== GENERATOR-DESCRIBED ===\n', '');
+  writeFileSync(join(dir, 'Demo.test.mjs'), `${broken}\n${proofs}\n`);
+  const unglobbed = run(['--refs', dir]);
+  assert.equal(unglobbed.code, 0, unglobbed.stderr);
+  const red = run(['--refs', '--test-glob=**/*.test.mjs', dir]);
+  assert.equal(red.code, 1);
+  assert.match(red.stderr, /needs === GENERATOR-DESCRIBED ===/);
+  // green: the valid header in a globbed .test.mjs resolves against its
+  // same-named .mjs sibling
+  writeFileSync(join(dir, 'Demo.test.mjs'), `${header}\n${proofs}\n`);
+  const green = run(['--refs', '--test-glob=**/*.test.mjs', dir]);
+  assert.equal(green.code, 0, green.stderr);
+  cleanup();
+});
