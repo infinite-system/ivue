@@ -369,3 +369,5 @@ Rules: one dev server at a time, kill by port when done
 the browser closes on error; before ending any session that started
 background processes, sweep:
 `ps aux | grep -E "wrangler|workerd|serve|chrom" | grep -v grep`.
+
+- **VitePress intercepts link clicks on `window` in the CAPTURE phase** (`router.js`): it runs before any element handler, so `event.preventDefault()` / `stopPropagation()` in a Vue `@click` are too late — the router still `go(href)`s, and a `history.go(-n)` you fire afterwards walks back from the NEW entry (symptom: wrong page + history length grows by one). To own a click on an internal `<a>`, put `vp-raw` on the anchor (the router skips `.closest(".vp-raw")`), or use a `<button>` (it skips `closest("button")` too). `BlogBackLink.vue` is the reference.
