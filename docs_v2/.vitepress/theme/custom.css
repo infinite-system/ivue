@@ -1576,6 +1576,11 @@ a.feature-inline-link {
 .blog-card .excerpt {
   -webkit-line-clamp: 3;
 }
+@media (max-width: 640px) {
+  .blog-card .excerpt {
+    -webkit-line-clamp: 2;
+  }
+}
 .blog-card .go {
   /* painted by the link system; layout only */
   font-size: 0.9rem;
