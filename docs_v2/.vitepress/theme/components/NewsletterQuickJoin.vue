@@ -32,6 +32,9 @@ const message = ref('');
 // --- Turnstile (explicit render, invisible unless challenged) --------
 const turnstileElement = ref<HTMLElement | null>(null);
 const turnstileToken = ref('');
+// true only while Cloudflare shows the VISIBLE challenge — the form's
+// container can make room for it then, and only then
+const challenged = ref(false);
 let turnstileWidgetId: string | undefined;
 async function renderTurnstile() {
   if (!TURNSTILE_SITE_KEY || !turnstileElement.value || turnstileWidgetId)
@@ -49,6 +52,12 @@ async function renderTurnstile() {
     },
     'expired-callback': () => {
       turnstileToken.value = '';
+    },
+    'before-interactive-callback': () => {
+      challenged.value = true;
+    },
+    'after-interactive-callback': () => {
+      challenged.value = false;
     },
   });
 }
@@ -117,7 +126,11 @@ async function join() {
   <form
     v-if="belongsHere && state !== 'done'"
     class="quickjoin"
-    :class="[`quickjoin--${align}`, `quickjoin--place-${placement}`]"
+    :class="[
+      `quickjoin--${align}`,
+      `quickjoin--place-${placement}`,
+      { 'quickjoin--challenged': challenged },
+    ]"
     aria-label="Newsletter quick signup"
     @submit.prevent="join()"
     @focusin.once="ensureTurnstile()"
