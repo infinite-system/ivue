@@ -426,6 +426,7 @@ describe('Static $-cached getters', () => {
     expect(settle()).toBe(70); // inherited method binds to the child, detached
   });
 
+  // invariant: A prototype level is transformed at most once (ivue.invariants.md)
   it('re-wrapping a subclass never resurrects a parent-bound method through the bind cache', () => {
     // The double-wrap pattern the manual prescribes: a Static parent, a raw
     // subclass extending it, and Static() applied again to the subclass.
@@ -458,6 +459,7 @@ describe('Static $-cached getters', () => {
     expect(roster()).toBe('tug,ferry'); // detached, still child-bound
   });
 
+  // invariant: A prototype level is transformed at most once (ivue.invariants.md)
   it('re-wrapping skips the unregistered bind caches of symbol-keyed methods too', () => {
     const describeKind = Symbol('describeKind');
     class $Signal {

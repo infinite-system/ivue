@@ -134,21 +134,23 @@ for orientation; this contract carries the falsifiable core.
 
 ### A prototype level is transformed at most once
 
-**Invariant:** If `Reactive()` reaches a prototype level — directly, through a repeated call, or through any number of subclasses — then that level's own getters and methods are converted exactly once, and the `$watch` / `$watchEffect` / `$stopEffects` trio is installed exactly once per class.
+**Invariant:** If a transform re-reaches work it already did — `Reactive()` reaching a prototype level directly, through a repeated call, or through any number of subclasses; `Static()` wrapping a subclass of a class it already wrapped — then each member is converted exactly once per seam, and the transform's own runtime residue (processed markers, bind caches, memo cells) is never mistaken for user API by a later pass.
 
-**Scope:** Every prototype in the chain from the target class up to (excluding) `Object.prototype`; every module that calls `Reactive()` on a class or its descendants, in any load order.
+**Scope:** BOTH transforms. `Reactive()`: every prototype in the chain from the target class up to (excluding) `Object.prototype`, from every module that calls it on a class or its descendants, in any load order. `Static()`: every class in the static chain of the wrapped class, including the residue-bearing case — a subclass wrapped AFTER the parent wrap has been read, when the parent already owns its bind/cache symbol properties.
 
-**Mechanism:** The chain is walked base to child; a level carrying an own `PROCESSED` marker (`Symbol.for('ivue.processed')`) is skipped (`lib/Reactive.ts:189`), and the marker is defined after conversion with the level's cache symbols as its value (`:214`). The helper trio is guarded by `hasOwn(prototype, '$stopEffects')` (`:225`). `Symbol.for` makes the markers agree across duplicate bundled copies of the engine.
+**Mechanism:** `Reactive()`: the chain is walked base to child; a level carrying an own `PROCESSED` marker (`Symbol.for('ivue.processed')`) is skipped (`lib/Reactive.ts:189`), and the marker is defined after conversion with the level's cache symbols as its value (`:214`). The helper trio is guarded by `hasOwn(prototype, '$stopEffects')` (`:225`). `Symbol.for` makes the markers agree across duplicate bundled copies of the engine. `Static()`: the wrap walk skips its own residue by two guards — `Symbol.keyFor` recognizing registered `ivue.static*` symbols even across bundled engine copies, and a module registry of every issued cache key catching the unregistered symbols that back symbol-keyed methods (`lib/Static.ts:63-68`). Without the guards, a re-wrap converts an ancestor's cached BOUND function into a "method" of the child, and the child's members run with the ancestor as receiver.
 
-**Generates:** Per-file authoring — a base transformed in `Base.ts` is skipped when `Child.ts` transforms itself; diamond and shared-base hierarchies converge regardless of import order; `$stopEffects` knowing exactly which symbols each level may cache.
+**Generates:** Per-file authoring — a base transformed in `Base.ts` is skipped when `Child.ts` transforms itself; diamond and shared-base hierarchies converge regardless of import order; `$stopEffects` knowing exactly which symbols each level may cache; the manual's double-wrap pattern (`class $Sub extends Parent.$Class` … `Static($Sub)`) being safe in any read order, which is what makes per-receiver gates and capability subclasses composable.
 
-**Rejected alternatives:** A module-level `WeakSet` of processed classes — a second bundled engine copy has its own set and double-wraps; a class-level flag — a child's flag does not stop the base from being re-walked.
+**Rejected alternatives:** A module-level `WeakSet` of processed classes — a second bundled engine copy has its own set and double-wraps; a class-level flag — a child's flag does not stop the base from being re-walked; for `Static()`, unregistered-only cache symbols — `Symbol.keyFor` could not recognize them across engine copies.
 
-**Evidence:** `lib/Reactive.ts:186-217`, `:225`. Tests: "calling Reactive twice on the same class is safe and a no-op the 2nd time", "Reactive(Parent) then Reactive(Child) skips the already-processed parent proto", "$stopEffects is injected only once (idempotent re-Reactive)".
+**Evidence:** `lib/Reactive.ts:186-217`, `:225`; `lib/Static.ts:63-68`. Tests: "calling Reactive twice on the same class is safe and a no-op the 2nd time", "Reactive(Parent) then Reactive(Child) skips the already-processed parent proto", "$stopEffects is injected only once (idempotent re-Reactive)", "re-wrapping a subclass never resurrects a parent-bound method through the bind cache", "re-wrapping skips the unregistered bind caches of symbol-keyed methods too".
 
-**Impossible if true:** A getter whose descriptor `get` is the engine wrapper around another engine wrapper; two `$stopEffects` own properties on one prototype chain; a base class whose getters behave differently depending on which subclass module loaded first.
+**Impossible if true:** A getter whose descriptor `get` is the engine wrapper around another engine wrapper; two `$stopEffects` own properties on one prototype chain; a base class whose getters behave differently depending on which subclass module loaded first; a member of a re-wrapped `Static` subclass that runs with its parent as receiver — a resurrected parent-bound method.
 
-**Verification:** `npx vitest run lib/__tests__/Reactive.vitest.spec.ts -t "idempotence|injected only once"`
+**Verification:** `npx vitest run lib/__tests__/Reactive.vitest.spec.ts -t "idempotence|injected only once"` · `npx vitest run lib/__tests__/Static.vitest.spec.ts -t "re-wrapping"`
+
+**Open question:** Any wrapper the package grows beyond `Reactive()` and `Static()` must prove this record for its own seam before shipping — the failure pattern this record now names is an invariant proven for one seam and silently assumed for its twin (that assumption shipped the `Static` hole fixed in 28c27d8).
 
 **Status:** provisional
 

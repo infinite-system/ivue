@@ -138,20 +138,26 @@ prototype; a class identity that differs between development and production.
 
 ### A prototype level is transformed at most once
 
-> However a level is reached — a repeated `Reactive()` call, any number of
-> subclasses, any load order — its getters and methods convert once, and the
-> `$watch` / `$watchEffect` / `$stopEffects` trio installs once per class.
+> However a transform re-reaches its own work — a repeated `Reactive()` call,
+> any number of subclasses, any load order, or `Static()` re-wrapping a
+> subclass of a class it already wrapped — each member converts once per seam,
+> and the transform's runtime residue is never mistaken for user API.
 
-A per-prototype `PROCESSED` marker makes the chain walk skip anything already
-transformed, and the chain is walked base → child so ancestors settle first.
-The marker's value is the list of that level's cache symbols, which is what
-lets teardown remove exactly the engine's cells. Calling `Reactive()` again is
-a safe no-op; a base transformed in its own module is skipped when a child in
-another module transforms itself — which is what makes the per-file authoring
-pattern correct.
+On the `Reactive()` side, a per-prototype `PROCESSED` marker makes the chain
+walk skip anything already transformed, and the chain is walked base → child
+so ancestors settle first. The marker's value is the list of that level's
+cache symbols, which is what lets teardown remove exactly the engine's cells.
+Calling `Reactive()` again is a safe no-op; a base transformed in its own
+module is skipped when a child in another module transforms itself — which is
+what makes the per-file authoring pattern correct. On the `Static()` side the
+wrap walk skips its own bind and cache symbols, so wrapping a subclass after
+the parent has been read still binds every member to the subclass — the
+double-wrap pattern (`class $Sub extends Parent.$Class` … `Static($Sub)`) is
+safe in any read order.
 
 **Rules out** — double-wrapped getters; `$stopEffects` installed twice;
-diamond / shared-base layouts transforming differently by load order.
+diamond / shared-base layouts transforming differently by load order; a
+re-wrapped `Static` subclass whose member runs with its parent as receiver.
 
 [Record →](https://github.com/infinite-system/ivue/blob/main/ivue.invariants.md#a-prototype-level-is-transformed-at-most-once)
 
