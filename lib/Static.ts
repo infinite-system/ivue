@@ -42,6 +42,11 @@ export type ClassConstructor = new (...arguments_: any[]) => any;
 
 const hasOwn = Object.hasOwn;
 
+// Every bind/cache symbol this module ever issues — so a second wrap can
+// recognize an ancestor's runtime residue even for the unregistered
+// symbols that back symbol-keyed methods.
+const issuedCacheKeys = new Set<PropertyKey>();
+
 export function Static<Class extends ClassConstructor>(targetClass: Class): Class {
   const SelectedClass = class extends targetClass {};
   const visitedKeys = new Set<PropertyKey>();
@@ -55,6 +60,13 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
       if (visitedKeys.has(key)) continue;
       visitedKeys.add(key);
 
+      // An already-wrapped ancestor that has been READ owns its bind/cache
+      // symbol properties. They are runtime residue, not API — re-wrapping
+      // them would install an ancestor-bound function where the child's
+      // own chain lookup expects to bind for itself.
+      if (typeof key === 'symbol' && Symbol.keyFor(key)?.startsWith('ivue.static')) continue;
+      if (issuedCacheKeys.has(key)) continue; // the unregistered symbols backing symbol-keyed methods
+
       const descriptor = Object.getOwnPropertyDescriptor(currentClass, key)!;
 
       if (typeof descriptor.value === 'function') {
@@ -63,6 +75,7 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
           typeof key === 'string'
             ? Symbol.for(`ivue.staticBound.${key}`)
             : Symbol('ivue.staticBound');
+        issuedCacheKeys.add(bindKey);
 
         Object.defineProperty(SelectedClass, key, {
           configurable: true,
@@ -85,6 +98,7 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
       ) {
         const getter = descriptor.get;
         const cacheKey = Symbol.for(`ivue.staticCache.${key}`);
+        issuedCacheKeys.add(cacheKey);
 
         Object.defineProperty(SelectedClass, key, {
           configurable: true,

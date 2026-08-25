@@ -458,6 +458,31 @@ describe('Static $-cached getters', () => {
     expect(roster()).toBe('tug,ferry'); // detached, still child-bound
   });
 
+  it('re-wrapping skips the unregistered bind caches of symbol-keyed methods too', () => {
+    const describeKind = Symbol('describeKind');
+    class $Signal {
+      static get kind(): string {
+        return 'base';
+      }
+
+      static [describeKind]() {
+        return `kind:${this.kind}`;
+      }
+    }
+
+    const Signal = Static($Signal);
+    expect((Signal as any)[describeKind]()).toBe('kind:base'); // parent reads first — unregistered bind cache lands
+
+    class $AlertSignal extends Signal {
+      static override get kind(): string {
+        return 'alert';
+      }
+    }
+    const AlertSignal = Static($AlertSignal);
+
+    expect((AlertSignal as any)[describeKind]()).toBe('kind:alert'); // child receiver, not the parent snapshot
+  });
+
   it('walks the raw inheritance chain — ancestor $-getters cache per receiver', () => {
     class $Base {
       static get scale() {
