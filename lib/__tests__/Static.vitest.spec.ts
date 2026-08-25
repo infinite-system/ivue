@@ -426,6 +426,38 @@ describe('Static $-cached getters', () => {
     expect(settle()).toBe(70); // inherited method binds to the child, detached
   });
 
+  it('re-wrapping a subclass never resurrects a parent-bound method through the bind cache', () => {
+    // The double-wrap pattern the manual prescribes: a Static parent, a raw
+    // subclass extending it, and Static() applied again to the subclass.
+    // The parent is READ FIRST, so its bind cache (an own symbol property)
+    // exists when the second wrap walks the chain — that cache must be
+    // invisible to the walk, or the child's methods run with the parent
+    // as receiver.
+    class $Fleet {
+      static get vessels(): string[] {
+        return ['tug'];
+      }
+
+      static roster() {
+        return this.vessels.join(',');
+      }
+    }
+
+    const Fleet = Static($Fleet);
+    expect(Fleet.roster()).toBe('tug'); // parent reads (and caches its bound method) first
+
+    class $HarborFleet extends Fleet {
+      static override get vessels(): string[] {
+        return [...super.vessels, 'ferry'];
+      }
+    }
+    const HarborFleet = Static($HarborFleet);
+
+    expect(HarborFleet.roster()).toBe('tug,ferry'); // the child's override, not the parent's snapshot
+    const roster = HarborFleet.roster;
+    expect(roster()).toBe('tug,ferry'); // detached, still child-bound
+  });
+
   it('walks the raw inheritance chain — ancestor $-getters cache per receiver', () => {
     class $Base {
       static get scale() {
