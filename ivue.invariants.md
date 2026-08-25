@@ -35,6 +35,32 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 **Last refined:** 2026-08-25
 
+### Cross-module class references resolve in any load order
+
+**Invariant:** If two class modules reference each other only through late reads — `new Other.Class()` inside getter or method bodies, `Other.$Class` only in `extends` of a non-cyclic parent — then both modules load and run in either import order without `Cannot access 'X' before initialization`.
+
+**Scope:** Modules that export a class through the namespace pattern (`export namespace X { export const $Class …; export let Class = Reactive($Class) }`) and read other namespaces at first access, not at module load or in field initializers. Circular inheritance (`A extends B` and `B extends A`) is outside this record and impossible in any language.
+
+**Renegotiable at:** TypeScript's `namespace` emit (a hoisted `var` filled by an IIFE) and ECMAScript module evaluation order. A TypeScript release that emitted `const` or `class` for namespaces would move this to a build-time check.
+
+**Mechanism:** A `namespace` compiles to `export var X; (function (X) { … })(X || (X = {}))`, so the binding exists from the first instant of evaluation and is never in the temporal dead zone; the member read `X.Class` happens inside a method body, at call time, when every module in the cycle has finished loading (`docs_v2/guide/modules.md` — "Circular references resolve by construction").
+
+**Generates:** "A's methods use B, B's methods use A" as a supported shape; the `$`-getter store slot (`private get $store() { return useStore() }`) resolving after Pinia and the app exist; per-file class hierarchies without an import-order manifest.
+
+**Rejected alternatives:** `export const Class = Reactive(class …)` — a `const` read mid-cycle throws; a registry that resolves names to classes at runtime — a second identity system beside the module graph.
+
+**Open question:** Add a two-module vitest case (A imports B, B imports A, each constructs the other in a method) run under both import orders, so the guarantee is proven by the suite rather than by the emit inspection alone.
+
+**Evidence:** `node -e` emit inspection below (TypeScript 5.9 emits `export var Thing;`); `docs_v2/guide/modules.md:122-170`; the `workspace-platform` example classes (`examples/playground/src/examples/workspace-platform/*.ts`) all use the pattern.
+
+**Impossible if true:** `Cannot access 'X' before initialization` thrown by a namespace binding read inside a method body; a namespace module whose emitted binding is `const` or `class`; two modules that load in one order and crash in the other while obeying the late-read rule.
+
+**Verification:** `node -e "const ts=require('typescript');console.log(ts.transpileModule('export namespace Thing { export const \$Class = 1; export let Class = 2 }',{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText)"` prints `export var Thing;` followed by an IIFE
+
+**Status:** provisional
+
+**Last refined:** 2026-08-25
+
 ## Chosen invariants
 
 ### Reactive returns the class it was given
@@ -233,6 +259,93 @@ Chosen invariants stand on reality invariants, never the reverse.
 **Impossible if true:** An `import.meta.env`, `process.env`, or `import.meta.hot` reference inside `lib/Reactive.ts`, `lib/Static.ts`, or `lib/LazyShared.ts`; a class whose transformed prototype differs between a vitest run and a production bundle; an instance whose constructor came from a different class generation than its prototype.
 
 **Verification:** `grep -c "import.meta.env\|process.env\|__DEV__\|import.meta.hot" lib/Reactive.ts lib/Static.ts lib/LazyShared.ts` prints `0` for each file
+
+**Status:** provisional
+
+**Last refined:** 2026-08-25
+### Each class transforms at load time in its own module
+
+**Invariant:** If every class module runs `Reactive($Class)` as its own top-level side effect, then a hierarchy spread over any number of files is fully transformed after all modules load — each prototype level exactly once, by whichever module reaches it first — with no coordination between files.
+
+**Scope:** Every module exporting a `Reactive()` class through the namespace pattern, including parent, grandparent, and child in separate files, and modules re-evaluated by Vite during development.
+
+**Mechanism:** The `Class = Reactive($Class)` line executes at module load; because a level already carrying `PROCESSED` is skipped (see `A prototype level is transformed at most once`) and the class identity is unchanged (see `Reactive returns the class it was given`), a base transformed in `Base.ts` is skipped when `Child.ts` walks its chain, and the child still inherits the installed getters through the shared prototype.
+
+**Generates:** The per-file authoring convention (one class per module, each calling `Reactive()` on itself); development module replacement that needs no custom class runtime — Vite re-evaluates the module and Vue reconstructs the owning component with the new hierarchy as one generation.
+
+**Rejected alternatives:** One central `Reactive()` call over the whole hierarchy — an import-order manifest every new class must join; transforming in the constructor — per-instance cost and a race with subclasses.
+
+**Evidence:** Tests: "Reactive(Parent) then Reactive(Child) skips the already-processed parent proto", "calling Reactive twice on the same class is safe and a no-op the 2nd time"; example modules `examples/playground/src/examples/workspace-platform/Project.ts:22-24`, `TaskList.ts:32-34`.
+
+**Impossible if true:** A multi-file hierarchy with one level left untransformed after all modules load; an inherited getter double-wrapped after a module reload; a child module that must import its grandparent's module for the transform to complete.
+
+**Verification:** `npx vitest run lib/__tests__/Reactive.vitest.spec.ts -t "idempotence"`
+
+**Status:** provisional
+
+**Last refined:** 2026-08-25
+
+### Static returns a bound subclass and leaves the raw class untouched
+
+**Invariant:** If `Static($X)` is called, then it returns a subclass of `$X` whose visible static methods are lazily bound per receiver with stable identity, and `$X` itself keeps native static behavior.
+
+**Scope:** `Static()` from `ivue/extras` (`lib/Static.ts`) over stateless capability classes; the returned class is the namespace's `$Class` anchor (`export const $Class = Static($X); export let Class = Reactive($Class)`). Instance reactivity is `Reactive()`'s domain — `Static()` has no instance dimension.
+
+**Mechanism:** `Static()` creates `class extends targetClass {}` (`lib/Static.ts:46`) and walks the static chain up to `Function.prototype` (`:49-53`), redefining each method as a getter that binds on first read and caches under a per-receiver own symbol `ivue.staticBound.<key>` (`:60-79`). A symbol own property, never the method name, means a parent-first read cannot install a parent-bound method where a subclass lookup would find it.
+
+**Generates:** Static methods safe to retain as callbacks (routers, watchers, command handlers); the mutable `Class` slot a kernel or plugin can replace while consumers keep calling `X.Class.method`; `Static(Reactive($Class))` composition for classes needing both contracts.
+
+**Rejected alternatives:** Bind by rewriting the raw class's statics — the raw class loses native behavior and `extends $Class` inherits the rewrite; cache under the method name — a parent-first read installs the parent's bound function on the subclass's chain.
+
+**Evidence:** `lib/Static.ts:45-107`. Tests: "returns a subclass and leaves the raw class untouched", "binds methods lazily with stable identity, safe to detach", "walks the static inheritance chain; child overrides win", "binds symbol-keyed static methods with the same discipline", "method binding is order-correct: parent read first, child dispatch intact", "method binding is order-correct: child read first, parent unaffected", "composes with Reactive(): Static(Reactive($Class)) grants both contracts", "the anchor shape: $Class = Static($X), Class = Reactive($Class)".
+
+**Impossible if true:** `Static($X) === $X`; `$X.method` returning a bound function after `Static($X)` ran; `Sub.method` dispatching to the parent's body because the parent was read first; `X.Class.method !== X.Class.method`.
+
+**Verification:** `npx vitest run lib/__tests__/Static.vitest.spec.ts -t "subclass|stable identity|inheritance chain|symbol-keyed|order-correct|composes|anchor shape"`
+
+**Status:** provisional
+
+**Last refined:** 2026-08-25
+
+### A static dollar getter caches once per receiver
+
+**Invariant:** If a get-only static accessor named with a `$` prefix is read through a `Static()` class, then its body runs once per receiver class and later reads through that class return the stored value — each class in a hierarchy derives its own value through its own overrides, in any read order.
+
+**Scope:** Get-only static accessors whose name starts with `$` on `Static()` classes and their subclasses. Non-`$` static getters stay live; accessor pairs with a setter are untouched. The `$` prefix promises stable identity per receiver, not immutability.
+
+**Mechanism:** `Static()` redefines the getter to store the result under `Symbol.for('ivue.staticCache.<key>')` as an own property of `this` behind an `Object.hasOwn` guard (`lib/Static.ts:80-102`). `hasOwn` never walks the prototype chain, so a parent's cache cannot shadow a subclass and a subclass's first read runs the getter with its own overrides in place.
+
+**Generates:** Per-class memo tables and tuning derived from static config; the shared-store rule that follows from it — a registry must NOT live in a `$` getter, because per-receiver caching forks it (see `A shared store lives in a LazyShared static readonly field`).
+
+**Rejected alternatives:** Cache on the declaring class and let subclasses inherit — a subclass that overrides an input still reads the parent's stale derivation; a module-level `WeakMap` — the same value for every receiver, which is the shared-store case, not the per-class one.
+
+**Evidence:** `lib/Static.ts:80-102`. Tests: "computes a $-getter exactly once per receiver", "is order-correct: parent read first, child override still wins", "is order-correct: child read first, parent unaffected", "promises stable identity, not immutability — memo tables mutate freely", "caches primitive results too", "leaves non-$ getters live — knobs re-read every time", "leaves accessor pairs with a setter untouched", "a subclass overriding the $-getter itself wins", "walks the raw inheritance chain — ancestor $-getters cache per receiver".
+
+**Impossible if true:** A `$` static getter body running twice for one receiver; `Sub.$config` returning the parent's derivation after the parent was read first; a non-`$` static getter returning a cached value; `Sub.$table === Parent.$table` for a per-receiver memo.
+
+**Verification:** `npx vitest run lib/__tests__/Static.vitest.spec.ts -t "\\$-getter|\\$-cached|order-correct|stable identity, not immutability|primitive results|knobs|accessor pairs"`
+
+**Status:** provisional
+
+**Last refined:** 2026-08-25
+
+### A shared store lives in a LazyShared static readonly field
+
+**Invariant:** If a static class owns state shared by every receiver (a registry, a ledger, a backend), then that state is held in a `static readonly` field whose value is a `LazyShared` cell — never in a `$` static getter and never in an eager field initializer that constructs another namespace's class.
+
+**Scope:** Shared stores on `Static()` classes across ivue and consumer code that follows the standard. Per-class memos and config belong to `$` getters (see `A static dollar getter caches once per receiver`); dependency-free constants may stay eager fields.
+
+**Mechanism:** The field eagerly stores the cell — a thunk evaluates nothing at module load, so it is cycle-safe; `LazyShared#value` (`lib/LazyShared.ts:44-61`) runs the thunk on first read, after every module in any import cycle has loaded, and memoizes inside the cell, so no receiver (subclass included) can fork it. A thunk that reads its own cell throws a named cycle error (`:46-51`), and a failed construction leaves the cell retryable (`:53-58`).
+
+**Generates:** One registry per process regardless of how many subclasses read it; `LazyShared` shipping from `ivue/extras`; the Standard's rule "shared store = static readonly LazyShared field, per-class derivation = `$` getter".
+
+**Rejected alternatives:** `static get $registry()` — per-receiver caching silently forks the registry per subclass; `static readonly registry = new Registry.Class()` — constructs at module load and races the import cycle; a module-level singleton variable — cannot be reset for tests or recomposed by a kernel.
+
+**Evidence:** `lib/LazyShared.ts:37-71`. Tests: "evaluates nothing at definition, constructs once, shares the result", "every receiver converges on the ONE singleton — forking the access path is harmless", "even a per-receiver $-cache over the cell returns the same singleton", "reset drops the value and the next read constructs again", "a thunk cycle throws a named error and leaves the cell retryable", "a throwing thunk does not poison the cell — the next read retries".
+
+**Impossible if true:** `Sub.store !== Parent.store` for a `LazyShared`-held store; the store's constructor running at module load; a thunk cycle surfacing as a bare `RangeError: Maximum call stack size exceeded`; a cell staying broken after its thunk threw once.
+
+**Verification:** `npx vitest run lib/__tests__/LazyShared.vitest.spec.ts`
 
 **Status:** provisional
 
