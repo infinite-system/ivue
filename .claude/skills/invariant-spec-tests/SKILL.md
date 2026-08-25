@@ -143,7 +143,9 @@ other, and the checker holds both directions (#678).
 ## Self-check before shipping any new check
 
 0. Which header component or caveat does this test prove, and is that
-   claim written directly above it? Read the header's Goal alone: can you
+   claim written directly above it? THE COUNTERFACTUAL: would this test go
+   red if the annotated behavior broke? If not, the annotation does not
+   belong on it — an existence check proves publication at most. Read the header's Goal alone: can you
    tell which mechanism this is without the file name? Delete each formal
    line in your head: does the Goal stop being reachable? Does the Goal
    need any claim the header does not carry?
