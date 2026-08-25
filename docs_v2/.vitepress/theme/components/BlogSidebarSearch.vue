@@ -1,46 +1,54 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, withBase } from 'vitepress';
+import { data as posts } from '../../../blog/blog.data.mjs';
+import { rankPosts } from '../blog-search';
 
 // The blog rail's head: the All-newsletters link plus a search box that
-// filters the RAIL — post titles that don't match are hidden, and a
-// month whose posts are all hidden folds away with them. The main
-// content is untouched; the index page has its own search.
+// searches the whole archive — titles, tags, excerpts AND body text —
+// ranked exactly like the index page's search (blog-search.ts). While
+// a query is typed the month groups step aside and the ranked results
+// take their place; clearing brings the months back. The main content
+// is never touched.
 const route = useRoute();
 const isBlogSection = computed(() => route.path.startsWith('/blog'));
 const isBlogIndex = computed(() => /^\/blog\/?(index\.html)?$/.test(route.path));
 
 const query = ref('');
-const HIDDEN = 'blog-rail-hidden';
+const searching = computed(() => query.value.trim().length > 0);
+const publicPosts = posts.filter((post) => !post.private);
+const results = computed(() =>
+  searching.value ? rankPosts(publicPosts, query.value) : [],
+);
 
-function applyFilter() {
-  const words = query.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  const groups = document.querySelectorAll<HTMLElement>(
-    '.VPSidebar .VPSidebarItem.level-0',
-  );
-  for (const group of groups) {
-    let visibleCount = 0;
-    for (const item of group.querySelectorAll<HTMLElement>('.VPSidebarItem.level-1')) {
-      const title = (item.querySelector('.link .text')?.textContent ?? '')
-        .replace(/\s+\w{3} \d{1,2}\s*$/, '') // drop the date suffix
-        .toLowerCase();
-      const matches = words.every((word) => title.includes(word));
-      item.classList.toggle(HIDDEN, !matches);
-      if (matches) visibleCount++;
-    }
-    group.classList.toggle(HIDDEN, visibleCount === 0);
-  }
+function isCurrent(url: string): boolean {
+  return route.path.replace(/\.html$/, '') === url.replace(/\.html$/, '');
 }
 
-// re-apply after each navigation — VitePress re-renders the rail items
-watch([query, () => route.path], () => nextTick(applyFilter));
+function shortDate(date: string): string {
+  return new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+// the month groups are VitePress DOM — hidden by a class on the rail
+// while searching, re-asserted after each navigation (the rail re-renders)
+const HIDDEN = 'blog-rail-searching';
+function syncGroups() {
+  document
+    .querySelector('.VPSidebar')
+    ?.classList.toggle(HIDDEN, searching.value && isBlogSection.value);
+}
+watch([searching, () => route.path], () => nextTick(syncGroups));
 
 function clear() {
   query.value = '';
 }
 onBeforeUnmount(() => {
   query.value = '';
-  applyFilter();
+  syncGroups();
 });
 </script>
 
@@ -70,6 +78,22 @@ onBeforeUnmount(() => {
         aria-label="Clear search"
         @click="clear"
       >×</button>
+    </div>
+    <div v-if="searching" class="blog-rail-results" role="list">
+      <p class="blog-rail-results__count">
+        {{ results.length }} match{{ results.length === 1 ? '' : 'es' }}
+      </p>
+      <a
+        v-for="post in results"
+        :key="post.slug"
+        class="blog-rail-result"
+        :class="{ active: isCurrent(post.url) }"
+        :href="withBase(post.url)"
+        role="listitem"
+      >
+        {{ post.title }}
+        <span class="blog-rail-result__date">{{ shortDate(post.date) }}</span>
+      </a>
     </div>
   </div>
 </template>
@@ -135,5 +159,42 @@ onBeforeUnmount(() => {
 }
 .blog-rail-search__clear:hover {
   color: var(--vp-c-text-1);
+}
+/* ranked results: the same row anatomy as the month lists (13px title,
+   small grey date, dotted separators) so the swap reads as a re-sort */
+.blog-rail-results {
+  margin-top: 12px;
+}
+.blog-rail-results__count {
+  margin: 0 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--vp-c-text-3);
+}
+.blog-rail-result {
+  display: block;
+  padding: 7px 0;
+  border-bottom: 1px dotted var(--vp-c-divider);
+  font-size: 13px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--vp-c-text-2);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.blog-rail-result:last-child {
+  border-bottom: none;
+}
+.blog-rail-result:hover,
+.blog-rail-result.active {
+  color: var(--ivue-link-2);
+}
+.blog-rail-result__date {
+  margin-left: 7px;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--vp-c-text-3);
+  opacity: 0.62;
+  white-space: nowrap;
 }
 </style>

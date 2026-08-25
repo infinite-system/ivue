@@ -2473,9 +2473,9 @@ a.feature-inline-link {
 .VPSidebar:has(a[href="/blog/"]) .VPSidebarItem.level-1:last-child {
   border-bottom: none;
 }
-/* rail search (BlogSidebarSearch.vue) hides non-matching posts and
-   emptied months */
-.VPSidebar .blog-rail-hidden {
+/* rail search (BlogSidebarSearch.vue): while a query is typed the
+   month groups step aside for the ranked results */
+.VPSidebar.blog-rail-searching .VPSidebarItem.level-0 {
   display: none !important;
 }
 /* post titles are long — one size down from the guide rail */

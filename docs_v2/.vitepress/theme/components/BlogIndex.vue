@@ -4,6 +4,7 @@ import { onMounted } from 'vue';
 import { withBase } from 'vitepress';
 import { data as posts } from '../../../blog/blog.data.mjs';
 import NewsletterQuickJoin from './NewsletterQuickJoin.vue';
+import { rankPosts } from '../blog-search';
 
 type ViewStyle = 'list' | 'cards';
 const VIEW_STORAGE_KEY = 'ivue-blog-view';
@@ -55,44 +56,16 @@ const tagCounts = computed(() => {
   );
 });
 
-// Search RANKS, not just filters: a title hit beats a tag hit beats
-// an excerpt hit beats a body mention — so typing words from a title
-// surfaces that post first. Without a query, newest-first stands.
-function searchScore(post: (typeof posts)[number], query: string): number {
-  const title = post.title.toLowerCase();
-  const excerpt = post.excerpt.toLowerCase();
-  const words = query.split(/\s+/).filter((word) => word.length > 1);
-  let score = 0;
-  if (title.includes(query)) score += 100;
-  if (title.startsWith(query)) score += 40;
-  for (const word of words) {
-    if (title.includes(word)) score += 30;
-    if (post.tags.some((tag: string) => tag.includes(word))) score += 15;
-    if (excerpt.includes(word)) score += 8;
-    if (post.searchText.includes(word)) score += 2;
-  }
-  if (post.tags.some((tag: string) => tag.includes(query))) score += 20;
-  if (excerpt.includes(query)) score += 12;
-  if (post.searchText.includes(query)) score += 5;
-  return score;
-}
-
-const filteredPosts = computed(() => {
-  const query = searchQuery.value.trim().toLowerCase();
-  const withinTag = visiblePosts.value.filter(
-    (post) => !activeTag.value || post.tags.includes(activeTag.value),
-  );
-  if (!query) return withinTag;
-  return withinTag
-    .map((post) => ({ post, score: searchScore(post, query) }))
-    .filter((entry) => entry.score > 0)
-    .sort(
-      (first, second) =>
-        second.score - first.score ||
-        second.post.timestamp - first.post.timestamp,
-    )
-    .map((entry) => entry.post);
-});
+// Search RANKS, not just filters (blog-search.ts — shared with the
+// sidebar rail's search). Without a query, newest-first stands.
+const filteredPosts = computed(() =>
+  rankPosts(
+    visiblePosts.value.filter(
+      (post) => !activeTag.value || post.tags.includes(activeTag.value),
+    ),
+    searchQuery.value,
+  ),
+);
 
 function toggleTag(tag: string) {
   activeTag.value = activeTag.value === tag ? null : tag;
