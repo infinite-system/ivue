@@ -45,6 +45,13 @@ other, and the checker holds both directions (#678).
   of that comment derives from the generator: a comment that introduces a
   claim absent from the header is the same finding as a test without a
   claim. There is no file-level spec-prose register.
+- DIRECTION. For NEW behavior, the spec precedes the code and git proves
+  it: the header claim and its born-red test enter in a commit BEFORE the
+  implementation that turns them green. Red is the honest state of a
+  declared intent. A claim whose first appearance in history is the same
+  commit as (or later than) its implementation is a description of what
+  was built, not a spec that determined it — intent cannot be recovered
+  from code, only declared before it.
 - GROWTH. The invariant: spec count may grow only while defects stay flat.
   Add a test only when it proves a component or caveat not yet proven. When
   a defect appears, the first question is which component or caveat had no
