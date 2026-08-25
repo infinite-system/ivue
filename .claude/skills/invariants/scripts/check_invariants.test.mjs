@@ -739,6 +739,61 @@ test('rule a: test headers are first and local symbols resolve in the sibling so
   cleanup();
 });
 
+test('a Subject line names the source symbols resolve against; a wrong path is refused; absent falls back to sibling', () => {
+  const { dir, cleanup } = tmp();
+  const claim = 'If Demo runs, then one local mechanism owns its value.';
+  const impossible = 'A second local mechanism owns the same value.';
+  const header = testGeneratorHeader({
+    domainClaims: [{ symbol: 'Demo', claim }],
+    impossibleClaims: [impossible],
+  });
+  const subjectHeader = (subjectLine) =>
+    header.replace('Goal:', `${subjectLine}\nGoal:`);
+  const proofs = [
+    `// domain-invariant: Demo — ${claim}`,
+    'test("one local mechanism owns the value", () => {});',
+    `// impossible-if-true: Demo — ${impossible}`,
+    'test("a second local mechanism is refused", () => {});',
+  ].join('\n');
+  mkdirSync(join(dir, 'source'), { recursive: true });
+  mkdirSync(join(dir, 'specs'), { recursive: true });
+  writeFileSync(join(dir, 'source/Demo.ts'), 'class Demo {}\n');
+
+  // red: a Subject path that does not exist is refused, never skipped
+  writeFileSync(
+    join(dir, 'specs/Growth.test.ts'),
+    `${subjectHeader('Subject: source/Missing.ts')}\n${proofs}\n`,
+  );
+  const wrongPath = run(['--refs', dir]);
+  assert.equal(wrongPath.code, 1);
+  assert.match(wrongPath.stderr, /Subject path does not exist: source\/Missing\.ts/);
+
+  // green: a valid Subject resolves symbols against the named source —
+  // no sibling exists and no sibling error fires
+  writeFileSync(
+    join(dir, 'specs/Growth.test.ts'),
+    `${subjectHeader('Subject: source/Demo.ts')}\n${proofs}\n`,
+  );
+  const named = run(['--refs', dir]);
+  assert.equal(named.code, 0, named.stderr);
+
+  // red: a valid Subject still refuses a symbol the named source lacks
+  writeFileSync(
+    join(dir, 'specs/Growth.test.ts'),
+    `${subjectHeader('Subject: source/Demo.ts').replaceAll('Demo —', 'Ghost —')}\n${proofs.replaceAll('Demo —', 'Ghost —')}\n`,
+  );
+  const ghost = run(['--refs', dir]);
+  assert.equal(ghost.code, 1);
+  assert.match(ghost.stderr, /domain-invariant symbol 'Ghost' is not declared in sibling Demo\.ts/);
+
+  // green: absent Subject falls back to the same-named sibling
+  writeFileSync(join(dir, 'specs/Growth.ts'), 'class Demo {}\n');
+  writeFileSync(join(dir, 'specs/Growth.test.ts'), `${header}\n${proofs}\n`);
+  const sibling = run(['--refs', dir]);
+  assert.equal(sibling.code, 0, sibling.stderr);
+  cleanup();
+});
+
 // domain-invariant: checker-rule-b — If a header states a domain claim, contract component, or impossibility, then an annotated test proves it and no test invents another claim.
 test('rule b: header claims and annotated tests cover each other in both directions', () => {
   const { dir, cleanup } = tmp();

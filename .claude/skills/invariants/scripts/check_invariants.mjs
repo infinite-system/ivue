@@ -1117,14 +1117,39 @@ function parseTestGeneratorHeader(
   if (!/^\s*Goal:\s*\S/m.test(formalBody)) {
     problems.push(where + ': formal generator register needs Goal');
   }
+  // An optional `Subject:` line names the source file(s) the header's
+  // symbols resolve against (one or more paths, space/comma-separated,
+  // resolved against the test's directory then the root); absent means the
+  // same-named sibling. A Subject path that does not exist is refused —
+  // never silently skipped.
+  const subjectPaths = [];
+  let subjectBroken = false;
+  for (const subjectMatch of formalBody.matchAll(/^\s*Subject:\s*(.+\S)\s*$/gm)) {
+    for (const subjectPath of subjectMatch[1].split(/[\s,]+/).filter(Boolean)) {
+      const resolvedSubject = [
+        resolve(dirname(path), subjectPath),
+        resolve(root, subjectPath),
+      ].find((candidate) => existsSync(candidate));
+      if (!resolvedSubject) {
+        problems.push(`${where}: Subject path does not exist: ${subjectPath}`);
+        subjectBroken = true;
+        continue;
+      }
+      subjectPaths.push(resolvedSubject);
+    }
+  }
   const sourcePath = path.replace(/\.test\.ts$/, '.ts');
-  let sourceText = '';
-  if (!existsSync(sourcePath)) {
+  let subjectTexts = [];
+  let subjectLabel = basename(sourcePath);
+  if (subjectPaths.length || subjectBroken) {
+    subjectTexts = subjectPaths.map((subject) => readText(subject));
+    subjectLabel = subjectPaths.map((subject) => basename(subject)).join(', ');
+  } else if (!existsSync(sourcePath)) {
     problems.push(
       where + ': generator header needs sibling source ' + basename(sourcePath),
     );
   } else {
-    sourceText = readText(sourcePath);
+    subjectTexts = [readText(sourcePath)];
   }
   const domainClaims = new Map();
   const domainSymbols = new Set();
@@ -1138,13 +1163,16 @@ function parseTestGeneratorHeader(
       const key = `${symbolName} — ${claim}`;
       domainClaims.set(key, { symbolName, claim });
       domainSymbols.add(symbolName);
-      if (sourceText && !declaredSymbolExists(sourceText, symbolName)) {
+      if (
+        subjectTexts.length &&
+        !subjectTexts.some((text) => declaredSymbolExists(text, symbolName))
+      ) {
         problems.push(
           where +
             ": domain-invariant symbol '" +
             symbolName +
             "' is not declared in sibling " +
-            basename(sourcePath),
+            subjectLabel,
         );
       }
       continue;

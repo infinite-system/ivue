@@ -575,7 +575,16 @@ shape and not the obvious alternative, the direction of use, the caveat a fresh 
 would simplify away, `Open question:` lines for what the tests do not reach); a sentence
 that fits every file belongs in no file.
 
-The Goal and the formal register cohere in both directions: the Goal is the index that turns
+An optional `Subject:` line in the formal register names the source file(s) the header's
+symbols resolve against (one or more paths; a cross-source or contract-only proof may name
+none). When absent, the same-named sibling source is the subject. The checker verifies the
+line when present and applies the sibling default when not.
+
+The Goal and the formal register cohere in both directions — for the file's OWN claims. A
+contract-record link is a hosted-proof binding to an external generator: it must have an
+annotated test in the file (the bijection), and it is exempt from the Goal-deletion test —
+the goal it serves is the record's, not this file's. The rule below binds domain-invariant
+and impossibility lines: the Goal is the index that turns
 these gears into this mechanism, so every formal line is load-bearing for the Goal (delete
 it and the Goal is no longer reachable — if the Goal survives, the line belongs to another
 mechanism or the Goal is too narrow), and the Goal is reachable from the formal lines alone
