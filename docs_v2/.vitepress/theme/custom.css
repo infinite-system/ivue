@@ -1767,6 +1767,19 @@ a.feature-inline-link {
     font-size: 0.86rem;
     line-height: 1.5;
   }
+}
+/* bare rows (phones + tablets): the row has no box to light up, so the
+   THUMB answers hover/tap — the same accent ring + glow as the related
+   posts and prev/next thumbs */
+@media (max-width: 1279px) {
+  .vp-doc .blog-row .thumb {
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .vp-doc .blog-row:hover .thumb,
+  .vp-doc .blog-row:active .thumb {
+    border-color: var(--ivue-link-accent);
+    box-shadow: 0 12px 30px -18px var(--ivue-link-glow);
+  }
   .blog-row .go {
     display: none;
   }
