@@ -124,3 +124,116 @@ Chosen invariants stand on reality invariants, never the reverse.
 **Status:** provisional
 
 **Last refined:** 2026-08-25
+### A plain-value getter erases its own wrapper
+
+**Invariant:** If a converted getter returns a non-Ref value on its first read (and its name does not start with `$`), then the engine redefines that prototype property as a thin native getter, and every later read on every instance of that prototype runs the original getter with no cache lookup.
+
+**Scope:** Every getter converted by `Reactive()` whose first result is not a Ref. The redefinition is per prototype level, so it happens once per class, on whichever instance reads first. Setters paired with the getter are kept.
+
+**Mechanism:** In the wrapper (`lib/Reactive.ts:116-153`), a non-Ref result takes the `defineProperty(proto, key, …)` branch at `:138-149`, installing `get() { return originalGetter.call(resolveRaw(this)) }` and the original setter. The wrapper object is then unreachable from the prototype.
+
+**Generates:** Plain derived getters as the default authoring mode (0 bytes per instance, re-derived inside whatever effect reads them); `computed()` as a surgical opt-in; the derivation benchmarks in `bench/derived-vs-computed.mjs`.
+
+**Rejected alternatives:** Cache the plain value as if it were a ref — stale reads and a fake reactive identity; keep the wrapper and re-check `isRef` per read — a permanent per-read tax on the most common member kind.
+
+**Evidence:** `lib/Reactive.ts:132-150`. Tests: "getter returning a plain value de-opts back to a native getter (no setter)", "getter+setter returning a plain value de-opts but keeps the setter wired", "native accessor pair over reactive state stays fully reactive (no computed)", "plain-getter (de-opt) super-chains resolve through 4 levels".
+
+**Impossible if true:** A plain-value getter whose prototype descriptor still has the engine wrapper after one read; `Object.getOwnPropertySymbols(instance)` gaining a symbol from reading a plain-value getter; a plain-value getter returning a stale value after its inputs changed inside an effect.
+
+**Verification:** `npx vitest run lib/__tests__/Reactive.vitest.spec.ts -t "de-opts|native accessor pair|plain-getter \(de-opt\)"`
+
+**Status:** provisional
+
+**Last refined:** 2026-08-25
+
+### Members resolve across the whole prototype chain
+
+**Invariant:** If a class hierarchy is transformed, then getters and methods at every level resolve as in native classes — `super.x` and `super.x.value` reach the parent's own cell, overrides at different levels cooperate, and no two levels share a cache for the same name.
+
+**Scope:** Every prototype level of a `Reactive()` class, at any depth, including levels transformed in other modules and chains that do not bottom out at `Object.prototype`.
+
+**Mechanism:** The transform walks base to child and gives each `(prototype, key)` its own `Symbol(key)` (`lib/Reactive.ts:186-209`), so a base `summary` and a child `summary` cache under different symbols on the same raw instance. `super.summary` invokes the parent level's getter, which reads the parent's symbol.
+
+**Generates:** Inheritance and polymorphism as ordinary class features; per-file hierarchies (`class $Child extends Parent.$Class`); a child computed aggregating ancestor refs and re-running when an ancestor ref changes.
+
+**Rejected alternatives:** Cache under the property name — parent and child clobber each other and `super.x` returns the child's cell (an infinite loop or the wrong layer).
+
+**Evidence:** `lib/Reactive.ts:198-209`. Tests: "resolves getters across a 3-level chain with super.x.value", "super computed and child computed are cached under different symbols (no collision)", "inherited methods bind correctly", "computed super-chains resolve through 4 levels", "mutating an ANCESTOR ref re-runs the full computed chain (reactivity through inheritance)", "each level resolves correctly as a standalone instance", "super method calls chain through 3 levels", "handles a chain that bottoms out at null (no Object.prototype)".
+
+**Impossible if true:** `super.x` inside a child getter returning the child's own value; a parent read changing what a child's same-named getter returns; a 4-level chain where one level's computed reads another level's cell.
+
+**Verification:** `npx vitest run lib/__tests__/Reactive.vitest.spec.ts -t "inheritance|super|bottoms out at null"`
+
+**Status:** provisional
+
+**Last refined:** 2026-08-25
+
+### Teardown stops watchers and drops only engine cells
+
+**Invariant:** If `instance.$stopEffects()` is called, then the instance's lazily created effect scope is stopped and deleted, every cell the engine cached on the instance is deleted (unless `{ reset: false }`), no consumer-owned property or symbol is touched, and no user method is called.
+
+**Scope:** The `$watch`, `$watchEffect`, and `$stopEffects` helpers on every `Reactive()` class. The scope exists only after the first `$watch` / `$watchEffect`; instances that never watch never allocate one. Cleanup of non-Vue resources is the consumer's ordinary method that calls `$stopEffects()` itself.
+
+**Mechanism:** `$watch` / `$watchEffect` run inside `raw[SCOPE] ??= effectScope(true)` (`lib/Reactive.ts:238`, `:253`). `$stopEffects` (`:268-300`) stops that scope in a `try`, then in `finally` deletes `SCOPE` and walks child to base deleting exactly the symbols each level's `PROCESSED` marker lists (`:287-296`); `RAW` is not in any list and survives. The next read re-materializes a fresh cell (see `A member materializes once per instance`).
+
+**Generates:** Component-outliving models (`session.dispose()` = own cleanup + `$stopEffects()`); suspend/resume via `{ reset: false }` + a fresh `startWatchers()`; the measured disposal numbers in `bench/disposal-vs-vue*.mjs` (retained leak 4.7 MB vs 85 MB when a reference is held).
+
+**Rejected alternatives:** A teardown hook the engine calls — ivue never runs user code; `computed.effect.stop()` per cell — gone in Vue 3.5, and lazy computeds are collected once dereferenced anyway; deleting every own symbol — destroys consumer-owned symbols.
+
+**Evidence:** `lib/Reactive.ts:231-300`. Tests: "clears cached computeds so they re-materialize fresh after teardown", "deletes cached bound methods without error", "never auto-calls user methods on teardown — no hooks, by design", "skips the RAW symbol while iterating (no crash on the raw anchor)", "{ reset: false } stops watchers but every cached cell survives", "$stopEffects stops watchers created via $watch", "pure-data instances never allocate a scope (zero overhead)", "reuses the same scope across multiple $watch calls"; adversarial: "teardown clears only engine cache keys — consumer symbols survive", "can allocate a fresh watcher scope after teardown", "richer cleanup composes as an ordinary method calling $stopEffects".
+
+**Impossible if true:** A `$watch` callback firing after `$stopEffects()`; a consumer's own symbol-keyed property missing after teardown; `$stopEffects()` invoking a method the class defines; a pure-data instance owning an `ivue.scope` symbol; `RAW` missing after teardown.
+
+**Verification:** `npx vitest run lib/__tests__/Reactive.vitest.spec.ts -t "teardown|\\$watch|scope"` and `npx vitest run lib/__tests__/ReactiveAdversarial.vitest.spec.ts -t "teardown|fresh watcher scope|richer cleanup"`
+
+**Status:** provisional
+
+**Last refined:** 2026-08-25
+
+### A dollar getter caches its whole result forever
+
+**Invariant:** If a converted getter's name starts with `$`, then its body runs once per instance on first read and the returned value — Ref or not, even `undefined` — is stored and returned on every later read of that instance.
+
+**Scope:** Every `Reactive()` getter whose key begins with `$`, on every instance. Static `$`-getters have their own per-receiver rule under `Static()` (see the static records).
+
+**Mechanism:** `cacheWhole = key[0] === '$'` at `lib/Reactive.ts:114`; the `cacheWhole` branch at `:126-130` stores the result under the member's symbol before the `isRef` check, so the plain-value erasure never applies to it.
+
+**Generates:** The composable/store slot — `get $mouse() { return useMouse() }`, `private get $project() { return useProjectStore() }` — resolved on first touch (after Pinia/app is ready), circular-import safe, one instance per model.
+
+**Rejected alternatives:** Detect "composable-shaped" results heuristically — no reliable signature; an explicit decorator or registry — a second API where a naming prefix already carries the intent.
+
+**Evidence:** `lib/Reactive.ts:113-130`. Tests: "caches the WHOLE result forever, even non-refs (composable/service pattern)"; adversarial: "caches an undefined $-singleton result instead of rerunning it".
+
+**Impossible if true:** A `$`-getter body running twice on one instance; `instance.$service !== instance.$service`; a `$`-getter that returned `undefined` re-running on the next read.
+
+**Verification:** `npx vitest run lib/__tests__/Reactive.vitest.spec.ts -t "cacheWhole|WHOLE result"` and `npx vitest run lib/__tests__/ReactiveAdversarial.vitest.spec.ts -t "undefined \\$-singleton"`
+
+**Status:** provisional
+
+**Last refined:** 2026-08-25
+
+### One class path runs in every environment
+
+**Invariant:** If code runs a `Reactive()` class, then development, tests, SSR, and production execute the same transformed prototype — the engine contains no environment check, class registry, construct proxy, or hot-reload classifier.
+
+**Scope:** `lib/Reactive.ts`, `lib/Static.ts`, `lib/LazyShared.ts` as shipped. Module replacement during development is Vite's and Vue's: they re-evaluate the module and reconstruct the owning component, so an instance always carries state and behavior from one class generation.
+
+**Mechanism:** The engine files reference no `import.meta.env`, `process.env`, `__DEV__`, or `import.meta.hot`; `Reactive()` has a single code path ending in `return targetClass` (see `Reactive returns the class it was given`). Nothing exists that could branch by environment.
+
+**Generates:** Benchmarks that measure what ships; identical `instanceof` and identity semantics in tests and production; no dev-only proxy layer for HMR.
+
+**Rejected alternatives:** A dev-time class registry that hot-swaps prototypes on edit (the v1 `lib/ivue.ts` approach) — a hybrid instance mixing old state with new behavior, and a dev-only identity production never sees.
+
+**Enforcement:** review-time — the constraint is an absence across three files; the Verification grep is the mechanical guard, and a guarding negative test is the next step (see Open question).
+
+**Open question:** Add a vitest case that asserts the engine source contains no environment token, so the guard runs with the suite instead of by hand.
+
+**Evidence:** `grep -n "import.meta.env\|process.env\|__DEV__\|import.meta.hot" lib/Reactive.ts lib/Static.ts lib/LazyShared.ts` returns nothing (checked 2026-08-25). Test: "returns the SAME class reference (mutates in place, no wrapper)".
+
+**Impossible if true:** An `import.meta.env`, `process.env`, or `import.meta.hot` reference inside `lib/Reactive.ts`, `lib/Static.ts`, or `lib/LazyShared.ts`; a class whose transformed prototype differs between a vitest run and a production bundle; an instance whose constructor came from a different class generation than its prototype.
+
+**Verification:** `grep -c "import.meta.env\|process.env\|__DEV__\|import.meta.hot" lib/Reactive.ts lib/Static.ts lib/LazyShared.ts` prints `0` for each file
+
+**Status:** provisional
+
+**Last refined:** 2026-08-25
