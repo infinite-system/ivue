@@ -9,6 +9,53 @@ Two kinds of records, and the split is load-bearing:
 
 Chosen invariants stand on reality invariants, never the reverse.
 
+## Generator
+
+The records below are gears. This section is the mechanism they form, in
+invariant form, so a scan of this file alone carries the deep picture.
+
+STUDY ALSO: [The Invariants Behind ivue](docs_v2/reference/invariants.md) —
+the prose narrative of this mechanism for readers of the site: why each
+gear exists, what it rules out, and where the method comes from. Read it
+for orientation; this contract carries the falsifiable core.
+
+### One prototype transform gives plain classes full reactivity
+
+**Invariant:** If a class's prototype is transformed once — ref-returning getters into lazily cached cells, plain getters into native getters, methods into lazily bound functions, every cell keyed on the raw instance — then its instances are plain objects with full Vue reactivity, real inheritance, and zero per-instance cost until first access, and the same class runs in every environment.
+
+**Scope:** The `ivue` engine: `Reactive()` for instance classes, `Static()` and `LazyShared` for the static side, and the namespace authoring convention that carries classes across modules. The goal vector is class-based application models with no proxy wrapper and no coordination between files.
+
+**Components:** One per gear, each delete-testable:
+- [Every engine cache lives on the raw instance](#every-engine-cache-lives-on-the-raw-instance) — why one `(instance, key)` has one cell whatever `this` the engine is entered through.
+- [Reactive returns the class it was given](#reactive-returns-the-class-it-was-given) — why `instanceof`, equality, and benchmarks see one identity.
+- [A prototype level is transformed at most once](#a-prototype-level-is-transformed-at-most-once) — why hierarchies converge regardless of import order.
+- [A member materializes once per instance](#a-member-materializes-once-per-instance) — why watchers stay attached and methods are safe handlers.
+- [Construction does no reactive work](#construction-does-no-reactive-work) — why creation cost does not scale with members declared.
+- [A plain-value getter erases its own wrapper](#a-plain-value-getter-erases-its-own-wrapper) — why derivations cost zero bytes and `computed()` is opt-in.
+- [Members resolve across the whole prototype chain](#members-resolve-across-the-whole-prototype-chain) — why `super` and overrides behave as in native classes.
+- [Teardown stops watchers and drops only engine cells](#teardown-stops-watchers-and-drops-only-engine-cells) — why models can outlive components and be released deterministically.
+- [A dollar getter caches its whole result forever](#a-dollar-getter-caches-its-whole-result-forever) — why composables and stores resolve once, late, and cycle-safe.
+- [One class path runs in every environment](#one-class-path-runs-in-every-environment) — why what is measured is what ships.
+- [Cross-module class references resolve in any load order](#cross-module-class-references-resolve-in-any-load-order) — why mutual references between class modules do not crash.
+- [Each class transforms at load time in its own module](#each-class-transforms-at-load-time-in-its-own-module) — why a hierarchy can live in many files with no manifest.
+- [Static returns a bound subclass and leaves the raw class untouched](#static-returns-a-bound-subclass-and-leaves-the-raw-class-untouched) — why static capability classes get stable handlers and a replaceable `Class` slot.
+- [A static dollar getter caches once per receiver](#a-static-dollar-getter-caches-once-per-receiver) — why per-class derivation follows each subclass's own overrides.
+- [A shared store lives in a LazyShared static readonly field](#a-shared-store-lives-in-a-lazyshared-static-readonly-field) — why a registry is one per process and never races an import cycle.
+
+**Mechanism:** Raw anchoring makes every cell canonical; once-only transformation and identity preservation make the transform composable across files and load orders; lazy materialization and wrapper erasure move every cost to first access and delete the cost that never earns itself; per-level symbols keep inheritance native; scoped teardown makes release explicit; the namespace convention pushes every cross-module read to the latest moment. The static side repeats the same discipline one level up: per-receiver symbols for binding and memos, one cell for shared state.
+
+**Generates:** The ivue Standard (`skills/ivue/SKILL.md`): ref-getters, plain getters, surgical `computed()`, `$`-getter stores, the namespace export, `$stopEffects` disposal; the creation, hot-call, derivation, and disposal benchmarks in `bench/`; the flyweight and formula-grid examples; this contract's gate checks.
+
+**Impossible if true:** A `Reactive()` class whose instances need a proxy to be reactive. Creation cost that grows with the number of getters declared. A multi-file hierarchy that depends on import order. A benchmark number that includes a development-only code path.
+
+**Evidence:** The Evidence fields of the fifteen component records — `lib/Reactive.ts`, `lib/Static.ts`, `lib/LazyShared.ts`, the four vitest suites under `lib/__tests__/` at 100% coverage, and `bench/`.
+
+**Verification:** `npx vitest run lib/__tests__/Reactive.vitest.spec.ts lib/__tests__/ReactiveAdversarial.vitest.spec.ts lib/__tests__/Static.vitest.spec.ts lib/__tests__/LazyShared.vitest.spec.ts` green, then `node .claude/skills/invariants/scripts/check_invariants.mjs --all --refs` clean.
+
+**Status:** provisional
+
+**Last refined:** 2026-08-25
+
 ## Reality-based invariants
 
 ### Every engine cache lives on the raw instance
