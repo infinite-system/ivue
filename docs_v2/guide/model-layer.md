@@ -255,7 +255,7 @@ instance. This isn't an Angular bug — it's what happens to _any_ reactive
 primitive declared as a field rather than a getter, in any framework. ivue
 getters are real prototype members, so `super.x.value` composes across as
 many subclass levels as the model needs
-([Inheritance & `super` fidelity](/reference/invariants#inheritance-super-fidelity)) — the getter placement is the whole
+([Members resolve across the whole prototype chain](/reference/invariants#members-resolve-across-the-whole-prototype-chain)) — the getter placement is the whole
 difference.
 
 One more shape of the same idea: Angular's dependency injection has a

@@ -485,6 +485,36 @@ test('generator: missing anchor, dead anchor, undefined ref key all fail', () =>
   cleanup();
 });
 
+test('generator: a GitHub blob URL to a contract resolves from the checkout root — anchors still validated', () => {
+  const { dir, cleanup } = tmp();
+  mkdirSync(join(dir, 'docs/reference'), { recursive: true });
+  writeFileSync(
+    join(dir, 'demo.invariants.md'),
+    contract([record('Rule one holds')], [record('B')]),
+  );
+  const hosted = 'https://github.com/acme/demo/blob/main/demo.invariants.md';
+  // red: the hosted path resolves, so a dead anchor is reported as such
+  // (not as "contract not found"), and a missing anchor is still a finding
+  writeFileSync(
+    join(dir, 'docs/reference/page.md'),
+    [`[Rule one holds](${hosted}#rule-one-gone)`, `[Rule one holds](${hosted})`].join('\n'),
+  );
+  let r = run(['--refs', dir]);
+  assert.equal(r.code, 1);
+  assert.match(r.stderr, /anchor '#rule-one-gone' does not resolve/);
+  assert.match(r.stderr, /needs an anchor/);
+  assert.doesNotMatch(r.stderr, /contract not found/);
+  // green: the anchored hosted link counts as a resolved generator link
+  writeFileSync(
+    join(dir, 'docs/reference/page.md'),
+    `[Rule one holds](${hosted}#rule-one-holds)`,
+  );
+  r = run(['--refs', dir]);
+  assert.equal(r.code, 0, r.stderr);
+  assert.match(r.stdout, /1 generator link\(s\) resolved/);
+  cleanup();
+});
+
 test('generator: verbatim-name text pointing at a different record fails; free alias passes', () => {
   const { dir, cleanup } = tmp();
   writeFileSync(

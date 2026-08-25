@@ -757,13 +757,22 @@ function resolveContractRecordLink(
     problems.push(`${where}: undefined link reference [${link.key}]`);
     return null;
   }
-  const decoded = decodedLinkTarget(link.target);
+  let decoded = decodedLinkTarget(link.target);
   if (
     !decoded.includes('.invariants.md') &&
     !(allowSelfAnchor && decoded.startsWith('#'))
   ) {
     return null;
   }
+  // A GitHub "blob" URL names a checkout path deterministically
+  // (…/blob/<ref>/<path>) — published docs link contracts that way. It is
+  // resolved from the checkout root like a root-relative path, so its anchor
+  // is validated exactly as a relative link's would be. Other absolute URLs
+  // cannot be resolved here and are left to the "contract not found" arm.
+  const hosted = decoded.match(
+    /^https?:\/\/github\.com\/[^/]+\/[^/]+\/blob\/[^/]+\/(.+)$/,
+  );
+  if (hosted) decoded = hosted[1];
   const [file, anchor] = decoded.split('#');
   if (!anchor) {
     problems.push(
@@ -771,7 +780,11 @@ function resolveContractRecordLink(
     );
     return null;
   }
-  let target = file ? resolve(dirname(path), file) : resolve(path);
+  let target = file
+    ? hosted
+      ? resolve(root, file)
+      : resolve(dirname(path), file)
+    : resolve(path);
   if (!slugsByFile.has(target)) target = resolve(root, file);
   const slugs = slugsByFile.get(target);
   if (slugs === undefined) {
