@@ -148,7 +148,7 @@ function formatDate(date: string): string {
   <div class="blog-index-toolbar">
     <div class="blog-index-heading">
       <h1>Blog</h1>
-      <span class="blog-count">{{ visiblePosts.length }} posts</span>
+      <span class="blog-count">{{ visiblePosts.length }} articles</span>
       <button
         v-if="privatePostCount"
         type="button"
@@ -173,8 +173,8 @@ function formatDate(date: string): string {
         v-model="searchQuery"
         type="search"
         class="blog-search__input"
-        placeholder="Search posts…"
-        aria-label="Search posts"
+        placeholder="Search articles…"
+        aria-label="Search articles"
       />
       <button
         v-if="searchQuery"

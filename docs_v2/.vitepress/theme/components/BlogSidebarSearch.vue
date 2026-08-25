@@ -4,7 +4,7 @@ import { useRoute, withBase } from 'vitepress';
 import { data as posts } from '../../../blog/blog.data.mjs';
 import { rankPosts } from '../blog-search';
 
-// The blog rail's head: the All-posts link plus a search box that
+// The blog rail's head: the All-articles link plus a search box that
 // searches the whole archive — titles, tags, excerpts AND body text —
 // ranked exactly like the index page's search (blog-search.ts). While
 // a query is typed the month groups step aside and the ranked results
@@ -58,7 +58,7 @@ onBeforeUnmount(() => {
       class="blog-rail-all"
       :class="{ active: isBlogIndex }"
       :href="withBase('/blog/')"
-    >All posts</a>
+    >All articles</a>
     <div class="blog-rail-search">
       <svg class="blog-rail-search__icon" width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
         <circle cx="6.5" cy="6.5" r="4.6" stroke="currentColor" stroke-width="1.6" />
@@ -68,8 +68,8 @@ onBeforeUnmount(() => {
         v-model="query"
         type="search"
         class="blog-rail-search__input"
-        placeholder="Search posts…"
-        aria-label="Search posts"
+        placeholder="Search articles…"
+        aria-label="Search articles"
       />
       <button
         v-if="query"
