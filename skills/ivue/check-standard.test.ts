@@ -1,44 +1,44 @@
 /*
 === GENERATOR ===
 Goal: A Standard gate that cannot certify itself — every one of its thirty-seven checks is proven able to fail on a planted defect and to pass on the conforming form, by tests that call the exact function the command line runs.
-// domain-invariant: exactlyOneReactiveSourceIsInstalled — Exactly one Reactive source is installed: if the gate runs over a checkout, then it finds exactly one engine (an ivue dependency or one vendored Reactive), never zero and never two
-// domain-invariant: aPublicClassPublishesItsNamespaceManifest — A public class publishes its namespace manifest: if a file declares a dollar-prefixed class, then it exports a namespace with dollar-Class, Class, and Instance for reactive classes, and no behavior is exported directly
-// domain-invariant: aClassFileIsNamedAfterItsClass — A class file is named after its class: if a file declares dollar-X, then the file is X.ts and the namespace is X
-// domain-invariant: aClassFileHoldsOnlyImportsClassNamespaceAndTypes — A class file holds only imports class namespace and types: if a file is a class file, then its top level is imports, the class, its namespace, and type declarations, nothing else
-// domain-invariant: behaviorLivesOnThePrototypeNotInFields — Behavior lives on the prototype not in fields: if a class member is a function, then it is a method, never a function-valued field
-// domain-invariant: constructionGoesThroughTheNamespaceClassSlot — Construction goes through the namespace Class slot: if an instance is created, then it is new X.Class, never new dollar-X, new X.dollar-Class, or reactive(new …)
-// domain-invariant: theAnchorIsStaticOnlyWhenStaticsExist — The anchor is Static only when statics exist: if a class declares static members, then its anchor is Static(dollar-X), and if it declares none, then its anchor is the raw class
-// domain-invariant: staticBindsMethodsAndCachesDollarGettersPerReceiver — Static binds methods and caches dollar getters per receiver: if the consumer's Static transforms a class, then its static methods are bound with stable identity and its dollar getters run once per receiver class
-// domain-invariant: aSharedStoreIsAStaticReadonlyField — A shared store is a static readonly field: if a static holds shared state, then the field is readonly, and a dependency constructed at load lives in a LazyShared cell
-// domain-invariant: aDerivedStaticGetterIsLowerCamelCase — A derived static getter is lower camel case: if a static getter derives its value from other members or classes, then its name is lowerCamel, and SCREAMING_SNAKE remains for literal tunable constants
-// domain-invariant: staticReadsGoThroughSelfNotTheBaseClass — Static reads go through self not the base class: if instance code reads its own statics, then it reads this.self, never the base class name or a per-site constructor cast
-// domain-invariant: mutableStateIsARefReturningGetter — Mutable state is a ref-returning getter: if a class holds mutable state, then it is a getter returning ref or shallowRef, never a mutable plain field
-// domain-invariant: aRefIsReadAndWrittenThroughValue — A Ref is read and written through value: if class code writes a Ref getter, then it writes .value, never assigns over the getter
-// domain-invariant: aDerivationIsAPlainGetterUnlessComputedIsJustified — A derivation is a plain getter unless computed is justified: if a getter allocates a computed, then a stated reason (expensive, render-suppression, stable-handle) sits above it
-// domain-invariant: aComposableIsInjectedByAOneCallDollarGetter — A composable is injected by a one-call dollar getter: if a class uses a composable or store, then a dollar getter returns the one call, never an eager field
-// domain-invariant: instanceTypesOnlyUnwrappingSurfaces — Instance types only unwrapping surfaces: if a raw collection or parameter is typed, then it uses Model, and if an unwrapping surface is typed, then it uses Instance
-// domain-invariant: aComponentHasOneModelOwner — A component has one model owner: if a component has behavior, then exactly one class instance owns it and the script setup carries no parallel reactive behavior
-// domain-invariant: theStateDestructureIsTotal — The state destructure is total: if a template touches a Ref, then that Ref is destructured, no plain getter or method is destructured, and no state binding shadows a prop
-// domain-invariant: templateExpressionsCarryNoLogic — Template expressions carry no logic: if a template expression is written, then it is a named read, a method call, or a structural branch, never a comparison, ternary, negation, or built string
-// domain-invariant: watchLifetimeMatchesTheInstanceOwner — Watch lifetime matches the instance owner: if a class is component-scoped, then it uses plain watch, and if it outlives components, then it uses dollar-watch with a dispose path
-// domain-invariant: aReactiveClosureDelegatesToOneMethod — A reactive closure delegates to one method: if a computed or watch callback is written, then it is one arrow delegating to one method
-// domain-invariant: aStoreIsUsedLazilyAndSwappedAtTheClassSlot — A store is used lazily and swapped at the Class slot: if shared state is published, then it constructs lazily behind use() and is never drilled as a prop or constructor argument
-// domain-invariant: keyedStateCreatesOnReadAndPeeksOnWrite — Keyed state creates on read and peeks on write: if a class holds a Map of refs, then reads get-or-create, writes peek, and a release path exists
-// domain-invariant: aGenericReactiveClassCastsItsConstructor — A generic reactive class casts its constructor: if a reactive class is generic, then Class is cast back to typeof dollar-Class and Instance applies ReactiveInstance by hand
-// domain-invariant: crossModuleClassReadsHappenInsideBodies — Cross-module Class reads happen inside bodies: if a module reads another namespace's Class, then it does so inside a getter or method body, never at module evaluation
-// domain-invariant: declarationsUseFullDescriptiveNames — Declarations use full descriptive names: if a name is declared in source or tests, then it is a domain word, never a single letter or a banned abbreviation
-// domain-invariant: classMembersAreOrderedAndSpaced — Class members are ordered and spaced: if a class is written, then statics precede the constructor, the constructor precedes getters, methods come last and are separated by blank lines
-// domain-invariant: aTestFileOpensWithItsGeneratorHeader — A test file opens with its generator header: if a file is a test, then its first content is the generator header
-// domain-invariant: aGeneratorHeaderCarriesBothRegistersInOrder — A generator header carries both registers in order: if a header exists, then it has one Goal, the formal register, at least one Impossible if true, and the described register after the formal one
-// domain-invariant: aHeaderSymbolIsDeclaredInTheSiblingSource — A header symbol is declared in the sibling source: if a header names a symbol, then the sibling source declares it
-// domain-invariant: aClaimAnnotationSitsDirectlyAboveItsTest — A claim annotation sits directly above its test: if a proof annotation is written, then a test follows it directly
-// domain-invariant: headerClaimsAndAnnotatedTestsMatchOneToOne — Header claims and annotated tests match one to one: if a header states a domain invariant, then an annotated test proves it, and every annotated claim is in the header
-// domain-invariant: anImpossibilityIsProvedByAnExactNegativeTest — An impossibility is proved by an exact negative test: if a header states an impossibility, then an impossible-if-true test carries its exact text and a header symbol
-// domain-invariant: aContractPointerResolvesAndIsProved — A contract pointer resolves and is proved: if a header links a contract record, then the anchor resolves and an annotated test proves it
-// domain-invariant: aSourceTripwireResolvesToItsSiblingHeader — A source tripwire resolves to its sibling header: if source carries a domain-invariant tripwire, then it names only a symbol the sibling header claims
-// domain-invariant: aTestCaveatDerivesFromATestedClaim — A test caveat derives from a tested claim: if the described register constrains, then the constraint names a header symbol
-// domain-invariant: thePopulationAndSkipListAreExact — The population and skip-list are exact: if the gate runs, then it refuses zero files, unmatched globs, unknown check names, duplicate and stale skips
-// domain-invariant: twoTestFilesDoNotShareOneGeneratorHeader — Two test files do not share one generator header: if two test files exist, then their Goal and described registers differ beyond their own symbol names
+// domain-invariant: exactly_one_reactive_source_is_installed — Exactly one Reactive source is installed: if the gate runs over a checkout, then it finds exactly one engine (an ivue dependency or one vendored Reactive), never zero and never two
+// domain-invariant: a_public_class_publishes_its_namespace_manifest — A public class publishes its namespace manifest: if a file declares a dollar-prefixed class, then it exports a namespace with dollar-Class, Class, and Instance for reactive classes, and no behavior is exported directly
+// domain-invariant: a_class_file_is_named_after_its_class — A class file is named after its class: if a file declares dollar-X, then the file is X.ts and the namespace is X
+// domain-invariant: a_class_file_holds_only_imports_class_namespace_and_types — A class file holds only imports class namespace and types: if a file is a class file, then its top level is imports, the class, its namespace, and type declarations, nothing else
+// domain-invariant: behavior_lives_on_the_prototype_not_in_fields — Behavior lives on the prototype not in fields: if a class member is a function, then it is a method, never a function-valued field
+// domain-invariant: construction_goes_through_the_namespace_class_slot — Construction goes through the namespace Class slot: if an instance is created, then it is new X.Class, never new dollar-X, new X.dollar-Class, or reactive(new …)
+// domain-invariant: the_anchor_is_static_only_when_statics_exist — The anchor is Static only when statics exist: if a class declares static members, then its anchor is Static(dollar-X), and if it declares none, then its anchor is the raw class
+// domain-invariant: static_binds_methods_and_caches_dollar_getters_per_receiver — Static binds methods and caches dollar getters per receiver: if the consumer's Static transforms a class, then its static methods are bound with stable identity and its dollar getters run once per receiver class
+// domain-invariant: a_shared_store_is_a_static_readonly_field — A shared store is a static readonly field: if a static holds shared state, then the field is readonly, and a dependency constructed at load lives in a LazyShared cell
+// domain-invariant: a_derived_static_getter_is_lower_camel_case — A derived static getter is lower camel case: if a static getter derives its value from other members or classes, then its name is lowerCamel, and SCREAMING_SNAKE remains for literal tunable constants
+// domain-invariant: static_reads_go_through_self_not_the_base_class — Static reads go through self not the base class: if instance code reads its own statics, then it reads this.self, never the base class name or a per-site constructor cast
+// domain-invariant: mutable_state_is_a_ref_returning_getter — Mutable state is a ref-returning getter: if a class holds mutable state, then it is a getter returning ref or shallowRef, never a mutable plain field
+// domain-invariant: a_ref_is_read_and_written_through_value — A Ref is read and written through value: if class code writes a Ref getter, then it writes .value, never assigns over the getter
+// domain-invariant: a_derivation_is_a_plain_getter_unless_computed_is_justified — A derivation is a plain getter unless computed is justified: if a getter allocates a computed, then a stated reason (expensive, render-suppression, stable-handle) sits above it
+// domain-invariant: a_composable_is_injected_by_a_one_call_dollar_getter — A composable is injected by a one-call dollar getter: if a class uses a composable or store, then a dollar getter returns the one call, never an eager field
+// domain-invariant: instance_types_only_unwrapping_surfaces — Instance types only unwrapping surfaces: if a raw collection or parameter is typed, then it uses Model, and if an unwrapping surface is typed, then it uses Instance
+// domain-invariant: a_component_has_one_model_owner — A component has one model owner: if a component has behavior, then exactly one class instance owns it and the script setup carries no parallel reactive behavior
+// domain-invariant: the_state_destructure_is_total — The state destructure is total: if a template touches a Ref, then that Ref is destructured, no plain getter or method is destructured, and no state binding shadows a prop
+// domain-invariant: template_expressions_carry_no_logic — Template expressions carry no logic: if a template expression is written, then it is a named read, a method call, or a structural branch, never a comparison, ternary, negation, or built string
+// domain-invariant: watch_lifetime_matches_the_instance_owner — Watch lifetime matches the instance owner: if a class is component-scoped, then it uses plain watch, and if it outlives components, then it uses dollar-watch with a dispose path
+// domain-invariant: a_reactive_closure_delegates_to_one_method — A reactive closure delegates to one method: if a computed or watch callback is written, then it is one arrow delegating to one method
+// domain-invariant: a_store_is_used_lazily_and_swapped_at_the_class_slot — A store is used lazily and swapped at the Class slot: if shared state is published, then it constructs lazily behind use() and is never drilled as a prop or constructor argument
+// domain-invariant: keyed_state_creates_on_read_and_peeks_on_write — Keyed state creates on read and peeks on write: if a class holds a Map of refs, then reads get-or-create, writes peek, and a release path exists
+// domain-invariant: a_generic_reactive_class_casts_its_constructor — A generic reactive class casts its constructor: if a reactive class is generic, then Class is cast back to typeof dollar-Class and Instance applies ReactiveInstance by hand
+// domain-invariant: cross_module_class_reads_happen_inside_bodies — Cross-module Class reads happen inside bodies: if a module reads another namespace's Class, then it does so inside a getter or method body, never at module evaluation
+// domain-invariant: declarations_use_full_descriptive_names — Declarations use full descriptive names: if a name is declared in source or tests, then it is a domain word, never a single letter or a banned abbreviation
+// domain-invariant: class_members_are_ordered_and_spaced — Class members are ordered and spaced: if a class is written, then statics precede the constructor, the constructor precedes getters, methods come last and are separated by blank lines
+// domain-invariant: a_test_file_opens_with_its_generator_header — A test file opens with its generator header: if a file is a test, then its first content is the generator header
+// domain-invariant: a_generator_header_carries_both_registers_in_order — A generator header carries both registers in order: if a header exists, then it has one Goal, the formal register, at least one Impossible if true, and the described register after the formal one
+// domain-invariant: a_header_symbol_is_declared_in_the_sibling_source — A header symbol is declared in the sibling source: if a header names a symbol, then the sibling source declares it
+// domain-invariant: a_claim_annotation_sits_directly_above_its_test — A claim annotation sits directly above its test: if a proof annotation is written, then a test follows it directly
+// domain-invariant: header_claims_and_annotated_tests_match_one_to_one — Header claims and annotated tests match one to one: if a header states a domain invariant, then an annotated test proves it, and every annotated claim is in the header
+// domain-invariant: an_impossibility_is_proved_by_an_exact_negative_test — An impossibility is proved by an exact negative test: if a header states an impossibility, then an impossible-if-true test carries its exact text and a header symbol
+// domain-invariant: a_contract_pointer_resolves_and_is_proved — A contract pointer resolves and is proved: if a header links a contract record, then the anchor resolves and an annotated test proves it
+// domain-invariant: a_source_tripwire_resolves_to_its_sibling_header — A source tripwire resolves to its sibling header: if source carries a domain-invariant tripwire, then it names only a symbol the sibling header claims
+// domain-invariant: a_test_caveat_derives_from_a_tested_claim — A test caveat derives from a tested claim: if the described register constrains, then the constraint names a header symbol
+// domain-invariant: the_population_and_skip_list_are_exact — The population and skip-list are exact: if the gate runs, then it refuses zero files, unmatched globs, unknown check names, duplicate and stale skips
+// domain-invariant: two_test_files_do_not_share_one_generator_header — Two test files do not share one generator header: if two test files exist, then their Goal and described registers differ beyond their own symbol names
 Impossible if true: a file breaking Exactly one Reactive source is installed passes the gate
 Impossible if true: a file breaking A public class publishes its namespace manifest passes the gate
 Impossible if true: a file breaking A class file is named after its class passes the gate
@@ -86,10 +86,10 @@ that passed on its own would prove nothing. Red arms plant the defect the
 check exists to catch and assert the finding by check name; green arms hold
 the conforming form from skills/ivue/SKILL.md and assert silence for that
 one check only, so a fixture may be red on an unrelated check without
-weakening the proof. The runtime probe (staticBindsMethodsAndCachesDollarGettersPerReceiver)
+weakening the proof. The runtime probe (static_binds_methods_and_caches_dollar_getters_per_receiver)
 takes the engine's own Static in its green arm and an identity transform in
 its red arm, which is how a runtime contract gets a planted failure without
-editing the engine. Population refusals (thePopulationAndSkipListAreExact) are
+editing the engine. Population refusals (the_population_and_skip_list_are_exact) are
 GateUsageError throws, the gate's exit 2 — the one place a red is an error,
 not a finding, because passing over nothing must be impossible.
 */
@@ -101,46 +101,46 @@ import { Static } from '../../lib/Static';
 import {
   CHECKS,
   GateUsageError,
-  aClaimAnnotationSitsDirectlyAboveItsTest,
-  aClassFileHoldsOnlyImportsClassNamespaceAndTypes,
-  aClassFileIsNamedAfterItsClass,
-  aComponentHasOneModelOwner,
-  aComposableIsInjectedByAOneCallDollarGetter,
-  aContractPointerResolvesAndIsProved,
-  aDerivationIsAPlainGetterUnlessComputedIsJustified,
-  aDerivedStaticGetterIsLowerCamelCase,
-  aGeneratorHeaderCarriesBothRegistersInOrder,
-  aGenericReactiveClassCastsItsConstructor,
-  aHeaderSymbolIsDeclaredInTheSiblingSource,
-  aPublicClassPublishesItsNamespaceManifest,
-  aReactiveClosureDelegatesToOneMethod,
-  aRefIsReadAndWrittenThroughValue,
-  aSharedStoreIsAStaticReadonlyField,
-  aSourceTripwireResolvesToItsSiblingHeader,
-  aStoreIsUsedLazilyAndSwappedAtTheClassSlot,
-  aTestCaveatDerivesFromATestedClaim,
-  aTestFileOpensWithItsGeneratorHeader,
-  anImpossibilityIsProvedByAnExactNegativeTest,
-  behaviorLivesOnThePrototypeNotInFields,
-  classMembersAreOrderedAndSpaced,
-  constructionGoesThroughTheNamespaceClassSlot,
-  crossModuleClassReadsHappenInsideBodies,
-  declarationsUseFullDescriptiveNames,
-  exactlyOneReactiveSourceIsInstalled,
-  headerClaimsAndAnnotatedTestsMatchOneToOne,
-  instanceTypesOnlyUnwrappingSurfaces,
-  keyedStateCreatesOnReadAndPeeksOnWrite,
+  a_claim_annotation_sits_directly_above_its_test,
+  a_class_file_holds_only_imports_class_namespace_and_types,
+  a_class_file_is_named_after_its_class,
+  a_component_has_one_model_owner,
+  a_composable_is_injected_by_a_one_call_dollar_getter,
+  a_contract_pointer_resolves_and_is_proved,
+  a_derivation_is_a_plain_getter_unless_computed_is_justified,
+  a_derived_static_getter_is_lower_camel_case,
+  a_generator_header_carries_both_registers_in_order,
+  a_generic_reactive_class_casts_its_constructor,
+  a_header_symbol_is_declared_in_the_sibling_source,
+  a_public_class_publishes_its_namespace_manifest,
+  a_reactive_closure_delegates_to_one_method,
+  a_ref_is_read_and_written_through_value,
+  a_shared_store_is_a_static_readonly_field,
+  a_source_tripwire_resolves_to_its_sibling_header,
+  a_store_is_used_lazily_and_swapped_at_the_class_slot,
+  a_test_caveat_derives_from_a_tested_claim,
+  a_test_file_opens_with_its_generator_header,
+  an_impossibility_is_proved_by_an_exact_negative_test,
+  behavior_lives_on_the_prototype_not_in_fields,
+  class_members_are_ordered_and_spaced,
+  construction_goes_through_the_namespace_class_slot,
+  cross_module_class_reads_happen_inside_bodies,
+  declarations_use_full_descriptive_names,
+  exactly_one_reactive_source_is_installed,
+  header_claims_and_annotated_tests_match_one_to_one,
+  instance_types_only_unwrapping_surfaces,
+  keyed_state_creates_on_read_and_peeks_on_write,
   main,
-  mutableStateIsARefReturningGetter,
+  mutable_state_is_a_ref_returning_getter,
   runStandardGate,
-  staticBindsMethodsAndCachesDollarGettersPerReceiver,
-  staticReadsGoThroughSelfNotTheBaseClass,
-  templateExpressionsCarryNoLogic,
-  theAnchorIsStaticOnlyWhenStaticsExist,
-  thePopulationAndSkipListAreExact,
-  theStateDestructureIsTotal,
-  twoTestFilesDoNotShareOneGeneratorHeader,
-  watchLifetimeMatchesTheInstanceOwner,
+  static_binds_methods_and_caches_dollar_getters_per_receiver,
+  static_reads_go_through_self_not_the_base_class,
+  template_expressions_carry_no_logic,
+  the_anchor_is_static_only_when_statics_exist,
+  the_population_and_skip_list_are_exact,
+  the_state_destructure_is_total,
+  two_test_files_do_not_share_one_generator_header,
+  watch_lifetime_matches_the_instance_owner,
   type Finding,
   type GateOptions,
   type StandardCheck,
@@ -280,38 +280,38 @@ test('the manifest names thirty-eight enforced checks by sentence', () => {
 // ---------------------------------------------------------------------------
 // 1 Exactly one Reactive source is installed
 
-// impossible-if-true: exactlyOneReactiveSourceIsInstalled — a file breaking Exactly one Reactive source is installed passes the gate
+// impossible-if-true: exactly_one_reactive_source_is_installed — a file breaking Exactly one Reactive source is installed passes the gate
 test('rejects dependency plus vendored Reactive', () => {
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Reactive.ts': 'export function Reactive<C>(targetClass: C): C { return targetClass; }\n' });
-  expect(findingsFor(exactlyOneReactiveSourceIsInstalled, result.findings)[0]?.message).toMatch(/2 Reactive sources/);
+  expect(findingsFor(exactly_one_reactive_source_is_installed, result.findings)[0]?.message).toMatch(/2 Reactive sources/);
 });
 
-// domain-invariant: exactlyOneReactiveSourceIsInstalled — Exactly one Reactive source is installed: if the gate runs over a checkout, then it finds exactly one engine (an ivue dependency or one vendored Reactive), never zero and never two
+// domain-invariant: exactly_one_reactive_source_is_installed — Exactly one Reactive source is installed: if the gate runs over a checkout, then it finds exactly one engine (an ivue dependency or one vendored Reactive), never zero and never two
 test('accepts one installed or vendored Reactive source', () => {
   const installed = gate({ 'src/Box.ts': VALID_CLASS });
-  expect(findingsFor(exactlyOneReactiveSourceIsInstalled, installed.findings)).toEqual([]);
+  expect(findingsFor(exactly_one_reactive_source_is_installed, installed.findings)).toEqual([]);
   const vendored = gate({ 'src/Box.ts': VALID_CLASS, 'src/ivue.ts': "export { Reactive } from '../engine/Reactive';\n" }, {}, { name: 'consumer' });
-  expect(findingsFor(exactlyOneReactiveSourceIsInstalled, vendored.findings)).toEqual([]);
+  expect(findingsFor(exactly_one_reactive_source_is_installed, vendored.findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 2 A public class publishes its namespace manifest
 
-// impossible-if-true: aPublicClassPublishesItsNamespaceManifest — a file breaking A public class publishes its namespace manifest passes the gate
+// impossible-if-true: a_public_class_publishes_its_namespace_manifest — a file breaking A public class publishes its namespace manifest passes the gate
 test('rejects a public class without its complete namespace manifest', () => {
   const missingInstance = VALID_CLASS.replace('  export type Instance = typeof Class.Instance;\n', '');
   const result = gate({
     'src/Box.ts': missingInstance,
     'src/Tools.ts': 'interface Handler { run(): number }\nexport default { run() { return 1; } } satisfies Handler;\n',
   });
-  const findings = findingsFor(aPublicClassPublishesItsNamespaceManifest, result.findings);
+  const findings = findingsFor(a_public_class_publishes_its_namespace_manifest, result.findings);
   expect(findings.map((entry) => entry.message)).toEqual([
     expect.stringMatching(/lacks `export type Instance/),
     expect.stringMatching(/behavioral object is exported directly/),
   ]);
 });
 
-// domain-invariant: aPublicClassPublishesItsNamespaceManifest — A public class publishes its namespace manifest: if a file declares a dollar-prefixed class, then it exports a namespace with dollar-Class, Class, and Instance for reactive classes, and no behavior is exported directly
+// domain-invariant: a_public_class_publishes_its_namespace_manifest — A public class publishes its namespace manifest: if a file declares a dollar-prefixed class, then it exports a namespace with dollar-Class, Class, and Instance for reactive classes, and no behavior is exported directly
 test('accepts reactive static and plain manifests', () => {
   const staticClass = `import { Static } from 'ivue/extras';
 
@@ -327,56 +327,56 @@ export namespace Format {
 }
 `;
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Format.ts': staticClass });
-  expect(findingsFor(aPublicClassPublishesItsNamespaceManifest, result.findings)).toEqual([]);
+  expect(findingsFor(a_public_class_publishes_its_namespace_manifest, result.findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 3 A class file is named after its class
 
-// impossible-if-true: aClassFileIsNamedAfterItsClass — a file breaking A class file is named after its class passes the gate
+// impossible-if-true: a_class_file_is_named_after_its_class — a file breaking A class file is named after its class passes the gate
 test('rejects a class whose file class and namespace names differ', () => {
   const result = gate({ 'src/Crate.ts': VALID_CLASS });
-  expect(findingsFor(aClassFileIsNamedAfterItsClass, result.findings)[0]?.message).toMatch(/`Crate\.ts` declares `\$Box`/);
+  expect(findingsFor(a_class_file_is_named_after_its_class, result.findings)[0]?.message).toMatch(/`Crate\.ts` declares `\$Box`/);
 });
 
-// domain-invariant: aClassFileIsNamedAfterItsClass — A class file is named after its class: if a file declares dollar-X, then the file is X.ts and the namespace is X
+// domain-invariant: a_class_file_is_named_after_its_class — A class file is named after its class: if a file declares dollar-X, then the file is X.ts and the namespace is X
 test('accepts an eponymous class file', () => {
-  expect(findingsFor(aClassFileIsNamedAfterItsClass, gate({ 'src/Box.ts': VALID_CLASS }).findings)).toEqual([]);
+  expect(findingsFor(a_class_file_is_named_after_its_class, gate({ 'src/Box.ts': VALID_CLASS }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 4 A class file holds only imports class namespace and types
 
-// impossible-if-true: aClassFileHoldsOnlyImportsClassNamespaceAndTypes — a file breaking A class file holds only imports class namespace and types passes the gate
+// impossible-if-true: a_class_file_holds_only_imports_class_namespace_and_types — a file breaking A class file holds only imports class namespace and types passes the gate
 test('rejects behavior or data outside the class seam', () => {
   const result = gate({ 'src/Box.ts': `${VALID_CLASS}\nconst DEFAULT_WIDTH = 4;\nexport function widen(box: Box.Instance) { return box.area; }\n` });
-  expect(findingsFor(aClassFileHoldsOnlyImportsClassNamespaceAndTypes, result.findings)).toHaveLength(2);
+  expect(findingsFor(a_class_file_holds_only_imports_class_namespace_and_types, result.findings)).toHaveLength(2);
 });
 
-// domain-invariant: aClassFileHoldsOnlyImportsClassNamespaceAndTypes — A class file holds only imports class namespace and types: if a file is a class file, then its top level is imports, the class, its namespace, and type declarations, nothing else
+// domain-invariant: a_class_file_holds_only_imports_class_namespace_and_types — A class file holds only imports class namespace and types: if a file is a class file, then its top level is imports, the class, its namespace, and type declarations, nothing else
 test('accepts imports class namespace and trailing types', () => {
   const result = gate({ 'src/Box.ts': `${VALID_CLASS}\nexport type BoxSeed = { width: number };\nexport interface BoxEmits { (event: 'grown'): void }\n` });
-  expect(findingsFor(aClassFileHoldsOnlyImportsClassNamespaceAndTypes, result.findings)).toEqual([]);
+  expect(findingsFor(a_class_file_holds_only_imports_class_namespace_and_types, result.findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 5 Behavior lives on the prototype not in fields
 
-// impossible-if-true: behaviorLivesOnThePrototypeNotInFields — a file breaking Behavior lives on the prototype not in fields passes the gate
+// impossible-if-true: behavior_lives_on_the_prototype_not_in_fields — a file breaking Behavior lives on the prototype not in fields passes the gate
 test('rejects a function-valued class field', () => {
   const result = gate({ 'src/Box.ts': VALID_CLASS.replace('  grow() {\n    this.height.value++;\n  }', '  grow = () => {\n    this.height.value++;\n  };') });
-  expect(findingsFor(behaviorLivesOnThePrototypeNotInFields, result.findings)[0]?.message).toMatch(/`grow` is a function-valued field/);
+  expect(findingsFor(behavior_lives_on_the_prototype_not_in_fields, result.findings)[0]?.message).toMatch(/`grow` is a function-valued field/);
 });
 
-// domain-invariant: behaviorLivesOnThePrototypeNotInFields — Behavior lives on the prototype not in fields: if a class member is a function, then it is a method, never a function-valued field
+// domain-invariant: behavior_lives_on_the_prototype_not_in_fields — Behavior lives on the prototype not in fields: if a class member is a function, then it is a method, never a function-valued field
 test('accepts a prototype method', () => {
-  expect(findingsFor(behaviorLivesOnThePrototypeNotInFields, gate({ 'src/Box.ts': VALID_CLASS }).findings)).toEqual([]);
+  expect(findingsFor(behavior_lives_on_the_prototype_not_in_fields, gate({ 'src/Box.ts': VALID_CLASS }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 6 Construction goes through the namespace Class slot
 
-// impossible-if-true: constructionGoesThroughTheNamespaceClassSlot — a file breaking Construction goes through the namespace Class slot passes the gate
+// impossible-if-true: construction_goes_through_the_namespace_class_slot — a file breaking Construction goes through the namespace Class slot passes the gate
 test('rejects raw construction and standard-path reactive wrapping', () => {
   const factory = `import { reactive } from 'vue';
 import { Box, $Box } from './Box';
@@ -401,10 +401,10 @@ export namespace BoxFactory {
 }
 `;
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/BoxFactory.ts': factory });
-  expect(findingsFor(constructionGoesThroughTheNamespaceClassSlot, result.findings)).toHaveLength(3);
+  expect(findingsFor(construction_goes_through_the_namespace_class_slot, result.findings)).toHaveLength(3);
 });
 
-// domain-invariant: constructionGoesThroughTheNamespaceClassSlot — Construction goes through the namespace Class slot: if an instance is created, then it is new X.Class, never new dollar-X, new X.dollar-Class, or reactive(new …)
+// domain-invariant: construction_goes_through_the_namespace_class_slot — Construction goes through the namespace Class slot: if an instance is created, then it is new X.Class, never new dollar-X, new X.dollar-Class, or reactive(new …)
 test('accepts new Namespace Class construction', () => {
   const factory = `import { Box } from './Box';
 
@@ -419,7 +419,7 @@ export namespace BoxFactory {
   export let Class = $Class;
 }
 `;
-  expect(findingsFor(constructionGoesThroughTheNamespaceClassSlot, gate({ 'src/Box.ts': VALID_CLASS, 'src/BoxFactory.ts': factory }).findings)).toEqual([]);
+  expect(findingsFor(construction_goes_through_the_namespace_class_slot, gate({ 'src/Box.ts': VALID_CLASS, 'src/BoxFactory.ts': factory }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
@@ -443,41 +443,41 @@ export namespace Clock {
 }
 `;
 
-// impossible-if-true: theAnchorIsStaticOnlyWhenStaticsExist — a file breaking The anchor is Static only when statics exist passes the gate
+// impossible-if-true: the_anchor_is_static_only_when_statics_exist — a file breaking The anchor is Static only when statics exist passes the gate
 test('rejects a statics-bearing raw anchor and a statics-free Static anchor', () => {
   const rawAnchor = STATIC_CLASS.replace('export const $Class = Static($Clock);', 'export const $Class = $Clock;');
   const staticFree = VALID_CLASS.replace("import { Reactive } from 'ivue';", "import { Reactive } from 'ivue';\nimport { Static } from 'ivue/extras';").replace('export const $Class = $Box;', 'export const $Class = Static($Box);');
   const result = gate({ 'src/Clock.ts': rawAnchor, 'src/Box.ts': staticFree });
-  expect(findingsFor(theAnchorIsStaticOnlyWhenStaticsExist, result.findings).map((entry) => entry.file).sort()).toEqual(['src/Box.ts', 'src/Clock.ts']);
+  expect(findingsFor(the_anchor_is_static_only_when_statics_exist, result.findings).map((entry) => entry.file).sort()).toEqual(['src/Box.ts', 'src/Clock.ts']);
 });
 
-// domain-invariant: theAnchorIsStaticOnlyWhenStaticsExist — The anchor is Static only when statics exist: if a class declares static members, then its anchor is Static(dollar-X), and if it declares none, then its anchor is the raw class
+// domain-invariant: the_anchor_is_static_only_when_statics_exist — The anchor is Static only when statics exist: if a class declares static members, then its anchor is Static(dollar-X), and if it declares none, then its anchor is the raw class
 test('accepts honest static reactive and plain anchors', () => {
-  expect(findingsFor(theAnchorIsStaticOnlyWhenStaticsExist, gate({ 'src/Clock.ts': STATIC_CLASS, 'src/Box.ts': VALID_CLASS }).findings)).toEqual([]);
+  expect(findingsFor(the_anchor_is_static_only_when_statics_exist, gate({ 'src/Clock.ts': STATIC_CLASS, 'src/Box.ts': VALID_CLASS }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 8 Static binds methods and caches dollar getters per receiver
 
-// impossible-if-true: staticBindsMethodsAndCachesDollarGettersPerReceiver — a file breaking Static binds methods and caches dollar getters per receiver passes the gate
+// impossible-if-true: static_binds_methods_and_caches_dollar_getters_per_receiver — a file breaking Static binds methods and caches dollar getters per receiver passes the gate
 test('fails when Static does not bind methods or cache dollar getters per receiver', () => {
   const identity = <Class extends new (...arguments_: any[]) => any>(targetClass: Class) => targetClass;
   const result = gate({ 'src/Box.ts': VALID_CLASS }, { staticImplementation: identity });
-  const messages = findingsFor(staticBindsMethodsAndCachesDollarGettersPerReceiver, result.findings).map((entry) => entry.message);
+  const messages = findingsFor(static_binds_methods_and_caches_dollar_getters_per_receiver, result.findings).map((entry) => entry.message);
   expect(messages).toEqual(expect.arrayContaining([expect.stringMatching(/does not bind static methods/), expect.stringMatching(/does not cache a dollar getter once per receiver/)]));
   const unloaded = gate({ 'src/Box.ts': VALID_CLASS }, { staticImplementation: null });
-  expect(findingsFor(staticBindsMethodsAndCachesDollarGettersPerReceiver, unloaded.findings)[0]?.message).toMatch(/could not be loaded/);
+  expect(findingsFor(static_binds_methods_and_caches_dollar_getters_per_receiver, unloaded.findings)[0]?.message).toMatch(/could not be loaded/);
 });
 
-// domain-invariant: staticBindsMethodsAndCachesDollarGettersPerReceiver — Static binds methods and caches dollar getters per receiver: if the consumer's Static transforms a class, then its static methods are bound with stable identity and its dollar getters run once per receiver class
+// domain-invariant: static_binds_methods_and_caches_dollar_getters_per_receiver — Static binds methods and caches dollar getters per receiver: if the consumer's Static transforms a class, then its static methods are bound with stable identity and its dollar getters run once per receiver class
 test('passes binding caching and subclass receiver probes', () => {
-  expect(findingsFor(staticBindsMethodsAndCachesDollarGettersPerReceiver, gate({ 'src/Box.ts': VALID_CLASS }).findings)).toEqual([]);
+  expect(findingsFor(static_binds_methods_and_caches_dollar_getters_per_receiver, gate({ 'src/Box.ts': VALID_CLASS }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 9 A shared store is a static readonly field
 
-// impossible-if-true: aSharedStoreIsAStaticReadonlyField — a file breaking A shared store is a static readonly field passes the gate
+// impossible-if-true: a_shared_store_is_a_static_readonly_field — a file breaking A shared store is a static readonly field passes the gate
 test('rejects a mutable shared store and dependencyful eager field', () => {
   const registry = `import { Static } from 'ivue/extras';
 import { Box } from './Box';
@@ -493,13 +493,13 @@ export namespace Registry {
 }
 `;
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Registry.ts': registry });
-  expect(findingsFor(aSharedStoreIsAStaticReadonlyField, result.findings).map((entry) => entry.message)).toEqual([
+  expect(findingsFor(a_shared_store_is_a_static_readonly_field, result.findings).map((entry) => entry.message)).toEqual([
     expect.stringMatching(/mutable shared store/),
     expect.stringMatching(/constructs another namespace's class at module load/),
   ]);
 });
 
-// domain-invariant: aSharedStoreIsAStaticReadonlyField — A shared store is a static readonly field: if a static holds shared state, then the field is readonly, and a dependency constructed at load lives in a LazyShared cell
+// domain-invariant: a_shared_store_is_a_static_readonly_field — A shared store is a static readonly field: if a static holds shared state, then the field is readonly, and a dependency constructed at load lives in a LazyShared cell
 test('accepts readonly shared store and LazyShared dependency', () => {
   const registry = `import { LazyShared, Static } from 'ivue/extras';
 import { Box } from './Box';
@@ -514,23 +514,23 @@ export namespace Registry {
   export let Class = $Class;
 }
 `;
-  expect(findingsFor(aSharedStoreIsAStaticReadonlyField, gate({ 'src/Box.ts': VALID_CLASS, 'src/Registry.ts': registry }).findings)).toEqual([]);
+  expect(findingsFor(a_shared_store_is_a_static_readonly_field, gate({ 'src/Box.ts': VALID_CLASS, 'src/Registry.ts': registry }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 9b A derived static getter is lower camel case
 
-// impossible-if-true: aDerivedStaticGetterIsLowerCamelCase — a file breaking A derived static getter is lower camel case passes the gate
+// impossible-if-true: a_derived_static_getter_is_lower_camel_case — a file breaking A derived static getter is lower camel case passes the gate
 test('rejects a derived static getter in SCREAMING_SNAKE', () => {
   const derived = STATIC_CLASS.replace('  static now() {', "  static get SCAN_LIMIT_HOURS() {\n    return Number(this.$zone.length) * 24;\n  }\n\n  static now() {");
   const result = gate({ 'src/Clock.ts': derived });
-  expect(findingsFor(aDerivedStaticGetterIsLowerCamelCase, result.findings)[0]?.message).toMatch(/derives its value — a derived getter is lowerCamel \(`scanLimitHours`\)/);
+  expect(findingsFor(a_derived_static_getter_is_lower_camel_case, result.findings)[0]?.message).toMatch(/derives its value — a derived getter is lowerCamel \(`scanLimitHours`\)/);
 });
 
-// domain-invariant: aDerivedStaticGetterIsLowerCamelCase — A derived static getter is lower camel case: if a static getter derives its value from other members or classes, then its name is lowerCamel, and SCREAMING_SNAKE remains for literal tunable constants
+// domain-invariant: a_derived_static_getter_is_lower_camel_case — A derived static getter is lower camel case: if a static getter derives its value from other members or classes, then its name is lowerCamel, and SCREAMING_SNAKE remains for literal tunable constants
 test('accepts a literal SCREAMING_SNAKE getter and a derived lowerCamel one', () => {
   const honest = STATIC_CLASS.replace('  static now() {', "  static get RETRY_LIMIT() {\n    return 3;\n  }\n\n  static get EMAIL_PATTERN() {\n    return /a+b/;\n  }\n\n  static get scanLimitHours() {\n    return Number(this.$zone.length) * 24;\n  }\n\n  static now() {");
-  expect(findingsFor(aDerivedStaticGetterIsLowerCamelCase, gate({ 'src/Clock.ts': honest }).findings)).toEqual([]);
+  expect(findingsFor(a_derived_static_getter_is_lower_camel_case, gate({ 'src/Clock.ts': honest }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
@@ -560,85 +560,85 @@ export namespace Tooltip {
 }
 `;
 
-// impossible-if-true: staticReadsGoThroughSelfNotTheBaseClass — a file breaking Static reads go through self not the base class passes the gate
+// impossible-if-true: static_reads_go_through_self_not_the_base_class — a file breaking Static reads go through self not the base class passes the gate
 test('rejects base-pinned namespace and per-site constructor casts', () => {
   const result = gate({ 'src/Tooltip.ts': SELF_CLASS('return $Tooltip.DELAY_MS + (this.constructor as typeof $Tooltip).DELAY_MS;') });
-  expect(findingsFor(staticReadsGoThroughSelfNotTheBaseClass, result.findings)).toHaveLength(2);
+  expect(findingsFor(static_reads_go_through_self_not_the_base_class, result.findings)).toHaveLength(2);
 });
 
-// domain-invariant: staticReadsGoThroughSelfNotTheBaseClass — Static reads go through self not the base class: if instance code reads its own statics, then it reads this.self, never the base class name or a per-site constructor cast
+// domain-invariant: static_reads_go_through_self_not_the_base_class — Static reads go through self not the base class: if instance code reads its own statics, then it reads this.self, never the base class name or a per-site constructor cast
 test('accepts self reads hoists and fixed-base skip', () => {
   const result = gate({ 'src/Tooltip.ts': SELF_CLASS('const self = this.self;\n    return self.DELAY_MS + self.DELAY_MS;') });
-  expect(findingsFor(staticReadsGoThroughSelfNotTheBaseClass, result.findings)).toEqual([]);
+  expect(findingsFor(static_reads_go_through_self_not_the_base_class, result.findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 11 Mutable state is a ref-returning getter
 
-// impossible-if-true: mutableStateIsARefReturningGetter — a file breaking Mutable state is a ref-returning getter passes the gate
+// impossible-if-true: mutable_state_is_a_ref_returning_getter — a file breaking Mutable state is a ref-returning getter passes the gate
 test('rejects a mutable plain state field', () => {
   const result = gate({ 'src/Box.ts': VALID_CLASS.replace('  get height() {', '  count = 0;\n\n  get height() {') });
-  expect(findingsFor(mutableStateIsARefReturningGetter, result.findings)[0]?.message).toMatch(/`count` is a mutable plain field/);
+  expect(findingsFor(mutable_state_is_a_ref_returning_getter, result.findings)[0]?.message).toMatch(/`count` is a mutable plain field/);
 });
 
-// domain-invariant: mutableStateIsARefReturningGetter — Mutable state is a ref-returning getter: if a class holds mutable state, then it is a getter returning ref or shallowRef, never a mutable plain field
+// domain-invariant: mutable_state_is_a_ref_returning_getter — Mutable state is a ref-returning getter: if a class holds mutable state, then it is a getter returning ref or shallowRef, never a mutable plain field
 test('accepts ref and shallowRef state getters', () => {
   const withRows = VALID_CLASS.replace("import { ref, watch } from 'vue';", "import { ref, shallowRef, watch } from 'vue';").replace('  get width() {', '  get rows() {\n    return shallowRef<number[]>([]);\n  }\n  get width() {');
-  expect(findingsFor(mutableStateIsARefReturningGetter, gate({ 'src/Box.ts': withRows }).findings)).toEqual([]);
+  expect(findingsFor(mutable_state_is_a_ref_returning_getter, gate({ 'src/Box.ts': withRows }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 12 A Ref is read and written through value
 
-// impossible-if-true: aRefIsReadAndWrittenThroughValue — a file breaking A Ref is read and written through value passes the gate
+// impossible-if-true: a_ref_is_read_and_written_through_value — a file breaking A Ref is read and written through value passes the gate
 test('rejects a raw Ref write and instance-template Ref read', () => {
   const rawWrite = VALID_CLASS.replace('    this.height.value++;', '    this.height = 9;');
   const result = gate({ 'src/Box.ts': rawWrite });
-  expect(findingsFor(aRefIsReadAndWrittenThroughValue, result.findings)[0]?.message).toMatch(/assigns over a Ref getter/);
+  expect(findingsFor(a_ref_is_read_and_written_through_value, result.findings)[0]?.message).toMatch(/assigns over a Ref getter/);
 });
 
-// domain-invariant: aRefIsReadAndWrittenThroughValue — A Ref is read and written through value: if class code writes a Ref getter, then it writes .value, never assigns over the getter
+// domain-invariant: a_ref_is_read_and_written_through_value — A Ref is read and written through value: if class code writes a Ref getter, then it writes .value, never assigns over the getter
 test('accepts value writes and destructured template bindings', () => {
-  expect(findingsFor(aRefIsReadAndWrittenThroughValue, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': VALID_SFC }).findings)).toEqual([]);
+  expect(findingsFor(a_ref_is_read_and_written_through_value, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': VALID_SFC }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 13 A derivation is a plain getter unless computed is justified
 
-// impossible-if-true: aDerivationIsAPlainGetterUnlessComputedIsJustified — a file breaking A derivation is a plain getter unless computed is justified passes the gate
+// impossible-if-true: a_derivation_is_a_plain_getter_unless_computed_is_justified — a file breaking A derivation is a plain getter unless computed is justified passes the gate
 test('rejects unjustified or fat computed derivation', () => {
   const unjustified = VALID_CLASS.replace("import { ref, watch } from 'vue';", "import { computed, ref, watch } from 'vue';").replace('  get area() {\n    return this.width * this.height.value;\n  }', '  get area() {\n    return computed(() => this.width * this.height.value);\n  }');
   const result = gate({ 'src/Box.ts': unjustified });
-  expect(findingsFor(aDerivationIsAPlainGetterUnlessComputedIsJustified, result.findings)[0]?.message).toMatch(/without a stated reason/);
-  expect(findingsFor(aReactiveClosureDelegatesToOneMethod, result.findings)[0]?.message).toMatch(/carries logic/);
+  expect(findingsFor(a_derivation_is_a_plain_getter_unless_computed_is_justified, result.findings)[0]?.message).toMatch(/without a stated reason/);
+  expect(findingsFor(a_reactive_closure_delegates_to_one_method, result.findings)[0]?.message).toMatch(/carries logic/);
 });
 
-// domain-invariant: aDerivationIsAPlainGetterUnlessComputedIsJustified — A derivation is a plain getter unless computed is justified: if a getter allocates a computed, then a stated reason (expensive, render-suppression, stable-handle) sits above it
+// domain-invariant: a_derivation_is_a_plain_getter_unless_computed_is_justified — A derivation is a plain getter unless computed is justified: if a getter allocates a computed, then a stated reason (expensive, render-suppression, stable-handle) sits above it
 test('accepts a plain getter and justified thin computed', () => {
   const justified = VALID_CLASS.replace("import { ref, watch } from 'vue';", "import { computed, ref, watch } from 'vue';").replace('  grow() {', '  // computed: expensive — sorts every row\n  get sortedRows() {\n    return computed(() => this.sortRows());\n  }\n\n  sortRows() {\n    return [this.area];\n  }\n\n  grow() {');
-  expect(findingsFor(aDerivationIsAPlainGetterUnlessComputedIsJustified, gate({ 'src/Box.ts': justified }).findings)).toEqual([]);
+  expect(findingsFor(a_derivation_is_a_plain_getter_unless_computed_is_justified, gate({ 'src/Box.ts': justified }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 14 A composable is injected by a one-call dollar getter
 
-// impossible-if-true: aComposableIsInjectedByAOneCallDollarGetter — a file breaking A composable is injected by a one-call dollar getter passes the gate
+// impossible-if-true: a_composable_is_injected_by_a_one_call_dollar_getter — a file breaking A composable is injected by a one-call dollar getter passes the gate
 test('rejects an eager composable field and fat dollar getter', () => {
   const eager = VALID_CLASS.replace('  get height() {', "  mouse = useMouse();\n\n  private get $project() {\n    const store = useProjectStore();\n    store.warm();\n    return store;\n  }\n\n  get height() {").replace("import { ref, watch } from 'vue';", "import { ref, watch } from 'vue';\nimport { useMouse } from '@vueuse/core';\nimport { useProjectStore } from './stores';");
   const result = gate({ 'src/Box.ts': eager });
-  expect(findingsFor(aComposableIsInjectedByAOneCallDollarGetter, result.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/runs at construction/), expect.stringMatching(/does more than one call/)]);
+  expect(findingsFor(a_composable_is_injected_by_a_one_call_dollar_getter, result.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/runs at construction/), expect.stringMatching(/does more than one call/)]);
 });
 
-// domain-invariant: aComposableIsInjectedByAOneCallDollarGetter — A composable is injected by a one-call dollar getter: if a class uses a composable or store, then a dollar getter returns the one call, never an eager field
+// domain-invariant: a_composable_is_injected_by_a_one_call_dollar_getter — A composable is injected by a one-call dollar getter: if a class uses a composable or store, then a dollar getter returns the one call, never an eager field
 test('accepts a one-call dollar getter', () => {
   const lazy = VALID_CLASS.replace('  get height() {', '  private get $project() {\n    return useProjectStore();\n  }\n\n  get height() {').replace("import { ref, watch } from 'vue';", "import { ref, watch } from 'vue';\nimport { useProjectStore } from './stores';");
-  expect(findingsFor(aComposableIsInjectedByAOneCallDollarGetter, gate({ 'src/Box.ts': lazy }).findings)).toEqual([]);
+  expect(findingsFor(a_composable_is_injected_by_a_one_call_dollar_getter, gate({ 'src/Box.ts': lazy }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 15 Instance types only unwrapping surfaces
 
-// impossible-if-true: instanceTypesOnlyUnwrappingSurfaces — a file breaking Instance types only unwrapping surfaces passes the gate
+// impossible-if-true: instance_types_only_unwrapping_surfaces — a file breaking Instance types only unwrapping surfaces passes the gate
 test('rejects Instance in a raw collection and Model on an unwrap surface', () => {
   const shelf = `import { shallowRef } from 'vue';
 import { Reactive } from 'ivue';
@@ -662,13 +662,13 @@ export namespace Shelf {
 `;
   const sfc = VALID_SFC.replace('defineExpose(box as Box.Instance);', 'defineExpose(box as Box.Model);');
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Shelf.ts': shelf, 'src/Box.vue': sfc });
-  const messages = findingsFor(instanceTypesOnlyUnwrappingSurfaces, result.findings).map((entry) => entry.message);
+  const messages = findingsFor(instance_types_only_unwrapping_surfaces, result.findings).map((entry) => entry.message);
   expect(messages).toHaveLength(3);
   expect(messages.filter((message) => /`Box\.Instance` types a raw graph position/.test(message))).toHaveLength(2);
   expect(messages.filter((message) => /`Box\.Model` on an unwrapping surface/.test(message))).toHaveLength(1);
 });
 
-// domain-invariant: instanceTypesOnlyUnwrappingSurfaces — Instance types only unwrapping surfaces: if a raw collection or parameter is typed, then it uses Model, and if an unwrapping surface is typed, then it uses Instance
+// domain-invariant: instance_types_only_unwrapping_surfaces — Instance types only unwrapping surfaces: if a raw collection or parameter is typed, then it uses Model, and if an unwrapping surface is typed, then it uses Instance
 test('accepts Model raw graphs and Instance unwrap surfaces', () => {
   const box = VALID_CLASS.replace('  export type Instance = typeof Class.Instance;', '  export type Model = InstanceType<typeof Class>;\n  export type Instance = typeof Class.Instance;');
   const shelf = `import { shallowRef } from 'vue';
@@ -691,17 +691,17 @@ export namespace Shelf {
   export type Instance = typeof Class.Instance;
 }
 `;
-  expect(findingsFor(instanceTypesOnlyUnwrappingSurfaces, gate({ 'src/Box.ts': box, 'src/Shelf.ts': shelf, 'src/Box.vue': VALID_SFC }).findings)).toEqual([]);
+  expect(findingsFor(instance_types_only_unwrapping_surfaces, gate({ 'src/Box.ts': box, 'src/Shelf.ts': shelf, 'src/Box.vue': VALID_SFC }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 16 A component has one model owner
 
-// impossible-if-true: aComponentHasOneModelOwner — a file breaking A component has one model owner passes the gate
+// impossible-if-true: a_component_has_one_model_owner — a file breaking A component has one model owner passes the gate
 test('rejects parallel setup behavior and two model constructions', () => {
   const sfc = VALID_SFC.replace("const box = new Box.Class(props);", "import { ref, watch } from 'vue';\nconst box = new Box.Class(props);\nconst spare = new Box.Class(props);\nconst open = ref(false);\nwatch(open, () => box.grow());\nfunction toggle() { open.value = !open.value; }");
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': sfc });
-  expect(findingsFor(aComponentHasOneModelOwner, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([
+  expect(findingsFor(a_component_has_one_model_owner, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([
     expect.stringMatching(/second model is constructed/),
     expect.stringMatching(/`ref\(\)` in `<script setup>`/),
     expect.stringMatching(/`watch\(\)` in `<script setup>`/),
@@ -709,15 +709,15 @@ test('rejects parallel setup behavior and two model constructions', () => {
   ]));
 });
 
-// domain-invariant: aComponentHasOneModelOwner — A component has one model owner: if a component has behavior, then exactly one class instance owns it and the script setup carries no parallel reactive behavior
+// domain-invariant: a_component_has_one_model_owner — A component has one model owner: if a component has behavior, then exactly one class instance owns it and the script setup carries no parallel reactive behavior
 test('accepts one wiring-only model owner', () => {
-  expect(findingsFor(aComponentHasOneModelOwner, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': VALID_SFC }).findings)).toEqual([]);
+  expect(findingsFor(a_component_has_one_model_owner, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': VALID_SFC }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 17 The state destructure is total
 
-// impossible-if-true: theStateDestructureIsTotal — a file breaking The state destructure is total passes the gate
+// impossible-if-true: the_state_destructure_is_total — a file breaking The state destructure is total passes the gate
 test('rejects missing Ref binding plain getter destructure and prop shadow', () => {
   const sfc = `<script setup lang="ts">
 import { Box } from './Box';
@@ -735,7 +735,7 @@ defineExpose(box as Box.Instance);
 </template>
 `;
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': sfc });
-  expect(findingsFor(theStateDestructureIsTotal, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([
+  expect(findingsFor(the_state_destructure_is_total, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([
     expect.stringMatching(/`area` is a plain getter/),
     expect.stringMatching(/`grow` is a method/),
     expect.stringMatching(/`width` shadows the prop/),
@@ -743,19 +743,19 @@ defineExpose(box as Box.Instance);
   ]));
 });
 
-// domain-invariant: theStateDestructureIsTotal — The state destructure is total: if a template touches a Ref, then that Ref is destructured, no plain getter or method is destructured, and no state binding shadows a prop
+// domain-invariant: the_state_destructure_is_total — The state destructure is total: if a template touches a Ref, then that Ref is destructured, no plain getter or method is destructured, and no state binding shadows a prop
 test('accepts total grouped Ref destructure', () => {
-  expect(findingsFor(theStateDestructureIsTotal, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': VALID_SFC }).findings)).toEqual([]);
+  expect(findingsFor(the_state_destructure_is_total, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': VALID_SFC }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 18 Template expressions carry no logic
 
-// impossible-if-true: templateExpressionsCarryNoLogic — a file breaking Template expressions carry no logic passes the gate
+// impossible-if-true: template_expressions_carry_no_logic — a file breaking Template expressions carry no logic passes the gate
 test('rejects a template comparison ternary or built string', () => {
   const sfc = VALID_SFC.replace('<div v-if="height > 0">{{ box.area }}</div>', '<div v-if="height > 0 && box.area">{{ box.area ? \'big\' : \'small\' }}</div>\n  <span :title="`Box ${box.area}`">{{ !height }}</span>');
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': sfc });
-  expect(findingsFor(templateExpressionsCarryNoLogic, result.findings).map((entry) => entry.message)).toEqual([
+  expect(findingsFor(template_expressions_carry_no_logic, result.findings).map((entry) => entry.message)).toEqual([
     expect.stringMatching(/`&&` expression/),
     expect.stringMatching(/a ternary/),
     expect.stringMatching(/a built string/),
@@ -763,16 +763,16 @@ test('rejects a template comparison ternary or built string', () => {
   ]);
 });
 
-// domain-invariant: templateExpressionsCarryNoLogic — Template expressions carry no logic: if a template expression is written, then it is a named read, a method call, or a structural branch, never a comparison, ternary, negation, or built string
+// domain-invariant: template_expressions_carry_no_logic — Template expressions carry no logic: if a template expression is written, then it is a named read, a method call, or a structural branch, never a comparison, ternary, negation, or built string
 test('accepts named getters methods and structural branches', () => {
   const sfc = VALID_SFC.replace('<div v-if="height > 0">{{ box.area }}</div>', '<div v-if="box.hasHeight">{{ box.area }}</div>\n  <ul><li v-for="row in box.rows" :key="row.id" :class="{ wide: box.isWide(row) }">{{ row.name }}</li></ul>');
-  expect(findingsFor(templateExpressionsCarryNoLogic, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': sfc }).findings)).toEqual([]);
+  expect(findingsFor(template_expressions_carry_no_logic, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': sfc }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 19 Watch lifetime matches the instance owner
 
-// impossible-if-true: watchLifetimeMatchesTheInstanceOwner — a file breaking Watch lifetime matches the instance owner passes the gate
+// impossible-if-true: watch_lifetime_matches_the_instance_owner — a file breaking Watch lifetime matches the instance owner passes the gate
 test('rejects component dollar watch and outliving plain watch', () => {
   const componentDollar = VALID_CLASS.replace('    watch(\n      () => this.height.value,', '    this.$watch(\n      () => this.height.value,');
   const session = `import { ref, watch } from 'vue';
@@ -804,14 +804,14 @@ export namespace Session {
 }
 `;
   const result = gate({ 'src/Box.ts': componentDollar, 'src/Box.vue': VALID_SFC, 'src/Session.ts': session });
-  expect(findingsFor(watchLifetimeMatchesTheInstanceOwner, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([
+  expect(findingsFor(watch_lifetime_matches_the_instance_owner, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([
     expect.stringMatching(/constructed in a component's setup but uses `this\.\$watch`/),
     expect.stringMatching(/no dispose path/),
     expect.stringMatching(/outlives components .* but uses plain `watch`/),
   ]));
 });
 
-// domain-invariant: watchLifetimeMatchesTheInstanceOwner — Watch lifetime matches the instance owner: if a class is component-scoped, then it uses plain watch, and if it outlives components, then it uses dollar-watch with a dispose path
+// domain-invariant: watch_lifetime_matches_the_instance_owner — Watch lifetime matches the instance owner: if a class is component-scoped, then it uses plain watch, and if it outlives components, then it uses dollar-watch with a dispose path
 test('accepts scoped watch and owned dollar-watch cleanup', () => {
   const session = `import { ref } from 'vue';
 import { Reactive } from 'ivue';
@@ -845,43 +845,43 @@ export namespace Session {
   }
 }
 `;
-  expect(findingsFor(watchLifetimeMatchesTheInstanceOwner, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': VALID_SFC, 'src/Session.ts': session }).findings)).toEqual([]);
+  expect(findingsFor(watch_lifetime_matches_the_instance_owner, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.vue': VALID_SFC, 'src/Session.ts': session }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 20 A reactive closure delegates to one method
 
-// impossible-if-true: aReactiveClosureDelegatesToOneMethod — a file breaking A reactive closure delegates to one method passes the gate
+// impossible-if-true: a_reactive_closure_delegates_to_one_method — a file breaking A reactive closure delegates to one method passes the gate
 test('rejects an inline computed or watch body and direct method getter', () => {
   const fat = VALID_CLASS.replace("import { ref, watch } from 'vue';", "import { computed, ref, watch } from 'vue';").replace('      (newHeight, oldHeight) => this.onResize(newHeight, oldHeight),', '      (newHeight) => {\n        if (newHeight > 10) this.grow();\n      },').replace('  grow() {', '  // computed: expensive\n  get doubled() {\n    return computed(this.grow);\n  }\n\n  grow() {');
   const result = gate({ 'src/Box.ts': fat });
-  expect(findingsFor(aReactiveClosureDelegatesToOneMethod, result.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/watch callback carries logic/), expect.stringMatching(/passes the method directly/)]);
+  expect(findingsFor(a_reactive_closure_delegates_to_one_method, result.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/watch callback carries logic/), expect.stringMatching(/passes the method directly/)]);
 });
 
-// domain-invariant: aReactiveClosureDelegatesToOneMethod — A reactive closure delegates to one method: if a computed or watch callback is written, then it is one arrow delegating to one method
+// domain-invariant: a_reactive_closure_delegates_to_one_method — A reactive closure delegates to one method: if a computed or watch callback is written, then it is one arrow delegating to one method
 test('accepts one arrow delegate to one method', () => {
-  expect(findingsFor(aReactiveClosureDelegatesToOneMethod, gate({ 'src/Box.ts': VALID_CLASS }).findings)).toEqual([]);
+  expect(findingsFor(a_reactive_closure_delegates_to_one_method, gate({ 'src/Box.ts': VALID_CLASS }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 21 A store is used lazily and swapped at the Class slot
 
-// impossible-if-true: aStoreIsUsedLazilyAndSwappedAtTheClassSlot — a file breaking A store is used lazily and swapped at the Class slot passes the gate
+// impossible-if-true: a_store_is_used_lazily_and_swapped_at_the_class_slot — a file breaking A store is used lazily and swapped at the Class slot passes the gate
 test('rejects a shared model prop and eager singleton', () => {
   const eager = `${VALID_CLASS}\nexport const store = new Box.Class({ width: 1 });\n`;
   const sfc = VALID_SFC.replace('defineProps<{ width: number }>()', 'defineProps<{ width: number; app: Box.Instance }>()');
   const result = gate({ 'src/Box.ts': eager, 'src/Box.vue': sfc });
-  expect(findingsFor(aStoreIsUsedLazilyAndSwappedAtTheClassSlot, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([
+  expect(findingsFor(a_store_is_used_lazily_and_swapped_at_the_class_slot, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([
     expect.stringMatching(/constructs a singleton at module load/),
     expect.stringMatching(/prop `app: Box\.Instance` drills a shared model/),
   ]));
 });
 
-// domain-invariant: aStoreIsUsedLazilyAndSwappedAtTheClassSlot — A store is used lazily and swapped at the Class slot: if shared state is published, then it constructs lazily behind use() and is never drilled as a prop or constructor argument
+// domain-invariant: a_store_is_used_lazily_and_swapped_at_the_class_slot — A store is used lazily and swapped at the Class slot: if shared state is published, then it constructs lazily behind use() and is never drilled as a prop or constructor argument
 test('accepts lazy use dollar injection and Class-slot swap', () => {
   const store = VALID_CLASS.replace('  export type Instance = typeof Class.Instance;\n}', '  export type Instance = typeof Class.Instance;\n\n  let singleton: Instance | null = null;\n  export function use(): Instance {\n    return (singleton ??= new Class({ width: 1 }));\n  }\n}');
   const consumer = VALID_SFC.replace('const box = new Box.Class(props);', 'const box = Box.use();');
-  expect(findingsFor(aStoreIsUsedLazilyAndSwappedAtTheClassSlot, gate({ 'src/Box.ts': store, 'src/Box.vue': consumer }).findings)).toEqual([]);
+  expect(findingsFor(a_store_is_used_lazily_and_swapped_at_the_class_slot, gate({ 'src/Box.ts': store, 'src/Box.vue': consumer }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
@@ -912,18 +912,18 @@ export namespace Sheet {
 }
 `;
 
-// impossible-if-true: keyedStateCreatesOnReadAndPeeksOnWrite — a file breaking Keyed state creates on read and peeks on write passes the gate
+// impossible-if-true: keyed_state_creates_on_read_and_peeks_on_write — a file breaking Keyed state creates on read and peeks on write passes the gate
 test('rejects create-on-write and an overlay without release', () => {
   const createOnWrite = 'bumpCell(cellKey: number): void {\n    let versionRef = this.cellVersions.get(cellKey);\n    if (!versionRef) {\n      versionRef = ref(0);\n      this.cellVersions.set(cellKey, versionRef);\n    }\n    versionRef.value++;\n  }\n';
   const result = gate({ 'src/Sheet.ts': KEYED_CLASS(createOnWrite, '') });
-  expect(findingsFor(keyedStateCreatesOnReadAndPeeksOnWrite, result.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/no release path/), expect.stringMatching(/write path `bumpCell` creates entries/)]);
+  expect(findingsFor(keyed_state_creates_on_read_and_peeks_on_write, result.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/no release path/), expect.stringMatching(/write path `bumpCell` creates entries/)]);
 });
 
-// domain-invariant: keyedStateCreatesOnReadAndPeeksOnWrite — Keyed state creates on read and peeks on write: if a class holds a Map of refs, then reads get-or-create, writes peek, and a release path exists
+// domain-invariant: keyed_state_creates_on_read_and_peeks_on_write — Keyed state creates on read and peeks on write: if a class holds a Map of refs, then reads get-or-create, writes peek, and a release path exists
 test('accepts create-on-read peek-on-write and eviction', () => {
   const peek = 'bumpCell(cellKey: number): void {\n    const versionRef = this.cellVersions.get(cellKey);\n    if (versionRef) versionRef.value++;\n  }\n';
   const release = '\n  releaseCell(cellKey: number): void {\n    this.cellVersions.delete(cellKey);\n  }\n';
-  expect(findingsFor(keyedStateCreatesOnReadAndPeeksOnWrite, gate({ 'src/Sheet.ts': KEYED_CLASS(peek, release) }).findings)).toEqual([]);
+  expect(findingsFor(keyed_state_creates_on_read_and_peeks_on_write, gate({ 'src/Sheet.ts': KEYED_CLASS(peek, release) }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
@@ -945,21 +945,21 @@ export namespace Scroller {
 }
 `;
 
-// impossible-if-true: aGenericReactiveClassCastsItsConstructor — a file breaking A generic reactive class casts its constructor passes the gate
+// impossible-if-true: a_generic_reactive_class_casts_its_constructor — a file breaking A generic reactive class casts its constructor passes the gate
 test('rejects erased generic Class and raw Instance alias', () => {
   const result = gate({ 'src/Scroller.ts': GENERIC_CLASS('export let Class = Reactive($Class);', 'export type Instance = typeof Class.Instance;') });
-  expect(findingsFor(aGenericReactiveClassCastsItsConstructor, result.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/`Class` erases <T>/), expect.stringMatching(/`Instance` must carry <T>/)]);
+  expect(findingsFor(a_generic_reactive_class_casts_its_constructor, result.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/`Class` erases <T>/), expect.stringMatching(/`Instance` must carry <T>/)]);
 });
 
-// domain-invariant: aGenericReactiveClassCastsItsConstructor — A generic reactive class casts its constructor: if a reactive class is generic, then Class is cast back to typeof dollar-Class and Instance applies ReactiveInstance by hand
+// domain-invariant: a_generic_reactive_class_casts_its_constructor — A generic reactive class casts its constructor: if a reactive class is generic, then Class is cast back to typeof dollar-Class and Instance applies ReactiveInstance by hand
 test('accepts constructor cast and ReactiveInstance alias', () => {
-  expect(findingsFor(aGenericReactiveClassCastsItsConstructor, gate({ 'src/Scroller.ts': GENERIC_CLASS('export let Class = Reactive($Class) as unknown as typeof $Class;', 'export type Instance<T> = ReactiveInstance<$Scroller<T>>;') }).findings)).toEqual([]);
+  expect(findingsFor(a_generic_reactive_class_casts_its_constructor, gate({ 'src/Scroller.ts': GENERIC_CLASS('export let Class = Reactive($Class) as unknown as typeof $Class;', 'export type Instance<T> = ReactiveInstance<$Scroller<T>>;') }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 24 Cross-module Class reads happen inside bodies
 
-// impossible-if-true: crossModuleClassReadsHappenInsideBodies — a file breaking Cross-module Class reads happen inside bodies passes the gate
+// impossible-if-true: cross_module_class_reads_happen_inside_bodies — a file breaking Cross-module Class reads happen inside bodies passes the gate
 test('rejects a top-level cross-module Class read', () => {
   const shelf = `import { Reactive } from 'ivue';
 import { Box } from './Box';
@@ -979,10 +979,10 @@ export namespace Shelf {
 }
 `;
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Shelf.ts': shelf });
-  expect(findingsFor(crossModuleClassReadsHappenInsideBodies, result.findings)[0]?.message).toMatch(/`Box\.Class` is read at module evaluation/);
+  expect(findingsFor(cross_module_class_reads_happen_inside_bodies, result.findings)[0]?.message).toMatch(/`Box\.Class` is read at module evaluation/);
 });
 
-// domain-invariant: crossModuleClassReadsHappenInsideBodies — Cross-module Class reads happen inside bodies: if a module reads another namespace's Class, then it does so inside a getter or method body, never at module evaluation
+// domain-invariant: cross_module_class_reads_happen_inside_bodies — Cross-module Class reads happen inside bodies: if a module reads another namespace's Class, then it does so inside a getter or method body, never at module evaluation
 test('accepts method and getter body reads', () => {
   const shelf = `import { Reactive } from 'ivue';
 import { Box } from './Box';
@@ -999,154 +999,154 @@ export namespace Shelf {
   export type Instance = typeof Class.Instance;
 }
 `;
-  expect(findingsFor(crossModuleClassReadsHappenInsideBodies, gate({ 'src/Box.ts': VALID_CLASS, 'src/Shelf.ts': shelf }).findings)).toEqual([]);
+  expect(findingsFor(cross_module_class_reads_happen_inside_bodies, gate({ 'src/Box.ts': VALID_CLASS, 'src/Shelf.ts': shelf }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 25 Declarations use full descriptive names
 
-// impossible-if-true: declarationsUseFullDescriptiveNames — a file breaking Declarations use full descriptive names passes the gate
+// impossible-if-true: declarations_use_full_descriptive_names — a file breaking Declarations use full descriptive names passes the gate
 test('rejects one-letter and banned abbreviated declarations in source and tests', () => {
   const terse = VALID_CLASS.replace('  onResize(newHeight: number, oldHeight: number) {\n    return newHeight - oldHeight;\n  }', '  onResize(nv: number, e: number) {\n    const inst = nv - e;\n    return inst;\n  }');
   const test = VALID_TEST.replace("test('height never decreases on its own', () => {", "test('height never decreases on its own', (_) => {");
   const result = gate({ 'src/Box.ts': terse, 'src/Box.test.ts': test });
-  expect(findingsFor(declarationsUseFullDescriptiveNames, result.findings).map((entry) => `${entry.file}:${entry.message.split('`')[1]}`)).toEqual(['src/Box.test.ts:_', 'src/Box.ts:nv', 'src/Box.ts:e', 'src/Box.ts:inst']);
+  expect(findingsFor(declarations_use_full_descriptive_names, result.findings).map((entry) => `${entry.file}:${entry.message.split('`')[1]}`)).toEqual(['src/Box.test.ts:_', 'src/Box.ts:nv', 'src/Box.ts:e', 'src/Box.ts:inst']);
 });
 
-// domain-invariant: declarationsUseFullDescriptiveNames — Declarations use full descriptive names: if a name is declared in source or tests, then it is a domain word, never a single letter or a banned abbreviation
+// domain-invariant: declarations_use_full_descriptive_names — Declarations use full descriptive names: if a name is declared in source or tests, then it is a domain word, never a single letter or a banned abbreviation
 test('accepts full names and declared domain terms', () => {
   const domain = VALID_CLASS.replace('  grow() {', '  offset(px: number, id: string) {\n    return `${id}:${px}`;\n  }\n\n  grow() {');
-  expect(findingsFor(declarationsUseFullDescriptiveNames, gate({ 'src/Box.ts': domain, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
+  expect(findingsFor(declarations_use_full_descriptive_names, gate({ 'src/Box.ts': domain, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 26 Class members are ordered and spaced
 
-// impossible-if-true: classMembersAreOrderedAndSpaced — a file breaking Class members are ordered and spaced passes the gate
+// impossible-if-true: class_members_are_ordered_and_spaced — a file breaking Class members are ordered and spaced passes the gate
 test('rejects a late static misplaced constructor and collapsed method spacing', () => {
   const disordered = VALID_CLASS.replace('class $Box {\n  constructor', 'class $Box {\n  get spare() {\n    return ref(0);\n  }\n\n  constructor').replace('  grow() {\n    this.height.value++;\n  }\n\n  onResize', '  static get LIMIT() {\n    return 9;\n  }\n\n  grow() {\n    this.height.value++;\n  }\n  onResize');
   const result = gate({ 'src/Box.ts': disordered });
-  expect(findingsFor(classMembersAreOrderedAndSpaced, result.findings).map((entry) => entry.message)).toEqual([
+  expect(findingsFor(class_members_are_ordered_and_spaced, result.findings).map((entry) => entry.message)).toEqual([
     expect.stringMatching(/the constructor follows a getter or field/),
     expect.stringMatching(/a static member follows a getter or field/),
     expect.stringMatching(/`onResize` is not separated from the previous method/),
   ]);
 });
 
-// domain-invariant: classMembersAreOrderedAndSpaced — Class members are ordered and spaced: if a class is written, then statics precede the constructor, the constructor precedes getters, methods come last and are separated by blank lines
+// domain-invariant: class_members_are_ordered_and_spaced — Class members are ordered and spaced: if a class is written, then statics precede the constructor, the constructor precedes getters, methods come last and are separated by blank lines
 test('accepts ordered grouped members with semantic spacing', () => {
   const ordered = VALID_CLASS.replace('class $Box {\n  constructor', 'class $Box {\n  static get LIMIT() {\n    return 9;\n  }\n\n  constructor');
-  expect(findingsFor(classMembersAreOrderedAndSpaced, gate({ 'src/Box.ts': ordered }).findings)).toEqual([]);
+  expect(findingsFor(class_members_are_ordered_and_spaced, gate({ 'src/Box.ts': ordered }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 27 A test file opens with its generator header
 
-// impossible-if-true: aTestFileOpensWithItsGeneratorHeader — a file breaking A test file opens with its generator header passes the gate
+// impossible-if-true: a_test_file_opens_with_its_generator_header — a file breaking A test file opens with its generator header passes the gate
 test('rejects a test file without a generator header', () => {
   const headerless = VALID_TEST.slice(VALID_TEST.indexOf('import { expect'));
   const late = `import { expect, test } from 'vitest';\n${VALID_TEST}`;
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': headerless, 'src/Crate.ts': VALID_CLASS.replaceAll('Box', 'Crate'), 'src/Crate.test.ts': late.replaceAll('Box', 'Crate') });
-  expect(findingsFor(aTestFileOpensWithItsGeneratorHeader, result.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/opens with its generator header, before any import/), expect.stringMatching(/not the first content/)]);
+  expect(findingsFor(a_test_file_opens_with_its_generator_header, result.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/opens with its generator header, before any import/), expect.stringMatching(/not the first content/)]);
 });
 
-// domain-invariant: aTestFileOpensWithItsGeneratorHeader — A test file opens with its generator header: if a file is a test, then its first content is the generator header
+// domain-invariant: a_test_file_opens_with_its_generator_header — A test file opens with its generator header: if a file is a test, then its first content is the generator header
 test('accepts a test whose header is first content', () => {
-  expect(findingsFor(aTestFileOpensWithItsGeneratorHeader, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
+  expect(findingsFor(a_test_file_opens_with_its_generator_header, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 28 A generator header carries both registers in order
 
-// impossible-if-true: aGeneratorHeaderCarriesBothRegistersInOrder — a file breaking A generator header carries both registers in order passes the gate
+// impossible-if-true: a_generator_header_carries_both_registers_in_order — a file breaking A generator header carries both registers in order passes the gate
 test('rejects duplicate reversed or incomplete generator registers', () => {
   const reversed = VALID_TEST.replace(`${SENTINEL}\nGoal:`, `${DESCRIBED}\nThe $Box prose.\n${SENTINEL}\nGoal:`).replace(`\n${DESCRIBED}\nThe $Box height is the only mutable state, so growth is the single write path the tests must hold.\n`, '\n');
   const incomplete = VALID_TEST.replace('Goal: Prove the box grows by exactly one height unit per grow call and that height never moves on its own.\n', '').replace('Impossible if true: height decreases without a grow call\n', '').replace(`// ${IMPOSSIBLE}: $Box — height decreases without a grow call\n`, '');
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': reversed, 'src/Crate.ts': VALID_CLASS.replaceAll('Box', 'Crate'), 'src/Crate.test.ts': incomplete.replaceAll('Box', 'Crate') });
-  expect(findingsFor(aGeneratorHeaderCarriesBothRegistersInOrder, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([
+  expect(findingsFor(a_generator_header_carries_both_registers_in_order, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([
     expect.stringMatching(/must follow/),
     expect.stringMatching(/needs a `Goal:` line/),
     expect.stringMatching(/at least one `Impossible if true:`/),
   ]));
 });
 
-// domain-invariant: aGeneratorHeaderCarriesBothRegistersInOrder — A generator header carries both registers in order: if a header exists, then it has one Goal, the formal register, at least one Impossible if true, and the described register after the formal one
+// domain-invariant: a_generator_header_carries_both_registers_in_order — A generator header carries both registers in order: if a header exists, then it has one Goal, the formal register, at least one Impossible if true, and the described register after the formal one
 test('accepts Goal formal described and Impossible registers', () => {
-  expect(findingsFor(aGeneratorHeaderCarriesBothRegistersInOrder, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
+  expect(findingsFor(a_generator_header_carries_both_registers_in_order, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 29 A header symbol is declared in the sibling source
 
-// impossible-if-true: aHeaderSymbolIsDeclaredInTheSiblingSource — a file breaking A header symbol is declared in the sibling source passes the gate
+// impossible-if-true: a_header_symbol_is_declared_in_the_sibling_source — a file breaking A header symbol is declared in the sibling source passes the gate
 test('rejects a header symbol absent from sibling source', () => {
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST.replaceAll('$Box —', '$Crate —') });
-  expect(findingsFor(aHeaderSymbolIsDeclaredInTheSiblingSource, result.findings)[0]?.message).toMatch(/`\$Crate` is not declared in Box\.ts/);
+  expect(findingsFor(a_header_symbol_is_declared_in_the_sibling_source, result.findings)[0]?.message).toMatch(/`\$Crate` is not declared in Box\.ts/);
   // a Subject line that names a missing path is refused, not silently skipped
   const wrongSubject = VALID_TEST.replace('Goal:', 'Subject: Missing.ts\nGoal:');
   const subjectResult = gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': wrongSubject });
-  expect(findingsFor(aHeaderSymbolIsDeclaredInTheSiblingSource, subjectResult.findings)[0]?.message).toMatch(/Subject path does not exist: Missing\.ts/);
+  expect(findingsFor(a_header_symbol_is_declared_in_the_sibling_source, subjectResult.findings)[0]?.message).toMatch(/Subject path does not exist: Missing\.ts/);
 });
 
-// domain-invariant: aHeaderSymbolIsDeclaredInTheSiblingSource — A header symbol is declared in the sibling source: if a header names a symbol, then the sibling source declares it
+// domain-invariant: a_header_symbol_is_declared_in_the_sibling_source — A header symbol is declared in the sibling source: if a header names a symbol, then the sibling source declares it
 test('accepts a declared sibling symbol', () => {
-  expect(findingsFor(aHeaderSymbolIsDeclaredInTheSiblingSource, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
+  expect(findingsFor(a_header_symbol_is_declared_in_the_sibling_source, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
   // a Subject line resolves symbols against the named source (non-colocated
   // layout); no sibling exists and the check still passes
   const subjectTest = VALID_TEST.replace('Goal:', 'Subject: src/Box.ts\nGoal:');
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'specs/Growth.test.ts': subjectTest }, { testGlobs: ['specs/**/*.test.ts'] });
-  expect(findingsFor(aHeaderSymbolIsDeclaredInTheSiblingSource, result.findings)).toEqual([]);
+  expect(findingsFor(a_header_symbol_is_declared_in_the_sibling_source, result.findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 30 A claim annotation sits directly above its test
 
-// impossible-if-true: aClaimAnnotationSitsDirectlyAboveItsTest — a file breaking A claim annotation sits directly above its test passes the gate
+// impossible-if-true: a_claim_annotation_sits_directly_above_its_test — a file breaking A claim annotation sits directly above its test passes the gate
 test('rejects an annotation not directly above its test', () => {
   const drifted = VALID_TEST.replace(`// ${DOMAIN}: $Box — If grow is called, then height increases by one\ntest('grow`, `// ${DOMAIN}: $Box — If grow is called, then height increases by one\nconst seed = 1;\ntest('grow`);
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': drifted });
-  expect(findingsFor(aClaimAnnotationSitsDirectlyAboveItsTest, result.findings)[0]?.message).toMatch(/must sit directly above a test/);
+  expect(findingsFor(a_claim_annotation_sits_directly_above_its_test, result.findings)[0]?.message).toMatch(/must sit directly above a test/);
 });
 
-// domain-invariant: aClaimAnnotationSitsDirectlyAboveItsTest — A claim annotation sits directly above its test: if a proof annotation is written, then a test follows it directly
+// domain-invariant: a_claim_annotation_sits_directly_above_its_test — A claim annotation sits directly above its test: if a proof annotation is written, then a test follows it directly
 test('accepts annotation optional doc comment and test', () => {
   const documented = VALID_TEST.replace(`// ${DOMAIN}: $Box — If grow is called, then height increases by one\ntest('grow`, `// ${DOMAIN}: $Box — If grow is called, then height increases by one\n/** The spec: one grow, one unit. */\ntest('grow`);
-  expect(findingsFor(aClaimAnnotationSitsDirectlyAboveItsTest, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': documented }).findings)).toEqual([]);
+  expect(findingsFor(a_claim_annotation_sits_directly_above_its_test, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': documented }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 31 Header claims and annotated tests match one to one
 
-// impossible-if-true: headerClaimsAndAnnotatedTestsMatchOneToOne — a file breaking Header claims and annotated tests match one to one passes the gate
+// impossible-if-true: header_claims_and_annotated_tests_match_one_to_one — a file breaking Header claims and annotated tests match one to one passes the gate
 test('rejects an unproved header claim and an undeclared test claim', () => {
   const mismatched = VALID_TEST.replace(`// ${DOMAIN}: $Box — If grow is called, then height increases by one\ntest('grow`, `// ${DOMAIN}: $Box — If grow is called, then height doubles\ntest('grow`);
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': mismatched });
-  expect(findingsFor(headerClaimsAndAnnotatedTestsMatchOneToOne, result.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/has no annotated test/), expect.stringMatching(/absent from the header/)]);
+  expect(findingsFor(header_claims_and_annotated_tests_match_one_to_one, result.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/has no annotated test/), expect.stringMatching(/absent from the header/)]);
 });
 
-// domain-invariant: headerClaimsAndAnnotatedTestsMatchOneToOne — Header claims and annotated tests match one to one: if a header states a domain invariant, then an annotated test proves it, and every annotated claim is in the header
+// domain-invariant: header_claims_and_annotated_tests_match_one_to_one — Header claims and annotated tests match one to one: if a header states a domain invariant, then an annotated test proves it, and every annotated claim is in the header
 test('accepts exact claim-to-test coverage both ways', () => {
-  expect(findingsFor(headerClaimsAndAnnotatedTestsMatchOneToOne, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
+  expect(findingsFor(header_claims_and_annotated_tests_match_one_to_one, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 32 An impossibility is proved by an exact negative test
 
-// impossible-if-true: anImpossibilityIsProvedByAnExactNegativeTest — a file breaking An impossibility is proved by an exact negative test passes the gate
+// impossible-if-true: an_impossibility_is_proved_by_an_exact_negative_test — a file breaking An impossibility is proved by an exact negative test passes the gate
 test('rejects missing mislabeled or non-exact impossibility proof', () => {
   const inexact = VALID_TEST.replace(`// ${IMPOSSIBLE}: $Box — height decreases without a grow call`, `// ${IMPOSSIBLE}: $Box — height decreases spontaneously`);
   const mislabeled = VALID_TEST.replace(`// ${IMPOSSIBLE}: $Box — height decreases without a grow call`, `// ${DOMAIN}: $Box — height decreases without a grow call`);
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': inexact, 'src/Crate.ts': VALID_CLASS.replaceAll('Box', 'Crate'), 'src/Crate.test.ts': mislabeled.replaceAll('Box', 'Crate') });
-  expect(findingsFor(anImpossibilityIsProvedByAnExactNegativeTest, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([
+  expect(findingsFor(an_impossibility_is_proved_by_an_exact_negative_test, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([
     expect.stringMatching(/impossibility text is not exact/),
     expect.stringMatching(/has no annotated negative test/),
     expect.stringMatching(/an impossibility is labeled as an invariant/),
   ]));
 });
 
-// domain-invariant: anImpossibilityIsProvedByAnExactNegativeTest — An impossibility is proved by an exact negative test: if a header states an impossibility, then an impossible-if-true test carries its exact text and a header symbol
+// domain-invariant: an_impossibility_is_proved_by_an_exact_negative_test — An impossibility is proved by an exact negative test: if a header states an impossibility, then an impossible-if-true test carries its exact text and a header symbol
 test('accepts exact negative proof with a header symbol', () => {
-  expect(findingsFor(anImpossibilityIsProvedByAnExactNegativeTest, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
+  expect(findingsFor(an_impossibility_is_proved_by_an_exact_negative_test, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
@@ -1171,55 +1171,55 @@ const CONTRACT_TEST = (pointer: string, annotation: string) =>
     `${annotation}// ${IMPOSSIBLE}: $Box — height decreases without a grow call\ntest('height never decreases on its own'`,
   );
 
-// impossible-if-true: aContractPointerResolvesAndIsProved — a file breaking A contract pointer resolves and is proved passes the gate
+// impossible-if-true: a_contract_pointer_resolves_and_is_proved — a file breaking A contract pointer resolves and is proved passes the gate
 test('rejects a broken record pointer and unproved contract claim', () => {
   const broken = CONTRACT_TEST('[A box never shrinks by itself](../demo.invariants.md#a-box-never-grows)', '');
   const unproved = CONTRACT_TEST('[A box never shrinks by itself](../demo.invariants.md#a-box-never-shrinks-by-itself)', '');
   const result = gate({ 'demo.invariants.md': CONTRACT, 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': broken, 'src/Crate.ts': VALID_CLASS.replaceAll('Box', 'Crate'), 'src/Crate.test.ts': unproved.replaceAll('Box', 'Crate') });
-  expect(findingsFor(aContractPointerResolvesAndIsProved, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([expect.stringMatching(/does not resolve/), expect.stringMatching(/pointer has no annotated test/)]));
+  expect(findingsFor(a_contract_pointer_resolves_and_is_proved, result.findings).map((entry) => entry.message)).toEqual(expect.arrayContaining([expect.stringMatching(/does not resolve/), expect.stringMatching(/pointer has no annotated test/)]));
 });
 
-// domain-invariant: aContractPointerResolvesAndIsProved — A contract pointer resolves and is proved: if a header links a contract record, then the anchor resolves and an annotated test proves it
+// domain-invariant: a_contract_pointer_resolves_and_is_proved — A contract pointer resolves and is proved: if a header links a contract record, then the anchor resolves and an annotated test proves it
 test('accepts a resolved anchored record with annotated proof', () => {
   const proved = CONTRACT_TEST('[A box never shrinks by itself](../demo.invariants.md#a-box-never-shrinks-by-itself)', `// ${INVARIANT}: A box never shrinks by itself (demo.invariants.md)\n`);
-  expect(findingsFor(aContractPointerResolvesAndIsProved, gate({ 'demo.invariants.md': CONTRACT, 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': proved }).findings)).toEqual([]);
+  expect(findingsFor(a_contract_pointer_resolves_and_is_proved, gate({ 'demo.invariants.md': CONTRACT, 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': proved }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 34 A source tripwire resolves to its sibling header
 
-// impossible-if-true: aSourceTripwireResolvesToItsSiblingHeader — a file breaking A source tripwire resolves to its sibling header passes the gate
+// impossible-if-true: a_source_tripwire_resolves_to_its_sibling_header — a file breaking A source tripwire resolves to its sibling header passes the gate
 test('rejects a source tripwire without its sibling header claim', () => {
   const tripwired = VALID_CLASS.replace('  grow() {', `  // ${DOMAIN}: $Crate\n  grow() {`);
   const result = gate({ 'src/Box.ts': tripwired, 'src/Box.test.ts': VALID_TEST });
-  expect(findingsFor(aSourceTripwireResolvesToItsSiblingHeader, result.findings)[0]?.message).toMatch(/tripwire `\$Crate` has no header claim in Box\.test\.ts/);
+  expect(findingsFor(a_source_tripwire_resolves_to_its_sibling_header, result.findings)[0]?.message).toMatch(/tripwire `\$Crate` has no header claim in Box\.test\.ts/);
 });
 
-// domain-invariant: aSourceTripwireResolvesToItsSiblingHeader — A source tripwire resolves to its sibling header: if source carries a domain-invariant tripwire, then it names only a symbol the sibling header claims
+// domain-invariant: a_source_tripwire_resolves_to_its_sibling_header — A source tripwire resolves to its sibling header: if source carries a domain-invariant tripwire, then it names only a symbol the sibling header claims
 test('accepts a symbol-only tripwire that resolves', () => {
   const tripwired = VALID_CLASS.replace('  grow() {', `  // ${DOMAIN}: $Box\n  grow() {`);
-  expect(findingsFor(aSourceTripwireResolvesToItsSiblingHeader, gate({ 'src/Box.ts': tripwired, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
+  expect(findingsFor(a_source_tripwire_resolves_to_its_sibling_header, gate({ 'src/Box.ts': tripwired, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 35 A test caveat derives from a tested claim
 
-// impossible-if-true: aTestCaveatDerivesFromATestedClaim — a file breaking A test caveat derives from a tested claim passes the gate
+// impossible-if-true: a_test_caveat_derives_from_a_tested_claim — a file breaking A test caveat derives from a tested claim passes the gate
 test('rejects a constraining caveat with no test claim', () => {
   const caveat = VALID_TEST.replace('so growth is the single write path the tests must hold.', 'so growth is the single write path the tests must hold. Width must never change after construction.');
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': caveat });
-  expect(findingsFor(aTestCaveatDerivesFromATestedClaim, result.findings)[0]?.message).toMatch(/Width must never change/);
+  expect(findingsFor(a_test_caveat_derives_from_a_tested_claim, result.findings)[0]?.message).toMatch(/Width must never change/);
 });
 
-// domain-invariant: aTestCaveatDerivesFromATestedClaim — A test caveat derives from a tested claim: if the described register constrains, then the constraint names a header symbol
+// domain-invariant: a_test_caveat_derives_from_a_tested_claim — A test caveat derives from a tested claim: if the described register constrains, then the constraint names a header symbol
 test('accepts prose derived from a tested claim', () => {
-  expect(findingsFor(aTestCaveatDerivesFromATestedClaim, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
+  expect(findingsFor(a_test_caveat_derives_from_a_tested_claim, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 36 The population and skip-list are exact
 
-// impossible-if-true: thePopulationAndSkipListAreExact — a file breaking The population and skip-list are exact passes the gate
+// impossible-if-true: the_population_and_skip_list_are_exact — a file breaking The population and skip-list are exact passes the gate
 test('rejects zero files unmatched globs and stale skips', () => {
   const empty = checkout({ 'src/.keep': '' });
   expect(() => runStandardGate({ cwd: empty, sourceRoots: ['src'], testGlobs: [], staticImplementation: Static })).toThrow(GateUsageError);
@@ -1231,33 +1231,33 @@ test('rejects zero files unmatched globs and stale skips', () => {
   expect(() => runStandardGate({ cwd: populated, sourceRoots: ['src'], testGlobs: [], skipListPath: 'skips.tsv', staticImplementation: Static })).toThrow(/duplicate skip/);
   writeFileSync(join(populated, 'skips.tsv'), `src/Box.ts\tA class file is named after its class\tnever fires here\nsrc/Gone.ts\tA class file is named after its class\tfile removed\n`);
   const stale = runStandardGate({ cwd: populated, sourceRoots: ['src'], testGlobs: [], skipListPath: 'skips.tsv', staticImplementation: Static });
-  expect(findingsFor(thePopulationAndSkipListAreExact, stale.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/no longer fires on src\/Box\.ts/), expect.stringMatching(/src\/Gone\.ts does not exist/)]);
+  expect(findingsFor(the_population_and_skip_list_are_exact, stale.findings).map((entry) => entry.message)).toEqual([expect.stringMatching(/no longer fires on src\/Box\.ts/), expect.stringMatching(/src\/Gone\.ts does not exist/)]);
 });
 
-// domain-invariant: thePopulationAndSkipListAreExact — The population and skip-list are exact: if the gate runs, then it refuses zero files, unmatched globs, unknown check names, duplicate and stale skips
+// domain-invariant: the_population_and_skip_list_are_exact — The population and skip-list are exact: if the gate runs, then it refuses zero files, unmatched globs, unknown check names, duplicate and stale skips
 test('accepts discovered roots tests and exact reasoned skips', () => {
   const root = checkout({ 'src/Crate.ts': VALID_CLASS, 'src/Crate.test.ts': VALID_TEST, 'skips.tsv': 'src/Crate.ts\tA class file is named after its class\tlegacy file name kept for the public import path\n' });
   const result = runStandardGate({ cwd: root, sourceRoots: ['src'], testGlobs: ['src/**/*.test.ts'], skipListPath: 'skips.tsv', staticImplementation: Static });
   expect(result.sources).toEqual(['src/Crate.ts']);
   expect(result.tests).toEqual(['src/Crate.test.ts']);
-  expect(result.suppressed.map((entry) => entry.check)).toEqual([aClassFileIsNamedAfterItsClass.name]);
-  expect(findingsFor(thePopulationAndSkipListAreExact, result.findings)).toEqual([]);
-  expect(findingsFor(aClassFileIsNamedAfterItsClass, result.findings)).toEqual([]);
+  expect(result.suppressed.map((entry) => entry.check)).toEqual([a_class_file_is_named_after_its_class.name]);
+  expect(findingsFor(the_population_and_skip_list_are_exact, result.findings)).toEqual([]);
+  expect(findingsFor(a_class_file_is_named_after_its_class, result.findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
 // 37 Two test files do not share one generator header
 
-// impossible-if-true: twoTestFilesDoNotShareOneGeneratorHeader — a file breaking Two test files do not share one generator header passes the gate
+// impossible-if-true: two_test_files_do_not_share_one_generator_header — a file breaking Two test files do not share one generator header passes the gate
 test('rejects two planted header twins', () => {
   const result = gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST, 'src/Crate.ts': VALID_CLASS.replaceAll('Box', 'Crate'), 'src/Crate.test.ts': VALID_TEST.replaceAll('Box', 'Crate') });
-  expect(findingsFor(twoTestFilesDoNotShareOneGeneratorHeader, result.findings)[0]?.message).toMatch(/template twin of src\/Box\.test\.ts/);
+  expect(findingsFor(two_test_files_do_not_share_one_generator_header, result.findings)[0]?.message).toMatch(/template twin of src\/Box\.test\.ts/);
 });
 
-// domain-invariant: twoTestFilesDoNotShareOneGeneratorHeader — Two test files do not share one generator header: if two test files exist, then their Goal and described registers differ beyond their own symbol names
+// domain-invariant: two_test_files_do_not_share_one_generator_header — Two test files do not share one generator header: if two test files exist, then their Goal and described registers differ beyond their own symbol names
 test('accepts two distinct Goals', () => {
   const distinct = VALID_TEST.replaceAll('Box', 'Crate').replace('Goal: Prove the box grows by exactly one height unit per grow call and that height never moves on its own.', 'Goal: Prove a crate reports the area its width and height imply, and nothing else moves it.').replace('The $Crate height is the only mutable state, so growth is the single write path the tests must hold.', 'Area is derived on every read; the $Crate class holds no cached area to drift.');
-  expect(findingsFor(twoTestFilesDoNotShareOneGeneratorHeader, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST, 'src/Crate.ts': VALID_CLASS.replaceAll('Box', 'Crate'), 'src/Crate.test.ts': distinct }).findings)).toEqual([]);
+  expect(findingsFor(two_test_files_do_not_share_one_generator_header, gate({ 'src/Box.ts': VALID_CLASS, 'src/Box.test.ts': VALID_TEST, 'src/Crate.ts': VALID_CLASS.replaceAll('Box', 'Crate'), 'src/Crate.test.ts': distinct }).findings)).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------
@@ -1276,5 +1276,5 @@ test('the command line runs the same gate and maps outcomes to exit codes', asyn
   } finally {
     console.error = original;
   }
-  expect(errors.some((line) => line.includes(behaviorLivesOnThePrototypeNotInFields.name))).toBe(true);
+  expect(errors.some((line) => line.includes(behavior_lives_on_the_prototype_not_in_fields.name))).toBe(true);
 });

@@ -12,7 +12,7 @@
  * Every check is identified by a plain declarative NAME (a sentence).
  * The name is what the CLI prints, what a skip row names, and what the
  * gate's own test file claims and proves. The exported constant that
- * holds a check is the camel-case form of its name — the identifier the
+ * holds a check is the snake_case form of its name — the identifier the
  * test header binds its claims to.
  *
  * The gate refuses to run over nothing: zero discovered sources, a test
@@ -613,13 +613,13 @@ const DOMAIN_TERMS = new Set(['px', 'id', 'fx', 'x', 'y', 'z']); // the Standard
 
 // ---------------------------------------------------------------------------
 // the checks — one exported constant per check; the identifier is the
-// camel-case form of the sentence name, which the gate's test header binds to
+// snake_case form of the sentence name, which the gate's test header binds to
 
 function check(name: string, run: (context: GateContext) => Finding[]): StandardCheck {
   return { name, enforced: true, run };
 }
 
-export const exactlyOneReactiveSourceIsInstalled = check(
+export const exactly_one_reactive_source_is_installed = check(
   'Exactly one Reactive source is installed',
   (context) => {
     // a vendored engine, or a local re-export that IS the project's engine seam
@@ -651,7 +651,7 @@ export const exactlyOneReactiveSourceIsInstalled = check(
     const unit = vendored[0] ?? context.sources[0];
     return [
       finding(
-        exactlyOneReactiveSourceIsInstalled,
+        exactly_one_reactive_source_is_installed,
         unit,
         1,
         count === 0
@@ -662,7 +662,7 @@ export const exactlyOneReactiveSourceIsInstalled = check(
   },
 );
 
-export const aPublicClassPublishesItsNamespaceManifest = check(
+export const a_public_class_publishes_its_namespace_manifest = check(
   'A public class publishes its namespace manifest',
   (context) => {
     const findings: Finding[] = [];
@@ -673,15 +673,15 @@ export const aPublicClassPublishesItsNamespaceManifest = check(
           classFile;
         const line = lineOf(unit, rawClass);
         if (!namespace) {
-          findings.push(finding(aPublicClassPublishesItsNamespaceManifest, unit, line, `class ${classFile.rawName} has no \`export namespace ${publicName}\``));
+          findings.push(finding(a_public_class_publishes_its_namespace_manifest, unit, line, `class ${classFile.rawName} has no \`export namespace ${publicName}\``));
           continue;
         }
         if (!anchorInitializer)
-          findings.push(finding(aPublicClassPublishesItsNamespaceManifest, unit, lineOf(unit, namespace), `namespace ${publicName} lacks \`export const $Class = …\``));
+          findings.push(finding(a_public_class_publishes_its_namespace_manifest, unit, lineOf(unit, namespace), `namespace ${publicName} lacks \`export const $Class = …\``));
         if (!classInitializer)
-          findings.push(finding(aPublicClassPublishesItsNamespaceManifest, unit, lineOf(unit, namespace), `namespace ${publicName} lacks \`export let Class = …\``));
+          findings.push(finding(a_public_class_publishes_its_namespace_manifest, unit, lineOf(unit, namespace), `namespace ${publicName} lacks \`export let Class = …\``));
         if (isReactive && !hasInstanceType)
-          findings.push(finding(aPublicClassPublishesItsNamespaceManifest, unit, lineOf(unit, namespace), `reactive namespace ${publicName} lacks \`export type Instance = typeof Class.Instance\``));
+          findings.push(finding(a_public_class_publishes_its_namespace_manifest, unit, lineOf(unit, namespace), `reactive namespace ${publicName} lacks \`export type Instance = typeof Class.Instance\``));
         continue;
       }
       // a file without a `$X` class may still export behavior directly — the
@@ -700,13 +700,13 @@ export const aPublicClassPublishesItsNamespaceManifest = check(
       for (const statement of topLevelStatements(unit)) {
         const exported = ts.getCombinedModifierFlags(statement as unknown as ts.Declaration) & ts.ModifierFlags.Export;
         if (ts.isClassDeclaration(statement) && exported)
-          findings.push(finding(aPublicClassPublishesItsNamespaceManifest, unit, lineOf(unit, statement), 'a class is exported directly — publish `$X` through `export namespace X`'));
+          findings.push(finding(a_public_class_publishes_its_namespace_manifest, unit, lineOf(unit, statement), 'a class is exported directly — publish `$X` through `export namespace X`'));
         if (ts.isExportAssignment(statement) && isBehavioralObject(statement.expression))
-          findings.push(finding(aPublicClassPublishesItsNamespaceManifest, unit, lineOf(unit, statement), 'a behavioral object is exported directly — behavior belongs to a namespace Static class'));
+          findings.push(finding(a_public_class_publishes_its_namespace_manifest, unit, lineOf(unit, statement), 'a behavioral object is exported directly — behavior belongs to a namespace Static class'));
         if (ts.isVariableStatement(statement) && exported) {
           for (const declaration of statement.declarationList.declarations) {
             if (isBehavioralObject(declaration.initializer))
-              findings.push(finding(aPublicClassPublishesItsNamespaceManifest, unit, lineOf(unit, declaration), 'a behavioral object is exported directly — behavior belongs to a namespace Static class'));
+              findings.push(finding(a_public_class_publishes_its_namespace_manifest, unit, lineOf(unit, declaration), 'a behavioral object is exported directly — behavior belongs to a namespace Static class'));
           }
         }
       }
@@ -715,19 +715,19 @@ export const aPublicClassPublishesItsNamespaceManifest = check(
   },
 );
 
-export const aClassFileIsNamedAfterItsClass = check('A class file is named after its class', (context) => {
+export const a_class_file_is_named_after_its_class = check('A class file is named after its class', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.sources) {
     const classFile = classFileOf(unit);
     if (!classFile) continue;
     const stem = basename(unit.path).replace(/\.ts$/, '');
     if (stem !== classFile.publicName)
-      findings.push(finding(aClassFileIsNamedAfterItsClass, unit, lineOf(unit, classFile.rawClass), `file \`${stem}.ts\` declares \`${classFile.rawName}\` — the file, class and namespace share one name`));
+      findings.push(finding(a_class_file_is_named_after_its_class, unit, lineOf(unit, classFile.rawClass), `file \`${stem}.ts\` declares \`${classFile.rawName}\` — the file, class and namespace share one name`));
   }
   return findings;
 });
 
-export const aClassFileHoldsOnlyImportsClassNamespaceAndTypes = check(
+export const a_class_file_holds_only_imports_class_namespace_and_types = check(
   'A class file holds only imports class namespace and types',
   (context) => {
     const findings: Finding[] = [];
@@ -740,7 +740,7 @@ export const aClassFileHoldsOnlyImportsClassNamespaceAndTypes = check(
         if (ts.isImportDeclaration(statement) || ts.isImportEqualsDeclaration(statement)) {
           if (seenClass && !seenImportAfterCode) {
             seenImportAfterCode = true;
-            findings.push(finding(aClassFileHoldsOnlyImportsClassNamespaceAndTypes, unit, lineOf(unit, statement), 'imports come first'));
+            findings.push(finding(a_class_file_holds_only_imports_class_namespace_and_types, unit, lineOf(unit, statement), 'imports come first'));
           }
           continue;
         }
@@ -749,32 +749,32 @@ export const aClassFileHoldsOnlyImportsClassNamespaceAndTypes = check(
           continue;
         }
         if (statement === classFile.namespace) {
-          if (!seenClass) findings.push(finding(aClassFileHoldsOnlyImportsClassNamespaceAndTypes, unit, lineOf(unit, statement), `namespace ${classFile.publicName} precedes its class ${classFile.rawName}`));
+          if (!seenClass) findings.push(finding(a_class_file_holds_only_imports_class_namespace_and_types, unit, lineOf(unit, statement), `namespace ${classFile.publicName} precedes its class ${classFile.rawName}`));
           continue;
         }
         if (ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement) || ts.isEnumDeclaration(statement)) continue;
         if (ts.isExportDeclaration(statement) && statement.isTypeOnly) continue;
-        findings.push(finding(aClassFileHoldsOnlyImportsClassNamespaceAndTypes, unit, lineOf(unit, statement), 'behavior or data outside the class seam — move it into the class (static get / method) or its namespace'));
+        findings.push(finding(a_class_file_holds_only_imports_class_namespace_and_types, unit, lineOf(unit, statement), 'behavior or data outside the class seam — move it into the class (static get / method) or its namespace'));
       }
     }
     return findings;
   },
 );
 
-export const behaviorLivesOnThePrototypeNotInFields = check('Behavior lives on the prototype not in fields', (context) => {
+export const behavior_lives_on_the_prototype_not_in_fields = check('Behavior lives on the prototype not in fields', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.sources) {
     const classFile = classFileOf(unit);
     if (!classFile) continue;
     for (const member of classFile.rawClass.members) {
       if (ts.isPropertyDeclaration(member) && isFunctionLike(member.initializer))
-        findings.push(finding(behaviorLivesOnThePrototypeNotInFields, unit, lineOf(unit, member), `\`${memberName(member)}\` is a function-valued field — write it as a method; the engine binds methods lazily`));
+        findings.push(finding(behavior_lives_on_the_prototype_not_in_fields, unit, lineOf(unit, member), `\`${memberName(member)}\` is a function-valued field — write it as a method; the engine binds methods lazily`));
     }
   }
   return findings;
 });
 
-export const constructionGoesThroughTheNamespaceClassSlot = check(
+export const construction_goes_through_the_namespace_class_slot = check(
   'Construction goes through the namespace Class slot',
   (context) => {
     const findings: Finding[] = [];
@@ -783,19 +783,19 @@ export const constructionGoesThroughTheNamespaceClassSlot = check(
         if (ts.isNewExpression(node)) {
           const callee = node.expression;
           if (ts.isIdentifier(callee) && callee.text.startsWith('$'))
-            findings.push(finding(constructionGoesThroughTheNamespaceClassSlot, unit, lineOf(unit, node), `\`new ${callee.text}()\` constructs the raw class — construct \`${callee.text.slice(1)}.Class\``));
+            findings.push(finding(construction_goes_through_the_namespace_class_slot, unit, lineOf(unit, node), `\`new ${callee.text}()\` constructs the raw class — construct \`${callee.text.slice(1)}.Class\``));
           if (ts.isPropertyAccessExpression(callee) && callee.name.text === '$Class')
-            findings.push(finding(constructionGoesThroughTheNamespaceClassSlot, unit, lineOf(unit, node), `\`new ${callee.getText(unit.ast)}()\` constructs the anchor — construct \`.Class\``));
+            findings.push(finding(construction_goes_through_the_namespace_class_slot, unit, lineOf(unit, node), `\`new ${callee.getText(unit.ast)}()\` constructs the anchor — construct \`.Class\``));
         }
         if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'reactive' && node.arguments[0] && ts.isNewExpression(node.arguments[0]))
-          findings.push(finding(constructionGoesThroughTheNamespaceClassSlot, unit, lineOf(unit, node), '`reactive(new …)` wraps an instance — instances are raw; no proxy on the standard path'));
+          findings.push(finding(construction_goes_through_the_namespace_class_slot, unit, lineOf(unit, node), '`reactive(new …)` wraps an instance — instances are raw; no proxy on the standard path'));
       });
     }
     return findings;
   },
 );
 
-export const theAnchorIsStaticOnlyWhenStaticsExist = check('The anchor is Static only when statics exist', (context) => {
+export const the_anchor_is_static_only_when_statics_exist = check('The anchor is Static only when statics exist', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.sources) {
     const classFile = classFileOf(unit);
@@ -803,20 +803,20 @@ export const theAnchorIsStaticOnlyWhenStaticsExist = check('The anchor is Static
     const hasStatics = classFile.rawClass.members.some((member) => isStatic(member) && !ts.isConstructorDeclaration(member));
     const anchorLine = lineOf(unit, classFile.anchorInitializer);
     if (hasStatics && !classFile.isStaticAnchored)
-      findings.push(finding(theAnchorIsStaticOnlyWhenStaticsExist, unit, anchorLine, `${classFile.rawName} declares statics but the anchor is raw — \`export const $Class = Static(${classFile.rawName})\``));
+      findings.push(finding(the_anchor_is_static_only_when_statics_exist, unit, anchorLine, `${classFile.rawName} declares statics but the anchor is raw — \`export const $Class = Static(${classFile.rawName})\``));
     if (!hasStatics && classFile.isStaticAnchored)
-      findings.push(finding(theAnchorIsStaticOnlyWhenStaticsExist, unit, anchorLine, `${classFile.rawName} declares no statics but the anchor is \`Static(…)\` — \`export const $Class = ${classFile.rawName}\``));
+      findings.push(finding(the_anchor_is_static_only_when_statics_exist, unit, anchorLine, `${classFile.rawName} declares no statics but the anchor is \`Static(…)\` — \`export const $Class = ${classFile.rawName}\``));
   }
   return findings;
 });
 
-export const staticBindsMethodsAndCachesDollarGettersPerReceiver = check(
+export const static_binds_methods_and_caches_dollar_getters_per_receiver = check(
   'Static binds methods and caches dollar getters per receiver',
   (context) => {
     // a runtime probe against the consumer's own Static(): the contract the
     // whole static side stands on, proven on every run rather than assumed
     const unit: SourceUnit | undefined = context.sources[0];
-    const probe = (message: string): Finding => ({ check: staticBindsMethodsAndCachesDollarGettersPerReceiver.name, file: 'ivue/extras', line: 0, message: `${message} (probed from ${unit?.relativePath ?? 'the gate'})` });
+    const probe = (message: string): Finding => ({ check: static_binds_methods_and_caches_dollar_getters_per_receiver.name, file: 'ivue/extras', line: 0, message: `${message} (probed from ${unit?.relativePath ?? 'the gate'})` });
     const Static = context.staticImplementation;
     if (!Static) return [probe('`Static` could not be loaded from ivue/extras — the runtime probe did not run')];
     const findings: Finding[] = [];
@@ -844,7 +844,7 @@ export const staticBindsMethodsAndCachesDollarGettersPerReceiver = check(
   },
 );
 
-export const aSharedStoreIsAStaticReadonlyField = check('A shared store is a static readonly field', (context) => {
+export const a_shared_store_is_a_static_readonly_field = check('A shared store is a static readonly field', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.sources) {
     const classFile = classFileOf(unit);
@@ -857,19 +857,19 @@ export const aSharedStoreIsAStaticReadonlyField = check('A shared store is a sta
           ? !!initializer.expression && ts.isIdentifier(initializer.expression) && ['Map', 'Set', 'WeakMap', 'WeakSet', 'Array'].includes(initializer.expression.text)
           : ts.isObjectLiteralExpression(initializer) || ts.isArrayLiteralExpression(initializer);
       if (storeShaped && !isReadonly(member))
-        findings.push(finding(aSharedStoreIsAStaticReadonlyField, unit, lineOf(unit, member), `static \`${memberName(member)}\` is a mutable shared store — declare it \`static readonly\``));
+        findings.push(finding(a_shared_store_is_a_static_readonly_field, unit, lineOf(unit, member), `static \`${memberName(member)}\` is a mutable shared store — declare it \`static readonly\``));
       const constructsNamespaceClass =
         ts.isNewExpression(initializer) &&
         ts.isPropertyAccessExpression(initializer.expression) &&
         initializer.expression.name.text === 'Class';
       if (constructsNamespaceClass)
-        findings.push(finding(aSharedStoreIsAStaticReadonlyField, unit, lineOf(unit, member), `static \`${memberName(member)}\` constructs another namespace's class at module load — hold it in \`new LazyShared(() => …)\``));
+        findings.push(finding(a_shared_store_is_a_static_readonly_field, unit, lineOf(unit, member), `static \`${memberName(member)}\` constructs another namespace's class at module load — hold it in \`new LazyShared(() => …)\``));
     }
   }
   return findings;
 });
 
-export const aDerivedStaticGetterIsLowerCamelCase = check('A derived static getter is lower camel case', (context) => {
+export const a_derived_static_getter_is_lower_camel_case = check('A derived static getter is lower camel case', (context) => {
   const findings: Finding[] = [];
   // literal = the tunable-constant form the Standard allows in
   // SCREAMING_SNAKE; anything reading other members or classes derives
@@ -893,13 +893,13 @@ export const aDerivedStaticGetterIsLowerCamelCase = check('A derived static gett
       const returned = member.body.statements.find(ts.isReturnStatement)?.expression;
       if (returned && isLiteral(returned)) continue; // a tunable literal constant keeps its SCREAMING_SNAKE
       const camel = name.toLowerCase().replace(/_(\w)/g, (whole, letter: string) => letter.toUpperCase());
-      findings.push(finding(aDerivedStaticGetterIsLowerCamelCase, unit, lineOf(unit, member), `static get ${name}() derives its value — a derived getter is lowerCamel (\`${camel}\`); SCREAMING_SNAKE is for literal tunable constants`));
+      findings.push(finding(a_derived_static_getter_is_lower_camel_case, unit, lineOf(unit, member), `static get ${name}() derives its value — a derived getter is lowerCamel (\`${camel}\`); SCREAMING_SNAKE is for literal tunable constants`));
     }
   }
   return findings;
 });
 
-export const staticReadsGoThroughSelfNotTheBaseClass = check('Static reads go through self not the base class', (context) => {
+export const static_reads_go_through_self_not_the_base_class = check('Static reads go through self not the base class', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.sources) {
     const classFile = classFileOf(unit);
@@ -908,16 +908,16 @@ export const staticReadsGoThroughSelfNotTheBaseClass = check('Static reads go th
       if (isStatic(member)) continue;
       forEachDescendant(member, (node) => {
         if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === classFile.rawName)
-          findings.push(finding(staticReadsGoThroughSelfNotTheBaseClass, unit, lineOf(unit, node), `\`${node.getText(unit.ast)}\` pins the read to the base class — read \`this.self.${node.name.text}\``));
+          findings.push(finding(static_reads_go_through_self_not_the_base_class, unit, lineOf(unit, node), `\`${node.getText(unit.ast)}\` pins the read to the base class — read \`this.self.${node.name.text}\``));
         if (ts.isAsExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'constructor' && node.expression.expression.kind === ts.SyntaxKind.ThisKeyword && !(ts.isGetAccessorDeclaration(member) && memberName(member) === 'self'))
-          findings.push(finding(staticReadsGoThroughSelfNotTheBaseClass, unit, lineOf(unit, node), 'per-site `this.constructor as …` cast — declare `get self()` once and read through it'));
+          findings.push(finding(static_reads_go_through_self_not_the_base_class, unit, lineOf(unit, node), 'per-site `this.constructor as …` cast — declare `get self()` once and read through it'));
       });
     }
   }
   return findings;
 });
 
-export const mutableStateIsARefReturningGetter = check('Mutable state is a ref-returning getter', (context) => {
+export const mutable_state_is_a_ref_returning_getter = check('Mutable state is a ref-returning getter', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.sources) {
     const classFile = classFileOf(unit);
@@ -932,13 +932,13 @@ export const mutableStateIsARefReturningGetter = check('Mutable state is a ref-r
         initializer.expression.expression.kind === ts.SyntaxKind.ThisKeyword &&
         /^create[A-Z]/.test(initializer.expression.name.text);
       if (fromFactory || isFunctionLike(initializer)) continue; // factories are their own role; function fields are another check's finding
-      findings.push(finding(mutableStateIsARefReturningGetter, unit, lineOf(unit, member), `\`${memberName(member)}\` is a mutable plain field — writes trigger nothing; declare \`get ${memberName(member)}() { return ref(…) }\``));
+      findings.push(finding(mutable_state_is_a_ref_returning_getter, unit, lineOf(unit, member), `\`${memberName(member)}\` is a mutable plain field — writes trigger nothing; declare \`get ${memberName(member)}() { return ref(…) }\``));
     }
   }
   return findings;
 });
 
-export const aRefIsReadAndWrittenThroughValue = check('A Ref is read and written through value', (context) => {
+export const a_ref_is_read_and_written_through_value = check('A Ref is read and written through value', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.sources) {
     const classFile = classFileOf(unit);
@@ -949,7 +949,7 @@ export const aRefIsReadAndWrittenThroughValue = check('A Ref is read and written
       if (!ts.isBinaryExpression(node) || node.operatorToken.kind !== ts.SyntaxKind.EqualsToken) return;
       const target = node.left;
       if (ts.isPropertyAccessExpression(target) && target.expression.kind === ts.SyntaxKind.ThisKeyword && refGetters.has(target.name.text))
-        findings.push(finding(aRefIsReadAndWrittenThroughValue, unit, lineOf(unit, node), `\`this.${target.name.text} = …\` assigns over a Ref getter — write \`this.${target.name.text}.value = …\``));
+        findings.push(finding(a_ref_is_read_and_written_through_value, unit, lineOf(unit, node), `\`this.${target.name.text} = …\` assigns over a Ref getter — write \`this.${target.name.text}.value = …\``));
     });
   }
   return findings;
@@ -957,7 +957,7 @@ export const aRefIsReadAndWrittenThroughValue = check('A Ref is read and written
 
 const COMPUTED_JUSTIFICATIONS = ['expensive', 'render-suppression', 'stable-handle'];
 
-export const aDerivationIsAPlainGetterUnlessComputedIsJustified = check(
+export const a_derivation_is_a_plain_getter_unless_computed_is_justified = check(
   'A derivation is a plain getter unless computed is justified',
   (context) => {
     const findings: Finding[] = [];
@@ -973,14 +973,14 @@ export const aDerivationIsAPlainGetterUnlessComputedIsJustified = check(
         const leading = unit.text.slice(member.getFullStart(), member.getStart(unit.ast));
         const justified = COMPUTED_JUSTIFICATIONS.some((category) => leading.includes(category));
         if (!justified)
-          findings.push(finding(aDerivationIsAPlainGetterUnlessComputedIsJustified, unit, lineOf(unit, member), `\`get ${memberName(member)}()\` allocates a computed without a stated reason — derive with a plain getter, or justify above it: \`// computed: expensive | render-suppression | stable-handle\``));
+          findings.push(finding(a_derivation_is_a_plain_getter_unless_computed_is_justified, unit, lineOf(unit, member), `\`get ${memberName(member)}()\` allocates a computed without a stated reason — derive with a plain getter, or justify above it: \`// computed: expensive | render-suppression | stable-handle\``));
       }
     }
     return findings;
   },
 );
 
-export const aComposableIsInjectedByAOneCallDollarGetter = check(
+export const a_composable_is_injected_by_a_one_call_dollar_getter = check(
   'A composable is injected by a one-call dollar getter',
   (context) => {
     const findings: Finding[] = [];
@@ -989,12 +989,12 @@ export const aComposableIsInjectedByAOneCallDollarGetter = check(
       if (!classFile) continue;
       for (const member of classFile.rawClass.members) {
         if (ts.isPropertyDeclaration(member) && member.initializer && ts.isCallExpression(member.initializer) && ts.isIdentifier(member.initializer.expression) && /^use[A-Z]/.test(member.initializer.expression.text))
-          findings.push(finding(aComposableIsInjectedByAOneCallDollarGetter, unit, lineOf(unit, member), `\`${memberName(member)} = ${member.initializer.expression.text}()\` runs at construction — inject it as \`private get $${memberName(member)}() { return ${member.initializer.expression.text}() }\``));
+          findings.push(finding(a_composable_is_injected_by_a_one_call_dollar_getter, unit, lineOf(unit, member), `\`${memberName(member)} = ${member.initializer.expression.text}()\` runs at construction — inject it as \`private get $${memberName(member)}() { return ${member.initializer.expression.text}() }\``));
         if (ts.isGetAccessorDeclaration(member) && memberName(member).startsWith('$') && member.body) {
           const statements = member.body.statements;
           const single = statements.length === 1 && ts.isReturnStatement(statements[0]) && !!statements[0].expression && (ts.isCallExpression(statements[0].expression) || ts.isNewExpression(statements[0].expression) || ts.isPropertyAccessExpression(statements[0].expression));
           if (!single)
-            findings.push(finding(aComposableIsInjectedByAOneCallDollarGetter, unit, lineOf(unit, member), `\`get ${memberName(member)}()\` does more than one call — a dollar getter creates its singleton and nothing else`));
+            findings.push(finding(a_composable_is_injected_by_a_one_call_dollar_getter, unit, lineOf(unit, member), `\`get ${memberName(member)}()\` does more than one call — a dollar getter creates its singleton and nothing else`));
         }
       }
     }
@@ -1002,7 +1002,7 @@ export const aComposableIsInjectedByAOneCallDollarGetter = check(
   },
 );
 
-export const instanceTypesOnlyUnwrappingSurfaces = check('Instance types only unwrapping surfaces', (context) => {
+export const instance_types_only_unwrapping_surfaces = check('Instance types only unwrapping surfaces', (context) => {
   const findings: Finding[] = [];
   const RAW_CONTAINERS = new Set(['Array', 'ReadonlyArray', 'Map', 'Set', 'WeakMap', 'ref', 'shallowRef', 'Ref', 'ShallowRef']);
   const inspect = (unit: SourceUnit, report: (line: number, message: string) => void) => {
@@ -1028,37 +1028,37 @@ export const instanceTypesOnlyUnwrappingSurfaces = check('Instance types only un
         report(lineOf(unit, node), `\`defineExpose(${node.arguments[0].text})\` exposes the raw type — \`defineExpose(${node.arguments[0].text} as X.Instance)\``);
     });
   };
-  for (const unit of context.sources) inspect(unit, (line, message) => findings.push(finding(instanceTypesOnlyUnwrappingSurfaces, unit, line, message)));
-  for (const component of context.components) if (component.script) inspect(component.script, (line, message) => findings.push(componentFinding(instanceTypesOnlyUnwrappingSurfaces, component, line + component.scriptLine - 1, message)));
+  for (const unit of context.sources) inspect(unit, (line, message) => findings.push(finding(instance_types_only_unwrapping_surfaces, unit, line, message)));
+  for (const component of context.components) if (component.script) inspect(component.script, (line, message) => findings.push(componentFinding(instance_types_only_unwrapping_surfaces, component, line + component.scriptLine - 1, message)));
   return findings;
 });
 
 const SETUP_BEHAVIOR_CALLS = new Set(['ref', 'shallowRef', 'reactive', 'computed', 'watch', 'watchEffect', 'onMounted', 'onUnmounted', 'onBeforeMount', 'onBeforeUnmount', 'onUpdated', 'onActivated', 'onDeactivated']);
 
-export const aComponentHasOneModelOwner = check('A component has one model owner', (context) => {
+export const a_component_has_one_model_owner = check('A component has one model owner', (context) => {
   const findings: Finding[] = [];
   for (const component of context.components) {
     if (!component.script) continue;
     const constructions = modelConstructions(component);
     if (constructions.length > 1)
-      for (const extra of constructions.slice(1)) findings.push(componentFinding(aComponentHasOneModelOwner, component, componentLine(component, extra.node), `a second model is constructed (\`${extra.variable}\`) — one template, one logic owner`));
+      for (const extra of constructions.slice(1)) findings.push(componentFinding(a_component_has_one_model_owner, component, componentLine(component, extra.node), `a second model is constructed (\`${extra.variable}\`) — one template, one logic owner`));
     for (const statement of component.script.ast.statements) {
       if (ts.isFunctionDeclaration(statement))
-        findings.push(componentFinding(aComponentHasOneModelOwner, component, componentLine(component, statement), `free function \`${statement.name?.text ?? ''}\` beside the model — behavior belongs on the class as a method`));
+        findings.push(componentFinding(a_component_has_one_model_owner, component, componentLine(component, statement), `free function \`${statement.name?.text ?? ''}\` beside the model — behavior belongs on the class as a method`));
       forEachDescendant(statement, (node) => {
         if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || !SETUP_BEHAVIOR_CALLS.has(node.expression.text)) return;
         // only top-level setup code counts (not inside a class the SFC happens to define)
         let inClass = false;
         for (let current: ts.Node | undefined = node.parent; current; current = current.parent) if (ts.isClassDeclaration(current) || ts.isClassExpression(current)) inClass = true;
         if (inClass) return;
-        findings.push(componentFinding(aComponentHasOneModelOwner, component, componentLine(component, node), `\`${node.expression.text}()\` in \`<script setup>\` — component-local reactive behavior beside the class; state, derivations, watchers and hooks live in the class`));
+        findings.push(componentFinding(a_component_has_one_model_owner, component, componentLine(component, node), `\`${node.expression.text}()\` in \`<script setup>\` — component-local reactive behavior beside the class; state, derivations, watchers and hooks live in the class`));
       });
     }
   }
   return findings;
 });
 
-export const theStateDestructureIsTotal = check('The state destructure is total', (context) => {
+export const the_state_destructure_is_total = check('The state destructure is total', (context) => {
   const findings: Finding[] = [];
   for (const component of context.components) {
     if (!component.script) continue;
@@ -1083,9 +1083,9 @@ export const theStateDestructureIsTotal = check('The state destructure is total'
             const bound = ts.isIdentifier(element.name) ? element.name.text : '';
             const source = element.propertyName && ts.isIdentifier(element.propertyName) ? element.propertyName.text : bound;
             const line = componentLine(component, element);
-            if (plainGetters.has(source)) findings.push(componentFinding(theStateDestructureIsTotal, component, line, `\`${source}\` is a plain getter — destructuring snapshots a dead value; read \`${construction.variable}.${source}\` dotted`));
-            if (methods.has(source)) findings.push(componentFinding(theStateDestructureIsTotal, component, line, `\`${source}\` is a method — keep it dotted (\`${construction.variable}.${source}()\`) unless a profiled hot path says otherwise`));
-            if (props.has(bound)) findings.push(componentFinding(theStateDestructureIsTotal, component, line, `state binding \`${bound}\` shadows the prop of the same name in the template`));
+            if (plainGetters.has(source)) findings.push(componentFinding(the_state_destructure_is_total, component, line, `\`${source}\` is a plain getter — destructuring snapshots a dead value; read \`${construction.variable}.${source}\` dotted`));
+            if (methods.has(source)) findings.push(componentFinding(the_state_destructure_is_total, component, line, `\`${source}\` is a method — keep it dotted (\`${construction.variable}.${source}()\`) unless a profiled hot path says otherwise`));
+            if (props.has(bound)) findings.push(componentFinding(the_state_destructure_is_total, component, line, `state binding \`${bound}\` shadows the prop of the same name in the template`));
           }
         }
       }
@@ -1094,7 +1094,7 @@ export const theStateDestructureIsTotal = check('The state destructure is total'
         if (!parsed) continue;
         forEachDescendant(parsed, (node) => {
           if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === construction.variable && refGetters.has(node.name.text))
-            findings.push(componentFinding(theStateDestructureIsTotal, component, expression.line, `\`${construction.variable}.${node.name.text}\` reaches a Ref through the instance (always truthy in \`v-if\`) — destructure \`${node.name.text}\` as a state binding`));
+            findings.push(componentFinding(the_state_destructure_is_total, component, expression.line, `\`${construction.variable}.${node.name.text}\` reaches a Ref through the instance (always truthy in \`v-if\`) — destructure \`${node.name.text}\` as a state binding`));
         });
       }
     }
@@ -1102,7 +1102,7 @@ export const theStateDestructureIsTotal = check('The state destructure is total'
   return findings;
 });
 
-export const templateExpressionsCarryNoLogic = check('Template expressions carry no logic', (context) => {
+export const template_expressions_carry_no_logic = check('Template expressions carry no logic', (context) => {
   const findings: Finding[] = [];
   const describe = (node: ts.Node): string | null => {
     if (ts.isConditionalExpression(node)) return 'a ternary';
@@ -1129,14 +1129,14 @@ export const templateExpressionsCarryNoLogic = check('Template expressions carry
         const what = describe(node);
         if (!what) return;
         reported = true;
-        findings.push(componentFinding(templateExpressionsCarryNoLogic, component, expression.line, `${what} in the template (\`${expression.code.trim().slice(0, 60)}\`) — name it as a plain getter (or a method when it takes an argument)`));
+        findings.push(componentFinding(template_expressions_carry_no_logic, component, expression.line, `${what} in the template (\`${expression.code.trim().slice(0, 60)}\`) — name it as a plain getter (or a method when it takes an argument)`));
       });
     }
   }
   return findings;
 });
 
-export const watchLifetimeMatchesTheInstanceOwner = check('Watch lifetime matches the instance owner', (context) => {
+export const watch_lifetime_matches_the_instance_owner = check('Watch lifetime matches the instance owner', (context) => {
   const findings: Finding[] = [];
   const componentScoped = new Set<string>();
   for (const component of context.components) for (const construction of modelConstructions(component)) componentScoped.add(construction.namespace);
@@ -1179,14 +1179,14 @@ export const watchLifetimeMatchesTheInstanceOwner = check('Watch lifetime matche
     });
     const isComponentScoped = componentScoped.has(name) && !outliving.has(name);
     const isOutliving = outliving.has(name);
-    if (isComponentScoped && usesDollarWatch) findings.push(finding(watchLifetimeMatchesTheInstanceOwner, unit, dollarLine, `${classFile.rawName} is constructed in a component's setup but uses \`this.$watch\` — its scope would outlive unmount; use plain \`watch\` (the component scope reaps it)`));
-    if (isOutliving && usesPlainWatch) findings.push(finding(watchLifetimeMatchesTheInstanceOwner, unit, plainLine, `${classFile.rawName} outlives components (constructed outside setup) but uses plain \`watch\` — there is no component scope to reap it; use \`this.$watch\``));
-    if (usesDollarWatch && !hasDisposePath) findings.push(finding(watchLifetimeMatchesTheInstanceOwner, unit, dollarLine, `${classFile.rawName} registers \`$watch\` effects but has no dispose path — call \`$stopEffects()\` from an owner method, or auto-wire \`onScopeDispose\``));
+    if (isComponentScoped && usesDollarWatch) findings.push(finding(watch_lifetime_matches_the_instance_owner, unit, dollarLine, `${classFile.rawName} is constructed in a component's setup but uses \`this.$watch\` — its scope would outlive unmount; use plain \`watch\` (the component scope reaps it)`));
+    if (isOutliving && usesPlainWatch) findings.push(finding(watch_lifetime_matches_the_instance_owner, unit, plainLine, `${classFile.rawName} outlives components (constructed outside setup) but uses plain \`watch\` — there is no component scope to reap it; use \`this.$watch\``));
+    if (usesDollarWatch && !hasDisposePath) findings.push(finding(watch_lifetime_matches_the_instance_owner, unit, dollarLine, `${classFile.rawName} registers \`$watch\` effects but has no dispose path — call \`$stopEffects()\` from an owner method, or auto-wire \`onScopeDispose\``));
   }
   return findings;
 });
 
-export const aReactiveClosureDelegatesToOneMethod = check('A reactive closure delegates to one method', (context) => {
+export const a_reactive_closure_delegates_to_one_method = check('A reactive closure delegates to one method', (context) => {
   const findings: Finding[] = [];
   const reactiveCallees = new Set(['computed', 'watch', 'watchEffect', '$watch', '$watchEffect']);
   for (const unit of context.sources) {
@@ -1208,18 +1208,18 @@ export const aReactiveClosureDelegatesToOneMethod = check('A reactive closure de
       else if (calleeName.endsWith('watchEffect') && node.arguments[0]) callbacks.push(node.arguments[0]);
       for (const callback of callbacks) {
         if (ts.isPropertyAccessExpression(callback) && callback.expression.kind === ts.SyntaxKind.ThisKeyword) {
-          findings.push(finding(aReactiveClosureDelegatesToOneMethod, unit, lineOf(unit, callback), `\`${calleeName}(${callback.getText(unit.ast)})\` passes the method directly — use the arrow form \`() => ${callback.getText(unit.ast)}()\``));
+          findings.push(finding(a_reactive_closure_delegates_to_one_method, unit, lineOf(unit, callback), `\`${calleeName}(${callback.getText(unit.ast)})\` passes the method directly — use the arrow form \`() => ${callback.getText(unit.ast)}()\``));
           continue;
         }
         if (!delegateCall(callback))
-          findings.push(finding(aReactiveClosureDelegatesToOneMethod, unit, lineOf(unit, callback), `${calleeName} callback carries logic — delegate to one method: \`() => this.method(…)\``));
+          findings.push(finding(a_reactive_closure_delegates_to_one_method, unit, lineOf(unit, callback), `${calleeName} callback carries logic — delegate to one method: \`() => this.method(…)\``));
       }
     });
   }
   return findings;
 });
 
-export const aStoreIsUsedLazilyAndSwappedAtTheClassSlot = check(
+export const a_store_is_used_lazily_and_swapped_at_the_class_slot = check(
   'A store is used lazily and swapped at the Class slot',
   (context) => {
     const findings: Finding[] = [];
@@ -1227,12 +1227,12 @@ export const aStoreIsUsedLazilyAndSwappedAtTheClassSlot = check(
       forEachDescendant(unit.ast, (node) => {
         // an eager singleton: `new X.Class()` evaluated at module load
         if (ts.isNewExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'Class' && !isInsideFunctionBody(node))
-          findings.push(finding(aStoreIsUsedLazilyAndSwappedAtTheClassSlot, unit, lineOf(unit, node), `\`${node.getText(unit.ast)}\` constructs a singleton at module load — publish it behind \`use()\` (\`singleton ??= new Class()\`) so it constructs on first touch and tests can swap the \`Class\` slot first`));
+          findings.push(finding(a_store_is_used_lazily_and_swapped_at_the_class_slot, unit, lineOf(unit, node), `\`${node.getText(unit.ast)}\` constructs a singleton at module load — publish it behind \`use()\` (\`singleton ??= new Class()\`) so it constructs on first touch and tests can swap the \`Class\` slot first`));
         // a shared model drilled through a constructor
         if (ts.isParameter(node) && node.type && ts.isConstructorDeclaration(node.parent)) {
           const tail = qualifiedTail(node.type);
           if (tail && (tail.member === 'Instance' || tail.member === 'Model') && ts.isIdentifier(node.name) && /^(app|store|session|root|shell)$/i.test(node.name.text))
-            findings.push(finding(aStoreIsUsedLazilyAndSwappedAtTheClassSlot, unit, lineOf(unit, node), `constructor takes the shared model \`${node.name.text}: ${tail.namespace}.${tail.member}\` — reach for it with \`private get $${node.name.text}() { return ${tail.namespace}.use() }\``));
+            findings.push(finding(a_store_is_used_lazily_and_swapped_at_the_class_slot, unit, lineOf(unit, node), `constructor takes the shared model \`${node.name.text}: ${tail.namespace}.${tail.member}\` — reach for it with \`private get $${node.name.text}() { return ${tail.namespace}.use() }\``));
         }
       });
     }
@@ -1250,7 +1250,7 @@ export const aStoreIsUsedLazilyAndSwappedAtTheClassSlot = check(
           // namespace that names itself a store
           const storeShaped = /^(app|store|session|root|shell)$/i.test(member.name.text) || /Store$/.test(tail?.namespace ?? '');
           if (tail && (tail.member === 'Instance' || tail.member === 'Model') && storeShaped)
-            findings.push(componentFinding(aStoreIsUsedLazilyAndSwappedAtTheClassSlot, component, componentLine(component, member), `prop \`${member.name.text}: ${tail.namespace}.${tail.member}\` drills a shared model — a store is reached with \`${tail.namespace}.use()\`, never passed down`));
+            findings.push(componentFinding(a_store_is_used_lazily_and_swapped_at_the_class_slot, component, componentLine(component, member), `prop \`${member.name.text}: ${tail.namespace}.${tail.member}\` drills a shared model — a store is reached with \`${tail.namespace}.use()\`, never passed down`));
         }
       });
     }
@@ -1258,7 +1258,7 @@ export const aStoreIsUsedLazilyAndSwappedAtTheClassSlot = check(
   },
 );
 
-export const keyedStateCreatesOnReadAndPeeksOnWrite = check('Keyed state creates on read and peeks on write', (context) => {
+export const keyed_state_creates_on_read_and_peeks_on_write = check('Keyed state creates on read and peeks on write', (context) => {
   const findings: Finding[] = [];
   const REF_TYPES = /\b(?:Ref|ShallowRef|ComputedRef|WritableComputedRef)\s*</;
   for (const unit of context.sources) {
@@ -1277,29 +1277,29 @@ export const keyedStateCreatesOnReadAndPeeksOnWrite = check('Keyed state creates
         if (new RegExp(`this\\.${overlay}\\.(?:delete|clear)\\(`).test(body)) releases = true;
         if (/^(?:set|write|bump|update|put|apply|invalidate)/.test(memberName(method)) && new RegExp(`this\\.${overlay}\\.set\\(`).test(body)) writers.push(method);
       }
-      if (!releases) findings.push(finding(keyedStateCreatesOnReadAndPeeksOnWrite, unit, lineOf(unit, member), `keyed overlay \`${overlay}\` has no release path — no method deletes or clears its entries; a Map of refs cannot GC on its own`));
-      for (const writer of writers) findings.push(finding(keyedStateCreatesOnReadAndPeeksOnWrite, unit, lineOf(unit, writer), `write path \`${memberName(writer)}\` creates entries in \`${overlay}\` — writes PEEK (\`get(key)?.value++\`); only reads get-or-create`));
+      if (!releases) findings.push(finding(keyed_state_creates_on_read_and_peeks_on_write, unit, lineOf(unit, member), `keyed overlay \`${overlay}\` has no release path — no method deletes or clears its entries; a Map of refs cannot GC on its own`));
+      for (const writer of writers) findings.push(finding(keyed_state_creates_on_read_and_peeks_on_write, unit, lineOf(unit, writer), `write path \`${memberName(writer)}\` creates entries in \`${overlay}\` — writes PEEK (\`get(key)?.value++\`); only reads get-or-create`));
     }
   }
   return findings;
 });
 
-export const aGenericReactiveClassCastsItsConstructor = check('A generic reactive class casts its constructor', (context) => {
+export const a_generic_reactive_class_casts_its_constructor = check('A generic reactive class casts its constructor', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.sources) {
     const classFile = classFileOf(unit);
     if (!classFile?.namespace?.body || !classFile.rawClass.typeParameters?.length || !classFile.isReactive) continue;
     const classText = classFile.classInitializer?.getText(unit.ast) ?? '';
     if (!/as\s+unknown\s+as\s+typeof\s+\$\w+/.test(classText))
-      findings.push(finding(aGenericReactiveClassCastsItsConstructor, unit, lineOf(unit, classFile.classInitializer ?? classFile.namespace), `generic ${classFile.rawName}: \`Class\` erases <T> — \`export let Class = Reactive($Class) as unknown as typeof $Class\``));
+      findings.push(finding(a_generic_reactive_class_casts_its_constructor, unit, lineOf(unit, classFile.classInitializer ?? classFile.namespace), `generic ${classFile.rawName}: \`Class\` erases <T> — \`export let Class = Reactive($Class) as unknown as typeof $Class\``));
     const instanceAlias = ts.isModuleBlock(classFile.namespace.body) ? classFile.namespace.body.statements.find((statement): statement is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(statement) && statement.name.text === 'Instance') : undefined;
     if (instanceAlias && (!instanceAlias.typeParameters?.length || !/ReactiveInstance\s*</.test(instanceAlias.type.getText(unit.ast))))
-      findings.push(finding(aGenericReactiveClassCastsItsConstructor, unit, lineOf(unit, instanceAlias), `generic ${classFile.rawName}: \`Instance\` must carry <T> and apply ReactiveInstance by hand — \`export type Instance<T> = ReactiveInstance<${classFile.rawName}<T>>\``));
+      findings.push(finding(a_generic_reactive_class_casts_its_constructor, unit, lineOf(unit, instanceAlias), `generic ${classFile.rawName}: \`Instance\` must carry <T> and apply ReactiveInstance by hand — \`export type Instance<T> = ReactiveInstance<${classFile.rawName}<T>>\``));
   }
   return findings;
 });
 
-export const crossModuleClassReadsHappenInsideBodies = check('Cross-module Class reads happen inside bodies', (context) => {
+export const cross_module_class_reads_happen_inside_bodies = check('Cross-module Class reads happen inside bodies', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.sources) {
     const imported = importedBindings(unit);
@@ -1310,13 +1310,13 @@ export const crossModuleClassReadsHappenInsideBodies = check('Cross-module Class
       if (node.name.text !== 'Class' && node.name.text !== '$Class') return;
       if (node.parent && ts.isExpressionWithTypeArguments(node.parent) && node.name.text === '$Class') return; // extends X.$Class — the sanctioned load-time read
       if (isInsideFunctionBody(node)) return;
-      findings.push(finding(crossModuleClassReadsHappenInsideBodies, unit, lineOf(unit, node), `\`${node.getText(unit.ast)}\` is read at module evaluation — read it inside a getter or method body (any load order then resolves)`));
+      findings.push(finding(cross_module_class_reads_happen_inside_bodies, unit, lineOf(unit, node), `\`${node.getText(unit.ast)}\` is read at module evaluation — read it inside a getter or method body (any load order then resolves)`));
     });
   }
   return findings;
 });
 
-export const declarationsUseFullDescriptiveNames = check('Declarations use full descriptive names', (context) => {
+export const declarations_use_full_descriptive_names = check('Declarations use full descriptive names', (context) => {
   const findings: Finding[] = [];
   const inspect = (unit: SourceUnit) => {
     forEachDescendant(unit.ast, (node) => {
@@ -1329,7 +1329,7 @@ export const declarationsUseFullDescriptiveNames = check('Declarations use full 
       const single = bare.length === 1 && !DOMAIN_TERMS.has(bare);
       const banned = BANNED_NAMES.has(bare.toLowerCase());
       if (name === '_' || single || banned)
-        findings.push(finding(declarationsUseFullDescriptiveNames, unit, lineOf(unit, identifier), `\`${name}\` — unfold to the domain word (row, cell, newValue, event…); single letters and abbreviations are not names`));
+        findings.push(finding(declarations_use_full_descriptive_names, unit, lineOf(unit, identifier), `\`${name}\` — unfold to the domain word (row, cell, newValue, event…); single letters and abbreviations are not names`));
     });
   };
   for (const unit of context.sources) inspect(unit);
@@ -1337,7 +1337,7 @@ export const declarationsUseFullDescriptiveNames = check('Declarations use full 
   return findings;
 });
 
-export const classMembersAreOrderedAndSpaced = check('Class members are ordered and spaced', (context) => {
+export const class_members_are_ordered_and_spaced = check('Class members are ordered and spaced', (context) => {
   const findings: Finding[] = [];
   const rank = (member: ts.ClassElement): number => {
     if (isStatic(member)) return 0;
@@ -1354,7 +1354,7 @@ export const classMembersAreOrderedAndSpaced = check('Class members are ordered 
     for (const member of classFile.rawClass.members) {
       const currentRank = rank(member);
       if (currentRank < highest)
-        findings.push(finding(classMembersAreOrderedAndSpaced, unit, lineOf(unit, member), `${rankName[currentRank]} follows ${rankName[highest]} — order is statics, constructor, getters, methods`));
+        findings.push(finding(class_members_are_ordered_and_spaced, unit, lineOf(unit, member), `${rankName[currentRank]} follows ${rankName[highest]} — order is statics, constructor, getters, methods`));
       highest = Math.max(highest, currentRank);
       if (previous && ts.isMethodDeclaration(member) && ts.isMethodDeclaration(previous)) {
         // the line before the method (or before its leading comments) must be blank
@@ -1362,7 +1362,7 @@ export const classMembersAreOrderedAndSpaced = check('Class members are ordered 
         const previousEndLine = unit.ast.getLineAndCharacterOfPosition(previous.getEnd()).line;
         const between = unit.lines.slice(previousEndLine + 1, unit.ast.getLineAndCharacterOfPosition(member.getStart(unit.ast)).line);
         if (!between.some((line) => line.trim() === '') && startLine >= previousEndLine)
-          findings.push(finding(classMembersAreOrderedAndSpaced, unit, lineOf(unit, member), `method \`${memberName(member)}\` is not separated from the previous method by a blank line — methods are paragraphs`));
+          findings.push(finding(class_members_are_ordered_and_spaced, unit, lineOf(unit, member), `method \`${memberName(member)}\` is not separated from the previous method by a blank line — methods are paragraphs`));
       }
       previous = member;
     }
@@ -1370,17 +1370,17 @@ export const classMembersAreOrderedAndSpaced = check('Class members are ordered 
   return findings;
 });
 
-export const aTestFileOpensWithItsGeneratorHeader = check('A test file opens with its generator header', (context) => {
+export const a_test_file_opens_with_its_generator_header = check('A test file opens with its generator header', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.tests) {
     const header = parseHeader(unit);
-    if (!header.present) findings.push(finding(aTestFileOpensWithItsGeneratorHeader, unit, 1, `no \`${GENERATOR}\` header — the test file opens with its generator header, before any import`));
-    else if (!header.firstContent) findings.push(finding(aTestFileOpensWithItsGeneratorHeader, unit, 1, 'the generator header is not the first content — nothing precedes it, imports follow it'));
+    if (!header.present) findings.push(finding(a_test_file_opens_with_its_generator_header, unit, 1, `no \`${GENERATOR}\` header — the test file opens with its generator header, before any import`));
+    else if (!header.firstContent) findings.push(finding(a_test_file_opens_with_its_generator_header, unit, 1, 'the generator header is not the first content — nothing precedes it, imports follow it'));
   }
   return findings;
 });
 
-export const aGeneratorHeaderCarriesBothRegistersInOrder = check(
+export const a_generator_header_carries_both_registers_in_order = check(
   'A generator header carries both registers in order',
   (context) => {
     const findings: Finding[] = [];
@@ -1388,17 +1388,17 @@ export const aGeneratorHeaderCarriesBothRegistersInOrder = check(
       const header = parseHeader(unit);
       if (!header.present) continue;
       const line = unit.lines.findIndex((text) => text.includes(GENERATOR)) + 1;
-      if (unit.text.split(GENERATOR).length > 2) findings.push(finding(aGeneratorHeaderCarriesBothRegistersInOrder, unit, line, `duplicate \`${GENERATOR}\` sentinel`));
-      if (!header.bothRegisters) findings.push(finding(aGeneratorHeaderCarriesBothRegistersInOrder, unit, line, `missing \`${GENERATOR_DESCRIBED}\` register`));
-      else if (!header.orderedRegisters) findings.push(finding(aGeneratorHeaderCarriesBothRegistersInOrder, unit, line, `\`${GENERATOR_DESCRIBED}\` must follow \`${GENERATOR}\``));
-      if (!header.goal) findings.push(finding(aGeneratorHeaderCarriesBothRegistersInOrder, unit, line, 'the formal register needs a `Goal:` line'));
-      if (!header.impossibilities.size) findings.push(finding(aGeneratorHeaderCarriesBothRegistersInOrder, unit, line, 'the formal register needs at least one `Impossible if true:` line'));
+      if (unit.text.split(GENERATOR).length > 2) findings.push(finding(a_generator_header_carries_both_registers_in_order, unit, line, `duplicate \`${GENERATOR}\` sentinel`));
+      if (!header.bothRegisters) findings.push(finding(a_generator_header_carries_both_registers_in_order, unit, line, `missing \`${GENERATOR_DESCRIBED}\` register`));
+      else if (!header.orderedRegisters) findings.push(finding(a_generator_header_carries_both_registers_in_order, unit, line, `\`${GENERATOR_DESCRIBED}\` must follow \`${GENERATOR}\``));
+      if (!header.goal) findings.push(finding(a_generator_header_carries_both_registers_in_order, unit, line, 'the formal register needs a `Goal:` line'));
+      if (!header.impossibilities.size) findings.push(finding(a_generator_header_carries_both_registers_in_order, unit, line, 'the formal register needs at least one `Impossible if true:` line'));
     }
     return findings;
   },
 );
 
-export const aHeaderSymbolIsDeclaredInTheSiblingSource = check(
+export const a_header_symbol_is_declared_in_the_sibling_source = check(
   'A header symbol is declared in the sibling source',
   (context) => {
     const findings: Finding[] = [];
@@ -1414,7 +1414,7 @@ export const aHeaderSymbolIsDeclaredInTheSiblingSource = check(
           const candidates = [resolve(dirname(unit.path), subject.path), resolve(context.cwd, subject.path)];
           const found = candidates.find(existsSync);
           if (!found) {
-            findings.push(finding(aHeaderSymbolIsDeclaredInTheSiblingSource, unit, subject.line, `Subject path does not exist: ${subject.path}`));
+            findings.push(finding(a_header_symbol_is_declared_in_the_sibling_source, unit, subject.line, `Subject path does not exist: ${subject.path}`));
             broken = true;
             continue;
           }
@@ -1424,7 +1424,7 @@ export const aHeaderSymbolIsDeclaredInTheSiblingSource = check(
       } else {
         const sourcePath = siblingSourcePath(unit.path);
         if (!existsSync(sourcePath)) {
-          findings.push(finding(aHeaderSymbolIsDeclaredInTheSiblingSource, unit, 1, `no sibling source \`${basename(sourcePath)}\` for this test file's header symbols — name the source with a \`Subject:\` line, or colocate the test`));
+          findings.push(finding(a_header_symbol_is_declared_in_the_sibling_source, unit, 1, `no sibling source \`${basename(sourcePath)}\` for this test file's header symbols — name the source with a \`Subject:\` line, or colocate the test`));
           continue;
         }
         subjectTexts = [readFileSync(sourcePath, 'utf8')];
@@ -1432,14 +1432,14 @@ export const aHeaderSymbolIsDeclaredInTheSiblingSource = check(
       const subjectDescription = header.subjects.length ? header.subjects.map((subject) => basename(subject.path)).join(', ') : basename(siblingSourcePath(unit.path));
       for (const { symbol, line } of header.domainClaims.values()) {
         if (!subjectTexts.some((text) => declaredInSource(text, symbol)))
-          findings.push(finding(aHeaderSymbolIsDeclaredInTheSiblingSource, unit, line, `header symbol \`${symbol}\` is not declared in ${subjectDescription}`));
+          findings.push(finding(a_header_symbol_is_declared_in_the_sibling_source, unit, line, `header symbol \`${symbol}\` is not declared in ${subjectDescription}`));
       }
     }
     return findings;
   },
 );
 
-export const aClaimAnnotationSitsDirectlyAboveItsTest = check(
+export const a_claim_annotation_sits_directly_above_its_test = check(
   'A claim annotation sits directly above its test',
   (context) => {
     const findings: Finding[] = [];
@@ -1447,14 +1447,14 @@ export const aClaimAnnotationSitsDirectlyAboveItsTest = check(
       const header = parseHeader(unit);
       if (!header.present) continue;
       for (const proof of parseProofs(unit, header)) {
-        if (!proof.bound) findings.push(finding(aClaimAnnotationSitsDirectlyAboveItsTest, unit, proof.line, 'proof annotation must sit directly above a test (an optional doc comment may sit between)'));
+        if (!proof.bound) findings.push(finding(a_claim_annotation_sits_directly_above_its_test, unit, proof.line, 'proof annotation must sit directly above a test (an optional doc comment may sit between)'));
       }
     }
     return findings;
   },
 );
 
-export const headerClaimsAndAnnotatedTestsMatchOneToOne = check(
+export const header_claims_and_annotated_tests_match_one_to_one = check(
   'Header claims and annotated tests match one to one',
   (context) => {
     const findings: Finding[] = [];
@@ -1466,17 +1466,17 @@ export const headerClaimsAndAnnotatedTestsMatchOneToOne = check(
       for (const proof of proofs) {
         const key = `${proof.symbol} — ${proof.claim}`;
         if (header.domainClaims.has(key)) proved.add(key);
-        else if (!header.impossibilities.has(proof.claim ?? '')) findings.push(finding(headerClaimsAndAnnotatedTestsMatchOneToOne, unit, proof.line, `annotated test claim is absent from the header: ${key}`));
+        else if (!header.impossibilities.has(proof.claim ?? '')) findings.push(finding(header_claims_and_annotated_tests_match_one_to_one, unit, proof.line, `annotated test claim is absent from the header: ${key}`));
       }
       for (const [key, { line }] of header.domainClaims) {
-        if (!proved.has(key)) findings.push(finding(headerClaimsAndAnnotatedTestsMatchOneToOne, unit, line, `header ${DOMAIN} has no annotated test: ${key}`));
+        if (!proved.has(key)) findings.push(finding(header_claims_and_annotated_tests_match_one_to_one, unit, line, `header ${DOMAIN} has no annotated test: ${key}`));
       }
     }
     return findings;
   },
 );
 
-export const anImpossibilityIsProvedByAnExactNegativeTest = check(
+export const an_impossibility_is_proved_by_an_exact_negative_test = check(
   'An impossibility is proved by an exact negative test',
   (context) => {
     const findings: Finding[] = [];
@@ -1489,22 +1489,22 @@ export const anImpossibilityIsProvedByAnExactNegativeTest = check(
         if (proof.type === 'impossible') {
           if (header.impossibilities.has(proof.claim ?? '')) {
             proved.add(proof.claim ?? '');
-            if (!header.domainSymbols.has(proof.symbol ?? '')) findings.push(finding(anImpossibilityIsProvedByAnExactNegativeTest, unit, proof.line, `impossibility proof symbol \`${proof.symbol}\` is absent from the header`));
-          } else if (header.domainClaims.has(`${proof.symbol} — ${proof.claim}`)) findings.push(finding(anImpossibilityIsProvedByAnExactNegativeTest, unit, proof.line, `an invariant is labeled as an impossibility: ${proof.claim}`));
-          else findings.push(finding(anImpossibilityIsProvedByAnExactNegativeTest, unit, proof.line, `impossibility text is not exact — no header line reads: ${proof.claim}`));
+            if (!header.domainSymbols.has(proof.symbol ?? '')) findings.push(finding(an_impossibility_is_proved_by_an_exact_negative_test, unit, proof.line, `impossibility proof symbol \`${proof.symbol}\` is absent from the header`));
+          } else if (header.domainClaims.has(`${proof.symbol} — ${proof.claim}`)) findings.push(finding(an_impossibility_is_proved_by_an_exact_negative_test, unit, proof.line, `an invariant is labeled as an impossibility: ${proof.claim}`));
+          else findings.push(finding(an_impossibility_is_proved_by_an_exact_negative_test, unit, proof.line, `impossibility text is not exact — no header line reads: ${proof.claim}`));
         }
         if (proof.type === 'domain' && header.impossibilities.has(proof.claim ?? ''))
-          findings.push(finding(anImpossibilityIsProvedByAnExactNegativeTest, unit, proof.line, `an impossibility is labeled as an invariant: ${proof.claim}`));
+          findings.push(finding(an_impossibility_is_proved_by_an_exact_negative_test, unit, proof.line, `an impossibility is labeled as an invariant: ${proof.claim}`));
       }
       for (const [claim, line] of header.impossibilities) {
-        if (!proved.has(claim)) findings.push(finding(anImpossibilityIsProvedByAnExactNegativeTest, unit, line, `Impossible if true has no annotated negative test: ${claim}`));
+        if (!proved.has(claim)) findings.push(finding(an_impossibility_is_proved_by_an_exact_negative_test, unit, line, `Impossible if true has no annotated negative test: ${claim}`));
       }
     }
     return findings;
   },
 );
 
-export const aContractPointerResolvesAndIsProved = check('A contract pointer resolves and is proved', (context) => {
+export const a_contract_pointer_resolves_and_is_proved = check('A contract pointer resolves and is proved', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.tests) {
     const header = parseHeader(unit);
@@ -1513,29 +1513,29 @@ export const aContractPointerResolvesAndIsProved = check('A contract pointer res
     const provedNames = new Set(proofs.map((proof) => headingSlug(proof.name ?? '')));
     for (const link of header.contractLinks) {
       if (!link.anchor) {
-        findings.push(finding(aContractPointerResolvesAndIsProved, unit, link.line, `contract link \`${link.file}\` needs a record anchor`));
+        findings.push(finding(a_contract_pointer_resolves_and_is_proved, unit, link.line, `contract link \`${link.file}\` needs a record anchor`));
         continue;
       }
       const candidates = [resolve(dirname(unit.path), link.file), resolve(context.cwd, link.file)];
       const slugs = candidates.map(contractSlugs).find((set) => set !== null) ?? null;
       if (!slugs) {
-        findings.push(finding(aContractPointerResolvesAndIsProved, unit, link.line, `contract not found: ${link.file}`));
+        findings.push(finding(a_contract_pointer_resolves_and_is_proved, unit, link.line, `contract not found: ${link.file}`));
         continue;
       }
       if (!slugs.has(link.anchor)) {
-        findings.push(finding(aContractPointerResolvesAndIsProved, unit, link.line, `anchor \`#${link.anchor}\` does not resolve in ${link.file}`));
+        findings.push(finding(a_contract_pointer_resolves_and_is_proved, unit, link.line, `anchor \`#${link.anchor}\` does not resolve in ${link.file}`));
         continue;
       }
-      if (!provedNames.has(link.anchor)) findings.push(finding(aContractPointerResolvesAndIsProved, unit, link.line, `header contract-record pointer has no annotated test: ${link.anchor}`));
+      if (!provedNames.has(link.anchor)) findings.push(finding(a_contract_pointer_resolves_and_is_proved, unit, link.line, `header contract-record pointer has no annotated test: ${link.anchor}`));
     }
     for (const proof of proofs) {
-      if (!header.contractLinks.some((link) => link.anchor === headingSlug(proof.name ?? ''))) findings.push(finding(aContractPointerResolvesAndIsProved, unit, proof.line, `annotated record is absent from the header: ${proof.name}`));
+      if (!header.contractLinks.some((link) => link.anchor === headingSlug(proof.name ?? ''))) findings.push(finding(a_contract_pointer_resolves_and_is_proved, unit, proof.line, `annotated record is absent from the header: ${proof.name}`));
     }
   }
   return findings;
 });
 
-export const aSourceTripwireResolvesToItsSiblingHeader = check(
+export const a_source_tripwire_resolves_to_its_sibling_header = check(
   'A source tripwire resolves to its sibling header',
   (context) => {
     const findings: Finding[] = [];
@@ -1547,22 +1547,22 @@ export const aSourceTripwireResolvesToItsSiblingHeader = check(
         if (!line.includes(`${DOMAIN}:`)) return;
         const symbolOnly = SYMBOL_ONLY.exec(line);
         if (!symbolOnly) {
-          findings.push(finding(aSourceTripwireResolvesToItsSiblingHeader, unit, index + 1, `source tripwires carry only the symbol: \`// ${DOMAIN}: <symbol>\``));
+          findings.push(finding(a_source_tripwire_resolves_to_its_sibling_header, unit, index + 1, `source tripwires carry only the symbol: \`// ${DOMAIN}: <symbol>\``));
           return;
         }
         if (siblingSymbols === null) {
           siblingSymbols = existsSync(testPath) ? parseHeader(toUnit(context.cwd, testPath)).domainSymbols : new Set();
         }
         if (!siblingSymbols.has(symbolOnly[1].trim()))
-          findings.push(finding(aSourceTripwireResolvesToItsSiblingHeader, unit, index + 1, `tripwire \`${symbolOnly[1].trim()}\` has no header claim in ${basename(testPath)}`));
+          findings.push(finding(a_source_tripwire_resolves_to_its_sibling_header, unit, index + 1, `tripwire \`${symbolOnly[1].trim()}\` has no header claim in ${basename(testPath)}`));
       });
-      if (unit.text.includes(GENERATOR)) findings.push(finding(aSourceTripwireResolvesToItsSiblingHeader, unit, unit.lines.findIndex((line) => line.includes(GENERATOR)) + 1, `\`${GENERATOR}\` belongs at the top of the sibling test file, not in source`));
+      if (unit.text.includes(GENERATOR)) findings.push(finding(a_source_tripwire_resolves_to_its_sibling_header, unit, unit.lines.findIndex((line) => line.includes(GENERATOR)) + 1, `\`${GENERATOR}\` belongs at the top of the sibling test file, not in source`));
     }
     return findings;
   },
 );
 
-export const aTestCaveatDerivesFromATestedClaim = check('A test caveat derives from a tested claim', (context) => {
+export const a_test_caveat_derives_from_a_tested_claim = check('A test caveat derives from a tested claim', (context) => {
   const findings: Finding[] = [];
   for (const unit of context.tests) {
     const header = parseHeader(unit);
@@ -1574,15 +1574,15 @@ export const aTestCaveatDerivesFromATestedClaim = check('A test caveat derives f
       if (!/\b(?:must|never|always|only|cannot)\b/i.test(sentence)) continue;
       if (/Open question:/i.test(sentence)) continue;
       if (symbols.some((symbol) => sentence.includes(symbol))) continue;
-      findings.push(finding(aTestCaveatDerivesFromATestedClaim, unit, startLine, `described-register caveat names no header symbol — a constraint the tests do not reach is a claim without a proof: "${sentence.trim().slice(0, 90)}"`));
+      findings.push(finding(a_test_caveat_derives_from_a_tested_claim, unit, startLine, `described-register caveat names no header symbol — a constraint the tests do not reach is a claim without a proof: "${sentence.trim().slice(0, 90)}"`));
     }
   }
   return findings;
 });
 
-export const thePopulationAndSkipListAreExact = check('The population and skip-list are exact', () => []); // enforced by runStandardGate itself; its findings carry this name
+export const the_population_and_skip_list_are_exact = check('The population and skip-list are exact', () => []); // enforced by runStandardGate itself; its findings carry this name
 
-export const twoTestFilesDoNotShareOneGeneratorHeader = check(
+export const two_test_files_do_not_share_one_generator_header = check(
   'Two test files do not share one generator header',
   (context) => {
     const findings: Finding[] = [];
@@ -1595,7 +1595,7 @@ export const twoTestFilesDoNotShareOneGeneratorHeader = check(
       text = text.replaceAll(basename(unit.path).replace(/\.test\.ts$/, ''), '<file>');
       if (!text) continue;
       const twin = normalized.get(text);
-      if (twin) findings.push(finding(twoTestFilesDoNotShareOneGeneratorHeader, unit, 1, `generator header is a template twin of ${twin.relativePath} — a Goal that fits another file with the name swapped is not a Goal`));
+      if (twin) findings.push(finding(two_test_files_do_not_share_one_generator_header, unit, 1, `generator header is a template twin of ${twin.relativePath} — a Goal that fits another file with the name swapped is not a Goal`));
       else normalized.set(text, unit);
     }
     return findings;
@@ -1604,44 +1604,44 @@ export const twoTestFilesDoNotShareOneGeneratorHeader = check(
 
 /** The manifest: every check the gate knows, in the Standard's order. */
 export const CHECKS: readonly StandardCheck[] = [
-  exactlyOneReactiveSourceIsInstalled,
-  aPublicClassPublishesItsNamespaceManifest,
-  aClassFileIsNamedAfterItsClass,
-  aClassFileHoldsOnlyImportsClassNamespaceAndTypes,
-  behaviorLivesOnThePrototypeNotInFields,
-  constructionGoesThroughTheNamespaceClassSlot,
-  theAnchorIsStaticOnlyWhenStaticsExist,
-  staticBindsMethodsAndCachesDollarGettersPerReceiver,
-  aSharedStoreIsAStaticReadonlyField,
-  aDerivedStaticGetterIsLowerCamelCase,
-  staticReadsGoThroughSelfNotTheBaseClass,
-  mutableStateIsARefReturningGetter,
-  aRefIsReadAndWrittenThroughValue,
-  aDerivationIsAPlainGetterUnlessComputedIsJustified,
-  aComposableIsInjectedByAOneCallDollarGetter,
-  instanceTypesOnlyUnwrappingSurfaces,
-  aComponentHasOneModelOwner,
-  theStateDestructureIsTotal,
-  templateExpressionsCarryNoLogic,
-  watchLifetimeMatchesTheInstanceOwner,
-  aReactiveClosureDelegatesToOneMethod,
-  aStoreIsUsedLazilyAndSwappedAtTheClassSlot,
-  keyedStateCreatesOnReadAndPeeksOnWrite,
-  aGenericReactiveClassCastsItsConstructor,
-  crossModuleClassReadsHappenInsideBodies,
-  declarationsUseFullDescriptiveNames,
-  classMembersAreOrderedAndSpaced,
-  aTestFileOpensWithItsGeneratorHeader,
-  aGeneratorHeaderCarriesBothRegistersInOrder,
-  aHeaderSymbolIsDeclaredInTheSiblingSource,
-  aClaimAnnotationSitsDirectlyAboveItsTest,
-  headerClaimsAndAnnotatedTestsMatchOneToOne,
-  anImpossibilityIsProvedByAnExactNegativeTest,
-  aContractPointerResolvesAndIsProved,
-  aSourceTripwireResolvesToItsSiblingHeader,
-  aTestCaveatDerivesFromATestedClaim,
-  thePopulationAndSkipListAreExact,
-  twoTestFilesDoNotShareOneGeneratorHeader,
+  exactly_one_reactive_source_is_installed,
+  a_public_class_publishes_its_namespace_manifest,
+  a_class_file_is_named_after_its_class,
+  a_class_file_holds_only_imports_class_namespace_and_types,
+  behavior_lives_on_the_prototype_not_in_fields,
+  construction_goes_through_the_namespace_class_slot,
+  the_anchor_is_static_only_when_statics_exist,
+  static_binds_methods_and_caches_dollar_getters_per_receiver,
+  a_shared_store_is_a_static_readonly_field,
+  a_derived_static_getter_is_lower_camel_case,
+  static_reads_go_through_self_not_the_base_class,
+  mutable_state_is_a_ref_returning_getter,
+  a_ref_is_read_and_written_through_value,
+  a_derivation_is_a_plain_getter_unless_computed_is_justified,
+  a_composable_is_injected_by_a_one_call_dollar_getter,
+  instance_types_only_unwrapping_surfaces,
+  a_component_has_one_model_owner,
+  the_state_destructure_is_total,
+  template_expressions_carry_no_logic,
+  watch_lifetime_matches_the_instance_owner,
+  a_reactive_closure_delegates_to_one_method,
+  a_store_is_used_lazily_and_swapped_at_the_class_slot,
+  keyed_state_creates_on_read_and_peeks_on_write,
+  a_generic_reactive_class_casts_its_constructor,
+  cross_module_class_reads_happen_inside_bodies,
+  declarations_use_full_descriptive_names,
+  class_members_are_ordered_and_spaced,
+  a_test_file_opens_with_its_generator_header,
+  a_generator_header_carries_both_registers_in_order,
+  a_header_symbol_is_declared_in_the_sibling_source,
+  a_claim_annotation_sits_directly_above_its_test,
+  header_claims_and_annotated_tests_match_one_to_one,
+  an_impossibility_is_proved_by_an_exact_negative_test,
+  a_contract_pointer_resolves_and_is_proved,
+  a_source_tripwire_resolves_to_its_sibling_header,
+  a_test_caveat_derives_from_a_tested_claim,
+  the_population_and_skip_list_are_exact,
+  two_test_files_do_not_share_one_generator_header,
 ];
 
 const CHECK_NAMES = new Set(CHECKS.map((entry) => entry.name));
@@ -1745,7 +1745,7 @@ export function runStandardGate(options: GateOptions): GateResult {
       const message = existsSync(resolve(cwd, row.path))
         ? `stale skip: "${row.check}" no longer fires on ${row.path} — remove the row`
         : `stale skip: ${row.path} does not exist — remove the row`;
-      findings.push({ check: thePopulationAndSkipListAreExact.name, file: options.skipListPath ?? 'skip-list', line: row.line, message });
+      findings.push({ check: the_population_and_skip_list_are_exact.name, file: options.skipListPath ?? 'skip-list', line: row.line, message });
     }
   }
   findings.sort((first, second) => first.file.localeCompare(second.file) || first.line - second.line);
