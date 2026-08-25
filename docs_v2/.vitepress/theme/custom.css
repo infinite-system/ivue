@@ -3671,11 +3671,12 @@ a.feature-inline-link:active {
   order: 2;
   display: flex;
   justify-content: center;
-  margin: 2px 0 0 !important;
-  padding: 0 !important;
-  border-bottom: none !important;
-  /* the differentiator: a whisper of ink over the page bg, no line */
-  background: color-mix(in srgb, var(--vp-c-text-1) 4%, transparent);
+  margin: 0 !important;
+  padding: 0 0 2px !important;
+  border: none !important;
+  /* same surface as the list — no tint, no line; the blue text and
+     the arrow are what set it apart */
+  background: transparent !important;
 }
 .VPLocalNavOutlineDropdown .items .outline {
   order: 1;
@@ -3718,6 +3719,13 @@ a.feature-inline-link:active {
   display: block;
   padding: 4px 12px 4px 9px;
   line-height: 1.55; /* theme default is 32px — rows were twice the height */
+  /* every heading in full — VitePress ellipsizes to one line; the
+     hanging indent keeps wrapped lines under the text, not the chevron */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  padding-left: 24px;
+  text-indent: -15px;
   border-radius: 5px; /* tighter than the panel's own 12px */
   transition:
     background-color 0.3s ease,
