@@ -1,8 +1,18 @@
+/*
+=== GENERATOR ===
+Goal: Prove the sends table is the one-email-per-(subscriber, post) invariant: idempotent to record, explicit to erase.
+// domain-invariant: $Ledger — If a (email, slug) pair is recorded, then recording it again changes nothing
+Impossible if true: a (email, slug) pair re-opens without an explicit erase
+
+=== GENERATOR-DESCRIBED ===
+Three writers share the $Ledger (cron drip, broadcast, targeted send); the tests prove the table itself carries the guarantee, so no writer needs to trust another.
+*/
 import { describe, expect, it } from 'vitest';
 import { Ledger } from './Ledger';
 import { makeTestEnv } from '../../../test/TestDatabase';
 
 describe('Ledger', () => {
+  // domain-invariant: $Ledger — If a (email, slug) pair is recorded, then recording it again changes nothing
   it('record is idempotent per (email, slug) — the one-send invariant', async () => {
     const env = makeTestEnv();
     await Ledger.Class.record(env, [
@@ -38,6 +48,7 @@ describe('Ledger', () => {
     ]);
   });
 
+  // impossible-if-true: $Ledger — a (email, slug) pair re-opens without an explicit erase
   it('erase re-opens a (email, slug) pair — the explicit force-resend path', async () => {
     const env = makeTestEnv();
     await Ledger.Class.record(env, [

@@ -1,7 +1,17 @@
+/*
+=== GENERATOR ===
+Goal: Prove wall-clock arithmetic follows each subscriber's own timezone through Intl, daylight saving included.
+// domain-invariant: $LocalTime — If a zone observes daylight saving, then the local hour follows it
+Impossible if true: a day number advances on UTC midnight instead of the local calendar
+
+=== GENERATOR-DESCRIBED ===
+$LocalTime leans on Intl because it is the one DST-correct source without shipping a tz database; the tests cross a DST boundary rather than trusting the offset math.
+*/
 import { describe, expect, it } from 'vitest';
 import { LocalTime } from './LocalTime';
 
 describe('LocalTime', () => {
+  // domain-invariant: $LocalTime — If a zone observes daylight saving, then the local hour follows it
   it('reads the local hour in a zone, DST included', () => {
     // 2026-01-05T14:00:00Z = 9am in Toronto (EST, UTC-5)
     const winter = Date.UTC(2026, 0, 5, 14) / 1000;
@@ -13,6 +23,7 @@ describe('LocalTime', () => {
     expect(LocalTime.Class.hourAt(winter, 'Asia/Tokyo')).toBe(23);
   });
 
+  // impossible-if-true: $LocalTime — a day number advances on UTC midnight instead of the local calendar
   it('day numbers advance with the LOCAL calendar, not UTC', () => {
     // 2026-01-05T03:00:00Z is still Jan 4 in Toronto (10pm EST)
     const lateNight = Date.UTC(2026, 0, 5, 3) / 1000;

@@ -1,3 +1,12 @@
+/*
+=== GENERATOR ===
+Goal: Prove Turnstile verification fails closed: transport errors, malformed tokens, and foreign hostnames or actions all read as no.
+// domain-invariant: $Turnstile — If the verdict, action, or hostname is wrong, then verification fails
+Impossible if true: an unreachable siteverify verifies a token
+
+=== GENERATOR-DESCRIBED ===
+The $Turnstile check guards the one form strangers can submit; the tests spend most of their rows on refusals because fail-open is the only catastrophic bug this module can have.
+*/
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Turnstile } from './Turnstile';
 import { makeTestEnv } from '../../../test/TestDatabase';
@@ -35,6 +44,7 @@ describe('Turnstile', () => {
     );
   });
 
+  // domain-invariant: $Turnstile — If the verdict, action, or hostname is wrong, then verification fails
   it('rejects a success with the wrong action or hostname', async () => {
     stubSiteverify({ success: true, action: 'login', hostname: 'ivue.dev' });
     expect(await Turnstile.Class.verify('token', null, makeTestEnv())).toBe(
@@ -46,6 +56,7 @@ describe('Turnstile', () => {
     );
   });
 
+  // impossible-if-true: $Turnstile — an unreachable siteverify verifies a token
   it('fails closed when siteverify is unreachable', async () => {
     vi.stubGlobal(
       'fetch',

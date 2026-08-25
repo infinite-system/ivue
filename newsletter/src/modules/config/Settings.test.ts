@@ -1,8 +1,18 @@
+/*
+=== GENERATOR ===
+Goal: Prove operator settings layer D1 overrides on env defaults and refuse any value the drip clock cannot run.
+// domain-invariant: $Settings — If no override is stored, then the env drip clock rules
+Impossible if true: an out-of-range cadence or send hour is accepted
+
+=== GENERATOR-DESCRIBED ===
+A fresh database behaves exactly like wrangler.jsonc, so the dashboard can retune $Settings without a deploy; corruption falls back instead of wedging the cron.
+*/
 import { describe, expect, it } from 'vitest';
 import { Settings } from './Settings';
 import { makeTestEnv } from '../../../test/TestDatabase';
 
 describe('Settings', () => {
+  // domain-invariant: $Settings — If no override is stored, then the env drip clock rules
   it('falls back to the env drip clock when nothing is stored', async () => {
     const env = makeTestEnv();
     expect(await Settings.Class.dripSchedule(env)).toEqual({
@@ -24,6 +34,7 @@ describe('Settings', () => {
     });
   });
 
+  // impossible-if-true: $Settings — an out-of-range cadence or send hour is accepted
   it('rejects out-of-range cadence, hour, and invalid timezones', async () => {
     const env = makeTestEnv();
     await expect(Settings.Class.setCadenceDays(env, 0)).rejects.toThrow();

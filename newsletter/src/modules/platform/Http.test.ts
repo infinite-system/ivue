@@ -1,3 +1,12 @@
+/*
+=== GENERATOR ===
+Goal: Prove one place decides every response: status and content type, how far CORS reaches, and what an error looks like.
+// domain-invariant: $Http — If the request origin is neither the site nor localhost, then CORS echoes nothing
+Impossible if true: malformed JSON escapes readJsonBody as a thrown error
+
+=== GENERATOR-DESCRIBED ===
+Every endpoint routes its response through $Http, so a header decided here is decided everywhere; the tests pin the stranger-origin case because CORS mistakes are silent in the happy path.
+*/
 import { describe, expect, it } from 'vitest';
 import { Http } from './Http';
 import { makeTestEnv } from '../../../test/TestDatabase';
@@ -10,6 +19,7 @@ describe('Http', () => {
     expect(await response.json()).toEqual({ ok: true });
   });
 
+  // domain-invariant: $Http — If the request origin is neither the site nor localhost, then CORS echoes nothing
   it('withCors grants the SITE origin, echoes localhost for dev, never echoes strangers', () => {
     const response = Http.Class.withCors(Http.Class.json({}), makeTestEnv());
     expect(response.headers.get('access-control-allow-origin')).toBe(
@@ -72,6 +82,7 @@ describe('Http', () => {
     ).toBe('https://ivue.dev');
   });
 
+  // impossible-if-true: $Http — malformed JSON escapes readJsonBody as a thrown error
   it('readJsonBody returns an empty object on malformed JSON', async () => {
     const request = new Request('https://newsletter.test/subscribe', {
       method: 'POST',

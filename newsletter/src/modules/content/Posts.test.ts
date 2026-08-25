@@ -1,3 +1,12 @@
+/*
+=== GENERATOR ===
+Goal: Prove the post catalog serves nothing it did not receive fully rendered: email content is made at site build, this module fetches and filters.
+// domain-invariant: $Posts — If a post arrives without emailHtml, then load drops it
+Impossible if true: a summaries row carries the email body
+
+=== GENERATOR-DESCRIBED ===
+Template changes ship via site push, never a Worker deploy; the $Posts deploy-skew guard is what makes that split safe when the two release at different moments.
+*/
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Posts } from './Posts';
 import { makeTestEnv } from '../../../test/TestDatabase';
@@ -8,6 +17,7 @@ describe('Posts', () => {
     vi.unstubAllGlobals();
   });
 
+  // domain-invariant: $Posts — If a post arrives without emailHtml, then load drops it
   it('load skips posts without emailHtml (deploy-skew guard)', async () => {
     const stale = { ...makePost('stale-post', 1), emailHtml: undefined };
     installFetchStub({ posts: [makePost('ready-post', 2), stale] });
@@ -15,6 +25,7 @@ describe('Posts', () => {
     expect(posts.map((post) => post.slug)).toEqual(['ready-post']);
   });
 
+  // impossible-if-true: $Posts — a summaries row carries the email body
   it('find locates by slug and summaries strips the email body', () => {
     const catalog = [makePost('first-post', 1), makePost('second-post', 2)];
     expect(Posts.Class.find(catalog, 'second-post')?.title).toBe(

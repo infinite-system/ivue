@@ -1,3 +1,12 @@
+/*
+=== GENERATOR ===
+Goal: Prove OAuth 1.0a signing is deterministic and media upload obeys X's caps before anything is posted or chained into a thread.
+// domain-invariant: $XPoster — If the four credentials are present, then postTweet signs the request and returns the tweet id
+Impossible if true: more than four images or an off-site URL is uploaded
+
+=== GENERATOR-DESCRIBED ===
+$XPoster signs with a fixed-nonce test path so the OAuth header is byte-comparable; threads chain reply ids with per-segment images, which is where an off-by-one silently reorders a launch.
+*/
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { XPoster } from './XPoster';
 import { makeTestEnv } from '../../../test/TestDatabase';
@@ -54,6 +63,7 @@ describe('XPoster', () => {
     expect(XPoster.Class.percentEncode('a b+c')).toBe('a%20b%2Bc');
   });
 
+  // domain-invariant: $XPoster — If the four credentials are present, then postTweet signs the request and returns the tweet id
   it('postTweet sends the signed request and returns the tweet id', async () => {
     let captured: { url: string; headers: Record<string, string>; body: string } | null = null;
     vi.stubGlobal(
@@ -105,6 +115,7 @@ describe('XPoster', () => {
     });
   });
 
+  // impossible-if-true: $XPoster — more than four images or an off-site URL is uploaded
   it('uploadImages caps at 4 and refuses off-site URLs', async () => {
     const { installFetchStub } = await import('../../../test/Fixtures');
     const calls = installFetchStub({});

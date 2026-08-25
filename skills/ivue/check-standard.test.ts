@@ -529,7 +529,7 @@ test('rejects a derived static getter in SCREAMING_SNAKE', () => {
 
 // domain-invariant: aDerivedStaticGetterIsLowerCamelCase — A derived static getter is lower camel case: if a static getter derives its value from other members or classes, then its name is lowerCamel, and SCREAMING_SNAKE remains for literal tunable constants
 test('accepts a literal SCREAMING_SNAKE getter and a derived lowerCamel one', () => {
-  const honest = STATIC_CLASS.replace('  static now() {', "  static get RETRY_LIMIT() {\n    return 3;\n  }\n\n  static get scanLimitHours() {\n    return Number(this.$zone.length) * 24;\n  }\n\n  static now() {");
+  const honest = STATIC_CLASS.replace('  static now() {', "  static get RETRY_LIMIT() {\n    return 3;\n  }\n\n  static get EMAIL_PATTERN() {\n    return /a+b/;\n  }\n\n  static get scanLimitHours() {\n    return Number(this.$zone.length) * 24;\n  }\n\n  static now() {");
   expect(findingsFor(aDerivedStaticGetterIsLowerCamelCase, gate({ 'src/Clock.ts': honest }).findings)).toEqual([]);
 });
 

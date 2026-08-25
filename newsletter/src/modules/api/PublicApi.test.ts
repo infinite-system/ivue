@@ -1,3 +1,12 @@
+/*
+=== GENERATOR ===
+Goal: Prove the public endpoints enroll, comment, and unsubscribe only under their own proofs: Turnstile verdicts, HMAC tokens, and the pending-first comment path.
+// domain-invariant: $PublicApi — If a subscription passes validation, then the subscriber is enrolled and the operator is pinged
+Impossible if true: an unsubscribe without a valid HMAC token suppresses an address
+
+=== GENERATOR-DESCRIBED ===
+Every $PublicApi route is reachable by strangers, so each test pairs the happy path with the refusal the same input earns when its proof is missing.
+*/
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PublicApi } from './PublicApi';
 import { Security } from '../platform/Security';
@@ -34,6 +43,7 @@ describe('PublicApi', () => {
     vi.unstubAllGlobals();
   });
 
+  // domain-invariant: $PublicApi — If a subscription passes validation, then the subscriber is enrolled and the operator is pinged
   it('subscribe validates, enrolls, and pings the operator (Turnstile off in tests)', async () => {
     const env = makeTestEnv();
     const postmarkCalls = installFetchStub({});
@@ -101,6 +111,7 @@ describe('PublicApi', () => {
     expect(await Audience.Class.active(env, 'newsletter')).toHaveLength(1);
   });
 
+  // impossible-if-true: $PublicApi — an unsubscribe without a valid HMAC token suppresses an address
   it('unsubscribe requires a valid HMAC token and suppresses on success', async () => {
     const env = makeTestEnv();
     await Audience.Class.enroll(env, 'a@ivue.dev', 'Ada', 'newsletter');

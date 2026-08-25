@@ -1,3 +1,12 @@
+/*
+=== GENERATOR ===
+Goal: Prove each subscriber is judged by their own local clock and calendar: due at their hour, gated by calendar days, and never handed a post the ledger already shows.
+// domain-invariant: $Drip — If fewer than cadenceDays local days passed since the last send, then the subscriber is not due
+Impossible if true: the drip resends a post a broadcast already delivered
+
+=== GENERATOR-DESCRIBED ===
+The $Drip pass runs hourly worldwide, so timezone arithmetic is the whole game; the tests hold a late send against schedule drift because hours-based gates drift and calendar-day gates do not.
+*/
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Drip } from './Drip';
 import { Settings } from '../config/Settings';
@@ -44,6 +53,7 @@ describe('Drip.plan (the pure decision the cron and the preview share)', () => {
     expect(atTen[0].dueAt).toBe(JAN_5_9AM_UTC + DAY_SECONDS);
   });
 
+  // domain-invariant: $Drip — If fewer than cadenceDays local days passed since the last send, then the subscriber is not due
   it('the calendar-day gate holds until cadenceDays local days passed', () => {
     const sentMonday = [
       { email: 'a@ivue.dev', slug: 'first-post', sentAt: JAN_5_9AM_UTC },
@@ -129,6 +139,7 @@ describe('Drip.plan (the pure decision the cron and the preview share)', () => {
     expect(entries[0].sendNow).toBe(false);
   });
 
+  // impossible-if-true: $Drip — the drip resends a post a broadcast already delivered
   it('a broadcast that jumped the queue is never re-sent — the drip skips it', () => {
     const entries = Drip.Class.plan(
       posts,

@@ -1,3 +1,12 @@
+/*
+=== GENERATOR ===
+Goal: Prove the dashboard's JSON API answers only to the admin bearer, and that its send paths obey the one-send ledger.
+// domain-invariant: $AdminApi — If a request lacks the admin bearer, then every admin route refuses it
+Impossible if true: a targeted send repeats a ledgered delivery without an explicit erase
+
+=== GENERATOR-DESCRIBED ===
+The $AdminApi surface is one handler behind one bearer check; the tests walk every route unauthenticated before anything else, because a single forgotten guard would expose the whole panel.
+*/
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AdminApi } from './AdminApi';
 import { LocalTime } from '../platform/LocalTime';
@@ -29,6 +38,7 @@ describe('AdminApi', () => {
     vi.unstubAllGlobals();
   });
 
+  // domain-invariant: $AdminApi — If a request lacks the admin bearer, then every admin route refuses it
   it('rejects a wrong or missing bearer on every route', async () => {
     const env = makeTestEnv();
     const url = new URL('https://newsletter.test/admin/subscribers');
@@ -163,6 +173,7 @@ describe('AdminApi', () => {
     );
   });
 
+  // impossible-if-true: $AdminApi — a targeted send repeats a ledgered delivery without an explicit erase
   it('targeted send honors the ledger and force erases it explicitly', async () => {
     const env = makeTestEnv();
     installFetchStub({ posts: [makePost('first-post', 1)] });

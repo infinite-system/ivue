@@ -1,8 +1,18 @@
+/*
+=== GENERATOR ===
+Goal: Prove every credential check flows through one timing-safe comparison, and unsubscribe links are HMAC-bound to their address.
+// domain-invariant: $Security — If two secrets differ, then the timing-safe comparison rejects them
+Impossible if true: an unsubscribe token verifies for a different address
+
+=== GENERATOR-DESCRIBED ===
+$Security is the chokepoint: bearer checks, webhook auth, and signed links all reduce to these primitives, so the tests attack the primitives instead of every caller.
+*/
 import { describe, expect, it } from 'vitest';
 import { Security } from './Security';
 import { makeTestEnv } from '../../../test/TestDatabase';
 
 describe('Security', () => {
+  // domain-invariant: $Security — If two secrets differ, then the timing-safe comparison rejects them
   it('timingSafeEqualStrings matches equal and rejects unequal secrets', async () => {
     expect(
       await Security.Class.timingSafeEqualStrings('secret', 'secret'),
@@ -29,6 +39,7 @@ describe('Security', () => {
     expect(await Security.Class.bearerAuthorized(absent, env)).toBe(false);
   });
 
+  // impossible-if-true: $Security — an unsubscribe token verifies for a different address
   it('unsubscribe tokens are stable 64-hex HMACs bound to the address', async () => {
     const env = makeTestEnv();
     const token = await Security.Class.unsubscribeToken('a@ivue.dev', env);

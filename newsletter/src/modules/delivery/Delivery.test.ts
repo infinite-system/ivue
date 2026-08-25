@@ -1,3 +1,12 @@
+/*
+=== GENERATOR ===
+Goal: Prove sending writes the ledger for accepted deliveries alone: a rejection or a failed batch leaves the row open to retry.
+// domain-invariant: $Delivery — If Postmark rejects a recipient, then the ledger stays unwritten for them
+Impossible if true: a failed batch call writes the ledger
+
+=== GENERATOR-DESCRIBED ===
+$Delivery sits between Postmark and the sends table; the tests pin the write to the acknowledgment, because a ledger row without a delivery silences that subscriber forever.
+*/
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Delivery } from './Delivery';
 import { Ledger } from '../audience/Ledger';
@@ -46,6 +55,7 @@ describe('Delivery', () => {
     expect(postmarkCalls.notifications).toHaveLength(1);
   });
 
+  // domain-invariant: $Delivery — If Postmark rejects a recipient, then the ledger stays unwritten for them
   it('a rejected recipient is reported and NOT written to the ledger', async () => {
     const env = makeTestEnv();
     installFetchStub({
@@ -72,6 +82,7 @@ describe('Delivery', () => {
     expect(sent.has('bad@ivue.dev')).toBe(false);
   });
 
+  // impossible-if-true: $Delivery — a failed batch call writes the ledger
   it('a failed batch call leaves the ledger unwritten so the send retries', async () => {
     const env = makeTestEnv();
     installFetchStub({ postmarkStatus: 500 });

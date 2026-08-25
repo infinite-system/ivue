@@ -1,8 +1,18 @@
+/*
+=== GENERATOR ===
+Goal: Prove comment moderation is pending-by-default and reply notifications reach only the answered and the mentioned.
+// domain-invariant: $Comments — If a comment is submitted, then it is pending and invisible everywhere public until approval
+Impossible if true: a reply notifies the thread starter who was neither answered nor mentioned
+
+=== GENERATOR-DESCRIBED ===
+The $Comments thread model is two levels deep with per-thread subscriptions; the tests trace who hears about a reply, because over-notifying is how comment systems burn their readers.
+*/
 import { describe, expect, it } from 'vitest';
 import { Comments } from './Comments';
 import { makeTestEnv } from '../../../test/TestDatabase';
 
 describe('Comments', () => {
+  // domain-invariant: $Comments — If a comment is submitted, then it is pending and invisible everywhere public until approval
   it('submit stores pending; approvedFor serves approved only, WITHOUT emails', async () => {
     const env = makeTestEnv();
     const id = await Comments.Class.submit(env, {
@@ -229,6 +239,7 @@ describe('Comments', () => {
     );
   });
 
+  // impossible-if-true: $Comments — a reply notifies the thread starter who was neither answered nor mentioned
   it('recipients: the answered author and mentions only — never the starter by default', async () => {
     const env = makeTestEnv();
     const { rootId, replyId } = await thread(env);

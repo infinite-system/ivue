@@ -1,9 +1,19 @@
+/*
+=== GENERATOR ===
+Goal: Prove subscribers belong to lists while suppression stays global: one email, many memberships, one kill switch.
+// domain-invariant: $Audience — If an email is suppressed, then it is excluded from every list's active set
+Impossible if true: a re-enrolled address keeps its previous unsubscribe
+
+=== GENERATOR-DESCRIBED ===
+The $Audience layer treats D1 as the single source of truth; the tests cross list membership against the global suppression table because those two axes are independent by design.
+*/
 import { describe, expect, it } from 'vitest';
 import { Audience } from './Audience';
 import { Ledger } from './Ledger';
 import { makeTestEnv } from '../../../test/TestDatabase';
 
 describe('Audience', () => {
+  // domain-invariant: $Audience — If an email is suppressed, then it is excluded from every list's active set
   it('enroll adds to a list and active excludes the suppressed', async () => {
     const env = makeTestEnv();
     await Audience.Class.enroll(env, 'a@ivue.dev', 'Ada', 'newsletter');
@@ -15,6 +25,7 @@ describe('Audience', () => {
     ]);
   });
 
+  // impossible-if-true: $Audience — a re-enrolled address keeps its previous unsubscribe
   it('re-enrolling cancels a previous unsubscribe (sequence resumes)', async () => {
     const env = makeTestEnv();
     await Audience.Class.enroll(env, 'a@ivue.dev', 'Ada', 'newsletter');

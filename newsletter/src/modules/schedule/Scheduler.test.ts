@@ -1,3 +1,12 @@
+/*
+=== GENERATOR ===
+Goal: Prove the queue holds broadcasts and X posts for a future time and the 5-minute tick executes exactly the due ones through their own ledgers.
+// domain-invariant: $Scheduler — If a broadcast job is due, then the tick executes it through the ledger-filtered core
+Impossible if true: a failing job throws the tick
+
+=== GENERATOR-DESCRIBED ===
+A $Scheduler job is claimed by stamping before work starts, so a crash cannot double-run it; the tests also refuse malformed threads at schedule time, where the operator can still fix them.
+*/
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Scheduler } from './Scheduler';
 import { Audience } from '../audience/Audience';
@@ -65,6 +74,7 @@ describe('Scheduler', () => {
     ).rejects.toThrow(/slug/);
   });
 
+  // domain-invariant: $Scheduler — If a broadcast job is due, then the tick executes it through the ledger-filtered core
   it('runDue executes a due broadcast through the ledger-filtered core', async () => {
     const env = makeTestEnv();
     await Audience.Class.enroll(env, 'a@ivue.dev', 'Ada', 'newsletter');
@@ -157,6 +167,7 @@ describe('Scheduler', () => {
     ).rejects.toThrow(/at least 2/);
   });
 
+  // impossible-if-true: $Scheduler — a failing job throws the tick
   it('a failing job records its error instead of throwing the tick', async () => {
     const env = makeTestEnv(); // no X credentials
     await Scheduler.Class.schedule(

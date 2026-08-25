@@ -874,7 +874,7 @@ export const aDerivedStaticGetterIsLowerCamelCase = check('A derived static gett
   // literal = the tunable-constant form the Standard allows in
   // SCREAMING_SNAKE; anything reading other members or classes derives
   const isLiteral = (expression: ts.Expression): boolean => {
-    if (ts.isNumericLiteral(expression) || ts.isStringLiteralLike(expression) || expression.kind === ts.SyntaxKind.TrueKeyword || expression.kind === ts.SyntaxKind.FalseKeyword) return true;
+    if (ts.isNumericLiteral(expression) || ts.isStringLiteralLike(expression) || ts.isRegularExpressionLiteral(expression) || expression.kind === ts.SyntaxKind.TrueKeyword || expression.kind === ts.SyntaxKind.FalseKeyword) return true;
     if (ts.isPrefixUnaryExpression(expression) && expression.operator === ts.SyntaxKind.MinusToken) return isLiteral(expression.operand);
     if (ts.isBinaryExpression(expression)) return isLiteral(expression.left) && isLiteral(expression.right);
     if (ts.isParenthesizedExpression(expression)) return isLiteral(expression.expression);
