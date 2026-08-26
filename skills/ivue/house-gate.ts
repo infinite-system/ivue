@@ -18,7 +18,7 @@
  * you skip step 3. Try it:
  *
  *   npm run gate:house -- --list
- *   npm run gate:house -- --prove 'A source file stays under the line budget'
+ *   npm run gate:house -- --prove a_source_file_stays_under_the_line_budget
  *   npm run gate:house -- --prove
  *   npm run gate:house -- --source-root src --test-glob 'src/**\/*.test.ts'
  */
@@ -35,7 +35,7 @@ class $HouseGate extends CheckStandard.$Class {
   }
 
   static get a_source_file_stays_under_the_line_budget(): StandardCheck {
-    return this.defineCheck('A source file stays under the line budget', (context) =>
+    return this.defineCheck('a_source_file_stays_under_the_line_budget', (context) =>
       context.sources
         .filter((unit) => unit.lines.length > this.MAX_SOURCE_LINES)
         .map((unit) => this.finding(this.a_source_file_stays_under_the_line_budget, unit, 1, `${unit.lines.length} lines — the budget is ${this.MAX_SOURCE_LINES}; split the module`)),
@@ -44,6 +44,54 @@ class $HouseGate extends CheckStandard.$Class {
 
   static get checks(): readonly StandardCheck[] {
     return [...super.checks, this.a_source_file_stays_under_the_line_budget];
+  }
+
+  // The severity menu — every check listed at its default, so this gate
+  // blocks exactly what the base gate blocks. Flip an entry to 'warn'
+  // (report, never block) or 'off' (skip globally, announced in the
+  // summary) and the whole team inherits the ruling.
+  static get severities(): Readonly<Record<string, 'error' | 'warn' | 'off'>> {
+    return {
+      exactly_one_reactive_source_is_installed: 'error',
+      a_public_class_publishes_its_namespace_manifest: 'error',
+      a_class_file_is_named_after_its_class: 'error',
+      a_class_file_holds_only_imports_class_namespace_and_types: 'error',
+      behavior_lives_on_the_prototype_not_in_fields: 'error',
+      construction_goes_through_the_namespace_class_slot: 'error',
+      the_anchor_is_static_only_when_statics_exist: 'error',
+      static_binds_methods_and_caches_dollar_getters_per_receiver: 'error',
+      a_shared_store_is_a_static_readonly_field: 'error',
+      a_derived_static_getter_is_lower_camel_case: 'error',
+      static_reads_go_through_self_not_the_base_class: 'error',
+      mutable_state_is_a_ref_returning_getter: 'error',
+      a_ref_is_read_and_written_through_value: 'error',
+      a_derivation_is_a_plain_getter_unless_computed_is_justified: 'error',
+      a_composable_is_injected_by_a_one_call_dollar_getter: 'error',
+      instance_types_only_unwrapping_surfaces: 'error',
+      a_component_has_one_model_owner: 'error',
+      the_state_destructure_is_total: 'error',
+      template_expressions_carry_no_logic: 'error',
+      watch_lifetime_matches_the_instance_owner: 'error',
+      a_reactive_closure_delegates_to_one_method: 'error',
+      a_store_is_used_lazily_and_swapped_at_the_class_slot: 'error',
+      keyed_state_creates_on_read_and_peeks_on_write: 'error',
+      a_generic_reactive_class_casts_its_constructor: 'error',
+      cross_module_class_reads_happen_inside_bodies: 'error',
+      declarations_use_full_descriptive_names: 'error',
+      class_members_are_ordered_and_spaced: 'error',
+      a_test_file_opens_with_its_generator_header: 'error',
+      a_generator_header_carries_both_registers_in_order: 'error',
+      a_header_symbol_is_declared_in_the_sibling_source: 'error',
+      a_claim_annotation_sits_directly_above_its_test: 'error',
+      header_claims_and_annotated_tests_match_one_to_one: 'error',
+      an_impossibility_is_proved_by_an_exact_negative_test: 'error',
+      a_contract_pointer_resolves_and_is_proved: 'error',
+      a_source_tripwire_resolves_to_its_sibling_header: 'error',
+      a_test_caveat_derives_from_a_tested_claim: 'error',
+      the_population_and_skip_list_are_exact: 'error',
+      two_test_files_do_not_share_one_generator_header: 'error',
+      a_source_file_stays_under_the_line_budget: 'error',
+    };
   }
 
   static get proofs(): Readonly<Record<string, CheckProof>> {

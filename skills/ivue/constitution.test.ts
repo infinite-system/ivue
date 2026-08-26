@@ -29,6 +29,8 @@ test('the shipped constitution is complete for every manifest check', () => {
   const report = GateClass.prove({ completenessOnly: true });
   expect(report.problems).toEqual([]);
   for (const check of GateClass.checks) {
+    // one form everywhere: the check's name IS its getter's name
+    expect((GateClass as unknown as Record<string, Gate.StandardCheck>)[check.name]?.name).toBe(check.name);
     const proof = GateClass.proofs[check.name];
     expect(proof, check.name).toBeDefined();
     expect(proof.claim).toMatch(/^If .+, then .+/);
@@ -50,7 +52,7 @@ test('every red arm produces its named finding and every green arm stays silent'
 
 test('prove isolates one check when asked', () => {
   const GateClass = Gate.CheckStandard.Class;
-  const report = GateClass.prove({ only: 'A Ref is read and written through value' });
+  const report = GateClass.prove({ only: 'a_ref_is_read_and_written_through_value' });
   expect(report.problems).toEqual([]);
   expect(report.ran.red).toBe(1);
   expect(report.ran.green).toBe(1);
@@ -68,37 +70,37 @@ test('the CLI refuses to combine --prove with a gate run', async () => {
 // impossible-if-true: $CheckStandard — a check enters the manifest without a red and a green proof arm
 test('an armless check is refused by its own constitution', () => {
   class $ArmlessGate extends Gate.CheckStandard.$Class {
-    static get houseRuleWithoutArms(): Gate.StandardCheck {
-      return { name: 'A house rule without arms', enforced: true, run: () => [] };
+    static get a_house_rule_without_arms(): Gate.StandardCheck {
+      return { name: 'a_house_rule_without_arms', enforced: true, run: () => [] };
     }
 
     static get checks(): readonly Gate.StandardCheck[] {
-      return [...super.checks, this.houseRuleWithoutArms];
+      return [...super.checks, this.a_house_rule_without_arms];
     }
   }
   const ArmlessGate = Static($ArmlessGate);
   const report = ArmlessGate.prove({ completenessOnly: true });
-  expect(report.problems.some((problem) => problem.includes('A house rule without arms'))).toBe(true);
+  expect(report.problems.some((problem) => problem.includes('a_house_rule_without_arms'))).toBe(true);
 });
 
 // domain-invariant: $CheckStandard — If a subclass overrides or adds a check getter, then the manifest, the skip-list validation, and the proofs follow the receiving class
 test('a house gate extends the manifest and its constitution through the receiver', () => {
   const houseCheck: Gate.StandardCheck = {
-    name: 'A source file stays under nine hundred lines',
+    name: 'a_source_file_stays_under_nine_hundred_lines',
     enforced: true,
     run: (context) =>
       context.sources
         .filter((unit) => unit.lines.length > 900)
-        .map((unit) => ({ check: 'A source file stays under nine hundred lines', file: unit.relativePath, line: 1, message: `${unit.lines.length} lines — split the module` })),
+        .map((unit) => ({ check: 'a_source_file_stays_under_nine_hundred_lines', file: unit.relativePath, line: 1, message: `${unit.lines.length} lines — split the module` })),
   };
   const longFile = `${'// filler\n'.repeat(901)}export type Filler = number;\n`;
   class $HouseGate extends Gate.CheckStandard.$Class {
-    static get houseRule(): Gate.StandardCheck {
+    static get a_source_file_stays_under_nine_hundred_lines(): Gate.StandardCheck {
       return houseCheck;
     }
 
     static get checks(): readonly Gate.StandardCheck[] {
-      return [...super.checks, this.houseRule];
+      return [...super.checks, this.a_source_file_stays_under_nine_hundred_lines];
     }
 
     static get proofs(): Readonly<Record<string, Gate.CheckProof>> {

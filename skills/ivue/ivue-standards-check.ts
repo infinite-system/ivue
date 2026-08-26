@@ -9,8 +9,11 @@
  *   vite-node node_modules/ivue/skills/ivue/check-standard.ts -- \
  *     --source-root src --test-glob 'src/**\/*.test.ts' --skip-list ivue-standards-skip.json
  *
- * Every check is identified by a plain declarative NAME (a sentence);
- * the static getter that holds it is the snake_case form of that name.
+ * Every check has ONE identity: a snake_case declarative sentence
+ * (a_class_file_is_named_after_its_class). The same string is the static
+ * getter's name, the finding label, the skip-list "check" token, and the
+ * severities key — search or replace one form and you have touched every
+ * site; prove() refuses a check whose name is not its own getter.
  * The gate carries its own CONSTITUTION as data: `proofs` maps every
  * check to its claim, its impossibility, and permanent red and green
  * fixture arms, and `prove()` runs every arm through the same `run()`
@@ -250,7 +253,7 @@ class $CheckStandard {
   // the checks — the getter name is the snake_case of the sentence name
 
   static get exactly_one_reactive_source_is_installed(): StandardCheck {
-    return this.defineCheck('Exactly one Reactive source is installed', (context) => {
+    return this.defineCheck('exactly_one_reactive_source_is_installed', (context) => {
       const vendored = context.sources.filter((unit) => /export\s+function\s+Reactive\s*[<(]/.test(unit.text) || /export\s*\{[^}]*\bReactive\b[^}]*\}\s*from/.test(unit.text));
       const manifests = new Set<string>();
       for (const root of context.sourceRoots) {
@@ -284,7 +287,7 @@ class $CheckStandard {
   }
 
   static get a_public_class_publishes_its_namespace_manifest(): StandardCheck {
-    return this.defineCheck('A public class publishes its namespace manifest', (context) => {
+    return this.defineCheck('a_public_class_publishes_its_namespace_manifest', (context) => {
       const findings: Finding[] = [];
       const unwrap = (expression: ts.Expression): ts.Expression => {
         let current = expression;
@@ -332,7 +335,7 @@ class $CheckStandard {
   }
 
   static get a_class_file_is_named_after_its_class(): StandardCheck {
-    return this.defineCheck('A class file is named after its class', (context) => {
+    return this.defineCheck('a_class_file_is_named_after_its_class', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -346,7 +349,7 @@ class $CheckStandard {
   }
 
   static get a_class_file_holds_only_imports_class_namespace_and_types(): StandardCheck {
-    return this.defineCheck('A class file holds only imports class namespace and types', (context) => {
+    return this.defineCheck('a_class_file_holds_only_imports_class_namespace_and_types', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -379,7 +382,7 @@ class $CheckStandard {
   }
 
   static get behavior_lives_on_the_prototype_not_in_fields(): StandardCheck {
-    return this.defineCheck('Behavior lives on the prototype not in fields', (context) => {
+    return this.defineCheck('behavior_lives_on_the_prototype_not_in_fields', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -394,7 +397,7 @@ class $CheckStandard {
   }
 
   static get construction_goes_through_the_namespace_class_slot(): StandardCheck {
-    return this.defineCheck('Construction goes through the namespace Class slot', (context) => {
+    return this.defineCheck('construction_goes_through_the_namespace_class_slot', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         this.forEachDescendant(unit.ast, (node) => {
@@ -414,7 +417,7 @@ class $CheckStandard {
   }
 
   static get the_anchor_is_static_only_when_statics_exist(): StandardCheck {
-    return this.defineCheck('The anchor is Static only when statics exist', (context) => {
+    return this.defineCheck('the_anchor_is_static_only_when_statics_exist', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -431,9 +434,9 @@ class $CheckStandard {
   }
 
   static get static_binds_methods_and_caches_dollar_getters_per_receiver(): StandardCheck {
-    return this.defineCheck('Static binds methods and caches dollar getters per receiver', (context) => {
+    return this.defineCheck('static_binds_methods_and_caches_dollar_getters_per_receiver', (context) => {
       const unit: SourceUnit | undefined = context.sources[0];
-      const probe = (message: string): Finding => ({ check: 'Static binds methods and caches dollar getters per receiver', file: 'ivue/extras', line: 0, message: `${message} (probed from ${unit?.relativePath ?? 'the gate'})` });
+      const probe = (message: string): Finding => ({ check: 'static_binds_methods_and_caches_dollar_getters_per_receiver', file: 'ivue/extras', line: 0, message: `${message} (probed from ${unit?.relativePath ?? 'the gate'})` });
       const StaticUnderTest = context.staticImplementation;
       if (!StaticUnderTest) return [probe('`Static` could not be loaded from ivue/extras — the runtime probe did not run')];
       const findings: Finding[] = [];
@@ -462,7 +465,7 @@ class $CheckStandard {
   }
 
   static get a_shared_store_is_a_static_readonly_field(): StandardCheck {
-    return this.defineCheck('A shared store is a static readonly field', (context) => {
+    return this.defineCheck('a_shared_store_is_a_static_readonly_field', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -489,7 +492,7 @@ class $CheckStandard {
   }
 
   static get a_derived_static_getter_is_lower_camel_case(): StandardCheck {
-    return this.defineCheck('A derived static getter is lower camel case', (context) => {
+    return this.defineCheck('a_derived_static_getter_is_lower_camel_case', (context) => {
       const findings: Finding[] = [];
       const isLiteral = (expression: ts.Expression): boolean => {
         if (ts.isNumericLiteral(expression) || ts.isStringLiteralLike(expression) || ts.isRegularExpressionLiteral(expression) || expression.kind === ts.SyntaxKind.TrueKeyword || expression.kind === ts.SyntaxKind.FalseKeyword) return true;
@@ -519,7 +522,7 @@ class $CheckStandard {
   }
 
   static get static_reads_go_through_self_not_the_base_class(): StandardCheck {
-    return this.defineCheck('Static reads go through self not the base class', (context) => {
+    return this.defineCheck('static_reads_go_through_self_not_the_base_class', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -539,7 +542,7 @@ class $CheckStandard {
   }
 
   static get mutable_state_is_a_ref_returning_getter(): StandardCheck {
-    return this.defineCheck('Mutable state is a ref-returning getter', (context) => {
+    return this.defineCheck('mutable_state_is_a_ref_returning_getter', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -564,7 +567,7 @@ class $CheckStandard {
   }
 
   static get a_ref_is_read_and_written_through_value(): StandardCheck {
-    return this.defineCheck('A Ref is read and written through value', (context) => {
+    return this.defineCheck('a_ref_is_read_and_written_through_value', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -583,7 +586,7 @@ class $CheckStandard {
   }
 
   static get a_derivation_is_a_plain_getter_unless_computed_is_justified(): StandardCheck {
-    return this.defineCheck('A derivation is a plain getter unless computed is justified', (context) => {
+    return this.defineCheck('a_derivation_is_a_plain_getter_unless_computed_is_justified', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -603,7 +606,7 @@ class $CheckStandard {
   }
 
   static get a_composable_is_injected_by_a_one_call_dollar_getter(): StandardCheck {
-    return this.defineCheck('A composable is injected by a one-call dollar getter', (context) => {
+    return this.defineCheck('a_composable_is_injected_by_a_one_call_dollar_getter', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -624,7 +627,7 @@ class $CheckStandard {
   }
 
   static get instance_types_only_unwrapping_surfaces(): StandardCheck {
-    return this.defineCheck('Instance types only unwrapping surfaces', (context) => {
+    return this.defineCheck('instance_types_only_unwrapping_surfaces', (context) => {
       const findings: Finding[] = [];
       const RAW_CONTAINERS = new Set(['Array', 'ReadonlyArray', 'Map', 'Set', 'WeakMap', 'ref', 'shallowRef', 'Ref', 'ShallowRef']);
       const inspect = (unit: SourceUnit, report: (line: number, message: string) => void) => {
@@ -655,7 +658,7 @@ class $CheckStandard {
   }
 
   static get a_component_has_one_model_owner(): StandardCheck {
-    return this.defineCheck('A component has one model owner', (context) => {
+    return this.defineCheck('a_component_has_one_model_owner', (context) => {
       const findings: Finding[] = [];
       for (const component of context.components) {
         if (!component.script) continue;
@@ -683,7 +686,7 @@ class $CheckStandard {
   }
 
   static get the_state_destructure_is_total(): StandardCheck {
-    return this.defineCheck('The state destructure is total', (context) => {
+    return this.defineCheck('the_state_destructure_is_total', (context) => {
       const findings: Finding[] = [];
       for (const component of context.components) {
         if (!component.script) continue;
@@ -729,7 +732,7 @@ class $CheckStandard {
   }
 
   static get template_expressions_carry_no_logic(): StandardCheck {
-    return this.defineCheck('Template expressions carry no logic', (context) => {
+    return this.defineCheck('template_expressions_carry_no_logic', (context) => {
       const findings: Finding[] = [];
       const isNamedRead = (expression: ts.Expression): boolean => {
         if (ts.isIdentifier(expression) || expression.kind === ts.SyntaxKind.ThisKeyword) return true;
@@ -773,7 +776,7 @@ class $CheckStandard {
   }
 
   static get watch_lifetime_matches_the_instance_owner(): StandardCheck {
-    return this.defineCheck('Watch lifetime matches the instance owner', (context) => {
+    return this.defineCheck('watch_lifetime_matches_the_instance_owner', (context) => {
       const findings: Finding[] = [];
       const componentScoped = new Set<string>();
       for (const component of context.components) for (const construction of this.modelConstructions(component)) componentScoped.add(construction.namespace);
@@ -824,7 +827,7 @@ class $CheckStandard {
   }
 
   static get a_reactive_closure_delegates_to_one_method(): StandardCheck {
-    return this.defineCheck('A reactive closure delegates to one method', (context) => {
+    return this.defineCheck('a_reactive_closure_delegates_to_one_method', (context) => {
       const findings: Finding[] = [];
       const reactiveCallees = new Set(['computed', 'watch', 'watchEffect', '$watch', '$watchEffect']);
       for (const unit of context.sources) {
@@ -858,7 +861,7 @@ class $CheckStandard {
   }
 
   static get a_store_is_used_lazily_and_swapped_at_the_class_slot(): StandardCheck {
-    return this.defineCheck('A store is used lazily and swapped at the Class slot', (context) => {
+    return this.defineCheck('a_store_is_used_lazily_and_swapped_at_the_class_slot', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         this.forEachDescendant(unit.ast, (node) => {
@@ -891,7 +894,7 @@ class $CheckStandard {
   }
 
   static get keyed_state_creates_on_read_and_peeks_on_write(): StandardCheck {
-    return this.defineCheck('Keyed state creates on read and peeks on write', (context) => {
+    return this.defineCheck('keyed_state_creates_on_read_and_peeks_on_write', (context) => {
       const findings: Finding[] = [];
       const REF_TYPES = /\b(?:Ref|ShallowRef|ComputedRef|WritableComputedRef)\s*</;
       for (const unit of context.sources) {
@@ -919,7 +922,7 @@ class $CheckStandard {
   }
 
   static get a_generic_reactive_class_casts_its_constructor(): StandardCheck {
-    return this.defineCheck('A generic reactive class casts its constructor', (context) => {
+    return this.defineCheck('a_generic_reactive_class_casts_its_constructor', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -936,7 +939,7 @@ class $CheckStandard {
   }
 
   static get cross_module_class_reads_happen_inside_bodies(): StandardCheck {
-    return this.defineCheck('Cross-module Class reads happen inside bodies', (context) => {
+    return this.defineCheck('cross_module_class_reads_happen_inside_bodies', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const imported = this.importedBindings(unit);
@@ -965,7 +968,7 @@ class $CheckStandard {
   }
 
   static get declarations_use_full_descriptive_names(): StandardCheck {
-    return this.defineCheck('Declarations use full descriptive names', (context) => {
+    return this.defineCheck('declarations_use_full_descriptive_names', (context) => {
       const findings: Finding[] = [];
       const inspect = (unit: SourceUnit) => {
         this.forEachDescendant(unit.ast, (node) => {
@@ -988,7 +991,7 @@ class $CheckStandard {
   }
 
   static get class_members_are_ordered_and_spaced(): StandardCheck {
-    return this.defineCheck('Class members are ordered and spaced', (context) => {
+    return this.defineCheck('class_members_are_ordered_and_spaced', (context) => {
       const findings: Finding[] = [];
       const rank = (member: ts.ClassElement): number => {
         if (this.isStaticMember(member)) return 0;
@@ -1022,7 +1025,7 @@ class $CheckStandard {
   }
 
   static get a_test_file_opens_with_its_generator_header(): StandardCheck {
-    return this.defineCheck('A test file opens with its generator header', (context) => {
+    return this.defineCheck('a_test_file_opens_with_its_generator_header', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -1034,7 +1037,7 @@ class $CheckStandard {
   }
 
   static get a_generator_header_carries_both_registers_in_order(): StandardCheck {
-    return this.defineCheck('A generator header carries both registers in order', (context) => {
+    return this.defineCheck('a_generator_header_carries_both_registers_in_order', (context) => {
       const findings: Finding[] = [];
       const grammar = this.$grammar;
       for (const unit of context.tests) {
@@ -1052,7 +1055,7 @@ class $CheckStandard {
   }
 
   static get a_header_symbol_is_declared_in_the_sibling_source(): StandardCheck {
-    return this.defineCheck('A header symbol is declared in the sibling source', (context) => {
+    return this.defineCheck('a_header_symbol_is_declared_in_the_sibling_source', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -1090,7 +1093,7 @@ class $CheckStandard {
   }
 
   static get a_claim_annotation_sits_directly_above_its_test(): StandardCheck {
-    return this.defineCheck('A claim annotation sits directly above its test', (context) => {
+    return this.defineCheck('a_claim_annotation_sits_directly_above_its_test', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -1104,7 +1107,7 @@ class $CheckStandard {
   }
 
   static get header_claims_and_annotated_tests_match_one_to_one(): StandardCheck {
-    return this.defineCheck('Header claims and annotated tests match one to one', (context) => {
+    return this.defineCheck('header_claims_and_annotated_tests_match_one_to_one', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -1125,7 +1128,7 @@ class $CheckStandard {
   }
 
   static get an_impossibility_is_proved_by_an_exact_negative_test(): StandardCheck {
-    return this.defineCheck('An impossibility is proved by an exact negative test', (context) => {
+    return this.defineCheck('an_impossibility_is_proved_by_an_exact_negative_test', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -1152,7 +1155,7 @@ class $CheckStandard {
   }
 
   static get a_contract_pointer_resolves_and_is_proved(): StandardCheck {
-    return this.defineCheck('A contract pointer resolves and is proved', (context) => {
+    return this.defineCheck('a_contract_pointer_resolves_and_is_proved', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -1185,7 +1188,7 @@ class $CheckStandard {
   }
 
   static get a_source_tripwire_resolves_to_its_sibling_header(): StandardCheck {
-    return this.defineCheck('A source tripwire resolves to its sibling header', (context) => {
+    return this.defineCheck('a_source_tripwire_resolves_to_its_sibling_header', (context) => {
       const findings: Finding[] = [];
       const grammar = this.$grammar;
       const SYMBOL_ONLY = new RegExp(`^\\s*//\\s*${grammar.DOMAIN}:\\s*([^—\\n]+?)\\s*$`);
@@ -1212,7 +1215,7 @@ class $CheckStandard {
   }
 
   static get a_test_caveat_derives_from_a_tested_claim(): StandardCheck {
-    return this.defineCheck('A test caveat derives from a tested claim', (context) => {
+    return this.defineCheck('a_test_caveat_derives_from_a_tested_claim', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -1233,11 +1236,11 @@ class $CheckStandard {
 
   static get the_population_and_skip_list_are_exact(): StandardCheck {
     // enforced by run() itself; its findings and refusals carry this name
-    return this.defineCheck('The population and skip-list are exact', () => []);
+    return this.defineCheck('the_population_and_skip_list_are_exact', () => []);
   }
 
   static get two_test_files_do_not_share_one_generator_header(): StandardCheck {
-    return this.defineCheck('Two test files do not share one generator header', (context) => {
+    return this.defineCheck('two_test_files_do_not_share_one_generator_header', (context) => {
       const findings: Finding[] = [];
       const normalized = new Map<string, SourceUnit>();
       for (const unit of context.tests) {
@@ -1305,10 +1308,12 @@ class $CheckStandard {
     return new Set(this.checks.map((entry) => entry.name));
   }
 
-  /** Default severity overrides — a house gate ships its team's rulings here
-   * ({ 'Check name': 'warn' | 'off' }); everything else is an error. The
-   * command line's --warn/--off override per run. */
-  static get severities(): Readonly<Record<string, 'warn' | 'off'>> {
+  /** Default severity rulings — a house gate ships its team's here
+   * ({ check_name: 'error' | 'warn' | 'off' }). 'error' is the default for
+   * every check, so listing a check at 'error' is an explicit no-op — a
+   * menu entry waiting to be flipped. The programmatic warnChecks /
+   * offChecks options override per run. */
+  static get severities(): Readonly<Record<string, 'error' | 'warn' | 'off'>> {
     return {};
   }
 
@@ -1501,18 +1506,18 @@ export namespace Scroller {
         .replace('Impossible if true:', `${pointer}\nImpossible if true:`)
         .replace(`// ${grammar.IMPOSSIBLE}: $Box — height decreases without a grow call\ntest('height never decreases on its own'`, `${annotation}// ${grammar.IMPOSSIBLE}: $Box — height decreases without a grow call\ntest('height never decreases on its own'`);
     return {
-      'Exactly one Reactive source is installed': {
+      'exactly_one_reactive_source_is_installed': {
         claim: 'If the gate runs over a checkout, then it finds exactly one engine, an ivue dependency or one vendored Reactive, never zero and never two',
-        impossibility: 'a file breaking Exactly one Reactive source is installed passes the gate',
+        impossibility: 'a file breaking exactly_one_reactive_source_is_installed passes the gate',
         red: [{ files: { ...box, 'src/Reactive.ts': 'export function Reactive<C>(targetClass: C): C { return targetClass; }\n' }, expectFindings: [/2 Reactive sources/] }],
         green: [
           { files: box },
           { files: { ...box, 'src/ivue.ts': "export { Reactive } from '../engine/Reactive';\n" }, manifest: { name: 'consumer' } },
         ],
       },
-      'A public class publishes its namespace manifest': {
+      'a_public_class_publishes_its_namespace_manifest': {
         claim: 'If a file declares a dollar-prefixed class, then it exports a namespace with dollar-Class, Class, and Instance for reactive classes, and no behavior is exported directly',
-        impossibility: 'a file breaking A public class publishes its namespace manifest passes the gate',
+        impossibility: 'a file breaking a_public_class_publishes_its_namespace_manifest passes the gate',
         red: [{
           files: {
             'src/Box.ts': fixture.validClass.replace('  export type Instance = typeof Class.Instance;\n', ''),
@@ -1529,29 +1534,29 @@ export namespace Scroller {
           },
         }],
       },
-      'A class file is named after its class': {
+      'a_class_file_is_named_after_its_class': {
         claim: 'If a file declares dollar-X, then the file is X.ts and the namespace is X',
-        impossibility: 'a file breaking A class file is named after its class passes the gate',
+        impossibility: 'a file breaking a_class_file_is_named_after_its_class passes the gate',
         red: [{ files: { 'src/Crate.ts': fixture.validClass }, expectFindings: [/`Crate\.ts` declares `\$Box`/] }],
         // Widget.ts declares a private helper class FIRST — the file's
         // identity is the class matching the file name, not the first class.
         green: [{ files: { ...box, 'src/Widget.ts': "class $WidgetPart {\n  spin() {\n    return 1;\n  }\n}\n\nclass $Widget {\n  get part() {\n    return new $WidgetPart();\n  }\n}\n\nexport namespace Widget {\n  export const $Class = $Widget;\n  export let Class = $Class;\n}\n" } }],
       },
-      'A class file holds only imports class namespace and types': {
+      'a_class_file_holds_only_imports_class_namespace_and_types': {
         claim: 'If a file is a class file, then its top level is imports, the class, its namespace, and type declarations, nothing else',
-        impossibility: 'a file breaking A class file holds only imports class namespace and types passes the gate',
+        impossibility: 'a file breaking a_class_file_holds_only_imports_class_namespace_and_types passes the gate',
         red: [{ files: { 'src/Box.ts': `${fixture.validClass}\nconst DEFAULT_WIDTH = 4;\nexport function widen(box: Box.Instance) { return box.area; }\n` }, expectFindings: [/outside the class seam/], expectCount: 2 }],
         green: [{ files: { 'src/Box.ts': `${fixture.validClass}\nexport type BoxSeed = { width: number };\nexport interface BoxEmits { (event: 'grown'): void }\n` } }],
       },
-      'Behavior lives on the prototype not in fields': {
+      'behavior_lives_on_the_prototype_not_in_fields': {
         claim: 'If a class member is a function, then it is a method, never a function-valued field',
-        impossibility: 'a file breaking Behavior lives on the prototype not in fields passes the gate',
+        impossibility: 'a file breaking behavior_lives_on_the_prototype_not_in_fields passes the gate',
         red: [{ files: { 'src/Box.ts': fixture.validClass.replace('  grow() {\n    this.height.value++;\n  }', '  grow = () => {\n    this.height.value++;\n  };') }, expectFindings: [/`grow` is a function-valued field/] }],
         green: [{ files: box }],
       },
-      'Construction goes through the namespace Class slot': {
+      'construction_goes_through_the_namespace_class_slot': {
         claim: 'If an instance is created, then it is new X.Class, never new dollar-X, new X.dollar-Class, or reactive-wrapped construction',
-        impossibility: 'a file breaking Construction goes through the namespace Class slot passes the gate',
+        impossibility: 'a file breaking construction_goes_through_the_namespace_class_slot passes the gate',
         red: [{
           files: {
             ...box,
@@ -1566,9 +1571,9 @@ export namespace Scroller {
           },
         }],
       },
-      'The anchor is Static only when statics exist': {
+      'the_anchor_is_static_only_when_statics_exist': {
         claim: 'If a class declares static members, then its anchor is Static of the raw class, and if it declares none, then its anchor is the raw class itself',
-        impossibility: 'a file breaking The anchor is Static only when statics exist passes the gate',
+        impossibility: 'a file breaking the_anchor_is_static_only_when_statics_exist passes the gate',
         red: [{
           files: {
             'src/Clock.ts': fixture.staticClass.replace('export const $Class = Static($Clock);', 'export const $Class = $Clock;'),
@@ -1578,18 +1583,18 @@ export namespace Scroller {
         }],
         green: [{ files: { 'src/Clock.ts': fixture.staticClass, ...box } }],
       },
-      'Static binds methods and caches dollar getters per receiver': {
+      'static_binds_methods_and_caches_dollar_getters_per_receiver': {
         claim: "If the consumer's Static transforms a class, then its static methods are bound with stable identity and its dollar getters run once per receiver class",
-        impossibility: 'a file breaking Static binds methods and caches dollar getters per receiver passes the gate',
+        impossibility: 'a file breaking static_binds_methods_and_caches_dollar_getters_per_receiver passes the gate',
         red: [
           { files: box, options: { staticImplementation: (<Class,>(targetClass: Class) => targetClass) as StaticTransform }, expectFindings: [/does not bind static methods/, /does not cache a dollar getter once per receiver/] },
           { files: box, options: { staticImplementation: null }, expectFindings: [/could not be loaded/] },
         ],
         green: [{ files: box }],
       },
-      'A shared store is a static readonly field': {
+      'a_shared_store_is_a_static_readonly_field': {
         claim: 'If a static holds shared state, then the field is readonly, and a dependency constructed at load lives in a LazyShared cell',
-        impossibility: 'a file breaking A shared store is a static readonly field passes the gate',
+        impossibility: 'a file breaking a_shared_store_is_a_static_readonly_field passes the gate',
         red: [{
           files: {
             ...box,
@@ -1604,47 +1609,47 @@ export namespace Scroller {
           },
         }],
       },
-      'A derived static getter is lower camel case': {
+      'a_derived_static_getter_is_lower_camel_case': {
         claim: 'If a static getter derives its value from other members or classes, then its name is lowerCamel, and SCREAMING_SNAKE remains for literal tunable constants',
-        impossibility: 'a file breaking A derived static getter is lower camel case passes the gate',
+        impossibility: 'a file breaking a_derived_static_getter_is_lower_camel_case passes the gate',
         red: [{ files: { 'src/Clock.ts': fixture.staticClass.replace('  static now() {', '  static get SCAN_LIMIT_HOURS() {\n    return Number(this.$zone.length) * 24;\n  }\n\n  static now() {') }, expectFindings: [/derives its value — a derived getter is lowerCamel \(`scanLimitHours`\)/] }],
         green: [{ files: { 'src/Clock.ts': fixture.staticClass.replace('  static now() {', '  static get RETRY_LIMIT() {\n    return 3;\n  }\n\n  static get EMAIL_PATTERN() {\n    return /a+b/;\n  }\n\n  static get scanLimitHours() {\n    return Number(this.$zone.length) * 24;\n  }\n\n  static now() {') } }],
       },
-      'Static reads go through self not the base class': {
+      'static_reads_go_through_self_not_the_base_class': {
         claim: 'If instance code reads its own statics, then it reads this.self, never the base class name or a per-site constructor cast',
-        impossibility: 'a file breaking Static reads go through self not the base class passes the gate',
+        impossibility: 'a file breaking static_reads_go_through_self_not_the_base_class passes the gate',
         red: [{ files: { 'src/Tooltip.ts': fixture.selfClass('return $Tooltip.DELAY_MS + (this.constructor as typeof $Tooltip).DELAY_MS;') }, expectCount: 2 }],
         green: [{ files: { 'src/Tooltip.ts': fixture.selfClass('const self = this.self;\n    return self.DELAY_MS + self.DELAY_MS;') } }],
       },
-      'Mutable state is a ref-returning getter': {
+      'mutable_state_is_a_ref_returning_getter': {
         claim: 'If a class holds mutable state, then it is a getter returning ref or shallowRef, never a mutable plain field',
-        impossibility: 'a file breaking Mutable state is a ref-returning getter passes the gate',
+        impossibility: 'a file breaking mutable_state_is_a_ref_returning_getter passes the gate',
         red: [{ files: { 'src/Box.ts': fixture.validClass.replace('  get height() {', '  count = 0;\n\n  get height() {') }, expectFindings: [/`count` is a mutable plain field/] }],
         // Db.ts is a PLAIN namespace class (no Reactive) — plain mutable
         // fields are its legitimate state; nothing reactive to trigger.
         green: [{ files: { 'src/Box.ts': fixture.validClass.replace("import { ref, watch } from 'vue';", "import { ref, shallowRef, watch } from 'vue';").replace('  get width() {', '  get rows() {\n    return shallowRef<number[]>([]);\n  }\n  get width() {'), 'src/Db.ts': "class $Db {\n  connectionCount = 0;\n\n  open() {\n    this.connectionCount++;\n  }\n}\n\nexport namespace Db {\n  export const $Class = $Db;\n  export let Class = $Class;\n}\n" } }],
       },
-      'A Ref is read and written through value': {
+      'a_ref_is_read_and_written_through_value': {
         claim: 'If class code writes a Ref getter, then it writes .value, never assigns over the getter',
-        impossibility: 'a file breaking A Ref is read and written through value passes the gate',
+        impossibility: 'a file breaking a_ref_is_read_and_written_through_value passes the gate',
         red: [{ files: { 'src/Box.ts': fixture.validClass.replace('    this.height.value++;', '    this.height = 9;') }, expectFindings: [/assigns over a Ref getter/] }],
         green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc } }],
       },
-      'A derivation is a plain getter unless computed is justified': {
+      'a_derivation_is_a_plain_getter_unless_computed_is_justified': {
         claim: 'If a getter allocates a computed, then a stated reason, expensive or render-suppression or stable-handle, sits above it',
-        impossibility: 'a file breaking A derivation is a plain getter unless computed is justified passes the gate',
+        impossibility: 'a file breaking a_derivation_is_a_plain_getter_unless_computed_is_justified passes the gate',
         red: [{ files: { 'src/Box.ts': fixture.validClass.replace("import { ref, watch } from 'vue';", "import { computed, ref, watch } from 'vue';").replace('  get area() {\n    return this.width * this.height.value;\n  }', '  get area() {\n    return computed(() => this.width * this.height.value);\n  }') }, expectFindings: [/without a stated reason/] }],
         green: [{ files: { 'src/Box.ts': fixture.validClass.replace("import { ref, watch } from 'vue';", "import { computed, ref, watch } from 'vue';").replace('  grow() {', '  // computed: expensive — sorts every row\n  get sortedRows() {\n    return computed(() => this.sortRows());\n  }\n\n  sortRows() {\n    return [this.area];\n  }\n\n  grow() {') } }],
       },
-      'A composable is injected by a one-call dollar getter': {
+      'a_composable_is_injected_by_a_one_call_dollar_getter': {
         claim: 'If a class uses a composable or store, then a dollar getter returns the one call, never an eager field',
-        impossibility: 'a file breaking A composable is injected by a one-call dollar getter passes the gate',
+        impossibility: 'a file breaking a_composable_is_injected_by_a_one_call_dollar_getter passes the gate',
         red: [{ files: { 'src/Box.ts': fixture.validClass.replace('  get height() {', "  mouse = useMouse();\n\n  private get $project() {\n    const store = useProjectStore();\n    store.warm();\n    return store;\n  }\n\n  get height() {").replace("import { ref, watch } from 'vue';", "import { ref, watch } from 'vue';\nimport { useMouse } from '@vueuse/core';\nimport { useProjectStore } from './stores';") }, expectFindings: [/runs at construction/, /does more than one call/] }],
         green: [{ files: { 'src/Box.ts': fixture.validClass.replace('  get height() {', '  private get $project() {\n    return useProjectStore();\n  }\n\n  get height() {').replace("import { ref, watch } from 'vue';", "import { ref, watch } from 'vue';\nimport { useProjectStore } from './stores';") } }],
       },
-      'Instance types only unwrapping surfaces': {
+      'instance_types_only_unwrapping_surfaces': {
         claim: 'If a raw collection or parameter is typed, then it uses Model, and if an unwrapping surface is typed, then it uses Instance',
-        impossibility: 'a file breaking Instance types only unwrapping surfaces passes the gate',
+        impossibility: 'a file breaking instance_types_only_unwrapping_surfaces passes the gate',
         red: [{
           files: {
             ...box,
@@ -1662,9 +1667,9 @@ export namespace Scroller {
           },
         }],
       },
-      'A component has one model owner': {
+      'a_component_has_one_model_owner': {
         claim: 'If a component has behavior, then exactly one class instance owns it and the script setup carries no parallel reactive behavior',
-        impossibility: 'a file breaking A component has one model owner passes the gate',
+        impossibility: 'a file breaking a_component_has_one_model_owner passes the gate',
         red: [{
           files: { ...box, 'src/Box.vue': fixture.validSfc.replace('const box = new Box.Class(props);', "import { onMounted, ref, watch } from 'vue';\nconst box = new Box.Class(props);\nconst spare = new Box.Class(props);\nconst open = ref(false);\nwatch(open, () => box.grow());\nonMounted(() => { open.value = !open.value; });\nfunction toggle() { open.value = !open.value; }") },
           expectFindings: [/second model is constructed/, /`ref\(\)` in `<script setup>`/, /`watch\(\)` in `<script setup>`/, /`onMounted\(\)` in `<script setup>`/, /free function `toggle`/],
@@ -1673,9 +1678,9 @@ export namespace Scroller {
         // not parallel behavior — the bridge an outliving store needs
         green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc.replace("const { height } = box;", "const { height } = box;\n\nonMounted(() => box.grow());").replace("import { Box } from './Box';", "import { onMounted } from 'vue';\nimport { Box } from './Box';") } }],
       },
-      'The state destructure is total': {
+      'the_state_destructure_is_total': {
         claim: 'If a template touches a Ref, then that Ref is destructured, no plain getter or method is destructured, and no state binding shadows a prop',
-        impossibility: 'a file breaking The state destructure is total passes the gate',
+        impossibility: 'a file breaking the_state_destructure_is_total passes the gate',
         red: [{
           files: {
             ...box,
@@ -1685,9 +1690,9 @@ export namespace Scroller {
         }],
         green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc } }],
       },
-      'Template expressions carry no logic': {
+      'template_expressions_carry_no_logic': {
         claim: 'If a template expression is written, then it is a named read, a method call, or a structural branch, never a comparison, ternary, negation, or built string',
-        impossibility: 'a file breaking Template expressions carry no logic passes the gate',
+        impossibility: 'a file breaking template_expressions_carry_no_logic passes the gate',
         red: [{
           files: { ...box, 'src/Box.vue': fixture.validSfc.replace('<div v-if="height > 0">{{ box.area }}</div>', '<div v-if="height > 0 && box.area">{{ box.area ? \'big\' : \'small\' }}</div>\n  <span :title="`Box ${box.area}`">{{ !!height }}</span>') },
           expectFindings: [/`&&` expression/, /a ternary/, /a built string/, /a negation/],
@@ -1697,9 +1702,9 @@ export namespace Scroller {
         // stays name-level — only unnamed compound logic is flagged
         green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc.replace('<div v-if="height > 0">{{ box.area }}</div>', '<div v-if="box.hasHeight">{{ box.area }}</div>\n  <span v-if="!box.hasHeight">empty</span>\n  <ul><li v-for="row in box.rows" :key="row.id" :class="{ wide: box.isWide(row), narrow: !box.isWide(row) }">{{ row.name }}</li></ul>') } }],
       },
-      'Watch lifetime matches the instance owner': {
+      'watch_lifetime_matches_the_instance_owner': {
         claim: 'If a class is component-scoped, then it uses plain watch, and if it outlives components, then it uses dollar-watch with a dispose path',
-        impossibility: 'a file breaking Watch lifetime matches the instance owner passes the gate',
+        impossibility: 'a file breaking watch_lifetime_matches_the_instance_owner passes the gate',
         red: [{
           files: {
             'src/Box.ts': fixture.validClass.replace('    watch(\n      () => this.height.value,', '    this.$watch(\n      () => this.height.value,'),
@@ -1716,18 +1721,18 @@ export namespace Scroller {
           },
         }],
       },
-      'A reactive closure delegates to one method': {
+      'a_reactive_closure_delegates_to_one_method': {
         claim: 'If a computed or watch callback is written, then it is one arrow delegating to one method',
-        impossibility: 'a file breaking A reactive closure delegates to one method passes the gate',
+        impossibility: 'a file breaking a_reactive_closure_delegates_to_one_method passes the gate',
         red: [{
           files: { 'src/Box.ts': fixture.validClass.replace("import { ref, watch } from 'vue';", "import { computed, ref, watch } from 'vue';").replace('      (newHeight, oldHeight) => this.onResize(newHeight, oldHeight),', '      (newHeight) => {\n        if (newHeight > 10) this.grow();\n      },').replace('  grow() {', '  // computed: expensive\n  get doubled() {\n    return computed(this.grow);\n  }\n\n  grow() {') },
           expectFindings: [/watch callback carries logic/, /passes the method directly/],
         }],
         green: [{ files: box }],
       },
-      'A store is used lazily and swapped at the Class slot': {
+      'a_store_is_used_lazily_and_swapped_at_the_class_slot': {
         claim: 'If shared state is published, then it constructs lazily behind use and is never drilled as a prop or constructor argument',
-        impossibility: 'a file breaking A store is used lazily and swapped at the Class slot passes the gate',
+        impossibility: 'a file breaking a_store_is_used_lazily_and_swapped_at_the_class_slot passes the gate',
         red: [{
           files: {
             'src/Box.ts': `${fixture.validClass}\nexport const store = new Box.Class({ width: 1 });\n`,
@@ -1742,21 +1747,21 @@ export namespace Scroller {
           },
         }],
       },
-      'Keyed state creates on read and peeks on write': {
+      'keyed_state_creates_on_read_and_peeks_on_write': {
         claim: 'If a class holds a Map of refs, then reads get-or-create, writes peek, and a release path exists',
-        impossibility: 'a file breaking Keyed state creates on read and peeks on write passes the gate',
+        impossibility: 'a file breaking keyed_state_creates_on_read_and_peeks_on_write passes the gate',
         red: [{ files: { 'src/Sheet.ts': fixture.keyedClass('bumpCell(cellKey: number): void {\n    let versionRef = this.cellVersions.get(cellKey);\n    if (!versionRef) {\n      versionRef = ref(0);\n      this.cellVersions.set(cellKey, versionRef);\n    }\n    versionRef.value++;\n  }\n', '') }, expectFindings: [/no release path/, /write path `bumpCell` creates entries/] }],
         green: [{ files: { 'src/Sheet.ts': fixture.keyedClass('bumpCell(cellKey: number): void {\n    const versionRef = this.cellVersions.get(cellKey);\n    if (versionRef) versionRef.value++;\n  }\n', '\n  releaseCell(cellKey: number): void {\n    this.cellVersions.delete(cellKey);\n  }\n') } }],
       },
-      'A generic reactive class casts its constructor': {
+      'a_generic_reactive_class_casts_its_constructor': {
         claim: 'If a reactive class is generic, then Class is cast back to typeof dollar-Class and Instance applies ReactiveInstance by hand',
-        impossibility: 'a file breaking A generic reactive class casts its constructor passes the gate',
+        impossibility: 'a file breaking a_generic_reactive_class_casts_its_constructor passes the gate',
         red: [{ files: { 'src/Scroller.ts': fixture.genericClass('export let Class = Reactive($Class);', 'export type Instance = typeof Class.Instance;') }, expectFindings: [/`Class` erases <T>/, /`Instance` must carry <T>/] }],
         green: [{ files: { 'src/Scroller.ts': fixture.genericClass('export let Class = Reactive($Class) as unknown as typeof $Class;', 'export type Instance<T> = ReactiveInstance<$Scroller<T>>;') } }],
       },
-      'Cross-module Class reads happen inside bodies': {
+      'cross_module_class_reads_happen_inside_bodies': {
         claim: "If a module reads another namespace's Class, then it does so inside a getter or method body, never at module evaluation",
-        impossibility: 'a file breaking Cross-module Class reads happen inside bodies passes the gate',
+        impossibility: 'a file breaking cross_module_class_reads_happen_inside_bodies passes the gate',
         red: [{
           files: { ...box, 'src/Shelf.ts': "import { Reactive } from 'ivue';\nimport { Box } from './Box';\n\nconst BoxClass = Box.Class;\n\nclass $Shelf {\n  make() {\n    return new BoxClass({ width: 1 });\n  }\n}\n\nexport namespace Shelf {\n  export const $Class = $Shelf;\n  export let Class = Reactive($Class);\n  export type Instance = typeof Class.Instance;\n}\n" },
           expectFindings: [/`Box\.Class` is read at module evaluation/],
@@ -1767,9 +1772,9 @@ export namespace Scroller {
           files: { ...box, 'src/Shelf.ts': "import { Reactive } from 'ivue';\nimport { Box } from './Box';\n\nclass $Shelf extends Box.$Class {\n  make() {\n    return new Box.Class({ width: 1 });\n  }\n}\n\nexport namespace Shelf {\n  export const $Class = $Shelf;\n  export let Class = Reactive($Class);\n  export type Instance = typeof Class.Instance;\n}\n", 'src/main.ts': "import { Box } from './Box';\n\nconst rootBox = new Box.Class({ width: 1 });\nvoid rootBox.area;\n" },
         }],
       },
-      'Declarations use full descriptive names': {
+      'declarations_use_full_descriptive_names': {
         claim: 'If a name is declared in source or tests, then it is a domain word, never a single letter or a banned abbreviation',
-        impossibility: 'a file breaking Declarations use full descriptive names passes the gate',
+        impossibility: 'a file breaking declarations_use_full_descriptive_names passes the gate',
         red: [{
           files: {
             'src/Box.ts': fixture.validClass.replace('  onResize(newHeight: number, oldHeight: number) {\n    return newHeight - oldHeight;\n  }', '  onResize(nv: number, e: number) {\n    const inst = nv - e;\n    return inst;\n  }'),
@@ -1780,9 +1785,9 @@ export namespace Scroller {
         }],
         green: [{ files: { 'src/Box.ts': fixture.validClass.replace('  grow() {', '  offset(px: number, id: string) {\n    return `${id}:${px}`;\n  }\n\n  grow() {'), 'src/Box.test.ts': fixture.validTest } }],
       },
-      'Class members are ordered and spaced': {
+      'class_members_are_ordered_and_spaced': {
         claim: 'If a class is written, then statics precede the constructor, the constructor precedes getters, methods come last and are separated by blank lines',
-        impossibility: 'a file breaking Class members are ordered and spaced passes the gate',
+        impossibility: 'a file breaking class_members_are_ordered_and_spaced passes the gate',
         red: [{
           files: { 'src/Box.ts': fixture.validClass.replace('class $Box {\n  constructor', 'class $Box {\n  get spare() {\n    return ref(0);\n  }\n\n  constructor').replace('  grow() {\n    this.height.value++;\n  }\n\n  onResize', '  static get LIMIT() {\n    return 9;\n  }\n\n  grow() {\n    this.height.value++;\n  }\n  onResize') },
           expectFindings: [/the constructor follows a getter or field/, /a static member follows a getter or field/, /`onResize` is not separated from the previous method/],
@@ -1790,9 +1795,9 @@ export namespace Scroller {
         }],
         green: [{ files: { 'src/Box.ts': fixture.validClass.replace('class $Box {\n  constructor', 'class $Box {\n  static get LIMIT() {\n    return 9;\n  }\n\n  constructor') } }],
       },
-      'A test file opens with its generator header': {
+      'a_test_file_opens_with_its_generator_header': {
         claim: 'If a file is a test, then its first content is the generator header',
-        impossibility: 'a file breaking A test file opens with its generator header passes the gate',
+        impossibility: 'a file breaking a_test_file_opens_with_its_generator_header passes the gate',
         red: [{
           files: {
             ...box,
@@ -1805,9 +1810,9 @@ export namespace Scroller {
         }],
         green: [{ files: boxAndTest }],
       },
-      'A generator header carries both registers in order': {
+      'a_generator_header_carries_both_registers_in_order': {
         claim: 'If a header exists, then it has one Goal, the formal register, at least one Impossible if true, and the described register after the formal one',
-        impossibility: 'a file breaking A generator header carries both registers in order passes the gate',
+        impossibility: 'a file breaking a_generator_header_carries_both_registers_in_order passes the gate',
         red: [{
           files: {
             ...box,
@@ -1819,9 +1824,9 @@ export namespace Scroller {
         }],
         green: [{ files: boxAndTest }],
       },
-      'A header symbol is declared in the sibling source': {
+      'a_header_symbol_is_declared_in_the_sibling_source': {
         claim: 'If a header names a symbol, then the named Subject or the same-named sibling source declares it',
-        impossibility: 'a file breaking A header symbol is declared in the sibling source passes the gate',
+        impossibility: 'a file breaking a_header_symbol_is_declared_in_the_sibling_source passes the gate',
         red: [
           { files: { ...box, 'src/Box.test.ts': fixture.validTest.replaceAll('$Box —', '$Crate —') }, expectFindings: [/`\$Crate` is not declared in Box\.ts/] },
           { files: { ...box, 'src/Box.test.ts': fixture.validTest.replace('Goal:', 'Subject: Missing.ts\nGoal:') }, expectFindings: [/Subject path does not exist: Missing\.ts/] },
@@ -1831,21 +1836,21 @@ export namespace Scroller {
           { files: { ...box, 'specs/Growth.test.ts': fixture.validTest.replace('Goal:', 'Subject: src/Box.ts\nGoal:') }, options: { testGlobs: ['specs/**/*.test.ts'] } },
         ],
       },
-      'A claim annotation sits directly above its test': {
+      'a_claim_annotation_sits_directly_above_its_test': {
         claim: 'If a proof annotation is written, then a test follows it directly, an optional doc comment between',
-        impossibility: 'a file breaking A claim annotation sits directly above its test passes the gate',
+        impossibility: 'a file breaking a_claim_annotation_sits_directly_above_its_test passes the gate',
         red: [{ files: { ...box, 'src/Box.test.ts': fixture.validTest.replace(`// ${grammar.DOMAIN}: $Box — If grow is called, then height increases by one\ntest('grow`, `// ${grammar.DOMAIN}: $Box — If grow is called, then height increases by one\nconst seed = 1;\ntest('grow`) }, expectFindings: [/must sit directly above a test/] }],
         green: [{ files: { ...box, 'src/Box.test.ts': fixture.validTest.replace(`// ${grammar.DOMAIN}: $Box — If grow is called, then height increases by one\ntest('grow`, `// ${grammar.DOMAIN}: $Box — If grow is called, then height increases by one\n/** The spec: one grow, one unit. */\ntest('grow`) } }],
       },
-      'Header claims and annotated tests match one to one': {
+      'header_claims_and_annotated_tests_match_one_to_one': {
         claim: 'If a header states a domain claim, then an annotated test proves it, and every annotated claim is in the header',
-        impossibility: 'a file breaking Header claims and annotated tests match one to one passes the gate',
+        impossibility: 'a file breaking header_claims_and_annotated_tests_match_one_to_one passes the gate',
         red: [{ files: { ...box, 'src/Box.test.ts': fixture.validTest.replace(`// ${grammar.DOMAIN}: $Box — If grow is called, then height increases by one\ntest('grow`, `// ${grammar.DOMAIN}: $Box — If grow is called, then height doubles\ntest('grow`) }, expectFindings: [/has no annotated test/, /absent from the header/] }],
         green: [{ files: boxAndTest }],
       },
-      'An impossibility is proved by an exact negative test': {
+      'an_impossibility_is_proved_by_an_exact_negative_test': {
         claim: 'If a header states an impossibility, then a negative test carries its exact text and a header symbol',
-        impossibility: 'a file breaking An impossibility is proved by an exact negative test passes the gate',
+        impossibility: 'a file breaking an_impossibility_is_proved_by_an_exact_negative_test passes the gate',
         red: [{
           files: {
             ...box,
@@ -1857,9 +1862,9 @@ export namespace Scroller {
         }],
         green: [{ files: boxAndTest }],
       },
-      'A contract pointer resolves and is proved': {
+      'a_contract_pointer_resolves_and_is_proved': {
         claim: 'If a header links a contract record, then the anchor resolves and an annotated test proves it',
-        impossibility: 'a file breaking A contract pointer resolves and is proved passes the gate',
+        impossibility: 'a file breaking a_contract_pointer_resolves_and_is_proved passes the gate',
         red: [{
           files: {
             [contractName]: fixture.demoContract,
@@ -1878,47 +1883,47 @@ export namespace Scroller {
           },
         }],
       },
-      'A source tripwire resolves to its sibling header': {
+      'a_source_tripwire_resolves_to_its_sibling_header': {
         claim: 'If source carries a domain tripwire, then it names only a symbol the sibling header claims',
-        impossibility: 'a file breaking A source tripwire resolves to its sibling header passes the gate',
+        impossibility: 'a file breaking a_source_tripwire_resolves_to_its_sibling_header passes the gate',
         red: [{ files: { 'src/Box.ts': fixture.validClass.replace('  grow() {', `  // ${grammar.DOMAIN}: $Crate\n  grow() {`), 'src/Box.test.ts': fixture.validTest }, expectFindings: [/tripwire `\$Crate` has no header claim in Box\.test\.ts/] }],
         green: [{ files: { 'src/Box.ts': fixture.validClass.replace('  grow() {', `  // ${grammar.DOMAIN}: $Box\n  grow() {`), 'src/Box.test.ts': fixture.validTest } }],
       },
-      'A test caveat derives from a tested claim': {
+      'a_test_caveat_derives_from_a_tested_claim': {
         claim: 'If the described register constrains, then the constraint names a header symbol',
-        impossibility: 'a file breaking A test caveat derives from a tested claim passes the gate',
+        impossibility: 'a file breaking a_test_caveat_derives_from_a_tested_claim passes the gate',
         red: [{ files: { ...box, 'src/Box.test.ts': fixture.validTest.replace('so growth is the single write path the tests must hold.', 'so growth is the single write path the tests must hold. Width must never change after construction.') }, expectFindings: [/Width must never change/] }],
         green: [{ files: boxAndTest }],
       },
-      'The population and skip-list are exact': {
+      'the_population_and_skip_list_are_exact': {
         claim: 'If the gate runs, then it refuses zero files, unmatched globs, unknown check names, duplicate and stale skips, and unknown or conflicting severity overrides',
-        impossibility: 'a file breaking The population and skip-list are exact passes the gate',
+        impossibility: 'a file breaking the_population_and_skip_list_are_exact passes the gate',
         red: [
           { files: { 'src/.keep': '' }, expectThrows: /no source files discovered/ },
           { files: box, options: { testGlobs: ['src/**/*.test.ts'] }, expectThrows: /test glob matches no file/ },
           { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'No such check', reason: 'reason' }]) }, options: { skipListPath: 'skips.json' }, expectThrows: /unknown check name/ },
-          { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'A class file is named after its class', reason: 'first' }, { path: 'src/Box.ts', check: 'A class file is named after its class', reason: 'second' }]) }, options: { skipListPath: 'skips.json' }, expectThrows: /duplicate skip/ },
-          { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'A class file is named after its class', reason: 'never fires here' }, { path: 'src/Gone.ts', check: 'A class file is named after its class', reason: 'file removed' }]) }, options: { skipListPath: 'skips.json' }, expectFindings: [/no longer fires on src\/Box\.ts/, /src\/Gone\.ts does not exist/] },
+          { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'a_class_file_is_named_after_its_class', reason: 'first' }, { path: 'src/Box.ts', check: 'a_class_file_is_named_after_its_class', reason: 'second' }]) }, options: { skipListPath: 'skips.json' }, expectThrows: /duplicate skip/ },
+          { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'a_class_file_is_named_after_its_class', reason: 'never fires here' }, { path: 'src/Gone.ts', check: 'a_class_file_is_named_after_its_class', reason: 'file removed' }]) }, options: { skipListPath: 'skips.json' }, expectFindings: [/no longer fires on src\/Box\.ts/, /src\/Gone\.ts does not exist/] },
           { files: { ...box, 'skips.json': 'src/Box.ts\tA class file is named after its class\treason\n' }, options: { skipListPath: 'skips.json' }, expectThrows: /a JSON array of \{ path, check, reason \}/ },
-          { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'A class file is named after its class' }]) }, options: { skipListPath: 'skips.json' }, expectThrows: /entry 1: .*reason/ },
+          { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'a_class_file_is_named_after_its_class' }]) }, options: { skipListPath: 'skips.json' }, expectThrows: /entry 1: .*reason/ },
           { files: box, options: { warnChecks: ['No such check'] }, expectThrows: /unknown check name/ },
-          { files: box, options: { warnChecks: ['A class file is named after its class'], offChecks: ['A class file is named after its class'] }, expectThrows: /both warn and off/ },
+          { files: box, options: { warnChecks: ['a_class_file_is_named_after_its_class'], offChecks: ['a_class_file_is_named_after_its_class'] }, expectThrows: /both warn and off/ },
         ],
         // Crate.ts deliberately declares $Box — the naming check fires and
         // the skip row suppresses it, proving a used skip is not stale.
         // Crate.ts deliberately declares $Box — the naming check fires and
         // the JSON row suppresses it, proving a used skip is not stale
         green: [
-          { files: { 'src/Crate.ts': fixture.validClass, 'src/Crate.test.ts': fixture.validTest, 'skips.json': JSON.stringify([{ path: 'src/Crate.ts', check: 'A class file is named after its class', reason: 'legacy file name kept for the public import path' }], null, 2) }, options: { skipListPath: 'skips.json' } },
+          { files: { 'src/Crate.ts': fixture.validClass, 'src/Crate.test.ts': fixture.validTest, 'skips.json': JSON.stringify([{ path: 'src/Crate.ts', check: 'a_class_file_is_named_after_its_class', reason: 'legacy file name kept for the public import path' }], null, 2) }, options: { skipListPath: 'skips.json' } },
           // demoted to warn: the breach reports as a warning, blocks nothing
-          { files: { 'src/Crate.ts': fixture.validClass, 'src/Crate.test.ts': fixture.validTest }, options: { warnChecks: ['A class file is named after its class'] }, expectWarnings: [/`Crate\.ts` declares `\$Box`/] },
+          { files: { 'src/Crate.ts': fixture.validClass, 'src/Crate.test.ts': fixture.validTest }, options: { warnChecks: ['a_class_file_is_named_after_its_class'] }, expectWarnings: [/`Crate\.ts` declares `\$Box`/] },
           // off: the check does not run at all — no finding, no warning
-          { files: { 'src/Crate.ts': fixture.validClass, 'src/Crate.test.ts': fixture.validTest }, options: { offChecks: ['A class file is named after its class'] } },
+          { files: { 'src/Crate.ts': fixture.validClass, 'src/Crate.test.ts': fixture.validTest }, options: { offChecks: ['a_class_file_is_named_after_its_class'] } },
         ],
       },
-      'Two test files do not share one generator header': {
+      'two_test_files_do_not_share_one_generator_header': {
         claim: 'If two test files exist, then their Goal and described registers differ beyond their own symbol names',
-        impossibility: 'a file breaking Two test files do not share one generator header passes the gate',
+        impossibility: 'a file breaking two_test_files_do_not_share_one_generator_header passes the gate',
         red: [{ files: { ...boxAndTest, 'src/Crate.ts': crate(fixture.validClass), 'src/Crate.test.ts': crate(fixture.validTest) }, expectFindings: [/template twin/] }],
         green: [{
           files: {
@@ -2397,7 +2402,7 @@ export namespace Scroller {
     const resolved = new Map<string, 'warn' | 'off'>();
     for (const [name, severity] of Object.entries(this.severities)) {
       if (!known.has(name)) throw new CheckStandard.GateUsageError(`severities: unknown check name "${name}" — --list names every check`);
-      resolved.set(name, severity);
+      if (severity !== 'error') resolved.set(name, severity);
     }
     for (const [flag, severity] of [['--warn', 'warn'], ['--off', 'off']] as const) {
       const names = flag === '--warn' ? options.warnChecks : options.offChecks;
@@ -2547,6 +2552,8 @@ export namespace Scroller {
       }
     }
     for (const check of selected) {
+      const asGetter = (this as unknown as Record<string, StandardCheck | undefined>)[check.name];
+      if (asGetter?.name !== check.name) problems.push(`${check.name}: the name is not its getter — one snake_case form is the whole identity (getter, finding label, skip token, severity key)`);
       const proof = proofs[check.name];
       if (!proof) {
         problems.push(`${check.name}: no constitution entry — a manifest check carries its claim, impossibility, and both proof arms`);

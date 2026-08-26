@@ -1,17 +1,17 @@
 [
   {
     "path": "newsletter/src/index.ts",
-    "check": "A public class publishes its namespace manifest",
+    "check": "a_public_class_publishes_its_namespace_manifest",
     "reason": "Cloudflare entry adapter: the platform requires export default { fetch, scheduled }; behavior lives on Worker.ts"
   },
   {
     "path": "newsletter/test/TestDatabase.ts",
-    "check": "A class file holds only imports class namespace and types",
+    "check": "a_class_file_holds_only_imports_class_namespace_and_types",
     "reason": "D1 test double: node:sqlite plumbing (helper class, path constants, makeTestEnv) colocated with the double it serves"
   },
   {
     "path": "newsletter/test/TestDatabase.ts",
-    "check": "Construction goes through the namespace Class slot",
+    "check": "construction_goes_through_the_namespace_class_slot",
     "reason": "$TestStatement is a private file-local helper with no namespace; only the test double constructs it"
   }
 ]
