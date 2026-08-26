@@ -798,14 +798,21 @@ test('height never decreases on its own', () => {
         red: [
           { files: { 'src/.keep': '' }, options: { testGlobs: [] }, expectThrows: /no files discovered/ },
           { files: rust, options: { testGlobs: ['src/**/*_test.go'] }, expectThrows: /test glob matches no file/ },
+          // test-shaped files exist but no glob names them — refuse loudly,
+          // never silently check 0 test files
+          { files: rust, options: { testGlobs: [] }, expectThrows: /test-shaped file.*no --test-glob/ },
           { files: { ...rust, 'skips.json': JSON.stringify([{ path: 'src/geometry.rs', check: 'no_such_check', reason: 'x' }]) }, options: { ...RUST_GLOB, skipListPath: 'skips.json' }, expectThrows: /unknown check name/ },
           { files: { ...rust, 'skips.json': JSON.stringify([{ path: 'src/geometry_test.rs', check: 'a_test_caveat_derives_from_a_tested_claim', reason: 'never fires' }]) }, options: { ...RUST_GLOB, skipListPath: 'skips.json' }, expectFindings: [/stale skip/] },
           { files: rust, options: { ...RUST_GLOB, warnChecks: ['no_such_check'] }, expectThrows: /unknown check name/ },
         ],
-        green: [{
-          files: { ...rust, 'src/geometry_test.rs': fixture.rustTest.replace('// Goal: Prove area multiplies width by height and never invents a negative quantity.\n', ''), 'skips.json': JSON.stringify([{ path: 'src/geometry_test.rs', check: 'a_generator_header_carries_both_registers_in_order', reason: 'goal pending a naming ruling' }]) },
-          options: { ...RUST_GLOB, skipListPath: 'skips.json' },
-        }],
+        green: [
+          {
+            files: { ...rust, 'src/geometry_test.rs': fixture.rustTest.replace('// Goal: Prove area multiplies width by height and never invents a negative quantity.\n', ''), 'skips.json': JSON.stringify([{ path: 'src/geometry_test.rs', check: 'a_generator_header_carries_both_registers_in_order', reason: 'goal pending a naming ruling' }]) },
+            options: { ...RUST_GLOB, skipListPath: 'skips.json' },
+          },
+          // a bare glob (no slash) matches by file name at any depth
+          { files: rust, options: { testGlobs: ['*_test.rs'] } },
+        ],
       },
     };
   }
@@ -1104,16 +1111,19 @@ test('height never decreases on its own', () => {
   static run(options: CheckerOptions): CheckerResult {
     const cwd = resolve(options.cwd);
     if (!options.sourceRoots.length) throw new InvariantsCheck.UsageError('at least one --source-root is required');
-    const testMatchers = options.testGlobs.map((glob) => ({ glob, regexp: this.globToRegExp(glob) }));
+    // a bare glob (no slash) matches by file name at any depth
+    const testMatchers = options.testGlobs.map((glob) => ({ glob, regexp: this.globToRegExp(glob), bare: !glob.includes('/') }));
+    const matchesTest = (relativePath: string) => testMatchers.some((matcher) => matcher.regexp.test(matcher.bare ? basename(relativePath) : relativePath));
     const sources: Unit[] = [];
     const tests: Unit[] = [];
+    let unnamedTestShaped = 0;
     for (const root of options.sourceRoots) {
       const absoluteRoot = isAbsolute(root) ? root : resolve(cwd, root);
       if (!existsSync(absoluteRoot) || !statSync(absoluteRoot).isDirectory()) throw new InvariantsCheck.UsageError(`source root is not a directory: ${root}`);
       for (const path of this.walk(absoluteRoot)) {
         const relativePath = relative(cwd, path).replaceAll('\\', '/');
         const profile = this.profileFor(path);
-        if (testMatchers.some((matcher) => matcher.regexp.test(relativePath))) {
+        if (matchesTest(relativePath)) {
           tests.push(this.toUnit(cwd, path, profile ?? this.fallbackProfile));
           continue;
         }
@@ -1122,13 +1132,17 @@ test('height never decreases on its own', () => {
         // silently checked — the population is explicit
         const stem = basename(path, extname(path));
         const testShaped = profile.testStemSuffixes.some((suffix) => stem.endsWith(suffix)) || profile.testStemPrefixes.some((prefix) => stem.startsWith(prefix));
-        if (testShaped) continue;
+        if (testShaped) {
+          unnamedTestShaped++;
+          continue;
+        }
         sources.push(this.toUnit(cwd, path, profile));
       }
     }
     if (!sources.length && !tests.length) throw new InvariantsCheck.UsageError(`no files discovered under ${options.sourceRoots.join(', ')} — refusing to pass over nothing`);
+    if (!testMatchers.length && unnamedTestShaped) throw new InvariantsCheck.UsageError(`${unnamedTestShaped} test-shaped file(s) discovered but no --test-glob given — name your tests (e.g. --test-glob '**/*_test.rs') so they enter the population`);
     for (const matcher of testMatchers) {
-      if (!tests.some((unit) => matcher.regexp.test(unit.relativePath))) throw new InvariantsCheck.UsageError(`test glob matches no file: ${matcher.glob}`);
+      if (!tests.some((unit) => matcher.regexp.test(matcher.bare ? basename(unit.relativePath) : unit.relativePath))) throw new InvariantsCheck.UsageError(`test glob matches no file: ${matcher.glob}`);
     }
     const skips = options.skipListPath ? this.readSkipList(cwd, options.skipListPath) : [];
     const severities = this.resolveSeverities(options);
