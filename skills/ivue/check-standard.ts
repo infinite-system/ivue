@@ -712,6 +712,13 @@ class $CheckStandard {
   static get template_expressions_carry_no_logic(): StandardCheck {
     return this.defineCheck('Template expressions carry no logic', (context) => {
       const findings: Finding[] = [];
+      const isNamedRead = (expression: ts.Expression): boolean => {
+        if (ts.isIdentifier(expression) || expression.kind === ts.SyntaxKind.ThisKeyword) return true;
+        if (ts.isPropertyAccessExpression(expression)) return isNamedRead(expression.expression);
+        if (ts.isCallExpression(expression))
+          return isNamedRead(expression.expression) && expression.arguments.every((argument) => isNamedRead(argument) || ts.isNumericLiteral(argument) || ts.isStringLiteralLike(argument));
+        return false;
+      };
       const describe = (node: ts.Node): string | null => {
         if (ts.isConditionalExpression(node)) return 'a ternary';
         if (ts.isBinaryExpression(node)) {
@@ -722,7 +729,8 @@ class $CheckStandard {
           return `a \`${node.operatorToken.getText()}\` expression`;
         }
         if (ts.isTemplateExpression(node)) return 'a built string';
-        if (ts.isPrefixUnaryExpression(node) && node.operator === ts.SyntaxKind.ExclamationToken) return 'a negation';
+        if (ts.isPrefixUnaryExpression(node) && node.operator === ts.SyntaxKind.ExclamationToken)
+          return isNamedRead(node.operand) ? null : 'a negation'; // `!name` reads as a name; `!` on compound logic does not
         if (ts.isPostfixUnaryExpression(node) || (ts.isPrefixUnaryExpression(node) && node.operator !== ts.SyntaxKind.MinusToken)) return 'a mutation';
         if (ts.isNewExpression(node)) return 'construction';
         return null;
@@ -914,6 +922,16 @@ class $CheckStandard {
       for (const unit of context.sources) {
         const imported = this.importedBindings(unit);
         if (!imported.size) continue;
+        // A module that exports nothing is a composition root (main.ts): its
+        // import graph settles before it evaluates and no module can import
+        // it into a cycle, so its module-evaluation Class reads are safe.
+        const exportsAnything = unit.ast.statements.some(
+          (statement) =>
+            ts.isExportAssignment(statement) ||
+            ts.isExportDeclaration(statement) ||
+            !!(ts.getCombinedModifierFlags(statement as unknown as ts.Declaration) & ts.ModifierFlags.Export),
+        );
+        if (!exportsAnything) continue;
         this.forEachDescendant(unit.ast, (node) => {
           if (!ts.isPropertyAccessExpression(node) || !ts.isIdentifier(node.expression)) return;
           if (!imported.has(node.expression.text)) return;
@@ -1481,6 +1499,7 @@ export namespace Scroller {
           files: {
             ...box,
             'src/Format.ts': "import { Static } from 'ivue/extras';\n\nclass $Format {\n  static orDash(value: string | null) {\n    return value ?? '—';\n  }\n}\n\nexport namespace Format {\n  export const $Class = Static($Format);\n  export let Class = $Class;\n}\n",
+            'src/Store.ts': "class $Store {\n  private readonly rows: string[] = [];\n\n  save(row: string) {\n    this.rows.push(row);\n  }\n}\n\nexport namespace Store {\n  export const $Class = $Store;\n  export let Class = $Class;\n}\n",
           },
         }],
       },
@@ -1638,11 +1657,13 @@ export namespace Scroller {
         claim: 'If a template expression is written, then it is a named read, a method call, or a structural branch, never a comparison, ternary, negation, or built string',
         impossibility: 'a file breaking Template expressions carry no logic passes the gate',
         red: [{
-          files: { ...box, 'src/Box.vue': fixture.validSfc.replace('<div v-if="height > 0">{{ box.area }}</div>', '<div v-if="height > 0 && box.area">{{ box.area ? \'big\' : \'small\' }}</div>\n  <span :title="`Box ${box.area}`">{{ !height }}</span>') },
+          files: { ...box, 'src/Box.vue': fixture.validSfc.replace('<div v-if="height > 0">{{ box.area }}</div>', '<div v-if="height > 0 && box.area">{{ box.area ? \'big\' : \'small\' }}</div>\n  <span :title="`Box ${box.area}`">{{ !!height }}</span>') },
           expectFindings: [/`&&` expression/, /a ternary/, /a built string/, /a negation/],
           expectCount: 4,
         }],
-        green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc.replace('<div v-if="height > 0">{{ box.area }}</div>', '<div v-if="box.hasHeight">{{ box.area }}</div>\n  <ul><li v-for="row in box.rows" :key="row.id" :class="{ wide: box.isWide(row) }">{{ row.name }}</li></ul>') } }],
+        // a bare `!` on a NAMED read (state binding, getter, or method call)
+        // stays name-level — only unnamed compound logic is flagged
+        green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc.replace('<div v-if="height > 0">{{ box.area }}</div>', '<div v-if="box.hasHeight">{{ box.area }}</div>\n  <span v-if="!box.hasHeight">empty</span>\n  <ul><li v-for="row in box.rows" :key="row.id" :class="{ wide: box.isWide(row), narrow: !box.isWide(row) }">{{ row.name }}</li></ul>') } }],
       },
       'Watch lifetime matches the instance owner': {
         claim: 'If a class is component-scoped, then it uses plain watch, and if it outlives components, then it uses dollar-watch with a dispose path',
@@ -1709,7 +1730,9 @@ export namespace Scroller {
           expectFindings: [/`Box\.Class` is read at module evaluation/],
         }],
         green: [{
-          files: { ...box, 'src/Shelf.ts': "import { Reactive } from 'ivue';\nimport { Box } from './Box';\n\nclass $Shelf extends Box.$Class {\n  make() {\n    return new Box.Class({ width: 1 });\n  }\n}\n\nexport namespace Shelf {\n  export const $Class = $Shelf;\n  export let Class = Reactive($Class);\n  export type Instance = typeof Class.Instance;\n}\n" },
+          // main.ts exports nothing — a composition root evaluates after its
+          // whole import graph, so its module-evaluation Class read is safe
+          files: { ...box, 'src/Shelf.ts': "import { Reactive } from 'ivue';\nimport { Box } from './Box';\n\nclass $Shelf extends Box.$Class {\n  make() {\n    return new Box.Class({ width: 1 });\n  }\n}\n\nexport namespace Shelf {\n  export const $Class = $Shelf;\n  export let Class = Reactive($Class);\n  export type Instance = typeof Class.Instance;\n}\n", 'src/main.ts': "import { Box } from './Box';\n\nconst rootBox = new Box.Class({ width: 1 });\nvoid rootBox.area;\n" },
         }],
       },
       'Declarations use full descriptive names': {
