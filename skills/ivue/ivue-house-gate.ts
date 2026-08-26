@@ -47,6 +47,10 @@ class $HouseGate extends CheckStandard.$Class {
       a_composable_is_injected_by_a_one_call_dollar_getter: 'error',
       instance_types_only_unwrapping_surfaces: 'error',
       a_component_has_one_model_owner: 'error',
+      script_setup_is_wiring_only: 'error',
+      // a hook with logic in its body is a thin-closure slip, not an
+      // ownership breach — advisory, like the line budget below
+      a_lifecycle_hook_delegates_to_one_method: 'warn',
       the_state_destructure_is_total: 'error',
       template_expressions_carry_no_logic: 'error',
       watch_lifetime_matches_the_instance_owner: 'error',

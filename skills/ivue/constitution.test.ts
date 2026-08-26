@@ -11,8 +11,8 @@ Impossible if true: a file breaking a manifest check passes the gate
 
 === GENERATOR-DESCRIBED ===
 The $CheckStandard class carries its own proof kit as per-receiver static
-data, so an agent extending someone's gate inherits thirty-eight proven
-checks and is refused the moment it adds a thirty-ninth without arms —
+data, so an agent extending someone's gate inherits forty proven
+checks and is refused the moment it adds a forty-first without arms —
 the discipline teaches itself to whoever extends it. The driver below
 runs every arm through the same run() the command line uses; hand-written
 tests here carry the meta-claims, and the per-check claims live in the
@@ -25,7 +25,7 @@ import * as Gate from './ivue-standards-check';
 // domain-invariant: $CheckStandard — If a check is in the manifest, then its proofs entry carries the claim, the impossibility, and at least one red and one green arm
 test('the shipped constitution is complete for every manifest check', () => {
   const GateClass = Gate.CheckStandard.Class;
-  expect(GateClass.checks.length).toBe(38);
+  expect(GateClass.checks.length).toBe(40);
   const report = GateClass.prove({ completenessOnly: true });
   expect(report.problems).toEqual([]);
   for (const check of GateClass.checks) {
@@ -46,8 +46,8 @@ test('the shipped constitution is complete for every manifest check', () => {
 test('every red arm produces its named finding and every green arm stays silent', () => {
   const report = Gate.CheckStandard.Class.prove();
   expect(report.problems).toEqual([]);
-  expect(report.ran.red).toBeGreaterThanOrEqual(38);
-  expect(report.ran.green).toBeGreaterThanOrEqual(38);
+  expect(report.ran.red).toBeGreaterThanOrEqual(40);
+  expect(report.ran.green).toBeGreaterThanOrEqual(40);
 });
 
 test('prove isolates one check when asked', () => {
@@ -122,7 +122,7 @@ test('a house gate extends the manifest and its constitution through the receive
   // …the constitution follows the receiver (39 proven checks, zero problems)…
   const report = HouseGate.prove();
   expect(report.problems).toEqual([]);
-  expect(report.ran.red).toBeGreaterThanOrEqual(39);
+  expect(report.ran.red).toBeGreaterThanOrEqual(41);
   // …and the base class is untouched: no house rule leaks upward
   expect(Gate.CheckStandard.Class.checks.map((check) => check.name)).not.toContain(houseCheck.name);
 });

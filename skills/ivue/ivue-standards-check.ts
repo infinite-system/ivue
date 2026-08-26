@@ -221,7 +221,9 @@ class $CheckStandard {
 
   static readonly COMPUTED_JUSTIFICATIONS = ['expensive', 'render-suppression', 'stable-handle'];
 
-  static readonly SETUP_BEHAVIOR_CALLS = new Set(['ref', 'shallowRef', 'reactive', 'computed', 'watch', 'watchEffect', 'onMounted', 'onUnmounted', 'onBeforeMount', 'onBeforeUnmount', 'onUpdated', 'onActivated', 'onDeactivated']);
+  static readonly SETUP_STATE_CALLS = new Set(['ref', 'shallowRef', 'reactive', 'computed', 'watch', 'watchEffect']);
+
+  static readonly LIFECYCLE_HOOKS = new Set(['onMounted', 'onUnmounted', 'onBeforeMount', 'onBeforeUnmount', 'onUpdated', 'onActivated', 'onDeactivated']);
 
   static readonly TEST_CALL = /\b(?:test|it)(?:\.[A-Za-z]+)?\s*\(/;
 
@@ -663,23 +665,45 @@ class $CheckStandard {
       for (const component of context.components) {
         if (!component.script) continue;
         const constructions = this.modelConstructions(component);
-        if (constructions.length > 1)
-          for (const extra of constructions.slice(1)) findings.push(this.componentFinding(this.a_component_has_one_model_owner, component, this.componentLine(component, extra.node), `a second model is constructed (\`${extra.variable}\`) — one template, one logic owner`));
+        for (const extra of constructions.slice(1)) findings.push(this.componentFinding(this.a_component_has_one_model_owner, component, this.componentLine(component, extra.node), `a second model is constructed (\`${extra.variable}\`) — one template, one logic owner`));
+      }
+      return findings;
+    });
+  }
+
+  static get script_setup_is_wiring_only(): StandardCheck {
+    return this.defineCheck('script_setup_is_wiring_only', (context) => {
+      const findings: Finding[] = [];
+      for (const component of context.components) {
+        if (!component.script) continue;
         for (const statement of component.script.ast.statements) {
           if (ts.isFunctionDeclaration(statement))
-            findings.push(this.componentFinding(this.a_component_has_one_model_owner, component, this.componentLine(component, statement), `free function \`${statement.name?.text ?? ''}\` beside the model — behavior belongs on the class as a method`));
+            findings.push(this.componentFinding(this.script_setup_is_wiring_only, component, this.componentLine(component, statement), `free function \`${statement.name?.text ?? ''}\` beside the model — behavior belongs on the class as a method`));
           this.forEachDescendant(statement, (node) => {
-            if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || !this.SETUP_BEHAVIOR_CALLS.has(node.expression.text)) return;
-            let inClass = false;
-            for (let current: ts.Node | undefined = node.parent; current; current = current.parent) if (ts.isClassDeclaration(current) || ts.isClassExpression(current)) inClass = true;
-            if (inClass) return;
-            // A lifecycle hook that delegates ONE call to the model is the
-            // wiring an outliving store needs (its constructor may run
-            // outside any component) — thin bridge allowed, logic is not.
-            if (node.expression.text.startsWith('on') && node.arguments.length === 1 && this.thinModelDelegation(node.arguments[0])) return;
-            findings.push(this.componentFinding(this.a_component_has_one_model_owner, component, this.componentLine(component, node), `\`${node.expression.text}()\` in \`<script setup>\` — component-local reactive behavior beside the class; state, derivations, watchers and hooks live in the class`));
+            if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || !this.SETUP_STATE_CALLS.has(node.expression.text)) return;
+            if (this.isInsideClassBody(node)) return;
+            findings.push(this.componentFinding(this.script_setup_is_wiring_only, component, this.componentLine(component, node), `\`${node.expression.text}()\` in \`<script setup>\` — component-local reactive behavior beside the class; state, derivations and watchers live in the class`));
           });
         }
+      }
+      return findings;
+    });
+  }
+
+  static get a_lifecycle_hook_delegates_to_one_method(): StandardCheck {
+    return this.defineCheck('a_lifecycle_hook_delegates_to_one_method', (context) => {
+      const findings: Finding[] = [];
+      for (const component of context.components) {
+        if (!component.script) continue;
+        this.forEachDescendant(component.script.ast, (node) => {
+          if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || !this.LIFECYCLE_HOOKS.has(node.expression.text)) return;
+          if (this.isInsideClassBody(node)) return;
+          // A hook that delegates ONE call to the model is the wiring an
+          // outliving store needs (its constructor may run outside any
+          // component) — thin bridge allowed, logic is not.
+          if (node.arguments.length === 1 && this.thinModelDelegation(node.arguments[0])) return;
+          findings.push(this.componentFinding(this.a_lifecycle_hook_delegates_to_one_method, component, this.componentLine(component, node), `\`${node.expression.text}()\` in \`<script setup>\` carries logic — a hook may only delegate one call to the model (\`${node.expression.text}(() => model.method())\`); logic lives in a method`));
+        });
       }
       return findings;
     });
@@ -1279,6 +1303,8 @@ class $CheckStandard {
       this.a_composable_is_injected_by_a_one_call_dollar_getter,
       this.instance_types_only_unwrapping_surfaces,
       this.a_component_has_one_model_owner,
+      this.script_setup_is_wiring_only,
+      this.a_lifecycle_hook_delegates_to_one_method,
       this.the_state_destructure_is_total,
       this.template_expressions_carry_no_logic,
       this.watch_lifetime_matches_the_instance_owner,
@@ -1668,14 +1694,34 @@ export namespace Scroller {
         }],
       },
       'a_component_has_one_model_owner': {
-        claim: 'If a component has behavior, then exactly one class instance owns it and the script setup carries no parallel reactive behavior',
+        claim: 'If a component constructs models, then exactly one instance owns its template',
         impossibility: 'a file breaking a_component_has_one_model_owner passes the gate',
         red: [{
-          files: { ...box, 'src/Box.vue': fixture.validSfc.replace('const box = new Box.Class(props);', "import { onMounted, ref, watch } from 'vue';\nconst box = new Box.Class(props);\nconst spare = new Box.Class(props);\nconst open = ref(false);\nwatch(open, () => box.grow());\nonMounted(() => { open.value = !open.value; });\nfunction toggle() { open.value = !open.value; }") },
-          expectFindings: [/second model is constructed/, /`ref\(\)` in `<script setup>`/, /`watch\(\)` in `<script setup>`/, /`onMounted\(\)` in `<script setup>`/, /free function `toggle`/],
+          files: { ...box, 'src/Box.vue': fixture.validSfc.replace('const box = new Box.Class(props);', 'const box = new Box.Class(props);\nconst spare = new Box.Class(props);') },
+          expectFindings: [/second model is constructed \(`spare`\)/],
+          expectCount: 1,
         }],
-        // a lifecycle hook that DELEGATES one call to the model is wiring,
-        // not parallel behavior — the bridge an outliving store needs
+        green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc } }],
+      },
+      'script_setup_is_wiring_only': {
+        claim: 'If a component has a model, then its script setup declares no parallel state, derivation, watcher, or free function',
+        impossibility: 'a file breaking script_setup_is_wiring_only passes the gate',
+        red: [{
+          files: { ...box, 'src/Box.vue': fixture.validSfc.replace('const box = new Box.Class(props);', "import { ref, watch } from 'vue';\nconst box = new Box.Class(props);\nconst open = ref(false);\nwatch(open, () => box.grow());\nfunction toggle() { open.value = !open.value; }") },
+          expectFindings: [/`ref\(\)` in `<script setup>`/, /`watch\(\)` in `<script setup>`/, /free function `toggle`/],
+          expectCount: 3,
+        }],
+        green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc } }],
+      },
+      'a_lifecycle_hook_delegates_to_one_method': {
+        claim: 'If a lifecycle hook is registered in script setup, then its whole body delegates one call to the model',
+        impossibility: 'a file breaking a_lifecycle_hook_delegates_to_one_method passes the gate',
+        red: [{
+          files: { ...box, 'src/Box.vue': fixture.validSfc.replace('const box = new Box.Class(props);', "import { onMounted } from 'vue';\nconst box = new Box.Class(props);\nonMounted(() => {\n  box.grow();\n  box.grow();\n});") },
+          expectFindings: [/`onMounted\(\)` in `<script setup>` carries logic/],
+          expectCount: 1,
+        }],
+        // the thin bridge an outliving store needs: one call, nothing else
         green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc.replace("const { height } = box;", "const { height } = box;\n\nonMounted(() => box.grow());").replace("import { Box } from './Box';", "import { onMounted } from 'vue';\nimport { Box } from './Box';") } }],
       },
       'the_state_destructure_is_total': {
@@ -2170,6 +2216,14 @@ export namespace Scroller {
 
   static isFunctionLike(node: ts.Node | undefined): boolean {
     return !!node && (ts.isArrowFunction(node) || ts.isFunctionExpression(node));
+  }
+
+  /** True when the node sits inside a class body declared in script setup. */
+  static isInsideClassBody(node: ts.Node): boolean {
+    for (let current: ts.Node | undefined = node.parent; current; current = current.parent) {
+      if (ts.isClassDeclaration(current) || ts.isClassExpression(current)) return true;
+    }
+    return false;
   }
 
   /** True when an arrow does nothing but call one method on one binding —
