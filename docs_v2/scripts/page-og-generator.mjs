@@ -101,7 +101,7 @@ function bannerHtml(eyebrow, title, description) {
   }
   /* a soft glowing infinity, the brand's own mark, anchoring the right */
   .mark {
-    position: absolute; right: -48px; top: 40%; transform: translateY(-50%);
+    position: absolute; right: -48px; top: 34%; transform: translateY(-50%);
     width: 600px; height: 600px;
     background: radial-gradient(closest-side, rgba(45, 212, 191, 0.19), transparent);
   }
