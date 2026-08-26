@@ -33,6 +33,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Static } from '../../../../lib/Static';
 
 // ---------------------------------------------------------------------------
@@ -67,6 +68,8 @@ export interface CheckerOptions {
   sourceRoots: string[];
   testGlobs: string[];
   skipListPath?: string;
+  /** extra folders of language-profile JSON, merged after the shipped ones */
+  languageDirectories?: string[];
   warnChecks?: string[];
   offChecks?: string[];
 }
@@ -157,75 +160,82 @@ interface SkipRow {
 class $InvariantsCheck {
   static readonly EXCLUDED_DIRECTORIES = new Set(['node_modules', 'dist', 'build', 'target', '.git', '__pycache__', '.venv', 'vendor']);
 
-  /** The language profiles — the whole per-language surface. Extend or
-   * override this getter to teach the checker a new ecosystem. */
-  static get languages(): readonly LanguageProfile[] {
-    return [
-      {
-        name: 'typescript',
-        extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
-        commentLeads: ['//', '*'],
-        blockComments: [['/*', '*/']],
-        testPattern: /\b(?:test|it)(?:\.[A-Za-z]+)?\s*\(/,
-        declares: (symbol) => new RegExp(`(?:class|function|interface|type|enum|namespace|const|let|var)\\s+${escapeRegExp(symbol)}\\b`),
-        testStemSuffixes: ['.test', '.spec'],
-        testStemPrefixes: [],
-      },
-      {
-        name: 'rust',
-        extensions: ['.rs'],
-        commentLeads: ['///', '//!', '//'],
-        blockComments: [['/*', '*/']],
-        testPattern: /^\s*#\[[\w:]*test(?:\]|\()/,
-        declares: (symbol) => new RegExp(`(?:fn|struct|enum|trait|mod|const|static|type|impl(?:<[^>]*>)?)\\s+${escapeRegExp(symbol)}\\b`),
-        testStemSuffixes: ['_test', '_tests'],
-        testStemPrefixes: [],
-      },
-      {
-        name: 'python',
-        extensions: ['.py'],
-        commentLeads: ['#'],
-        blockComments: [['"""', '"""'], ["'''", "'''"]],
-        testPattern: /^\s*(?:async\s+)?def\s+test_\w+/,
-        declares: (symbol) => new RegExp(`(?:def|class)\\s+${escapeRegExp(symbol)}\\b|^${escapeRegExp(symbol)}\\s*=`, 'm'),
-        testStemSuffixes: ['_test'],
-        testStemPrefixes: ['test_'],
-      },
-      {
-        name: 'c',
-        extensions: ['.c', '.h', '.cc', '.cpp', '.hpp'],
-        commentLeads: ['//', '*'],
-        blockComments: [['/*', '*/']],
-        testPattern: /^\s*(?:static\s+)?void\s+test_\w+\s*\(|^\s*TEST[A-Z_]*\s*\(/,
-        declares: null, // C declaration grammar is context-heavy — word-boundary presence
-        testStemSuffixes: ['_test', '_tests'],
-        testStemPrefixes: ['test_'],
-      },
-      {
-        name: 'go',
-        extensions: ['.go'],
-        commentLeads: ['//'],
-        blockComments: [['/*', '*/']],
-        testPattern: /^\s*func\s+Test\w+/,
-        declares: (symbol) => new RegExp(`(?:func|type|var|const)\\s+(?:\\([^)]*\\)\\s+)?${escapeRegExp(symbol)}\\b`),
-        testStemSuffixes: ['_test'],
-        testStemPrefixes: [],
-      },
-    ];
+  /** Where language-profile JSON lives. The shipped languages/ folder sits
+   * beside this script; override or extend to add repo-local folders (the
+   * --languages flag appends per run). A profile is DATA — see languages/
+   * rust.json for the schema; `declares` is a regex template where {symbol}
+   * is substituted (escaped). */
+  static get languagesDirectories(): readonly string[] {
+    return [join(dirname(fileURLToPath(import.meta.url)), 'languages')];
   }
 
-  /** Fallback for a test file whose extension no profile claims: comment
-   * grammar with common leads, and any code line can be a test boundary. */
-  static get fallbackProfile(): LanguageProfile {
+  /** Load and compile every profile from the receiver's directories plus
+   * the run's extras. Malformed profiles are refused by file name. */
+  static loadProfiles(extraDirectories: readonly string[] = [], cwd = process.cwd()): LanguageProfile[] {
+    const directories = [
+      ...this.languagesDirectories,
+      ...extraDirectories.map((directory) => (isAbsolute(directory) ? directory : resolve(cwd, directory))),
+    ];
+    const profiles: LanguageProfile[] = [];
+    for (const directory of directories) {
+      if (!existsSync(directory)) throw new InvariantsCheck.UsageError(`languages directory not found: ${directory}`);
+      for (const entry of readdirSync(directory).filter((file) => file.endsWith('.json')).sort()) {
+        profiles.push(this.compileProfile(join(directory, entry)));
+      }
+    }
+    if (!profiles.length) throw new InvariantsCheck.UsageError('no language profiles found — the languages/ folder beside the checker defines them');
+    return profiles;
+  }
+
+  static compileProfile(path: string): LanguageProfile {
+    const refuse = (why: string): never => {
+      throw new InvariantsCheck.UsageError(`language profile ${path}: ${why}`);
+    };
+    let raw: Record<string, unknown>;
+    try {
+      raw = JSON.parse(readFileSync(path, 'utf8'));
+    } catch (error) {
+      return refuse(`not valid JSON (${(error as Error).message})`);
+    }
+    if (typeof raw !== 'object' || raw === null) return refuse('a profile is a JSON object');
+    const requireStrings = (field: string, allowEmpty = false): string[] => {
+      const value = raw[field];
+      if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) return refuse(`"${field}" is an array of strings`);
+      if (!allowEmpty && field === 'commentLeads' && !value.length) return refuse('"commentLeads" needs at least one lead');
+      return value as string[];
+    };
+    if (typeof raw.name !== 'string' || !raw.name.trim()) return refuse('"name" is a non-empty string');
+    if (typeof raw.testPattern !== 'string') return refuse('"testPattern" is a regex source string');
+    let testPattern: RegExp;
+    try {
+      testPattern = new RegExp(raw.testPattern, typeof raw.testPatternFlags === 'string' ? raw.testPatternFlags : undefined);
+    } catch (error) {
+      return refuse(`"testPattern" does not compile (${(error as Error).message})`);
+    }
+    let declares: ((symbol: string) => RegExp) | null = null;
+    if (raw.declares !== null && raw.declares !== undefined) {
+      if (typeof raw.declares !== 'string' || !raw.declares.includes('{symbol}')) return refuse('"declares" is a regex template containing {symbol}, or null');
+      const template = raw.declares;
+      const flags = typeof raw.declaresFlags === 'string' ? raw.declaresFlags : undefined;
+      try {
+        new RegExp(template.replaceAll('{symbol}', 'probe'), flags);
+      } catch (error) {
+        return refuse(`"declares" does not compile (${(error as Error).message})`);
+      }
+      declares = (symbol) => new RegExp(template.replaceAll('{symbol}', escapeRegExp(symbol)), flags);
+    }
+    const blockComments = raw.blockComments;
+    if (!Array.isArray(blockComments) || blockComments.some((pair) => !Array.isArray(pair) || pair.length !== 2 || pair.some((token) => typeof token !== 'string')))
+      return refuse('"blockComments" is an array of [open, close] pairs');
     return {
-      name: 'generic',
-      extensions: [],
-      commentLeads: ['//', '#', '*', '--', ';'],
-      blockComments: [['/*', '*/']],
-      testPattern: /\S/,
-      declares: null,
-      testStemSuffixes: ['_test', '.test', '.spec'],
-      testStemPrefixes: ['test_'],
+      name: raw.name,
+      extensions: requireStrings('extensions', true),
+      commentLeads: requireStrings('commentLeads'),
+      blockComments: blockComments as [string, string][],
+      testPattern,
+      declares,
+      testStemSuffixes: requireStrings('testStemSuffixes', true),
+      testStemPrefixes: requireStrings('testStemPrefixes', true),
     };
   }
 
@@ -793,7 +803,7 @@ test('height never decreases on its own', () => {
         }],
       },
       'the_population_and_skip_list_are_exact': {
-        claim: 'If the checker runs, then it refuses zero files, unmatched globs, unknown check names, duplicate and stale skips, and unknown severity overrides',
+        claim: 'If the checker runs, then it refuses zero files, unmatched globs, unknown check names, duplicate and stale skips, unknown severity overrides, and malformed language profiles',
         impossibility: 'a checker run over nothing reports a pass',
         red: [
           { files: { 'src/.keep': '' }, options: { testGlobs: [] }, expectThrows: /no files discovered/ },
@@ -804,6 +814,8 @@ test('height never decreases on its own', () => {
           { files: { ...rust, 'skips.json': JSON.stringify([{ path: 'src/geometry.rs', check: 'no_such_check', reason: 'x' }]) }, options: { ...RUST_GLOB, skipListPath: 'skips.json' }, expectThrows: /unknown check name/ },
           { files: { ...rust, 'skips.json': JSON.stringify([{ path: 'src/geometry_test.rs', check: 'a_test_caveat_derives_from_a_tested_claim', reason: 'never fires' }]) }, options: { ...RUST_GLOB, skipListPath: 'skips.json' }, expectFindings: [/stale skip/] },
           { files: rust, options: { ...RUST_GLOB, warnChecks: ['no_such_check'] }, expectThrows: /unknown check name/ },
+          // a malformed profile file is refused by name, never skipped
+          { files: { ...rust, 'languages/broken.json': '{ "name": "broken" }' }, options: { ...RUST_GLOB, languageDirectories: ['languages'] }, expectThrows: /language profile .*broken\.json/ },
         ],
         green: [
           {
@@ -812,6 +824,47 @@ test('height never decreases on its own', () => {
           },
           // a bare glob (no slash) matches by file name at any depth
           { files: rust, options: { testGlobs: ['*_test.rs'] } },
+          // languages are DATA: a dropped-in profile teaches a language the
+          // checker has never heard of — no code changes anywhere
+          {
+            files: {
+              'languages/zig.json': JSON.stringify({
+                name: 'zig',
+                extensions: ['.zig'],
+                commentLeads: ['//'],
+                blockComments: [],
+                testPattern: '^\\s*test\\s+"',
+                declares: '(?:fn|const|var)\\s+{symbol}\\b',
+                testStemSuffixes: ['_test'],
+                testStemPrefixes: [],
+              }),
+              'src/adder.zig': 'pub fn add(left: u32, right: u32) u32 {\n    return left + right;\n}\n',
+              'src/adder_test.zig': [
+                `// ${grammar.GENERATOR}`,
+                '// Subject: adder.zig',
+                '// Goal: Prove add sums its operands and never loses a unit.',
+                `// ${grammar.DOMAIN}: add — If two numbers are added, then the sum is their total`,
+                '// Impossible if true: a sum is smaller than either operand',
+                '//',
+                `// ${grammar.GENERATOR_DESCRIBED}`,
+                '// Addition over unsigned integers; overflow is out of scope here.',
+                '',
+                'const adder = @import("adder.zig");',
+                '',
+                `// ${grammar.DOMAIN}: add — If two numbers are added, then the sum is their total`,
+                'test "add sums operands" {',
+                '    try expect(adder.add(2, 3) == 5);',
+                '}',
+                '',
+                `// ${grammar.IMPOSSIBLE}: add — a sum is smaller than either operand`,
+                'test "sum never shrinks" {',
+                '    try expect(adder.add(4, 0) == 4);',
+                '}',
+                '',
+              ].join('\n'),
+            },
+            options: { testGlobs: ['src/**/*_test.zig'], languageDirectories: ['languages'] },
+          },
         ],
       },
     };
@@ -828,9 +881,9 @@ test('height never decreases on its own', () => {
     return { check: check.name, file: unit.relativePath, line, message };
   }
 
-  static profileFor(path: string): LanguageProfile | null {
+  static profileFor(path: string, profiles: readonly LanguageProfile[]): LanguageProfile | null {
     const extension = extname(path).toLowerCase();
-    return this.languages.find((profile) => profile.extensions.includes(extension)) ?? null;
+    return profiles.find((profile) => profile.extensions.includes(extension)) ?? null;
   }
 
   /** Strip one leading comment lead (and surrounding space) from a line. */
@@ -1111,6 +1164,8 @@ test('height never decreases on its own', () => {
   static run(options: CheckerOptions): CheckerResult {
     const cwd = resolve(options.cwd);
     if (!options.sourceRoots.length) throw new InvariantsCheck.UsageError('at least one --source-root is required');
+    const profiles = this.loadProfiles(options.languageDirectories ?? [], cwd);
+    const fallback = profiles.find((profile) => profile.name === 'generic') ?? profiles[profiles.length - 1];
     // a bare glob (no slash) matches by file name at any depth
     const testMatchers = options.testGlobs.map((glob) => ({ glob, regexp: this.globToRegExp(glob), bare: !glob.includes('/') }));
     const matchesTest = (relativePath: string) => testMatchers.some((matcher) => matcher.regexp.test(matcher.bare ? basename(relativePath) : relativePath));
@@ -1122,9 +1177,9 @@ test('height never decreases on its own', () => {
       if (!existsSync(absoluteRoot) || !statSync(absoluteRoot).isDirectory()) throw new InvariantsCheck.UsageError(`source root is not a directory: ${root}`);
       for (const path of this.walk(absoluteRoot)) {
         const relativePath = relative(cwd, path).replaceAll('\\', '/');
-        const profile = this.profileFor(path);
+        const profile = this.profileFor(path, profiles);
         if (matchesTest(relativePath)) {
-          tests.push(this.toUnit(cwd, path, profile ?? this.fallbackProfile));
+          tests.push(this.toUnit(cwd, path, profile ?? fallback));
           continue;
         }
         if (!profile) continue;
@@ -1264,14 +1319,16 @@ usage:
   invariants-check --source-root <dir> [--source-root <dir>…]
                    [--test-glob '<glob>' …]     which files are tests
                    [--skip-list <path>]         a JSON array of { path, check, reason }
+                   [--languages <dir>]          extra language-profile folders
   invariants-check --list                       print every check name and severity
   invariants-check --prove ['<check_name>']     run the checker's own constitution
 
-Languages: ${this.languages.map((profile) => profile.name).join(', ')} — extend the
-languages getter (a profile is data) for anything else.
+Languages come from JSON profiles in languages/ beside this script —
+add a language by adding a file (see rust.json for the schema).
 Exit: 0 clean · 1 findings · 2 usage.`;
     const sourceRoots: string[] = [];
     const testGlobs: string[] = [];
+    const languageDirectories: string[] = [];
     let skipListPath: string | undefined;
     for (let index = 0; index < argv.length; index++) {
       const argument = argv[index];
@@ -1300,6 +1357,7 @@ Exit: 0 clean · 1 findings · 2 usage.`;
         } else if (argument === '--source-root') sourceRoots.push(value());
         else if (argument === '--test-glob') testGlobs.push(value());
         else if (argument === '--skip-list') skipListPath = value();
+        else if (argument === '--languages') languageDirectories.push(value());
         else throw new InvariantsCheck.UsageError(`unknown argument: ${argument}`);
       } catch (error) {
         console.error(`invariants-check: ${(error as Error).message}`);
@@ -1308,7 +1366,7 @@ Exit: 0 clean · 1 findings · 2 usage.`;
     }
     let result: CheckerResult;
     try {
-      result = this.run({ cwd, sourceRoots, testGlobs, skipListPath });
+      result = this.run({ cwd, sourceRoots, testGlobs, skipListPath, languageDirectories });
     } catch (error) {
       if (error instanceof InvariantsCheck.UsageError) {
         console.error(`invariants-check: ${error.message}`);

@@ -1,0 +1,24 @@
+{
+  "name": "rust",
+  "extensions": [
+    ".rs"
+  ],
+  "commentLeads": [
+    "///",
+    "//!",
+    "//"
+  ],
+  "blockComments": [
+    [
+      "/*",
+      "*/"
+    ]
+  ],
+  "testPattern": "^\\s*#\\[[\\w:]*test(?:\\]|\\()",
+  "declares": "(?:fn|struct|enum|trait|mod|const|static|type|impl(?:<[^>]*>)?)\\s+{symbol}\\b",
+  "testStemSuffixes": [
+    "_test",
+    "_tests"
+  ],
+  "testStemPrefixes": []
+}

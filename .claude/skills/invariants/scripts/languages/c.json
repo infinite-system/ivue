@@ -1,0 +1,29 @@
+{
+  "name": "c",
+  "extensions": [
+    ".c",
+    ".h",
+    ".cc",
+    ".cpp",
+    ".hpp"
+  ],
+  "commentLeads": [
+    "//",
+    "*"
+  ],
+  "blockComments": [
+    [
+      "/*",
+      "*/"
+    ]
+  ],
+  "testPattern": "^\\s*(?:static\\s+)?void\\s+test_\\w+\\s*\\(|^\\s*TEST[A-Z_]*\\s*\\(",
+  "declares": null,
+  "testStemSuffixes": [
+    "_test",
+    "_tests"
+  ],
+  "testStemPrefixes": [
+    "test_"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "typescript",
+  "extensions": [
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".cjs"
+  ],
+  "commentLeads": [
+    "//",
+    "*"
+  ],
+  "blockComments": [
+    [
+      "/*",
+      "*/"
+    ]
+  ],
+  "testPattern": "\\b(?:test|it)(?:\\.[A-Za-z]+)?\\s*\\(",
+  "declares": "(?:class|function|interface|type|enum|namespace|const|let|var)\\s+{symbol}\\b",
+  "testStemSuffixes": [
+    ".test",
+    ".spec"
+  ],
+  "testStemPrefixes": []
+}

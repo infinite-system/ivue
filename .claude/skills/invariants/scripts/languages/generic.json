@@ -1,0 +1,27 @@
+{
+  "name": "generic",
+  "extensions": [],
+  "commentLeads": [
+    "//",
+    "#",
+    "*",
+    "--",
+    ";"
+  ],
+  "blockComments": [
+    [
+      "/*",
+      "*/"
+    ]
+  ],
+  "testPattern": "\\S",
+  "declares": null,
+  "testStemSuffixes": [
+    "_test",
+    ".test",
+    ".spec"
+  ],
+  "testStemPrefixes": [
+    "test_"
+  ]
+}

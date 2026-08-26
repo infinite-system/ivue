@@ -1,0 +1,21 @@
+{
+  "name": "go",
+  "extensions": [
+    ".go"
+  ],
+  "commentLeads": [
+    "//"
+  ],
+  "blockComments": [
+    [
+      "/*",
+      "*/"
+    ]
+  ],
+  "testPattern": "^\\s*func\\s+Test\\w+",
+  "declares": "(?:func|type|var|const)\\s+(?:\\([^)]*\\)\\s+)?{symbol}\\b",
+  "testStemSuffixes": [
+    "_test"
+  ],
+  "testStemPrefixes": []
+}

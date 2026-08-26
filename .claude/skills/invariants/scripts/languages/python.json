@@ -1,0 +1,28 @@
+{
+  "name": "python",
+  "extensions": [
+    ".py"
+  ],
+  "commentLeads": [
+    "#"
+  ],
+  "blockComments": [
+    [
+      "\"\"\"",
+      "\"\"\""
+    ],
+    [
+      "'''",
+      "'''"
+    ]
+  ],
+  "testPattern": "^\\s*(?:async\\s+)?def\\s+test_\\w+",
+  "declares": "(?:def|class)\\s+{symbol}\\b|^{symbol}\\s*=",
+  "declaresFlags": "m",
+  "testStemSuffixes": [
+    "_test"
+  ],
+  "testStemPrefixes": [
+    "test_"
+  ]
+}
