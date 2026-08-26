@@ -1507,7 +1507,9 @@ export namespace Scroller {
         claim: 'If a file declares dollar-X, then the file is X.ts and the namespace is X',
         impossibility: 'a file breaking A class file is named after its class passes the gate',
         red: [{ files: { 'src/Crate.ts': fixture.validClass }, expectFindings: [/`Crate\.ts` declares `\$Box`/] }],
-        green: [{ files: box }],
+        // Widget.ts declares a private helper class FIRST — the file's
+        // identity is the class matching the file name, not the first class.
+        green: [{ files: { ...box, 'src/Widget.ts': "class $WidgetPart {\n  spin() {\n    return 1;\n  }\n}\n\nclass $Widget {\n  get part() {\n    return new $WidgetPart();\n  }\n}\n\nexport namespace Widget {\n  export const $Class = $Widget;\n  export let Class = $Class;\n}\n" } }],
       },
       'A class file holds only imports class namespace and types': {
         claim: 'If a file is a class file, then its top level is imports, the class, its namespace, and type declarations, nothing else',
@@ -2047,10 +2049,14 @@ export namespace Scroller {
   }
 
   static classFileOf(unit: SourceUnit): ClassFile | null {
-    const rawClass = unit.ast.statements.find(
+    const dollarClasses = unit.ast.statements.filter(
       (statement): statement is ts.ClassDeclaration =>
         ts.isClassDeclaration(statement) && !!statement.name && statement.name.text.startsWith('$'),
     );
+    // The file's identity is the class matching the file name; a private
+    // helper class declared first must not usurp it. First class as fallback.
+    const stem = basename(unit.path).replace(/\.ts$/, '');
+    const rawClass = dollarClasses.find((declaration) => declaration.name!.text === `$${stem}`) ?? dollarClasses[0];
     if (!rawClass?.name) return null;
     const rawName = rawClass.name.text;
     const publicName = rawName.slice(1);
