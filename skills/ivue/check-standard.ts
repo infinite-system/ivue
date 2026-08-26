@@ -57,9 +57,11 @@ export interface GateOptions {
   sourceRoots: string[];
   testGlobs: string[];
   skipListPath?: string;
-  /** checks demoted to warnings for this run — reported, never blocking */
+  /** programmatic severity overrides (the declarative home is the gate
+   * class's `severities` getter): demoted to warnings — reported, never
+   * blocking … */
   warnChecks?: string[];
-  /** checks disabled for this run — not executed, announced in the summary */
+  /** … or disabled — not executed, announced in the summary */
   offChecks?: string[];
   /** the `Static` used by the runtime probe; defaults to this package's own */
   staticImplementation?: StaticTransform | null;
@@ -2624,9 +2626,6 @@ usage:
                  --test-glob '<glob>' [--test-glob '<glob>'…]
                  [--skip-list <path>]   a JSON array of { path, check, reason }
   check-standard --list                 print every check name and severity
-  check-standard … --warn '<check name>' --off '<check name>'
-                 demote a check to a warning / turn it off for this run
-                 (repeatable; a house gate ships defaults in its severities getter)
   check-standard --prove ['<check name>']   run the gate's own constitution
                                         (name it to isolate one check's arms)
 
@@ -2634,8 +2633,6 @@ Exit: 0 clean · 1 findings · 2 usage (zero files, unmatched glob, unknown chec
 name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
     const sourceRoots: string[] = [];
     const testGlobs: string[] = [];
-    const warnChecks: string[] = [];
-    const offChecks: string[] = [];
     let skipListPath: string | undefined;
     for (let index = 0; index < argv.length; index++) {
       const argument = argv[index];
@@ -2649,6 +2646,7 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
           console.log(HELP);
           return 0;
         } else if (argument === '--list') {
+          if (argv.length > 1) throw new CheckStandard.GateUsageError('--list takes no other arguments');
           for (const entry of this.checks) {
             const severity = this.severities[entry.name];
             const label = !entry.enforced ? 'not yet' : (severity ?? 'error');
@@ -2667,8 +2665,6 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
         } else if (argument === '--source-root') sourceRoots.push(value());
         else if (argument === '--test-glob') testGlobs.push(value());
         else if (argument === '--skip-list') skipListPath = value();
-        else if (argument === '--warn') warnChecks.push(value());
-        else if (argument === '--off') offChecks.push(value());
         else throw new CheckStandard.GateUsageError(`unknown argument: ${argument}`);
       } catch (error) {
         console.error(`check-standard: ${(error as Error).message}`);
@@ -2677,7 +2673,7 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
     }
     let result: GateResult;
     try {
-      result = this.run({ cwd, sourceRoots, testGlobs, skipListPath, warnChecks, offChecks, staticImplementation: Static });
+      result = this.run({ cwd, sourceRoots, testGlobs, skipListPath, staticImplementation: Static });
     } catch (error) {
       if (error instanceof CheckStandard.GateUsageError) {
         console.error(`check-standard: ${error.message}`);
