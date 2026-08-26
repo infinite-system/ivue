@@ -24,38 +24,38 @@ import { Static } from '../../lib/Static';
 import { CheckStandard, type CheckProof, type Finding, type StandardCheck } from './ivue-standards-check';
 
 class $GeneratorStandard extends CheckStandard.$Class {
-  static get a_test_file_opens_with_its_generator_header(): StandardCheck {
-    return this.defineCheck('a_test_file_opens_with_its_generator_header', (context) => {
+  static get invariants_a_test_file_opens_with_its_generator_header(): StandardCheck {
+    return this.defineCheck('invariants_a_test_file_opens_with_its_generator_header', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
-        if (!header.present) findings.push(this.finding(this.a_test_file_opens_with_its_generator_header, unit, 1, `no \`${this.$grammar.GENERATOR}\` header — the test file opens with its generator header, before any import`));
-        else if (!header.firstContent) findings.push(this.finding(this.a_test_file_opens_with_its_generator_header, unit, 1, 'the generator header is not the first content — nothing precedes it, imports follow it'));
+        if (!header.present) findings.push(this.finding(this.invariants_a_test_file_opens_with_its_generator_header, unit, 1, `no \`${this.$grammar.GENERATOR}\` header — the test file opens with its generator header, before any import`));
+        else if (!header.firstContent) findings.push(this.finding(this.invariants_a_test_file_opens_with_its_generator_header, unit, 1, 'the generator header is not the first content — nothing precedes it, imports follow it'));
       }
       return findings;
     });
   }
 
-  static get a_generator_header_carries_both_registers_in_order(): StandardCheck {
-    return this.defineCheck('a_generator_header_carries_both_registers_in_order', (context) => {
+  static get invariants_a_generator_header_carries_both_registers_in_order(): StandardCheck {
+    return this.defineCheck('invariants_a_generator_header_carries_both_registers_in_order', (context) => {
       const findings: Finding[] = [];
       const grammar = this.$grammar;
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
         if (!header.present) continue;
         const line = unit.lines.findIndex((text) => text.includes(grammar.GENERATOR)) + 1;
-        if (unit.text.split(grammar.GENERATOR).length > 2) findings.push(this.finding(this.a_generator_header_carries_both_registers_in_order, unit, line, `duplicate \`${grammar.GENERATOR}\` sentinel`));
-        if (!header.bothRegisters) findings.push(this.finding(this.a_generator_header_carries_both_registers_in_order, unit, line, `missing \`${grammar.GENERATOR_DESCRIBED}\` register`));
-        else if (!header.orderedRegisters) findings.push(this.finding(this.a_generator_header_carries_both_registers_in_order, unit, line, `\`${grammar.GENERATOR_DESCRIBED}\` must follow \`${grammar.GENERATOR}\``));
-        if (!header.goal) findings.push(this.finding(this.a_generator_header_carries_both_registers_in_order, unit, line, 'the formal register needs a `Goal:` line'));
-        if (!header.impossibilities.size) findings.push(this.finding(this.a_generator_header_carries_both_registers_in_order, unit, line, 'the formal register needs at least one `Impossible if true:` line'));
+        if (unit.text.split(grammar.GENERATOR).length > 2) findings.push(this.finding(this.invariants_a_generator_header_carries_both_registers_in_order, unit, line, `duplicate \`${grammar.GENERATOR}\` sentinel`));
+        if (!header.bothRegisters) findings.push(this.finding(this.invariants_a_generator_header_carries_both_registers_in_order, unit, line, `missing \`${grammar.GENERATOR_DESCRIBED}\` register`));
+        else if (!header.orderedRegisters) findings.push(this.finding(this.invariants_a_generator_header_carries_both_registers_in_order, unit, line, `\`${grammar.GENERATOR_DESCRIBED}\` must follow \`${grammar.GENERATOR}\``));
+        if (!header.goal) findings.push(this.finding(this.invariants_a_generator_header_carries_both_registers_in_order, unit, line, 'the formal register needs a `Goal:` line'));
+        if (!header.impossibilities.size) findings.push(this.finding(this.invariants_a_generator_header_carries_both_registers_in_order, unit, line, 'the formal register needs at least one `Impossible if true:` line'));
       }
       return findings;
     });
   }
 
-  static get a_header_symbol_is_declared_in_the_sibling_source(): StandardCheck {
-    return this.defineCheck('a_header_symbol_is_declared_in_the_sibling_source', (context) => {
+  static get invariants_a_header_symbol_is_declared_in_the_sibling_source(): StandardCheck {
+    return this.defineCheck('invariants_a_header_symbol_is_declared_in_the_sibling_source', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -67,7 +67,7 @@ class $GeneratorStandard extends CheckStandard.$Class {
             const candidates = [resolve(dirname(unit.path), subject.path), resolve(context.cwd, subject.path)];
             const found = candidates.find(existsSync);
             if (!found) {
-              findings.push(this.finding(this.a_header_symbol_is_declared_in_the_sibling_source, unit, subject.line, `Subject path does not exist: ${subject.path}`));
+              findings.push(this.finding(this.invariants_a_header_symbol_is_declared_in_the_sibling_source, unit, subject.line, `Subject path does not exist: ${subject.path}`));
               broken = true;
               continue;
             }
@@ -77,7 +77,7 @@ class $GeneratorStandard extends CheckStandard.$Class {
         } else {
           const sourcePath = this.siblingSourcePath(unit.path);
           if (!existsSync(sourcePath)) {
-            findings.push(this.finding(this.a_header_symbol_is_declared_in_the_sibling_source, unit, 1, `no sibling source \`${basename(sourcePath)}\` for this test file's header symbols — name the source with a \`Subject:\` line, or colocate the test`));
+            findings.push(this.finding(this.invariants_a_header_symbol_is_declared_in_the_sibling_source, unit, 1, `no sibling source \`${basename(sourcePath)}\` for this test file's header symbols — name the source with a \`Subject:\` line, or colocate the test`));
             continue;
           }
           subjectTexts = [readFileSync(sourcePath, 'utf8')];
@@ -85,29 +85,29 @@ class $GeneratorStandard extends CheckStandard.$Class {
         const subjectDescription = header.subjects.length ? header.subjects.map((subject) => basename(subject.path)).join(', ') : basename(this.siblingSourcePath(unit.path));
         for (const { symbol, line } of header.domainClaims.values()) {
           if (!subjectTexts.some((text) => this.declaredInSource(text, symbol)))
-            findings.push(this.finding(this.a_header_symbol_is_declared_in_the_sibling_source, unit, line, `header symbol \`${symbol}\` is not declared in ${subjectDescription}`));
+            findings.push(this.finding(this.invariants_a_header_symbol_is_declared_in_the_sibling_source, unit, line, `header symbol \`${symbol}\` is not declared in ${subjectDescription}`));
         }
       }
       return findings;
     });
   }
 
-  static get a_claim_annotation_sits_directly_above_its_test(): StandardCheck {
-    return this.defineCheck('a_claim_annotation_sits_directly_above_its_test', (context) => {
+  static get invariants_a_claim_annotation_sits_directly_above_its_test(): StandardCheck {
+    return this.defineCheck('invariants_a_claim_annotation_sits_directly_above_its_test', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
         if (!header.present) continue;
         for (const proof of this.parseProofs(unit, header)) {
-          if (!proof.bound) findings.push(this.finding(this.a_claim_annotation_sits_directly_above_its_test, unit, proof.line, 'proof annotation must sit directly above a test (an optional doc comment may sit between)'));
+          if (!proof.bound) findings.push(this.finding(this.invariants_a_claim_annotation_sits_directly_above_its_test, unit, proof.line, 'proof annotation must sit directly above a test (an optional doc comment may sit between)'));
         }
       }
       return findings;
     });
   }
 
-  static get header_claims_and_annotated_tests_match_one_to_one(): StandardCheck {
-    return this.defineCheck('header_claims_and_annotated_tests_match_one_to_one', (context) => {
+  static get invariants_header_claims_and_annotated_tests_match_one_to_one(): StandardCheck {
+    return this.defineCheck('invariants_header_claims_and_annotated_tests_match_one_to_one', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -117,18 +117,18 @@ class $GeneratorStandard extends CheckStandard.$Class {
         for (const proof of proofs) {
           const key = `${proof.symbol} — ${proof.claim}`;
           if (header.domainClaims.has(key)) proved.add(key);
-          else if (!header.impossibilities.has(proof.claim ?? '')) findings.push(this.finding(this.header_claims_and_annotated_tests_match_one_to_one, unit, proof.line, `annotated test claim is absent from the header: ${key}`));
+          else if (!header.impossibilities.has(proof.claim ?? '')) findings.push(this.finding(this.invariants_header_claims_and_annotated_tests_match_one_to_one, unit, proof.line, `annotated test claim is absent from the header: ${key}`));
         }
         for (const [key, { line }] of header.domainClaims) {
-          if (!proved.has(key)) findings.push(this.finding(this.header_claims_and_annotated_tests_match_one_to_one, unit, line, `header ${this.$grammar.DOMAIN} has no annotated test: ${key}`));
+          if (!proved.has(key)) findings.push(this.finding(this.invariants_header_claims_and_annotated_tests_match_one_to_one, unit, line, `header ${this.$grammar.DOMAIN} has no annotated test: ${key}`));
         }
       }
       return findings;
     });
   }
 
-  static get an_impossibility_is_proved_by_an_exact_negative_test(): StandardCheck {
-    return this.defineCheck('an_impossibility_is_proved_by_an_exact_negative_test', (context) => {
+  static get invariants_an_impossibility_is_proved_by_an_exact_negative_test(): StandardCheck {
+    return this.defineCheck('invariants_an_impossibility_is_proved_by_an_exact_negative_test', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -139,23 +139,23 @@ class $GeneratorStandard extends CheckStandard.$Class {
           if (proof.type === 'impossible') {
             if (header.impossibilities.has(proof.claim ?? '')) {
               proved.add(proof.claim ?? '');
-              if (!header.domainSymbols.has(proof.symbol ?? '')) findings.push(this.finding(this.an_impossibility_is_proved_by_an_exact_negative_test, unit, proof.line, `impossibility proof symbol \`${proof.symbol}\` is absent from the header`));
-            } else if (header.domainClaims.has(`${proof.symbol} — ${proof.claim}`)) findings.push(this.finding(this.an_impossibility_is_proved_by_an_exact_negative_test, unit, proof.line, `an invariant is labeled as an impossibility: ${proof.claim}`));
-            else findings.push(this.finding(this.an_impossibility_is_proved_by_an_exact_negative_test, unit, proof.line, `impossibility text is not exact — no header line reads: ${proof.claim}`));
+              if (!header.domainSymbols.has(proof.symbol ?? '')) findings.push(this.finding(this.invariants_an_impossibility_is_proved_by_an_exact_negative_test, unit, proof.line, `impossibility proof symbol \`${proof.symbol}\` is absent from the header`));
+            } else if (header.domainClaims.has(`${proof.symbol} — ${proof.claim}`)) findings.push(this.finding(this.invariants_an_impossibility_is_proved_by_an_exact_negative_test, unit, proof.line, `an invariant is labeled as an impossibility: ${proof.claim}`));
+            else findings.push(this.finding(this.invariants_an_impossibility_is_proved_by_an_exact_negative_test, unit, proof.line, `impossibility text is not exact — no header line reads: ${proof.claim}`));
           }
           if (proof.type === 'domain' && header.impossibilities.has(proof.claim ?? ''))
-            findings.push(this.finding(this.an_impossibility_is_proved_by_an_exact_negative_test, unit, proof.line, `an impossibility is labeled as an invariant: ${proof.claim}`));
+            findings.push(this.finding(this.invariants_an_impossibility_is_proved_by_an_exact_negative_test, unit, proof.line, `an impossibility is labeled as an invariant: ${proof.claim}`));
         }
         for (const [claim, line] of header.impossibilities) {
-          if (!proved.has(claim)) findings.push(this.finding(this.an_impossibility_is_proved_by_an_exact_negative_test, unit, line, `Impossible if true has no annotated negative test: ${claim}`));
+          if (!proved.has(claim)) findings.push(this.finding(this.invariants_an_impossibility_is_proved_by_an_exact_negative_test, unit, line, `Impossible if true has no annotated negative test: ${claim}`));
         }
       }
       return findings;
     });
   }
 
-  static get a_contract_pointer_resolves_and_is_proved(): StandardCheck {
-    return this.defineCheck('a_contract_pointer_resolves_and_is_proved', (context) => {
+  static get invariants_a_contract_pointer_resolves_and_is_proved(): StandardCheck {
+    return this.defineCheck('invariants_a_contract_pointer_resolves_and_is_proved', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -164,31 +164,31 @@ class $GeneratorStandard extends CheckStandard.$Class {
         const provedNames = new Set(proofs.map((proof) => this.headingSlug(proof.name ?? '')));
         for (const link of header.contractLinks) {
           if (!link.anchor) {
-            findings.push(this.finding(this.a_contract_pointer_resolves_and_is_proved, unit, link.line, `contract link \`${link.file}\` needs a record anchor`));
+            findings.push(this.finding(this.invariants_a_contract_pointer_resolves_and_is_proved, unit, link.line, `contract link \`${link.file}\` needs a record anchor`));
             continue;
           }
           const candidates = [resolve(dirname(unit.path), link.file), resolve(context.cwd, link.file)];
           const slugs = candidates.map((candidate) => this.contractSlugs(candidate)).find((set) => set !== null) ?? null;
           if (!slugs) {
-            findings.push(this.finding(this.a_contract_pointer_resolves_and_is_proved, unit, link.line, `contract not found: ${link.file}`));
+            findings.push(this.finding(this.invariants_a_contract_pointer_resolves_and_is_proved, unit, link.line, `contract not found: ${link.file}`));
             continue;
           }
           if (!slugs.has(link.anchor)) {
-            findings.push(this.finding(this.a_contract_pointer_resolves_and_is_proved, unit, link.line, `anchor \`#${link.anchor}\` does not resolve in ${link.file}`));
+            findings.push(this.finding(this.invariants_a_contract_pointer_resolves_and_is_proved, unit, link.line, `anchor \`#${link.anchor}\` does not resolve in ${link.file}`));
             continue;
           }
-          if (!provedNames.has(link.anchor)) findings.push(this.finding(this.a_contract_pointer_resolves_and_is_proved, unit, link.line, `header contract-record pointer has no annotated test: ${link.anchor}`));
+          if (!provedNames.has(link.anchor)) findings.push(this.finding(this.invariants_a_contract_pointer_resolves_and_is_proved, unit, link.line, `header contract-record pointer has no annotated test: ${link.anchor}`));
         }
         for (const proof of proofs) {
-          if (!header.contractLinks.some((link) => link.anchor === this.headingSlug(proof.name ?? ''))) findings.push(this.finding(this.a_contract_pointer_resolves_and_is_proved, unit, proof.line, `annotated record is absent from the header: ${proof.name}`));
+          if (!header.contractLinks.some((link) => link.anchor === this.headingSlug(proof.name ?? ''))) findings.push(this.finding(this.invariants_a_contract_pointer_resolves_and_is_proved, unit, proof.line, `annotated record is absent from the header: ${proof.name}`));
         }
       }
       return findings;
     });
   }
 
-  static get a_source_tripwire_resolves_to_its_sibling_header(): StandardCheck {
-    return this.defineCheck('a_source_tripwire_resolves_to_its_sibling_header', (context) => {
+  static get invariants_a_source_tripwire_resolves_to_its_sibling_header(): StandardCheck {
+    return this.defineCheck('invariants_a_source_tripwire_resolves_to_its_sibling_header', (context) => {
       const findings: Finding[] = [];
       const grammar = this.$grammar;
       const SYMBOL_ONLY = new RegExp(`^\\s*//\\s*${grammar.DOMAIN}:\\s*([^—\\n]+?)\\s*$`);
@@ -199,23 +199,23 @@ class $GeneratorStandard extends CheckStandard.$Class {
           if (!line.includes(`${grammar.DOMAIN}:`)) return;
           const symbolOnly = SYMBOL_ONLY.exec(line);
           if (!symbolOnly) {
-            findings.push(this.finding(this.a_source_tripwire_resolves_to_its_sibling_header, unit, index + 1, `source tripwires carry only the symbol: \`// ${grammar.DOMAIN}: <symbol>\``));
+            findings.push(this.finding(this.invariants_a_source_tripwire_resolves_to_its_sibling_header, unit, index + 1, `source tripwires carry only the symbol: \`// ${grammar.DOMAIN}: <symbol>\``));
             return;
           }
           if (siblingSymbols === null) {
             siblingSymbols = existsSync(testPath) ? this.parseHeader(this.toUnit(context.cwd, testPath)).domainSymbols : new Set();
           }
           if (!siblingSymbols.has(symbolOnly[1].trim()))
-            findings.push(this.finding(this.a_source_tripwire_resolves_to_its_sibling_header, unit, index + 1, `tripwire \`${symbolOnly[1].trim()}\` has no header claim in ${basename(testPath)}`));
+            findings.push(this.finding(this.invariants_a_source_tripwire_resolves_to_its_sibling_header, unit, index + 1, `tripwire \`${symbolOnly[1].trim()}\` has no header claim in ${basename(testPath)}`));
         });
-        if (unit.text.includes(grammar.GENERATOR)) findings.push(this.finding(this.a_source_tripwire_resolves_to_its_sibling_header, unit, unit.lines.findIndex((line) => line.includes(grammar.GENERATOR)) + 1, `\`${grammar.GENERATOR}\` belongs at the top of the sibling test file, not in source`));
+        if (unit.text.includes(grammar.GENERATOR)) findings.push(this.finding(this.invariants_a_source_tripwire_resolves_to_its_sibling_header, unit, unit.lines.findIndex((line) => line.includes(grammar.GENERATOR)) + 1, `\`${grammar.GENERATOR}\` belongs at the top of the sibling test file, not in source`));
       }
       return findings;
     });
   }
 
-  static get a_test_caveat_derives_from_a_tested_claim(): StandardCheck {
-    return this.defineCheck('a_test_caveat_derives_from_a_tested_claim', (context) => {
+  static get invariants_a_test_caveat_derives_from_a_tested_claim(): StandardCheck {
+    return this.defineCheck('invariants_a_test_caveat_derives_from_a_tested_claim', (context) => {
       const findings: Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -227,15 +227,15 @@ class $GeneratorStandard extends CheckStandard.$Class {
           if (!/\b(?:must|never|always|only|cannot)\b/i.test(sentence)) continue;
           if (/Open question:/i.test(sentence)) continue;
           if (symbols.some((symbol) => sentence.includes(symbol))) continue;
-          findings.push(this.finding(this.a_test_caveat_derives_from_a_tested_claim, unit, startLine, `described-register caveat names no header symbol — a constraint the tests do not reach is a claim without a proof: "${sentence.trim().slice(0, 90)}"`));
+          findings.push(this.finding(this.invariants_a_test_caveat_derives_from_a_tested_claim, unit, startLine, `described-register caveat names no header symbol — a constraint the tests do not reach is a claim without a proof: "${sentence.trim().slice(0, 90)}"`));
         }
       }
       return findings;
     });
   }
 
-  static get two_test_files_do_not_share_one_generator_header(): StandardCheck {
-    return this.defineCheck('two_test_files_do_not_share_one_generator_header', (context) => {
+  static get invariants_two_test_files_do_not_share_one_generator_header(): StandardCheck {
+    return this.defineCheck('invariants_two_test_files_do_not_share_one_generator_header', (context) => {
       const findings: Finding[] = [];
       const normalized = new Map<string, SourceUnit>();
       for (const unit of context.tests) {
@@ -246,7 +246,7 @@ class $GeneratorStandard extends CheckStandard.$Class {
         text = text.replaceAll(basename(unit.path).replace(/\.test\.ts$/, ''), '<file>');
         if (!text) continue;
         const twin = normalized.get(text);
-        if (twin) findings.push(this.finding(this.two_test_files_do_not_share_one_generator_header, unit, 1, `generator header is a template twin of ${twin.relativePath} — a Goal that fits another file with the name swapped is not a Goal`));
+        if (twin) findings.push(this.finding(this.invariants_two_test_files_do_not_share_one_generator_header, unit, 1, `generator header is a template twin of ${twin.relativePath} — a Goal that fits another file with the name swapped is not a Goal`));
         else normalized.set(text, unit);
       }
       return findings;
@@ -256,16 +256,16 @@ class $GeneratorStandard extends CheckStandard.$Class {
   static get checks(): readonly StandardCheck[] {
     return [
       ...super.checks,
-      this.a_test_file_opens_with_its_generator_header,
-      this.a_generator_header_carries_both_registers_in_order,
-      this.a_header_symbol_is_declared_in_the_sibling_source,
-      this.a_claim_annotation_sits_directly_above_its_test,
-      this.header_claims_and_annotated_tests_match_one_to_one,
-      this.an_impossibility_is_proved_by_an_exact_negative_test,
-      this.a_contract_pointer_resolves_and_is_proved,
-      this.a_source_tripwire_resolves_to_its_sibling_header,
-      this.a_test_caveat_derives_from_a_tested_claim,
-      this.two_test_files_do_not_share_one_generator_header,
+      this.invariants_a_test_file_opens_with_its_generator_header,
+      this.invariants_a_generator_header_carries_both_registers_in_order,
+      this.invariants_a_header_symbol_is_declared_in_the_sibling_source,
+      this.invariants_a_claim_annotation_sits_directly_above_its_test,
+      this.invariants_header_claims_and_annotated_tests_match_one_to_one,
+      this.invariants_an_impossibility_is_proved_by_an_exact_negative_test,
+      this.invariants_a_contract_pointer_resolves_and_is_proved,
+      this.invariants_a_source_tripwire_resolves_to_its_sibling_header,
+      this.invariants_a_test_caveat_derives_from_a_tested_claim,
+      this.invariants_two_test_files_do_not_share_one_generator_header,
     ];
   }
 
@@ -282,9 +282,9 @@ class $GeneratorStandard extends CheckStandard.$Class {
         .replace(`// ${grammar.IMPOSSIBLE}: $Box — height decreases without a grow call\ntest('height never decreases on its own'`, `${annotation}// ${grammar.IMPOSSIBLE}: $Box — height decreases without a grow call\ntest('height never decreases on its own'`);
     return {
       ...super.proofs,
-      'a_test_file_opens_with_its_generator_header': {
+      'invariants_a_test_file_opens_with_its_generator_header': {
         claim: 'If a file is a test, then its first content is the generator header',
-        impossibility: 'a file breaking a_test_file_opens_with_its_generator_header passes the gate',
+        impossibility: 'a file breaking invariants_a_test_file_opens_with_its_generator_header passes the gate',
         red: [{
           files: {
             ...box,
@@ -297,9 +297,9 @@ class $GeneratorStandard extends CheckStandard.$Class {
         }],
         green: [{ files: boxAndTest }],
       },
-      'a_generator_header_carries_both_registers_in_order': {
+      'invariants_a_generator_header_carries_both_registers_in_order': {
         claim: 'If a header exists, then it has one Goal, the formal register, at least one Impossible if true, and the described register after the formal one',
-        impossibility: 'a file breaking a_generator_header_carries_both_registers_in_order passes the gate',
+        impossibility: 'a file breaking invariants_a_generator_header_carries_both_registers_in_order passes the gate',
         red: [{
           files: {
             ...box,
@@ -311,9 +311,9 @@ class $GeneratorStandard extends CheckStandard.$Class {
         }],
         green: [{ files: boxAndTest }],
       },
-      'a_header_symbol_is_declared_in_the_sibling_source': {
+      'invariants_a_header_symbol_is_declared_in_the_sibling_source': {
         claim: 'If a header names a symbol, then the named Subject or the same-named sibling source declares it',
-        impossibility: 'a file breaking a_header_symbol_is_declared_in_the_sibling_source passes the gate',
+        impossibility: 'a file breaking invariants_a_header_symbol_is_declared_in_the_sibling_source passes the gate',
         red: [
           { files: { ...box, 'src/Box.test.ts': fixture.validTest.replaceAll('$Box —', '$Crate —') }, expectFindings: [/`\$Crate` is not declared in Box\.ts/] },
           { files: { ...box, 'src/Box.test.ts': fixture.validTest.replace('Goal:', 'Subject: Missing.ts\nGoal:') }, expectFindings: [/Subject path does not exist: Missing\.ts/] },
@@ -323,21 +323,21 @@ class $GeneratorStandard extends CheckStandard.$Class {
           { files: { ...box, 'specs/Growth.test.ts': fixture.validTest.replace('Goal:', 'Subject: src/Box.ts\nGoal:') }, options: { testGlobs: ['specs/**/*.test.ts'] } },
         ],
       },
-      'a_claim_annotation_sits_directly_above_its_test': {
+      'invariants_a_claim_annotation_sits_directly_above_its_test': {
         claim: 'If a proof annotation is written, then a test follows it directly, an optional doc comment between',
-        impossibility: 'a file breaking a_claim_annotation_sits_directly_above_its_test passes the gate',
+        impossibility: 'a file breaking invariants_a_claim_annotation_sits_directly_above_its_test passes the gate',
         red: [{ files: { ...box, 'src/Box.test.ts': fixture.validTest.replace(`// ${grammar.DOMAIN}: $Box — If grow is called, then height increases by one\ntest('grow`, `// ${grammar.DOMAIN}: $Box — If grow is called, then height increases by one\nconst seed = 1;\ntest('grow`) }, expectFindings: [/must sit directly above a test/] }],
         green: [{ files: { ...box, 'src/Box.test.ts': fixture.validTest.replace(`// ${grammar.DOMAIN}: $Box — If grow is called, then height increases by one\ntest('grow`, `// ${grammar.DOMAIN}: $Box — If grow is called, then height increases by one\n/** The spec: one grow, one unit. */\ntest('grow`) } }],
       },
-      'header_claims_and_annotated_tests_match_one_to_one': {
+      'invariants_header_claims_and_annotated_tests_match_one_to_one': {
         claim: 'If a header states a domain claim, then an annotated test proves it, and every annotated claim is in the header',
-        impossibility: 'a file breaking header_claims_and_annotated_tests_match_one_to_one passes the gate',
+        impossibility: 'a file breaking invariants_header_claims_and_annotated_tests_match_one_to_one passes the gate',
         red: [{ files: { ...box, 'src/Box.test.ts': fixture.validTest.replace(`// ${grammar.DOMAIN}: $Box — If grow is called, then height increases by one\ntest('grow`, `// ${grammar.DOMAIN}: $Box — If grow is called, then height doubles\ntest('grow`) }, expectFindings: [/has no annotated test/, /absent from the header/] }],
         green: [{ files: boxAndTest }],
       },
-      'an_impossibility_is_proved_by_an_exact_negative_test': {
+      'invariants_an_impossibility_is_proved_by_an_exact_negative_test': {
         claim: 'If a header states an impossibility, then a negative test carries its exact text and a header symbol',
-        impossibility: 'a file breaking an_impossibility_is_proved_by_an_exact_negative_test passes the gate',
+        impossibility: 'a file breaking invariants_an_impossibility_is_proved_by_an_exact_negative_test passes the gate',
         red: [{
           files: {
             ...box,
@@ -349,9 +349,9 @@ class $GeneratorStandard extends CheckStandard.$Class {
         }],
         green: [{ files: boxAndTest }],
       },
-      'a_contract_pointer_resolves_and_is_proved': {
+      'invariants_a_contract_pointer_resolves_and_is_proved': {
         claim: 'If a header links a contract record, then the anchor resolves and an annotated test proves it',
-        impossibility: 'a file breaking a_contract_pointer_resolves_and_is_proved passes the gate',
+        impossibility: 'a file breaking invariants_a_contract_pointer_resolves_and_is_proved passes the gate',
         red: [{
           files: {
             [contractName]: fixture.demoContract,
@@ -370,21 +370,21 @@ class $GeneratorStandard extends CheckStandard.$Class {
           },
         }],
       },
-      'a_source_tripwire_resolves_to_its_sibling_header': {
+      'invariants_a_source_tripwire_resolves_to_its_sibling_header': {
         claim: 'If source carries a domain tripwire, then it names only a symbol the sibling header claims',
-        impossibility: 'a file breaking a_source_tripwire_resolves_to_its_sibling_header passes the gate',
+        impossibility: 'a file breaking invariants_a_source_tripwire_resolves_to_its_sibling_header passes the gate',
         red: [{ files: { 'src/Box.ts': fixture.validClass.replace('  grow() {', `  // ${grammar.DOMAIN}: $Crate\n  grow() {`), 'src/Box.test.ts': fixture.validTest }, expectFindings: [/tripwire `\$Crate` has no header claim in Box\.test\.ts/] }],
         green: [{ files: { 'src/Box.ts': fixture.validClass.replace('  grow() {', `  // ${grammar.DOMAIN}: $Box\n  grow() {`), 'src/Box.test.ts': fixture.validTest } }],
       },
-      'a_test_caveat_derives_from_a_tested_claim': {
+      'invariants_a_test_caveat_derives_from_a_tested_claim': {
         claim: 'If the described register constrains, then the constraint names a header symbol',
-        impossibility: 'a file breaking a_test_caveat_derives_from_a_tested_claim passes the gate',
+        impossibility: 'a file breaking invariants_a_test_caveat_derives_from_a_tested_claim passes the gate',
         red: [{ files: { ...box, 'src/Box.test.ts': fixture.validTest.replace('so growth is the single write path the tests must hold.', 'so growth is the single write path the tests must hold. Width must never change after construction.') }, expectFindings: [/Width must never change/] }],
         green: [{ files: boxAndTest }],
       },
-      'two_test_files_do_not_share_one_generator_header': {
+      'invariants_two_test_files_do_not_share_one_generator_header': {
         claim: 'If two test files exist, then their Goal and described registers differ beyond their own symbol names',
-        impossibility: 'a file breaking two_test_files_do_not_share_one_generator_header passes the gate',
+        impossibility: 'a file breaking invariants_two_test_files_do_not_share_one_generator_header passes the gate',
         red: [{ files: { ...boxAndTest, 'src/Crate.ts': crate(fixture.validClass), 'src/Crate.test.ts': crate(fixture.validTest) }, expectFindings: [/template twin/] }],
         green: [{
           files: {

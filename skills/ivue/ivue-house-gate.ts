@@ -20,13 +20,13 @@
  */
 import { Static } from '../../lib/Static';
 import { CheckStandard, type CheckProof, type StandardCheck } from './ivue-standards-check';
-import { GeneratorStandard } from './ivue-generator-standard';
 
-// This gate opts INTO the invariant methodology (generator headers on test
-// files, claims bound to tests) by extending GeneratorStandard. Not using
-// that discipline? Extend CheckStandard.$Class instead — the ivue-only
-// Standard — and delete the ten generator rows from the menu below.
-class $HouseGate extends GeneratorStandard.$Class {
+// This gate extends the ivue-only Standard. Teams using the invariant
+// methodology (generator headers on test files, claims bound to tests)
+// extend GeneratorStandard.$Class from './ivue-generator-standard'
+// instead — its ten invariants_* checks then join the manifest and this
+// menu.
+class $HouseGate extends CheckStandard.$Class {
   // ── YOUR RULINGS ─────────────────────────────────────────────────────
   // The severity menu: every check at its default, so this gate blocks
   // exactly what the base gate blocks. Flip an entry to 'warn' (report,
@@ -66,17 +66,7 @@ class $HouseGate extends GeneratorStandard.$Class {
       cross_module_class_reads_happen_inside_bodies: 'error',
       declarations_use_full_descriptive_names: 'error',
       class_members_are_ordered_and_spaced: 'error',
-      a_test_file_opens_with_its_generator_header: 'error',
-      a_generator_header_carries_both_registers_in_order: 'error',
-      a_header_symbol_is_declared_in_the_sibling_source: 'error',
-      a_claim_annotation_sits_directly_above_its_test: 'error',
-      header_claims_and_annotated_tests_match_one_to_one: 'error',
-      an_impossibility_is_proved_by_an_exact_negative_test: 'error',
-      a_contract_pointer_resolves_and_is_proved: 'error',
-      a_source_tripwire_resolves_to_its_sibling_header: 'error',
-      a_test_caveat_derives_from_a_tested_claim: 'error',
       the_population_and_skip_list_are_exact: 'error',
-      two_test_files_do_not_share_one_generator_header: 'error',
       // the house example ships FLIPPED: a line budget is advisory by
       // nature — it reports, it never blocks (real classes can be long)
       a_source_file_stays_under_the_line_budget: 'warn',

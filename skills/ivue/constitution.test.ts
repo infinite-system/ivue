@@ -59,8 +59,10 @@ test('the generator standard is the extension mechanism eating its own cooking',
   const report = GeneratorClass.prove({ completenessOnly: true });
   expect(report.problems).toEqual([]);
   // the base stays ivue-only: no header check leaks upward
-  expect(Gate.CheckStandard.Class.checks.map((check) => check.name)).not.toContain('a_test_file_opens_with_its_generator_header');
-  expect(GeneratorClass.checks.map((check) => check.name)).toContain('a_test_file_opens_with_its_generator_header');
+  // the methodology checks wear their jurisdiction as a prefix
+  expect(Gate.CheckStandard.Class.checks.map((check) => check.name)).not.toContain('invariants_a_test_file_opens_with_its_generator_header');
+  expect(GeneratorClass.checks.map((check) => check.name)).toContain('invariants_a_test_file_opens_with_its_generator_header');
+  expect(GeneratorClass.checks.filter((check) => check.name.startsWith('invariants_')).length).toBe(10);
 });
 
 test('prove isolates one check when asked', () => {
