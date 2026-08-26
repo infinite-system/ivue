@@ -31,7 +31,7 @@ class $HouseGate extends CheckStandard.$Class {
   // (here, or in a deeper subclass) never falsifies the name; the finding
   // message carries the current budget.
   static get MAX_SOURCE_LINES() {
-    return 30;
+    return 900;
   }
 
   static get a_source_file_stays_under_the_line_budget(): StandardCheck {

@@ -530,7 +530,9 @@ class $CheckStandard {
       const findings: Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
-        if (!classFile) continue;
+        // A plain namespace class (no Reactive) holds plain state — there
+        // is no reactivity for a field write to trigger.
+        if (!classFile?.isReactive) continue;
         for (const member of classFile.rawClass.members) {
           if (!ts.isPropertyDeclaration(member) || this.isStaticMember(member) || this.isReadonlyMember(member)) continue;
           const initializer = member.initializer;
@@ -655,6 +657,10 @@ class $CheckStandard {
             let inClass = false;
             for (let current: ts.Node | undefined = node.parent; current; current = current.parent) if (ts.isClassDeclaration(current) || ts.isClassExpression(current)) inClass = true;
             if (inClass) return;
+            // A lifecycle hook that delegates ONE call to the model is the
+            // wiring an outliving store needs (its constructor may run
+            // outside any component) — thin bridge allowed, logic is not.
+            if (node.expression.text.startsWith('on') && node.arguments.length === 1 && this.thinModelDelegation(node.arguments[0])) return;
             findings.push(this.componentFinding(this.a_component_has_one_model_owner, component, this.componentLine(component, node), `\`${node.expression.text}()\` in \`<script setup>\` — component-local reactive behavior beside the class; state, derivations, watchers and hooks live in the class`));
           });
         }
@@ -1594,7 +1600,9 @@ export namespace Scroller {
         claim: 'If a class holds mutable state, then it is a getter returning ref or shallowRef, never a mutable plain field',
         impossibility: 'a file breaking Mutable state is a ref-returning getter passes the gate',
         red: [{ files: { 'src/Box.ts': fixture.validClass.replace('  get height() {', '  count = 0;\n\n  get height() {') }, expectFindings: [/`count` is a mutable plain field/] }],
-        green: [{ files: { 'src/Box.ts': fixture.validClass.replace("import { ref, watch } from 'vue';", "import { ref, shallowRef, watch } from 'vue';").replace('  get width() {', '  get rows() {\n    return shallowRef<number[]>([]);\n  }\n  get width() {') } }],
+        // Db.ts is a PLAIN namespace class (no Reactive) — plain mutable
+        // fields are its legitimate state; nothing reactive to trigger.
+        green: [{ files: { 'src/Box.ts': fixture.validClass.replace("import { ref, watch } from 'vue';", "import { ref, shallowRef, watch } from 'vue';").replace('  get width() {', '  get rows() {\n    return shallowRef<number[]>([]);\n  }\n  get width() {'), 'src/Db.ts': "class $Db {\n  connectionCount = 0;\n\n  open() {\n    this.connectionCount++;\n  }\n}\n\nexport namespace Db {\n  export const $Class = $Db;\n  export let Class = $Class;\n}\n" } }],
       },
       'A Ref is read and written through value': {
         claim: 'If class code writes a Ref getter, then it writes .value, never assigns over the getter',
@@ -1638,10 +1646,12 @@ export namespace Scroller {
         claim: 'If a component has behavior, then exactly one class instance owns it and the script setup carries no parallel reactive behavior',
         impossibility: 'a file breaking A component has one model owner passes the gate',
         red: [{
-          files: { ...box, 'src/Box.vue': fixture.validSfc.replace('const box = new Box.Class(props);', "import { ref, watch } from 'vue';\nconst box = new Box.Class(props);\nconst spare = new Box.Class(props);\nconst open = ref(false);\nwatch(open, () => box.grow());\nfunction toggle() { open.value = !open.value; }") },
-          expectFindings: [/second model is constructed/, /`ref\(\)` in `<script setup>`/, /`watch\(\)` in `<script setup>`/, /free function `toggle`/],
+          files: { ...box, 'src/Box.vue': fixture.validSfc.replace('const box = new Box.Class(props);', "import { onMounted, ref, watch } from 'vue';\nconst box = new Box.Class(props);\nconst spare = new Box.Class(props);\nconst open = ref(false);\nwatch(open, () => box.grow());\nonMounted(() => { open.value = !open.value; });\nfunction toggle() { open.value = !open.value; }") },
+          expectFindings: [/second model is constructed/, /`ref\(\)` in `<script setup>`/, /`watch\(\)` in `<script setup>`/, /`onMounted\(\)` in `<script setup>`/, /free function `toggle`/],
         }],
-        green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc } }],
+        // a lifecycle hook that DELEGATES one call to the model is wiring,
+        // not parallel behavior — the bridge an outliving store needs
+        green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc.replace("const { height } = box;", "const { height } = box;\n\nonMounted(() => box.grow());").replace("import { Box } from './Box';", "import { onMounted } from 'vue';\nimport { Box } from './Box';") } }],
       },
       'The state destructure is total': {
         claim: 'If a template touches a Ref, then that Ref is destructured, no plain getter or method is destructured, and no state binding shadows a prop',
@@ -2123,6 +2133,21 @@ export namespace Scroller {
 
   static isFunctionLike(node: ts.Node | undefined): boolean {
     return !!node && (ts.isArrowFunction(node) || ts.isFunctionExpression(node));
+  }
+
+  /** True when an arrow does nothing but call one method on one binding —
+   * `() => app.probe()` — the only body a script-setup lifecycle hook may have. */
+  static thinModelDelegation(callback: ts.Expression | ts.Node): boolean {
+    if (!ts.isArrowFunction(callback)) return false;
+    let body: ts.Node | undefined = callback.body;
+    if (ts.isBlock(body)) {
+      if (body.statements.length !== 1) return false;
+      const only = body.statements[0];
+      body = ts.isReturnStatement(only) ? only.expression : ts.isExpressionStatement(only) ? only.expression : undefined;
+    }
+    if (!body) return false;
+    if (ts.isAwaitExpression(body)) body = body.expression;
+    return ts.isCallExpression(body) && ts.isPropertyAccessExpression(body.expression) && ts.isIdentifier(body.expression.expression);
   }
 
   /** The single expression a thin closure delegates to, or null when it does more. */
