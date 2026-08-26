@@ -9,7 +9,7 @@ const app = AppStore.use();
 
 <template>
   <div class="domain">
-    <nav class="subtabs" :aria-label="`${props.domain} sections`">
+    <nav class="subtabs" :aria-label="app.sectionsLabel(props.domain)">
       <button
         v-for="tab in app.TABS_BY_DOMAIN[props.domain]"
         :key="tab.name"

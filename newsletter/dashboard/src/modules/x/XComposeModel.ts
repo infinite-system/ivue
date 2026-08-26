@@ -149,10 +149,24 @@ class $XComposeModel {
     return this.mode.value === 'thread';
   }
 
-  weightedLengthOf(text: string) {
-    const withoutUrls = text.replace(/https?:\/\/\S+/g, '');
-    const urlCount = (text.match(/https?:\/\/\S+/g) ?? []).length;
-    return [...withoutUrls].length + urlCount * this.URL_WEIGHT;
+  get isLinkMode() {
+    return this.mode.value === 'link';
+  }
+
+  get isContentMode() {
+    return this.mode.value === 'content';
+  }
+
+  get imagePickerVisible() {
+    return this.availableImages.length > 0 && !this.isThreadMode;
+  }
+
+  get rebuildButtonLabel() {
+    return this.threadLoading.value ? 'Building…' : 'Rebuild from article';
+  }
+
+  get scheduleButtonLabel() {
+    return this.isThreadMode ? 'Schedule thread' : 'Schedule post';
   }
 
   get weightedLength() {
@@ -165,13 +179,6 @@ class $XComposeModel {
 
   get overLimit() {
     return this.remaining < 0;
-  }
-
-  threadRemaining(index: number) {
-    return (
-      this.TWEET_LIMIT -
-      this.weightedLengthOf(this.threadSegments.value[index]?.text ?? '')
-    );
   }
 
   get threadValid() {
@@ -222,6 +229,34 @@ class $XComposeModel {
 
   get canSchedule() {
     return this.draftValid && this.scheduleTimeValid;
+  }
+
+  // ---- measures and labels (methods — they take arguments) ----
+
+  weightedLengthOf(text: string) {
+    const withoutUrls = text.replace(/https?:\/\/\S+/g, '');
+    const urlCount = (text.match(/https?:\/\/\S+/g) ?? []).length;
+    return [...withoutUrls].length + urlCount * this.URL_WEIGHT;
+  }
+
+  threadRemaining(index: number) {
+    return (
+      this.TWEET_LIMIT -
+      this.weightedLengthOf(this.threadSegments.value[index]?.text ?? '')
+    );
+  }
+
+  threadOverLimit(index: number) {
+    return this.threadRemaining(index) < 0;
+  }
+
+  imageCountLabel(segment: ThreadSegment) {
+    const count = segment.imageUrls.length;
+    return count === 1 ? '1 image' : `${count} images`;
+  }
+
+  tweetUrl(tweet: TweetRow) {
+    return `https://x.com/i/status/${tweet.tweetId}`;
   }
 
   // ---- loading ----

@@ -8,7 +8,6 @@ const {
   posts,
   slug,
   draft,
-  mode,
   threadSegments,
   threadLoading,
   xConfigured,
@@ -17,6 +16,7 @@ const {
   scheduleAt,
   scheduledJobs,
   loading,
+  postArmed,
 } = model;
 </script>
 
@@ -56,7 +56,7 @@ const {
             <input
               type="radio"
               value="link"
-              :checked="mode === 'link'"
+              :checked="model.isLinkMode"
               @change="model.setMode('link')"
             />
             Link — X renders the post's card
@@ -65,7 +65,7 @@ const {
             <input
               type="radio"
               value="content"
-              :checked="mode === 'content'"
+              :checked="model.isContentMode"
               @change="model.setMode('content')"
             />
             Content — substance + images
@@ -74,7 +74,7 @@ const {
             <input
               type="radio"
               value="thread"
-              :checked="mode === 'thread'"
+              :checked="model.isThreadMode"
               @change="model.setMode('thread')"
             />
             Thread — the full article, chained
@@ -82,7 +82,7 @@ const {
         </div>
 
         <div
-          v-if="model.availableImages.length && !model.isThreadMode"
+          v-if="model.imagePickerVisible"
           class="image-picker"
         >
           <label>Images (first tweet, up to {{ model.MAXIMUM_IMAGES }})</label>
@@ -120,7 +120,7 @@ const {
               :disabled="threadLoading"
               @click="model.buildThread()"
             >
-              {{ threadLoading ? 'Building…' : 'Rebuild from article' }}
+              {{ model.rebuildButtonLabel }}
             </button>
           </div>
           <div
@@ -150,13 +150,11 @@ const {
             <div class="thread-segment__meta">
               <span
                 class="muted counter"
-                :class="{ error: model.threadRemaining(index) < 0 }"
+                :class="{ error: model.threadOverLimit(index) }"
               >
                 {{ model.threadRemaining(index) }} left
                 <template v-if="segment.imageUrls.length">
-                  · {{ segment.imageUrls.length }} image{{
-                    segment.imageUrls.length > 1 ? 's' : ''
-                  }}
+                  · {{ model.imageCountLabel(segment) }}
                 </template>
               </span>
               <button
@@ -182,7 +180,7 @@ const {
           {{ model.postButtonLabel }}
         </button>
         <button
-          v-if="model.postArmed"
+          v-if="postArmed"
           class="ghost"
           type="button"
           @click="model.disarm()"
@@ -204,7 +202,7 @@ const {
           :disabled="!model.canSchedule"
           @click="model.scheduleCurrent()"
         >
-          {{ model.isThreadMode ? 'Schedule thread' : 'Schedule post' }}
+          {{ model.scheduleButtonLabel }}
         </button>
 
         <ul v-if="scheduledJobs.length" class="job-queue">
@@ -236,7 +234,7 @@ const {
               <td class="tweet-text">
                 <a
                   class="linklike"
-                  :href="`https://x.com/i/status/${tweet.tweetId}`"
+                  :href="model.tweetUrl(tweet)"
                   target="_blank"
                   rel="noopener"
                 >

@@ -61,8 +61,6 @@ class $TestStatement {
 }
 
 class $TestDatabase {
-  database = new DatabaseSync(':memory:');
-
   constructor() {
     for (const migration of readdirSync(migrationsDirectory).sort()) {
       if (!migration.endsWith('.sql')) continue;
@@ -71,6 +69,8 @@ class $TestDatabase {
       );
     }
   }
+
+  readonly database = new DatabaseSync(':memory:');
 
   prepare(sql: string): $TestStatement {
     return new $TestStatement(this.database, sql);

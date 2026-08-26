@@ -93,6 +93,14 @@ class $NewsletterSettingsModel {
     return `One email every ${days} day${days === 1 ? '' : 's'}, at ${this.hourLabel(hour)} in each subscriber's own timezone.`;
   }
 
+  cadenceLabel(list: string) {
+    return `Cadence for ${list}`;
+  }
+
+  sendHourLabel(list: string) {
+    return `Send hour for ${list}`;
+  }
+
   hourLabel(hour: number) {
     if (!Number.isInteger(hour) || hour < 0 || hour > 23) return '—';
     const twelveHour = hour % 12 === 0 ? 12 : hour % 12;

@@ -86,7 +86,7 @@ const {
                   min="1"
                   max="30"
                   placeholder="inherit"
-                  :aria-label="`Cadence for ${entry.list}`"
+                  :aria-label="model.cadenceLabel(entry.list)"
                 />
               </td>
               <td>
@@ -96,7 +96,7 @@ const {
                   min="0"
                   max="23"
                   placeholder="inherit"
-                  :aria-label="`Send hour for ${entry.list}`"
+                  :aria-label="model.sendHourLabel(entry.list)"
                 />
               </td>
               <td class="muted">

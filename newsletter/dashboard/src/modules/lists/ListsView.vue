@@ -61,7 +61,7 @@ const {
               >
                 <input
                   v-model="renameDraft"
-                  :aria-label="`New name for ${entry.list}`"
+                  :aria-label="model.renameLabel(entry.list)"
                 />
                 <button
                   class="primary"

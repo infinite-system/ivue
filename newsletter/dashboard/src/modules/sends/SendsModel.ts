@@ -75,6 +75,10 @@ class $SendsModel {
     }
   }
 
+  rowKey(row: SendLogRow) {
+    return row.email + ' ' + row.slug;
+  }
+
   searchNow() {
     this.offset.value = 0;
     this.refresh();

@@ -111,14 +111,14 @@ const {
           <tr
             v-for="row in rows"
             v-else
-            :key="row.email + row.list"
+            :key="model.rowKey(row)"
             :class="{ suppressed: row.unsubscribedAt }"
           >
             <td class="check">
               <input
                 type="checkbox"
                 :checked="model.isSelected(row.email)"
-                :aria-label="`Select ${row.email}`"
+                :aria-label="model.selectLabel(row)"
                 @change="model.toggleSelected(row.email)"
               />
             </td>

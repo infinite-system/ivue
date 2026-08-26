@@ -90,6 +90,20 @@ class $CommentsModel {
     return row.status === 'pending' ? 'pending' : 'approved';
   }
 
+  isPending(row: CommentRow) {
+    return row.status === 'pending';
+  }
+
+  statusTone(row: CommentRow) {
+    return this.isPending(row) ? 'off' : 'on';
+  }
+
+  lockActionTitle(row: CommentRow) {
+    return row.locked
+      ? 'Reopen this thread to replies'
+      : 'Close this thread to new replies';
+  }
+
   // ---- actions ----
   async refresh() {
     this.loading.value = true;

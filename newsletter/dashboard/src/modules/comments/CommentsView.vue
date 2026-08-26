@@ -70,12 +70,12 @@ const {
             v-for="row in rows"
             v-else
             :key="row.id"
-            :class="{ suppressed: row.status !== 'pending' }"
+            :class="{ suppressed: !model.isPending(row) }"
           >
             <td>
               <span
                 class="status"
-                :class="row.status === 'pending' ? 'off' : 'on'"
+                :class="model.statusTone(row)"
               >
                 {{ model.statusLabel(row) }}
               </span>
@@ -104,7 +104,7 @@ const {
             <td>{{ Format.Class.dateTime(row.submittedAt) }}</td>
             <td class="list-actions">
               <button
-                v-if="row.status === 'pending'"
+                v-if="model.isPending(row)"
                 class="primary"
                 :disabled="model.isBusy(row.id)"
                 @click="model.approve(row)"
@@ -113,11 +113,7 @@ const {
               </button>
               <button
                 :disabled="model.isBusy(row.id)"
-                :title="
-                  row.locked
-                    ? 'Reopen this thread to replies'
-                    : 'Close this thread to new replies'
-                "
+                :title="model.lockActionTitle(row)"
                 @click="model.toggleLock(row)"
               >
                 {{ model.lockLabel(row) }}

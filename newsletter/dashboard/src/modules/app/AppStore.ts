@@ -63,6 +63,11 @@ class $AppStore {
     return ref<Toast[]>([]);
   }
 
+  // monotonic toast id source — survives dismissals, never reused
+  get toastCounter() {
+    return ref(0);
+  }
+
   // ---- routing (derived from the router's reactive currentRoute) ----
 
   get view(): ViewName {
@@ -79,6 +84,23 @@ class $AppStore {
       : 'newsletter';
   }
 
+  // Any email address, anywhere in the app, opens that subscriber's
+  // modal — history, and the projected pipeline of what arrives next.
+  // The address rides the query string, so the modal overlays whatever
+  // view is open and survives a reload.
+  get subscriberEmail(): string {
+    return String(this.$router.currentRoute.value.query.subscriber ?? '');
+  }
+
+  // The dialog's tab rides the query too (?subscriberTab=upcoming), so
+  // a tab choice survives reload and back/forward. Sent is the default
+  // and keeps the URL clean (vue-router drops undefined params).
+  get subscriberTab(): SubscriberTabName {
+    return this.$router.currentRoute.value.query.subscriberTab === 'upcoming'
+      ? 'upcoming'
+      : 'sent';
+  }
+
   isOpen(view: ViewName) {
     return this.view === view;
   }
@@ -89,6 +111,10 @@ class $AppStore {
 
   open(view: ViewName) {
     this.$router.push({ name: view });
+  }
+
+  sectionsLabel(domain: DomainName) {
+    return `${domain} sections`;
   }
 
   openDomain(domain: DomainName) {
@@ -105,14 +131,6 @@ class $AppStore {
     this.$router.push({ name: 'posts' });
   }
 
-  // Any email address, anywhere in the app, opens that subscriber's
-  // modal — history, and the projected pipeline of what arrives next.
-  // The address rides the query string, so the modal overlays whatever
-  // view is open and survives a reload.
-  get subscriberEmail(): string {
-    return String(this.$router.currentRoute.value.query.subscriber ?? '');
-  }
-
   openSubscriber(email: string) {
     this.$router.push({
       query: {
@@ -120,15 +138,6 @@ class $AppStore {
         subscriber: email,
       },
     });
-  }
-
-  // The dialog's tab rides the query too (?subscriberTab=upcoming), so
-  // a tab choice survives reload and back/forward. Sent is the default
-  // and keeps the URL clean (vue-router drops undefined params).
-  get subscriberTab(): SubscriberTabName {
-    return this.$router.currentRoute.value.query.subscriberTab === 'upcoming'
-      ? 'upcoming'
-      : 'sent';
   }
 
   openSubscriberTab(tab: SubscriberTabName) {
@@ -186,7 +195,7 @@ class $AppStore {
   // ---- toasts ----
 
   notify(message: string, tone: ToastTone = 'info') {
-    const toast: Toast = { id: ++this.toastCounter, message, tone };
+    const toast: Toast = { id: ++this.toastCounter.value, message, tone };
     this.toasts.value = [...this.toasts.value, toast];
     setTimeout(() => this.dismiss(toast.id), 4500);
   }
@@ -208,7 +217,6 @@ class $AppStore {
     );
   }
 
-  toastCounter = 0;
 }
 
 export namespace AppStore {

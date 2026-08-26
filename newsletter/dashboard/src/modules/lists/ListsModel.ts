@@ -65,6 +65,10 @@ class $ListsModel {
     return list === this.DEFAULT_LIST;
   }
 
+  renameLabel(list: string) {
+    return `New name for ${list}`;
+  }
+
   isRenaming(list: string) {
     return this.renamingList.value === list;
   }

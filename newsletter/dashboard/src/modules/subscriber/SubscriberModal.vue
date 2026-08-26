@@ -39,7 +39,7 @@ const {
               joined {{ Format.Class.date(membership.subscribedAt) }}
             </span>
             <span class="muted">
-              {{ membership.timezone ?? `${detail.defaultTimezone} (default)` }}
+              {{ model.timezoneLabel(membership) }}
             </span>
           </li>
         </ul>
@@ -87,10 +87,10 @@ const {
             <li
               v-for="(entry, position) in model.upcoming"
               :key="entry.slug"
-              :class="{ next: position === 0 }"
+              :class="{ next: model.isNext(position) }"
             >
-              <span v-if="position === 0" class="status on">next</span>
-              <span v-else class="pipeline-position">{{ position + 1 }}</span>
+              <span v-if="model.isNext(position)" class="status on">next</span>
+              <span v-else class="pipeline-position">{{ model.pipelinePosition(position) }}</span>
               <button
                 class="linklike slug"
                 @click="model.openPost(entry.slug)"

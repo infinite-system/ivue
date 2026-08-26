@@ -43,22 +43,6 @@ class $SubscriberModel {
     return this.$app.subscriberTab;
   }
 
-  isTabOpen(tab: SubscriberTabName) {
-    return this.activeTab === tab;
-  }
-
-  openTab(tab: SubscriberTabName) {
-    this.$app.openSubscriberTab(tab);
-  }
-
-  tabLabel(tab: SubscriberTabName) {
-    const label = this.TABS.find((entry) => entry.name === tab)?.label ?? tab;
-    if (!this.detail.value) return label;
-    const count =
-      tab === 'sent' ? this.history.length : this.upcoming.length;
-    return `${label} (${count})`;
-  }
-
   // ---- derived ----
   get isOpen() {
     return Boolean(this.$app.subscriberEmail);
@@ -108,6 +92,38 @@ class $SubscriberModel {
 
   get isFullyCaughtUp() {
     return Boolean(this.detail.value) && !this.upcoming.length;
+  }
+
+  // ---- tabs ----
+  isTabOpen(tab: SubscriberTabName) {
+    return this.activeTab === tab;
+  }
+
+  openTab(tab: SubscriberTabName) {
+    this.$app.openSubscriberTab(tab);
+  }
+
+  tabLabel(tab: SubscriberTabName) {
+    const label = this.TABS.find((entry) => entry.name === tab)?.label ?? tab;
+    if (!this.detail.value) return label;
+    const count =
+      tab === 'sent' ? this.history.length : this.upcoming.length;
+    return `${label} (${count})`;
+  }
+
+  timezoneLabel(membership: SubscriberDetail['memberships'][number]) {
+    return (
+      membership.timezone ??
+      (this.detail.value?.defaultTimezone ?? '') + ' (default)'
+    );
+  }
+
+  isNext(position: number) {
+    return position === 0;
+  }
+
+  pipelinePosition(position: number) {
+    return position + 1;
   }
 
   // ---- actions ----

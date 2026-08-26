@@ -156,6 +156,14 @@ class $SubscribersModel {
     this.refresh();
   }
 
+  rowKey(row: SubscriberRow) {
+    return row.email + ' ' + row.list;
+  }
+
+  selectLabel(row: SubscriberRow) {
+    return `Select ${row.email}`;
+  }
+
   isSelected(email: string) {
     return this.selectedEmails.value.includes(email);
   }

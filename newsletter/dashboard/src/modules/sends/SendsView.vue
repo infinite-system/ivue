@@ -51,7 +51,7 @@ const {
               targeted sends deliver.
             </td>
           </tr>
-          <tr v-for="row in rows" v-else :key="row.email + row.slug">
+          <tr v-for="row in rows" v-else :key="model.rowKey(row)">
             <td>{{ Format.Class.dateTime(row.sentAt) }}</td>
             <td>
               <button class="linklike" @click="app.openSubscriber(row.email)">

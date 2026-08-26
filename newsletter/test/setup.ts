@@ -4,12 +4,12 @@
 import { timingSafeEqual } from 'node:crypto';
 
 const subtle = crypto.subtle as SubtleCrypto & {
-  timingSafeEqual?: (a: ArrayBuffer, b: ArrayBuffer) => boolean;
+  timingSafeEqual?: (left: ArrayBuffer, right: ArrayBuffer) => boolean;
 };
 if (typeof subtle.timingSafeEqual !== 'function') {
   Object.defineProperty(subtle, 'timingSafeEqual', {
-    value: (a: ArrayBuffer, b: ArrayBuffer) =>
-      timingSafeEqual(new Uint8Array(a), new Uint8Array(b)),
+    value: (left: ArrayBuffer, right: ArrayBuffer) =>
+      timingSafeEqual(new Uint8Array(left), new Uint8Array(right)),
     configurable: true,
   });
 }
