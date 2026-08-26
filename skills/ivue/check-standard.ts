@@ -57,16 +57,25 @@ export interface GateOptions {
   sourceRoots: string[];
   testGlobs: string[];
   skipListPath?: string;
+  /** checks demoted to warnings for this run — reported, never blocking */
+  warnChecks?: string[];
+  /** checks disabled for this run — not executed, announced in the summary */
+  offChecks?: string[];
   /** the `Static` used by the runtime probe; defaults to this package's own */
   staticImplementation?: StaticTransform | null;
 }
 
 export interface GateResult {
+  /** blocking findings — checks at severity error */
   findings: Finding[];
+  /** findings from checks demoted to warn — reported, never blocking */
+  warnings: Finding[];
   suppressed: Finding[];
   sources: string[];
   tests: string[];
   unenforced: string[];
+  /** checks turned off for this run — announced, never silent */
+  off: string[];
 }
 
 export interface StandardCheck {
@@ -89,6 +98,8 @@ export interface CheckProofArm {
   expectFindings?: (RegExp | string)[];
   /** red arms: exact number of findings the check must produce */
   expectCount?: number;
+  /** arms with warn-demoted checks: each pattern must match a warning */
+  expectWarnings?: (RegExp | string)[];
   /** red arms for population refusals: run() must throw matching this */
   expectThrows?: RegExp;
 }
@@ -1292,6 +1303,13 @@ class $CheckStandard {
     return new Set(this.checks.map((entry) => entry.name));
   }
 
+  /** Default severity overrides — a house gate ships its team's rulings here
+   * ({ 'Check name': 'warn' | 'off' }); everything else is an error. The
+   * command line's --warn/--off override per run. */
+  static get severities(): Readonly<Record<string, 'warn' | 'off'>> {
+    return {};
+  }
+
   // shared proof fixtures, assembled once per receiver (grammar tokens
   // interpolated at runtime so scanners never read them as this file's own)
   static get $fixtures() {
@@ -1871,7 +1889,7 @@ export namespace Scroller {
         green: [{ files: boxAndTest }],
       },
       'The population and skip-list are exact': {
-        claim: 'If the gate runs, then it refuses zero files, unmatched globs, unknown check names, duplicate and stale skips',
+        claim: 'If the gate runs, then it refuses zero files, unmatched globs, unknown check names, duplicate and stale skips, and unknown or conflicting severity overrides',
         impossibility: 'a file breaking The population and skip-list are exact passes the gate',
         red: [
           { files: { 'src/.keep': '' }, expectThrows: /no source files discovered/ },
@@ -1881,12 +1899,20 @@ export namespace Scroller {
           { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'A class file is named after its class', reason: 'never fires here' }, { path: 'src/Gone.ts', check: 'A class file is named after its class', reason: 'file removed' }]) }, options: { skipListPath: 'skips.json' }, expectFindings: [/no longer fires on src\/Box\.ts/, /src\/Gone\.ts does not exist/] },
           { files: { ...box, 'skips.json': 'src/Box.ts\tA class file is named after its class\treason\n' }, options: { skipListPath: 'skips.json' }, expectThrows: /a JSON array of \{ path, check, reason \}/ },
           { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'A class file is named after its class' }]) }, options: { skipListPath: 'skips.json' }, expectThrows: /entry 1: .*reason/ },
+          { files: box, options: { warnChecks: ['No such check'] }, expectThrows: /unknown check name/ },
+          { files: box, options: { warnChecks: ['A class file is named after its class'], offChecks: ['A class file is named after its class'] }, expectThrows: /both warn and off/ },
         ],
         // Crate.ts deliberately declares $Box — the naming check fires and
         // the skip row suppresses it, proving a used skip is not stale.
         // Crate.ts deliberately declares $Box — the naming check fires and
         // the JSON row suppresses it, proving a used skip is not stale
-        green: [{ files: { 'src/Crate.ts': fixture.validClass, 'src/Crate.test.ts': fixture.validTest, 'skips.json': JSON.stringify([{ path: 'src/Crate.ts', check: 'A class file is named after its class', reason: 'legacy file name kept for the public import path' }], null, 2) }, options: { skipListPath: 'skips.json' } }],
+        green: [
+          { files: { 'src/Crate.ts': fixture.validClass, 'src/Crate.test.ts': fixture.validTest, 'skips.json': JSON.stringify([{ path: 'src/Crate.ts', check: 'A class file is named after its class', reason: 'legacy file name kept for the public import path' }], null, 2) }, options: { skipListPath: 'skips.json' } },
+          // demoted to warn: the breach reports as a warning, blocks nothing
+          { files: { 'src/Crate.ts': fixture.validClass, 'src/Crate.test.ts': fixture.validTest }, options: { warnChecks: ['A class file is named after its class'] }, expectWarnings: [/`Crate\.ts` declares `\$Box`/] },
+          // off: the check does not run at all — no finding, no warning
+          { files: { 'src/Crate.ts': fixture.validClass, 'src/Crate.test.ts': fixture.validTest }, options: { offChecks: ['A class file is named after its class'] } },
+        ],
       },
       'Two test files do not share one generator header': {
         claim: 'If two test files exist, then their Goal and described registers differ beyond their own symbol names',
@@ -2361,6 +2387,29 @@ export namespace Scroller {
   /** The skip list is a JSON array of { path, check, reason } — named
    * fields, no invisible delimiters. Every entry must name a real check
    * and carry a reason; duplicates are refused. */
+  /** The run's final severity per check: the receiver's `severities`
+   * defaults, overridden by the run's --warn/--off. Unknown names and a
+   * check assigned both warn and off are refused. */
+  static resolveSeverities(options: GateOptions): Map<string, 'warn' | 'off'> {
+    const known = this.checkNames;
+    const resolved = new Map<string, 'warn' | 'off'>();
+    for (const [name, severity] of Object.entries(this.severities)) {
+      if (!known.has(name)) throw new CheckStandard.GateUsageError(`severities: unknown check name "${name}" — --list names every check`);
+      resolved.set(name, severity);
+    }
+    for (const [flag, severity] of [['--warn', 'warn'], ['--off', 'off']] as const) {
+      const names = flag === '--warn' ? options.warnChecks : options.offChecks;
+      for (const name of names ?? []) {
+        if (!known.has(name)) throw new CheckStandard.GateUsageError(`${flag}: unknown check name "${name}" — --list names every check`);
+        resolved.set(name, severity);
+      }
+    }
+    for (const name of options.warnChecks ?? []) {
+      if ((options.offChecks ?? []).includes(name)) throw new CheckStandard.GateUsageError(`"${name}" is both warn and off — pick one severity`);
+    }
+    return resolved;
+  }
+
   static readSkipList(cwd: string, path: string): SkipRow[] {
     const absolute = isAbsolute(path) ? path : resolve(cwd, path);
     if (!existsSync(absolute)) throw new CheckStandard.GateUsageError(`skip-list not found: ${path}`);
@@ -2430,6 +2479,7 @@ export namespace Scroller {
       if (!tests.some((unit) => matcher.regexp.test(unit.relativePath))) throw new CheckStandard.GateUsageError(`test glob matches no file: ${matcher.glob}`);
     }
     const skips = options.skipListPath ? this.readSkipList(cwd, options.skipListPath) : [];
+    const severities = this.resolveSeverities(options);
 
     const context: GateContext = {
       cwd,
@@ -2441,9 +2491,13 @@ export namespace Scroller {
       staticImplementation: options.staticImplementation ?? null,
     };
     const raw: Finding[] = [];
-    for (const entry of this.checks) if (entry.enforced) raw.push(...entry.run(context));
+    for (const entry of this.checks) {
+      if (!entry.enforced || severities.get(entry.name) === 'off') continue;
+      raw.push(...entry.run(context));
+    }
 
     const findings: Finding[] = [];
+    const warnings: Finding[] = [];
     const suppressed: Finding[] = [];
     const used = new Set<SkipRow>();
     for (const item of raw) {
@@ -2451,7 +2505,8 @@ export namespace Scroller {
       if (row) {
         used.add(row);
         suppressed.push(item);
-      } else findings.push(item);
+      } else if (severities.get(item.check) === 'warn') warnings.push(item);
+      else findings.push(item);
     }
     for (const row of skips) {
       if (!used.has(row)) {
@@ -2461,13 +2516,17 @@ export namespace Scroller {
         findings.push({ check: this.the_population_and_skip_list_are_exact.name, file: options.skipListPath ?? 'skip-list', line: row.line, message });
       }
     }
-    findings.sort((first, second) => first.file.localeCompare(second.file) || first.line - second.line);
+    const byPlace = (first: Finding, second: Finding) => first.file.localeCompare(second.file) || first.line - second.line;
+    findings.sort(byPlace);
+    warnings.sort(byPlace);
     return {
       findings,
+      warnings,
       suppressed,
       sources: sources.map((unit) => unit.relativePath),
       tests: tests.map((unit) => unit.relativePath),
       unenforced: this.checks.filter((entry) => !entry.enforced).map((entry) => entry.name),
+      off: this.checks.filter((entry) => severities.get(entry.name) === 'off').map((entry) => entry.name),
     };
   }
 
@@ -2515,9 +2574,14 @@ export namespace Scroller {
             };
             if (arm.options && 'staticImplementation' in arm.options) gateOptions.staticImplementation = arm.options.staticImplementation ?? null;
             let findings: Finding[] = [];
+            let warnings: Finding[] = [];
             let thrown: Error | null = null;
             try {
-              findings = this.run(gateOptions).findings.filter((item) => item.check === check.name);
+              const result = this.run(gateOptions);
+              findings = result.findings.filter((item) => item.check === check.name);
+              // warnings stay unfiltered: a severity arm demotes ANOTHER
+              // check, so its warning carries that check's name
+              warnings = result.warnings;
             } catch (error) {
               thrown = error as Error;
             }
@@ -2525,15 +2589,22 @@ export namespace Scroller {
               if (!thrown || !arm.expectThrows.test(thrown.message)) problems.push(`${check.name} ${kind} arm: expected a refusal matching ${arm.expectThrows} — got ${thrown ? thrown.message : `${findings.length} finding(s)`}`);
             } else if (thrown) {
               problems.push(`${check.name} ${kind} arm: the gate threw: ${thrown.message}`);
-            } else if (kind === 'red') {
-              for (const expected of arm.expectFindings ?? []) {
+            } else {
+              for (const expected of arm.expectWarnings ?? []) {
                 const pattern = typeof expected === 'string' ? new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) : expected;
-                if (!findings.some((item) => pattern.test(item.message))) problems.push(`${check.name} red arm: no finding matches ${pattern}`);
+                if (!warnings.some((item) => pattern.test(item.message))) problems.push(`${check.name} ${kind} arm: no warning matches ${pattern}`);
               }
-              if (!arm.expectFindings?.length && !findings.length) problems.push(`${check.name} red arm: the planted defect produced no finding`);
-              if (arm.expectCount !== undefined && findings.length !== arm.expectCount) problems.push(`${check.name} red arm: expected ${arm.expectCount} finding(s), got ${findings.length}`);
-            } else if (findings.length) {
-              problems.push(`${check.name} green arm: the conforming form produced ${findings.length} finding(s): ${findings[0].message}`);
+              if (!arm.expectWarnings?.length && warnings.length) problems.push(`${check.name} ${kind} arm: unexpected warning(s): ${warnings[0].message}`);
+              if (kind === 'red') {
+                for (const expected of arm.expectFindings ?? []) {
+                  const pattern = typeof expected === 'string' ? new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) : expected;
+                  if (!findings.some((item) => pattern.test(item.message))) problems.push(`${check.name} red arm: no finding matches ${pattern}`);
+                }
+                if (!arm.expectFindings?.length && !findings.length) problems.push(`${check.name} red arm: the planted defect produced no finding`);
+                if (arm.expectCount !== undefined && findings.length !== arm.expectCount) problems.push(`${check.name} red arm: expected ${arm.expectCount} finding(s), got ${findings.length}`);
+              } else if (findings.length) {
+                problems.push(`${check.name} green arm: the conforming form produced ${findings.length} finding(s): ${findings[0].message}`);
+              }
             }
             ran[kind === 'red' ? 'red' : 'green']++;
           } finally {
@@ -2552,7 +2623,10 @@ usage:
   check-standard --source-root <dir> [--source-root <dir>…]
                  --test-glob '<glob>' [--test-glob '<glob>'…]
                  [--skip-list <path>]   a JSON array of { path, check, reason }
-  check-standard --list                 print every check name
+  check-standard --list                 print every check name and severity
+  check-standard … --warn '<check name>' --off '<check name>'
+                 demote a check to a warning / turn it off for this run
+                 (repeatable; a house gate ships defaults in its severities getter)
   check-standard --prove ['<check name>']   run the gate's own constitution
                                         (name it to isolate one check's arms)
 
@@ -2560,6 +2634,8 @@ Exit: 0 clean · 1 findings · 2 usage (zero files, unmatched glob, unknown chec
 name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
     const sourceRoots: string[] = [];
     const testGlobs: string[] = [];
+    const warnChecks: string[] = [];
+    const offChecks: string[] = [];
     let skipListPath: string | undefined;
     for (let index = 0; index < argv.length; index++) {
       const argument = argv[index];
@@ -2573,7 +2649,11 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
           console.log(HELP);
           return 0;
         } else if (argument === '--list') {
-          for (const entry of this.checks) console.log(`${entry.enforced ? 'enforced   ' : 'not yet    '} ${entry.name}`);
+          for (const entry of this.checks) {
+            const severity = this.severities[entry.name];
+            const label = !entry.enforced ? 'not yet' : (severity ?? 'error');
+            console.log(`${label.padEnd(11)} ${entry.name}`);
+          }
           return 0;
         } else if (argument === '--prove') {
           const next = argv[index + 1];
@@ -2587,6 +2667,8 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
         } else if (argument === '--source-root') sourceRoots.push(value());
         else if (argument === '--test-glob') testGlobs.push(value());
         else if (argument === '--skip-list') skipListPath = value();
+        else if (argument === '--warn') warnChecks.push(value());
+        else if (argument === '--off') offChecks.push(value());
         else throw new CheckStandard.GateUsageError(`unknown argument: ${argument}`);
       } catch (error) {
         console.error(`check-standard: ${(error as Error).message}`);
@@ -2595,7 +2677,7 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
     }
     let result: GateResult;
     try {
-      result = this.run({ cwd, sourceRoots, testGlobs, skipListPath, staticImplementation: Static });
+      result = this.run({ cwd, sourceRoots, testGlobs, skipListPath, warnChecks, offChecks, staticImplementation: Static });
     } catch (error) {
       if (error instanceof CheckStandard.GateUsageError) {
         console.error(`check-standard: ${error.message}`);
@@ -2604,10 +2686,12 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
       throw error;
     }
     for (const item of result.findings) console.error(`${item.file}:${item.line}: [${item.check}] ${item.message}`);
+    for (const item of result.warnings) console.error(`warn: ${item.file}:${item.line}: [${item.check}] ${item.message}`);
     console.log(
       `check-standard: ${result.sources.length} source file(s), ${result.tests.length} test file(s), ` +
-        `${result.findings.length} finding(s), ${result.suppressed.length} suppressed by skip-list`,
+        `${result.findings.length} finding(s), ${result.warnings.length} warning(s), ${result.suppressed.length} suppressed by skip-list`,
     );
+    if (result.off.length) console.log(`off by config (${result.off.length}): ${result.off.join(' · ')}`);
     if (result.unenforced.length) console.log(`not enforced yet (${result.unenforced.length}): ${result.unenforced.join(' · ')}`);
     return result.findings.length ? 1 : 0;
   }
