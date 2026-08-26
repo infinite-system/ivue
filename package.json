@@ -22,6 +22,7 @@
   "scripts": {
     "gate": "vite-node skills/ivue/check-standard.ts --",
     "gate:house": "vite-node skills/ivue/house-gate.ts --",
+    "gate:newsletter": "vite-node skills/ivue/house-gate.ts -- --source-root newsletter --skip-list newsletter/standard-skips.tsv --test-glob 'newsletter/src/**/*.test.ts'",
     "dev": "vite demo --host",
     "dev:demo": "vite demo --host",
     "dev:flyweight": "vite examples/playground --port 5181 --host",
