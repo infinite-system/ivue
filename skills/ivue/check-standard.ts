@@ -7,7 +7,7 @@
  * reasoned skip-list — no repository names, no paths of its own.
  *
  *   vite-node node_modules/ivue/skills/ivue/check-standard.ts -- \
- *     --source-root src --test-glob 'src/**\/*.test.ts' --skip-list skips.tsv
+ *     --source-root src --test-glob 'src/**\/*.test.ts' --skip-list skips.json
  *
  * Every check is identified by a plain declarative NAME (a sentence);
  * the static getter that holds it is the snake_case form of that name.
@@ -1876,13 +1876,17 @@ export namespace Scroller {
         red: [
           { files: { 'src/.keep': '' }, expectThrows: /no source files discovered/ },
           { files: box, options: { testGlobs: ['src/**/*.test.ts'] }, expectThrows: /test glob matches no file/ },
-          { files: { ...box, 'skips.tsv': 'src/Box.ts\tNo such check\treason\n' }, options: { skipListPath: 'skips.tsv' }, expectThrows: /unknown check name/ },
-          { files: { ...box, 'skips.tsv': 'src/Box.ts\tA class file is named after its class\tfirst\nsrc/Box.ts\tA class file is named after its class\tsecond\n' }, options: { skipListPath: 'skips.tsv' }, expectThrows: /duplicate skip/ },
-          { files: { ...box, 'skips.tsv': 'src/Box.ts\tA class file is named after its class\tnever fires here\nsrc/Gone.ts\tA class file is named after its class\tfile removed\n' }, options: { skipListPath: 'skips.tsv' }, expectFindings: [/no longer fires on src\/Box\.ts/, /src\/Gone\.ts does not exist/] },
+          { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'No such check', reason: 'reason' }]) }, options: { skipListPath: 'skips.json' }, expectThrows: /unknown check name/ },
+          { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'A class file is named after its class', reason: 'first' }, { path: 'src/Box.ts', check: 'A class file is named after its class', reason: 'second' }]) }, options: { skipListPath: 'skips.json' }, expectThrows: /duplicate skip/ },
+          { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'A class file is named after its class', reason: 'never fires here' }, { path: 'src/Gone.ts', check: 'A class file is named after its class', reason: 'file removed' }]) }, options: { skipListPath: 'skips.json' }, expectFindings: [/no longer fires on src\/Box\.ts/, /src\/Gone\.ts does not exist/] },
+          { files: { ...box, 'skips.json': 'src/Box.ts\tA class file is named after its class\treason\n' }, options: { skipListPath: 'skips.json' }, expectThrows: /a JSON array of \{ path, check, reason \}/ },
+          { files: { ...box, 'skips.json': JSON.stringify([{ path: 'src/Box.ts', check: 'A class file is named after its class' }]) }, options: { skipListPath: 'skips.json' }, expectThrows: /entry 1: .*reason/ },
         ],
         // Crate.ts deliberately declares $Box — the naming check fires and
         // the skip row suppresses it, proving a used skip is not stale.
-        green: [{ files: { 'src/Crate.ts': fixture.validClass, 'src/Crate.test.ts': fixture.validTest, 'skips.tsv': 'src/Crate.ts\tA class file is named after its class\tlegacy file name kept for the public import path\n' }, options: { skipListPath: 'skips.tsv' } }],
+        // Crate.ts deliberately declares $Box — the naming check fires and
+        // the JSON row suppresses it, proving a used skip is not stale
+        green: [{ files: { 'src/Crate.ts': fixture.validClass, 'src/Crate.test.ts': fixture.validTest, 'skips.json': JSON.stringify([{ path: 'src/Crate.ts', check: 'A class file is named after its class', reason: 'legacy file name kept for the public import path' }], null, 2) }, options: { skipListPath: 'skips.json' } }],
       },
       'Two test files do not share one generator header': {
         claim: 'If two test files exist, then their Goal and described registers differ beyond their own symbol names',
@@ -2354,23 +2358,34 @@ export namespace Scroller {
     return testPath.replace(/\.test\.ts$/, '.ts');
   }
 
+  /** The skip list is a JSON array of { path, check, reason } — named
+   * fields, no invisible delimiters. Every entry must name a real check
+   * and carry a reason; duplicates are refused. */
   static readSkipList(cwd: string, path: string): SkipRow[] {
     const absolute = isAbsolute(path) ? path : resolve(cwd, path);
     if (!existsSync(absolute)) throw new CheckStandard.GateUsageError(`skip-list not found: ${path}`);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(readFileSync(absolute, 'utf8'));
+    } catch (error) {
+      throw new CheckStandard.GateUsageError(`skip-list ${path}: not valid JSON (${(error as Error).message}) — the skip list is a JSON array of { path, check, reason }`);
+    }
+    if (!Array.isArray(parsed)) throw new CheckStandard.GateUsageError(`skip-list ${path}: the skip list is a JSON array of { path, check, reason }`);
     const rows: SkipRow[] = [];
     const seen = new Set<string>();
     const knownNames = this.checkNames;
-    readFileSync(absolute, 'utf8').split('\n').forEach((line, index) => {
-      if (!line.trim() || line.startsWith('#')) return;
-      const parts = line.split('\t');
-      if (parts.length !== 3 || parts.some((part) => !part.trim()))
-        throw new CheckStandard.GateUsageError(`skip-list ${path}:${index + 1}: a row is path<TAB>check name<TAB>reason`);
-      const [rowPath, checkName, reason] = parts.map((part) => part.trim());
-      if (!knownNames.has(checkName)) throw new CheckStandard.GateUsageError(`skip-list ${path}:${index + 1}: unknown check name "${checkName}"`);
-      const key = `${rowPath}\t${checkName}`;
-      if (seen.has(key)) throw new CheckStandard.GateUsageError(`skip-list ${path}:${index + 1}: duplicate skip for ${rowPath} / ${checkName}`);
+    parsed.forEach((entry, index) => {
+      const label = `skip-list ${path} entry ${index + 1}`;
+      if (typeof entry !== 'object' || entry === null) throw new CheckStandard.GateUsageError(`${label}: an entry is an object — { path, check, reason }`);
+      const { path: rowPath, check: checkName, reason } = entry as Record<string, unknown>;
+      for (const [field, value] of [['path', rowPath], ['check', checkName], ['reason', reason]] as const) {
+        if (typeof value !== 'string' || !value.trim()) throw new CheckStandard.GateUsageError(`${label}: "${field}" is a non-empty string — { path, check, reason }`);
+      }
+      if (!knownNames.has(checkName as string)) throw new CheckStandard.GateUsageError(`${label}: unknown check name "${checkName}" — --list names every check`);
+      const key = `${rowPath}\u0000${checkName}`;
+      if (seen.has(key)) throw new CheckStandard.GateUsageError(`${label}: duplicate skip for ${rowPath} / ${checkName}`);
       seen.add(key);
-      rows.push({ path: rowPath.replaceAll('\\', '/'), check: checkName, reason, line: index + 1 });
+      rows.push({ path: (rowPath as string).trim().replaceAll('\\', '/'), check: (checkName as string).trim(), reason: (reason as string).trim(), line: index + 1 });
     });
     return rows;
   }
@@ -2536,7 +2551,7 @@ export namespace Scroller {
 usage:
   check-standard --source-root <dir> [--source-root <dir>…]
                  --test-glob '<glob>' [--test-glob '<glob>'…]
-                 [--skip-list <path>]   rows: path<TAB>check name<TAB>reason
+                 [--skip-list <path>]   a JSON array of { path, check, reason }
   check-standard --list                 print every check name
   check-standard --prove ['<check name>']   run the gate's own constitution
                                         (name it to isolate one check's arms)

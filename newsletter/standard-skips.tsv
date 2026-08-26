@@ -1,3 +1,0 @@
-newsletter/src/index.ts	A public class publishes its namespace manifest	Cloudflare entry adapter: the platform requires export default { fetch, scheduled }; behavior lives on Worker.ts
-newsletter/test/TestDatabase.ts	A class file holds only imports class namespace and types	D1 test double: node:sqlite plumbing (helper class, path constants, makeTestEnv) colocated with the double it serves
-newsletter/test/TestDatabase.ts	Construction goes through the namespace Class slot	$TestStatement is a private file-local helper with no namespace; only the test double constructs it
