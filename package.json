@@ -21,6 +21,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "gate": "vite-node skills/ivue/check-standard.ts --",
+    "gate:house": "vite-node skills/ivue/house-gate.ts --",
     "dev": "vite demo --host",
     "dev:demo": "vite demo --host",
     "dev:flyweight": "vite examples/playground --port 5181 --host",

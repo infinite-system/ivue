@@ -2548,12 +2548,25 @@ export namespace CheckStandard {
 
   export class GateUsageError extends Error {}
 
-  // Entry detection that survives every runner: `vite-node check-standard.ts
-  // -- …` leaves the gate's own flags in argv; a test runner importing this
-  // module does not.
-  const cliArguments = process.argv.slice(2);
-  const invokedAsCli =
-    !process.env.VITEST &&
-    cliArguments.some((argument) => ['--source-root', '--test-glob', '--skip-list', '--list', '--prove', '--help', '-h'].includes(argument));
-  if (invokedAsCli) void Class.main(cliArguments).then((code) => process.exit(code));
+  // Entry detection that survives every runner AND subclass gates. The
+  // flags in argv say a gate CLI was invoked (`vite-node <gate>.ts -- …`
+  // leaves them there; a test runner importing this module does not; the
+  // runner strips the script path, so argv cannot say WHICH gate). Module
+  // evaluation order says which: imports evaluate before the entry, so the
+  // entry's bootstrap registers LAST — a house gate importing this file
+  // supersedes this registration before the deferred main runs.
+  let selectedCliGate: { main(argv: string[]): Promise<number> } | null = null;
+
+  export function bootstrapCli(gate: { main(argv: string[]): Promise<number> }): void {
+    const cliArguments = process.argv.slice(2);
+    const invokedAsCli =
+      !process.env.VITEST &&
+      cliArguments.some((argument) => ['--source-root', '--test-glob', '--skip-list', '--list', '--prove', '--help', '-h'].includes(argument));
+    if (!invokedAsCli) return;
+    const isFirstRegistration = selectedCliGate === null;
+    selectedCliGate = gate;
+    if (isFirstRegistration) setImmediate(() => void selectedCliGate!.main(cliArguments).then((code) => process.exit(code)));
+  }
+
+  bootstrapCli(Class);
 }
