@@ -7,7 +7,7 @@
  * reasoned skip-list — no repository names, no paths of its own.
  *
  *   vite-node node_modules/ivue/skills/ivue/check-standard.ts -- \
- *     --source-root src --test-glob 'src/**\/*.test.ts' --skip-list skips.json
+ *     --source-root src --test-glob 'src/**\/*.test.ts' --skip-list ivue-standards-skip.json
  *
  * Every check is identified by a plain declarative NAME (a sentence);
  * the static getter that holds it is the snake_case form of that name.
@@ -2622,11 +2622,11 @@ export namespace Scroller {
     const HELP = `ivue Standard gate — checks class sources and test files against skills/ivue/SKILL.md
 
 usage:
-  check-standard --source-root <dir> [--source-root <dir>…]
+  ivue-standards-check --source-root <dir> [--source-root <dir>…]
                  --test-glob '<glob>' [--test-glob '<glob>'…]
                  [--skip-list <path>]   a JSON array of { path, check, reason }
-  check-standard --list                 print every check name and severity
-  check-standard --prove ['<check name>']   run the gate's own constitution
+  ivue-standards-check --list                 print every check name and severity
+  ivue-standards-check --prove ['<check name>']   run the gate's own constitution
                                         (name it to isolate one check's arms)
 
 Exit: 0 clean · 1 findings · 2 usage (zero files, unmatched glob, unknown check
@@ -2660,14 +2660,14 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
             throw new CheckStandard.GateUsageError('--prove runs the constitution over its own fixture checkouts — it does not combine with --source-root, --test-glob, or --skip-list');
           const report = this.prove(only ? { only } : undefined);
           for (const problem of report.problems) console.error(problem);
-          console.log(`check-standard --prove${only ? ` "${only}"` : ''}: ${report.ran.red} red arm(s), ${report.ran.green} green arm(s), ${report.problems.length} problem(s)`);
+          console.log(`ivue-standards-check --prove${only ? ` "${only}"` : ''}: ${report.ran.red} red arm(s), ${report.ran.green} green arm(s), ${report.problems.length} problem(s)`);
           return report.problems.length ? 1 : 0;
         } else if (argument === '--source-root') sourceRoots.push(value());
         else if (argument === '--test-glob') testGlobs.push(value());
         else if (argument === '--skip-list') skipListPath = value();
         else throw new CheckStandard.GateUsageError(`unknown argument: ${argument}`);
       } catch (error) {
-        console.error(`check-standard: ${(error as Error).message}`);
+        console.error(`ivue-standards-check: ${(error as Error).message}`);
         return 2;
       }
     }
@@ -2676,7 +2676,7 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
       result = this.run({ cwd, sourceRoots, testGlobs, skipListPath, staticImplementation: Static });
     } catch (error) {
       if (error instanceof CheckStandard.GateUsageError) {
-        console.error(`check-standard: ${error.message}`);
+        console.error(`ivue-standards-check: ${error.message}`);
         return 2;
       }
       throw error;
@@ -2684,7 +2684,7 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
     for (const item of result.findings) console.error(`${item.file}:${item.line}: [${item.check}] ${item.message}`);
     for (const item of result.warnings) console.error(`warn: ${item.file}:${item.line}: [${item.check}] ${item.message}`);
     console.log(
-      `check-standard: ${result.sources.length} source file(s), ${result.tests.length} test file(s), ` +
+      `ivue-standards-check: ${result.sources.length} source file(s), ${result.tests.length} test file(s), ` +
         `${result.findings.length} finding(s), ${result.warnings.length} warning(s), ${result.suppressed.length} suppressed by skip-list`,
     );
     if (result.off.length) console.log(`off by config (${result.off.length}): ${result.off.join(' · ')}`);

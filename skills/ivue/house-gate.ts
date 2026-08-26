@@ -2,7 +2,7 @@
  * house-gate.ts — a WORKING example of extending the ivue Standard gate.
  *
  * Copy this file into your repo, rename the class, and point the imports
- * at the package (`ivue/extras` and `ivue/skills/ivue/check-standard`) —
+ * at the package (`ivue/extras` and `ivue/skills/ivue/ivue-standards-check`) —
  * here they are relative because this file lives beside the engine.
  *
  * The whole recipe is three getters:
@@ -23,7 +23,7 @@
  *   npm run gate:house -- --source-root src --test-glob 'src/**\/*.test.ts'
  */
 import { Static } from '../../lib/Static';
-import { CheckStandard, type CheckProof, type StandardCheck } from './check-standard';
+import { CheckStandard, type CheckProof, type StandardCheck } from './ivue-standards-check';
 
 class $HouseGate extends CheckStandard.$Class {
   // A literal tunable constant — SCREAMING_SNAKE per the Standard. The

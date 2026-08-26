@@ -1,6 +1,6 @@
 /*
 === GENERATOR ===
-Subject: check-standard.ts
+Subject: ivue-standards-check.ts
 Goal: Prove the gate's constitution is data a subclass inherits and extends — every manifest check travels with its claim, its impossibility, and both proof arms, and a gate that grows a check without them refuses itself.
 // domain-invariant: $CheckStandard — If a check is in the manifest, then its proofs entry carries the claim, the impossibility, and at least one red and one green arm
 // domain-invariant: $CheckStandard — If a red arm's fixture runs through the gate, then its check reports the expected finding
@@ -20,7 +20,7 @@ proof data where prove() reads them.
 */
 import { expect, test } from 'vitest';
 import { Static } from '../../lib/Static';
-import * as Gate from './check-standard';
+import * as Gate from './ivue-standards-check';
 
 // domain-invariant: $CheckStandard — If a check is in the manifest, then its proofs entry carries the claim, the impossibility, and at least one red and one green arm
 test('the shipped constitution is complete for every manifest check', () => {
