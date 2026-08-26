@@ -101,11 +101,11 @@ function bannerHtml(eyebrow, title, description) {
   }
   /* a soft glowing infinity, the brand's own mark, anchoring the right */
   .mark {
-    position: absolute; right: -70px; top: 24%; transform: translateY(-50%);
-    width: 600px; height: 600px;
-    background: radial-gradient(closest-side, rgba(45, 212, 191, 0.19), transparent);
+    position: absolute; right: -60px; top: 47%; transform: translateY(-50%);
+    width: 560px; height: 560px;
+    background: radial-gradient(closest-side, rgba(45, 212, 191, 0.16), transparent);
   }
-  .mark svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.17; }
+  .mark svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.16; }
   /* left-aligned editorial block: eyebrow / title / beam / description */
   .stage {
     position: absolute; left: 90px; right: 90px; top: 128px; bottom: 72px;
