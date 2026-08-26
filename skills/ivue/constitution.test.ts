@@ -59,6 +59,12 @@ test('prove isolates one check when asked', () => {
   expect(unknown.ran.red + unknown.ran.green).toBe(0);
 });
 
+test('the CLI refuses to combine --prove with a gate run', async () => {
+  const GateClass = Gate.CheckStandard.Class;
+  expect(await GateClass.main(['--prove', '--source-root', '../../'])).toBe(2);
+  expect(await GateClass.main(['--source-root', 'src', '--prove'])).toBe(2);
+});
+
 // impossible-if-true: $CheckStandard — a check enters the manifest without a red and a green proof arm
 test('an armless check is refused by its own constitution', () => {
   class $ArmlessGate extends Gate.CheckStandard.$Class {

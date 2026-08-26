@@ -2509,6 +2509,8 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
         } else if (argument === '--prove') {
           const next = argv[index + 1];
           const only = next !== undefined && !next.startsWith('--') ? argv[++index] : undefined;
+          if (sourceRoots.length || testGlobs.length || skipListPath || index + 1 < argv.length)
+            throw new CheckStandard.GateUsageError('--prove runs the constitution over its own fixture checkouts — it does not combine with --source-root, --test-glob, or --skip-list');
           const report = this.prove(only ? { only } : undefined);
           for (const problem of report.problems) console.error(problem);
           console.log(`check-standard --prove${only ? ` "${only}"` : ''}: ${report.ran.red} red arm(s), ${report.ran.green} green arm(s), ${report.problems.length} problem(s)`);
