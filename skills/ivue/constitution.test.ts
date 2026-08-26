@@ -1,6 +1,6 @@
 /*
 === GENERATOR ===
-Subject: ivue-standards-check.ts
+Subject: ivue-standards-check.ts ivue-generator-standard.ts
 Goal: Prove the gate's constitution is data a subclass inherits and extends — every manifest check travels with its claim, its impossibility, and both proof arms, and a gate that grows a check without them refuses itself.
 // domain-invariant: $CheckStandard — If a check is in the manifest, then its proofs entry carries the claim, the impossibility, and at least one red and one green arm
 // domain-invariant: $CheckStandard — If a red arm's fixture runs through the gate, then its check reports the expected finding
@@ -11,8 +11,8 @@ Impossible if true: a file breaking a manifest check passes the gate
 
 === GENERATOR-DESCRIBED ===
 The $CheckStandard class carries its own proof kit as per-receiver static
-data, so an agent extending someone's gate inherits forty proven
-checks and is refused the moment it adds a forty-first without arms —
+data, so an agent extending someone's gate inherits the proven
+checks and is refused the moment it adds one more without arms —
 the discipline teaches itself to whoever extends it. The driver below
 runs every arm through the same run() the command line uses; hand-written
 tests here carry the meta-claims, and the per-check claims live in the
@@ -21,11 +21,12 @@ proof data where prove() reads them.
 import { expect, test } from 'vitest';
 import { Static } from '../../lib/Static';
 import * as Gate from './ivue-standards-check';
+import { GeneratorStandard } from './ivue-generator-standard';
 
 // domain-invariant: $CheckStandard — If a check is in the manifest, then its proofs entry carries the claim, the impossibility, and at least one red and one green arm
 test('the shipped constitution is complete for every manifest check', () => {
   const GateClass = Gate.CheckStandard.Class;
-  expect(GateClass.checks.length).toBe(40);
+  expect(GateClass.checks.length).toBe(30);
   const report = GateClass.prove({ completenessOnly: true });
   expect(report.problems).toEqual([]);
   for (const check of GateClass.checks) {
@@ -46,8 +47,20 @@ test('the shipped constitution is complete for every manifest check', () => {
 test('every red arm produces its named finding and every green arm stays silent', () => {
   const report = Gate.CheckStandard.Class.prove();
   expect(report.problems).toEqual([]);
-  expect(report.ran.red).toBeGreaterThanOrEqual(40);
-  expect(report.ran.green).toBeGreaterThanOrEqual(40);
+  expect(report.ran.red).toBeGreaterThanOrEqual(30);
+  expect(report.ran.green).toBeGreaterThanOrEqual(30);
+});
+
+test('the generator standard is the extension mechanism eating its own cooking', () => {
+  // ten methodology checks arrive the same way a house check does:
+  // getters + checks + proofs on a subclass — fully proven, opt-in
+  const GeneratorClass = GeneratorStandard.Class;
+  expect(GeneratorClass.checks.length).toBe(40);
+  const report = GeneratorClass.prove({ completenessOnly: true });
+  expect(report.problems).toEqual([]);
+  // the base stays ivue-only: no header check leaks upward
+  expect(Gate.CheckStandard.Class.checks.map((check) => check.name)).not.toContain('a_test_file_opens_with_its_generator_header');
+  expect(GeneratorClass.checks.map((check) => check.name)).toContain('a_test_file_opens_with_its_generator_header');
 });
 
 test('prove isolates one check when asked', () => {
@@ -122,7 +135,7 @@ test('a house gate extends the manifest and its constitution through the receive
   // …the constitution follows the receiver (39 proven checks, zero problems)…
   const report = HouseGate.prove();
   expect(report.problems).toEqual([]);
-  expect(report.ran.red).toBeGreaterThanOrEqual(41);
+  expect(report.ran.red).toBeGreaterThanOrEqual(31);
   // …and the base class is untouched: no house rule leaks upward
   expect(Gate.CheckStandard.Class.checks.map((check) => check.name)).not.toContain(houseCheck.name);
 });

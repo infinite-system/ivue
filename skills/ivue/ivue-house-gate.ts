@@ -20,8 +20,13 @@
  */
 import { Static } from '../../lib/Static';
 import { CheckStandard, type CheckProof, type StandardCheck } from './ivue-standards-check';
+import { GeneratorStandard } from './ivue-generator-standard';
 
-class $HouseGate extends CheckStandard.$Class {
+// This gate opts INTO the invariant methodology (generator headers on test
+// files, claims bound to tests) by extending GeneratorStandard. Not using
+// that discipline? Extend CheckStandard.$Class instead — the ivue-only
+// Standard — and delete the ten generator rows from the menu below.
+class $HouseGate extends GeneratorStandard.$Class {
   // ── YOUR RULINGS ─────────────────────────────────────────────────────
   // The severity menu: every check at its default, so this gate blocks
   // exactly what the base gate blocks. Flip an entry to 'warn' (report,

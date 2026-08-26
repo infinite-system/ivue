@@ -161,7 +161,8 @@ if (wantClaude) {
   if (housePath) {
     const houseSeed = readFileSync(housePath, 'utf8')
       .replace("from '../../lib/Static'", "from 'ivue/extras'")
-      .replace("from './ivue-standards-check'", "from 'ivue/skills/ivue/ivue-standards-check'");
+      .replace("from './ivue-standards-check'", "from 'ivue/skills/ivue/ivue-standards-check'")
+      .replace("from './ivue-generator-standard'", "from 'ivue/skills/ivue/ivue-generator-standard'");
     installSeed('.claude/skills/ivue/ivue-house-gate.ts', houseSeed, 'house gate');
   }
 }
