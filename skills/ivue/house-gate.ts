@@ -18,7 +18,7 @@
  * you skip step 3. Try it:
  *
  *   npm run gate:house -- --list
- *   npm run gate:house -- --prove 'A source file stays under nine hundred lines'
+ *   npm run gate:house -- --prove 'A source file stays under the line budget'
  *   npm run gate:house -- --prove
  *   npm run gate:house -- --source-root src --test-glob 'src/**\/*.test.ts'
  */
@@ -26,31 +26,33 @@ import { Static } from '../../lib/Static';
 import { CheckStandard, type CheckProof, type StandardCheck } from './check-standard';
 
 class $HouseGate extends CheckStandard.$Class {
-  // A literal tunable constant — SCREAMING_SNAKE per the Standard. If a
-  // deeper subclass pinches it, rename the check so the sentence stays true.
+  // A literal tunable constant — SCREAMING_SNAKE per the Standard. The
+  // check's sentence deliberately names no number, so pinching this knob
+  // (here, or in a deeper subclass) never falsifies the name; the finding
+  // message carries the current budget.
   static get MAX_SOURCE_LINES() {
-    return 900;
+    return 30;
   }
 
-  static get a_source_file_stays_under_nine_hundred_lines(): StandardCheck {
-    return this.defineCheck('A source file stays under nine hundred lines', (context) =>
+  static get a_source_file_stays_under_the_line_budget(): StandardCheck {
+    return this.defineCheck('A source file stays under the line budget', (context) =>
       context.sources
         .filter((unit) => unit.lines.length > this.MAX_SOURCE_LINES)
-        .map((unit) => this.finding(this.a_source_file_stays_under_nine_hundred_lines, unit, 1, `${unit.lines.length} lines — split the module`)),
+        .map((unit) => this.finding(this.a_source_file_stays_under_the_line_budget, unit, 1, `${unit.lines.length} lines — the budget is ${this.MAX_SOURCE_LINES}; split the module`)),
     );
   }
 
   static get checks(): readonly StandardCheck[] {
-    return [...super.checks, this.a_source_file_stays_under_nine_hundred_lines];
+    return [...super.checks, this.a_source_file_stays_under_the_line_budget];
   }
 
   static get proofs(): Readonly<Record<string, CheckProof>> {
     return {
       ...super.proofs,
-      [this.a_source_file_stays_under_nine_hundred_lines.name]: {
-        claim: 'If a source file exceeds nine hundred lines, then the gate names it',
-        impossibility: 'a source file over nine hundred lines passes the gate',
-        red: [{ files: { 'src/Long.ts': `${'// filler\n'.repeat(901)}export type Filler = number;\n` }, expectFindings: [/lines — split the module/] }],
+      [this.a_source_file_stays_under_the_line_budget.name]: {
+        claim: 'If a source file exceeds the line budget, then the gate names it and states the budget',
+        impossibility: 'a source file over the line budget passes the gate',
+        red: [{ files: { 'src/Long.ts': `${'// filler\n'.repeat(901)}export type Filler = number;\n` }, expectFindings: [/90\d lines — the budget is \d+; split the module/] }],
         green: [{ files: { 'src/Short.ts': 'export type Short = number;\n' } }],
       },
     };
