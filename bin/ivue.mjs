@@ -10,6 +10,7 @@
  * the installed package, so the manual always matches the engine version
  * the project actually runs.
  */
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,7 +28,11 @@ if (command !== 'skill') {
 
   npx ivue skill [targets] [--force]
 
-  Installs the ivue operating manual for coding agents. Targets:
+  Installs the ivue operating manual for coding agents, and (for the
+  Claude target) the house gate seed — your own extendable Standard
+  gate at .claude/skills/ivue/ivue-house-gate.ts. A house gate you have
+  customized is never overwritten; upgrade it with your AI agent using
+  the ivue skill, or --force. Targets:
     (none) / --claude   .claude/skills/ivue/SKILL.md
     --cursor            .cursor/rules/ivue.mdc
     --copilot           .github/instructions/ivue.instructions.md
@@ -57,6 +62,50 @@ const skillBody = skillText.replace(/^---\n[\s\S]*?\n---\n+/, '');
 const skillDescription =
   /description:\s*([^\n]+)/.exec(skillText)?.[1] ??
   'The ivue operating manual.';
+
+/**
+ * A SEED is a file the user is meant to edit (the house gate). The install
+ * stamps it with a hash of its own content; on upgrade, a matching stamp
+ * means "untouched since install" (safe to replace), anything else means
+ * the user customized it — leave it alone and point at AI reconciliation.
+ */
+const SEED_STAMP = /^\/\/ ivue-seed: ([0-9a-f]{64})\n/;
+
+function stampSeed(content) {
+  const hash = createHash('sha256').update(content).digest('hex');
+  return `// ivue-seed: ${hash}\n${content}`;
+}
+
+function seedUntouched(existing) {
+  const stamp = SEED_STAMP.exec(existing);
+  if (!stamp) return false;
+  const body = existing.slice(stamp[0].length);
+  return createHash('sha256').update(body).digest('hex') === stamp[1];
+}
+
+function installSeed(relativePath, content, label) {
+  const targetPath = join(process.cwd(), relativePath);
+  const stamped = stampSeed(content);
+  if (existsSync(targetPath)) {
+    const existing = readFileSync(targetPath, 'utf8');
+    if (existing === stamped) {
+      console.log(`ivue: ${label} already up to date (ivue v${version}).`);
+      return;
+    }
+    if (!seedUntouched(existing) && !force) {
+      console.log(
+        `ivue: ${label} at ${relativePath} was customized — keeping yours.\n` +
+          '      To upgrade it, ask your AI agent (with the ivue skill installed) to\n' +
+          "      reconcile your gate with the new Standard's — it knows both sides.\n" +
+          '      Or re-run with --force to overwrite your customizations.',
+      );
+      return;
+    }
+  }
+  mkdirSync(dirname(targetPath), { recursive: true });
+  writeFileSync(targetPath, stamped);
+  console.log(`ivue: ${label} installed at ${relativePath} (ivue v${version}).`);
+}
 
 /** Write one target idempotently; refuse to clobber local edits sans --force. */
 function install(relativePath, content, label) {
@@ -104,6 +153,17 @@ const wantClaude =
 
 if (wantClaude) {
   install('.claude/skills/ivue/SKILL.md', skillText, 'Claude skill');
+  // the house gate seed — the user's own gate, never clobbered once edited
+  const housePath = [
+    join(packageRoot, 'skills', 'ivue', 'ivue-house-gate.ts'),
+    join(packageRoot, '.claude', 'skills', 'ivue', 'ivue-house-gate.ts'),
+  ].find(existsSync);
+  if (housePath) {
+    const houseSeed = readFileSync(housePath, 'utf8')
+      .replace("from '../../lib/Static'", "from 'ivue/extras'")
+      .replace("from './ivue-standards-check'", "from 'ivue/skills/ivue/ivue-standards-check'");
+    installSeed('.claude/skills/ivue/ivue-house-gate.ts', houseSeed, 'house gate');
+  }
 }
 if (wantAll && !wantCursor) skipped('Cursor rule', '.cursor/', '--cursor');
 if (wantAll && !wantCopilot) skipped('Copilot instructions', '.github/', '--copilot');

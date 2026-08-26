@@ -1,21 +1,17 @@
 /**
- * house-gate.ts — a WORKING example of extending the ivue Standard gate.
+ * ivue-house-gate.ts — YOUR gate. The severity menu at the top is the part
+ * you edit; the block below it is a working example of how to extend.
  *
- * Copy this file into your repo, rename the class, and point the imports
- * at the package (`ivue/extras` and `ivue/skills/ivue/ivue-standards-check`) —
- * here they are relative because this file lives beside the engine.
+ * `npx ivue skill` installs this file into your project and never
+ * overwrites a copy you have modified — upgrade a customized gate with
+ * your AI agent using the ivue skill, which reconciles your rulings with
+ * the new Standard.
  *
- * The whole recipe is three getters:
+ * In this repo the imports are relative (the file lives beside the
+ * engine); the installed copy imports from the package instead
+ * (`ivue/extras` and `ivue/skills/ivue/ivue-standards-check`).
  *
- *   1. a check getter        — the rule itself, named by its sentence;
- *   2. `checks`              — appends it to the inherited manifest;
- *   3. `proofs`              — spreads its constitution entry (claim,
- *                              impossibility, red arm, green arm) over
- *                              the inherited ones.
- *
- * Everything else is inherited through the receiver: run(), the CLI, the
- * skip-list vocabulary, and prove() — which REFUSES the house check if
- * you skip step 3. Try it:
+ * Try it:
  *
  *   npm run gate:house -- --list
  *   npm run gate:house -- --prove a_source_file_stays_under_the_line_budget
@@ -26,30 +22,12 @@ import { Static } from '../../lib/Static';
 import { CheckStandard, type CheckProof, type StandardCheck } from './ivue-standards-check';
 
 class $HouseGate extends CheckStandard.$Class {
-  // A literal tunable constant — SCREAMING_SNAKE per the Standard. The
-  // check's sentence deliberately names no number, so pinching this knob
-  // (here, or in a deeper subclass) never falsifies the name; the finding
-  // message carries the current budget.
-  static get MAX_SOURCE_LINES() {
-    return 900;
-  }
-
-  static get a_source_file_stays_under_the_line_budget(): StandardCheck {
-    return this.defineCheck('a_source_file_stays_under_the_line_budget', (context) =>
-      context.sources
-        .filter((unit) => unit.lines.length > this.MAX_SOURCE_LINES)
-        .map((unit) => this.finding(this.a_source_file_stays_under_the_line_budget, unit, 1, `${unit.lines.length} lines — the budget is ${this.MAX_SOURCE_LINES}; split the module`)),
-    );
-  }
-
-  static get checks(): readonly StandardCheck[] {
-    return [...super.checks, this.a_source_file_stays_under_the_line_budget];
-  }
-
-  // The severity menu — every check listed at its default, so this gate
-  // blocks exactly what the base gate blocks. Flip an entry to 'warn'
-  // (report, never block) or 'off' (skip globally, announced in the
-  // summary) and the whole team inherits the ruling.
+  // ── YOUR RULINGS ─────────────────────────────────────────────────────
+  // The severity menu: every check at its default, so this gate blocks
+  // exactly what the base gate blocks. Flip an entry to 'warn' (report,
+  // never block) or 'off' (skip globally, announced in the summary) and
+  // the whole team inherits the ruling. Per-file exceptions belong in the
+  // skip list (ivue-standards-skip.json), not here.
   static get severities(): Readonly<Record<string, 'error' | 'warn' | 'off'>> {
     return {
       exactly_one_reactive_source_is_installed: 'error',
@@ -92,6 +70,40 @@ class $HouseGate extends CheckStandard.$Class {
       two_test_files_do_not_share_one_generator_header: 'error',
       a_source_file_stays_under_the_line_budget: 'error',
     };
+  }
+
+  // ── EXTENSION EXAMPLE — how to ADD a house check ─────────────────────
+  // A house check is three members, and everything else is inherited
+  // (run(), the CLI, the skip-list vocabulary, prove()):
+  //
+  //   1. the check getter — its name IS the check's one snake_case
+  //      identity (getter name, finding label, skip token, severity key);
+  //   2. `checks`         — appends it to the inherited manifest;
+  //   3. `proofs`         — spreads its constitution entry (claim,
+  //      impossibility, red arm, green arm) over the inherited ones.
+  //      prove() REFUSES a check that skips this step.
+  //
+  // Delete these members to run the plain Standard; copy their shape to
+  // add your own rules.
+
+  // A literal tunable constant — SCREAMING_SNAKE per the Standard. The
+  // check's name deliberately carries no number, so pinching this knob
+  // (here, or in a deeper subclass) never falsifies it; the finding
+  // message states the current budget.
+  static get MAX_SOURCE_LINES() {
+    return 900;
+  }
+
+  static get a_source_file_stays_under_the_line_budget(): StandardCheck {
+    return this.defineCheck('a_source_file_stays_under_the_line_budget', (context) =>
+      context.sources
+        .filter((unit) => unit.lines.length > this.MAX_SOURCE_LINES)
+        .map((unit) => this.finding(this.a_source_file_stays_under_the_line_budget, unit, 1, `${unit.lines.length} lines — the budget is ${this.MAX_SOURCE_LINES}; split the module`)),
+    );
+  }
+
+  static get checks(): readonly StandardCheck[] {
+    return [...super.checks, this.a_source_file_stays_under_the_line_budget];
   }
 
   static get proofs(): Readonly<Record<string, CheckProof>> {
