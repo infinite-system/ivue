@@ -2448,7 +2448,16 @@ export namespace CheckStandard {
     // gaps, so a macrotask scheduled during the FIRST module's eval can fire
     // before later modules register. beforeExit only fires once the whole
     // graph has evaluated and the loop drained — the last registrant has won.
-    if (isFirstRegistration) process.once('beforeExit', () => void selectedCliGate!.main(cliArguments).then((code) => process.exit(code)));
+    if (isFirstRegistration)
+      process.once('beforeExit', () => {
+        // a live timer holds the loop open while main runs: Bun exits before
+        // draining microtasks scheduled from a beforeExit handler
+        const keepAlive = setInterval(() => {}, 1000);
+        void selectedCliGate!.main(cliArguments).then((code) => {
+          clearInterval(keepAlive);
+          process.exit(code);
+        });
+      });
   }
 
   bootstrapCli(Class);

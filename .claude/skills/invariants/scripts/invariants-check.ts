@@ -1351,7 +1351,16 @@ export namespace InvariantsCheck {
     if (!invokedAsCli) return;
     const isFirstRegistration = selectedCliGate === null;
     selectedCliGate = gate;
-    if (isFirstRegistration) process.once('beforeExit', () => void selectedCliGate!.main(cliArguments).then((code) => process.exit(code)));
+    if (isFirstRegistration)
+      process.once('beforeExit', () => {
+        // a live timer holds the loop open while main runs: Bun exits before
+        // draining microtasks scheduled from a beforeExit handler
+        const keepAlive = setInterval(() => {}, 1000);
+        void selectedCliGate!.main(cliArguments).then((code) => {
+          clearInterval(keepAlive);
+          process.exit(code);
+        });
+      });
   }
 
   bootstrapCli(Class);
