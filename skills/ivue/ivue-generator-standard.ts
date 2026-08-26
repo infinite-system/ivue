@@ -5,8 +5,8 @@
  * The extension mechanism eating its own cooking.
  *
  * The base gate (`ivue-standards-check.ts`) is ivue-only. This subclass
- * adds the ten generator-header checks — test files open with a
- * `=== GENERATOR ===` header, claims bind to tests one-to-one,
+ * adds the ten generator-header checks — test files open with the
+ * generator sentinel header, claims bind to tests one-to-one,
  * impossibilities carry exact negative proofs, contract pointers resolve —
  * the discipline of the invariants / invariant-spec-tests skills. Opt in
  * by extending THIS class in your house gate instead of the base:
