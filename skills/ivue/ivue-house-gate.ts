@@ -68,7 +68,9 @@ class $HouseGate extends CheckStandard.$Class {
       a_test_caveat_derives_from_a_tested_claim: 'error',
       the_population_and_skip_list_are_exact: 'error',
       two_test_files_do_not_share_one_generator_header: 'error',
-      a_source_file_stays_under_the_line_budget: 'error',
+      // the house example ships FLIPPED: a line budget is advisory by
+      // nature — it reports, it never blocks (real classes can be long)
+      a_source_file_stays_under_the_line_budget: 'warn',
     };
   }
 

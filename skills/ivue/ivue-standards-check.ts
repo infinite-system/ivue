@@ -2582,6 +2582,12 @@ export namespace Scroller {
               ...arm.options,
             };
             if (arm.options && 'staticImplementation' in arm.options) gateOptions.staticImplementation = arm.options.staticImplementation ?? null;
+            // Proofs establish what a check DETECTS; severity is only how a
+            // detection is REPORTED. So unless this arm explicitly tests
+            // severity (its options carry warnChecks/offChecks), a receiver's
+            // own severities getter must not bend the arm: the check's
+            // warnings fold back into its findings.
+            const armTestsSeverity = !!arm.options && ('warnChecks' in arm.options || 'offChecks' in arm.options);
             let findings: Finding[] = [];
             let warnings: Finding[] = [];
             let thrown: Error | null = null;
@@ -2591,6 +2597,10 @@ export namespace Scroller {
               // warnings stay unfiltered: a severity arm demotes ANOTHER
               // check, so its warning carries that check's name
               warnings = result.warnings;
+              if (!armTestsSeverity) {
+                findings = [...findings, ...result.warnings.filter((item) => item.check === check.name)];
+                warnings = [];
+              }
             } catch (error) {
               thrown = error as Error;
             }
