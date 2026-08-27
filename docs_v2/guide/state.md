@@ -9,9 +9,18 @@ relatedPosts: [the-object-should-tell-the-truth, computed-is-a-cache, this-metho
 In ivue you declare state as **getters that return refs**. That single convention
 is what makes instances plain and creation lazy.
 
+The refs themselves are Vue 3's own: `ref`, `shallowRef`, and `computed` here
+are the same functions you import from `vue` everywhere else — ivue invents no
+reactivity machinery of its own. The engine only decides *where those refs
+live* (cached per instance, materialized on first read). That's the beauty of
+the design: everything you know about Vue reactivity — and everything Vue
+ships next — applies unchanged.
+
 ## ref
 
 ```ts
+import { ref } from 'vue'
+
 class $Box {
   get width() {
     return ref(100)
@@ -30,6 +39,34 @@ box.tags.value.push('a')
 ```
 
 The getter runs once per instance; the same ref is returned forever after.
+
+::: tip Publish real classes through the namespace pattern
+`const Box = Reactive($Box)` above is a one-off, compressed so the state
+mechanics stay in focus. In a real module, a class ships through the
+[namespace pattern](/guide/namespace-pattern) — it is what makes the
+architecture immune by construction: a raw anchor children `extends`, a
+mutable `Class` slot tests and kernels can swap, and a typed unwrapping
+surface.
+
+```ts
+class $Box {
+  get width() {
+    return ref(100)
+  }
+}
+
+export namespace Box {
+  export const $Class = $Box // raw — children `extends` this
+  export let Class = Reactive($Class) // reactive — you `new` this
+  // the type of every unwrapping surface (defineExpose, reactive())
+  export type Instance = typeof Class.Instance
+}
+
+const box = new Box.Class()
+```
+
+Every guide example that compresses the export is shorthand for this form.
+:::
 
 ## shallowRef
 
