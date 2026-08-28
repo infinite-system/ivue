@@ -1,6 +1,6 @@
 import { ref, shallowRef } from 'vue';
 import { Reactive } from '../../ivue';
-import type { VirtualScrollerExposedUnwrapped } from './VirtualScroller.vue';
+import type { VirtualScroller } from './VirtualScroller';
 import type { BaseItem } from './VirtualScroller.types';
 
 export const ITEM_COUNT = 1_000_000;
@@ -49,7 +49,7 @@ class $VirtualScrollerExample {
 
   // TEMPLATE-REF TARGET — the scroller component's exposed instance.
   get scroller() {
-    return ref<VirtualScrollerExposedUnwrapped<BaseItem> | null>(null);
+    return ref<VirtualScroller.Exposed<BaseItem> | null>(null);
   }
 
   // DERIVED — plain getter; reactive through the scroller's exposed state.

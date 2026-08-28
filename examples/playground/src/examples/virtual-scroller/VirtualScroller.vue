@@ -1,84 +1,21 @@
-<script lang="ts">
-import type { ShallowUnwrapRef } from 'vue';
-
-import type { VirtualScrollerReturn } from './VirtualScroller';
-import { VirtualScroller } from './VirtualScroller';
+<script lang="ts" setup generic="T extends BaseItem">
 import { ref } from 'vue';
+
+import { VirtualScroller } from './VirtualScroller';
 import type { BaseItem } from './VirtualScroller.types';
 import VirtualScrollerItem from './VirtualScrollerItem.vue';
 
-export type VirtualScrollerExposed<T extends BaseItem> =
-  VirtualScroller.Instance<T>;
-/**
- * What consumers hold through a template ref: Vue's expose surface unwraps
- * refs on read and redirects ref writes into .value (proxyRefs semantics).
- * Instance (ReactiveInstance) is load-bearing here: it strips the readonly
- * that TS puts on get-only accessors, so writes like
- * `scroller.scrollDirection = 'down'` typecheck as they behave.
- */
-export type VirtualScrollerExposedUnwrapped<T extends BaseItem> =
-  ShallowUnwrapRef<VirtualScroller.Instance<T>>;
+// The namespace carries the whole contract (props types + defaults merged
+// by propsWithDefaults, emits, slots, expose type) — the macros receive
+// RUNTIME objects, so the compiler never resolves a cross-file type here;
+// the casts recover the generic <T> precision the runtime maps cannot carry.
+const props = defineProps(
+  VirtualScroller.props
+) as unknown as VirtualScroller.Props<T>;
 
-export interface VirtualScrollerEmits {
-  (e: 'itemsChanged', args: ItemsChangeEmitArgs): void;
-  (e: 'drop', startIndex: number, dropIndex: number): void;
-  (e: 'move', evt: any): void;
-}
+const emit = defineEmits(VirtualScroller.emits) as VirtualScroller.Emits;
 
-export interface ItemsChangeEmitArgs {
-  start: number;
-  end: number;
-}
-
-export interface VirtualScrollerSlots<T extends BaseItem> {
-  item: (scope: ItemContext<T>) => any;
-}
-
-export interface ItemContext<T extends BaseItem> {
-  item: T;
-  id: string;
-  index: number;
-}
-
-export interface VirtualScrollerProps<T extends BaseItem> {
-  modelValue: T[];
-  /** Render the built-in draggable scrollbar over the VIRTUAL position. */
-  scrollbar?: boolean;
-  autoPlay?: boolean;
-  autoPlayDelay?: number;
-  autoRepeat?: boolean;
-  /** Step mode: after any input settles, snap to the nearest item
-   *  boundary — scroll, stop; scroll, stop. */
-  snapToItems?: boolean;
-  assumedSize: number;
-  paddingQuantity: number;
-  /** Accepted for API compatibility; the docs build renders the plain branch. */
-  draggable?: boolean;
-  dragHandleSelector?: string;
-  dragClass?: string;
-  dragGhostClass?: string;
-  dragChosenClass?: string;
-}
-</script>
-<script lang="ts" setup generic="T extends BaseItem">
-const props = withDefaults(defineProps<VirtualScrollerProps<T>>(), {
-  scrollbar: false,
-  autoPlay: false,
-  autoPlayDelay: 500,
-  autoRepeat: true,
-  snapToItems: false,
-  assumedSize: 30,
-  paddingQuantity: 6,
-  draggable: false,
-  dragHandleSelector: '.sortable-drag-handle',
-  dragClass: 'sortable-drag',
-  dragGhostClass: 'sortable-ghost',
-  dragChosenClass: 'sortable-chosen'
-});
-
-const emit = defineEmits<VirtualScrollerEmits>();
-
-defineSlots<VirtualScrollerSlots<T>>();
+defineSlots<VirtualScroller.Slots<T>>();
 
 const virtualScroller = new VirtualScroller.Class<T>(props, emit);
 

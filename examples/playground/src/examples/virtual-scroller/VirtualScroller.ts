@@ -1,4 +1,9 @@
-import type { Ref } from 'vue';
+import type {
+  ExtractPropTypes,
+  PropType,
+  Ref,
+  ShallowUnwrapRef
+} from 'vue';
 import {
   computed,
   nextTick,
@@ -11,15 +16,114 @@ import {
 } from 'vue';
 
 import { useElementSize, useResizeObserver } from '@vueuse/core';
-import { Reactive, type ReactiveInstance } from '../../ivue';
+import {
+  propsWithDefaults,
+  Reactive,
+  type ExtractEmitTypes,
+  type ExtractPropDefaultTypes,
+  type ReactiveInstance
+} from '../../ivue';
 import { Lenis } from '../../lenis/lenis';
 import type { BaseItem } from './VirtualScroller.types';
-import type {
-  ItemContext,
-  ItemsChangeEmitArgs,
-  VirtualScrollerEmits,
-  VirtualScrollerProps
-} from './VirtualScroller.vue';
+
+/*
+ * THE COMPONENT CONTRACT — the class file owns it; the namespace below
+ * carries it (VirtualScroller.props / emits / Props / Emits / Slots /
+ * Exposed). The SFC is pure wiring: it hands the RUNTIME props object to
+ * defineProps and the RUNTIME emits object to defineEmits, so no compiler
+ * macro ever resolves a cross-file TYPE — and a subclass component
+ * composes its surface by SPREADING the maps (see HorizontalVirtualScroller,
+ * which inherits every prop and overrides one default in one line).
+ */
+
+/** 1 — the TYPES: a defineComponent-style object, no defaults inside.
+ *  `modelValue` is typed against BaseItem here (a const cannot be
+ *  generic); Props<T> recovers the precise item type in the SFC. */
+const virtualScrollerPropsTypes = {
+  modelValue: { type: Array as PropType<BaseItem[]>, required: true },
+  /** Render the built-in draggable scrollbar over the VIRTUAL position. */
+  scrollbar: { type: Boolean as PropType<boolean> },
+  autoPlay: { type: Boolean as PropType<boolean> },
+  autoPlayDelay: { type: Number as PropType<number> },
+  autoRepeat: { type: Boolean as PropType<boolean> },
+  /** Step mode: after any input settles, snap to the nearest item
+   *  boundary — scroll, stop; scroll, stop. */
+  snapToItems: { type: Boolean as PropType<boolean> },
+  assumedSize: { type: Number as PropType<number> },
+  paddingQuantity: { type: Number as PropType<number> },
+  /** Autoplay creep speed: ms of wall time per px. No default on purpose —
+   *  unset falls back to the tuned reading cadence (see creepMsPerPx). */
+  creepMsPerPx: { type: Number as PropType<number> },
+  /** Accepted for API compatibility; the docs build renders the plain branch. */
+  draggable: { type: Boolean as PropType<boolean> },
+  dragHandleSelector: { type: String as PropType<string> },
+  dragClass: { type: String as PropType<string> },
+  dragGhostClass: { type: String as PropType<string> },
+  dragChosenClass: { type: String as PropType<string> }
+};
+
+/** 2 — the DEFAULTS: plain values, typed against the types object.
+ *  `modelValue` is required and `creepMsPerPx` deliberately default-free
+ *  (unset = the tuned creep cadence), so both are excluded from the
+ *  must-have-a-default check. */
+const virtualScrollerPropsDefaults: ExtractPropDefaultTypes<
+  Omit<typeof virtualScrollerPropsTypes, 'modelValue' | 'creepMsPerPx'>
+> = {
+  scrollbar: false,
+  autoPlay: false,
+  autoPlayDelay: 500,
+  autoRepeat: true,
+  snapToItems: false,
+  assumedSize: 30,
+  paddingQuantity: 6,
+  draggable: false,
+  dragHandleSelector: '.sortable-drag-handle',
+  dragClass: 'sortable-drag',
+  dragGhostClass: 'sortable-ghost',
+  dragChosenClass: 'sortable-chosen'
+};
+
+/** 3 — the MERGE: a standard Vue props object, ready for defineProps. */
+const virtualScrollerProps = propsWithDefaults(
+  virtualScrollerPropsDefaults,
+  virtualScrollerPropsTypes
+);
+
+/** Resolved props — what the class receives AFTER defaults are applied.
+ *  DERIVED from the merged runtime object (never hand-duplicated):
+ *  ExtractPropTypes makes every defaulted prop non-optional and the
+ *  default-free `creepMsPerPx` optional; the one thing a runtime map
+ *  cannot carry — the generic item type — is grafted back over
+ *  `modelValue`. */
+export type VirtualScrollerProps<T extends BaseItem> = Omit<
+  ExtractPropTypes<typeof virtualScrollerProps>,
+  'modelValue'
+> & { modelValue: T[] };
+
+export interface ItemsChangeEmitArgs {
+  start: number;
+  end: number;
+}
+
+export interface ItemContext<T extends BaseItem> {
+  item: T;
+  id: string;
+  index: number;
+}
+
+export interface VirtualScrollerSlots<T extends BaseItem> {
+  item: (scope: ItemContext<T>) => any;
+}
+
+const virtualScrollerEmits = {
+  itemsChanged: (args: ItemsChangeEmitArgs) => true,
+  drop: (startIndex: number, dropIndex: number) => true,
+  move: (evt: any) => true
+};
+
+export type VirtualScrollerEmits = ExtractEmitTypes<
+  typeof virtualScrollerEmits
+>;
 
 /**
  * Virtualized scroller (ivue v2 `Reactive` class).
@@ -1166,6 +1270,14 @@ class $VirtualScroller<T extends BaseItem> {
    *  cadence (1px per 150ms tick ≈ 6.7px/s), now integrated per FRAME. */
   private static readonly CREEP_MS_PER_PX = 150;
 
+  /** Speed as a SETTING: the optional creepMsPerPx prop overrides the
+   *  tuned reading cadence (which stays the sacred default). A marquee
+   *  reads a live value here every creep frame, so a speed slider takes
+   *  effect mid-glide. */
+  protected get creepMsPerPx(): number {
+    return this.props.creepMsPerPx ?? $VirtualScroller.CREEP_MS_PER_PX;
+  }
+
   /** rAF handle + last frame timestamp of the creep integrator. */
   private creepFrame: number | null = null;
   private lastCreepTs: number | null = null;
@@ -1218,7 +1330,7 @@ class $VirtualScroller<T extends BaseItem> {
     const dt =
       this.lastCreepTs === null ? 16.7 : Math.min(50, ts - this.lastCreepTs);
     this.lastCreepTs = ts;
-    this.lenis.targetScroll += dt / $VirtualScroller.CREEP_MS_PER_PX;
+    this.lenis.targetScroll += dt / this.creepMsPerPx;
 
     const container = this.offsetSize(this.scrollElement.value);
     const atEnd =
@@ -1284,6 +1396,11 @@ class $VirtualScroller<T extends BaseItem> {
  * `new VirtualScroller.Class<T>()` fully generic. For the same reason
  * `typeof Class.Instance` cannot exist per-T; `Instance<T>` applies
  * `ReactiveInstance` explicitly instead.
+ *
+ * The namespace carries the WHOLE component contract: class, instance
+ * type, props (types + defaults + merged runtime object), emits, slots
+ * and the expose-surface type — one import gives a consumer or a
+ * subclass everything the component is.
  */
 export namespace VirtualScroller {
   export const $Class = $VirtualScroller;
@@ -1293,6 +1410,27 @@ export namespace VirtualScroller {
   export type Instance<T extends BaseItem> = ReactiveInstance<
     $VirtualScroller<T>
   >;
+
+  /** The TYPES / DEFAULTS / MERGE triple — declared once above the class
+   *  (see virtualScrollerPropsTypes), carried here. */
+  export const propsTypes = virtualScrollerPropsTypes;
+  export const propsDefaults = virtualScrollerPropsDefaults;
+  export const props = virtualScrollerProps;
+
+  export const emits = virtualScrollerEmits;
+
+  export type Props<T extends BaseItem> = VirtualScrollerProps<T>;
+  export type Emits = VirtualScrollerEmits;
+  export type Slots<T extends BaseItem> = VirtualScrollerSlots<T>;
+
+  /**
+   * What consumers hold through a template ref: Vue's expose surface
+   * unwraps refs on read and redirects ref writes into .value (proxyRefs
+   * semantics). Instance (ReactiveInstance) is load-bearing underneath:
+   * it strips the readonly that TS puts on get-only accessors, so writes
+   * like `scroller.scrollDirection = 'down'` typecheck as they behave.
+   */
+  export type Exposed<T extends BaseItem> = ShallowUnwrapRef<Instance<T>>;
 }
 
 export type VirtualScrollerReturn<T extends BaseItem> = $VirtualScroller<T>;

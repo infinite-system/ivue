@@ -1,36 +1,20 @@
 <script lang="ts" setup generic="T extends BaseItem">
-import type { ShallowUnwrapRef } from 'vue';
-
 import { HorizontalVirtualScroller } from './HorizontalVirtualScroller';
 import type { BaseItem } from './VirtualScroller.types';
-import type {
-  VirtualScrollerEmits,
-  VirtualScrollerProps,
-  VirtualScrollerSlots
-} from './VirtualScroller.vue';
 import VirtualScrollerItem from './VirtualScrollerItem.vue';
 
-export type HorizontalVirtualScrollerExposedUnwrapped<T extends BaseItem> =
-  ShallowUnwrapRef<HorizontalVirtualScroller.Instance<T>>;
+// Pure wiring — the namespace carries the whole contract, with the
+// horizontal defaults already merged (assumedSize 300 overridden by
+// spread in HorizontalVirtualScroller.propsDefaults).
+const props = defineProps(
+  HorizontalVirtualScroller.props
+) as unknown as HorizontalVirtualScroller.Props<T>;
 
-const props = withDefaults(defineProps<VirtualScrollerProps<T>>(), {
-  scrollbar: false,
-  autoPlay: false,
-  autoPlayDelay: 500,
-  autoRepeat: true,
-  snapToItems: false,
-  assumedSize: 300,
-  paddingQuantity: 6,
-  draggable: false,
-  dragHandleSelector: '.sortable-drag-handle',
-  dragClass: 'sortable-drag',
-  dragGhostClass: 'sortable-ghost',
-  dragChosenClass: 'sortable-chosen'
-});
+const emit = defineEmits(
+  HorizontalVirtualScroller.emits
+) as HorizontalVirtualScroller.Emits;
 
-const emit = defineEmits<VirtualScrollerEmits>();
-
-defineSlots<VirtualScrollerSlots<T>>();
+defineSlots<HorizontalVirtualScroller.Slots<T>>();
 
 const virtualScroller = new HorizontalVirtualScroller.Class<T>(props, emit);
 

@@ -6,7 +6,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, withBase } from 'vitepress';
 import VirtualScroller from '../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue';
-import type { VirtualScrollerExposedUnwrapped } from '../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue';
+import type { VirtualScroller as VirtualScrollerNs } from '../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller';
 import type { BaseItem } from '../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.types';
 import { data as allPosts } from '../../../blog/blog.data.mjs';
 
@@ -51,7 +51,7 @@ function formatDate(date: string): string {
   });
 }
 
-const scroller = ref<VirtualScrollerExposedUnwrapped<ArchiveItem> | null>(null);
+const scroller = ref<VirtualScrollerNs.Exposed<ArchiveItem> | null>(null);
 const viewport = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
 

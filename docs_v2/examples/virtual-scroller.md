@@ -8,6 +8,7 @@ relatedPosts: [a-million-rows-twelve-divs]
 
 <script setup>
 import ExampleVirtualScroller from '../.vitepress/theme/components/examples/ExampleVirtualScroller.vue'
+import ExampleTextMarquee from '../.vitepress/theme/components/examples/ExampleTextMarquee.vue'
 </script>
 
 # Virtual scroller: 1,000,000 rows on Lenis
@@ -79,3 +80,72 @@ redeploys the example automatically.
 - **The scrollbar is code.** `overflow-anchor: none` and a `translateZ`
   compositor layer keep the browser out of the way; Lenis takes its clamp
   from the computed content height, not the DOM.
+
+## The contract lives in the namespace
+
+The scroller's namespace carries the **whole component contract**, not
+just the class: prop types, prop defaults, the merged runtime props
+object, emits, slots and the expose-surface type. The SFC is pure wiring
+against it —
+
+```ts
+const props = defineProps(
+  VirtualScroller.props
+) as unknown as VirtualScroller.Props<T>;
+
+const emit = defineEmits(VirtualScroller.emits) as VirtualScroller.Emits;
+```
+
+`defineProps` receives a plain **runtime object** (types and defaults
+merged by [`propsWithDefaults`](/guide/extensible-components)), so the
+compiler never resolves a cross-file type inside a macro, and the cast
+recovers the generic `<T>` precision a runtime map cannot carry. The
+payoff is the same one the class hierarchy already has: a subclass
+component composes its surface by **spread**. `HorizontalVirtualScroller`
+— the same tuned class rotated sideways through its axis seams — inherits
+every prop and states its one real difference in one line:
+
+```ts
+export const propsDefaults = {
+  ...VirtualScroller.propsDefaults,
+  assumedSize: 300 // cards are ~hundreds of px wide where rows are tens tall
+};
+```
+
+## A book as one scrolling line
+
+The same machinery, pointed at text: a **marquee** that scrolls a
+~400,000-character book as a single unbroken line. Three units, each pure
+about one thing:
+
+- **`TextChunker`** (a plain static class) speaks only text: it collapses
+  the book to one line, cuts it into ~400-character chunks at spaces so
+  words never split — each chunk keeping its trailing space, so side by
+  side they concatenate back byte-identically — and canvas-measures the
+  font's average character width.
+- **`HorizontalVirtualScroller`** speaks only items, sizes and pixels. It
+  never learns it is scrolling a book.
+- **`TextMarquee`** is where they meet: chunks become items, the measured
+  character width seeds `assumed-size`, and the glide is the scroller's
+  own autoplay creep — the per-frame integrator that paces article
+  reading — with its speed exposed through the `creep-ms-per-px` prop.
+  That is why the speed slider takes effect mid-glide: the creep reads
+  the live value every frame; nothing restarts.
+
+<ClientOnly>
+  <ExampleTextMarquee />
+</ClientOnly>
+
+::: code-group
+<<< ../../examples/playground/src/examples/text-marquee/TextMarquee.ts [TextMarquee.ts]
+<<< ../../examples/playground/src/examples/text-marquee/TextMarquee.vue [TextMarquee.vue]
+<<< ../../examples/playground/src/examples/text-marquee/TextChunker.ts [TextChunker.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.ts [HorizontalVirtualScroller.ts]
+:::
+
+The scale math holds up to real books: 600k characters is ~1,500 chunks,
+the scroll extent a few million pixels — inside the scroller's
+origin-rebasing regime — and the DOM holds a dozen-odd `span`s at any
+moment. Run it in the playground:
+
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Ftext-marquee%2FTextMarquee.ts&path=%2F%23%2Ftext-marquee">Open the marquee in StackBlitz ⚡</a>

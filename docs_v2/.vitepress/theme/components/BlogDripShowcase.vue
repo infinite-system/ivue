@@ -7,7 +7,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { withBase } from 'vitepress';
 import HorizontalVirtualScroller from '../../../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.vue';
-import type { HorizontalVirtualScrollerExposedUnwrapped } from '../../../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.vue';
+import type { HorizontalVirtualScroller as HorizontalScrollerNs } from '../../../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller';
 import { data as allPosts } from '../../../blog/blog.data.mjs';
 
 interface DripItem {
@@ -33,7 +33,7 @@ const items: DripItem[] = allPosts
 const ADVANCE_EVERY_MS = 4500;
 
 const root = ref<HTMLElement | null>(null);
-const scroller = ref<HorizontalVirtualScrollerExposedUnwrapped<DripItem> | null>(null);
+const scroller = ref<HorizontalScrollerNs.Exposed<DripItem> | null>(null);
 const arrivingId = ref('');
 // everything at or left of this index has been delivered — those cards
 // wear the checkmark; the arriving card gets the full stamp first

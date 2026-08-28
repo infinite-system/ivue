@@ -1,4 +1,10 @@
-import { Reactive, type ReactiveInstance } from '../../ivue';
+import type { ShallowUnwrapRef } from 'vue';
+
+import {
+  propsWithDefaults,
+  Reactive,
+  type ReactiveInstance
+} from '../../ivue';
 import type { BaseItem } from './VirtualScroller.types';
 import { VirtualScroller } from './VirtualScroller';
 
@@ -65,7 +71,11 @@ class $HorizontalVirtualScroller<T extends BaseItem> extends (VirtualScroller.$C
 
 /** Standard namespace pattern, generic adaptation — see VirtualScroller's
  *  note on why `Class` casts back and `Instance<T>` applies
- *  ReactiveInstance by hand. */
+ *  ReactiveInstance by hand. The props surface extends the same way the
+ *  class does: spread the parent's maps, override what defines the
+ *  specialization — here a single default (cards are ~hundreds of px
+ *  wide where rows are tens tall), stated once instead of duplicating
+ *  the whole defaults block. */
 export namespace HorizontalVirtualScroller {
   export const $Class = $HorizontalVirtualScroller;
   export let Class = Reactive(
@@ -74,4 +84,18 @@ export namespace HorizontalVirtualScroller {
   export type Instance<T extends BaseItem> = ReactiveInstance<
     $HorizontalVirtualScroller<T>
   >;
+
+  export const propsTypes = { ...VirtualScroller.propsTypes };
+  export const propsDefaults = {
+    ...VirtualScroller.propsDefaults,
+    assumedSize: 300
+  };
+  export const props = propsWithDefaults(propsDefaults, propsTypes);
+  export const emits = VirtualScroller.emits;
+
+  export type Props<T extends BaseItem> = VirtualScroller.Props<T>;
+  export type Emits = VirtualScroller.Emits;
+  export type Slots<T extends BaseItem> = VirtualScroller.Slots<T>;
+  /** See VirtualScroller.Exposed — same surface, this class's instance. */
+  export type Exposed<T extends BaseItem> = ShallowUnwrapRef<Instance<T>>;
 }

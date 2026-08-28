@@ -8,7 +8,7 @@
 import { computed, ref } from 'vue';
 import DemoBox from '../DemoBox.vue';
 import VirtualScroller from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue';
-import type { VirtualScrollerExposedUnwrapped } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue';
+import type { VirtualScroller as VirtualScrollerNs } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller';
 import type { BaseItem } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.types';
 
 const ITEM_COUNT = 1_000_000;
@@ -50,7 +50,7 @@ function buildItems(): BaseItem[] {
 }
 
 const items = ref<BaseItem[]>(buildItems());
-const scroller = ref<VirtualScrollerExposedUnwrapped<BaseItem> | null>(null);
+const scroller = ref<VirtualScrollerNs.Exposed<BaseItem> | null>(null);
 
 // the scroller's own reactive state — flips off when the reader scrolls up
 const isAutoPlaying = computed(() => scroller.value?.isAutoPlaying ?? false);
