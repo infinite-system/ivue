@@ -37,7 +37,9 @@ export const contactFieldParamsDefaults: ExtractPropDefaultTypes<
   roundChips: true,
   useInput: true,
   hideDropdownIcon: true,
-  fetchPath: '/contact',
+  // fetchPath is NOT defaulted here — the class overrides the getter with
+  // a super chain (`super.fetchPath || '/contact'`), the ported v1 idiom:
+  // an explicit prop still wins, and the endpoint is behavior, not config.
   fetchSearch: true,
   fetchPagination: true,
   fetchRowsPerPage: 8,

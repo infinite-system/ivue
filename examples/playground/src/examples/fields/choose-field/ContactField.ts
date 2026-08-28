@@ -56,6 +56,30 @@ class $ContactField extends ChooseField.$Class {
   showEmail(option: { email?: string } | undefined): boolean {
     return !this.compact && !!option?.email;
   }
+
+  /* Overrides — behavior extensions over the base, super-chained so an
+     explicit prop always wins (ported v1 idiom) */
+
+  /**
+   * The contact endpoint is BEHAVIOR, not a default: unset resolves to
+   * '/contact', an explicit `fetch-path` prop still wins.
+   * @extends @see {$ChooseField.fetchPath}
+   */
+  override get fetchPath() {
+    return super.fetchPath || '/contact';
+  }
+
+  /**
+   * Typing a new value creates a contact when options are keyed by
+   * email — 'add-unique' keeps the list deduplicated.
+   * @extends @see {$ChooseField.newValueMode}
+   */
+  override get newValueMode() {
+    return (
+      super.newValueMode ??
+      (this.optionValue === 'email' ? 'add-unique' : super.newValueMode)
+    );
+  }
 }
 
 export namespace ContactField {
