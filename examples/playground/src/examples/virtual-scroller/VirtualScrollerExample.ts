@@ -10,6 +10,12 @@ class $VirtualScrollerExample {
     return shallowRef<BaseItem[]>(VirtualScrollerExample.buildItems());
   }
 
+  // MUTABLE STATE — the autoplay-speed slider writes this (px/s; 6.7 is
+  // the scroller's tuned reading cadence, 150 ms per px).
+  get speed() {
+    return ref(6.7);
+  }
+
   // TEMPLATE-REF TARGET — the scroller component's exposed instance.
   get scroller() {
     return ref<VirtualScroller.Exposed<BaseItem> | null>(null);
@@ -18,6 +24,15 @@ class $VirtualScrollerExample {
   // DERIVED — plain getter; reactive through the scroller's exposed state.
   get renderedCount() {
     return this.scroller.value?.visibleItems.length ?? 0;
+  }
+
+  // DERIVED — the slider's px/s translated into the creep integrator's unit.
+  get creepMsPerPx() {
+    return 1000 / Math.max(1, this.speed.value);
+  }
+
+  get speedLabel() {
+    return `${this.speed.value.toFixed(1)} px/s`;
   }
 
   // DERIVED — reads the scroller's reactive autoplay state through expose.

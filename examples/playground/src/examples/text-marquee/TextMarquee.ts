@@ -190,7 +190,7 @@ export namespace TextMarquee {
   export const propsTypes = {
     /** The full text — newlines and all; the marquee one-lines it. */
     text: { type: String as PropType<string>, required: true },
-    /** Glide speed. The default reads like a fast news ticker. */
+    /** Glide speed. The default is a comfortable reading glide. */
     pxPerSecond: { type: Number as PropType<number> },
     /** Characters per chunk (cut at spaces). Bigger chunks = fewer items;
      *  smaller chunks = finer virtualization granularity. */
@@ -202,7 +202,7 @@ export namespace TextMarquee {
   export const propsDefaults: ExtractPropDefaultTypes<
     Omit<typeof propsTypes, 'text'>
   > = {
-    pxPerSecond: 120,
+    pxPerSecond: 50,
     targetChars: 400
   };
 

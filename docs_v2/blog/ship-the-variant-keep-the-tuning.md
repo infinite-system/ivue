@@ -124,8 +124,8 @@ because that is all the visible strip needs.
 
 The numbers, measured with Playwright on a Linux VM (a slow
 environment; your laptop does better): 401,789 characters, 1,010
-chunks, 5 in the DOM, gliding at 120.0 ± 0.3 px/s on a 16.7 ms frame
-cadence. The glide is the scroller's own autoplay creep, the same
+chunks, 5 in the DOM, gliding at a measured 50.2 px/s against a 50 px/s
+setting, on a 16.7 ms frame cadence. The glide is the scroller's own autoplay creep, the same
 integrator that paces article reading, with its speed exposed as a
 prop. Drag the slider mid-glide and the speed changes without a
 restart, because the integrator reads the live value every frame.
@@ -144,9 +144,10 @@ of the visible strip — verified to the pixel.
 
 **Motion this smooth needs a transform, not a scrollbar.** Native
 scrolling quantizes position to device pixels. The creep writes
-fractional positions into a composited transform. At 120 px/s that is
-two-ish pixels a frame, and the compositor filters the fractions into a
-true constant-velocity glide. The same real-valued position model is
+fractional positions into a composited transform. At 50 px/s that is
+under a pixel per frame — whole-pixel scrolling cannot even represent
+that speed as smooth motion, but the compositor filters the fractions
+into a true constant-velocity glide. The same real-valued position model is
 why a wheel flick hands off cleanly: the fling decays *to* cruise speed
 and the creep adopts the scroll at that exact speed, mid-decay. It
 never stalls to zero and restarts.

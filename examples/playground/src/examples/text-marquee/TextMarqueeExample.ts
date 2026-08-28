@@ -42,7 +42,7 @@ export const BOOK_TEXT = buildBook();
 class $TextMarqueeExample {
   // MUTABLE STATE — the slider writes this; the marquee reads it as a prop.
   get speed() {
-    return ref(120);
+    return ref(50);
   }
 
   // TEMPLATE-REF TARGET — the marquee component's exposed instance.

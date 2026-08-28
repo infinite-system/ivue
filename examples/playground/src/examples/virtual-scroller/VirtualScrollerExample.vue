@@ -8,6 +8,7 @@ const example = new VirtualScrollerExample.Class();
 const {
   // state refs
   items,
+  speed,
   // element refs
   scroller,
 } = example;
@@ -36,6 +37,17 @@ const {
           the end
         </button>
         <button type="button" @click="example.jumpTo(0)">the top</button>
+        <label class="speed">
+          speed
+          <input
+            v-model.number="speed"
+            type="range"
+            min="1"
+            max="60"
+            step="0.1"
+          />
+          <span class="speed-value">{{ example.speedLabel }}</span>
+        </label>
       </nav>
     </header>
     <main class="example-body">
@@ -44,6 +56,7 @@ const {
         v-model="items"
         :assumed-size="56"
         :padding-quantity="10"
+        :creep-ms-per-px="example.creepMsPerPx"
         auto-play
         :auto-play-delay="800"
       >
@@ -92,6 +105,22 @@ nav button:hover {
 }
 nav .btn-icon {
   margin-right: 6px;
+}
+.speed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #8b95b5;
+}
+.speed input {
+  width: 140px;
+  accent-color: #6366f1;
+}
+.speed-value {
+  min-width: 58px;
+  color: #dbe1f4;
+  font-variant-numeric: tabular-nums;
 }
 nav button.playing {
   border-color: rgba(52, 211, 153, 0.7);

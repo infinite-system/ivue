@@ -50,6 +50,12 @@ function buildItems(): BaseItem[] {
 }
 
 const items = ref<BaseItem[]>(buildItems());
+
+// autoplay speed (px/s) — 6.7 is the scroller's tuned reading cadence
+// (150 ms per px); the slider hands the creep integrator a live value.
+const creepSpeed = ref(6.7);
+const creepMsPerPx = computed(() => 1000 / Math.max(1, creepSpeed.value));
+const creepSpeedLabel = computed(() => `${creepSpeed.value.toFixed(1)} px/s`);
 const scroller = ref<VirtualScrollerNs.Exposed<BaseItem> | null>(null);
 
 // the scroller's own reactive state — flips off when the reader scrolls up
@@ -92,6 +98,7 @@ function toggleAutoPlay() {
         v-model="items"
         :assumed-size="56"
         :padding-quantity="10"
+        :creep-ms-per-px="creepMsPerPx"
         auto-play
         :auto-play-delay="800"
       >
@@ -122,6 +129,17 @@ function toggleAutoPlay() {
         <span class="evs-btn-icon">{{ isAutoPlaying ? '⏸' : '▶' }}</span>
         {{ isAutoPlaying ? 'pause autoplay' : 'autoplay' }}
       </button>
+      <label class="evs-speed">
+        speed
+        <input
+          v-model.number="creepSpeed"
+          type="range"
+          min="1"
+          max="60"
+          step="0.1"
+        />
+        <span class="evs-speed-value">{{ creepSpeedLabel }}</span>
+      </label>
     </div>
   </DemoBox>
 </template>
@@ -151,6 +169,22 @@ function toggleAutoPlay() {
 
 .evs-btn-icon {
   margin-right: 6px;
+}
+.evs-speed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--vp-c-text-2);
+}
+.evs-speed input {
+  width: 140px;
+  accent-color: #6366f1;
+}
+.evs-speed-value {
+  min-width: 58px;
+  color: var(--vp-c-text-1);
+  font-variant-numeric: tabular-nums;
 }
 .d-btn.evs-playing {
   border-color: rgba(52, 211, 153, 0.6);
