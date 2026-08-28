@@ -55,7 +55,10 @@ defineExpose(marquee as TextMarquee.Instance);
 .text-marquee .virtual-scroller--x {
   padding-bottom: 18px;
 }
-.text-marquee .virtual-scroller__track--x {
+/* three classes on purpose: the component's own track rules use a doubled
+   selector (two classes), so this override must out-specify it — a tie
+   would leave the winner to stylesheet load order */
+.text-marquee .virtual-scroller__track.virtual-scroller__track--x {
   bottom: 0;
   /* the hosts fade the line out over the outer ~5% (mask-image) — the
      track ends rest inside the fully-opaque zone, not under the fade */
