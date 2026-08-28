@@ -16,6 +16,14 @@ import ExampleTextMarquee from '../.vitepress/theme/components/examples/ExampleT
 
 <BlogPostDate />
 
+A ~400,000-character book, scrolling as one line — shift+wheel scrubs
+it, the bar underneath drags and lands where it points (including the
+true end), and a plain vertical wheel scrolls this page, untouched:
+
+<ClientOnly>
+  <ExampleTextMarquee />
+</ClientOnly>
+
 Every codebase has one component that took years to get right. Ours is
 a [virtual scroller](/examples/virtual-scroller): a million rows, a
 dozen divs, scroll physics driven by a customized Lenis instead of
@@ -117,14 +125,7 @@ same object, never written twice. The full pattern is in the
 
 ## The proof: a book as one scrolling line
 
-Running the shipped engine — shift+wheel scrubs it, the bar underneath
-drags and lands where it points (including the true end), and a plain
-vertical wheel scrolls this page, untouched:
-
-<ClientOnly>
-  <ExampleTextMarquee />
-</ClientOnly>
-
+The marquee at the top of this page is the proof, running live.
 Extension proves the seams. Composition proves the component. So we
 pointed the horizontal scroller at something it was never built for: a
 ~400,000-character text, scrolling as a single unbroken line.
