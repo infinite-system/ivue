@@ -1,6 +1,6 @@
 ---
 title: 'Example: Horizontal Scroller — 1M Items'
-description: 'The production virtual scroller rotated sideways by subclassing: eight overridden axis seams, every prop inherited by spread, the tuned scroll physics unchanged. One million cards, a handful of divs — and the file is the reference for the namespace-as-contract standard.'
+description: 'The production virtual scroller rotated sideways by subclassing: eight overridden axis seams, every prop inherited by spread, the tuned scroll physics unchanged. One million cards, a handful of divs — and the file is the reference for the namespace-as-contract standard, generic typing included.'
 aside: false
 pageClass: benchmarks-wide examples-page
 relatedPosts: [ship-the-variant-keep-the-tuning, a-million-rows-twelve-divs]
@@ -53,10 +53,31 @@ section order:
   to itself live in the namespace un-exported: private to the file, no
   module-level residue.
 
-The SFC is pure wiring against that contract: `defineProps` receives
-the runtime `props` object, so no compiler macro ever resolves a
-cross-file type, and the state destructure is the only other thing in
-`<script setup>`.
+- **Generic typing** — the part that makes this the FULL canonical
+  example: the scroller is a generic component (`<T extends BaseItem>`),
+  and the namespace pattern carries the generic through every layer TS
+  makes awkward. `Reactive()` returns the same constructor, but its
+  return type cannot carry `<T>` (TypeScript has no higher-kinded
+  types), so `Class` is cast back to the raw constructor type to keep
+  `new VirtualScroller.Class<T>()` fully generic, and `Instance<T>`
+  applies `ReactiveInstance` by hand. A runtime props map cannot carry
+  a type parameter either, so `Props<T>` grafts it back over the one
+  prop that needs it: `Omit<ExtractPropTypes<typeof props>,
+  'modelValue'> & { modelValue: T[] }`. `Exposed<T>` closes the loop
+  for template refs.
+
+The SFC is pure wiring against that contract — and generic wiring:
+`<script setup generic="T extends BaseItem">` hands the runtime `props`
+object to `defineProps` (no compiler macro ever resolves a cross-file
+type) and one cast recovers the precision the runtime map cannot carry:
+
+```ts
+const props = defineProps(
+  VirtualScroller.props
+) as unknown as VirtualScroller.Props<T>;
+```
+
+The state destructure is the only other thing in `<script setup>`.
 
 ## The source
 
