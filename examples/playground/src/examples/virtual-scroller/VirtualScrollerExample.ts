@@ -40,6 +40,14 @@ class $VirtualScrollerExample {
     return this.scroller.value?.isAutoPlaying ?? false;
   }
 
+  get playButtonIcon() {
+    return this.isAutoPlaying ? '⏸' : '▶';
+  }
+
+  get playButtonLabel() {
+    return this.isAutoPlaying ? 'autoplay on — scroll up to stop' : 'autoplay';
+  }
+
   jumpTo(index: number) {
     this.scroller.value?.scrollToIndex(index, undefined, true, 12);
   }

@@ -3,76 +3,23 @@
  * The VirtualScroller example, live in the docs. The scroller, its class,
  * and the customized Lenis in this folder are the production files —
  * extracted from an app where they drive 100k-item feeds. Only this
- * wrapper (the data and the chrome) is docs code.
+ * wrapper (the chrome) is docs code, and even its logic is the
+ * playground example's own class.
  */
-import { computed, ref } from 'vue';
 import DemoBox from '../DemoBox.vue';
 import VirtualScroller from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue';
-import type { VirtualScroller as VirtualScrollerNs } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller';
-import type { BaseItem } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.types';
+import { VirtualScrollerExample } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample';
 
-const ITEM_COUNT = 1_000_000;
+const example = new VirtualScrollerExample.Class();
 
-const OPENERS = [
-  'Everything costs proportional to what is observed',
-  'The window walks; the list stands still',
-  'A million rows, a handful of divs',
-  'Estimates decide the spacers; real heights decide the rest',
-  'Scroll is virtual — the DOM never learns the total',
-  'Heights are captured once, on the way in and on the way out',
-];
-
-// One million rows must stay memory-sane: bodies are 24 SHARED string
-// variants (opener × padding length) — unique text per row would be
-// hundreds of MB of strings. The row number renders from `position`.
-const BODY_VARIANTS: string[] = [];
-for (let openerIndex = 0; openerIndex < OPENERS.length; openerIndex++) {
-  for (let extraSentences = 0; extraSentences < 4; extraSentences++) {
-    let body = `${OPENERS[openerIndex]}.`;
-    for (let extra = 0; extra < extraSentences; extra++) {
-      body +=
-        ' Rendered rows are normal-flow blocks between two spacer divs, so the browser stacks them at their real heights for free.';
-    }
-    BODY_VARIANTS.push(body);
-  }
-}
-
-function buildItems(): BaseItem[] {
-  const items = new Array(ITEM_COUNT);
-  for (let index = 0; index < ITEM_COUNT; index++) {
-    items[index] = {
-      id: String(index),
-      body: BODY_VARIANTS[(index * 7) % BODY_VARIANTS.length],
-      position: String(index + 1),
-    };
-  }
-  return items;
-}
-
-const items = ref<BaseItem[]>(buildItems());
-
-// autoplay speed (px/s) — 6.7 is the scroller's tuned reading cadence
-// (150 ms per px); the slider hands the creep integrator a live value.
-const creepSpeed = ref(6.7);
-const creepMsPerPx = computed(() => 1000 / Math.max(1, creepSpeed.value));
-const creepSpeedLabel = computed(() => `${creepSpeed.value.toFixed(1)} px/s`);
-const scroller = ref<VirtualScrollerNs.Exposed<BaseItem> | null>(null);
-
-// the scroller's own reactive state — flips off when the reader scrolls up
-const isAutoPlaying = computed(() => scroller.value?.isAutoPlaying ?? false);
-
-function jumpTo(index: number) {
-  scroller.value?.scrollToIndex(index, undefined, true, 12);
-}
-
-function toggleAutoPlay() {
-  if (!scroller.value) return;
-  if (isAutoPlaying.value) {
-    scroller.value.stopAutoPlay();
-  } else {
-    scroller.value.startAutoPlay(0);
-  }
-}
+// the state destructure — every Ref the template touches, grouped
+const {
+  // state refs
+  items,
+  speed,
+  // element refs
+  scroller,
+} = example;
 </script>
 
 <template>
@@ -83,11 +30,11 @@ function toggleAutoPlay() {
     <div class="d-vals evs-stats">
       <div>
         <div class="d-k">items in the list</div>
-        <div class="d-n">{{ ITEM_COUNT.toLocaleString() }}</div>
+        <div class="d-n">{{ VirtualScrollerExample.ITEM_COUNT.toLocaleString() }}</div>
       </div>
       <div>
         <div class="d-k">rows in the DOM</div>
-        <div class="d-n grad">{{ scroller?.visibleItems.length ?? 0 }}</div>
+        <div class="d-n grad">{{ example.renderedCount }}</div>
       </div>
     </div>
 
@@ -98,7 +45,7 @@ function toggleAutoPlay() {
         v-model="items"
         :assumed-size="56"
         :padding-quantity="10"
-        :creep-ms-per-px="creepMsPerPx"
+        :creep-ms-per-px="example.creepMsPerPx"
         auto-play
         :auto-play-delay="800"
       >
@@ -111,34 +58,34 @@ function toggleAutoPlay() {
     </div>
 
     <div class="d-row">
-      <button class="d-btn primary" type="button" @click="jumpTo(499999)">
+      <button class="d-btn primary" type="button" @click="example.jumpTo(499999)">
         jump to #500,000
       </button>
-      <button class="d-btn" type="button" @click="jumpTo(ITEM_COUNT - 1)">
+      <button class="d-btn" type="button" @click="example.jumpTo(VirtualScrollerExample.ITEM_COUNT - 1)">
         jump to the end
       </button>
-      <button class="d-btn" type="button" @click="jumpTo(0)">
+      <button class="d-btn" type="button" @click="example.jumpTo(0)">
         back to the top
       </button>
       <button
         class="d-btn"
-        :class="{ 'evs-playing': isAutoPlaying }"
+        :class="{ 'evs-playing': example.isAutoPlaying }"
         type="button"
-        @click="toggleAutoPlay"
+        @click="example.toggleAutoPlay()"
       >
-        <span class="evs-btn-icon">{{ isAutoPlaying ? '⏸' : '▶' }}</span>
-        {{ isAutoPlaying ? 'pause autoplay' : 'autoplay' }}
+        <span class="evs-btn-icon">{{ example.playButtonIcon }}</span>
+        {{ example.playButtonLabel }}
       </button>
       <label class="evs-speed">
         speed
         <input
-          v-model.number="creepSpeed"
+          v-model.number="speed"
           type="range"
           min="1"
           max="60"
           step="0.1"
         />
-        <span class="evs-speed-value">{{ creepSpeedLabel }}</span>
+        <span class="evs-speed-value">{{ example.speedLabel }}</span>
       </label>
     </div>
   </DemoBox>
@@ -170,6 +117,11 @@ function toggleAutoPlay() {
 .evs-btn-icon {
   margin-right: 6px;
 }
+.d-btn.evs-playing {
+  border-color: rgba(52, 211, 153, 0.6);
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+}
 .evs-speed {
   display: flex;
   align-items: center;
@@ -185,10 +137,5 @@ function toggleAutoPlay() {
   min-width: 58px;
   color: var(--vp-c-text-1);
   font-variant-numeric: tabular-nums;
-}
-.d-btn.evs-playing {
-  border-color: rgba(52, 211, 153, 0.6);
-  background: rgba(52, 211, 153, 0.1);
-  color: #34d399;
 }
 </style>

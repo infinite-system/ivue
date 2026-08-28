@@ -27,8 +27,8 @@ const {
           :class="{ playing: example.isAutoPlaying }"
           @click="example.toggleAutoPlay()"
         >
-          <span class="btn-icon">{{ example.isAutoPlaying ? '⏸' : '▶' }}</span>
-          {{ example.isAutoPlaying ? 'autoplay on — scroll up to stop' : 'autoplay' }}
+          <span class="btn-icon">{{ example.playButtonIcon }}</span>
+          {{ example.playButtonLabel }}
         </button>
         <button type="button" @click="example.jumpTo(499999)">
           jump to #500,000
