@@ -25,8 +25,11 @@ axis is a `protected` getter or method; the subclass overrides exactly
 those — each one carrying the `override` keyword, which TypeScript's
 `noImplicitOverride` option makes mandatory, so a seam can never be
 overridden silently or orphaned by a base rename — and the hand-tuned
-80% runs sideways, unchanged. The full story
-is in [Ship the variant, keep the
+80% runs sideways, unchanged. This one subclass powers three shipped
+surfaces: the card strip above, the home page's blog drip, and — composed
+with a pure text chunker — [a ~400k-character book scrolling as one
+line](/examples/virtual-scroller#a-book-as-one-scrolling-line). The full
+story is in [Ship the variant, keep the
 tuning](/blog/ship-the-variant-keep-the-tuning).
 
 ## The reference for the module standard
@@ -92,6 +95,5 @@ un-exported, private to the file).
   it never stalls to zero and restarts. The slider changes speed
   mid-glide; the integrator reads the live value every frame.
 
-The same subclass powers the home page's blog drip strip and, composed
-with a pure text chunker, [a ~400k-character book scrolling as one
-line](/examples/virtual-scroller#a-book-as-one-scrolling-line).
+Wheel through a million cards above, then read the two files that made
+it possible — that ratio is the page's whole argument.
