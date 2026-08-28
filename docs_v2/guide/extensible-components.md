@@ -144,3 +144,11 @@ The [Advanced Select Field](/examples/choose-field) and
 this pattern — their props files are the production-grade reference, and
 each class consumes every prop through plain prop-getters per the
 [standard](/guide/standard).
+
+The [Horizontal Scroller: 1M Items](/examples/horizontal-scroller)
+example shows the pattern paired with class extension: the subclass
+spreads the base scroller's `propsTypes` and `propsDefaults`, overrides
+a single default, and its namespace carries the whole contract — types,
+defaults, merged props, emits — beside the class. The measured account
+of what that buys is
+[Ship the variant, keep the tuning](/blog/ship-the-variant-keep-the-tuning).
