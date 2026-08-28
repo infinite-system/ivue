@@ -32,12 +32,12 @@ click; nothing runs on page load.
 ## The source
 
 ::: code-group
-<<< ../../examples/playground/src/examples/formula-grid/Sheet.ts [Sheet.ts]
 <<< ../../examples/playground/src/examples/formula-grid/FormulaCell.ts [FormulaCell.ts]
+<<< ../../examples/playground/src/examples/formula-grid/Sheet.ts [Sheet.ts]
 <<< ../../examples/playground/src/examples/formula-grid/formula-logic.ts [formula-logic.ts]
 :::
 
-<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fformula-grid%2FSheet.ts&path=%2F%23%2Fformula-grid">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fformula-grid%2FFormulaCell.ts&path=%2F%23%2Fformula-grid">Open in StackBlitz ⚡</a>
 — the playground boots with this example's route and file active.
 
 The measured heap/creation protocol lives in
