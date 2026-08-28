@@ -58,6 +58,7 @@ everything else is the production component.
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts [demo model]
 <<< @/.vitepress/theme/components/examples/ExampleVirtualScroller.vue [demo wrapper]
 :::
 
