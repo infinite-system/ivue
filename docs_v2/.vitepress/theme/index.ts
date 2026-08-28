@@ -25,6 +25,7 @@ import BlogPostNav from './components/BlogPostNav.vue';
 import BlogPostDate from './components/BlogPostDate.vue';
 import NewsletterSignup from './components/NewsletterSignup.vue';
 import NewsletterQuickJoin from './components/NewsletterQuickJoin.vue';
+import BlogDripShowcase from './components/BlogDripShowcase.vue';
 import BlogComments from './components/BlogComments.vue';
 import RelatedPosts from './components/RelatedPosts.vue';
 import ChannelNote from './components/ChannelNote.vue';
@@ -410,6 +411,7 @@ export default {
     app.component('StackBlitzPlayground', StackBlitzPlayground);
     app.component('BlogIndex', BlogIndex);
     app.component('NewsletterQuickJoin', NewsletterQuickJoin);
+    app.component('BlogDripShowcase', BlogDripShowcase);
     app.component('BlogPostDate', BlogPostDate);
   },
 } satisfies Theme;

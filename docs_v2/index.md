@@ -403,6 +403,8 @@ flyweight state, and lifecycle discipline, all in one real codebase.
 
 </section>
 
+<BlogDripShowcase />
+
 <section class="ix-newsletter-hero">
 
 ## The future of JavaScript, delivered
