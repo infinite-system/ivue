@@ -8,6 +8,7 @@
     "preview": "vitepress preview --host"
   },
   "devDependencies": {
+    "typescript": "^5.9.3",
     "vitepress": "^1.6.3"
   },
   "dependencies": {
