@@ -29,24 +29,19 @@ import {
 import { FlyweightCell } from './model/FlyweightCell';
 import { FlyweightSheet } from './model/FlyweightSheet';
 
-export interface PageRow {
-  row: number;
-  cells: FlyweightCell.Instance[];
-}
-
-/**
- * Scroll has physical walls: Chrome's compositor does scroll math in
- * FLOAT32 (dead past 2^24 = 16,777,216 px — a 28M px scroller stops at
- * ~row 599,186); Firefox caps element height at ~17.9M px. Cap the
- * physical height under both and map scroll ratio → virtual offset (the
- * scaled scrollbar every big-grid engine uses; ~2.4:1 at 1M rows).
- */
-const MAX_SCROLL_HEIGHT = 12_000_000;
-
-/** Eviction margin ≫ the 50-row running-sum reach (dependency locality). */
-const EVICT_MARGIN_ROWS = 512;
-
 class $FlyweightGridPage {
+  /**
+   * Scroll has physical walls: Chrome's compositor does scroll math in
+   * FLOAT32 (dead past 2^24 = 16,777,216 px — a 28M px scroller stops at
+   * ~row 599,186); Firefox caps element height at ~17.9M px. Cap the
+   * physical height under both and map scroll ratio → virtual offset (the
+   * scaled scrollbar every big-grid engine uses; ~2.4:1 at 1M rows).
+   */
+  private static readonly MAX_SCROLL_HEIGHT = 12_000_000;
+
+  /** Eviction margin ≫ the 50-row running-sum reach (dependency locality). */
+  private static readonly EVICT_MARGIN_ROWS = 512;
+
   constructor() {
     // Viewport-tied eviction, debounced so a fast flick doesn't thrash.
     // Plain watch: the constructor runs in setup() context, so the
@@ -115,7 +110,7 @@ class $FlyweightGridPage {
     return this.sheet.value ? this.sheet.value.rows * ROW_HEIGHT : 0;
   }
   get totalHeight() {
-    return Math.min(this.naturalHeight, MAX_SCROLL_HEIGHT);
+    return Math.min(this.naturalHeight, $FlyweightGridPage.MAX_SCROLL_HEIGHT);
   }
   get scrollScale() {
     return this.naturalHeight > this.totalHeight
@@ -154,14 +149,14 @@ class $FlyweightGridPage {
    * would rebuild ~520 facades per poll; cached, an unchanged window
    * returns the same array instance and the v-for never re-patches.
    */
-  get visibleRows(): ComputedRef<PageRow[]> {
+  get visibleRows(): ComputedRef<FlyweightGridPage.PageRow[]> {
     return computed(() => this.buildVisibleRows());
   }
 
-  private buildVisibleRows(): PageRow[] {
+  private buildVisibleRows(): FlyweightGridPage.PageRow[] {
     const sheet = this.sheet.value;
     if (!sheet) return [];
-    const pageRows: PageRow[] = [];
+    const pageRows: FlyweightGridPage.PageRow[] = [];
     for (let row = this.startRow; row < this.endRow; row++) {
       const cells: FlyweightCell.Instance[] = new Array(COLS);
       for (let col = 0; col < COLS; col++)
@@ -251,8 +246,8 @@ class $FlyweightGridPage {
       const sheet = this.sheet.value;
       if (!sheet) return;
       sheet.evictOutsideRows(
-        Math.max(0, this.startRow - EVICT_MARGIN_ROWS),
-        this.endRow + EVICT_MARGIN_ROWS,
+        Math.max(0, this.startRow - $FlyweightGridPage.EVICT_MARGIN_ROWS),
+        this.endRow + $FlyweightGridPage.EVICT_MARGIN_ROWS,
       );
       this.pollCensus();
     }, 300);
@@ -301,7 +296,17 @@ class $FlyweightGridPage {
 }
 
 export namespace FlyweightGridPage {
+  /* Identity */
+
   export const $Class = $FlyweightGridPage;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
+
+  /* Types */
+
+  /** One rendered row: its index plus the flyweight cells leased to it. */
+  export interface PageRow {
+    row: number;
+    cells: FlyweightCell.Instance[];
+  }
 }
