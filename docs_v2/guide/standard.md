@@ -329,6 +329,89 @@ in canonical section order:
   { modelValue: T[] }`); `Emits` is `ExtractEmitTypes<typeof emits>`;
   `Slots`; `Exposed` is `ShallowUnwrapRef<Instance>`.
 
+Combined — the canonical file, everything above in one shape:
+
+```ts
+// Box.ts — the whole module: imports, the class, the namespace. Nothing else.
+import type { ExtractPropTypes, PropType, ShallowUnwrapRef } from 'vue';
+import {
+  propsWithDefaults,
+  Reactive,
+  type ExtractEmitTypes,
+  type ExtractPropDefaultTypes,
+} from 'ivue';
+
+class $Box {
+  // Forward references into the namespace below — legal: type positions
+  // resolve non-positionally, and the class never reads a contract VALUE.
+  constructor(
+    public props: Box.Props,
+    public emit: Box.Emits,
+  ) {}
+
+  get title() {
+    return this.props.title;
+  }
+
+  get sizeLabel() {
+    return `${this.props.size}px`;
+  }
+
+  close() {
+    this.emit('close', this.props.title);
+  }
+}
+
+export namespace Box {
+  /* Identity */
+
+  export const $Class = $Box; // raw — children `extends` this
+  export let Class = Reactive($Class); // reactive — you `new` this
+  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
+
+  /* Values */
+
+  // A value the module keeps to itself: NON-EXPORTED — private to the
+  // file, invisible to importers. Never a module-level const.
+  const DEFAULT_SIZE = 400;
+
+  /** 1 — the TYPES: a defineComponent-style object, no defaults inside. */
+  export const propsTypes = {
+    title: { type: String as PropType<string>, required: true },
+    size: { type: Number as PropType<number> },
+    disabled: { type: Boolean as PropType<boolean> },
+  };
+
+  /** 2 — the DEFAULTS: plain values, typed against the types object
+   *  (`title` is required, so it carries none). */
+  export const propsDefaults: ExtractPropDefaultTypes<
+    Omit<typeof propsTypes, 'title'>
+  > = {
+    size: DEFAULT_SIZE,
+    disabled: false,
+  };
+
+  /** 3 — the MERGE: a standard Vue props object, ready for defineProps. */
+  export const props = propsWithDefaults(propsDefaults, propsTypes);
+
+  export const emits = {
+    close: (title: string) => true,
+  };
+
+  /* Types — DERIVED from the values, never hand-duplicated */
+
+  export type Props = ExtractPropTypes<typeof props>;
+  export type Emits = ExtractEmitTypes<typeof emits>;
+
+  export interface Slots {
+    default: (scope: { title: string }) => any;
+  }
+
+  /** What consumers hold through a template ref (expose unwraps refs). */
+  export type Exposed = ShallowUnwrapRef<Instance>;
+}
+```
+
 The SFC is pure wiring against the seam. The macros receive the
 RUNTIME objects, so no compiler macro ever resolves a cross-file type:
 
