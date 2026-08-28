@@ -83,10 +83,10 @@ Everything above lives on **one ivue class** — 1,199 lines,
 
 - **Template refs** (`scrollElement`, `itemsWrapperElement`) as
   ref-getters the SFC destructures for `ref=""` bindings.
-- **Prop reads** (`items`, `assumedHeight`, `paddingQuantity`) as plain
+- **Prop reads** (`items`, `assumedSize`, `paddingQuantity`) as plain
   getters — leaf-tracked, zero bytes per instance.
-- **Derived geometry** — `estimatedItemHeight`, the leading and
-  trailing spacer heights, `scrollHeight`, `visibleItems` — as plain
+- **Derived geometry** — `estimatedItemSize`, the leading and
+  trailing spacer heights, `scrollExtent`, `visibleItems` — as plain
   getters over the measurement state, recomputed only when a
   `geometryVersion` signal says the ground truth moved: the
   [keyed-version-signal pattern](/guide/keyed-version-signals) keeping

@@ -166,6 +166,9 @@ export type LenisOptions = {
    * @default vertical
    */
   gestureOrientation?: GestureOrientation
+  /** Fully-virtual mode: never adopt the wrapper's native scroll — not on
+   *  native scroll events, and not in reset() when a lerp completes. */
+  ignoreNativeScroll?: boolean
   /**
    * The multiplier to use for mouse wheel events
    * @default 1

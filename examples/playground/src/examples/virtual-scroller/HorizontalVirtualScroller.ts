@@ -54,11 +54,11 @@ class $HorizontalVirtualScroller<T extends BaseItem> extends (VirtualScroller.$C
     return data.deltaX;
   }
 
-  get containerHeight() {
+  get containerSize() {
     return this.elementSize.width;
   }
 
-  get containerOuterHeight() {
+  get containerOuterSize() {
     return this.outerElementSize.width;
   }
 }

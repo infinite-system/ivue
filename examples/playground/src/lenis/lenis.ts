@@ -581,7 +581,7 @@ export class Lenis {
     // adoption: the wrapper's scrollLeft/scrollTop are pinned 0 by design,
     // and adopting them the instant a lerp completes teleports the content
     // back to the origin.
-    if ((this.options as any).ignoreNativeScroll) return;
+    if (this.options.ignoreNativeScroll) return;
     if (this._resetVelocityTimeout !== null) {
       clearTimeout(this._resetVelocityTimeout);
       this._resetVelocityTimeout = null;
@@ -624,8 +624,7 @@ export class Lenis {
     // Fully-virtual scrollers pin the wrapper's native scroll at 0, so
     // adopting actualScroll on completion would teleport the content back
     // to the origin — virtual mode keeps the animated position instead.
-    this.animatedScroll = this.targetScroll = (this.options as any)
-      .ignoreNativeScroll
+    this.animatedScroll = this.targetScroll = this.options.ignoreNativeScroll
       ? this.animatedScroll
       : this.actualScroll;
     this.lastVelocity = this.velocity = 0;

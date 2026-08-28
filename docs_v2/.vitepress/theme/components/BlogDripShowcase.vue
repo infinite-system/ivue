@@ -122,7 +122,7 @@ onBeforeUnmount(() => {
       <HorizontalVirtualScroller
         ref="scroller"
         :model-value="items"
-        :assumed-height="330"
+        :assumed-size="330"
         :padding-quantity="6"
         snap-to-items
       >
@@ -187,7 +187,7 @@ onBeforeUnmount(() => {
   mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent);
   /* main-axis padding, same contract as the vertical scroller's
      padding-top/bottom: the first and last card rest fully inside the
-     edge fade (computeScrollHeight adds it through axisPaddingProps) */
+     edge fade (computeScrollExtent adds it through axisPaddingProps) */
   padding-left: max(4vw, 34px);
   padding-right: max(4vw, 34px);
 }

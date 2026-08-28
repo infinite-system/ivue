@@ -8,7 +8,7 @@ export interface VirtualScrollerItem {
 }
 
 export interface VirtualScrollItemEmits {
-  (e: 'sizeUpdated', height: number): void;
+  (e: 'sizeUpdated', size: number): void;
 }
 
 const props = withDefaults(defineProps<VirtualScrollerItem>(), { axis: 'y' });

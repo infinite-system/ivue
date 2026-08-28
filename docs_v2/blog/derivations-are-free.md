@@ -116,10 +116,10 @@ composable form. Run them through the rule:
   read a handful of times ever. The cache saves ~2 nanoseconds per
   read and costs ~300 bytes. Plain getter.
 - **`scrollHeightPx`** — a number plus `'px'`. Trivial, and as a
-  computed it sits downstream of the real `scrollHeight`, so every
+  computed it sits downstream of the real `scrollExtent`, so every
   position update pays an extra invalidation hop for a string concat.
   Plain getter.
-- **`scrollHeight`** — calls `getComputedStyle()` inside the
+- **`scrollExtent`** — calls `getComputedStyle()` inside the
   derivation. That is a forced style query: microseconds, hundreds of
   times the heavy tier — and it's read every animation frame while
   its dependencies change only when items resize. High reads per

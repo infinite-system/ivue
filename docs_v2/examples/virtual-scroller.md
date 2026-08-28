@@ -39,7 +39,7 @@ const items = ref<BaseItem[]>(loadRows()) // any size — 1M is routine
 </script>
 
 <template>
-  <VirtualScroller v-model="items" :assumed-height="56" :padding-quantity="10">
+  <VirtualScroller v-model="items" :assumed-size="56" :padding-quantity="10">
     <template #item="{ item }">
       <article>{{ item.body }}</article>
     </template>

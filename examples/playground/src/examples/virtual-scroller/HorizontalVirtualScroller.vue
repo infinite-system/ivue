@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<VirtualScrollerProps<T>>(), {
   autoPlayDelay: 500,
   autoRepeat: true,
   snapToItems: false,
-  assumedHeight: 300,
+  assumedSize: 300,
   paddingQuantity: 6,
   draggable: false,
   dragHandleSelector: '.sortable-drag-handle',
@@ -60,7 +60,7 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
           class="virtual-scroller__item virtual-scroller__item--x"
           :index="element.index"
           axis="x"
-          @size-updated="(width) => virtualScroller.syncItemHeight(element.index, width)"
+          @size-updated="(width) => virtualScroller.syncItemSize(element.index, width)"
         >
           <slot name="item" v-bind="element"></slot>
         </VirtualScrollerItem>

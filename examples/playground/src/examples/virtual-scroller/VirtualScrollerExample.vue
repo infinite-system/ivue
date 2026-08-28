@@ -42,7 +42,7 @@ const {
       <VirtualScroller
         ref="scroller"
         v-model="items"
-        :assumed-height="56"
+        :assumed-size="56"
         :padding-quantity="10"
         auto-play
         :auto-play-delay="800"

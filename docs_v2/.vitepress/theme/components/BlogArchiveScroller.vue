@@ -82,7 +82,7 @@ onBeforeUnmount(() => observer?.disconnect());
         <VirtualScroller
           ref="scroller"
           :model-value="archiveItems"
-          :assumed-height="44"
+          :assumed-size="44"
           :padding-quantity="4"
           :auto-play="false"
           auto-repeat

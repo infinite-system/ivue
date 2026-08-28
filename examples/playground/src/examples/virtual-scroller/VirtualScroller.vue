@@ -50,7 +50,7 @@ export interface VirtualScrollerProps<T extends BaseItem> {
   /** Step mode: after any input settles, snap to the nearest item
    *  boundary — scroll, stop; scroll, stop. */
   snapToItems?: boolean;
-  assumedHeight: number;
+  assumedSize: number;
   paddingQuantity: number;
   /** Accepted for API compatibility; the docs build renders the plain branch. */
   draggable?: boolean;
@@ -67,7 +67,7 @@ const props = withDefaults(defineProps<VirtualScrollerProps<T>>(), {
   autoPlayDelay: 500,
   autoRepeat: true,
   snapToItems: false,
-  assumedHeight: 30,
+  assumedSize: 30,
   paddingQuantity: 6,
   draggable: false,
   dragHandleSelector: '.sortable-drag-handle',
@@ -141,7 +141,7 @@ function onTrackPointerUp() {
           :key="element.id"
           class="virtual-scroller__item"
           :index="element.index"
-          @size-updated="(height) => virtualScroller.syncItemHeight(element.index, height)"
+          @size-updated="(height) => virtualScroller.syncItemSize(element.index, height)"
         >
           <slot name="item" v-bind="element"></slot>
         </VirtualScrollerItem>

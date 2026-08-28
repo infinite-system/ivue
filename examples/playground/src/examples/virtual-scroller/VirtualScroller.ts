@@ -36,7 +36,7 @@ import type {
  * spacer divs — the browser stacks the window at real heights for free; no
  * per-item `top` is computed or maintained. Estimates only decide the two
  * spacer heights and the scrollTop↔index mapping: an item's estimated top
- * is the prefix sum `P(i) = Σ (measuredHeights[j] ?? assumedHeight)` for
+ * is the prefix sum `P(i) = Σ (measuredSizes[j] ?? assumedSize)` for
  * `j < i`, never materialized as an array — it is evaluated lazily by
  * walking a movable cursor `(index, offset)` kept exactly equal to
  * `P(index)` under the current height map, plus O(1) aggregates
@@ -109,7 +109,7 @@ class $VirtualScroller<T extends BaseItem> {
       this.lenis.virtualLimit = () =>
         Math.max(
           0,
-          this.scrollHeight.value - this.offsetSize(this.scrollElement.value)
+          this.scrollExtent.value - this.offsetSize(this.scrollElement.value)
         );
     });
 
@@ -144,8 +144,8 @@ class $VirtualScroller<T extends BaseItem> {
     return toRef(this.props, 'modelValue');
   }
 
-  get assumedHeight() {
-    return toRef(this.props, 'assumedHeight');
+  get assumedSize() {
+    return toRef(this.props, 'assumedSize');
   }
 
   get paddingQuantity() {
@@ -204,17 +204,17 @@ class $VirtualScroller<T extends BaseItem> {
   protected elementSize: ReturnType<typeof useElementSize>;
   protected outerElementSize: ReturnType<typeof useElementSize>;
 
-  get containerHeight() {
+  get containerSize() {
     return this.elementSize.height;
   }
 
   /**
    * Border-box container height — the same box setScrollPosition's bottom
    * clamp measures (offsetHeight). Seek math must use THIS, not the
-   * content-box containerHeight: the padding difference is invisible on a
+   * content-box containerSize: the padding difference is invisible on a
    * huge post but parks the knob 10-15% short of the end on a small one.
    */
-  get containerOuterHeight() {
+  get containerOuterSize() {
     return this.outerElementSize.height;
   }
 
@@ -235,14 +235,14 @@ class $VirtualScroller<T extends BaseItem> {
     return ref(false);
   }
 
-  /** Measured pixel heights by item index (unmeasured fall back to assumedHeight). */
-  get measuredHeights() {
+  /** Measured main-axis pixel sizes by item index (unmeasured fall back to assumedSize). */
+  get measuredSizes() {
     return ref<Record<number, number>>({});
   }
 
   /**
    * Bumped whenever item geometry may have changed (height sync, structural
-   * repair). The reactive invalidation signal for visibleItems/scrollHeight/
+   * repair). The reactive invalidation signal for visibleItems/scrollExtent/
    * getIndexPosition — replaces the old wholesale `positions` array
    * replacement. Bumps are O(1) and evaluations are O(window), so no
    * debounce is needed anywhere anymore.
@@ -258,33 +258,33 @@ class $VirtualScroller<T extends BaseItem> {
   /**
    * Movable prefix-sum cursor. INVARIANT: `offset === P(index)` (sum of
    * measured-or-assumed heights of every item before `index`) under the
-   * current measuredHeights/assumedHeight/items — maintained O(1) in
-   * syncItemHeight and re-derived from scratch in updatePositionsImmediately.
+   * current measuredSizes/assumedSize/items — maintained O(1) in
+   * syncItemSize and re-derived from scratch in updatePositionsImmediately.
    * Deliberately a plain non-reactive field (like visibleItemsSnapshot):
    * it is a cache; reactivity flows through geometryVersion.
    */
   private cursor = { index: 0, offset: 0 };
 
-  /** Σ of all values in measuredHeights — non-reactive, see cursor. */
+  /** Σ of all values in measuredSizes — non-reactive, see cursor. */
   private measuredSum = 0;
 
-  /** Number of keys in measuredHeights — non-reactive, see cursor. */
+  /** Number of keys in measuredSizes — non-reactive, see cursor. */
   private measuredCount = 0;
 
   /** Post-calibration per-item estimate (frozen once) — see below. */
   private calibratedAssumed: number | null = null;
 
   /**
-   * The height assumed for unmeasured items. Starts as the assumedHeight
+   * The height assumed for unmeasured items. Starts as the assumedSize
    * prop; once enough real measurements exist it calibrates to the post's
    * true average (once, frozen). The prop's fixed value is biased low for
    * prose (50 vs ~130 real), which warps every estimate-derived quantity —
-   * scrollHeight, the seek mapping, the knob — by 2-3x until items are
+   * scrollExtent, the seek mapping, the knob — by 2-3x until items are
    * measured. Reads are plain (non-reactive); geometryVersion bumps cover
    * invalidation at the calibration moment.
    */
-  private get estimatedItemHeight() {
-    return this.calibratedAssumed ?? this.assumedHeight.value;
+  private get estimatedItemSize() {
+    return this.calibratedAssumed ?? this.assumedSize.value;
   }
 
   /**
@@ -302,7 +302,7 @@ class $VirtualScroller<T extends BaseItem> {
       typeof scrollPosition === 'number'
         ? scrollPosition
         : parseFloat(scrollPosition) || 0;
-    if (scrollTop > this.containerHeight.value) return;
+    if (scrollTop > this.containerSize.value) return;
     this.calibratedAssumed = this.measuredSum / this.measuredCount;
     this.updatePositionsImmediately();
   }
@@ -320,18 +320,18 @@ class $VirtualScroller<T extends BaseItem> {
    * content reduced to two numbers. Written by visibleItems on every
    * evaluation (same mutate-inside-computed pattern as visibleIndex).
    */
-  private get leadingSpacerHeight() {
+  private get leadingSpacerSize() {
     return ref(0);
   }
 
-  private get trailingSpacerHeight() {
+  private get trailingSpacerSize() {
     return ref(0);
   }
 
   get leadingSpacerPx() {
     return (
       $VirtualScroller.snapForRender(
-        Math.max(0, this.leadingSpacerHeight.value - this.renderBias.value)
+        Math.max(0, this.leadingSpacerSize.value - this.renderBias.value)
       ) + 'px'
     );
   }
@@ -351,7 +351,7 @@ class $VirtualScroller<T extends BaseItem> {
       $VirtualScroller.snapForRender(
         Math.min(
           $VirtualScroller.TRAILING_SPACER_RENDER_CAP,
-          this.trailingSpacerHeight.value
+          this.trailingSpacerSize.value
         )
       ) + 'px'
     );
@@ -401,13 +401,13 @@ class $VirtualScroller<T extends BaseItem> {
     return Math.round(value * dpr) / dpr;
   }
 
-  get scrollHeight() {
+  get scrollExtent() {
     // THIN computed — the caching shell only; the logic stays named in a
     // directly testable method on the prototype.
-    return computed(() => this.computeScrollHeight());
+    return computed(() => this.computeScrollExtent());
   }
 
-  private computeScrollHeight(): number {
+  private computeScrollExtent(): number {
     const len = this.items.value.length;
 
     if (len === 0) return 0;
@@ -429,7 +429,7 @@ class $VirtualScroller<T extends BaseItem> {
     this.geometryVersion.value;
     return (
       this.measuredSum +
-      Math.max(0, len - this.measuredCount) * this.estimatedItemHeight +
+      Math.max(0, len - this.measuredCount) * this.estimatedItemSize +
       paddingTop +
       paddingBottom
     );
@@ -463,7 +463,7 @@ class $VirtualScroller<T extends BaseItem> {
    *   new array (plain for-loop, no slice/map).
    */
   get visibleItems() {
-    // THIN computed — see computeScrollHeight's note.
+    // THIN computed — see computeScrollExtent's note.
     return computed(() => this.computeVisibleItems());
   }
 
@@ -471,8 +471,8 @@ class $VirtualScroller<T extends BaseItem> {
     this.geometryVersion.value;
     const items = this.items.value;
     const len = items.length;
-    const measured = toRaw(this.measuredHeights.value);
-    const assumed = this.estimatedItemHeight;
+    const measured = toRaw(this.measuredSizes.value);
+    const assumed = this.estimatedItemSize;
     const scrollPosition = this.scrollPosition.value;
     const scrollTop =
       typeof scrollPosition === 'number'
@@ -508,7 +508,7 @@ class $VirtualScroller<T extends BaseItem> {
     // Walk forward until the window covers the container height.
     let end = start;
     let endOffset = startOffset;
-    const bottom = startOffset + this.containerHeight.value;
+    const bottom = startOffset + this.containerSize.value;
     while (end < len && endOffset < bottom) {
       endOffset += measured[end] ?? assumed;
       end++;
@@ -550,8 +550,8 @@ class $VirtualScroller<T extends BaseItem> {
       this.measuredSum + Math.max(0, len - this.measuredCount) * assumed;
     // Spacers must update even when the window itself is unchanged
     // (e.g. a height correction above the window moved only the lead).
-    this.leadingSpacerHeight.value = paddedStartOffset;
-    this.trailingSpacerHeight.value =
+    this.leadingSpacerSize.value = paddedStartOffset;
+    this.trailingSpacerSize.value =
       count >= len ? 0 : Math.max(0, total - afterWindowOffset);
 
     const prev = this.visibleItemsSnapshot;
@@ -603,8 +603,8 @@ class $VirtualScroller<T extends BaseItem> {
    * watch); the per-height-sync hot path never comes through here.
    */
   updatePositionsImmediately() {
-    const measured = toRaw(this.measuredHeights.value);
-    const assumed = this.estimatedItemHeight;
+    const measured = toRaw(this.measuredSizes.value);
+    const assumed = this.estimatedItemSize;
     const length = toRaw(this.items.value).length;
 
     const cursorIndex = Math.min(this.cursor.index, Math.max(0, length - 1));
@@ -616,7 +616,7 @@ class $VirtualScroller<T extends BaseItem> {
     let beyondLastIndex = length;
     if (beyondLastIndex in measured) {
       while (measured[beyondLastIndex]) {
-        delete this.measuredHeights.value[beyondLastIndex];
+        delete this.measuredSizes.value[beyondLastIndex];
         beyondLastIndex++;
       }
     }
@@ -665,7 +665,7 @@ class $VirtualScroller<T extends BaseItem> {
     // wrapper's rect-to-layout ratio is the scale; divide it out.
     const wrapperSize = this.offsetSize(wrapper);
     const scale = wrapperSize > 0 ? this.rectSize(wrapper) / wrapperSize : 1;
-    const measured = toRaw(this.measuredHeights.value);
+    const measured = toRaw(this.measuredSizes.value);
     let changed = false;
     const heights: [number, number][] = [];
     for (const el of rendered) {
@@ -675,7 +675,7 @@ class $VirtualScroller<T extends BaseItem> {
     }
     for (const [index, height] of heights) {
       if (measured[index] !== height) {
-        this.syncItemHeight(index, height, false);
+        this.syncItemSize(index, height, false);
         changed = true;
       }
     }
@@ -685,24 +685,24 @@ class $VirtualScroller<T extends BaseItem> {
     }
   }
 
-  syncItemHeight(index: number, height: number, doUpdatePositions = true) {
+  syncItemSize(index: number, height: number, doUpdatePositions = true) {
     if (index < 0) return;
     if (index >= toRaw(this.items.value).length) {
       // Beyond the current list (mid-edit shift loops): keep the value for
       // neighbor reads, but out-of-range keys never count toward geometry —
       // exactly like the old rebuild, which only summed j < length.
-      if (height == null) delete this.measuredHeights.value[index];
-      else this.measuredHeights.value[index] = height;
+      if (height == null) delete this.measuredSizes.value[index];
+      else this.measuredSizes.value[index] = height;
       if (doUpdatePositions) this.bumpGeometryVersion();
       return;
     }
-    const assumed = this.estimatedItemHeight;
-    const previous = toRaw(this.measuredHeights.value)[index];
+    const assumed = this.estimatedItemSize;
+    const previous = toRaw(this.measuredSizes.value)[index];
     // O(1) bookkeeping that keeps the aggregates and the cursor invariant
     // (`offset === P(index)`) exact — heights before the cursor shift it.
     if (height == null) {
       // Callers copy neighbor heights that may not exist — undefined means
-      // "unmeasured": drop the entry so the item falls back to assumedHeight
+      // "unmeasured": drop the entry so the item falls back to assumedSize
       // (the old rebuild got this via its `?? assumed`).
       if (previous !== undefined) {
         this.measuredCount--;
@@ -710,7 +710,7 @@ class $VirtualScroller<T extends BaseItem> {
         if (index < this.cursor.index) {
           this.cursor.offset += assumed - previous;
         }
-        delete this.measuredHeights.value[index];
+        delete this.measuredSizes.value[index];
       }
       if (doUpdatePositions) this.bumpGeometryVersion();
       return;
@@ -724,7 +724,7 @@ class $VirtualScroller<T extends BaseItem> {
     if (index < this.cursor.index) {
       this.cursor.offset += height - (previous ?? assumed);
     }
-    this.measuredHeights.value[index] = height;
+    this.measuredSizes.value[index] = height;
     if (doUpdatePositions) this.bumpGeometryVersion();
   }
 
@@ -739,8 +739,8 @@ class $VirtualScroller<T extends BaseItem> {
     this.geometryVersion.value;
     if (index < 0 || index >= this.items.value.length) return undefined;
 
-    const measured = toRaw(this.measuredHeights.value);
-    const assumed = this.estimatedItemHeight;
+    const measured = toRaw(this.measuredSizes.value);
+    const assumed = this.estimatedItemSize;
     const cursor = this.cursor;
     let cursorIndex = cursor.index;
     let offset = cursor.offset;
@@ -802,7 +802,7 @@ class $VirtualScroller<T extends BaseItem> {
     const base = this.getIndexPosition(index);
     if (base === undefined) return undefined;
     const height =
-      toRaw(this.measuredHeights.value)[index] ?? this.estimatedItemHeight;
+      toRaw(this.measuredSizes.value)[index] ?? this.estimatedItemSize;
     return base + fraction * height;
   }
 
@@ -816,8 +816,8 @@ class $VirtualScroller<T extends BaseItem> {
     this.geometryVersion.value;
     const len = this.items.value.length;
     if (len === 0) return undefined;
-    const measured = toRaw(this.measuredHeights.value);
-    const assumed = this.estimatedItemHeight;
+    const measured = toRaw(this.measuredSizes.value);
+    const assumed = this.estimatedItemSize;
     const cursor = this.cursor;
     let index = Math.min(cursor.index, len - 1);
     let top = cursor.offset;
@@ -881,19 +881,19 @@ class $VirtualScroller<T extends BaseItem> {
     // nothing ever recovers). Refuse it.
     if (!Number.isFinite(position)) return;
     const containerSize = this.offsetSize(this.scrollElement.value);
-    if (position > 0 || this.scrollHeight.value < containerSize) position = 0;
+    if (position > 0 || this.scrollExtent.value < containerSize) position = 0;
 
     // Prevent scrolling down beyond last paragraph
     if (
       Math.abs(position) +
       containerSize +
       (this.scrollElement.value?.scrollTop ?? 0) >
-      this.scrollHeight.value &&
-      this.scrollHeight.value > containerSize
+      this.scrollExtent.value &&
+      this.scrollExtent.value > containerSize
     ) {
       position = -(
         // Must be negative
-        this.scrollHeight.value -
+        this.scrollExtent.value -
         containerSize -
         (this.scrollElement.value?.scrollTop ?? 0)
       );
@@ -947,16 +947,16 @@ class $VirtualScroller<T extends BaseItem> {
    *  the track the thumb occupies — floored so a million-item list still
    *  presents a grabbable thumb. */
   get scrollbarThumbFraction() {
-    const total = this.scrollHeight.value;
-    const container = this.containerOuterHeight.value;
+    const total = this.scrollExtent.value;
+    const container = this.containerOuterSize.value;
     if (!total || !container || total <= container) return 0;
     return Math.max(container / total, 0.08);
   }
 
   /** 0..1 progress of the thumb along its travel range. */
   get scrollbarProgress() {
-    const total = this.scrollHeight.value;
-    const scrollable = total - this.containerOuterHeight.value;
+    const total = this.scrollExtent.value;
+    const scrollable = total - this.containerOuterSize.value;
     if (scrollable <= 0) return 0;
     const position = parseFloat(String(this.scrollPosition.value)) || 0;
     return Math.min(Math.max(position / scrollable, 0), 1);
@@ -995,7 +995,7 @@ class $VirtualScroller<T extends BaseItem> {
       const position = this.getIndexPosition(index);
       if (position === undefined) return undefined;
       const height =
-        toRaw(this.measuredHeights.value)[index] ?? this.estimatedItemHeight;
+        toRaw(this.measuredSizes.value)[index] ?? this.estimatedItemSize;
       return Math.max(0, position + innerFraction * height - topOffsetPx);
     };
 
@@ -1221,7 +1221,7 @@ class $VirtualScroller<T extends BaseItem> {
 
     const containerH = this.offsetSize(this.scrollElement.value);
     const atEnd =
-      this.lenis.actualScroll + containerH >= this.scrollHeight.value - 10;
+      this.lenis.actualScroll + containerH >= this.scrollExtent.value - 10;
 
     if (this.props.autoRepeat && atEnd) {
       // End reached: stop creeping and let the auto-repeat chain own the
