@@ -57,5 +57,9 @@ defineExpose(marquee as TextMarquee.Instance);
 }
 .text-marquee .virtual-scroller__track--x {
   bottom: 0;
+  /* the hosts fade the line out over the outer ~5% (mask-image) — the
+     track ends rest inside the fully-opaque zone, not under the fade */
+  left: 5%;
+  right: 5%;
 }
 </style>
