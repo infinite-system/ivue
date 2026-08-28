@@ -30,11 +30,14 @@ const items: DripItem[] = allPosts
     image: post.image,
   }));
 
-const ADVANCE_EVERY_MS = 3000;
+const ADVANCE_EVERY_MS = 4500;
 
 const root = ref<HTMLElement | null>(null);
 const scroller = ref<HorizontalVirtualScrollerExposedUnwrapped<DripItem> | null>(null);
 const arrivingId = ref('');
+// everything at or left of this index has been delivered — those cards
+// wear the checkmark; the arriving card gets the full stamp first
+const deliveredThrough = ref(-1);
 
 let timer: ReturnType<typeof setInterval> | undefined;
 let arrivingTimer: ReturnType<typeof setTimeout> | undefined;
@@ -48,9 +51,17 @@ function cardStep(): number {
 }
 
 function fullyVisibleCount(): number {
-  const width = root.value?.clientWidth ?? 0;
+  const element = root.value;
+  if (!element) return 1;
+  const style = getComputedStyle(element.querySelector('.virtual-scroller--x') ?? element);
+  const padding = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+  const width = element.clientWidth - padding;
   const step = cardStep();
   return step > 0 ? Math.max(1, Math.floor(width / step)) : 1;
+}
+
+function centerIndexAt(position: number): number {
+  return Math.min(position + Math.floor(fullyVisibleCount() / 2), items.length - 1);
 }
 
 function advance() {
@@ -61,14 +72,16 @@ function advance() {
   current = current + visible >= items.length ? 0 : current + 1;
   scrollerInstance.scrollToIndex(current, () => {
     // the delivery lands on the CENTER card of the visible strip — the
-    // one the eye is on
-    const arriving = Math.min(
-      current + Math.floor(visible / 2),
-      items.length - 1,
-    );
+    // one the eye is on; older cards to its left already wear the check
+    const arriving = centerIndexAt(current);
     arrivingId.value = items[arriving]?.id ?? '';
+    if (current === 0) deliveredThrough.value = -1; // the loop wrapped — history resets
     clearTimeout(arrivingTimer);
-    arrivingTimer = setTimeout(() => (arrivingId.value = ''), 2600);
+    arrivingTimer = setTimeout(() => {
+      arrivingId.value = '';
+      // the stamp settles into a permanent checkmark
+      deliveredThrough.value = Math.max(deliveredThrough.value, arriving);
+    }, 2600);
   });
 }
 
@@ -82,6 +95,10 @@ onMounted(() => {
     { threshold: 0.35 },
   );
   if (root.value) observer.observe(root.value);
+  // cards left of the center start as already-delivered history
+  setTimeout(() => {
+    deliveredThrough.value = Math.max(deliveredThrough.value, centerIndexAt(0) - 1);
+  }, 400);
   timer = setInterval(advance, ADVANCE_EVERY_MS);
 });
 
@@ -112,7 +129,10 @@ onBeforeUnmount(() => {
         <template #item="{ item, index }">
           <a
             class="drip-card"
-            :class="{ 'drip-card--arriving': item.id === arrivingId }"
+            :class="{
+              'drip-card--arriving': item.id === arrivingId,
+              'drip-card--delivered': index <= deliveredThrough && item.id !== arrivingId,
+            }"
             :href="withBase(item.url)"
             tabindex="-1"
           >
@@ -133,6 +153,7 @@ onBeforeUnmount(() => {
                 </svg>
               </span>
               <span class="drip-card__delivered" aria-hidden="true">Delivered ✓</span>
+              <span class="drip-card__check" aria-hidden="true">✓</span>
             </span>
             <span class="drip-card__title">{{ item.title }}</span>
           </a>
@@ -164,6 +185,11 @@ onBeforeUnmount(() => {
   /* cards enter and leave through a soft edge, not a hard clip */
   -webkit-mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent);
   mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent);
+  /* main-axis padding, same contract as the vertical scroller's
+     padding-top/bottom: the first and last card rest fully inside the
+     edge fade (computeScrollHeight adds it through axisPaddingProps) */
+  padding-left: max(4vw, 34px);
+  padding-right: max(4vw, 34px);
 }
 
 .drip-card {
@@ -232,16 +258,45 @@ onBeforeUnmount(() => {
   right: 8px;
   top: 8px;
   z-index: 2;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 999px;
   font-size: 10.5px;
   font-weight: 650;
   letter-spacing: 0.02em;
+  line-height: 1.35; /* the frame's line-height: 0 must not crush the pill */
   color: #06251d;
   background: linear-gradient(90deg, #5eead4, #34d399);
   box-shadow: 0 6px 18px -6px rgba(52, 211, 153, 0.7);
   opacity: 0;
   pointer-events: none;
+}
+
+/* the permanent receipt: a quiet check on every already-delivered card */
+.drip-card__check {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #06251d;
+  background: linear-gradient(135deg, #5eead4, #34d399);
+  box-shadow: 0 4px 12px -4px rgba(52, 211, 153, 0.55);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+}
+.drip-card--delivered .drip-card__check {
+  opacity: 0.92;
+  transform: scale(1);
 }
 
 .drip-card--arriving .drip-card__envelope {
@@ -304,6 +359,9 @@ onBeforeUnmount(() => {
   .drip-card--arriving .drip-card__delivered {
     animation: none;
     display: none;
+  }
+  .drip-card__check {
+    transition: none;
   }
   .drip-card:hover .drip-card__frame {
     transform: none;
