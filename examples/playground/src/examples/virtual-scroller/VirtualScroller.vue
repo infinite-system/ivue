@@ -71,7 +71,7 @@ function onTrackPointerUp() {
     <div ref="scrollElementInner" class="virtual-scroller-inner">
       <!-- The whole leading/trailing content, reduced to two empty divs.
            Rendered items flow normally between them at their real sizes. -->
-      <div :style="{ size: virtualScroller.leadingSpacerPx }"></div>
+      <div :style="{ height: virtualScroller.leadingSpacerPx }"></div>
       <div ref="itemsWrapperElement" :style="{ width: '100%' }">
         <VirtualScrollerItem
           v-for="element in visibleItems"
@@ -83,7 +83,7 @@ function onTrackPointerUp() {
           <slot name="item" v-bind="element"></slot>
         </VirtualScrollerItem>
       </div>
-      <div :style="{ size: virtualScroller.trailingSpacerPx }"></div>
+      <div :style="{ height: virtualScroller.trailingSpacerPx }"></div>
     </div>
     <div
       v-if="props.scrollbar && virtualScroller.scrollbarThumbFraction > 0"
@@ -97,7 +97,7 @@ function onTrackPointerUp() {
         class="virtual-scroller__thumb"
         :class="{ dragging: scrollbarDragging }"
         :style="{
-          size: virtualScroller.scrollbarThumbFraction * 100 + '%',
+          height: virtualScroller.scrollbarThumbFraction * 100 + '%',
           top:
             virtualScroller.scrollbarProgress *
               (1 - virtualScroller.scrollbarThumbFraction) *
@@ -110,7 +110,7 @@ function onTrackPointerUp() {
 </template>
 <style>
 .virtual-scroller {
-  size: 100%;
+  height: 100%;
   overflow: auto;
   position: relative;
   scrollbar-width: none; /* Firefox */
@@ -145,7 +145,7 @@ function onTrackPointerUp() {
   background: rgba(148, 163, 184, 0.45);
   /* eased relocation: a fast flick or loop-wrap moves the thumb far in
      one frame — glide it instead of teleporting */
-  transition: background 0.15s ease, top 0.2s ease-out, size 0.2s ease-out;
+  transition: background 0.15s ease, top 0.2s ease-out, height 0.2s ease-out;
 }
 .virtual-scroller__thumb.dragging {
   /* while the finger owns it, the thumb must stick — no easing lag */
@@ -158,7 +158,7 @@ function onTrackPointerUp() {
 .virtual-scroller::-webkit-scrollbar {
   /* WebKit */
   width: 0;
-  size: 0;
+  height: 0;
 }
 
 .virtual-scroller-inner {

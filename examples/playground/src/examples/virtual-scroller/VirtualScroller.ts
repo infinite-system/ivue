@@ -1325,10 +1325,15 @@ class $VirtualScroller<T extends BaseItem> {
       return;
     }
 
-    // Δt clamped so a background-tab rAF suspension resumes as a slow
-    // frame, not a content jump.
-    const dt =
-      this.lastCreepTs === null ? 16.7 : Math.min(50, ts - this.lastCreepTs);
+    // Δt integrates TRUTHFULLY on slow frames: a loaded machine's 60→20fps
+    // jitter stays time-correct, so every displayed position is where the
+    // clock says it should be. (Clamping Δt at 50ms made the advance
+    // constant per FRAME — at marquee speeds that turns frame jitter into
+    // visible speed wobble: 6px landing every 50–250ms reads as chop.)
+    // Only a genuine rAF suspension (background tab) resumes as a fresh
+    // frame instead of a content jump.
+    const elapsed = this.lastCreepTs === null ? 16.7 : ts - this.lastCreepTs;
+    const dt = elapsed > 250 ? 16.7 : elapsed;
     this.lastCreepTs = ts;
     this.lenis.targetScroll += dt / this.creepMsPerPx;
 
