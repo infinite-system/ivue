@@ -88,6 +88,7 @@ class $VirtualScroller<T extends BaseItem> {
       this.lenis = new Lenis({
         wrapper: this.scrollElement.value,
         content: this.scrollElementInner.value,
+        gestureOrientation: this.lenisGestureOrientation,
         syncTouch: true, // Sync touch events
         smoothWheel: true,
         autoRaf: false, // we drive it ourselves
@@ -106,12 +107,12 @@ class $VirtualScroller<T extends BaseItem> {
       this.lenis.virtualLimit = () =>
         Math.max(
           0,
-          this.scrollHeight.value -
-          (this.scrollElement.value?.offsetHeight ?? 0)
+          this.scrollHeight.value - this.offsetSize(this.scrollElement.value)
         );
     });
 
     onBeforeUnmount(() => {
+      clearTimeout(this.snapTimeout);
       cancelAnimationFrame(this.frame);
       cancelAnimationFrame(this.creepFrame);
       this.stopScrollToIndexReapply?.();
@@ -153,10 +154,43 @@ class $VirtualScroller<T extends BaseItem> {
     return toRef(this.props, 'autoPlay');
   }
 
+  /* Axis seams — every place the class touches a DOM dimension or a
+     gesture axis goes through these. Vertical defaults here; the
+     horizontal subclass overrides ONLY these (the tuned scroll physics,
+     cursor math, and creep never fork). */
+
+  protected get lenisGestureOrientation(): 'vertical' | 'horizontal' | 'both' {
+    return 'vertical';
+  }
+
+  /** Main-axis border-box size of an element. */
+  protected offsetSize(element: HTMLElement | null | undefined): number {
+    return element?.offsetHeight ?? 0;
+  }
+
+  /** Main-axis rect size (screen px) of an element. */
+  protected rectSize(element: Element): number {
+    return element.getBoundingClientRect().height;
+  }
+
+  /** The transform that places the content at `px` along the main axis. */
+  protected transformFor(px: number): string {
+    return 'translateY(' + px + 'px)';
+  }
+
+  protected get axisPaddingProps(): readonly [string, string] {
+    return ['padding-top', 'padding-bottom'];
+  }
+
+  /** The gesture delta that drives the main axis. */
+  protected axisDelta(data: { deltaX: number; deltaY: number }): number {
+    return data.deltaY;
+  }
+
   /* Container size */
 
-  private elementSize: ReturnType<typeof useElementSize>;
-  private outerElementSize: ReturnType<typeof useElementSize>;
+  protected elementSize: ReturnType<typeof useElementSize>;
+  protected outerElementSize: ReturnType<typeof useElementSize>;
 
   get containerHeight() {
     return this.elementSize.height;
@@ -374,10 +408,9 @@ class $VirtualScroller<T extends BaseItem> {
         this.scrollElement.value,
         null
       );
-      paddingTop = parseInt(computedStyle.getPropertyValue('padding-top'));
-      paddingBottom = parseInt(
-        computedStyle.getPropertyValue('padding-bottom')
-      );
+      const [paddingStartProp, paddingEndProp] = this.axisPaddingProps;
+      paddingTop = parseInt(computedStyle.getPropertyValue(paddingStartProp));
+      paddingBottom = parseInt(computedStyle.getPropertyValue(paddingEndProp));
     }
 
     // O(1) total: P(len) = measured sum + assumed estimate for the rest.
@@ -618,20 +651,15 @@ class $VirtualScroller<T extends BaseItem> {
     // flow renders at full layout height — the map diverges from the flow
     // and index-targeted jumps land short by exactly that drift. The
     // wrapper's rect-to-layout ratio is the scale; divide it out.
-    const scale =
-      wrapper.offsetHeight > 0
-        ? wrapper.getBoundingClientRect().height / wrapper.offsetHeight
-        : 1;
+    const wrapperSize = this.offsetSize(wrapper);
+    const scale = wrapperSize > 0 ? this.rectSize(wrapper) / wrapperSize : 1;
     const measured = toRaw(this.measuredHeights.value);
     let changed = false;
     const heights: [number, number][] = [];
     for (const el of rendered) {
       const row = el.getAttribute('aria-rowindex');
       if (row === null) continue;
-      heights.push([
-        +row - 1,
-        el.getBoundingClientRect().height / (scale > 0 ? scale : 1)
-      ]);
+      heights.push([+row - 1, this.rectSize(el) / (scale > 0 ? scale : 1)]);
     }
     for (const [index, height] of heights) {
       if (measured[index] !== height) {
@@ -840,24 +868,21 @@ class $VirtualScroller<T extends BaseItem> {
     // scroller until remount (invalid transforms are silently ignored, so
     // nothing ever recovers). Refuse it.
     if (!Number.isFinite(position)) return;
-    if (
-      position > 0 ||
-      this.scrollHeight.value < (this.scrollElement.value?.offsetHeight ?? 0)
-    )
-      position = 0;
+    const containerSize = this.offsetSize(this.scrollElement.value);
+    if (position > 0 || this.scrollHeight.value < containerSize) position = 0;
 
     // Prevent scrolling down beyond last paragraph
     if (
       Math.abs(position) +
-      (this.scrollElement.value?.offsetHeight ?? 0) +
+      containerSize +
       (this.scrollElement.value?.scrollTop ?? 0) >
       this.scrollHeight.value &&
-      this.scrollHeight.value > (this.scrollElement.value?.offsetHeight ?? 0)
+      this.scrollHeight.value > containerSize
     ) {
       position = -(
         // Must be negative
         this.scrollHeight.value -
-        (this.scrollElement.value?.offsetHeight ?? 0) -
+        containerSize -
         (this.scrollElement.value?.scrollTop ?? 0)
       );
     }
@@ -883,10 +908,9 @@ class $VirtualScroller<T extends BaseItem> {
       // Rebased + snapped for GPU precision (see renderBias/snapForRender);
       // scrollPosition and lenis keep full precision for the scroll math.
       const rendered = position + this.renderBias.value;
-      this.scrollElementInner.value!.style.transform =
-        'translateY(' +
-        (snapRender ? $VirtualScroller.snapForRender(rendered) : rendered) +
-        'px)';
+      this.scrollElementInner.value!.style.transform = this.transformFor(
+        snapRender ? $VirtualScroller.snapForRender(rendered) : rendered
+      );
       // Programmatic jumps write the transform directly — lenis must ADOPT
       // the jump, not just be told about it. Adopting kills any in-flight
       // wheel animation (a running lerp holds its own captured target;
@@ -1028,20 +1052,21 @@ class $VirtualScroller<T extends BaseItem> {
   private autoscrollTimeout;
   private autoRepeatTimeout;
 
-  onVirtualScroll({ deltaY }) {
+  onVirtualScroll({ deltaX, deltaY }) {
+    const delta = this.axisDelta({ deltaX, deltaY });
     // Scrolling UP is the reader taking over — autoplay stops outright
     // (the frame loop re-arms below for the manual scroll itself).
     // Scrolling DOWN is reading intent — autoplay re-arms by itself and
     // the settle chain below resumes the creep once the input rests.
-    if (this.isAutoPlaying.value && deltaY < 0) {
+    if (this.isAutoPlaying.value && delta < 0) {
       this.stopAutoPlay();
-    } else if (!this.isAutoPlaying.value && deltaY > 0) {
+    } else if (!this.isAutoPlaying.value && delta > 0 && !this.props.snapToItems) {
       this.isAutoPlaying.value = true;
     }
     this.virtualScrolling = true;
     clearTimeout(this.virtualScrollTimeout);
     this.scrollElementInner.value.style.transitionDuration = '0s';
-    this.scrollDirection.value = deltaY < 0 ? 'up' : 'down';
+    this.scrollDirection.value = delta < 0 ? 'up' : 'down';
     if (!this.frame) {
       // Lenis's clock aged while its raf loop was parked (the creep runs
       // without it) — reset it or the first frame advances the whole gap
@@ -1058,6 +1083,37 @@ class $VirtualScroller<T extends BaseItem> {
     this.virtualScrollTimeout = setTimeout(() => {
       this.virtualScrolling = false;
     }, 3);
+
+    if (this.props.snapToItems) {
+      // step mode: once the input rests AND the lenis lerp settles, the
+      // strip snaps to the nearest item boundary through the same
+      // scrollToIndex pipeline a seek uses.
+      clearTimeout(this.snapTimeout);
+      this.snapTimeout = setTimeout(this.snapToNearest, 160);
+    }
+  }
+
+  private snapTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  snapToNearest() {
+    if (this.virtualScrolling || this.lenis?.isScrolling) {
+      clearTimeout(this.snapTimeout);
+      this.snapTimeout = setTimeout(this.snapToNearest, 90);
+      return;
+    }
+    const scrollPosition = this.scrollPosition.value;
+    const offset =
+      typeof scrollPosition === 'number'
+        ? scrollPosition
+        : parseFloat(scrollPosition) || 0;
+    const at = this.getIndexAtPosition(offset);
+    if (!at) return;
+    const target = at.fraction > 0.5 ? at.index + 1 : at.index;
+    this.scrollToIndex(
+      Math.min(target, this.items.value.length - 1),
+      undefined,
+      true
+    );
   }
 
   loop(now: number) {
@@ -1151,7 +1207,7 @@ class $VirtualScroller<T extends BaseItem> {
     this.lastCreepTs = ts;
     this.lenis.targetScroll += dt / $VirtualScroller.CREEP_MS_PER_PX;
 
-    const containerH = this.scrollElement.value?.offsetHeight ?? 0;
+    const containerH = this.offsetSize(this.scrollElement.value);
     const atEnd =
       this.lenis.actualScroll + containerH >= this.scrollHeight.value - 10;
 

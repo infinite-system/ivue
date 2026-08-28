@@ -47,6 +47,9 @@ export interface VirtualScrollerProps<T extends BaseItem> {
   autoPlay?: boolean;
   autoPlayDelay?: number;
   autoRepeat?: boolean;
+  /** Step mode: after any input settles, snap to the nearest item
+   *  boundary — scroll, stop; scroll, stop. */
+  snapToItems?: boolean;
   assumedHeight: number;
   paddingQuantity: number;
   /** Accepted for API compatibility; the docs build renders the plain branch. */
@@ -63,6 +66,7 @@ const props = withDefaults(defineProps<VirtualScrollerProps<T>>(), {
   autoPlay: false,
   autoPlayDelay: 500,
   autoRepeat: true,
+  snapToItems: false,
   assumedHeight: 30,
   paddingQuantity: 6,
   draggable: false,

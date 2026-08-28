@@ -3,13 +3,15 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 export interface VirtualScrollerItem {
   index: number;
+  /** Main axis the parent scroller virtualizes ('y' default). */
+  axis?: 'y' | 'x';
 }
 
 export interface VirtualScrollItemEmits {
   (e: 'sizeUpdated', height: number): void;
 }
 
-defineProps<VirtualScrollerItem>();
+const props = withDefaults(defineProps<VirtualScrollerItem>(), { axis: 'y' });
 
 const emit = defineEmits<VirtualScrollItemEmits>();
 
@@ -36,12 +38,19 @@ const capture = () => {
   // current scale from the parent stack's rect-to-layout ratio and divide
   // it out.
   const parent = el.parentElement;
-  const scale =
-    parent && parent.offsetHeight > 0
-      ? parent.getBoundingClientRect().height / parent.offsetHeight
-      : 1;
-  const height = el.getBoundingClientRect().height;
-  emit('sizeUpdated', scale > 0 ? height / scale : height);
+  const horizontal = props.axis === 'x';
+  const parentLayout = horizontal
+    ? (parent?.offsetWidth ?? 0)
+    : (parent?.offsetHeight ?? 0);
+  const parentRect = parent
+    ? horizontal
+      ? parent.getBoundingClientRect().width
+      : parent.getBoundingClientRect().height
+    : 0;
+  const scale = parent && parentLayout > 0 ? parentRect / parentLayout : 1;
+  const rect = el.getBoundingClientRect();
+  const size = horizontal ? rect.width : rect.height;
+  emit('sizeUpdated', scale > 0 ? size / scale : size);
 };
 
 onMounted(capture);
