@@ -141,6 +141,7 @@ about one thing:
 <<< ../../examples/playground/src/examples/text-marquee/TextMarquee.vue [TextMarquee.vue]
 <<< ../../examples/playground/src/examples/text-marquee/TextChunker.ts [TextChunker.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.ts [HorizontalVirtualScroller.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.vue [HorizontalVirtualScroller.vue]
 :::
 
 The scale math holds up to real books: 600k characters is ~1,500 chunks,
