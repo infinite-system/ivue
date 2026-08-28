@@ -34,7 +34,7 @@ class $Container extends BaseElement.$Class {
 
   // INHERITANCE TEST: Overriding the computed property
   // We explicitly call `super.diagnosticSummary.value` to ensure reactivity travels up the chain
-  get diagnosticSummary() {
+  override get diagnosticSummary() {
     return computed(
       () =>
         `{Container: pad=${this.padding.value}} >> ` +
@@ -50,7 +50,7 @@ class $Container extends BaseElement.$Class {
   }
 
   // Overriding the update method
-  refreshState() {
+  override refreshState() {
     super.refreshState();
     this.padding.value = Math.floor(Math.random() * 50);
     this.scale.value = parseFloat((Math.random() * 2).toFixed(2));
@@ -61,7 +61,7 @@ class $Container extends BaseElement.$Class {
     console.log('Theme changed', v);
   }
 
-  get typeChain() {
+  override get typeChain() {
     return super.typeChain + ' -> Container';
   }
 }

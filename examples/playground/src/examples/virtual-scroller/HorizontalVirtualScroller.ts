@@ -23,56 +23,56 @@ import { VirtualScroller } from './VirtualScroller';
  * through. Pair with `snap-to-items` for the step feel: scroll, stop.
  */
 class $HorizontalVirtualScroller<T extends BaseItem> extends (VirtualScroller.$Class as typeof VirtualScroller.$Class) <T> {
-  protected get lenisOrientation(): 'vertical' | 'horizontal' {
+  protected override get lenisOrientation(): 'vertical' | 'horizontal' {
     // lenis writes the wheel-path transform itself — translateX only when
     // it knows the axis
     return 'horizontal';
   }
 
-  protected get lenisIgnoreNativeScroll(): boolean {
+  protected override get lenisIgnoreNativeScroll(): boolean {
     return true;
   }
 
-  protected get lenisGestureOrientation(): 'vertical' | 'horizontal' | 'both' {
+  protected override get lenisGestureOrientation(): 'vertical' | 'horizontal' | 'both' {
     // deltaX ONLY: a plain vertical wheel is the page's (lenis refuses it
     // before preventDefault, so the page scrolls straight through); the
     // strip answers to shift+wheel and real horizontal trackpad swipes.
     return 'horizontal';
   }
 
-  protected offsetSize(element: HTMLElement | null | undefined): number {
+  protected override offsetSize(element: HTMLElement | null | undefined): number {
     return element?.offsetWidth ?? 0;
   }
 
-  protected rectSize(element: Element): number {
+  protected override rectSize(element: Element): number {
     return element.getBoundingClientRect().width;
   }
 
-  protected transformFor(px: number): string {
+  protected override transformFor(px: number): string {
     return 'translateX(' + px + 'px)';
   }
 
-  protected get axisPaddingProps(): readonly [string, string] {
+  protected override get axisPaddingProps(): readonly [string, string] {
     return ['padding-left', 'padding-right'];
   }
 
-  protected axisDelta(data: { deltaX: number; deltaY: number }): number {
+  protected override axisDelta(data: { deltaX: number; deltaY: number }): number {
     return data.deltaX;
   }
 
-  protected get axisThumbProps(): readonly [string, string] {
+  protected override get axisThumbProps(): readonly [string, string] {
     return ['width', 'left'];
   }
 
-  protected trackPointerFraction(event: PointerEvent, rect: DOMRect): number {
+  protected override trackPointerFraction(event: PointerEvent, rect: DOMRect): number {
     return (event.clientX - rect.left) / rect.width;
   }
 
-  get containerSize() {
+  override get containerSize() {
     return this.elementSize.width;
   }
 
-  get containerOuterSize() {
+  override get containerOuterSize() {
     return this.outerElementSize.width;
   }
 }

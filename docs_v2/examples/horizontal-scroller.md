@@ -22,7 +22,10 @@ class, with the same prefix-sum cursor, origin rebasing, creep
 integrator and seek pipeline — **subclassed** through its eight axis
 seams. Every place the base class touches a DOM dimension or a gesture
 axis is a `protected` getter or method; the subclass overrides exactly
-those, and the hand-tuned 80% runs sideways, unchanged. The full story
+those — each one carrying the `override` keyword, which TypeScript's
+`noImplicitOverride` option makes mandatory, so a seam can never be
+overridden silently or orphaned by a base rename — and the hand-tuned
+80% runs sideways, unchanged. The full story
 is in [Ship the variant, keep the
 tuning](/blog/ship-the-variant-keep-the-tuning).
 

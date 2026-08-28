@@ -8,11 +8,11 @@ class $TaxedProduct extends SaleProduct.$Class {
     return ref(0.1);
   }
 
-  get total(): number {
+  override get total(): number {
     return super.total * (1 + this.taxRate.value);
   }
 
-  receipt(): string[] {
+  override receipt(): string[] {
     return [
       ...super.receipt(),
       `tax +${Math.round(this.taxRate.value * 100)}%`,

@@ -6,13 +6,13 @@ import { kernel } from './kernel';
 import { Notification } from './Notification';
 
 class $ErrorNotification extends Notification.$Class {
-  get kind() {
+  override get kind() {
     return 'Error notification';
   }
-  get icon() {
+  override get icon() {
     return '!';
   }
-  get accent() {
+  override get accent() {
     return '#ef4444';
   }
 }

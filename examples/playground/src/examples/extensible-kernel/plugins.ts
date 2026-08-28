@@ -9,7 +9,7 @@ export type NotificationPlugin = (
 
 export const activityPlugin: NotificationPlugin = (Base) =>
   class extends Base {
-    show() {
+    override show() {
       super.show();
       this.reportActivity(`SHOW · ${this.kind} · ${this.message}`);
     }
@@ -17,17 +17,17 @@ export const activityPlugin: NotificationPlugin = (Base) =>
 
 export const stickyPlugin: NotificationPlugin = (Base) =>
   class extends Base {
-    get accent() {
+    override get accent() {
       return '#f59e0b';
     }
-    get isPinned() {
+    override get isPinned() {
       return true;
     }
-    get lifetimeLabel() {
+    override get lifetimeLabel() {
       return 'Pinned until dismissed';
     }
 
-    tick() {
+    override tick() {
       // Sticky Plugin replaces auto-dismiss: the countdown intentionally stops.
     }
   };

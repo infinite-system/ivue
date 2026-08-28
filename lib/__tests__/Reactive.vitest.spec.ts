@@ -418,18 +418,18 @@ describe('Reactive()', () => {
         }
       }
       class Mid extends Base {
-        get summary() {
+        override get summary() {
           return computed(() => `(Mid>${super.summary.value})`);
         }
-        get chain() {
+        override get chain() {
           return super.chain + '->Mid';
         }
       }
       class Leaf extends Mid {
-        get summary() {
+        override get summary() {
           return computed(() => `{Leaf>${super.summary.value}}`);
         }
-        get chain() {
+        override get chain() {
           return super.chain + '->Leaf';
         }
       }
@@ -446,7 +446,7 @@ describe('Reactive()', () => {
         }
       }
       class Child extends Base {
-        get val() {
+        override get val() {
           return computed(() => 10 + super.val.value);
         }
       }
@@ -491,13 +491,13 @@ describe('Reactive()', () => {
       }
     }
     class L2 extends L1 {
-      get tag() {
+      override get tag() {
         return computed(() => `L2(${super.tag.value})`);
       }
-      get name() {
+      override get name() {
         return super.name + '>L2';
       }
-      greet() {
+      override greet() {
         return super.greet() + '/L2';
       }
     }
@@ -505,18 +505,18 @@ describe('Reactive()', () => {
       get extra() {
         return ref(5);
       }
-      get tag() {
+      override get tag() {
         return computed(() => `L3[${super.tag.value}]`);
       }
-      get name() {
+      override get name() {
         return super.name + '>L3';
       }
     }
     class L4 extends L3 {
-      get tag() {
+      override get tag() {
         return computed(() => `L4{${super.tag.value}}`);
       }
-      get name() {
+      override get name() {
         return super.name + '>L4';
       }
       // computed in the child aggregating refs declared 3 and 1 levels up
@@ -525,7 +525,7 @@ describe('Reactive()', () => {
           () => (this as any).base.value + (this as any).extra.value,
         );
       }
-      greet() {
+      override greet() {
         return super.greet() + '/L4';
       }
     }

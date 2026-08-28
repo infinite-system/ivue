@@ -35,14 +35,14 @@ Here is what the horizontal version actually cost:
 
 ```ts
 class $HorizontalVirtualScroller<T> extends VirtualScroller.$Class<T> {
-  protected get lenisOrientation() { return 'horizontal'; }
-  protected get lenisGestureOrientation() { return 'horizontal'; }
-  protected get lenisIgnoreNativeScroll() { return true; }
-  protected offsetSize(el) { return el?.offsetWidth ?? 0; }
-  protected rectSize(el) { return el.getBoundingClientRect().width; }
-  protected transformFor(px) { return 'translateX(' + px + 'px)'; }
-  protected get axisPaddingProps() { return ['padding-left', 'padding-right']; }
-  protected axisDelta({ deltaX }) { return deltaX; }
+  protected override get lenisOrientation() { return 'horizontal'; }
+  protected override get lenisGestureOrientation() { return 'horizontal'; }
+  protected override get lenisIgnoreNativeScroll() { return true; }
+  protected override offsetSize(el) { return el?.offsetWidth ?? 0; }
+  protected override rectSize(el) { return el.getBoundingClientRect().width; }
+  protected override transformFor(px) { return 'translateX(' + px + 'px)'; }
+  protected override get axisPaddingProps() { return ['padding-left', 'padding-right']; }
+  protected override axisDelta({ deltaX }) { return deltaX; }
 }
 ```
 
@@ -68,6 +68,12 @@ We call them axis seams.
 The simple version: the scroller never says "height" directly. It asks
 itself "how big is this, along my axis?", and a subclass changes the
 answer without touching the question.
+
+Every override says so out loud. TypeScript's `noImplicitOverride`
+option makes the `override` keyword mandatory, so a seam cannot be
+overridden silently — and if the base ever renames a seam, every
+subclass breaks at compile time instead of quietly falling back to the
+vertical behavior.
 
 A seam is not a mode flag. There is no `direction: 'horizontal'` prop
 threading `if` branches through a thousand lines. The base class has

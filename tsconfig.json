@@ -5,6 +5,7 @@
     "target": "es2016",
     "lib": ["DOM", "ESNext"],
     "strict": true,
+    "noImplicitOverride": true,
     "esModuleInterop": true,
     "incremental": false,
     "skipLibCheck": true,

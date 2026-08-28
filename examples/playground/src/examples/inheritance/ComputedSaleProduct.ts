@@ -8,7 +8,7 @@ class $ComputedSaleProduct extends ComputedProduct.$Class {
     return ref(0.2);
   }
 
-  get total() {
+  override get total() {
     return computed(() => super.total.value * (1 - this.discount.value));
   }
 

@@ -8,7 +8,7 @@ class $ComputedTaxedProduct extends ComputedSaleProduct.$Class {
     return ref(0.1);
   }
 
-  get total() {
+  override get total() {
     return computed(() => super.total.value * (1 + this.taxRate.value));
   }
 

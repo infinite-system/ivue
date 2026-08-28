@@ -49,7 +49,7 @@ describe('Static', () => {
       }
     }
     class $Child extends $Base {
-      static describe() {
+      static override describe() {
         return 'child';
       }
     }

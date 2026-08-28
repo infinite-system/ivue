@@ -8,11 +8,11 @@ class $SaleProduct extends Product.$Class {
     return ref(0.2);
   }
 
-  get total(): number {
+  override get total(): number {
     return super.total * (1 - this.discount.value);
   }
 
-  receipt(): string[] {
+  override receipt(): string[] {
     return [
       ...super.receipt(),
       `sale −${Math.round(this.discount.value * 100)}%`,

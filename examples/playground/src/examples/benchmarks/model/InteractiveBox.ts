@@ -50,7 +50,7 @@ class $InteractiveBox extends Container.$Class {
   }
 
   // 2. Override Computed: Chains up to Container -> BaseElement
-  get diagnosticSummary() {
+  override get diagnosticSummary() {
     return computed(
       () =>
         `[Box #${this.id} Area:${this.area.value}] >> ` +
@@ -73,7 +73,7 @@ class $InteractiveBox extends Container.$Class {
   // --- Methods ---
 
   // Main update loop
-  refreshState() {
+  override refreshState() {
     super.refreshState(); // Updates Base opacity, Container padding
     this.width.value = Math.floor(Math.random() * 500);
     this.height.value = Math.floor(Math.random() * 500);
@@ -89,7 +89,7 @@ class $InteractiveBox extends Container.$Class {
   }
 
   // Testing string concatenation inheritance
-  get typeChain() {
+  override get typeChain() {
     return super.typeChain + ' -> InteractiveBox';
   }
 }

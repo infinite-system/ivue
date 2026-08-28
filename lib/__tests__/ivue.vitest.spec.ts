@@ -76,21 +76,21 @@ class ProductItem extends Item {
 }
 
 class StoreItem extends ProductItem {
-  _productType = iref('store');
-  get productType() {
+  override _productType = iref('store');
+  override get productType() {
     const prefix = super.productFeel ?? '';
     return (prefix ? prefix + ':' : '') + this._productType;
   }
-  set productFeel(value: string) {
+  override set productFeel(value: string) {
     this._productFeel = value;
   }
 }
 
 class RetailStoreItem extends StoreItem {
-  _productType = iref('retail');
+  override _productType = iref('retail');
   /** Do not overwrite productType getter here, on purpose. */
   productHistory = iref([]);
-  get testProperty() {
+  override get testProperty() {
     return this._testProperty;
   }
   calculateSize() {

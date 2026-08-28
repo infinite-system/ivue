@@ -4,6 +4,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "strict": true,
+    "noImplicitOverride": true,
     "jsx": "preserve",
     "skipLibCheck": true,
     "types": ["vite/client"]
