@@ -200,6 +200,17 @@ saleProduct.total     // 38.40 — discounted, never taxed
 saleProduct.receipt() // two lines, not four
 ```
 
+## Inheritance at production scale
+
+The pattern carries to real components, not just product chains. The
+[Horizontal Scroller: 1M Items](/examples/horizontal-scroller) example
+subclasses a production virtual scroller — a ~1,200-line hand-tuned
+class — and overrides only its eight axis seams (`protected` getters
+and methods, each carrying TypeScript's `override` keyword): the scroll
+physics, cursor math and autoplay integrator run sideways, unchanged.
+The full story, with the measured receipts, is
+[Ship the variant, keep the tuning](/blog/ship-the-variant-keep-the-tuning).
+
 ## Files and cycles — solved underneath
 
 Cross-file hierarchies are the normal case, and the namespace pattern makes
