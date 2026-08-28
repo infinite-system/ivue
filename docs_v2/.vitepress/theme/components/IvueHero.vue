@@ -34,6 +34,7 @@ class $Typewriter {
     'Reactive super.',
     'Memory control.',
     'Circular immunity.',
+    'Hot reload safe.',
     'Zero-cost creation.',
     'Minimal memory.',
     'Rocket fast.',
@@ -43,6 +44,7 @@ class $Typewriter {
     'Built for AI.',
     'Invariant based.',
     'Reactive backend.',
+    'Object graph.'
   ];
   fallLeadMs = 700; // let the fall-ins land before typing starts
   typeDelayMs = 66;
