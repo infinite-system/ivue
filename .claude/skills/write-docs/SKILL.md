@@ -78,7 +78,7 @@ Every code block is teaching code — someone WILL copy it.
 - If the docs demo a component live, the demo imports the SAME files the
   page shows — the page's code blocks are the demo's actual source.
 - **Every layer of an example is written in ivue itself** — the route SFC,
-  the demo wrapper, even the app shell that bootstraps it. No plain
+  the demo template, even the app shell that bootstraps it. No plain
   script-setup ref soup anywhere a reader might look: the examples are the
   advertisement, and an "ordinary" wrapper undercuts the claim on the page.
 

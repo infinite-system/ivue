@@ -51,7 +51,7 @@ const items = ref<BaseItem[]>(loadRows()) // any size — 1M is routine
 ## The source
 
 The exact files running above, tabbed — the class alone is ~1,200 lines,
-so each block scrolls inside itself. The demo wrapper is docs code;
+so each block scrolls inside itself. The demo template is docs code;
 everything else is the production component.
 
 ::: code-group
