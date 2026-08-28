@@ -122,6 +122,15 @@ article only. Write accordingly:
 - **Structure**: one thesis, blockquoted where it deserves it;
   receipts linked to prior posts/guides rather than re-argued;
   a closing that lands the invariant, not a summary.
+- **Reverse links — analyze which DOCS pages should link back.** The
+  article's own `relatedPosts` and body links point at guides and
+  examples; that covers only one direction. Before finishing, sweep the
+  docs for every guide/example page the article proves, extends, or
+  demonstrates (grep the topics the article touches), and add the
+  article to THOSE pages' `relatedPosts` (strongest first). A guide
+  section that states the pattern the article demonstrates may also
+  earn one inline link. An article linked from nowhere in the reference
+  path is undiscoverable to the reader who arrives via the docs.
 - **Pipeline** (the mechanical steps live in CLAUDE.md): frontmatter
   with `tags` + `relatedPosts` (destination-oriented, strongest
   first) → banner via the blog-banner skill (VIEW the PNG; content

@@ -1,7 +1,7 @@
 ---
 title: Extensible Components
 description: 'Classes extend — so props, emits and slots must extend with them. The params/defaults architecture: typed props + plain defaults merged by propsWithDefaults(), ExtractEmitTypes for emits, ExtendSlots for wrappable slots.'
-relatedPosts: [the-options-api-everyone-wanted, inheritance-exile]
+relatedPosts: [ship-the-variant-keep-the-tuning, the-options-api-everyone-wanted, inheritance-exile]
 ---
 
 # Extensible Components

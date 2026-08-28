@@ -1,7 +1,7 @@
 ---
 title: Inheritance & super
 description: A real three-file hierarchy under the namespace pattern — plain-getter chains through super, same-name computeds that never collide, a receipt built level by level, and import cycles solved by construction.
-relatedPosts: [inheritance-exile, circular-imports-dissolved]
+relatedPosts: [ship-the-variant-keep-the-tuning, inheritance-exile, circular-imports-dissolved]
 ---
 
 # Inheritance & `super`
