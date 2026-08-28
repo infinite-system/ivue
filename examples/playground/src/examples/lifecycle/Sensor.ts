@@ -34,9 +34,25 @@ class $Sensor {
     this.watching.value = false;
   }
 
+  /** Stop the watchers ONLY — `{ reset: false }` keeps every cached cell
+   *  and its current value; start() resumes in a fresh scope. */
+  suspend() {
+    (this as any).$stopEffects({ reset: false });
+    this.#stopWatch = undefined;
+    this.watching.value = false;
+  }
+
   dispose() {
+    // Write the initial values FIRST: a template that destructured these
+    // refs keeps holding the pre-dispose cells, so this is what its
+    // display shows after the reset. The engine reset then drops the
+    // cells — the next access (a remount, a new consumer) materializes
+    // fresh ones with these same initial values, so both worlds agree.
+    this.watching.value = false;
+    this.fired.value = 0;
+    this.lastChange.value = '';
+    this.temp.value = 20;
     (this as any).$stopEffects(); // stops the scope, clears every cached cell
-    this.watching.value = false; // fresh cells materialize on next access
   }
 
   onTempChanged(newTemp: number, oldTemp: number) {

@@ -48,6 +48,7 @@ onUnmounted(() => (sensor as any).$stopEffects());
       >
         {{ watching ? 'Stop watch' : 'Start $watch' }}
       </button>
+      <button class="d-btn" type="button" @click="sensor.suspend">Suspend (reset: false)</button>
       <button class="d-btn" type="button" @click="sensor.dispose">Dispose ($stopEffects)</button>
       <span v-if="lastChange" class="d-mono"><code>$watch</code> {{ lastChange }}</span>
     </div>

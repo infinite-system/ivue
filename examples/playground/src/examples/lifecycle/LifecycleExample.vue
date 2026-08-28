@@ -20,8 +20,10 @@ onUnmounted(() => sensor.$stopEffects());
   <div class="pane">
     <p class="note">
       Start registers a watcher in the instance's lazily created effect scope.
-      Dispose calls $stopEffects: the scope stops and every cached cell is
-      dropped, so state re-materializes fresh.
+      Suspend calls $stopEffects({ reset: false }): the watcher dies but every
+      value survives — start resumes where it left off. Dispose calls
+      $stopEffects(): the scope stops AND every cached cell is dropped —
+      terminal for this pane's bindings; fresh consumers get fresh cells.
     </p>
     <div class="vals">
       <div>
@@ -56,6 +58,9 @@ onUnmounted(() => sensor.$stopEffects());
         start
       </button>
       <button class="btn" type="button" @click="sensor.stop()">stop</button>
+      <button class="btn" type="button" @click="sensor.suspend()">
+        suspend
+      </button>
       <button class="btn" type="button" @click="sensor.dispose()">
         dispose
       </button>

@@ -12,8 +12,10 @@ import DemoTeardown from '../.vitepress/theme/components/DemoTeardown.vue'
 
 `Sensor` manages its own watcher: `start()` registers a `$watch` in the
 instance's lazily created effect scope, `stop()` disposes just that watcher,
-and `dispose()` calls `$stopEffects()` — the scope stops and every cached
-cell is dropped, so state re-materializes fresh on the next access.
+`suspend()` calls `$stopEffects({ reset: false })` — the watchers stop but
+every cached cell keeps its value — and `dispose()` calls `$stopEffects()`,
+where the scope stops and every cached cell is dropped, so state
+re-materializes fresh on the next access.
 
 <ClientOnly>
   <DemoTeardown />
@@ -23,8 +25,16 @@ cell is dropped, so state re-materializes fresh on the next access.
 
 - **The scope is lazy.** An instance that never calls `$watch` allocates no
   effect scope at all.
-- **Dispose is total.** After `$stopEffects()`, the old cells are gone;
-  touching any ref-getter materializes a fresh cell.
+- **Suspend keeps the state.** After `suspend()`, `fired` and `last change`
+  hold their values while the slider no longer triggers the watcher —
+  `{ reset: false }` stops the scope only. `start()` resumes in a fresh
+  scope and the counter continues where it left off.
+- **Dispose is total — and terminal for existing bindings.** After
+  `$stopEffects()`, the old cells are gone; the next access materializes
+  fresh ones. Consumers that destructured the old cells (this pane
+  included) are detached from the fresh ones by design — dispose ends an
+  instance's life for its current consumers. Stop-and-resume is what
+  `suspend()` is for.
 - The watch callback delegates to a method (`onTempChanged`) — the
   thin-closure rule keeps logic named on the prototype and directly testable.
 
