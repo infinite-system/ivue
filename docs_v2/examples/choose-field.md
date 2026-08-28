@@ -62,11 +62,12 @@ what a hand-written Quasar wrapper gives you, and it falls out of the
 ## The source
 
 ::: code-group
+<<< ../../examples/playground/src/examples/fields/choose-field/ContactField.ts [ContactField.ts]
+<<< ../../examples/playground/src/examples/fields/choose-field/ContactField.vue [ContactField.vue]
+<<< ../../examples/playground/src/examples/fields/choose-field/ContactFieldProps.ts [ContactFieldProps.ts]
 <<< ../../examples/playground/src/examples/fields/choose-field/ChooseField.ts [ChooseField.ts]
 <<< ../../examples/playground/src/examples/fields/choose-field/ChooseField.vue [ChooseField.vue]
 <<< ../../examples/playground/src/examples/fields/choose-field/ChooseFieldProps.ts [ChooseFieldProps.ts]
-<<< ../../examples/playground/src/examples/fields/choose-field/ContactField.vue [ContactField.vue]
-<<< ../../examples/playground/src/examples/fields/choose-field/ContactFieldProps.ts [ContactFieldProps.ts]
 <<< ../../examples/playground/src/examples/fields/choose-field/ChooseFieldExample.vue [demo route]
 :::
 

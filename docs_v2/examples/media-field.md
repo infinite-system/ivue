@@ -73,12 +73,12 @@ getters, all of it ([Inheritance & super](/guide/inheritance)) — so
 ## The source
 
 ::: code-group
+<<< ../../examples/playground/src/examples/fields/media-field/ExtendedMediaField.ts [ExtendedMediaField.ts]
+<<< ../../examples/playground/src/examples/fields/media-field/ExtendedMediaField.vue [ExtendedMediaField.vue]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaField.ts [MediaField.ts]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaField.vue [MediaField.vue]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaFieldProps.ts [MediaFieldProps.ts]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaFieldPreviewDialog.vue [PreviewDialog.vue]
-<<< ../../examples/playground/src/examples/fields/media-field/ExtendedMediaField.ts [ExtendedMediaField.ts]
-<<< ../../examples/playground/src/examples/fields/media-field/ExtendedMediaField.vue [ExtendedMediaField.vue]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaFieldExample.vue [demo route]
 :::
 
