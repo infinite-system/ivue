@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import VirtualScroller from './VirtualScroller.vue';
-import { VirtualScrollerExample, ITEM_COUNT } from './VirtualScrollerExample';
+import { VirtualScrollerExample } from './VirtualScrollerExample';
 
 const example = new VirtualScrollerExample.Class();
 
@@ -17,7 +17,7 @@ const {
   <div class="example">
     <header class="example-header">
       <p>
-        {{ ITEM_COUNT.toLocaleString() }} rows ·
+        {{ VirtualScrollerExample.ITEM_COUNT.toLocaleString() }} rows ·
         {{ example.renderedCount }} in the DOM
       </p>
       <nav>
@@ -32,7 +32,7 @@ const {
         <button type="button" @click="example.jumpTo(499999)">
           jump to #500,000
         </button>
-        <button type="button" @click="example.jumpTo(ITEM_COUNT - 1)">
+        <button type="button" @click="example.jumpTo(VirtualScrollerExample.ITEM_COUNT - 1)">
           the end
         </button>
         <button type="button" @click="example.jumpTo(0)">the top</button>

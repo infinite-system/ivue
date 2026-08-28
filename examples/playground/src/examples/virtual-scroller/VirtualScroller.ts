@@ -26,105 +26,6 @@ import {
 import { Lenis } from '../../lenis/lenis';
 import type { BaseItem } from './VirtualScroller.types';
 
-/*
- * THE COMPONENT CONTRACT — the class file owns it; the namespace below
- * carries it (VirtualScroller.props / emits / Props / Emits / Slots /
- * Exposed). The SFC is pure wiring: it hands the RUNTIME props object to
- * defineProps and the RUNTIME emits object to defineEmits, so no compiler
- * macro ever resolves a cross-file TYPE — and a subclass component
- * composes its surface by SPREADING the maps (see HorizontalVirtualScroller,
- * which inherits every prop and overrides one default in one line).
- */
-
-/** 1 — the TYPES: a defineComponent-style object, no defaults inside.
- *  `modelValue` is typed against BaseItem here (a const cannot be
- *  generic); Props<T> recovers the precise item type in the SFC. */
-const virtualScrollerPropsTypes = {
-  modelValue: { type: Array as PropType<BaseItem[]>, required: true },
-  /** Render the built-in draggable scrollbar over the VIRTUAL position. */
-  scrollbar: { type: Boolean as PropType<boolean> },
-  autoPlay: { type: Boolean as PropType<boolean> },
-  autoPlayDelay: { type: Number as PropType<number> },
-  autoRepeat: { type: Boolean as PropType<boolean> },
-  /** Step mode: after any input settles, snap to the nearest item
-   *  boundary — scroll, stop; scroll, stop. */
-  snapToItems: { type: Boolean as PropType<boolean> },
-  assumedSize: { type: Number as PropType<number> },
-  paddingQuantity: { type: Number as PropType<number> },
-  /** Autoplay creep speed: ms of wall time per px. No default on purpose —
-   *  unset falls back to the tuned reading cadence (see creepMsPerPx). */
-  creepMsPerPx: { type: Number as PropType<number> },
-  /** Accepted for API compatibility; the docs build renders the plain branch. */
-  draggable: { type: Boolean as PropType<boolean> },
-  dragHandleSelector: { type: String as PropType<string> },
-  dragClass: { type: String as PropType<string> },
-  dragGhostClass: { type: String as PropType<string> },
-  dragChosenClass: { type: String as PropType<string> }
-};
-
-/** 2 — the DEFAULTS: plain values, typed against the types object.
- *  `modelValue` is required and `creepMsPerPx` deliberately default-free
- *  (unset = the tuned creep cadence), so both are excluded from the
- *  must-have-a-default check. */
-const virtualScrollerPropsDefaults: ExtractPropDefaultTypes<
-  Omit<typeof virtualScrollerPropsTypes, 'modelValue' | 'creepMsPerPx'>
-> = {
-  scrollbar: false,
-  autoPlay: false,
-  autoPlayDelay: 500,
-  autoRepeat: true,
-  snapToItems: false,
-  assumedSize: 30,
-  paddingQuantity: 6,
-  draggable: false,
-  dragHandleSelector: '.sortable-drag-handle',
-  dragClass: 'sortable-drag',
-  dragGhostClass: 'sortable-ghost',
-  dragChosenClass: 'sortable-chosen'
-};
-
-/** 3 — the MERGE: a standard Vue props object, ready for defineProps. */
-const virtualScrollerProps = propsWithDefaults(
-  virtualScrollerPropsDefaults,
-  virtualScrollerPropsTypes
-);
-
-/** Resolved props — what the class receives AFTER defaults are applied.
- *  DERIVED from the merged runtime object (never hand-duplicated):
- *  ExtractPropTypes makes every defaulted prop non-optional and the
- *  default-free `creepMsPerPx` optional; the one thing a runtime map
- *  cannot carry — the generic item type — is grafted back over
- *  `modelValue`. */
-export type VirtualScrollerProps<T extends BaseItem> = Omit<
-  ExtractPropTypes<typeof virtualScrollerProps>,
-  'modelValue'
-> & { modelValue: T[] };
-
-export interface ItemsChangeEmitArgs {
-  start: number;
-  end: number;
-}
-
-export interface ItemContext<T extends BaseItem> {
-  item: T;
-  id: string;
-  index: number;
-}
-
-export interface VirtualScrollerSlots<T extends BaseItem> {
-  item: (scope: ItemContext<T>) => any;
-}
-
-const virtualScrollerEmits = {
-  itemsChanged: (args: ItemsChangeEmitArgs) => true,
-  drop: (startIndex: number, dropIndex: number) => true,
-  move: (evt: any) => true
-};
-
-export type VirtualScrollerEmits = ExtractEmitTypes<
-  typeof virtualScrollerEmits
->;
-
 /**
  * Virtualized scroller (ivue v2 `Reactive` class).
  *
@@ -154,8 +55,8 @@ export type VirtualScrollerEmits = ExtractEmitTypes<
  */
 class $VirtualScroller<T extends BaseItem> {
   constructor (
-    public props: VirtualScrollerProps<T>,
-    public emit: VirtualScrollerEmits
+    public props: VirtualScroller.Props<T>,
+    public emit: VirtualScroller.Emits
   ) {
     this.elementSize = useElementSize(this.scrollElement);
     this.outerElementSize = useElementSize(this.scrollElement, undefined, {
@@ -548,7 +449,7 @@ class $VirtualScroller<T extends BaseItem> {
    * Previous visibleItems result — returned again when the window is
    * unchanged so the computed's equality check stops propagation.
    */
-  private visibleItemsSnapshot: ItemContext<T>[] = [];
+  private visibleItemsSnapshot: VirtualScroller.ItemContext<T>[] = [];
 
   /**
    * The window of items currently rendered. Hot path: re-evaluates on every
@@ -572,7 +473,7 @@ class $VirtualScroller<T extends BaseItem> {
     return computed(() => this.computeVisibleItems());
   }
 
-  private computeVisibleItems(): ItemContext<T>[] {
+  private computeVisibleItems(): VirtualScroller.ItemContext<T>[] {
     this.geometryVersion.value;
     const items = this.items.value;
     const len = items.length;
@@ -680,7 +581,7 @@ class $VirtualScroller<T extends BaseItem> {
       if (unchanged) return prev;
     }
 
-    const next: ItemContext<T>[] = new Array(length);
+    const next: VirtualScroller.ItemContext<T>[] = new Array(length);
     for (let i = 0; i < length; i++) {
       const index = paddedStart + i;
       const item = items[index];
@@ -693,7 +594,7 @@ class $VirtualScroller<T extends BaseItem> {
     return (this.visibleItemsSnapshot = next);
   }
 
-  private onItemsChanged(args: ItemsChangeEmitArgs) {
+  private onItemsChanged(args: VirtualScroller.ItemsChangeEmitArgs) {
     this.emit('itemsChanged', args);
   }
 
@@ -1328,8 +1229,10 @@ class $VirtualScroller<T extends BaseItem> {
     // pixel at cruise speed — velocity is continuous through the handoff.
     lenis.adoptExternalScroll(lenis.animatedScroll);
     cancelAnimationFrame(this.frame);
-    this.frame = null;
-    cancelAnimationFrame(this.creepFrame);
+    // 0 (not null): falsy for onVirtualScroll's re-arm check without
+    // widening the field type.
+    this.frame = 0;
+    if (this.creepFrame !== null) cancelAnimationFrame(this.creepFrame);
     this.lastCreepTs = null;
     this.creepFrame = requestAnimationFrame(this.creepStep);
     return true;
@@ -1438,12 +1341,19 @@ class $VirtualScroller<T extends BaseItem> {
  * `typeof Class.Instance` cannot exist per-T; `Instance<T>` applies
  * `ReactiveInstance` explicitly instead.
  *
- * The namespace carries the WHOLE component contract: class, instance
- * type, props (types + defaults + merged runtime object), emits, slots
- * and the expose-surface type — one import gives a consumer or a
- * subclass everything the component is.
+ * The namespace carries the WHOLE component contract, in canonical order:
+ * IDENTITY ($Class / Class / Instance), then VALUES (prop types + defaults
+ * merged by propsWithDefaults, the emits object), then TYPES (all derived
+ * from the values — never hand-duplicated). One import gives a consumer or
+ * a subclass everything the component is, and the SFC is pure wiring: the
+ * macros receive the RUNTIME objects, so no compiler macro ever resolves a
+ * cross-file type, and a subclass component composes its surface by
+ * SPREADING the maps (see HorizontalVirtualScroller, which inherits every
+ * prop and overrides one default in one line).
  */
 export namespace VirtualScroller {
+  /* Identity */
+
   export const $Class = $VirtualScroller;
   export let Class = Reactive(
     $VirtualScroller
@@ -1452,17 +1362,93 @@ export namespace VirtualScroller {
     $VirtualScroller<T>
   >;
 
-  /** The TYPES / DEFAULTS / MERGE triple — declared once above the class
-   *  (see virtualScrollerPropsTypes), carried here. */
-  export const propsTypes = virtualScrollerPropsTypes;
-  export const propsDefaults = virtualScrollerPropsDefaults;
-  export const props = virtualScrollerProps;
+  /* Values */
 
-  export const emits = virtualScrollerEmits;
+  /** 1 — the TYPES: a defineComponent-style object, no defaults inside.
+   *  `modelValue` is typed against BaseItem here (a const cannot be
+   *  generic); Props<T> recovers the precise item type in the SFC. */
+  export const propsTypes = {
+    modelValue: { type: Array as PropType<BaseItem[]>, required: true },
+    /** Render the built-in draggable scrollbar over the VIRTUAL position. */
+    scrollbar: { type: Boolean as PropType<boolean> },
+    autoPlay: { type: Boolean as PropType<boolean> },
+    autoPlayDelay: { type: Number as PropType<number> },
+    autoRepeat: { type: Boolean as PropType<boolean> },
+    /** Step mode: after any input settles, snap to the nearest item
+     *  boundary — scroll, stop; scroll, stop. */
+    snapToItems: { type: Boolean as PropType<boolean> },
+    assumedSize: { type: Number as PropType<number> },
+    paddingQuantity: { type: Number as PropType<number> },
+    /** Autoplay creep speed: ms of wall time per px. No default on purpose —
+     *  unset falls back to the tuned reading cadence (see creepMsPerPx). */
+    creepMsPerPx: { type: Number as PropType<number> },
+    /** Accepted for API compatibility; the docs build renders the plain branch. */
+    draggable: { type: Boolean as PropType<boolean> },
+    dragHandleSelector: { type: String as PropType<string> },
+    dragClass: { type: String as PropType<string> },
+    dragGhostClass: { type: String as PropType<string> },
+    dragChosenClass: { type: String as PropType<string> }
+  };
 
-  export type Props<T extends BaseItem> = VirtualScrollerProps<T>;
-  export type Emits = VirtualScrollerEmits;
-  export type Slots<T extends BaseItem> = VirtualScrollerSlots<T>;
+  /** 2 — the DEFAULTS: plain values, typed against the types object.
+   *  `modelValue` is required and `creepMsPerPx` deliberately default-free
+   *  (unset = the tuned creep cadence), so both are excluded from the
+   *  must-have-a-default check. */
+  export const propsDefaults: ExtractPropDefaultTypes<
+    Omit<typeof propsTypes, 'modelValue' | 'creepMsPerPx'>
+  > = {
+    scrollbar: false,
+    autoPlay: false,
+    autoPlayDelay: 500,
+    autoRepeat: true,
+    snapToItems: false,
+    assumedSize: 30,
+    paddingQuantity: 6,
+    draggable: false,
+    dragHandleSelector: '.sortable-drag-handle',
+    dragClass: 'sortable-drag',
+    dragGhostClass: 'sortable-ghost',
+    dragChosenClass: 'sortable-chosen'
+  };
+
+  /** 3 — the MERGE: a standard Vue props object, ready for defineProps. */
+  export const props = propsWithDefaults(propsDefaults, propsTypes);
+
+  export const emits = {
+    itemsChanged: (args: ItemsChangeEmitArgs) => true,
+    drop: (startIndex: number, dropIndex: number) => true,
+    move: (evt: any) => true
+  };
+
+  /* Types */
+
+  /** Resolved props — what the class receives AFTER defaults are applied.
+   *  DERIVED from the merged runtime object (never hand-duplicated):
+   *  ExtractPropTypes makes every defaulted prop non-optional and the
+   *  default-free `creepMsPerPx` optional; the one thing a runtime map
+   *  cannot carry — the generic item type — is grafted back over
+   *  `modelValue`. */
+  export type Props<T extends BaseItem> = Omit<
+    ExtractPropTypes<typeof props>,
+    'modelValue'
+  > & { modelValue: T[] };
+
+  export type Emits = ExtractEmitTypes<typeof emits>;
+
+  export interface ItemsChangeEmitArgs {
+    start: number;
+    end: number;
+  }
+
+  export interface ItemContext<T extends BaseItem> {
+    item: T;
+    id: string;
+    index: number;
+  }
+
+  export interface Slots<T extends BaseItem> {
+    item: (scope: ItemContext<T>) => any;
+  }
 
   /**
    * What consumers hold through a template ref: Vue's expose surface
@@ -1473,5 +1459,3 @@ export namespace VirtualScroller {
    */
   export type Exposed<T extends BaseItem> = ShallowUnwrapRef<Instance<T>>;
 }
-
-export type VirtualScrollerReturn<T extends BaseItem> = $VirtualScroller<T>;

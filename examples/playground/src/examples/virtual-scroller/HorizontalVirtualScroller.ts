@@ -77,6 +77,8 @@ class $HorizontalVirtualScroller<T extends BaseItem> extends (VirtualScroller.$C
  *  wide where rows are tens tall), stated once instead of duplicating
  *  the whole defaults block. */
 export namespace HorizontalVirtualScroller {
+  /* Identity */
+
   export const $Class = $HorizontalVirtualScroller;
   export let Class = Reactive(
     $HorizontalVirtualScroller
@@ -85,6 +87,8 @@ export namespace HorizontalVirtualScroller {
     $HorizontalVirtualScroller<T>
   >;
 
+  /* Values */
+
   export const propsTypes = { ...VirtualScroller.propsTypes };
   export const propsDefaults = {
     ...VirtualScroller.propsDefaults,
@@ -92,6 +96,8 @@ export namespace HorizontalVirtualScroller {
   };
   export const props = propsWithDefaults(propsDefaults, propsTypes);
   export const emits = VirtualScroller.emits;
+
+  /* Types */
 
   export type Props<T extends BaseItem> = VirtualScroller.Props<T>;
   export type Emits = VirtualScroller.Emits;
