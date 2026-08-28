@@ -978,14 +978,37 @@ class $VirtualScroller<T extends BaseItem> {
     return Math.min(Math.max(position / scrollable, 0), 1);
   }
 
-  /** Seek to a 0..1 track fraction through the full scrollToIndex pipeline
-   *  (spacer rebase + converge loop) — a raw lenis.scrollTo would translate
-   *  content out of the viewport without rebasing the window. */
+  /** Seek to a 0..1 track fraction in ITEM-INDEX space through the full
+   *  scrollToIndex pipeline (spacer rebase + converge loop) — a raw
+   *  lenis.scrollTo would translate content out of the viewport without
+   *  rebasing the window. Index space is the external seek-bar contract:
+   *  the landing promises an ITEM, size-independent, so it survives the
+   *  estimate→real refinement. */
   seekToFraction(fraction: number) {
     const lastIndex = this.items.value.length - 1;
     if (lastIndex < 0) return;
     const clamped = Math.min(Math.max(fraction, 0), 1);
     this.scrollToIndex(Math.round(clamped * lastIndex), undefined, false);
+  }
+
+  /**
+   * Seek to a 0..1 fraction of the SCROLLABLE RANGE — the exact inverse
+   * of scrollbarProgress, which is what the built-in track needs: the
+   * thumb RENDERS position-space, so its drag must land where it points.
+   * Index space cannot express this when one item outsizes the container
+   * (a marquee chunk is ~3 containers wide): the last item's START is
+   * far from the end of the content, so an index-anchored drag leaves the
+   * tail unreachable. The target position still resolves to an item plus
+   * an in-item fraction and rides the scrollToIndex converge loop, so the
+   * landing stays on the same CONTENT as late sizes refine.
+   */
+  seekToProgress(fraction: number) {
+    const clamped = Math.min(Math.max(fraction, 0), 1);
+    const container = this.offsetSize(this.scrollElement.value);
+    const target = clamped * Math.max(0, this.scrollExtent.value - container);
+    const at = this.getIndexAtPosition(target);
+    if (!at) return;
+    this.scrollToIndex(at.index, undefined, false, 0, at.fraction);
   }
 
   /* Scrollbar drag (the built-in track) */
@@ -1033,7 +1056,7 @@ class $VirtualScroller<T extends BaseItem> {
       '.virtual-scroller__track'
     ) as HTMLElement;
     if (!track) return;
-    this.seekToFraction(
+    this.seekToProgress(
       this.trackPointerFraction(event, track.getBoundingClientRect())
     );
   }

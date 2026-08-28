@@ -76,6 +76,24 @@ class $TextChunker {
     $TextChunker.widthCache.set(font, width);
     return width;
   }
+
+  /**
+   * EXACT pixel width of every chunk under a CSS `font` — one canvas,
+   * one measureText per chunk (microseconds each; a whole book measures
+   * in single-digit milliseconds). Average-based estimates run ~1% small
+   * per chunk, which compounds across a thousand chunks into a hidden
+   * tail at the end of the scroll; exact seeds make the scroll extent,
+   * the seek mapping and the END of the text true before any chunk has
+   * rendered.
+   */
+  static measureChunks(chunks: string[], font: string): number[] {
+    const fallback = () => chunks.map((chunk) => chunk.length * 7.5);
+    if (typeof document === 'undefined') return fallback();
+    const context = document.createElement('canvas').getContext('2d');
+    if (!context) return fallback();
+    context.font = font;
+    return chunks.map((chunk) => context.measureText(chunk).width);
+  }
 }
 
 export namespace TextChunker {

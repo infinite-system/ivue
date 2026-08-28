@@ -50,10 +50,16 @@ defineExpose(marquee as TextMarquee.Instance);
   display: block;
   white-space: pre;
 }
-/* cross-axis room below the line for the built-in track — padding-bottom
-   is off the scroll axis, so the extent math never sees it */
+/* cross-axis room below the line for the built-in track (padding-bottom
+   is off the scroll axis), plus MAIN-axis padding matching the hosts'
+   5% edge fade: computeScrollExtent adds padding-left/right through
+   axisPaddingProps, so the book's first and last words rest INSIDE the
+   opaque zone — without this the end of the text clamps flush to the
+   strip edge and the fade permanently hides the closing words */
 .text-marquee .virtual-scroller--x {
   padding-bottom: 18px;
+  padding-left: 5%;
+  padding-right: 5%;
 }
 /* three classes on purpose: the component's own track rules use a doubled
    selector (two classes), so this override must out-specify it — a tie

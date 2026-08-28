@@ -1,5 +1,5 @@
 import type { ExtractPropTypes, PropType, ShallowUnwrapRef } from 'vue';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 import {
   propsWithDefaults,
@@ -24,6 +24,12 @@ import { TextChunker } from './TextChunker';
 class $TextMarquee {
   constructor(public props: TextMarquee.Props) {
     onMounted(() => this.measureFont());
+    // Rechunked text (text/targetChars changed) invalidates every index —
+    // reseed the exact widths for the new chunk list.
+    watch(
+      () => this.items.value,
+      () => this.seedChunkSizes()
+    );
   }
 
   /* Template refs */
@@ -99,11 +105,42 @@ class $TextMarquee {
   /* Methods */
 
   measureFont() {
-    const element = this.rootElement.value;
-    if (!element) return;
-    const style = getComputedStyle(element);
-    const font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const font = this.fontShorthand();
+    if (!font) return;
     this.averageCharWidth.value = TextChunker.Class.averageCharWidth(font);
+    this.seedChunkSizes();
+  }
+
+  /** The marquee's real rendered font, as a canvas-ready shorthand. */
+  fontShorthand(): string | null {
+    const element = this.rootElement.value;
+    if (!element) return null;
+    const style = getComputedStyle(element);
+    return `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+  }
+
+  /**
+   * Seed the scroller's size map with canvas-EXACT chunk widths (see
+   * TextChunker.measureChunks). Without seeds, unmeasured chunks ride the
+   * average-based assumed size, whose ~1% error compounds across a
+   * thousand chunks into a scroll extent that ends a chunk and a half
+   * short — the end of the book hides past the clamp and the scrollbar
+   * cannot reach it. Real one-shot captures still overwrite the seeds as
+   * chunks render.
+   */
+  seedChunkSizes() {
+    const scroller = this.scroller.value;
+    const font = this.fontShorthand();
+    if (!scroller || !font) return;
+    const items = this.items.value;
+    const widths = TextChunker.Class.measureChunks(
+      items.map((item) => item.body),
+      font
+    );
+    for (let index = 0; index < widths.length; index++) {
+      scroller.syncItemSize(index, widths[index], false);
+    }
+    scroller.updatePositionsImmediately();
   }
 
   buildItems(): BaseItem[] {
