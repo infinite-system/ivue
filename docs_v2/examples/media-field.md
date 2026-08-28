@@ -79,8 +79,8 @@ getters, all of it ([Inheritance & super](/guide/inheritance)) — so
 <<< ../../examples/playground/src/examples/fields/media-field/MediaFieldProps.ts [MediaFieldProps.ts]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaField.vue [MediaField.vue]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaFieldPreviewDialog.vue [PreviewDialog.vue]
-<<< ../../examples/playground/src/examples/fields/media-field/MediaFieldExample.ts [example model]
-<<< ../../examples/playground/src/examples/fields/media-field/MediaFieldExample.vue [demo route]
+<<< ../../examples/playground/src/examples/fields/media-field/MediaFieldExample.ts [example]
+<<< ../../examples/playground/src/examples/fields/media-field/MediaFieldExample.vue [route]
 :::
 
 ## The backend path

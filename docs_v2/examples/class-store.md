@@ -131,5 +131,5 @@ Both views read and write the SAME cells — pick per consumer, not per app.
 <<< ../../examples/playground/src/examples/class-store/TaskBoard.vue [TaskBoard.vue]
 <<< ../../examples/playground/src/examples/class-store/ProjectStats.vue [ProjectStats.vue]
 <<< ../../examples/playground/src/examples/class-store/ReactiveViewPanel.vue [ReactiveViewPanel.vue]
-<<< ../../examples/playground/src/examples/class-store/ClassStoreExample.vue [demo route]
+<<< ../../examples/playground/src/examples/class-store/ClassStoreExample.vue [route]
 :::

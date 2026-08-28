@@ -58,8 +58,8 @@ everything else is the production component.
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts [example model]
-<<< @/.vitepress/theme/components/examples/ExampleVirtualScroller.vue [demo template]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts [example]
+<<< @/.vitepress/theme/components/examples/ExampleVirtualScroller.vue [template]
 :::
 
 The example lives in the unified playground at
