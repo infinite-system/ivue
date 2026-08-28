@@ -108,6 +108,7 @@ export class Lenis {
     infinite = false,
     orientation = 'vertical', // vertical, horizontal
     gestureOrientation = 'vertical', // vertical, horizontal, both
+    ignoreNativeScroll = false, // fully-virtual mode: never adopt native scroll
     touchMultiplier = 1,
     wheelMultiplier = 1,
     autoResize = true,
@@ -149,6 +150,7 @@ export class Lenis {
       lerp,
       infinite,
       gestureOrientation,
+      ignoreNativeScroll,
       orientation,
       touchMultiplier,
       wheelMultiplier,
@@ -575,6 +577,11 @@ export class Lenis {
   }
 
   private onNativeScroll = () => {
+    // Fully-virtual scrollers (the horizontal strip) never accept native
+    // adoption: the wrapper's scrollLeft/scrollTop are pinned 0 by design,
+    // and adopting them the instant a lerp completes teleports the content
+    // back to the origin.
+    if ((this.options as any).ignoreNativeScroll) return;
     if (this._resetVelocityTimeout !== null) {
       clearTimeout(this._resetVelocityTimeout);
       this._resetVelocityTimeout = null;
@@ -614,7 +621,13 @@ export class Lenis {
   private reset() {
     this.isLocked = false;
     this.isScrolling = false;
-    this.animatedScroll = this.targetScroll = this.actualScroll;
+    // Fully-virtual scrollers pin the wrapper's native scroll at 0, so
+    // adopting actualScroll on completion would teleport the content back
+    // to the origin — virtual mode keeps the animated position instead.
+    this.animatedScroll = this.targetScroll = (this.options as any)
+      .ignoreNativeScroll
+      ? this.animatedScroll
+      : this.actualScroll;
     this.lastVelocity = this.velocity = 0;
     this.animate.stop();
   }

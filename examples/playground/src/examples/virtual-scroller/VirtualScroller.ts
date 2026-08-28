@@ -88,7 +88,9 @@ class $VirtualScroller<T extends BaseItem> {
       this.lenis = new Lenis({
         wrapper: this.scrollElement.value,
         content: this.scrollElementInner.value,
+        orientation: this.lenisOrientation,
         gestureOrientation: this.lenisGestureOrientation,
+        ignoreNativeScroll: this.lenisIgnoreNativeScroll,
         syncTouch: true, // Sync touch events
         smoothWheel: true,
         autoRaf: false, // we drive it ourselves
@@ -159,8 +161,18 @@ class $VirtualScroller<T extends BaseItem> {
      horizontal subclass overrides ONLY these (the tuned scroll physics,
      cursor math, and creep never fork). */
 
+  protected get lenisOrientation(): 'vertical' | 'horizontal' {
+    return 'vertical';
+  }
+
   protected get lenisGestureOrientation(): 'vertical' | 'horizontal' | 'both' {
     return 'vertical';
+  }
+
+  /** Fully-virtual axes refuse native-scroll adoption (see the fork's
+   *  onNativeScroll) — the vertical scroller keeps the stock behavior. */
+  protected get lenisIgnoreNativeScroll(): boolean {
+    return false;
   }
 
   /** Main-axis border-box size of an element. */

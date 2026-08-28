@@ -60,9 +60,12 @@ function advance() {
   const visible = fullyVisibleCount();
   current = current + visible >= items.length ? 0 : current + 1;
   scrollerInstance.scrollToIndex(current, () => {
-    // the delivery lands on the LAST FULLY VISIBLE card — never the
-    // half-clipped one at the strip's masked edge
-    const arriving = Math.min(current + visible - 1, items.length - 1);
+    // the delivery lands on the CENTER card of the visible strip — the
+    // one the eye is on
+    const arriving = Math.min(
+      current + Math.floor(visible / 2),
+      items.length - 1,
+    );
     arrivingId.value = items[arriving]?.id ?? '';
     clearTimeout(arrivingTimer);
     arrivingTimer = setTimeout(() => (arrivingId.value = ''), 2600);
@@ -166,7 +169,7 @@ onBeforeUnmount(() => {
 .drip-card {
   display: block;
   width: clamp(230px, 24vw, 320px);
-  padding: 6px 18px 4px 0; /* the right padding IS the gap — uniform card widths */
+  padding: 8px 18px 4px 0; /* the right padding IS the gap — uniform card widths */
   text-decoration: none !important;
   cursor: pointer;
 }
@@ -176,22 +179,32 @@ onBeforeUnmount(() => {
   display: block;
   overflow: hidden;
   border-radius: 12px;
-  /* ONE border, no inner padding, no backing panel — the banner is the card */
-  border: 1px solid var(--vp-c-divider);
-  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+  /* no stray vertical gaps between border and banner: the theme's vp-doc
+     image margins and inline line-height would read as double borders */
+  line-height: 0;
+  /* NO border on the wrapper, ever — the hover ring lives on the image
+     itself (outline), so there is exactly one edge and one radius */
+  transition: transform 0.25s, box-shadow 0.25s;
 }
 .drip-card:hover .drip-card__frame {
   transform: translateY(-3px);
-  border-color: var(--ivue-link-accent);
-  box-shadow: 0 18px 44px -20px var(--ivue-link-glow);
+  box-shadow: 0 18px 44px -18px var(--ivue-link-glow);
+}
+.drip-card:hover .drip-card__image {
+  /* the highlight is ON the image: an inset outline hugs the banner's own
+     edge at the banner's own radius — nothing to double */
+  outline: 1.5px solid var(--ivue-link-accent);
+  outline-offset: -1.5px;
 }
 
 .drip-card__image {
   display: block;
   width: 100%;
   height: auto;
+  margin: 0 !important; /* vp-doc gives images vertical margins — not here */
   aspect-ratio: 1200 / 630;
   object-fit: cover;
+  border-radius: 12px; /* the outline follows this radius on hover */
 }
 
 /* the delivery: the arriving card starts as a sealed envelope face that
@@ -216,12 +229,12 @@ onBeforeUnmount(() => {
 
 .drip-card__delivered {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
+  right: 8px;
+  top: 8px;
   z-index: 2;
-  padding: 4px 11px;
+  padding: 3px 9px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 10.5px;
   font-weight: 650;
   letter-spacing: 0.02em;
   color: #06251d;

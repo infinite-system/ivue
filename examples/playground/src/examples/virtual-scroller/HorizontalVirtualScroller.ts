@@ -12,13 +12,26 @@ import { VirtualScroller } from './VirtualScroller';
  * seek/converge loop — the hand-tuned 80% — run here unchanged, just over
  * widths instead of heights.
  *
- * Gestures: 'both' lets the dominant axis win, so a mouse wheel advances
- * the strip while a trackpad's real horizontal swipe does too. Pair it
- * with `snap-to-items` for the step feel: scroll, stop; scroll, stop.
+ * Gestures are deltaX-only: shift+wheel and horizontal trackpad swipes
+ * drive the strip; a plain vertical wheel scrolls the page straight
+ * through. Pair with `snap-to-items` for the step feel: scroll, stop.
  */
 class $HorizontalVirtualScroller<T extends BaseItem> extends (VirtualScroller.$Class as typeof VirtualScroller.$Class) <T> {
+  protected get lenisOrientation(): 'vertical' | 'horizontal' {
+    // lenis writes the wheel-path transform itself — translateX only when
+    // it knows the axis
+    return 'horizontal';
+  }
+
+  protected get lenisIgnoreNativeScroll(): boolean {
+    return true;
+  }
+
   protected get lenisGestureOrientation(): 'vertical' | 'horizontal' | 'both' {
-    return 'both';
+    // deltaX ONLY: a plain vertical wheel is the page's (lenis refuses it
+    // before preventDefault, so the page scrolls straight through); the
+    // strip answers to shift+wheel and real horizontal trackpad swipes.
+    return 'horizontal';
   }
 
   protected offsetSize(element: HTMLElement | null | undefined): number {
@@ -38,11 +51,7 @@ class $HorizontalVirtualScroller<T extends BaseItem> extends (VirtualScroller.$C
   }
 
   protected axisDelta(data: { deltaX: number; deltaY: number }): number {
-    // dominant axis: a trackpad's sideways swipe drives directly; a mouse
-    // wheel's vertical delta advances the strip while the pointer is on it
-    return Math.abs(data.deltaX) > Math.abs(data.deltaY)
-      ? data.deltaX
-      : data.deltaY;
+    return data.deltaX;
   }
 
   get containerHeight() {
