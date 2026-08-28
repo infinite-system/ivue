@@ -31,6 +31,7 @@ defineExpose(marquee as TextMarquee.Instance);
       :padding-quantity="6"
       auto-play
       :auto-play-delay="600"
+      scrollbar
     >
       <template #item="{ item }">
         <span class="text-marquee__chunk">{{ item.body }}</span>
@@ -48,5 +49,13 @@ defineExpose(marquee as TextMarquee.Instance);
 .text-marquee__chunk {
   display: block;
   white-space: pre;
+}
+/* cross-axis room below the line for the built-in track — padding-bottom
+   is off the scroll axis, so the extent math never sees it */
+.text-marquee .virtual-scroller--x {
+  padding-bottom: 18px;
+}
+.text-marquee .virtual-scroller__track--x {
+  bottom: 0;
 }
 </style>

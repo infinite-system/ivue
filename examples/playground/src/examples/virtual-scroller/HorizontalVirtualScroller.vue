@@ -20,6 +20,8 @@ const virtualScroller = new HorizontalVirtualScroller.Class<T>(props, emit);
 
 // THE STATE DESTRUCTURE — every Ref/Computed the template touches, grouped.
 const {
+  // state refs
+  scrollbarDragging,
   // computed refs
   visibleItems,
   // element refs
@@ -51,12 +53,29 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
       </div>
       <div :style="{ width: virtualScroller.trailingSpacerPx, flex: '0 0 auto' }"></div>
     </div>
+    <div
+      v-if="virtualScroller.scrollbarVisible"
+      class="virtual-scroller__track virtual-scroller__track--x"
+      @pointerdown="virtualScroller.onTrackPointerDown"
+      @pointermove="virtualScroller.onTrackPointerMove"
+      @pointerup="virtualScroller.onTrackPointerUp"
+      @pointercancel="virtualScroller.onTrackPointerUp"
+    >
+      <div
+        class="virtual-scroller__thumb virtual-scroller__thumb--x"
+        :class="{ dragging: scrollbarDragging }"
+        :style="virtualScroller.scrollbarThumbStyle"
+      ></div>
+    </div>
   </div>
 </template>
 <style>
 .virtual-scroller--x {
   height: auto;
   overflow: hidden;
+  /* own positioning context — the absolute track must not depend on the
+     vertical stylesheet's .virtual-scroller rules being loaded */
+  position: relative;
   /* horizontal gestures belong to the strip; vertical stays the page's */
   touch-action: pan-y;
 }
@@ -74,5 +93,47 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
 .virtual-scroller__item--x {
   display: block;
   flex: 0 0 auto;
+}
+/* The built-in track, rotated: it hugs the bottom edge and the thumb
+   travels left→right. SELF-CONTAINED on purpose — this component loads
+   without the vertical scroller's stylesheet (the home strip) — and the
+   selectors double up (.track.track--x) so they out-specify the vertical
+   base rules when both stylesheets ARE on the page (the docs demos). */
+.virtual-scroller__track.virtual-scroller__track--x {
+  position: absolute;
+  top: auto;
+  left: 10px;
+  right: 10px;
+  bottom: 4px;
+  width: auto;
+  height: 12px;
+  cursor: pointer;
+  touch-action: none;
+  z-index: 1;
+}
+.virtual-scroller__track.virtual-scroller__track--x::before {
+  content: '';
+  position: absolute;
+  inset: 4px 0;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.18);
+}
+.virtual-scroller__thumb.virtual-scroller__thumb--x {
+  position: absolute;
+  left: auto;
+  right: auto;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.45);
+  /* eased relocation, sideways: left/width glide instead of top/height */
+  transition: background 0.15s ease, left 0.2s ease-out, width 0.2s ease-out;
+}
+.virtual-scroller__thumb.virtual-scroller__thumb--x.dragging {
+  transition: background 0.15s ease;
+}
+.virtual-scroller__track--x:hover .virtual-scroller__thumb--x,
+.virtual-scroller__thumb.virtual-scroller__thumb--x.dragging {
+  background: rgba(148, 163, 184, 0.75);
 }
 </style>

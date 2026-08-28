@@ -204,6 +204,16 @@ class $VirtualScroller<T extends BaseItem> {
     return data.deltaY;
   }
 
+  /** Scrollbar-thumb style properties along the main axis: [size, offset]. */
+  protected get axisThumbProps(): readonly [string, string] {
+    return ['height', 'top'];
+  }
+
+  /** 0..1 position of a pointer along the scrollbar track's main axis. */
+  protected trackPointerFraction(event: PointerEvent, rect: DOMRect): number {
+    return (event.clientY - rect.top) / rect.height;
+  }
+
   /* Container size */
 
   protected elementSize: ReturnType<typeof useElementSize>;
@@ -976,6 +986,56 @@ class $VirtualScroller<T extends BaseItem> {
     if (lastIndex < 0) return;
     const clamped = Math.min(Math.max(fraction, 0), 1);
     this.scrollToIndex(Math.round(clamped * lastIndex), undefined, false);
+  }
+
+  /* Scrollbar drag (the built-in track) */
+
+  /** True while a pointer owns the thumb — the thumb's easing turns off so
+   *  it sticks to the finger (see the .dragging CSS). */
+  get scrollbarDragging() {
+    return ref(false);
+  }
+
+  /** The track renders only when asked for AND there is travel to show. */
+  get scrollbarVisible() {
+    return this.props.scrollbar && this.scrollbarThumbFraction > 0;
+  }
+
+  /** The thumb's size and offset along the track — main-axis property
+   *  names come from the axis seam, so the same geometry renders as
+   *  height/top on the vertical track and width/left on the horizontal. */
+  get scrollbarThumbStyle() {
+    const [sizeProp, offsetProp] = this.axisThumbProps;
+    return {
+      [sizeProp]: this.scrollbarThumbFraction * 100 + '%',
+      [offsetProp]:
+        this.scrollbarProgress * (1 - this.scrollbarThumbFraction) * 100 + '%'
+    };
+  }
+
+  onTrackPointerDown(event: PointerEvent) {
+    this.stopAutoPlay();
+    this.scrollbarDragging.value = true;
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    this.seekToPointer(event);
+  }
+
+  onTrackPointerMove(event: PointerEvent) {
+    if (this.scrollbarDragging.value) this.seekToPointer(event);
+  }
+
+  onTrackPointerUp() {
+    this.scrollbarDragging.value = false;
+  }
+
+  seekToPointer(event: PointerEvent) {
+    const track = (event.currentTarget as HTMLElement).closest(
+      '.virtual-scroller__track'
+    ) as HTMLElement;
+    if (!track) return;
+    this.seekToFraction(
+      this.trackPointerFraction(event, track.getBoundingClientRect())
+    );
   }
 
   /** Stop handle for the latest scrollToIndex re-apply watcher (see below). */

@@ -1,6 +1,4 @@
 <script lang="ts" setup generic="T extends BaseItem">
-import { ref } from 'vue';
-
 import { VirtualScroller } from './VirtualScroller';
 import type { BaseItem } from './VirtualScroller.types';
 import VirtualScrollerItem from './VirtualScrollerItem.vue';
@@ -22,6 +20,8 @@ const virtualScroller = new VirtualScroller.Class<T>(props, emit);
 // THE STATE DESTRUCTURE — every Ref/Computed the template touches, grouped.
 // Methods and plain getters stay DOTTED on the instance.
 const {
+  // state refs
+  scrollbarDragging,
   // computed refs
   visibleItems,
   // element refs
@@ -31,34 +31,6 @@ const {
 } = virtualScroller;
 
 defineExpose(virtualScroller as VirtualScroller.Instance<T>);
-
-// Scrollbar drag: local gesture state only — geometry and seeking live on
-// the class (scrollbarThumbFraction / scrollbarProgress / seekToFraction).
-const scrollbarDragging = ref(false);
-
-function seekToPointer(event: PointerEvent) {
-  const track = (event.currentTarget as HTMLElement).closest(
-    '.virtual-scroller__track'
-  ) as HTMLElement;
-  if (!track) return;
-  const rect = track.getBoundingClientRect();
-  virtualScroller.seekToFraction((event.clientY - rect.top) / rect.height);
-}
-
-function onTrackPointerDown(event: PointerEvent) {
-  virtualScroller.stopAutoPlay();
-  scrollbarDragging.value = true;
-  (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-  seekToPointer(event);
-}
-
-function onTrackPointerMove(event: PointerEvent) {
-  if (scrollbarDragging.value) seekToPointer(event);
-}
-
-function onTrackPointerUp() {
-  scrollbarDragging.value = false;
-}
 </script>
 <template>
   <div ref="scrollElement" class="virtual-scroller" @scroll="virtualScroller.onScroll">
@@ -86,24 +58,17 @@ function onTrackPointerUp() {
       <div :style="{ height: virtualScroller.trailingSpacerPx }"></div>
     </div>
     <div
-      v-if="props.scrollbar && virtualScroller.scrollbarThumbFraction > 0"
+      v-if="virtualScroller.scrollbarVisible"
       class="virtual-scroller__track"
-      @pointerdown="onTrackPointerDown"
-      @pointermove="onTrackPointerMove"
-      @pointerup="onTrackPointerUp"
-      @pointercancel="onTrackPointerUp"
+      @pointerdown="virtualScroller.onTrackPointerDown"
+      @pointermove="virtualScroller.onTrackPointerMove"
+      @pointerup="virtualScroller.onTrackPointerUp"
+      @pointercancel="virtualScroller.onTrackPointerUp"
     >
       <div
         class="virtual-scroller__thumb"
         :class="{ dragging: scrollbarDragging }"
-        :style="{
-          height: virtualScroller.scrollbarThumbFraction * 100 + '%',
-          top:
-            virtualScroller.scrollbarProgress *
-              (1 - virtualScroller.scrollbarThumbFraction) *
-              100 +
-            '%'
-        }"
+        :style="virtualScroller.scrollbarThumbStyle"
       ></div>
     </div>
   </div>

@@ -60,6 +60,14 @@ class $HorizontalVirtualScroller<T extends BaseItem> extends (VirtualScroller.$C
     return data.deltaX;
   }
 
+  protected get axisThumbProps(): readonly [string, string] {
+    return ['width', 'left'];
+  }
+
+  protected trackPointerFraction(event: PointerEvent, rect: DOMRect): number {
+    return (event.clientX - rect.left) / rect.width;
+  }
+
   get containerSize() {
     return this.elementSize.width;
   }
