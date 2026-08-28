@@ -99,7 +99,9 @@ This is the props-side mirror of `class $ContactField extends
 ChooseField.$Class` — the class hierarchy and the props hierarchy extend
 together. See it live in the
 [Advanced Select Field example](/examples/choose-field), where
-`ContactField` is exactly this wrapper.
+`ContactField.vue` constructs the subclass instance and hands it to the
+base SFC through the `runner` prop: one object drives the base's
+behavior and the wrapper's decoration.
 
 `propsWithDefaults` is **non-mutating** by design: spreading a types map
 shares the inner `{ type }` descriptor objects, so an in-place

@@ -15,7 +15,17 @@ import { ChooseField } from './ChooseField';
 const props = defineProps(ChooseField.props);
 const emit = defineEmits(ChooseField.emits);
 
-const choose = new ChooseField.Class(props, emit);
+// The runner prop swaps the driving object (ported v1 mechanism): a
+// wrapping component passes its OWN pre-built subclass INSTANCE — carrying
+// the wrapper's props and emit — and this base renders through it; a
+// CLASS runner (or none) is constructed here instead.
+const choose =
+  typeof props.runner === 'object' && props.runner !== null
+    ? (props.runner as ChooseField.Instance)
+    : new ((props.runner ?? ChooseField.Class) as typeof ChooseField.Class)(
+        props,
+        emit,
+      );
 
 const {
   // state refs

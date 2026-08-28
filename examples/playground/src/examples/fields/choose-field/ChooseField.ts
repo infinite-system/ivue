@@ -649,6 +649,7 @@ class $ChooseField {
   }
 }
 
+
 export namespace ChooseField {
   /* Identity */
 

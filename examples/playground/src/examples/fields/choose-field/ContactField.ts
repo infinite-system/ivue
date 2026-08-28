@@ -1,4 +1,5 @@
 import { Reactive } from '../../../ivue';
+import { ChooseField } from './ChooseField';
 import {
   contactFieldEmits,
   contactFieldParams,
@@ -10,19 +11,22 @@ import {
 } from './ContactFieldProps';
 
 /**
- * ContactField's model — ChooseField preconfigured for the '/contact'
- * endpoint, with avatar-decorated options and chips in two display
- * modes (full / compact). The component WRAPS ChooseField.vue rather
- * than subclassing the class: its whole job is passing the surface
- * through and decorating the option/chip slots, so the model is the
- * named vocabulary of that decoration — every size, class and
- * condition the template needs, none of it inline.
+ * ContactField — ChooseField SUBCLASSED for the '/contact' endpoint:
+ * avatar-decorated options and chips in two display modes (full /
+ * compact). The class extends the base the way the contract extends the
+ * base's contract (ContactFieldProps.ts spreads ChooseFieldProps.ts);
+ * ContactField.vue constructs THIS instance with its own props and emit
+ * and hands it to the base SFC through the `runner` prop (the ported v1
+ * mechanism) — every inherited behavior (fetch, filter, variants,
+ * chips) and every member below live on ONE object, driving both
+ * templates.
  */
-class $ContactField {
-  constructor(
-    public props: ContactFieldProps,
-    public emit: ContactFieldEmits
-  ) {}
+class $ContactField extends ChooseField.$Class {
+  // Widen the inherited surfaces to the contact contract — the ported v1
+  // idiom (`declare` emits nothing at runtime; the base constructor
+  // assigned these).
+  declare props: ContactField.Props;
+  declare emit: ContactField.Emits;
 
   /* Props */
 
@@ -30,13 +34,7 @@ class $ContactField {
     return this.props.compact;
   }
 
-  /* Derived — the wrapper's vocabulary, named */
-
-  /** Everything except our own `compact` passes straight into ChooseField. */
-  get chooseProps() {
-    const { compact, modelValue, ...passthrough } = this.props;
-    return passthrough;
-  }
+  /* Derived — the contact decoration vocabulary, named */
 
   get rootClass() {
     return this.compact ? 'contact-field--compact' : 'contact-field--full';
@@ -57,16 +55,6 @@ class $ContactField {
   /** Full mode shows the email line under the name — when there is one. */
   showEmail(option: { email?: string } | undefined): boolean {
     return !this.compact && !!option?.email;
-  }
-
-  /* Methods — emit forwarding from the wrapped ChooseField */
-
-  forwardModelValue(value: any) {
-    this.emit('update:model-value', value);
-  }
-
-  forwardRemove(details: { index: number; value: any }) {
-    this.emit('remove', details);
   }
 }
 

@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-// ContactField — ChooseField preconfigured for the '/contact' endpoint,
+// ContactField — ChooseField SUBCLASSED for the '/contact' endpoint,
 // with avatar-decorated options and chips in two display modes:
 //   full (default): avatar + name + email in options AND selected chips
 //   compact:        smaller avatar, name only, denser rows
-// Pure wiring: the model (sizes, classes, passthrough, emit forwarding)
-// lives in ContactField.ts.
+// The wrapper constructs the SUBCLASS instance with its own props and
+// emit, then hands it to the base SFC via `runner` (ported v1 mechanism):
+// one object drives the base's behavior AND this template's decoration.
 import { QChip, QItem, QItemLabel, QItemSection } from 'quasar';
 
 import ChooseField from './ChooseField.vue';
@@ -22,10 +23,8 @@ defineExpose(field as ContactField.Instance);
 <template>
   <ChooseField
     :class="field.rootClass"
-    v-bind="field.chooseProps"
     :model-value="props.modelValue"
-    @update:model-value="field.forwardModelValue"
-    @remove="field.forwardRemove"
+    :runner="field"
   >
     <!-- CONTACT OPTION: avatar + name (+ email in full mode) -->
     <template #option="scope">
