@@ -150,7 +150,7 @@ number was a **harness artifact, not library behavior** — when a number
   way. Adding an example = update both, in the same slot.
 
 - **Everything in an example is written in ivue — including the bootstrap.**
-  Route SFCs, demo wrappers, the app shell that displays an example: all of
+  Route SFCs, demo templates, the app shell that displays an example: all of
   it uses the class + namespace + state-destructure standard, never plain
   script-setup ref soup. The examples ARE the advertisement; a wrapper
   written the "ordinary" way undercuts the claim on the page.
