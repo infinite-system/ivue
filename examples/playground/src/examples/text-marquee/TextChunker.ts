@@ -1,3 +1,5 @@
+import { Static } from '../../Static';
+
 /**
  * Pure text machinery — it knows NOTHING about scrolling. It turns any
  * text into whitespace-safe chunks a virtual scroller can treat as items,
@@ -6,9 +8,9 @@
  * the scroller pure: the scroller speaks items, sizes and pixels; the
  * chunker speaks text — TextMarquee is the only place the two meet.
  *
- * Stateless by design — every member is static, so the namespace
- * publishes the plain form (no `Reactive()`: there is nothing reactive
- * to transform).
+ * Stateless by design — every member is static, so the class anchors
+ * with `Static()` and the namespace publishes the plain form (no
+ * `Reactive()`: there is nothing reactive to transform).
  */
 class $TextChunker {
   /** Collapse every whitespace run (newlines, tabs, double spaces) into a
@@ -97,6 +99,6 @@ class $TextChunker {
 }
 
 export namespace TextChunker {
-  export const $Class = $TextChunker; // raw — children `extends` this
+  export const $Class = Static($TextChunker); // statics anchored — children `extends` this
   export let Class = $Class; // plain form — a pure static utility
 }

@@ -3,7 +3,7 @@ import { Reactive } from '../../ivue';
 import { Member } from './Member';
 import { Project } from './Project';
 import { Task } from './Task';
-import { activitySeeds, memberSeeds, projectSeeds, taskSeeds } from './seed';
+import { Seeds } from './seed';
 import {
   STATUS_ORDER,
   type ActivityEntry,
@@ -12,14 +12,14 @@ import {
   type WorkspaceView,
 } from './types';
 
-const dateAtOffset = (offset: number) => {
-  const date = new Date();
-  date.setHours(12, 0, 0, 0);
-  date.setDate(date.getDate() + offset);
-  return date.toISOString().slice(0, 10);
-};
-
 class $Workspace {
+  private static dateAtOffset(offset: number) {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() + offset);
+    return date.toISOString().slice(0, 10);
+  }
+
   constructor() {
     this.reset();
   }
@@ -215,7 +215,7 @@ class $Workspace {
         estimateHours: 3,
         tags: ['new'],
       },
-      dateAtOffset(7),
+      $Workspace.dateAtOffset(7),
     );
     this.tasks.value = [task, ...this.tasks.value];
     this.recordActivity('you', '+', `created ${trimmed}`);
@@ -242,12 +242,12 @@ class $Workspace {
   }
 
   reset() {
-    this.projects.value = projectSeeds.map((seed) => new Project.Class(seed));
-    this.members.value = memberSeeds.map((seed) => new Member.Class(seed));
-    this.tasks.value = taskSeeds.map(
-      (seed) => new Task.Class(this, seed, dateAtOffset(seed.dueOffset)),
+    this.projects.value = Seeds.projects.map((seed) => new Project.Class(seed));
+    this.members.value = Seeds.members.map((seed) => new Member.Class(seed));
+    this.tasks.value = Seeds.tasks.map(
+      (seed) => new Task.Class(this, seed, $Workspace.dateAtOffset(seed.dueOffset)),
     );
-    this.activities.value = activitySeeds.map((entry, index) => ({
+    this.activities.value = Seeds.activities.map((entry, index) => ({
       ...entry,
       id: index + 1,
     }));
@@ -266,10 +266,14 @@ export namespace Workspace {
   export let Class = Reactive($Class);
   export type Model = InstanceType<typeof Class>;
   export type Instance = typeof Class.Instance;
-}
 
-let workspace: Workspace.Model | undefined;
+  // The store pattern, held by the seam: the backing singleton is a
+  // NON-EXPORTED namespace member — invisible to importers, no module
+  // residue.
+  let singleton: Model | undefined;
 
-export function useWorkspace() {
-  return (workspace ??= new Workspace.Class());
+  /** The app-wide workspace singleton, created on first use. */
+  export function use() {
+    return (singleton ??= new Class());
+  }
 }

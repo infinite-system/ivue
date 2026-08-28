@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import { Reactive } from '../../ivue';
 import type { Task } from './Task';
 import type { TaskStatus } from './types';
-import { useWorkspace } from './Workspace';
+import { Workspace } from './Workspace';
 
 class $TaskBoard {
   get draggingTaskId() {
@@ -14,7 +14,7 @@ class $TaskBoard {
   }
 
   private get $workspace() {
-    return useWorkspace();
+    return Workspace.use();
   }
 
   tasksByStatus(status: TaskStatus) {

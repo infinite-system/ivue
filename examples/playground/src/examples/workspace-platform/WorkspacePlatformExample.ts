@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { Reactive } from '../../ivue';
-import { useWorkspace } from './Workspace';
+import { Workspace } from './Workspace';
 
 class $WorkspacePlatformExample {
   get creatingTask() {
@@ -12,7 +12,7 @@ class $WorkspacePlatformExample {
   }
 
   private get $workspace() {
-    return useWorkspace();
+    return Workspace.use();
   }
 
   get workspace() {

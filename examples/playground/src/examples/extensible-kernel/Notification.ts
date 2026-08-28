@@ -3,7 +3,7 @@
 // no matter which vendor supplies the plugin.
 import { ref } from 'vue';
 import { Reactive } from '../../ivue';
-import { kernel } from './kernel';
+import { Kernel } from './Kernel';
 
 export class $Notification {
   constructor(
@@ -63,4 +63,4 @@ export namespace Notification {
   export type Instance = typeof Class.Instance; // expose & reactive() interop
 }
 
-kernel.defineClass('core/Notification', Notification);
+Kernel.Class.defineClass('core/Notification', Notification);

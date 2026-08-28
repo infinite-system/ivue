@@ -21,7 +21,7 @@ toast's `SHOW` event into the event stream.
   <ExampleExtensibleKernel />
 </ClientOnly>
 
-<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fextensible-kernel%2Fkernel.ts&path=%2F%23%2Fextensible-kernel">Open in StackBlitz ⚡</a>
+<a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fextensible-kernel%2FKernel.ts&path=%2F%23%2Fextensible-kernel">Open in StackBlitz ⚡</a>
 
 ## How it works
 
@@ -84,12 +84,12 @@ the affected runtime state.
 
 This is the complete registry:
 
-<<< ../../examples/playground/src/examples/extensible-kernel/kernel.ts
+<<< ../../examples/playground/src/examples/extensible-kernel/Kernel.ts
 
 ## Opting in with an owner key
 
 An extensible class is an ordinary ivue class with two additions. `Class`
-is a `let` binding that the kernel can rewrite, and `kernel.defineClass()`
+is a `let` binding that the kernel can rewrite, and `Kernel.Class.defineClass()`
 associates the namespace with its owner key. Call sites keep the ordinary
 ivue forms: `new Notification.Class(...)` and
 `extends Notification.$Class`.
@@ -126,7 +126,7 @@ JavaScript's dynamic `super` lookup then follows the sealed chain.
   records each `show()` call in the event stream.
 - **The child follows the base class.** `ErrorNotification` receives both
   plugins through the re-parented inheritance chain.
-- **`kernel.getClassGraph()` exposes metadata.** The panel displays the graph
+- **`Kernel.Class.getClassGraph()` exposes metadata.** The panel displays the graph
   discovered from inheritance. Runtime construction never consults it.
 - **A toggle reconstructs visible instances.** Production registers once,
   seals once, and restarts after a plugin change, like reloading an editor

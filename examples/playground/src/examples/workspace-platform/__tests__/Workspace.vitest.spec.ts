@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TaskBoard } from '../TaskBoard';
 import { TaskDetails } from '../TaskDetails';
 import { TaskList } from '../TaskList';
-import { Workspace, useWorkspace } from '../Workspace';
+import { Workspace } from '../Workspace';
 import { WorkspacePlatformExample } from '../WorkspacePlatformExample';
 
 function changeEvent(value: string) {
@@ -76,7 +76,7 @@ describe('Workspace platform model', () => {
 
 describe('Workspace template models', () => {
   it('owns list actions in TaskList.Class', () => {
-    const workspace = useWorkspace();
+    const workspace = Workspace.use();
     workspace.reset();
     const list = new TaskList.Class();
     const task = list.tasksByStatus('backlog')[0];
@@ -88,7 +88,7 @@ describe('Workspace template models', () => {
   });
 
   it('owns drag state and transitions in TaskBoard.Class', () => {
-    const workspace = useWorkspace();
+    const workspace = Workspace.use();
     workspace.reset();
     const board = new TaskBoard.Class();
     const task = board.tasksByStatus('backlog')[0];
@@ -105,7 +105,7 @@ describe('Workspace template models', () => {
   });
 
   it('owns detail form state and event normalization in TaskDetails.Class', () => {
-    const workspace = useWorkspace();
+    const workspace = Workspace.use();
     workspace.reset();
     const task = workspace.tasks.value[0];
     const details = new TaskDetails.Class({ task });

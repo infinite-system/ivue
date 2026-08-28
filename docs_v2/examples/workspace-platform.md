@@ -50,7 +50,7 @@ lookups and activity:
 ```ts
 class $Task {
   constructor(
-    readonly workspace: TaskOwner,
+    readonly workspace: Task.Owner,
     seed: TaskSeed,
     dueDate: string,
   ) {}

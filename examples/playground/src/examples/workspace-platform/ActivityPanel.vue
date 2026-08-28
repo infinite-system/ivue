@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import MemberAvatar from './MemberAvatar.vue';
-import { useWorkspace } from './Workspace';
+import { Workspace } from './Workspace';
 
-const workspace = useWorkspace();
+const workspace = Workspace.use();
 </script>
 
 <template>

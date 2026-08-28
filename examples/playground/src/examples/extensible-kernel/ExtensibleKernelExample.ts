@@ -4,7 +4,7 @@
 import { onUnmounted, ref, shallowRef } from 'vue';
 import { Reactive } from '../../ivue';
 import { ErrorNotification } from './ErrorNotification';
-import { kernel } from './kernel';
+import { Kernel } from './Kernel';
 import { Notification } from './Notification';
 import {
   activityPlugin,
@@ -107,15 +107,15 @@ class $ExtensibleKernelExample {
   /** Register, seal, and reconstruct: the whole boot sequence. */
   reboot() {
     const visibleNotifications = this.visibleNotifications;
-    kernel.reset();
+    Kernel.Class.reset();
     this.activityLog.value = [];
     for (const plugin of this.plugins) {
       if (this.isPluginActive(plugin.id)) {
-        kernel.registerClass('core/Notification', plugin.make, plugin.label);
+        Kernel.Class.registerClass('core/Notification', plugin.make, plugin.label);
       }
     }
-    kernel.sealClassGraph();
-    this.graph.value = kernel.getClassGraph();
+    Kernel.Class.sealClassGraph();
+    this.graph.value = Kernel.Class.getClassGraph();
     this.notifications.value = visibleNotifications.map((entry) =>
       this.buildNotification(entry.kind, entry.notification.message, entry.id),
     );

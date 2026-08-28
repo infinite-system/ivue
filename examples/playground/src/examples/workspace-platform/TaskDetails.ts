@@ -2,21 +2,17 @@ import { ref } from 'vue';
 import { Reactive } from '../../ivue';
 import type { Task } from './Task';
 import type { TaskPriority, TaskStatus } from './types';
-import { useWorkspace } from './Workspace';
-
-export interface TaskDetailsProps {
-  task: Task.Model;
-}
+import { Workspace } from './Workspace';
 
 class $TaskDetails {
-  constructor(readonly props: Readonly<TaskDetailsProps>) {}
+  constructor(readonly props: Readonly<TaskDetails.Props>) {}
 
   get comment() {
     return ref('');
   }
 
   private get $workspace() {
-    return useWorkspace();
+    return Workspace.use();
   }
 
   get task() {
@@ -74,4 +70,10 @@ export namespace TaskDetails {
   export let Class = Reactive($Class);
   export type Model = InstanceType<typeof Class>;
   export type Instance = typeof Class.Instance;
+
+  /* Types */
+
+  export interface Props {
+    task: Task.Model;
+  }
 }

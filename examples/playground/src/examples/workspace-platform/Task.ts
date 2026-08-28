@@ -12,18 +12,12 @@ import {
   type TaskStatus,
 } from './types';
 
-export interface TaskOwner {
-  memberById(memberId: string): Member.Model | undefined;
-  projectById(projectId: string): Project.Model | undefined;
-  recordActivity(actorId: string, icon: string, text: string): void;
-}
-
 class $Task {
   readonly id: string;
   readonly projectId: string;
-  readonly workspace: TaskOwner;
+  readonly workspace: Task.Owner;
 
-  constructor(workspace: TaskOwner, seed: TaskSeed, dueDate: string) {
+  constructor(workspace: Task.Owner, seed: TaskSeed, dueDate: string) {
     this.workspace = workspace;
     this.id = seed.id;
     this.projectId = seed.projectId;
@@ -191,4 +185,13 @@ export namespace Task {
   export let Class = Reactive($Class);
   export type Model = InstanceType<typeof Class>;
   export type Instance = typeof Class.Instance;
+
+  /* Types */
+
+  /** What a task needs from its owner — the workspace, seen narrowly. */
+  export interface Owner {
+    memberById(memberId: string): Member.Model | undefined;
+    projectById(projectId: string): Project.Model | undefined;
+    recordActivity(actorId: string, icon: string, text: string): void;
+  }
 }
