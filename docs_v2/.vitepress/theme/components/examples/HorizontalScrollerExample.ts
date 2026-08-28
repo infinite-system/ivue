@@ -4,7 +4,7 @@ import type { HorizontalVirtualScroller } from '../../../../../examples/playgrou
 import type { BaseItem } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.types';
 
 /**
- * The docs demo model for the horizontal 1M example — itself written to
+ * The docs example model for the horizontal 1M example — itself written to
  * the standard the page teaches: one class, one namespace carrying the
  * class plus every const the module owns (non-exported members stay
  * private to the file), nothing at module level beside imports.
