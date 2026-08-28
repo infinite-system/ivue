@@ -1285,6 +1285,9 @@ class $VirtualScroller<T extends BaseItem> {
   play() {
     if (this.virtualScrolling || this.lenis.isScrolling) {
       clearTimeout(this.autoscrollTimeout);
+      // Forward inertia decaying through cruise speed hands off to the
+      // creep RIGHT THERE — the glide never dips below cruise.
+      if (this.adoptDecayedInertia()) return;
 
       return (this.autoscrollTimeout = setTimeout(this.play, 3));
     }
@@ -1297,6 +1300,39 @@ class $VirtualScroller<T extends BaseItem> {
     cancelAnimationFrame(this.creepFrame);
     this.lastCreepTs = null;
     this.creepFrame = requestAnimationFrame(this.creepStep);
+  }
+
+  /**
+   * The wheel-to-creep handoff: while a FORWARD flick's inertia decays,
+   * the moment its speed falls to the creep's cruise speed the creep
+   * adopts the scroll right there — a scrub may accelerate the glide
+   * above cruise, but it never drags it below. Without this, play()
+   * waits for the lenis lerp to decay all the way to zero before
+   * resuming: decelerate, stall, accelerate — felt as a stutter after
+   * every shift+wheel scrub. A backward scrub is the reader taking over
+   * (stopAutoPlay already handled it), so no handoff there. Snap-mode
+   * consumers never arm autoplay, so this path never runs for them.
+   */
+  private adoptDecayedInertia(): boolean {
+    const lenis = this.lenis;
+    // While input is still arriving, the reader owns the scroll — only a
+    // free-decaying smooth lerp is a candidate.
+    if (!lenis || this.virtualScrolling) return false;
+    if (lenis.isScrolling !== 'smooth') return false;
+    if (this.scrollDirection.value !== 'down') return false;
+    // lenis.velocity is px per rAF frame; at ~60fps that is px per 16.7ms.
+    const pxPerMs = lenis.velocity / 16.7;
+    if (pxPerMs <= 0 || pxPerMs > 1 / this.creepMsPerPx) return false;
+    // Adopt the CURRENT animated position (not the farther wheel target):
+    // the lerp dies where it is and the creep continues from that exact
+    // pixel at cruise speed — velocity is continuous through the handoff.
+    lenis.adoptExternalScroll(lenis.animatedScroll);
+    cancelAnimationFrame(this.frame);
+    this.frame = null;
+    cancelAnimationFrame(this.creepFrame);
+    this.lastCreepTs = null;
+    this.creepFrame = requestAnimationFrame(this.creepStep);
+    return true;
   }
 
   /**
