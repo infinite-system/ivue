@@ -18,12 +18,12 @@ const emit = defineEmits<VirtualScrollItemEmits>();
 const item = ref<HTMLElement | null>(null);
 
 /**
- * ONE-SHOT height capture — deliberately not a ResizeObserver. Items render
- * in normal flow, so the browser positions them at their real height with no
- * bookkeeping; the parent only needs heights for its spacer/estimate math.
+ * ONE-SHOT size capture — deliberately not a ResizeObserver. Items render
+ * in normal flow, so the browser positions them at their real size with no
+ * bookkeeping; the parent only needs sizes for its spacer/estimate math.
  * Capture once on mount (seeds the estimate the moment the item enters the
  * window — keeps window-local index→position math as accurate as the old
- * always-observed map) and once right before unmount (the final height — the
+ * always-observed map) and once right before unmount (the final size — the
  * only one that matters once the item leaves the window). Continuous
  * observation is what caused measurable jitter at 100k items: bursts of
  * resize callbacks during scroll, each invalidating geometry.
@@ -33,7 +33,7 @@ const capture = () => {
   if (!el) return;
   // Heights are recorded in LAYOUT px: an ancestor transform scale (the
   // post card scales to fit the window) shrinks every rect readout, and a
-  // height map built from scaled values diverges from the real flow by the
+  // size map built from scaled values diverges from the real flow by the
   // scale factor — landing every index-targeted jump short. Derive the
   // current scale from the parent stack's rect-to-layout ratio and divide
   // it out.

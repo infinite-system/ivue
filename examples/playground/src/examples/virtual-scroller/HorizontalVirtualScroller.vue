@@ -71,7 +71,7 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
 </template>
 <style>
 .virtual-scroller--x {
-  height: auto;
+  size: auto;
   overflow: hidden;
   /* horizontal gestures belong to the strip; vertical stays the page's */
   touch-action: pan-y;

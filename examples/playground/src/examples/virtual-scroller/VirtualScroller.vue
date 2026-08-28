@@ -125,28 +125,28 @@ function onTrackPointerUp() {
 </script>
 <template>
   <div ref="scrollElement" class="virtual-scroller" @scroll="virtualScroller.onScroll">
-    <!-- Content-sized on purpose — NO explicit height. The inner is the
+    <!-- Content-sized on purpose — NO explicit size. The inner is the
          composited layer; sized to the full virtual content (~10M px on a
          100k-item list) it carried visible compositor heaviness. The lead
          spacer is render-rebased and the tail is capped, so the layer stays
          a few hundred k px regardless of list size; the scroll range comes
-         from the COMPUTED height via lenis.virtualLimit, not from the DOM. -->
+         from the COMPUTED size via lenis.virtualLimit, not from the DOM. -->
     <div ref="scrollElementInner" class="virtual-scroller-inner">
       <!-- The whole leading/trailing content, reduced to two empty divs.
-           Rendered items flow normally between them at their real heights. -->
-      <div :style="{ height: virtualScroller.leadingSpacerPx }"></div>
+           Rendered items flow normally between them at their real sizes. -->
+      <div :style="{ size: virtualScroller.leadingSpacerPx }"></div>
       <div ref="itemsWrapperElement" :style="{ width: '100%' }">
         <VirtualScrollerItem
           v-for="element in visibleItems"
           :key="element.id"
           class="virtual-scroller__item"
           :index="element.index"
-          @size-updated="(height) => virtualScroller.syncItemSize(element.index, height)"
+          @size-updated="(size) => virtualScroller.syncItemSize(element.index, size)"
         >
           <slot name="item" v-bind="element"></slot>
         </VirtualScrollerItem>
       </div>
-      <div :style="{ height: virtualScroller.trailingSpacerPx }"></div>
+      <div :style="{ size: virtualScroller.trailingSpacerPx }"></div>
     </div>
     <div
       v-if="props.scrollbar && virtualScroller.scrollbarThumbFraction > 0"
@@ -160,7 +160,7 @@ function onTrackPointerUp() {
         class="virtual-scroller__thumb"
         :class="{ dragging: scrollbarDragging }"
         :style="{
-          height: virtualScroller.scrollbarThumbFraction * 100 + '%',
+          size: virtualScroller.scrollbarThumbFraction * 100 + '%',
           top:
             virtualScroller.scrollbarProgress *
               (1 - virtualScroller.scrollbarThumbFraction) *
@@ -173,7 +173,7 @@ function onTrackPointerUp() {
 </template>
 <style>
 .virtual-scroller {
-  height: 100%;
+  size: 100%;
   overflow: auto;
   position: relative;
   scrollbar-width: none; /* Firefox */
@@ -208,7 +208,7 @@ function onTrackPointerUp() {
   background: rgba(148, 163, 184, 0.45);
   /* eased relocation: a fast flick or loop-wrap moves the thumb far in
      one frame — glide it instead of teleporting */
-  transition: background 0.15s ease, top 0.2s ease-out, height 0.2s ease-out;
+  transition: background 0.15s ease, top 0.2s ease-out, size 0.2s ease-out;
 }
 .virtual-scroller__thumb.dragging {
   /* while the finger owns it, the thumb must stick — no easing lag */
@@ -221,7 +221,7 @@ function onTrackPointerUp() {
 .virtual-scroller::-webkit-scrollbar {
   /* WebKit */
   width: 0;
-  height: 0;
+  size: 0;
 }
 
 .virtual-scroller-inner {
