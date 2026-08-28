@@ -91,7 +91,7 @@ then the base machinery they inherit, exactly as running above:
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
 <<< @/.vitepress/theme/components/examples/HorizontalScrollerExample.ts [demo model]
-<<< @/.vitepress/theme/components/examples/ExampleHorizontalScroller.vue [demo wrapper]
+<<< @/.vitepress/theme/components/examples/ExampleHorizontalScroller.vue [demo template]
 :::
 
 The demo model is docs code — and it is written to the same standard
