@@ -12,15 +12,10 @@ import { QBadge, QBtn, QIcon, QTooltip } from 'quasar';
 
 import { ExtendedMediaField } from './ExtendedMediaField';
 import MediaField from './MediaField.vue';
-import {
-  mediaFieldEmits,
-  mediaFieldProps,
-  type MediaFieldEmits,
-} from './MediaFieldProps';
 
-const props = defineProps(mediaFieldProps);
+const props = defineProps(ExtendedMediaField.props);
 /** Object-declared emits — ExtractEmitTypes derives the callable type. */
-const emit = defineEmits(mediaFieldEmits) as MediaFieldEmits;
+const emit = defineEmits(ExtendedMediaField.emits) as ExtendedMediaField.Emits;
 
 /** Square tile edge — v-bound into the grid styles below. */
 const tileSize = `${props.thumbnailSize ?? 132}px`;

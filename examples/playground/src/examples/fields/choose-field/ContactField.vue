@@ -10,13 +10,9 @@ import { QChip, QItem, QItemLabel, QItemSection } from 'quasar';
 import ChooseField from './ChooseField.vue';
 import ContactAvatar from './ContactAvatar.vue';
 import { ContactField } from './ContactField';
-import {
-  contactFieldEmits,
-  contactFieldProps,
-} from './ContactFieldProps';
 
-const props = defineProps(contactFieldProps);
-const emit = defineEmits(contactFieldEmits);
+const props = defineProps(ContactField.props);
+const emit = defineEmits(ContactField.emits);
 
 const field = new ContactField.Class(props, emit);
 

@@ -11,11 +11,17 @@ import { ref, watch } from 'vue';
 
 import { Reactive } from '../../../ivue';
 import { ServerApi } from '../server/ServerApi';
-import type {
-  MediaFieldEmits,
-  MediaFieldModel,
-  MediaFieldProps,
-  MediaItem,
+import {
+  mediaFieldEmits,
+  mediaFieldParams,
+  mediaFieldParamsDefaults,
+  mediaFieldParamsTypes,
+  mediaFieldProps,
+  type MediaFieldEmits,
+  type MediaFieldModel,
+  type MediaFieldProps,
+  type MediaFieldSlots,
+  type MediaItem,
 } from './MediaFieldProps';
 
 export class $MediaField {
@@ -506,7 +512,28 @@ export class $MediaField {
 }
 
 export namespace MediaField {
+  /* Identity */
+
   export const $Class = $MediaField; // raw — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance;
+
+  /* Values — the contract, authored in MediaFieldProps.ts (tier 2: a
+     surface this large earns its own file). Only this class file and
+     extending contract files import that file — every consumer reads
+     the contract HERE. */
+
+  export const paramsTypes = mediaFieldParamsTypes;
+  export const paramsDefaults = mediaFieldParamsDefaults;
+  export const params = mediaFieldParams;
+  export const props = mediaFieldProps;
+  export const emits = mediaFieldEmits;
+
+  /* Types */
+
+  export type Props = MediaFieldProps;
+  export type Emits = MediaFieldEmits;
+  export type Slots = MediaFieldSlots;
+  export type Model = MediaFieldModel;
+  export type Item = MediaItem;
 }

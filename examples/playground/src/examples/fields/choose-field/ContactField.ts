@@ -1,7 +1,12 @@
 import { Reactive } from '../../../ivue';
-import type {
-  ContactFieldEmits,
-  ContactFieldProps,
+import {
+  contactFieldEmits,
+  contactFieldParams,
+  contactFieldParamsDefaults,
+  contactFieldParamsTypes,
+  contactFieldProps,
+  type ContactFieldEmits,
+  type ContactFieldProps,
 } from './ContactFieldProps';
 
 /**
@@ -66,7 +71,24 @@ class $ContactField {
 }
 
 export namespace ContactField {
+  /* Identity */
+
   export const $Class = $ContactField; // raw — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
+
+  /* Values — the contract, authored in ContactFieldProps.ts (tier 2),
+     which spreads and re-defaults the choose-field contract. Consumers
+     read it HERE. */
+
+  export const paramsTypes = contactFieldParamsTypes;
+  export const paramsDefaults = contactFieldParamsDefaults;
+  export const params = contactFieldParams;
+  export const props = contactFieldProps;
+  export const emits = contactFieldEmits;
+
+  /* Types */
+
+  export type Props = ContactFieldProps;
+  export type Emits = ContactFieldEmits;
 }

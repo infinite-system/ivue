@@ -11,14 +11,9 @@ import {
 } from 'quasar';
 
 import { ChooseField } from './ChooseField';
-import {
-  type ChooseFieldSlots,
-  chooseFieldEmits,
-  chooseFieldProps,
-} from './ChooseFieldProps';
 
-const props = defineProps(chooseFieldProps);
-const emit = defineEmits(chooseFieldEmits);
+const props = defineProps(ChooseField.props);
+const emit = defineEmits(ChooseField.emits);
 
 const choose = new ChooseField.Class(props, emit);
 
@@ -38,7 +33,7 @@ const {
  * each wrapped by a `before--<slot>` / `after--<slot>` pair, so a wrapping
  * component can decorate around ANY QSelect slot without replacing it.
  */
-const slots = defineSlots<ChooseFieldSlots>();
+const slots = defineSlots<ChooseField.Slots>();
 const activeSlots = new Set(
   Object.keys(slots)
     .map((slotName) => slotName.replace(/^(before|after)--/, ''))

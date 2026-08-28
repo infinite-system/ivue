@@ -270,6 +270,66 @@ defineExpose(box as Box.Instance);
 </template>
 ```
 
+## The namespace carries the WHOLE contract (one seam)
+
+A class FILE has exactly three residents: imports, the class, the
+namespace. Everything else the module owns lives INSIDE the namespace,
+in canonical section order:
+
+- **Identity** — `$Class` (raw, for children to extend), `Class`
+  (`Reactive()`, for you to `new`), `Instance` (and `Model` when used).
+- **Values** — the component contract as plain data: `propsTypes`
+  (defineComponent-style, no defaults), `propsDefaults` (plain values,
+  typed by `ExtractPropDefaultTypes`), `props =
+  propsWithDefaults(propsDefaults, propsTypes)`, and `emits`
+  (object-declared validators). Module constants live here too — a
+  value the module keeps to itself is a NON-EXPORTED namespace member,
+  private to the file. Nothing lives at module level beside the seam.
+- **Types** — DERIVED from the values, never hand-duplicated:
+  `Props` is `ExtractPropTypes<typeof props>` (a generic component
+  grafts its parameter back over the one prop a runtime map cannot
+  carry: `Omit<ExtractPropTypes<typeof props>, 'modelValue'> &
+  { modelValue: T[] }`); `Emits` is `ExtractEmitTypes<typeof emits>`;
+  `Slots`; `Exposed` is `ShallowUnwrapRef<Instance>`.
+
+The SFC is pure wiring against the seam. The macros receive the
+RUNTIME objects, so no compiler macro ever resolves a cross-file type:
+
+```ts
+const props = defineProps(Box.props); // non-generic: the type is inferred
+const emit = defineEmits(Box.emits) as Box.Emits;
+defineSlots<Box.Slots>();
+// generic components cast the one graft:
+// defineProps(X.props) as unknown as X.Props<T>
+```
+
+A subclass composes its surface the way it composes behavior — by
+SPREADING the parent's maps and overriding only what defines the
+specialization, with the reason on the line:
+
+```ts
+export const propsTypes = { ...Box.propsTypes };
+export const propsDefaults = {
+  ...Box.propsDefaults,
+  assumedSize: 300, // cards are hundreds of px wide; rows were tens tall
+};
+export const props = propsWithDefaults(propsDefaults, propsTypes);
+```
+
+**Two tiers, one seam.** A small contract (roughly under fifteen props)
+is authored inline in the namespace. A LARGE surface earns a sibling
+`XProps.ts`: authored there, imported ONLY by its own class file and by
+extending contract files, and re-exported through the namespace 1:1 —
+the re-export block is the seam's table of contents. Consumers never
+import `XProps.ts`; the namespace stays the whole truth either way.
+File placement is expression; the one-seam rule is the invariant.
+
+**Overrides say so out loud.** `noImplicitOverride` is on: every member
+that overrides a base member carries the `override` keyword
+(`protected override get offsetSize() { ... }`). A silent override
+refuses to compile, and a base rename breaks every subclass at the
+exact overriding member instead of quietly orphaning it.
+
 ## One template, one logic owner
 
 Every behavioral SFC has exactly one ivue class as its template logic owner.
@@ -1053,3 +1113,5 @@ convention and check it in review.
 - [ ] Instance reads of own statics go through `this.self` (declared once per class needing it, cast to `typeof $X`, plain getter never `$self`); 2+ reads or loops hoist `const self = this.self`; no per-site `this.constructor` casts; `Namespace.Class` reads stay reserved for late-bound capability dispatch.
 - [ ] Static members precede the constructor; the constructor precedes state, prop, and derived getters; methods come last.
 - [ ] Spacing carries meaning: declaration-like getters contiguous within their group; blank lines only where a doc comment / multi-line body / category boundary begins; methods always separated.
+- [ ] The namespace is the ONE seam: no module-level consts beside imports/class/namespace (file-private values are non-exported namespace members); the contract is namespace data in Identity → Values → Types order, its types derived from its values; a large contract's sibling `XProps.ts` is imported only by its class file and extending contract files.
+- [ ] Every member that overrides a base member carries `override` (with `noImplicitOverride` enabled).

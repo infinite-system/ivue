@@ -104,6 +104,26 @@ implementation would silently rewrite the base component's defaults when
 the child applies different ones. Each descriptor is copied — the base
 surface is never touched by its children.
 
+## Two tiers, one seam
+
+Where the contract is *authored* varies with its size; where it is
+*read* never does. Every consumer, SFC and subclass reads the contract
+from the component's namespace — `ChooseField.props`,
+`ChooseField.emits`, `ChooseField.Props` — which carries it beside the
+class in canonical order (identity, values, types):
+
+- **Small contracts** (roughly under fifteen props) are authored inline
+  in the namespace, the way the
+  [virtual scroller](/examples/horizontal-scroller) does it.
+- **Large surfaces** earn a sibling props file — `ChooseFieldProps.ts`
+  is easier to open, navigate and review than a 300-line block welded
+  to a 650-line class. The props file is imported ONLY by its own class
+  file and by extending contract files (`ContactFieldProps.ts` spreads
+  `ChooseFieldProps.ts`); the namespace re-exports it 1:1, and that
+  re-export block is the seam's table of contents.
+
+File placement is expression; the one-seam rule is the invariant.
+
 ## Why not `withDefaults(defineProps<T>())`?
 
 Vue's macro form is right for small, terminal components. It stops

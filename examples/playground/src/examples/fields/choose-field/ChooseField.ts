@@ -16,13 +16,19 @@ import { computed, ref, shallowRef, watch } from 'vue';
 
 import { Reactive } from '../../../ivue';
 import { ServerApi } from '../server/ServerApi';
-import type {
-  ChooseFieldEmits,
-  ChooseFieldProps,
-  ChooseFieldVariant,
-  ChooseOption,
-  KeyValueRow,
-  OptionFilter,
+import {
+  chooseFieldEmits,
+  chooseFieldParams,
+  chooseFieldParamsDefaults,
+  chooseFieldParamsTypes,
+  chooseFieldProps,
+  type ChooseFieldEmits,
+  type ChooseFieldProps,
+  type ChooseFieldSlots,
+  type ChooseFieldVariant,
+  type ChooseOption,
+  type KeyValueRow,
+  type OptionFilter,
 } from './ChooseFieldProps';
 
 /** Sentinel `value` of the synthetic "Create …" option row. */
@@ -644,7 +650,28 @@ class $ChooseField {
 }
 
 export namespace ChooseField {
+  /* Identity */
+
   export const $Class = $ChooseField; // raw — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
+
+  /* Values — the contract, authored in ChooseFieldProps.ts (tier 2: a
+     surface this large earns its own file). Only this class file and
+     extending contract files import that file — every consumer reads
+     the contract HERE. */
+
+  export const paramsTypes = chooseFieldParamsTypes;
+  export const paramsDefaults = chooseFieldParamsDefaults;
+  export const params = chooseFieldParams;
+  export const props = chooseFieldProps;
+  export const emits = chooseFieldEmits;
+
+  /* Types */
+
+  export type Props = ChooseFieldProps;
+  export type Emits = ChooseFieldEmits;
+  export type Slots = ChooseFieldSlots;
+  export type Option = ChooseOption;
+  export type Variant = ChooseFieldVariant;
 }

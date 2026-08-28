@@ -19,17 +19,10 @@ import {
 
 import { MediaField } from './MediaField';
 import MediaFieldPreviewDialog from './MediaFieldPreviewDialog.vue';
-import {
-  mediaFieldEmits,
-  mediaFieldProps,
-  type MediaFieldEmits,
-  type MediaFieldSlots,
-} from './MediaFieldProps';
-
-const props = defineProps(mediaFieldProps);
+const props = defineProps(MediaField.props);
 /** Object-declared emits — ExtractEmitTypes derives the class-facing type. */
-const emit = defineEmits(mediaFieldEmits) as MediaFieldEmits;
-defineSlots<MediaFieldSlots>();
+const emit = defineEmits(MediaField.emits) as MediaField.Emits;
+defineSlots<MediaField.Slots>();
 
 /** Runner implementation: swap the class that drives this component. */
 const RunnerClass = (props.runner ?? MediaField.Class) as typeof MediaField.Class;
