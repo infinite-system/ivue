@@ -117,6 +117,14 @@ same object, never written twice. The full pattern is in the
 
 ## The proof: a book as one scrolling line
 
+Running the shipped engine — shift+wheel scrubs it, the bar underneath
+drags and lands where it points (including the true end), and a plain
+vertical wheel scrolls this page, untouched:
+
+<ClientOnly>
+  <ExampleTextMarquee />
+</ClientOnly>
+
 Extension proves the seams. Composition proves the component. So we
 pointed the horizontal scroller at something it was never built for: a
 ~400,000-character text, scrolling as a single unbroken line.
@@ -157,16 +165,6 @@ into a true constant-velocity glide. The same real-valued position model is
 why a wheel flick hands off cleanly: the fling decays *to* cruise speed
 and the creep adopts the scroll at that exact speed, mid-decay. It
 never stalls to zero and restarts.
-
-Here it is, running the shipped engine:
-
-<ClientOnly>
-  <ExampleTextMarquee />
-</ClientOnly>
-
-Shift+wheel scrubs it. The bar underneath drags, and it lands where it
-points, including the true end. A plain vertical wheel scrolls this
-page, untouched.
 
 ## What this buys you
 
