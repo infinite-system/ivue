@@ -68,6 +68,7 @@ what a hand-written Quasar wrapper gives you, and it falls out of the
 <<< ../../examples/playground/src/examples/fields/choose-field/ChooseField.ts [ChooseField.ts]
 <<< ../../examples/playground/src/examples/fields/choose-field/ChooseFieldProps.ts [ChooseFieldProps.ts]
 <<< ../../examples/playground/src/examples/fields/choose-field/ChooseField.vue [ChooseField.vue]
+<<< ../../examples/playground/src/examples/fields/choose-field/ChooseFieldExample.ts [demo model]
 <<< ../../examples/playground/src/examples/fields/choose-field/ChooseFieldExample.vue [demo route]
 :::
 
