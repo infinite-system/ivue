@@ -27,20 +27,23 @@ Three declarations per component, each doing exactly one job:
 // ChooseFieldProps.ts (excerpt)
 import type { ExtractPropTypes, PropType } from 'vue';
 import {
+  definePropTypes,
   propsWithDefaults,
   type ExtractEmitTypes,
   type ExtractPropDefaultTypes,
 } from 'ivue';
 
-/** 1 — the TYPES: a defineComponent-style object, no defaults inside. */
-export const chooseFieldParamsTypes = {
+/** 1 — the TYPES: a defineComponent-style object, no defaults inside.
+ *  The identity call preserves `required: true` literals that a bare
+ *  const would widen to boolean. */
+export const chooseFieldParamsTypes = definePropTypes({
   multiple: { type: Boolean as PropType<boolean> },
   useChips: { type: Boolean as PropType<boolean> },
   inputDebounce: { type: Number as PropType<number> },
   fetchPath: { type: String as PropType<string> },
   fetchRowsPerPage: { type: Number as PropType<number> },
   optionLabelPriority: { type: Array as PropType<string[]> },
-};
+});
 
 /** 2 — the DEFAULTS: plain values, typed against the types object. */
 export const chooseFieldParamsDefaults: ExtractPropDefaultTypes<
@@ -138,8 +141,12 @@ scaling exactly where extensible components begin:
   automatically (via `structuredClone`; pass a custom cloner for exotic
   values), primitives pass through untouched.
 - **`ExtractPropDefaultTypes` keeps the pair honest**: the defaults object
-  must provide a correctly-typed value for every declared type, so a new
-  prop without a default is a compile error, not a runtime surprise.
+  must provide a correctly-typed value for every declared OPTIONAL type,
+  so a new prop without a default is a compile error, not a runtime
+  surprise. Props declared `required: true` are filtered out of the check
+  automatically (they can never carry a default), and a deliberately
+  default-free optional prop is declared `key: undefined` — the ruling
+  lives in the defaults object, not in a type expression.
 
 ## Emits and slots, same discipline
 

@@ -9,6 +9,7 @@
 import type { ExtractPropTypes, PropType } from 'vue';
 
 import {
+  definePropTypes,
   propsWithDefaults,
   type ExtractEmitTypes,
   type ExtractPropDefaultTypes,
@@ -31,7 +32,7 @@ export type MediaFieldModel =
   | null;
 
 /** Params Types */
-export const mediaFieldParamsTypes = {
+export const mediaFieldParamsTypes = definePropTypes({
   multiple: { type: Boolean as PropType<boolean> },
   /** Comma-separated accept list — extensions (`.pdf`) and mime patterns (`image/*`). */
   accept: { type: String as PropType<string> },
@@ -56,7 +57,7 @@ export const mediaFieldParamsTypes = {
    * @see ExtendedMediaField.vue
    */
   runner: { type: Function as PropType<any> },
-};
+});
 
 /** Params Defaults */
 export const mediaFieldParamsDefaults: ExtractPropDefaultTypes<

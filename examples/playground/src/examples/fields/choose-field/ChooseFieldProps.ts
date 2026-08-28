@@ -14,6 +14,7 @@ import {
   type ExtractEmitTypes,
   type ExtractPropDefaultTypes,
   type IFnParameter,
+  definePropTypes,
   propsWithDefaults,
 } from '../../../ivue';
 import { baseFieldProps } from '../field-kit';
@@ -46,7 +47,7 @@ export interface ChooseFieldVariant {
 /* === Choose Field Params === */
 
 /** Params Types */
-export const chooseFieldParamsTypes = {
+export const chooseFieldParamsTypes = definePropTypes({
   /** === QSelect Overrides === */
   multiple: { type: Boolean as PropType<boolean> },
   /** Chips */
@@ -109,7 +110,7 @@ export const chooseFieldParamsTypes = {
   createPath: { type: String as PropType<string> },
   createLabel: { type: String as PropType<string> },
   createEntityAsOption: { type: Boolean as PropType<boolean> },
-};
+});
 
 /** Params Defaults */
 export const chooseFieldParamsDefaults: ExtractPropDefaultTypes<

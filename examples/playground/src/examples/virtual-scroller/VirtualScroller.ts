@@ -17,6 +17,7 @@ import {
 
 import { useElementSize, useResizeObserver } from '@vueuse/core';
 import {
+  definePropTypes,
   propsWithDefaults,
   Reactive,
   type ExtractEmitTypes,
@@ -1450,7 +1451,7 @@ export namespace VirtualScroller {
   /** 1 — the TYPES: a defineComponent-style object, no defaults inside.
    *  `modelValue` is typed against BaseItem here (a const cannot be
    *  generic); Props<T> recovers the precise item type in the SFC. */
-  export const propsTypes = {
+  export const propsTypes = definePropTypes({
     modelValue: { type: Array as PropType<BaseItem[]>, required: true },
     /** Render the built-in draggable scrollbar over the VIRTUAL position. */
     scrollbar: { type: Boolean as PropType<boolean> },
@@ -1471,15 +1472,14 @@ export namespace VirtualScroller {
     dragClass: { type: String as PropType<string> },
     dragGhostClass: { type: String as PropType<string> },
     dragChosenClass: { type: String as PropType<string> }
-  };
+  });
 
   /** 2 — the DEFAULTS: plain values, typed against the types object.
-   *  `modelValue` is required and `creepMsPerPx` deliberately default-free
-   *  (unset = the tuned creep cadence), so both are excluded from the
-   *  must-have-a-default check. */
-  export const propsDefaults: ExtractPropDefaultTypes<
-    Omit<typeof propsTypes, 'modelValue' | 'creepMsPerPx'>
-  > = {
+   *  Required props (`modelValue`) are filtered out by
+   *  ExtractPropDefaultTypes itself; a deliberately default-free optional
+   *  prop states its ruling in data: `creepMsPerPx: undefined` below means
+   *  "unset = the tuned creep cadence". */
+  export const propsDefaults: ExtractPropDefaultTypes<typeof propsTypes> = {
     scrollbar: false,
     autoPlay: false,
     autoPlayDelay: 500,
@@ -1487,6 +1487,7 @@ export namespace VirtualScroller {
     snapToItems: false,
     assumedSize: 30,
     paddingQuantity: 6,
+    creepMsPerPx: undefined, // no default ON PURPOSE — see the comment above
     draggable: false,
     dragHandleSelector: '.sortable-drag-handle',
     dragClass: 'sortable-drag',

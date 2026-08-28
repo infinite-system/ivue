@@ -130,9 +130,15 @@ export type ExtractEmitTypes<T extends Record<string, any>> =
 
 /**
  * Extract properties as all assigned properties because they have defaults.
+ * Props declared `required: true` are filtered out (they can never carry a
+ * default); declare the types map with a literal-preserving generic call so
+ * the `required: true` literal survives `typeof`.
  */
 export type ExtractPropDefaultTypes<O> = {
-  [K in keyof O]: ValueOf<ExtractPropTypes<O>, K>;
+  [K in keyof O as O[K] extends { required: true } ? never : K]: ValueOf<
+    ExtractPropTypes<O>,
+    K
+  >;
 };
 
 /**
@@ -779,6 +785,14 @@ export const isClass = (val: any): boolean => {
  * @param typedProps Props declared in defineComponent() style with type and possibly required declared, but without default
  * @returns Props declared in defineComponent() style with all properties having default property declared.
  */
+/**
+ * Identity helper for a prop-TYPES map: generic inference preserves the
+ * `required: true` literal that a bare object const widens to `boolean`,
+ * which ExtractPropDefaultTypes' required-key filter depends on.
+ */
+export const definePropTypes = <T extends VuePropsObject>(types: T): T =>
+  types;
+
 export const propsWithDefaults = <T extends VuePropsObject>(
   defaults: Record<string, any>,
   typedProps: T,

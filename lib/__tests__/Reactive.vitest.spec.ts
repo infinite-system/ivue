@@ -17,6 +17,7 @@ import {
   propsWithDefaults,
   Reactive,
   type ReactiveInstance,
+  definePropTypes,
 } from '../Reactive';
 
 /**
@@ -1110,5 +1111,16 @@ describe('$watchEffect (scoped watchEffect)', () => {
     await nextTick();
     expect(effectRuns).toBe(1); // stopped
     expect(watchRuns).toBe(1); // sibling watcher in the same scope still fires
+  });
+});
+
+describe('definePropTypes()', () => {
+  it('returns the same types map (identity, literal-preserving)', () => {
+    const types = definePropTypes({
+      title: { type: String, required: true },
+      size: { type: Number },
+    });
+    expect(types.title.required).toBe(true);
+    expect(types.size.type).toBe(Number);
   });
 });

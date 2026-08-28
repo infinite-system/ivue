@@ -10,6 +10,7 @@ import type { ExtractPropTypes, PropType } from 'vue';
 import {
   type ExtractEmitTypes,
   type ExtractPropDefaultTypes,
+  definePropTypes,
   propsWithDefaults,
 } from '../../../ivue';
 import { baseFieldProps } from '../field-kit';
@@ -19,12 +20,12 @@ import {
   chooseFieldParamsTypes,
 } from './ChooseFieldProps';
 
-export const contactFieldParamsTypes = {
+export const contactFieldParamsTypes = definePropTypes({
   ...chooseFieldParamsTypes,
 
   /** Compact display mode: smaller avatar, name only, denser rows. */
   compact: { type: Boolean as PropType<boolean> },
-};
+});
 
 export const contactFieldParamsDefaults: ExtractPropDefaultTypes<
   typeof contactFieldParamsTypes

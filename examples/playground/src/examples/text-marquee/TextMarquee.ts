@@ -2,6 +2,7 @@ import type { ExtractPropTypes, PropType, ShallowUnwrapRef } from 'vue';
 import { computed, onMounted, ref, watch } from 'vue';
 
 import {
+  definePropTypes,
   propsWithDefaults,
   Reactive,
   type ExtractPropDefaultTypes
@@ -187,7 +188,7 @@ export namespace TextMarquee {
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 
   /** 1 — the TYPES: a defineComponent-style object, no defaults inside. */
-  export const propsTypes = {
+  export const propsTypes = definePropTypes({
     /** The full text — newlines and all; the marquee one-lines it. */
     text: { type: String as PropType<string>, required: true },
     /** Glide speed. The default is a comfortable reading glide. */
@@ -195,13 +196,11 @@ export namespace TextMarquee {
     /** Characters per chunk (cut at spaces). Bigger chunks = fewer items;
      *  smaller chunks = finer virtualization granularity. */
     targetChars: { type: Number as PropType<number> }
-  };
+  });
 
   /** 2 — the DEFAULTS: plain values, typed against the types object
-   *  (`text` is required, so it carries none). */
-  export const propsDefaults: ExtractPropDefaultTypes<
-    Omit<typeof propsTypes, 'text'>
-  > = {
+   *  (`text` is required — filtered out of the check automatically). */
+  export const propsDefaults: ExtractPropDefaultTypes<typeof propsTypes> = {
     pxPerSecond: 50,
     targetChars: 400
   };

@@ -486,13 +486,31 @@ export type ExtractEmitTypes<T extends Record<string, any>> =
 
 /**
  * Extract properties as all-assigned (non-optional) because every one of
- * them carries a default.
+ * them carries a default — the honesty check: a declared type without a
+ * default is a compile error. Props declared `required: true` are FILTERED
+ * OUT automatically (a required prop can never carry a default —
+ * propsWithDefaults skips them at runtime), so no manual `Omit` is needed;
+ * a deliberately default-free OPTIONAL prop is declared `key: undefined`,
+ * stating the ruling in the defaults object itself. The `required: true`
+ * literal survives `typeof` only through generic inference — declare the
+ * types map with `definePropTypes({...})`, never as a bare object const.
  */
 export type ExtractPropDefaultTypes<O> = {
-  [K in keyof O]: K extends keyof ExtractPropTypes<O>
-    ? ExtractPropTypes<O>[K]
-    : never;
+  [K in keyof O as O[K] extends { required: true }
+    ? never
+    : K]: K extends keyof ExtractPropTypes<O> ? ExtractPropTypes<O>[K] : never;
 };
+
+/**
+ * Identity helper for a prop-TYPES map. Exists for one reason: in a bare
+ * `const propsTypes = {...}`, TypeScript widens `required: true` to
+ * `boolean`, which blinds ExtractPropDefaultTypes' required-key filter —
+ * generic inference through this call preserves the literal. Costs
+ * nothing at runtime.
+ */
+export function definePropTypes<T extends VuePropsObject>(types: T): T {
+  return types;
+}
 
 /**
  * Extend a slots interface T with prefixed 'before--' & 'after--' slots to

@@ -316,8 +316,12 @@ in canonical section order:
 - **Identity** — `$Class` (raw, for children to extend), `Class`
   (`Reactive()`, for you to `new`), `Instance` (and `Model` when used).
 - **Values** — the component contract as plain data: `propsTypes`
-  (defineComponent-style, no defaults), `propsDefaults` (plain values,
-  typed by `ExtractPropDefaultTypes`), `props =
+  (defineComponent-style, no defaults, wrapped in `definePropTypes({...})`
+  so the `required: true` literal survives `typeof`), `propsDefaults`
+  (plain values, typed by `ExtractPropDefaultTypes<typeof propsTypes>` —
+  required props are filtered out of the check automatically, and a
+  deliberately default-free optional prop is declared `key: undefined`,
+  stating the ruling in data), `props =
   propsWithDefaults(propsDefaults, propsTypes)`, and `emits`
   (object-declared validators). Module constants live here too — a
   value the module keeps to itself is a NON-EXPORTED namespace member,
@@ -335,6 +339,7 @@ Combined — the canonical file, everything above in one shape:
 // Box.ts — the whole module: imports, the class, the namespace. Nothing else.
 import type { ExtractPropTypes, PropType, ShallowUnwrapRef } from 'vue';
 import {
+  definePropTypes,
   propsWithDefaults,
   Reactive,
   type ExtractEmitTypes,
@@ -375,19 +380,24 @@ export namespace Box {
   // file, invisible to importers. Never a module-level const.
   const DEFAULT_SIZE = 400;
 
-  /** 1 — the TYPES: a defineComponent-style object, no defaults inside. */
-  export const propsTypes = {
+  /** 1 — the TYPES: a defineComponent-style object, no defaults inside.
+   *  definePropTypes is an identity call that keeps `required: true` a
+   *  LITERAL — a bare const widens it to boolean, which would blind the
+   *  defaults check below. */
+  export const propsTypes = definePropTypes({
     title: { type: String as PropType<string>, required: true },
     size: { type: Number as PropType<number> },
+    maxHeight: { type: Number as PropType<number> },
     disabled: { type: Boolean as PropType<boolean> },
-  };
+  });
 
-  /** 2 — the DEFAULTS: plain values, typed against the types object
-   *  (`title` is required, so it carries none). */
-  export const propsDefaults: ExtractPropDefaultTypes<
-    Omit<typeof propsTypes, 'title'>
-  > = {
+  /** 2 — the DEFAULTS: plain values, typed against the types object.
+   *  Required props (`title`) are filtered out of the check
+   *  automatically; every OPTIONAL prop must appear — `undefined` is the
+   *  explicit "no default ON PURPOSE" ruling, stated in data. */
+  export const propsDefaults: ExtractPropDefaultTypes<typeof propsTypes> = {
     size: DEFAULT_SIZE,
+    maxHeight: undefined, // unset = unbounded — deliberately default-free
     disabled: false,
   };
 

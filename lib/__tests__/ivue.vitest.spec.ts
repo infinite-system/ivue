@@ -13,6 +13,7 @@ import {
   ivue,
   propertiesAccessorsMaps,
   propsWithDefaults,
+  definePropTypes,
 } from '../ivue';
 const {
   copyOwnProps,
@@ -1883,5 +1884,16 @@ describe('ivue coverage edge cases', () => {
     const cloned = deepClone(svc, deepCloneArgs);
     // clone() called with no args → init(true) default → value = 7
     expect(cloned.value).toBe(7);
+  });
+});
+
+describe('definePropTypes()', () => {
+  it('returns the same types map (identity, literal-preserving)', () => {
+    const types = definePropTypes({
+      title: { type: String, required: true },
+      size: { type: Number },
+    });
+    expect(types.title.required).toBe(true);
+    expect(types.size.type).toBe(Number);
   });
 });
