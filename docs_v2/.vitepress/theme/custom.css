@@ -3867,11 +3867,13 @@ a.feature-inline-link:active {
    of that work while off-screen. */
 .ix .ix-moat,
 .ix .ix-idea,
-.ix .ix-start,
 .ix .ix-end,
 .ix .invar-production {
   /* NOT .ix-newsletter-hero: content-visibility implies paint
-     containment, which clips its 100vw ::before glow to the 46rem box */
+     containment, which clips its 100vw ::before glow to the 46rem box.
+     NOT .ix-start either: the same paint containment clips its hover
+     lift (top border shaved at the grid's edge) and the card shadows
+     spilling below the box. */
   content-visibility: auto;
   contain-intrinsic-size: auto 640px;
 }
