@@ -290,14 +290,22 @@ watch(turnstileElement, (element) => {
   // the top-level form and the inline reply form are DIFFERENT
   // elements — swapping forms must tear down the old widget or the
   // new form never gets one (and submits token-less, which the
-  // Worker refuses)
+  // Worker refuses). Render only if the reader had already engaged;
+  // a fresh form waits for its own first input focus.
   if (turnstileWidgetId) {
     (window as any).turnstile?.remove?.(turnstileWidgetId);
     turnstileWidgetId = undefined;
     turnstileToken.value = '';
+    renderTurnstile();
   }
-  renderTurnstile();
 });
+
+// Turnstile spins up only on deliberate engagement — focusing a
+// name/email/comment field — never on mount: an idle comment form
+// must not load a third-party script + iframe for every reader.
+function ensureTurnstile() {
+  if (!turnstileWidgetId) renderTurnstile();
+}
 
 // render on demand and WAIT for the async token — never race it
 async function awaitTurnstileToken(): Promise<string> {
@@ -535,6 +543,7 @@ async function submit() {
               autocomplete="name"
               aria-label="Name"
               required
+              @focus.once="ensureTurnstile()"
             />
             <input
               v-model="email"
@@ -543,6 +552,7 @@ async function submit() {
               autocomplete="email"
               aria-label="Email"
               required
+              @focus.once="ensureTurnstile()"
             />
           </div>
           <textarea
@@ -553,6 +563,7 @@ async function submit() {
             placeholder="Your reply…"
             aria-label="Reply"
             required
+            @focus.once="ensureTurnstile()"
           ></textarea>
           <p
             v-if="participants(root.id, replyTo).length"
@@ -619,6 +630,7 @@ async function submit() {
           autocomplete="name"
           aria-label="Name"
           required
+          @focus.once="ensureTurnstile()"
         />
         <input
           v-model="email"
@@ -627,6 +639,7 @@ async function submit() {
           autocomplete="email"
           aria-label="Email"
           required
+          @focus.once="ensureTurnstile()"
         />
       </div>
       <textarea
@@ -637,6 +650,7 @@ async function submit() {
         placeholder="Your comment…"
         aria-label="Comment"
         required
+        @focus.once="ensureTurnstile()"
       ></textarea>
       <label class="blog-comments__opt">
         <input v-model="subscribeReplies" type="checkbox" />
