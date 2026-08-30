@@ -3025,6 +3025,10 @@ html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after,
 /* back-to-blog link atop posts — phones only */
 .blog-back {
   display: none;
+  max-width: min(78vw, 34rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 @media (max-width: 640px) {
   .VPDoc .blog-back {
@@ -3654,7 +3658,6 @@ a.feature-inline-link:active {
     rgba(45, 212, 191, 0.4) 78%,
     transparent
   );
-  box-shadow: 0 0 14px rgba(34, 211, 238, 0.22);
   pointer-events: none;
 }
 
@@ -3974,9 +3977,6 @@ a.feature-inline-link:active {
     rgba(45, 212, 191, 0.55) 78%,
     transparent
   );
-  box-shadow:
-    0 0 18px rgba(34, 211, 238, 0.35),
-    0 0 46px rgba(99, 102, 241, 0.25);
   pointer-events: none;
 }
 .ix .ix-newsletter-hero h2 {
