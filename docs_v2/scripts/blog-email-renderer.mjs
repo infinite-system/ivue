@@ -330,10 +330,14 @@ function relatedSection(post, allPosts) {
 // ---- neighbor cards (the blog's older/newer nav, in email form) -----
 // Newer and older ride ONE row, two half-width cards side by side.
 
-function neighborCell(label, post) {
-  if (!post) return '<td style="width:50%"></td>';
+function neighborCell(label, post, side) {
+  // the gutter lives INSIDE the cells (padding toward the middle) —
+  // border-spacing pads the table's outer edges too, which read as a
+  // stray left margin on the first card
+  const gutter = side === 'left' ? 'padding:0 7px 0 0' : 'padding:0 0 0 7px';
+  if (!post) return `<td style="width:50%;${gutter}"></td>`;
   return (
-    `<td style="width:50%;vertical-align:top;padding:0 0 0 0">` +
+    `<td style="width:50%;vertical-align:top;${gutter}">` +
     `<a href="${SITE}/blog/${post.slug}" style="text-decoration:none;display:block;border:1px solid ${P.EDGE};border-radius:10px;overflow:hidden;background:${P.CARD_BG}">` +
     `<img src="${SITE}/blog/${post.slug}.png" alt="" width="240" style="display:block;width:100%;height:auto;border:0" />` +
     `<div style="padding:9px 12px">` +
@@ -346,9 +350,9 @@ function neighborCell(label, post) {
 function neighborRow(newer, older) {
   if (!newer && !older) return '';
   return (
-    `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:separate;border-spacing:7px 0;margin:0 -7px 14px"><tr>` +
-    neighborCell('NEWER POST', newer) +
-    neighborCell('OLDER POST', older) +
+    `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:0 0 14px"><tr>` +
+    neighborCell('NEWER POST', newer, 'left') +
+    neighborCell('OLDER POST', older, 'right') +
     `</tr></table>`
   );
 }
