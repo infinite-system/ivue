@@ -3,7 +3,7 @@
 // preview images themselves are the committed /og/ banners.
 import { createContentLoader } from 'vitepress';
 
-export default createContentLoader(['*.md', '{guide,examples,api,releases}/**/*.md'], {
+export default createContentLoader(['*.md', '{guide,examples,api,releases,reference}/**/*.md'], {
   transform(pages) {
     const records = {};
     for (const page of pages) {
