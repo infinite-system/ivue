@@ -181,9 +181,10 @@ onBeforeUnmount(() => {
 .drip-showcase {
   position: relative;
   width: 100vw;
-  margin: 26px calc(50% - 50vw) -8px;
+  margin: 26px calc(50% - 50vw) 0;
   /* the strip and the newsletter hero are ONE block — the strip now
-     closes the section, riding the hero's glow from above */
+     closes the section flush against the footer, riding the hero's
+     glow from above */
   padding: 10px 0 26px;
 }
 .drip-showcase::before {

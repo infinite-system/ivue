@@ -3892,16 +3892,19 @@ a.feature-inline-link:active {
      negative margin hands that extra room back so the footer gap
      stays where it was */
   /* breathing room ABOVE the aurora line (it was hugging the section
-     before it), and a shorter drop from the line to the heading */
-  margin: 72px auto -56px;
-  padding: 40px 20px 128px;
+     before it), a short drop from the line to the heading, and a FLUSH
+     bottom: the strip closes the section right against the footer */
+  margin: 72px auto 0;
+  padding: 40px 20px 0;
 }
 .ix-newsletter-hero::before {
   content: '';
   position: absolute;
   /* full-viewport bleed: the glow's box must exceed its ellipses, or
-     the clipped gradient edges read as seams on narrow screens */
-  top: 10%;
+     the clipped gradient edges read as seams on narrow screens.
+     top: 0 — the heading halo anchors at the box's top edge, which must
+     BE the aurora line for the two to read as one light source */
+  top: 0;
   bottom: 0;
   left: 50%;
   width: 100vw;
@@ -3911,15 +3914,21 @@ a.feature-inline-link:active {
      above it — so the glow always completes inside the box and never
      cuts flat where the section ends, whatever the section's height */
   background:
-    /* the heading's halo — the strip used to sit above and lend its
-       glow; now the section carries its own */
-    radial-gradient(44rem 13rem at 50% 1.5rem, rgba(99, 102, 241, 0.13), transparent 70%),
+    /* the heading's halo BLOOMS FROM the aurora line itself (anchored
+       at the very top edge) — line and glow read as one light source */
+    radial-gradient(44rem 13rem at 50% 0, rgba(99, 102, 241, 0.14), transparent 70%),
     radial-gradient(32rem 14rem at 50% calc(100% - 20rem), rgba(99, 102, 241, 0.1), transparent 70%),
     radial-gradient(26rem 12rem at 50% calc(100% - 9.5rem), rgba(45, 212, 191, 0.08), transparent 70%);
   pointer-events: none;
 }
 /* the section opens on a thin aurora line — the house glow colors as a
    full-bleed gradient rule, with a soft bloom breathing under it */
+/* the drip strip closes the page flush against the footer — VPHome's
+   stock 128px bottom margin would float it */
+.ix .VPHome,
+.VPHome:has(.ix) {
+  margin-bottom: 0;
+}
 .ix-newsletter-hero::after {
   content: '';
   position: absolute;
