@@ -133,7 +133,11 @@ function embedPlaceholder(slug, postUrl, embedIndex) {
 // highlighting email clients render. Same theme as the site's dark code.
 
 async function highlightedPre(code, lang, hasLabel) {
-  const layout = `margin:0 0 20px;padding:14px 16px;border-radius:${hasLabel ? '0 0 8px 8px' : '8px'};font:12.5px/1.6 ui-monospace,Menlo,monospace;overflow-x:auto;`;
+  // pre-wrap, never overflow: Gmail's apps strip overflow, and an
+  // unwrapped line then clips or pans the whole email — every reader
+  // sees all the code, at the cost of a rare wrapped line (12px mono
+  // fits ~68ch in the 496px column; posts are authored to ~70ch)
+  const layout = `margin:0 0 20px;padding:14px 16px;border-radius:${hasLabel ? '0 0 8px 8px' : '8px'};font:12px/1.6 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word;`;
   try {
     const html = await codeToHtml(code, { lang, theme: P.SHIKI_THEME });
     // shiki's own background is the THEME's (one-dark-pro grey /
