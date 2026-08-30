@@ -3632,6 +3632,32 @@ a.feature-inline-link:active {
     color-mix(in srgb, var(--vp-c-divider) 55%, transparent) !important;
 }
 
+/* On the HOME page the drip strip meets the footer flush — its separator
+   speaks the aurora language (a quieter echo of the hero's opening line)
+   instead of the plain divider. */
+.VPContent:has(.ix) + .VPFooter {
+  position: relative;
+  border-top: none !important;
+}
+.VPContent:has(.ix) + .VPFooter::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(99, 102, 241, 0.4) 22%,
+    rgba(34, 211, 238, 0.55) 50%,
+    rgba(45, 212, 191, 0.4) 78%,
+    transparent
+  );
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.22);
+  pointer-events: none;
+}
+
 /* Mobile header: desktop shows a hairline under the bar; give the fixed
    mobile bar the same line plus a whisper of shadow so content visibly
    passes beneath it. */
