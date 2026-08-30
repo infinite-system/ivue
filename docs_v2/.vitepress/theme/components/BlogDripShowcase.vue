@@ -1,139 +1,32 @@
 <script setup lang="ts">
-// The inbox preview above the newsletter hero, riding the REAL machinery:
-// the ivue HorizontalVirtualScroller (the vertical scroller's axis-seam
-// subclass) in step mode — every 3 seconds one more post "arrives", the
-// way the drip lands one email at a time; wheel and touch scrub the strip
-// with lenis physics and snap to card boundaries on settle.
-import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { withBase } from 'vitepress';
 import HorizontalVirtualScroller from '../../../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.vue';
-import type { HorizontalVirtualScroller as HorizontalScrollerNs } from '../../../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller';
-import { data as allPosts } from '../../../blog/blog.data.mjs';
+import { BlogDripShowcase } from './BlogDripShowcase';
 
-interface DripItem {
-  id: string;
-  body: string;
-  position: string;
-  title: string;
-  url: string;
-  image: string;
-}
+const drip = new BlogDripShowcase.Class();
 
-const items: DripItem[] = allPosts
-  .filter((post) => !post.private && post.image)
-  .map((post) => ({
-    id: post.slug,
-    body: post.title,
-    position: '',
-    title: post.title,
-    url: post.url,
-    image: post.image,
-  }));
-
-const ADVANCE_EVERY_MS = 4500;
-
-const root = ref<HTMLElement | null>(null);
-const scroller = ref<HorizontalScrollerNs.Exposed<DripItem> | null>(null);
-const arrivingId = ref('');
-// everything at or left of this index has been delivered — those cards
-// wear the checkmark; the arriving card gets the full stamp first
-const deliveredThrough = ref(-1);
-
-let timer: ReturnType<typeof setInterval> | undefined;
-let arrivingTimer: ReturnType<typeof setTimeout> | undefined;
-let observer: IntersectionObserver | undefined;
-let inView = false;
-let hovering = false;
-let current = 0;
-
-/** The card resting under the strip's center — read from the scroller's
- *  OWN geometry (position + half the container), never estimated from
- *  CSS. With snap-align="center" this is also the card every step
- *  centers, so "the arriving card" is a guarantee, not a guess. */
-function centerIndexAtRest(): number {
-  const scrollerInstance = scroller.value;
-  if (!scrollerInstance) return 0;
-  const position =
-    parseFloat(String(scrollerInstance.scrollPosition)) || 0;
-  return (
-    scrollerInstance.getIndexAtPosition(
-      position + scrollerInstance.containerOuterSize / 2,
-    )?.index ?? 0
-  );
-}
-
-/** One delivery: the stamp plays on card `index`, then settles into its
- *  permanent checkmark by advancing the frontier. */
-function deliver(index: number) {
-  arrivingId.value = items[index]?.id ?? '';
-  clearTimeout(arrivingTimer);
-  arrivingTimer = setTimeout(() => {
-    arrivingId.value = '';
-    deliveredThrough.value = Math.max(deliveredThrough.value, index);
-  }, 2600);
-}
-
-/** Load AND wrap start identically: the clamped cards left of center are
- *  HISTORY (checked, no stamp — like older mail already in the inbox);
- *  the centered card is the first to actually arrive. Every later check
- *  is therefore preceded by that card's own stamp. */
-function beginCycle() {
-  current = centerIndexAtRest();
-  deliveredThrough.value = current - 1;
-  // snap the opening card onto the exact center — the stamp rides it
-  scroller.value?.scrollToIndex(current);
-  deliver(current);
-}
-
-function advance() {
-  const scrollerInstance = scroller.value;
-  if (!scrollerInstance || !inView || hovering || document.hidden) return;
-  if (scrollerInstance.lenis?.isScrolling) return; // the reader owns it
-  if (current >= items.length - 1) {
-    // the loop wrapped — reset to the start and begin a fresh cycle
-    deliveredThrough.value = -1;
-    scrollerInstance.scrollToIndex(0, () => beginCycle(), true, 0);
-    return;
-  }
-  current += 1;
-  scrollerInstance.scrollToIndex(current, () => deliver(current));
-}
-
-onMounted(() => {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  if (items.length < 2) return;
-  observer = new IntersectionObserver(
-    ([entry]) => {
-      inView = entry.isIntersecting;
-    },
-    { threshold: 0.35 },
-  );
-  if (root.value) observer.observe(root.value);
-  // first cycle after the strip has measured its opening cards
-  setTimeout(() => beginCycle(), 600);
-  timer = setInterval(advance, ADVANCE_EVERY_MS);
-});
-
-onBeforeUnmount(() => {
-  if (timer) clearInterval(timer);
-  clearTimeout(arrivingTimer);
-  observer?.disconnect();
-});
+// the state destructure — only the element refs; the delivery state is
+// read through the instance's own methods/getters (cardClasses & co.)
+const {
+  // element refs
+  root,
+  scroller,
+} = drip;
 </script>
 
 <template>
   <div
-    v-if="items.length"
+    v-if="drip.hasItems"
     ref="root"
     class="drip-showcase"
     aria-label="Every blog post, delivered one email at a time"
-    @mouseenter="hovering = true"
-    @mouseleave="hovering = false"
+    @mouseenter="drip.onMouseEnter()"
+    @mouseleave="drip.onMouseLeave()"
   >
     <ClientOnly>
       <HorizontalVirtualScroller
         ref="scroller"
-        :model-value="items"
+        :model-value="drip.items"
         :assumed-size="330"
         :padding-quantity="6"
         snap-to-items
@@ -142,11 +35,7 @@ onBeforeUnmount(() => {
         <template #item="{ item, index }">
           <a
             class="drip-card"
-            :class="{
-              'drip-card--arriving': item.id === arrivingId,
-              'drip-card--delivered': index <= deliveredThrough && item.id !== arrivingId,
-              'drip-card--sealed': index > deliveredThrough && item.id !== arrivingId,
-            }"
+            :class="drip.cardClasses(item, index)"
             :href="withBase(item.url)"
             tabindex="-1"
           >
@@ -157,7 +46,7 @@ onBeforeUnmount(() => {
                 :alt="item.title"
                 width="1200"
                 height="630"
-                :loading="index < 6 ? 'eager' : 'lazy'"
+                :loading="drip.imageLoading(index)"
                 decoding="async"
               />
               <span class="drip-card__envelope" aria-hidden="true">
