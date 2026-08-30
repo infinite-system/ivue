@@ -282,21 +282,4 @@ const {
 .drip-card:hover .drip-card__title {
   color: var(--vp-c-text-1);
 }
-
-@media (prefers-reduced-motion: reduce) {
-  /* the delivery theater is off entirely — no cycle runs, so sealed
-     cards would never open; show every banner instead */
-  .drip-card--sealed .drip-card__envelope,
-  .drip-card--arriving .drip-card__envelope,
-  .drip-card--arriving .drip-card__delivered {
-    animation: none;
-    display: none;
-  }
-  .drip-card__check {
-    transition: none;
-  }
-  .drip-card:hover .drip-card__frame {
-    transform: none;
-  }
-}
 </style>

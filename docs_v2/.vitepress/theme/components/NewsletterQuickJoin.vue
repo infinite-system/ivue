@@ -133,11 +133,12 @@ async function join() {
     ]"
     aria-label="Newsletter quick signup"
     @submit.prevent="join()"
-    @focusin.once="ensureTurnstile()"
-    @pointerenter.once="ensureTurnstile()"
   >
     <span class="quickjoin__lead">Get the blog as a newsletter</span>
     <div class="quickjoin__group">
+      <!-- Turnstile spins up only on deliberate engagement — focusing a
+           field. Hover is not intent: pointerenter rendered the widget
+           for anyone mousing across the toolbar. -->
       <input
         v-model="name"
         type="text"
@@ -145,6 +146,7 @@ async function join() {
         placeholder="Name"
         autocomplete="given-name"
         aria-label="Name"
+        @focus.once="ensureTurnstile()"
       />
       <input
         v-model="email"
@@ -154,6 +156,7 @@ async function join() {
         autocomplete="email"
         aria-label="Email"
         required
+        @focus.once="ensureTurnstile()"
       />
       <button class="quickjoin__button" type="submit" :disabled="state === 'sending'">
         <span class="newsletter__button-shine" aria-hidden="true"></span>
@@ -310,14 +313,22 @@ async function join() {
 }
 /* centered variants (post footer, blog footer) keep the challenge
    IN-FLOW below the form — there is prose right above them, and a
-   popover would sit on it */
+   popover would sit on it. Whatever box Turnstile renders, the row
+   contributes ZERO height until Cloudflare actually shows the visible
+   challenge (the challenged flag) — no phantom padding, ever. */
 .quickjoin--center .quickjoin__turnstile {
   position: static;
   transform: none;
   flex-basis: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: -10px; /* no gap while invisible */
+  height: 0;
+  overflow: hidden;
+}
+.quickjoin--center.quickjoin--challenged .quickjoin__turnstile {
+  height: auto;
+  overflow: visible;
+  margin-bottom: 4px;
 }
 /* start-aligned (community page): the challenge sits IN-FLOW below
    the form, centered — a popover above would cover the prose */
@@ -327,7 +338,13 @@ async function join() {
   flex-basis: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: -10px;
+  height: 0;
+  overflow: hidden;
+}
+.quickjoin--start.quickjoin--challenged .quickjoin__turnstile {
+  height: auto;
+  overflow: visible;
+  margin-bottom: 4px;
 }
 .quickjoin--center {
   margin-left: auto;
@@ -382,14 +399,22 @@ async function join() {
     display: inline;
   }
   /* mobile: the challenge joins the flow — its own centered row
-     below the form, pushing content instead of covering it */
+     below the form, pushing content instead of covering it. Zero
+     height until the challenge actually shows (same contract as the
+     centered variants). */
   .quickjoin__turnstile {
     position: static;
     transform: none;
     flex-basis: 100%;
     display: flex;
     justify-content: center;
-    margin-bottom: -10px; /* no gap while invisible */
+    height: 0;
+    overflow: hidden;
+  }
+  .quickjoin--challenged .quickjoin__turnstile {
+    height: auto;
+    overflow: visible;
+    margin-bottom: 4px;
   }
   .quickjoin__group {
     flex: 1 1 auto;

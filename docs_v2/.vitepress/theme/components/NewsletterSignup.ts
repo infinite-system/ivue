@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref, useId, watch } from 'vue';
+import { onMounted, onUnmounted, ref, useId } from 'vue';
 import { useRoute } from 'vitepress';
 import { Reactive } from '../../../../lib/Reactive';
 import { captureEvent } from '../analytics';
@@ -26,10 +26,14 @@ class $NewsletterSignup {
     this.route = useRoute();
     onMounted(() => this.onMount());
     onUnmounted(() => this.onUnmount());
-    watch(
-      () => this.turnstileElement.value,
-      (element) => element && this.renderTurnstile(),
-    );
+  }
+
+  /** Turnstile spins up only on deliberate engagement — focusing a
+   *  field — never on mount: an idle card must not load a third-party
+   *  script + iframe (and Cloudflare's occasional visible box) for a
+   *  visitor who never touches the form. */
+  ensureTurnstile() {
+    if (!this.turnstileWidgetId) this.renderTurnstile();
   }
 
   // STATE

@@ -73,6 +73,7 @@ const {
             name="FNAME"
             placeholder="Name"
             autocomplete="given-name"
+            @focus.once="signup.ensureTurnstile()"
           />
           <input
             v-model="email"
@@ -81,6 +82,7 @@ const {
             placeholder="Email"
             autocomplete="email"
             required
+            @focus.once="signup.ensureTurnstile()"
           />
         </div>
         <div

@@ -135,7 +135,6 @@ class $BlogDripShowcase {
   }
 
   onMount() {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (this.items.length < 2) return;
     this.observer = new IntersectionObserver(
       ([entry]) => this.onVisibility(entry.isIntersecting),
