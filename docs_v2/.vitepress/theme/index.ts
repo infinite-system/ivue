@@ -365,35 +365,29 @@ export default {
         }
       });
 
-      // --- blog list scroll keeper -----------------------------------
-      // A history-back to /blog/ lands before the async post list has
-      // regained its height, so the browser's native restoration clamps
-      // to the short page (a flaky jump to the top). Save the list's
-      // scroll whenever the reader leaves it; on a POP return, re-assert
-      // the saved position once the list is tall enough to hold it.
-      const isBlogList = (path: string) =>
-        /\/blog\/(index\.html)?$/.test(path);
-      let blogListScroll = 0;
+      // --- pop-scroll re-assert ----------------------------------------
+      // VitePress already remembers each entry's scroll in
+      // history.state.scrollPosition and restores it after a popstate —
+      // but the restore can clamp against a page that hasn't regained
+      // its full height yet (seen on history-back to the blog list).
+      // After a pop, re-assert THAT saved value once the page is tall
+      // enough to hold it. One source of truth: the history state.
       let arrivedViaPop = false;
       window.addEventListener('popstate', () => {
         arrivedViaPop = true;
       });
-      const onBeforeRouteChange = router.onBeforeRouteChange;
-      router.onBeforeRouteChange = async (to) => {
-        if (isBlogList(location.pathname)) blogListScroll = window.scrollY;
-        return onBeforeRouteChange?.(to);
-      };
-      const restoreBlogListScroll = () => {
-        const target = blogListScroll;
-        if (!target) return;
+      const reassertSavedScroll = () => {
+        const saved = (history.state?.scrollPosition as number) || 0;
+        if (!saved) return;
+        const arrivedPath = location.pathname;
         let tries = 0;
         const attempt = () => {
-          if (!isBlogList(location.pathname)) return;
+          if (location.pathname !== arrivedPath) return;
           const tallEnough =
             document.documentElement.scrollHeight >=
-            target + window.innerHeight;
+            saved + window.innerHeight;
           if (tallEnough || tries > 60) {
-            window.scrollTo(0, target);
+            window.scrollTo(0, saved);
             return;
           }
           tries++;
@@ -405,9 +399,7 @@ export default {
       const onAfterRouteChange = router.onAfterRouteChange;
       router.onAfterRouteChange = async (to) => {
         await onAfterRouteChange?.(to);
-        if (arrivedViaPop && isBlogList(router.route.path)) {
-          restoreBlogListScroll();
-        }
+        if (arrivedViaPop) reassertSavedScroll();
         arrivedViaPop = false;
         requestAnimationFrame(() => {
           shieldBrand();
