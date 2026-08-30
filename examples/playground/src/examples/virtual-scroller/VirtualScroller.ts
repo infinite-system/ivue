@@ -1062,6 +1062,37 @@ class $VirtualScroller<T extends BaseItem> {
     );
   }
 
+  /** Main-axis offset that places item `index` per the snapAlign prop —
+   *  0 for 'start'; half the free space for 'center' (clamped landings at
+   *  the bounds come free from setScrollPosition's own clamps). */
+  snapAlignOffset(index: number): number {
+    if (this.props.snapAlign !== 'center') return 0;
+    const size =
+      toRaw(this.measuredSizes.value)[index] ?? this.estimatedItemSize;
+    // The rendered flow starts AFTER the container's leading main-axis
+    // padding, but prefix-sum positions do not include it — subtract it,
+    // or every "centered" landing sits paddingStart px past center.
+    return Math.max(
+      0,
+      (this.offsetSize(this.scrollElement.value) - size) / 2 -
+        this.mainAxisPaddingStart()
+    );
+  }
+
+  /** Leading main-axis padding of the scroll container (see
+   *  axisPaddingProps) — the offset between position space and the
+   *  rendered flow. */
+  protected mainAxisPaddingStart(): number {
+    const element = this.scrollElement.value;
+    if (!element) return 0;
+    const [paddingStartProp] = this.axisPaddingProps;
+    return (
+      parseInt(
+        window.getComputedStyle(element).getPropertyValue(paddingStartProp)
+      ) || 0
+    );
+  }
+
   /** Stop handle for the latest scrollToIndex re-apply watcher (see below). */
   private stopScrollToIndexReapply: (() => void) | null = null;
 
@@ -1078,7 +1109,9 @@ class $VirtualScroller<T extends BaseItem> {
     index: number,
     afterCallback?: () => void,
     animate = true,
-    topOffsetPx = 0,
+    /** Defaults to the snapAlign placement — pass an explicit value to
+     *  override it (0 = flush to the container start). */
+    topOffsetPx = this.snapAlignOffset(index),
     innerFraction = 0
   ) {
     const targetPosition = () => {
@@ -1208,9 +1241,25 @@ class $VirtualScroller<T extends BaseItem> {
       typeof scrollPosition === 'number'
         ? scrollPosition
         : parseFloat(scrollPosition) || 0;
-    const at = this.getIndexAtPosition(offset);
+    // 'start': the item nearest the container's leading edge. 'center':
+    // the item under the container's center — that item then lands
+    // centered (scrollToIndex's default alignment).
+    const centered = this.props.snapAlign === 'center';
+    // The probe point lives in POSITION space: the container's visual
+    // center minus the leading padding that the rendered flow adds.
+    const at = this.getIndexAtPosition(
+      centered
+        ? offset +
+            this.offsetSize(this.scrollElement.value) / 2 -
+            this.mainAxisPaddingStart()
+        : offset
+    );
     if (!at) return;
-    const target = at.fraction > 0.5 ? at.index + 1 : at.index;
+    const target = centered
+      ? at.index
+      : at.fraction > 0.5
+        ? at.index + 1
+        : at.index;
     this.scrollToIndex(
       Math.min(target, this.items.value.length - 1),
       undefined,
@@ -1461,6 +1510,13 @@ export namespace VirtualScroller {
     /** Step mode: after any input settles, snap to the nearest item
      *  boundary — scroll, stop; scroll, stop. */
     snapToItems: { type: Boolean as PropType<boolean> },
+    /** Where a snapped/step landing places the item: at the container's
+     *  start (the default) or its CENTER — `scroll-snap-align` semantics,
+     *  clamped at the bounds like the platform's. Edge items that cannot
+     *  center rest against the bounds; a consumer that wants true
+     *  edge-centering adds main-axis padding (it flows into the extent
+     *  through axisPaddingProps — the scroll-padding escape hatch). */
+    snapAlign: { type: String as PropType<'start' | 'center'> },
     assumedSize: { type: Number as PropType<number> },
     paddingQuantity: { type: Number as PropType<number> },
     /** Autoplay creep speed: ms of wall time per px. No default on purpose —
@@ -1485,6 +1541,7 @@ export namespace VirtualScroller {
     autoPlayDelay: 500,
     autoRepeat: true,
     snapToItems: false,
+    snapAlign: 'start',
     assumedSize: 30,
     paddingQuantity: 6,
     creepMsPerPx: undefined, // no default ON PURPOSE — see the comment above

@@ -46,43 +46,57 @@ let inView = false;
 let hovering = false;
 let current = 0;
 
-function cardStep(): number {
-  return scroller.value?.getIndexPosition(1) ?? 320;
+/** The card resting under the strip's center — read from the scroller's
+ *  OWN geometry (position + half the container), never estimated from
+ *  CSS. With snap-align="center" this is also the card every step
+ *  centers, so "the arriving card" is a guarantee, not a guess. */
+function centerIndexAtRest(): number {
+  const scrollerInstance = scroller.value;
+  if (!scrollerInstance) return 0;
+  const position =
+    parseFloat(String(scrollerInstance.scrollPosition)) || 0;
+  return (
+    scrollerInstance.getIndexAtPosition(
+      position + scrollerInstance.containerOuterSize / 2,
+    )?.index ?? 0
+  );
 }
 
-function fullyVisibleCount(): number {
-  const element = root.value;
-  if (!element) return 1;
-  const style = getComputedStyle(element.querySelector('.virtual-scroller--x') ?? element);
-  const padding = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
-  const width = element.clientWidth - padding;
-  const step = cardStep();
-  return step > 0 ? Math.max(1, Math.floor(width / step)) : 1;
+/** One delivery: the stamp plays on card `index`, then settles into its
+ *  permanent checkmark by advancing the frontier. */
+function deliver(index: number) {
+  arrivingId.value = items[index]?.id ?? '';
+  clearTimeout(arrivingTimer);
+  arrivingTimer = setTimeout(() => {
+    arrivingId.value = '';
+    deliveredThrough.value = Math.max(deliveredThrough.value, index);
+  }, 2600);
 }
 
-function centerIndexAt(position: number): number {
-  return Math.min(position + Math.floor(fullyVisibleCount() / 2), items.length - 1);
+/** Load AND wrap start identically: the clamped cards left of center are
+ *  HISTORY (checked, no stamp — like older mail already in the inbox);
+ *  the centered card is the first to actually arrive. Every later check
+ *  is therefore preceded by that card's own stamp. */
+function beginCycle() {
+  current = centerIndexAtRest();
+  deliveredThrough.value = current - 1;
+  // snap the opening card onto the exact center — the stamp rides it
+  scroller.value?.scrollToIndex(current);
+  deliver(current);
 }
 
 function advance() {
   const scrollerInstance = scroller.value;
   if (!scrollerInstance || !inView || hovering || document.hidden) return;
   if (scrollerInstance.lenis?.isScrolling) return; // the reader owns it
-  const visible = fullyVisibleCount();
-  current = current + visible >= items.length ? 0 : current + 1;
-  scrollerInstance.scrollToIndex(current, () => {
-    // the delivery lands on the CENTER card of the visible strip — the
-    // one the eye is on; older cards to its left already wear the check
-    const arriving = centerIndexAt(current);
-    arrivingId.value = items[arriving]?.id ?? '';
-    if (current === 0) deliveredThrough.value = -1; // the loop wrapped — history resets
-    clearTimeout(arrivingTimer);
-    arrivingTimer = setTimeout(() => {
-      arrivingId.value = '';
-      // the stamp settles into a permanent checkmark
-      deliveredThrough.value = Math.max(deliveredThrough.value, arriving);
-    }, 2600);
-  });
+  if (current >= items.length - 1) {
+    // the loop wrapped — reset to the start and begin a fresh cycle
+    deliveredThrough.value = -1;
+    scrollerInstance.scrollToIndex(0, () => beginCycle(), true, 0);
+    return;
+  }
+  current += 1;
+  scrollerInstance.scrollToIndex(current, () => deliver(current));
 }
 
 onMounted(() => {
@@ -95,10 +109,8 @@ onMounted(() => {
     { threshold: 0.35 },
   );
   if (root.value) observer.observe(root.value);
-  // cards left of the center start as already-delivered history
-  setTimeout(() => {
-    deliveredThrough.value = Math.max(deliveredThrough.value, centerIndexAt(0) - 1);
-  }, 400);
+  // first cycle after the strip has measured its opening cards
+  setTimeout(() => beginCycle(), 600);
   timer = setInterval(advance, ADVANCE_EVERY_MS);
 });
 
@@ -125,6 +137,7 @@ onBeforeUnmount(() => {
         :assumed-size="330"
         :padding-quantity="6"
         snap-to-items
+        snap-align="center"
       >
         <template #item="{ item, index }">
           <a
