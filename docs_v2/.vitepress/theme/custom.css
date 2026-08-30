@@ -3624,6 +3624,11 @@ a.feature-inline-link:active {
   display: none;
 }
 
+/* nav logo: the brand glyph's indigo glow, at header scale */
+.VPNavBarTitle .logo {
+  filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.5));
+}
+
 /* Footer divider: the full-black gutter line is heavier than the page's
    other separators — soften it to the standard divider at half strength. */
 .VPFooter {
