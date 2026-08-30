@@ -181,18 +181,21 @@ onBeforeUnmount(() => {
 .drip-showcase {
   position: relative;
   width: 100vw;
-  margin: -8px calc(50% - 50vw) 26px;
-  /* the strip and the newsletter hero are ONE block — this band's glow
-     hands off to the hero's own bottom-anchored glow right below it */
-  padding: 26px 0 10px;
+  margin: 26px calc(50% - 50vw) -8px;
+  /* the strip and the newsletter hero are ONE block — the strip now
+     closes the section, riding the hero's glow from above */
+  padding: 10px 0 26px;
 }
 .drip-showcase::before {
   content: '';
   position: absolute;
   inset: 0;
+  /* INVERTED for the strip's place at the section's close: the glow
+     anchors at the BOTTOM and fades upward, so the band reads as the
+     luminous base of the hero above it, not the start of a new one */
   background:
-    radial-gradient(60rem 16rem at 50% 0%, rgba(99, 102, 241, 0.08), transparent 70%),
-    linear-gradient(180deg, rgba(45, 212, 191, 0.05), transparent 85%);
+    radial-gradient(60rem 16rem at 50% 100%, rgba(99, 102, 241, 0.08), transparent 70%),
+    linear-gradient(0deg, rgba(45, 212, 191, 0.05), transparent 85%);
   pointer-events: none;
 }
 .drip-showcase .virtual-scroller--x {
@@ -212,8 +215,10 @@ onBeforeUnmount(() => {
   /* the horizontal padding IS the gap — split SYMMETRICALLY (9+9 = the
      same 18px between frames) so the frame sits at the item's true
      center: centered snap landings would otherwise lean by half the gap,
-     visible on narrow screens */
-  padding: 8px 9px 4px;
+     visible on narrow screens. The bottom padding is shadow room: the
+     frame's hover glow reaches ~26px below it, and the scroller root is
+     overflow: hidden — without this the shadow clips at the strip edge. */
+  padding: 8px 9px 30px;
   text-decoration: none !important;
   cursor: pointer;
 }

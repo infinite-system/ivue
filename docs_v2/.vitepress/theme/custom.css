@@ -3891,8 +3891,10 @@ a.feature-inline-link:active {
      inside the box (it was clipped flat at the old 72px edge); the
      negative margin hands that extra room back so the footer gap
      stays where it was */
-  margin: 0 auto -56px;
-  padding: 56px 20px 128px;
+  /* breathing room ABOVE the aurora line (it was hugging the section
+     before it), and a shorter drop from the line to the heading */
+  margin: 72px auto -56px;
+  padding: 40px 20px 128px;
 }
 .ix-newsletter-hero::before {
   content: '';
@@ -3909,8 +3911,34 @@ a.feature-inline-link:active {
      above it — so the glow always completes inside the box and never
      cuts flat where the section ends, whatever the section's height */
   background:
+    /* the heading's halo — the strip used to sit above and lend its
+       glow; now the section carries its own */
+    radial-gradient(44rem 13rem at 50% 1.5rem, rgba(99, 102, 241, 0.13), transparent 70%),
     radial-gradient(32rem 14rem at 50% calc(100% - 20rem), rgba(99, 102, 241, 0.1), transparent 70%),
     radial-gradient(26rem 12rem at 50% calc(100% - 9.5rem), rgba(45, 212, 191, 0.08), transparent 70%);
+  pointer-events: none;
+}
+/* the section opens on a thin aurora line — the house glow colors as a
+   full-bleed gradient rule, with a soft bloom breathing under it */
+.ix-newsletter-hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 100vw;
+  height: 3px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(99, 102, 241, 0.55) 22%,
+    rgba(34, 211, 238, 0.75) 50%,
+    rgba(45, 212, 191, 0.55) 78%,
+    transparent
+  );
+  box-shadow:
+    0 0 18px rgba(34, 211, 238, 0.35),
+    0 0 46px rgba(99, 102, 241, 0.25);
   pointer-events: none;
 }
 .ix .ix-newsletter-hero h2 {
