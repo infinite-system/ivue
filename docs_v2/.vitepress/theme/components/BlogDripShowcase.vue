@@ -328,9 +328,12 @@ onBeforeUnmount(() => {
    flat envelope a defined edge against the dark band (an outline, not a
    border: borders would grow the frame and nudge the measured card
    size when the state flips). */
-.drip-card--sealed .drip-card__frame {
-  outline: 1px solid rgba(99, 102, 241, 0.32);
-  outline-offset: -1px;
+.drip-card--sealed .drip-card__envelope {
+  /* an inset ring, not a border/outline: it paints INSIDE the envelope
+     face (never clipped, never resizing the frame) and follows the
+     frame's radius */
+  box-shadow: inset 0 0 0 1.5px rgba(99, 102, 241, 0.55);
+  border-radius: 12px;
 }
 .drip-card--sealed .drip-card__envelope {
   display: flex;
