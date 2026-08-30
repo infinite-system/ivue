@@ -16,7 +16,6 @@ import {
   loadPostsWithSource,
   renderEmail,
   renderWelcomeEmail,
-  toLightVariant,
 } from './blog-email-renderer.mjs';
 
 const SITE = 'https://ivue.dev';
@@ -81,7 +80,8 @@ function plainText(source) {
 const posts = loadPostsWithSource(); // oldest first — the drip order
 const catalog = [];
 for (const post of posts) {
-  const emailHtml = await renderEmail(post, posts);
+  const emailHtml = await renderEmail(post, posts, 'dark');
+  const emailHtmlLight = await renderEmail(post, posts, 'light');
   catalog.push({
     slug: post.slug,
     title: post.title,
@@ -93,8 +93,9 @@ for (const post of posts) {
     codeImages: codeBySlug.get(post.slug) ?? [],
     plainText: plainText(post.source),
     emailHtml,
-    // the Gmail-UI variant — same content, chrome tokens mapped light
-    emailHtmlLight: toLightVariant(emailHtml),
+    // the Gmail-UI variant — a full light render (light chrome AND the
+    // site's github-light code blocks)
+    emailHtmlLight,
   });
 }
 
@@ -107,11 +108,10 @@ console.log(
 // Worker fetches https://ivue.dev/welcome-email.html on each signup and
 // fills the per-recipient {{UNSUBSCRIBE_URL}} placeholder.
 const welcomePath = resolve(scriptDirectory, '../public/welcome-email.html');
-const welcomeHtml = renderWelcomeEmail(posts);
-writeFileSync(welcomePath, welcomeHtml);
+writeFileSync(welcomePath, renderWelcomeEmail(posts, 'dark'));
 writeFileSync(
   resolve(scriptDirectory, '../public/welcome-email-light.html'),
-  toLightVariant(welcomeHtml),
+  renderWelcomeEmail(posts, 'light'),
 );
 console.log(
   'welcome email → docs_v2/public/welcome-email.html (+ -light variant)',

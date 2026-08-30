@@ -6,10 +6,11 @@
 // The Worker only substitutes the per-recipient {{UNSUBSCRIBE_URL}}
 // placeholder. Same input → byte-identical email.
 //
-// The email is DARK by design — it matches the site, the banners, and
-// the one-dark-pro code blocks, and a designed-dark email is the one
-// form email clients' auto-dark modes leave alone (they invert light
-// emails, never dark ones). The color-scheme meta tags declare it.
+// Every email renders TWICE, from the site's own two themes: the DARK
+// render (canonical — the site's dark tokens, one-dark-pro code) and
+// the LIGHT render for Gmail-UI recipients (Gmail's apps recolor dark
+// emails; a light-sourced one survives), with github-light code on the
+// site's light code-block bg. The color-scheme metas declare each.
 //
 // Preview any post's email as a file:
 //   node docs_v2/scripts/blog-email-renderer.mjs <slug> > /tmp/email.html
@@ -27,19 +28,58 @@ const embedsDirectory = resolve(scriptDirectory, '../public/blog/embeds');
 // ---- the dark palette — the SITE's dark theme (custom.css tokens) ----
 // --vp-c-bg #0b1020 / --vp-c-bg-alt #0e1424 / --vp-c-bg-soft #141a2e
 
-const PAGE_BG = '#0b1020'; // page behind the card = --vp-c-bg
-const CARD_BG = '#0e1424'; // card surface = --vp-c-bg-alt
-const PANEL_BG = '#141a2e'; // quote / inset surface = --vp-c-bg-soft
-const EDGE = '#28324e'; // card borders
-const EDGE_SOFT = '#1e2740'; // row hairlines
-const HEADING = '#e8edf7';
-const TEXT = '#b6c0d2';
-const MUTED = '#8892a6';
-const FAINT = '#7c8698';
-const LINK = '#8f9cfa'; // indigo, AA on card bg
-const BUTTON_BG = '#5457e0';
-const CODE_BG = '#1c2440'; // inline code chip
-const CODE_TEXT = '#b4bcf8';
+// Two palettes, one per rendered variant. DARK is the canonical email
+// (the site's dark tokens); LIGHT is what Gmail-UI recipients get —
+// Gmail's apps recolor dark emails, a light-sourced one survives.
+// Code blocks use the SITE's real duo: one-dark-pro on --vp-code-block-bg
+// dark (#161c2b), github-light on the light theme's #f6f6f7.
+const PALETTES = {
+  dark: {
+    SCHEME: 'dark',
+    PAGE_BG: '#0b1020', // page behind the card = --vp-c-bg
+    CARD_BG: '#0e1424', // card surface = --vp-c-bg-alt
+    PANEL_BG: '#141a2e', // quote / inset surface = --vp-c-bg-soft
+    EDGE: '#28324e', // card borders
+    EDGE_SOFT: '#1e2740', // row hairlines
+    HEADING: '#e8edf7',
+    TEXT: '#b6c0d2',
+    MUTED: '#8892a6',
+    FAINT: '#7c8698',
+    LINK: '#8f9cfa', // indigo, AA on card bg
+    BUTTON_BG: '#5457e0',
+    CODE_BG: '#1c2440', // inline code chip
+    CODE_TEXT: '#b4bcf8',
+    SHIKI_THEME: 'one-dark-pro',
+    CODE_BLOCK_BG: '#161c2b', // --vp-code-block-bg (site dark)
+    EMBED_CAPTION_BG: '#151a30',
+    EMBED_CAPTION_FG: '#8fd3c7',
+  },
+  light: {
+    SCHEME: 'light',
+    PAGE_BG: '#f3f5fa',
+    CARD_BG: '#ffffff',
+    PANEL_BG: '#f0f3f9',
+    EDGE: '#dbe1ee',
+    EDGE_SOFT: '#e8ecf5',
+    HEADING: '#1c2438',
+    TEXT: '#3f4a5f',
+    MUTED: '#67718a',
+    FAINT: '#8a93a8',
+    LINK: '#4649d0',
+    BUTTON_BG: '#5457e0',
+    CODE_BG: '#eceffc',
+    CODE_TEXT: '#4548c9',
+    SHIKI_THEME: 'github-light',
+    CODE_BLOCK_BG: '#f6f6f7', // --vp-code-block-bg (site light)
+    EMBED_CAPTION_BG: '#e6f4f0',
+    EMBED_CAPTION_FG: '#0f766e',
+  },
+};
+
+// The palette the CURRENT render uses. Renders are sequential (the
+// generator awaits each email), so a module-level current-palette is
+// race-free; renderEmail/renderWelcomeEmail set it per variant.
+let P = PALETTES.dark;
 
 // ---- inline markdown → inline-styled HTML ---------------------------
 
@@ -49,11 +89,11 @@ function inlineHtml(markdown) {
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
-    .replace(/`([^`]+)`/g, `<code style="background:${CODE_BG};color:${CODE_TEXT};padding:1px 5px;border-radius:4px;font:12.5px ui-monospace,Menlo,monospace">$1</code>`)
-    .replace(/\*\*([^*]+)\*\*/g, `<strong style="color:${HEADING}">$1</strong>`)
+    .replace(/`([^`]+)`/g, `<code style="background:${P.CODE_BG};color:${P.CODE_TEXT};padding:1px 5px;border-radius:4px;font:12.5px ui-monospace,Menlo,monospace">$1</code>`)
+    .replace(/\*\*([^*]+)\*\*/g, `<strong style="color:${P.HEADING}">$1</strong>`)
     .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    .replace(/\[([^\]]+)\]\((\/[^)]*)\)/g, `<a href="${SITE}$2" style="color:${LINK}">$1</a>`)
-    .replace(/\[([^\]]+)\]\((https?:[^)]*)\)/g, `<a href="$2" style="color:${LINK}">$1</a>`);
+    .replace(/\[([^\]]+)\]\((\/[^)]*)\)/g, `<a href="${SITE}$2" style="color:${P.LINK}">$1</a>`)
+    .replace(/\[([^\]]+)\]\((https?:[^)]*)\)/g, `<a href="$2" style="color:${P.LINK}">$1</a>`);
 }
 
 function escapeHtml(text) {
@@ -71,18 +111,18 @@ function escapeHtml(text) {
 function embedPlaceholder(slug, postUrl, embedIndex) {
   const shotName = `${slug}-embed-${embedIndex}.png`;
   const caption =
-    '<div style="padding:9px 16px;background:#151a30;color:#8fd3c7;border-radius:0 0 8px 8px;font-size:12.5px;font-weight:600">&#9654;&nbsp; Click to view the live example</div>';
+    `<div style="padding:9px 16px;background:${P.EMBED_CAPTION_BG};color:${P.EMBED_CAPTION_FG};border-radius:0 0 8px 8px;font-size:12.5px;font-weight:600">&#9654;&nbsp; Click to view the live example</div>`;
   if (existsSync(resolve(embedsDirectory, shotName))) {
     return (
       `<a href="${postUrl}" style="text-decoration:none;display:block;margin:0 0 20px">` +
-      `<img src="${SITE}/blog/embeds/${shotName}" alt="Interactive example — view it live on the post" width="496" style="display:block;width:100%;height:auto;border:1px solid #1e2440;border-radius:8px 8px 0 0" />` +
+      `<img src="${SITE}/blog/embeds/${shotName}" alt="Interactive example — view it live on the post" width="496" style="display:block;width:100%;height:auto;border:1px solid ${P.EDGE_SOFT};border-radius:8px 8px 0 0" />` +
       caption +
       '</a>'
     );
   }
   return (
     `<a href="${postUrl}" style="text-decoration:none;display:block;margin:0 0 20px">` +
-    `<div style="padding:18px;background:#0d1226;color:#e6edf3;border-radius:8px 8px 0 0;font-size:14px">This post has an interactive example.</div>` +
+    `<div style="padding:18px;background:${P.PANEL_BG};color:${P.HEADING};border-radius:8px 8px 0 0;font-size:14px">This post has an interactive example.</div>` +
     caption +
     '</a>'
   );
@@ -95,12 +135,16 @@ function embedPlaceholder(slug, postUrl, embedIndex) {
 async function highlightedPre(code, lang, hasLabel) {
   const layout = `margin:0 0 20px;padding:14px 16px;border-radius:${hasLabel ? '0 0 8px 8px' : '8px'};font:12.5px/1.6 ui-monospace,Menlo,monospace;overflow-x:auto;`;
   try {
-    const html = await codeToHtml(code, { lang, theme: 'one-dark-pro' });
-    return html.replace(/<pre[^>]*?style="/, `<pre style="${layout}`);
+    const html = await codeToHtml(code, { lang, theme: P.SHIKI_THEME });
+    // shiki's own background is the THEME's (one-dark-pro grey /
+    // github-light white) — the site overrides it with its code-block
+    // token, and the email matches the site
+    return html.replace(/<pre([^>]*?)style="([^"]*)"/, (match, attrs, style) =>
+      `<pre${attrs}style="${layout}${style.replace(/background-color:[^;"]*;?/g, '')};background:${P.CODE_BLOCK_BG}"`);
   } catch {
     const escaped = code
       .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-    return `<pre style="${layout}background:#0d1226;color:#e6edf3"><code>${escaped}</code></pre>`;
+    return `<pre style="${layout}background:${P.CODE_BLOCK_BG};color:${P.TEXT}"><code>${escaped}</code></pre>`;
   }
 }
 
@@ -135,7 +179,7 @@ export async function bodyHtml(source, slug, postUrl) {
         ? imagePath
         : `${SITE}${imagePath}`;
       blocks.push(
-        `<img src="${imageUrl}" alt="${escapeHtml(altText)}" width="496" style="display:block;width:100%;height:auto;border:1px solid ${EDGE_SOFT};border-radius:8px;margin:0 0 20px" />`,
+        `<img src="${imageUrl}" alt="${escapeHtml(altText)}" width="496" style="display:block;width:100%;height:auto;border:1px solid ${P.EDGE_SOFT};border-radius:8px;margin:0 0 20px" />`,
       );
       continue;
     }
@@ -168,17 +212,17 @@ export async function bodyHtml(source, slug, postUrl) {
       const header = parseRow(rows[0]);
       const bodyRows = rows.slice(2).map(parseRow); // rows[1] is the ---|--- divider
       const th = header
-        .map((cell) => `<th style="padding:8px 12px;border-bottom:2px solid ${EDGE};text-align:left;font-size:13px;color:${HEADING}">${cell}</th>`)
+        .map((cell) => `<th style="padding:8px 12px;border-bottom:2px solid ${P.EDGE};text-align:left;font-size:13px;color:${P.HEADING}">${cell}</th>`)
         .join('');
       const trs = bodyRows
         .map((cells) =>
-          `<tr>${cells.map((cell) => `<td style="padding:8px 12px;border-bottom:1px solid ${EDGE_SOFT};font-size:13.5px;color:${TEXT}">${cell}</td>`).join('')}</tr>`)
+          `<tr>${cells.map((cell) => `<td style="padding:8px 12px;border-bottom:1px solid ${P.EDGE_SOFT};font-size:13.5px;color:${P.TEXT}">${cell}</td>`).join('')}</tr>`)
         .join('');
       blocks.push(`<table style="margin:0 0 20px;border-collapse:collapse;width:100%"><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table>`);
       continue;
     }
     if (/^#{2,3} /.test(line)) {
-      blocks.push(`<h2 style="margin:26px 0 12px;font-size:18px;line-height:1.35;color:${HEADING}">${inlineHtml(line.replace(/^#{2,3} /, ''))}</h2>`);
+      blocks.push(`<h2 style="margin:26px 0 12px;font-size:18px;line-height:1.35;color:${P.HEADING}">${inlineHtml(line.replace(/^#{2,3} /, ''))}</h2>`);
       index++;
       continue;
     }
@@ -188,7 +232,7 @@ export async function bodyHtml(source, slug, postUrl) {
         quoteLines.push(lines[index].replace(/^>\s?/, ''));
         index++;
       }
-      blocks.push(`<blockquote style="margin:0 0 20px;padding:10px 18px;border-left:3px solid ${LINK};background:${PANEL_BG};color:#c6cfdf;font-size:15px;line-height:1.6"><p style="margin:0">${inlineHtml(quoteLines.join(' '))}</p></blockquote>`);
+      blocks.push(`<blockquote style="margin:0 0 20px;padding:10px 18px;border-left:3px solid ${P.LINK};background:${P.PANEL_BG};color:#c6cfdf;font-size:15px;line-height:1.6"><p style="margin:0">${inlineHtml(quoteLines.join(' '))}</p></blockquote>`);
       continue;
     }
     if (/^[-*] /.test(line)) {
@@ -202,7 +246,7 @@ export async function bodyHtml(source, slug, postUrl) {
         }
         items.push(`<li style="margin:0 0 7px">${inlineHtml(item)}</li>`);
       }
-      blocks.push(`<ul style="margin:0 0 20px;padding-left:22px;color:${TEXT};font-size:15px;line-height:1.6">${items.join('')}</ul>`);
+      blocks.push(`<ul style="margin:0 0 20px;padding-left:22px;color:${P.TEXT};font-size:15px;line-height:1.6">${items.join('')}</ul>`);
       continue;
     }
     if (/^\d+\. /.test(line)) {
@@ -216,7 +260,7 @@ export async function bodyHtml(source, slug, postUrl) {
         }
         items.push(`<li style="margin:0 0 7px">${inlineHtml(item)}</li>`);
       }
-      blocks.push(`<ol style="margin:0 0 20px;padding-left:22px;color:${TEXT};font-size:15px;line-height:1.6">${items.join('')}</ol>`);
+      blocks.push(`<ol style="margin:0 0 20px;padding-left:22px;color:${P.TEXT};font-size:15px;line-height:1.6">${items.join('')}</ol>`);
       continue;
     }
     if (/^---+$/.test(line.trim())) { index++; continue; }
@@ -246,7 +290,7 @@ export async function bodyHtml(source, slug, postUrl) {
       index++;
     }
     if (paragraphLines.length)
-      blocks.push(`<p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:${TEXT}">${inlineHtml(paragraphLines.join(' '))}</p>`);
+      blocks.push(`<p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:${P.TEXT}">${inlineHtml(paragraphLines.join(' '))}</p>`);
   }
   return blocks.join('');
 }
@@ -260,8 +304,8 @@ function relatedRow(post) {
   return (
     `<a href="${SITE}/blog/${post.slug}" style="text-decoration:none;display:block;margin:0 0 10px">` +
     `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%"><tr>` +
-    `<td style="width:88px;vertical-align:middle"><img src="${SITE}/blog/${post.slug}.png" alt="" width="76" height="40" style="display:block;width:76px;height:40px;border-radius:6px;border:1px solid ${EDGE_SOFT}" /></td>` +
-    `<td style="vertical-align:middle;font-size:13px;line-height:1.4;color:${TEXT}">${escapeHtml(post.title)}</td>` +
+    `<td style="width:88px;vertical-align:middle"><img src="${SITE}/blog/${post.slug}.png" alt="" width="76" height="40" style="display:block;width:76px;height:40px;border-radius:6px;border:1px solid ${P.EDGE_SOFT}" /></td>` +
+    `<td style="vertical-align:middle;font-size:13px;line-height:1.4;color:${P.TEXT}">${escapeHtml(post.title)}</td>` +
     `</tr></table></a>`
   );
 }
@@ -272,7 +316,7 @@ function relatedSection(post, allPosts) {
     .filter(Boolean);
   if (!related.length) return '';
   return (
-    `<p style="margin:26px 0 10px;font-size:11.5px;letter-spacing:.14em;color:${MUTED}">RELATED POSTS</p>` +
+    `<p style="margin:26px 0 10px;font-size:11.5px;letter-spacing:.14em;color:${P.MUTED}">RELATED POSTS</p>` +
     related.map((relatedPost) => relatedRow(relatedPost)).join('')
   );
 }
@@ -284,11 +328,11 @@ function neighborCell(label, post) {
   if (!post) return '<td style="width:50%"></td>';
   return (
     `<td style="width:50%;vertical-align:top;padding:0 0 0 0">` +
-    `<a href="${SITE}/blog/${post.slug}" style="text-decoration:none;display:block;border:1px solid ${EDGE};border-radius:10px;overflow:hidden;background:${CARD_BG}">` +
+    `<a href="${SITE}/blog/${post.slug}" style="text-decoration:none;display:block;border:1px solid ${P.EDGE};border-radius:10px;overflow:hidden;background:${P.CARD_BG}">` +
     `<img src="${SITE}/blog/${post.slug}.png" alt="" width="240" style="display:block;width:100%;height:auto;border:0" />` +
     `<div style="padding:9px 12px">` +
-    `<div style="font-size:10px;letter-spacing:.12em;color:${MUTED};margin:0 0 3px">${label}</div>` +
-    `<div style="font-size:12.5px;font-weight:600;line-height:1.35;color:${HEADING}">${escapeHtml(post.title)}</div>` +
+    `<div style="font-size:10px;letter-spacing:.12em;color:${P.MUTED};margin:0 0 3px">${label}</div>` +
+    `<div style="font-size:12.5px;font-weight:600;line-height:1.35;color:${P.HEADING}">${escapeHtml(post.title)}</div>` +
     `</div></a></td>`
   );
 }
@@ -306,11 +350,11 @@ function neighborRow(newer, older) {
 function neighborCard(label, post) {
   if (!post) return '';
   return (
-    `<a href="${SITE}/blog/${post.slug}" style="text-decoration:none;display:block;margin:0 0 14px;border:1px solid ${EDGE};border-radius:10px;overflow:hidden;background:${CARD_BG}">` +
+    `<a href="${SITE}/blog/${post.slug}" style="text-decoration:none;display:block;margin:0 0 14px;border:1px solid ${P.EDGE};border-radius:10px;overflow:hidden;background:${P.CARD_BG}">` +
     `<img src="${SITE}/blog/${post.slug}.png" alt="" width="496" style="display:block;width:100%;height:auto;border:0" />` +
     `<div style="padding:12px 16px">` +
-    `<div style="font-size:10.5px;letter-spacing:.12em;color:${MUTED};margin:0 0 4px">${label}</div>` +
-    `<div style="font-size:15px;font-weight:600;color:${HEADING}">${escapeHtml(post.title)}</div>` +
+    `<div style="font-size:10.5px;letter-spacing:.12em;color:${P.MUTED};margin:0 0 4px">${label}</div>` +
+    `<div style="font-size:15px;font-weight:600;color:${P.HEADING}">${escapeHtml(post.title)}</div>` +
     `</div></a>`
   );
 }
@@ -319,7 +363,7 @@ function neighborCard(label, post) {
 
 function authorCard() {
   return (
-    `<div style="margin:22px 0 0;padding:16px 18px;background:${CARD_BG};border:1px solid ${EDGE};border-radius:12px">` +
+    `<div style="margin:22px 0 0;padding:16px 18px;background:${P.CARD_BG};border:1px solid ${P.EDGE};border-radius:12px">` +
     `<table role="presentation" style="border-collapse:collapse"><tr>` +
     `<td style="vertical-align:top;padding:2px 14px 0 0">` +
     // the site's avatar ring, email-safe: static gradient (no
@@ -330,55 +374,17 @@ function authorCard() {
     `</div>` +
     `</td>` +
     `<td style="vertical-align:top">` +
-    `<div style="font-size:10.5px;letter-spacing:.12em;color:${MUTED};margin:0 0 3px">AUTHOR</div>` +
-    `<div style="font-size:15px;font-weight:600;color:${HEADING};margin:0 0 2px">Evgeny Kalashnikov</div>` +
-    `<div style="font-size:12.5px;color:${MUTED};margin:0 0 4px">Lead Software Engineer @ Blackline, Adhoc Studio</div>` +
-    `<div style="font-size:12.5px;line-height:1.55;color:${TEXT};margin:0 0 6px">Three years reducing Vue reactivity into <a href="${SITE}" style="color:${LINK};text-decoration:none">ivue</a>'s one kilobyte &mdash; then watching AI agents build <a href="${SITE}/examples/invar" style="color:${LINK};text-decoration:none">Invar</a>, a 94,000-line terminal IDE, on top of it.</div>` +
+    `<div style="font-size:10.5px;letter-spacing:.12em;color:${P.MUTED};margin:0 0 3px">AUTHOR</div>` +
+    `<div style="font-size:15px;font-weight:600;color:${P.HEADING};margin:0 0 2px">Evgeny Kalashnikov</div>` +
+    `<div style="font-size:12.5px;color:${P.MUTED};margin:0 0 4px">Lead Software Engineer @ Blackline, Adhoc Studio</div>` +
+    `<div style="font-size:12.5px;line-height:1.55;color:${P.TEXT};margin:0 0 6px">Three years reducing Vue reactivity into <a href="${SITE}" style="color:${P.LINK};text-decoration:none">ivue</a>'s one kilobyte &mdash; then watching AI agents build <a href="${SITE}/examples/invar" style="color:${P.LINK};text-decoration:none">Invar</a>, a 94,000-line terminal IDE, on top of it.</div>` +
     `<div style="font-size:12.5px">` +
-    `<a href="https://x.com/evgenykalash" style="color:${LINK};text-decoration:none">X</a>` +
-    `&nbsp;&middot;&nbsp; <a href="https://github.com/infinite-system" style="color:${LINK};text-decoration:none">GitHub</a>` +
-    `&nbsp;&middot;&nbsp; <a href="https://www.linkedin.com/in/evgeny-kalashnikov/" style="color:${LINK};text-decoration:none">LinkedIn</a>` +
-    `&nbsp;&middot;&nbsp; <a href="https://forms.gle/Z7L5N8hBYFoLQ8wA9" style="color:${LINK};text-decoration:none">Email</a>` +
+    `<a href="https://x.com/evgenykalash" style="color:${P.LINK};text-decoration:none">X</a>` +
+    `&nbsp;&middot;&nbsp; <a href="https://github.com/infinite-system" style="color:${P.LINK};text-decoration:none">GitHub</a>` +
+    `&nbsp;&middot;&nbsp; <a href="https://www.linkedin.com/in/evgeny-kalashnikov/" style="color:${P.LINK};text-decoration:none">LinkedIn</a>` +
+    `&nbsp;&middot;&nbsp; <a href="https://forms.gle/Z7L5N8hBYFoLQ8wA9" style="color:${P.LINK};text-decoration:none">Email</a>` +
     `</div></td></tr></table></div>`
   );
-}
-
-// ---- the light variant ----------------------------------------------
-// Gmail's mobile apps ignore color-scheme declarations and recolor the
-// body by luminance — a designed-dark email comes out as a mangled
-// light one. So recipients on a Gmail UI (@gmail.com, or a domain whose
-// MX is Google-hosted — the Worker decides) get a LIGHT-sourced email
-// instead, which Gmail leaves alone in light mode and darkens cleanly
-// in dark mode. The variant is derived from the rendered dark HTML by
-// mapping the chrome tokens only: shiki code blocks and the banner
-// imagery deliberately stay dark, exactly like the site's light theme.
-// The map keys are the token constants above — change one there and
-// its entry here must follow.
-
-const LIGHT_TOKEN_MAP = [
-  [PAGE_BG, '#f3f5fa'],
-  [CARD_BG, '#ffffff'],
-  [PANEL_BG, '#f0f3f9'],
-  [EDGE, '#dbe1ee'],
-  [EDGE_SOFT, '#e8ecf5'],
-  [HEADING, '#1c2438'],
-  [TEXT, '#3f4a5f'],
-  [MUTED, '#67718a'],
-  [FAINT, '#8a93a8'],
-  [LINK, '#4649d0'],
-  // BUTTON_BG stays — the indigo button works on both grounds
-  [CODE_BG, '#eceffc'],
-  [CODE_TEXT, '#4548c9'],
-  ['color-scheme:dark', 'color-scheme:light'],
-  ['<meta name="color-scheme" content="dark" />', '<meta name="color-scheme" content="light" />'],
-  ['<meta name="supported-color-schemes" content="dark" />', '<meta name="supported-color-schemes" content="light" />'],
-];
-
-export function toLightVariant(html) {
-  let light = html;
-  for (const [dark, replacement] of LIGHT_TOKEN_MAP)
-    light = light.replaceAll(dark, replacement);
-  return light;
 }
 
 // ---- the welcome email ----------------------------------------------
@@ -387,32 +393,33 @@ export function toLightVariant(html) {
 // fills {{UNSUBSCRIBE_URL}}). It sets the contract: every post from
 // the archive, one at a time, oldest first.
 
-export function renderWelcomeEmail(allPosts) {
+export function renderWelcomeEmail(allPosts, variant = 'dark') {
+  P = PALETTES[variant];
   const newest = allPosts[allPosts.length - 1] ?? null;
   const first = allPosts[0] ?? null;
   return `<!doctype html>
-<html style="color-scheme:dark"><head>
+<html style="color-scheme:${P.SCHEME}"><head>
 <meta charset="utf-8" />
-<meta name="color-scheme" content="dark" />
-<meta name="supported-color-schemes" content="dark" />
-</head><body style="margin:0;background:${PAGE_BG};font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px 48px;background:${PAGE_BG}">
-    <div style="background:${CARD_BG};border:1px solid ${EDGE};border-radius:12px;overflow:hidden">
+<meta name="color-scheme" content="${P.SCHEME}" />
+<meta name="supported-color-schemes" content="${P.SCHEME}" />
+</head><body style="margin:0;background:${P.PAGE_BG};font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+  <div style="max-width:560px;margin:0 auto;padding:32px 20px 48px;background:${P.PAGE_BG}">
+    <div style="background:${P.CARD_BG};border:1px solid ${P.EDGE};border-radius:12px;overflow:hidden">
       <div style="padding:30px 32px 30px">
-        <div style="font-size:11px;letter-spacing:.16em;color:${MUTED};margin:0 0 10px">IVUE NEWSLETTER</div>
-        <h1 style="margin:0 0 14px;font-size:24px;line-height:1.3;color:${HEADING}">Welcome aboard.</h1>
-        <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${TEXT}">You're on the list. Here's the deal: the ivue blog is a running record of reducing Vue reactivity to its invariant core &mdash; measured numbers, real patterns, no fluff. You'll receive <strong style="color:${HEADING}">every post from the archive, one at a time</strong>, from the beginning &mdash; the story in the order it happened.</p>
-        <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${TEXT}">Your first post lands with the next delivery pass. Can't wait? The whole archive is open:</p>
-        <a href="${SITE}/blog/" style="display:inline-block;margin:2px 0 6px;background:${BUTTON_BG};color:#ffffff;text-decoration:none;font-size:14.5px;font-weight:600;padding:11px 22px;border-radius:8px">Browse all posts &rarr;</a>
+        <div style="font-size:11px;letter-spacing:.16em;color:${P.MUTED};margin:0 0 10px">IVUE NEWSLETTER</div>
+        <h1 style="margin:0 0 14px;font-size:24px;line-height:1.3;color:${P.HEADING}">Welcome aboard.</h1>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${P.TEXT}">You're on the list. Here's the deal: the ivue blog is a running record of reducing Vue reactivity to its invariant core &mdash; measured numbers, real patterns, no fluff. You'll receive <strong style="color:${P.HEADING}">every post from the archive, one at a time</strong>, from the beginning &mdash; the story in the order it happened.</p>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${P.TEXT}">Your first post lands with the next delivery pass. Can't wait? The whole archive is open:</p>
+        <a href="${SITE}/blog/" style="display:inline-block;margin:2px 0 6px;background:${P.BUTTON_BG};color:#ffffff;text-decoration:none;font-size:14.5px;font-weight:600;padding:11px 22px;border-radius:8px">Browse all posts &rarr;</a>
       </div>
     </div>
     ${authorCard()}
-    ${first ? `<p style="margin:26px 0 10px;font-size:11.5px;letter-spacing:.14em;color:${MUTED}">UP FIRST FOR YOU</p>${neighborCard('WHERE THE STORY STARTS', first)}` : ''}
+    ${first ? `<p style="margin:26px 0 10px;font-size:11.5px;letter-spacing:.14em;color:${P.MUTED}">UP FIRST FOR YOU</p>${neighborCard('WHERE THE STORY STARTS', first)}` : ''}
     ${newest && newest !== first ? neighborCard('LATEST POST', newest) : ''}
-    <p style="margin:20px 0 8px;font-size:12px;line-height:1.6;color:${FAINT}">
+    <p style="margin:20px 0 8px;font-size:12px;line-height:1.6;color:${P.FAINT}">
       You're receiving the ivue newsletter — every post from the archive,
-      one at a time. <a href="${SITE}/blog/" style="color:${MUTED}">Browse all posts</a>
-      &nbsp;&middot;&nbsp; <a href="{{UNSUBSCRIBE_URL}}" style="color:${MUTED}">Unsubscribe</a>
+      one at a time. <a href="${SITE}/blog/" style="color:${P.MUTED}">Browse all posts</a>
+      &nbsp;&middot;&nbsp; <a href="{{UNSUBSCRIBE_URL}}" style="color:${P.MUTED}">Unsubscribe</a>
     </p>
   </div>
 </body></html>`;
@@ -421,7 +428,8 @@ export function renderWelcomeEmail(allPosts) {
 // ---- the complete email ---------------------------------------------
 // posts: full list sorted oldest-first; the neighbors are chronological.
 
-export async function renderEmail(post, allPosts) {
+export async function renderEmail(post, allPosts, variant = 'dark') {
+  P = PALETTES[variant];
   const postUrl = `${SITE}/blog/${post.slug}`;
   const bannerUrl = `${SITE}/blog/${post.slug}.png`;
   const position = allPosts.findIndex((entry) => entry.slug === post.slug);
@@ -432,30 +440,30 @@ export async function renderEmail(post, allPosts) {
       : null;
 
   return `<!doctype html>
-<html style="color-scheme:dark"><head>
+<html style="color-scheme:${P.SCHEME}"><head>
 <meta charset="utf-8" />
-<meta name="color-scheme" content="dark" />
-<meta name="supported-color-schemes" content="dark" />
-</head><body style="margin:0;background:${PAGE_BG};font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
-  <div style="max-width:560px;margin:0 auto;padding:32px 20px 48px;background:${PAGE_BG}">
-    <div style="background:${CARD_BG};border:1px solid ${EDGE};border-radius:12px;overflow:hidden">
+<meta name="color-scheme" content="${P.SCHEME}" />
+<meta name="supported-color-schemes" content="${P.SCHEME}" />
+</head><body style="margin:0;background:${P.PAGE_BG};font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+  <div style="max-width:560px;margin:0 auto;padding:32px 20px 48px;background:${P.PAGE_BG}">
+    <div style="background:${P.CARD_BG};border:1px solid ${P.EDGE};border-radius:12px;overflow:hidden">
       <a href="${postUrl}" style="text-decoration:none">
         <img src="${bannerUrl}" alt="${escapeHtml(post.title)}" width="560" style="display:block;width:100%;height:auto;border:0" />
       </a>
       <div style="padding:26px 32px 30px">
-        <h1 style="margin:0 0 22px;font-size:23px;line-height:1.3;color:${HEADING}">${escapeHtml(post.title)}</h1>
+        <h1 style="margin:0 0 22px;font-size:23px;line-height:1.3;color:${P.HEADING}">${escapeHtml(post.title)}</h1>
         ${await bodyHtml(post.source, post.slug, postUrl)}
-        <a href="${postUrl}" style="display:inline-block;margin:6px 0 0;background:${BUTTON_BG};color:#ffffff;text-decoration:none;font-size:14.5px;font-weight:600;padding:11px 22px;border-radius:8px">Read on ivue.dev &rarr;</a>
+        <a href="${postUrl}" style="display:inline-block;margin:6px 0 0;background:${P.BUTTON_BG};color:#ffffff;text-decoration:none;font-size:14.5px;font-weight:600;padding:11px 22px;border-radius:8px">Read on ivue.dev &rarr;</a>
       </div>
     </div>
     ${authorCard()}
     ${relatedSection(post, allPosts)}
-    ${older || newer ? `<p style="margin:26px 0 10px;font-size:11.5px;letter-spacing:.14em;color:${MUTED}">MORE FROM THE BLOG</p>` : ''}
+    ${older || newer ? `<p style="margin:26px 0 10px;font-size:11.5px;letter-spacing:.14em;color:${P.MUTED}">MORE FROM THE BLOG</p>` : ''}
     ${neighborRow(newer, older)}
-    <p style="margin:20px 0 8px;font-size:12px;line-height:1.6;color:${FAINT}">
+    <p style="margin:20px 0 8px;font-size:12px;line-height:1.6;color:${P.FAINT}">
       You're receiving the ivue newsletter — every post from the archive,
-      one at a time. <a href="${SITE}/blog/" style="color:${MUTED}">Browse all posts</a>
-      &nbsp;&middot;&nbsp; <a href="{{UNSUBSCRIBE_URL}}" style="color:${MUTED}">Unsubscribe</a>
+      one at a time. <a href="${SITE}/blog/" style="color:${P.MUTED}">Browse all posts</a>
+      &nbsp;&middot;&nbsp; <a href="{{UNSUBSCRIBE_URL}}" style="color:${P.MUTED}">Unsubscribe</a>
     </p>
   </div>
 </body></html>`;
