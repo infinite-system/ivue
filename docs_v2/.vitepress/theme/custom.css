@@ -3890,14 +3890,15 @@ a.feature-inline-link:active {
    relayouts the page when the body locks, and these sections opt out
    of that work while off-screen. */
 .ix .ix-moat,
-.ix .ix-idea,
+.ix .ix-idea:not(.ix-standard),
 .ix .ix-end,
 .ix .invar-production {
   /* NOT .ix-newsletter-hero: content-visibility implies paint
      containment, which clips its 100vw ::before glow to the 46rem box.
      NOT .ix-start either: the same paint containment clips its hover
      lift (top border shaved at the grid's edge) and the card shadows
-     spilling below the box. */
+     spilling below the box. NOT .ix-idea.ix-standard: its CTA's hover
+     shadow ends 2px above the box's bottom edge and gets beheaded. */
   content-visibility: auto;
   contain-intrinsic-size: auto 640px;
 }
