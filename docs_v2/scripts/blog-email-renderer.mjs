@@ -251,7 +251,57 @@ export async function bodyHtml(source, slug, postUrl) {
   return blocks.join('');
 }
 
-// ---- neighbor card (the blog's older/newer nav, in email form) ------
+// ---- related posts (the site's aside rows, in email form) -----------
+// A compact row per curated slug: small banner thumb + grey title —
+// the same recognition-over-spectacle form the site's sidebar uses.
+// The 76×40 thumb is the banner's own 1200:630 ratio, so no cropping.
+
+function relatedRow(post) {
+  return (
+    `<a href="${SITE}/blog/${post.slug}" style="text-decoration:none;display:block;margin:0 0 10px">` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%"><tr>` +
+    `<td style="width:88px;vertical-align:middle"><img src="${SITE}/blog/${post.slug}.png" alt="" width="76" height="40" style="display:block;width:76px;height:40px;border-radius:6px;border:1px solid ${EDGE_SOFT}" /></td>` +
+    `<td style="vertical-align:middle;font-size:13px;line-height:1.4;color:${TEXT}">${escapeHtml(post.title)}</td>` +
+    `</tr></table></a>`
+  );
+}
+
+function relatedSection(post, allPosts) {
+  const related = (post.relatedPosts ?? [])
+    .map((slug) => allPosts.find((candidate) => candidate.slug === slug))
+    .filter(Boolean);
+  if (!related.length) return '';
+  return (
+    `<p style="margin:26px 0 10px;font-size:11.5px;letter-spacing:.14em;color:${MUTED}">RELATED POSTS</p>` +
+    related.map((relatedPost) => relatedRow(relatedPost)).join('')
+  );
+}
+
+// ---- neighbor cards (the blog's older/newer nav, in email form) -----
+// Newer and older ride ONE row, two half-width cards side by side.
+
+function neighborCell(label, post) {
+  if (!post) return '<td style="width:50%"></td>';
+  return (
+    `<td style="width:50%;vertical-align:top;padding:0 0 0 0">` +
+    `<a href="${SITE}/blog/${post.slug}" style="text-decoration:none;display:block;border:1px solid ${EDGE};border-radius:10px;overflow:hidden;background:${CARD_BG}">` +
+    `<img src="${SITE}/blog/${post.slug}.png" alt="" width="240" style="display:block;width:100%;height:auto;border:0" />` +
+    `<div style="padding:9px 12px">` +
+    `<div style="font-size:10px;letter-spacing:.12em;color:${MUTED};margin:0 0 3px">${label}</div>` +
+    `<div style="font-size:12.5px;font-weight:600;line-height:1.35;color:${HEADING}">${escapeHtml(post.title)}</div>` +
+    `</div></a></td>`
+  );
+}
+
+function neighborRow(newer, older) {
+  if (!newer && !older) return '';
+  return (
+    `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:separate;border-spacing:7px 0;margin:0 -7px 14px"><tr>` +
+    neighborCell('NEWER POST', newer) +
+    neighborCell('OLDER POST', older) +
+    `</tr></table>`
+  );
+}
 
 function neighborCard(label, post) {
   if (!post) return '';
@@ -399,9 +449,9 @@ export async function renderEmail(post, allPosts) {
       </div>
     </div>
     ${authorCard()}
+    ${relatedSection(post, allPosts)}
     ${older || newer ? `<p style="margin:26px 0 10px;font-size:11.5px;letter-spacing:.14em;color:${MUTED}">MORE FROM THE BLOG</p>` : ''}
-    ${neighborCard('NEWER POST', newer)}
-    ${neighborCard('OLDER POST', older)}
+    ${neighborRow(newer, older)}
     <p style="margin:20px 0 8px;font-size:12px;line-height:1.6;color:${FAINT}">
       You're receiving the ivue newsletter — every post from the archive,
       one at a time. <a href="${SITE}/blog/" style="color:${MUTED}">Browse all posts</a>
@@ -431,9 +481,14 @@ export function loadPostsWithSource() {
       // private posts never enter the newsletter catalog
       if (isPrivatePost(source)) return null;
       const record = recordedDates[slug];
+      // curated related slugs, strongest first (inline-array frontmatter)
+      const relatedMatch = source.match(/^relatedPosts:\s*\[([^\]]*)\]/m);
       return {
         slug,
         source,
+        relatedPosts: relatedMatch
+          ? relatedMatch[1].split(',').map((entry) => entry.trim()).filter(Boolean)
+          : [],
         title: frontmatterField(source, 'title'),
         description: frontmatterField(source, 'description'),
         url: `${SITE}/blog/${slug}`,

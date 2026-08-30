@@ -173,14 +173,17 @@ watch(
 }
 .related-posts__title {
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.35;
-  color: var(--vp-c-text-1); /* like the prev/next card titles */
+  color: var(--vp-c-text-2); /* grey like the TOC's outline links */
   transition: color 0.15s ease;
 }
 .related-posts__item:hover .related-posts__thumb {
   border-color: var(--ivue-link-accent);
   box-shadow: 0 12px 30px -18px var(--ivue-link-glow);
+}
+.related-posts__item:hover .related-posts__title {
+  color: var(--vp-c-text-1); /* lights up like a hovered TOC entry */
 }
 .related-posts__more {
   grid-column: 1 / -1;
