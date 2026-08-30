@@ -365,9 +365,50 @@ export default {
         }
       });
 
+      // --- blog list scroll keeper -----------------------------------
+      // A history-back to /blog/ lands before the async post list has
+      // regained its height, so the browser's native restoration clamps
+      // to the short page (a flaky jump to the top). Save the list's
+      // scroll whenever the reader leaves it; on a POP return, re-assert
+      // the saved position once the list is tall enough to hold it.
+      const isBlogList = (path: string) =>
+        /\/blog\/(index\.html)?$/.test(path);
+      let blogListScroll = 0;
+      let arrivedViaPop = false;
+      window.addEventListener('popstate', () => {
+        arrivedViaPop = true;
+      });
+      const onBeforeRouteChange = router.onBeforeRouteChange;
+      router.onBeforeRouteChange = async (to) => {
+        if (isBlogList(location.pathname)) blogListScroll = window.scrollY;
+        return onBeforeRouteChange?.(to);
+      };
+      const restoreBlogListScroll = () => {
+        const target = blogListScroll;
+        if (!target) return;
+        let tries = 0;
+        const attempt = () => {
+          if (!isBlogList(location.pathname)) return;
+          const tallEnough =
+            document.documentElement.scrollHeight >=
+            target + window.innerHeight;
+          if (tallEnough || tries > 60) {
+            window.scrollTo(0, target);
+            return;
+          }
+          tries++;
+          requestAnimationFrame(attempt);
+        };
+        requestAnimationFrame(attempt);
+      };
+
       const onAfterRouteChange = router.onAfterRouteChange;
       router.onAfterRouteChange = async (to) => {
         await onAfterRouteChange?.(to);
+        if (arrivedViaPop && isBlogList(router.route.path)) {
+          restoreBlogListScroll();
+        }
+        arrivedViaPop = false;
         requestAnimationFrame(() => {
           shieldBrand();
           injectExtraNavLinks();

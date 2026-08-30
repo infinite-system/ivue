@@ -310,6 +310,18 @@ async function join() {
   bottom: calc(100% + 8px);
   right: 0;
   z-index: 20; /* above content, BELOW the sticky navbar (--vp-z-index-nav: 30) */
+  /* the widget is INVISIBLE and sizeless in every state Cloudflare can
+     put it in (badge, "verifying…", error box — Safari showed these as
+     stray space at the top of the blog) — only a genuine interactive
+     challenge (the challenged flag) reveals it */
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+.quickjoin--challenged .quickjoin__turnstile {
+  width: auto;
+  height: auto;
+  overflow: visible;
 }
 /* centered variants (post footer, blog footer) keep the challenge
    IN-FLOW below the form — there is prose right above them, and a
