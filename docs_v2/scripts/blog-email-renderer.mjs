@@ -53,6 +53,7 @@ const PALETTES = {
     CODE_BLOCK_BG: '#161c2b', // --vp-code-block-bg (site dark)
     EMBED_CAPTION_BG: '#151a30',
     EMBED_CAPTION_FG: '#8fd3c7',
+    QUOTE_TEXT: '#c6cfdf',
   },
   light: {
     SCHEME: 'light',
@@ -73,6 +74,7 @@ const PALETTES = {
     CODE_BLOCK_BG: '#f6f6f7', // --vp-code-block-bg (site light)
     EMBED_CAPTION_BG: '#e6f4f0',
     EMBED_CAPTION_FG: '#0f766e',
+    QUOTE_TEXT: '#333e56',
   },
 };
 
@@ -236,7 +238,7 @@ export async function bodyHtml(source, slug, postUrl) {
         quoteLines.push(lines[index].replace(/^>\s?/, ''));
         index++;
       }
-      blocks.push(`<blockquote style="margin:0 0 20px;padding:10px 18px;border-left:3px solid ${P.LINK};background:${P.PANEL_BG};color:#c6cfdf;font-size:15px;line-height:1.6"><p style="margin:0">${inlineHtml(quoteLines.join(' '))}</p></blockquote>`);
+      blocks.push(`<blockquote style="margin:0 0 20px;padding:10px 18px;border-left:3px solid ${P.LINK};background:${P.PANEL_BG};color:${P.QUOTE_TEXT};font-size:15px;line-height:1.6"><p style="margin:0">${inlineHtml(quoteLines.join(' '))}</p></blockquote>`);
       continue;
     }
     if (/^[-*] /.test(line)) {
@@ -457,7 +459,9 @@ export async function renderEmail(post, allPosts, variant = 'dark') {
       <div style="padding:26px 32px 30px">
         <h1 style="margin:0 0 22px;font-size:23px;line-height:1.3;color:${P.HEADING}">${escapeHtml(post.title)}</h1>
         ${await bodyHtml(post.source, post.slug, postUrl)}
-        <a href="${postUrl}" style="display:inline-block;margin:6px 0 0;background:${P.BUTTON_BG};color:#ffffff;text-decoration:none;font-size:14.5px;font-weight:600;padding:11px 22px;border-radius:8px">Read on ivue.dev &rarr;</a>
+        <div style="text-align:right">
+          <a href="${postUrl}" style="display:inline-block;margin:6px 0 0;background-color:${P.BUTTON_BG};background-image:linear-gradient(105deg,#6366f1,#2dd4bf 70%,#34d399);color:#ffffff;text-decoration:none;font-size:14.5px;font-weight:600;padding:11px 22px;border-radius:9px">Read on ivue.dev &rarr;</a>
+        </div>
       </div>
     </div>
     ${authorCard()}
