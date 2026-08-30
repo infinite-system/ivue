@@ -1841,6 +1841,27 @@ a.feature-inline-link {
 .foot-tag--more {
   font-weight: 650;
 }
+/* cards view: the +N reveal is an ANCHORED OVERLAY on the pill — the
+   card keeps its height, grid neighbors never jump */
+.blog-card .foot-tags {
+  position: relative;
+}
+.foot-tags__overlay {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  max-width: 250px;
+  padding: 6px 7px;
+  background: var(--vp-c-bg);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 9px;
+  box-shadow: 0 12px 32px -14px rgba(2, 6, 23, 0.45);
+}
 /* phones: rows are tight — the date stands alone */
 @media (max-width: 560px) {
   .foot-tags {

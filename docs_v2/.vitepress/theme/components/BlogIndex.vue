@@ -97,6 +97,26 @@ function hiddenTagCount(post: { slug: string; tags: string[] }): number {
   return post.tags.length - visibleTags(post).length;
 }
 
+// cards view expands into an ANCHORED OVERLAY (a floating chip panel
+// on the +N pill) instead of inline — an inline reveal grows the card
+// and shoves its grid neighbors. These fold WITHOUT the expansion
+// override: the visible row never changes, only the panel appears.
+function foldedTags(post: { slug: string; tags: string[] }): string[] {
+  const budget = TAG_CHAR_BUDGET.cards;
+  const shown: string[] = [];
+  let spent = 0;
+  for (const tag of post.tags) {
+    spent += tag.length + 2;
+    if (shown.length > 0 && spent > budget) break;
+    shown.push(tag);
+  }
+  return shown;
+}
+
+function overlayTags(post: { slug: string; tags: string[] }): string[] {
+  return post.tags.slice(foldedTags(post).length);
+}
+
 function toggleTagExpand(slug: string) {
   expandedTagsSlug.value = expandedTagsSlug.value === slug ? null : slug;
 }
@@ -130,6 +150,14 @@ function goToPage(target: number) {
 }
 
 onMounted(() => {
+  // clicking anywhere outside a tag group closes an open overlay
+  document.addEventListener('click', (event) => {
+    if (
+      expandedTagsSlug.value &&
+      !(event.target as Element | null)?.closest?.('.foot-tags')
+    )
+      expandedTagsSlug.value = null;
+  });
   const stored = localStorage.getItem(VIEW_STORAGE_KEY);
   if (stored === 'cards' || stored === 'list') {
     viewStyle.value = stored;
@@ -299,7 +327,7 @@ function formatDate(date: string): string {
             <span class="date">{{ formatDate(post.date) }}</span>
             <span v-if="post.tags.length" class="foot-tags">
               <button
-                v-for="tag in visibleTags(post)"
+                v-for="tag in foldedTags(post)"
                 :key="tag"
                 type="button"
                 class="foot-tag"
@@ -307,19 +335,28 @@ function formatDate(date: string): string {
                 @click.prevent.stop="toggleTag(tag)"
               >{{ tag }}</button>
               <button
-                v-if="hiddenTagCount(post) > 0"
+                v-if="overlayTags(post).length"
                 type="button"
                 class="foot-tag foot-tag--more"
-                :aria-label="`Show ${hiddenTagCount(post)} more tags`"
+                :class="{ 'foot-tag--active': expandedTagsSlug === post.slug }"
+                :aria-label="`Show ${overlayTags(post).length} more tags`"
                 @click.prevent.stop="toggleTagExpand(post.slug)"
-              >+{{ hiddenTagCount(post) }}</button>
-              <button
-                v-else-if="expandedTagsSlug === post.slug"
-                type="button"
-                class="foot-tag foot-tag--more"
-                aria-label="Collapse tags"
-                @click.prevent.stop="toggleTagExpand(post.slug)"
-              >−</button>
+              >+{{ overlayTags(post).length }}</button>
+              <!-- anchored overlay: the reveal floats on the pill, so the
+                   card never grows and grid neighbors never jump -->
+              <span
+                v-if="expandedTagsSlug === post.slug && overlayTags(post).length"
+                class="foot-tags__overlay"
+              >
+                <button
+                  v-for="tag in overlayTags(post)"
+                  :key="tag"
+                  type="button"
+                  class="foot-tag"
+                  :class="{ 'foot-tag--active': tag === activeTag }"
+                  @click.prevent.stop="toggleTag(tag)"
+                >{{ tag }}</button>
+              </span>
             </span>
           </span>
           <span class="go">Read the post →</span>
