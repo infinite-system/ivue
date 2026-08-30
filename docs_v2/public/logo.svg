@@ -1,14 +1,16 @@
-<svg width="48" height="48" viewBox="-5 -5 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <linearGradient id="inf" x1="10" y1="16" x2="38" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BAE6FD"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+    
     <linearGradient id="ivg" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
       <stop stop-color="#6366F1"/>
       <stop offset="1" stop-color="#34D399"/>
     </linearGradient>
-    <filter id="ivglow" x="-40%" y="-40%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="0" stdDeviation="2.6" flood-color="#6366F1" flood-opacity="0.45"/>
-    </filter>
   </defs>
-  <rect x="1" y="1" width="46" height="46" rx="11" fill="url(#ivg)" filter="url(#ivglow)"/>
+  <rect x="1" y="1" width="46" height="46" rx="11" fill="url(#ivg)"/>
   <path d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
-        stroke="#192338" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        stroke="url(#inf)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>

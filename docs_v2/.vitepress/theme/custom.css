@@ -3624,10 +3624,13 @@ a.feature-inline-link:active {
   display: none;
 }
 
-/* nav logo: the brand glyph's indigo glow, at header scale */
-.VPNavBarTitle .logo {
-  filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.5));
+/* sidebar pages: the logo corner shows the gray sidebar column through
+   the transparent nav — paint the whole nav bar solid so the header
+   strip reads the same as the homepage's */
+.VPNavBar.has-sidebar {
+  background-color: var(--vp-nav-bg-color);
 }
+
 
 /* Footer divider: the full-black gutter line is heavier than the page's
    other separators — soften it to the standard divider at half strength. */
@@ -3845,12 +3848,23 @@ a.feature-inline-link:active {
   border-bottom-color: transparent !important;
 }
 @media (min-width: 960px) {
+  /* the hairline is painted OUT of flow (::after on the divider's own
+     64–65px row) — the title box stays byte-identical to the homepage's,
+     so the logo doesn't shift when navigating between layouts */
   .VPNavBarTitle.has-sidebar .title {
-    border-bottom-color: color-mix(
-      in srgb,
-      var(--vp-c-gutter) 30%,
-      transparent
-    ) !important;
+    /* transparent, not none — the homepage title carries the same 1px
+       transparent border, and the box must match it exactly */
+    border-bottom-color: transparent !important;
+    position: relative;
+  }
+  .VPNavBarTitle.has-sidebar .title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background: color-mix(in srgb, var(--vp-c-gutter) 30%, transparent);
   }
 }
 

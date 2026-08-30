@@ -7,7 +7,11 @@ import { chromium } from 'playwright';
 
 const scriptDirectory = fileURLToPath(new URL('.', import.meta.url));
 const publicDirectory = resolve(scriptDirectory, '../public');
-const logoSvg = readFileSync(resolve(publicDirectory, 'logo.svg'), 'utf8');
+// logo.svg pads its viewBox for the nav glow; favicons want the tile
+// FULL-BLEED in the icon box (a padded box renders visibly smaller in a
+// browser tab than neighboring favicons).
+const logoSvg = readFileSync(resolve(publicDirectory, 'logo.svg'), 'utf8')
+  .replace(/viewBox="[^"]*"/, 'viewBox="0 0 48 48"');
 
 // Tile favicons keep logo.svg's own rounded corners (transparent outside).
 const tilePage = (svg) => `<!doctype html><html><head><style>
@@ -17,10 +21,12 @@ const tilePage = (svg) => `<!doctype html><html><head><style>
 </style></head><body>${svg}</body></html>`;
 
 // The apple-touch-icon is full-bleed: iOS applies its own corner mask, so
-// the tile's rounded rect becomes the square page background instead.
-const fullBleedSvg = logoSvg
-  .replace(/<rect[^>]*rx="12"[^>]*\/>/, '')
-  .replace(/<rect[^>]*rx="11\.5"[^>]*\/>/, '');
+// the gradient rect expands past the edges instead of keeping its own
+// rounded corners.
+const fullBleedSvg = logoSvg.replace(
+  /<rect[^>]*rx="11"[^>]*fill="url\(#ivg\)"\/>/,
+  '<rect x="-2" y="-2" width="52" height="52" fill="url(#ivg)"/>',
+);
 const applePage = `<!doctype html><html><head><style>
   * { margin: 0; padding: 0; }
   html, body { width: 100vw; height: 100vh; background: #0D1226; }

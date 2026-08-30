@@ -1,5 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" viewBox="0 0 48 48">
-  <title>ivue — Infinite Vue</title>
+<!doctype html><html><head><meta charset="utf-8"><style>
+* { margin:0; padding:0; }
+html, body { width: 452px; height: 384px; background: transparent; overflow: hidden; }
+.tile { position: absolute; left: 24px; top: 24px; filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.4)); }
+.tile path { filter: drop-shadow(0 5px 8px rgba(13, 18, 38, 0.4)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.5)); }
+</style></head><body>
+<svg class="tile" width="336" height="336" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="inf" x1="10" y1="16" x2="38" y2="32" gradientUnits="userSpaceOnUse">
       <stop stop-color="#BAE6FD"/>
@@ -11,7 +16,8 @@
       <stop offset="1" stop-color="#34D399"/>
     </linearGradient>
   </defs>
-  <rect x="0" y="0" width="48" height="48" fill="url(#g)"/>
+  <rect x="1" y="1" width="46" height="46" rx="11" fill="url(#g)"/>
   <path d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
         stroke="url(#inf)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>
+</body></html>

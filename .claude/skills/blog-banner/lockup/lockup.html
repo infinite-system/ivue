@@ -14,7 +14,7 @@
   body { font-family: 'Geist', 'DejaVu Sans', sans-serif; position: relative; }
   .tile {
     position: absolute; left: 20px; top: 20px;
-    filter: drop-shadow(0 0 26px rgba(99, 102, 241, 0.45));
+    filter: drop-shadow(0 0 17px rgba(99, 102, 241, 0.4));
   }
   .word {
     position: absolute; left: 424px; top: -8px;
@@ -30,11 +30,17 @@
   }
   body.dark { --sub: #aab6d3; }
   body.light { --sub: #3d4759; }
+.tile path { filter: drop-shadow(0 5px 8px rgba(13, 18, 38, 0.4)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.5)); }
 </style>
 </head>
 <body class="dark">
   <svg class="tile" width="344" height="344" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
+    <linearGradient id="inf" x1="10" y1="16" x2="38" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BAE6FD"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+    
       <linearGradient id="g" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
         <stop stop-color="#6366F1"/>
         <stop offset="1" stop-color="#34D399"/>
@@ -42,7 +48,7 @@
     </defs>
     <rect x="1" y="1" width="46" height="46" rx="11" fill="url(#g)"/>
     <path d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
-          stroke="#192338" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          stroke="url(#inf)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
   </svg>
   <div class="word">ivue</div>
   <div class="sub">INFINITE VUE</div>

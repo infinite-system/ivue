@@ -20,6 +20,7 @@ const props = defineProps<{ placement: 'toast' | 'aside' | 'doc' | 'cta' }>();
 // posts, one hidden by CSS) — a shared gradient id would resolve into the
 // display:none instance and paint nothing. Every instance gets its own.
 const markGradientId = useId();
+const markTileGradientId = useId();
 
 const route = useRoute();
 const isBlogPost = computed(
@@ -215,15 +216,18 @@ async function subscribe() {
       >×</button>
       <div class="newsletter__head">
         <svg class="newsletter__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-          <rect width="48" height="48" rx="12" fill="#0D1226" />
-          <rect x="0.5" y="0.5" width="47" height="47" rx="11.5" stroke="white" stroke-opacity="0.08" />
+          <rect x="1" y="1" width="46" height="46" rx="11" :fill="`url(#${markTileGradientId})`" />
           <path
             d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
-            :stroke="`url(#${markGradientId})`" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+            :stroke="`url(#${markGradientId})`" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
           <defs>
-            <linearGradient :id="markGradientId" x1="8" y1="14" x2="40" y2="34" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#818CF8" />
+            <linearGradient :id="markTileGradientId" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6366F1" />
               <stop offset="1" stop-color="#34D399" />
+            </linearGradient>
+            <linearGradient :id="markGradientId" x1="10" y1="16" x2="38" y2="32" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#BAE6FD" />
+              <stop offset="1" stop-color="#FFFFFF" />
             </linearGradient>
           </defs>
         </svg>
