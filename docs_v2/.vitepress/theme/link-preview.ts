@@ -158,6 +158,9 @@ export function installLinkPreviews() {
     hide();
     // links that already show an image (cards, thumbs) need no preview
     if (link.querySelector('img')) return;
+    // self-describing card links (the Start-here grid) — a preview card
+    // floating over neighboring cards reads as clipped borders/shadows
+    if (link.closest('.ix-start')) return;
     const info = previewFor(link.href);
     if (!info) return;
     currentLink = link;
@@ -182,7 +185,12 @@ export function installLinkPreviews() {
   document.addEventListener(
     'mouseout',
     (event) => {
-      const link = (event.target as Element | null)?.closest?.('.vp-doc a');
+      // must match the SAME selector as mouseover — the hero's
+      // feature-inline-link lives outside .vp-doc, and a mismatch here
+      // left its card stuck open forever
+      const link = (event.target as Element | null)?.closest?.(
+        '.vp-doc a[href], a.feature-inline-link[href]',
+      );
       if (link !== currentLink || !link) return;
       // heading onto the card keeps it open
       const destination = event.relatedTarget as Element | null;
