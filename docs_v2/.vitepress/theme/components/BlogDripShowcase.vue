@@ -145,6 +145,7 @@ onBeforeUnmount(() => {
             :class="{
               'drip-card--arriving': item.id === arrivingId,
               'drip-card--delivered': index <= deliveredThrough && item.id !== arrivingId,
+              'drip-card--sealed': index > deliveredThrough && item.id !== arrivingId,
             }"
             :href="withBase(item.url)"
             tabindex="-1"
@@ -316,6 +317,12 @@ onBeforeUnmount(() => {
   transform: scale(1);
 }
 
+/* SEALED: not yet delivered — the banner hides behind the envelope face
+   until this card's own arrival lifts it open */
+.drip-card--sealed .drip-card__envelope {
+  display: flex;
+}
+
 .drip-card--arriving .drip-card__envelope {
   display: flex;
   animation: drip-open 0.85s cubic-bezier(0.55, 0, 0.3, 1) 0.25s both;
@@ -372,6 +379,9 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* the delivery theater is off entirely — no cycle runs, so sealed
+     cards would never open; show every banner instead */
+  .drip-card--sealed .drip-card__envelope,
   .drip-card--arriving .drip-card__envelope,
   .drip-card--arriving .drip-card__delivered {
     animation: none;
