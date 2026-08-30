@@ -208,7 +208,11 @@ onBeforeUnmount(() => {
 .drip-card {
   display: block;
   width: clamp(230px, 24vw, 320px);
-  padding: 8px 18px 4px 0; /* the right padding IS the gap — uniform card widths */
+  /* the horizontal padding IS the gap — split SYMMETRICALLY (9+9 = the
+     same 18px between frames) so the frame sits at the item's true
+     center: centered snap landings would otherwise lean by half the gap,
+     visible on narrow screens */
+  padding: 8px 9px 4px;
   text-decoration: none !important;
   cursor: pointer;
 }
@@ -353,7 +357,7 @@ onBeforeUnmount(() => {
 .drip-card__title {
   display: block;
   margin-top: 9px;
-  padding: 0 18px 0 2px; /* optical center over the gap padding */
+  padding: 0 9px; /* centered over the symmetric gap */
   font-size: 13px;
   line-height: 1.4;
   text-align: center;
