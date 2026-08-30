@@ -324,7 +324,14 @@ onBeforeUnmount(() => {
 }
 
 /* SEALED: not yet delivered — the banner hides behind the envelope face
-   until this card's own arrival lifts it open */
+   until this card's own arrival lifts it open. The outline gives the
+   flat envelope a defined edge against the dark band (an outline, not a
+   border: borders would grow the frame and nudge the measured card
+   size when the state flips). */
+.drip-card--sealed .drip-card__frame {
+  outline: 1px solid rgba(99, 102, 241, 0.32);
+  outline-offset: -1px;
+}
 .drip-card--sealed .drip-card__envelope {
   display: flex;
 }
