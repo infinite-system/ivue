@@ -109,6 +109,9 @@ async function highlightedPre(code, lang, hasLabel) {
 export async function bodyHtml(source, slug, postUrl) {
   const body = source
     .replace(/^---[\s\S]*?---/, '')
+    // Vue SFC blocks in the markdown (embed component imports) are
+    // site-only wiring — without this they leak as body text
+    .replace(/<script setup>[\s\S]*?<\/script>/g, '')
     .replace(/<BlogPostDate \/>/g, '')
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/^:::.*$/gm, '')
@@ -288,6 +291,44 @@ function authorCard() {
     `&nbsp;&middot;&nbsp; <a href="https://forms.gle/Z7L5N8hBYFoLQ8wA9" style="color:${LINK};text-decoration:none">Email</a>` +
     `</div></td></tr></table></div>`
   );
+}
+
+// ---- the light variant ----------------------------------------------
+// Gmail's mobile apps ignore color-scheme declarations and recolor the
+// body by luminance — a designed-dark email comes out as a mangled
+// light one. So recipients on a Gmail UI (@gmail.com, or a domain whose
+// MX is Google-hosted — the Worker decides) get a LIGHT-sourced email
+// instead, which Gmail leaves alone in light mode and darkens cleanly
+// in dark mode. The variant is derived from the rendered dark HTML by
+// mapping the chrome tokens only: shiki code blocks and the banner
+// imagery deliberately stay dark, exactly like the site's light theme.
+// The map keys are the token constants above — change one there and
+// its entry here must follow.
+
+const LIGHT_TOKEN_MAP = [
+  [PAGE_BG, '#f3f5fa'],
+  [CARD_BG, '#ffffff'],
+  [PANEL_BG, '#f0f3f9'],
+  [EDGE, '#dbe1ee'],
+  [EDGE_SOFT, '#e8ecf5'],
+  [HEADING, '#1c2438'],
+  [TEXT, '#3f4a5f'],
+  [MUTED, '#67718a'],
+  [FAINT, '#8a93a8'],
+  [LINK, '#4649d0'],
+  // BUTTON_BG stays — the indigo button works on both grounds
+  [CODE_BG, '#eceffc'],
+  [CODE_TEXT, '#4548c9'],
+  ['color-scheme:dark', 'color-scheme:light'],
+  ['<meta name="color-scheme" content="dark" />', '<meta name="color-scheme" content="light" />'],
+  ['<meta name="supported-color-schemes" content="dark" />', '<meta name="supported-color-schemes" content="light" />'],
+];
+
+export function toLightVariant(html) {
+  let light = html;
+  for (const [dark, replacement] of LIGHT_TOKEN_MAP)
+    light = light.replaceAll(dark, replacement);
+  return light;
 }
 
 // ---- the welcome email ----------------------------------------------

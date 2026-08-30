@@ -33,7 +33,12 @@ class $Posts {
   // server-side (plainText travels via /admin/post-text on demand).
   static summaries(posts: Post[]): PostSummary[] {
     return posts.map(
-      ({ emailHtml: _emailHtml, plainText: _plainText, ...summary }) => ({
+      ({
+        emailHtml: _emailHtml,
+        emailHtmlLight: _emailHtmlLight,
+        plainText: _plainText,
+        ...summary
+      }) => ({
         ...summary,
         embedImages: summary.embedImages ?? [],
         codeImages: summary.codeImages ?? [],
@@ -64,9 +69,16 @@ export interface Post {
   // the complete email body, rendered at site build time; one
   // {{UNSUBSCRIBE_URL}} placeholder remains for the Worker to fill
   emailHtml: string;
+  // the light-chrome variant for Gmail-UI recipients (Gmail's apps
+  // recolor dark emails); optional — an older blog-index.json without
+  // it falls back to the dark body
+  emailHtmlLight?: string;
 }
 
-export type PostSummary = Omit<Post, 'emailHtml' | 'plainText'> & {
+export type PostSummary = Omit<
+  Post,
+  'emailHtml' | 'emailHtmlLight' | 'plainText'
+> & {
   embedImages: string[];
   codeImages: string[];
 };

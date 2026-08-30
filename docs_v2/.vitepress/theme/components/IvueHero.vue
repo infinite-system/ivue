@@ -143,20 +143,24 @@ onUnmounted(() => {
 
     <div class="ivh-inner">
       <div class="ivh-copy">
-        <img
-          class="ivh-lockup ivh-lockup--light"
-          :src="withBase('/brand-lockup-light.png')"
-          alt="ivue — Infinite Vue"
-          width="392"
-          height="128"
-        />
-        <img
-          class="ivh-lockup ivh-lockup--dark"
-          :src="withBase('/brand-lockup-dark.png')"
-          alt="ivue — Infinite Vue"
-          width="392"
-          height="128"
-        />
+        <!-- the tile glow is CSS (::before under the imgs) — the PNGs
+             are flat, so nothing bakes a clipped halo into the canvas -->
+        <div class="ivh-lockup-wrap">
+          <img
+            class="ivh-lockup ivh-lockup--light"
+            :src="withBase('/brand-lockup-light.png')"
+            alt="ivue — Infinite Vue"
+            width="392"
+            height="128"
+          />
+          <img
+            class="ivh-lockup ivh-lockup--dark"
+            :src="withBase('/brand-lockup-dark.png')"
+            alt="ivue — Infinite Vue"
+            width="392"
+            height="128"
+          />
+        </div>
         <h1 class="ivh-title" aria-label="Plain classes. Full reactivity. Infinite scalability. One kilobyte. Built for AI.">
           <span class="row fall fall-1">Plain classes.</span>
           <span class="row fall fall-2">Full reactivity.</span>
@@ -289,11 +293,37 @@ onUnmounted(() => {
 }
 
 /* ---- copy ---- */
+/* The tile's glow lives HERE, not in the PNGs: a baked halo dies at
+   the canvas edge (24px of room) and reads as cut off. The radial sits
+   under the tile square (left ~6..91px of the displayed lockup) and
+   can breathe as far as it likes. */
+.ivh-lockup-wrap {
+  position: relative;
+  width: min(252px, 58vw);
+  margin: 0 0 18px -6px;
+}
+.ivh-lockup-wrap::before {
+  content: '';
+  position: absolute;
+  /* the VISIBLE tile square within the lockup PNG: the tile svg spans
+     24..360 but its rect is inset 1 viewBox-unit, so the painted tile
+     is x 31..353 of 993, y 31..353 of 384. The box must match the
+     painted edge exactly or its shadow reads as a second border. */
+  left: 3.12%;
+  top: 8.07%;
+  width: 32.43%;
+  height: 83.85%;
+  /* the tile's own corner rounding (rx 11 of a 46-unit side) */
+  border-radius: 24%;
+  /* indigo nudged toward blue */
+  box-shadow: 0 0 17px -1px rgba(79, 121, 246, 0.32);
+  pointer-events: none;
+}
 .ivh-lockup {
   display: none;
-  width: min(252px, 58vw);
+  position: relative;
+  width: 100%;
   height: auto;
-  margin: 0 0 18px -6px;
 }
 :root:not(.dark) .ivh-lockup--light {
   display: block;

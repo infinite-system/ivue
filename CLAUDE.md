@@ -7,6 +7,14 @@
 - Docs are written per `.claude/skills/write-docs/SKILL.md`; ivue code per
   `.claude/skills/ivue/SKILL.md` (its mirror is `docs_v2/guide/standard.md` —
   never edit the mirror).
+- **The docs site eats its own cooking**: every new behavioral component
+  under `docs_v2/.vitepress/theme/components/` is written as an ivue
+  class per the ivue skill (one `$Class` + namespace owning the logic,
+  `<script setup>` as wiring only) — like `BlogDripShowcase`. A
+  markup-only leaf may stay classless; the moment a component owns
+  state, derivation, or handlers, it gets its one class. Existing
+  plain-setup components migrate opportunistically when touched, not in
+  bulk sweeps.
 - After docs changes: `npm run build:docs` must pass. After engine changes:
   re-verify the ~1.1 KB gzipped production size and 100% test coverage.
 - **Newsletter** (`newsletter/` — Worker + D1 + Postmark): the ops manual

@@ -9,6 +9,7 @@ $Delivery sits between Postmark and the sends table; the tests pin the write to 
 */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Delivery } from './Delivery';
+import { GmailUi } from '../platform/GmailUi';
 import { Ledger } from '../audience/Ledger';
 import { makeTestEnv } from '../../../test/TestDatabase';
 import { installFetchStub, makePost } from '../../../test/Fixtures';
@@ -16,6 +17,7 @@ import { installFetchStub, makePost } from '../../../test/Fixtures';
 describe('Delivery', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    GmailUi.Class.domainCache.clear();
   });
 
   it('sends via Postmark, fills the unsubscribe placeholder, writes the ledger', async () => {
@@ -95,5 +97,38 @@ describe('Delivery', () => {
     expect(
       (await Ledger.Class.sentSetForSlug(env, 'first-post')).size,
     ).toBe(0);
+  });
+
+  it('a Gmail-UI recipient gets the light variant; others the dark; both in one batch', async () => {
+    const env = makeTestEnv();
+    const postmarkCalls = installFetchStub({ googleMxDomains: ['corp.test'] });
+    await Delivery.Class.sendPost(env, makePost('first-post', 1), [
+      { email: 'a@gmail.com', name: '' },
+      { email: 'b@corp.test', name: '' },
+      { email: 'c@ivue.dev', name: '' },
+    ]);
+    const bodies = Object.fromEntries(
+      postmarkCalls[0].messages.map((message) => [message.To, message.HtmlBody]),
+    );
+    expect(bodies['a@gmail.com']).toContain('LIGHT first-post');
+    expect(bodies['b@corp.test']).toContain('LIGHT first-post');
+    expect(bodies['c@ivue.dev']).not.toContain('LIGHT');
+  });
+
+  it('a post without emailHtmlLight sends the dark body to Gmail too (deploy-skew guard)', async () => {
+    const env = makeTestEnv();
+    const postmarkCalls = installFetchStub({});
+    const stale = { ...makePost('first-post', 1), emailHtmlLight: undefined };
+    await Delivery.Class.sendPost(env, stale, [
+      { email: 'a@gmail.com', name: '' },
+    ]);
+    expect(postmarkCalls[0].messages[0].HtmlBody).not.toContain('LIGHT');
+  });
+
+  it('welcome email: a Gmail-UI subscriber gets the light template', async () => {
+    const env = makeTestEnv();
+    const postmarkCalls = installFetchStub({});
+    await Delivery.Class.sendWelcome(env, { email: 'g@gmail.com', name: '' });
+    expect(postmarkCalls.notifications[0].HtmlBody).toContain('LIGHT Welcome');
   });
 });

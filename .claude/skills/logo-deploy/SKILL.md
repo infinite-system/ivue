@@ -27,8 +27,11 @@ must stay visually in sync:
    so typography never drifts.
 4. `.claude/skills/logo-deploy/tile-only.html` — the 452×384 tile-only
    render used by the lockup composite. Tile svg 336px at (24,24);
-   `.tile` carries the indigo glow, `.tile path` the shadow + white
-   glow treatment.
+   `.tile path` carries the shadow + white-glow infinity treatment.
+   **No tile glow here**: a glow baked into the canvas dies at its
+   24px edge and reads as cut off — the hero's tile glow is a CSS
+   radial (`.ivh-lockup-wrap::before` in IvueHero.vue), where nothing
+   clips it.
 
 Current mark (as of the sky-gradient iteration): tile gradient `#6366F1
 → #34D399` (id `g`/`ivg`), infinity stroke gradient id `inf` `#BAE6FD →

@@ -1,5 +1,6 @@
 import { Static } from 'ivue/extras';
 import { Http } from '../platform/Http';
+import { GmailUi } from '../platform/GmailUi';
 import { Security } from '../platform/Security';
 import { Ledger } from '../audience/Ledger';
 import { Posts } from '../content/Posts';
@@ -50,7 +51,19 @@ class $Delivery {
     try {
       if (await Ledger.Class.hasSend(env, subscriber.email, this.WELCOME_SLUG))
         return;
-      const response = await fetch(`${env.SITE_ORIGIN}/welcome-email.html`);
+      // Gmail-UI subscribers get the light-chrome variant; any failure
+      // along that path (DoH, missing -light file pre-deploy) falls
+      // back to the canonical dark template without blocking.
+      let templateFile = 'welcome-email.html';
+      try {
+        if (await GmailUi.Class.usesGmailUi(subscriber.email))
+          templateFile = 'welcome-email-light.html';
+      } catch {
+        // dark is the safe default
+      }
+      let response = await fetch(`${env.SITE_ORIGIN}/${templateFile}`);
+      if (!response.ok && templateFile !== 'welcome-email.html')
+        response = await fetch(`${env.SITE_ORIGIN}/welcome-email.html`);
       if (!response.ok)
         throw new Error(`welcome-email.html ${response.status}`);
       const template = await response.text();
@@ -305,12 +318,27 @@ class $Delivery {
           recipient.email,
           env,
         );
+        // Gmail-UI recipients get the light-chrome variant (Gmail's
+        // apps recolor dark emails); everyone else the canonical dark.
+        // Detection is best-effort and never blocks a send: a DoH
+        // hiccup or a stale blog-index.json without the variant both
+        // fall back to the canonical dark body.
+        let body = post.emailHtml;
+        try {
+          if (
+            post.emailHtmlLight &&
+            (await GmailUi.Class.usesGmailUi(recipient.email))
+          )
+            body = post.emailHtmlLight;
+        } catch {
+          // dark is the safe default
+        }
         messages.push({
           From: `${env.SENDER_NAME} <${env.SENDER_EMAIL}>`,
           ReplyTo: env.REPLY_TO,
           To: recipient.email,
           Subject: post.title,
-          HtmlBody: post.emailHtml.replaceAll(
+          HtmlBody: body.replaceAll(
             '{{UNSUBSCRIBE_URL}}',
             unsubscribe,
           ),

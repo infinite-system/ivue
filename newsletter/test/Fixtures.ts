@@ -17,11 +17,14 @@ export function makePost(slug: string, timestamp: number): Post {
     codeImages: [`https://ivue.dev/blog/code/${slug}-code-1.png`],
     plainText: `Plain text of ${slug}.\n\nSecond paragraph of ${slug}.`,
     emailHtml: `<html><body>${slug} — <a href="{{UNSUBSCRIBE_URL}}">unsubscribe</a></body></html>`,
+    emailHtmlLight: `<html><body>LIGHT ${slug} — <a href="{{UNSUBSCRIBE_URL}}">unsubscribe</a></body></html>`,
   };
 }
 
 export interface FetchStubOptions {
   posts?: unknown[];
+  // domains whose stubbed MX resolves to Google (Workspace recipients)
+  googleMxDomains?: string[];
   // one outcome per message, applied in order; default accepts everything
   postmarkOutcome?: (recipient: string) => PostmarkOutcome;
   postmarkStatus?: number;
@@ -64,6 +67,26 @@ export function installFetchStub(
         return new Response(
           '<html><body>Welcome — <a href="{{UNSUBSCRIBE_URL}}">unsubscribe</a></body></html>',
         );
+      if (url.endsWith('/welcome-email-light.html'))
+        return new Response(
+          '<html><body>LIGHT Welcome — <a href="{{UNSUBSCRIBE_URL}}">unsubscribe</a></body></html>',
+        );
+      // DNS-over-HTTPS MX lookups (GmailUi) — Google-hosted only for
+      // domains a test lists in googleMxDomains
+      if (url.includes('cloudflare-dns.com/dns-query')) {
+        const domain = new URL(url).searchParams.get('name') ?? '';
+        const hosted = (options.googleMxDomains ?? []).includes(domain);
+        return new Response(
+          JSON.stringify({
+            Answer: [
+              {
+                type: 15,
+                data: hosted ? '1 aspmx.l.google.com.' : '10 mail.example.com.',
+              },
+            ],
+          }),
+        );
+      }
       if (url.includes('api.x.com/2/media/upload')) {
         postmarkCalls.mediaUploads.push(url);
         return new Response(
