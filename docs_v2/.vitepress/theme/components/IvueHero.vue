@@ -44,7 +44,9 @@ class $Typewriter {
     'Built for AI.',
     'Invariant based.',
     'Reactive backend.',
-    'Object graph.'
+    'Mock-free tests.',
+    '100% coverage.',
+    'Real object graphs.'
   ];
   fallLeadMs = 700; // let the fall-ins land before typing starts
   typeDelayMs = 66;
