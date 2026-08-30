@@ -3022,29 +3022,24 @@ html[data-new-blog='1'] .VPNavScreenMenuLink[href^='/blog']::after,
   font-size: 12px;
 }
 
-/* back-to-blog link atop posts — phones only */
-.blog-back {
-  display: none;
+/* back link atop posts — names where back leads; all viewports */
+.VPDoc .blog-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ivue-link-2);
+  text-decoration: none;
   max-width: min(78vw, 34rem);
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
-@media (max-width: 640px) {
-  .VPDoc .blog-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    margin-bottom: 14px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ivue-link-2);
-    text-decoration: none;
-  }
-  .VPDoc .blog-back svg {
-    width: 15px;
-    height: 15px;
-  }
+.VPDoc .blog-back svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
 }
 
 /* the Last-updated footer sits too far from the article's end */
