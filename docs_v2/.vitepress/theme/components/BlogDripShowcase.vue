@@ -332,7 +332,7 @@ onBeforeUnmount(() => {
   /* an inset ring, not a border/outline: it paints INSIDE the envelope
      face (never clipped, never resizing the frame) and follows the
      frame's radius */
-  box-shadow: inset 0 0 0 1.5px rgba(99, 102, 241, 0.55);
+  box-shadow: inset 0 0 0 1.5px rgba(148, 163, 184, 0.35);
   border-radius: 12px;
 }
 .drip-card--sealed .drip-card__envelope {
