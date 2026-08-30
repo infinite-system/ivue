@@ -31,43 +31,49 @@ function titleFor(path: string): string | null {
 // WHERE back leads is remembered in the HISTORY ENTRY ITSELF
 // (history.state.backPath, stamped when the entry is pushed): the
 // entry directly below any pushed entry is, by construction, the page
-// it was pushed from — and unlike component memory, the stamp survives
-// any number of back/forward pops. Direct entries (a mail link, a
-// shared URL) have no stamp and fall back to a plain /blog/ link.
+// it was pushed from — and unlike any component- or path-keyed memory,
+// the stamp is per ENTRY, so it stays truthful when the same post
+// appears twice in the stack (related links cycle) and survives any
+// number of back/forward pops. Direct entries (a mail link, a shared
+// URL) have no stamp and fall back to a plain /blog/ link.
+//
+// VitePress overwrites entry state with non-spreading replaceState
+// calls ({ scrollPosition } on departure, {} on clean-URL
+// normalization), which would destroy the stamp — so replaceState is
+// wrapped ONCE to carry an existing backPath over unless the caller
+// sets its own. A replace never changes which entry sits below, so
+// carrying the stamp is always correct.
+if (typeof window !== 'undefined' && !(history.replaceState as any).__ivueBackStamp) {
+  const original = history.replaceState.bind(history);
+  const wrapped = function (
+    state: any,
+    title: string,
+    url?: string | URL | null,
+  ) {
+    const backPath = history.state?.backPath;
+    if (
+      backPath &&
+      state &&
+      typeof state === 'object' &&
+      !('backPath' in state)
+    ) {
+      state = { ...state, backPath };
+    }
+    original(state, title, url);
+  };
+  (wrapped as any).__ivueBackStamp = true;
+  history.replaceState = wrapped;
+}
+
 const previousPath = ref<string | null>(null);
 let currentPath = '';
 let poppingHistory = false;
 const onPopState = () => {
   poppingHistory = true;
 };
-// VitePress overwrites the departed entry's state with
-// { scrollPosition } (no spread), destroying the stamp — so every
-// stamp is mirrored in a sessionStorage map keyed by path (the most
-// recent push of a path IS its live history entry), and reads fall
-// back to the mirror when the in-state stamp was wiped.
-const BACK_MAP_KEY = 'ivue-blog-back-map';
-const readBackMap = (): Record<string, string> => {
-  try {
-    return JSON.parse(sessionStorage.getItem(BACK_MAP_KEY) ?? '{}');
-  } catch {
-    return {};
-  }
-};
-const rememberBackPath = (path: string, cameFrom: string) => {
-  try {
-    sessionStorage.setItem(
-      BACK_MAP_KEY,
-      JSON.stringify({ ...readBackMap(), [path]: cameFrom }),
-    );
-  } catch {
-    // storage unavailable — the in-state stamp still covers pushes
-  }
-};
 const readStamp = () => {
   previousPath.value =
-    (window.history.state?.backPath as string | undefined) ??
-    readBackMap()[route.path] ??
-    null;
+    (window.history.state?.backPath as string | undefined) ?? null;
 };
 onMounted(() => {
   currentPath = route.path;
@@ -82,19 +88,13 @@ watch(
     const popped = poppingHistory;
     poppingHistory = false;
     currentPath = path;
-    // rAF: AFTER VitePress's own nextTick replaceState (clean-URL
-    // normalization rewrites the state object) — a stamp written
-    // earlier could be wiped
-    requestAnimationFrame(() => {
-      if (!popped && !window.history.state?.backPath) {
-        window.history.replaceState(
-          { ...window.history.state, backPath: cameFrom },
-          '',
-        );
-        rememberBackPath(path, cameFrom);
-      }
-      readStamp();
-    });
+    if (!popped && !window.history.state?.backPath) {
+      window.history.replaceState(
+        { ...window.history.state, backPath: cameFrom },
+        '',
+      );
+    }
+    readStamp();
   },
 );
 
