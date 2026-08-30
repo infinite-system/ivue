@@ -1802,6 +1802,51 @@ a.feature-inline-link {
   font-size: 0.9rem;
   font-weight: 600;
 }
+/* date + tags travel together on the foot's left side */
+.blog-row .foot .meta,
+.blog-card .foot .meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+/* per-row tag chips: DELIBERATELY quieter and smaller than the top
+   filter bar's — recognition while scanning, never competition */
+.foot-tags {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.foot-tag {
+  padding: 0.5px 7px;
+  border: 1px solid color-mix(in srgb, var(--vp-c-divider) 70%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--vp-c-text-3);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.foot-tag:hover {
+  color: var(--vp-c-text-1);
+  border-color: var(--vp-c-text-3);
+}
+.foot-tag--active {
+  color: var(--ivue-link-accent);
+  border-color: var(--ivue-link-accent);
+}
+.foot-tag--more {
+  font-weight: 650;
+}
+/* phones: rows are tight — the date stands alone */
+@media (max-width: 560px) {
+  .foot-tags {
+    display: none;
+  }
+}
 
 /* ---------- Blog article: share buttons ---------- */
 .blog-share__label {

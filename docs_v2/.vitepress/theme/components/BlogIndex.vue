@@ -71,6 +71,36 @@ function toggleTag(tag: string) {
   activeTag.value = activeTag.value === tag ? null : tag;
 }
 
+// ---- per-row tags ---------------------------------------------------
+// Quiet chips beside the date. A CHARACTER budget decides how many
+// show (no layout measurement — deterministic and SSR-stable); the
+// rest fold into a +N pill that tap-expands. One row expanded at a
+// time; navigating or filtering collapses it.
+// list rows run the content width; cards share a grid cell
+const TAG_CHAR_BUDGET = { list: 34, cards: 20 } as const;
+const expandedTagsSlug = ref<string | null>(null);
+
+function visibleTags(post: { slug: string; tags: string[] }): string[] {
+  if (expandedTagsSlug.value === post.slug) return post.tags;
+  const budget = TAG_CHAR_BUDGET[viewStyle.value];
+  const shown: string[] = [];
+  let spent = 0;
+  for (const tag of post.tags) {
+    spent += tag.length + 2;
+    if (shown.length > 0 && spent > budget) break;
+    shown.push(tag);
+  }
+  return shown;
+}
+
+function hiddenTagCount(post: { slug: string; tags: string[] }): number {
+  return post.tags.length - visibleTags(post).length;
+}
+
+function toggleTagExpand(slug: string) {
+  expandedTagsSlug.value = expandedTagsSlug.value === slug ? null : slug;
+}
+
 // ---- pagination ----------------------------------------------------
 const PAGE_SIZE = 100;
 const page = ref(1);
@@ -89,6 +119,7 @@ const pagedPosts = computed(() =>
 // and any filter change starts from page 1
 watch([activeTag, searchQuery], () => {
   page.value = 1;
+  expandedTagsSlug.value = null;
 });
 
 function goToPage(target: number) {
@@ -264,7 +295,33 @@ function formatDate(date: string): string {
         <p class="excerpt">{{ post.excerpt }}</p>
         <div class="foot">
           <span v-if="post.private" class="channel-chip">{{ post.channel ? CHANNEL_LABELS[post.channel] : 'PRIVATE' }}</span>
-          <span class="date">{{ formatDate(post.date) }}</span>
+          <span class="meta">
+            <span class="date">{{ formatDate(post.date) }}</span>
+            <span v-if="post.tags.length" class="foot-tags">
+              <button
+                v-for="tag in visibleTags(post)"
+                :key="tag"
+                type="button"
+                class="foot-tag"
+                :class="{ 'foot-tag--active': tag === activeTag }"
+                @click.prevent.stop="toggleTag(tag)"
+              >{{ tag }}</button>
+              <button
+                v-if="hiddenTagCount(post) > 0"
+                type="button"
+                class="foot-tag foot-tag--more"
+                :aria-label="`Show ${hiddenTagCount(post)} more tags`"
+                @click.prevent.stop="toggleTagExpand(post.slug)"
+              >+{{ hiddenTagCount(post) }}</button>
+              <button
+                v-else-if="expandedTagsSlug === post.slug"
+                type="button"
+                class="foot-tag foot-tag--more"
+                aria-label="Collapse tags"
+                @click.prevent.stop="toggleTagExpand(post.slug)"
+              >−</button>
+            </span>
+          </span>
           <span class="go">Read the post →</span>
         </div>
       </div>
@@ -291,7 +348,33 @@ function formatDate(date: string): string {
         <p class="excerpt">{{ post.excerpt }}</p>
         <div class="foot">
           <span v-if="post.private" class="channel-chip">{{ post.channel ? CHANNEL_LABELS[post.channel] : 'PRIVATE' }}</span>
-          <span class="date">{{ formatDate(post.date) }}</span>
+          <span class="meta">
+            <span class="date">{{ formatDate(post.date) }}</span>
+            <span v-if="post.tags.length" class="foot-tags">
+              <button
+                v-for="tag in visibleTags(post)"
+                :key="tag"
+                type="button"
+                class="foot-tag"
+                :class="{ 'foot-tag--active': tag === activeTag }"
+                @click.prevent.stop="toggleTag(tag)"
+              >{{ tag }}</button>
+              <button
+                v-if="hiddenTagCount(post) > 0"
+                type="button"
+                class="foot-tag foot-tag--more"
+                :aria-label="`Show ${hiddenTagCount(post)} more tags`"
+                @click.prevent.stop="toggleTagExpand(post.slug)"
+              >+{{ hiddenTagCount(post) }}</button>
+              <button
+                v-else-if="expandedTagsSlug === post.slug"
+                type="button"
+                class="foot-tag foot-tag--more"
+                aria-label="Collapse tags"
+                @click.prevent.stop="toggleTagExpand(post.slug)"
+              >−</button>
+            </span>
+          </span>
           <span class="go">Read the post →</span>
         </div>
       </div>
