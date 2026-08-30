@@ -1,15 +1,14 @@
 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="ivg" x1="8" y1="14" x2="40" y2="34" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#38BDF8"/>
-      <stop offset="0.5" stop-color="#2DD4BF"/>
+      <stop stop-color="#818CF8"/>
       <stop offset="1" stop-color="#34D399"/>
     </linearGradient>
   </defs>
   <!-- ONE rect carrying fill AND border. Integer geometry + a full-unit
        stroke: a half-pixel hairline on fractional coordinates rasterized
        into lone bright pixels at the corner arcs at nav size -->
-  <rect x="1" y="1" width="46" height="46" rx="11" fill="#0D1226" stroke="white" stroke-opacity="0.05" stroke-width="2"/>
+  <rect x="1" y="1" width="46" height="46" rx="11" fill="#0D1226" stroke="#192338" stroke-width="2"/>
   <path d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
         stroke="url(#ivg)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>

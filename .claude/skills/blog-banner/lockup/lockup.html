@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(../banners/fonts/geist-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 993px; height: 384px; background: transparent; overflow: hidden; }
+  body { font-family: 'Geist', 'DejaVu Sans', sans-serif; position: relative; }
+  .tile { position: absolute; left: 12px; top: 12px; }
+  .word {
+    position: absolute; left: 424px; top: -8px;
+    font-size: 268px; font-weight: 750; letter-spacing: -0.012em;
+    background: linear-gradient(100deg, #818CF8 12%, #34D399 95%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    line-height: 1;
+  }
+  .sub {
+    position: absolute; left: 440px; top: 272px;
+    font-size: 54px; font-weight: 500; letter-spacing: 0.30em;
+    color: var(--sub);
+  }
+  body.dark { --sub: #aab6d3; }
+  body.light { --sub: #3d4759; }
+</style>
+</head>
+<body class="dark">
+  <svg class="tile" width="360" height="360" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0.75" y="0.75" width="46.5" height="46.5" rx="11" fill="#0D1226" stroke="#192338" stroke-width="1.5"/>
+    <path d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
+          stroke="url(#g)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <defs>
+      <linearGradient id="g" x1="8" y1="14" x2="40" y2="34" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#818CF8"/>
+        <stop offset="1" stop-color="#34D399"/>
+      </linearGradient>
+    </defs>
+  </svg>
+  <div class="word">ivue</div>
+  <div class="sub">INFINITE VUE</div>
+</body>
+</html>
