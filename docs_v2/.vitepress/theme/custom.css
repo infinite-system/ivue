@@ -3898,7 +3898,7 @@ a.feature-inline-link:active {
      104px on desktop) would push the heading a whole band under the
      aurora line */
   margin: 72px auto 0;
-  padding: 26px 20px 0 !important;
+  padding: 56px 20px 0 !important;
 }
 .ix-newsletter-hero::before {
   content: '';
