@@ -3893,9 +3893,12 @@ a.feature-inline-link:active {
      stays where it was */
   /* breathing room ABOVE the aurora line (it was hugging the section
      before it), a short drop from the line to the heading, and a FLUSH
-     bottom: the strip closes the section right against the footer */
+     bottom: the strip closes the section right against the footer.
+     padding-top !important: the generic `.ix section` rhythm (64px,
+     104px on desktop) would push the heading a whole band under the
+     aurora line */
   margin: 72px auto 0;
-  padding: 40px 20px 0;
+  padding: 26px 20px 0 !important;
 }
 .ix-newsletter-hero::before {
   content: '';
@@ -3953,6 +3956,10 @@ a.feature-inline-link:active {
 .ix .ix-newsletter-hero h2 {
   position: relative;
   border: none;
+  /* sit close under the aurora line — vp-doc's default h2 top margin
+     pushed the heading a full viewport-band away from it */
+  margin-top: 0;
+  padding-top: 0;
   margin-bottom: 10px;
 }
 .ix-newsletter-hero__lead {
