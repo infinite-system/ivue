@@ -14,6 +14,11 @@ Always annotated:
 git tag -a ivue@2.0.0 -m "ivue 2.0.0 — <one-line highlight>" <commit>
 ```
 
+The highlight follows the PRECISE-NAMING rule (see Release notes
+below): a concrete change-list naming the features/fixes, never a
+poetic theme. Tag message, notes H1, and the `gh release` title all
+carry the SAME line.
+
 - Pin the commit explicitly (the `chore(release)` bump commit) so the tag
   cannot land on an unrelated HEAD.
 - The history also contains `vX.Y.Z` tags and one stray `vue@0.1.2`
