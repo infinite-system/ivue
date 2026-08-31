@@ -3629,6 +3629,11 @@ a.feature-inline-link:active {
 }
 
 /* ivue in production — the Invar showcase */
+/* the section's lead and note are centered — the heading was the one
+   left-aligned thing in it */
+.ix .invar-production h2 {
+  text-align: center;
+}
 .invar-production .invar-lead {
   max-width: 760px;
   margin: 34px auto 0;
@@ -4131,9 +4136,9 @@ html {
   background-image:
     /* nearly full width at the top, fading down and out — a wide wash
        of daylight rather than a defined shaft */
-    radial-gradient(96% 78% at 50% 110%, rgba(79, 121, 246, 0.26), transparent 76%),
-    radial-gradient(130% 92% at 50% 104%, rgba(99, 102, 241, 0.15), transparent 78%),
-    linear-gradient(0deg, rgba(99, 102, 241, 0.06), transparent 62%);
+    radial-gradient(96% 78% at 50% 110%, rgba(37, 99, 235, 0.24), transparent 76%),
+    radial-gradient(130% 92% at 50% 104%, rgba(29, 78, 216, 0.13), transparent 78%),
+    linear-gradient(0deg, rgba(37, 99, 235, 0.06), transparent 62%);
   background-size: 100% 100%;
   mix-blend-mode: normal;
   opacity: 1;
@@ -4159,23 +4164,12 @@ html {
   display: none;
 }
 
+/* NO line above the title any more: it was the light SOURCE when the
+   beam fell from above. The light now rises from the section's base,
+   so a rule at the top motivated nothing and boxed the section in —
+   without it the section emerges out of the page. */
 .ix-newsletter-hero::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 100vw;
-  height: 3px;
-  transform: translateX(-50%);
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(99, 102, 241, 0.55) 22%,
-    rgba(34, 211, 238, 0.75) 50%,
-    rgba(45, 212, 191, 0.55) 78%,
-    transparent
-  );
-  pointer-events: none;
+  content: none;
 }
 .ix .ix-newsletter-hero h2 {
   position: relative;
