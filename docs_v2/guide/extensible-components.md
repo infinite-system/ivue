@@ -1,7 +1,7 @@
 ---
 title: Extensible Components
 description: 'Classes extend — so props, emits and slots must extend with them. The two-tier contract system: the namespace carries the whole component contract as plain data (types + defaults merged by propsWithDefaults, emits, derived types), authored inline for small surfaces and in a sibling props file for large ones.'
-relatedPosts: [ship-the-variant-keep-the-tuning, the-options-api-everyone-wanted, inheritance-exile]
+relatedPosts: [ban-private, ship-the-variant-keep-the-tuning, the-options-api-everyone-wanted, inheritance-exile]
 ---
 
 # Extensible Components

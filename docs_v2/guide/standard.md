@@ -1,7 +1,7 @@
 ---
 title: The Standard Operating Manual
 description: The complete ivue operating manual — annotated class and SFC templates, DO/NEVER table, the unwrapping-surface typing invariant, watch rules, thin-closure delegation, naming guidelines, keyed reactivity, and the review checklist. The same manual we ship to AI agents.
-relatedPosts: [reactive-framework-for-the-ai-era, uniformity-is-a-measuring-device, patterns-the-author-never-wrote]
+relatedPosts: [ban-private, reactive-framework-for-the-ai-era, uniformity-is-a-measuring-device, patterns-the-author-never-wrote]
 ---
 
 # The Standard Operating Manual
