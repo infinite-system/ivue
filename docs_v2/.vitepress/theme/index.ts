@@ -3,7 +3,6 @@ import type { Theme } from 'vitepress';
 import { h } from 'vue';
 import IvueHero from './components/IvueHero.vue';
 import PerfSlider from './components/PerfSlider.vue';
-import SpotlightBeam from './components/SpotlightBeam.vue';
 import DemoCounter from './components/DemoCounter.vue';
 import DemoState from './components/DemoState.vue';
 import DemoDerived from './components/DemoDerived.vue';
@@ -429,7 +428,6 @@ export default {
     }
 
     app.component('PerfSlider', PerfSlider);
-    app.component('SpotlightBeam', SpotlightBeam);
     app.component('DemoCounter', DemoCounter);
     app.component('DemoState', DemoState);
     app.component('DemoDerived', DemoDerived);

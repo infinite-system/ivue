@@ -3742,7 +3742,7 @@ html {
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 1px;
   background: linear-gradient(
     90deg,
     transparent,
@@ -4086,22 +4086,16 @@ html {
   /* the light fills the WHOLE section — cards, title, form, and the
      closing archive line all stand in it */
   height: 100%;
-  /* a button now (click the empty light to cycle variants), sitting
-     BEHIND the post strip so the strip's own interactions win */
+  /* purely painted — no art, no component: gradients cost nothing,
+     scale to any width, and have no edges that can clip. Sits BEHIND
+     the post strip. */
   z-index: 0;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  /* the SpotlightBeam class binds --ivue-beam (click to cycle) — a
-     gradient stack or a url(); this is the pre-hydration default,
-     matching BEAMS[0] (the painted column) */
-  background-image: var(
-    --ivue-beam,
-    radial-gradient(30% 62% at 50% 106%, rgba(186, 245, 253, 0.34), transparent 72%),
+  pointer-events: none;
+  background-image:
+    radial-gradient(30% 62% at 50% 106%, rgba(148, 214, 246, 0.24), transparent 72%),
     radial-gradient(52% 82% at 50% 108%, rgba(103, 232, 249, 0.22), transparent 74%),
     radial-gradient(88% 96% at 50% 112%, rgba(99, 102, 241, 0.16), transparent 76%),
-    radial-gradient(64% 26% at 50% 54%, rgba(125, 211, 252, 0.1), transparent 72%)
-  );
+    radial-gradient(64% 26% at 50% 54%, rgba(125, 211, 252, 0.1), transparent 72%);
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: top center;
@@ -4137,9 +4131,9 @@ html {
   background-image:
     /* nearly full width at the top, fading down and out — a wide wash
        of daylight rather than a defined shaft */
-    radial-gradient(96% 78% at 50% 110%, rgba(103, 232, 249, 0.34), transparent 76%),
-    radial-gradient(130% 92% at 50% 104%, rgba(99, 102, 241, 0.13), transparent 78%),
-    linear-gradient(0deg, rgba(45, 212, 191, 0.08), transparent 62%);
+    radial-gradient(96% 78% at 50% 110%, rgba(79, 121, 246, 0.26), transparent 76%),
+    radial-gradient(130% 92% at 50% 104%, rgba(99, 102, 241, 0.15), transparent 78%),
+    linear-gradient(0deg, rgba(99, 102, 241, 0.06), transparent 62%);
   background-size: 100% 100%;
   mix-blend-mode: normal;
   opacity: 1;
@@ -4158,7 +4152,8 @@ html {
   margin-top: 26px;
   margin-bottom: 0;
   padding-top: 0;
-  padding-bottom: 6px;
+  /* a little air between the last card row and the footer's hairline */
+  padding-bottom: 22px;
 }
 .ix .ix-newsletter-hero .drip-showcase::before {
   display: none;
