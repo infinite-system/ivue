@@ -347,6 +347,16 @@ npx ivue skill --all
 
 </PerfSlider>
 
+<p class="invar-note">
+Invar is an <strong>alpha, experimental project</strong> — a proving ground for ivue
+beyond the web, and an experiment in <strong>agentic development</strong>: the entire
+editor was built by AI agents using the ivue skill as their base discipline, with
+every module governed by explicit invariants contracts. The
+source is open as a
+study-scale example of ivue architecture — module seams, namespace exports,
+flyweight state, and lifecycle discipline, all in one real codebase.
+</p>
+
 </section>
 
 <section class="ix-section invar-production">
@@ -360,16 +370,6 @@ built entirely on ivue: <strong>340+ ivue classes</strong> — nearly 200
 models — driving the editor, workspace search,
 tasks, terminals, and agents — in a Bun process with no DOM. Every frame below is
 real output from the running app, rendered cell-for-cell from its PTY grid.
-</p>
-
-<p class="invar-note">
-Invar is an <strong>alpha, experimental project</strong> — a proving ground for ivue
-beyond the web, and an experiment in <strong>agentic development</strong>: the entire
-editor was built by AI agents using the ivue skill as their base discipline, with
-every module governed by explicit invariants contracts. The
-source is open as a
-study-scale example of ivue architecture — module seams, namespace exports,
-flyweight state, and lifecycle discipline, all in one real codebase.
 </p>
 
 <PerfSlider>
@@ -418,6 +418,8 @@ was always waiting for</a> to
 <a href="/blog/bulletproof-class-modules">Bulletproof class modules</a>.
 </p>
 
+<BlogDripShowcase />
+
 <p class="ix-newsletter-hero__cadence">
 The whole blog lands in your inbox in {{ $archiveDays }} days — one post every other day, at your local morning.
 </p>
@@ -427,8 +429,6 @@ The whole blog lands in your inbox in {{ $archiveDays }} days — one post every
 <p class="ix-newsletter-hero__note">
 The whole archive is open — <a href="/blog/">browse the blog →</a>
 </p>
-
-<BlogDripShowcase />
 
 </section>
 

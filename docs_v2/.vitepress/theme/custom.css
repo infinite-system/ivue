@@ -4152,11 +4152,11 @@ html {
 .ix .ix-newsletter-hero .drip-showcase {
   position: relative;
   z-index: 1;
+  /* the strip sits between the lead and the signup block now */
   margin-top: 26px;
-  margin-bottom: 0;
+  margin-bottom: 26px;
   padding-top: 0;
-  /* a little air between the last card row and the footer's hairline */
-  padding-bottom: 22px;
+  padding-bottom: 14px;
 }
 .ix .ix-newsletter-hero .drip-showcase::before {
   display: none;
