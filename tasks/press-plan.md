@@ -162,6 +162,11 @@ The reel, ranked by silent-hook strength:
 4. **Drip strip** — envelopes opening, Delivered stamps (best for the
    newsletter push specifically).
 5. **20M-cell flyweight grid** free-scroll.
+6. **Invar driving Invar** — the 94,000-line terminal IDE in use (or
+   an agent using it), rendered through the invar→SVG converter:
+   terminal sessions become crisp vector frames → animated to video.
+   Deterministic like the rest, and the only clip that shows the
+   AI-agents story MOVING — "agents built this, agents drive it.
 
 Artifacts committed (short mp4s, a few MB each) under a press/ or
 public/x/ directory. V1 constraint: the composer's X upload is
