@@ -68,11 +68,18 @@ The design (agreed in discussion):
   the hooks — at write time, when the sharpest claims are hot.
 - Backfill: only the calendar posts (W4) + all new posts. Not all 48.
 
-### W2 — release channel copy (encode in the release skill)
+### W2 — the release tank (copy + video are part of "released")
 
-Every release gets, written alongside the notes (same commit):
+A release is not released until its distribution exists. The release
+skill's pipeline extends: gates → notes **+ channel copy + video** →
+tag → publish → verify-publish → fire the calendar slot. Authored
+BEFORE the tag, same commit as the notes — the tagged tree carries its
+own ammunition; nothing downstream waits on inspiration.
+
+Per release, written alongside the notes:
 
 - an X thread (3–5 segments: what shipped, the one code receipt, link)
+  with a release video where one exists (W7)
 - a short Reddit-comment-shaped blurb (r/vuejs / r/typescript
   depending on content)
 - a LinkedIn paragraph when the release carries a story
@@ -131,13 +138,45 @@ numbers or a repo link, never adjectives.
   articles live on-platform and link back; zero hreflang/maintenance
   tax.
 
+### W7 — video pipeline (deterministic, silent-first)
+
+Videos are code, like the banners: a scripted Playwright session
+(recordVideo) → webm → ffmpeg (static binary, no root needed) → mp4 in
+X's spec + a square feed crop. Same input, same video; re-render after
+a brand change exactly like banners re-render.
+
+**Design rule: judged on MUTE.** X autoplays silent — motion, big
+type, and on-screen numbers carry the hook. Music is an optional
+polish layer for the tap-to-unmute minority, license-clean only
+(CC0/royalty-free; X rights-matching flags commercial tracks).
+
+The reel, ranked by silent-hook strength:
+
+1. **Hero typewriter** — the capability lines cycling ("One
+   kilobyte." / "Mock-free tests." / "Real object graphs."), 12–15s
+   seamless loop. Copywriting already in motion — the flagship clip.
+2. **1M scroller / book marquee** — scrub, land pixel-exact at the end
+   of a 400,000-char book.
+3. **CreationBench running live** — benchmark numbers climbing on
+   camera; nobody shows their benchmark RUNNING.
+4. **Drip strip** — envelopes opening, Delivered stamps (best for the
+   newsletter push specifically).
+5. **20M-cell flyweight grid** free-scroll.
+
+Artifacts committed (short mp4s, a few MB each) under a press/ or
+public/x/ directory. V1 constraint: the composer's X upload is
+image-only today — videos attach manually; the chunked video upload
+(INIT/APPEND/FINALIZE) is a later composer upgrade, not a blocker.
+
 ### Sequencing
 
 1. W1 machinery (feeds everything; mechanical)
-2. W2 + retroactive 2.5.0 copy (release is a day old — still fresh)
-3. W4 calendar agreed → batch-write missing copy
-4. W5 after English launch signals the winning story
-5. W6 last, smallest surface
+2. W7 flagship clip (hero typewriter) — proves the video pipeline and
+   feeds the launch thread itself
+3. W2 + retroactive 2.5.0 copy (release is a day old — still fresh)
+4. W4 calendar agreed → batch-write missing copy (+ clips 2–3)
+5. W5 after English launch signals the winning story
+6. W6 last, smallest surface
 
 ## Open questions (to settle in discussion)
 
