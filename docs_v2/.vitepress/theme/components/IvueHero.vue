@@ -240,6 +240,9 @@ onUnmounted(() => {
 
 /* ---- background ---- */
 .ivh-bg {
+  /* the blobs are wider than a phone — clip (not hidden: no scroll
+     container) so they cannot inflate the layout viewport */
+  overflow: clip;
   position: absolute;
   inset: 0;
   pointer-events: none;

@@ -4084,10 +4084,12 @@ html {
   transform: translateX(-50%);
   /* ALWAYS wider than the viewport: the strip below is full-bleed, so
      a beam box narrower than the page puts a lit-vs-unlit edge behind
-     it — the boundary reads as two different backgrounds. At >100vw
-     the horizontal feather happens off-screen and the atmosphere is
-     continuous across the whole section. */
-  width: max(1500px, 116vw);
+     it. EXACTLY the viewport, never wider: an element wider than the
+     page makes a phone size its layout viewport to the overflow — the
+     page zooms out and every 100vw element locks in at the inflated
+     width. The ART needed extra width to hide its edges; painted
+     gradients fade to nothing on their own. */
+  width: 100vw;
   /* the light fills the WHOLE section — cards, title, form, and the
      closing archive line all stand in it */
   height: 100%;
@@ -4116,12 +4118,8 @@ html {
      starts full-strength at the aurora line, born from it), and a
      horizontal feather so the box's own left/right edges dissolve
      instead of ending in a seam. */
-  -webkit-mask-image: linear-gradient(180deg, transparent 3%, black 38%, black),
-    linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
-  mask-image: linear-gradient(180deg, transparent 3%, black 38%, black),
-    linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(180deg, transparent 3%, black 38%, black);
+  mask-image: linear-gradient(180deg, transparent 3%, black 38%, black);
 }
 /* light theme: a beam of light needs darkness to read — dial it back
    to a whisper so the section keeps its airy daylight feel */
