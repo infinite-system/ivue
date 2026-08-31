@@ -9,6 +9,23 @@ is a one-day firework (a launch kit with no week-2). Distribution
 should get the same treatment as content: pre-written, versioned,
 validated at build, fired on a calendar.
 
+## The strategy in five lines
+
+1. **The rotation math**: ~12 rooms x one post per 2–3 weeks each =
+   4–6 placements per week indefinitely, with no room ever seeing the
+   project twice in a month. No room fatigues; the aggregate never
+   goes quiet.
+2. **Stockpiled ammunition**: 48 evergreen receipt-posts and growing —
+   cycling never depends on writing under pressure; xHooks make each
+   article 2–3 fires instead of one.
+3. **Zero marginal cost**: the tank arms every post at write time;
+   each later placement is a paste plus same-day comment presence.
+4. **Losses are routing data**: fire broadly, watch which stories win
+   rooms, then amplify the winners — localization (RU warm channel
+   first), X re-angles, creator pitches all go to PROVEN stories.
+5. **The drip is the metronome**: the newsletter already proves the
+   cadence; press taps the same rhythm outward.
+
 ## What exists (the inventory)
 
 Private channel posts in `docs_v2/blog/` (dev-only, validated by
