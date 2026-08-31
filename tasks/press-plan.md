@@ -110,6 +110,12 @@ to rooms across ~6 weeks post-launch. Draft mapping to refine:
 | 4 | r/vuejs | a-million-rows-twelve-divs | perf receipts |
 | 4 | X re-promotion pass | week 0–2 articles | UNUSED xHooks angles |
 | 5 | r/javascript | reactivity-is-an-allocator | language angle |
+| 1–2 | JS Weekly / Bytes / Frontend Focus / TLDR | per W8a table | submission emails |
+| 1 | StackBlitz tag-team (X) | a-million-rows-twelve-divs | demo clip + @stackblitz |
+| 2 | r/webdev | a-million-rows-twelve-divs or twenty-million-cells | engineering + video, not product |
+| 3 | creator outreach (emails) | per W8d list | press kit ready first |
+| 5 | r/programming | win-by-reduction | language story, zero launch smell |
+| standing | Bluesky + Mastodon | every X thread, same day | links in post 1 (not punished there) |
 
 Copy for each row gets written batch-wise as private channel posts.
 Rule kept from the launch plan: answer every technical comment with
@@ -173,27 +179,77 @@ public/x/ directory. V1 constraint: the composer's X upload is
 image-only today — videos attach manually; the chunked video upload
 (INIT/APPEND/FINALIZE) is a later composer upgrade, not a blocker.
 
-### W8 — missed avenues (cheap reach)
+### W8 — missed avenues (cheap reach), in operational detail
 
-- **General-JS newsletters** (the biggest free distribution in the
-  ecosystem, all take submissions): JavaScript Weekly (bulletproof /
-  options-api story), Bytes (the 55–253× number is their voice),
-  Frontend Focus, TLDR Web Dev. Four short submission emails.
-- **Bluesky + Mastodon mirror** of every X thread (front-end.social /
-  Fosstodon): links aren't punished there, audience skews senior,
-  cost ≈ paste twice.
-- **Reddit rooms missing from the calendar**: r/webdev (bigger than
-  r/javascript, demo-tolerant), r/programming (language-story posts).
-- **Creator outreach + press-kit page**: a /press page (the story in
-  three lengths, the numbers table, logo/lockup downloads, W7 clips
-  embeddable) turns cold outreach into a ready-made episode. Targets:
-  LearnVue, Alexander Lichter / DejaVue, Vue Mastery + Vue School
-  blogs. Plus Vue Land Discord #showcase (one compliant post) and an
-  awesome-vue PR (passive, permanent).
-- **StackBlitz tag-team**: tweet the 1M-rows demo tagging them — the
-  playground already boots there; their DevRel amplifies this genre.
-- **Product Hunt**: optional, week 5+, only because assets will all
-  exist by then. HN outranks it 10×.
+**W8a — general-JS newsletters.** The biggest free distribution in the
+ecosystem; all take submissions. One artifact each, written as private
+channel posts (`note-pitch-<outlet>`), sent week 1–2:
+
+| outlet | how to submit | what to send | why it fits |
+| --- | --- | --- | --- |
+| JavaScript Weekly (Cooperpress) | submission form on javascriptweekly.com (+ @cooperpress on X) | link + 1-sentence pitch for bulletproof-class-modules OR the-options-api-everyone-wanted | they favor measured, technical deep-dives; one inclusion ≈ the reach of a good HN run |
+| Bytes (ui.dev) | hello@bytes.dev | the 55–253× creation number + the 1.1 kB line, framed playfully — their voice is witty | spicy numbers with receipts are their bread |
+| Frontend Focus (Cooperpress) | same Cooperpress form family | a-million-rows-twelve-divs (rendering/perf angle) | perf + DOM material is their lane |
+| TLDR Web Dev | tldr.tech submission form | introducing-ivue, one-line pitch | volume outlet; zero-effort add-on |
+
+Pitch shape (all four): one sentence of claim with the number, the
+link, no adjectives. The editor rewrites anyway — the numbers are what
+survive.
+
+**W8b — Bluesky + Mastodon mirror (standing rule, not a calendar
+row).** Every X thread posts same-day to Bluesky and Mastodon
+(front-end.social first choice, Fosstodon fallback — register handles
+NOW, before launch, to hold the name). Two structural advantages:
+links are not algorithmically punished (unlike X — put the link in
+tweet 1 there), and the audience skews senior/framework-skeptical,
+which fits the receipts voice. Threads port verbatim; Mastodon's 500
+chars lets some X pairs merge. Cost ≈ paste twice. Add `bluesky` and
+`mastodon` channel labels; the composer's ledger pattern can extend
+later — manual paste is fine at this volume.
+
+**W8c — additional Reddit rooms** (added to the W4 calendar below):
+r/webdev (huge, demo-tolerant — the 1M-rows or 20M-cells material with
+a video, framed as engineering not product) and r/programming
+(language-story posts only: win-by-reduction, discovered-not-invented;
+r/programming punishes anything that smells like a launch).
+
+**W8d — press-kit page + creator outreach.** The unlock is the kit:
+outreach without one is "please cover me"; with one it is "here is a
+ready-made episode." Build `/press` on the site (or PRESS.md first —
+open question) containing:
+
+- the story in three lengths: one line, one paragraph, one page
+- the numbers table with methods (creation 55–253×, 1.1 kB, 100%
+  coverage, 94k-line Invar) — copy-pasteable
+- logo/lockup downloads (light + dark PNG + SVG) — the logo-deploy
+  pipeline already produces every asset
+- the W7 clips, embeddable/downloadable
+- three suggested episode/video angles, each with its receipts links
+- contact + "what we'll do to help" (demo access, benchmark repro
+  instructions, interview availability)
+
+Then the outreach list, one personalized email each (NOT a blast):
+LearnVue (Matt Maribojoc), Alexander Lichter (DejaVue podcast + Nuxt
+audience), Vue Mastery blog, Vue School blog, Michael Thiessen (his
+newsletter already fits W4's Vue-newsletter row — one email covers
+both). Angle per target: LearnVue/Lichter get the Options-API story;
+Vue Mastery/School get the teaching angle (one document teaches
+humans AND agents).
+
+**W8e — community drops (rules-compliant, one post each):** Vue Land
+Discord #showcase; awesome-vue PR (one line + link — passive,
+permanent SEO); Echo JS and daily.dev link drops (already in the
+launch plan, kept here for completeness).
+
+**W8f — StackBlitz tag-team.** The playground already boots on
+StackBlitz. Week 1: tweet the 1M-rows demo clip tagging @stackblitz
+with the one-click-repro link. Their DevRel amplifies exactly this
+genre; free lottery ticket, zero downside.
+
+**W8g — Product Hunt (optional, week 5+).** Only because every asset
+(clips, kit, copy) exists by then; HN outranks it 10× for this
+audience. Decision point at week 4: only if launch momentum suggests a
+second wave is worth scheduling.
 
 ### W9 — Japan (geo #3)
 
@@ -202,6 +258,15 @@ community predates almost everyone), with the platform-native culture
 that justifies translation: **Zenn** and **Qiita** host articles the
 way Habr/juejin do. Same caveat as Chinese — no native reviewer — so
 the same humble entry: one tight piece, short where tone risk is high.
+
+Mechanics: Zenn is the modern choice (markdown, GitHub-connected
+publishing — fits the repo workflow; articles CAN live in a public
+repo and sync), Qiita the bigger legacy reach; start Zenn, cross-post
+Qiita if the first lands. Piece: the introducing-ivue story tightened
+to ~800 JP words, code blocks verbatim from the English post, link to
+ivue.dev for depth. Technical-JP tone is more formulaic than
+conversational English — which actually LOWERS translation risk
+relative to Chinese social platforms. Channel label: `zenn`.
 
 **The localization rule (settled):** localize only where big Vue share
 AND a content culture that does not default to English. That is CN,
