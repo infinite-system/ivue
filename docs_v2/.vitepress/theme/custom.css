@@ -4083,16 +4083,18 @@ html {
      the horizontal feather happens off-screen and the atmosphere is
      continuous across the whole section. */
   width: max(1500px, 116vw);
-  height: 620px;
+  /* the light fills the WHOLE section — cards, title, form, and the
+     closing archive line all stand in it */
+  height: 100%;
   /* a button now (click the empty light to cycle variants), sitting
      BEHIND the post strip so the strip's own interactions win */
   z-index: 0;
   border: none;
   padding: 0;
   cursor: pointer;
-  /* the image is bound by the SpotlightBeam class — this is the
-     pre-hydration default */
-  background-image: url('/spotlight-beam-4.png');
+  /* the SpotlightBeam class binds --ivue-beam (click to cycle); the
+     url here is the pre-hydration default */
+  background-image: var(--ivue-beam, url('/spotlight-beam-4.png'));
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: top center;
@@ -4107,21 +4109,37 @@ html {
      starts full-strength at the aurora line, born from it), and a
      horizontal feather so the box's own left/right edges dissolve
      instead of ending in a seam. */
-  -webkit-mask-image: linear-gradient(180deg, black, black 46%, transparent 88%),
+  -webkit-mask-image: linear-gradient(180deg, black, black 62%, transparent 97%),
     linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
-  mask-image: linear-gradient(180deg, black, black 46%, transparent 88%),
+  mask-image: linear-gradient(180deg, black, black 62%, transparent 97%),
     linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
 }
 /* light theme: a beam of light needs darkness to read — dial it back
    to a whisper so the section keeps its airy daylight feel */
+/* Light theme uses NO art. On white, screen shows nothing and multiply
+   darkens the art's dark-navy field into grey corners — either way the
+   section greys out. A painted CSS column instead: normal blending, a
+   real blue tint, no dark pixels anywhere. */
 :root:not(.dark) .ix .ix-newsletter-hero .ix-spotlight {
-  opacity: 0.34;
-  mix-blend-mode: multiply;
-  filter: saturate(0.7);
+  /* a top-anchored ellipse, NOT a clipped trapezoid: clip-path leaves
+     hard diagonal edges, and blurring a box this large is the exact
+     thing LESSONS.md flags for iOS jank */
+  background-image:
+    /* nearly full width at the top, fading down and out — a wide wash
+       of daylight rather than a defined shaft */
+    radial-gradient(96% 78% at 50% -10%, rgba(103, 232, 249, 0.34), transparent 76%),
+    radial-gradient(130% 92% at 50% -4%, rgba(99, 102, 241, 0.13), transparent 78%),
+    linear-gradient(180deg, rgba(45, 212, 191, 0.08), transparent 62%);
+  background-size: 100% 100%;
+  mix-blend-mode: normal;
+  opacity: 1;
 }
 
+.dark .ix .ix-newsletter-hero .drip-card__title {
+  color: #f2f6ff;
+}
 /* the post strip stands IN the beam: headroom above it so the light
    has room to FALL onto the cards, and no gradient of its own — the
    strip's inverted band was designed for closing the page, and under
@@ -4129,8 +4147,8 @@ html {
 .ix .ix-newsletter-hero .drip-showcase {
   position: relative;
   z-index: 1;
-  margin-top: 22px;
-  margin-bottom: 14px;
+  margin-top: 10px;
+  margin-bottom: 6px;
   padding-top: 0;
   padding-bottom: 8px;
 }

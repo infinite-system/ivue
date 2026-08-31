@@ -71,10 +71,9 @@ const {
   position: relative;
   width: 100vw;
   margin: 26px calc(50% - 50vw) 0;
-  /* the strip and the newsletter hero are ONE block — the strip now
-     closes the section flush against the footer, riding the hero's
-     glow from above */
-  padding: 10px 0 26px;
+  /* the strip stands in the newsletter hero's beam — padding is only
+     shadow room for the cards' hover lift (the scroller root clips) */
+  padding: 4px 0 14px;
 }
 .drip-showcase::before {
   content: '';
@@ -273,7 +272,8 @@ const {
   font-size: 13px;
   line-height: 1.4;
   text-align: center;
-  color: var(--vp-c-text-2);
+  /* the cards stand in a bright beam — a muted title disappears in it */
+  color: var(--vp-c-text-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

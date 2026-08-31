@@ -22,8 +22,11 @@ class $SpotlightBeam {
   get beam() {
     return this.beams[this.beamIndex.value] ?? this.beams[0];
   }
+  /** A custom PROPERTY, not background-image: an inline background
+   *  would beat every theme rule, and the light theme paints its own
+   *  beam instead of using the art. */
   get beamStyle() {
-    return { backgroundImage: `url('${this.beam.src}')` };
+    return { '--ivue-beam': `url('${this.beam.src}')` };
   }
   get beamLabel() {
     return `Spotlight: ${this.beam.name} — click to change`;
