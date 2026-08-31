@@ -405,6 +405,8 @@ flyweight state, and lifecycle discipline, all in one real codebase.
 
 <section class="ix-newsletter-hero">
 
+<SpotlightBeam />
+
 ## The future of JavaScript, delivered
 
 <p class="lead ix-newsletter-hero__lead">
