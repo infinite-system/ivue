@@ -204,16 +204,21 @@ Pitch shape (all four): one sentence of claim with the number, the
 link, no adjectives. The editor rewrites anyway — the numbers are what
 survive.
 
-**W8b — Bluesky + Mastodon mirror (standing rule, not a calendar
-row).** Every X thread posts same-day to Bluesky and Mastodon
-(front-end.social first choice, Fosstodon fallback — register handles
-NOW, before launch, to hold the name). Two structural advantages:
-links are not algorithmically punished (unlike X — put the link in
-tweet 1 there), and the audience skews senior/framework-skeptical,
-which fits the receipts voice. Threads port verbatim; Mastodon's 500
-chars lets some X pairs merge. Cost ≈ paste twice. Add `bluesky` and
-`mastodon` channel labels; the composer's ledger pattern can extend
-later — manual paste is fine at this volume.
+**W8b — Bluesky + Mastodon mirror** (standing rule, not a calendar
+row):
+
+- **Rule**: every X thread posts same-day to Bluesky and Mastodon.
+- **Handles**: register NOW, before launch, to hold the name —
+  Bluesky, plus Mastodon on front-end.social (first choice) or
+  Fosstodon (fallback).
+- **Why it pays**: links are NOT algorithmically punished there
+  (unlike X — put the link in post 1), and the audience skews
+  senior/framework-skeptical, which fits the receipts voice.
+- **Porting**: threads port verbatim; Mastodon's 500-char limit lets
+  some X tweet-pairs merge into one post.
+- **Cost**: ≈ paste twice. Manual is fine at this volume; the
+  composer's ledger pattern can extend to these networks later.
+- **Machinery**: add `bluesky` and `mastodon` channel labels.
 
 **W8c — additional Reddit rooms** (rows in the W4 calendar):
 
@@ -247,13 +252,25 @@ open question) containing:
 - contact + "what we'll do to help" (demo access, benchmark repro
   instructions, interview availability)
 
-Then the outreach list, one personalized email each (NOT a blast):
-LearnVue (Matt Maribojoc), Alexander Lichter (DejaVue podcast + Nuxt
-audience), Vue Mastery blog, Vue School blog, Michael Thiessen (his
-newsletter already fits W4's Vue-newsletter row — one email covers
-both). Angle per target: LearnVue/Lichter get the Options-API story;
-Vue Mastery/School get the teaching angle (one document teaches
-humans AND agents).
+Then the outreach list — one personalized email each, NEVER a blast:
+
+- **LearnVue (Matt Maribojoc)** — YouTube + newsletter, the largest
+  Vue-tutorial audience. Angle: the Options-API story ("the class API
+  Vue devs actually wanted"). A video practically scripts itself from
+  the blog post + clips.
+- **Alexander Lichter** — DejaVue podcast + Nuxt-core credibility.
+  Angle: the Options-API story, pitched as a podcast conversation
+  (the discovery arc + the invariants method). Podcast-ready framing
+  already exists in note-launch-plan.
+- **Vue Mastery (blog/courses)** — Angle: the teaching story — one
+  document (the standard) teaches humans AND agents; 100% coverage,
+  mock-free tests as course-friendly material.
+- **Vue School (blog/courses)** — same teaching angle, separate
+  personalized email (they are competitors; never CC).
+- **Michael Thiessen** — his newsletter already sits in W4's
+  Vue-newsletter row; ONE email covers both the newsletter submission
+  and the creator relationship. Angle: the Options-API story with the
+  measured numbers up front (his audience loves patterns + receipts).
 
 **W8e — community drops** (each is one rules-compliant post; read the
 room's rules first — every one of these bans repeat promotion):
@@ -272,15 +289,23 @@ room's rules first — every one of these bans repeat promotion):
   the repo has launch-week stars; the most durable Vue-audience
   surface that exists.
 
-**W8f — StackBlitz tag-team.** The playground already boots on
-StackBlitz. Week 1: tweet the 1M-rows demo clip tagging @stackblitz
-with the one-click-repro link. Their DevRel amplifies exactly this
-genre; free lottery ticket, zero downside.
+**W8f — StackBlitz tag-team**:
 
-**W8g — Product Hunt (optional, week 5+).** Only because every asset
-(clips, kit, copy) exists by then; HN outranks it 10× for this
-audience. Decision point at week 4: only if launch momentum suggests a
-second wave is worth scheduling.
+- The playground already boots on StackBlitz (one-click repro exists
+  today — zero build work).
+- Week 1: tweet the 1M-rows demo clip tagging @stackblitz with the
+  one-click link.
+- Their DevRel amplifies exactly this genre. Free lottery ticket,
+  zero downside, zero follow-up obligation.
+
+**W8g — Product Hunt** (optional, week 5+):
+
+- Viable only because every asset (clips, kit, copy) exists by then —
+  marginal cost is scheduling, not creation.
+- HN outranks it ~10× for this audience; PH is a second-wave play,
+  never the launch.
+- Decision point at week 4: go only if launch momentum suggests a
+  second wave is worth the calendar slot.
 
 ### W9 — Japan (geo #3)
 
