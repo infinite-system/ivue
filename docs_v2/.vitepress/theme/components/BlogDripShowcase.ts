@@ -13,9 +13,12 @@ class $BlogDripShowcase {
   protected timer: ReturnType<typeof setInterval> | undefined;
   protected arrivingTimer: ReturnType<typeof setTimeout> | undefined;
   protected observer: IntersectionObserver | undefined;
+  protected kickTimer: ReturnType<typeof setTimeout> | undefined;
   protected inView = false;
   protected hovering = false;
   protected current = 0;
+  // the first cycle has run — visibility kicks only make sense after it
+  protected started = false;
 
   constructor() {
     onMounted(() => this.onMount());
@@ -142,20 +145,41 @@ class $BlogDripShowcase {
     );
     if (this.root.value) this.observer.observe(this.root.value);
     // first cycle after the strip has measured its opening cards
-    setTimeout(() => this.beginCycle(), 600);
+    setTimeout(() => this.startCycle(), 600);
     this.timer = setInterval(
       () => this.advance(),
       BlogDripShowcase.ADVANCE_EVERY_MS,
     );
   }
 
+  startCycle() {
+    this.started = true;
+    this.beginCycle();
+  }
+
   onVisibility(isIntersecting: boolean) {
+    const wasInView = this.inView;
     this.inView = isIntersecting;
+    // scrolling INTO the strip: slide almost immediately instead of
+    // waiting out the interval's remainder — then keep the normal
+    // cadence by restarting the interval from this moment
+    if (isIntersecting && !wasInView && this.started) this.kickAdvance();
+  }
+
+  kickAdvance() {
+    clearTimeout(this.kickTimer);
+    if (this.timer) clearInterval(this.timer);
+    this.kickTimer = setTimeout(() => this.advance(), 450);
+    this.timer = setInterval(
+      () => this.advance(),
+      BlogDripShowcase.ADVANCE_EVERY_MS,
+    );
   }
 
   dispose() {
     if (this.timer) clearInterval(this.timer);
     clearTimeout(this.arrivingTimer);
+    clearTimeout(this.kickTimer);
     this.observer?.disconnect();
   }
 }
