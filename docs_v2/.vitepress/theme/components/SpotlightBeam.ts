@@ -68,10 +68,9 @@ export namespace SpotlightBeam {
   export const STORAGE_KEY = 'ivue-spotlight-beam';
 
   export const BEAMS: Beam[] = [
-    { src: '/spotlight-beam-1.png', name: 'divine column' },
-    { src: '/spotlight-beam-2.png', name: 'cathedral diagonal' },
-    { src: '/spotlight-beam-3.png', name: 'aurora curtains' },
     { src: '/spotlight-beam-4.png', name: 'column with dust' },
+    { src: '/spotlight-beam-1.png', name: 'divine column' },
+    { src: '/spotlight-beam-3.png', name: 'aurora curtains' },
   ];
 
   /* Types */

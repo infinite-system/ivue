@@ -4051,9 +4051,9 @@ html {
      above it — so the glow always completes inside the box and never
      cuts flat where the section ends, whatever the section's height */
   background:
-    /* the heading's halo BLOOMS FROM the aurora line itself (anchored
-       at the very top edge) — line and glow read as one light source */
-    radial-gradient(44rem 13rem at 50% 0, rgba(99, 102, 241, 0.14), transparent 70%),
+    /* NO halo at the top edge any more: the spotlight beam is the
+       light source now, and a bloom under the line read as a drop
+       shadow competing with it */
     radial-gradient(32rem 14rem at 50% calc(100% - 20rem), rgba(99, 102, 241, 0.1), transparent 70%),
     radial-gradient(26rem 12rem at 50% calc(100% - 9.5rem), rgba(45, 212, 191, 0.08), transparent 70%);
   pointer-events: none;
@@ -4077,21 +4077,26 @@ html {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: min(720px, 96vw);
-  height: 460px;
+  /* wide enough that the beam's own falloff ends INSIDE the box —
+     a narrower box clips the haze into visible vertical edges */
+  width: min(1100px, 100vw);
+  height: 520px;
   pointer-events: none;
   /* the image is bound by the SpotlightBeam class (click the lockup to
      cycle variants) — this is the pre-hydration default */
-  background-image: url('/spotlight-beam-1.png');
+  background-image: url('/spotlight-beam-4.png');
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: top center;
   mix-blend-mode: screen;
-  opacity: 0.9;
+  /* the beam LIGHTS the mark; it must not wash the prose below it */
+  opacity: 0.6;
   /* the beam's own top edge is a hard cut — feather it INTO the
      aurora line so the light appears to be born from the line */
-  -webkit-mask-image: linear-gradient(180deg, transparent, black 6%, black 74%, transparent);
-  mask-image: linear-gradient(180deg, transparent, black 6%, black 74%, transparent);
+  /* feather only the very top (into the aurora line) and the tail —
+     the sides are never masked, so no vertical seams */
+  -webkit-mask-image: linear-gradient(180deg, transparent, black 3%, black 46%, transparent 88%);
+  mask-image: linear-gradient(180deg, transparent, black 3%, black 46%, transparent 88%);
 }
 /* light theme: a beam of light needs darkness to read — dial it back
    to a whisper so the section keeps its airy daylight feel */
@@ -4107,7 +4112,8 @@ html {
   justify-content: center;
   width: 100%;
   padding-top: 74px;
-  margin-bottom: 6px;
+  /* air between the lit mark and the section title */
+  margin-bottom: 30px;
   /* a button for the beam-cycling click, chrome stripped */
   border: none;
   background: none;
@@ -4115,10 +4121,12 @@ html {
 }
 .ix .ix-newsletter-hero .ix-spotlight-lockup img {
   display: none;
-  width: min(300px, 64vw);
+  position: relative;
+  width: min(240px, 56vw);
   height: auto;
-  /* standing in the beam: a soft under-glow grounds the mark */
-  filter: drop-shadow(0 18px 40px rgba(99, 102, 241, 0.35));
+  /* NO shadow, no scrim: the beam is dialed back far enough that the
+     mark separates on its own, and anything behind a flat lockup reads
+     as dirt under the light */
 }
 :root:not(.dark) .ix .ix-newsletter-hero .ix-spotlight-lockup--light {
   display: block;
