@@ -168,6 +168,42 @@ public/x/ directory. V1 constraint: the composer's X upload is
 image-only today — videos attach manually; the chunked video upload
 (INIT/APPEND/FINALIZE) is a later composer upgrade, not a blocker.
 
+### W8 — missed avenues (cheap reach)
+
+- **General-JS newsletters** (the biggest free distribution in the
+  ecosystem, all take submissions): JavaScript Weekly (bulletproof /
+  options-api story), Bytes (the 55–253× number is their voice),
+  Frontend Focus, TLDR Web Dev. Four short submission emails.
+- **Bluesky + Mastodon mirror** of every X thread (front-end.social /
+  Fosstodon): links aren't punished there, audience skews senior,
+  cost ≈ paste twice.
+- **Reddit rooms missing from the calendar**: r/webdev (bigger than
+  r/javascript, demo-tolerant), r/programming (language-story posts).
+- **Creator outreach + press-kit page**: a /press page (the story in
+  three lengths, the numbers table, logo/lockup downloads, W7 clips
+  embeddable) turns cold outreach into a ready-made episode. Targets:
+  LearnVue, Alexander Lichter / DejaVue, Vue Mastery + Vue School
+  blogs. Plus Vue Land Discord #showcase (one compliant post) and an
+  awesome-vue PR (passive, permanent).
+- **StackBlitz tag-team**: tweet the 1M-rows demo tagging them — the
+  playground already boots there; their DevRel amplifies this genre.
+- **Product Hunt**: optional, week 5+, only because assets will all
+  exist by then. HN outranks it 10×.
+
+### W9 — Japan (geo #3)
+
+By Vue adoption arguably #2 after China (LINE, Rakuten; the ja docs
+community predates almost everyone), with the platform-native culture
+that justifies translation: **Zenn** and **Qiita** host articles the
+way Habr/juejin do. Same caveat as Chinese — no native reviewer — so
+the same humble entry: one tight piece, short where tone risk is high.
+
+**The localization rule (settled):** localize only where big Vue share
+AND a content culture that does not default to English. That is CN,
+JP, RU — full stop. Europe reads English (DE is Angular country), KR
+is React-leaning, BR/VN are real Vue pockets with thinner platform
+reach — revisit only on evidence.
+
 ### Sequencing
 
 1. W1 machinery (feeds everything; mechanical)
@@ -189,4 +225,6 @@ image-only today — videos attach manually; the chunked video upload
   relationships or is it cold submission?
 - Dev.to account + canonical setup — exists?
 - New channel labels to add to the validator/CHANNEL_LABELS:
-  `habr`, `juejin`, `telegram`, `devto`, `lobsters`?
+  `habr`, `juejin`, `telegram`, `devto`, `lobsters` — plus `zenn`,
+  `bluesky`, `mastodon`, `newsletter-pitch`?
+- Press-kit page: /press on the site, or a repo PRESS.md first?
