@@ -14,6 +14,10 @@ class $BlogDripShowcase {
   protected arrivingTimer: ReturnType<typeof setTimeout> | undefined;
   protected observer: IntersectionObserver | undefined;
   protected kickTimer: ReturnType<typeof setTimeout> | undefined;
+  // the card whose settle timer is in flight — a new delivery settles
+  // it INSTANTLY instead of cancelling it (a cancelled settle flips
+  // the card from arriving back to sealed)
+  protected pendingIndex: number | undefined;
   protected inView = false;
   protected hovering = false;
   protected current = 0;
@@ -95,12 +99,17 @@ class $BlogDripShowcase {
   /** One delivery: the stamp plays on card `index`, then settles into its
    *  permanent checkmark by advancing the frontier. */
   deliver(index: number) {
-    this.arrivingId.value = this.items[index]?.id ?? '';
     clearTimeout(this.arrivingTimer);
+    // a delivery still animating when the next one starts settles NOW:
+    // its checkmark pops instead of its envelope resealing
+    if (this.pendingIndex !== undefined) this.settleDelivery(this.pendingIndex);
+    this.pendingIndex = index;
+    this.arrivingId.value = this.items[index]?.id ?? '';
     this.arrivingTimer = setTimeout(() => this.settleDelivery(index), 2600);
   }
 
   settleDelivery(index: number) {
+    this.pendingIndex = undefined;
     this.arrivingId.value = '';
     this.deliveredThrough.value = Math.max(
       this.deliveredThrough.value,
@@ -169,7 +178,7 @@ class $BlogDripShowcase {
   kickAdvance() {
     clearTimeout(this.kickTimer);
     if (this.timer) clearInterval(this.timer);
-    this.kickTimer = setTimeout(() => this.advance(), 450);
+    this.kickTimer = setTimeout(() => this.advance(), 1000);
     this.timer = setInterval(
       () => this.advance(),
       BlogDripShowcase.ADVANCE_EVERY_MS,
