@@ -4129,9 +4129,10 @@ html {
 .ix .ix-newsletter-hero .drip-showcase {
   position: relative;
   z-index: 1;
-  margin-top: 104px;
-  margin-bottom: 40px;
+  margin-top: 62px;
+  margin-bottom: 14px;
   padding-top: 0;
+  padding-bottom: 8px;
 }
 .ix .ix-newsletter-hero .drip-showcase::before {
   display: none;
