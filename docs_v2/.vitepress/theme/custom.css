@@ -4155,8 +4155,8 @@ html {
   margin-top: 26px;
   margin-bottom: 0;
   padding-top: 0;
-  /* a little air between the last card row and the footer's hairline */
-  padding-bottom: 22px;
+  /* air between the last card row and the footer's hairline */
+  padding-bottom: 54px;
 }
 .ix .ix-newsletter-hero .drip-showcase::before {
   display: none;
