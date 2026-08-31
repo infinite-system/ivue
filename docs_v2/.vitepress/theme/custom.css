@@ -4092,9 +4092,16 @@ html {
   border: none;
   padding: 0;
   cursor: pointer;
-  /* the SpotlightBeam class binds --ivue-beam (click to cycle); the
-     url here is the pre-hydration default */
-  background-image: var(--ivue-beam, url('/spotlight-beam-4.png'));
+  /* the SpotlightBeam class binds --ivue-beam (click to cycle) — a
+     gradient stack or a url(); this is the pre-hydration default,
+     matching BEAMS[0] (the painted column) */
+  background-image: var(
+    --ivue-beam,
+    radial-gradient(30% 62% at 50% -6%, rgba(186, 245, 253, 0.34), transparent 72%),
+    radial-gradient(52% 82% at 50% -8%, rgba(103, 232, 249, 0.22), transparent 74%),
+    radial-gradient(88% 96% at 50% -12%, rgba(99, 102, 241, 0.16), transparent 76%),
+    radial-gradient(64% 26% at 50% 46%, rgba(125, 211, 252, 0.1), transparent 72%)
+  );
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: top center;
