@@ -106,6 +106,27 @@ class $VirtualScroller<T extends BaseItem> {
       });
       this.lenis.on('virtual-scroll', this.onVirtualScroll);
 
+      // Gesture-axis lock (touch). Lenis only refuses a gesture whose
+      // cross-axis delta is EXACTLY zero, and a finger swiping down a
+      // page always drifts a pixel or two sideways — so a horizontal
+      // strip would claim the swipe and preventDefault the page's own
+      // scroll. These run in the CAPTURE phase (lenis binds on bubble),
+      // decide the axis once per touch, and hand cross-axis gestures
+      // back by marking the event lenis already knows to skip.
+      const element = this.scrollElement.value;
+      element.addEventListener('touchstart', this.onTouchStartCapture, {
+        capture: true,
+        passive: true
+      });
+      element.addEventListener('touchmove', this.onTouchMoveCapture, {
+        capture: true,
+        passive: true
+      });
+      element.addEventListener('touchend', this.onTouchEndCapture, {
+        capture: true,
+        passive: true
+      });
+
       // The DOM is much shorter than the virtual content (content-sized
       // layer + capped tail — see trailingSpacerPx), so lenis takes its
       // wheel-clamp limit from the COMPUTED size — same box as
@@ -120,6 +141,12 @@ class $VirtualScroller<T extends BaseItem> {
     });
 
     onBeforeUnmount(() => {
+      const element = this.scrollElement.value;
+      if (element) {
+        element.removeEventListener('touchstart', this.onTouchStartCapture, true);
+        element.removeEventListener('touchmove', this.onTouchMoveCapture, true);
+        element.removeEventListener('touchend', this.onTouchEndCapture, true);
+      }
       clearTimeout(this.snapTimeout);
       cancelAnimationFrame(this.frame);
       cancelAnimationFrame(this.creepFrame);
@@ -160,6 +187,53 @@ class $VirtualScroller<T extends BaseItem> {
 
   get autoPlay() {
     return toRef(this.props, 'autoPlay');
+  }
+
+  /* ---- gesture-axis lock (touch) ---------------------------------- */
+
+  /** The axis this gesture belongs to, decided once per touch. */
+  protected gestureAxis: 'x' | 'y' | null = null;
+  protected gestureOrigin = { x: 0, y: 0 };
+
+  /** Below this the finger has not said which way it is going yet. */
+  protected get gestureAxisThresholdPx(): number {
+    return 8;
+  }
+
+  /** The axis this scroller answers to — cross-axis gestures are the
+   *  page's. A 'both' gesture orientation claims everything. */
+  protected get gestureOwnAxis(): 'x' | 'y' | null {
+    if (this.lenisGestureOrientation === 'horizontal') return 'x';
+    if (this.lenisGestureOrientation === 'vertical') return 'y';
+    return null;
+  }
+
+  onTouchStartCapture(event: TouchEvent) {
+    const touch = event.touches[0];
+    if (!touch) return;
+    this.gestureAxis = null;
+    this.gestureOrigin = { x: touch.clientX, y: touch.clientY };
+  }
+
+  onTouchMoveCapture(event: TouchEvent) {
+    const ownAxis = this.gestureOwnAxis;
+    if (!ownAxis) return; // 'both' — every gesture is ours
+    const touch = event.touches[0];
+    if (!touch) return;
+    if (!this.gestureAxis) {
+      const deltaX = Math.abs(touch.clientX - this.gestureOrigin.x);
+      const deltaY = Math.abs(touch.clientY - this.gestureOrigin.y);
+      if (Math.max(deltaX, deltaY) < this.gestureAxisThresholdPx) return;
+      this.gestureAxis = deltaX > deltaY ? 'x' : 'y';
+    }
+    // a cross-axis gesture belongs to the page: lenis skips any event
+    // carrying this flag, so its preventDefault never runs
+    if (this.gestureAxis !== ownAxis)
+      (event as TouchEvent & { lenisStopPropagation?: boolean }).lenisStopPropagation = true;
+  }
+
+  onTouchEndCapture() {
+    this.gestureAxis = null;
   }
 
   /* Axis seams — every place the class touches a DOM dimension or a
