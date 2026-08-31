@@ -75,11 +75,15 @@ export namespace SpotlightBeam {
    *  background-image values, so painted and photographic beams live
    *  in one list. The painted one leads: it costs no bytes, scales to
    *  any width, and never has edges to clip. */
+  /** Anchored BELOW the bottom edge: the light rises from the section's
+   *  base, where the post strip stands. (A CSS transform would flip it
+   *  in one line, but a transform on a mix-blend-mode element drops the
+   *  blend entirely — measured: identical pixels with it on and off.) */
   export const PAINTED_COLUMN = [
-    'radial-gradient(30% 62% at 50% -6%, rgba(186, 245, 253, 0.34), transparent 72%)',
-    'radial-gradient(52% 82% at 50% -8%, rgba(103, 232, 249, 0.22), transparent 74%)',
-    'radial-gradient(88% 96% at 50% -12%, rgba(99, 102, 241, 0.16), transparent 76%)',
-    'radial-gradient(64% 26% at 50% 46%, rgba(125, 211, 252, 0.10), transparent 72%)',
+    'radial-gradient(30% 62% at 50% 106%, rgba(186, 245, 253, 0.34), transparent 72%)',
+    'radial-gradient(52% 82% at 50% 108%, rgba(103, 232, 249, 0.22), transparent 74%)',
+    'radial-gradient(88% 96% at 50% 112%, rgba(99, 102, 241, 0.16), transparent 76%)',
+    'radial-gradient(64% 26% at 50% 54%, rgba(125, 211, 252, 0.10), transparent 72%)',
   ].join(', ');
 
   export const BEAMS: Beam[] = [

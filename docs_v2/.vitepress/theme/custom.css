@@ -4097,17 +4097,18 @@ html {
      matching BEAMS[0] (the painted column) */
   background-image: var(
     --ivue-beam,
-    radial-gradient(30% 62% at 50% -6%, rgba(186, 245, 253, 0.34), transparent 72%),
-    radial-gradient(52% 82% at 50% -8%, rgba(103, 232, 249, 0.22), transparent 74%),
-    radial-gradient(88% 96% at 50% -12%, rgba(99, 102, 241, 0.16), transparent 76%),
-    radial-gradient(64% 26% at 50% 46%, rgba(125, 211, 252, 0.1), transparent 72%)
+    radial-gradient(30% 62% at 50% 106%, rgba(186, 245, 253, 0.34), transparent 72%),
+    radial-gradient(52% 82% at 50% 108%, rgba(103, 232, 249, 0.22), transparent 74%),
+    radial-gradient(88% 96% at 50% 112%, rgba(99, 102, 241, 0.16), transparent 76%),
+    radial-gradient(64% 26% at 50% 54%, rgba(125, 211, 252, 0.1), transparent 72%)
   );
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: top center;
   mix-blend-mode: screen;
-  /* the beam LIGHTS the mark; it must not wash the prose below it */
+  /* the beam LIGHTS the strip; it must not wash the prose above it */
   opacity: 0.6;
+
   /* the beam's own top edge is a hard cut — feather it INTO the
      aurora line so the light appears to be born from the line */
   /* The art is not pure black at its edges (dark navy), and screen
@@ -4116,9 +4117,9 @@ html {
      starts full-strength at the aurora line, born from it), and a
      horizontal feather so the box's own left/right edges dissolve
      instead of ending in a seam. */
-  -webkit-mask-image: linear-gradient(180deg, black, black 62%, transparent 97%),
+  -webkit-mask-image: linear-gradient(180deg, transparent 3%, black 38%, black),
     linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
-  mask-image: linear-gradient(180deg, black, black 62%, transparent 97%),
+  mask-image: linear-gradient(180deg, transparent 3%, black 38%, black),
     linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
@@ -4136,9 +4137,9 @@ html {
   background-image:
     /* nearly full width at the top, fading down and out — a wide wash
        of daylight rather than a defined shaft */
-    radial-gradient(96% 78% at 50% -10%, rgba(103, 232, 249, 0.34), transparent 76%),
-    radial-gradient(130% 92% at 50% -4%, rgba(99, 102, 241, 0.13), transparent 78%),
-    linear-gradient(180deg, rgba(45, 212, 191, 0.08), transparent 62%);
+    radial-gradient(96% 78% at 50% 110%, rgba(103, 232, 249, 0.34), transparent 76%),
+    radial-gradient(130% 92% at 50% 104%, rgba(99, 102, 241, 0.13), transparent 78%),
+    linear-gradient(0deg, rgba(45, 212, 191, 0.08), transparent 62%);
   background-size: 100% 100%;
   mix-blend-mode: normal;
   opacity: 1;
@@ -4154,10 +4155,10 @@ html {
 .ix .ix-newsletter-hero .drip-showcase {
   position: relative;
   z-index: 1;
-  margin-top: 10px;
-  margin-bottom: 6px;
+  margin-top: 26px;
+  margin-bottom: 0;
   padding-top: 0;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
 }
 .ix .ix-newsletter-hero .drip-showcase::before {
   display: none;
