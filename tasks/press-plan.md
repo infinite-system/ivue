@@ -322,6 +322,25 @@ room's rules first — every one of these bans repeat promotion):
   the repo has launch-week stars; the most durable Vue-audience
   surface that exists.
 
+**W8e2 — r/ivue (owned room — SECURED) + the AMA**:
+
+- **r/ivue exists and is ours.** Home base, not a launch channel — an
+  empty subreddit reads "abandoned project," so it stays quiet until
+  furnished.
+- **Furnish before linking**: pinned welcome + receipts post, release
+  notes as posts, a "start here" article guide, the FAQ answers from
+  launch threads. Only then link it from the site footer / newsletter.
+- **Its real value is permanence**: Reddit threads are Google-indexed
+  forever — r/ivue becomes the durable "where do I ask ivue
+  questions" answer (Discord chatter evaporates; these threads
+  compound).
+- **AMA — a traction HARVEST, not a source**: week 3–6, after the
+  launch wave gives people questions. Venue: r/vuejs WITH mod
+  coordination (borrowed audience), cross-posted to r/ivue as the
+  archived home copy. Pitch to mods: the receipts line (1.1 kB,
+  94k-line agent-built IDE, everything answered with numbers).
+  Every launch comment thread before it is micro-AMA practice.
+
 **W8f — StackBlitz tag-team**:
 
 - The playground already boots on StackBlitz (one-click repro exists
