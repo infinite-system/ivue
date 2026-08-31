@@ -71,6 +71,7 @@ export namespace SpotlightBeam {
     { src: '/spotlight-beam-1.png', name: 'divine column' },
     { src: '/spotlight-beam-2.png', name: 'cathedral diagonal' },
     { src: '/spotlight-beam-3.png', name: 'aurora curtains' },
+    { src: '/spotlight-beam-4.png', name: 'column with dust' },
   ];
 
   /* Types */
