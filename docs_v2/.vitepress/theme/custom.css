@@ -3648,6 +3648,11 @@ a.feature-inline-link:active {
 .invar-figure img {
   display: block;
   width: 100%;
+  /* every frame is 1920x1092 — reserving the ratio means a lazy,
+     not-yet-loaded slide measures at its TRUE height, so the slider's
+     viewport never collapses-then-reexpands (layout shift) on slide */
+  aspect-ratio: 1920 / 1092;
+  height: auto;
   border: 1px solid var(--vp-c-divider);
   border-radius: 10px;
   box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
