@@ -359,6 +359,33 @@ room's rules first — every one of these bans repeat promotion):
 - Decision point at week 4: go only if launch momentum suggests a
   second wave is worth the calendar slot.
 
+### W10 — X format variety (dwell time is the algorithm)
+
+X rewards on-platform dwell and punishes link-outs — so the thread is
+one format among four, rotated per post:
+
+- **A. Thread** (exists) — the composer's hook + banner/clip + packed
+  body + closing link.
+- **B. Article-as-images** — the post (or its strongest section)
+  rendered as 1–4 typographic cards in X's 4-image slot. Readers
+  consume the WHOLE argument in-feed; the link rides the reply or the
+  final card. Manufactured deterministically like banners: a
+  render-article-cards script (md section → styled HTML → PNG, house
+  design language, big readable type), alt text = the plain text
+  (accessibility + search). High-read format; many readers prefer it.
+- **C. Long post** (25,000 chars — AVAILABLE NOW on the $5 Basic
+  plan; all Premium tiers have it) — renders with "Show more," no
+  card presentation. Right vehicle for release-post-sized content and
+  mini-articles; effectively a free blog mirror on-platform.
+- **D. X Articles (rich editor + article card)** — Premium+ only
+  (~$22/mo, verify in-app). Decision rule: upgrade ONLY after formats
+  B/C demonstrably earn engagement — presentation upgrade, not a
+  capability unlock.
+
+Rotation guidance: threads for launch/receipts moments, image-cards
+for essay-shaped posts (philosophy/story tags), long posts for
+release-notes-shaped and r/ivue-grade content mirrored outward.
+
 ### W9 — Japan (geo #3)
 
 By Vue adoption arguably #2 after China (LINE, Rakuten; the ja docs
