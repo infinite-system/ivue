@@ -68,25 +68,41 @@ The design (agreed in discussion):
   the hooks — at write time, when the sharpest claims are hot.
 - Backfill: only the calendar posts (W4) + all new posts. Not all 48.
 
-### W2 — the release tank (copy + video are part of "released")
+### W2 — the content tank (the POST is the release unit)
 
-A release is not released until its distribution exists. The release
-skill's pipeline extends: gates → notes **+ channel copy + video** →
-tag → publish → verify-publish → fire the calendar slot. Authored
-BEFORE the tag, same commit as the notes — the tagged tree carries its
-own ammunition; nothing downstream waits on inspiration.
+**The correction that reframed this workstream:** the engine is
+mostly feature-complete, so npm version releases are maintenance
+events — skill refinements and internal fixes ship SILENT, and
+describing every one is noise nobody should be asked to care about.
+The recurring unit that fires every few days is the BLOG POST (the
+newsletter drip already proves the cadence). The tank = every post
+leaves the factory fully armed, nothing downstream waits on mood:
 
-Per release, written alongside the notes:
+Per post, at write time (extending the existing pipeline in
+CLAUDE.md / write-article):
 
-- an X thread (3–5 segments: what shipped, the one code receipt, link)
-  with a release video where one exists (W7)
-- a short Reddit-comment-shaped blurb (r/vuejs / r/typescript
-  depending on content)
-- a LinkedIn paragraph when the release carries a story
+1. title (doctrine) → prose → **xHooks, 2–3 angles** (W1)
+2. banner (exists) → **clip, when the post earns one** (W7 — not
+   every post; the rule: a clip when the post's subject MOVES)
+3. build → commit → dates (exists)
+4. newsletter drip: automatic (exists)
+5. X thread via composer (hook + banner/clip) → **same-day
+   Bluesky/Mastodon mirror** (W8b)
+6. calendar room, when the post has one (W4) — most posts are
+   X+mirror+drip only; rooms are for the strongest
 
-Stored as private channel posts (`x-release-X-Y-Z`, …). Retroactive
-first case: 2.5.0 — definePropTypes + the private ban is an
-r/typescript conversation waiting to happen.
+**npm version releases, demoted:** channel copy only when a release
+carries a REAL story a stranger benefits from hearing (a new
+capability, a bridge, a headline number). Rule of thumb: if the
+release notes' H1 wouldn't survive the blog title doctrine as an
+article title, it ships without press. When one DOES qualify, the
+best form is usually a blog post ABOUT the capability (which then
+rides the post tank above) — not release-notes-shaped copy.
+
+Retroactive case check under the new rule: 2.5.0 needs no release
+copy — its press-worthy content (the private ban) already has a
+better vehicle, the ban-private post, which the calendar routes to
+r/typescript in week 2.
 
 ### W3 — first-tweet fix is W1 (superseded)
 
@@ -335,7 +351,8 @@ reach — revisit only on evidence.
 1. W1 machinery (feeds everything; mechanical)
 2. W7 flagship clip (hero typewriter) — proves the video pipeline and
    feeds the launch thread itself
-3. W2 + retroactive 2.5.0 copy (release is a day old — still fresh)
+3. W2 wiring is mostly W1+W7+W8b landing — no retroactive 2.5.0 copy
+   (ban-private the post is the vehicle, per the demotion rule)
 4. W4 calendar agreed → batch-write missing copy (+ clips 2–3)
 5. W5 after English launch signals the winning story
 6. W6 last, smallest surface
