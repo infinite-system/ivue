@@ -128,8 +128,15 @@ numbers or a repo link, never adjectives.
   English launch shows which story wins; default: the-options-api-
   everyone-wanted). Habr rewards depth + measured numbers — the house
   voice translates well.
-- **Telegram** — short blurbs for the Vue/frontend channel ecosystem;
-  list target channels first.
+- **Telegram — WARM, not cold.** The leader of the Russian Vue.js
+  Telegram community (t.me/vuejs_ru) is a personal contact: he
+  transferred the `ivue` npm package name to the author, free, because
+  he wasn't using it — he has already materially supported the
+  project. Plan: a personal message with the launch story + the Habr
+  piece when it exists; he posts or advises where to post. RU is
+  therefore the ONLY market with an inside channel — it can run week
+  1–2 instead of waiting for English signals, since distribution risk
+  is low.
 - Workflow: agent drafts RU, author does the native pass. Artifacts as
   private channel posts (`channel: habr`, `channel: telegram` — new
   labels, same machinery).
@@ -208,11 +215,22 @@ chars lets some X pairs merge. Cost ≈ paste twice. Add `bluesky` and
 `mastodon` channel labels; the composer's ledger pattern can extend
 later — manual paste is fine at this volume.
 
-**W8c — additional Reddit rooms** (added to the W4 calendar below):
-r/webdev (huge, demo-tolerant — the 1M-rows or 20M-cells material with
-a video, framed as engineering not product) and r/programming
-(language-story posts only: win-by-reduction, discovered-not-invented;
-r/programming punishes anything that smells like a launch).
+**W8c — additional Reddit rooms** (rows in the W4 calendar):
+
+- **r/webdev** — huge, demo-tolerant. Material: a-million-rows-twelve-
+  divs or twenty-million-cells WITH the video clip. Frame as
+  engineering ("how we render 1M rows in 12 divs"), never as product.
+- **r/programming** — language-story posts only: win-by-reduction,
+  discovered-not-invented. This room punishes anything that smells
+  like a launch; the article must stand as an essay.
+- **r/typescript** — supports MULTIPLE entries, spaced ~3 weeks apart,
+  each framed as a TS-techniques post rather than a library pitch:
+  1. ban-private (week 2 — the protected/override doctrine)
+  2. the two-inheritance-chains + `self` story (already flagged in the
+     launch plan as r/typescript material)
+  3. definePropTypes and the `required: true` literal-preservation
+     trick (generic inference vs bare-const widening)
+  4. the-test-is-a-subclass
 
 **W8d — press-kit page + creator outreach.** The unlock is the kit:
 outreach without one is "please cover me"; with one it is "here is a
@@ -237,10 +255,22 @@ both). Angle per target: LearnVue/Lichter get the Options-API story;
 Vue Mastery/School get the teaching angle (one document teaches
 humans AND agents).
 
-**W8e — community drops (rules-compliant, one post each):** Vue Land
-Discord #showcase; awesome-vue PR (one line + link — passive,
-permanent SEO); Echo JS and daily.dev link drops (already in the
-launch plan, kept here for completeness).
+**W8e — community drops** (each is one rules-compliant post; read the
+room's rules first — every one of these bans repeat promotion):
+
+- **Vue Land Discord, #showcase** — one post: the one-paragraph story,
+  the playground link, the 1M-rows clip. Stay in the thread and answer
+  questions same-day; Discord rewards presence, not the post.
+- **awesome-vue PR** — one line + link under the right section.
+  Passive but permanent SEO; the first place many devs search for
+  "vue <thing>". Zero maintenance after merge.
+- **Echo JS** — plain link drop, title = the article title (their
+  culture: no pitch text).
+- **daily.dev** — submit via their squad/submission flow; the
+  algorithm resurfaces good posts repeatedly at zero ongoing cost.
+- **vuejs.org ecosystem surfaces** — check the listing criteria once
+  the repo has launch-week stars; the most durable Vue-audience
+  surface that exists.
 
 **W8f — StackBlitz tag-team.** The playground already boots on
 StackBlitz. Week 1: tweet the 1M-rows demo clip tagging @stackblitz
@@ -292,8 +322,9 @@ reach — revisit only on evidence.
   every new article's thread, or is X manual-only via the composer?
 - Habr flagship: options-api story vs introducing-ivue vs win-by-
   reduction? (Default: decide from English launch data.)
-- Telegram: which channels, and does the author have posting
-  relationships or is it cold submission?
+- ~~Telegram: which channels / relationships?~~ ANSWERED: warm —
+  t.me/vuejs_ru leadership is a personal contact (transferred the
+  ivue npm name, free). See W5.
 - Dev.to account + canonical setup — exists?
 - New channel labels to add to the validator/CHANNEL_LABELS:
   `habr`, `juejin`, `telegram`, `devto`, `lobsters` — plus `zenn`,
