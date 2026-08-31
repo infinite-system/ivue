@@ -115,6 +115,7 @@ to rooms across ~6 weeks post-launch. Draft mapping to refine:
 | 2 | r/webdev | a-million-rows-twelve-divs or twenty-million-cells | engineering + video, not product |
 | 3 | creator outreach (emails) | per W8d list | press kit ready first |
 | 5 | r/programming | win-by-reduction | language story, zero launch smell |
+| 5–6 | r/typescript (second entry) | the-test-is-a-subclass or the definePropTypes literal trick | TS techniques, not pitch |
 | standing | Bluesky + Mastodon | every X thread, same day | links in post 1 (not punished there) |
 
 Copy for each row gets written batch-wise as private channel posts.
