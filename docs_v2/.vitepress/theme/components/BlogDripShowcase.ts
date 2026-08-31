@@ -10,12 +10,12 @@ import { data as allPosts } from '../../../blog/blog.data.mjs';
 // with lenis physics and snap to card boundaries on settle.
 class $BlogDripShowcase {
   // non-reactive internals — cycle bookkeeping, never read by the template
-  private timer: ReturnType<typeof setInterval> | undefined;
-  private arrivingTimer: ReturnType<typeof setTimeout> | undefined;
-  private observer: IntersectionObserver | undefined;
-  private inView = false;
-  private hovering = false;
-  private current = 0;
+  protected timer: ReturnType<typeof setInterval> | undefined;
+  protected arrivingTimer: ReturnType<typeof setTimeout> | undefined;
+  protected observer: IntersectionObserver | undefined;
+  protected inView = false;
+  protected hovering = false;
+  protected current = 0;
 
   constructor() {
     onMounted(() => this.onMount());

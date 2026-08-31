@@ -182,7 +182,7 @@ class $Box {
   // STORE / COMPOSABLE — `$`-getter caches WHOLE, forever, per
   // instance. Resolves on first touch (after Pinia/app ready);
   // circular-import safe.
-  private get $project() {
+  protected get $project() {
     return useProjectStore();
   }
   get projectId() {
@@ -460,6 +460,27 @@ that overrides a base member carries the `override` keyword
 refuses to compile, and a base rename breaks every subclass at the
 exact overriding member instead of quietly orphaning it.
 
+**`private` is banned — visibility is a three-tier semantic.** ivue's
+core promise is extend-don't-fork, and `private` is the one keyword
+that structurally revokes it: a subclass that needs a private member
+has exactly one option, copy the file. TypeScript's `private` is
+compile-time advisory anyway — it protects nothing at runtime and
+forbids only the legitimate extender. So every member picks its tier
+by AUDIENCE:
+
+| tier | audience | meaning |
+| --- | --- | --- |
+| `public` | templates & consumers | the component/module surface |
+| `protected` | subclasses | a seam of the hierarchy — reachable to extend, invisible to templates and consumers (TS enforces this) |
+| `private` | nobody | banned — "must hide it even from subclasses" is a design smell; resolve by naming and documenting the member |
+
+The pairing with `noImplicitOverride` is what makes protected-everything
+safe rather than fragile: every subclass touchpoint is annotated
+`override`, so a base renaming or removing a protected seam breaks
+every extender's BUILD at the exact member — seam drift is loud, never
+silent. (Both halves are load-bearing: `protected` opens every seam,
+the tsconfig makes changing one detectable.)
+
 ## One template, one logic owner
 
 Every behavioral SFC has exactly one ivue class as its template logic owner.
@@ -644,7 +665,7 @@ session.dispose();
 | ✅ `.value` for every Ref/Computed inside the class and in the script body | ❌ write `this.x = v` for a Ref/Computed in the class — it clobbers the ref or no-ops |
 | ✅ derive with a PLAIN getter | ❌ wrap every derivation in `computed()` — pays ~300 bytes/instance for nothing |
 | ✅ `computed()` only for expensive / render-suppressing / stable-handle needs | ❌ reach for `computed()` by default |
-| ✅ inject stores via `private get $store() { return useStore() }` | ❌ `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles |
+| ✅ inject stores via `protected get $store() { return useStore() }` | ❌ `store = useStore()` field initializer — runs at construction, breaks tests/SSR/cycles |
 | ✅ `new X.Class(props, emit)` — raw instance everywhere | ❌ wrap in `reactive(instance)` or any shallow-unwrap view as the standard |
 | ✅ destructure ALL template-touched Refs/Computeds + element refs, grouped | ❌ destructure plain getters or methods — snapshots a dead value / loses nothing but clarity |
 | ✅ state bindings in templates; dotted `box.x` only for plain getters/methods | ❌ reach a Ref through the instance in a template — `v-if="box.someRef"` is always-truthy |
@@ -654,6 +675,7 @@ session.dispose();
 | ✅ plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | ❌ default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |
 | ✅ compose cleanup as an ordinary method — `dispose() { /* non-Vue cleanup */ this.$stopEffects(); }` | ❌ expect a teardown hook — ivue auto-calls NOTHING (no `init()`, no `stopEffects()`) |
 | ✅ a class with static members anchors them: `const $Class = Static($X)` (`ivue/extras`) | ❌ `extends X.Class` — the mutable slot is an eager snapshot of one generation; always extend `$Class` |
+| ✅ `protected` for every internal member — subclasses reach every seam | ❌ `private` anywhere in an ivue class — it forbids only the legitimate extender |
 | ✅ instance code reads its own statics through `this.self` (the one cast per class); hoist `const self = this.self` for 2+ reads or any loop | ❌ per-site `(this.constructor as typeof $X)` casts — each one is an unchecked class-name assertion |
 
 ## The unwrapping-surface typing invariant
@@ -857,13 +879,13 @@ reactive primitives as plain values** and materialize per observation:
 class $Sheet {
   // Plain readonly fields — the COLLECTIONS aren't reactive;
   // their VALUES are.
-  private readonly cellVersions = new Map<number, Ref<number>>();
+  protected readonly cellVersions = new Map<number, Ref<number>>();
 
   /**
    * READ path: get-OR-CREATE, then subscribe — observation
    * materializes.
    */
-  private trackCell(cellKey: number): void {
+  protected trackCell(cellKey: number): void {
     let versionRef = this.cellVersions.get(cellKey);
     if (!versionRef) {
       versionRef = ref(0);
@@ -877,7 +899,7 @@ class $Sheet {
    * WRITE path: PEEK-ONLY — unobserved keys allocate nothing,
    * notify no one.
    */
-  private bumpCell(cellKey: number): void {
+  protected bumpCell(cellKey: number): void {
     const versionRef = this.cellVersions.get(cellKey);
     if (versionRef) versionRef.value++;
   }
@@ -1226,7 +1248,7 @@ convention and check it in review.
 - [ ] Every mutable state member is `get x() { return ref(...) }` — no mutable plain fields.
 - [ ] Inside the class, every Ref/Computed read/write uses `.value`; every plain field matches one role in the constants table.
 - [ ] Derived values are PLAIN getters; `computed()` appears only for expensive / render-suppressing / stable-handle cases.
-- [ ] Stores/composables are injected via `private get $store() { return useStore() }`, not field initializers.
+- [ ] Stores/composables are injected via `protected get $store() { return useStore() }`, not field initializers.
 - [ ] The class is exported through the namespace (`$Class` / `Class = Reactive($Class)` / `Instance`); generics cast `Class` and hand-apply `ReactiveInstance` to `Instance<T>`.
 - [ ] The SFC does `new X.Class(...)` once — no `reactive()` wrapper, no unwrap view.
 - [ ] `<script setup>` is wiring only: no component-local Ref/Computed, watcher, lifecycle hook, or free function beside the class instance; extend an existing class-backed component through its class, never through parallel setup behavior.
@@ -1245,3 +1267,4 @@ convention and check it in review.
 - [ ] Spacing carries meaning: declaration-like getters contiguous within their group; blank lines only where a doc comment / multi-line body / category boundary begins; methods always separated.
 - [ ] The namespace is the ONE seam: no module-level consts beside imports/class/namespace (file-private values are non-exported namespace members); the contract is namespace data in Identity → Values → Types order, its types derived from its values; a large contract's sibling `XProps.ts` is imported only by its class file and extending contract files.
 - [ ] Every member that overrides a base member carries `override` (with `noImplicitOverride` enabled).
+- [ ] No `private` members — internal members are `protected` (three-tier visibility: public = consumer surface, protected = hierarchy seam, private = banned).

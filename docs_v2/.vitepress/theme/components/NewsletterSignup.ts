@@ -16,9 +16,9 @@ class $NewsletterSignup {
   readonly markGradientId: string;
   readonly markTileGradientId: string;
 
-  private route: ReturnType<typeof useRoute>;
+  protected route: ReturnType<typeof useRoute>;
   // Turnstile's widget handle — internal bookkeeping, not template state
-  private turnstileWidgetId: string | undefined;
+  protected turnstileWidgetId: string | undefined;
 
   constructor(public props: NewsletterSignup.Props) {
     this.markGradientId = useId();
