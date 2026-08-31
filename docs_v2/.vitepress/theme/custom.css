@@ -4166,6 +4166,27 @@ html {
    beam fell from above. The light now rises from the section's base,
    so a rule at the top motivated nothing and boxed the section in —
    without it the section emerges out of the page. */
+/* NARROW SCREENS: the radials are sized as percentages of the beam
+   box, so a 390px phone gets a ~117px core — a thin stripe, where the
+   same percentages read as a wide wash at 1280px. Widen them well past
+   100% on mobile (a background gradient can exceed its box; it cannot
+   overflow it, so this is safe for the layout viewport). */
+@media (max-width: 768px) {
+  .ix .ix-newsletter-hero .ix-spotlight {
+    background-image:
+      radial-gradient(96% 52% at 50% 106%, rgba(148, 214, 246, 0.26), transparent 72%),
+      radial-gradient(150% 72% at 50% 108%, rgba(103, 232, 249, 0.2), transparent 74%),
+      radial-gradient(220% 88% at 50% 112%, rgba(99, 102, 241, 0.16), transparent 76%),
+      radial-gradient(170% 24% at 50% 56%, rgba(125, 211, 252, 0.1), transparent 72%);
+  }
+  :root:not(.dark) .ix .ix-newsletter-hero .ix-spotlight {
+    background-image:
+      radial-gradient(190% 64% at 50% 110%, rgba(37, 99, 235, 0.24), transparent 76%),
+      radial-gradient(260% 82% at 50% 104%, rgba(29, 78, 216, 0.13), transparent 78%),
+      linear-gradient(0deg, rgba(37, 99, 235, 0.06), transparent 62%);
+  }
+}
+
 .ix-newsletter-hero::after {
   content: none;
 }
