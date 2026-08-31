@@ -17,7 +17,7 @@ import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 
 class $Kernel {
-  private static readonly nodes = new Map<string, Kernel.Node>();
+  protected static readonly nodes = new Map<string, Kernel.Node>();
 
   /** Register an owner-namespaced key (`namespace/Class`) and namespace. */
   static defineClass(name: string, ns: Kernel.Extensible) {
@@ -81,13 +81,13 @@ class $Kernel {
     }));
   }
 
-  private static nodeByClass() {
+  protected static nodeByClass() {
     const map = new Map<Kernel.AnyClass, Kernel.Node>();
     for (const node of this.nodes.values()) map.set(node.ns.$Class, node);
     return map;
   }
 
-  private static topoOrder(
+  protected static topoOrder(
     byClass: Map<Kernel.AnyClass, Kernel.Node>,
   ): Kernel.Node[] {
     const out: Kernel.Node[] = [];

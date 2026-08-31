@@ -4,7 +4,7 @@ import { useMouse } from '@vueuse/core';
 
 class $Pointer {
   // the composable is an implementation detail — created once, held forever
-  private get $mouse() {
+  protected get $mouse() {
     return useMouse();
   }
 

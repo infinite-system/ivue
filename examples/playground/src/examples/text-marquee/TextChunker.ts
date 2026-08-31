@@ -51,11 +51,11 @@ class $TextChunker {
 
   /** Prose sample the canvas measures — mixed case, punctuation and
    *  spaces in ordinary proportions, so the average is honest for text. */
-  private static readonly WIDTH_SAMPLE =
+  protected static readonly WIDTH_SAMPLE =
     'The window walks; the list stands still. A million rows, ' +
     'a handful of divs — estimates decide the spacers, real sizes decide the rest.';
 
-  private static readonly widthCache = new Map<string, number>();
+  protected static readonly widthCache = new Map<string, number>();
 
   /**
    * Canvas-measured average character width for a CSS `font` shorthand,

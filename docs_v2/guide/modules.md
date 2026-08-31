@@ -191,10 +191,10 @@ on first access. That makes it the standard slot for stores and composables:
 
 ```ts
 class $Order {
-  private get $project() {
+  protected get $project() {
     return useProjectStore();
   }
-  private get $user() {
+  protected get $user() {
     return useUserStore();
   }
 

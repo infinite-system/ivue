@@ -615,7 +615,7 @@ class $CheckStandard {
         if (!classFile) continue;
         for (const member of classFile.rawClass.members) {
           if (ts.isPropertyDeclaration(member) && member.initializer && ts.isCallExpression(member.initializer) && ts.isIdentifier(member.initializer.expression) && /^use[A-Z]/.test(member.initializer.expression.text))
-            findings.push(this.finding(this.a_composable_is_injected_by_a_one_call_dollar_getter, unit, this.lineOf(unit, member), `\`${this.memberName(member)} = ${member.initializer.expression.text}()\` runs at construction — inject it as \`private get $${this.memberName(member)}() { return ${member.initializer.expression.text}() }\``));
+            findings.push(this.finding(this.a_composable_is_injected_by_a_one_call_dollar_getter, unit, this.lineOf(unit, member), `\`${this.memberName(member)} = ${member.initializer.expression.text}()\` runs at construction — inject it as \`protected get $${this.memberName(member)}() { return ${member.initializer.expression.text}() }\``));
           if (ts.isGetAccessorDeclaration(member) && this.memberName(member).startsWith('$') && member.body) {
             const statements = member.body.statements;
             const single = statements.length === 1 && ts.isReturnStatement(statements[0]) && !!statements[0].expression && (ts.isCallExpression(statements[0].expression) || ts.isNewExpression(statements[0].expression) || ts.isPropertyAccessExpression(statements[0].expression));
@@ -894,7 +894,7 @@ class $CheckStandard {
           if (ts.isParameter(node) && node.type && ts.isConstructorDeclaration(node.parent)) {
             const tail = this.qualifiedTail(node.type);
             if (tail && (tail.member === 'Instance' || tail.member === 'Model') && ts.isIdentifier(node.name) && /^(app|store|session|root|shell)$/i.test(node.name.text))
-              findings.push(this.finding(this.a_store_is_used_lazily_and_swapped_at_the_class_slot, unit, this.lineOf(unit, node), `constructor takes the shared model \`${node.name.text}: ${tail.namespace}.${tail.member}\` — reach for it with \`private get $${node.name.text}() { return ${tail.namespace}.use() }\``));
+              findings.push(this.finding(this.a_store_is_used_lazily_and_swapped_at_the_class_slot, unit, this.lineOf(unit, node), `constructor takes the shared model \`${node.name.text}: ${tail.namespace}.${tail.member}\` — reach for it with \`protected get $${node.name.text}() { return ${tail.namespace}.use() }\``));
           }
         });
       }
@@ -1238,7 +1238,7 @@ export namespace Tooltip {
 import { Reactive } from 'ivue';
 
 class $Sheet {
-  private readonly cellVersions = new Map<number, Ref<number>>();
+  protected readonly cellVersions = new Map<number, Ref<number>>();
 
   trackCell(cellKey: number): void {
     let versionRef = this.cellVersions.get(cellKey);

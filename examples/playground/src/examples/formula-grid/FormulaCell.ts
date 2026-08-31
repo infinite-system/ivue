@@ -35,7 +35,7 @@ class $FormulaCell {
   readonly sheet: Sheet;
   readonly row: number;
   readonly col: number;
-  private readonly iv: string;
+  protected readonly iv: string;
 
   constructor(sheet: Sheet, row: number, col: number, initial: string) {
     this.sheet = sheet;

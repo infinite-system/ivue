@@ -4,7 +4,7 @@ import type { TaskStatus } from './types';
 import { Workspace } from './Workspace';
 
 class $TaskList {
-  private get $workspace() {
+  protected get $workspace() {
     return Workspace.use();
   }
 

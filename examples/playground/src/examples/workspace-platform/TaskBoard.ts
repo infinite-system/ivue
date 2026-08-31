@@ -13,7 +13,7 @@ class $TaskBoard {
     return ref<TaskStatus | null>(null);
   }
 
-  private get $workspace() {
+  protected get $workspace() {
     return Workspace.use();
   }
 

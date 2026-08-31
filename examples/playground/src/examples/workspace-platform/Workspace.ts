@@ -13,7 +13,7 @@ import {
 } from './types';
 
 class $Workspace {
-  private static dateAtOffset(offset: number) {
+  protected static dateAtOffset(offset: number) {
     const date = new Date();
     date.setHours(12, 0, 0, 0);
     date.setDate(date.getDate() + offset);

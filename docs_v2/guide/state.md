@@ -238,6 +238,12 @@ reconstruction after a script edit creates the new declaration and its matching
 brand together, so ivue needs no private-field detection or alternate update
 path.
 
+This section documents what the engine SUPPORTS. What the standard
+recommends is stricter: internal members are `protected`, never
+`private` or `#private` — both hide the member from subclasses, and a
+subclass that cannot reach a member can only fork the file. The
+reasoning is [Ban private](/blog/ban-private).
+
 ## Keyed reactivity: the third shape
 
 Ref-getters express **named** state — members you can list when you author
@@ -252,10 +258,10 @@ materialize them per observation.
 ```ts
 class $Sheet {
   // Plain readonly fields — the COLLECTIONS aren't reactive; their VALUES are.
-  private readonly cellVersions = new Map<number, Ref<number>>();
+  protected readonly cellVersions = new Map<number, Ref<number>>();
 
   /** READ path: get-OR-CREATE, then subscribe — observation materializes. */
-  private trackCell(cellKey: number): void {
+  protected trackCell(cellKey: number): void {
     let versionRef = this.cellVersions.get(cellKey);
     if (!versionRef) {
       versionRef = ref(0);
@@ -265,7 +271,7 @@ class $Sheet {
   }
 
   /** WRITE path: PEEK-ONLY — unobserved keys allocate nothing, notify no one. */
-  private bumpCell(cellKey: number): void {
+  protected bumpCell(cellKey: number): void {
     const versionRef = this.cellVersions.get(cellKey);
     if (versionRef) versionRef.value++;
   }

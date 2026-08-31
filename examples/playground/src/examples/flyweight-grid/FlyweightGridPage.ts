@@ -37,10 +37,10 @@ class $FlyweightGridPage {
    * physical height under both and map scroll ratio → virtual offset (the
    * scaled scrollbar every big-grid engine uses; ~2.4:1 at 1M rows).
    */
-  private static readonly MAX_SCROLL_HEIGHT = 12_000_000;
+  protected static readonly MAX_SCROLL_HEIGHT = 12_000_000;
 
   /** Eviction margin ≫ the 50-row running-sum reach (dependency locality). */
-  private static readonly EVICT_MARGIN_ROWS = 512;
+  protected static readonly EVICT_MARGIN_ROWS = 512;
 
   constructor() {
     // Viewport-tied eviction, debounced so a fast flick doesn't thrash.
@@ -96,8 +96,8 @@ class $FlyweightGridPage {
   }
 
   // --- non-reactive infra (timers) ---
-  private censusTimer: ReturnType<typeof setInterval> | null = null;
-  private evictTimer: ReturnType<typeof setTimeout> | null = null;
+  protected censusTimer: ReturnType<typeof setInterval> | null = null;
+  protected evictTimer: ReturnType<typeof setTimeout> | null = null;
 
   // --- derived (plain getters) ---
   get hasModel() {
@@ -153,7 +153,7 @@ class $FlyweightGridPage {
     return computed(() => this.buildVisibleRows());
   }
 
-  private buildVisibleRows(): FlyweightGridPage.PageRow[] {
+  protected buildVisibleRows(): FlyweightGridPage.PageRow[] {
     const sheet = this.sheet.value;
     if (!sheet) return [];
     const pageRows: FlyweightGridPage.PageRow[] = [];
@@ -267,7 +267,7 @@ class $FlyweightGridPage {
   }
 
   /** Measurement/verification harness (same idea as the reference grids). */
-  private installHarness() {
+  protected installHarness() {
     (window as unknown as { __fw: unknown }).__fw = {
       rows: () => (this.sheet.value ? this.sheet.value.rows : 0),
       cols: COLS,

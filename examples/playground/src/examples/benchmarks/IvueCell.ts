@@ -24,7 +24,7 @@ class $Cell {
   // CONSTANTS — plain fields, never mutated (safe: not reactive state).
   row: number;
   col: number;
-  private iv: string;
+  protected iv: string;
 
   constructor(row: number, col: number, initial: string) {
     this.row = row;

@@ -40,7 +40,7 @@ into structured models without losing anything.
 
 ## Consuming a composable: the `$`-getter
 
-The one convention: a class holds a composable behind a **private getter
+The one convention: a class holds a composable behind a **protected getter
 whose name starts with `$`**, and the engine caches the entire returned
 object on first touch — once per instance, for the instance's whole life.
 
@@ -52,7 +52,7 @@ import { useMouse } from '@vueuse/core';
 class $Pointer {
   // the composable is an implementation detail — created on first
   // touch, cached WHOLE, held for the life of the instance
-  private get $mouse() {
+  protected get $mouse() {
     return useMouse();
   }
 
@@ -204,7 +204,7 @@ class $Pointer {
     void this.$mouse;
   }
 
-  private get $mouse() {
+  protected get $mouse() {
     return useMouse();
   }
   /* ... */

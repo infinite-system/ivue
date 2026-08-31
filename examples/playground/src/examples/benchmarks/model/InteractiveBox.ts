@@ -13,7 +13,7 @@ class $InteractiveBox extends Container.$Class {
 
   // --- Composition API Integrations ---
   // Using private getter to encapsulate the hook
-  private get $mouse() {
+  protected get $mouse() {
     return useMouse();
   }
 

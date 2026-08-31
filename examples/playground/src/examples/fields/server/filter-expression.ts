@@ -90,19 +90,19 @@ function tokenize(expression: string): Token[] {
 class Parser {
   // Node runs this file natively via type stripping, which forbids
   // constructor parameter properties — assign explicitly.
-  private position = 0;
-  private tokens: Token[];
+  protected position = 0;
+  protected tokens: Token[];
   constructor(tokens: Token[]) {
     this.tokens = tokens;
   }
 
-  private peek(): Token | undefined {
+  protected peek(): Token | undefined {
     return this.tokens[this.position];
   }
-  private next(): Token {
+  protected next(): Token {
     return this.tokens[this.position++];
   }
-  private isKeyword(word: string): boolean {
+  protected isKeyword(word: string): boolean {
     const token = this.peek();
     return !!token && token.kind === 'ident' && token.value.toUpperCase() === word;
   }
@@ -111,7 +111,7 @@ class Parser {
     return this.parseOr();
   }
 
-  private parseOr(): (row: Row) => boolean {
+  protected parseOr(): (row: Row) => boolean {
     let left = this.parseAnd();
     while (this.isKeyword('OR')) {
       this.next();
@@ -122,7 +122,7 @@ class Parser {
     return left;
   }
 
-  private parseAnd(): (row: Row) => boolean {
+  protected parseAnd(): (row: Row) => boolean {
     let left = this.parseUnary();
     while (this.isKeyword('AND')) {
       this.next();
@@ -133,7 +133,7 @@ class Parser {
     return left;
   }
 
-  private parseUnary(): (row: Row) => boolean {
+  protected parseUnary(): (row: Row) => boolean {
     if (this.isKeyword('NOT')) {
       this.next();
       const inner = this.parseUnary();
@@ -142,7 +142,7 @@ class Parser {
     return this.parsePrimary();
   }
 
-  private parsePrimary(): (row: Row) => boolean {
+  protected parsePrimary(): (row: Row) => boolean {
     if (this.peek()?.kind === 'lparen') {
       this.next();
       const inner = this.parseOr();
@@ -152,7 +152,7 @@ class Parser {
     return this.parseComparison();
   }
 
-  private parseOperand(): (row: Row) => any {
+  protected parseOperand(): (row: Row) => any {
     const token = this.next();
     if (token.kind === 'string') return () => token.value;
     if (token.kind === 'number') return () => Number(token.value);
@@ -173,7 +173,7 @@ class Parser {
     throw new Error(`Unexpected token '${token.value}' in filter expression`);
   }
 
-  private parseComparison(): (row: Row) => boolean {
+  protected parseComparison(): (row: Row) => boolean {
     const left = this.parseOperand();
     const operatorToken = this.next();
     const operator =

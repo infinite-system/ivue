@@ -11,7 +11,7 @@ class $WorkspacePlatformExample {
     return ref('');
   }
 
-  private get $workspace() {
+  protected get $workspace() {
     return Workspace.use();
   }
 

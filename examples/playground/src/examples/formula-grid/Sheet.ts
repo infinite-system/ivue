@@ -37,11 +37,11 @@ export class Sheet {
   readonly grid: FormulaCell.Instance[][];
 
   /** ONE parser for the entire sheet, shared by all cells. */
-  private readonly parser: FormulaParser;
+  protected readonly parser: FormulaParser;
   /** Recursion guard: a cell re-entered mid-evaluation is a cycle → #REF!. */
-  private readonly evaluating = new Set<object>();
+  protected readonly evaluating = new Set<object>();
   /** When non-null, cellValueAt records every (row,col) read (dep tracing). */
-  private tracer: Array<[number, number]> | null = null;
+  protected tracer: Array<[number, number]> | null = null;
 
   constructor(rows: number, cols: number = COLS) {
     this.rows = rows;
@@ -80,14 +80,14 @@ export class Sheet {
    * tracked by whatever computed is currently evaluating, so editing that cell
    * later invalidates the dependent formula automatically.
    */
-  private cellValueAt(row: number, col: number): CellValue {
+  protected cellValueAt(row: number, col: number): CellValue {
     if (this.tracer) this.tracer.push([row, col]);
     const cell = this.cellAt(row, col);
     return cell ? cell.value.value : null; // out of bounds / blank → 0 in math
   }
 
   /** onRange seam — a 2D array of the referenced cells' values. */
-  private rangeValues(ref: RangeRef): CellValue[][] {
+  protected rangeValues(ref: RangeRef): CellValue[][] {
     const { from, to } = ref;
     const out: CellValue[][] = [];
     for (let r = from.row; r <= to.row; r++) {

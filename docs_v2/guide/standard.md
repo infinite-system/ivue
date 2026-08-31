@@ -325,7 +325,7 @@ in canonical section order:
   propsWithDefaults(propsDefaults, propsTypes)`, and `emits`
   (object-declared validators). Module constants live here too — a
   value the module keeps to itself is a NON-EXPORTED namespace member,
-  private to the file. Nothing lives at module level beside the seam.
+  protected to the file. Nothing lives at module level beside the seam.
 - **Types** — DERIVED from the values, never hand-duplicated:
   `Props` is `ExtractPropTypes<typeof props>` (a generic component
   grafts its parameter back over the one prop a runtime map cannot

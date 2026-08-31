@@ -78,23 +78,23 @@ class $FlyweightSheet {
   readonly cols: number;
 
   // --- ground truth (plain, non-reactive) ---
-  private readonly columns: Column[];
+  protected readonly columns: Column[];
 
   // --- the sparse reactive overlay (empty until observed) ---
-  private readonly cellVersions = new Map<number, Ref<number>>();
-  private readonly blockVersions = new Map<number, Ref<number>>();
-  private readonly formulaCache = new Map<number, FormulaEntry>();
-  private readonly adHocCache = new Map<string, ComputedRef<CellValue>>();
+  protected readonly cellVersions = new Map<number, Ref<number>>();
+  protected readonly blockVersions = new Map<number, Ref<number>>();
+  protected readonly formulaCache = new Map<number, FormulaEntry>();
+  protected readonly adHocCache = new Map<string, ComputedRef<CellValue>>();
 
   /** Blocks per column (fine↔coarse key math). */
-  private readonly blockCount: number;
+  protected readonly blockCount: number;
 
   /** ONE parser for the whole sheet (reference: formula grid). */
-  private readonly parser: FormulaParser;
+  protected readonly parser: FormulaParser;
   /** Cycle guard — a cell re-entered mid-evaluation is a cycle → #REF!. */
-  private readonly evaluating = new Set<number>();
+  protected readonly evaluating = new Set<number>();
   /** When non-null, tracked reads record (row,col) — dep tracing. */
-  private tracer: Array<[number, number]> | null = null;
+  protected tracer: Array<[number, number]> | null = null;
 
   constructor(rows: number, cols: number = COLS) {
     this.rows = rows;
@@ -131,17 +131,17 @@ class $FlyweightSheet {
   }
 
   // --- keys ---
-  private cellKey(row: number, col: number): number {
+  protected cellKey(row: number, col: number): number {
     return col * this.rows + row;
   }
 
-  private blockKey(row: number, col: number): number {
+  protected blockKey(row: number, col: number): number {
     return col * this.blockCount + (row >> BLOCK_SHIFT);
   }
 
   // --- version-ref plumbing ---
   /** Subscribe the current effect to a cell (get-OR-CREATE — observation). */
-  private trackCell(row: number, col: number): void {
+  protected trackCell(row: number, col: number): void {
     const cellKey = this.cellKey(row, col);
     let versionRef = this.cellVersions.get(cellKey);
     if (!versionRef) {
@@ -152,7 +152,7 @@ class $FlyweightSheet {
   }
 
   /** Subscribe the current effect to a block (get-or-create — observation). */
-  private trackBlock(blockKey: number): void {
+  protected trackBlock(blockKey: number): void {
     let versionRef = this.blockVersions.get(blockKey);
     if (!versionRef) {
       versionRef = ref(0);
@@ -162,13 +162,13 @@ class $FlyweightSheet {
   }
 
   /** Notify a cell's observers — PEEK-ONLY (unobserved cells cost nothing). */
-  private bumpCell(row: number, col: number): void {
+  protected bumpCell(row: number, col: number): void {
     const versionRef = this.cellVersions.get(this.cellKey(row, col));
     if (versionRef) versionRef.value++;
   }
 
   /** Notify a block's observers — peek-only. */
-  private bumpBlock(row: number, col: number): void {
+  protected bumpBlock(row: number, col: number): void {
     const versionRef = this.blockVersions.get(this.blockKey(row, col));
     if (versionRef) versionRef.value++;
   }
@@ -224,7 +224,7 @@ class $FlyweightSheet {
   }
 
   /** onCell seam (1-based, like the parser). */
-  private pointValue(oneBasedRow: number, oneBasedCol: number): CellValue {
+  protected pointValue(oneBasedRow: number, oneBasedCol: number): CellValue {
     if (this.tracer) this.tracer.push([oneBasedRow, oneBasedCol]);
     return this.valueAt(oneBasedRow - 1, oneBasedCol - 1);
   }
@@ -236,7 +236,7 @@ class $FlyweightSheet {
    * (transitive observation, priced) whose derived-write watchers keep the
    * block tier truthful.
    */
-  private rangeValues(range: RangeRef): CellValue[][] {
+  protected rangeValues(range: RangeRef): CellValue[][] {
     const startRow = range.from.row - 1;
     const startCol = range.from.col - 1;
     const endRow = Math.min(range.to.row - 1, this.rows - 1);
@@ -296,7 +296,7 @@ class $FlyweightSheet {
    * THIN on purpose: the computed and watcher bodies are small pointers to
    * named, directly testable methods on the prototype.
    */
-  private formulaValue(row: number, col: number): ComputedRef<CellValue> {
+  protected formulaValue(row: number, col: number): ComputedRef<CellValue> {
     const cellKey = this.cellKey(row, col);
     let entry = this.formulaCache.get(cellKey);
     if (!entry) {
@@ -318,7 +318,7 @@ class $FlyweightSheet {
    * cell's block so coarse subscribers invalidate even though the
    * underlying write happened somewhere else entirely.
    */
-  private onFormulaValueChanged(
+  protected onFormulaValueChanged(
     row: number,
     col: number,
     newValue: CellValue,
@@ -328,7 +328,7 @@ class $FlyweightSheet {
   }
 
   /** Evaluate a cell by its CURRENT kind (formulas through the parser). */
-  private evaluateCell(row: number, col: number): CellValue {
+  protected evaluateCell(row: number, col: number): CellValue {
     // Source edits / kind flips invalidate this computed via the fine ref.
     this.trackCell(row, col);
     const kind = this.columns[col].kind[row];
@@ -380,7 +380,7 @@ class $FlyweightSheet {
     return cached;
   }
 
-  private evaluateAdHocFormula(body: string): CellValue {
+  protected evaluateAdHocFormula(body: string): CellValue {
     try {
       const aggregate = matchSimpleAggregate(body);
       if (aggregate) return this.fastAggregate(aggregate);
@@ -404,7 +404,7 @@ class $FlyweightSheet {
    * aggregate; blanks/text are skipped (COUNT counts numbers, Excel-style);
    * an error value propagates.
    */
-  private fastAggregate(aggregate: SimpleAggregate): CellValue {
+  protected fastAggregate(aggregate: SimpleAggregate): CellValue {
     const startRow = aggregate.startRow - 1;
     const startCol = aggregate.startCol - 1;
     const endRow = Math.min(aggregate.endRow - 1, this.rows - 1);

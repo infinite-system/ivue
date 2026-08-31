@@ -165,7 +165,7 @@ import { Reactive } from 'ivue'
 import { useMouse } from '@vueuse/core'
 
 class $Pointer {
-  private get $mouse() {
+  protected get $mouse() {
     return useMouse() // a composable, hosted
   }
   get x() {

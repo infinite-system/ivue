@@ -36,7 +36,7 @@ class $FormulaGridExample {
   }
 
   // COMPOSABLE — the row window, hosted whole, created on first touch.
-  private get $window() {
+  protected get $window() {
     return useRowWindow({
       rowCount: () => (this.sheet.value ? this.sheet.value.rows : 0),
       rowHeight: ROW_HEIGHT,

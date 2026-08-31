@@ -263,11 +263,11 @@ class $VirtualScroller<T extends BaseItem> {
    * replacement. Bumps are O(1) and evaluations are O(window), so no
    * debounce is needed anywhere anymore.
    */
-  private get geometryVersion() {
+  protected get geometryVersion() {
     return ref(0);
   }
 
-  private bumpGeometryVersion() {
+  protected bumpGeometryVersion() {
     this.geometryVersion.value++;
   }
 
@@ -279,16 +279,16 @@ class $VirtualScroller<T extends BaseItem> {
    * Deliberately a plain non-reactive field (like visibleItemsSnapshot):
    * it is a cache; reactivity flows through geometryVersion.
    */
-  private cursor = { index: 0, offset: 0 };
+  protected cursor = { index: 0, offset: 0 };
 
   /** Σ of all values in measuredSizes — non-reactive, see cursor. */
-  private measuredSum = 0;
+  protected measuredSum = 0;
 
   /** Number of keys in measuredSizes — non-reactive, see cursor. */
-  private measuredCount = 0;
+  protected measuredCount = 0;
 
   /** Post-calibration per-item estimate (frozen once) — see below. */
-  private calibratedAssumed: number | null = null;
+  protected calibratedAssumed: number | null = null;
 
   /**
    * The size assumed for unmeasured items. Starts as the assumedSize
@@ -299,7 +299,7 @@ class $VirtualScroller<T extends BaseItem> {
    * measured. Reads are plain (non-reactive); geometryVersion bumps cover
    * invalidation at the calibration moment.
    */
-  private get estimatedItemSize() {
+  protected get estimatedItemSize() {
     return this.calibratedAssumed ?? this.assumedSize.value;
   }
 
@@ -309,7 +309,7 @@ class $VirtualScroller<T extends BaseItem> {
    * items, so swapping the assumption for the tail cannot move anything
    * visible — the change lands entirely in the trailing spacer.
    */
-  private maybeCalibrateEstimate() {
+  protected maybeCalibrateEstimate() {
     if (this.calibratedAssumed !== null) return;
     const length = toRaw(this.items.value).length;
     if (this.measuredCount < 20 || this.measuredCount >= length) return;
@@ -336,11 +336,11 @@ class $VirtualScroller<T extends BaseItem> {
    * content reduced to two numbers. Written by visibleItems on every
    * evaluation (same mutate-inside-computed pattern as visibleIndex).
    */
-  private get leadingSpacerSize() {
+  protected get leadingSpacerSize() {
     return ref(0);
   }
 
-  private get trailingSpacerSize() {
+  protected get trailingSpacerSize() {
     return ref(0);
   }
 
@@ -360,7 +360,7 @@ class $VirtualScroller<T extends BaseItem> {
    *  the difference between "slight chop" and "fully smooth"). Nothing
    *  below the fold reads the tail — scroll range comes from the computed
    *  size via lenis.virtualLimit. */
-  private static readonly TRAILING_SPACER_RENDER_CAP = 2048;
+  protected static readonly TRAILING_SPACER_RENDER_CAP = 2048;
 
   get trailingSpacerPx() {
     return (
@@ -386,13 +386,13 @@ class $VirtualScroller<T extends BaseItem> {
    * absolute; only the two render outputs are shifted. A ref, not a plain
    * field: the spacer template binding must re-render on rebase.
    */
-  private get renderBias() {
+  protected get renderBias() {
     return ref(0);
   }
 
-  private static readonly RENDER_BIAS_CHUNK = 65536;
+  protected static readonly RENDER_BIAS_CHUNK = 65536;
 
-  private updateRenderBias(scroll: number) {
+  protected updateRenderBias(scroll: number) {
     const chunk = $VirtualScroller.RENDER_BIAS_CHUNK;
     const bias = Math.max(0, (Math.floor(scroll / chunk) - 1) * chunk);
     if (bias !== this.renderBias.value) {
@@ -412,7 +412,7 @@ class $VirtualScroller<T extends BaseItem> {
    * renderBias keeps rendered offsets ≤ ~131k px, where f32 resolves both
    * integers and fractions.
    */
-  private static snapForRender(value: number) {
+  protected static snapForRender(value: number) {
     const dpr = window.devicePixelRatio || 1;
     return Math.round(value * dpr) / dpr;
   }
@@ -423,7 +423,7 @@ class $VirtualScroller<T extends BaseItem> {
     return computed(() => this.computeScrollExtent());
   }
 
-  private computeScrollExtent(): number {
+  protected computeScrollExtent(): number {
     const len = this.items.value.length;
 
     if (len === 0) return 0;
@@ -452,7 +452,7 @@ class $VirtualScroller<T extends BaseItem> {
     );
   }
 
-  private get halfPaddingQuantity() {
+  protected get halfPaddingQuantity() {
     return Math.ceil(this.paddingQuantity.value / 2);
   }
 
@@ -460,7 +460,7 @@ class $VirtualScroller<T extends BaseItem> {
    * Previous visibleItems result — returned again when the window is
    * unchanged so the computed's equality check stops propagation.
    */
-  private visibleItemsSnapshot: VirtualScroller.ItemContext<T>[] = [];
+  protected visibleItemsSnapshot: VirtualScroller.ItemContext<T>[] = [];
 
   /**
    * The window of items currently rendered. Hot path: re-evaluates on every
@@ -484,7 +484,7 @@ class $VirtualScroller<T extends BaseItem> {
     return computed(() => this.computeVisibleItems());
   }
 
-  private computeVisibleItems(): VirtualScroller.ItemContext<T>[] {
+  protected computeVisibleItems(): VirtualScroller.ItemContext<T>[] {
     this.geometryVersion.value;
     const items = this.items.value;
     const len = items.length;
@@ -605,7 +605,7 @@ class $VirtualScroller<T extends BaseItem> {
     return (this.visibleItemsSnapshot = next);
   }
 
-  private onItemsChanged(args: VirtualScroller.ItemsChangeEmitArgs) {
+  protected onItemsChanged(args: VirtualScroller.ItemsChangeEmitArgs) {
     this.emit('itemsChanged', args);
   }
 
@@ -668,7 +668,7 @@ class $VirtualScroller<T extends BaseItem> {
    * O(window), driven by the single wrapper ResizeObserver. Reads happen
    * in one layout pass (no interleaved writes); only changed sizes sync.
    */
-  private remeasureRenderedItems() {
+  protected remeasureRenderedItems() {
     const wrapper = this.itemsWrapperElement.value;
     if (!wrapper) return;
     const rendered = wrapper.querySelectorAll<HTMLElement>(
@@ -1094,7 +1094,7 @@ class $VirtualScroller<T extends BaseItem> {
   }
 
   /** Stop handle for the latest scrollToIndex re-apply watcher (see below). */
-  private stopScrollToIndexReapply: (() => void) | null = null;
+  protected stopScrollToIndexReapply: (() => void) | null = null;
 
   /**
    * @param topOffsetPx pushes the landing DOWN so the target sits this many
@@ -1180,12 +1180,12 @@ class $VirtualScroller<T extends BaseItem> {
   /* Autoplay (Lenis-driven) */
 
   lenis: Lenis | null = null;
-  private frame: number;
+  protected frame: number;
 
-  private virtualScrolling = false;
-  private virtualScrollTimeout;
-  private autoscrollTimeout;
-  private autoRepeatTimeout;
+  protected virtualScrolling = false;
+  protected virtualScrollTimeout;
+  protected autoscrollTimeout;
+  protected autoRepeatTimeout;
 
   onVirtualScroll({ deltaX, deltaY }) {
     const delta = this.axisDelta({ deltaX, deltaY });
@@ -1228,7 +1228,7 @@ class $VirtualScroller<T extends BaseItem> {
     }
   }
 
-  private snapTimeout: ReturnType<typeof setTimeout> | undefined;
+  protected snapTimeout: ReturnType<typeof setTimeout> | undefined;
 
   snapToNearest() {
     if (this.virtualScrolling || this.lenis?.isScrolling) {
@@ -1302,7 +1302,7 @@ class $VirtualScroller<T extends BaseItem> {
 
   /** Reading-creep speed: ms of wall time per px of content — the original
    *  cadence (1px per 150ms tick ≈ 6.7px/s), now integrated per FRAME. */
-  private static readonly CREEP_MS_PER_PX = 150;
+  protected static readonly CREEP_MS_PER_PX = 150;
 
   /** Speed as a SETTING: the optional creepMsPerPx prop overrides the
    *  tuned reading cadence (which stays the sacred default). A marquee
@@ -1313,8 +1313,8 @@ class $VirtualScroller<T extends BaseItem> {
   }
 
   /** rAF handle + last frame timestamp of the creep integrator. */
-  private creepFrame: number | null = null;
-  private lastCreepTs: number | null = null;
+  protected creepFrame: number | null = null;
+  protected lastCreepTs: number | null = null;
 
   play() {
     if (this.virtualScrolling || this.lenis.isScrolling) {
@@ -1347,7 +1347,7 @@ class $VirtualScroller<T extends BaseItem> {
    * (stopAutoPlay already handled it), so no handoff there. Snap-mode
    * consumers never arm autoplay, so this path never runs for them.
    */
-  private adoptDecayedInertia(): boolean {
+  protected adoptDecayedInertia(): boolean {
     const lenis = this.lenis;
     // While input is still arriving, the reader owns the scroll — only a
     // free-decaying smooth lerp is a candidate.
@@ -1445,7 +1445,7 @@ class $VirtualScroller<T extends BaseItem> {
 
   /* Drag and Drop */
 
-  private startIndex = 0;
+  protected startIndex = 0;
 
   onStart(evt: any) {
     this.startIndex = evt.item.__draggable_context.element.index;
