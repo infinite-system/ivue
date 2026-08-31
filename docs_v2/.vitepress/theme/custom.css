@@ -3690,6 +3690,17 @@ a.feature-inline-link:active {
   display: none;
 }
 
+/* Full-bleed sections (drip strip, hero glow, aurora line) are
+   width:100vw — and on classic-scrollbar systems 100vw INCLUDES the
+   vertical scrollbar, so the page grows a permanent horizontal
+   scrollbar. clip (not hidden: no scroll container is created, sticky
+   and anchoring keep working) makes those invisible pixels
+   unscrollable. The page never scrolls horizontally by design — wide
+   content scrolls inside its own containers. */
+html {
+  overflow-x: clip;
+}
+
 /* homepage headings: no hover-# anchor affordance — marketing sections
    aren't deep-link targets, and the custom heading styles misalign the
    default anchor anyway. The ids stay, so #fragment links still work. */
