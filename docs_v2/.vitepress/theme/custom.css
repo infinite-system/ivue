@@ -4077,13 +4077,21 @@ html {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  /* wide enough that the beam's own falloff ends INSIDE the box —
-     a narrower box clips the haze into visible vertical edges */
-  width: min(1100px, 100vw);
-  height: 520px;
-  pointer-events: none;
-  /* the image is bound by the SpotlightBeam class (click the lockup to
-     cycle variants) — this is the pre-hydration default */
+  /* ALWAYS wider than the viewport: the strip below is full-bleed, so
+     a beam box narrower than the page puts a lit-vs-unlit edge behind
+     it — the boundary reads as two different backgrounds. At >100vw
+     the horizontal feather happens off-screen and the atmosphere is
+     continuous across the whole section. */
+  width: max(1500px, 116vw);
+  height: 620px;
+  /* a button now (click the empty light to cycle variants), sitting
+     BEHIND the post strip so the strip's own interactions win */
+  z-index: 0;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  /* the image is bound by the SpotlightBeam class — this is the
+     pre-hydration default */
   background-image: url('/spotlight-beam-4.png');
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -4093,10 +4101,18 @@ html {
   opacity: 0.6;
   /* the beam's own top edge is a hard cut — feather it INTO the
      aurora line so the light appears to be born from the line */
-  /* feather only the very top (into the aurora line) and the tail —
-     the sides are never masked, so no vertical seams */
-  -webkit-mask-image: linear-gradient(180deg, transparent, black 3%, black 46%, transparent 88%);
-  mask-image: linear-gradient(180deg, transparent, black 3%, black 46%, transparent 88%);
+  /* The art is not pure black at its edges (dark navy), and screen
+     blending LIGHTENS — so any masked-away strip reads as a shadow
+     against the lit area beside it. Hence: NO top feather (the beam
+     starts full-strength at the aurora line, born from it), and a
+     horizontal feather so the box's own left/right edges dissolve
+     instead of ending in a seam. */
+  -webkit-mask-image: linear-gradient(180deg, black, black 46%, transparent 88%),
+    linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
+  mask-image: linear-gradient(180deg, black, black 46%, transparent 88%),
+    linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
 /* light theme: a beam of light needs darkness to read — dial it back
    to a whisper so the section keeps its airy daylight feel */
@@ -4106,33 +4122,19 @@ html {
   filter: saturate(0.7);
 }
 
-.ix .ix-newsletter-hero .ix-spotlight-lockup {
+/* the post strip stands IN the beam: headroom above it so the light
+   has room to FALL onto the cards, and no gradient of its own — the
+   strip's inverted band was designed for closing the page, and under
+   a beam it reads as haze on haze */
+.ix .ix-newsletter-hero .drip-showcase {
   position: relative;
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  padding-top: 74px;
-  /* air between the lit mark and the section title */
-  margin-bottom: 30px;
-  /* a button for the beam-cycling click, chrome stripped */
-  border: none;
-  background: none;
-  cursor: pointer;
+  z-index: 1;
+  margin-top: 104px;
+  margin-bottom: 40px;
+  padding-top: 0;
 }
-.ix .ix-newsletter-hero .ix-spotlight-lockup img {
+.ix .ix-newsletter-hero .drip-showcase::before {
   display: none;
-  position: relative;
-  width: min(240px, 56vw);
-  height: auto;
-  /* NO shadow, no scrim: the beam is dialed back far enough that the
-     mark separates on its own, and anything behind a flat lockup reads
-     as dirt under the light */
-}
-:root:not(.dark) .ix .ix-newsletter-hero .ix-spotlight-lockup--light {
-  display: block;
-}
-.dark .ix .ix-newsletter-hero .ix-spotlight-lockup--dark {
-  display: block;
 }
 
 .ix-newsletter-hero::after {

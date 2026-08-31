@@ -1,32 +1,19 @@
 <script setup lang="ts">
-import { withBase } from 'vitepress';
 import { SpotlightBeam } from './SpotlightBeam';
 
 const spotlight = new SpotlightBeam.Class();
 </script>
 
 <template>
-  <div class="ix-spotlight" aria-hidden="true" :style="spotlight.beamStyle" />
+  <!-- The beam lights the DELIVERY (the post strip), not the brand:
+       this section's appeal is JavaScript, wider than ivue itself.
+       Clicking the empty light above the strip cycles the variants. -->
   <button
     type="button"
-    class="ix-spotlight-lockup"
+    class="ix-spotlight"
+    :style="spotlight.beamStyle"
     :title="spotlight.beamLabel"
     :aria-label="spotlight.beamLabel"
     @click="spotlight.cycleBeam()"
-  >
-    <img
-      class="ix-spotlight-lockup--light"
-      :src="withBase('/brand-lockup-light.png')"
-      alt="ivue — Infinite Vue"
-      width="392"
-      height="128"
-    />
-    <img
-      class="ix-spotlight-lockup--dark"
-      :src="withBase('/brand-lockup-dark.png')"
-      alt="ivue — Infinite Vue"
-      width="392"
-      height="128"
-    />
-  </button>
+  />
 </template>

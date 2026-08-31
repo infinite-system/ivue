@@ -407,6 +407,8 @@ flyweight state, and lifecycle discipline, all in one real codebase.
 
 <SpotlightBeam />
 
+<BlogDripShowcase />
+
 ## The future of JavaScript, delivered
 
 <p class="lead ix-newsletter-hero__lead">
@@ -427,8 +429,6 @@ The whole blog lands in your inbox in {{ $archiveDays }} days — one post every
 <p class="ix-newsletter-hero__note">
 The whole archive is open — <a href="/blog/">browse the blog →</a>
 </p>
-
-<BlogDripShowcase />
 
 </section>
 
