@@ -68,7 +68,11 @@ gh release create ivue@X.Y.Z -F releases/ivue@X.Y.Z.md \
 ```
 
 - **Title** (the H1 line): `ivue@X.Y.Z — <the one-line story of the
-  release>`.
+  release>`. The story is a CONCRETE change-list, never a poetic theme:
+  name the features/fixes so the releases list answers "what changed?"
+  without a click (`definePropTypes, the Static re-wrap fix, private
+  banned` — not `contracts as data, a standard with teeth`). Same
+  doctrine as blog titles: generative, not evocative.
 - **Body shape**: a short lead paragraph saying what the release IS;
   then `### Breaking` (omit when none) with each break stating the old
   behavior, the new behavior, and the migration; then `### Changed` /
