@@ -425,6 +425,50 @@ entering our territory means rebuilding on member-level seams and a
 user trust layer, which is the standard itself. Sources:
 deepseek.com/harness, thenewstack.io, justin3go.com review (2026-08).
 
+## The product identity: Invar's control plane (2026-09-01)
+
+The app IS the Electron version of Invar — with switchable MODES:
+**Desktop / Editor / Agent Harness**, all three living in one shell.
+
+The move that makes this coherent (not scope creep): **a mode is the
+malleable pattern applied at the root.** The three modes are not
+three apps sharing code — they are three TEMPLATE SETS over ONE
+object graph, one ledger, one agent, one trust layer. The mode
+switcher is the root component's template seam. No new mechanism:
+the architecture predicts modes. Self-similarity all the way up:
+cell → component → page → mode → platform, the same seam at every
+scale (the generative test passing).
+
+This re-seats Invar instead of replacing it — the platform ladder:
+
+| rung | surface | role |
+| --- | --- | --- |
+| terminal (Invar) | TUI — just another renderer behind the seam | headless: servers, CI, SSH; deploy where only a terminal exists |
+| web (Quasar SPA) | browser | zero-install demo, path templates only |
+| desktop (Electron) | full OS surface | THE CONTROL PLANE — home folder, file search, media, app launch, agent over the live environment |
+| mobile (Capacitor) | iOS/Android | same seams, same ledger |
+
+One codebase, four platforms, all extended through the same three
+seams — "everyone extends ALL platforms the same way."
+
+**Desktop mode scope discipline** (scoping, not fatal): we do NOT
+ship an OS replacement. We ship PRIMITIVES (file list, media
+surface, launcher) + the agent that summons machinery — a flyweight
+grid materializing for 1M log lines and a video surface
+materializing for an mp4 are the same move. Desktop MVP = an agentic
+finder/launcher over the home folder; users grow it from there.
+
+**Trust generalization**: home-folder access + overlays extend the
+egress allowlist to a RESOURCE allowlist — network domains,
+filesystem scopes, app-launch permissions; one default-deny control
+panel governs every capability grant, same ledger, same rings. Not
+new architecture — the egress design was the general shape all
+along.
+
+**Mode sequencing** (by distance from what exists): Harness first
+(Invar ported — immediate dogfooding), Editor second, Desktop third
+as the launch halo.
+
 ## Sequencing
 
 Post-release, as a ladder — each rung is a shippable artifact:
