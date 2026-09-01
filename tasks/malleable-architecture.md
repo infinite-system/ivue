@@ -98,6 +98,38 @@ template renders `<component :is>` when a dynamic view is present and
 its own markup otherwise. The runner class receives the same
 props/emit either way.
 
+### What the shell costs (so uniformity is defensible everywhere)
+
+- **Per render**: the fallback is one boolean; `<component :is>`
+  mounts the resolved component DIRECTLY — no wrapper instance, no
+  extra tree layer. With a stable `template` value the vnode type is
+  the same reference every render, so `isSameVNodeType` passes and
+  `shouldUpdateComponent` short-circuits. The only delta vs a
+  hard-coded child: the vnode lands in the parent's dynamic-children
+  block, costing two identity/short-circuit checks per parent
+  re-render. Nanoseconds against a microsecond component render —
+  under 0.1%.
+- **Per instance**: the contract spread adds two props
+  (`runner`, `template`) and `runner ?? new X.Class()` is one nullish
+  check at setup. Bytes and a branch, once per mount.
+- **The one real cost**: runtime-compiled template STRINGS pay a
+  one-time compile (~0.1–2 ms each, cache by string) and ship the
+  full Vue build (~14 kB extra gzip). The runtime compiler is the
+  same compiler — the produced render function is as optimized as
+  build-time output. Fallback-running components pay zero of this.
+- **Granularity boundary — viewport, not dataset.** Even grid CELLS
+  can carry the shell: the flyweight grid holds 20M data cells but
+  renders ~400 live DOM cells (16 visible rows + 4 overscan × 20
+  columns), regardless of dataset size. Virtualization decouples
+  component count from data count. ~400 instances = sub-2 ms mount
+  (ivue creation nearly free), and keyed windowing makes scroll a
+  patch pass, not remounts — sub-millisecond per frame. The law:
+  **component count is bounded by the viewport, and the viewport is
+  always small** — anything rendering enough cells to worry about is
+  already virtualized, and if it isn't, virtualization is the fix,
+  not shell-avoidance. Per-cell malleability ("override how a CELL
+  renders") is a headline capability, not a tax.
+
 ## Boundaries to respect (named in discussion)
 
 - **Constructions are malleable; live instances are not.** Swapping a
