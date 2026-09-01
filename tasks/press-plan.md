@@ -228,10 +228,10 @@ channel posts (`note-pitch-<outlet>`), sent week 1–2:
 
 | outlet | how to submit | what to send | why it fits |
 | --- | --- | --- | --- |
-| JavaScript Weekly (Cooperpress) | submission form on javascriptweekly.com (+ @cooperpress on X) | link + 1-sentence pitch for bulletproof-class-modules OR the-options-api-everyone-wanted | they favor measured, technical deep-dives; one inclusion ≈ the reach of a good HN run |
+| JavaScript Weekly (Cooperpress) | **editor@cooperpress.com** (the on-site form is a 404 — verified 2026-09-01) | link + 1-sentence pitch for bulletproof-class-modules OR the-options-api-everyone-wanted | they favor measured, technical deep-dives; one inclusion ≈ the reach of a good HN run. **All Cooperpress titles (JS Weekly, Frontend Focus, Node Weekly) share ONE editor — one pitch per ~6 weeks across the family, never three in a week** |
 | Bytes (ui.dev) | hello@bytes.dev | the 55–253× creation number + the 1.1 kB line, framed playfully — their voice is witty | spicy numbers with receipts are their bread |
 | Frontend Focus (Cooperpress) | same Cooperpress form family | a-million-rows-twelve-divs (rendering/perf angle) | perf + DOM material is their lane |
-| TLDR Web Dev | tldr.tech submission form | introducing-ivue, one-line pitch | volume outlet; zero-effort add-on |
+| TLDR Web Dev | **no free submission form exists** (verified 2026-09-01; only advertise.tldr.tech) — reply to the newsletter or paid placement | introducing-ivue, one-line pitch | demoted: cannot hold a week-1 slot; reply-to is the only free path |
 
 Pitch shape (all four): one sentence of claim with the number, the
 link, no adjectives. The editor rewrites anyway — the numbers are what
@@ -258,6 +258,8 @@ row):
 - **r/webdev** — huge, demo-tolerant. Material: a-million-rows-twelve-
   divs or twenty-million-cells WITH the video clip. Frame as
   engineering ("how we render 1M rows in 12 divs"), never as product.
+  **HARD GATE: non-commercial showoffs are Saturday-only (Showoff
+  Saturday) — calendar this row on a Saturday or it gets removed.**
 - **r/programming** — language-story posts only: win-by-reduction,
   discovered-not-invented. This room punishes anything that smells
   like a launch; the article must stand as an essay.
@@ -404,9 +406,22 @@ backlink):
 
 - **Godly (godly.website)** — favors sleek dark dev-tool sites; the
   typewriter hero + spotlight is exactly their feed. Best single fit.
-- **Dark Mode Design** — self-explanatory fit.
-- **siteInspire / httpster / Land-book / minimal.gallery** — curated,
-  free, docs-friendly; ~10-minute form each.
+  **Mechanics (verified 2026-09-01): godly.website/submit 301-redirects
+  to recent.design — submit through recent.design's work dialog.**
+- **Dark Mode Design** — self-explanatory fit. **Mechanics: EMAIL
+  hello@darkmodedesign.com, subject "Site Submission" (no form;
+  /submit is a 404).**
+- **minimal.gallery** — form at /submit; free; review takes 1–2 weeks
+  (**so the gallery batch fires week 1, not week 2**); most
+  submissions rejected, resubmission invited.
+- **siteInspire** — /submissions rate-limited to bots (429); verify
+  the form manually before the batch.
+- **~~httpster~~ — SUBMISSIONS CLOSED** (its /about says so verbatim;
+  verified 2026-09-01). Re-check week 4; spend the slot on Hover
+  States or Dark.design (see tasks/press-venues.md).
+- **Land-book** — reported to have a PAID review element (403 to
+  bots, unconfirmed); re-price before submitting or move it to the
+  not-paying bucket.
 - **VitePress showcase** — doubly valuable: the audience is already
   Vue devs, and "best-looking VitePress site" is a winnable crown,
   not a lottery.
@@ -426,9 +441,10 @@ W8d kit makes each pitch ~15 minutes of work):
 
 - **Views on Vue** (Top End Devs) — Vue-specific panel; angle: the
   Options-API story + the discovery arc.
-- **JS Party (Changelog)** — general-JS, receipts-friendly; angle:
-  the 94k-line agent-built IDE + the standard-with-teeth story
-  (works even for non-Vue listeners).
+- ~~JS Party (Changelog)~~ — **the show ended** (episode #350 "One last
+  party", 2025-02-13; verified live 2026-09-01). Replaced by:
+  **Changelog News** (changelog.com/news/submit — link queue) and the
+  **Changelog episode-request form** (changelog.com/request/podcast).
 
 ### W9 — Japan (geo #3)
 

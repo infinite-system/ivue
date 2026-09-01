@@ -1471,3 +1471,4 @@ input[type='datetime-local'] {
   overflow-wrap: anywhere;
   color: var(--text-dim);
 }
+.press-chip.ch-prep { border-left: 3px solid #64748b; }

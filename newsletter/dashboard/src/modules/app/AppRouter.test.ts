@@ -30,6 +30,7 @@ describe('AppRouter', () => {
         ['stats', '/newsletter/stats'],
         ['newsletter-settings', '/newsletter/settings'],
         ['x', '/socials/x'],
+        ['press', '/socials/press'],
         ['socials-settings', '/socials/settings'],
       ]),
     );
