@@ -232,6 +232,36 @@ gate, contracts-as-data, HMR-style swap, ledger storage) — it is
 PRODUCT work: making seam-pointing feel effortless and overlay
 failures feel safe.
 
+## Positioning: DeepSeek Harness (investigated 2026-09-01)
+
+DeepSeek Harness (OSS, ~2026-08-15, ~90K stars in two days) is the
+closest prior art — and an INDEPENDENT convergence on the law:
+everything is a plugin (model adapter, tools, sessions, UI, even the
+agent loop), one uniform shape (`apply(ctx)` + a YAML line), built on
+Cordis. Different layer though: Harness makes the AGENT malleable for
+developers; this design makes the USER'S APP malleable for end users.
+
+Their gaps are this doc's pillars: self-written plugins are
+memory-only ("gone on restart, with no way to persist") and disabled
+by default; plugins run in-process with full trust ("good faith" —
+their reviewer's words) vs our gate + contracts + invariants; no
+recovery layer for plugins vs our quarantine/rollback/safe-mode; no
+egress control vs our user-owned allowlist; module-granularity swap
+vs our member-granularity seams; Cordis lifecycle is heavyweight and
+~10x token-inefficient vs a 1.1 kB runtime transform.
+
+Where they are ahead: shipped + mindshare, OS-level TOOL sandboxing
+(bwrap/Landlock/Seatbelt), 40 providers, four years of Cordis
+hardening, and a mature append-only session log with replay/fork.
+
+Strategic: validates the category and the uniformity law from an
+independent reducer; gives the eventual story an anchor ("Harness
+makes the agent malleable; this makes YOUR APP malleable — with a
+ledger, a gate, and a permission panel you own"). Threat is medium:
+entering our territory means rebuilding on member-level seams and a
+user trust layer, which is the standard itself. Sources:
+deepseek.com/harness, thenewstack.io, justin3go.com review (2026-08).
+
 ## Sequencing
 
 Post-release, as a ladder — each rung is a shippable artifact:
