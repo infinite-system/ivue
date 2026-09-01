@@ -136,6 +136,31 @@ What makes it survivable rather than a party trick:
   allowed to mean; contract validation turns bad templates into
   mount-time diagnostics instead of white screens.
 
+### Recovery: quarantine, rollback, safe mode (the trust layer)
+
+Self-modification is only trustworthy if no tweak can brick the app.
+The model — and every ingredient already exists in this codebase:
+
+1. **Quarantine before rollback.** Every overlaid seam mounts inside an
+   error boundary (`onErrorCaptured` per dynamic component); a broken
+   tweak quarantines THAT ledger entry and renders the base seam.
+   Blast radius: one seam, never the app.
+2. **Trial → committed → quarantined ledger states.** A generation
+   applies in TRIAL; only a healthy mount plus a grace period promotes
+   it to COMMITTED — a safe point. (The newsletter ledger's invariant,
+   re-worn: only an acknowledged delivery writes the ledger.)
+3. **Crash-loop guard → safe mode.** Two failed boots inside a window
+   boot base-only. The deploy-guard's reloadOntoFreshBuild
+   (sessionStorage stamp, at most once per 30s) is this exact
+   mechanism pointed at a different failure.
+4. **Rollback = replay a prefix.** The ledger is append-only: a safe
+   point is an index, base is the empty overlay. No undo logic —
+   reconstruct forward from zero. UNIQUELY CHEAP HERE: disposal is a
+   reset and creation is nearly free (20M cells in 78ms), so a full
+   from-scratch reboot is a sub-second recovery action.
+5. **The escape hatch.** `?safe=1` (or a long-press) boots base
+   unconditionally — no persisted state can brick the user.
+
 Receipt that this works: Invar IS this product in terminal form — an
 app whose users (agents) modify it to their need, governed by the
 skill and invariants, 94k lines and navigable. The GUI version is the
@@ -154,8 +179,10 @@ Post-release, as a ladder — each rung is a shippable artifact:
    component; measure the runtime-string tier's real cost.
 2. The overlay ledger: persist + replay generated subclasses for one
    surface (a settings page, a list view).
-3. The in-app agent: prompt → seam resolution via the live graph →
+3. The recovery layer on that surface: error-boundary quarantine,
+   trial/committed ledger states, crash-loop safe mode, ?safe=1.
+4. The in-app agent: prompt → seam resolution via the live graph →
    gated generation → slot swap, on that same surface.
-4. The story writes itself at every rung — "the app agents can extend
+5. The story writes itself at every rung — "the app agents can extend
    while it runs" is press material for the W2/W4 machinery in
-   tasks/press-plan.md, and rung 3 is a launch of its own.
+   tasks/press-plan.md, and rung 4 is a launch of its own.
