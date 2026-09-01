@@ -26,8 +26,10 @@ import { Static } from '../../Static';
  * read — the only per-call cost is reading the method through the
  * accessor inside a loop. FlyweightSheet's 9,000,000-call seeding loop
  * therefore destructures the methods it needs once
- * (`const { isDataCol, numDataValue } = FlyweightLogic.Class`) — a late
- * read of the mutable slot, so a subclass swap is still honored — and
+ * (`const { isDataCol, numDataValue } = this.Logic`) — one read of the
+ * sheet's overridable Logic seam, so BOTH swap axes are honored: a
+ * class swapped into the namespace slot, and a sheet subclass
+ * overriding `get Logic()` to route the whole layer elsewhere — and
  * measures at or better than the original module functions (77-82ms vs
  * 89ms for 20M cells, in-browser medians). Ordinary call counts can use
  * `FlyweightLogic.Class.method()` directly and never notice.
