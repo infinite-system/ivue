@@ -38,6 +38,7 @@ class $AppStore {
       ],
       socials: [
         { name: 'x', label: 'X' },
+        { name: 'press', label: 'Press' },
         { name: 'socials-settings', label: 'Settings' },
       ],
     };
@@ -242,6 +243,7 @@ export type ViewName =
   | 'stats'
   | 'newsletter-settings'
   | 'x'
+  | 'press'
   | 'socials-settings';
 export type ToastTone = 'info' | 'success' | 'error';
 export type SubscriberTabName = 'sent' | 'upcoming';

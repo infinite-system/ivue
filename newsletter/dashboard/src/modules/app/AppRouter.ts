@@ -79,6 +79,11 @@ class $AppRouter {
             component: () => import('../x/XComposeView.vue'),
           },
           {
+            path: 'press',
+            name: 'press',
+            component: () => import('../press/PressCalendarView.vue'),
+          },
+          {
             path: 'settings',
             name: 'socials-settings',
             component: () =>

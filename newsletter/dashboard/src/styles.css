@@ -1319,3 +1319,155 @@ input[type='datetime-local'] {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* ---- press calendar (/socials/press) ---- */
+.press-filter select,
+.press-filter input[type='checkbox'] {
+  accent-color: var(--accent-strong);
+}
+.press-filter select {
+  background: var(--panel-raised);
+  color: var(--text);
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius-small);
+  padding: 6px 10px;
+}
+.press-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+}
+.press-mode {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 4px;
+}
+.press-mode .ghost.active {
+  border-color: var(--accent-strong);
+  color: var(--accent);
+}
+.press-cal {
+  padding: 16px;
+}
+.press-monthbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.press-monthbar h2 {
+  margin: 0;
+  font-size: 18px;
+  min-width: 180px;
+  text-align: center;
+}
+.press-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.press-grid-head {
+  margin-bottom: 6px;
+  color: var(--muted-text);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.press-grid-head span {
+  padding: 0 8px;
+}
+.press-day {
+  min-height: 92px;
+  background: var(--panel-raised);
+  border: 1px solid var(--panel-edge-soft);
+  border-radius: var(--radius-small);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.press-day.blank {
+  background: transparent;
+  border-color: transparent;
+}
+.press-daynum {
+  font-size: 12px;
+  color: var(--muted-text);
+}
+.press-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.25;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--panel-edge);
+  background: var(--panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: border-color 0.15s ease-out, color 0.15s ease-out;
+}
+.press-chip:hover {
+  border-color: var(--accent-strong);
+  color: var(--text);
+}
+.press-chip.open {
+  border-color: var(--accent-strong);
+}
+.press-chip.done {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+.press-chip input[type='checkbox'] {
+  accent-color: var(--accent-2);
+  flex: none;
+}
+.press-chip-venue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.press-chip.ch-hn { border-left: 3px solid #ff6600; }
+.press-chip.ch-reddit { border-left: 3px solid #ff4500; }
+.press-chip.ch-x { border-left: 3px solid #8b98a5; }
+.press-chip.ch-newsletter-pitch { border-left: 3px solid var(--accent); }
+.press-chip.ch-podcast { border-left: 3px solid #a78bfa; }
+.press-chip.ch-creator { border-left: 3px solid #f472b6; }
+.press-chip.ch-gallery { border-left: 3px solid #34d399; }
+.press-chip.ch-directory { border-left: 3px solid #fbbf24; }
+.press-chip.ch-community { border-left: 3px solid #60a5fa; }
+.press-chip.ch-article-platform { border-left: 3px solid #2dd4bf; }
+.press-chip.ch-intl { border-left: 3px solid #f97316; }
+.press-chip.ch-conference { border-left: 3px solid #e879f9; }
+.press-detail {
+  margin-top: 12px;
+  padding: 16px;
+}
+.press-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.press-detail-head h3 {
+  margin: 0;
+}
+.press-detail-row {
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.press-detail-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+}
+.press-articles {
+  max-width: 420px;
+  overflow-wrap: anywhere;
+  color: var(--text-dim);
+}
