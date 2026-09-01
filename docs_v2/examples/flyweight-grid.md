@@ -43,7 +43,14 @@ overlay) and the cell facade:
 <<< ../../examples/playground/src/examples/flyweight-grid/model/FlyweightCell.ts [FlyweightCell.ts]
 <<< ../../examples/playground/src/examples/flyweight-grid/model/FlyweightSheet.ts [FlyweightSheet.ts]
 <<< ../../examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts [FlyweightGridPage.ts]
+<<< ../../examples/playground/src/examples/flyweight-grid/FlyweightGridApp.vue [template]
+<<< ../../examples/playground/src/examples/flyweight-grid/flyweight-logic.ts [flyweight-logic.ts]
 :::
+
+The template is the whole wiring layer: one `new FlyweightGridPage.Class()`,
+the element-ref destructure, and markup that reads named members. Twenty
+million cells, and the SFC still owns no state — every derivation the
+rows need is a getter or a method on the page class.
 
 <a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fflyweight-grid%2Fmodel%2FFlyweightSheet.ts&path=%2F%23%2Fflyweight-grid">Open in StackBlitz ⚡</a>
 — the playground boots with this example's route and file active.
