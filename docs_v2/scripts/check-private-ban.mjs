@@ -23,7 +23,16 @@ const targets = [
 const findings = [];
 for (const file of targets) {
   const lines = readFileSync(resolve(root, file), 'utf8').split('\n');
+  // In markdown, only CODE FENCES are teaching code — prose may say
+  // "private to the file" (file-private) legitimately.
+  const markdown = file.endsWith('.md');
+  let insideFence = false;
   lines.forEach((line, index) => {
+    if (markdown && /^\s*(```|~~~)/.test(line)) {
+      insideFence = !insideFence;
+      return;
+    }
+    if (markdown && !insideFence) return;
     if (memberPosition.test(line)) findings.push(`${file}:${index + 1}: ${line.trim()}`);
   });
 }

@@ -325,7 +325,7 @@ in canonical section order:
   propsWithDefaults(propsDefaults, propsTypes)`, and `emits`
   (object-declared validators). Module constants live here too — a
   value the module keeps to itself is a NON-EXPORTED namespace member,
-  protected to the file. Nothing lives at module level beside the seam.
+  private to the file. Nothing lives at module level beside the seam.
 - **Types** — DERIVED from the values, never hand-duplicated:
   `Props` is `ExtractPropTypes<typeof props>` (a generic component
   grafts its parameter back over the one prop a runtime map cannot
@@ -1066,6 +1066,26 @@ export namespace Settings {
 
 No static members → no wrapper: `$Class = $X`, the standard form unchanged.
 
+**Hot loops read the method through the accessor — hoist it, not the
+class.** The bound method itself is plain-function speed (measured,
+Chromium, 9M calls, fresh page per variant: module function 31.7 ms,
+hoisted bound method 30.0 ms); the ONLY per-call cost is re-reading it
+through the accessor inside the loop (84.6 ms same loop — the
+own-property guard that buys per-receiver binding). Ordinary call
+frequency never notices. In a million-call loop, destructure once,
+INSIDE the function:
+
+```ts
+// one accessor read per method — a late read of the mutable slot,
+// so a swapped-in subclass is still honored
+const { isDataCol, numDataValue } = FlyweightLogic.Class;
+for (let row = 0; row < ROWS_1M; row++) sum += numDataValue(row, col) ?? 0;
+```
+
+Never hoist at module scope (captures today's `Class` forever, blind to
+swaps) and never reach for `$Class` as a "fast path" — the raw class
+skips per-receiver binding, which is the capability seam itself.
+
 ## Reading your own statics — the ladder
 
 `Reactive(X) === X`, so a namespace's `Class` slot IS the base class. A getter
@@ -1262,6 +1282,7 @@ convention and check it in review.
 - [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices and specs included — no single-letter names, no name meaning different things in different methods.
 - [ ] Keyed/sparse state uses the Map-of-refs shape (get-or-create on read, peek-only bump on write, explicit release path) — never one getter per key, never a deep `reactive()` collection.
 - [ ] Static members are anchored (`const $Class = Static($X)`); `$`-prefixed static getters are compute-once-per-receiver caches, non-`$` statics stay live knobs, and inheritance extends `$Class` — never the mutable `Class`.
+- [ ] Million-call loops over a `Static()` class destructure the bound methods once inside the function (never module-scope, never `$Class`); `Class.method()` stays the form everywhere else.
 - [ ] Instance reads of own statics go through `this.self` (declared once per class needing it, cast to `typeof $X`, plain getter never `$self`); 2+ reads or loops hoist `const self = this.self`; no per-site `this.constructor` casts; `Namespace.Class` reads stay reserved for late-bound capability dispatch.
 - [ ] Static members precede the constructor; the constructor precedes state, prop, and derived getters; methods come last.
 - [ ] Spacing carries meaning: declaration-like getters contiguous within their group; blank lines only where a doc comment / multi-line body / category boundary begins; methods always separated.
