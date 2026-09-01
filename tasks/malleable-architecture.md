@@ -83,6 +83,19 @@ not a convention. Migration follows the docs-components rule:
 opportunistic when touched, never a bulk sweep; new components born
 in the shape.
 
+**The namespace is the module shape** — the tier that completes the
+one-shape-per-layer table: values = contracts-as-data, instances =
+the class standard, components = the universal shell, modules = the
+namespace (`X.Class`, `X.$Class`, `X.Instance`, `X.ItemContext`, …).
+The module unit decouples from the FILE (ES modules' accidental
+boundary) and becomes the CONCEPT: one addressable node carrying its
+class, raw class, types, and constants — fully-qualified at every
+call site (`VirtualScroller.ItemContext<T>`), dot-enumerable in one
+autocomplete. Same-shaped nodes at every scale is what the law
+demands, and it is what makes the graph WALKABLE by the agent:
+resolve the namespace, enumerate its surface, find the seam,
+generate against its types.
+
 ## The open build: the template axis
 
 Three tiers, increasing power and cost:
