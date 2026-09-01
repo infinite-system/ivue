@@ -33,6 +33,11 @@
   /* the ONE hairline ink: header, sidebar groups, mobile menu rows.
      Light needs more presence on white (0.5); dark runs 0.3. */
   --ivue-hairline: color-mix(in srgb, var(--vp-c-gutter) 50%, transparent);
+  /* the same ink PRE-COMPOSITED over the page background. Identical
+     wherever the backdrop already is the background, but opaque — so
+     the header line cannot pick up the sidebar column beneath its left
+     end, or tint from content scrolling under it. */
+  --ivue-hairline-solid: color-mix(in srgb, var(--vp-c-gutter) 50%, var(--vp-c-bg));
 
   --vp-c-tip-1: var(--vp-c-brand-1);
   --vp-c-tip-soft: var(--vp-c-brand-soft);
@@ -53,6 +58,7 @@
 
 .dark {
   --ivue-hairline: color-mix(in srgb, var(--vp-c-gutter) 30%, transparent);
+  --ivue-hairline-solid: color-mix(in srgb, var(--vp-c-gutter) 30%, var(--vp-c-bg));
   --ivue-link-1: #60a5fa;
   --ivue-link-2: #3b82f6;
   --ivue-link-3: #0ea5e9;
@@ -3776,16 +3782,19 @@ html {
   }
 }
 
-/* Header hairline at 0.3 alpha — softer separation from the page.
-   VitePress paints it two ways: a border on the bar and a divider-line
-   element on docs pages; both get the same translucent ink. */
+/* Header hairline — softer separation from the page. VitePress paints
+   it two ways: a border on the bar and a divider-line element on docs
+   pages; both get the same ink, and it is the SOLID one: this line has
+   the sidebar column under its left end and scrolling content under
+   the rest, so a translucent ink reads as two shades and tints as text
+   passes beneath. Same color, no backdrop. */
 .VPNavBar {
-  border-bottom-color: var(--ivue-hairline) !important;
+  border-bottom-color: var(--ivue-hairline-solid) !important;
 }
 .VPNavBar .divider-line {
   /* !important: VitePress's scoped .divider-line[data-v-*] rule wins
      the cascade otherwise and keeps the line at full opacity */
-  background-color: var(--ivue-hairline) !important;
+  background-color: var(--ivue-hairline-solid) !important;
 }
 /* The sub-nav's right button carries the PAGE TITLE (set in
    theme/index.ts). Cap it at 70% of the bar so the section label on
@@ -3942,31 +3951,21 @@ html {
 .VPNavScreen .VPNavScreenMenuLink {
   border-bottom-color: var(--ivue-hairline) !important;
 }
-/* the hairline under the brand in the sidebar column — desktop only;
-   on mobile the title lives inside the bar and its border would read
-   as a second line under the logo */
+/* ONE hairline under the whole header. VitePress insets the divider by
+   the sidebar width (padding-left on .divider) so the logo corner can
+   carry its own short line — the two-tone header we do not want. Zero
+   the inset and the existing divider-line spans the full bar, in one
+   ink, on one row.
+   The title keeps a TRANSPARENT bottom border (not none): the homepage
+   title carries the same 1px border, and the box must match it exactly
+   or the logo shifts a pixel when navigating between layouts. */
 .VPNavBarTitle.has-sidebar .title {
   border-bottom-color: transparent !important;
 }
-@media (min-width: 960px) {
-  /* the hairline is painted OUT of flow (::after on the divider's own
-     64–65px row) — the title box stays byte-identical to the homepage's,
-     so the logo doesn't shift when navigating between layouts */
-  .VPNavBarTitle.has-sidebar .title {
-    /* transparent, not none — the homepage title carries the same 1px
-       transparent border, and the box must match it exactly */
-    border-bottom-color: transparent !important;
-    position: relative;
-  }
-  .VPNavBarTitle.has-sidebar .title::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -1px;
-    height: 1px;
-    background: color-mix(in srgb, var(--vp-c-gutter) 30%, transparent);
-  }
+.VPNavBar.has-sidebar .divider {
+  /* !important: VitePress's scoped .divider rule carries a [data-v-*]
+     attribute (specificity 0,4,0) and re-applies the inset otherwise */
+  padding-left: 0 !important;
 }
 
 /* Two-line hamburger geometry: equal widths, no horizontal staircase, and
