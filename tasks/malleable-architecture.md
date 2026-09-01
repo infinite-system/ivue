@@ -232,6 +232,47 @@ gate, contracts-as-data, HMR-style swap, ledger storage) — it is
 PRODUCT work: making seam-pointing feel effortless and overlay
 failures feel safe.
 
+## The delivery vehicle: desktop shell (Electron/Tauri)
+
+Not packaging — an ARCHITECTURE upgrade. Three pillars get stronger
+than the web can make them:
+
+- **Safe mode becomes a real supervisor**: main process watches the
+  renderer; a bricked overlay crashes the renderer and main reboots it
+  base-only — OS-grade crash-loop guard instead of a sessionStorage
+  stamp.
+- **Egress moves to the network layer**: session.webRequest/proxy
+  enforces the user's allowlist for ALL renderer traffic (stronger
+  than CSP); the panel is literally a firewall the user owns. Two-ring
+  model: generated overlays run ONLY in the sandboxed renderer,
+  platform code in main.
+- **Ledger + agent go local**: customization ledger on the user's
+  disk (their app is theirs, offline, no multi-tenant surface); the
+  embedded agent gets real tools via Node in main.
+
+Also dissolves the web's blocker: runtime template compilation needs
+unsafe-eval — desktop controls policy per-window (compile in a hidden
+eval-allowed window, ship the compiled render fn to the strict-CSP
+display renderer).
+
+Tauri vs Electron: Tauri ~10x lighter; Electron wins if the agent
+needs Node in-process — lean Electron BECAUSE the agent is the
+product. Keep the web tier as the zero-install demo (path templates
+only, no eval); desktop = full self-modification. That ladder is the
+go-to-market. Precedent: Invar already lives outside the browser.
+
+## The clear advantages (distilled — all from one root)
+
+The standard with teeth is the moat; features are its corollaries:
+member-granularity seams (swap unit = a getter, not a module/file);
+verifiable generation (the gate checks structure, others review or
+trust); contracts as data (mount-time template validation); no build
+step by construction (Reactive() is a runtime transform); the live
+object graph (agent introspects the RUNNING app); recovery cheap
+because creation is cheap (rollback-by-replay as the primary safety
+story); and the 94k-line receipt (Invar) that generated code need not
+rot. A competitor copies a feature; the moat is a discipline.
+
 ## Positioning: DeepSeek Harness (investigated 2026-09-01)
 
 DeepSeek Harness (OSS, ~2026-08-15, ~90K stars in two days) is the
