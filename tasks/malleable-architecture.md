@@ -323,10 +323,21 @@ Honest costs: WebKit variance on macOS/Linux system webviews
 project (contributor note: PRs may never be reviewed) — Electron's
 boringness is a feature when trust IS the pitch.
 
-Decision: prototype Electrobun first (tiny bundles + kilobyte
-updates + Bun agent are a real product edge), Electron as the
-guaranteed fallback. Cheap to defer: app code is identical either
-way — only the supervisor layer differs.
+Decision (revised same day): **uniform behavior across platforms is
+a REQUIREMENT** — runtime-compiled templates and the trust pitch
+demand one engine everywhere. That rules out system-webview mode
+(WebKit on macOS/Linux, Chromium on Windows = three engines);
+Electrobun's fix is bundleCEF, which erases its tiny-bundle
+headline. Once Chromium ships anyway, Electron is the boring,
+battle-tested way to ship it — and its session.webRequest becomes
+defense-in-depth ON TOP of the canonical proxy ring. **Electron
+leads; Electrobun demoted to watch-it-mature.**
+
+Non-factor noted: "Node cluster vs Bun single-threaded" does not
+decide this — Bun has workers, subprocesses, and reusePort; and our
+localhost proxy serves ONE user, never enough traffic to need
+cluster. Parallel work (compiles, agent loops) is worker/subprocess
+shaped in both runtimes.
 
 ## The clear advantages (distilled — all from one root)
 
