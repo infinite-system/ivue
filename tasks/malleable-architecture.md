@@ -50,6 +50,39 @@ terminal.)
 - **Live-swap prior art**: the node-class-HMR machinery is precisely
   "swap the class generation under a running system."
 
+## The law: malleability is a function of uniformity
+
+None of this exists elsewhere, and the reason is structural: the agent
+can override ANY component only if EVERY component is overridable THE
+SAME WAY. One shape for classes (the standard) is what made agents
+able to write them at 94k lines; one shape for components is what
+makes an app addressable seam-by-seam. Partial adoption is a demo;
+total shape is a platform. Others hold the ingredients (headless UI
+separates logic from view at authoring time; low-code tools have
+runtime views) — nobody holds the uniform shape across every
+component, because without a standard-with-teeth it cannot be reached.
+
+**The universal component shell** — the class standard's second half.
+Every component is the same three seams:
+
+- **contract** — props/emits as namespace data (already the standard),
+  opening with a spread of the malleable base:
+  `...Malleable.propsTypes` carrying `runner` + `template`. The
+  two-tier contract system makes universalizing a ONE-LINE move per
+  component.
+- **runner** — the SFC constructs `props.runner ?? new X.Class(props,
+  emit)`; the class that drives is injectable (ChooseField's shipped
+  mechanism, generalized).
+- **template** — `<component :is="dynamicView" v-if="template">`
+  with the built-in markup as the v-else. View injectable, default
+  intact.
+
+Because the shape is uniform, the GATE can verify it exactly as it
+verifies class shape today — the shell becomes a checkable ruling,
+not a convention. Migration follows the docs-components rule:
+opportunistic when touched, never a bulk sweep; new components born
+in the shape.
+
 ## The open build: the template axis
 
 Three tiers, increasing power and cost:
@@ -203,8 +236,10 @@ failures feel safe.
 
 Post-release, as a ladder — each rung is a shippable artifact:
 
-1. Generalize the `runner` + `template` pair on ONE docs demo
-   component; measure the runtime-string tier's real cost.
+1. The universal shell: `Malleable.propsTypes` base contract + the
+   shell shape on ONE docs demo component (runner + template +
+   :is/fallback); measure the runtime-string tier's real cost; add
+   the shell ruling to the gate.
 2. The overlay ledger: persist + replay generated subclasses for one
    surface (a settings page, a list view).
 3. The recovery layer on that surface: error-boundary quarantine,
