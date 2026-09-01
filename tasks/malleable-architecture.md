@@ -80,7 +80,8 @@ props/emit either way.
 - **Security**: runtime template strings execute expressions in render
   context — user-supplied templates are a code-injection surface.
   Trusted sources (agents we run, admin surfaces) only, or a
-  sandboxed expression policy.
+  sandboxed expression policy. Egress is solved structurally by the
+  user-controlled allowlist (section below).
 - **Performance discipline carries over**: malleable seams by default,
   measured hoists where a real loop earns them — the flyweight file
   demonstrates both in one constructor.
@@ -161,6 +162,33 @@ The model — and every ingredient already exists in this codebase:
 5. **The escape hatch.** `?safe=1` (or a long-press) boots base
    unconditionally — no persisted state can brick the user.
 
+### User-controlled egress: integrations as capability grants
+
+The exfiltration boundary flips into the product's superpower: the
+app's generated code can do anything INTERNALLY, but can only talk to
+the outside through domains the user enabled in their control panel —
+default-deny, per-domain, revocable.
+
+- **Integrations without a marketplace.** "Send new invoices to my
+  Slack webhook" → the agent generates the subclass → the app asks
+  "this needs hooks.slack.com — enable it?" → one click. Any service
+  with an HTTP API is an integration; zero per-connector engineering.
+- **Three enforcement rings, defense in depth:**
+  1. Generation-time — the gate statically refuses overlays reaching
+     non-allowlisted domains (caught before the code exists).
+  2. Runtime, BROWSER-enforced — CSP `connect-src` built per-user from
+     the allowlist. The browser enforces it: no generated code can
+     bypass it, however clever. (The artifact-sandbox mechanism, made
+     user-controlled.)
+  3. Server-side — overlay server code egresses only through the
+     platform's proxy, which checks the list and writes the audit
+     ledger.
+- **Audit is the trust UX.** The panel shows "overlay #12 sent 3
+  requests to hooks.slack.com today, 2.1 KB" — permissions plus
+  visibility, the mobile-OS model for your own app's generated code.
+  Revoking a domain degrades its overlays gracefully (the quarantine
+  semantics from the trust layer, reused).
+
 Receipt that this works: Invar IS this product in terminal form — an
 app whose users (agents) modify it to their need, governed by the
 skill and invariants, 94k lines and navigable. The GUI version is the
@@ -180,7 +208,8 @@ Post-release, as a ladder — each rung is a shippable artifact:
 2. The overlay ledger: persist + replay generated subclasses for one
    surface (a settings page, a list view).
 3. The recovery layer on that surface: error-boundary quarantine,
-   trial/committed ledger states, crash-loop safe mode, ?safe=1.
+   trial/committed ledger states, crash-loop safe mode, ?safe=1 —
+   plus the egress ring (per-user CSP connect-src + audit).
 4. The in-app agent: prompt → seam resolution via the live graph →
    gated generation → slot swap, on that same surface.
 5. The story writes itself at every rung — "the app agents can extend
