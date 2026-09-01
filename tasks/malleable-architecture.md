@@ -513,6 +513,15 @@ moves, all the same doctrine:
   holds only the streamed result collection and never touches the
   filesystem. Performance hygiene and the security model are the
   same seam.
+- **Sync fs survives — placement decides, not the API.** Invar's
+  sync fs code ports UNCHANGED: bulk work (walks, indexing, hashing)
+  runs sync inside worker threads/subprocesses, where blocking is
+  free and sync beats async (direct syscalls vs libuv threadpool
+  queueing + promise overhead). Only the Electron main thread must
+  never run fs loops (it services IPC/window events, sync or async
+  alike); one-shot small ops there stay sync. Terminal rung and
+  desktop rung share one sync implementation — only placement
+  differs.
 
 Precedent: Everything (Windows) beats the native OS with a
 journal-fed index as a solo project; ours adds the malleable,
