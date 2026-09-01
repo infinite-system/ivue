@@ -132,24 +132,41 @@ Two rules keep the population honest:
   `Sub.$x` derives through the override and `Sub.$x !== Base.$x`.
   Compare by value, or through one receiver.
 
-## Hot paths: hoist the cache once
+## Hot paths: hoist once — and why
 
-A warm `$`-cache read costs a few nanoseconds more than a plain
-property (an own-property guard is the price of the per-receiver
-correctness above — measured at ~4–6 ns on Node 26). At any ordinary
-call frequency that is invisible. In a genuinely hot loop, apply the
-same discipline as [hot ref reads](/guide/performance): hoist the
-value into a local once, outside the loop:
+The bound method itself is **plain-function speed**. Measured in
+Chromium on a 9,000,000-call loop (fresh page per variant, dedicated
+loops, medians of five): a module function ran 31.7 ms, a hoisted
+bound method 30.0 ms — identical within noise. The only per-call cost
+is reading the method **through the accessor inside the loop**: the
+same loop calling `Class.method()` on every iteration ran 84.6 ms,
+because each read replays the own-property guard that makes the
+per-receiver binding above correct.
+
+So the discipline is the same as [hot ref reads](/guide/performance),
+and the reason is the read, never the call. At any ordinary call
+frequency none of this is visible; in a genuinely hot loop,
+destructure the methods once, outside the loop:
 
 ```ts
-const defaults = LineWrap.Class.$defaults; // one guarded read
-for (const line of millionLines) {
-  wrap(line, defaults); // plain local access from here on
+// one accessor read per method — a LATE read of the mutable slot,
+// so a subclass swapped into `Class` is still honored
+const { isDataCol, numDataValue } = FlyweightLogic.Class;
+for (let row = 0; row < ROWS_1M; row++) {
+  const value = numDataValue(row, col); // plain-function speed
 }
 ```
 
-One hoist line converts the per-read cost to zero for the whole
-algorithm — explicitly, at the call site, with no correctness trade.
+The same applies to `$`-cached getters — hoist the value once
+(`const defaults = LineWrap.Class.$defaults;`) and the loop pays
+nothing. Two boundaries keep the hoist honest: it lives **inside the
+function** (a module-scope hoist would capture today's `Class` forever
+and never see a swap), and it is never `$Class` — the raw class skips
+the per-receiver binding, which is the capability seam itself.
+
+This is the shape the [20M-cell flyweight grid](/examples/flyweight-grid)
+seeds with — measured at 77–82 ms for the full fill, at or better than
+the plain-module functions it replaced.
 
 ## Testing: the seam is the harness
 
