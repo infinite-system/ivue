@@ -23,15 +23,15 @@ import { Static } from '../../Static';
  *   K…T  (10–19) even = data, odd = =<left1>{r}+<left2>{r}  (cross mesh)
  *
  * HOT PATH: statics are hot-loop ready out of the box — Static() binds a
- * method once on first read and every later read returns the same bound
- * function (see lib/Static.ts). The only residue is the indirection of a
- * `.method` access: measured at 20M calls, module function 30.9M/s vs
- * `Class.method()` 25.2M/s vs a hoisted local 28.6M/s. That is nothing at
- * ordinary call counts. The seeding loop is the one exception in this
- * example — it calls numDataValue 9,000,000 times — so it destructures
- * the methods once from a LATE read of the slot (a subclass swap is still
- * honored; a module-scope hoist would capture today's Class and never see
- * one).
+ * method on first read and every later read returns that same bound
+ * function, so `Class.method()` belongs in loops. What costs at millions
+ * of calls is resolving the CLASS per call. FlyweightSheet's seeding loop
+ * runs 9,000,000 times and measures (medians of five runs): 361ms with
+ * `const Logic = FlyweightLogic.Class` hoisted once inside the
+ * constructor, 416ms reading the namespace per call, 446ms through a
+ * `protected get Logic()` on the Reactive() class — a getter there is
+ * transformed and leaf-tracked, and it also took run-to-run spread from
+ * 2ms to 45ms. Hoist the class, late, inside the function.
  */
 class $FlyweightLogic {
   static readonly COLS = 20;

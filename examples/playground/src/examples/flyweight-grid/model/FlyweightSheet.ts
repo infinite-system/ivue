@@ -59,12 +59,6 @@ interface FormulaEntry {
 }
 
 class $FlyweightSheet {
-  /** Late read of the mutable slot — a subclass swap is honored, and hot
-   *  loops hoist the METHOD they need into a local (see FlyweightLogic). */
-  protected get Logic() {
-    return FlyweightLogic.Class;
-  }
-
   readonly rows: number;
   readonly cols: number;
 
@@ -87,17 +81,25 @@ class $FlyweightSheet {
   /** When non-null, tracked reads record (row,col) — dep tracing. */
   protected tracer: Array<[number, number]> | null = null;
 
-  constructor(rows: number, cols: number = this.Logic.COLS) {
+  constructor(rows: number, cols: number = FlyweightLogic.Class.COLS) {
     this.rows = rows;
     this.cols = cols;
-    this.blockCount = Math.ceil(rows / this.Logic.BLOCK_ROWS);
+    this.blockCount = Math.ceil(rows / FlyweightLogic.Class.BLOCK_ROWS);
 
-    // Statics are hot-loop ready (Static() binds once, then every read is
-    // the same bound function) — this loop is the one place in the example
-    // that still earns a hoist, because numDataValue runs 9,000,000 times
-    // at 1M rows and even a property-access indirection compounds there.
-    // A LATE read of the slot, so a subclass swap is still honored.
-    const { isDataCol, numDataValue } = this.Logic;
+    // Read the capability class ONCE for the seeding loop (a late read of
+    // the mutable slot, so a subclass swap is still honored). Measured on
+    // this 9,000,000-call loop, medians of five runs:
+    //   361ms  this shape — the namespace read hoisted
+    //   416ms  FlyweightLogic.Class.method() per call
+    //   446ms  through a `protected get Logic()` per call
+    // Statics themselves are hot-loop ready (Static() binds on first read
+    // and every later read returns that same bound function); what the
+    // numbers above measure is CLASS resolution, not the method. The
+    // namespace is read directly rather than through a getter on this
+    // class: a getter here is transformed by Reactive() and adds leaf
+    // tracking to every call — it also pushed run-to-run spread from 2ms
+    // to 45ms.
+    const Logic = FlyweightLogic.Class;
 
     // Seed the columnar ground truth. Data columns fill Float64Arrays
     // numerically (no string round-trips — this is the whole creation cost);
@@ -106,10 +108,10 @@ class $FlyweightSheet {
     for (let col = 0; col < cols; col++) {
       const kind = new Uint8Array(rows);
       let numbers: Float64Array | null = null;
-      if (isDataCol(col)) {
+      if (Logic.isDataCol(col)) {
         numbers = new Float64Array(rows);
         for (let row = 0; row < rows; row++) {
-          const value = numDataValue(row, col);
+          const value = Logic.numDataValue(row, col);
           if (value !== null) {
             kind[row] = FlyweightLogic.Kind.Number;
             numbers[row] = value;
@@ -134,7 +136,7 @@ class $FlyweightSheet {
   }
 
   protected blockKey(row: number, col: number): number {
-    return col * this.blockCount + (row >> this.Logic.BLOCK_SHIFT);
+    return col * this.blockCount + (row >> FlyweightLogic.Class.BLOCK_SHIFT);
   }
 
   // --- version-ref plumbing ---
@@ -196,7 +198,7 @@ class $FlyweightSheet {
       case FlyweightLogic.Kind.Number:
         return String(column.numbers![row]);
       case FlyweightLogic.Kind.Formula:
-        return this.Logic.patternSource(row, col) ?? '';
+        return FlyweightLogic.Class.patternSource(row, col) ?? '';
       default:
         return '';
     }
@@ -249,7 +251,7 @@ class $FlyweightSheet {
 
     const values: FlyweightLogic.CellValue[][] = [];
 
-    if (cellCount <= this.Logic.FINE_RANGE_LIMIT) {
+    if (cellCount <= FlyweightLogic.Class.FINE_RANGE_LIMIT) {
       for (let row = startRow; row <= endRow; row++) {
         const rowValues: FlyweightLogic.CellValue[] = [];
         for (let col = startCol; col <= endCol; col++)
@@ -260,8 +262,8 @@ class $FlyweightSheet {
     }
 
     // Coarse tier: subscribe every covered block (tracked), …
-    const firstBlock = startRow >> this.Logic.BLOCK_SHIFT;
-    const lastBlock = endRow >> this.Logic.BLOCK_SHIFT;
+    const firstBlock = startRow >> FlyweightLogic.Class.BLOCK_SHIFT;
+    const lastBlock = endRow >> FlyweightLogic.Class.BLOCK_SHIFT;
     for (let col = startCol; col <= endCol; col++) {
       for (let block = firstBlock; block <= lastBlock; block++) {
         this.trackBlock(col * this.blockCount + block);
@@ -333,7 +335,7 @@ class $FlyweightSheet {
     if (kind !== FlyweightLogic.Kind.Formula) return this.rawAt(row, col);
 
     const source = this.sourceAt(row, col);
-    const body = this.Logic.stripFormula(source);
+    const body = FlyweightLogic.Class.stripFormula(source);
     if (body.trim().length === 0) return null;
 
     const cellKey = this.cellKey(row, col);
@@ -347,7 +349,7 @@ class $FlyweightSheet {
       // measured 27ms @ 10k cells → 40s @ 200k — so bulk aggregation
       // belongs to the columnar layer, exactly as desktop engines
       // special-case their range ops.
-      const aggregate = this.Logic.matchSimpleAggregate(body);
+      const aggregate = FlyweightLogic.Class.matchSimpleAggregate(body);
       if (aggregate) return this.fastAggregate(aggregate);
       return this.parser.parse(body, {
         row: row + 1,
@@ -380,7 +382,7 @@ class $FlyweightSheet {
 
   protected evaluateAdHocFormula(body: string): FlyweightLogic.CellValue {
     try {
-      const aggregate = this.Logic.matchSimpleAggregate(body);
+      const aggregate = FlyweightLogic.Class.matchSimpleAggregate(body);
       if (aggregate) return this.fastAggregate(aggregate);
       return this.parser.parse(body, {
         row: 1,
@@ -408,11 +410,11 @@ class $FlyweightSheet {
     const endRow = Math.min(aggregate.endRow - 1, this.rows - 1);
     const endCol = Math.min(aggregate.endCol - 1, this.cols - 1);
     const cellCount = (endRow - startRow + 1) * (endCol - startCol + 1);
-    const isFineTier = cellCount <= this.Logic.FINE_RANGE_LIMIT;
+    const isFineTier = cellCount <= FlyweightLogic.Class.FINE_RANGE_LIMIT;
 
     if (!isFineTier) {
-      const firstBlock = startRow >> this.Logic.BLOCK_SHIFT;
-      const lastBlock = endRow >> this.Logic.BLOCK_SHIFT;
+      const firstBlock = startRow >> FlyweightLogic.Class.BLOCK_SHIFT;
+      const lastBlock = endRow >> FlyweightLogic.Class.BLOCK_SHIFT;
       for (let col = startCol; col <= endCol; col++) {
         for (let block = firstBlock; block <= lastBlock; block++) {
           this.trackBlock(col * this.blockCount + block);
@@ -441,7 +443,7 @@ class $FlyweightSheet {
             count++;
             if (cellValue < min) min = cellValue;
             if (cellValue > max) max = cellValue;
-          } else if (this.Logic.isFormulaError(cellValue)) {
+          } else if (FlyweightLogic.Class.isFormulaError(cellValue)) {
             return cellValue; // errors propagate, Excel-style
           }
         }
@@ -473,7 +475,7 @@ class $FlyweightSheet {
   write(row: number, col: number, input: string): void {
     const column = this.columns[col];
     const trimmed = input.trim();
-    if (this.Logic.isFormulaText(input)) {
+    if (FlyweightLogic.Class.isFormulaText(input)) {
       column.kind[row] = FlyweightLogic.Kind.Formula;
       column.text.set(row, input);
     } else if (trimmed.length === 0) {
@@ -506,7 +508,7 @@ class $FlyweightSheet {
     const row = oneBasedRow - 1;
     const col = oneBasedCol - 1;
     if (this.columns[col]?.kind[row] !== FlyweightLogic.Kind.Formula) return [];
-    const body = this.Logic.stripFormula(this.sourceAt(row, col));
+    const body = FlyweightLogic.Class.stripFormula(this.sourceAt(row, col));
     if (body.trim().length === 0) return [];
 
     const previousTracer = this.tracer;

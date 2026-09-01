@@ -72,16 +72,22 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
       const descriptor = Object.getOwnPropertyDescriptor(currentClass, key)!;
 
       if (typeof descriptor.value === 'function') {
-      // HOT-LOOP READY. The bind happens ONCE: first read of the method
-      // defines an own bind-key property holding the bound function, and
-      // every later read returns it — no rebinding, no closure churn, no
-      // allocation per call. What remains is the accessor indirection of
-      // a `.method` read. Measured at 20M calls: a plain module function
-      // 30.9M calls/s, `Class.method()` 25.2M/s, and the method hoisted
-      // into a local 28.6M/s. So statics are fine directly in hot paths;
-      // only a loop calling MILLIONS of times earns hoisting the method
-      // out (`const { method } = X.Class` — a late read of the mutable
-      // slot, so a subclass still wins).
+      // HOT-LOOP READY. The bind happens ONCE: the first read of a
+      // method defines an own bind-key property holding the bound
+      // function, and every later read returns it — no rebinding, no
+      // allocation per call. What is left is the indirection of a
+      // `.method` read (20M calls: module fn 30.9M/s, Class.method()
+      // 25.2M/s, a hoisted local 28.6M/s), so statics are fine directly
+      // in hot paths.
+      //
+      // What DOES cost in a real million-call loop is resolving the
+      // CLASS per call — especially through a getter on a Reactive()
+      // class, which is transformed and leaf-tracked. Measured in the
+      // flyweight grid's 9M-call seeding loop: 361ms with
+      // `const C = X.Class` hoisted once, 416ms reading X.Class per
+      // call, 446ms through a `protected get` per call. Hoist the class,
+      // late, inside the function; destructuring individual methods adds
+      // nothing on top.
         const method = descriptor.value;
         const bindKey =
           typeof key === 'string'
