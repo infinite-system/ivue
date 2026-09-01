@@ -386,6 +386,26 @@ Rotation guidance: threads for launch/receipts moments, image-cards
 for essay-shaped posts (philosophy/story tags), long posts for
 release-notes-shaped and r/ivue-grade content mirrored outward.
 
+**W8h — directory drops** (one submission each, permanent SEO — the
+awesome-vue class of asset, near-zero cost):
+
+- **madewithvuejs.com** — submit the playground/site; screenshots +
+  link, browsed by Vue devs looking for real usage.
+- **vuejsexamples.com** — same class, same submission shape.
+- **vue.libhunt.com** — indexes from GitHub; verify the listing picks
+  up description + topics once repo surface (W12) is set.
+- **alternativeto.net** — list under Pinia/Vuex/MobX alternatives;
+  where "X alternative" searches land for years.
+
+**W8i — podcasts beyond DejaVue** (pitch AFTER week-2 signals; the
+W8d kit makes each pitch ~15 minutes of work):
+
+- **Views on Vue** (Top End Devs) — Vue-specific panel; angle: the
+  Options-API story + the discovery arc.
+- **JS Party (Changelog)** — general-JS, receipts-friendly; angle:
+  the 94k-line agent-built IDE + the standard-with-teeth story
+  (works even for non-Vue listeners).
+
 ### W9 — Japan (geo #3)
 
 By Vue adoption arguably #2 after China (LINE, Rakuten; the ja docs
@@ -409,16 +429,110 @@ JP, RU — full stop. Europe reads English (DE is Angular country), KR
 is React-leaning, BR/VN are real Vue pockets with thinner platform
 reach — revisit only on evidence.
 
+### W11 — measurement (the missing instrument for "losses are routing data")
+
+The strategy's feedback loop — fire broadly, amplify winners — has no
+instrument. Without one, amplification decisions are vibes. Before
+week 0:
+
+- **Referrer visibility on ivue.dev** — the site is already a CF
+  Worker: log Referer + path (aggregate counts only, no PII), or
+  enable CF Web Analytics (free, no cookies). One afternoon.
+- **Per-placement snapshots** — a small script (or manual table in a
+  private note post) recording npm weekly downloads + GitHub stars +
+  newsletter subscriber count at each calendar firing. Star-history
+  and npm charts reconstruct the past, but signups don't — capture as
+  you go.
+- **Newsletter signups by day** are already in D1 with timestamps —
+  the drip ledger IS the conversion metric; just read it per
+  placement window.
+- **Define "a story won a room" BEFORE launch**: e.g. front page /
+  top-10 of subreddit / >X referrers to the article in 48h →
+  qualifies for localization (W5 Habr pick) and X re-angle
+  amplification. Write the thresholds here once agreed.
+- **Milestone re-promotions ride the data**: a "1,000 stars — what
+  worked" thread is a known-good X format and costs nothing when the
+  snapshots exist.
+
+### W12 — the repo and npm page as landing surfaces
+
+Launch traffic's first click after any thread is github.com — audit
+it like a landing page:
+
+- **README first screen = the pitch**: claim + numbers table + one
+  code block + playground link + docs link, above the fold. The
+  house voice, receipts-first.
+- **Social preview image** — the OG card GitHub shows wherever the
+  repo is linked (Settings → social preview). The page-OG pipeline
+  already manufactures these; render one for the repo.
+- **Topics/tags** set (vue, reactivity, typescript, state-management,
+  signals, class-based) — feeds GitHub search and libhunt (W8h).
+- **Discussions decision**: OFF, with r/ivue as the durable Q&A home
+  (one question surface, Google-indexed) — or ON if repo-native
+  questions prove high-volume. Decide once, link consistently.
+- **Pinned "start here"** issue or README section routing: docs,
+  playground, blog, r/ivue, newsletter.
+- **npm page** mirrors the README pitch (it renders the same file —
+  verify the first screen works there too; badges: size, coverage,
+  types).
+
+### W13 — the objection bank + launch-day runbook
+
+**Objection bank** — the comment-presence rule ("answer with numbers,
+never adjectives") currently has no ammunition. Pre-write the top
+~20 hostile questions once, as a private note post
+(`note-objection-bank`); it feeds every launch thread, the AMA, and
+podcast prep. The predictable set: classes in 2026 / "just use
+Pinia" / proxy overhead vs plain objects / bundle-size skepticism /
+bus factor & single maintainer / "AI wrote this" / SSR story /
+Vue-version coupling (3.5 vs 3.6 alien-signals) / "another state
+library" / why not composables / decorator comparisons / TC39
+signals overlap / testing claims ("100% is easy on 1 kB") / license
+& stewardship / typescript-only? / DevTools support / migration
+cost from Pinia / what happens when Vue changes internals /
+memory-leak story ($stopEffects) / "benchmarks are always rigged"
+(link the live in-browser bench — the answer that ends the thread).
+Each answer: 2–4 sentences, a number or a repo/docs link, zero
+adjectives.
+
+**Launch-day runbook** — one page executed under adrenaline
+(`note-launch-runbook`): submission time (HN weekday morning US
+Eastern), first-comment posted immediately from the prepared text,
+monitoring windows (first 2h continuous, then hourly), the
+do-not-argue rules (concede fair hits — the self-criticism comment
+sets the tone; never fight a downvote wave; numbers or silence),
+the same-day mirror checklist (X thread → Bluesky/Mastodon →
+LinkedIn), newsletter mention timing, and the W11 snapshot at T+48h.
+
+### Second wave, deliberately withheld: the agents story
+
+The malleable-architecture / Invar control-plane story targets a
+DIFFERENT audience (AI-tooling rooms, r/ClaudeAI-class subreddits,
+X AI crowd) and is deliberately absent from weeks 0–6 — mixing it
+into the Vue launch would blur both pitches. It is its own launch
+(the malleable doc's sequencing ladder ends in one), fired after the
+Vue wave establishes the receipts it builds on. Only leak permitted
+meanwhile: the Invar-driving-Invar clip (W7 #6) as a teaser, framed
+as receipts for the standard, not as a product announcement.
+
 ### Sequencing
 
+0. **Pre-launch gate (new)**: W12 repo/npm surfaces + W11
+   instrumentation + W13 objection bank & runbook — all three must
+   exist BEFORE week 0; they are hours of work each and every
+   placement leans on them.
 1. W1 machinery (feeds everything; mechanical)
 2. W7 flagship clip (hero typewriter) — proves the video pipeline and
    feeds the launch thread itself
 3. W2 wiring is mostly W1+W7+W8b landing — no retroactive 2.5.0 copy
    (ban-private the post is the vehicle, per the demotion rule)
-4. W4 calendar agreed → batch-write missing copy (+ clips 2–3)
-5. W5 after English launch signals the winning story
-6. W6 last, smallest surface
+4. W4 calendar agreed → batch-write missing copy (+ clips 2–3);
+   W8h directory drops ride week 1–2 alongside W8a
+5. W5 after English launch signals the winning story (per W11
+   thresholds, not vibes)
+6. W6 last, smallest surface; W8i podcast pitches after week-2
+   signals; agents-story second wave stays holstered until the Vue
+   wave lands
 
 ## Open questions (to settle in discussion)
 
@@ -435,3 +549,9 @@ reach — revisit only on evidence.
   `habr`, `juejin`, `telegram`, `devto`, `lobsters` — plus `zenn`,
   `bluesky`, `mastodon`, `newsletter-pitch`?
 - Press-kit page: /press on the site, or a repo PRESS.md first?
+- W11 analytics choice: CF Web Analytics (zero code) vs Worker-side
+  referrer logging (more control) — or both?
+- W11 thresholds: what counts as "a story won a room"? (Propose:
+  HN front page OR subreddit top-10 OR 500+ article referrers in
+  48h.)
+- W12 Discussions: off (r/ivue is the Q&A home) — confirm.
