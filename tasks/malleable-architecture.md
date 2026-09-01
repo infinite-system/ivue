@@ -493,10 +493,28 @@ reduced to this generator.
 
 Honest boundary (so the claim stays a receipt): search latency is
 an INDEXING problem before a rendering problem — Spotlight/Everything
-win on their index, not their UI. The invariant covers the write
-path too: an incremental index (fs events → index deltas) is
-observation-bounded WRITING — index what changed, never rescan the
-world. Precedent: Everything (Windows) beats the native OS with a
+win on their index, not their UI. The search architecture, three
+moves, all the same doctrine:
+
+- **Tiered engines, not one.** Content search = ripgrep (brute scan
+  saturates SSDs; zero index maintenance — never build an index rg
+  makes redundant). Our OWN indexes only where brute force loses:
+  filename/metadata across the disk (fs events → index deltas,
+  Everything-style: observation-bounded WRITING — index what
+  changed, never rescan the world) and semantic layers the agent
+  adds later.
+- **Indexing decoupled from rendering = the doctrine over TIME.**
+  Results STREAM into a collection; the flyweight surface renders
+  the observed window of what has ARRIVED. First paint at first
+  match, regardless of how long the scan behind it runs — render
+  what's arrived, not what exists.
+- **The process split is free — and it's the trust boundary.**
+  rg/index workers live in main (fs access); the display webview
+  holds only the streamed result collection and never touches the
+  filesystem. Performance hygiene and the security model are the
+  same seam.
+
+Precedent: Everything (Windows) beats the native OS with a
 journal-fed index as a solo project; ours adds the malleable,
 agent-extensible surface on top.
 
