@@ -397,6 +397,30 @@ awesome-vue class of asset, near-zero cost):
 - **alternativeto.net** — list under Pinia/Vuex/MobX alternatives;
   where "X alternative" searches land for years.
 
+**W8h2 — design galleries** (the site itself is an asset; reaches
+designers + design-curious front-end devs the rest of the plan never
+touches; each placement = permanent "featured on" credential +
+backlink):
+
+- **Godly (godly.website)** — favors sleek dark dev-tool sites; the
+  typewriter hero + spotlight is exactly their feed. Best single fit.
+- **Dark Mode Design** — self-explanatory fit.
+- **siteInspire / httpster / Land-book / minimal.gallery** — curated,
+  free, docs-friendly; ~10-minute form each.
+- **VitePress showcase** — doubly valuable: the audience is already
+  Vue devs, and "best-looking VitePress site" is a winnable crown,
+  not a lottery.
+- **"Beautiful docs" awesome-lists on GitHub** — the awesome-vue move
+  applied to docs design; permanent SEO.
+- **NOT paying**: Awwwards / CSSDA / FWA (~$55+/submission, jury
+  taste runs agency-flash; structural long shot for a docs site).
+  Revisit only if free galleries land and the credential is wanted.
+- **Pre-flight**: galleries judge the first screen in ~5s at THEIR
+  thumbnail widths — one homepage QA pass at common gallery
+  breakpoints, both themes, before submitting.
+- Timing: rides week 1–2 with the W8h drops — same asset class
+  (one-shot submission, permanent placement, zero maintenance).
+
 **W8i — podcasts beyond DejaVue** (pitch AFTER week-2 signals; the
 W8d kit makes each pitch ~15 minutes of work):
 
