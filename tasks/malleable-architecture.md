@@ -85,10 +85,77 @@ props/emit either way.
   measured hoists where a real loop earns them — the flyweight file
   demonstrates both in one constructor.
 
+## The product endgame: the self-modifying app
+
+The user prompts INSIDE the app, and the app meets them — an agentic
+app whose users modify it to their need. The pattern is the flyweight
+overlay applied to the app itself: the shipped class graph is columnar
+ground truth, and each user's modifications are a SPARSE OVERLAY — a
+small set of subclasses and template overrides attached at named
+seams. A user's custom app is never a fork; it is
+`base graph + their overlay, replayed at boot`.
+
+The in-app loop:
+
+1. User points at a thing and prompts ("group invoices by client, add
+   a notes field").
+2. The embedded agent walks the LIVE object graph to resolve which
+   instance → class → seam produces that behavior — "point at the
+   thing" resolves to a named seam, not a text search. This is where
+   the object layer earns it.
+3. It generates `class $MyInvoiceList extends InvoiceList.$Class` (+
+   a template override where the view changes), runs the standards
+   GATE on the output, validates the template against the
+   contract-as-data at mount, swaps the slot.
+4. The generated source lands in the user's CUSTOMIZATION LEDGER (a
+   few KB of class text per tweak; D1 or local), replayed on every
+   boot. No build, ever — `Reactive()` is a runtime transform.
+
+Because template, props (contracts as data), and logic are all
+controlled end to end, the agent can restructure ANY surface — and
+even summon heavy machinery on demand: an agent UI that needs to show
+a million log lines generates a flyweight-grid subclass on the fly
+(FlyweightLogic's patternSource/columns overridden for log columns),
+overrides how files render, how diffs appear — the whole presentation
+AND behavior of its own tooling, per user, per need.
+
+What makes it survivable rather than a party trick:
+
+- **Upgrades don't destroy customizations.** Overlays attach at
+  seams; on a base update the app diffs the user's overlay against
+  the changed seams (noImplicitOverride semantics, applied at
+  runtime) and reports exactly which tweaks need re-generation —
+  never the SaaS classic "we redesigned, your workflow is gone."
+- **Blast radius is the user.** Each person's overlay modifies THEIR
+  instance — prompted code changes their own app, the one case where
+  running generated code is mostly safe by construction. Remaining
+  care: exfiltration where the app holds secrets — server-side seams
+  take the gate plus a capability allowlist.
+- **The app has an immune system.** The gate refuses generations that
+  violate the standard; invariants contracts bound what a seam is
+  allowed to mean; contract validation turns bad templates into
+  mount-time diagnostics instead of white screens.
+
+Receipt that this works: Invar IS this product in terminal form — an
+app whose users (agents) modify it to their need, governed by the
+skill and invariants, 94k lines and navigable. The GUI version is the
+same architecture with a prompt box instead of a PTY.
+
+The honest hard part is not machinery (every piece exists: seams,
+gate, contracts-as-data, HMR-style swap, ledger storage) — it is
+PRODUCT work: making seam-pointing feel effortless and overlay
+failures feel safe.
+
 ## Sequencing
 
-Post-release. Natural first artifact: generalize the `runner` +
-`template` pair on ONE docs demo component, measure the runtime-string
-tier's real cost, and write the story up — it is also press material
-("the app agents can extend while it runs") for the W2/W4 machinery in
-tasks/press-plan.md.
+Post-release, as a ladder — each rung is a shippable artifact:
+
+1. Generalize the `runner` + `template` pair on ONE docs demo
+   component; measure the runtime-string tier's real cost.
+2. The overlay ledger: persist + replay generated subclasses for one
+   surface (a settings page, a list view).
+3. The in-app agent: prompt → seam resolution via the live graph →
+   gated generation → slot swap, on that same surface.
+4. The story writes itself at every rung — "the app agents can extend
+   while it runs" is press material for the W2/W4 machinery in
+   tasks/press-plan.md, and rung 3 is a launch of its own.
