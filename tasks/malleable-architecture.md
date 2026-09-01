@@ -396,6 +396,64 @@ generated UI on day one, no primitive-teaching phase.
 Existence proof: ChooseField already ships the runner seam over a
 Quasar base in production. The pattern is running, not hypothetical.
 
+### The backend is malleable too — the same seam, pointed down
+
+Electron has two halves; only extending one is half an architecture.
+The reduction: a renderer component's TEMPLATE is not "presentation",
+it is **the boundary through which the runner touches something
+outside itself** — the human eye. The backend's boundary faces the
+other way: **the machine**. So the shell generalizes without a new
+mechanism:
+
+| seam | renderer | backend service |
+| --- | --- | --- |
+| contract | props/emits as data | callable surface as data (IPC methods, params, returns) |
+| runner | injectable class | injectable class |
+| boundary | template (`<component :is>`) | **capability grant** (which paths, domains, processes) |
+
+**The fatal asymmetry, and the rule it forces: the renderer is
+sandboxed, main is not.** A bad generated template kills a pane; a bad
+generated main module has fs + net + spawn over the home folder.
+Therefore **extensions NEVER run in main.** They run in a supervised
+extension host (Electron `utilityProcess`) and receive **capability
+OBJECTS, not imports** — a generated service never writes `import fs`;
+it is handed a handle already scoped to a granted path. Grants come
+from the same default-deny ledger that owns egress (object-capability
+model). This is the resource-allowlist generalization already named
+above, now with the backend as the governed thing.
+
+**The prize is the ATOMIC UNIT.** "Show me my biggest folders, live"
+needs a backend scanner AND a flyweight grid. Every extensibility
+system alive splits that across two lifecycles (a plugin here, a
+webview there, a hand-rolled protocol between). Here **one ledger
+entry spans both halves**: the unit of malleability stops being the
+module and becomes the **FEATURE** — generated together, gated
+together, quarantined together, rolled back in one move. Half a
+feature can never outlive its other half, which is exactly how plugin
+systems rot. The joint between halves is the contract, already plain
+data, so the agent generates against a CHECKABLE interface instead of
+a convention.
+
+Honest costs:
+
+- **Stateful teardown** (watchers, handles, sockets) on hot-swap —
+  scoping, not a wall: the standard already carries `dispose()` +
+  `$stopEffects`; the runner contract includes teardown.
+- **A process per feature is too heavy** — one extension host holds
+  many runners; a separate process only for the genuinely untrusted,
+  tiered by grant.
+- **Headless must work.** The Invar terminal rung has a backend and no
+  renderer: if the backend seam only works with a UI attached, the
+  seam is wrong. That rung is the forcing function.
+
+Rival (VS Code — extension host + webview, the closest living thing):
+loses on all four axes — extensions are packaged and installed rather
+than generated, reload required, the inter-half protocol is
+hand-written, and an extension receives ALL of Node rather than a
+scoped grant. The deeper precedent is **Emacs**: one live image where
+backend and UI are equally redefinable — and no trust layer at all.
+**What this builds is Emacs' malleability with a capability system.**
+
 ## The clear advantages (distilled — all from one root)
 
 The standard with teeth is the moat; features are its corollaries:
