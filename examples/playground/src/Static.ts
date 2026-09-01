@@ -72,22 +72,22 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
       const descriptor = Object.getOwnPropertyDescriptor(currentClass, key)!;
 
       if (typeof descriptor.value === 'function') {
-      // HOT-LOOP READY. The bind happens ONCE: the first read of a
-      // method defines an own bind-key property holding the bound
-      // function, and every later read returns it — no rebinding, no
-      // allocation per call. What is left is the indirection of a
-      // `.method` read (20M calls: module fn 30.9M/s, Class.method()
-      // 25.2M/s, a hoisted local 28.6M/s), so statics are fine directly
-      // in hot paths.
+      // HOT-LOOP READY — measured, twice, after two wrong theories. The
+      // bind happens ONCE: the first read defines an own bind-key
+      // property holding the bound function; every later read returns
+      // it. A HOISTED bound method is exactly plain-function speed
+      // (in-browser, 9M calls, fresh-page medians: module fn 31.7ms,
+      // hoisted bound method 30.0ms). The ONLY per-call cost is reading
+      // the method THROUGH the accessor inside the loop (84.6ms same
+      // loop) — so in a million-call loop, destructure the methods once
+      // (`const { method } = X.Class` — a late read of the mutable slot,
+      // so a subclass swap is still honored) and pay the accessor once.
+      // Ordinary call counts never notice any of this.
       //
-      // What DOES cost in a real million-call loop is resolving the
-      // CLASS per call — especially through a getter on a Reactive()
-      // class, which is transformed and leaf-tracked. Measured in the
-      // flyweight grid's 9M-call seeding loop: 361ms with
-      // `const C = X.Class` hoisted once, 416ms reading X.Class per
-      // call, 446ms through a `protected get` per call. Hoist the class,
-      // late, inside the function; destructuring individual methods adds
-      // nothing on top.
+      // Benchmark honestly: a shared bench(fn) harness makes the call
+      // site megamorphic and slows every variant measured after the
+      // first — that artifact once misread bound calls as "48% slower."
+      // Fresh page per variant, dedicated loops.
         const method = descriptor.value;
         const bindKey =
           typeof key === 'string'
