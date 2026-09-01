@@ -293,6 +293,41 @@ product. Keep the web tier as the zero-install demo (path templates
 only, no eval); desktop = full self-modification. That ladder is the
 go-to-market. Precedent: Invar already lives outside the browser.
 
+### Shell candidate: Electrobun (assessed 2026-09-01)
+
+blackboardsh/electrobun — v1 shipped, ~12.7k stars, 40+ production
+apps; macOS 14+ / Windows 11+ / Ubuntu official. Bun (or their JSC
+runtime) in main, system webviews by default, optional bundled
+Chromium (`bundleCEF`), typed RPC between isolated processes,
+bsdiff kilobyte-scale updates. Scored against our four pillars:
+
+- Agent runtime in main: ✅ Bun covers everything Node would
+  (filesystem, processes, SDK, ledger) — faster startup, better DX.
+- Hidden eval window for template compile: ✅ we set CSP per page we
+  load; compile webview gets unsafe-eval, display webview stays
+  strict.
+- Trust layer: ✅ their isolated-process typed-RPC model is CLOSER to
+  our quarantine design than Electron's defaults.
+- Egress firewall: ⚠️ system webviews expose no uniform
+  session.webRequest equivalent — the one real gap.
+
+**The gap dissolves by making egress shell-agnostic**: webviews get
+NO direct network — app served from localhost, injected CSP
+connect-src points only at our local proxy, the proxy (our Bun/Node
+process) enforces the user's allowlist. The firewall lives in OUR
+process, not the shell's API. This is now the canonical egress
+design regardless of shell — stronger and portable.
+
+Honest costs: WebKit variance on macOS/Linux system webviews
+(bundleCEF fixes it but eats the size win); single-maintainer
+project (contributor note: PRs may never be reviewed) — Electron's
+boringness is a feature when trust IS the pitch.
+
+Decision: prototype Electrobun first (tiny bundles + kilobyte
+updates + Bun agent are a real product edge), Electron as the
+guaranteed fallback. Cheap to defer: app code is identical either
+way — only the supervisor layer differs.
+
 ## The clear advantages (distilled — all from one root)
 
 The standard with teeth is the moat; features are its corollaries:
