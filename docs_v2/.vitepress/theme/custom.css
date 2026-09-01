@@ -3721,9 +3721,15 @@ html {
 
 /* sidebar pages: the logo corner shows the gray sidebar column through
    the transparent nav — paint the whole nav bar solid so the header
-   strip reads the same as the homepage's */
+   strip reads the same as the homepage's.
+   !important is load-bearing: VitePress leaves the bar transparent in
+   BOTH scroll states through scoped rules (.VPNavBar:not(.home).top and
+   :not(.top), each carrying a [data-v-*] attribute = specificity 0,4,0),
+   so the plain rule here lost the cascade and the corner kept painting
+   --vp-sidebar-bg-color. The delta is 3 levels in dark and 9 in light —
+   invisible on a color-managed panel, obvious in a screen recording. */
 .VPNavBar.has-sidebar {
-  background-color: var(--vp-nav-bg-color);
+  background-color: var(--vp-nav-bg-color) !important;
 }
 
 
