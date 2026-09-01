@@ -339,6 +339,50 @@ localhost proxy serves ONE user, never enough traffic to need
 cluster. Parallel work (compiles, agent loops) is worker/subprocess
 shaped in both runtimes.
 
+### The chassis: Quasar — wrap, don't go raw (decided 2026-09-01)
+
+Quasar fills two holes at once without touching the law:
+
+- **Build modes solve the whole ladder in one chassis**: SPA
+  (zero-install demo) / PWA / Electron (Quasar's electron mode IS
+  Electron — consistent with the shell decision above) / Capacitor
+  (iOS + Android — a rung we hadn't even claimed). One codebase.
+- **Component base**: fallback templates consume Quasar components
+  (QSelect etc.) INTERNALLY instead of hand-rolling primitives.
+
+Why this does not violate the uniformity law: malleability =
+uniformity AT THE SEAM LEVEL. The universal shell (contract, runner,
+template) is our layer; what the fallback template paints inside —
+QSelect or a raw listbox — sits BEHIND the seam, invisible to the
+agent, the ledger, and the override machinery. Uniformity is about
+every component exposing the same three seams, never about who
+renders the pixels.
+
+Why wrap beats raw (bottleneck principle): the bottleneck is shell +
+agent + ledger + trust — the things that exist nowhere else. Raw
+primitives are months of undifferentiated work (QSelect alone:
+keyboard nav, a11y, virtual scroll, filtering, dark mode). And the
+viewport law applies again: a page holds a handful of selects —
+per-instance weight is irrelevant at real counts.
+
+**The one rule that keeps swap-out free: the contract is OURS, never
+Quasar-shaped.** Failure mode = wrapper mirroring QSelect's ~100
+props 1:1 (contracts become Quasar's API in our namespace; swap-out
+breaks every consumer). Instead ChooseField's contract stays
+domain-shaped and minimal (options, value, label, disabled); the
+fallback template translates to QSelect inside. Then "go raw bit by
+bit" is not a migration project — it is swapping fallback internals
+behind an unchanged contract, i.e. THE TEMPLATE AXIS WE SELL.
+Replacing Quasar through our own seam is dogfooding.
+
+Bonus: **the agent gets a vocabulary** — generated template
+overrides may legally use the whole Quasar catalog, a documented
+component language LLMs already know from training data. Better
+generated UI on day one, no primitive-teaching phase.
+
+Existence proof: ChooseField already ships the runner seam over a
+Quasar base in production. The pattern is running, not hypothetical.
+
 ## The clear advantages (distilled — all from one root)
 
 The standard with teeth is the moat; features are its corollaries:
