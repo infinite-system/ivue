@@ -411,16 +411,54 @@ mechanism:
 | runner | injectable class | injectable class |
 | boundary | template (`<component :is>`) | **capability grant** (which paths, domains, processes) |
 
-**The fatal asymmetry, and the rule it forces: the renderer is
-sandboxed, main is not.** A bad generated template kills a pane; a bad
-generated main module has fs + net + spawn over the home folder.
-Therefore **extensions NEVER run in main.** They run in a supervised
-extension host (Electron `utilityProcess`) and receive **capability
-OBJECTS, not imports** — a generated service never writes `import fs`;
-it is handed a handle already scoped to a granted path. Grants come
-from the same default-deny ledger that owns egress (object-capability
-model). This is the resource-allowlist generalization already named
-above, now with the backend as the governed thing.
+**Extensions NEVER run in main** — but the reason is HEALTH, not
+restraint (corrected 2026-09-01): a separate supervised host
+(Electron `utilityProcess`) can be killed and restarted, while a
+module loaded into main cannot be cleanly unloaded and takes the app
+down when it crashes. Crash isolation and hot-swap force the rule;
+authority level does not.
+
+Extensions receive **capability OBJECTS, not imports** — a generated
+service never writes `import fs`; it is handed a handle.
+
+**FULL ACCESS IS A GRANT, NOT THE ABSENCE OF THE GRANT SYSTEM (user
+ruling 2026-09-01).** Root is a scope value. The grant system exists
+for the user to restrain things that ARE NOT THEM — refusing the
+owner full authority on their own machine is paternalism, and a
+prompt-per-fs-call destroys the loop the product sells (prompt → the
+app changes → try it). Because the handle mechanism is identical at
+every scope, there is no "restricted API" beside a "real API": one
+code path, nothing to rewrite when a scope changes, same audit shape
+either way.
+
+Two tiers on the trust axis, not a permission taxonomy:
+
+| tier | when | default for |
+| --- | --- | --- |
+| **unrestricted** | your machine, your prompt, your app — the `--dangerously-skip-permissions` equivalent, flipped once | solo desktop user (THE DEFAULT) |
+| **scoped** | anything the user did not personally just ask for: someone else's shared overlay, unattended agent runs, work on another party's behalf | shared/multi-party surfaces |
+
+**Audit is orthogonal and always on** — it is not a third tier;
+recording what happened costs nothing and blocks nothing.
+
+**What buys the right to run unrestricted is RECOVERY, not prompts.**
+People run codex in YOLO mode because git exists; the customization
+ledger is the app's git (quarantine, safe mode, replay-a-prefix).
+Recovery scales where prompts do not, because it costs nothing until
+something breaks. We run our own agent fleet in YOLO nightly — a
+product that refuses its owner the same setting is preaching.
+
+**The one held line (flag, not a wall): egress stays default-deny even
+in unrestricted mode** — one switch away, never a prompt-per-call. The
+asymmetry is not about trust: a deleted file replays back from the
+ledger, but data that already left the machine cannot be un-sent. It
+is the single failure recovery cannot undo. Filesystem, spawn, and
+native modules default OPEN on the user's own machine.
+
+The scoped tier earns its existence the moment overlays become
+shareable (which the ledger already makes possible): building the
+mechanism now while shipping the permissive default costs nothing and
+is what makes "install someone else's overlay" safe later.
 
 **The prize is the ATOMIC UNIT.** "Show me my biggest folders, live"
 needs a backend scanner AND a flyweight grid. Every extensibility
