@@ -574,6 +574,17 @@ as receipts for the standard, not as a product announcement.
    signals; agents-story second wave stays holstered until the Vue
    wave lands
 
+## The calendar is BUILT (2026-09-01)
+
+W4's "note-channel-calendar" is superseded by the real thing: a
+checkable 160-entry, 6-month calendar in the admin dashboard at
+`/socials/press` (data: `newsletter/dashboard/src/modules/press/
+press-calendar.data.ts`, anchored at launch = Tue 2026-09-08).
+Venue research: `tasks/press-venues.md` (222 verified rows).
+Paste-ready copy: `tasks/press-drafts/` (42 artifacts, all
+draft-for-review). W13's objection bank + runbook: drafted in
+`tasks/press-drafts/juno/`.
+
 ## Open questions (to settle in discussion)
 
 - Launch date/window for week 0 — everything sequences from it.
