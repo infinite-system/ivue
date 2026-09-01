@@ -170,7 +170,8 @@ If the design holds, none of these can occur:
 
 ## Files
 
-- `flyweight-logic.ts` — pure config, column layout, pattern sources.
+- `FlyweightLogic.ts` — a `Static()` capability class: config, column
+  layout, pattern sources and value mapping in one extensible seam.
 - `model/FlyweightSheet.ts` — columnar stores, two-tier overlay, formula
   cache + derived bridge, parser seam, `stats()`.
 - `model/FlyweightCell.ts` — the facade.

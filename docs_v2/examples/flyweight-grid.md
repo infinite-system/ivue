@@ -44,7 +44,7 @@ overlay) and the cell facade:
 <<< ../../examples/playground/src/examples/flyweight-grid/model/FlyweightSheet.ts [FlyweightSheet.ts]
 <<< ../../examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts [FlyweightGridPage.ts]
 <<< ../../examples/playground/src/examples/flyweight-grid/FlyweightGridApp.vue [template]
-<<< ../../examples/playground/src/examples/flyweight-grid/flyweight-logic.ts [flyweight-logic.ts]
+<<< ../../examples/playground/src/examples/flyweight-grid/FlyweightLogic.ts [FlyweightLogic.ts]
 :::
 
 The template is the whole wiring layer: one `new FlyweightGridPage.Class()`,

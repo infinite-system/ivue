@@ -8,12 +8,7 @@
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 import { watch, watchEffect } from 'vue';
-import {
-  BLOCK_ROWS,
-  isFormulaError,
-  numDataValue,
-  type CellValue,
-} from '../flyweight-logic';
+import { FlyweightLogic } from '../FlyweightLogic';
 import { FlyweightCell } from '../model/FlyweightCell';
 import { FlyweightSheet } from '../model/FlyweightSheet';
 
@@ -33,14 +28,14 @@ beforeAll(() => {
   );
 });
 
-const num = (cellValue: CellValue): number => {
+const num = (cellValue: FlyweightLogic.CellValue): number => {
   expect(typeof cellValue).toBe('number');
   return cellValue as number;
 };
 
 /** Restore a data cell to its deterministic seed value. */
 const restoreSeed = (row: number, col: number) => {
-  const seedValue = numDataValue(row, col);
+  const seedValue = FlyweightLogic.Class.numDataValue(row, col);
   sheet.write(row, col, seedValue === null ? '' : String(seedValue));
 };
 
@@ -184,7 +179,7 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
     expect(num(total.value)).toBeCloseTo(manualSum, 6);
 
     const statsAfter = sheet.stats();
-    const expectedBlocks = Math.ceil(ROWS / BLOCK_ROWS); // 245
+    const expectedBlocks = Math.ceil(ROWS / FlyweightLogic.Class.BLOCK_ROWS); // 245
     expect(statsAfter.blockRefs - statsBefore.blockRefs).toBe(expectedBlocks);
     // Column A is pure data — the giant range materialized NO formula
     // computeds and NO fine refs.
@@ -250,13 +245,13 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
     sheet.write(900_000, 0, '=B900001');
     sheet.write(900_000, 1, '=A900001');
     const cellValue = sheet.valueAt(900_000, 0);
-    expect(isFormulaError(cellValue)).toBe(true);
+    expect(FlyweightLogic.Class.isFormulaError(cellValue)).toBe(true);
     sheet.write(900_000, 0, '');
     sheet.write(900_000, 1, '');
   });
 
   it('kind transitions keep observers correct (number → formula → text)', () => {
-    const seenValues: CellValue[] = [];
+    const seenValues: FlyweightLogic.CellValue[] = [];
     const stopWatch = watch(
       () => sheet.valueAt(42, 10), // K43 — a data cell
       (cellValue) => seenValues.push(cellValue),
@@ -278,7 +273,7 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
     const cell = new FlyweightCell.Class(sheet, 0, 4); // E1 = =A1+B1
     const valueA = num(sheet.valueAt(0, 0));
     const valueB = num(sheet.valueAt(0, 1));
-    expect(num(cell.value as CellValue)).toBeCloseTo(valueA + valueB, 10);
+    expect(num(cell.value as FlyweightLogic.CellValue)).toBeCloseTo(valueA + valueB, 10);
     expect(cell.isFormula).toBe(true);
     expect(typeof cell.display).toBe('string');
 

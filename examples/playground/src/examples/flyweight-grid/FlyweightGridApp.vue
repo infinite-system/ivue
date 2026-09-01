@@ -7,7 +7,9 @@
  * target is destructured. All logic lives as named methods on the class.
  */
 import './grid.css';
-import { COLS, colLabel, displayOf } from './flyweight-logic';
+import { FlyweightLogic } from './FlyweightLogic';
+
+const Logic = FlyweightLogic.Class;
 import { FlyweightGridPage } from './FlyweightGridPage';
 
 const page = new FlyweightGridPage.Class();
@@ -75,7 +77,7 @@ const {
           class="fw-total"
         >
           <code>{{ entry.label }}</code> =
-          <b>{{ displayOf(entry.total.value) }}</b>
+          <b>{{ Logic.displayOf(entry.total.value) }}</b>
         </span>
       </div>
 
@@ -91,11 +93,11 @@ const {
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
             <div
-              v-for="col in COLS"
+              v-for="col in Logic.COLS"
               :key="col"
               class="gc-cell gc-head-cell"
             >
-              {{ colLabel(col - 1) }}
+              {{ Logic.colLabel(col - 1) }}
             </div>
           </div>
           <div class="gc-viewport" :style="{ height: page.totalHeight + 'px' }">

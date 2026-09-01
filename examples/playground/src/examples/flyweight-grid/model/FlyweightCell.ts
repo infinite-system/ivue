@@ -13,7 +13,7 @@
  * this holds NOTHING — that is the flyweight move.
  */
 import { Reactive } from '../../../ivue';
-import { Kind, cssOf, displayOf, type CellValue } from '../flyweight-logic';
+import { FlyweightLogic } from '../FlyweightLogic';
 import type { FlyweightSheet } from './FlyweightSheet';
 
 class $FlyweightCell {
@@ -28,7 +28,7 @@ class $FlyweightCell {
   }
 
   /** Resolved value — tracked point read through the sheet. */
-  get value(): CellValue {
+  get value(): FlyweightLogic.CellValue {
     return this.sheet.valueAt(this.row, this.col);
   }
 
@@ -38,15 +38,15 @@ class $FlyweightCell {
   }
 
   get isFormula(): boolean {
-    return this.sheet.kindAt(this.row, this.col) === Kind.Formula;
+    return this.sheet.kindAt(this.row, this.col) === FlyweightLogic.Kind.Formula;
   }
 
   get display(): string {
-    return displayOf(this.value);
+    return FlyweightLogic.Class.displayOf(this.value);
   }
 
   get cssClass(): string {
-    return cssOf(this.value, this.isFormula);
+    return FlyweightLogic.Class.cssOf(this.value, this.isFormula);
   }
 
   write(input: string): void {

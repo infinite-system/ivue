@@ -17,15 +17,7 @@ import {
   type ComputedRef,
 } from 'vue';
 import { Reactive } from '../../ivue';
-import {
-  COLS,
-  OVERSCAN,
-  ROWS_1M,
-  ROW_HEIGHT,
-  VIEWPORT_HEIGHT,
-  colLabel,
-  type CellValue,
-} from './flyweight-logic';
+import { FlyweightLogic } from './FlyweightLogic';
 import { FlyweightCell } from './model/FlyweightCell';
 import { FlyweightSheet } from './model/FlyweightSheet';
 
@@ -104,18 +96,18 @@ class $FlyweightGridPage {
     return this.sheet.value !== null;
   }
   get modelCells() {
-    return this.sheet.value ? this.sheet.value.rows * COLS : 0;
+    return this.sheet.value ? this.sheet.value.rows * FlyweightLogic.Class.COLS : 0;
   }
   get naturalHeight() {
-    return this.sheet.value ? this.sheet.value.rows * ROW_HEIGHT : 0;
+    return this.sheet.value ? this.sheet.value.rows * FlyweightLogic.Class.ROW_HEIGHT : 0;
   }
   get totalHeight() {
     return Math.min(this.naturalHeight, $FlyweightGridPage.MAX_SCROLL_HEIGHT);
   }
   get scrollScale() {
     return this.naturalHeight > this.totalHeight
-      ? (this.naturalHeight - VIEWPORT_HEIGHT) /
-          (this.totalHeight - VIEWPORT_HEIGHT)
+      ? (this.naturalHeight - FlyweightLogic.Class.VIEWPORT_HEIGHT) /
+          (this.totalHeight - FlyweightLogic.Class.VIEWPORT_HEIGHT)
       : 1;
   }
   /** Position in CONTENT space (0 … naturalHeight − viewport). */
@@ -123,22 +115,22 @@ class $FlyweightGridPage {
     return this.scrollTop.value * this.scrollScale;
   }
   get startRow() {
-    return Math.max(0, Math.floor(this.virtualTop / ROW_HEIGHT) - OVERSCAN);
+    return Math.max(0, Math.floor(this.virtualTop / FlyweightLogic.Class.ROW_HEIGHT) - FlyweightLogic.Class.OVERSCAN);
   }
   get endRow() {
-    const visibleCount = Math.ceil(VIEWPORT_HEIGHT / ROW_HEIGHT);
+    const visibleCount = Math.ceil(FlyweightLogic.Class.VIEWPORT_HEIGHT / FlyweightLogic.Class.ROW_HEIGHT);
     return this.sheet.value
       ? Math.min(
           this.sheet.value.rows,
-          this.startRow + visibleCount + OVERSCAN * 2,
+          this.startRow + visibleCount + FlyweightLogic.Class.OVERSCAN * 2,
         )
       : 0;
   }
   /** Pin the window band under the physical scroll position (degenerates
-   *  to startRow × ROW_HEIGHT when scale = 1). */
+   *  to startRow × FlyweightLogic.Class.ROW_HEIGHT when scale = 1). */
   get offsetY() {
     return (
-      this.scrollTop.value - (this.virtualTop - this.startRow * ROW_HEIGHT)
+      this.scrollTop.value - (this.virtualTop - this.startRow * FlyweightLogic.Class.ROW_HEIGHT)
     );
   }
 
@@ -158,8 +150,8 @@ class $FlyweightGridPage {
     if (!sheet) return [];
     const pageRows: FlyweightGridPage.PageRow[] = [];
     for (let row = this.startRow; row < this.endRow; row++) {
-      const cells: FlyweightCell.Instance[] = new Array(COLS);
-      for (let col = 0; col < COLS; col++)
+      const cells: FlyweightCell.Instance[] = new Array(FlyweightLogic.Class.COLS);
+      for (let col = 0; col < FlyweightLogic.Class.COLS; col++)
         cells[col] = new FlyweightCell.Class(sheet, row, col);
       pageRows.push({ row, cells });
     }
@@ -169,7 +161,7 @@ class $FlyweightGridPage {
   /** Live full-column totals (block tier: 245 edges each). liveFormula is
    *  cached on the sheet, so rebuilding this array per render is pointer
    *  work — a plain getter suffices. */
-  get totals(): { label: string; total: ComputedRef<CellValue> }[] {
+  get totals(): { label: string; total: ComputedRef<FlyweightLogic.CellValue> }[] {
     const sheet = this.sheet.value;
     if (!sheet) return [];
     const lastRow = sheet.rows;
@@ -191,7 +183,7 @@ class $FlyweightGridPage {
 
   get activeRef() {
     const editing = this.editing.value;
-    return editing ? colLabel(editing.col) + (editing.row + 1) : '';
+    return editing ? FlyweightLogic.Class.colLabel(editing.col) + (editing.row + 1) : '';
   }
   get activeSource() {
     const editing = this.editing.value;
@@ -204,13 +196,13 @@ class $FlyweightGridPage {
   createModel() {
     this.editing.value = null;
     const startedAt = performance.now();
-    const sheet = new FlyweightSheet.Class(ROWS_1M, COLS);
+    const sheet = new FlyweightSheet.Class(FlyweightLogic.Class.ROWS_1M, FlyweightLogic.Class.COLS);
     this.creationMs.value = performance.now() - startedAt;
     this.sheet.value = sheet;
     this.pollCensus();
     // eslint-disable-next-line no-console
     console.log(
-      `[flyweight] created ${(ROWS_1M * COLS).toLocaleString()} cells in ${this.creationMs.value.toFixed(1)}ms`,
+      `[flyweight] created ${(FlyweightLogic.Class.ROWS_1M * FlyweightLogic.Class.COLS).toLocaleString()} cells in ${this.creationMs.value.toFixed(1)}ms`,
     );
   }
 
@@ -257,10 +249,10 @@ class $FlyweightGridPage {
     const scrollEl = this.scrollEl.value;
     if (!this.sheet.value || !scrollEl) return;
     const targetPx =
-      (row * ROW_HEIGHT - VIEWPORT_HEIGHT / 2) / this.scrollScale;
+      (row * FlyweightLogic.Class.ROW_HEIGHT - FlyweightLogic.Class.VIEWPORT_HEIGHT / 2) / this.scrollScale;
     const clamped = Math.max(
       0,
-      Math.min(targetPx, this.totalHeight - VIEWPORT_HEIGHT),
+      Math.min(targetPx, this.totalHeight - FlyweightLogic.Class.VIEWPORT_HEIGHT),
     );
     scrollEl.scrollTop = clamped;
     this.scrollTop.value = clamped;
@@ -270,7 +262,7 @@ class $FlyweightGridPage {
   protected installHarness() {
     (window as unknown as { __fw: unknown }).__fw = {
       rows: () => (this.sheet.value ? this.sheet.value.rows : 0),
-      cols: COLS,
+      cols: FlyweightLogic.Class.COLS,
       createModel: () => this.createModel(),
       hasModel: () => this.hasModel,
       creationMs: () => this.creationMs.value,
