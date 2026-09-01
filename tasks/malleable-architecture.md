@@ -469,6 +469,37 @@ along.
 (Invar ported — immediate dogfooding), Editor second, Desktop third
 as the launch halo.
 
+### The speed doctrine: work is bounded by observation
+
+One generator under every speed win in the stack — **work scales
+with what is OBSERVED, never with what EXISTS**:
+
+- ivue creation: state materializes on first ACCESS — 20M instances
+  are cheap because nobody read their cells yet.
+- Flyweight grid: 20M data cells, ~400 observed DOM cells.
+- Viewport law: component count bounded by the visible window.
+- Reactive leaf tracking: only READ leaves subscribe.
+- Games proved it at industry scale: frustum/occlusion culling —
+  nobody renders what the camera can't see.
+
+Desktop-mode application: native shells do NOT hold this invariant
+uniformly (Finder chokes on 100k-file directories, Explorer
+thumbnails eagerly, file dialogs load whole listings). A flyweight
+file surface treats a million-entry directory like the grid treats
+20M cells — observed window only, instant at any size. Same move
+for media grids, log viewers, search results, web-page surfaces.
+"Nicer than the desktop itself" is credible BECAUSE the OS never
+reduced to this generator.
+
+Honest boundary (so the claim stays a receipt): search latency is
+an INDEXING problem before a rendering problem — Spotlight/Everything
+win on their index, not their UI. The invariant covers the write
+path too: an incremental index (fs events → index deltas) is
+observation-bounded WRITING — index what changed, never rescan the
+world. Precedent: Everything (Windows) beats the native OS with a
+journal-fed index as a solo project; ours adds the malleable,
+agent-extensible surface on top.
+
 ## Sequencing
 
 Post-release, as a ladder — each rung is a shippable artifact:
