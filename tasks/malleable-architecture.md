@@ -876,6 +876,41 @@ along.
 (Invar ported — immediate dogfooding), Editor second, Desktop third
 as the launch halo.
 
+**Harness mode's core surface: the transcript viewer (2026-09-02).**
+The agent is not rendered directly — its append-only `.jsonl` is,
+through a virtual scroller with a shell component PER RECORD KIND
+(message, tool call, tool result, thinking, error), each overridable
+via the ledger. "Override how tool outputs render" is the harness's
+day-one feature. Append-only is what makes it clean, not just fast:
+indices never shift, offsets never move, so an observed window is
+consistent even while the agent is still writing. Opening a 300 MB
+transcript in 50–100 ms is O(observed), by four moves:
+1. **Block index, harness-written.** Sparse sidecar (every Nth
+   record: offset, index, kind, byte length — SSTable-style) appended
+   by the harness AS IT WRITES; lookup = binary search + one ≤N-line
+   block scan. ~0.5 MB index for 2M records. Foreign files without a
+   sidecar: index in a worker, from the END backwards, after first
+   paint.
+2. **Tail-first cold open.** Read the last ~1 MB, parse backwards,
+   paint — the whole open cost is one range read; background indexing
+   then runs end→start, ahead of anyone scrolling up. The number
+   comes from never reading the file, not from reading it fast.
+3. **Heights from index metadata before render.** kind + byte length
+   → estimated height, enough to place the scrollbar proportionally
+   and lay out the window; real measurements refine as records
+   render (the scroller's variable-height discipline with a better
+   prior than a constant).
+4. **Main owns the bytes; the renderer holds a sparse cache.** File
+   handle in main, sync range reads in a worker (placement rule),
+   records over IPC per index range; renderer keeps observed blocks +
+   prefetch margin, evicts far ones — memory O(observed + margin).
+   Live tail is PUSH (the harness is the writer, in main), never
+   polling.
+Search composes: `rg` → byte offset → sparse index → scroll
+position; "jump to where the test failed" is three lookups. Same
+generator as the search architecture above: observed window,
+streamed arrival, process split as trust boundary.
+
 ### The speed doctrine: work is bounded by observation
 
 One generator under every speed win in the stack — **work scales
