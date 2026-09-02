@@ -124,6 +124,25 @@ arriving runner's `class.props` against the declared set and warn on
 mismatch. Everywhere else this failure is silent; here it is a
 tripwire the trust layer gets for free.
 
+**Runner construction in lists (2026-09-02).** Inline
+`:runner="new X.Class({...})"` in a v-for re-runs per parent render —
+and since the shell reads `props.runner` ONCE in setup, that means a
+discarded instance (plus any watchers it registered) every render
+while the child drives the first one forever, and a silently dead
+swap axis. The standard's own rule already forbids it: construction
+is logic, and logic never lives in a template expression. Two
+canonical shapes: (a) **the items ARE the runners** — v-for over
+live entities, `:runner="item"`, identity and disposal ride the
+collection (the pure object-graph form); (b) **keyed runner cache on
+the owner** — `runnerFor(row)` memoizing per item in a WeakMap,
+template reads the method, construct-once identity survives
+re-render (the flyweight pattern in runner clothes; runners holding
+watchers follow the outliving-instance dispose discipline). And (b)
+is where per-row malleability lands: WHICH class `runnerFor`
+constructs is the owner's decision, so it reads the LEDGER — the
+agent's per-row overlay applies in one model method, never in a
+template.
+
 **The namespace is the module shape** — the tier that completes the
 one-shape-per-layer table: values = contracts-as-data, instances =
 the class standard, components = the universal shell, modules = the
