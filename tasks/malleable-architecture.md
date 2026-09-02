@@ -124,6 +124,39 @@ arriving runner's `class.props` against the declared set and warn on
 mismatch. Everywhere else this failure is silent; here it is a
 tripwire the trust layer gets for free.
 
+**Contract timing under global override (2026-09-02).**
+`defineProps(X.Class.props)` evaluates ONCE at SFC module evaluation
+(then Vue caches normalization per component definition). So a slot
+swap BEFORE the module imports carries the whole new contract —
+props, defaults, everything: **global override genuinely overrides
+props on reload**, provided ledger replay runs before component
+imports (lazy route/component imports give this nearly free). A swap
+AFTER module evaluation freezes that definition's contract — and
+mid-session contract changes already belong to the `:is` axis (the
+bootstrap ruling), where a fresh thin SFC reads the subclass
+contract at generation time. The per-rung timing table:
+
+| what changes | mechanism | takes effect |
+| --- | --- | --- |
+| behavior, globally | slot swap | next mount |
+| behavior, one site | injection / runnerFor | next render there |
+| contract, one place, now | component swap (:is) | immediately |
+| contract, globally | slot swap + reload (replay-first) | one reload |
+
+The reload rung is what the recovery doctrine already made cheap —
+"reload from scratch" was carrying the contract axis all along.
+
+**Minimal diffs are BY CONSTRUCTION (the AI-development property).**
+An agent's override artifact is a subclass, and a subclass contains
+only the DELTA: the overridden members plus `...super.props` and the
+new entries. Everything unchanged is inherited, not copied — the
+ledger entry IS the diff, readable as one. Inheritance is the diff
+format (config-object and fork-the-file extensibility carry the
+whole surface; the change drowns). Agent decision procedure, one
+sentence: **take the lowest rung that reaches the goal** — and the
+app can truthfully report timing ("applied; full effect on reload")
+because the table above is knowable, not folklore.
+
 **Runners are NOT the default — self-construction is (2026-09-02).**
 The deciding question is lifetime ownership: a shell-constructed
 runner rides component scope (watchers reaped on unmount, free); an
