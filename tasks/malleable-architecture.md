@@ -214,6 +214,33 @@ four verbs, cheapest first:
   re-evaluates, replay-first). The desktop shell turns hard refresh
   into a view-layer reboot under a running supervisor.
 
+**Injected runners after a slot swap (2026-09-02).** A `:runner`
+passed from outside was constructed from the OLD class; the child
+holds that instance and reads `props.runner` ONCE in setup (by
+design — the total-destructure idiom binds a component to one
+instance for life). Two rulings dissolve "hard to track":
+- **A shell instance is bound to one runner for life; a new runner
+  is a REMOUNT.** The parent keys the child on runner identity, so a
+  fresh runner is automatically a fresh mount — never fight the
+  once-read.
+- **Nobody tracks consumers — consumers derive from a REACTIVE
+  per-seam epoch.** The ledger publishes `Ledger.epochOf(Seam)` as a
+  ref; the owner's `runnerFor` cache key AND the child's `:key` both
+  derive from it. Ledger-apply bumps the seam's epoch → every owner
+  that READ it re-renders → keys change → children remount → setups
+  capture runners regenerated from the new slot (the cache disposes
+  the stale instance per the outliving-instance discipline).
+  Propagation is Vue's dependency tracking; it is observation-bounded
+  (only owners reading that seam's epoch react). Rung B stops being a
+  manual verb and becomes a DERIVATION. The quiescence guard still
+  gates dirty subtrees.
+- **Residue — long-lived singletons** (a session object in a store):
+  the live-instance boundary stands, plus one verb between B and D:
+  **reconstruct with state carry-over** — serialize the instance's
+  cells, construct from the new slot, restore. Generic here because
+  instances are plain objects with enumerable ref-getter cells. Or
+  reload. The OWNER's call, never the consumer's.
+
 D is cheap because the speed doctrine bounds it: reload cost =
 module eval + graph rebuild + first paint, and observation-bounded
 work bounds all three (22ms/1M creation; ~400 observed cells at any
