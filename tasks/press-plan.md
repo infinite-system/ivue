@@ -555,6 +555,15 @@ Vue wave establishes the receipts it builds on. Only leak permitted
 meanwhile: the Invar-driving-Invar clip (W7 #6) as a teaser, framed
 as receipts for the standard, not as a product announcement.
 
+**Wave-2 flagship clip (added 2026-09-02): the live-morph demo.** A
+running app with ticking state takes a prompt, the agent emits a new
+template, runtime compile + Vue's `__VUE_HMR_RUNTIME__.rerender()` —
+the interface morphs around its own live data, half-typed input
+intact, no reload. Mechanics + honest caveats (dev-build
+requirement, createRecord wiring) in tasks/malleable-architecture.md
+invalidation section. Supersedes Invar-driving-Invar as the
+strongest wave-2 asset; stays fully holstered until wave 2.
+
 ### Sequencing
 
 0. **Pre-launch gate (new)**: W12 repo/npm surfaces + W11

@@ -161,12 +161,28 @@ four verbs, cheapest first:
   that subtree remounts, fresh setups read the new slot. Scoped, no
   reload. Behavior only (same definition = frozen contract).
 - **C. Vue's HMR runtime — mid-session definition swap.** This IS
-  the "HMR-style hot-swap protocol" named above:
+  the "HMR-style hot-swap protocol" named above, and it has TWO
+  verbs with different state semantics:
   `__VUE_HMR_RUNTIME__.reload(id, newDefinition)` replaces a
   definition (props included) and remounts every live instance in
-  place. __DEV__-stripped normally, but the malleable app owns its
-  build flags and keeps it. Runtime-compiled generated components
-  sidestep the module cache anyway (definitions born fresh).
+  place (state resets, parents undisturbed);
+  `rerender(id, newRenderFn)` swaps JUST the template of every
+  mounted instance **while their state survives** — a running form
+  keeps its half-typed input as the layout morphs around it.
+  Caveats, stated honestly: the runtime is __DEV__-guarded with no
+  official HMR-only prod flag (demo = ship Vue's dev-ish build,
+  works today; product = custom Vue build unguarding the HMR block,
+  or eventually our own record registry), and plain runtime
+  components need `createRecord(id, comp)` wired by the app.
+  Runtime-compiled generated components sidestep the module cache
+  anyway (definitions born fresh).
+  **THE WAVE-2 FLAGSHIP DEMO lives here**: live app with ticking
+  state → prompt → agent emits template → runtime compile →
+  `rerender()` → the interface morphs around its own live data, no
+  reload. "The app agents can extend while it runs" as 15 seconds of
+  footage. Supersedes Invar-driving-Invar as the strongest wave-2
+  clip; HOLSTERED until wave 2 per the press plan's second-wave
+  rule.
 - **D. Full reload — guaranteed.** Web: location.reload(). Electron:
   `webContents.reload()` — the RENDERER reloads while MAIN persists
   (ledger, agent, running work survive; only the view realm
