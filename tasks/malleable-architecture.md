@@ -1018,6 +1018,22 @@ per session. Each capability is a mechanism the doc already has:
   continue the model conversation → return only the finished
   assistant turn). Feasible (the proxy is a full client both ways);
   an engineering item, not a switch.
+- **Control compaction transitions** — the moment every agent
+  silently loses the most, and no UI shows what went. The proxy owns
+  the wire, so effective context is whatever it FORWARDS: detect the
+  transition by diffing consecutive requests; substitute Invar's own
+  compaction — a summary built from the canonical record stream by an
+  anchor protocol (invar's 85% CHECKPOINT ritual, made generic and
+  enforced via the on-compact hook); PINNED RANGES that survive
+  verbatim (the selection primitive: shift-select, pin); fundamentals
+  re-injected after the cut (the "doctrine edit while builders live"
+  lesson, automated); thresholds set at launch where the agent
+  exposes them (codex `model_auto_compact_token_limit`); and a
+  `compaction` record in the transcript showing exactly what was
+  dropped. Strongest form: the agent's live context becomes the
+  OBSERVED WINDOW while the full transcript stays indexed in main,
+  with an injected "expand" tool (sub-loop) to fetch dropped ranges
+  on demand — O(observed) applied to the model's own context.
 - **Invariant: THE GOVERNOR IS AS OBSERVABLE AS THE GOVERNED.** Every
   injection, hook rewrite, and gated output logs into the same
   transcript as its own record kind, in the same viewer. "No action
