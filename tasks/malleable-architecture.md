@@ -802,6 +802,27 @@ because creation is cheap (rollback-by-replay as the primary safety
 story); and the 94k-line receipt (Invar) that generated code need not
 rot. A competitor copies a feature; the moat is a discipline.
 
+**Positioning (2026-09-02): shapeless at the surface BECAUSE uniform
+underneath.** One record shape, one component shell, one namespace
+form, one window primitive, one proxy — a system whose every part
+has the same shape can take any shape (water fits any vessel because
+every molecule is identical). "Uniform" is the engineering word,
+"shapeless" the product word, one invariant. The structural claim
+to LEAD: this is not an entrant in the agent race, it is THE TRACK —
+it hosts Claude Code / Codex / pi / hermes rather than competing with
+them, and improves as they improve (proxy tap sees all, canonical
+records unify all, window primitive views all, ledger reshapes all).
+Copying it means becoming a control plane, i.e. abandoning one's own
+shape. THE CAUTION that kills shapeless products: a platform with no
+sharp entry point is a platform nobody enters. The wedge is ONE
+undeniable thing — **"see and control what your agent is actually
+doing"** (context as a first-class object, over any agent, 300 MB in
+100 ms) — with shapelessness revealed only after adoption.
+Conditions for "leader," all execution not architecture: the wedge
+ships first and cuts; adapters for the top four agents exist and
+survive format drift; the local-only, open, receipts-first story
+earns the trust that routing every agent through one proxy needs.
+
 ## Positioning: DeepSeek Harness (investigated 2026-09-01)
 
 DeepSeek Harness (OSS, ~2026-08-15, ~90K stars in two days) is the
