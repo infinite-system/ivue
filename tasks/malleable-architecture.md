@@ -170,10 +170,22 @@ four verbs, cheapest first:
   mounted instance **while their state survives** — a running form
   keeps its half-typed input as the layout morphs around it.
   Caveats, stated honestly: the runtime is __DEV__-guarded with no
-  official HMR-only prod flag (demo = ship Vue's dev-ish build,
-  works today; product = custom Vue build unguarding the HMR block,
-  or eventually our own record registry), and plain runtime
-  components need `createRecord(id, comp)` wired by the app.
+  official HMR-only prod flag — but NO FORK is needed (2026-09-02):
+  Vue's esm-bundler dist ships the HMR code with guards compiled to
+  `process.env.NODE_ENV !== 'production'`, resolved by OUR bundler.
+  So **patch-package** flips just the HMR guard sites (the global
+  `__VUE_HMR_RUNTIME__` install + the per-instance registerHMR
+  hooks, ~4 edits) to `true`, leaving every warning/slow-path
+  guarded: HMR-only, full-speed production Vue as a committed diff
+  in patches/, replayed on install — the ledger pattern applied to
+  node_modules (a delta against a dependency, replayed at boot).
+  Version bumps fail the patch LOUDLY (build error, not silent
+  regression; two-minute refresh per Vue upgrade); a Vite transform
+  plugin matching the guard patterns is the version-tolerant
+  upgrade if refreshes get old. Demo needs none of this (dev-mode
+  bundle works today); the patch is what makes the claim
+  product-grade. Plain runtime components still need
+  `createRecord(id, comp)` wired by the app.
   Runtime-compiled generated components sidestep the module cache
   anyway (definitions born fresh).
   **THE WAVE-2 FLAGSHIP DEMO lives here**: live app with ticking
