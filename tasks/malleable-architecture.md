@@ -921,6 +921,57 @@ position; "jump to where the test failed" is three lookups. Same
 generator as the search architecture above: observed window,
 streamed arrival, process split as trust boundary.
 
+**Context as an operable phenomenon (2026-09-02).** The invariant:
+**context is data with a uniform record shape, and O(viewport)
+rendering makes granularity FREE** — "show everything" and "show a
+sleek summary" cost the same, so verbosity is a presentation choice,
+never a performance one. Chat UIs hide context because showing it
+costs O(context); here it costs O(screen). Everything below is that
+invariant applied:
+- **Views are INDEX operations.** "Only user requests," one-line
+  index mode (each record collapsed to a truncated line), tool calls
+  shown/hidden, verbose toggle — each is a filtered sequence of
+  record indices. The harness writes per-kind sub-indexes at append
+  time, so filtering 2M records is a lookup, not a scan; the viewer
+  scrolls the filtered index with the same window. Expand-on-demand
+  renders full content only for expanded records ON SCREEN.
+- **Selection is a set of index RANGES** (click + shift-select),
+  never DOM; export streams those ranges from the file in main —
+  O(exported) at any size.
+- **Transfer is an adapter problem = the uniformity law again.**
+  Codex rollouts, Claude transcripts, pi, hermes each have a JSONL
+  dialect. One CANONICAL record shape (kind, role, content,
+  references, timestamps, parent, + RAW PAYLOAD) and one adapter per
+  agent → one viewer serves every agent, and "port this range into
+  another context" = canonical-out, target-adapter-in. Same-agent
+  round-trips stay lossless via the raw field; cross-agent
+  transplants normalize what is normalizable and expose the rest
+  raw. That IS "equalize," operationally.
+- **Hooks are records.** Every hook invocation logs into the same
+  stream → observable by the same viewer, changeable by the same
+  ledger. "No action opaque" falls out of "everything is a record."
+- **THE EGRESS PROXY IS THE UNIVERSAL OBSERVABILITY TAP.** Every
+  agent's model calls are network egress and already route through
+  the local proxy ring. Not TLS interception — BASE-URL REDIRECTION:
+  agent CLIs honor `ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL`; point
+  them at localhost, forward to the provider, and the proxy sees
+  plaintext system prompts, tool definitions, every turn of Claude
+  Code / Codex / pi / hermes WITHOUT their cooperation. The tap that
+  observes also intervenes: inject context, redact, swap models,
+  normalize tool schemas — observability and end-to-end control are
+  ONE mechanism, the one built for egress. Security ring,
+  integration layer, agent instrumentation: three superpowers, one
+  proxy.
+Honest boundaries: transcript formats drift with agent versions
+(adapters need upkeep; the raw field is the insurance); cross-agent
+equivalence is partial (tool semantics differ); transcripts hold
+secrets — export REDACTS by default, keyed on record kinds; an agent
+that ignores base-URL overrides needs a local CA (an install step on
+the user's own machine). Product line: **context as a first-class
+object — observable, filterable, selectable, portable, re-presentable
+at any granularity, over every agent you run.** Nobody ships this;
+developers debug agents with grep over JSONL today.
+
 ### The speed doctrine: work is bounded by observation
 
 One generator under every speed win in the stack — **work scales
