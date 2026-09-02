@@ -186,8 +186,18 @@ so none of it was load-bearing. Reload-only is the REDUCED design:
   2. **The agent never lived in the renderer** (main / worker), so a
      renderer reload is invisible to a running turn. Coalesce reloads
      to turn boundaries.
-  3. **Double-buffered reload in Electron**: load the new renderer in
-     a hidden BrowserView, restore, swap when painted. Zero flicker —
+  3. **Double-buffered reload in Electron** (`WebContentsView` on a
+     `BaseWindow` — BrowserView is deprecated since Electron 30): load
+     the new renderer hidden, restore, swap when painted. Both views
+     are live compositor surfaces, so the swap is ONE repaint with no
+     intermediate frame. Readiness is the APP's signal, never
+     `did-finish-load` (which precedes replay + restore): restore
+     state → lay out → restore scroll → two rAFs → IPC "restored" →
+     swap → destroy old. Optional: a WARM STANDBY renderer already
+     booted on the base graph, needing only the ledger delta + the
+     snapshot to catch up — latency approaches snapshot transfer. No
+     cross-fade (views lack opacity): a hard cut, which is the goal.
+     Zero flicker —
      and a viewer CANNOT distinguish a double-buffered reload from a
      hot swap, so the wave-2 demo survives visually intact and
      becomes honest ("applied, your input is still there") instead of
