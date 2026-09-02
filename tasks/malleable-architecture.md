@@ -1030,6 +1030,47 @@ Precedent: Everything (Windows) beats the native OS with a
 journal-fed index as a solo project; ours adds the malleable,
 agent-extensible surface on top.
 
+### The window primitive: scroller + grid are ONE thing (2026-09-02)
+
+The virtual scroller and the flyweight grid are one primitive in
+two dimensions: **a window over an index-addressable source, where
+the view never holds more than what is observed.** The grid is the
+scroller with a second axis. Everything else is a SOURCE ADAPTER —
+a function from an index range to items:
+
+| source | addressable by | adapter |
+| --- | --- | --- |
+| JSONL / logs | record | block index (the transcript design) |
+| CSV | row | row-offset index (quoted newlines need a real indexer) |
+| SQL dump | statement | statement index |
+| SQLite / DuckDB | query | keyset pagination — the DB IS the index |
+| directory | entry | the fs walker |
+| search / API | result | streaming arrival |
+
+An adapter is a `Static()` capability class, so the AGENT can write
+one on demand: "summon machinery" concretely = twenty lines of
+adapter, and the primitive supplies scrolling, selection, filtering,
+export, and per-cell shell components for free.
+
+**Memory never grows with data** — the Electron half of the claim:
+main holds the handle/mmap, the renderer holds window + prefetch
+margin and evicts the rest. Footprint is a function of the SCREEN,
+not the file; a 2 GB CSV costs the renderer what a 2 KB one does.
+The desktop shell is what gives you one process that owns bytes and
+one that owns pixels.
+
+**Honest boundary → the missing piece: viewing is O(viewport),
+COMPUTING is not.** Sort, filter-by-value, aggregate, join touch the
+whole dataset. The answer is the doctrine on the index path: a
+COMPUTE ENGINE IN MAIN — DuckDB (or SQLite) reads CSV/Parquet lazily,
+vectorized, streams results (100M rows aggregated in seconds); the
+grid windows the RESULT. Engine scales compute, primitive bounds
+rendering, the process split between them is the trust boundary.
+"Open a 2 GB CSV, top customers by revenue, scroll the answer" =
+DuckDB in main + one adapter + the grid. The flyweight grid's
+columnar ground truth was already this shape at 20M cells; DuckDB is
+the same idea with a query language.
+
 ## Gap register — fresh-eyes review (2026-09-02)
 
 A full read after two days of accretion. The design contradicts
