@@ -124,6 +124,28 @@ arriving runner's `class.props` against the declared set and warn on
 mismatch. Everywhere else this failure is silent; here it is a
 tripwire the trust layer gets for free.
 
+**Runners are NOT the default — self-construction is (2026-09-02).**
+The deciding question is lifetime ownership: a shell-constructed
+runner rides component scope (watchers reaped on unmount, free); an
+injected runner is an outliving instance someone must dispose.
+Injection-as-default would make manual lifecycle the norm for every
+component to serve flexibility most sites never use. And it buys
+nothing: `new X.Class(props, emit)` reads the MUTABLE namespace slot
+late (at mount), so the default path is already swappable globally —
+the ledger's mass-customization works THROUGH self-construction. The
+malleability ladder: (1) namespace slot swap — global, zero
+call-site changes; (2) injection — per-site/per-row surgery; (3)
+component swap — contract changes. The law is uniformity of SEAMS,
+not uniformity of USE: the nullish IS the seam, self-construction
+its un-injected state. The one domain where injection is rightly
+default: **the instance predates or outlives the view** (entity
+views over the object graph, `:runner="item"`) — constructing a
+second model inside the view would fork identity. Criterion, not
+policy: does this instance exist independently of this view? Yes →
+inject; no (it IS the view's state) → self-construct. Same split the
+standard already draws between component-scoped and outliving
+instances.
+
 **Runner construction in lists (2026-09-02).** Inline
 `:runner="new X.Class({...})"` in a v-for re-runs per parent render —
 and since the shell reads `props.runner` ONCE in setup, that means a
