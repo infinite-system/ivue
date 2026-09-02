@@ -107,12 +107,25 @@ may carry a wider contract — while being itself selected by a prop.
 The ruling that makes the circle structurally impossible:
 
 > **Runner swap is contract-PRESERVING; contract change is a
-> COMPONENT swap.** The declared props belong to the SHELL (base
-> class); a swapped-in runner honors them — Liskov applied to the
-> shell. A variant needing NEW inputs is not a runner swap: the agent
-> generates a thin SFC whose `defineProps(Variant.Class.props)` reads
-> the subclass's static getter fresh, and swaps at the `:is` level —
-> the template axis doing exactly its job.
+> COMPONENT swap — at the component's OWN inner `:is`.** The declared
+> (parent-facing) props belong to the SHELL (base class); a swapped-in
+> runner honors them — Liskov applied to the shell. A variant needing
+> NEW inputs is not a runner swap: the agent generates a thin view
+> whose `defineProps` reads the subclass contract fresh, and the
+> component renders it through ITS OWN `<component :is="model.template"
+> :runner="model">`. The parent never changes — it keeps rendering
+> `<InvoiceRow>` — because every component is its own swap point
+> (the uniformity law delivering swap reach by construction; static
+> imports in parents are irrelevant, since no component is ever
+> replaced, only re-driven and re-skinned from within). The inner
+> view's contract collapses to ONE prop — the runner — so a variant's
+> new inputs are runner state/derivations/ledger config, and its
+> `static get props()` describes the RUNNER's inputs. The only case
+> that touches a parent: a variant needing data only the parent holds
+> — a feature spanning two components by definition (the atomic-unit
+> case), not a reach failure. (Review note 2026-09-02: a fresh-eyes
+> pass misread this as a parent-level swap and flagged static
+> imports as a wall; the user's reading above is the correct one.)
 
 Escape valves for the in-between cases, both already shipped shapes:
 parent-constructed runner instances (variant inputs flow through the
