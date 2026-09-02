@@ -146,6 +146,43 @@ contract at generation time. The per-rung timing table:
 The reload rung is what the recovery doctrine already made cheap —
 "reload from scratch" was carrying the contract axis all along.
 
+**Invalidation mechanics (2026-09-02) — the fact that decides it:
+the ESM module cache.** `app.unmount()` + remount does NOT re-read
+contracts — re-import returns the cached module; the module-scope
+props expression never re-evaluates. So invalidation is a ladder of
+four verbs, cheapest first:
+
+- **A. Nothing — drift-in at next mount.** Slot swap reaches future
+  `new X.Class` reads; live instances finish on the old class until
+  their site naturally remounts. Correct for most behavior changes,
+  per "constructions are malleable, live instances are not."
+- **B. Key-bump — the surgical remount verb.** Owner holds an
+  `overlayEpoch` ref; subtrees key on it; ledger-apply bumps it →
+  that subtree remounts, fresh setups read the new slot. Scoped, no
+  reload. Behavior only (same definition = frozen contract).
+- **C. Vue's HMR runtime — mid-session definition swap.** This IS
+  the "HMR-style hot-swap protocol" named above:
+  `__VUE_HMR_RUNTIME__.reload(id, newDefinition)` replaces a
+  definition (props included) and remounts every live instance in
+  place. __DEV__-stripped normally, but the malleable app owns its
+  build flags and keeps it. Runtime-compiled generated components
+  sidestep the module cache anyway (definitions born fresh).
+- **D. Full reload — guaranteed.** Web: location.reload(). Electron:
+  `webContents.reload()` — the RENDERER reloads while MAIN persists
+  (ledger, agent, running work survive; only the view realm
+  re-evaluates, replay-first). The desktop shell turns hard refresh
+  into a view-layer reboot under a running supervisor.
+
+D is cheap because the speed doctrine bounds it: reload cost =
+module eval + graph rebuild + first paint, and observation-bounded
+work bounds all three (22ms/1M creation; ~400 observed cells at any
+data size). The malleability architecture and its reset button are
+the same architecture. Discipline riding along: route, ledger, and
+domain state persist (main process / IndexedDB); the graph REBUILDS
+on boot rather than being precious. Verb per rung: A drift-in, B
+"this surface now," C "this contract everywhere now," D "globally,
+guaranteed."
+
 **Minimal diffs are BY CONSTRUCTION (the AI-development property).**
 An agent's override artifact is a subclass, and a subclass contains
 only the DELTA: the overridden members plus `...super.props` and the
