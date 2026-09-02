@@ -304,6 +304,16 @@ template renders `<component :is>` when a dynamic view is present and
 its own markup otherwise. The runner class receives the same
 props/emit either way.
 
+**Superseding tier (review 2026-09-02): compile in main, load as a
+blob module.** With the backend compiling TS + templates + SFCs
+(see the gap register's #3 ruling), the renderer receives finished
+JavaScript and imports it via a blob URL under CSP
+`script-src 'self' blob:` — NOT unsafe-eval. The runtime-string
+tier's two costs above (14 kB runtime compiler, no SFC-time
+optimizations) both disappear: compiler-dom in build mode emits
+patch flags and hoisting for generated templates exactly as for
+shipped ones. The hidden eval window becomes unnecessary.
+
 ### What the shell costs (so uniformity is defensible everywhere)
 
 - **Per render**: the fallback is one boolean; `<component :is>`
@@ -643,10 +653,23 @@ product that refuses its owner the same setting is preaching.
 
 **The one held line (flag, not a wall): egress stays default-deny even
 in unrestricted mode** — one switch away, never a prompt-per-call. The
-asymmetry is not about trust: a deleted file replays back from the
-ledger, but data that already left the machine cannot be un-sent. It
-is the single failure recovery cannot undo. Filesystem, spawn, and
-native modules default OPEN on the user's own machine.
+asymmetry is not about trust: data that already left the machine
+cannot be un-sent. Filesystem, spawn, and native modules default OPEN
+on the user's own machine.
+
+**Correction (review 2026-09-02): the ledger recovers the APP, not the
+user's data.** Replay-a-prefix restores overlay code; it holds nothing
+of ~/Documents. A bad overlay deleting user files under the
+unrestricted default is as unrecoverable as exfiltration — so the
+"recovery buys the right to run unrestricted" argument needed one
+more rule to be true: **THE TRASH RULE — the fs capability handle
+never hard-deletes. Delete means move-to-trash, at every scope,
+always.** One rule in one handle, and the argument holds again.
+`spawn` remains the honest hole (a shell `rm` bypasses the handle);
+it stays open per the YOLO-consistency ruling, but recovery does NOT
+reach spawn side effects — they are audited always, and the scoped
+tier implements spawn through an OS sandbox (bwrap/Landlock/Seatbelt,
+the layer DeepSeek Harness is ahead on).
 
 The scoped tier earns its existence the moment overlays become
 shareable (which the ledger already makes possible): building the
@@ -828,6 +851,107 @@ moves, all the same doctrine:
 Precedent: Everything (Windows) beats the native OS with a
 journal-fed index as a solo project; ours adds the malleable,
 agent-extensible surface on top.
+
+## Gap register — fresh-eyes review (2026-09-02)
+
+A full read after two days of accretion. The design contradicts
+nothing in itself and the earlier stress tests still resolve; these
+are the omissions a build would meet. Severity-tagged; each carries
+its proposed ruling. (One fatal finding from the same review — that
+static parent imports block child swaps — was withdrawn: the swap
+is at each component's OWN inner `:is`; ruling refined above.)
+
+### Fatal-tier (a false claim; a missing mechanism)
+
+1. **Recovery ≠ user data.** FIXED IN PLACE above: the TRASH RULE on
+   the fs handle; spawn named as outside recovery, audited, sandboxed
+   in the scoped tier.
+2. **"No build, ever" is true of Reactive() only.** Generated code is
+   TypeScript; the browser runs JavaScript; the gate is Node. RULING:
+   **compile in main (desktop) or a service (web); the renderer only
+   ever receives JavaScript.** Pipeline: `ts.transpileModule` (ms) for
+   TRIAL; full `tsc` language service against the app's OWN SHIPPED
+   `.d.ts` bundle in the background as the gate for COMMITTED (the
+   app carries its types — that is what makes generations verifiable,
+   not merely runnable); `@vue/compiler-sfc`/`compiler-dom` in build
+   mode for views. Delivery: JS text over IPC → blob-URL `import()`
+   under `script-src blob:` (no unsafe-eval). Wiring detail: blob
+   modules cannot resolve bare specifiers, so the transpile step
+   rewrites `import ... from 'ivue'`/`'vue'` to a renderer-exposed
+   module registry (or an import map, which Electron honors).
+
+### Scoping-tier (real gaps; proposed rulings)
+
+3. **Emits and slots — the two unaddressed contract channels.**
+   Emits follow the props rulings (a new event = an inner component
+   swap) but the LISTENER lives in the parent — a variant that emits
+   something new is a feature spanning two components (atomic-unit
+   case; the ledger entry names both halves). Slots are render
+   functions, not data: declare them as data — `static get slots()`
+   (names + expected slot props) — so the mount-time verifier covers
+   them.
+4. **Overlay composition semantics + the ledger schema.** Same-seam
+   overlays CHAIN as linear inheritance in ledger order (each
+   subclasses the previous result). Inter-overlay dependency is a
+   ledger FIELD; removing an entry quarantines its dependents rather
+   than orphaning them; non-prefix removal = replay-with-skip. Ledger
+   entry schema: id, seam address (stable id, see flags), kind
+   (class | view | backend | patch | data), base-version hash, state
+   (trial | committed | quarantined), dependencies, timestamp.
+5. **Data schema malleability.** "Add a notes field" needs a home.
+   RULING: **base columns + a sparse overlay column** — a JSON
+   extension bag per entity. Overlays never migrate the base schema;
+   a rolled-back overlay leaves its data inert, never destroyed. The
+   flyweight-overlay pattern applied to storage.
+6. **Renderer-realm isolation does not exist for the scoped tier.**
+   Capability objects isolate the backend half; UI overlays share the
+   JS realm with the base app inside a window. RULING: renderer trust
+   is all-or-nothing PER WINDOW; scoped-tier UI overlays get their own
+   realm (sandboxed iframe or BrowserView with a postMessage
+   contract). Stated now so the sharing story never over-promises.
+7. **Rung B destroys dirty user state.** Key-bump remounts reset
+   state; a ledger apply mid-form kills the user's input. RULING: a
+   QUIESCENCE GUARD — never remount a subtree with dirty state; defer
+   to idle or navigation; prefer `rerender()` for pure template
+   changes (it preserves state by design).
+8. **"Items are runners" conflated model and view-model.** The
+   entity in the runner slot leaves the shell no view class to read
+   its contract from. RULING: **the entity rides in as a PROP to a
+   self-constructed, component-scoped view-model** — identity by
+   reference, lifecycle automatic. Injection stays only for runners
+   that genuinely predate the view (a long-lived editor session).
+   Self-construction is the default even more thoroughly than stated.
+9. **The pointing mechanism is assumed.** "Walk the live graph from
+   the thing the user pointed at" needs a registry: the shell
+   registers runner ↔ component uid; namespaces are enumerable; DOM →
+   component → runner → namespace in three lookups. Cheap; must
+   exist.
+10. **Trial promotion is a smoke test.** "Healthy mount + grace
+    period" proves no crash, not correctness. RULING: **the test is a
+    subclass** — the agent generates the test beside the overlay;
+    trial promotes only when it passes. The article's pattern becomes
+    the trust layer's evidence standard.
+
+### Flags (record; no ruling needed yet)
+
+- Seam addresses need STABLE IDs — a base rename must not orphan
+  overlays (the upgrade-diff paragraph assumes this; make it a field).
+- Egress is `default-src`, not just `connect-src` — image beacons and
+  form actions leak; the rule is that the renderer has NO direct
+  network at all (proxy ring), which covers every vector.
+- Semantic drift on base upgrade (member exists, behavior changed) is
+  undetectable statically — trial/quarantine catch crashes, not
+  silent meaning changes. An honest limit.
+- Multi-window Electron = per-renderer module caches; invalidation
+  verbs are per window.
+- HMR records accumulate definitions over a long session — replace
+  per seam, never append.
+- The doc lists boundaries but no explicit IMPOSSIBILITY list; add one
+  when the shell lands (cannot rewire a live instance without
+  re-creation; cannot change a mounted definition's contract without
+  HMR reload; cannot un-send egress; cannot recover user data via the
+  ledger — only via the trash rule; cannot isolate overlays within one
+  renderer realm).
 
 ## Sequencing
 
