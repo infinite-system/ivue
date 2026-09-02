@@ -1034,6 +1034,33 @@ per session. Each capability is a mechanism the doc already has:
   OBSERVED WINDOW while the full transcript stays indexed in main,
   with an injected "expand" tool (sub-loop) to fetch dropped ranges
   on demand — O(observed) applied to the model's own context.
+- **INDEX INSTEAD OF SUMMARY (user ruling 2026-09-02).** A summary
+  is a PREDICTION (decides what matters before the need is known;
+  what it guesses wrong is gone); an index is a DEFERRAL (demotes
+  records from in-context to one-call-away; the moment of need
+  decides). Nothing dropped, only distance changed — O(observed)
+  applied to the model's context with the map of the unobserved kept
+  visible. Mechanism: the viewer's index mode, re-exposed to the
+  model — same block index in main, HIERARCHICAL (sessions → turns →
+  records; `retrieve('turn:12')` returns that turn's index). Keys are
+  meaningful AND unique: `agent:47:result-of-long-thinking-about-x`
+  (slug for meaning, record index for uniqueness; append-only makes
+  them stable). Gists: harness-written at append time (always
+  present), agent-named for important results ("key this as…"),
+  background-upgraded later; SEARCH is the floor for bad gists. Two
+  injected tools via the sub-loop: `retrieve(key|range|query)` and
+  `pin(key)` (resident across every future cut). Settings own the
+  cost dial — index depth, gist length, kinds indexed, auto-pin —
+  default RELIABILITY OVER TOKEN SAVINGS (tens of thousands of index
+  tokens vs millions of content tokens, lossless by reference).
+  Bonuses: cross-session memory without a vector DB (keys namespaced
+  by session; a table of contents + grep is most of what memory
+  products sell); the agent reasons about its own history
+  structurally ("already concluded at agent:47"). Invar's conductor
+  anchors were hand-written index entries — this automates them.
+  Boundaries: gist quality bounds skimming (search is the floor);
+  over/under-retrieval (settings; auto-expand-on-reference); a
+  retrieve is a local sub-loop hop, not free.
 - **Invariant: THE GOVERNOR IS AS OBSERVABLE AS THE GOVERNED.** Every
   injection, hook rewrite, and gated output logs into the same
   transcript as its own record kind, in the same viewer. "No action
