@@ -83,6 +83,47 @@ not a convention. Migration follows the docs-components rule:
 opportunistic when touched, never a bulk sweep; new components born
 in the shape.
 
+**Contract home upgrade (2026-09-02): the contract moves ONTO the
+class as a plain static getter** — `static get props()` returning the
+propsWithDefaults call. No Static() machinery needed (static
+inheritance and `super` are native; a getter read is data, nothing to
+bind). Three properties by construction: UNIQUE (each read builds a
+fresh object — components can never share a mutable contract; read
+once per SFC, so cost is nil), EXTENSIBLE (`static override get
+props() { return { ...super.props, extra } }` — contract inheritance
+IS class inheritance, and noImplicitOverride narrates it), and
+SINGLE-OWNER (the class carries state, derivation, methods, AND
+contract — the namespace's one-dot enumeration now includes the
+contract). One rule rides along: entry objects are built INSIDE the
+getter body — a hoisted shared entry const reintroduces the sharing
+hazard through the shallow spread. Receipt pending: convert
+MediaField/ContactField (the shipped subclass pair) before this
+becomes skill doctrine.
+
+**The runner-contract bootstrap, dissolved (2026-09-02).** The knot:
+props are declared ONCE at component definition
+(`defineProps(X.Class.props)`), but the runner arrives at MOUNT and
+may carry a wider contract — while being itself selected by a prop.
+The ruling that makes the circle structurally impossible:
+
+> **Runner swap is contract-PRESERVING; contract change is a
+> COMPONENT swap.** The declared props belong to the SHELL (base
+> class); a swapped-in runner honors them — Liskov applied to the
+> shell. A variant needing NEW inputs is not a runner swap: the agent
+> generates a thin SFC whose `defineProps(Variant.Class.props)` reads
+> the subclass's static getter fresh, and swaps at the `:is` level —
+> the template axis doing exactly its job.
+
+Escape valves for the in-between cases, both already shipped shapes:
+parent-constructed runner instances (variant inputs flow through the
+CONSTRUCTOR — props are the view's contract, constructor args are
+the runner's contract; ChooseField's precedent), and attrs
+fallthrough for one or two optional extras. Bonus only
+contracts-as-data gets: the shell can VERIFY at mount — compare the
+arriving runner's `class.props` against the declared set and warn on
+mismatch. Everywhere else this failure is silent; here it is a
+tripwire the trust layer gets for free.
+
 **The namespace is the module shape** — the tier that completes the
 one-shape-per-layer table: values = contracts-as-data, instances =
 the class standard, components = the universal shell, modules = the
