@@ -60,46 +60,23 @@
         pointer-events: none;
       }
 
+      /* ONE image from the single source of truth — the same move
+         og-image.html makes. This used to hand-build the mark (a
+         #0d1226 tile plus an inline teal infinity) beside a cropped
+         slice of the wordmark, so a brand change updated the wordmark
+         and left the tile on the old mark.
+         Geometry preserved: the PNG is 993x384 with its 322px tile at
+         (31,31), so 212.8px wide renders the tile at 69px and the
+         6.64px transparent inset puts its visible corner back at
+         (60,60) — where the hand-built tile sat. */
       .lockup {
         position: absolute;
         z-index: 1;
-        top: 54px;
-        left: 53px;
-        width: 205px;
-        height: 79px;
-      }
-
-      .lockup-mark {
-        position: absolute;
-        top: 6px;
-        left: 7px;
-        width: 69px;
-        height: 69px;
-        border-radius: 17px;
-        background: #0d1226;
-      }
-
-      .lockup-mark svg {
+        top: 53.36px;
+        left: 53.36px;
+        width: 212.8px;
+        height: auto;
         display: block;
-        width: 100%;
-        height: 100%;
-      }
-
-      .lockup-wordmark {
-        position: absolute;
-        top: 0;
-        left: 89px;
-        width: 116px;
-        height: 79px;
-        overflow: hidden;
-      }
-
-      .lockup-wordmark img {
-        position: absolute;
-        top: 0;
-        left: -94px;
-        width: 205px;
-        max-width: none;
       }
 
       .headline {
@@ -212,36 +189,11 @@
         </defs>
       </svg>
 
-      <div class="lockup" role="img" aria-label="ivue — Infinite Vue">
-        <span class="lockup-mark">
-          <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-            <path
-              d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
-              stroke="url(#lockup-mark-gradient)"
-              stroke-width="2.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <defs>
-              <linearGradient
-                id="lockup-mark-gradient"
-                x1="8"
-                y1="14"
-                x2="40"
-                y2="34"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop stop-color="#38bdf8" />
-                <stop offset="0.5" stop-color="#2dd4bf" />
-                <stop offset="1" stop-color="#34d399" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </span>
-        <span class="lockup-wordmark" aria-hidden="true">
-          <img src="../public/brand-lockup-dark.png" alt="" />
-        </span>
-      </div>
+      <img
+        class="lockup"
+        src="../public/brand-lockup-dark.png"
+        alt="ivue — Infinite Vue"
+      />
 
       <h1 class="headline">
         <span>
