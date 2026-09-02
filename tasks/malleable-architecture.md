@@ -993,6 +993,38 @@ object — observable, filterable, selectable, portable, re-presentable
 at any granularity, over every agent you run.** Nobody ships this;
 developers debug agents with grep over JSONL today.
 
+**Hosted agents: passthrough vs governed (2026-09-02) = the trust
+tiers applied to agents.** Same tap; intervention off or on. Reduced
+further: governance is a SET of independently switchable
+capabilities with two presets (passthrough / governed), per agent,
+per session. Each capability is a mechanism the doc already has:
+- **Unified hooks** — the uniformity law on the control plane: a
+  canonical hook shape (pre-tool, post-tool, on-turn, on-stop,
+  on-compact) + one adapter per agent's dialect (Claude Code settings
+  hooks, Codex notify, …). Write a hook once; fires everywhere.
+- **Preload if missing** — the agent-fleet skill's preload law,
+  automated: the proxy sees every system prompt; absent fundamentals
+  (IBR, the ivue skill, invariants) get injected. Last night's
+  paste-buffer ritual becomes a checkbox.
+- **Audit + validate** — the conductor doctrine productized: two-arm
+  acceptance (gate, invariants check, structural review) on what any
+  hosted agent produces, Invar as conductor over agents it does not
+  own.
+- **Extend = tool injection at the tap** — add tool definitions to
+  outbound requests and fulfil them in the proxy (give Codex the
+  ivue gate as a tool). THE HONEST HARD PART: the hosted agent's
+  loop does not know the injected tool, so the proxy cannot hand the
+  call back — it must run a SUB-LOOP (intercept tool use → execute →
+  continue the model conversation → return only the finished
+  assistant turn). Feasible (the proxy is a full client both ways);
+  an engineering item, not a switch.
+- **Invariant: THE GOVERNOR IS AS OBSERVABLE AS THE GOVERNED.** Every
+  injection, hook rewrite, and gated output logs into the same
+  transcript as its own record kind, in the same viewer. "No action
+  opaque" includes Invar's own actions — the hole a user would look
+  for first, and the honest answer to "why route my agents through
+  you": because you can see everything it did to them.
+
 ### The speed doctrine: work is bounded by observation
 
 One generator under every speed win in the stack — **work scales
