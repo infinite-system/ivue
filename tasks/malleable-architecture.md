@@ -159,8 +159,51 @@ contract at generation time. The per-rung timing table:
 The reload rung is what the recovery doctrine already made cheap —
 "reload from scratch" was carrying the contract axis all along.
 
-**Invalidation mechanics (2026-09-02) — the fact that decides it:
-the ESM module cache.** `app.unmount()` + remount does NOT re-read
+**THE SIMPLIFICATION (user ruling 2026-09-02): RELOAD IS THE ONLY
+VERB.** The deletion test: remove the live machinery (drift-in,
+epochs, key-bumps, the HMR runtime flip) and correctness survives —
+so none of it was load-bearing. Reload-only is the REDUCED design:
+
+- **Apply, rollback, quarantine, safe mode are ONE operation.** Apply
+  = write the ledger, reload. Rollback = reload with a shorter
+  ledger. Safe mode = reload with an empty one. The trust layer and
+  the apply path were always the same verb.
+- **One effect model for every change.** Behavior and contract
+  changes land identically (ledger replay before import, fresh
+  realm). The timing table below collapses to one row; the agent's
+  "lowest rung" procedure disappears; the module-cache problem, the
+  injected-runner problem, and the entire old-instance-under-new-
+  class bug class become UNREACHABLE rather than managed.
+- **Three requirements, all already in the vocabulary:**
+  1. **Observation-bounded state restore.** Instances are plain
+     objects whose cells materialize on first read, so
+     `Object.keys()` over the graph's roots yields exactly the
+     observed state — snapshot that, reload, restore. Unread state
+     was default; form drafts ARE cells, so dirty forms survive
+     without a special rule; route lives in the URL; scroll is a few
+     numbers per surface. (The state carry-over verb, applied to the
+     whole app.)
+  2. **The agent never lived in the renderer** (main / worker), so a
+     renderer reload is invisible to a running turn. Coalesce reloads
+     to turn boundaries.
+  3. **Double-buffered reload in Electron**: load the new renderer in
+     a hidden BrowserView, restore, swap when painted. Zero flicker —
+     and a viewer CANNOT distinguish a double-buffered reload from a
+     hot swap, so the wave-2 demo survives visually intact and
+     becomes honest ("applied, your input is still there") instead of
+     "no reload."
+- **Honest costs:** truly ephemeral UI (open dropdown, text
+  selection) resets unless captured; the web tier cannot
+  double-buffer and blinks (demo tier, acceptable); state not
+  reachable from a root is not snapshotted — the discipline the
+  standard already has.
+
+The invalidation ladder below (A–C) is DEMOTED TO RESERVE: recorded
+because the analysis is correct and may be wanted for a hot path
+someday, but NOT part of the base design. Rung D is the design.
+
+**Invalidation mechanics (reserve; superseded above) — the fact that
+decides it: the ESM module cache.** `app.unmount()` + remount does NOT re-read
 contracts — re-import returns the cached module; the module-scope
 props expression never re-evaluates. So invalidation is a ladder of
 four verbs, cheapest first:
@@ -214,7 +257,9 @@ four verbs, cheapest first:
   re-evaluates, replay-first). The desktop shell turns hard refresh
   into a view-layer reboot under a running supervisor.
 
-**Injected runners after a slot swap (2026-09-02).** A `:runner`
+**Injected runners after a slot swap (2026-09-02; MOOT under
+reload-only — every instance is reconstructed from the new slots at
+boot; kept for the reserve ladder).** A `:runner`
 passed from outside was constructed from the OLD class; the child
 holds that instance and reads `props.runner` ONCE in setup (by
 design — the total-destructure idiom binds a component to one
@@ -936,7 +981,9 @@ is at each component's OWN inner `:is`; ruling refined above.)
    is all-or-nothing PER WINDOW; scoped-tier UI overlays get their own
    realm (sandboxed iframe or BrowserView with a postMessage
    contract). Stated now so the sharing story never over-promises.
-7. **Rung B destroys dirty user state.** Key-bump remounts reset
+7. *(MOOT under reload-only — drafts are cells and survive the
+   snapshot; kept for the reserve ladder.)* **Rung B destroys dirty
+   user state.** Key-bump remounts reset
    state; a ledger apply mid-form kills the user's input. RULING: a
    QUIESCENCE GUARD — never remount a subtree with dirty state; defer
    to idle or navigation; prefer `rerender()` for pure template

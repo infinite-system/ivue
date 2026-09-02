@@ -559,7 +559,9 @@ as receipts for the standard, not as a product announcement.
 running app with ticking state takes a prompt, the agent emits a new
 template, runtime compile + Vue's `__VUE_HMR_RUNTIME__.rerender()` —
 the interface morphs around its own live data, half-typed input
-intact, no reload. Mechanics + honest caveats (dev-build
+intact. (Ruling 2026-09-02: the product reloads, double-buffered —
+visually indistinguishable from a hot swap, and the honest claim is
+"applied, your input is still there," never "no reload.") Mechanics + honest caveats (dev-build
 requirement, createRecord wiring) in tasks/malleable-architecture.md
 invalidation section. Supersedes Invar-driving-Invar as the
 strongest wave-2 asset; stays fully holstered until wave 2.
