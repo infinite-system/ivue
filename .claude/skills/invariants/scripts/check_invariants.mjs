@@ -25,7 +25,8 @@
 //   check_invariants.mjs --refs [ROOT]   scan code for
 //                                        'invariant: <Name> (<root-relative contract path>)'
 //                                        annotations, test-file generator headers, source
-//                                        tripwires, and companion links; fail on orphans
+//                                        tripwires, companion links, and italic prose
+//                                        citations; fail on orphans
 //                                        (name, anchor, or contract path that no longer
 //                                        resolves); report per-record annotation coverage
 //   --version                            print checker + schema version (skew diagnosis)
@@ -37,11 +38,10 @@
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative, resolve, dirname, basename } from 'node:path';
 import { execSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 
 // Bump when schema fields or validation semantics change.
-const VERSION = '3.1.0';
+const VERSION = '3.2.0';
 const GENERATOR_SUFFIX = '.generator.md';
 const LEGACY_LATTICE_SUFFIX = '.lattice.md';
 const GENERATOR_HEADING = '## Generator';
@@ -82,50 +82,19 @@ const OPTIONAL = [
 const STATUSES = new Set(['established', 'provisional']);
 const DATE_RE = /^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/;
 const EXCLUDED_DIRS = new Set(['node_modules', '.git', '.claude']);
-// Root-relative directories the walk never enters: gitignored scratch and build
-// output. None hold contracts, but all are FULL of annotation-shaped text
-// (transcripts quote `invariant:` lines, bundles inline source comments), and
-// scanning them reports "contract not found" for paths never meant to resolve
-// from there. This walk reads the FILESYSTEM, not git, so .gitignore does not
-// protect it. The defaults are this repo's; `--exclude=a,b` adds more per run.
+// `tmp/` is gitignored scratch and `agent-dispatches/` is archived agent
+// correspondence. Neither holds contracts, but both are FULL of annotation-shaped
+// text: builders quote `invariant:` lines in their transcripts and briefs cite
+// contracts by name. Scanning them reports thousands of "contract not found" for
+// relative paths that were never meant to resolve from there. This walk reads the
+// FILESYSTEM, not git, so .gitignore does not protect it — the same property that
+// once made a macOS `._Foo.ts` artifact red the grammar gate.
 const EXCLUDED_DIRECTORY_PATHS = new Set([
+  'scripts/retired-smokes',
   'tmp',
-  'dist',
-  'docs_v2/.vitepress/.temp',
-  'docs_v2/.vitepress/cache',
-  'docs_v2/.vitepress/dist',
-  'docs/docs/.vitepress/dist', // the v1 docs site's gitignored build
-  'newsletter/.wrangler',
-  'newsletter/dashboard/dist',
+  'agent-dispatches',
+  '.invar',
 ]);
-const EXCLUDE_FLAG_PREFIX = '--exclude=';
-// --test-glob=<glob>[,<glob>]: ADDITIONAL root-relative globs whose matches
-// are treated as generator-header test files (default detection is the
-// *.test.ts suffix). This is what lets the checker read a constitution in a
-// .test.mjs file — its own test suite included. `**` any depth, `*` within
-// a segment, `?` one character.
-const TEST_GLOB_FLAG_PREFIX = '--test-glob=';
-const EXTRA_TEST_GLOB_RES = [];
-function testGlobToRegExp(glob) {
-  let pattern = '';
-  for (let index = 0; index < glob.length; index++) {
-    const character = glob[index];
-    if (character === '*') {
-      if (glob[index + 1] === '*') {
-        index++;
-        if (glob[index + 1] === '/') index++;
-        pattern += '(?:.*/)?';
-      } else pattern += '[^/]*';
-    } else if (character === '?') pattern += '[^/]';
-    else pattern += character.replace(/[.+^${}()|[\]\\]/g, '\\$&');
-  }
-  return new RegExp(`^${pattern}$`);
-}
-function isExtraTestFile(root, path) {
-  if (!EXTRA_TEST_GLOB_RES.length) return false;
-  const relativePath = relative(root, path).replaceAll('\\', '/');
-  return EXTRA_TEST_GLOB_RES.some((expression) => expression.test(relativePath));
-}
 const ANNOT_RE =
   /(?<![\w-])invariant:\s*([^(\n]+?)\s*\(([^)\n]*\.invariants\.md)\)/g;
 // annotation-shaped lines that DON'T parse (typo'd suffix, wrong brackets) — flagged, not silent
@@ -771,6 +740,81 @@ function decodedLinkTarget(target) {
   }
 }
 
+function escapedRegularExpression(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function maskMarkdownLinks(text) {
+  const maskedInlineLinks = text.replace(
+    /\[((?:[^\[\]]|\[[^\]]*\])*)\]\((?:<([^>\n]*)>|([^)\s]+))\)/g,
+    (match) => match.replace(/[^\n]/g, ' '),
+  );
+  return maskedInlineLinks.replace(
+    /\[((?:[^\[\]]|\[[^\]]*\])*)\]\[([^\]]*)\]/g,
+    (match) => match.replace(/[^\n]/g, ' '),
+  );
+}
+
+function checkItalicRecordCitations(root, path, recordsByName, problems) {
+  let text;
+  try {
+    const { lines, active } = readMasked(path);
+    const componentLines = new Set();
+    for (const record of canonicalAllRecords(path)) {
+      const componentRange = record.fieldRanges.Components;
+      if (!componentRange) continue;
+      for (
+        let line = componentRange.start;
+        line <= componentRange.end;
+        line++
+      ) {
+        componentLines.add(line);
+      }
+    }
+    text = lines
+      .map((line, index) =>
+        active[index] && !componentLines.has(index + 1)
+          ? stripInlineCode(line)
+          : '',
+      )
+      .join('\n');
+  } catch {
+    return 0;
+  }
+  const searchableText = maskMarkdownLinks(text);
+  let found = 0;
+  for (const [name, targets] of recordsByName) {
+    const flexibleName = escapedRegularExpression(name).replace(/ /g, '\\s+');
+    const citationPattern = new RegExp(
+      `(?<!\\*)\\*${flexibleName}\\*(?!\\*)`,
+      'g',
+    );
+    for (const match of searchableText.matchAll(citationPattern)) {
+      const line = searchableText.slice(0, match.index).split('\n').length;
+      const suggestion =
+        targets.length === 1
+          ? (() => {
+              const target = targets[0];
+              const relativeTarget = relative(
+                dirname(path),
+                target.path,
+              ).replaceAll('\\', '/');
+              const linkTarget =
+                target.path === path
+                  ? `#${target.anchor}`
+                  : `${relativeTarget}#${target.anchor}`;
+              return ` use [${name}](${linkTarget})`;
+            })()
+          : ' link the intended record with its contract path and anchor';
+      problems.push(
+        `${relative(root, path)}:${line}: italic record citation '${name}' is prose, not a resolvable dependency;${suggestion}`,
+      );
+      found++;
+    }
+  }
+  return found;
+}
+
 function resolveContractRecordLink(
   root,
   path,
@@ -785,22 +829,13 @@ function resolveContractRecordLink(
     problems.push(`${where}: undefined link reference [${link.key}]`);
     return null;
   }
-  let decoded = decodedLinkTarget(link.target);
+  const decoded = decodedLinkTarget(link.target);
   if (
     !decoded.includes('.invariants.md') &&
     !(allowSelfAnchor && decoded.startsWith('#'))
   ) {
     return null;
   }
-  // A GitHub "blob" URL names a checkout path deterministically
-  // (…/blob/<ref>/<path>) — published docs link contracts that way. It is
-  // resolved from the checkout root like a root-relative path, so its anchor
-  // is validated exactly as a relative link's would be. Other absolute URLs
-  // cannot be resolved here and are left to the "contract not found" arm.
-  const hosted = decoded.match(
-    /^https?:\/\/github\.com\/[^/]+\/[^/]+\/blob\/[^/]+\/(.+)$/,
-  );
-  if (hosted) decoded = hosted[1];
   const [file, anchor] = decoded.split('#');
   if (!anchor) {
     problems.push(
@@ -808,11 +843,7 @@ function resolveContractRecordLink(
     );
     return null;
   }
-  let target = file
-    ? hosted
-      ? resolve(root, file)
-      : resolve(dirname(path), file)
-    : resolve(path);
+  let target = file ? resolve(dirname(path), file) : resolve(path);
   if (!slugsByFile.has(target)) target = resolve(root, file);
   const slugs = slugsByFile.get(target);
   if (slugs === undefined) {
@@ -906,7 +937,7 @@ function checkGenerator(root, path, slugsByFile, globalSlugs, problems) {
       slugsByFile,
       globalSlugs,
       problems,
-      isComponentLink,
+      isComponentLink || path.endsWith('.invariants.md'),
     );
     if (!resolvedLink) continue;
     resolved++;
@@ -1145,39 +1176,14 @@ function parseTestGeneratorHeader(
   if (!/^\s*Goal:\s*\S/m.test(formalBody)) {
     problems.push(where + ': formal generator register needs Goal');
   }
-  // An optional `Subject:` line names the source file(s) the header's
-  // symbols resolve against (one or more paths, space/comma-separated,
-  // resolved against the test's directory then the root); absent means the
-  // same-named sibling. A Subject path that does not exist is refused —
-  // never silently skipped.
-  const subjectPaths = [];
-  let subjectBroken = false;
-  for (const subjectMatch of formalBody.matchAll(/^\s*Subject:\s*(.+\S)\s*$/gm)) {
-    for (const subjectPath of subjectMatch[1].split(/[\s,]+/).filter(Boolean)) {
-      const resolvedSubject = [
-        resolve(dirname(path), subjectPath),
-        resolve(root, subjectPath),
-      ].find((candidate) => existsSync(candidate));
-      if (!resolvedSubject) {
-        problems.push(`${where}: Subject path does not exist: ${subjectPath}`);
-        subjectBroken = true;
-        continue;
-      }
-      subjectPaths.push(resolvedSubject);
-    }
-  }
-  const sourcePath = path.replace(/\.test\.(\w+)$/, '.$1');
-  let subjectTexts = [];
-  let subjectLabel = basename(sourcePath);
-  if (subjectPaths.length || subjectBroken) {
-    subjectTexts = subjectPaths.map((subject) => readText(subject));
-    subjectLabel = subjectPaths.map((subject) => basename(subject)).join(', ');
-  } else if (!existsSync(sourcePath)) {
+  const sourcePath = path.replace(/\.test\.ts$/, '.ts');
+  let sourceText = '';
+  if (!existsSync(sourcePath)) {
     problems.push(
       where + ': generator header needs sibling source ' + basename(sourcePath),
     );
   } else {
-    subjectTexts = [readText(sourcePath)];
+    sourceText = readText(sourcePath);
   }
   const domainClaims = new Map();
   const domainSymbols = new Set();
@@ -1191,16 +1197,13 @@ function parseTestGeneratorHeader(
       const key = `${symbolName} — ${claim}`;
       domainClaims.set(key, { symbolName, claim });
       domainSymbols.add(symbolName);
-      if (
-        subjectTexts.length &&
-        !subjectTexts.some((text) => declaredSymbolExists(text, symbolName))
-      ) {
+      if (sourceText && !declaredSymbolExists(sourceText, symbolName)) {
         problems.push(
           where +
             ": domain-invariant symbol '" +
             symbolName +
             "' is not declared in sibling " +
-            subjectLabel,
+            basename(sourcePath),
         );
       }
       continue;
@@ -1334,7 +1337,7 @@ function checkTypeScriptGenerator(
       `${where}: // spec: rows are retired; annotate the proving test`,
     );
   }
-  if (path.endsWith('.test.ts') || isExtraTestFile(root, path)) {
+  if (path.endsWith('.test.ts')) {
     parseTestGeneratorHeader(
       root,
       path,
@@ -1406,6 +1409,7 @@ function checkRefs(root) {
   );
   const slugsByFile = new Map();
   const globalSlugs = new Map(); // slug -> contract path (first seen)
+  const recordsByName = new Map();
   for (const [path, records] of recordsByFile) {
     const names = records.length
       ? records.map((record) => record.name)
@@ -1416,6 +1420,9 @@ function checkRefs(root) {
       if (!/[\p{L}\p{N}]/u.test(slug)) continue;
       slugs.add(slug);
       if (!globalSlugs.has(slug)) globalSlugs.set(slug, path);
+      const targets = recordsByName.get(name) ?? [];
+      targets.push({ path, anchor: slug });
+      recordsByName.set(name, targets);
     }
     slugsByFile.set(path, slugs);
   }
@@ -1455,7 +1462,7 @@ function checkRefs(root) {
     } catch {
       continue;
     }
-    if (p.endsWith('.ts') || isExtraTestFile(root, p)) {
+    if (p.endsWith('.ts')) {
       checkTypeScriptGenerator(
         root,
         p,
@@ -1538,6 +1545,7 @@ function checkRefs(root) {
   const generatorProblems = [];
   const generatorReferenced = new Set();
   let generatorResolved = 0;
+  let italicRecordCitations = 0;
   for (const p of walk(root)) {
     // contract-targeting md links are validated wherever they live (READMEs, design docs,
     // even other contracts) — a broken anchor is rot regardless of the file's name; only
@@ -1545,6 +1553,14 @@ function checkRefs(root) {
     if (!p.endsWith('.md')) continue;
     const b = basename(p);
     if (b === 'SKILL.md' || b === 'check_invariants.test.mjs') continue;
+    if (p.endsWith('.invariants.md')) {
+      italicRecordCitations += checkItalicRecordCitations(
+        root,
+        p,
+        recordsByName,
+        generatorProblems,
+      );
+    }
     if (p.endsWith(LEGACY_LATTICE_SUFFIX)) {
       console.log(
         `note: legacy reflective companion accepted: ${relative(root, p)}; ` +
@@ -1621,50 +1637,15 @@ function checkRefs(root) {
       }
     }
   }
-  // The tool reads its own constitution: the test file beside this script is
-  // header-validated even though the walk excludes .claude/ — no exclusion
-  // may exempt the checker from the grammar it enforces. Skipped when the
-  // file already sits inside the walked tree.
-  {
-    const selfTestPath = resolve(
-      dirname(fileURLToPath(import.meta.url)),
-      'check_invariants.test.mjs',
-    );
-    const insideRoot = !relative(root, selfTestPath).startsWith('..');
-    const excludedFromWalk = relative(root, dirname(selfTestPath))
-      .replaceAll('\\', '/')
-      .split('/')
-      .some((segment) => EXCLUDED_DIRS.has(segment));
-    if (existsSync(selfTestPath) && (!insideRoot || excludedFromWalk)) {
-      const selfText = readText(selfTestPath);
-      // header-shaped only: the first content is a block comment carrying the
-      // sentinel (a sentinel inside a fixture string deeper in the file is
-      // that suite's DATA, not this file's constitution)
-      const firstBlockEnd = selfText.indexOf('*/');
-      const headerShaped =
-        selfText.trimStart().startsWith('/*') &&
-        firstBlockEnd > 0 &&
-        selfText.slice(0, firstBlockEnd).includes(GENERATOR_SENTINEL);
-      if (headerShaped) {
-        parseTestGeneratorHeader(
-          root,
-          selfTestPath,
-          selfText,
-          orphans,
-          slugsByFile,
-          globalSlugs,
-        );
-      }
-    }
-  }
-
   console.log(
-    `${valid} annotation(s) resolved, ${generatorResolved} generator link(s) resolved, ${orphans.length} problem(s)`,
+    `${valid} annotation(s) resolved, ${generatorResolved} generator link(s) resolved, ` +
+      `${italicRecordCitations} italic record citation(s), ${orphans.length} problem(s)`,
   );
   return {
     code: orphans.length ? 1 : 0,
     valid,
     generatorResolved,
+    italicRecordCitations,
     problems: orphans.length,
     coverage: COVERAGE_COUNTS.unreferenced,
     exempt: COVERAGE_COUNTS.exempt,
@@ -1717,27 +1698,21 @@ usage:
                                                         (exit 2 if none exist under ROOT)
   node <path-to>/check_invariants.mjs --refs [ROOT]     verify code annotations + generators
                                                         test headers, source tripwires, links,
-                                                        and record-membership coverage
+                                                        italic record citations, and
+                                                        record-membership coverage
   node <path-to>/check_invariants.mjs --refs-for '<Name>' [ROOT]
                                                         every code annotation + contract declaring
                                                         ONE named invariant (retirement-sweep primitive)
   --strict     with --all: non-canonical (local-format) files fail instead of skip
   --score      emit mechanical score components as JSON (last line) — facts only; the
                scoring rubric lives in the skill's references/score.md
-  --exclude=a,b
-               root-relative directories the walk never enters, in addition to the
-               built-in scratch/build-output list (tmp, dist, …)
-  --test-glob=g[,g]
-               additional root-relative globs treated as generator-header test
-               files (default detection is the *.test.ts suffix) — lets header
-               mode read constitutions in .test.mjs and other layouts
   --version    print version (for diagnosing checker/schema skew between copies)
   --help       this text
 
 ROOT defaults to the git toplevel of the current directory (printed as "root ...");
 pass it explicitly when outside a git checkout. Exit: 0 ok, 1 findings, 2 usage/IO.
 CRLF/BOM normalized; fenced code blocks and HTML comments are inert; nested checkouts,
-symlinks, files over 2MB, and excluded directories are skipped.`;
+symlinks, files over 2MB, and scripts/retired-smokes are skipped.`;
 
 const KNOWN_FLAGS = new Set([
   '--all',
@@ -1814,20 +1789,6 @@ function main() {
   const pathArg = positional[0];
 
   for (const f of flags) {
-    if (f.startsWith(TEST_GLOB_FLAG_PREFIX)) {
-      for (const glob of f.slice(TEST_GLOB_FLAG_PREFIX.length).split(',')) {
-        const clean = glob.trim().replaceAll('\\', '/');
-        if (clean) EXTRA_TEST_GLOB_RES.push(testGlobToRegExp(clean));
-      }
-      continue;
-    }
-    if (f.startsWith(EXCLUDE_FLAG_PREFIX)) {
-      for (const path of f.slice(EXCLUDE_FLAG_PREFIX.length).split(',')) {
-        const clean = path.trim().replaceAll('\\', '/').replace(/\/+$/, '');
-        if (clean) EXCLUDED_DIRECTORY_PATHS.add(clean);
-      }
-      continue;
-    }
     if (!KNOWN_FLAGS.has(f)) {
       console.error(
         `unknown flag: ${f} (known: ${[...KNOWN_FLAGS].join(', ')})`,

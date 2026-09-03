@@ -632,6 +632,8 @@ to a full contract record as soon as a second file or subsystem depends on it.
 - Every contract-targeting link **must carry an anchor**: `#slug(record name)`. Slug rule:
   lowercase · strip everything but letters/digits/spaces/hyphens · spaces become `-`
   (identical to GitHub's rendered heading anchors, so links click through).
+- Outside `Components`, an italic record name is prose, not a dependency. `--refs` rejects it.
+  Use a Markdown link with the record anchor. A same-contract link may use `#record-anchor`.
 - Link text is free (aliases welcome) with one guard: text that is verbatim a DIFFERENT
   record's name than the anchor's is an error — objectively misleading. Style: first
   mention in a doc uses the full record name; aliases must still gesture at the content.

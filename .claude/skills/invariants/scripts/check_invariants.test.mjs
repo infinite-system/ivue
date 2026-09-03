@@ -280,7 +280,7 @@ test('--all discovers nested contracts, skips local formats and node_modules', (
   cleanup();
 });
 
-test('--all and --refs ignore directories named by --exclude', () => {
+test('--all and --refs ignore retired smoke files', () => {
   const { dir, cleanup } = tmp();
   const retiredSmokeDirectory = join(dir, 'scripts/retired-smokes');
   mkdirSync(retiredSmokeDirectory, { recursive: true });
@@ -296,12 +296,7 @@ test('--all and --refs ignore directories named by --exclude', () => {
     join(retiredSmokeDirectory, 'stale.js'),
     '// invariant: Ghost (missing.invariants.md)\n',
   );
-  // red first: without the flag the directory is walked and its junk is found
-  const unexcluded = run(['--all', '--refs', dir]);
-  assert.equal(unexcluded.code, 1);
-  assert.match(unexcluded.stdout + unexcluded.stderr, /stale|Ghost/);
-  // green: the flag keeps the walk out of it (trailing slash tolerated)
-  const result = run(['--all', '--refs', '--exclude=scripts/retired-smokes/', dir]);
+  const result = run(['--all', '--refs', dir]);
   assert.equal(result.code, 0, result.stderr);
   assert.doesNotMatch(result.stdout + result.stderr, /stale|Ghost/);
   cleanup();
@@ -485,36 +480,6 @@ test('generator: missing anchor, dead anchor, undefined ref key all fail', () =>
   cleanup();
 });
 
-test('generator: a GitHub blob URL to a contract resolves from the checkout root — anchors still validated', () => {
-  const { dir, cleanup } = tmp();
-  mkdirSync(join(dir, 'docs/reference'), { recursive: true });
-  writeFileSync(
-    join(dir, 'demo.invariants.md'),
-    contract([record('Rule one holds')], [record('B')]),
-  );
-  const hosted = 'https://github.com/acme/demo/blob/main/demo.invariants.md';
-  // red: the hosted path resolves, so a dead anchor is reported as such
-  // (not as "contract not found"), and a missing anchor is still a finding
-  writeFileSync(
-    join(dir, 'docs/reference/page.md'),
-    [`[Rule one holds](${hosted}#rule-one-gone)`, `[Rule one holds](${hosted})`].join('\n'),
-  );
-  let r = run(['--refs', dir]);
-  assert.equal(r.code, 1);
-  assert.match(r.stderr, /anchor '#rule-one-gone' does not resolve/);
-  assert.match(r.stderr, /needs an anchor/);
-  assert.doesNotMatch(r.stderr, /contract not found/);
-  // green: the anchored hosted link counts as a resolved generator link
-  writeFileSync(
-    join(dir, 'docs/reference/page.md'),
-    `[Rule one holds](${hosted}#rule-one-holds)`,
-  );
-  r = run(['--refs', dir]);
-  assert.equal(r.code, 0, r.stderr);
-  assert.match(r.stdout, /1 generator link\(s\) resolved/);
-  cleanup();
-});
-
 test('generator: verbatim-name text pointing at a different record fails; free alias passes', () => {
   const { dir, cleanup } = tmp();
   writeFileSync(
@@ -538,6 +503,52 @@ test('generator: verbatim-name text pointing at a different record fails; free a
     /link text names 'A non-ready route cannot transmit'.*misleading reference/,
   );
   assert.doesNotMatch(r.stderr, /the transmit rule/);
+  cleanup();
+});
+
+test('--refs reports italic record citations and accepts the linked form', () => {
+  const { dir, cleanup } = tmp();
+  const contractPath = join(dir, 'demo.invariants.md');
+  writeFileSync(
+    contractPath,
+    contract(
+      [record('Rule one holds')],
+      [record('Rule two holds', { Mechanism: 'Stands on *Rule one holds*.' })],
+    ),
+  );
+
+  const proseCitationRed = run(['--refs', dir]);
+  assert.equal(proseCitationRed.code, 1);
+  assert.match(
+    proseCitationRed.stderr,
+    /italic record citation 'Rule one holds' is prose, not a resolvable dependency/,
+  );
+  assert.match(
+    proseCitationRed.stderr,
+    /use \[Rule one holds\]\(#rule-one-holds\)/,
+  );
+  assert.match(
+    proseCitationRed.stdout,
+    /1 italic record citation\(s\), 1 problem\(s\)/,
+  );
+
+  writeFileSync(
+    contractPath,
+    contract(
+      [record('Rule one holds')],
+      [
+        record('Rule two holds', {
+          Mechanism: 'Stands on [Rule one holds](#rule-one-holds).',
+        }),
+      ],
+    ),
+  );
+  const linkedCitationGreen = run(['--refs', dir]);
+  assert.equal(linkedCitationGreen.code, 0, linkedCitationGreen.stderr);
+  assert.match(
+    linkedCitationGreen.stdout,
+    /1 generator link\(s\) resolved, 0 italic record citation\(s\), 0 problem\(s\)/,
+  );
   cleanup();
 });
 
@@ -736,61 +747,6 @@ test('rule a: test headers are first and local symbols resolve in the sibling so
   );
   const green = run(['--refs', dir]);
   assert.equal(green.code, 0, green.stderr);
-  cleanup();
-});
-
-test('a Subject line names the source symbols resolve against; a wrong path is refused; absent falls back to sibling', () => {
-  const { dir, cleanup } = tmp();
-  const claim = 'If Demo runs, then one local mechanism owns its value.';
-  const impossible = 'A second local mechanism owns the same value.';
-  const header = testGeneratorHeader({
-    domainClaims: [{ symbol: 'Demo', claim }],
-    impossibleClaims: [impossible],
-  });
-  const subjectHeader = (subjectLine) =>
-    header.replace('Goal:', `${subjectLine}\nGoal:`);
-  const proofs = [
-    `// domain-invariant: Demo — ${claim}`,
-    'test("one local mechanism owns the value", () => {});',
-    `// impossible-if-true: Demo — ${impossible}`,
-    'test("a second local mechanism is refused", () => {});',
-  ].join('\n');
-  mkdirSync(join(dir, 'source'), { recursive: true });
-  mkdirSync(join(dir, 'specs'), { recursive: true });
-  writeFileSync(join(dir, 'source/Demo.ts'), 'class Demo {}\n');
-
-  // red: a Subject path that does not exist is refused, never skipped
-  writeFileSync(
-    join(dir, 'specs/Growth.test.ts'),
-    `${subjectHeader('Subject: source/Missing.ts')}\n${proofs}\n`,
-  );
-  const wrongPath = run(['--refs', dir]);
-  assert.equal(wrongPath.code, 1);
-  assert.match(wrongPath.stderr, /Subject path does not exist: source\/Missing\.ts/);
-
-  // green: a valid Subject resolves symbols against the named source —
-  // no sibling exists and no sibling error fires
-  writeFileSync(
-    join(dir, 'specs/Growth.test.ts'),
-    `${subjectHeader('Subject: source/Demo.ts')}\n${proofs}\n`,
-  );
-  const named = run(['--refs', dir]);
-  assert.equal(named.code, 0, named.stderr);
-
-  // red: a valid Subject still refuses a symbol the named source lacks
-  writeFileSync(
-    join(dir, 'specs/Growth.test.ts'),
-    `${subjectHeader('Subject: source/Demo.ts').replaceAll('Demo —', 'Ghost —')}\n${proofs.replaceAll('Demo —', 'Ghost —')}\n`,
-  );
-  const ghost = run(['--refs', dir]);
-  assert.equal(ghost.code, 1);
-  assert.match(ghost.stderr, /domain-invariant symbol 'Ghost' is not declared in sibling Demo\.ts/);
-
-  // green: absent Subject falls back to the same-named sibling
-  writeFileSync(join(dir, 'specs/Growth.ts'), 'class Demo {}\n');
-  writeFileSync(join(dir, 'specs/Growth.test.ts'), `${header}\n${proofs}\n`);
-  const sibling = run(['--refs', dir]);
-  assert.equal(sibling.code, 0, sibling.stderr);
   cleanup();
 });
 
@@ -1444,7 +1400,7 @@ test('unknown flags exit 2; --version prints a version', () => {
   assert.equal(run(['--all', '--strick']).code, 2);
   const v = run(['--version']);
   assert.equal(v.code, 0);
-  assert.equal(v.stdout.trim(), '3.1.0');
+  assert.equal(v.stdout.trim(), '3.2.0');
 });
 
 test('directory as PATH gives a directory-specific message', () => {
@@ -1615,36 +1571,4 @@ test('--all and --refs print the resolved root', () => {
 test('usage errors exit 2', () => {
   assert.equal(run([]).code, 2);
   assert.equal(run(['/nonexistent/file.invariants.md']).code, 2);
-});
-
-test('--test-glob treats matched files as header test files beyond the ts suffix', () => {
-  const { dir, cleanup } = tmp();
-  const claim = 'If Demo runs, then one local mechanism owns its value.';
-  const impossible = 'A second local mechanism owns the same value.';
-  const header = testGeneratorHeader({
-    domainClaims: [{ symbol: 'Demo', claim }],
-    impossibleClaims: [impossible],
-  });
-  const proofs = [
-    `// domain-invariant: Demo — ${claim}`,
-    'test("one local mechanism owns the value", () => {});',
-    `// impossible-if-true: Demo — ${impossible}`,
-    'test("a second local mechanism is refused", () => {});',
-  ].join('\n');
-  writeFileSync(join(dir, 'Demo.mjs'), 'class Demo {}\n');
-  // the header is BROKEN (missing described register) so the glob's effect
-  // is observable: unglobbed the file is invisible, globbed it goes red
-  const broken = header.replace('=== GENERATOR-DESCRIBED ===\n', '');
-  writeFileSync(join(dir, 'Demo.test.mjs'), `${broken}\n${proofs}\n`);
-  const unglobbed = run(['--refs', dir]);
-  assert.equal(unglobbed.code, 0, unglobbed.stderr);
-  const red = run(['--refs', '--test-glob=**/*.test.mjs', dir]);
-  assert.equal(red.code, 1);
-  assert.match(red.stderr, /needs === GENERATOR-DESCRIBED ===/);
-  // green: the valid header in a globbed .test.mjs resolves against its
-  // same-named .mjs sibling
-  writeFileSync(join(dir, 'Demo.test.mjs'), `${header}\n${proofs}\n`);
-  const green = run(['--refs', '--test-glob=**/*.test.mjs', dir]);
-  assert.equal(green.code, 0, green.stderr);
-  cleanup();
 });

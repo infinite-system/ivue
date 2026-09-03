@@ -293,7 +293,7 @@ for orientation; this contract carries the falsifiable core.
 
 **Scope:** `lib/Reactive.ts`, `lib/Static.ts`, `lib/LazyShared.ts` as shipped. Module replacement during development is Vite's and Vue's: they re-evaluate the module and reconstruct the owning component, so an instance always carries state and behavior from one class generation.
 
-**Mechanism:** The engine files reference no `import.meta.env`, `process.env`, `__DEV__`, or `import.meta.hot`; `Reactive()` has a single code path ending in `return targetClass` (see `Reactive returns the class it was given`). Nothing exists that could branch by environment.
+**Mechanism:** The engine files reference no `import.meta.env`, `process.env`, `__DEV__`, or `import.meta.hot`; `Reactive()` has a single code path ending in `return targetClass` (see [Reactive returns the class it was given](#reactive-returns-the-class-it-was-given)). Nothing exists that could branch by environment.
 
 **Generates:** Benchmarks that measure what ships; identical `instanceof` and identity semantics in tests and production; no dev-only proxy layer for HMR.
 
@@ -318,7 +318,7 @@ for orientation; this contract carries the falsifiable core.
 
 **Scope:** Every module exporting a `Reactive()` class through the namespace pattern, including parent, grandparent, and child in separate files, and modules re-evaluated by Vite during development.
 
-**Mechanism:** The `Class = Reactive($Class)` line executes at module load; because a level already carrying `PROCESSED` is skipped (see `A prototype level is transformed at most once`) and the class identity is unchanged (see `Reactive returns the class it was given`), a base transformed in `Base.ts` is skipped when `Child.ts` walks its chain, and the child still inherits the installed getters through the shared prototype.
+**Mechanism:** The `Class = Reactive($Class)` line executes at module load; because a level already carrying `PROCESSED` is skipped (see [A prototype level is transformed at most once](#a-prototype-level-is-transformed-at-most-once)) and the class identity is unchanged (see [Reactive returns the class it was given](#reactive-returns-the-class-it-was-given)), a base transformed in `Base.ts` is skipped when `Child.ts` walks its chain, and the child still inherits the installed getters through the shared prototype.
 
 **Generates:** The per-file authoring convention (one class per module, each calling `Reactive()` on itself); development module replacement that needs no custom class runtime — Vite re-evaluates the module and Vue reconstructs the owning component with the new hierarchy as one generation.
 
