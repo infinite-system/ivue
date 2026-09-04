@@ -44,8 +44,11 @@ Every post carries layer 1. Most carry layer 2. A few end on layer 3.
    in a shape that does not exist yet. A framework is a moat as the moves it
    opens and the mistakes it locks — which is why ivue's moat got STRONGER
    in the agent era: agents wrote 94k lines on it because the shape
-   constrains them into correctness. Never argue with the "anything" crowd;
-   reframe them in one line and hand them the receipt.
+   constrains them into correctness. The sharper form, his: an
+   unrestrained possibility space is also a space for bugs; AI works
+   best in a CONTROLLED possibility space, and that is what ivue is.
+   Never argue with the "anything" crowd; reframe them in one line and
+   hand them the receipt.
 3. **The method, as a prelude (posture updated 2026-09-04).** There is a
    reasoning method under all of this, its release is coming, and it is
    BIGGER than ivue. It is named in ROTATION, never by one repeated label:
@@ -267,6 +270,23 @@ sizing, not composing. Primary quarries:
   of AGI - Paper - Sharp.md` — the origin story: the ~fifteen "impossible"
   verdicts, 338 lines, a million objects in ~20 ms, the eight-hour C class
   system with no prior C.
+- `~/dev/ibr/Papers/` (~290 files) — the wider quarry, mined 2026-09-04
+  into four rungs on the launch artifact. Best software veins: Design as
+  Function Made Inevitable, Software Architecture as Invariant
+  Preservation, The Meta-Invariant of Software Building (contract /
+  checker / gate; ~20 features in 24 h, zero regressions). Best AI veins:
+  The Substrate Not the Scale (5 KB beats a model upgrade), Your AI
+  Learned to Argue, Pattern Matching Is Fast, the model's own Self-Report
+  ("I was wrong" as a low-probability token), The Reduction Partner
+  (the unit of work), Invariant Drift, AI Trick Questions (oranges /
+  knife), Aristotle for 75 Cents (7 models, 5 labs, $0.75). Best
+  reasoning veins: Holding Less (seed vault), You Were Never Taught to
+  Think, The One Question, The Shortest True Thing, Kill Your Best Idea,
+  Your Ego Is the Worst Scientist, Bottleneck-Shifted Returns, Refusal
+  of Fake Necessity, The Limits of Logic, Four Hundred Years of
+  Reduction, Words Are Handles, Humor. Hook-phase outputs (per his own
+  distribution strategy in `~/dev/ibr/Actionables/Strategy/`): Love in
+  Two Words, Two Ways Unfair, What Are We Actually Looking For.
 - `docs_v2/blog/` — 48 receipt posts; every number a post needs is in one.
 - `tasks/malleable-architecture.md` — the shapeless-system thesis.
 
