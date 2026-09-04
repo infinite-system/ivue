@@ -117,9 +117,15 @@ warmth line; a reply never climbs into the reducer's formality.
   is true ("measured on Vue 3.5, 100k instances"), then stop. No
   "arguably," "it seems," "might," "in my humble opinion," "I think" in the
   reducer register.
-- **Never announce. Report.** No "excited to announce," "thrilled to
-  share," "just launched," "introducing," "big news." Open on the reframe
-  or the receipt.
+- **Announcing is allowed. Sounding generated is not.** An excited
+  release post is a real register and some days call for it. The test is
+  never "is this enthusiastic" but "would a person type this." What makes
+  an announcement read as machine-made is the ADJECTIVE STACK
+  ("blazing-fast, elegant"), the press-desk opener ("excited to announce,"
+  "thrilled to share"), and the stage props (🚀, 👇, "game changer").
+  A person announcing sounds like: "ivue 2.5 is out. three years of
+  reduction, still 1.1 kB. go break it." Energy comes from short
+  sentences and a number, never from adjectives.
 - **Never fight the feed's belief; move it.** "AI can code in anything"
   gets one sentence of reframe, not a rebuttal thread.
 - **The ten-year-old layer is present, never substituted.** Beside every
@@ -234,17 +240,29 @@ ivue did not exist. Approved shapes from his own work:
 
 Make new ones by the same cut; never reuse one twice in a week.
 
-## Before and after
+## The same announcement, three ways
 
-Feed version: "🚀 Excited to announce ivue 2.5! A blazing-fast, elegant
-class-based reactivity layer for Vue with zero dependencies. Game changer
-for large apps. Check it out 👇"
+Generated (do not ship): "🚀 Excited to announce ivue 2.5! A blazing-fast,
+elegant class-based reactivity layer for Vue with zero dependencies. Game
+changer for large apps. Check it out 👇"
+The tells: adjective stack, press-desk opener, rocket and arrow, a claim
+("game changer") with nothing behind it. Not the enthusiasm — the props.
 
-His version: "Every framework bet on classes, then abandoned them. The bugs
-were real. The diagnosis was wrong: classes weren't broken, they were
-UNCONSTRAINED. So: find the constraints. What fell out is 1.1 kB, creates
-100k instances 55–253× faster, and a 94,000-line IDE runs on it.
-ivue.dev/blog/introducing-ivue"
+His announcement (builder register, ships fine): "ivue 2.5 is out.
+
+plain typescript classes, full vue 3 reactivity, still 1.1 kB after
+three years of cutting. 100k instances in under a millisecond each.
+
+go break it: ivue.dev"
+
+His reducer version (threads, HN): "Every framework bet on classes, then
+abandoned them. The bugs were real. The diagnosis was wrong: classes
+weren't broken, they were UNCONSTRAINED. So: find the constraints. What
+fell out is 1.1 kB, creates 100k instances 55–253× faster, and a
+94,000-line IDE runs on it. ivue.dev/blog/introducing-ivue"
+
+Both of his versions announce. Neither sounds generated. That is the
+whole distinction.
 
 ## Self-test before shipping any unit
 
@@ -252,7 +270,7 @@ ivue.dev/blog/introducing-ivue"
 2. Is there a number or a link? If not, it is not finished.
 3. Exactly one shouted word, or none?
 4. Any banned adjective, slop tell, move-label ("honest limit," "receipt:"), or rules-vocabulary ("follow," "rules," "discipline")? Any second em-dash?
-5. Does it announce, or report?
+5. If it announces, does it do it the way a person does (short sentences, a number, no adjective stack, no props)?
 6. Does it end on a line that would survive alone?
 7. Would he say this out loud to a friend who builds things? If it sounds
    like a press desk or a model, cut until it does not.
