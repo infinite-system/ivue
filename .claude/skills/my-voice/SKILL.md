@@ -93,6 +93,31 @@ Every post carries layer 1. Most carry layer 2. A few end on layer 3.
   the industry decided wasn't worth asking." Once per piece, at the
   opening, then the work speaks.
 
+## Excitement — required, and positioned
+
+The work deserves huge excitement: a 1.1 kB engine that made classes
+whole again, and a way of reasoning that is bigger than the engine and
+is coming. A voice that cannot show that is lying by omission. The rule
+is not "less excitement," it is WHERE IT POINTS:
+
+- **A marketer is excited about the product. A discoverer is excited
+  about the finding.** Point the excitement at what was FOUND, at what
+  it makes possible, at what is coming — never at the product as a
+  product. "I stopped calling it luck." "The design was already there."
+  "It is coming, and it is bigger than anything it has produced so far."
+- **Excitement is earned by a receipt in the same breath.** The number,
+  the demo, the line that compresses something true. Excitement with a
+  receipt is contagious because the reader can check it; excitement
+  with an adjective is a pitch.
+- **Both registers carry it.** The reducer's excitement is quiet and
+  enormous: a short sentence that lands too hard to be casual. The
+  builder's is loud and honest: "wait, this is insane," "nothing like
+  this exists," "we just did 20M cells and the tax was zero." Both are
+  his; the second is how he talks, the first is how he writes.
+- **Release days and prelude posts are where it peaks.** On those days
+  restraint is the wrong register. Say it is a big deal, say why in one
+  sentence, put the number next to it, and stop.
+
 ## Two registers — never mixed inside one unit
 
 **The reducer** — threads, long posts, HN, articles. Compressed, exact,
