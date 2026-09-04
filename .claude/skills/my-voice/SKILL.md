@@ -251,6 +251,29 @@ warmth line; a reply never climbs into the reducer's formality.
 - **Article opening (with write-article):** title first per the doctrine,
   then the twelve-line opening, then the meat by the first heading.
 
+## The quarries — where the lines come from
+
+Before writing a batch of posts, cut from his own papers rather than
+inventing. The lines are already in his voice; the work is choosing and
+sizing, not composing. Primary quarries:
+
+- `~/dev/ibr/IBR/Invariant Engineering/Invariant Engineering - The
+  Geometry of Software in the AI Era.md` — coherence as the new
+  bottleneck, steering as signal, the first invariant of agentic
+  development, modularity as epistemic infrastructure, architectural
+  surprise, the Observer, workers as sensors, the semantic graph, the
+  ivue reduction in four lines, the triage matrix, the shortest compass.
+- `~/dev/ibr/Papers/26.04.24 - 12.00 - IBR Architecture - The Penicillin
+  of AGI - Paper - Sharp.md` — the origin story: the ~fifteen "impossible"
+  verdicts, 338 lines, a million objects in ~20 ms, the eight-hour C class
+  system with no prior C.
+- `docs_v2/blog/` — 48 receipt posts; every number a post needs is in one.
+- `tasks/malleable-architecture.md` — the shapeless-system thesis.
+
+Rule: a paper line may be shortened and paragraphed; its claim is never
+inflated. If a post needs a number the quarry does not contain, it is not
+finished.
+
 ## The landing line — how to make one
 
 Take the piece's whole argument and delete words until only the invariant
