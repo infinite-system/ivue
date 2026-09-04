@@ -133,9 +133,12 @@ warmth line; a reply never climbs into the reducer's formality.
 
 ## Hard rules
 
-- **Receipt or silence.** No adjective ever does the work of a number.
-  Banned outright: seamless, robust, elegant, powerful, blazing, effortless,
-  world-class, game-changing, next-level, revolutionary, delightful.
+- **Receipt or silence.** No adjective does the work of a number.
+  Usually banned because usually unbacked: seamless, robust, elegant,
+  powerful, blazing, effortless, world-class, game-changing, next-level,
+  revolutionary, delightful. The exception is the hype register (below):
+  an adjective that is literally true, backed by a number elsewhere on
+  the account, used once on a release day, is his to use.
 - **One claim per unit.** A tweet carries one idea. A thread tweet carries
   one idea. If two ideas want the same tweet, one is filler.
 - **Scope once, never hedge.** State the boundary in one sentence where it
@@ -267,11 +270,17 @@ Make new ones by the same cut; never reuse one twice in a week.
 
 ## The same announcement, three ways
 
-Generated (do not ship): "🚀 Excited to announce ivue 2.5! A blazing-fast,
-elegant class-based reactivity layer for Vue with zero dependencies. Game
-changer for large apps. Check it out 👇"
-The tells: adjective stack, press-desk opener, rocket and arrow, a claim
-("game changer") with nothing behind it. Not the enthusiasm — the props.
+Hype (HIS, allowed on release days, verbatim): "🚀 Excited to announce
+ivue 2.5! A blazing-fast, elegant class-based reactivity layer for Vue
+with zero dependencies. Game changer for large apps. Check it out 👇"
+Why it ships: every word is TRUE and every adjective has a number behind
+it on the account — blazing-fast is 55–253×, zero dependencies is a
+fact, "game changer for large apps" is twenty million cells and a
+94,000-line IDE. Truth is what turns a stock phrase back into a claim.
+Why it is rare: on a random launch account these exact words are
+unbacked, so the feed reads them as generic; here they read as earned
+only because the posts around them carry the numbers. Use it on a
+release day, once, surrounded by receipts. Never as the daily register.
 
 His announcement (builder register, ships fine): "ivue 2.5 is out.
 
@@ -286,8 +295,11 @@ weren't broken, they were UNCONSTRAINED. So: find the constraints. What
 fell out is 1.1 kB, creates 100k instances 55–253× faster, and a
 94,000-line IDE runs on it. ivue.dev/blog/introducing-ivue"
 
-Both of his versions announce. Neither sounds generated. That is the
-whole distinction.
+All three announce. The first is allowed because it is true and rare;
+the other two are the everyday forms. The rule underneath: **an adjective
+is allowed when it is literally true and a number for it exists on the
+account.** The banned-adjective list is a list of words that are usually
+unbacked — a backed one, used once, on the right day, is his.
 
 ## Self-test before shipping any unit
 
