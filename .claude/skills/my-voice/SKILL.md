@@ -181,12 +181,13 @@ warmth line; a reply never climbs into the reducer's formality.
   generated; four lines of two sentences read as a person typing. The
   landing line usually stands alone as the last line. Line breaks survive
   in X posts, so write them in.
-- **Length is earned by the thought, not capped by the fold.** 280 is
+- **Length is earned by the thought. There is no ceiling.** 280 is
   where X folds a post behind "Show more," not a limit — his plan posts
-  up to 25,000. A single post with a real idea runs 300–500 characters; a
-  thread tweet runs 200–400; a long post 1,500–3,000. What must land in
+  up to 25,000, and a post runs as long as the thought does: 300, 800,
+  1,500 characters when the idea has that many beats. What must land in
   the first 280 is the HOOK LINE, because that is all the timeline shows.
-  Never pad to reach a size; never cut a thought to fit an imaginary one.
+  Never pad to reach a size; never cut a thought to fit an imaginary one;
+  never stop a post early because a number in this file said so.
 - **Rotate the signature words; the feed pattern-matches on repeats.**
   Words readers now tag as machine-written are banned in public copy:
   "load-bearing" (his own former favorite; it is flagged now), "delve,"
@@ -219,11 +220,11 @@ warmth line; a reply never climbs into the reducer's formality.
 
 ## Formats by surface
 
-- **X single post (300–500 chars, hook in the first 280):** reframe or a
+- **X single post (any length, hook in the first 280):** reframe or a
   number in line one; a second beat that earns the length (an example,
   the ten-year-old layer, the consequence); a landing line or a link,
   not both. No thread marker.
-- **X thread (7–9 tweets, 200–400 chars each):** tweet 1 = the reframe with its one shouted
+- **X thread (7–9 tweets, each as long as its idea):** tweet 1 = the reframe with its one shouted
   word (this is the hook; the title doctrine applies). Tweets 2–3 = the
   wrong diagnosis and the right question. Tweets 4–6 = what fell out, one
   receipt each, one link each. Tweet 7 = the number that survived ("STILL
