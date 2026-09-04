@@ -294,6 +294,20 @@ Rule: a paper line may be shortened and paragraphed; its claim is never
 inflated. If a post needs a number the quarry does not contain, it is not
 finished.
 
+**Write from the paper, never from a summary of it (2026-09-04).** Agent
+extracts are a map of where to cut, not the quarry. A post generated from a
+summary comes out over-reduced: it says "the generator" and "two words"
+without ever giving them, and the reader has no idea what is being talked
+about. Before writing, open the source and take the concrete thing the
+paper lands on. Every method post must carry the GENERATOR ITSELF (love =
+unconditional goodwill; fairness = treatment maps to the differences that
+matter here; trust = vulnerable reliance on expected integrity) and at
+least one thing that is NOT it (attachment is not love; agreement is not
+trust; zero risk is not safety), plus the example the paper used (the
+master who loves without being disrupted; the literacy test; the four
+oranges and the knife). Compression is for the argument, not for the
+evidence: the punch lives in the specific.
+
 ## The landing line — how to make one
 
 Take the piece's whole argument and delete words until only the invariant
