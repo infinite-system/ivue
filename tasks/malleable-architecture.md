@@ -853,6 +853,77 @@ entering our territory means rebuilding on member-level seams and a
 user trust layer, which is the standard itself. Sources:
 deepseek.com/harness, thenewstack.io, justin3go.com review (2026-08).
 
+## Positioning: bb — "the agent IDE that builds itself" (analyzed 2026-09-04)
+
+getbb.app / github.com/get-bb/bb (MIT, 3.2k stars, 5,423 commits, ~361k
+lines TS, React 19 + Electron + SQLite server + host daemons; by
+@_ymichael with Sawyer Hood). Cloned to ~/dev/bb and read: plugin SDK,
+the agent-facing `bb-plugin-authoring` skill, manifest validator,
+runtime loader, trust vocabulary, timeline code. The SECOND
+independent convergence on the category (after DeepSeek Harness) —
+which settles it: **"self-modifying tool" is no longer a claim we can
+lead with; bb owns "the IDE that builds itself."** Our edge is
+underneath that claim.
+
+**Where bb is ahead (honestly):** shipped on desktop/web/CLI/SDK with
+a mobile app in-repo and remote hosts over Tailscale; 30 bundled
+plugins incl. provider bridges for Claude Code, Codex, Pi;
+multi-agent ORCHESTRATION is their core (manager threads spawning and
+steering children — the founder's "IDE bottleneck" essay names
+coordination as the wedge); provider bridges yield STRUCTURED events
+(JSON-RPC-style, capability handshakes, approvals, permission modes)
+— richer than a wire tap for supported providers; a real partial
+trust layer (zod-validated manifests, per-slot React error
+boundaries, reload-with-generations where a throwing candidate leaves
+the prior registration running); timeline virtualized with
+@tanstack/react-virtual.
+
+**Where we have the edge (structural):**
+1. **Seam = member; theirs = slot.** bb plugins register into
+   ENUMERATED slots (composer actions/banners, nav/thread panels,
+   file renderers, app overlay) plus content scripts for everything
+   else — which the SDK itself calls "trusted same-origin page code,
+   not a sandbox" (DOM hacking of the shell). Changing a CORE surface
+   means finding a slot or patching DOM. Under the uniformity law
+   every component is its own swap point at getter granularity.
+   Extension POINTS vs a uniform SHAPE — not retrofittable; the
+   standard-with-teeth moat.
+2. **Unit of change = package; ours = delta.** A bb plugin is a
+   TypeScript package (manifest, backend factory, frontend bundle,
+   contracts, tests, `esbuild` via `bb plugin build`, SDK peer deps);
+   a small request yields a small PACKAGE. Ours: a subclass of only
+   the overrides, no build for classes. Their persistence hazard: the
+   SDK is mid-churn (every new surface `experimental_`-prefixed), so
+   agent-generated plugins sit on a moving API — no "upgrades don't
+   destroy customizations" story.
+3. **Trust and recovery.** Plugin backends load IN-PROCESS in the
+   server (`jiti.import`, plugin-runtime.ts) with full trust; the
+   server API is unauthenticated by design ("trusted network
+   boundary"); zero rollback / quarantine / safe-mode / ledger /
+   allowlist / egress vocabulary in docs or plugin runtime. Theirs is
+   the immune response of a slot; ours is the immune system.
+4. **Governance of the model wire.** bb steers threads; it does not
+   govern what reaches the model. Our proxy tap works on ANY agent
+   without a bridge; governed mode adds compaction control, index
+   retrieval, preload-if-missing, unified hooks. Complement, not
+   either/or: bb's ACP-style bridges are exactly the adapter our
+   canonical record shape should consume.
+5. **Infinite interface.** They virtualize the timeline over
+   in-memory events; we designed the window primitive over ANY
+   index-addressable source with DuckDB behind it. Edge in scope, not
+   existence — theirs shipped, ours design.
+
+**Strategic:** the wedge sharpens rather than moves — lead with "see
+and control what your agents are actually doing" and "change any
+part, not just the slots"; never with "the app that builds itself."
+bb is a candidate GOVERNED AGENT under our proxy before it is a
+competitor — the honest relation between a control plane and a
+workspace. Threat: higher than Harness (same user, same local-first
+desktop, same self-building pitch, far ahead in shipping); the
+substrate (React + package plugins) cannot reach member-granularity
+uniformity without a rewrite on a standard. Sources: getbb.app,
+github.com/get-bb/bb, ymichael.com/2026/06/23/the-ide-bottleneck.html.
+
 ## The product identity: Invar's control plane (2026-09-01)
 
 The app IS the Electron version of Invar — with switchable MODES:
