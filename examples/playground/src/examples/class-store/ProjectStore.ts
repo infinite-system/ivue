@@ -23,7 +23,7 @@ class $ProjectStore {
   /** The same singleton as a `reactive()` view — refs auto-unwrap on read
    *  AND write, no `.value`. Built once. */
   static get $sharedReactive() {
-    return reactive(this.use());
+    return reactive(this.$shared);
   }
 
   static get STORAGE_KEY() {
