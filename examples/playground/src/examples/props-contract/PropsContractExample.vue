@@ -129,13 +129,14 @@ const {
   margin-bottom: 6px;
 }
 @media (max-width: 560px) {
-  .stages {
+  .stages,
+  .knobs {
     grid-template-columns: 1fr;
   }
 }
 .knobs {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 14px;
 }
@@ -174,7 +175,12 @@ const {
   color: var(--vp-c-brand-1, #e0e7ff);
 }
 .current {
+  align-self: flex-start;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.14);
   color: var(--vp-c-brand-1, #a5b4fc) !important;
+  font-weight: 600;
 }
 .switch {
   display: inline-flex;
