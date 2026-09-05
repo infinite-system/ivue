@@ -19,17 +19,20 @@ import {
   Reactive,
 } from '../../../ivue';
 import { Static } from '../../../Static';
+import { Field } from '../Field';
 import type { MediaRow } from '../server/ServerApi';
 import { ServerApi } from '../server/ServerApi';
 
-export class $MediaField {
-  /* Contract — STATIC. Types and defaults are declared separately so a
-     subclass can re-default without re-typing; `props` fuses them
-     through the receiver (object/array defaults become factories). */
+export class $MediaField extends Field.$Class {
+  /* Contract — the shared field surface (model, label, hint, density,
+     states) comes from Field through `super`; only the media-specific
+     params and the narrowed model type are declared here. */
 
   /** Params Types */
-  static get propsTypes() {
+  static override get propsTypes() {
     return definePropTypes({
+      ...super.propsTypes,
+      /** Narrowed from the base's `any`: rows, ids, a mix, or null. */
       modelValue: {
         type: [Object, Array, String] as PropType<MediaField.Model>,
       },
@@ -39,11 +42,6 @@ export class $MediaField {
       maxFiles: { type: Number as PropType<number> },
       /** Per-file limit in bytes. */
       maxFileSize: { type: Number as PropType<number> },
-      label: { type: String as PropType<string> },
-      hint: { type: String as PropType<string> },
-      readonly: { type: Boolean as PropType<boolean> },
-      disable: { type: Boolean as PropType<boolean> },
-      dense: { type: Boolean as PropType<boolean> },
       /** Preview grid tile size in pixels. */
       thumbnailSize: { type: Number as PropType<number> },
       canPreview: { type: Boolean as PropType<boolean> },
@@ -61,20 +59,16 @@ export class $MediaField {
   }
 
   /** Params Defaults */
-  static get propsDefaults(): ExtractPropDefaultTypes<
+  static override get propsDefaults(): ExtractPropDefaultTypes<
     typeof $MediaField.propsTypes
   > {
     return {
-      modelValue: null,
+      ...super.propsDefaults,
       multiple: false,
       accept: '.pdf, image/*',
       maxFiles: 12,
       maxFileSize: 100 * 1024 * 1024, // 100 MB
       label: 'Media',
-      hint: '',
-      readonly: false,
-      disable: false,
-      dense: false,
       thumbnailSize: 132,
       canPreview: true,
       canDownload: true,
@@ -85,7 +79,8 @@ export class $MediaField {
     };
   }
 
-  static get props() {
+  /** Re-declared so `MediaField.Props` carries the params above. */
+  static override get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
 
@@ -103,6 +98,7 @@ export class $MediaField {
     public props: MediaField.Props,
     public emit: MediaField.Emits,
   ) {
+    super();
     watch(
       () => this.props.modelValue,
       (value) => this.hydrateModel(value),
