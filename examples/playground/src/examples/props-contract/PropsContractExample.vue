@@ -101,10 +101,10 @@ const {
 <style scoped>
 .pane-props {
   max-width: 720px;
-  padding: 14px 18px 18px;
+  padding: 12px 18px 16px;
 }
 .pane-props .note {
-  margin-bottom: 14px;
+  margin: 0 0 12px;
 }
 .pane-props .receipt {
   margin-bottom: 0;
