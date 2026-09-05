@@ -510,3 +510,19 @@ detects the missing toolchain and skips with a message
 `.github/workflows/ci.yml`, which installs the root. Local `build:docs`
 and CI run the gate; the deploy build does not, and does not need to —
 the commit it deploys was already gated twice.
+
+## The component sweep — every component, one real interaction (2026-09-05)
+
+`npm run sweep:components` (docs_v2/scripts/component-sweep.cjs) drives
+the BUILT docs site and the BUILT playground in headless Chromium and
+asserts a real interaction per component — a counter increments, a
+range moves a derived label, the pointer pad follows the mouse, the
+benchmark builds and switches arms, the formula grid edits A1, the
+share button reads "Copied!" with the URL on the clipboard, every
+playground route renders and its first button changes the stage. Run it
+after any theme/playground change; the header lists the two servers it
+expects. Probe lessons that cost time: scroll the target into view
+before acting (below-the-fold pads and buttons silently no-op); the
+arm tabs have no accessible name, use `.gb-tab`; `type=range` inputs
+reject `fill()` — set `.value` and dispatch `input`; StackBlitz never
+reaches networkidle, load with `waitUntil: 'load'`.

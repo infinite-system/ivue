@@ -23,6 +23,7 @@
   "scripts": {
     "gate": "vite-node skills/ivue/ivue-standards-check.ts --",
     "gate:docs": "node scripts/gate-docs.mjs",
+    "sweep:components": "NODE_PATH=$PWD/node_modules node docs_v2/scripts/component-sweep.cjs",
     "gate:house": "vite-node skills/ivue/ivue-house-gate.ts --",
     "gate:newsletter": "vite-node skills/ivue/ivue-generator-standard.ts -- --source-root newsletter --skip-list skills/ivue/ivue-standards-skip.json --test-glob 'newsletter/src/**/*.test.ts'",
     "dev": "vite demo --host",
