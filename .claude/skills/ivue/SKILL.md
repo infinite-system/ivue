@@ -1225,6 +1225,11 @@ like prose — don't ruin it with letter soup:
 - Abbreviate only when the abbreviation IS the domain term (`px`, `id`,
   `fx`, A1-notation like `startRow`/`endCol`).
 - Tests are code — the same rules apply to specs.
+- **A `v-for` alias is a declaration the template makes** — the same
+  rule: `v-for="(cell, columnIndex) in sheet.grid[row]"`, never
+  `(cell, ci) in sheet.grid[r]`. The template is read by the same
+  people as the class; `r`, `c`, `ci` cost them the same re-derivation
+  there.
 
 ```ts
 // ❌ const v = this.cellVersions.get(k);
@@ -1321,7 +1326,7 @@ convention and check it in review.
 - [ ] Watch sources are the FUNCTION form; component-scoped constructors use plain `watch`/`watchEffect`; `this.$watch`/`this.$watchEffect` only for component-outliving instances — each with a dispose path (`$stopEffects()` owner or `onScopeDispose` auto-wire).
 - [ ] Lifecycle hooks / init logic live in the constructor (no `init()` expecting auto-call); template refs guarded with `?.` where read pre-mount.
 - [ ] Every `computed()`/constructor-watch CALLBACK delegates to a method (`computed(() => this.recalculate())`) — no logic inlined in reactive closures; the arrow form, never `computed(this.method)`.
-- [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices and specs included — no single-letter names, no name meaning different things in different methods.
+- [ ] Identifiers are unfolded to domain words (`row`/`col`/`cell`/`cellValue`/`versionRef`…), loop indices, `v-for` aliases and specs included — no single-letter names, no name meaning different things in different methods.
 - [ ] Keyed/sparse state uses the Map-of-refs shape (get-or-create on read, peek-only bump on write, explicit release path) — never one getter per key, never a deep `reactive()` collection.
 - [ ] Static members are anchored (`const $Class = Static($X)`); `$`-prefixed static getters are compute-once-per-receiver caches, non-`$` statics stay live knobs, and inheritance extends `$Class` — never the mutable `Class`.
 - [ ] Million-call loops over a `Static()` class destructure the bound methods once inside the function (never module-scope, never `$Class`); `Class.method()` stays the form everywhere else.

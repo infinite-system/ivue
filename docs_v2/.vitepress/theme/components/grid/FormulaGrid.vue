@@ -98,8 +98,8 @@ const {
         <div class="gc-inner">
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
-            <div v-for="c in grid.columnCount" :key="c" class="gc-cell gc-head-cell">
-              {{ grid.headerLabel(c) }}
+            <div v-for="column in grid.columnCount" :key="column" class="gc-cell gc-head-cell">
+              {{ grid.headerLabel(column) }}
             </div>
           </div>
           <div
@@ -110,21 +110,21 @@ const {
               class="gc-rows"
               :style="{ transform: `translateY(${grid.window.offsetY.value}px)` }"
             >
-              <div v-for="r in grid.window.visibleRows.value" :key="r" class="gc-row">
-                <div class="gc-rownum">{{ r + 1 }}</div>
+              <div v-for="row in grid.window.visibleRows.value" :key="row" class="gc-row">
+                <div class="gc-rownum">{{ row + 1 }}</div>
                 <div
-                  v-for="(cell, ci) in sheet!.grid[r]"
-                  :key="ci"
+                  v-for="(cell, columnIndex) in sheet!.grid[row]"
+                  :key="columnIndex"
                   class="gc-cell"
                   :class="cell.cssClass"
                   data-grid-cell
-                  :data-row="r"
-                  :data-col="ci"
+                  :data-row="row"
+                  :data-col="columnIndex"
                   :title="cell.raw.value"
-                  @click="grid.edit(r, ci)"
+                  @click="grid.edit(row, columnIndex)"
                 >
                   <input
-                    v-if="grid.isEditing(r, ci)"
+                    v-if="grid.isEditing(row, columnIndex)"
                     class="gc-edit"
                     v-model="cell.raw.value"
                     autofocus

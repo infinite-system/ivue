@@ -150,28 +150,28 @@ const pojoCls = (cell: { raw: string }) =>
     <!-- Comparison strip: creation time + measured heap, side by side -->
     <div v-if="hasAny" class="gb-compare">
       <div
-        v-for="a in ARMS"
-        :key="a.key"
+        v-for="arm in ARMS"
+        :key="arm.key"
         class="gb-compare-item"
-        :class="`gb-accent-${a.accent}`"
+        :class="`gb-accent-${arm.accent}`"
       >
         <div class="gb-compare-head">
-          <span class="gb-tag">{{ a.tag }}</span>
-          <span class="gb-label">{{ a.label }}</span>
+          <span class="gb-tag">{{ arm.tag }}</span>
+          <span class="gb-label">{{ arm.label }}</span>
         </div>
         <div class="gb-compare-num">
-          {{ controllers[a.key].creationMs.value.toFixed(1)
+          {{ controllers[arm.key].creationMs.value.toFixed(1)
           }}<span class="gb-unit">ms</span
-          ><BenchmarkWinner v-if="a.key === 'ivue'" placement="after" />
+          ><BenchmarkWinner v-if="arm.key === 'ivue'" placement="after" />
         </div>
         <div class="gb-compare-sub">
           to create
-          {{ controllers[a.key].modelCells.value.toLocaleString() }} cells
+          {{ controllers[arm.key].modelCells.value.toLocaleString() }} cells
         </div>
         <div class="gb-compare-heap">
           <span class="gb-heap-num"
-            >{{ heapFor(a.key)
-            }}<BenchmarkWinner v-if="a.key === 'ivue'" placement="after"
+            >{{ heapFor(arm.key)
+            }}<BenchmarkWinner v-if="arm.key === 'ivue'" placement="after"
           /></span>
           <span class="gb-heap-label">measured heap &middot; RESULTS.md</span>
         </div>
@@ -181,22 +181,22 @@ const pojoCls = (cell: { raw: string }) =>
     <!-- Arm switcher — only ONE grid is mounted below at a time -->
     <div v-if="hasAny" class="gb-tabs" role="tablist">
       <button
-        v-for="a in ARMS"
-        :key="a.key"
+        v-for="arm in ARMS"
+        :key="arm.key"
         class="gb-tab"
-        :class="[{ active: activeArm === a.key }, `gb-accent-${a.accent}`]"
+        :class="[{ active: activeArm === arm.key }, `gb-accent-${arm.accent}`]"
         type="button"
         role="tab"
-        :aria-selected="activeArm === a.key"
-        @click="activeArm = a.key"
+        :aria-selected="activeArm === arm.key"
+        @click="activeArm = arm.key"
       >
-        {{ a.label }}
+        {{ arm.label }}
       </button>
       <span class="gb-tabs-hint">
         {{
           activeArm === 'pojo'
             ? 'read-only · no reactivity, by design'
-            : 'click a cell to edit · scroll to virtualize'
+            : 'click arm cell to edit · scroll to virtualize'
         }}
       </span>
     </div>
@@ -213,8 +213,8 @@ const pojoCls = (cell: { raw: string }) =>
         <div class="gc-inner">
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
-            <div v-for="c in COLS" :key="c" class="gc-cell gc-head-cell">
-              {{ colLabel(c - 1) }}
+            <div v-for="column in COLS" :key="column" class="gc-cell gc-head-cell">
+              {{ colLabel(column - 1) }}
             </div>
             <div class="gc-sum gc-head-cell">Σ</div>
           </div>
@@ -229,21 +229,21 @@ const pojoCls = (cell: { raw: string }) =>
               }"
             >
               <div
-                v-for="r in composableG.visibleRows.value"
-                :key="r"
+                v-for="row in composableG.visibleRows.value"
+                :key="row"
                 class="gc-row"
               >
-                <div class="gc-rownum">{{ r + 1 }}</div>
+                <div class="gc-rownum">{{ row + 1 }}</div>
                 <div
-                  v-for="(cell, ci) in composableG.model.value[r]"
-                  :key="ci"
+                  v-for="(cell, columnIndex) in composableG.model.value[row]"
+                  :key="columnIndex"
                   class="gc-cell"
                   :class="cell.cssClass.value"
                   data-grid-cell
-                  @click="composableG.edit(r, ci)"
+                  @click="composableG.edit(row, columnIndex)"
                 >
                   <input
-                    v-if="composableG.isEditing(r, ci)"
+                    v-if="composableG.isEditing(row, columnIndex)"
                     class="gc-edit"
                     v-model="cell.raw.value"
                     autofocus
@@ -252,7 +252,7 @@ const pojoCls = (cell: { raw: string }) =>
                   />
                   <template v-else>{{ cell.display.value }}</template>
                 </div>
-                <div class="gc-sum">{{ fmtSum(composableG.rowSum(r)) }}</div>
+                <div class="gc-sum">{{ fmtSum(composableG.rowSum(row)) }}</div>
               </div>
             </div>
           </div>
@@ -269,8 +269,8 @@ const pojoCls = (cell: { raw: string }) =>
         <div class="gc-inner">
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
-            <div v-for="c in COLS" :key="c" class="gc-cell gc-head-cell">
-              {{ colLabel(c - 1) }}
+            <div v-for="column in COLS" :key="column" class="gc-cell gc-head-cell">
+              {{ colLabel(column - 1) }}
             </div>
             <div class="gc-sum gc-head-cell">Σ</div>
           </div>
@@ -282,18 +282,18 @@ const pojoCls = (cell: { raw: string }) =>
               class="gc-rows"
               :style="{ transform: `translateY(${ivueG.offsetY.value}px)` }"
             >
-              <div v-for="r in ivueG.visibleRows.value" :key="r" class="gc-row">
-                <div class="gc-rownum">{{ r + 1 }}</div>
+              <div v-for="row in ivueG.visibleRows.value" :key="row" class="gc-row">
+                <div class="gc-rownum">{{ row + 1 }}</div>
                 <div
-                  v-for="(cell, ci) in ivueG.model.value[r]"
-                  :key="ci"
+                  v-for="(cell, columnIndex) in ivueG.model.value[row]"
+                  :key="columnIndex"
                   class="gc-cell"
                   :class="cell.cssClass"
                   data-grid-cell
-                  @click="ivueG.edit(r, ci)"
+                  @click="ivueG.edit(row, columnIndex)"
                 >
                   <input
-                    v-if="ivueG.isEditing(r, ci)"
+                    v-if="ivueG.isEditing(row, columnIndex)"
                     class="gc-edit"
                     v-model="cell.raw.value"
                     autofocus
@@ -302,7 +302,7 @@ const pojoCls = (cell: { raw: string }) =>
                   />
                   <template v-else>{{ cell.display }}</template>
                 </div>
-                <div class="gc-sum">{{ fmtSum(ivueG.rowSum(r)) }}</div>
+                <div class="gc-sum">{{ fmtSum(ivueG.rowSum(row)) }}</div>
               </div>
             </div>
           </div>
@@ -319,8 +319,8 @@ const pojoCls = (cell: { raw: string }) =>
         <div class="gc-inner">
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
-            <div v-for="c in COLS" :key="c" class="gc-cell gc-head-cell">
-              {{ colLabel(c - 1) }}
+            <div v-for="column in COLS" :key="column" class="gc-cell gc-head-cell">
+              {{ colLabel(column - 1) }}
             </div>
             <div class="gc-sum gc-head-cell">Σ</div>
           </div>
@@ -332,18 +332,18 @@ const pojoCls = (cell: { raw: string }) =>
               class="gc-rows"
               :style="{ transform: `translateY(${pojoG.offsetY.value}px)` }"
             >
-              <div v-for="r in pojoG.visibleRows.value" :key="r" class="gc-row">
-                <div class="gc-rownum">{{ r + 1 }}</div>
+              <div v-for="row in pojoG.visibleRows.value" :key="row" class="gc-row">
+                <div class="gc-rownum">{{ row + 1 }}</div>
                 <div
-                  v-for="(cell, ci) in pojoG.model.value[r]"
-                  :key="ci"
+                  v-for="(cell, columnIndex) in pojoG.model.value[row]"
+                  :key="columnIndex"
                   class="gc-cell"
                   :class="pojoCls(cell)"
                   data-grid-cell
                 >
                   {{ pojoDisp(cell) }}
                 </div>
-                <div class="gc-sum">{{ fmtSum(pojoG.rowSum(r)) }}</div>
+                <div class="gc-sum">{{ fmtSum(pojoG.rowSum(row)) }}</div>
               </div>
             </div>
           </div>

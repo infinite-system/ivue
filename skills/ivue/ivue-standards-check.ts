@@ -53,7 +53,7 @@ class $CheckStandard {
 
   static readonly BANNED_NAMES = new Set([
     'inst', 'qty', 'agg', 'nv', 'ov', 'val', 'arr', 'obj', 'fn', 'cb', 'el', 'evt', 'tmp', 'idx', 'err',
-    'num', 'str', 'ctx', 'res', 'msg', 'cnt', 'len', 'ret', 'prev', 'old',
+    'num', 'str', 'ctx', 'res', 'msg', 'cnt', 'len', 'ret', 'prev', 'old', 'ci', 'ri',
   ]);
 
   static readonly DOMAIN_TERMS = new Set(['px', 'id', 'fx', 'x', 'y', 'z']);
@@ -911,6 +911,16 @@ class $CheckStandard {
       };
       for (const unit of context.sources) inspect(unit);
       for (const unit of context.tests) inspect(unit);
+      // a `v-for` alias is a declaration the template makes — same rule
+      for (const component of context.components) {
+        for (const alias of component.forAliases) {
+          for (const name of alias.names) {
+            const bare = name.replace(/^[$_]+/, '');
+            if (name === '_' || (bare.length === 1 && !this.DOMAIN_TERMS.has(bare)) || this.BANNED_NAMES.has(bare.toLowerCase()))
+              findings.push(this.componentFinding(this.declarations_use_full_descriptive_names, component, alias.line, `\`${name}\` as a \`v-for\` alias — unfold to the domain word (row, cell, column, index…); single letters and abbreviations are not names`));
+          }
+        }
+      }
       return findings;
     });
   }
@@ -1510,8 +1520,13 @@ export namespace Scroller {
           },
           expectFindings: [/`nv`/, /`e`/, /`inst`/, /`_`/],
           expectCount: 4,
+        }, {
+          // a `v-for` alias is a declaration too
+          files: { ...box, 'src/Box.vue': fixture.validSfc.replace('<button @click="box.grow()">grow</button>', '<ul><li v-for="(r, i) in box.rows" :key="i">{{ r }}</li></ul>\n  <button @click="box.grow()">grow</button>') },
+          expectFindings: [/`r` as a `v-for` alias/, /`i` as a `v-for` alias/],
+          expectCount: 2,
         }],
-        green: [{ files: { 'src/Box.ts': fixture.validClass.replace('  grow() {', '  offset(px: number, id: string) {\n    return `${id}:${px}`;\n  }\n\n  grow() {'), 'src/Box.test.ts': fixture.validTest } }],
+        green: [{ files: { 'src/Box.ts': fixture.validClass.replace('  grow() {', '  offset(px: number, id: string) {\n    return `${id}:${px}`;\n  }\n\n  grow() {'), 'src/Box.test.ts': fixture.validTest } }, { files: { ...box, 'src/Box.vue': fixture.validSfc.replace('<button @click="box.grow()">grow</button>', '<ul><li v-for="(row, index) in box.rows" :key="index">{{ row }}</li></ul>\n  <button @click="box.grow()">grow</button>') } }],
       },
       'class_members_are_ordered_and_spaced': {
         claim: 'If a class is written, then statics precede the constructor, the constructor precedes getters, methods come last and are separated by blank lines',
@@ -1608,7 +1623,8 @@ export namespace Scroller {
     return unit.ast.getLineAndCharacterOfPosition(node.getStart(unit.ast)).line + 1;
   }
 
-  static collectTemplateExpressions(nodes: TemplateChildNode[], into: CheckStandard.TemplateExpression[]): void {
+  static collectTemplateExpressions(nodes: TemplateChildNode[], into: CheckStandard.TemplateExpression[], aliases: CheckStandard.ForAliases[] = []): void {
+    const aliasNames = (text: string) => text.match(/[A-Za-z_$][\w$]*/g) ?? [];
     for (const node of nodes) {
       if (node.type === NodeTypes.INTERPOLATION && node.content.type === NodeTypes.SIMPLE_EXPRESSION) {
         into.push({ code: node.content.content, line: node.loc.start.line, kind: 'interpolation' });
@@ -1619,21 +1635,24 @@ export namespace Scroller {
           if (this.TEMPLATE_IGNORED_DIRECTIVES.has(property.name)) continue;
           let code = property.exp.content;
           if (property.name === 'for') {
-            const source = /\s+(?:in|of)\s+([\s\S]+)$/.exec(code);
+            const source = /^([\s\S]*?)\s+(?:in|of)\s+([\s\S]+)$/.exec(code);
             if (!source) continue;
-            code = source[1];
+            aliases.push({ names: aliasNames(source[1]), line: property.exp.loc.start.line });
+            code = source[2];
           }
           into.push({ code, line: property.exp.loc.start.line, kind: property.name });
         }
-        this.collectTemplateExpressions(element.children, into);
+        this.collectTemplateExpressions(element.children, into, aliases);
       } else if (node.type === NodeTypes.IF) {
         for (const branch of node.branches) {
           if (branch.condition && branch.condition.type === NodeTypes.SIMPLE_EXPRESSION) into.push({ code: branch.condition.content, line: branch.loc.start.line, kind: 'if' });
-          this.collectTemplateExpressions(branch.children, into);
+          this.collectTemplateExpressions(branch.children, into, aliases);
         }
       } else if (node.type === NodeTypes.FOR) {
         if (node.source.type === NodeTypes.SIMPLE_EXPRESSION) into.push({ code: node.source.content, line: node.loc.start.line, kind: 'for' });
-        this.collectTemplateExpressions(node.children, into);
+        const names = [node.valueAlias, node.keyAlias, node.objectIndexAlias].flatMap((alias) => (alias && alias.type === NodeTypes.SIMPLE_EXPRESSION ? aliasNames(alias.content) : []));
+        if (names.length) aliases.push({ names, line: node.loc.start.line });
+        this.collectTemplateExpressions(node.children, into, aliases);
       }
     }
   }
@@ -1653,13 +1672,15 @@ export namespace Scroller {
         }
       : null;
     const expressions: CheckStandard.TemplateExpression[] = [];
+    const forAliases: CheckStandard.ForAliases[] = [];
     if (descriptor.template) {
       const templateAst = parseTemplate(descriptor.template.content, { comments: false });
-      this.collectTemplateExpressions(templateAst.children, expressions);
+      this.collectTemplateExpressions(templateAst.children, expressions, forAliases);
       const offset = descriptor.template.loc.start.line - 1;
       for (const expression of expressions) expression.line += offset;
+      for (const alias of forAliases) alias.line += offset;
     }
-    return { path, relativePath: relative(cwd, path).replaceAll('\\', '/'), text, script, scriptLine, expressions };
+    return { path, relativePath: relative(cwd, path).replaceAll('\\', '/'), text, script, scriptLine, expressions, forAliases };
   }
 
   /** A template expression parsed as one TypeScript expression (null when it does not parse). */
@@ -2447,6 +2468,13 @@ export namespace CheckStandard {
     /** 1-based line of the script block's first line in the .vue file */
     scriptLine: number;
     expressions: TemplateExpression[];
+    /** every `v-for` alias (value, key, index) with the line it is declared on */
+    forAliases: ForAliases[];
+  }
+
+  export interface ForAliases {
+    names: string[];
+    line: number;
   }
 
   export interface TemplateExpression {
