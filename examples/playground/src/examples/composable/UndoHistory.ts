@@ -40,16 +40,6 @@ class $UndoHistory {
   get positionLabel() {
     return `${this.cursor.value + 1} / ${this.depth}`;
   }
-  /** The step to undo, named — what an Undo button should say. */
-  get undoLabel() {
-    return this.canUndo ? `undo "${this.current.label}"` : 'undo';
-  }
-  /** The step to redo, named. */
-  get redoLabel() {
-    return this.canRedo
-      ? `redo "${this.entries.value[this.cursor.value + 1].label}"`
-      : 'redo';
-  }
 
   /** Whether a history entry is the current one (a per-row template condition). */
   isCurrent(index: number) {

@@ -53,7 +53,7 @@ const example = new ComposableExample.Class();
         :disabled="!example.history.canUndo"
         @click="example.history.undo()"
       >
-        {{ example.history.undoLabel }}
+        undo
       </button>
       <button
         class="btn"
@@ -61,7 +61,7 @@ const example = new ComposableExample.Class();
         :disabled="!example.history.canRedo"
         @click="example.history.redo()"
       >
-        {{ example.history.redoLabel }}
+        redo
       </button>
     </div>
 

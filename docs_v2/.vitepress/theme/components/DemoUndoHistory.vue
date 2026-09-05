@@ -21,10 +21,10 @@ const list = new GroceryList.Class();
     </div>
     <div class="d-row">
       <button class="d-btn" type="button" :disabled="!list.history.canUndo" @click="list.history.undo()">
-        {{ list.history.undoLabel }}
+        Undo
       </button>
       <button class="d-btn" type="button" :disabled="!list.history.canRedo" @click="list.history.redo()">
-        {{ list.history.redoLabel }}
+        Redo
       </button>
       <span class="d-mono">{{ list.history.positionLabel }}</span>
     </div>

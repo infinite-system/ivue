@@ -37,7 +37,7 @@ readouts.
 `useUndoHistory()` is one line: `return new UndoHistory.Class()`. A
 consumer who only knows composables calls it and destructures, and gets a
 class underneath: lazy state, plain-getter derivations (`canUndo`,
-`canRedo`, `undoLabel`, `positionLabel` cost zero bytes per instance), and
+`canRedo`, `positionLabel` cost zero bytes per instance), and
 a model that can be subclassed or swapped without touching a caller.
 
 The demo edits a grocery list. Each operation records one labeled
