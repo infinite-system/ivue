@@ -30,10 +30,13 @@ import { Static } from '../../../Static';
 import { ServerApi } from '../server/ServerApi';
 import { Field } from '../Field';
 
-/** Sentinel `value` of the synthetic "Create …" option row. */
-export const CREATE_OPTION_VALUE = '__create_option__';
-
 class $ChooseField extends Field.$Class {
+  /** Sentinel `value` of the synthetic "Create …" option row — a live
+   *  static knob (no `$`): a subclass can re-key it. */
+  static get createOptionValue() {
+    return '__create_option__';
+  }
+
   /* Contract — STATIC. The class owns its inputs the way it owns its
      state; ContactField extends them with `super` and re-tunes only
      what differs. Types AND defaults are declared separately on purpose:
@@ -707,7 +710,7 @@ class $ChooseField extends Field.$Class {
     // offer nothing to create — selecting it is the only correct action.
     if (this.findOptionByLabel(this.searchTerm.value)) return;
     const [firstOption] = this.displayedOptions.value;
-    if ((firstOption as ChooseField.KeyValueRow)?.value === CREATE_OPTION_VALUE) return;
+    if ((firstOption as ChooseField.KeyValueRow)?.value === this.self.createOptionValue) return;
     const term = this.searchTerm.value.trim();
     const text = `${this.createLabel || 'Create new'} '${term}'`;
     this.displayedOptions.value = [
@@ -718,14 +721,14 @@ class $ChooseField extends Field.$Class {
         ...(this.props.optionLabel ? { [this.props.optionLabel]: text } : {}),
         createTerm: term,
         icon: 'add',
-        value: CREATE_OPTION_VALUE,
+        value: this.self.createOptionValue,
       },
       ...this.displayedOptions.value,
     ];
   }
 
   isCreateOptionRow(option: ChooseField.Option) {
-    return (option as ChooseField.KeyValueRow)?.value === CREATE_OPTION_VALUE;
+    return (option as ChooseField.KeyValueRow)?.value === this.self.createOptionValue;
   }
 
   /** POST the typed term as a new entity, add it to the options, select it. */
@@ -804,7 +807,7 @@ class $ChooseField extends Field.$Class {
   onModelWrite(value: any) {
     const isArrayValue = Array.isArray(value);
     const lastAdded = isArrayValue ? value[value.length - 1] : value;
-    if ([lastAdded, (lastAdded as ChooseField.KeyValueRow)?.value].includes(CREATE_OPTION_VALUE)) {
+    if ([lastAdded, (lastAdded as ChooseField.KeyValueRow)?.value].includes(this.self.createOptionValue)) {
       this.createOption();
       return;
     }
