@@ -462,3 +462,13 @@ background processes, sweep:
   the template and the wrapper is not shown. Never both — two SFCs
   side by side read as duplication.
 
+## `this.$watch` inside a raw class body is typed by declaration merging (2026-09-05)
+
+- `Reactive()` installs `$watch` / `$watchEffect` / `$stopEffects` after the
+  class was typed, so a raw `$Class` body cannot see them. The idiom is
+  ONE line beside the class, zero runtime: `interface $X extends
+  ReactiveHelpers {}` (`ReactiveHelpers` is exported by the engine; the
+  playground gets it through `sync:examples`). Never `(this as any)`,
+  never per-member `declare` lines. The residents check treats the merge
+  interface named after the file's own class as the class's second half.
+

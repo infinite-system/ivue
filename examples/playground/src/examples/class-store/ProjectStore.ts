@@ -2,7 +2,7 @@
 // module singleton. No Pinia, no defineStore, no plugin: the class IS the
 // store, and ProjectStore.use() hands every caller the same instance.
 import { reactive, ref, shallowRef } from 'vue';
-import { Reactive } from '../../ivue';
+import { Reactive, type ReactiveHelpers } from '../../ivue';
 import { LazyShared } from '../../LazyShared';
 import { Static } from '../../Static';
 
@@ -131,6 +131,8 @@ class $ProjectStore {
     }
   }
 }
+
+interface $ProjectStore extends ReactiveHelpers {}
 
 export namespace ProjectStore {
   export const $Class = Static($ProjectStore); // anchor — it declares statics; children `extends` this

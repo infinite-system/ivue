@@ -432,17 +432,27 @@ type WritableGetters<T> = {
   ]-?: T[K];
 };
 
-export type ReactiveInstance<T> = T &
-  WritableGetters<T> & {
-    /** Register a watcher in the instance's lazy effect scope (same signature as Vue `watch`). */
-    $watch: typeof watch;
-    /** Register a watchEffect in the instance's lazy effect scope (same signature as Vue `watchEffect`). */
-    $watchEffect: typeof watchEffect;
-    /** Stop the instance's effect scope and drop cached cells (the next
-     * touch re-materializes). `{ reset: false }` stops watchers only —
-     * every cached cell survives with its current value. */
-    $stopEffects: (options?: { reset?: boolean }) => void;
-  };
+/**
+ * The members `Reactive()` installs on every instance's prototype. A raw
+ * class body cannot see them (the transform runs after the class is typed),
+ * so a class that calls them merges this interface into its own instance
+ * type — one declaration beside the class, zero runtime:
+ *
+ *   class $Session { constructor() { this.$watch(…) } }
+ *   interface $Session extends ReactiveHelpers {}
+ */
+export interface ReactiveHelpers {
+  /** Register a watcher in the instance's lazy effect scope (same signature as Vue `watch`). */
+  $watch: typeof watch;
+  /** Register a watchEffect in the instance's lazy effect scope (same signature as Vue `watchEffect`). */
+  $watchEffect: typeof watchEffect;
+  /** Stop the instance's effect scope and drop cached cells (the next
+   * touch re-materializes). `{ reset: false }` stops watchers only —
+   * every cached cell survives with its current value. */
+  $stopEffects: (options?: { reset?: boolean }) => void;
+}
+
+export type ReactiveInstance<T> = T & WritableGetters<T> & ReactiveHelpers;
 
 export type ReactiveClass<C extends new (...args: any) => any> = {
   [Key in keyof C]: C[Key];

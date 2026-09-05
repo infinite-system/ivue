@@ -2,15 +2,10 @@
 // lazily created effect scope, and the instance is started, suspended,
 // resumed and disposed by hand. The onScopeDispose bridge in the
 // constructor makes a component-owned Sensor ride unmount anyway.
-import { getCurrentScope, onScopeDispose, ref, shallowRef, type watch } from 'vue';
-import { Reactive } from '../../ivue';
+import { getCurrentScope, onScopeDispose, ref, shallowRef } from 'vue';
+import { Reactive, type ReactiveHelpers } from '../../ivue';
 
 class $Sensor {
-  // The engine installs these on the prototype at Reactive(); `declare`
-  // gives the class body their types and emits nothing.
-  declare $watch: typeof watch;
-  declare $stopEffects: (options?: { reset?: boolean }) => void;
-
   constructor() {
     // The bridge: constructed inside a component, disposal rides its
     // unmount; constructed anywhere else, this line is a no-op and the
@@ -90,6 +85,10 @@ class $Sensor {
     this.lastChange.value = `${oldTemp} → ${newTemp}`;
   }
 }
+
+// The engine installs $watch / $stopEffects at Reactive(); merging its
+// helpers gives the class body their types — one line, zero runtime.
+interface $Sensor extends ReactiveHelpers {}
 
 export namespace Sensor {
   export const $Class = $Sensor; // raw — children `extends` this

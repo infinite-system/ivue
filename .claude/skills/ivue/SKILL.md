@@ -612,6 +612,8 @@ created in a callback — watchers go in the instance's OWN scope, and the
 owner of its lifetime disposes it:
 
 ```ts
+import { Reactive, type ReactiveHelpers } from 'ivue';
+
 class $Session {
   get user() {
     return ref<User | null>(null);
@@ -673,6 +675,12 @@ export namespace Session {
   // the type of every unwrapping surface (defineExpose, reactive())
   export type Instance = typeof Class.Instance;
 }
+
+// The engine installs $watch / $watchEffect / $stopEffects at Reactive(),
+// AFTER the class body was typed — so a class that calls them merges the
+// helpers into its own instance type. One line, zero runtime; the gate
+// reads it as the class's second half, never as a stray type.
+interface $Session extends ReactiveHelpers {}
 
 // The owner disposes — the class's own method, like any other:
 session.dispose();
@@ -1319,6 +1327,7 @@ convention and check it in review.
 - [ ] Instance reads of own statics go through `this.self` (declared once per class needing it, cast to `typeof $X`, plain getter never `$self`); 2+ reads or loops hoist `const self = this.self`; no per-site `this.constructor` casts; `Namespace.Class` reads stay reserved for late-bound capability dispatch.
 - [ ] Static members precede the constructor; the constructor precedes state, prop, and derived getters; methods come last.
 - [ ] Spacing carries meaning: declaration-like getters contiguous within their group; blank lines only where a doc comment / multi-line body / category boundary begins; methods always separated.
+- [ ] A class that calls `this.$watch` / `$watchEffect` / `$stopEffects` merges the engine's helpers beside itself — `interface $X extends ReactiveHelpers {}` — so the body typechecks (never `(this as any)`, never per-member `declare` lines).
 - [ ] The class carries the WHOLE contract as static getters (`propsTypes`, `propsDefaults`, the one-line `props` fusion, `emits`, tuning knobs) and the namespace holds identity and types ONLY, every type derived from `$Class`; no module-level consts or TYPE declarations beside imports/class/namespace (every type a class file declares is a namespace member, read as `X.Name`), no `const`, `let`, or `function` of any kind in the namespace — contract data, tuning knobs, seed data, singletons (`use()`), helpers all live on the class as statics (the gate's `the_namespace_holds_identity_and_types_only` check enforces it), no sibling `XProps.ts`; the SFC reads `X.Class.props` / `X.Class.emits`; a subclass extends the contract with `super` and re-declares the fusion line only when it ADDS props.
 - [ ] Every member that overrides a base member carries `override` (with `noImplicitOverride` enabled).
 - [ ] No `private` members — internal members are `protected` (three-tier visibility: public = consumer surface, protected = hierarchy seam, private = banned).

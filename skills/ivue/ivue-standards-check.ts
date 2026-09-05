@@ -213,6 +213,10 @@ class $CheckStandard {
             if (!seenClass) findings.push(this.finding(this.a_class_file_holds_only_imports_class_namespace_and_types, unit, this.lineOf(unit, statement), `namespace ${classFile.publicName} precedes its class ${classFile.rawName}`));
             continue;
           }
+          // `interface $Box extends ReactiveHelpers {}` merges the engine's
+          // helpers into the class's own instance type — it is the class's
+          // second half, not a type outside the namespace
+          if (ts.isInterfaceDeclaration(statement) && statement.name.text === classFile.rawName) continue;
           if (ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement) || ts.isEnumDeclaration(statement)) {
             findings.push(this.finding(this.a_class_file_holds_only_imports_class_namespace_and_types, unit, this.lineOf(unit, statement), `\`${statement.name.text}\` is a type outside the namespace — every type a class file declares is a member of \`namespace ${classFile.publicName}\` (export type / interface), read as \`${classFile.publicName}.${statement.name.text}\``));
             continue;
@@ -1244,7 +1248,7 @@ export namespace Scroller {
         claim: 'If a file is a class file, then its top level is imports, the class, and its namespace, nothing else — every type it declares is a namespace member',
         impossibility: 'a file breaking a_class_file_holds_only_imports_class_namespace_and_types passes the gate',
         red: [{ files: { 'src/Box.ts': `${fixture.validClass}\nconst DEFAULT_WIDTH = 4;\nexport function widen(box: Box.Instance) { return box.area; }\nexport type BoxSeed = { width: number };\n` }, expectFindings: [/outside the class seam/, /`BoxSeed` is a type outside the namespace/], expectCount: 3 }],
-        green: [{ files: { 'src/Box.ts': fixture.validClass.replace('  export type Instance = typeof Class.Instance;\n', '  export type Instance = typeof Class.Instance;\n  export type Seed = { width: number };\n  export interface Emits {\n    (event: \'grown\'): void;\n  }\n') } }],
+        green: [{ files: { 'src/Box.ts': fixture.validClass.replace('  export type Instance = typeof Class.Instance;\n', '  export type Instance = typeof Class.Instance;\n  export type Seed = { width: number };\n  export interface Emits {\n    (event: \'grown\'): void;\n  }\n') } }, { files: { 'src/Box.ts': fixture.validClass.replace("import { Reactive } from 'ivue';", "import { Reactive, type ReactiveHelpers } from 'ivue';").replace('    watch(\n      () => this.height.value,', '    getCurrentScope() && onScopeDispose(() => this.$stopEffects());\n    this.$watch(\n      () => this.height.value,').replace("import { ref, watch } from 'vue';", "import { getCurrentScope, onScopeDispose, ref, watch } from 'vue';").replace('\nexport namespace Box {', '\ninterface $Box extends ReactiveHelpers {}\n\nexport namespace Box {') } }],
       },
       'the_namespace_holds_identity_and_types_only': {
         claim: 'If a class file has a namespace, then the namespace holds $Class, Class, and type declarations, never runtime data or behavior (which live on the class as statics)',
