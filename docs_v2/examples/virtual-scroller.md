@@ -48,6 +48,12 @@ const items = ref<BaseItem[]>(loadRows()) // any size — 1M is routine
 </template>
 ```
 
+## Related guide pages
+
+- [Components & Templates](/guide/components) — one template, one logic owner; the state destructure.
+- [Extensible Components](/guide/extensible-components) — props, emits and slots that extend with the class.
+- [Performance by Design](/guide/performance) — what the shape costs and does not.
+
 ## The source
 
 The exact files running above, tabbed — the class alone is ~1,200 lines,

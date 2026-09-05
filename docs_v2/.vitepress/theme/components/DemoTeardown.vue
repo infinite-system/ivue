@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { onUnmounted } from 'vue';
 import DemoBox from './DemoBox.vue';
 import { Sensor } from '@examples/lifecycle/Sensor';
 
+// The Sensor's constructor bridges to this component's scope
+// (getCurrentScope() && onScopeDispose(() => this.dispose())), so
+// unmount disposes it — no hook to write here.
 const sensor = new Sensor.Class();
 // the state destructure
 const { temp, watching, fired, lastChange } = sensor;
-onUnmounted(() => (sensor as any).$stopEffects());
 </script>
 
 <template>

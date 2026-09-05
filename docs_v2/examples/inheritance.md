@@ -72,3 +72,10 @@ The standalone playground renders both hierarchies on one route:
 
 For the full story of why inheritance works this way, read the
 [Inheritance guide](/guide/inheritance).
+
+## Related guide pages
+
+- [Inheritance & super](/guide/inheritance) — `extends $Class`, `super`, `override`.
+- [Namespace Pattern](/guide/namespace-pattern) — `$Class`, `Class`, and the types derived from them.
+- [Reactive State](/guide/state) — ref-getters, plain getters, the `$`-prefixed cache.
+

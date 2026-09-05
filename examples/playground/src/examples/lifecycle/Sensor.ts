@@ -1,8 +1,24 @@
-// Sensor.ts — $watch and $stopEffects on an instance you control by hand.
-import { ref } from 'vue';
+// Sensor.ts — the OUTLIVING shape: $watch registers in the instance's own
+// lazily created effect scope, and the instance is started, suspended,
+// resumed and disposed by hand. The onScopeDispose bridge in the
+// constructor makes a component-owned Sensor ride unmount anyway.
+import { getCurrentScope, onScopeDispose, ref, shallowRef, type watch } from 'vue';
 import { Reactive } from '../../ivue';
 
 class $Sensor {
+  // The engine installs these on the prototype at Reactive(); `declare`
+  // gives the class body their types and emits nothing.
+  declare $watch: typeof watch;
+  declare $stopEffects: (options?: { reset?: boolean }) => void;
+
+  constructor() {
+    // The bridge: constructed inside a component, disposal rides its
+    // unmount; constructed anywhere else, this line is a no-op and the
+    // explicit owner calls dispose().
+    getCurrentScope() && onScopeDispose(() => this.dispose());
+  }
+
+  // MUTABLE STATE
   get temp() {
     return ref(20);
   }
@@ -16,29 +32,42 @@ class $Sensor {
     return ref('');
   }
 
-  #stopWatch?: () => void;
+  /** The handle of the one live watcher; null when none is registered. A
+   *  ref like every other cell, so dispose()'s reset clears it too. */
+  protected get stopWatcher() {
+    return shallowRef<(() => void) | null>(null);
+  }
+
+  // DERIVED — plain getters
+  get watchingLabel() {
+    return this.watching.value ? 'ON' : 'off';
+  }
+  get lastChangeLabel() {
+    return this.lastChange.value || '—';
+  }
 
   start() {
     if (this.watching.value) return;
     this.watching.value = true;
-    // $watch registers in the instance's lazy effect scope
-    this.#stopWatch = (this as any).$watch(
+    // $watch registers in the instance's lazy effect scope — allocated
+    // now, on the first call, never before
+    this.stopWatcher.value = this.$watch(
       () => this.temp.value,
       (newTemp: number, oldTemp: number) => this.onTempChanged(newTemp, oldTemp),
     );
   }
 
   stop() {
-    this.#stopWatch?.();
-    this.#stopWatch = undefined;
+    this.stopWatcher.value?.();
+    this.stopWatcher.value = null;
     this.watching.value = false;
   }
 
   /** Stop the watchers ONLY — `{ reset: false }` keeps every cached cell
    *  and its current value; start() resumes in a fresh scope. */
   suspend() {
-    (this as any).$stopEffects({ reset: false });
-    this.#stopWatch = undefined;
+    this.$stopEffects({ reset: false });
+    this.stopWatcher.value = null;
     this.watching.value = false;
   }
 
@@ -52,7 +81,8 @@ class $Sensor {
     this.fired.value = 0;
     this.lastChange.value = '';
     this.temp.value = 20;
-    (this as any).$stopEffects(); // stops the scope, clears every cached cell
+    this.stopWatcher.value = null;
+    this.$stopEffects(); // stops the scope, clears every cached cell
   }
 
   onTempChanged(newTemp: number, oldTemp: number) {

@@ -78,6 +78,12 @@ const props = defineProps(
 
 The state destructure is the only other thing in `<script setup>`.
 
+## Related guide pages
+
+- [Inheritance & super](/guide/inheritance) — `extends $Class`, `super`, `override`.
+- [Extensible Components](/guide/extensible-components) — props, emits and slots that extend with the class.
+- [Performance by Design](/guide/performance) — what the shape costs and does not.
+
 ## The source
 
 The subclass first — the two files that ARE the horizontal scroller —

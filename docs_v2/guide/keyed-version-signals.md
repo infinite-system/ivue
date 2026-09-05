@@ -100,3 +100,7 @@ No wrapper is needed anywhere: `ref()` and `computed()` are first-class
 values from `@vue/reactivity`, and Maps of them inside a `Reactive()`
 class compose with everything — methods stay bound, `$watch` works, and
 the collection itself stays a plain field.
+
+## See it running
+
+- [Flyweight Grid: 20M Cells](/examples/flyweight-grid) — twenty million cells at 4.7 bytes each.

@@ -613,3 +613,10 @@ and one override surface (the static).
 
 Never add a `protected get <ClassName>()` self-reference getter. It is a cast
 wearing a getter costume: it looks live and is not.
+
+## See it running
+
+- [Inheritance chain](/examples/inheritance) — three levels, one instance, `super.total`.
+- [Workspace Platform](/examples/workspace-platform) — a ClickUp-scale graph of models.
+- [Extensible Kernel](/examples/extensible-kernel) — plugins extend a namespaced class key.
+- [Invar — Terminal IDE](/examples/invar) — 108,000 lines of it in production.

@@ -124,6 +124,13 @@ Both views read and write the SAME cells — pick per consumer, not per app.
 - **The third panel writes `project.projectName` with no `.value`** — the
   `reactive()` view at work, fully typed.
 
+## Related guide pages
+
+- [Composables & Stores](/guide/composables) — hosting and publishing composables; stores behind `use()`.
+- [Lifecycle & Teardown](/guide/lifecycle-teardown) — the two lifetimes, `$stopEffects`, the bridge.
+- [Modules & Imports](/guide/modules) — circular imports dissolved by late reads through the namespace.
+- [Caches, Registries & self](/guide/caches-and-registries) — shared stores, `LazyShared`, reading statics through `self`.
+
 ## The source
 
 ::: code-group

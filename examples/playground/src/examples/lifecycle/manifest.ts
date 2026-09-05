@@ -1,6 +1,6 @@
 export const manifest = {
   slug: 'lifecycle',
-  title: '$watch & $stopEffects',
-  blurb: 'An instance-scoped watcher, started, stopped and disposed live.',
+  title: 'Lifecycle & teardown',
+  blurb: 'A component-owned Ticker beside an outliving Sensor — both lifetimes, live.',
   docsPath: '/examples/lifecycle',
 } as const;

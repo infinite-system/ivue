@@ -814,8 +814,21 @@ threads one object through every component and constructor signature it
 crosses; the store pattern deletes the thread.
 
 ```ts
-// app/AppStore.ts — the store IS an ivue class; `use()` owns the singleton
+// app/AppStore.ts — the store IS an ivue class; a static owns the singleton
+// (imports: Reactive from 'ivue'; LazyShared, Static from 'ivue/extras')
 class $AppStore {
+  // The ONE instance, in a static readonly cell: every receiver — the
+  // class, a subclass, a test double swapped into `Class` — resolves to
+  // the same store. The thunk runs on first read, after the app exists,
+  // and constructs through the namespace slot.
+  protected static readonly shared = new LazyShared<AppStore.Instance>(
+    () => new AppStore.Class(),
+  );
+
+  static use(): AppStore.Instance {
+    return this.shared.value;
+  }
+
   get authenticated() {
     return ref(false);
   }
@@ -826,14 +839,9 @@ class $AppStore {
 }
 
 export namespace AppStore {
-  export const $Class = $AppStore;
-  export let Class = Reactive($Class);
+  export const $Class = Static($AppStore); // anchor — it declares statics
+  export let Class = Reactive($Class); // reactive — use() does the one `new`
   export type Instance = typeof Class.Instance;
-
-  let singleton: Instance | null = null;
-  export function use(): Instance {
-    return (singleton ??= new Class());
-  }
 }
 ```
 
@@ -843,7 +851,7 @@ Consumers never receive it — they REACH for it:
 // any model — the `$`-getter caches the store per instance, forever
 class $SubscribersModel {
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   async refresh() {
@@ -861,7 +869,7 @@ class $SubscribersModel {
 // any component — call use() directly; no prop, no provide/inject
 import { AppStore } from '../app/AppStore';
 
-const app = AppStore.use();
+const app = AppStore.Class.use();
 const { authenticated } = app;
 </script>
 
@@ -874,13 +882,16 @@ Why this shape and not alternatives:
 
 - **`use()` is lazy** — the singleton constructs on first touch, after the
   app exists, so module-load order and circular imports stay non-events
-  (the same late-read property as every cross-module reference).
+  (the same late-read property as every cross-module reference). It lives
+  in a `static readonly` LazyShared cell on the class — never a namespace
+  `let`, which is a parallel world no subclass can reach (the gate's
+  `the_namespace_holds_identity_and_types_only` check refuses it).
 - **The `$`-getter is the injection point** — cached whole, per instance,
   on first read. A model names its dependency once; every method reads
   `this.$app` with zero lookup cost and zero constructor plumbing.
 - **Tests swap the slot, not the callers** — `AppStore.Class = $TestStore`
-  before the first `use()` (or reset the singleton) and every consumer
-  gets the double through the same seam.
+  before the first `use()` and every consumer, calling
+  `AppStore.Class.use()`, gets the double through the same seam.
 - A store is component-OUTLIVING by definition: watchers inside it use
   `this.$watch`/`$watchEffect`, never plain `watch`, and lifecycle hooks
   never belong in it.

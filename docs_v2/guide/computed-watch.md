@@ -222,3 +222,10 @@ const stop = this.$watch(() => this.query.value, onChange);
 // ...later
 stop();
 ```
+
+## See it running
+
+- [Counter](/examples/counter) — your first class, one ref, one derivation.
+- [Plain getter vs computed()](/examples/derived) — the same derivation both ways, with run counters.
+- [Lifecycle & Teardown](/examples/lifecycle) — both lifetimes live, Ticker and Sensor.
+- [Formula Grid: 1M Cells](/examples/formula-grid) — real formulas over a million cells.

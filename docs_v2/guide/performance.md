@@ -259,3 +259,11 @@ The result is not allocation performance purchased with permanently slower
 reads. ivue combines plain-object construction, observation-priced memory,
 proxy-free ordinary access, and an explicit path to native speed where a
 profiler shows repetition matters.
+
+## See it running
+
+- [Plain getter vs computed()](/examples/derived) — the same derivation both ways, with run counters.
+- [Virtual Scroller: 1M Items](/examples/virtual-scroller) — a million rows, a handful of divs.
+- [Horizontal Scroller: 1M Items](/examples/horizontal-scroller) — the vertical class rotated, one default re-tuned.
+- [Formula Grid: 1M Cells](/examples/formula-grid) — real formulas over a million cells.
+- [Flyweight Grid: 20M Cells](/examples/flyweight-grid) — twenty million cells at 4.7 bytes each.

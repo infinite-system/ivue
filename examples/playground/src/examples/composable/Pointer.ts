@@ -1,4 +1,5 @@
 // Pointer.ts — a class HOSTING a composable: private inside, two refs outside.
+import type { Ref } from 'vue';
 import { Reactive } from '../../ivue';
 import { useMouse } from '@vueuse/core';
 
@@ -8,11 +9,13 @@ class $Pointer {
     return useMouse();
   }
 
-  // the public surface: two refs
-  get x() {
+  // the public surface: two refs, FORWARDED from the composable (the
+  // annotation says these are the same cells, so a consumer may
+  // destructure them)
+  get x(): Ref<number> {
     return this.$mouse.x;
   }
-  get y() {
+  get y(): Ref<number> {
     return this.$mouse.y;
   }
 

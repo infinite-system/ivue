@@ -310,3 +310,11 @@ until observed*: getters price **members**, keyed collections price
 **keys**. Proven at scale in
 [the Flyweight Pattern](/guide/flyweight): 20,000,000 live formula-capable
 cells at 4.7 bytes each, with the overlay evicted as observation moves.
+
+## See it running
+
+- [Counter](/examples/counter) — your first class, one ref, one derivation.
+- [Plain getter vs computed()](/examples/derived) — the same derivation both ways, with run counters.
+- [Composables in classes](/examples/composable) — `useMouse` hosted, `useUndoHistory()` published.
+- [Inheritance chain](/examples/inheritance) — three levels, one instance, `super.total`.
+- [Workspace Platform](/examples/workspace-platform) — a ClickUp-scale graph of models.

@@ -105,3 +105,12 @@ patterns from this site's guides, applied at three orders of magnitude:
 **[github.com/infinite-system/invar](https://github.com/infinite-system/invar)** —
 clone it, run `bun start`, and read the modules with the guides open
 beside them.
+
+## Related guide pages
+
+- [Backend ivue](/guide/backend) — ivue with no DOM, under Bun.
+- [Static() — Capability Classes](/guide/static) — capability classes, `$`-cached statics, the anchor.
+- [Caches, Registries & self](/guide/caches-and-registries) — shared stores, `LazyShared`, reading statics through `self`.
+- [Namespace Pattern](/guide/namespace-pattern) — `$Class`, `Class`, and the types derived from them.
+- [Node class HMR](/guide/node-class-hmr) — class hot-swap on the backend.
+

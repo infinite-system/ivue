@@ -279,3 +279,9 @@ in the constructor; the component cleans up. Outliving instance →
 `this.$watch`/`this.$watchEffect` plus an owner that calls `$stopEffects()`
 (or the `onScopeDispose` bridge). Pure-data models need nothing.
 :::
+
+## See it running
+
+- [Lifecycle & Teardown](/examples/lifecycle) — both lifetimes live, Ticker and Sensor.
+- [Composables in classes](/examples/composable) — `useMouse` hosted, `useUndoHistory()` published.
+- [Pinia Store Alternative](/examples/class-store) — one shared instance behind `use()`.

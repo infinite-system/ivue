@@ -189,3 +189,11 @@ standard; `reactive()` at a boundary is an interop concession, not a pattern.
   through `Instance`.
 
 All three are Vue's own semantics, stated honestly instead of hidden.
+
+## See it running
+
+- [Counter](/examples/counter) — your first class, one ref, one derivation.
+- [Workspace Platform](/examples/workspace-platform) — a ClickUp-scale graph of models.
+- [Advanced Select Field](/examples/choose-field) — a 45-prop contract, extended by ContactField.
+- [Advanced Media Uploader](/examples/media-field) — an uploader and its class-extended tile variant.
+- [Virtual Scroller: 1M Items](/examples/virtual-scroller) — a million rows, a handful of divs.

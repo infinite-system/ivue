@@ -25,6 +25,12 @@ value, two actions. `count` is a ref-getter, `double` is a plain getter — no
 - **Methods are engine-bound.** `counter.increment` is safe to pass as a
   handler directly; its identity is stable.
 
+## Related guide pages
+
+- [Reactive State](/guide/state) — ref-getters, plain getters, the `$`-prefixed cache.
+- [Computed & Watch](/guide/computed-watch) — when `computed()` earns its bytes; plain `watch` versus `$watch`.
+- [Components & Templates](/guide/components) — one template, one logic owner; the state destructure.
+
 ## The source
 
 The demo above runs these exact files from the playground:

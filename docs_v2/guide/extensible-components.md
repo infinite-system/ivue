@@ -258,3 +258,10 @@ the generic-typing reference: one default re-tuned through `super`, and
 the `Props<T>` graft for the type parameter a runtime map cannot carry. The
 measured account of what the whole system buys is
 [Ship the variant, keep the tuning](/blog/ship-the-variant-keep-the-tuning).
+
+## See it running
+
+- [Advanced Select Field](/examples/choose-field) — a 45-prop contract, extended by ContactField.
+- [Advanced Media Uploader](/examples/media-field) — an uploader and its class-extended tile variant.
+- [Virtual Scroller: 1M Items](/examples/virtual-scroller) — a million rows, a handful of divs.
+- [Horizontal Scroller: 1M Items](/examples/horizontal-scroller) — the vertical class rotated, one default re-tuned.

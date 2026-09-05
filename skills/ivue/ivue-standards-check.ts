@@ -579,7 +579,7 @@ class $CheckStandard {
         // is no reactivity for a field write to trigger.
         if (!classFile?.isReactive) continue;
         for (const member of classFile.rawClass.members) {
-          if (!ts.isPropertyDeclaration(member) || this.isStaticMember(member) || this.isReadonlyMember(member)) continue;
+          if (!ts.isPropertyDeclaration(member) || this.isStaticMember(member) || this.isReadonlyMember(member) || this.isDeclaredMember(member)) continue;
           const initializer = member.initializer;
           const fromFactory =
             !!initializer &&
@@ -831,15 +831,36 @@ class $CheckStandard {
       const findings: Finding[] = [];
       const componentScoped = new Set<string>();
       for (const component of context.components) for (const construction of this.modelConstructions(component)) componentScoped.add(construction.namespace);
-      const outliving = new Set<string>();
+      // A class constructed INSIDE a component-scoped class (its constructor
+      // or a `$`-getter touched there) shares that component's lifetime —
+      // the host is the seam; close over hosts to a fixpoint.
+      const constructedInside = new Map<string, Set<string>>();
+      const constructedElsewhere = new Set<string>();
       for (const unit of context.sources) {
+        const classFile = this.classFileOf(unit);
         this.forEachDescendant(unit.ast, (node) => {
           if (!ts.isNewExpression(node) || !ts.isPropertyAccessExpression(node.expression) || node.expression.name.text !== 'Class' || !ts.isIdentifier(node.expression.expression)) return;
-          outliving.add(node.expression.expression.text);
+          const constructed = node.expression.expression.text;
+          let ancestor: ts.Node | undefined = node.parent;
+          while (ancestor && ancestor !== classFile?.rawClass) ancestor = ancestor.parent;
+          if (classFile && ancestor === classFile.rawClass) {
+            if (!constructedInside.has(classFile.publicName)) constructedInside.set(classFile.publicName, new Set());
+            constructedInside.get(classFile.publicName)!.add(constructed);
+          } else constructedElsewhere.add(constructed);
         });
-        const classFile = this.classFileOf(unit);
-        if (classFile?.namespace?.body && ts.isModuleBlock(classFile.namespace.body) && classFile.namespace.body.statements.some((statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === 'use')) outliving.add(classFile.publicName);
+        if (classFile?.namespace?.body && ts.isModuleBlock(classFile.namespace.body) && classFile.namespace.body.statements.some((statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === 'use')) constructedElsewhere.add(classFile.publicName);
+        if (classFile && classFile.rawClass.members.some((member) => ts.isMethodDeclaration(member) && this.isStaticMember(member) && this.memberName(member) === 'use')) constructedElsewhere.add(classFile.publicName);
       }
+      let grew = true;
+      while (grew) {
+        grew = false;
+        for (const [host, constructed] of constructedInside) {
+          if (!componentScoped.has(host)) continue;
+          for (const name of constructed) if (!componentScoped.has(name)) { componentScoped.add(name); grew = true; }
+        }
+      }
+      const outliving = new Set<string>(constructedElsewhere);
+      for (const [host, constructed] of constructedInside) if (!componentScoped.has(host)) for (const name of constructed) outliving.add(name);
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         if (!classFile) continue;
@@ -847,6 +868,7 @@ class $CheckStandard {
         let usesDollarWatch = false;
         let usesPlainWatch = false;
         let hasDisposePath = false;
+        let hasScopeBridge = false;
         let dollarLine = 0;
         let plainLine = 0;
         this.forEachDescendant(classFile.rawClass, (node) => {
@@ -864,12 +886,18 @@ class $CheckStandard {
               usesPlainWatch = true;
               plainLine ||= this.lineOf(unit, node);
             }
-            if (callee.text === 'onScopeDispose') hasDisposePath = true;
+            if (callee.text === 'onScopeDispose') {
+              hasDisposePath = true;
+              hasScopeBridge = true;
+            }
           }
         });
         const isComponentScoped = componentScoped.has(name) && !outliving.has(name);
         const isOutliving = outliving.has(name);
-        if (isComponentScoped && usesDollarWatch) findings.push(this.finding(this.watch_lifetime_matches_the_instance_owner, unit, dollarLine, `${classFile.rawName} is constructed in a component's setup but uses \`this.$watch\` — its scope would outlive unmount; use plain \`watch\` (the component scope reaps it)`));
+        // the guide's bridge — `getCurrentScope() && onScopeDispose(() =>
+        // this.dispose())` — is the sanctioned way for an outliving-shaped
+        // class to be constructed inside a component as well
+        if (isComponentScoped && usesDollarWatch && !hasScopeBridge) findings.push(this.finding(this.watch_lifetime_matches_the_instance_owner, unit, dollarLine, `${classFile.rawName} is constructed in a component's setup but uses \`this.$watch\` — its scope would outlive unmount; use plain \`watch\` (the component scope reaps it)`));
         if (isOutliving && usesPlainWatch) findings.push(this.finding(this.watch_lifetime_matches_the_instance_owner, unit, plainLine, `${classFile.rawName} outlives components (constructed outside setup) but uses plain \`watch\` — there is no component scope to reap it; use \`this.$watch\``));
         if (usesDollarWatch && !hasDisposePath) findings.push(this.finding(this.watch_lifetime_matches_the_instance_owner, unit, dollarLine, `${classFile.rawName} registers \`$watch\` effects but has no dispose path — call \`$stopEffects()\` from an owner method, or auto-wire \`onScopeDispose\``));
       }
@@ -1047,6 +1075,9 @@ class $CheckStandard {
       const rank = (member: ts.ClassElement): number => {
         if (this.isStaticMember(member)) return 0;
         if (ts.isConstructorDeclaration(member)) return 1;
+        // a `declare` member is a type statement (the engine installs the
+        // value at Reactive()); it reads first, with the statics
+        if (ts.isPropertyDeclaration(member) && this.isDeclaredMember(member)) return 0;
         if (ts.isPropertyDeclaration(member) || ts.isGetAccessorDeclaration(member) || ts.isSetAccessorDeclaration(member)) return 2;
         return 3;
       };
@@ -1458,7 +1489,7 @@ export namespace Scroller {
         red: [{ files: { 'src/Box.ts': fixture.validClass.replace('  get height() {', '  count = 0;\n\n  get height() {') }, expectFindings: [/`count` is a mutable plain field/] }],
         // Db.ts is a PLAIN namespace class (no Reactive) — plain mutable
         // fields are its legitimate state; nothing reactive to trigger.
-        green: [{ files: { 'src/Box.ts': fixture.validClass.replace("import { ref, watch } from 'vue';", "import { ref, shallowRef, watch } from 'vue';").replace('  get width() {', '  get rows() {\n    return shallowRef<number[]>([]);\n  }\n  get width() {'), 'src/Db.ts': "class $Db {\n  connectionCount = 0;\n\n  open() {\n    this.connectionCount++;\n  }\n}\n\nexport namespace Db {\n  export const $Class = $Db;\n  export let Class = $Class;\n}\n" } }],
+        green: [{ files: { 'src/Box.ts': fixture.validClass.replace("import { ref, watch } from 'vue';", "import { ref, shallowRef, watch } from 'vue';").replace('  get width() {', '  get rows() {\n    return shallowRef<number[]>([]);\n  }\n  get width() {'), 'src/Db.ts': "class $Db {\n  connectionCount = 0;\n\n  open() {\n    this.connectionCount++;\n  }\n}\n\nexport namespace Db {\n  export const $Class = $Db;\n  export let Class = $Class;\n}\n" } }, { files: { 'src/Box.ts': fixture.validClass.replace('class $Box {\n', 'class $Box {\n  declare $watch: typeof watch;\n\n') } }],
       },
       'a_ref_is_read_and_written_through_value': {
         claim: 'If class code writes a Ref getter, then it writes .value, never assigns over the getter',
@@ -1539,7 +1570,7 @@ export namespace Scroller {
           },
           expectFindings: [/`area` is a plain getter/, /`grow` is a method/, /`width` shadows the prop/, /reaches a Ref through the instance/],
         }],
-        green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc } }],
+        green: [{ files: { 'src/Box.ts': fixture.validClass.replace("import { ref, watch } from 'vue';", "import { ref, watch, type Ref } from 'vue';").replace('  get width() {', '  get forwardedHeight(): Ref<number> {\n    return this.height;\n  }\n  get width() {'), 'src/Box.vue': fixture.validSfc.replace('const { height } = box;', 'const { height, forwardedHeight } = box;') } }, { files: { ...box, 'src/Box.vue': fixture.validSfc } }],
       },
       'template_expressions_carry_no_logic': {
         claim: 'If a template expression is written, then it is a named read, a method call, or a structural branch, never a comparison, ternary, negation, or built string',
@@ -1564,7 +1595,7 @@ export namespace Scroller {
           },
           expectFindings: [/constructed in a component's setup but uses `this\.\$watch`/, /no dispose path/, /outlives components .* but uses plain `watch`/],
         }],
-        green: [{
+        green: [{ files: { 'src/Box.ts': fixture.validClass.replace("import { ref, watch } from 'vue';", "import { getCurrentScope, onScopeDispose, ref, watch } from 'vue';").replace('    watch(\n      () => this.height.value,', '    getCurrentScope() && onScopeDispose(() => this.$stopEffects());\n    this.$watch(\n      () => this.height.value,'), 'src/Box.vue': fixture.validSfc } }, { files: { ...box, 'src/Host.ts': "import { Reactive } from 'ivue';\nimport { Box } from './Box';\n\nclass $Host {\n  constructor() {\n    void this.$box;\n  }\n\n  protected get $box() {\n    return new Box.Class({ width: 2 });\n  }\n}\n\nexport namespace Host {\n  export const $Class = $Host;\n  export let Class = Reactive($Class);\n  export type Instance = typeof Class.Instance;\n}\n", 'src/Host.vue': "<script setup lang=\"ts\">\nimport { Host } from './Host';\n\nconst host = new Host.Class();\n\ndefineExpose(host as Host.Instance);\n</script>\n\n<template>\n  <div />\n</template>\n" } }, {
           files: {
             ...box,
             'src/Box.vue': fixture.validSfc,
@@ -1901,6 +1932,12 @@ export namespace Scroller {
     return !!(ts.getCombinedModifierFlags(member as ts.Declaration) & ts.ModifierFlags.Readonly);
   }
 
+  /** `declare` on a class member: a type-only statement with no runtime —
+   *  how a class names the `$watch` / `$stopEffects` the engine installs. */
+  static isDeclaredMember(member: ts.ClassElement): boolean {
+    return !!ts.getModifiers(member as ts.HasModifiers)?.some((modifier) => modifier.kind === ts.SyntaxKind.DeclareKeyword);
+  }
+
   static memberName(member: ts.ClassElement): string {
     return member.name && (ts.isIdentifier(member.name) || ts.isStringLiteral(member.name)) ? member.name.text : '';
   }
@@ -1951,19 +1988,29 @@ export namespace Scroller {
     return isThisMethod ? body : null;
   }
 
+  /** `Ref<…>`, `ShallowRef<…>`, `ComputedRef<…>`, `WritableComputedRef<…>` as a
+   *  declared return type. */
+  static isRefTypeNode(type: ts.TypeNode): boolean {
+    return ts.isTypeReferenceNode(type) && ts.isIdentifier(type.typeName) && ['Ref', 'ShallowRef', 'ComputedRef', 'WritableComputedRef'].includes(type.typeName.text);
+  }
+
   static refFactoryName(expression: ts.Expression | undefined): string | null {
     if (!expression || !ts.isCallExpression(expression) || !ts.isIdentifier(expression.expression)) return null;
     const name = expression.expression.text;
     return ['ref', 'shallowRef', 'computed', 'toRef'].includes(name) ? name : null;
   }
 
-  /** Getter names of a class whose body returns a Ref factory call. */
+  /** Getter names of a class whose body returns a Ref factory call, or
+   *  that declare a Ref return type — a FORWARDED cell (`get x(): Ref<number>
+   *  { return this.$mouse.x }`) is the same cell as its source, and the
+   *  annotation is how the author says so. */
   static refGetterNames(rawClass: ts.ClassDeclaration): Set<string> {
     const names = new Set<string>();
     for (const member of rawClass.members) {
       if (!ts.isGetAccessorDeclaration(member) || !member.body) continue;
       const returned = member.body.statements.find(ts.isReturnStatement);
       if (returned && this.refFactoryName(returned.expression)) names.add(this.memberName(member));
+      else if (member.type && this.isRefTypeNode(member.type)) names.add(this.memberName(member));
     }
     return names;
   }

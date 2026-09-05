@@ -730,9 +730,9 @@ export default defineConfig({
             items: [
               { text: 'Classic Counter Example', link: '/examples/counter' },
               { text: 'Plain getter vs computed()', link: '/examples/derived' },
-              { text: '$watch & $stopEffects', link: '/examples/lifecycle' },
+              { text: 'Lifecycle & Teardown', link: '/examples/lifecycle' },
               { text: 'Inheritance chain', link: '/examples/inheritance' },
-              { text: 'Composable in a class', link: '/examples/pointer' },
+              { text: 'Composables in classes', link: '/examples/composable' },
               { text: 'Pinia Store Alternative', link: '/examples/class-store' },
             ],
           },
@@ -790,9 +790,9 @@ export default defineConfig({
           items: [
             { text: 'Classic Counter Example', link: '/examples/counter' },
             { text: 'Plain getter vs computed()', link: '/examples/derived' },
-            { text: '$watch & $stopEffects', link: '/examples/lifecycle' },
+            { text: 'Lifecycle & Teardown', link: '/examples/lifecycle' },
             { text: 'Inheritance chain', link: '/examples/inheritance' },
-            { text: 'Composable in a class', link: '/examples/pointer' },
+            { text: 'Composables in classes', link: '/examples/composable' },
             { text: 'Pinia Store Alternative', link: '/examples/class-store' },
           ],
         },

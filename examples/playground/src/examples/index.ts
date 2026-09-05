@@ -3,7 +3,7 @@ import { manifest as counter } from './counter/manifest';
 import { manifest as derived } from './derived/manifest';
 import { manifest as lifecycle } from './lifecycle/manifest';
 import { manifest as inheritance } from './inheritance/manifest';
-import { manifest as pointer } from './pointer/manifest';
+import { manifest as composable } from './composable/manifest';
 import { manifest as classStore } from './class-store/manifest';
 import { manifest as workspacePlatform } from './workspace-platform/manifest';
 import { manifest as extensibleKernel } from './extensible-kernel/manifest';
@@ -49,7 +49,7 @@ export const examples: ExampleEntry[] = [
     ...inheritance,
     load: () => import('./inheritance/InheritanceExample.vue'),
   },
-  { ...pointer, load: () => import('./pointer/PointerExample.vue') },
+  { ...composable, load: () => import('./composable/ComposableExample.vue') },
   // Advanced
   {
     ...classStore,

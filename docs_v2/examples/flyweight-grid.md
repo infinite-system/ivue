@@ -34,6 +34,13 @@ browser.
   [`DESIGN.md`](https://github.com/infinite-system/ivue/blob/main/examples/playground/src/examples/flyweight-grid/DESIGN.md);
   the deeper story is in [Flyweight Pattern guide](/guide/flyweight).
 
+## Related guide pages
+
+- [Flyweight Pattern](/guide/flyweight) — ground truth in plain storage, reactivity as an overlay.
+- [Keyed Version Signals](/guide/keyed-version-signals) — invalidation by key at scale.
+- [Static() — Capability Classes](/guide/static) — capability classes, `$`-cached statics, the anchor.
+- [Performance by Design](/guide/performance) — what the shape costs and does not.
+
 ## The source
 
 The heart of the pattern — the sheet (columnar ground truth + sparse

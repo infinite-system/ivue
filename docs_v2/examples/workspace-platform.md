@@ -130,6 +130,13 @@ The workspace constructs `new Task.Class(...)`, never the hidden declaration.
 Tests or a future boot-time kernel can select an extension without rewriting
 consumers.
 
+## Related guide pages
+
+- [Modules & Imports](/guide/modules) — circular imports dissolved by late reads through the namespace.
+- [Namespace Pattern](/guide/namespace-pattern) — `$Class`, `Class`, and the types derived from them.
+- [Components & Templates](/guide/components) — one template, one logic owner; the state destructure.
+- [Reactive State](/guide/state) — ref-getters, plain getters, the `$`-prefixed cache.
+
 ## The source
 
 ::: code-group

@@ -235,3 +235,8 @@ first use, never module load.
 The narrative form of this page — the full transform map across
 `Reactive()` and `Static()`, every scope in working code — is
 [Bulletproof class modules](/blog/bulletproof-class-modules).
+
+## See it running
+
+- [Pinia Store Alternative](/examples/class-store) — one shared instance behind `use()`.
+- [Invar — Terminal IDE](/examples/invar) — 108,000 lines of it in production.

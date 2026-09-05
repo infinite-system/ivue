@@ -319,3 +319,8 @@ export default Reactive(
 It works, and it stays correct. But classes have a habit of growing parents
 and dependents. The namespace costs three lines and never needs migrating.
 When in doubt, use the standard.
+
+## See it running
+
+- [Pinia Store Alternative](/examples/class-store) — one shared instance behind `use()`.
+- [Workspace Platform](/examples/workspace-platform) — a ClickUp-scale graph of models.

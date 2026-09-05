@@ -41,13 +41,16 @@ templates and Vite will update the running playground.
   plain-getter derivation, two methods.
 - **[Plain getter vs computed()](/examples/derived)** — the same derivation
   both ways, with live run counters proving whose body runs when.
-- **[$watch & $stopEffects](/examples/lifecycle)** — an instance-scoped
-  watcher started, stopped and disposed by hand.
+- **[Lifecycle & teardown](/examples/lifecycle)** — both lifetimes side by
+  side: a component-owned Ticker (plain watch, hooks, an interval released
+  by dispose()) and an outliving Sensor started, suspended and disposed by
+  hand.
 - **[Inheritance chain](/examples/inheritance)** — three files, three
   levels, one instance; `total` refines through `super.total` with zero
   computeds.
-- **[Composable in a class](/examples/pointer)** — `useMouse` hosted
-  privately; consumers see two refs and nothing else.
+- **[Composables in classes](/examples/composable)** — both directions of
+  the seam: `useMouse` hosted privately behind a `$`-getter, and an undo
+  history class published as `useUndoHistory()`.
 - **[Pinia Store Alternative](/examples/class-store)** — a class-based alternative to
   Pinia stores; optional reactive() view, fully typed.
 

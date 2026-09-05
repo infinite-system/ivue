@@ -77,3 +77,14 @@
   line-height: 1.7;
   color: #b7c0dc;
 }
+
+.text {
+  flex: 1;
+  min-width: 160px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}

@@ -441,3 +441,16 @@ background processes, sweep:
 - Proof arms for a new gate check: `npm run gate -- --prove <name>`;
   `--prove` alone runs the whole constitution.
 
+## Examples and guides are one tree (2026-09-05)
+
+- Every `docs_v2/examples/*.md` page ends its prose with "## The guides
+  behind it" (the guide pages for its concepts) and every guide page
+  that has a demonstration ends with "## See it running" (the example
+  pages). Add both sides when adding either kind of page; the
+  write-docs self-review has the line.
+- Example renames: `git mv` the playground dir + route SFC + docs page,
+  update `manifest.ts` (slug, docsPath), `examples/index.ts`, both
+  sidebar entries in `config.ts`, `docs_v2/examples/index.md`, the theme
+  demo imports (`@examples/<dir>/…`), the StackBlitz link on the page,
+  and add a 301 to `docs_v2/public/_redirects`.
+

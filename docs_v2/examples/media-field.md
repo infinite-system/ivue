@@ -70,6 +70,12 @@ getters, all of it ([Inheritance & super](/guide/inheritance)) — so
 - **The extended variant** shows dimensions badges, captions and the size
   summary — same base template, one subclass.
 
+## Related guide pages
+
+- [Extensible Components](/guide/extensible-components) — props, emits and slots that extend with the class.
+- [Inheritance & super](/guide/inheritance) — `extends $Class`, `super`, `override`.
+- [Components & Templates](/guide/components) — one template, one logic owner; the state destructure.
+
 ## The source
 
 ::: code-group

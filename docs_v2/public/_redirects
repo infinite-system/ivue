@@ -2,6 +2,7 @@
 # and og:image references live forever — every slug rename adds its
 # pair of lines here (page + banner), plus any embed/code shots.
 # Workers static assets serve this file as 301s.
+/examples/pointer /examples/composable 301
 /blog/reduction-to-modularity /blog/monolith-to-modular-in-a-day 301
 /blog/reduction-to-modularity.png /blog/monolith-to-modular-in-a-day.png 301
 /blog/scrollbar-is-code /blog/a-million-rows-twelve-divs 301

@@ -305,3 +305,9 @@ inherit both worlds' foundations.
   they are your live surface.
 - The exact per-member contract lives in the
   [API reference](/api/#static-class-—-from-ivue-extras).
+
+## See it running
+
+- [Extensible Kernel](/examples/extensible-kernel) — plugins extend a namespaced class key.
+- [Flyweight Grid: 20M Cells](/examples/flyweight-grid) — twenty million cells at 4.7 bytes each.
+- [Invar — Terminal IDE](/examples/invar) — 108,000 lines of it in production.

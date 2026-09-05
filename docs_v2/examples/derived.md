@@ -28,6 +28,12 @@ show exactly when each body executes.
 - The run counters are **plain fields** — incrementing them inside getter
   bodies is side-effect-free for the reactive graph.
 
+## Related guide pages
+
+- [Computed & Watch](/guide/computed-watch) — when `computed()` earns its bytes; plain `watch` versus `$watch`.
+- [Performance by Design](/guide/performance) — what the shape costs and does not.
+- [Reactive State](/guide/state) — ref-getters, plain getters, the `$`-prefixed cache.
+
 ## The source
 
 ::: code-group

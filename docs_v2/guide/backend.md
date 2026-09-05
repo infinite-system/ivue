@@ -228,3 +228,7 @@ reactivity, rewritten on [alien
 signals](https://github.com/stackblitz/alien-signals), which ivue rides
 unchanged ([196/196 tests on the 3.6 release candidate, first tracked
 reads ~1.6× faster](/blog/the-stack-got-faster)).
+
+## See it running
+
+- [Invar — Terminal IDE](/examples/invar) — 108,000 lines of it in production.

@@ -260,3 +260,11 @@ class $Thermostat {
 
 Everything else — overrides, `super`, reactivity through the chain — matches
 native class semantics exactly.
+
+## See it running
+
+- [Inheritance chain](/examples/inheritance) — three levels, one instance, `super.total`.
+- [Extensible Kernel](/examples/extensible-kernel) — plugins extend a namespaced class key.
+- [Advanced Select Field](/examples/choose-field) — a 45-prop contract, extended by ContactField.
+- [Advanced Media Uploader](/examples/media-field) — an uploader and its class-extended tile variant.
+- [Horizontal Scroller: 1M Items](/examples/horizontal-scroller) — the vertical class rotated, one default re-tuned.

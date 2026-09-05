@@ -128,3 +128,7 @@ namespace + late getters + Static() + restart
 The [Namespace Pattern](/guide/namespace-pattern) explains the
 cross-runtime invariant. [Static() — Capability Classes](/guide/static)
 contains the working transform, tests, benchmarks, and exact scope.
+
+## See it running
+
+- [Invar — Terminal IDE](/examples/invar) — 108,000 lines of it in production.

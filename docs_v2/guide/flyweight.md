@@ -116,3 +116,7 @@ not benchmarked. Run it yourself:
 npm run dev:flyweight       # the demo, with a live observation census
 npm run measure:flyweight   # the heap protocol (pass the URL)
 ```
+
+## See it running
+
+- [Flyweight Grid: 20M Cells](/examples/flyweight-grid) — twenty million cells at 4.7 bytes each.

@@ -119,3 +119,7 @@ Every code block is teaching code — someone WILL copy it.
 - [ ] Numbers have method + environment; behaviors were executed.
 - [ ] Docs build passes; linked anchors exist in built HTML; skill mirror
       resynced if SKILL.md changed.
+- [ ] Every example page carries a "Related guide pages" section linking
+      the guide pages for its concepts, and every guide page a "See it
+      running" section linking the examples that demonstrate it — the two
+      trees are never disjoint.

@@ -29,6 +29,13 @@ click; nothing runs on page load.
   few hundred DOM cells out of up to a million in the model; a formula
   cell's ref and computed materialize only when observed.
 
+## Related guide pages
+
+- [Computed & Watch](/guide/computed-watch) — when `computed()` earns its bytes; plain `watch` versus `$watch`.
+- [Computed Seed Pattern](/guide/computed-seed) — seeding a computed from a plain getter.
+- [Performance by Design](/guide/performance) — what the shape costs and does not.
+- [Interactive Benchmarks](/guide/benchmarks) — the numbers, run in your browser.
+
 ## The source
 
 ::: code-group

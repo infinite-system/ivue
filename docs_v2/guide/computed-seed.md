@@ -128,3 +128,7 @@ invariant records, with the computed seed guaranteeing the contract from
 the first read. The full class —
 [`SplitterModel.ts`](https://github.com/infinite-system/invar/blob/main/src/modules/layout/SplitterModel.ts)
 — is ~150 lines and unit-tests with plain numbers.
+
+## See it running
+
+- [Formula Grid: 1M Cells](/examples/formula-grid) — real formulas over a million cells.

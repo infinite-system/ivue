@@ -132,6 +132,12 @@ JavaScript's dynamic `super` lookup then follows the sealed chain.
   seals once, and restarts after a plugin change, like reloading an editor
   window after enabling an extension.
 
+## Related guide pages
+
+- [Static() — Capability Classes](/guide/static) — capability classes, `$`-cached statics, the anchor.
+- [Inheritance & super](/guide/inheritance) — `extends $Class`, `super`, `override`.
+- [Namespace Pattern](/guide/namespace-pattern) — `$Class`, `Class`, and the types derived from them.
+
 ## The source
 
 ::: code-group

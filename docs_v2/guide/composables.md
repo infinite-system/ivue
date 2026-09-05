@@ -100,11 +100,24 @@ user — is a **store**: one ivue class, one instance, published behind a
 singleton is an implementation detail of `use()`:
 
 ```ts
-// app/AppStore.ts — the store IS an ivue class; `use()` owns the singleton
+// app/AppStore.ts — the store IS an ivue class; a static owns the singleton
 import { Reactive } from 'ivue';
+import { LazyShared, Static } from 'ivue/extras';
 import { ref } from 'vue';
 
 class $AppStore {
+  // The ONE instance, in a static readonly cell: every receiver — the
+  // class, a subclass, a test double swapped into `Class` — resolves to
+  // the same store. The thunk runs on first read, after the app exists,
+  // and constructs through the namespace slot.
+  protected static readonly shared = new LazyShared<AppStore.Instance>(
+    () => new AppStore.Class(),
+  );
+
+  static use(): AppStore.Instance {
+    return this.shared.value;
+  }
+
   get authenticated() {
     return ref(false);
   }
@@ -115,14 +128,9 @@ class $AppStore {
 }
 
 export namespace AppStore {
-  export const $Class = $AppStore; // raw — children `extends` this
-  export let Class = Reactive($Class); // reactive — you `new` this
+  export const $Class = Static($AppStore); // anchor — it declares statics
+  export let Class = Reactive($Class); // reactive — use() does the one `new`
   export type Instance = typeof Class.Instance;
-
-  let singleton: Instance | null = null;
-  export function use(): Instance {
-    return (singleton ??= new Class());
-  }
 }
 ```
 
@@ -134,7 +142,7 @@ it through the same `$`-getter as any composable; a component calls
 // any model — the `$`-getter caches the store per instance, forever
 class $SubscribersModel {
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   async refresh() {
@@ -152,7 +160,7 @@ class $SubscribersModel {
 // any component — call use() directly; no prop, no provide/inject
 import { AppStore } from '../app/AppStore';
 
-const app = AppStore.use();
+const app = AppStore.Class.use();
 const { authenticated } = app;
 </script>
 
@@ -165,13 +173,16 @@ Why this exact shape:
 
 - **`use()` is lazy.** The singleton constructs on first touch, after
   the app exists — module-load order and
-  [circular imports](/guide/modules) stay non-events.
+  [circular imports](/guide/modules) stay non-events. It lives in a
+  `static readonly` cell, never in the namespace: a namespace `let` is a
+  parallel world no subclass can reach, and the gate refuses it.
 - **The `$`-getter is the injection point.** A model names its
   dependency once; every method reads `this.$app` at cache-hit cost,
   with no constructor plumbing and no prop-drilling.
 - **Tests swap the slot, not the callers.** Assign
   `AppStore.Class = $TestStore` before the first `use()` and every
-  consumer gets the double through the same seam.
+  consumer, calling `AppStore.Class.use()`, gets the double through the
+  same seam.
 - **A store outlives components by definition.** Its watchers use
   `this.$watch` / `this.$watchEffect`, never plain `watch`, and
   lifecycle hooks never belong in it — see
@@ -231,10 +242,10 @@ function IS a composable to its consumers — same call shape, same
 destructure, class internals:
 
 ```ts
-// useUndoHistory.ts — composable-shaped API, class-powered inside
+// UndoHistory.ts — the class: lazy state, plain-getter derivations
 class $UndoHistory {
   get entries() {
-    return shallowRef<Snapshot[]>([]);
+    return shallowRef<UndoHistory.Snapshot[]>([{ label: 'start', items: [] }]);
   }
   get cursor() {
     return ref(0);
@@ -243,7 +254,7 @@ class $UndoHistory {
     return this.cursor.value > 0;
   }
 
-  push(snapshot: Snapshot) {
+  push(label: string, items: readonly string[]) {
     /* ... */
   }
   undo() {
@@ -256,8 +267,13 @@ export namespace UndoHistory {
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance;
 }
+```
 
-// the composable face: one instance per call, like any useX()
+```ts
+// useUndoHistory.ts — the composable face: one instance per call, like
+// any useX(). Its own module, because a class file holds only its class.
+import { UndoHistory } from './UndoHistory';
+
 export function useUndoHistory() {
   return new UndoHistory.Class();
 }
@@ -268,7 +284,7 @@ export function useUndoHistory() {
 import { useUndoHistory } from './useUndoHistory';
 
 const history = useUndoHistory();
-const { entries, cursor } = history;
+const { cursor } = history;
 </script>
 
 <template>
@@ -297,3 +313,9 @@ exactly the [store pattern above](#stores-a-singleton-behind-use).
   one buys structure, privacy, and a refinable surface.
 - **Publish models behind `use()`** when consumers expect the composable
   shape. The face costs one function; the internals stay a class.
+
+## See it running
+
+- [Lifecycle & Teardown](/examples/lifecycle) — both lifetimes live, Ticker and Sensor.
+- [Composables in classes](/examples/composable) — `useMouse` hosted, `useUndoHistory()` published.
+- [Pinia Store Alternative](/examples/class-store) — one shared instance behind `use()`.

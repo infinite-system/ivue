@@ -59,6 +59,12 @@ what a hand-written Quasar wrapper gives you, and it falls out of the
 - **Create** appears when nothing matches; it POSTs and selects the new
   row.
 
+## Related guide pages
+
+- [Extensible Components](/guide/extensible-components) — props, emits and slots that extend with the class.
+- [Components & Templates](/guide/components) — one template, one logic owner; the state destructure.
+- [Inheritance & super](/guide/inheritance) — `extends $Class`, `super`, `override`.
+
 ## The source
 
 ::: code-group

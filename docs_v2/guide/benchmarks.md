@@ -287,3 +287,7 @@ npm run measure:grid -- http://localhost:5180 25000  # 1M cells
   structural, and why ivue closes it.
 - [Performance by Design](/guide/performance) — the micro-level numbers: isolated
   instance creation, per-instance memory, hot-loop read cost.
+
+## See it running
+
+- [Formula Grid: 1M Cells](/examples/formula-grid) — real formulas over a million cells.

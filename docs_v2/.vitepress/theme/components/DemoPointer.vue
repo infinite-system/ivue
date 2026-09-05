@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useElementBounding, useWindowScroll } from '@vueuse/core';
 import DemoBox from './DemoBox.vue';
-import { Pointer } from '@examples/pointer/Pointer';
+import { Pointer } from '@examples/composable/Pointer';
 
 // the state destructure — materializes $mouse inside the component's scope,
 // so its listeners are cleaned up on unmount
