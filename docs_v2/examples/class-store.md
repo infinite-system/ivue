@@ -20,12 +20,12 @@ machinery reduces to **one static on the class that owns the singleton**:
 
 ```ts
 class $ProjectStore {
-  protected static get $sharedReactive() {
-    return reactive(new ProjectStore.Class());
+  protected static get $shared(): ProjectStore.Instance {
+    return new ProjectStore.Class();
   }
 
-  static use() {
-    return this.$sharedReactive;
+  static use(): ProjectStore.Instance {
+    return this.$shared;
   }
 
   // …state, derivations, actions
@@ -94,11 +94,51 @@ Tests swap the seam, not the callers: install a double with
 `ProjectStore.Class = Reactive($TestProjectStore)` before the first
 `use()` and every consumer receives it through the same getter.
 
-## The store decides what `use()` hands out
+## The optional reactive() view
 
-Consumers always go through `use()`. What comes back is the store's
-choice. This store publishes itself as a `reactive()` view — refs
-auto-unwrap on read **and** write, so no consumer writes `.value`:
+Some teams prefer store reads without `.value`. A store can publish itself
+as a `reactive()` view instead — refs auto-unwrap on read **and** write —
+and `use()` stays the one door: it returns the view. In full:
+
+```ts
+// ProjectStore.ts — the same store, published as a reactive() view
+import { reactive, ref } from 'vue';
+import { Reactive } from 'ivue';
+import { Static } from 'ivue/extras';
+
+class $ProjectStore {
+  /** The ONE instance, as a reactive() view — built once, on first read,
+   *  through the namespace slot. */
+  protected static get $sharedReactive() {
+    return reactive(new ProjectStore.Class());
+  }
+
+  /** The store singleton: every caller receives the SAME view. */
+  static use() {
+    return this.$sharedReactive;
+  }
+
+  get projectName() {
+    return ref('Untitled');
+  }
+
+  get filter() {
+    return ref<ProjectStore.TaskFilter>('all');
+  }
+
+  setFilter(filter: ProjectStore.TaskFilter) {
+    this.filter.value = filter;
+  }
+}
+
+export namespace ProjectStore {
+  export const $Class = Static($ProjectStore); // anchor — it declares statics
+  export let Class = Reactive($Class); // reactive — use() does the one `new`
+  export type Instance = typeof Class.Instance;
+
+  export type TaskFilter = 'all' | 'active' | 'done';
+}
+```
 
 ```ts
 const project = ProjectStore.Class.use();
@@ -107,13 +147,11 @@ project.projectName = 'Artemis'; // ref write, no .value
 project.filter = 'done';         // typechecks: Instance strips the readonly
 ```
 
-The `Instance` type under the view is load-bearing: it strips the
-`readonly` TypeScript puts on get-only accessors, so writes typecheck
-exactly as they behave at runtime
+Inside the class, cells are still refs and methods still write `.value`;
+only what `use()` hands out changes. The `Instance` type under the view
+is load-bearing: it strips the `readonly` TypeScript puts on get-only
+accessors, so writes typecheck exactly as they behave at runtime
 ([the unwrapping-surface invariant](/guide/standard#the-unwrapping-surface-typing-invariant)).
-A store that hands out the raw instance instead returns `new
-ProjectStore.Class()` from its `$`-static, and its consumers destructure
-refs; either way, `use()` is the one door.
 
 ## What to notice
 
@@ -124,8 +162,9 @@ refs; either way, `use()` is the one door.
 - **Derivations are plain getters** (`completedCount`, `progressPercent`,
   `visibleTasks`) — every consumer reads live values, zero computeds
   allocated.
-- **Every panel writes and reads with no `.value`** — `use()` hands out the
-  store's `reactive()` view, fully typed.
+- **The third panel writes `projectName` and `filter` as state bindings**
+  — the same cells the first panel's `addTask()` and the store's own
+  `persist()` read, so every panel re-renders from one write.
 
 ## Related guide pages
 

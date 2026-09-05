@@ -422,6 +422,6 @@
   {
     "path": "examples/playground/src/examples/class-store/ProjectStore.ts",
     "check": "construction_goes_through_the_namespace_class_slot",
-    "reason": "the store publishes itself as a reactive() view: $sharedReactive is reactive(new ProjectStore.Class()) and use() hands it out — documented on /examples/class-store"
+    "reason": "$sharedReactive is the store's optional reactive() view (reactive(new ProjectStore.Class())), shown in full on /examples/class-store"
   }
 ]

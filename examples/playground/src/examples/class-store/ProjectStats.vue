@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { ProjectStore } from './ProjectStore';
 
-// the SAME singleton the TaskBoard writes — no props, no provide/inject.
-// use() hands out the store's reactive() view, so reads and writes drop .value
+// the SAME singleton the TaskBoard writes — no props, no provide/inject
 const project = ProjectStore.Class.use();
+
+// the state destructure
+const {
+  // state refs
+  projectName,
+} = project;
 </script>
 
 <template>
@@ -12,7 +17,7 @@ const project = ProjectStore.Class.use();
       <div>
         <div class="k">project</div>
         <div class="n">
-          <input v-model="project.projectName" class="stats__name" />
+          <input v-model="projectName" class="stats__name" />
         </div>
       </div>
       <div>

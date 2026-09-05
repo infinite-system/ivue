@@ -1,22 +1,24 @@
 <script setup lang="ts">
-// The same singleton as every other panel — use() hands out the store's
-// reactive() view, so reads AND writes drop .value. The Instance type
-// under the view is what makes the writes typecheck (it strips TS's
-// readonly on get-only accessors).
 import { ProjectStore } from './ProjectStore';
 
+// the SAME singleton the other two panels use
 const project = ProjectStore.Class.use();
+
+// the state destructure
+const {
+  // state refs
+  projectName,
+  filter,
+} = project;
 </script>
 
 <template>
   <div class="reactive-view">
-    <p class="mono">
-      project.projectName · project.filter — reads and writes, no .value:
-    </p>
-    <input v-model="project.projectName" class="reactive-view__input" />
+    <p class="mono">projectName · filter — state bindings write the store's cells:</p>
+    <input v-model="projectName" class="reactive-view__input" />
     <div class="row" style="margin-top: 10px">
       <button class="btn" type="button" @click="project.toggleDoneFilter()">
-        filter: {{ project.filter }}
+        filter: {{ filter }}
       </button>
       <span class="mono">
         {{ project.completedCount }} done · {{ project.progressPercent }}%
