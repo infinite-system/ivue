@@ -122,9 +122,8 @@ Consumers use `use()`; the view is there for those who want it.
 - **Derivations are plain getters** (`completedCount`, `progressPercent`,
   `visibleTasks`) — every consumer reads live values, zero computeds
   allocated.
-- **The third panel writes `projectName` and `filter` as state bindings**
-  — the same cells the first panel's `addTask()` and the store's own
-  `persist()` read, so every panel re-renders from one write.
+- **The third panel writes `project.projectName` with no `.value`** — the
+  `reactive()` view at work, fully typed.
 
 ## Related guide pages
 
@@ -140,6 +139,6 @@ Consumers use `use()`; the view is there for those who want it.
 <<< ../../examples/playground/src/examples/class-store/TaskBoard.ts [TaskBoard.ts]
 <<< ../../examples/playground/src/examples/class-store/TaskBoard.vue [TaskBoard.vue]
 <<< ../../examples/playground/src/examples/class-store/ProjectStats.vue [ProjectStats.vue]
-<<< ../../examples/playground/src/examples/class-store/ProjectSettingsPanel.vue [ProjectSettingsPanel.vue]
+<<< ../../examples/playground/src/examples/class-store/ReactiveViewPanel.vue [ReactiveViewPanel.vue]
 <<< ../../examples/playground/src/examples/class-store/ClassStoreExample.vue [template]
 :::
