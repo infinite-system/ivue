@@ -1,63 +1,21 @@
-<script lang="ts" setup generic="T extends any">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+<script lang="ts" setup>
+import { VirtualScrollerItem } from './VirtualScrollerItem';
 
-export interface VirtualScrollerItem {
-  index: number;
-  /** Main axis the parent scroller virtualizes ('y' default). */
-  axis?: 'y' | 'x';
-}
+const props = defineProps(VirtualScrollerItem.Class.props);
+const emit = defineEmits(VirtualScrollerItem.Class.emits) as VirtualScrollerItem.Emits;
 
-export interface VirtualScrollItemEmits {
-  (e: 'sizeUpdated', size: number): void;
-}
+// The constructor runs here, in setup — its mount / before-unmount hooks
+// register against this component and capture the row's size once each.
+const item = new VirtualScrollerItem.Class(props as VirtualScrollerItem.Props, emit);
 
-const props = withDefaults(defineProps<VirtualScrollerItem>(), { axis: 'y' });
-
-const emit = defineEmits<VirtualScrollItemEmits>();
-
-const item = ref<HTMLElement | null>(null);
-
-/**
- * ONE-SHOT size capture — deliberately not a ResizeObserver. Items render
- * in normal flow, so the browser positions them at their real size with no
- * bookkeeping; the parent only needs sizes for its spacer/estimate math.
- * Capture once on mount (seeds the estimate the moment the item enters the
- * window — keeps window-local index→position math as accurate as the old
- * always-observed map) and once right before unmount (the final size — the
- * only one that matters once the item leaves the window). Continuous
- * observation is what caused measurable jitter at 100k items: bursts of
- * resize callbacks during scroll, each invalidating geometry.
- */
-const capture = () => {
-  const el = item.value;
-  if (!el) return;
-  // Heights are recorded in LAYOUT px: an ancestor transform scale (the
-  // post card scales to fit the window) shrinks every rect readout, and a
-  // size map built from scaled values diverges from the real flow by the
-  // scale factor — landing every index-targeted jump short. Derive the
-  // current scale from the parent stack's rect-to-layout ratio and divide
-  // it out.
-  const parent = el.parentElement;
-  const horizontal = props.axis === 'x';
-  const parentLayout = horizontal
-    ? (parent?.offsetWidth ?? 0)
-    : (parent?.offsetHeight ?? 0);
-  const parentRect = parent
-    ? horizontal
-      ? parent.getBoundingClientRect().width
-      : parent.getBoundingClientRect().height
-    : 0;
-  const scale = parent && parentLayout > 0 ? parentRect / parentLayout : 1;
-  const rect = el.getBoundingClientRect();
-  const size = horizontal ? rect.width : rect.height;
-  emit('sizeUpdated', scale > 0 ? size / scale : size);
-};
-
-onMounted(capture);
-onBeforeUnmount(capture);
+// the state destructure
+const {
+  // element refs
+  element,
+} = item;
 </script>
 <template>
-  <div ref="item" class="virtual-scroller__item" :aria-rowindex="index + 1">
+  <div ref="element" class="virtual-scroller__item" :aria-rowindex="item.rowIndex">
     <slot />
   </div>
 </template>

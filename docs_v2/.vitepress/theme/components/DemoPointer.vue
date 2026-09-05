@@ -1,29 +1,15 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useElementBounding, useWindowScroll } from '@vueuse/core';
 import DemoBox from './DemoBox.vue';
-import { Pointer } from '@examples/composable/Pointer';
+import { DemoPointer } from './DemoPointer';
 
-// the state destructure — materializes $mouse inside the component's scope,
-// so its listeners are cleaned up on unmount
-const pointer = new Pointer.Class();
-const { x, y } = pointer;
+// wiring only — the model hosts the Pointer and the pad-mapping composables
+const demo = new DemoPointer.Class();
 
-// presentation only: map the class's page coordinates into the pad
-const padEl = ref<HTMLElement | null>(null);
-const bounds = useElementBounding(padEl);
-const scroll = useWindowScroll();
-
-const localX = computed(() => x.value - (bounds.left.value + scroll.x.value));
-const localY = computed(() => y.value - (bounds.top.value + scroll.y.value));
-const inside = computed(
-  () =>
-    bounds.width.value > 0 &&
-    localX.value >= 0 &&
-    localX.value <= bounds.width.value &&
-    localY.value >= 0 &&
-    localY.value <= bounds.height.value,
-);
+// the state destructure
+const {
+  // element refs
+  padEl,
+} = demo;
 </script>
 
 <template>
@@ -31,22 +17,22 @@ const inside = computed(
     title="A composable, encapsulated"
     note="The component destructures { x, y } from a Pointer instance. useMouse lives inside the class — private, created once on the first read. Consumers see two refs and nothing else."
   >
-    <div ref="padEl" class="pad" :class="{ live: inside }">
-      <template v-if="inside">
-        <div class="hair v" :style="{ left: localX + 'px' }" />
-        <div class="hair h" :style="{ top: localY + 'px' }" />
-        <div class="dot" :style="{ left: localX + 'px', top: localY + 'px' }" />
+    <div ref="padEl" class="pad" :class="{ live: demo.inside }">
+      <template v-if="demo.inside">
+        <div class="hair v" :style="demo.verticalHairStyle" />
+        <div class="hair h" :style="demo.horizontalHairStyle" />
+        <div class="dot" :style="demo.dotStyle" />
       </template>
       <div v-else class="hint">move the pointer across this pad</div>
     </div>
     <div class="d-vals">
       <div>
         <div class="d-k">x &middot; page</div>
-        <div class="d-n">{{ pointer.pageX }}</div>
+        <div class="d-n">{{ demo.pageX }}</div>
       </div>
       <div>
         <div class="d-k">y &middot; page</div>
-        <div class="d-n">{{ pointer.pageY }}</div>
+        <div class="d-n">{{ demo.pageY }}</div>
       </div>
     </div>
   </DemoBox>

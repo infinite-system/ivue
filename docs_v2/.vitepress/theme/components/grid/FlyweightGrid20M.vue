@@ -1,34 +1,17 @@
 <script setup lang="ts">
-/**
- * The flyweight grid (examples/playground, flyweight-grid), embedded live in the docs.
- *
- * The ENTIRE app is imported dynamically inside the click handler — model,
- * page class, grid chrome, and the fast-formula-parser it pulls in.
- * `vitepress build` (SSR) never executes any of it, and readers who don't
- * click never download a byte. The imported component is the sketch's own
- * FlyweightGridApp.vue — the exact code the RESULTS.md numbers were
- * measured with; only this gate lives in the docs.
- */
-import { ref, shallowRef, type Component } from 'vue';
 import DemoBox from '../DemoBox.vue';
+import { FlyweightGrid20M } from './FlyweightGrid20M';
 
-const gridApp = shallowRef<Component | null>(null);
-const isLoading = ref(false);
-const loadError = ref('');
+// wiring only — the model imports the whole app on the first click
+const gate = new FlyweightGrid20M.Class();
 
-async function loadGrid() {
-  isLoading.value = true;
-  loadError.value = '';
-  try {
-    const module = await import(
-      '@examples/flyweight-grid/FlyweightGridApp.vue'
-    );
-    gridApp.value = module.default;
-  } catch (error) {
-    loadError.value = String(error);
-  }
-  isLoading.value = false;
-}
+// the state destructure
+const {
+  // state refs
+  gridApp,
+  isLoading,
+  loadError,
+} = gate;
 </script>
 
 <template>
@@ -36,17 +19,17 @@ async function loadGrid() {
     title="The flyweight grid — 20,000,000 cells"
     note="Ground truth in columnar typed arrays, disposable cell facades per render, a sparse reactive overlay that materializes per observation and evicts with the viewport. ~55% real Excel-syntax formulas. Everything costs proportional to what's observed — never to what exists."
   >
-    <div v-if="!gridApp" class="fwl-gate">
+    <div v-if="!gate.isLoaded" class="fwl-gate">
       <p class="fwl-copy">
         20 columns × 1,000,000 rows, fully reactive at 4.7 bytes per cell.
         Nothing downloads until you click — the model code and the formula
         parser load on demand, then one more click creates all 20,000,000
         cells in your browser.
       </p>
-      <button class="d-btn primary" type="button" :disabled="isLoading" @click="loadGrid">
-        {{ isLoading ? 'Loading the code…' : 'Load the flyweight grid' }}
+      <button class="d-btn primary" type="button" :disabled="isLoading" @click="gate.loadGrid()">
+        {{ gate.buttonLabel }}
       </button>
-      <p v-if="loadError" class="fwl-error">{{ loadError }}</p>
+      <p v-if="gate.hasError" class="fwl-error">{{ loadError }}</p>
     </div>
     <div v-else class="fw-embed">
       <component :is="gridApp" />

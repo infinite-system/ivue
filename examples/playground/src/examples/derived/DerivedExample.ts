@@ -1,13 +1,34 @@
 // DerivedExample.ts — the route's view state, in ivue: it hosts the Thermo
-// instance and mirrors its plain-field run counters into refs the template
-// can display (a plain-field write triggers nothing — that's the point the
-// demo makes — so a post-flush watcher does the mirroring).
-import { onMounted, ref, watch } from 'vue';
+// instance, forwards the refs the template binds, and mirrors Thermo's
+// plain-field run counters into refs the template can display (a
+// plain-field write triggers nothing — that's the point the demo makes —
+// so a post-flush watcher does the mirroring).
+import { onMounted, ref, watch, type ComputedRef, type Ref } from 'vue';
 import { Reactive } from '../../ivue';
 import { Thermo } from './Thermo';
 
 class $DerivedExample {
-  thermo = new Thermo.Class();
+  constructor() {
+    onMounted(() => this.startMirroring());
+  }
+
+  // HOSTED model — created on first touch, held for the life of the view
+  protected get $thermo() {
+    return new Thermo.Class();
+  }
+
+  /** The model, exposed for the template's dotted reads. */
+  get thermo() {
+    return this.$thermo;
+  }
+
+  // FORWARDED cells — the model's refs, so the SFC destructures ONE instance
+  get celsius(): Ref<number> {
+    return this.$thermo.celsius;
+  }
+  get status(): ComputedRef<string> {
+    return this.$thermo.status;
+  }
 
   // Unrelated state — changing it re-renders the demo without touching celsius.
   get ticks() {
@@ -20,22 +41,26 @@ class $DerivedExample {
     return ref(0);
   }
 
-  constructor() {
-    onMounted(() => this.startMirroring());
+  // DERIVED — plain getters
+  get fahrenheit() {
+    return this.$thermo.fahrenheit;
+  }
+  get reRenderLabel() {
+    return `re-render (${this.ticks.value})`;
   }
 
   startMirroring() {
     this.syncRunCounters();
     watch(
-      [() => this.thermo.celsius.value, () => this.ticks.value],
+      [() => this.celsius.value, () => this.ticks.value],
       () => this.syncRunCounters(),
       { flush: 'post' },
     );
   }
 
   syncRunCounters() {
-    this.fahrenheitRunsShown.value = this.thermo.fahrenheitRuns;
-    this.statusRunsShown.value = this.thermo.statusRuns;
+    this.fahrenheitRunsShown.value = this.$thermo.fahrenheitRuns;
+    this.statusRunsShown.value = this.$thermo.statusRuns;
   }
 
   reRender() {

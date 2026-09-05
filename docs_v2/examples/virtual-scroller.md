@@ -63,6 +63,7 @@ everything else is the production component.
 ::: code-group
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.ts [VirtualScrollerItem.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts [example]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.vue [route]

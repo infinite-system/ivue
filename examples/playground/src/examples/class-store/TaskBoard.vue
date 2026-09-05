@@ -1,21 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ProjectStore } from './ProjectStore';
+import { TaskBoard } from './TaskBoard';
 
-const project = ProjectStore.Class.use();
+// wiring only — the board model reaches for the shared store itself
+const board = new TaskBoard.Class();
+const project = board.project;
 
-// the state destructure — same rules as any ivue instance
+// the state destructure
 const {
   // state refs
-  filter,
-} = project;
-
-const newTaskTitle = ref('');
-
-function submitTask() {
-  project.addTask(newTaskTitle.value);
-  newTaskTitle.value = '';
-}
+  newTaskTitle,
+} = board;
 </script>
 
 <template>
@@ -24,16 +18,16 @@ function submitTask() {
       <input
         v-model="newTaskTitle"
         placeholder="add a task…"
-        @keyup.enter="submitTask"
+        @keyup.enter="board.submitTask()"
       />
-      <button class="btn primary" type="button" @click="submitTask">add</button>
+      <button class="btn primary" type="button" @click="board.submitTask()">add</button>
     </div>
     <div class="board__filters">
       <button
-        v-for="option in ['all', 'active', 'done'] as const"
+        v-for="option in board.filterOptions"
         :key="option"
         class="btn"
-        :class="{ primary: filter === option }"
+        :class="{ primary: board.isFilter(option) }"
         type="button"
         @click="project.setFilter(option)"
       >

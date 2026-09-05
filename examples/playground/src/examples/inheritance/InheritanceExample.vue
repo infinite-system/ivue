@@ -1,23 +1,21 @@
 <script setup lang="ts">
-import { ComputedTaxedProduct } from './ComputedTaxedProduct';
-import { TaxedProduct } from './TaxedProduct';
+import { InheritanceExample } from './InheritanceExample';
 
-const product = new TaxedProduct.Class();
-const computedProduct = new ComputedTaxedProduct.Class();
+// ONE model owns the route; it hosts both chains and forwards their cells.
+const example = new InheritanceExample.Class();
+const product = example.product;
+const computedProduct = example.computedProduct;
 
-// the state destructure
+// the state destructure — both chains' refs, forwarded through the example
 const {
   // state refs
   price,
   discount,
   taxRate,
-} = product;
-const {
-  price: computedPrice,
-  discount: computedDiscount,
-  taxRate: computedTaxRate,
-  total: computedTotal,
-} = computedProduct;
+  computedPrice,
+  computedDiscount,
+  computedTaxRate,
+} = example;
 </script>
 
 <template>
@@ -40,29 +38,29 @@ const {
         </div>
         <div>
           <div class="k">discount · SaleProduct</div>
-          <div class="n">{{ Math.round(discount * 100) }}%</div>
+          <div class="n">{{ example.discountPercent }}%</div>
         </div>
         <div>
           <div class="k">tax · TaxedProduct</div>
-          <div class="n">{{ Math.round(taxRate * 100) }}%</div>
+          <div class="n">{{ example.taxRatePercent }}%</div>
         </div>
         <div>
           <div class="k">total · plain getter</div>
-          <div class="n grad">${{ product.total.toFixed(2) }}</div>
+          <div class="n grad">${{ example.totalLabel }}</div>
         </div>
       </div>
       <div class="row">
-        <button class="btn primary" type="button" @click="price += 6">
+        <button class="btn primary" type="button" @click="example.bumpPrice()">
           price +$6
         </button>
         <button
           class="btn"
           type="button"
-          @click="discount = Math.min(discount + 0.05, 0.9)"
+          @click="example.bumpDiscount()"
         >
           deeper sale
         </button>
-        <button class="btn" type="button" @click="taxRate = taxRate ? 0 : 0.1">
+        <button class="btn" type="button" @click="example.toggleTax()">
           toggle tax
         </button>
       </div>
@@ -77,32 +75,32 @@ const {
       <div class="vals computed-vals">
         <div>
           <div class="k">Product.total</div>
-          <div class="n">${{ computedProduct.baseTotal.toFixed(2) }}</div>
+          <div class="n">${{ example.computedBaseTotalLabel }}</div>
         </div>
         <div>
           <div class="k">SaleProduct.total</div>
-          <div class="n">${{ computedProduct.discountedTotal.toFixed(2) }}</div>
+          <div class="n">${{ example.computedDiscountedTotalLabel }}</div>
         </div>
         <div>
           <div class="k">TaxedProduct.total</div>
-          <div class="n grad">${{ computedTotal.toFixed(2) }}</div>
+          <div class="n grad">${{ example.computedTotalLabel }}</div>
         </div>
       </div>
       <div class="row">
-        <button class="btn primary" type="button" @click="computedPrice += 6">
+        <button class="btn primary" type="button" @click="example.bumpComputedPrice()">
           price +$6
         </button>
         <button
           class="btn"
           type="button"
-          @click="computedDiscount = Math.min(computedDiscount + 0.05, 0.9)"
+          @click="example.bumpComputedDiscount()"
         >
           deeper sale
         </button>
         <button
           class="btn"
           type="button"
-          @click="computedTaxRate = computedTaxRate ? 0 : 0.1"
+          @click="example.toggleComputedTax()"
         >
           toggle tax
         </button>

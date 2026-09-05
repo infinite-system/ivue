@@ -64,6 +64,7 @@ computed named `total`, and each child refines the parent cell through
 The standalone playground renders both hierarchies on one route:
 
 ::: code-group
+<<< ../../examples/playground/src/examples/inheritance/InheritanceExample.ts [example]
 <<< ../../examples/playground/src/examples/inheritance/InheritanceExample.vue [route]
 <<< @/.vitepress/theme/components/DemoInheritance.vue [template]
 <<< @/.vitepress/theme/components/DemoComputedInheritance.vue [template · computed]

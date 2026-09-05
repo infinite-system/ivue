@@ -94,6 +94,7 @@ then the base machinery they inherit, exactly as running above:
 <<< ../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.vue [HorizontalVirtualScroller.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.ts [VirtualScrollerItem.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
 <<< @/.vitepress/theme/components/examples/HorizontalScrollerExample.ts [example]
 <<< @/.vitepress/theme/components/examples/ExampleHorizontalScroller.vue [template]

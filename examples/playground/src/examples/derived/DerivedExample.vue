@@ -2,21 +2,17 @@
 import { DerivedExample } from './DerivedExample';
 
 const view = new DerivedExample.Class();
-const thermo = view.thermo;
 
-// the state destructure — the view's refs AND the model's refs, grouped
-const {
-  // state refs
-  ticks,
-  fahrenheitRunsShown,
-  statusRunsShown,
-} = view;
+// the state destructure — the model's cells arrive forwarded through the view
 const {
   // state refs
   celsius,
+  ticks,
+  fahrenheitRunsShown,
+  statusRunsShown,
   // computed refs
   status,
-} = thermo;
+} = view;
 </script>
 
 <template>
@@ -34,7 +30,7 @@ const {
       </div>
       <div>
         <div class="k">fahrenheit · plain getter</div>
-        <div class="n grad">{{ thermo.fahrenheit }}°</div>
+        <div class="n grad">{{ view.fahrenheit }}°</div>
         <div class="mono">body ran {{ fahrenheitRunsShown }}×</div>
       </div>
       <div>
@@ -53,7 +49,7 @@ const {
         aria-label="celsius"
       />
       <button class="btn" type="button" @click="view.reRender()">
-        re-render ({{ ticks }})
+        {{ view.reRenderLabel }}
       </button>
     </div>
   </div>
