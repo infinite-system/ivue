@@ -102,13 +102,17 @@ Some teams prefer store reads without `.value`. The same singleton wraps in
 the `readonly` TypeScript puts on get-only accessors, so writes typecheck
 exactly as they behave at runtime
 ([the unwrapping-surface invariant](/guide/standard#the-unwrapping-surface-typing-invariant)).
-It is one more static on the class:
+It is one more `$`-static on the class, built once over the one instance:
 
 ```ts
 class $ProjectStore {
   // …the statics above, plus:
-  static useReactive() {
+  protected static get $sharedReactive() {
     return reactive(this.use());
+  }
+
+  static useReactive() {
+    return this.$sharedReactive;
   }
 }
 ```

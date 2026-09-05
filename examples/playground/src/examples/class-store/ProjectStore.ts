@@ -22,12 +22,17 @@ class $ProjectStore {
 
   /**
    * Optional `reactive()` view of the same singleton — refs auto-unwrap
-   * on read AND write, so consumers drop every `.value`. `use()` already
-   * returns the `Instance` type, which strips the readonly that TS puts
-   * on get-only accessors, so writes typecheck as they behave.
+   * on read AND write, so consumers drop every `.value`. Built once, as a
+   * `$`-static, over the one instance. `use()` already returns the
+   * `Instance` type, which strips the readonly that TS puts on get-only
+   * accessors, so writes typecheck as they behave.
    */
-  static useReactive() {
+  protected static get $sharedReactive() {
     return reactive(this.use());
+  }
+
+  static useReactive() {
+    return this.$sharedReactive;
   }
 
   static get STORAGE_KEY() {
