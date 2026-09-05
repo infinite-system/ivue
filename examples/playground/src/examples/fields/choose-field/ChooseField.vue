@@ -19,13 +19,7 @@ const emit = defineEmits(ChooseField.Class.emits);
 // wrapping component passes its OWN pre-built subclass INSTANCE — carrying
 // the wrapper's props and emit — and this base renders through it; a
 // CLASS runner (or none) is constructed here instead.
-const choose =
-  typeof props.runner === 'object' && props.runner !== null
-    ? (props.runner as ChooseField.Instance)
-    : new ((props.runner ?? ChooseField.Class) as typeof ChooseField.Class)(
-        props,
-        emit,
-      );
+const choose = ChooseField.Class.runner(props, emit);
 
 const {
   // state refs

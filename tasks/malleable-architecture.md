@@ -179,6 +179,19 @@ extends state, derivation, behavior, contract, and knobs alike; the
 gate verifies the whole shape. Open items below are engineering on top
 of this form, not revisions of it.
 
+**Runner resolution is a static on the base (2026-09-05).** The shell's
+runner seam is one line in every SFC — `const field =
+X.Class.runner(props, emit)` — because the resolver lives on the base
+class as a static: an INSTANCE runner is used as-is, a CLASS runner is
+constructed with this SFC's props and emit, unset means the receiving
+class constructs itself. Every field SFC is therefore its own swap
+point, wrappers included (ExtendedMediaField and ContactField construct
+their subclass through the same line and hand it to the base via
+`:runner`). The `runner` prop itself is declared once, on `Field`, and
+inherited. Receipt: ChooseField / ContactField / MediaField /
+ExtendedMediaField, gate on the fields root unchanged, typecheck error
+set unchanged, both example pages render.
+
 **Contract timing under global override (2026-09-02).**
 `defineProps(X.Class.props)` evaluates ONCE at SFC module evaluation
 (then Vue caches normalization per component definition). So a slot

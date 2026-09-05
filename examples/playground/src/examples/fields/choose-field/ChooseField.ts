@@ -94,11 +94,6 @@ class $ChooseField extends Field.$Class {
       /** Variants */
       variants: { type: Array as PropType<ChooseField.Variant[]> },
 
-      /** The driving runner — a ChooseField subclass CLASS (the base
-       *  constructs it) or a pre-built INSTANCE (a wrapping component passes
-       *  its own, carrying the wrapper's props and emit — see ContactField).
-       *  Ported v1 mechanism. */
-      runner: { type: [Function, Object] as PropType<any> },
 
       /** Fetch */
       fetchPath: { type: String as PropType<string> },
@@ -167,8 +162,6 @@ class $ChooseField extends Field.$Class {
       icon: '',
       /** Variants */
       variants: [],
-      /** Runner */
-      runner: null,
 
       /** Fetch */
       fetchPath: '', // List endpoint to fetch options from ('' = purely client-side options).

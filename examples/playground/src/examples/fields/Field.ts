@@ -29,6 +29,14 @@ class $Field {
       readonly: { type: Boolean as PropType<boolean> },
       loading: { type: Boolean as PropType<boolean> },
       outlined: { type: Boolean as PropType<boolean> },
+      /**
+       * The driving runner — the universal shell's swap seam. A subclass
+       * CLASS (this component constructs it with its own props and emit)
+       * or a pre-built INSTANCE (a wrapping component constructs the
+       * subclass with ITS props and emit and hands it down, so every emit
+       * leaves through the wrapper). Unset = this component's own Class.
+       */
+      runner: { type: [Function, Object] as PropType<any> },
     });
   }
 
@@ -44,6 +52,7 @@ class $Field {
       readonly: false,
       loading: false,
       outlined: true,
+      runner: null,
     };
   }
 
@@ -54,6 +63,28 @@ class $Field {
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
+
+  /**
+   * Resolve the instance that drives a field SFC: the `runner` prop as an
+   * INSTANCE is used as-is; as a CLASS it is constructed with this SFC's
+   * props and emit; unset, the receiving class constructs itself. Every
+   * field SFC is one line — `X.Class.runner(props, emit)` — and therefore
+   * its own swap point.
+   */
+  static runner<This extends typeof $Field>(
+    this: This,
+    props: any,
+    emit: any,
+  ): InstanceType<This> {
+    const runner = props.runner;
+    if (typeof runner === 'object' && runner !== null) return runner;
+    const RunnerClass = (typeof runner === 'function' ? runner : this) as This;
+    return new RunnerClass(props, emit) as InstanceType<This>;
+  }
+
+  /** Fields take (props, emit); the base accepts either so `runner()` can
+   *  construct any receiver uniformly. */
+  constructor(..._arguments: any[]) {}
 }
 
 export namespace Field {

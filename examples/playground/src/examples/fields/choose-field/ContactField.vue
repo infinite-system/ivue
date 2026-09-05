@@ -15,7 +15,7 @@ import { ContactField } from './ContactField';
 const props = defineProps(ContactField.Class.props);
 const emit = defineEmits(ContactField.Class.emits);
 
-const field = new ContactField.Class(props, emit);
+const field = ContactField.Class.runner(props, emit);
 
 defineExpose(field as ContactField.Instance);
 </script>

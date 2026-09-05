@@ -49,15 +49,6 @@ export class $MediaField extends Field.$Class {
       canRename: { type: Boolean as PropType<boolean> },
       canRenameCaption: { type: Boolean as PropType<boolean> },
       canRemove: { type: Boolean as PropType<boolean> },
-      /**
-       * The driving runner — a MediaField subclass CLASS (the base
-       * constructs it with its own props and emit) or a pre-built
-       * INSTANCE (a wrapping component constructs the subclass with ITS
-       * props and emit and hands it down — ExtendedMediaField.vue). Either
-       * way every slot receives it as `field`, and every emit leaves
-       * through the instance, so a subclass can override the emit path.
-       */
-      runner: { type: [Function, Object] as PropType<any> },
     });
   }
 
@@ -78,7 +69,6 @@ export class $MediaField extends Field.$Class {
       canRename: true,
       canRenameCaption: true,
       canRemove: true,
-      runner: null,
     };
   }
 

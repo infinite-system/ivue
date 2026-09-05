@@ -20,7 +20,7 @@ const props = defineProps(ExtendedMediaField.Class.props);
 /** Object-declared emits — ExtractEmitTypes derives the callable type. */
 const emit = defineEmits(ExtendedMediaField.Class.emits) as ExtendedMediaField.Emits;
 
-const field = new ExtendedMediaField.Class(props, emit);
+const field = ExtendedMediaField.Class.runner(props, emit);
 
 // THE STATE DESTRUCTURE — the refs this template touches; the slot
 // templates below read them as setup bindings (auto-unwrapped) while
