@@ -1,5 +1,6 @@
 import { onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
 import { Reactive } from '../../../../lib/Reactive';
+import { Static } from '../../../../lib/Static';
 import type { HorizontalVirtualScroller as HorizontalScrollerNs } from '../../../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller';
 import { data as allPosts } from '../../../blog/blog.data.mjs';
 
@@ -9,6 +10,27 @@ import { data as allPosts } from '../../../blog/blog.data.mjs';
 // way the drip lands one email at a time; wheel and touch scrub the strip
 // with lenis physics and snap to card boundaries on settle.
 class $BlogDripShowcase {
+  static readonly ADVANCE_EVERY_MS = 4500;
+
+  /** The strip's cards, built once per receiver from the blog index. */
+  static get $items(): BlogDripShowcase.DripItem[] {
+    return allPosts
+      .filter((post) => !post.private && post.image)
+      .map((post) => ({
+        id: post.slug,
+        body: post.title,
+        position: '',
+        title: post.title,
+        url: post.url,
+        image: post.image,
+      }));
+  }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $BlogDripShowcase;
+  }
+
   // non-reactive internals — cycle bookkeeping, never read by the template
   protected timer: ReturnType<typeof setInterval> | undefined;
   protected arrivingTimer: ReturnType<typeof setTimeout> | undefined;
@@ -51,7 +73,7 @@ class $BlogDripShowcase {
 
   // DERIVED
   get items() {
-    return BlogDripShowcase.items;
+    return this.self.$items;
   }
   get hasItems() {
     return this.items.length > 0;
@@ -157,7 +179,7 @@ class $BlogDripShowcase {
     setTimeout(() => this.startCycle(), 600);
     this.timer = setInterval(
       () => this.advance(),
-      BlogDripShowcase.ADVANCE_EVERY_MS,
+      this.self.ADVANCE_EVERY_MS,
     );
   }
 
@@ -181,7 +203,7 @@ class $BlogDripShowcase {
     this.kickTimer = setTimeout(() => this.advance(), 1000);
     this.timer = setInterval(
       () => this.advance(),
-      BlogDripShowcase.ADVANCE_EVERY_MS,
+      this.self.ADVANCE_EVERY_MS,
     );
   }
 
@@ -194,25 +216,10 @@ class $BlogDripShowcase {
 }
 
 export namespace BlogDripShowcase {
-  export const $Class = $BlogDripShowcase; // raw — children `extends` this
+  export const $Class = Static($BlogDripShowcase); // anchor — it declares statics; children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   // the type of every unwrapping surface (defineExpose, reactive())
   export type Instance = typeof Class.Instance;
-
-  /* Values */
-
-  export const ADVANCE_EVERY_MS = 4500;
-
-  export const items: DripItem[] = allPosts
-    .filter((post) => !post.private && post.image)
-    .map((post) => ({
-      id: post.slug,
-      body: post.title,
-      position: '',
-      title: post.title,
-      url: post.url,
-      image: post.image,
-    }));
 
   /* Types */
 

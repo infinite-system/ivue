@@ -12,7 +12,7 @@ class $TaskDetails {
   }
 
   protected get $workspace() {
-    return Workspace.use();
+    return Workspace.Class.use();
   }
 
   get task() {

@@ -1,5 +1,6 @@
 import { ref, shallowRef } from 'vue';
 import { Reactive } from '../../../../../lib/Reactive';
+import { Static } from '../../../../../lib/Static';
 import type { HorizontalVirtualScroller } from '../../../../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller';
 import type { BaseItem } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.types';
 
@@ -10,10 +11,33 @@ import type { BaseItem } from '../../../../../examples/playground/src/examples/v
  * private to the file), nothing at module level beside imports.
  */
 class $HorizontalScrollerExample {
+  static readonly ITEM_COUNT = 1_000_000;
+
+  protected static readonly CAPTIONS = [
+    'The window walks; the strip stands still',
+    'A million cards, a handful of divs',
+    'Widths are captured once, in and out',
+    'Estimates decide the spacers',
+    'Scroll is virtual — the DOM never learns the total',
+    'Everything costs O(window)',
+  ];
+
+  static buildItems(): BaseItem[] {
+    const items = new Array(this.ITEM_COUNT);
+    for (let index = 0; index < this.ITEM_COUNT; index++) {
+      items[index] = {
+        id: String(index),
+        body: this.CAPTIONS[(index * 7) % this.CAPTIONS.length],
+        position: String(index + 1),
+      };
+    }
+    return items;
+  }
+
   // MUTABLE STATE — the list is replaced wholesale, never deep-mutated,
   // so shallowRef keeps a million cards out of the deep-proxy machinery.
   get items() {
-    return shallowRef<BaseItem[]>(HorizontalScrollerExample.buildItems());
+    return shallowRef<BaseItem[]>(this.self.buildItems());
   }
 
   // MUTABLE STATE — the glide-speed slider writes this (px/s).
@@ -65,39 +89,29 @@ class $HorizontalScrollerExample {
       scroller.startAutoPlay(0);
     }
   }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $HorizontalScrollerExample;
+  }
+
+  get itemCount() {
+    return this.self.ITEM_COUNT;
+  }
+  get itemCountLabel() {
+    return this.itemCount.toLocaleString();
+  }
+
+  jumpToEnd() {
+    this.jumpTo(this.itemCount - 1);
+  }
+
 }
 
 export namespace HorizontalScrollerExample {
   /* Identity */
 
-  export const $Class = $HorizontalScrollerExample; // raw — children `extends` this
+  export const $Class = Static($HorizontalScrollerExample); // anchor — it declares statics; children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
-
-  /* Values */
-
-  export const ITEM_COUNT = 1_000_000;
-
-  // Non-exported namespace members: private to this file — the namespace
-  // is the ONE seam, so nothing lives at module level beside it.
-  const CAPTIONS = [
-    'The window walks; the strip stands still',
-    'A million cards, a handful of divs',
-    'Widths are captured once, in and out',
-    'Estimates decide the spacers',
-    'Scroll is virtual — the DOM never learns the total',
-    'Everything costs O(window)',
-  ];
-
-  export function buildItems(): BaseItem[] {
-    const items = new Array(ITEM_COUNT);
-    for (let index = 0; index < ITEM_COUNT; index++) {
-      items[index] = {
-        id: String(index),
-        body: CAPTIONS[(index * 7) % CAPTIONS.length],
-        position: String(index + 1),
-      };
-    }
-    return items;
-  }
 }

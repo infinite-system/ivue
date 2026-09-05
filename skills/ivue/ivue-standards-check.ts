@@ -383,6 +383,33 @@ class $CheckStandard {
     });
   }
 
+  static get the_namespace_holds_identity_and_types_only(): StandardCheck {
+    return this.defineCheck('the_namespace_holds_identity_and_types_only', (context) => {
+      const findings: Finding[] = [];
+      for (const unit of context.sources) {
+        const classFile = this.classFileOf(unit);
+        if (!classFile?.namespace?.body || !ts.isModuleBlock(classFile.namespace.body)) continue;
+        for (const statement of classFile.namespace.body.statements) {
+          if (ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement) || ts.isEnumDeclaration(statement)) continue;
+          if (ts.isExportDeclaration(statement) && statement.isTypeOnly) continue;
+          if (ts.isVariableStatement(statement)) {
+            const names = statement.declarationList.declarations.map((declaration) => (ts.isIdentifier(declaration.name) ? declaration.name.text : '?'));
+            const identity = names.every((name) => name === '$Class' || name === 'Class');
+            if (identity) continue;
+            findings.push(this.finding(this.the_namespace_holds_identity_and_types_only, unit, this.lineOf(unit, statement), `\`${names.join(', ')}\` is runtime data in namespace ${classFile.publicName} — a parallel world the class mechanics cannot reach (not inherited, not overridable, not swapped with Class); move it onto the class as a static getter`));
+            continue;
+          }
+          if (ts.isFunctionDeclaration(statement)) {
+            findings.push(this.finding(this.the_namespace_holds_identity_and_types_only, unit, this.lineOf(unit, statement), `\`${statement.name?.text ?? 'function'}\` is behavior in namespace ${classFile.publicName} — move it onto the class as a static method`));
+            continue;
+          }
+          findings.push(this.finding(this.the_namespace_holds_identity_and_types_only, unit, this.lineOf(unit, statement), `namespace ${classFile.publicName} holds a runtime statement — the namespace is \`$Class\`, \`Class\` and types only`));
+        }
+      }
+      return findings;
+    });
+  }
+
   static get behavior_lives_on_the_prototype_not_in_fields(): StandardCheck {
     return this.defineCheck('behavior_lives_on_the_prototype_not_in_fields', (context) => {
       const findings: Finding[] = [];
@@ -1071,6 +1098,7 @@ class $CheckStandard {
       this.a_public_class_publishes_its_namespace_manifest,
       this.a_class_file_is_named_after_its_class,
       this.a_class_file_holds_only_imports_class_namespace_and_types,
+      this.the_namespace_holds_identity_and_types_only,
       this.behavior_lives_on_the_prototype_not_in_fields,
       this.construction_goes_through_the_namespace_class_slot,
       this.the_anchor_is_static_only_when_statics_exist,
@@ -1344,6 +1372,12 @@ export namespace Scroller {
         impossibility: 'a file breaking a_class_file_holds_only_imports_class_namespace_and_types passes the gate',
         red: [{ files: { 'src/Box.ts': `${fixture.validClass}\nconst DEFAULT_WIDTH = 4;\nexport function widen(box: Box.Instance) { return box.area; }\n` }, expectFindings: [/outside the class seam/], expectCount: 2 }],
         green: [{ files: { 'src/Box.ts': `${fixture.validClass}\nexport type BoxSeed = { width: number };\nexport interface BoxEmits { (event: 'grown'): void }\n` } }],
+      },
+      'the_namespace_holds_identity_and_types_only': {
+        claim: 'If a class file has a namespace, then the namespace holds $Class, Class, and type declarations, never runtime data or behavior (which live on the class as statics)',
+        impossibility: 'a file breaking the_namespace_holds_identity_and_types_only passes the gate',
+        red: [{ files: { 'src/Box.ts': fixture.validClass.replace('  export type Instance = typeof Class.Instance;\n', '  export type Instance = typeof Class.Instance;\n  export const DEFAULT_WIDTH = 4;\n  const SEEDS = [1, 2];\n  export function widen(box: Box.Instance) {\n    return box.area + SEEDS.length;\n  }\n') }, expectFindings: [/`DEFAULT_WIDTH` is runtime data in namespace Box/, /`SEEDS` is runtime data/, /`widen` is behavior in namespace Box/], expectCount: 3 }],
+        green: [{ files: { 'src/Box.ts': fixture.validClass.replace('  export type Instance = typeof Class.Instance;\n', '  export type Instance = typeof Class.Instance;\n  export type Model = InstanceType<typeof Class>;\n  export interface Seed {\n    width: number;\n  }\n') } }],
       },
       'behavior_lives_on_the_prototype_not_in_fields': {
         claim: 'If a class member is a function, then it is a method, never a function-valued field',

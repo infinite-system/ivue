@@ -5,7 +5,7 @@
 // writes typecheck (it strips TS's readonly on get-only accessors).
 import { ProjectStore } from './ProjectStore';
 
-const project = ProjectStore.useReactive();
+const project = ProjectStore.Class.useReactive();
 </script>
 
 <template>

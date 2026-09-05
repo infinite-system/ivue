@@ -76,7 +76,7 @@ describe('Workspace platform model', () => {
 
 describe('Workspace template models', () => {
   it('owns list actions in TaskList.Class', () => {
-    const workspace = Workspace.use();
+    const workspace = Workspace.Class.use();
     workspace.reset();
     const list = new TaskList.Class();
     const task = list.tasksByStatus('backlog')[0];
@@ -88,7 +88,7 @@ describe('Workspace template models', () => {
   });
 
   it('owns drag state and transitions in TaskBoard.Class', () => {
-    const workspace = Workspace.use();
+    const workspace = Workspace.Class.use();
     workspace.reset();
     const board = new TaskBoard.Class();
     const task = board.tasksByStatus('backlog')[0];
@@ -105,7 +105,7 @@ describe('Workspace template models', () => {
   });
 
   it('owns detail form state and event normalization in TaskDetails.Class', () => {
-    const workspace = Workspace.use();
+    const workspace = Workspace.Class.use();
     workspace.reset();
     const task = workspace.tasks.value[0];
     const details = new TaskDetails.Class({ task });

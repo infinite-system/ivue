@@ -12,7 +12,7 @@ class $WorkspacePlatformExample {
   }
 
   protected get $workspace() {
-    return Workspace.use();
+    return Workspace.Class.use();
   }
 
   get workspace() {

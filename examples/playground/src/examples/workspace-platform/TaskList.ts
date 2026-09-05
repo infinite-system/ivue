@@ -5,7 +5,7 @@ import { Workspace } from './Workspace';
 
 class $TaskList {
   protected get $workspace() {
-    return Workspace.use();
+    return Workspace.Class.use();
   }
 
   tasksByStatus(status: TaskStatus) {

@@ -424,3 +424,20 @@ background processes, sweep:
   `tasks/press-*`. Dated measurements inside a story (the 26k / 69k
   snapshots, "292 commits") stay as history; present-tense claims move.
 
+## The namespace is identity and types only — gated (2026-09-05)
+
+- New gate check `the_namespace_holds_identity_and_types_only`: inside a
+  class file's namespace, anything but `export const $Class`, `export let
+  Class`, and type declarations is a finding. It caught the parallel
+  worlds the sweep missed: `ITEM_COUNT` + `buildItems()` on the two
+  scroller examples, the newsletter form's endpoint and keys, the drip
+  strip's items, the workspace seed dataset (a data-only namespace → a
+  `Static()` class with getters), and the two store singletons
+  (`use()` as a namespace function over a `let singleton`).
+- A module singleton store is a `static readonly shared = new
+  LazyShared(() => new X.Class())` cell plus `static use()`; consumers
+  call `X.Class.use()` through the slot. `LazyShared` is vendored at
+  `examples/playground/src/LazyShared.ts` beside `Static.ts`.
+- Proof arms for a new gate check: `npm run gate -- --prove <name>`;
+  `--prove` alone runs the whole constitution.
+

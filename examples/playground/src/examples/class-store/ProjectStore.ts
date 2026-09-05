@@ -3,6 +3,8 @@
 // store, and ProjectStore.use() hands every caller the same instance.
 import { reactive, ref, shallowRef } from 'vue';
 import { Reactive } from '../../ivue';
+import { LazyShared } from '../../LazyShared';
+import { Static } from '../../Static';
 
 export interface ProjectTask {
   id: number;
@@ -12,9 +14,42 @@ export interface ProjectTask {
 
 export type TaskFilter = 'all' | 'active' | 'done';
 
-const STORAGE_KEY = 'ivue-example-project-store';
-
 class $ProjectStore {
+  /** The ONE store instance, held in a static readonly field so every
+   *  receiver (the class, a subclass, a test double swapped into `Class`)
+   *  resolves to the same cell — never receiver-cached, never forked. The
+   *  thunk runs on first read, after the app exists, immune to module-load
+   *  order; it constructs through the namespace slot so a swapped Class is
+   *  what gets built. */
+  protected static readonly shared = new LazyShared<ProjectStore.Instance>(
+    () => new ProjectStore.Class(),
+  );
+
+  /** The store singleton: every caller receives the SAME instance,
+   *  constructed lazily on first touch. */
+  static use(): ProjectStore.Instance {
+    return this.shared.value;
+  }
+
+  /**
+   * Optional `reactive()` view of the same singleton — refs auto-unwrap
+   * on read AND write, so consumers drop every `.value`. `use()` already
+   * returns the `Instance` type, which strips the readonly that TS puts
+   * on get-only accessors, so writes typecheck as they behave.
+   */
+  static useReactive() {
+    return reactive(this.use());
+  }
+
+  static get STORAGE_KEY() {
+    return 'ivue-example-project-store';
+  }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $ProjectStore;
+  }
+
   // Outliving instance: the store outlives every component, so watchers
   // registered here use $watch/$watchEffect (the instance's own scope).
   constructor() {
@@ -77,7 +112,7 @@ class $ProjectStore {
   /** Restore a previous visit's state — reload the page and it holds. */
   hydrate() {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(this.self.STORAGE_KEY);
       if (!saved) return;
       const state = JSON.parse(saved);
       if (typeof state.projectName === 'string') {
@@ -97,7 +132,7 @@ class $ProjectStore {
       tasks: this.tasks.value,
     };
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(this.self.STORAGE_KEY, JSON.stringify(state));
     } catch {
       /* storage unavailable — the store still works in memory */
     }
@@ -105,26 +140,7 @@ class $ProjectStore {
 }
 
 export namespace ProjectStore {
-  export const $Class = $ProjectStore; // raw — children `extends` this
-  export let Class = Reactive($Class); // reactive — you `new` this
+  export const $Class = Static($ProjectStore); // anchor — it declares statics; children `extends` this
+  export let Class = Reactive($Class); // reactive — you `new` this (use() does, once)
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
-
-  let singleton: Instance | null = null;
-
-  /** The store singleton: every caller receives the SAME instance,
-   *  constructed lazily on first touch — after the app exists, immune
-   *  to module-load order. */
-  export function use(): Instance {
-    return (singleton ??= new Class());
-  }
-
-  /**
-   * Optional `reactive()` view of the same singleton — refs auto-unwrap
-   * on read AND write, so consumers drop every `.value`. `use()` already
-   * returns the `Instance` type, which strips the readonly that TS puts
-   * on get-only accessors, so writes typecheck as they behave.
-   */
-  export function useReactive() {
-    return reactive(use());
-  }
 }

@@ -1,9 +1,11 @@
 import { ref, shallowRef } from 'vue';
 import { Reactive } from '../../ivue';
+import { LazyShared } from '../../LazyShared';
+import { Static } from '../../Static';
 import { Member } from './Member';
 import { Project } from './Project';
 import { Task } from './Task';
-import { Seeds } from './seed';
+import { Seeds } from './Seeds';
 import {
   STATUS_ORDER,
   type ActivityEntry,
@@ -13,6 +15,18 @@ import {
 } from './types';
 
 class $Workspace {
+  /** The app-wide workspace singleton — a static readonly cell, so every
+   *  receiver resolves to the one instance; created on first use through
+   *  the namespace slot, after the app exists. */
+  protected static readonly shared = new LazyShared<Workspace.Model>(
+    () => new Workspace.Class(),
+  );
+
+  /** The app-wide workspace singleton, created on first use. */
+  static use(): Workspace.Model {
+    return this.shared.value;
+  }
+
   protected static dateAtOffset(offset: number) {
     const date = new Date();
     date.setHours(12, 0, 0, 0);
@@ -242,12 +256,12 @@ class $Workspace {
   }
 
   reset() {
-    this.projects.value = Seeds.projects.map((seed) => new Project.Class(seed));
-    this.members.value = Seeds.members.map((seed) => new Member.Class(seed));
-    this.tasks.value = Seeds.tasks.map(
+    this.projects.value = Seeds.Class.projects.map((seed) => new Project.Class(seed));
+    this.members.value = Seeds.Class.members.map((seed) => new Member.Class(seed));
+    this.tasks.value = Seeds.Class.tasks.map(
       (seed) => new Task.Class(this, seed, $Workspace.dateAtOffset(seed.dueOffset)),
     );
-    this.activities.value = Seeds.activities.map((entry, index) => ({
+    this.activities.value = Seeds.Class.activities.map((entry, index) => ({
       ...entry,
       id: index + 1,
     }));
@@ -262,18 +276,8 @@ class $Workspace {
 }
 
 export namespace Workspace {
-  export const $Class = $Workspace;
+  export const $Class = Static($Workspace); // anchor — it declares statics
   export let Class = Reactive($Class);
   export type Model = InstanceType<typeof Class>;
   export type Instance = typeof Class.Instance;
-
-  // The store pattern, held by the seam: the backing singleton is a
-  // NON-EXPORTED namespace member — invisible to importers, no module
-  // residue.
-  let singleton: Model | undefined;
-
-  /** The app-wide workspace singleton, created on first use. */
-  export function use() {
-    return (singleton ??= new Class());
-  }
 }

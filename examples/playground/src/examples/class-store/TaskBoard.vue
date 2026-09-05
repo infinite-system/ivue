@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { ProjectStore } from './ProjectStore';
 
-const project = ProjectStore.use();
+const project = ProjectStore.Class.use();
 
 // the state destructure — same rules as any ivue instance
 const {

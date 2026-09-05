@@ -2,7 +2,7 @@
 import MemberAvatar from './MemberAvatar.vue';
 import { Workspace } from './Workspace';
 
-const workspace = Workspace.use();
+const workspace = Workspace.Class.use();
 </script>
 
 <template>

@@ -1,6 +1,6 @@
 ---
 title: 'Example: Pinia Store Alternative'
-description: 'A class-based alternative to Pinia stores — ProjectStore.use() returns one shared ivue instance, injected into other classes through a cached $-getter, with an optional reactive() view.'
+description: 'A class-based alternative to Pinia stores — ProjectStore.Class.use() returns one shared ivue instance, injected into other classes through a cached $-getter, with an optional reactive() view.'
 aside: false
 pageClass: benchmarks-wide examples-page
 relatedPosts: [reactive-is-all-you-need, module-level-state, rented-objects]
@@ -33,7 +33,7 @@ export namespace ProjectStore {
 ```
 
 No Pinia, no `defineStore`, no plugin registration. Every component that
-calls `ProjectStore.use()` receives the same instance; state written in one
+calls `ProjectStore.Class.use()` receives the same instance; state written in one
 panel renders in every other. Because `use()` constructs the singleton
 lazily — on first touch, after the app exists — module-load order and
 circular imports stay non-events, and the store's name travels with its
@@ -59,7 +59,7 @@ models, entities, capability classes — reach the store through a cached
 class $TaskBoardModel {
   // resolved on first touch, cached per instance, circular-import safe
   protected get $project() {
-    return ProjectStore.use();
+    return ProjectStore.Class.use();
   }
 
   get remainingLabel() {
@@ -104,7 +104,7 @@ export namespace ProjectStore {
 ```
 
 ```ts
-const project = ProjectStore.useReactive();
+const project = ProjectStore.Class.useReactive();
 
 project.projectName = 'Artemis'; // ref write, no .value
 project.filter = 'done';         // typechecks because of Instance

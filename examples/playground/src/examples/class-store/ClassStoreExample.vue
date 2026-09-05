@@ -8,7 +8,7 @@ import ReactiveViewPanel from './ReactiveViewPanel.vue';
   <div class="pane pane-wide">
     <p class="note">
       Three independent components, ZERO props between them — each calls
-      ProjectStore.use() and receives the same singleton class instance. The
+      ProjectStore.Class.use() and receives the same singleton class instance. The
       third panel consumes the store through the optional reactive() wrapper
       (typed via ProjectStore.Instance), so its reads and writes drop every
       .value.

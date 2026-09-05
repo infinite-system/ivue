@@ -14,7 +14,7 @@ class $TaskBoard {
   }
 
   protected get $workspace() {
-    return Workspace.use();
+    return Workspace.Class.use();
   }
 
   tasksByStatus(status: TaskStatus) {

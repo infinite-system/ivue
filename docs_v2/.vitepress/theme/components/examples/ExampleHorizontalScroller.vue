@@ -31,7 +31,7 @@ const {
     <div class="d-vals ehs-stats">
       <div>
         <div class="d-k">cards in the list</div>
-        <div class="d-n">{{ HorizontalScrollerExample.ITEM_COUNT.toLocaleString() }}</div>
+        <div class="d-n">{{ example.itemCountLabel }}</div>
       </div>
       <div>
         <div class="d-k">cards in the DOM</div>
@@ -63,7 +63,7 @@ const {
       <button class="d-btn primary" type="button" @click="example.jumpTo(499999)">
         jump to #500,000
       </button>
-      <button class="d-btn" type="button" @click="example.jumpTo(HorizontalScrollerExample.ITEM_COUNT - 1)">
+      <button class="d-btn" type="button" @click="example.jumpToEnd()">
         jump to the end
       </button>
       <button class="d-btn" type="button" @click="example.jumpTo(0)">

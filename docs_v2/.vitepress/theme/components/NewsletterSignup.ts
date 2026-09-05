@@ -1,6 +1,7 @@
 import { onMounted, onUnmounted, ref, useId } from 'vue';
 import { useRoute } from 'vitepress';
 import { Reactive } from '../../../../lib/Reactive';
+import { Static } from '../../../../lib/Static';
 import { captureEvent } from '../analytics';
 import { loadTurnstileScript } from '../turnstile';
 
@@ -9,6 +10,33 @@ import { loadTurnstileScript } from '../turnstile';
 // driven by this model: which placement belongs on the current page,
 // the Turnstile handshake, and the subscribe round-trip.
 class $NewsletterSignup {
+  /** The newsletter Worker's public URL (see /newsletter/README.md).
+   *  Empty string keeps the form visible but dormant (soft-fail message
+   *  on submit). A live knob: a docs variant or a test double overrides it. */
+  static get ENDPOINT() {
+    return 'https://ivue-newsletter.ekalashnikov.workers.dev';
+  }
+
+  /** Turnstile sitekey (dashboard → Turnstile → the ivue.dev widget).
+   *  Empty string skips the widget; the Worker enforces verification only
+   *  once its TURNSTILE_SECRET is set, so the two roll out together. */
+  static get TURNSTILE_SITE_KEY() {
+    return '0x4AAAAAAESFVS2C9LMeYZpt';
+  }
+
+  static get DISMISSED_KEY() {
+    return 'ivue-newsletter-dismissed';
+  }
+
+  static get DISMISS_DAYS() {
+    return 21;
+  }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $NewsletterSignup;
+  }
+
   // The card renders in several placements at once (aside + doc on blog
   // posts, one hidden by CSS) — a shared gradient id would resolve into
   // the display:none instance and paint nothing. Every instance gets its
@@ -135,7 +163,7 @@ class $NewsletterSignup {
     return this.sending ? 'Joining…' : 'Join the list';
   }
   get turnstileEnabled() {
-    return Boolean(NewsletterSignup.TURNSTILE_SITE_KEY);
+    return Boolean(this.self.TURNSTILE_SITE_KEY);
   }
 
   // ACTIONS
@@ -144,11 +172,11 @@ class $NewsletterSignup {
     if (this.placement !== 'toast') return;
     window.addEventListener('ivue:newsletter-open', this.onOpenRequested);
     const dismissedAt = Number(
-      localStorage.getItem(NewsletterSignup.DISMISSED_KEY) ?? 0,
+      localStorage.getItem(this.self.DISMISSED_KEY) ?? 0,
     );
     if (
       Date.now() - dismissedAt <
-      NewsletterSignup.DISMISS_DAYS * 86_400_000
+      this.self.DISMISS_DAYS * 86_400_000
     )
       return;
     window.setTimeout(() => this.revealToast(), 9_000);
@@ -165,7 +193,7 @@ class $NewsletterSignup {
 
   dismiss() {
     this.toastVisible.value = false;
-    localStorage.setItem(NewsletterSignup.DISMISSED_KEY, String(Date.now()));
+    localStorage.setItem(this.self.DISMISSED_KEY, String(Date.now()));
   }
 
   openFromPill() {
@@ -191,7 +219,7 @@ class $NewsletterSignup {
   // attempt — tokens are single-use) ----------------------------------
   async renderTurnstile() {
     if (
-      !NewsletterSignup.TURNSTILE_SITE_KEY ||
+      !this.self.TURNSTILE_SITE_KEY ||
       !this.turnstileElement.value ||
       this.turnstileWidgetId
     )
@@ -200,7 +228,7 @@ class $NewsletterSignup {
     const turnstile = (window as any).turnstile;
     if (!turnstile || !this.turnstileElement.value) return;
     this.turnstileWidgetId = turnstile.render(this.turnstileElement.value, {
-      sitekey: NewsletterSignup.TURNSTILE_SITE_KEY,
+      sitekey: this.self.TURNSTILE_SITE_KEY,
       action: 'newsletter',
       theme: 'dark',
       // invisible unless Turnstile actually needs the visitor to
@@ -227,7 +255,7 @@ class $NewsletterSignup {
    *  visible checkbox appears and a human needs time to click it — the
    *  submit must outwait the challenge, not race it. */
   async awaitTurnstileToken(): Promise<string> {
-    if (!NewsletterSignup.TURNSTILE_SITE_KEY) return '';
+    if (!this.self.TURNSTILE_SITE_KEY) return '';
     await this.renderTurnstile();
     const deadline = Date.now() + 45_000;
     while (!this.turnstileToken.value && Date.now() < deadline)
@@ -237,7 +265,7 @@ class $NewsletterSignup {
 
   async subscribe() {
     if (!this.email.value || this.sending) return;
-    if (!NewsletterSignup.ENDPOINT) {
+    if (!this.self.ENDPOINT) {
       this.state.value = 'error';
       this.message.value =
         'Signups open very soon — follow @evgenykalash on X meanwhile.';
@@ -246,7 +274,7 @@ class $NewsletterSignup {
     this.state.value = 'sending'; // guard double-submits through the token wait
     await this.awaitTurnstileToken();
     try {
-      const response = await fetch(`${NewsletterSignup.ENDPOINT}/subscribe`, {
+      const response = await fetch(`${this.self.ENDPOINT}/subscribe`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -285,25 +313,10 @@ class $NewsletterSignup {
 }
 
 export namespace NewsletterSignup {
-  export const $Class = $NewsletterSignup; // raw — children `extends` this
+  export const $Class = Static($NewsletterSignup); // anchor — it declares statics; children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   // the type of every unwrapping surface (defineExpose, reactive())
   export type Instance = typeof Class.Instance;
-
-  /* Values */
-
-  /** The newsletter Worker's public URL (see /newsletter/README.md).
-   *  Empty string keeps the form visible but dormant (soft-fail message
-   *  on submit). */
-  export const ENDPOINT = 'https://ivue-newsletter.ekalashnikov.workers.dev';
-
-  /** Turnstile sitekey (dashboard → Turnstile → the ivue.dev widget).
-   *  Empty string skips the widget; the Worker enforces verification only
-   *  once its TURNSTILE_SECRET is set, so the two roll out together. */
-  export const TURNSTILE_SITE_KEY = '0x4AAAAAAESFVS2C9LMeYZpt';
-
-  export const DISMISSED_KEY = 'ivue-newsletter-dismissed';
-  export const DISMISS_DAYS = 21;
 
   /* Types */
 

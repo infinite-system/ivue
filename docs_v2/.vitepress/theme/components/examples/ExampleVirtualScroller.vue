@@ -30,7 +30,7 @@ const {
     <div class="d-vals evs-stats">
       <div>
         <div class="d-k">items in the list</div>
-        <div class="d-n">{{ VirtualScrollerExample.ITEM_COUNT.toLocaleString() }}</div>
+        <div class="d-n">{{ example.itemCountLabel }}</div>
       </div>
       <div>
         <div class="d-k">rows in the DOM</div>
@@ -61,7 +61,7 @@ const {
       <button class="d-btn primary" type="button" @click="example.jumpTo(499999)">
         jump to #500,000
       </button>
-      <button class="d-btn" type="button" @click="example.jumpTo(VirtualScrollerExample.ITEM_COUNT - 1)">
+      <button class="d-btn" type="button" @click="example.jumpToEnd()">
         jump to the end
       </button>
       <button class="d-btn" type="button" @click="example.jumpTo(0)">

@@ -2,7 +2,7 @@
 import { ProjectStore } from './ProjectStore';
 
 // the SAME singleton the TaskBoard writes — no props, no provide/inject
-const project = ProjectStore.use();
+const project = ProjectStore.Class.use();
 
 // the state destructure
 const {

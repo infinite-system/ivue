@@ -1,8 +1,13 @@
+import { Static } from '../../Static';
 import type { ActivityEntry, MemberSeed, ProjectSeed, TaskSeed } from './types';
 
-/** The demo dataset — one namespace, one seam. */
-export namespace Seeds {
-  export const members: MemberSeed[] = [
+/** The demo dataset — a static capability class, so a variant workspace
+ *  extends it (`class $DemoSeeds extends Seeds.$Class`) and overrides one
+ *  getter to ship a different dataset. Each getter builds a fresh array,
+ *  so no consumer can mutate another's copy. */
+class $Seeds {
+  static get members(): MemberSeed[] {
+    return [
     {
       id: 'maya',
       name: 'Maya Chen',
@@ -48,16 +53,20 @@ export namespace Seeds {
       capacity: 30,
       online: true,
     },
-  ];
+    ];
+  }
 
-  export const projects: ProjectSeed[] = [
+  static get projects(): ProjectSeed[] {
+    return [
     { id: 'launch', name: 'Product launch', icon: '✦', color: '#7c3aed' },
     { id: 'website', name: 'Website refresh', icon: '◈', color: '#0284c7' },
     { id: 'mobile', name: 'Mobile app', icon: '◇', color: '#059669' },
     { id: 'growth', name: 'Growth experiments', icon: '↗', color: '#db2777' },
-  ];
+    ];
+  }
 
-  export const tasks: TaskSeed[] = [
+  static get tasks(): TaskSeed[] {
+    return [
     {
       id: 'OR-241',
       projectId: 'launch',
@@ -260,9 +269,11 @@ export namespace Seeds {
       estimateHours: 6,
       tags: ['analytics'],
     },
-  ];
+    ];
+  }
 
-  export const activities: Omit<ActivityEntry, 'id'>[] = [
+  static get activities(): Omit<ActivityEntry, 'id'>[] {
+    return [
     {
       actorId: 'leo',
       icon: '→',
@@ -287,5 +298,11 @@ export namespace Seeds {
       text: 'completed Ship biometric unlock',
       createdAt: '3 hr',
     },
-  ];
+    ];
+  }
+}
+
+export namespace Seeds {
+  export const $Class = Static($Seeds); // anchor — statics live here
+  export let Class = $Class; // selection — a variant workspace swaps this
 }
