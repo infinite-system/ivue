@@ -309,8 +309,9 @@ defineExpose(box as Box.Instance);
 
 ## The class carries the WHOLE contract; the namespace is identity and types
 
-A class FILE has exactly three residents: imports, the class, the
-namespace. The component contract — prop types, prop defaults, their
+A class FILE is a SINGLE-FILE MODEL — the model-side twin of the
+single-file component. It has exactly three residents: imports, the
+class, the namespace. The component contract — prop types, prop defaults, their
 fusion, emits, and every tuning constant — lives ON THE CLASS as static
 getters, beside the state and behavior it governs. The namespace holds
 identity and TYPES only, every type DERIVED from `$Class`. Two worlds
