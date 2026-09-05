@@ -31,9 +31,6 @@ class $GroceryList {
   get isEmpty() {
     return this.count === 0;
   }
-  get canRemove() {
-    return !this.isEmpty;
-  }
 
   /** The pantry the "add" button draws from, in order. */
   get pantry() {
@@ -50,12 +47,6 @@ class $GroceryList {
   add() {
     const item = this.nextItem;
     this.$history.push(`add ${item}`, [...this.items, item]);
-  }
-
-  removeLast() {
-    if (!this.canRemove) return;
-    const removed = this.items[this.count - 1];
-    this.$history.push(`remove ${removed}`, this.items.slice(0, -1));
   }
 
   double() {

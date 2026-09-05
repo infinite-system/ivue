@@ -15,7 +15,6 @@ const list = new GroceryList.Class();
   >
     <div class="d-row">
       <button class="d-btn primary" type="button" @click="list.add()">{{ list.addLabel }}</button>
-      <button class="d-btn" type="button" :disabled="!list.canRemove" @click="list.removeLast()">remove last</button>
       <button class="d-btn" type="button" :disabled="list.isEmpty" @click="list.double()">double</button>
       <button class="d-btn" type="button" :disabled="list.isEmpty" @click="list.sort()">sort</button>
       <button class="d-btn" type="button" :disabled="list.isEmpty" @click="list.reverse()">reverse</button>

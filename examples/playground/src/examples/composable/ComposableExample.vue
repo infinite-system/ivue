@@ -36,9 +36,6 @@ const example = new ComposableExample.Class();
       <button class="btn primary" type="button" @click="example.list.add()">
         {{ example.list.addLabel }}
       </button>
-      <button class="btn" type="button" :disabled="!example.list.canRemove" @click="example.list.removeLast()">
-        remove last
-      </button>
       <button class="btn" type="button" :disabled="example.list.isEmpty" @click="example.list.double()">
         double
       </button>
