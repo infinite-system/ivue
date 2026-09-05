@@ -77,6 +77,7 @@ getters, all of it ([Inheritance & super](/guide/inheritance)) — so
 <<< ../../examples/playground/src/examples/fields/media-field/ExtendedMediaField.vue [ExtendedMediaField.vue]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaField.ts [MediaField.ts]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaField.vue [MediaField.vue]
+<<< ../../examples/playground/src/examples/fields/Field.ts [Field.ts]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaFieldPreviewDialog.vue [PreviewDialog.vue]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaFieldExample.ts [example]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaFieldExample.vue [route]
