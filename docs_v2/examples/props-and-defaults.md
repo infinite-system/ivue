@@ -24,9 +24,10 @@ at runtime.
 ### What to notice
 
 - **The knobs come from the class.** `Badge.Class.propsTypes` decides the
-  control kind, `Badge.Class.propsDefaults` seeds the value. Add a prop to
-  the class and a knob appears.
-- **The validator is a value.** Push `size` to `0`. The panel calls the
+  control kind, `Badge.Class.propsDefaults` seeds the value, and
+  `Badge.Class.propsChoices`, a live static knob, supplies the choices.
+  Add a prop to the class and a knob appears.
+- **The validator is a value.** Pick `size` `0`. The panel calls the
   same function Vue would call, and says so. A type-based prop cannot
   declare one.
 - **The ledger is a diff of two contracts.** Inherited, added and re-tuned

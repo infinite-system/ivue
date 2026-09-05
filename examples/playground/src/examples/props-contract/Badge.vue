@@ -28,16 +28,16 @@ const badge = new Badge.Class(props as Badge.Props);
 .badge--neutral {
   background: rgba(148, 163, 184, 0.16);
   border-color: rgba(148, 163, 184, 0.3);
-  color: #cbd5e1;
+  color: var(--vp-c-text-1, #cbd5e1);
 }
 .badge--success {
   background: rgba(52, 211, 153, 0.16);
   border-color: rgba(52, 211, 153, 0.4);
-  color: #6ee7b7;
+  color: var(--vp-c-green-1, #6ee7b7);
 }
 .badge--danger {
   background: rgba(248, 113, 113, 0.16);
   border-color: rgba(248, 113, 113, 0.4);
-  color: #fca5a5;
+  color: var(--vp-c-danger-1, #fca5a5);
 }
 </style>

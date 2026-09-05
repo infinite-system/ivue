@@ -8,6 +8,8 @@ import PropsContractExample from '@examples/props-contract/PropsContractExample.
   </div>
 </template>
 
+<style src="./field-embed.css"></style>
+
 <style>
 .props-embed {
   margin: 22px 0;

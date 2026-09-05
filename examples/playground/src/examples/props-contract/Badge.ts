@@ -26,6 +26,15 @@ class $Badge {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
 
+  /** KNOB — the values a panel may offer for each prop; a live static, read like the rest. */
+  static get propsChoices() {
+    return {
+      label: ['runtime', 'props', 'value', 'ivue'],
+      tone: ['neutral', 'success', 'danger'] as readonly Badge.Tone[],
+      size: [0, 12, 14, 16, 20, 28],
+    };
+  }
+
   constructor(public props: Badge.Props) {}
 
   // PROPS — plain getters, leaf-tracked through the props proxy

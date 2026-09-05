@@ -20,6 +20,7 @@ class $PropsContractExample {
   get controls(): PropsContractExample.Control[] {
     const types = Badge.Class.propsTypes;
     const defaults: Partial<Record<PropsContractExample.PropName, unknown>> = Badge.Class.propsDefaults;
+    const choices: Partial<Record<PropsContractExample.PropName, readonly PropsContractExample.Choice[]>> = Badge.Class.propsChoices;
     return (Object.keys(types) as PropsContractExample.PropName[]).map((name) => {
       const declaration = types[name] as PropsContractExample.Declaration;
       return {
@@ -28,6 +29,7 @@ class $PropsContractExample {
         required: declaration.required === true,
         defaultValue: defaults[name],
         validator: declaration.validator,
+        choices: choices[name],
       };
     });
   }
@@ -81,6 +83,14 @@ class $PropsContractExample {
   }
 
   // PER-CONTROL — named template conditions and labels
+  hasChoices(control: PropsContractExample.Control) {
+    return control.choices !== undefined;
+  }
+
+  isChosen(control: PropsContractExample.Control, choice: PropsContractExample.Choice) {
+    return this.values.value[control.name] === choice;
+  }
+
   isNumberControl(control: PropsContractExample.Control) {
     return control.kind === 'number';
   }
@@ -98,7 +108,11 @@ class $PropsContractExample {
   }
 
   defaultLabel(control: PropsContractExample.Control) {
-    return control.required ? 'required' : `default ${JSON.stringify(control.defaultValue)}`;
+    return control.required ? 'required, no default' : `default: ${JSON.stringify(control.defaultValue)}`;
+  }
+
+  currentLabel(control: PropsContractExample.Control) {
+    return `current: ${JSON.stringify(this.values.value[control.name])}`;
   }
 
   numberValue(control: PropsContractExample.Control) {
@@ -114,6 +128,10 @@ class $PropsContractExample {
   }
 
   // ACTIONS
+  choose(control: PropsContractExample.Control, choice: PropsContractExample.Choice) {
+    this.write(control, choice);
+  }
+
   setNumber(control: PropsContractExample.Control, event: Event) {
     this.write(control, Number((event.target as HTMLInputElement).value));
   }
@@ -150,6 +168,7 @@ export namespace PropsContractExample {
   export type PropName = keyof typeof Badge.$Class.propsTypes;
   export type Values = Record<PropName, unknown> & { label: string };
   export type Kind = 'number' | 'boolean' | 'text';
+  export type Choice = string | number;
   export interface Declaration {
     type: unknown;
     required?: boolean;
@@ -161,5 +180,6 @@ export namespace PropsContractExample {
     required: boolean;
     defaultValue: unknown;
     validator?: (value: unknown) => boolean;
+    choices?: readonly Choice[];
   }
 }
