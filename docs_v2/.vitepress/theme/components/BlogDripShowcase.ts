@@ -26,29 +26,48 @@ class $BlogDripShowcase {
       }));
   }
 
+  constructor() {
+    onMounted(() => this.onMount());
+    onBeforeUnmount(() => this.dispose());
+  }
+
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
     return this.constructor as typeof $BlogDripShowcase;
   }
 
-  // non-reactive internals — cycle bookkeeping, never read by the template
-  protected timer: ReturnType<typeof setInterval> | undefined;
-  protected arrivingTimer: ReturnType<typeof setTimeout> | undefined;
-  protected observer: IntersectionObserver | undefined;
-  protected kickTimer: ReturnType<typeof setTimeout> | undefined;
+  // INTERNAL cells — cycle bookkeeping, never read by the template;
+  // shallowRef because nothing derives from them
+  get timer() {
+    return shallowRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  }
+  get arrivingTimer() {
+    return shallowRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  }
+  get observer() {
+    return shallowRef<IntersectionObserver | undefined>(undefined);
+  }
+  get kickTimer() {
+    return shallowRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  }
   // the card whose settle timer is in flight — a new delivery settles
   // it INSTANTLY instead of cancelling it (a cancelled settle flips
   // the card from arriving back to sealed)
-  protected pendingIndex: number | undefined;
-  protected inView = false;
-  protected hovering = false;
-  protected current = 0;
+  get pendingIndex() {
+    return shallowRef<number | undefined>(undefined);
+  }
+  get inView() {
+    return shallowRef(false);
+  }
+  get hovering() {
+    return shallowRef(false);
+  }
+  get current() {
+    return shallowRef(0);
+  }
   // the first cycle has run — visibility kicks only make sense after it
-  protected started = false;
-
-  constructor() {
-    onMounted(() => this.onMount());
-    onBeforeUnmount(() => this.dispose());
+  get started() {
+    return shallowRef(false);
   }
 
   // TEMPLATE-REF TARGETS
@@ -97,10 +116,11 @@ class $BlogDripShowcase {
   }
 
   onMouseEnter() {
-    this.hovering = true;
+    this.hovering.value = true;
   }
+
   onMouseLeave() {
-    this.hovering = false;
+    this.hovering.value = false;
   }
 
   /** The card resting under the strip's center — read from the scroller's
@@ -121,17 +141,17 @@ class $BlogDripShowcase {
   /** One delivery: the stamp plays on card `index`, then settles into its
    *  permanent checkmark by advancing the frontier. */
   deliver(index: number) {
-    clearTimeout(this.arrivingTimer);
+    clearTimeout(this.arrivingTimer.value);
     // a delivery still animating when the next one starts settles NOW:
     // its checkmark pops instead of its envelope resealing
-    if (this.pendingIndex !== undefined) this.settleDelivery(this.pendingIndex);
-    this.pendingIndex = index;
+    if (this.pendingIndex.value !== undefined) this.settleDelivery(this.pendingIndex.value);
+    this.pendingIndex.value = index;
     this.arrivingId.value = this.items[index]?.id ?? '';
-    this.arrivingTimer = setTimeout(() => this.settleDelivery(index), 2600);
+    this.arrivingTimer.value = setTimeout(() => this.settleDelivery(index), 2600);
   }
 
   settleDelivery(index: number) {
-    this.pendingIndex = undefined;
+    this.pendingIndex.value = undefined;
     this.arrivingId.value = '';
     this.deliveredThrough.value = Math.max(
       this.deliveredThrough.value,
@@ -144,74 +164,74 @@ class $BlogDripShowcase {
    *  the centered card is the first to actually arrive. Every later check
    *  is therefore preceded by that card's own stamp. */
   beginCycle() {
-    this.current = this.centerIndexAtRest();
-    this.deliveredThrough.value = this.current - 1;
+    this.current.value = this.centerIndexAtRest();
+    this.deliveredThrough.value = this.current.value - 1;
     // snap the opening card onto the exact center — the stamp rides it
-    this.scroller.value?.scrollToIndex(this.current);
-    this.deliver(this.current);
+    this.scroller.value?.scrollToIndex(this.current.value);
+    this.deliver(this.current.value);
   }
 
   advance() {
     const scrollerInstance = this.scroller.value;
-    if (!scrollerInstance || !this.inView || this.hovering || document.hidden)
+    if (!scrollerInstance || !this.inView.value || this.hovering.value || document.hidden)
       return;
     if (scrollerInstance.lenis?.isScrolling) return; // the reader owns it
-    if (this.current >= this.items.length - 1) {
+    if (this.current.value >= this.items.length - 1) {
       // the loop wrapped — reset to the start and begin a fresh cycle
       this.deliveredThrough.value = -1;
       scrollerInstance.scrollToIndex(0, () => this.beginCycle(), true, 0);
       return;
     }
-    this.current += 1;
-    scrollerInstance.scrollToIndex(this.current, () =>
-      this.deliver(this.current),
+    this.current.value += 1;
+    scrollerInstance.scrollToIndex(this.current.value, () =>
+      this.deliver(this.current.value),
     );
   }
 
   onMount() {
     if (this.items.length < 2) return;
-    this.observer = new IntersectionObserver(
+    this.observer.value = new IntersectionObserver(
       ([entry]) => this.onVisibility(entry.isIntersecting),
       { threshold: 0.35 },
     );
-    if (this.root.value) this.observer.observe(this.root.value);
+    if (this.root.value) this.observer.value.observe(this.root.value);
     // first cycle after the strip has measured its opening cards
     setTimeout(() => this.startCycle(), 600);
-    this.timer = setInterval(
+    this.timer.value = setInterval(
       () => this.advance(),
       this.self.ADVANCE_EVERY_MS,
     );
   }
 
   startCycle() {
-    this.started = true;
+    this.started.value = true;
     this.beginCycle();
   }
 
   onVisibility(isIntersecting: boolean) {
-    const wasInView = this.inView;
-    this.inView = isIntersecting;
+    const wasInView = this.inView.value;
+    this.inView.value = isIntersecting;
     // scrolling INTO the strip: slide almost immediately instead of
     // waiting out the interval's remainder — then keep the normal
     // cadence by restarting the interval from this moment
-    if (isIntersecting && !wasInView && this.started) this.kickAdvance();
+    if (isIntersecting && !wasInView && this.started.value) this.kickAdvance();
   }
 
   kickAdvance() {
-    clearTimeout(this.kickTimer);
-    if (this.timer) clearInterval(this.timer);
-    this.kickTimer = setTimeout(() => this.advance(), 1000);
-    this.timer = setInterval(
+    clearTimeout(this.kickTimer.value);
+    if (this.timer.value) clearInterval(this.timer.value);
+    this.kickTimer.value = setTimeout(() => this.advance(), 1000);
+    this.timer.value = setInterval(
       () => this.advance(),
       this.self.ADVANCE_EVERY_MS,
     );
   }
 
   dispose() {
-    if (this.timer) clearInterval(this.timer);
-    clearTimeout(this.arrivingTimer);
-    clearTimeout(this.kickTimer);
-    this.observer?.disconnect();
+    if (this.timer.value) clearInterval(this.timer.value);
+    clearTimeout(this.arrivingTimer.value);
+    clearTimeout(this.kickTimer.value);
+    this.observer.value?.disconnect();
   }
 }
 

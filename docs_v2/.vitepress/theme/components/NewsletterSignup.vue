@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { NewsletterSignup } from './NewsletterSignup';
 
-const props = defineProps<{ placement: 'toast' | 'aside' | 'doc' | 'cta' }>();
+const props = defineProps(NewsletterSignup.Class.props);
 
-const signup = new NewsletterSignup.Class(props);
+const signup = new NewsletterSignup.Class(props as NewsletterSignup.Props);
 
 // the state destructure
 const {
@@ -34,10 +34,10 @@ const {
       >×</button>
       <div class="newsletter__head">
         <svg class="newsletter__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-          <rect x="1" y="1" width="46" height="46" rx="11" :fill="`url(#${signup.markTileGradientId})`" />
+          <rect x="1" y="1" width="46" height="46" rx="11" :fill="signup.markTileFill" />
           <path
             d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
-            :stroke="`url(#${signup.markGradientId})`" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+            :stroke="signup.markStroke" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
           <defs>
             <linearGradient :id="signup.markTileGradientId" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
               <stop stop-color="#6366F1" />

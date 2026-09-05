@@ -1,63 +1,21 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
-import { useRoute, withBase } from 'vitepress';
-import { data as posts } from '../../../blog/blog.data.mjs';
-import { rankPosts } from '../blog-search';
+import { BlogSidebarSearch } from './BlogSidebarSearch';
 
-// The blog rail's head: the All-articles link plus a search box that
-// searches the whole archive — titles, tags, excerpts AND body text —
-// ranked exactly like the index page's search (blog-search.ts). While
-// a query is typed the month groups step aside and the ranked results
-// take their place; clearing brings the months back. The main content
-// is never touched.
-const route = useRoute();
-const isBlogSection = computed(() => route.path.startsWith('/blog'));
-const isBlogIndex = computed(() => /^\/blog\/?(index\.html)?$/.test(route.path));
+const search = new BlogSidebarSearch.Class();
 
-const query = ref('');
-const searching = computed(() => query.value.trim().length > 0);
-const publicPosts = posts.filter((post) => !post.private);
-const results = computed(() =>
-  searching.value ? rankPosts(publicPosts, query.value) : [],
-);
-
-function isCurrent(url: string): boolean {
-  return route.path.replace(/\.html$/, '') === url.replace(/\.html$/, '');
-}
-
-function shortDate(date: string): string {
-  return new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  });
-}
-
-// the month groups are VitePress DOM — hidden by a class on the rail
-// while searching, re-asserted after each navigation (the rail re-renders)
-const HIDDEN = 'blog-rail-searching';
-function syncGroups() {
-  document
-    .querySelector('.VPSidebar')
-    ?.classList.toggle(HIDDEN, searching.value && isBlogSection.value);
-}
-watch([searching, () => route.path], () => nextTick(syncGroups));
-
-function clear() {
-  query.value = '';
-}
-onBeforeUnmount(() => {
-  query.value = '';
-  syncGroups();
-});
+// the state destructure
+const {
+  // state refs
+  query,
+} = search;
 </script>
 
 <template>
-  <div v-if="isBlogSection" class="blog-rail-head">
+  <div v-if="search.isBlogSection" class="blog-rail-head">
     <a
       class="blog-rail-all"
-      :class="{ active: isBlogIndex }"
-      :href="withBase('/blog/')"
+      :class="{ active: search.isBlogIndex }"
+      :href="search.allArticlesHref"
     >All articles</a>
     <div class="blog-rail-search">
       <svg class="blog-rail-search__icon" width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
@@ -76,23 +34,23 @@ onBeforeUnmount(() => {
         type="button"
         class="blog-rail-search__clear"
         aria-label="Clear search"
-        @click="clear"
+        @click="search.clear()"
       >×</button>
     </div>
-    <div v-if="searching" class="blog-rail-results" role="list">
+    <div v-if="search.searching" class="blog-rail-results" role="list">
       <p class="blog-rail-results__count">
-        {{ results.length }} match{{ results.length === 1 ? '' : 'es' }}
+        {{ search.matchCountLabel }}
       </p>
       <a
-        v-for="post in results"
+        v-for="post in search.results"
         :key="post.slug"
         class="blog-rail-result"
-        :class="{ active: isCurrent(post.url) }"
-        :href="withBase(post.url)"
+        :class="{ active: search.isCurrent(post) }"
+        :href="search.postHref(post)"
         role="listitem"
       >
         {{ post.title }}
-        <span class="blog-rail-result__date">{{ shortDate(post.date) }}</span>
+        <span class="blog-rail-result__date">{{ search.shortDate(post.date) }}</span>
       </a>
     </div>
   </div>

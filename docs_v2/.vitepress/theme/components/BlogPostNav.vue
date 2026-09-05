@@ -1,62 +1,37 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRoute, withBase } from 'vitepress';
-import { data as allPosts } from '../../../blog/blog.data.mjs';
+import { BlogPostNav } from './BlogPostNav';
 
-// private posts (dev-only artifacts) never appear in prev/next — the
-// walk sees exactly what production publishes
-const posts = allPosts.filter((post) => !post.private);
-
-const route = useRoute();
-const isBlogPost = computed(
-  () => /^\/blog\/.+/.test(route.path) && !route.path.endsWith('/blog/'),
-);
-
-// posts are sorted newest-first; "older" walks forward in the array.
-const currentIndex = computed(() =>
-  posts.findIndex(
-    (post) => post.url === route.path.replace(/\.html$/, ''),
-  ),
-);
-const newerPost = computed(() =>
-  currentIndex.value > 0 ? posts[currentIndex.value - 1] : null,
-);
-const olderPost = computed(() =>
-  currentIndex.value >= 0 && currentIndex.value < posts.length - 1
-    ? posts[currentIndex.value + 1]
-    : null,
-);
-
+const nav = new BlogPostNav.Class();
 </script>
 
 <template>
   <nav
-    v-if="isBlogPost && (olderPost || newerPost)"
+    v-if="nav.hasNav"
     class="blog-post-nav"
     aria-label="More posts"
   >
     <a
-      v-if="olderPost"
+      v-if="nav.olderPost"
       class="blog-post-nav__card"
-      :href="withBase(olderPost.url)"
+      :href="nav.postHref(nav.olderPost)"
     >
-      <img class="blog-post-nav__thumb" :src="withBase(olderPost.image)" :alt="olderPost.title" loading="lazy" />
+      <img class="blog-post-nav__thumb" :src="nav.imageSrc(nav.olderPost)" :alt="nav.olderPost.title" loading="lazy" />
       <div class="blog-post-nav__body">
-        <span class="blog-post-nav__title">{{ olderPost.title }}</span>
-        <span class="blog-post-nav__excerpt">{{ olderPost.excerpt }}</span>
+        <span class="blog-post-nav__title">{{ nav.olderPost.title }}</span>
+        <span class="blog-post-nav__excerpt">{{ nav.olderPost.excerpt }}</span>
         <span class="blog-post-nav__label">← Older post</span>
       </div>
     </a>
     <span v-else class="blog-post-nav__spacer" aria-hidden="true"></span>
     <a
-      v-if="newerPost"
+      v-if="nav.newerPost"
       class="blog-post-nav__card blog-post-nav__card--newer"
-      :href="withBase(newerPost.url)"
+      :href="nav.postHref(nav.newerPost)"
     >
-      <img class="blog-post-nav__thumb" :src="withBase(newerPost.image)" :alt="newerPost.title" loading="lazy" />
+      <img class="blog-post-nav__thumb" :src="nav.imageSrc(nav.newerPost)" :alt="nav.newerPost.title" loading="lazy" />
       <div class="blog-post-nav__body">
-        <span class="blog-post-nav__title">{{ newerPost.title }}</span>
-        <span class="blog-post-nav__excerpt">{{ newerPost.excerpt }}</span>
+        <span class="blog-post-nav__title">{{ nav.newerPost.title }}</span>
+        <span class="blog-post-nav__excerpt">{{ nav.newerPost.excerpt }}</span>
         <span class="blog-post-nav__label">Newer post →</span>
       </div>
     </a>

@@ -50,7 +50,20 @@ class $HorizontalScrollerExample {
     return ref<HorizontalVirtualScroller.Exposed<VirtualScroller.BaseItem> | null>(null);
   }
 
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $HorizontalScrollerExample;
+  }
+
   /* DERIVED — plain getters; reactive through the scroller's expose. */
+
+  get itemCount() {
+    return this.self.ITEM_COUNT;
+  }
+
+  get itemCountLabel() {
+    return this.itemCount.toLocaleString();
+  }
 
   get renderedCount() {
     return this.scroller.value?.visibleItems.length ?? 0;
@@ -90,22 +103,9 @@ class $HorizontalScrollerExample {
     }
   }
 
-  /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
-    return this.constructor as typeof $HorizontalScrollerExample;
-  }
-
-  get itemCount() {
-    return this.self.ITEM_COUNT;
-  }
-  get itemCountLabel() {
-    return this.itemCount.toLocaleString();
-  }
-
   jumpToEnd() {
     this.jumpTo(this.itemCount - 1);
   }
-
 }
 
 export namespace HorizontalScrollerExample {

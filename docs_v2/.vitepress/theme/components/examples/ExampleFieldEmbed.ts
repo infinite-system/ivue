@@ -6,10 +6,7 @@ import { Reactive } from '../../../../../lib/Reactive';
 import { installQuasar } from '../../quasar-docs-loader';
 
 class $ExampleFieldEmbed {
-  #load: () => Promise<{ default: Component }>;
-
-  constructor(load: () => Promise<{ default: Component }>) {
-    this.#load = load;
+  constructor(readonly load: () => Promise<{ default: Component }>) {
     this.mountExample();
   }
 
@@ -23,7 +20,7 @@ class $ExampleFieldEmbed {
   async mountExample() {
     try {
       await installQuasar();
-      const module = await this.#load();
+      const module = await this.load();
       this.example.value = markRaw(module.default);
     } catch (error) {
       this.failure.value = String(error);

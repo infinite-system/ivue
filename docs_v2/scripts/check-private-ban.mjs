@@ -9,7 +9,9 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const memberPosition = /^\s+private\b/;
+// the MODIFIER only — a property NAMED `private` (`private?: boolean`, the
+// loader's frontmatter flag on a post record) is data, not access control
+const memberPosition = /^\s+private\s+(?!\?|:)(?=[\w$#[]|get\b|set\b|static\b|readonly\b|async\b)/;
 
 const targets = [
   ...globSync('examples/playground/src/**/*.ts', { cwd: root }).filter(

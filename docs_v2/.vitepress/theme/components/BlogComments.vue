@@ -1,379 +1,39 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
-import { useRoute } from 'vitepress';
-import { loadTurnstileScript } from '../turnstile';
+import { BlogComments } from './BlogComments';
 import CommentAvatar from './CommentAvatar.vue';
 
-// Blog comments — served by the newsletter Worker, moderated in its
-// dashboard. Submissions land PENDING; nothing renders here until the
-// operator approves it. Bodies render as plain text, never HTML.
-//
-// Threads are TWO levels deep and no more: a top-level comment and its
-// replies. Answering a reply stays at the same level and addresses it
-// with an @mention, so a conversation never marches rightward off the
-// screen. Replies fold: the newest one shows, the rest expand on ask.
-const NEWSLETTER_ENDPOINT = 'https://ivue-newsletter.ekalashnikov.workers.dev';
-const TURNSTILE_SITE_KEY = '0x4AAAAAAESFVS2C9LMeYZpt';
-const IDENTITY_KEY = 'ivue-comment-identity';
+// Blog comments — the model (BlogComments.ts) owns the thread tree, the
+// form, the follow banner, and the Turnstile handshake; this file is
+// wiring and markup. Design + invariants: newsletter/COMMENTS.md.
+const discussion = new BlogComments.Class();
 
-interface PublicComment {
-  id: number;
-  name: string;
-  body: string;
-  submittedAt: number;
-  parentId: number | null;
-  rootId: number | null;
-  locked: number;
-  avatarSeed: string;
-}
-
-const route = useRoute();
-const isBlogPost = computed(
-  () => /^\/blog\/.+/.test(route.path) && !route.path.endsWith('/blog/'),
-);
-const slug = computed(() =>
-  route.path.replace(/^\/blog\//, '').replace(/\.html$/, '').replace(/\/$/, ''),
-);
-
-const comments = ref<PublicComment[]>([]);
-const loaded = ref(false);
-const name = ref('');
-const email = ref('');
-const body = ref('');
-const subscribeReplies = ref(true); // replies-to-me is the default
-const alsoSubscribe = ref(false); // the newsletter is not
-const state = ref<'idle' | 'sending' | 'done' | 'error'>('idle');
-const message = ref('');
-// which comment the open form answers (0 = a new top-level comment)
-const replyTo = ref(0);
-const submittedTo = ref(0);
-const expandedRoots = ref<number[]>([]);
-const bodyElement = ref<HTMLTextAreaElement | null>(null);
-
-// ---- the tree ---------------------------------------------------------
-const roots = computed(() =>
-  comments.value.filter((comment) => !comment.parentId),
-);
-function repliesOf(rootId: number): PublicComment[] {
-  return comments.value.filter(
-    (comment) => comment.parentId && (comment.rootId ?? 0) === rootId,
-  );
-}
-function latestReply(rootId: number): PublicComment | null {
-  const replies = repliesOf(rootId);
-  return replies.length ? replies[replies.length - 1] : null;
-}
-function hiddenReplyCount(rootId: number): number {
-  return Math.max(0, repliesOf(rootId).length - 1);
-}
-function isExpanded(rootId: number): boolean {
-  return expandedRoots.value.includes(rootId);
-}
-function expand(rootId: number) {
-  if (!isExpanded(rootId)) expandedRoots.value = [...expandedRoots.value, rootId];
-}
-function collapse(rootId: number) {
-  expandedRoots.value = expandedRoots.value.filter((id) => id !== rootId);
-}
-// a locked thread carries the flag on its root row
-function threadLocked(rootId: number): boolean {
-  const root = comments.value.find((comment) => comment.id === rootId);
-  return Boolean(root?.locked);
-}
-// everyone in a thread, for the @mention chips (the author of the
-// comment being answered is already addressed by the reply itself)
-function participants(rootId: number, excludeId: number): string[] {
-  const seen = new Set<string>();
-  for (const comment of comments.value) {
-    if (comment.id !== rootId && (comment.rootId ?? 0) !== rootId) continue;
-    if (comment.id === excludeId) continue;
-    if (comment.name.trim()) seen.add(comment.name.trim());
-  }
-  return [...seen].slice(0, 8);
-}
-const totalCount = computed(() => comments.value.length);
-
-async function loadComments() {
-  if (!isBlogPost.value) return;
-  try {
-    const response = await fetch(
-      `${NEWSLETTER_ENDPOINT}/comments?slug=${encodeURIComponent(slug.value)}`,
-    );
-    if (response.ok) comments.value = await response.json();
-  } catch {
-    /* comments are progressive enhancement — a failed load stays silent */
-  } finally {
-    loaded.value = true;
-    await nextTick();
-    revealDeepLink();
-  }
-}
-
-// arriving at #comment-123: expand the thread that holds it, then land
-const highlighted = ref(0);
-function revealDeepLink() {
-  const match = /^#comment-(\d+)$/.exec(window.location.hash);
-  if (!match) return;
-  const id = Number(match[1]);
-  const target = comments.value.find((comment) => comment.id === id);
-  if (!target) return;
-  highlighted.value = id;
-  expand(target.rootId ?? target.id);
-  nextTick(() => {
-    document
-      .getElementById(`comment-${id}`)
-      ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  });
-}
-
-// ---- following a thread (arrival from a notification email) ----------
-const followedThread = ref(0);
-const followEmail = ref('');
-const followToken = ref('');
-const following = ref(false);
-const followState = ref<'idle' | 'leaving' | 'left'>('idle');
-
-async function readFollowState() {
-  const query = new URLSearchParams(window.location.search);
-  const thread = Number(query.get('thread') ?? 0);
-  const address = (query.get('sub') ?? '').trim();
-  const token = (query.get('t') ?? '').trim();
-  if (!thread || !address || !token) return;
-  followedThread.value = thread;
-  followEmail.value = address;
-  followToken.value = token;
-  try {
-    const response = await fetch(
-      `${NEWSLETTER_ENDPOINT}/comment-subscription?thread=${thread}` +
-        `&email=${encodeURIComponent(address)}&token=${encodeURIComponent(token)}`,
-    );
-    if (!response.ok) return;
-    const payload = await response.json();
-    following.value = Boolean(payload.following);
-    if (!following.value) followState.value = 'left';
-    expand(thread);
-  } catch {
-    /* the Worker page in the email is the fallback for this */
-  }
-}
-
-async function stopFollowing() {
-  if (followState.value === 'leaving') return;
-  followState.value = 'leaving';
-  try {
-    const response = await fetch(`${NEWSLETTER_ENDPOINT}/comment-unsubscribe`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        thread: followedThread.value,
-        email: followEmail.value,
-        token: followToken.value,
-      }),
-    });
-    if (response.ok) {
-      following.value = false;
-      followState.value = 'left';
-    } else {
-      followState.value = 'idle';
-    }
-  } catch {
-    followState.value = 'idle';
-  }
-}
-
-onMounted(() => {
-  restoreIdentity();
-  loadComments();
-  readFollowState();
-});
-
-watch(slug, () => {
-  comments.value = [];
-  loaded.value = false;
-  state.value = 'idle';
-  replyTo.value = 0;
-  submittedTo.value = 0;
-  expandedRoots.value = [];
-  highlighted.value = 0;
-  loadComments();
-});
-
-// name/email survive between comments — a returning reader retypes nothing
-function restoreIdentity() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(IDENTITY_KEY) ?? '{}');
-    if (typeof stored.name === 'string') name.value = stored.name;
-    if (typeof stored.email === 'string') email.value = stored.email;
-  } catch {
-    /* private mode, cleared storage — the form just starts empty */
-  }
-}
-function rememberIdentity() {
-  try {
-    localStorage.setItem(
-      IDENTITY_KEY,
-      JSON.stringify({ name: name.value, email: email.value }),
-    );
-  } catch {
-    /* storage is a convenience, never a requirement */
-  }
-}
-
-function formatDate(unixSeconds: number): string {
-  return new Date(unixSeconds * 1000).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-// ---- the form ---------------------------------------------------------
-function openReply(comment: PublicComment) {
-  const rootId = comment.rootId ?? comment.id;
-  if (threadLocked(rootId)) return;
-  replyTo.value = comment.id;
-  submittedTo.value = 0;
-  state.value = 'idle';
-  expand(rootId);
-  // answering a REPLY addresses it by name — the level stays the same
-  if (comment.parentId && !body.value.includes(`@${comment.name}`))
-    body.value = `@${comment.name} ${body.value}`.trimStart();
-  nextTick(() => bodyElement.value?.focus());
-}
-
-function cancelReply() {
-  replyTo.value = 0;
-  body.value = '';
-  state.value = 'idle';
-}
-
-function mention(who: string) {
-  if (body.value.includes(`@${who}`)) return;
-  body.value = `${body.value.trimEnd()} @${who} `.trimStart();
-  bodyElement.value?.focus();
-}
-
-// is the open form attached to this comment?
-function formIsOn(commentId: number): boolean {
-  return replyTo.value === commentId && state.value !== 'done';
-}
-function doneOn(commentId: number): boolean {
-  return submittedTo.value === commentId && state.value === 'done';
-}
-
-// --- Turnstile (explicit render, invisible unless challenged) --------
-const turnstileElement = ref<HTMLElement | null>(null);
-const turnstileToken = ref('');
-let turnstileWidgetId: string | undefined;
-async function renderTurnstile() {
-  if (!TURNSTILE_SITE_KEY || !turnstileElement.value || turnstileWidgetId)
-    return;
-  await loadTurnstileScript();
-  const turnstile = (window as any).turnstile;
-  if (!turnstile || !turnstileElement.value) return;
-  turnstileWidgetId = turnstile.render(turnstileElement.value, {
-    sitekey: TURNSTILE_SITE_KEY,
-    action: 'newsletter',
-    theme: 'dark',
-    appearance: 'interaction-only',
-    callback: (token: string) => {
-      turnstileToken.value = token;
-    },
-    'expired-callback': () => {
-      turnstileToken.value = '';
-    },
-  });
-}
-
-watch(turnstileElement, (element) => {
-  if (!element) return;
-  // the top-level form and the inline reply form are DIFFERENT
-  // elements — swapping forms must tear down the old widget or the
-  // new form never gets one (and submits token-less, which the
-  // Worker refuses). Render only if the reader had already engaged;
-  // a fresh form waits for its own first input focus.
-  if (turnstileWidgetId) {
-    (window as any).turnstile?.remove?.(turnstileWidgetId);
-    turnstileWidgetId = undefined;
-    turnstileToken.value = '';
-    renderTurnstile();
-  }
-});
-
-// Turnstile spins up only on deliberate engagement — focusing a
-// name/email/comment field — never on mount: an idle comment form
-// must not load a third-party script + iframe for every reader.
-function ensureTurnstile() {
-  if (!turnstileWidgetId) renderTurnstile();
-}
-
-// render on demand and WAIT for the async token — never race it
-async function awaitTurnstileToken(): Promise<string> {
-  if (!TURNSTILE_SITE_KEY) return '';
-  await renderTurnstile();
-  // 45s: when Cloudflare decides the widget needs INTERACTION, the
-  // visible checkbox appears and a human needs time to click it — the
-  // submit must outwait the challenge, not race it
-  const deadline = Date.now() + 45_000;
-  while (!turnstileToken.value && Date.now() < deadline)
-    await new Promise((resolve) => setTimeout(resolve, 150));
-  return turnstileToken.value;
-}
-
-async function submit() {
-  if (!email.value || !body.value.trim() || state.value === 'sending') return;
-  state.value = 'sending';
-  const target = replyTo.value;
-  await awaitTurnstileToken();
-  try {
-    const response = await fetch(`${NEWSLETTER_ENDPOINT}/comment`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        slug: slug.value,
-        name: name.value,
-        email: email.value,
-        body: body.value,
-        parentId: target || null,
-        subscribeReplies: subscribeReplies.value,
-        subscribe: alsoSubscribe.value,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? '',
-        ...(turnstileToken.value
-          ? { turnstileToken: turnstileToken.value }
-          : {}),
-      }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (response.ok) {
-      state.value = 'done';
-      submittedTo.value = target;
-      body.value = '';
-      rememberIdentity();
-    } else {
-      state.value = 'error';
-      message.value =
-        payload.error ?? 'Could not submit — try again in a minute.';
-    }
-  } catch {
-    state.value = 'error';
-    message.value = 'Could not submit — try again in a minute.';
-  } finally {
-    turnstileToken.value = '';
-    if (turnstileWidgetId) (window as any).turnstile?.reset(turnstileWidgetId);
-  }
-}
+// the state destructure — every Ref the template touches, grouped
+const {
+  // state refs
+  loaded,
+  name,
+  email,
+  body,
+  subscribeReplies,
+  alsoSubscribe,
+  message,
+  followEmail,
+  // element refs
+  bodyElement,
+  turnstileElement,
+} = discussion;
 </script>
 
 <template>
-  <section v-if="isBlogPost" class="blog-comments" aria-label="Comments">
+  <section v-if="discussion.isBlogPost" class="blog-comments" aria-label="Comments">
     <h2 class="blog-comments__title">
       Comments
-      <span v-if="loaded" class="blog-comments__count">{{ totalCount }}</span>
+      <span v-if="loaded" class="blog-comments__count">{{ discussion.totalCount }}</span>
     </h2>
 
     <!-- arrived from a reply notification: say so, and offer one click out -->
     <p
-      v-if="followedThread && following"
+      v-if="discussion.isFollowing"
       class="blog-comments__follow"
       role="status"
     >
@@ -382,32 +42,32 @@ async function submit() {
         <strong>{{ followEmail }}</strong
         >.</span
       >
-      <button type="button" @click="stopFollowing()">
-        {{ followState === 'leaving' ? 'Stopping…' : 'Stop following' }}
+      <button type="button" @click="discussion.stopFollowing()">
+        {{ discussion.stopFollowingLabel }}
       </button>
     </p>
     <p
-      v-else-if="followedThread && followState === 'left'"
+      v-else-if="discussion.hasStoppedFollowing"
       class="blog-comments__follow blog-comments__follow--left"
       role="status"
     >
       You no longer follow replies on this thread.
     </p>
 
-    <ol v-if="roots.length" class="blog-comments__list">
+    <ol v-if="discussion.hasRoots" class="blog-comments__list">
       <li
-        v-for="root in roots"
+        v-for="root in discussion.roots"
         :key="root.id"
-        :id="`comment-${root.id}`"
+        :id="discussion.commentAnchor(root.id)"
         class="blog-comments__item"
-        :class="{ 'is-highlighted': highlighted === root.id }"
+        :class="{ 'is-highlighted': discussion.isHighlighted(root.id) }"
       >
         <div class="blog-comments__head">
           <CommentAvatar :seed="root.avatarSeed" :name="root.name" />
           <div class="blog-comments__meta">
             <span class="blog-comments__name">{{ root.name }}</span>
             <span class="blog-comments__date">{{
-              formatDate(root.submittedAt)
+              discussion.formatDate(root.submittedAt)
             }}</span>
           </div>
           <span v-if="root.locked" class="blog-comments__lock" title="Replies locked"
@@ -422,7 +82,7 @@ async function submit() {
             v-if="!root.locked"
             type="button"
             class="blog-comments__reply-link"
-            @click="openReply(root)"
+            @click="discussion.openReply(root)"
           >
             Reply
           </button>
@@ -432,17 +92,14 @@ async function submit() {
         </div>
 
         <!-- replies: the newest shows; the rest expand on ask -->
-        <ol
-          v-if="repliesOf(root.id).length"
-          class="blog-comments__replies"
-        >
-          <template v-if="isExpanded(root.id)">
+        <ol v-if="discussion.hasReplies(root.id)" class="blog-comments__replies">
+          <template v-if="discussion.isExpanded(root.id)">
             <li
-              v-for="reply in repliesOf(root.id)"
+              v-for="reply in discussion.repliesOf(root.id)"
               :key="reply.id"
-              :id="`comment-${reply.id}`"
+              :id="discussion.commentAnchor(reply.id)"
               class="blog-comments__reply"
-              :class="{ 'is-highlighted': highlighted === reply.id }"
+              :class="{ 'is-highlighted': discussion.isHighlighted(reply.id) }"
             >
               <div class="blog-comments__head">
                 <CommentAvatar
@@ -453,7 +110,7 @@ async function submit() {
                 <div class="blog-comments__meta">
                   <span class="blog-comments__name">{{ reply.name }}</span>
                   <span class="blog-comments__date">{{
-                    formatDate(reply.submittedAt)
+                    discussion.formatDate(reply.submittedAt)
                   }}</span>
                 </div>
               </div>
@@ -463,37 +120,37 @@ async function submit() {
                   v-if="!root.locked"
                   type="button"
                   class="blog-comments__reply-link"
-                  @click="openReply(reply)"
+                  @click="discussion.openReply(reply)"
                 >
                   Reply
                 </button>
               </div>
             </li>
           </template>
-          <li v-else class="blog-comments__reply" :key="`latest-${root.id}`">
+          <li v-else class="blog-comments__reply" :key="discussion.latestKey(root.id)">
             <div class="blog-comments__head">
               <CommentAvatar
-                :seed="latestReply(root.id)!.avatarSeed"
-                :name="latestReply(root.id)!.name"
+                :seed="discussion.latestReply(root.id)!.avatarSeed"
+                :name="discussion.latestReply(root.id)!.name"
                 :size="26"
               />
               <div class="blog-comments__meta">
                 <span class="blog-comments__name">{{
-                  latestReply(root.id)!.name
+                  discussion.latestReply(root.id)!.name
                 }}</span>
                 <span class="blog-comments__date">{{
-                  formatDate(latestReply(root.id)!.submittedAt)
+                  discussion.formatDate(discussion.latestReply(root.id)!.submittedAt)
                 }}</span>
                 <span class="blog-comments__latest">latest reply</span>
               </div>
             </div>
-            <p class="blog-comments__body">{{ latestReply(root.id)!.body }}</p>
+            <p class="blog-comments__body">{{ discussion.latestReply(root.id)!.body }}</p>
             <div class="blog-comments__actions-row">
               <button
                 v-if="!root.locked"
                 type="button"
                 class="blog-comments__reply-link"
-                @click="openReply(latestReply(root.id)!)"
+                @click="discussion.openReply(discussion.latestReply(root.id)!)"
               >
                 Reply
               </button>
@@ -502,38 +159,32 @@ async function submit() {
         </ol>
 
         <button
-          v-if="hiddenReplyCount(root.id) && !isExpanded(root.id)"
+          v-if="discussion.showsMoreButton(root.id)"
           type="button"
           class="blog-comments__more"
-          @click="expand(root.id)"
+          @click="discussion.expand(root.id)"
         >
-          Show {{ hiddenReplyCount(root.id) }} earlier
-          {{ hiddenReplyCount(root.id) === 1 ? 'reply' : 'replies' }}
+          {{ discussion.moreLabel(root.id) }}
         </button>
         <button
-          v-else-if="repliesOf(root.id).length > 1 && isExpanded(root.id)"
+          v-else-if="discussion.showsFoldButton(root.id)"
           type="button"
           class="blog-comments__more"
-          @click="collapse(root.id)"
+          @click="discussion.collapse(root.id)"
         >
           Fold replies
         </button>
 
         <!-- the inline reply form lives inside the thread it answers -->
         <form
-          v-if="
-            formIsOn(root.id) ||
-            repliesOf(root.id).some((reply) => formIsOn(reply.id))
-          "
+          v-if="discussion.formIsInThread(root.id)"
           class="blog-comments__form blog-comments__form--reply"
-          @submit.prevent="submit"
+          @submit.prevent="discussion.submit()"
         >
           <p class="blog-comments__answering">
             Replying to
-            <strong>{{
-              comments.find((comment) => comment.id === replyTo)?.name
-            }}</strong>
-            <button type="button" @click="cancelReply()">cancel</button>
+            <strong>{{ discussion.replyingToName }}</strong>
+            <button type="button" @click="discussion.cancelReply()">cancel</button>
           </p>
           <div class="blog-comments__row">
             <input
@@ -543,7 +194,7 @@ async function submit() {
               autocomplete="name"
               aria-label="Name"
               required
-              @focus.once="ensureTurnstile()"
+              @focus.once="discussion.ensureTurnstile()"
             />
             <input
               v-model="email"
@@ -552,7 +203,7 @@ async function submit() {
               autocomplete="email"
               aria-label="Email"
               required
-              @focus.once="ensureTurnstile()"
+              @focus.once="discussion.ensureTurnstile()"
             />
           </div>
           <textarea
@@ -563,18 +214,15 @@ async function submit() {
             placeholder="Your reply…"
             aria-label="Reply"
             required
-            @focus.once="ensureTurnstile()"
+            @focus.once="discussion.ensureTurnstile()"
           ></textarea>
-          <p
-            v-if="participants(root.id, replyTo).length"
-            class="blog-comments__mentions"
-          >
+          <p v-if="discussion.hasMentionable(root.id)" class="blog-comments__mentions">
             <span>Mention:</span>
             <button
-              v-for="who in participants(root.id, replyTo)"
+              v-for="who in discussion.mentionable(root.id)"
               :key="who"
               type="button"
-              @click="mention(who)"
+              @click="discussion.mention(who)"
             >
               @{{ who }}
             </button>
@@ -589,25 +237,15 @@ async function submit() {
           </label>
           <div ref="turnstileElement" class="blog-comments__turnstile"></div>
           <div class="blog-comments__actions">
-            <button type="submit" :disabled="state === 'sending'">
-              {{ state === 'sending' ? 'Submitting…' : 'Post reply' }}
+            <button type="submit" :disabled="discussion.isSending">
+              {{ discussion.replySubmitLabel }}
             </button>
-            <span
-              v-if="state === 'error'"
-              class="blog-comments__error"
-              role="alert"
-              >{{ message }}</span
-            >
+            <span v-if="discussion.hasError" class="blog-comments__error" role="alert">{{
+              message
+            }}</span>
           </div>
         </form>
-        <p
-          v-else-if="
-            doneOn(root.id) ||
-            repliesOf(root.id).some((reply) => doneOn(reply.id))
-          "
-          class="blog-comments__done"
-          role="status"
-        >
+        <p v-else-if="discussion.doneInThread(root.id)" class="blog-comments__done" role="status">
           ✓ Reply submitted — it appears once approved.
         </p>
       </li>
@@ -617,11 +255,7 @@ async function submit() {
     </p>
 
     <!-- a new top-level comment -->
-    <form
-      v-if="replyTo === 0 && state !== 'done'"
-      class="blog-comments__form"
-      @submit.prevent="submit"
-    >
+    <form v-if="discussion.showsNewForm" class="blog-comments__form" @submit.prevent="discussion.submit()">
       <div class="blog-comments__row">
         <input
           v-model="name"
@@ -630,7 +264,7 @@ async function submit() {
           autocomplete="name"
           aria-label="Name"
           required
-          @focus.once="ensureTurnstile()"
+          @focus.once="discussion.ensureTurnstile()"
         />
         <input
           v-model="email"
@@ -639,7 +273,7 @@ async function submit() {
           autocomplete="email"
           aria-label="Email"
           required
-          @focus.once="ensureTurnstile()"
+          @focus.once="discussion.ensureTurnstile()"
         />
       </div>
       <textarea
@@ -650,7 +284,7 @@ async function submit() {
         placeholder="Your comment…"
         aria-label="Comment"
         required
-        @focus.once="ensureTurnstile()"
+        @focus.once="discussion.ensureTurnstile()"
       ></textarea>
       <label class="blog-comments__opt">
         <input v-model="subscribeReplies" type="checkbox" />
@@ -662,19 +296,15 @@ async function submit() {
       </label>
       <div ref="turnstileElement" class="blog-comments__turnstile"></div>
       <div class="blog-comments__actions">
-        <button type="submit" :disabled="state === 'sending'">
-          {{ state === 'sending' ? 'Submitting…' : 'Submit comment' }}
+        <button type="submit" :disabled="discussion.isSending">
+          {{ discussion.submitLabel }}
         </button>
-        <span v-if="state === 'error'" class="blog-comments__error" role="alert">
+        <span v-if="discussion.hasError" class="blog-comments__error" role="alert">
           {{ message }}
         </span>
       </div>
     </form>
-    <p
-      v-else-if="replyTo === 0 && state === 'done'"
-      class="blog-comments__done"
-      role="status"
-    >
+    <p v-else-if="discussion.showsNewDone" class="blog-comments__done" role="status">
       ✓ Comment submitted — it appears once approved.
       <template v-if="alsoSubscribe"> Welcome to the newsletter.</template>
     </p>

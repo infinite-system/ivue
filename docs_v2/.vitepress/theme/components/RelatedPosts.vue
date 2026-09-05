@@ -1,86 +1,28 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { useData, useRoute, withBase } from 'vitepress';
-import { data as posts } from '../../../blog/blog-lite.data.mjs';
+import { RelatedPosts } from './RelatedPosts';
 
-// "From the blog" — the aside block that turns reference pages into
-// blog on-ramps. Curation is explicit frontmatter (relatedPosts:
-// [slug, …]) per page; pages without the key render nothing. Compact
-// rows on purpose: in a 240px column, recognition beats spectacle —
-// a small banner thumb, the title doing the work, a muted date.
-const props = withDefaults(
-  defineProps<{ variant?: 'aside' | 'doc' }>(),
-  { variant: 'aside' },
-);
+const props = defineProps(RelatedPosts.Class.props);
 
-const { frontmatter, page } = useData();
-const route = useRoute();
-
-// On a blog post the block lists PEERS — "Related posts". On guide
-// pages it is an on-ramp from reference into the blog — "From the
-// blog" says where the reader is being invited.
-const isBlogPost = computed(
-  () => /^\/blog\/.+/.test(route.path) && !route.path.endsWith('/blog/'),
-);
-const heading = computed(() =>
-  isBlogPost.value ? 'Related posts' : 'From the blog',
-);
-
-// frontmatter may list any number of slugs, strongest first. The
-// aside stays capped at three (a calm column, no controls); the doc
-// grid shows three and expands on demand — a button, not a slider:
-// hidden-by-carousel content barely gets touched, and post pages
-// already have one slider (the archive rail).
-const VISIBLE_COUNT = 3;
-const expanded = ref(false);
-
-const allRelatedPosts = computed(() => {
-  const slugs: string[] = frontmatter.value.relatedPosts ?? [];
-  return slugs
-    .map((slug) => posts.find((post) => post.slug === slug))
-    .filter((post): post is (typeof posts)[number] => Boolean(post));
-});
-
-const relatedPosts = computed(() => {
-  if (props.variant === 'aside') return allRelatedPosts.value.slice(0, VISIBLE_COUNT);
-  if (expanded.value) return allRelatedPosts.value;
-  return allRelatedPosts.value.slice(0, VISIBLE_COUNT);
-});
-
-const hiddenCount = computed(() =>
-  props.variant === 'doc' && !expanded.value
-    ? allRelatedPosts.value.length - VISIBLE_COUNT
-    : 0,
-);
-
-// a route change collapses the grid again
-watch(
-  () => page.value.relativePath,
-  () => {
-    expanded.value = false;
-  },
-);
-
-
+const related = new RelatedPosts.Class(props as RelatedPosts.Props);
 </script>
 
 <template>
   <nav
-    v-if="relatedPosts.length"
+    v-if="related.hasPosts"
     class="related-posts"
-    :class="`related-posts--${props.variant}`"
+    :class="related.variantClass"
     aria-label="Related blog posts"
   >
-    <p class="related-posts__heading">{{ heading }}</p>
+    <p class="related-posts__heading">{{ related.heading }}</p>
     <a
-      v-for="post in relatedPosts"
+      v-for="post in related.relatedPosts"
       :key="post.slug"
       class="related-posts__item"
-      :href="withBase(post.url)"
+      :href="related.postHref(post)"
     >
       <img
         class="related-posts__thumb"
-        :src="withBase(post.image)"
+        :src="related.imageSrc(post)"
         :alt="post.title"
         width="1200"
         height="630"
@@ -91,12 +33,12 @@ watch(
       </span>
     </a>
     <button
-      v-if="hiddenCount > 0"
+      v-if="related.hasHidden"
       type="button"
       class="related-posts__more"
-      @click="expanded = true"
+      @click="related.expand()"
     >
-      {{ isBlogPost ? `More related posts (${hiddenCount})` : `Show ${hiddenCount} more from the blog` }}
+      {{ related.moreLabel }}
     </button>
   </nav>
 </template>

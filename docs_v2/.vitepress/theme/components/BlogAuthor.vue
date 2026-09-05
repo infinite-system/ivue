@@ -1,20 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRoute, withBase } from 'vitepress';
+import { BlogAuthor } from './BlogAuthor';
 
-const route = useRoute();
-const isBlogPost = computed(
-  () => /^\/blog\/.+/.test(route.path) && !route.path.endsWith('/blog/'),
-);
+const author = new BlogAuthor.Class();
 </script>
 
 <template>
   <!-- Same card as community.md's "Who's behind ivue" — the cm-author
        styles in custom.css paint both. -->
-  <div v-if="isBlogPost" class="cm-author blog-author">
+  <div v-if="author.isBlogPost" class="cm-author blog-author">
     <img
       class="cm-avatar"
-      :src="withBase('/avatars/evgeny-avatar.jpg')"
+      :src="author.avatarSrc"
       alt="Evgeny Kalashnikov"
       width="76"
       height="76"

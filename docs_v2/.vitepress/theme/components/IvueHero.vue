@@ -1,128 +1,18 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { withBase } from 'vitepress';
-// The real engine. Not a mock: this file ships as the library.
-import { Reactive } from '../../../../lib/Reactive';
+import { IvueHero } from './IvueHero';
 
-class $Counter {
-  get count() {
-    return ref(0);
-  }
-  // Derived value: a plain getter. No computed() for simple math.
-  get double() {
-    return this.count.value * 2;
-  }
-  increment() {
-    this.count.value++;
-  }
-  decrement() {
-    this.count.value--;
-  }
-  reset() {
-    this.count.value = 0;
-  }
-}
-const Counter = Reactive($Counter);
+const hero = new IvueHero.Class();
 
-// The headline: the top three rows fall in from above (pure CSS); the
-// finale row types itself, cycling through the capability list forever.
-// Same engine as the whole page.
-class $Typewriter {
-  finaleVariants = [
-    'One kilobyte.',
-    'Zero dependencies.',
-    'Reactive super.',
-    'Memory control.',
-    'Circular immunity.',
-    'Hot reload safe.',
-    'Zero-cost creation.',
-    'Minimal memory.',
-    'Rocket fast.',
-    'TypeScript first.',
-    'Composable.',
-    'Class modules.',
-    'Built for AI.',
-    'Invariant based.',
-    'Reactive backend.',
-    'Mock-free tests.',
-    '100% coverage.',
-    'Real object graphs.'
-  ];
-  fallLeadMs = 700; // let the fall-ins land before typing starts
-  typeDelayMs = 66;
-  deleteDelayMs = 32;
-  holdMs = 3200;
-  restMs = 380;
-  timer: ReturnType<typeof setTimeout> | undefined;
-
-  // SSR and no-JS render the finished headline; the animation only takes
-  // over after mount.
-  get finaleText() {
-    return ref(this.finaleVariants[0]);
-  }
-  get variantIndex() {
-    return ref(0);
-  }
-
-  start() {
-    this.finaleText.value = '';
-    this.timer = setTimeout(() => this.typeFinale(), this.fallLeadMs);
-  }
-  stop() {
-    if (this.timer) clearTimeout(this.timer);
-  }
-
-  typeFinale() {
-    const target = this.finaleVariants[this.variantIndex.value];
-    const current = this.finaleText.value;
-    if (current.length < target.length) {
-      this.finaleText.value = target.slice(0, current.length + 1);
-      this.timer = setTimeout(() => this.typeFinale(), this.typeDelayMs);
-    } else {
-      this.timer = setTimeout(() => this.deleteFinale(), this.holdMs);
-    }
-  }
-
-  deleteFinale() {
-    const current = this.finaleText.value;
-    if (current.length > 0) {
-      this.finaleText.value = current.slice(0, -1);
-      this.timer = setTimeout(() => this.deleteFinale(), this.deleteDelayMs);
-    } else {
-      this.variantIndex.value =
-        (this.variantIndex.value + 1) % this.finaleVariants.length;
-      this.timer = setTimeout(() => this.typeFinale(), this.restMs);
-    }
-  }
-}
-const Typewriter = Reactive($Typewriter);
-
-const counter: any = new Counter();
-const typewriter: any = new Typewriter();
-const { finaleText } = typewriter;
-// the state destructure — every Ref the template touches
-const { count } = counter;
-const lastChange = ref('');
-const fired = ref(0);
-let stop: (() => void) | undefined;
-
-onMounted(() => {
-  stop = watch(
-    () => count.value,
-    (v: number, o: number) => {
-      lastChange.value = `${o} → ${v}`;
-      fired.value++;
-    },
-  );
-  typewriter.start();
-});
-
-onUnmounted(() => {
-  stop?.();
-  counter.$stopEffects();
-  typewriter.stop();
-  typewriter.$stopEffects();
-});
+// the state destructure — every Ref the template touches, grouped
+const {
+  // forwarded cells
+  count,
+  finaleText,
+  // state refs
+  lastChange,
+  fired,
+} = hero;
 </script>
 
 <template>
@@ -202,13 +92,13 @@ onUnmounted(() => {
             </div>
             <div class="val">
               <div class="k">double <span class="dim">(plain getter)</span></div>
-              <div class="n">{{ counter.double }}</div>
+              <div class="n">{{ hero.counter.double }}</div>
             </div>
           </div>
           <div class="controls">
-            <button class="ctl minus" type="button" @click="counter.decrement">&minus;1</button>
-            <button class="ctl plus" type="button" @click="counter.increment">+1</button>
-            <button class="ctl ghost" type="button" @click="counter.reset">Reset</button>
+            <button class="ctl minus" type="button" @click="hero.counter.decrement()">&minus;1</button>
+            <button class="ctl plus" type="button" @click="hero.counter.increment()">+1</button>
+            <button class="ctl ghost" type="button" @click="hero.counter.reset()">Reset</button>
           </div>
           <div class="watchline" aria-live="polite">
             <code>watch</code>

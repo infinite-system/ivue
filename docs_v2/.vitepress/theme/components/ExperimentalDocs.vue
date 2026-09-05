@@ -1,55 +1,29 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { useRoute, withBase } from 'vitepress';
+import { ExperimentalDocs } from './ExperimentalDocs';
 
-const experimentStorageKey = 'ivue.docs.experiment';
-const isVisible = ref(false);
-const route = useRoute();
+const docs = new ExperimentalDocs.Class();
 
-function readExperimentFlag() {
-  const queryValue = new URLSearchParams(window.location.search).get(
-    'experiment',
-  );
-
-  if (queryValue === '1' || queryValue === '0') {
-    sessionStorage.setItem(experimentStorageKey, queryValue);
-  }
-
-  isVisible.value =
-    queryValue === '1' ||
-    (queryValue !== '0' &&
-      sessionStorage.getItem(experimentStorageKey) === '1');
-}
-
-onMounted(readExperimentFlag);
-
-const links = [
-  {
-    text: 'Node Development by Restart',
-    link: '/guide/node-class-hmr',
-  },
-];
-
-function isActive(link: string) {
-  return route.path === withBase(link);
-}
+// the state destructure — every Ref the template touches, grouped
+const {
+  // state refs
+  isVisible,
+} = docs;
 </script>
 
 <template>
   <section v-if="isVisible" class="experimental-docs">
     <h2>Current Explorations</h2>
     <a
-      v-for="item in links"
+      v-for="item in docs.links"
       :key="item.link"
-      :class="{ active: isActive(item.link) }"
-      :href="`${withBase(item.link)}?experiment=1`"
-      :aria-current="isActive(item.link) ? 'page' : undefined"
+      :class="{ active: docs.isActive(item) }"
+      :href="docs.href(item)"
+      :aria-current="docs.ariaCurrent(item)"
     >
       {{ item.text }}
     </a>
   </section>
 </template>
-
 <style scoped>
 .experimental-docs {
   border-top: 1px solid var(--vp-c-divider);

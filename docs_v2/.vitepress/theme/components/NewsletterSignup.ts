@@ -1,6 +1,6 @@
-import { onMounted, onUnmounted, ref, useId } from 'vue';
+import { onMounted, onUnmounted, ref, shallowRef, useId, type ExtractPropTypes, type PropType } from 'vue';
 import { useRoute } from 'vitepress';
-import { Reactive } from '../../../../lib/Reactive';
+import { definePropTypes, propsWithDefaults, Reactive } from '../../../../lib/Reactive';
 import { Static } from '../../../../lib/Static';
 import { captureEvent } from '../analytics';
 import { loadTurnstileScript } from '../turnstile';
@@ -32,21 +32,21 @@ class $NewsletterSignup {
     return 21;
   }
 
-  /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
-    return this.constructor as typeof $NewsletterSignup;
+  /* Contract — STATIC */
+
+  static get propsTypes() {
+    return definePropTypes({
+      placement: { type: String as PropType<NewsletterSignup.Placement>, required: true },
+    });
   }
 
-  // The card renders in several placements at once (aside + doc on blog
-  // posts, one hidden by CSS) — a shared gradient id would resolve into
-  // the display:none instance and paint nothing. Every instance gets its
-  // own pair (assigned once in setup; never changes).
-  readonly markGradientId: string;
-  readonly markTileGradientId: string;
+  static get propsDefaults() {
+    return {};
+  }
 
-  protected route: ReturnType<typeof useRoute>;
-  // Turnstile's widget handle — internal bookkeeping, not template state
-  protected turnstileWidgetId: string | undefined;
+  static get props() {
+    return propsWithDefaults(this.propsDefaults, this.propsTypes);
+  }
 
   constructor(public props: NewsletterSignup.Props) {
     this.markGradientId = useId();
@@ -56,12 +56,19 @@ class $NewsletterSignup {
     onUnmounted(() => this.onUnmount());
   }
 
-  /** Turnstile spins up only on deliberate engagement — focusing a
-   *  field — never on mount: an idle card must not load a third-party
-   *  script + iframe (and Cloudflare's occasional visible box) for a
-   *  visitor who never touches the form. */
-  ensureTurnstile() {
-    if (!this.turnstileWidgetId) this.renderTurnstile();
+  // The card renders in several placements at once (aside + doc on blog
+  // posts, one hidden by CSS) — a shared gradient id would resolve into
+  // the display:none instance and paint nothing. Every instance gets its
+  // own pair (assigned once in setup; never changes).
+  readonly markGradientId: string;
+  readonly markTileGradientId: string;
+
+  // resolved in setup (the constructor) — inject() needs the component instance
+  protected readonly route: ReturnType<typeof useRoute>;
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $NewsletterSignup;
   }
 
   // STATE
@@ -85,6 +92,11 @@ class $NewsletterSignup {
   }
   get turnstileToken() {
     return ref('');
+  }
+
+  // Turnstile's widget handle — internal bookkeeping, not template state
+  get turnstileWidgetId() {
+    return shallowRef<string | undefined>(undefined);
   }
 
   // TEMPLATE-REF TARGET
@@ -130,6 +142,14 @@ class $NewsletterSignup {
     return `newsletter--${this.placement}`;
   }
 
+  /** The mark's paint references, unique per instance (see the gradient ids). */
+  get markTileFill() {
+    return `url(#${this.markTileGradientId})`;
+  }
+  get markStroke() {
+    return `url(#${this.markGradientId})`;
+  }
+
   /** The pill is the permanent, on-demand doorway: always present on
    *  non-blog pages once the card is closed. */
   get pillVisible() {
@@ -167,6 +187,15 @@ class $NewsletterSignup {
   }
 
   // ACTIONS
+
+  /** Turnstile spins up only on deliberate engagement — focusing a
+   *  field — never on mount: an idle card must not load a third-party
+   *  script + iframe (and Cloudflare's occasional visible box) for a
+   *  visitor who never touches the form. */
+  ensureTurnstile() {
+    if (!this.turnstileWidgetId.value) this.renderTurnstile();
+  }
+
   onMount() {
     this.mounted.value = true;
     if (this.placement !== 'toast') return;
@@ -221,13 +250,13 @@ class $NewsletterSignup {
     if (
       !this.self.TURNSTILE_SITE_KEY ||
       !this.turnstileElement.value ||
-      this.turnstileWidgetId
+      this.turnstileWidgetId.value
     )
       return;
     await loadTurnstileScript();
     const turnstile = (window as any).turnstile;
     if (!turnstile || !this.turnstileElement.value) return;
-    this.turnstileWidgetId = turnstile.render(this.turnstileElement.value, {
+    this.turnstileWidgetId.value = turnstile.render(this.turnstileElement.value, {
       sitekey: this.self.TURNSTILE_SITE_KEY,
       action: 'newsletter',
       theme: 'dark',
@@ -245,8 +274,8 @@ class $NewsletterSignup {
 
   resetTurnstile() {
     this.turnstileToken.value = '';
-    if (this.turnstileWidgetId)
-      (window as any).turnstile?.reset(this.turnstileWidgetId);
+    if (this.turnstileWidgetId.value)
+      (window as any).turnstile?.reset(this.turnstileWidgetId.value);
   }
 
   /** The token arrives async after render — a submit waits for it briefly
@@ -320,7 +349,6 @@ export namespace NewsletterSignup {
 
   /* Types */
 
-  export interface Props {
-    placement: 'toast' | 'aside' | 'doc' | 'cta';
-  }
+  export type Placement = 'toast' | 'aside' | 'doc' | 'cta';
+  export type Props = ExtractPropTypes<typeof $Class.props>;
 }

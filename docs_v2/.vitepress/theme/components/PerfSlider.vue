@@ -1,93 +1,29 @@
 <script setup lang="ts">
-import {
-  ref,
-  computed,
-  useSlots,
-  onMounted,
-  onBeforeUnmount,
-  nextTick,
-} from 'vue';
+import { PerfSlider } from './PerfSlider';
 
-/**
- * A dependency-free slide carousel. Each direct child element of the default
- * slot becomes one slide; dots navigate, arrows step, swipe works on touch —
- * EXCEPT on narrow screens, where slides often contain horizontally
- * scrollable tables: there a horizontal pan must scroll the table, never
- * flick the slide, so swipe is disabled and the arrows move under the slide
- * beside the dots. No autoplay — numbers are for reading, not for racing.
- */
-const slots = useSlots();
-const activeIndex = ref(0);
-const trackElement = ref<HTMLElement | null>(null);
-const viewportHeight = ref<number | null>(null);
+const slider = new PerfSlider.Class();
 
-const slideCount = computed(() => {
-  const children = slots.default?.() ?? [];
-  return children.filter((node) => typeof node.type !== 'symbol').length;
-});
-
-// The viewport's height follows the ACTIVE slide, so a short slide is not
-// padded out to the tallest sibling's height. A ResizeObserver keeps the
-// measurement honest when late content (images, fonts) changes the slide.
-let resizeObserver: ResizeObserver | null = null;
-function measureActiveSlide() {
-  const slide = trackElement.value?.children[activeIndex.value] as
-    | HTMLElement
-    | undefined;
-  if (!slide) return;
-  viewportHeight.value = slide.offsetHeight;
-  if (typeof ResizeObserver !== 'undefined') {
-    resizeObserver?.disconnect();
-    resizeObserver = new ResizeObserver(() => {
-      viewportHeight.value = slide.offsetHeight;
-    });
-    resizeObserver.observe(slide);
-  }
-}
-
-function goTo(index: number) {
-  const count = slideCount.value;
-  activeIndex.value = ((index % count) + count) % count;
-  nextTick(measureActiveSlide);
-}
-
-onMounted(measureActiveSlide);
-onBeforeUnmount(() => resizeObserver?.disconnect());
-
-function isNarrowScreen(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    window.matchMedia('(max-width: 719px)').matches
-  );
-}
-
-let touchStartX = 0;
-function onTouchStart(event: TouchEvent) {
-  touchStartX = event.touches[0]?.clientX ?? 0;
-}
-function onTouchEnd(event: TouchEvent) {
-  // On narrow screens a horizontal pan belongs to the slide's own
-  // scrollable content (tables) — never steal it for slide navigation.
-  if (isNarrowScreen()) return;
-  const deltaX = (event.changedTouches[0]?.clientX ?? 0) - touchStartX;
-  if (Math.abs(deltaX) > 40) goTo(activeIndex.value + (deltaX < 0 ? 1 : -1));
-}
+// the state destructure — every Ref the template touches, grouped
+const {
+  // element refs
+  trackElement,
+} = slider;
 </script>
 
 <template>
   <div
     class="perf-slider"
-    @touchstart.passive="onTouchStart"
-    @touchend.passive="onTouchEnd"
+    @touchstart.passive="slider.onTouchStart"
+    @touchend.passive="slider.onTouchEnd"
   >
     <div
       class="perf-slider-viewport"
-      :style="viewportHeight !== null ? { height: `${viewportHeight}px` } : {}"
+      :style="slider.viewportStyle"
     >
       <div
         ref="trackElement"
         class="perf-slider-track"
-        :style="{ transform: `translateX(-${activeIndex * 100}%)` }"
+        :style="slider.trackStyle"
       >
         <slot />
       </div>
@@ -97,26 +33,26 @@ function onTouchEnd(event: TouchEvent) {
       <button
         class="perf-slider-arrow prev"
         aria-label="Previous slide"
-        @click="goTo(activeIndex - 1)"
+        @click="slider.previous()"
       >
         ‹
       </button>
       <div class="perf-slider-dots" role="tablist">
         <button
-          v-for="index in slideCount"
+          v-for="index in slider.slideCount"
           :key="index"
           class="perf-slider-dot"
-          :class="{ active: index - 1 === activeIndex }"
+          :class="{ active: slider.isActiveSlide(index) }"
           role="tab"
-          :aria-selected="index - 1 === activeIndex"
-          :aria-label="`Slide ${index}`"
-          @click="goTo(index - 1)"
+          :aria-selected="slider.isActiveSlide(index)"
+          :aria-label="slider.slideLabel(index)"
+          @click="slider.goToSlide(index)"
         />
       </div>
       <button
         class="perf-slider-arrow next"
         aria-label="Next slide"
-        @click="goTo(activeIndex + 1)"
+        @click="slider.next()"
       >
         ›
       </button>

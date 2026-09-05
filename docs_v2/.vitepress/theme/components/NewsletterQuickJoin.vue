@@ -1,138 +1,28 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { useRoute } from 'vitepress';
-import { captureEvent } from '../analytics';
-import { loadTurnstileScript } from '../turnstile';
+import { NewsletterQuickJoin } from './NewsletterQuickJoin';
 
-// The one-line signup: Name, Email, [Join the frontier]. Rides the
-// blog toolbar, the blog footer, and the bottom of every post. Same
-// endpoint and invisible Turnstile as the full card — this is the fast
-// lane, not a separate system.
-const NEWSLETTER_ENDPOINT = 'https://ivue-newsletter.ekalashnikov.workers.dev';
-const TURNSTILE_SITE_KEY = '0x4AAAAAAESFVS2C9LMeYZpt';
+const props = defineProps(NewsletterQuickJoin.Class.props);
 
-const props = withDefaults(
-  defineProps<{ placement?: string; align?: 'end' | 'center' | 'start' }>(),
-  { placement: 'blog-inline', align: 'end' },
-);
+const quickJoin = new NewsletterQuickJoin.Class(props as NewsletterQuickJoin.Props);
 
-// post-footer instances mount globally (doc-after slot) — they belong
-// on blog posts only
-const route = useRoute();
-const belongsHere = computed(() => {
-  if (props.placement !== 'post-footer') return true;
-  return /^\/blog\/.+/.test(route.path) && !route.path.endsWith('/blog/');
-});
-
-const name = ref('');
-const email = ref('');
-const state = ref<'idle' | 'sending' | 'done' | 'error'>('idle');
-const message = ref('');
-
-// --- Turnstile (explicit render, invisible unless challenged) --------
-const turnstileElement = ref<HTMLElement | null>(null);
-const turnstileToken = ref('');
-// true only while Cloudflare shows the VISIBLE challenge — the form's
-// container can make room for it then, and only then
-const challenged = ref(false);
-let turnstileWidgetId: string | undefined;
-async function renderTurnstile() {
-  if (!TURNSTILE_SITE_KEY || !turnstileElement.value || turnstileWidgetId)
-    return;
-  await loadTurnstileScript();
-  const turnstile = (window as any).turnstile;
-  if (!turnstile || !turnstileElement.value) return;
-  turnstileWidgetId = turnstile.render(turnstileElement.value, {
-    sitekey: TURNSTILE_SITE_KEY,
-    action: 'newsletter',
-    theme: 'dark',
-    appearance: 'interaction-only',
-    callback: (token: string) => {
-      turnstileToken.value = token;
-    },
-    'expired-callback': () => {
-      turnstileToken.value = '';
-    },
-    'before-interactive-callback': () => {
-      challenged.value = true;
-    },
-    'after-interactive-callback': () => {
-      challenged.value = false;
-    },
-  });
-}
-
-// Turnstile is deferred to the FIRST interaction with the form: the
-// widget is invisible until challenged and its token matters only at
-// submit — rendering it on mount put a third-party script + iframe on
-// every homepage visit (felt as menu-open jank on iPhone).
-function ensureTurnstile() {
-  if (!turnstileWidgetId) renderTurnstile();
-}
-
-// The token arrives ASYNC after the widget renders — a fast typist can
-// submit before the callback fires, and the Worker fails closed on a
-// missing token. So a submit renders on demand and WAITS (briefly) for
-// the token instead of racing it.
-async function awaitTurnstileToken(): Promise<string> {
-  if (!TURNSTILE_SITE_KEY) return '';
-  await renderTurnstile();
-  // 45s: when Cloudflare decides the widget needs INTERACTION, the
-  // visible checkbox appears and a human needs time to click it — the
-  // submit must outwait the challenge, not race it
-  const deadline = Date.now() + 45_000;
-  while (!turnstileToken.value && Date.now() < deadline)
-    await new Promise((resolve) => setTimeout(resolve, 150));
-  return turnstileToken.value;
-}
-
-async function join() {
-  if (!email.value || state.value === 'sending') return;
-  state.value = 'sending';
-  await awaitTurnstileToken();
-  try {
-    const response = await fetch(`${NEWSLETTER_ENDPOINT}/subscribe`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        name: name.value,
-        email: email.value,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? '',
-        ...(turnstileToken.value
-          ? { turnstileToken: turnstileToken.value }
-          : {}),
-      }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (response.ok) {
-      state.value = 'done';
-      captureEvent('newsletter_signup', { placement: props.placement });
-    } else {
-      state.value = 'error';
-      message.value =
-        payload.error ?? 'Could not subscribe — try again in a minute.';
-    }
-  } catch {
-    state.value = 'error';
-    message.value = 'Could not subscribe — try again in a minute.';
-  } finally {
-    turnstileToken.value = '';
-    if (turnstileWidgetId) (window as any).turnstile?.reset(turnstileWidgetId);
-  }
-}
+// the state destructure
+const {
+  // state refs
+  name,
+  email,
+  message,
+  // element refs
+  turnstileElement,
+} = quickJoin;
 </script>
 
 <template>
   <form
-    v-if="belongsHere && state !== 'done'"
+    v-if="quickJoin.formVisible"
     class="quickjoin"
-    :class="[
-      `quickjoin--${align}`,
-      `quickjoin--place-${placement}`,
-      { 'quickjoin--challenged': challenged },
-    ]"
+    :class="quickJoin.formClasses"
     aria-label="Newsletter quick signup"
-    @submit.prevent="join()"
+    @submit.prevent="quickJoin.join()"
   >
     <span class="quickjoin__lead">Get the blog as a newsletter</span>
     <div class="quickjoin__group">
@@ -146,7 +36,7 @@ async function join() {
         placeholder="Name"
         autocomplete="given-name"
         aria-label="Name"
-        @focus.once="ensureTurnstile()"
+        @focus.once="quickJoin.ensureTurnstile()"
       />
       <input
         v-model="email"
@@ -156,17 +46,17 @@ async function join() {
         autocomplete="email"
         aria-label="Email"
         required
-        @focus.once="ensureTurnstile()"
+        @focus.once="quickJoin.ensureTurnstile()"
       />
-      <button class="quickjoin__button" type="submit" :disabled="state === 'sending'">
+      <button class="quickjoin__button" type="submit" :disabled="quickJoin.sending">
         <span class="newsletter__button-shine" aria-hidden="true"></span>
         <span class="quickjoin__button-text">
-          <template v-if="state === 'sending'">Joining…</template>
+          <template v-if="quickJoin.sending">Joining…</template>
           <template v-else>
             <span class="quickjoin__button-label--full">Join the frontier</span>
             <span class="quickjoin__button-label--short">Join</span>
           </template>
-          <svg v-if="state !== 'sending'" class="quickjoin__plane" viewBox="0 0 24 24" aria-hidden="true">
+          <svg v-if="!quickJoin.sending" class="quickjoin__plane" viewBox="0 0 24 24" aria-hidden="true">
             <!-- folded paper plane: three facets, opacity carries the 3D -->
             <path fill="currentColor" d="M22 3 3 10.5l7.5 1.7L22 3Z" />
             <path fill="currentColor" fill-opacity="0.72" d="M22 3 10.5 12.2l1.6 8.3L22 3Z" />
@@ -176,14 +66,14 @@ async function join() {
       </button>
     </div>
     <div ref="turnstileElement" class="quickjoin__turnstile"></div>
-    <span v-if="state === 'error'" class="quickjoin__error" role="alert">
+    <span v-if="quickJoin.failed" class="quickjoin__error" role="alert">
       {{ message }}
     </span>
   </form>
   <p
-    v-else-if="belongsHere"
+    v-else-if="quickJoin.doneVisible"
     class="quickjoin quickjoin--done"
-    :class="[`quickjoin--${align}`, `quickjoin--place-${placement}`]"
+    :class="quickJoin.placementClasses"
     role="status"
   >
     ✓ Welcome aboard — see you in your inbox.

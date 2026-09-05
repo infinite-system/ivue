@@ -3,112 +3,23 @@
  * The flagship grid benchmark, embedded live in the docs.
  *
  * This is a purpose-built docs widget, NOT the three standalone full-page
- * routes from `demo/grid/` stacked on top of each other. One shared control
- * panel builds all three models at once (from the same seeded data), a
- * comparison strip puts their creation time + measured heap side by side, and
- * a single arm-switcher shows one virtualized grid at a time — so the reader
- * compares numbers directly instead of scrolling between three giant tables.
- *
- * The three arms share every byte of logic except the per-cell model
- * (`cell-logic.ts`, `useRowWindow.ts`, `useGridArm.ts`, `grid.css` — all
- * ported unchanged or near-unchanged from `demo/grid/`). Model creation is
- * always behind an explicit click — nothing runs on mount, so this component
- * is cheap during SSR (`vitepress build`) and cheap on first paint.
+ * routes from `demo/grid/` stacked on top of each other — see
+ * `GridBenchmark.ts`, the model that owns all of it. This SFC is wiring.
  */
-import { computed, ref } from 'vue';
 import DemoBox from '../DemoBox.vue';
 import BenchmarkWinner from '@examples/benchmarks/BenchmarkWinner.vue';
 import '@examples/benchmarks/grid.css';
-import { Cell } from '@examples/benchmarks/IvueCell';
-import { createComposableCell } from '@examples/benchmarks/composableCell';
-import { createPojoCell } from '@examples/benchmarks/pojoCell';
-import {
-  COLS,
-  ROWS,
-  ROWS_1M,
-  colLabel,
-  fmtSum,
-  initialRaw,
-  cssOf,
-  displayOf,
-  isNumberOf,
-  numericOf,
-} from '@examples/benchmarks/cell-logic';
-import { useGridArm } from '@examples/benchmarks/useGridArm';
+import { GridBenchmark } from './GridBenchmark';
 
-type Arm = 'composable' | 'ivue' | 'pojo';
+const benchmark = new GridBenchmark.Class();
 
-const ARMS: Array<{ key: Arm; tag: string; label: string; accent: string }> = [
-  { key: 'composable', tag: 'Arm A', label: 'Composable', accent: 'sky' },
-  { key: 'ivue', tag: 'Arm B', label: 'ivue', accent: 'indigo' },
-  { key: 'pojo', tag: 'Arm C', label: 'POJO floor', accent: 'slate' },
-];
-
-// Measured heap figures from demo/grid/RESULTS.md (median of 3 runs, headless
-// Chromium, gc-forced reads). These are NOT computed live in the reader's
-// browser — accurate heap deltas require `--js-flags=--expose-gc`, which a
-// normal page load does not have. Quoted verbatim, keyed by the exact row
-// count each button builds (ROWS → 100k, ROWS_1M → 1M).
-const MEASURED_HEAP: Record<number, Record<Arm, string>> = {
-  [ROWS]: { composable: '77.3 MB', ivue: '5.7 MB', pojo: '4.5 MB' },
-  [ROWS_1M]: { composable: '757.7 MB', ivue: '41.7 MB', pojo: '40.5 MB' },
-};
-
-const activeArm = ref<Arm>('ivue');
-const lastRowCount = ref<number | null>(null);
-
-const composableG = useGridArm(
-  (r, c) => createComposableCell(r, c, initialRaw(r, c)),
-  (cell) => cell.numericValue.value,
-);
-const ivueG = useGridArm(
-  (r, c) => new Cell.Class(r, c, initialRaw(r, c)),
-  (cell) => cell.numericValue.value,
-);
-const pojoG = useGridArm(
-  (r, c) => createPojoCell(r, c, initialRaw(r, c)),
-  (cell) => numericOf(cell.raw),
-);
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const controllers: Record<Arm, any> = {
-  composable: composableG,
-  ivue: ivueG,
-  pojo: pojoG,
-};
-
-// Only template-ref targets get destructured off each controller (skill
-// rule) — distinct top-level names since three controllers coexist here.
-const { scrollEl: composableScrollEl } = composableG;
-const { scrollEl: ivueScrollEl } = ivueG;
-const { scrollEl: pojoScrollEl } = pojoG;
-
-const hasAny = computed(
-  () =>
-    composableG.hasModel.value || ivueG.hasModel.value || pojoG.hasModel.value,
-);
-
-function createAll(rowCount: number) {
-  lastRowCount.value = rowCount;
-  // Same order every time (A, B, C) — live numbers are illustrative, not the
-  // controlled measurement (that lives in RESULTS.md, one fresh page load
-  // per arm). See the note under the buttons.
-  composableG.createModel(rowCount);
-  ivueG.createModel(rowCount);
-  pojoG.createModel(rowCount);
-}
-
-function heapFor(arm: Arm): string {
-  if (!lastRowCount.value) return '—';
-  return MEASURED_HEAP[lastRowCount.value]?.[arm] ?? '—';
-}
-
-// POJO has no getters at all — derived values are pure functions read at
-// render time (this is the arm's whole point: zero reactive machinery).
-const pojoDisp = (cell: { raw: string }) =>
-  displayOf(cell.raw, isNumberOf(cell.raw), numericOf(cell.raw));
-const pojoCls = (cell: { raw: string }) =>
-  cssOf(isNumberOf(cell.raw), numericOf(cell.raw));
+// the state destructure — every Ref the template touches, grouped
+const {
+  // element refs — one per arm, distinct names since three coexist
+  composableScrollEl,
+  ivueScrollEl,
+  pojoScrollEl,
+} = benchmark;
 </script>
 
 <template>
@@ -117,29 +28,29 @@ const pojoCls = (cell: { raw: string }) =>
     note="All three arms build from the same seeded 40-column data, at the same time, from the same button click — so every number below is directly comparable. This is a live, in-your-browser illustration; the controlled measurement (gc-forced heap reads, 3-run medians, one fresh page load per arm) lives in demo/grid/RESULTS.md."
   >
     <div class="gb-controls d-row">
-      <button class="d-btn primary" type="button" @click="createAll(ROWS)">
+      <button class="d-btn primary" type="button" @click="benchmark.createHundredThousand()">
         Create 100k (all 3 arms)
       </button>
       <button
         class="d-btn"
         type="button"
         title="Builds all three models at once. The composable arm alone costs ~758 MB at this size — combined peak is roughly 840 MB."
-        @click="createAll(ROWS_1M)"
+        @click="benchmark.createMillion()"
       >
         Create 1M (all 3 arms)
       </button>
-      <span v-if="hasAny" class="d-mono gb-last-build">
+      <span v-if="benchmark.hasAny" class="d-mono gb-last-build">
         last build:
-        {{ lastRowCount === ROWS_1M ? '1,000,000' : '100,000' }} cells &times; 3
+        {{ benchmark.lastBuildLabel }} cells &times; 3
         arms
       </span>
     </div>
-    <p v-if="lastRowCount === ROWS_1M" class="gb-warning">
+    <p v-if="benchmark.isMillionBuild" class="gb-warning">
       ⚠ 1M cells &times; 3 arms in memory at once — mostly the composable arm's
       ~758&nbsp;MB. Fine on a modern desktop browser; may be heavy on a
       memory-constrained device.
     </p>
-    <p v-if="!hasAny" class="gb-hint">
+    <p v-if="!benchmark.hasAny" class="gb-hint">
       Nothing built yet — click a button above.
     </p>
     <p v-else class="gb-hint">
@@ -148,30 +59,30 @@ const pojoCls = (cell: { raw: string }) =>
     </p>
 
     <!-- Comparison strip: creation time + measured heap, side by side -->
-    <div v-if="hasAny" class="gb-compare">
+    <div v-if="benchmark.hasAny" class="gb-compare">
       <div
-        v-for="arm in ARMS"
+        v-for="arm in benchmark.arms"
         :key="arm.key"
         class="gb-compare-item"
-        :class="`gb-accent-${arm.accent}`"
+        :class="benchmark.accentClass(arm)"
       >
         <div class="gb-compare-head">
           <span class="gb-tag">{{ arm.tag }}</span>
           <span class="gb-label">{{ arm.label }}</span>
         </div>
         <div class="gb-compare-num">
-          {{ controllers[arm.key].creationMs.value.toFixed(1)
+          {{ benchmark.creationLabel(arm)
           }}<span class="gb-unit">ms</span
-          ><BenchmarkWinner v-if="arm.key === 'ivue'" placement="after" />
+          ><BenchmarkWinner v-if="benchmark.isIvueArm(arm)" placement="after" />
         </div>
         <div class="gb-compare-sub">
           to create
-          {{ controllers[arm.key].modelCells.value.toLocaleString() }} cells
+          {{ benchmark.modelCellsLabel(arm) }} cells
         </div>
         <div class="gb-compare-heap">
           <span class="gb-heap-num"
-            >{{ heapFor(arm.key)
-            }}<BenchmarkWinner v-if="arm.key === 'ivue'" placement="after"
+            >{{ benchmark.heapLabel(arm)
+            }}<BenchmarkWinner v-if="benchmark.isIvueArm(arm)" placement="after"
           /></span>
           <span class="gb-heap-label">measured heap &middot; RESULTS.md</span>
         </div>
@@ -179,80 +90,74 @@ const pojoCls = (cell: { raw: string }) =>
     </div>
 
     <!-- Arm switcher — only ONE grid is mounted below at a time -->
-    <div v-if="hasAny" class="gb-tabs" role="tablist">
+    <div v-if="benchmark.hasAny" class="gb-tabs" role="tablist">
       <button
-        v-for="arm in ARMS"
+        v-for="arm in benchmark.arms"
         :key="arm.key"
         class="gb-tab"
-        :class="[{ active: activeArm === arm.key }, `gb-accent-${arm.accent}`]"
+        :class="benchmark.tabClass(arm)"
         type="button"
         role="tab"
-        :aria-selected="activeArm === arm.key"
-        @click="activeArm = arm.key"
+        :aria-selected="benchmark.isActiveArm(arm)"
+        @click="benchmark.showArm(arm)"
       >
         {{ arm.label }}
       </button>
       <span class="gb-tabs-hint">
-        {{
-          activeArm === 'pojo'
-            ? 'read-only · no reactivity, by design'
-            : 'click arm cell to edit · scroll to virtualize'
-        }}
+        {{ benchmark.activeArmHint }}
       </span>
     </div>
 
     <!-- Grid viewport -->
-    <div v-if="hasAny" class="gb-grid-wrap">
+    <div v-if="benchmark.hasAny" class="gb-grid-wrap">
       <!-- Composable arm -->
       <div
-        v-if="activeArm === 'composable'"
+        v-if="benchmark.isComposableActive"
         ref="composableScrollEl"
         class="gc-grid-scroll"
-        @scroll="composableG.onScroll"
+        @scroll="benchmark.composable.onScroll"
       >
         <div class="gc-inner">
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
-            <div v-for="column in COLS" :key="column" class="gc-cell gc-head-cell">
-              {{ colLabel(column - 1) }}
+            <div v-for="column in benchmark.columns" :key="column" class="gc-cell gc-head-cell">
+              {{ benchmark.headerLabel(column) }}
             </div>
             <div class="gc-sum gc-head-cell">Σ</div>
           </div>
           <div
             class="gc-viewport"
-            :style="{ height: composableG.totalHeight.value + 'px' }"
+            :style="benchmark.viewportStyle('composable')"
           >
             <div
               class="gc-rows"
-              :style="{
-                transform: `translateY(${composableG.offsetY.value}px)`,
-              }"
+              :style="benchmark.rowsStyle('composable')"
             >
               <div
-                v-for="row in composableG.visibleRows.value"
+                v-for="row in benchmark.composable.visibleRows.value"
                 :key="row"
                 class="gc-row"
               >
-                <div class="gc-rownum">{{ row + 1 }}</div>
+                <div class="gc-rownum">{{ benchmark.rowNumber(row) }}</div>
                 <div
-                  v-for="(cell, columnIndex) in composableG.model.value[row]"
+                  v-for="(cell, columnIndex) in benchmark.composable.model.value[row]"
                   :key="columnIndex"
                   class="gc-cell"
                   :class="cell.cssClass.value"
                   data-grid-cell
-                  @click="composableG.edit(row, columnIndex)"
+                  @click="benchmark.composable.edit(row, columnIndex)"
                 >
                   <input
-                    v-if="composableG.isEditing(row, columnIndex)"
+                    v-if="benchmark.composable.isEditing(row, columnIndex)"
                     class="gc-edit"
                     v-model="cell.raw.value"
                     autofocus
-                    @blur="composableG.commitEdit"
-                    @keyup.enter="composableG.commitEdit"
+                    @blur="benchmark.composable.commitEdit"
+                    @keyup.enter="benchmark.composable.commitEdit"
                   />
                   <template v-else>{{ cell.display.value }}</template>
                 </div>
-                <div class="gc-sum">{{ fmtSum(composableG.rowSum(row)) }}</div>
+                <div class="gc-sum">{{ benchmark.sumLabel('composable', row) }}</div>
               </div>
             </div>
           </div>
@@ -261,48 +166,48 @@ const pojoCls = (cell: { raw: string }) =>
 
       <!-- ivue arm -->
       <div
-        v-else-if="activeArm === 'ivue'"
+        v-else-if="benchmark.isIvueActive"
         ref="ivueScrollEl"
         class="gc-grid-scroll"
-        @scroll="ivueG.onScroll"
+        @scroll="benchmark.ivue.onScroll"
       >
         <div class="gc-inner">
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
-            <div v-for="column in COLS" :key="column" class="gc-cell gc-head-cell">
-              {{ colLabel(column - 1) }}
+            <div v-for="column in benchmark.columns" :key="column" class="gc-cell gc-head-cell">
+              {{ benchmark.headerLabel(column) }}
             </div>
             <div class="gc-sum gc-head-cell">Σ</div>
           </div>
           <div
             class="gc-viewport"
-            :style="{ height: ivueG.totalHeight.value + 'px' }"
+            :style="benchmark.viewportStyle('ivue')"
           >
             <div
               class="gc-rows"
-              :style="{ transform: `translateY(${ivueG.offsetY.value}px)` }"
+              :style="benchmark.rowsStyle('ivue')"
             >
-              <div v-for="row in ivueG.visibleRows.value" :key="row" class="gc-row">
-                <div class="gc-rownum">{{ row + 1 }}</div>
+              <div v-for="row in benchmark.ivue.visibleRows.value" :key="row" class="gc-row">
+                <div class="gc-rownum">{{ benchmark.rowNumber(row) }}</div>
                 <div
-                  v-for="(cell, columnIndex) in ivueG.model.value[row]"
+                  v-for="(cell, columnIndex) in benchmark.ivue.model.value[row]"
                   :key="columnIndex"
                   class="gc-cell"
                   :class="cell.cssClass"
                   data-grid-cell
-                  @click="ivueG.edit(row, columnIndex)"
+                  @click="benchmark.ivue.edit(row, columnIndex)"
                 >
                   <input
-                    v-if="ivueG.isEditing(row, columnIndex)"
+                    v-if="benchmark.ivue.isEditing(row, columnIndex)"
                     class="gc-edit"
                     v-model="cell.raw.value"
                     autofocus
-                    @blur="ivueG.commitEdit"
-                    @keyup.enter="ivueG.commitEdit"
+                    @blur="benchmark.ivue.commitEdit"
+                    @keyup.enter="benchmark.ivue.commitEdit"
                   />
                   <template v-else>{{ cell.display }}</template>
                 </div>
-                <div class="gc-sum">{{ fmtSum(ivueG.rowSum(row)) }}</div>
+                <div class="gc-sum">{{ benchmark.sumLabel('ivue', row) }}</div>
               </div>
             </div>
           </div>
@@ -314,36 +219,36 @@ const pojoCls = (cell: { raw: string }) =>
         v-else
         ref="pojoScrollEl"
         class="gc-grid-scroll"
-        @scroll="pojoG.onScroll"
+        @scroll="benchmark.pojo.onScroll"
       >
         <div class="gc-inner">
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
-            <div v-for="column in COLS" :key="column" class="gc-cell gc-head-cell">
-              {{ colLabel(column - 1) }}
+            <div v-for="column in benchmark.columns" :key="column" class="gc-cell gc-head-cell">
+              {{ benchmark.headerLabel(column) }}
             </div>
             <div class="gc-sum gc-head-cell">Σ</div>
           </div>
           <div
             class="gc-viewport"
-            :style="{ height: pojoG.totalHeight.value + 'px' }"
+            :style="benchmark.viewportStyle('pojo')"
           >
             <div
               class="gc-rows"
-              :style="{ transform: `translateY(${pojoG.offsetY.value}px)` }"
+              :style="benchmark.rowsStyle('pojo')"
             >
-              <div v-for="row in pojoG.visibleRows.value" :key="row" class="gc-row">
-                <div class="gc-rownum">{{ row + 1 }}</div>
+              <div v-for="row in benchmark.pojo.visibleRows.value" :key="row" class="gc-row">
+                <div class="gc-rownum">{{ benchmark.rowNumber(row) }}</div>
                 <div
-                  v-for="(cell, columnIndex) in pojoG.model.value[row]"
+                  v-for="(cell, columnIndex) in benchmark.pojo.model.value[row]"
                   :key="columnIndex"
                   class="gc-cell"
-                  :class="pojoCls(cell)"
+                  :class="benchmark.pojoClass(cell)"
                   data-grid-cell
                 >
-                  {{ pojoDisp(cell) }}
+                  {{ benchmark.pojoDisplay(cell) }}
                 </div>
-                <div class="gc-sum">{{ fmtSum(pojoG.rowSum(row)) }}</div>
+                <div class="gc-sum">{{ benchmark.sumLabel('pojo', row) }}</div>
               </div>
             </div>
           </div>
@@ -351,9 +256,9 @@ const pojoCls = (cell: { raw: string }) =>
       </div>
 
       <div class="gb-mounted-note d-mono">
-        {{ controllers[activeArm].mountedCells.value.toLocaleString() }} DOM
+        {{ benchmark.mountedCellsLabel }} DOM
         cells mounted for this view (virtualized) out of
-        {{ controllers[activeArm].modelCells.value.toLocaleString() }} in the
+        {{ benchmark.activeModelCellsLabel }} in the
         model.
       </div>
     </div>
