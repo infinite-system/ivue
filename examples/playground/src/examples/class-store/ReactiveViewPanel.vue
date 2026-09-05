@@ -1,11 +1,11 @@
 <script setup lang="ts">
-// The OPTIONAL consumption style: the same singleton wrapped in reactive().
-// Refs auto-unwrap on read AND write — no .value anywhere in this file.
-// The Instance type returned by use() is what makes the
-// writes typecheck (it strips TS's readonly on get-only accessors).
+// The same singleton as every other panel — use() hands out the store's
+// reactive() view, so reads AND writes drop .value. The Instance type
+// under the view is what makes the writes typecheck (it strips TS's
+// readonly on get-only accessors).
 import { ProjectStore } from './ProjectStore';
 
-const project = ProjectStore.Class.$sharedReactive;
+const project = ProjectStore.Class.use();
 </script>
 
 <template>

@@ -8,10 +8,9 @@ import ReactiveViewPanel from './ReactiveViewPanel.vue';
   <div class="pane pane-wide">
     <p class="note">
       Three independent components, ZERO props between them — each calls
-      ProjectStore.Class.use() and receives the same singleton class instance. The
-      third panel consumes the store through the optional reactive() wrapper
-      (typed via ProjectStore.Instance), so its reads and writes drop every
-      .value.
+      ProjectStore.Class.use() and receives the same singleton class instance.
+      This store publishes itself as a reactive() view, so every panel reads
+      and writes it with no .value.
     </p>
     <div class="store-grid">
       <section>
@@ -23,7 +22,7 @@ import ReactiveViewPanel from './ReactiveViewPanel.vue';
         <ProjectStats />
       </section>
       <section>
-        <h3>ReactiveViewPanel.vue — reactive() view, no .value</h3>
+        <h3>ReactiveViewPanel.vue — writes name and filter, no .value</h3>
         <ReactiveViewPanel />
       </section>
     </div>

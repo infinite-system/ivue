@@ -29,7 +29,7 @@ class $TaskBoard {
 
   /** Whether a filter button is the active one (a per-item template condition). */
   isFilter(option: ProjectStore.TaskFilter) {
-    return this.$project.filter.value === option;
+    return this.$project.filter === option;
   }
 
   submitTask() {

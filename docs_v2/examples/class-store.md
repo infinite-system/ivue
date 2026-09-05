@@ -20,12 +20,12 @@ machinery reduces to **one static on the class that owns the singleton**:
 
 ```ts
 class $ProjectStore {
-  protected static get $shared(): ProjectStore.Instance {
-    return new ProjectStore.Class();
+  protected static get $sharedReactive() {
+    return reactive(new ProjectStore.Class());
   }
 
-  static use(): ProjectStore.Instance {
-    return this.$shared;
+  static use() {
+    return this.$sharedReactive;
   }
 
   // …state, derivations, actions
@@ -94,36 +94,26 @@ Tests swap the seam, not the callers: install a double with
 `ProjectStore.Class = Reactive($TestProjectStore)` before the first
 `use()` and every consumer receives it through the same getter.
 
-## The optional reactive() view
+## The store decides what `use()` hands out
 
-Some teams prefer store reads without `.value`. The same singleton wraps in
-`reactive()` — refs auto-unwrap on read **and** write. `use()` returns the
-`ProjectStore.Instance` type, and that typing is load-bearing: it strips
-the `readonly` TypeScript puts on get-only accessors, so writes typecheck
-exactly as they behave at runtime
-([the unwrapping-surface invariant](/guide/standard#the-unwrapping-surface-typing-invariant)).
-It is one more `$`-static on the class, built once over the one instance:
+Consumers always go through `use()`. What comes back is the store's
+choice. This store publishes itself as a `reactive()` view — refs
+auto-unwrap on read **and** write, so no consumer writes `.value`:
 
 ```ts
-class $ProjectStore {
-  // …the statics above, plus:
-
-  /** The same singleton as a `reactive()` view — refs auto-unwrap on read
-   *  AND write, no `.value`. Built once. */
-  static get $sharedReactive() {
-    return reactive(new ProjectStore.Class());
-  }
-}
-```
-
-```ts
-const project = ProjectStore.Class.$sharedReactive;
+const project = ProjectStore.Class.use();
 
 project.projectName = 'Artemis'; // ref write, no .value
-project.filter = 'done';         // typechecks because of Instance
+project.filter = 'done';         // typechecks: Instance strips the readonly
 ```
 
-Both views read and write the SAME cells — pick per consumer, not per app.
+The `Instance` type under the view is load-bearing: it strips the
+`readonly` TypeScript puts on get-only accessors, so writes typecheck
+exactly as they behave at runtime
+([the unwrapping-surface invariant](/guide/standard#the-unwrapping-surface-typing-invariant)).
+A store that hands out the raw instance instead returns `new
+ProjectStore.Class()` from its `$`-static, and its consumers destructure
+refs; either way, `use()` is the one door.
 
 ## What to notice
 
@@ -134,8 +124,8 @@ Both views read and write the SAME cells — pick per consumer, not per app.
 - **Derivations are plain getters** (`completedCount`, `progressPercent`,
   `visibleTasks`) — every consumer reads live values, zero computeds
   allocated.
-- **The third panel writes `project.projectName` with no `.value`** — the
-  `reactive()` view at work, fully typed.
+- **Every panel writes and reads with no `.value`** — `use()` hands out the
+  store's `reactive()` view, fully typed.
 
 ## Related guide pages
 

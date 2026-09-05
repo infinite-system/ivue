@@ -7,23 +7,18 @@ import { Static } from '../../Static';
 
 
 class $ProjectStore {
-  /** The ONE store instance — a `$`-static, so it constructs on first
-   *  read (after the app exists, immune to module-load order) and is
-   *  cached on the receiver. It constructs through the namespace slot, so
-   *  a test double swapped into `Class` is what gets built. */
-  protected static get $shared(): ProjectStore.Instance {
-    return new ProjectStore.Class();
+  /** The ONE store instance, published as a `reactive()` view — refs
+   *  auto-unwrap on read AND write, no `.value` for consumers. A `$`-static:
+   *  built once, on first read (after the app exists, immune to
+   *  module-load order), through the namespace slot so a test double
+   *  swapped into `Class` is what gets built. */
+  protected static get $sharedReactive() {
+    return reactive(new ProjectStore.Class());
   }
 
   /** The store singleton: every caller receives the SAME instance. */
-  static use(): ProjectStore.Instance {
-    return this.$shared;
-  }
-
-  /** The same singleton as a `reactive()` view — refs auto-unwrap on read
-   *  AND write, no `.value`. Built once. */
-  static get $sharedReactive() {
-    return reactive(new ProjectStore.Class());
+  static use() {
+    return this.$sharedReactive;
   }
 
   static get STORAGE_KEY() {
