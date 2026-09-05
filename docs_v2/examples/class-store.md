@@ -3,7 +3,7 @@ title: 'Example: Pinia Store Alternative'
 description: 'A class-based alternative to Pinia stores — ProjectStore.Class.use() returns one shared ivue instance, injected into other classes through a cached $-getter, with an optional reactive() view.'
 aside: false
 pageClass: benchmarks-wide examples-page
-relatedPosts: [reactive-is-all-you-need, module-level-state, rented-objects]
+relatedPosts: [templates-with-nothing-to-debug, reactive-is-all-you-need, module-level-state, rented-objects]
 ---
 
 <script setup>

@@ -1,7 +1,7 @@
 ---
 title: Components & Templates
 description: The settled standard — raw instance in setup, one grouped state destructure (refs, computeds, element refs), state bindings and dotted behavior in templates, and every unwrapping surface typed through Instance.
-relatedPosts: [the-options-api-everyone-wanted, organs-not-skeletons, rented-objects]
+relatedPosts: [templates-with-nothing-to-debug, the-options-api-everyone-wanted, organs-not-skeletons, rented-objects]
 ---
 
 # Components & Templates
@@ -177,6 +177,35 @@ const wrapped = reactive(player as Player.Instance); // writes typecheck as they
 
 Prefer not wrapping at all — the raw instance plus destructured state is the
 standard; `reactive()` at a boundary is an interop concession, not a pattern.
+
+## Stage directions and the script
+
+Once every expression has a name, the two files read as two different
+kinds of text, and the difference is the point.
+
+A template is **stage directions**: who is on stage, where they stand,
+what happens when someone acts. `v-if="media.isDragging(index)"`,
+`:disabled="model.sendDisabled"`, `@click="board.openTask(task)"`. Every
+line names an actor or an action. Nothing on the page computes anything,
+so there is nothing on the page to debug. When a template is wrong, it is
+wrong the way a seating chart is wrong, and you can see it.
+
+The class is **the script**. Every derivation is a sentence about what
+something means, in order, and reading the class top to bottom is reading
+the component's whole intent. A condition that used to be
+`items.length && !loading && mode === 'edit'` scattered across three
+bindings is one line that says `canEditItems`, and the three bindings say
+it too.
+
+> Structure stays in the template. Meaning moves to the class.
+
+The split is not a style. It falls out of one rule, that every piece of
+logic must have a name, and a name is a claim about meaning. Claims live
+on the prototype where they can be read, tested without a mount, and
+overridden in a subclass. What is left for the template is structure,
+and structure was always meant to be dumb. The gate enforces the rule:
+a ternary, a comparison, a built string or an assignment inside a
+template expression fails the build.
 
 ## The one mental model
 

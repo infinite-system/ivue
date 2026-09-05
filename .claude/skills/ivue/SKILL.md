@@ -586,7 +586,10 @@ call site. Rules that keep it clean:
   In ordinary Vue this discipline costs a `computed()` per condition, so
   nobody keeps it; here a named plain getter costs zero bytes, so there is
   no excuse. Templates read as prose: bindings, names, and events — never
-  expressions.
+  expressions. The split is stage directions and script: the template says
+  who is on stage and what happens when someone acts; the class says what
+  everything MEANS. Structure stays in the template, meaning moves to the
+  class.
 - **The rule covers EVERY binding kind, not just `v-if`** — the common
   leaks are display strings, disabled states, and class objects:
 
