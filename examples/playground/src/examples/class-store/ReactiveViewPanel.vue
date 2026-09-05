@@ -15,11 +15,7 @@ const project = ProjectStore.Class.useReactive();
     </p>
     <input v-model="project.projectName" class="reactive-view__input" />
     <div class="row" style="margin-top: 10px">
-      <button
-        class="btn"
-        type="button"
-        @click="project.filter = project.filter === 'done' ? 'all' : 'done'"
-      >
+      <button class="btn" type="button" @click="project.toggleDoneFilter()">
         filter: {{ project.filter }}
       </button>
       <span class="mono">

@@ -102,6 +102,11 @@ class $ProjectStore {
     this.filter.value = filter;
   }
 
+  /** The "done" filter as a switch — a second press returns to all. */
+  toggleDoneFilter() {
+    this.setFilter(this.filter.value === 'done' ? 'all' : 'done');
+  }
+
   /** Restore a previous visit's state — reload the page and it holds. */
   hydrate() {
     try {
