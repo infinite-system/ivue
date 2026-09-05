@@ -12,7 +12,7 @@ relatedPosts: [runtime-props-all-along, single-file-models, the-options-api-ever
 
 <BlogPostDate />
 
-This was a button in the [class store example](/examples/class-store):
+This was a button in a store example:
 
 ```vue
 <button @click="project.filter = project.filter === 'done' ? 'all' : 'done'">
@@ -32,6 +32,16 @@ the template only says when to call it.
 
 > Structure stays in the template. Meaning moves to the class.
 
+## See it in the docs
+
+- [Components & Templates](/guide/components#stage-directions-and-the-script) — the rule, and the stage-directions reading of it.
+- [The standard](/guide/standard) — the operating manual the gate checks against.
+- [Class store](/examples/class-store) — the button this post opened on.
+- [Select field](/examples/choose-field) — the slot forwarding, twenty-one expressions to two names.
+- [Media uploader](/examples/media-field) — drag, rename and busy states as names.
+- [Workspace platform](/examples/workspace-platform) — views, progress bars and priorities as names.
+- [Inheritance chain](/examples/inheritance) — the discount and tax buttons.
+
 This post is about what happens when that is not a preference but a rule,
 applied to every template in a codebase and checked by a gate. The short
 version: the template and the class become two different kinds of text,
@@ -39,11 +49,10 @@ and the template becomes the kind you never have to debug.
 
 ## The rule, and what it costs elsewhere
 
-The rule is one sentence, and it is in the
-[standard](/guide/standard): no logic in a template expression. A
-condition, a comparison, a ternary, a built string, an assignment: each
-one becomes a plain getter or a method on the component's class, and the
-template binds the name.
+The rule is one sentence. No logic in a template expression. A condition,
+a comparison, a ternary, a built string, an assignment: each one becomes a
+plain getter or a method on the component's class, and the template binds
+the name.
 
 Every Vue developer has heard a version of this and nobody keeps it,
 because in ordinary Vue the cost is real. A named condition is a
@@ -59,36 +68,33 @@ can be absolute.
 
 ## What moved
 
-Applied to the docs site and its [playground](/examples/), the rule found
-86 expressions across 22 templates. A sample, with what each became, and
-where each one runs:
+Applied to the docs site and its playground, the rule found 86
+expressions across 22 templates. A sample, with what each became:
 
-| in the template | on the class | example |
-| --- | --- | --- |
-| `discount = Math.min(discount + 0.05, 0.9)` | `bumpDiscount()` | [inheritance chain](/examples/inheritance) |
-| `resetting ? 'Resetting…' : 'Reset sandbox data'` | `resetLabel` | [media uploader](/examples/media-field) |
-| `{ width: \`${task.checklistProgress}%\` }` | `task.checklistBarStyle` | [workspace platform](/examples/workspace-platform) |
-| `renameId === row.id ? renameDraft : row.name` | `displayName(row)` | [media uploader](/examples/media-field) |
-| `media.dragIndex.value === index` | `isDragging(index)` | [media uploader](/examples/media-field) |
+| in the template | on the class |
+| --- | --- |
+| `discount = Math.min(discount + 0.05, 0.9)` | `bumpDiscount()` |
+| `resetting ? 'Resetting…' : 'Reset sandbox data'` | `resetLabel` |
+| `{ width: \`${task.checklistProgress}%\` }` | `task.checklistBarStyle` |
+| `renameId === row.id ? renameDraft : row.name` | `displayName(row)` |
+| `media.dragIndex.value === index` | `isDragging(index)` |
 | `slot === 'prepend'` and `scope \|\| {}`, the latter twenty-one times | `isPrependSlot(slot)` and `slotScope(scope)` | [select field](/examples/choose-field) |
-| `view = 'board'` | `showBoard()` | [workspace platform](/examples/workspace-platform) |
-| `Math.round(taxRate * 100)` | `taxRatePercent` | [inheritance chain](/examples/inheritance) |
+| `view = 'board'` | `showBoard()` |
+| `Math.round(taxRate * 100)` | `taxRatePercent` |
 
 Said plainly: every place the page used to do a little arithmetic, it now
 asks the class a question, and the class has a word for the answer.
 
 Two things fell out that were not the point. Duplicates disappeared,
-because the docs [formula grid](/examples/formula-grid) and the playground
-formula grid had the same three style expressions each, and now both bind
-the same three getters. And two leaves that thought they were markup turned out to own a
+because the docs formula grid and the playground formula grid had the
+same three style expressions each, and now both bind the same three
+getters. And two leaves that thought they were markup turned out to own a
 derivation, so they got their class. Naming a thing forces the question of
 who owns it, and the answer was never the wrapper.
 
 ## Two kinds of text
 
-Here is what the split does to how the files read. The
-[Components & Templates](/guide/components#stage-directions-and-the-script)
-guide states it as a rule; this is what it looks like.
+Here is what the split does to how the files read.
 
 The template becomes **stage directions**. Who is on stage, where they
 stand, what happens when someone acts. `v-if="media.isDragging(index)"`.
@@ -112,9 +118,8 @@ get canEditItems() {
 ```
 
 That is a prototype member. It is greppable by name, callable in a test
-with a plain object and no mount, typed, and overridable in a
-[subclass](/guide/inheritance). None of that was possible while it was a
-string inside a `v-if`.
+with a plain object and no mount, typed, and overridable in a subclass.
+None of that was possible while it was a string inside a `v-if`.
 
 ## Why it holds without effort
 
@@ -129,8 +134,8 @@ conversion was done by four agents in parallel, on disjoint files, and
 none of them drifted. Prose has one way to be said correctly. The rule
 made the correct way the only way, and the gate refused the rest.
 
-The gate is the part that makes it permanent. The
-[standard's](/guide/standard) checker parses every SFC template, and a ternary, a comparison, a built string or
+The gate is the part that makes it permanent. The standard's checker
+parses every SFC template, and a ternary, a comparison, a built string or
 an assignment inside an expression fails the docs build. Fifty-five
 components were then driven in a real browser with one interaction each,
 and every one of them still did what it did before. The behavior did not
@@ -145,3 +150,13 @@ was already cheap here. Against it: a template you can read without
 thinking, and a class that says everything the component means.
 
 Structure stays in the template. Meaning moves to the class.
+
+## See it in the docs
+
+- [Components & Templates](/guide/components#stage-directions-and-the-script) — the rule, and the stage-directions reading of it.
+- [The standard](/guide/standard) — the operating manual the gate checks against.
+- [Class store](/examples/class-store) — the button this post opened on.
+- [Select field](/examples/choose-field) — the slot forwarding, twenty-one expressions to two names.
+- [Media uploader](/examples/media-field) — drag, rename and busy states as names.
+- [Workspace platform](/examples/workspace-platform) — views, progress bars and priorities as names.
+- [Inheritance chain](/examples/inheritance) — the discount and tax buttons.
