@@ -1,10 +1,5 @@
 [
   {
-    "path": "docs_v2/.vitepress/theme/components/grid/FormulaGrid.vue",
-    "check": "the_state_destructure_is_total",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
     "path": "examples/playground/src/examples/benchmarks/Box.ts",
     "check": "declarations_use_full_descriptive_names",
     "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
@@ -257,11 +252,6 @@
   {
     "path": "examples/playground/src/examples/formula-grid/FormulaCell.ts",
     "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/formula-grid/FormulaGridExample.vue",
-    "check": "the_state_destructure_is_total",
     "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
   },
   {

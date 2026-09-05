@@ -41,8 +41,10 @@ class $FormulaGridExample {
   get window() {
     return this.$window;
   }
+
+  // TEMPLATE-REF TARGET — the scroll viewport; the SFC binds ref="scrollEl"
   get scrollEl() {
-    return this.$window.scrollEl;
+    return ref<HTMLElement | null>(null);
   }
 
   /** The pure-logic layer the page sizes and labels with. */
