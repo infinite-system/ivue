@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import TaskBoard from './TaskBoard.vue';
 import ProjectStats from './ProjectStats.vue';
-import ReactiveViewPanel from './ReactiveViewPanel.vue';
+import ProjectSettingsPanel from './ProjectSettingsPanel.vue';
 </script>
 
 <template>
   <div class="pane pane-wide">
     <p class="note">
       Three independent components, ZERO props between them — each calls
-      ProjectStore.Class.use() and receives the same singleton class instance. The
-      third panel consumes the store through the optional reactive() wrapper
-      (typed via ProjectStore.Instance), so its reads and writes drop every
-      .value.
+      ProjectStore.Class.use() and receives the same singleton class instance.
+      Every panel is the same shape: destructured state bindings for the
+      cells it writes, dotted reads for derivations and actions.
     </p>
     <div class="store-grid">
       <section>
@@ -23,8 +22,8 @@ import ReactiveViewPanel from './ReactiveViewPanel.vue';
         <ProjectStats />
       </section>
       <section>
-        <h3>ReactiveViewPanel.vue — reactive() view, no .value</h3>
-        <ReactiveViewPanel />
+        <h3>ProjectSettingsPanel.vue — writes name and filter</h3>
+        <ProjectSettingsPanel />
       </section>
     </div>
   </div>

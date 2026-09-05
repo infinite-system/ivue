@@ -1,7 +1,7 @@
 // ProjectStore.ts — a global store is just an ivue class published as a
 // module singleton. No Pinia, no defineStore, no plugin: the class IS the
 // store, and ProjectStore.Class.use() hands every caller the same instance.
-import { reactive, ref, shallowRef } from 'vue';
+import { ref, shallowRef } from 'vue';
 import { Reactive, type ReactiveHelpers } from '../../ivue';
 import { Static } from '../../Static';
 
@@ -18,21 +18,6 @@ class $ProjectStore {
   /** The store singleton: every caller receives the SAME instance. */
   static use(): ProjectStore.Instance {
     return this.$shared;
-  }
-
-  /**
-   * Optional `reactive()` view of the same singleton — refs auto-unwrap
-   * on read AND write, so consumers drop every `.value`. Built once, as a
-   * `$`-static, over the one instance. `use()` already returns the
-   * `Instance` type, which strips the readonly that TS puts on get-only
-   * accessors, so writes typecheck as they behave.
-   */
-  protected static get $sharedReactive() {
-    return reactive(this.use());
-  }
-
-  static useReactive() {
-    return this.$sharedReactive;
   }
 
   static get STORAGE_KEY() {
@@ -67,6 +52,9 @@ class $ProjectStore {
 
   // DERIVED — plain getters: zero bytes per instance, and there is only
   // one instance anyway. Every consumer reads the same live values.
+  get taskCount() {
+    return this.tasks.value.length;
+  }
   get completedCount() {
     return this.tasks.value.filter((task) => task.done).length;
   }

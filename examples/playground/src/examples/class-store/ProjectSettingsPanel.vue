@@ -1,22 +1,24 @@
 <script setup lang="ts">
-// The OPTIONAL consumption style: the same singleton wrapped in reactive().
-// Refs auto-unwrap on read AND write — no .value anywhere in this file.
-// The Instance type returned by use() is what makes the
-// writes typecheck (it strips TS's readonly on get-only accessors).
 import { ProjectStore } from './ProjectStore';
 
-const project = ProjectStore.Class.useReactive();
+// the SAME singleton the other two panels use — the store has one way in
+const project = ProjectStore.Class.use();
+
+// the state destructure
+const {
+  // state refs
+  projectName,
+  filter,
+} = project;
 </script>
 
 <template>
-  <div class="reactive-view">
-    <p class="mono">
-      project.projectName · project.filter — reads and writes, no .value:
-    </p>
-    <input v-model="project.projectName" class="reactive-view__input" />
+  <div class="settings-view">
+    <p class="mono">projectName · filter — state bindings write the store's cells:</p>
+    <input v-model="projectName" class="settings-view__input" />
     <div class="row" style="margin-top: 10px">
       <button class="btn" type="button" @click="project.toggleDoneFilter()">
-        filter: {{ project.filter }}
+        filter: {{ filter }}
       </button>
       <span class="mono">
         {{ project.completedCount }} done · {{ project.progressPercent }}%
@@ -28,7 +30,7 @@ const project = ProjectStore.Class.useReactive();
 <style scoped src="../example-pane.css"></style>
 
 <style scoped>
-.reactive-view__input {
+.settings-view__input {
   width: 100%;
   padding: 7px 10px;
   border-radius: 8px;

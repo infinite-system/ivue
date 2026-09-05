@@ -23,7 +23,7 @@ const {
       <div>
         <div class="k">done</div>
         <div class="n grad">
-          {{ project.completedCount }}/{{ project.tasks.value.length }}
+          {{ project.completedCount }}/{{ project.taskCount }}
         </div>
       </div>
       <div>
