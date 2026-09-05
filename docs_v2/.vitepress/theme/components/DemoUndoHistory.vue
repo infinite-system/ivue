@@ -70,10 +70,14 @@ const list = new GroceryList.Class();
   list-style: none;
 }
 .u-step {
-  padding: 3px 9px;
+  /* VitePress styles every `li` in a doc page (margin, line-height) —
+     the rail's steps are pills, so pin both */
+  margin: 0;
+  padding: 2px 9px;
   border-radius: 6px;
   border: 1px solid var(--vp-c-divider);
   font-size: 12px;
+  line-height: 1.4;
   color: var(--vp-c-text-2);
   cursor: pointer;
 }
