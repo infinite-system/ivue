@@ -102,23 +102,16 @@ writes as state bindings, and reads derivations and actions dotted. There
 is no second surface to learn, and nothing for a new consumer to copy
 except the shape the standard already prescribes.
 
-If you prefer Pinia-style reads with no `.value`, the view is one line at
-your own boundary, and the store does not need to know:
+If you prefer Pinia-style reads with no `.value`, the same singleton is
+also published as a `reactive()` view, built once as a `$`-static:
 
 ```ts
-const project = reactive(ProjectStore.Class.use());
+const project = ProjectStore.Class.$sharedReactive;
 
 project.projectName = 'Artemis'; // ref write, no .value
 ```
 
-Vue memoizes the proxy per target, so every call returns the same view of
-the same instance; there is nothing to cache and no static to add. It
-stays what the standard calls it, a concession at an interop boundary
-([the unwrapping-surface invariant](/guide/standard#the-unwrapping-surface-typing-invariant)),
-because a proxied read costs five to eighteen times a raw one
-([measured](/guide/performance#raw-access-avoids-proxy-overhead)), and
-`use()` already returns the `Instance` type that makes those writes
-typecheck.
+Consumers use `use()`; the view is there for those who want it.
 
 ## What to notice
 
