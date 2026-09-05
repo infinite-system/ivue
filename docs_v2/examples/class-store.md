@@ -94,24 +94,36 @@ Tests swap the seam, not the callers: install a double with
 `ProjectStore.Class = Reactive($TestProjectStore)` before the first
 `use()` and every consumer receives it through the same getter.
 
-## One way in
+## The optional reactive() view
 
-The store exposes `use()` and nothing else. Every consumer is the same
-shape: it calls `ProjectStore.Class.use()`, destructures the cells it
-writes as state bindings, and reads derivations and actions dotted. There
-is no second surface to learn, and nothing for a new consumer to copy
-except the shape the standard already prescribes.
+Some teams prefer store reads without `.value`. The same singleton wraps in
+`reactive()` — refs auto-unwrap on read **and** write. `use()` returns the
+`ProjectStore.Instance` type, and that typing is load-bearing: it strips
+the `readonly` TypeScript puts on get-only accessors, so writes typecheck
+exactly as they behave at runtime
+([the unwrapping-surface invariant](/guide/standard#the-unwrapping-surface-typing-invariant)).
+It is one more `$`-static on the class, built once over the one instance:
 
-If you prefer Pinia-style reads with no `.value`, the same singleton is
-also published as a `reactive()` view, built once as a `$`-static:
+```ts
+class $ProjectStore {
+  // …the statics above, plus:
+
+  /** The same singleton as a `reactive()` view — refs auto-unwrap on read
+   *  AND write, no `.value`. Built once. */
+  static get $sharedReactive() {
+    return reactive(this.use());
+  }
+}
+```
 
 ```ts
 const project = ProjectStore.Class.$sharedReactive;
 
 project.projectName = 'Artemis'; // ref write, no .value
+project.filter = 'done';         // typechecks because of Instance
 ```
 
-Consumers use `use()`; the view is there for those who want it.
+Both views read and write the SAME cells — pick per consumer, not per app.
 
 ## What to notice
 
