@@ -44,15 +44,15 @@ const withQuasar = (load: () => Promise<{ default: Component }>) => {
 export const examples: ExampleEntry[] = [
   // Basic
   { ...counter, load: () => import('./counter/CounterExample.vue') },
+  {
+    ...propsContract,
+    load: () => import('./props-contract/PropsContractExample.vue'),
+  },
   { ...derived, load: () => import('./derived/DerivedExample.vue') },
   { ...lifecycle, load: () => import('./lifecycle/LifecycleExample.vue') },
   {
     ...inheritance,
     load: () => import('./inheritance/InheritanceExample.vue'),
-  },
-  {
-    ...propsContract,
-    load: () => import('./props-contract/PropsContractExample.vue'),
   },
   { ...composable, load: () => import('./composable/ComposableExample.vue') },
   // Advanced

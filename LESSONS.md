@@ -526,3 +526,13 @@ before acting (below-the-fold pads and buttons silently no-op); the
 arm tabs have no accessible name, use `.gb-tab`; `type=range` inputs
 reject `fill()` — set `.value` and dispatch `input`; StackBlitz never
 reaches networkidle, load with `waitUntil: 'load'`.
+
+## Playground CSS is global in the docs bundle (2026-09-05)
+
+VitePress bundles every imported stylesheet into one `style.css`, so a
+playground SFC imported by a docs embed makes its CSS site-wide. A dead
+`.text` rule in `example-pane.css` put a border around every sidebar link
+(VitePress's link label is `<span class="text">`). Rules in shared
+playground CSS must be scoped (`.pane .x`) or use names VitePress cannot
+own; never `.text`, `.item`, `.link`, `.title`, `.caption`, `.content`.
+Check with the sidebar screenshot after adding any docs embed.
