@@ -730,7 +730,7 @@ export default defineConfig({
             text: 'Start Small',
             items: [
               { text: 'Classic Counter Example', link: '/examples/counter' },
-              { text: 'Extend Props & Props Defaults', link: '/examples/props-and-defaults' },
+              { text: 'Extend Props & Defaults', link: '/examples/props-and-defaults' },
                 { text: 'Plain getter vs computed()', link: '/examples/derived' },
               { text: 'Lifecycle & Teardown', link: '/examples/lifecycle' },
               { text: 'Inheritance chain', link: '/examples/inheritance' },
@@ -791,7 +791,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'Classic Counter Example', link: '/examples/counter' },
-            { text: 'Extend Props & Props Defaults', link: '/examples/props-and-defaults' },
+            { text: 'Extend Props & Defaults', link: '/examples/props-and-defaults' },
             { text: 'Plain getter vs computed()', link: '/examples/derived' },
             { text: 'Lifecycle & Teardown', link: '/examples/lifecycle' },
             { text: 'Inheritance chain', link: '/examples/inheritance' },
