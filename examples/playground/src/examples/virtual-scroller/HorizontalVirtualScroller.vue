@@ -1,6 +1,6 @@
-<script lang="ts" setup generic="T extends BaseItem">
+<script lang="ts" setup generic="T extends VirtualScroller.BaseItem">
 import { HorizontalVirtualScroller } from './HorizontalVirtualScroller';
-import type { BaseItem } from './VirtualScroller.types';
+import type { VirtualScroller } from './VirtualScroller';
 import VirtualScrollerItem from './VirtualScrollerItem.vue';
 
 // Pure wiring — the CLASS carries the contract (static getters), with the

@@ -52,7 +52,7 @@ and the namespace — and the contract lives ON THE CLASS:
   `Slots`, `Exposed`), never hand-duplicated.
 
 - **Generic typing** — the part that makes this the FULL canonical
-  example: the scroller is a generic component (`<T extends BaseItem>`),
+  example: the scroller is a generic component (`<T extends VirtualScroller.BaseItem>`),
   and the namespace pattern carries the generic through every layer TS
   makes awkward. `Reactive()` returns the same constructor, but its
   return type cannot carry `<T>` (TypeScript has no higher-kinded
@@ -65,7 +65,7 @@ and the namespace — and the contract lives ON THE CLASS:
   for template refs.
 
 The SFC is pure wiring against that contract — and generic wiring:
-`<script setup generic="T extends BaseItem">` hands the runtime `props`
+`<script setup generic="T extends VirtualScroller.BaseItem">` hands the runtime `props`
 object to `defineProps` through `Class` (no compiler macro ever resolves
 a cross-file type) and one cast recovers the precision the runtime map
 cannot carry:

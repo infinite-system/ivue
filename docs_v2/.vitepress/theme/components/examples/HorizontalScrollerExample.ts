@@ -1,8 +1,8 @@
 import { ref, shallowRef } from 'vue';
+import type { VirtualScroller } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller';
 import { Reactive } from '../../../../../lib/Reactive';
 import { Static } from '../../../../../lib/Static';
 import type { HorizontalVirtualScroller } from '../../../../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller';
-import type { BaseItem } from '../../../../../examples/playground/src/examples/virtual-scroller/VirtualScroller.types';
 
 /**
  * The docs example model for the horizontal 1M example — itself written to
@@ -22,7 +22,7 @@ class $HorizontalScrollerExample {
     'Everything costs O(window)',
   ];
 
-  static buildItems(): BaseItem[] {
+  static buildItems(): VirtualScroller.BaseItem[] {
     const items = new Array(this.ITEM_COUNT);
     for (let index = 0; index < this.ITEM_COUNT; index++) {
       items[index] = {
@@ -37,7 +37,7 @@ class $HorizontalScrollerExample {
   // MUTABLE STATE — the list is replaced wholesale, never deep-mutated,
   // so shallowRef keeps a million cards out of the deep-proxy machinery.
   get items() {
-    return shallowRef<BaseItem[]>(this.self.buildItems());
+    return shallowRef<VirtualScroller.BaseItem[]>(this.self.buildItems());
   }
 
   // MUTABLE STATE — the glide-speed slider writes this (px/s).
@@ -47,7 +47,7 @@ class $HorizontalScrollerExample {
 
   // TEMPLATE-REF TARGET — the scroller component's exposed instance.
   get scroller() {
-    return ref<HorizontalVirtualScroller.Exposed<BaseItem> | null>(null);
+    return ref<HorizontalVirtualScroller.Exposed<VirtualScroller.BaseItem> | null>(null);
   }
 
   /* DERIVED — plain getters; reactive through the scroller's expose. */

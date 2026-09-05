@@ -1,4 +1,5 @@
 import type { ExtractPropTypes, PropType, ShallowUnwrapRef } from 'vue';
+import type { VirtualScroller } from '../virtual-scroller/VirtualScroller';
 import { computed, onMounted, ref, watch } from 'vue';
 
 import {
@@ -9,7 +10,6 @@ import {
 } from '../../ivue';
 import { Static } from '../../Static';
 import { HorizontalVirtualScroller } from '../virtual-scroller/HorizontalVirtualScroller';
-import type { BaseItem } from '../virtual-scroller/VirtualScroller.types';
 import { TextChunker } from './TextChunker';
 
 /**
@@ -93,7 +93,7 @@ class $TextMarquee {
 
   /** The scroller component's exposed instance. */
   get scroller() {
-    return ref<HorizontalVirtualScroller.Exposed<BaseItem> | null>(null);
+    return ref<HorizontalVirtualScroller.Exposed<VirtualScroller.BaseItem> | null>(null);
   }
 
   /* Props */
@@ -196,12 +196,12 @@ class $TextMarquee {
     scroller.updatePositionsImmediately();
   }
 
-  buildItems(): BaseItem[] {
+  buildItems(): VirtualScroller.BaseItem[] {
     const chunks = TextChunker.Class.chunk(
       TextChunker.Class.oneLine(this.text),
       this.targetChars
     );
-    const items: BaseItem[] = new Array(chunks.length);
+    const items: VirtualScroller.BaseItem[] = new Array(chunks.length);
     for (let index = 0; index < chunks.length; index++) {
       items[index] = {
         id: String(index),

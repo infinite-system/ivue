@@ -2,7 +2,6 @@ import { ref, shallowRef } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import type { VirtualScroller } from './VirtualScroller';
-import type { BaseItem } from './VirtualScroller.types';
 
 class $VirtualScrollerExample {
   static readonly ITEM_COUNT = 1_000_000;
@@ -34,7 +33,7 @@ class $VirtualScrollerExample {
     return variants;
   }
 
-  static buildItems(): BaseItem[] {
+  static buildItems(): VirtualScroller.BaseItem[] {
     const variants = this.$bodyVariants;
     const items = new Array(this.ITEM_COUNT);
     for (let index = 0; index < this.ITEM_COUNT; index++) {
@@ -50,7 +49,7 @@ class $VirtualScrollerExample {
   // MUTABLE STATE — the list is replaced wholesale, never deep-mutated,
   // so shallowRef keeps a million rows out of the deep-proxy machinery.
   get items() {
-    return shallowRef<BaseItem[]>(this.self.buildItems());
+    return shallowRef<VirtualScroller.BaseItem[]>(this.self.buildItems());
   }
 
   // MUTABLE STATE — the autoplay-speed slider writes this (px/s; 6.7 is
@@ -61,7 +60,7 @@ class $VirtualScrollerExample {
 
   // TEMPLATE-REF TARGET — the scroller component's exposed instance.
   get scroller() {
-    return ref<VirtualScroller.Exposed<BaseItem> | null>(null);
+    return ref<VirtualScroller.Exposed<VirtualScroller.BaseItem> | null>(null);
   }
 
   // DERIVED — plain getter; reactive through the scroller's exposed state.

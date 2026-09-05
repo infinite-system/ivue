@@ -128,7 +128,7 @@ changes one default. That is now one override, and `props` needs no
 mention because it reads `this`:
 
 ```ts
-class $HorizontalVirtualScroller<T extends BaseItem> extends VirtualScroller.$Class<T> {
+class $HorizontalVirtualScroller<T extends VirtualScroller.BaseItem> extends VirtualScroller.$Class<T> {
   static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults {
     return {
       ...super.propsDefaults,

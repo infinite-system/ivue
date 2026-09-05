@@ -107,7 +107,7 @@ they govern, and the variant composes it the way the class composes
 behavior — with `super`, overriding one thing:
 
 ```ts
-class $HorizontalVirtualScroller<T extends BaseItem> extends VirtualScroller.$Class<T> {
+class $HorizontalVirtualScroller<T extends VirtualScroller.BaseItem> extends VirtualScroller.$Class<T> {
   static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults {
     return {
       ...super.propsDefaults,

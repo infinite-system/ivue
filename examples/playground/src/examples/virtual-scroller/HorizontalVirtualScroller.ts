@@ -2,7 +2,6 @@ import type { ShallowUnwrapRef } from 'vue';
 
 import { Reactive, type ReactiveInstance } from '../../ivue';
 import { Static } from '../../Static';
-import type { BaseItem } from './VirtualScroller.types';
 import { VirtualScroller } from './VirtualScroller';
 
 /**
@@ -19,7 +18,7 @@ import { VirtualScroller } from './VirtualScroller';
  * drive the strip; a plain vertical wheel scrolls the page straight
  * through. Pair with `snap-to-items` for the step feel: scroll, stop.
  */
-class $HorizontalVirtualScroller<T extends BaseItem> extends (VirtualScroller.$Class as typeof VirtualScroller.$Class) <T> {
+class $HorizontalVirtualScroller<T extends VirtualScroller.BaseItem> extends (VirtualScroller.$Class as typeof VirtualScroller.$Class) <T> {
   /* Contract — inherited whole; ONE default re-tuned. `props` needs no
      override: it reads through the receiver and fuses THESE defaults
      with the inherited types. */
@@ -95,15 +94,15 @@ export namespace HorizontalVirtualScroller {
   export let Class = Reactive(
     $HorizontalVirtualScroller
   ) as unknown as typeof $HorizontalVirtualScroller;
-  export type Instance<T extends BaseItem> = ReactiveInstance<
+  export type Instance<T extends VirtualScroller.BaseItem> = ReactiveInstance<
     $HorizontalVirtualScroller<T>
   >;
 
   /* Types */
 
-  export type Props<T extends BaseItem> = VirtualScroller.Props<T>;
+  export type Props<T extends VirtualScroller.BaseItem> = VirtualScroller.Props<T>;
   export type Emits = VirtualScroller.Emits;
-  export type Slots<T extends BaseItem> = VirtualScroller.Slots<T>;
+  export type Slots<T extends VirtualScroller.BaseItem> = VirtualScroller.Slots<T>;
   /** See VirtualScroller.Exposed — same surface, this class's instance. */
-  export type Exposed<T extends BaseItem> = ShallowUnwrapRef<Instance<T>>;
+  export type Exposed<T extends VirtualScroller.BaseItem> = ShallowUnwrapRef<Instance<T>>;
 }

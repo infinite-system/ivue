@@ -120,7 +120,7 @@ scroller's whole props story, as shipped:
 
 ```ts
 // HorizontalVirtualScroller.ts (class excerpt)
-class $HorizontalVirtualScroller<T extends BaseItem> extends VirtualScroller.$Class<T> {
+class $HorizontalVirtualScroller<T extends VirtualScroller.BaseItem> extends VirtualScroller.$Class<T> {
   static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults {
     return {
       ...super.propsDefaults,

@@ -26,7 +26,6 @@ import {
 } from '../../ivue';
 import { Lenis } from '../../lenis/lenis';
 import { Static } from '../../Static';
-import type { BaseItem } from './VirtualScroller.types';
 
 /**
  * Virtualized scroller (ivue v2 `Reactive` class).
@@ -55,18 +54,18 @@ import type { BaseItem } from './VirtualScroller.types';
  * 100k-item posts jitter when the prefix sum was a real array rebuilt on
  * every (debounced) ResizeObserver burst.
  */
-class $VirtualScroller<T extends BaseItem> {
+class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /* Contract — STATIC, so the class owns its inputs the way it owns its
      state, and a subclass extends them with `super` like any other
      member (HorizontalVirtualScroller re-tunes one default in one line).
      The namespace below holds identity and TYPES only. */
 
   /** 1 — the TYPES: a defineComponent-style object, no defaults inside.
-   *  `modelValue` is typed against BaseItem here (a const cannot be
+   *  `modelValue` is typed against VirtualScroller.BaseItem here (a const cannot be
    *  generic); Props<T> recovers the precise item type in the SFC. */
   static get propsTypes() {
     return definePropTypes({
-      modelValue: { type: Array as PropType<BaseItem[]>, required: true },
+      modelValue: { type: Array as PropType<VirtualScroller.BaseItem[]>, required: true },
       /** Render the built-in draggable scrollbar over the VIRTUAL position. */
       scrollbar: { type: Boolean as PropType<boolean> },
       autoPlay: { type: Boolean as PropType<boolean> },
@@ -230,8 +229,7 @@ class $VirtualScroller<T extends BaseItem> {
         element.removeEventListener('touchend', this.onTouchEndCapture, true);
       }
       clearTimeout(this.snapTimeout);
-      cancelAnimationFrame(this.frame);
-      cancelAnimationFrame(this.creepFrame);
+      this.cancelFrames();
       this.stopScrollToIndexReapply?.();
       this.lenis?.stop();
       this.lenis?.destroy();
@@ -251,6 +249,12 @@ class $VirtualScroller<T extends BaseItem> {
 
   get scrollElementInner() {
     return ref(null) as Ref<HTMLElement | null>;
+  }
+
+  /** Lenis, for paths that only run after mount created it. */
+  protected get lenisRequired(): Lenis {
+    if (!this.lenis) throw new Error('VirtualScroller: lenis is created on mount');
+    return this.lenis;
   }
 
   /** The div wrapping the rendered items (between the two spacers). */
@@ -1031,7 +1035,8 @@ class $VirtualScroller<T extends BaseItem> {
     // Prevents native scrolling on focus of contenteditable elements.
     if (this.preventScrollEvent.value) {
       e.preventDefault();
-      this.scrollElement.value.scrollTop = 0;
+      const element = this.scrollElement.value;
+      if (element) element.scrollTop = 0;
     }
   }
 
@@ -1110,14 +1115,15 @@ class $VirtualScroller<T extends BaseItem> {
       // animated, possibly millions of px away: a few frames of catch-up
       // sweep). The wheel path (translateY false — lenis owns the transform
       // there) keeps its lerp untouched.
-      this.lenis.adoptExternalScroll(absolutePosition);
+      this.lenis?.adoptExternalScroll(absolutePosition);
     }
 
-    this.lenis.targetScroll = absolutePosition;
+    if (this.lenis) this.lenis.targetScroll = absolutePosition;
   }
 
   resetScrollTop() {
-    this.scrollElement.value.scrollTop = 0;
+    const element = this.scrollElement.value;
+    if (element) element.scrollTop = 0;
   }
 
   /** Scrollbar geometry over the VIRTUAL position (native scrollTop stays
@@ -1341,14 +1347,14 @@ class $VirtualScroller<T extends BaseItem> {
   /* Autoplay (Lenis-driven) */
 
   lenis: Lenis | null = null;
-  protected frame: number;
+  protected frame: number | null = null;
 
   protected virtualScrolling = false;
-  protected virtualScrollTimeout;
-  protected autoscrollTimeout;
-  protected autoRepeatTimeout;
+  protected virtualScrollTimeout: ReturnType<typeof setTimeout> | undefined;
+  protected autoscrollTimeout: ReturnType<typeof setTimeout> | undefined;
+  protected autoRepeatTimeout: ReturnType<typeof setTimeout> | undefined;
 
-  onVirtualScroll({ deltaX, deltaY }) {
+  onVirtualScroll({ deltaX, deltaY }: { deltaX: number; deltaY: number }) {
     const delta = this.axisDelta({ deltaX, deltaY });
     // Scrolling UP is the reader taking over — autoplay stops outright
     // (the frame loop re-arms below for the manual scroll itself).
@@ -1361,13 +1367,14 @@ class $VirtualScroller<T extends BaseItem> {
     }
     this.virtualScrolling = true;
     clearTimeout(this.virtualScrollTimeout);
-    this.scrollElementInner.value.style.transitionDuration = '0s';
+    const inner = this.scrollElementInner.value;
+    if (inner) inner.style.transitionDuration = '0s';
     this.scrollDirection.value = delta < 0 ? 'up' : 'down';
     if (!this.frame) {
       // Lenis's clock aged while its raf loop was parked (the creep runs
       // without it) — reset it or the first frame advances the whole gap
       // and the flick lands as an instant jump instead of the lerp.
-      this.lenis.time = 0;
+      this.lenisRequired.time = 0;
       this.frame = requestAnimationFrame(this.loop);
     }
     if (this.isAutoPlaying.value) {
@@ -1429,12 +1436,13 @@ class $VirtualScroller<T extends BaseItem> {
   }
 
   loop(now: number) {
+    const lenis = this.lenisRequired;
     // Rebase BEFORE lenis writes this frame's transform: the transform and
     // the spacer (rendered by this frame's flush) must shift together.
-    this.updateRenderBias(Math.abs(this.lenis.scroll ?? 0));
-    this.lenis.raf(now); // keep Lenis in sync
+    this.updateRenderBias(Math.abs(lenis.scroll ?? 0));
+    lenis.raf(now); // keep Lenis in sync
     this.frame = requestAnimationFrame(this.loop);
-    this.setScrollPosition(-this.lenis.targetScroll, false, false);
+    this.setScrollPosition(-lenis.targetScroll, false, false);
   }
 
   startAutoPlay(delay = 500, callback = () => {}) {
@@ -1452,10 +1460,7 @@ class $VirtualScroller<T extends BaseItem> {
 
   stopAutoPlay(callback = () => {}) {
     this.isAutoPlaying.value = false;
-    cancelAnimationFrame(this.frame);
-    this.frame = null;
-    cancelAnimationFrame(this.creepFrame);
-    this.creepFrame = null;
+    this.cancelFrames();
     this.lastCreepTs = null;
     clearTimeout(this.autoscrollTimeout);
     callback();
@@ -1477,8 +1482,16 @@ class $VirtualScroller<T extends BaseItem> {
   protected creepFrame: number | null = null;
   protected lastCreepTs: number | null = null;
 
+  /** Cancel both raf loops (the lenis frame and the creep) if armed. */
+  cancelFrames() {
+    if (this.frame !== null) cancelAnimationFrame(this.frame);
+    this.frame = null;
+    if (this.creepFrame !== null) cancelAnimationFrame(this.creepFrame);
+    this.creepFrame = null;
+  }
+
   play() {
-    if (this.virtualScrolling || this.lenis.isScrolling) {
+    if (this.virtualScrolling || this.lenis?.isScrolling) {
       clearTimeout(this.autoscrollTimeout);
       // Forward inertia decaying through cruise speed hands off to the
       // creep RIGHT THERE — the glide never dips below cruise.
@@ -1490,9 +1503,7 @@ class $VirtualScroller<T extends BaseItem> {
     clearTimeout(this.autoscrollTimeout);
     // The reader is at rest — lenis has nothing to animate, so its raf loop
     // can stop (the old timer creep cancelled it one tick later).
-    cancelAnimationFrame(this.frame);
-    this.frame = null;
-    cancelAnimationFrame(this.creepFrame);
+    this.cancelFrames();
     this.lastCreepTs = null;
     this.creepFrame = requestAnimationFrame(this.creepStep);
   }
@@ -1522,7 +1533,7 @@ class $VirtualScroller<T extends BaseItem> {
     // the lerp dies where it is and the creep continues from that exact
     // pixel at cruise speed — velocity is continuous through the handoff.
     lenis.adoptExternalScroll(lenis.animatedScroll);
-    cancelAnimationFrame(this.frame);
+    if (this.frame !== null) cancelAnimationFrame(this.frame);
     // 0 (not null): falsy for onVirtualScroll's re-arm check without
     // widening the field type.
     this.frame = 0;
@@ -1546,7 +1557,7 @@ class $VirtualScroller<T extends BaseItem> {
    */
   creepStep(ts: number) {
     this.creepFrame = null;
-    if (this.virtualScrolling || this.lenis.isScrolling) {
+    if (this.virtualScrolling || this.lenis?.isScrolling) {
       // Reader took over — hand back to play()'s defer loop, which resumes
       // the creep when the input settles.
       this.lastCreepTs = null;
@@ -1568,11 +1579,11 @@ class $VirtualScroller<T extends BaseItem> {
     const elapsed = this.lastCreepTs === null ? 16.7 : ts - this.lastCreepTs;
     const dt = elapsed > 250 ? 16.7 : elapsed;
     this.lastCreepTs = ts;
-    this.lenis.targetScroll += dt / this.creepMsPerPx;
+    const lenis = this.lenisRequired;
+    lenis.targetScroll += dt / this.creepMsPerPx;
 
     const container = this.offsetSize(this.scrollElement.value);
-    const atEnd =
-      this.lenis.actualScroll + container >= this.scrollExtent.value - 10;
+    const atEnd = lenis.actualScroll + container >= this.scrollExtent.value - 10;
 
     if (this.props.autoRepeat && atEnd) {
       // End reached: stop creeping and let the auto-repeat chain own the
@@ -1594,7 +1605,7 @@ class $VirtualScroller<T extends BaseItem> {
     // compositor's filtering renders ~0.11px/frame as an apparent glide.
     // Snapped, the same speed ticks a whole device pixel every 150ms on
     // dpr-1 screens, which reads as chop.
-    this.setScrollPosition(-this.lenis.targetScroll, false, true, false);
+    this.setScrollPosition(-lenis.targetScroll, false, true, false);
     if (atEnd) {
       // Nothing left to creep into (setScrollPosition clamps at the end);
       // the next wheel re-arms play via onVirtualScroll.
@@ -1656,6 +1667,15 @@ export namespace VirtualScroller {
   >;
 
   /* Types */
+
+  /** What every row carries — the minimum a scroller needs to key, render
+   *  and number an item; a list's own row type extends it. */
+  export interface BaseItem {
+    id: string;
+    body: string;
+    position: string;
+    sequence?: string;
+  }
 
   /** Resolved props — what the class receives AFTER defaults are applied.
    *  DERIVED from the merged runtime object (never hand-duplicated):

@@ -40,7 +40,7 @@ live in the [playground fields](/examples/choose-field).
 one and changes one number. One override, and nothing else to write:
 
 ```ts
-class $HorizontalVirtualScroller<T extends BaseItem> extends VirtualScroller.$Class<T> {
+class $HorizontalVirtualScroller<T extends VirtualScroller.BaseItem> extends VirtualScroller.$Class<T> {
   static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults {
     return {
       ...super.propsDefaults,

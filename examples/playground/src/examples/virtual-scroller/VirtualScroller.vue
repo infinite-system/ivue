@@ -1,6 +1,5 @@
-<script lang="ts" setup generic="T extends BaseItem">
+<script lang="ts" setup generic="T extends VirtualScroller.BaseItem">
 import { VirtualScroller } from './VirtualScroller';
-import type { BaseItem } from './VirtualScroller.types';
 import VirtualScrollerItem from './VirtualScrollerItem.vue';
 
 // The namespace carries the whole contract (props types + defaults merged

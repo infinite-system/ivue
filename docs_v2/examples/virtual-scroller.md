@@ -34,9 +34,9 @@ instance, constructed in `setup()` and torn down by the component scope.
 ```vue
 <script setup lang="ts">
 import VirtualScroller from './virtual-scroller/VirtualScroller.vue'
-import type { BaseItem } from './virtual-scroller/VirtualScroller.types'
+import type { VirtualScroller as Scroller } from './virtual-scroller/VirtualScroller'
 
-const items = ref<BaseItem[]>(loadRows()) // any size — 1M is routine
+const items = ref<Scroller.BaseItem[]>(loadRows()) // any size — 1M is routine
 </script>
 
 <template>
