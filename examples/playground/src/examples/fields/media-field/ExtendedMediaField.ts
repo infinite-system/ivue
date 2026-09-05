@@ -56,6 +56,10 @@ export class $ExtendedMediaField extends MediaField.$Class {
   get totalSizeLabel() {
     return this.formatBytes(this.totalSize);
   }
+  /** Square tile edge — the grid styles v-bind it. */
+  get tileSize() {
+    return `${this.props.thumbnailSize}px`;
+  }
 
   // --- per-row template conditions (named — no logic in the template) ---
 

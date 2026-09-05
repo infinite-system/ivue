@@ -77,6 +77,17 @@ export class $MediaField extends Field.$Class {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
 
+  /**
+   * The autofocus directive the inline editors use (`v-focus`): a
+   * behavior the class owns; an SFC only binds it under the local name
+   * Vue's directive resolution requires.
+   */
+  static get focusDirective() {
+    return {
+      mounted: (element: HTMLInputElement) => element.focus(),
+    };
+  }
+
   /** Emits */
   static get emits() {
     return {

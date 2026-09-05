@@ -33,13 +33,9 @@ const {
 
 defineExpose(field as ExtendedMediaField.Instance);
 
-/** Square tile edge — v-bound into the grid styles below. */
-const tileSize = `${props.thumbnailSize ?? 132}px`;
-
-/** Autofocus the rename input the moment it renders (used as v-focus). */
-const vFocus = {
-  mounted: (element: HTMLInputElement) => element.focus(),
-};
+/** `v-focus` — Vue resolves a directive by its local `vX` binding, so
+ *  the wiring names it; the behavior is the class's static. */
+const vFocus = ExtendedMediaField.Class.focusDirective;
 </script>
 
 <template>
@@ -240,7 +236,7 @@ const vFocus = {
 
 /* The add affordance becomes a square tile alongside the thumbnails. */
 .extended-media :deep(.media-field__add) {
-  width: v-bind(tileSize);
+  width: v-bind('field.tileSize');
   aspect-ratio: 1 / 1;
   flex-direction: column;
   gap: 2px;
@@ -248,7 +244,7 @@ const vFocus = {
 }
 
 .extended-media__tile {
-  width: v-bind(tileSize);
+  width: v-bind('field.tileSize');
 }
 
 .extended-media__thumb {
