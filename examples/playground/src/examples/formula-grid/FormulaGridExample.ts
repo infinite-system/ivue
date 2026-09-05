@@ -1,25 +1,19 @@
 // FormulaGridExample.ts — the formula-grid route's state, in ivue. The
-// MODEL (Sheet + FormulaCell) is the exact code the measured RESULTS.md
-// numbers were produced with; this class is the page around it.
-// `fast-formula-parser` loads via a dynamic import inside create(), so the
-// route costs nothing until you build a sheet.
+// MODEL (Sheet + FormulaCell + FormulaLogic) is the exact code the
+// measured RESULTS.md numbers were produced with; this class is the page
+// around it. `fast-formula-parser` loads via a dynamic import inside
+// create(), so the route costs nothing until you build a sheet.
 import { ref, shallowRef } from 'vue';
 import { Reactive } from '../../ivue';
-import {
-  COLS,
-  ROW_HEIGHT,
-  VIEWPORT_HEIGHT,
-  OVERSCAN,
-  colLabel,
-} from './formula-logic';
-import type { Sheet as SheetModel } from './Sheet';
 import { useRowWindow } from '../benchmarks/useRowWindow';
+import { FormulaLogic } from './FormulaLogic';
+import type { Sheet } from './Sheet';
 
 class $FormulaGridExample {
   // MUTABLE STATE — the sheet is replaced wholesale; shallowRef keeps a
   // million cells out of the deep-proxy machinery.
   get sheet() {
-    return shallowRef<SheetModel | null>(null);
+    return shallowRef<Sheet.Model | null>(null);
   }
   get loading() {
     return ref(false);
@@ -39,9 +33,9 @@ class $FormulaGridExample {
   protected get $window() {
     return useRowWindow({
       rowCount: () => (this.sheet.value ? this.sheet.value.rows : 0),
-      rowHeight: ROW_HEIGHT,
-      viewportHeight: VIEWPORT_HEIGHT,
-      overscan: OVERSCAN,
+      rowHeight: this.Logic.ROW_HEIGHT,
+      viewportHeight: this.Logic.VIEWPORT_HEIGHT,
+      overscan: this.Logic.OVERSCAN,
     });
   }
   get window() {
@@ -51,15 +45,45 @@ class $FormulaGridExample {
     return this.$window.scrollEl;
   }
 
+  /** The pure-logic layer the page sizes and labels with. */
+  get Logic() {
+    return FormulaLogic.Class;
+  }
+
   // DERIVED — plain getters; zero allocations per instance.
+  get columnCount() {
+    return this.Logic.COLS;
+  }
+  get smallRowCount() {
+    return this.Logic.ROWS;
+  }
+  get largeRowCount() {
+    return this.Logic.ROWS_1M;
+  }
+  get createLabel() {
+    return this.loading.value ? 'Loading parser…' : 'Create 100k cells';
+  }
   get hasModel() {
     return this.sheet.value !== null;
   }
   get modelCells() {
-    return this.sheet.value ? this.sheet.value.rows * COLS : 0;
+    return this.sheet.value ? this.sheet.value.rows * this.columnCount : 0;
+  }
+  get modelCellsLabel() {
+    return this.modelCells.toLocaleString();
   }
   get mountedCells() {
-    return this.$window.visibleRows.value.length * COLS;
+    return this.$window.visibleRows.value.length * this.columnCount;
+  }
+  get mountedCellsLabel() {
+    return this.mountedCells.toLocaleString();
+  }
+  get creationLabel() {
+    return this.creationMs.value.toFixed(1);
+  }
+  get activeName() {
+    const active = this.editing.value;
+    return active ? this.a1(active.r, active.c) : 'fx';
   }
   get activeCell() {
     const active = this.editing.value;
@@ -75,6 +99,12 @@ class $FormulaGridExample {
       .traceDeps(active.r + 1, active.c + 1)
       .map(([row, col]) => this.a1(row - 1, col - 1));
   }
+  get activeDepsLabel() {
+    return this.activeDeps.join(', ');
+  }
+  get hasActiveDeps() {
+    return this.activeDeps.length > 0;
+  }
 
   async create(rows: number) {
     this.loading.value = true;
@@ -82,10 +112,27 @@ class $FormulaGridExample {
     // The parser ships in its own lazy chunk; first click pays it once.
     const { Sheet } = await import('./Sheet');
     const start = performance.now();
-    const model = new Sheet(rows, COLS);
+    const model = new Sheet.Class(rows, this.columnCount);
     this.creationMs.value = performance.now() - start;
     this.sheet.value = model;
     this.loading.value = false;
+  }
+
+  createSmall() {
+    return this.create(this.smallRowCount);
+  }
+
+  createLarge() {
+    return this.create(this.largeRowCount);
+  }
+
+  columnLabel(columnIndex: number) {
+    return this.Logic.colLabel(columnIndex);
+  }
+
+  /** Header label for a 1-based `v-for="c in columnCount"` column. */
+  headerLabel(columnNumber: number) {
+    return this.columnLabel(columnNumber - 1);
   }
 
   isEditing(row: number, col: number) {
@@ -106,7 +153,7 @@ class $FormulaGridExample {
   }
 
   a1(row0: number, col0: number) {
-    return colLabel(col0) + (row0 + 1);
+    return this.columnLabel(col0) + (row0 + 1);
   }
 }
 

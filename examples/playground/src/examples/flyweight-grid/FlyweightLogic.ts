@@ -6,7 +6,7 @@ import { Static } from '../../Static';
  * grid EXTENDS it (`class $WideGrid extends FlyweightLogic.$Class`
  * overriding COLS or patternSource) instead of forking the file.
  * Nothing here is reactive and nothing imports the parser — the same
- * division of labor as the formula grid's `formula-logic.ts`
+ * division of labor as the formula grid's `FormulaLogic`
  * (reference, not imported).
  *
  * Layout — 20 columns × 1,000,000 rows = 20,000,000 cells, ~55% formulas

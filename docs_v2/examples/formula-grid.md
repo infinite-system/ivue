@@ -34,7 +34,10 @@ click; nothing runs on page load.
 ::: code-group
 <<< ../../examples/playground/src/examples/formula-grid/FormulaCell.ts [FormulaCell.ts]
 <<< ../../examples/playground/src/examples/formula-grid/Sheet.ts [Sheet.ts]
-<<< ../../examples/playground/src/examples/formula-grid/formula-logic.ts [formula-logic.ts]
+<<< ../../examples/playground/src/examples/formula-grid/FormulaLogic.ts [FormulaLogic.ts]
+<<< ../../examples/playground/src/examples/formula-grid/FormulaGridExample.ts [example]
+<<< ../../examples/playground/src/examples/formula-grid/FormulaGridExample.vue [route]
+<<< @/.vitepress/theme/components/grid/FormulaGrid.vue [template]
 :::
 
 <a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fformula-grid%2FFormulaCell.ts&path=%2F%23%2Fformula-grid">Open in StackBlitz ⚡</a>

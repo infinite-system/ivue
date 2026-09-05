@@ -2,95 +2,33 @@
 /**
  * The formula grid, embedded live in the docs.
  *
- * The MODEL is imported from the playground's `formula-grid` example unchanged — `Sheet` (the one
- * shared parser + O(1) cellAt) and `FormulaCell` (ref-getter raw, ONE
- * computed value, plain getters) are the exact files the measured
- * RESULTS.md numbers were produced with. Only the docs chrome around them
- * lives here.
+ * The MODEL is imported from the playground's `formula-grid` example
+ * unchanged — `Sheet` (the one shared parser + O(1) cellAt), `FormulaCell`
+ * (ref-getter raw, ONE computed value, plain getters) and `FormulaLogic`
+ * are the exact files the measured RESULTS.md numbers were produced with,
+ * and the page state is the playground's own `FormulaGridExample` class.
+ * Only the docs chrome around them lives here: this SFC is wiring.
  *
  * `fast-formula-parser` (chevrotain-based, ~real bytes) is loaded via a
- * DYNAMIC import inside the click handler: `vitepress build` (SSR) never
- * executes it and readers who don't click never download it. Nothing runs
- * on mount.
+ * DYNAMIC import inside the class's create(): `vitepress build` (SSR)
+ * never executes it and readers who don't click never download it.
+ * Nothing runs on mount.
  */
-import { computed, ref, shallowRef } from 'vue';
 import DemoBox from '../DemoBox.vue';
 import '@examples/benchmarks/grid.css';
 import '@examples/formula-grid/formula.css';
-import {
-  COLS,
-  ROWS,
-  ROWS_1M,
-  ROW_HEIGHT,
-  VIEWPORT_HEIGHT,
-  OVERSCAN,
-  colLabel,
-} from '@examples/formula-grid/formula-logic';
-import type { Sheet as SheetModel } from '@examples/formula-grid/Sheet';
-import { useRowWindow } from '@examples/benchmarks/useRowWindow';
+import { FormulaGridExample } from '@examples/formula-grid/FormulaGridExample';
 
-const sheet = shallowRef<SheetModel | null>(null);
-const hasModel = ref(false);
-const loading = ref(false);
-const creationMs = ref(0);
-const lastRows = ref(0);
+const grid = new FormulaGridExample.Class();
 
-const win = useRowWindow({
-  rowCount: () => (sheet.value ? sheet.value.rows : 0),
-  rowHeight: ROW_HEIGHT,
-  viewportHeight: VIEWPORT_HEIGHT,
-  overscan: OVERSCAN,
-});
-const { scrollEl } = win;
-
-const modelCells = computed(() => (sheet.value ? sheet.value.rows * COLS : 0));
-const mountedCells = computed(() => win.visibleRows.value.length * COLS);
-
-async function create(rows: number) {
-  loading.value = true;
-  editing.value = null;
-  // The parser ships in its own lazy chunk; first click pays it once.
-  const { Sheet } = await import('@examples/formula-grid/Sheet');
-  const t0 = performance.now();
-  const s = new Sheet(rows, COLS);
-  creationMs.value = performance.now() - t0;
-  sheet.value = s;
-  lastRows.value = rows;
-  hasModel.value = true;
-  loading.value = false;
-}
-
-// --- click-to-edit + the fx bar (active cell's literal text + live deps) ---
-const editing = ref<{ r: number; c: number } | null>(null);
-const depsBump = ref(0);
-const isEditing = (r: number, c: number) =>
-  !!editing.value && editing.value.r === r && editing.value.c === c;
-const edit = (r: number, c: number) => {
-  editing.value = { r, c };
-};
-const commitEdit = () => {
-  editing.value = null;
-  depsBump.value++; // re-trace deps after an edit (traceDeps is not reactive)
-};
-
-const a1 = (r0: number, c0: number) => colLabel(c0) + (r0 + 1);
-
-const activeCell = computed(() => {
-  const e = editing.value;
-  if (!e || !sheet.value) return null;
-  return sheet.value.cellAt(e.r + 1, e.c + 1) ?? null;
-});
-
-/** The ACTIVE cell's live tracked dependency set, as A1 refs. This is the
- *  conditional-dependency proof, interactive: select I1 and flip A1's sign —
- *  the set shifts between {A1, C1} and {A1, B1}. */
-const activeDeps = computed(() => {
-  void depsBump.value;
-  const e = editing.value;
-  const s = sheet.value;
-  if (!e || !s) return [];
-  return s.traceDeps(e.r + 1, e.c + 1).map(([rr, cc]) => a1(rr - 1, cc - 1));
-});
+// the state destructure
+const {
+  // state refs
+  sheet,
+  loading,
+  // element refs
+  scrollEl,
+} = grid;
 </script>
 
 <template>
@@ -103,26 +41,26 @@ const activeDeps = computed(() => {
         class="d-btn primary"
         type="button"
         :disabled="loading"
-        @click="create(ROWS)"
+        @click="grid.createSmall()"
       >
-        {{ loading ? 'Loading parser…' : 'Create 100k cells' }}
+        {{ grid.createLabel }}
       </button>
       <button
         class="d-btn"
         type="button"
         :disabled="loading"
         title="40 columns × 25,000 rows. ~68 MB of model — fine on a desktop browser."
-        @click="create(ROWS_1M)"
+        @click="grid.createLarge()"
       >
         Create 1M cells
       </button>
-      <span v-if="hasModel" class="d-mono">
-        {{ modelCells.toLocaleString() }} cells &middot; 52.5% live formulas
-        &middot; created in {{ creationMs.toFixed(1) }} ms
+      <span v-if="grid.hasModel" class="d-mono">
+        {{ grid.modelCellsLabel }} cells &middot; 52.5% live formulas
+        &middot; created in {{ grid.creationLabel }} ms
       </span>
     </div>
 
-    <p v-if="!hasModel" class="fg-hint">
+    <p v-if="!grid.hasModel" class="fg-hint">
       Nothing built yet. Every cell in columns E–J (and every odd column
       beyond) holds a real formula — <code>=A1+B1</code>,
       <code>=SUM(A1:D1)</code>, <code>=IF(A1&gt;0,B1,C1)</code>, a running
@@ -130,7 +68,7 @@ const activeDeps = computed(() => {
       by Vue.
     </p>
 
-    <template v-if="hasModel">
+    <template v-if="grid.hasModel">
       <p class="fg-hint">
         Click a cell to edit its formula or value. Try it: set
         <strong>A1</strong> to <code>5000</code> and watch E1, G1, H1, I1 and
@@ -141,38 +79,38 @@ const activeDeps = computed(() => {
       <!-- fx bar: active cell's literal text + its LIVE tracked deps -->
       <div class="fx-bar fg-fx">
         <span class="fx-name">{{
-          editing ? a1(editing.r, editing.c) : 'fx'
+          grid.activeName
         }}</span>
-        <span v-if="activeCell" class="fx-val">{{
-          activeCell.raw.value
+        <span v-if="grid.activeCell" class="fx-val">{{
+          grid.activeCell.raw.value
         }}</span>
         <span v-else class="fx-empty">click a cell to see its formula</span>
-        <span v-if="activeDeps.length" class="fg-deps d-mono">
-          reads: {{ activeDeps.join(', ') }}
+        <span v-if="grid.hasActiveDeps" class="fg-deps d-mono">
+          reads: {{ grid.activeDepsLabel }}
         </span>
       </div>
 
       <div
         ref="scrollEl"
         class="gc-grid-scroll"
-        @scroll="win.onScroll"
+        @scroll="grid.window.onScroll"
       >
         <div class="gc-inner">
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
-            <div v-for="c in COLS" :key="c" class="gc-cell gc-head-cell">
-              {{ colLabel(c - 1) }}
+            <div v-for="c in grid.columnCount" :key="c" class="gc-cell gc-head-cell">
+              {{ grid.headerLabel(c) }}
             </div>
           </div>
           <div
             class="gc-viewport"
-            :style="{ height: win.totalHeight.value + 'px' }"
+            :style="{ height: grid.window.totalHeight.value + 'px' }"
           >
             <div
               class="gc-rows"
-              :style="{ transform: `translateY(${win.offsetY.value}px)` }"
+              :style="{ transform: `translateY(${grid.window.offsetY.value}px)` }"
             >
-              <div v-for="r in win.visibleRows.value" :key="r" class="gc-row">
+              <div v-for="r in grid.window.visibleRows.value" :key="r" class="gc-row">
                 <div class="gc-rownum">{{ r + 1 }}</div>
                 <div
                   v-for="(cell, ci) in sheet!.grid[r]"
@@ -183,15 +121,15 @@ const activeDeps = computed(() => {
                   :data-row="r"
                   :data-col="ci"
                   :title="cell.raw.value"
-                  @click="edit(r, ci)"
+                  @click="grid.edit(r, ci)"
                 >
                   <input
-                    v-if="isEditing(r, ci)"
+                    v-if="grid.isEditing(r, ci)"
                     class="gc-edit"
                     v-model="cell.raw.value"
                     autofocus
-                    @blur="commitEdit"
-                    @keyup.enter="commitEdit"
+                    @blur="grid.commitEdit()"
+                    @keyup.enter="grid.commitEdit()"
                   />
                   <template v-else>{{ cell.display }}</template>
                 </div>
@@ -202,8 +140,8 @@ const activeDeps = computed(() => {
       </div>
 
       <div class="fg-mounted d-mono">
-        {{ mountedCells.toLocaleString() }} DOM cells mounted (virtualized)
-        out of {{ modelCells.toLocaleString() }} in the model — an unrendered
+        {{ grid.mountedCellsLabel }} DOM cells mounted (virtualized)
+        out of {{ grid.modelCellsLabel }} in the model — an unrendered
         formula cell never allocates its ref or computed.
       </div>
     </template>

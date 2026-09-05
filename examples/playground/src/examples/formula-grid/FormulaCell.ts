@@ -15,61 +15,63 @@
  * Instances are plain objects. None of the getters run at construction, so the
  * ref and computed MATERIALIZE LAZILY — a cell that is never rendered never
  * allocates a Ref or a Computed. That laziness is the whole point.
+ *
+ * The pure logic (parse detection, literal resolution, display, css) is read
+ * through the sheet's `Logic` seam, so a sheet variant reroutes it for every
+ * cell at once.
  */
 import { computed, ref, type ComputedRef } from 'vue';
 import { Reactive } from '../../ivue';
+import type { FormulaLogic } from './FormulaLogic';
 import type { Sheet } from './Sheet';
-import {
-  type CellValue,
-  cssOf,
-  displayOf,
-  evalLiteral,
-  isFormulaText,
-  stripFormula,
-} from './formula-logic';
 
 class $FormulaCell {
   // CONSTANTS / CONFIG — plain fields, set once, never mutated.
   // `sheet` is an injected dependency (the parser + O(1) cellAt live on it),
   // `row`/`col` are the 1-based position used by the parser and ROW()/COLUMN().
-  readonly sheet: Sheet;
+  readonly sheet: Sheet.Model;
   readonly row: number;
   readonly col: number;
-  protected readonly iv: string;
+  protected readonly initialText: string;
 
-  constructor(sheet: Sheet, row: number, col: number, initial: string) {
+  constructor(sheet: Sheet.Model, row: number, col: number, initial: string) {
     this.sheet = sheet;
     this.row = row;
     this.col = col;
-    this.iv = initial;
+    this.initialText = initial;
   }
 
   // MUTABLE STATE — ref-getter; materializes on first touch.
   get raw() {
-    return ref(this.iv);
+    return ref(this.initialText);
   }
 
   // HOT DERIVED — the single surgical computed(). Parsing + evaluating is real
   // work; memoizing it is exactly the "one hot value" the ivue idiom promotes.
-  get value(): ComputedRef<CellValue> {
-    return computed<CellValue>(() => {
-      const text = this.raw.value;
-      if (!isFormulaText(text)) return evalLiteral(text);
-      // The reads inside sheet.evaluate() (onCell/onRange → other cells'
-      // value.value) are tracked by THIS computed's effect → auto deps.
-      return this.sheet.evaluate(this, stripFormula(text));
-    });
+  get value(): ComputedRef<FormulaLogic.CellValue> {
+    return computed<FormulaLogic.CellValue>(() => this.evaluateText());
   }
 
   // DERIVED — plain getters. Reactive via leaf tracking; zero per-instance cost.
   get isFormula() {
-    return isFormulaText(this.raw.value);
+    return this.sheet.Logic.isFormulaText(this.raw.value);
   }
   get display() {
-    return displayOf(this.value.value);
+    return this.sheet.Logic.displayOf(this.value.value);
   }
   get cssClass() {
-    return cssOf(this.value.value, this.isFormula);
+    return this.sheet.Logic.cssOf(this.value.value, this.isFormula);
+  }
+
+  /** The body of the `value` computed — a method, so it is testable and
+   *  overridable without touching the cache. */
+  evaluateText(): FormulaLogic.CellValue {
+    const logic = this.sheet.Logic;
+    const text = this.raw.value;
+    if (!logic.isFormulaText(text)) return logic.evalLiteral(text);
+    // The reads inside sheet.evaluate() (onCell/onRange → other cells'
+    // value.value) are tracked by THIS computed's effect → auto deps.
+    return this.sheet.evaluate(this, logic.stripFormula(text));
   }
 
   // Read every derived value once — used only by the measurement harness to
@@ -83,7 +85,7 @@ class $FormulaCell {
 }
 
 export namespace FormulaCell {
-  export const $Class = $FormulaCell;
-  export let Class = Reactive($Class);
+  export const $Class = $FormulaCell; // raw — children `extends` this
+  export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance;
 }
