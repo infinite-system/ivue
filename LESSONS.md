@@ -494,3 +494,19 @@ Before: the two inheritance demos carried 8 template-logic findings for
 weeks because nothing ran the gate over docs components. Run
 `npm run gate:docs` before claiming docs code is clean; grep-filtering
 its output to the checks you just added is how findings hide.
+
+## The deploy build has no root toolchain (2026-09-05)
+
+Cloudflare's build runs `npm install --prefix docs_v2 && npm run
+build:docs` — ONLY docs_v2's dependencies exist there. Anything in
+`build:docs` that needs a root devDependency (vite-node, typescript,
+@vue/compiler-sfc, playwright…) fails the deploy with `sh: 1: <bin>: not
+found`. That is exactly how wiring `gate:docs` into `build:docs` broke a
+prod deploy the same day it landed.
+
+Rule: a root-toolchain step inside `build:docs` goes through a shim that
+detects the missing toolchain and skips with a message
+(`scripts/gate-docs.mjs`), and the REAL enforcement lives in
+`.github/workflows/ci.yml`, which installs the root. Local `build:docs`
+and CI run the gate; the deploy build does not, and does not need to —
+the commit it deploys was already gated twice.

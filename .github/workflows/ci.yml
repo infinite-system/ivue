@@ -2,7 +2,9 @@ name: ci
 on: [ push ]
 
 # Docs deploy lives on Cloudflare Workers Builds (GitHub-connected, builds on
-# push to main) — CI only runs the engine's test suite.
+# push to main) and installs only docs_v2's deps, so the standard gate
+# cannot run there (scripts/gate-docs.mjs skips itself). CI installs the
+# root and is where the gate over docs + playground is enforced.
 jobs:
   build:
     name: vitest
@@ -25,3 +27,6 @@ jobs:
 
       - name: vitest ivue
         run: npm run coverage
+
+      - name: standard gate over docs + playground
+        run: npm run gate:docs
