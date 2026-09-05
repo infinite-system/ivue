@@ -12,8 +12,8 @@ import ChooseField from './ChooseField.vue';
 import ContactAvatar from './ContactAvatar.vue';
 import { ContactField } from './ContactField';
 
-const props = defineProps(ContactField.props);
-const emit = defineEmits(ContactField.emits);
+const props = defineProps(ContactField.Class.props);
+const emit = defineEmits(ContactField.Class.emits);
 
 const field = new ContactField.Class(props, emit);
 

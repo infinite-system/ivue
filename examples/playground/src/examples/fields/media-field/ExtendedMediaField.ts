@@ -149,14 +149,10 @@ export namespace ExtendedMediaField {
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 
-  /* Values — the contract IS the base field's: the subclass adds
-     behavior and slot templates, not props. Carried here so consumers
-     read ExtendedMediaField.* and never reach into the base's files. */
-
-  export const props = MediaField.props;
-  export const emits = MediaField.emits;
-
-  /* Types */
+  /* Types — the contract IS the base field's (inherited statics): the
+     subclass adds behavior and slot templates, not props. Aliased here
+     so consumers read ExtendedMediaField.* and never reach into the
+     base's files. */
 
   export type Props = MediaField.Props;
   export type Emits = MediaField.Emits;

@@ -7,27 +7,101 @@
 // that DOES earn it lives in ExtendedMediaField (a whole-list sort, cached
 // so a render doesn't re-sort per read).
 
+import type { ExtractPropTypes, PropType } from 'vue';
 import { ref, watch } from 'vue';
 
-import { Reactive } from '../../../ivue';
-import { ServerApi } from '../server/ServerApi';
 import {
-  mediaFieldEmits,
-  mediaFieldParams,
-  mediaFieldParamsDefaults,
-  mediaFieldParamsTypes,
-  mediaFieldProps,
-  type MediaFieldEmits,
-  type MediaFieldModel,
-  type MediaFieldProps,
-  type MediaFieldSlots,
-  type MediaItem,
-} from './MediaFieldProps';
+  type ExtendSlots,
+  type ExtractEmitTypes,
+  type ExtractPropDefaultTypes,
+  definePropTypes,
+  propsWithDefaults,
+  Reactive,
+} from '../../../ivue';
+import { Static } from '../../../Static';
+import type { MediaRow } from '../server/ServerApi';
+import { ServerApi } from '../server/ServerApi';
 
 export class $MediaField {
+  /* Contract — STATIC. Types and defaults are declared separately so a
+     subclass can re-default without re-typing; `props` fuses them
+     through the receiver (object/array defaults become factories). */
+
+  /** Params Types */
+  static get propsTypes() {
+    return definePropTypes({
+      modelValue: {
+        type: [Object, Array, String] as PropType<MediaField.Model>,
+      },
+      multiple: { type: Boolean as PropType<boolean> },
+      /** Comma-separated accept list — extensions (`.pdf`) and mime patterns (`image/*`). */
+      accept: { type: String as PropType<string> },
+      maxFiles: { type: Number as PropType<number> },
+      /** Per-file limit in bytes. */
+      maxFileSize: { type: Number as PropType<number> },
+      label: { type: String as PropType<string> },
+      hint: { type: String as PropType<string> },
+      readonly: { type: Boolean as PropType<boolean> },
+      disable: { type: Boolean as PropType<boolean> },
+      dense: { type: Boolean as PropType<boolean> },
+      /** Preview grid tile size in pixels. */
+      thumbnailSize: { type: Number as PropType<number> },
+      canPreview: { type: Boolean as PropType<boolean> },
+      canDownload: { type: Boolean as PropType<boolean> },
+      canRename: { type: Boolean as PropType<boolean> },
+      canRenameCaption: { type: Boolean as PropType<boolean> },
+      canRemove: { type: Boolean as PropType<boolean> },
+      /**
+       * Runner implementation — pass a subclass's `Class` to swap the logic
+       * that drives the component (the class-extension showcase).
+       * @see ExtendedMediaField.vue
+       */
+      runner: { type: Function as PropType<any> },
+    });
+  }
+
+  /** Params Defaults */
+  static get propsDefaults(): ExtractPropDefaultTypes<
+    typeof $MediaField.propsTypes
+  > {
+    return {
+      modelValue: null,
+      multiple: false,
+      accept: '.pdf, image/*',
+      maxFiles: 12,
+      maxFileSize: 100 * 1024 * 1024, // 100 MB
+      label: 'Media',
+      hint: '',
+      readonly: false,
+      disable: false,
+      dense: false,
+      thumbnailSize: 132,
+      canPreview: true,
+      canDownload: true,
+      canRename: true,
+      canRenameCaption: true,
+      canRemove: true,
+      runner: null,
+    };
+  }
+
+  static get props() {
+    return propsWithDefaults(this.propsDefaults, this.propsTypes);
+  }
+
+  /** Emits */
+  static get emits() {
+    return {
+      'update:modelValue': (value: MediaField.Model) => true,
+      uploaded: (rows: MediaField.Item[]) => true,
+      removed: (row: MediaField.Item) => true,
+      error: (message: string) => true,
+    };
+  }
+
   constructor(
-    public props: MediaFieldProps,
-    public emit: MediaFieldEmits,
+    public props: MediaField.Props,
+    public emit: MediaField.Emits,
   ) {
     watch(
       () => this.props.modelValue,
@@ -38,7 +112,7 @@ export class $MediaField {
 
   // --- state ---
   get files() {
-    return ref<MediaItem[]>([]);
+    return ref<MediaField.Item[]>([]);
   }
   get isUploading() {
     return ref(false);
@@ -140,7 +214,7 @@ export class $MediaField {
   }
 
   /** The list the template renders — subclasses override to reorder. */
-  get displayFiles(): MediaItem[] {
+  get displayFiles(): MediaField.Item[] {
     return this.files.value;
   }
 
@@ -168,7 +242,7 @@ export class $MediaField {
   get thumbnailStyle() {
     return { width: this.props.thumbnailSize + 'px' };
   }
-  get activeFile(): MediaItem | null {
+  get activeFile(): MediaField.Item | null {
     return this.displayFiles[this.previewIndex.value] ?? null;
   }
   get hasError() {
@@ -178,7 +252,7 @@ export class $MediaField {
   // --- model hydration & emission ---
 
   /** Bare ids in the model are fetched; rows are used as-is. Echoes of our own emit are skipped by id-comparison. */
-  async hydrateModel(value: MediaFieldModel | undefined) {
+  async hydrateModel(value: MediaField.Model | undefined) {
     const entries =
       value == null || value === ''
         ? []
@@ -196,7 +270,7 @@ export class $MediaField {
     const missingIds = limited.filter(
       (entry): entry is string => typeof entry === 'string',
     );
-    const fetchedRows = new Map<string, MediaItem>();
+    const fetchedRows = new Map<string, MediaField.Item>();
     if (missingIds.length) {
       this.isHydrating.value = true;
       try {
@@ -210,7 +284,7 @@ export class $MediaField {
       }
     }
 
-    const rows: MediaItem[] = [];
+    const rows: MediaField.Item[] = [];
     for (const entry of limited) {
       if (typeof entry === 'string') {
         const fetched = fetchedRows.get(entry);
@@ -224,7 +298,7 @@ export class $MediaField {
   }
 
   /** Hook for subclasses — runs after hydration replaces the list. */
-  onFilesLoaded(rows: MediaItem[]) {}
+  onFilesLoaded(rows: MediaField.Item[]) {}
 
   moveFile(fromIndex: number, toIndex: number) {
     const list = this.files.value;
@@ -320,7 +394,7 @@ export class $MediaField {
   }
 
   /** Hook for subclasses — appends the uploaded rows and reports them. */
-  onUploaded(rows: MediaItem[]) {
+  onUploaded(rows: MediaField.Item[]) {
     this.files.value.push(...rows);
     this.emitModel();
     this.emit('uploaded', rows);
@@ -365,7 +439,7 @@ export class $MediaField {
 
   // --- remove / rename / download ---
 
-  async removeFile(row: MediaItem) {
+  async removeFile(row: MediaField.Item) {
     if (!this.canRemove) return;
     try {
       await ServerApi.media.remove(row.id);
@@ -387,7 +461,7 @@ export class $MediaField {
     this.emit('removed', row);
   }
 
-  startRename(row: MediaItem) {
+  startRename(row: MediaField.Item) {
     if (!this.canRename) return;
     this.renameId.value = row.id;
     this.renameDraft.value = this.baseName(row.name);
@@ -420,7 +494,7 @@ export class $MediaField {
     this.renameId.value = null;
   }
 
-  downloadFile(row: MediaItem) {
+  downloadFile(row: MediaField.Item) {
     const anchor = document.createElement('a');
     anchor.href = row.url;
     anchor.download = row.name;
@@ -455,22 +529,22 @@ export class $MediaField {
 
   // --- per-row helpers ---
 
-  isImage(row: MediaItem): boolean {
+  isImage(row: MediaField.Item): boolean {
     return row.mimetype.startsWith('image/');
   }
 
-  fileExtension(row: MediaItem): string {
+  fileExtension(row: MediaField.Item): string {
     return this.extensionOf(row.name).toUpperCase();
   }
 
-  fileIcon(row: MediaItem): string {
+  fileIcon(row: MediaField.Item): string {
     if (row.mimetype === 'application/pdf') return 'picture_as_pdf';
     if (row.mimetype.startsWith('video/')) return 'movie';
     if (row.mimetype.startsWith('audio/')) return 'audiotrack';
     return 'insert_drive_file';
   }
 
-  sizeLabel(row: MediaItem): string {
+  sizeLabel(row: MediaField.Item): string {
     return this.formatBytes(row.size);
   }
 
@@ -514,26 +588,50 @@ export class $MediaField {
 export namespace MediaField {
   /* Identity */
 
-  export const $Class = $MediaField; // raw — children `extends` this
+  export const $Class = Static($MediaField); // anchor — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance;
 
-  /* Values — the contract, authored in MediaFieldProps.ts (tier 2: a
-     surface this large earns its own file). Only this class file and
-     extending contract files import that file — every consumer reads
-     the contract HERE. */
+  /* Types — DERIVED from the class's statics, never hand-duplicated */
 
-  export const paramsTypes = mediaFieldParamsTypes;
-  export const paramsDefaults = mediaFieldParamsDefaults;
-  export const params = mediaFieldParams;
-  export const props = mediaFieldProps;
-  export const emits = mediaFieldEmits;
+  export type Props = ExtractPropTypes<typeof $Class.props>;
+  export type Emits = ExtractEmitTypes<typeof $Class.emits>;
 
-  /* Types */
+  /** A media row plus the client-editable caption. */
+  export type Item = MediaRow & { caption?: string };
 
-  export type Props = MediaFieldProps;
-  export type Emits = MediaFieldEmits;
-  export type Slots = MediaFieldSlots;
-  export type Model = MediaFieldModel;
-  export type Item = MediaItem;
+  /**
+   * The model accepts rows, bare ids, or a mix — ids are hydrated through
+   * `ServerApi.media.get`. Single mode holds one entry (or null), multiple
+   * mode holds an array.
+   */
+  export type Model =
+    | Item
+    | string
+    | Array<Item | string>
+    | null;
+
+  /**
+   * Slot props. `field` is typed loose on purpose: the runner prop can swap
+   * in ANY MediaField subclass, and injected templates call the subclass's
+   * extra members (see ExtendedMediaField.vue).
+   */
+  export interface SlotProps {
+    field: any;
+  }
+  export interface ItemSlotProps extends SlotProps {
+    row: Item;
+    index: number;
+  }
+
+  /**
+   * Base slots — ExtendSlots wraps every one with `before--` & `after--`
+   * variants, the template-injection mechanism extended components use.
+   */
+  export type Slots = ExtendSlots<{
+    header(slotProps: SlotProps): any;
+    empty(slotProps: SlotProps): any;
+    item(slotProps: ItemSlotProps): any;
+    'item-actions'(slotProps: ItemSlotProps): any;
+  }>;
 }

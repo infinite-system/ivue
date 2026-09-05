@@ -82,35 +82,38 @@ redeploys the example automatically.
   compositor layer keep the browser out of the way; Lenis takes its clamp
   from the computed content height, not the DOM.
 
-## The contract lives in the namespace
+## The contract lives on the class
 
-The scroller's namespace carries the **whole component contract**, not
-just the class: prop types, prop defaults, the merged runtime props
-object, emits, slots and the expose-surface type. The SFC is pure wiring
-against it —
+The scroller's class carries the **whole component contract** as static
+getters, beside the state it governs: prop types, prop defaults, the
+fused runtime props object, emits. The namespace holds identity and the
+types derived from the class. The SFC is pure wiring against it —
 
 ```ts
 const props = defineProps(
-  VirtualScroller.props
+  VirtualScroller.Class.props
 ) as unknown as VirtualScroller.Props<T>;
 
-const emit = defineEmits(VirtualScroller.emits) as VirtualScroller.Emits;
+const emit = defineEmits(VirtualScroller.Class.emits) as VirtualScroller.Emits;
 ```
 
 `defineProps` receives a plain **runtime object** (types and defaults
-merged by [`propsWithDefaults`](/guide/extensible-components)), so the
+fused by [`propsWithDefaults`](/guide/extensible-components)), so the
 compiler never resolves a cross-file type inside a macro, and the cast
 recovers the generic `<T>` precision a runtime map cannot carry. The
-payoff is the same one the class hierarchy already has: a subclass
-component composes its surface by **spread**. `HorizontalVirtualScroller`
-— the same tuned class rotated sideways through its axis seams — inherits
-every prop and states its one real difference in one line:
+payoff is the same one the class hierarchy already has, because it IS
+the class hierarchy: a subclass component composes its surface with
+**`super`**. `HorizontalVirtualScroller` — the same tuned class rotated
+sideways through its axis seams — inherits every prop and states its one
+real difference in one override:
 
 ```ts
-export const propsDefaults = {
-  ...VirtualScroller.propsDefaults,
-  assumedSize: 300 // cards are ~hundreds of px wide where rows are tens tall
-};
+static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults {
+  return {
+    ...super.propsDefaults,
+    assumedSize: 300 // cards are ~hundreds of px wide where rows are tens tall
+  };
+}
 ```
 
 ## A book as one scrolling line

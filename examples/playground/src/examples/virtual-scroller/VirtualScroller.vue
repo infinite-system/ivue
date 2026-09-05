@@ -8,10 +8,10 @@ import VirtualScrollerItem from './VirtualScrollerItem.vue';
 // RUNTIME objects, so the compiler never resolves a cross-file type here;
 // the casts recover the generic <T> precision the runtime maps cannot carry.
 const props = defineProps(
-  VirtualScroller.props
+  VirtualScroller.Class.props
 ) as unknown as VirtualScroller.Props<T>;
 
-const emit = defineEmits(VirtualScroller.emits) as VirtualScroller.Emits;
+const emit = defineEmits(VirtualScroller.Class.emits) as VirtualScroller.Emits;
 
 defineSlots<VirtualScroller.Slots<T>>();
 

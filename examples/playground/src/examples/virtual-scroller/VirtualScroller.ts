@@ -25,6 +25,7 @@ import {
   type ReactiveInstance
 } from '../../ivue';
 import { Lenis } from '../../lenis/lenis';
+import { Static } from '../../Static';
 import type { BaseItem } from './VirtualScroller.types';
 
 /**
@@ -55,6 +56,87 @@ import type { BaseItem } from './VirtualScroller.types';
  * every (debounced) ResizeObserver burst.
  */
 class $VirtualScroller<T extends BaseItem> {
+  /* Contract — STATIC, so the class owns its inputs the way it owns its
+     state, and a subclass extends them with `super` like any other
+     member (HorizontalVirtualScroller re-tunes one default in one line).
+     The namespace below holds identity and TYPES only. */
+
+  /** 1 — the TYPES: a defineComponent-style object, no defaults inside.
+   *  `modelValue` is typed against BaseItem here (a const cannot be
+   *  generic); Props<T> recovers the precise item type in the SFC. */
+  static get propsTypes() {
+    return definePropTypes({
+      modelValue: { type: Array as PropType<BaseItem[]>, required: true },
+      /** Render the built-in draggable scrollbar over the VIRTUAL position. */
+      scrollbar: { type: Boolean as PropType<boolean> },
+      autoPlay: { type: Boolean as PropType<boolean> },
+      autoPlayDelay: { type: Number as PropType<number> },
+      autoRepeat: { type: Boolean as PropType<boolean> },
+      /** Step mode: after any input settles, snap to the nearest item
+       *  boundary — scroll, stop; scroll, stop. */
+      snapToItems: { type: Boolean as PropType<boolean> },
+      /** Where a snapped/step landing places the item: at the container's
+       *  start (the default) or its CENTER — `scroll-snap-align` semantics,
+       *  clamped at the bounds like the platform's. Edge items that cannot
+       *  center rest against the bounds; a consumer that wants true
+       *  edge-centering adds main-axis padding (it flows into the extent
+       *  through axisPaddingProps — the scroll-padding escape hatch). */
+      snapAlign: { type: String as PropType<'start' | 'center'> },
+      assumedSize: { type: Number as PropType<number> },
+      paddingQuantity: { type: Number as PropType<number> },
+      /** Autoplay creep speed: ms of wall time per px. No default on purpose —
+       *  unset falls back to the tuned reading cadence (see creepMsPerPx). */
+      creepMsPerPx: { type: Number as PropType<number> },
+      /** Accepted for API compatibility; the docs build renders the plain branch. */
+      draggable: { type: Boolean as PropType<boolean> },
+      dragHandleSelector: { type: String as PropType<string> },
+      dragClass: { type: String as PropType<string> },
+      dragGhostClass: { type: String as PropType<string> },
+      dragChosenClass: { type: String as PropType<string> }
+    });
+  }
+
+  /** 2 — the DEFAULTS: plain values, typed against the types object.
+   *  Required props (`modelValue`) are filtered out by
+   *  ExtractPropDefaultTypes itself; a deliberately default-free optional
+   *  prop states its ruling in data: `creepMsPerPx: undefined` below means
+   *  "unset = the tuned creep cadence". */
+  static get propsDefaults(): ExtractPropDefaultTypes<
+    typeof $VirtualScroller.propsTypes
+  > {
+    return {
+      scrollbar: false,
+      autoPlay: false,
+      autoPlayDelay: 500,
+      autoRepeat: true,
+      snapToItems: false,
+      snapAlign: 'start',
+      assumedSize: 30,
+      paddingQuantity: 6,
+      creepMsPerPx: undefined, // no default ON PURPOSE — see the comment above
+      draggable: false,
+      dragHandleSelector: '.sortable-drag-handle',
+      dragClass: 'sortable-drag',
+      dragGhostClass: 'sortable-ghost',
+      dragChosenClass: 'sortable-chosen'
+    };
+  }
+
+  /** 3 — the MERGE: a standard Vue props object, ready for defineProps.
+   *  Reads through the receiver, so a subclass's `props` is its own
+   *  fusion of ITS types and defaults. */
+  static get props() {
+    return propsWithDefaults(this.propsDefaults, this.propsTypes);
+  }
+
+  static get emits() {
+    return {
+      itemsChanged: (args: VirtualScroller.ItemsChangeEmitArgs) => true,
+      drop: (startIndex: number, dropIndex: number) => true,
+      move: (evt: any) => true
+    };
+  }
+
   constructor (
     public props: VirtualScroller.Props<T>,
     public emit: VirtualScroller.Emits
@@ -1548,92 +1630,25 @@ class $VirtualScroller<T extends BaseItem> {
  * `typeof Class.Instance` cannot exist per-T; `Instance<T>` applies
  * `ReactiveInstance` explicitly instead.
  *
- * The namespace carries the WHOLE component contract, in canonical order:
- * IDENTITY ($Class / Class / Instance), then VALUES (prop types + defaults
- * merged by propsWithDefaults, the emits object), then TYPES (all derived
- * from the values — never hand-duplicated). One import gives a consumer or
- * a subclass everything the component is, and the SFC is pure wiring: the
- * macros receive the RUNTIME objects, so no compiler macro ever resolves a
- * cross-file type, and a subclass component composes its surface by
- * SPREADING the maps (see HorizontalVirtualScroller, which inherits every
- * prop and overrides one default in one line).
+ * The namespace is IDENTITY ($Class / Class / Instance) and TYPES, every
+ * type derived from `$Class` — never hand-duplicated. The contract itself
+ * (prop types, defaults, their fusion, emits) lives on the class as
+ * statics: it swaps with `Class` under a global override and a subclass
+ * extends it with `super` (see HorizontalVirtualScroller, which inherits
+ * every prop and re-tunes one default in one line). The SFC is pure
+ * wiring: the macros receive the RUNTIME objects through `Class`, so no
+ * compiler macro ever resolves a cross-file type.
  */
 export namespace VirtualScroller {
   /* Identity */
 
-  export const $Class = $VirtualScroller;
+  export const $Class = Static($VirtualScroller); // anchor — statics live here
   export let Class = Reactive(
     $VirtualScroller
   ) as unknown as typeof $VirtualScroller;
   export type Instance<T extends BaseItem> = ReactiveInstance<
     $VirtualScroller<T>
   >;
-
-  /* Values */
-
-  /** 1 — the TYPES: a defineComponent-style object, no defaults inside.
-   *  `modelValue` is typed against BaseItem here (a const cannot be
-   *  generic); Props<T> recovers the precise item type in the SFC. */
-  export const propsTypes = definePropTypes({
-    modelValue: { type: Array as PropType<BaseItem[]>, required: true },
-    /** Render the built-in draggable scrollbar over the VIRTUAL position. */
-    scrollbar: { type: Boolean as PropType<boolean> },
-    autoPlay: { type: Boolean as PropType<boolean> },
-    autoPlayDelay: { type: Number as PropType<number> },
-    autoRepeat: { type: Boolean as PropType<boolean> },
-    /** Step mode: after any input settles, snap to the nearest item
-     *  boundary — scroll, stop; scroll, stop. */
-    snapToItems: { type: Boolean as PropType<boolean> },
-    /** Where a snapped/step landing places the item: at the container's
-     *  start (the default) or its CENTER — `scroll-snap-align` semantics,
-     *  clamped at the bounds like the platform's. Edge items that cannot
-     *  center rest against the bounds; a consumer that wants true
-     *  edge-centering adds main-axis padding (it flows into the extent
-     *  through axisPaddingProps — the scroll-padding escape hatch). */
-    snapAlign: { type: String as PropType<'start' | 'center'> },
-    assumedSize: { type: Number as PropType<number> },
-    paddingQuantity: { type: Number as PropType<number> },
-    /** Autoplay creep speed: ms of wall time per px. No default on purpose —
-     *  unset falls back to the tuned reading cadence (see creepMsPerPx). */
-    creepMsPerPx: { type: Number as PropType<number> },
-    /** Accepted for API compatibility; the docs build renders the plain branch. */
-    draggable: { type: Boolean as PropType<boolean> },
-    dragHandleSelector: { type: String as PropType<string> },
-    dragClass: { type: String as PropType<string> },
-    dragGhostClass: { type: String as PropType<string> },
-    dragChosenClass: { type: String as PropType<string> }
-  });
-
-  /** 2 — the DEFAULTS: plain values, typed against the types object.
-   *  Required props (`modelValue`) are filtered out by
-   *  ExtractPropDefaultTypes itself; a deliberately default-free optional
-   *  prop states its ruling in data: `creepMsPerPx: undefined` below means
-   *  "unset = the tuned creep cadence". */
-  export const propsDefaults: ExtractPropDefaultTypes<typeof propsTypes> = {
-    scrollbar: false,
-    autoPlay: false,
-    autoPlayDelay: 500,
-    autoRepeat: true,
-    snapToItems: false,
-    snapAlign: 'start',
-    assumedSize: 30,
-    paddingQuantity: 6,
-    creepMsPerPx: undefined, // no default ON PURPOSE — see the comment above
-    draggable: false,
-    dragHandleSelector: '.sortable-drag-handle',
-    dragClass: 'sortable-drag',
-    dragGhostClass: 'sortable-ghost',
-    dragChosenClass: 'sortable-chosen'
-  };
-
-  /** 3 — the MERGE: a standard Vue props object, ready for defineProps. */
-  export const props = propsWithDefaults(propsDefaults, propsTypes);
-
-  export const emits = {
-    itemsChanged: (args: ItemsChangeEmitArgs) => true,
-    drop: (startIndex: number, dropIndex: number) => true,
-    move: (evt: any) => true
-  };
 
   /* Types */
 
@@ -1644,11 +1659,11 @@ export namespace VirtualScroller {
    *  cannot carry — the generic item type — is grafted back over
    *  `modelValue`. */
   export type Props<T extends BaseItem> = Omit<
-    ExtractPropTypes<typeof props>,
+    ExtractPropTypes<typeof $Class.props>,
     'modelValue'
   > & { modelValue: T[] };
 
-  export type Emits = ExtractEmitTypes<typeof emits>;
+  export type Emits = ExtractEmitTypes<typeof $Class.emits>;
 
   export interface ItemsChangeEmitArgs {
     start: number;

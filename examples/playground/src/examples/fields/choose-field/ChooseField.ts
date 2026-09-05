@@ -14,31 +14,197 @@
 import type { QSelect } from 'quasar';
 import { computed, ref, shallowRef, watch } from 'vue';
 
-import { Reactive } from '../../../ivue';
-import { ServerApi } from '../server/ServerApi';
+import type { QSelectOption, QSelectProps, QSelectSlots } from 'quasar';
+import type { ExtractPropTypes, PropType } from 'vue';
+
 import {
-  chooseFieldEmits,
-  chooseFieldParams,
-  chooseFieldParamsDefaults,
-  chooseFieldParamsTypes,
-  chooseFieldProps,
-  type ChooseFieldEmits,
-  type ChooseFieldProps,
-  type ChooseFieldSlots,
-  type ChooseFieldVariant,
-  type ChooseOption,
-  type KeyValueRow,
-  type OptionFilter,
-} from './ChooseFieldProps';
+  type ExtendSlots,
+  type ExtractEmitTypes,
+  type ExtractPropDefaultTypes,
+  type IFnParameter,
+  definePropTypes,
+  propsWithDefaults,
+  Reactive,
+} from '../../../ivue';
+import { Static } from '../../../Static';
+import { ServerApi } from '../server/ServerApi';
+import { Field } from '../Field';
 
 /** Sentinel `value` of the synthetic "Create …" option row. */
 export const CREATE_OPTION_VALUE = '__create_option__';
 
-class $ChooseField {
+class $ChooseField extends Field.$Class {
+  /* Contract — STATIC. The class owns its inputs the way it owns its
+     state; ContactField extends them with `super` and re-tunes only
+     what differs. Types AND defaults are declared separately on purpose:
+     a subclass can re-default without re-typing (propsWithDefaults fuses
+     them, wrapping object/array defaults in factories). */
+
+  /** Params Types */
+  static override get propsTypes() {
+    return definePropTypes({
+      ...super.propsTypes,
+
+      /** === QSelect Overrides === */
+      multiple: { type: Boolean as PropType<boolean> },
+      /** Chips */
+      useChips: { type: Boolean as PropType<boolean> },
+      roundChips: { type: Boolean as PropType<boolean> },
+      /** Input */
+      useInput: { type: Boolean as PropType<boolean> },
+      inputDebounce: { type: Number as PropType<number> },
+      /** Icons */
+      dropdownIcon: { type: String as PropType<string> },
+      hideDropdownIcon: { type: Boolean as PropType<boolean> },
+      /** Options */
+      options: { type: Array as PropType<ChooseField.Option[]> },
+      optionValue: { type: String as PropType<string> },
+      optionsCover: { type: Boolean as PropType<boolean> },
+      prependOptions: { type: Array as PropType<ChooseField.Option[]> },
+      appendOptions: { type: Array as PropType<ChooseField.Option[]> },
+      /** Clearable */
+      clearable: { type: Boolean as PropType<boolean> },
+      clearIcon: { type: String as PropType<string> },
+      /** New Value Mode */
+      newValueMode: {
+        type: String as PropType<'add' | 'add-unique' | 'toggle' | undefined>,
+      },
+      /** === QSelect Overrides End === */
+
+      /** === Custom Choose Field Params === */
+      /** Client-side filtering — `{ key, value }` equality rows; @see fetchFilters for server side. */
+      optionFilters: { type: Array as PropType<ChooseField.OptionFilter[]> },
+      /** Client-side sorting in 'field:asc,field2:desc' format; @see fetchSort for server side. */
+      optionSort: { type: String as PropType<string> },
+      /** Options */
+      optionClass: { type: String as PropType<string> },
+      /** Label */
+      optionLabel: { type: String as PropType<string> },
+      optionLabelPriority: { type: Array as PropType<string[]> },
+      /** Description */
+      optionDescription: { type: String as PropType<string> },
+      optionDescriptionPriority: { type: Array as PropType<string[]> },
+      /** Chip */
+      chipClass: { type: String as PropType<string> },
+      /** Icon */
+      icon: { type: String as PropType<string> },
+      /** Variants */
+      variants: { type: Array as PropType<ChooseField.Variant[]> },
+
+      /** The driving runner — a ChooseField subclass CLASS (the base
+       *  constructs it) or a pre-built INSTANCE (a wrapping component passes
+       *  its own, carrying the wrapper's props and emit — see ContactField).
+       *  Ported v1 mechanism. */
+      runner: { type: [Function, Object] as PropType<any> },
+
+      /** Fetch */
+      fetchPath: { type: String as PropType<string> },
+      fetchOnFocus: { type: Boolean as PropType<boolean> },
+      fetchScrollThreshold: { type: Number as PropType<number> },
+      /** Fetch Filters */
+      fetchFilters: { type: String as PropType<string> },
+      fetchSort: { type: String as PropType<string> },
+      /** Fetch Search */
+      fetchSearch: { type: Boolean as PropType<boolean> },
+      /** Fetch Pagination */
+      fetchPagination: { type: Boolean as PropType<boolean> },
+      fetchRowsPerPage: { type: Number as PropType<number> },
+      /** Create */
+      createPath: { type: String as PropType<string> },
+      createLabel: { type: String as PropType<string> },
+      createEntityAsOption: { type: Boolean as PropType<boolean> },
+    });
+  }
+
+  /** Params Defaults */
+  static override get propsDefaults(): ExtractPropDefaultTypes<
+    typeof $ChooseField.propsTypes
+  > {
+    return {
+      ...super.propsDefaults,
+
+      /** === QSelect Overrides === */
+      multiple: false,
+      /** Chips */
+      useChips: false,
+      roundChips: false,
+      /** Input */
+      useInput: false,
+      inputDebounce: 250,
+      /** Icons */
+      dropdownIcon: 'arrow_drop_down',
+      hideDropdownIcon: false,
+      /** Options */
+      options: [],
+      optionValue: '',
+      optionsCover: false,
+      prependOptions: [], // Extra options ahead of fetched/static options.
+      appendOptions: [], // Extra options after fetched/static options.
+      /** Clearable */
+      clearable: false,
+      clearIcon: 'close',
+      /** New Value Mode */
+      newValueMode: undefined,
+      /** === QSelect Overrides End === */
+
+      /** === Custom Choose Field Params === */
+      optionFilters: [], // Client-side equality filters, applied after any server fetch.
+      optionSort: '', // Client-side sort, 'field:asc,field2:desc' — same grammar as fetchSort.
+      /** Options */
+      optionClass: '',
+      /** Option Label */
+      optionLabel: '', // Custom prop to use for the label.
+      optionLabelPriority: ['label', 'name', 'value', 'id'], // Fallback chain when optionLabel is not set.
+      /** Option Description */
+      optionDescription: '', // Custom prop to use for the description.
+      optionDescriptionPriority: ['description', 'caption'], // Fallback chain when optionDescription is not set.
+      /** Chips */
+      chipClass: '',
+      /** Icon */
+      icon: '',
+      /** Variants */
+      variants: [],
+      /** Runner */
+      runner: null,
+
+      /** Fetch */
+      fetchPath: '', // List endpoint to fetch options from ('' = purely client-side options).
+      fetchOnFocus: true, // Refetch on each focus, for an always-fresh-data feel.
+      fetchScrollThreshold: 5, // Items left below the viewport that trigger the next-page fetch.
+      /** Fetch Filters */
+      fetchFilters: '', // Server-side filter expression; @see optionFilters for client side.
+      fetchSort: '', // Server-side sort: 'columnName:asc,columnName2:desc'; @see optionSort for client side.
+      /** Fetch Search */
+      fetchSearch: false, // Search through the server even without pagination.
+      /** Fetch Pagination */
+      fetchPagination: false, // Implies server search — client search over a partial page lies.
+      fetchRowsPerPage: 20,
+      /** Create */
+      createPath: '', // POST endpoint enabling the create-new-option affordance.
+      createLabel: '',
+      createEntityAsOption: true, // Show the create affordance as the first option row while typing.
+    };
+  }
+
+  /** Re-declared (one line) so the derived `ChooseField.Props` type
+   *  carries the params above — see Field.props. */
+  static override get props() {
+    return propsWithDefaults(this.propsDefaults, this.propsTypes);
+  }
+
+  /** Emits */
+  static get emits() {
+    return {
+      'update:model-value': (value: any) => true,
+      remove: (details: IFnParameter<QSelectProps, 'onRemove', 0>) => true,
+    };
+  }
+
   constructor(
-    public props: ChooseFieldProps,
-    public emit: ChooseFieldEmits,
+    public props: ChooseField.Props,
+    public emit: ChooseField.Emits,
   ) {
+    super();
     this.activeVariantIndex.value = this.defaultActiveVariantIndex;
 
     if (this.fetchPath) {
@@ -65,16 +231,21 @@ class $ChooseField {
     );
   }
 
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $ChooseField;
+  }
+
   // --- state ---
 
   get selectEl() {
     return ref<QSelect | null>(null);
   }
   get displayedOptions() {
-    return shallowRef<ChooseOption[]>([]);
+    return shallowRef<ChooseField.Option[]>([]);
   }
   get fetchedOptions() {
-    return shallowRef<KeyValueRow[]>([]);
+    return shallowRef<ChooseField.KeyValueRow[]>([]);
   }
   get searchTerm() {
     return ref('');
@@ -234,7 +405,7 @@ class $ChooseField {
 
   // --- variants ---
 
-  get activeVariant(): ChooseFieldVariant | undefined {
+  get activeVariant(): ChooseField.Variant | undefined {
     return this.variants.length && this.activeVariantIndex.value > -1
       ? this.variants[this.activeVariantIndex.value]
       : undefined;
@@ -251,7 +422,7 @@ class $ChooseField {
   get fetchSort() {
     return this.activeVariant?.fetchSort ?? this.props.fetchSort;
   }
-  get optionFilters(): OptionFilter[] {
+  get optionFilters(): ChooseField.OptionFilter[] {
     return this.activeVariant?.optionFilters ?? this.props.optionFilters;
   }
   get optionSort() {
@@ -321,7 +492,7 @@ class $ChooseField {
   // --- options resolution (derived, all plain) ---
 
   /** Either the fetched result set or the static options prop, plus pre/append. */
-  get resolvedOptions(): ChooseOption[] {
+  get resolvedOptions(): ChooseField.Option[] {
     return [
       ...this.prependOptions,
       ...(this.fetchPath ? this.fetchedOptions.value : this.options),
@@ -349,7 +520,7 @@ class $ChooseField {
     this.applyFilter(this.searchTerm.value);
   }
 
-  async fetchOptionsRequest(): Promise<KeyValueRow[]> {
+  async fetchOptionsRequest(): Promise<ChooseField.KeyValueRow[]> {
     this.errorMessage.value = '';
     this.fetching.value = true;
     this.fetchedPages.value = {
@@ -357,7 +528,7 @@ class $ChooseField {
       [this.fetchPage.value]: true,
     };
     try {
-      const result = await ServerApi.getPaginated<KeyValueRow>(
+      const result = await ServerApi.getPaginated<ChooseField.KeyValueRow>(
         this.fetchFullPath,
       );
       this.lastFetchedCount.value = result.data.length;
@@ -436,12 +607,12 @@ class $ChooseField {
   }
 
   /** Client-side refinement: `{ key, value }` equality filters, then 'field:asc' sort. */
-  refineOptions(options: ChooseOption[]): ChooseOption[] {
+  refineOptions(options: ChooseField.Option[]): ChooseField.Option[] {
     let refined = options;
     if (this.optionFilters.length) {
       refined = refined.filter((option) =>
         this.optionFilters.every(
-          (filter) => (option as KeyValueRow)?.[filter.key] === filter.value,
+          (filter) => (option as ChooseField.KeyValueRow)?.[filter.key] === filter.value,
         ),
       );
     }
@@ -453,11 +624,11 @@ class $ChooseField {
     return refined;
   }
 
-  compareBySort(first: ChooseOption, second: ChooseOption) {
+  compareBySort(first: ChooseField.Option, second: ChooseField.Option) {
     for (const sortPart of this.optionSort.split(',')) {
       const [field, direction] = sortPart.split(':');
-      const firstValue = (first as KeyValueRow)?.[field.trim()];
-      const secondValue = (second as KeyValueRow)?.[field.trim()];
+      const firstValue = (first as ChooseField.KeyValueRow)?.[field.trim()];
+      const secondValue = (second as ChooseField.KeyValueRow)?.[field.trim()];
       if (firstValue === secondValue) continue;
       const ascending = (direction?.trim() || 'asc') === 'asc';
       return (firstValue > secondValue ? 1 : -1) * (ascending ? 1 : -1);
@@ -465,14 +636,14 @@ class $ChooseField {
     return 0;
   }
 
-  matchesSearch(inputValue: string, option: ChooseOption) {
+  matchesSearch(inputValue: string, option: ChooseField.Option) {
     const needle = inputValue.toLowerCase().trim();
     if (needle === '') return true;
     if (typeof option === 'string' || typeof option === 'number') {
       return String(option).toLowerCase().includes(needle);
     }
     // Search the first layer of the option's own values.
-    return Object.values(option as KeyValueRow).some((cellValue) =>
+    return Object.values(option as ChooseField.KeyValueRow).some((cellValue) =>
       String(cellValue ?? '')
         .toLowerCase()
         .includes(needle),
@@ -481,19 +652,19 @@ class $ChooseField {
 
   // --- option label & description resolution ---
 
-  optionLabelOf(option: ChooseOption): string {
+  optionLabelOf(option: ChooseField.Option): string {
     if (typeof option === 'string' || typeof option === 'number') {
       return String(option);
     }
     return String(this.firstPresentValue(option, this.labelKeys) ?? '');
   }
-  optionDescriptionOf(option: ChooseOption): string {
+  optionDescriptionOf(option: ChooseField.Option): string {
     if (typeof option !== 'object' || option === null) return '';
     return String(this.firstPresentValue(option, this.descriptionKeys) ?? '');
   }
-  optionIconOf(option: ChooseOption): string {
+  optionIconOf(option: ChooseField.Option): string {
     return typeof option === 'object' && option !== null
-      ? ((option as KeyValueRow).icon ?? '')
+      ? ((option as ChooseField.KeyValueRow).icon ?? '')
       : '';
   }
 
@@ -508,7 +679,7 @@ class $ChooseField {
       : this.props.optionDescriptionPriority;
   }
 
-  firstPresentValue(row: KeyValueRow, keys: string[]) {
+  firstPresentValue(row: ChooseField.KeyValueRow, keys: string[]) {
     for (const key of keys) {
       const candidate = row?.[key];
       if (candidate !== undefined && candidate !== null && candidate !== '') {
@@ -519,9 +690,9 @@ class $ChooseField {
   }
 
   /** QSelect option-value fn: the optionValue prop's key, else id, else the row itself. */
-  optionValueOf(option: ChooseOption) {
+  optionValueOf(option: ChooseField.Option) {
     if (typeof option !== 'object' || option === null) return option;
-    const row = option as KeyValueRow;
+    const row = option as ChooseField.KeyValueRow;
     if (this.optionValue) return row[this.optionValue];
     return row.id ?? row.value ?? row;
   }
@@ -536,7 +707,7 @@ class $ChooseField {
     // offer nothing to create — selecting it is the only correct action.
     if (this.findOptionByLabel(this.searchTerm.value)) return;
     const [firstOption] = this.displayedOptions.value;
-    if ((firstOption as KeyValueRow)?.value === CREATE_OPTION_VALUE) return;
+    if ((firstOption as ChooseField.KeyValueRow)?.value === CREATE_OPTION_VALUE) return;
     const term = this.searchTerm.value.trim();
     const text = `${this.createLabel || 'Create new'} '${term}'`;
     this.displayedOptions.value = [
@@ -553,8 +724,8 @@ class $ChooseField {
     ];
   }
 
-  isCreateOptionRow(option: ChooseOption) {
-    return (option as KeyValueRow)?.value === CREATE_OPTION_VALUE;
+  isCreateOptionRow(option: ChooseField.Option) {
+    return (option as ChooseField.KeyValueRow)?.value === CREATE_OPTION_VALUE;
   }
 
   /** POST the typed term as a new entity, add it to the options, select it. */
@@ -586,7 +757,7 @@ class $ChooseField {
     }
   }
 
-  findOptionByLabel(label: string): KeyValueRow | undefined {
+  findOptionByLabel(label: string): ChooseField.KeyValueRow | undefined {
     const wanted = label.trim().toLowerCase();
     const pools: any[] = [
       ...this.fetchedOptions.value,
@@ -602,7 +773,7 @@ class $ChooseField {
     );
   }
 
-  isSelectedOption(option: KeyValueRow): boolean {
+  isSelectedOption(option: ChooseField.KeyValueRow): boolean {
     const selected = Array.isArray(this.props.modelValue)
       ? this.props.modelValue
       : this.props.modelValue
@@ -615,7 +786,7 @@ class $ChooseField {
     );
   }
 
-  selectCreated(created: KeyValueRow) {
+  selectCreated(created: ChooseField.KeyValueRow) {
     if (this.multiple) {
       const current = Array.isArray(this.props.modelValue)
         ? this.props.modelValue
@@ -633,7 +804,7 @@ class $ChooseField {
   onModelWrite(value: any) {
     const isArrayValue = Array.isArray(value);
     const lastAdded = isArrayValue ? value[value.length - 1] : value;
-    if ([lastAdded, (lastAdded as KeyValueRow)?.value].includes(CREATE_OPTION_VALUE)) {
+    if ([lastAdded, (lastAdded as ChooseField.KeyValueRow)?.value].includes(CREATE_OPTION_VALUE)) {
       this.createOption();
       return;
     }
@@ -653,26 +824,39 @@ class $ChooseField {
 export namespace ChooseField {
   /* Identity */
 
-  export const $Class = $ChooseField; // raw — children `extends` this
+  export const $Class = Static($ChooseField); // anchor — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 
-  /* Values — the contract, authored in ChooseFieldProps.ts (tier 2: a
-     surface this large earns its own file). Only this class file and
-     extending contract files import that file — every consumer reads
-     the contract HERE. */
+  /* Types — DERIVED from the class's statics, never hand-duplicated */
 
-  export const paramsTypes = chooseFieldParamsTypes;
-  export const paramsDefaults = chooseFieldParamsDefaults;
-  export const params = chooseFieldParams;
-  export const props = chooseFieldProps;
-  export const emits = chooseFieldEmits;
+  export type Props = ExtractPropTypes<typeof $Class.props>;
+  export type Emits = ExtractEmitTypes<typeof $Class.emits>;
+  /** Every QSelect slot, plus a 'before--'/'after--' pair around each. */
+  export type Slots = ExtendSlots<QSelectSlots>;
 
-  /* Types */
+  export type KeyValueRow = Record<string, any>;
+  export type Option = string | number | QSelectOption | KeyValueRow;
 
-  export type Props = ChooseFieldProps;
-  export type Emits = ChooseFieldEmits;
-  export type Slots = ChooseFieldSlots;
-  export type Option = ChooseOption;
-  export type Variant = ChooseFieldVariant;
+  /**
+   * Client-side option filter: a `{ key, value }` equality predicate applied
+   * to each loaded option row. Deliberately tiny — the server-side
+   * `fetchFilters` string handles anything richer.
+   */
+  export interface OptionFilter {
+    key: string;
+    value: any;
+  }
+
+  /** A named preset of server + client filtering the user can switch between. */
+  export interface Variant {
+    label: string;
+    default?: true;
+    icon?: string;
+    fetchFilters?: string;
+    fetchSort?: string;
+    /** Client filters & sort are applied after server-side fetch filters & sort. */
+    optionFilters?: OptionFilter[];
+    optionSort?: string;
+  }
 }

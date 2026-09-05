@@ -3,15 +3,15 @@ import { HorizontalVirtualScroller } from './HorizontalVirtualScroller';
 import type { BaseItem } from './VirtualScroller.types';
 import VirtualScrollerItem from './VirtualScrollerItem.vue';
 
-// Pure wiring — the namespace carries the whole contract, with the
-// horizontal defaults already merged (assumedSize 300 overridden by
-// spread in HorizontalVirtualScroller.propsDefaults).
+// Pure wiring — the CLASS carries the contract (static getters), with the
+// horizontal default already fused in (assumedSize 300 re-tuned by the
+// subclass's `propsDefaults` override).
 const props = defineProps(
-  HorizontalVirtualScroller.props
+  HorizontalVirtualScroller.Class.props
 ) as unknown as HorizontalVirtualScroller.Props<T>;
 
 const emit = defineEmits(
-  HorizontalVirtualScroller.emits
+  HorizontalVirtualScroller.Class.emits
 ) as HorizontalVirtualScroller.Emits;
 
 defineSlots<HorizontalVirtualScroller.Slots<T>>();

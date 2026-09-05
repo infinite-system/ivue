@@ -307,31 +307,44 @@ defineExpose(box as Box.Instance);
 </template>
 ```
 
-## The namespace carries the WHOLE contract (one seam)
+## The class carries the WHOLE contract; the namespace is identity and types
 
 A class FILE has exactly three residents: imports, the class, the
-namespace. Everything else the module owns lives INSIDE the namespace,
-in canonical section order:
+namespace. The component contract — prop types, prop defaults, their
+fusion, emits, and every tuning constant — lives ON THE CLASS as static
+getters, beside the state and behavior it governs. The namespace holds
+identity and TYPES only, every type DERIVED from `$Class`. Two worlds
+would make a class half extensible: a `const` in a namespace cannot be
+overridden by a subclass, is not inherited, and does not swap with
+`Class` under a global override — so a runtime declaration never lives
+there.
 
-- **Identity** — `$Class` (raw, for children to extend), `Class`
-  (`Reactive()`, for you to `new`), `Instance` (and `Model` when used).
-- **Values** — the component contract as plain data: `propsTypes`
-  (defineComponent-style, no defaults, wrapped in `definePropTypes({...})`
-  so the `required: true` literal survives `typeof`), `propsDefaults`
-  (plain values, typed by `ExtractPropDefaultTypes<typeof propsTypes>` —
-  required props are filtered out of the check automatically, and a
-  deliberately default-free optional prop is declared `key: undefined`,
-  stating the ruling in data), `props =
-  propsWithDefaults(propsDefaults, propsTypes)`, and `emits`
-  (object-declared validators). Module constants live here too — a
-  value the module keeps to itself is a NON-EXPORTED namespace member,
-  private to the file. Nothing lives at module level beside the seam.
-- **Types** — DERIVED from the values, never hand-duplicated:
-  `Props` is `ExtractPropTypes<typeof props>` (a generic component
+- **Contract (on the class, static)** — `static get propsTypes()`
+  (defineComponent-style, no defaults, returned through
+  `definePropTypes({...})` so the `required: true` literal survives
+  `typeof`); `static get propsDefaults()` (plain values, annotated
+  `ExtractPropDefaultTypes<typeof $X.propsTypes>` — required props are
+  filtered out of the check automatically, and a deliberately
+  default-free optional prop is declared `key: undefined`, stating the
+  ruling in data); `static get props()` — the ONE fusion line,
+  `propsWithDefaults(this.propsDefaults, this.propsTypes)`, reading
+  through the receiver so a subclass's `props` fuses ITS types and
+  defaults; `static get emits()` (object-declared validators). Tuning
+  constants are plain static getters too — live knobs a subclass or test
+  double overrides; the `$` prefix stays reserved for compute-once caches.
+  Types and defaults stay two members ON PURPOSE: a variant re-tunes
+  defaults without re-typing.
+- **Identity (namespace)** — `$Class` (raw, for children to extend),
+  `Class` (`Reactive()`, for you to `new`), `Instance` (and `Model` when
+  used).
+- **Types (namespace)** — DERIVED from the class, never hand-duplicated:
+  `Props` is `ExtractPropTypes<typeof $Class.props>` (a generic component
   grafts its parameter back over the one prop a runtime map cannot
-  carry: `Omit<ExtractPropTypes<typeof props>, 'modelValue'> &
-  { modelValue: T[] }`); `Emits` is `ExtractEmitTypes<typeof emits>`;
-  `Slots`; `Exposed` is `ShallowUnwrapRef<Instance>`.
+  carry: `Omit<ExtractPropTypes<typeof $Class.props>, 'modelValue'> &
+  { modelValue: T[] }`); `Emits` is `ExtractEmitTypes<typeof
+  $Class.emits>`; `Slots`; `Exposed` is `ShallowUnwrapRef<Instance>`.
+  Domain types the contract refers to (an item shape, a variant preset)
+  live here as namespace types; the class reads them as `X.Item`.
 
 Combined — the canonical file, everything above in one shape:
 
@@ -345,10 +358,63 @@ import {
   type ExtractEmitTypes,
   type ExtractPropDefaultTypes,
 } from 'ivue';
+import { Static } from 'ivue/extras';
 
 class $Box {
-  // Forward references into the namespace below — legal: type positions
-  // resolve non-positionally, and the class never reads a contract VALUE.
+  /* Contract — STATIC: owned by the class, extended with `super` */
+
+  /** 1 — the TYPES: a defineComponent-style object, no defaults inside.
+   *  definePropTypes is an identity call that keeps `required: true` a
+   *  LITERAL — a bare object widens it to boolean, which would blind the
+   *  defaults check below. */
+  static get propsTypes() {
+    return definePropTypes({
+      title: { type: String as PropType<string>, required: true },
+      size: { type: Number as PropType<number> },
+      maxHeight: { type: Number as PropType<number> },
+      disabled: { type: Boolean as PropType<boolean> },
+    });
+  }
+
+  /** 2 — the DEFAULTS: plain values, typed against the types object.
+   *  Required props (`title`) are filtered out of the check
+   *  automatically; every OPTIONAL prop must appear — `undefined` is the
+   *  explicit "no default ON PURPOSE" ruling, stated in data. */
+  static get propsDefaults(): ExtractPropDefaultTypes<typeof $Box.propsTypes> {
+    return {
+      size: this.defaultSize,
+      maxHeight: undefined, // unset = unbounded — deliberately default-free
+      disabled: false,
+    };
+  }
+
+  /** 3 — the FUSION: a standard Vue props object, ready for defineProps.
+   *  Reads through the receiver — a subclass's `props` fuses ITS own
+   *  types and defaults. Written once per hierarchy; a subclass that ADDS
+   *  props re-declares this one line so its derived `Props` widens (a
+   *  static's return type is not polymorphic). */
+  static get props() {
+    return propsWithDefaults(this.propsDefaults, this.propsTypes);
+  }
+
+  static get emits() {
+    return {
+      close: (title: string) => true,
+    };
+  }
+
+  /** A tuning constant: a LIVE static knob (no `$`), overridable. */
+  static get defaultSize() {
+    return 400;
+  }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $Box;
+  }
+
+  // Type positions resolve non-positionally — the class names its own
+  // namespace's derived types freely.
   constructor(
     public props: Box.Props,
     public emit: Box.Emits,
@@ -370,48 +436,14 @@ class $Box {
 export namespace Box {
   /* Identity */
 
-  export const $Class = $Box; // raw — children `extends` this
+  export const $Class = Static($Box); // anchor — it declares statics; children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 
-  /* Values */
+  /* Types — DERIVED from the class's statics, never hand-duplicated */
 
-  // A value the module keeps to itself: NON-EXPORTED — private to the
-  // file, invisible to importers. Never a module-level const.
-  const DEFAULT_SIZE = 400;
-
-  /** 1 — the TYPES: a defineComponent-style object, no defaults inside.
-   *  definePropTypes is an identity call that keeps `required: true` a
-   *  LITERAL — a bare const widens it to boolean, which would blind the
-   *  defaults check below. */
-  export const propsTypes = definePropTypes({
-    title: { type: String as PropType<string>, required: true },
-    size: { type: Number as PropType<number> },
-    maxHeight: { type: Number as PropType<number> },
-    disabled: { type: Boolean as PropType<boolean> },
-  });
-
-  /** 2 — the DEFAULTS: plain values, typed against the types object.
-   *  Required props (`title`) are filtered out of the check
-   *  automatically; every OPTIONAL prop must appear — `undefined` is the
-   *  explicit "no default ON PURPOSE" ruling, stated in data. */
-  export const propsDefaults: ExtractPropDefaultTypes<typeof propsTypes> = {
-    size: DEFAULT_SIZE,
-    maxHeight: undefined, // unset = unbounded — deliberately default-free
-    disabled: false,
-  };
-
-  /** 3 — the MERGE: a standard Vue props object, ready for defineProps. */
-  export const props = propsWithDefaults(propsDefaults, propsTypes);
-
-  export const emits = {
-    close: (title: string) => true,
-  };
-
-  /* Types — DERIVED from the values, never hand-duplicated */
-
-  export type Props = ExtractPropTypes<typeof props>;
-  export type Emits = ExtractEmitTypes<typeof emits>;
+  export type Props = ExtractPropTypes<typeof $Class.props>;
+  export type Emits = ExtractEmitTypes<typeof $Class.emits>;
 
   export interface Slots {
     default: (scope: { title: string }) => any;
@@ -422,37 +454,63 @@ export namespace Box {
 }
 ```
 
-The SFC is pure wiring against the seam. The macros receive the
-RUNTIME objects, so no compiler macro ever resolves a cross-file type:
+The SFC is pure wiring against the seam, and it reads the contract
+through `Class` — the mutable slot — so a global override swaps the
+contract together with the runner. The macros receive RUNTIME objects,
+so no compiler macro ever resolves a cross-file type:
 
 ```ts
-const props = defineProps(Box.props); // non-generic: the type is inferred
-const emit = defineEmits(Box.emits) as Box.Emits;
+const props = defineProps(Box.Class.props); // non-generic: the type is inferred
+const emit = defineEmits(Box.Class.emits) as Box.Emits;
 defineSlots<Box.Slots>();
 // generic components cast the one graft:
-// defineProps(X.props) as unknown as X.Props<T>
+// defineProps(X.Class.props) as unknown as X.Props<T>
 ```
 
-A subclass composes its surface the way it composes behavior — by
-SPREADING the parent's maps and overriding only what defines the
-specialization, with the reason on the line:
+A subclass extends its contract the way it extends behavior — with
+`super`, overriding only what defines the specialization, with the
+reason on the line. Re-tuning a default needs ONE override; adding a
+prop needs the types override plus the one-line `props` re-declaration:
 
 ```ts
-export const propsTypes = { ...Box.propsTypes };
-export const propsDefaults = {
-  ...Box.propsDefaults,
-  assumedSize: 300, // cards are hundreds of px wide; rows were tens tall
-};
-export const props = propsWithDefaults(propsDefaults, propsTypes);
+class $CardBox extends Box.$Class {
+  static override get propsDefaults(): typeof Box.$Class.propsDefaults {
+    return {
+      ...super.propsDefaults,
+      size: 300, // cards are hundreds of px wide; rows were tens tall
+    };
+  }
+}
+
+class $TaggedBox extends Box.$Class {
+  static override get propsTypes() {
+    return definePropTypes({
+      ...super.propsTypes,
+      tag: { type: String as PropType<string> },
+    });
+  }
+  static override get propsDefaults(): ExtractPropDefaultTypes<typeof $TaggedBox.propsTypes> {
+    return { ...super.propsDefaults, tag: '' };
+  }
+  static override get props() {
+    return propsWithDefaults(this.propsDefaults, this.propsTypes); // widens TaggedBox.Props
+  }
+}
 ```
 
-**Two tiers, one seam.** A small contract (roughly under fifteen props)
-is authored inline in the namespace. A LARGE surface earns a sibling
-`XProps.ts`: authored there, imported ONLY by its own class file and by
-extending contract files, and re-exported through the namespace 1:1 —
-the re-export block is the seam's table of contents. Consumers never
-import `XProps.ts`; the namespace stays the whole truth either way.
-File placement is expression; the one-seam rule is the invariant.
+The anchor rule is unchanged and now reaches every component class: a
+class that DECLARES statics — and the contract is statics — anchors at
+`$Class` with `Static()` (`export const $Class = Static($Box)`), and so
+does a subclass that overrides one. A subclass that only inherits stays
+raw. The anchor costs nothing on getters (native reads) and is what
+gives a `$`-cached static its compute-once semantics.
+
+**One seam, any size.** A contract of forty documented props is still
+authored on its class — a static getter scrolls like any other member,
+and a sibling `XProps.ts` would be the parallel world again (a second
+runtime owner the class mechanics cannot reach). Shared base surfaces
+are a base CLASS (`class $ChooseField extends Field.$Class`), never a
+spread-in const: inheritance is the only composition the contract uses.
 
 **Overrides say so out loud.** `noImplicitOverride` is on: every member
 that overrides a base member carries the `override` keyword
@@ -1286,6 +1344,6 @@ convention and check it in review.
 - [ ] Instance reads of own statics go through `this.self` (declared once per class needing it, cast to `typeof $X`, plain getter never `$self`); 2+ reads or loops hoist `const self = this.self`; no per-site `this.constructor` casts; `Namespace.Class` reads stay reserved for late-bound capability dispatch.
 - [ ] Static members precede the constructor; the constructor precedes state, prop, and derived getters; methods come last.
 - [ ] Spacing carries meaning: declaration-like getters contiguous within their group; blank lines only where a doc comment / multi-line body / category boundary begins; methods always separated.
-- [ ] The namespace is the ONE seam: no module-level consts beside imports/class/namespace (file-private values are non-exported namespace members); the contract is namespace data in Identity → Values → Types order, its types derived from its values; a large contract's sibling `XProps.ts` is imported only by its class file and extending contract files.
+- [ ] The class carries the WHOLE contract as static getters (`propsTypes`, `propsDefaults`, the one-line `props` fusion, `emits`, tuning knobs) and the namespace holds identity and types ONLY, every type derived from `$Class`; no module-level consts beside imports/class/namespace, no `const` contract data in the namespace (a parallel world the class mechanics cannot reach), no sibling `XProps.ts`; the SFC reads `X.Class.props` / `X.Class.emits`; a subclass extends the contract with `super` and re-declares the fusion line only when it ADDS props.
 - [ ] Every member that overrides a base member carries `override` (with `noImplicitOverride` enabled).
 - [ ] No `private` members — internal members are `protected` (three-tier visibility: public = consumer surface, protected = hierarchy seam, private = banned).

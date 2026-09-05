@@ -1,6 +1,6 @@
 ---
 title: Extensible Components
-description: 'Classes extend — so props, emits and slots must extend with them. The two-tier contract system: the namespace carries the whole component contract as plain data (types + defaults merged by propsWithDefaults, emits, derived types), authored inline for small surfaces and in a sibling props file for large ones.'
+description: 'Classes extend — so props, emits and slots must extend with them. The contract lives on the class as static getters (types + defaults fused by propsWithDefaults, emits), a subclass extends it with super, and the namespace carries only identity and the types derived from the class.'
 relatedPosts: [ban-private, ship-the-variant-keep-the-tuning, the-options-api-everyone-wanted, inheritance-exile]
 ---
 
@@ -13,80 +13,97 @@ slots wrappable rather than replaced.
 Vue's `withDefaults(defineProps<T>())` macro cannot express that: its
 defaults are locked inside a compiler transform, invisible to any wrapper.
 
-So the contract is **plain data, carried by the component's namespace**
-beside the class — and it extends the way the class extends: by spread.
+So the contract is **plain data, carried by the class as static
+getters** — and it extends the way the class extends: with `super`.
 
-## The namespace carries the contract
+## The class carries the contract
 
-A component's namespace holds everything the component is, in canonical
-section order: **Identity** (`$Class` / `Class` / `Instance`), **Values**
-(the contract as data), **Types** (derived from the values, never written
-twice). The values are three declarations, each doing exactly one job —
-here as shipped in the [text marquee](/examples/virtual-scroller#a-book-as-one-scrolling-line):
+A class file has three residents: imports, the class, the namespace.
+The contract is three static getters on the class, each doing exactly
+one job, plus emits — here as shipped in the
+[text marquee](/examples/virtual-scroller#a-book-as-one-scrolling-line):
 
 ```ts
-// TextMarquee.ts (namespace excerpt)
-export namespace TextMarquee {
-  /* Identity */
-
-  export const $Class = $TextMarquee; // raw — children `extends` this
-  export let Class = Reactive($Class); // reactive — you `new` this
-  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
-
-  /* Values */
-
+// TextMarquee.ts (class excerpt)
+class $TextMarquee {
   /** 1 — the TYPES: a defineComponent-style object, no defaults inside. */
-  export const propsTypes = definePropTypes({
-    /** The full text — newlines and all; the marquee one-lines it. */
-    text: { type: String as PropType<string>, required: true },
-    /** Glide speed. The default is a comfortable reading glide. */
-    pxPerSecond: { type: Number as PropType<number> },
-    targetChars: { type: Number as PropType<number> }
-  });
+  static get propsTypes() {
+    return definePropTypes({
+      /** The full text — newlines and all; the marquee one-lines it. */
+      text: { type: String as PropType<string>, required: true },
+      /** Glide speed. The default is a comfortable reading glide. */
+      pxPerSecond: { type: Number as PropType<number> },
+      targetChars: { type: Number as PropType<number> }
+    });
+  }
 
   /** 2 — the DEFAULTS: plain values, typed against the types object
    *  (`text` is required — filtered out of the check automatically). */
-  export const propsDefaults: ExtractPropDefaultTypes<typeof propsTypes> = {
-    pxPerSecond: 50,
-    targetChars: 400
-  };
+  static get propsDefaults(): ExtractPropDefaultTypes<typeof $TextMarquee.propsTypes> {
+    return {
+      pxPerSecond: 50,
+      targetChars: 400
+    };
+  }
 
-  /** 3 — the MERGE: a standard Vue props object, ready for defineProps. */
-  export const props = propsWithDefaults(propsDefaults, propsTypes);
+  /** 3 — the FUSION: a standard Vue props object, ready for defineProps.
+   *  Reads through the receiver, so a subclass's `props` fuses ITS own
+   *  types and defaults. */
+  static get props() {
+    return propsWithDefaults(this.propsDefaults, this.propsTypes);
+  }
 
-  /* Types */
+  constructor(public props: TextMarquee.Props) {}
+}
 
-  /** Resolved props — DERIVED from the merged runtime object. */
-  export type Props = ExtractPropTypes<typeof props>;
+export namespace TextMarquee {
+  /* Identity */
+
+  export const $Class = Static($TextMarquee); // anchor — it declares statics; children `extends` this
+  export let Class = Reactive($Class); // reactive — you `new` this
+  export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
+
+  /* Types — DERIVED from the class, never hand-duplicated */
+
+  export type Props = ExtractPropTypes<typeof $Class.props>;
 }
 ```
 
 Each piece earns its place:
 
 - **`definePropTypes({...})`** is an identity call with one job: in a bare
-  object const, TypeScript widens `required: true` to `boolean`; generic
+  object literal, TypeScript widens `required: true` to `boolean`; generic
   inference through the call preserves the literal, which the defaults
   check below depends on.
-- **`ExtractPropDefaultTypes<typeof propsTypes>`** keeps the pair honest:
-  every optional prop must appear in the defaults, so a new prop without
-  a default is a compile error. Required props are filtered out of the
-  check automatically (they can never carry a default), and a
+- **`ExtractPropDefaultTypes<typeof $TextMarquee.propsTypes>`** keeps the
+  pair honest: every optional prop must appear in the defaults, so a new
+  prop without a default is a compile error. Required props are filtered
+  out of the check automatically (they can never carry a default), and a
   deliberately default-free optional prop is declared `key: undefined` —
   the ruling stated in the defaults object itself.
-- **`propsWithDefaults(propsDefaults, propsTypes)`** merges the pair into
-  a defineComponent-style props object. Object and array defaults are
-  wrapped in cloning factories automatically (`structuredClone`; pass a
-  custom cloner for exotic values); primitives pass through untouched.
-- **`Props`** is derived with `ExtractPropTypes` — defaulted props come
-  out non-optional, default-free ones optional, and nothing is ever
-  hand-duplicated.
+- **`propsWithDefaults(this.propsDefaults, this.propsTypes)`** fuses the
+  pair into a defineComponent-style props object. Object and array
+  defaults are wrapped in cloning factories automatically
+  (`structuredClone`; pass a custom cloner for exotic values); primitives
+  pass through untouched. Because it reads `this`, the one line written in
+  the base fuses a subclass's own types and defaults when read as
+  `Child.props`.
+- **`Props`** is derived with `ExtractPropTypes` from the class — defaulted
+  props come out non-optional, default-free ones optional, and nothing is
+  ever hand-duplicated.
+- **`Static($TextMarquee)`** anchors the class because it declares
+  statics — the same anchor rule every capability class follows; it costs
+  nothing on getters and gives a `$`-prefixed static its compute-once
+  cache.
 
 The SFC is pure wiring against the seam. The macros receive the RUNTIME
-objects, so no compiler macro ever resolves a cross-file type:
+objects through `Class` — the mutable slot — so a global override that
+swaps the class swaps its contract with it, and no compiler macro ever
+resolves a cross-file type:
 
 ```ts
-const props = defineProps(TextMarquee.props); // inferred — no cast
-const emit = defineEmits(TextMarquee.emits) as TextMarquee.Emits;
+const props = defineProps(TextMarquee.Class.props); // inferred — no cast
+const emit = defineEmits(TextMarquee.Class.emits) as TextMarquee.Emits;
 ```
 
 A **generic** component adds exactly one cast — the type parameter a
@@ -96,27 +113,29 @@ full canonical reference for that layer.
 
 ## Extension is the point
 
-Because the types and defaults are plain, inspectable namespace data, a
-subclass composes its surface the way it composes behavior — spread the
-parent's maps, override what defines the specialization, with the reason
-on the line. The horizontal scroller's whole props story, as shipped:
+Because the contract is a set of static getters, a subclass composes its
+surface the way it composes behavior — `super`, then override what
+defines the specialization, with the reason on the line. The horizontal
+scroller's whole props story, as shipped:
 
 ```ts
-// HorizontalVirtualScroller.ts (namespace excerpt)
-export const propsTypes = { ...VirtualScroller.propsTypes };
-export const propsDefaults = {
-  ...VirtualScroller.propsDefaults,
-  assumedSize: 300 // cards are ~hundreds of px wide where rows are tens tall
-};
-export const props = propsWithDefaults(propsDefaults, propsTypes);
-export const emits = VirtualScroller.emits;
+// HorizontalVirtualScroller.ts (class excerpt)
+class $HorizontalVirtualScroller<T extends BaseItem> extends VirtualScroller.$Class<T> {
+  static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults {
+    return {
+      ...super.propsDefaults,
+      assumedSize: 300 // cards are ~hundreds of px wide where rows are tens tall
+    };
+  }
+}
 ```
 
-Every prop inherited, one default overridden. This is the props-side
-mirror of `class $HorizontalVirtualScroller extends
-VirtualScroller.$Class` — the class hierarchy and the contract hierarchy
-extend together, and neither can drift from the other because both are
-compositions of the same parent data.
+Every prop inherited, one default overridden, and nothing else to
+write: `props` and `emits` are inherited whole, and `props` fuses the
+new defaults because it reads through the receiver. This is the
+contract-side mirror of `extends VirtualScroller.$Class` — the class
+hierarchy and the contract hierarchy are the SAME hierarchy, so neither
+can drift from the other.
 
 `propsWithDefaults` is **non-mutating** by design: spreading a types map
 shares the inner `{ type }` descriptor objects, so an in-place
@@ -124,89 +143,79 @@ implementation would silently rewrite the base component's defaults when
 the child applies different ones. Each descriptor is copied — the base
 surface is never touched by its children.
 
-## Two tiers, one seam
+## Why the namespace holds no values
 
-Where the contract is *authored* varies with its size; where it is
-*read* never does. Every consumer, SFC and subclass reads the contract
-from the namespace — that is the invariant. The file layout has two
-expressions of it:
+The namespace used to be a plausible home for the contract as `const`
+data. It fails the moment the class extends: a namespace `const` is not
+inherited, cannot be overridden with `super`, and does not move when
+`Class` is reassigned — so the class was extensible and its contract was
+not, two worlds under one name. On the class, the contract gets class
+mechanics for free: inheritance, `override` checked by the compiler,
+and one swap point. The namespace keeps what only a namespace can hold —
+`$Class`, `Class`, and the TYPES derived from them.
 
-**Tier 1 — inline in the namespace** (the default). A contract of
-roughly fifteen props or fewer lives in the namespace's Values section,
-as `TextMarquee` and the scrollers do above. One file, three residents:
-imports, the class, the namespace.
+## Adding props, not just re-tuning them
 
-**Tier 2 — a sibling props file** for large surfaces. `ChooseField`
-declares ~40 documented props; as a namespace section that would be a
-300-line block welded to a 650-line class. So the contract is authored
-in `ChooseFieldProps.ts` — easier to open, navigate and diff — and the
-namespace **re-exports it 1:1**, becoming the seam's table of contents:
+A subclass that ADDS a prop overrides `propsTypes` (spreading `super`),
+overrides `propsDefaults` for the new key, and re-declares the one
+fusion line so its derived `Props` type widens — a static's return type
+is not polymorphic in TypeScript, so the base's `props` would type as
+the base contract. `ContactField` is the shipped case: the choose-field
+contract preconfigured for contacts, plus one prop of its own:
 
 ```ts
-// ChooseField.ts (namespace excerpt)
-export namespace ChooseField {
-  /* Identity */
+// ContactField.ts (class excerpt)
+class $ContactField extends ChooseField.$Class {
+  static override get propsTypes() {
+    return definePropTypes({
+      ...super.propsTypes,
+      /** Compact display mode: smaller avatar, name only, denser rows. */
+      compact: { type: Boolean as PropType<boolean> },
+    });
+  }
 
-  export const $Class = $ChooseField; // raw — children `extends` this
-  export let Class = Reactive($Class); // reactive — you `new` this
-  export type Instance = typeof Class.Instance;
+  static override get propsDefaults(): ExtractPropDefaultTypes<typeof $ContactField.propsTypes> {
+    return {
+      ...super.propsDefaults,
+      useChips: true,                                // chips on
+      optionLabelPriority: ['name', 'email', 'id'],  // its label rules
+      compact: false,                                // its own prop
+    };
+  }
 
-  /* Values — the contract, authored in ChooseFieldProps.ts (tier 2). */
-
-  export const paramsTypes = chooseFieldParamsTypes;
-  export const paramsDefaults = chooseFieldParamsDefaults;
-  export const params = chooseFieldParams;
-  export const props = chooseFieldProps;
-  export const emits = chooseFieldEmits;
-
-  /* Types */
-
-  export type Props = ChooseFieldProps;
-  export type Emits = ChooseFieldEmits;
-  export type Slots = ChooseFieldSlots;
+  /** Re-declared so `ContactField.Props` carries `compact`. */
+  static override get props() {
+    return propsWithDefaults(this.propsDefaults, this.propsTypes);
+  }
 }
 ```
 
-The props file is **private to the module family**: only its own class
-file and extending contract files import it. `ContactFieldProps.ts`
-spreads `ChooseFieldProps.ts` — contract extends contract, mirroring
-class extends class:
-
-```ts
-// ContactFieldProps.ts — extends the choose-field surface
-export const contactFieldParamsTypes = definePropTypes({
-  ...chooseFieldParamsTypes,
-  /** Compact display mode: smaller avatar, name only, denser rows. */
-  compact: { type: Boolean as PropType<boolean> },
-});
-
-export const contactFieldParamsDefaults: ExtractPropDefaultTypes<
-  typeof contactFieldParamsTypes
-> = {
-  ...chooseFieldParamsDefaults,
-  useChips: true,                                // chips on
-  optionLabelPriority: ['name', 'email', 'id'],  // its label rules
-  compact: false,                                // its own prop
-};
-```
-
 Everything else — the SFC, the example route, any consumer — speaks
-`ContactField.props`, `ContactField.emits`, `ContactField.Props`. A
-reader never needs to know which tier a component chose; the namespace
-reads identically either way. File placement is expression; the
-one-seam rule is the invariant.
+`ContactField.Class.props`, `ContactField.Class.emits`,
+`ContactField.Props`. A shared base surface is a base class, never a
+spread-in constant: `ChooseField` extends `Field`, whose statics declare
+the QField passthrough every field shares (model, label, hint, density,
+states), and inherits them the way it inherits behavior.
 
 ## Emits and slots, same discipline
 
-Emits are declared as an object of validators — data, like the props —
-and the emit function's type is derived by `ExtractEmitTypes`:
+Emits are declared as a static getter returning an object of validators
+— data, like the props — and the emit function's type is derived by
+`ExtractEmitTypes`:
 
 ```ts
-export const chooseFieldEmits = {
-  'update:model-value': (newValue: any) => true,
-  remove: (removed: { index: number; value: any }) => true,
-};
-export type ChooseFieldEmits = ExtractEmitTypes<typeof chooseFieldEmits>;
+class $ChooseField extends Field.$Class {
+  static get emits() {
+    return {
+      'update:model-value': (newValue: any) => true,
+      remove: (removed: { index: number; value: any }) => true,
+    };
+  }
+}
+
+export namespace ChooseField {
+  export type Emits = ExtractEmitTypes<typeof $Class.emits>;
+}
 ```
 
 Slots interfaces extend a wrapped component's slots with
@@ -215,7 +224,9 @@ lets a wrapping component inject content around every inherited slot
 without redeclaring any of them:
 
 ```ts
-export type ChooseFieldSlots = ExtendSlots<QSelectSlots>;
+export namespace ChooseField {
+  export type Slots = ExtendSlots<QSelectSlots>;
+}
 ```
 
 ## Why not `withDefaults(defineProps<T>())`?
@@ -236,15 +247,14 @@ scaling exactly where extensible components begin:
 ## Where to see it at scale
 
 The [Advanced Select Field](/examples/choose-field) and
-[Advanced Media Uploader](/examples/media-field) are the tier-2
-reference — large authored contracts, namespace re-exports, and class
-extension driven through the `runner` mechanism, with each class
-consuming every prop through plain prop-getters per the
+[Advanced Media Uploader](/examples/media-field) are the large-surface
+reference — forty-prop contracts as static getters, a shared `Field`
+base, and class extension driven through the `runner` mechanism, with
+each class consuming every prop through plain prop-getters per the
 [standard](/guide/standard).
 
 The [Horizontal Scroller: 1M Items](/examples/horizontal-scroller) is
-the tier-1 and generic-typing reference: contract inline in the
-namespace, surface composed by spread, one default overridden, and the
-`Props<T>` graft for the type parameter a runtime map cannot carry. The
+the generic-typing reference: one default re-tuned through `super`, and
+the `Props<T>` graft for the type parameter a runtime map cannot carry. The
 measured account of what the whole system buys is
 [Ship the variant, keep the tuning](/blog/ship-the-variant-keep-the-tuning).

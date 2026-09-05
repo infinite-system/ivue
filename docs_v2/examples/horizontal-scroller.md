@@ -36,22 +36,20 @@ tuning](/blog/ship-the-variant-keep-the-tuning).
 
 `HorizontalVirtualScroller.ts` doubles as the canonical shape of an ivue
 module. A class file has exactly three residents — imports, the class,
-and the **namespace, which carries everything else** in canonical
-section order:
+and the namespace — and the contract lives ON THE CLASS:
 
+- **Contract** — static getters: `propsTypes`, `propsDefaults`, the
+  fused `props` (via
+  [`propsWithDefaults`](/guide/extensible-components), reading through
+  the receiver), `emits`. Being statics is what lets a subclass compose
+  its surface with **`super`** — every prop inherited, one default
+  overridden, with the reason on the line — and what makes the contract
+  swap together with `Class`.
 - **Identity** — `$Class` (raw, for children to extend), `Class`
   (`Reactive()`, for you to `new`), `Instance` (the unwrapping-surface
   type).
-- **Values** — the component contract as plain data: `propsTypes`,
-  `propsDefaults`, the merged `props` (via
-  [`propsWithDefaults`](/guide/extensible-components)), `emits`. Being
-  data is what lets a subclass compose its surface by **spread** —
-  every prop inherited, one default overridden, with the reason on the
-  line.
-- **Types** — all **derived** from the values (`Props`, `Emits`,
-  `Slots`, `Exposed`), never hand-duplicated. Constants a module keeps
-  to itself live in the namespace un-exported: private to the file, no
-  module-level residue.
+- **Types** — all **derived** from the class (`Props`, `Emits`,
+  `Slots`, `Exposed`), never hand-duplicated.
 
 - **Generic typing** — the part that makes this the FULL canonical
   example: the scroller is a generic component (`<T extends BaseItem>`),
@@ -62,18 +60,19 @@ section order:
   `new VirtualScroller.Class<T>()` fully generic, and `Instance<T>`
   applies `ReactiveInstance` by hand. A runtime props map cannot carry
   a type parameter either, so `Props<T>` grafts it back over the one
-  prop that needs it: `Omit<ExtractPropTypes<typeof props>,
+  prop that needs it: `Omit<ExtractPropTypes<typeof $Class.props>,
   'modelValue'> & { modelValue: T[] }`. `Exposed<T>` closes the loop
   for template refs.
 
 The SFC is pure wiring against that contract — and generic wiring:
 `<script setup generic="T extends BaseItem">` hands the runtime `props`
-object to `defineProps` (no compiler macro ever resolves a cross-file
-type) and one cast recovers the precision the runtime map cannot carry:
+object to `defineProps` through `Class` (no compiler macro ever resolves
+a cross-file type) and one cast recovers the precision the runtime map
+cannot carry:
 
 ```ts
 const props = defineProps(
-  VirtualScroller.props
+  VirtualScroller.Class.props
 ) as unknown as VirtualScroller.Props<T>;
 ```
 

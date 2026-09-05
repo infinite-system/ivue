@@ -1,10 +1,7 @@
 import type { ShallowUnwrapRef } from 'vue';
 
-import {
-  propsWithDefaults,
-  Reactive,
-  type ReactiveInstance
-} from '../../ivue';
+import { Reactive, type ReactiveInstance } from '../../ivue';
+import { Static } from '../../Static';
 import type { BaseItem } from './VirtualScroller.types';
 import { VirtualScroller } from './VirtualScroller';
 
@@ -23,6 +20,16 @@ import { VirtualScroller } from './VirtualScroller';
  * through. Pair with `snap-to-items` for the step feel: scroll, stop.
  */
 class $HorizontalVirtualScroller<T extends BaseItem> extends (VirtualScroller.$Class as typeof VirtualScroller.$Class) <T> {
+  /* Contract — inherited whole; ONE default re-tuned. `props` needs no
+     override: it reads through the receiver and fuses THESE defaults
+     with the inherited types. */
+  static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults {
+    return {
+      ...super.propsDefaults,
+      assumedSize: 300 // cards are ~hundreds of px wide where rows are tens tall
+    };
+  }
+
   protected override get lenisOrientation(): 'vertical' | 'horizontal' {
     // lenis writes the wheel-path transform itself — translateX only when
     // it knows the axis
@@ -79,31 +86,18 @@ class $HorizontalVirtualScroller<T extends BaseItem> extends (VirtualScroller.$C
 
 /** Standard namespace pattern, generic adaptation — see VirtualScroller's
  *  note on why `Class` casts back and `Instance<T>` applies
- *  ReactiveInstance by hand. The props surface extends the same way the
- *  class does: spread the parent's maps, override what defines the
- *  specialization — here a single default (cards are ~hundreds of px
- *  wide where rows are tens tall), stated once instead of duplicating
- *  the whole defaults block. */
+ *  ReactiveInstance by hand. Identity and types only: the contract is the
+ *  parent's statics, extended on the class above the way the behavior is. */
 export namespace HorizontalVirtualScroller {
   /* Identity */
 
-  export const $Class = $HorizontalVirtualScroller;
+  export const $Class = Static($HorizontalVirtualScroller); // anchor — it overrides a static
   export let Class = Reactive(
     $HorizontalVirtualScroller
   ) as unknown as typeof $HorizontalVirtualScroller;
   export type Instance<T extends BaseItem> = ReactiveInstance<
     $HorizontalVirtualScroller<T>
   >;
-
-  /* Values */
-
-  export const propsTypes = { ...VirtualScroller.propsTypes };
-  export const propsDefaults = {
-    ...VirtualScroller.propsDefaults,
-    assumedSize: 300
-  };
-  export const props = propsWithDefaults(propsDefaults, propsTypes);
-  export const emits = VirtualScroller.emits;
 
   /* Types */
 

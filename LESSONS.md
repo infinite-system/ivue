@@ -383,3 +383,27 @@ background processes, sweep:
 - **A mechanical rename can eat CSS properties and Vue style-binding keys** — the scroller's axis-neutral rename (height→size) converted `.virtual-scroller { height: 100% }`, the spacer bindings `:style="{ height: ... }"`, the thumb height and a transition property into `size:` — which is NOT a CSS property, so the browser silently ignored all of them. Result: spacers rendered at 0px, the scroller element grew with its content, `containerSize` tracked that growth, and the visible-window walk extended forever — thousands of rows accumulating in the DOM, dragging the whole page's frame rate down (diagnosed as "marquee is choppy"; the marquee was fine — the broken demo above it was flooding the page). Rules: rename identifiers, never string-replace across CSS/template-style territory; after any rename touching a layout word (height/width/top/left/size), grep the diff for it inside `<style>` blocks and `:style` bindings; and verify long-running behavior (window size over 15+ seconds), not just first paint — this bug looked perfect in every screenshot.
 
 - **Playwright's synthesized shift+wheel never becomes deltaX** — the shift+wheel → horizontal-scroll conversion happens in the real browser's input pipeline, BEFORE the page event; `page.mouse.wheel(0, N)` with Shift held arrives as `{deltaX: 0, deltaY: N, shiftKey: true}` and a `gestureOrientation: 'horizontal'` lenis refuses it. Worse, the test can silently "pass": the strip keeps moving under its own autoplay creep, so a before/after transform delta reads as a successful scrub that never happened (this invalidated two earlier scrub verifications). To drive a horizontal-gesture surface in a harness, dispatch the converted event yourself: `el.dispatchEvent(new WheelEvent('wheel', {deltaX: N, deltaY: 0, bubbles: true, cancelable: true}))` — and prove any input test with a probe the autonomous motion can't satisfy (event counters, lenis.targetScroll).
+
+## Playground typecheck and gate (2026-09-05)
+
+- There is no `vue-tsc` in this repo. To typecheck the playground's
+  class files run `npx tsc --noEmit -p examples/playground/tsconfig.json`
+  — it carries ~45 pre-existing errors (`.vue` module resolution, a few
+  nullability spots in VirtualScroller). The useful signal is the DIFF
+  of the error set, compared with line numbers stripped
+  (`sed -E 's/\(([0-9]+),([0-9]+)\)//'`), before and after a change.
+  SFC `<script setup>` lines are NOT typechecked by it — `npm run
+  build:docs` compiles the scroller/marquee SFCs and is the runtime
+  gate for those.
+- The standards gate runs on the playground with explicit roots
+  (`npm run gate -- --source-root examples/playground/src/examples/<dir>`);
+  it has ~187 pre-existing findings there. Diff findings before/after
+  (`git stash -u`, run, `git stash pop`, run) and fix only the delta.
+- The playground vendors `Static` at `examples/playground/src/Static.ts`
+  (imported as `'../../Static'`), beside the synced `src/ivue.ts` — the
+  vendored engine does NOT export `Static`.
+- The gate's anchor rule is the tie-breaker for the contract-as-statics
+  shape: any class that DECLARES a static (including a subclass that
+  overrides one) anchors with `Static()`; a subclass that only inherits
+  stays raw.
+

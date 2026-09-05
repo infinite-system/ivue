@@ -12,8 +12,8 @@ import {
 
 import { ChooseField } from './ChooseField';
 
-const props = defineProps(ChooseField.props);
-const emit = defineEmits(ChooseField.emits);
+const props = defineProps(ChooseField.Class.props);
+const emit = defineEmits(ChooseField.Class.emits);
 
 // The runner prop swaps the driving object (ported v1 mechanism): a
 // wrapping component passes its OWN pre-built subclass INSTANCE — carrying

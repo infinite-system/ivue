@@ -7,6 +7,7 @@ import {
   Reactive,
   type ExtractPropDefaultTypes
 } from '../../ivue';
+import { Static } from '../../Static';
 import { HorizontalVirtualScroller } from '../virtual-scroller/HorizontalVirtualScroller';
 import type { BaseItem } from '../virtual-scroller/VirtualScroller.types';
 import { TextChunker } from './TextChunker';
@@ -23,6 +24,52 @@ import { TextChunker } from './TextChunker';
  * prop, so a speed slider takes effect mid-glide with no restart.
  */
 class $TextMarquee {
+  /* Contract — STATIC, so the class owns its inputs the way it owns its
+     state, and a subclass extends them with `super` like any other
+     member. The namespace below holds identity and TYPES only. */
+
+  /** 1 — the TYPES: a defineComponent-style object, no defaults inside. */
+  static get propsTypes() {
+    return definePropTypes({
+      /** The full text — newlines and all; the marquee one-lines it. */
+      text: { type: String as PropType<string>, required: true },
+      /** Glide speed. The default is a comfortable reading glide. */
+      pxPerSecond: { type: Number as PropType<number> },
+      /** Characters per chunk (cut at spaces). Bigger chunks = fewer items;
+       *  smaller chunks = finer virtualization granularity. */
+      targetChars: { type: Number as PropType<number> }
+    });
+  }
+
+  /** 2 — the DEFAULTS: plain values, typed against the types object
+   *  (`text` is required — filtered out of the check automatically). */
+  static get propsDefaults(): ExtractPropDefaultTypes<
+    typeof $TextMarquee.propsTypes
+  > {
+    return {
+      pxPerSecond: 50,
+      targetChars: 400
+    };
+  }
+
+  /** 3 — the MERGE: a standard Vue props object, ready for defineProps.
+   *  Reads through the receiver, so a subclass's `props` is its own
+   *  fusion of ITS types and defaults. */
+  static get props() {
+    return propsWithDefaults(this.propsDefaults, this.propsTypes);
+  }
+
+  /** Smallest width the scroller assumes for an unmeasured chunk. A live
+   *  knob (no `$`): a subclass or test double overrides it. */
+  static get minimumChunkWidth() {
+    return 60;
+  }
+
+  /** Average character width before the real font is measured on mount. */
+  static get preMeasureCharWidth() {
+    return 7.5;
+  }
+
   constructor(public props: TextMarquee.Props) {
     onMounted(() => this.measureFont());
     // Rechunked text (text/targetChars changed) invalidates every index —
@@ -31,6 +78,11 @@ class $TextMarquee {
       () => this.items.value,
       () => this.seedChunkSizes()
     );
+  }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $TextMarquee;
   }
 
   /* Template refs */
@@ -64,13 +116,13 @@ class $TextMarquee {
    *  on mount (see measureFont); the pre-mount value only serves the very
    *  first frame. */
   get averageCharWidth() {
-    return ref(7.5);
+    return ref(this.self.preMeasureCharWidth);
   }
 
   /** What the scroller assumes for a chunk it has not measured yet. */
   get assumedChunkSize() {
     return Math.max(
-      60,
+      this.self.minimumChunkWidth,
       Math.round(this.targetChars * this.averageCharWidth.value)
     );
   }
@@ -178,39 +230,19 @@ class $TextMarquee {
 }
 
 /**
- * The namespace carries the WHOLE component contract — class, instance
- * type, props types + defaults merged by propsWithDefaults, and the
- * expose-surface type. TextMarquee.vue is pure wiring against it.
+ * The namespace is identity and TYPES only. The contract (prop types,
+ * defaults, their fusion) lives on the class as statics, so it swaps with
+ * `Class` under a global override and extends through `super` in a
+ * subclass; every type here is DERIVED from `$Class`, never hand-written.
+ * TextMarquee.vue is pure wiring against it.
  */
 export namespace TextMarquee {
-  export const $Class = $TextMarquee; // raw — children `extends` this
+  export const $Class = Static($TextMarquee); // anchor — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 
-  /** 1 — the TYPES: a defineComponent-style object, no defaults inside. */
-  export const propsTypes = definePropTypes({
-    /** The full text — newlines and all; the marquee one-lines it. */
-    text: { type: String as PropType<string>, required: true },
-    /** Glide speed. The default is a comfortable reading glide. */
-    pxPerSecond: { type: Number as PropType<number> },
-    /** Characters per chunk (cut at spaces). Bigger chunks = fewer items;
-     *  smaller chunks = finer virtualization granularity. */
-    targetChars: { type: Number as PropType<number> }
-  });
-
-  /** 2 — the DEFAULTS: plain values, typed against the types object
-   *  (`text` is required — filtered out of the check automatically). */
-  export const propsDefaults: ExtractPropDefaultTypes<typeof propsTypes> = {
-    pxPerSecond: 50,
-    targetChars: 400
-  };
-
-  /** 3 — the MERGE: a standard Vue props object, ready for defineProps. */
-  export const props = propsWithDefaults(propsDefaults, propsTypes);
-
-  /** Resolved props — what the class receives after defaults apply.
-   *  DERIVED from the merged runtime object, never hand-duplicated. */
-  export type Props = ExtractPropTypes<typeof props>;
+  /** Resolved props — what the class receives after defaults apply. */
+  export type Props = ExtractPropTypes<typeof $Class.props>;
 
   export type Exposed = ShallowUnwrapRef<Instance>;
 }

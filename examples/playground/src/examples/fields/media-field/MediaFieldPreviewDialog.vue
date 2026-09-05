@@ -8,7 +8,6 @@ import { computed, ref } from 'vue';
 
 import { Reactive } from '../../../ivue';
 import type { MediaField } from './MediaField';
-import type { MediaItem } from './MediaFieldProps';
 
 export interface MediaFieldPreviewDialogProps {
   /** The owning field instance — the dialog navigates ITS preview state. */
@@ -39,7 +38,7 @@ class $MediaFieldPreviewDialog {
   get field() {
     return this.props.field;
   }
-  get activeFile(): MediaItem | null {
+  get activeFile(): MediaField.Item | null {
     return this.field.activeFile;
   }
   get isActiveImage() {

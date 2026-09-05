@@ -2,11 +2,12 @@
 import HorizontalVirtualScroller from '../virtual-scroller/HorizontalVirtualScroller.vue';
 import { TextMarquee } from './TextMarquee';
 
-// Pure wiring — the namespace carries the whole contract; the macro
-// receives the RUNTIME props object, so nothing here resolves types
-// across files, and the props type is inferred from it (no cast: only
-// generic components need one, to graft <T> back on).
-const props = defineProps(TextMarquee.props);
+// Pure wiring — the CLASS carries the contract; the macro receives the
+// RUNTIME props object through `Class` (so a global override swaps the
+// contract with the runner), nothing here resolves types across files,
+// and the props type is inferred from it (no cast: only generic
+// components need one, to graft <T> back on).
+const props = defineProps(TextMarquee.Class.props);
 
 const marquee = new TextMarquee.Class(props);
 

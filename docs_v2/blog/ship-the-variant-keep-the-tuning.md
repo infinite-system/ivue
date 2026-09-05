@@ -102,25 +102,26 @@ defaults, emits. If the class extends but the props are locked inside a
 whole surface by hand, and the fork sneaks back in through the
 front door.
 
-So the contract lives beside the class, as plain data in the same
-namespace, and the variant composes it the way the class composes
-behavior — by spreading and overriding:
+So the contract lives on the class, as static getters beside the state
+they govern, and the variant composes it the way the class composes
+behavior — with `super`, overriding one thing:
 
 ```ts
-export namespace HorizontalVirtualScroller {
-  export const propsTypes = { ...VirtualScroller.propsTypes };
-  export const propsDefaults = {
-    ...VirtualScroller.propsDefaults,
-    assumedSize: 300 // cards are hundreds of px wide; rows were tens tall
-  };
-  export const props = propsWithDefaults(propsDefaults, propsTypes);
+class $HorizontalVirtualScroller<T extends BaseItem> extends VirtualScroller.$Class<T> {
+  static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults {
+    return {
+      ...super.propsDefaults,
+      assumedSize: 300 // cards are hundreds of px wide; rows were tens tall
+    };
+  }
 }
 ```
 
 Every prop inherited. One default overridden, with the reason on the
-line. The SFC becomes pure wiring — `defineProps(X.props)` receives a
-runtime object, and the resolved TypeScript type is derived from that
-same object, never written twice. The full pattern is in the
+line. The SFC becomes pure wiring — `defineProps(X.Class.props)`
+receives a runtime object fused from the subclass's own defaults, and
+the resolved TypeScript type is derived from that same object, never
+written twice. The full pattern is in the
 [Extensible Components guide](/guide/extensible-components).
 
 ## The proof: a book as one scrolling line

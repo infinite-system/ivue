@@ -137,6 +137,38 @@ arriving runner's `class.props` against the declared set and warn on
 mismatch. Everywhere else this failure is silent; here it is a
 tripwire the trust layer gets for free.
 
+**The whole contract moves onto the class; the namespace is identity
+and types (2026-09-05, the pending receipt — DONE).** The user's
+diagnosis: consts inside the namespace create a PARALLEL WORLD to the
+static pattern, which makes a class half extensible, half not. A
+namespace `const` is not inherited, cannot be overridden with `super`,
+and does not move when `Class` is reassigned — so the runner swapped and
+the contract stayed. Ruling: every runtime declaration lives on the class
+as a static getter — `propsTypes`, `propsDefaults` (kept as two members
+so a variant re-tunes without re-typing), the one-line fusion `props`
+(`propsWithDefaults(this.propsDefaults, this.propsTypes)`, reading
+through the receiver), `emits`, `slots`-as-data when needed, and every
+tuning constant (live knobs, no `$`). The namespace keeps `$Class`,
+`Class`, and TYPES, every type DERIVED from `$Class`
+(`ExtractPropTypes<typeof $Class.props>`), so it carries zero
+independent runtime. The SFC reads `X.Class.props`, which closes the
+seam at both ends: a global override that swaps `Class` swaps the
+contract with it. Two mechanics noted: a subclass that ADDS props
+re-declares the one fusion line (a static's return type is not
+polymorphic in TS, so the derived `Props` would otherwise stay the
+base's); and shared base surfaces are a base CLASS (`Field.$Class`
+declaring the QField passthrough), never a spread-in const — inheritance
+is the only composition the contract uses. The gate's anchor rule
+decides the last question: a class that declares statics anchors at
+`$Class` with `Static()`, and the contract is statics — so every
+component class (and every subclass that overrides a static) anchors;
+uniformity over the 2026-09-02 "no machinery" note, which the gate
+overruled the moment it ran. Receipt: TextMarquee, both
+scrollers, `Field` + ChooseField/ContactField, MediaField/Extended
+converted; the three `XProps.ts` modules and `field-kit.ts` dissolved
+into their classes; playground typecheck error set identical to the
+pre-conversion baseline; skill doctrine rewritten and mirrored.
+
 **Contract timing under global override (2026-09-02).**
 `defineProps(X.Class.props)` evaluates ONCE at SFC module evaluation
 (then Vue caches normalization per component definition). So a slot
