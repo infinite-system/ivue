@@ -146,8 +146,8 @@ move. Only its address did.
 The class grows. Every condition that used to be free text is now a
 member with a name, and a component with forty conditions has forty more
 members. That is the whole price, and it is paid in the one currency that
-was already cheap here. Against it: a template you can read without
-thinking, and a class that says everything the component means.
+was already cheap here, giving you a template you can read without
+thinking and a class that says everything the component means.
 
 Structure stays in the template. Meaning moves to the class.
 
