@@ -14,9 +14,11 @@ generated from them, and each is mirrored on
 [GitHub Releases](https://github.com/infinite-system/ivue/releases).
 Install any version with `npm i ivue@<version>`.
 
-## [ivue@2.5.0](/releases/2.5.0) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.5.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-5-0}
+## [ivue@2.5.0](/releases/2.5.0) <span class="new-badge">NEW</span> <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.5.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-5-0}
 
 Feature release, zero breaking runtime changes. Three stories: the props-contract system gets its missing piece (definePropTypes, and defaults maps that no longer need Omit), Static() fixes a re-wrap bug in deep subclass chains, and the shipped standard hardens — every override says override, private is banned, and a runnable gate enforces the rules in CI.
+
+<p class="release-date">Released August 31, 2026</p>
 
 ## [ivue@2.4.0](/releases/2.4.0) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.4.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-4-0}
 
