@@ -50,11 +50,14 @@ export class $MediaField extends Field.$Class {
       canRenameCaption: { type: Boolean as PropType<boolean> },
       canRemove: { type: Boolean as PropType<boolean> },
       /**
-       * Runner implementation — pass a subclass's `Class` to swap the logic
-       * that drives the component (the class-extension showcase).
-       * @see ExtendedMediaField.vue
+       * The driving runner — a MediaField subclass CLASS (the base
+       * constructs it with its own props and emit) or a pre-built
+       * INSTANCE (a wrapping component constructs the subclass with ITS
+       * props and emit and hands it down — ExtendedMediaField.vue). Either
+       * way every slot receives it as `field`, and every emit leaves
+       * through the instance, so a subclass can override the emit path.
        */
-      runner: { type: Function as PropType<any> },
+      runner: { type: [Function, Object] as PropType<any> },
     });
   }
 
@@ -332,12 +335,27 @@ export class $MediaField extends Field.$Class {
     this.dragIndex.value = null;
   }
 
+  // --- emits — every event leaves through ONE method, so a subclass can
+  //     intercept, reshape, or silence it with an override ---
+
   emitModel() {
     const rows = this.files.value;
     this.emit(
       'update:modelValue',
       this.multiple ? [...rows] : (rows[0] ?? null),
     );
+  }
+
+  emitUploaded(rows: MediaField.Item[]) {
+    this.emit('uploaded', rows);
+  }
+
+  emitRemoved(row: MediaField.Item) {
+    this.emit('removed', row);
+  }
+
+  emitError(message: string) {
+    this.emit('error', message);
   }
 
   // --- picking & drag-drop ---
@@ -393,7 +411,7 @@ export class $MediaField extends Field.$Class {
   onUploaded(rows: MediaField.Item[]) {
     this.files.value.push(...rows);
     this.emitModel();
-    this.emit('uploaded', rows);
+    this.emitUploaded(rows);
   }
 
   /** Filters by accept list, size limit, and remaining slots; reports every rejection. */
@@ -454,7 +472,12 @@ export class $MediaField extends Field.$Class {
     if (!this.hasFiles) this.previewOpen.value = false;
 
     this.emitModel();
-    this.emit('removed', row);
+    this.emitRemoved(row);
+  }
+
+  /** Whether this row is the one being renamed (a per-row template condition). */
+  isRenaming(row: MediaField.Item) {
+    return this.renameId.value === row.id;
   }
 
   startRename(row: MediaField.Item) {
@@ -570,7 +593,7 @@ export class $MediaField extends Field.$Class {
 
   setError(message: string) {
     this.errorMessage.value = message;
-    this.emit('error', message);
+    this.emitError(message);
   }
 
   clearError() {

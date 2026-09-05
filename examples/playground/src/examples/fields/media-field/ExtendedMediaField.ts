@@ -57,6 +57,24 @@ export class $ExtendedMediaField extends MediaField.$Class {
     return this.formatBytes(this.totalSize);
   }
 
+  // --- per-row template conditions (named — no logic in the template) ---
+
+  isCaptioning(row: MediaField.Item) {
+    return this.captionId.value === row.id;
+  }
+
+  isCopied(row: MediaField.Item) {
+    return this.copiedId.value === row.id;
+  }
+
+  copyIcon(row: MediaField.Item) {
+    return this.isCopied(row) ? 'check' : 'link';
+  }
+
+  copyLabel(row: MediaField.Item) {
+    return this.isCopied(row) ? 'Copied!' : 'Copy URL';
+  }
+
   // --- sorting ---
 
   sortFiles(): MediaField.Item[] {

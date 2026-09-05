@@ -1,8 +1,11 @@
 <script lang="ts" setup>
 // ExtendedMediaField.vue — demonstrates BOTH extension mechanisms at once:
-//   1. CLASS extension: `:runner="ExtendedMediaField.Class"` makes the base
-//      MediaField.vue construct the subclass — every slot receives it as
-//      `field`, so injected templates call the subclass's extra members.
+//   1. CLASS extension: this wrapper constructs the SUBCLASS instance with
+//      its own props and emit and hands it to the base through `runner` —
+//      one object drives the base's behavior and this template's tiles,
+//      every slot receives it as `field`, and every emit leaves through the
+//      instance's methods (overridable) straight to this component's
+//      listeners; nothing is re-emitted by hand.
 //   2. TEMPLATE injection: the `item` slot REPLACES the base's per-file list
 //      row with a square thumbnail tile — the base renders list rows, this
 //      component pulls in a completely different item template while the
@@ -17,6 +20,19 @@ const props = defineProps(ExtendedMediaField.Class.props);
 /** Object-declared emits — ExtractEmitTypes derives the callable type. */
 const emit = defineEmits(ExtendedMediaField.Class.emits) as ExtendedMediaField.Emits;
 
+const field = new ExtendedMediaField.Class(props, emit);
+
+// THE STATE DESTRUCTURE — the refs this template touches; the slot
+// templates below read them as setup bindings (auto-unwrapped) while
+// the slot's `field` carries the methods and derivations.
+const {
+  // state refs — the v-model targets of the inline editors
+  renameDraft,
+  captionDraft,
+} = field;
+
+defineExpose(field as ExtendedMediaField.Instance);
+
 /** Square tile edge — v-bound into the grid styles below. */
 const tileSize = `${props.thumbnailSize ?? 132}px`;
 
@@ -30,11 +46,7 @@ const vFocus = {
   <MediaField
     v-bind="props"
     class="extended-media"
-    :runner="ExtendedMediaField.Class"
-    @update:model-value="(value) => emit('update:modelValue', value)"
-    @uploaded="(rows) => emit('uploaded', rows)"
-    @removed="(row) => emit('removed', row)"
-    @error="(message) => emit('error', message)"
+    :runner="field"
   >
     <!-- SORT TOGGLE + TOTAL SIZE — injected after the base header -->
     <template #after--header="{ field }">
@@ -131,12 +143,12 @@ const vFocus = {
               flat
               round
               size="10px"
-              :icon="field.copiedId.value === row.id ? 'check' : 'link'"
+              :icon="field.copyIcon(row)"
               color="white"
               @click="field.copyUrl(row)"
             >
               <q-tooltip class="bg-grey-9">
-                {{ field.copiedId.value === row.id ? 'Copied!' : 'Copy URL' }}
+                {{ field.copyLabel(row) }}
               </q-tooltip>
             </q-btn>
             <q-btn
@@ -157,8 +169,8 @@ const vFocus = {
         <!-- NAME / RENAME / SIZE -->
         <div class="extended-media__tile-footer">
           <input
-            v-if="field.renameId.value === row.id"
-            v-model="field.renameDraft.value"
+            v-if="field.isRenaming(row)"
+            v-model="renameDraft"
             v-focus
             class="extended-media__rename-input"
             placeholder="File name"
@@ -174,8 +186,8 @@ const vFocus = {
 
         <!-- CAPTION EDITOR -->
         <input
-          v-if="field.captionId.value === row.id"
-          v-model="field.captionDraft.value"
+          v-if="field.isCaptioning(row)"
+          v-model="captionDraft"
           class="extended-media__caption-input"
           placeholder="Caption"
           @keydown.enter.prevent="field.commitCaption()"

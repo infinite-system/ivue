@@ -24,9 +24,17 @@ const props = defineProps(MediaField.Class.props);
 const emit = defineEmits(MediaField.Class.emits) as MediaField.Emits;
 defineSlots<MediaField.Slots>();
 
-/** Runner implementation: swap the class that drives this component. */
-const RunnerClass = (props.runner ?? MediaField.Class) as typeof MediaField.Class;
-const media = new RunnerClass(props, emit);
+// The runner prop swaps the driving object: a wrapping component passes
+// its OWN pre-built subclass INSTANCE — carrying the wrapper's props and
+// emit, so every event leaves through the wrapper — and this base renders
+// through it; a CLASS runner (or none) is constructed here instead.
+const media =
+  typeof props.runner === 'object' && props.runner !== null
+    ? (props.runner as MediaField.Instance)
+    : new ((props.runner ?? MediaField.Class) as typeof MediaField.Class)(
+        props,
+        emit,
+      );
 
 const {
   // state refs
