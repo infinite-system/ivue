@@ -94,7 +94,7 @@ const {
         :disabled="resetting"
         @click="example.resetSandbox()"
       >
-        {{ resetting ? 'Resetting…' : 'Reset sandbox data' }}
+        {{ example.resetLabel }}
       </button>
       <span class="mono">
         files live in IndexedDB — private to this browser

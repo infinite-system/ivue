@@ -150,7 +150,7 @@ const {
         :disabled="resetting"
         @click="example.resetSandbox()"
       >
-        {{ resetting ? 'Resetting…' : 'Reset sandbox data' }}
+        {{ example.resetLabel }}
       </button>
       <span class="mono">
         your edits live in localStorage — private to this browser

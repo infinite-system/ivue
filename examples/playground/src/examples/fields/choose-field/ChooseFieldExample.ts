@@ -41,6 +41,10 @@ class $ChooseFieldExample {
     return ref(false);
   }
 
+  get resetLabel() {
+    return this.resetting.value ? 'Resetting…' : 'Reset sandbox data';
+  }
+
   // CONSTANTS — static options for the client-only variations.
   planOptions = [
     { name: 'Hobby', description: 'For side projects', icon: 'rocket_launch' },

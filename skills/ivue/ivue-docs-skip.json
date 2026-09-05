@@ -455,11 +455,6 @@
     "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
   },
   {
-    "path": "examples/playground/src/examples/fields/choose-field/ChooseFieldExample.vue",
-    "check": "template_expressions_carry_no_logic",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
     "path": "examples/playground/src/examples/fields/choose-field/ChooseField.ts",
     "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
     "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
@@ -496,11 +491,6 @@
   },
   {
     "path": "examples/playground/src/examples/fields/media-field/ExtendedMediaField.vue",
-    "check": "template_expressions_carry_no_logic",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/fields/media-field/MediaFieldExample.vue",
     "check": "template_expressions_carry_no_logic",
     "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
   },

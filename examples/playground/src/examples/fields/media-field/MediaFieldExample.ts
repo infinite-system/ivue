@@ -41,6 +41,10 @@ class $MediaFieldExample {
     return ref(false);
   }
 
+  get resetLabel() {
+    return this.resetting.value ? 'Resetting…' : 'Reset sandbox data';
+  }
+
   async loadPreexisting() {
     const seeded = await ensureSeedMedia();
     // hand the field IDS ONLY — it fetches the rows through ServerApi
