@@ -33,11 +33,8 @@ const media = MediaField.Class.runner(props, emit);
 const {
   // state refs
   isUploading,
-  isHydrating,
   isDragOver,
   errorMessage,
-  renameId,
-  renameDraft,
   previewOpen,
   // element refs
   fileInput,
@@ -69,7 +66,7 @@ defineExpose(media as MediaField.Instance);
           class="media-field__count"
           :label="media.fileCountLabel"
         />
-        <q-spinner v-if="isUploading || isHydrating" size="16px" :thickness="2" />
+        <q-spinner v-if="media.isBusy" size="16px" :thickness="2" />
       </div>
     </slot>
     <slot name="after--header" :field="media" />
@@ -116,12 +113,12 @@ defineExpose(media as MediaField.Instance);
           v-for="(row, index) in media.displayFiles"
           :key="row.id"
           class="media-field__item"
-          :class="{ 'media-field__item--dragging': media.dragIndex.value === index }"
+          :class="{ 'media-field__item--dragging': media.isDragging(index) }"
           :draggable="media.canSort"
           @dragstart="media.onRowDragStart(index)"
           @dragover.prevent
           @drop.prevent="media.onRowDrop(index)"
-          @dragend="media.dragIndex.value = null"
+          @dragend="media.endDrag()"
         >
           <slot name="before--item" :row="row" :index="index" :field="media" />
           <slot name="item" :row="row" :index="index" :field="media">
@@ -132,7 +129,7 @@ defineExpose(media as MediaField.Instance);
                 flat
                 size="xs"
                 round
-                :disable="index === 0"
+                :disable="media.isFirst(index)"
                 @click="media.fileMoveUp(index)"
               >
                 <q-tooltip class="bg-grey-9">Move up</q-tooltip>
@@ -142,7 +139,7 @@ defineExpose(media as MediaField.Instance);
                 flat
                 size="xs"
                 round
-                :disable="index === media.displayFiles.length - 1"
+                :disable="media.isLast(index)"
                 @click="media.fileMoveDown(index)"
               >
                 <q-tooltip class="bg-grey-9">Move down</q-tooltip>
@@ -189,10 +186,10 @@ defineExpose(media as MediaField.Instance);
                 class="media-field__filename-input"
                 placeholder="File Name"
                 type="text"
-                :value="renameId === row.id ? renameDraft : row.name"
+                :value="media.displayName(row)"
                 :title="row.name"
                 @focus="media.startRename(row)"
-                @input="renameDraft = ($event.target as HTMLInputElement).value"
+                @input="media.onRenameInput($event)"
                 @keydown.enter.prevent="media.commitRename()"
                 @keydown.esc="media.cancelRename()"
                 @blur="media.commitRename()"

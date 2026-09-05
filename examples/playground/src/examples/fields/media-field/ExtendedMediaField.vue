@@ -60,7 +60,7 @@ const vFocus = ExtendedMediaField.Class.focusDirective;
         <q-badge
           color="grey-3"
           text-color="black"
-          :label="'Total ' + field.totalSizeLabel"
+          :label="field.totalLabel"
         />
       </div>
     </template>
@@ -196,7 +196,7 @@ const vFocus = ExtendedMediaField.Class.focusDirective;
           :class="{ 'extended-media__caption--empty': !row.caption }"
           @click="field.startCaption(row)"
         >
-          {{ row.caption || 'Add caption…' }}
+          {{ field.captionLabel(row) }}
         </div>
         <div v-else-if="row.caption" class="extended-media__caption">
           {{ row.caption }}

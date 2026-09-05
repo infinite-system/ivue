@@ -248,6 +248,10 @@ export class $MediaField extends Field.$Class {
   get hasError() {
     return !!this.errorMessage.value;
   }
+  /** Uploading or fetching model rows — the header spinner's condition. */
+  get isBusy() {
+    return this.isUploading.value || this.isHydrating.value;
+  }
 
   // --- model hydration & emission ---
 
@@ -334,6 +338,23 @@ export class $MediaField extends Field.$Class {
       this.moveFile(this.dragIndex.value, index);
     }
     this.dragIndex.value = null;
+  }
+
+  endDrag() {
+    this.dragIndex.value = null;
+  }
+
+  /** Whether this row is the one being dragged (a per-row template condition). */
+  isDragging(index: number) {
+    return this.dragIndex.value === index;
+  }
+
+  isFirst(index: number) {
+    return index === 0;
+  }
+
+  isLast(index: number) {
+    return index === this.displayFiles.length - 1;
   }
 
   // --- emits — every event leaves through ONE method, so a subclass can
@@ -479,6 +500,15 @@ export class $MediaField extends Field.$Class {
   /** Whether this row is the one being renamed (a per-row template condition). */
   isRenaming(row: MediaField.Item) {
     return this.renameId.value === row.id;
+  }
+
+  /** The rename input's value — the draft while renaming, the name otherwise. */
+  displayName(row: MediaField.Item) {
+    return this.isRenaming(row) ? this.renameDraft.value : row.name;
+  }
+
+  onRenameInput(event: Event) {
+    this.renameDraft.value = (event.target as HTMLInputElement).value;
   }
 
   startRename(row: MediaField.Item) {

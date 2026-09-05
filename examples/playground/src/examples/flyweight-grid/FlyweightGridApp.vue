@@ -82,10 +82,8 @@ const {
       </div>
 
       <div class="fx-bar">
-        <span class="fx-name">{{ page.activeRef || 'fx' }}</span>
-        <span class="fx-val">{{
-          page.activeSource || 'click a cell to see + edit its formula'
-        }}</span>
+        <span class="fx-name">{{ page.activeRefLabel }}</span>
+        <span class="fx-val">{{ page.activeSourceLabel }}</span>
       </div>
 
       <div ref="scrollEl" class="gc-grid-scroll" @scroll="page.onScroll">
@@ -97,13 +95,13 @@ const {
               :key="col"
               class="gc-cell gc-head-cell"
             >
-              {{ Logic.colLabel(col - 1) }}
+              {{ page.headerLabel(col) }}
             </div>
           </div>
-          <div class="gc-viewport" :style="{ height: page.totalHeight + 'px' }">
+          <div class="gc-viewport" :style="page.viewportStyle">
             <div
               class="gc-rows"
-              :style="{ transform: `translateY(${page.offsetY}px)` }"
+              :style="page.rowsStyle"
             >
               <div
                 v-for="pageRow in visibleRows"
@@ -111,7 +109,7 @@ const {
                 class="gc-row"
               >
                 <div class="gc-rownum">
-                  {{ (pageRow.row + 1).toLocaleString() }}
+                  {{ page.rowNumber(pageRow.row) }}
                 </div>
                 <div
                   v-for="cell in pageRow.cells"

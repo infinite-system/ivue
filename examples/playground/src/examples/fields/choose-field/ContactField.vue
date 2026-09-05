@@ -35,7 +35,7 @@ defineExpose(field as ContactField.Instance);
         :class="{ 'contact-field__option--compact': field.compact }"
       >
         <q-item-section avatar>
-          <ContactAvatar :name="scope.opt?.name ?? ''" :size="field.avatarSize" />
+          <ContactAvatar :name="field.optionName(scope.opt)" :size="field.avatarSize" />
         </q-item-section>
         <q-item-section>
           <q-item-label>{{ scope.opt?.name }}</q-item-label>
@@ -60,7 +60,7 @@ defineExpose(field as ContactField.Instance);
         @remove="() => scope.removeAtIndex(scope.index)"
       >
         <ContactAvatar
-          :name="scope.opt?.name ?? ''"
+          :name="field.optionName(scope.opt)"
           :size="field.chipAvatarSize"
           class="contact-field__chip-avatar"
         />

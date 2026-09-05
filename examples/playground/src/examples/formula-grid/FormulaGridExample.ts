@@ -72,6 +72,12 @@ class $FormulaGridExample {
   get modelCellsLabel() {
     return this.modelCells.toLocaleString();
   }
+  get viewportStyle() {
+    return { height: `${this.$window.totalHeight.value}px` };
+  }
+  get rowsStyle() {
+    return { transform: `translateY(${this.$window.offsetY.value}px)` };
+  }
   get mountedCells() {
     return this.$window.visibleRows.value.length * this.columnCount;
   }
@@ -133,6 +139,11 @@ class $FormulaGridExample {
   /** Header label for a 1-based `v-for="c in columnCount"` column. */
   headerLabel(columnNumber: number) {
     return this.columnLabel(columnNumber - 1);
+  }
+
+  /** The 1-based row number the gutter shows. */
+  rowNumber(row: number) {
+    return row + 1;
   }
 
   isEditing(row: number, col: number) {

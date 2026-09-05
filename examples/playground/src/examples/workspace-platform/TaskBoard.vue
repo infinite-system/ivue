@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import MemberAvatar from './MemberAvatar.vue';
 import { TaskBoard as TaskBoardModel } from './TaskBoard';
-import { PRIORITY_META, STATUS_META, STATUS_ORDER } from './types';
+import { STATUS_META, STATUS_ORDER } from './types';
 
 const board = new TaskBoardModel.Class();
 </script>
@@ -57,14 +57,14 @@ const board = new TaskBoardModel.Class();
           v-if="task.checklist.value.length"
           class="ow-board-card__progress"
         >
-          <i><b :style="{ width: `${task.checklistProgress}%` }"></b></i>
+          <i><b :style="task.checklistBarStyle"></b></i>
           {{ task.completedChecklistCount }}/{{ task.checklist.value.length }}
         </span>
         <footer>
           <span
             class="ow-priority-flag"
-            :style="{ color: PRIORITY_META[task.priority.value].color }"
-            :title="`${PRIORITY_META[task.priority.value].label} priority`"
+            :style="{ color: task.priorityColor }"
+            :title="task.priorityTitle"
           >
             ⚑
           </span>

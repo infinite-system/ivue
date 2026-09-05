@@ -99,6 +99,11 @@ class $ContactField extends ChooseField.$Class {
   }
 
   /** Full mode shows the email line under the name — when there is one. */
+  /** The avatar's name for an option — empty while the option is unresolved. */
+  optionName(option: { name?: string } | null | undefined) {
+    return option?.name ?? '';
+  }
+
   showEmail(option: { email?: string } | undefined): boolean {
     return !this.compact && !!option?.email;
   }

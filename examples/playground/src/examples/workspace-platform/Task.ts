@@ -94,6 +94,18 @@ class $Task {
     );
   }
 
+  get checklistBarStyle() {
+    return { width: `${this.checklistProgress}%` };
+  }
+
+  get priorityColor() {
+    return PRIORITY_META[this.priority.value].color;
+  }
+
+  get priorityTitle() {
+    return `${PRIORITY_META[this.priority.value].label} priority`;
+  }
+
   get dueDayOffset() {
     const due = new Date(`${this.dueDate.value}T12:00:00`);
     const today = new Date();

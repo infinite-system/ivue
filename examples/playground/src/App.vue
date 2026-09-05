@@ -20,7 +20,7 @@ const {
           v-for="example in playground.examples"
           :key="example.slug"
           type="button"
-          :class="{ active: example.slug === playground.activeExample.slug }"
+          :class="{ active: playground.isActive(example) }"
           @click="playground.navigate(example.slug)"
         >
           <span class="title">{{ example.title }}</span>
@@ -41,7 +41,7 @@ const {
       <div class="stage-body">
         <component
           :is="playground.activeComponent"
-          :key="route || playground.activeExample.slug"
+          :key="playground.activeSlug"
         />
       </div>
     </section>

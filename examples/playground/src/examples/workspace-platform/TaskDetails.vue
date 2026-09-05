@@ -105,7 +105,7 @@ const { comment } = details;
             <span>{{ details.task.checklistProgress }}%</span>
           </header>
           <div class="ow-checklist-bar">
-            <i :style="{ width: `${details.task.checklistProgress}%` }"></i>
+            <i :style="details.task.checklistBarStyle"></i>
           </div>
           <label
             v-for="item in details.task.checklist.value"

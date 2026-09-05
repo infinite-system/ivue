@@ -29,13 +29,13 @@ const {
         <div class="k">ivue · new Class()</div>
         <div class="n grad">
           {{ bench.format(ivueMs)
-          }}<BenchmarkWinner v-if="ivueMs !== null" placement="after" />
+          }}<BenchmarkWinner v-if="bench.hasIvueResult" placement="after" />
         </div>
       </div>
       <div>
         <div class="k">
           reactive(new X())
-          <span v-if="reactiveMs !== null"
+          <span v-if="bench.hasReactiveResult"
             >· {{ bench.ratio(reactiveMs) }}</span
           >
         </div>
@@ -44,7 +44,7 @@ const {
       <div>
         <div class="k">
           composable factory
-          <span v-if="composableMs !== null">
+          <span v-if="bench.hasComposableResult">
             · {{ bench.ratio(composableMs) }}
           </span>
         </div>
@@ -58,13 +58,7 @@ const {
         :disabled="running"
         @click="bench.runCreation()"
       >
-        {{
-          running
-            ? 'Running…'
-            : ivueMs === null
-              ? `Create ${INSTANCE_COUNT.toLocaleString()} instances`
-              : 'Run again'
-        }}
+        {{ bench.creationButtonLabel }}
       </button>
     </div>
 
@@ -93,13 +87,7 @@ const {
         :disabled="boxRunning"
         @click="bench.runInteractiveBox()"
       >
-        {{
-          boxRunning
-            ? 'Running…'
-            : boxCreationMs === null
-              ? 'Run the hierarchy benchmark'
-              : 'Run again'
-        }}
+        {{ bench.boxButtonLabel }}
       </button>
     </div>
   </div>

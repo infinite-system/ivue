@@ -36,6 +36,16 @@ class $Playground {
     return this.routeComponents[this.activeExample.slug];
   }
 
+  /** The stage key — the route when set, else the fallback example's slug. */
+  get activeSlug() {
+    return this.route.value || this.activeExample.slug;
+  }
+
+  /** Whether a nav entry is the active one (a per-item template condition). */
+  isActive(example: ExampleEntry) {
+    return example.slug === this.activeExample.slug;
+  }
+
   readHash() {
     return location.hash.replace(/^#\/?/, '');
   }

@@ -56,11 +56,19 @@ export class $ExtendedMediaField extends MediaField.$Class {
     return this.formatBytes(this.totalSize);
   }
   /** Square tile edge — the grid styles v-bind it. */
+  get totalLabel() {
+    return `Total ${this.totalSizeLabel}`;
+  }
   get tileSize() {
     return `${this.props.thumbnailSize}px`;
   }
 
   // --- per-row template conditions (named — no logic in the template) ---
+
+  /** The caption cell's text — the caption, or the prompt to add one. */
+  captionLabel(row: MediaField.Item) {
+    return row.caption || 'Add caption…';
+  }
 
   isCaptioning(row: MediaField.Item) {
     return this.captionId.value === row.id;

@@ -53,7 +53,7 @@ const {
         @click="example.togglePlay()"
       >
         <span class="etm-btn-icon">{{ example.playButtonIcon }}</span>
-        {{ example.isPlaying ? 'pause the glide' : 'glide' }}
+        {{ example.playButtonLabel }}
       </button>
       <label class="etm-speed">
         speed

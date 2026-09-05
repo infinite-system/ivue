@@ -23,6 +23,23 @@ class $BenchmarksExample {
   get instanceCountLabel() {
     return INSTANCE_COUNT.toLocaleString();
   }
+  get hasIvueResult() {
+    return this.ivueMs.value !== null;
+  }
+  get hasReactiveResult() {
+    return this.reactiveMs.value !== null;
+  }
+  get hasComposableResult() {
+    return this.composableMs.value !== null;
+  }
+  get creationButtonLabel() {
+    if (this.running.value) return 'Running…';
+    return this.hasIvueResult ? 'Run again' : `Create ${this.instanceCountLabel} instances`;
+  }
+  get boxButtonLabel() {
+    if (this.boxRunning.value) return 'Running…';
+    return this.boxCreationMs.value === null ? 'Run the hierarchy benchmark' : 'Run again';
+  }
 
   get ivueMs() {
     return ref<number | null>(null);

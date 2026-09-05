@@ -72,20 +72,18 @@ const {
           </div>
           <div
             class="gc-viewport"
-            :style="{ height: grid.window.totalHeight.value + 'px' }"
+            :style="grid.viewportStyle"
           >
             <div
               class="gc-rows"
-              :style="{
-                transform: `translateY(${grid.window.offsetY.value}px)`,
-              }"
+              :style="grid.rowsStyle"
             >
               <div
                 v-for="row in grid.window.visibleRows.value"
                 :key="row"
                 class="gc-row"
               >
-                <div class="gc-rownum">{{ row + 1 }}</div>
+                <div class="gc-rownum">{{ grid.rowNumber(row) }}</div>
                 <div
                   v-for="(cell, columnIndex) in sheet!.grid[row]"
                   :key="columnIndex"

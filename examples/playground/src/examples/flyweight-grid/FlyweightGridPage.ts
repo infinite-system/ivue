@@ -151,19 +151,6 @@ class $FlyweightGridPage {
     return computed(() => this.buildVisibleRows());
   }
 
-  protected buildVisibleRows(): FlyweightGridPage.PageRow[] {
-    const sheet = this.sheet.value;
-    if (!sheet) return [];
-    const pageRows: FlyweightGridPage.PageRow[] = [];
-    for (let row = this.startRow; row < this.endRow; row++) {
-      const cells: FlyweightCell.Instance[] = new Array(FlyweightLogic.Class.COLS);
-      for (let col = 0; col < FlyweightLogic.Class.COLS; col++)
-        cells[col] = new FlyweightCell.Class(sheet, row, col);
-      pageRows.push({ row, cells });
-    }
-    return pageRows;
-  }
-
   /** Live full-column totals (block tier: 245 edges each). liveFormula is
    *  cached on the sheet, so rebuilding this array per render is pointer
    *  work — a plain getter suffices. */
@@ -197,8 +184,33 @@ class $FlyweightGridPage {
       ? this.sheet.value.sourceAt(editing.row, editing.col)
       : '';
   }
+  get activeRefLabel() {
+    return this.activeRef || 'fx';
+  }
+  get activeSourceLabel() {
+    return this.activeSource || 'click a cell to see + edit its formula';
+  }
+  get viewportStyle() {
+    return { height: `${this.totalHeight}px` };
+  }
+  get rowsStyle() {
+    return { transform: `translateY(${this.offsetY}px)` };
+  }
 
   // --- methods ---
+  protected buildVisibleRows(): FlyweightGridPage.PageRow[] {
+    const sheet = this.sheet.value;
+    if (!sheet) return [];
+    const pageRows: FlyweightGridPage.PageRow[] = [];
+    for (let row = this.startRow; row < this.endRow; row++) {
+      const cells: FlyweightCell.Instance[] = new Array(FlyweightLogic.Class.COLS);
+      for (let col = 0; col < FlyweightLogic.Class.COLS; col++)
+        cells[col] = new FlyweightCell.Class(sheet, row, col);
+      pageRows.push({ row, cells });
+    }
+    return pageRows;
+  }
+
   createModel() {
     this.editing.value = null;
     const startedAt = performance.now();
@@ -214,6 +226,16 @@ class $FlyweightGridPage {
 
   onScroll(event: Event) {
     this.scrollTop.value = (event.target as HTMLElement).scrollTop;
+  }
+
+  /** Header label for a 1-based `v-for="column in COLS"` column. */
+  headerLabel(columnNumber: number) {
+    return FlyweightLogic.Class.colLabel(columnNumber - 1);
+  }
+
+  /** The 1-based, thousands-grouped row number the gutter shows. */
+  rowNumber(row: number) {
+    return (row + 1).toLocaleString();
   }
 
   isEditing(row: number, col: number) {

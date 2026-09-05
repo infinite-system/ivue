@@ -10,8 +10,7 @@ import './workspace.css';
 
 const example = new WorkspacePlatformExampleModel.Class();
 const workspace = example.workspace;
-const { assigneeFilter, priorityFilter, search, selectedProjectId, view } =
-  workspace;
+const { assigneeFilter, priorityFilter, search } = workspace;
 const { creatingTask, newTaskTitle } = example;
 </script>
 
@@ -58,7 +57,7 @@ const { creatingTask, newTaskTitle } = example;
           </header>
           <button
             type="button"
-            :class="{ active: selectedProjectId === 'all' }"
+            :class="{ active: workspace.isAllSelected }"
             @click="workspace.selectProject('all')"
           >
             <i class="ow-everything ow-symbol">◎</i>
@@ -69,7 +68,7 @@ const { creatingTask, newTaskTitle } = example;
             v-for="project in workspace.projects.value"
             :key="project.id"
             type="button"
-            :class="{ active: selectedProjectId === project.id }"
+            :class="{ active: workspace.isSelected(project) }"
             @click="workspace.selectProject(project.id)"
           >
             <i class="ow-symbol" :style="{ color: project.color }">{{
@@ -89,7 +88,7 @@ const { creatingTask, newTaskTitle } = example;
             <MemberAvatar :member="member" size="small" />
             <i
               ><b
-                :style="{ width: `${workspace.workloadPercent(member)}%` }"
+                :style="{ width: workspace.workloadWidth(member) }"
               ></b
             ></i>
             <small>{{ workspace.workloadFor(member.id) }}h</small>
@@ -135,11 +134,9 @@ const { creatingTask, newTaskTitle } = example;
           <div class="ow-page-title">
             <span
               class="ow-page-icon"
-              :style="{
-                background: workspace.selectedProject?.color ?? '#6366f1',
-              }"
+              :style="{ background: workspace.selectedProjectColor }"
             >
-              {{ workspace.selectedProject?.icon ?? '◎' }}
+              {{ workspace.selectedProjectIcon }}
             </span>
             <div>
               <small>PROJECT</small>
@@ -152,13 +149,13 @@ const { creatingTask, newTaskTitle } = example;
             <article>
               <span>Progress</span>
               <strong>{{ workspace.completionRate }}%</strong>
-              <i><b :style="{ width: `${workspace.completionRate}%` }"></b></i>
+              <i><b :style="{ width: workspace.completionWidth }"></b></i>
             </article>
             <article>
               <span>Active</span><strong>{{ workspace.activeCount }}</strong
               ><small>in flight</small>
             </article>
-            <article :class="{ danger: workspace.overdueCount > 0 }">
+            <article :class="{ danger: workspace.hasOverdue }">
               <span>Overdue</span><strong>{{ workspace.overdueCount }}</strong
               ><small>needs attention</small>
             </article>
@@ -169,15 +166,15 @@ const { creatingTask, newTaskTitle } = example;
           <div class="ow-view-tabs">
             <button
               type="button"
-              :class="{ active: view === 'list' }"
-              @click="view = 'list'"
+              :class="{ active: workspace.isListView }"
+              @click="workspace.showList()"
             >
               <span class="ow-symbol">☷</span> List
             </button>
             <button
               type="button"
-              :class="{ active: view === 'board' }"
-              @click="view = 'board'"
+              :class="{ active: !workspace.isListView }"
+              @click="workspace.showBoard()"
             >
               <span class="ow-symbol">▦</span> Board
             </button>
@@ -242,10 +239,10 @@ const { creatingTask, newTaskTitle } = example;
 
         <div class="ow-content">
           <div class="ow-work-surface">
-            <TaskList v-if="view === 'list'" />
+            <TaskList v-if="workspace.isListView" />
             <TaskBoard v-else />
             <div
-              v-if="workspace.filteredTasks.length === 0"
+              v-if="workspace.hasNoTasks"
               class="ow-no-results"
             >
               <span>⌕</span>

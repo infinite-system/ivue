@@ -70,6 +70,10 @@ class $MediaFieldPreviewDialog {
     return this.isMaximized.value ? 'close_fullscreen' : 'open_in_full';
   }
 
+  get maximizeLabel() {
+    return this.isMaximized.value ? 'Minimize' : 'Maximize';
+  }
+
   get isOpenModel() {
     return computed({
       get: () => this.isOpenValue(),
@@ -206,7 +210,7 @@ defineExpose(dialog as MediaFieldPreviewDialog.Instance);
             class="media-preview__name-input"
             :value="renameDraft"
             autofocus
-            @input="(event: any) => (renameDraft = event.target.value)"
+            @input="dialog.field.onRenameInput($event)"
             @keyup.enter="dialog.field.commitRename()"
             @keyup.esc="dialog.field.cancelRename()"
             @blur="dialog.field.commitRename()"
@@ -260,7 +264,7 @@ defineExpose(dialog as MediaFieldPreviewDialog.Instance);
             @click="dialog.toggleMaximized()"
           >
             <q-tooltip class="bg-grey-9">
-              {{ isMaximized ? 'Minimize' : 'Maximize' }}
+              {{ dialog.maximizeLabel }}
             </q-tooltip>
           </q-btn>
           <q-btn flat round icon="check" color="primary" @click="dialog.close()">

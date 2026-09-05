@@ -40,6 +40,12 @@ class $Sensor {
   get lastChangeLabel() {
     return this.lastChange.value || '—';
   }
+  get watchingClass() {
+    return this.watching.value ? 'grad' : '';
+  }
+  get toggleLabel() {
+    return this.watching.value ? 'Stop watch' : 'Start $watch';
+  }
 
   start() {
     if (this.watching.value) return;
@@ -60,6 +66,12 @@ class $Sensor {
 
   /** Stop the watchers ONLY — `{ reset: false }` keeps every cached cell
    *  and its current value; start() resumes in a fresh scope. */
+  /** One button for both directions — stop when watching, start otherwise. */
+  toggleWatch() {
+    if (this.watching.value) this.stop();
+    else this.start();
+  }
+
   suspend() {
     this.$stopEffects({ reset: false });
     this.stopWatcher.value = null;

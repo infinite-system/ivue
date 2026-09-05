@@ -34,7 +34,7 @@ const {
     <div class="stats__bar">
       <div
         class="stats__fill"
-        :style="{ width: project.progressPercent + '%' }"
+        :style="project.progressBarStyle"
       />
     </div>
   </div>

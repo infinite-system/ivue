@@ -24,7 +24,6 @@ const choose = ChooseField.Class.runner(props, emit);
 const {
   // state refs
   displayedOptions,
-  activeVariantIndex,
   // computed refs
   model,
   // element refs
@@ -80,17 +79,17 @@ defineExpose(choose as ChooseField.Instance);
   >
     <!-- Every active slot forwards through, wrapped in before--/after-- hooks. -->
     <template v-for="slot of activeSlots" :key="slot" #[slot]="scope">
-      <template v-if="slot === 'prepend'">
-        <slot name="before--prepend" v-bind="scope || {}" />
-        <slot name="prepend" v-bind="scope || {}">
+      <template v-if="choose.isPrependSlot(slot)">
+        <slot name="before--prepend" v-bind="choose.slotScope(scope)" />
+        <slot name="prepend" v-bind="choose.slotScope(scope)">
           <q-icon v-if="choose.icon" :name="choose.icon" />
         </slot>
-        <slot name="after--prepend" v-bind="scope || {}" />
+        <slot name="after--prepend" v-bind="choose.slotScope(scope)" />
       </template>
 
-      <template v-else-if="slot === 'selected-item'">
-        <slot name="before--selected-item" v-bind="scope || {}" />
-        <slot name="selected-item" v-bind="scope || {}">
+      <template v-else-if="choose.isSelectedItemSlot(slot)">
+        <slot name="before--selected-item" v-bind="choose.slotScope(scope)" />
+        <slot name="selected-item" v-bind="choose.slotScope(scope)">
           <q-chip
             v-if="choose.useChips"
             :key="scope.index"
@@ -111,14 +110,14 @@ defineExpose(choose as ChooseField.Instance);
             {{ choose.optionLabelOf(scope.opt) }}
           </span>
         </slot>
-        <slot name="after--selected-item" v-bind="scope || {}" />
+        <slot name="after--selected-item" v-bind="choose.slotScope(scope)" />
       </template>
 
-      <template v-else-if="slot === 'before-options'">
-        <slot name="before--before-options" v-bind="scope || {}" />
-        <slot name="before-options" v-bind="scope || {}">
+      <template v-else-if="choose.isBeforeOptionsSlot(slot)">
+        <slot name="before--before-options" v-bind="choose.slotScope(scope)" />
+        <slot name="before-options" v-bind="choose.slotScope(scope)">
           <!-- VARIANT SWITCHER -->
-          <div v-if="choose.variants.length > 1" class="ivue-choose__variants">
+          <div v-if="choose.hasVariants" class="ivue-choose__variants">
             <q-btn
               v-for="(variant, index) in choose.variants"
               :key="variant.label"
@@ -127,19 +126,19 @@ defineExpose(choose as ChooseField.Instance);
               dense
               class="ivue-choose__variant-btn"
               :icon="variant.icon"
-              :color="choose.isActiveVariant(index) ? 'primary' : 'grey-8'"
-              :class="{ 'ivue-choose__variant--active': activeVariantIndex === index }"
+              :color="choose.variantColor(index)"
+              :class="{ 'ivue-choose__variant--active': choose.isActiveVariant(index) }"
               @click="choose.setVariant(index)"
               >{{ variant.label }}</q-btn
             >
           </div>
         </slot>
-        <slot name="after--before-options" v-bind="scope || {}" />
+        <slot name="after--before-options" v-bind="choose.slotScope(scope)" />
       </template>
 
-      <template v-else-if="slot === 'option'">
-        <slot name="before--option" v-bind="scope || {}" />
-        <slot name="option" v-bind="scope || {}">
+      <template v-else-if="choose.isOptionSlot(slot)">
+        <slot name="before--option" v-bind="choose.slotScope(scope)" />
+        <slot name="option" v-bind="choose.slotScope(scope)">
           <q-item
             v-bind="scope.itemProps"
             class="ivue-choose__option"
@@ -150,7 +149,7 @@ defineExpose(choose as ChooseField.Instance);
             </q-item-section>
             <q-item-section>
               <q-item-label v-if="scope.opt?.createTerm">
-                {{ choose.createLabel || 'Create new' }}
+                {{ choose.createLabel }}
                 <span class="ivue-choose__create-term">{{
                   scope.opt.createTerm
                 }}</span>
@@ -164,13 +163,13 @@ defineExpose(choose as ChooseField.Instance);
             </q-item-section>
           </q-item>
         </slot>
-        <slot name="after--option" v-bind="scope || {}" />
+        <slot name="after--option" v-bind="choose.slotScope(scope)" />
       </template>
 
-      <template v-else-if="slot === 'no-option'">
-        <slot name="before--no-option" v-bind="scope || {}" />
-        <slot name="no-option" v-bind="scope || {}">
-          <div v-if="choose.variants.length > 1" class="ivue-choose__variants">
+      <template v-else-if="choose.isNoOptionSlot(slot)">
+        <slot name="before--no-option" v-bind="choose.slotScope(scope)" />
+        <slot name="no-option" v-bind="choose.slotScope(scope)">
+          <div v-if="choose.hasVariants" class="ivue-choose__variants">
             <q-btn
               v-for="(variant, index) in choose.variants"
               :key="variant.label"
@@ -179,14 +178,14 @@ defineExpose(choose as ChooseField.Instance);
               dense
               class="ivue-choose__variant-btn"
               :icon="variant.icon"
-              :color="choose.isActiveVariant(index) ? 'primary' : 'grey-8'"
+              :color="choose.variantColor(index)"
               @click="choose.setVariant(index)"
               >{{ variant.label }}</q-btn
             >
           </div>
           <!-- CREATE AFFORDANCE when nothing matches -->
           <q-item
-            v-if="choose.canCreate && scope.inputValue"
+            v-if="choose.canCreateFrom(scope)"
             clickable
             @click="choose.createOption()"
           >
@@ -201,12 +200,12 @@ defineExpose(choose as ChooseField.Instance);
             <q-item-section class="text-grey">No results</q-item-section>
           </q-item>
         </slot>
-        <slot name="after--no-option" v-bind="scope || {}" />
+        <slot name="after--no-option" v-bind="choose.slotScope(scope)" />
       </template>
 
-      <template v-else-if="slot === 'append' && choose.canCreate">
-        <slot name="before--append" v-bind="scope || {}" />
-        <slot name="append" v-bind="scope || {}">
+      <template v-else-if="choose.isCreateAppendSlot(slot)">
+        <slot name="before--append" v-bind="choose.slotScope(scope)" />
+        <slot name="append" v-bind="choose.slotScope(scope)">
           <!-- CREATE NEW PLUS ICON -->
           <q-btn round dense flat icon="add" @click.stop.prevent="choose.createOption()">
             <q-tooltip anchor="top middle" self="bottom middle" :offset="[0, 5]">
@@ -214,14 +213,14 @@ defineExpose(choose as ChooseField.Instance);
             </q-tooltip>
           </q-btn>
         </slot>
-        <slot name="after--append" v-bind="scope || {}" />
+        <slot name="after--append" v-bind="choose.slotScope(scope)" />
       </template>
 
       <!-- Any other QSelect slot the consumer supplied: forward it wrapped. -->
       <template v-else>
-        <slot :name="`before--${slot}` as any" v-bind="scope || {}" />
-        <slot :name="slot as any" v-bind="scope || {}" />
-        <slot :name="`after--${slot}` as any" v-bind="scope || {}" />
+        <slot :name="choose.beforeSlotName(slot) as any" v-bind="choose.slotScope(scope)" />
+        <slot :name="slot as any" v-bind="choose.slotScope(scope)" />
+        <slot :name="choose.afterSlotName(slot) as any" v-bind="choose.slotScope(scope)" />
       </template>
     </template>
   </q-select>

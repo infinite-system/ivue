@@ -7,7 +7,7 @@ import { Sensor } from '@examples/lifecycle/Sensor';
 // unmount disposes it — no hook to write here.
 const sensor = new Sensor.Class();
 // the state destructure
-const { temp, watching, fired, lastChange } = sensor;
+const { temp, fired, lastChange } = sensor;
 </script>
 
 <template>
@@ -22,8 +22,8 @@ const { temp, watching, fired, lastChange } = sensor;
       </div>
       <div>
         <div class="d-k">watcher</div>
-        <div class="d-n" :class="watching ? 'grad' : ''">
-          {{ watching ? 'ON' : 'off' }}
+        <div class="d-n" :class="sensor.watchingClass">
+          {{ sensor.watchingLabel }}
         </div>
       </div>
       <div>
@@ -45,9 +45,9 @@ const { temp, watching, fired, lastChange } = sensor;
       <button
         class="d-btn primary"
         type="button"
-        @click="watching ? sensor.stop() : sensor.start()"
+        @click="sensor.toggleWatch()"
       >
-        {{ watching ? 'Stop watch' : 'Start $watch' }}
+        {{ sensor.toggleLabel }}
       </button>
       <button class="d-btn" type="button" @click="sensor.suspend">Suspend (reset: false)</button>
       <button class="d-btn" type="button" @click="sensor.dispose">Dispose ($stopEffects)</button>

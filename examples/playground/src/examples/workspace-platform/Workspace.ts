@@ -102,6 +102,22 @@ class $Workspace {
     );
   }
 
+  get isAllSelected() {
+    return this.selectedProjectId.value === 'all';
+  }
+
+  get isListView() {
+    return this.view.value === 'list';
+  }
+
+  get selectedProjectIcon() {
+    return this.selectedProject?.icon ?? '◎';
+  }
+
+  get selectedProjectColor() {
+    return this.selectedProject?.color ?? '#6366f1';
+  }
+
   get title() {
     return this.selectedProject?.name.value ?? 'Everything';
   }
@@ -158,6 +174,18 @@ class $Workspace {
     return this.projectTasks.filter((task) => task.isOverdue).length;
   }
 
+  get completionWidth() {
+    return `${this.completionRate}%`;
+  }
+
+  get hasOverdue() {
+    return this.overdueCount > 0;
+  }
+
+  get hasNoTasks() {
+    return this.filteredTasks.length === 0;
+  }
+
   get filterCount() {
     return (
       Number(this.priorityFilter.value !== 'all') +
@@ -197,6 +225,23 @@ class $Workspace {
       100,
       Math.round((this.workloadFor(member.id) / member.capacity.value) * 100),
     );
+  }
+
+  /** Whether a project is the selected one (a per-item template condition). */
+  isSelected(project: Project.Model) {
+    return this.selectedProjectId.value === project.id;
+  }
+
+  workloadWidth(member: Member.Model) {
+    return `${this.workloadPercent(member)}%`;
+  }
+
+  showList() {
+    this.view.value = 'list';
+  }
+
+  showBoard() {
+    this.view.value = 'board';
   }
 
   selectProject(projectId: string | 'all') {

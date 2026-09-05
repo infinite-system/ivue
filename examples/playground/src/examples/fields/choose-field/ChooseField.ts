@@ -425,12 +425,66 @@ class $ChooseField extends Field.$Class {
     return this.activeVariant?.optionSort ?? this.props.optionSort;
   }
 
+  /** The variant switcher only renders when there is a choice to make. */
+  get hasVariants() {
+    return this.variants.length > 1;
+  }
+
   isActiveVariant(index: number) {
     return this.activeVariantIndex.value === index;
   }
 
   setVariant(index: number) {
     this.activeVariantIndex.value = index;
+  }
+
+  variantColor(index: number) {
+    return this.isActiveVariant(index) ? 'primary' : 'grey-8';
+  }
+
+  // --- slot forwarding (every QSelect slot, wrapped before--/after--) ---
+
+  /** QSelect hands some slots no scope; forwarding always binds an object. */
+  slotScope(scope: unknown): Record<string, any> {
+    return (scope as Record<string, any>) || {};
+  }
+
+  beforeSlotName(slot: string) {
+    return `before--${slot}`;
+  }
+
+  afterSlotName(slot: string) {
+    return `after--${slot}`;
+  }
+
+  isPrependSlot(slot: string) {
+    return slot === 'prepend';
+  }
+
+  isSelectedItemSlot(slot: string) {
+    return slot === 'selected-item';
+  }
+
+  isBeforeOptionsSlot(slot: string) {
+    return slot === 'before-options';
+  }
+
+  isOptionSlot(slot: string) {
+    return slot === 'option';
+  }
+
+  isNoOptionSlot(slot: string) {
+    return slot === 'no-option';
+  }
+
+  /** The append slot is only taken over when there is a create affordance to show. */
+  isCreateAppendSlot(slot: string) {
+    return slot === 'append' && this.canCreate;
+  }
+
+  /** Whether the typed text can become a new option. */
+  canCreateFrom(scope: Record<string, any>) {
+    return this.canCreate && !!scope.inputValue;
   }
 
   // --- server query (derived, all plain) ---

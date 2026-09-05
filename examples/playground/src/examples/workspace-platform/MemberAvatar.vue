@@ -1,23 +1,14 @@
 <script setup lang="ts">
-import type { Member } from './Member';
+import { MemberAvatar } from './MemberAvatar';
 
-withDefaults(
-  defineProps<{
-    member?: Member.Model;
-    size?: 'small' | 'medium' | 'large';
-  }>(),
-  { size: 'medium' },
-);
+const props = defineProps(MemberAvatar.Class.props);
+
+const avatar = new MemberAvatar.Class(props as MemberAvatar.Props);
 </script>
 
 <template>
-  <span
-    class="ow-avatar"
-    :class="`ow-avatar--${size}`"
-    :style="{ background: member?.color ?? '#94a3b8' }"
-    :title="member?.name ?? 'Unassigned'"
-  >
-    <span class="ow-avatar__initials">{{ member?.initials ?? '?' }}</span>
-    <i v-if="member?.online.value" aria-label="Online"></i>
+  <span class="ow-avatar" :class="avatar.sizeClass" :style="avatar.style" :title="avatar.name">
+    <span class="ow-avatar__initials">{{ avatar.initials }}</span>
+    <i v-if="avatar.isOnline" aria-label="Online"></i>
   </span>
 </template>

@@ -1,13 +1,15 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ placement?: 'before' | 'after' }>(), {
-  placement: 'before',
-});
+import { BenchmarkWinner } from './BenchmarkWinner';
+
+const props = defineProps(BenchmarkWinner.Class.props);
+
+const winner = new BenchmarkWinner.Class(props as BenchmarkWinner.Props);
 </script>
 
 <template>
   <span
     class="benchmark-winner"
-    :class="`benchmark-winner--${placement}`"
+    :class="winner.placementClass"
     role="img"
     aria-label="Best measured result among fully reactive implementations"
     title="Best measured result among fully reactive implementations"

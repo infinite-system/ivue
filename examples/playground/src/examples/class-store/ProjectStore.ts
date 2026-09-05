@@ -73,6 +73,9 @@ class $ProjectStore {
     const total = this.tasks.value.length;
     return total === 0 ? 0 : Math.round((this.completedCount / total) * 100);
   }
+  get progressBarStyle() {
+    return { width: `${this.progressPercent}%` };
+  }
   get visibleTasks(): ProjectStore.ProjectTask[] {
     if (this.filter.value === 'active') {
       return this.tasks.value.filter((task) => !task.done);
