@@ -1914,15 +1914,16 @@ a.feature-inline-link {
 .blog-share__button--icon {
   padding: 7px;
 }
+/* hover joins the blue family (links, search) — never the brand purple */
 .blog-share__button:hover {
-  color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
+  color: var(--ivue-link-2);
+  background: color-mix(in srgb, var(--ivue-link-2) 10%, transparent);
 }
 /* press feedback: compress + brighten so every tap visibly answers */
 .blog-share__button:active {
   transform: scale(0.94);
-  color: var(--vp-c-brand-1);
-  background: color-mix(in srgb, var(--vp-c-brand-1) 22%, var(--vp-c-brand-soft));
+  color: var(--ivue-link-hover-2);
+  background: color-mix(in srgb, var(--ivue-link-2) 22%, transparent);
 }
 .blog-share__button svg {
   width: 15px;
@@ -1948,13 +1949,28 @@ a.feature-inline-link {
   align-items: center;
   gap: 6px;
 }
+/* one height for every button on the row — the icon squares and the
+   Share… / Copy link pills share a 32px box, so the row reads as one
+   control strip; the border takes the hover blue with the ink */
 .blog-share--doc .blog-share__button {
+  box-sizing: border-box;
+  height: 32px;
   border: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg-soft);
-  padding: 6px 12px;
+  padding: 0 12px;
+  line-height: 1;
+  transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
 }
 .blog-share--doc .blog-share__button--icon {
-  padding: 7px 8px;
+  width: 32px;
+  padding: 0;
+  justify-content: center;
+}
+.blog-share--doc .blog-share__button:hover {
+  border-color: color-mix(in srgb, var(--ivue-link-2) 60%, var(--vp-c-divider));
+}
+.blog-share--doc .blog-share__button:active {
+  border-color: var(--ivue-link-hover-2);
 }
 /* author card under the article */
 .VPDoc .blog-author {
