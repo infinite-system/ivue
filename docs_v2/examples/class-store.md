@@ -100,11 +100,25 @@ The store exposes `use()` and nothing else. Every consumer is the same
 shape: it calls `ProjectStore.Class.use()`, destructures the cells it
 writes as state bindings, and reads derivations and actions dotted. There
 is no second surface to learn, and nothing for a new consumer to copy
-except the shape the standard already prescribes. Wrapping an instance in
-`reactive()` remains what the standard calls it, a concession at an
-interop boundary
+except the shape the standard already prescribes.
+
+If you prefer Pinia-style reads with no `.value`, the view is one line at
+your own boundary, and the store does not need to know:
+
+```ts
+const project = reactive(ProjectStore.Class.use());
+
+project.projectName = 'Artemis'; // ref write, no .value
+```
+
+Vue memoizes the proxy per target, so every call returns the same view of
+the same instance; there is nothing to cache and no static to add. It
+stays what the standard calls it, a concession at an interop boundary
 ([the unwrapping-surface invariant](/guide/standard#the-unwrapping-surface-typing-invariant)),
-not a store API.
+because a proxied read costs five to eighteen times a raw one
+([measured](/guide/performance#raw-access-avoids-proxy-overhead)), and
+`use()` already returns the `Instance` type that makes those writes
+typecheck.
 
 ## What to notice
 
