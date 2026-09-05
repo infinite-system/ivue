@@ -73,7 +73,7 @@ context is INJECTED, not requested:
 ## Two-step dispatch (invar law): the BRIEF, then the GOAL
 
 1. **The brief** is the preload's head: `## In plain words` (2–3
-   sentences a ten-year-old could follow), the task, a STRICT output
+   sentences with no jargon, direct transmission), the task, a STRICT output
    format (machine-mergeable tables), the agent's LANE (disjoint
    angles per agent — overlap only when convergence-validation is
    wanted), and `## THE DONE CHECKLIST` — numbered checkpoints

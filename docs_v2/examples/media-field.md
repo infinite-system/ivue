@@ -3,7 +3,7 @@ title: 'Example: Advanced Media Uploader'
 description: 'A production-grade media field — drag-drop uploads, thumbnails, lightbox, rename, download — plus a class-extended variant that adds features without copying a template.'
 aside: false
 pageClass: benchmarks-wide examples-page
-relatedPosts: [inheritance-exile, the-options-api-everyone-wanted]
+relatedPosts: [runtime-props-all-along, inheritance-exile, the-options-api-everyone-wanted]
 ---
 
 <script setup>

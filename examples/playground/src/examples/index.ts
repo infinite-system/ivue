@@ -3,6 +3,7 @@ import { manifest as counter } from './counter/manifest';
 import { manifest as derived } from './derived/manifest';
 import { manifest as lifecycle } from './lifecycle/manifest';
 import { manifest as inheritance } from './inheritance/manifest';
+import { manifest as propsContract } from './props-contract/manifest';
 import { manifest as composable } from './composable/manifest';
 import { manifest as classStore } from './class-store/manifest';
 import { manifest as workspacePlatform } from './workspace-platform/manifest';
@@ -48,6 +49,10 @@ export const examples: ExampleEntry[] = [
   {
     ...inheritance,
     load: () => import('./inheritance/InheritanceExample.vue'),
+  },
+  {
+    ...propsContract,
+    load: () => import('./props-contract/PropsContractExample.vue'),
   },
   { ...composable, load: () => import('./composable/ComposableExample.vue') },
   // Advanced

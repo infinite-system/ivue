@@ -1,7 +1,7 @@
 ---
 title: Extensible Components
 description: 'Classes extend — so props, emits and slots must extend with them. The contract lives on the class as static getters (types + defaults fused by propsWithDefaults, emits), a subclass extends it with super, and the namespace carries only identity and the types derived from the class.'
-relatedPosts: [ban-private, ship-the-variant-keep-the-tuning, the-options-api-everyone-wanted, inheritance-exile]
+relatedPosts: [runtime-props-all-along, ban-private, ship-the-variant-keep-the-tuning, the-options-api-everyone-wanted, inheritance-exile]
 ---
 
 # Extensible Components

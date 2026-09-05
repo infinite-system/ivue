@@ -2,8 +2,8 @@
 title: 'Props inherit now'
 description: 'A component contract that extends like a class: a variant re-tunes a default in one override, adds a prop in three, narrows a type, shares a base surface, and the compiler checks every line. What that makes possible, with the shipped receipts.'
 date: 2026-09
-tags: [patterns, architecture, agents]
-relatedPosts: [single-file-models, ship-the-variant-keep-the-tuning, ban-private, the-options-api-everyone-wanted, inheritance-exile]
+tags: [props, patterns, architecture, agents]
+relatedPosts: [runtime-props-all-along, single-file-models, ship-the-variant-keep-the-tuning, ban-private, the-options-api-everyone-wanted, inheritance-exile]
 ---
 
 # Props inherit now

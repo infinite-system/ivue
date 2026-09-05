@@ -3,7 +3,7 @@ title: 'Example: Advanced Select Field'
 description: 'A production-grade QSelect wrapper — server search, pagination, dataset variants, chips, create-new-option — whose reactive core is 54 plain getters and exactly one computed.'
 aside: false
 pageClass: benchmarks-wide examples-page
-relatedPosts: [computed-is-a-cache, the-options-api-everyone-wanted]
+relatedPosts: [runtime-props-all-along, computed-is-a-cache, the-options-api-everyone-wanted]
 ---
 
 <script setup>

@@ -159,9 +159,9 @@ warmth line; a reply never climbs into the reducer's formality.
   sentences and a number, never from adjectives.
 - **Never fight the feed's belief; move it.** "AI can code in anything"
   gets one sentence of reframe, not a rebuttal thread.
-- **The ten-year-old layer is present, never substituted.** Beside every
-  mechanism, one line a kid could repeat ("nothing is paid until you look
-  at it"). Exact numbers and names stay.
+- **The plain layer is present, never substituted.** Beside every
+  mechanism, one line that transmits directly, no jargon ("nothing is
+  paid until you look at it"). Exact numbers and names stay.
 - **Title doctrine applies to hooks.** The first line names the reader's
   win or the changed fact, never the mechanism or the mood. Run the
   stranger test: someone who has never heard of ivue reads only this line
@@ -225,7 +225,7 @@ warmth line; a reply never climbs into the reducer's formality.
 
 - **X single post (any length, hook in the first 280):** reframe or a
   number in line one; a second beat that earns the length (an example,
-  the ten-year-old layer, the consequence); a landing line or a link,
+  the plain layer, the consequence); a landing line or a link,
   not both. No thread marker.
 - **X thread (7–9 tweets, each as long as its idea):** tweet 1 = the reframe with its one shouted
   word (this is the hook; the title doctrine applies). Tweets 2–3 = the

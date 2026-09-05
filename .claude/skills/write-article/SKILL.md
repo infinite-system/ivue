@@ -74,9 +74,9 @@ articles:
   initiate), help (not facilitate), about (not regarding). No
   marketing adjectives — seamless, robust, elegant, world-class are
   banned; the receipts do the boasting.
-- **The ten-year-old layer — required for every mechanism.** Every
+- **The plain layer — required for every mechanism.** Every
   benchmark table, every engine behavior, every memory claim gets a
-  version a ten-year-old could say back, next to the exact one ("the
+  version that transmits directly, no jargon, next to the exact one ("the
   cache reads fast, but it charges rent every time the value
   changes"). This is a proof of comprehension, not dumbing down: if
   you can't say it simply, you hold a description, not the generator

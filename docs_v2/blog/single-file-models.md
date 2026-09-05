@@ -2,8 +2,8 @@
 title: 'Single-file models'
 description: 'Vue gave the view one file. ivue gives the model one file: state, derivation, behavior, contract and knobs on a class, extended by inheritance and nothing else. The conversion deleted four files, and the shape is now something a gate can check.'
 date: 2026-09
-tags: [patterns, architecture, agents]
-relatedPosts: [ship-the-variant-keep-the-tuning, ban-private, the-options-api-everyone-wanted, inheritance-exile]
+tags: [props, patterns, architecture, agents]
+relatedPosts: [runtime-props-all-along, ship-the-variant-keep-the-tuning, ban-private, the-options-api-everyone-wanted, inheritance-exile]
 ---
 
 # Single-file models

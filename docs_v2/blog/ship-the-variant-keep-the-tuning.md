@@ -2,7 +2,7 @@
 title: 'Ship the variant, keep the tuning'
 description: 'A production virtual scroller, hand-tuned for years, became a horizontal card strip and a book-length text marquee — and the whole diff is eight getters and one prop. How class extension keeps the hard 80% shipped once.'
 date: 2026-08
-tags: [patterns, performance]
+tags: [props, patterns, performance]
 relatedPosts: [a-million-rows-twelve-divs, inheritance-exile, the-options-api-everyone-wanted, one-kilobyte-feature]
 ---
 

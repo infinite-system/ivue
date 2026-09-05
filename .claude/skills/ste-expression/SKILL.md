@@ -1,6 +1,6 @@
 ---
 name: ste-expression
-description: Express yourself in Simplified Technical English (ASD-STE100, adapted for ivue). Applies to replies, blog prose, docs prose, commit messages, and reports — never to code. Use when writing any prose for this project, when asked to make text plain, or when explaining what you did, found, or propose — the ten-year-old layer applies to every finding, fix, and claim.
+description: Express yourself in Simplified Technical English (ASD-STE100, adapted for ivue). Applies to replies, blog prose, docs prose, commit messages, and reports — never to code. Use when writing any prose for this project, when asked to make text plain, or when explaining what you did, found, or propose — the plain layer (direct transmission, no jargon) applies to every finding, fix, and claim.
 ---
 
 # ste-expression — plain prose for ivue
@@ -53,11 +53,12 @@ STRUCTURE
 - No contractions.
 - Error messages name three things: what failed, why, what to do next.
 
-## The ten-year-old layer
+## The plain layer — direct transmission
 
 Plain sentences are not the same as a plain explanation. A reader can parse
 every word and still not know what happened. So for anything you did, found,
-or propose, add the version a ten-year-old could follow.
+or propose, add the version that transmits directly: no jargon, no
+prerequisite, the thing said in terms of what it does.
 
 This is not dumbing down. It is a proof of comprehension. If you cannot say
 what a thing does without the jargon, you do not yet know what it does. The
@@ -114,9 +115,9 @@ EXAMPLES from real work
 WHERE IT APPLIES — REQUIRED, not optional
 
 - Blog articles: every mechanism gets its plain version before or right
-  after the exact one. A benchmark table earns a sentence a ten-year-old
-  could say back ("the cache reads fast, but it charges rent every time
-  the value changes").
+  after the exact one. A benchmark table earns a sentence anyone could
+  say back with no jargon ("the cache reads fast, but it charges rent
+  every time the value changes").
 - Docs/guide prose: first use of a term of art gets its plain meaning
   in-line (this is also a write-docs rule — same rule, one name).
 - Replies to the user: after any finding, fix, or refusal. Lead with the
@@ -143,8 +144,8 @@ than a dense one that is exact.
 3. Passive voice with a known actor? Make it active.
 4. "Perform an analysis" shapes? Use the verb.
 5. The same thing under two names? Pick one.
-6. Could a ten-year-old say back what happened? If not, add the plain
-   version, and keep the exact one.
+6. Could a reader with none of the jargon say back what happened? If
+   not, add the plain version, and keep the exact one.
 
 ## The linter
 
