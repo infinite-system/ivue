@@ -175,7 +175,18 @@ are extractable on their own: `typeof $ContactField.propsDefaults` is a
 type, and `ExtractPropDefaultTypes<typeof $ContactField.propsTypes>` is
 the check that every optional prop has one. A test asserts a default. A
 docs page renders a props table from the object the component actually
-uses, never a copy. A gate diffs two contracts. The shell can compare an
+uses, never a copy. A gate diffs two contracts.
+
+The use that matters most is an interface built ON the defaults. A
+property panel, a design tool, an agent harness that lets a person or a
+model tune a live component: each needs every knob shown with its
+initial value already in place. `X.Class.propsDefaults` is that panel's
+data, read at runtime from the component itself, so `thumbnailSize`
+opens at 132 and `fetchRowsPerPage` at 8 without anyone copying a number
+out of the source. A subclass's panel shows the subclass's defaults,
+because the getter reads through the receiver. Type-based props cannot
+do this at all: the defaults exist only inside a compiler transform,
+and at runtime there is nothing left to read. The shell can compare an
 arriving runner's `Class.props` against the declared set at mount and
 warn on a mismatch, a tripwire type-based props cannot offer because
 there is nothing there to compare.
