@@ -16,28 +16,37 @@ import ExampleClassStore from '../.vitepress/theme/components/examples/ExampleCl
 
 A global store needs three things: shared state, derived values, and
 actions. An ivue class already is all three — so the entire store
-machinery reduces to a **singleton published by its own namespace**:
+machinery reduces to **one static on the class that owns the singleton**:
 
 ```ts
+class $ProjectStore {
+  protected static readonly shared = new LazyShared<ProjectStore.Instance>(
+    () => new ProjectStore.Class(),
+  );
+
+  static use(): ProjectStore.Instance {
+    return this.shared.value;
+  }
+
+  // …state, derivations, actions
+}
+
 export namespace ProjectStore {
-  export const $Class = $ProjectStore; // raw — children `extends` this
+  export const $Class = Static($ProjectStore); // anchor — it declares statics
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance;
-
-  let singleton: Instance | null = null;
-
-  export function use(): Instance {
-    return (singleton ??= new Class());
-  }
 }
 ```
 
-No Pinia, no `defineStore`, no plugin registration. Every component that
-calls `ProjectStore.Class.use()` receives the same instance; state written in one
-panel renders in every other. Because `use()` constructs the singleton
-lazily — on first touch, after the app exists — module-load order and
-circular imports stay non-events, and the store's name travels with its
-namespace instead of a loose `useX` function.
+No Pinia, no `defineStore`, no plugin registration, and nothing in the
+namespace but identity and types. Every component that calls
+`ProjectStore.Class.use()` receives the same instance; state written in one
+panel renders in every other. `LazyShared` runs its thunk on first touch,
+after the app exists, so module-load order and circular imports stay
+non-events. It constructs through the namespace slot, so a test double
+swapped into `Class` is what gets built. And because the singleton is a
+`static readonly` field rather than a `$`-cached static, every receiver —
+the class, a subclass, the double — resolves to the same cell.
 
 Three independent components below share the store with zero props between
 them — type a task in the first panel and watch the other two react:
@@ -92,13 +101,14 @@ Some teams prefer store reads without `.value`. The same singleton wraps in
 `ProjectStore.Instance` type, and that typing is load-bearing: it strips
 the `readonly` TypeScript puts on get-only accessors, so writes typecheck
 exactly as they behave at runtime
-([the unwrapping-surface invariant](/guide/standard#the-unwrapping-surface-typing-invariant)):
+([the unwrapping-surface invariant](/guide/standard#the-unwrapping-surface-typing-invariant)).
+It is one more static on the class:
 
 ```ts
-export namespace ProjectStore {
-  // …the namespace above, plus:
-  export function useReactive() {
-    return reactive(use());
+class $ProjectStore {
+  // …the statics above, plus:
+  static useReactive() {
+    return reactive(this.use());
   }
 }
 ```
