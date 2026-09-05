@@ -3,25 +3,21 @@
 // store, and ProjectStore.Class.use() hands every caller the same instance.
 import { reactive, ref, shallowRef } from 'vue';
 import { Reactive, type ReactiveHelpers } from '../../ivue';
-import { LazyShared } from '../../LazyShared';
 import { Static } from '../../Static';
 
 
 class $ProjectStore {
-  /** The ONE store instance, held in a static readonly field so every
-   *  receiver (the class, a subclass, a test double swapped into `Class`)
-   *  resolves to the same cell — never receiver-cached, never forked. The
-   *  thunk runs on first read, after the app exists, immune to module-load
-   *  order; it constructs through the namespace slot so a swapped Class is
-   *  what gets built. */
-  protected static readonly shared = new LazyShared<ProjectStore.Instance>(
-    () => new ProjectStore.Class(),
-  );
+  /** The ONE store instance — a `$`-static, so it constructs on first
+   *  read (after the app exists, immune to module-load order) and is
+   *  cached on the receiver. It constructs through the namespace slot, so
+   *  a test double swapped into `Class` is what gets built. */
+  protected static get $shared(): ProjectStore.Instance {
+    return new ProjectStore.Class();
+  }
 
-  /** The store singleton: every caller receives the SAME instance,
-   *  constructed lazily on first touch. */
+  /** The store singleton: every caller receives the SAME instance. */
   static use(): ProjectStore.Instance {
-    return this.shared.value;
+    return this.$shared;
   }
 
   /**

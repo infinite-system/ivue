@@ -102,20 +102,20 @@ singleton is an implementation detail of `use()`:
 ```ts
 // app/AppStore.ts — the store IS an ivue class; a static owns the singleton
 import { Reactive } from 'ivue';
-import { LazyShared, Static } from 'ivue/extras';
+import { Static } from 'ivue/extras';
 import { ref } from 'vue';
 
 class $AppStore {
-  // The ONE instance, in a static readonly cell: every receiver — the
-  // class, a subclass, a test double swapped into `Class` — resolves to
-  // the same store. The thunk runs on first read, after the app exists,
-  // and constructs through the namespace slot.
-  protected static readonly shared = new LazyShared<AppStore.Instance>(
-    () => new AppStore.Class(),
-  );
+  // The ONE instance, as a `$`-static: constructed on first read, after
+  // the app exists, and cached on the receiver. It constructs through the
+  // namespace slot, so a test double swapped into `Class` is what gets
+  // built — the store has one receiver, the slot, so nothing forks.
+  protected static get $shared(): AppStore.Instance {
+    return new AppStore.Class();
+  }
 
   static use(): AppStore.Instance {
-    return this.shared.value;
+    return this.$shared;
   }
 
   get authenticated() {

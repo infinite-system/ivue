@@ -20,12 +20,12 @@ machinery reduces to **one static on the class that owns the singleton**:
 
 ```ts
 class $ProjectStore {
-  protected static readonly shared = new LazyShared<ProjectStore.Instance>(
-    () => new ProjectStore.Class(),
-  );
+  protected static get $shared(): ProjectStore.Instance {
+    return new ProjectStore.Class();
+  }
 
   static use(): ProjectStore.Instance {
-    return this.shared.value;
+    return this.$shared;
   }
 
   // …state, derivations, actions
@@ -41,12 +41,12 @@ export namespace ProjectStore {
 No Pinia, no `defineStore`, no plugin registration, and nothing in the
 namespace but identity and types. Every component that calls
 `ProjectStore.Class.use()` receives the same instance; state written in one
-panel renders in every other. `LazyShared` runs its thunk on first touch,
-after the app exists, so module-load order and circular imports stay
-non-events. It constructs through the namespace slot, so a test double
-swapped into `Class` is what gets built. And because the singleton is a
-`static readonly` field rather than a `$`-cached static, every receiver —
-the class, a subclass, the double — resolves to the same cell.
+panel renders in every other. A `$`-static runs its body once, on first
+touch, after the app exists, so module-load order and circular imports
+stay non-events. It constructs through the namespace slot, so a test
+double swapped into `Class` is what gets built, and since every consumer
+reaches the store through that one slot, the per-receiver cache never
+forks.
 
 Three independent components below share the store with zero props between
 them — type a task in the first panel and watch the other two react:

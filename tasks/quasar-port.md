@@ -61,15 +61,15 @@ Two things the port gets that Quasar cannot reach from where it is:
 | `useX(props, …)` returning `{ a, b }` | `extends X.$Class` (behavior) or `protected get $x()` (hosted composable) |
 | `provide(key, computed)` | `provide(key, this)` — children read the instance |
 | `h('div', { class: classes.value }, …)` | a `<template>` reading `model.classes` |
-| `$q` (`useQuasar()`) | `Platform.Class.use()` — a `LazyShared` static store |
+| `$q` (`useQuasar()`) | `Platform.Class.use()` — a `$`-static singleton |
 | module-level constants | `static` knobs on the class |
 | `export default createComponent({ name, props, emits, setup })` | one `X.ts` (single-file model) + one `X.vue` (wiring + template) |
 
 ## Sequence
 
 1. **Platform kernel first** — every component reaches for it:
-   `$q` (platform, screen, dark, lang, iconSet) as `LazyShared`
-   stores; `use-size`, `use-align`, `use-dark`, `use-id`,
+   `$q` (platform, screen, dark, lang, iconSet) as `$`-static
+   singletons; `use-size`, `use-align`, `use-dark`, `use-id`,
    `use-split-attrs` as base classes or `$`-hosted composables;
    the `ripple` directive as a static (like `MediaField.focusDirective`).
 2. **The field chain** — `QField` → `QInput` → `QSelect`. This is where

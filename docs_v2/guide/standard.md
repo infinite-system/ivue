@@ -864,18 +864,18 @@ crosses; the store pattern deletes the thread.
 
 ```ts
 // app/AppStore.ts — the store IS an ivue class; a static owns the singleton
-// (imports: Reactive from 'ivue'; LazyShared, Static from 'ivue/extras')
+// (imports: Reactive from 'ivue'; Static from 'ivue/extras')
 class $AppStore {
-  // The ONE instance, in a static readonly cell: every receiver — the
-  // class, a subclass, a test double swapped into `Class` — resolves to
-  // the same store. The thunk runs on first read, after the app exists,
-  // and constructs through the namespace slot.
-  protected static readonly shared = new LazyShared<AppStore.Instance>(
-    () => new AppStore.Class(),
-  );
+  // The ONE instance, as a `$`-static: constructed on first read, after
+  // the app exists, and cached on the receiver. It constructs through the
+  // namespace slot, so a test double swapped into `Class` is what gets
+  // built — the store has one receiver, the slot, so nothing forks.
+  protected static get $shared(): AppStore.Instance {
+    return new AppStore.Class();
+  }
 
   static use(): AppStore.Instance {
-    return this.shared.value;
+    return this.$shared;
   }
 
   get authenticated() {
@@ -932,9 +932,12 @@ Why this shape and not alternatives:
 - **`use()` is lazy** — the singleton constructs on first touch, after the
   app exists, so module-load order and circular imports stay non-events
   (the same late-read property as every cross-module reference). It lives
-  in a `static readonly` LazyShared cell on the class — never a namespace
-  `let`, which is a parallel world no subclass can reach (the gate's
-  `the_namespace_holds_identity_and_types_only` check refuses it).
+  in a `$`-static on the class — never a namespace `let`, which is a
+  parallel world no subclass can reach (the gate's
+  `the_namespace_holds_identity_and_types_only` check refuses it). A
+  `$`-static caches per receiver, and a store reached only through
+  `X.Class.use()` has one receiver, so nothing forks; `LazyShared` is for
+  a REGISTRY that several receivers (subclasses) must share.
 - **The `$`-getter is the injection point** — cached whole, per instance,
   on first read. A model names its dependency once; every method reads
   `this.$app` with zero lookup cost and zero constructor plumbing.

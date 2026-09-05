@@ -1,6 +1,5 @@
 import { ref, shallowRef } from 'vue';
 import { Reactive } from '../../ivue';
-import { LazyShared } from '../../LazyShared';
 import { Static } from '../../Static';
 import { Member } from './Member';
 import { Project } from './Project';
@@ -15,16 +14,15 @@ import {
 } from './types';
 
 class $Workspace {
-  /** The app-wide workspace singleton — a static readonly cell, so every
-   *  receiver resolves to the one instance; created on first use through
-   *  the namespace slot, after the app exists. */
-  protected static readonly shared = new LazyShared<Workspace.Model>(
-    () => new Workspace.Class(),
-  );
+  /** The app-wide workspace singleton — a `$`-static: constructed on
+   *  first use through the namespace slot, after the app exists. */
+  protected static get $shared(): Workspace.Model {
+    return new Workspace.Class();
+  }
 
   /** The app-wide workspace singleton, created on first use. */
   static use(): Workspace.Model {
-    return this.shared.value;
+    return this.$shared;
   }
 
   protected static dateAtOffset(offset: number) {

@@ -375,11 +375,6 @@
     "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
   },
   {
-    "path": "examples/playground/src/LazyShared.ts",
-    "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
     "path": "examples/playground/src/lenis/animate.ts",
     "check": "a_public_class_publishes_its_namespace_manifest",
     "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"

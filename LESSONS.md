@@ -434,10 +434,11 @@ background processes, sweep:
   strip's items, the workspace seed dataset (a data-only namespace → a
   `Static()` class with getters), and the two store singletons
   (`use()` as a namespace function over a `let singleton`).
-- A module singleton store is a `static readonly shared = new
-  LazyShared(() => new X.Class())` cell plus `static use()`; consumers
-  call `X.Class.use()` through the slot. `LazyShared` is vendored at
-  `examples/playground/src/LazyShared.ts` beside `Static.ts`.
+- A module singleton store is a `protected static get $shared()` that
+  returns `new X.Class()` plus `static use()`; consumers call
+  `X.Class.use()` through the slot. `LazyShared` is NOT for this — it is
+  for a registry several receivers (subclasses) must share; a store has
+  one receiver, the slot.
 - Proof arms for a new gate check: `npm run gate -- --prove <name>`;
   `--prove` alone runs the whole constitution.
 
