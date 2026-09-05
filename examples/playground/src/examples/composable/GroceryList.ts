@@ -51,8 +51,15 @@ class $GroceryList {
 
   double() {
     if (this.isEmpty) return;
-    const doubled = this.items.map((item) => (item.startsWith('2× ') ? item : `2× ${item}`));
-    this.$history.push('double everything', doubled);
+    this.$history.push('double everything', this.items.map((item) => this.doubled(item)));
+  }
+
+  /** `milk` → `2× milk`, `2× milk` → `4× milk` — the multiplier compounds. */
+  doubled(item: string) {
+    const match = item.match(/^(\d+)× (.*)$/);
+    const quantity = match ? Number(match[1]) : 1;
+    const name = match ? match[2] : item;
+    return `${quantity * 2}× ${name}`;
   }
 
   sort() {
