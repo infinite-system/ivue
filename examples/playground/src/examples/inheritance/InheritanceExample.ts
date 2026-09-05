@@ -46,6 +46,9 @@ class $InheritanceExample {
   }
 
   // DERIVED — the labels, named
+  get receiptLines() {
+    return this.$product.receipt();
+  }
   get discountPercent() {
     return Math.round(this.discount.value * 100);
   }
@@ -69,18 +72,23 @@ class $InheritanceExample {
   bumpPrice() {
     this.price.value += 6;
   }
+
   bumpDiscount() {
     this.discount.value = Math.min(this.discount.value + 0.05, 0.9);
   }
+
   toggleTax() {
     this.taxRate.value = this.taxRate.value ? 0 : 0.1;
   }
+
   bumpComputedPrice() {
     this.computedPrice.value += 6;
   }
+
   bumpComputedDiscount() {
     this.computedDiscount.value = Math.min(this.computedDiscount.value + 0.05, 0.9);
   }
+
   toggleComputedTax() {
     this.computedTaxRate.value = this.computedTaxRate.value ? 0 : 0.1;
   }

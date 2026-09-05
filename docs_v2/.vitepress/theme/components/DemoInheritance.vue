@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import DemoBox from './DemoBox.vue';
-import { TaxedProduct } from '@examples/inheritance/TaxedProduct';
+import { InheritanceExample } from '@examples/inheritance/InheritanceExample';
 
-const product = new TaxedProduct.Class();
+const example = new InheritanceExample.Class();
 
 // the state destructure
-const { price, discount, taxRate } = product;
+const {
+  // forwarded cells — the plain-getter chain
+  price,
+} = example;
 </script>
 
 <template>
@@ -14,7 +17,7 @@ const { price, discount, taxRate } = product;
     note="total is a plain-getter chain — each level refines super.total, zero computeds allocated. Every receipt() line is written by a different class in the chain. Write to any level's ref and everything re-derives."
   >
     <div class="receipt d-mono">
-      <div v-for="(line, index) in product.receipt()" :key="index">
+      <div v-for="(line, index) in example.receiptLines" :key="index">
         {{ line }}
       </div>
     </div>
@@ -25,29 +28,25 @@ const { price, discount, taxRate } = product;
       </div>
       <div>
         <div class="d-k">discount &middot; SaleProduct</div>
-        <div class="d-n">{{ Math.round(discount * 100) }}%</div>
+        <div class="d-n">{{ example.discountPercent }}%</div>
       </div>
       <div>
         <div class="d-k">tax &middot; TaxedProduct</div>
-        <div class="d-n">{{ Math.round(taxRate * 100) }}%</div>
+        <div class="d-n">{{ example.taxRatePercent }}%</div>
       </div>
       <div>
         <div class="d-k">total &middot; plain getter</div>
-        <div class="d-n grad">${{ product.total.toFixed(2) }}</div>
+        <div class="d-n grad">${{ example.totalLabel }}</div>
       </div>
     </div>
     <div class="d-row">
-      <button class="d-btn primary" type="button" @click="price += 6">
+      <button class="d-btn primary" type="button" @click="example.bumpPrice()">
         price +$6
       </button>
-      <button
-        class="d-btn"
-        type="button"
-        @click="discount = Math.min(discount + 0.05, 0.9)"
-      >
+      <button class="d-btn" type="button" @click="example.bumpDiscount()">
         deeper sale
       </button>
-      <button class="d-btn" type="button" @click="taxRate = taxRate ? 0 : 0.1">
+      <button class="d-btn" type="button" @click="example.toggleTax()">
         toggle tax
       </button>
     </div>

@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ComputedTaxedProduct } from '@examples/inheritance/ComputedTaxedProduct';
+import { InheritanceExample } from '@examples/inheritance/InheritanceExample';
 import DemoBox from './DemoBox.vue';
 
-const product = new ComputedTaxedProduct.Class();
-const { price, discount, taxRate, total } = product;
+const example = new InheritanceExample.Class();
 </script>
 
 <template>
@@ -14,29 +13,25 @@ const { price, discount, taxRate, total } = product;
     <div class="d-vals d-vals-3col">
       <div>
         <div class="d-k">Product.total</div>
-        <div class="d-n">${{ product.baseTotal.toFixed(2) }}</div>
+        <div class="d-n">${{ example.computedBaseTotalLabel }}</div>
       </div>
       <div>
         <div class="d-k">SaleProduct.total</div>
-        <div class="d-n">${{ product.discountedTotal.toFixed(2) }}</div>
+        <div class="d-n">${{ example.computedDiscountedTotalLabel }}</div>
       </div>
       <div>
         <div class="d-k">TaxedProduct.total</div>
-        <div class="d-n grad">${{ total.toFixed(2) }}</div>
+        <div class="d-n grad">${{ example.computedTotalLabel }}</div>
       </div>
     </div>
     <div class="d-row">
-      <button class="d-btn primary" type="button" @click="price += 6">
+      <button class="d-btn primary" type="button" @click="example.bumpComputedPrice()">
         price +$6
       </button>
-      <button
-        class="d-btn"
-        type="button"
-        @click="discount = Math.min(discount + 0.05, 0.9)"
-      >
+      <button class="d-btn" type="button" @click="example.bumpComputedDiscount()">
         deeper sale
       </button>
-      <button class="d-btn" type="button" @click="taxRate = taxRate ? 0 : 0.1">
+      <button class="d-btn" type="button" @click="example.toggleComputedTax()">
         toggle tax
       </button>
     </div>
