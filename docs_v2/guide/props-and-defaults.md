@@ -142,6 +142,6 @@ contract that is never erased and never declared twice.
 
 ## See it running
 
-- [Props contract & knobs](/examples/props-and-defaults) — a knobs panel, a validator verdict and an inheritance ledger, all read off two classes' statics.
+- [Extend Props & Props Defaults](/examples/props-and-defaults) — a knobs panel, a validator verdict and an inheritance ledger, all read off two classes' statics.
 - [Advanced Select Field](/examples/choose-field) — a forty-five prop contract, extended by a variant that adds three.
 - [Horizontal Scroller](/examples/horizontal-scroller) — the vertical scroller's contract with one default re-tuned.

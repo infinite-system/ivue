@@ -1,5 +1,5 @@
 ---
-title: 'Example: Props contract & knobs'
+title: 'Example: Extend Props & Props Defaults'
 description: 'A component contract that is a value: prop types, defaults and a validator as statics on the class. A knobs panel, an inheritance ledger and a validity check are all read off the statics — nothing is hand-listed.'
 relatedPosts: [runtime-props-all-along, props-inherit-now, single-file-models]
 ---
@@ -8,7 +8,7 @@ relatedPosts: [runtime-props-all-along, props-inherit-now, single-file-models]
 import ExamplePropsContract from '../.vitepress/theme/components/examples/ExamplePropsContract.vue'
 </script>
 
-# Props contract & knobs
+# Extend Props & Props Defaults
 
 `Badge` declares its contract as three static getters: the prop types, the
 defaults, and the fused `props` object the SFC hands to `defineProps`.
