@@ -8,10 +8,7 @@
  */
 import DemoBox from '../DemoBox.vue';
 import TextMarquee from '../../../../../examples/playground/src/examples/text-marquee/TextMarquee.vue';
-import {
-  TextMarqueeExample,
-  BOOK_TEXT,
-} from '../../../../../examples/playground/src/examples/text-marquee/TextMarqueeExample';
+import { TextMarqueeExample } from '../../../../../examples/playground/src/examples/text-marquee/TextMarqueeExample';
 
 const example = new TextMarqueeExample.Class();
 
@@ -32,7 +29,7 @@ const {
     <div class="d-vals etm-stats">
       <div>
         <div class="d-k">characters</div>
-        <div class="d-n">{{ BOOK_TEXT.length.toLocaleString() }}</div>
+        <div class="d-n">{{ example.bookLengthLabel }}</div>
       </div>
       <div>
         <div class="d-k">chunks</div>
@@ -45,7 +42,7 @@ const {
     </div>
 
     <div class="etm-frame">
-      <TextMarquee ref="marquee" :text="BOOK_TEXT" :px-per-second="speed" />
+      <TextMarquee ref="marquee" :text="example.bookText" :px-per-second="speed" />
     </div>
 
     <div class="d-row">

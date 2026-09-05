@@ -12,13 +12,12 @@ import {
   resetMockServer,
 } from '../server/MockServer';
 
-ServerApi.use(mockServerTransport);
-
 class $MediaFieldExample {
   // Preexisting media: the server already holds these images — the field
   // receives bare IDS and hydrates the rows itself. Stock QUploader has no
   // such path; it only knows files picked in the session.
   constructor() {
+    this.installMockServer();
     this.loadPreexisting();
   }
 
@@ -57,6 +56,13 @@ class $MediaFieldExample {
     this.extendedMedia.value = [];
     await this.loadPreexisting();
     this.resetting.value = false;
+  }
+
+  /** This route runs against the in-browser mock backend; installing it
+   *  here (not at import) keeps the class file free of side effects. Swap
+   *  for `ServerApi.use(httpTransport(...))` to run against server-node. */
+  installMockServer() {
+    ServerApi.use(mockServerTransport);
   }
 }
 

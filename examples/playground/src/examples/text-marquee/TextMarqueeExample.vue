@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import TextMarquee from './TextMarquee.vue';
-import { TextMarqueeExample, BOOK_TEXT } from './TextMarqueeExample';
+import { TextMarqueeExample } from './TextMarqueeExample';
 
 const example = new TextMarqueeExample.Class();
 
@@ -48,7 +48,7 @@ const {
       <TextMarquee
         ref="marquee"
         class="book-line"
-        :text="BOOK_TEXT"
+        :text="example.bookText"
         :px-per-second="speed"
       />
     </main>

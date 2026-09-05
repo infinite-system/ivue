@@ -2,7 +2,6 @@
 // re-parents it onto the composed Notification class, so it inherits every
 // plugin registered for `core/Notification`.
 import { Reactive } from '../../ivue';
-import { Kernel } from './Kernel';
 import { Notification } from './Notification';
 
 class $ErrorNotification extends Notification.$Class {
@@ -23,4 +22,3 @@ export namespace ErrorNotification {
   export type Instance = typeof Class.Instance; // expose & reactive() interop
 }
 
-Kernel.Class.defineClass('core/ErrorNotification', ErrorNotification);

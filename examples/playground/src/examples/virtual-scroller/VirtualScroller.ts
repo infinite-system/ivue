@@ -240,6 +240,11 @@ class $VirtualScroller<T extends BaseItem> {
 
   /* Template refs */
 
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $VirtualScroller;
+  }
+
   get scrollElement() {
     return ref(null) as Ref<HTMLElement | null>;
   }
@@ -502,7 +507,7 @@ class $VirtualScroller<T extends BaseItem> {
 
   get leadingSpacerPx() {
     return (
-      $VirtualScroller.snapForRender(
+      this.self.snapForRender(
         Math.max(0, this.leadingSpacerSize.value - this.renderBias.value)
       ) + 'px'
     );
@@ -520,9 +525,9 @@ class $VirtualScroller<T extends BaseItem> {
 
   get trailingSpacerPx() {
     return (
-      $VirtualScroller.snapForRender(
+      this.self.snapForRender(
         Math.min(
-          $VirtualScroller.TRAILING_SPACER_RENDER_CAP,
+          this.self.TRAILING_SPACER_RENDER_CAP,
           this.trailingSpacerSize.value
         )
       ) + 'px'
@@ -549,7 +554,7 @@ class $VirtualScroller<T extends BaseItem> {
   protected static readonly RENDER_BIAS_CHUNK = 65536;
 
   protected updateRenderBias(scroll: number) {
-    const chunk = $VirtualScroller.RENDER_BIAS_CHUNK;
+    const chunk = this.self.RENDER_BIAS_CHUNK;
     const bias = Math.max(0, (Math.floor(scroll / chunk) - 1) * chunk);
     if (bias !== this.renderBias.value) {
       this.renderBias.value = bias;
@@ -1094,7 +1099,7 @@ class $VirtualScroller<T extends BaseItem> {
       // scrollPosition and lenis keep full precision for the scroll math.
       const rendered = position + this.renderBias.value;
       this.scrollElementInner.value!.style.transform = this.transformFor(
-        snapRender ? $VirtualScroller.snapForRender(rendered) : rendered
+        snapRender ? this.self.snapForRender(rendered) : rendered
       );
       // Programmatic jumps write the transform directly — lenis must ADOPT
       // the jump, not just be told about it. Adopting kills any in-flight
@@ -1465,7 +1470,7 @@ class $VirtualScroller<T extends BaseItem> {
    *  reads a live value here every creep frame, so a speed slider takes
    *  effect mid-glide. */
   protected get creepMsPerPx(): number {
-    return this.props.creepMsPerPx ?? $VirtualScroller.CREEP_MS_PER_PX;
+    return this.props.creepMsPerPx ?? this.self.CREEP_MS_PER_PX;
   }
 
   /** rAF handle + last frame timestamp of the creep integrator. */

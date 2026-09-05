@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { BenchmarksExample, CALL_COUNT } from './BenchmarksExample';
-import { INSTANCE_COUNT } from './creationBench';
+import { BenchmarksExample } from './BenchmarksExample';
 import BenchmarkWinner from './BenchmarkWinner.vue';
 
 const bench = new BenchmarksExample.Class();
@@ -78,12 +77,12 @@ const {
     <div class="vals">
       <div>
         <div class="k">
-          create {{ INSTANCE_COUNT.toLocaleString() }} InteractiveBoxes
+          create {{ bench.instanceCountLabel }} InteractiveBoxes
         </div>
         <div class="n grad">{{ bench.format(boxCreationMs) }}</div>
       </div>
       <div>
-        <div class="k">{{ CALL_COUNT.toLocaleString() }} method calls</div>
+        <div class="k">{{ bench.callCountLabel }} method calls</div>
         <div class="n">{{ bench.format(methodMs) }}</div>
       </div>
     </div>

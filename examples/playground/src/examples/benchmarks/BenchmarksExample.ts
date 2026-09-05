@@ -1,6 +1,7 @@
 // BenchmarksExample.ts — the benchmarks route's own state, in ivue.
 import { ref } from 'vue';
 import { Reactive } from '../../ivue';
+import { Static } from '../../Static';
 import {
   INSTANCE_COUNT,
   benchIvue,
@@ -8,9 +9,21 @@ import {
   benchComposable,
 } from './creationBench';
 
-export const CALL_COUNT = 200_000;
-
 class $BenchmarksExample {
+  static readonly CALL_COUNT = 200_000;
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $BenchmarksExample;
+  }
+
+  get callCountLabel() {
+    return this.self.CALL_COUNT.toLocaleString();
+  }
+  get instanceCountLabel() {
+    return INSTANCE_COUNT.toLocaleString();
+  }
+
   get ivueMs() {
     return ref<number | null>(null);
   }
@@ -68,7 +81,7 @@ class $BenchmarksExample {
     // 2. method dispatch — one instance, a prototype-bound method, N calls
     const benchmarkInstance = instances[0];
     const methodStart = performance.now();
-    for (let index = 0; index < CALL_COUNT; index++) {
+    for (let index = 0; index < this.self.CALL_COUNT; index++) {
       benchmarkInstance.calculatePhysics();
     }
     this.methodMs.value = performance.now() - methodStart;
@@ -91,7 +104,7 @@ class $BenchmarksExample {
 }
 
 export namespace BenchmarksExample {
-  export const $Class = $BenchmarksExample; // raw — children `extends` this
+  export const $Class = Static($BenchmarksExample); // anchor — it declares statics // raw — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 }

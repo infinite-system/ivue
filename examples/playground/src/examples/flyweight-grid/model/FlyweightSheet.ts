@@ -33,14 +33,20 @@ import {
   type WatchStopHandle,
 } from 'vue';
 import { Reactive } from '../../../ivue';
+import { Static } from '../../../Static';
 import { FlyweightLogic } from '../FlyweightLogic';
 
-const { FormulaError } = FormulaParser as unknown as {
-  FormulaError: new (error: string, details?: unknown) => FlyweightLogic.CellValue;
-};
-
-
 class $FlyweightSheet {
+  /** The parser's error class, read off the parser module once per class —
+   *  a static so a subclass can substitute the error shape it evaluates to. */
+  protected static get $FormulaError() {
+    return (
+      FormulaParser as unknown as {
+        FormulaError: new (error: string, details?: unknown) => FlyweightLogic.CellValue;
+      }
+    ).FormulaError;
+  }
+
   readonly rows: number;
   readonly cols: number;
 
@@ -114,6 +120,11 @@ class $FlyweightSheet {
       onCell: (cellRef) => this.pointValue(cellRef.row, cellRef.col),
       onRange: (rangeRef) => this.rangeValues(rangeRef as FlyweightSheet.RangeRef),
     });
+  }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $FlyweightSheet;
   }
 
   // --- keys ---
@@ -325,7 +336,7 @@ class $FlyweightSheet {
     if (body.trim().length === 0) return null;
 
     const cellKey = this.cellKey(row, col);
-    if (this.evaluating.has(cellKey)) return new FormulaError('#REF!');
+    if (this.evaluating.has(cellKey)) return new (this.self.$FormulaError)('#REF!');
     this.evaluating.add(cellKey);
     try {
       // COLUMNAR FAST PATH: a bare aggregate over one range is computed
@@ -343,9 +354,9 @@ class $FlyweightSheet {
         sheet: 'Sheet1',
       }) as FlyweightLogic.CellValue;
     } catch (error) {
-      return error instanceof (FormulaError as unknown as Function)
+      return error instanceof (this.self.$FormulaError as unknown as Function)
         ? (error as FlyweightLogic.CellValue)
-        : new FormulaError('#ERROR!');
+        : new (this.self.$FormulaError)('#ERROR!');
     } finally {
       this.evaluating.delete(cellKey);
     }
@@ -376,9 +387,9 @@ class $FlyweightSheet {
         sheet: 'Sheet1',
       }) as FlyweightLogic.CellValue;
     } catch (error) {
-      return error instanceof (FormulaError as unknown as Function)
+      return error instanceof (this.self.$FormulaError as unknown as Function)
         ? (error as FlyweightLogic.CellValue)
-        : new FormulaError('#ERROR!');
+        : new (this.self.$FormulaError)('#ERROR!');
     }
   }
 
@@ -438,7 +449,7 @@ class $FlyweightSheet {
         case 'SUM':
           return sum;
         case 'AVERAGE':
-          return count === 0 ? new FormulaError('#DIV/0!') : sum / count;
+          return count === 0 ? new (this.self.$FormulaError)('#DIV/0!') : sum / count;
         case 'COUNT':
           return count;
         case 'MIN':
@@ -446,7 +457,7 @@ class $FlyweightSheet {
         case 'MAX':
           return count === 0 ? 0 : max;
         default:
-          return new FormulaError('#VALUE!'); // unreachable — union is exhaustive
+          return new (this.self.$FormulaError)('#VALUE!'); // unreachable — union is exhaustive
       }
     } finally {
       if (!isFineTier) resetTracking();
@@ -596,7 +607,7 @@ class $FlyweightSheet {
 }
 
 export namespace FlyweightSheet {
-  export const $Class = $FlyweightSheet;
+  export const $Class = Static($FlyweightSheet); // anchor — it declares statics
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 

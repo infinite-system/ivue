@@ -17,6 +17,7 @@ import {
   type ComputedRef,
 } from 'vue';
 import { Reactive } from '../../ivue';
+import { Static } from '../../Static';
 import { FlyweightLogic } from './FlyweightLogic';
 import { FlyweightCell } from './model/FlyweightCell';
 import { FlyweightSheet } from './model/FlyweightSheet';
@@ -55,6 +56,11 @@ class $FlyweightGridPage {
         if (this.evictTimer) clearTimeout(this.evictTimer);
       });
     }
+  }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $FlyweightGridPage;
   }
 
   // --- state ---
@@ -102,7 +108,7 @@ class $FlyweightGridPage {
     return this.sheet.value ? this.sheet.value.rows * FlyweightLogic.Class.ROW_HEIGHT : 0;
   }
   get totalHeight() {
-    return Math.min(this.naturalHeight, $FlyweightGridPage.MAX_SCROLL_HEIGHT);
+    return Math.min(this.naturalHeight, this.self.MAX_SCROLL_HEIGHT);
   }
   get scrollScale() {
     return this.naturalHeight > this.totalHeight
@@ -238,8 +244,8 @@ class $FlyweightGridPage {
       const sheet = this.sheet.value;
       if (!sheet) return;
       sheet.evictOutsideRows(
-        Math.max(0, this.startRow - $FlyweightGridPage.EVICT_MARGIN_ROWS),
-        this.endRow + $FlyweightGridPage.EVICT_MARGIN_ROWS,
+        Math.max(0, this.startRow - this.self.EVICT_MARGIN_ROWS),
+        this.endRow + this.self.EVICT_MARGIN_ROWS,
       );
       this.pollCensus();
     }, 300);
@@ -290,7 +296,7 @@ class $FlyweightGridPage {
 export namespace FlyweightGridPage {
   /* Identity */
 
-  export const $Class = $FlyweightGridPage;
+  export const $Class = Static($FlyweightGridPage); // anchor — it declares statics
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 

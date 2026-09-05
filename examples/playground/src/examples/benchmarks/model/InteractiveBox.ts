@@ -1,7 +1,7 @@
 import { useMouse } from '@vueuse/core';
 import { computed, ref, shallowRef } from 'vue';
 import { Reactive } from '../../../ivue';
-import { Container, GlobalTheme } from './Container';
+import { Container } from './Container';
 
 class $InteractiveBox extends Container.$Class {
   id: number;
@@ -39,7 +39,7 @@ class $InteractiveBox extends Container.$Class {
 
   // Accessing the imported global state
   get globalTheme() {
-    return GlobalTheme;
+    return Container.Class.$theme;
   }
 
   // --- Computed Inheritance & Overrides ---

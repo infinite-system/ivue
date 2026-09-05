@@ -38,6 +38,11 @@ class $Workspace {
     this.reset();
   }
 
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $Workspace;
+  }
+
   get name() {
     return ref('Orbit Labs');
   }
@@ -229,7 +234,7 @@ class $Workspace {
         estimateHours: 3,
         tags: ['new'],
       },
-      $Workspace.dateAtOffset(7),
+      this.self.dateAtOffset(7),
     );
     this.tasks.value = [task, ...this.tasks.value];
     this.recordActivity('you', '+', `created ${trimmed}`);
@@ -259,7 +264,7 @@ class $Workspace {
     this.projects.value = Seeds.Class.projects.map((seed) => new Project.Class(seed));
     this.members.value = Seeds.Class.members.map((seed) => new Member.Class(seed));
     this.tasks.value = Seeds.Class.tasks.map(
-      (seed) => new Task.Class(this, seed, $Workspace.dateAtOffset(seed.dueOffset)),
+      (seed) => new Task.Class(this, seed, this.self.dateAtOffset(seed.dueOffset)),
     );
     this.activities.value = Seeds.Class.activities.map((entry, index) => ({
       ...entry,

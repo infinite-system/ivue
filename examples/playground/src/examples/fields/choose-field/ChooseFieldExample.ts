@@ -7,9 +7,11 @@ import { Reactive } from '../../../ivue';
 import { ServerApi } from '../server/ServerApi';
 import { mockServerTransport, resetMockServer } from '../server/MockServer';
 
-ServerApi.use(mockServerTransport);
-
 class $ChooseFieldExample {
+  constructor() {
+    this.installMockServer();
+  }
+
   // MUTABLE STATE — one model per showcased variation.
   get basicPick() {
     return ref<any>(null);
@@ -67,6 +69,13 @@ class $ChooseFieldExample {
     this.resetting.value = true;
     await resetMockServer();
     this.resetting.value = false;
+  }
+
+  /** This route runs against the in-browser mock backend; installing it
+   *  here (not at import) keeps the class file free of side effects. Swap
+   *  for `ServerApi.use(httpTransport(...))` to run against server-node. */
+  installMockServer() {
+    ServerApi.use(mockServerTransport);
   }
 }
 

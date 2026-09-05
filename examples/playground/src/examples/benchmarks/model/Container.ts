@@ -1,14 +1,19 @@
 import { computed, ref, watch } from 'vue';
 import { Reactive } from '../../../ivue';
+import { Static } from '../../../Static';
 import { BaseElement } from './BaseElement';
 
-// A shared global state (simulating global config)
-export const GlobalTheme = ref({
-  primaryColor: 'blue',
-  scaleFactor: 1.0,
-});
-
 class $Container extends BaseElement.$Class {
+  /** A shared global state (simulating global config) — ONE cell in a
+   *  static readonly field, so every receiver resolves to the same theme. */
+  protected static readonly sharedTheme = ref({
+    primaryColor: 'blue',
+    scaleFactor: 1.0,
+  });
+  static get $theme() {
+    return this.sharedTheme; // the field IS the pin
+  }
+
   constructor() {
     super();
   }
@@ -67,7 +72,7 @@ class $Container extends BaseElement.$Class {
 }
 
 export namespace Container {
-  export const $Class = $Container;
+  export const $Class = Static($Container); // anchor — it declares statics
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

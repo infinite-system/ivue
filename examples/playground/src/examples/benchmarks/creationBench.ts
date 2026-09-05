@@ -2,20 +2,7 @@
 // ways (ivue class, reactive(new X()), composable factory), retained-array
 // harness so the JIT cannot elide the allocations.
 import { computed, reactive, ref } from 'vue';
-import { Reactive } from '../../ivue';
-
-class $Box {
-  get w() {
-    return ref(1);
-  }
-  get h() {
-    return ref(2);
-  }
-  get area() {
-    return this.w.value * this.h.value;
-  }
-}
-export const Box = Reactive($Box);
+import { Box } from './Box';
 
 export class PlainBox {
   w = 1;
@@ -52,6 +39,6 @@ export function bench(make: () => unknown): number {
   return elapsed;
 }
 
-export const benchIvue = () => bench(() => new Box());
+export const benchIvue = () => bench(() => new Box.Class());
 export const benchReactive = () => bench(() => reactive(new PlainBox()));
 export const benchComposable = () => bench(() => useBox());

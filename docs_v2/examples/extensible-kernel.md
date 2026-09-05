@@ -88,10 +88,12 @@ This is the complete registry:
 
 ## Opting in with an owner key
 
-An extensible class is an ordinary ivue class with two additions. `Class`
-is a `let` binding that the kernel can rewrite, and `Kernel.Class.defineClass()`
-associates the namespace with its owner key. Call sites keep the ordinary
-ivue forms: `new Notification.Class(...)` and
+An extensible class is an ordinary ivue class with one addition: `Class`
+is a `let` binding that the kernel can rewrite. The composition root — here
+the example app, in `defineCoreClasses()` — associates each namespace with
+its owner key through `Kernel.Class.defineClass()` before it seals the
+graph, so importing a class file has no side effects. Call sites keep the
+ordinary ivue forms: `new Notification.Class(...)` and
 `extends Notification.$Class`.
 
 <<< ../../examples/playground/src/examples/extensible-kernel/Notification.ts

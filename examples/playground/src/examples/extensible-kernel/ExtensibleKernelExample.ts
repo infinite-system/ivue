@@ -15,6 +15,7 @@ import {
 
 class $ExtensibleKernelExample {
   constructor() {
+    this.defineCoreClasses();
     this.reboot();
     this.addNotification('notification');
     const countdownTimer = window.setInterval(() => this.tick(), 1000);
@@ -146,6 +147,14 @@ class $ExtensibleKernelExample {
 
   recordActivity(event: string) {
     this.activityLog.value = [...this.activityLog.value, event];
+  }
+
+  /** The composition root registers each extensible class under its owner
+   *  key — importing a class file has no side effects; the app that seals
+   *  the graph is the one that says which keys exist. */
+  defineCoreClasses() {
+    Kernel.Class.defineClass('core/Notification', Notification);
+    Kernel.Class.defineClass('core/ErrorNotification', ErrorNotification);
   }
 }
 
