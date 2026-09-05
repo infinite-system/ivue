@@ -22,7 +22,7 @@
  * skip-list vocabulary, and the constitution in one gesture:
  *
  *   class $HouseGate extends CheckStandard.$Class {
- *     static get house_rule(): StandardCheck { … }
+ *     static get house_rule(): CheckStandard.StandardCheck { … }
  *     static get checks() { return [...super.checks, this.house_rule]; }
  *     static get proofs() { return { ...super.proofs, [this.house_rule.name]: … }; }
  *   }
@@ -42,167 +42,6 @@ import ts from 'typescript';
 import { parse as parseSfc } from '@vue/compiler-sfc';
 import { parse as parseTemplate, NodeTypes, type ElementNode, type TemplateChildNode } from '@vue/compiler-dom';
 import { Static } from '../../lib/Static';
-
-// ---------------------------------------------------------------------------
-// public types
-
-export interface Finding {
-  check: string;
-  file: string;
-  line: number;
-  message: string;
-}
-
-export type StaticTransform = <Class extends new (...arguments_: any[]) => any>(targetClass: Class) => Class;
-
-export interface GateOptions {
-  cwd: string;
-  sourceRoots: string[];
-  testGlobs: string[];
-  skipListPath?: string;
-  /** programmatic severity overrides (the declarative home is the gate
-   * class's `severities` getter): demoted to warnings — reported, never
-   * blocking … */
-  warnChecks?: string[];
-  /** … or disabled — not executed, announced in the summary */
-  offChecks?: string[];
-  /** the `Static` used by the runtime probe; defaults to this package's own */
-  staticImplementation?: StaticTransform | null;
-}
-
-export interface GateResult {
-  /** blocking findings — checks at severity error */
-  findings: Finding[];
-  /** findings from checks demoted to warn — reported, never blocking */
-  warnings: Finding[];
-  suppressed: Finding[];
-  sources: string[];
-  tests: string[];
-  unenforced: string[];
-  /** checks turned off for this run — announced, never silent */
-  off: string[];
-}
-
-export interface StandardCheck {
-  /** The identity: a plain declarative sentence, used verbatim everywhere. */
-  name: string;
-  /** false = registered in the manifest but not enforced yet; the report says so. */
-  enforced: boolean;
-  run(context: GateContext): Finding[];
-}
-
-/** One permanent proof fixture: a small checkout the gate runs over. */
-export interface CheckProofArm {
-  /** repo-relative path → file text; sources under `src/` by convention */
-  files: Record<string, string>;
-  /** package.json for the fixture checkout (default: an ivue consumer) */
-  manifest?: Record<string, unknown>;
-  /** GateOptions overrides for this arm (e.g. a broken staticImplementation) */
-  options?: Partial<GateOptions>;
-  /** red arms: each pattern must match at least one of the check's findings */
-  expectFindings?: (RegExp | string)[];
-  /** red arms: exact number of findings the check must produce */
-  expectCount?: number;
-  /** arms with warn-demoted checks: each pattern must match a warning */
-  expectWarnings?: (RegExp | string)[];
-  /** red arms for population refusals: run() must throw matching this */
-  expectThrows?: RegExp;
-}
-
-/** A check's constitution entry: its claim, its boundary, and both arms. */
-export interface CheckProof {
-  claim: string;
-  impossibility: string;
-  red: CheckProofArm[];
-  green: CheckProofArm[];
-}
-
-export interface ProveReport {
-  problems: string[];
-  ran: { red: number; green: number };
-}
-
-export interface SourceUnit {
-  path: string;
-  relativePath: string;
-  text: string;
-  lines: string[];
-  ast: ts.SourceFile;
-}
-
-/** A `.vue` single-file component: its script setup as TS plus every template expression. */
-export interface ComponentUnit {
-  path: string;
-  relativePath: string;
-  text: string;
-  script: SourceUnit | null;
-  /** 1-based line of the script block's first line in the .vue file */
-  scriptLine: number;
-  expressions: TemplateExpression[];
-}
-
-export interface TemplateExpression {
-  code: string;
-  line: number;
-  kind: string;
-}
-
-export interface GateContext {
-  cwd: string;
-  /** absolute source roots, as discovered */
-  sourceRoots: string[];
-  sources: SourceUnit[];
-  tests: SourceUnit[];
-  components: ComponentUnit[];
-  testGlobs: string[];
-  staticImplementation: StaticTransform | null;
-}
-
-interface ClassFile {
-  unit: SourceUnit;
-  rawClass: ts.ClassDeclaration;
-  rawName: string;
-  publicName: string;
-  namespace: ts.ModuleDeclaration | null;
-  anchorInitializer: ts.Expression | null;
-  classInitializer: ts.Expression | null;
-  hasInstanceType: boolean;
-  isReactive: boolean;
-  isStaticAnchored: boolean;
-}
-
-interface GeneratorHeader {
-  present: boolean;
-  firstContent: boolean;
-  goal: string;
-  formal: string;
-  described: string;
-  orderedRegisters: boolean;
-  bothRegisters: boolean;
-  subjects: { path: string; line: number }[];
-  domainClaims: Map<string, { symbol: string; claim: string; line: number }>;
-  domainSymbols: Set<string>;
-  impossibilities: Map<string, number>;
-  contractLinks: { text: string; file: string; anchor: string; line: number }[];
-  endLine: number;
-}
-
-interface ProofAnnotation {
-  type: 'domain' | 'impossible' | 'record';
-  symbol?: string;
-  claim?: string;
-  name?: string;
-  contractPath?: string;
-  line: number;
-  bound: boolean;
-}
-
-interface SkipRow {
-  path: string;
-  check: string;
-  reason: string;
-  line: number;
-}
 
 // ---------------------------------------------------------------------------
 // the gate class — statics only; getters carry data, methods carry behavior
@@ -254,7 +93,7 @@ class $CheckStandard {
   // -------------------------------------------------------------------------
   // the checks — the getter name is the snake_case of the sentence name
 
-  static get exactly_one_reactive_source_is_installed(): StandardCheck {
+  static get exactly_one_reactive_source_is_installed(): CheckStandard.StandardCheck {
     return this.defineCheck('exactly_one_reactive_source_is_installed', (context) => {
       const vendored = context.sources.filter((unit) => /export\s+function\s+Reactive\s*[<(]/.test(unit.text) || /export\s*\{[^}]*\bReactive\b[^}]*\}\s*from/.test(unit.text));
       const manifests = new Set<string>();
@@ -288,9 +127,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_public_class_publishes_its_namespace_manifest(): StandardCheck {
+  static get a_public_class_publishes_its_namespace_manifest(): CheckStandard.StandardCheck {
     return this.defineCheck('a_public_class_publishes_its_namespace_manifest', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       const unwrap = (expression: ts.Expression): ts.Expression => {
         let current = expression;
         while (ts.isSatisfiesExpression(current) || ts.isAsExpression(current) || ts.isParenthesizedExpression(current)) current = current.expression;
@@ -336,9 +175,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_class_file_is_named_after_its_class(): StandardCheck {
+  static get a_class_file_is_named_after_its_class(): CheckStandard.StandardCheck {
     return this.defineCheck('a_class_file_is_named_after_its_class', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         if (!classFile) continue;
@@ -350,9 +189,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_class_file_holds_only_imports_class_namespace_and_types(): StandardCheck {
+  static get a_class_file_holds_only_imports_class_namespace_and_types(): CheckStandard.StandardCheck {
     return this.defineCheck('a_class_file_holds_only_imports_class_namespace_and_types', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         if (!classFile) continue;
@@ -374,7 +213,10 @@ class $CheckStandard {
             if (!seenClass) findings.push(this.finding(this.a_class_file_holds_only_imports_class_namespace_and_types, unit, this.lineOf(unit, statement), `namespace ${classFile.publicName} precedes its class ${classFile.rawName}`));
             continue;
           }
-          if (ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement) || ts.isEnumDeclaration(statement)) continue;
+          if (ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement) || ts.isEnumDeclaration(statement)) {
+            findings.push(this.finding(this.a_class_file_holds_only_imports_class_namespace_and_types, unit, this.lineOf(unit, statement), `\`${statement.name.text}\` is a type outside the namespace — every type a class file declares is a member of \`namespace ${classFile.publicName}\` (export type / interface), read as \`${classFile.publicName}.${statement.name.text}\``));
+            continue;
+          }
           if (ts.isExportDeclaration(statement) && statement.isTypeOnly) continue;
           findings.push(this.finding(this.a_class_file_holds_only_imports_class_namespace_and_types, unit, this.lineOf(unit, statement), 'behavior or data outside the class seam — move it into the class (static get / method) or its namespace'));
         }
@@ -383,9 +225,9 @@ class $CheckStandard {
     });
   }
 
-  static get the_namespace_holds_identity_and_types_only(): StandardCheck {
+  static get the_namespace_holds_identity_and_types_only(): CheckStandard.StandardCheck {
     return this.defineCheck('the_namespace_holds_identity_and_types_only', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         if (!classFile?.namespace?.body || !ts.isModuleBlock(classFile.namespace.body)) continue;
@@ -410,9 +252,9 @@ class $CheckStandard {
     });
   }
 
-  static get behavior_lives_on_the_prototype_not_in_fields(): StandardCheck {
+  static get behavior_lives_on_the_prototype_not_in_fields(): CheckStandard.StandardCheck {
     return this.defineCheck('behavior_lives_on_the_prototype_not_in_fields', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         if (!classFile) continue;
@@ -425,9 +267,9 @@ class $CheckStandard {
     });
   }
 
-  static get construction_goes_through_the_namespace_class_slot(): StandardCheck {
+  static get construction_goes_through_the_namespace_class_slot(): CheckStandard.StandardCheck {
     return this.defineCheck('construction_goes_through_the_namespace_class_slot', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         this.forEachDescendant(unit.ast, (node) => {
           if (ts.isNewExpression(node)) {
@@ -445,9 +287,9 @@ class $CheckStandard {
     });
   }
 
-  static get the_anchor_is_static_only_when_statics_exist(): StandardCheck {
+  static get the_anchor_is_static_only_when_statics_exist(): CheckStandard.StandardCheck {
     return this.defineCheck('the_anchor_is_static_only_when_statics_exist', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         if (!classFile?.namespace || !classFile.anchorInitializer) continue;
@@ -462,13 +304,13 @@ class $CheckStandard {
     });
   }
 
-  static get static_binds_methods_and_caches_dollar_getters_per_receiver(): StandardCheck {
+  static get static_binds_methods_and_caches_dollar_getters_per_receiver(): CheckStandard.StandardCheck {
     return this.defineCheck('static_binds_methods_and_caches_dollar_getters_per_receiver', (context) => {
-      const unit: SourceUnit | undefined = context.sources[0];
-      const probe = (message: string): Finding => ({ check: 'static_binds_methods_and_caches_dollar_getters_per_receiver', file: 'ivue/extras', line: 0, message: `${message} (probed from ${unit?.relativePath ?? 'the gate'})` });
+      const unit: CheckStandard.SourceUnit | undefined = context.sources[0];
+      const probe = (message: string): CheckStandard.Finding => ({ check: 'static_binds_methods_and_caches_dollar_getters_per_receiver', file: 'ivue/extras', line: 0, message: `${message} (probed from ${unit?.relativePath ?? 'the gate'})` });
       const StaticUnderTest = context.staticImplementation;
       if (!StaticUnderTest) return [probe('`Static` could not be loaded from ivue/extras — the runtime probe did not run')];
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       let cacheRuns = 0;
       class $Probe {
         static get $cache() {
@@ -493,9 +335,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_shared_store_is_a_static_readonly_field(): StandardCheck {
+  static get a_shared_store_is_a_static_readonly_field(): CheckStandard.StandardCheck {
     return this.defineCheck('a_shared_store_is_a_static_readonly_field', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         if (!classFile) continue;
@@ -520,9 +362,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_derived_static_getter_is_lower_camel_case(): StandardCheck {
+  static get a_derived_static_getter_is_lower_camel_case(): CheckStandard.StandardCheck {
     return this.defineCheck('a_derived_static_getter_is_lower_camel_case', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       const isLiteral = (expression: ts.Expression): boolean => {
         if (ts.isNumericLiteral(expression) || ts.isStringLiteralLike(expression) || ts.isRegularExpressionLiteral(expression) || expression.kind === ts.SyntaxKind.TrueKeyword || expression.kind === ts.SyntaxKind.FalseKeyword) return true;
         if (ts.isPrefixUnaryExpression(expression) && expression.operator === ts.SyntaxKind.MinusToken) return isLiteral(expression.operand);
@@ -550,9 +392,9 @@ class $CheckStandard {
     });
   }
 
-  static get static_reads_go_through_self_not_the_base_class(): StandardCheck {
+  static get static_reads_go_through_self_not_the_base_class(): CheckStandard.StandardCheck {
     return this.defineCheck('static_reads_go_through_self_not_the_base_class', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         if (!classFile) continue;
@@ -570,9 +412,9 @@ class $CheckStandard {
     });
   }
 
-  static get mutable_state_is_a_ref_returning_getter(): StandardCheck {
+  static get mutable_state_is_a_ref_returning_getter(): CheckStandard.StandardCheck {
     return this.defineCheck('mutable_state_is_a_ref_returning_getter', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         // A plain namespace class (no Reactive) holds plain state — there
@@ -595,9 +437,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_ref_is_read_and_written_through_value(): StandardCheck {
+  static get a_ref_is_read_and_written_through_value(): CheckStandard.StandardCheck {
     return this.defineCheck('a_ref_is_read_and_written_through_value', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         if (!classFile) continue;
@@ -614,9 +456,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_derivation_is_a_plain_getter_unless_computed_is_justified(): StandardCheck {
+  static get a_derivation_is_a_plain_getter_unless_computed_is_justified(): CheckStandard.StandardCheck {
     return this.defineCheck('a_derivation_is_a_plain_getter_unless_computed_is_justified', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         if (!classFile) continue;
@@ -634,9 +476,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_composable_is_injected_by_a_one_call_dollar_getter(): StandardCheck {
+  static get a_composable_is_injected_by_a_one_call_dollar_getter(): CheckStandard.StandardCheck {
     return this.defineCheck('a_composable_is_injected_by_a_one_call_dollar_getter', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         if (!classFile) continue;
@@ -655,11 +497,11 @@ class $CheckStandard {
     });
   }
 
-  static get instance_types_only_unwrapping_surfaces(): StandardCheck {
+  static get instance_types_only_unwrapping_surfaces(): CheckStandard.StandardCheck {
     return this.defineCheck('instance_types_only_unwrapping_surfaces', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       const RAW_CONTAINERS = new Set(['Array', 'ReadonlyArray', 'Map', 'Set', 'WeakMap', 'ref', 'shallowRef', 'Ref', 'ShallowRef']);
-      const inspect = (unit: SourceUnit, report: (line: number, message: string) => void) => {
+      const inspect = (unit: CheckStandard.SourceUnit, report: (line: number, message: string) => void) => {
         this.forEachDescendant(unit.ast, (node) => {
           if (ts.isTypeReferenceNode(node)) {
             const tail = this.qualifiedTail(node);
@@ -686,9 +528,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_component_has_one_model_owner(): StandardCheck {
+  static get a_component_has_one_model_owner(): CheckStandard.StandardCheck {
     return this.defineCheck('a_component_has_one_model_owner', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const component of context.components) {
         if (!component.script) continue;
         const constructions = this.modelConstructions(component);
@@ -698,9 +540,9 @@ class $CheckStandard {
     });
   }
 
-  static get script_setup_is_wiring_only(): StandardCheck {
+  static get script_setup_is_wiring_only(): CheckStandard.StandardCheck {
     return this.defineCheck('script_setup_is_wiring_only', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const component of context.components) {
         if (!component.script) continue;
         for (const statement of component.script.ast.statements) {
@@ -717,9 +559,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_lifecycle_hook_delegates_to_one_method(): StandardCheck {
+  static get a_lifecycle_hook_delegates_to_one_method(): CheckStandard.StandardCheck {
     return this.defineCheck('a_lifecycle_hook_delegates_to_one_method', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const component of context.components) {
         if (!component.script) continue;
         this.forEachDescendant(component.script.ast, (node) => {
@@ -736,9 +578,9 @@ class $CheckStandard {
     });
   }
 
-  static get the_state_destructure_is_total(): StandardCheck {
+  static get the_state_destructure_is_total(): CheckStandard.StandardCheck {
     return this.defineCheck('the_state_destructure_is_total', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const component of context.components) {
         if (!component.script) continue;
         const props = this.propNames(component);
@@ -782,9 +624,9 @@ class $CheckStandard {
     });
   }
 
-  static get template_expressions_carry_no_logic(): StandardCheck {
+  static get template_expressions_carry_no_logic(): CheckStandard.StandardCheck {
     return this.defineCheck('template_expressions_carry_no_logic', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       const isNamedRead = (expression: ts.Expression): boolean => {
         if (ts.isIdentifier(expression) || expression.kind === ts.SyntaxKind.ThisKeyword) return true;
         if (ts.isPropertyAccessExpression(expression)) return isNamedRead(expression.expression);
@@ -826,9 +668,9 @@ class $CheckStandard {
     });
   }
 
-  static get watch_lifetime_matches_the_instance_owner(): StandardCheck {
+  static get watch_lifetime_matches_the_instance_owner(): CheckStandard.StandardCheck {
     return this.defineCheck('watch_lifetime_matches_the_instance_owner', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       const componentScoped = new Set<string>();
       for (const component of context.components) for (const construction of this.modelConstructions(component)) componentScoped.add(construction.namespace);
       // A class constructed INSIDE a component-scoped class (its constructor
@@ -905,9 +747,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_reactive_closure_delegates_to_one_method(): StandardCheck {
+  static get a_reactive_closure_delegates_to_one_method(): CheckStandard.StandardCheck {
     return this.defineCheck('a_reactive_closure_delegates_to_one_method', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       const reactiveCallees = new Set(['computed', 'watch', 'watchEffect', '$watch', '$watchEffect']);
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -939,9 +781,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_store_is_used_lazily_and_swapped_at_the_class_slot(): StandardCheck {
+  static get a_store_is_used_lazily_and_swapped_at_the_class_slot(): CheckStandard.StandardCheck {
     return this.defineCheck('a_store_is_used_lazily_and_swapped_at_the_class_slot', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         this.forEachDescendant(unit.ast, (node) => {
           if (ts.isNewExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'Class' && !this.isInsideFunctionBody(node))
@@ -972,9 +814,9 @@ class $CheckStandard {
     });
   }
 
-  static get keyed_state_creates_on_read_and_peeks_on_write(): StandardCheck {
+  static get keyed_state_creates_on_read_and_peeks_on_write(): CheckStandard.StandardCheck {
     return this.defineCheck('keyed_state_creates_on_read_and_peeks_on_write', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       const REF_TYPES = /\b(?:Ref|ShallowRef|ComputedRef|WritableComputedRef)\s*</;
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
@@ -1000,9 +842,9 @@ class $CheckStandard {
     });
   }
 
-  static get a_generic_reactive_class_casts_its_constructor(): StandardCheck {
+  static get a_generic_reactive_class_casts_its_constructor(): CheckStandard.StandardCheck {
     return this.defineCheck('a_generic_reactive_class_casts_its_constructor', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         if (!classFile?.namespace?.body || !classFile.rawClass.typeParameters?.length || !classFile.isReactive) continue;
@@ -1017,9 +859,9 @@ class $CheckStandard {
     });
   }
 
-  static get cross_module_class_reads_happen_inside_bodies(): StandardCheck {
+  static get cross_module_class_reads_happen_inside_bodies(): CheckStandard.StandardCheck {
     return this.defineCheck('cross_module_class_reads_happen_inside_bodies', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.sources) {
         const imported = this.importedBindings(unit);
         if (!imported.size) continue;
@@ -1046,10 +888,10 @@ class $CheckStandard {
     });
   }
 
-  static get declarations_use_full_descriptive_names(): StandardCheck {
+  static get declarations_use_full_descriptive_names(): CheckStandard.StandardCheck {
     return this.defineCheck('declarations_use_full_descriptive_names', (context) => {
-      const findings: Finding[] = [];
-      const inspect = (unit: SourceUnit) => {
+      const findings: CheckStandard.Finding[] = [];
+      const inspect = (unit: CheckStandard.SourceUnit) => {
         this.forEachDescendant(unit.ast, (node) => {
           let identifier: ts.Identifier | null = null;
           if ((ts.isVariableDeclaration(node) || ts.isParameter(node) || ts.isBindingElement(node)) && ts.isIdentifier(node.name)) identifier = node.name;
@@ -1069,9 +911,9 @@ class $CheckStandard {
     });
   }
 
-  static get class_members_are_ordered_and_spaced(): StandardCheck {
+  static get class_members_are_ordered_and_spaced(): CheckStandard.StandardCheck {
     return this.defineCheck('class_members_are_ordered_and_spaced', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       const rank = (member: ts.ClassElement): number => {
         if (this.isStaticMember(member)) return 0;
         if (ts.isConstructorDeclaration(member)) return 1;
@@ -1115,7 +957,7 @@ class $CheckStandard {
 
 
 
-  static get the_population_and_skip_list_are_exact(): StandardCheck {
+  static get the_population_and_skip_list_are_exact(): CheckStandard.StandardCheck {
     // enforced by run() itself; its findings and refusals carry this name
     return this.defineCheck('the_population_and_skip_list_are_exact', () => []);
   }
@@ -1123,7 +965,7 @@ class $CheckStandard {
 
   /** The manifest, in the Standard's order — reads through `this`, so a
    * subclass's overridden or added check getters flow into it. */
-  static get checks(): readonly StandardCheck[] {
+  static get checks(): readonly CheckStandard.StandardCheck[] {
     return [
       this.exactly_one_reactive_source_is_installed,
       this.a_public_class_publishes_its_namespace_manifest,
@@ -1350,7 +1192,7 @@ export namespace Scroller {
 
   /** The constitution: every check's claim, impossibility, and both
    * permanent proof arms — per receiver, extended alongside `checks`. */
-  static get proofs(): Readonly<Record<string, CheckProof>> {
+  static get proofs(): Readonly<Record<string, CheckStandard.CheckProof>> {
     const fixture = this.$fixtures;
     const grammar = this.$grammar;
     const contractName = `demo${grammar.CONTRACT_SUFFIX}`;
@@ -1399,10 +1241,10 @@ export namespace Scroller {
         green: [{ files: { ...box, 'src/Widget.ts': "class $WidgetPart {\n  spin() {\n    return 1;\n  }\n}\n\nclass $Widget {\n  get part() {\n    return new $WidgetPart();\n  }\n}\n\nexport namespace Widget {\n  export const $Class = $Widget;\n  export let Class = $Class;\n}\n" } }],
       },
       'a_class_file_holds_only_imports_class_namespace_and_types': {
-        claim: 'If a file is a class file, then its top level is imports, the class, its namespace, and type declarations, nothing else',
+        claim: 'If a file is a class file, then its top level is imports, the class, and its namespace, nothing else — every type it declares is a namespace member',
         impossibility: 'a file breaking a_class_file_holds_only_imports_class_namespace_and_types passes the gate',
-        red: [{ files: { 'src/Box.ts': `${fixture.validClass}\nconst DEFAULT_WIDTH = 4;\nexport function widen(box: Box.Instance) { return box.area; }\n` }, expectFindings: [/outside the class seam/], expectCount: 2 }],
-        green: [{ files: { 'src/Box.ts': `${fixture.validClass}\nexport type BoxSeed = { width: number };\nexport interface BoxEmits { (event: 'grown'): void }\n` } }],
+        red: [{ files: { 'src/Box.ts': `${fixture.validClass}\nconst DEFAULT_WIDTH = 4;\nexport function widen(box: Box.Instance) { return box.area; }\nexport type BoxSeed = { width: number };\n` }, expectFindings: [/outside the class seam/, /`BoxSeed` is a type outside the namespace/], expectCount: 3 }],
+        green: [{ files: { 'src/Box.ts': fixture.validClass.replace('  export type Instance = typeof Class.Instance;\n', '  export type Instance = typeof Class.Instance;\n  export type Seed = { width: number };\n  export interface Emits {\n    (event: \'grown\'): void;\n  }\n') } }],
       },
       'the_namespace_holds_identity_and_types_only': {
         claim: 'If a class file has a namespace, then the namespace holds $Class, Class, and type declarations, never runtime data or behavior (which live on the class as statics)',
@@ -1449,7 +1291,7 @@ export namespace Scroller {
         claim: "If the consumer's Static transforms a class, then its static methods are bound with stable identity and its dollar getters run once per receiver class",
         impossibility: 'a file breaking static_binds_methods_and_caches_dollar_getters_per_receiver passes the gate',
         red: [
-          { files: box, options: { staticImplementation: (<Class,>(targetClass: Class) => targetClass) as StaticTransform }, expectFindings: [/does not bind static methods/, /does not cache a dollar getter once per receiver/] },
+          { files: box, options: { staticImplementation: (<Class,>(targetClass: Class) => targetClass) as CheckStandard.StaticTransform }, expectFindings: [/does not bind static methods/, /does not cache a dollar getter once per receiver/] },
           { files: box, options: { staticImplementation: null }, expectFindings: [/could not be loaded/] },
         ],
         green: [{ files: box }],
@@ -1709,15 +1551,15 @@ export namespace Scroller {
   // -------------------------------------------------------------------------
   // behavior — methods (async welcome here; the getters above carry data)
 
-  static defineCheck(name: string, run: (context: GateContext) => Finding[]): StandardCheck {
+  static defineCheck(name: string, run: (context: CheckStandard.GateContext) => CheckStandard.Finding[]): CheckStandard.StandardCheck {
     return { name, enforced: true, run };
   }
 
-  static finding(check: StandardCheck, unit: SourceUnit, line: number, message: string): Finding {
+  static finding(check: CheckStandard.StandardCheck, unit: CheckStandard.SourceUnit, line: number, message: string): CheckStandard.Finding {
     return { check: check.name, file: unit.relativePath, line, message };
   }
 
-  static componentFinding(check: StandardCheck, component: ComponentUnit, line: number, message: string): Finding {
+  static componentFinding(check: CheckStandard.StandardCheck, component: CheckStandard.ComponentUnit, line: number, message: string): CheckStandard.Finding {
     return { check: check.name, file: component.relativePath, line, message };
   }
 
@@ -1747,7 +1589,7 @@ export namespace Scroller {
     }
   }
 
-  static toUnit(cwd: string, path: string): SourceUnit {
+  static toUnit(cwd: string, path: string): CheckStandard.SourceUnit {
     const text = readFileSync(path, 'utf8');
     return {
       path,
@@ -1758,11 +1600,11 @@ export namespace Scroller {
     };
   }
 
-  static lineOf(unit: SourceUnit, node: ts.Node): number {
+  static lineOf(unit: CheckStandard.SourceUnit, node: ts.Node): number {
     return unit.ast.getLineAndCharacterOfPosition(node.getStart(unit.ast)).line + 1;
   }
 
-  static collectTemplateExpressions(nodes: TemplateChildNode[], into: TemplateExpression[]): void {
+  static collectTemplateExpressions(nodes: TemplateChildNode[], into: CheckStandard.TemplateExpression[]): void {
     for (const node of nodes) {
       if (node.type === NodeTypes.INTERPOLATION && node.content.type === NodeTypes.SIMPLE_EXPRESSION) {
         into.push({ code: node.content.content, line: node.loc.start.line, kind: 'interpolation' });
@@ -1792,12 +1634,12 @@ export namespace Scroller {
     }
   }
 
-  static toComponent(cwd: string, path: string): ComponentUnit {
+  static toComponent(cwd: string, path: string): CheckStandard.ComponentUnit {
     const text = readFileSync(path, 'utf8');
     const { descriptor } = parseSfc(text, { filename: path });
     const scriptBlock = descriptor.scriptSetup;
     const scriptLine = scriptBlock ? scriptBlock.loc.start.line : 0;
-    const script: SourceUnit | null = scriptBlock
+    const script: CheckStandard.SourceUnit | null = scriptBlock
       ? {
           path,
           relativePath: relative(cwd, path).replaceAll('\\', '/'),
@@ -1806,7 +1648,7 @@ export namespace Scroller {
           ast: ts.createSourceFile(path, scriptBlock.content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS),
         }
       : null;
-    const expressions: TemplateExpression[] = [];
+    const expressions: CheckStandard.TemplateExpression[] = [];
     if (descriptor.template) {
       const templateAst = parseTemplate(descriptor.template.content, { comments: false });
       this.collectTemplateExpressions(templateAst.children, expressions);
@@ -1826,12 +1668,12 @@ export namespace Scroller {
     return expression;
   }
 
-  static componentLine(component: ComponentUnit, node: ts.Node): number {
+  static componentLine(component: CheckStandard.ComponentUnit, node: ts.Node): number {
     return component.script ? this.lineOf(component.script, node) + component.scriptLine - 1 : 1;
   }
 
   /** `const box = new Box.Class(…)` bindings in a component's script setup. */
-  static modelConstructions(component: ComponentUnit): { variable: string; namespace: string; node: ts.Node }[] {
+  static modelConstructions(component: CheckStandard.ComponentUnit): { variable: string; namespace: string; node: ts.Node }[] {
     const constructions: { variable: string; namespace: string; node: ts.Node }[] = [];
     if (!component.script) return constructions;
     for (const statement of component.script.ast.statements) {
@@ -1846,7 +1688,7 @@ export namespace Scroller {
   }
 
   /** Names declared by `defineProps<{ … }>()` / `withDefaults(defineProps<{ … }>(), …)`. */
-  static propNames(component: ComponentUnit): Set<string> {
+  static propNames(component: CheckStandard.ComponentUnit): Set<string> {
     const names = new Set<string>();
     if (!component.script) return names;
     this.forEachDescendant(component.script.ast, (node) => {
@@ -1863,7 +1705,7 @@ export namespace Scroller {
     return names;
   }
 
-  static classFileOf(unit: SourceUnit): ClassFile | null {
+  static classFileOf(unit: CheckStandard.SourceUnit): CheckStandard.ClassFile | null {
     const dollarClasses = unit.ast.statements.filter(
       (statement): statement is ts.ClassDeclaration =>
         ts.isClassDeclaration(statement) && !!statement.name && statement.name.text.startsWith('$'),
@@ -1916,7 +1758,7 @@ export namespace Scroller {
     };
   }
 
-  static classFileByNamespace(context: GateContext, namespace: string): ClassFile | null {
+  static classFileByNamespace(context: CheckStandard.GateContext, namespace: string): CheckStandard.ClassFile | null {
     for (const unit of context.sources) {
       const classFile = this.classFileOf(unit);
       if (classFile?.publicName === namespace) return classFile;
@@ -2020,7 +1862,7 @@ export namespace Scroller {
     node.forEachChild((child) => this.forEachDescendant(child, visit));
   }
 
-  static importedBindings(unit: SourceUnit): Set<string> {
+  static importedBindings(unit: CheckStandard.SourceUnit): Set<string> {
     const names = new Set<string>();
     for (const statement of unit.ast.statements) {
       if (!ts.isImportDeclaration(statement) || !statement.importClause) continue;
@@ -2048,10 +1890,10 @@ export namespace Scroller {
     return false;
   }
 
-  static parseHeader(unit: SourceUnit): GeneratorHeader {
+  static parseHeader(unit: CheckStandard.SourceUnit): CheckStandard.GeneratorHeader {
     const grammar = this.$grammar;
     const text = unit.text;
-    const header: GeneratorHeader = {
+    const header: CheckStandard.GeneratorHeader = {
       present: text.includes(grammar.GENERATOR),
       firstContent: false,
       goal: '',
@@ -2109,10 +1951,10 @@ export namespace Scroller {
     return header;
   }
 
-  static parseProofs(unit: SourceUnit, header: GeneratorHeader): ProofAnnotation[] {
+  static parseProofs(unit: CheckStandard.SourceUnit, header: CheckStandard.GeneratorHeader): CheckStandard.ProofAnnotation[] {
     const grammar = this.$grammar;
-    const proofs: ProofAnnotation[] = [];
-    let pending: ProofAnnotation[] = [];
+    const proofs: CheckStandard.ProofAnnotation[] = [];
+    let pending: CheckStandard.ProofAnnotation[] = [];
     let documentationOpen = false;
     for (let index = header.endLine; index < unit.lines.length; index++) {
       const line = unit.lines[index];
@@ -2189,7 +2031,7 @@ export namespace Scroller {
   /** The run's final severity per check: the receiver's `severities`
    * defaults, overridden by the run's --warn/--off. Unknown names and a
    * check assigned both warn and off are refused. */
-  static resolveSeverities(options: GateOptions): Map<string, 'warn' | 'off'> {
+  static resolveSeverities(options: CheckStandard.GateOptions): Map<string, 'warn' | 'off'> {
     const known = this.checkNames;
     const resolved = new Map<string, 'warn' | 'off'>();
     for (const [name, severity] of Object.entries(this.severities)) {
@@ -2209,7 +2051,7 @@ export namespace Scroller {
     return resolved;
   }
 
-  static readSkipList(cwd: string, path: string): SkipRow[] {
+  static readSkipList(cwd: string, path: string): CheckStandard.SkipRow[] {
     const absolute = isAbsolute(path) ? path : resolve(cwd, path);
     if (!existsSync(absolute)) throw new CheckStandard.GateUsageError(`skip-list not found: ${path}`);
     let parsed: unknown;
@@ -2219,7 +2061,7 @@ export namespace Scroller {
       throw new CheckStandard.GateUsageError(`skip-list ${path}: not valid JSON (${(error as Error).message}) — the skip list is a JSON array of { path, check, reason }`);
     }
     if (!Array.isArray(parsed)) throw new CheckStandard.GateUsageError(`skip-list ${path}: the skip list is a JSON array of { path, check, reason }`);
-    const rows: SkipRow[] = [];
+    const rows: CheckStandard.SkipRow[] = [];
     const seen = new Set<string>();
     const knownNames = this.checkNames;
     parsed.forEach((entry, index) => {
@@ -2239,13 +2081,13 @@ export namespace Scroller {
   }
 
   /** Discover, check, apply the skip-list. Throws GateUsageError on a refused population. */
-  static run(options: GateOptions): GateResult {
+  static run(options: CheckStandard.GateOptions): CheckStandard.GateResult {
     const cwd = resolve(options.cwd);
     if (!options.sourceRoots.length) throw new CheckStandard.GateUsageError('at least one --source-root is required');
     const testMatchers = options.testGlobs.map((glob) => ({ glob, regexp: this.globToRegExp(glob) }));
-    const sources: SourceUnit[] = [];
-    const tests: SourceUnit[] = [];
-    const components: ComponentUnit[] = [];
+    const sources: CheckStandard.SourceUnit[] = [];
+    const tests: CheckStandard.SourceUnit[] = [];
+    const components: CheckStandard.ComponentUnit[] = [];
     const isTest = (relativePath: string) => testMatchers.some((matcher) => matcher.regexp.test(relativePath));
     for (const root of options.sourceRoots) {
       const absoluteRoot = isAbsolute(root) ? root : resolve(cwd, root);
@@ -2280,7 +2122,7 @@ export namespace Scroller {
     const skips = options.skipListPath ? this.readSkipList(cwd, options.skipListPath) : [];
     const severities = this.resolveSeverities(options);
 
-    const context: GateContext = {
+    const context: CheckStandard.GateContext = {
       cwd,
       sourceRoots: options.sourceRoots.map((root) => (isAbsolute(root) ? root : resolve(cwd, root))),
       sources,
@@ -2289,16 +2131,16 @@ export namespace Scroller {
       testGlobs: options.testGlobs,
       staticImplementation: options.staticImplementation ?? null,
     };
-    const raw: Finding[] = [];
+    const raw: CheckStandard.Finding[] = [];
     for (const entry of this.checks) {
       if (!entry.enforced || severities.get(entry.name) === 'off') continue;
       raw.push(...entry.run(context));
     }
 
-    const findings: Finding[] = [];
-    const warnings: Finding[] = [];
-    const suppressed: Finding[] = [];
-    const used = new Set<SkipRow>();
+    const findings: CheckStandard.Finding[] = [];
+    const warnings: CheckStandard.Finding[] = [];
+    const suppressed: CheckStandard.Finding[] = [];
+    const used = new Set<CheckStandard.SkipRow>();
     for (const item of raw) {
       const row = skips.find((skip) => skip.check === item.check && skip.path === item.file);
       if (row) {
@@ -2315,7 +2157,7 @@ export namespace Scroller {
         findings.push({ check: this.the_population_and_skip_list_are_exact.name, file: options.skipListPath ?? 'skip-list', line: row.line, message });
       }
     }
-    const byPlace = (first: Finding, second: Finding) => first.file.localeCompare(second.file) || first.line - second.line;
+    const byPlace = (first: CheckStandard.Finding, second: CheckStandard.Finding) => first.file.localeCompare(second.file) || first.line - second.line;
     findings.sort(byPlace);
     warnings.sort(byPlace);
     return {
@@ -2332,7 +2174,7 @@ export namespace Scroller {
   /** Run the receiver's whole constitution: every check's red and green
    * arms through run(), refusing a manifest whose check lacks them.
    * `only` isolates one check by name — its arms and nothing else. */
-  static prove(options?: { completenessOnly?: boolean; only?: string }): ProveReport {
+  static prove(options?: { completenessOnly?: boolean; only?: string }): CheckStandard.ProveReport {
     const problems: string[] = [];
     const ran = { red: 0, green: 0 };
     const proofs = this.proofs;
@@ -2344,7 +2186,7 @@ export namespace Scroller {
       }
     }
     for (const check of selected) {
-      const asGetter = (this as unknown as Record<string, StandardCheck | undefined>)[check.name];
+      const asGetter = (this as unknown as Record<string, CheckStandard.StandardCheck | undefined>)[check.name];
       if (asGetter?.name !== check.name) problems.push(`${check.name}: the name is not its getter — one snake_case form is the whole identity (getter, finding label, skip token, severity key)`);
       const proof = proofs[check.name];
       if (!proof) {
@@ -2366,7 +2208,7 @@ export namespace Scroller {
               writeFileSync(join(checkout, path), text);
             }
             const hasTests = Object.keys(arm.files).some((path) => path.endsWith('.test.ts'));
-            const gateOptions: GateOptions = {
+            const gateOptions: CheckStandard.GateOptions = {
               cwd: checkout,
               sourceRoots: ['src'],
               testGlobs: hasTests ? ['src/**/*.test.ts'] : [],
@@ -2380,8 +2222,8 @@ export namespace Scroller {
             // own severities getter must not bend the arm: the check's
             // warnings fold back into its findings.
             const armTestsSeverity = !!arm.options && ('warnChecks' in arm.options || 'offChecks' in arm.options);
-            let findings: Finding[] = [];
-            let warnings: Finding[] = [];
+            let findings: CheckStandard.Finding[] = [];
+            let warnings: CheckStandard.Finding[] = [];
             let thrown: Error | null = null;
             try {
               const result = this.run(gateOptions);
@@ -2480,7 +2322,7 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
         return 2;
       }
     }
-    let result: GateResult;
+    let result: CheckStandard.GateResult;
     try {
       result = this.run({ cwd, sourceRoots, testGlobs, skipListPath, staticImplementation: Static });
     } catch (error) {
@@ -2505,6 +2347,167 @@ name, duplicate or stale skip row). Paths in findings are relative to the cwd.`;
 export namespace CheckStandard {
   export const $Class = Static($CheckStandard);
   export let Class = $Class;
+
+  /* Types — the gate's public vocabulary, one seam */
+
+  export interface Finding {
+    check: string;
+    file: string;
+    line: number;
+    message: string;
+  }
+
+  export type StaticTransform = <Class extends new (...arguments_: any[]) => any>(targetClass: Class) => Class;
+
+  export interface GateOptions {
+    cwd: string;
+    sourceRoots: string[];
+    testGlobs: string[];
+    skipListPath?: string;
+    /** programmatic severity overrides (the declarative home is the gate
+     * class's `severities` getter): demoted to warnings — reported, never
+     * blocking … */
+    warnChecks?: string[];
+    /** … or disabled — not executed, announced in the summary */
+    offChecks?: string[];
+    /** the `Static` used by the runtime probe; defaults to this package's own */
+    staticImplementation?: StaticTransform | null;
+  }
+
+  export interface GateResult {
+    /** blocking findings — checks at severity error */
+    findings: Finding[];
+    /** findings from checks demoted to warn — reported, never blocking */
+    warnings: Finding[];
+    suppressed: Finding[];
+    sources: string[];
+    tests: string[];
+    unenforced: string[];
+    /** checks turned off for this run — announced, never silent */
+    off: string[];
+  }
+
+  export interface StandardCheck {
+    /** The identity: a plain declarative sentence, used verbatim everywhere. */
+    name: string;
+    /** false = registered in the manifest but not enforced yet; the report says so. */
+    enforced: boolean;
+    run(context: GateContext): Finding[];
+  }
+
+  /** One permanent proof fixture: a small checkout the gate runs over. */
+  export interface CheckProofArm {
+    /** repo-relative path → file text; sources under `src/` by convention */
+    files: Record<string, string>;
+    /** package.json for the fixture checkout (default: an ivue consumer) */
+    manifest?: Record<string, unknown>;
+    /** GateOptions overrides for this arm (e.g. a broken staticImplementation) */
+    options?: Partial<GateOptions>;
+    /** red arms: each pattern must match at least one of the check's findings */
+    expectFindings?: (RegExp | string)[];
+    /** red arms: exact number of findings the check must produce */
+    expectCount?: number;
+    /** arms with warn-demoted checks: each pattern must match a warning */
+    expectWarnings?: (RegExp | string)[];
+    /** red arms for population refusals: run() must throw matching this */
+    expectThrows?: RegExp;
+  }
+
+  /** A check's constitution entry: its claim, its boundary, and both arms. */
+  export interface CheckProof {
+    claim: string;
+    impossibility: string;
+    red: CheckProofArm[];
+    green: CheckProofArm[];
+  }
+
+  export interface ProveReport {
+    problems: string[];
+    ran: { red: number; green: number };
+  }
+
+  export interface SourceUnit {
+    path: string;
+    relativePath: string;
+    text: string;
+    lines: string[];
+    ast: ts.SourceFile;
+  }
+
+  /** A `.vue` single-file component: its script setup as TS plus every template expression. */
+  export interface ComponentUnit {
+    path: string;
+    relativePath: string;
+    text: string;
+    script: SourceUnit | null;
+    /** 1-based line of the script block's first line in the .vue file */
+    scriptLine: number;
+    expressions: TemplateExpression[];
+  }
+
+  export interface TemplateExpression {
+    code: string;
+    line: number;
+    kind: string;
+  }
+
+  export interface GateContext {
+    cwd: string;
+    /** absolute source roots, as discovered */
+    sourceRoots: string[];
+    sources: SourceUnit[];
+    tests: SourceUnit[];
+    components: ComponentUnit[];
+    testGlobs: string[];
+    staticImplementation: StaticTransform | null;
+  }
+
+  export interface ClassFile {
+    unit: SourceUnit;
+    rawClass: ts.ClassDeclaration;
+    rawName: string;
+    publicName: string;
+    namespace: ts.ModuleDeclaration | null;
+    anchorInitializer: ts.Expression | null;
+    classInitializer: ts.Expression | null;
+    hasInstanceType: boolean;
+    isReactive: boolean;
+    isStaticAnchored: boolean;
+  }
+
+  export interface GeneratorHeader {
+    present: boolean;
+    firstContent: boolean;
+    goal: string;
+    formal: string;
+    described: string;
+    orderedRegisters: boolean;
+    bothRegisters: boolean;
+    subjects: { path: string; line: number }[];
+    domainClaims: Map<string, { symbol: string; claim: string; line: number }>;
+    domainSymbols: Set<string>;
+    impossibilities: Map<string, number>;
+    contractLinks: { text: string; file: string; anchor: string; line: number }[];
+    endLine: number;
+  }
+
+  export interface ProofAnnotation {
+    type: 'domain' | 'impossible' | 'record';
+    symbol?: string;
+    claim?: string;
+    name?: string;
+    contractPath?: string;
+    line: number;
+    bound: boolean;
+  }
+
+  export interface SkipRow {
+    path: string;
+    check: string;
+    reason: string;
+    line: number;
+  }
+
 
   export class GateUsageError extends Error {}
 

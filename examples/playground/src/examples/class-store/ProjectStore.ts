@@ -6,13 +6,6 @@ import { Reactive } from '../../ivue';
 import { LazyShared } from '../../LazyShared';
 import { Static } from '../../Static';
 
-export interface ProjectTask {
-  id: number;
-  title: string;
-  done: boolean;
-}
-
-export type TaskFilter = 'all' | 'active' | 'done';
 
 class $ProjectStore {
   /** The ONE store instance, held in a static readonly field so every
@@ -61,14 +54,14 @@ class $ProjectStore {
     return ref('Apollo');
   }
   get tasks() {
-    return shallowRef<ProjectTask[]>([
+    return shallowRef<ProjectStore.ProjectTask[]>([
       { id: 1, title: 'Design the flight plan', done: true },
       { id: 2, title: 'Fuel the first stage', done: false },
       { id: 3, title: 'Run the countdown checklist', done: false },
     ]);
   }
   get filter() {
-    return ref<TaskFilter>('all');
+    return ref<ProjectStore.TaskFilter>('all');
   }
 
   // DERIVED — plain getters: zero bytes per instance, and there is only
@@ -80,7 +73,7 @@ class $ProjectStore {
     const total = this.tasks.value.length;
     return total === 0 ? 0 : Math.round((this.completedCount / total) * 100);
   }
-  get visibleTasks(): ProjectTask[] {
+  get visibleTasks(): ProjectStore.ProjectTask[] {
     if (this.filter.value === 'active') {
       return this.tasks.value.filter((task) => !task.done);
     }
@@ -105,7 +98,7 @@ class $ProjectStore {
     );
   }
 
-  setFilter(filter: TaskFilter) {
+  setFilter(filter: ProjectStore.TaskFilter) {
     this.filter.value = filter;
   }
 
@@ -143,4 +136,15 @@ export namespace ProjectStore {
   export const $Class = Static($ProjectStore); // anchor — it declares statics; children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this (use() does, once)
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
+
+  /* Types */
+
+  export interface ProjectTask {
+    id: number;
+    title: string;
+    done: boolean;
+  }
+
+  export type TaskFilter = 'all' | 'active' | 'done';
+
 }

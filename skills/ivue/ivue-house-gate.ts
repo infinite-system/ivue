@@ -19,7 +19,7 @@
  *   npm run gate:house -- --source-root src --test-glob 'src/**\/*.test.ts'
  */
 import { Static } from '../../lib/Static';
-import { CheckStandard, type CheckProof, type StandardCheck } from './ivue-standards-check';
+import { CheckStandard } from './ivue-standards-check';
 
 // This gate extends the ivue-only Standard. Teams using the invariant
 // methodology (generator headers on test files, claims bound to tests)
@@ -95,7 +95,7 @@ class $HouseGate extends CheckStandard.$Class {
     return 900;
   }
 
-  static get a_source_file_stays_under_the_line_budget(): StandardCheck {
+  static get a_source_file_stays_under_the_line_budget(): CheckStandard.StandardCheck {
     return this.defineCheck('a_source_file_stays_under_the_line_budget', (context) =>
       context.sources
         .filter((unit) => unit.lines.length > this.MAX_SOURCE_LINES)
@@ -103,11 +103,11 @@ class $HouseGate extends CheckStandard.$Class {
     );
   }
 
-  static get checks(): readonly StandardCheck[] {
+  static get checks(): readonly CheckStandard.StandardCheck[] {
     return [...super.checks, this.a_source_file_stays_under_the_line_budget];
   }
 
-  static get proofs(): Readonly<Record<string, CheckProof>> {
+  static get proofs(): Readonly<Record<string, CheckStandard.CheckProof>> {
     return {
       ...super.proofs,
       [this.a_source_file_stays_under_the_line_budget.name]: {

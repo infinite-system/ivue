@@ -4,7 +4,7 @@
 // the draft title of the task being added.
 import { ref } from 'vue';
 import { Reactive } from '../../ivue';
-import { ProjectStore, type TaskFilter } from './ProjectStore';
+import { ProjectStore } from './ProjectStore';
 
 class $TaskBoard {
   // STORE — injected by `$`-getter; every consumer gets the one instance
@@ -28,7 +28,7 @@ class $TaskBoard {
   }
 
   /** Whether a filter button is the active one (a per-item template condition). */
-  isFilter(option: TaskFilter) {
+  isFilter(option: ProjectStore.TaskFilter) {
     return this.$project.filter.value === option;
   }
 

@@ -21,12 +21,12 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';
 import { Static } from '../../lib/Static';
-import { CheckStandard, type CheckProof, type Finding, type StandardCheck } from './ivue-standards-check';
+import { CheckStandard } from './ivue-standards-check';
 
 class $GeneratorStandard extends CheckStandard.$Class {
-  static get invariants_a_test_file_opens_with_its_generator_header(): StandardCheck {
+  static get invariants_a_test_file_opens_with_its_generator_header(): CheckStandard.StandardCheck {
     return this.defineCheck('invariants_a_test_file_opens_with_its_generator_header', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
         if (!header.present) findings.push(this.finding(this.invariants_a_test_file_opens_with_its_generator_header, unit, 1, `no \`${this.$grammar.GENERATOR}\` header — the test file opens with its generator header, before any import`));
@@ -36,9 +36,9 @@ class $GeneratorStandard extends CheckStandard.$Class {
     });
   }
 
-  static get invariants_a_generator_header_carries_both_registers_in_order(): StandardCheck {
+  static get invariants_a_generator_header_carries_both_registers_in_order(): CheckStandard.StandardCheck {
     return this.defineCheck('invariants_a_generator_header_carries_both_registers_in_order', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       const grammar = this.$grammar;
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
@@ -54,9 +54,9 @@ class $GeneratorStandard extends CheckStandard.$Class {
     });
   }
 
-  static get invariants_a_header_symbol_is_declared_in_the_sibling_source(): StandardCheck {
+  static get invariants_a_header_symbol_is_declared_in_the_sibling_source(): CheckStandard.StandardCheck {
     return this.defineCheck('invariants_a_header_symbol_is_declared_in_the_sibling_source', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
         if (!header.present) continue;
@@ -92,9 +92,9 @@ class $GeneratorStandard extends CheckStandard.$Class {
     });
   }
 
-  static get invariants_a_claim_annotation_sits_directly_above_its_test(): StandardCheck {
+  static get invariants_a_claim_annotation_sits_directly_above_its_test(): CheckStandard.StandardCheck {
     return this.defineCheck('invariants_a_claim_annotation_sits_directly_above_its_test', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
         if (!header.present) continue;
@@ -106,9 +106,9 @@ class $GeneratorStandard extends CheckStandard.$Class {
     });
   }
 
-  static get invariants_header_claims_and_annotated_tests_match_one_to_one(): StandardCheck {
+  static get invariants_header_claims_and_annotated_tests_match_one_to_one(): CheckStandard.StandardCheck {
     return this.defineCheck('invariants_header_claims_and_annotated_tests_match_one_to_one', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
         if (!header.present) continue;
@@ -127,9 +127,9 @@ class $GeneratorStandard extends CheckStandard.$Class {
     });
   }
 
-  static get invariants_an_impossibility_is_proved_by_an_exact_negative_test(): StandardCheck {
+  static get invariants_an_impossibility_is_proved_by_an_exact_negative_test(): CheckStandard.StandardCheck {
     return this.defineCheck('invariants_an_impossibility_is_proved_by_an_exact_negative_test', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
         if (!header.present) continue;
@@ -154,9 +154,9 @@ class $GeneratorStandard extends CheckStandard.$Class {
     });
   }
 
-  static get invariants_a_contract_pointer_resolves_and_is_proved(): StandardCheck {
+  static get invariants_a_contract_pointer_resolves_and_is_proved(): CheckStandard.StandardCheck {
     return this.defineCheck('invariants_a_contract_pointer_resolves_and_is_proved', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
         if (!header.present) continue;
@@ -187,9 +187,9 @@ class $GeneratorStandard extends CheckStandard.$Class {
     });
   }
 
-  static get invariants_a_source_tripwire_resolves_to_its_sibling_header(): StandardCheck {
+  static get invariants_a_source_tripwire_resolves_to_its_sibling_header(): CheckStandard.StandardCheck {
     return this.defineCheck('invariants_a_source_tripwire_resolves_to_its_sibling_header', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       const grammar = this.$grammar;
       const SYMBOL_ONLY = new RegExp(`^\\s*//\\s*${grammar.DOMAIN}:\\s*([^—\\n]+?)\\s*$`);
       for (const unit of context.sources) {
@@ -214,9 +214,9 @@ class $GeneratorStandard extends CheckStandard.$Class {
     });
   }
 
-  static get invariants_a_test_caveat_derives_from_a_tested_claim(): StandardCheck {
+  static get invariants_a_test_caveat_derives_from_a_tested_claim(): CheckStandard.StandardCheck {
     return this.defineCheck('invariants_a_test_caveat_derives_from_a_tested_claim', (context) => {
-      const findings: Finding[] = [];
+      const findings: CheckStandard.Finding[] = [];
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
         if (!header.present || !header.described) continue;
@@ -234,10 +234,10 @@ class $GeneratorStandard extends CheckStandard.$Class {
     });
   }
 
-  static get invariants_two_test_files_do_not_share_one_generator_header(): StandardCheck {
+  static get invariants_two_test_files_do_not_share_one_generator_header(): CheckStandard.StandardCheck {
     return this.defineCheck('invariants_two_test_files_do_not_share_one_generator_header', (context) => {
-      const findings: Finding[] = [];
-      const normalized = new Map<string, SourceUnit>();
+      const findings: CheckStandard.Finding[] = [];
+      const normalized = new Map<string, CheckStandard.SourceUnit>();
       for (const unit of context.tests) {
         const header = this.parseHeader(unit);
         if (!header.present) continue;
@@ -253,7 +253,7 @@ class $GeneratorStandard extends CheckStandard.$Class {
     });
   }
 
-  static get checks(): readonly StandardCheck[] {
+  static get checks(): readonly CheckStandard.StandardCheck[] {
     return [
       ...super.checks,
       this.invariants_a_test_file_opens_with_its_generator_header,
@@ -269,7 +269,7 @@ class $GeneratorStandard extends CheckStandard.$Class {
     ];
   }
 
-  static get proofs(): Readonly<Record<string, CheckProof>> {
+  static get proofs(): Readonly<Record<string, CheckStandard.CheckProof>> {
     const fixture = this.$fixtures;
     const grammar = this.$grammar;
     const contractName = `demo${grammar.CONTRACT_SUFFIX}`;

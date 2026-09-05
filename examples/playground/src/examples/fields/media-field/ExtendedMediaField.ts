@@ -17,12 +17,11 @@ import { ServerApi } from '../server/ServerApi';
 import { MediaField } from './MediaField';
 
 
-export type MediaSortMode = 'newest' | 'name';
 
 export class $ExtendedMediaField extends MediaField.$Class {
   // --- state ---
   get sortMode() {
-    return ref<MediaSortMode>('newest');
+    return ref<ExtendedMediaField.MediaSortMode>('newest');
   }
   get captionId() {
     return ref<string | null>(null);
@@ -179,4 +178,9 @@ export namespace ExtendedMediaField {
   export type Props = MediaField.Props;
   export type Emits = MediaField.Emits;
   export type Slots = MediaField.Slots;
+
+  /* Types */
+
+  export type MediaSortMode = 'newest' | 'name';
+
 }

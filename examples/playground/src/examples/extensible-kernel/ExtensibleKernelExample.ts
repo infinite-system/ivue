@@ -12,25 +12,6 @@ import {
   type NotificationPlugin,
 } from './plugins';
 
-type NotificationKind = 'notification' | 'error';
-type NotificationInstance = InstanceType<typeof Notification.Class>;
-interface NotificationEntry {
-  id: number;
-  kind: NotificationKind;
-  notification: NotificationInstance;
-}
-interface PluginEntry {
-  id: string;
-  label: string;
-  description: string;
-  enabledEffect: string;
-  make: NotificationPlugin;
-}
-interface GraphNode {
-  name: string;
-  extends: string | null;
-  plugins: string[];
-}
 
 class $ExtensibleKernelExample {
   constructor() {
@@ -41,13 +22,13 @@ class $ExtensibleKernelExample {
   }
 
   get notifications() {
-    return shallowRef<NotificationEntry[]>([]);
+    return shallowRef<ExtensibleKernelExample.NotificationEntry[]>([]);
   }
   get activePlugins() {
     return ref<Record<string, boolean>>({ activity: false, sticky: true });
   }
   get graph() {
-    return shallowRef<GraphNode[]>([]);
+    return shallowRef<ExtensibleKernelExample.GraphNode[]>([]);
   }
   get nextNotificationId() {
     return ref(0);
@@ -56,7 +37,7 @@ class $ExtensibleKernelExample {
     return ref<string[]>([]);
   }
 
-  plugins: PluginEntry[] = [
+  plugins: ExtensibleKernelExample.PluginEntry[] = [
     {
       id: 'sticky',
       label: 'Sticky Plugin',
@@ -96,11 +77,11 @@ class $ExtensibleKernelExample {
     return this.isPluginActive(pluginId) ? 'ON' : 'OFF';
   }
 
-  graphNodeHasParent(node: GraphNode) {
+  graphNodeHasParent(node: ExtensibleKernelExample.GraphNode) {
     return node.extends !== null;
   }
 
-  graphNodeHasPlugins(node: GraphNode) {
+  graphNodeHasPlugins(node: ExtensibleKernelExample.GraphNode) {
     return node.plugins.length > 0;
   }
 
@@ -130,10 +111,10 @@ class $ExtensibleKernelExample {
   }
 
   buildNotification(
-    kind: NotificationKind,
+    kind: ExtensibleKernelExample.NotificationKind,
     message: string,
     id = ++this.nextNotificationId.value,
-  ): NotificationEntry {
+  ): ExtensibleKernelExample.NotificationEntry {
     const notification =
       kind === 'error'
         ? new ErrorNotification.Class(message, this.recordActivity)
@@ -142,7 +123,7 @@ class $ExtensibleKernelExample {
     return { id, kind, notification };
   }
 
-  addNotification(kind: NotificationKind) {
+  addNotification(kind: ExtensibleKernelExample.NotificationKind) {
     const message =
       kind === 'error'
         ? 'Upload failed — retry the request.'
@@ -158,7 +139,7 @@ class $ExtensibleKernelExample {
     this.notifications.value = this.visibleNotifications;
   }
 
-  dismissNotification(entry: NotificationEntry) {
+  dismissNotification(entry: ExtensibleKernelExample.NotificationEntry) {
     entry.notification.dismiss();
     this.notifications.value = this.visibleNotifications;
   }
@@ -172,4 +153,27 @@ export namespace ExtensibleKernelExample {
   export const $Class = $ExtensibleKernelExample; // raw — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // expose & reactive() interop
+
+  /* Types */
+
+  export type NotificationKind = 'notification' | 'error';
+  export type NotificationInstance = InstanceType<typeof Notification.Class>;
+  export interface NotificationEntry {
+    id: number;
+    kind: NotificationKind;
+    notification: NotificationInstance;
+  }
+  export interface PluginEntry {
+    id: string;
+    label: string;
+    description: string;
+    enabledEffect: string;
+    make: NotificationPlugin;
+  }
+  export interface GraphNode {
+    name: string;
+    extends: string | null;
+    plugins: string[];
+  }
+
 }

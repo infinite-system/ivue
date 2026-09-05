@@ -39,36 +39,18 @@ const { FormulaError } = FormulaParser as unknown as {
   FormulaError: new (error: string, details?: unknown) => FlyweightLogic.CellValue;
 };
 
-interface RangeRef {
-  from: { row: number; col: number };
-  to: { row: number; col: number };
-}
-
-interface Column {
-  kind: Uint8Array;
-  /** Allocated on the first numeric write — formula columns never pay. */
-  numbers: Float64Array | null;
-  /** Sparse: typed text AND user-edited formula sources (pattern overrides). */
-  text: Map<number, string>;
-}
-
-interface FormulaEntry {
-  value: ComputedRef<FlyweightLogic.CellValue>;
-  /** Stops the derived-write bridge watcher (see formulaValue). */
-  stopBridge: WatchStopHandle;
-}
 
 class $FlyweightSheet {
   readonly rows: number;
   readonly cols: number;
 
   // --- ground truth (plain, non-reactive) ---
-  protected readonly columns: Column[];
+  protected readonly columns: FlyweightSheet.Column[];
 
   // --- the sparse reactive overlay (empty until observed) ---
   protected readonly cellVersions = new Map<number, Ref<number>>();
   protected readonly blockVersions = new Map<number, Ref<number>>();
-  protected readonly formulaCache = new Map<number, FormulaEntry>();
+  protected readonly formulaCache = new Map<number, FlyweightSheet.FormulaEntry>();
   protected readonly adHocCache = new Map<string, ComputedRef<FlyweightLogic.CellValue>>();
 
   /** Blocks per column (fine↔coarse key math). */
@@ -108,7 +90,7 @@ class $FlyweightSheet {
     // Seed the columnar ground truth. Data columns fill Float64Arrays
     // numerically (no string round-trips — this is the whole creation cost);
     // formula columns are a single Uint8Array.fill.
-    const columns: Column[] = new Array(cols);
+    const columns: FlyweightSheet.Column[] = new Array(cols);
     for (let col = 0; col < cols; col++) {
       const kind = new Uint8Array(rows);
       let numbers: Float64Array | null = null;
@@ -130,7 +112,7 @@ class $FlyweightSheet {
 
     this.parser = new FormulaParser({
       onCell: (cellRef) => this.pointValue(cellRef.row, cellRef.col),
-      onRange: (rangeRef) => this.rangeValues(rangeRef as RangeRef),
+      onRange: (rangeRef) => this.rangeValues(rangeRef as FlyweightSheet.RangeRef),
     });
   }
 
@@ -240,7 +222,7 @@ class $FlyweightSheet {
    * (transitive observation, priced) whose derived-write watchers keep the
    * block tier truthful.
    */
-  protected rangeValues(range: RangeRef): FlyweightLogic.CellValue[][] {
+  protected rangeValues(range: FlyweightSheet.RangeRef): FlyweightLogic.CellValue[][] {
     const startRow = range.from.row - 1;
     const startCol = range.from.col - 1;
     const endRow = Math.min(range.to.row - 1, this.rows - 1);
@@ -617,4 +599,26 @@ export namespace FlyweightSheet {
   export const $Class = $FlyweightSheet;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
+
+  /* Types */
+
+  export interface RangeRef {
+    from: { row: number; col: number };
+    to: { row: number; col: number };
+  }
+
+  export interface Column {
+    kind: Uint8Array;
+    /** Allocated on the first numeric write — formula columns never pay. */
+    numbers: Float64Array | null;
+    /** Sparse: typed text AND user-edited formula sources (pattern overrides). */
+    text: Map<number, string>;
+  }
+
+  export interface FormulaEntry {
+    value: ComputedRef<FlyweightLogic.CellValue>;
+    /** Stops the derived-write bridge watcher (see formulaValue). */
+    stopBridge: WatchStopHandle;
+  }
+
 }
