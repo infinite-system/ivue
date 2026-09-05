@@ -37,7 +37,6 @@ The demo above runs these exact files from the playground:
 
 ::: code-group
 <<< ../../examples/playground/src/examples/counter/Counter.ts [Counter.ts]
-<<< ../../examples/playground/src/examples/counter/CounterExample.vue [route]
 <<< @/.vitepress/theme/components/DemoCounter.vue [template]
 :::
 

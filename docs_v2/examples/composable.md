@@ -74,7 +74,6 @@ level up.
 <<< ../../examples/playground/src/examples/composable/useUndoHistory.ts [useUndoHistory.ts]
 <<< ../../examples/playground/src/examples/composable/GroceryList.ts [GroceryList.ts]
 <<< ../../examples/playground/src/examples/composable/ComposableExample.ts [example]
-<<< ../../examples/playground/src/examples/composable/ComposableExample.vue [route]
 <<< @/.vitepress/theme/components/DemoPointer.vue [template · pointer]
 <<< @/.vitepress/theme/components/DemoUndoHistory.vue [template · undo]
 :::

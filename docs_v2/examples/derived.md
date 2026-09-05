@@ -39,7 +39,6 @@ show exactly when each body executes.
 ::: code-group
 <<< ../../examples/playground/src/examples/derived/Thermo.ts [Thermo.ts]
 <<< ../../examples/playground/src/examples/derived/DerivedExample.ts [example]
-<<< ../../examples/playground/src/examples/derived/DerivedExample.vue [route]
 <<< @/.vitepress/theme/components/DemoDerived.vue [template]
 :::
 

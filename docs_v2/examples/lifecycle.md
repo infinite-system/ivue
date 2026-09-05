@@ -78,7 +78,6 @@ docs demo below writes no unmount hook because of it.
 <<< ../../examples/playground/src/examples/lifecycle/LifecycleExample.ts [example]
 <<< ../../examples/playground/src/examples/lifecycle/Ticker.ts [Ticker.ts]
 <<< ../../examples/playground/src/examples/lifecycle/Sensor.ts [Sensor.ts]
-<<< ../../examples/playground/src/examples/lifecycle/LifecycleExample.vue [route]
 <<< @/.vitepress/theme/components/DemoTeardown.vue [template]
 :::
 

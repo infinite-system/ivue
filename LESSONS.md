@@ -453,9 +453,12 @@ background processes, sweep:
   sidebar entries in `config.ts`, `docs_v2/examples/index.md`, the theme
   demo imports (`@examples/<dir>/…`), the StackBlitz link on the page,
   and add a 301 to `docs_v2/public/_redirects`.
-- Every example page's code group carries the three route tabs where
-  the files exist: `[example]` (the playground route's model class),
-  `[route]` (the playground route SFC) and `[template]` (the docs demo
-  component under `.vitepress/theme/components`, via `<<< @/…`), beside
-  the model files. A page missing one is a page half-shown.
+- Every example page's code group carries two tabs beside the model
+  files: `[example]` (the route's model class) and ONE `[template]` —
+  the SFC that actually renders the demo. When the docs component is a
+  real demo (`Demo*.vue`), that is the template; when the docs component
+  only wraps the playground route (the field embeds, class-store,
+  extensible-kernel, workspace-platform), the playground route SFC is
+  the template and the wrapper is not shown. Never both — two SFCs
+  side by side read as duplication.
 

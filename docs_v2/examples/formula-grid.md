@@ -43,7 +43,6 @@ click; nothing runs on page load.
 <<< ../../examples/playground/src/examples/formula-grid/Sheet.ts [Sheet.ts]
 <<< ../../examples/playground/src/examples/formula-grid/FormulaLogic.ts [FormulaLogic.ts]
 <<< ../../examples/playground/src/examples/formula-grid/FormulaGridExample.ts [example]
-<<< ../../examples/playground/src/examples/formula-grid/FormulaGridExample.vue [route]
 <<< @/.vitepress/theme/components/grid/FormulaGrid.vue [template]
 :::
 
