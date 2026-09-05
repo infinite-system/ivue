@@ -117,7 +117,7 @@ offer — is that your application becomes a live, inspectable **object
 graph**: entities holding entities, stores referencing stores,
 subclasses specializing nodes. Closures compose into opaque scopes; a
 constrained class graph can be walked, by a human or by an AI agent.
-A 94,000-line terminal IDE has been built on exactly that, by agents
+A 108,000-line terminal IDE has been built on exactly that, by agents
 following the same one-document standard human contributors use.
 
 **Receipts** (every claim has a measured write-up):

@@ -19,7 +19,7 @@ description: >-
 
 A solo maker who spent three years reducing one question and shipped the
 answer: ivue, a 1.1 kB class layer over Vue's reactivity, and Invar, a
-94,000-line terminal IDE that AI agents built on it under one written
+108,000-line terminal IDE that AI agents built on it under one written
 standard. He reasons by reduction — find what must be TRUE, hold the
 constraints, let the features fall out — and he measures before he claims.
 He is playful in conversation and exact in public. He is not selling; he is
@@ -36,14 +36,14 @@ Every post carries layer 1. Most carry layer 2. A few end on layer 3.
 
 1. **Receipts** (the house word — never written in public copy). Numbers
    with their method. 1.1 kB gzipped. 55–253× faster
-   creation, measured on 100k instances. 20 million cells in 78 ms. 94,000
+   creation, measured on 100k instances. 20 million cells in 78 ms. 108,000
    lines by agents. A claim without a number or a link is not finished.
 2. **The moat is a possibility space, not a syntax.** The feed believes
    "AI can code in anything, so languages and frameworks are no longer a
    moat." Half right. AI can write any syntax that EXISTS; it cannot write
    in a shape that does not exist yet. A framework is a moat as the moves it
    opens and the mistakes it locks — which is why ivue's moat got STRONGER
-   in the agent era: agents wrote 94k lines on it because the shape
+   in the agent era: agents wrote 108k lines on it because the shape
    constrains them into correctness. The sharper form, his: an
    unrestrained possibility space is also a space for bugs; AI works
    best in a CONTROLLED possibility space, and that is what ivue is.
@@ -334,7 +334,7 @@ with zero dependencies. Game changer for large apps. Check it out 👇"
 Why it ships: every word is TRUE and every adjective has a number behind
 it on the account — blazing-fast is 55–253×, zero dependencies is a
 fact, "game changer for large apps" is twenty million cells and a
-94,000-line IDE. Truth is what turns a stock phrase back into a claim.
+108,000-line IDE. Truth is what turns a stock phrase back into a claim.
 Why it is rare: on a random launch account these exact words are
 unbacked, so the feed reads them as generic; here they read as earned
 only because the posts around them carry the numbers. Use it on a
@@ -351,7 +351,7 @@ His reducer version (threads, HN): "Every framework bet on classes, then
 abandoned them. The bugs were real. The diagnosis was wrong: classes
 weren't broken, they were UNCONSTRAINED. So: find the constraints. What
 fell out is 1.1 kB, creates 100k instances 55–253× faster, and a
-94,000-line IDE runs on it. ivue.dev/blog/introducing-ivue"
+108,000-line IDE runs on it. ivue.dev/blog/introducing-ivue"
 
 All three announce. The first is allowed because it is true and rare;
 the other two are the everyday forms. The rule underneath: **an adjective

@@ -189,7 +189,7 @@ export namespace TextSegmentation {
 [**Invar**](https://ivue.dev/examples/invar) is ivue at full scale: a
 complete terminal IDE — editor, workspace search, git, terminals, LSP,
 agents — running on ivue classes under Bun, with no DOM and no Vue
-components. **94,000 source lines, 345 classes, 35 invariant contracts,
+components. **108,000 source lines, 384 classes, 39 invariant contracts,
 zero import cycles**, built almost entirely by AI agents holding the
 [Standard](https://ivue.dev/guide/standard) as their base discipline.
 

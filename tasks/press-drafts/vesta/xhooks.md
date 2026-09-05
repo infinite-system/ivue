@@ -95,7 +95,7 @@ xHooks:
   - >-
     Rename a base member with `noImplicitOverride` on, and every subclass
     breaks at compile time, at the exact member, by name. Seam drift
-    becomes a build error. Proven across a 94,000-line IDE where agents
+    becomes a build error. Proven across a 108,000-line IDE where agents
     extend the classes daily.
 ```
 
@@ -158,7 +158,7 @@ xHooks:
   - >-
     A notify channel cannot report its own silence. A watcher that goes
     quiet looks exactly like a filesystem where nothing changed. So an
-    entire 94,000-line IDE ships one file watcher — over a five-second
+    entire 108,000-line IDE ships one file watcher — over a five-second
     pull floor that writes zero refs when nothing moved.
 ```
 

@@ -14,7 +14,7 @@ ivue is a 1.1 kB class layer over Vue's reactivity. Plain TypeScript classes bec
 
 The conversation is not “classes versus composables.” It is anatomy versus machinery. The Options API gave components a readable shape through a proxy-backed DSL. The Composition API gave Vue honest primitives. A class uses those primitives while state, derivation, and action become language members again.
 
-The receipts are 55–253× creation, zero dependencies, 100% coverage, and a 94,000-line agent-built IDE.
+The receipts are 55–253× creation, zero dependencies, 100% coverage, and a 108,000-line agent-built IDE.
 
 https://ivue.dev/blog/the-options-api-everyone-wanted
 

@@ -29,7 +29,7 @@ paste, send. Nothing here depends on another file having been read.
 
 The press plan holds the AI-agents story for a separate second wave.
 `launch-thread-alt.md` therefore contains no agents announcement; the
-94,000-line codebase appears once, in segment 6, as a receipt for the
+108,000-line codebase appears once, in segment 6, as a receipt for the
 engine — the framing the plan permits. Same discipline in the hooks:
 `reactivity-is-an-allocator` and `ban-private` cite the codebase as
 evidence, never as a product.

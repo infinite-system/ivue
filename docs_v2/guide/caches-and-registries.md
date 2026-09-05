@@ -12,7 +12,7 @@ and they are not alike. One of them must fork when the class is
 subclassed; another must never fork; a third cannot even be constructed
 at the time the file loads. This page is the map: four storage forms,
 one read idiom, and the decision that picks between them. The forms are
-production-proven — [Invar](/examples/invar)'s 94,000 lines run on
+production-proven — [Invar](/examples/invar)'s 108,000 lines run on
 exactly these shapes.
 
 > A static value has one axis that matters: does a subclass get its own

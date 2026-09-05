@@ -1,6 +1,6 @@
 ---
 title: 'The stack got faster. We changed nothing.'
-description: 'Vue 3.6 rewrites reactivity on alien signals; Vapor mode removes the virtual DOM. ivue changes nothing and gets faster on both sides — measured on the RC, and already running 94,000 lines in production.'
+description: 'Vue 3.6 rewrites reactivity on alien signals; Vapor mode removes the virtual DOM. ivue changes nothing and gets faster on both sides — measured on the RC, and already running 108,000 lines in production.'
 tags: [performance, engine]
 relatedPosts: [what-native-signals-should-steal, measured-not-promised, one-kilobyte-feature, twenty-million-cells, computed-is-a-cache, reactivity-is-an-allocator]
 date: 2026-08
@@ -62,7 +62,7 @@ cost of first touches. Alien signals cuts more than a third off that cost; ivue'
 nearly free, by design rather than by engine.
 
 And this is not only a benchmark claim.
-[Invar](/examples/invar) — 94,000 lines, 345 classes, a full terminal
+[Invar](/examples/invar) — 108,000 lines, 384 classes, a full terminal
 IDE — has been running its entire model layer on the 3.6 release
 candidate's reactivity in production, daily. Not because every corner
 of 3.6 is final, but because the reactivity core is the only part the

@@ -141,7 +141,7 @@ if the snapshot exists.
    their browser
 3. https://ivue.dev/guide/standard — the whole contract, one document
 4. https://ivue.dev/guide/performance — the numbers with their methods
-5. https://ivue.dev/blog/agents-built-an-editor — the 94,000-line
+5. https://ivue.dev/blog/agents-built-an-editor — the 108,000-line
    receipt
 
 If a reply needs a sixth link, it needs fewer words instead.

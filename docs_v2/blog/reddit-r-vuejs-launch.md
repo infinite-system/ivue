@@ -76,7 +76,7 @@ final piece landed — the full write-up walks every value kind in code:
 
 1.1 kB gzipped, zero dependencies, 100% coverage, and the whole
 operating manual ships as one document that works for humans and AI
-agents alike (a 94k-line terminal IDE was built on it by agents).
+agents alike (a 108k-line terminal IDE was built on it by agents).
 
 If the frontier interests you regardless of whether you'd use ivue,
 the blog is the running record — every claim measured, misses

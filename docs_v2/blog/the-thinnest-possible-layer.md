@@ -77,7 +77,7 @@ graph, under the same grammar, is currently running:
 - [a 20,000,000-cell spreadsheet](/blog/twenty-million-cells) at 4.7
   bytes per cell
 - [a terminal IDE](/examples/invar) rendered cell-for-cell into a PTY
-  grid — 94,000 lines, no DOM in the process
+  grid — 108,000 lines, no DOM in the process
 - that IDE's Bun backend, where
   [reactivity allocates OS resources](/blog/reactivity-is-an-allocator)
   — files, watchers, terminals — and the floor below it stays plainly

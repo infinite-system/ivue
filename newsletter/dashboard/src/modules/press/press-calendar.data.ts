@@ -190,7 +190,7 @@ export const PRESS_ENTRIES: PressEntry[] = [
 
   /* ---------- WEEK 6 (10/19–10/25) ---------- */
   D('2026-10-19', 'r/programming', 'https://reddit.com/r/programming', 'reddit', 'win-by-reduction', 'essay-first, zero launch smell', 30),
-  D('2026-10-20', 'Tproger — RU case', 'https://tproger.ru', 'intl', 'MOD: agents-built-an-editor (RU)', '94k-line Invar case, editors can promote selected work', 45, 1, 'ru', 'tasks/press-drafts/luna/'),
+  D('2026-10-20', 'Tproger — RU case', 'https://tproger.ru', 'intl', 'MOD: agents-built-an-editor (RU)', '108k-line Invar case, editors can promote selected work', 45, 1, 'ru', 'tasks/press-drafts/luna/'),
   D('2026-10-21', 'OSCHINA — ZH email', 'mailto:oscbianji@oschina.cn', 'intl', 'MOD: agents-built-an-editor (ZH)', 'deep case with background/evolution/measured result', 45, 1, 'zh'),
   D('2026-10-22', 'r/vuejs — AMA', 'https://reddit.com/r/vuejs', 'reddit', 'n/a', 'the coordinated AMA; objection bank is the prep; cross-post archive copy to r/ivue', 180, 1, 'en', 'tasks/press-drafts/juno/objection-bank.md'),
   D('2026-10-23', 'Velog (KR) — EN post', 'https://velog.io', 'intl', 'MOD: a-million-rows-twelve-divs + KR abstract', 'English post, Korean title/summary; translate only on demand', 30),
@@ -207,7 +207,7 @@ export const PRESS_ENTRIES: PressEntry[] = [
   D('2026-11-09', 'Software Engineering Radio', 'https://se-radio.net/about/content-guidelines/', 'podcast', 'agents-built-an-editor', 'topic proposal: 200-word abstract, construction-vs-discipline case', 30),
   D('2026-11-10', 'Whiskey Web and Whatnot', 'https://whiskey.fm/contact', 'podcast', 'three-years-to-reduce', 'personality show: the discovery-arc story, not benchmarks', 15),
   D('2026-11-11', 'Frontend at Scale', 'https://frontendatscale.com', 'newsletter-pitch', 'bulletproof-class-modules', 'architecture-essay newsletter — module/seam posts are its genre', 15),
-  D('2026-11-12', 'InfoQ (EN) — pitch', 'https://www.infoq.com/write-for-infoq/', 'article-platform', 'MOD: agents-built-an-editor', 'production architecture case study with the 94k-line census; long lead', 45),
+  D('2026-11-12', 'InfoQ (EN) — pitch', 'https://www.infoq.com/write-for-infoq/', 'article-platform', 'MOD: agents-built-an-editor', 'production architecture case study with the 108k-line census; long lead', 45),
   D('2026-11-13', 'X — milestone thread (data-gated)', 'https://x.com', 'x', 'NEW: "N stars — what worked"', 'fire only when a real milestone lands; W11 snapshots make it a 20-min post', 30),
   D('2026-11-16', 'Vue newsletters — round 2', 'https://vuejsfeed.com/submit', 'newsletter-pitch', 'derivations-are-free', 'second bites: Vue.js Feed article entry + VueDigest with a NEW article', 15),
   D('2026-11-17', 'Hatena Blog — JA adaptation', 'https://blog.hatena.ne.jp', 'intl', 'MOD: introducing-ivue (JA)', '800–1200 word localized post linking the EN receipt', 45, 1, 'ja'),
@@ -226,7 +226,7 @@ export const PRESS_ENTRIES: PressEntry[] = [
   D('2026-12-08', 'OpenAI Developer Showcase', 'https://openai.com/form/showcase-submission/', 'community', 'NEW: Invar demo + build ledger', 'submit ONLY if the build truthfully used qualifying OpenAI surfaces (the form asks)', 45, 2),
   D('2026-12-09', 'AI Tinkerers Toronto — demo', 'https://toronto.aitinkerers.org/events', 'conference', 'NEW: 6-min live Invar demo', 'working code, one failed gate, the green rerun; local + timezone-friendly', 60, 2),
   D('2026-12-10', 'TokenMade — guest apply', 'https://tokenmade.ai/demo', 'podcast', 'NEW: screen-share the agent workflow', 'concrete workflow show; Invar is the demo, ivue the substrate', 30, 2),
-  D('2026-12-10', 'Inside The Stack', 'https://insidethestack.dev/guests/', 'podcast', 'MOD: agents-built-an-editor', '94k-line update + one gate failure story', 20, 2),
+  D('2026-12-10', 'Inside The Stack', 'https://insidethestack.dev/guests/', 'podcast', 'MOD: agents-built-an-editor', '108k-line update + one gate failure story', 20, 2),
   D('2026-12-11', 'The New Stack — contributed post', 'https://thenewstack.io/contributions/', 'article-platform', 'reactive-framework-for-the-ai-era', 'the agents-era architecture argument as a contributed post', 60, 2),
   D('2026-12-14', 'devtools.fm — Invar angle', 'https://www.devtools.fm/guests', 'podcast', 'introducing-invar', 'second application, now the tool story (if first pitch unanswered)', 20, 2),
   D('2026-12-15', 'Zhihu column — ZH', 'https://zhuanlan.zhihu.com/write', 'intl', 'MOD: what-native-signals-should-steal (ZH)', 'lazy existence/derivation/release explainer; product subordinate', 45, 2, 'zh'),

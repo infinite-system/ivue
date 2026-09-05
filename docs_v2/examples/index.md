@@ -85,7 +85,7 @@ templates and Vite will update the running playground.
 <div class="ix-example-list">
 
 - **[Invar — Terminal IDE](/examples/invar)** — the largest ivue
-  codebase in production: a terminal IDE built by AI agents, 94,000
+  codebase in production: a terminal IDE built by AI agents, 108,000
   lines on the ivue standard — every model a `Reactive()` class, the
   entire capability layer on `Static()`.
 

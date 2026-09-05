@@ -207,10 +207,11 @@ suite at 100% coverage.*
 
 ---
 
-**Update — August 2026.** The 26,000 lines in the title were true for
-about nine days. The editor now measures roughly **144,000 lines of
-TypeScript — 94,000 of them editor source**, the rest its colocated
-tests — and every discipline metric held while it grew. The
+**Update — September 2026.** The 26,000 lines in the title were true
+for about nine days. At the 2026-09-03 census the editor measures
+**173,430 lines of TypeScript — 107,670 of them editor source**, the
+rest its colocated tests — across 384 classes, 39 invariant contracts
+and 5,131 commits, and every discipline metric held while it grew. The
 re-measurements are in
 [The editor tripled. The zeros didn't move.](/blog/the-zeros-didnt-move),
 and the current census lives on the [Invar page](/examples/invar).

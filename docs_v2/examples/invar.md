@@ -1,6 +1,6 @@
 ---
 title: 'Invar — a terminal IDE built on ivue'
-description: 'ivue at full scale: a complete terminal IDE — editor, workspace search, tasks, terminals, agents — running on ivue classes in a Bun process with no DOM. 94,054 source lines, 345 classes, 35 invariant contracts, zero import cycles.'
+description: 'ivue at full scale: a complete terminal IDE — editor, workspace search, tasks, terminals, agents — running on ivue classes in a Bun process with no DOM. 107,670 source lines, 384 classes, 39 invariant contracts, zero import cycles.'
 pageClass: examples-page
 relatedPosts: [introducing-invar, agents-built-an-editor, the-zeros-didnt-move]
 ---
@@ -57,17 +57,18 @@ worked is a series on the blog, starting with
 
 ## The numbers
 
-Counted from the open repository, 2026-08-11 (its own deterministic
-census script plus AST checkers; source excludes tests):
+Counted from the open repository, 2026-09-03 (its own deterministic
+census script, `scripts/census.sh`, plus AST checkers; source excludes
+tests):
 
 ```
-source lines                94,054   across 372 files, 37 modules
-classes                        345   100% namespace-pattern conforming
-Reactive() classes              79
-Static() capability classes    198
-invariant contracts             35   (~14,000 lines)
+source lines               107,670   across 412 files, 41 modules
+classes                        384   100% namespace-pattern conforming
+Reactive() classes              91
+Static() capability classes    211
+invariant contracts             39   (~19,000 lines)
 value-import cycles              0   (Tarjan over the import graph)
-computed() calls                10   (memoization is opt-in)
+computed() calls                12   (memoization is opt-in)
 module-level variables           0
 ```
 
@@ -76,7 +77,7 @@ scale, mechanically enforced on every merge. How each one is achieved
 has its own deep dive:
 [zero import cycles](/blog/circular-imports-dissolved),
 [zero module-level state](/blog/module-level-state),
-[ten computed() in 94k lines](/blog/reactivity-is-an-allocator).
+[twelve computed() in 108k lines](/blog/reactivity-is-an-allocator).
 
 ## What to study in the source
 
@@ -84,10 +85,10 @@ Invar is open as a study-scale example of ivue architecture — the
 patterns from this site's guides, applied at three orders of magnitude:
 
 - **The [namespace pattern](/guide/namespace-pattern) everywhere** —
-  345 classes, one export shape, cross-module references that resolve
+  384 classes, one export shape, cross-module references that resolve
   at first access.
-- **79 [`Reactive()`](/guide/standard) classes,
-  198 [`Static()` capability classes](/guide/static)** —
+- **91 [`Reactive()`](/guide/standard) classes,
+  211 [`Static()` capability classes](/guide/static)** —
   file system, subprocesses, PTY file descriptors, and native library
   handles behind `$`-cached static getters.
 - **The [flyweight pattern](/guide/flyweight)** rendering

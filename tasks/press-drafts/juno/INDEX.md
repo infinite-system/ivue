@@ -20,7 +20,7 @@ creation at 100k instances**, **32.2 B/instance at construction vs
 raw vs **68.2 / 47.0 / 42.3 ns** shallow-unwrap vs **125.1 / 72.4 /
 68.5 ns** `reactive()`, **20,000,000 cells at 4.7 bytes each (~89 MB)**,
 **196/196 tests on the Vue 3.6 release candidate, first tracked reads
-~1.6× faster**, **94,000-line agent-built IDE**, MIT, zero runtime
+~1.6× faster**, **108,000-line agent-built IDE**, MIT, zero runtime
 dependencies, peer dep `vue ^3.2.0`.
 
 Two live-web checks fed the bank so no competitive claim is asserted

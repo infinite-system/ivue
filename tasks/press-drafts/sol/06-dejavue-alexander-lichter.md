@@ -16,7 +16,7 @@ ivue is a 1.1 kB class layer over Vue's reactivity. Plain TypeScript classes bec
 
 The episode question is: were Vue's API debates ever about syntax? The reduction says no. The Options API promised anatomy but implemented a component-bound object DSL. The Composition API supplied honest primitives but no shared shape. A class keeps the primitives and restores the anatomy.
 
-The receipts are 55–253× creation, 100% coverage, and a 94,000-line IDE built by agents on the same class standard.
+The receipts are 55–253× creation, 100% coverage, and a 108,000-line IDE built by agents on the same class standard.
 
 https://ivue.dev/blog/the-options-api-everyone-wanted
 

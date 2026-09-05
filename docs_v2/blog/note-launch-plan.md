@@ -60,7 +60,7 @@ room:
 - **The Vue story** — "the Options API everyone actually wanted:
   classes weren't broken, they were unconstrained." For Vue-native
   rooms; controversy is the hook, receipts are the armor.
-- **The agent story** — "AI agents built a 94,000-line terminal IDE
+- **The agent story** — "AI agents built a 108,000-line terminal IDE
   by following a one-document standard — here's what makes a codebase
   agent-legible." Works in ANY dev room, and it's the rising tide.
 

@@ -209,7 +209,7 @@ The reel, ranked by silent-hook strength:
 4. **Drip strip** — envelopes opening, Delivered stamps (best for the
    newsletter push specifically).
 5. **20M-cell flyweight grid** free-scroll.
-6. **Invar driving Invar** — the 94,000-line terminal IDE in use (or
+6. **Invar driving Invar** — the 108,000-line terminal IDE in use (or
    an agent using it), rendered through the invar→SVG converter:
    terminal sessions become crisp vector frames → animated to video.
    Deterministic like the rest, and the only clip that shows the
@@ -279,7 +279,7 @@ open question) containing:
 
 - the story in three lengths: one line, one paragraph, one page
 - the numbers table with methods (creation 55–253×, 1.1 kB, 100%
-  coverage, 94k-line Invar) — copy-pasteable
+  coverage, 108k-line Invar) — copy-pasteable
 - logo/lockup downloads (light + dark PNG + SVG) — the logo-deploy
   pipeline already produces every asset
 - the W7 clips, embeddable/downloadable
@@ -340,7 +340,7 @@ room's rules first — every one of these bans repeat promotion):
   launch wave gives people questions. Venue: r/vuejs WITH mod
   coordination (borrowed audience), cross-posted to r/ivue as the
   archived home copy. Pitch to mods: the receipts line (1.1 kB,
-  94k-line agent-built IDE, everything answered with numbers).
+  108k-line agent-built IDE, everything answered with numbers).
   Every launch comment thread before it is micro-AMA practice.
 
 **W8f — StackBlitz tag-team**:

@@ -48,7 +48,7 @@ copy.
 > the exact member, by name.
 
 **Post text accompanying the cards:**
-> Banned outright in the ivue standard, and proven on a 94,000-line
+> Banned outright in the ivue standard, and proven on a 108,000-line
 > codebase where the classes get extended daily. The reasoning, the
 > objection, and the compiler flag that answers it:
 
@@ -110,7 +110,7 @@ copy.
 
 **Post text accompanying the cards:**
 > The generator is compact; what it generates can be enormous. That is
-> the whole reason a 1.1 kB library can carry a 94,000-line
+> the whole reason a 1.1 kB library can carry a 108,000-line
 > application:
 
 ---

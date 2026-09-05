@@ -64,7 +64,7 @@ AND agents need to navigate a big system.
 
 ---
 
-A 94,000-line terminal IDE has been built on this — by AI agents,
+A 108,000-line terminal IDE has been built on this — by AI agents,
 following the same one-document standard humans use. More is coming.
 The blog documents the reduction as it happens, measured numbers only:
 https://ivue.dev/blog/

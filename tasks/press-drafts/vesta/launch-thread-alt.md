@@ -15,7 +15,7 @@ machinery.
 
 **Withhold check, per the press plan:** the AI-agents story is a
 deliberately separate second wave and does not appear in this thread.
-The only permitted reference is the 94,000-line codebase cited as a
+The only permitted reference is the 108,000-line codebase cited as a
 receipt for the standard — one mention, framed as evidence, never as an
 announcement. Segment 6 is that mention.
 
@@ -72,7 +72,7 @@ thread posts from a free account.
 > formula-capable and reactive, in about 89 MB. 4.7 bytes per cell — 8.5×
 > below a plain { row, col, raw } object with no reactivity at all.
 >
-> The same 1.1 kB runs a 94,000-line IDE.
+> The same 1.1 kB runs a 108,000-line IDE.
 
 **7/8**
 
@@ -99,5 +99,5 @@ thread posts from a free account.
   benchmark page. Keep it pasted and ready before posting.
 - If a reply argues "1 kB is easy when the library does little", the
   answer is segment 6, not an adjective: the same engine runs a
-  20M-cell document and a 94,000-line application.
+  20M-cell document and a 108,000-line application.
 - Do not answer a downvote wave. Numbers or silence.

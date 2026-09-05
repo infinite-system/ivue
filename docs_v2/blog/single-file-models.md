@@ -211,7 +211,7 @@ organized." It is: three residents, statics for every runtime
 declaration, derived types in the namespace, `X.Class.props` in the SFC.
 An agent writing a new component either produces that shape or fails
 the gate, which is the same property that let agents build a
-[94,000-line editor](/blog/agents-built-an-editor) on the class standard
+[108,000-line editor](/blog/agents-built-an-editor) on the class standard
 without the shape drifting.
 
 The engine underneath did not change. Still 1.1 kB, still the same

@@ -44,6 +44,6 @@ That gives each keyword one job:
 
 This is not a universal rule. A codebase that does not offer inheritance may prefer `private`. The rule is for a class architecture that treats variants as subclasses: preserve the extension seam, then make seam drift loud.
 
-We used it in Invar, a **94,000-line terminal IDE built by AI agents**. The practical win was simple: a variant changed the member it needed instead of carrying a copied base class forward.
+We used it in Invar, a **108,000-line terminal IDE built by AI agents**. The practical win was simple: a variant changed the member it needed instead of carrying a copied base class forward.
 
 The longer reasoning and the exact three-tier table are here: [ivue.dev/blog/ban-private](https://ivue.dev/blog/ban-private).

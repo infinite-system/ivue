@@ -1,6 +1,6 @@
 ---
 title: 'Ban private'
-description: 'Every private member is a fork waiting to happen. The ivue standard bans the keyword: internals are protected, overrides carry override, and the compiler makes seam drift loud. Proven on a 94,000-line IDE that AI agents extend daily.'
+description: 'Every private member is a fork waiting to happen. The ivue standard bans the keyword: internals are protected, overrides carry override, and the compiler makes seam drift loud. Proven on a 108,000-line IDE that AI agents extend daily.'
 date: 2026-08
 tags: [patterns, architecture, agents, invar]
 relatedPosts: [ship-the-variant-keep-the-tuning, inheritance-exile, agents-built-an-editor]
@@ -125,7 +125,7 @@ weakness:
 
 ## Where it was proven
 
-[Invar](/examples/invar) is a 94,000-line terminal IDE built almost
+[Invar](/examples/invar) is a 108,000-line terminal IDE built almost
 entirely by AI agents on ivue classes. Its house standard was stricter
 than ivue's: Invar banned `private` first. The ban migrated upstream
 into [the ivue standard](/guide/standard) after we watched it hold.

@@ -387,7 +387,7 @@ function authorCard() {
     `<div style="font-size:10.5px;letter-spacing:.12em;color:${P.MUTED};margin:0 0 3px">AUTHOR</div>` +
     `<div style="font-size:15px;font-weight:600;color:${P.HEADING};margin:0 0 2px">Evgeny Kalashnikov</div>` +
     `<div style="font-size:12.5px;color:${P.MUTED};margin:0 0 4px">Lead Software Engineer @ Blackline, Adhoc Studio</div>` +
-    `<div style="font-size:12.5px;line-height:1.55;color:${P.TEXT};margin:0 0 6px">Three years reducing Vue reactivity into <a href="${SITE}" style="color:${P.LINK};text-decoration:none">ivue</a>'s one kilobyte &mdash; then watching AI agents build <a href="${SITE}/examples/invar" style="color:${P.LINK};text-decoration:none">Invar</a>, a 94,000-line terminal IDE, on top of it.</div>` +
+    `<div style="font-size:12.5px;line-height:1.55;color:${P.TEXT};margin:0 0 6px">Three years reducing Vue reactivity into <a href="${SITE}" style="color:${P.LINK};text-decoration:none">ivue</a>'s one kilobyte &mdash; then watching AI agents build <a href="${SITE}/examples/invar" style="color:${P.LINK};text-decoration:none">Invar</a>, a 108,000-line terminal IDE, on top of it.</div>` +
     `<div style="font-size:12.5px">` +
     `<a href="https://x.com/evgenykalash" style="color:${P.LINK};text-decoration:none">X</a>` +
     `&nbsp;&middot;&nbsp; <a href="https://github.com/infinite-system" style="color:${P.LINK};text-decoration:none">GitHub</a>` +

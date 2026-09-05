@@ -407,3 +407,20 @@ background processes, sweep:
   overrides one) anchors with `Static()`; a subclass that only inherits
   stays raw.
 
+## Invar numbers come from its census (2026-09-05)
+
+- Every public Invar statistic (source lines, classes, contracts,
+  `computed()` count, commits) is read from `~/dev/invar/scripts/census.sh
+  --json`, never from memory or an older post. The 2026-09-03 census:
+  107,670 source lines / 412 files / 41 modules, 384 classes, 91
+  `Reactive()` + 211 `Static()`, 39 contracts, 12 `computed()`, 5,131
+  commits. Public copy rounds to "108,000-line"; tables carry the exact
+  figure and the census date.
+- When the census moves, sweep with grep for the OLD number across
+  `docs_v2/blog`, `docs_v2/examples`, `docs_v2/guide`, `README.md`,
+  `.claude/skills/my-voice`, the banner sources under
+  `.claude/skills/blog-banner/banners` (then re-render those PNGs),
+  `docs_v2/scripts/blog-email-renderer.mjs` (the welcome email), and
+  `tasks/press-*`. Dated measurements inside a story (the 26k / 69k
+  snapshots, "292 commits") stay as history; present-tense claims move.
+

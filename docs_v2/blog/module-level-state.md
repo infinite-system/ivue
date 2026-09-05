@@ -1,6 +1,6 @@
 ---
 title: 'Module-level state is a bug'
-description: The most normal line in JavaScript — const cache = new Map() at module scope — is an eager, global, unownable singleton with no seam. Static() replaces it with one declaration that is lazy, inheritable, overridable, and test-isolated. A 94,000-line codebase runs on zero module-level functions and zero module-level variables.
+description: The most normal line in JavaScript — const cache = new Map() at module scope — is an eager, global, unownable singleton with no seam. Static() replaces it with one declaration that is lazy, inheritable, overridable, and test-isolated. A 108,000-line codebase runs on zero module-level functions and zero module-level variables.
 date: 2026-08
 tags: [javascript, architecture]
 relatedPosts: [bulletproof-class-modules, circular-imports-dissolved, the-test-is-a-subclass, initialization-order-solved, discovered-not-invented]
@@ -102,8 +102,8 @@ other property differs:
 The pattern would be a curiosity if it only held memo tables. What
 makes it a substrate is that *one declaration form* absorbs every
 kind of module-level state a real system accumulates.
-[Invar](/blog/introducing-invar) — the 94,000-line terminal IDE
-built on ivue — runs 78 of these getters. A ladder of real cases,
+[Invar](/blog/introducing-invar) — the 108,000-line terminal IDE
+built on ivue — runs 81 of these getters. A ladder of real cases,
 smallest to strangest:
 
 **A memo table.** The wrap index above is Invar's own text-layout

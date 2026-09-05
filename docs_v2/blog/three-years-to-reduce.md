@@ -38,8 +38,8 @@ deletion, and deletion does not fill a log.
 
 The fast phase was **generation**: applying the finished primitives,
 over and over, at machine speed. [AI agents wrote almost all of
-Invar](/blog/agents-built-an-editor) — 143,785 lines of TypeScript
-(94,043 source, 49,742 tests), 35 invariant contracts, and on top of
+Invar](/blog/agents-built-an-editor) — 173,430 lines of TypeScript
+(107,670 source, 65,760 tests, counted 2026-09-03), 39 invariant contracts, and on top of
 that a verification harness the size of the product itself —
 and could only do so because every class takes the same shape, every
 seam sits in the same place, and the failure classes that eat agent

@@ -56,7 +56,7 @@ a large system.
 
 The numbers are measured, not promised: creating 100,000 instances
 runs 55–253× faster than the alternatives; a 20,000,000-cell
-spreadsheet holds 4.7 bytes per cell; a 94,000-line terminal IDE was
+spreadsheet holds 4.7 bytes per cell; a 108,000-line terminal IDE was
 built on it — by AI agents, following the same one-page standard
 human contributors use.
 

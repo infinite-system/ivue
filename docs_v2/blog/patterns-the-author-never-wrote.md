@@ -108,7 +108,7 @@ Left alone, this story overclaims, so here is the counterweight.
 Agents are stochastic rule-followers — they derive wrong things
 with the same fluency as right ones. The derivations that fill
 Invar survived because the other half of the system *selected*
-them: 35 invariant contracts, AST censuses with positive controls,
+them: 39 invariant contracts, AST censuses with positive controls,
 a merge gate that rejects what the model contradicts. Just this
 week, a census caught a contract asserting an observation gate the
 code had lost — drift happens, and the machinery is why it stays

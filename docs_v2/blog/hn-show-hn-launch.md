@@ -76,7 +76,7 @@ humans and for AI agents alike.
 
 Numbers, held to "measured, not promised": 1.1 kB gzipped core, zero
 dependencies, 100% test coverage, a 20M-cell spreadsheet demo at 4.7
-bytes/cell, and a 94,000-line terminal IDE built on it (by AI agents
+bytes/cell, and a 108,000-line terminal IDE built on it (by AI agents
 following the same one-document standard humans use:
 https://ivue.dev/guide/standard).
 

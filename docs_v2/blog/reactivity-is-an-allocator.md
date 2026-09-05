@@ -226,13 +226,13 @@ suggests (counted 2026-08-11, non-test source):
 
 ```
 fs watchers in the application:      1   (git — with a 5 s pull floor)
-$watch / $watchEffect sites:        21   (in 94,054 lines)
+$watch / $watchEffect sites:        23   (in 107,670 lines, re-counted 2026-09-03)
 revision-bump sites:                92
 void-revision subscribe prologues:  19
 isObserved sites:                   29
 ```
 
-Twenty-one watch sites in ninety-four thousand lines — because push
+Twenty-three watch sites in a hundred and eight thousand lines — because push
 is reserved for the places a state change must drive an *action*: a
 resource opening, a document syncing to a language server, a timer
 dying. Everything else is pull — tracked getters, read by

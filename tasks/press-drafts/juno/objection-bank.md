@@ -89,7 +89,7 @@ of it.
 ## 6. "AI wrote this."
 
 Split it honestly: the engine and the standard are human work — three
-years of reduction — and **Invar**, the 94,000-line terminal IDE, was
+years of reduction — and **Invar**, the 108,000-line terminal IDE, was
 built almost entirely by AI agents following that standard. That
 second part is the receipt, not the authorship claim: the point of the
 IDE is that a constrained substrate is agent-legible, measured as one
@@ -170,7 +170,7 @@ that a 1.1 kB engine is small enough that 100% coverage on statements,
 branches, functions and lines is achievable at all: 209 tests across
 seven files (`Reactive.ts`, `Static.ts`, `ivue.ts`, `kernel.ts`,
 `extras.ts`, `LazyShared.ts`, `index.ts`). The number that is not easy
-is the one downstream: Invar, 94,000 lines built on it by agents, with
+is the one downstream: Invar, 108,000 lines built on it by agents, with
 its own suite at 100% coverage. Coverage is a floor claim, never a
 correctness claim — we do not present it as one.
 
