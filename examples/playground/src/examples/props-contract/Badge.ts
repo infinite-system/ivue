@@ -19,7 +19,7 @@ class $Badge {
   }
 
   static get propsDefaults() {
-    return { tone: 'neutral' as Badge.Tone, size: 14, rounded: false };
+    return { tone: 'success' as Badge.Tone, size: 14, rounded: false };
   }
 
   static get props() {
