@@ -169,6 +169,16 @@ converted; the three `XProps.ts` modules and `field-kit.ts` dissolved
 into their classes; playground typecheck error set identical to the
 pre-conversion baseline; skill doctrine rewritten and mirrored.
 
+**Sealed (2026-09-05).** With the contract and every knob on the class,
+the module const gone, and the props modules dissolved, the user ruled
+the architecture has reached its structurally correct form. Deletion
+test: nothing removable without losing extensibility, nothing addable
+without a second owner. A class file is a SINGLE-FILE MODEL (three
+residents), the model-side twin of the SFC; one mechanic (inheritance)
+extends state, derivation, behavior, contract, and knobs alike; the
+gate verifies the whole shape. Open items below are engineering on top
+of this form, not revisions of it.
+
 **Contract timing under global override (2026-09-02).**
 `defineProps(X.Class.props)` evaluates ONCE at SFC module evaluation
 (then Vue caches normalization per component definition). So a slot
