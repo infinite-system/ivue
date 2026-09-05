@@ -65,11 +65,6 @@ const example = new ComposableExample.Class();
       </button>
     </div>
 
-    <div class="list">
-      <span v-if="example.list.isEmpty" class="mono">empty — add something</span>
-      <span v-for="(item, index) in example.list.items" :key="index" class="chip">{{ item }}</span>
-    </div>
-
     <ol class="rail">
       <li
         v-for="(entry, index) in example.list.steps"
@@ -81,17 +76,26 @@ const example = new ComposableExample.Class();
         {{ entry.label }}
       </li>
     </ol>
+    <div class="k result">Result:</div>
+    <div class="list">
+      <span v-if="example.list.isEmpty" class="mono">empty — add something</span>
+      <span v-for="(item, index) in example.list.items" :key="index" class="chip">{{ item }}</span>
+    </div>
+
   </div>
 </template>
 
 <style scoped src="../example-pane.css"></style>
 <style scoped>
+.result {
+  margin-top: 14px;
+}
 .list {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   min-height: 34px;
-  margin-top: 10px;
+  margin-top: 6px;
 }
 .chip {
   padding: 4px 10px;

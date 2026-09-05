@@ -28,10 +28,6 @@ const list = new GroceryList.Class();
       </button>
       <span class="d-mono">{{ list.history.positionLabel }}</span>
     </div>
-    <div class="u-list">
-      <span v-if="list.isEmpty" class="d-mono">empty — add something</span>
-      <span v-for="(item, index) in list.items" :key="index" class="u-chip">{{ item }}</span>
-    </div>
     <ol class="u-rail">
       <li
         v-for="(entry, index) in list.steps"
@@ -43,16 +39,29 @@ const list = new GroceryList.Class();
         {{ entry.label }}
       </li>
     </ol>
+    <div class="u-label">Result:</div>
+    <div class="u-list">
+      <span v-if="list.isEmpty" class="d-mono">empty — add something</span>
+      <span v-for="(item, index) in list.items" :key="index" class="u-chip">{{ item }}</span>
+    </div>
   </DemoBox>
 </template>
 
 <style scoped>
+.u-label {
+  margin: 14px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--vp-c-text-2);
+}
 .u-list {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   min-height: 34px;
-  margin: 12px 0 0;
+  margin: 6px 0 0;
 }
 .u-chip {
   padding: 4px 10px;
