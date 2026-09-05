@@ -87,6 +87,7 @@ getters, all of it ([Inheritance & super](/guide/inheritance)) — so
 <<< ../../examples/playground/src/examples/fields/media-field/MediaFieldPreviewDialog.vue [PreviewDialog.vue]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaFieldExample.ts [example]
 <<< ../../examples/playground/src/examples/fields/media-field/MediaFieldExample.vue [route]
+<<< @/.vitepress/theme/components/examples/ExampleMediaField.vue [template]
 :::
 
 ## The backend path

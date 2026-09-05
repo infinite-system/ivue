@@ -65,6 +65,7 @@ everything else is the production component.
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts [example]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.vue [route]
 <<< @/.vitepress/theme/components/examples/ExampleVirtualScroller.vue [template]
 :::
 
@@ -150,6 +151,9 @@ about one thing:
 <<< ../../examples/playground/src/examples/text-marquee/TextMarquee.ts [TextMarquee.ts]
 <<< ../../examples/playground/src/examples/text-marquee/TextMarquee.vue [TextMarquee.vue]
 <<< ../../examples/playground/src/examples/text-marquee/TextChunker.ts [TextChunker.ts]
+<<< ../../examples/playground/src/examples/text-marquee/TextMarqueeExample.ts [example]
+<<< ../../examples/playground/src/examples/text-marquee/TextMarqueeExample.vue [route]
+<<< @/.vitepress/theme/components/examples/ExampleTextMarquee.vue [template]
 <<< ../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.ts [HorizontalVirtualScroller.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.vue [HorizontalVirtualScroller.vue]
 :::

@@ -453,4 +453,9 @@ background processes, sweep:
   sidebar entries in `config.ts`, `docs_v2/examples/index.md`, the theme
   demo imports (`@examples/<dir>/…`), the StackBlitz link on the page,
   and add a 301 to `docs_v2/public/_redirects`.
+- Every example page's code group carries the three route tabs where
+  the files exist: `[example]` (the playground route's model class),
+  `[route]` (the playground route SFC) and `[template]` (the docs demo
+  component under `.vitepress/theme/components`, via `<<< @/…`), beside
+  the model files. A page missing one is a page half-shown.
 

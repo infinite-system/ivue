@@ -38,7 +38,9 @@ show exactly when each body executes.
 
 ::: code-group
 <<< ../../examples/playground/src/examples/derived/Thermo.ts [Thermo.ts]
-<<< ../../examples/playground/src/examples/derived/DerivedExample.vue [DerivedExample.vue]
+<<< ../../examples/playground/src/examples/derived/DerivedExample.ts [example]
+<<< ../../examples/playground/src/examples/derived/DerivedExample.vue [route]
+<<< @/.vitepress/theme/components/DemoDerived.vue [template]
 :::
 
 <a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fderived%2FThermo.ts&path=%2F%23%2Fderived">Open in StackBlitz ⚡</a>

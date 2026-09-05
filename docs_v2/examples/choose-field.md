@@ -75,6 +75,7 @@ what a hand-written Quasar wrapper gives you, and it falls out of the
 <<< ../../examples/playground/src/examples/fields/Field.ts [Field.ts]
 <<< ../../examples/playground/src/examples/fields/choose-field/ChooseFieldExample.ts [example]
 <<< ../../examples/playground/src/examples/fields/choose-field/ChooseFieldExample.vue [route]
+<<< @/.vitepress/theme/components/examples/ExampleChooseField.vue [template]
 :::
 
 The props architecture — one typed params object, one plain defaults

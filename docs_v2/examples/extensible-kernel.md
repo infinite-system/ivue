@@ -142,8 +142,9 @@ JavaScript's dynamic `super` lookup then follows the sealed chain.
 
 ::: code-group
 <<< ../../examples/playground/src/examples/extensible-kernel/ErrorNotification.ts [ErrorNotification.ts]
-<<< ../../examples/playground/src/examples/extensible-kernel/ExtensibleKernelExample.ts [ExtensibleKernelExample.ts]
-<<< ../../examples/playground/src/examples/extensible-kernel/ExtensibleKernelExample.vue [ExtensibleKernelExample.vue]
+<<< ../../examples/playground/src/examples/extensible-kernel/ExtensibleKernelExample.ts [example]
+<<< ../../examples/playground/src/examples/extensible-kernel/ExtensibleKernelExample.vue [route]
+<<< @/.vitepress/theme/components/examples/ExampleExtensibleKernel.vue [template]
 :::
 
 This is the frontend half of a full-stack substrate. The same kernel can route

@@ -37,7 +37,8 @@ The demo above runs these exact files from the playground:
 
 ::: code-group
 <<< ../../examples/playground/src/examples/counter/Counter.ts [Counter.ts]
-<<< ../../examples/playground/src/examples/counter/CounterExample.vue [CounterExample.vue]
+<<< ../../examples/playground/src/examples/counter/CounterExample.vue [route]
+<<< @/.vitepress/theme/components/DemoCounter.vue [template]
 :::
 
 <a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Fcounter%2FCounter.ts&path=%2F%23%2Fcounter">Open in StackBlitz ⚡</a>

@@ -49,7 +49,8 @@ overlay) and the cell facade:
 ::: code-group
 <<< ../../examples/playground/src/examples/flyweight-grid/model/FlyweightCell.ts [FlyweightCell.ts]
 <<< ../../examples/playground/src/examples/flyweight-grid/model/FlyweightSheet.ts [FlyweightSheet.ts]
-<<< ../../examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts [FlyweightGridPage.ts]
+<<< ../../examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts [example]
+<<< ../../examples/playground/src/examples/flyweight-grid/FlyweightGridExample.vue [route]
 <<< ../../examples/playground/src/examples/flyweight-grid/FlyweightGridApp.vue [template]
 <<< ../../examples/playground/src/examples/flyweight-grid/FlyweightLogic.ts [FlyweightLogic.ts]
 :::

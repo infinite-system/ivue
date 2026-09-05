@@ -152,4 +152,5 @@ consumers.
 <<< ../../examples/playground/src/examples/workspace-platform/TaskBoard.vue [Board template]
 <<< ../../examples/playground/src/examples/workspace-platform/TaskDetails.ts [Detail model]
 <<< ../../examples/playground/src/examples/workspace-platform/TaskDetails.vue [Detail template]
+<<< @/.vitepress/theme/components/examples/ExampleWorkspacePlatform.vue [docs template]
 :::

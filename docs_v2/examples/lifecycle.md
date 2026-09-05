@@ -75,10 +75,11 @@ docs demo below writes no unmount hook because of it.
 ## The source
 
 ::: code-group
-<<< ../../examples/playground/src/examples/lifecycle/LifecycleExample.ts [LifecycleExample.ts]
+<<< ../../examples/playground/src/examples/lifecycle/LifecycleExample.ts [example]
 <<< ../../examples/playground/src/examples/lifecycle/Ticker.ts [Ticker.ts]
 <<< ../../examples/playground/src/examples/lifecycle/Sensor.ts [Sensor.ts]
-<<< ../../examples/playground/src/examples/lifecycle/LifecycleExample.vue [LifecycleExample.vue]
+<<< ../../examples/playground/src/examples/lifecycle/LifecycleExample.vue [route]
+<<< @/.vitepress/theme/components/DemoTeardown.vue [template]
 :::
 
 <a class="feature-inline-link" href="/examples/stackblitz?file=src%2Fexamples%2Flifecycle%2FSensor.ts&path=%2F%23%2Flifecycle">Open in StackBlitz ⚡</a>
