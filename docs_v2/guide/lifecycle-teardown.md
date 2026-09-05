@@ -76,19 +76,31 @@ instance's **lazily-created, detached** effect scope — owned by the
 instance, not by whatever component happened to construct it:
 
 ```ts
+import { Reactive, type ReactiveHelpers } from 'ivue';
+
 class $Enemy {
   get hp() {
-    return ref(100)
+    return ref(100);
   }
   constructor() {
-    this.$watch(() => this.hp.value, (hp) => {
-      if (hp <= 0) this.die()
-    })
+    this.$watch(
+      () => this.hp.value,
+      (hp) => this.onHpChanged(hp),
+    );
+  }
+  onHpChanged(hp: number) {
+    if (hp <= 0) this.die();
   }
   die() {
     /* ... */
   }
 }
+
+// `Reactive()` installs $watch / $watchEffect / $stopEffects on the
+// prototype AFTER the class body was typed, so the body cannot see them.
+// Merging the engine's helpers into the class's own instance type is one
+// line and emits nothing — `this.$watch` typechecks in the constructor.
+interface $Enemy extends ReactiveHelpers {}
 ```
 
 The scope is allocated **only on the first `$watch` call**. A pure-data instance
@@ -199,7 +211,7 @@ million-row list where only visible rows deserve live effects):
 ```ts
 // Row.ts
 import { ref } from 'vue'
-import { Reactive } from 'ivue'
+import { Reactive, type ReactiveHelpers } from 'ivue'
 
 class $Row {
   // GROUND TRUTH — a plain record: survives teardown, costs nothing
@@ -226,6 +238,8 @@ class $Row {
     this.$stopEffects()
   }
 }
+
+interface $Row extends ReactiveHelpers {}
 
 export namespace Row {
   export const $Class = $Row // raw — children `extends` this

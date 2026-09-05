@@ -703,6 +703,7 @@ session.dispose();
 | ✅ `defineExpose(box as X.Instance)` | ❌ `defineExpose(box)` raw — readonly-accessor writes will type-error for consumers |
 | ✅ constructor runs init; register hooks/watchers there | ❌ add an `init()` method expecting auto-call — ivue never calls it |
 | ✅ plain `watch` in component-scoped constructors; `$watch` + a `$stopEffects` dispose path for outliving instances | ❌ default to `this.$watch` in a component-scoped class — its scope silently outlives unmount |
+| ✅ a class that calls `this.$watch` / `$watchEffect` / `$stopEffects` merges the engine's helpers beside itself: `interface $X extends ReactiveHelpers {}` (one line, zero runtime) | ❌ `(this as any).$watch(...)` or per-member `declare $watch: …` lines — the body should typecheck without a cast |
 | ✅ compose cleanup as an ordinary method — `dispose() { /* non-Vue cleanup */ this.$stopEffects(); }` | ❌ expect a teardown hook — ivue auto-calls NOTHING (no `init()`, no `stopEffects()`) |
 | ✅ a class with static members anchors them: `const $Class = Static($X)` (`ivue/extras`) | ❌ `extends X.Class` — the mutable slot is an eager snapshot of one generation; always extend `$Class` |
 | ✅ `protected` for every internal member — subclasses reach every seam | ❌ `private` anywhere in an ivue class — it forbids only the legitimate extender |
