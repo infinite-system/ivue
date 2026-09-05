@@ -128,7 +128,7 @@ const {
   white-space: normal;
   margin-bottom: 6px;
 }
-@media (max-width: 560px) {
+@media (max-width: 767px) {
   .stages,
   .knobs {
     grid-template-columns: 1fr;
