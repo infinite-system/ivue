@@ -128,12 +128,6 @@ const {
   white-space: normal;
   margin-bottom: 6px;
 }
-@media (max-width: 767px) {
-  .stages,
-  .knobs {
-    grid-template-columns: 1fr;
-  }
-}
 .knobs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -204,5 +198,11 @@ const {
 }
 .invalid {
   color: var(--vp-c-danger-1, #fca5a5) !important;
+}
+@media (max-width: 767px) {
+  .stages,
+  .knobs {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
