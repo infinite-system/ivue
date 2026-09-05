@@ -472,3 +472,25 @@ background processes, sweep:
   never per-member `declare` lines. The residents check treats the merge
   interface named after the file's own class as the class's second half.
 
+
+## The docs build runs the gate as a ratchet (2026-09-05)
+
+`npm run build:docs` now starts with `npm run gate:docs`: the standard
+gate over `docs_v2/.vitepress/theme/components` and
+`examples/playground/src` with `skills/ivue/ivue-docs-skip.json` as a
+BASELINE skip-list (one row per path + check, 161 rows covering 699
+pre-existing findings on 2026-09-05). Why a baseline and not a hard
+gate: 49 rows are site chrome (BlogComments, BlogIndex, PerfSlider…)
+that CLAUDE.md says migrates opportunistically, never in a sweep.
+
+How the ratchet works — both arms proven at wiring time:
+- any NEW finding (a new file, or a new check firing on a file that
+  had none of that check) fails the build;
+- fixing a file's last finding of a check makes its row STALE, and the
+  gate refuses stale rows — so the fix must delete the row, and the
+  baseline only ever shrinks.
+
+Before: the two inheritance demos carried 8 template-logic findings for
+weeks because nothing ran the gate over docs components. Run
+`npm run gate:docs` before claiming docs code is clean; grep-filtering
+its output to the checks you just added is how findings hide.

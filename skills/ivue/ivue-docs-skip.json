@@ -1,0 +1,807 @@
+[
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogArchiveScroller.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogArchiveScroller.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogAuthor.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogBackLink.vue",
+    "check": "a_lifecycle_hook_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogBackLink.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogComments.vue",
+    "check": "a_lifecycle_hook_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogComments.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogComments.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogDripShowcase.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogDripShowcase.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogIndex.vue",
+    "check": "a_lifecycle_hook_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogIndex.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogIndex.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogPostDate.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogPostDate.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogPostNav.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogPostNav.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogPublishedDate.vue",
+    "check": "a_lifecycle_hook_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogPublishedDate.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogShare.vue",
+    "check": "a_lifecycle_hook_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogShare.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogShare.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogSidebarSearch.vue",
+    "check": "a_lifecycle_hook_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogSidebarSearch.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/BlogSidebarSearch.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/ChannelNote.vue",
+    "check": "a_lifecycle_hook_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/ChannelNote.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/ChannelNote.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/CommentAvatar.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/CommentAvatar.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/DemoTeardown.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/examples/ExampleFieldEmbed.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/examples/ExampleFieldEmbed.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/examples/ExampleTextMarquee.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/examples/HorizontalScrollerExample.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/ExperimentalDocs.vue",
+    "check": "a_lifecycle_hook_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/ExperimentalDocs.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/ExperimentalDocs.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/grid/FormulaGrid.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/grid/FormulaGrid.vue",
+    "check": "the_state_destructure_is_total",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/grid/GridBenchmark.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/grid/GridBenchmark.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/IvueHero.vue",
+    "check": "a_lifecycle_hook_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/IvueHero.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/NewsletterQuickJoin.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/NewsletterQuickJoin.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/NewsletterSignup.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/NewsletterSignup.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/NewsletterSignup.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/PerfSlider.vue",
+    "check": "a_lifecycle_hook_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/PerfSlider.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/PerfSlider.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/RelatedPosts.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/RelatedPosts.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/StackBlitzPlayground.vue",
+    "check": "a_lifecycle_hook_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/StackBlitzPlayground.vue",
+    "check": "script_setup_is_wiring_only",
+    "reason": "baseline 2026-09-05 \u2014 site chrome migrates to the standard opportunistically when touched (CLAUDE.md); fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/App.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/BenchmarksExample.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/BenchmarkWinner.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/Box.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/cell-logic.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/creationBench.ts",
+    "check": "a_public_class_publishes_its_namespace_manifest",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/creationBench.ts",
+    "check": "construction_goes_through_the_namespace_class_slot",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/creationBench.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/IvueCell.ts",
+    "check": "a_class_file_is_named_after_its_class",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/IvueCell.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/IvueCell.ts",
+    "check": "a_reactive_closure_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/IvueCell.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/IvueCell.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/model/BaseElement.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/model/BaseElement.ts",
+    "check": "a_reactive_closure_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/model/BaseElement.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/model/Container.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/model/Container.ts",
+    "check": "a_reactive_closure_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/model/Container.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/model/Container.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/model/InteractiveBox.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/model/InteractiveBox.ts",
+    "check": "a_reactive_closure_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/model/InteractiveBox.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/model/InteractiveBox.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/model/InteractiveBox.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/pojoCell.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/useGridArm.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/benchmarks/useRowWindow.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/class-store/ProjectStats.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/class-store/ProjectStore.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/class-store/ProjectStore.ts",
+    "check": "watch_lifetime_matches_the_instance_owner",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/class-store/ReactiveViewPanel.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/derived/Thermo.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/derived/Thermo.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/extensible-kernel/ExtensibleKernelExample.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/choose-field/ChooseFieldExample.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/choose-field/ChooseFieldExample.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/choose-field/ChooseField.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/choose-field/ChooseField.ts",
+    "check": "a_reactive_closure_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/choose-field/ChooseField.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/choose-field/ChooseField.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/choose-field/ContactField.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/choose-field/ContactField.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/media-field/ExtendedMediaField.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/media-field/ExtendedMediaField.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/media-field/MediaFieldExample.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/media-field/MediaFieldPreviewDialog.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/media-field/MediaField.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/media-field/MediaField.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/media-field/MediaField.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/server/filter-expression.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/server/MockServer.ts",
+    "check": "a_public_class_publishes_its_namespace_manifest",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/fields/server/ServerApi.ts",
+    "check": "a_public_class_publishes_its_namespace_manifest",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/flyweight-grid/FlyweightGridApp.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts",
+    "check": "instance_types_only_unwrapping_surfaces",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/flyweight-grid/FlyweightLogic.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/flyweight-grid/model/FlyweightCell.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/flyweight-grid/model/FlyweightCell.ts",
+    "check": "instance_types_only_unwrapping_surfaces",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/flyweight-grid/model/FlyweightSheet.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/flyweight-grid/model/FlyweightSheet.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/formula-grid/FormulaCell.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/formula-grid/FormulaCell.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/formula-grid/FormulaGridExample.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/formula-grid/FormulaGridExample.vue",
+    "check": "the_state_destructure_is_total",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/formula-grid/Sheet.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/formula-grid/Sheet.ts",
+    "check": "instance_types_only_unwrapping_surfaces",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/inheritance/ComputedProduct.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/inheritance/ComputedProduct.ts",
+    "check": "a_reactive_closure_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/inheritance/ComputedSaleProduct.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/inheritance/ComputedSaleProduct.ts",
+    "check": "a_reactive_closure_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/inheritance/ComputedTaxedProduct.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/inheritance/ComputedTaxedProduct.ts",
+    "check": "a_reactive_closure_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/text-marquee/TextMarqueeExample.ts",
+    "check": "a_composable_is_injected_by_a_one_call_dollar_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.ts",
+    "check": "cross_module_class_reads_happen_inside_bodies",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts",
+    "check": "a_composable_is_injected_by_a_one_call_dollar_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/virtual-scroller/VirtualScroller.ts",
+    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/virtual-scroller/VirtualScroller.ts",
+    "check": "a_reactive_closure_delegates_to_one_method",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/virtual-scroller/VirtualScroller.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/virtual-scroller/VirtualScroller.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/virtual-scroller/VirtualScroller.vue",
+    "check": "the_state_destructure_is_total",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/workspace-platform/MemberAvatar.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/workspace-platform/Member.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/workspace-platform/Project.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/workspace-platform/TaskBoard.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/workspace-platform/TaskDetails.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/workspace-platform/Task.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/workspace-platform/WorkspacePlatformExample.vue",
+    "check": "template_expressions_carry_no_logic",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/workspace-platform/Workspace.ts",
+    "check": "class_members_are_ordered_and_spaced",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/examples/workspace-platform/Workspace.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/ivue.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/LazyShared.ts",
+    "check": "a_public_class_publishes_its_namespace_manifest",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/lenis/animate.ts",
+    "check": "a_public_class_publishes_its_namespace_manifest",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/lenis/dimensions.ts",
+    "check": "a_public_class_publishes_its_namespace_manifest",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/lenis/emitter.ts",
+    "check": "a_public_class_publishes_its_namespace_manifest",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/lenis/emitter.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/lenis/lenis.ts",
+    "check": "a_public_class_publishes_its_namespace_manifest",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/lenis/lenis.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/lenis/maths.ts",
+    "check": "declarations_use_full_descriptive_names",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/lenis/virtual-scroll.ts",
+    "check": "a_public_class_publishes_its_namespace_manifest",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  },
+  {
+    "path": "examples/playground/src/Playground.ts",
+    "check": "mutable_state_is_a_ref_returning_getter",
+    "reason": "baseline 2026-09-05 \u2014 pre-existing teaching-code debt; fix and delete this row"
+  }
+]
