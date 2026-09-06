@@ -143,7 +143,7 @@ const {
   margin: 8px 0 0;
   min-height: 1.6em;
 }
-.evs-play {
+.dbx .d-btn.evs-play {
   min-width: 124px;
   justify-content: center;
 }
