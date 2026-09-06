@@ -8,7 +8,7 @@ Goal: Let a finger select text in a list where a drag already means scroll, by p
 // domain-invariant: $VirtualScrollerSelectionTouch — If two fingers land, then no hold arms; if a second finger lands mid-drag, then the first finger keeps the focus.
 // domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts after a selecting drag, then the drag ends and the copy chip shows exactly when the owner holds a selection.
 // domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts without moving, or scrolls away, or is a tap, then the rows are selectable again and nothing was selected.
-// domain-invariant: $VirtualScrollerSelectionTouch — If a finger lands while a selection exists, then selectability is not locked, so the native selection and its handles stay under it.
+// domain-invariant: $VirtualScrollerSelectionTouch — If a finger lands on an existing selection, then selectability locks like anywhere else; a tap there clears the selection and a long press hands the press to the owner, which extends.
 Impossible if true: The page scrolling while a touch selection is being extended.
 
 === GENERATOR-DESCRIBED ===
@@ -42,6 +42,7 @@ function gesture() {
     beginAt: vi.fn(() => true),
     extendTo: vi.fn(),
     endDrag: vi.fn(),
+    clear: vi.fn(),
     hasSelection: false
   };
   const instance = new Gesture(owner);
@@ -191,12 +192,22 @@ test('lifting the finger ends the drag and reports selected exactly when the own
   instance.dispose();
 });
 
-// domain-invariant: $VirtualScrollerSelectionTouch — If a finger lands while a selection exists, then selectability is not locked, so the native selection and its handles stay under it.
-test('a finger landing on an existing selection does not lock selectability — the handles stay', () => {
+// domain-invariant: $VirtualScrollerSelectionTouch — If a finger lands on an existing selection, then selectability locks like anywhere else; a tap there clears the selection and a long press hands the press to the owner, which extends.
+test('a finger on an existing selection still locks; a tap clears it, a long press and move extend it', () => {
   const { owner, instance, row, element } = gesture();
   owner.hasSelection = true;
   row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  expect(element.style.userSelect).toBe('');
+  expect(element.style.userSelect).toBe('none');
+  expect(instance.holding).toBe(true);
   row.dispatchEvent(touchEvent('touchend', []));
+  expect(owner.clear).toHaveBeenCalledTimes(1);
+  expect(instance.holding).toBe(false);
+
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
+  row.dispatchEvent(touchEvent('touchmove', [{ x: 100, y: 160 }]));
+  expect(owner.beginAt).toHaveBeenCalledWith(100, 100, 'touch');
+  expect(owner.extendTo).toHaveBeenCalledWith(100, 160);
+  expect(owner.clear).toHaveBeenCalledTimes(1);
   instance.dispose();
 });

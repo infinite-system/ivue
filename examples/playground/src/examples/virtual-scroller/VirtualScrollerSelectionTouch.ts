@@ -61,6 +61,12 @@ class $VirtualScrollerSelectionTouch {
     return ref(false);
   }
 
+  /** True while a finger holds or selects — collapses of the native
+   *  selection in that window are the lock's doing, not the reader's. */
+  get holding() {
+    return this.hold.timer !== null || this.selecting.value;
+  }
+
   /** The element the listeners are attached to, once attached. */
   get element() {
     return shallowRef<HTMLElement | null>(null);
@@ -74,7 +80,11 @@ class $VirtualScrollerSelectionTouch {
     /** the node the finger landed on — the one node its events keep reaching */
     target: null as EventTarget | null,
     /** whether the promoted hold has begun a selection (on its first move) */
-    began: false
+    began: false,
+    /** whether a selection existed when the finger landed — a tap on it clears it */
+    hadSelection: false,
+    /** whether the finger moved past the slop (a swipe, not a tap) */
+    moved: false
   };
 
   /* Lifetime — the host calls these from its own mount and unmount */
@@ -152,11 +162,14 @@ class $VirtualScrollerSelectionTouch {
     this.hold.origin = { x: touch.clientX, y: touch.clientY };
     this.hold.identifier = touch.identifier;
     this.hold.began = false;
+    this.hold.moved = false;
     if (event.target) this.followTouch(event.target);
-    // A finger landing while a selection exists may be reaching for its
-    // handles: locking would take the native selection, and the handles,
-    // away under it. The hold still arms — a new selection elsewhere.
-    if (!this.owner.hasSelection) this.lockSelectability();
+    // Always locked, selection or not: a finger on selected text is the
+    // reader about to EXTEND it with a long press (the owner extends from
+    // the far end when the press lands inside the range), and iOS must
+    // not take that press. A tap on it clears, as the system's would.
+    this.hold.hadSelection = this.owner.hasSelection;
+    this.lockSelectability();
     this.hold.timer = setTimeout(() => this.promoteHold(), this.self.LONG_PRESS_MS);
   }
 
@@ -197,6 +210,7 @@ class $VirtualScrollerSelectionTouch {
     if (!this.selecting.value) {
       const moved = this.self.distanceFrom(this.hold.origin, touch.clientX, touch.clientY);
       if (this.self.exceedsSlop(moved)) {
+        this.hold.moved = true;
         this.cancelHold();
         this.stopFollowingTouch();
         this.unlockSelectability();
@@ -225,8 +239,14 @@ class $VirtualScrollerSelectionTouch {
     this.cancelHold();
     this.stopFollowingTouch();
     this.unlockSelectability();
-    if (!this.selecting.value) return;
+    const promoted = this.selecting.value;
     this.selecting.value = false;
+    // A tap (no promotion, no move) on an existing selection dismisses it.
+    if (!promoted && this.hold.hadSelection && !this.hold.moved) {
+      this.owner.clear();
+      return;
+    }
+    if (!promoted) return;
     // A hold that never moved is a long press with nothing under it.
     if (!this.hold.began) return;
     this.owner.endDrag();
@@ -264,6 +284,7 @@ export namespace VirtualScrollerSelectionTouch {
     beginAt(x: number, y: number, input: 'mouse' | 'touch'): boolean;
     extendTo(x: number, y: number): void;
     endDrag(): void;
+    clear(): void;
     readonly hasSelection: boolean;
   }
 }

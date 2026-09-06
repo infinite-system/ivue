@@ -16,6 +16,7 @@ Goal: Hold a text selection over a virtual list as a range over the DATA, so the
 // domain-invariant: $VirtualScrollerSelection — If the pointer nears an edge or passes it, then the drag scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge: an upward drag scrolls up.
 // domain-invariant: $VirtualScrollerSelection — If a mousedown is not the primary button or lands on an interactive element, then it is left to the browser; otherwise it begins a selection and takes the native one away.
 // domain-invariant: $VirtualScrollerSelection — If a press lands outside the frame, then the selection clears; inside, it stays.
+// domain-invariant: $VirtualScrollerSelection — If a finger's press lands inside the existing range, then the drag extends it from the far end; outside it, or from a mouse, the drag starts over.
 // domain-invariant: $VirtualScrollerSelection — If the reader dismisses a natively pinned selection, then the logical range and the chip go with it; a collapse of our own making (a range scrolled out, a clear) does not.
 Impossible if true: A selection whose anchor equals its focus.
 Impossible if true: Clearing our selection removing a highlight the reader made elsewhere on the page.
@@ -536,6 +537,34 @@ test('dismissing the native selection clears the logical range, while our own co
   window.getSelection()!.removeAllRanges();
   instance.onSelectionChange();
   expect(instance.hasSelection).toBe(false);
+  instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelection — If a finger's press lands inside the existing range, then the drag extends it from the far end; outside it, or from a mouse, the drag starts over.
+test('a finger pressing inside the selection extends it from the far end; a press outside or a mouse press starts over', () => {
+  const range = Logic.normalize(at(2, 0), at(6, 4));
+  expect(Logic.farEnd(range, at(5, 1))).toEqual(at(2, 0));
+  expect(Logic.farEnd(range, at(3, 1))).toEqual(at(6, 4));
+  expect(Logic.farEnd(range, at(9, 0))).toBeNull();
+  expect(Logic.farEnd(null, at(3, 1))).toBeNull();
+
+  const { instance } = selection(0, 5);
+  instance.beginAt(60, 20, 'touch');
+  instance.extendTo(30, 100);
+  instance.endDrag();
+  expect(instance.range).toEqual({ start: at(0, 8), end: at(2, 5) });
+
+  // A finger on row 2 (inside) drags down to row 4: the start stays.
+  instance.beginAt(30, 100, 'touch');
+  instance.extendTo(30, 180);
+  instance.endDrag();
+  expect(instance.range).toEqual({ start: at(0, 8), end: at(4, 5) });
+
+  // A mouse press on row 2 starts over.
+  instance.beginAt(30, 100);
+  instance.extendTo(30, 180);
+  instance.endDrag();
+  expect(instance.range).toEqual({ start: at(2, 5), end: at(4, 5) });
   instance.dispose();
 });
 

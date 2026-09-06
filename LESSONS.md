@@ -710,9 +710,13 @@ selection handling — the page's touch is cancelled, the autoscroll dies,
 the range freezes ("selection disappears, new rows not selected, scroll
 up and the old rows are still highlighted"). Paint a touch drag through
 the CSS Custom Highlight API (WebKit 26.5 has it; paints on selectable
-text) and pin the native selection only on release. (6) Any touchstart that locks
-selectability kills an EXISTING native selection and its handles under the
-finger — skip the lock when a selection exists. (7) A tap on iOS collapses
+text) and pin the native selection only on release. (6) The selectability lock must be UNCONDITIONAL: skipping it
+when a selection exists (to keep iOS's handles grabbable) hands every
+second gesture — the long press that extends, the press near the edge —
+back to iOS, the exact failure of (4). Touch extends through the class
+instead: a long press INSIDE the range keeps the far end as the anchor
+(`farEnd`); a tap on the selection clears it; collapses of the native
+selection during a hold are the lock's, never a dismissal. (7) A tap on iOS collapses
 the native selection without touching the page: read a collapse we did not
 make as a dismissal and clear the logical range, or the copy chip outlives
 the highlight. (9) WebKit under a held touch moves a promoted layer but does not

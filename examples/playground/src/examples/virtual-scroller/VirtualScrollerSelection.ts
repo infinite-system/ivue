@@ -391,6 +391,24 @@ class $VirtualScrollerSelection {
     return `${identity(selection.anchorNode)}:${selection.anchorOffset}>${identity(selection.focusNode)}:${selection.focusOffset}`;
   }
 
+  /**
+   * For a press inside a range, the end farther from it — the anchor an
+   * extension keeps; null when there is no range or the press is outside.
+   */
+  static farEnd(
+    range: VirtualScrollerSelection.Range | null,
+    pressed: VirtualScrollerSelection.Position
+  ): VirtualScrollerSelection.Position | null {
+    if (!range) return null;
+    const inside =
+      this.comparePositions(range.start, pressed) <= 0 &&
+      this.comparePositions(pressed, range.end) <= 0;
+    if (!inside) return null;
+    const toStart = pressed.index - range.start.index;
+    const toEnd = range.end.index - pressed.index;
+    return toStart >= toEnd ? range.start : range.end;
+  }
+
   /* Range math — no DOM */
 
   /** Document order: by row index first, then by offset within the row. */
@@ -611,10 +629,15 @@ class $VirtualScrollerSelection {
   beginAt(x: number, y: number, input: 'mouse' | 'touch' = 'mouse'): boolean {
     const wrapper = this.owner.itemsWrapperElement.value;
     if (!wrapper) return false;
-    const anchor = this.self.positionAt(wrapper, x, y, this.owner.selectionAxis);
-    if (!anchor) return false;
-    this.anchor.value = anchor;
-    this.focus.value = anchor;
+    const pressed = this.self.positionAt(wrapper, x, y, this.owner.selectionAxis);
+    if (!pressed) return false;
+    // A finger's long press INSIDE an existing selection extends it: the
+    // anchor is the end farther from the press, the press becomes the
+    // focus. Touch has no shift-click and cannot rely on iOS's handles,
+    // which the selectability lock takes away.
+    const extending = input === 'touch' ? this.self.farEnd(this.range, pressed) : null;
+    this.anchor.value = extending ?? pressed;
+    this.focus.value = pressed;
     this.input.touch = input === 'touch';
     this.dragging.value = true;
     this.drag.pointerX = x;
@@ -874,6 +897,9 @@ class $VirtualScrollerSelection {
   // invariant: A native selection inside the frame is adopted as the logical range (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   onSelectionChange() {
     if (this.dragging.value) return;
+    // While a finger holds, the selectability lock hides the native
+    // selection; that collapse is the lock's, not a dismissal.
+    if (this.$touch.holding) return;
     const wrapper = this.owner.itemsWrapperElement.value;
     const selection = window.getSelection();
     if (!wrapper || !selection) return;
