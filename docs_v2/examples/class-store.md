@@ -110,7 +110,7 @@ class $ProjectStore {
   /** The ONE instance, as a reactive() view — built once, on first read,
    *  through the namespace slot. */
   protected static get $sharedReactive() {
-    return reactive(new ProjectStore.Class());
+    return reactive(new ProjectStore.Class() as ProjectStore.Instance);
   }
 
   /** The store singleton: every caller receives the SAME view. */

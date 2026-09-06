@@ -19,7 +19,7 @@ class $ProjectStore {
    *  write, no `.value`. A store that wants to publish itself this way
    *  returns this from use() instead of $shared. */
   protected static get $sharedReactive() {
-    return reactive(new ProjectStore.Class());
+    return reactive(new ProjectStore.Class() as ProjectStore.Instance);
   }
 
   /** The store singleton: every caller receives the SAME instance. */
