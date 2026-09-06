@@ -18,7 +18,7 @@ const {
   items,
   speed,
   // element refs
-  scroller,
+  scroller
 } = example;
 </script>
 
@@ -41,6 +41,7 @@ const {
         <div class="d-n">{{ example.selectedRowsLabel }}</div>
       </div>
     </div>
+    <pre v-if="example.touchDebugEnabled" class="evs-touchlog">{{ example.touchLogText }}</pre>
 
     <div class="evs-frame">
       <VirtualScroller
@@ -66,12 +67,8 @@ const {
       <button class="d-btn primary" type="button" @click="example.jumpTo(499999)">
         jump to #500,000
       </button>
-      <button class="d-btn" type="button" @click="example.jumpToEnd()">
-        jump to the end
-      </button>
-      <button class="d-btn" type="button" @click="example.jumpTo(0)">
-        back to the top
-      </button>
+      <button class="d-btn" type="button" @click="example.jumpToEnd()">jump to the end</button>
+      <button class="d-btn" type="button" @click="example.jumpTo(0)">back to the top</button>
       <button
         class="d-btn evs-play"
         :class="{ 'evs-playing': example.isAutoPlaying }"
@@ -83,13 +80,7 @@ const {
       </button>
       <label class="evs-speed">
         speed
-        <input
-          v-model.number="speed"
-          type="range"
-          min="1"
-          max="60"
-          step="0.1"
-        />
+        <input v-model.number="speed" type="range" min="1" max="60" step="0.1" />
         <span class="evs-speed-value">{{ example.speedLabel }}</span>
       </label>
     </div>
@@ -100,6 +91,17 @@ const {
 <style scoped>
 .evs-stats {
   margin-bottom: 14px;
+}
+.evs-touchlog {
+  max-height: 220px;
+  overflow: auto;
+  margin: 0 0 14px;
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.35;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  border-radius: 8px;
+  white-space: pre-wrap;
 }
 .evs-frame {
   height: 440px;

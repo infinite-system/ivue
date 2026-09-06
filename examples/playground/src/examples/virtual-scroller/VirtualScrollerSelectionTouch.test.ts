@@ -8,6 +8,7 @@ Goal: Let a finger select text in a list where a drag already means scroll, by p
 // domain-invariant: $VirtualScrollerSelectionTouch — If two fingers land, then no hold arms; if a second finger lands mid-drag, then the first finger keeps the focus.
 // domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts after a selecting drag, then the drag ends and the copy chip shows exactly when the owner holds a selection.
 // domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts without moving, or scrolls away, or is a tap, then the rows are selectable again and nothing was selected.
+// domain-invariant: $VirtualScrollerSelectionTouch — If a finger lands while a selection exists, then selectability is not locked, so the native selection and its handles stay under it.
 Impossible if true: The page scrolling while a touch selection is being extended.
 
 === GENERATOR-DESCRIBED ===
@@ -187,5 +188,15 @@ test('lifting the finger ends the drag and reports selected exactly when the own
   row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
   row.dispatchEvent(touchEvent('touchend', []));
   expect(owner.endDrag).toHaveBeenCalledTimes(1);
+  instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelectionTouch — If a finger lands while a selection exists, then selectability is not locked, so the native selection and its handles stay under it.
+test('a finger landing on an existing selection does not lock selectability — the handles stay', () => {
+  const { owner, instance, row, element } = gesture();
+  owner.hasSelection = true;
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  expect(element.style.userSelect).toBe('');
+  row.dispatchEvent(touchEvent('touchend', []));
   instance.dispose();
 });

@@ -1,4 +1,4 @@
-import { ref, shallowRef } from 'vue';
+import { ref, shallowRef, watch } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import type { VirtualScroller } from './VirtualScroller';
@@ -52,6 +52,16 @@ class $VirtualScrollerExample {
     return items;
   }
 
+  /** On-device diagnostics: `?touchdebug` in the URL turns the demo into
+   *  an instrument that logs every selection call and touch event on the
+   *  page itself — the only way to read what a phone does. */
+  constructor() {
+    watch(
+      () => this.scroller.value,
+      () => this.attachTouchDebug()
+    );
+  }
+
   // MUTABLE STATE — the list is replaced wholesale, never deep-mutated,
   // so shallowRef keeps a million rows out of the deep-proxy machinery.
   get items() {
@@ -100,6 +110,19 @@ class $VirtualScrollerExample {
     return this.selectedRowCount.toLocaleString();
   }
 
+  // MUTABLE STATE — the diagnostic log, newest last, capped.
+  get touchLog() {
+    return shallowRef<string[]>([]);
+  }
+
+  get touchDebugEnabled() {
+    return typeof location !== 'undefined' && /touchdebug/.test(location.search);
+  }
+
+  get touchLogText() {
+    return this.touchLog.value.join('\n');
+  }
+
   get playButtonLabel() {
     return this.isAutoPlaying ? 'pause' : 'autoplay';
   }
@@ -129,6 +152,73 @@ class $VirtualScrollerExample {
   rowText(item: VirtualScroller.BaseItem) {
     const row = item as VirtualScrollerExample.Row;
     return `#${Number(row.position).toLocaleString()} — ${row.body}`;
+  }
+
+  /** Append a diagnostic line (wall clock in seconds). */
+  logTouch(line: string) {
+    const stamp = (performance.now() / 1000).toFixed(2);
+    this.touchLog.value = [...this.touchLog.value.slice(-39), `${stamp}s ${line}`];
+  }
+
+  /**
+   * Wrap the selection's entry points and the frame's touch events with
+   * logging. Wrapped methods land as own properties on the raw instance,
+   * which is what the gesture and the frame loops read through — every
+   * call and every thrown error shows up, in order.
+   */
+  attachTouchDebug() {
+    const scroller = this.scroller.value;
+    if (!scroller || !this.touchDebugEnabled) return;
+    const selection = scroller.selection as unknown as Record<
+      string,
+      (...args: unknown[]) => unknown
+    >;
+    const wrap = (name: string, summary: (args: unknown[], result: unknown) => string) => {
+      const original = selection[name];
+      if (typeof original !== 'function') return;
+      selection[name] = (...args: unknown[]) => {
+        try {
+          const result = original(...args);
+          this.logTouch(`${name} ${summary(args, result)}`);
+          return result;
+        } catch (error) {
+          this.logTouch(`ERR ${name}: ${(error as Error).message}`);
+          throw error;
+        }
+      };
+    };
+    const point = (args: unknown[]) =>
+      `(${Math.round(args[0] as number)},${Math.round(args[1] as number)})`;
+    wrap('beginAt', (args, result) => `${point(args)} ${args[2] ?? 'mouse'} → ${result}`);
+    wrap('extendTo', (args) => `${point(args)} rows=${scroller.selection.selectedRowCount}`);
+    wrap('endDrag', () => `rows=${scroller.selection.selectedRowCount}`);
+    wrap(
+      'autoscrollStep',
+      () => `rows=${scroller.selection.selectedRowCount} first=${scroller.visibleIndex.start}`
+    );
+    wrap('clear', () => '');
+    wrap(
+      'onSelectionChange',
+      () =>
+        `native=${getSelection()?.toString().length ?? 0} rows=${scroller.selection.selectedRowCount}`
+    );
+    const frame = scroller.scrollElement;
+    for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel'] as const) {
+      frame?.addEventListener(
+        type,
+        (event) => {
+          const touch = (event as TouchEvent).touches[0];
+          this.logTouch(
+            `${type}${touch ? ` (${Math.round(touch.clientX)},${Math.round(touch.clientY)})` : ''} cancelable=${event.cancelable} prevented=${event.defaultPrevented}`
+          );
+        },
+        { capture: true, passive: true }
+      );
+    }
+    window.addEventListener('error', (event) => this.logTouch(`window error: ${event.message}`));
+    this.logTouch(
+      `touch debug on — Highlight API: ${typeof CSS !== 'undefined' && 'highlights' in CSS}`
+    );
   }
 
   jumpTo(index: number) {

@@ -153,7 +153,10 @@ class $VirtualScrollerSelectionTouch {
     this.hold.identifier = touch.identifier;
     this.hold.began = false;
     if (event.target) this.followTouch(event.target);
-    this.lockSelectability();
+    // A finger landing while a selection exists may be reaching for its
+    // handles: locking would take the native selection, and the handles,
+    // away under it. The hold still arms — a new selection elsewhere.
+    if (!this.owner.hasSelection) this.lockSelectability();
     this.hold.timer = setTimeout(() => this.promoteHold(), this.self.LONG_PRESS_MS);
   }
 

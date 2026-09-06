@@ -16,6 +16,7 @@ Goal: Hold a text selection over a virtual list as a range over the DATA, so the
 // domain-invariant: $VirtualScrollerSelection — If the pointer nears an edge or passes it, then the drag scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge: an upward drag scrolls up.
 // domain-invariant: $VirtualScrollerSelection — If a mousedown is not the primary button or lands on an interactive element, then it is left to the browser; otherwise it begins a selection and takes the native one away.
 // domain-invariant: $VirtualScrollerSelection — If a press lands outside the frame, then the selection clears; inside, it stays.
+// domain-invariant: $VirtualScrollerSelection — If the reader dismisses a natively pinned selection, then the logical range and the chip go with it; a collapse of our own making (a range scrolled out, a clear) does not.
 Impossible if true: A selection whose anchor equals its focus.
 Impossible if true: Clearing our selection removing a highlight the reader made elsewhere on the page.
 
@@ -504,6 +505,34 @@ test('a finger’s drag paints the range through the CSS Highlight API and leave
   instance.clear();
   expect(native.rangeCount).toBe(0);
   vi.unstubAllGlobals();
+  instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelection — If the reader dismisses a natively pinned selection, then the logical range and the chip go with it; a collapse of our own making (a range scrolled out, a clear) does not.
+test('dismissing the native selection clears the logical range, while our own collapse of it keeps the range', () => {
+  const { instance } = selection(0, 5);
+  instance.beginAt(60, 20);
+  instance.extendTo(30, 100);
+  instance.endDrag();
+  expect(instance.hasSelection).toBe(true);
+
+  // Our own collapse: the range scrolls out of the window and the native
+  // highlight is dropped by applyHighlight — the range stays.
+  instance.anchor.value = at(40, 0);
+  instance.focus.value = at(45, 3);
+  instance.applyHighlight();
+  expect(window.getSelection()!.rangeCount).toBe(0);
+  instance.onSelectionChange();
+  expect(instance.hasSelection).toBe(true);
+
+  // Back on screen, pinned natively; then the reader taps it away.
+  instance.anchor.value = at(0, 8);
+  instance.focus.value = at(2, 5);
+  instance.applyHighlight();
+  expect(window.getSelection()!.rangeCount).toBe(1);
+  window.getSelection()!.removeAllRanges();
+  instance.onSelectionChange();
+  expect(instance.hasSelection).toBe(false);
   instance.dispose();
 });
 

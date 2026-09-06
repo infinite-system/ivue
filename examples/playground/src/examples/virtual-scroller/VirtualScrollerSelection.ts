@@ -533,7 +533,7 @@ class $VirtualScrollerSelection {
 
   /** The native selection this class last applied, as a signature — a
    *  selectionchange that matches it is our own echo, not the reader's. */
-  protected readonly native = { applied: '' };
+  protected readonly native = { applied: '', collapsedByUs: false };
 
   /** The input driving the live drag: a finger's drag paints through the
    *  CSS Highlight API and hands the range to the native selection only on
@@ -761,7 +761,8 @@ class $VirtualScrollerSelection {
     const selection = window.getSelection();
     const frame = this.owner.scrollElement.value;
     const ours = selection?.anchorNode && frame && frame.contains(selection.anchorNode);
-    if (ours) selection.removeAllRanges();
+    if (ours && selection) this.collapseNative(selection);
+    this.native.applied = '';
     this.clearCssHighlight();
     this.input.touch = false;
     // Nothing is selected any more: the outside-press listeners go too.
@@ -807,7 +808,7 @@ class $VirtualScrollerSelection {
     // No range: make sure no stale highlight of ours lingers.
     if (!range) {
       const ours = selection.anchorNode && wrapper.contains(selection.anchorNode);
-      if (ours) selection.removeAllRanges();
+      if (ours) this.collapseNative(selection);
       this.clearCssHighlight();
       return;
     }
@@ -827,7 +828,7 @@ class $VirtualScrollerSelection {
     );
     if (!visible) {
       if (paintOnly) this.clearCssHighlight();
-      else selection.removeAllRanges();
+      else this.collapseNative(selection);
       return;
     }
 
@@ -846,6 +847,15 @@ class $VirtualScrollerSelection {
     }
     selection.setBaseAndExtent(start.node, start.offset, end.node, end.offset);
     this.native.applied = this.self.selectionSignature(selection);
+    this.native.collapsedByUs = false;
+  }
+
+  /** Drop the native selection as OUR act, so the selectionchange it
+   *  fires is not read as the reader dismissing the range. */
+  protected collapseNative(selection: Selection) {
+    if (selection.rangeCount === 0) return;
+    this.native.collapsedByUs = true;
+    selection.removeAllRanges();
   }
 
   protected clearCssHighlight() {
@@ -866,7 +876,18 @@ class $VirtualScrollerSelection {
     if (this.dragging.value) return;
     const wrapper = this.owner.itemsWrapperElement.value;
     const selection = window.getSelection();
-    if (!wrapper || !selection || selection.isCollapsed) return;
+    if (!wrapper || !selection) return;
+    if (selection.isCollapsed) {
+      // Our own collapses (a range scrolled out of the window, a clear)
+      // are marked; any other dismissal of a natively pinned range — a tap
+      // on iOS — takes the logical range and its chip with it.
+      if (this.native.collapsedByUs) {
+        this.native.collapsedByUs = false;
+        return;
+      }
+      if (this.native.applied && this.hasSelection) this.clear();
+      return;
+    }
     if (this.self.selectionSignature(selection) === this.native.applied) return;
     const anchor = this.self.positionOfNode(wrapper, selection.anchorNode, selection.anchorOffset);
     const focus = this.self.positionOfNode(wrapper, selection.focusNode, selection.focusOffset);

@@ -433,7 +433,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Scope:** `VirtualScrollerSelectionTouch.ts`: `onTouchStart`, `promoteHold`, `onTouchMove`, `onTouchEnd`, `LONG_PRESS_MS`, `SLOP_PX`. Hosted by the selection; the scroller attaches it at mount.
 
-**Mechanism:** A drag already means scroll on a touchscreen, so selection takes the browser's own convention. The hold timer promotes; slop cancels; after promotion `preventDefault` stops the page and `lenisStopPropagation` stops the list. iOS runs its own long-press selection on selectable text at about the same moment and would take the finger; `lockSelectability` makes the rows `user-select: none` for the hold, and because WebKit paints no highlight in non-selectable text (native or CSS Highlight API — measured in WebKit 26.5), `unlockSelectability` runs right before `beginAt` on the first move. The gesture calls the same three primitives the mouse path calls.
+**Mechanism:** A drag already means scroll on a touchscreen, so selection takes the browser's own convention. The hold timer promotes; slop cancels; after promotion `preventDefault` stops the page and `lenisStopPropagation` stops the list. iOS runs its own long-press selection on selectable text at about the same moment and would take the finger; `lockSelectability` makes the rows `user-select: none` for the hold — except when a selection already exists, since a finger landing then may be reaching for its native handles and locking would take them away — and because WebKit paints no highlight in non-selectable text (native or CSS Highlight API — measured in WebKit 26.5), `unlockSelectability` runs right before `beginAt` on the first move. The gesture calls the same three primitives the mouse path calls.
 
 **Generates:** The copy chip (`showsCopyChip`, `copy`) — a phone has no Ctrl+C.
 
@@ -571,11 +571,11 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Scope:** `VirtualScrollerSelection.ts`: `onSelectionChange`, `positionOfNode`, `selectionSignature`, the `native.applied` holder; the `selectionchange` listener installed by `attach`.
 
-**Mechanism:** `applyHighlight` records the signature of what it wrote; `selectionchange` events whose signature matches are echoes, and so is any native range that equals the logical range clamped to the mounted window (`isClampedEcho`), however the browser re-seated its nodes — the native selection only ever covers the mounted rows, so adopting that would shrink a range that runs past the window. Anything else inside the wrapper is converted node by node through `offsetInRow`, the same translation the drag uses.
+**Mechanism:** `applyHighlight` records the signature of what it wrote; `selectionchange` events whose signature matches are echoes, and so is any native range that equals the logical range clamped to the mounted window (`isClampedEcho`), however the browser re-seated its nodes — the native selection only ever covers the mounted rows, so adopting that would shrink a range that runs past the window. Anything else inside the wrapper is converted node by node through `offsetInRow`, the same translation the drag uses. A collapse is read the same way: one of our own making (`collapseNative` marks it — a range scrolled out of the window, a clear) is ignored; any other dismissal of a natively pinned range, a tap on iOS, clears the logical range and its chip.
 
 **Evidence:** `VirtualScrollerSelection.ts` `onSelectionChange`. Test: "a native selection the reader makes inside the frame becomes the logical range, while our own re-pins are ignored as echoes, re-seated or not".
 
-**Impossible if true:** A chip label that disagrees with the native highlight. An adopted range from a selection outside the frame. A range that runs past the window shrinking to the mounted rows on a selectionchange.
+**Impossible if true:** A chip label that disagrees with the native highlight. An adopted range from a selection outside the frame. A range that runs past the window shrinking to the mounted rows on a selectionchange. A copy chip outliving the highlight the reader dismissed.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts -t "adopted|echoes"`
 
