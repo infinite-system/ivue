@@ -22,6 +22,7 @@ import {
 } from '../../ivue';
 import { Lenis } from '../../lenis/lenis';
 import { Static } from '../../Static';
+import { VirtualScrollerPadding } from './VirtualScrollerPadding';
 import { VirtualScrollerSelection } from './VirtualScrollerSelection';
 
 /**
@@ -270,6 +271,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       clearTimeout(this.snapTimeout);
       this.cancelFrames();
       this.$selection.dispose();
+      this.$padding.dispose();
       this.stopScrollToIndexReapply?.();
       this.lenis?.stop();
       this.lenis?.destroy();
@@ -478,7 +480,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * measured. Reads are plain (non-reactive); geometryVersion bumps cover
    * invalidation at the calibration moment.
    */
-  protected get estimatedItemSize() {
+  get estimatedItemSize() {
     return this.calibratedAssumed ?? this.assumedSize.value;
   }
 
@@ -541,8 +543,34 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return computed(() => this.computeScrollExtent());
   }
 
-  protected get halfPaddingQuantity() {
+  get halfPaddingQuantity() {
     return Math.ceil(this.paddingQuantity.value / 2);
+  }
+
+  // RENDER PADDING — owned by a hosted VirtualScrollerPadding: the base
+  // pad on both ends, plus rows ahead of the motion sized by velocity.
+  // The window walk asks it once per evaluation.
+  protected get $padding() {
+    return new VirtualScrollerPadding.Class(this);
+  }
+
+  /** The pad, exposed for anyone who wants to show what the walk mounted. */
+  get padding() {
+    return this.$padding;
+  }
+
+  /** The content's velocity in px per animation frame, signed: positive
+   *  forward. Read, never tracked — Lenis is not reactive. */
+  get scrollVelocity() {
+    return this.lenis?.velocity ?? 0;
+  }
+
+  /** The lerp gap: how far the transform still has to travel to the
+   *  target, in px, signed like the velocity. The window walk is anchored
+   *  at the target; this is what the trailing pad must cover. */
+  get scrollGap() {
+    const lenis = this.lenis;
+    return lenis ? lenis.targetScroll - lenis.animatedScroll : 0;
   }
 
   /**
@@ -819,9 +847,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       end++;
     }
 
-    const padding = this.halfPaddingQuantity;
-    const paddedStart = Math.max(0, start - padding);
-    end += padding + 1;
+    const padding = this.$padding.pad();
+    const paddedStart = Math.max(0, start - padding.before);
+    end += padding.after + 1;
 
     if (this.visibleIndex.value.start !== paddedStart || this.visibleIndex.value.end !== end) {
       this.visibleIndex.value.start = paddedStart;

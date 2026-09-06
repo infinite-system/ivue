@@ -596,3 +596,21 @@ or not (the `selection-text` prop) — or copy differs across the window.
 Sweep probe: drag past the edge, copy, assert lines === selected rows >
 mounted rows and the first line starts mid-row. Playwright's
 `Control+C` fires the copy event; grant clipboard permissions to read.
+
+## Virtual scroller: the window walk is anchored at the scroll TARGET
+
+The frame loop hands the window walk `lenis.targetScroll`, not the
+animated position. During a wheel lerp the mounted window already sits at
+the destination while the viewport is still travelling toward it — so a
+"blank canvas during a flick" is never an under-padding problem and
+velocity-sized padding alone changes nothing (measured: 21/28/35 uncovered
+frames of 91, identical with and without a 60-row velocity pad). The
+variable that covers it is the lerp gap, `targetScroll - animatedScroll`,
+converted to rows on the trailing end of the window; it is exact per frame
+and needs no hysteresis. `VirtualScrollerPadding` owns both terms. Two
+traps: (1) read Lenis inside the walk, never track it — the walk already
+reruns on every position write; (2) a flick that stops autoplay stops the
+walk too, so the last pad stays mounted unless the pad class bumps a ref
+after its settle window to force one more walk. Probe scripts: sample
+`requestAnimationFrame` for 1.5 s after four `mouse.wheel` bursts and count
+frames where the mounted rows' union does not cover the frame rect.

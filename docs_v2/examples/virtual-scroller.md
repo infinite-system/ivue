@@ -65,6 +65,7 @@ everything else is the production component.
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.ts [VirtualScrollerSelection.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/TouchSelectionGesture.ts [TouchSelectionGesture.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.ts [VirtualScrollerPadding.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.ts [VirtualScrollerItem.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts [example]
@@ -106,6 +107,17 @@ redeploys the example automatically.
   the hold and the slop) and a chip copies it, since a phone has no
   Ctrl+C. During any drag a per-frame follow loop keeps the focus under
   the pointer while content slides beneath it.
+- **The pad follows the flick.** The window walk is anchored at the
+  scroll target, the destination of the wheel lerp, while the transform
+  travels there over many frames. A fixed pad leaves the rows between the
+  two unmounted, and a hard flick showed blank canvas for a third of its
+  frames. `VirtualScrollerPadding`, hosted through one `$`-getter, sizes
+  the pad per walk: the lerp gap in rows on the trailing end, exact every
+  frame, plus a velocity lookahead on the leading end held with
+  hysteresis, and one more walk after the flick settles so the pad never
+  outlives it. Measured on three flick strengths, 91 frames each: 21, 28
+  and 35 uncovered frames before, zero after, and the window rests at its
+  base size again within half a second.
 - **The scrollbar is code.** `overflow-anchor: none` and a `translateZ`
   compositor layer keep the browser out of the way; Lenis takes its clamp
   from the computed content height, not the DOM.
