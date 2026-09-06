@@ -118,6 +118,7 @@ function owner(stage: Stage, join = '\n') {
     creepFactor: 1,
     rowText,
     scrollBy: vi.fn(),
+    nudgePaint: vi.fn(),
     window
   };
 }
@@ -386,6 +387,8 @@ test('holding the pointer inside the edge zone scrolls forward at a crawl, past 
   expect(frames).toHaveLength(1);
   frames.shift()!(1000);
   expect(owner.scrollBy).toHaveBeenLastCalledWith(Logic.autoscrollSpeed(10) * 16.7);
+  // Every write asks the engine to paint what it mounted.
+  expect(owner.nudgePaint).toHaveBeenCalledTimes(1);
   // 50 px past the bottom edge: the ramp counts the whole zone plus the overshoot.
   instance.extendTo(60, 250);
   frames.shift()!(1016.7);

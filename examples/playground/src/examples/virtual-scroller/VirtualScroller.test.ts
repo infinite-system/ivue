@@ -12,12 +12,14 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 [Shrinking the list prunes the measurements at its new end](virtual-scroller.invariants.md#shrinking-the-list-prunes-the-measurements-at-its-new-end)
 [The copied text is the string the row renders](virtual-scroller.invariants.md#the-copied-text-is-the-string-the-row-renders)
 [The frame is never natively panned along its own axis](virtual-scroller.invariants.md#the-frame-is-never-natively-panned-along-its-own-axis)
+[WebKit re-rasterizes the layer on every autoscroll write](virtual-scroller.invariants.md#webkit-re-rasterizes-the-layer-on-every-autoscroll-write)
 // domain-invariant: $VirtualScroller — If the props object is read, then it is the fusion of the static types and defaults: the required list carries no default and the creep knob unset reads as the tuned cadence.
 // domain-invariant: $VirtualScroller — If item i's position is asked, then it is the sum of the sizes before it, measured where known and the estimate elsewhere, whichever way the cursor walks there.
 // domain-invariant: $VirtualScroller — If a pixel offset is asked for its item, then anchoring that item at the returned fraction gives the same pixel back.
 // domain-invariant: $VirtualScroller — If the window changes, then itemsChanged fires once with the padded bounds; a scroll that keeps the window fires nothing.
 // domain-invariant: $VirtualScroller — If the vertical seams are read, then they name the y axis: translateY and deltaY, and the frame lets the browser pan only the cross axis: pan-x.
 // domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded; only a landing snaps.
+// domain-invariant: $VirtualScroller — If nudgePaint runs on WebKit, then the inner layer's will-change is cycled through auto with a layout read between; elsewhere it does nothing.
 Impossible if true: A rendered scroll position beyond the extent.
 Impossible if true: An item outside the list with a position.
 Impossible if true: A window whose spacers plus rows sum to anything but the extent.
@@ -88,6 +90,18 @@ class $Probe extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<R
   probeTrailingCap() {
     return this.self.TRAILING_SPACER_RENDER_CAP;
   }
+
+  /** The engine flag, pinned per test. */
+  static override readonly IS_WEBKIT: boolean = false;
+}
+
+class $WebKitProbe extends $Probe {
+  static override readonly IS_WEBKIT: boolean = true;
+}
+
+namespace WebKitProbe {
+  export const $Class = Static($WebKitProbe);
+  export let Class = Reactive($WebKitProbe) as unknown as typeof $WebKitProbe;
 }
 
 namespace Probe {
@@ -423,4 +437,33 @@ test('the vertical seams read the y axis: translateY and deltaY', () => {
   expect(instance.probeAxisDelta({ deltaX: 5, deltaY: 9 })).toBe(9);
   expect(instance.frameTouchAction).toBe('pan-x');
   unmount();
+});
+
+// domain-invariant: $VirtualScroller — If nudgePaint runs on WebKit, then the inner layer's will-change is cycled through auto with a layout read between; elsewhere it does nothing.
+// invariant: WebKit re-rasterizes the layer on every autoscroll write (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('the paint nudge cycles will-change on WebKit and is a no-op elsewhere', () => {
+  const writes: string[] = [];
+  const inner = document.createElement('div');
+  Object.defineProperty(inner.style, 'willChange', {
+    set: (value: string) => writes.push(value),
+    get: () => writes.at(-1) ?? ''
+  });
+  const props = {
+    ...VirtualScroller.Class.propsDefaults,
+    modelValue: rows(3)
+  } as VirtualScroller.Props<Row>;
+
+  const chrome = hosted(() => new Probe.Class(props, vi.fn() as unknown as VirtualScroller.Emits));
+  chrome.instance.scrollElementInner.value = inner;
+  chrome.instance.nudgePaint();
+  expect(writes).toEqual([]);
+  chrome.unmount();
+
+  const webkit = hosted(
+    () => new WebKitProbe.Class(props, vi.fn() as unknown as VirtualScroller.Emits)
+  );
+  webkit.instance.scrollElementInner.value = inner;
+  webkit.instance.nudgePaint();
+  expect(writes).toEqual(['auto', 'transform']);
+  webkit.unmount();
 });

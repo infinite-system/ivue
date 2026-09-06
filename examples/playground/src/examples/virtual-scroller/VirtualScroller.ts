@@ -182,6 +182,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return Math.round(value * dpr) / dpr;
   }
 
+  /** WebKit, iOS browsers included (every one of them is WebKit): the
+   *  engine that needs its composited layer re-promoted to rasterize
+   *  fresh content under a held touch — see nudgePaint. */
+  protected static readonly IS_WEBKIT =
+    typeof navigator !== 'undefined' &&
+    /^((?!chrome|chromium|android).)*safari/i.test(navigator.userAgent);
+
   /** Reading-creep speed: ms of wall time per px of content — the original
    *  cadence (1px per 150ms tick ≈ 6.7px/s), now integrated per FRAME. */
   protected static readonly CREEP_MS_PER_PX = 150;
@@ -1711,6 +1718,26 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const lenis = this.lenisRequired;
     lenis.targetScroll = Math.max(0, lenis.targetScroll + delta);
     this.setScrollPosition(-lenis.targetScroll, false, true, false);
+  }
+
+  // invariant: WebKit re-rasterizes the layer on every autoscroll write (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  /**
+   * Force WebKit to rasterize what the last write mounted. Under a held
+   * touch, iOS moves the composited layer but leaves rows that mounted
+   * during the move blank until the finger lifts — the scrollbar thumb
+   * in the same layer vanishes with them. Demoting and re-promoting the
+   * layer (will-change auto → layout read → transform) is the fork's own
+   * Safari workaround on the wheel path; the selection's autoscroll
+   * writes the transform here instead, so it asks for the same nudge.
+   * WebKit only: on Chrome the re-raster snaps text per frame as shimmer.
+   */
+  nudgePaint() {
+    if (!this.self.IS_WEBKIT) return;
+    const inner = this.scrollElementInner.value;
+    if (!inner) return;
+    inner.style.willChange = 'auto';
+    void inner.offsetHeight;
+    inner.style.willChange = 'transform';
   }
 
   onStart(event: any) {

@@ -715,7 +715,13 @@ selectability kills an EXISTING native selection and its handles under the
 finger — skip the lock when a selection exists. (7) A tap on iOS collapses
 the native selection without touching the page: read a collapse we did not
 make as a dismissal and clear the logical range, or the copy chip outlives
-the highlight. (8) Blind iteration on a phone is the expensive loop — the
+the highlight. (9) WebKit under a held touch moves a promoted layer but does not
+rasterize rows mounted during the move ("blank items after #9", the
+scrollbar thumb gone) until the finger lifts — the Lenis fork's Safari
+will-change cycle exists for the wheel path; the selection's autoscroll
+writes through the scroller and needs the same nudge (`nudgePaint`,
+WebKit only — on Chrome the per-frame re-raster shimmers). (8) Blind
+iteration on a phone is the expensive loop — the
 docs demo has an on-device log: open `/examples/virtual-scroller?touchdebug`
 and every selection call, touch event and thrown error prints under the
 stats (`VirtualScrollerExample.attachTouchDebug`). None of this is

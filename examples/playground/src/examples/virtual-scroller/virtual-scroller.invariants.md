@@ -52,6 +52,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 - [The frame is never natively panned along its own axis](#the-frame-is-never-natively-panned-along-its-own-axis) — why a selecting finger cannot pan the rows out of the clip.
 - [A native selection inside the frame is adopted as the logical range](#a-native-selection-inside-the-frame-is-adopted-as-the-logical-range) — why iOS's handles and a keyboard extend the same range the chip copies.
 - [A finger's drag paints without selecting](#a-fingers-drag-paints-without-selecting) — why iOS does not take the touch away mid-drag.
+- [WebKit re-rasterizes the layer on every autoscroll write](#webkit-re-rasterizes-the-layer-on-every-autoscroll-write) — why rows that mount under a held finger are not blank on iOS.
 
 **Mechanism:** The prefix-sum cursor turns an estimate plus a sparse map of measured sizes into positions in O(distance); the window walk mounts the rows the container covers plus the pad and reduces everything else to two spacers; the clamp and the rebase make the rendered numbers safe before Lenis writes them; the hosted capabilities add selection, touch and adaptive padding through owner interfaces of a handful of members, so each is a class with its own statics, its own spec and its own reason to exist.
 
@@ -178,6 +179,26 @@ tier each record is proven at, and how the colocated tests bind to it.
 **Impossible if true:** A leading spacer or transform rendered above about 131k px. A bias that is not a multiple of the chunk.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "rebases the leading spacer"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-06
+
+### WebKit re-rasterizes the layer on every autoscroll write
+
+**Invariant:** If the selection's autoscroll writes the transform on WebKit (every iOS browser included), then the composited layer is demoted and re-promoted (`will-change: auto`, a layout read, `will-change: transform`) in the same step, so the rows that write mounted are rasterized while the finger still holds; on other engines the nudge is a no-op.
+
+**Scope:** `VirtualScroller.ts` `nudgePaint`, `IS_WEBKIT`; `VirtualScrollerSelection.ts` `autoscrollStep`, the `nudgePaint` member of its `Owner`.
+
+**Renegotiable at:** WebKit's compositing under an active touch — it moves a promoted layer but leaves content mounted during the move unpainted until the touch ends (seen on an iPhone as blank rows past the fold and a vanished scrollbar thumb). The Lenis fork's wheel path carries the same workaround (`IS_SAFARI` in `setScroll`); the autoscroll writes through the scroller, so it needs its own.
+
+**Mechanism:** The will-change cycle forces the layer to be re-created and re-rasterized; the layout read between the two writes is what makes the demotion take effect before the promotion. Chrome and Firefox keep the permanent `will-change: transform` from the CSS and take the plain write — on Chrome the re-raster snaps text per frame and reads as shimmer, so the nudge is gated to WebKit.
+
+**Evidence:** `VirtualScroller.ts` `nudgePaint`; `src/lenis/lenis.ts` `setScroll` (the Safari branch and its comment). Tests: "the paint nudge cycles will-change on WebKit and is a no-op elsewhere", "holding the pointer inside the edge zone scrolls forward at a crawl, past the frame faster, above it backward, and returning to the interior stops it" (one nudge per write).
+
+**Impossible if true:** A row mounted by the autoscroll on iOS that stays blank until the finger lifts. A will-change write on Chrome from the autoscroll.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller -t "paint nudge|edge zone scrolls forward"`
 
 **Status:** provisional
 

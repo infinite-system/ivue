@@ -1028,6 +1028,8 @@ class $VirtualScrollerSelection {
 
     // 2 — scroll by speed × time in the pointer's direction.
     this.owner.scrollBy(Math.sign(distance) * speed * elapsed);
+    // invariant: WebKit re-rasterizes the layer on every autoscroll write (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+    this.owner.nudgePaint();
 
     // 3 — the focus follows the pointer along the axis onto the arriving rows.
     const probe = this.self.probePoint(frame, this.drag.pointerX, this.drag.pointerY, axis);
@@ -1116,5 +1118,7 @@ export namespace VirtualScrollerSelection {
     rowText(index: number): string;
     /** Scroll by a signed delta along the axis, immediately. */
     scrollBy(delta: number): void;
+    /** Make the engine paint what the write mounted — a no-op outside WebKit. */
+    nudgePaint(): void;
   }
 }
