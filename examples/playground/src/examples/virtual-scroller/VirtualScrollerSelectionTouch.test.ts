@@ -97,7 +97,7 @@ test('a still hold promotes at the long-press mark, and every move after it exte
   const move = touchEvent('touchmove', [{ x: 100, y: 180 }]);
   row.dispatchEvent(move);
   expect(element.style.userSelect).toBe('');
-  expect(owner.beginAt).toHaveBeenCalledWith(100, 100);
+  expect(owner.beginAt).toHaveBeenCalledWith(100, 100, 'touch');
   expect(owner.extendTo).toHaveBeenCalledWith(100, 180);
   expect(move.defaultPrevented).toBe(true);
   expect(move.lenisStopPropagation).toBe(true);

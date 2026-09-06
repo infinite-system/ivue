@@ -204,7 +204,7 @@ class $VirtualScrollerSelectionTouch {
     // finger rested — with the rows selectable again, so the highlight paints.
     if (!this.hold.began) {
       this.unlockSelectability();
-      this.hold.began = this.owner.beginAt(this.hold.origin.x, this.hold.origin.y);
+      this.hold.began = this.owner.beginAt(this.hold.origin.x, this.hold.origin.y, 'touch');
       if (!this.hold.began) {
         this.selecting.value = false;
         return;
@@ -258,7 +258,7 @@ export namespace VirtualScrollerSelectionTouch {
   /** What the gesture needs from the selection that hosts it: the three
    *  pointer-agnostic primitives, and whether a selection exists. */
   export interface Owner {
-    beginAt(x: number, y: number): boolean;
+    beginAt(x: number, y: number, input: 'mouse' | 'touch'): boolean;
     extendTo(x: number, y: number): void;
     endDrag(): void;
     readonly hasSelection: boolean;

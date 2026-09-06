@@ -9,6 +9,7 @@ Goal: Hold a text selection over a virtual list as a range over the DATA, so the
 [A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
 [A drag scrolls from inside the edge zone](virtual-scroller.invariants.md#a-drag-scrolls-from-inside-the-edge-zone)
 [A native selection inside the frame is adopted as the logical range](virtual-scroller.invariants.md#a-native-selection-inside-the-frame-is-adopted-as-the-logical-range)
+[A finger's drag paints without selecting](virtual-scroller.invariants.md#a-fingers-drag-paints-without-selecting)
 // domain-invariant: $VirtualScrollerSelection — If anchor and focus are given in either order, then the range is the same, and a range whose ends coincide is no selection.
 // domain-invariant: $VirtualScrollerSelection — If a range is clamped to the mounted window, then an end that scrolled out is pinned to the boundary row, and a range wholly outside the window is null.
 // domain-invariant: $VirtualScrollerSelection — If a point is over a row, then the position is that row at the caret's offset; in a gap it is the nearest row along the axis, at its start before it and its end after; over nothing it is null.
@@ -458,6 +459,39 @@ test('a press inside the frame keeps the selection, a press outside drops it', (
   expect(instance.hasSelection).toBe(true);
   instance.onDocumentPress({ target: document.body } as unknown as MouseEvent);
   expect(instance.hasSelection).toBe(false);
+  instance.dispose();
+});
+
+// invariant: A finger's drag paints without selecting (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a finger’s drag paints the range through the CSS Highlight API and leaves the native selection alone until release, when the range becomes the native selection', () => {
+  const registry = new Map<string, unknown>();
+  vi.stubGlobal('CSS', { highlights: registry });
+  vi.stubGlobal(
+    'Highlight',
+    class {
+      constructor(public range: Range) {}
+    }
+  );
+  expect(Logic.supportsCssHighlight).toBe(true);
+  const { instance } = selection(0, 5);
+  const native = window.getSelection()!;
+  native.removeAllRanges();
+
+  instance.beginAt(60, 20, 'touch');
+  instance.extendTo(30, 100);
+  const painted = registry.get(Logic.TOUCH_HIGHLIGHT_NAME) as { range: Range } | undefined;
+  expect(painted).toBeDefined();
+  expect(painted!.range.toString().length).toBeGreaterThan(0);
+  expect(native.rangeCount).toBe(0);
+
+  instance.endDrag();
+  expect(registry.has(Logic.TOUCH_HIGHLIGHT_NAME)).toBe(false);
+  expect(native.rangeCount).toBe(1);
+  expect(native.toString().length).toBeGreaterThan(0);
+
+  instance.clear();
+  expect(native.rangeCount).toBe(0);
+  vi.unstubAllGlobals();
   instance.dispose();
 });
 

@@ -38,6 +38,18 @@ class $VirtualScrollerSelection {
     return '.virtual-scroller__item';
   }
 
+  /** The CSS Custom Highlight registered while a finger drags — a paint
+   *  with no native selection behind it, so iOS never enters its own
+   *  selection handling under the touch. Styled by `::highlight(...)`. */
+  static get TOUCH_HIGHLIGHT_NAME() {
+    return 'virtual-scroller-selection';
+  }
+
+  /** Whether this browser can paint a range without selecting it. */
+  static get supportsCssHighlight(): boolean {
+    return typeof CSS !== 'undefined' && 'highlights' in CSS && typeof Highlight === 'function';
+  }
+
   /** Elements a mousedown must leave alone — they own their own gesture. */
   static get INTERACTIVE_SELECTOR() {
     return 'a, button, input, textarea, select, [contenteditable="true"], [contenteditable=""]';
@@ -523,6 +535,11 @@ class $VirtualScrollerSelection {
    *  selectionchange that matches it is our own echo, not the reader's. */
   protected readonly native = { applied: '' };
 
+  /** The input driving the live drag: a finger's drag paints through the
+   *  CSS Highlight API and hands the range to the native selection only on
+   *  release (see applyHighlight). */
+  protected readonly input = { touch: false };
+
   // HOSTED — the touch gesture (long press, then move); attached to the
   // frame by `attach`, disposed with this selection.
   // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
@@ -591,13 +608,14 @@ class $VirtualScrollerSelection {
    * and starts the per-frame follow. Returns false when the point is on
    * nothing.
    */
-  beginAt(x: number, y: number): boolean {
+  beginAt(x: number, y: number, input: 'mouse' | 'touch' = 'mouse'): boolean {
     const wrapper = this.owner.itemsWrapperElement.value;
     if (!wrapper) return false;
     const anchor = this.self.positionAt(wrapper, x, y, this.owner.selectionAxis);
     if (!anchor) return false;
     this.anchor.value = anchor;
     this.focus.value = anchor;
+    this.input.touch = input === 'touch';
     this.dragging.value = true;
     this.drag.pointerX = x;
     this.drag.pointerY = y;
@@ -658,7 +676,16 @@ class $VirtualScrollerSelection {
     this.stopFollow();
     this.stopAutoscroll();
     this.stopListening();
-    if (!this.hasSelection) this.clear();
+    if (!this.hasSelection) {
+      this.clear();
+      return;
+    }
+    // A finger's drag painted without selecting; now that it has lifted
+    // the range becomes the native selection (copy, iOS handles).
+    if (this.input.touch) {
+      this.input.touch = false;
+      this.applyHighlight();
+    }
   }
 
   /* The mouse gesture — thin: press, move, release */
@@ -735,6 +762,8 @@ class $VirtualScrollerSelection {
     const frame = this.owner.scrollElement.value;
     const ours = selection?.anchorNode && frame && frame.contains(selection.anchorNode);
     if (ours) selection.removeAllRanges();
+    this.clearCssHighlight();
+    this.input.touch = false;
     // Nothing is selected any more: the outside-press listeners go too.
     this.stopListeningForOutsidePress();
   }
@@ -748,26 +777,38 @@ class $VirtualScrollerSelection {
     this.stopListening();
   }
 
-  /* The highlight — the native selection, re-pinned to what is mounted */
+  /* The highlight — re-pinned to what is mounted */
 
   /**
-   * Pin the native highlight to the MOUNTED part of the logical range.
-   * Called on every move and after every window change, because the rows
-   * under the highlight recycle while it lives. The logical range is
-   * index-based, so nothing is lost when a boundary row unmounts; the
-   * visible part is simply re-derived.
+   * Pin the highlight to the MOUNTED part of the logical range. Called on
+   * every move and after every window change, because the rows under the
+   * highlight recycle while it lives. The logical range is index-based,
+   * so nothing is lost when a boundary row unmounts; the visible part is
+   * simply re-derived.
+   *
+   * Two paints. A mouse drag pins the NATIVE selection, which is what
+   * Ctrl+C reads. A finger's drag paints through the CSS Custom Highlight
+   * API and leaves the native selection alone until release: on iOS, a
+   * native selection changing under a held finger hands the touch to the
+   * system's selection handling — the page's touch is cancelled, the
+   * autoscroll stops, and the range freezes where the cancel hit. A
+   * highlight is only paint; it wakes nothing.
    */
   // invariant: The selection is a range over the data (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: A finger's drag paints without selecting (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   applyHighlight() {
     const range = this.range;
     const wrapper = this.owner.itemsWrapperElement.value;
     const selection = window.getSelection();
     if (!wrapper || !selection) return;
+    const paintOnly = this.input.touch && this.self.supportsCssHighlight;
+    if (!paintOnly) this.clearCssHighlight();
 
     // No range: make sure no stale highlight of ours lingers.
     if (!range) {
       const ours = selection.anchorNode && wrapper.contains(selection.anchorNode);
       if (ours) selection.removeAllRanges();
+      this.clearCssHighlight();
       return;
     }
 
@@ -785,7 +826,8 @@ class $VirtualScrollerSelection {
       this.self.rowText(lastRow).length
     );
     if (!visible) {
-      selection.removeAllRanges();
+      if (paintOnly) this.clearCssHighlight();
+      else selection.removeAllRanges();
       return;
     }
 
@@ -795,8 +837,19 @@ class $VirtualScrollerSelection {
     if (!startRow || !endRow) return;
     const start = this.self.caretInRow(startRow, visible.start.offset);
     const end = this.self.caretInRow(endRow, visible.end.offset);
+    if (paintOnly) {
+      const painted = new Range();
+      painted.setStart(start.node, start.offset);
+      painted.setEnd(end.node, end.offset);
+      CSS.highlights.set(this.self.TOUCH_HIGHLIGHT_NAME, new Highlight(painted));
+      return;
+    }
     selection.setBaseAndExtent(start.node, start.offset, end.node, end.offset);
     this.native.applied = this.self.selectionSignature(selection);
+  }
+
+  protected clearCssHighlight() {
+    if (this.self.supportsCssHighlight) CSS.highlights.delete(this.self.TOUCH_HIGHLIGHT_NAME);
   }
 
   /**

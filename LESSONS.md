@@ -704,6 +704,12 @@ selectable again from the first move. Measured in WebKit 26.5
 (Playwright's webkit, needs `libnice10` on this VM): WebKit paints NO
 highlight in non-selectable text, neither the native selection
 (toString() is even "") nor the CSS Custom Highlight API — so blanket
-`user-select: none` on touch is not an option. None of this is testable
-in jsdom or headless Chromium beyond the unit arms; the iPhone is the
-instrument.
+`user-select: none` on touch is not an option. (5) A native selection changing under a
+held finger (our per-frame `setBaseAndExtent`) hands the touch to iOS's
+selection handling — the page's touch is cancelled, the autoscroll dies,
+the range freezes ("selection disappears, new rows not selected, scroll
+up and the old rows are still highlighted"). Paint a touch drag through
+the CSS Custom Highlight API (WebKit 26.5 has it; paints on selectable
+text) and pin the native selection only on release. None of this is
+testable in jsdom or headless Chromium beyond the unit arms; the iPhone
+is the instrument.

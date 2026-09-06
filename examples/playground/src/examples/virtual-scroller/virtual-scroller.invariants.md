@@ -51,6 +51,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 - [A drag scrolls from inside the edge zone](#a-drag-scrolls-from-inside-the-edge-zone) — why a selection scrolls even when the frame is the page.
 - [The frame is never natively panned along its own axis](#the-frame-is-never-natively-panned-along-its-own-axis) — why a selecting finger cannot pan the rows out of the clip.
 - [A native selection inside the frame is adopted as the logical range](#a-native-selection-inside-the-frame-is-adopted-as-the-logical-range) — why iOS's handles and a keyboard extend the same range the chip copies.
+- [A finger's drag paints without selecting](#a-fingers-drag-paints-without-selecting) — why iOS does not take the touch away mid-drag.
 
 **Mechanism:** The prefix-sum cursor turns an estimate plus a sparse map of measured sizes into positions in O(distance); the window walk mounts the rows the container covers plus the pad and reduces everything else to two spacers; the clamp and the rebase make the rendered numbers safe before Lenis writes them; the hosted capabilities add selection, touch and adaptive padding through owner interfaces of a handful of members, so each is a class with its own statics, its own spec and its own reason to exist.
 
@@ -582,6 +583,26 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Last refined:** 2026-09-06
 
+### A finger's drag paints without selecting
+
+**Invariant:** If a touch drag is live and the browser has the CSS Custom Highlight API, then the range is painted through `CSS.highlights` and the native selection is not touched until the finger lifts, when the finished range becomes the native selection; a mouse drag pins the native selection throughout, and a browser without the API falls back to it for touch too.
+
+**Scope:** `VirtualScrollerSelection.ts`: `applyHighlight`, `clearCssHighlight`, the `input` holder, `beginAt`'s input parameter, `endDrag`; `TOUCH_HIGHLIGHT_NAME`, `supportsCssHighlight`; the `::highlight(virtual-scroller-selection)` rule in `VirtualScroller.vue`.
+
+**Renegotiable at:** iOS Safari's touch handling — a native selection changing under a held finger hands the touch to the system's selection UI and cancels the page's touch; the autoscroll dies and the range freezes where the cancel hit (seen on an iPhone as "the selection disappears and new rows are not selected"). A highlight is paint only and wakes nothing.
+
+**Mechanism:** `beginAt(x, y, 'touch')` marks the drag; every `applyHighlight` while it lives builds a `Range` over the mounted carets and registers it as a `Highlight`; `endDrag` re-runs `applyHighlight` with the mark cleared, which pins the native selection (the copy chip and iOS's handles need one) and drops the paint. Ctrl+C is a mouse affordance and keeps the native selection from the first move.
+
+**Evidence:** `VirtualScrollerSelection.ts` `applyHighlight`. Test: "a finger’s drag paints the range through the CSS Highlight API and leaves the native selection alone until release, when the range becomes the native selection". WebKit 26.5: the Highlight API is present and paints on selectable text (measured, 3474 tinted px on the control).
+
+**Impossible if true:** A `setBaseAndExtent` call while a finger drags in a browser with the Highlight API.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts -t "paints the range through the CSS Highlight API"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-06
+
 ### A hosted capability reaches its owner through an interface
 
 **Invariant:** If a capability needs what only the scroller knows, then it receives an `Owner` object of a handful of members through its constructor, reached by the scroller through one `$`-getter, and the capability never imports or types the scroller class.
@@ -617,3 +638,4 @@ tier each record is proven at, and how the colocated tests bind to it.
 - A capability that imports the scroller — [A hosted capability reaches its owner through an interface](#a-hosted-capability-reaches-its-owner-through-an-interface).
 - A selection drag near the edge that does not scroll — [A drag scrolls from inside the edge zone](#a-drag-scrolls-from-inside-the-edge-zone).
 - The frame's scrollTop moving under a touch selection — [The frame is never natively panned along its own axis](#the-frame-is-never-natively-panned-along-its-own-axis).
+- A native selection changing under a held finger — [A finger's drag paints without selecting](#a-fingers-drag-paints-without-selecting).
