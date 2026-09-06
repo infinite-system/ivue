@@ -4,7 +4,6 @@ import { Static } from '../../Static';
 import type { VirtualScroller } from './VirtualScroller';
 
 class $VirtualScrollerExample {
-
   static readonly ITEM_COUNT = 1_000_000;
 
   protected static readonly OPENERS = [
@@ -26,7 +25,11 @@ class $VirtualScrollerExample {
   /** Builds the 24 body variants — the `$bodyVariants` cache calls this once per receiver. */
   protected static buildBodyVariants(): string[] {
     const variants: string[] = [];
-    for (let openerIndex = 0; openerIndex < this.OPENERS.length; openerIndex++) {
+    for (
+      let openerIndex = 0;
+      openerIndex < this.OPENERS.length;
+      openerIndex++
+    ) {
       for (let extraSentences = 0; extraSentences < 4; extraSentences++) {
         let body = `${this.OPENERS[openerIndex]}.`;
         for (let extra = 0; extra < extraSentences; extra++) {
@@ -106,7 +109,9 @@ class $VirtualScrollerExample {
 
   /** The tip line under the controls — its own row, so toggling never shifts the buttons. */
   get autoPlayHint() {
-    return this.isAutoPlaying ? 'autoplay on — scroll up to stop, or press pause' : 'autoplay off — press ▶ to glide through the list';
+    return this.isAutoPlaying
+      ? 'autoplay on — scroll up to stop, or press pause'
+      : 'autoplay off — press ▶ to glide through the list';
   }
 
   /** The one cast per class: instance code reads its own statics here. */
@@ -146,7 +151,6 @@ class $VirtualScrollerExample {
   jumpToEnd() {
     this.jumpTo(this.itemCount - 1);
   }
-
 }
 
 export namespace VirtualScrollerExample {
