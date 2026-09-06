@@ -125,16 +125,44 @@ class already had eight for widths and deltas, and the ninth fell in line.
 The marquee, a book on one scrolling line, passes a `selection-join` of
 one space so a selection across chunks copies as prose.
 
+## Touch, and the follow loop
+
+Touch arrived a day later, and it changed two things.
+
+On a touchscreen a drag already means scroll, so selection needs a way in
+that scrolling does not use: the long press. Hold a finger still for
+about half a second and the next movement selects instead of scrolling. A
+small hosted class owns that gesture, the hold timer, the slop that
+cancels it, the mode flag, and the one non-passive listener it installs
+while selecting, and calls the same three primitives the mouse path
+calls: begin at a point, extend to a point, end. A phone has no Ctrl+C,
+so a touch selection shows a chip that copies on tap.
+
+The second change came from a bug you would only find by using it. Scroll
+the wheel with the button held and the content slides under a stationary
+pointer, and for a moment the highlight was empty. The cause was that the
+focus was re-derived on events, a window change or a pointer move, and
+between those events Lenis owns the transform. The fix is a follow loop:
+for the length of a drag, every animation frame re-reads the pointer's
+row and re-pins. Measured over a six-notch wheel with the button held,
+151 frames sampled: the empty-highlight frames went from 112 to 40, and
+every one of the 40 is a frame with no row under the pointer yet, the
+new rows still sliding into place. There is nothing to highlight in
+those, so that is the floor.
+
 ## The cost
 
-Two things to state. Touch selection is a different gesture and is not
-built. And the row text has to agree between the DOM and the data, which
-is why the prop exists and why the card markup on the horizontal page sits
-on one line: a stray newline in the template would put a character in the
-mounted text that the data does not have.
+The row text has to agree between the DOM and the data, which is why the
+prop exists and why the card markup on the horizontal page sits on one
+line: a stray newline in the template would put a character in the
+mounted text that the data does not have. And the follow loop is one
+`elementFromPoint` per frame while a drag is live, which is nothing, but
+it is a loop that must stop, and it does on release, on clear, and on
+unmount.
 
 Against that: selection and copy that work at any list size, on both
-axes, with the scroll position and the thumb untouched while you drag.
+axes, from a mouse or a finger, with the scroll position and the thumb
+untouched while you drag.
 
 The DOM shows the window. The data holds the selection.
 

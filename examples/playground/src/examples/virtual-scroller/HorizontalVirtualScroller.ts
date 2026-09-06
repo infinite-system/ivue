@@ -20,7 +20,7 @@ import type { VirtualScrollerSelection } from './VirtualScrollerSelection';
  * through. Pair with `snap-to-items` for the step feel: scroll, stop.
  */
 class $HorizontalVirtualScroller<
-  T extends VirtualScroller.BaseItem,
+  T extends VirtualScroller.BaseItem
 > extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<T> {
   /* Contract — inherited whole; ONE default re-tuned. `props` needs no
      override: it reads through the receiver and fuses THESE defaults
@@ -28,7 +28,7 @@ class $HorizontalVirtualScroller<
   static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults {
     return {
       ...super.propsDefaults,
-      assumedSize: 300, // cards are ~hundreds of px wide where rows are tens tall
+      assumedSize: 300 // cards are ~hundreds of px wide where rows are tens tall
     };
   }
 
@@ -101,7 +101,7 @@ export namespace HorizontalVirtualScroller {
 
   export const $Class = Static($HorizontalVirtualScroller); // anchor — it overrides a static
   export let Class = Reactive(
-    $HorizontalVirtualScroller,
+    $HorizontalVirtualScroller
   ) as unknown as typeof $HorizontalVirtualScroller;
   export type Instance<T extends VirtualScroller.BaseItem> = ReactiveInstance<
     $HorizontalVirtualScroller<T>

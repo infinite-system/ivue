@@ -12,7 +12,7 @@ class $VirtualScrollerExample {
     'A million rows, a handful of divs',
     'Estimates decide the spacers; real heights decide the rest',
     'Scroll is virtual — the DOM never learns the total',
-    'Heights are captured once, on the way in and on the way out',
+    'Heights are captured once, on the way in and on the way out'
   ];
 
   /** A million rows must stay memory-sane: bodies are 24 SHARED string
@@ -45,7 +45,7 @@ class $VirtualScrollerExample {
       items[index] = {
         id: String(index),
         body: variants[(index * 7) % variants.length],
-        position: String(index + 1),
+        position: String(index + 1)
       };
     }
     return items;

@@ -76,6 +76,14 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
         :style="virtualScroller.scrollbarThumbStyle"
       ></div>
     </div>
+    <button
+      v-if="virtualScroller.showsCopyChip"
+      type="button"
+      class="virtual-scroller__copy"
+      @click="virtualScroller.copySelectedText()"
+    >
+      {{ virtualScroller.copyChipLabel }}
+    </button>
   </div>
 </template>
 <style>
@@ -144,5 +152,19 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
 .virtual-scroller__track--x:hover .virtual-scroller__thumb--x,
 .virtual-scroller__thumb.virtual-scroller__thumb--x.dragging {
   background: rgba(148, 163, 184, 0.75);
+}
+.virtual-scroller__copy {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 3;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.7);
+  background: rgba(99, 102, 241, 0.92);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
 }
 </style>

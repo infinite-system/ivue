@@ -64,6 +64,7 @@ everything else is the production component.
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.ts [VirtualScrollerSelection.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/TouchSelectionGesture.ts [TouchSelectionGesture.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.ts [VirtualScrollerItem.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts [example]
@@ -96,7 +97,11 @@ redeploys the example automatically.
   change, and copy assembles its text from the items — rows that were
   never on screen together included. The pure half (range math, text
   assembly, the ramp) is `VirtualScrollerSelection`, a Static class with
-  its own DOM-free spec; the scroller holds three cells and calls in.
+  its own DOM-free spec; the scroller holds three cells and calls in. On
+  touch, a long press starts the selection (a hosted `TouchSelectionGesture`
+  owns the hold and the slop) and a chip copies it, since a phone has no
+  Ctrl+C. During any drag a per-frame follow loop keeps the focus under
+  the pointer while content slides beneath it.
 - **The scrollbar is code.** `overflow-anchor: none` and a `translateZ`
   compositor layer keep the browser out of the way; Lenis takes its clamp
   from the computed content height, not the DOM.

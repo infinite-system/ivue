@@ -65,6 +65,14 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
       </div>
       <div :style="{ height: virtualScroller.trailingSpacerPx }"></div>
     </div>
+    <button
+      v-if="virtualScroller.showsCopyChip"
+      type="button"
+      class="virtual-scroller__copy"
+      @click="virtualScroller.copySelectedText()"
+    >
+      {{ virtualScroller.copyChipLabel }}
+    </button>
     <div
       v-if="virtualScroller.scrollbarVisible"
       class="virtual-scroller__track"
@@ -140,5 +148,19 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
   backface-visibility: hidden;
   transform-style: preserve-3d;
   overscroll-behavior: contain;
+}
+.virtual-scroller__copy {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 3;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.7);
+  background: rgba(99, 102, 241, 0.92);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
 }
 </style>

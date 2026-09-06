@@ -19,7 +19,7 @@ class $HorizontalScrollerExample {
     'Widths are captured once, in and out',
     'Estimates decide the spacers',
     'Scroll is virtual — the DOM never learns the total',
-    'Everything costs O(window)',
+    'Everything costs O(window)'
   ];
 
   static buildItems(): VirtualScroller.BaseItem[] {
@@ -28,7 +28,7 @@ class $HorizontalScrollerExample {
       items[index] = {
         id: String(index),
         body: this.CAPTIONS[(index * 7) % this.CAPTIONS.length],
-        position: String(index + 1),
+        position: String(index + 1)
       };
     }
     return items;

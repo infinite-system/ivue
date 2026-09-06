@@ -1,0 +1,218 @@
+// TouchSelectionGesture.ts — the touch gesture that produces a text
+// selection over a virtual list, hosted by the scroller.
+//
+// On a touchscreen a drag already means SCROLL, so selection needs a way
+// in that scrolling does not use. The browser's own convention is the long
+// press: hold a finger still for a moment and the next movement selects
+// instead of scrolling. This class owns exactly that gesture — the hold
+// timer, the slop that cancels it, the mode flag, and the one non-passive
+// listener it installs while selecting — and hands the scroller three
+// pointer-agnostic calls: begin at a point, extend to a point, end.
+//
+// The selection itself (the logical range, the highlight, copy) is the
+// scroller's, and it does not know or care which input produced the
+// points. That is why the mouse path and this class share the primitives
+// and nothing else.
+import { ref, shallowRef } from 'vue';
+import { Reactive } from '../../ivue';
+import { Static } from '../../Static';
+
+class $TouchSelectionGesture {
+  /* Knobs */
+
+  /** How long a finger must hold still before movement selects. */
+  static get LONG_PRESS_MS() {
+    return 450;
+  }
+
+  /** Movement (px) during the hold that turns the gesture back into a scroll. */
+  static get SLOP_PX() {
+    return 8;
+  }
+
+  /* Pure decisions — the spec covers these */
+
+  /** Whether movement of `distance` px during the hold cancels it. */
+  static exceedsSlop(distance: number): boolean {
+    return distance > this.SLOP_PX;
+  }
+
+  /** Straight-line distance between the hold's origin and a point. */
+  static distanceFrom(origin: { x: number; y: number }, x: number, y: number): number {
+    return Math.hypot(x - origin.x, y - origin.y);
+  }
+
+  constructor(public owner: TouchSelectionGesture.Owner) {}
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $TouchSelectionGesture;
+  }
+
+  // MUTABLE STATE — whether a touch selection is being extended right now
+  get selecting() {
+    return ref(false);
+  }
+
+  /** Whether the last touch gesture left a selection behind — the copy
+   *  chip's reason to exist, since a phone has no Ctrl+C. */
+  get selected() {
+    return ref(false);
+  }
+
+  /** The element the listeners are attached to, once attached. */
+  get element() {
+    return shallowRef<HTMLElement | null>(null);
+  }
+
+  /** The hold in progress: where it started and the timer that promotes it. */
+  protected readonly hold = {
+    origin: { x: 0, y: 0 },
+    timer: null as ReturnType<typeof setTimeout> | null,
+    identifier: -1,
+    /** the node the finger landed on — the one node its events keep reaching */
+    target: null as EventTarget | null
+  };
+
+  /* Lifetime — the host calls these from its own mount and unmount */
+
+  /**
+   * Only `touchstart` lives on the element. Touch events keep firing on
+   * the node the finger LANDED on — even after that node leaves the DOM,
+   * and in a virtual list it does leave: the edge autoscroll recycles the
+   * origin row mid-drag. A detached node has no ancestors, so its events
+   * reach neither the element nor the document. They do still reach
+   * listeners on the node ITSELF. So once a hold is armed, move and end
+   * are listened for on the touch's own target node, and released when
+   * the gesture ends.
+   */
+  attach(element: HTMLElement) {
+    this.detach();
+    this.element.value = element;
+    element.addEventListener('touchstart', this.onTouchStart, { passive: true });
+  }
+
+  detach() {
+    this.stopFollowingTouch();
+    const element = this.element.value;
+    if (!element) return;
+    element.removeEventListener('touchstart', this.onTouchStart);
+    this.element.value = null;
+  }
+
+  dispose() {
+    this.cancelHold();
+    this.detach();
+    this.selecting.value = false;
+  }
+
+  protected followTouch(target: EventTarget) {
+    this.stopFollowingTouch();
+    // touchmove must be able to preventDefault while selecting (it stops
+    // the page from scrolling), so it is the one non-passive listener here.
+    target.addEventListener('touchmove', this.onTouchMove as EventListener, { passive: false });
+    target.addEventListener('touchend', this.onTouchEnd as EventListener);
+    target.addEventListener('touchcancel', this.onTouchEnd as EventListener);
+    this.hold.target = target;
+  }
+
+  protected stopFollowingTouch() {
+    const target = this.hold.target;
+    if (!target) return;
+    target.removeEventListener('touchmove', this.onTouchMove as EventListener);
+    target.removeEventListener('touchend', this.onTouchEnd as EventListener);
+    target.removeEventListener('touchcancel', this.onTouchEnd as EventListener);
+    this.hold.target = null;
+  }
+
+  /* The gesture */
+
+  /** A finger lands: arm the hold. Two fingers is a pinch or a scroll, never a selection. */
+  onTouchStart(event: TouchEvent) {
+    this.cancelHold();
+    if (event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    this.hold.origin = { x: touch.clientX, y: touch.clientY };
+    this.hold.identifier = touch.identifier;
+    if (event.target) this.followTouch(event.target);
+    this.hold.timer = setTimeout(() => this.promoteHold(), this.self.LONG_PRESS_MS);
+  }
+
+  /** The hold survived: from here movement selects. The anchor is the
+   *  point the finger has been resting on. */
+  promoteHold() {
+    this.hold.timer = null;
+    const began = this.owner.beginTextSelectionAt(this.hold.origin.x, this.hold.origin.y);
+    if (!began) return;
+    this.selecting.value = true;
+    this.selected.value = false;
+  }
+
+  /**
+   * The finger moves. Before the hold fires, moving past the slop means
+   * the user is scrolling — cancel the hold and stay out of the way.
+   * After it fires, the move extends the selection and is taken away from
+   * the scroll: `preventDefault` stops the page, and the flag Lenis
+   * already honours for cross-axis gestures stops the list.
+   */
+  onTouchMove(event: TouchEvent) {
+    const touch = this.trackedTouch(event);
+    if (!touch) return;
+    if (!this.selecting.value) {
+      const moved = this.self.distanceFrom(this.hold.origin, touch.clientX, touch.clientY);
+      if (this.self.exceedsSlop(moved)) {
+        this.cancelHold();
+        this.stopFollowingTouch();
+      }
+      return;
+    }
+    event.preventDefault();
+    (event as TouchEvent & { lenisStopPropagation?: boolean }).lenisStopPropagation = true;
+    this.owner.extendTextSelectionTo(touch.clientX, touch.clientY);
+  }
+
+  /** The finger lifts: a cancelled hold was a tap or a scroll; a selecting
+   *  drag ends and leaves its range behind for the copy chip. */
+  onTouchEnd() {
+    this.cancelHold();
+    this.stopFollowingTouch();
+    if (!this.selecting.value) return;
+    this.selecting.value = false;
+    this.owner.endTextSelectionDrag();
+    this.selected.value = this.owner.hasSelection;
+  }
+
+  /** The selection was cleared by other means (an outside tap, a clear). */
+  onSelectionCleared() {
+    this.selected.value = false;
+  }
+
+  protected cancelHold() {
+    if (this.hold.timer !== null) clearTimeout(this.hold.timer);
+    this.hold.timer = null;
+  }
+
+  /** The finger this gesture follows, by identifier — a second finger
+   *  landing mid-drag must not steal the focus. */
+  protected trackedTouch(event: TouchEvent): Touch | null {
+    for (const touch of Array.from(event.touches)) {
+      if (touch.identifier === this.hold.identifier) return touch;
+    }
+    return null;
+  }
+}
+
+export namespace TouchSelectionGesture {
+  export const $Class = Static($TouchSelectionGesture); // anchor — it declares statics
+  export let Class = Reactive($Class); // reactive — the scroller hosts one
+  export type Instance = typeof Class.Instance;
+
+  /** What the gesture needs from its host: the three pointer-agnostic
+   *  selection primitives, and whether a selection exists. */
+  export interface Owner {
+    beginTextSelectionAt(x: number, y: number): boolean;
+    extendTextSelectionTo(x: number, y: number): void;
+    endTextSelectionDrag(): void;
+    readonly hasSelection: boolean;
+  }
+}

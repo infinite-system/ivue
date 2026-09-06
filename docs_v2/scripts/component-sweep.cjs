@@ -21,7 +21,7 @@ const settle = (p, ms = 300) => p.waitForTimeout(ms);
 
 (async () => {
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, permissions: ['clipboard-read', 'clipboard-write'] });
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, hasTouch: true, permissions: ['clipboard-read', 'clipboard-write'] });
   const p = await ctx.newPage();
   let pageErrors = [];
   p.on('pageerror', (e) => { if (!/stackblitz:/.test(e.message)) pageErrors.push(e.message.slice(0, 160)); });
@@ -228,6 +228,23 @@ const settle = (p, ms = 300) => p.waitForTimeout(ms);
     if (lines.length !== selected) throw new Error(`copied ${lines.length} lines for ${selected} selected rows`);
     if (lines[0].startsWith('#')) throw new Error('first line should start mid-row');
     ok('ExampleVirtualScroller (drag-select + copy)', `${selected} rows selected over a ${mounted}-row window, ${lines.length} lines copied from the data`);
+  });
+  await step('ExampleVirtualScroller (touch long-press + chip)', async () => {
+    const frame = p.locator('.evs-frame .virtual-scroller').first(); await frame.scrollIntoViewIfNeeded(); const fb = await frame.boundingBox();
+    const rows = p.locator('.evs-frame .virtual-scroller__item');
+    let rb = null; for (let i = 0; i < await rows.count(); i++) { const box = await rows.nth(i).boundingBox(); if (box && box.y > fb.y + 10 && box.y + box.height < fb.y + fb.height - 10) { rb = box; break; } }
+    if (!rb) throw new Error('no mounted row inside the frame');
+    const cdp = await ctx.newCDPSession(p);
+    const touch = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }] });
+    await touch('touchStart', rb.x + 60, rb.y + rb.height / 2); await settle(p, 600);
+    for (let i = 1; i <= 8; i++) { await touch('touchMove', rb.x + 60, rb.y + rb.height / 2 + i * ((fb.y + fb.height + 100 - rb.y) / 8)); await settle(p, 30); }
+    await settle(p, 900); await touch('touchMove', rb.x + 60, fb.y + fb.height - 30); await settle(p, 100); await touch('touchEnd'); await settle(p, 300);
+    const selected = Number((await p.locator('.evs-stats').innerText()).match(/rows selected\s*([\d,]+)/)?.[1]?.replace(/,/g, '') ?? 0);
+    const chip = p.locator('.evs-frame .virtual-scroller__copy'); if (!(await chip.count())) throw new Error(`no copy chip after a touch selection of ${selected} rows`);
+    const label = (await chip.innerText()).trim(); await chip.tap(); await settle(p, 400);
+    const lines = (await p.evaluate(() => navigator.clipboard.readText())).split('\n');
+    if (lines.length !== selected) throw new Error(`chip copied ${lines.length} lines for ${selected} rows`);
+    ok('ExampleVirtualScroller (touch long-press + chip)', `${selected} rows by long press + drag, chip "${label}" copied ${lines.length} lines`);
   });
   await step('ExampleTextMarquee', async () => {
     const btn = p.locator('button:has(.etm-btn-icon)').first(); const l0 = await btn.innerText(); await btn.click(); await settle(p); const l1 = await btn.innerText();

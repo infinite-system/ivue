@@ -78,7 +78,7 @@ class $VirtualScrollerSelection {
     const doc = document as Document & {
       caretPositionFromPoint?: (
         x: number,
-        y: number,
+        y: number
       ) => { offsetNode: Node; offset: number } | null;
     };
     if (doc.caretPositionFromPoint) {
@@ -204,7 +204,7 @@ class $VirtualScrollerSelection {
     container: Element,
     x: number,
     y: number,
-    axis: VirtualScrollerSelection.Axis = 'y',
+    axis: VirtualScrollerSelection.Axis = 'y'
   ): VirtualScrollerSelection.Position | null {
     // Clamp the point into the container so `elementFromPoint` and the
     // caret APIs look at the list, not at whatever lies past its edge.
@@ -262,7 +262,7 @@ class $VirtualScrollerSelection {
     container: Element,
     x: number,
     y: number,
-    axis: VirtualScrollerSelection.Axis = 'y',
+    axis: VirtualScrollerSelection.Axis = 'y'
   ): number {
     const [start, end] = this.axisEdges(container, axis);
     const along = axis === 'y' ? y : x;
@@ -281,7 +281,7 @@ class $VirtualScrollerSelection {
     container: Element,
     pointerX: number,
     pointerY: number,
-    axis: VirtualScrollerSelection.Axis = 'y',
+    axis: VirtualScrollerSelection.Axis = 'y'
   ): { x: number; y: number } {
     const bounds = container.getBoundingClientRect();
     return axis === 'y' ? { x: bounds.left + 1, y: pointerY } : { x: pointerX, y: bounds.top + 1 };
@@ -292,7 +292,7 @@ class $VirtualScrollerSelection {
   /** Document order: by row index first, then by offset within the row. */
   static comparePositions(
     left: VirtualScrollerSelection.Position,
-    right: VirtualScrollerSelection.Position,
+    right: VirtualScrollerSelection.Position
   ): number {
     if (left.index !== right.index) return left.index - right.index;
     return left.offset - right.offset;
@@ -302,7 +302,7 @@ class $VirtualScrollerSelection {
    *  range as the drag downward that covers the same text. */
   static normalize(
     anchor: VirtualScrollerSelection.Position,
-    focus: VirtualScrollerSelection.Position,
+    focus: VirtualScrollerSelection.Position
   ): VirtualScrollerSelection.Range {
     if (this.comparePositions(anchor, focus) <= 0) {
       return { start: anchor, end: focus };
@@ -330,7 +330,7 @@ class $VirtualScrollerSelection {
     range: VirtualScrollerSelection.Range,
     firstIndex: number,
     lastIndex: number,
-    lastRowTextLength: number,
+    lastRowTextLength: number
   ): VirtualScrollerSelection.Range | null {
     const scrolledOut = range.end.index < firstIndex || range.start.index > lastIndex;
     if (scrolledOut) return null;
@@ -350,7 +350,7 @@ class $VirtualScrollerSelection {
   static assembleText(
     range: VirtualScrollerSelection.Range,
     textOf: (index: number) => string,
-    separator = '\n',
+    separator = '\n'
   ): string {
     const { start, end } = range;
     // A single row: the slice between the two offsets.
