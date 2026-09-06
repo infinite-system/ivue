@@ -50,6 +50,19 @@ class $VirtualScrollerSelection {
     return typeof CSS !== 'undefined' && 'highlights' in CSS && typeof Highlight === 'function';
   }
 
+  /** How close a finger may land to a native selection's end and still be
+   *  taken for a grab of its handle (iOS draws the handles there). */
+  static get HANDLE_REACH_PX() {
+    return 28;
+  }
+
+  /** A native handle drag reaches this class only as selectionchange
+   *  events; when they stop for this long the handle has come to rest and
+   *  the edge autoscroll it drove stops with it. */
+  static get HANDLE_SETTLE_MS() {
+    return 300;
+  }
+
   /** Elements a mousedown must leave alone — they own their own gesture. */
   static get INTERACTIVE_SELECTOR() {
     return 'a, button, input, textarea, select, [contenteditable="true"], [contenteditable=""]';
@@ -558,6 +571,16 @@ class $VirtualScrollerSelection {
    *  release (see applyHighlight). */
   protected readonly input = { touch: false };
 
+  /** A native handle drag near the edge: the moving end's last screen
+   *  point, the frame loop scrolling under it, and when it last moved. */
+  protected readonly handle = {
+    x: 0,
+    y: 0,
+    frame: null as number | null,
+    lastTs: null as number | null,
+    lastChange: 0
+  };
+
   // HOSTED — the touch gesture (long press, then move); attached to the
   // frame by `attach`, disposed with this selection.
   // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
@@ -608,6 +631,32 @@ class $VirtualScrollerSelection {
   /** The touch gesture's question: does this target own its own tap? */
   isInteractive(target: EventTarget | null): boolean {
     return this.self.isInteractive(target);
+  }
+
+  /**
+   * The touch gesture's other question: is this finger grabbing a handle
+   * of the native selection? iOS draws its handles at the selection's
+   * first and last caret; a touch within reach of either is the reader
+   * about to drag one, and the gesture must neither lock selectability
+   * (that takes the selection and the handles away) nor arm a hold.
+   */
+  isNearSelectionHandle(x: number, y: number): boolean {
+    const selection = window.getSelection();
+    const frame = this.owner.scrollElement.value;
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed || !frame) return false;
+    if (!selection.anchorNode || !frame.contains(selection.anchorNode)) return false;
+    const rects = selection.getRangeAt(0).getClientRects();
+    if (rects.length === 0) return false;
+    const first = rects[0];
+    const last = rects[rects.length - 1];
+    const reach = this.self.HANDLE_REACH_PX;
+    const near = (px: number, py: number) => Math.hypot(x - px, y - py) <= reach;
+    return (
+      near(first.left, first.top) ||
+      near(first.left, first.bottom) ||
+      near(last.right, last.top) ||
+      near(last.right, last.bottom)
+    );
   }
 
   /* Lifetime — the scroller calls these from its own mount and unmount */
@@ -803,6 +852,7 @@ class $VirtualScrollerSelection {
     this.dragging.value = false;
     this.stopFollow();
     this.stopAutoscroll();
+    this.stopHandleAutoscroll();
     this.stopListening();
   }
 
@@ -830,6 +880,10 @@ class $VirtualScrollerSelection {
     const wrapper = this.owner.itemsWrapperElement.value;
     const selection = window.getSelection();
     if (!wrapper || !selection) return;
+    // While a native handle drives the scroll the system owns the
+    // selection: re-pinning it here would yank the handle out of the
+    // reader's finger.
+    if (this.handle.frame !== null) return;
     const paintOnly = this.input.touch && this.self.supportsCssHighlight;
     if (!paintOnly) this.clearCssHighlight();
 
@@ -934,6 +988,67 @@ class $VirtualScrollerSelection {
     this.listenForOutsidePress();
     // A finger made it: offer the chip, since a phone has no Ctrl+C.
     if (window.matchMedia?.('(pointer: coarse)').matches) this.$touch.selected.value = true;
+    this.followHandle(selection);
+  }
+
+  /**
+   * A native selection's moving end reached the edge zone — the reader
+   * is dragging a handle toward rows that are not on screen. The system
+   * owns the selection; this class owns the scroll. The list scrolls
+   * under the handle, the system re-selects what is now beneath it, the
+   * next selectionchange keeps the loop alive, and it stops when the end
+   * leaves the zone or the changes stop.
+   */
+  // invariant: A drag scrolls from inside the edge zone (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  protected followHandle(selection: Selection) {
+    const frame = this.owner.scrollElement.value;
+    if (!frame || !selection.focusNode) return;
+    const caret = document.createRange();
+    caret.setStart(selection.focusNode, selection.focusOffset);
+    caret.collapse(true);
+    // A caret's screen rect; an environment with no layout has none.
+    const rects = typeof caret.getClientRects === 'function' ? caret.getClientRects() : [];
+    const rect = rects[0];
+    if (!rect) {
+      this.stopHandleAutoscroll();
+      return;
+    }
+    const x = rect.left;
+    const y = rect.top + rect.height / 2;
+    if (this.self.edgePenetration(frame, x, y, this.owner.selectionAxis) === 0) {
+      this.stopHandleAutoscroll();
+      return;
+    }
+    this.handle.x = x;
+    this.handle.y = y;
+    this.handle.lastChange = performance.now();
+    if (this.handle.frame === null) {
+      this.handle.lastTs = null;
+      this.handle.frame = requestAnimationFrame(this.handleAutoscrollStep);
+    }
+  }
+
+  /** One frame of scrolling under a native handle held at the edge. */
+  handleAutoscrollStep(ts: number) {
+    this.handle.frame = null;
+    const frame = this.owner.scrollElement.value;
+    if (!frame) return;
+    if (ts - this.handle.lastChange > this.self.HANDLE_SETTLE_MS) return;
+    const axis = this.owner.selectionAxis;
+    const distance = this.self.edgePenetration(frame, this.handle.x, this.handle.y, axis);
+    if (distance === 0) return;
+    const elapsed = this.handle.lastTs === null ? 16.7 : Math.min(50, ts - this.handle.lastTs);
+    this.handle.lastTs = ts;
+    const speed = this.self.autoscrollSpeed(Math.abs(distance), this.owner.creepFactor);
+    this.owner.scrollBy(Math.sign(distance) * speed * elapsed);
+    this.owner.nudgePaint();
+    this.handle.frame = requestAnimationFrame(this.handleAutoscrollStep);
+  }
+
+  protected stopHandleAutoscroll() {
+    if (this.handle.frame !== null) cancelAnimationFrame(this.handle.frame);
+    this.handle.frame = null;
+    this.handle.lastTs = null;
   }
 
   /** Whether a native range equals the logical range clamped to the

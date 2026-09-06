@@ -162,6 +162,9 @@ class $VirtualScrollerSelectionTouch {
     // all: arming here would clear the selection before its click copies.
     if (this.owner.isInteractive(event.target)) return;
     const touch = event.touches[0];
+    // A finger on a handle of the native selection is dragging that handle;
+    // iOS owns the drag and selectionchange adopts the result.
+    if (this.owner.isNearSelectionHandle(touch.clientX, touch.clientY)) return;
     this.hold.origin = { x: touch.clientX, y: touch.clientY };
     this.hold.identifier = touch.identifier;
     this.hold.began = false;
@@ -290,6 +293,8 @@ export namespace VirtualScrollerSelectionTouch {
     clear(): void;
     /** Whether a touch target owns its own gesture (a button, a link, an input). */
     isInteractive(target: EventTarget | null): boolean;
+    /** Whether a touch point lies on a handle of the native selection. */
+    isNearSelectionHandle(x: number, y: number): boolean;
     readonly hasSelection: boolean;
   }
 }

@@ -17,6 +17,8 @@ Goal: Hold a text selection over a virtual list as a range over the DATA, so the
 // domain-invariant: $VirtualScrollerSelection — If a mousedown is not the primary button or lands on an interactive element, then it is left to the browser; otherwise it begins a selection and takes the native one away.
 // domain-invariant: $VirtualScrollerSelection — If a press lands outside the frame, then the selection clears; inside, it stays.
 // domain-invariant: $VirtualScrollerSelection — If a finger's press lands inside the existing range, then the drag extends it from the far end; outside it, or from a mouse, the drag starts over.
+// domain-invariant: $VirtualScrollerSelection — If a native handle drags the selection's end into the edge zone, then the list scrolls under it frame by frame until the end leaves the zone or the selection stops changing; the native selection is never re-pinned while it does.
+// domain-invariant: $VirtualScrollerSelection — If a touch lands within reach of the native selection's first or last caret, then it is a handle grab; elsewhere, or with no native selection in the frame, it is not.
 // domain-invariant: $VirtualScrollerSelection — If the reader dismisses a natively pinned selection, then the logical range and the chip go with it; a collapse of our own making (a range scrolled out, a clear) does not.
 Impossible if true: A selection whose anchor equals its focus.
 Impossible if true: Clearing our selection removing a highlight the reader made elsewhere on the page.
@@ -508,7 +510,9 @@ test('a finger’s drag paints the range through the CSS Highlight API and leave
 
   instance.clear();
   expect(native.rangeCount).toBe(0);
-  vi.unstubAllGlobals();
+  // Restore only what this test stubbed — the frame stubs at the top of the file stay.
+  vi.stubGlobal('CSS', undefined);
+  vi.stubGlobal('Highlight', undefined);
   instance.dispose();
 });
 
@@ -565,6 +569,61 @@ test('a finger pressing inside the selection extends it from the far end; a pres
   instance.extendTo(30, 180);
   instance.endDrag();
   expect(instance.range).toEqual({ start: at(2, 5), end: at(4, 5) });
+  instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelection — If a touch lands within reach of the native selection's first or last caret, then it is a handle grab; elsewhere, or with no native selection in the frame, it is not.
+test('a touch within reach of the native selection’s ends is a handle grab', () => {
+  const { instance, dom } = selection(0, 5);
+  expect(instance.isNearSelectionHandle(60, 20)).toBe(false);
+  instance.beginAt(60, 20);
+  instance.extendTo(30, 100);
+  instance.endDrag();
+  const range = window.getSelection()!.getRangeAt(0);
+  // jsdom lays nothing out: give the range two rects, one per end.
+  range.getClientRects = () =>
+    [
+      { left: 60, top: 10, right: 400, bottom: 30 },
+      { left: 0, top: 90, right: 30, bottom: 110 }
+    ] as unknown as DOMRectList;
+  expect(instance.isNearSelectionHandle(62, 12)).toBe(true);
+  expect(instance.isNearSelectionHandle(31, 109)).toBe(true);
+  expect(instance.isNearSelectionHandle(200, 60)).toBe(false);
+  instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelection — If a native handle drags the selection's end into the edge zone, then the list scrolls under it frame by frame until the end leaves the zone or the selection stops changing; the native selection is never re-pinned while it does.
+test('a native handle dragged into the edge zone scrolls the list under it, and the loop stops when the changes stop', () => {
+  const { instance, dom, owner } = selection(0, 5);
+  instance.attach(dom.frame);
+  const native = window.getSelection()!;
+  // jsdom lays nothing out: a collapsed range reports the rect of its row.
+  const rowOf = (node: Node) =>
+    (node.parentElement ?? (node as Element)).closest('.virtual-scroller__item')!;
+  const originalRects = Range.prototype.getClientRects;
+  Range.prototype.getClientRects = function () {
+    return [rowOf(this.startContainer).getBoundingClientRect()] as unknown as DOMRectList;
+  };
+  frames.length = 0;
+
+  // The reader drags the end handle onto row 4, whose rect sits in the bottom zone.
+  native.setBaseAndExtent(dom.rows[1].childNodes[2], 3, dom.rows[4].childNodes[2], 5);
+  instance.onSelectionChange();
+  expect(instance.range).toEqual({ start: at(1, 5), end: at(4, 7) });
+  expect(frames).toHaveLength(1);
+  const step = frames.shift()!;
+  step(performance.now());
+  expect(owner.scrollBy).toHaveBeenCalled();
+  expect(frames).toHaveLength(1);
+  // A window change while the handle drives must not re-pin the native selection.
+  const before = native.toString();
+  instance.applyHighlight();
+  expect(native.toString()).toBe(before);
+  // The changes stop: the loop lets go.
+  frames.shift()!(performance.now() + Logic.HANDLE_SETTLE_MS + 10);
+  expect(frames).toHaveLength(0);
+
+  Range.prototype.getClientRects = originalRects;
   instance.dispose();
 });
 
