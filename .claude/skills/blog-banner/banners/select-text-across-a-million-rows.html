@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: 'Geist';
+    font-style: normal;
+    font-weight: 300 800;
+    src: url(./fonts/geist-latin.woff2) format('woff2');
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    font-style: normal;
+    font-weight: 400 600;
+    src: url(./fonts/geist-mono-latin.woff2) format('woff2');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
+      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      #050a18;
+    font-family: 'Geist', 'DejaVu Sans', 'Inter', sans-serif;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+  }
+  .stage {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 20px; padding: 122px 70px 40px;
+    text-align: center;
+  }
+  .title {
+    font-size: 58px; font-weight: 750; color: #eaf2ff;
+    text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); letter-spacing: -0.015em;
+    line-height: 1.12;
+  }
+  .title .glow { color: #67e8f9; text-shadow: 0 0 36px rgba(34, 211, 238, 0.8); }
+  .sub {
+    font-size: 22px; color: #7e9cd0; line-height: 1.5; max-width: 980px;
+  }
+  .code {
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 19px; line-height: 1.6; text-align: left;
+    color: #abb2bf;
+    padding: 18px 30px; border-radius: 14px;
+    background: rgba(10, 18, 38, 0.85);
+    border: 1px solid rgba(96, 165, 250, 0.35);
+    box-shadow: 0 0 60px rgba(59, 130, 246, 0.18);
+  }
+  .code .kw { color: #c678dd; }
+  .code .cls { color: #e5c07b; }
+  .code .base { color: #61afef; }
+  .code .fn { color: #61afef; }
+  .code .cm { color: #5c6370; }
+  .code .glow { color: #67e8f9; text-shadow: 0 0 14px rgba(34, 211, 238, 0.55); }
+  .stats {
+    display: flex; justify-content: center; gap: 18px;
+  }
+  .stat {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 12px 22px; border-radius: 11px;
+    border: 1px solid rgba(96, 165, 250, 0.4);
+  }
+  .stat .n {
+    font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 23px; color: #67e8f9; text-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+  }
+  .stat .l { font-size: 15px; color: #7e9cd0; }
+  .lockup {
+    position: absolute; top: 34px; left: 44px;
+  }
+  .lockup img { display: block; width: 178px; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="lockup">
+    <img src="../../../../docs_v2/public/brand-lockup-dark.png" alt="ivue — Infinite Vue" />
+  </div>
+
+  <div class="stage">
+    <div class="title">Select text across <span class="glow">a million rows</span></div>
+    <div class="code">
+      <div><span class="cm">// the selection is a range over the DATA, not the DOM</span></div>
+      <div><span class="kw">interface</span> <span class="cls">Position</span> { index: <span class="glow">number</span>; offset: <span class="glow">number</span> }</div>
+      <div><span class="fn">onCopy</span>(event) { event.clipboardData.setData(<span class="cls">'text/plain'</span>, <span class="kw">this</span>.<span class="glow">selectedText</span>) }</div>
+    </div>
+    <div class="sub">the DOM shows the window — the data holds the selection: the highlight survives recycling, copy reaches rows never on screen together, both axes through one seam</div>
+    <div class="stats">
+      <div class="stat"><span class="n">18</span><span class="l">rows mounted</span></div>
+      <div class="stat"><span class="n">29</span><span class="l">rows selected</span></div>
+      <div class="stat"><span class="n">29</span><span class="l">lines copied</span></div>
+      <div class="stat"><span class="n">1</span><span class="l">seam for the horizontal axis</span></div>
+    </div>
+  </div>
+</body>
+</html>

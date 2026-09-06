@@ -3,7 +3,7 @@ title: 'Example: Horizontal Scroller — 1M Items'
 description: 'The production virtual scroller rotated sideways by subclassing: eight overridden axis seams, every prop inherited by spread, the tuned scroll physics unchanged. One million cards, a handful of divs — and the file is the reference for the namespace-as-contract standard, generic typing included.'
 aside: false
 pageClass: benchmarks-wide examples-page
-relatedPosts: [ship-the-variant-keep-the-tuning, a-million-rows-twelve-divs]
+relatedPosts: [select-text-across-a-million-rows, ship-the-variant-keep-the-tuning, a-million-rows-twelve-divs]
 ---
 
 <script setup>
