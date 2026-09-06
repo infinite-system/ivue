@@ -1525,6 +1525,10 @@ export namespace Scroller {
           // main.ts exports nothing — a composition root evaluates after its
           // whole import graph, so its module-evaluation Class read is safe
           files: { ...box, 'src/Shelf.ts': "import { Reactive } from 'ivue';\nimport { Box } from './Box';\n\nclass $Shelf extends Box.$Class {\n  make() {\n    return new Box.Class({ width: 1 });\n  }\n}\n\nexport namespace Shelf {\n  export const $Class = $Shelf;\n  export let Class = Reactive($Class);\n  export type Instance = typeof Class.Instance;\n}\n", 'src/main.ts': "import { Box } from './Box';\n\nconst rootBox = new Box.Class({ width: 1 });\nvoid rootBox.area;\n" },
+        }, {
+          // a generic subclass keeps its type parameter by extending through a cast —
+          // `extends (X.$Class as typeof X.$Class)<T>` is still the heritage read
+          files: { ...box, 'src/Shelf.ts': "import { Reactive } from 'ivue';\nimport { Box } from './Box';\n\nclass $Shelf<T> extends (Box.$Class as typeof Box.$Class) {\n  make(item: T) {\n    return item;\n  }\n}\n\nexport namespace Shelf {\n  export const $Class = $Shelf;\n  export let Class = Reactive($Class);\n  export type Instance = typeof Class.Instance;\n}\n" },
         }],
       },
       'declarations_use_full_descriptive_names': {
