@@ -627,7 +627,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### On a touch device the selection is drawn by the class
 
-**Invariant:** If the device has a touch point, then a finger never creates a native selection: the rows are non-selectable for as long as a finger is down, a range a finger made is painted by `VirtualScrollerSelectionTouchCustom` as boxes from the mounted DOM range's client rects, each clipped to the frame, laid inside the items wrapper, two handles of its own sit beside the range's ends, a handle drag begins at once from the other end through `beginFromEnd`, and a finger landing on selected text drags at once from the far end with no hold (`isInsideSelection`) while a tap there clears; a mouse on the same device keeps the native selection and Ctrl+C; on a device with no touch point the class is inert and the native selection paints as before.
+**Invariant:** If the device has a touch point, then a finger never creates a native selection: the rows are non-selectable for as long as a finger is down, a range a finger made is painted by `VirtualScrollerSelectionTouchCustom` as boxes from the mounted DOM range's client rects, each clipped to the frame, laid inside the items wrapper, two handles of its own sit beside the range's ends, a handle drag begins at once from the other end through `beginFromEnd`; selected text is no different from any other — a swipe over it scrolls, a tap on it clears, a long press extends it; a mouse on the same device keeps the native selection and Ctrl+C; on a device with no touch point the class is inert and the native selection paints as before.
 
 **Scope:** `VirtualScrollerSelectionTouchCustom.ts` whole; `VirtualScrollerSelection.ts` `$touch`, `applyHighlight` (the `paintsSelection` branch), `visibleDomRange`, `beginFromEnd`, `itemsWrapperElement`; the overlay rules in `VirtualScroller.vue`. The earlier implementation, which rode the system's selection, stays in `VirtualScrollerSelectionTouch.ts` for rollback: swap the class in `$touch`.
 
@@ -641,7 +641,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Evidence:** `VirtualScrollerSelectionTouchCustom.ts`. Tests: "with a touch point the rows are non-selectable and the overlay with its two handles is laid inside the wrapper; dispose removes both", "painting a range lays one box per non-empty rect and puts the handles at the ends; painting null hides it all", "a finger on the end handle drags from the start at once, and on the start handle from the end", "on a touch device the highlight is the touch class’s overlay and the native selection is never created".
 
-**Impossible if true:** A native selection created by a touch. A handle drag that starts over instead of extending. A box that does not move with the rows. A box painted outside the frame. A handle shown for an end that is not on screen. A mouse on a touch-capable device losing its native selection or its Ctrl+C.
+**Impossible if true:** A native selection created by a touch. A handle drag that starts over instead of extending. A box that does not move with the rows. A box painted outside the frame. A handle shown for an end that is not on screen. A swipe over selected text changing the selection instead of scrolling. A mouse on a touch-capable device losing its native selection or its Ctrl+C.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouchCustom.test.ts`
 

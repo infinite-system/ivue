@@ -134,9 +134,10 @@ class $VirtualScrollerSelectionTouchCustom {
     return boxes;
   }
 
-  /** Where the two handles sit for a set of boxes: beside the first box's
-   *  bottom-left and the last box's bottom-right, offset outward and down
-   *  so neither knob covers the text it marks. */
+  /** Where the two handles sit for a set of boxes: the start above the
+   *  first box's top-left, the end below the last box's bottom-right, each
+   *  offset outward — the system's own placement, and neither knob covers
+   *  the text it marks. */
   static handlePositions(boxes: VirtualScrollerSelectionTouchCustom.Box[]): {
     start: { x: number; y: number };
     end: { x: number; y: number };
@@ -146,7 +147,7 @@ class $VirtualScrollerSelectionTouchCustom {
     const last = boxes[boxes.length - 1];
     const offset = this.HANDLE_OFFSET_PX;
     return {
-      start: { x: first.left - offset, y: first.top + first.height + offset / 2 },
+      start: { x: first.left - offset, y: first.top - offset / 2 },
       end: { x: last.left + last.width + offset, y: last.top + last.height + offset / 2 }
     };
   }
@@ -209,8 +210,8 @@ class $VirtualScrollerSelectionTouchCustom {
     moved: false,
     /** the handle being dragged, if the finger landed on one */
     handle: null as 'start' | 'end' | null,
-    /** whether the finger landed on selected text — a grab, dragged at once */
-    grabbed: false
+    /** whether this touch is the second tap of a double tap */
+    doubleTapped: false
   };
 
   /** The last tap, for the double tap; and the last touch, for the mouse
@@ -385,32 +386,32 @@ class $VirtualScrollerSelectionTouchCustom {
       return;
     const touch = event.touches[0];
     this.tap.lastTouchAt = performance.now();
-    // The second tap of a double tap selects the word under it.
+    // The second tap of a double tap selects the word under it — with the
+    // rows locked like any other touch, so the system's own double-tap
+    // selection finds nothing, and followed to its end so the lock lifts.
     if (this.isDoubleTap(touch.clientX, touch.clientY)) {
       this.tap.at = null;
+      this.hold.doubleTapped = true;
+      this.hold.identifier = touch.identifier;
+      if (event.target) this.followTouch(event.target);
+      this.lockSelectability();
       if (this.owner.selectAt(touch.clientX, touch.clientY, 'word', 'touch')) {
         this.selected.value = true;
       }
       return;
     }
+    this.hold.doubleTapped = false;
     this.hold.origin = { x: touch.clientX, y: touch.clientY };
     this.hold.identifier = touch.identifier;
     this.hold.began = false;
     this.hold.moved = false;
     this.hold.handle = null;
-    this.hold.grabbed = false;
     this.hold.hadSelection = this.owner.hasSelection;
     if (event.target) this.followTouch(event.target);
     this.lockSelectability();
-    // A finger on selected text is grabbing the selection: the drag begins
-    // at once, from the far end, with no hold — a scroll is not what a
-    // finger on its own selection means. A tap there still clears it.
-    if (this.hold.hadSelection && this.owner.isInsideSelection(touch.clientX, touch.clientY)) {
-      this.hold.grabbed = true;
-      this.hold.began = this.owner.beginAt(touch.clientX, touch.clientY, 'touch');
-      this.selecting.value = this.hold.began;
-      return;
-    }
+    // Selected text is no different from any other: a swipe over it is a
+    // scroll, a tap on it clears it, a long press extends it. Only a
+    // handle changes the selection from the first move.
     this.hold.timer = setTimeout(() => this.promoteHold(), this.self.LONG_PRESS_MS);
   }
 
@@ -470,7 +471,7 @@ class $VirtualScrollerSelectionTouchCustom {
    */
   onTouchMove(event: TouchEvent) {
     const touch = this.trackedTouch(event);
-    if (!touch) return;
+    if (!touch || this.hold.doubleTapped) return;
     if (!this.selecting.value) {
       const moved = this.self.distanceFrom(this.hold.origin, touch.clientX, touch.clientY);
       if (this.self.exceedsSlop(moved)) {
@@ -508,15 +509,13 @@ class $VirtualScrollerSelectionTouchCustom {
     this.unlockSelectability();
     this.restoreHandle();
     this.tap.lastTouchAt = performance.now();
-    const promoted = this.selecting.value;
-    this.selecting.value = false;
-    // A grab that never moved was a tap on the selection: it clears.
-    if (this.hold.grabbed && !this.hold.moved) {
-      this.hold.grabbed = false;
-      this.owner.endDrag();
-      this.owner.clear();
+    // The second tap lifting: the word stays selected, nothing else happens.
+    if (this.hold.doubleTapped) {
+      this.hold.doubleTapped = false;
       return;
     }
+    const promoted = this.selecting.value;
+    this.selecting.value = false;
     // A tap (no promotion, no move) is remembered for a possible double tap.
     if (!promoted && !this.hold.moved && !this.hold.handle) {
       this.tap.at = performance.now();
@@ -598,8 +597,6 @@ export namespace VirtualScrollerSelectionTouchCustom {
   /** What the gesture needs from the selection that hosts it. */
   export interface Owner {
     beginAt(x: number, y: number, input: 'mouse' | 'touch'): boolean;
-    /** Whether a point lies on selected text. */
-    isInsideSelection(x: number, y: number): boolean;
     /** Select the word or the row under a point as a settled range. */
     selectAt(x: number, y: number, unit: 'word' | 'row', input: 'mouse' | 'touch'): boolean;
     /** Begin a drag with one end fixed — a handle drag. */
