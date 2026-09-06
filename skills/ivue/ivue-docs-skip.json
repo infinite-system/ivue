@@ -320,26 +320,6 @@
     "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
   },
   {
-    "path": "examples/playground/src/examples/virtual-scroller/VirtualScroller.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/virtual-scroller/VirtualScroller.ts",
-    "check": "a_reactive_closure_delegates_to_one_method",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/virtual-scroller/VirtualScroller.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/virtual-scroller/VirtualScroller.ts",
-    "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
     "path": "examples/playground/src/examples/virtual-scroller/VirtualScroller.vue",
     "check": "the_state_destructure_is_total",
     "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"

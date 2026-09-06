@@ -55,6 +55,7 @@ import { Static } from '../../Static';
  * every (debounced) ResizeObserver burst.
  */
 class $VirtualScroller<T extends VirtualScroller.BaseItem> {
+
   /* Contract — STATIC, so the class owns its inputs the way it owns its
      state, and a subclass extends them with `super` like any other
      member (HorizontalVirtualScroller re-tunes one default in one line).
@@ -132,9 +133,41 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return {
       itemsChanged: (args: VirtualScroller.ItemsChangeEmitArgs) => true,
       drop: (startIndex: number, dropIndex: number) => true,
-      move: (evt: any) => true
+      move: (event: any) => true
     };
   }
+
+  /** How much tail actually gets RENDERED below the window — a safety
+   *  margin of a few viewports, not the whole remaining post. The layer
+   *  (the inner element) is content-sized; rendering the true tail made it
+   *  ~10M px tall on a 100k-item post, and layers that size carry visible
+   *  compositor heaviness (confirmed by feel test: capping the layer was
+   *  the difference between "slight chop" and "fully smooth"). Nothing
+   *  below the fold reads the tail — scroll range comes from the computed
+   *  size via lenis.virtualLimit. */
+  protected static readonly TRAILING_SPACER_RENDER_CAP = 2048;
+
+  protected static readonly RENDER_BIAS_CHUNK = 65536;
+
+  /**
+   * Device-pixel snap for LANDINGS (spacers, seeks/jumps): a resting
+   * position on the grid keeps text crisp. The snap policy is "motion is
+   * fractional, landings snap" — continuous MOTION paths (the wheel lerp in
+   * lenis.setScroll, the reading creep via snapRender=false) deliberately
+   * bypass this: snapped sub-device-pixel-per-frame motion degenerates into
+   * whole-pixel ticks at visible rates, while fractional translateY is
+   * filtered by the compositor into an apparent glide. Safe at any depth —
+   * renderBias keeps rendered offsets ≤ ~131k px, where f32 resolves both
+   * integers and fractions.
+   */
+  protected static snapForRender(value: number) {
+    const dpr = window.devicePixelRatio || 1;
+    return Math.round(value * dpr) / dpr;
+  }
+
+  /** Reading-creep speed: ms of wall time per px of content — the original
+   *  cadence (1px per 150ms tick ≈ 6.7px/s), now integrated per FRAME. */
+  protected static readonly CREEP_MS_PER_PX = 150;
 
   constructor (
     public props: VirtualScroller.Props<T>,
@@ -284,6 +317,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   /** The axis this gesture belongs to, decided once per touch. */
   protected gestureAxis: 'x' | 'y' | null = null;
+
   protected gestureOrigin = { x: 0, y: 0 };
 
   /** Below this the finger has not said which way it is going yet. */
@@ -297,34 +331,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (this.lenisGestureOrientation === 'horizontal') return 'x';
     if (this.lenisGestureOrientation === 'vertical') return 'y';
     return null;
-  }
-
-  onTouchStartCapture(event: TouchEvent) {
-    const touch = event.touches[0];
-    if (!touch) return;
-    this.gestureAxis = null;
-    this.gestureOrigin = { x: touch.clientX, y: touch.clientY };
-  }
-
-  onTouchMoveCapture(event: TouchEvent) {
-    const ownAxis = this.gestureOwnAxis;
-    if (!ownAxis) return; // 'both' — every gesture is ours
-    const touch = event.touches[0];
-    if (!touch) return;
-    if (!this.gestureAxis) {
-      const deltaX = Math.abs(touch.clientX - this.gestureOrigin.x);
-      const deltaY = Math.abs(touch.clientY - this.gestureOrigin.y);
-      if (Math.max(deltaX, deltaY) < this.gestureAxisThresholdPx) return;
-      this.gestureAxis = deltaX > deltaY ? 'x' : 'y';
-    }
-    // a cross-axis gesture belongs to the page: lenis skips any event
-    // carrying this flag, so its preventDefault never runs
-    if (this.gestureAxis !== ownAxis)
-      (event as TouchEvent & { lenisStopPropagation?: boolean }).lenisStopPropagation = true;
-  }
-
-  onTouchEndCapture() {
-    this.gestureAxis = null;
   }
 
   /* Axis seams — every place the class touches a DOM dimension or a
@@ -346,28 +352,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return false;
   }
 
-  /** Main-axis border-box size of an element. */
-  protected offsetSize(element: HTMLElement | null | undefined): number {
-    return element?.offsetHeight ?? 0;
-  }
-
-  /** Main-axis rect size (screen px) of an element. */
-  protected rectSize(element: Element): number {
-    return element.getBoundingClientRect().height;
-  }
-
-  /** The transform that places the content at `px` along the main axis. */
-  protected transformFor(px: number): string {
-    return 'translateY(' + px + 'px)';
-  }
-
   protected get axisPaddingProps(): readonly [string, string] {
     return ['padding-top', 'padding-bottom'];
-  }
-
-  /** The gesture delta that drives the main axis. */
-  protected axisDelta(data: { deltaX: number; deltaY: number }): number {
-    return data.deltaY;
   }
 
   /** Scrollbar-thumb style properties along the main axis: [size, offset]. */
@@ -375,14 +361,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return ['height', 'top'];
   }
 
-  /** 0..1 position of a pointer along the scrollbar track's main axis. */
-  protected trackPointerFraction(event: PointerEvent, rect: DOMRect): number {
-    return (event.clientY - rect.top) / rect.height;
-  }
-
   /* Container size */
 
   protected elementSize: ReturnType<typeof useElementSize>;
+
   protected outerElementSize: ReturnType<typeof useElementSize>;
 
   get containerSize() {
@@ -432,10 +414,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return ref(0);
   }
 
-  protected bumpGeometryVersion() {
-    this.geometryVersion.value++;
-  }
-
   /**
    * Movable prefix-sum cursor. INVARIANT: `offset === P(index)` (sum of
    * measured-or-assumed sizes of every item before `index`) under the
@@ -468,26 +446,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return this.calibratedAssumed ?? this.assumedSize.value;
   }
 
-  /**
-   * One-time estimate calibration. Runs only while the reader is near the
-   * top: there the scrollTop→content mapping goes through fully-measured
-   * items, so swapping the assumption for the tail cannot move anything
-   * visible — the change lands entirely in the trailing spacer.
-   */
-  protected maybeCalibrateEstimate() {
-    if (this.calibratedAssumed !== null) return;
-    const length = toRaw(this.items.value).length;
-    if (this.measuredCount < 20 || this.measuredCount >= length) return;
-    const scrollPosition = this.scrollPosition.value;
-    const scrollTop =
-      typeof scrollPosition === 'number'
-        ? scrollPosition
-        : parseFloat(scrollPosition) || 0;
-    if (scrollTop > this.containerSize.value) return;
-    this.calibratedAssumed = this.measuredSum / this.measuredCount;
-    this.updatePositionsImmediately();
-  }
-
   /** The currently rendered window, including padding. */
   get visibleIndex() {
     return ref({
@@ -517,16 +475,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     );
   }
 
-  /** How much tail actually gets RENDERED below the window — a safety
-   *  margin of a few viewports, not the whole remaining post. The layer
-   *  (the inner element) is content-sized; rendering the true tail made it
-   *  ~10M px tall on a 100k-item post, and layers that size carry visible
-   *  compositor heaviness (confirmed by feel test: capping the layer was
-   *  the difference between "slight chop" and "fully smooth"). Nothing
-   *  below the fold reads the tail — scroll range comes from the computed
-   *  size via lenis.virtualLimit. */
-  protected static readonly TRAILING_SPACER_RENDER_CAP = 2048;
-
   get trailingSpacerPx() {
     return (
       this.self.snapForRender(
@@ -555,66 +503,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return ref(0);
   }
 
-  protected static readonly RENDER_BIAS_CHUNK = 65536;
-
-  protected updateRenderBias(scroll: number) {
-    const chunk = this.self.RENDER_BIAS_CHUNK;
-    const bias = Math.max(0, (Math.floor(scroll / chunk) - 1) * chunk);
-    if (bias !== this.renderBias.value) {
-      this.renderBias.value = bias;
-      if (this.lenis) this.lenis.renderOffset = bias;
-    }
-  }
-
-  /**
-   * Device-pixel snap for LANDINGS (spacers, seeks/jumps): a resting
-   * position on the grid keeps text crisp. The snap policy is "motion is
-   * fractional, landings snap" — continuous MOTION paths (the wheel lerp in
-   * lenis.setScroll, the reading creep via snapRender=false) deliberately
-   * bypass this: snapped sub-device-pixel-per-frame motion degenerates into
-   * whole-pixel ticks at visible rates, while fractional translateY is
-   * filtered by the compositor into an apparent glide. Safe at any depth —
-   * renderBias keeps rendered offsets ≤ ~131k px, where f32 resolves both
-   * integers and fractions.
-   */
-  protected static snapForRender(value: number) {
-    const dpr = window.devicePixelRatio || 1;
-    return Math.round(value * dpr) / dpr;
-  }
-
+  // computed: expensive — walks the measured sizes; THIN, the caching
+  // shell only; the logic stays named in a directly testable method.
   get scrollExtent() {
-    // THIN computed — the caching shell only; the logic stays named in a
-    // directly testable method on the prototype.
     return computed(() => this.computeScrollExtent());
-  }
-
-  protected computeScrollExtent(): number {
-    const len = this.items.value.length;
-
-    if (len === 0) return 0;
-
-    /** Account for the scroller's main-axis padding (top/bottom vertical,
-     * left/right horizontal — see axisPaddingProps). */
-    let paddingStart = 0;
-    let paddingEnd = 0;
-    if (this.scrollElement.value) {
-      const computedStyle = window.getComputedStyle(
-        this.scrollElement.value,
-        null
-      );
-      const [paddingStartProp, paddingEndProp] = this.axisPaddingProps;
-      paddingStart = parseInt(computedStyle.getPropertyValue(paddingStartProp));
-      paddingEnd = parseInt(computedStyle.getPropertyValue(paddingEndProp));
-    }
-
-    // O(1) total: P(len) = measured sum + assumed estimate for the rest.
-    this.geometryVersion.value;
-    return (
-      this.measuredSum +
-      Math.max(0, len - this.measuredCount) * this.estimatedItemSize +
-      paddingStart +
-      paddingEnd
-    );
   }
 
   protected get halfPaddingQuantity() {
@@ -644,15 +536,221 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *   the v-for never re-renders. Only a genuinely shifted window builds a
    *   new array (plain for-loop, no slice/map).
    */
+  // computed: expensive + render-suppression — the window walk, and the
+  // unchanged-window snapshot that keeps the v-for from re-rendering.
   get visibleItems() {
-    // THIN computed — see computeScrollExtent's note.
     return computed(() => this.computeVisibleItems());
+  }
+
+  /* Scrolling */
+
+  get preventScrollEvent() {
+    return ref(false);
+  }
+
+  /** Scrollbar geometry over the VIRTUAL position (native scrollTop stays
+   *  0 by design, so a native scrollbar can never exist here). Fraction of
+   *  the track the thumb occupies — floored so a million-item list still
+   *  presents a grabbable thumb. */
+  get scrollbarThumbFraction() {
+    const total = this.scrollExtent.value;
+    const container = this.containerOuterSize.value;
+    if (!total || !container || total <= container) return 0;
+    return Math.max(container / total, 0.08);
+  }
+
+  /** 0..1 progress of the thumb along its travel range. */
+  get scrollbarProgress() {
+    const total = this.scrollExtent.value;
+    const scrollable = total - this.containerOuterSize.value;
+    if (scrollable <= 0) return 0;
+    const position = parseFloat(String(this.scrollPosition.value)) || 0;
+    return Math.min(Math.max(position / scrollable, 0), 1);
+  }
+
+  /* Scrollbar drag (the built-in track) */
+
+  /** True while a pointer owns the thumb — the thumb's easing turns off so
+   *  it sticks to the finger (see the .dragging CSS). */
+  get scrollbarDragging() {
+    return ref(false);
+  }
+
+  /** The track renders only when asked for AND there is travel to show. */
+  get scrollbarVisible() {
+    return this.props.scrollbar && this.scrollbarThumbFraction > 0;
+  }
+
+  /** The thumb's size and offset along the track — main-axis property
+   *  names come from the axis seam, so the same geometry renders as
+   *  height/top on the vertical track and width/left on the horizontal. */
+  get scrollbarThumbStyle() {
+    const [sizeProp, offsetProp] = this.axisThumbProps;
+    return {
+      [sizeProp]: this.scrollbarThumbFraction * 100 + '%',
+      [offsetProp]:
+        this.scrollbarProgress * (1 - this.scrollbarThumbFraction) * 100 + '%'
+    };
+  }
+
+  /** Stop handle for the latest scrollToIndex re-apply watcher (see below). */
+  protected stopScrollToIndexReapply: (() => void) | null = null;
+  /** The live seek's re-apply step and its quiet timer (one seek is live at a time). */
+  protected reapplyScrollToIndex: (() => void) | null = null;
+  protected scrollToIndexQuietTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /* Autoplay (Lenis-driven) */
+
+  lenis: Lenis | null = null;
+
+  protected frame: number | null = null;
+
+  protected virtualScrolling = false;
+
+  protected virtualScrollTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  protected autoscrollTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  protected autoRepeatTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  protected snapTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  /** Speed as a SETTING: the optional creepMsPerPx prop overrides the
+   *  tuned reading cadence (which stays the sacred default). A marquee
+   *  reads a live value here every creep frame, so a speed slider takes
+   *  effect mid-glide. */
+  protected get creepMsPerPx(): number {
+    return this.props.creepMsPerPx ?? this.self.CREEP_MS_PER_PX;
+  }
+
+  /** rAF handle + last frame timestamp of the creep integrator. */
+  protected creepFrame: number | null = null;
+
+  protected lastCreepTs: number | null = null;
+
+  /* Drag and Drop */
+
+  protected startIndex = 0;
+
+  onTouchStartCapture(event: TouchEvent) {
+    const touch = event.touches[0];
+    if (!touch) return;
+    this.gestureAxis = null;
+    this.gestureOrigin = { x: touch.clientX, y: touch.clientY };
+  }
+
+  onTouchMoveCapture(event: TouchEvent) {
+    const ownAxis = this.gestureOwnAxis;
+    if (!ownAxis) return; // 'both' — every gesture is ours
+    const touch = event.touches[0];
+    if (!touch) return;
+    if (!this.gestureAxis) {
+      const deltaX = Math.abs(touch.clientX - this.gestureOrigin.x);
+      const deltaY = Math.abs(touch.clientY - this.gestureOrigin.y);
+      if (Math.max(deltaX, deltaY) < this.gestureAxisThresholdPx) return;
+      this.gestureAxis = deltaX > deltaY ? 'x' : 'y';
+    }
+    // a cross-axis gesture belongs to the page: lenis skips any event
+    // carrying this flag, so its preventDefault never runs
+    if (this.gestureAxis !== ownAxis)
+      (event as TouchEvent & { lenisStopPropagation?: boolean }).lenisStopPropagation = true;
+  }
+
+  onTouchEndCapture() {
+    this.gestureAxis = null;
+  }
+
+  /** Main-axis border-box size of an element. */
+  protected offsetSize(element: HTMLElement | null | undefined): number {
+    return element?.offsetHeight ?? 0;
+  }
+
+  /** Main-axis rect size (screen px) of an element. */
+  protected rectSize(element: Element): number {
+    return element.getBoundingClientRect().height;
+  }
+
+  /** The transform that places the content at `px` along the main axis. */
+  protected transformFor(px: number): string {
+    return 'translateY(' + px + 'px)';
+  }
+
+  /** The gesture delta that drives the main axis. */
+  protected axisDelta(data: { deltaX: number; deltaY: number }): number {
+    return data.deltaY;
+  }
+
+  /** 0..1 position of a pointer along the scrollbar track's main axis. */
+  protected trackPointerFraction(event: PointerEvent, rect: DOMRect): number {
+    return (event.clientY - rect.top) / rect.height;
+  }
+
+  protected bumpGeometryVersion() {
+    this.geometryVersion.value++;
+  }
+
+  /**
+   * One-time estimate calibration. Runs only while the reader is near the
+   * top: there the scrollTop→content mapping goes through fully-measured
+   * items, so swapping the assumption for the tail cannot move anything
+   * visible — the change lands entirely in the trailing spacer.
+   */
+  protected maybeCalibrateEstimate() {
+    if (this.calibratedAssumed !== null) return;
+    const length = toRaw(this.items.value).length;
+    if (this.measuredCount < 20 || this.measuredCount >= length) return;
+    const scrollPosition = this.scrollPosition.value;
+    const scrollTop =
+      typeof scrollPosition === 'number'
+        ? scrollPosition
+        : parseFloat(scrollPosition) || 0;
+    if (scrollTop > this.containerSize.value) return;
+    this.calibratedAssumed = this.measuredSum / this.measuredCount;
+    this.updatePositionsImmediately();
+  }
+
+  protected updateRenderBias(scroll: number) {
+    const chunk = this.self.RENDER_BIAS_CHUNK;
+    const bias = Math.max(0, (Math.floor(scroll / chunk) - 1) * chunk);
+    if (bias !== this.renderBias.value) {
+      this.renderBias.value = bias;
+      if (this.lenis) this.lenis.renderOffset = bias;
+    }
+  }
+
+  protected computeScrollExtent(): number {
+    const itemCount = this.items.value.length;
+
+    if (itemCount === 0) return 0;
+
+    /** Account for the scroller's main-axis padding (top/bottom vertical,
+     * left/right horizontal — see axisPaddingProps). */
+    let paddingStart = 0;
+    let paddingEnd = 0;
+    if (this.scrollElement.value) {
+      const computedStyle = window.getComputedStyle(
+        this.scrollElement.value,
+        null
+      );
+      const [paddingStartProp, paddingEndProp] = this.axisPaddingProps;
+      paddingStart = parseInt(computedStyle.getPropertyValue(paddingStartProp));
+      paddingEnd = parseInt(computedStyle.getPropertyValue(paddingEndProp));
+    }
+
+    // O(1) total: P(itemCount) = measured sum + assumed estimate for the rest.
+    this.geometryVersion.value;
+    return (
+      this.measuredSum +
+      Math.max(0, itemCount - this.measuredCount) * this.estimatedItemSize +
+      paddingStart +
+      paddingEnd
+    );
   }
 
   protected computeVisibleItems(): VirtualScroller.ItemContext<T>[] {
     this.geometryVersion.value;
     const items = this.items.value;
-    const len = items.length;
+    const itemCount = items.length;
     const measured = toRaw(this.measuredSizes.value);
     const assumed = this.estimatedItemSize;
     const scrollPosition = this.scrollPosition.value;
@@ -664,16 +762,16 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // Walk the cursor to the last item whose top is at/above scrollTop —
     // same semantics the binary search over the dense array had.
     const cursor = this.cursor;
-    let start = Math.min(cursor.index, Math.max(0, len - 1));
+    let start = Math.min(cursor.index, Math.max(0, itemCount - 1));
     let startOffset = cursor.offset;
-    for (let i = cursor.index; i > start; i--) {
+    for (let index = cursor.index; index > start; index--) {
       // Cursor beyond a shrunk list (pre-repair) — walk it back in.
-      startOffset -= measured[i - 1] ?? assumed;
+      startOffset -= measured[index - 1] ?? assumed;
     }
-    if (len > 0) {
+    if (itemCount > 0) {
       let step;
       while (
-        start < len - 1 &&
+        start < itemCount - 1 &&
         startOffset + (step = measured[start] ?? assumed) <= scrollTop
       ) {
         startOffset += step;
@@ -691,7 +789,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     let end = start;
     let endOffset = startOffset;
     const bottom = startOffset + this.containerSize.value;
-    while (end < len && endOffset < bottom) {
+    while (end < itemCount && endOffset < bottom) {
       endOffset += measured[end] ?? assumed;
       end++;
     }
@@ -711,37 +809,37 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
     // Clamp like Array.slice did — items and geometry can briefly
     // disagree between a splice and the structural repair.
-    const count = Math.min(end, len);
+    const count = Math.min(end, itemCount);
     const length = Math.max(0, count - paddedStart);
 
     // Estimated top of the first rendered item = the leading spacer.
     let paddedStartOffset = startOffset;
-    for (let i = start - 1; i >= paddedStart; i--) {
-      paddedStartOffset -= measured[i] ?? assumed;
+    for (let index = start - 1; index >= paddedStart; index--) {
+      paddedStartOffset -= measured[index] ?? assumed;
     }
     if (paddedStart === 0 || paddedStartOffset < 0) paddedStartOffset = 0;
 
-    // Trailing spacer: everything after the window. P(len) equals the
+    // Trailing spacer: everything after the window. P(itemCount) equals the
     // aggregate total by the cursor invariant, so this is exactly 0 when
     // the window reaches the last item (clamped for float drift).
     let afterWindowOffset = paddedStartOffset;
-    for (let i = paddedStart; i < count; i++) {
-      afterWindowOffset += measured[i] ?? assumed;
+    for (let index = paddedStart; index < count; index++) {
+      afterWindowOffset += measured[index] ?? assumed;
     }
     const total =
-      this.measuredSum + Math.max(0, len - this.measuredCount) * assumed;
+      this.measuredSum + Math.max(0, itemCount - this.measuredCount) * assumed;
     // Spacers must update even when the window itself is unchanged
     // (e.g. a size correction above the window moved only the lead).
     this.leadingSpacerSize.value = paddedStartOffset;
     this.trailingSpacerSize.value =
-      count >= len ? 0 : Math.max(0, total - afterWindowOffset);
+      count >= itemCount ? 0 : Math.max(0, total - afterWindowOffset);
 
-    const prev = this.visibleItemsSnapshot;
-    if (prev.length === length) {
+    const previous = this.visibleItemsSnapshot;
+    if (previous.length === length) {
       let unchanged = true;
-      for (let i = 0; i < length; i++) {
-        const context = prev[i];
-        const index = paddedStart + i;
+      for (let slot = 0; slot < length; slot++) {
+        const context = previous[slot];
+        const index = paddedStart + slot;
         const item = items[index];
         if (
           context.item !== item ||
@@ -754,14 +852,14 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
           break;
         }
       }
-      if (unchanged) return prev;
+      if (unchanged) return previous;
     }
 
     const next: VirtualScroller.ItemContext<T>[] = new Array(length);
-    for (let i = 0; i < length; i++) {
-      const index = paddedStart + i;
+    for (let slot = 0; slot < length; slot++) {
+      const index = paddedStart + slot;
       const item = items[index];
-      next[i] = {
+      next[slot] = {
         item: item,
         id: item.id,
         index: index
@@ -850,10 +948,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const measured = toRaw(this.measuredSizes.value);
     let changed = false;
     const sizes: [number, number][] = [];
-    for (const el of rendered) {
-      const row = el.getAttribute('aria-rowindex');
+    for (const element of rendered) {
+      const row = element.getAttribute('aria-rowindex');
       if (row === null) continue;
-      sizes.push([+row - 1, this.rectSize(el) / (scale > 0 ? scale : 1)]);
+      sizes.push([+row - 1, this.rectSize(element) / (scale > 0 ? scale : 1)]);
     }
     for (const [index, size] of sizes) {
       if (measured[index] !== size) {
@@ -962,9 +1060,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * is a scrub dead-zone — invisible next to typical item sizes.
    */
   getRatioPosition(ratio: number, endGapPx = 0): number | undefined {
-    const len = this.items.value.length;
-    if (len === 0) return undefined;
-    const scaled = Math.min(1, Math.max(0, ratio)) * (len - 1);
+    const itemCount = this.items.value.length;
+    if (itemCount === 0) return undefined;
+    const scaled = Math.min(1, Math.max(0, ratio)) * (itemCount - 1);
     const index = Math.floor(scaled);
     const position = this.getAnchoredPosition(index, scaled - index);
     if (position === undefined || endGapPx <= 0) return position;
@@ -996,12 +1094,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     offset: number
   ): { index: number; fraction: number } | undefined {
     this.geometryVersion.value;
-    const len = this.items.value.length;
-    if (len === 0) return undefined;
+    const itemCount = this.items.value.length;
+    if (itemCount === 0) return undefined;
     const measured = toRaw(this.measuredSizes.value);
     const assumed = this.estimatedItemSize;
     const cursor = this.cursor;
-    let index = Math.min(cursor.index, len - 1);
+    let index = Math.min(cursor.index, itemCount - 1);
     let top = cursor.offset;
     while (index > 0 && top > offset) {
       index--;
@@ -1009,7 +1107,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     }
     let size = measured[index] ?? assumed;
     while (
-      index < len - 1 &&
+      index < itemCount - 1 &&
       top + (size = measured[index] ?? assumed) <= offset
     ) {
       top += size;
@@ -1025,16 +1123,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     };
   }
 
-  /* Scrolling */
-
-  get preventScrollEvent() {
-    return ref(false);
-  }
-
-  onScroll(e: Event) {
+  onScroll(event: Event) {
     // Prevents native scrolling on focus of contenteditable elements.
     if (this.preventScrollEvent.value) {
-      e.preventDefault();
+      event.preventDefault();
       const element = this.scrollElement.value;
       if (element) element.scrollTop = 0;
     }
@@ -1126,26 +1218,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (element) element.scrollTop = 0;
   }
 
-  /** Scrollbar geometry over the VIRTUAL position (native scrollTop stays
-   *  0 by design, so a native scrollbar can never exist here). Fraction of
-   *  the track the thumb occupies — floored so a million-item list still
-   *  presents a grabbable thumb. */
-  get scrollbarThumbFraction() {
-    const total = this.scrollExtent.value;
-    const container = this.containerOuterSize.value;
-    if (!total || !container || total <= container) return 0;
-    return Math.max(container / total, 0.08);
-  }
-
-  /** 0..1 progress of the thumb along its travel range. */
-  get scrollbarProgress() {
-    const total = this.scrollExtent.value;
-    const scrollable = total - this.containerOuterSize.value;
-    if (scrollable <= 0) return 0;
-    const position = parseFloat(String(this.scrollPosition.value)) || 0;
-    return Math.min(Math.max(position / scrollable, 0), 1);
-  }
-
   /** Seek to a 0..1 track fraction in ITEM-INDEX space through the full
    *  scrollToIndex pipeline (spacer rebase + converge loop) — a raw
    *  lenis.scrollTo would translate content out of the viewport without
@@ -1177,31 +1249,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const at = this.getIndexAtPosition(target);
     if (!at) return;
     this.scrollToIndex(at.index, undefined, false, 0, at.fraction);
-  }
-
-  /* Scrollbar drag (the built-in track) */
-
-  /** True while a pointer owns the thumb — the thumb's easing turns off so
-   *  it sticks to the finger (see the .dragging CSS). */
-  get scrollbarDragging() {
-    return ref(false);
-  }
-
-  /** The track renders only when asked for AND there is travel to show. */
-  get scrollbarVisible() {
-    return this.props.scrollbar && this.scrollbarThumbFraction > 0;
-  }
-
-  /** The thumb's size and offset along the track — main-axis property
-   *  names come from the axis seam, so the same geometry renders as
-   *  height/top on the vertical track and width/left on the horizontal. */
-  get scrollbarThumbStyle() {
-    const [sizeProp, offsetProp] = this.axisThumbProps;
-    return {
-      [sizeProp]: this.scrollbarThumbFraction * 100 + '%',
-      [offsetProp]:
-        this.scrollbarProgress * (1 - this.scrollbarThumbFraction) * 100 + '%'
-    };
   }
 
   onTrackPointerDown(event: PointerEvent) {
@@ -1260,9 +1307,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     );
   }
 
-  /** Stop handle for the latest scrollToIndex re-apply watcher (see below). */
-  protected stopScrollToIndexReapply: (() => void) | null = null;
-
   /**
    * @param topOffsetPx pushes the landing DOWN so the target sits this many
    * pixels below the viewport top — context above a jumped-to item (and
@@ -1320,39 +1364,36 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // unrelated size change and yank the reader back), and the reader
     // taking over the scroll abandons it immediately.
     this.stopScrollToIndexReapply?.();
-    let quietTimer: ReturnType<typeof setTimeout>;
     const stop = () => {
-      clearTimeout(quietTimer);
+      if (this.scrollToIndexQuietTimer !== null) clearTimeout(this.scrollToIndexQuietTimer);
       stopWatch();
       if (this.stopScrollToIndexReapply === stop) {
         this.stopScrollToIndexReapply = null;
+        this.reapplyScrollToIndex = null;
       }
     };
+    this.reapplyScrollToIndex = setScroll;
+    this.stopScrollToIndexReapply = stop;
     const stopWatch = watch(
       () => this.getIndexPosition(index),
-      () => {
-        if (this.lenis?.isScrolling) {
-          stop();
-          return;
-        }
-        setScroll();
-        clearTimeout(quietTimer);
-        quietTimer = setTimeout(stop, 600);
-      }
+      () => this.onIndexPositionShift(),
     );
-    quietTimer = setTimeout(stop, 600);
-    this.stopScrollToIndexReapply = stop;
+    this.scrollToIndexQuietTimer = setTimeout(stop, 600);
   }
 
-  /* Autoplay (Lenis-driven) */
-
-  lenis: Lenis | null = null;
-  protected frame: number | null = null;
-
-  protected virtualScrolling = false;
-  protected virtualScrollTimeout: ReturnType<typeof setTimeout> | undefined;
-  protected autoscrollTimeout: ReturnType<typeof setTimeout> | undefined;
-  protected autoRepeatTimeout: ReturnType<typeof setTimeout> | undefined;
+  /** One wave of the converge loop: the reader taking over ends it; any
+   *  other shift re-applies the target and re-arms the quiet timer. */
+  protected onIndexPositionShift() {
+    const stop = this.stopScrollToIndexReapply;
+    if (!stop) return;
+    if (this.lenis?.isScrolling) {
+      stop();
+      return;
+    }
+    this.reapplyScrollToIndex?.();
+    if (this.scrollToIndexQuietTimer !== null) clearTimeout(this.scrollToIndexQuietTimer);
+    this.scrollToIndexQuietTimer = setTimeout(stop, 600);
+  }
 
   onVirtualScroll({ deltaX, deltaY }: { deltaX: number; deltaY: number }) {
     const delta = this.axisDelta({ deltaX, deltaY });
@@ -1395,8 +1436,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       this.snapTimeout = setTimeout(this.snapToNearest, 160);
     }
   }
-
-  protected snapTimeout: ReturnType<typeof setTimeout> | undefined;
 
   snapToNearest() {
     if (this.virtualScrolling || this.lenis?.isScrolling) {
@@ -1465,22 +1504,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     clearTimeout(this.autoscrollTimeout);
     callback();
   }
-
-  /** Reading-creep speed: ms of wall time per px of content — the original
-   *  cadence (1px per 150ms tick ≈ 6.7px/s), now integrated per FRAME. */
-  protected static readonly CREEP_MS_PER_PX = 150;
-
-  /** Speed as a SETTING: the optional creepMsPerPx prop overrides the
-   *  tuned reading cadence (which stays the sacred default). A marquee
-   *  reads a live value here every creep frame, so a speed slider takes
-   *  effect mid-glide. */
-  protected get creepMsPerPx(): number {
-    return this.props.creepMsPerPx ?? this.self.CREEP_MS_PER_PX;
-  }
-
-  /** rAF handle + last frame timestamp of the creep integrator. */
-  protected creepFrame: number | null = null;
-  protected lastCreepTs: number | null = null;
 
   /** Cancel both raf loops (the lenis frame and the creep) if armed. */
   cancelFrames() {
@@ -1615,24 +1638,20 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.creepFrame = requestAnimationFrame(this.creepStep);
   }
 
-  /* Drag and Drop */
-
-  protected startIndex = 0;
-
-  onStart(evt: any) {
-    this.startIndex = evt.item.__draggable_context.element.index;
+  onStart(event: any) {
+    this.startIndex = event.item.__draggable_context.element.index;
   }
 
-  onDrop(evt: any) {
+  onDrop(event: any) {
     const dropIndex =
-      evt.target
+      event.target
         .closest('.virtual-scroller__item')
         .getAttribute('aria-rowindex') - 1;
     this.emit('drop', this.startIndex, dropIndex);
   }
 
-  onMove(evt: any, originalEvent: any) {
-    this.emit('move', evt);
+  onMove(event: any, originalEvent: any) {
+    this.emit('move', event);
     return true; // — keep default insertion point based on the direction
   }
 }
