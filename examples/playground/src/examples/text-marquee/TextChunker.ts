@@ -26,6 +26,7 @@ class $TextChunker {
    * byte-identically to the source — rendered side by side with
    * `white-space: pre`, the joints are invisible.
    */
+  // invariant: Chunks concatenate back to the source text byte for byte (examples/playground/src/examples/text-marquee/text-marquee.invariants.md)
   static chunk(text: string, targetChars: number): string[] {
     const chunks: string[] = [];
     const length = text.length;
@@ -88,6 +89,7 @@ class $TextChunker {
    * the seek mapping and the END of the text true before any chunk has
    * rendered.
    */
+  // invariant: Chunk widths are seeded exact before any chunk renders (examples/playground/src/examples/text-marquee/text-marquee.invariants.md)
   static measureChunks(chunks: string[], font: string): number[] {
     const fallback = () => chunks.map((chunk) => chunk.length * 7.5);
     if (typeof document === 'undefined') return fallback();

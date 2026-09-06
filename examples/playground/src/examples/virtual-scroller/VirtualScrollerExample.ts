@@ -4,7 +4,8 @@ import { Static } from '../../Static';
 import type { VirtualScroller } from './VirtualScroller';
 
 class $VirtualScrollerExample {
-  static readonly ITEM_COUNT = 1_000_000;
+  /** Typed as a number, not the literal, so a test double can shrink the list. */
+  static readonly ITEM_COUNT: number = 1_000_000;
 
   protected static readonly OPENERS = [
     'Everything costs proportional to what is observed',

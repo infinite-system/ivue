@@ -614,3 +614,30 @@ walk too, so the last pad stays mounted unless the pad class bumps a ref
 after its settle window to force one more walk. Probe scripts: sample
 `requestAnimationFrame` for 1.5 s after four `mouse.wheel` bursts and count
 frames where the mounted rows' union does not cover the frame rect.
+
+## Colocated specs bind to contracts — the testing method
+
+Playground classes are proven by `X.test.ts` BESIDE `X.ts` (the invariants
+checker resolves generator headers and source tripwires against the
+sibling `X.ts`; a spec under `__tests__/` or named `*.vitest.spec.ts` is
+invisible to it). Each spec opens with a generator header; every test
+carries its claim above it; records live in a `<subsystem>.invariants.md`
+beside the code and are cited verbatim from source enforcement points.
+The root vitest include collects `examples/**/*.test.ts` too. Method and
+worked example: `docs_v2/guide/testing.md`. Traps found writing the nine
+scroller specs: (1) a bare `new` of a class whose constructor registers
+hooks warns and drops them — host it in a throwaway component
+(`virtual-scroller/hosted.ts`); (2) a test-double getter named after an
+EXISTING field (`frame` vs the scroller's rAF handle) is silently
+shadowed by the instance field — check the class before naming a probe
+getter; (3) `TextChunker`'s width cache is per font and process-wide — a
+spec that measures with a stubbed canvas leaves 8 px/char cached for
+later specs, so read the average instead of assuming 7.5; (4) jsdom logs
+a "not implemented" error for every `getContext` — stub it to null for
+the fallback path; (5) the checker's exit code, like every CLI's, must be
+read directly — piping into `tail` hid 22 pre-existing problems behind
+exit 0 (dist/ artifacts, GitHub-URL contract links in
+`docs_v2/reference/invariants.md`, a newsletter test, the constitution's
+sibling rule). Born-red discipline: plant one defect per spec file
+(`cp X.ts X.ts.bak`, sed the plant, run the spec, `mv` back) and record
+the red count — every one of the nine went red on its plant.

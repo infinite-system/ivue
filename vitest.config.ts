@@ -34,6 +34,9 @@ export default mergeConfig(
         "lib/**/*.vitest.spec.ts",
         "skills/**/*.test.ts",
         "examples/**/*.vitest.spec.ts",
+        // Colocated specs: `X.test.ts` beside `X.ts`, carrying the generator
+        // header the invariants checker binds to the sibling source.
+        "examples/**/*.test.ts",
         "experiments/**/*.vitest.spec.ts",
       ],
       exclude: [...configDefaults.exclude, "e2e/*", "**/demo/**", "newsletter/**", ".claude/**"],

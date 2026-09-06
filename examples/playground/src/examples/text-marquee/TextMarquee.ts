@@ -23,6 +23,7 @@ import { TextChunker } from './TextChunker';
  * integrator that paces article reading — through the `creepMsPerPx`
  * prop, so a speed slider takes effect mid-glide with no restart.
  */
+// invariant: The marquee composes the scroller and never extends it (examples/playground/src/examples/text-marquee/text-marquee.invariants.md)
 class $TextMarquee {
   /* Contract — STATIC, so the class owns its inputs the way it owns its
      state, and a subclass extends them with `super` like any other
@@ -43,9 +44,7 @@ class $TextMarquee {
 
   /** 2 — the DEFAULTS: plain values, typed against the types object
    *  (`text` is required — filtered out of the check automatically). */
-  static get propsDefaults(): ExtractPropDefaultTypes<
-    typeof $TextMarquee.propsTypes
-  > {
+  static get propsDefaults(): ExtractPropDefaultTypes<typeof $TextMarquee.propsTypes> {
     return {
       pxPerSecond: 50,
       targetChars: 400
@@ -100,7 +99,6 @@ class $TextMarquee {
     return this.scroller.value?.selection.selectedRowCount ?? 0;
   }
 
-
   /* Props */
 
   get text() {
@@ -125,6 +123,7 @@ class $TextMarquee {
   }
 
   /** What the scroller assumes for a chunk it has not measured yet. */
+  // invariant: The assumed chunk size never falls below the minimum (examples/playground/src/examples/text-marquee/text-marquee.invariants.md)
   get assumedChunkSize() {
     return Math.max(
       this.self.minimumChunkWidth,
@@ -152,6 +151,7 @@ class $TextMarquee {
   /* Speed and play state */
 
   /** The speed setting, translated into the creep integrator's unit. */
+  // invariant: Speed rides the creep integrator (examples/playground/src/examples/text-marquee/text-marquee.invariants.md)
   get creepMsPerPx() {
     return 1000 / Math.max(1, this.pxPerSecond);
   }
@@ -186,6 +186,7 @@ class $TextMarquee {
    * cannot reach it. Real one-shot captures still overwrite the seeds as
    * chunks render.
    */
+  // invariant: Chunk widths are seeded exact before any chunk renders (examples/playground/src/examples/text-marquee/text-marquee.invariants.md)
   seedChunkSizes() {
     const scroller = this.scroller.value;
     const font = this.fontShorthand();
@@ -202,10 +203,7 @@ class $TextMarquee {
   }
 
   buildItems(): VirtualScroller.BaseItem[] {
-    const chunks = TextChunker.Class.chunk(
-      TextChunker.Class.oneLine(this.text),
-      this.targetChars
-    );
+    const chunks = TextChunker.Class.chunk(TextChunker.Class.oneLine(this.text), this.targetChars);
     const items: VirtualScroller.BaseItem[] = new Array(chunks.length);
     for (let index = 0; index < chunks.length; index++) {
       items[index] = {

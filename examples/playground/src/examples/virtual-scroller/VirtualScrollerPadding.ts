@@ -87,6 +87,8 @@ class $VirtualScrollerPadding {
 
   /** Rows between the animated position and the target: the trailing
    *  pad that keeps the viewport covered while the lerp travels. */
+  // invariant: The pad covers the lerp gap exactly (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: The transform lerps to the target over many frames (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   static rowsBehind(gapPx: number, rowSize: number): number {
     if (rowSize <= 0) return 0;
     return Math.min(this.MAX_ROWS_GAP, Math.ceil(Math.abs(gapPx) / rowSize));
@@ -139,6 +141,7 @@ class $VirtualScrollerPadding {
 
   /* The instance — one pad per scroller */
 
+  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   constructor(public owner: VirtualScrollerPadding.Owner) {}
 
   /** The one cast per class: instance code reads its own statics here. */
@@ -148,6 +151,8 @@ class $VirtualScrollerPadding {
 
   // MUTABLE STATE — bumped once the flick has settled. The walk reads it
   // through pad(), so the bump is what runs the walk one last time.
+  // invariant: A pad never outlives its flick (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: Lenis is read inside the walk never tracked (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   get settledVersion() {
     return ref(0);
   }
@@ -206,6 +211,7 @@ class $VirtualScrollerPadding {
   }
 
   /** One more walk after the settle window, so a pad never outlives its flick. */
+  // invariant: A pad never outlives its flick (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected armSettle() {
     if (this.settle.timer !== null) clearTimeout(this.settle.timer);
     this.settle.timer = setTimeout(() => this.onSettled(), this.self.SETTLE_MS + 50);

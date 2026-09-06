@@ -11,7 +11,7 @@ class $VirtualScrollerItem {
     return definePropTypes({
       index: { type: Number as PropType<number>, required: true },
       /** Main axis the parent scroller virtualizes ('y' default). */
-      axis: { type: String as PropType<'y' | 'x'> },
+      axis: { type: String as PropType<'y' | 'x'> }
     });
   }
 
@@ -25,17 +25,18 @@ class $VirtualScrollerItem {
 
   static get emits() {
     return {
-      sizeUpdated: (size: number) => true,
+      sizeUpdated: (size: number) => true
     };
   }
 
   constructor(
     public props: VirtualScrollerItem.Props,
-    public emit: VirtualScrollerItem.Emits,
+    public emit: VirtualScrollerItem.Emits
   ) {
     // Capture once on mount (seeds the estimate the moment the item enters
     // the window) and once right before unmount (the final size — the only
     // one that matters once the item leaves the window).
+    // invariant: An item captures its size once in and once out (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     onMounted(() => this.capture());
     onBeforeUnmount(() => this.capture());
   }
@@ -71,9 +72,7 @@ class $VirtualScrollerItem {
     if (!element) return;
     const parent = element.parentElement;
     const horizontal = this.isHorizontal;
-    const parentLayout = horizontal
-      ? (parent?.offsetWidth ?? 0)
-      : (parent?.offsetHeight ?? 0);
+    const parentLayout = horizontal ? (parent?.offsetWidth ?? 0) : (parent?.offsetHeight ?? 0);
     const parentRect = parent
       ? horizontal
         ? parent.getBoundingClientRect().width

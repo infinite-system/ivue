@@ -688,6 +688,7 @@ export default defineConfig({
               { text: 'Inheritance & super', link: '/guide/inheritance' },
               { text: 'Extensible Components', link: '/guide/extensible-components' },
               { text: 'Development & HMR', link: '/guide/hmr' },
+              { text: 'Testing & Invariants', link: '/guide/testing' },
             ],
           },
           {
@@ -858,6 +859,7 @@ export default defineConfig({
             { text: 'Inheritance & super', link: '/guide/inheritance' },
             { text: 'Extensible Components', link: '/guide/extensible-components' },
             { text: 'Development & HMR', link: '/guide/hmr' },
+            { text: 'Testing & Invariants', link: '/guide/testing' },
           ],
         },
         {

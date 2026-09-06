@@ -15,7 +15,7 @@ class $TextMarqueeExample {
     'The prefix sum is never materialized; a movable cursor walks it lazily.',
     'Past two to the twenty-third pixels, single-precision compositing loses the sub-pixel — so the origin rebases and the content always renders at small coordinates.',
     'Speed is a setting; the tuned cadence is the default.',
-    'The chunker speaks text, the scroller speaks pixels, and the marquee is where they meet.',
+    'The chunker speaks text, the scroller speaks pixels, and the marquee is where they meet.'
   ];
 
   /** A book-scale text, built once per receiver: 200 chapters of the same
@@ -78,7 +78,6 @@ class $TextMarqueeExample {
   get selectedChunksLabel() {
     return (this.marquee.value?.selectedChunkCount ?? 0).toLocaleString();
   }
-
 
   get isPlaying() {
     return this.marquee.value?.isPlaying ?? false;

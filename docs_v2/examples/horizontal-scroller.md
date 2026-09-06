@@ -100,6 +100,17 @@ then the base machinery they inherit, exactly as running above:
 <<< @/.vitepress/theme/components/examples/ExampleHorizontalScroller.vue [template]
 :::
 
+The strip's spec asserts every seam names the x axis; the marquee's two
+specs prove the chunker as a pure Static class and the marquee as
+composition. The method is on [Testing & Invariants](/guide/testing).
+
+::: code-group
+<<< ../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.test.ts [HorizontalVirtualScroller.test.ts]
+<<< ../../examples/playground/src/examples/text-marquee/TextChunker.test.ts [TextChunker.test.ts]
+<<< ../../examples/playground/src/examples/text-marquee/TextMarquee.test.ts [TextMarquee.test.ts]
+<<< ../../examples/playground/src/examples/text-marquee/text-marquee.invariants.md [text-marquee.invariants.md]
+:::
+
 The example model is docs code — and it is written to the same standard
 the page teaches: one class, one namespace, the million-card builder
 and its caption bank living inside the namespace (the captions

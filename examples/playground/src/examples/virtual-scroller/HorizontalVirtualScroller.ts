@@ -32,6 +32,7 @@ class $HorizontalVirtualScroller<
     };
   }
 
+  // invariant: Every axis dependency goes through a seam getter (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected override get lenisOrientation(): 'vertical' | 'horizontal' {
     // lenis writes the wheel-path transform itself — translateX only when
     // it knows the axis
@@ -42,6 +43,7 @@ class $HorizontalVirtualScroller<
     return true;
   }
 
+  // invariant: A cross-axis touch belongs to the page (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected override get lenisGestureOrientation(): 'vertical' | 'horizontal' | 'both' {
     // deltaX ONLY: a plain vertical wheel is the page's (lenis refuses it
     // before preventDefault, so the page scrolls straight through); the

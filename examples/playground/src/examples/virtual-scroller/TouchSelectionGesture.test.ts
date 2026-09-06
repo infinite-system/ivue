@@ -1,0 +1,162 @@
+/*
+=== GENERATOR ===
+Goal: Let a finger select text in a list where a drag already means scroll, by promoting a still hold into a selection and handing the moves to the owner as points.
+[Touch events keep firing on the node the finger landed on](virtual-scroller.invariants.md#touch-events-keep-firing-on-the-node-the-finger-landed-on)
+[A long press turns the next move into a selection](virtual-scroller.invariants.md#a-long-press-turns-the-next-move-into-a-selection)
+[A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
+// domain-invariant: $TouchSelectionGesture — If the finger moves past the slop before the hold fires, then the gesture is a scroll and the owner never hears of it.
+// domain-invariant: $TouchSelectionGesture — If two fingers land, then no hold arms; if a second finger lands mid-drag, then the first finger keeps the focus.
+// domain-invariant: $TouchSelectionGesture — If the finger lifts after a selecting drag, then the drag ends and the copy chip shows exactly when the owner holds a selection.
+Impossible if true: The page scrolling while a touch selection is being extended.
+
+=== GENERATOR-DESCRIBED ===
+The owner is a plain object of the three primitives plus hasSelection,
+recording every call. Timers are faked so the long press is a clock
+advance, not a wait. Touch events are plain Events with a `touches` list
+attached, dispatched on real jsdom nodes — including a node removed from
+the document, which is the whole reason the listeners ride the origin
+node instead of the element.
+*/
+
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { TouchSelectionGesture } from './TouchSelectionGesture';
+
+const Gesture = TouchSelectionGesture.Class;
+
+function touchEvent(type: string, touches: { x: number; y: number; id?: number }[]) {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'touches', {
+    value: touches.map((touch) => ({
+      clientX: touch.x,
+      clientY: touch.y,
+      identifier: touch.id ?? 1
+    }))
+  });
+  return event as Event & { lenisStopPropagation?: boolean };
+}
+
+function gesture() {
+  const owner = {
+    beginAt: vi.fn(() => true),
+    extendTo: vi.fn(),
+    endDrag: vi.fn(),
+    hasSelection: false
+  };
+  const instance = new Gesture(owner);
+  const element = document.createElement('div');
+  const row = document.createElement('div');
+  element.appendChild(row);
+  document.body.appendChild(element);
+  instance.attach(element);
+  return { owner, instance, element, row };
+}
+
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+afterEach(() => {
+  vi.useRealTimers();
+  document.body.innerHTML = '';
+});
+
+// domain-invariant: $TouchSelectionGesture — If the finger moves past the slop before the hold fires, then the gesture is a scroll and the owner never hears of it.
+test('movement within the slop keeps the hold alive; past it, the gesture is a scroll', () => {
+  expect(Gesture.exceedsSlop(0)).toBe(false);
+  expect(Gesture.exceedsSlop(Gesture.SLOP_PX)).toBe(false);
+  expect(Gesture.exceedsSlop(Gesture.SLOP_PX + 0.1)).toBe(true);
+  expect(Gesture.distanceFrom({ x: 10, y: 10 }, 13, 14)).toBe(5);
+  expect(Gesture.distanceFrom({ x: 10, y: 10 }, 7, 6)).toBe(5);
+
+  const { owner, instance, row } = gesture();
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  row.dispatchEvent(touchEvent('touchmove', [{ x: 104, y: 103 }]));
+  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS / 2);
+  row.dispatchEvent(touchEvent('touchmove', [{ x: 100, y: 130 }]));
+  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
+  expect(owner.beginAt).not.toHaveBeenCalled();
+  expect(instance.selecting.value).toBe(false);
+  instance.dispose();
+});
+
+// invariant: A long press turns the next move into a selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+// impossible-if-true: $TouchSelectionGesture — The page scrolling while a touch selection is being extended.
+test('a still hold promotes at the long-press mark, and every move after it extends the selection while the page and the list are told to stay put', () => {
+  const { owner, instance, row } = gesture();
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS - 1);
+  expect(owner.beginAt).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(1);
+  expect(owner.beginAt).toHaveBeenCalledWith(100, 100);
+  expect(instance.selecting.value).toBe(true);
+
+  const move = touchEvent('touchmove', [{ x: 100, y: 180 }]);
+  row.dispatchEvent(move);
+  expect(owner.extendTo).toHaveBeenCalledWith(100, 180);
+  expect(move.defaultPrevented).toBe(true);
+  expect(move.lenisStopPropagation).toBe(true);
+  instance.dispose();
+});
+
+// invariant: Touch events keep firing on the node the finger landed on (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a finger whose origin row left the DOM still extends the selection, because the listeners ride the origin node', () => {
+  const { owner, instance, row } = gesture();
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
+  row.remove();
+  expect(row.isConnected).toBe(false);
+  row.dispatchEvent(touchEvent('touchmove', [{ x: 100, y: 190 }]));
+  expect(owner.extendTo).toHaveBeenLastCalledWith(100, 190);
+  instance.dispose();
+});
+
+// domain-invariant: $TouchSelectionGesture — If two fingers land, then no hold arms; if a second finger lands mid-drag, then the first finger keeps the focus.
+test('two fingers never arm a hold, and a second finger mid-drag does not steal the focus', () => {
+  const pinch = gesture();
+  pinch.row.dispatchEvent(
+    touchEvent('touchstart', [
+      { x: 100, y: 100, id: 1 },
+      { x: 200, y: 100, id: 2 }
+    ])
+  );
+  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
+  expect(pinch.owner.beginAt).not.toHaveBeenCalled();
+  pinch.instance.dispose();
+
+  const { owner, instance, row } = gesture();
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100, id: 1 }]));
+  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
+  row.dispatchEvent(
+    touchEvent('touchmove', [
+      { x: 100, y: 150, id: 1 },
+      { x: 300, y: 300, id: 2 }
+    ])
+  );
+  expect(owner.extendTo).toHaveBeenLastCalledWith(100, 150);
+  // Only the second finger reported: the tracked one is absent, nothing moves.
+  row.dispatchEvent(touchEvent('touchmove', [{ x: 300, y: 320, id: 2 }]));
+  expect(owner.extendTo).toHaveBeenCalledTimes(1);
+  instance.dispose();
+});
+
+// domain-invariant: $TouchSelectionGesture — If the finger lifts after a selecting drag, then the drag ends and the copy chip shows exactly when the owner holds a selection.
+// invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('lifting the finger ends the drag and reports selected exactly when the owner holds a selection; a cleared selection drops the chip', () => {
+  const { owner, instance, row } = gesture();
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
+  row.dispatchEvent(touchEvent('touchmove', [{ x: 100, y: 180 }]));
+  owner.hasSelection = true;
+  row.dispatchEvent(touchEvent('touchend', []));
+  expect(owner.endDrag).toHaveBeenCalledTimes(1);
+  expect(instance.selecting.value).toBe(false);
+  expect(instance.selected.value).toBe(true);
+
+  instance.onSelectionCleared();
+  expect(instance.selected.value).toBe(false);
+
+  // A tap (no hold) ends nothing.
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  row.dispatchEvent(touchEvent('touchend', []));
+  expect(owner.endDrag).toHaveBeenCalledTimes(1);
+  instance.dispose();
+});

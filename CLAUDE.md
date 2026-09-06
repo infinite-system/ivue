@@ -15,6 +15,12 @@
   state, derivation, or handlers, it gets its one class. Existing
   plain-setup components migrate opportunistically when touched, not in
   bulk sweeps.
+- **Tests are specs bound to contracts**: playground classes get a
+  colocated `X.test.ts` with a generator header, and a subsystem gets a
+  `<name>.invariants.md` beside its code (`.claude/skills/invariants`,
+  `.claude/skills/invariant-spec-tests`; method + worked example in
+  `docs_v2/guide/testing.md`). `node .claude/skills/invariants/scripts/check_invariants.mjs --all --refs`
+  must not add problems for touched files.
 - After docs changes: `npm run build:docs` must pass. After engine changes:
   re-verify the ~1.1 KB gzipped production size and 100% test coverage.
 - **Newsletter** (`newsletter/` — Worker + D1 + Postmark): the ops manual

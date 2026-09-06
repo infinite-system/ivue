@@ -347,6 +347,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
      horizontal subclass overrides ONLY these (the tuned scroll physics,
      cursor math, and creep never fork). */
 
+  // invariant: Every axis dependency goes through a seam getter (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected get lenisOrientation(): 'vertical' | 'horizontal' {
     return 'vertical';
   }
@@ -405,6 +406,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   // logical range over the DATA, the highlight, the gestures, copy. The
   // scroller supplies what only it knows (the Owner interface) and
   // exposes the instance for the template.
+  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected get $selection() {
     return new VirtualScrollerSelection.Class(this);
   }
@@ -550,6 +552,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   // RENDER PADDING — owned by a hosted VirtualScrollerPadding: the base
   // pad on both ends, plus rows ahead of the motion sized by velocity.
   // The window walk asks it once per evaluation.
+  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected get $padding() {
     return new VirtualScrollerPadding.Class(this);
   }
@@ -561,6 +564,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   /** The content's velocity in px per animation frame, signed: positive
    *  forward. Read, never tracked — Lenis is not reactive. */
+  // invariant: Lenis is read inside the walk never tracked (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   get scrollVelocity() {
     return this.lenis?.velocity ?? 0;
   }
@@ -568,6 +572,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** The lerp gap: how far the transform still has to travel to the
    *  target, in px, signed like the velocity. The window walk is anchored
    *  at the target; this is what the trailing pad must cover. */
+  // invariant: The transform lerps to the target over many frames (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   get scrollGap() {
     const lenis = this.lenis;
     return lenis ? lenis.targetScroll - lenis.animatedScroll : 0;
@@ -612,6 +617,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  0 by design, so a native scrollbar can never exist here). Fraction of
    *  the track the thumb occupies — floored so a million-item list still
    *  presents a grabbable thumb. */
+  // invariant: The thumb never shrinks below a grabbable fraction (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   get scrollbarThumbFraction() {
     const total = this.scrollExtent.value;
     const container = this.containerOuterSize.value;
@@ -699,6 +705,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.gestureOrigin = { x: touch.clientX, y: touch.clientY };
   }
 
+  // invariant: A cross-axis touch belongs to the page (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   onTouchMoveCapture(event: TouchEvent) {
     const ownAxis = this.gestureOwnAxis;
     if (!ownAxis) return; // 'both' — every gesture is ours
@@ -767,6 +774,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.updatePositionsImmediately();
   }
 
+  // invariant: Rendered offsets are rebased by whole chunks (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected updateRenderBias(scroll: number) {
     const chunk = this.self.RENDER_BIAS_CHUNK;
     const bias = Math.max(0, (Math.floor(scroll / chunk) - 1) * chunk);
@@ -847,6 +855,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       end++;
     }
 
+    // invariant: The pad covers the lerp gap exactly (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     const padding = this.$padding.pad();
     const paddedStart = Math.max(0, start - padding.before);
     end += padding.after + 1;
@@ -879,9 +888,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const total = this.measuredSum + Math.max(0, itemCount - this.measuredCount) * assumed;
     // Spacers must update even when the window itself is unchanged
     // (e.g. a size correction above the window moved only the lead).
+    // invariant: The two spacers and the rendered rows sum to the extent (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     this.leadingSpacerSize.value = paddedStartOffset;
     this.trailingSpacerSize.value = count >= itemCount ? 0 : Math.max(0, total - afterWindowOffset);
 
+    // invariant: An unchanged window keeps its array identity (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     const previous = this.visibleItemsSnapshot;
     if (previous.length === length) {
       let unchanged = true;
@@ -930,6 +941,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * tracking. Called after splices (by PostPlayer and the items-length
    * watch); the per-size-sync hot path never comes through here.
    */
+  // invariant: Shrinking the list prunes the measurements at its new end (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   updatePositionsImmediately() {
     const measured = toRaw(this.measuredSizes.value);
     const assumed = this.estimatedItemSize;
@@ -1010,6 +1022,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     }
   }
 
+  // invariant: Rendered sizes are known only after a row mounts (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   syncItemSize(index: number, size: number, doUpdatePositions = true) {
     if (index < 0) return;
     if (index >= toRaw(this.items.value).length) {
@@ -1060,6 +1073,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * `watch(() => scroller.getIndexPosition(i), …)` behaves like watching
    * the old `positions[i]`.
    */
+  // invariant: Rendered sizes are known only after a row mounts (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   getIndexPosition(index: number): number | undefined {
     this.geometryVersion.value;
     if (index < 0 || index >= this.items.value.length) return undefined;
@@ -1192,6 +1206,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // A non-finite position would poison lenis.targetScroll and freeze the
     // scroller until remount (invalid transforms are silently ignored, so
     // nothing ever recovers). Refuse it.
+    // invariant: The scroll position lands inside the scrollable range (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     if (!Number.isFinite(position)) return;
     const containerSize = this.offsetSize(this.scrollElement.value);
     if (position > 0 || this.scrollExtent.value < containerSize) position = 0;
@@ -1258,6 +1273,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  rebasing the window. Index space is the external seek-bar contract:
    *  the landing promises an ITEM, size-independent, so it survives the
    *  estimate→real refinement. */
+  // invariant: A seek names an item not a pixel (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   seekToFraction(fraction: number) {
     const lastIndex = this.items.value.length - 1;
     if (lastIndex < 0) return;
@@ -1487,6 +1503,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.scrollToIndex(Math.min(target, this.items.value.length - 1), undefined, true);
   }
 
+  // invariant: The transform lerps to the target over many frames (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: Rendered offsets are rebased by whole chunks (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   loop(now: number) {
     const lenis = this.lenisRequired;
     // Rebase BEFORE lenis writes this frame's transform: the transform and
@@ -1660,6 +1678,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * the id. The two sources must produce the same string, or a copy that
    * spans the window boundary would change wording halfway through.
    */
+  // invariant: The copied text is the string the row renders (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   rowText(index: number): string {
     const row = this.$selection.mountedRowElement(index);
     if (row) return VirtualScrollerSelection.Class.rowText(row);

@@ -72,6 +72,21 @@ everything else is the production component.
 <<< @/.vitepress/theme/components/examples/ExampleVirtualScroller.vue [template]
 :::
 
+Every class above has a colocated spec beside it, and the subsystem has a
+contract the spec headers bind to — the method is on
+[Testing & Invariants](/guide/testing).
+
+::: code-group
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts [VirtualScroller.test.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts [VirtualScrollerSelection.test.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/TouchSelectionGesture.test.ts [TouchSelectionGesture.test.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.test.ts [VirtualScrollerPadding.test.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.test.ts [VirtualScrollerItem.test.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.test.ts [VirtualScrollerExample.test.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/hosted.ts [hosted.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md [virtual-scroller.invariants.md]
+:::
+
 The example lives in the unified playground at
 [`examples/playground/`](https://github.com/infinite-system/ivue/tree/main/examples/playground)
 — the customized Lenis (virtual-limit support over the stock engine) is
@@ -105,8 +120,10 @@ redeploys the example automatically.
   by index, and a way to scroll by a delta. On touch, a long press starts
   the selection (a `TouchSelectionGesture` hosted by the selection owns
   the hold and the slop) and a chip copies it, since a phone has no
-  Ctrl+C. During any drag a per-frame follow loop keeps the focus under
-  the pointer while content slides beneath it.
+  Ctrl+C. A double click selects the word under the caret and a triple
+  click the row, the browser's own units given back over the data.
+  During any drag a per-frame follow loop keeps the focus under the
+  pointer while content slides beneath it.
 - **The pad follows the flick.** The window walk is anchored at the
   scroll target, the destination of the wheel lerp, while the transform
   travels there over many frames. A fixed pad leaves the rows between the

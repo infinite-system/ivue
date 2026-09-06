@@ -42,6 +42,7 @@ class $TouchSelectionGesture {
     return Math.hypot(x - origin.x, y - origin.y);
   }
 
+  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   constructor(public owner: TouchSelectionGesture.Owner) {}
 
   /** The one cast per class: instance code reads its own statics here. */
@@ -106,6 +107,7 @@ class $TouchSelectionGesture {
     this.selecting.value = false;
   }
 
+  // invariant: Touch events keep firing on the node the finger landed on (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected followTouch(target: EventTarget) {
     this.stopFollowingTouch();
     // touchmove must be able to preventDefault while selecting (it stops
@@ -140,6 +142,7 @@ class $TouchSelectionGesture {
 
   /** The hold survived: from here movement selects. The anchor is the
    *  point the finger has been resting on. */
+  // invariant: A long press turns the next move into a selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   promoteHold() {
     this.hold.timer = null;
     const began = this.owner.beginAt(this.hold.origin.x, this.hold.origin.y);
@@ -166,6 +169,7 @@ class $TouchSelectionGesture {
       }
       return;
     }
+    // invariant: A long press turns the next move into a selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     event.preventDefault();
     (event as TouchEvent & { lenisStopPropagation?: boolean }).lenisStopPropagation = true;
     this.owner.extendTo(touch.clientX, touch.clientY);

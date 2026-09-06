@@ -26,7 +26,7 @@ import { GeneratorStandard } from './ivue-generator-standard';
 // domain-invariant: $CheckStandard — If a check is in the manifest, then its proofs entry carries the claim, the impossibility, and at least one red and one green arm
 test('the shipped constitution is complete for every manifest check', () => {
   const GateClass = Gate.CheckStandard.Class;
-  expect(GateClass.checks.length).toBe(30);
+  expect(GateClass.checks.length).toBe(31);
   const report = GateClass.prove({ completenessOnly: true });
   expect(report.problems).toEqual([]);
   for (const check of GateClass.checks) {
@@ -55,7 +55,7 @@ test('the generator standard is the extension mechanism eating its own cooking',
   // ten methodology checks arrive the same way a house check does:
   // getters + checks + proofs on a subclass — fully proven, opt-in
   const GeneratorClass = GeneratorStandard.Class;
-  expect(GeneratorClass.checks.length).toBe(40);
+  expect(GeneratorClass.checks.length).toBe(41);
   const report = GeneratorClass.prove({ completenessOnly: true });
   expect(report.problems).toEqual([]);
   // the base stays ivue-only: no header check leaks upward
