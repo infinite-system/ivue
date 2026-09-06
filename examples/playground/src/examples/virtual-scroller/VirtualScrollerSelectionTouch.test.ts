@@ -7,6 +7,7 @@ Goal: Let a finger select text in a list where a drag already means scroll, by p
 // domain-invariant: $VirtualScrollerSelectionTouch — If the finger moves past the slop before the hold fires, then the gesture is a scroll and the owner never hears of it.
 // domain-invariant: $VirtualScrollerSelectionTouch — If two fingers land, then no hold arms; if a second finger lands mid-drag, then the first finger keeps the focus.
 // domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts after a selecting drag, then the drag ends and the copy chip shows exactly when the owner holds a selection.
+// domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts without moving, or scrolls away, or is a tap, then the rows are selectable again and nothing was selected.
 Impossible if true: The page scrolling while a touch selection is being extended.
 
 === GENERATOR-DESCRIBED ===
@@ -81,19 +82,47 @@ test('movement within the slop keeps the hold alive; past it, the gesture is a s
 // invariant: A long press turns the next move into a selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 // impossible-if-true: $VirtualScrollerSelectionTouch — The page scrolling while a touch selection is being extended.
 test('a still hold promotes at the long-press mark, and every move after it extends the selection while the page and the list are told to stay put', () => {
-  const { owner, instance, row } = gesture();
+  const { owner, instance, row, element } = gesture();
   row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  // The rows are non-selectable for the length of the hold: iOS's own
+  // long press finds nothing to select.
+  expect(element.style.userSelect).toBe('none');
   vi.advanceTimersByTime(Gesture.LONG_PRESS_MS - 1);
-  expect(owner.beginAt).not.toHaveBeenCalled();
+  expect(instance.selecting.value).toBe(false);
   vi.advanceTimersByTime(1);
-  expect(owner.beginAt).toHaveBeenCalledWith(100, 100);
   expect(instance.selecting.value).toBe(true);
+  expect(owner.beginAt).not.toHaveBeenCalled();
 
+  // The first move lays the anchor at the resting point, with the rows selectable again.
   const move = touchEvent('touchmove', [{ x: 100, y: 180 }]);
   row.dispatchEvent(move);
+  expect(element.style.userSelect).toBe('');
+  expect(owner.beginAt).toHaveBeenCalledWith(100, 100);
   expect(owner.extendTo).toHaveBeenCalledWith(100, 180);
   expect(move.defaultPrevented).toBe(true);
   expect(move.lenisStopPropagation).toBe(true);
+  instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts without moving, or scrolls away, or is a tap, then the rows are selectable again and nothing was selected.
+test('a tap, a swipe and a motionless long press all restore selectability and select nothing', () => {
+  const { owner, instance, row, element } = gesture();
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  row.dispatchEvent(touchEvent('touchend', []));
+  expect(element.style.userSelect).toBe('');
+
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  row.dispatchEvent(touchEvent('touchmove', [{ x: 100, y: 140 }]));
+  expect(element.style.userSelect).toBe('');
+
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
+  expect(element.style.userSelect).toBe('none');
+  row.dispatchEvent(touchEvent('touchend', []));
+  expect(element.style.userSelect).toBe('');
+  expect(owner.beginAt).not.toHaveBeenCalled();
+  expect(owner.endDrag).not.toHaveBeenCalled();
+  expect(instance.selecting.value).toBe(false);
   instance.dispose();
 });
 

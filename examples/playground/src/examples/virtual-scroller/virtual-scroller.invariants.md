@@ -428,17 +428,17 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### A long press turns the next move into a selection
 
-**Invariant:** If a single finger holds still for 450 ms, then the next move extends a selection instead of scrolling, the move is prevented and flagged for Lenis, and lifting the finger ends the drag; if the finger moves past 8 px before the hold fires, then the gesture is a scroll and the owner never hears of it.
+**Invariant:** If a single finger holds still for 450 ms, then the next move lays the anchor at the resting point and extends a selection instead of scrolling, the move is prevented and flagged for Lenis, and lifting the finger ends the drag; while the finger holds, the rows are non-selectable so iOS's own long-press selection finds nothing, and they are selectable again from the first move (or on release); if the finger moves past 8 px before the hold fires, then the gesture is a scroll and the owner never hears of it.
 
 **Scope:** `VirtualScrollerSelectionTouch.ts`: `onTouchStart`, `promoteHold`, `onTouchMove`, `onTouchEnd`, `LONG_PRESS_MS`, `SLOP_PX`. Hosted by the selection; the scroller attaches it at mount.
 
-**Mechanism:** A drag already means scroll on a touchscreen, so selection takes the browser's own convention. The hold timer promotes; slop cancels; after promotion `preventDefault` stops the page and `lenisStopPropagation` stops the list. The gesture calls the same three primitives the mouse path calls.
+**Mechanism:** A drag already means scroll on a touchscreen, so selection takes the browser's own convention. The hold timer promotes; slop cancels; after promotion `preventDefault` stops the page and `lenisStopPropagation` stops the list. iOS runs its own long-press selection on selectable text at about the same moment and would take the finger; `lockSelectability` makes the rows `user-select: none` for the hold, and because WebKit paints no highlight in non-selectable text (native or CSS Highlight API — measured in WebKit 26.5), `unlockSelectability` runs right before `beginAt` on the first move. The gesture calls the same three primitives the mouse path calls.
 
 **Generates:** The copy chip (`showsCopyChip`, `copy`) — a phone has no Ctrl+C.
 
 **Evidence:** `VirtualScrollerSelectionTouch.ts`. Tests: "a still hold promotes at the long-press mark, and every move after it extends the selection while the page and the list are told to stay put", "movement within the slop keeps the hold alive; past it, the gesture is a scroll". Sweep: "ExampleVirtualScroller (touch long-press + chip)".
 
-**Impossible if true:** The page scrolling while a touch selection is being extended. A selection beginning from a moving finger.
+**Impossible if true:** The page scrolling while a touch selection is being extended. A selection beginning from a moving finger. A native iOS selection starting under a held finger.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.test.ts`
 

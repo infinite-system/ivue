@@ -72,7 +72,9 @@ class $VirtualScrollerSelectionTouch {
     timer: null as ReturnType<typeof setTimeout> | null,
     identifier: -1,
     /** the node the finger landed on — the one node its events keep reaching */
-    target: null as EventTarget | null
+    target: null as EventTarget | null,
+    /** whether the promoted hold has begun a selection (on its first move) */
+    began: false
   };
 
   /* Lifetime — the host calls these from its own mount and unmount */
@@ -103,6 +105,7 @@ class $VirtualScrollerSelectionTouch {
 
   dispose() {
     this.cancelHold();
+    this.unlockSelectability();
     this.detach();
     this.selecting.value = false;
   }
@@ -130,25 +133,52 @@ class $VirtualScrollerSelectionTouch {
   /* The gesture */
 
   /** A finger lands: arm the hold. Two fingers is a pinch or a scroll, never a selection. */
+  /**
+   * A finger lands: arm the hold, and make the rows non-selectable for
+   * as long as it lasts. iOS runs its own long-press text selection on
+   * selectable text, at about the same moment this hold promotes; from
+   * then on the finger's movement belongs to that native machinery and
+   * never reaches these listeners. Non-selectable rows give its
+   * recogniser nothing to select. WebKit paints no highlight in
+   * non-selectable text (native or CSS Highlight API — measured), so
+   * selectability returns the moment the promoted finger first moves,
+   * right before the anchor is laid down, and on release for a tap or a
+   * swipe — a double tap still selects a word.
+   */
   onTouchStart(event: TouchEvent) {
     this.cancelHold();
     if (event.touches.length !== 1) return;
     const touch = event.touches[0];
     this.hold.origin = { x: touch.clientX, y: touch.clientY };
     this.hold.identifier = touch.identifier;
+    this.hold.began = false;
     if (event.target) this.followTouch(event.target);
+    this.lockSelectability();
     this.hold.timer = setTimeout(() => this.promoteHold(), this.self.LONG_PRESS_MS);
   }
 
-  /** The hold survived: from here movement selects. The anchor is the
-   *  point the finger has been resting on. */
+  /** The hold survived: from here movement selects. The anchor is laid
+   *  down by the first move, at the point the finger has been resting on. */
   // invariant: A long press turns the next move into a selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   promoteHold() {
     this.hold.timer = null;
-    const began = this.owner.beginAt(this.hold.origin.x, this.hold.origin.y);
-    if (!began) return;
     this.selecting.value = true;
     this.selected.value = false;
+  }
+
+  /** Rows non-selectable while a finger holds — see onTouchStart. */
+  protected lockSelectability() {
+    const element = this.element.value;
+    if (!element) return;
+    element.style.userSelect = 'none';
+    element.style.webkitUserSelect = 'none';
+  }
+
+  protected unlockSelectability() {
+    const element = this.element.value;
+    if (!element) return;
+    element.style.userSelect = '';
+    element.style.webkitUserSelect = '';
   }
 
   /**
@@ -166,8 +196,19 @@ class $VirtualScrollerSelectionTouch {
       if (this.self.exceedsSlop(moved)) {
         this.cancelHold();
         this.stopFollowingTouch();
+        this.unlockSelectability();
       }
       return;
+    }
+    // The first move after the promotion lays the anchor down where the
+    // finger rested — with the rows selectable again, so the highlight paints.
+    if (!this.hold.began) {
+      this.unlockSelectability();
+      this.hold.began = this.owner.beginAt(this.hold.origin.x, this.hold.origin.y);
+      if (!this.hold.began) {
+        this.selecting.value = false;
+        return;
+      }
     }
     // invariant: A long press turns the next move into a selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     event.preventDefault();
@@ -180,8 +221,11 @@ class $VirtualScrollerSelectionTouch {
   onTouchEnd() {
     this.cancelHold();
     this.stopFollowingTouch();
+    this.unlockSelectability();
     if (!this.selecting.value) return;
     this.selecting.value = false;
+    // A hold that never moved is a long press with nothing under it.
+    if (!this.hold.began) return;
     this.owner.endDrag();
     this.selected.value = this.owner.hasSelection;
   }

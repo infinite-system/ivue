@@ -695,6 +695,15 @@ edge zone, ramping through the edge) — a finger cannot leave a frame that
 is the page. (3) iOS shows native selection handles for any programmatic
 selection and the reader WILL drag them: adopt `selectionchange` ranges
 inside the wrapper into the logical range (signature-guarded against our
-own re-pins), or the chip copies something else than the highlight. None
-of this is testable in jsdom or headless Chromium beyond the unit arms;
-the iPhone is the instrument.
+own re-pins), or the chip copies something else than the highlight.
+(4) iOS runs its OWN long-press text selection on selectable text at
+about the same moment our hold promotes, and from then on the finger
+belongs to it — our touchmove never fires ("nothing scrolls or extends").
+The rows must be `user-select: none` for the length of the hold and
+selectable again from the first move. Measured in WebKit 26.5
+(Playwright's webkit, needs `libnice10` on this VM): WebKit paints NO
+highlight in non-selectable text, neither the native selection
+(toString() is even "") nor the CSS Custom Highlight API — so blanket
+`user-select: none` on touch is not an option. None of this is testable
+in jsdom or headless Chromium beyond the unit arms; the iPhone is the
+instrument.
