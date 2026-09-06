@@ -10,6 +10,7 @@ Goal: Let a finger select text in a list where a drag already means scroll, by p
 // domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts without moving, or scrolls away, or is a tap, then the rows are selectable again and nothing was selected.
 // domain-invariant: $VirtualScrollerSelectionTouch — If a finger lands on an existing selection, then selectability locks like anywhere else; a tap there clears the selection and a long press hands the press to the owner, which extends.
 Impossible if true: The page scrolling while a touch selection is being extended.
+Impossible if true: A tap on the copy chip clearing the selection it is about to copy.
 
 === GENERATOR-DESCRIBED ===
 The owner is a plain object of the three primitives plus hasSelection,
@@ -43,6 +44,8 @@ function gesture() {
     extendTo: vi.fn(),
     endDrag: vi.fn(),
     clear: vi.fn(),
+    isInteractive: (target: EventTarget | null) =>
+      target instanceof Element && target.closest('button, a, input') !== null,
     hasSelection: false
   };
   const instance = new Gesture(owner);
@@ -209,5 +212,19 @@ test('a finger on an existing selection still locks; a tap clears it, a long pre
   expect(owner.beginAt).toHaveBeenCalledWith(100, 100, 'touch');
   expect(owner.extendTo).toHaveBeenCalledWith(100, 160);
   expect(owner.clear).toHaveBeenCalledTimes(1);
+  instance.dispose();
+});
+
+// impossible-if-true: $VirtualScrollerSelectionTouch — A tap on the copy chip clearing the selection it is about to copy.
+test('a touch on a button inside the frame arms nothing and clears nothing — the chip keeps its selection', () => {
+  const { owner, instance, element } = gesture();
+  owner.hasSelection = true;
+  const chip = document.createElement('button');
+  element.appendChild(chip);
+  chip.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  expect(element.style.userSelect).toBe('');
+  expect(instance.holding).toBe(false);
+  chip.dispatchEvent(touchEvent('touchend', []));
+  expect(owner.clear).not.toHaveBeenCalled();
   instance.dispose();
 });

@@ -158,6 +158,9 @@ class $VirtualScrollerSelectionTouch {
   onTouchStart(event: TouchEvent) {
     this.cancelHold();
     if (event.touches.length !== 1) return;
+    // A button, a link, an input own their own tap — the copy chip above
+    // all: arming here would clear the selection before its click copies.
+    if (this.owner.isInteractive(event.target)) return;
     const touch = event.touches[0];
     this.hold.origin = { x: touch.clientX, y: touch.clientY };
     this.hold.identifier = touch.identifier;
@@ -285,6 +288,8 @@ export namespace VirtualScrollerSelectionTouch {
     extendTo(x: number, y: number): void;
     endDrag(): void;
     clear(): void;
+    /** Whether a touch target owns its own gesture (a button, a link, an input). */
+    isInteractive(target: EventTarget | null): boolean;
     readonly hasSelection: boolean;
   }
 }

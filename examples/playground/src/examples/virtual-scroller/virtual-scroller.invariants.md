@@ -460,7 +460,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Evidence:** `VirtualScrollerSelectionTouch.ts`. Tests: "a still hold promotes at the long-press mark, and every move after it extends the selection while the page and the list are told to stay put", "movement within the slop keeps the hold alive; past it, the gesture is a scroll". Sweep: "ExampleVirtualScroller (touch long-press + chip)".
 
-**Impossible if true:** The page scrolling while a touch selection is being extended. A selection beginning from a moving finger. A native iOS selection starting under a held finger.
+**Impossible if true:** The page scrolling while a touch selection is being extended. A selection beginning from a moving finger. A native iOS selection starting under a held finger. A tap on the copy chip clearing the selection it is about to copy.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.test.ts`
 

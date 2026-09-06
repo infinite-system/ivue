@@ -605,6 +605,11 @@ class $VirtualScrollerSelection {
     return `copy ${count.toLocaleString()} ${count === 1 ? 'row' : 'rows'}`;
   }
 
+  /** The touch gesture's question: does this target own its own tap? */
+  isInteractive(target: EventTarget | null): boolean {
+    return this.self.isInteractive(target);
+  }
+
   /* Lifetime — the scroller calls these from its own mount and unmount */
 
   attach(element: HTMLElement) {
