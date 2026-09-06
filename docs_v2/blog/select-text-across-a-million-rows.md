@@ -83,7 +83,7 @@ is a scroll up, not the reader taking over, and autoplay keeps its state.
 Each frame it extends the focus to the row that just arrived under the
 pointer and re-pins the highlight.
 
-## The receipt
+## The result
 
 On the [virtual scroller example](/examples/virtual-scroller), the browser
 drive does this: mousedown 60 pixels into a row, drag 120 pixels past the
