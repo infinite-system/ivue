@@ -102,6 +102,12 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
      scrollTop whenever the spacers change, fighting the Lenis-driven
      translateY (scroll is virtual; scrollTop must stay 0). */
   overflow-anchor: none;
+  /* Composited descendants (the transformed layer and the touch selection's
+     boxes inside it) are clipped HERE, by paint containment: Safari's
+     overflow clip lags the compositor while the layer moves, and boxes
+     that had crossed the edge since the last paint flickered over the
+     page. */
+  contain: paint;
   /* The long-press callout (Copy / Look Up) would race the selection's
      own long press; the copy chip is the affordance here. */
   -webkit-touch-callout: none;

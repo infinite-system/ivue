@@ -42,6 +42,29 @@ class $VirtualScrollerSelectionTouchCustom {
     return 8;
   }
 
+  /** Two taps this close in time and place select the word under them —
+   *  the touch form of the double click. */
+  static get DOUBLE_TAP_MS() {
+    return 300;
+  }
+
+  static get DOUBLE_TAP_SLOP_PX() {
+    return 24;
+  }
+
+  /** For how long after a touch the browser's synthesized mouse events
+   *  are still that touch's, and not a mouse. */
+  static get MOUSE_AFTER_TOUCH_MS() {
+    return 700;
+  }
+
+  /** How far beside the selection's end its handle sits — left of the
+   *  start, right of the end, and a little below — so the knob never
+   *  covers the text it marks. */
+  static get HANDLE_OFFSET_PX() {
+    return 12;
+  }
+
   /** The handle's touch target, centred on its knob. */
   static get HANDLE_TARGET_PX() {
     return 44;
@@ -111,8 +134,9 @@ class $VirtualScrollerSelectionTouchCustom {
     return boxes;
   }
 
-  /** Where the two handles sit for a set of boxes: the start at the first
-   *  box's bottom-left, the end at the last box's bottom-right. */
+  /** Where the two handles sit for a set of boxes: beside the first box's
+   *  bottom-left and the last box's bottom-right, offset outward and down
+   *  so neither knob covers the text it marks. */
   static handlePositions(boxes: VirtualScrollerSelectionTouchCustom.Box[]): {
     start: { x: number; y: number };
     end: { x: number; y: number };
@@ -120,9 +144,10 @@ class $VirtualScrollerSelectionTouchCustom {
     if (boxes.length === 0) return null;
     const first = boxes[0];
     const last = boxes[boxes.length - 1];
+    const offset = this.HANDLE_OFFSET_PX;
     return {
-      start: { x: first.left, y: first.top + first.height },
-      end: { x: last.left + last.width, y: last.top + last.height }
+      start: { x: first.left - offset, y: first.top + first.height + offset / 2 },
+      end: { x: last.left + last.width + offset, y: last.top + last.height + offset / 2 }
     };
   }
 
@@ -164,6 +189,11 @@ class $VirtualScrollerSelectionTouchCustom {
     return this.self.isActive;
   }
 
+  /** Whether a touch ended recently enough that mouse events are its echo. */
+  get recentTouch() {
+    return performance.now() - this.tap.lastTouchAt < this.self.MOUSE_AFTER_TOUCH_MS;
+  }
+
   /** The hold in progress, and the drag it may turn into. */
   protected readonly hold = {
     origin: { x: 0, y: 0 },
@@ -178,8 +208,14 @@ class $VirtualScrollerSelectionTouchCustom {
     /** whether the finger moved past the slop (a swipe, not a tap) */
     moved: false,
     /** the handle being dragged, if the finger landed on one */
-    handle: null as 'start' | 'end' | null
+    handle: null as 'start' | 'end' | null,
+    /** whether the finger landed on selected text — a grab, dragged at once */
+    grabbed: false
   };
+
+  /** The last tap, for the double tap; and the last touch, for the mouse
+   *  events synthesized after it. */
+  protected readonly tap = { at: null as number | null, x: 0, y: 0, lastTouchAt: 0 };
 
   /** The overlay's parts, created once on attach. */
   protected readonly parts = {
@@ -348,15 +384,41 @@ class $VirtualScrollerSelectionTouchCustom {
     if (event.target instanceof Element && event.target.closest(`.${this.self.OVERLAY_CLASS}`))
       return;
     const touch = event.touches[0];
+    this.tap.lastTouchAt = performance.now();
+    // The second tap of a double tap selects the word under it.
+    if (this.isDoubleTap(touch.clientX, touch.clientY)) {
+      this.tap.at = null;
+      if (this.owner.selectAt(touch.clientX, touch.clientY, 'word', 'touch')) {
+        this.selected.value = true;
+      }
+      return;
+    }
     this.hold.origin = { x: touch.clientX, y: touch.clientY };
     this.hold.identifier = touch.identifier;
     this.hold.began = false;
     this.hold.moved = false;
     this.hold.handle = null;
+    this.hold.grabbed = false;
     this.hold.hadSelection = this.owner.hasSelection;
     if (event.target) this.followTouch(event.target);
     this.lockSelectability();
+    // A finger on selected text is grabbing the selection: the drag begins
+    // at once, from the far end, with no hold — a scroll is not what a
+    // finger on its own selection means. A tap there still clears it.
+    if (this.hold.hadSelection && this.owner.isInsideSelection(touch.clientX, touch.clientY)) {
+      this.hold.grabbed = true;
+      this.hold.began = this.owner.beginAt(touch.clientX, touch.clientY, 'touch');
+      this.selecting.value = this.hold.began;
+      return;
+    }
     this.hold.timer = setTimeout(() => this.promoteHold(), this.self.LONG_PRESS_MS);
+  }
+
+  /** Whether a touch landing now, here, is the second tap of a double tap. */
+  protected isDoubleTap(x: number, y: number): boolean {
+    if (this.tap.at === null) return false;
+    if (performance.now() - this.tap.at > this.self.DOUBLE_TAP_MS) return false;
+    return this.self.distanceFrom(this.tap, x, y) <= this.self.DOUBLE_TAP_SLOP_PX;
   }
 
   /** The hold survived: from here movement selects. The anchor is laid
@@ -419,6 +481,11 @@ class $VirtualScrollerSelectionTouchCustom {
       }
       return;
     }
+    if (
+      this.self.exceedsSlop(this.self.distanceFrom(this.hold.origin, touch.clientX, touch.clientY))
+    ) {
+      this.hold.moved = true;
+    }
     // The first move after a promotion lays the anchor down where the
     // finger rested.
     if (!this.hold.began) {
@@ -440,8 +507,22 @@ class $VirtualScrollerSelectionTouchCustom {
     this.stopFollowingTouch();
     this.unlockSelectability();
     this.restoreHandle();
+    this.tap.lastTouchAt = performance.now();
     const promoted = this.selecting.value;
     this.selecting.value = false;
+    // A grab that never moved was a tap on the selection: it clears.
+    if (this.hold.grabbed && !this.hold.moved) {
+      this.hold.grabbed = false;
+      this.owner.endDrag();
+      this.owner.clear();
+      return;
+    }
+    // A tap (no promotion, no move) is remembered for a possible double tap.
+    if (!promoted && !this.hold.moved && !this.hold.handle) {
+      this.tap.at = performance.now();
+      this.tap.x = this.hold.origin.x;
+      this.tap.y = this.hold.origin.y;
+    }
     // A tap (no promotion, no move) on an existing selection dismisses it.
     if (!promoted && this.hold.hadSelection && !this.hold.moved) {
       this.owner.clear();
@@ -517,6 +598,10 @@ export namespace VirtualScrollerSelectionTouchCustom {
   /** What the gesture needs from the selection that hosts it. */
   export interface Owner {
     beginAt(x: number, y: number, input: 'mouse' | 'touch'): boolean;
+    /** Whether a point lies on selected text. */
+    isInsideSelection(x: number, y: number): boolean;
+    /** Select the word or the row under a point as a settled range. */
+    selectAt(x: number, y: number, unit: 'word' | 'row', input: 'mouse' | 'touch'): boolean;
     /** Begin a drag with one end fixed — a handle drag. */
     beginFromEnd(fixed: VirtualScrollerSelection.Position, x: number, y: number): boolean;
     extendTo(x: number, y: number): void;

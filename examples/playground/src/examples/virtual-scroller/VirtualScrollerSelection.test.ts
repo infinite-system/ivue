@@ -19,7 +19,7 @@ Goal: Hold a text selection over a virtual list as a range over the DATA, so the
 // domain-invariant: $VirtualScrollerSelection — If a press lands outside the frame, then the selection clears; inside, it stays.
 // domain-invariant: $VirtualScrollerSelection — If a drag begins from a fixed end, then that end is the anchor and the point under the finger the focus, and the drag is any other touch drag from there.
 // domain-invariant: $VirtualScrollerSelection — If the mounted part of the range is asked for as a DOM range, then it spans the clamped carets, and it is null with no range, nothing mounted, or the range scrolled out.
-// domain-invariant: $VirtualScrollerSelection — If a finger's press lands inside the existing range, then the drag extends it from the far end; outside it, or from a mouse, the drag starts over.
+// domain-invariant: $VirtualScrollerSelection — If a finger's press lands inside the existing range, then the drag extends it from the far end; outside it, or from a mouse, the drag starts over; and isInsideSelection answers whether a point lies on the range.
 // domain-invariant: $VirtualScrollerSelection — If a native handle drags the selection's end into the edge zone, then the list scrolls under it frame by frame until the end leaves the zone or the selection stops changing; the native selection is never re-pinned while it does.
 // domain-invariant: $VirtualScrollerSelection — If a touch lands within reach of the native selection's first or last caret, then it is a handle grab; elsewhere, or with no native selection in the frame, it is not.
 // domain-invariant: $VirtualScrollerSelection — If the reader dismisses a natively pinned selection, then the logical range and the chip go with it; a collapse of our own making (a range scrolled out, a clear) does not.
@@ -557,7 +557,7 @@ test('dismissing the native selection clears the logical range, while our own co
   instance.dispose();
 });
 
-// domain-invariant: $VirtualScrollerSelection — If a finger's press lands inside the existing range, then the drag extends it from the far end; outside it, or from a mouse, the drag starts over.
+// domain-invariant: $VirtualScrollerSelection — If a finger's press lands inside the existing range, then the drag extends it from the far end; outside it, or from a mouse, the drag starts over; and isInsideSelection answers whether a point lies on the range.
 test('a finger pressing inside the selection extends it from the far end; a press outside or a mouse press starts over', () => {
   const range = Logic.normalize(at(2, 0), at(6, 4));
   expect(Logic.farEnd(range, at(5, 1))).toEqual(at(2, 0));
@@ -577,6 +577,8 @@ test('a finger pressing inside the selection extends it from the far end; a pres
   instance.endDrag();
   expect(instance.range).toEqual({ start: at(0, 8), end: at(4, 5) });
 
+  expect(instance.isInsideSelection(30, 100)).toBe(true);
+  expect(instance.isInsideSelection(60, 190)).toBe(false);
   // A mouse press on row 2 starts over.
   instance.beginAt(30, 100);
   instance.extendTo(30, 180);

@@ -6,11 +6,13 @@ Goal: Let a finger select text in a virtual list without the system's selection:
 [A drag scrolls from inside the edge zone](virtual-scroller.invariants.md#a-drag-scrolls-from-inside-the-edge-zone)
 [A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If the device has neither touch points nor touch events, then attach does nothing: no overlay, no listeners, the rows stay selectable and the native selection paints as before.
-// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, each clipped to the frame so nothing is painted outside it, and the handles sit at the true ends — hidden when an end lies outside the frame; a null range hides the overlay.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, each clipped to the frame so nothing is painted outside it, and the handles sit beside the true ends, offset outward so they never cover the text — hidden when an end lies outside the frame; a null range hides the overlay.
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a handle, then the drag begins at once from the other end, the handle stops catching pointer events for its own drag, and lifting ends it with the chip offered.
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a button or on the overlay, then no hold arms; a tap on an existing selection clears it; a swipe past the slop is a scroll.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a second tap lands within the double-tap window and slop of the first, then the word under it is selected as a touch range and the chip is offered; mouse events synthesized after a touch are that touch's.
 Impossible if true: A native selection created by this class.
 Impossible if true: A handle drag that starts over instead of extending.
+Impossible if true: A finger on selected text having to wait out a long press before it can drag.
 
 === GENERATOR-DESCRIBED ===
 The owner is a plain object of the primitives plus a wrapper element the
@@ -62,6 +64,8 @@ function gesture(range: VirtualScrollerSelection.Range | null = null) {
   document.body.appendChild(frame);
   const owner = {
     beginAt: vi.fn(() => true),
+    selectAt: vi.fn(() => true),
+    isInsideSelection: vi.fn(() => false),
     beginFromEnd: vi.fn(() => true),
     extendTo: vi.fn(),
     endDrag: vi.fn(),
@@ -78,7 +82,11 @@ function gesture(range: VirtualScrollerSelection.Range | null = null) {
 }
 
 beforeEach(() => {
-  vi.useFakeTimers();
+  // performance.now() is faked too: the double tap and the mouse-after-touch
+  // windows read the clock, and advancing the timers must advance it.
+  vi.useFakeTimers({
+    toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date', 'performance']
+  });
   device(5);
 });
 afterEach(() => {
@@ -120,7 +128,7 @@ test('with a touch point the overlay with its two handles is laid inside the wra
   expect(wrapper.querySelector(`.${Touch.OVERLAY_CLASS}`)).toBeNull();
 });
 
-// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, each clipped to the frame so nothing is painted outside it, and the handles sit at the true ends — hidden when an end lies outside the frame; a null range hides the overlay.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, each clipped to the frame so nothing is painted outside it, and the handles sit beside the true ends, offset outward so they never cover the text — hidden when an end lies outside the frame; a null range hides the overlay.
 test('painting a range lays one box per non-empty rect and puts the handles at the ends; painting null hides it all', () => {
   const rects = [
     { left: 20, top: 10, right: 320, bottom: 30, width: 300, height: 20 },
@@ -166,8 +174,10 @@ test('painting a range lays one box per non-empty rect and puts the handles at t
   expect((boxes[0] as HTMLElement).style.width).toBe('300px');
   const start = overlay.querySelector(`.${Touch.HANDLE_CLASS}--start`) as HTMLElement;
   const end = overlay.querySelector(`.${Touch.HANDLE_CLASS}--end`) as HTMLElement;
-  expect(start.style.transform).toBe('translate(20px, 30px)');
-  expect(end.style.transform).toBe('translate(120px, 50px)');
+  // Beside the ends, offset outward and half the offset down — never over the text.
+  const offset = Touch.HANDLE_OFFSET_PX;
+  expect(start.style.transform).toBe(`translate(${20 - offset}px, ${30 + offset / 2}px)`);
+  expect(end.style.transform).toBe(`translate(${120 + offset}px, ${50 + offset / 2}px)`);
 
   // An end outside the frame has no handle: the range runs on below the frame.
   range.getClientRects = () =>
@@ -261,6 +271,50 @@ test('a button and the overlay arm nothing, a tap on the selection clears it, a 
   expect(instance.holding).toBe(false);
   vi.advanceTimersByTime(Touch.LONG_PRESS_MS);
   expect(owner.beginAt).not.toHaveBeenCalled();
+  row.dispatchEvent(touchEvent('touchend', []));
+  expect(owner.clear).toHaveBeenCalledTimes(1);
+  instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a second tap lands within the double-tap window and slop of the first, then the word under it is selected as a touch range and the chip is offered; mouse events synthesized after a touch are that touch's.
+test('a double tap selects the word under it through the owner and offers the chip; a late second tap is a new tap', () => {
+  const { owner, instance, row } = gesture();
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  row.dispatchEvent(touchEvent('touchend', []));
+  expect(instance.recentTouch).toBe(true);
+  vi.advanceTimersByTime(Touch.DOUBLE_TAP_MS - 50);
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 104, y: 98 }]));
+  expect(owner.selectAt).toHaveBeenCalledWith(104, 98, 'word', 'touch');
+  expect(instance.selected.value).toBe(true);
+  expect(instance.holding).toBe(false);
+  row.dispatchEvent(touchEvent('touchend', []));
+
+  vi.advanceTimersByTime(Touch.DOUBLE_TAP_MS + 50);
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 104, y: 98 }]));
+  expect(owner.selectAt).toHaveBeenCalledTimes(1);
+  expect(instance.holding).toBe(true);
+  row.dispatchEvent(touchEvent('touchend', []));
+  vi.advanceTimersByTime(Touch.MOUSE_AFTER_TOUCH_MS + 10);
+  expect(instance.recentTouch).toBe(false);
+  instance.dispose();
+});
+
+// impossible-if-true: $VirtualScrollerSelectionTouchCustom — A finger on selected text having to wait out a long press before it can drag.
+test('a finger landing on selected text drags at once from the far end, and a tap there clears', () => {
+  const { owner, instance, row } = gesture({ start: at(1, 0), end: at(3, 4) });
+  (owner.isInsideSelection as ReturnType<typeof vi.fn>).mockReturnValue(true);
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  expect(owner.beginAt).toHaveBeenCalledWith(100, 100, 'touch');
+  expect(instance.selecting.value).toBe(true);
+  const move = touchEvent('touchmove', [{ x: 100, y: 160 }]);
+  row.dispatchEvent(move);
+  expect(owner.extendTo).toHaveBeenCalledWith(100, 160);
+  expect(move.defaultPrevented).toBe(true);
+  row.dispatchEvent(touchEvent('touchend', []));
+  expect(owner.endDrag).toHaveBeenCalledTimes(1);
+  expect(owner.clear).not.toHaveBeenCalled();
+
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
   row.dispatchEvent(touchEvent('touchend', []));
   expect(owner.clear).toHaveBeenCalledTimes(1);
   instance.dispose();

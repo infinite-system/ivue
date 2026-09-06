@@ -72,6 +72,11 @@ class $VirtualScrollerSelectionTouch {
     return false;
   }
 
+  /** This implementation never needs mouse events told apart from a touch. */
+  get recentTouch() {
+    return false;
+  }
+
   /** The element the listeners are attached to, once attached. */
   get element() {
     return shallowRef<HTMLElement | null>(null);

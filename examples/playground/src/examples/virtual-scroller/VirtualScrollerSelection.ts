@@ -652,6 +652,15 @@ class $VirtualScrollerSelection {
     return this.selectedRowCount.toLocaleString();
   }
 
+  /** The touch gesture's question: does this point lie on selected text?
+   *  A finger landing there is grabbing the selection, not scrolling. */
+  isInsideSelection(x: number, y: number): boolean {
+    const wrapper = this.owner.itemsWrapperElement.value;
+    if (!wrapper || !this.range) return false;
+    const pressed = this.self.positionAt(wrapper, x, y, this.owner.selectionAxis);
+    return pressed !== null && this.self.farEnd(this.range, pressed) !== null;
+  }
+
   /** The touch gesture's question: does this target own its own tap? */
   isInteractive(target: EventTarget | null): boolean {
     return this.self.isInteractive(target);
@@ -773,7 +782,12 @@ class $VirtualScrollerSelection {
    * it — as a settled range, no drag. The outside-press listeners arm so
    * a click elsewhere drops it, like any selection.
    */
-  selectAt(x: number, y: number, unit: 'word' | 'row'): boolean {
+  selectAt(
+    x: number,
+    y: number,
+    unit: 'word' | 'row',
+    input: 'mouse' | 'touch' = 'mouse'
+  ): boolean {
     const wrapper = this.owner.itemsWrapperElement.value;
     if (!wrapper) return false;
     const position = this.self.positionAt(wrapper, x, y, this.owner.selectionAxis);
@@ -784,6 +798,7 @@ class $VirtualScrollerSelection {
         ? { start: 0, end: text.length }
         : this.self.wordBoundsAt(text, position.offset);
     this.end();
+    this.input.touch = input === 'touch';
     this.anchor.value = { index: position.index, offset: bounds.start };
     this.focus.value = { index: position.index, offset: bounds.end };
     this.listenForOutsidePress();
@@ -825,6 +840,9 @@ class $VirtualScrollerSelection {
   onMouseDown(event: MouseEvent) {
     const isPrimaryButton = event.button === 0;
     if (!isPrimaryButton || this.self.isInteractive(event.target)) return;
+    // A touch is followed by synthesized mouse events; on a device where
+    // the touch class owns selection they must not start a second one.
+    if (this.$touch.paintsSelection && this.$touch.recentTouch) return;
     // The second click of a double click selects the word, the third the
     // row — the browser's own multi-click units, which the preventDefault
     // below would otherwise take away with the drag-selection.
