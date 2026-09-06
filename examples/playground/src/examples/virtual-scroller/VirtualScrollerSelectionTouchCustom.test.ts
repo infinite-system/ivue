@@ -149,8 +149,16 @@ test('painting a range lays one box per non-empty rect and puts the handles at t
   const range = document.createRange();
   range.selectNodeContents(row);
   range.getClientRects = () => rects as unknown as DOMRectList;
-  instance.paint(range);
   const overlay = wrapper.querySelector(`.${Touch.OVERLAY_CLASS}`) as HTMLElement;
+  // The overlay must be shown before it is measured: a hidden one has no rect.
+  const measured: boolean[] = [];
+  const originalRect = overlay.getBoundingClientRect.bind(overlay);
+  overlay.getBoundingClientRect = () => {
+    measured.push(overlay.hidden);
+    return originalRect();
+  };
+  instance.paint(range);
+  expect(measured).toEqual([false]);
   expect(overlay.hidden).toBe(false);
   const boxes = overlay.querySelectorAll(`.${Touch.BOX_CLASS}`);
   expect(boxes).toHaveLength(2);

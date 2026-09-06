@@ -62,7 +62,7 @@ interface Stage {
 }
 
 /**
- * Mount rows [first, first + count) into a wrapper inside a 200 px frame
+ * Mount rows [first, first + count) into a wrapper inside a 400 px frame
  * at y = 0. Row i sits at y = (i − first) × ROW_HEIGHT; a caret's offset in
  * the row's trailing text node is x / CHAR_WIDTH. The wrapper extends
  * 100 px past the rows on both ends, so a point can land in a gap.
@@ -75,7 +75,7 @@ function stage(first: number, count: number): Stage {
   document.body.appendChild(frame);
   const rect = (top: number, bottom: number) =>
     ({ top, bottom, left: 0, right: 800, width: 800, height: bottom - top }) as DOMRect;
-  frame.getBoundingClientRect = () => rect(0, 200);
+  frame.getBoundingClientRect = () => rect(0, 400);
   wrapper.getBoundingClientRect = () => rect(-100, count * ROW_HEIGHT + 100);
   const rows: HTMLElement[] = [];
   for (let slot = 0; slot < count; slot++) {
@@ -211,15 +211,18 @@ test('assembleText copies the first row from its offset, every row between in fu
 
 // domain-invariant: $VirtualScrollerSelection — If the pointer nears an edge or passes it, then the drag scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge: an upward drag scrolls up.
 test('the autoscroll speed ramps from the minimum at the edge to the maximum past the ramp, scaled by the creep knob within bounds', () => {
+  const zone = Logic.AUTOSCROLL_EDGE_ZONE_PX;
+  const rise = zone - Logic.AUTOSCROLL_EDGE_REST_PX;
   expect(Logic.autoscrollSpeed(0)).toBe(Logic.AUTOSCROLL_MIN_PX_PER_MS);
-  // Squared: halfway through the ramp the speed is a quarter of the span.
-  const span = Logic.AUTOSCROLL_MAX_PX_PER_MS - Logic.AUTOSCROLL_MIN_PX_PER_MS;
-  expect(Logic.autoscrollSpeed(Logic.AUTOSCROLL_RAMP_PX / 2)).toBeCloseTo(
-    Logic.AUTOSCROLL_MIN_PX_PER_MS + span / 4,
+  // One straight rise: halfway to the rest band, halfway in speed.
+  expect(Logic.autoscrollSpeed(rise / 2)).toBeCloseTo(
+    (Logic.AUTOSCROLL_MIN_PX_PER_MS + Logic.AUTOSCROLL_MAX_PX_PER_MS) / 2,
     6
   );
-  expect(Logic.autoscrollSpeed(Logic.AUTOSCROLL_RAMP_PX)).toBe(Logic.AUTOSCROLL_MAX_PX_PER_MS);
-  expect(Logic.autoscrollSpeed(Logic.AUTOSCROLL_RAMP_PX * 5)).toBe(Logic.AUTOSCROLL_MAX_PX_PER_MS);
+  // Full speed a fingertip before the edge, and the same at the edge and beyond.
+  expect(Logic.autoscrollSpeed(rise)).toBeCloseTo(Logic.AUTOSCROLL_MAX_PX_PER_MS, 6);
+  expect(Logic.autoscrollSpeed(zone)).toBe(Logic.AUTOSCROLL_MAX_PX_PER_MS);
+  expect(Logic.autoscrollSpeed(zone + 500)).toBe(Logic.AUTOSCROLL_MAX_PX_PER_MS);
   expect(Logic.autoscrollSpeed(0, 2)).toBe(Logic.AUTOSCROLL_MIN_PX_PER_MS * 2);
   expect(Logic.autoscrollSpeed(0, 100)).toBe(Logic.AUTOSCROLL_MIN_PX_PER_MS * 3);
   expect(Logic.autoscrollSpeed(0, 0)).toBe(Logic.AUTOSCROLL_MIN_PX_PER_MS * 0.5);
@@ -384,26 +387,26 @@ test('holding the pointer inside the edge zone scrolls forward at a crawl, past 
   const zone = Logic.AUTOSCROLL_EDGE_ZONE_PX;
   const { instance, owner, dom } = selection(0, 5);
   // The zone is the last 48 px inside each edge and everything beyond.
-  expect(Logic.edgePenetration(dom.frame, 60, 100)).toBe(0);
-  expect(Logic.edgePenetration(dom.frame, 60, 200 - zone + 10)).toBe(10);
-  expect(Logic.edgePenetration(dom.frame, 60, 250)).toBe(50 + zone);
+  expect(Logic.edgePenetration(dom.frame, 60, 200)).toBe(0);
+  expect(Logic.edgePenetration(dom.frame, 60, 400 - zone + 10)).toBe(10);
+  expect(Logic.edgePenetration(dom.frame, 60, 450)).toBe(50 + zone);
   expect(Logic.edgePenetration(dom.frame, 60, zone - 10)).toBe(-10);
   expect(Logic.edgePenetration(dom.frame, 60, -30)).toBe(-(30 + zone));
   // Inside the frame the probe is the pointer; outside, the edge.
   expect(Logic.probePoint(dom.frame, 60, 170)).toEqual({ x: 60, y: 170 });
-  expect(Logic.probePoint(dom.frame, 60, 250)).toEqual({ x: 1, y: 250 });
+  expect(Logic.probePoint(dom.frame, 60, 450)).toEqual({ x: 1, y: 450 });
 
   instance.beginAt(60, 20);
   frames.length = 0;
   // 10 px into the bottom zone, still inside the frame: a crawl.
-  instance.extendTo(60, 200 - zone + 10);
+  instance.extendTo(60, 400 - zone + 10);
   expect(frames).toHaveLength(1);
   frames.shift()!(1000);
   expect(owner.scrollBy).toHaveBeenLastCalledWith(Logic.autoscrollSpeed(10) * 16.7);
   // Every write asks the engine to paint what it mounted.
   expect(owner.nudgePaint).toHaveBeenCalledTimes(1);
   // 50 px past the bottom edge: the ramp counts the whole zone plus the overshoot.
-  instance.extendTo(60, 250);
+  instance.extendTo(60, 450);
   frames.shift()!(1016.7);
   expect(owner.scrollBy.mock.calls.at(-1)![0]).toBeCloseTo(
     Logic.autoscrollSpeed(50 + zone) * 16.7,
@@ -418,7 +421,7 @@ test('holding the pointer inside the edge zone scrolls forward at a crawl, past 
   );
   // Back in the interior: the loop stops, and a stale frame does nothing.
   const calls = owner.scrollBy.mock.calls.length;
-  instance.extendTo(60, 100);
+  instance.extendTo(60, 200);
   frames.shift()!(1050.1);
   expect(owner.scrollBy.mock.calls.length).toBe(calls);
   instance.dispose();
@@ -429,11 +432,11 @@ test('a frame the size of the page still scrolls a selection: the zone lies insi
   const { instance, owner, dom } = selection(0, 5);
   instance.beginAt(60, 20);
   frames.length = 0;
-  instance.extendTo(60, 199);
+  instance.extendTo(60, 399);
   expect(frames).toHaveLength(1);
   frames.shift()!(1000);
   expect(owner.scrollBy).toHaveBeenCalled();
-  expect(Logic.edgeDistance(dom.frame, 60, 199)).toBe(0);
+  expect(Logic.edgeDistance(dom.frame, 60, 399)).toBe(0);
   instance.dispose();
 });
 
@@ -604,7 +607,7 @@ test('a touch within reach of the native selection’s ends is a handle grab', (
 
 // domain-invariant: $VirtualScrollerSelection — If a native handle drags the selection's end into the edge zone, then the list scrolls under it frame by frame until the end leaves the zone or the selection stops changing; the native selection is never re-pinned while it does.
 test('a native handle dragged into the edge zone scrolls the list under it, and the loop stops when the changes stop', () => {
-  const { instance, dom, owner } = selection(0, 5);
+  const { instance, dom, owner } = selection(0, 10);
   instance.attach(dom.frame);
   const native = window.getSelection()!;
   // jsdom lays nothing out: a collapsed range reports the rect of its row.
@@ -616,10 +619,10 @@ test('a native handle dragged into the edge zone scrolls the list under it, and 
   };
   frames.length = 0;
 
-  // The reader drags the end handle onto row 4, whose rect sits in the bottom zone.
-  native.setBaseAndExtent(dom.rows[1].childNodes[2], 3, dom.rows[4].childNodes[2], 5);
+  // The reader drags the end handle onto row 8, whose rect sits in the bottom zone.
+  native.setBaseAndExtent(dom.rows[1].childNodes[2], 3, dom.rows[8].childNodes[2], 5);
   instance.onSelectionChange();
-  expect(instance.range).toEqual({ start: at(1, 5), end: at(4, 7) });
+  expect(instance.range).toEqual({ start: at(1, 5), end: at(8, 7) });
   expect(frames).toHaveLength(1);
   const step = frames.shift()!;
   step(performance.now());

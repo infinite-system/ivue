@@ -68,21 +68,23 @@ class $VirtualScrollerSelection {
     return 'a, button, input, textarea, select, [contenteditable="true"], [contenteditable=""]';
   }
 
-  /** Drag autoscroll: px per ms at the zone's inner boundary — a crawl a
-   *  reader can stop by lifting a little … */
+  /** Drag autoscroll: px per ms at the zone's inner boundary — already
+   *  moving, not a crawl a finger has to wait on … */
   static get AUTOSCROLL_MIN_PX_PER_MS() {
-    return 0.05;
+    return 0.12;
   }
 
-  /** … and the fastest the ramp reaches, well past the edge. */
+  /** … and the fastest it gets, reached a finger's width BEFORE the edge
+   *  and held from there on, so a finger never has to touch the edge —
+   *  past the edge is the page, its own text and its zoom. */
   static get AUTOSCROLL_MAX_PX_PER_MS() {
-    return 1.2;
+    return 0.9;
   }
 
-  /** How far into the zone (px) the ramp reaches full speed — the whole
-   *  zone plus a reach past the edge. */
-  static get AUTOSCROLL_RAMP_PX() {
-    return 240;
+  /** The band at the edge where the speed no longer changes — the room a
+   *  resting fingertip needs. */
+  static get AUTOSCROLL_EDGE_REST_PX() {
+    return 28;
   }
 
   /** The band inside each edge where a drag begins to scroll — the closer
@@ -90,7 +92,7 @@ class $VirtualScrollerSelection {
    *  has to leave the frame, which a frame the size of the page has no
    *  outside of. */
   static get AUTOSCROLL_EDGE_ZONE_PX() {
-    return 96;
+    return 128;
   }
 
   /* Geometry — viewport point ↔ row ↔ logical position */
@@ -504,19 +506,22 @@ class $VirtualScrollerSelection {
   }
 
   /**
-   * Drag autoscroll speed (px/ms) for a pointer `distance` px past the
-   * frame's edge.
+   * Drag autoscroll speed (px/ms) for a pointer `distance` px into the
+   * edge zone (see edgePenetration: the zone starts inside the frame and
+   * runs on past its edge).
    *
-   * A linear ramp: the minimum right at the edge, the maximum once the
-   * pointer is AUTOSCROLL_RAMP_PX past it, so a small overshoot crawls
-   * and a big one flies. The scroller's creep knob scales it — a faster
-   * reading creep is a faster drag — within sane bounds either way.
+   * One straight rise from the zone's inner boundary to the rest band a
+   * fingertip's width before the edge, then a plateau — at the edge, past
+   * it, anywhere. The whole speed range is reachable while the finger is
+   * still inside the frame, and nothing changes once it is close, so a
+   * finger never has to hunt for the edge. The scroller's creep knob
+   * scales it — a faster reading creep is a faster drag — within bounds.
    */
   static autoscrollSpeed(distance: number, creepFactor = 1): number {
-    const ramp = Math.min(1, Math.max(0, distance) / this.AUTOSCROLL_RAMP_PX);
+    const rise = this.AUTOSCROLL_EDGE_ZONE_PX - this.AUTOSCROLL_EDGE_REST_PX;
+    const ramp = Math.min(1, Math.max(0, distance) / rise);
     const span = this.AUTOSCROLL_MAX_PX_PER_MS - this.AUTOSCROLL_MIN_PX_PER_MS;
-    // Squared: most of the zone is gentle, the speed arrives past the edge.
-    const base = this.AUTOSCROLL_MIN_PX_PER_MS + span * ramp * ramp;
+    const base = this.AUTOSCROLL_MIN_PX_PER_MS + span * ramp;
     return base * Math.min(3, Math.max(0.5, creepFactor));
   }
 

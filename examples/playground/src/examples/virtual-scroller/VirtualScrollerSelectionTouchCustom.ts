@@ -286,6 +286,9 @@ class $VirtualScrollerSelectionTouchCustom {
     }
     const rects = typeof range.getClientRects === 'function' ? range.getClientRects() : [];
     const frame = this.element.value;
+    // Shown BEFORE it is measured: a hidden element has no rect, and boxes
+    // laid from a zero origin land far outside the frame.
+    overlay.hidden = false;
     const origin = overlay.getBoundingClientRect();
     const clip = frame ? frame.getBoundingClientRect() : undefined;
     const boxes = this.self.boxesFrom(rects, origin, clip);
@@ -293,7 +296,6 @@ class $VirtualScrollerSelectionTouchCustom {
       overlay.hidden = true;
       return;
     }
-    overlay.hidden = false;
     this.paintBoxes(boxes);
     // The handles sit at the TRUE ends; an end that lies outside the frame
     // has no handle — one pinned at the clip line would sit half outside
