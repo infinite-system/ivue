@@ -267,6 +267,35 @@ const settle = (p, ms = 300) => p.waitForTimeout(ms);
     if (lines.length !== selected) throw new Error(`chip copied ${lines.length} lines for ${selected} rows`);
     ok('ExampleVirtualScroller (touch long-press + chip)', `${selected} rows by long press + drag, chip "${label}" copied ${lines.length} lines`);
   });
+  await step('ExampleVirtualScroller (sub-pixel continuity)', async () => {
+    // a tracked row's on-screen top must move exactly as the transform moves — a frame where the two
+    // disagree is a hop, and the only thing that can cause one is a spacer changing by a rounding.
+    // Judged only on frames moving more than 2px: at creep speeds (0.1–0.2px/frame) the rect reports the
+    // sub-pixel transform quantized (≤0.09px), which the compositor filters and no reader sees;
+    // on moving frames the docs page still reports up to 0.09px of noise, so 0.1px is a hop (the real
+    // ones measured 0.15–0.53px; the planted snap still trips this at 0.25 and 0.46).
+    const frame = p.locator('.evs-frame .virtual-scroller').first(); const fb = await frame.boundingBox();
+    await p.mouse.move(fb.x + fb.width / 2, fb.y + fb.height / 2);
+    const sampling = p.evaluate(() => new Promise((resolve) => {
+      const frame = document.querySelector('.evs-frame .virtual-scroller'); const inner = frame.querySelector('.virtual-scroller-inner');
+      const ty = () => { const m = /translateY\(([-\d.]+)px\)/.exec(inner.style.transform); return m ? parseFloat(m[1]) : 0; };
+      const rows = () => [...frame.querySelectorAll('.virtual-scroller__item')];
+      const target = rows().at(-1).getAttribute('aria-rowindex');
+      const hops = []; let lastTop = null, lastTy = null, lastFirst = null, frames = 0, windowMoves = 0, moving = 0; const t0 = performance.now();
+      const tick = () => {
+        const list = rows(); const row = list.find((r) => r.getAttribute('aria-rowindex') === target); const first = list[0]?.getAttribute('aria-rowindex'); const t = ty();
+        if (row && lastTop !== null) { const moved = t - lastTy; const error = (row.getBoundingClientRect().top - lastTop) - moved; if (first !== lastFirst) windowMoves++; if (Math.abs(moved) > 2) { moving++; if (Math.abs(error) > 0.1) hops.push(`f${frames} ${error.toFixed(3)}px`); } }
+        lastTop = row ? row.getBoundingClientRect().top : null; lastTy = t; lastFirst = first; frames++;
+        if (performance.now() - t0 < 1200 && row) requestAnimationFrame(tick); else resolve({ frames, windowMoves, moving, hops });
+      }; requestAnimationFrame(tick);
+    }));
+    await settle(p, 50);
+    for (let i = 0; i < 4; i++) { await p.mouse.wheel(0, 300); await settle(p, 16); }
+    const { frames, windowMoves, moving, hops } = await sampling;
+    if (windowMoves < 1 || moving < 20) throw new Error(`the list did not glide (${moving} moving frames, ${windowMoves} window moves in ${frames}) — the flick went to the page?`);
+    if (hops.length) throw new Error(`${hops.length} sub-pixel hop(s) over ${frames} frames: ${hops.slice(0, 4).join(', ')}`);
+    ok('ExampleVirtualScroller (sub-pixel continuity)', `${moving} moving frames, ${windowMoves} window moves, 0 hops`);
+  });
   await step('ExampleTextMarquee', async () => {
     const btn = p.locator('button:has(.etm-btn-icon)').first(); const l0 = await btn.innerText(); await btn.click(); await settle(p); const l1 = await btn.innerText();
     if (l0 === l1) throw new Error('label static'); ok('ExampleTextMarquee', `${l0.trim()} -> ${l1.trim()}`);

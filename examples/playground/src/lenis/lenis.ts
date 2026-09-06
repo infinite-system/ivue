@@ -182,11 +182,7 @@ export class Lenis {
     });
 
     if (this.options.anchors && this.options.wrapper === window) {
-      this.options.wrapper.addEventListener(
-        'click',
-        this.onClick as EventListener,
-        false
-      );
+      this.options.wrapper.addEventListener('click', this.onClick as EventListener, false);
     }
 
     this.options.wrapper.addEventListener(
@@ -219,11 +215,7 @@ export class Lenis {
   destroy() {
     this.emitter.destroy();
 
-    this.options.wrapper.removeEventListener(
-      'scroll',
-      this.onNativeScroll,
-      false
-    );
+    this.options.wrapper.removeEventListener('scroll', this.onNativeScroll, false);
 
     this.options.wrapper.removeEventListener('scrollend', this.onScrollEnd, {
       capture: true
@@ -236,11 +228,7 @@ export class Lenis {
     );
 
     if (this.options.anchors && this.options.wrapper === window) {
-      this.options.wrapper.removeEventListener(
-        'click',
-        this.onClick as EventListener,
-        false
-      );
+      this.options.wrapper.removeEventListener('click', this.onClick as EventListener, false);
     }
 
     this.virtualScroll.destroy();
@@ -348,19 +336,30 @@ export class Lenis {
 
     scroll -= this.renderOffset;
 
-    // Deliberately UNSNAPPED — fractional motion is the smooth one. The
-    // renderOffset rebasing keeps this value small (≤ ~131k px), where f32
-    // still resolves sub-pixel fractions, and the compositor filters
-    // fractional translateY into an apparent glide. Snapping put the slow
-    // tail of every flick (velocity decaying below ~1 device px/frame)
-    // into whole-pixel steps at exponentially-stretching, IRREGULAR
-    // intervals — a visible chop just before the creep takes over, worst
-    // on dpr-1 screens. Resting positions stay crisp regardless: scrollTo
-    // rounds its targets, so completed inertia lands on integers.
+    // SNAP BY SPEED. Fast motion (a device pixel or more per frame) is
+    // written on the device-pixel grid; slow motion is written fractional.
+    //   - Fractional at speed re-rasterizes the layer at a new sub-pixel
+    //     offset as tiles are repainted, and Chrome snaps each text line
+    //     and box edge to whole device pixels independently at every
+    //     re-raster: rows whose layout tops carry different fractions
+    //     shift by a pixel relative to their neighbours mid-glide (seen as
+    //     "some elements hop 1px" on wheel scrolls). On the grid the
+    //     raster offset never changes, so every row keeps its snap.
+    //   - Snapped at the slow tail (velocity decaying below ~1 device
+    //     px/frame) turns the exponential decay into whole-pixel steps at
+    //     stretching, IRREGULAR intervals — a visible chop just before the
+    //     creep takes over, worst on dpr-1 screens. Fractional there, the
+    //     compositor filters the sub-pixel motion into an apparent glide.
+    // The renderOffset rebasing keeps this value small (≤ ~131k px), where
+    // f32 still resolves sub-pixel fractions. Resting positions stay crisp
+    // regardless: scrollTo rounds its targets, so completed inertia lands
+    // on integers.
+    const dpr = window.devicePixelRatio || 1;
+    const fast = Math.abs(this.velocity) * dpr >= 1;
+    const rendered = fast ? Math.round(scroll * dpr) / dpr : scroll;
 
     if (this.isHorizontal) {
-      (this.options.content as HTMLElement).style.transform =
-        `translateX(${-scroll}px)`;
+      (this.options.content as HTMLElement).style.transform = `translateX(${-rendered}px)`;
     } else {
       if (IS_SAFARI) {
         /** Safari mis-renders long translated content unless the layer is
@@ -377,8 +376,7 @@ export class Lenis {
         (this.options.content as HTMLElement).offsetHeight;
         (this.options.content as HTMLElement).style.willChange = `transform`;
       }
-      (this.options.content as HTMLElement).style.transform =
-        `translateY(${-scroll}px)`;
+      (this.options.content as HTMLElement).style.transform = `translateY(${-rendered}px)`;
     }
   }
 
@@ -478,10 +476,7 @@ export class Lenis {
 
     // catch if scrolling on nested scroll elements
     let composedPath = event.composedPath();
-    composedPath = composedPath.slice(
-      0,
-      composedPath.indexOf(this.rootElement)
-    ); // remove parents elements
+    composedPath = composedPath.slice(0, composedPath.indexOf(this.rootElement)); // remove parents elements
 
     const prevent = this.options.prevent;
 
@@ -493,8 +488,7 @@ export class Lenis {
             node.hasAttribute?.('data-lenis-prevent') ||
             (isTouch && node.hasAttribute?.('data-lenis-prevent-touch')) ||
             (isWheel && node.hasAttribute?.('data-lenis-prevent-wheel')) ||
-            (this.options.allowNestedScroll &&
-              this.checkNestedScroll(node, { deltaX, deltaY })))
+            (this.options.allowNestedScroll && this.checkNestedScroll(node, { deltaX, deltaY })))
       )
     )
       return;
@@ -504,9 +498,7 @@ export class Lenis {
       return;
     }
 
-    const isSmooth =
-      (this.options.syncTouch && isTouch) ||
-      (this.options.smoothWheel && isWheel);
+    const isSmooth = (this.options.syncTouch && isTouch) || (this.options.smoothWheel && isWheel);
 
     if (!isSmooth) {
       this.isScrolling = 'native';
@@ -597,9 +589,7 @@ export class Lenis {
       this.animatedScroll = this.targetScroll = this.actualScroll;
       this.lastVelocity = this.velocity;
       this.velocity = this.animatedScroll - lastScroll;
-      this.direction = Math.sign(
-        this.animatedScroll - lastScroll
-      ) as Lenis['direction'];
+      this.direction = Math.sign(this.animatedScroll - lastScroll) as Lenis['direction'];
 
       if (!this.isStopped) {
         this.isScrolling = 'native';
@@ -710,15 +700,9 @@ export class Lenis {
     if ((this.isStopped || this.isLocked) && !force) return;
 
     // keywords
-    if (
-      typeof target === 'string' &&
-      ['top', 'left', 'start'].includes(target)
-    ) {
+    if (typeof target === 'string' && ['top', 'left', 'start'].includes(target)) {
       target = 0;
-    } else if (
-      typeof target === 'string' &&
-      ['bottom', 'right', 'end'].includes(target)
-    ) {
+    } else if (typeof target === 'string' && ['bottom', 'right', 'end'].includes(target)) {
       target = this.limit;
     } else {
       let node;
@@ -740,8 +724,7 @@ export class Lenis {
 
         const rect = node.getBoundingClientRect();
 
-        target =
-          (this.isHorizontal ? rect.left : rect.top) + this.animatedScroll;
+        target = (this.isHorizontal ? rect.left : rect.top) + this.animatedScroll;
       }
     }
 
@@ -917,21 +900,13 @@ export class Lenis {
       clientHeight = cache.clientHeight;
     }
 
-    if (
-      (!hasOverflowX && !hasOverflowY) ||
-      (!isScrollableX && !isScrollableY)
-    ) {
+    if ((!hasOverflowX && !hasOverflowY) || (!isScrollableX && !isScrollableY)) {
       return false;
     }
 
-    if (gestureOrientation === 'vertical' && (!hasOverflowY || !isScrollableY))
-      return false;
+    if (gestureOrientation === 'vertical' && (!hasOverflowY || !isScrollableY)) return false;
 
-    if (
-      gestureOrientation === 'horizontal' &&
-      (!hasOverflowX || !isScrollableX)
-    )
-      return false;
+    if (gestureOrientation === 'horizontal' && (!hasOverflowX || !isScrollableX)) return false;
 
     let orientation: 'x' | 'y' | undefined;
 
@@ -993,9 +968,7 @@ export class Lenis {
     // The content's applied transform is renderOffset-shifted (see
     // setScroll) — undo it so actualScroll stays in absolute scroll space.
     // Reads of other (nested) elements are untouched.
-    return element === this.options.content
-      ? translated + this.renderOffset
-      : translated;
+    return element === this.options.content ? translated + this.renderOffset : translated;
   }
 
   /**
@@ -1003,9 +976,7 @@ export class Lenis {
    */
   get rootElement() {
     return (
-      this.options.wrapper === window
-        ? document.documentElement
-        : this.options.wrapper
+      this.options.wrapper === window ? document.documentElement : this.options.wrapper
     ) as HTMLElement;
   }
 
@@ -1063,9 +1034,7 @@ export class Lenis {
    * The current scroll value
    */
   get scroll() {
-    return this.options.infinite
-      ? modulo(this.animatedScroll, this.limit)
-      : this.animatedScroll;
+    return this.options.infinite ? modulo(this.animatedScroll, this.limit) : this.animatedScroll;
   }
 
   /**
@@ -1141,13 +1110,10 @@ export class Lenis {
   private updateClassName() {
     this.cleanUpClassName();
 
-    this.rootElement.className =
-      `${this.rootElement.className} ${this.className}`.trim();
+    this.rootElement.className = `${this.rootElement.className} ${this.className}`.trim();
   }
 
   private cleanUpClassName() {
-    this.rootElement.className = this.rootElement.className
-      .replace(/lenis(-\w+)?/g, '')
-      .trim();
+    this.rootElement.className = this.rootElement.className.replace(/lenis(-\w+)?/g, '').trim();
   }
 }

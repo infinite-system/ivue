@@ -229,7 +229,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Scope:** `VirtualScroller.ts` `computeVisibleItems` (the spacer writes), `leadingSpacerPx`, `trailingSpacerPx`, `TRAILING_SPACER_RENDER_CAP`, and `lenis.virtualLimit`.
 
-**Mechanism:** The walk writes both spacer sizes on every evaluation, even when the window is unchanged, because a size correction above the window moves only the lead. Both render FRACTIONAL: a row sum is fractional whenever a row is, the transform under it is fractional in motion, and a spacer rounded to the device grid would hop the visible content by its rounding error at every window move (measured up to 0.53 px on 111.375 px rows). The rendered tail is capped so the composited layer stays a few hundred k px regardless of list size; the scroll range comes from the computed extent through `virtualLimit`, not from the DOM.
+**Mechanism:** The walk writes both spacer sizes on every evaluation, even when the window is unchanged, because a size correction above the window moves only the lead. Both render FRACTIONAL: a row sum is fractional whenever a row is, the transform under it is fractional at creep and lerp-tail speeds, and a spacer rounded to the device grid would hop the visible content by its rounding error at every window move (measured up to 0.53 px on 111.375 px rows). The transform itself snaps by speed (`src/lenis/lenis.ts` `setScroll`, a device pixel or more per frame): a fractional offset at speed re-rasters the layer and snaps each row's text and edges to the grid independently, a 1 px shimmer between neighbours. The rendered tail is capped so the composited layer stays a few hundred k px regardless of list size; the scroll range comes from the computed extent through `virtualLimit`, not from the DOM.
 
 **Generates:** The content-sized inner layer (no explicit size in `VirtualScroller.vue`); the scrollbar geometry, which is computed over the virtual position.
 
@@ -239,7 +239,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Impossible if true:** A window whose spacers plus rows sum to anything but the extent. A rendered trailing spacer above the cap. A rendered spacer that differs from its size by a rounding.
 
-**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "add up to the extent"`
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "add up to the extent|keeps the leading spacer fractional"` for the values, then `npm run sweep:components` — the step "ExampleVirtualScroller (sub-pixel continuity)" follows one row's on-screen top against the transform through a flick in a real browser and fails on any moving frame (over 2 px) where the two disagree by more than 0.1 px.
 
 **Status:** provisional
 

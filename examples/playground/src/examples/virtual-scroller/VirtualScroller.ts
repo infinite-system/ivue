@@ -161,12 +161,15 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   /**
    * Device-pixel snap for LANDINGS (seeks/jumps): a resting position on
-   * the grid keeps text crisp. The snap policy is "motion is fractional,
-   * landings snap" — continuous MOTION paths (the wheel lerp in
-   * lenis.setScroll, the reading creep via snapRender=false) deliberately
-   * bypass this: snapped sub-device-pixel-per-frame motion degenerates into
-   * whole-pixel ticks at visible rates, while fractional translateY is
-   * filtered by the compositor into an apparent glide. The SPACERS never
+   * the grid keeps text crisp. The snap policy is "slow motion is
+   * fractional, fast motion and landings snap" — the reading creep
+   * (snapRender=false) and the slow tail of a wheel lerp bypass this:
+   * snapped sub-device-pixel-per-frame motion degenerates into whole-pixel
+   * ticks at visible rates, while fractional translateY is filtered by the
+   * compositor into an apparent glide. The wheel lerp snaps by speed
+   * inside lenis.setScroll (a device pixel or more per frame): fractional
+   * offsets at speed re-raster the layer and snap each row's text and
+   * edges independently, a 1 px shimmer between neighbours. The SPACERS never
    * snap either: they change mid-motion at every window move, and a
    * spacer rounded to the grid while the transform under it is fractional
    * hops the visible content by its rounding error (up to half a device

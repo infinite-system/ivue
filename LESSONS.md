@@ -653,7 +653,31 @@ rounding error changed and the visible content hopped by it (measured
 spacer). The realized post player never snapped anything. Rule: only the
 transform snaps, and only when a seek lands; spacers are fractional like
 the row sums they are. Probe: follow one row's `getBoundingClientRect().top`
-per frame and compare its delta to the transform's delta — any difference
-above 0.05 px is a hop, and the frame's `windowMoved` flag names the cause.
+per frame and compare its delta to the transform's delta on frames moving
+more than 2 px — a difference above 0.1 px is a hop (the docs page reports
+up to 0.09 px of noise even on moving frames; the real hops were 0.15–0.53),
+and the frame's
+`windowMoved` flag names the cause. Do NOT judge creep-speed frames
+(0.1–0.2 px/frame): the rect reports the sub-pixel transform quantized,
+up to 0.09 px, which the compositor filters into the glide by design —
+the first sweep version flagged 22 of those as hops. Permanent instrument:
+the sweep step "ExampleVirtualScroller (sub-pixel continuity)".
 Frame-timing and velocity-series probes could NOT see this; position
 continuity could.
+
+## The transform snaps by speed — the wheel-scroll shimmer
+
+After the spacer hop was gone, wheel scrolls still showed "some elements
+shifting by 1 px" while the creep looked perfect. Layout was stable (every
+mounted row's `rect.top − transform` constant through a flick, LayoutUnit
+noise of 0.011 px aside), so the shift is PAINT: rows sit at fractional
+layout tops, and a fractional transform at speed makes Chrome re-raster
+the layer at new sub-pixel offsets, snapping each text line and box edge to
+whole device pixels independently — neighbours flip by a pixel relative
+to each other. Fix in `src/lenis/lenis.ts` `setScroll`: write the transform
+on the device-pixel grid when |velocity| ≥ 1 device px/frame, fractional
+below (the slow tail and the creep need fractional motion or they tick).
+The old realized post player rounded the transform always and felt
+solid; the fork went fully fractional for the tail's sake — the answer
+is both, split by speed. Rects cannot see this class of defect; only eyes
+or a screenshot diff can.
