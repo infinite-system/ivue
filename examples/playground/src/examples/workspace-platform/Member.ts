@@ -3,11 +3,6 @@ import { Reactive } from '../../ivue';
 import type { MemberSeed } from './types';
 
 class $Member {
-  readonly id: string;
-  readonly name: string;
-  readonly initials: string;
-  readonly role: string;
-  readonly color: string;
 
   constructor(seed: MemberSeed) {
     this.id = seed.id;
@@ -18,6 +13,16 @@ class $Member {
     this.capacity.value = seed.capacity;
     this.online.value = seed.online;
   }
+
+  readonly id: string;
+
+  readonly name: string;
+
+  readonly initials: string;
+
+  readonly role: string;
+
+  readonly color: string;
 
   get capacity() {
     return ref(0);

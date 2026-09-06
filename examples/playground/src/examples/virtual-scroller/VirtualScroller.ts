@@ -276,12 +276,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return this.constructor as typeof $VirtualScroller;
   }
 
-  get scrollElement() {
-    return ref(null) as Ref<HTMLElement | null>;
+  get scrollElement(): Ref<HTMLElement | null> {
+    return ref<HTMLElement | null>(null);
   }
 
-  get scrollElementInner() {
-    return ref(null) as Ref<HTMLElement | null>;
+  get scrollElementInner(): Ref<HTMLElement | null> {
+    return ref<HTMLElement | null>(null);
   }
 
   /** Lenis, for paths that only run after mount created it. */
@@ -291,8 +291,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   /** The div wrapping the rendered items (between the two spacers). */
-  get itemsWrapperElement() {
-    return ref(null) as Ref<HTMLElement | null>;
+  get itemsWrapperElement(): Ref<HTMLElement | null> {
+    return ref<HTMLElement | null>(null);
   }
 
   /* Props as refs */

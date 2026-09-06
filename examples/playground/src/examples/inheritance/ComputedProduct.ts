@@ -7,8 +7,13 @@ class $ComputedProduct {
     return ref(48);
   }
 
+  // computed: stable-handle — the chain below reads super.total.value
   get total() {
-    return computed(() => this.price.value);
+    return computed(() => this.computeBaseTotal());
+  }
+
+  computeBaseTotal() {
+    return this.price.value;
   }
 }
 

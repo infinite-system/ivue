@@ -95,7 +95,7 @@ class $FlyweightLogic {
    * typed arrays).
    */
   static patternSource(row: number, col: number): string | null {
-    const r = row + 1;
+    const rowNumber = row + 1;
     switch (col) {
       case 0:
       case 1:
@@ -103,20 +103,20 @@ class $FlyweightLogic {
       case 3:
         return null;
       case 4:
-        return `=A${r}+B${r}`;
+        return `=A${rowNumber}+B${rowNumber}`;
       case 5:
-        return `=C${r}-D${r}`;
+        return `=C${rowNumber}-D${rowNumber}`;
       case 6:
-        return `=SUM(A${r}:D${r})`;
+        return `=SUM(A${rowNumber}:D${rowNumber})`;
       case 7:
-        return `=IF(A${r}>0,B${r},C${r})`;
+        return `=IF(A${rowNumber}>0,B${rowNumber},C${rowNumber})`;
       case 8:
-        return `=H${r}*2`;
+        return `=H${rowNumber}*2`;
       case 9:
-        return row % this.RUNSUM_BLOCK === 0 ? `=A${r}` : `=J${r - 1}+A${r}`;
+        return row % this.RUNSUM_BLOCK === 0 ? `=A${rowNumber}` : `=J${rowNumber - 1}+A${rowNumber}`;
       default:
         if (col % 2 === 0) return null;
-        return `=${this.colLabel(col - 1)}${r}+${this.colLabel(col - 2)}${r}`;
+        return `=${this.colLabel(col - 1)}${rowNumber}+${this.colLabel(col - 2)}${rowNumber}`;
     }
   }
 
@@ -141,14 +141,14 @@ class $FlyweightLogic {
   ): FlyweightLogic.SimpleAggregate | null {
     const match = this.AGG_RE.exec(body);
     if (!match) return null;
-    const fn = match[1].toUpperCase() as FlyweightLogic.SimpleAggregate['fn'];
+    const aggregate = match[1].toUpperCase() as FlyweightLogic.SimpleAggregate['fn'];
     const startCol = this.colIndexFromLabel(match[2].toUpperCase());
     const startRow = parseInt(match[3], 10);
     const endCol = this.colIndexFromLabel(match[4].toUpperCase());
     const endRow = parseInt(match[5], 10);
     if (startRow < 1 || startCol < 1 || endRow < startRow || endCol < startCol)
       return null;
-    return { fn, startRow, startCol, endRow, endCol };
+    return { fn: aggregate, startRow, startCol, endRow, endCol };
   }
 
   /** Does literal text start (after leading spaces) with '='? */

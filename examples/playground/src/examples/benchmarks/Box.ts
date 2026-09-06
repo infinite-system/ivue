@@ -4,14 +4,14 @@ import { ref } from 'vue';
 import { Reactive } from '../../ivue';
 
 class $Box {
-  get w() {
+  get width() {
     return ref(1);
   }
-  get h() {
+  get height() {
     return ref(2);
   }
   get area() {
-    return this.w.value * this.h.value;
+    return this.width.value * this.height.value;
   }
 }
 

@@ -1,402 +1,57 @@
 [
   {
-    "path": "examples/playground/src/examples/benchmarks/Box.ts",
-    "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/cell-logic.ts",
-    "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
     "path": "examples/playground/src/examples/benchmarks/creationBench.ts",
     "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
+    "reason": "benchmark arms: PlainBox and reactive(new PlainBox()) ARE the measured competitors; changing their shape changes the numbers the docs quote"
   },
   {
     "path": "examples/playground/src/examples/benchmarks/creationBench.ts",
     "check": "construction_goes_through_the_namespace_class_slot",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/creationBench.ts",
-    "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/IvueCell.ts",
-    "check": "a_class_file_is_named_after_its_class",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/IvueCell.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/IvueCell.ts",
-    "check": "a_reactive_closure_delegates_to_one_method",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/IvueCell.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/IvueCell.ts",
-    "check": "mutable_state_is_a_ref_returning_getter",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/model/BaseElement.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/model/BaseElement.ts",
-    "check": "a_reactive_closure_delegates_to_one_method",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/model/BaseElement.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/model/Container.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/model/Container.ts",
-    "check": "a_reactive_closure_delegates_to_one_method",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/model/Container.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/model/Container.ts",
-    "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/model/InteractiveBox.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/model/InteractiveBox.ts",
-    "check": "a_reactive_closure_delegates_to_one_method",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/model/InteractiveBox.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/model/InteractiveBox.ts",
-    "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/model/InteractiveBox.ts",
-    "check": "mutable_state_is_a_ref_returning_getter",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/pojoCell.ts",
-    "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/useGridArm.ts",
-    "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/benchmarks/useRowWindow.ts",
-    "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/class-store/ProjectStore.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/class-store/ProjectStore.ts",
-    "check": "watch_lifetime_matches_the_instance_owner",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/derived/Thermo.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/derived/Thermo.ts",
-    "check": "mutable_state_is_a_ref_returning_getter",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/extensible-kernel/ExtensibleKernelExample.ts",
-    "check": "mutable_state_is_a_ref_returning_getter",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/fields/choose-field/ChooseFieldExample.ts",
-    "check": "mutable_state_is_a_ref_returning_getter",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/fields/choose-field/ChooseField.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/fields/choose-field/ChooseField.ts",
-    "check": "a_reactive_closure_delegates_to_one_method",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/fields/choose-field/ChooseField.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/fields/choose-field/ContactField.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/fields/media-field/ExtendedMediaField.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/fields/media-field/MediaField.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/fields/media-field/MediaField.ts",
-    "check": "mutable_state_is_a_ref_returning_getter",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/fields/server/filter-expression.ts",
-    "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/fields/server/MockServer.ts",
-    "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/fields/server/ServerApi.ts",
-    "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts",
-    "check": "instance_types_only_unwrapping_surfaces",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/flyweight-grid/FlyweightGridPage.ts",
-    "check": "mutable_state_is_a_ref_returning_getter",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/flyweight-grid/FlyweightLogic.ts",
-    "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/flyweight-grid/model/FlyweightCell.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/flyweight-grid/model/FlyweightCell.ts",
-    "check": "instance_types_only_unwrapping_surfaces",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/flyweight-grid/model/FlyweightSheet.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/flyweight-grid/model/FlyweightSheet.ts",
-    "check": "mutable_state_is_a_ref_returning_getter",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/formula-grid/FormulaCell.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/formula-grid/FormulaCell.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/formula-grid/Sheet.ts",
-    "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/formula-grid/Sheet.ts",
-    "check": "instance_types_only_unwrapping_surfaces",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/inheritance/ComputedProduct.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/inheritance/ComputedProduct.ts",
-    "check": "a_reactive_closure_delegates_to_one_method",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/inheritance/ComputedSaleProduct.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/inheritance/ComputedSaleProduct.ts",
-    "check": "a_reactive_closure_delegates_to_one_method",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/inheritance/ComputedTaxedProduct.ts",
-    "check": "a_derivation_is_a_plain_getter_unless_computed_is_justified",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/inheritance/ComputedTaxedProduct.ts",
-    "check": "a_reactive_closure_delegates_to_one_method",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/text-marquee/TextMarqueeExample.ts",
-    "check": "a_composable_is_injected_by_a_one_call_dollar_getter",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.ts",
-    "check": "cross_module_class_reads_happen_inside_bodies",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts",
-    "check": "a_composable_is_injected_by_a_one_call_dollar_getter",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/virtual-scroller/VirtualScroller.vue",
-    "check": "the_state_destructure_is_total",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/workspace-platform/Member.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/workspace-platform/Project.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/workspace-platform/Task.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/workspace-platform/Workspace.ts",
-    "check": "class_members_are_ordered_and_spaced",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/workspace-platform/Workspace.ts",
-    "check": "mutable_state_is_a_ref_returning_getter",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
+    "reason": "benchmark arms: PlainBox and reactive(new PlainBox()) ARE the measured competitors; changing their shape changes the numbers the docs quote"
   },
   {
     "path": "examples/playground/src/ivue.ts",
     "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
+    "reason": "vendored copy of the engine (lib/Reactive.ts, synced by sync:examples) — the engine keeps its own conventions"
   },
   {
     "path": "examples/playground/src/lenis/animate.ts",
     "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
+    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
   },
   {
     "path": "examples/playground/src/lenis/dimensions.ts",
     "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
+    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
   },
   {
     "path": "examples/playground/src/lenis/emitter.ts",
     "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
+    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
   },
   {
     "path": "examples/playground/src/lenis/emitter.ts",
     "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
+    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
   },
   {
     "path": "examples/playground/src/lenis/lenis.ts",
     "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
+    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
   },
   {
     "path": "examples/playground/src/lenis/lenis.ts",
     "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
+    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
   },
   {
     "path": "examples/playground/src/lenis/maths.ts",
     "check": "declarations_use_full_descriptive_names",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
+    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
   },
   {
     "path": "examples/playground/src/lenis/virtual-scroll.ts",
     "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/Playground.ts",
-    "check": "mutable_state_is_a_ref_returning_getter",
-    "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
+    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
   }
 ]

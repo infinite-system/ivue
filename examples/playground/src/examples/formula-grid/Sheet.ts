@@ -36,18 +36,18 @@ class $Sheet {
     this.cols = cols;
 
     const { initialFormula } = this.Logic;
-    const grid: FormulaCell.Instance[][] = new Array(rows);
-    for (let r = 0; r < rows; r++) {
-      const rowArr: FormulaCell.Instance[] = new Array(cols);
-      for (let c = 0; c < cols; c++) {
-        rowArr[c] = new FormulaCell.Class(
+    const grid: FormulaCell.Model[][] = new Array(rows);
+    for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
+      const rowArr: FormulaCell.Model[] = new Array(cols);
+      for (let columnIndex = 0; columnIndex < cols; columnIndex++) {
+        rowArr[columnIndex] = new FormulaCell.Class(
           this,
-          r + 1,
-          c + 1,
-          initialFormula(r, c),
+          rowIndex + 1,
+          columnIndex + 1,
+          initialFormula(rowIndex, columnIndex),
         );
       }
-      grid[r] = rowArr;
+      grid[rowIndex] = rowArr;
     }
     this.grid = grid;
 
@@ -61,7 +61,7 @@ class $Sheet {
   readonly rows: number;
   readonly cols: number;
   /** [row0][col0] — the cells, doubling as the O(1) cellAt index. */
-  readonly grid: FormulaCell.Instance[][];
+  readonly grid: FormulaCell.Model[][];
 
   /** ONE parser for the entire sheet, shared by all cells. */
   protected readonly parser: FormulaParser;
@@ -82,7 +82,7 @@ class $Sheet {
   }
 
   /** O(1) 1-based lookup. Out of bounds → undefined. */
-  cellAt(row: number, col: number): FormulaCell.Instance | undefined {
+  cellAt(row: number, col: number): FormulaCell.Model | undefined {
     if (row < 1 || row > this.rows || col < 1 || col > this.cols)
       return undefined;
     return this.grid[row - 1][col - 1];
@@ -103,10 +103,10 @@ class $Sheet {
   protected rangeValues(ref: Sheet.RangeRef): FormulaLogic.CellValue[][] {
     const { from, to } = ref;
     const out: FormulaLogic.CellValue[][] = [];
-    for (let r = from.row; r <= to.row; r++) {
+    for (let rowIndex = from.row; rowIndex <= to.row; rowIndex++) {
       const rowArr: FormulaLogic.CellValue[] = [];
-      for (let c = from.col; c <= to.col; c++)
-        rowArr.push(this.cellValueAt(r, c));
+      for (let columnIndex = from.col; columnIndex <= to.col; columnIndex++)
+        rowArr.push(this.cellValueAt(rowIndex, columnIndex));
       out.push(rowArr);
     }
     return out;
@@ -162,11 +162,11 @@ class $Sheet {
 
     const seen = new Set<string>();
     const deps: Array<[number, number]> = [];
-    for (const [r, c] of recorded) {
-      const key = r + ',' + c;
+    for (const [rowIndex, columnIndex] of recorded) {
+      const key = rowIndex + ',' + columnIndex;
       if (!seen.has(key)) {
         seen.add(key);
-        deps.push([r, c]);
+        deps.push([rowIndex, columnIndex]);
       }
     }
     return deps;
@@ -174,10 +174,10 @@ class $Sheet {
 
   /** Iterate every cell — the measurement harness uses this to force full
    *  materialization of all cells for the worst-case heap figure. */
-  forEach(visit: (cell: FormulaCell.Instance) => void) {
-    for (let r = 0; r < this.rows; r++) {
-      const rowArr = this.grid[r];
-      for (let c = 0; c < this.cols; c++) visit(rowArr[c]);
+  forEach(visit: (cell: FormulaCell.Model) => void) {
+    for (let rowIndex = 0; rowIndex < this.rows; rowIndex++) {
+      const rowArr = this.grid[rowIndex];
+      for (let columnIndex = 0; columnIndex < this.cols; columnIndex++) visit(rowArr[columnIndex]);
     }
   }
 }

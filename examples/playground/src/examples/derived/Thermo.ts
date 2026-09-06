@@ -3,10 +3,9 @@ import { computed, ref } from 'vue';
 import { Reactive } from '../../ivue';
 
 class $Thermo {
-  // Run counters are plain fields: incrementing them inside getter bodies is
-  // side-effect-free for the graph (a plain-field write triggers nothing).
-  fahrenheitRuns = 0;
-  statusRuns = 0;
+  // Run counters live in one plain object: incrementing them inside getter
+  // bodies is side-effect-free for the graph (a plain write triggers nothing).
+  readonly runs = { fahrenheit: 0, status: 0 };
 
   get celsius() {
     return ref(21);
@@ -14,17 +13,18 @@ class $Thermo {
 
   // Plain getter: re-derives on EVERY render — even unrelated ones.
   get fahrenheit() {
-    this.fahrenheitRuns++;
+    this.runs.fahrenheit++;
     return Math.round((this.celsius.value * 9) / 5 + 32);
   }
 
-  // computed(): memoized — its body runs only when celsius actually changed.
+  // computed: render-suppression — memoized; its body runs only when celsius
+  // actually changed (the demo's whole point, side by side with the getter).
   get status() {
     return computed(() => this.deriveStatus());
   }
 
   deriveStatus() {
-    this.statusRuns++;
+    this.runs.status++;
     const celsius = this.celsius.value;
     if (celsius < 10) return 'Cold';
     if (celsius < 18) return 'Cool';

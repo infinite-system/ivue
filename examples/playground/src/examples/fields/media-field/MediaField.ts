@@ -20,10 +20,10 @@ import {
 } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Field } from '../Field';
-import type { MediaRow } from '../server/ServerApi';
 import { ServerApi } from '../server/ServerApi';
 
 export class $MediaField extends Field.$Class {
+
   /* Contract — the shared field surface (model, label, hint, density,
      states) comes from Field through `super`; only the media-specific
      params and the narrowed model type are declared here. */
@@ -114,33 +114,43 @@ export class $MediaField extends Field.$Class {
   get files() {
     return ref<MediaField.Item[]>([]);
   }
+
   get isUploading() {
     return ref(false);
   }
+
   get uploadingCount() {
     return ref(0);
   }
+
   get isHydrating() {
     return ref(false);
   }
+
   get isDragOver() {
     return ref(false);
   }
+
   get errorMessage() {
     return ref<string | null>(null);
   }
+
   get renameId() {
     return ref<string | null>(null);
   }
+
   get renameDraft() {
     return ref('');
   }
+
   get previewOpen() {
     return ref(false);
   }
+
   get previewIndex() {
     return ref(0);
   }
+
   get fileInput() {
     return ref<HTMLInputElement | null>(null);
   }
@@ -149,39 +159,51 @@ export class $MediaField extends Field.$Class {
   get multiple() {
     return this.props.multiple;
   }
+
   get accept() {
     return this.props.accept;
   }
+
   get maxFileSize() {
     return this.props.maxFileSize;
   }
+
   get label() {
     return this.props.label;
   }
+
   get hint() {
     return this.props.hint;
   }
+
   get readonly() {
     return this.props.readonly;
   }
+
   get disable() {
     return this.props.disable;
   }
+
   get dense() {
     return this.props.dense;
   }
+
   get canPreview() {
     return this.props.canPreview;
   }
+
   get canDownload() {
     return this.props.canDownload;
   }
+
   get canRename() {
     return this.props.canRename && this.isInteractive;
   }
+
   get canRenameCaption() {
     return this.props.canRenameCaption && this.isInteractive;
   }
+
   get canRemove() {
     return this.props.canRemove && this.isInteractive;
   }
@@ -190,6 +212,7 @@ export class $MediaField extends Field.$Class {
   get canSort() {
     return this.multiple && this.isInteractive && this.files.value.length > 1;
   }
+
   get dragIndex() {
     return ref<number | null>(null);
   }
@@ -197,18 +220,23 @@ export class $MediaField extends Field.$Class {
   get isInteractive() {
     return !this.props.readonly && !this.props.disable;
   }
+
   get maxFiles() {
     return this.multiple ? this.props.maxFiles : 1;
   }
+
   get remainingSlots() {
     return Math.max(0, this.maxFiles - this.files.value.length);
   }
+
   get canAddMore() {
     return this.isInteractive && this.remainingSlots > 0;
   }
+
   get hasFiles() {
     return this.files.value.length > 0;
   }
+
   get fileCountLabel() {
     return `${this.files.value.length} / ${this.maxFiles}`;
   }
@@ -221,37 +249,48 @@ export class $MediaField extends Field.$Class {
   get acceptedTypesText() {
     return this.acceptTokens.join(', ');
   }
+
   get acceptTokens() {
     return this.accept
       .split(',')
       .map((token) => token.trim().toLowerCase())
       .filter(Boolean);
   }
+
   get maxFileSizeLabel() {
     return this.formatBytes(this.maxFileSize, 0);
   }
+
   get dropHint() {
     return this.multiple
       ? 'Drop files here or click to browse'
       : 'Drop a file here or click to browse';
   }
+
   get uploadProgressLabel() {
     const count = this.uploadingCount.value;
     return `Uploading ${count} file${count === 1 ? '' : 's'}…`;
   }
+
   get thumbnailStyle() {
     return { width: this.props.thumbnailSize + 'px' };
   }
+
   get activeFile(): MediaField.Item | null {
     return this.displayFiles[this.previewIndex.value] ?? null;
   }
+
   get hasError() {
     return !!this.errorMessage.value;
   }
+
   /** Uploading or fetching model rows — the header spinner's condition. */
   get isBusy() {
     return this.isUploading.value || this.isHydrating.value;
   }
+
+  /** Rejects Windows/macOS-forbidden characters and leading dots/spaces. */
+  readonly validFilenameRegExp = /^(?!^[ .])(?!.*[/\\:*?"<>|])(?![. ]+$)[^/\\:*?"<>|]+$/;
 
   // --- model hydration & emission ---
 
@@ -278,7 +317,7 @@ export class $MediaField extends Field.$Class {
     if (missingIds.length) {
       this.isHydrating.value = true;
       try {
-        for (const row of await ServerApi.media.get(missingIds)) {
+        for (const row of await ServerApi.Class.getMedia(missingIds)) {
           fetchedRows.set(row.id, row);
         }
       } catch {
@@ -419,7 +458,7 @@ export class $MediaField extends Field.$Class {
     this.isUploading.value = true;
     this.uploadingCount.value = acceptedFiles.length;
     try {
-      const rows = await ServerApi.media.upload(acceptedFiles);
+      const rows = await ServerApi.Class.uploadMedia(acceptedFiles);
       this.onUploaded(rows);
     } catch {
       this.setError('Upload failed.');
@@ -478,7 +517,7 @@ export class $MediaField extends Field.$Class {
   async removeFile(row: MediaField.Item) {
     if (!this.canRemove) return;
     try {
-      await ServerApi.media.remove(row.id);
+      await ServerApi.Class.removeMedia(row.id);
     } catch {
       this.setError(`Failed to remove ${row.name}.`);
       return;
@@ -530,7 +569,7 @@ export class $MediaField extends Field.$Class {
     const extension = this.extensionOf(row.name);
     const newName = extension ? `${draft}.${extension}` : draft;
     try {
-      await ServerApi.media.update({ id: row.id, name: newName });
+      await ServerApi.Class.updateMedia({ id: row.id, name: newName });
       row.name = newName;
       this.clearError();
       this.emitModel();
@@ -630,9 +669,6 @@ export class $MediaField extends Field.$Class {
   clearError() {
     this.errorMessage.value = null;
   }
-
-  /** Rejects Windows/macOS-forbidden characters and leading dots/spaces. */
-  validFilenameRegExp = /^(?!^[ .])(?!.*[/\\:*?"<>|])(?![. ]+$)[^/\\:*?"<>|]+$/;
 }
 
 export namespace MediaField {
@@ -648,11 +684,11 @@ export namespace MediaField {
   export type Emits = ExtractEmitTypes<typeof $Class.emits>;
 
   /** A media row plus the client-editable caption. */
-  export type Item = MediaRow & { caption?: string };
+  export type Item = ServerApi.MediaRow & { caption?: string };
 
   /**
    * The model accepts rows, bare ids, or a mix — ids are hydrated through
-   * `ServerApi.media.get`. Single mode holds one entry (or null), multiple
+   * `ServerApi.Class.getMedia`. Single mode holds one entry (or null), multiple
    * mode holds an array.
    */
   export type Model =

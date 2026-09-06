@@ -221,9 +221,9 @@ class Parser {
   }
 }
 
-function looseEquals(a: any, b: any): boolean {
-  if (a === null || a === undefined) return b === null || b === undefined;
-  return String(a) === String(b);
+function looseEquals(left: any, right: any): boolean {
+  if (left === null || left === undefined) return right === null || right === undefined;
+  return String(left) === String(right);
 }
 
 function sqlLike(value: any, pattern: any, caseInsensitive: boolean): boolean {
@@ -255,13 +255,13 @@ export function applySort<T extends Row>(rows: T[], sortExpression: string): T[]
   if (!terms.length) return rows;
   return [...rows].sort((rowA, rowB) => {
     for (const { column, descending } of terms) {
-      const a = rowA[column];
-      const b = rowB[column];
-      if (a === b) continue;
+      const left = rowA[column];
+      const right = rowB[column];
+      if (left === right) continue;
       const comparison =
-        typeof a === 'number' && typeof b === 'number'
-          ? a - b
-          : String(a ?? '').localeCompare(String(b ?? ''));
+        typeof left === 'number' && typeof right === 'number'
+          ? left - right
+          : String(left ?? '').localeCompare(String(right ?? ''));
       if (comparison !== 0) return descending ? -comparison : comparison;
     }
     return 0;

@@ -37,6 +37,7 @@ export class $ExtendedMediaField extends MediaField.$Class {
   }
 
   // --- derived ---
+  // computed: expensive — sorts the whole file list
   get sortedFiles() {
     return computed(() => this.sortFiles());
   }
@@ -157,7 +158,7 @@ export class $ExtendedMediaField extends MediaField.$Class {
 
     const caption = this.captionDraft.value.trim();
     try {
-      await ServerApi.media.update({ id: row.id, caption });
+      await ServerApi.Class.updateMedia({ id: row.id, caption });
       row.caption = caption;
       this.emitModel();
     } catch {

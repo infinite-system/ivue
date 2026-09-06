@@ -3,13 +3,13 @@
 //
 //   import { ServerApi } from './ServerApi';
 //   import { httpTransport } from './httpTransport';
-//   ServerApi.use(httpTransport('https://api.example.com'));
+//   ServerApi.Class.use(httpTransport('https://api.example.com'));
 //
 // Everything else — components, classes, search, uploads — runs unchanged.
 
-import type { ServerTransport } from './ServerApi';
+import type { ServerApi } from './ServerApi';
 
-export function httpTransport(baseUrl: string): ServerTransport {
+export function httpTransport(baseUrl: string): ServerApi.ServerTransport {
   const base = baseUrl.replace(/\/$/, '');
   return {
     async request(method, path, options = {}) {

@@ -13,9 +13,6 @@ import {
 } from './types';
 
 class $Task {
-  readonly id: string;
-  readonly projectId: string;
-  readonly workspace: Task.Owner;
 
   constructor(workspace: Task.Owner, seed: TaskSeed, dueDate: string) {
     this.workspace = workspace;
@@ -34,6 +31,12 @@ class $Task {
       ...comment,
     }));
   }
+
+  readonly id: string;
+
+  readonly projectId: string;
+
+  readonly workspace: Task.Owner;
 
   get title() {
     return ref('');

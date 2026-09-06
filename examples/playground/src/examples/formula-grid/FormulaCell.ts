@@ -26,13 +26,6 @@ import type { FormulaLogic } from './FormulaLogic';
 import type { Sheet } from './Sheet';
 
 class $FormulaCell {
-  // CONSTANTS / CONFIG — plain fields, set once, never mutated.
-  // `sheet` is an injected dependency (the parser + O(1) cellAt live on it),
-  // `row`/`col` are the 1-based position used by the parser and ROW()/COLUMN().
-  readonly sheet: Sheet.Model;
-  readonly row: number;
-  readonly col: number;
-  protected readonly initialText: string;
 
   constructor(sheet: Sheet.Model, row: number, col: number, initial: string) {
     this.sheet = sheet;
@@ -41,6 +34,17 @@ class $FormulaCell {
     this.initialText = initial;
   }
 
+  // CONSTANTS / CONFIG — plain fields, set once, never mutated.
+  // `sheet` is an injected dependency (the parser + O(1) cellAt live on it),
+  // `row`/`col` are the 1-based position used by the parser and ROW()/COLUMN().
+  readonly sheet: Sheet.Model;
+
+  readonly row: number;
+
+  readonly col: number;
+
+  protected readonly initialText: string;
+
   // MUTABLE STATE — ref-getter; materializes on first touch.
   get raw() {
     return ref(this.initialText);
@@ -48,6 +52,7 @@ class $FormulaCell {
 
   // HOT DERIVED — the single surgical computed(). Parsing + evaluating is real
   // work; memoizing it is exactly the "one hot value" the ivue idiom promotes.
+  // computed: expensive — parse + evaluate, the one hot value
   get value(): ComputedRef<FormulaLogic.CellValue> {
     return computed<FormulaLogic.CellValue>(() => this.evaluateText());
   }
@@ -56,9 +61,11 @@ class $FormulaCell {
   get isFormula() {
     return this.sheet.Logic.isFormulaText(this.raw.value);
   }
+
   get display() {
     return this.sheet.Logic.displayOf(this.value.value);
   }
+
   get cssClass() {
     return this.sheet.Logic.cssOf(this.value.value, this.isFormula);
   }
@@ -87,5 +94,6 @@ class $FormulaCell {
 export namespace FormulaCell {
   export const $Class = $FormulaCell; // raw — children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
+  export type Model = InstanceType<typeof Class>; // raw-instance type — collections, parameters, returns
   export type Instance = typeof Class.Instance;
 }

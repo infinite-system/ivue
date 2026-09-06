@@ -20,11 +20,7 @@ import { computed, ref } from 'vue';
 import { Reactive } from '../../ivue';
 import { cssOf, displayOf, isNumberOf, numericOf } from './cell-logic';
 
-class $Cell {
-  // CONSTANTS — plain fields, never mutated (safe: not reactive state).
-  row: number;
-  col: number;
-  protected iv: string;
+class $IvueCell {
 
   constructor(row: number, col: number, initial: string) {
     this.row = row;
@@ -32,29 +28,43 @@ class $Cell {
     this.iv = initial;
   }
 
+  // CONSTANTS — plain fields, never mutated (safe: not reactive state).
+  readonly row: number;
+
+  readonly col: number;
+
+  protected readonly iv: string;
+
   // MUTABLE STATE — ref-getter; materializes on first touch.
   get raw() {
     return ref(this.iv);
   }
 
   // HOT DERIVED — the single surgical computed(): feeds the row-sum column.
+  // computed: expensive — the ONE hot derived value, read by the row-sum column
   get numericValue() {
-    return computed(() => numericOf(this.raw.value));
+    return computed(() => this.computeNumericValue());
   }
 
   // DERIVED — plain getters. Reactive via leaf tracking; zero per-instance cost.
   get isNumber() {
     return isNumberOf(this.raw.value);
   }
+
   get display() {
     return displayOf(this.raw.value, this.isNumber, this.numericValue.value);
   }
+
   get cssClass() {
     return cssOf(this.isNumber, this.numericValue.value);
   }
 
   // Read every derived value once (used only to force full materialization of
   // all cells, for the worst-case "everything touched" comparison).
+  computeNumericValue() {
+    return numericOf(this.raw.value);
+  }
+
   touch() {
     void this.display;
     void this.isNumber;
@@ -63,8 +73,8 @@ class $Cell {
   }
 }
 
-export namespace Cell {
-  export const $Class = $Cell;
+export namespace IvueCell {
+  export const $Class = $IvueCell;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

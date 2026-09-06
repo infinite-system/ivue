@@ -16,8 +16,8 @@ class $Playground {
 
   // CONSTANTS — the manifest registry and its lazy route components;
   // plain fields, never mutated. A route never loads the others' code.
-  examples = examples;
-  routeComponents: Record<string, Component> = Object.fromEntries(
+  readonly examples = examples;
+  readonly routeComponents: Record<string, Component> = Object.fromEntries(
     examples.map((example) => [
       example.slug,
       defineAsyncComponent(example.load),

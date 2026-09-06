@@ -5,10 +5,10 @@
 // thumbnails, disk or S3 storage).
 import { ref } from 'vue';
 import { Reactive } from '../../../ivue';
-import { ServerApi, type MediaRow } from '../server/ServerApi';
+import { ServerApi } from '../server/ServerApi';
 import {
   ensureSeedMedia,
-  mockServerTransport,
+  createMockServerTransport,
   resetMockServer,
 } from '../server/MockServer';
 
@@ -23,19 +23,19 @@ class $MediaFieldExample {
 
   // MUTABLE STATE — one model per showcased variation.
   get preloadedMedia() {
-    return ref<(MediaRow | string)[]>([]);
+    return ref<(ServerApi.MediaRow | string)[]>([]);
   }
   get avatarMedia() {
-    return ref<MediaRow | null>(null);
+    return ref<ServerApi.MediaRow | null>(null);
   }
   get galleryMedia() {
-    return ref<MediaRow[]>([]);
+    return ref<ServerApi.MediaRow[]>([]);
   }
   get documentMedia() {
-    return ref<MediaRow[]>([]);
+    return ref<ServerApi.MediaRow[]>([]);
   }
   get extendedMedia() {
-    return ref<MediaRow[]>([]);
+    return ref<ServerApi.MediaRow[]>([]);
   }
   get resetting() {
     return ref(false);
@@ -64,9 +64,9 @@ class $MediaFieldExample {
 
   /** This route runs against the in-browser mock backend; installing it
    *  here (not at import) keeps the class file free of side effects. Swap
-   *  for `ServerApi.use(httpTransport(...))` to run against server-node. */
+   *  for `ServerApi.Class.use(httpTransport(...))` to run against server-node. */
   installMockServer() {
-    ServerApi.use(mockServerTransport);
+    ServerApi.Class.use(createMockServerTransport());
   }
 }
 

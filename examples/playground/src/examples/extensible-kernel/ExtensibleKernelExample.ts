@@ -38,7 +38,7 @@ class $ExtensibleKernelExample {
     return ref<string[]>([]);
   }
 
-  plugins: ExtensibleKernelExample.PluginEntry[] = [
+  readonly plugins: ExtensibleKernelExample.PluginEntry[] = [
     {
       id: 'sticky',
       label: 'Sticky Plugin',

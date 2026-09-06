@@ -37,6 +37,7 @@ import { Static } from '../../../Static';
 import { FlyweightLogic } from '../FlyweightLogic';
 
 class $FlyweightSheet {
+
   /** The parser's error class, read off the parser module once per class —
    *  a static so a subclass can substitute the error shape it evaluates to. */
   protected static get $FormulaError() {
@@ -45,38 +46,6 @@ class $FlyweightSheet {
         FormulaError: new (error: string, details?: unknown) => FlyweightLogic.CellValue;
       }
     ).FormulaError;
-  }
-
-  readonly rows: number;
-  readonly cols: number;
-
-  // --- ground truth (plain, non-reactive) ---
-  protected readonly columns: FlyweightSheet.Column[];
-
-  // --- the sparse reactive overlay (empty until observed) ---
-  protected readonly cellVersions = new Map<number, Ref<number>>();
-  protected readonly blockVersions = new Map<number, Ref<number>>();
-  protected readonly formulaCache = new Map<number, FlyweightSheet.FormulaEntry>();
-  protected readonly adHocCache = new Map<string, ComputedRef<FlyweightLogic.CellValue>>();
-
-  /** Blocks per column (fine↔coarse key math). */
-  protected readonly blockCount: number;
-
-  /** ONE parser for the whole sheet (reference: formula grid). */
-  protected readonly parser: FormulaParser;
-  /** Cycle guard — a cell re-entered mid-evaluation is a cycle → #REF!. */
-  protected readonly evaluating = new Set<number>();
-  /** When non-null, tracked reads record (row,col) — dep tracing. */
-  protected tracer: Array<[number, number]> | null = null;
-
-  /** The logic seam. A subclass overrides THIS to swap the whole config/
-   *  mapping layer (`protected override get Logic() { return
-   *  WideGridLogic.Class }`) — every read below, including the seeding
-   *  loop's one-time destructure, follows the override. A single read
-   *  costs one tracked getter call; only PER-CALL reads in the 9M-loop
-   *  were ever a cost, and the destructure below avoids exactly that. */
-  protected get Logic() {
-    return FlyweightLogic.Class;
   }
 
   constructor(rows: number, cols: number = FlyweightLogic.Class.COLS) {
@@ -120,6 +89,44 @@ class $FlyweightSheet {
       onCell: (cellRef) => this.pointValue(cellRef.row, cellRef.col),
       onRange: (rangeRef) => this.rangeValues(rangeRef as FlyweightSheet.RangeRef),
     });
+  }
+
+  readonly rows: number;
+
+  readonly cols: number;
+
+  // --- ground truth (plain, non-reactive) ---
+  protected readonly columns: FlyweightSheet.Column[];
+
+  // --- the sparse reactive overlay (empty until observed) ---
+  protected readonly cellVersions = new Map<number, Ref<number>>();
+
+  protected readonly blockVersions = new Map<number, Ref<number>>();
+
+  protected readonly formulaCache = new Map<number, FlyweightSheet.FormulaEntry>();
+
+  protected readonly adHocCache = new Map<string, ComputedRef<FlyweightLogic.CellValue>>();
+
+  /** Blocks per column (fine↔coarse key math). */
+  protected readonly blockCount: number;
+
+  /** ONE parser for the whole sheet (reference: formula grid). */
+  protected readonly parser: FormulaParser;
+
+  /** Cycle guard — a cell re-entered mid-evaluation is a cycle → #REF!. */
+  protected readonly evaluating = new Set<number>();
+
+  /** When non-null, tracked reads record (row,col) — dep tracing. */
+  protected readonly trace = { recording: null as Array<[number, number]> | null };
+
+  /** The logic seam. A subclass overrides THIS to swap the whole config/
+   *  mapping layer (`protected override get Logic() { return
+   *  WideGridLogic.Class }`) — every read below, including the seeding
+   *  loop's one-time destructure, follows the override. A single read
+   *  costs one tracked getter call; only PER-CALL reads in the 9M-loop
+   *  were ever a cost, and the destructure below avoids exactly that. */
+  protected get Logic() {
+    return FlyweightLogic.Class;
   }
 
   /** The one cast per class: instance code reads its own statics here. */
@@ -222,7 +229,7 @@ class $FlyweightSheet {
 
   /** onCell seam (1-based, like the parser). */
   protected pointValue(oneBasedRow: number, oneBasedCol: number): FlyweightLogic.CellValue {
-    if (this.tracer) this.tracer.push([oneBasedRow, oneBasedCol]);
+    if (this.trace.recording) this.trace.recording.push([oneBasedRow, oneBasedCol]);
     return this.valueAt(oneBasedRow - 1, oneBasedCol - 1);
   }
 
@@ -240,10 +247,10 @@ class $FlyweightSheet {
     const endCol = Math.min(range.to.col - 1, this.cols - 1);
     const cellCount = (endRow - startRow + 1) * (endCol - startCol + 1);
 
-    if (this.tracer) {
+    if (this.trace.recording) {
       for (let row = startRow; row <= endRow; row++)
         for (let col = startCol; col <= endCol; col++)
-          this.tracer.push([row + 1, col + 1]);
+          this.trace.recording.push([row + 1, col + 1]);
     }
 
     const values: FlyweightLogic.CellValue[][] = [];
@@ -508,8 +515,8 @@ class $FlyweightSheet {
     const body = this.Logic.stripFormula(this.sourceAt(row, col));
     if (body.trim().length === 0) return [];
 
-    const previousTracer = this.tracer;
-    this.tracer = [];
+    const previousTracer = this.trace.recording;
+    this.trace.recording = [];
     pauseTracking();
     try {
       this.parser.parse(body, {
@@ -522,8 +529,8 @@ class $FlyweightSheet {
     } finally {
       resetTracking();
     }
-    const recorded = this.tracer;
-    this.tracer = previousTracer;
+    const recorded = this.trace.recording;
+    this.trace.recording = previousTracer;
 
     const seenKeys = new Set<number>();
     const dependencies: Array<[number, number]> = [];
@@ -609,6 +616,7 @@ class $FlyweightSheet {
 export namespace FlyweightSheet {
   export const $Class = Static($FlyweightSheet); // anchor — it declares statics
   export let Class = Reactive($Class);
+  export type Model = InstanceType<typeof Class>; // raw-instance type — collections, parameters, returns
   export type Instance = typeof Class.Instance;
 
   /* Types */

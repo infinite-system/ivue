@@ -24,7 +24,7 @@ export function createPojoCell(
 }
 
 export function pojoRowSum(row: PojoCell[]): number {
-  let s = 0;
-  for (let i = 0; i < row.length; i++) s += numericOf(row[i].raw);
-  return s;
+  let sum = 0;
+  for (let index = 0; index < row.length; index++) sum += numericOf(row[index].raw);
+  return sum;
 }

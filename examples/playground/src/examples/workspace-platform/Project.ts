@@ -3,9 +3,6 @@ import { Reactive } from '../../ivue';
 import type { ProjectSeed } from './types';
 
 class $Project {
-  readonly id: string;
-  readonly icon: string;
-  readonly color: string;
 
   constructor(seed: ProjectSeed) {
     this.id = seed.id;
@@ -13,6 +10,12 @@ class $Project {
     this.color = seed.color;
     this.name.value = seed.name;
   }
+
+  readonly id: string;
+
+  readonly icon: string;
+
+  readonly color: string;
 
   get name() {
     return ref('');

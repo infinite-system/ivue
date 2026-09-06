@@ -7,7 +7,7 @@
 // visitor gets a pristine private sandbox. The same components run against
 // server-node/server.mjs by swapping the transport.
 
-import type { MediaRow, RequestOptions, ServerTransport } from './ServerApi';
+import type { ServerApi } from './ServerApi';
 import { applySort, compileFilter } from './filter-expression';
 import { seedContacts, seedTags } from './demo-data';
 
@@ -147,7 +147,7 @@ function listEndpoint(collection: any[], query: URLSearchParams) {
   return { data: rows };
 }
 
-async function hydrateMediaRow(row: MediaRow): Promise<MediaRow> {
+async function hydrateMediaRow(row: ServerApi.MediaRow): Promise<ServerApi.MediaRow> {
   return {
     ...row,
     url: await urlFor(row.key),
@@ -155,8 +155,16 @@ async function hydrateMediaRow(row: MediaRow): Promise<MediaRow> {
   };
 }
 
-export const mockServerTransport: ServerTransport = {
-  async request(method, path, options: RequestOptions = {}) {
+/** The in-browser transport: install with `ServerApi.Class.use(createMockServerTransport())`. */
+export function createMockServerTransport(): ServerApi.ServerTransport {
+  return { request: mockServerRequest };
+}
+
+async function mockServerRequest(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  path: string,
+  options: ServerApi.RequestOptions = {},
+) {
     await wait(LATENCY_MS);
     const [pathname, queryString] = path.split('?');
     const query = new URLSearchParams(queryString ?? '');
@@ -165,13 +173,13 @@ export const mockServerTransport: ServerTransport = {
     /* ---- media endpoints ---- */
     if (segments[0] === 'media') {
       if (method === 'POST' && segments[1] === 'upload') {
-        const uploaded: MediaRow[] = [];
+        const uploaded: ServerApi.MediaRow[] = [];
         for (const file of options.files ?? []) {
           const key = `m${nextId++}`;
           await putBlob(key, file);
           const thumbnail = await makeThumbnail(file);
           if (thumbnail) await putBlob(`thumb:${key}`, thumbnail);
-          const row: MediaRow = {
+          const row: ServerApi.MediaRow = {
             id: key,
             key,
             name: options.payload?.name || file.name,
@@ -260,27 +268,26 @@ export const mockServerTransport: ServerTransport = {
     }
 
     throw new Error(`MockServer: unhandled ${method} ${path}`);
-  },
-};
+}
 
 /**
  * Seed the media store with server-preexisting images (SVG blobs) so demos
  * can show a field HYDRATING an existing model from ids — loading media the
  * server already holds, not just uploading new files.
  */
-export async function ensureSeedMedia(): Promise<MediaRow[]> {
+export async function ensureSeedMedia(): Promise<ServerApi.MediaRow[]> {
   // Versioned: bumping SEED_VERSION replaces stale artwork cached in the
   // visitor's IndexedDB from an earlier deploy.
   const SEED_VERSION = 'v2';
   const seedPrefix = `seed-${SEED_VERSION}-`;
   const staleSeeds = collections.media.filter(
-    (row: MediaRow) => row.key.startsWith('seed-') && !row.key.startsWith(seedPrefix),
+    (row: ServerApi.MediaRow) => row.key.startsWith('seed-') && !row.key.startsWith(seedPrefix),
   );
   for (const stale of staleSeeds) {
     await deleteBlob(stale.key);
     collections.media.splice(collections.media.indexOf(stale), 1);
   }
-  const existingSeeds = collections.media.filter((row: MediaRow) =>
+  const existingSeeds = collections.media.filter((row: ServerApi.MediaRow) =>
     row.key.startsWith(seedPrefix),
   );
   if (existingSeeds.length) {
@@ -309,13 +316,13 @@ export async function ensureSeedMedia(): Promise<MediaRow[]> {
       icon: '<g stroke="rgba(255,255,255,0.9)" stroke-width="22" stroke-linecap="round" fill="none"><path d="M90 210 q 37 -44 75 0 t 75 0 75 0 75 0"/><path d="M90 280 q 37 -44 75 0 t 75 0 75 0 75 0"/></g>',
     },
   ];
-  const seeded: MediaRow[] = [];
+  const seeded: ServerApi.MediaRow[] = [];
   for (const [index, art] of artworks.entries()) {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${art.from}"/><stop offset="1" stop-color="${art.to}"/></linearGradient></defs><rect width="480" height="480" fill="url(#g)"/>${art.icon}</svg>`;
     const blob = new Blob([svg], { type: 'image/svg+xml' });
     const key = `${seedPrefix}${index + 1}`;
     await putBlob(key, blob);
-    const row: MediaRow = {
+    const row: ServerApi.MediaRow = {
       id: key,
       key,
       name: art.name,

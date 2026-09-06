@@ -19,6 +19,7 @@ import { VirtualScroller } from './VirtualScroller';
  * through. Pair with `snap-to-items` for the step feel: scroll, stop.
  */
 class $HorizontalVirtualScroller<T extends VirtualScroller.BaseItem> extends (VirtualScroller.$Class as typeof VirtualScroller.$Class) <T> {
+
   /* Contract — inherited whole; ONE default re-tuned. `props` needs no
      override: it reads through the receiver and fuses THESE defaults
      with the inherited types. */
@@ -46,6 +47,22 @@ class $HorizontalVirtualScroller<T extends VirtualScroller.BaseItem> extends (Vi
     return 'horizontal';
   }
 
+  protected override get axisPaddingProps(): readonly [string, string] {
+    return ['padding-left', 'padding-right'];
+  }
+
+  protected override get axisThumbProps(): readonly [string, string] {
+    return ['width', 'left'];
+  }
+
+  override get containerSize() {
+    return this.elementSize.width;
+  }
+
+  override get containerOuterSize() {
+    return this.outerElementSize.width;
+  }
+
   protected override offsetSize(element: HTMLElement | null | undefined): number {
     return element?.offsetWidth ?? 0;
   }
@@ -58,28 +75,12 @@ class $HorizontalVirtualScroller<T extends VirtualScroller.BaseItem> extends (Vi
     return 'translateX(' + px + 'px)';
   }
 
-  protected override get axisPaddingProps(): readonly [string, string] {
-    return ['padding-left', 'padding-right'];
-  }
-
   protected override axisDelta(data: { deltaX: number; deltaY: number }): number {
     return data.deltaX;
   }
 
-  protected override get axisThumbProps(): readonly [string, string] {
-    return ['width', 'left'];
-  }
-
   protected override trackPointerFraction(event: PointerEvent, rect: DOMRect): number {
     return (event.clientX - rect.left) / rect.width;
-  }
-
-  override get containerSize() {
-    return this.elementSize.width;
-  }
-
-  override get containerOuterSize() {
-    return this.outerElementSize.width;
   }
 }
 

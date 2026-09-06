@@ -27,15 +27,15 @@ export const ROWNUM_WIDTH = 64; // px for the row-number gutter
 export const SUM_WIDTH = 116; // px for the Σ row-sum column
 
 /** Spreadsheet-style column label: 0→A, 25→Z, 26→AA … */
-export function colLabel(n: number): string {
-  let s = '';
-  let x = n + 1;
+export function colLabel(columnNumber: number): string {
+  let label = '';
+  let x = columnNumber + 1;
   while (x > 0) {
-    const m = (x - 1) % 26;
-    s = String.fromCharCode(65 + m) + s;
+    const remainder = (x - 1) % 26;
+    label = String.fromCharCode(65 + remainder) + label;
     x = Math.floor((x - 1) / 26);
   }
-  return s;
+  return label;
 }
 
 const WORDS = ['alpha', 'beta', 'gamma', 'delta', 'omega', 'sigma', 'lorem'];
@@ -47,27 +47,27 @@ const WORDS = ['alpha', 'beta', 'gamma', 'delta', 'omega', 'sigma', 'lorem'];
  */
 export function initialRaw(row: number, col: number): string {
   const seed = row * COLS + col;
-  const k = seed % 7;
-  if (k < 4) {
-    const v = ((seed * 2654435761) % 100000) / 100 - 500;
-    return (Math.round(v * 100) / 100).toString();
+  const kind = seed % 7;
+  if (kind < 4) {
+    const value = ((seed * 2654435761) % 100000) / 100 - 500;
+    return (Math.round(value * 100) / 100).toString();
   }
-  if (k === 4) return '';
+  if (kind === 4) return '';
   return WORDS[seed % WORDS.length];
 }
 
 /** Does the raw string parse as a finite number? */
 export function isNumberOf(raw: string): boolean {
-  const t = raw.trim();
-  if (t.length === 0) return false;
-  const n = Number(t);
-  return !Number.isNaN(n) && Number.isFinite(n);
+  const text = raw.trim();
+  if (text.length === 0) return false;
+  const parsed = Number(text);
+  return !Number.isNaN(parsed) && Number.isFinite(parsed);
 }
 
 /** The numeric value used by the visible row-sum column (0 for non-numbers). */
 export function numericOf(raw: string): number {
-  const n = parseFloat(raw);
-  return Number.isFinite(n) ? n : 0;
+  const parsed = parseFloat(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 /** Display string: formatted number, a dot for blanks, or the raw text. */
@@ -88,6 +88,6 @@ export function cssOf(isNumber: boolean, numeric: number): string {
 }
 
 /** Format a row sum for the Σ column. */
-export function fmtSum(n: number): string {
-  return n.toLocaleString('en-US', { maximumFractionDigits: 1 });
+export function fmtSum(sum: number): string {
+  return sum.toLocaleString('en-US', { maximumFractionDigits: 1 });
 }

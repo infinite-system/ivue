@@ -1,11 +1,11 @@
 // ChooseFieldExample.ts — the Advanced Select Field showcase route state.
 // Installs the in-browser mock backend for this route chunk; swap
-// ServerApi.use(httpTransport('http://localhost:4300')) to run the same
+// ServerApi.Class.use(httpTransport('http://localhost:4300')) to run the same
 // components against server-node/server.ts.
 import { ref } from 'vue';
 import { Reactive } from '../../../ivue';
 import { ServerApi } from '../server/ServerApi';
-import { mockServerTransport, resetMockServer } from '../server/MockServer';
+import { createMockServerTransport, resetMockServer } from '../server/MockServer';
 
 class $ChooseFieldExample {
   constructor() {
@@ -46,14 +46,14 @@ class $ChooseFieldExample {
   }
 
   // CONSTANTS — static options for the client-only variations.
-  planOptions = [
+  readonly planOptions = [
     { name: 'Hobby', description: 'For side projects', icon: 'rocket_launch' },
     { name: 'Pro', description: 'For production apps', icon: 'workspace_premium' },
     { name: 'Team', description: 'Shared workspaces', icon: 'groups' },
     { name: 'Enterprise', description: 'SSO, audit, SLAs', icon: 'apartment' },
   ];
 
-  variants = [
+  readonly variants = [
     {
       label: 'People',
       icon: 'person',
@@ -77,9 +77,9 @@ class $ChooseFieldExample {
 
   /** This route runs against the in-browser mock backend; installing it
    *  here (not at import) keeps the class file free of side effects. Swap
-   *  for `ServerApi.use(httpTransport(...))` to run against server-node. */
+   *  for `ServerApi.Class.use(httpTransport(...))` to run against server-node. */
   installMockServer() {
-    ServerApi.use(mockServerTransport);
+    ServerApi.Class.use(createMockServerTransport());
   }
 }
 

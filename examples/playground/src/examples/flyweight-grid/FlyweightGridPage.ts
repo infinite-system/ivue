@@ -45,15 +45,15 @@ class $FlyweightGridPage {
     );
 
     onMounted(() => {
-      this.censusTimer = setInterval(() => this.pollCensus(), 500);
+      this.timers.census = setInterval(() => this.pollCensus(), 500);
       this.installHarness();
     });
 
     // Timers die with the component (watchers are component-scoped already).
     if (getCurrentScope()) {
       onScopeDispose(() => {
-        if (this.censusTimer) clearInterval(this.censusTimer);
-        if (this.evictTimer) clearTimeout(this.evictTimer);
+        if (this.timers.census) clearInterval(this.timers.census);
+        if (this.timers.evict) clearTimeout(this.timers.evict);
       });
     }
   }
@@ -94,8 +94,10 @@ class $FlyweightGridPage {
   }
 
   // --- non-reactive infra (timers) ---
-  protected censusTimer: ReturnType<typeof setInterval> | null = null;
-  protected evictTimer: ReturnType<typeof setTimeout> | null = null;
+  protected readonly timers = {
+    census: null as ReturnType<typeof setInterval> | null,
+    evict: null as ReturnType<typeof setTimeout> | null,
+  };
 
   // --- derived (plain getters) ---
   get hasModel() {
@@ -147,6 +149,7 @@ class $FlyweightGridPage {
    * would rebuild ~520 facades per poll; cached, an unchanged window
    * returns the same array instance and the v-for never re-patches.
    */
+  // computed: render-suppression — see above
   get visibleRows(): ComputedRef<FlyweightGridPage.PageRow[]> {
     return computed(() => this.buildVisibleRows());
   }
@@ -203,7 +206,7 @@ class $FlyweightGridPage {
     if (!sheet) return [];
     const pageRows: FlyweightGridPage.PageRow[] = [];
     for (let row = this.startRow; row < this.endRow; row++) {
-      const cells: FlyweightCell.Instance[] = new Array(FlyweightLogic.Class.COLS);
+      const cells: FlyweightCell.Model[] = new Array(FlyweightLogic.Class.COLS);
       for (let col = 0; col < FlyweightLogic.Class.COLS; col++)
         cells[col] = new FlyweightCell.Class(sheet, row, col);
       pageRows.push({ row, cells });
@@ -243,7 +246,7 @@ class $FlyweightGridPage {
     return !!editing && editing.row === row && editing.col === col;
   }
 
-  edit(cell: FlyweightCell.Instance) {
+  edit(cell: FlyweightCell.Model) {
     this.editing.value = { row: cell.row, col: cell.col };
     this.draft.value = cell.source;
   }
@@ -261,8 +264,8 @@ class $FlyweightGridPage {
   }
 
   scheduleEviction() {
-    if (this.evictTimer) clearTimeout(this.evictTimer);
-    this.evictTimer = setTimeout(() => {
+    if (this.timers.evict) clearTimeout(this.timers.evict);
+    this.timers.evict = setTimeout(() => {
       const sheet = this.sheet.value;
       if (!sheet) return;
       sheet.evictOutsideRows(
@@ -327,6 +330,6 @@ export namespace FlyweightGridPage {
   /** One rendered row: its index plus the flyweight cells leased to it. */
   export interface PageRow {
     row: number;
-    cells: FlyweightCell.Instance[];
+    cells: FlyweightCell.Model[];
   }
 }

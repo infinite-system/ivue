@@ -22,6 +22,7 @@ import { ChooseField } from './ChooseField';
  * templates.
  */
 class $ContactField extends ChooseField.$Class {
+
   /* Contract — the choose-field contract, preconfigured for contacts:
      chips on, server search + pagination against '/contact',
      contact-shaped label/description priorities — plus one prop of its
@@ -72,6 +73,7 @@ class $ContactField extends ChooseField.$Class {
   // idiom (`declare` emits nothing at runtime; the base constructor
   // assigned these).
   declare props: ContactField.Props;
+
   declare emit: ContactField.Emits;
 
   /* Props */
@@ -98,16 +100,6 @@ class $ContactField extends ChooseField.$Class {
     return this.compact ? '12px' : '14px';
   }
 
-  /** Full mode shows the email line under the name — when there is one. */
-  /** The avatar's name for an option — empty while the option is unresolved. */
-  optionName(option: { name?: string } | null | undefined) {
-    return option?.name ?? '';
-  }
-
-  showEmail(option: { email?: string } | undefined): boolean {
-    return !this.compact && !!option?.email;
-  }
-
   /* Overrides — behavior extensions over the base, super-chained so an
      explicit prop always wins (ported v1 idiom) */
 
@@ -130,6 +122,16 @@ class $ContactField extends ChooseField.$Class {
       super.newValueMode ??
       (this.optionValue === 'email' ? 'add-unique' : super.newValueMode)
     );
+  }
+
+  /** Full mode shows the email line under the name — when there is one. */
+  /** The avatar's name for an option — empty while the option is unresolved. */
+  optionName(option: { name?: string } | null | undefined) {
+    return option?.name ?? '';
+  }
+
+  showEmail(option: { email?: string } | undefined): boolean {
+    return !this.compact && !!option?.email;
   }
 }
 

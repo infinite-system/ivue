@@ -4,12 +4,13 @@ import { Reactive } from '../../../ivue';
 import { Container } from './Container';
 
 class $InteractiveBox extends Container.$Class {
-  id: number;
 
   constructor(props: { id: number }) {
     super();
     this.id = props.id;
   }
+
+  readonly id: number;
 
   // --- Composition API Integrations ---
   // Using private getter to encapsulate the hook
@@ -20,6 +21,7 @@ class $InteractiveBox extends Container.$Class {
   get mouseX() {
     return this.$mouse.x;
   }
+
   get mouseY() {
     return this.$mouse.y;
   }
@@ -45,32 +47,50 @@ class $InteractiveBox extends Container.$Class {
   // --- Computed Inheritance & Overrides ---
 
   // 1. New Computed: Calculates geometry
+  // computed: stable-handle — read by the override chain below
   get area() {
-    return computed(() => this.width.value * this.height.value);
+    return computed(() => this.computeArea());
   }
 
   // 2. Override Computed: Chains up to Container -> BaseElement
+  // computed: stable-handle — the override chain reads super.diagnosticSummary.value
   override get diagnosticSummary() {
-    return computed(
-      () =>
-        `[Box #${this.id} Area:${this.area.value}] >> ` +
-        super.diagnosticSummary.value
-    );
+    return computed(() => this.describeBox());
   }
 
   // 3. Complex Computed: reactive setter/getter example
+  // computed: stable-handle — a writable v-model target
   get label() {
     return computed({
-      get: () => `Box-${this.id} (${this.width.value}x${this.height.value})`,
-      set: (val: string) => {
-        // Reverse logic: parsing a string to set width (just for demo)
-        const num = parseInt(val.replace(/\D/g, ''));
-        if (!isNaN(num)) this.width.value = num;
-      },
+      get: () => this.describeLabel(),
+      set: (text: string) => this.parseLabel(text),
     });
   }
 
+  // Testing string concatenation inheritance
+  override get typeChain() {
+    return super.typeChain + ' -> InteractiveBox';
+  }
+
   // --- Methods ---
+
+  computeArea() {
+    return this.width.value * this.height.value;
+  }
+
+  describeBox() {
+    return `[Box #${this.id} Area:${this.area.value}] >> ` + super.diagnosticSummary.value;
+  }
+
+  describeLabel() {
+    return `Box-${this.id} (${this.width.value}x${this.height.value})`;
+  }
+
+  /** Reverse logic: parsing a string to set width (just for demo). */
+  parseLabel(text: string) {
+    const parsed = parseInt(text.replace(/\D/g, ''));
+    if (!isNaN(parsed)) this.width.value = parsed;
+  }
 
   // Main update loop
   override refreshState() {
@@ -86,11 +106,6 @@ class $InteractiveBox extends Container.$Class {
     return Math.sqrt(
       Math.pow(this.width.value, 2) + Math.pow(this.height.value, 2)
     ) * Math.random();
-  }
-
-  // Testing string concatenation inheritance
-  override get typeChain() {
-    return super.typeChain + ' -> InteractiveBox';
   }
 }
 

@@ -39,13 +39,13 @@ export function useRowWindow(opts: RowWindowOptions) {
 
   /** The explicit list of row indices currently mounted in the DOM. */
   const visibleRows = computed(() => {
-    const arr: number[] = [];
-    for (let r = startRow.value; r < endRow.value; r++) arr.push(r);
-    return arr;
+    const rows: number[] = [];
+    for (let rowIndex = startRow.value; rowIndex < endRow.value; rowIndex++) rows.push(rowIndex);
+    return rows;
   });
 
-  const onScroll = (e: Event) => {
-    scrollTop.value = (e.target as HTMLElement).scrollTop;
+  const onScroll = (event: Event) => {
+    scrollTop.value = (event.target as HTMLElement).scrollTop;
   };
 
   return {

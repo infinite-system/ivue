@@ -17,15 +17,18 @@ import { FlyweightLogic } from '../FlyweightLogic';
 import type { FlyweightSheet } from './FlyweightSheet';
 
 class $FlyweightCell {
-  readonly sheet: FlyweightSheet.Instance;
-  readonly row: number;
-  readonly col: number;
 
-  constructor(sheet: FlyweightSheet.Instance, row: number, col: number) {
+  constructor(sheet: FlyweightSheet.Model, row: number, col: number) {
     this.sheet = sheet;
     this.row = row;
     this.col = col;
   }
+
+  readonly sheet: FlyweightSheet.Model;
+
+  readonly row: number;
+
+  readonly col: number;
 
   /** Resolved value — tracked point read through the sheet. */
   get value(): FlyweightLogic.CellValue {
@@ -57,5 +60,6 @@ class $FlyweightCell {
 export namespace FlyweightCell {
   export const $Class = $FlyweightCell;
   export let Class = Reactive($Class);
+  export type Model = InstanceType<typeof Class>; // raw-instance type — collections, parameters, returns
   export type Instance = typeof Class.Instance;
 }

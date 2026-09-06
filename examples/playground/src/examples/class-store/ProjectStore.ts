@@ -7,6 +7,7 @@ import { Static } from '../../Static';
 
 
 class $ProjectStore {
+
   /** The ONE store instance — a `$`-static, so it constructs on first
    *  read (after the app exists, immune to module-load order) and is
    *  cached on the receiver. It constructs through the namespace slot, so
@@ -31,11 +32,6 @@ class $ProjectStore {
     return 'ivue-example-project-store';
   }
 
-  /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
-    return this.constructor as typeof $ProjectStore;
-  }
-
   // Outliving instance: the store outlives every component, so watchers
   // registered here use $watch/$watchEffect (the instance's own scope).
   constructor() {
@@ -43,9 +39,15 @@ class $ProjectStore {
     this.$watchEffect(() => this.persist());
   }
 
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $ProjectStore;
+  }
+
   get projectName() {
     return ref('Apollo');
   }
+
   get tasks() {
     return shallowRef<ProjectStore.ProjectTask[]>([
       { id: 1, title: 'Design the flight plan', done: true },
@@ -53,6 +55,7 @@ class $ProjectStore {
       { id: 3, title: 'Run the countdown checklist', done: false },
     ]);
   }
+
   get filter() {
     return ref<ProjectStore.TaskFilter>('all');
   }
@@ -62,16 +65,20 @@ class $ProjectStore {
   get taskCount() {
     return this.tasks.value.length;
   }
+
   get completedCount() {
     return this.tasks.value.filter((task) => task.done).length;
   }
+
   get progressPercent() {
     const total = this.tasks.value.length;
     return total === 0 ? 0 : Math.round((this.completedCount / total) * 100);
   }
+
   get progressBarStyle() {
     return { width: `${this.progressPercent}%` };
   }
+
   get visibleTasks(): ProjectStore.ProjectTask[] {
     if (this.filter.value === 'active') {
       return this.tasks.value.filter((task) => !task.done);
@@ -95,6 +102,11 @@ class $ProjectStore {
     this.tasks.value = this.tasks.value.map((task) =>
       task.id === id ? { ...task, done: !task.done } : task,
     );
+  }
+
+  /** Cleanup for tests and hot swaps: stop the watchers, reset the cells. */
+  dispose() {
+    this.$stopEffects();
   }
 
   setFilter(filter: ProjectStore.TaskFilter) {

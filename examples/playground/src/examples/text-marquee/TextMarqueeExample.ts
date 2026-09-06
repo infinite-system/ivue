@@ -22,6 +22,11 @@ class $TextMarqueeExample {
    *  prose bank (one shared string in memory, ~400k characters). The
    *  marquee one-lines it — newlines and all — into a single scrolling line. */
   static get $bookText(): string {
+    return this.buildBookText();
+  }
+
+  /** Builds the book text — the `$bookText` cache calls this once per receiver. */
+  static buildBookText(): string {
     const chapters: string[] = [];
     for (let chapter = 1; chapter <= 200; chapter++) {
       const paragraphs: string[] = [`Chapter ${chapter}.`];

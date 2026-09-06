@@ -59,8 +59,8 @@ class $DerivedExample {
   }
 
   syncRunCounters() {
-    this.fahrenheitRunsShown.value = this.$thermo.fahrenheitRuns;
-    this.statusRunsShown.value = this.$thermo.statusRuns;
+    this.fahrenheitRunsShown.value = this.$thermo.runs.fahrenheit;
+    this.statusRunsShown.value = this.$thermo.runs.status;
   }
 
   reRender() {

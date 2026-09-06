@@ -4,6 +4,7 @@ import { Static } from '../../Static';
 import type { VirtualScroller } from './VirtualScroller';
 
 class $VirtualScrollerExample {
+
   static readonly ITEM_COUNT = 1_000_000;
 
   protected static readonly OPENERS = [
@@ -19,6 +20,11 @@ class $VirtualScrollerExample {
    *  variants — unique text per row would be hundreds of MB of strings.
    *  Built once per receiver. */
   protected static get $bodyVariants(): string[] {
+    return this.buildBodyVariants();
+  }
+
+  /** Builds the 24 body variants — the `$bodyVariants` cache calls this once per receiver. */
+  protected static buildBodyVariants(): string[] {
     const variants: string[] = [];
     for (let openerIndex = 0; openerIndex < this.OPENERS.length; openerIndex++) {
       for (let extraSentences = 0; extraSentences < 4; extraSentences++) {
@@ -90,6 +96,19 @@ class $VirtualScrollerExample {
     return this.isAutoPlaying ? 'autoplay on — scroll up to stop' : 'autoplay';
   }
 
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $VirtualScrollerExample;
+  }
+
+  get itemCount() {
+    return this.self.ITEM_COUNT;
+  }
+
+  get itemCountLabel() {
+    return this.itemCount.toLocaleString();
+  }
+
   jumpTo(index: number) {
     this.scroller.value?.scrollToIndex(index, undefined, true, 12);
   }
@@ -102,18 +121,6 @@ class $VirtualScrollerExample {
     } else {
       scroller.startAutoPlay(0);
     }
-  }
-
-  /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
-    return this.constructor as typeof $VirtualScrollerExample;
-  }
-
-  get itemCount() {
-    return this.self.ITEM_COUNT;
-  }
-  get itemCountLabel() {
-    return this.itemCount.toLocaleString();
   }
 
   jumpToEnd() {

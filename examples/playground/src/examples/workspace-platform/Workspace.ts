@@ -14,6 +14,7 @@ import {
 } from './types';
 
 class $Workspace {
+
   /** The app-wide workspace singleton — a `$`-static: constructed on
    *  first use through the namespace slot, after the app exists. */
   protected static get $shared(): Workspace.Model {
@@ -192,6 +193,8 @@ class $Workspace {
     );
   }
 
+  readonly statusOrder = STATUS_ORDER;
+
   memberById(memberId: string) {
     return this.members.value.find((member) => member.id === memberId);
   }
@@ -319,8 +322,6 @@ class $Workspace {
     this.clearFilters();
     this.nextTaskNumber.value = 500;
   }
-
-  statusOrder = STATUS_ORDER;
 }
 
 export namespace Workspace {

@@ -5,18 +5,18 @@ import { computed, reactive, ref } from 'vue';
 import { Box } from './Box';
 
 export class PlainBox {
-  w = 1;
-  h = 2;
+  width = 1;
+  height = 2;
   get area() {
-    return this.w * this.h;
+    return this.width * this.height;
   }
 }
 
 export const useBox = () => {
-  const w = ref(1);
-  const h = ref(2);
-  const area = computed(() => w.value * h.value);
-  return { w, h, area };
+  const width = ref(1);
+  const height = ref(2);
+  const area = computed(() => width.value * height.value);
+  return { width, height, area };
 };
 
 export const INSTANCE_COUNT = 100_000;

@@ -537,3 +537,41 @@ playground SFC imported by a docs embed makes its CSS site-wide. A dead
 playground CSS must be scoped (`.pane .x`) or use names VitePress cannot
 own; never `.text`, `.item`, `.link`, `.title`, `.caption`, `.content`.
 Check with the sidebar screenshot after adding any docs embed.
+
+## The playground baseline is gone — the skip-list is reasons only (2026-09-05)
+
+`skills/ivue/ivue-docs-skip.json` holds 11 rows and none is dated debt:
+vendored Lenis (`lenis/*`), the vendored engine copy (`src/ivue.ts`),
+and the creation benchmark's competitor arms (`creationBench.ts`, where
+`reactive(new PlainBox())` IS the measured thing). Every other file under
+the docs components and the playground passes the gate unmodified.
+
+How the last 174 went, for the next sweep of this kind:
+- Member ORDER is an AST move, never a hand edit: parse the class, rank
+  members (statics, constructor, getters/fields, methods), re-emit each
+  group in original order with a blank line between members, and prove
+  the result is a pure move by comparing sorted non-whitespace characters
+  before/after (`scratchpad/reorder.ts` pattern). 17 classes, zero
+  behavior risk.
+- Renames are METHOD-scoped, never file-wide: find the enclosing block
+  by brace balancing and rename inside it with a `(?<![\w$.])name(?![\w$])`
+  guard. Two collisions to expect: a loop variable renamed to a name the
+  body already declares (`i` → `index` where `const index = …` exists —
+  pick `slot`), and object KEYS that share the variable's name
+  (`{ r, c }`, `['fn']`) — rename the key everywhere or leave it.
+- A `computed()` the demo exists to show (a computed chain, the
+  getter-vs-computed demo, the ONE hot cell value) is justified with the
+  `// computed: expensive | render-suppression | stable-handle` token
+  and its body delegates to a level-specific method (`computeBaseTotal`,
+  `computeDiscountedTotal` — never one name overridden down the chain, or
+  the base computed dispatches to the child and recurses).
+- Non-reactive bookkeeping (timers, a dep tracer on a hot path) lives in
+  a `readonly` holder object (`readonly timers = { census: null, … }`),
+  NOT a shallowRef: a `.value` read inside cell evaluation would make
+  every cell depend on the tracer.
+- A store that outlives components gets `dispose() { this.$stopEffects() }`
+  even if nothing calls it yet — the gate wants the path to exist.
+- A module that exports a behavioral OBJECT (`export const Api = { … }`)
+  becomes a Static class with its types in the namespace; a transport
+  object becomes a factory function (`createMockServerTransport()`), which
+  keeps its module a plain module.

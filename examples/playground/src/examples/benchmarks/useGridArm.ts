@@ -56,10 +56,10 @@ export function useGridArm<T>(
     editing.value = null;
     const t0 = performance.now();
     const rows: T[][] = new Array(rowCount);
-    for (let r = 0; r < rowCount; r++) {
+    for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
       const row: T[] = new Array(COLS);
-      for (let c = 0; c < COLS; c++) row[c] = makeRow(r, c);
-      rows[r] = row;
+      for (let columnIndex = 0; columnIndex < COLS; columnIndex++) row[columnIndex] = makeRow(rowIndex, columnIndex);
+      rows[rowIndex] = row;
     }
     creationMs.value = performance.now() - t0;
     model.value = rows;
@@ -67,20 +67,20 @@ export function useGridArm<T>(
   }
 
   /** The visible row-sum: reads the hot derived numeric value of every cell. */
-  function rowSum(r: number): number {
-    const row = model.value[r];
+  function rowSum(rowIndex: number): number {
+    const row = model.value[rowIndex];
     if (!row) return 0;
-    let s = 0;
-    for (let c = 0; c < row.length; c++) s += readNumeric(row[c]);
-    return s;
+    let sum = 0;
+    for (let columnIndex = 0; columnIndex < row.length; columnIndex++) sum += readNumeric(row[columnIndex]);
+    return sum;
   }
 
   // --- click-to-edit ---
-  const editing = ref<{ r: number; c: number } | null>(null);
-  const isEditing = (r: number, c: number) =>
-    !!editing.value && editing.value.r === r && editing.value.c === c;
-  const edit = (r: number, c: number) => {
-    editing.value = { r, c };
+  const editing = ref<{ rowIndex: number; columnIndex: number } | null>(null);
+  const isEditing = (rowIndex: number, columnIndex: number) =>
+    !!editing.value && editing.value.rowIndex === rowIndex && editing.value.columnIndex === columnIndex;
+  const edit = (rowIndex: number, columnIndex: number) => {
+    editing.value = { rowIndex, columnIndex };
   };
   const commitEdit = () => {
     editing.value = null;

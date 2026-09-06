@@ -4,7 +4,7 @@
 // MockServer transport (localStorage data + IndexedDB media), and the same
 // components run unchanged against a real HTTP backend — see
 // server-node/server.mjs for a reference Express implementation of this
-// exact contract. Swap transports with ServerApi.use(httpTransport(baseUrl)).
+// exact contract. Swap transports with ServerApi.Class.use(httpTransport(baseUrl)).
 //
 // The wire contract (shared by mock and real servers):
 //   list endpoints:  GET <path>?filters=<expr>&sort=<col:asc,..>&page=&rowsPerPage=
@@ -14,115 +14,115 @@
 //   media upload:    POST /media/upload (multipart) → { data: MediaRow[] }
 //   media bytes:     GET /media/file/<key> → the file (or a redirect to it)
 
-export interface Pagination {
-  page: number;
-  rowsPerPage: number;
-  rowsNumber: number;
-}
+import { Static } from '../../../Static';
 
-export interface ListResult<Row = any> {
-  data: Row[];
-  pagination?: Pagination;
-}
+class $ServerApi {
+  /** The installed transport — the mock by default; an HTTP transport in real apps. */
+  protected static transport: ServerApi.ServerTransport | null = null;
 
-export interface MediaRow {
-  id: string;
-  key: string;
-  name: string;
-  mimetype: string;
-  size: number;
-  /** Resolvable URL for the bytes — `/media/file/<key>` on a real server. */
-  url: string;
-  /** Resolvable URL for a reduced-size preview when the type supports one. */
-  thumbnailUrl: string;
-  createdAt: string;
-}
+  /** Install a transport. */
+  static use(nextTransport: ServerApi.ServerTransport) {
+    this.transport = nextTransport;
+  }
 
-export interface RequestOptions {
-  query?: string;
-  payload?: any;
-  /** Multipart file payload for media uploads. */
-  files?: File[];
-}
-
-export interface ServerTransport {
-  request(
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
-    path: string,
-    options?: RequestOptions,
-  ): Promise<any>;
-}
-
-let transport: ServerTransport | null = null;
-
-/** The response envelope is `{ data, pagination? }` — unwrap like an app would. */
-const unwrap = (response: any) => response?.data ?? response;
-
-export const ServerApi = {
-  /** Install a transport (the mock by default; an HTTP transport in real apps). */
-  use(nextTransport: ServerTransport) {
-    transport = nextTransport;
-  },
-
-  get active(): ServerTransport {
-    if (!transport) {
-      throw new Error(
-        'ServerApi has no transport — call ServerApi.use(...) first.',
-      );
+  static get active(): ServerApi.ServerTransport {
+    if (!this.transport) {
+      throw new Error('ServerApi has no transport — call ServerApi.Class.use(...) first.');
     }
-    return transport;
-  },
+    return this.transport;
+  }
 
-  async getCustom(path: string): Promise<any> {
-    return unwrap(await this.active.request('GET', path));
-  },
+  /** The response envelope is `{ data, pagination? }` — unwrap like an app would. */
+  static unwrap(response: any) {
+    return response?.data ?? response;
+  }
+
+  static async getCustom(path: string): Promise<any> {
+    return this.unwrap(await this.active.request('GET', path));
+  }
 
   /** List call that PRESERVES the pagination envelope. */
-  async getPaginated<Row = any>(path: string): Promise<ListResult<Row>> {
+  static async getPaginated<Row = any>(path: string): Promise<ServerApi.ListResult<Row>> {
     const response = await this.active.request('GET', path);
     return {
       data: response?.data ?? response ?? [],
       pagination: response?.pagination,
     };
-  },
+  }
 
-  async postCustom(path: string, payload?: any): Promise<any> {
-    return unwrap(await this.active.request('POST', path, { payload }));
-  },
+  static async postCustom(path: string, payload?: any): Promise<any> {
+    return this.unwrap(await this.active.request('POST', path, { payload }));
+  }
 
-  async putCustom(path: string, payload?: any): Promise<any> {
-    return unwrap(await this.active.request('PUT', path, { payload }));
-  },
+  static async putCustom(path: string, payload?: any): Promise<any> {
+    return this.unwrap(await this.active.request('PUT', path, { payload }));
+  }
 
-  async deleteCustom(path: string): Promise<any> {
-    return unwrap(await this.active.request('DELETE', path));
-  },
+  static async deleteCustom(path: string): Promise<any> {
+    return this.unwrap(await this.active.request('DELETE', path));
+  }
 
-  media: {
-    async upload(files: File[], name?: string): Promise<MediaRow[]> {
-      const response = await ServerApi.active.request(
-        'POST',
-        '/media/upload',
-        { files, payload: { name } },
-      );
-      return response?.data ?? response ?? [];
-    },
+  /* Media endpoints */
 
-    async get(ids: string[]): Promise<MediaRow[]> {
-      const query = ids.map((id, index) => `ids[${index}]=${id}`).join('&');
-      return (await ServerApi.getCustom(`/media?${query}`)) ?? [];
-    },
+  static async uploadMedia(files: File[], name?: string): Promise<ServerApi.MediaRow[]> {
+    const response = await this.active.request('POST', '/media/upload', { files, payload: { name } });
+    return response?.data ?? response ?? [];
+  }
 
-    async update(payload: {
-      id: string;
-      name?: string;
-      caption?: string;
-    }): Promise<MediaRow> {
-      return await ServerApi.postCustom('/media/update', payload);
-    },
+  static async getMedia(ids: string[]): Promise<ServerApi.MediaRow[]> {
+    const query = ids.map((id, index) => `ids[${index}]=${id}`).join('&');
+    return (await this.getCustom(`/media?${query}`)) ?? [];
+  }
 
-    async remove(id: string): Promise<void> {
-      await ServerApi.deleteCustom(`/media/${id}`);
-    },
-  },
-};
+  static async updateMedia(payload: { id: string; name?: string; caption?: string }): Promise<ServerApi.MediaRow> {
+    return await this.postCustom('/media/update', payload);
+  }
+
+  static async removeMedia(id: string): Promise<void> {
+    await this.deleteCustom(`/media/${id}`);
+  }
+}
+
+export namespace ServerApi {
+  export const $Class = Static($ServerApi); // raw — children extend this
+  export let Class = $Class; // selected — callers read this
+
+  export interface Pagination {
+    page: number;
+    rowsPerPage: number;
+    rowsNumber: number;
+  }
+
+  export interface ListResult<Row = any> {
+    data: Row[];
+    pagination?: Pagination;
+  }
+
+  export interface MediaRow {
+    id: string;
+    key: string;
+    name: string;
+    mimetype: string;
+    size: number;
+    /** Resolvable URL for the bytes — `/media/file/<key>` on a real server. */
+    url: string;
+    /** Resolvable URL for a reduced-size preview when the type supports one. */
+    thumbnailUrl: string;
+    createdAt: string;
+  }
+
+  export interface RequestOptions {
+    query?: string;
+    payload?: any;
+    /** Multipart file payload for media uploads. */
+    files?: File[];
+  }
+
+  export interface ServerTransport {
+    request(
+      method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+      path: string,
+      options?: RequestOptions,
+    ): Promise<any>;
+  }
+}

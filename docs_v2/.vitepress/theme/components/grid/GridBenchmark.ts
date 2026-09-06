@@ -11,7 +11,7 @@ import type { Ref } from 'vue';
 import { ref } from 'vue';
 import { Reactive } from '../../../../../lib/Reactive';
 import { Static } from '../../../../../lib/Static';
-import { Cell } from '../../../../../examples/playground/src/examples/benchmarks/IvueCell';
+import { IvueCell } from '../../../../../examples/playground/src/examples/benchmarks/IvueCell';
 import { createComposableCell } from '../../../../../examples/playground/src/examples/benchmarks/composableCell';
 import { createPojoCell } from '../../../../../examples/playground/src/examples/benchmarks/pojoCell';
 import {
@@ -257,7 +257,7 @@ class $GridBenchmark {
   }
 
   makeIvueCell(row: number, col: number) {
-    return new Cell.Class(row, col, initialRaw(row, col));
+    return new IvueCell.Class(row, col, initialRaw(row, col));
   }
 
   makePojoCell(row: number, col: number) {

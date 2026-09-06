@@ -888,7 +888,13 @@ class $CheckStandard {
           if (!ts.isPropertyAccessExpression(node) || !ts.isIdentifier(node.expression)) return;
           if (!imported.has(node.expression.text)) return;
           if (node.name.text !== 'Class' && node.name.text !== '$Class') return;
-          if (node.parent && ts.isExpressionWithTypeArguments(node.parent) && node.name.text === '$Class') return;
+          if (node.name.text === '$Class') {
+            // `extends X.$Class` — also through a cast, `extends (X.$Class as typeof X.$Class)<T>`,
+            // which a generic subclass needs to keep its type parameter
+            let heritage: ts.Node = node.parent;
+            while (heritage && (ts.isAsExpression(heritage) || ts.isParenthesizedExpression(heritage))) heritage = heritage.parent;
+            if (heritage && ts.isExpressionWithTypeArguments(heritage)) return;
+          }
           if (this.isInsideFunctionBody(node)) return;
           findings.push(this.finding(this.cross_module_class_reads_happen_inside_bodies, unit, this.lineOf(unit, node), `\`${node.getText(unit.ast)}\` is read at module evaluation — read it inside a getter or method body (any load order then resolves)`));
         });

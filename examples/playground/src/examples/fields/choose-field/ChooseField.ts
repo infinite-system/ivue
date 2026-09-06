@@ -31,6 +31,7 @@ import { ServerApi } from '../server/ServerApi';
 import { Field } from '../Field';
 
 class $ChooseField extends Field.$Class {
+
   /** Sentinel `value` of the synthetic "Create …" option row — a live
    *  static knob (no `$`): a subclass can re-key it. */
   static get createOptionValue() {
@@ -93,7 +94,6 @@ class $ChooseField extends Field.$Class {
       icon: { type: String as PropType<string> },
       /** Variants */
       variants: { type: Array as PropType<ChooseField.Variant[]> },
-
 
       /** Fetch */
       fetchPath: { type: String as PropType<string> },
@@ -237,33 +237,43 @@ class $ChooseField extends Field.$Class {
   get selectEl() {
     return ref<QSelect | null>(null);
   }
+
   get displayedOptions() {
     return shallowRef<ChooseField.Option[]>([]);
   }
+
   get fetchedOptions() {
     return shallowRef<ChooseField.KeyValueRow[]>([]);
   }
+
   get searchTerm() {
     return ref('');
   }
+
   get fetchPage() {
     return ref(1);
   }
+
   get fetchedPages() {
     return shallowRef<Record<number, true>>({});
   }
+
   get lastFetchedCount() {
     return ref(0);
   }
+
   get fetching() {
     return ref(false);
   }
+
   get creating() {
     return ref(false);
   }
+
   get errorMessage() {
     return ref('');
   }
+
   get activeVariantIndex() {
     return ref(-1);
   }
@@ -272,9 +282,10 @@ class $ChooseField extends Field.$Class {
    * v-model proxy — the ONE computed(): a writable ref handle the SFC
    * destructures for `v-model`; its setter intercepts the create sentinel.
    */
+  // computed: stable-handle — the v-model target the SFC destructures
   get model() {
     return computed({
-      get: () => this.props.modelValue,
+      get: () => this.readModel(),
       set: (value: any) => this.onModelWrite(value),
     });
   }
@@ -284,78 +295,103 @@ class $ChooseField extends Field.$Class {
   get multiple() {
     return this.props.multiple;
   }
+
   get useChips() {
     return this.props.useChips;
   }
+
   get useInput() {
     return this.props.useInput;
   }
+
   get inputDebounce() {
     return this.props.inputDebounce;
   }
+
   get dropdownIcon() {
     return this.props.dropdownIcon;
   }
+
   get options() {
     return this.props.options;
   }
+
   get optionValue() {
     return this.props.optionValue;
   }
+
   get optionsCover() {
     return this.props.optionsCover;
   }
+
   get prependOptions() {
     return this.props.prependOptions;
   }
+
   get appendOptions() {
     return this.props.appendOptions;
   }
+
   get clearable() {
     return this.props.clearable;
   }
+
   get clearIcon() {
     return this.props.clearIcon;
   }
+
   get newValueMode() {
     return this.props.newValueMode;
   }
+
   get optionClass() {
     return this.props.optionClass;
   }
+
   get icon() {
     return this.props.icon;
   }
+
   get variants() {
     return this.props.variants;
   }
+
   get label() {
     return this.props.label;
   }
+
   get dense() {
     return this.props.dense;
   }
+
   get disable() {
     return this.props.disable;
   }
+
   get readonly() {
     return this.props.readonly;
   }
+
   get outlined() {
     return this.props.outlined;
   }
+
   get fetchPath() {
     return this.props.fetchPath;
   }
+
   get fetchScrollThreshold() {
     return this.props.fetchScrollThreshold;
   }
+
   get fetchRowsPerPage() {
     return this.props.fetchRowsPerPage;
   }
+
   get createPath() {
     return this.props.createPath;
   }
+
   get createEntityAsOption() {
     return this.props.createEntityAsOption;
   }
@@ -365,27 +401,35 @@ class $ChooseField extends Field.$Class {
   get hint() {
     return this.readonly ? undefined : this.props.hint;
   }
+
   get hideDropdownIcon() {
     return this.readonly || this.props.hideDropdownIcon;
   }
+
   get loading() {
     return this.props.loading || this.fetching.value || this.creating.value;
   }
+
   get createLabel() {
     return this.props.createLabel || 'Create new';
   }
+
   get fetchOnFocus() {
     return !!this.fetchPath && this.props.fetchOnFocus;
   }
+
   get fetchSearch() {
     return !!this.fetchPath && this.props.fetchSearch;
   }
+
   get fetchPagination() {
     return !!this.fetchPath && this.props.fetchPagination;
   }
+
   get useFetchSearch() {
     return this.fetchSearch || this.fetchPagination;
   }
+
   get canCreate() {
     return !!this.createPath;
   }
@@ -395,6 +439,7 @@ class $ChooseField extends Field.$Class {
   get chipBorderRadius() {
     return this.props.roundChips ? '50px' : '5px';
   }
+
   get chipClass() {
     return [{ 'ivue-chip__singular': !this.multiple }, this.props.chipClass];
   }
@@ -406,6 +451,7 @@ class $ChooseField extends Field.$Class {
       ? this.variants[this.activeVariantIndex.value]
       : undefined;
   }
+
   get defaultActiveVariantIndex() {
     const index = this.variants.findIndex((variant) => variant.default);
     return index === -1 && this.variants.length ? 0 : index;
@@ -415,12 +461,15 @@ class $ChooseField extends Field.$Class {
   get fetchFilters() {
     return this.activeVariant?.fetchFilters ?? this.props.fetchFilters;
   }
+
   get fetchSort() {
     return this.activeVariant?.fetchSort ?? this.props.fetchSort;
   }
+
   get optionFilters(): ChooseField.OptionFilter[] {
     return this.activeVariant?.optionFilters ?? this.props.optionFilters;
   }
+
   get optionSort() {
     return this.activeVariant?.optionSort ?? this.props.optionSort;
   }
@@ -428,6 +477,86 @@ class $ChooseField extends Field.$Class {
   /** The variant switcher only renders when there is a choice to make. */
   get hasVariants() {
     return this.variants.length > 1;
+  }
+
+  // --- server query (derived, all plain) ---
+
+  /** Search text lowercased with single quotes doubled (safe in the filter grammar). */
+  get escapedSearchTerm() {
+    return this.searchTerm.value.toLowerCase().replaceAll("'", "''");
+  }
+
+  /** `name ILIKE '%term%' OR id::TEXT ILIKE '%term%'` — the server search expression. */
+  get fetchSearchQuery() {
+    if (!this.useFetchSearch || this.searchTerm.value === '') return '';
+    const term = this.escapedSearchTerm;
+    return `name ILIKE '%${term}%' OR id::TEXT ILIKE '%${term}%'`;
+  }
+
+  /** fetchFilters and the search expression, each parenthesized, ANDed together. */
+  get fetchFiltersQuery() {
+    if (this.fetchFilters && this.fetchSearchQuery) {
+      return `(${this.fetchFilters}) AND (${this.fetchSearchQuery})`;
+    }
+    return this.fetchFilters || this.fetchSearchQuery;
+  }
+
+  get fetchPathQuery() {
+    const queries: string[] = [];
+    if (this.fetchPagination) {
+      queries.push(`page=${this.fetchPage.value}`);
+      queries.push(`rowsPerPage=${this.fetchRowsPerPage}`);
+    }
+    if (this.fetchFiltersQuery) {
+      queries.push(`filters=${encodeURIComponent(this.fetchFiltersQuery)}`);
+    }
+    if (this.fetchSort) {
+      queries.push(`sort=${encodeURIComponent(this.fetchSort)}`);
+    }
+    return queries.join('&');
+  }
+
+  get fetchFullPath() {
+    const [path, ...queryParts] = this.fetchPath.split('?');
+    const baseQuery = queryParts.length ? `?${queryParts.join('?')}` : '';
+    if (!this.fetchPathQuery) return path + baseQuery;
+    return path + (baseQuery ? `${baseQuery}&` : '?') + this.fetchPathQuery;
+  }
+
+  /** Watch signatures — change means "the query is different now". */
+  get serverQuerySignature() {
+    return `${this.fetchFilters}|${this.fetchSort}`;
+  }
+
+  get clientQuerySignature() {
+    return `${JSON.stringify(this.optionFilters)}|${this.optionSort}`;
+  }
+
+  // --- options resolution (derived, all plain) ---
+
+  /** Either the fetched result set or the static options prop, plus pre/append. */
+  get resolvedOptions(): ChooseField.Option[] {
+    return [
+      ...this.prependOptions,
+      ...(this.fetchPath ? this.fetchedOptions.value : this.options),
+      ...this.appendOptions,
+    ];
+  }
+
+  get hasMoreToFetch() {
+    return this.lastFetchedCount.value === this.fetchRowsPerPage;
+  }
+
+  get labelKeys() {
+    return this.props.optionLabel
+      ? [this.props.optionLabel]
+      : this.props.optionLabelPriority;
+  }
+
+  get descriptionKeys() {
+    return this.props.optionDescription
+      ? [this.props.optionDescription]
+      : this.props.optionDescriptionPriority;
   }
 
   isActiveVariant(index: number) {
@@ -487,73 +616,6 @@ class $ChooseField extends Field.$Class {
     return this.canCreate && !!scope.inputValue;
   }
 
-  // --- server query (derived, all plain) ---
-
-  /** Search text lowercased with single quotes doubled (safe in the filter grammar). */
-  get escapedSearchTerm() {
-    return this.searchTerm.value.toLowerCase().replaceAll("'", "''");
-  }
-
-  /** `name ILIKE '%term%' OR id::TEXT ILIKE '%term%'` — the server search expression. */
-  get fetchSearchQuery() {
-    if (!this.useFetchSearch || this.searchTerm.value === '') return '';
-    const term = this.escapedSearchTerm;
-    return `name ILIKE '%${term}%' OR id::TEXT ILIKE '%${term}%'`;
-  }
-
-  /** fetchFilters and the search expression, each parenthesized, ANDed together. */
-  get fetchFiltersQuery() {
-    if (this.fetchFilters && this.fetchSearchQuery) {
-      return `(${this.fetchFilters}) AND (${this.fetchSearchQuery})`;
-    }
-    return this.fetchFilters || this.fetchSearchQuery;
-  }
-
-  get fetchPathQuery() {
-    const queries: string[] = [];
-    if (this.fetchPagination) {
-      queries.push(`page=${this.fetchPage.value}`);
-      queries.push(`rowsPerPage=${this.fetchRowsPerPage}`);
-    }
-    if (this.fetchFiltersQuery) {
-      queries.push(`filters=${encodeURIComponent(this.fetchFiltersQuery)}`);
-    }
-    if (this.fetchSort) {
-      queries.push(`sort=${encodeURIComponent(this.fetchSort)}`);
-    }
-    return queries.join('&');
-  }
-
-  get fetchFullPath() {
-    const [path, ...queryParts] = this.fetchPath.split('?');
-    const baseQuery = queryParts.length ? `?${queryParts.join('?')}` : '';
-    if (!this.fetchPathQuery) return path + baseQuery;
-    return path + (baseQuery ? `${baseQuery}&` : '?') + this.fetchPathQuery;
-  }
-
-  /** Watch signatures — change means "the query is different now". */
-  get serverQuerySignature() {
-    return `${this.fetchFilters}|${this.fetchSort}`;
-  }
-  get clientQuerySignature() {
-    return `${JSON.stringify(this.optionFilters)}|${this.optionSort}`;
-  }
-
-  // --- options resolution (derived, all plain) ---
-
-  /** Either the fetched result set or the static options prop, plus pre/append. */
-  get resolvedOptions(): ChooseField.Option[] {
-    return [
-      ...this.prependOptions,
-      ...(this.fetchPath ? this.fetchedOptions.value : this.options),
-      ...this.appendOptions,
-    ];
-  }
-
-  get hasMoreToFetch() {
-    return this.lastFetchedCount.value === this.fetchRowsPerPage;
-  }
-
   // --- fetch ---
 
   /** Object model values display in the input before the first fetch lands. */
@@ -578,7 +640,7 @@ class $ChooseField extends Field.$Class {
       [this.fetchPage.value]: true,
     };
     try {
-      const result = await ServerApi.getPaginated<ChooseField.KeyValueRow>(
+      const result = await ServerApi.Class.getPaginated<ChooseField.KeyValueRow>(
         this.fetchFullPath,
       );
       this.lastFetchedCount.value = result.data.length;
@@ -708,25 +770,16 @@ class $ChooseField extends Field.$Class {
     }
     return String(this.firstPresentValue(option, this.labelKeys) ?? '');
   }
+
   optionDescriptionOf(option: ChooseField.Option): string {
     if (typeof option !== 'object' || option === null) return '';
     return String(this.firstPresentValue(option, this.descriptionKeys) ?? '');
   }
+
   optionIconOf(option: ChooseField.Option): string {
     return typeof option === 'object' && option !== null
       ? ((option as ChooseField.KeyValueRow).icon ?? '')
       : '';
-  }
-
-  get labelKeys() {
-    return this.props.optionLabel
-      ? [this.props.optionLabel]
-      : this.props.optionLabelPriority;
-  }
-  get descriptionKeys() {
-    return this.props.optionDescription
-      ? [this.props.optionDescription]
-      : this.props.optionDescriptionPriority;
   }
 
   firstPresentValue(row: ChooseField.KeyValueRow, keys: string[]) {
@@ -794,7 +847,7 @@ class $ChooseField extends Field.$Class {
     }
     this.creating.value = true;
     try {
-      const created = await ServerApi.postCustom(this.createPath, { name });
+      const created = await ServerApi.Class.postCustom(this.createPath, { name });
       this.fetchedOptions.value = [created, ...this.fetchedOptions.value];
       this.searchTerm.value = '';
       this.selectEl.value?.updateInputValue('', true);
@@ -851,6 +904,10 @@ class $ChooseField extends Field.$Class {
   // --- model value ---
 
   /** All writes route here: intercept the create sentinel, pass the rest through. */
+  readModel() {
+    return this.props.modelValue;
+  }
+
   onModelWrite(value: any) {
     const isArrayValue = Array.isArray(value);
     const lastAdded = isArrayValue ? value[value.length - 1] : value;
