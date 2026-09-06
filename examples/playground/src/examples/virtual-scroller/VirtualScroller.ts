@@ -160,13 +160,17 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   protected static readonly RENDER_BIAS_CHUNK = 65536;
 
   /**
-   * Device-pixel snap for LANDINGS (spacers, seeks/jumps): a resting
-   * position on the grid keeps text crisp. The snap policy is "motion is
-   * fractional, landings snap" — continuous MOTION paths (the wheel lerp in
+   * Device-pixel snap for LANDINGS (seeks/jumps): a resting position on
+   * the grid keeps text crisp. The snap policy is "motion is fractional,
+   * landings snap" — continuous MOTION paths (the wheel lerp in
    * lenis.setScroll, the reading creep via snapRender=false) deliberately
    * bypass this: snapped sub-device-pixel-per-frame motion degenerates into
    * whole-pixel ticks at visible rates, while fractional translateY is
-   * filtered by the compositor into an apparent glide. Safe at any depth —
+   * filtered by the compositor into an apparent glide. The SPACERS never
+   * snap either: they change mid-motion at every window move, and a
+   * spacer rounded to the grid while the transform under it is fractional
+   * hops the visible content by its rounding error (up to half a device
+   * pixel, measured) exactly when the window advances. Safe at any depth —
    * renderBias keeps rendered offsets ≤ ~131k px, where f32 resolves both
    * integers and fractions.
    */
@@ -507,19 +511,16 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return ref(0);
   }
 
+  // invariant: The two spacers and the rendered rows sum to the extent (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  /** Fractional on purpose — a row sum is fractional whenever a row is,
+   *  and a snapped spacer hops the content at every window move (see
+   *  snapForRender). */
   get leadingSpacerPx() {
-    return (
-      this.self.snapForRender(Math.max(0, this.leadingSpacerSize.value - this.renderBias.value)) +
-      'px'
-    );
+    return Math.max(0, this.leadingSpacerSize.value - this.renderBias.value) + 'px';
   }
 
   get trailingSpacerPx() {
-    return (
-      this.self.snapForRender(
-        Math.min(this.self.TRAILING_SPACER_RENDER_CAP, this.trailingSpacerSize.value)
-      ) + 'px'
-    );
+    return Math.min(this.self.TRAILING_SPACER_RENDER_CAP, this.trailingSpacerSize.value) + 'px';
   }
 
   /**

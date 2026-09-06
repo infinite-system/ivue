@@ -16,6 +16,7 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If a pixel offset is asked for its item, then anchoring that item at the returned fraction gives the same pixel back.
 // domain-invariant: $VirtualScroller — If the window changes, then itemsChanged fires once with the padded bounds; a scroll that keeps the window fires nothing.
 // domain-invariant: $VirtualScroller — If the vertical seams are read, then they name the y axis: translateY and deltaY.
+// domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded; only a landing snaps.
 Impossible if true: A rendered scroll position beyond the extent.
 Impossible if true: An item outside the list with a position.
 Impossible if true: A window whose spacers plus rows sum to anything but the extent.
@@ -249,6 +250,17 @@ test('the two spacers and the rendered rows add up to the extent, and the traili
   expect(trailing).toBe(3000 - 210 - 330);
   // … and the RENDERED trailing spacer is capped.
   expect(parseFloat(instance.trailingSpacerPx)).toBe(instance.probeTrailingCap());
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded; only a landing snaps.
+test('a fractional row above the window keeps the leading spacer fractional — a snapped spacer would hop the content at every window move', () => {
+  const { instance, unmount } = scroller(rows(100), { assumedSize: 30 });
+  instance.syncItemSize(1, 30.375);
+  instance.setScrollPosition(-300, false);
+  instance.visibleItems.value;
+  // Row 1 is 0.375 px taller, so row 10 starts past 300 and the window starts a row earlier.
+  expect(instance.leadingSpacerPx).toBe(`${5 * 30 + 30.375}px`);
   unmount();
 });
 

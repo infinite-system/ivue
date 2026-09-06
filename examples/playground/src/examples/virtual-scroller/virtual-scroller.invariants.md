@@ -229,15 +229,15 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Scope:** `VirtualScroller.ts` `computeVisibleItems` (the spacer writes), `leadingSpacerPx`, `trailingSpacerPx`, `TRAILING_SPACER_RENDER_CAP`, and `lenis.virtualLimit`.
 
-**Mechanism:** The walk writes both spacer sizes on every evaluation, even when the window is unchanged, because a size correction above the window moves only the lead. The rendered tail is capped so the composited layer stays a few hundred k px regardless of list size; the scroll range comes from the computed extent through `virtualLimit`, not from the DOM.
+**Mechanism:** The walk writes both spacer sizes on every evaluation, even when the window is unchanged, because a size correction above the window moves only the lead. Both render FRACTIONAL: a row sum is fractional whenever a row is, the transform under it is fractional in motion, and a spacer rounded to the device grid would hop the visible content by its rounding error at every window move (measured up to 0.53 px on 111.375 px rows). The rendered tail is capped so the composited layer stays a few hundred k px regardless of list size; the scroll range comes from the computed extent through `virtualLimit`, not from the DOM.
 
 **Generates:** The content-sized inner layer (no explicit size in `VirtualScroller.vue`); the scrollbar geometry, which is computed over the virtual position.
 
-**Rejected alternatives:** Rendering the true tail — a ~10M px layer on a 100k-item post, felt as compositor heaviness.
+**Rejected alternatives:** Rendering the true tail — a ~10M px layer on a 100k-item post, felt as compositor heaviness. Snapping the leading spacer to the device grid for crisp text — only the first row would be on the grid anyway, and every window move became a sub-pixel hop.
 
-**Evidence:** `VirtualScroller.ts` `computeVisibleItems`, `trailingSpacerPx`. Test: "the two spacers and the rendered rows add up to the extent, and the trailing spacer renders capped".
+**Evidence:** `VirtualScroller.ts` `computeVisibleItems`, `leadingSpacerPx`. Tests: "the two spacers and the rendered rows add up to the extent, and the trailing spacer renders capped", "a fractional row above the window keeps the leading spacer fractional — a snapped spacer would hop the content at every window move". Probe: 0 hops over two flicks after the change, 3 and 2 before.
 
-**Impossible if true:** A window whose spacers plus rows sum to anything but the extent. A rendered trailing spacer above the cap.
+**Impossible if true:** A window whose spacers plus rows sum to anything but the extent. A rendered trailing spacer above the cap. A rendered spacer that differs from its size by a rounding.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "add up to the extent"`
 

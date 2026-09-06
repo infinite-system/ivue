@@ -641,3 +641,19 @@ exit 0 (dist/ artifacts, GitHub-URL contract links in
 sibling rule). Born-red discipline: plant one defect per spec file
 (`cp X.ts X.ts.bak`, sed the plant, run the spec, `mv` back) and record
 the red count — every one of the nine went red on its plant.
+
+## Spacers never snap — the sub-pixel hop
+
+The docs scroller had a subtle, intermittent ~1 px hop during otherwise
+smooth wheel glides. Cause: `leadingSpacerPx` was device-pixel snapped
+(filed under "landings snap") while the transform under it was fractional
+and the rows are 111.375 px tall — at every window move the spacer's
+rounding error changed and the visible content hopped by it (measured
+−0.157/+0.25/−0.531 px, each on a window-moved frame with an integer
+spacer). The realized post player never snapped anything. Rule: only the
+transform snaps, and only when a seek lands; spacers are fractional like
+the row sums they are. Probe: follow one row's `getBoundingClientRect().top`
+per frame and compare its delta to the transform's delta — any difference
+above 0.05 px is a hop, and the frame's `windowMoved` flag names the cause.
+Frame-timing and velocity-series probes could NOT see this; position
+continuity could.

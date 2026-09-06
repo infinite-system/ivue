@@ -210,8 +210,9 @@ const settle = (p, ms = 300) => p.waitForTimeout(ms);
   await step('ExampleVirtualScroller (drag-select + copy)', async () => {
     const frame = p.locator('.evs-frame .virtual-scroller').first(); await frame.scrollIntoViewIfNeeded(); const fb = await frame.boundingBox();
     const rows = p.locator('.evs-frame .virtual-scroller__item');
-    // a mounted row INSIDE the frame — the window keeps padding rows above and below the viewport
-    let rb = null; for (let i = 0; i < await rows.count(); i++) { const box = await rows.nth(i).boundingBox(); if (box && box.y > fb.y + 10 && box.y + box.height < fb.y + fb.height - 10) { rb = box; break; } }
+    // a mounted row INSIDE the frame — the window keeps padding rows above and below the viewport —
+    // and BELOW the site's fixed 64px nav bar, which covers the frame's top when the page scrolls it there
+    let rb = null; for (let i = 0; i < await rows.count(); i++) { const box = await rows.nth(i).boundingBox(); if (box && box.y > Math.max(fb.y + 10, 80) && box.y + box.height < fb.y + fb.height - 10) { rb = box; break; } }
     if (!rb) throw new Error('no mounted row inside the frame');
     await p.mouse.move(rb.x + 60, rb.y + rb.height / 2); await p.mouse.down();
     // a wheel scroll with the button held and NO pointer movement must extend the selection too
@@ -232,7 +233,7 @@ const settle = (p, ms = 300) => p.waitForTimeout(ms);
   await step('ExampleVirtualScroller (double-click word)', async () => {
     const frame = p.locator('.evs-frame .virtual-scroller').first(); const fb = await frame.boundingBox();
     const rows = p.locator('.evs-frame .virtual-scroller__item');
-    let rb = null; for (let i = 0; i < await rows.count(); i++) { const box = await rows.nth(i).boundingBox(); if (box && box.y > fb.y + 10 && box.y + box.height < fb.y + fb.height - 10) { rb = box; break; } }
+    let rb = null; for (let i = 0; i < await rows.count(); i++) { const box = await rows.nth(i).boundingBox(); if (box && box.y > Math.max(fb.y + 10, 80) && box.y + box.height < fb.y + fb.height - 10) { rb = box; break; } }
     if (!rb) throw new Error('no mounted row inside the frame');
     // a double click must select the word under the caret — mousedown's preventDefault took the native one away
     await p.mouse.click(rb.x + 80, rb.y + rb.height / 2, { clickCount: 2 }); await settle(p, 200);
@@ -252,7 +253,7 @@ const settle = (p, ms = 300) => p.waitForTimeout(ms);
   await step('ExampleVirtualScroller (touch long-press + chip)', async () => {
     const frame = p.locator('.evs-frame .virtual-scroller').first(); await frame.scrollIntoViewIfNeeded(); const fb = await frame.boundingBox();
     const rows = p.locator('.evs-frame .virtual-scroller__item');
-    let rb = null; for (let i = 0; i < await rows.count(); i++) { const box = await rows.nth(i).boundingBox(); if (box && box.y > fb.y + 10 && box.y + box.height < fb.y + fb.height - 10) { rb = box; break; } }
+    let rb = null; for (let i = 0; i < await rows.count(); i++) { const box = await rows.nth(i).boundingBox(); if (box && box.y > Math.max(fb.y + 10, 80) && box.y + box.height < fb.y + fb.height - 10) { rb = box; break; } }
     if (!rb) throw new Error('no mounted row inside the frame');
     const cdp = await ctx.newCDPSession(p);
     const touch = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }] });
