@@ -32,7 +32,12 @@ const {
 defineExpose(virtualScroller as VirtualScroller.Instance<T>);
 </script>
 <template>
-  <div ref="scrollElement" class="virtual-scroller" @scroll="virtualScroller.onScroll">
+  <div
+    ref="scrollElement"
+    class="virtual-scroller"
+    @scroll="virtualScroller.onScroll"
+    @copy="virtualScroller.onCopy"
+  >
     <!-- Content-sized on purpose — NO explicit size. The inner is the
          composited layer; sized to the full virtual content (~10M px on a
          100k-item list) it carried visible compositor heaviness. The lead
@@ -43,7 +48,11 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
       <!-- The whole leading/trailing content, reduced to two empty divs.
            Rendered items flow normally between them at their real sizes. -->
       <div :style="{ height: virtualScroller.leadingSpacerPx }"></div>
-      <div ref="itemsWrapperElement" :style="{ width: '100%' }">
+      <div
+        ref="itemsWrapperElement"
+        :style="{ width: '100%' }"
+        @mousedown="virtualScroller.onSelectStart"
+      >
         <VirtualScrollerItem
           v-for="element in visibleItems"
           :key="element.id"

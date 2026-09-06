@@ -63,6 +63,7 @@ everything else is the production component.
 ::: code-group
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.ts [VirtualScrollerSelection.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.ts [VirtualScrollerItem.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts [example]
@@ -85,6 +86,17 @@ redeploys the example automatically.
 - **Jumps converge.** A jump lands on an estimated position, then re-applies
   as the fresh window measures in — watch the landing settle onto row
   #500,000.
+- **Text selection is a range over the data.** A native selection is
+  anchored to DOM nodes, and this list recycles its nodes, so the browser's
+  selection collapses as soon as a row scrolls out and copy sees only what
+  is mounted. Here the scroller owns it: mousedown records a logical anchor
+  (item index + character offset), a drag past either edge autoscrolls at
+  a speed that ramps with distance and follows the reading-speed knob, the
+  highlight is re-pinned to whatever rows are mounted after every window
+  change, and copy assembles its text from the items — rows that were
+  never on screen together included. The pure half (range math, text
+  assembly, the ramp) is `VirtualScrollerSelection`, a Static class with
+  its own DOM-free spec; the scroller holds three cells and calls in.
 - **The scrollbar is code.** `overflow-anchor: none` and a `translateZ`
   compositor layer keep the browser out of the way; Lenis takes its clamp
   from the computed content height, not the DOM.

@@ -191,6 +191,24 @@ const settle = (p, ms = 300) => p.waitForTimeout(ms);
     if (await jump.count()) { await jump.click(); await settle(p, 600); } else { await p.locator('.virtual-scroller').first().hover(); await p.mouse.wheel(0, 3000); await settle(p, 600); }
     const t1 = await stats.innerText(); if (t0 === t1) throw new Error('stats static'); ok('ExampleVirtualScroller', 'jumped, stats updated');
   });
+  await step('ExampleVirtualScroller (drag-select + copy)', async () => {
+    const frame = p.locator('.evs-frame .virtual-scroller').first(); await frame.scrollIntoViewIfNeeded(); const fb = await frame.boundingBox();
+    const rows = p.locator('.evs-frame .virtual-scroller__item');
+    // a mounted row INSIDE the frame — the window keeps padding rows above and below the viewport
+    let rb = null; for (let i = 0; i < await rows.count(); i++) { const box = await rows.nth(i).boundingBox(); if (box && box.y > fb.y + 10 && box.y + box.height < fb.y + fb.height - 10) { rb = box; break; } }
+    if (!rb) throw new Error('no mounted row inside the frame');
+    await p.mouse.move(rb.x + 60, rb.y + rb.height / 2); await p.mouse.down();
+    await p.mouse.move(fb.x + 60, fb.y + fb.height + 120, { steps: 6 }); await settle(p, 1200);
+    await p.mouse.move(fb.x + 60, fb.y + fb.height - 30, { steps: 3 }); await p.mouse.up(); await settle(p, 200);
+    const selected = Number((await p.locator('.evs-stats').innerText()).match(/rows selected\s*([\d,]+)/)?.[1]?.replace(/,/g, '') ?? 0);
+    const mounted = await rows.count();
+    await p.keyboard.press('Control+C'); await settle(p, 300);
+    const lines = (await p.evaluate(() => navigator.clipboard.readText())).split('\n');
+    if (selected <= mounted) throw new Error(`selection (${selected} rows) never outgrew the window (${mounted})`);
+    if (lines.length !== selected) throw new Error(`copied ${lines.length} lines for ${selected} selected rows`);
+    if (lines[0].startsWith('#')) throw new Error('first line should start mid-row');
+    ok('ExampleVirtualScroller (drag-select + copy)', `${selected} rows selected over a ${mounted}-row window, ${lines.length} lines copied from the data`);
+  });
   await step('ExampleTextMarquee', async () => {
     const btn = p.locator('button:has(.etm-btn-icon)').first(); const l0 = await btn.innerText(); await btn.click(); await settle(p); const l1 = await btn.innerText();
     if (l0 === l1) throw new Error('label static'); ok('ExampleTextMarquee', `${l0.trim()} -> ${l1.trim()}`);

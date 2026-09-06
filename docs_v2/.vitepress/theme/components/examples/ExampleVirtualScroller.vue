@@ -25,7 +25,7 @@ const {
 <template>
   <DemoBox
     title="Virtual scroller — 1,000,000 rows, Lenis-driven"
-    note="The list is virtual: two spacer divs stand in for everything off-screen, rendered rows flow at their real heights, and a customized Lenis drives the scroll over translateY — the DOM never holds more than the window plus padding. Wheel, drag the touch way, or jump — landings converge as real heights measure in."
+    note="The list is virtual: two spacer divs stand in for everything off-screen, rendered rows flow at their real heights, and a customized Lenis drives the scroll over translateY — the DOM never holds more than the window plus padding. Wheel, drag the touch way, or jump — landings converge as real heights measure in. Drag-select text past the bottom edge and copy: the selection is a range over the DATA, so it survives rows recycling under it and copies rows that were never on screen together."
   >
     <div class="d-vals evs-stats">
       <div>
@@ -35,6 +35,10 @@ const {
       <div>
         <div class="d-k">rows in the DOM</div>
         <div class="d-n grad">{{ example.renderedCount }}</div>
+      </div>
+      <div>
+        <div class="d-k">rows selected</div>
+        <div class="d-n">{{ example.selectedRowsLabel }}</div>
       </div>
     </div>
 
@@ -46,6 +50,7 @@ const {
         :assumed-size="56"
         :padding-quantity="10"
         :creep-ms-per-px="example.creepMsPerPx"
+        :selection-text="example.rowText"
         auto-play
         :auto-play-delay="800"
       >

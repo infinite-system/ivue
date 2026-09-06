@@ -19,7 +19,8 @@ const {
     <header class="example-header">
       <p>
         {{ example.itemCountLabel }} rows ·
-        {{ example.renderedCount }} in the DOM
+        {{ example.renderedCount }} in the DOM ·
+        {{ example.selectedRowsLabel }} selected
       </p>
       <nav>
         <button
@@ -59,6 +60,7 @@ const {
         :assumed-size="56"
         :padding-quantity="10"
         :creep-ms-per-px="example.creepMsPerPx"
+        :selection-text="example.rowText"
         auto-play
         :auto-play-delay="800"
       >

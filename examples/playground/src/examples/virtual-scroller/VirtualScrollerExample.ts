@@ -39,7 +39,7 @@ class $VirtualScrollerExample {
     return variants;
   }
 
-  static buildItems(): VirtualScroller.BaseItem[] {
+  static buildItems(): VirtualScrollerExample.Row[] {
     const variants = this.$bodyVariants;
     const items = new Array(this.ITEM_COUNT);
     for (let index = 0; index < this.ITEM_COUNT; index++) {
@@ -92,6 +92,14 @@ class $VirtualScrollerExample {
     return this.isAutoPlaying ? '⏸' : '▶';
   }
 
+  get selectedRowCount() {
+    return this.scroller.value?.selectedRowCount ?? 0;
+  }
+
+  get selectedRowsLabel() {
+    return this.selectedRowCount.toLocaleString();
+  }
+
   get playButtonLabel() {
     return this.isAutoPlaying ? 'pause' : 'autoplay';
   }
@@ -112,6 +120,13 @@ class $VirtualScrollerExample {
 
   get itemCountLabel() {
     return this.itemCount.toLocaleString();
+  }
+
+  /** The row's text as the template renders it — what an unmounted row
+   *  contributes to a copied selection (mounted rows read their own DOM). */
+  rowText(item: VirtualScroller.BaseItem) {
+    const row = item as VirtualScrollerExample.Row;
+    return `#${Number(row.position).toLocaleString()} — ${row.body}`;
   }
 
   jumpTo(index: number) {
@@ -140,4 +155,10 @@ export namespace VirtualScrollerExample {
   export const $Class = Static($VirtualScrollerExample); // anchor — it declares statics; children `extends` this
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
+
+  /** A row of the demo list: the base item plus the text the row renders. */
+  export interface Row extends VirtualScroller.BaseItem {
+    body: string;
+    position: string;
+  }
 }

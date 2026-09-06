@@ -11,6 +11,7 @@ import {
   onMounted,
   ref,
   toRaw,
+  shallowRef,
   toRef,
   watch
 } from 'vue';
@@ -26,6 +27,7 @@ import {
 } from '../../ivue';
 import { Lenis } from '../../lenis/lenis';
 import { Static } from '../../Static';
+import { VirtualScrollerSelection } from './VirtualScrollerSelection';
 
 /**
  * Virtualized scroller (ivue v2 `Reactive` class).
@@ -89,6 +91,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       creepMsPerPx: { type: Number as PropType<number> },
       /** Accepted for API compatibility; the docs build renders the plain branch. */
       draggable: { type: Boolean as PropType<boolean> },
+      /** The text an item contributes to a copied selection when its row is
+       *  NOT mounted (mounted rows read their own text). Return the same
+       *  string the row renders, or copy will differ across the window. */
+      selectionText: { type: Function as PropType<(item: VirtualScroller.BaseItem) => string> },
       dragHandleSelector: { type: String as PropType<string> },
       dragClass: { type: String as PropType<string> },
       dragGhostClass: { type: String as PropType<string> },
@@ -114,6 +120,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       assumedSize: 30,
       paddingQuantity: 6,
       creepMsPerPx: undefined, // no default ON PURPOSE — see the comment above
+      selectionText: undefined, // mounted rows read their own text; the data fallback is body|id
       draggable: false,
       dragHandleSelector: '.sortable-drag-handle',
       dragClass: 'sortable-drag',
@@ -200,6 +207,14 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       () => this.updatePositionsImmediately()
     );
 
+    // Rows recycle under a live selection: re-pin the highlight to
+    // whatever is mounted after every window change.
+    watch(
+      () => this.visibleItems.value,
+      () => this.applySelectionHighlight(),
+      { flush: 'post' }
+    );
+
     if (this.autoPlay.value) this.startAutoPlay(this.props.autoPlayDelay);
 
     onMounted(() => {
@@ -263,6 +278,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       }
       clearTimeout(this.snapTimeout);
       this.cancelFrames();
+      this.endTextSelection();
       this.stopScrollToIndexReapply?.();
       this.lenis?.stop();
       this.lenis?.destroy();
@@ -390,6 +406,62 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   get scrollDirection() {
     return ref('down');
+  }
+
+  // TEXT SELECTION over the virtual list — logical positions over the DATA
+  // (index + character offset), owned by the scroller; see VirtualScrollerSelection.
+  get selectionAnchor() {
+    return shallowRef<VirtualScrollerSelection.Position | null>(null);
+  }
+
+  get selectionFocus() {
+    return shallowRef<VirtualScrollerSelection.Position | null>(null);
+  }
+
+  get selectionDragging() {
+    return ref(false);
+  }
+
+  /** The drag's non-reactive bookkeeping: the pointer's last y, the autoscroll frame. */
+  protected readonly selectionDrag = {
+    pointerY: 0,
+    frame: null as number | null,
+    lastTs: null as number | null,
+    listening: false,
+  };
+
+  /** The logic seam — a subclass swaps the whole selection capability here. */
+  protected get SelectionLogic() {
+    return VirtualScrollerSelection.Class;
+  }
+
+  /** The selection in document order, or null when there is none. */
+  get selectionRange(): VirtualScrollerSelection.Range | null {
+    const anchor = this.selectionAnchor.value;
+    const focus = this.selectionFocus.value;
+    if (!anchor || !focus) return null;
+    const range = this.SelectionLogic.normalize(anchor, focus);
+    return this.SelectionLogic.isEmpty(range) ? null : range;
+  }
+
+  get hasSelection() {
+    return this.selectionRange !== null;
+  }
+
+  get selectedRowCount() {
+    const range = this.selectionRange;
+    return range ? this.SelectionLogic.rowCount(range) : 0;
+  }
+
+  /** The selected text, assembled from the DATA — rows never mounted included. */
+  get selectedText() {
+    const range = this.selectionRange;
+    return range ? this.SelectionLogic.assembleText(range, (index) => this.selectionTextOf(index)) : '';
+  }
+
+  /** The drag autoscroll's speed factor: a faster reading creep is a faster drag. */
+  protected get creepFactor() {
+    return this.self.CREEP_MS_PER_PX / this.creepMsPerPx;
   }
 
   /** Reactive autoplay state — true while the reading creep is armed.
@@ -1636,6 +1708,174 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       return;
     }
     this.creepFrame = requestAnimationFrame(this.creepStep);
+  }
+
+  /* Text selection */
+
+  /** A mounted row's text, else the item's — the same string the row renders. */
+  selectionTextOf(index: number): string {
+    const row = this.mountedRowElement(index);
+    if (row) return this.SelectionLogic.rowText(row);
+    const item = this.items.value[index];
+    if (!item) return '';
+    if (this.props.selectionText) return this.props.selectionText(item);
+    const body = (item as { body?: unknown }).body;
+    return typeof body === 'string' ? body : String(item.id);
+  }
+
+  protected mountedRowElement(index: number): Element | null {
+    const wrapper = this.itemsWrapperElement.value;
+    return wrapper ? wrapper.querySelector(`${this.SelectionLogic.ROW_SELECTOR}[aria-rowindex="${index + 1}"]`) : null;
+  }
+
+  /** mousedown on the rows: take the selection away from the browser — no
+   *  native drag-selection means no native autoscroll fighting the virtual
+   *  scroll — and record the anchor as a logical position. */
+  onSelectStart(event: MouseEvent) {
+    if (event.button !== 0 || this.SelectionLogic.isInteractive(event.target)) return;
+    const wrapper = this.itemsWrapperElement.value;
+    if (!wrapper) return;
+    const anchor = this.SelectionLogic.positionAt(wrapper, event.clientX, event.clientY);
+    if (!anchor) return;
+    event.preventDefault();
+    this.selectionAnchor.value = anchor;
+    this.selectionFocus.value = anchor;
+    this.selectionDragging.value = true;
+    this.selectionDrag.pointerY = event.clientY;
+    this.listenForSelectionDrag();
+    this.applySelectionHighlight();
+  }
+
+  onSelectMove(event: MouseEvent) {
+    if (!this.selectionDragging.value) return;
+    const wrapper = this.itemsWrapperElement.value;
+    const scrollElement = this.scrollElement.value;
+    if (!wrapper || !scrollElement) return;
+    this.selectionDrag.pointerY = event.clientY;
+    const focus = this.SelectionLogic.positionAt(wrapper, event.clientX, event.clientY);
+    if (focus) this.selectionFocus.value = focus;
+    this.applySelectionHighlight();
+    if (this.SelectionLogic.edgeDistance(scrollElement, event.clientY) !== 0) this.startSelectionAutoscroll();
+    else this.stopSelectionAutoscroll();
+  }
+
+  onSelectEnd() {
+    if (!this.selectionDragging.value) return;
+    this.selectionDragging.value = false;
+    this.stopSelectionAutoscroll();
+    this.stopListeningForSelectionDrag();
+    if (!this.hasSelection) this.clearTextSelection();
+  }
+
+  /** A mousedown anywhere outside the scroller drops the selection. */
+  onDocumentMouseDown(event: MouseEvent) {
+    const scrollElement = this.scrollElement.value;
+    if (scrollElement && event.target instanceof Node && scrollElement.contains(event.target)) return;
+    this.clearTextSelection();
+  }
+
+  /** copy: the browser would hand over the mounted fragment; hand over the data. */
+  onCopy(event: ClipboardEvent) {
+    if (!this.hasSelection || !event.clipboardData) return;
+    event.preventDefault();
+    event.clipboardData.setData('text/plain', this.selectedText);
+  }
+
+  clearTextSelection() {
+    this.endTextSelection();
+    this.selectionAnchor.value = null;
+    this.selectionFocus.value = null;
+    const selection = window.getSelection();
+    if (selection && this.scrollElement.value && selection.anchorNode && this.scrollElement.value.contains(selection.anchorNode)) {
+      selection.removeAllRanges();
+    }
+  }
+
+  /** Stop the drag and its listeners without touching the range (unmount, clear). */
+  endTextSelection() {
+    this.selectionDragging.value = false;
+    this.stopSelectionAutoscroll();
+    this.stopListeningForSelectionDrag();
+  }
+
+  /** Pin the native highlight to the mounted part of the logical range. */
+  applySelectionHighlight() {
+    const range = this.selectionRange;
+    const wrapper = this.itemsWrapperElement.value;
+    const selection = window.getSelection();
+    if (!wrapper || !selection) return;
+    if (!range) {
+      if (selection.anchorNode && wrapper.contains(selection.anchorNode)) selection.removeAllRanges();
+      return;
+    }
+    const rows = this.SelectionLogic.mountedRows(wrapper);
+    if (rows.length === 0) return;
+    const firstIndex = this.SelectionLogic.rowIndexOf(rows[0]);
+    const lastRow = rows[rows.length - 1];
+    const lastIndex = this.SelectionLogic.rowIndexOf(lastRow);
+    const visible = this.SelectionLogic.clampToWindow(range, firstIndex, lastIndex, this.SelectionLogic.rowText(lastRow).length);
+    if (!visible) {
+      selection.removeAllRanges();
+      return;
+    }
+    const startRow = this.mountedRowElement(visible.start.index);
+    const endRow = this.mountedRowElement(visible.end.index);
+    if (!startRow || !endRow) return;
+    const start = this.SelectionLogic.caretInRow(startRow, visible.start.offset);
+    const end = this.SelectionLogic.caretInRow(endRow, visible.end.offset);
+    selection.setBaseAndExtent(start.node, start.offset, end.node, end.offset);
+  }
+
+  protected listenForSelectionDrag() {
+    if (this.selectionDrag.listening) return;
+    document.addEventListener('mousemove', this.onSelectMove);
+    document.addEventListener('mouseup', this.onSelectEnd);
+    document.addEventListener('mousedown', this.onDocumentMouseDown, true);
+    this.selectionDrag.listening = true;
+  }
+
+  protected stopListeningForSelectionDrag() {
+    if (!this.selectionDrag.listening) return;
+    document.removeEventListener('mousemove', this.onSelectMove);
+    document.removeEventListener('mouseup', this.onSelectEnd);
+    this.selectionDrag.listening = false;
+    // the outside-click listener stays until the selection is cleared
+    if (!this.hasSelection) document.removeEventListener('mousedown', this.onDocumentMouseDown, true);
+  }
+
+  protected startSelectionAutoscroll() {
+    if (this.selectionDrag.frame !== null) return;
+    this.selectionDrag.lastTs = null;
+    this.selectionDrag.frame = requestAnimationFrame(this.selectionAutoscrollStep);
+  }
+
+  protected stopSelectionAutoscroll() {
+    if (this.selectionDrag.frame !== null) cancelAnimationFrame(this.selectionDrag.frame);
+    this.selectionDrag.frame = null;
+    this.selectionDrag.lastTs = null;
+  }
+
+  /** One autoscroll frame: scroll toward the pointer at the ramped speed,
+   *  extend the focus to the boundary row, re-pin the highlight. Both
+   *  directions — an upward drag is a scroll UP, not the reader taking over. */
+  selectionAutoscrollStep(ts: number) {
+    this.selectionDrag.frame = null;
+    if (!this.selectionDragging.value) return;
+    const scrollElement = this.scrollElement.value;
+    const wrapper = this.itemsWrapperElement.value;
+    if (!scrollElement || !wrapper || !this.lenis) return;
+    const distance = this.SelectionLogic.edgeDistance(scrollElement, this.selectionDrag.pointerY);
+    if (distance === 0) return;
+    const elapsed = this.selectionDrag.lastTs === null ? 16.7 : Math.min(50, ts - this.selectionDrag.lastTs);
+    this.selectionDrag.lastTs = ts;
+    const speed = this.SelectionLogic.autoscrollSpeed(Math.abs(distance), this.creepFactor);
+    const lenis = this.lenisRequired;
+    lenis.targetScroll = Math.max(0, lenis.targetScroll + Math.sign(distance) * speed * elapsed);
+    this.setScrollPosition(-lenis.targetScroll, false, true, false);
+    const focus = this.SelectionLogic.positionAt(wrapper, scrollElement.getBoundingClientRect().left + 1, this.selectionDrag.pointerY);
+    if (focus) this.selectionFocus.value = focus;
+    this.applySelectionHighlight();
+    this.selectionDrag.frame = requestAnimationFrame(this.selectionAutoscrollStep);
   }
 
   onStart(event: any) {

@@ -575,3 +575,24 @@ How the last 174 went, for the next sweep of this kind:
   becomes a Static class with its types in the namespace; a transport
   object becomes a factory function (`createMockServerTransport()`), which
   keeps its module a plain module.
+
+## Text selection over a virtual list (2026-09-05)
+
+A native selection is anchored to DOM nodes; a virtual list recycles
+them, so the selection collapses when a row scrolls out, copy sees only
+the mounted fragment, and the browser's own drag-autoscroll fights the
+transform-driven scroll (the thumb and the inner position jump). The
+fix is to OWN the selection: `preventDefault` the mousedown (no native
+drag-selection → no native autoscroll), keep anchor/focus as logical
+`{ index, offset }` positions over the DATA, re-pin the native highlight
+with `setBaseAndExtent` on the mounted rows after every window change
+(a `flush: 'post'` watch on `visibleItems`), autoscroll with a signed
+frame loop that writes `lenis.targetScroll` directly (an upward drag
+must not read as the reader taking over), and answer `copy` from the
+items. Split: `VirtualScrollerSelection` (Static, pure, DOM-free spec)
++ three refs and the handlers on the scroller. The row's text must be
+the same whether mounted (textContent, trimmed of template whitespace)
+or not (the `selection-text` prop) — or copy differs across the window.
+Sweep probe: drag past the edge, copy, assert lines === selected rows >
+mounted rows and the first line starts mid-row. Playwright's
+`Control+C` fires the copy event; grant clipboard permissions to read.
