@@ -53,6 +53,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 - [A native selection inside the frame is adopted as the logical range](#a-native-selection-inside-the-frame-is-adopted-as-the-logical-range) — why iOS's handles and a keyboard extend the same range the chip copies.
 - [A finger's drag paints without selecting](#a-fingers-drag-paints-without-selecting) — why iOS does not take the touch away mid-drag.
 - [WebKit re-rasterizes the layer on every autoscroll write](#webkit-re-rasterizes-the-layer-on-every-autoscroll-write) — why rows that mount under a held finger are not blank on iOS.
+- [On a touch device the selection is drawn by the class](#on-a-touch-device-the-selection-is-drawn-by-the-class) — why a phone never enters the system's selection mode at all.
 
 **Mechanism:** The prefix-sum cursor turns an estimate plus a sparse map of measured sizes into positions in O(distance); the window walk mounts the rows the container covers plus the pad and reduces everything else to two spacers; the clamp and the rebase make the rendered numbers safe before Lenis writes them; the hosted capabilities add selection, touch and adaptive padding through owner interfaces of a handful of members, so each is a class with its own statics, its own spec and its own reason to exist.
 
@@ -452,7 +453,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If a single finger holds still for 450 ms, then the next move lays the anchor at the resting point and extends a selection instead of scrolling, the move is prevented and flagged for Lenis, and lifting the finger ends the drag; while the finger holds, the rows are non-selectable so iOS's own long-press selection finds nothing, and they are selectable again from the first move (or on release); if the finger moves past 8 px before the hold fires, then the gesture is a scroll and the owner never hears of it.
 
-**Scope:** `VirtualScrollerSelectionTouch.ts`: `onTouchStart`, `promoteHold`, `onTouchMove`, `onTouchEnd`, `LONG_PRESS_MS`, `SLOP_PX`. Hosted by the selection; the scroller attaches it at mount.
+**Scope:** `VirtualScrollerSelectionTouchCustom.ts` (the live implementation) and `VirtualScrollerSelectionTouch.ts` (the earlier one, kept for rollback): `onTouchStart`, `promoteHold`, `onTouchMove`, `onTouchEnd`, `LONG_PRESS_MS`, `SLOP_PX`. Hosted by the selection; the scroller attaches it at mount.
 
 **Mechanism:** A drag already means scroll on a touchscreen, so selection takes the browser's own convention. The hold timer promotes; slop cancels; after promotion `preventDefault` stops the page and `lenisStopPropagation` stops the list. iOS runs its own long-press selection on selectable text at about the same moment and would take the finger; `lockSelectability` makes the rows `user-select: none` for every hold, selection or not — a finger on selected text is a long press about to extend it, and iOS must not take that press — except a finger within `HANDLE_REACH_PX` of the native selection's first or last caret (`isNearSelectionHandle`), which is grabbing a handle: iOS drags it and `selectionchange` adopts the result; `farEnd` makes the extension, keeping the end farther from the press as the anchor, and a tap on the selection clears it as the system's would — and because WebKit paints no highlight in non-selectable text (native or CSS Highlight API — measured in WebKit 26.5), `unlockSelectability` runs right before `beginAt` on the first move. The gesture calls the same three primitives the mouse path calls.
 
@@ -624,6 +625,30 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Last refined:** 2026-09-06
 
+### On a touch device the selection is drawn by the class
+
+**Invariant:** If the device has a touch point, then a finger never creates a native selection: the rows are non-selectable for as long as a finger is down, a range a finger made is painted by `VirtualScrollerSelectionTouchCustom` as boxes from the mounted DOM range's client rects laid inside the items wrapper, two handles of its own sit at the range's ends, and a handle drag begins at once from the other end through `beginFromEnd`; a mouse on the same device keeps the native selection and Ctrl+C; on a device with no touch point the class is inert and the native selection paints as before.
+
+**Scope:** `VirtualScrollerSelectionTouchCustom.ts` whole; `VirtualScrollerSelection.ts` `$touch`, `applyHighlight` (the `paintsSelection` branch), `visibleDomRange`, `beginFromEnd`, `itemsWrapperElement`; the overlay rules in `VirtualScroller.vue`. The earlier implementation, which rode the system's selection, stays in `VirtualScrollerSelectionTouch.ts` for rollback: swap the class in `$touch`.
+
+**Renegotiable at:** The system's touch selection — its long press, its handles and its loupe contend with the list's own touch scroll for one finger under rules that are the system's and undocumented, and it is anchored to DOM nodes that a virtual list recycles. Owning the whole of it removes the contest.
+
+**Mechanism:** `attach` lays the overlay inside the wrapper, so the boxes move with the transform for free; every touchstart locks the frame's selectability and every release unlocks it, so the system's long press finds nothing while a mouse between touches finds everything; `applyHighlight` hands the mounted DOM range to `paint` on every move and window change while the range is a finger's (`input.touch`), and paints natively otherwise; a touch on a handle calls `beginFromEnd` with the opposite end and rides `extendTo`, so the edge zone scrolls the list with the loop the mouse uses; the copy chip copies from the logical range.
+
+**Generates:** The overlay and handle CSS; the `beginFromEnd` and `visibleDomRange` primitives; the sweep's touch probe driving a handle to the edge.
+
+**Rejected alternatives:** Riding the system's selection (locks, adoption, handle reach, paint nudges) — nine rounds of arbitration on an iPhone, each fix a rule about who yields, and the edge never scrolled.
+
+**Evidence:** `VirtualScrollerSelectionTouchCustom.ts`. Tests: "with a touch point the rows are non-selectable and the overlay with its two handles is laid inside the wrapper; dispose removes both", "painting a range lays one box per non-empty rect and puts the handles at the ends; painting null hides it all", "a finger on the end handle drags from the start at once, and on the start handle from the end", "on a touch device the highlight is the touch class’s overlay and the native selection is never created".
+
+**Impossible if true:** A native selection created by a touch. A handle drag that starts over instead of extending. A box that does not move with the rows. A mouse on a touch-capable device losing its native selection or its Ctrl+C.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouchCustom.test.ts`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-06
+
 ### A hosted capability reaches its owner through an interface
 
 **Invariant:** If a capability needs what only the scroller knows, then it receives an `Owner` object of a handful of members through its constructor, reached by the scroller through one `$`-getter, and the capability never imports or types the scroller class.
@@ -660,3 +685,4 @@ tier each record is proven at, and how the colocated tests bind to it.
 - A selection drag near the edge that does not scroll — [A drag scrolls from inside the edge zone](#a-drag-scrolls-from-inside-the-edge-zone).
 - The frame's scrollTop moving under a touch selection — [The frame is never natively panned along its own axis](#the-frame-is-never-natively-panned-along-its-own-axis).
 - A native selection changing under a held finger — [A finger's drag paints without selecting](#a-fingers-drag-paints-without-selecting).
+- A native selection created by a touch — [On a touch device the selection is drawn by the class](#on-a-touch-device-the-selection-is-drawn-by-the-class).

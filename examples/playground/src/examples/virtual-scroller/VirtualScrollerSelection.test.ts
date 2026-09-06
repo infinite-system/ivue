@@ -10,12 +10,15 @@ Goal: Hold a text selection over a virtual list as a range over the DATA, so the
 [A drag scrolls from inside the edge zone](virtual-scroller.invariants.md#a-drag-scrolls-from-inside-the-edge-zone)
 [A native selection inside the frame is adopted as the logical range](virtual-scroller.invariants.md#a-native-selection-inside-the-frame-is-adopted-as-the-logical-range)
 [A finger's drag paints without selecting](virtual-scroller.invariants.md#a-fingers-drag-paints-without-selecting)
+[On a touch device the selection is drawn by the class](virtual-scroller.invariants.md#on-a-touch-device-the-selection-is-drawn-by-the-class)
 // domain-invariant: $VirtualScrollerSelection — If anchor and focus are given in either order, then the range is the same, and a range whose ends coincide is no selection.
 // domain-invariant: $VirtualScrollerSelection — If a range is clamped to the mounted window, then an end that scrolled out is pinned to the boundary row, and a range wholly outside the window is null.
 // domain-invariant: $VirtualScrollerSelection — If a point is over a row, then the position is that row at the caret's offset; in a gap it is the nearest row along the axis, at its start before it and its end after; over nothing it is null.
 // domain-invariant: $VirtualScrollerSelection — If the pointer nears an edge or passes it, then the drag scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge: an upward drag scrolls up.
 // domain-invariant: $VirtualScrollerSelection — If a mousedown is not the primary button or lands on an interactive element, then it is left to the browser; otherwise it begins a selection and takes the native one away.
 // domain-invariant: $VirtualScrollerSelection — If a press lands outside the frame, then the selection clears; inside, it stays.
+// domain-invariant: $VirtualScrollerSelection — If a drag begins from a fixed end, then that end is the anchor and the point under the finger the focus, and the drag is any other touch drag from there.
+// domain-invariant: $VirtualScrollerSelection — If the mounted part of the range is asked for as a DOM range, then it spans the clamped carets, and it is null with no range, nothing mounted, or the range scrolled out.
 // domain-invariant: $VirtualScrollerSelection — If a finger's press lands inside the existing range, then the drag extends it from the far end; outside it, or from a mouse, the drag starts over.
 // domain-invariant: $VirtualScrollerSelection — If a native handle drags the selection's end into the edge zone, then the list scrolls under it frame by frame until the end leaves the zone or the selection stops changing; the native selection is never re-pinned while it does.
 // domain-invariant: $VirtualScrollerSelection — If a touch lands within reach of the native selection's first or last caret, then it is a handle grab; elsewhere, or with no native selection in the frame, it is not.
@@ -624,6 +627,70 @@ test('a native handle dragged into the edge zone scrolls the list under it, and 
   expect(frames).toHaveLength(0);
 
   Range.prototype.getClientRects = originalRects;
+  instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelection — If a drag begins from a fixed end, then that end is the anchor and the point under the finger the focus, and the drag is any other touch drag from there.
+test('a drag from a fixed end keeps that end as the anchor and follows the finger with the focus', () => {
+  const { instance } = selection(0, 5);
+  expect(instance.beginFromEnd(at(0, 8), 30, 100)).toBe(true);
+  expect(instance.dragging.value).toBe(true);
+  expect(instance.range).toEqual({ start: at(0, 8), end: at(2, 5) });
+  instance.extendTo(30, 140);
+  expect(instance.range).toEqual({ start: at(0, 8), end: at(3, 5) });
+  instance.endDrag();
+  expect(instance.selectedRowCount).toBe(4);
+  // The other way round: the end fixed, the finger above it.
+  expect(instance.beginFromEnd(at(3, 5), 60, 20)).toBe(true);
+  expect(instance.range).toEqual({ start: at(0, 8), end: at(3, 5) });
+  instance.endDrag();
+  instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelection — If the mounted part of the range is asked for as a DOM range, then it spans the clamped carets, and it is null with no range, nothing mounted, or the range scrolled out.
+test('the mounted part of the range as a DOM range spans the clamped carets, and is null when nothing of it is on screen', () => {
+  const { instance, dom } = selection(0, 5);
+  expect(instance.visibleDomRange()).toBeNull();
+  instance.anchor.value = at(1, 5);
+  instance.focus.value = at(40, 2);
+  const painted = instance.visibleDomRange()!;
+  expect(painted.startContainer).toBe(dom.rows[1].childNodes[2]);
+  expect(painted.startOffset).toBe(3);
+  expect(painted.endContainer).toBe(dom.rows[4].childNodes[2]);
+  expect(painted.toString().startsWith(rowText(1).slice(5))).toBe(true);
+  expect(painted.toString().endsWith(rowText(4).slice(-6))).toBe(true);
+  instance.anchor.value = at(40, 0);
+  instance.focus.value = at(45, 3);
+  expect(instance.visibleDomRange()).toBeNull();
+  instance.dispose();
+});
+
+// invariant: On a touch device the selection is drawn by the class (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('on a touch device the highlight is the touch class’s overlay and the native selection is never created', () => {
+  Object.defineProperty(navigator, 'maxTouchPoints', { value: 5, configurable: true });
+  const { instance, dom } = selection(0, 5);
+  instance.attach(dom.frame);
+  const originalRects = Range.prototype.getClientRects;
+  Range.prototype.getClientRects = function () {
+    return [{ left: 0, top: 10, width: 200, height: 20 }] as unknown as DOMRectList;
+  };
+  window.getSelection()!.removeAllRanges();
+  instance.beginAt(60, 20, 'touch');
+  instance.extendTo(30, 100);
+  instance.endDrag();
+  const overlay = dom.wrapper.querySelector('.virtual-scroller__touch-selection') as HTMLElement;
+  expect(overlay.hidden).toBe(false);
+  expect(overlay.querySelectorAll('.virtual-scroller__touch-box')).toHaveLength(1);
+  expect(window.getSelection()!.rangeCount).toBe(0);
+  // A mouse drag on the same device keeps the native selection and drops the overlay.
+  instance.beginAt(60, 20);
+  instance.extendTo(30, 100);
+  instance.endDrag();
+  expect(overlay.hidden).toBe(true);
+  expect(window.getSelection()!.rangeCount).toBe(1);
+  instance.clear();
+  Range.prototype.getClientRects = originalRects;
+  Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, configurable: true });
   instance.dispose();
 });
 

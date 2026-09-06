@@ -736,3 +736,19 @@ and every selection call, touch event and thrown error prints under the
 stats (`VirtualScrollerExample.attachTouchDebug`). None of this is
 testable in jsdom or headless Chromium beyond the unit arms; the iPhone
 is the instrument.
+
+## Touch selection is owned outright — the system is not a partner
+
+After nine rounds of arbitrating an iPhone's native selection against the
+list's touch scroll (locks, adoption, handle reach, paint nudges; every
+fix a rule about who yields; the edge never scrolled), the answer was to
+stop negotiating: on a device with a touch point the native selection is
+never created. `VirtualScrollerSelectionTouchCustom` makes the frame
+`user-select: none`, paints the mounted DOM range's client rects as boxes
+inside the items wrapper (they move with the transform for free), owns two
+handles at the range ends, and hands every drag to the same primitives and
+edge loop the mouse uses (`beginFromEnd` for a handle). The earlier
+implementation stays in `VirtualScrollerSelectionTouch.ts`; one getter
+(`$touch`) swaps them. The mouse path is untouched. Rule for next time: a
+capability that must share one input with an opaque system is cheaper to
+own whole than to arbitrate.

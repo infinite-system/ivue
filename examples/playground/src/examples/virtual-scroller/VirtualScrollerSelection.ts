@@ -28,7 +28,7 @@
 import { ref, shallowRef, watch, type ComputedRef, type Ref } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
-import { VirtualScrollerSelectionTouch } from './VirtualScrollerSelectionTouch';
+import { VirtualScrollerSelectionTouchCustom } from './VirtualScrollerSelectionTouchCustom';
 
 class $VirtualScrollerSelection {
   /* Knobs */
@@ -584,8 +584,17 @@ class $VirtualScrollerSelection {
   // HOSTED — the touch gesture (long press, then move); attached to the
   // frame by `attach`, disposed with this selection.
   // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // The custom touch implementation draws and drives the selection itself
+  // on a touch device (VirtualScrollerSelectionTouchCustom); the earlier
+  // one, which rode the system's native selection, stays in
+  // VirtualScrollerSelectionTouch.ts — swap the class here to roll back.
   protected get $touch() {
-    return new VirtualScrollerSelectionTouch.Class(this);
+    return new VirtualScrollerSelectionTouchCustom.Class(this);
+  }
+
+  /** The wrapper the rows live in, for the touch overlay laid inside it. */
+  get itemsWrapperElement() {
+    return this.owner.itemsWrapperElement;
   }
 
   // DERIVED — plain getters over the two cells
@@ -703,6 +712,28 @@ class $VirtualScrollerSelection {
   }
 
   /**
+   * Begin a drag with one end fixed — a handle drag on touch. The fixed
+   * end is the anchor, the point under the finger the focus, and from
+   * here the drag is any other drag: extendTo, the edge zone, endDrag.
+   */
+  // invariant: On a touch device the selection is drawn by the class (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  beginFromEnd(fixed: VirtualScrollerSelection.Position, x: number, y: number): boolean {
+    const wrapper = this.owner.itemsWrapperElement.value;
+    if (!wrapper) return false;
+    const focus = this.self.positionAt(wrapper, x, y, this.owner.selectionAxis) ?? fixed;
+    this.anchor.value = fixed;
+    this.focus.value = focus;
+    this.input.touch = true;
+    this.dragging.value = true;
+    this.drag.pointerX = x;
+    this.drag.pointerY = y;
+    this.listen();
+    this.startFollow();
+    this.applyHighlight();
+    return true;
+  }
+
+  /**
    * Extend the selection to a viewport point: the focus follows the point
    * as a logical position, the highlight is re-pinned, and past the
    * frame's edge the autoscroll loop takes over until the point returns.
@@ -758,8 +789,10 @@ class $VirtualScrollerSelection {
       return;
     }
     // A finger's drag painted without selecting; now that it has lifted
-    // the range becomes the native selection (copy, iOS handles).
-    if (this.input.touch) {
+    // the range becomes the native selection (copy, iOS handles) — unless
+    // the touch class draws touch ranges itself, in which case the paint
+    // stays and the range stays a touch range until cleared.
+    if (this.input.touch && !this.$touch.paintsSelection) {
       this.input.touch = false;
       this.applyHighlight();
     }
@@ -876,6 +909,15 @@ class $VirtualScrollerSelection {
   // invariant: The selection is a range over the data (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   // invariant: A finger's drag paints without selecting (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   applyHighlight() {
+    // A range a finger made on a touch device: the touch class draws it
+    // itself and the native selection is never created (see
+    // VirtualScrollerSelectionTouchCustom). A mouse's range on the same
+    // device stays native, Ctrl+C included.
+    if (this.$touch.paintsSelection && this.input.touch) {
+      this.$touch.paint(this.visibleDomRange());
+      return;
+    }
+    this.$touch.paint(null);
     const range = this.range;
     const wrapper = this.owner.itemsWrapperElement.value;
     const selection = window.getSelection();
@@ -895,41 +937,55 @@ class $VirtualScrollerSelection {
       return;
     }
 
-    // Clamp the range to what is mounted; an end that scrolled out is
-    // pinned to the window's boundary row.
-    const rows = this.self.mountedRows(wrapper);
-    if (rows.length === 0) return;
-    const firstIndex = this.self.rowIndexOf(rows[0]);
-    const lastRow = rows[rows.length - 1];
-    const lastIndex = this.self.rowIndexOf(lastRow);
-    const visible = this.self.clampToWindow(
-      range,
-      firstIndex,
-      lastIndex,
-      this.self.rowText(lastRow).length
-    );
-    if (!visible) {
+    const painted = this.visibleDomRange();
+    if (!painted) {
       if (paintOnly) this.clearCssHighlight();
       else this.collapseNative(selection);
       return;
     }
-
-    // Translate the two logical ends back into DOM carets and apply.
-    const startRow = this.mountedRowElement(visible.start.index);
-    const endRow = this.mountedRowElement(visible.end.index);
-    if (!startRow || !endRow) return;
-    const start = this.self.caretInRow(startRow, visible.start.offset);
-    const end = this.self.caretInRow(endRow, visible.end.offset);
     if (paintOnly) {
-      const painted = new Range();
-      painted.setStart(start.node, start.offset);
-      painted.setEnd(end.node, end.offset);
       CSS.highlights.set(this.self.TOUCH_HIGHLIGHT_NAME, new Highlight(painted));
       return;
     }
-    selection.setBaseAndExtent(start.node, start.offset, end.node, end.offset);
+    selection.setBaseAndExtent(
+      painted.startContainer,
+      painted.startOffset,
+      painted.endContainer,
+      painted.endOffset
+    );
     this.native.applied = this.self.selectionSignature(selection);
     this.native.collapsedByUs = false;
+  }
+
+  /**
+   * The DOM range over the MOUNTED part of the logical range, or null when
+   * there is no range, nothing is mounted, or the range scrolled out. The
+   * range is clamped to the window — an end that scrolled out is pinned to
+   * the boundary row — and its two ends translated back into DOM carets.
+   */
+  visibleDomRange(): Range | null {
+    const range = this.range;
+    const wrapper = this.owner.itemsWrapperElement.value;
+    if (!range || !wrapper) return null;
+    const rows = this.self.mountedRows(wrapper);
+    if (rows.length === 0) return null;
+    const lastRow = rows[rows.length - 1];
+    const visible = this.self.clampToWindow(
+      range,
+      this.self.rowIndexOf(rows[0]),
+      this.self.rowIndexOf(lastRow),
+      this.self.rowText(lastRow).length
+    );
+    if (!visible) return null;
+    const startRow = this.mountedRowElement(visible.start.index);
+    const endRow = this.mountedRowElement(visible.end.index);
+    if (!startRow || !endRow) return null;
+    const start = this.self.caretInRow(startRow, visible.start.offset);
+    const end = this.self.caretInRow(endRow, visible.end.offset);
+    const painted = document.createRange();
+    painted.setStart(start.node, start.offset);
+    painted.setEnd(end.node, end.offset);
+    return painted;
   }
 
   /** Drop the native selection as OUR act, so the selectionchange it

@@ -67,6 +67,11 @@ class $VirtualScrollerSelectionTouch {
     return this.hold.timer !== null || this.selecting.value;
   }
 
+  /** This implementation rides the system's selection; it paints nothing. */
+  get paintsSelection() {
+    return false;
+  }
+
   /** The element the listeners are attached to, once attached. */
   get element() {
     return shallowRef<HTMLElement | null>(null);
@@ -263,6 +268,9 @@ class $VirtualScrollerSelectionTouch {
   onSelectionCleared() {
     this.selected.value = false;
   }
+
+  /** Nothing to draw — the native selection paints itself. */
+  paint(_range: Range | null) {}
 
   protected cancelHold() {
     if (this.hold.timer !== null) clearTimeout(this.hold.timer);

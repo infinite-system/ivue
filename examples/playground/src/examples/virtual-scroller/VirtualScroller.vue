@@ -163,6 +163,50 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
   transform-style: preserve-3d;
   overscroll-behavior: contain;
 }
+/* The touch selection, drawn by VirtualScrollerSelectionTouchCustom: boxes
+   over the selected text and two handles at its ends, laid inside the
+   items wrapper so a scroll moves them with the rows. */
+.virtual-scroller__touch-selection {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.virtual-scroller__touch-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 2px;
+  background: rgba(59, 130, 246, 0.32);
+}
+.virtual-scroller__touch-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  pointer-events: auto;
+  touch-action: none;
+}
+.virtual-scroller__touch-handle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: rgb(59, 130, 246);
+  box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+.virtual-scroller__touch-handle--start::before {
+  border-top-right-radius: 2px;
+}
+.virtual-scroller__touch-handle--end::before {
+  border-top-left-radius: 2px;
+}
 .virtual-scroller__copy {
   position: absolute;
   top: 8px;

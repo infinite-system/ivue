@@ -260,12 +260,20 @@ const settle = (p, ms = 300) => p.waitForTimeout(ms);
     await touch('touchStart', rb.x + 60, rb.y + rb.height / 2); await settle(p, 600);
     for (let i = 1; i <= 8; i++) { await touch('touchMove', rb.x + 60, rb.y + rb.height / 2 + i * ((fb.y + fb.height + 100 - rb.y) / 8)); await settle(p, 30); }
     await settle(p, 900); await touch('touchMove', rb.x + 60, fb.y + fb.height - 30); await settle(p, 100); await touch('touchEnd'); await settle(p, 300);
+    const selectedByPress = Number((await p.locator('.evs-stats').innerText()).match(/rows selected\s*([\d,]+)/)?.[1]?.replace(/,/g, '') ?? 0);
+    // the class's own end handle, dragged into the bottom edge zone: the list scrolls under it and the range grows
+    const handle = p.locator('.evs-frame .virtual-scroller__touch-handle--end'); if (!(await handle.count())) throw new Error('no end handle after a touch selection');
+    const hb = await handle.boundingBox(); if (!hb) throw new Error('end handle has no box');
+    await touch('touchStart', hb.x + hb.width / 2, hb.y + hb.height / 2); await settle(p, 100);
+    for (let i = 1; i <= 6; i++) { await touch('touchMove', hb.x + hb.width / 2, hb.y + hb.height / 2 + i * ((fb.y + fb.height - 20 - hb.y) / 6)); await settle(p, 30); }
+    await settle(p, 1200); await touch('touchEnd'); await settle(p, 300);
     const selected = Number((await p.locator('.evs-stats').innerText()).match(/rows selected\s*([\d,]+)/)?.[1]?.replace(/,/g, '') ?? 0);
+    if (selected <= selectedByPress) throw new Error(`the end handle did not extend the selection (${selectedByPress} → ${selected} rows)`);
     const chip = p.locator('.evs-frame .virtual-scroller__copy'); if (!(await chip.count())) throw new Error(`no copy chip after a touch selection of ${selected} rows`);
     const label = (await chip.innerText()).trim(); await chip.tap(); await settle(p, 400);
     const lines = (await p.evaluate(() => navigator.clipboard.readText())).split('\n');
     if (lines.length !== selected) throw new Error(`chip copied ${lines.length} lines for ${selected} rows`);
-    ok('ExampleVirtualScroller (touch long-press + chip)', `${selected} rows by long press + drag, chip "${label}" copied ${lines.length} lines`);
+    ok('ExampleVirtualScroller (touch long-press + chip)', `${selectedByPress} rows by long press + drag, ${selected} after the end handle scrolled the edge, chip "${label}" copied ${lines.length} lines`);
   });
   await step('ExampleVirtualScroller (sub-pixel continuity)', async () => {
     // a tracked row's on-screen top must move exactly as the transform moves — a frame where the two
