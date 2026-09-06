@@ -100,8 +100,12 @@ export namespace HorizontalVirtualScroller {
   /* Identity */
 
   export const $Class = Static($HorizontalVirtualScroller); // anchor — it overrides a static
-  export let Class = Reactive($HorizontalVirtualScroller) as unknown as typeof $HorizontalVirtualScroller;
-  export type Instance<T extends VirtualScroller.BaseItem> = ReactiveInstance<$HorizontalVirtualScroller<T>>;
+  export let Class = Reactive(
+    $HorizontalVirtualScroller,
+  ) as unknown as typeof $HorizontalVirtualScroller;
+  export type Instance<T extends VirtualScroller.BaseItem> = ReactiveInstance<
+    $HorizontalVirtualScroller<T>
+  >;
 
   /* Types */
 

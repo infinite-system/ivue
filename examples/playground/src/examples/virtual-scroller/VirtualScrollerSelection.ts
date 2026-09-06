@@ -30,7 +30,9 @@ class $VirtualScrollerSelection {
 
   /** Elements a mousedown must leave alone — they own their own gesture. */
   static get INTERACTIVE_SELECTOR() {
-    return 'a, button, input, textarea, select, ' + '[contenteditable="true"], [contenteditable=""]';
+    return (
+      'a, button, input, textarea, select, ' + '[contenteditable="true"], [contenteditable=""]'
+    );
   }
 
   /** Drag autoscroll: px per ms right at the frame's edge … */
@@ -74,7 +76,10 @@ class $VirtualScrollerSelection {
    */
   static caretFromPoint(x: number, y: number): VirtualScrollerSelection.Caret | null {
     const doc = document as Document & {
-      caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null;
+      caretPositionFromPoint?: (
+        x: number,
+        y: number,
+      ) => { offsetNode: Node; offset: number } | null;
     };
     if (doc.caretPositionFromPoint) {
       const position = doc.caretPositionFromPoint(x, y);
@@ -120,7 +125,11 @@ class $VirtualScrollerSelection {
 
     // Walk the row's text nodes in order, summing their lengths until the
     // caret's node is reached.
-    for (let text = walker.nextNode() as Text | null; text; text = walker.nextNode() as Text | null) {
+    for (
+      let text = walker.nextNode() as Text | null;
+      text;
+      text = walker.nextNode() as Text | null
+    ) {
       // The usual case: the caret sits inside this text node.
       if (text === caret.node) {
         raw += caret.offset;
@@ -159,7 +168,11 @@ class $VirtualScrollerSelection {
     let last: Text | null = null;
 
     // Walk the text nodes, spending the offset until it fits in one.
-    for (let text = walker.nextNode() as Text | null; text; text = walker.nextNode() as Text | null) {
+    for (
+      let text = walker.nextNode() as Text | null;
+      text;
+      text = walker.nextNode() as Text | null
+    ) {
       if (remaining <= text.data.length) {
         return { node: text, offset: Math.max(0, remaining) };
       }
@@ -245,7 +258,12 @@ class $VirtualScrollerSelection {
   /** How far past the frame the pointer is along the scroll axis:
    *  negative before the start edge (above / left), positive past the end
    *  edge (below / right), 0 inside. */
-  static edgeDistance(container: Element, x: number, y: number, axis: VirtualScrollerSelection.Axis = 'y'): number {
+  static edgeDistance(
+    container: Element,
+    x: number,
+    y: number,
+    axis: VirtualScrollerSelection.Axis = 'y',
+  ): number {
     const [start, end] = this.axisEdges(container, axis);
     const along = axis === 'y' ? y : x;
     if (along < start) return along - start;
@@ -272,7 +290,10 @@ class $VirtualScrollerSelection {
   /* Range math — no DOM */
 
   /** Document order: by row index first, then by offset within the row. */
-  static comparePositions(left: VirtualScrollerSelection.Position, right: VirtualScrollerSelection.Position): number {
+  static comparePositions(
+    left: VirtualScrollerSelection.Position,
+    right: VirtualScrollerSelection.Position,
+  ): number {
     if (left.index !== right.index) return left.index - right.index;
     return left.offset - right.offset;
   }
@@ -314,7 +335,8 @@ class $VirtualScrollerSelection {
     const scrolledOut = range.end.index < firstIndex || range.start.index > lastIndex;
     if (scrolledOut) return null;
     const start = range.start.index < firstIndex ? { index: firstIndex, offset: 0 } : range.start;
-    const end = range.end.index > lastIndex ? { index: lastIndex, offset: lastRowTextLength } : range.end;
+    const end =
+      range.end.index > lastIndex ? { index: lastIndex, offset: lastRowTextLength } : range.end;
     return { start, end };
   }
 

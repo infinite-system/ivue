@@ -1,5 +1,15 @@
 import type { ExtractPropTypes, PropType, Ref, ShallowUnwrapRef } from 'vue';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, toRaw, shallowRef, toRef, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  toRaw,
+  shallowRef,
+  toRef,
+  watch,
+} from 'vue';
 
 import { useElementSize, useResizeObserver } from '@vueuse/core';
 import {
@@ -252,7 +262,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // setScrollPosition's own bottom clamp. A pull callback, not a
       // watcher: lenis reads it at clamp time, the computed caches, and it
       // can never be stale.
-      this.lenis.virtualLimit = () => Math.max(0, this.scrollExtent.value - this.offsetSize(this.scrollElement.value));
+      this.lenis.virtualLimit = () =>
+        Math.max(0, this.scrollExtent.value - this.offsetSize(this.scrollElement.value));
     });
 
     onBeforeUnmount(() => {
@@ -452,7 +463,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   get selectedText() {
     const range = this.selectionRange;
     if (!range) return '';
-    return this.SelectionLogic.assembleText(range, (index) => this.selectionTextOf(index), this.props.selectionJoin);
+    return this.SelectionLogic.assembleText(
+      range,
+      (index) => this.selectionTextOf(index),
+      this.props.selectionJoin,
+    );
   }
 
   /** The drag autoscroll's speed factor: a faster reading creep is a
@@ -537,12 +552,17 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   get leadingSpacerPx() {
-    return this.self.snapForRender(Math.max(0, this.leadingSpacerSize.value - this.renderBias.value)) + 'px';
+    return (
+      this.self.snapForRender(Math.max(0, this.leadingSpacerSize.value - this.renderBias.value)) +
+      'px'
+    );
   }
 
   get trailingSpacerPx() {
     return (
-      this.self.snapForRender(Math.min(this.self.TRAILING_SPACER_RENDER_CAP, this.trailingSpacerSize.value)) + 'px'
+      this.self.snapForRender(
+        Math.min(this.self.TRAILING_SPACER_RENDER_CAP, this.trailingSpacerSize.value),
+      ) + 'px'
     );
   }
 
@@ -760,7 +780,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const length = toRaw(this.items.value).length;
     if (this.measuredCount < 20 || this.measuredCount >= length) return;
     const scrollPosition = this.scrollPosition.value;
-    const scrollTop = typeof scrollPosition === 'number' ? scrollPosition : parseFloat(scrollPosition) || 0;
+    const scrollTop =
+      typeof scrollPosition === 'number' ? scrollPosition : parseFloat(scrollPosition) || 0;
     if (scrollTop > this.containerSize.value) return;
     this.calibratedAssumed = this.measuredSum / this.measuredCount;
     this.updatePositionsImmediately();
@@ -808,7 +829,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const measured = toRaw(this.measuredSizes.value);
     const assumed = this.estimatedItemSize;
     const scrollPosition = this.scrollPosition.value;
-    const scrollTop = typeof scrollPosition === 'number' ? scrollPosition : parseFloat(scrollPosition);
+    const scrollTop =
+      typeof scrollPosition === 'number' ? scrollPosition : parseFloat(scrollPosition);
 
     // Walk the cursor to the last item whose top is at/above scrollTop —
     // same semantics the binary search over the dense array had.
@@ -821,7 +843,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     }
     if (itemCount > 0) {
       let step;
-      while (start < itemCount - 1 && startOffset + (step = measured[start] ?? assumed) <= scrollTop) {
+      while (
+        start < itemCount - 1 &&
+        startOffset + (step = measured[start] ?? assumed) <= scrollTop
+      ) {
         startOffset += step;
         start++;
       }
@@ -1193,7 +1218,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
     // Prevent scrolling down beyond last paragraph
     if (
-      Math.abs(position) + containerSize + (this.scrollElement.value?.scrollTop ?? 0) > this.scrollExtent.value &&
+      Math.abs(position) + containerSize + (this.scrollElement.value?.scrollTop ?? 0) >
+        this.scrollExtent.value &&
       this.scrollExtent.value > containerSize
     ) {
       position = -(
@@ -1295,7 +1321,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   seekToPointer(event: PointerEvent) {
-    const track = (event.currentTarget as HTMLElement).closest('.virtual-scroller__track') as HTMLElement;
+    const track = (event.currentTarget as HTMLElement).closest(
+      '.virtual-scroller__track',
+    ) as HTMLElement;
     if (!track) return;
     this.seekToProgress(this.trackPointerFraction(event, track.getBoundingClientRect()));
   }
@@ -1309,7 +1337,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // The rendered flow starts AFTER the container's leading main-axis
     // padding, but prefix-sum positions do not include it — subtract it,
     // or every "centered" landing sits paddingStart px past center.
-    return Math.max(0, (this.offsetSize(this.scrollElement.value) - size) / 2 - this.mainAxisPaddingStart());
+    return Math.max(
+      0,
+      (this.offsetSize(this.scrollElement.value) - size) / 2 - this.mainAxisPaddingStart(),
+    );
   }
 
   /** Leading main-axis padding of the scroll container (see
@@ -1458,7 +1489,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       return;
     }
     const scrollPosition = this.scrollPosition.value;
-    const offset = typeof scrollPosition === 'number' ? scrollPosition : parseFloat(scrollPosition) || 0;
+    const offset =
+      typeof scrollPosition === 'number' ? scrollPosition : parseFloat(scrollPosition) || 0;
     // 'start': the item nearest the container's leading edge. 'center':
     // the item under the container's center — that item then lands
     // centered (scrollToIndex's default alignment).
@@ -1466,7 +1498,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // The probe point lives in POSITION space: the container's visual
     // center minus the leading padding that the rendered flow adds.
     const at = this.getIndexAtPosition(
-      centered ? offset + this.offsetSize(this.scrollElement.value) / 2 - this.mainAxisPaddingStart() : offset,
+      centered
+        ? offset + this.offsetSize(this.scrollElement.value) / 2 - this.mainAxisPaddingStart()
+        : offset,
     );
     if (!at) return;
     const target = centered ? at.index : at.fraction > 0.5 ? at.index + 1 : at.index;
@@ -1681,7 +1715,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     }
     const wrapper = this.itemsWrapperElement.value;
     if (!wrapper) return;
-    const anchor = this.SelectionLogic.positionAt(wrapper, event.clientX, event.clientY, this.selectionAxis);
+    const anchor = this.SelectionLogic.positionAt(
+      wrapper,
+      event.clientX,
+      event.clientY,
+      this.selectionAxis,
+    );
     if (!anchor) return;
 
     event.preventDefault();
@@ -1708,12 +1747,22 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
     this.selectionDrag.pointerX = event.clientX;
     this.selectionDrag.pointerY = event.clientY;
-    const focus = this.SelectionLogic.positionAt(wrapper, event.clientX, event.clientY, this.selectionAxis);
+    const focus = this.SelectionLogic.positionAt(
+      wrapper,
+      event.clientX,
+      event.clientY,
+      this.selectionAxis,
+    );
     if (focus) this.selectionFocus.value = focus;
     this.applySelectionHighlight();
 
     const outside =
-      this.SelectionLogic.edgeDistance(scrollElement, event.clientX, event.clientY, this.selectionAxis) !== 0;
+      this.SelectionLogic.edgeDistance(
+        scrollElement,
+        event.clientX,
+        event.clientY,
+        this.selectionAxis,
+      ) !== 0;
     if (outside) this.startSelectionAutoscroll();
     else this.stopSelectionAutoscroll();
   }
@@ -1732,7 +1781,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  way a click elsewhere drops a native one. */
   onDocumentMouseDown(event: MouseEvent) {
     const scrollElement = this.scrollElement.value;
-    const inside = scrollElement && event.target instanceof Node && scrollElement.contains(event.target);
+    const inside =
+      scrollElement && event.target instanceof Node && scrollElement.contains(event.target);
     if (inside) return;
     this.clearTextSelection();
   }
@@ -1756,7 +1806,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // a selection the user made elsewhere on the page.
     const selection = window.getSelection();
     const scrollElement = this.scrollElement.value;
-    const ours = selection?.anchorNode && scrollElement && scrollElement.contains(selection.anchorNode);
+    const ours =
+      selection?.anchorNode && scrollElement && scrollElement.contains(selection.anchorNode);
     if (ours) selection.removeAllRanges();
   }
 
@@ -1875,7 +1926,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       this.selectionAxis,
     );
     if (distance === 0) return;
-    const elapsed = this.selectionDrag.lastTs === null ? 16.7 : Math.min(50, ts - this.selectionDrag.lastTs);
+    const elapsed =
+      this.selectionDrag.lastTs === null ? 16.7 : Math.min(50, ts - this.selectionDrag.lastTs);
     this.selectionDrag.lastTs = ts;
     const speed = this.SelectionLogic.autoscrollSpeed(Math.abs(distance), this.creepFactor);
 
@@ -1908,7 +1960,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   onDrop(event: any) {
-    const dropIndex = event.target.closest('.virtual-scroller__item').getAttribute('aria-rowindex') - 1;
+    const dropIndex =
+      event.target.closest('.virtual-scroller__item').getAttribute('aria-rowindex') - 1;
     this.emit('drop', this.startIndex, dropIndex);
   }
 
@@ -1960,7 +2013,10 @@ export namespace VirtualScroller {
    *  default-free `creepMsPerPx` optional; the one thing a runtime map
    *  cannot carry — the generic item type — is grafted back over
    *  `modelValue`. */
-  export type Props<T extends BaseItem> = Omit<ExtractPropTypes<typeof $Class.props>, 'modelValue'> & {
+  export type Props<T extends BaseItem> = Omit<
+    ExtractPropTypes<typeof $Class.props>,
+    'modelValue'
+  > & {
     modelValue: T[];
   };
 
