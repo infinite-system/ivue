@@ -418,10 +418,5 @@
     "path": "examples/playground/src/Playground.ts",
     "check": "mutable_state_is_a_ref_returning_getter",
     "reason": "baseline 2026-09-05 — pre-existing teaching-code debt; fix and delete this row"
-  },
-  {
-    "path": "examples/playground/src/examples/class-store/ProjectStore.ts",
-    "check": "construction_goes_through_the_namespace_class_slot",
-    "reason": "$sharedReactive is the store's optional reactive() view (reactive(new ProjectStore.Class())), shown in full on /examples/class-store"
   }
 ]
