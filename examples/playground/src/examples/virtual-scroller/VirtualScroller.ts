@@ -1,15 +1,5 @@
 import type { ExtractPropTypes, PropType, Ref, ShallowUnwrapRef } from 'vue';
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  toRaw,
-  shallowRef,
-  toRef,
-  watch,
-} from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, toRaw, shallowRef, toRef, watch } from 'vue';
 
 import { useElementSize, useResizeObserver } from '@vueuse/core';
 import {
@@ -109,9 +99,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  ExtractPropDefaultTypes itself; a deliberately default-free optional
    *  prop states its ruling in data: `creepMsPerPx: undefined` below means
    *  "unset = the tuned creep cadence". */
-  static get propsDefaults(): ExtractPropDefaultTypes<
-    typeof $VirtualScroller.propsTypes
-  > {
+  static get propsDefaults(): ExtractPropDefaultTypes<typeof $VirtualScroller.propsTypes> {
     return {
       scrollbar: false,
       autoPlay: false,
@@ -197,9 +185,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // after item mount (mount-time capture reads the pre-hydration size),
     // fonts/images settle later still — and none of that re-fires per-item
     // observers anymore.
-    useResizeObserver(this.itemsWrapperElement, () =>
-      this.remeasureRenderedItems(),
-    );
+    useResizeObserver(this.itemsWrapperElement, () => this.remeasureRenderedItems());
 
     this.updatePositionsImmediately();
 
@@ -266,21 +252,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // setScrollPosition's own bottom clamp. A pull callback, not a
       // watcher: lenis reads it at clamp time, the computed caches, and it
       // can never be stale.
-      this.lenis.virtualLimit = () =>
-        Math.max(
-          0,
-          this.scrollExtent.value - this.offsetSize(this.scrollElement.value),
-        );
+      this.lenis.virtualLimit = () => Math.max(0, this.scrollExtent.value - this.offsetSize(this.scrollElement.value));
     });
 
     onBeforeUnmount(() => {
       const element = this.scrollElement.value;
       if (element) {
-        element.removeEventListener(
-          'touchstart',
-          this.onTouchStartCapture,
-          true,
-        );
+        element.removeEventListener('touchstart', this.onTouchStartCapture, true);
         element.removeEventListener('touchmove', this.onTouchMoveCapture, true);
         element.removeEventListener('touchend', this.onTouchEndCapture, true);
       }
@@ -310,8 +288,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   /** Lenis, for paths that only run after mount created it. */
   protected get lenisRequired(): Lenis {
-    if (!this.lenis)
-      throw new Error('VirtualScroller: lenis is created on mount');
+    if (!this.lenis) throw new Error('VirtualScroller: lenis is created on mount');
     return this.lenis;
   }
 
@@ -475,11 +452,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   get selectedText() {
     const range = this.selectionRange;
     if (!range) return '';
-    return this.SelectionLogic.assembleText(
-      range,
-      (index) => this.selectionTextOf(index),
-      this.props.selectionJoin,
-    );
+    return this.SelectionLogic.assembleText(range, (index) => this.selectionTextOf(index), this.props.selectionJoin);
   }
 
   /** The drag autoscroll's speed factor: a faster reading creep is a
@@ -564,21 +537,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   get leadingSpacerPx() {
-    return (
-      this.self.snapForRender(
-        Math.max(0, this.leadingSpacerSize.value - this.renderBias.value),
-      ) + 'px'
-    );
+    return this.self.snapForRender(Math.max(0, this.leadingSpacerSize.value - this.renderBias.value)) + 'px';
   }
 
   get trailingSpacerPx() {
     return (
-      this.self.snapForRender(
-        Math.min(
-          this.self.TRAILING_SPACER_RENDER_CAP,
-          this.trailingSpacerSize.value,
-        ),
-      ) + 'px'
+      this.self.snapForRender(Math.min(this.self.TRAILING_SPACER_RENDER_CAP, this.trailingSpacerSize.value)) + 'px'
     );
   }
 
@@ -684,8 +648,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const [sizeProp, offsetProp] = this.axisThumbProps;
     return {
       [sizeProp]: this.scrollbarThumbFraction * 100 + '%',
-      [offsetProp]:
-        this.scrollbarProgress * (1 - this.scrollbarThumbFraction) * 100 + '%',
+      [offsetProp]: this.scrollbarProgress * (1 - this.scrollbarThumbFraction) * 100 + '%',
     };
   }
 
@@ -694,8 +657,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** The live seek's re-apply step and its quiet timer (one seek is live
    *  at a time). */
   protected reapplyScrollToIndex: (() => void) | null = null;
-  protected scrollToIndexQuietTimer: ReturnType<typeof setTimeout> | null =
-    null;
+  protected scrollToIndexQuietTimer: ReturnType<typeof setTimeout> | null = null;
 
   /* Autoplay (Lenis-driven) */
 
@@ -751,9 +713,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // a cross-axis gesture belongs to the page: lenis skips any event
     // carrying this flag, so its preventDefault never runs
     if (this.gestureAxis !== ownAxis)
-      (
-        event as TouchEvent & { lenisStopPropagation?: boolean }
-      ).lenisStopPropagation = true;
+      (event as TouchEvent & { lenisStopPropagation?: boolean }).lenisStopPropagation = true;
   }
 
   onTouchEndCapture() {
@@ -800,10 +760,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const length = toRaw(this.items.value).length;
     if (this.measuredCount < 20 || this.measuredCount >= length) return;
     const scrollPosition = this.scrollPosition.value;
-    const scrollTop =
-      typeof scrollPosition === 'number'
-        ? scrollPosition
-        : parseFloat(scrollPosition) || 0;
+    const scrollTop = typeof scrollPosition === 'number' ? scrollPosition : parseFloat(scrollPosition) || 0;
     if (scrollTop > this.containerSize.value) return;
     this.calibratedAssumed = this.measuredSum / this.measuredCount;
     this.updatePositionsImmediately();
@@ -828,10 +785,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     let paddingStart = 0;
     let paddingEnd = 0;
     if (this.scrollElement.value) {
-      const computedStyle = window.getComputedStyle(
-        this.scrollElement.value,
-        null,
-      );
+      const computedStyle = window.getComputedStyle(this.scrollElement.value, null);
       const [paddingStartProp, paddingEndProp] = this.axisPaddingProps;
       paddingStart = parseInt(computedStyle.getPropertyValue(paddingStartProp));
       paddingEnd = parseInt(computedStyle.getPropertyValue(paddingEndProp));
@@ -854,10 +808,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const measured = toRaw(this.measuredSizes.value);
     const assumed = this.estimatedItemSize;
     const scrollPosition = this.scrollPosition.value;
-    const scrollTop =
-      typeof scrollPosition === 'number'
-        ? scrollPosition
-        : parseFloat(scrollPosition);
+    const scrollTop = typeof scrollPosition === 'number' ? scrollPosition : parseFloat(scrollPosition);
 
     // Walk the cursor to the last item whose top is at/above scrollTop —
     // same semantics the binary search over the dense array had.
@@ -870,10 +821,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     }
     if (itemCount > 0) {
       let step;
-      while (
-        start < itemCount - 1 &&
-        startOffset + (step = measured[start] ?? assumed) <= scrollTop
-      ) {
+      while (start < itemCount - 1 && startOffset + (step = measured[start] ?? assumed) <= scrollTop) {
         startOffset += step;
         start++;
       }
@@ -898,10 +846,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const paddedStart = Math.max(0, start - padding);
     end += padding + 1;
 
-    if (
-      this.visibleIndex.value.start !== paddedStart ||
-      this.visibleIndex.value.end !== end
-    ) {
+    if (this.visibleIndex.value.start !== paddedStart || this.visibleIndex.value.end !== end) {
       this.visibleIndex.value.start = paddedStart;
       this.visibleIndex.value.end = end;
       nextTick(() => this.onItemsChanged({ start: paddedStart, end }));
@@ -926,13 +871,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     for (let index = paddedStart; index < count; index++) {
       afterWindowOffset += measured[index] ?? assumed;
     }
-    const total =
-      this.measuredSum + Math.max(0, itemCount - this.measuredCount) * assumed;
+    const total = this.measuredSum + Math.max(0, itemCount - this.measuredCount) * assumed;
     // Spacers must update even when the window itself is unchanged
     // (e.g. a size correction above the window moved only the lead).
     this.leadingSpacerSize.value = paddedStartOffset;
-    this.trailingSpacerSize.value =
-      count >= itemCount ? 0 : Math.max(0, total - afterWindowOffset);
+    this.trailingSpacerSize.value = count >= itemCount ? 0 : Math.max(0, total - afterWindowOffset);
 
     const previous = this.visibleItemsSnapshot;
     if (previous.length === length) {
@@ -1020,8 +963,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.measuredSum = sum;
     this.measuredCount = count;
     this.cursor.index = cursorIndex;
-    this.cursor.offset =
-      sumBeforeCursor + (cursorIndex - countBeforeCursor) * assumed;
+    this.cursor.offset = sumBeforeCursor + (cursorIndex - countBeforeCursor) * assumed;
 
     this.bumpGeometryVersion();
   }
@@ -1034,9 +976,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   protected remeasureRenderedItems() {
     const wrapper = this.itemsWrapperElement.value;
     if (!wrapper) return;
-    const rendered = wrapper.querySelectorAll<HTMLElement>(
-      '.virtual-scroller__item',
-    );
+    const rendered = wrapper.querySelectorAll<HTMLElement>('.virtual-scroller__item');
     // Rects are in SCREEN px; the map must be in LAYOUT px. An ancestor
     // transform scale (the post card scales to fit the window) would
     // otherwise shrink every recorded size by the scale factor while the
@@ -1181,8 +1121,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   getAnchoredPosition(index: number, fraction = 0): number | undefined {
     const base = this.getIndexPosition(index);
     if (base === undefined) return undefined;
-    const size =
-      toRaw(this.measuredSizes.value)[index] ?? this.estimatedItemSize;
+    const size = toRaw(this.measuredSizes.value)[index] ?? this.estimatedItemSize;
     return base + fraction * size;
   }
 
@@ -1190,9 +1129,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * The inverse: which item (+ fraction within it) lives at a pixel offset.
    * Walked from the cursor — O(distance), cheap for seek-bar use.
    */
-  getIndexAtPosition(
-    offset: number,
-  ): { index: number; fraction: number } | undefined {
+  getIndexAtPosition(offset: number): { index: number; fraction: number } | undefined {
     this.geometryVersion.value;
     const itemCount = this.items.value.length;
     if (itemCount === 0) return undefined;
@@ -1206,10 +1143,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       top -= measured[index] ?? assumed;
     }
     let size = measured[index] ?? assumed;
-    while (
-      index < itemCount - 1 &&
-      top + (size = measured[index] ?? assumed) <= offset
-    ) {
+    while (index < itemCount - 1 && top + (size = measured[index] ?? assumed) <= offset) {
       top += size;
       index++;
     }
@@ -1259,17 +1193,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
     // Prevent scrolling down beyond last paragraph
     if (
-      Math.abs(position) +
-        containerSize +
-        (this.scrollElement.value?.scrollTop ?? 0) >
-        this.scrollExtent.value &&
+      Math.abs(position) + containerSize + (this.scrollElement.value?.scrollTop ?? 0) > this.scrollExtent.value &&
       this.scrollExtent.value > containerSize
     ) {
       position = -(
         // Must be negative
-        this.scrollExtent.value -
-        containerSize -
-        (this.scrollElement.value?.scrollTop ?? 0)
+        this.scrollExtent.value - containerSize - (this.scrollElement.value?.scrollTop ?? 0)
       );
     }
 
@@ -1366,13 +1295,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   seekToPointer(event: PointerEvent) {
-    const track = (event.currentTarget as HTMLElement).closest(
-      '.virtual-scroller__track',
-    ) as HTMLElement;
+    const track = (event.currentTarget as HTMLElement).closest('.virtual-scroller__track') as HTMLElement;
     if (!track) return;
-    this.seekToProgress(
-      this.trackPointerFraction(event, track.getBoundingClientRect()),
-    );
+    this.seekToProgress(this.trackPointerFraction(event, track.getBoundingClientRect()));
   }
 
   /** Main-axis offset that places item `index` per the snapAlign prop —
@@ -1380,16 +1305,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  the bounds come free from setScrollPosition's own clamps). */
   snapAlignOffset(index: number): number {
     if (this.props.snapAlign !== 'center') return 0;
-    const size =
-      toRaw(this.measuredSizes.value)[index] ?? this.estimatedItemSize;
+    const size = toRaw(this.measuredSizes.value)[index] ?? this.estimatedItemSize;
     // The rendered flow starts AFTER the container's leading main-axis
     // padding, but prefix-sum positions do not include it — subtract it,
     // or every "centered" landing sits paddingStart px past center.
-    return Math.max(
-      0,
-      (this.offsetSize(this.scrollElement.value) - size) / 2 -
-        this.mainAxisPaddingStart(),
-    );
+    return Math.max(0, (this.offsetSize(this.scrollElement.value) - size) / 2 - this.mainAxisPaddingStart());
   }
 
   /** Leading main-axis padding of the scroll container (see
@@ -1399,11 +1319,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const element = this.scrollElement.value;
     if (!element) return 0;
     const [paddingStartProp] = this.axisPaddingProps;
-    return (
-      parseInt(
-        window.getComputedStyle(element).getPropertyValue(paddingStartProp),
-      ) || 0
-    );
+    return parseInt(window.getComputedStyle(element).getPropertyValue(paddingStartProp)) || 0;
   }
 
   /**
@@ -1427,8 +1343,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const targetPosition = () => {
       const position = this.getIndexPosition(index);
       if (position === undefined) return undefined;
-      const size =
-        toRaw(this.measuredSizes.value)[index] ?? this.estimatedItemSize;
+      const size = toRaw(this.measuredSizes.value)[index] ?? this.estimatedItemSize;
       return Math.max(0, position + innerFraction * size - topOffsetPx);
     };
 
@@ -1464,8 +1379,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // taking over the scroll abandons it immediately.
     this.stopScrollToIndexReapply?.();
     const stop = () => {
-      if (this.scrollToIndexQuietTimer !== null)
-        clearTimeout(this.scrollToIndexQuietTimer);
+      if (this.scrollToIndexQuietTimer !== null) clearTimeout(this.scrollToIndexQuietTimer);
       stopWatch();
       if (this.stopScrollToIndexReapply === stop) {
         this.stopScrollToIndexReapply = null;
@@ -1491,8 +1405,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       return;
     }
     this.reapplyScrollToIndex?.();
-    if (this.scrollToIndexQuietTimer !== null)
-      clearTimeout(this.scrollToIndexQuietTimer);
+    if (this.scrollToIndexQuietTimer !== null) clearTimeout(this.scrollToIndexQuietTimer);
     this.scrollToIndexQuietTimer = setTimeout(stop, 600);
   }
 
@@ -1504,11 +1417,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // the settle chain below resumes the creep once the input rests.
     if (this.isAutoPlaying.value && delta < 0) {
       this.stopAutoPlay();
-    } else if (
-      !this.isAutoPlaying.value &&
-      delta > 0 &&
-      !this.props.snapToItems
-    ) {
+    } else if (!this.isAutoPlaying.value && delta > 0 && !this.props.snapToItems) {
       this.isAutoPlaying.value = true;
     }
     this.virtualScrolling = true;
@@ -1549,10 +1458,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       return;
     }
     const scrollPosition = this.scrollPosition.value;
-    const offset =
-      typeof scrollPosition === 'number'
-        ? scrollPosition
-        : parseFloat(scrollPosition) || 0;
+    const offset = typeof scrollPosition === 'number' ? scrollPosition : parseFloat(scrollPosition) || 0;
     // 'start': the item nearest the container's leading edge. 'center':
     // the item under the container's center — that item then lands
     // centered (scrollToIndex's default alignment).
@@ -1560,23 +1466,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // The probe point lives in POSITION space: the container's visual
     // center minus the leading padding that the rendered flow adds.
     const at = this.getIndexAtPosition(
-      centered
-        ? offset +
-            this.offsetSize(this.scrollElement.value) / 2 -
-            this.mainAxisPaddingStart()
-        : offset,
+      centered ? offset + this.offsetSize(this.scrollElement.value) / 2 - this.mainAxisPaddingStart() : offset,
     );
     if (!at) return;
-    const target = centered
-      ? at.index
-      : at.fraction > 0.5
-        ? at.index + 1
-        : at.index;
-    this.scrollToIndex(
-      Math.min(target, this.items.value.length - 1),
-      undefined,
-      true,
-    );
+    const target = centered ? at.index : at.fraction > 0.5 ? at.index + 1 : at.index;
+    this.scrollToIndex(Math.min(target, this.items.value.length - 1), undefined, true);
   }
 
   loop(now: number) {
@@ -1711,8 +1605,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     lenis.targetScroll += dt / this.creepMsPerPx;
 
     const container = this.offsetSize(this.scrollElement.value);
-    const atEnd =
-      lenis.actualScroll + container >= this.scrollExtent.value - 10;
+    const atEnd = lenis.actualScroll + container >= this.scrollExtent.value - 10;
 
     if (this.props.autoRepeat && atEnd) {
       // End reached: stop creeping and let the auto-repeat chain own the
@@ -1788,12 +1681,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     }
     const wrapper = this.itemsWrapperElement.value;
     if (!wrapper) return;
-    const anchor = this.SelectionLogic.positionAt(
-      wrapper,
-      event.clientX,
-      event.clientY,
-      this.selectionAxis,
-    );
+    const anchor = this.SelectionLogic.positionAt(wrapper, event.clientX, event.clientY, this.selectionAxis);
     if (!anchor) return;
 
     event.preventDefault();
@@ -1820,22 +1708,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
     this.selectionDrag.pointerX = event.clientX;
     this.selectionDrag.pointerY = event.clientY;
-    const focus = this.SelectionLogic.positionAt(
-      wrapper,
-      event.clientX,
-      event.clientY,
-      this.selectionAxis,
-    );
+    const focus = this.SelectionLogic.positionAt(wrapper, event.clientX, event.clientY, this.selectionAxis);
     if (focus) this.selectionFocus.value = focus;
     this.applySelectionHighlight();
 
     const outside =
-      this.SelectionLogic.edgeDistance(
-        scrollElement,
-        event.clientX,
-        event.clientY,
-        this.selectionAxis,
-      ) !== 0;
+      this.SelectionLogic.edgeDistance(scrollElement, event.clientX, event.clientY, this.selectionAxis) !== 0;
     if (outside) this.startSelectionAutoscroll();
     else this.stopSelectionAutoscroll();
   }
@@ -1854,10 +1732,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  way a click elsewhere drops a native one. */
   onDocumentMouseDown(event: MouseEvent) {
     const scrollElement = this.scrollElement.value;
-    const inside =
-      scrollElement &&
-      event.target instanceof Node &&
-      scrollElement.contains(event.target);
+    const inside = scrollElement && event.target instanceof Node && scrollElement.contains(event.target);
     if (inside) return;
     this.clearTextSelection();
   }
@@ -1881,10 +1756,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // a selection the user made elsewhere on the page.
     const selection = window.getSelection();
     const scrollElement = this.scrollElement.value;
-    const ours =
-      selection?.anchorNode &&
-      scrollElement &&
-      scrollElement.contains(selection.anchorNode);
+    const ours = selection?.anchorNode && scrollElement && scrollElement.contains(selection.anchorNode);
     if (ours) selection.removeAllRanges();
   }
 
@@ -1911,8 +1783,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
     // No range: make sure no stale highlight of ours lingers.
     if (!range) {
-      const ours =
-        selection.anchorNode && wrapper.contains(selection.anchorNode);
+      const ours = selection.anchorNode && wrapper.contains(selection.anchorNode);
       if (ours) selection.removeAllRanges();
       return;
     }
@@ -1939,10 +1810,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const startRow = this.mountedRowElement(visible.start.index);
     const endRow = this.mountedRowElement(visible.end.index);
     if (!startRow || !endRow) return;
-    const start = this.SelectionLogic.caretInRow(
-      startRow,
-      visible.start.offset,
-    );
+    const start = this.SelectionLogic.caretInRow(startRow, visible.start.offset);
     const end = this.SelectionLogic.caretInRow(endRow, visible.end.offset);
     selection.setBaseAndExtent(start.node, start.offset, end.node, end.offset);
   }
@@ -1970,9 +1838,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   protected startSelectionAutoscroll() {
     if (this.selectionDrag.frame !== null) return;
     this.selectionDrag.lastTs = null;
-    this.selectionDrag.frame = requestAnimationFrame(
-      this.selectionAutoscrollStep,
-    );
+    this.selectionDrag.frame = requestAnimationFrame(this.selectionAutoscrollStep);
   }
 
   protected stopSelectionAutoscroll() {
@@ -2009,15 +1875,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       this.selectionAxis,
     );
     if (distance === 0) return;
-    const elapsed =
-      this.selectionDrag.lastTs === null
-        ? 16.7
-        : Math.min(50, ts - this.selectionDrag.lastTs);
+    const elapsed = this.selectionDrag.lastTs === null ? 16.7 : Math.min(50, ts - this.selectionDrag.lastTs);
     this.selectionDrag.lastTs = ts;
-    const speed = this.SelectionLogic.autoscrollSpeed(
-      Math.abs(distance),
-      this.creepFactor,
-    );
+    const speed = this.SelectionLogic.autoscrollSpeed(Math.abs(distance), this.creepFactor);
 
     // 2 — scroll: the target moves by speed × time in the pointer's
     // direction, and never above the top.
@@ -2035,19 +1895,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       this.selectionDrag.pointerY,
       this.selectionAxis,
     );
-    const focus = this.SelectionLogic.positionAt(
-      wrapper,
-      probe.x,
-      probe.y,
-      this.selectionAxis,
-    );
+    const focus = this.SelectionLogic.positionAt(wrapper, probe.x, probe.y, this.selectionAxis);
     if (focus) this.selectionFocus.value = focus;
 
     // 4 — re-pin and continue.
     this.applySelectionHighlight();
-    this.selectionDrag.frame = requestAnimationFrame(
-      this.selectionAutoscrollStep,
-    );
+    this.selectionDrag.frame = requestAnimationFrame(this.selectionAutoscrollStep);
   }
 
   onStart(event: any) {
@@ -2055,10 +1908,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   onDrop(event: any) {
-    const dropIndex =
-      event.target
-        .closest('.virtual-scroller__item')
-        .getAttribute('aria-rowindex') - 1;
+    const dropIndex = event.target.closest('.virtual-scroller__item').getAttribute('aria-rowindex') - 1;
     this.emit('drop', this.startIndex, dropIndex);
   }
 
@@ -2090,12 +1940,8 @@ export namespace VirtualScroller {
   /* Identity */
 
   export const $Class = Static($VirtualScroller); // anchor — statics live here
-  export let Class = Reactive(
-    $VirtualScroller,
-  ) as unknown as typeof $VirtualScroller;
-  export type Instance<T extends BaseItem> = ReactiveInstance<
-    $VirtualScroller<T>
-  >;
+  export let Class = Reactive($VirtualScroller) as unknown as typeof $VirtualScroller;
+  export type Instance<T extends BaseItem> = ReactiveInstance<$VirtualScroller<T>>;
 
   /* Types */
 
@@ -2114,10 +1960,9 @@ export namespace VirtualScroller {
    *  default-free `creepMsPerPx` optional; the one thing a runtime map
    *  cannot carry — the generic item type — is grafted back over
    *  `modelValue`. */
-  export type Props<T extends BaseItem> = Omit<
-    ExtractPropTypes<typeof $Class.props>,
-    'modelValue'
-  > & { modelValue: T[] };
+  export type Props<T extends BaseItem> = Omit<ExtractPropTypes<typeof $Class.props>, 'modelValue'> & {
+    modelValue: T[];
+  };
 
   export type Emits = ExtractEmitTypes<typeof $Class.emits>;
 

@@ -47,9 +47,7 @@ class $HorizontalScrollerExample {
 
   // TEMPLATE-REF TARGET — the scroller component's exposed instance.
   get scroller() {
-    return ref<HorizontalVirtualScroller.Exposed<VirtualScroller.BaseItem> | null>(
-      null,
-    );
+    return ref<HorizontalVirtualScroller.Exposed<VirtualScroller.BaseItem> | null>(null);
   }
 
   /** The one cast per class: instance code reads its own statics here. */

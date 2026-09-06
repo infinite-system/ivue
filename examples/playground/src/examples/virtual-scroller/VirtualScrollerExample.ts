@@ -25,11 +25,7 @@ class $VirtualScrollerExample {
   /** Builds the 24 body variants — the `$bodyVariants` cache calls this once per receiver. */
   protected static buildBodyVariants(): string[] {
     const variants: string[] = [];
-    for (
-      let openerIndex = 0;
-      openerIndex < this.OPENERS.length;
-      openerIndex++
-    ) {
+    for (let openerIndex = 0; openerIndex < this.OPENERS.length; openerIndex++) {
       for (let extraSentences = 0; extraSentences < 4; extraSentences++) {
         let body = `${this.OPENERS[openerIndex]}.`;
         for (let extra = 0; extra < extraSentences; extra++) {
