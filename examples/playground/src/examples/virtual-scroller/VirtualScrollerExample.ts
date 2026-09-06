@@ -190,12 +190,21 @@ class $VirtualScrollerExample {
     const point = (args: unknown[]) =>
       `(${Math.round(args[0] as number)},${Math.round(args[1] as number)})`;
     wrap('beginAt', (args, result) => `${point(args)} ${args[2] ?? 'mouse'} → ${result}`);
-    wrap('extendTo', (args) => `${point(args)} rows=${scroller.selection.selectedRowCount}`);
-    wrap('endDrag', () => `rows=${scroller.selection.selectedRowCount}`);
     wrap(
-      'autoscrollStep',
-      () => `rows=${scroller.selection.selectedRowCount} first=${scroller.visibleIndex.start}`
+      'extendTo',
+      (args) => `${point(args)} rows=${scroller.selection.selectedRowCount} ${dom()}`
     );
+    wrap('endDrag', () => `rows=${scroller.selection.selectedRowCount}`);
+    const dom = () => {
+      const mounted =
+        scroller.itemsWrapperElement?.querySelectorAll('.virtual-scroller__item') ?? [];
+      const last = mounted[mounted.length - 1];
+      const tail = last
+        ? ` last#${last.getAttribute('aria-rowindex')} text=${(last.textContent ?? '').trim().length}`
+        : '';
+      return `walk=${scroller.visibleIndex.start}..${scroller.visibleIndex.end} dom=${mounted.length}${tail} pos=${Math.round(Number(scroller.scrollPosition))}`;
+    };
+    wrap('autoscrollStep', () => `rows=${scroller.selection.selectedRowCount} ${dom()}`);
     wrap('clear', () => '');
     wrap(
       'onSelectionChange',
