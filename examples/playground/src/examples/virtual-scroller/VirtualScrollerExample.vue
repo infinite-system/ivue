@@ -149,7 +149,7 @@ nav button.playing {
   min-height: 1.6em;
 }
 nav .play {
-  min-width: 8.5em;
+  min-width: 124px;
   justify-content: center;
 }
 </style>

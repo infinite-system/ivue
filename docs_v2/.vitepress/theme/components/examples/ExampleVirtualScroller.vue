@@ -144,7 +144,7 @@ const {
   min-height: 1.6em;
 }
 .evs-play {
-  min-width: 8.5em;
+  min-width: 124px;
   justify-content: center;
 }
 </style>
