@@ -68,31 +68,24 @@ class $VirtualScrollerSelection {
     return 'a, button, input, textarea, select, [contenteditable="true"], [contenteditable=""]';
   }
 
-  /** Drag autoscroll: px per ms at the zone's inner boundary — already
-   *  moving, not a crawl a finger has to wait on … */
-  static get AUTOSCROLL_MIN_PX_PER_MS() {
-    return 0.12;
+  /**
+   * Drag autoscroll for a POINTER. A pointer is small and can leave the
+   * frame, so the zone inside the frame is shallow and the speed keeps
+   * rising past the edge: a crawl at the zone's inner boundary, full
+   * speed AUTOSCROLL_MOUSE.reachPx beyond the edge.
+   */
+  static get AUTOSCROLL_MOUSE(): VirtualScrollerSelection.AutoscrollProfile {
+    return { zonePx: 32, restPx: 0, reachPx: 160, minPxPerMs: 0.15, maxPxPerMs: 2 };
   }
 
-  /** … and the fastest it gets, reached a finger's width BEFORE the edge
-   *  and held from there on, so a finger never has to touch the edge —
-   *  past the edge is the page, its own text and its zoom. */
-  static get AUTOSCROLL_MAX_PX_PER_MS() {
-    return 0.9;
-  }
-
-  /** The band at the edge where the speed no longer changes — the room a
-   *  resting fingertip needs. */
-  static get AUTOSCROLL_EDGE_REST_PX() {
-    return 28;
-  }
-
-  /** The band inside each edge where a drag begins to scroll — the closer
-   *  to the edge, the faster; past the edge it keeps ramping. A drag never
-   *  has to leave the frame, which a frame the size of the page has no
-   *  outside of. */
-  static get AUTOSCROLL_EDGE_ZONE_PX() {
-    return 128;
+  /**
+   * Drag autoscroll for a FINGER. A finger is wide and cannot rest on the
+   * edge — past it is the page, its own text and its zoom — so the zone
+   * is deep, already moving at its inner boundary, and full speed is
+   * reached restPx BEFORE the edge and held from there on.
+   */
+  static get AUTOSCROLL_TOUCH(): VirtualScrollerSelection.AutoscrollProfile {
+    return { zonePx: 96, restPx: 24, reachPx: 0, minPxPerMs: 0.06, maxPxPerMs: 0.9 };
   }
 
   /* Geometry — viewport point ↔ row ↔ logical position */
@@ -330,11 +323,12 @@ class $VirtualScrollerSelection {
     container: Element,
     x: number,
     y: number,
-    axis: VirtualScrollerSelection.Axis = 'y'
+    axis: VirtualScrollerSelection.Axis = 'y',
+    profile: VirtualScrollerSelection.AutoscrollProfile = this.AUTOSCROLL_MOUSE
   ): number {
     const [start, end] = this.axisEdges(container, axis);
     const along = axis === 'y' ? y : x;
-    const zone = this.AUTOSCROLL_EDGE_ZONE_PX;
+    const zone = profile.zonePx;
     if (along < start + zone) return along - (start + zone);
     if (along > end - zone) return along - (end - zone);
     return 0;
@@ -517,11 +511,14 @@ class $VirtualScrollerSelection {
    * finger never has to hunt for the edge. The scroller's creep knob
    * scales it — a faster reading creep is a faster drag — within bounds.
    */
-  static autoscrollSpeed(distance: number, creepFactor = 1): number {
-    const rise = this.AUTOSCROLL_EDGE_ZONE_PX - this.AUTOSCROLL_EDGE_REST_PX;
+  static autoscrollSpeed(
+    distance: number,
+    creepFactor = 1,
+    profile: VirtualScrollerSelection.AutoscrollProfile = this.AUTOSCROLL_MOUSE
+  ): number {
+    const rise = profile.zonePx - profile.restPx + profile.reachPx;
     const ramp = Math.min(1, Math.max(0, distance) / rise);
-    const span = this.AUTOSCROLL_MAX_PX_PER_MS - this.AUTOSCROLL_MIN_PX_PER_MS;
-    const base = this.AUTOSCROLL_MIN_PX_PER_MS + span * ramp;
+    const base = profile.minPxPerMs + (profile.maxPxPerMs - profile.minPxPerMs) * ramp;
     return base * Math.min(3, Math.max(0.5, creepFactor));
   }
 
@@ -606,6 +603,11 @@ class $VirtualScrollerSelection {
   }
 
   // DERIVED — plain getters over the two cells
+  /** The cadence the live drag scrolls with: a finger's or a pointer's. */
+  get autoscrollProfile() {
+    return this.input.touch ? this.self.AUTOSCROLL_TOUCH : this.self.AUTOSCROLL_MOUSE;
+  }
+
   /** The selection in document order, or null when there is none. */
   get range(): VirtualScrollerSelection.Range | null {
     const anchor = this.anchor.value;
@@ -772,7 +774,9 @@ class $VirtualScrollerSelection {
     const focus = this.self.positionAt(wrapper, x, y, this.owner.selectionAxis);
     if (focus) this.focus.value = focus;
     this.applyHighlight();
-    const nearEdge = this.self.edgePenetration(frame, x, y, this.owner.selectionAxis) !== 0;
+    const nearEdge =
+      this.self.edgePenetration(frame, x, y, this.owner.selectionAxis, this.autoscrollProfile) !==
+      0;
     if (nearEdge) this.startAutoscroll();
     else this.stopAutoscroll();
   }
@@ -1104,7 +1108,8 @@ class $VirtualScrollerSelection {
     }
     const x = rect.left;
     const y = rect.top + rect.height / 2;
-    if (this.self.edgePenetration(frame, x, y, this.owner.selectionAxis) === 0) {
+    const profile = this.self.AUTOSCROLL_TOUCH;
+    if (this.self.edgePenetration(frame, x, y, this.owner.selectionAxis, profile) === 0) {
       this.stopHandleAutoscroll();
       return;
     }
@@ -1124,11 +1129,12 @@ class $VirtualScrollerSelection {
     if (!frame) return;
     if (ts - this.handle.lastChange > this.self.HANDLE_SETTLE_MS) return;
     const axis = this.owner.selectionAxis;
-    const distance = this.self.edgePenetration(frame, this.handle.x, this.handle.y, axis);
+    const profile = this.self.AUTOSCROLL_TOUCH;
+    const distance = this.self.edgePenetration(frame, this.handle.x, this.handle.y, axis, profile);
     if (distance === 0) return;
     const elapsed = this.handle.lastTs === null ? 16.7 : Math.min(50, ts - this.handle.lastTs);
     this.handle.lastTs = ts;
-    const speed = this.self.autoscrollSpeed(Math.abs(distance), this.owner.creepFactor);
+    const speed = this.self.autoscrollSpeed(Math.abs(distance), this.owner.creepFactor, profile);
     this.owner.scrollBy(Math.sign(distance) * speed * elapsed);
     this.owner.nudgePaint();
     this.handle.frame = requestAnimationFrame(this.handleAutoscrollStep);
@@ -1255,11 +1261,18 @@ class $VirtualScrollerSelection {
     const axis = this.owner.selectionAxis;
 
     // 1 — speed and direction from how far the pointer pushed into the edge zone.
-    const distance = this.self.edgePenetration(frame, this.drag.pointerX, this.drag.pointerY, axis);
+    const profile = this.autoscrollProfile;
+    const distance = this.self.edgePenetration(
+      frame,
+      this.drag.pointerX,
+      this.drag.pointerY,
+      axis,
+      profile
+    );
     if (distance === 0) return;
     const elapsed = this.drag.lastTs === null ? 16.7 : Math.min(50, ts - this.drag.lastTs);
     this.drag.lastTs = ts;
-    const speed = this.self.autoscrollSpeed(Math.abs(distance), this.owner.creepFactor);
+    const speed = this.self.autoscrollSpeed(Math.abs(distance), this.owner.creepFactor, profile);
 
     // 2 — scroll by speed × time in the pointer's direction.
     this.owner.scrollBy(Math.sign(distance) * speed * elapsed);
@@ -1328,6 +1341,17 @@ export namespace VirtualScrollerSelection {
   export interface Range {
     start: Position;
     end: Position;
+  }
+
+  /** A drag autoscroll cadence: the zone inside each edge where scrolling
+   *  begins, the band at the edge where the speed no longer changes, how
+   *  far past the edge it may keep rising, and the two speeds. */
+  export interface AutoscrollProfile {
+    zonePx: number;
+    restPx: number;
+    reachPx: number;
+    minPxPerMs: number;
+    maxPxPerMs: number;
   }
 
   /** A DOM caret: a node and an offset within it. */

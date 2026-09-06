@@ -211,21 +211,27 @@ test('assembleText copies the first row from its offset, every row between in fu
 
 // domain-invariant: $VirtualScrollerSelection — If the pointer nears an edge or passes it, then the drag scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge: an upward drag scrolls up.
 test('the autoscroll speed ramps from the minimum at the edge to the maximum past the ramp, scaled by the creep knob within bounds', () => {
-  const zone = Logic.AUTOSCROLL_EDGE_ZONE_PX;
-  const rise = zone - Logic.AUTOSCROLL_EDGE_REST_PX;
-  expect(Logic.autoscrollSpeed(0)).toBe(Logic.AUTOSCROLL_MIN_PX_PER_MS);
-  // One straight rise: halfway to the rest band, halfway in speed.
-  expect(Logic.autoscrollSpeed(rise / 2)).toBeCloseTo(
-    (Logic.AUTOSCROLL_MIN_PX_PER_MS + Logic.AUTOSCROLL_MAX_PX_PER_MS) / 2,
+  // A pointer: a shallow zone, and the speed keeps rising past the edge.
+  const mouse = Logic.AUTOSCROLL_MOUSE;
+  expect(Logic.autoscrollSpeed(0)).toBe(mouse.minPxPerMs);
+  expect(Logic.autoscrollSpeed(mouse.zonePx)).toBeLessThan(mouse.maxPxPerMs);
+  expect(Logic.autoscrollSpeed(mouse.zonePx + mouse.reachPx)).toBeCloseTo(mouse.maxPxPerMs, 6);
+  expect(Logic.autoscrollSpeed(mouse.zonePx + mouse.reachPx * 5)).toBe(mouse.maxPxPerMs);
+  // A finger: a deep zone, full speed a fingertip before the edge and held there.
+  const touch = Logic.AUTOSCROLL_TOUCH;
+  const rise = touch.zonePx - touch.restPx;
+  expect(Logic.autoscrollSpeed(0, 1, touch)).toBe(touch.minPxPerMs);
+  expect(Logic.autoscrollSpeed(rise / 2, 1, touch)).toBeCloseTo(
+    (touch.minPxPerMs + touch.maxPxPerMs) / 2,
     6
   );
-  // Full speed a fingertip before the edge, and the same at the edge and beyond.
-  expect(Logic.autoscrollSpeed(rise)).toBeCloseTo(Logic.AUTOSCROLL_MAX_PX_PER_MS, 6);
-  expect(Logic.autoscrollSpeed(zone)).toBe(Logic.AUTOSCROLL_MAX_PX_PER_MS);
-  expect(Logic.autoscrollSpeed(zone + 500)).toBe(Logic.AUTOSCROLL_MAX_PX_PER_MS);
-  expect(Logic.autoscrollSpeed(0, 2)).toBe(Logic.AUTOSCROLL_MIN_PX_PER_MS * 2);
-  expect(Logic.autoscrollSpeed(0, 100)).toBe(Logic.AUTOSCROLL_MIN_PX_PER_MS * 3);
-  expect(Logic.autoscrollSpeed(0, 0)).toBe(Logic.AUTOSCROLL_MIN_PX_PER_MS * 0.5);
+  expect(Logic.autoscrollSpeed(rise, 1, touch)).toBeCloseTo(touch.maxPxPerMs, 6);
+  expect(Logic.autoscrollSpeed(touch.zonePx, 1, touch)).toBeCloseTo(touch.maxPxPerMs, 6);
+  expect(Logic.autoscrollSpeed(touch.zonePx + 500, 1, touch)).toBeCloseTo(touch.maxPxPerMs, 6);
+  // The creep knob scales either, within bounds.
+  expect(Logic.autoscrollSpeed(0, 2)).toBe(mouse.minPxPerMs * 2);
+  expect(Logic.autoscrollSpeed(0, 100)).toBe(mouse.minPxPerMs * 3);
+  expect(Logic.autoscrollSpeed(0, 0)).toBe(mouse.minPxPerMs * 0.5);
 });
 
 /* ---- text offsets over real nodes ----------------------------------- */
@@ -384,9 +390,9 @@ test('a double click selects the word under the caret and a triple click the row
 
 // domain-invariant: $VirtualScrollerSelection — If the pointer nears an edge or passes it, then the drag scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge: an upward drag scrolls up.
 test('holding the pointer inside the edge zone scrolls forward at a crawl, past the frame faster, above it backward, and returning to the interior stops it', () => {
-  const zone = Logic.AUTOSCROLL_EDGE_ZONE_PX;
+  const zone = Logic.AUTOSCROLL_MOUSE.zonePx;
   const { instance, owner, dom } = selection(0, 5);
-  // The zone is the last 48 px inside each edge and everything beyond.
+  // A pointer's zone is the last 32 px inside each edge and everything beyond.
   expect(Logic.edgePenetration(dom.frame, 60, 200)).toBe(0);
   expect(Logic.edgePenetration(dom.frame, 60, 400 - zone + 10)).toBe(10);
   expect(Logic.edgePenetration(dom.frame, 60, 450)).toBe(50 + zone);
