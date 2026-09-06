@@ -28,7 +28,7 @@
 import { ref, shallowRef, watch, type ComputedRef, type Ref } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
-import { TouchSelectionGesture } from './TouchSelectionGesture';
+import { VirtualScrollerSelectionTouch } from './VirtualScrollerSelectionTouch';
 
 class $VirtualScrollerSelection {
   /* Knobs */
@@ -527,7 +527,7 @@ class $VirtualScrollerSelection {
   // frame by `attach`, disposed with this selection.
   // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected get $touch() {
-    return new TouchSelectionGesture.Class(this);
+    return new VirtualScrollerSelectionTouch.Class(this);
   }
 
   // DERIVED — plain getters over the two cells

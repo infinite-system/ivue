@@ -64,7 +64,7 @@ everything else is the production component.
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.ts [VirtualScrollerSelection.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/TouchSelectionGesture.ts [TouchSelectionGesture.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.ts [VirtualScrollerSelectionTouch.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.ts [VirtualScrollerPadding.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.ts [VirtualScrollerItem.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
@@ -79,7 +79,7 @@ contract the spec headers bind to — the method is on
 ::: code-group
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts [VirtualScroller.test.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts [VirtualScrollerSelection.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/TouchSelectionGesture.test.ts [TouchSelectionGesture.test.ts]
+<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.test.ts [VirtualScrollerSelectionTouch.test.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.test.ts [VirtualScrollerPadding.test.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.test.ts [VirtualScrollerItem.test.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.test.ts [VirtualScrollerExample.test.ts]
@@ -119,7 +119,7 @@ redeploys the example automatically.
   autoscroll and follow loops. The scroller supplies what only it knows
   through a small owner interface: its elements, the axis, a row's text
   by index, and a way to scroll by a delta. On touch, a long press starts
-  the selection (a `TouchSelectionGesture` hosted by the selection owns
+  the selection (a `VirtualScrollerSelectionTouch` hosted by the selection owns
   the hold and the slop) and a chip copies it, since a phone has no
   Ctrl+C. A double click selects the word under the caret and a triple
   click the row, the browser's own units given back over the data.

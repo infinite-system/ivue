@@ -256,7 +256,7 @@ classes:
 | `HorizontalVirtualScroller.test.ts` | hosted | the same Probe over the subclass; asserts every seam names x |
 | `VirtualScrollerItem.test.ts` | hosted | an element and a parent with two rect readers |
 | `VirtualScrollerSelection.test.ts` | statics + instance | `elementFromPoint`, the caret API, rects; an owner object |
-| `TouchSelectionGesture.test.ts` | instance | fake timers; touch events on real nodes, one detached |
+| `VirtualScrollerSelectionTouch.test.ts` | instance | fake timers; touch events on real nodes, one detached |
 | `VirtualScrollerPadding.test.ts` | statics + instance | an owner object; fake timers |
 | `VirtualScrollerExample.test.ts` | instance | a static override to a thousand rows; a scroller object |
 | `TextChunker.test.ts` | statics | the canvas context, once as null and once as arithmetic |

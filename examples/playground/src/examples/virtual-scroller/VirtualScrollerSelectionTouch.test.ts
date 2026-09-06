@@ -4,9 +4,9 @@ Goal: Let a finger select text in a list where a drag already means scroll, by p
 [Touch events keep firing on the node the finger landed on](virtual-scroller.invariants.md#touch-events-keep-firing-on-the-node-the-finger-landed-on)
 [A long press turns the next move into a selection](virtual-scroller.invariants.md#a-long-press-turns-the-next-move-into-a-selection)
 [A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
-// domain-invariant: $TouchSelectionGesture — If the finger moves past the slop before the hold fires, then the gesture is a scroll and the owner never hears of it.
-// domain-invariant: $TouchSelectionGesture — If two fingers land, then no hold arms; if a second finger lands mid-drag, then the first finger keeps the focus.
-// domain-invariant: $TouchSelectionGesture — If the finger lifts after a selecting drag, then the drag ends and the copy chip shows exactly when the owner holds a selection.
+// domain-invariant: $VirtualScrollerSelectionTouch — If the finger moves past the slop before the hold fires, then the gesture is a scroll and the owner never hears of it.
+// domain-invariant: $VirtualScrollerSelectionTouch — If two fingers land, then no hold arms; if a second finger lands mid-drag, then the first finger keeps the focus.
+// domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts after a selecting drag, then the drag ends and the copy chip shows exactly when the owner holds a selection.
 Impossible if true: The page scrolling while a touch selection is being extended.
 
 === GENERATOR-DESCRIBED ===
@@ -19,9 +19,9 @@ node instead of the element.
 */
 
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { TouchSelectionGesture } from './TouchSelectionGesture';
+import { VirtualScrollerSelectionTouch } from './VirtualScrollerSelectionTouch';
 
-const Gesture = TouchSelectionGesture.Class;
+const Gesture = VirtualScrollerSelectionTouch.Class;
 
 function touchEvent(type: string, touches: { x: number; y: number; id?: number }[]) {
   const event = new Event(type, { bubbles: true, cancelable: true });
@@ -59,7 +59,7 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-// domain-invariant: $TouchSelectionGesture — If the finger moves past the slop before the hold fires, then the gesture is a scroll and the owner never hears of it.
+// domain-invariant: $VirtualScrollerSelectionTouch — If the finger moves past the slop before the hold fires, then the gesture is a scroll and the owner never hears of it.
 test('movement within the slop keeps the hold alive; past it, the gesture is a scroll', () => {
   expect(Gesture.exceedsSlop(0)).toBe(false);
   expect(Gesture.exceedsSlop(Gesture.SLOP_PX)).toBe(false);
@@ -79,7 +79,7 @@ test('movement within the slop keeps the hold alive; past it, the gesture is a s
 });
 
 // invariant: A long press turns the next move into a selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-// impossible-if-true: $TouchSelectionGesture — The page scrolling while a touch selection is being extended.
+// impossible-if-true: $VirtualScrollerSelectionTouch — The page scrolling while a touch selection is being extended.
 test('a still hold promotes at the long-press mark, and every move after it extends the selection while the page and the list are told to stay put', () => {
   const { owner, instance, row } = gesture();
   row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
@@ -109,7 +109,7 @@ test('a finger whose origin row left the DOM still extends the selection, becaus
   instance.dispose();
 });
 
-// domain-invariant: $TouchSelectionGesture — If two fingers land, then no hold arms; if a second finger lands mid-drag, then the first finger keeps the focus.
+// domain-invariant: $VirtualScrollerSelectionTouch — If two fingers land, then no hold arms; if a second finger lands mid-drag, then the first finger keeps the focus.
 test('two fingers never arm a hold, and a second finger mid-drag does not steal the focus', () => {
   const pinch = gesture();
   pinch.row.dispatchEvent(
@@ -138,7 +138,7 @@ test('two fingers never arm a hold, and a second finger mid-drag does not steal 
   instance.dispose();
 });
 
-// domain-invariant: $TouchSelectionGesture — If the finger lifts after a selecting drag, then the drag ends and the copy chip shows exactly when the owner holds a selection.
+// domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts after a selecting drag, then the drag ends and the copy chip shows exactly when the owner holds a selection.
 // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('lifting the finger ends the drag and reports selected exactly when the owner holds a selection; a cleared selection drops the chip', () => {
   const { owner, instance, row } = gesture();

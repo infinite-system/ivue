@@ -1,5 +1,5 @@
-// TouchSelectionGesture.ts — the touch gesture that produces a text
-// selection over a virtual list, hosted by the scroller.
+// VirtualScrollerSelectionTouch.ts — the touch gesture that produces a text
+// selection over a virtual list, hosted by the selection.
 //
 // On a touchscreen a drag already means SCROLL, so selection needs a way
 // in that scrolling does not use. The browser's own convention is the long
@@ -17,7 +17,7 @@ import { ref, shallowRef } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 
-class $TouchSelectionGesture {
+class $VirtualScrollerSelectionTouch {
   /* Knobs */
 
   /** How long a finger must hold still before movement selects. */
@@ -43,11 +43,11 @@ class $TouchSelectionGesture {
   }
 
   // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  constructor(public owner: TouchSelectionGesture.Owner) {}
+  constructor(public owner: VirtualScrollerSelectionTouch.Owner) {}
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
-    return this.constructor as typeof $TouchSelectionGesture;
+    return this.constructor as typeof $VirtualScrollerSelectionTouch;
   }
 
   // MUTABLE STATE — whether a touch selection is being extended right now
@@ -206,8 +206,8 @@ class $TouchSelectionGesture {
   }
 }
 
-export namespace TouchSelectionGesture {
-  export const $Class = Static($TouchSelectionGesture); // anchor — it declares statics
+export namespace VirtualScrollerSelectionTouch {
+  export const $Class = Static($VirtualScrollerSelectionTouch); // anchor — it declares statics
   export let Class = Reactive($Class); // reactive — the scroller hosts one
   export type Instance = typeof Class.Instance;
 

@@ -1,6 +1,6 @@
 # Virtual scroller invariants
 
-The living contract for the virtual scroller subsystem: `VirtualScroller.ts` and its `HorizontalVirtualScroller.ts` subclass, the row model `VirtualScrollerItem.ts`, and the three hosted capabilities `VirtualScrollerSelection.ts`, `TouchSelectionGesture.ts` and `VirtualScrollerPadding.ts`. Records are unnumbered; the name is the identifier and is referenced verbatim by code annotations (`// invariant: <name> (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)`) and by the generator headers of the colocated `*.test.ts` files.
+The living contract for the virtual scroller subsystem: `VirtualScroller.ts` and its `HorizontalVirtualScroller.ts` subclass, the row model `VirtualScrollerItem.ts`, and the three hosted capabilities `VirtualScrollerSelection.ts`, `VirtualScrollerSelectionTouch.ts` and `VirtualScrollerPadding.ts`. Records are unnumbered; the name is the identifier and is referenced verbatim by code annotations (`// invariant: <name> (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)`) and by the generator headers of the colocated `*.test.ts` files.
 
 Two kinds of records, and the split is load-bearing:
 
@@ -54,7 +54,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Mechanism:** The prefix-sum cursor turns an estimate plus a sparse map of measured sizes into positions in O(distance); the window walk mounts the rows the container covers plus the pad and reduces everything else to two spacers; the clamp and the rebase make the rendered numbers safe before Lenis writes them; the hosted capabilities add selection, touch and adaptive padding through owner interfaces of a handful of members, so each is a class with its own statics, its own spec and its own reason to exist.
 
-**Generates:** The colocated specs (`VirtualScroller.test.ts`, `HorizontalVirtualScroller.test.ts`, `VirtualScrollerItem.test.ts`, `VirtualScrollerSelection.test.ts`, `TouchSelectionGesture.test.ts`, `VirtualScrollerPadding.test.ts`); the component sweep's drag-select, touch and flick probes (`docs_v2/scripts/component-sweep.cjs`); the example pages `docs_v2/examples/virtual-scroller.md` and `docs_v2/examples/horizontal-scroller.md`; the text marquee, which composes the horizontal scroller (`../text-marquee/text-marquee.invariants.md`).
+**Generates:** The colocated specs (`VirtualScroller.test.ts`, `HorizontalVirtualScroller.test.ts`, `VirtualScrollerItem.test.ts`, `VirtualScrollerSelection.test.ts`, `VirtualScrollerSelectionTouch.test.ts`, `VirtualScrollerPadding.test.ts`); the component sweep's drag-select, touch and flick probes (`docs_v2/scripts/component-sweep.cjs`); the example pages `docs_v2/examples/virtual-scroller.md` and `docs_v2/examples/horizontal-scroller.md`; the text marquee, which composes the horizontal scroller (`../text-marquee/text-marquee.invariants.md`).
 
 **Impossible if true:** Blank canvas under the viewport after a flick. A highlight that collapses when its anchor row recycles. A copy that stops at the mounted rows. A horizontal scroller that forks the cursor or the creep. A scroll position rendered outside the extent.
 
@@ -118,7 +118,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If a finger lands on a node and that node leaves the DOM, then the finger's later touchmove and touchend events still fire on that node and nowhere above it.
 
-**Scope:** `TouchSelectionGesture.ts`: `attach`, `followTouch`, `stopFollowingTouch`. Any touch gesture whose origin element a virtual list may recycle mid-gesture.
+**Scope:** `VirtualScrollerSelectionTouch.ts`: `attach`, `followTouch`, `stopFollowingTouch`. Any touch gesture whose origin element a virtual list may recycle mid-gesture.
 
 **Renegotiable at:** The Touch Events specification — the touch target is fixed at touchstart.
 
@@ -128,11 +128,11 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Rejected alternatives:** Document-level touch listeners — they never see the events of a recycled origin row, which is exactly the row a drag past the edge recycles.
 
-**Evidence:** `TouchSelectionGesture.ts` `followTouch`. Test: "a finger whose origin row left the DOM still extends the selection, because the listeners ride the origin node". LESSONS.md, the text selection mechanics entry.
+**Evidence:** `VirtualScrollerSelectionTouch.ts` `followTouch`. Test: "a finger whose origin row left the DOM still extends the selection, because the listeners ride the origin node". LESSONS.md, the text selection mechanics entry.
 
 **Impossible if true:** A document listener receiving a touchmove whose target is detached.
 
-**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/TouchSelectionGesture.test.ts -t "origin row left the DOM"`
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.test.ts -t "origin row left the DOM"`
 
 **Status:** provisional
 
@@ -430,17 +430,17 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If a single finger holds still for 450 ms, then the next move extends a selection instead of scrolling, the move is prevented and flagged for Lenis, and lifting the finger ends the drag; if the finger moves past 8 px before the hold fires, then the gesture is a scroll and the owner never hears of it.
 
-**Scope:** `TouchSelectionGesture.ts`: `onTouchStart`, `promoteHold`, `onTouchMove`, `onTouchEnd`, `LONG_PRESS_MS`, `SLOP_PX`. Hosted by the selection; the scroller attaches it at mount.
+**Scope:** `VirtualScrollerSelectionTouch.ts`: `onTouchStart`, `promoteHold`, `onTouchMove`, `onTouchEnd`, `LONG_PRESS_MS`, `SLOP_PX`. Hosted by the selection; the scroller attaches it at mount.
 
 **Mechanism:** A drag already means scroll on a touchscreen, so selection takes the browser's own convention. The hold timer promotes; slop cancels; after promotion `preventDefault` stops the page and `lenisStopPropagation` stops the list. The gesture calls the same three primitives the mouse path calls.
 
 **Generates:** The copy chip (`showsCopyChip`, `copy`) — a phone has no Ctrl+C.
 
-**Evidence:** `TouchSelectionGesture.ts`. Tests: "a still hold promotes at the long-press mark, and every move after it extends the selection while the page and the list are told to stay put", "movement within the slop keeps the hold alive; past it, the gesture is a scroll". Sweep: "ExampleVirtualScroller (touch long-press + chip)".
+**Evidence:** `VirtualScrollerSelectionTouch.ts`. Tests: "a still hold promotes at the long-press mark, and every move after it extends the selection while the page and the list are told to stay put", "movement within the slop keeps the hold alive; past it, the gesture is a scroll". Sweep: "ExampleVirtualScroller (touch long-press + chip)".
 
 **Impossible if true:** The page scrolling while a touch selection is being extended. A selection beginning from a moving finger.
 
-**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/TouchSelectionGesture.test.ts`
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.test.ts`
 
 **Status:** provisional
 
@@ -586,11 +586,11 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If a capability needs what only the scroller knows, then it receives an `Owner` object of a handful of members through its constructor, reached by the scroller through one `$`-getter, and the capability never imports or types the scroller class.
 
-**Scope:** `VirtualScrollerSelection.Owner`, `TouchSelectionGesture.Owner`, `VirtualScrollerPadding.Owner`; the `$selection`, `$touch` and `$padding` getters.
+**Scope:** `VirtualScrollerSelection.Owner`, `VirtualScrollerSelectionTouch.Owner`, `VirtualScrollerPadding.Owner`; the `$selection`, `$touch` and `$padding` getters.
 
 **Mechanism:** The owner interface names the exact boundary; a plain object satisfies it, which is what makes each capability testable without a scroller and swappable by overriding one getter. The selection hosts the touch gesture the same way the scroller hosts the selection.
 
-**Generates:** The owner doubles in `VirtualScrollerSelection.test.ts`, `TouchSelectionGesture.test.ts` and `VirtualScrollerPadding.test.ts`; the seam a grid or a tree would implement to get selection.
+**Generates:** The owner doubles in `VirtualScrollerSelection.test.ts`, `VirtualScrollerSelectionTouch.test.ts` and `VirtualScrollerPadding.test.ts`; the seam a grid or a tree would implement to get selection.
 
 **Rejected alternatives:** Passing the scroller instance — the capability then reaches into everything, and its spec needs a scroller.
 
@@ -598,7 +598,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Impossible if true:** An import of `VirtualScroller` inside a hosted capability file.
 
-**Verification:** `grep -L "from './VirtualScroller'" examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.ts examples/playground/src/examples/virtual-scroller/TouchSelectionGesture.ts examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.ts` lists all three.
+**Verification:** `grep -L "from './VirtualScroller'" examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.ts examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.ts examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.ts` lists all three.
 
 **Status:** provisional
 
