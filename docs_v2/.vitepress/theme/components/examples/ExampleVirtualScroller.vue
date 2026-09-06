@@ -68,7 +68,7 @@ const {
         back to the top
       </button>
       <button
-        class="d-btn"
+        class="d-btn evs-play"
         :class="{ 'evs-playing': example.isAutoPlaying }"
         type="button"
         @click="example.toggleAutoPlay()"
@@ -88,6 +88,7 @@ const {
         <span class="evs-speed-value">{{ example.speedLabel }}</span>
       </label>
     </div>
+    <p class="d-mono evs-hint">{{ example.autoPlayHint }}</p>
   </DemoBox>
 </template>
 
@@ -137,5 +138,13 @@ const {
   min-width: 58px;
   color: var(--vp-c-text-1);
   font-variant-numeric: tabular-nums;
+}
+.evs-hint {
+  margin: 8px 0 0;
+  min-height: 1.6em;
+}
+.evs-play {
+  min-width: 8.5em;
+  justify-content: center;
 }
 </style>

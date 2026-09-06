@@ -93,7 +93,12 @@ class $VirtualScrollerExample {
   }
 
   get playButtonLabel() {
-    return this.isAutoPlaying ? 'autoplay on — scroll up to stop' : 'autoplay';
+    return this.isAutoPlaying ? 'pause' : 'autoplay';
+  }
+
+  /** The tip line under the controls — its own row, so toggling never shifts the buttons. */
+  get autoPlayHint() {
+    return this.isAutoPlaying ? 'autoplay on — scroll up to stop, or press pause' : 'autoplay off — press ▶ to glide through the list';
   }
 
   /** The one cast per class: instance code reads its own statics here. */

@@ -24,6 +24,7 @@ const {
       <nav>
         <button
           type="button"
+          class="play"
           :class="{ playing: example.isAutoPlaying }"
           @click="example.toggleAutoPlay()"
         >
@@ -49,6 +50,7 @@ const {
           <span class="speed-value">{{ example.speedLabel }}</span>
         </label>
       </nav>
+      <p class="hint">{{ example.autoPlayHint }}</p>
     </header>
     <main class="example-body">
       <VirtualScroller
@@ -139,5 +141,15 @@ nav button.playing {
 }
 .row b {
   color: #7dd3fc;
+}
+.example-header .hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #8b95b5;
+  min-height: 1.6em;
+}
+nav .play {
+  min-width: 8.5em;
+  justify-content: center;
 }
 </style>
