@@ -107,6 +107,7 @@ class $VirtualScrollerSelection {
    * measured against the TRIMMED text, which is also what copy emits — the
    * two must agree or a copied row would start a few characters off.
    */
+  // invariant: Text offsets are measured against the trimmed row text (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   static rowText(row: Element): string {
     return (row.textContent ?? '').trim();
   }
@@ -295,6 +296,29 @@ class $VirtualScrollerSelection {
     return axis === 'y' ? { x: bounds.left + 1, y: pointerY } : { x: pointerX, y: bounds.top + 1 };
   }
 
+  /**
+   * The word around a text offset — a run of letters, digits and
+   * underscores, the unit a double click selects. mousedown's
+   * preventDefault takes the browser's own double-click selection away
+   * with the drag-selection, so the class gives it back over the DATA.
+   * Punctuation runs and whitespace runs are their own units, as in the
+   * browser: a double click on "divs," takes "divs". A caret right after
+   * a word belongs to that word (the pointer was on its last letter).
+   */
+  static wordBoundsAt(text: string, offset: number): { start: number; end: number } {
+    if (text.length === 0) return { start: 0, end: 0 };
+    const kindOf = (index: number) =>
+      /\s/.test(text[index]) ? 'space' : /[\p{L}\p{N}_]/u.test(text[index]) ? 'word' : 'mark';
+    let at = Math.min(text.length - 1, Math.max(0, offset));
+    if (at > 0 && at === offset && kindOf(at) !== 'word' && kindOf(at - 1) === 'word') at--;
+    const kind = kindOf(at);
+    let start = at;
+    while (start > 0 && kindOf(start - 1) === kind) start--;
+    let end = at + 1;
+    while (end < text.length && kindOf(end) === kind) end++;
+    return { start, end };
+  }
+
   /* Range math — no DOM */
 
   /** Document order: by row index first, then by offset within the row. */
@@ -355,6 +379,7 @@ class $VirtualScrollerSelection {
    * `textOf` is asked for every row in the span — mounted or not — which
    * is what lets copy reach rows the DOM never held at the same time.
    */
+  // invariant: The selection is a range over the data (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   static assembleText(
     range: VirtualScrollerSelection.Range,
     textOf: (index: number) => string,
@@ -395,6 +420,8 @@ class $VirtualScrollerSelection {
   // component's setup: the plain watch lands in the component's scope and
   // is reaped on unmount. Rows recycle under a live selection, so after
   // every window change the highlight is re-pinned to what is mounted.
+  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: The selection is a range over the data (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   constructor(public owner: VirtualScrollerSelection.Owner) {
     watch(
       () => this.owner.visibleItems.value,
@@ -434,6 +461,7 @@ class $VirtualScrollerSelection {
 
   // HOSTED — the touch gesture (long press, then move); attached to the
   // frame by `attach`, disposed with this selection.
+  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected get $touch() {
     return new TouchSelectionGesture.Class(this);
   }
@@ -533,6 +561,29 @@ class $VirtualScrollerSelection {
     else this.stopAutoscroll();
   }
 
+  /**
+   * Select a whole unit at a viewport point — the word or the row under
+   * it — as a settled range, no drag. The outside-press listeners arm so
+   * a click elsewhere drops it, like any selection.
+   */
+  selectAt(x: number, y: number, unit: 'word' | 'row'): boolean {
+    const wrapper = this.owner.itemsWrapperElement.value;
+    if (!wrapper) return false;
+    const position = this.self.positionAt(wrapper, x, y, this.owner.selectionAxis);
+    if (!position) return false;
+    const text = this.owner.rowText(position.index);
+    const bounds =
+      unit === 'row'
+        ? { start: 0, end: text.length }
+        : this.self.wordBoundsAt(text, position.offset);
+    this.end();
+    this.anchor.value = { index: position.index, offset: bounds.start };
+    this.focus.value = { index: position.index, offset: bounds.end };
+    this.listenForOutsidePress();
+    this.applyHighlight();
+    return true;
+  }
+
   /** End the drag: the range stays. A drag that never moved (anchor ===
    *  focus) leaves nothing selected. */
   endDrag() {
@@ -556,6 +607,16 @@ class $VirtualScrollerSelection {
   onMouseDown(event: MouseEvent) {
     const isPrimaryButton = event.button === 0;
     if (!isPrimaryButton || this.self.isInteractive(event.target)) return;
+    // The second click of a double click selects the word, the third the
+    // row — the browser's own multi-click units, which the preventDefault
+    // below would otherwise take away with the drag-selection.
+    // invariant: A multi-click selects the word or the row under it (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+    if (event.detail >= 2) {
+      const unit = event.detail === 2 ? 'word' : 'row';
+      if (this.selectAt(event.clientX, event.clientY, unit)) event.preventDefault();
+      return;
+    }
+    // invariant: A native selection dies with the node that anchors it (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     if (this.beginAt(event.clientX, event.clientY)) event.preventDefault();
   }
 
@@ -608,6 +669,8 @@ class $VirtualScrollerSelection {
     const frame = this.owner.scrollElement.value;
     const ours = selection?.anchorNode && frame && frame.contains(selection.anchorNode);
     if (ours) selection.removeAllRanges();
+    // Nothing is selected any more: the outside-press listeners go too.
+    this.stopListeningForOutsidePress();
   }
 
   /** Stop the drag and its loops without touching the range — unmount and
@@ -628,6 +691,7 @@ class $VirtualScrollerSelection {
    * index-based, so nothing is lost when a boundary row unmounts; the
    * visible part is simply re-derived.
    */
+  // invariant: The selection is a range over the data (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   applyHighlight() {
     const range = this.range;
     const wrapper = this.owner.itemsWrapperElement.value;
@@ -782,9 +846,20 @@ class $VirtualScrollerSelection {
     if (this.drag.listening) return;
     document.addEventListener('mousemove', this.onMouseMove);
     document.addEventListener('mouseup', this.onMouseUp);
+    this.listenForOutsidePress();
+    this.drag.listening = true;
+  }
+
+  /** The outside-press listeners: armed by any selection, dropped with it.
+   *  Adding twice is safe — the handler is identity-stable. */
+  protected listenForOutsidePress() {
     document.addEventListener('mousedown', this.onDocumentPress, true);
     document.addEventListener('touchstart', this.onDocumentPress, true);
-    this.drag.listening = true;
+  }
+
+  protected stopListeningForOutsidePress() {
+    document.removeEventListener('mousedown', this.onDocumentPress, true);
+    document.removeEventListener('touchstart', this.onDocumentPress, true);
   }
 
   protected stopListening() {
@@ -794,10 +869,7 @@ class $VirtualScrollerSelection {
     this.drag.listening = false;
     // The outside-press listeners outlive the drag: they stay armed until
     // the selection itself is cleared.
-    if (!this.hasSelection) {
-      document.removeEventListener('mousedown', this.onDocumentPress, true);
-      document.removeEventListener('touchstart', this.onDocumentPress, true);
-    }
+    if (!this.hasSelection) this.stopListeningForOutsidePress();
   }
 }
 

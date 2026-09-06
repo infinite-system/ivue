@@ -229,6 +229,26 @@ const settle = (p, ms = 300) => p.waitForTimeout(ms);
     if (lines[0].startsWith('#')) throw new Error('first line should start mid-row');
     ok('ExampleVirtualScroller (drag-select + copy)', `${selected} rows selected over a ${mounted}-row window, ${lines.length} lines copied from the data`);
   });
+  await step('ExampleVirtualScroller (double-click word)', async () => {
+    const frame = p.locator('.evs-frame .virtual-scroller').first(); const fb = await frame.boundingBox();
+    const rows = p.locator('.evs-frame .virtual-scroller__item');
+    let rb = null; for (let i = 0; i < await rows.count(); i++) { const box = await rows.nth(i).boundingBox(); if (box && box.y > fb.y + 10 && box.y + box.height < fb.y + fb.height - 10) { rb = box; break; } }
+    if (!rb) throw new Error('no mounted row inside the frame');
+    // a double click must select the word under the caret — mousedown's preventDefault took the native one away
+    await p.mouse.click(rb.x + 80, rb.y + rb.height / 2, { clickCount: 2 }); await settle(p, 200);
+    const selected = Number((await p.locator('.evs-stats').innerText()).match(/rows selected\s*([\d,]+)/)?.[1]?.replace(/,/g, '') ?? 0);
+    if (selected !== 1) throw new Error(`double click selected ${selected} rows`);
+    await p.keyboard.press('Control+C'); await settle(p, 300);
+    const word = await p.evaluate(() => navigator.clipboard.readText());
+    if (!word || /\s/.test(word)) throw new Error(`double click copied ${JSON.stringify(word)}`);
+    await p.mouse.click(rb.x + 80, rb.y + rb.height / 2, { clickCount: 3 }); await settle(p, 200);
+    await p.keyboard.press('Control+C'); await settle(p, 300);
+    const row = await p.evaluate(() => navigator.clipboard.readText());
+    if (!row.startsWith('#') || row.length <= word.length) throw new Error(`triple click copied ${JSON.stringify(row)}`);
+    // clean up with a single click on the row: press begins a drag, release without movement clears it
+    await p.mouse.click(rb.x + 80, rb.y + rb.height / 2); await settle(p, 200);
+    ok('ExampleVirtualScroller (double-click word)', `double click copied ${JSON.stringify(word)}, triple click the ${row.length}-char row`);
+  });
   await step('ExampleVirtualScroller (touch long-press + chip)', async () => {
     const frame = p.locator('.evs-frame .virtual-scroller').first(); await frame.scrollIntoViewIfNeeded(); const fb = await frame.boundingBox();
     const rows = p.locator('.evs-frame .virtual-scroller__item');
