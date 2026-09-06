@@ -871,12 +871,43 @@ class $VirtualScrollerSelection {
     const anchor = this.self.positionOfNode(wrapper, selection.anchorNode, selection.anchorOffset);
     const focus = this.self.positionOfNode(wrapper, selection.focusNode, selection.focusOffset);
     if (!anchor || !focus) return;
+    // The native selection only ever covers the MOUNTED part of the range.
+    // A selection that equals that clamped part is our own re-pin however
+    // the browser re-seated its nodes — adopting it would shrink a range
+    // that runs past the window to the rows on screen.
+    if (this.isClampedEcho(anchor, focus)) return;
     this.anchor.value = anchor;
     this.focus.value = focus;
     this.native.applied = this.self.selectionSignature(selection);
     this.listenForOutsidePress();
     // A finger made it: offer the chip, since a phone has no Ctrl+C.
     if (window.matchMedia?.('(pointer: coarse)').matches) this.$touch.selected.value = true;
+  }
+
+  /** Whether a native range equals the logical range clamped to the
+   *  mounted window — our own highlight, wherever its nodes now sit. */
+  protected isClampedEcho(
+    anchor: VirtualScrollerSelection.Position,
+    focus: VirtualScrollerSelection.Position
+  ): boolean {
+    const range = this.range;
+    const wrapper = this.owner.itemsWrapperElement.value;
+    if (!range || !wrapper) return false;
+    const rows = this.self.mountedRows(wrapper);
+    if (rows.length === 0) return false;
+    const lastRow = rows[rows.length - 1];
+    const visible = this.self.clampToWindow(
+      range,
+      this.self.rowIndexOf(rows[0]),
+      this.self.rowIndexOf(lastRow),
+      this.self.rowText(lastRow).length
+    );
+    if (!visible) return false;
+    const native = this.self.normalize(anchor, focus);
+    return (
+      this.self.comparePositions(native.start, visible.start) === 0 &&
+      this.self.comparePositions(native.end, visible.end) === 0
+    );
   }
 
   mountedRowElement(index: number): Element | null {

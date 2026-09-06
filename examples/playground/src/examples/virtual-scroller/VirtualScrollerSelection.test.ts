@@ -421,7 +421,7 @@ test('a frame the size of the page still scrolls a selection: the zone lies insi
 });
 
 // invariant: A native selection inside the frame is adopted as the logical range (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-test('a native selection the reader makes inside the frame becomes the logical range, while our own re-pins are ignored as echoes', () => {
+test('a native selection the reader makes inside the frame becomes the logical range, while our own re-pins are ignored as echoes, re-seated or not', () => {
   const { instance, dom } = selection(0, 5);
   instance.attach(dom.frame);
   // Our own drag pins the native selection; a selectionchange for it changes nothing.
@@ -439,13 +439,25 @@ test('a native selection the reader makes inside the frame becomes the logical r
   expect(instance.range).toEqual({ start: at(1, 5), end: at(3, 7) });
   expect(instance.selectedRowCount).toBe(3);
 
+  // A range that runs past the window is pinned natively on the mounted rows
+  // only; the browser re-seating that selection must not shrink the range.
+  instance.anchor.value = at(1, 5);
+  instance.focus.value = at(40, 2);
+  instance.applyHighlight();
+  expect(instance.selectedRowCount).toBe(40);
+  const reseated = window.getSelection()!;
+  const tail = dom.rows[4].childNodes[2] as Text;
+  reseated.setBaseAndExtent(dom.rows[1].childNodes[2], 3, tail, tail.data.length);
+  instance.onSelectionChange();
+  expect(instance.selectedRowCount).toBe(40);
+
   // A native selection elsewhere on the page is not ours to adopt.
   const elsewhere = document.createElement('p');
   elsewhere.textContent = 'reader text';
   document.body.appendChild(elsewhere);
   native.setBaseAndExtent(elsewhere.firstChild!, 0, elsewhere.firstChild!, 6);
   instance.onSelectionChange();
-  expect(instance.range).toEqual({ start: at(1, 5), end: at(3, 7) });
+  expect(instance.range).toEqual({ start: at(1, 5), end: at(40, 2) });
   instance.dispose();
 });
 

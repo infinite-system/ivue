@@ -571,11 +571,11 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Scope:** `VirtualScrollerSelection.ts`: `onSelectionChange`, `positionOfNode`, `selectionSignature`, the `native.applied` holder; the `selectionchange` listener installed by `attach`.
 
-**Mechanism:** `applyHighlight` records the signature of what it wrote; `selectionchange` events whose signature matches are echoes. Anything else inside the wrapper is converted node by node through `offsetInRow`, the same translation the drag uses.
+**Mechanism:** `applyHighlight` records the signature of what it wrote; `selectionchange` events whose signature matches are echoes, and so is any native range that equals the logical range clamped to the mounted window (`isClampedEcho`), however the browser re-seated its nodes — the native selection only ever covers the mounted rows, so adopting that would shrink a range that runs past the window. Anything else inside the wrapper is converted node by node through `offsetInRow`, the same translation the drag uses.
 
-**Evidence:** `VirtualScrollerSelection.ts` `onSelectionChange`. Test: "a native selection the reader makes inside the frame becomes the logical range, while our own re-pins are ignored as echoes".
+**Evidence:** `VirtualScrollerSelection.ts` `onSelectionChange`. Test: "a native selection the reader makes inside the frame becomes the logical range, while our own re-pins are ignored as echoes, re-seated or not".
 
-**Impossible if true:** A chip label that disagrees with the native highlight. An adopted range from a selection outside the frame.
+**Impossible if true:** A chip label that disagrees with the native highlight. An adopted range from a selection outside the frame. A range that runs past the window shrinking to the mounted rows on a selectionchange.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts -t "adopted|echoes"`
 
