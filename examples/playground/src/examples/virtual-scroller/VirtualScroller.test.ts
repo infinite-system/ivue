@@ -11,11 +11,12 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 [A cross-axis touch belongs to the page](virtual-scroller.invariants.md#a-cross-axis-touch-belongs-to-the-page)
 [Shrinking the list prunes the measurements at its new end](virtual-scroller.invariants.md#shrinking-the-list-prunes-the-measurements-at-its-new-end)
 [The copied text is the string the row renders](virtual-scroller.invariants.md#the-copied-text-is-the-string-the-row-renders)
+[The frame is never natively panned along its own axis](virtual-scroller.invariants.md#the-frame-is-never-natively-panned-along-its-own-axis)
 // domain-invariant: $VirtualScroller — If the props object is read, then it is the fusion of the static types and defaults: the required list carries no default and the creep knob unset reads as the tuned cadence.
 // domain-invariant: $VirtualScroller — If item i's position is asked, then it is the sum of the sizes before it, measured where known and the estimate elsewhere, whichever way the cursor walks there.
 // domain-invariant: $VirtualScroller — If a pixel offset is asked for its item, then anchoring that item at the returned fraction gives the same pixel back.
 // domain-invariant: $VirtualScroller — If the window changes, then itemsChanged fires once with the padded bounds; a scroll that keeps the window fires nothing.
-// domain-invariant: $VirtualScroller — If the vertical seams are read, then they name the y axis: translateY and deltaY.
+// domain-invariant: $VirtualScroller — If the vertical seams are read, then they name the y axis: translateY and deltaY, and the frame lets the browser pan only the cross axis: pan-x.
 // domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded; only a landing snaps.
 Impossible if true: A rendered scroll position beyond the extent.
 Impossible if true: An item outside the list with a position.
@@ -414,10 +415,12 @@ test('seeking to a fraction lands on the item that fraction names, flush to the 
   vi.useRealTimers();
 });
 
-// domain-invariant: $VirtualScroller — If the vertical seams are read, then they name the y axis: translateY and deltaY.
+// domain-invariant: $VirtualScroller — If the vertical seams are read, then they name the y axis: translateY and deltaY, and the frame lets the browser pan only the cross axis: pan-x.
+// invariant: The frame is never natively panned along its own axis (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('the vertical seams read the y axis: translateY and deltaY', () => {
   const { instance, unmount } = scroller(rows(3));
   expect(instance.probeTransform(-42)).toBe('translateY(-42px)');
   expect(instance.probeAxisDelta({ deltaX: 5, deltaY: 9 })).toBe(9);
+  expect(instance.frameTouchAction).toBe('pan-x');
   unmount();
 });

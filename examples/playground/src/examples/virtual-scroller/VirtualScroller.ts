@@ -378,6 +378,16 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return ['height', 'top'];
   }
 
+  // invariant: The frame is never natively panned along its own axis (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  /** The frame's touch-action: the browser may pan the CROSS axis natively
+   *  (that gesture is the page's) and never the own axis — Lenis drives
+   *  that in JS, and a touch selection needs the own-axis touchmove to
+   *  stay cancelable. Without this, the overflow:auto frame pans for real
+   *  under a selecting finger and the transformed rows leave the clip. */
+  get frameTouchAction(): string {
+    return 'pan-x';
+  }
+
   /* Container size */
 
   protected elementSize: ReturnType<typeof useElementSize>;

@@ -681,3 +681,20 @@ The old realized post player rounded the transform always and felt
 solid; the fork went fully fractional for the tail's sake — the answer
 is both, split by speed. Rects cannot see this class of defect; only eyes
 or a screenshot diff can.
+
+## Touch selection on iOS — three things it needs
+
+(1) The frame must exclude its OWN axis from native panning
+(`touch-action: pan-x` on the vertical scroller, `pan-y` on the strip —
+a seam getter, `frameTouchAction`). The frame is `overflow: auto` for
+Lenis's native-scroll adoption, so without it a finger our long press has
+promoted still pans the frame natively once iOS stops honouring
+`preventDefault` — `scrollTop` moves under the transformed rows and "all
+the text disappears". (2) Autoscroll must begin INSIDE the frame (a 48 px
+edge zone, ramping through the edge) — a finger cannot leave a frame that
+is the page. (3) iOS shows native selection handles for any programmatic
+selection and the reader WILL drag them: adopt `selectionchange` ranges
+inside the wrapper into the logical range (signature-guarded against our
+own re-pins), or the chip copies something else than the highlight. None
+of this is testable in jsdom or headless Chromium beyond the unit arms;
+the iPhone is the instrument.

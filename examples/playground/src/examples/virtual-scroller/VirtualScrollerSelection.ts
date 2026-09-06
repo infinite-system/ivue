@@ -58,6 +58,14 @@ class $VirtualScrollerSelection {
     return 160;
   }
 
+  /** The band inside each edge where a drag begins to scroll — the closer
+   *  to the edge, the faster; past the edge it keeps ramping. A drag never
+   *  has to leave the frame, which a frame the size of the page has no
+   *  outside of. */
+  static get AUTOSCROLL_EDGE_ZONE_PX() {
+    return 48;
+  }
+
   /* Geometry — viewport point ↔ row ↔ logical position */
 
   /** The row element under a viewport point, or null between rows. */
@@ -281,10 +289,34 @@ class $VirtualScrollerSelection {
   }
 
   /**
-   * Where to probe for the focus while autoscrolling with the pointer
-   * held outside the frame: the pointer's coordinate along the axis
-   * (clamped into the frame by positionAt) paired with the frame's first
-   * pixel across it — the row that just scrolled in under the pointer.
+   * How far the pointer has pushed INTO the autoscroll zone along the
+   * axis, signed: negative toward the start edge (up / left), positive
+   * toward the end edge, 0 in the frame's interior. The zone starts
+   * AUTOSCROLL_EDGE_ZONE_PX inside each edge and continues past it, so
+   * the value grows smoothly from the zone's inner boundary through the
+   * edge and beyond — the speed ramp reads it directly.
+   */
+  // invariant: A drag scrolls from inside the edge zone (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  static edgePenetration(
+    container: Element,
+    x: number,
+    y: number,
+    axis: VirtualScrollerSelection.Axis = 'y'
+  ): number {
+    const [start, end] = this.axisEdges(container, axis);
+    const along = axis === 'y' ? y : x;
+    const zone = this.AUTOSCROLL_EDGE_ZONE_PX;
+    if (along < start + zone) return along - (start + zone);
+    if (along > end - zone) return along - (end - zone);
+    return 0;
+  }
+
+  /**
+   * Where to probe for the focus while autoscrolling. Inside the frame
+   * the pointer itself: the rows slide under it and the focus follows.
+   * Outside, the pointer's coordinate along the axis (clamped into the
+   * frame by positionAt) paired with the frame's first pixel across it —
+   * the row that just scrolled in under the pointer.
    */
   static probePoint(
     container: Element,
@@ -292,6 +324,9 @@ class $VirtualScrollerSelection {
     pointerY: number,
     axis: VirtualScrollerSelection.Axis = 'y'
   ): { x: number; y: number } {
+    if (this.edgeDistance(container, pointerX, pointerY, axis) === 0) {
+      return { x: pointerX, y: pointerY };
+    }
     const bounds = container.getBoundingClientRect();
     return axis === 'y' ? { x: bounds.left + 1, y: pointerY } : { x: pointerX, y: bounds.top + 1 };
   }
@@ -317,6 +352,31 @@ class $VirtualScrollerSelection {
     let end = at + 1;
     while (end < text.length && kindOf(end) === kind) end++;
     return { start, end };
+  }
+
+  /** The logical position of a DOM caret inside a mounted row of the
+   *  wrapper, or null when the node is not in one. */
+  static positionOfNode(
+    wrapper: Element,
+    node: Node | null,
+    offset: number
+  ): VirtualScrollerSelection.Position | null {
+    if (!node || !wrapper.contains(node)) return null;
+    const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : (node as Element);
+    const row = element?.closest(this.ROW_SELECTOR) ?? null;
+    if (!row) return null;
+    return { index: this.rowIndexOf(row), offset: this.offsetInRow(row, { node, offset }) };
+  }
+
+  /** A native selection's four coordinates as one comparable string. */
+  static selectionSignature(selection: Selection): string {
+    const identity = (node: Node | null) =>
+      node
+        ? node.nodeName +
+          '@' +
+          Array.prototype.indexOf.call(node.parentNode?.childNodes ?? [], node)
+        : '';
+    return `${identity(selection.anchorNode)}:${selection.anchorOffset}>${identity(selection.focusNode)}:${selection.focusOffset}`;
   }
 
   /* Range math — no DOM */
@@ -459,6 +519,10 @@ class $VirtualScrollerSelection {
     listening: false
   };
 
+  /** The native selection this class last applied, as a signature — a
+   *  selectionchange that matches it is our own echo, not the reader's. */
+  protected readonly native = { applied: '' };
+
   // HOSTED — the touch gesture (long press, then move); attached to the
   // frame by `attach`, disposed with this selection.
   // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
@@ -510,11 +574,13 @@ class $VirtualScrollerSelection {
 
   attach(element: HTMLElement) {
     this.$touch.attach(element);
+    document.addEventListener('selectionchange', this.onSelectionChange);
   }
 
   dispose() {
     this.end();
     this.$touch.dispose();
+    document.removeEventListener('selectionchange', this.onSelectionChange);
   }
 
   /* The three pointer-agnostic primitives — every gesture calls these */
@@ -556,8 +622,8 @@ class $VirtualScrollerSelection {
     const focus = this.self.positionAt(wrapper, x, y, this.owner.selectionAxis);
     if (focus) this.focus.value = focus;
     this.applyHighlight();
-    const outside = this.self.edgeDistance(frame, x, y, this.owner.selectionAxis) !== 0;
-    if (outside) this.startAutoscroll();
+    const nearEdge = this.self.edgePenetration(frame, x, y, this.owner.selectionAxis) !== 0;
+    if (nearEdge) this.startAutoscroll();
     else this.stopAutoscroll();
   }
 
@@ -730,6 +796,34 @@ class $VirtualScrollerSelection {
     const start = this.self.caretInRow(startRow, visible.start.offset);
     const end = this.self.caretInRow(endRow, visible.end.offset);
     selection.setBaseAndExtent(start.node, start.offset, end.node, end.offset);
+    this.native.applied = this.self.selectionSignature(selection);
+  }
+
+  /**
+   * The reader moved the native selection inside the frame by some means
+   * that is not ours — iOS's selection handles after a long press or a
+   * double tap, shift+arrows on a keyboard. Adopt it as the logical
+   * range, so the chip's count and the copied text follow what the
+   * reader sees. Our own re-pins echo back as selectionchange too; the
+   * signature tells them apart. A live drag owns the range and ignores
+   * this.
+   */
+  // invariant: A native selection inside the frame is adopted as the logical range (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  onSelectionChange() {
+    if (this.dragging.value) return;
+    const wrapper = this.owner.itemsWrapperElement.value;
+    const selection = window.getSelection();
+    if (!wrapper || !selection || selection.isCollapsed) return;
+    if (this.self.selectionSignature(selection) === this.native.applied) return;
+    const anchor = this.self.positionOfNode(wrapper, selection.anchorNode, selection.anchorOffset);
+    const focus = this.self.positionOfNode(wrapper, selection.focusNode, selection.focusOffset);
+    if (!anchor || !focus) return;
+    this.anchor.value = anchor;
+    this.focus.value = focus;
+    this.native.applied = this.self.selectionSignature(selection);
+    this.listenForOutsidePress();
+    // A finger made it: offer the chip, since a phone has no Ctrl+C.
+    if (window.matchMedia?.('(pointer: coarse)').matches) this.$touch.selected.value = true;
   }
 
   mountedRowElement(index: number): Element | null {
@@ -820,8 +914,8 @@ class $VirtualScrollerSelection {
     if (!frame || !wrapper) return;
     const axis = this.owner.selectionAxis;
 
-    // 1 — speed and direction from the pointer's distance past the edge.
-    const distance = this.self.edgeDistance(frame, this.drag.pointerX, this.drag.pointerY, axis);
+    // 1 — speed and direction from how far the pointer pushed into the edge zone.
+    const distance = this.self.edgePenetration(frame, this.drag.pointerX, this.drag.pointerY, axis);
     if (distance === 0) return;
     const elapsed = this.drag.lastTs === null ? 16.7 : Math.min(50, ts - this.drag.lastTs);
     this.drag.lastTs = ts;

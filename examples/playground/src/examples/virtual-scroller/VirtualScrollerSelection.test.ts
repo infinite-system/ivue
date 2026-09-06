@@ -7,10 +7,12 @@ Goal: Hold a text selection over a virtual list as a range over the DATA, so the
 [The copied text is the string the row renders](virtual-scroller.invariants.md#the-copied-text-is-the-string-the-row-renders)
 [A multi-click selects the word or the row under it](virtual-scroller.invariants.md#a-multi-click-selects-the-word-or-the-row-under-it)
 [A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
+[A drag scrolls from inside the edge zone](virtual-scroller.invariants.md#a-drag-scrolls-from-inside-the-edge-zone)
+[A native selection inside the frame is adopted as the logical range](virtual-scroller.invariants.md#a-native-selection-inside-the-frame-is-adopted-as-the-logical-range)
 // domain-invariant: $VirtualScrollerSelection — If anchor and focus are given in either order, then the range is the same, and a range whose ends coincide is no selection.
 // domain-invariant: $VirtualScrollerSelection — If a range is clamped to the mounted window, then an end that scrolled out is pinned to the boundary row, and a range wholly outside the window is null.
 // domain-invariant: $VirtualScrollerSelection — If a point is over a row, then the position is that row at the caret's offset; in a gap it is the nearest row along the axis, at its start before it and its end after; over nothing it is null.
-// domain-invariant: $VirtualScrollerSelection — If the pointer is held past an edge, then the drag scrolls in that direction at a speed that ramps with distance: an upward drag scrolls up.
+// domain-invariant: $VirtualScrollerSelection — If the pointer nears an edge or passes it, then the drag scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge: an upward drag scrolls up.
 // domain-invariant: $VirtualScrollerSelection — If a mousedown is not the primary button or lands on an interactive element, then it is left to the browser; otherwise it begins a selection and takes the native one away.
 // domain-invariant: $VirtualScrollerSelection — If a press lands outside the frame, then the selection clears; inside, it stays.
 Impossible if true: A selection whose anchor equals its focus.
@@ -198,7 +200,7 @@ test('assembleText copies the first row from its offset, every row between in fu
   );
 });
 
-// domain-invariant: $VirtualScrollerSelection — If the pointer is held past an edge, then the drag scrolls in that direction at a speed that ramps with distance: an upward drag scrolls up.
+// domain-invariant: $VirtualScrollerSelection — If the pointer nears an edge or passes it, then the drag scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge: an upward drag scrolls up.
 test('the autoscroll speed ramps from the minimum at the edge to the maximum past the ramp, scaled by the creep knob within bounds', () => {
   expect(Logic.autoscrollSpeed(0)).toBe(Logic.AUTOSCROLL_MIN_PX_PER_MS);
   expect(Logic.autoscrollSpeed(Logic.AUTOSCROLL_RAMP_PX)).toBe(Logic.AUTOSCROLL_MAX_PX_PER_MS);
@@ -361,29 +363,88 @@ test('a double click selects the word under the caret and a triple click the row
   instance.dispose();
 });
 
-// domain-invariant: $VirtualScrollerSelection — If the pointer is held past an edge, then the drag scrolls in that direction at a speed that ramps with distance: an upward drag scrolls up.
-test('holding the pointer below the frame scrolls forward each frame, above it scrolls back, and returning inside stops it', () => {
-  const { instance, owner } = selection(0, 5);
+// domain-invariant: $VirtualScrollerSelection — If the pointer nears an edge or passes it, then the drag scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge: an upward drag scrolls up.
+test('holding the pointer inside the edge zone scrolls forward at a crawl, past the frame faster, above it backward, and returning to the interior stops it', () => {
+  const zone = Logic.AUTOSCROLL_EDGE_ZONE_PX;
+  const { instance, owner, dom } = selection(0, 5);
+  // The zone is the last 48 px inside each edge and everything beyond.
+  expect(Logic.edgePenetration(dom.frame, 60, 100)).toBe(0);
+  expect(Logic.edgePenetration(dom.frame, 60, 200 - zone + 10)).toBe(10);
+  expect(Logic.edgePenetration(dom.frame, 60, 250)).toBe(50 + zone);
+  expect(Logic.edgePenetration(dom.frame, 60, zone - 10)).toBe(-10);
+  expect(Logic.edgePenetration(dom.frame, 60, -30)).toBe(-(30 + zone));
+  // Inside the frame the probe is the pointer; outside, the edge.
+  expect(Logic.probePoint(dom.frame, 60, 170)).toEqual({ x: 60, y: 170 });
+  expect(Logic.probePoint(dom.frame, 60, 250)).toEqual({ x: 1, y: 250 });
+
   instance.beginAt(60, 20);
   frames.length = 0;
-  // 50 px below the frame's bottom edge.
-  instance.extendTo(60, 250);
+  // 10 px into the bottom zone, still inside the frame: a crawl.
+  instance.extendTo(60, 200 - zone + 10);
   expect(frames).toHaveLength(1);
   frames.shift()!(1000);
-  expect(owner.scrollBy).toHaveBeenLastCalledWith(Logic.autoscrollSpeed(50) * 16.7);
-  // The loop re-armed itself.
-  expect(frames).toHaveLength(1);
-
-  // 30 px above the top edge: the same loop now scrolls back.
-  instance.extendTo(60, -30);
+  expect(owner.scrollBy).toHaveBeenLastCalledWith(Logic.autoscrollSpeed(10) * 16.7);
+  // 50 px past the bottom edge: the ramp counts the whole zone plus the overshoot.
+  instance.extendTo(60, 250);
   frames.shift()!(1016.7);
-  expect(owner.scrollBy.mock.calls.at(-1)![0]).toBeCloseTo(-Logic.autoscrollSpeed(30) * 16.7, 6);
-
-  // Back inside: the loop stops, and a stale frame does nothing.
+  expect(owner.scrollBy.mock.calls.at(-1)![0]).toBeCloseTo(
+    Logic.autoscrollSpeed(50 + zone) * 16.7,
+    6
+  );
+  // 30 px above the top edge: the same loop scrolls back.
+  instance.extendTo(60, -30);
+  frames.shift()!(1033.4);
+  expect(owner.scrollBy.mock.calls.at(-1)![0]).toBeCloseTo(
+    -Logic.autoscrollSpeed(30 + zone) * 16.7,
+    6
+  );
+  // Back in the interior: the loop stops, and a stale frame does nothing.
   const calls = owner.scrollBy.mock.calls.length;
   instance.extendTo(60, 100);
-  frames.shift()!(1033.4);
+  frames.shift()!(1050.1);
   expect(owner.scrollBy.mock.calls.length).toBe(calls);
+  instance.dispose();
+});
+
+// invariant: A drag scrolls from inside the edge zone (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a frame the size of the page still scrolls a selection: the zone lies inside the frame, so a pointer never has to leave it', () => {
+  const { instance, owner, dom } = selection(0, 5);
+  instance.beginAt(60, 20);
+  frames.length = 0;
+  instance.extendTo(60, 199);
+  expect(frames).toHaveLength(1);
+  frames.shift()!(1000);
+  expect(owner.scrollBy).toHaveBeenCalled();
+  expect(Logic.edgeDistance(dom.frame, 60, 199)).toBe(0);
+  instance.dispose();
+});
+
+// invariant: A native selection inside the frame is adopted as the logical range (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a native selection the reader makes inside the frame becomes the logical range, while our own re-pins are ignored as echoes', () => {
+  const { instance, dom } = selection(0, 5);
+  instance.attach(dom.frame);
+  // Our own drag pins the native selection; a selectionchange for it changes nothing.
+  instance.beginAt(60, 20);
+  instance.extendTo(30, 100);
+  instance.endDrag();
+  const before = instance.range;
+  instance.onSelectionChange();
+  expect(instance.range).toEqual(before);
+
+  // The reader extends the native selection (iOS handles, shift+arrows): rows 1 → 3.
+  const native = window.getSelection()!;
+  native.setBaseAndExtent(dom.rows[1].childNodes[2], 3, dom.rows[3].childNodes[2], 5);
+  instance.onSelectionChange();
+  expect(instance.range).toEqual({ start: at(1, 5), end: at(3, 7) });
+  expect(instance.selectedRowCount).toBe(3);
+
+  // A native selection elsewhere on the page is not ours to adopt.
+  const elsewhere = document.createElement('p');
+  elsewhere.textContent = 'reader text';
+  document.body.appendChild(elsewhere);
+  native.setBaseAndExtent(elsewhere.firstChild!, 0, elsewhere.firstChild!, 6);
+  instance.onSelectionChange();
+  expect(instance.range).toEqual({ start: at(1, 5), end: at(3, 7) });
   instance.dispose();
 });
 

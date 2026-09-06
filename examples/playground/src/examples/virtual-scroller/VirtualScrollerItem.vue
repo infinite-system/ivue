@@ -11,7 +11,7 @@ const item = new VirtualScrollerItem.Class(props as VirtualScrollerItem.Props, e
 // the state destructure
 const {
   // element refs
-  element,
+  element
 } = item;
 </script>
 <template>

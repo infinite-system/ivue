@@ -10,9 +10,7 @@ const props = defineProps(
   HorizontalVirtualScroller.Class.props
 ) as unknown as HorizontalVirtualScroller.Props<T>;
 
-const emit = defineEmits(
-  HorizontalVirtualScroller.Class.emits
-) as HorizontalVirtualScroller.Emits;
+const emit = defineEmits(HorizontalVirtualScroller.Class.emits) as HorizontalVirtualScroller.Emits;
 
 defineSlots<HorizontalVirtualScroller.Slots<T>>();
 
@@ -35,6 +33,7 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
 <template>
   <div
     ref="scrollElement"
+    :style="{ touchAction: virtualScroller.frameTouchAction }"
     class="virtual-scroller virtual-scroller--x"
     @scroll="virtualScroller.onScroll"
     @copy="virtualScroller.selection.onCopyEvent"
@@ -144,7 +143,10 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.45);
   /* eased relocation, sideways: left/width glide instead of top/height */
-  transition: background 0.15s ease, left 0.2s ease-out, width 0.2s ease-out;
+  transition:
+    background 0.15s ease,
+    left 0.2s ease-out,
+    width 0.2s ease-out;
 }
 .virtual-scroller__thumb.virtual-scroller__thumb--x.dragging {
   transition: background 0.15s ease;

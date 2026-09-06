@@ -3,8 +3,9 @@
 Goal: Turn the tuned vertical scroller sideways by overriding only its axis seams, so widths replace heights everywhere and nothing else forks.
 [Every axis dependency goes through a seam getter](virtual-scroller.invariants.md#every-axis-dependency-goes-through-a-seam-getter)
 [A cross-axis touch belongs to the page](virtual-scroller.invariants.md#a-cross-axis-touch-belongs-to-the-page)
+[The frame is never natively panned along its own axis](virtual-scroller.invariants.md#the-frame-is-never-natively-panned-along-its-own-axis)
 // domain-invariant: $HorizontalVirtualScroller — If the subclass re-tunes one default, then its props object carries that default and the parent's props object keeps its own.
-// domain-invariant: $HorizontalVirtualScroller — If the horizontal seams are read, then every one names the x axis: translateX, deltaX, padding-left, width and left, clientX along the track, and the selection walks along x.
+// domain-invariant: $HorizontalVirtualScroller — If the horizontal seams are read, then every one names the x axis: translateX, deltaX, padding-left, width and left, clientX along the track, the selection walks along x, and the browser may pan only y.
 Impossible if true: A horizontal scroller whose transform, thumb, or gesture reads the y axis.
 
 === GENERATOR-DESCRIBED ===
@@ -87,8 +88,9 @@ test('the strip assumes 300 px cards while the parent keeps 30 px rows, each in 
   );
 });
 
-// domain-invariant: $HorizontalVirtualScroller — If the horizontal seams are read, then every one names the x axis: translateX, deltaX, padding-left, width and left, clientX along the track, and the selection walks along x.
+// domain-invariant: $HorizontalVirtualScroller — If the horizontal seams are read, then every one names the x axis: translateX, deltaX, padding-left, width and left, clientX along the track, the selection walks along x, and the browser may pan only y.
 // invariant: Every axis dependency goes through a seam getter (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+// invariant: The frame is never natively panned along its own axis (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 // impossible-if-true: $HorizontalVirtualScroller — A horizontal scroller whose transform, thumb, or gesture reads the y axis.
 test('every seam names the x axis', () => {
   const { instance, unmount } = strip(rows(3));
@@ -98,6 +100,7 @@ test('every seam names the x axis', () => {
   expect(instance.probeThumbProps()).toEqual(['width', 'left']);
   expect(Object.keys(instance.scrollbarThumbStyle)).toEqual(['width', 'left']);
   expect(instance.selectionAxis).toBe('x');
+  expect(instance.frameTouchAction).toBe('pan-y');
   expect(instance.probeContainerIsWidth()).toBe(true);
   const rect = { left: 100, width: 400, top: 0, height: 10 } as DOMRect;
   expect(instance.probeTrackFraction({ clientX: 300, clientY: 5 } as PointerEvent, rect)).toBe(0.5);

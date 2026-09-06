@@ -107,8 +107,9 @@ redeploys the example automatically.
   anchored to DOM nodes, and this list recycles its nodes, so the browser's
   selection collapses as soon as a row scrolls out and copy sees only what
   is mounted. Here the scroller owns it: mousedown records a logical anchor
-  (item index + character offset), a drag past either edge autoscrolls at
-  a speed that ramps with distance and follows the reading-speed knob, the
+  (item index + character offset), a drag near or past either edge
+  autoscrolls at a speed that ramps with distance and follows the
+  reading-speed knob, the
   highlight is re-pinned to whatever rows are mounted after every window
   change, and copy assembles its text from the items — rows that were
   never on screen together included. All of it lives in

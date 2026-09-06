@@ -75,10 +75,12 @@ item, which the page sets to the same string its row renders. Plain
 strings over an index range cost nothing, so a hundred thousand rows copy
 as fast as ten.
 
-**Autoscroll is the scroller's own loop.** When the pointer is held past
-the frame's edge, a frame loop scrolls in that direction at a speed that
-ramps with distance past the edge, scaled by the reading-speed knob the
-list already has. It writes the scroll target directly, so an upward drag
+**Autoscroll is the scroller's own loop.** When the pointer nears the
+frame's edge or passes it, a frame loop scrolls in that direction at a
+speed that ramps from a crawl inside the edge zone to full speed past
+the edge, scaled by the reading-speed knob the list already has. The
+zone lies inside the frame, so a frame that is the whole page still
+scrolls a selection. It writes the scroll target directly, so an upward drag
 is a scroll up, not the reader taking over, and autoplay keeps its state.
 Each frame it extends the focus to the row that just arrived under the
 pointer and re-pins the highlight.

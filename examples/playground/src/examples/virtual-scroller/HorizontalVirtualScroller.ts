@@ -59,6 +59,11 @@ class $HorizontalVirtualScroller<
     return ['width', 'left'];
   }
 
+  /** Vertical pans are the page's; horizontal ones are the strip's. */
+  override get frameTouchAction(): string {
+    return 'pan-y';
+  }
+
   override get containerSize() {
     return this.elementSize.width;
   }

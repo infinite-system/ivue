@@ -10,7 +10,7 @@ const {
   items,
   speed,
   // element refs
-  scroller,
+  scroller
 } = example;
 </script>
 
@@ -18,8 +18,7 @@ const {
   <div class="example">
     <header class="example-header">
       <p>
-        {{ example.itemCountLabel }} rows ·
-        {{ example.renderedCount }} in the DOM ·
+        {{ example.itemCountLabel }} rows · {{ example.renderedCount }} in the DOM ·
         {{ example.selectedRowsLabel }} selected
       </p>
       <nav>
@@ -32,22 +31,12 @@ const {
           <span class="btn-icon">{{ example.playButtonIcon }}</span>
           {{ example.playButtonLabel }}
         </button>
-        <button type="button" @click="example.jumpTo(499999)">
-          jump to #500,000
-        </button>
-        <button type="button" @click="example.jumpToEnd()">
-          the end
-        </button>
+        <button type="button" @click="example.jumpTo(499999)">jump to #500,000</button>
+        <button type="button" @click="example.jumpToEnd()">the end</button>
         <button type="button" @click="example.jumpTo(0)">the top</button>
         <label class="speed">
           speed
-          <input
-            v-model.number="speed"
-            type="range"
-            min="1"
-            max="60"
-            step="0.1"
-          />
+          <input v-model.number="speed" type="range" min="1" max="60" step="0.1" />
           <span class="speed-value">{{ example.speedLabel }}</span>
         </label>
       </nav>

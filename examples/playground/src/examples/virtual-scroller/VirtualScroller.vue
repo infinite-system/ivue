@@ -6,9 +6,7 @@ import VirtualScrollerItem from './VirtualScrollerItem.vue';
 // by propsWithDefaults, emits, slots, expose type) — the macros receive
 // RUNTIME objects, so the compiler never resolves a cross-file type here;
 // the casts recover the generic <T> precision the runtime maps cannot carry.
-const props = defineProps(
-  VirtualScroller.Class.props
-) as unknown as VirtualScroller.Props<T>;
+const props = defineProps(VirtualScroller.Class.props) as unknown as VirtualScroller.Props<T>;
 
 const emit = defineEmits(VirtualScroller.Class.emits) as VirtualScroller.Emits;
 
@@ -34,6 +32,7 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
 <template>
   <div
     ref="scrollElement"
+    :style="{ touchAction: virtualScroller.frameTouchAction }"
     class="virtual-scroller"
     @scroll="virtualScroller.onScroll"
     @copy="virtualScroller.selection.onCopyEvent"
@@ -100,6 +99,9 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
      scrollTop whenever the spacers change, fighting the Lenis-driven
      translateY (scroll is virtual; scrollTop must stay 0). */
   overflow-anchor: none;
+  /* The long-press callout (Copy / Look Up) would race the selection's
+     own long press; the copy chip is the affordance here. */
+  -webkit-touch-callout: none;
 }
 .virtual-scroller__track {
   position: absolute;
@@ -126,7 +128,10 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
   background: rgba(148, 163, 184, 0.45);
   /* eased relocation: a fast flick or loop-wrap moves the thumb far in
      one frame — glide it instead of teleporting */
-  transition: background 0.15s ease, top 0.2s ease-out, height 0.2s ease-out;
+  transition:
+    background 0.15s ease,
+    top 0.2s ease-out,
+    height 0.2s ease-out;
 }
 .virtual-scroller__thumb.dragging {
   /* while the finger owns it, the thumb must stick — no easing lag */

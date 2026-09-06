@@ -48,6 +48,9 @@ tier each record is proven at, and how the colocated tests bind to it.
 - [Lenis is read inside the walk never tracked](#lenis-is-read-inside-the-walk-never-tracked) — why the pad costs no extra walks.
 - [A pad never outlives its flick](#a-pad-never-outlives-its-flick) — why a resting list mounts its base rows only.
 - [A hosted capability reaches its owner through an interface](#a-hosted-capability-reaches-its-owner-through-an-interface) — why selection, touch and padding are each testable without a scroller.
+- [A drag scrolls from inside the edge zone](#a-drag-scrolls-from-inside-the-edge-zone) — why a selection scrolls even when the frame is the page.
+- [The frame is never natively panned along its own axis](#the-frame-is-never-natively-panned-along-its-own-axis) — why a selecting finger cannot pan the rows out of the clip.
+- [A native selection inside the frame is adopted as the logical range](#a-native-selection-inside-the-frame-is-adopted-as-the-logical-range) — why iOS's handles and a keyboard extend the same range the chip copies.
 
 **Mechanism:** The prefix-sum cursor turns an estimate plus a sparse map of measured sizes into positions in O(distance); the window walk mounts the rows the container covers plus the pad and reduces everything else to two spacers; the clamp and the rebase make the rendered numbers safe before Lenis writes them; the hosted capabilities add selection, touch and adaptive padding through owner interfaces of a handful of members, so each is a class with its own statics, its own spec and its own reason to exist.
 
@@ -521,6 +524,64 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Last refined:** 2026-09-06
 
+### A drag scrolls from inside the edge zone
+
+**Invariant:** If a selecting pointer, mouse or finger, comes within `AUTOSCROLL_EDGE_ZONE_PX` (48 px) of the frame's start or end edge along the axis, then the list scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge, and the focus follows the rows sliding under the pointer; in the interior nothing scrolls.
+
+**Scope:** `VirtualScrollerSelection.ts`: `edgePenetration`, `probePoint`, `extendTo`, `autoscrollStep`, `AUTOSCROLL_EDGE_ZONE_PX`; both axes; mouse and touch, since both call `extendTo`.
+
+**Mechanism:** `edgePenetration` is signed and continuous from the zone's inner boundary through the edge and beyond, so one ramp serves both; `probePoint` probes at the pointer while it is inside the frame and at the edge once it has left. A rule that scrolled only past the edge could never scroll a frame with no outside — a scroller that is the whole page.
+
+**Rejected alternatives:** Scrolling only past the edge — a page-sized frame never scrolls a selection, up or down.
+
+**Evidence:** `VirtualScrollerSelection.ts` `edgePenetration`. Tests: "holding the pointer inside the edge zone scrolls forward at a crawl, past the frame faster, above it backward, and returning to the interior stops it", "a frame the size of the page still scrolls a selection: the zone lies inside the frame, so a pointer never has to leave it".
+
+**Impossible if true:** A selection drag held 10 px from the frame's bottom edge that does not scroll.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts -t "edge zone|size of the page"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-06
+
+### The frame is never natively panned along its own axis
+
+**Invariant:** If a touch pans the frame along the scroller's own axis, then the browser does nothing with it natively — Lenis drives it in JS — and the cross axis is the page's: the frame's `touch-action` is `pan-x` on the vertical scroller and `pan-y` on the horizontal strip.
+
+**Scope:** `VirtualScroller.ts` `frameTouchAction` (the seam), `HorizontalVirtualScroller.ts` (the override), the `:style` binding on the frame in both SFCs.
+
+**Mechanism:** The frame is `overflow: auto` so Lenis can adopt native scroll; without a `touch-action`, a finger that our long press has turned into a selection still pans the frame natively the moment the touchmove is no longer cancelable, moving `scrollTop` under the transformed rows so the text leaves the clip. With the own axis excluded from native panning, a selecting finger's touchmove stays ours to cancel, and a cross-axis swipe still reaches the page.
+
+**Generates:** The touch selection surviving on iOS; the `-webkit-touch-callout: none` on the frame, since the copy chip is the affordance.
+
+**Evidence:** `VirtualScroller.ts` `frameTouchAction`. Tests: "the vertical seams read the y axis: translateY and deltaY", "every seam names the x axis".
+
+**Impossible if true:** The frame's `scrollTop` moving under a touch selection.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller -t "vertical seams|every seam names the x axis"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-06
+
+### A native selection inside the frame is adopted as the logical range
+
+**Invariant:** If the native selection changes to a range inside the mounted rows by a means that is not ours — iOS's selection handles after a long press or a double tap, shift+arrows on a keyboard — then it becomes the logical range, so the chip's count and the copied text follow what the reader sees; our own re-pins are recognised by their signature and ignored, and a live drag owns the range.
+
+**Scope:** `VirtualScrollerSelection.ts`: `onSelectionChange`, `positionOfNode`, `selectionSignature`, the `native.applied` holder; the `selectionchange` listener installed by `attach`.
+
+**Mechanism:** `applyHighlight` records the signature of what it wrote; `selectionchange` events whose signature matches are echoes. Anything else inside the wrapper is converted node by node through `offsetInRow`, the same translation the drag uses.
+
+**Evidence:** `VirtualScrollerSelection.ts` `onSelectionChange`. Test: "a native selection the reader makes inside the frame becomes the logical range, while our own re-pins are ignored as echoes".
+
+**Impossible if true:** A chip label that disagrees with the native highlight. An adopted range from a selection outside the frame.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts -t "adopted|echoes"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-06
+
 ### A hosted capability reaches its owner through an interface
 
 **Invariant:** If a capability needs what only the scroller knows, then it receives an `Owner` object of a handful of members through its constructor, reached by the scroller through one `$`-getter, and the capability never imports or types the scroller class.
@@ -554,3 +615,5 @@ tier each record is proven at, and how the colocated tests bind to it.
 - The page scrolling while a touch selection extends — [A long press turns the next move into a selection](#a-long-press-turns-the-next-move-into-a-selection).
 - A double click over a row that selects nothing — [A multi-click selects the word or the row under it](#a-multi-click-selects-the-word-or-the-row-under-it).
 - A capability that imports the scroller — [A hosted capability reaches its owner through an interface](#a-hosted-capability-reaches-its-owner-through-an-interface).
+- A selection drag near the edge that does not scroll — [A drag scrolls from inside the edge zone](#a-drag-scrolls-from-inside-the-edge-zone).
+- The frame's scrollTop moving under a touch selection — [The frame is never natively panned along its own axis](#the-frame-is-never-natively-panned-along-its-own-axis).
