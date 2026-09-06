@@ -22,7 +22,6 @@ import {
 } from '../../ivue';
 import { Lenis } from '../../lenis/lenis';
 import { Static } from '../../Static';
-import { TouchSelectionGesture } from './TouchSelectionGesture';
 import { VirtualScrollerSelection } from './VirtualScrollerSelection';
 
 /**
@@ -208,18 +207,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       () => this.updatePositionsImmediately()
     );
 
-    // Rows recycle under a live selection: after every window change the
-    // highlight is re-pinned to what is mounted. (During a DRAG the focus
-    // follows the pointer every animation frame instead — see
-    // followPointerSelection — because a wheel scroll lets Lenis own the
-    // transform, and rows slide under a stationary pointer between the
-    // discrete events a watch could see.)
-    watch(
-      () => this.visibleItems.value,
-      () => this.applySelectionHighlight(),
-      { flush: 'post' }
-    );
-
     if (this.autoPlay.value) this.startAutoPlay(this.props.autoPlayDelay);
 
     onMounted(() => {
@@ -267,7 +254,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // setScrollPosition's own bottom clamp. A pull callback, not a
       // watcher: lenis reads it at clamp time, the computed caches, and it
       // can never be stale.
-      this.$touchSelection.attach(element);
+      this.$selection.attach(element);
 
       this.lenis.virtualLimit = () =>
         Math.max(0, this.scrollExtent.value - this.offsetSize(this.scrollElement.value));
@@ -282,8 +269,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       }
       clearTimeout(this.snapTimeout);
       this.cancelFrames();
-      this.endTextSelection();
-      this.$touchSelection.dispose();
+      this.$selection.dispose();
       this.stopScrollToIndexReapply?.();
       this.lenis?.stop();
       this.lenis?.destroy();
@@ -413,93 +399,32 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return ref('down');
   }
 
-  // TEXT SELECTION over the virtual list — logical positions over the DATA
-  // (index + character offset), owned by the scroller — see
-  // VirtualScrollerSelection.
-  get selectionAnchor() {
-    return shallowRef<VirtualScrollerSelection.Position | null>(null);
+  // TEXT SELECTION — owned by a hosted VirtualScrollerSelection: the
+  // logical range over the DATA, the highlight, the gestures, copy. The
+  // scroller supplies what only it knows (the Owner interface) and
+  // exposes the instance for the template.
+  protected get $selection() {
+    return new VirtualScrollerSelection.Class(this);
   }
 
-  get selectionFocus() {
-    return shallowRef<VirtualScrollerSelection.Position | null>(null);
-  }
-
-  get selectionDragging() {
-    return ref(false);
-  }
-
-  /** The drag's non-reactive bookkeeping: the pointer's last y and the
-   *  autoscroll frame. */
-  protected readonly selectionDrag = {
-    pointerX: 0,
-    pointerY: 0,
-    frame: null as number | null,
-    lastTs: null as number | null,
-    listening: false,
-    /** the per-frame pointer follow that runs for the length of a drag */
-    followLoop: null as number | null
-  };
-
-  /** The logic seam — a subclass swaps the whole selection capability here. */
-  protected get SelectionLogic() {
-    return VirtualScrollerSelection.Class;
+  /** The selection, exposed for the template's dotted reads and handlers. */
+  get selection() {
+    return this.$selection;
   }
 
   /** The axis seam — rows stack down; the horizontal subclass says 'x'. */
-  protected get selectionAxis(): VirtualScrollerSelection.Axis {
+  get selectionAxis(): VirtualScrollerSelection.Axis {
     return 'y';
   }
 
-  // HOSTED — the touch gesture (long press, then move) that produces a
-  // selection; created on first touch of the getter, attached on mount,
-  // disposed on unmount, calling the three primitives below.
-  protected get $touchSelection() {
-    return new TouchSelectionGesture.Class(this);
-  }
-
-  /** The copy chip: a phone has no Ctrl+C, so a touch selection shows one. */
-  get showsCopyChip() {
-    return this.$touchSelection.selected.value && this.hasSelection;
-  }
-
-  get copyChipLabel() {
-    const count = this.selectedRowCount;
-    return `copy ${count.toLocaleString()} ${count === 1 ? 'row' : 'rows'}`;
-  }
-
-  /** The selection in document order, or null when there is none. */
-  get selectionRange(): VirtualScrollerSelection.Range | null {
-    const anchor = this.selectionAnchor.value;
-    const focus = this.selectionFocus.value;
-    if (!anchor || !focus) return null;
-    const range = this.SelectionLogic.normalize(anchor, focus);
-    return this.SelectionLogic.isEmpty(range) ? null : range;
-  }
-
-  get hasSelection() {
-    return this.selectionRange !== null;
-  }
-
-  get selectedRowCount() {
-    const range = this.selectionRange;
-    return range ? this.SelectionLogic.rowCount(range) : 0;
-  }
-
-  /** The selected text, assembled from the DATA — rows never mounted
-   *  included. */
-  get selectedText() {
-    const range = this.selectionRange;
-    if (!range) return '';
-    return this.SelectionLogic.assembleText(
-      range,
-      (index) => this.selectionTextOf(index),
-      this.props.selectionJoin
-    );
+  /** What joins the rows of a copied selection (the prop, defaulted). */
+  get selectionJoin() {
+    return this.props.selectionJoin;
   }
 
   /** The drag autoscroll's speed factor: a faster reading creep is a
    *  faster drag. */
-  protected get creepFactor() {
+  get creepFactor() {
     return this.self.CREEP_MS_PER_PX / this.creepMsPerPx;
   }
 
@@ -1698,7 +1623,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.creepFrame = requestAnimationFrame(this.creepStep);
   }
 
-  /* Text selection — the scroller owns it; see VirtualScrollerSelection */
+  /* Text selection — the Owner side; the behavior lives on VirtualScrollerSelection */
 
   /**
    * A row's text for the copied selection. A MOUNTED row reads its own
@@ -1707,9 +1632,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * the id. The two sources must produce the same string, or a copy that
    * spans the window boundary would change wording halfway through.
    */
-  selectionTextOf(index: number): string {
-    const row = this.mountedRowElement(index);
-    if (row) return this.SelectionLogic.rowText(row);
+  rowText(index: number): string {
+    const row = this.$selection.mountedRowElement(index);
+    if (row) return VirtualScrollerSelection.Class.rowText(row);
     const item = this.items.value[index];
     if (!item) return '';
     if (this.props.selectionText) return this.props.selectionText(item);
@@ -1717,340 +1642,14 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return typeof body === 'string' ? body : String(item.id);
   }
 
-  protected mountedRowElement(index: number): Element | null {
-    const wrapper = this.itemsWrapperElement.value;
-    if (!wrapper) return null;
-    const selector = this.SelectionLogic.ROW_SELECTOR;
-    return wrapper.querySelector(`${selector}[aria-rowindex="${index + 1}"]`);
-  }
-
-  /**
-   * Begin a selection at a viewport point — the pointer-agnostic primitive
-   * both the mouse handler and the touch gesture call. Records the anchor
-   * as a logical position, arms the drag, and installs the document
-   * listeners that end it. Returns false when the point is on nothing.
-   */
-  beginTextSelectionAt(x: number, y: number): boolean {
-    const wrapper = this.itemsWrapperElement.value;
-    if (!wrapper) return false;
-    const anchor = this.SelectionLogic.positionAt(wrapper, x, y, this.selectionAxis);
-    if (!anchor) return false;
-    this.selectionAnchor.value = anchor;
-    this.selectionFocus.value = anchor;
-    this.selectionDragging.value = true;
-    this.selectionDrag.pointerX = x;
-    this.selectionDrag.pointerY = y;
-    this.listenForSelectionDrag();
-    this.startSelectionFollow();
-    this.applySelectionHighlight();
-    return true;
-  }
-
-  /**
-   * Extend the selection to a viewport point: the focus follows the point
-   * as a logical position, the highlight is re-pinned, and past the
-   * frame's edge the autoscroll loop takes over until the point returns.
-   */
-  extendTextSelectionTo(x: number, y: number) {
-    if (!this.selectionDragging.value) return;
-    const wrapper = this.itemsWrapperElement.value;
-    const scrollElement = this.scrollElement.value;
-    if (!wrapper || !scrollElement) return;
-    this.selectionDrag.pointerX = x;
-    this.selectionDrag.pointerY = y;
-    const focus = this.SelectionLogic.positionAt(wrapper, x, y, this.selectionAxis);
-    if (focus) this.selectionFocus.value = focus;
-    this.applySelectionHighlight();
-    const outside = this.SelectionLogic.edgeDistance(scrollElement, x, y, this.selectionAxis) !== 0;
-    if (outside) this.startSelectionAutoscroll();
-    else this.stopSelectionAutoscroll();
-  }
-
-  /** End the drag: the range stays. A drag that never moved (anchor ===
-   *  focus) leaves nothing selected. */
-  endTextSelectionDrag() {
-    if (!this.selectionDragging.value) return;
-    this.selectionDragging.value = false;
-    this.stopSelectionFollow();
-    this.stopSelectionAutoscroll();
-    this.stopListeningForSelectionDrag();
-    if (!this.hasSelection) this.clearTextSelection();
-  }
-
-  /**
-   * mousedown on the rows: the browser is told NOT to start its own
-   * drag-selection (`preventDefault`) — no native selection means no
-   * native autoscroll fighting the virtual scroll, and no DOM anchor that
-   * dies when its row recycles — and the selection begins at the point.
-   * Links, buttons and inputs inside a row keep their own gesture.
-   */
-  onSelectStart(event: MouseEvent) {
-    const isPrimaryButton = event.button === 0;
-    if (!isPrimaryButton || this.SelectionLogic.isInteractive(event.target)) return;
-    if (this.beginTextSelectionAt(event.clientX, event.clientY)) event.preventDefault();
-  }
-
-  /** mousemove during a drag — the mouse's spelling of extend. */
-  onSelectMove(event: MouseEvent) {
-    this.extendTextSelectionTo(event.clientX, event.clientY);
-  }
-
-  /**
-   * The per-frame pointer follow, alive for the length of a drag. Each
-   * animation frame the focus is re-derived from the last known pointer
-   * position and the highlight re-pinned, so content sliding under a
-   * stationary pointer — a wheel scroll's lerp, the autoplay creep, a
-   * window jump whose rows arrive from below — extends the selection
-   * exactly as a pointer move would. A scroll event could not carry this:
-   * the wheel path lets Lenis own the transform between events.
-   *
-   * Two guards. While the edge autoscroll runs it owns the focus, so the
-   * follow only re-pins. And inside the frame but over no row (a gap, or
-   * rows still sliding into place) the previous focus is kept rather than
-   * snapped to a boundary row, which would collapse the range for a frame.
-   */
-  followPointerSelection() {
-    if (this.selectionDragging.value && this.selectionDrag.frame === null) {
-      const wrapper = this.itemsWrapperElement.value;
-      const scrollElement = this.scrollElement.value;
-      if (wrapper && scrollElement) {
-        const { pointerX, pointerY } = this.selectionDrag;
-        const inside =
-          this.SelectionLogic.edgeDistance(
-            scrollElement,
-            pointerX,
-            pointerY,
-            this.selectionAxis
-          ) === 0;
-        const overRow = this.SelectionLogic.rowElementAt(pointerX, pointerY) !== null;
-        if (!inside || overRow) {
-          const focus = this.SelectionLogic.positionAt(
-            wrapper,
-            pointerX,
-            pointerY,
-            this.selectionAxis
-          );
-          if (focus) this.selectionFocus.value = focus;
-        }
-      }
-    }
-    this.applySelectionHighlight();
-  }
-
-  protected startSelectionFollow() {
-    if (this.selectionDrag.followLoop !== null) return;
-    const step = () => {
-      this.selectionDrag.followLoop = null;
-      if (!this.selectionDragging.value) return;
-      this.followPointerSelection();
-      this.selectionDrag.followLoop = requestAnimationFrame(step);
-    };
-    this.selectionDrag.followLoop = requestAnimationFrame(step);
-  }
-
-  protected stopSelectionFollow() {
-    if (this.selectionDrag.followLoop !== null) cancelAnimationFrame(this.selectionDrag.followLoop);
-    this.selectionDrag.followLoop = null;
-  }
-
-  /** mouseup — the mouse's spelling of end. */
-  onSelectEnd() {
-    this.endTextSelectionDrag();
-  }
-
-  /** A mousedown anywhere outside the scroller drops the selection, the
-   *  way a click elsewhere drops a native one. */
-  onDocumentMouseDown(event: MouseEvent | TouchEvent) {
-    const scrollElement = this.scrollElement.value;
-    const inside =
-      scrollElement && event.target instanceof Node && scrollElement.contains(event.target);
-    if (inside) return;
-    this.clearTextSelection();
-  }
-
-  /**
-   * copy: the browser would hand over the mounted fragment of the native
-   * highlight. Replace it with the text assembled from the data, which
-   * covers every row in the range — including the ones that scrolled out.
-   */
-  onCopy(event: ClipboardEvent) {
-    if (!this.hasSelection || !event.clipboardData) return;
-    event.preventDefault();
-    event.clipboardData.setData('text/plain', this.selectedText);
-  }
-
-  /** The copy chip's action: the clipboard API needs a user gesture, and
-   *  the tap on the chip is one. */
-  async copySelectedText() {
-    if (!this.hasSelection) return;
-    await navigator.clipboard.writeText(this.selectedText);
-    this.clearTextSelection();
-  }
-
-  clearTextSelection() {
-    this.endTextSelection();
-    this.selectionAnchor.value = null;
-    this.selectionFocus.value = null;
-    this.$touchSelection.onSelectionCleared();
-    // Drop the native highlight too, but only if it is ours — never touch
-    // a selection the user made elsewhere on the page.
-    const selection = window.getSelection();
-    const scrollElement = this.scrollElement.value;
-    const ours =
-      selection?.anchorNode && scrollElement && scrollElement.contains(selection.anchorNode);
-    if (ours) selection.removeAllRanges();
-  }
-
-  /** Stop the drag and its listeners without touching the range —
-   *  unmount and clear both go through here. */
-  endTextSelection() {
-    this.selectionDragging.value = false;
-    this.stopSelectionFollow();
-    this.stopSelectionAutoscroll();
-    this.stopListeningForSelectionDrag();
-  }
-
-  /**
-   * Pin the native highlight to the MOUNTED part of the logical range.
-   * Called on every move and after every window change (the watch in the
-   * constructor), because the rows under the highlight recycle while it
-   * lives. The logical range is index-based, so nothing is lost when a
-   * boundary row unmounts; the visible part is simply re-derived.
-   */
-  applySelectionHighlight() {
-    const range = this.selectionRange;
-    const wrapper = this.itemsWrapperElement.value;
-    const selection = window.getSelection();
-    if (!wrapper || !selection) return;
-
-    // No range: make sure no stale highlight of ours lingers.
-    if (!range) {
-      const ours = selection.anchorNode && wrapper.contains(selection.anchorNode);
-      if (ours) selection.removeAllRanges();
-      return;
-    }
-
-    // Clamp the range to what is mounted; an end that scrolled out is
-    // pinned to the window's boundary row.
-    const rows = this.SelectionLogic.mountedRows(wrapper);
-    if (rows.length === 0) return;
-    const firstIndex = this.SelectionLogic.rowIndexOf(rows[0]);
-    const lastRow = rows[rows.length - 1];
-    const lastIndex = this.SelectionLogic.rowIndexOf(lastRow);
-    const visible = this.SelectionLogic.clampToWindow(
-      range,
-      firstIndex,
-      lastIndex,
-      this.SelectionLogic.rowText(lastRow).length
-    );
-    if (!visible) {
-      selection.removeAllRanges();
-      return;
-    }
-
-    // Translate the two logical ends back into DOM carets and apply.
-    const startRow = this.mountedRowElement(visible.start.index);
-    const endRow = this.mountedRowElement(visible.end.index);
-    if (!startRow || !endRow) return;
-    const start = this.SelectionLogic.caretInRow(startRow, visible.start.offset);
-    const end = this.SelectionLogic.caretInRow(endRow, visible.end.offset);
-    selection.setBaseAndExtent(start.node, start.offset, end.node, end.offset);
-  }
-
-  protected listenForSelectionDrag() {
-    if (this.selectionDrag.listening) return;
-    document.addEventListener('mousemove', this.onSelectMove);
-    document.addEventListener('mouseup', this.onSelectEnd);
-    document.addEventListener('mousedown', this.onDocumentMouseDown, true);
-    document.addEventListener('touchstart', this.onDocumentMouseDown, true);
-    this.selectionDrag.listening = true;
-  }
-
-  protected stopListeningForSelectionDrag() {
-    if (!this.selectionDrag.listening) return;
-    document.removeEventListener('mousemove', this.onSelectMove);
-    document.removeEventListener('mouseup', this.onSelectEnd);
-    this.selectionDrag.listening = false;
-    // The outside-click listener outlives the drag: it stays armed until
-    // the selection itself is cleared.
-    if (!this.hasSelection) {
-      document.removeEventListener('mousedown', this.onDocumentMouseDown, true);
-      document.removeEventListener('touchstart', this.onDocumentMouseDown, true);
-    }
-  }
-
-  protected startSelectionAutoscroll() {
-    if (this.selectionDrag.frame !== null) return;
-    this.selectionDrag.lastTs = null;
-    this.selectionDrag.frame = requestAnimationFrame(this.selectionAutoscrollStep);
-  }
-
-  protected stopSelectionAutoscroll() {
-    if (this.selectionDrag.frame !== null) {
-      cancelAnimationFrame(this.selectionDrag.frame);
-    }
-    this.selectionDrag.frame = null;
-    this.selectionDrag.lastTs = null;
-  }
-
-  /**
-   * One autoscroll frame, while the pointer is held past the frame's edge.
-   *   1. how far past the edge decides the speed (a ramp, scaled by the
-   *      creep knob) and the sign decides the direction — an upward drag
-   *      scrolls UP, and because it writes lenis's target directly it is
-   *      never mistaken for the reader taking over;
-   *   2. the scroll is applied through the same setter the creep uses;
-   *   3. the focus is extended to the row at the pointer's height, which
-   *      after the scroll is a row that just arrived;
-   *   4. the highlight is re-pinned and the next frame is requested.
-   */
-  selectionAutoscrollStep(ts: number) {
-    this.selectionDrag.frame = null;
-    if (!this.selectionDragging.value) return;
-    const scrollElement = this.scrollElement.value;
-    const wrapper = this.itemsWrapperElement.value;
-    if (!scrollElement || !wrapper || !this.lenis) return;
-
-    // 1 — speed and direction from the pointer's distance past the edge.
-    const distance = this.SelectionLogic.edgeDistance(
-      scrollElement,
-      this.selectionDrag.pointerX,
-      this.selectionDrag.pointerY,
-      this.selectionAxis
-    );
-    if (distance === 0) return;
-    const elapsed =
-      this.selectionDrag.lastTs === null ? 16.7 : Math.min(50, ts - this.selectionDrag.lastTs);
-    this.selectionDrag.lastTs = ts;
-    const speed = this.SelectionLogic.autoscrollSpeed(Math.abs(distance), this.creepFactor);
-
-    // 2 — scroll: the target moves by speed × time in the pointer's
-    // direction, and never above the top.
+  /** Scroll by a signed delta along the axis, immediately — the edge
+   *  autoscroll's step. It writes lenis's target directly, so an upward
+   *  drag is a scroll up, never mistaken for the reader taking over. */
+  scrollBy(delta: number) {
+    if (!this.lenis) return;
     const lenis = this.lenisRequired;
-    const step = Math.sign(distance) * speed * elapsed;
-    lenis.targetScroll = Math.max(0, lenis.targetScroll + step);
+    lenis.targetScroll = Math.max(0, lenis.targetScroll + delta);
     this.setScrollPosition(-lenis.targetScroll, false, true, false);
-
-    // 3 — the focus follows the pointer along the axis onto the arriving
-    // rows (the probe point is the pointer's coordinate along the axis,
-    // paired with the frame's first pixel across it).
-    const probe = this.SelectionLogic.probePoint(
-      scrollElement,
-      this.selectionDrag.pointerX,
-      this.selectionDrag.pointerY,
-      this.selectionAxis
-    );
-    const focus = this.SelectionLogic.positionAt(
-      scrollElement,
-      probe.x,
-      probe.y,
-      this.selectionAxis
-    );
-    if (focus) this.selectionFocus.value = focus;
-
-    // 4 — re-pin and continue.
-    this.applySelectionHighlight();
-    this.selectionDrag.frame = requestAnimationFrame(this.selectionAutoscrollStep);
   }
 
   onStart(event: any) {

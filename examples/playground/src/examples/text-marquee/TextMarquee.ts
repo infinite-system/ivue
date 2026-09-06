@@ -97,7 +97,7 @@ class $TextMarquee {
   }
   /** Chunks under the reader's text selection (a range over the data). */
   get selectedChunkCount() {
-    return this.scroller.value?.selectedRowCount ?? 0;
+    return this.scroller.value?.selection.selectedRowCount ?? 0;
   }
 
 

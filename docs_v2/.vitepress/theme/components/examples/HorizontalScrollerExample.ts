@@ -70,7 +70,7 @@ class $HorizontalScrollerExample {
   }
 
   get selectedCardsLabel() {
-    return (this.scroller.value?.selectedRowCount ?? 0).toLocaleString();
+    return (this.scroller.value?.selection.selectedRowCount ?? 0).toLocaleString();
   }
 
   get creepMsPerPx() {

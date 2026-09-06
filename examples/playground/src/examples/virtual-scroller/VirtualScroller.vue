@@ -36,7 +36,7 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
     ref="scrollElement"
     class="virtual-scroller"
     @scroll="virtualScroller.onScroll"
-    @copy="virtualScroller.onCopy"
+    @copy="virtualScroller.selection.onCopyEvent"
   >
     <!-- Content-sized on purpose — NO explicit size. The inner is the
          composited layer; sized to the full virtual content (~10M px on a
@@ -51,7 +51,7 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
       <div
         ref="itemsWrapperElement"
         :style="{ width: '100%' }"
-        @mousedown="virtualScroller.onSelectStart"
+        @mousedown="virtualScroller.selection.onMouseDown"
       >
         <VirtualScrollerItem
           v-for="element in visibleItems"
@@ -66,12 +66,12 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
       <div :style="{ height: virtualScroller.trailingSpacerPx }"></div>
     </div>
     <button
-      v-if="virtualScroller.showsCopyChip"
+      v-if="virtualScroller.selection.showsCopyChip"
       type="button"
       class="virtual-scroller__copy"
-      @click="virtualScroller.copySelectedText()"
+      @click="virtualScroller.selection.copy()"
     >
-      {{ virtualScroller.copyChipLabel }}
+      {{ virtualScroller.selection.copyChipLabel }}
     </button>
     <div
       v-if="virtualScroller.scrollbarVisible"

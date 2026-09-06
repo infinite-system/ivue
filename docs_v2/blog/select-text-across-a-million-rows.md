@@ -104,18 +104,21 @@ sweep, so a regression fails the check.
 ## Where the code went
 
 The split is the one the standard already prescribes for anything with a
-pure half.
+pure half, and it settled into one hosted class.
 
-`VirtualScrollerSelection` is a Static capability class: caret to text
-offset and back, range normalization, clamping to a window, text
-assembly, the speed ramp, the edge distance. None of it reads state. The
-range math and the assembly have no DOM at all, and they carry the spec,
-seven cases that run with no browser.
+`VirtualScrollerSelection` is that class. Its statics are the pure logic:
+caret to text offset and back, range normalization, clamping to a window,
+text assembly, the speed ramp, the edge distance. None of it reads state,
+the range math and the assembly have no DOM at all, and they carry the
+spec, seven cases that run with no browser. Its instance holds the three
+cells, anchor, focus, and a dragging flag, the mouse handlers the
+template binds, the copy handler, and the two frame loops.
 
-The scroller holds three cells, anchor, focus, and a dragging flag, and
-the handlers as named methods the template binds: `onSelectStart`,
-`onSelectMove`, `onSelectEnd`, `onCopy`. A getter on the class returns
-the logic, so a subclass can swap the capability whole.
+The scroller constructs one through a `$`-getter and hands it what only
+the scroller knows, through a small owner interface: the frame and the
+wrapper, the rendered window, the axis, a row's text by index, the creep
+knob, and a way to scroll by a signed delta. A subclass can swap the
+selection whole by overriding that one getter.
 
 Then the horizontal strip asked for the same thing. The nearest-row
 search and the edge distance took an axis, and the scroller gained one
@@ -135,7 +138,9 @@ about half a second and the next movement selects instead of scrolling. A
 small hosted class owns that gesture, the hold timer, the slop that
 cancels it, the mode flag, and the one non-passive listener it installs
 while selecting, and calls the same three primitives the mouse path
-calls: begin at a point, extend to a point, end. A phone has no Ctrl+C,
+calls: begin at a point, extend to a point, end. The selection hosts
+the gesture the way the scroller hosts the selection. A phone has no
+Ctrl+C,
 so a touch selection shows a chip that copies on tap.
 
 The second change came from a bug you would only find by using it. Scroll

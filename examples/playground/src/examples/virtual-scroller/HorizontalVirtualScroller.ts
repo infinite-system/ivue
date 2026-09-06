@@ -67,7 +67,7 @@ class $HorizontalVirtualScroller<
 
   /** Text selection walks cards sideways: nearest-card and edge distance
    *  along x, autoscroll left/right. */
-  protected override get selectionAxis(): VirtualScrollerSelection.Axis {
+  override get selectionAxis(): VirtualScrollerSelection.Axis {
     return 'x';
   }
 

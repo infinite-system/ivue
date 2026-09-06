@@ -95,11 +95,15 @@ redeploys the example automatically.
   a speed that ramps with distance and follows the reading-speed knob, the
   highlight is re-pinned to whatever rows are mounted after every window
   change, and copy assembles its text from the items — rows that were
-  never on screen together included. The pure half (range math, text
-  assembly, the ramp) is `VirtualScrollerSelection`, a Static class with
-  its own DOM-free spec; the scroller holds three cells and calls in. On
-  touch, a long press starts the selection (a hosted `TouchSelectionGesture`
-  owns the hold and the slop) and a chip copies it, since a phone has no
+  never on screen together included. All of it lives in
+  `VirtualScrollerSelection`, a hosted class the scroller reaches through
+  one `$`-getter: the pure statics (range math, text assembly, the ramp)
+  with their own DOM-free spec, the three cells, the mouse handlers, the
+  autoscroll and follow loops. The scroller supplies what only it knows
+  through a small owner interface: its elements, the axis, a row's text
+  by index, and a way to scroll by a delta. On touch, a long press starts
+  the selection (a `TouchSelectionGesture` hosted by the selection owns
+  the hold and the slop) and a chip copies it, since a phone has no
   Ctrl+C. During any drag a per-frame follow loop keeps the focus under
   the pointer while content slides beneath it.
 - **The scrollbar is code.** `overflow-anchor: none` and a `translateZ`

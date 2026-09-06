@@ -37,7 +37,7 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
     ref="scrollElement"
     class="virtual-scroller virtual-scroller--x"
     @scroll="virtualScroller.onScroll"
-    @copy="virtualScroller.onCopy"
+    @copy="virtualScroller.selection.onCopyEvent"
   >
     <!-- Same layer discipline as the vertical scroller (content-sized inner,
          rebased leading spacer, capped tail), rotated: spacers are widths
@@ -47,7 +47,7 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
       <div
         ref="itemsWrapperElement"
         class="virtual-scroller__row"
-        @mousedown="virtualScroller.onSelectStart"
+        @mousedown="virtualScroller.selection.onMouseDown"
       >
         <VirtualScrollerItem
           v-for="element in visibleItems"
@@ -77,12 +77,12 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
       ></div>
     </div>
     <button
-      v-if="virtualScroller.showsCopyChip"
+      v-if="virtualScroller.selection.showsCopyChip"
       type="button"
       class="virtual-scroller__copy"
-      @click="virtualScroller.copySelectedText()"
+      @click="virtualScroller.selection.copy()"
     >
-      {{ virtualScroller.copyChipLabel }}
+      {{ virtualScroller.selection.copyChipLabel }}
     </button>
   </div>
 </template>

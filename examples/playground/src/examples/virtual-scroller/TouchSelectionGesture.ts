@@ -142,7 +142,7 @@ class $TouchSelectionGesture {
    *  point the finger has been resting on. */
   promoteHold() {
     this.hold.timer = null;
-    const began = this.owner.beginTextSelectionAt(this.hold.origin.x, this.hold.origin.y);
+    const began = this.owner.beginAt(this.hold.origin.x, this.hold.origin.y);
     if (!began) return;
     this.selecting.value = true;
     this.selected.value = false;
@@ -168,7 +168,7 @@ class $TouchSelectionGesture {
     }
     event.preventDefault();
     (event as TouchEvent & { lenisStopPropagation?: boolean }).lenisStopPropagation = true;
-    this.owner.extendTextSelectionTo(touch.clientX, touch.clientY);
+    this.owner.extendTo(touch.clientX, touch.clientY);
   }
 
   /** The finger lifts: a cancelled hold was a tap or a scroll; a selecting
@@ -178,7 +178,7 @@ class $TouchSelectionGesture {
     this.stopFollowingTouch();
     if (!this.selecting.value) return;
     this.selecting.value = false;
-    this.owner.endTextSelectionDrag();
+    this.owner.endDrag();
     this.selected.value = this.owner.hasSelection;
   }
 
@@ -207,12 +207,12 @@ export namespace TouchSelectionGesture {
   export let Class = Reactive($Class); // reactive — the scroller hosts one
   export type Instance = typeof Class.Instance;
 
-  /** What the gesture needs from its host: the three pointer-agnostic
-   *  selection primitives, and whether a selection exists. */
+  /** What the gesture needs from the selection that hosts it: the three
+   *  pointer-agnostic primitives, and whether a selection exists. */
   export interface Owner {
-    beginTextSelectionAt(x: number, y: number): boolean;
-    extendTextSelectionTo(x: number, y: number): void;
-    endTextSelectionDrag(): void;
+    beginAt(x: number, y: number): boolean;
+    extendTo(x: number, y: number): void;
+    endDrag(): void;
     readonly hasSelection: boolean;
   }
 }

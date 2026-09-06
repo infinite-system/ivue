@@ -92,7 +92,7 @@ class $VirtualScrollerExample {
   }
 
   get selectedRowCount() {
-    return this.scroller.value?.selectedRowCount ?? 0;
+    return this.scroller.value?.selection.selectedRowCount ?? 0;
   }
 
   get selectedRowsLabel() {
