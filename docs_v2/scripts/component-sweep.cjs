@@ -183,6 +183,22 @@ const settle = (p, ms = 300) => p.waitForTimeout(ms);
     const scroller = p.locator('.virtual-scroller, [class*=scroller]').first(); await scroller.hover(); await p.mouse.wheel(600, 0); await settle(p, 500); const t1 = await stats.innerText();
     ok('ExampleHorizontalScroller', t0 !== t1 ? 'stats follow scroll' : 'rendered (stats unchanged after wheel)');
   });
+  await step('ExampleHorizontalScroller (drag-select + copy)', async () => {
+    const frame = p.locator('.ehs-frame .virtual-scroller').first(); await frame.scrollIntoViewIfNeeded(); const fb = await frame.boundingBox();
+    const cards = p.locator('.ehs-frame .virtual-scroller__item');
+    let cb = null; for (let i = 0; i < await cards.count(); i++) { const box = await cards.nth(i).boundingBox(); if (box && box.x > fb.x + 10 && box.x + box.width < fb.x + fb.width - 10) { cb = box; break; } }
+    if (!cb) throw new Error('no mounted card inside the frame');
+    await p.mouse.move(cb.x + 30, cb.y + 30); await p.mouse.down();
+    await p.mouse.move(fb.x + fb.width + 120, cb.y + 30, { steps: 6 }); await settle(p, 1200);
+    await p.mouse.move(fb.x + fb.width - 40, cb.y + 30, { steps: 3 }); await p.mouse.up(); await settle(p, 200);
+    const selected = Number((await p.locator('.ehs-stats').innerText()).match(/cards selected\s*([\d,]+)/)?.[1]?.replace(/,/g, '') ?? 0);
+    const mounted = await cards.count();
+    await p.keyboard.press('Control+C'); await settle(p, 300);
+    const lines = (await p.evaluate(() => navigator.clipboard.readText())).split('\n');
+    if (selected <= mounted) throw new Error(`selection (${selected} cards) never outgrew the window (${mounted})`);
+    if (lines.length !== selected) throw new Error(`copied ${lines.length} lines for ${selected} selected cards`);
+    ok('ExampleHorizontalScroller (drag-select + copy)', `${selected} cards selected sideways over a ${mounted}-card window, ${lines.length} lines copied`);
+  });
   errsFor('horizontal-scroller');
   await go('/examples/virtual-scroller');
   await step('ExampleVirtualScroller', async () => {
@@ -212,6 +228,20 @@ const settle = (p, ms = 300) => p.waitForTimeout(ms);
   await step('ExampleTextMarquee', async () => {
     const btn = p.locator('button:has(.etm-btn-icon)').first(); const l0 = await btn.innerText(); await btn.click(); await settle(p); const l1 = await btn.innerText();
     if (l0 === l1) throw new Error('label static'); ok('ExampleTextMarquee', `${l0.trim()} -> ${l1.trim()}`);
+  });
+  await step('ExampleTextMarquee (drag-select + copy)', async () => {
+    const frame = p.locator('.text-marquee .virtual-scroller').first(); await frame.scrollIntoViewIfNeeded(); const fb = await frame.boundingBox();
+    // a chunk is thousands of px wide — any point inside the frame is on one
+    const y = fb.y + fb.height / 2;
+    await p.mouse.move(fb.x + 40, y); await p.mouse.down();
+    await p.mouse.move(fb.x + fb.width + 100, y, { steps: 6 }); await settle(p, 900);
+    await p.mouse.move(fb.x + fb.width - 20, y, { steps: 3 }); await p.mouse.up(); await settle(p, 200);
+    const selected = Number((await p.locator('.etm-stats').innerText()).match(/chunks selected\s*([\d,]+)/)?.[1]?.replace(/,/g, '') ?? 0);
+    await p.keyboard.press('Control+C'); await settle(p, 300);
+    const text = await p.evaluate(() => navigator.clipboard.readText());
+    if (selected < 2) throw new Error(`only ${selected} chunks selected`);
+    if (text.includes('\n')) throw new Error('marquee chunks should join with spaces, not line breaks');
+    ok('ExampleTextMarquee (drag-select + copy)', `${selected} chunks selected, copied as one line of ${text.length} characters`);
   });
   errsFor('virtual-scroller');
   await go('/examples/workspace-platform');

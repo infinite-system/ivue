@@ -202,14 +202,19 @@ class $VirtualScrollerSelection {
    * Three cases, in order:
    *   1. the point is over a row → that row, at the caret's offset;
    *   2. the point is between rows, or past the container's edge (the
-   *      pointer left the frame mid-drag) → the NEAREST mounted row, at
-   *      its start when the point is above it, at its end when below;
+   *      pointer left the frame mid-drag) → the NEAREST mounted row along
+   *      the scroll axis, at its start when the point is before it, at
+   *      its end when after;
    *   3. nothing is mounted → null.
+   *
+   * `axis` is the scroll axis: rows stack vertically ('y'), cards of a
+   * horizontal strip stack sideways ('x'). Only case 2 cares.
    */
   static positionAt(
     container: Element,
     x: number,
     y: number,
+    axis: VirtualScrollerSelection.Axis = 'y',
   ): VirtualScrollerSelection.Position | null {
     // Clamp the point into the container so `elementFromPoint` and the
     // caret APIs look at the list, not at whatever lies past its edge.
@@ -230,27 +235,33 @@ class $VirtualScrollerSelection {
     if (rows.length === 0) return null;
 
     // Case 2 — in a gap or past the edge: the row with the smallest
-    // vertical distance to the point wins.
+    // distance to the point ALONG THE AXIS wins.
+    const along = axis === 'y' ? clampedY : clampedX;
     let nearest = rows[0];
     let nearestDistance = Infinity;
     for (const candidate of rows) {
-      const rect = candidate.getBoundingClientRect();
+      const [before, after] = this.axisEdges(candidate, axis);
       const distance =
-        clampedY < rect.top
-          ? rect.top - clampedY
-          : clampedY > rect.bottom
-            ? clampedY - rect.bottom
-            : 0;
+        along < before ? before - along : along > after ? along - after : 0;
       if (distance < nearestDistance) {
         nearestDistance = distance;
         nearest = candidate;
       }
     }
 
-    // Above the nearest row selects from its start; below, to its end.
-    const rect = nearest.getBoundingClientRect();
-    const offset = clampedY < rect.top ? 0 : this.rowText(nearest).length;
+    // Before the nearest row selects from its start; after, to its end.
+    const [before] = this.axisEdges(nearest, axis);
+    const offset = along < before ? 0 : this.rowText(nearest).length;
     return { index: this.rowIndexOf(nearest), offset };
+  }
+
+  /** A row's two edges along the scroll axis: [top, bottom] or [left, right]. */
+  static axisEdges(
+    element: Element,
+    axis: VirtualScrollerSelection.Axis,
+  ): [number, number] {
+    const rect = element.getBoundingClientRect();
+    return axis === 'y' ? [rect.top, rect.bottom] : [rect.left, rect.right];
   }
 
   /** Whether a mousedown target owns its own gesture (link, button, input). */
@@ -261,13 +272,38 @@ class $VirtualScrollerSelection {
     );
   }
 
-  /** How far past the frame the pointer is: negative above the top edge,
-   *  positive below the bottom edge, 0 inside. */
-  static edgeDistance(container: Element, y: number): number {
-    const bounds = container.getBoundingClientRect();
-    if (y < bounds.top) return y - bounds.top;
-    if (y > bounds.bottom) return y - bounds.bottom;
+  /** How far past the frame the pointer is along the scroll axis:
+   *  negative before the start edge (above / left), positive past the end
+   *  edge (below / right), 0 inside. */
+  static edgeDistance(
+    container: Element,
+    x: number,
+    y: number,
+    axis: VirtualScrollerSelection.Axis = 'y',
+  ): number {
+    const [start, end] = this.axisEdges(container, axis);
+    const along = axis === 'y' ? y : x;
+    if (along < start) return along - start;
+    if (along > end) return along - end;
     return 0;
+  }
+
+  /**
+   * Where to probe for the focus while autoscrolling with the pointer
+   * held outside the frame: the pointer's coordinate along the axis
+   * (clamped into the frame by positionAt) paired with the frame's first
+   * pixel across it — the row that just scrolled in under the pointer.
+   */
+  static probePoint(
+    container: Element,
+    pointerX: number,
+    pointerY: number,
+    axis: VirtualScrollerSelection.Axis = 'y',
+  ): { x: number; y: number } {
+    const bounds = container.getBoundingClientRect();
+    return axis === 'y'
+      ? { x: bounds.left + 1, y: pointerY }
+      : { x: pointerX, y: bounds.top + 1 };
   }
 
   /* Range math — no DOM */
@@ -330,14 +366,16 @@ class $VirtualScrollerSelection {
   }
 
   /**
-   * The copied text, one row per line: the first row from its offset,
-   * every row between in full, the last row up to its offset. `textOf`
-   * is asked for every row in the span — mounted or not — which is what
-   * lets copy reach rows the DOM never held at the same time.
+   * The copied text: the first row from its offset, every row between in
+   * full, the last row up to its offset, joined by `separator` — a line
+   * break for stacked rows, a space for the chunks of a one-line marquee.
+   * `textOf` is asked for every row in the span — mounted or not — which
+   * is what lets copy reach rows the DOM never held at the same time.
    */
   static assembleText(
     range: VirtualScrollerSelection.Range,
     textOf: (index: number) => string,
+    separator = '\n',
   ): string {
     const { start, end } = range;
     // A single row: the slice between the two offsets.
@@ -349,7 +387,7 @@ class $VirtualScrollerSelection {
       lines.push(textOf(index));
     }
     lines.push(textOf(end.index).slice(0, end.offset));
-    return lines.join('\n');
+    return lines.join(separator);
   }
 
   /**
@@ -373,6 +411,9 @@ export namespace VirtualScrollerSelection {
   // raw — children extend this
   export const $Class = Static($VirtualScrollerSelection);
   export let Class = $Class; // selected — callers read this
+
+  /** The scroll axis: rows stack down ('y'), cards stack sideways ('x'). */
+  export type Axis = 'x' | 'y';
 
   /** A logical position over the data: item index + character offset in
    *  that item's text. */

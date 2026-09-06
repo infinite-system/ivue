@@ -94,6 +94,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       selectionText: {
         type: Function as PropType<(item: VirtualScroller.BaseItem) => string>,
       },
+      /** What joins the rows of a copied selection — a line break for
+       *  stacked rows; a horizontal strip of text chunks passes a space. */
+      selectionJoin: { type: String as PropType<string> },
       dragHandleSelector: { type: String as PropType<string> },
       dragClass: { type: String as PropType<string> },
       dragGhostClass: { type: String as PropType<string> },
@@ -121,6 +124,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       creepMsPerPx: undefined, // no default ON PURPOSE — see the comment above
       // mounted rows read their own text; the data fallback is body, then id
       selectionText: undefined,
+      selectionJoin: '\n',
       draggable: false,
       dragHandleSelector: '.sortable-drag-handle',
       dragClass: 'sortable-drag',
@@ -431,6 +435,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** The drag's non-reactive bookkeeping: the pointer's last y and the
    *  autoscroll frame. */
   protected readonly selectionDrag = {
+    pointerX: 0,
     pointerY: 0,
     frame: null as number | null,
     lastTs: null as number | null,
@@ -440,6 +445,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** The logic seam — a subclass swaps the whole selection capability here. */
   protected get SelectionLogic() {
     return VirtualScrollerSelection.Class;
+  }
+
+  /** The axis seam — rows stack down; the horizontal subclass says 'x'. */
+  protected get selectionAxis(): VirtualScrollerSelection.Axis {
+    return 'y';
   }
 
   /** The selection in document order, or null when there is none. */
@@ -464,11 +474,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  included. */
   get selectedText() {
     const range = this.selectionRange;
-    return range
-      ? this.SelectionLogic.assembleText(range, (index) =>
-          this.selectionTextOf(index),
-        )
-      : '';
+    if (!range) return '';
+    return this.SelectionLogic.assembleText(
+      range,
+      (index) => this.selectionTextOf(index),
+      this.props.selectionJoin,
+    );
   }
 
   /** The drag autoscroll's speed factor: a faster reading creep is a
@@ -1781,6 +1792,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       wrapper,
       event.clientX,
       event.clientY,
+      this.selectionAxis,
     );
     if (!anchor) return;
 
@@ -1788,6 +1800,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.selectionAnchor.value = anchor;
     this.selectionFocus.value = anchor;
     this.selectionDragging.value = true;
+    this.selectionDrag.pointerX = event.clientX;
     this.selectionDrag.pointerY = event.clientY;
     this.listenForSelectionDrag();
     this.applySelectionHighlight();
@@ -1805,17 +1818,24 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const scrollElement = this.scrollElement.value;
     if (!wrapper || !scrollElement) return;
 
+    this.selectionDrag.pointerX = event.clientX;
     this.selectionDrag.pointerY = event.clientY;
     const focus = this.SelectionLogic.positionAt(
       wrapper,
       event.clientX,
       event.clientY,
+      this.selectionAxis,
     );
     if (focus) this.selectionFocus.value = focus;
     this.applySelectionHighlight();
 
     const outside =
-      this.SelectionLogic.edgeDistance(scrollElement, event.clientY) !== 0;
+      this.SelectionLogic.edgeDistance(
+        scrollElement,
+        event.clientX,
+        event.clientY,
+        this.selectionAxis,
+      ) !== 0;
     if (outside) this.startSelectionAutoscroll();
     else this.stopSelectionAutoscroll();
   }
@@ -1984,7 +2004,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // 1 — speed and direction from the pointer's distance past the edge.
     const distance = this.SelectionLogic.edgeDistance(
       scrollElement,
+      this.selectionDrag.pointerX,
       this.selectionDrag.pointerY,
+      this.selectionAxis,
     );
     if (distance === 0) return;
     const elapsed =
@@ -2004,11 +2026,20 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     lenis.targetScroll = Math.max(0, lenis.targetScroll + step);
     this.setScrollPosition(-lenis.targetScroll, false, true, false);
 
-    // 3 — the focus follows the pointer's height onto the arriving rows.
+    // 3 — the focus follows the pointer along the axis onto the arriving
+    // rows (the probe point is the pointer's coordinate along the axis,
+    // paired with the frame's first pixel across it).
+    const probe = this.SelectionLogic.probePoint(
+      scrollElement,
+      this.selectionDrag.pointerX,
+      this.selectionDrag.pointerY,
+      this.selectionAxis,
+    );
     const focus = this.SelectionLogic.positionAt(
       wrapper,
-      scrollElement.getBoundingClientRect().left + 1,
-      this.selectionDrag.pointerY,
+      probe.x,
+      probe.y,
+      this.selectionAxis,
     );
     if (focus) this.selectionFocus.value = focus;
 

@@ -32,6 +32,7 @@ defineExpose(marquee as TextMarquee.Instance);
       :padding-quantity="6"
       auto-play
       :auto-play-delay="600"
+      selection-join=" "
       scrollbar
     >
       <template #item="{ item }">

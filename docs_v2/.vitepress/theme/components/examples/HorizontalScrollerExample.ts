@@ -47,7 +47,9 @@ class $HorizontalScrollerExample {
 
   // TEMPLATE-REF TARGET — the scroller component's exposed instance.
   get scroller() {
-    return ref<HorizontalVirtualScroller.Exposed<VirtualScroller.BaseItem> | null>(null);
+    return ref<HorizontalVirtualScroller.Exposed<VirtualScroller.BaseItem> | null>(
+      null,
+    );
   }
 
   /** The one cast per class: instance code reads its own statics here. */
@@ -69,6 +71,10 @@ class $HorizontalScrollerExample {
     return this.scroller.value?.visibleItems.length ?? 0;
   }
 
+  get selectedCardsLabel() {
+    return (this.scroller.value?.selectedRowCount ?? 0).toLocaleString();
+  }
+
   get creepMsPerPx() {
     return 1000 / Math.max(1, this.speed.value);
   }
@@ -87,6 +93,16 @@ class $HorizontalScrollerExample {
 
   get playButtonLabel() {
     return this.isAutoPlaying ? 'pause the glide' : 'glide';
+  }
+
+  /** A card's text as the template renders it — what an unmounted card
+   *  contributes to a copied selection. */
+  cardText(item: VirtualScroller.BaseItem) {
+    const card = item as VirtualScroller.BaseItem & {
+      position: string;
+      body: string;
+    };
+    return `#${Number(card.position).toLocaleString()} ${card.body}`;
   }
 
   jumpTo(index: number) {

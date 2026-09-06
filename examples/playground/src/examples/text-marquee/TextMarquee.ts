@@ -95,6 +95,11 @@ class $TextMarquee {
   get scroller() {
     return ref<HorizontalVirtualScroller.Exposed<VirtualScroller.BaseItem> | null>(null);
   }
+  /** Chunks under the reader's text selection (a range over the data). */
+  get selectedChunkCount() {
+    return this.scroller.value?.selectedRowCount ?? 0;
+  }
+
 
   /* Props */
 

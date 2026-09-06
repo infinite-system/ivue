@@ -75,6 +75,10 @@ class $TextMarqueeExample {
   get renderedCount() {
     return this.marquee.value?.renderedCount ?? 0;
   }
+  get selectedChunksLabel() {
+    return (this.marquee.value?.selectedChunkCount ?? 0).toLocaleString();
+  }
+
 
   get isPlaying() {
     return this.marquee.value?.isPlaying ?? false;

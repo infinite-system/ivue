@@ -48,6 +48,11 @@ describe('VirtualScrollerSelection', () => {
     expect(seen).toEqual([1, 2, 3, 4]);
   });
 
+  test('assembleText joins rows with the given separator — a space for the chunks of a one-line marquee', () => {
+    const textOf = (index: number) => `chunk${index}`;
+    expect(Logic.assembleText(Logic.normalize(at(1, 2), at(3, 3)), textOf, ' ')).toBe('unk1 chunk2 chu');
+  });
+
   test('autoscrollSpeed ramps from the edge minimum to the maximum and scales with the creep knob, clamped', () => {
     const min = Logic.AUTOSCROLL_MIN_PX_PER_MS;
     const max = Logic.AUTOSCROLL_MAX_PX_PER_MS;

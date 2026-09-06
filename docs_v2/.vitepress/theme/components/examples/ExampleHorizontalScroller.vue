@@ -37,6 +37,10 @@ const {
         <div class="d-k">cards in the DOM</div>
         <div class="d-n grad">{{ example.renderedCount }}</div>
       </div>
+      <div>
+        <div class="d-k">cards selected</div>
+        <div class="d-n">{{ example.selectedCardsLabel }}</div>
+      </div>
     </div>
 
     <div class="ehs-frame">
@@ -47,14 +51,14 @@ const {
         :assumed-size="230"
         :padding-quantity="8"
         :creep-ms-per-px="example.creepMsPerPx"
+        :selection-text="example.cardText"
         auto-play
         :auto-play-delay="800"
       >
         <template #item="{ item }">
-          <div class="ehs-card">
-            <b>#{{ Number(item.position).toLocaleString() }}</b>
-            <span>{{ item.body }}</span>
-          </div>
+          <!-- one line on purpose: the space between the two spans is the
+               only whitespace the card's text carries, so copy matches it -->
+          <div class="ehs-card"><b>#{{ Number(item.position).toLocaleString() }}</b> <span>{{ item.body }}</span></div>
         </template>
       </HorizontalVirtualScroller>
     </div>

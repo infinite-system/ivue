@@ -39,6 +39,10 @@ const {
         <div class="d-k">chunks in the DOM</div>
         <div class="d-n grad">{{ example.renderedCount }}</div>
       </div>
+      <div>
+        <div class="d-k">chunks selected</div>
+        <div class="d-n">{{ example.selectedChunksLabel }}</div>
+      </div>
     </div>
 
     <div class="etm-frame">

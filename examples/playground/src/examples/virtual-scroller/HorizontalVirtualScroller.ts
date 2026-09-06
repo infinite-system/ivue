@@ -3,6 +3,7 @@ import type { ShallowUnwrapRef } from 'vue';
 import { Reactive, type ReactiveInstance } from '../../ivue';
 import { Static } from '../../Static';
 import { VirtualScroller } from './VirtualScroller';
+import type { VirtualScrollerSelection } from './VirtualScrollerSelection';
 
 /**
  * The virtual scroller, sideways — the extension story on the flagship
@@ -18,15 +19,16 @@ import { VirtualScroller } from './VirtualScroller';
  * drive the strip; a plain vertical wheel scrolls the page straight
  * through. Pair with `snap-to-items` for the step feel: scroll, stop.
  */
-class $HorizontalVirtualScroller<T extends VirtualScroller.BaseItem> extends (VirtualScroller.$Class as typeof VirtualScroller.$Class) <T> {
-
+class $HorizontalVirtualScroller<
+  T extends VirtualScroller.BaseItem,
+> extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<T> {
   /* Contract — inherited whole; ONE default re-tuned. `props` needs no
      override: it reads through the receiver and fuses THESE defaults
      with the inherited types. */
   static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults {
     return {
       ...super.propsDefaults,
-      assumedSize: 300 // cards are ~hundreds of px wide where rows are tens tall
+      assumedSize: 300, // cards are ~hundreds of px wide where rows are tens tall
     };
   }
 
@@ -40,7 +42,8 @@ class $HorizontalVirtualScroller<T extends VirtualScroller.BaseItem> extends (Vi
     return true;
   }
 
-  protected override get lenisGestureOrientation(): 'vertical' | 'horizontal' | 'both' {
+  protected override get lenisGestureOrientation():
+    'vertical' | 'horizontal' | 'both' {
     // deltaX ONLY: a plain vertical wheel is the page's (lenis refuses it
     // before preventDefault, so the page scrolls straight through); the
     // strip answers to shift+wheel and real horizontal trackpad swipes.
@@ -63,7 +66,15 @@ class $HorizontalVirtualScroller<T extends VirtualScroller.BaseItem> extends (Vi
     return this.outerElementSize.width;
   }
 
-  protected override offsetSize(element: HTMLElement | null | undefined): number {
+  /** Text selection walks cards sideways: nearest-card and edge distance
+   *  along x, autoscroll left/right. */
+  protected override get selectionAxis(): VirtualScrollerSelection.Axis {
+    return 'x';
+  }
+
+  protected override offsetSize(
+    element: HTMLElement | null | undefined,
+  ): number {
     return element?.offsetWidth ?? 0;
   }
 
@@ -75,11 +86,17 @@ class $HorizontalVirtualScroller<T extends VirtualScroller.BaseItem> extends (Vi
     return 'translateX(' + px + 'px)';
   }
 
-  protected override axisDelta(data: { deltaX: number; deltaY: number }): number {
+  protected override axisDelta(data: {
+    deltaX: number;
+    deltaY: number;
+  }): number {
     return data.deltaX;
   }
 
-  protected override trackPointerFraction(event: PointerEvent, rect: DOMRect): number {
+  protected override trackPointerFraction(
+    event: PointerEvent,
+    rect: DOMRect,
+  ): number {
     return (event.clientX - rect.left) / rect.width;
   }
 }
@@ -93,7 +110,7 @@ export namespace HorizontalVirtualScroller {
 
   export const $Class = Static($HorizontalVirtualScroller); // anchor — it overrides a static
   export let Class = Reactive(
-    $HorizontalVirtualScroller
+    $HorizontalVirtualScroller,
   ) as unknown as typeof $HorizontalVirtualScroller;
   export type Instance<T extends VirtualScroller.BaseItem> = ReactiveInstance<
     $HorizontalVirtualScroller<T>
@@ -101,9 +118,13 @@ export namespace HorizontalVirtualScroller {
 
   /* Types */
 
-  export type Props<T extends VirtualScroller.BaseItem> = VirtualScroller.Props<T>;
+  export type Props<T extends VirtualScroller.BaseItem> =
+    VirtualScroller.Props<T>;
   export type Emits = VirtualScroller.Emits;
-  export type Slots<T extends VirtualScroller.BaseItem> = VirtualScroller.Slots<T>;
+  export type Slots<T extends VirtualScroller.BaseItem> =
+    VirtualScroller.Slots<T>;
   /** See VirtualScroller.Exposed — same surface, this class's instance. */
-  export type Exposed<T extends VirtualScroller.BaseItem> = ShallowUnwrapRef<Instance<T>>;
+  export type Exposed<T extends VirtualScroller.BaseItem> = ShallowUnwrapRef<
+    Instance<T>
+  >;
 }

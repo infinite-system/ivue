@@ -117,6 +117,13 @@ un-exported, private to the file).
 - **The bar under the cards drags in progress space** — the thumb
   renders `position / (extent − container)`, and its drag is the exact
   inverse, so it lands where it points, including the true end.
+- **Text selection walks sideways too.** The selection is a range over
+  the data ([the vertical page](/examples/virtual-scroller) explains it),
+  and the only thing that changes here is the axis: the nearest-card and
+  edge-distance math run along x, and a drag past the left or right edge
+  autoscrolls the strip. One seam, `selectionAxis`, is all the subclass
+  overrides. The marquee above the vertical list is the same class and
+  joins its chunks with a space instead of a line break (`selection-join`).
 - **The glide hands off, both ways.** A forward flick decays *to* the
   glide speed and the creep adopts the scroll at that exact speed —
   it never stalls to zero and restarts. The slider changes speed
