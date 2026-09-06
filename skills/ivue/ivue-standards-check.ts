@@ -283,8 +283,13 @@ class $CheckStandard {
             if (ts.isPropertyAccessExpression(callee) && callee.name.text === '$Class')
               findings.push(this.finding(this.construction_goes_through_the_namespace_class_slot, unit, this.lineOf(unit, node), `\`new ${callee.getText(unit.ast)}()\` constructs the anchor — construct \`.Class\``));
           }
+          // `reactive(new X.Class())` bare is the proxy-on-the-standard-path
+          // mistake; `reactive(new X.Class() as X.Instance)` is the sanctioned
+          // interop form (a store's optional reactive() view) — the cast is
+          // what makes the unwrapped writes typecheck, so its presence is
+          // the signal that the author chose the concession knowingly.
           if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'reactive' && node.arguments[0] && ts.isNewExpression(node.arguments[0]))
-            findings.push(this.finding(this.construction_goes_through_the_namespace_class_slot, unit, this.lineOf(unit, node), '`reactive(new …)` wraps an instance — instances are raw; no proxy on the standard path'));
+            findings.push(this.finding(this.construction_goes_through_the_namespace_class_slot, unit, this.lineOf(unit, node), '`reactive(new …)` wraps an instance without the Instance cast — instances are raw; a reactive() view is `reactive(new X.Class() as X.Instance)`'));
         });
       }
       return findings;
@@ -1273,7 +1278,7 @@ export namespace Scroller {
         green: [{ files: box }],
       },
       'construction_goes_through_the_namespace_class_slot': {
-        claim: 'If an instance is created, then it is new X.Class, never new dollar-X, new X.dollar-Class, or reactive-wrapped construction',
+        claim: 'If an instance is created, then it is new X.Class, never new dollar-X, new X.dollar-Class, or bare reactive-wrapped construction; reactive(new X.Class() as X.Instance) is the sanctioned view',
         impossibility: 'a file breaking construction_goes_through_the_namespace_class_slot passes the gate',
         red: [{
           files: {
@@ -1286,6 +1291,12 @@ export namespace Scroller {
           files: {
             ...box,
             'src/BoxFactory.ts': "import { Box } from './Box';\n\nclass $BoxFactory {\n  make() {\n    return new Box.Class({ width: 1 });\n  }\n}\n\nexport namespace BoxFactory {\n  export const $Class = $BoxFactory;\n  export let Class = $Class;\n}\n",
+          },
+        }, {
+          // the sanctioned reactive() view: the Instance cast marks the concession
+          files: {
+            ...box,
+            'src/BoxView.ts': "import { reactive } from 'vue';\nimport { Box } from './Box';\n\nclass $BoxView {\n  make() {\n    return reactive(new Box.Class({ width: 1 }) as Box.Instance);\n  }\n}\n\nexport namespace BoxView {\n  export const $Class = $BoxView;\n  export let Class = $Class;\n}\n",
           },
         }],
       },

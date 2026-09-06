@@ -941,6 +941,12 @@ Why this shape and not alternatives:
 - **The `$`-getter is the injection point** — cached whole, per instance,
   on first read. A model names its dependency once; every method reads
   `this.$app` with zero lookup cost and zero constructor plumbing.
+- **A store may publish itself as a `reactive()` view** — `use()` stays
+  the one door; the `$`-static behind it returns
+  `reactive(new AppStore.Class() as AppStore.Instance)` and consumers read
+  and write with no `.value`. The `as Instance` cast is the interop form
+  the gate sanctions (it is what makes the unwrapped writes typecheck);
+  bare `reactive(new …)` is refused.
 - **Tests swap the slot, not the callers** — `AppStore.Class = $TestStore`
   before the first `use()` and every consumer, calling
   `AppStore.Class.use()`, gets the double through the same seam.
