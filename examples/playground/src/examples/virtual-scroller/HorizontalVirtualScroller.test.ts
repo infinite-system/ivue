@@ -49,6 +49,10 @@ class $Probe extends (HorizontalVirtualScroller.$Class as typeof HorizontalVirtu
   probeContainerIsWidth() {
     return this.containerSize === this.elementSize.width;
   }
+
+  probeNativeOffset(element: HTMLElement) {
+    return this.nativeScrollOffset(element);
+  }
 }
 
 namespace Probe {
@@ -101,6 +105,9 @@ test('every seam names the x axis', () => {
   expect(Object.keys(instance.scrollbarThumbStyle)).toEqual(['width', 'left']);
   expect(instance.selectionAxis).toBe('x');
   expect(instance.frameTouchAction).toBe('pan-y');
+  const scrolled = document.createElement('div');
+  Object.defineProperty(scrolled, 'scrollLeft', { value: 12 });
+  expect(instance.probeNativeOffset(scrolled)).toBe(12);
   expect(instance.probeContainerIsWidth()).toBe(true);
   const rect = { left: 100, width: 400, top: 0, height: 10 } as DOMRect;
   expect(instance.probeTrackFraction({ clientX: 300, clientY: 5 } as PointerEvent, rect)).toBe(0.5);

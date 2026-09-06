@@ -568,17 +568,17 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### The frame is never natively panned along its own axis
 
-**Invariant:** If a touch pans the frame along the scroller's own axis, then the browser does nothing with it natively — Lenis drives it in JS — and the cross axis is the page's: the frame's `touch-action` is `pan-x` on the vertical scroller and `pan-y` on the horizontal strip.
+**Invariant:** If a touch pans the frame along the scroller's own axis, then the browser does nothing with it natively — Lenis drives it in JS — and the cross axis is the page's: the frame's `touch-action` is `pan-x` on the vertical scroller and `pan-y` on the horizontal strip; and if the frame does scroll natively by any means, then Lenis never adopts that offset as the position and `onScroll` hands it to the virtual scroll and zeroes the frame.
 
-**Scope:** `VirtualScroller.ts` `frameTouchAction` (the seam), `HorizontalVirtualScroller.ts` (the override), the `:style` binding on the frame in both SFCs.
+**Scope:** `VirtualScroller.ts` `frameTouchAction` (the seam), `lenisIgnoreNativeScroll` (true on both axes), `onScroll` with the `nativeScrollOffset` / `resetNativeScroll` seams; `HorizontalVirtualScroller.ts` (the overrides), the `:style` binding on the frame in both SFCs; the fork's `onNativeScroll`.
 
-**Mechanism:** The frame is `overflow: auto` so Lenis can adopt native scroll; without a `touch-action`, a finger that our long press has turned into a selection still pans the frame natively the moment the touchmove is no longer cancelable, moving `scrollTop` under the transformed rows so the text leaves the clip. With the own axis excluded from native panning, a selecting finger's touchmove stays ours to cancel, and a cross-axis swipe still reaches the page.
+**Mechanism:** The frame is `overflow: auto` so Lenis can adopt native scroll; without a `touch-action`, a finger that our long press has turned into a selection still pans the frame natively the moment the touchmove is no longer cancelable, moving `scrollTop` under the transformed rows so the text leaves the clip. With the own axis excluded from native panning, a selecting finger's touchmove stays ours to cancel, and a cross-axis swipe still reaches the page. The second half is the teleport: the fork's `onNativeScroll` adopts `scrollTop` as the position when it is not animating, so a 30 px native nudge under a touch became "scroll 30" and the rows, the thumb and the copy chip left the frame together (seen on an iPhone as rows that never appear past the fold). Both axes now refuse adoption, and `onScroll` converts whatever native offset arrives — a focused input, a find-in-page match, a selection nudge — into `scrollBy` and zeroes the frame.
 
 **Generates:** The touch selection surviving on iOS; the `-webkit-touch-callout: none` on the frame, since the copy chip is the affordance.
 
 **Evidence:** `VirtualScroller.ts` `frameTouchAction`. Tests: "the vertical seams read the y axis: translateY and deltaY", "every seam names the x axis".
 
-**Impossible if true:** The frame's `scrollTop` moving under a touch selection.
+**Impossible if true:** The frame's `scrollTop` moving under a touch selection. Lenis adopting a native scroll offset as the position on either axis. A native scroll of the frame that is neither zeroed nor turned into a virtual one.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller -t "vertical seams|every seam names the x axis"`
 

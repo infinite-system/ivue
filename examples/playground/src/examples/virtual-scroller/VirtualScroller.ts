@@ -370,10 +370,15 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return 'vertical';
   }
 
-  /** Fully-virtual axes refuse native-scroll adoption (see the fork's
-   *  onNativeScroll) — the vertical scroller keeps the stock behavior. */
+  // invariant: The frame is never natively panned along its own axis (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  /** Both axes are fully virtual: scrollTop and scrollLeft are pinned at 0
+   *  by design, so Lenis must never adopt a native scroll as the position
+   *  (see the fork's onNativeScroll). Adopting one teleports the content:
+   *  a 30 px native nudge under a touch became "scroll 30", and the rows,
+   *  the thumb and the copy chip left the frame together on iOS. Any
+   *  native scroll the frame does receive is converted by onScroll. */
   protected get lenisIgnoreNativeScroll(): boolean {
-    return false;
+    return true;
   }
 
   protected get axisPaddingProps(): readonly [string, string] {
@@ -1196,13 +1201,31 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     };
   }
 
+  // invariant: The frame is never natively panned along its own axis (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  /**
+   * The frame scrolled natively — a focused input scrolled into view, a
+   * find-in-page match, a selection nudge under a finger. Scroll is
+   * virtual here, so the native offset is handed to the transform and
+   * zeroed: what the browser wanted to show is shown, and the rows stay
+   * inside the clip.
+   */
   onScroll(event: Event) {
-    // Prevents native scrolling on focus of contenteditable elements.
-    if (this.preventScrollEvent.value) {
-      event.preventDefault();
-      const element = this.scrollElement.value;
-      if (element) element.scrollTop = 0;
-    }
+    if (this.preventScrollEvent.value) event.preventDefault();
+    const element = this.scrollElement.value;
+    if (!element) return;
+    const native = this.nativeScrollOffset(element);
+    if (native === 0) return;
+    this.resetNativeScroll(element);
+    if (!this.preventScrollEvent.value) this.scrollBy(native);
+  }
+
+  /** The frame's native offset along the main axis. */
+  protected nativeScrollOffset(element: HTMLElement): number {
+    return element.scrollTop;
+  }
+
+  protected resetNativeScroll(element: HTMLElement) {
+    element.scrollTop = 0;
   }
 
   disableScrollEvent() {

@@ -39,10 +39,6 @@ class $HorizontalVirtualScroller<
     return 'horizontal';
   }
 
-  protected override get lenisIgnoreNativeScroll(): boolean {
-    return true;
-  }
-
   // invariant: A cross-axis touch belongs to the page (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected override get lenisGestureOrientation(): 'vertical' | 'horizontal' | 'both' {
     // deltaX ONLY: a plain vertical wheel is the page's (lenis refuses it
@@ -96,6 +92,14 @@ class $HorizontalVirtualScroller<
 
   protected override trackPointerFraction(event: PointerEvent, rect: DOMRect): number {
     return (event.clientX - rect.left) / rect.width;
+  }
+
+  protected override nativeScrollOffset(element: HTMLElement): number {
+    return element.scrollLeft;
+  }
+
+  protected override resetNativeScroll(element: HTMLElement) {
+    element.scrollLeft = 0;
   }
 }
 

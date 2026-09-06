@@ -106,8 +106,11 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
 /* A finger's drag paints through the CSS Custom Highlight API, styled as
    the native selection would be — see VirtualScrollerSelection.applyHighlight. */
 ::highlight(virtual-scroller-selection) {
-  background-color: Highlight;
-  color: HighlightText;
+  /* Explicit colors, never the Highlight/HighlightText system pair: inside
+     ::highlight iOS paints HighlightText (white) without the Highlight
+     background, and the selected rows read as blank. The text keeps its
+     own color; only the ground changes. */
+  background-color: rgba(59, 130, 246, 0.35);
 }
 .virtual-scroller__track {
   position: absolute;

@@ -724,7 +724,12 @@ rasterize rows mounted during the move ("blank items after #9", the
 scrollbar thumb gone) until the finger lifts — the Lenis fork's Safari
 will-change cycle exists for the wheel path; the selection's autoscroll
 writes through the scroller and needs the same nudge (`nudgePaint`,
-WebKit only — on Chrome the per-frame re-raster shimmers). (8) Blind
+WebKit only — on Chrome the per-frame re-raster shimmers). (10) The fork's Lenis ADOPTS native scrollTop on axes that keep stock
+`ignoreNativeScroll: false` — the vertical list did — so any native
+nudge of the frame under a touch (iOS makes them) teleported the content
+to "scroll 30": rows, thumb and chip left the frame together. Both axes
+refuse adoption now, and `onScroll` converts any native offset into a
+virtual scroll and zeroes the frame. (8) Blind
 iteration on a phone is the expensive loop — the
 docs demo has an on-device log: open `/examples/virtual-scroller?touchdebug`
 and every selection call, touch event and thrown error prints under the
