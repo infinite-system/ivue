@@ -212,6 +212,12 @@ test('assembleText copies the first row from its offset, every row between in fu
 // domain-invariant: $VirtualScrollerSelection — If the pointer nears an edge or passes it, then the drag scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge: an upward drag scrolls up.
 test('the autoscroll speed ramps from the minimum at the edge to the maximum past the ramp, scaled by the creep knob within bounds', () => {
   expect(Logic.autoscrollSpeed(0)).toBe(Logic.AUTOSCROLL_MIN_PX_PER_MS);
+  // Squared: halfway through the ramp the speed is a quarter of the span.
+  const span = Logic.AUTOSCROLL_MAX_PX_PER_MS - Logic.AUTOSCROLL_MIN_PX_PER_MS;
+  expect(Logic.autoscrollSpeed(Logic.AUTOSCROLL_RAMP_PX / 2)).toBeCloseTo(
+    Logic.AUTOSCROLL_MIN_PX_PER_MS + span / 4,
+    6
+  );
   expect(Logic.autoscrollSpeed(Logic.AUTOSCROLL_RAMP_PX)).toBe(Logic.AUTOSCROLL_MAX_PX_PER_MS);
   expect(Logic.autoscrollSpeed(Logic.AUTOSCROLL_RAMP_PX * 5)).toBe(Logic.AUTOSCROLL_MAX_PX_PER_MS);
   expect(Logic.autoscrollSpeed(0, 2)).toBe(Logic.AUTOSCROLL_MIN_PX_PER_MS * 2);
@@ -312,7 +318,8 @@ test('copy assembles the selected text from the owner’s row text with the owne
   instance.onCopyEvent(event);
   expect(event.preventDefault).toHaveBeenCalled();
   expect(setData).toHaveBeenCalledWith('text/plain', instance.selectedText);
-  expect(instance.copyChipLabel).toBe('copy 3 rows');
+  expect(instance.copyChipLabel).toBe('Copy');
+  expect(instance.copyChipCount).toBe('3');
   instance.dispose();
 });
 

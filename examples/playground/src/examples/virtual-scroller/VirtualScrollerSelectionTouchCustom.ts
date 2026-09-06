@@ -80,23 +80,32 @@ class $VirtualScrollerSelectionTouchCustom {
   }
 
   /**
-   * Client rects to boxes relative to an origin rect (the overlay's), empty
-   * ones dropped — a range's rects include zero-width ones at node
-   * boundaries that would draw as hairlines.
+   * Client rects to boxes relative to an origin rect (the overlay's), each
+   * clipped to the frame's rect, empty ones dropped. The clip is this
+   * class's, not the browser's: the range spans the padded rows above and
+   * below the viewport too, and while the layer is in motion the frame's
+   * overflow clip lags the compositor — boxes laid there flash over the
+   * page until the scroll settles. A range's rects also include
+   * zero-width ones at node boundaries that would draw as hairlines.
    */
   static boxesFrom(
     rects: ArrayLike<DOMRectReadOnly>,
-    origin: { left: number; top: number }
+    origin: { left: number; top: number },
+    clip?: { left: number; top: number; right: number; bottom: number }
   ): VirtualScrollerSelectionTouchCustom.Box[] {
     const boxes: VirtualScrollerSelectionTouchCustom.Box[] = [];
     for (let index = 0; index < rects.length; index++) {
       const rect = rects[index];
-      if (rect.width < 1 || rect.height < 1) continue;
+      const left = clip ? Math.max(rect.left, clip.left) : rect.left;
+      const top = clip ? Math.max(rect.top, clip.top) : rect.top;
+      const right = clip ? Math.min(rect.right, clip.right) : rect.right;
+      const bottom = clip ? Math.min(rect.bottom, clip.bottom) : rect.bottom;
+      if (right - left < 1 || bottom - top < 1) continue;
       boxes.push({
-        left: rect.left - origin.left,
-        top: rect.top - origin.top,
-        width: rect.width,
-        height: rect.height
+        left: left - origin.left,
+        top: top - origin.top,
+        width: right - left,
+        height: bottom - top
       });
     }
     return boxes;
@@ -276,16 +285,28 @@ class $VirtualScrollerSelectionTouchCustom {
       return;
     }
     const rects = typeof range.getClientRects === 'function' ? range.getClientRects() : [];
-    const boxes = this.self.boxesFrom(rects, overlay.getBoundingClientRect());
-    const handles = this.self.handlePositions(boxes);
-    if (!handles) {
+    const frame = this.element.value;
+    const origin = overlay.getBoundingClientRect();
+    const clip = frame ? frame.getBoundingClientRect() : undefined;
+    const boxes = this.self.boxesFrom(rects, origin, clip);
+    if (boxes.length === 0) {
       overlay.hidden = true;
       return;
     }
     overlay.hidden = false;
     this.paintBoxes(boxes);
-    this.placeHandle(this.parts.start, handles.start);
-    this.placeHandle(this.parts.end, handles.end);
+    // The handles sit at the TRUE ends; an end that lies outside the frame
+    // has no handle — one pinned at the clip line would sit half outside
+    // the frame, where a touch is a press elsewhere.
+    const handles = this.self.handlePositions(this.self.boxesFrom(rects, origin));
+    const inside = (at: { x: number; y: number }) =>
+      !clip ||
+      (at.x + origin.left >= clip.left &&
+        at.x + origin.left <= clip.right &&
+        at.y + origin.top >= clip.top &&
+        at.y + origin.top <= clip.bottom);
+    this.placeHandle(this.parts.start, handles && inside(handles.start) ? handles.start : null);
+    this.placeHandle(this.parts.end, handles && inside(handles.end) ? handles.end : null);
   }
 
   protected paintBoxes(boxes: VirtualScrollerSelectionTouchCustom.Box[]) {
@@ -308,9 +329,10 @@ class $VirtualScrollerSelectionTouchCustom {
     }
   }
 
-  protected placeHandle(handle: HTMLElement | null, at: { x: number; y: number }) {
+  protected placeHandle(handle: HTMLElement | null, at: { x: number; y: number } | null) {
     if (!handle) return;
-    handle.style.transform = `translate(${at.x}px, ${at.y}px)`;
+    handle.hidden = at === null;
+    if (at) handle.style.transform = `translate(${at.x}px, ${at.y}px)`;
   }
 
   /* The gestures */

@@ -71,6 +71,9 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
       @click="virtualScroller.selection.copy()"
     >
       {{ virtualScroller.selection.copyChipLabel }}
+      <span class="virtual-scroller__copy-count">{{
+        virtualScroller.selection.copyChipCount
+      }}</span>
     </button>
     <div
       v-if="virtualScroller.scrollbarVisible"
@@ -199,13 +202,28 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
   margin: -8px 0 0 -8px;
   border-radius: 50%;
   background: rgb(59, 130, 246);
-  box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 1px 4px rgba(0, 0, 0, 0.35);
 }
 .virtual-scroller__touch-handle--start::before {
   border-top-right-radius: 2px;
 }
 .virtual-scroller__touch-handle--end::before {
   border-top-left-radius: 2px;
+}
+.virtual-scroller__copy-count {
+  display: inline-block;
+  min-width: 18px;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
 }
 .virtual-scroller__copy {
   position: absolute;

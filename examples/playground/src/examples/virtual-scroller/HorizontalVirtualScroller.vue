@@ -82,6 +82,9 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
       @click="virtualScroller.selection.copy()"
     >
       {{ virtualScroller.selection.copyChipLabel }}
+      <span class="virtual-scroller__copy-count">{{
+        virtualScroller.selection.copyChipCount
+      }}</span>
     </button>
   </div>
 </template>

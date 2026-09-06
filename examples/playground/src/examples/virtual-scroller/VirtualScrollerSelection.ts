@@ -68,19 +68,21 @@ class $VirtualScrollerSelection {
     return 'a, button, input, textarea, select, [contenteditable="true"], [contenteditable=""]';
   }
 
-  /** Drag autoscroll: px per ms right at the frame's edge … */
+  /** Drag autoscroll: px per ms at the zone's inner boundary — a crawl a
+   *  reader can stop by lifting a little … */
   static get AUTOSCROLL_MIN_PX_PER_MS() {
-    return 0.15;
+    return 0.05;
   }
 
-  /** … and the fastest the ramp reaches. */
+  /** … and the fastest the ramp reaches, well past the edge. */
   static get AUTOSCROLL_MAX_PX_PER_MS() {
-    return 2;
+    return 1.2;
   }
 
-  /** How far past the edge (px) the ramp reaches full speed. */
+  /** How far into the zone (px) the ramp reaches full speed — the whole
+   *  zone plus a reach past the edge. */
   static get AUTOSCROLL_RAMP_PX() {
-    return 160;
+    return 240;
   }
 
   /** The band inside each edge where a drag begins to scroll — the closer
@@ -88,7 +90,7 @@ class $VirtualScrollerSelection {
    *  has to leave the frame, which a frame the size of the page has no
    *  outside of. */
   static get AUTOSCROLL_EDGE_ZONE_PX() {
-    return 48;
+    return 96;
   }
 
   /* Geometry — viewport point ↔ row ↔ logical position */
@@ -513,7 +515,8 @@ class $VirtualScrollerSelection {
   static autoscrollSpeed(distance: number, creepFactor = 1): number {
     const ramp = Math.min(1, Math.max(0, distance) / this.AUTOSCROLL_RAMP_PX);
     const span = this.AUTOSCROLL_MAX_PX_PER_MS - this.AUTOSCROLL_MIN_PX_PER_MS;
-    const base = this.AUTOSCROLL_MIN_PX_PER_MS + span * ramp;
+    // Squared: most of the zone is gentle, the speed arrives past the edge.
+    const base = this.AUTOSCROLL_MIN_PX_PER_MS + span * ramp * ramp;
     return base * Math.min(3, Math.max(0.5, creepFactor));
   }
 
@@ -628,13 +631,20 @@ class $VirtualScrollerSelection {
   }
 
   /** The copy chip: a phone has no Ctrl+C, so a touch selection shows one. */
+  /** On a touch device every selection offers the chip — a word from a
+   *  double tap as much as a drag; elsewhere only a touch-made one. */
   get showsCopyChip() {
-    return this.$touch.selected.value && this.hasSelection;
+    if (!this.hasSelection) return false;
+    return this.$touch.selected.value || this.$touch.paintsSelection;
   }
 
   get copyChipLabel() {
-    const count = this.selectedRowCount;
-    return `copy ${count.toLocaleString()} ${count === 1 ? 'row' : 'rows'}`;
+    return 'Copy';
+  }
+
+  /** The count in the chip's badge. */
+  get copyChipCount() {
+    return this.selectedRowCount.toLocaleString();
   }
 
   /** The touch gesture's question: does this target own its own tap? */

@@ -549,7 +549,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### A drag scrolls from inside the edge zone
 
-**Invariant:** If a selecting pointer, mouse or finger, comes within `AUTOSCROLL_EDGE_ZONE_PX` (48 px) of the frame's start or end edge along the axis, then the list scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge, and the focus follows the rows sliding under the pointer; in the interior nothing scrolls. If a native selection handle drags the selection's end into that zone, then the list scrolls under the handle the same way while the system keeps re-selecting beneath it, and stops when the end leaves the zone or the changes stop.
+**Invariant:** If a selecting pointer, mouse or finger, comes within `AUTOSCROLL_EDGE_ZONE_PX` (96 px) of the frame's start or end edge along the axis, then the list scrolls that way at a speed that ramps — squared, so most of the zone is gentle — from a crawl at the zone's inner boundary to the maximum well past the edge, and the focus follows the rows sliding under the pointer; in the interior nothing scrolls. If a native selection handle drags the selection's end into that zone, then the list scrolls under the handle the same way while the system keeps re-selecting beneath it, and stops when the end leaves the zone or the changes stop.
 
 **Scope:** `VirtualScrollerSelection.ts`: `edgePenetration`, `probePoint`, `extendTo`, `autoscrollStep`, `AUTOSCROLL_EDGE_ZONE_PX`; `followHandle`, `handleAutoscrollStep`, `HANDLE_SETTLE_MS` for the native handle path; both axes; mouse, finger and system handle.
 
@@ -627,7 +627,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### On a touch device the selection is drawn by the class
 
-**Invariant:** If the device has a touch point, then a finger never creates a native selection: the rows are non-selectable for as long as a finger is down, a range a finger made is painted by `VirtualScrollerSelectionTouchCustom` as boxes from the mounted DOM range's client rects laid inside the items wrapper, two handles of its own sit at the range's ends, and a handle drag begins at once from the other end through `beginFromEnd`; a mouse on the same device keeps the native selection and Ctrl+C; on a device with no touch point the class is inert and the native selection paints as before.
+**Invariant:** If the device has a touch point, then a finger never creates a native selection: the rows are non-selectable for as long as a finger is down, a range a finger made is painted by `VirtualScrollerSelectionTouchCustom` as boxes from the mounted DOM range's client rects, each clipped to the frame, laid inside the items wrapper, two handles of its own sit at the range's ends, and a handle drag begins at once from the other end through `beginFromEnd`; a mouse on the same device keeps the native selection and Ctrl+C; on a device with no touch point the class is inert and the native selection paints as before.
 
 **Scope:** `VirtualScrollerSelectionTouchCustom.ts` whole; `VirtualScrollerSelection.ts` `$touch`, `applyHighlight` (the `paintsSelection` branch), `visibleDomRange`, `beginFromEnd`, `itemsWrapperElement`; the overlay rules in `VirtualScroller.vue`. The earlier implementation, which rode the system's selection, stays in `VirtualScrollerSelectionTouch.ts` for rollback: swap the class in `$touch`.
 
@@ -641,7 +641,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Evidence:** `VirtualScrollerSelectionTouchCustom.ts`. Tests: "with a touch point the rows are non-selectable and the overlay with its two handles is laid inside the wrapper; dispose removes both", "painting a range lays one box per non-empty rect and puts the handles at the ends; painting null hides it all", "a finger on the end handle drags from the start at once, and on the start handle from the end", "on a touch device the highlight is the touch class’s overlay and the native selection is never created".
 
-**Impossible if true:** A native selection created by a touch. A handle drag that starts over instead of extending. A box that does not move with the rows. A mouse on a touch-capable device losing its native selection or its Ctrl+C.
+**Impossible if true:** A native selection created by a touch. A handle drag that starts over instead of extending. A box that does not move with the rows. A box painted outside the frame. A handle shown for an end that is not on screen. A mouse on a touch-capable device losing its native selection or its Ctrl+C.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouchCustom.test.ts`
 

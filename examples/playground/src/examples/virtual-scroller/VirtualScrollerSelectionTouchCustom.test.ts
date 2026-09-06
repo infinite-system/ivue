@@ -6,7 +6,7 @@ Goal: Let a finger select text in a virtual list without the system's selection:
 [A drag scrolls from inside the edge zone](virtual-scroller.invariants.md#a-drag-scrolls-from-inside-the-edge-zone)
 [A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If the device has neither touch points nor touch events, then attach does nothing: no overlay, no listeners, the rows stay selectable and the native selection paints as before.
-// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay and the handles sit at the first box's bottom-left and the last box's bottom-right; a null range hides the overlay.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, each clipped to the frame so nothing is painted outside it, and the handles sit at the true ends — hidden when an end lies outside the frame; a null range hides the overlay.
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a handle, then the drag begins at once from the other end, the handle stops catching pointer events for its own drag, and lifting ends it with the chip offered.
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a button or on the overlay, then no hold arms; a tap on an existing selection clears it; a swipe past the slop is a scroll.
 Impossible if true: A native selection created by this class.
@@ -50,6 +50,9 @@ function device(touchPoints: number) {
 
 function gesture(range: VirtualScrollerSelection.Range | null = null) {
   const frame = document.createElement('div');
+  // jsdom lays nothing out: the frame's rect is the clip every box is cut to.
+  frame.getBoundingClientRect = () =>
+    ({ left: 0, top: 0, right: 800, bottom: 1000, width: 800, height: 1000 }) as DOMRect;
   const wrapper = document.createElement('div');
   const row = document.createElement('div');
   row.className = 'virtual-scroller__item';
@@ -117,18 +120,30 @@ test('with a touch point the overlay with its two handles is laid inside the wra
   expect(wrapper.querySelector(`.${Touch.OVERLAY_CLASS}`)).toBeNull();
 });
 
-// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay and the handles sit at the first box's bottom-left and the last box's bottom-right; a null range hides the overlay.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, each clipped to the frame so nothing is painted outside it, and the handles sit at the true ends — hidden when an end lies outside the frame; a null range hides the overlay.
 test('painting a range lays one box per non-empty rect and puts the handles at the ends; painting null hides it all', () => {
   const rects = [
-    { left: 20, top: 10, width: 300, height: 20 },
-    { left: 0, top: 30, width: 0, height: 20 },
-    { left: 0, top: 30, width: 120, height: 20 }
+    { left: 20, top: 10, right: 320, bottom: 30, width: 300, height: 20 },
+    { left: 0, top: 30, right: 0, bottom: 50, width: 0, height: 20 },
+    { left: 0, top: 30, right: 120, bottom: 50, width: 120, height: 20 }
   ];
   expect(Touch.boxesFrom(rects as DOMRectReadOnly[], { left: 10, top: 5 })).toEqual([
     { left: 10, top: 5, width: 300, height: 20 },
     { left: -10, top: 25, width: 120, height: 20 }
   ]);
   expect(Touch.handlePositions([])).toBeNull();
+  // Clipped to the frame: a rect above it is dropped, one crossing its bottom is cut.
+  const frame = { left: 0, top: 0, right: 400, bottom: 40 };
+  expect(
+    Touch.boxesFrom(
+      [
+        { left: 20, top: -30, right: 320, bottom: -10, width: 300, height: 20 },
+        { left: 20, top: 30, right: 320, bottom: 50, width: 300, height: 20 }
+      ] as DOMRectReadOnly[],
+      { left: 0, top: 0 },
+      frame
+    )
+  ).toEqual([{ left: 20, top: 30, width: 300, height: 10 }]);
 
   const { instance, wrapper, row } = gesture();
   const range = document.createRange();
@@ -145,6 +160,17 @@ test('painting a range lays one box per non-empty rect and puts the handles at t
   const end = overlay.querySelector(`.${Touch.HANDLE_CLASS}--end`) as HTMLElement;
   expect(start.style.transform).toBe('translate(20px, 30px)');
   expect(end.style.transform).toBe('translate(120px, 50px)');
+
+  // An end outside the frame has no handle: the range runs on below the frame.
+  range.getClientRects = () =>
+    [
+      rects[0],
+      { left: 0, top: 1200, right: 120, bottom: 1220, width: 120, height: 20 }
+    ] as unknown as DOMRectList;
+  instance.paint(range);
+  expect(start.hidden).toBe(false);
+  expect(end.hidden).toBe(true);
+  expect(overlay.querySelectorAll(`.${Touch.BOX_CLASS}`)).toHaveLength(1);
 
   // A smaller range shrinks the pool; null hides.
   range.getClientRects = () => [rects[0]] as unknown as DOMRectList;
