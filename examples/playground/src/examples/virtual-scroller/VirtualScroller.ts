@@ -207,11 +207,20 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       () => this.updatePositionsImmediately(),
     );
 
-    // Rows recycle under a live selection: re-pin the highlight to
-    // whatever is mounted after every window change.
+    // Rows recycle under a live selection: after every window change AND
+    // every scroll frame, the focus follows the (possibly stationary)
+    // pointer onto whatever is now under it, and the highlight is
+    // re-pinned to what is mounted. Without the scroll watch a wheel
+    // scroll during a drag would move the content under the pointer and
+    // leave the highlight empty until the next mousemove.
     watch(
       () => this.visibleItems.value,
-      () => this.applySelectionHighlight(),
+      () => this.onSelectionViewportChanged(),
+      { flush: 'post' },
+    );
+    watch(
+      () => this.scrollPosition.value,
+      () => this.onSelectionViewportChanged(),
       { flush: 'post' },
     );
 
@@ -1765,6 +1774,29 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       ) !== 0;
     if (outside) this.startSelectionAutoscroll();
     else this.stopSelectionAutoscroll();
+  }
+
+  /**
+   * The content moved under the pointer (a window change or a scroll
+   * frame). During a drag the focus is re-derived from the last known
+   * pointer position — a wheel scroll with the button held extends the
+   * selection exactly as a pointer move would — and the highlight is
+   * re-pinned either way.
+   */
+  onSelectionViewportChanged() {
+    if (this.selectionDragging.value) {
+      const wrapper = this.itemsWrapperElement.value;
+      if (wrapper) {
+        const focus = this.SelectionLogic.positionAt(
+          wrapper,
+          this.selectionDrag.pointerX,
+          this.selectionDrag.pointerY,
+          this.selectionAxis,
+        );
+        if (focus) this.selectionFocus.value = focus;
+      }
+    }
+    this.applySelectionHighlight();
   }
 
   /** mouseup: the drag ends, the range stays. A click that never moved

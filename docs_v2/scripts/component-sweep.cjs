@@ -214,6 +214,10 @@ const settle = (p, ms = 300) => p.waitForTimeout(ms);
     let rb = null; for (let i = 0; i < await rows.count(); i++) { const box = await rows.nth(i).boundingBox(); if (box && box.y > fb.y + 10 && box.y + box.height < fb.y + fb.height - 10) { rb = box; break; } }
     if (!rb) throw new Error('no mounted row inside the frame');
     await p.mouse.move(rb.x + 60, rb.y + rb.height / 2); await p.mouse.down();
+    // a wheel scroll with the button held and NO pointer movement must extend the selection too
+    await p.mouse.wheel(0, 1500); await settle(p, 700);
+    const afterWheel = Number((await p.locator('.evs-stats').innerText()).match(/rows selected\s*([\d,]+)/)?.[1]?.replace(/,/g, '') ?? 0);
+    if (afterWheel < 5) throw new Error(`wheel with the button held did not extend the selection (${afterWheel} rows)`);
     await p.mouse.move(fb.x + 60, fb.y + fb.height + 120, { steps: 6 }); await settle(p, 1200);
     await p.mouse.move(fb.x + 60, fb.y + fb.height - 30, { steps: 3 }); await p.mouse.up(); await settle(p, 200);
     const selected = Number((await p.locator('.evs-stats').innerText()).match(/rows selected\s*([\d,]+)/)?.[1]?.replace(/,/g, '') ?? 0);
