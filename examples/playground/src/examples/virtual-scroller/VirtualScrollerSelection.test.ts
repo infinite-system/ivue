@@ -36,7 +36,7 @@ DOM and comes back. The owner is a plain object of the Owner interface —
 the seam that makes this class testable without a scroller.
 */
 
-import { computed, ref, shallowRef } from 'vue';
+import { computed, nextTick, ref, shallowRef } from 'vue';
 import { afterEach, expect, test, vi } from 'vitest';
 import { VirtualScrollerSelection } from './VirtualScrollerSelection';
 
@@ -119,6 +119,7 @@ function owner(stage: Stage, join = '\n') {
     scrollElement: ref(stage.frame),
     itemsWrapperElement: ref(stage.wrapper),
     visibleItems: computed(() => window.value),
+    scrollPosition: ref<string | number>(0),
     selectionAxis: 'y' as const,
     selectionJoin: join,
     creepFactor: 1,
@@ -686,7 +687,7 @@ test('the mounted part of the range as a DOM range spans the clamped carets, and
 // invariant: On a touch device the selection is drawn by the class (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('on a touch device the highlight is the touch class’s overlay and the native selection is never created', () => {
   Object.defineProperty(navigator, 'maxTouchPoints', { value: 5, configurable: true });
-  const { instance, dom } = selection(0, 5);
+  const { instance, dom, owner } = selection(0, 5);
   instance.attach(dom.frame);
   const originalRects = Range.prototype.getClientRects;
   Range.prototype.getClientRects = function () {
@@ -700,7 +701,18 @@ test('on a touch device the highlight is the touch class’s overlay and the nat
   expect(overlay.hidden).toBe(false);
   expect(overlay.querySelectorAll('.virtual-scroller__touch-box')).toHaveLength(1);
   expect(window.getSelection()!.rangeCount).toBe(0);
-  // A mouse drag on the same device keeps the native selection and drops the overlay.
+  // A scroll re-lays the boxes: a rect that was clipped away is painted
+  // once it comes back into the frame, window change or not.
+  Range.prototype.getClientRects = function () {
+    return [
+      { left: 0, top: 10, width: 200, height: 20 },
+      { left: 0, top: 40, width: 200, height: 20 }
+    ] as unknown as DOMRectList;
+  };
+  owner.scrollPosition.value = 30;
+  return nextTick().then(() => {
+    expect(overlay.querySelectorAll('.virtual-scroller__touch-box')).toHaveLength(2);
+    // A mouse drag on the same device keeps the native selection and drops the overlay.
   instance.beginAt(60, 20);
   instance.extendTo(30, 100);
   instance.endDrag();
@@ -710,6 +722,7 @@ test('on a touch device the highlight is the touch class’s overlay and the nat
   Range.prototype.getClientRects = originalRects;
   Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, configurable: true });
   instance.dispose();
+  });
 });
 
 // impossible-if-true: $VirtualScrollerSelection — Clearing our selection removing a highlight the reader made elsewhere on the page.

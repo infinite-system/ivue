@@ -213,7 +213,7 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
     0 1px 4px rgba(0, 0, 0, 0.35);
 }
 .virtual-scroller__touch-handle--start::before {
-  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
 }
 .virtual-scroller__touch-handle--end::before {
   border-top-left-radius: 2px;

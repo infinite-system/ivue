@@ -536,6 +536,14 @@ class $VirtualScrollerSelection {
       () => this.applyHighlight(),
       { flush: 'post' }
     );
+    // A finger's boxes are clipped to the frame when painted, so a scroll
+    // that brings clipped-away text back into the frame must repaint
+    // them, window change or not; a native highlight moves with the rows.
+    watch(
+      () => this.owner.scrollPosition.value,
+      () => this.repaintTouch(),
+      { flush: 'post' }
+    );
   }
 
   /** The one cast per class: instance code reads its own statics here. */
@@ -945,6 +953,14 @@ class $VirtualScrollerSelection {
    */
   // invariant: The selection is a range over the data (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   // invariant: A finger's drag paints without selecting (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  /** Re-lay the touch class's boxes over the range it paints — nothing
+   *  when the range is not a finger's, since a native highlight needs no
+   *  help to follow a scroll. */
+  repaintTouch() {
+    if (!this.$touch.paintsSelection || !this.input.touch || !this.hasSelection) return;
+    this.$touch.paint(this.visibleDomRange());
+  }
+
   applyHighlight() {
     // A range a finger made on a touch device: the touch class draws it
     // itself and the native selection is never created (see
@@ -1368,6 +1384,8 @@ export namespace VirtualScrollerSelection {
     readonly itemsWrapperElement: Ref<HTMLElement | null>;
     /** The rendered window — the highlight is re-pinned when it changes. */
     readonly visibleItems: ComputedRef<unknown>;
+    /** The scroll offset — a finger's boxes are re-laid when it changes. */
+    readonly scrollPosition: Ref<string | number>;
     readonly selectionAxis: Axis;
     /** What joins the rows of a copied selection. */
     readonly selectionJoin: string;
