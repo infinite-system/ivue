@@ -86,7 +86,7 @@ onMounted(() => app.probe());
       </form>
     </main>
 
-    <main v-else class="content">
+    <main v-else class="content" :class="app.contentClass">
       <RouterView />
       <!-- any email address anywhere opens this — rides ?subscriber= -->
       <SubscriberModal />

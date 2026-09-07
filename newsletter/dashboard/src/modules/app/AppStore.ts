@@ -20,6 +20,7 @@ class $AppStore {
     return [
       { name: 'newsletter', label: 'Newsletter', home: 'subscribers' },
       { name: 'socials', label: 'Socials', home: 'x' },
+      { name: 'release', label: 'Release', home: 'release' },
     ];
   }
 
@@ -38,8 +39,11 @@ class $AppStore {
       ],
       socials: [
         { name: 'x', label: 'X' },
-        { name: 'press', label: 'Press' },
         { name: 'socials-settings', label: 'Settings' },
+      ],
+      release: [
+        { name: 'release', label: 'Calendar' },
+        { name: 'release-venues', label: 'Venues' },
       ],
     };
   }
@@ -80,9 +84,16 @@ class $AppStore {
   }
 
   get activeDomain(): DomainName {
-    return this.$router.currentRoute.value.path.startsWith('/socials')
-      ? 'socials'
-      : 'newsletter';
+    const path = this.$router.currentRoute.value.path;
+    if (path.startsWith('/socials')) return 'socials';
+    if (path.startsWith('/release')) return 'release';
+    return 'newsletter';
+  }
+
+  // the release calendar runs the full viewport width — seven readable
+  // day columns need it; every other view keeps the reading measure
+  get contentClass(): Record<string, boolean> {
+    return { 'content--wide': this.activeDomain === 'release' };
   }
 
   // Any email address, anywhere in the app, opens that subscriber's
@@ -231,7 +242,7 @@ export namespace AppStore {
   }
 }
 
-export type DomainName = 'newsletter' | 'socials';
+export type DomainName = 'newsletter' | 'socials' | 'release';
 export type ViewName =
   | 'subscribers'
   | 'lists'
@@ -243,8 +254,9 @@ export type ViewName =
   | 'stats'
   | 'newsletter-settings'
   | 'x'
-  | 'press'
-  | 'socials-settings';
+  | 'socials-settings'
+  | 'release'
+  | 'release-venues';
 export type ToastTone = 'info' | 'success' | 'error';
 export type SubscriberTabName = 'sent' | 'upcoming';
 

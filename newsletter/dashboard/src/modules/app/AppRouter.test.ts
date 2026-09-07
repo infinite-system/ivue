@@ -30,8 +30,9 @@ describe('AppRouter', () => {
         ['stats', '/newsletter/stats'],
         ['newsletter-settings', '/newsletter/settings'],
         ['x', '/socials/x'],
-        ['press', '/socials/press'],
         ['socials-settings', '/socials/settings'],
+        ['release', '/release/calendar'],
+        ['release-venues', '/release/venues'],
       ]),
     );
     // run_worker_first claims GET /drip — the SPA must never route there
@@ -51,6 +52,12 @@ describe('AppRouter', () => {
       path: '/newsletter/posts',
       query: { preview: 'first-post' },
     });
+  });
+
+  it("the calendar's old socials address forwards to the release domain", () => {
+    expect(
+      routes.find((route) => route.path === '/socials/press')?.redirect,
+    ).toBe('/release/calendar');
   });
 
   it('root and unknown paths land on the subscribers table', () => {

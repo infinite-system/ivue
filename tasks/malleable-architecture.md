@@ -1412,5 +1412,5 @@ Post-release, as a ladder — each rung is a shippable artifact:
 4. The in-app agent: prompt → seam resolution via the live graph →
    gated generation → slot swap, on that same surface.
 5. The story writes itself at every rung — "the app agents can extend
-   while it runs" is press material for the W2/W4 machinery in
+   while it runs" is press material for the content-tank and channel-calendar machinery in
    tasks/press-plan.md, and rung 4 is a launch of its own.

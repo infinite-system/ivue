@@ -2,7 +2,7 @@
 venue: HN launch thread, r/vuejs, r/javascript, r/typescript, r/webdev, r/programming, lobste.rs, the r/vuejs AMA, every podcast pre-read
 purpose: post
 lang: en
-source: NEW (W13 objection bank) — receipts drawn from introducing-ivue, one-kilobyte-feature, performance/benchmarks docs, ban-private, the-stack-got-faster, twenty-million-cells, agents-built-an-editor
+source: NEW (the objection bank) — receipts drawn from introducing-ivue, one-kilobyte-feature, performance/benchmarks docs, ban-private, the-stack-got-faster, twenty-million-cells, agents-built-an-editor
 status: draft-for-review
 ---
 

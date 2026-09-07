@@ -1,4 +1,4 @@
-# Press drafts — juno (wave 2: W13 objection bank + launch runbook)
+# Press drafts — juno (wave 2: objection bank + launch runbook)
 
 | file | venue(s) | purpose | lang | length |
 | --- | --- | --- | --- | --- |

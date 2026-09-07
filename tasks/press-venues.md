@@ -26,7 +26,7 @@ press plan. This file is the map; the substance lives in:
   all `status: draft-for-review`: 14 cold emails (sol), 8 EN venue
   adaptations (terra), RU Habr translation + warm Telegram message +
   ZH juejin + JA Zenn (luna), objection bank + launch runbook (juno,
-  = W13), xHooks for 12 articles + X formats (vesta).
+  = the objection bank + runbook), xHooks for 12 articles + X formats (vesta).
 
 Convergence notes (independent agents agreeing = strong rows):
 news.vuejs.org/submit, Vue.js Feed, Changelog News, TypeScript

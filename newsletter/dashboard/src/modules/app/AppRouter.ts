@@ -2,9 +2,10 @@ import { Static } from 'ivue/extras';
 import { createMemoryHistory, createRouter, createWebHistory } from 'vue-router';
 import type { RouteLocation, Router } from 'vue-router';
 
-// The application router — vue-router owns the URL. Two DOMAINS, each a
+// The application router — vue-router owns the URL. Three DOMAINS, each a
 // nested layout with its own section tabs: /newsletter/* (the audience
-// machine) and /socials/* (publishing). Every leaf route is NAMED by its
+// machine), /socials/* (publishing), and /release/* (the launch calendar
+// and where it has landed). Every leaf route is NAMED by its
 // ViewName so the store reads/pushes views by name. Route components are
 // lazy imports: the router module never touches a .vue file at load
 // time, so it stays importable in node tests (and the views code-split
@@ -79,11 +80,6 @@ class $AppRouter {
             component: () => import('../x/XComposeView.vue'),
           },
           {
-            path: 'press',
-            name: 'press',
-            component: () => import('../press/PressCalendarView.vue'),
-          },
-          {
             path: 'settings',
             name: 'socials-settings',
             component: () =>
@@ -91,7 +87,27 @@ class $AppRouter {
           },
         ],
       },
+      {
+        path: '/release',
+        component: () => import('./DomainLayout.vue'),
+        props: { domain: 'release' },
+        children: [
+          { path: '', redirect: { name: 'release' } },
+          {
+            path: 'calendar',
+            name: 'release',
+            component: () => import('../release/ReleaseCalendarView.vue'),
+          },
+          {
+            path: 'venues',
+            name: 'release-venues',
+            component: () => import('../release/ReleaseVenuesView.vue'),
+          },
+        ],
+      },
       { path: '/', redirect: '/newsletter/subscribers' },
+      // the calendar lived under socials before it became its own domain
+      { path: '/socials/press', redirect: '/release/calendar' },
       // pre-domain URLs stay alive (bookmarks, old links); query survives
       // so /posts?preview=<slug> still deep-links the email preview
       ...['sent', 'posts', 'send', 'drip-plan', 'stats'].map((leaf) => ({

@@ -862,3 +862,40 @@ own whole than to arbitrate.
   build script gates imports and the 1,134-byte gzipped core budget.
 - Sync `clone.ts` alongside the playground's vendored engine and nestedProps;
   the standalone playground needs all three source files.
+
+## Release-film rendering: sample time, not the browser's frame rate
+
+- `release-film/` renders its 3D scene at explicit timestamps and streams
+  image frames into FFmpeg. Headless WebGL can run below real time without
+  changing the exported duration or skipping a frame; recording a live rAF
+  loop would bake the machine's slowdowns into the film.
+- FFmpeg's `loudnorm` upsamples internally. Without an explicit output
+  `-ar 48000`, AAC selected 96 kHz. Pin the export sample rate, then inspect
+  the actual MP4 with ffprobe rather than trusting the WAV's 48 kHz header.
+- The preview's representative poster is separate from playback position:
+  drawing a frame at eight seconds must not make Play skip the opening.
+
+## The release calendar: copy lives beside the entry
+
+- The admin's launch calendar is its own top-level domain (`/release/*`,
+  `newsletter/dashboard/src/modules/release/`). Every entry names its
+  paste-ready copy in `drafts` — repo-relative markdown paths bundled by
+  `import.meta.glob(..., { query: '?raw', eager: true })` from `tasks/` and
+  `docs_v2/blog/`, or `x:<group>[:n]` keys into `x-launch-copy.ts` (the
+  reviewed launch-thread artifact, extracted to data). Bundling files from
+  outside the dashboard root needs `server.fs.allow` for the dev server;
+  the build needs nothing. The chunk is ~93 KB gzipped and loads only on
+  the Release tab.
+- The standing X voice posts are generated, not hand-listed: three a week
+  from launch, in the artifact's order, skipping days that already carry
+  an X entry. Edit the copy module, never the schedule.
+- Plan docs name their sections (xHooks, the channel calendar,
+  measurement, the landing surfaces…). Never reintroduce W-numbers — a
+  number sends the reader counting; a name sends them to the section.
+- A clipboard fallback that selects a scratch textarea moves focus out of
+  the dialog, so Escape stops working; hand focus back to the element
+  that was active before the copy.
+- perl `s|…|…|` with `\|` in the pattern: the escaped delimiter becomes a
+  bare `|`, an ALTERNATION — the replacement lands at the first two spaces
+  of the file. Use `#` as the delimiter for patterns that contain `|`,
+  and a heredoc or Python for CSS blocks that contain `#` colors.

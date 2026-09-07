@@ -2,7 +2,7 @@
 venue: internal — launch day (HN, r/vuejs, X, Bluesky, Mastodon, LinkedIn, newsletter)
 purpose: post
 lang: en
-source: NEW (W13 launch runbook) — sequencing from note-launch-plan, gates from the press plan's W11/W12/W13
+source: NEW (the launch runbook) — sequencing from note-launch-plan, gates from the press plan's measurement, landing surfaces, and objection bank + runbook sections
 status: draft-for-review
 ---
 

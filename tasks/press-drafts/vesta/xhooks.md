@@ -267,7 +267,7 @@ xHooks:
 ## Notes for the composer
 
 - All 33 hooks are ≤270 characters (counted; see the INDEX checkpoint
-  report). None opens with a backtick — the YAML trap the W1 spec names.
+  report). None opens with a backtick — the YAML trap the xHooks spec names.
 - URLs cost a fixed 23 characters on X regardless of length, so a hook
   with room to spare can absorb one link; none of these carry one,
   because the link belongs in the closing segment on X and in post 1 on
