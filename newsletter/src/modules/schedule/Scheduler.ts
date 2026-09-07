@@ -3,6 +3,7 @@ import { Http } from '../platform/Http';
 import { Delivery } from '../delivery/Delivery';
 import { XPoster } from '../socials/XPoster';
 import { Tweets } from '../socials/Tweets';
+import { Expression } from '../press/Expression';
 
 // The scheduling queue: broadcasts and X posts enqueued for a future
 // time, executed by the 5-minute cron. A job is CLAIMED by stamping
@@ -13,13 +14,13 @@ import { Tweets } from '../socials/Tweets';
 // instead of retrying blind.
 class $Scheduler {
   static get KINDS() {
-    return ['broadcast', 'tweet', 'thread'] as const;
+    return ['broadcast', 'tweet', 'thread', 'expression'] as const;
   }
 
   static async schedule(
     env: Env,
     kind: JobKind,
-    payload: BroadcastPayload | TweetPayload | ThreadPayload,
+    payload: BroadcastPayload | TweetPayload | ThreadPayload | ExpressionPayload,
     dueAt: number,
   ): Promise<ScheduledJob> {
     if (!this.KINDS.includes(kind)) throw new Error(`Unknown kind: ${kind}`);
@@ -30,6 +31,8 @@ class $Scheduler {
       throw new Error('A broadcast needs a post slug.');
     if (kind === 'tweet' && !(payload as TweetPayload).text?.trim())
       throw new Error('A tweet needs text.');
+    if (kind === 'expression' && !Number((payload as ExpressionPayload).expressionId))
+      throw new Error('An expression job needs an expression id.');
     if (kind === 'thread') {
       const segments = this.threadSegments(payload as unknown as ThreadPayload);
       if (segments.length < 2)
@@ -66,6 +69,19 @@ class $Scheduler {
       upcoming: upcoming.map((row) => this.toJob(row)),
       recent: recent.map((row) => this.toJob(row)),
     };
+  }
+
+  // Reschedule = move a pending job's due time; false when it already ran.
+  static async reschedule(env: Env, id: number, dueAt: number): Promise<boolean> {
+    const now = Http.Class.nowSeconds();
+    if (!Number.isFinite(dueAt) || dueAt < now - 60)
+      throw new Error('Schedule time must be in the future.');
+    const outcome = await env.DB.prepare(
+      'UPDATE scheduled_job SET due_at = ? WHERE id = ? AND executed_at IS NULL',
+    )
+      .bind(Math.floor(dueAt), id)
+      .run();
+    return outcome.meta.changes > 0;
   }
 
   // Cancel = delete, and only while still pending.
@@ -109,7 +125,15 @@ class $Scheduler {
     try {
       const payload = JSON.parse(row.payload) as BroadcastPayload &
         TweetPayload &
-        Partial<ThreadPayload>;
+        Partial<ThreadPayload> &
+        Partial<ExpressionPayload>;
+      // a press expression: the row is read now, and only a still-scheduled
+      // row ships (Expression.executeJob owns the platform dispatch)
+      if (row.kind === 'expression')
+        return Expression.Class.executeJob(env, {
+          expressionId: String(payload.expressionId ?? ''),
+          platform: String(payload.platform ?? ''),
+        });
       if (row.kind === 'broadcast') {
         const report = await Delivery.Class.broadcastPost(
           env,
@@ -221,7 +245,12 @@ export namespace Scheduler {
   export let Class = $Class;
 }
 
-export type JobKind = 'broadcast' | 'tweet' | 'thread';
+export type JobKind = 'broadcast' | 'tweet' | 'thread' | 'expression';
+
+export interface ExpressionPayload {
+  expressionId: string;
+  platform: string;
+}
 
 export interface BroadcastPayload {
   slug: string;

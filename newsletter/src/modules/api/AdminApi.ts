@@ -14,6 +14,7 @@ import { Comments } from '../comments/Comments';
 import { Ledger } from '../audience/Ledger';
 import { Delivery } from '../delivery/Delivery';
 import { Drip } from '../delivery/Drip';
+import { PressApi } from '../press/PressApi';
 
 // The dashboard's JSON API — every /admin/* route, all behind the same
 // timing-safe Bearer ADMIN_SECRET check. The dashboard is a pure client
@@ -27,6 +28,10 @@ class $AdminApi {
   ): Promise<Response> {
     if (!(await Security.Class.bearerAuthorized(request, env)))
       return Http.Class.json({ error: 'Unauthorized' }, 401);
+
+    // the press has ids in its paths — its own router, same auth
+    if (url.pathname.startsWith('/admin/press/'))
+      return PressApi.Class.handle(request, url, env);
 
     const route = `${request.method} ${url.pathname}`;
     switch (route) {
