@@ -37,6 +37,13 @@ SFC is wiring).
 8. **Every posting is a ledger row.** When and where each projection
    went out is recorded per posting, so one expression can go out
    twice (launch, re-promotion) and the history stays whole.
+9. **Table names are singular, always.** A table is named for what one
+   row IS: `piece`, `expression`, `posting`, `subscriber`, `send`. A
+   plural name describes the container, not the row, and reads wrong
+   in every query (`FROM subscriber WHERE email = ?` is the sentence).
+   The rule is written into `newsletter/CONVENTIONS.md`; the existing
+   plural tables migrate before the press tables land (see Migration
+   0011 below).
 
 ## Architecture
 
@@ -47,9 +54,9 @@ artifact posts ────┘        │                 └─ Press ▸ Piece
                             │                        │
                        Worker admin API ◄────────────┘
                             │
-                    scheduled_jobs ─► cron ─► XPoster (X) / Postmark (email)
+                    scheduled_job ─► cron ─► XPoster (X) / Postmark (email)
                             │
-                       tweets ledger, post_revisions
+                       tweet ledger, post_revision
 ```
 
 - **Worker** (`newsletter/src`): new `press` module — `Pieces`,
@@ -84,10 +91,46 @@ artifact posts ────┘        │                 └─ Press ▸ Piece
 - Platform cards are bespoke CSS. Quasar provides none of that and is
   not asked to.
 
-## Data model (D1, migration 0011_press.sql)
+## Migration 0011_singular.sql — every table to its singular name
+
+Runs before the press schema. SQLite renames are atomic per statement
+and keep the data, constraints and indexes; the indexes are renamed by
+drop-and-create so their names follow the table.
+
+| today | after | index / view follow-ups |
+| --- | --- | --- |
+| `subscribers` | `subscriber` | — |
+| `sends` | `send` | `sends_by_email` → `send_by_email` |
+| `unsubscribes` | `unsubscribe` | — |
+| `tweets` | `tweet` | — |
+| `scheduled_jobs` | `scheduled_job` | `scheduled_jobs_due` → `scheduled_job_due` |
+| `lists` | `list` | — (`list` is not reserved in SQLite) |
+| `comments` | `comment` | `comments_slug_status` → `comment_slug_status`, `comments_root` → `comment_root` |
+| `comment_subscriptions` | `comment_subscription` | — |
+| `settings` | `setting` | one row per setting key |
 
 ```sql
-CREATE TABLE pieces (
+ALTER TABLE subscribers RENAME TO subscriber;
+ALTER TABLE sends RENAME TO send;
+DROP INDEX IF EXISTS sends_by_email;
+CREATE INDEX IF NOT EXISTS send_by_email ON send (email, sent_at);
+-- … one block per row of the table above
+```
+
+The code sweep lands in the same commit, so no deploy ever runs with
+the Worker and the schema disagreeing: every SQL string in
+`newsletter/src` (about 96 references across Audience, Delivery, Drip,
+Lists, Comments, Scheduler, Tweets, Settings), the ops commands in
+`newsletter/README.md` and `COMMENTS.md`, and the scripts under
+`newsletter/scripts/`. The test suite applies the migration files to
+the local D1 shim, so a missed reference fails a test before it fails
+production. Deploy order: `d1 migrations apply --remote` then `deploy`,
+which is the order the auto-deploy already runs.
+
+## Data model (D1, migration 0012_press.sql)
+
+```sql
+CREATE TABLE piece (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   slug        TEXT UNIQUE,            -- blog slug when the piece is an article; NULL for a bare post
   title       TEXT NOT NULL,
@@ -101,11 +144,11 @@ CREATE TABLE pieces (
   updated_at  INTEGER NOT NULL
 );
 
-CREATE TABLE expressions (
+CREATE TABLE expression (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  piece_id    INTEGER NOT NULL REFERENCES pieces(id),
+  piece_id    INTEGER NOT NULL REFERENCES piece(id),
   kind        TEXT NOT NULL,          -- see kinds below
-  parent_id   INTEGER REFERENCES expressions(id),  -- segment → its thread / card set
+  parent_id   INTEGER REFERENCES expression(id),  -- segment → its thread / card set
   position    INTEGER NOT NULL DEFAULT 0,          -- order among siblings
   label       TEXT,                   -- "hook", "A · the kilobyte", card title
   body        TEXT NOT NULL,          -- markdown subset (see projections)
@@ -121,12 +164,12 @@ CREATE TABLE expressions (
   created_at  INTEGER NOT NULL,
   updated_at  INTEGER NOT NULL
 );
-CREATE INDEX expressions_piece ON expressions (piece_id, kind, position);
-CREATE INDEX expressions_parent ON expressions (parent_id, position);
+CREATE INDEX expression_piece ON expression (piece_id, kind, position);
+CREATE INDEX expression_parent ON expression (parent_id, position);
 
-CREATE TABLE postings (              -- the ledger: when and where each projection went out
+CREATE TABLE posting (              -- the ledger: when and where each projection went out
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  expression_id INTEGER NOT NULL REFERENCES expressions(id),
+  expression_id INTEGER NOT NULL REFERENCES expression(id),
   platform      TEXT NOT NULL,        -- x | bluesky | mastodon | threads | linkedin | reddit | devto | hn | email | other
   venue         TEXT,                 -- r/vuejs, a newsletter's name, a Discord — the calendar entry's venue when placed
   url           TEXT,                 -- where it lives now
@@ -135,17 +178,17 @@ CREATE TABLE postings (              -- the ledger: when and where each projecti
   posted_by     TEXT NOT NULL,        -- 'api' (the Worker posted) | 'manual' (copied and marked)
   calendar_id   TEXT                  -- the release-calendar entry this fulfilled, when any
 );
-CREATE INDEX postings_expression ON postings (expression_id, posted_at);
+CREATE INDEX posting_expression ON posting (expression_id, posted_at);
 
-CREATE TABLE post_revisions (
+CREATE TABLE post_revision (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  expression_id INTEGER NOT NULL REFERENCES expressions(id),
+  expression_id INTEGER NOT NULL REFERENCES expression(id),
   body          TEXT NOT NULL,        -- the body BEFORE the save
   meta          TEXT,
   author        TEXT NOT NULL,        -- 'user' | 'agent'
   saved_at      INTEGER NOT NULL
 );
-CREATE INDEX post_revisions_expression ON post_revisions (expression_id, saved_at);
+CREATE INDEX post_revision_expression ON post_revision (expression_id, saved_at);
 ```
 
 Kinds: `x-thread` (parent) with `x-segment` children; `x-post`;
@@ -154,14 +197,14 @@ Kinds: `x-thread` (parent) with `x-segment` children; `x-post`;
 `linkedin-article`; `reddit`; `devto`; `hn`; `bluesky`; `mastodon`;
 `threads`; `email`; `note`.
 
-`expressions.sent_at` / `sent_url` and a mirror's `sent_at` are the
-latest posting, denormalized for the list; `postings` is the truth.
+`expression.sent_at` / `sent_url` and a mirror's `sent_at` are the
+latest posting, denormalized for the list; `posting` is the truth.
 
 Rules the Worker enforces: a segment's `piece_id` equals its parent's;
 approving a parent approves nothing on children (children have no
 status of their own; `skipped` is their only state); `status` moves
 only forward except `archived`, which any state can reach; every
-`body`/`meta` change writes a `post_revisions` row first.
+`body`/`meta` change writes a `post_revision` row first.
 
 ## Projections (one stored format, many renderings)
 
@@ -196,9 +239,9 @@ approval, never typing.
 | `PATCH /expressions/:id` | body, meta, label, mirrors, skipped, calendar_id — writes a revision; `author` from the `X-Press-Author` header (`agent` when the CLI calls) |
 | `POST /expressions/:id/approve` / `/unapprove` | status draft ↔ approved (lint must pass) |
 | `POST /expressions/:id/segments` | append a segment; `PATCH /expressions/:id/reorder` takes ordered child ids |
-| `POST /expressions/:id/schedule` | `{ due_at }` → a `scheduled_jobs` row of kind `expression`; status → scheduled |
-| `POST /expressions/:id/post` | X kinds only: post now through XPoster (thread posts live segments in order); writes a `postings` row with the tweet ids; status → sent |
-| `POST /expressions/:id/sent` | `{ url, platform, venue?, calendar_id? }` manual mark for platforms without an API; writes a `postings` row; with a mirror platform it also stamps the mirror |
+| `POST /expressions/:id/schedule` | `{ due_at }` → a `scheduled_job` row of kind `expression`; status → scheduled |
+| `POST /expressions/:id/post` | X kinds only: post now through XPoster (thread posts live segments in order); writes a `posting` row with the tweet ids; status → sent |
+| `POST /expressions/:id/sent` | `{ url, platform, venue?, calendar_id? }` manual mark for platforms without an API; writes a `posting` row; with a mirror platform it also stamps the mirror |
 | `GET /expressions/:id/postings` · `GET /pieces/:id/postings` | the ledger: every time and place this projection, or any of the piece's, went out |
 | `POST /expressions/:id/clone` | `{ kind }` → a new expression on the same piece with the body copied (X article → LinkedIn article) |
 | `GET /expressions/:id/revisions` · `POST …/revisions/:rev/restore` | history and undo |
@@ -300,9 +343,9 @@ now.
 
 ### Queue and Sent
 
-Queue: `scheduled_jobs` of every kind, soonest first, with cancel and
+Queue: `scheduled_job` rows of every kind, soonest first, with cancel and
 reschedule; due non-X expressions surface here with a "Copy and mark
-sent" action. Sent: the `postings` ledger, newest first — piece, kind,
+sent" action. Sent: the `posting` ledger, newest first — piece, kind,
 platform, venue, URL, remote ids, posted by API or by hand, and the
 calendar entry it fulfilled; filter by piece or platform to see where
 one article has been.
@@ -344,6 +387,8 @@ updated with the press commands.
 
 ## Order of work
 
+0. **Singular tables.** Migration 0011 + the code sweep + README, one
+   commit, applied remote before anything else in this plan.
 1. **Quasar in.** Plugin, theme from tokens, dark forced; one existing
    dialog (the subscriber modal) moved to `QDialog` as the proof.
 2. **Schema + API + CLI.** Migration, the three Worker classes,
@@ -363,7 +408,7 @@ updated with the press commands.
 9. **Cleanup.** Drafts out of the tree, docs, gate clean, e2e walk
    extended to press.
 
-Steps 1–6 are launch-week scope; 7–9 follow.
+Steps 0–6 are launch-week scope; 7–9 follow.
 
 ## Impossibilities (what this design forbids)
 
@@ -375,4 +420,5 @@ Steps 1–6 are launch-week scope; 7–9 follow.
 - A posting without a ledger row, whether the Worker posted it or you
   copied and marked it.
 - A piece that reads the live site at posting time.
+- A plural table name anywhere in the schema after migration 0011.
 - A platform card that shows text the platform would not accept.

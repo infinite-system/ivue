@@ -90,3 +90,13 @@ structural rules below. This file is the WHAT; the gate is the enforcement.
   trusted.
 - End-to-end: Playwright walks the BUILT dashboard against `wrangler dev`
   with a local D1 (see README).
+
+## Table names are singular
+
+A D1 table is named for what one row IS: `subscriber`, `send`,
+`comment`, `piece`, `expression`, `posting`. Never the plural — a
+plural names the container, not the row, and every query reads wrong
+(`FROM subscriber WHERE email = ?` is the sentence; `FROM subscribers`
+is not). Indexes follow the table (`send_by_email`, `comment_root`).
+Migration 0011 renamed every earlier table to this rule; a new
+migration that creates a plural table is wrong on arrival.
