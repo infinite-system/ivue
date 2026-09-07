@@ -73,7 +73,9 @@ The pieces, and what each one is for:
   prop can carry a literal union.
 - **`propsDefaults`** is a plain object of values. `propsWithDefaults`
   fuses it into the types and wraps object and array defaults in
-  factories, the way Vue requires.
+  factories, the way Vue requires. `clone` copies plain containers
+  while preserving nested callbacks, class constructors and opaque objects
+  by reference. Pass a custom cloner when those objects need their own copies.
 - **`props`** is the fused object the SFC uses. A subclass that only
   re-tunes defaults inherits it. A subclass that adds a prop re-declares
   it, because a static getter's return type is not polymorphic.
@@ -161,8 +163,9 @@ always there. The fill is in place, the semantics lodash's
 `defaultsDeep` with arrays taken whole: for every prop whose value and
 default are both plain objects, each leaf the supplied object lacks is
 written into it from the default, recursively, and a leaf it has is
-kept. Arrays, class instances and functions are never merged; whichever
-side supplies one, it is taken whole. Vue's props proxy is shallow, so
+kept. Missing plain-object and array branches are copied so instances keep
+independent containers. Class instances and functions retain their references.
+Arrays are never merged. Vue's props proxy is shallow, so
 the nested objects are the parent's own and are written directly; the
 props object itself is untouched and returned. `NestedPartial<T>` is
 the type a page may pass, and `NestedProps<P, D>` the type the class
@@ -171,6 +174,13 @@ reads.
 The parent passes a stable object: a constant inline literal, which
 Vue's compiler hoists, a `ref`'s value, or a store field. An object
 built anew on every parent render arrives unfilled each time.
+
+A third argument, `customCloner`, is the same policy knob
+`propsWithDefaults` has. The default copies each default branch it
+writes, so no two instances share a mutable default. Pass
+`structuredClone` when `Date` or `Map` defaults need their own copies,
+and the identity function only when the caller owns a fresh tree per
+instance.
 
 A `withDefaults(defineProps<…>())` component cannot do this. Its
 defaults exist only inside the compiler and never reach runtime, so

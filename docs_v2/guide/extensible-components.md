@@ -83,8 +83,9 @@ Each piece earns its place:
   the ruling stated in the defaults object itself.
 - **`propsWithDefaults(this.propsDefaults, this.propsTypes)`** fuses the
   pair into a defineComponent-style props object. Object and array
-  defaults are wrapped in cloning factories automatically
-  (`structuredClone`; pass a custom cloner for exotic values); primitives
+  defaults are wrapped in factories using `clone`: plain containers
+  are copied, while callbacks and opaque objects retain their references.
+  Pass a custom cloner for other ownership rules; primitives
   pass through untouched. Because it reads `this`, the one line written in
   the base fuses a subclass's own types and defaults when read as
   `Child.props`.

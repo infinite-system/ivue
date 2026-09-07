@@ -850,3 +850,15 @@ own whole than to arbitrate.
   with a Playwright sampler before theorising (scratch `jump-loop2.cjs`).
 - The component sweep runs in CI as an advisory job (`continue-on-error`):
   a red row without a blocked deploy.
+
+## Shared clone and the core size budget
+
+- Vite's final library transform can reintroduce whitespace after an input
+  Terser plugin. Run Terser in `rollupOptions.output.plugins` and retain
+  `format.preserve_annotations: true` so downstream PURE-based tree shaking
+  still works; a comments filter alone does not preserve these annotations.
+- Build core and extras independently to inline their shared `clone` source
+  without introducing a shared chunk or a Vue dependency into extras. The
+  build script gates imports and the 1,134-byte gzipped core budget.
+- Sync `clone.ts` alongside the playground's vendored engine and nestedProps;
+  the standalone playground needs all three source files.

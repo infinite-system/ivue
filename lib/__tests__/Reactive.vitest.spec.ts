@@ -13,6 +13,7 @@ import {
 } from 'vue';
 
 import {
+  clone,
   isClass,
   propsWithDefaults,
   Reactive,
@@ -986,7 +987,7 @@ describe('propsWithDefaults()', () => {
     expect(out.nul.default).toBe(null); // null → else branch, assigned directly
   });
 
-  it('wraps object/array defaults in a factory that structuredClones', () => {
+  it('wraps object/array defaults in a factory that copies their containers', () => {
     const typed = { o: { type: Object }, a: { type: Array } };
     const defaults = { o: { nested: { k: 1 } }, a: [1, 2, 3] };
     const out = propsWithDefaults(defaults, { ...typed }) as Record<
@@ -1020,6 +1021,49 @@ describe('propsWithDefaults()', () => {
     const v = out.o.default();
     expect(cloner).toHaveBeenCalledWith(defaults.o);
     expect(v).toEqual({ k: 1, cloned: true });
+  });
+
+  it('isolates default containers while preserving nested constructors, callbacks and opaque objects', () => {
+    class Runner {}
+    class Tuning { gain = 1; }
+    const onChange = () => 1;
+    const tuning = new Tuning();
+    const date = new Date(0);
+    const cache = new Map([['gain', 1]]);
+    const defaults = { options: { limits: { count: 5 }, runner: Runner, onChange, tuning, date, cache } };
+    const props = propsWithDefaults(defaults, { options: { type: Object } }) as Record<string, any>;
+    const first = props.options.default();
+    const second = props.options.default();
+
+    first.limits.count = 2;
+    expect(second.limits.count).toBe(5);
+    expect(defaults.options.limits.count).toBe(5);
+    expect(first.runner).toBe(Runner);
+    expect(first.onChange).toBe(onChange);
+    expect(first.tuning).toBe(tuning);
+    expect(first.date).toBe(date);
+    expect(first.cache).toBe(cache);
+    // The public copier uses the same ownership policy as the props factory.
+    const copied = clone(defaults.options);
+    expect(copied.limits).not.toBe(defaults.options.limits);
+    expect(copied.runner).toBe(Runner);
+  });
+
+  it('accepts structuredClone explicitly for cyclic data and independent built-in objects', () => {
+    const options: { date: Date; cache: Map<string, number>; self?: unknown } = {
+      date: new Date(0), cache: new Map([['gain', 1]]),
+    };
+    options.self = options;
+    const props = propsWithDefaults({ options }, { options: { type: Object } }, structuredClone) as Record<string, any>;
+    const first = props.options.default();
+    const second = props.options.default();
+
+    expect(first.self).toBe(first);
+    expect(first.date).not.toBe(second.date);
+    expect(first.date.getTime()).toBe(0);
+    first.cache.set('gain', 9);
+    expect(second.cache.get('gain')).toBe(1);
+    expect(options.cache.get('gain')).toBe(1);
   });
 
   it('wraps a class default in a factory that returns the class itself', () => {

@@ -37,14 +37,9 @@ export default defineConfig({
     minify: 'esbuild',
     cssCodeSplit: true,
     lib: {
-      // Multi-entry: the reactive core stays alone in `ivue` (the 1.1 kB
-      // gate measures dist/index.es.js); the toolkit beyond the core ships
-      // from `ivue/extras`. UMD cannot do multi-entry, so the require()
-      // path is plain CJS.
-      entry: {
-        index: './lib/index.ts',
-        extras: './lib/extras.ts',
-      },
+      // scripts/build-lib.mjs builds each entry independently. The shared
+      // copier stays inline, and extras needs neither a core chunk nor Vue.
+      entry: './lib/index.ts',
       formats: ['es', 'cjs'],
       name: pkg.name,
       fileName: (format, entryName) =>
@@ -52,8 +47,10 @@ export default defineConfig({
     },
     rollupOptions: {
       external: ['vue'],
-      plugins: [terser()],
       output: {
+        // Output plugins run AFTER Vite's final esbuild pass. Preserve PURE
+        // annotations so consumers can still tree-shake unused exports.
+        plugins: [terser({ format: { preserve_annotations: true } })],
         globals: {
           vue: 'Vue',
         },

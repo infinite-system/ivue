@@ -7,6 +7,9 @@ import {
   type ExtractPropTypes,
   type Ref,
 } from 'vue';
+import { clone } from './clone';
+
+export { clone } from './clone';
 
 /**
  * Constants & Helpers
@@ -363,20 +366,20 @@ export function isClass(val: any): boolean {
  * but leave primitive properties and functions intact so that
  * the final object is fully defineComponent() style compatible.
  *
- * The default cloner is the native `structuredClone` (zero-dependency, handles
- * plain data, Map/Set/Date/typed arrays, circular refs). For defaults that
- * contain class instances or functions — which `structuredClone` cannot clone —
- * pass a `customCloner` such as lodash `cloneDeep`.
+ * The default cloner copies acyclic plain-object and array trees while
+ * retaining callbacks, class constructors and opaque objects by reference.
+ * For independent Map/Set/Date values or cyclic data, pass a `customCloner`
+ * such as `structuredClone` when the values support it.
  *
  * @param defaults Regular object of default key -> values
  * @param typedProps Props declared in defineComponent() style with type and possibly required declared, but without default
- * @param customCloner Optional cloner used for object/array defaults (defaults to structuredClone)
+ * @param customCloner Optional cloner used for object/array defaults (defaults to clone)
  * @returns Props declared in defineComponent() style with all properties having default property declared.
  */
 export function propsWithDefaults<T extends VuePropsObject>(
   defaults: Record<string, any>,
   typedProps: T,
-  // Optional: Allows user to pass a custom cloner if structuredClone isn't enough
+  // Optional: Choose different ownership semantics for opaque objects or cycles.
   customCloner?: (val: any) => any,
 ): VuePropsWithDefaults<T> {
   // NON-MUTATING: descriptor objects are routinely SHARED between props
@@ -394,7 +397,7 @@ export function propsWithDefaults<T extends VuePropsObject>(
 
     if (typeof def === 'object' && def !== null) {
       result[prop].default = () =>
-        customCloner ? customCloner(def) : structuredClone(def);
+        customCloner ? customCloner(def) : clone(def);
     } else {
       if (isClass(def)) {
         result[prop].default = () => def;

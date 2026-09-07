@@ -110,8 +110,8 @@ an ordinary method of yours that does its own work and then calls
 ## `propsWithDefaults(defaults, typedProps, cloner?)`
 
 Merges plain default values into `defineComponent`-style prop definitions,
-wrapping object and array defaults in factory functions so each component
-instance receives a fresh copy.
+wrapping object and array defaults in factory functions that copy their
+plain containers for each component instance.
 
 ```ts
 const props = propsWithDefaults(
@@ -124,13 +124,46 @@ const props = propsWithDefaults(
 )
 ```
 
-- **Default cloner:** native `structuredClone` — zero dependencies, handles
-  plain data, `Map`/`Set`/`Date`/typed arrays, and circular references.
-- **`cloner` override:** pass your own (for example lodash `cloneDeep`)
-  when defaults contain class instances or functions, which
-  `structuredClone` cannot copy.
+- **Default cloner:** `clone` copies acyclic plain-object and array
+  trees. Nested callbacks, class constructors, class instances and other
+  opaque objects (`Map`, `Set`, `Date`, typed arrays) retain their references.
+- **`cloner` override:** pass `structuredClone` for supported data when
+  built-in objects need independent copies or the data contains cycles.
+  A custom cloner can supply other ownership rules.
 - Required props and primitive/function/class defaults pass through
   unwrapped.
+
+## `clone(value)`
+
+The configuration copier used by `propsWithDefaults` and `nestedProps`.
+It recursively copies plain objects and arrays, preserving sparse array
+holes and null object prototypes. Other values retain their identity,
+including nested class constructors and callbacks. Container trees must
+be acyclic; opaque objects remain shared.
+
+```ts
+function clone<T>(value: T): T
+```
+
+## `nestedProps(props, defaults, customCloner?)` — from `ivue/extras`
+
+Fills every nested object prop from the class's own defaults, in place,
+at the seam where props enter the class, and returns the props typed as
+complete (`NestedProps<P, D>`; `NestedPartial<T>` is what a page may
+pass). Vue resolves a default only when a prop is absent, so a supplied
+partial object arrives with its sibling leaves gone; this completes it.
+Arrays are taken whole. `customCloner` is the copy policy for each
+default branch written in, the same knob `propsWithDefaults` has:
+`clone` by default, `structuredClone` for `Date`/`Map`/`Set` copies, the
+identity only when the caller owns a fresh tree per instance.
+
+```ts
+function nestedProps<P extends object, D extends object>(
+  props: P,
+  defaults: D,
+  customCloner?: (value: unknown) => unknown
+): NestedProps<P, D>
+```
 
 ## `Static(Class)` — from `ivue/extras`
 

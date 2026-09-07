@@ -1,5 +1,3 @@
-// Vendored from ivue lib/nestedProps.ts — the playground is self-contained on
-// purpose (StackBlitz imports this folder straight from GitHub).
 /**
  * `nestedProps(props, defaults)` — fill a nested object prop from its
  * defaults, in place, so the class reads complete props at every depth.
@@ -16,8 +14,9 @@
  * The semantics are lodash's `defaultsDeep` with arrays taken whole: for
  * every prop whose value and default are both plain objects, each leaf the
  * supplied object lacks is written into it from the default, recursively;
- * a leaf it has is kept. Arrays, class instances, functions and primitives
- * are never merged — whichever side supplies one, it is taken whole. Vue's
+ * a leaf it has is kept. Missing plain-object and array defaults are copied
+ * recursively so instances never share those mutable containers. Arrays
+ * are never merged; class instances and functions retain their identity. Vue's
  * props proxy is shallow, so the nested objects are the parent's own and
  * are written directly; the props object itself is untouched and returned.
  *
@@ -31,6 +30,14 @@
  * it), a `ref`'s value, a store field. An object built anew on every
  * parent render is a new, unfilled object each time.
  *
+ * `customCloner` is the same policy knob `propsWithDefaults` has: it copies
+ * each default branch written into the props. The default, `clone`, copies
+ * plain containers and keeps callbacks, constructors and opaque objects by
+ * reference, so no two instances share a mutable default. Pass
+ * `structuredClone` when `Date`, `Map` or `Set` defaults need their own
+ * copies; pass the identity, `value => value`, only when the caller owns
+ * every default it passes — a fresh tree per instance, never a shared one.
+ *
  * `NestedPartial<T>` is the matching declaration for the prop's type — the
  * shape an author may pass — and `NestedProps<P, D>` the type of the
  * filled props, where every key both sides carry as an object is complete.
@@ -38,6 +45,8 @@
  * Ships from `ivue/extras` (not the reactive core) so the primary `ivue`
  * entry stays minimal.
  */
+
+import { clone } from './clone';
 
 /** Every key optional at every plain-object depth; arrays stay whole. */
 export type NestedPartial<T> = T extends readonly unknown[]
@@ -56,9 +65,14 @@ export type NestedProps<P, D> = {
   [K in keyof P as K extends keyof D ? never : K]: P[K];
 };
 
+/** A value the fill takes whole: not a plain container. */
+type Opaque = Date | RegExp | Map<unknown, unknown> | Set<unknown> | ((...args: never[]) => unknown);
+
 type NestedLeaf<V, D> = V extends readonly unknown[]
   ? V
-  : V extends object
+  : V extends Opaque
+    ? V
+    : V extends object
     ? D extends readonly unknown[]
       ? V
       : D extends object
@@ -83,12 +97,12 @@ function isPlain(value: unknown): value is PlainObject {
 /** Write every leaf `target` lacks from `defaults`, recursively; keep what
  *  it has. `for…in` over the defaults: plain objects have no enumerable
  *  prototype keys. */
-function fill(target: PlainObject, defaults: PlainObject) {
+function fill(target: PlainObject, defaults: PlainObject, copy: (value: unknown) => unknown) {
   for (const key in defaults) {
     const value = target[key];
     const fallback = defaults[key];
-    if (value === undefined) target[key] = fallback;
-    else if (isPlain(value) && isPlain(fallback)) fill(value, fallback);
+    if (value === undefined) target[key] = copy(fallback);
+    else if (isPlain(value) && isPlain(fallback)) fill(value, fallback, copy);
   }
 }
 
@@ -99,12 +113,14 @@ function fill(target: PlainObject, defaults: PlainObject) {
  */
 export function nestedProps<P extends object, D extends object>(
   props: P,
-  defaults: D
+  defaults: D,
+  // Optional: the copy policy for default branches written into the props.
+  customCloner: (value: unknown) => unknown = clone
 ): NestedProps<P, D> {
   for (const key in defaults) {
     const value = (props as PlainObject)[key];
     const fallback = (defaults as PlainObject)[key];
-    if (isPlain(value) && isPlain(fallback)) fill(value, fallback);
+    if (isPlain(value) && isPlain(fallback)) fill(value, fallback, customCloner);
   }
   return props as unknown as NestedProps<P, D>;
 }
