@@ -170,9 +170,9 @@ const vFocus = ExtendedMediaField.Class.focusDirective;
             v-focus
             class="extended-media__rename-input"
             placeholder="File name"
-            @keydown.enter.prevent="field.commitRename()"
+            @keydown.enter.prevent="field.onRenameEnter()"
             @keydown.esc="field.cancelRename()"
-            @blur="field.commitRename()"
+            @blur="field.onRenameBlur()"
           />
           <div v-else class="extended-media__tile-name" :title="row.name">
             {{ row.name }}
@@ -186,9 +186,9 @@ const vFocus = ExtendedMediaField.Class.focusDirective;
           v-model="captionDraft"
           class="extended-media__caption-input"
           placeholder="Caption"
-          @keydown.enter.prevent="field.commitCaption()"
+          @keydown.enter.prevent="field.onCaptionEnter()"
           @keydown.esc="field.cancelCaption()"
-          @blur="field.commitCaption()"
+          @blur="field.onCaptionBlur()"
         />
         <div
           v-else-if="field.canRenameCaption"

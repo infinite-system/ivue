@@ -127,8 +127,8 @@ const {
                     class="gc-edit"
                     v-model="draft"
                     autofocus
-                    @blur="page.commitEdit()"
-                    @keyup.enter="page.commitEdit()"
+                    @blur="page.onEditBlur()"
+                    @keyup.enter="page.onEditEnter()"
                   />
                   <template v-else>{{ cell.display }}</template>
                 </div>

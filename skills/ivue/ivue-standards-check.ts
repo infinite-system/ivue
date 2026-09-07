@@ -636,6 +636,40 @@ class $CheckStandard {
     });
   }
 
+  static get one_handler_per_event(): CheckStandard.StandardCheck {
+    return this.defineCheck('one_handler_per_event', (context) => {
+      const findings: CheckStandard.Finding[] = [];
+      const visit = (nodes: TemplateChildNode[], component: CheckStandard.ComponentUnit, offset: number) => {
+        for (const node of nodes) {
+          if (node.type !== NodeTypes.ELEMENT) continue;
+          const element = node as ElementNode;
+          const handlers = new Map<string, string[]>();
+          for (const property of element.props) {
+            if (property.type !== NodeTypes.DIRECTIVE || property.name !== 'on') continue;
+            if (!property.arg || property.arg.type !== NodeTypes.SIMPLE_EXPRESSION || !property.arg.isStatic) continue;
+            if (!property.exp || property.exp.type !== NodeTypes.SIMPLE_EXPRESSION) continue;
+            const handler = property.exp.content.trim();
+            const events = handlers.get(handler) ?? [];
+            events.push(property.arg.content);
+            handlers.set(handler, events);
+          }
+          for (const [handler, events] of handlers) {
+            if (events.length < 2) continue;
+            findings.push(this.componentFinding(this.one_handler_per_event, component, element.loc.start.line + offset, `\`@${events.join('` and `@')}\` bind one handler (\`${handler}\`) — one DOM event, one handler named for the event: give each its own method, a one-line delegate where they coincide, so a subclass can extend either alone`));
+          }
+          visit(element.children, component, offset);
+        }
+      };
+      for (const component of context.components) {
+        const { descriptor } = parseSfc(component.text, { filename: component.path });
+        if (!descriptor.template) continue;
+        const templateAst = parseTemplate(descriptor.template.content, { comments: false });
+        visit(templateAst.children, component, descriptor.template.loc.start.line - 1);
+      }
+      return findings;
+    });
+  }
+
   static get template_expressions_carry_no_logic(): CheckStandard.StandardCheck {
     return this.defineCheck('template_expressions_carry_no_logic', (context) => {
       const findings: CheckStandard.Finding[] = [];
@@ -1017,6 +1051,7 @@ class $CheckStandard {
       this.a_lifecycle_hook_delegates_to_one_method,
       this.the_state_destructure_is_total,
       this.template_expressions_carry_no_logic,
+      this.one_handler_per_event,
       this.watch_lifetime_matches_the_instance_owner,
       this.a_reactive_closure_delegates_to_one_method,
       this.a_store_is_used_lazily_and_swapped_at_the_class_slot,
@@ -1447,6 +1482,16 @@ export namespace Scroller {
           expectFindings: [/`area` is a plain getter/, /`grow` is a method/, /`width` shadows the prop/, /reaches a Ref through the instance/],
         }],
         green: [{ files: { 'src/Box.ts': fixture.validClass.replace("import { ref, watch } from 'vue';", "import { ref, watch, type Ref } from 'vue';").replace('  get width() {', '  get forwardedHeight(): Ref<number> {\n    return this.height;\n  }\n  get width() {'), 'src/Box.vue': fixture.validSfc.replace('const { height } = box;', 'const { height, forwardedHeight } = box;') } }, { files: { ...box, 'src/Box.vue': fixture.validSfc } }],
+      },
+      'one_handler_per_event': {
+        claim: 'If a template binds DOM events on one element, then no two events share a handler: a cancel gets its own method that may delegate to the lift, so a subclass can extend either alone',
+        impossibility: 'a file breaking one_handler_per_event passes the gate',
+        red: [{
+          files: { ...box, 'src/Box.vue': fixture.validSfc.replace('<button @click="box.grow()">grow</button>', '<button @pointerup="box.grow" @pointercancel="box.grow">grow</button>') },
+          expectFindings: [/`@pointerup` and `@pointercancel` bind one handler/],
+          expectCount: 1,
+        }],
+        green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc.replace('<button @click="box.grow()">grow</button>', '<button @pointerup="box.grow" @pointercancel="box.cancelGrow">grow</button>') } }],
       },
       'template_expressions_carry_no_logic': {
         claim: 'If a template expression is written, then it is a named read, a method call, or a structural branch, never a comparison, ternary, negation, or built string',

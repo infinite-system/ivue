@@ -28,5 +28,10 @@
     "path": "examples/playground/src/lenis/LenisUtils.ts",
     "check": "declarations_use_full_descriptive_names",
     "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) \u2014 not teaching code"
+  },
+  {
+    "path": "docs_v2/.vitepress/theme/components/grid/GridBenchmark.vue",
+    "check": "one_handler_per_event",
+    "reason": "benchmark arms: the composable and the ivue grid ARE the measured competitors, bound identically on purpose; giving either its own per-event methods changes the shape the numbers compare"
   }
 ]

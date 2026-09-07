@@ -109,6 +109,12 @@ class $MediaFieldPreviewDialog {
     this.isImageLoading.value = false;
   }
 
+  /** A failed load ends the wait as a load does — its own handler, so a
+   *  subclass can show a fallback without touching the loaded path. */
+  onImageError() {
+    this.onImageLoaded();
+  }
+
   download() {
     if (this.activeFile) this.field.downloadFile(this.activeFile);
   }
@@ -166,7 +172,7 @@ defineExpose(dialog as MediaFieldPreviewDialog.Instance);
           :src="dialog.activeFile.url"
           class="media-preview__image"
           @load="dialog.onImageLoaded()"
-          @error="dialog.onImageLoaded()"
+          @error="dialog.onImageError()"
         />
         <div v-else class="media-preview__placeholder">
           <q-icon
@@ -211,9 +217,9 @@ defineExpose(dialog as MediaFieldPreviewDialog.Instance);
             :value="renameDraft"
             autofocus
             @input="dialog.field.onRenameInput($event)"
-            @keyup.enter="dialog.field.commitRename()"
+            @keyup.enter="dialog.field.onRenameEnter()"
             @keyup.esc="dialog.field.cancelRename()"
-            @blur="dialog.field.commitRename()"
+            @blur="dialog.field.onRenameBlur()"
           />
           <div class="media-preview__meta">
             {{ dialog.activeExtension }} — {{ dialog.activeSizeLabel }}

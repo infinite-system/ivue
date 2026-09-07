@@ -15,7 +15,7 @@ Goal: Hold a text selection over a virtual list as a range over the DATA, so the
 // domain-invariant: $VirtualScrollerSelection — If the frame runs past the viewport, then the zone sits inside the visible part of the frame, so a pointer at the screen's edge is in the zone.
 // domain-invariant: $VirtualScrollerSelection — If anchor and focus are given in either order, then the range is the same, and a range whose ends coincide is no selection.
 // domain-invariant: $VirtualScrollerSelection — If a range is clamped to the mounted window, then an end that scrolled out is pinned to the boundary row, and a range wholly outside the window is null.
-// domain-invariant: $VirtualScrollerSelection — If a point is over a row, then the position is that row at the caret's offset; in a gap it is the nearest row along the axis, at its start before it and its end after; over nothing it is null.
+// domain-invariant: $VirtualScrollerSelection — If a point is over a row, then the position is that row at the caret's offset; in a gap it is the nearest row along the axis — beside it across the axis at the caret of the point's own coordinate, at its start before it and its end after it; and an empty wrapper gives no position.
 // domain-invariant: $VirtualScrollerSelection — If the pointer nears an edge or passes it, then the drag scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge: an upward drag scrolls up.
 // domain-invariant: $VirtualScrollerSelection — If a mousedown is not the primary button or lands on an interactive element, then it is left to the browser; otherwise it begins a selection and takes the native one away.
 // domain-invariant: $VirtualScrollerSelection — If a press lands outside the frame, then the selection clears; inside, it stays.
@@ -260,7 +260,7 @@ test('a row’s text is the trimmed textContent, and every offset survives the D
   expect(Logic.offsetInRow(row, { node: row.lastChild!, offset: 999 })).toBe(text.length);
 });
 
-// domain-invariant: $VirtualScrollerSelection — If a point is over a row, then the position is that row at the caret's offset; in a gap it is the nearest row along the axis, at its start before it and its end after; over nothing it is null.
+// domain-invariant: $VirtualScrollerSelection — If a point is over a row, then the position is that row at the caret's offset; in a gap it is the nearest row along the axis — beside it across the axis at the caret of the point's own coordinate, at its start before it and its end after it; and an empty wrapper gives no position.
 test('a point over a row gives that row at the caret, a point past the rows gives the nearest row’s start or end, and an empty wrapper gives nothing', () => {
   const { dom } = selection(10, 3);
   // Row 11 (slot 1): the caret lands 6 characters into the last text node;
@@ -271,6 +271,18 @@ test('a point over a row gives that row at the caret, a point past the rows give
   expect(Logic.positionAt(dom.wrapper, 60, -500)).toEqual(at(10, 0));
   const empty = stage(0, 0);
   expect(Logic.positionAt(empty.wrapper, 10, 10)).toBeNull();
+});
+
+// domain-invariant: $VirtualScrollerSelection — If a point is over a row, then the position is that row at the caret's offset; in a gap it is the nearest row along the axis — beside it across the axis at the caret of the point's own coordinate, at its start before it and its end after it; and an empty wrapper gives no position.
+test('a point beside a row across the axis takes the caret at its own coordinate along the axis, not the row’s end', () => {
+  const { dom } = selection(0, 5);
+  // The strip's axis: every row spans the point's x, so the nearest row
+  // along x is at distance 0; the point sits under all rows, in the
+  // wrapper's padding. The caret is read at x = 100 on that row.
+  const beside = Logic.positionAt(dom.wrapper, 100, 990, 'x');
+  const onRow = Logic.positionAt(dom.wrapper, 100, ROW_HEIGHT / 2, 'x');
+  expect(beside).toEqual(onRow);
+  expect(beside?.offset).toBeGreaterThan(0);
 });
 
 /* ---- the instance: begin, extend, end --------------------------------- */

@@ -100,8 +100,8 @@ const {
                     class="gc-edit"
                     v-model="cell.raw.value"
                     autofocus
-                    @blur="grid.commitEdit()"
-                    @keyup.enter="grid.commitEdit()"
+                    @blur="grid.onEditBlur()"
+                    @keyup.enter="grid.onEditEnter()"
                   />
                   <template v-else>{{ cell.display }}</template>
                 </div>

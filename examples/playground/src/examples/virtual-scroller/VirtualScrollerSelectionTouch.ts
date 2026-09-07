@@ -648,6 +648,12 @@ class $VirtualScrollerSelectionTouch {
     this.selected.value = this.owner.hasSelection;
   }
 
+  /** A cancelled touch ends the gesture as a lift does — its own handler,
+   *  so a subclass can treat a cancel differently without touching the lift. */
+  onTouchCancel() {
+    this.onTouchEnd();
+  }
+
   /** The selection was cleared by other means (an outside tap, a clear). */
   onSelectionCleared() {
     this.selected.value = false;
@@ -667,7 +673,7 @@ class $VirtualScrollerSelectionTouch {
     // the page from scrolling), so it is the one non-passive listener here.
     target.addEventListener('touchmove', this.onTouchMove as EventListener, { passive: false });
     target.addEventListener('touchend', this.onTouchEnd as EventListener);
-    target.addEventListener('touchcancel', this.onTouchEnd as EventListener);
+    target.addEventListener('touchcancel', this.onTouchCancel as EventListener);
     this.hold.target = target;
   }
 
@@ -676,7 +682,7 @@ class $VirtualScrollerSelectionTouch {
     if (!target) return;
     target.removeEventListener('touchmove', this.onTouchMove as EventListener);
     target.removeEventListener('touchend', this.onTouchEnd as EventListener);
-    target.removeEventListener('touchcancel', this.onTouchEnd as EventListener);
+    target.removeEventListener('touchcancel', this.onTouchCancel as EventListener);
     this.hold.target = null;
   }
 

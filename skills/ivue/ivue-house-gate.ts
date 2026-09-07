@@ -58,6 +58,7 @@ class $HouseGate extends CheckStandard.$Class {
       a_lifecycle_hook_delegates_to_one_method: 'warn',
       the_state_destructure_is_total: 'error',
       template_expressions_carry_no_logic: 'error',
+      one_handler_per_event: 'error',
       watch_lifetime_matches_the_instance_owner: 'error',
       a_reactive_closure_delegates_to_one_method: 'error',
       a_store_is_used_lazily_and_swapped_at_the_class_slot: 'error',

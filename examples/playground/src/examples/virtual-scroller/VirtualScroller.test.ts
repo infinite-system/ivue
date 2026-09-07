@@ -16,6 +16,8 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 [The feel is one nested prop complete at every depth](virtual-scroller.invariants.md#the-feel-is-one-nested-prop-complete-at-every-depth)
 // domain-invariant: $VirtualScroller — If a nested knob prop is read, then it is complete at every depth: a leaf the author supplied wins and every leaf left out is the tuned default, and Lenis is tuned from the same leaves.
 // domain-invariant: $VirtualScroller — If the scroll position changes with the window unchanged, then the scroller's own template does not re-render: the thumb, the one per-frame reader, is its own component.
+// domain-invariant: $VirtualScroller — If the reading creep moves on from a seek's landing, then the seek's converge loop ends with the next position shift instead of re-pinning the landing under the creep.
+// domain-invariant: $VirtualScroller — If the thumb is dragged, then autoplay is never stopped by it: a playing scroller re-arms the creep on release either way, a drag deeper in the scroll direction from rest starts it as a forward wheel does, and while the thumb is held the creep waits.
 // domain-invariant: $VirtualScroller — If a finger lands on the track, then the touch is flagged for Lenis to skip, so the thumb drag seeks and the content does not scroll under it.
 // domain-invariant: $VirtualScroller — If the props object is read, then it is the fusion of the static types and defaults: the required list carries no default and the creep knob unset reads as the tuned cadence.
 // domain-invariant: $VirtualScroller — If item i's position is asked, then it is the sum of the sizes before it, measured where known and the estimate elsewhere, whichever way the cursor walks there.
@@ -79,6 +81,18 @@ class $Probe extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<R
 
   probeAxisDelta(data: { deltaX: number; deltaY: number }) {
     return this.axisDelta(data);
+  }
+
+  probeVirtualScrolling() {
+    return this.virtualScrolling;
+  }
+
+  probeConverging() {
+    return this.stopScrollToIndexReapply !== null;
+  }
+
+  probeStartCreep() {
+    this.creepFrame = 1;
   }
 
   probeCreepMsPerPx() {
@@ -163,6 +177,66 @@ test('the props object fuses every default into the types, leaves the required l
   expect(set.instance.probeCreepMsPerPx()).toBe(20);
   tuned.unmount();
   set.unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the reading creep moves on from a seek's landing, then the seek's converge loop ends with the next position shift instead of re-pinning the landing under the creep.
+// invariant: A seek names an item not a pixel (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a seek keeps converging while sizes refine at rest, and lets go the moment the creep moves on', async () => {
+  const { instance, unmount } = scroller(rows(1000));
+  instance.scrollElement.value = document.createElement('div');
+  instance.scrollToIndex(500, undefined, false);
+  await nextTick();
+  expect(instance.probeConverging()).toBe(true);
+  // A size measured before the landing shifts its position: at rest the
+  // loop re-pins and stays armed.
+  instance.syncItemSize(10, 80);
+  await nextTick();
+  expect(instance.probeConverging()).toBe(true);
+  // The creep is running: the next shift ends the loop, no snap-back.
+  instance.probeStartCreep();
+  instance.syncItemSize(11, 80);
+  await nextTick();
+  expect(instance.probeConverging()).toBe(false);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the thumb is dragged, then autoplay is never stopped by it: a playing scroller re-arms the creep on release either way, a drag deeper in the scroll direction from rest starts it as a forward wheel does, and while the thumb is held the creep waits.
+test('a thumb drag never stops autoplay: it re-arms on release either way, starts it from rest when forward, and the creep waits while the thumb is held', () => {
+  vi.useFakeTimers();
+  const { instance, unmount } = scroller(rows(50));
+  const track = document.createElement('div');
+  track.className = 'virtual-scroller__track';
+  track.getBoundingClientRect = () => ({ top: 0, height: 100, left: 0, width: 12 }) as DOMRect;
+  track.setPointerCapture = () => {};
+  const pointer = (clientY: number) =>
+    ({ currentTarget: track, pointerId: 1, clientX: 6, clientY }) as unknown as PointerEvent;
+  const play = vi.spyOn(instance, 'play').mockImplementation(() => undefined);
+  instance.isAutoPlaying.value = true;
+  // Forward: down at 20 %, released at 60 % — autoplay stays and re-arms.
+  instance.onTrackPointerDown(pointer(20));
+  expect(instance.probeVirtualScrolling()).toBe(true);
+  instance.onTrackPointerMove(pointer(60));
+  instance.onTrackPointerUp();
+  expect(instance.isAutoPlaying.value).toBe(true);
+  expect(instance.probeVirtualScrolling()).toBe(false);
+  vi.advanceTimersByTime(3);
+  expect(play).toHaveBeenCalledTimes(1);
+  // Back: down at 60 %, released at 20 % — still reading; autoplay stays and re-arms.
+  instance.onTrackPointerDown(pointer(60));
+  instance.onTrackPointerMove(pointer(20));
+  instance.onTrackPointerUp();
+  expect(instance.isAutoPlaying.value).toBe(true);
+  vi.advanceTimersByTime(3);
+  expect(play).toHaveBeenCalledTimes(2);
+  // Forward from rest, not playing: reading intent, like a forward wheel.
+  instance.stopAutoPlay();
+  instance.onTrackPointerDown(pointer(20));
+  instance.onTrackPointerMove(pointer(40));
+  instance.onTrackPointerUp();
+  expect(instance.isAutoPlaying.value).toBe(true);
+  play.mockRestore();
+  vi.useRealTimers();
+  unmount();
 });
 
 // domain-invariant: $VirtualScroller — If a finger lands on the track, then the touch is flagged for Lenis to skip, so the thumb drag seeks and the content does not scroll under it.

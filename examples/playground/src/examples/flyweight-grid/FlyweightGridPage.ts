@@ -258,6 +258,17 @@ class $FlyweightGridPage {
     this.editing.value = null;
   }
 
+  /** The edit's blur commits — its own handler, so a subclass can treat a
+   *  blur apart from an Enter. */
+  onEditBlur() {
+    this.commitEdit();
+  }
+
+  /** Enter in the edit commits. */
+  onEditEnter() {
+    this.commitEdit();
+  }
+
   pollCensus() {
     const sheet = this.sheet.value;
     if (sheet) this.census.value = sheet.stats();

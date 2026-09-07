@@ -278,7 +278,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Scope:** `VirtualScroller.ts` `seekToFraction`, `seekToProgress`, `getRatioPosition`, `getAnchoredPosition`, `scrollToIndex`, `snapAlignOffset`.
 
-**Mechanism:** `getRatioPosition` scales the fraction over `itemCount − 1` and anchors at the floor item plus the remainder; `scrollToIndex` computes the target from `getIndexPosition` on every wave and stops only after the position has been quiet for 600 ms or the reader takes over. `seekToProgress` is the built-in track's inverse of `scrollbarProgress`: position space resolved to an item plus a fraction, so a marquee chunk wider than the container still reaches its tail.
+**Mechanism:** `getRatioPosition` scales the fraction over `itemCount − 1` and anchors at the floor item plus the remainder; `scrollToIndex` computes the target from `getIndexPosition` on every wave and stops only after the position has been quiet for 600 ms or the reader takes over — a wheel glide, or the reading creep moving on from the landing (a creep that kept mounting rows shifted the target at every mount, and every shift snapped the content back under it, for as long as the creep ran). `seekToProgress` is the built-in track's inverse of `scrollbarProgress`: position space resolved to an item plus a fraction, so a marquee chunk wider than the container still reaches its tail.
 
 **Generates:** The `endGapPx` dead-zone that keeps the promised item clear of the top edge; the `snapAlign` center placement.
 

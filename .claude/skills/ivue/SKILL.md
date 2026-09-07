@@ -524,6 +524,17 @@ belong in plain getters, setup work belongs in the constructor, and event
 handlers belong in methods — even when the handler only normalizes a DOM event
 before delegating to a domain model.
 
+**One DOM event, one handler, named for the event.** A template never binds
+two events to the same method (`@pointerup="x.onUp" @pointercancel="x.onUp"`),
+and a class never registers one method for two event types. A cancel gets
+`onPointerCancel`, whose body may be one line delegating to `onPointerUp`;
+a track's `touchstart` and `touchmove` get `onTrackTouchStart` and
+`onTrackTouchMove` even when both only claim the touch. The reason is the
+override seam: a subclass that must treat a cancel differently can override
+`onPointerCancel` alone, where a shared handler would make it re-derive
+which event it is handling from the event object — and the standard's
+whole point is that behavior extends by name.
+
 When building on a class-backed component, **extend its class, not its
 `<script setup>`**. Add behavior to the existing class when it belongs to the
 same component contract. When it is a real specialization, subclass the raw

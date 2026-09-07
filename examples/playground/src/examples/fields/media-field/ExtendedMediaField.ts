@@ -151,6 +151,17 @@ export class $ExtendedMediaField extends MediaField.$Class {
     this.captionDraft.value = row.caption ?? '';
   }
 
+  /** Enter in the caption commits — its own handler, so a subclass can
+   *  treat an Enter apart from a blur. */
+  onCaptionEnter() {
+    void this.commitCaption();
+  }
+
+  /** The caption's blur commits. */
+  onCaptionBlur() {
+    void this.commitCaption();
+  }
+
   async commitCaption() {
     const captionId = this.captionId.value;
     const row = this.files.value.find((existing) => existing.id === captionId);

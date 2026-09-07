@@ -165,6 +165,17 @@ class $FormulaGridExample {
     this.depsBump.value++;
   }
 
+  /** The edit's blur commits — its own handler, so a subclass can treat a
+   *  blur apart from an Enter. */
+  onEditBlur() {
+    this.commitEdit();
+  }
+
+  /** Enter in the edit commits. */
+  onEditEnter() {
+    this.commitEdit();
+  }
+
   a1(row0: number, col0: number) {
     return this.columnLabel(col0) + (row0 + 1);
   }

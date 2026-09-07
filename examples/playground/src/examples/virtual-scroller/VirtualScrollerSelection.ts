@@ -65,7 +65,7 @@ class $VirtualScrollerSelection {
 
   /** Elements a mousedown must leave alone — they own their own gesture. */
   static get INTERACTIVE_SELECTOR() {
-    return 'a, button, input, textarea, select, [contenteditable="true"], [contenteditable=""]';
+    return 'a, button, input, textarea, select, [contenteditable="true"], [contenteditable=""], .virtual-scroller__track';
   }
 
   /**
@@ -232,8 +232,10 @@ class $VirtualScrollerSelection {
    *   1. the point is over a row → that row, at the caret's offset;
    *   2. the point is between rows, or past the container's edge (the
    *      pointer left the frame mid-drag) → the NEAREST mounted row along
-   *      the scroll axis, at its start when the point is before it, at
-   *      its end when after;
+   *      the scroll axis: beside it ACROSS the axis (a finger just under
+   *      a marquee's line, in the frame's padding) the caret at the
+   *      point's own coordinate along the axis, clamped into the row;
+   *      before it, its start; after it, its end;
    *   3. nothing is mounted → null.
    *
    * `axis` is the scroll axis: rows stack vertically ('y'), cards of a
@@ -275,6 +277,20 @@ class $VirtualScrollerSelection {
         nearestDistance = distance;
         nearest = candidate;
       }
+    }
+
+    // Beside the nearest row across the axis: the caret at the point's own
+    // coordinate along the axis, read with the cross coordinate clamped
+    // into the row — a drag a few px under a marquee's line selects along
+    // the line, not to the chunk's end.
+    if (nearestDistance === 0) {
+      const rect = nearest.getBoundingClientRect();
+      const insideX =
+        axis === 'x' ? clampedX : Math.min(rect.right - 1, Math.max(rect.left + 1, clampedX));
+      const insideY =
+        axis === 'y' ? clampedY : Math.min(rect.bottom - 1, Math.max(rect.top + 1, clampedY));
+      const caret = this.caretFromPoint(insideX, insideY);
+      return { index: this.rowIndexOf(nearest), offset: caret ? this.offsetInRow(nearest, caret) : 0 };
     }
 
     // Before the nearest row selects from its start; after, to its end.

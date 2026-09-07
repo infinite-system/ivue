@@ -21,6 +21,7 @@ class $VirtualScroll {
     this.onTouchStart = this.onTouchStart.bind(this)
     this.onTouchMove = this.onTouchMove.bind(this)
     this.onTouchEnd = this.onTouchEnd.bind(this)
+    this.onTouchCancel = this.onTouchCancel.bind(this)
     this.onWheel = this.onWheel.bind(this)
     this.onWindowResize = this.onWindowResize.bind(this)
 
@@ -43,7 +44,7 @@ class $VirtualScroll {
     // The browser claiming the gesture (Android Chrome, when touch-action
     // lets it) ends the touch with a cancel, not an end: the flick must
     // still fire, or the glide a touchstart froze stays frozen.
-    this.element.addEventListener('touchcancel', this.onTouchEnd, listenerOptions)
+    this.element.addEventListener('touchcancel', this.onTouchCancel, listenerOptions)
   }
 
   /** The one cast per class: instance code reads its own statics here. */
@@ -105,7 +106,7 @@ class $VirtualScroll {
     )
     this.element.removeEventListener(
       'touchcancel',
-      this.onTouchEnd,
+      this.onTouchCancel,
       listenerOptions
     )
   }
@@ -167,6 +168,13 @@ class $VirtualScroll {
       deltaY: this.lastDelta.y,
       event,
     })
+  }
+
+  /** A cancelled touch flicks as an end does (the fork's rule) — its own
+   *  handler, so a subclass can treat a cancel differently without
+   *  touching the end. */
+  onTouchCancel(event: TouchEvent) {
+    this.onTouchEnd(event)
   }
 
   /** Event handler for 'wheel' event */

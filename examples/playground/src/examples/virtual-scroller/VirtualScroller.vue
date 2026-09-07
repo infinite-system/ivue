@@ -35,6 +35,7 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
     class="virtual-scroller"
     @scroll="virtualScroller.onScroll"
     @copy="virtualScroller.selection.onCopyEvent"
+    @mousedown="virtualScroller.selection.onMouseDown"
   >
     <!-- Content-sized on purpose — NO explicit size. The inner is the
          composited layer; sized to the full virtual content (~10M px on a
@@ -49,7 +50,6 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
       <div
         ref="itemsWrapperElement"
         :style="{ width: '100%' }"
-        @mousedown="virtualScroller.selection.onMouseDown"
       >
         <VirtualScrollerItem
           v-for="element in visibleItems"

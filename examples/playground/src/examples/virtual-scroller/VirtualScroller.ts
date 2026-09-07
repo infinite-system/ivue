@@ -783,6 +783,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   protected virtualScrolling = false;
 
+  /** A thumb drag's track fractions at its start and its latest move —
+   *  their order on release is the drag's direction. */
+  protected readonly thumbDrag = { from: 0, to: 0 };
+
   protected virtualScrollTimeout: ReturnType<typeof setTimeout> | undefined;
 
   protected autoscrollTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -1432,19 +1436,64 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.scrollToIndex(at.index, undefined, false, 0, at.fraction);
   }
 
+  /** A thumb drag never stops autoplay: a reader repositioning by the
+   *  thumb, either way, is still reading, so a playing scroller re-arms
+   *  the creep on release, and a drag deeper in the scroll direction from
+   *  rest starts it, as a forward wheel does. While the thumb is held the
+   *  creep waits, as it does under any live input. */
   onTrackPointerDown(event: PointerEvent) {
-    this.stopAutoPlay();
+    const track = this.trackOf(event);
+    if (!track) return;
     this.scrollbarDragging.value = true;
+    this.virtualScrolling = true;
+    clearTimeout(this.virtualScrollTimeout);
+    clearTimeout(this.autoscrollTimeout);
+    const fraction = this.trackPointerFraction(event, track.getBoundingClientRect());
+    this.thumbDrag.from = fraction;
+    this.thumbDrag.to = fraction;
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     this.seekToPointer(event);
   }
 
   onTrackPointerMove(event: PointerEvent) {
-    if (this.scrollbarDragging.value) this.seekToPointer(event);
+    if (!this.scrollbarDragging.value) return;
+    const track = this.trackOf(event);
+    if (track) this.thumbDrag.to = this.trackPointerFraction(event, track.getBoundingClientRect());
+    this.seekToPointer(event);
   }
 
   onTrackPointerUp() {
+    if (!this.scrollbarDragging.value) return;
     this.scrollbarDragging.value = false;
+    this.virtualScrolling = false;
+    const forward = this.thumbDrag.to > this.thumbDrag.from;
+    if (forward && !this.props.snapToItems) this.isAutoPlaying.value = true;
+    if (this.isAutoPlaying.value) {
+      this.scrollDirection.value = 'down';
+      clearTimeout(this.autoscrollTimeout);
+      this.autoscrollTimeout = setTimeout(this.play, 3);
+    }
+  }
+
+  /** A cancelled pointer ends the drag as a lift does — its own handler,
+   *  so a subclass can treat a cancel differently without touching the lift. */
+  onTrackPointerCancel(_event: PointerEvent) {
+    this.onTrackPointerUp();
+  }
+
+  /** The track's touchstart: claimed from Lenis (see claimTouch). */
+  onTrackTouchStart(event: TouchEvent) {
+    this.claimTouch(event);
+  }
+
+  /** The track's touchmove: claimed from Lenis (see claimTouch). */
+  onTrackTouchMove(event: TouchEvent) {
+    this.claimTouch(event);
+  }
+
+  /** The track element a pointer event on it or its thumb belongs to. */
+  protected trackOf(event: PointerEvent): HTMLElement | null {
+    return (event.currentTarget as HTMLElement | null)?.closest('.virtual-scroller__track') ?? null;
   }
 
   /** A finger on the track is the track's: Lenis listens for touches on
@@ -1455,9 +1504,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   seekToPointer(event: PointerEvent) {
-    const track = (event.currentTarget as HTMLElement).closest(
-      '.virtual-scroller__track'
-    ) as HTMLElement;
+    const track = this.trackOf(event);
     if (!track) return;
     this.seekToProgress(this.trackPointerFraction(event, track.getBoundingClientRect()));
   }
@@ -1565,7 +1612,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   protected onIndexPositionShift() {
     const stop = this.stopScrollToIndexReapply;
     if (!stop) return;
-    if (this.lenis?.isScrolling) {
+    // The reader has taken over — a wheel glide, or the reading creep
+    // moving on from the landing: the loop ends. A creep that kept
+    // mounting rows shifted the target's position at every mount, and
+    // every shift re-pinned the landing under it — a 6 px snap-back every
+    // few frames, for as long as the creep ran.
+    if (this.lenis?.isScrolling || this.creepFrame !== null) {
       stop();
       return;
     }

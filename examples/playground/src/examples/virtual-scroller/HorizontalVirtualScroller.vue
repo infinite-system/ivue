@@ -36,6 +36,7 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
     class="virtual-scroller virtual-scroller--x"
     @scroll="virtualScroller.onScroll"
     @copy="virtualScroller.selection.onCopyEvent"
+    @mousedown="virtualScroller.selection.onMouseDown"
   >
     <!-- Same layer discipline as the vertical scroller (content-sized inner,
          rebased leading spacer, capped tail), rotated: spacers are widths
@@ -45,7 +46,6 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
       <div
         ref="itemsWrapperElement"
         class="virtual-scroller__row"
-        @mousedown="virtualScroller.selection.onMouseDown"
       >
         <VirtualScrollerItem
           v-for="element in visibleItems"

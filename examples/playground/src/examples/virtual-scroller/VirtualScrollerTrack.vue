@@ -17,9 +17,9 @@ defineProps<{
     @pointerdown="scroller.onTrackPointerDown"
     @pointermove="scroller.onTrackPointerMove"
     @pointerup="scroller.onTrackPointerUp"
-    @pointercancel="scroller.onTrackPointerUp"
-    @touchstart="scroller.claimTouch"
-    @touchmove="scroller.claimTouch"
+    @pointercancel="scroller.onTrackPointerCancel"
+    @touchstart="scroller.onTrackTouchStart"
+    @touchmove="scroller.onTrackTouchMove"
   >
     <div
       class="virtual-scroller__thumb"

@@ -190,9 +190,9 @@ defineExpose(media as MediaField.Instance);
                 :title="row.name"
                 @focus="media.startRename(row)"
                 @input="media.onRenameInput($event)"
-                @keydown.enter.prevent="media.commitRename()"
+                @keydown.enter.prevent="media.onRenameEnter()"
                 @keydown.esc="media.cancelRename()"
-                @blur="media.commitRename()"
+                @blur="media.onRenameBlur()"
               />
               <div v-else class="media-field__item-name" :title="row.name">
                 {{ row.name }}

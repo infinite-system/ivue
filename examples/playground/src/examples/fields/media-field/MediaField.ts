@@ -579,6 +579,17 @@ export class $MediaField extends Field.$Class {
     this.renameId.value = null;
   }
 
+  /** Enter in the rename commits — its own handler, so a subclass can
+   *  treat an Enter apart from a blur. */
+  onRenameEnter() {
+    void this.commitRename();
+  }
+
+  /** The rename's blur commits. */
+  onRenameBlur() {
+    void this.commitRename();
+  }
+
   cancelRename() {
     this.renameId.value = null;
   }
