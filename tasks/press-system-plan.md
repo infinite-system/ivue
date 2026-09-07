@@ -386,7 +386,7 @@ the cron loads the row: an X kind posts through `XPoster` (live
 segments in order, tweet ids into the `posting` row), any other platform
 flips the expression to **due** and it surfaces at the top of Queue and
 on the calendar with a "Copy and mark sent" action, since only X has an
-API we post to. A stale or edited-since-approval expression cannot be
+API we post to. An edited-since-approval expression cannot be
 scheduled until re-approved, and an edit after scheduling cancels the
 job and returns the expression to draft — nothing ships that was not
 approved as the exact text. The job holds the id, not the body, so
