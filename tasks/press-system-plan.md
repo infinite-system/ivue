@@ -90,6 +90,13 @@ artifact posts ────┘        │                 └─ Press ▸ Piece
   running on the dashboard.
 - Platform cards are bespoke CSS. Quasar provides none of that and is
   not asked to.
+- **The module architecture stays.** Quasar is a component library
+  here, not a project layout: no `src/layouts`, `src/pages`,
+  `src/boot`, `src/router`, no Quasar CLI. Code keeps living in
+  `src/modules/<domain>/` with the class, its `.test.ts`, its views,
+  and its data side by side, the way every other module does; the
+  router stays `AppRouter`, the shell stays `App.vue`. The Vite plugin
+  is the whole integration.
 
 ## Migration 0011_singular.sql — every table to its singular name
 

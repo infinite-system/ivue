@@ -31,3 +31,19 @@ export function shapeAt(time) {
   const index = Math.floor(phase) % 3;
   return { from: sequence[index], to: sequence[index + 1], amount: ramp(phase % 1, 0.34, 0.58) };
 }
+
+export function objectFlip(time) {
+  const shapes=['brick','triangle','sphere','brick'];
+  const starts=[1.5,5,8.5];
+  let turn=0;
+  while(turn<2&&time>=starts[turn+1])turn++;
+  const progress=ramp(time,starts[turn],starts[turn]+1.8);
+  const angles=[Math.PI/2,2*Math.PI/3,Math.PI/2];
+  const previous=[0,Math.PI/2,7*Math.PI/6];
+  return {
+    from:shapes[turn],to:shapes[turn+1],amount:progress,
+    stage:turn,rotation:-previous[turn]-angles[turn]*progress,
+    height:Math.sin(progress*Math.PI)*1.1,
+    progress,
+  };
+}

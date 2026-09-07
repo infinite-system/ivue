@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.min.js';
-import { DURATION, OBJECTS_DURATION, clamp, smooth, mix, ramp, envelope, jump, shapeAt } from './timeline.mjs';
+import { DURATION, OBJECTS_DURATION, clamp, smooth, mix, ramp, envelope, jump, shapeAt, objectFlip } from './timeline.mjs';
+import { objectVertex } from './object-morph.mjs';
 
 const query = new URLSearchParams(location.search);
 const objectsVersion = query.get('version') === 'objects';
@@ -44,17 +45,20 @@ const rim = new THREE.DirectionalLight(0x5affc4, 2.6);
 rim.position.set(5,1,-2); scene.add(rim);
 
 function radius(shape, angle) {
-  if (shape === 'circle') return 1.03;
+  if (shape === 'circle' || shape === 'sphere') return 1.03;
   if (shape === 'triangle') {
-    // Rounded equilateral triangle, its tip facing up. Same topology as the brick.
-    const theta = ((angle - Math.PI / 2 + Math.PI / 3 + Math.PI * 4) % (Math.PI * 2 / 3)) - Math.PI / 3;
-    return 0.65 / Math.cos(Math.PI / 3 - Math.abs(theta));
+    // Smooth intersection of three half-planes rounds the corners continuously.
+    const normals=[-Math.PI/2,Math.PI/6,5*Math.PI/6];
+    return .65/(Math.log(normals.reduce((sum,normal)=>sum+Math.exp(10*Math.cos(angle-normal)),0))/10);
   }
   return Math.pow(Math.pow(Math.abs(Math.cos(angle)), 4.8) + Math.pow(Math.abs(Math.sin(angle)), 4.8), -1 / 4.8);
 }
 
 function makeGeometry(shape) {
-  const rings = [[0,.27],[.3,.27],[.7,.27],[.93,.27],[.98,.25],[1,.21],[1,-.21],[.98,-.25],[.93,-.27],[.7,-.27],[.3,-.27],[0,-.27]];
+  const rings = Array.from({length:41},(_,index)=>{
+    const angle=index/40*Math.PI;
+    return [Math.sin(angle),shape==='sphere'?1.03*Math.cos(angle):.27*Math.tanh(12*Math.cos(angle))];
+  });
   const positions = [], colors = [], indices = [];
   const purple = new THREE.Color('#6366f1'), green = new THREE.Color('#34d399');
   for (let ring=0; ring<rings.length; ring++) {
@@ -75,12 +79,25 @@ function makeGeometry(shape) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors,3));
   geometry.setIndex(indices); geometry.computeVertexNormals();
+  const normals=geometry.attributes.normal;
+  if(shape==='sphere') {
+    for(let index=0;index<positions.length/3;index++) {
+      normals.setXYZ(index,positions[index*3]/1.03,positions[index*3+1]/1.03,positions[index*3+2]/1.03);
+    }
+  } else {
+    for(let ring=0;ring<rings.length;ring++) {
+      const first=ring*97,last=first+96;
+      const normal=new THREE.Vector3(normals.getX(first)+normals.getX(last),normals.getY(first)+normals.getY(last),normals.getZ(first)+normals.getZ(last)).normalize();
+      normals.setXYZ(first,normal.x,normal.y,normal.z);normals.setXYZ(last,normal.x,normal.y,normal.z);
+    }
+  }
   return geometry;
 }
 const brickGeometry=makeGeometry('brick');
 const triangleGeometry=makeGeometry('triangle'), circleGeometry=makeGeometry('circle');
-brickGeometry.morphAttributes.position=[triangleGeometry.attributes.position,circleGeometry.attributes.position];
-brickGeometry.morphAttributes.normal=[triangleGeometry.attributes.normal,circleGeometry.attributes.normal];
+const sphereGeometry=makeGeometry('sphere');
+brickGeometry.morphAttributes.position=[triangleGeometry.attributes.position,circleGeometry.attributes.position,sphereGeometry.attributes.position];
+brickGeometry.morphAttributes.normal=[triangleGeometry.attributes.normal,circleGeometry.attributes.normal,sphereGeometry.attributes.normal];
 const metal = new THREE.MeshPhysicalMaterial({ vertexColors:true, metalness:.58, roughness:.26, clearcoat:1, clearcoatRoughness:.19, envMapIntensity:1.15, side:THREE.DoubleSide });
 
 // The four cubic segments are taken verbatim from docs_v2/public/logo.svg.
@@ -95,10 +112,18 @@ for (const controls of segments) {
   infinityPath.add(new THREE.CubicBezierCurve3(...controls.map(([x,y]) => new THREE.Vector3((x-24)/23, (24-y)/23, .286))));
 }
 const infinityGeometry = new THREE.TubeGeometry(infinityPath, 128, 1.6/23, 10, true);
+const sphereSign=infinityGeometry.clone();
+for(let index=0;index<sphereSign.attributes.position.count;index++) {
+  const positions=sphereSign.attributes.position,x=positions.getX(index),y=positions.getY(index);
+  positions.setZ(index,Math.sqrt(1.03**2-x*x-y*y)+positions.getZ(index)-.286+.025);
+}
+sphereSign.computeVertexNormals();
+infinityGeometry.morphAttributes.position=[sphereSign.attributes.position];
+infinityGeometry.morphAttributes.normal=[sphereSign.attributes.normal];
 const porcelain = new THREE.MeshPhysicalMaterial({ color:0xe0f6ff, emissive:0x82d9ff, emissiveIntensity:.28, metalness:.3, roughness:.2, clearcoat:1 });
 function makeBlock() {
   const group=new THREE.Group();
-  const body=new THREE.Mesh(brickGeometry,metal);
+  const body=new THREE.Mesh(brickGeometry.clone(),metal.clone());
   const sign=new THREE.Mesh(infinityGeometry,porcelain);
   group.add(body,sign); group.userData={body,sign};
   return group;
@@ -146,10 +171,13 @@ const lockup=new Image();lockup.src='./assets/brand-lockup-dark.png';
 await Promise.all([lockup.decode(),document.fonts.load('700 100px Geist')]);
 
 function morph(block, state) {
-  const influence={brick:0,triangle:0,circle:0};
+  const influence={brick:0,triangle:0,circle:0,sphere:0};
   influence[state.from]+=1-state.amount; influence[state.to]+=state.amount;
   block.userData.body.morphTargetInfluences[0]=influence.triangle;
   block.userData.body.morphTargetInfluences[1]=influence.circle;
+  block.userData.body.morphTargetInfluences[2]=influence.sphere;
+  // Lift the original mark onto the sphere's front, without burying it in the mesh.
+  block.userData.sign.morphTargetInfluences[0]=influence.sphere;
   block.userData.sign.scale.setScalar(mix(1,.85,influence.triangle));
 }
 function text(value,x,y,size=80,color='#eff6ff',weight=650,align='left') {
@@ -160,11 +188,11 @@ function tracked(value,x,y,size=18,spacing=5,color='#8aa5b8') {
   ink.font=`500 ${size}px Geist`;ink.fillStyle=color;ink.textAlign='left';
   for(const letter of value){ink.fillText(letter,x,y);x+=ink.measureText(letter).width+spacing;}
 }
-function title(lines,time,start,end,{x=142,y=444,size=100,accent=-1,eyebrow='',sub='',align='left'}={}) {
+function title(lines,time,start,end,{x=142,y=444,size=100,accent=-1,eyebrow='',sub='',align='left',weight=680}={}) {
   const alpha=envelope(time,start,end,.65); if(alpha<=0)return;
   ink.save();ink.globalAlpha=alpha;ink.translate(0,24*(1-ramp(time,start,start+.85)));
   if(eyebrow)tracked(eyebrow,x,y-size*.9-28,16,4);
-  lines.forEach((line,index)=>text(line,x,y+index*size*1.08,size,index===accent?'#80e7cf':'#f0f5ff',680,align));
+  lines.forEach((line,index)=>text(line,x,y+index*size*1.08,size,index===accent?'#80e7cf':'#f0f5ff',weight,align));
   if(sub)text(sub,x,y+lines.length*size*1.08+40,24,'#a0b1c7',400);
   ink.restore();
 }
@@ -182,7 +210,33 @@ function background(time) {
   ink.fillStyle=pool;ink.fillRect(0,620,1920,460);
   ink.save();ink.globalAlpha=.3;line(100,950,1820,950,.3);ink.restore();
   tracked('IVUE  /  INFINITE VUE',110,94,15,3,'#7e91aa');
-  text(objectsVersion?'OBJECTS IN MOTION':'INFINITE BY DESIGN',1810,94,15,'#7e91aa',500,'right');
+text(objectsVersion?'OBJECTS ARE BACK':'INFINITE BY DESIGN',1810,94,15,'#7e91aa',500,'right');
+}
+
+function objectAtmosphere(time) {
+  const state=objectFlip(time);
+  const colors={brick:[91,146,242],triangle:[255,176,104],sphere:[194,115,242]};
+  const color=colors[state.from].map((channel,index)=>Math.round(mix(channel,colors[state.to][index],state.amount)));
+  const pulse=Math.sin(state.amount*Math.PI);
+  const glow=ink.createRadialGradient(960,555,20,960,555,510);
+  glow.addColorStop(0,`rgba(${color},${.12+pulse*.12})`);
+  glow.addColorStop(.5,`rgba(${color},.045)`);glow.addColorStop(1,`rgba(${color},0)`);
+  ink.fillStyle=glow;ink.fillRect(0,0,1920,1080);
+  ink.save();ink.translate(960,750);ink.scale(1,.19);
+  for(let index=0;index<3;index++) {
+    const radius=275+index*48+pulse*30;
+    ink.strokeStyle=`rgba(${color},${.16-index*.035+pulse*.1})`;ink.lineWidth=2;
+    ink.beginPath();ink.arc(0,0,radius,time*.25+index*2,time*.25+index*2+Math.PI*1.35);ink.stroke();
+  }
+  ink.restore();
+  // A traveling highlight accents the quarter-turn's instant of transformation.
+  ink.save();ink.globalAlpha=pulse*.5;ink.fillStyle=`rgb(${color})`;
+  for(let index=0;index<18;index++) {
+    const angle=index/18*Math.PI*2+time*.4;
+    const radius=230+pulse*90;
+    ink.beginPath();ink.arc(960+Math.cos(angle)*radius,550+Math.sin(angle)*radius*.65,1.7,0,Math.PI*2);ink.fill();
+  }
+  ink.restore();
 }
 
 function renderScene(time) {
@@ -196,6 +250,53 @@ function renderScene(time) {
   porcelain.emissiveIntensity=.25;
   sparks.rotation.z=time*.002;
   if(objectScene) {
+    if(objectsVersion) {
+      const state=objectFlip(time);
+      morph(main,state);
+      // One persistent mesh: vertex positions change during the turn itself.
+      main.userData.body.morphTargetInfluences.fill(0);
+      const geometry=main.userData.body.geometry;
+      const positions=geometry.attributes.position;
+      const brick=brickGeometry.attributes.position,sphere=sphereGeometry.attributes.position;
+      let bottom=0;
+      for(let index=0;index<positions.count;index++) {
+        const point=objectVertex(
+          [brick.getX(index),brick.getY(index),brick.getZ(index)],
+          [sphere.getX(index),sphere.getY(index),sphere.getZ(index)],state.stage,state.progress);
+        positions.setXYZ(index,...point);bottom=Math.max(bottom,-point[1]);
+      }
+      positions.needsUpdate=true;
+      geometry.computeVertexNormals();
+      // Join the duplicate angular seam, including the sphere's smooth highlight.
+      const normals=geometry.attributes.normal;
+      for(let ring=0;ring<41;ring++) {
+        const first=ring*97,last=first+96;
+        const normal=new THREE.Vector3(normals.getX(first)+normals.getX(last),normals.getY(first)+normals.getY(last),normals.getZ(first)+normals.getZ(last)).normalize();
+        normals.setXYZ(first,normal.x,normal.y,normal.z);normals.setXYZ(last,normal.x,normal.y,normal.z);
+      }
+      normals.needsUpdate=true;
+      const palettes={brick:['#6366f1','#34d399'],triangle:['#ff8d66','#ffd17e'],sphere:['#b15bff','#f18bde']};
+      const left=new THREE.Color(palettes[state.from][0]).lerp(new THREE.Color(palettes[state.to][0]),state.amount);
+      const right=new THREE.Color(palettes[state.from][1]).lerp(new THREE.Color(palettes[state.to][1]),state.amount);
+      const colors=geometry.attributes.color;
+      const color=new THREE.Color();
+      for(let index=0;index<colors.count;index++) {
+        const x=positions.getX(index),y=positions.getY(index);
+        color.copy(left).lerp(right,clamp((x-y+2.3)/4.6));
+        colors.setXYZ(index,color.r,color.g,color.b);
+      }
+      colors.needsUpdate=true;
+      const size=1.12*ramp(time,0,.65);
+      main.position.set(0,-1.15+size*bottom+state.height*.08,0);
+      main.scale.setScalar(size);
+      main.rotation.set(0,0,0);
+      main.userData.sign.rotation.z=0;
+      const triangleWeight=state.from==='triangle'?1-state.amount:state.to==='triangle'?state.amount:0;
+      main.userData.sign.position.y=-.25*triangleWeight;
+      shadows[0].visible=true;shadows[0].position.set(0,-1.15,-.2);
+      shadows[0].scale.setScalar(1.15+state.height*.3);
+      shadows[0].material.opacity=1-state.height*.3;
+    } else {
     const local=objectsVersion?time:filmTime-18;
     const reveal=objectsVersion?ramp(time,0,1):ramp(local,0,.8);
     const blocks=[companions[0],main,companions[1]];
@@ -211,6 +312,7 @@ function renderScene(time) {
       shadows[index].visible=true;shadows[index].position.set(block.position.x,-2.02,-.1);
       shadows[index].scale.setScalar(1+motion.height*.3);
       shadows[index].material.opacity=1-motion.height*.25;
+    }
     }
   } else if(filmTime<6) {
     const reveal=ramp(filmTime,.5,6);
@@ -269,14 +371,15 @@ function draw(time) {
   renderScene(time);
   ink.setTransform(WIDTH/1920,0,0,HEIGHT/1080,0,0);ink.globalAlpha=1;
   background(time);
+  if(objectsVersion)objectAtmosphere(time);
   ink.globalAlpha=objectsVersion?1:1-ramp(time,41,42.2);
   ink.drawImage(renderer.domElement,0,0,1920,1080);ink.globalAlpha=1;
   if(objectsVersion) {
-    title(['One foundation.','Infinite forms.'],time,.1,12,{x:960,y:238,size:76,accent:1,align:'center'});
+    title(['Objects are back.'],time,.1,12,{x:960,y:210,size:62,align:'center',weight:500});
     if(time>12) {
       const alpha=ramp(time,12,13);ink.globalAlpha=alpha;
-      ink.drawImage(lockup,770,175,380,147);ink.globalAlpha=1;
-      text('Plain classes. Full reactivity.',960,402,38,'#edf5ff',600,'center');
+      ink.drawImage(lockup,805,115,310,120);ink.globalAlpha=1;
+      text('Plain classes. Full reactivity.',960,292,28,'#c4d3e4',450,'center');
     }
     ink.save();ink.globalAlpha=envelope(time,.6,15.8);
     tracked('NATIVE TYPESCRIPT OBJECTS',140,1005,15,3);
@@ -314,7 +417,7 @@ function draw(time) {
 
 const play=document.querySelector('#play'),seek=document.querySelector('#seek'),clock=document.querySelector('#clock');
 seek.max=duration;
-document.querySelector('#version').textContent=objectsVersion?'Full release film ↗':'Bouncing objects ↗';
+document.querySelector('#version').textContent=objectsVersion?'Full release film ↗':'Objects are back ↗';
 document.querySelector('#version').href=objectsVersion?'./':'?version=objects';
 const score=new Audio(`./output/${objectsVersion?'objects':'intro'}-soundtrack.wav`);score.preload='none';
 let playing=false,position=0,origin=0,frame=0,soundReady=false;

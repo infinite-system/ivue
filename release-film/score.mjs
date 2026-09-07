@@ -53,7 +53,7 @@ export function writeScore(path,duration,objects=false) {
       return envelope*(noise()*.55+Math.sin(tau*(120*time+160*time*time))*.45);
     });
   }
-  if(objects)for(let index=0;index<3;index++)for(let start=1.94-[.8,0,1.6][index];start<duration;start+=2.4)impact(start,.10);
+  if(objects)for(const landing of [3.3,6.8,10.3])impact(landing,.28);
   // Cross-channel delay creates a spacious tail without opaque reverb assets.
   for(const [seconds,gain] of [[.225,.17],[.45,.11],[.9,.07]]) {
     const delay=Math.round(seconds*rate);

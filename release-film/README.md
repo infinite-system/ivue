@@ -1,16 +1,21 @@
 # ivue — Infinite by design
 
-A 48-second release film and a 16-second **Objects in motion** cut. The infinity
-block is a lit, beveled 3D mesh. It morphs into a triangle and a circle during
-staggered jumps, with landing compression and contact pools. The main film
-connects the objects to shared behavior and state created on first access.
+A 48-second release film and a 16-second **Objects are back** cut. The infinity
+block is a lit, beveled 3D mesh. The main film uses staggered jumps between
+bricks, rounded triangles, and discs to connect objects to shared behavior
+and state created on first access.
+
+The short cut follows one block through three clockwise flips: the ivue square
+becomes an amber rounded triangle, then a violet sphere, then the standard
+indigo-green ivue block. Its infinity mark follows the sphere's curved surface.
+The final block holds still beneath the brand lockup.
 
 ## Watch
 
 The rendered files live in `output/`:
 
 - `ivue-intro-1080p.mp4` — 48-second release film, 1920 × 1080, 30 fps.
-- `ivue-objects-1080p.mp4` — 16-second bouncing-objects cut, same format.
+- `ivue-objects-1080p.mp4` — 16-second clockwise-flipping objects cut, same format.
 - `intro-soundtrack.wav` and `objects-soundtrack.wav` — original stereo scores.
 - `intro-*.png` and `objects-*.png` — chapter stills.
 - `intro-render.json` and `objects-render.json` — export settings and browser errors.

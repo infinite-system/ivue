@@ -30,7 +30,7 @@ try {
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`http://127.0.0.1:${port}/?render&width=${width}${objects?'&version=objects':''}`);
   await page.waitForFunction(()=>window.film?.ready,{},{timeout:60000});
-  const snapshots=objects?[1,3.6,5.1,7.4,10.2,14]:[3,8,14.5,19,21.5,28.5,34,37.5,44];
+  const snapshots=objects?[1,2.1,2.4,2.7,3.6,5.1,5.6,5.9,6.2,7.4,10.2,14]:[3,8,14.5,19,21.5,28.5,34,37.5,44];
   for(const time of snapshots){
     await page.evaluate(time=>window.film.draw(time),time);
     await page.screenshot({path:join(output,`${version}-${String(time).replace('.','_')}.png`)});
