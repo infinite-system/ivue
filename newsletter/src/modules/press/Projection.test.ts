@@ -90,3 +90,18 @@ describe('Projection', () => {
     );
   });
 });
+
+describe('Projection — every kind derives', () => {
+  it('cards, long, articles, a reddit body without a link, an email without meta, an unknown platform, the default', () => {
+    expect(Projection.Class.platformOf('nope')).toBe('other');
+    const bare = { title: 'T', base: '## One\n\ntext\n\n## Two\n\ntext', links: [] };
+    expect(Projection.Class.derive('x-cards', bare).segments).toEqual(['One\n\ntext', 'Two\n\ntext']);
+    expect(Projection.Class.derive('x-post', { ...bare, base: '' }).body).toBe('');
+    expect(Projection.Class.derive('x-long', bare).body).toBe('One\n\ntext\n\nTwo\n\ntext');
+    expect(Projection.Class.derive('x-article', bare).body).toBe('## One\n\ntext\n\n## Two\n\ntext');
+    expect(Projection.Class.derive('linkedin-article', bare).body).toBe('## One\n\ntext\n\n## Two\n\ntext');
+    expect(Projection.Class.derive('reddit', bare).body).toBe('## One\n\ntext\n\n## Two\n\ntext');
+    expect(Projection.Class.derive('email', bare).body).toBe('Hi,\n\nOne\n\ntext\n\nTwo\n\ntext\n\n— Evgeny');
+    expect(Projection.Class.derive('note', bare).body).toBe('One\n\ntext\n\nTwo\n\ntext');
+  });
+});

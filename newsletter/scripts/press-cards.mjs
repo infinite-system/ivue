@@ -82,6 +82,15 @@ const written = [];
 for (const [index, card] of cards.entries()) {
   await page.setContent(cardHtml(card.body, index + 1, cards.length), { waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready);
+  // fit: shrink the type until the text sits inside the card's middle band
+  await page.evaluate(() => {
+    const text = document.querySelector('.text');
+    let size = 44;
+    while (size > 18 && text.getBoundingClientRect().height > 460) {
+      size -= 2;
+      text.style.fontSize = `${size}px`;
+    }
+  });
   const path = resolve(outDir, `${expression.id}-${index + 1}.png`);
   await page.screenshot({ path, type: 'png' });
   written.push(path);

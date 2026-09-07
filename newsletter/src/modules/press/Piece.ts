@@ -198,7 +198,7 @@ class $Piece {
       slug: row.slug,
       title: row.title,
       claim: row.claim,
-      links: JSON.parse(row.links || '[]') as Piece.Link[],
+      links: JSON.parse(row.links) as Piece.Link[],
       banner: row.banner,
       base: row.base,
       wave: row.wave === 2 ? 2 : 1,

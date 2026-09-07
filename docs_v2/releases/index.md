@@ -14,7 +14,11 @@ generated from them, and each is mirrored on
 [GitHub Releases](https://github.com/infinite-system/ivue/releases).
 Install any version with `npm i ivue@<version>`.
 
-## [ivue@2.5.0](/releases/2.5.0) <span class="new-badge">NEW</span> <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.5.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-5-0}
+## [ivue@2.6.0](/releases/2.6.0) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.6.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-6-0}
+
+Feature release, no breaking API changes. The props-contract system gains its two missing halves — a copier that can hold callbacks and constructors, and a filler that completes a nested object prop at every depth — the standard gains a ruling with a gate check, and the docs ship their source on demand. Around them, the virtual scroller example took its touch selection through two phones and its scroll integrator into the ivue shape; those live in the playground and the docs, not the package, and are listed at the end.
+
+## [ivue@2.5.0](/releases/2.5.0) <a class="release-gh release-gh--right" href="https://github.com/infinite-system/ivue/releases/tag/ivue%402.5.0" target="_blank" rel="noreferrer">GitHub ↗</a> {#ivue-2-5-0}
 
 Feature release, zero breaking runtime changes. Three stories: the props-contract system gets its missing piece (definePropTypes, and defaults maps that no longer need Omit), Static() fixes a re-wrap bug in deep subclass chains, and the shipped standard hardens — every override says override, private is banned, and a runnable gate enforces the rules in CI.
 

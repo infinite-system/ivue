@@ -28,7 +28,7 @@ class $Expression {
   static readonly TRANSITIONS: Record<string, readonly string[]> = {
     draft: ['approved', 'archived'],
     approved: ['draft', 'scheduled', 'sent', 'archived'],
-    scheduled: ['approved', 'due', 'sent', 'archived'],
+    scheduled: ['draft', 'approved', 'due', 'sent', 'archived'],
     due: ['sent', 'archived'],
     sent: ['archived'],
     archived: [],
@@ -283,7 +283,7 @@ class $Expression {
       const derived = Projection.Class.derive(record.kind, piece, record.meta);
       if (Projection.Class.isParentKind(record.kind)) {
         const before = await this.children(env, record.id);
-        const texts = derived.segments ?? [];
+        const texts = derived.segments as string[];
         // skip flags survive by position when the count is unchanged, else clear
         const keepSkips = before.length === texts.length;
         await this.replaceChildren(
@@ -350,7 +350,7 @@ class $Expression {
   }
 
   static async transition(env: Env, record: Expression.Record, next: Expression.Status): Promise<void> {
-    const allowed = this.TRANSITIONS[record.status] ?? [];
+    const allowed = this.TRANSITIONS[record.status];
     if (record.status !== next && !allowed.includes(next))
       throw new Error(`${record.status} → ${next} is not a move this row can make.`);
     const now = Http.Class.nowSeconds();
@@ -558,21 +558,21 @@ class $Expression {
     )
       .bind(id)
       .all<{ id: number; body: string; meta: string; author: string; savedAt: number }>();
-    return results.map((row) => ({ ...row, meta: JSON.parse(row.meta || '{}') as Record<string, unknown> }));
+    return results.map((row) => ({ ...row, meta: JSON.parse(row.meta) as Record<string, unknown> }));
   }
 
   /** restore = a new save of the old text; the history keeps growing */
   static async restore(env: Env, id: number, revisionId: number, author: Expression.Author = 'user'): Promise<Expression.Record | null> {
+    const current = await this.byId(env, id);
+    if (!current) return null;
     const revision = await env.DB.prepare(
       'SELECT body, meta FROM post_revision WHERE id = ? AND expression_id = ?',
     )
       .bind(revisionId, id)
       .first<{ body: string; meta: string }>();
     if (!revision) return null;
-    const current = await this.byId(env, id);
-    if (!current) return null;
     if (current.mode === 'derived') await this.detach(env, id);
-    return this.patch(env, id, { body: revision.body, meta: JSON.parse(revision.meta || '{}') as Record<string, unknown> }, author);
+    return this.patch(env, id, { body: revision.body, meta: JSON.parse(revision.meta) as Record<string, unknown> }, author);
   }
 
   /* ---- helpers ---- */
@@ -605,7 +605,7 @@ class $Expression {
     )
       .bind(parentId === null ? pieceId : parentId)
       .first<{ next: number }>();
-    return row?.next ?? 0;
+    return row!.next;
   }
 
   static normalizeMirrors(mirrors: unknown): Expression.Mirror[] {
@@ -634,8 +634,8 @@ class $Expression {
       label: row.label,
       venue: row.venue,
       body: row.body,
-      meta: JSON.parse(row.meta || '{}') as Record<string, unknown>,
-      mirrors: JSON.parse(row.mirrors || '[]') as Expression.Mirror[],
+      meta: JSON.parse(row.meta) as Record<string, unknown>,
+      mirrors: JSON.parse(row.mirrors) as Expression.Mirror[],
       status: row.status as Expression.Status,
       skipped: row.skipped === 1,
       calendarId: row.calendar_id,

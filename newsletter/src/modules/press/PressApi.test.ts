@@ -180,3 +180,59 @@ describe('PressApi', () => {
     void Expression;
   });
 });
+
+describe('PressApi — every route and fallback', () => {
+  it('the calendar and source lookups take an empty key; a non-Error failure still answers JSON', async () => {
+    const env = makeTestEnv({ ADMIN_SECRET: SECRET });
+    expect((await call('/admin/press/expression?calendar=', env)).json).toEqual([]);
+    expect((await call('/admin/press/expression?source=', env)).json).toEqual([]);
+    Posts.Class = class extends Posts.$Class {
+      static override async load(): Promise<never> {
+        throw 'the site is down';
+      }
+    };
+    const failed = await call('/admin/press/blog-post', env);
+    expect(failed.status).toBe(400);
+    expect(failed.json.error).toBe('the site is down');
+  });
+
+  it('every remaining verb: unapprove, archive, segment and reorder defaults, post without X, clone without a kind, restore, lint of a ghost, a piece with a bad id', async () => {
+    const env = makeTestEnv({ ADMIN_SECRET: SECRET });
+    const piece = (await call('/admin/press/piece', env, 'POST', { title: 'T', base: 'Words.' })).json;
+    expect((await call('/admin/press/piece/abc', env)).status).toBe(404);
+    expect((await call(`/admin/press/piece/${piece.id}`, env, 'DELETE')).status).toBe(404);
+    expect((await call('/admin/press/piece', env, 'DELETE')).status).toBe(404);
+    expect((await call(`/admin/press/piece/${piece.id}/expression`, env, 'POST', {})).status).toBe(400);
+    const thread = (await call(`/admin/press/piece/${piece.id}/expression`, env, 'POST', { kind: 'x-thread', segments: ['a'] })).json;
+    expect((await call(`/admin/press/expression/${thread.id}`, env, 'DELETE')).status).toBe(404);
+    expect((await call(`/admin/press/expression/${thread.id}/segment`, env, 'POST', {})).json.children).toHaveLength(2);
+    expect((await call(`/admin/press/expression/${thread.id}/reorder`, env, 'PATCH', {})).status).toBe(400);
+    await call(`/admin/press/expression/${thread.id}/approve`, env, 'POST', {});
+    expect((await call(`/admin/press/expression/${thread.id}/unapprove`, env, 'POST', {})).json.status).toBe('draft');
+    expect((await call(`/admin/press/expression/${thread.id}/clone`, env, 'POST', {})).status).toBe(400);
+    const posted = await call(`/admin/press/expression/${thread.id}/post`, env, 'POST', {});
+    expect(posted.status).toBe(400);
+    const leaf = (await call(`/admin/press/piece/${piece.id}/expression`, env, 'POST', { kind: 'bluesky', body: 'one' })).json;
+    await call(`/admin/press/expression/${leaf.id}`, env, 'PATCH', { body: 'two' });
+    const revisions = (await call(`/admin/press/expression/${leaf.id}/revision`, env)).json;
+    expect((await call(`/admin/press/expression/${leaf.id}/revision/${revisions[0].id}/restore`, env, 'POST', {})).json.body).toBe('one');
+    expect((await call(`/admin/press/expression/${leaf.id}/revision/999/restore`, env, 'POST', {})).status).toBe(404);
+    expect((await call('/admin/press/expression/999/lint', env)).status).toBe(404);
+    expect((await call('/admin/press/expression/999/post', env, 'POST', {})).status).toBe(404);
+    expect((await call(`/admin/press/expression/${thread.id}/archive`, env, 'POST', {})).json.status).toBe('archived');
+    // the queue resolves only expression jobs; a plain tweet job rides along with no expression
+    await call('/admin/schedule', env, 'POST', { kind: 'tweet', payload: { text: 'plain', slug: '' }, dueAt: future() });
+    const queue = await call('/admin/press/queue', env);
+    expect(queue.json.upcoming[0].expression).toBeNull();
+  });
+
+  it('import: no pieces, a piece found by slug then by title, an expression list absent, every default', async () => {
+    const env = makeTestEnv({ ADMIN_SECRET: SECRET });
+    expect((await call('/admin/press/import', env, 'POST', {})).json).toMatchObject({ pieces: 0, expressions: 0 });
+    const first = await call('/admin/press/import', env, 'POST', { pieces: [{ title: 'Voice' }, { title: 'Voice', expressions: [{ kind: 'note', body: 'n' }] }, { title: 'Art', slug: 'art' }] });
+    expect(first.json).toMatchObject({ pieces: 2, expressions: 1 });
+    const second = await call('/admin/press/import', env, 'POST', { pieces: [{ title: 'Art', slug: 'art', expressions: [{ kind: 'note', body: 'n' }] }] });
+    expect(second.json).toMatchObject({ pieces: 0, expressions: 1 });
+    expect((await call('/admin/press/piece', env)).json).toHaveLength(2);
+  });
+});

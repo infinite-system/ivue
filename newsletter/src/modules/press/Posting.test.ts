@@ -39,3 +39,15 @@ describe('Posting', () => {
     expect(await Posting.Class.byId(env, 999)).toBeNull();
   });
 });
+
+describe('Posting — defaults', () => {
+  it('stamps now and an empty venue when none are given', async () => {
+    const env = makeTestEnv();
+    const piece = await Piece.Class.create(env, { title: 'T' });
+    const post = await Expression.Class.create(env, { pieceId: piece.id, kind: 'note', body: 'n' });
+    const row = await Posting.Class.record(env, { expressionId: post.id, platform: 'other', postedBy: 'manual' });
+    expect(row.venue).toBe('');
+    expect(row.postedAt).toBeGreaterThan(0);
+    expect(row.remoteIds).toEqual([]);
+  });
+});

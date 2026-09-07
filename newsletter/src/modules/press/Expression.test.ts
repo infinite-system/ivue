@@ -302,3 +302,125 @@ describe('Expression', () => {
     expect((await Expression.Class.byCalendarId(env, '2026-09-08--x')).map((row) => row.id)).toEqual([post.id]);
   });
 });
+
+describe('Expression — every branch', () => {
+  it('forPiece nests children; create fills the cover from the banner; addSegment and reorder refuse the wrong rows', async () => {
+    const env = makeTestEnv();
+    const piece = await Piece.Class.create(env, { title: 'T', base: 'a\n\n---\n\nb', banner: '/blog/t.png', links: [] });
+    const thread = await Expression.Class.create(env, { pieceId: piece.id, kind: 'x-thread', mode: 'derived' });
+    const leaf = await Expression.Class.create(env, { pieceId: piece.id, kind: 'x-post', body: 'x' });
+    const article = await Expression.Class.create(env, { pieceId: piece.id, kind: 'x-article', mode: 'derived' });
+    expect(article.meta.cover).toBe('/blog/t.png');
+    const bare = await Expression.Class.create(env, { pieceId: piece.id, kind: 'x-thread' });
+    expect(bare.children).toEqual([]);
+    const all = await Expression.Class.forPiece(env, piece.id);
+    expect(all.find((row) => row.id === thread.id)?.children).toHaveLength(2);
+    expect(await Expression.Class.addSegment(env, leaf.id, 'x')).toBeNull();
+    expect(await Expression.Class.addSegment(env, 999, 'x')).toBeNull();
+    expect(await Expression.Class.reorder(env, leaf.id, [])).toBeNull();
+    expect(await Expression.Class.patch(env, 999, { body: 'x' })).toBeNull();
+    // patch every field kind
+    const patched = await Expression.Class.patch(env, leaf.id, {
+      venue: 'X',
+      mirrors: [{ platform: 'bluesky', sentAt: 5, url: 'https://bsky.app/1' }, { platform: 'nope' }, 'mastodon', { platform: 'threads' }],
+      skipped: true,
+      label: 'l',
+    });
+    expect(patched?.venue).toBe('X');
+    expect(patched?.mirrors).toEqual([
+      { platform: 'bluesky', sentAt: 5, url: 'https://bsky.app/1' },
+      { platform: 'mastodon', sentAt: null, url: null },
+      { platform: 'threads', sentAt: null, url: null },
+    ]);
+    expect(patched?.skipped).toBe(true);
+    // a label-only patch keeps the skip flag as it is
+    expect((await Expression.Class.patch(env, leaf.id, { label: 'kept' }))?.skipped).toBe(true);
+    expect((await Expression.Class.patch(env, leaf.id, { skipped: false }))?.skipped).toBe(false);
+    expect((await Expression.Class.patch(env, leaf.id, { mirrors: [{}] }))?.mirrors).toEqual([]);
+    // a leaf cloned as a thread splits its body into segments
+    const cloned = await Expression.Class.clone(env, leaf.id, 'x-thread');
+    expect(cloned?.children?.map((child) => child.body)).toEqual(['x']);
+    expect(await Expression.Class.regenerateForPiece(env, 999)).toBe(0);
+  });
+
+  it('missing rows answer null everywhere; the wrong status answers plainly', async () => {
+    const env = makeTestEnv();
+    const piece = await pieceWithBase(env);
+    expect(await Expression.Class.unapprove(env, 999)).toBeNull();
+    expect(await Expression.Class.archive(env, 999)).toBeNull();
+    expect(await Expression.Class.schedule(env, 999, future())).toBeNull();
+    expect(await Expression.Class.reschedule(env, 999, future())).toBeNull();
+    expect(await Expression.Class.cancelSchedule(env, 999)).toBeNull();
+    expect(await Expression.Class.post(env, 999)).toBeNull();
+    expect(await Expression.Class.restore(env, 999, 1)).toBeNull();
+    const post = await Expression.Class.create(env, { pieceId: piece.id, kind: 'bluesky', body: 'ok' });
+    await expect(Expression.Class.reschedule(env, post.id, future())).rejects.toThrow(/Nothing is scheduled/);
+    expect((await Expression.Class.cancelSchedule(env, post.id))?.status).toBe('draft');
+    // scheduled rows cancel their job on unapprove, archive, and mark sent
+    await Expression.Class.approve(env, post.id);
+    await Expression.Class.schedule(env, post.id, future());
+    await Expression.Class.unapprove(env, post.id);
+    expect((await Scheduler.Class.list(env)).upcoming).toHaveLength(0);
+    await Expression.Class.approve(env, post.id);
+    await Expression.Class.schedule(env, post.id, future());
+    await Expression.Class.markSent(env, post.id, {});
+    expect((await Scheduler.Class.list(env)).upcoming).toHaveLength(0);
+    const another = await Expression.Class.create(env, { pieceId: piece.id, kind: 'bluesky', body: 'ok' });
+    await Expression.Class.approve(env, another.id);
+    await Expression.Class.schedule(env, another.id, future());
+    // the job vanished underneath (an operator cancelled it in the queue): archive still lands
+    await Scheduler.Class.cancel(env, (await Scheduler.Class.list(env)).upcoming[0].id);
+    expect((await Expression.Class.archive(env, another.id))?.status).toBe('archived');
+  });
+
+  it('the job: a vanished row, a row no longer scheduled, X without credentials', async () => {
+    const env = makeTestEnv();
+    expect(await Expression.Class.executeJob(env, { expressionId: '999', platform: 'x' })).toEqual({ error: 'expression 999 no longer exists' });
+    const piece = await pieceWithBase(env);
+    const post = await Expression.Class.create(env, { pieceId: piece.id, kind: 'x-post', body: 'ok' });
+    expect((await Expression.Class.executeJob(env, { expressionId: String(post.id), platform: 'x' })).detail).toMatch(/not scheduled/);
+    await Expression.Class.approve(env, post.id);
+    await Expression.Class.schedule(env, post.id, future());
+    expect(await Expression.Class.executeJob(env, { expressionId: String(post.id), platform: 'x' })).toEqual({ error: 'X credentials not configured' });
+  });
+
+  it('posts a single X post through the poster with its images; a thread segment carries its own images', async () => {
+    const env = makeTestEnv(X_ENV);
+    stubPoster();
+    const piece = await pieceWithBase(env);
+    const post = await Expression.Class.create(env, { pieceId: piece.id, kind: 'x-post', body: 'ok', meta: { imageUrls: ['https://ivue.dev/a.png'] } });
+    await Expression.Class.approve(env, post.id);
+    await Expression.Class.schedule(env, post.id, future());
+    const sent = await Expression.Class.post(env, post.id);
+    expect(sent?.status).toBe('sent');
+    expect(postedTweets).toEqual(['ok']);
+    const plain = await Expression.Class.create(env, { pieceId: piece.id, kind: 'x-post', body: 'no images' });
+    await Expression.Class.approve(env, plain.id);
+    await Expression.Class.post(env, plain.id);
+    expect(postedTweets).toEqual(['ok', 'no images']);
+    expect((await Scheduler.Class.list(env)).upcoming).toHaveLength(0);
+    const thread = await Expression.Class.create(env, { pieceId: piece.id, kind: 'x-thread', segments: ['a', 'b'] });
+    await Expression.Class.patch(env, thread.children![0].id, { meta: { imageUrls: ['https://ivue.dev/b.png'] } });
+    await Expression.Class.approve(env, thread.id);
+    await Expression.Class.post(env, thread.id);
+    expect(postedThreads[0]).toEqual([{ text: 'a', imageUrls: ['https://ivue.dev/b.png'] }, { text: 'b', imageUrls: [] }]);
+  });
+
+  it('mark sent without a URL, a mirror not yet listed, and restore on a derived row (which detaches it)', async () => {
+    const env = makeTestEnv();
+    const piece = await pieceWithBase(env);
+    const post = await Expression.Class.create(env, { pieceId: piece.id, kind: 'x-post', body: 'ok', mirrors: ['bluesky'] });
+    await Expression.Class.approve(env, post.id);
+    const sent = await Expression.Class.markSent(env, post.id, { platform: 'threads' });
+    expect(sent?.mirrors.map((mirror) => mirror.platform)).toEqual(['bluesky', 'threads']);
+    expect(sent?.mirrors[1].url).toBeNull();
+    const again = await Expression.Class.markSent(env, post.id, { platform: 'bluesky' });
+    expect(again?.mirrors[0].sentAt).toBeGreaterThan(0);
+    expect(again?.mirrors[0].url).toBeNull();
+    const derived = await Expression.Class.create(env, { pieceId: piece.id, kind: 'x-post', mode: 'derived' });
+    await Expression.Class.patch(env, derived.id, { meta: { note: 1 } });
+    const revisions = await Expression.Class.revisions(env, derived.id);
+    const restored = await Expression.Class.restore(env, derived.id, revisions[0].id);
+    expect(restored?.mode).toBe('authored');
+  });
+});

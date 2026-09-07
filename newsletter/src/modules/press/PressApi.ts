@@ -32,9 +32,9 @@ class $PressApi {
       if (resource === 'piece')
         return await this.piece(request, url, env, method, idText, id, action, subText, author);
       if (resource === 'expression' && !idText && method === 'GET' && url.searchParams.has('calendar'))
-        return Http.Class.json(await Expression.Class.byCalendarId(env, url.searchParams.get('calendar') ?? ''));
+        return Http.Class.json(await Expression.Class.byCalendarId(env, url.searchParams.get('calendar')!));
       if (resource === 'expression' && !idText && method === 'GET' && url.searchParams.has('source'))
-        return Http.Class.json(await Expression.Class.bySource(env, url.searchParams.get('source') ?? ''));
+        return Http.Class.json(await Expression.Class.bySource(env, url.searchParams.get('source')!));
       if (resource === 'expression' && idText)
         return await this.expression(request, env, method, id, action, subText, author);
       return Http.Class.notFound();
@@ -279,7 +279,7 @@ class $PressApi {
             await Expression.Class.approve(env, created.id);
           } catch (error) {
             report.skipped.push(
-              `${entry.title} / ${expression.kind}: not approved — ${error instanceof Error ? error.message : String(error)}`,
+              `${entry.title} / ${expression.kind}: not approved — ${(error as Error).message}`,
             );
           }
         }

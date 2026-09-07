@@ -899,3 +899,41 @@ own whole than to arbitrate.
   bare `|`, an ALTERNATION — the replacement lands at the first two spaces
   of the file. Use `#` as the delimiter for patterns that contain `|`,
   and a heredoc or Python for CSS blocks that contain `#` colors.
+
+## The press: copy in D1, cards as editors, types in the namespace
+
+- Types live INSIDE the namespace — `Api.PressExpression`, `Posts.Post`,
+  `Scheduler.JobKind` — never beside it. The gate's
+  `a_class_file_holds_only_imports_class_namespace_and_types` says so and
+  had been flagging thirteen files; treating those findings as "pre-existing
+  style" and copying the surrounding shape was the mistake. A gate finding
+  in a file you touch is yours, whoever left it.
+- The store singleton is the skill's shape: `protected static get $shared()`
+  + `static use()` on the class, `Static($X)` anchor, consumers call
+  `AppStore.Class.use()`. A `let singleton` in the namespace is the same
+  violation as a type there.
+- Segment rows follow their parent's mode. `replaceChildren` hard-coding
+  `derived` made every imported (authored) thread's tweets refuse edits
+  with a 400 that only showed up in the browser drive, not in tests that
+  never patched a segment of an authored thread. Drive the real path.
+- `return promise` inside `try` does not catch the rejection; the press
+  router needed `return await` so store errors become JSON 400s. Three API
+  tests failed with the raw throw before that.
+- A `td` with `display: flex` breaks table layout so badly that Playwright
+  reports the `<table>` intercepting the row's click. Put flex on an inner
+  div.
+- `import.meta.glob` of files outside the dashboard root needs
+  `server.fs.allow` for the dev server and nothing for the build — and
+  bundling copy that way put 93 KB of unsent posts into a public chunk.
+  The press keeps copy in D1; the calendar asks the Worker by source key.
+- The worktree lacked `newsletter/worker-configuration.d.ts` (gitignored,
+  generated): copy it from the main tree or run `wrangler types` before
+  the first tsc in a fresh worktree.
+- Quasar 2.21 + `@quasar/vite-plugin` 2.x wants `@vitejs/plugin-vue` 6 and
+  Vite 6+; this repo is on Vite 4, so pin `@quasar/vite-plugin@^1.12`.
+  Icons: use `quasar/icon-set/svg-material-icons` instead of the font CSS
+  (the ligature font showed `arrow_drop_down` as text under the dev server).
+- perl `s|…|…|` with a `\|` in the PATTERN: the escaped delimiter becomes a
+  bare `|`, an alternation; the replacement lands at the first two spaces
+  of the file. Use `#` as the delimiter — and not when the text holds `#`
+  color codes either; Python for anything with both.

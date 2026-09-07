@@ -200,7 +200,7 @@ class $Projection {
     piece: Projection.Source,
     meta: Record<string, unknown> = {},
   ): Projection.Derived {
-    const base = piece.base ?? '';
+    const base = piece.base;
     const link = piece.links[0]?.url ?? '';
     switch (kind) {
       case 'x-thread': {

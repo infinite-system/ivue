@@ -13,7 +13,8 @@
 // pagination → bulk unsubscribe/resubscribe → add subscriber → detail
 // drawer (send history) → posts + email preview → targeted send (fails
 // cleanly on the invalid local Postmark token) → drip preview → stats →
-// lock. Screenshots each station; exits non-zero on any failed check.
+// socials → the press (a piece, a derived thread, skip, approve,
+// schedule, queue, mark sent, ledger, the calendar dialog) → lock. Screenshots each station; exits non-zero on any failed check.
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
@@ -522,6 +523,122 @@ try {
     timeout: 15_000,
   });
   await shot('socials-settings');
+  await page.click('.tab--domain[data-domain="newsletter"]');
+  await page.waitForFunction(() =>
+    window.location.pathname.startsWith('/newsletter'),
+  );
+
+  // ---- station 6.8: the press — a piece from a blog post, a derived thread, skip, approve, schedule, queue, mark sent, ledger ----
+  await page.click('.tab--domain[data-domain="press"]');
+  await page.waitForSelector('[data-view="press"]', { timeout: 15_000 });
+  check(
+    'press domain routes to the pieces list',
+    new URL(page.url()).pathname === '/press/piece',
+  );
+  await shot('press-pieces');
+  await page.click('button:has-text("New piece")');
+  await page.waitForSelector('.press-new-dialog', { timeout: 10_000 });
+  await page.fill('.press-new-dialog input[aria-label="Title"]', 'E2E piece');
+  await page.click('.press-new-dialog button[type="submit"]');
+  await page.waitForSelector('[data-view="press-piece"]', { timeout: 15_000 });
+  check(
+    'a blank piece opens its page with no expressions',
+    (await page.locator('.press-empty').count()) === 1,
+  );
+  // write a base with two tweet breaks, autosave, then derive a thread
+  await page.fill('.press-base-editor', 'One tweet.\n\n---\n\nTwo tweet.\n\n---\n\nThree tweet.');
+  await page.waitForFunction(
+    () => document.querySelector('.press-piece-head .press-save')?.textContent?.startsWith('Saved'),
+    undefined,
+    { timeout: 10_000 },
+  );
+  check(
+    'the base gutter shows one count per tweet break',
+    (await page.locator('.press-gutter li').count()) === 3,
+  );
+  await page.click('button:has-text("Add expression")');
+  await page.click('.press-menu-list button:has-text("X thread")');
+  await page.waitForSelector('.x-thread .x-tweet', { timeout: 10_000 });
+  check(
+    'a derived thread splits the base into three tweets',
+    (await page.locator('.x-tweet').count()) === 3,
+  );
+  await shot('press-thread');
+  await page.locator('.x-tweet').nth(1).locator('button:has-text("Skip")').click();
+  await page.waitForFunction(
+    () => document.querySelectorAll('.x-tweet.skipped').length === 1,
+    undefined,
+    { timeout: 10_000 },
+  );
+  check(
+    'skipping a tweet renumbers the live thread around it',
+    (await page.locator('.x-number').allTextContents()).join('|') === '1 / 2|skipped|2 / 2',
+  );
+  await page.click('.press-card-foot button:has-text("Approve")');
+  await page.waitForFunction(
+    () => document.querySelector('.press-card-head .press-badge')?.textContent?.trim() === 'approved',
+    undefined,
+    { timeout: 10_000 },
+  );
+  check('the thread approves as its exact text', true);
+  await page.click('.press-card-foot button:has-text("Schedule")');
+  await page.waitForSelector('.press-small-dialog input[type="datetime-local"]', { timeout: 10_000 });
+  await page.fill('.press-small-dialog input[type="datetime-local"]', '2099-01-01T09:00');
+  await page.click('.press-small-dialog button[type="submit"]');
+  await page.waitForFunction(
+    () => document.querySelector('.press-card-head .press-badge')?.textContent?.trim() === 'scheduled',
+    undefined,
+    { timeout: 10_000 },
+  );
+  await shot('press-scheduled');
+  await page.click('.tab[data-tab="press-queue"]');
+  await page.waitForSelector('[data-view="press-queue"]', { timeout: 15_000 });
+  await page.waitForFunction(
+    () => document.body.innerText.includes('X thread'),
+    undefined,
+    { timeout: 10_000 },
+  );
+  check(
+    'the queue lists the scheduled thread with its expression',
+    (await page.locator('[data-view="press-queue"]').innerText()).includes('X thread'),
+  );
+  await shot('press-queue');
+  await page.click('.tab[data-tab="press"]');
+  await page.waitForSelector('[data-view="press"] .press-row', { timeout: 15_000 });
+  await page.locator('.press-row', { hasText: 'E2E piece' }).first().click();
+  await page.waitForSelector('[data-view="press-piece"] .press-card', { timeout: 15_000 });
+  await page.click('.press-card-foot button:has-text("Mark sent")');
+  await page.waitForSelector('.press-small-dialog input[type="url"]', { timeout: 10_000 });
+  await page.fill('.press-small-dialog input[type="url"]', 'https://x.com/i/status/e2e');
+  await page.click('.press-small-dialog button[type="submit"]');
+  await page.waitForFunction(
+    () => document.querySelector('.press-card-head .press-badge')?.textContent?.trim() === 'sent',
+    undefined,
+    { timeout: 10_000 },
+  );
+  await page.click('.tab[data-tab="press-sent"]');
+  await page.waitForSelector('[data-view="press-sent"] tbody tr', { timeout: 15_000 });
+  check(
+    'the ledger shows the posting with its URL',
+    (await page.locator('[data-view="press-sent"]').innerText()).includes('https://x.com/i/status/e2e'),
+  );
+  await shot('press-sent');
+  // the calendar reads its copy from the press by source key
+  await page.click('.tab--domain[data-domain="release"]');
+  await page.waitForSelector('[data-view="release"] .release-card-open', { timeout: 15_000 });
+  await page.locator('.release-card-open', { hasText: 'X — launch thread' }).first().click();
+  await page.waitForSelector('.release-dialog', { timeout: 10_000 });
+  await page.waitForFunction(
+    () => !document.body.innerText.includes('Reading the copy'),
+    undefined,
+    { timeout: 15_000 },
+  );
+  check(
+    'the calendar dialog reads the press (rows, or says none yet)',
+    (await page.locator('.release-copy, .release-copy-empty').count()) >= 1,
+  );
+  await shot('press-calendar-dialog');
+  await page.keyboard.press('Escape');
   await page.click('.tab--domain[data-domain="newsletter"]');
   await page.waitForFunction(() =>
     window.location.pathname.startsWith('/newsletter'),

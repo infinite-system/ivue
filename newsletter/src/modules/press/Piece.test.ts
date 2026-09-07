@@ -127,3 +127,41 @@ describe('Piece', () => {
     expect(await Piece.Class.patch(env, 999, { title: 'x' })).toBeNull();
   });
 });
+
+describe('Piece — every branch', () => {
+  it('next due is the soonest schedule; a post without plain text seeds an empty base; a given title beats the post title', async () => {
+    const env = makeTestEnv();
+    Posts.Class = class extends Posts.$Class {
+      static override async load() {
+        const post = makePost('bare', 1);
+        delete post.plainText;
+        return [post];
+      }
+    };
+    const piece = await Piece.Class.create(env, { fromSlug: 'bare', title: 'My title' });
+    expect(piece.base).toBe('');
+    expect(piece.title).toBe('My title');
+    const late = await Expression.Class.create(env, { pieceId: piece.id, kind: 'bluesky', body: 'a' });
+    const soon = await Expression.Class.create(env, { pieceId: piece.id, kind: 'mastodon', body: 'b' });
+    const now = Math.floor(Date.now() / 1000);
+    await Expression.Class.approve(env, late.id);
+    await Expression.Class.schedule(env, late.id, now + 7200);
+    await Expression.Class.approve(env, soon.id);
+    await Expression.Class.schedule(env, soon.id, now + 3600);
+    expect((await Piece.Class.list(env))[0].nextDueAt).toBe(now + 3600);
+    // patch every field; an empty title keeps the old one; an empty slug clears it
+    const patched = await Piece.Class.patch(env, piece.id, {
+      title: '  ',
+      claim: 'c',
+      links: [{ label: 'l', url: 'https://u' }],
+      banner: '/b.png',
+      wave: 2,
+      notes: 'n',
+      slug: '',
+    });
+    expect(patched).toMatchObject({ title: 'My title', claim: 'c', banner: '/b.png', wave: 2, notes: 'n', slug: null });
+    expect(patched?.links).toEqual([{ label: 'l', url: 'https://u' }]);
+    expect((await Piece.Class.patch(env, piece.id, { wave: 1 }))?.wave).toBe(1);
+    await expect(Piece.Class.create(env, {})).rejects.toThrow(/title/);
+  });
+});

@@ -339,6 +339,54 @@ projected send time (`GET /admin/subscriber` unrolls the drip's own
 rule — one email per cadence from the last send — to the end of the
 archive). Unsubscribed addresses show a "pipeline paused" banner.
 
+## The press (`/press` in the dashboard)
+
+The printing desk. A **piece** is the argument (title, claim, links,
+banner, the **base** text); its **expressions** are the platform
+projections — an X thread, a LinkedIn post, a Reddit post, an email —
+each a card that is also the editor. Every posting, by the Worker or by
+hand, is a row in the **posting** ledger. Copy lives in D1, never in the
+repo. Design and invariants: `tasks/press-system-plan.md`,
+`src/modules/press/press.invariants.md`.
+
+- **Two modes.** A *derived* expression regenerates from the base on
+  every base save (its text is read-only in the card — edit the base, or
+  Detach). An *authored* expression is hand-written and never tracks the
+  base. Threads split the base on `---` rules.
+- **Approval is of the exact text.** The lint (limits, plain-text
+  constructs, a cover for articles) must pass; any edit or regeneration
+  of an approved row returns it to draft and cancels its job.
+- **Only X posts through an API.** Everything else comes due in the Queue
+  with Copy and Mark sent; the ledger row is the same shape either way.
+- **The calendar says when, the press says what.** A calendar entry names
+  its copy by press source key and reads it from the Worker; Mark as
+  posted there writes the ledger with the entry's venue and id.
+- **Tables and routes are singular** (`piece`, `expression`, `posting`;
+  `/admin/press/piece/:id`, `/admin/press/expression/:id/posting`).
+
+The agent's door is the same API, with `X-Press-Author: agent` so every
+revision names who wrote:
+
+```bash
+# from the repo root; PRESS_ORIGIN + ADMIN_SECRET from the environment or newsletter/.env
+node newsletter/scripts/press.mjs list [--q text] [--status approved] [--kind x-thread] [--wave 1]
+node newsletter/scripts/press.mjs show <pieceId>            # the piece, its base, every expression with segments
+node newsletter/scripts/press.mjs expression <id>           # one expression as JSON
+node newsletter/scripts/press.mjs edit <id> --body-file path | --body "text" | --label "…" | --venue "…"
+node newsletter/scripts/press.mjs base <pieceId> --body-file path   # saves the base; derived rows regenerate
+node newsletter/scripts/press.mjs approve|unapprove|detach|archive <id>
+node newsletter/scripts/press.mjs skip <segmentId> [--restore]
+node newsletter/scripts/press.mjs sent <id> --url … [--platform bluesky] [--venue …] [--calendar-id …]
+node newsletter/scripts/press.mjs postings [<pieceId>]      # the ledger
+node newsletter/scripts/press.mjs queue
+node newsletter/scripts/press.mjs import <batch.json> [--dry-run]   # one-shot; the batch stays out of the repo
+node newsletter/scripts/press-cards.mjs <expressionId>      # an image-card set → 1200×675 PNGs in newsletter/press-cards/
+```
+
+Local development: `wrangler dev` on :8787 with the migrations applied
+`--local`, and the dashboard with `DEV_WORKER_ORIGIN=http://localhost:8787
+ADMIN_SECRET=<the dev secret>` so the proxy targets the local Worker.
+
 ## Notes
 
 - Per-message batch outcomes are honored: only `ErrorCode 0` (accepted)

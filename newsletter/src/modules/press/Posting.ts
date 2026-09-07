@@ -90,7 +90,7 @@ class $Posting {
       platform: row.platform,
       venue: row.venue,
       url: row.url,
-      remoteIds: JSON.parse(row.remote_ids || '[]') as string[],
+      remoteIds: JSON.parse(row.remote_ids) as string[],
       postedAt: row.posted_at,
       postedBy: row.posted_by,
       calendarId: row.calendar_id,
