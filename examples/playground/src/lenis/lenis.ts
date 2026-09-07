@@ -38,9 +38,15 @@ export const FLICK_WINDOW_MS = 100;
 /** Lenis measures velocity in px per animation frame; a frame is ~16.7 ms. */
 const FRAME_MS = 16.7;
 
-/** Drop trail samples older than the window. */
+/**
+ * Drop trail samples older than the window — all but one: the newest
+ * sample before the window stays as the anchor, so a lone move inside
+ * the window still has a span. A whole re-flick coalesced into one
+ * touchmove 260 ms after the touchstart would otherwise trim its seed
+ * and read no velocity at all.
+ */
 export function trimTrail(trail: Array<{ at: number; position: number }>, now: number, windowMs: number) {
-  while (trail.length > 0 && now - trail[0].at > windowMs) trail.shift();
+  while (trail.length > 2 && now - trail[1].at > windowMs) trail.shift();
 }
 
 /**

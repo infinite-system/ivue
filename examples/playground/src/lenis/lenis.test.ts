@@ -38,6 +38,15 @@ test('a re-flick Android coalesced into one touchmove still flicks: the touchsta
     { at: 11_180, position: 12_887 + 194 }
   ];
   expect(trailVelocity(seeded, 0)).toBeCloseTo((194 / 190) * 16.7, 6);
+  // The seed sits outside the window by the time the move lands; the trim
+  // keeps it as the anchor all the same (the phone's second log: 260 ms).
+  const late = [
+    { at: 6_350, position: 4_982 },
+    { at: 6_610, position: 4_982 + 257 }
+  ];
+  trimTrail(late, 6_610, FLICK_WINDOW_MS);
+  expect(late).toHaveLength(2);
+  expect(trailVelocity(late, 0)).toBeCloseTo((257 / 260) * 16.7, 6);
 });
 
 // impossible-if-true: trailVelocity — A flick that dies because the last animation frame before the touchend saw no move.
@@ -52,6 +61,6 @@ test('an idle frame before the touchend does not zero the flick: the trail still
   // The window drops what is older than FLICK_WINDOW_MS, so a pause mid-touch is not a flick.
   const paused = [{ at: 0, position: 0 }, { at: 50, position: 100 }, { at: 400, position: 100 }];
   trimTrail(paused, 400, FLICK_WINDOW_MS);
-  expect(paused).toEqual([{ at: 400, position: 100 }]);
+  expect(paused).toEqual([{ at: 50, position: 100 }, { at: 400, position: 100 }]);
   expect(trailVelocity(paused, 0)).toBe(0);
 });
