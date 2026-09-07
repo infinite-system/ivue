@@ -165,40 +165,22 @@ class $VirtualScrollerSelectionTouchCustom {
     return { left, top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
   }
 
-  /** Whether a box (overlay-relative) overlaps a visible rect (viewport-relative). */
-  static intersects(
-    box: VirtualScrollerSelectionTouchCustom.Box,
-    origin: { left: number; top: number },
-    visible: VirtualScrollerSelectionTouchCustom.Box
-  ): boolean {
-    const left = box.left + origin.left;
-    const top = box.top + origin.top;
-    return (
-      left < visible.left + visible.width &&
-      left + box.width > visible.left &&
-      top < visible.top + visible.height &&
-      top + box.height > visible.top
-    );
-  }
-
-  /** A handle position (overlay-relative) pinned inside a visible rect
-   *  (viewport-relative), inset by the knob's radius so the knob stays
-   *  whole on screen; the touch target's inner half is what a finger
-   *  reaches, and it is inside the frame. */
-  static pinInside(
+  /** Whether a handle spot (overlay-relative) lies inside a visible rect
+   *  (viewport-relative) with its knob whole: inset by the knob's radius. */
+  static spotOnScreen(
     at: { x: number; y: number },
     origin: { left: number; top: number },
     visible: VirtualScrollerSelectionTouchCustom.Box
-  ): { x: number; y: number } {
+  ): boolean {
     const inset = this.HANDLE_KNOB_PX / 2;
-    const minX = visible.left + inset - origin.left;
-    const maxX = visible.left + visible.width - inset - origin.left;
-    const minY = visible.top + inset - origin.top;
-    const maxY = visible.top + visible.height - inset - origin.top;
-    return {
-      x: Math.min(Math.max(at.x, minX), Math.max(minX, maxX)),
-      y: Math.min(Math.max(at.y, minY), Math.max(minY, maxY))
-    };
+    const x = at.x + origin.left;
+    const y = at.y + origin.top;
+    return (
+      x >= visible.left + inset &&
+      x <= visible.left + visible.width - inset &&
+      y >= visible.top + inset &&
+      y <= visible.top + visible.height - inset
+    );
   }
 
   constructor(public owner: VirtualScrollerSelectionTouchCustom.Owner) {}
@@ -276,8 +258,6 @@ class $VirtualScrollerSelectionTouchCustom {
      *  frame's visible rect, so a scroll re-places the handles from one
      *  rect read instead of a repaint. */
     laid: null as null | {
-      first: VirtualScrollerSelectionTouchCustom.Box;
-      last: VirtualScrollerSelectionTouchCustom.Box;
       start: { x: number; y: number };
       end: { x: number; y: number };
       visible: VirtualScrollerSelectionTouchCustom.Box | null;
@@ -399,8 +379,6 @@ class $VirtualScrollerSelectionTouchCustom {
     const handles = this.self.handlePositions(boxes)!;
     const clip = frame ? frame.getBoundingClientRect() : null;
     this.parts.laid = {
-      first: boxes[0],
-      last: boxes[boxes.length - 1],
       start: handles.start,
       end: handles.end,
       visible: clip && this.self.visibleRect(clip)
@@ -410,12 +388,11 @@ class $VirtualScrollerSelectionTouchCustom {
 
   /**
    * A scroll moved the overlay under the frame: re-place the handles from
-   * the last paint's boxes and one rect read. The handles sit at the TRUE
-   * ends. An end whose line is partly on screen keeps its handle pinned
-   * just inside the visible edge, whole, so a range clipped at the edge is
-   * still grabbable there — and a grab there is already in the zone, so
-   * it scrolls at once. An end whose line has scrolled wholly away has no
-   * handle: one pinned at the edge would point at nothing the reader sees.
+   * the last paint's boxes and one rect read. A handle sits at its TRUE
+   * spot and shows only while that spot is on screen; an end that has
+   * scrolled away has no handle until its spot scrolls back in. (A handle
+   * pinned at the edge while its line was partly visible glided in with
+   * the line — it looked like a handle that had not finished hiding.)
    */
   follow() {
     const overlay = this.overlay.value;
@@ -427,12 +404,10 @@ class $VirtualScrollerSelectionTouchCustom {
     const laid = this.parts.laid;
     if (!laid) return;
     const visible = laid.visible;
-    const shown = (box: VirtualScrollerSelectionTouchCustom.Box) =>
-      !visible || this.self.intersects(box, origin, visible);
-    const pin = (at: { x: number; y: number }) =>
-      visible ? this.self.pinInside(at, origin, visible) : at;
-    this.placeHandle(this.parts.start, shown(laid.first) ? pin(laid.start) : null);
-    this.placeHandle(this.parts.end, shown(laid.last) ? pin(laid.end) : null);
+    const shown = (at: { x: number; y: number }) =>
+      !visible || this.self.spotOnScreen(at, origin, visible);
+    this.placeHandle(this.parts.start, shown(laid.start) ? laid.start : null);
+    this.placeHandle(this.parts.end, shown(laid.end) ? laid.end : null);
   }
 
   protected paintBoxes(boxes: VirtualScrollerSelectionTouchCustom.Box[]) {

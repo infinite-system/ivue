@@ -6,7 +6,7 @@ Goal: Let a finger select text in a virtual list without the system's selection:
 [A drag scrolls from inside the edge zone](virtual-scroller.invariants.md#a-drag-scrolls-from-inside-the-edge-zone)
 [A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If the device has neither touch points nor touch events, then attach does nothing: no overlay, no listeners, the rows stay selectable and the native selection paints as before.
-// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, laid whole since the frame clips, and the handles sit beside the true ends — the start above the first line, the end below the last, offset outward — so they never cover the text — pinned whole just inside the visible edge while an end's line is partly on screen and hidden once it has scrolled wholly away; a null range hides the overlay.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, laid whole since the frame clips, and the handles sit beside the true ends — the start above the first line, the end below the last, offset outward — so they never cover the text — shown only while their own spot is on screen with the knob whole, hidden otherwise; a null range hides the overlay.
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a handle, then the drag begins at once from the other end, the handle stops catching pointer events for its own drag, and lifting ends it with the chip offered.
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a button or on the overlay, then no hold arms; a tap on an existing selection clears it; a swipe past the slop is a scroll.
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If a second tap lands within the double-tap window and slop of the first, then the word under it is selected as a touch range and the chip is offered; mouse events synthesized after a touch are that touch's.
@@ -127,7 +127,7 @@ test('with a touch point the overlay with its two handles is laid inside the wra
   expect(wrapper.querySelector(`.${Touch.OVERLAY_CLASS}`)).toBeNull();
 });
 
-// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, laid whole since the frame clips, and the handles sit beside the true ends — the start above the first line, the end below the last, offset outward — so they never cover the text — pinned whole just inside the visible edge while an end's line is partly on screen and hidden once it has scrolled wholly away; a null range hides the overlay.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, laid whole since the frame clips, and the handles sit beside the true ends — the start above the first line, the end below the last, offset outward — so they never cover the text — shown only while their own spot is on screen with the knob whole, hidden otherwise; a null range hides the overlay.
 test('painting a range lays one box per non-empty rect and puts the handles at the ends; painting null hides it all', () => {
   const rects = [
     { left: 20, top: 10, right: 320, bottom: 30, width: 300, height: 20 },
@@ -175,7 +175,8 @@ test('painting a range lays one box per non-empty rect and puts the handles at t
   const end = overlay.querySelector(`.${Touch.HANDLE_CLASS}--end`) as HTMLElement;
   // Beside the ends, offset outward and half the offset down — never over the text.
   const offset = Touch.HANDLE_OFFSET_PX;
-  // The start's true spot is 4 px from the frame's top — pinned to the knob's radius.
+  // The start's true spot is 4 px from the frame's top — its knob would
+  // hang off the top, so it is hidden until it scrolls fully into view.
   const inset = Touch.HANDLE_KNOB_PX / 2;
   expect(
     Touch.handlePositions(
@@ -185,11 +186,13 @@ test('painting a range lays one box per non-empty rect and puts the handles at t
     start: { x: 20 - offset, y: 10 - offset / 2 },
     end: { x: 120 + offset, y: 50 + offset / 2 }
   });
-  expect(start.style.transform).toBe(`translate(${20 - offset}px, ${inset}px)`);
+  expect(start.hidden).toBe(true);
+  expect(end.hidden).toBe(false);
   expect(end.style.transform).toBe(`translate(${120 + offset}px, ${50 + offset / 2}px)`);
 
-  // An end whose line is partly on screen keeps its handle, pinned whole
-  // just inside the visible edge; boxes are laid whole, the frame clips.
+  // An end whose line is partly on screen but whose spot is past the edge
+  // has no handle yet — it appears only once its spot is fully in view;
+  // boxes are laid whole, the frame clips.
   const visibleBottom = Math.min(1000, window.innerHeight);
   range.getClientRects = () =>
     [
@@ -197,28 +200,31 @@ test('painting a range lays one box per non-empty rect and puts the handles at t
       { left: 0, top: visibleBottom - 10, right: 120, bottom: visibleBottom + 10, width: 120, height: 20 }
     ] as unknown as DOMRectList;
   instance.paint(range);
-  expect(start.hidden).toBe(false);
-  expect(end.hidden).toBe(false);
-  expect(end.style.transform).toBe(`translate(${120 + offset}px, ${visibleBottom - inset}px)`);
+  expect(end.hidden).toBe(true);
   expect(overlay.querySelectorAll(`.${Touch.BOX_CLASS}`)).toHaveLength(2);
-  // An end whose line has scrolled wholly away has no handle.
+  // An end that has scrolled wholly away has no handle either.
   range.getClientRects = () =>
     [
       rects[0],
       { left: 0, top: 1200, right: 120, bottom: 1220, width: 120, height: 20 }
     ] as unknown as DOMRectList;
   instance.paint(range);
-  expect(start.hidden).toBe(false);
   expect(end.hidden).toBe(true);
   expect(overlay.querySelectorAll(`.${Touch.BOX_CLASS}`)).toHaveLength(2);
   // A scroll re-places the handles from the last paint and one rect read:
-  // the overlay moved up 1000 px, so the end's line is on screen and the
-  // start's has left.
+  // the overlay moved up 1000 px, so the end's spot is on screen at its
+  // true position and the start's has left.
   overlay.getBoundingClientRect = () => ({ left: 0, top: -1000, width: 800, height: 3000 }) as DOMRect;
   instance.follow();
   expect(start.hidden).toBe(true);
   expect(end.hidden).toBe(false);
   expect(end.style.transform).toBe(`translate(${120 + offset}px, ${1220 + offset / 2}px)`);
+  // Scrolled so the start's spot is 20 px inside the top: it shows, at its true spot.
+  overlay.getBoundingClientRect = () => ({ left: 0, top: 20 - (10 - offset / 2), width: 800, height: 3000 }) as DOMRect;
+  instance.follow();
+  expect(start.hidden).toBe(false);
+  expect(start.style.transform).toBe(`translate(${20 - offset}px, ${10 - offset / 2}px)`);
+  expect(inset).toBe(8);
 
   // A smaller range shrinks the pool; null hides.
   range.getClientRects = () => [rects[0]] as unknown as DOMRectList;
