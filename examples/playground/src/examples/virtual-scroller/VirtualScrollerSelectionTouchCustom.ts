@@ -108,13 +108,12 @@ class $VirtualScrollerSelectionTouchCustom {
   }
 
   /**
-   * Client rects to boxes relative to an origin rect (the overlay's), each
-   * clipped to the frame's rect, empty ones dropped. The clip is this
-   * class's, not the browser's: the range spans the padded rows above and
-   * below the viewport too, and while the layer is in motion the frame's
-   * overflow clip lags the compositor — boxes laid there flash over the
-   * page until the scroll settles. A range's rects also include
-   * zero-width ones at node boundaries that would draw as hairlines.
+   * Client rects to boxes relative to an origin rect (the overlay's),
+   * empty ones dropped — a range's rects include zero-width ones at node
+   * boundaries that would draw as hairlines. Boxes are laid whole: the
+   * range spans the padded rows above and below the viewport too, and the
+   * frame clips them (`contain: paint` keeps the clip on the compositor
+   * while the layer moves). An optional clip rect is still honoured.
    */
   static boxesFrom(
     rects: ArrayLike<DOMRectReadOnly>,
@@ -272,7 +271,17 @@ class $VirtualScrollerSelectionTouchCustom {
   protected readonly parts = {
     boxes: [] as HTMLElement[],
     start: null as HTMLElement | null,
-    end: null as HTMLElement | null
+    end: null as HTMLElement | null,
+    /** The last paint's boxes and handle spots (overlay-relative) and the
+     *  frame's visible rect, so a scroll re-places the handles from one
+     *  rect read instead of a repaint. */
+    laid: null as null | {
+      first: VirtualScrollerSelectionTouchCustom.Box;
+      last: VirtualScrollerSelectionTouchCustom.Box;
+      start: { x: number; y: number };
+      end: { x: number; y: number };
+      visible: VirtualScrollerSelectionTouchCustom.Box | null;
+    }
   };
 
   /* Lifetime — the host calls these from its own mount and unmount */
@@ -377,31 +386,53 @@ class $VirtualScrollerSelectionTouchCustom {
     // laid from a zero origin land far outside the frame.
     overlay.hidden = false;
     const origin = overlay.getBoundingClientRect();
-    const clip = frame ? frame.getBoundingClientRect() : undefined;
-    const boxes = this.self.boxesFrom(rects, origin, clip);
+    // Boxes are laid whole — the frame clips them (contain: paint) — so a
+    // scroll moves them with the rows and nothing is re-laid until the
+    // range or the window changes.
+    const boxes = this.self.boxesFrom(rects, origin);
     if (boxes.length === 0) {
       overlay.hidden = true;
+      this.parts.laid = null;
       return;
     }
     this.paintBoxes(boxes);
-    // The handles sit at the TRUE ends. An end whose line is partly on
-    // screen keeps its handle pinned just inside the visible edge, whole,
-    // so a range clipped at the edge is still grabbable there — and a grab
-    // there is already in the zone, so it scrolls at once. An end whose
-    // line has scrolled wholly away has no handle: one pinned at the edge
-    // would point at nothing the reader can see.
-    const whole = this.self.boxesFrom(rects, origin);
-    const handles = this.self.handlePositions(whole);
-    const visible = clip && this.self.visibleRect(clip);
-    const shown = (box: VirtualScrollerSelectionTouchCustom.Box | undefined) =>
-      !visible || (box !== undefined && this.self.intersects(box, origin, visible));
+    const handles = this.self.handlePositions(boxes)!;
+    const clip = frame ? frame.getBoundingClientRect() : null;
+    this.parts.laid = {
+      first: boxes[0],
+      last: boxes[boxes.length - 1],
+      start: handles.start,
+      end: handles.end,
+      visible: clip && this.self.visibleRect(clip)
+    };
+    this.placeHandles(origin);
+  }
+
+  /**
+   * A scroll moved the overlay under the frame: re-place the handles from
+   * the last paint's boxes and one rect read. The handles sit at the TRUE
+   * ends. An end whose line is partly on screen keeps its handle pinned
+   * just inside the visible edge, whole, so a range clipped at the edge is
+   * still grabbable there — and a grab there is already in the zone, so
+   * it scrolls at once. An end whose line has scrolled wholly away has no
+   * handle: one pinned at the edge would point at nothing the reader sees.
+   */
+  follow() {
+    const overlay = this.overlay.value;
+    if (!overlay || overlay.hidden || !this.parts.laid) return;
+    this.placeHandles(overlay.getBoundingClientRect());
+  }
+
+  protected placeHandles(origin: { left: number; top: number }) {
+    const laid = this.parts.laid;
+    if (!laid) return;
+    const visible = laid.visible;
+    const shown = (box: VirtualScrollerSelectionTouchCustom.Box) =>
+      !visible || this.self.intersects(box, origin, visible);
     const pin = (at: { x: number; y: number }) =>
       visible ? this.self.pinInside(at, origin, visible) : at;
-    this.placeHandle(this.parts.start, handles && shown(whole[0]) ? pin(handles.start) : null);
-    this.placeHandle(
-      this.parts.end,
-      handles && shown(whole[whole.length - 1]) ? pin(handles.end) : null
-    );
+    this.placeHandle(this.parts.start, shown(laid.first) ? pin(laid.start) : null);
+    this.placeHandle(this.parts.end, shown(laid.last) ? pin(laid.end) : null);
   }
 
   protected paintBoxes(boxes: VirtualScrollerSelectionTouchCustom.Box[]) {

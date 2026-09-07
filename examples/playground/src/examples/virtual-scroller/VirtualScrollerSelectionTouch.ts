@@ -277,6 +277,9 @@ class $VirtualScrollerSelectionTouch {
   /** Nothing to draw — the native selection paints itself. */
   paint(_range: Range | null) {}
 
+  /** Nothing to follow — see paint. */
+  follow() {}
+
   protected cancelHold() {
     if (this.hold.timer !== null) clearTimeout(this.hold.timer);
     this.hold.timer = null;

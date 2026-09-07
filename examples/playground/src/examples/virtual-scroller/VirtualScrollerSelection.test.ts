@@ -735,7 +735,9 @@ test('on a touch device the highlight is the touch class’s overlay and the nat
   instance.attach(dom.frame);
   const originalRects = Range.prototype.getClientRects;
   Range.prototype.getClientRects = function () {
-    return [{ left: 0, top: 10, width: 200, height: 20 }] as unknown as DOMRectList;
+    return [
+      { left: 0, top: 10, right: 200, bottom: 30, width: 200, height: 20 }
+    ] as unknown as DOMRectList;
   };
   window.getSelection()!.removeAllRanges();
   instance.beginAt(60, 20, 'touch');
@@ -745,17 +747,16 @@ test('on a touch device the highlight is the touch class’s overlay and the nat
   expect(overlay.hidden).toBe(false);
   expect(overlay.querySelectorAll('.virtual-scroller__touch-box')).toHaveLength(1);
   expect(window.getSelection()!.rangeCount).toBe(0);
-  // A scroll re-lays the boxes: a rect that was clipped away is painted
-  // once it comes back into the frame, window change or not.
-  Range.prototype.getClientRects = function () {
-    return [
-      { left: 0, top: 10, width: 200, height: 20 },
-      { left: 0, top: 40, width: 200, height: 20 }
-    ] as unknown as DOMRectList;
-  };
-  owner.scrollPosition.value = 30;
+  // A scroll re-places the handles (the boxes move with the rows): the
+  // end's line scrolled wholly out of the frame, so its handle hides.
+  const end = overlay.querySelector('.virtual-scroller__touch-handle--end') as HTMLElement;
+  expect(end.hidden).toBe(false);
+  overlay.getBoundingClientRect = () =>
+    ({ left: 0, top: -900, width: 800, height: 3000 }) as DOMRect;
+  owner.scrollPosition.value = 900;
   return nextTick().then(() => {
-    expect(overlay.querySelectorAll('.virtual-scroller__touch-box')).toHaveLength(2);
+    expect(end.hidden).toBe(true);
+    expect(overlay.querySelectorAll('.virtual-scroller__touch-box')).toHaveLength(1);
     // A mouse drag on the same device keeps the native selection and drops the overlay.
   instance.beginAt(60, 20);
   instance.extendTo(30, 100);

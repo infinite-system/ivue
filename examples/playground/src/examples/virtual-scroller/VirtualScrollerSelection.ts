@@ -570,14 +570,14 @@ class $VirtualScrollerSelection {
       () => this.applyHighlight(),
       { flush: 'post' }
     );
-    // A finger's boxes are clipped to the frame when painted, so a scroll
-    // that brings clipped-away text back into the frame must repaint
-    // them, window change or not; a native highlight moves with the rows.
-    // Always started: the callback's device check is three reads a frame,
-    // and one place — attach — decides whether the touch class is live.
+    // A scroll moves a finger's boxes with the rows for free, but the
+    // handles pin to the frame's visible edges, so a scroll re-places
+    // them; a native highlight needs nothing. Always started: the
+    // callback's device check is three reads a frame, and one place —
+    // attach — decides whether the touch class is live.
     watch(
       () => this.owner.scrollPosition.value,
-      () => this.repaintTouch(),
+      () => this.followTouch(),
       { flush: 'post' }
     );
   }
@@ -992,12 +992,12 @@ class $VirtualScrollerSelection {
    */
   // invariant: The selection is a range over the data (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   // invariant: A finger's drag paints without selecting (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  /** Re-lay the touch class's boxes over the range it paints — nothing
-   *  when the range is not a finger's, since a native highlight needs no
-   *  help to follow a scroll. */
-  repaintTouch() {
+  /** Re-place the touch class's handles after a scroll — nothing when the
+   *  range is not a finger's, since a native highlight needs no help to
+   *  follow a scroll. */
+  followTouch() {
     if (!this.$touch.paintsSelection || !this.input.touch || !this.hasSelection) return;
-    this.$touch.paint(this.visibleDomRange());
+    this.$touch.follow();
   }
 
   applyHighlight() {
