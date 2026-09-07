@@ -322,6 +322,34 @@ class $VirtualScrollerSelection {
     return 0;
   }
 
+  /** How long the chip reads "Copied" after a copy. */
+  static get COPIED_MS() {
+    return 1200;
+  }
+
+  /** The clipboard without the clipboard API: select the text in an
+   *  off-screen textarea and ask the document to copy — what a page on
+   *  plain http gets, and what Android Chrome still honours on a tap. */
+  static copyThroughTextarea(text: string): boolean {
+    if (typeof document === 'undefined') return false;
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    area.setSelectionRange(0, text.length);
+    let copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } catch {
+      copied = false;
+    }
+    area.remove();
+    return copied;
+  }
+
   /**
    * How far the pointer has pushed INTO the autoscroll zone along the
    * axis, signed: negative toward the start edge (up / left), positive
@@ -616,6 +644,9 @@ class $VirtualScrollerSelection {
    *  selectionchange that matches it is our own echo, not the reader's. */
   protected readonly native = { applied: '', collapsedByUs: false };
 
+  /** The "Copied" moment's timer — a holder, not state: nothing renders it. */
+  protected readonly copiedMoment = { timer: null as ReturnType<typeof setTimeout> | null };
+
   /** The input driving the live drag: a finger's drag paints through the
    *  CSS Highlight API and hands the range to the native selection only on
    *  release (see applyHighlight). */
@@ -692,8 +723,14 @@ class $VirtualScrollerSelection {
     return this.$touch.selected.value || this.$touch.paintsSelection;
   }
 
+  // MUTABLE STATE — the chip just copied; it says so for a moment.
+  get copied() {
+    return ref(false);
+  }
+
+  /** The chip says what it just did, for COPIED_MS, then offers again. */
   get copyChipLabel() {
-    return 'Copy';
+    return this.copied.value ? 'Copied ✓' : 'Copy';
   }
 
   /** The count in the chip's badge. */
@@ -749,6 +786,8 @@ class $VirtualScrollerSelection {
   }
 
   dispose() {
+    if (this.copiedMoment.timer !== null) clearTimeout(this.copiedMoment.timer);
+    this.copiedMoment.timer = null;
     this.end();
     this.$touch.dispose();
     document.removeEventListener('selectionchange', this.onSelectionChange);
@@ -938,11 +977,34 @@ class $VirtualScrollerSelection {
   }
 
   /** The copy chip's action: the clipboard API needs a user gesture, and
-   *  the tap on the chip is one. */
+   *  the tap on the chip is one. The selection STAYS — a reader may widen
+   *  it and copy again, as the system's own copy leaves it — and the chip
+   *  reads "Copied" for a moment. Outside a secure context (plain http on
+   *  a LAN) the clipboard API is absent and the textarea fallback copies. */
   async copy() {
     if (!this.hasSelection) return;
-    await navigator.clipboard.writeText(this.selectedText);
-    this.clear();
+    const text = this.selectedText;
+    let done = false;
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      done = await navigator.clipboard.writeText(text).then(
+        () => true,
+        () => false
+      );
+    }
+    if (!done) done = this.self.copyThroughTextarea(text);
+    if (done) this.showCopied();
+  }
+
+  /** Flip the chip to "Copied" for COPIED_MS. */
+  showCopied() {
+    this.copied.value = true;
+    if (this.copiedMoment.timer !== null) clearTimeout(this.copiedMoment.timer);
+    this.copiedMoment.timer = setTimeout(() => this.hideCopied(), this.self.COPIED_MS);
+  }
+
+  hideCopied() {
+    this.copiedMoment.timer = null;
+    this.copied.value = false;
   }
 
   clear() {

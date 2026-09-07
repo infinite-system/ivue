@@ -336,7 +336,25 @@ test('copy assembles the selected text from the owner’s row text with the owne
   expect(setData).toHaveBeenCalledWith('text/plain', instance.selectedText);
   expect(instance.copyChipLabel).toBe('Copy');
   expect(instance.copyChipCount).toBe('3');
-  instance.dispose();
+  // The chip's copy: the selection STAYS (a reader may widen it and copy
+  // again), the chip reads "Copied ✓" for a moment, then offers again.
+  // (The clipboard is stubbed on navigator itself and the timer run by
+  // hand: unstubAllGlobals would also drop this file's rAF stubs.)
+  const written: string[] = [];
+  Object.defineProperty(navigator, 'clipboard', {
+    value: { writeText: (value: string) => (written.push(value), Promise.resolve()) },
+    configurable: true
+  });
+  return instance.copy().then(() => {
+    expect(written).toEqual([instance.selectedText]);
+    expect(instance.hasSelection).toBe(true);
+    expect(instance.copyChipLabel).toBe('Copied ✓');
+    instance.hideCopied();
+    expect(instance.copyChipLabel).toBe('Copy');
+    expect(instance.hasSelection).toBe(true);
+    delete (navigator as { clipboard?: unknown }).clipboard;
+    instance.dispose();
+  });
 });
 
 // domain-invariant: $VirtualScrollerSelection — If a mousedown is not the primary button or lands on an interactive element, then it is left to the browser; otherwise it begins a selection and takes the native one away.

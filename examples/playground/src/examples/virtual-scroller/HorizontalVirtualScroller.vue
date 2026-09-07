@@ -161,4 +161,14 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
   font-weight: 600;
   cursor: pointer;
 }
+
+.virtual-scroller__copy {
+  transition:
+    transform 0.08s ease,
+    background 0.15s ease;
+}
+.virtual-scroller__copy:active {
+  /* the press is felt: the chip shrinks under the finger */
+  transform: scale(0.92);
+}
 </style>
