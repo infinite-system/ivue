@@ -427,13 +427,17 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   // invariant: The frame is never natively panned along its own axis (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  /** The frame's touch-action: the browser may pan the CROSS axis natively
-   *  (that gesture is the page's) and never the own axis — Lenis drives
-   *  that in JS, and a touch selection needs the own-axis touchmove to
-   *  stay cancelable. Without this, the overflow:auto frame pans for real
-   *  under a selecting finger and the transformed rows leave the clip. */
+  /** The frame's touch-action. The own axis is never the browser's — Lenis
+   *  drives it in JS, and a touch selection needs the own-axis touchmove
+   *  to stay cancelable; without this, the overflow:auto frame pans for
+   *  real under a selecting finger and the transformed rows leave the
+   *  clip. The vertical scroller gives the browser nothing: a page does
+   *  not pan sideways, and any token left on (`pan-x`) lets Chrome on
+   *  Android claim a sloppy second swipe as a horizontal pan and end it
+   *  with a touchcancel, which is a flick that never fires. The strip
+   *  keeps `pan-y`, since the page must scroll vertically across it. */
   get frameTouchAction(): string {
-    return 'pan-x';
+    return 'none';
   }
 
   /* Container size */

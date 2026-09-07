@@ -576,7 +576,7 @@ export class Lenis {
 
     this.lastInputTouch = isTouch;
     const isSyncTouch = isTouch && this.options.syncTouch;
-    const isTouchEnd = isTouch && event.type === 'touchend';
+    const isTouchEnd = isTouch && (event.type === 'touchend' || event.type === 'touchcancel');
 
     let flickVelocity = this.velocity;
     if (isTouch) {

@@ -43,6 +43,10 @@ export class VirtualScroll {
       listenerOptions
     )
     this.element.addEventListener('touchend', this.onTouchEnd, listenerOptions)
+    // The browser claiming the gesture (Android Chrome, when touch-action
+    // lets it) ends the touch with a cancel, not an end: the flick must
+    // still fire, or the glide a touchstart froze stays frozen.
+    this.element.addEventListener('touchcancel', this.onTouchEnd, listenerOptions)
   }
 
   /**
@@ -74,6 +78,11 @@ export class VirtualScroll {
     )
     this.element.removeEventListener(
       'touchend',
+      this.onTouchEnd,
+      listenerOptions
+    )
+    this.element.removeEventListener(
+      'touchcancel',
       this.onTouchEnd,
       listenerOptions
     )
