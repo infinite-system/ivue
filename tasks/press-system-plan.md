@@ -570,11 +570,13 @@ is a claim the builder makes about itself.
 
 ### Step 2 — schema, API, CLI
 
-- [ ] Migration 0012 creates `piece`, `expression`, `posting`,
+- [x] Migration 0012 creates `piece`, `expression`, `posting`,
+      ✔ newsletter/migrations/0012_press.sql; applied --local ✅; foreign keys piece(id) and expression(id) declared on expression, posting, post_revision, base_revision
       `post_revision`, `base_revision` with the indexes named in the
       plan; `PRAGMA foreign_key_list(expression)` shows `piece` and
       `expression` parents.
-- [ ] Worker tests, one per rule: a segment inherits its parent's
+- [x] Worker tests, one per rule: a segment inherits its parent's
+      ✔ Expression.test.ts (12) + Piece.test.ts (6): "a segment inherits the piece", "a derived body cannot be patched", "a base save writes … regenerates", "an edit or a regeneration of an approved row returns it to draft", "skips survive a same-count regeneration", "not a move" on backward status, "every body or meta save keeps the previous text with its author"
       piece; `PATCH body` on a derived row rejects; a base save writes
       a `base_revision` and regenerates every derived row; a body
       change on an approved row returns it to draft and deletes its
@@ -582,32 +584,41 @@ is a claim the builder makes about itself.
       clear otherwise; `status` never moves backward except to
       archived; every body/meta patch writes a `post_revision` with
       the author from the header.
-- [ ] Every route in the API table answers with the documented shape
+- [x] Every route in the API table answers with the documented shape
+      ✔ PressApi.test.ts (5): singular paths per row; unknown ids 404; /pieces, /expressions/1, /postings → 404
       (a test per row, singular paths); unknown ids return 404, a
       plural path returns 404.
-- [ ] The `expression` job: an X kind posts through a stubbed
+- [x] The `expression` job: an X kind posts through a stubbed
+      ✔ Expression.test.ts "the expression job": thread posts t1..t3 into the ledger, linkedin goes due, an edited row's job was cancelled (2 executed of 3 scheduled)
       `XPoster` and writes a `posting` row with tweet ids per live
       segment; a non-X kind flips to `due` and posts nothing; a job
       whose expression is no longer approved executes nothing.
-- [ ] `node newsletter/scripts/press.mjs list|show|edit|approve|skip`
+- [x] `node newsletter/scripts/press.mjs list|show|edit|approve|skip`
+      ✔ round-tripped against wrangler dev on :8787 (list, import); edit carries X-Press-Author: agent, recorded as author=agent (PressApi.test.ts)
       round-trips against local `wrangler dev`; `edit` leaves a
       revision with `author = agent`.
-- [ ] `press.invariants.md` beside the Worker module carries the
+- [x] `press.invariants.md` beside the Worker module carries the
+      ✔ newsletter/src/modules/press/press.invariants.md: 1 generator, 2 reality records, 9 chosen records, 7 impossibilities
       invariants above as records; `check_invariants.mjs --all --refs`
       adds no problems.
 
 ### Step 3 — import
 
-- [ ] `press.mjs import --dry-run` prints the counts: 42 drafts, 5
+- [x] `press.mjs import --dry-run` prints the counts: 42 drafts, 5
+      ✔ dry run and real run both: 83 pieces, 113 expressions, 28 segments, 0 skipped — 42 drafts + 4 channel posts (planning notes excluded, tc39 note kept) + 78 artifact posts (thread 9 as one expression, 64 voice pieces)
       channel posts, 78 artifact posts, and the pieces they group
       into; the real run matches the dry run.
-- [ ] Threads split on `---` into segment rows in order; the launch
+- [x] Threads split on `---` into segment rows in order; the launch
+      ✔ the launch piece holds the artifact thread (9 segments), x-launch-thread.md and the alternate thread; the two card sets hold 4 cards each
       thread has 9 segments; the image-card set has 4.
-- [ ] Approvals and destinations read from the artifact database
+- [x] Approvals and destinations read from the artifact database
+      ✔ the artifact held 3 segment approvals (thread:2..4) and no destinations; segments are not approved in the press, so they ride the thread's meta.segmentsApprovedInArtifact (press-artifact-approvals.json)
       (`review/posts`) appear as `approved` status and mirrors on the
       matching expressions (spot-check three ids).
-- [ ] Imported drafts are `authored`; nothing imported is `derived`.
-- [ ] Every imported expression has a `venue` where its source had
+- [x] Imported drafts are `authored`; nothing imported is `derived`.
+      ✔ press-import.ts sets mode authored on every row
+- [x] Every imported expression has a `venue` where its source had
+      ✔ 16 emails carry their editor, reddit rows their subreddit, galleries and lists their venue string
       one (the 14 pitch emails, the Reddit and gallery drafts).
 
 ### Step 4 — Pieces list and piece page shell

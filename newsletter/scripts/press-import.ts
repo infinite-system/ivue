@@ -125,26 +125,21 @@ for (const file of readdirSync(resolve(root, 'docs_v2/blog'))) {
 
 /* ---- the press drafts under tasks/press-drafts ---- */
 
-const DRAFT_KIND_BY_PURPOSE: Record<string, string> = {
-  'pitch-email': 'email',
-  'warm personal message': 'email',
-  'message mirror': 'email',
-  'short announcement': 'note',
-  'full article adaptation': 'article',
-  'tightened article adaptation': 'article',
-  'technical article adaptation': 'article',
-  'one-screen project section': 'article',
-  'text post': 'reddit',
-  'canonical-ready cross-post': 'devto',
-  'submission title + first comment': 'note',
-  'four image-card texts': 'x-cards',
-  'long post': 'x-long',
-  'PR one-liners': 'note',
-  'gallery blurbs': 'note',
-  'card-text': 'note',
-  thread: 'x-thread',
-  post: 'note',
-};
+// kind by purpose, then by venue where the purpose is only "post"
+function draftKind(purpose: string, venue: string, file: string): string {
+  const room = venue.toLowerCase();
+  if (purpose === 'pitch-email') return 'email';
+  if (purpose === 'thread') return 'x-thread';
+  if (purpose === 'translation') return 'article';
+  if (purpose === 'card-text') return file.includes('hooks') ? 'note' : 'x-cards';
+  if (purpose === 'pr-oneliner') return 'note';
+  if (room.startsWith('r/')) return 'reddit';
+  if (room.startsWith('dev.to')) return 'devto';
+  if (room.startsWith('x')) return 'x-long';
+  if (room.includes('readme')) return 'article';
+  if (room.includes('t.me')) return 'email';
+  return 'note';
+}
 
 const draftsRoot = resolve(root, 'tasks/press-drafts');
 if (existsSync(draftsRoot))
@@ -159,8 +154,8 @@ if (existsSync(draftsRoot))
         ? articlePiece(slug)
         : pieceFor(`draft:${folder}/${file}`, { title: meta.venue ? `${meta.venue} — ${basename(file, '.md')}` : basename(file, '.md'), wave: 1, notes: source });
       const purpose = (meta.purpose || '').split('(')[0].trim();
-      const kind = DRAFT_KIND_BY_PURPOSE[purpose] ?? (purpose.startsWith('thread') ? 'x-thread' : purpose.startsWith('post') ? 'note' : 'note');
       const venue = (meta.venue || '').split(';')[0].trim();
+      const kind = draftKind(purpose, venue, file);
       const expression: ImportExpression = {
         kind,
         mode: 'authored',
