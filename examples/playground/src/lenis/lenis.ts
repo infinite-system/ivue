@@ -517,8 +517,11 @@ export class Lenis {
     // touch that stops a glide returns right here, and its swipe still
     // needs the start as the trail's first sample (Android may coalesce
     // the whole swipe into one touchmove, which alone has no span).
+    // The seed is the ANIMATED position, where the content is: a touch
+    // that stops a glide has a target hundreds of px ahead, and the reset
+    // below pulls the target back to the animated position anyway.
     if (isTouch && event.type === 'touchstart') {
-      this.touchTrail = [{ at: performance.now(), position: this.targetScroll }];
+      this.touchTrail = [{ at: performance.now(), position: this.animatedScroll }];
     }
 
     if (isTapToStop) {

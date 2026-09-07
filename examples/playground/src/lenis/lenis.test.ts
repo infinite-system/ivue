@@ -47,6 +47,20 @@ test('a re-flick Android coalesced into one touchmove still flicks: the touchsta
   trimTrail(late, 6_610, FLICK_WINDOW_MS);
   expect(late).toHaveLength(2);
   expect(trailVelocity(late, 0)).toBeCloseTo((257 / 260) * 16.7, 6);
+  // The seed is the animated position, not the glide's target: seeded at
+  // the target (13476, 327 px ahead of the content at 13149) the phone's
+  // 336 px swipe read as 1.19 px/frame; seeded where the content is, it
+  // reads the swipe.
+  const atTarget = [
+    { at: 15_980, position: 13_476 },
+    { at: 16_100, position: 13_149 + 336 }
+  ];
+  expect(trailVelocity(atTarget, 0)).toBeLessThan(2);
+  const atContent = [
+    { at: 15_980, position: 13_149 },
+    { at: 16_100, position: 13_149 + 336 }
+  ];
+  expect(trailVelocity(atContent, 0)).toBeCloseTo((336 / 120) * 16.7, 6);
 });
 
 // impossible-if-true: trailVelocity — A flick that dies because the last animation frame before the touchend saw no move.
