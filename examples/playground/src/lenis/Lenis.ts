@@ -80,6 +80,17 @@ class $Lenis {
     return ((last.position - first.position) / span) * this.FRAME_MS;
   }
 
+  /**
+   * A flick's velocity with the interrupted glide's added back, when the
+   * flick runs the same way; a flick the other way, or a swipe too slow
+   * to be a flick, drops the carry.
+   */
+  // invariant: A flick carries the glide it interrupted (examples/playground/src/lenis/lenis.invariants.md)
+  static carryVelocity(flick: number, carried: number): number {
+    if (carried === 0 || Math.sign(flick) !== Math.sign(carried)) return flick;
+    return flick + carried;
+  }
+
   constructor({
     wrapper = window,
     content = document.documentElement,
@@ -217,17 +228,6 @@ class $Lenis {
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
     return this.constructor as typeof $Lenis;
-  }
-
-  /**
-   * A flick's velocity with the interrupted glide's added back, when the
-   * flick runs the same way; a flick the other way, or a swipe too slow
-   * to be a flick, drops the carry.
-   */
-  // invariant: A flick carries the glide it interrupted (examples/playground/src/lenis/lenis.invariants.md)
-  static carryVelocity(flick: number, carried: number): number {
-    if (carried === 0 || Math.sign(flick) !== Math.sign(carried)) return flick;
-    return flick + carried;
   }
 
   /* The instance */
