@@ -97,6 +97,14 @@ export class Lenis {
    */
   private touchTrail: Array<{ at: number; position: number }> = [];
   /**
+   * A touch has landed and no move has come yet. The glide keeps running
+   * until the first move — the finger then takes over from wherever the
+   * content is — and a touch that ends with no move stops it (tap to
+   * stop). Stopping at the touchstart froze the content for the ~200 ms
+   * Android holds the first move back, then jumped: a stall per re-flick.
+   */
+  private touchPending = false;
+  /**
    * An optional sink for one line per gesture event and decision — the
    * on-device touch log sets it; null costs nothing.
    */
@@ -506,35 +514,38 @@ export class Lenis {
     // }
 
     const isClickOrTap = deltaX === 0 && deltaY === 0;
+    const now = performance.now();
     this.trace?.(
       `${event.type} d=(${Math.round(deltaX)},${Math.round(deltaY)}) flag=${Boolean(
         (event as Event & { lenisStopPropagation?: boolean }).lenisStopPropagation
       )} scrolling=${String(this.isScrolling)} v=${this.velocity.toFixed(1)} target=${Math.round(this.targetScroll)} anim=${Math.round(this.animatedScroll)} stopped=${this.isStopped} locked=${this.isLocked}`
     );
 
-    const isTapToStop =
-      this.options.syncTouch &&
-      isTouch &&
-      event.type === 'touchstart' &&
-      isClickOrTap &&
-      !this.isStopped &&
-      !this.isLocked;
-
-    // The touchstart seeds the flick trail BEFORE any early return: a
-    // touch that stops a glide returns right here, and its swipe still
-    // needs the start as the trail's first sample (Android may coalesce
-    // the whole swipe into one touchmove, which alone has no span).
-    // The seed is the ANIMATED position, where the content is: a touch
-    // that stops a glide has a target hundreds of px ahead, and the reset
-    // below pulls the target back to the animated position anyway.
-    if (isTouch && event.type === 'touchstart') {
-      this.touchTrail = [{ at: performance.now(), position: this.animatedScroll }];
-    }
-
-    if (isTapToStop) {
-      this.trace?.('tap-to-stop: reset');
-      this.reset();
-      return;
+    if (this.options.syncTouch && isTouch && !this.isStopped && !this.isLocked) {
+      if (event.type === 'touchstart' && isClickOrTap) {
+        // The touch is pending: the glide runs on. The trail is seeded at
+        // the animated position now and re-seeded at the first move, so a
+        // whole swipe Android coalesces into one move still has a span.
+        this.touchPending = true;
+        this.touchTrail = [{ at: now, position: this.animatedScroll }];
+        this.trace?.('touch pending: glide runs on');
+        return;
+      }
+      if (this.touchPending && event.type === 'touchmove') {
+        // The finger takes over from where the content IS: the glide's
+        // target, hundreds of px ahead, is dropped.
+        this.touchPending = false;
+        this.animate.stop();
+        this.targetScroll = this.animatedScroll;
+        this.touchTrail[0] = { at: this.touchTrail[0]?.at ?? now, position: this.animatedScroll };
+        this.trace?.('finger takes over');
+      } else if (this.touchPending && (event.type === 'touchend' || event.type === 'touchcancel')) {
+        // A touch with no move: tap to stop.
+        this.touchPending = false;
+        this.trace?.('tap-to-stop: reset');
+        this.reset();
+        return;
+      }
     }
 
     // const isPullToRefresh =
@@ -617,8 +628,7 @@ export class Lenis {
     let flickVelocity = this.velocity;
     let trailLength = 0;
     if (isTouch) {
-      const now = performance.now();
-      // The touchstart seeded the trail above, ahead of the tap-to-stop return.
+      // The touchstart seeded the trail above.
       if (event.type === 'touchmove') {
         this.touchTrail.push({ at: now, position: this.targetScroll + delta });
         trimTrail(this.touchTrail, now, FLICK_WINDOW_MS);
