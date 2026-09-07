@@ -839,6 +839,11 @@ class $VirtualScrollerSelection {
    * here the drag is any other drag: extendTo, the edge zone, endDrag.
    */
   // invariant: On a touch device the selection is drawn by the class (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  /** A touch the touch class claims stops any glide under it. */
+  holdScroll() {
+    this.owner.holdScroll();
+  }
+
   beginFromEnd(fixed: VirtualScrollerSelection.Position, x: number, y: number): boolean {
     const wrapper = this.owner.itemsWrapperElement.value;
     if (!wrapper) return false;
@@ -1531,5 +1536,7 @@ export namespace VirtualScrollerSelection {
     scrollBy(delta: number): void;
     /** Make the engine paint what the write mounted — a no-op outside WebKit. */
     nudgePaint(): void;
+    /** Stop a glide where the content is — a touch the selection claims. */
+    holdScroll(): void;
   }
 }

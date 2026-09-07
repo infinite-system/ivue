@@ -1832,6 +1832,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.lenis?.tune(motion);
   }
 
+  /** Stop a glide where the content is — a touch a capability claims. */
+  holdScroll() {
+    this.lenis?.hold();
+  }
+
   /** Scroll by a signed delta along the axis, immediately — the edge
    *  autoscroll's step. It writes lenis's target directly, so an upward
    *  drag is a scroll up, never mistaken for the reader taking over. */

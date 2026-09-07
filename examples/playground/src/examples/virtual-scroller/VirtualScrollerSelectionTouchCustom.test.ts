@@ -7,7 +7,7 @@ Goal: Let a finger select text in a virtual list without the system's selection:
 [A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If the device has neither touch points nor touch events, then attach does nothing: no overlay, no listeners, the rows stay selectable and the native selection paints as before.
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, laid whole since the frame clips, and the handles sit beside the true ends — the start above the first line, the end below the last, offset outward — so they never cover the text — shown only while their own spot is on screen with the knob whole, hidden otherwise; a null range hides the overlay.
-// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a handle, then the drag begins at once from the other end, the handle stops catching pointer events for its own drag, and lifting ends it with the chip offered.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a handle, then any glide is held where the content is, the drag begins at once from the other end, the handle stops catching pointer events for its own drag, and lifting ends it with the chip offered.
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a button or on the overlay, then no hold arms; a tap on an existing selection clears it; a swipe past the slop is a scroll.
 // domain-invariant: $VirtualScrollerSelectionTouchCustom — If a second tap lands within the double-tap window and slop of the first, then the word under it is selected as a touch range and the chip is offered; mouse events synthesized after a touch are that touch's.
 Impossible if true: A native selection created by this class.
@@ -71,6 +71,7 @@ function gesture(range: VirtualScrollerSelection.Range | null = null) {
     clear: vi.fn(),
     isInteractive: (target: EventTarget | null) =>
       target instanceof Element && target.closest('button, a, input') !== null,
+    holdScroll: vi.fn(),
     hasSelection: range !== null,
     range,
     itemsWrapperElement: { value: wrapper }
@@ -256,7 +257,7 @@ test('a still hold promotes, the first move lays the anchor at the resting point
   instance.dispose();
 });
 
-// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a handle, then the drag begins at once from the other end, the handle stops catching pointer events for its own drag, and lifting ends it with the chip offered.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a handle, then any glide is held where the content is, the drag begins at once from the other end, the handle stops catching pointer events for its own drag, and lifting ends it with the chip offered.
 // impossible-if-true: $VirtualScrollerSelectionTouchCustom — A handle drag that starts over instead of extending.
 // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('a finger on the end handle drags from the start at once, and on the start handle from the end', () => {
@@ -268,6 +269,10 @@ test('a finger on the end handle drags from the start at once, and on the start 
   expect(press.defaultPrevented).toBe(true);
   expect(owner.beginFromEnd).toHaveBeenCalledWith(at(2, 3), 200, 300);
   expect(owner.beginAt).not.toHaveBeenCalled();
+  // A grabbed handle holds any glide where the content is: its moves are
+  // flagged for Lenis to skip, so the glide would otherwise run on under
+  // the finger and read as a scroll.
+  expect(owner.holdScroll).toHaveBeenCalledTimes(1);
   expect(end.style.pointerEvents).toBe('none');
   expect(instance.selecting.value).toBe(true);
   const move = touchEvent('touchmove', [{ x: 200, y: 360 }]);

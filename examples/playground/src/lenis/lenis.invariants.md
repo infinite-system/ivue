@@ -89,9 +89,9 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 ### A touch on a glide keeps it running until the first move
 
-**Invariant:** If a finger lands while the content glides, then the glide runs on and the touch is pending; if that finger then moves, then the glide stops where the content is, the glide's target is dropped for the animated position, the trail is re-seeded there and the finger's sync takes over; if that finger lifts or is cancelled with no move, then the glide is reset — the tap that stops it.
+**Invariant:** If a finger lands while the content glides, then the glide runs on and the touch is pending; if that finger then moves, then the glide stops where the content is, the glide's target is dropped for the animated position, the trail is re-seeded there and the finger's sync takes over; if that finger lifts or is cancelled with no move, then the glide is reset — the tap that stops it; and if a class claims the touch for itself and flags its moves for Lenis to skip, then it calls `hold()` and the glide stops where the content is, since the pending touch would never see the move that takes over.
 
-**Scope:** `lenis.ts` `touchPending` and the touchstart / first-move / end branches of `onVirtualScroll`.
+**Scope:** `lenis.ts` `touchPending`, `hold`, and the touchstart / first-move / end branches of `onVirtualScroll`; the scroller's `holdScroll` seam down to the touch class.
 
 **Mechanism:** Stopping at the touchstart froze the content for the whole hold-back Android imposes on the first move, then the sync catch-up jumped: freeze, gap, jump, per re-flick — the stall five other fixes could not touch. Running on until the first move, the finger meets the content where it is.
 

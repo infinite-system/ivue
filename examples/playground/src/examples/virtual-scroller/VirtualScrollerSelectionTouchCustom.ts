@@ -455,6 +455,7 @@ class $VirtualScrollerSelectionTouchCustom {
       this.tap.at = null;
       this.hold.doubleTapped = true;
       this.hold.identifier = touch.identifier;
+      this.owner.holdScroll();
       if (event.target) this.followTouch(event.target);
       this.lockSelectability();
       if (this.owner.selectAt(touch.clientX, touch.clientY, 'word', 'touch')) {
@@ -489,6 +490,7 @@ class $VirtualScrollerSelectionTouchCustom {
   // invariant: A long press turns the next move into a selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   promoteHold() {
     this.hold.timer = null;
+    this.owner.holdScroll();
     this.selecting.value = true;
     this.selected.value = false;
   }
@@ -509,6 +511,9 @@ class $VirtualScrollerSelectionTouchCustom {
     if (!range) return;
     event.preventDefault();
     this.cancelHold();
+    // The handle's moves are flagged for Lenis to skip, so a glide under
+    // the finger would run on — held here, where the content is.
+    this.owner.holdScroll();
     const touch = event.touches[0];
     this.hold.identifier = touch.identifier;
     this.hold.handle = which;
@@ -667,6 +672,8 @@ export namespace VirtualScrollerSelectionTouchCustom {
     endDrag(): void;
     clear(): void;
     isInteractive(target: EventTarget | null): boolean;
+    /** Stop a glide where the content is: a claimed touch never scrolls. */
+    holdScroll(): void;
     readonly hasSelection: boolean;
     readonly range: VirtualScrollerSelection.Range | null;
     /** The wrapper the rows live in — the overlay is laid inside it. */

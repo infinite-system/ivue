@@ -670,6 +670,17 @@ export class Lenis {
   };
 
   /**
+   * Stop a glide where the content is, now. A touch that a class claims
+   * for itself — a selection handle, a long press, a double tap — flags
+   * its moves for Lenis to skip, so the pending touch would never see the
+   * move that takes over and the glide would run on under the finger.
+   */
+  hold() {
+    this.touchPending = false;
+    this.reset();
+  }
+
+  /**
    * Re-tune the motion options after construction: the gains, the lerps,
    * the flick inertia and the speed caps. Anything omitted is unchanged.
    */

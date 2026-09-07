@@ -132,6 +132,7 @@ function owner(stage: Stage, join = '\n') {
     rowText,
     scrollBy: vi.fn(),
     nudgePaint: vi.fn(),
+    holdScroll: vi.fn(),
     window
   };
 }
