@@ -494,7 +494,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Scope:** `VirtualScrollerPadding.ts`: `rowsBehind`, `rowsAhead`, `split`, `settle`, `pad`; the scroller's `scrollGap`, `scrollVelocity`, `halfPaddingQuantity` and `estimatedItemSize` accessors.
 
-**Mechanism:** The gap term is exact and needs no hysteresis: it shrinks every frame as the lerp converges, and the rows it releases are behind the viewport. The lookahead grows the frame the velocity does and shrinks only after the settle window, so the decay tail of a flick does not unmount rows the next flick needs; a reversal drops the held level at once.
+**Mechanism:** The gap term is exact and needs no hysteresis: it shrinks every frame as the lerp converges, and the rows it releases are behind the viewport. The lookahead grows the frame the velocity does, holds for as long as the content moves, and shrinks only at rest once the settle window has passed since it last grew, so the decay tail of a flick never unmounts a burst of rows mid-glide — a visible hitch on a phone — and keeps what the next flick needs; a reversal drops the held level at once.
 
 **Generates:** The `padding.before` / `padding.after` split the walk reads instead of one symmetric constant.
 

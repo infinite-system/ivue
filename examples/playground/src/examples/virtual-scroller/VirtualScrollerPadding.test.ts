@@ -8,7 +8,7 @@ Goal: Size the rows mounted beyond the visible window from the motion itself, so
 [A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
 // domain-invariant: $VirtualScrollerPadding — If the content moves at a speed, then the rows ahead cover the distance it travels in the lookahead, rounded up and capped, and a crawl counts as still.
 // domain-invariant: $VirtualScrollerPadding — If a pad is split, then the lookahead rows sit on the end the content moves toward and the gap rows on the end it comes from; at rest both ends carry the base.
-// domain-invariant: $VirtualScrollerPadding — If a new reading arrives, then a higher level replaces the held one at once, a lower one only after the settle window, and a reversal drops it immediately.
+// domain-invariant: $VirtualScrollerPadding — If a new reading arrives, then a higher level replaces the held one at once, a lower one never shrinks it while the content moves, rest shrinks it after the settle window, and a reversal drops it immediately.
 Impossible if true: A pad that shrinks on the first frame of a flick's decay.
 
 === GENERATOR-DESCRIBED ===
@@ -60,29 +60,26 @@ test('the split puts the lookahead rows ahead of the motion and the gap rows beh
   expect(Logic.split(3, 12, 16, 0)).toEqual({ before: 3, after: 3 });
 });
 
-// domain-invariant: $VirtualScrollerPadding — If a new reading arrives, then a higher level replaces the held one at once, a lower one only after the settle window, and a reversal drops it immediately.
+// domain-invariant: $VirtualScrollerPadding — If a new reading arrives, then a higher level replaces the held one at once, a lower one never shrinks it while the content moves, rest shrinks it after the settle window, and a reversal drops it immediately.
 // impossible-if-true: $VirtualScrollerPadding — A pad that shrinks on the first frame of a flick's decay.
-test('settle grows at once, shrinks only after the settle window, and drops on a turn', () => {
+test('settle grows at once, holds through the decay, shrinks at rest after the settle window, and drops on a turn', () => {
   const start = { ahead: 0, direction: 0 as const, since: 0 };
   const grown = Logic.settle(start, 10, 1, 100);
   expect(grown).toEqual({ ahead: 10, direction: 1, since: 100 });
-  // The first lower reading of the decay keeps the held level.
+  // Lower readings while the content still moves keep the held level —
+  // however long the decay tail runs — so no burst of unmounts lands mid-glide.
   expect(Logic.settle(grown, 4, 1, 101)).toBe(grown);
   expect(Logic.settle(grown, 4, 1, 100 + Logic.SETTLE_MS - 1)).toBe(grown);
-  // Once the window passes, the lower reading takes over.
-  expect(Logic.settle(grown, 4, 1, 100 + Logic.SETTLE_MS)).toEqual({
-    ahead: 4,
-    direction: 1,
-    since: 100 + Logic.SETTLE_MS
-  });
-  // A reversal drops to the new reading immediately — the held rows face the wrong way.
-  expect(Logic.settle(grown, 2, -1, 150)).toEqual({ ahead: 2, direction: -1, since: 150 });
-  // Coming to rest keeps the direction the rows already face.
+  expect(Logic.settle(grown, 4, 1, 100 + Logic.SETTLE_MS * 5)).toBe(grown);
+  // Rest inside the window still holds; rest once the window has passed shrinks.
+  expect(Logic.settle(grown, 0, 0, 100 + Logic.SETTLE_MS - 1)).toBe(grown);
   expect(Logic.settle(grown, 0, 0, 100 + Logic.SETTLE_MS)).toEqual({
     ahead: 0,
     direction: 1,
     since: 100 + Logic.SETTLE_MS
   });
+  // A reversal drops to the new reading immediately — the held rows face the wrong way.
+  expect(Logic.settle(grown, 2, -1, 150)).toEqual({ ahead: 2, direction: -1, since: 150 });
 });
 
 // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
@@ -101,9 +98,12 @@ test('pad() follows the lerp gap frame by frame and holds the lookahead across a
   owner.scrollVelocity = 8;
   owner.scrollGap = 80;
   expect(padding.pad(100)).toEqual({ before: 5, after: 18 });
-  // Settled: the lookahead drops to the reading.
+  // Still moving past the window: the lookahead is held, not shrunk mid-glide.
   owner.scrollGap = 0;
-  expect(padding.pad(100 + Logic.SETTLE_MS)).toEqual({ before: 3, after: 6 });
+  expect(padding.pad(100 + Logic.SETTLE_MS)).toEqual({ before: 3, after: 18 });
+  // At rest: the lookahead drops to the base.
+  owner.scrollVelocity = 0;
+  expect(padding.pad(200 + Logic.SETTLE_MS)).toEqual({ before: 3, after: 3 });
   // A flick back: everything mirrors.
   owner.scrollVelocity = -40;
   owner.scrollGap = -800;

@@ -30,9 +30,10 @@
 //     it, a flick that stops the creep would leave its pad mounted.
 //
 // The hysteresis is what keeps the window from thrashing. A pad grows the
-// frame the velocity does; it shrinks only once the velocity has been
-// below the grown level for SETTLE_MS, so the decay tail of a flick does
-// not unmount rows it will need again if the next flick comes.
+// frame the velocity does; it holds for as long as the content moves and
+// shrinks only at rest, once SETTLE_MS has passed since it last grew, so
+// the decay tail of a flick never unmounts a burst of rows mid-glide (a
+// visible hitch on a phone) and keeps what the next flick needs.
 import { ref } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
@@ -119,9 +120,12 @@ class $VirtualScrollerPadding {
 
   /**
    * The held level after a new reading, with hysteresis: a higher reading
-   * replaces the level at once; a lower one only after SETTLE_MS of
-   * lower readings; a direction change drops the level to the reading,
-   * since rows held ahead of the old direction are behind the new one.
+   * replaces the level at once; a lower reading never shrinks it while
+   * the content still moves — the decay tail of a flick is when a burst
+   * of unmounts would be seen as a hitch — and rest shrinks it once the
+   * settle window has passed since the last growth; a direction change
+   * drops the level to the reading, since rows held ahead of the old
+   * direction are behind the new one.
    */
   static settle(
     held: VirtualScrollerPadding.Held,
@@ -133,8 +137,8 @@ class $VirtualScrollerPadding {
     if (turned || ahead >= held.ahead) {
       return { ahead, direction: direction || held.direction, since: now };
     }
-    if (now - held.since >= this.SETTLE_MS) {
-      return { ahead, direction: direction || held.direction, since: now };
+    if (ahead === 0 && now - held.since >= this.SETTLE_MS) {
+      return { ahead, direction: held.direction, since: now };
     }
     return held;
   }
