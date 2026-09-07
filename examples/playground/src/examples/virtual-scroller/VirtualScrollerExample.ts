@@ -169,7 +169,10 @@ class $VirtualScrollerExample {
     this.touchLog.value = [...this.touchLog.value.slice(-79), `${stamp}s ${line}`];
   }
 
-  /** Put the whole log on the clipboard — a phone has no console to read. */
+  /** Put the whole log on the clipboard — a phone has no console to read.
+   *  The clipboard API exists only in a secure context (https, localhost);
+   *  a dev server reached over plain http on the LAN gets the textarea
+   *  fallback, which Android Chrome still honours on a tap. */
   copyTouchLog() {
     const text = this.touchLogText;
     const done = () => {
@@ -177,10 +180,30 @@ class $VirtualScrollerExample {
       setTimeout(() => (this.touchLogCopied.value = false), 1200);
     };
     if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(text).then(done, () => this.logTouch('copy failed'));
+      navigator.clipboard.writeText(text).then(done, () => this.copyTouchLogFallback(text, done));
       return;
     }
-    this.logTouch('copy unavailable');
+    this.copyTouchLogFallback(text, done);
+  }
+
+  protected copyTouchLogFallback(text: string, done: () => void) {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    area.setSelectionRange(0, text.length);
+    let copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } catch {
+      copied = false;
+    }
+    area.remove();
+    if (copied) done();
+    else this.logTouch('copy unavailable — select the log by hand');
   }
 
   clearTouchLog() {
