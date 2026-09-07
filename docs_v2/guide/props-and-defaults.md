@@ -145,7 +145,7 @@ class $Scroller {
   }
 
   static get propsDefaults() {
-    return { scroll: this.SCROLL_KNOBS };
+    return { scroll: this.scrollKnobs };
   }
 
   props: Scroller.MergedProps;

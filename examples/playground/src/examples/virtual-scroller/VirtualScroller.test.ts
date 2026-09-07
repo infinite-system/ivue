@@ -166,7 +166,7 @@ test('the props object fuses every default into the types, leaves the required l
 // invariant: The feel is one nested prop complete at every depth (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('a nested knob left out reads as its tuned default at every depth, a supplied leaf wins, and Lenis reads the merged leaves', () => {
   const tuned = scroller(rows(3));
-  expect(tuned.instance.props.scroll).toEqual(VirtualScroller.Class.SCROLL_KNOBS);
+  expect(tuned.instance.props.scroll).toEqual(VirtualScroller.Class.scrollKnobs);
   expect(tuned.instance.autoscrollProfiles.mouse.zonePx).toBe(32);
   const set = scroller(rows(3), {
     scroll: { wheel: { gain: 2 } },
