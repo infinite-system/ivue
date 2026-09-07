@@ -1,7 +1,6 @@
 import { Reactive } from 'ivue';
 import { onMounted, ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type { PressPosting } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 import { Format } from '../platform/Format';
 import { PressKinds } from './PressKinds';
@@ -10,16 +9,16 @@ import { PressKinds } from './PressKinds';
 // platform, venue, URL, remote ids, who posted, the calendar entry it
 // fulfilled. Filter by text to see where one piece has been.
 class $SentModel {
-  protected get $app() {
-    return AppStore.use();
-  }
-
   constructor() {
     onMounted(() => this.load());
   }
 
+  protected get $app() {
+    return AppStore.Class.use();
+  }
+
   get rows() {
-    return shallowRef<PressPosting[]>([]);
+    return shallowRef<Api.PressPosting[]>([]);
   }
 
   get loading() {
@@ -30,7 +29,7 @@ class $SentModel {
     return ref('');
   }
 
-  get filtered(): PressPosting[] {
+  get filtered(): Api.PressPosting[] {
     const needle = this.filter.value.trim().toLowerCase();
     if (!needle) return this.rows.value;
     return this.rows.value.filter((row) =>
@@ -38,6 +37,10 @@ class $SentModel {
         .filter(Boolean)
         .some((field) => String(field).toLowerCase().includes(needle)),
     );
+  }
+
+  get isLoadingEmpty(): boolean {
+    return this.loading.value && this.filtered.length === 0;
   }
 
   get isEmpty(): boolean {
@@ -55,31 +58,35 @@ class $SentModel {
     }
   }
 
-  whenLabel(row: PressPosting): string {
+  whenLabel(row: Api.PressPosting): string {
     return `${Format.Class.dateTime(row.postedAt)} · ${PressKinds.Class.easternTime(row.postedAt)} ET`;
   }
 
-  kindLabel(row: PressPosting): string {
+  kindLabel(row: Api.PressPosting): string {
     return PressKinds.Class.label(row.kind ?? '');
   }
 
-  platformLabel(row: PressPosting): string {
+  platformLabel(row: Api.PressPosting): string {
     return PressKinds.Class.PLATFORM_LABELS[row.platform] ?? row.platform;
   }
 
-  byLabel(row: PressPosting): string {
+  byLabel(row: Api.PressPosting): string {
     return row.postedBy === 'api' ? 'the Worker' : 'by hand';
   }
 
-  remoteLabel(row: PressPosting): string {
+  remoteLabel(row: Api.PressPosting): string {
     return row.remoteIds.join(', ') || '—';
   }
 
-  urlLabel(row: PressPosting): string {
+  calendarLabel(row: Api.PressPosting): string {
+    return row.calendarId ?? '—';
+  }
+
+  urlLabel(row: Api.PressPosting): string {
     return row.url ?? '—';
   }
 
-  openPiece(row: PressPosting) {
+  openPiece(row: Api.PressPosting) {
     if (row.pieceId) this.$app.openPiece(row.pieceId);
   }
 }

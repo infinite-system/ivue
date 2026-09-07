@@ -7,9 +7,8 @@ Impossible if true: a keystroke that sends a request
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PieceModel } from './PieceModel';
 import { Api } from '../platform/Api';
-import type { PressExpression, PressPiece } from '../platform/Api';
 
-function expression(id: number, overrides: Partial<PressExpression> = {}): PressExpression {
+function expression(id: number, overrides: Partial<Api.PressExpression> = {}): Api.PressExpression {
   return {
     id,
     pieceId: 1,
@@ -36,7 +35,7 @@ function expression(id: number, overrides: Partial<PressExpression> = {}): Press
   };
 }
 
-let piece: PressPiece;
+let piece: Api.PressPiece;
 let patches: unknown[] = [];
 
 beforeEach(() => {

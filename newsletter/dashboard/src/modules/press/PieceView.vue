@@ -7,11 +7,11 @@ const model = new PieceModel.Class();
 const {
   // state refs
   piece,
-  loading,
   titleDraft,
   claimDraft,
   notesDraft,
   baseDraft,
+  saveState,
   split,
   activeExpressionId,
   postings,
@@ -23,8 +23,8 @@ const {
 
 <template>
   <section class="view press press-piece" data-view="press-piece" @keydown="model.onKeydown($event)">
-    <p v-if="loading && !piece" class="muted">Loading…</p>
-    <p v-else-if="!piece" class="muted">No such piece.</p>
+    <p v-if="model.isLoadingPiece" class="muted">Loading…</p>
+    <p v-else-if="model.isMissing" class="muted">No such piece.</p>
 
     <q-splitter v-else v-model="split" class="press-splitter" :limits="[26, 60]">
       <template #before>
@@ -33,10 +33,10 @@ const {
             <p class="press-eyebrow">{{ model.slugLabel }}</p>
             <input v-model="titleDraft" class="press-title-input" aria-label="Title" />
             <input v-model="claimDraft" class="press-claim-input" placeholder="The claim, in one line" aria-label="Claim" />
-            <span class="press-save" :class="model.saveState.value">{{ model.saveLabel }}</span>
+            <span class="press-save" :class="saveState">{{ model.saveLabel }}</span>
           </header>
 
-          <img v-if="model.bannerUrl" class="press-banner" :src="'https://ivue.dev' + model.bannerUrl" alt="" />
+          <img v-if="model.bannerSrc" class="press-banner" :src="model.bannerSrc" alt="" />
 
           <div class="press-base">
             <div class="press-base-head">

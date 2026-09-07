@@ -1,8 +1,8 @@
 import { Reactive } from 'ivue';
+import { Static } from 'ivue/extras';
 import { Notify } from 'quasar';
 import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { Api } from '../platform/Api';
-import type { PressBaseRevision, PressExpression, PressPiece, PressPosting } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 import { Format } from '../platform/Format';
 import { PressKinds } from './PressKinds';
@@ -15,10 +15,6 @@ import { PressKinds } from './PressKinds';
 class $PieceModel {
   static readonly AUTOSAVE_MS = 800;
 
-  protected get $app() {
-    return AppStore.use();
-  }
-
   constructor() {
     onMounted(() => this.load());
     onUnmounted(() => this.flush());
@@ -28,10 +24,19 @@ class $PieceModel {
     );
   }
 
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $PieceModel;
+  }
+
+  protected get $app() {
+    return AppStore.Class.use();
+  }
+
   /* ---- state ---- */
 
   get piece() {
-    return shallowRef<PressPiece | null>(null);
+    return shallowRef<Api.PressPiece | null>(null);
   }
 
   get loading() {
@@ -72,11 +77,11 @@ class $PieceModel {
   }
 
   get postings() {
-    return shallowRef<PressPosting[]>([]);
+    return shallowRef<Api.PressPosting[]>([]);
   }
 
   get baseRevisions() {
-    return shallowRef<PressBaseRevision[]>([]);
+    return shallowRef<Api.PressBaseRevision[]>([]);
   }
 
   get baseRevisionsOpen() {
@@ -93,11 +98,11 @@ class $PieceModel {
     return this.$app.pieceId;
   }
 
-  get expressions(): PressExpression[] {
+  get expressions(): Api.PressExpression[] {
     return this.piece.value?.expressions ?? [];
   }
 
-  get activeExpression(): PressExpression | null {
+  get activeExpression(): Api.PressExpression | null {
     const id = this.activeExpressionId.value;
     return this.expressions.find((expression) => expression.id === id) ?? this.expressions[0] ?? null;
   }
@@ -149,6 +154,18 @@ class $PieceModel {
     return this.piece.value?.banner ?? '';
   }
 
+  get bannerSrc(): string {
+    return this.bannerUrl ? `https://ivue.dev${this.bannerUrl}` : '';
+  }
+
+  get isLoadingPiece(): boolean {
+    return this.loading.value && this.piece.value === null;
+  }
+
+  get isMissing(): boolean {
+    return !this.loading.value && this.piece.value === null;
+  }
+
   get slugLabel(): string {
     return this.piece.value?.slug ? `from ${this.piece.value.slug}` : 'no article behind this piece';
   }
@@ -179,7 +196,7 @@ class $PieceModel {
     }
   }
 
-  adopt(piece: PressPiece) {
+  adopt(piece: Api.PressPiece) {
     this.piece.value = piece;
     this.titleDraft.value = piece.title;
     this.claimDraft.value = piece.claim;
@@ -196,7 +213,7 @@ class $PieceModel {
     if (!this.isDirty) return;
     this.saveState.value = 'dirty';
     if (this.saveTimer.value !== null) clearTimeout(this.saveTimer.value);
-    this.saveTimer.value = setTimeout(() => this.saveNow(), $PieceModel.AUTOSAVE_MS);
+    this.saveTimer.value = setTimeout(() => this.saveNow(), this.self.AUTOSAVE_MS);
   }
 
   onKeydown(event: KeyboardEvent) {
@@ -246,20 +263,20 @@ class $PieceModel {
     this.activeExpressionId.value = id;
   }
 
-  isActive(expression: PressExpression): boolean {
+  isActive(expression: Api.PressExpression): boolean {
     return this.activeExpression?.id === expression.id;
   }
 
-  tabLabel(expression: PressExpression): string {
+  tabLabel(expression: Api.PressExpression): string {
     const venue = expression.venue && expression.venue !== 'X' ? ` · ${expression.venue}` : '';
     return `${PressKinds.Class.label(expression.kind)}${venue}`;
   }
 
-  tabTone(expression: PressExpression): string {
+  tabTone(expression: Api.PressExpression): string {
     return `state-${expression.status}`;
   }
 
-  modeMark(expression: PressExpression): string {
+  modeMark(expression: Api.PressExpression): string {
     return expression.mode === 'derived' ? 'derived' : 'authored';
   }
 
@@ -280,7 +297,7 @@ class $PieceModel {
   }
 
   /** a card saved, approved, scheduled… — its fresh record replaces the tab */
-  onExpressionChanged(record: PressExpression) {
+  onExpressionChanged(record: Api.PressExpression) {
     const piece = this.piece.value;
     if (!piece) return;
     const known = piece.expressions.some((expression) => expression.id === record.id);
@@ -323,7 +340,7 @@ class $PieceModel {
     this.baseRevisionsOpen.value = false;
   }
 
-  async restoreBase(revision: PressBaseRevision) {
+  async restoreBase(revision: Api.PressBaseRevision) {
     try {
       await Api.Class.pressRestoreBase(this.id, revision.id);
       this.baseRevisionsOpen.value = false;
@@ -334,22 +351,22 @@ class $PieceModel {
     }
   }
 
-  revisionLabel(revision: PressBaseRevision): string {
+  revisionLabel(revision: Api.PressBaseRevision): string {
     return `${Format.Class.dateTime(revision.savedAt)} · ${revision.author}`;
   }
 
-  revisionExcerpt(revision: PressBaseRevision): string {
+  revisionExcerpt(revision: Api.PressBaseRevision): string {
     const line = revision.base.split('\n').find((candidate) => candidate.trim()) ?? '';
     return line.length > 90 ? `${line.slice(0, 87)}…` : line;
   }
 
-  postingLabel(row: PressPosting): string {
+  postingLabel(row: Api.PressPosting): string {
     return `${Format.Class.dateTime(row.postedAt)} · ${PressKinds.Class.PLATFORM_LABELS[row.platform] ?? row.platform}${row.venue ? ` · ${row.venue}` : ''}${row.postedBy === 'api' ? ' · by the Worker' : ''}`;
   }
 }
 
 export namespace PieceModel {
-  export const $Class = $PieceModel;
+  export const $Class = Static($PieceModel); // anchor — it declares statics
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

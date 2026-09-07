@@ -7,9 +7,8 @@ Impossible if true: a due expression shown without the text to copy
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueueModel } from './QueueModel';
 import { Api } from '../platform/Api';
-import type { PressExpression, PressQueue } from '../platform/Api';
 
-function expression(overrides: Partial<PressExpression> = {}): PressExpression {
+function expression(overrides: Partial<Api.PressExpression> = {}): Api.PressExpression {
   return {
     id: 5,
     pieceId: 1,
@@ -43,7 +42,7 @@ beforeEach(() => {
   acts = [];
   cancelled = [];
   vi.stubGlobal('sessionStorage', { getItem: () => null, setItem: () => undefined, removeItem: () => undefined });
-  const queue: PressQueue = {
+  const queue: Api.PressQueue = {
     upcoming: [
       { id: 1, kind: 'expression', payload: { expressionId: '5', platform: 'linkedin' }, dueAt: 1_800_000_000, createdAt: 0, executedAt: null, result: null, expression: expression({ status: 'scheduled' }) },
       { id: 2, kind: 'tweet', payload: { text: 'plain tweet' }, dueAt: 1_800_000_100, createdAt: 0, executedAt: null, result: null, expression: null },

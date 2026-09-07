@@ -21,7 +21,7 @@ defineProps<{ model: ExpressionModel.Instance }>();
         />
         <p class="muted hn-sub">
           <span class="x-count" :class="{ over: model.bodyOver }">{{ model.countLabel }}</span>
-          · {{ model.piece.links[0]?.url ?? 'no link' }} · 1 point by {{ model.xName.toLowerCase() }} just now
+          · {{ model.pieceLinkLabel }} · 1 point by {{ model.xName.toLowerCase() }} just now
         </p>
       </div>
     </div>

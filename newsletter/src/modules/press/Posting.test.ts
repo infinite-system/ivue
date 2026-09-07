@@ -15,6 +15,7 @@ import { makeTestEnv } from '../../../test/TestDatabase';
 
 describe('Posting', () => {
   // domain-invariant: $Posting — If an expression is posted twice, then the ledger holds two rows and the first stands
+  // impossible-if-true: $Posting — a posting without a ledger row
   it('records, reads by id, per expression, per piece, and recent across the press', async () => {
     const env = makeTestEnv();
     const piece = await Piece.Class.create(env, { title: 'T', base: 'Words.' });

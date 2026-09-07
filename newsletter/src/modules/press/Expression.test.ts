@@ -9,7 +9,7 @@ Goal: Prove an expression is one platform projection with a mode — derived row
 Impossible if true: a scheduled expression ships text that was not the approved text
 
 === GENERATOR-DESCRIBED ===
-$Expression is the press's row: kind, mode, body, meta, mirrors, status, skip, calendar id. Status moves forward by explicit verbs; edits and regeneration return it to draft on their own. Only X posts through an API; the rest goes due and is marked sent by hand.
+$Expression is the press's row: kind, mode, body, meta, mirrors, status, skip, calendar id. $Expression moves status forward by explicit verbs; edits and regeneration return it to draft on their own. $Expression posts only to X through an API; every other platform goes due and is marked sent by hand.
 */
 import { afterEach, describe, expect, it } from 'vitest';
 import { Expression } from './Expression';

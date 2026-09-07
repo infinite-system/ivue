@@ -2,7 +2,6 @@ import { Reactive } from 'ivue';
 import { Notify } from 'quasar';
 import { onMounted, ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type { BlogPostOption, PressPieceSummary, PressState } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 import { PressKinds } from './PressKinds';
 
@@ -11,18 +10,18 @@ import { PressKinds } from './PressKinds';
 // status, kind and wave; keyboard moves through the rows. "New piece"
 // starts blank or from a blog post (copied in, never linked).
 class $PiecesModel {
-  protected get $app() {
-    return AppStore.use();
-  }
-
   constructor() {
     onMounted(() => this.load());
+  }
+
+  protected get $app() {
+    return AppStore.Class.use();
   }
 
   /* ---- state ---- */
 
   get rows() {
-    return shallowRef<PressPieceSummary[]>([]);
+    return shallowRef<Api.PressPieceSummary[]>([]);
   }
 
   get loading() {
@@ -63,7 +62,7 @@ class $PiecesModel {
   }
 
   get blogPosts() {
-    return shallowRef<BlogPostOption[]>([]);
+    return shallowRef<Api.BlogPostOption[]>([]);
   }
 
   get creating() {
@@ -74,6 +73,10 @@ class $PiecesModel {
 
   get count(): number {
     return this.rows.value.length;
+  }
+
+  get isLoadingEmpty(): boolean {
+    return this.loading.value && this.rows.value.length === 0;
   }
 
   get isEmpty(): boolean {
@@ -143,7 +146,7 @@ class $PiecesModel {
     this.load();
   }
 
-  open(piece: PressPieceSummary) {
+  open(piece: Api.PressPieceSummary) {
     this.$app.openPiece(piece.id);
   }
 
@@ -168,7 +171,7 @@ class $PiecesModel {
     }
   }
 
-  async approveFirstDraft(piece: PressPieceSummary) {
+  async approveFirstDraft(piece: Api.PressPieceSummary) {
     const draft = piece.expressions.find((state) => state.status === 'draft');
     if (!draft) return;
     try {
@@ -217,32 +220,32 @@ class $PiecesModel {
 
   /* ---- labels ---- */
 
-  kindLabel(state: PressState): string {
+  kindLabel(state: Api.PressState): string {
     return PressKinds.Class.label(state.kind);
   }
 
-  stateTitle(state: PressState): string {
+  stateTitle(state: Api.PressState): string {
     const venue = state.venue ? ` @ ${state.venue}` : '';
     return `${PressKinds.Class.label(state.kind)}${venue} — ${PressKinds.Class.statusLabel(state.status)}${state.mode === 'derived' ? ' (derived)' : ''}`;
   }
 
-  stateTone(state: PressState): string {
+  stateTone(state: Api.PressState): string {
     return `state-${state.status}`;
   }
 
-  hasExpressions(piece: PressPieceSummary): boolean {
+  hasExpressions(piece: Api.PressPieceSummary): boolean {
     return piece.expressions.length > 0;
   }
 
-  waveLabel(piece: PressPieceSummary): string {
+  waveLabel(piece: Api.PressPieceSummary): string {
     return piece.wave === 2 ? 'wave 2' : 'wave 1';
   }
 
-  nextDueLabel(piece: PressPieceSummary): string {
+  nextDueLabel(piece: Api.PressPieceSummary): string {
     return piece.nextDueAt ? PressKinds.Class.easternTime(piece.nextDueAt) + ' ET' : '—';
   }
 
-  calendarLabel(piece: PressPieceSummary): string {
+  calendarLabel(piece: Api.PressPieceSummary): string {
     return piece.calendarIds.length ? `${piece.calendarIds.length} placed` : '—';
   }
 }

@@ -3,7 +3,7 @@
 // no mount needed.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReleaseCalendarModel } from './ReleaseCalendarModel';
-import { ReleaseDrafts } from './ReleaseDrafts';
+import { Api } from '../platform/Api';
 import { PRESS_ENTRIES, type PressEntry } from './release-calendar.data';
 
 function makeEntry(overrides: Partial<PressEntry>): PressEntry {
@@ -15,7 +15,7 @@ function makeEntry(overrides: Partial<PressEntry>): PressEntry {
     channel: 'hn',
     article: 'introducing-ivue',
     angle: 'Show HN launch',
-    drafts: [],
+    copy: [],
     effortMin: 30,
     wave: 1,
     lang: 'en',
@@ -142,32 +142,44 @@ describe('the entry dialog', () => {
     expect(model.isDialogOpen).toBe(false);
   });
 
-  it('resolves the entry drafts — X keys and bundled markdown — dropping unknown ones', () => {
-    PRESS_ENTRIES.push(
-      makeEntry({
-        id: '2026-09-08--x',
-        date: '2026-09-08',
-        venue: 'X — launch thread',
-        channel: 'x',
-        drafts: ['x:thread', 'x:hooks:2', 'docs_v2/blog/x-launch-thread.md', 'nope.md'],
-      }),
-    );
+  it('reads the copy behind an entry from the press by source key, deduped, thread segments live only', async () => {
+    const thread: Api.PressExpression = {
+      id: 40, pieceId: 7, kind: 'x-thread', mode: 'authored', parentId: null, position: 0, label: '', venue: 'X', body: '',
+      meta: {}, mirrors: [], status: 'approved', skipped: false, calendarId: null, approvedAt: 1, scheduledAt: null, sentAt: null,
+      sentUrl: null, createdAt: 0, updatedAt: 0,
+      children: [
+        { id: 41, pieceId: 7, kind: 'x-segment', mode: 'authored', parentId: 40, position: 0, label: '', venue: '', body: 'One', meta: {}, mirrors: [], status: 'draft', skipped: false, calendarId: null, approvedAt: null, scheduledAt: null, sentAt: null, sentUrl: null, createdAt: 0, updatedAt: 0, children: null },
+        { id: 42, pieceId: 7, kind: 'x-segment', mode: 'authored', parentId: 40, position: 1, label: '', venue: '', body: 'Two', meta: {}, mirrors: [], status: 'draft', skipped: true, calendarId: null, approvedAt: null, scheduledAt: null, sentAt: null, sentUrl: null, createdAt: 0, updatedAt: 0, children: null },
+      ],
+    };
+    const acts: [number, string, unknown][] = [];
+    Api.Class = class extends Api.$Class {
+      static override async pressExpressionsForSource(key: string) {
+        return key === 'nope.md' ? [] : [thread];
+      }
+      static override async pressAct(id: number, action: string, body: unknown) {
+        acts.push([id, action, body]);
+        return { ...thread, status: action === 'sent' ? 'sent' : 'scheduled' } as Api.PressExpression;
+      }
+    };
+    PRESS_ENTRIES.push(makeEntry({ id: '2026-09-08--x', date: '2026-09-08', venue: 'X — launch thread', channel: 'x', copy: ['x:thread', 'docs_v2/blog/x-launch-thread.md', 'nope.md'] }));
     const model = new ReleaseCalendarModel.Class();
+    Object.defineProperty(model, '$app', { value: { reportFailure() {}, openPiece() {} } });
     model.open('2026-09-08--x');
-    expect(model.openDrafts.map((draft) => draft.key)).toEqual([
-      'x:thread',
-      'x:hooks:2',
-      'docs_v2/blog/x-launch-thread.md',
-    ]);
-    expect(model.hasDraftTabs).toBe(true);
-    // the first draft shows until one is picked
-    expect(model.activeDraft?.key).toBe('x:thread');
-    expect(model.activeDraft?.segments?.length).toBe(9);
-    model.showDraft('docs_v2/blog/x-launch-thread.md');
-    expect(model.isDraftActive('docs_v2/blog/x-launch-thread.md')).toBe(true);
-    // the blog thread splits on its rules and loses its frontmatter + heading
-    expect(model.activeDraft?.segments?.[0]).toMatch(/^Every framework bet on classes/);
-    expect(model.activeDraft?.body).not.toContain('private: true');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(model.openExpressions.value.map((row) => row.id)).toEqual([40]);
+    expect(model.hasCopyTabs).toBe(false);
+    expect(model.expressionTitle(model.activeExpression!)).toBe('X thread');
+    expect(model.activeSegments?.map((child) => child.body)).toEqual(['One']);
+    expect(model.activeBody).toBe('One');
+    // one placement, one expression: schedule for the day, and mark posted writes the ledger
+    expect(model.canScheduleHere).toBe(true);
+    await model.scheduleHere();
+    expect(acts[0][1]).toBe('schedule');
+    await model.toggleOpenDone();
+    expect(acts[1]).toEqual([40, 'sent', { venue: 'X — launch thread', calendarId: '2026-09-08--x' }]);
+    expect(model.isDone('2026-09-08--x')).toBe(true);
+    Api.Class = Api.$Class;
   });
 
   it('labels the copy button Copied for a moment after a successful copy', async () => {
@@ -175,13 +187,12 @@ describe('the entry dialog', () => {
     const writeText = vi.fn(async () => undefined);
     vi.stubGlobal('navigator', { clipboard: { writeText } });
     const model = new ReleaseCalendarModel.Class();
-    const draft = ReleaseDrafts.Class.resolve('x:single')!;
-    expect(model.copyLabel(draft.key)).toBe('Copy');
-    await model.copyDraft(draft);
-    expect(writeText).toHaveBeenCalledWith(draft.body);
-    expect(model.copyLabel(draft.key)).toBe('Copied ✓');
+    expect(model.copyLabel('all')).toBe('Copy');
+    await model.copyText('all', 'the text');
+    expect(writeText).toHaveBeenCalledWith('the text');
+    expect(model.copyLabel('all')).toBe('Copied ✓');
     vi.advanceTimersByTime(ReleaseCalendarModel.Class.COPIED_MS + 1);
-    expect(model.copyLabel(draft.key)).toBe('Copy');
+    expect(model.copyLabel('all')).toBe('Copy');
     vi.useRealTimers();
   });
 });

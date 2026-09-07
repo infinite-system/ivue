@@ -1,7 +1,6 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type { CommentPage, CommentRow } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 
 // The moderation queue: pending comments first (approve/delete), the
@@ -14,7 +13,7 @@ class $CommentsModel {
 
   // the app store — resolved and cached on first touch (store pattern)
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   get PAGE_SIZE() {
@@ -22,7 +21,7 @@ class $CommentsModel {
   }
 
   get rows() {
-    return shallowRef<CommentRow[]>([]);
+    return shallowRef<Api.CommentRow[]>([]);
   }
 
   get total() {
@@ -86,19 +85,19 @@ class $CommentsModel {
     return `https://ivue.dev/blog/${slug}`;
   }
 
-  statusLabel(row: CommentRow) {
+  statusLabel(row: Api.CommentRow) {
     return row.status === 'pending' ? 'pending' : 'approved';
   }
 
-  isPending(row: CommentRow) {
+  isPending(row: Api.CommentRow) {
     return row.status === 'pending';
   }
 
-  statusTone(row: CommentRow) {
+  statusTone(row: Api.CommentRow) {
     return this.isPending(row) ? 'off' : 'on';
   }
 
-  lockActionTitle(row: CommentRow) {
+  lockActionTitle(row: Api.CommentRow) {
     return row.locked
       ? 'Reopen this thread to replies'
       : 'Close this thread to new replies';
@@ -122,7 +121,7 @@ class $CommentsModel {
     }
   }
 
-  applyPage(page: CommentPage) {
+  applyPage(page: Api.CommentPage) {
     this.rows.value = page.rows;
     this.total.value = page.total;
   }
@@ -150,14 +149,14 @@ class $CommentsModel {
     this.refresh();
   }
 
-  async approve(row: CommentRow) {
+  async approve(row: Api.CommentRow) {
     await this.moderate(row, async () => {
       await Api.Class.approveComment(row.id);
       return `Approved — it is live on ${row.slug}.`;
     });
   }
 
-  async remove(row: CommentRow) {
+  async remove(row: Api.CommentRow) {
     await this.moderate(row, async () => {
       await Api.Class.deleteComment(row.id);
       return 'Comment deleted.';
@@ -166,7 +165,7 @@ class $CommentsModel {
 
   // Lock/unlock the THREAD a row belongs to — a locked thread keeps its
   // replies visible and accepts no new ones (enforced server-side too).
-  async toggleLock(row: CommentRow) {
+  async toggleLock(row: Api.CommentRow) {
     const locking = !row.locked;
     await this.moderate(row, async () => {
       await Api.Class.lockComment(row.id, locking);
@@ -177,15 +176,15 @@ class $CommentsModel {
   }
 
   // a reply belongs to a thread; only the root carries the flag
-  isReply(row: CommentRow) {
+  isReply(row: Api.CommentRow) {
     return Boolean(row.parentId);
   }
 
-  lockLabel(row: CommentRow) {
+  lockLabel(row: Api.CommentRow) {
     return row.locked ? 'Unlock' : 'Lock';
   }
 
-  async moderate(row: CommentRow, action: () => Promise<string>) {
+  async moderate(row: Api.CommentRow, action: () => Promise<string>) {
     this.busyId.value = row.id;
     try {
       const message = await action();

@@ -7,9 +7,8 @@ Impossible if true: a piece refused, hidden, or flagged for having no expression
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PiecesModel } from './PiecesModel';
 import { Api } from '../platform/Api';
-import type { PressPieceSummary } from '../platform/Api';
 
-const PIECES: PressPieceSummary[] = [
+const PIECES: Api.PressPieceSummary[] = [
   {
     id: 1,
     slug: 'introducing-ivue',

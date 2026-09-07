@@ -6,6 +6,12 @@
 //   npx vite-node newsletter/scripts/press-import.ts > /tmp/press-batch.json
 //   node newsletter/scripts/press.mjs import /tmp/press-batch.json --dry-run
 //
+// This ran ONCE (2026-09-08) against the local and then the live Worker
+// from a batch kept out of the repo (newsletter/press-batch.json, gitignored);
+// its inputs — the drafts under tasks/press-drafts, the channel posts, the
+// dashboard's x-launch-copy module — left the public tree afterwards, so
+// the script is history, not a tool: the rows are the truth now.
+//
 // Everything imports as AUTHORED: these texts were written before any
 // base existed, so derivation is for what gets written from here on.
 // The launch thread's per-segment approvals from the artifact database
@@ -188,14 +194,14 @@ launch.expressions.push({
   venue: 'X',
   segments: threadPosts.map((post) => post.text),
   mirrors: ['bluesky', 'mastodon'],
-  meta: { source: 'artifact ivue Launch Thread', segmentsApprovedInArtifact: approvedSegments },
+  meta: { source: 'artifact ivue Launch Thread', artifactKey: 'x:thread', segmentsApprovedInArtifact: approvedSegments },
 });
 for (const post of byGroup.get('single') ?? [])
-  launch.expressions.push({ kind: 'x-post', mode: 'authored', label: post.label, venue: 'X', body: post.text, mirrors: ['bluesky', 'mastodon'] });
+  launch.expressions.push({ kind: 'x-post', mode: 'authored', label: post.label, venue: 'X', body: post.text, mirrors: ['bluesky', 'mastodon'], meta: { artifactKey: post.key } });
 for (const post of byGroup.get('long') ?? [])
-  launch.expressions.push({ kind: 'x-long', mode: 'authored', label: post.label, venue: 'X', body: post.text });
+  launch.expressions.push({ kind: 'x-long', mode: 'authored', label: post.label, venue: 'X', body: post.text, meta: { artifactKey: post.key } });
 for (const post of byGroup.get('hooks') ?? [])
-  launch.expressions.push({ kind: 'x-post', mode: 'authored', label: `hook ${post.label}`, venue: 'X', body: post.text });
+  launch.expressions.push({ kind: 'x-post', mode: 'authored', label: `hook ${post.label}`, venue: 'X', body: post.text, meta: { artifactKey: post.key } });
 
 const VOICE_TITLES: Record<string, string> = { voice: 'Voice post', deeper: 'From the papers', field: 'Field theory' };
 for (const group of ['voice', 'deeper', 'field'])
@@ -216,6 +222,7 @@ for (const group of ['voice', 'deeper', 'field'])
       body: post.text,
       mirrors: approval?.to?.filter((platform) => ['bluesky', 'mastodon', 'threads'].includes(platform)) ?? [],
       approved: approval?.approved ?? false,
+      meta: { artifactKey: post.key },
     });
   }
 

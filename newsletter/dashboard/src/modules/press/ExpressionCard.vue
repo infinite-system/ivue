@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { QDialog, QSelect } from 'quasar';
-import type { PressExpression, PressPieceRecord } from '../platform/Api';
+import type { Api } from '../platform/Api';
 import { ExpressionModel } from './ExpressionModel';
 import XThreadFrame from './XThreadFrame.vue';
 import XPostFrame from './XPostFrame.vue';
@@ -13,12 +13,27 @@ import EmailFrame from './EmailFrame.vue';
 import CardsFrame from './CardsFrame.vue';
 import PlainFrame from './PlainFrame.vue';
 
-const props = defineProps<{ expression: PressExpression; piece: PressPieceRecord }>();
-const emit = defineEmits<{ changed: [record: PressExpression]; removed: [id: number] }>();
+const props = defineProps<{ expression: Api.PressExpression; piece: Api.PressPieceRecord }>();
+const emit = defineEmits<{ changed: [record: Api.PressExpression]; removed: [id: number] }>();
+
+// the frame each kind renders in — wiring, not logic
+const FRAMES: Record<string, unknown> = {
+  'x-thread': XThreadFrame,
+  'x-post': XPostFrame,
+  linkedin: LinkedInFrame,
+  reddit: RedditFrame,
+  devto: DevtoFrame,
+  article: ArticleFrame,
+  hn: HnFrame,
+  email: EmailFrame,
+  cards: CardsFrame,
+  plain: PlainFrame,
+};
 
 const model = new ExpressionModel.Class(props, emit as ExpressionModel.Emits);
 const {
   // state refs
+  saveState,
   lintProblems,
   scheduleOpen,
   scheduleAt,
@@ -44,10 +59,10 @@ const {
         <span v-if="model.scheduledLabel" class="muted">· {{ model.scheduledLabel }}</span>
         <span v-if="model.sentLabel" class="muted">· {{ model.sentLabel }}</span>
       </div>
-      <span class="press-save" :class="model.saveState.value">{{ model.saveLabel }}</span>
+      <span class="press-save" :class="saveState">{{ model.saveLabel }}</span>
     </header>
 
-    <p v-if="model.unapprovedBecause && model.canApprove" class="press-notice">
+    <p v-if="model.showsReturnedNotice" class="press-notice">
       Returned to draft: {{ model.unapprovedBecause }}. Approve the text again once it reads right.
     </p>
     <p v-if="model.isDerived" class="press-notice press-notice--derived">
@@ -55,16 +70,7 @@ const {
     </p>
 
     <div class="press-frame">
-      <XThreadFrame v-if="model.frame === 'x-thread'" :model="model" />
-      <XPostFrame v-else-if="model.frame === 'x-post'" :model="model" />
-      <LinkedInFrame v-else-if="model.frame === 'linkedin'" :model="model" />
-      <RedditFrame v-else-if="model.frame === 'reddit'" :model="model" />
-      <DevtoFrame v-else-if="model.frame === 'devto'" :model="model" />
-      <ArticleFrame v-else-if="model.frame === 'article'" :model="model" />
-      <HnFrame v-else-if="model.frame === 'hn'" :model="model" />
-      <EmailFrame v-else-if="model.frame === 'email'" :model="model" />
-      <CardsFrame v-else-if="model.frame === 'cards'" :model="model" />
-      <PlainFrame v-else :model="model" />
+      <component :is="FRAMES[model.frame]" :model="model" />
     </div>
 
     <ul v-if="model.hasMirrors" class="press-mirrors" aria-label="Mirrors">
@@ -88,8 +94,8 @@ const {
         <button v-else-if="model.canUnapprove" class="ghost press-approved" type="button" :disabled="busy" @click="model.unapprove()">
           Approved ✓ — unapprove
         </button>
-        <button v-if="model.canSchedule || model.canReschedule" class="ghost" type="button" @click="model.openSchedule()">
-          {{ model.canReschedule ? 'Reschedule' : 'Schedule' }}
+        <button v-if="model.canOpenSchedule" class="ghost" type="button" @click="model.openSchedule()">
+          {{ model.scheduleButtonLabel }}
         </button>
         <button v-if="model.canCancel" class="ghost" type="button" @click="model.cancelSchedule()">Cancel schedule</button>
         <button v-if="model.canPost" class="primary" type="button" :disabled="busy" @click="model.post()">Post to X now</button>
@@ -121,7 +127,7 @@ const {
           The exact approved text ships. An edit after scheduling cancels the job and returns the text to draft.
         </p>
         <footer class="press-dialog-foot">
-          <button class="primary" type="submit">{{ model.canReschedule ? 'Move it' : 'Schedule' }}</button>
+          <button class="primary" type="submit">{{ model.scheduleSubmitLabel }}</button>
         </footer>
       </form>
     </q-dialog>

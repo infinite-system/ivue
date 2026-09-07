@@ -19,22 +19,22 @@ class $Scheduler {
 
   static async schedule(
     env: Env,
-    kind: JobKind,
-    payload: BroadcastPayload | TweetPayload | ThreadPayload | ExpressionPayload,
+    kind: Scheduler.JobKind,
+    payload: Scheduler.BroadcastPayload | Scheduler.TweetPayload | Scheduler.ThreadPayload | Scheduler.ExpressionPayload,
     dueAt: number,
-  ): Promise<ScheduledJob> {
+  ): Promise<Scheduler.ScheduledJob> {
     if (!this.KINDS.includes(kind)) throw new Error(`Unknown kind: ${kind}`);
     const now = Http.Class.nowSeconds();
     if (!Number.isFinite(dueAt) || dueAt < now - 60)
       throw new Error('Schedule time must be in the future.');
-    if (kind === 'broadcast' && !(payload as BroadcastPayload).slug)
+    if (kind === 'broadcast' && !(payload as Scheduler.BroadcastPayload).slug)
       throw new Error('A broadcast needs a post slug.');
-    if (kind === 'tweet' && !(payload as TweetPayload).text?.trim())
+    if (kind === 'tweet' && !(payload as Scheduler.TweetPayload).text?.trim())
       throw new Error('A tweet needs text.');
-    if (kind === 'expression' && !Number((payload as ExpressionPayload).expressionId))
+    if (kind === 'expression' && !Number((payload as Scheduler.ExpressionPayload).expressionId))
       throw new Error('An expression job needs an expression id.');
     if (kind === 'thread') {
-      const segments = this.threadSegments(payload as unknown as ThreadPayload);
+      const segments = this.threadSegments(payload as unknown as Scheduler.ThreadPayload);
       if (segments.length < 2)
         throw new Error('A thread needs at least 2 tweets.');
       if (segments.length > XPoster.Class.MAXIMUM_THREAD_TWEETS)
@@ -49,21 +49,21 @@ class $Scheduler {
       .run();
     const row = await env.DB.prepare(
       'SELECT * FROM scheduled_job ORDER BY id DESC LIMIT 1',
-    ).first<JobRow>();
+    ).first<Scheduler.JobRow>();
     return this.toJob(row!);
   }
 
   static async list(env: Env): Promise<{
-    upcoming: ScheduledJob[];
-    recent: ScheduledJob[];
+    upcoming: Scheduler.ScheduledJob[];
+    recent: Scheduler.ScheduledJob[];
   }> {
     const [{ results: upcoming }, { results: recent }] = await Promise.all([
       env.DB.prepare(
         'SELECT * FROM scheduled_job WHERE executed_at IS NULL ORDER BY due_at',
-      ).all<JobRow>(),
+      ).all<Scheduler.JobRow>(),
       env.DB.prepare(
         'SELECT * FROM scheduled_job WHERE executed_at IS NOT NULL ORDER BY executed_at DESC LIMIT 20',
-      ).all<JobRow>(),
+      ).all<Scheduler.JobRow>(),
     ]);
     return {
       upcoming: upcoming.map((row) => this.toJob(row)),
@@ -100,7 +100,7 @@ class $Scheduler {
       'SELECT * FROM scheduled_job WHERE executed_at IS NULL AND due_at <= ? ORDER BY due_at',
     )
       .bind(now)
-      .all<JobRow>();
+      .all<Scheduler.JobRow>();
     let executed = 0;
     for (const row of due) {
       // the claim: only the writer that flips NULL→now owns the job
@@ -121,12 +121,12 @@ class $Scheduler {
     return executed;
   }
 
-  static async execute(env: Env, row: JobRow): Promise<JobResult> {
+  static async execute(env: Env, row: Scheduler.JobRow): Promise<Scheduler.JobResult> {
     try {
-      const payload = JSON.parse(row.payload) as BroadcastPayload &
-        TweetPayload &
-        Partial<ThreadPayload> &
-        Partial<ExpressionPayload>;
+      const payload = JSON.parse(row.payload) as Scheduler.BroadcastPayload &
+        Scheduler.TweetPayload &
+        Partial<Scheduler.ThreadPayload> &
+        Partial<Scheduler.ExpressionPayload>;
       // a press expression: the row is read now, and only a still-scheduled
       // row ships (Expression.executeJob owns the platform dispatch)
       if (row.kind === 'expression')
@@ -146,7 +146,7 @@ class $Scheduler {
         return { error: 'X credentials not configured' };
       if (row.kind === 'thread') {
         const segments = this.threadSegments(
-          payload as unknown as ThreadPayload,
+          payload as unknown as Scheduler.ThreadPayload,
         );
         const thread = await XPoster.Class.postThread(env, segments);
         const postedAt = Http.Class.nowSeconds();
@@ -185,7 +185,7 @@ class $Scheduler {
 
   // tweets: JSON array of strings (legacy) or {text, imageUrls} objects
   static threadSegments(
-    payload: ThreadPayload,
+    payload: Scheduler.ThreadPayload,
   ): { text: string; imageUrls: string[] }[] {
     try {
       const entries = JSON.parse(payload.tweets ?? '[]') as (
@@ -227,7 +227,7 @@ class $Scheduler {
     return [];
   }
 
-  static toJob(row: JobRow): ScheduledJob {
+  static toJob(row: Scheduler.JobRow): Scheduler.ScheduledJob {
     return {
       id: row.id,
       kind: row.kind,
@@ -235,7 +235,7 @@ class $Scheduler {
       dueAt: row.due_at,
       createdAt: row.created_at,
       executedAt: row.executed_at,
-      result: row.result ? (JSON.parse(row.result) as JobResult) : null,
+      result: row.result ? (JSON.parse(row.result) as Scheduler.JobResult) : null,
     };
   }
 }
@@ -243,55 +243,56 @@ class $Scheduler {
 export namespace Scheduler {
   export const $Class = Static($Scheduler);
   export let Class = $Class;
+
+  export type JobKind = 'broadcast' | 'tweet' | 'thread' | 'expression';
+
+  export interface ExpressionPayload {
+    expressionId: string;
+    platform: string;
+  }
+
+  export interface BroadcastPayload {
+    slug: string;
+    list: string;
+  }
+
+  export interface TweetPayload {
+    text: string;
+    slug: string;
+    images?: string; // JSON array of site-hosted image URLs
+    attachBanner?: string; // legacy '1' = attach the post banner
+  }
+
+  export interface ThreadPayload {
+    tweets: string; // JSON array of tweet texts
+    slug: string;
+    images?: string; // JSON array — rides the first tweet
+  }
+
+  export interface JobResult {
+    ok?: boolean;
+    detail?: string;
+    error?: string;
+  }
+
+  export interface ScheduledJob {
+    id: number;
+    kind: JobKind;
+    payload: Record<string, string>;
+    dueAt: number;
+    createdAt: number;
+    executedAt: number | null;
+    result: JobResult | null;
+  }
+
+  export interface JobRow {
+    id: number;
+    kind: JobKind;
+    payload: string;
+    due_at: number;
+    created_at: number;
+    executed_at: number | null;
+    result: string | null;
+  }
 }
 
-export type JobKind = 'broadcast' | 'tweet' | 'thread' | 'expression';
-
-export interface ExpressionPayload {
-  expressionId: string;
-  platform: string;
-}
-
-export interface BroadcastPayload {
-  slug: string;
-  list: string;
-}
-
-export interface TweetPayload {
-  text: string;
-  slug: string;
-  images?: string; // JSON array of site-hosted image URLs
-  attachBanner?: string; // legacy '1' = attach the post banner
-}
-
-export interface ThreadPayload {
-  tweets: string; // JSON array of tweet texts
-  slug: string;
-  images?: string; // JSON array — rides the first tweet
-}
-
-export interface JobResult {
-  ok?: boolean;
-  detail?: string;
-  error?: string;
-}
-
-export interface ScheduledJob {
-  id: number;
-  kind: JobKind;
-  payload: Record<string, string>;
-  dueAt: number;
-  createdAt: number;
-  executedAt: number | null;
-  result: JobResult | null;
-}
-
-interface JobRow {
-  id: number;
-  kind: JobKind;
-  payload: string;
-  due_at: number;
-  created_at: number;
-  executed_at: number | null;
-  result: string | null;
-}

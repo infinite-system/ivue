@@ -1,7 +1,6 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type { DripPlanEntry } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 
 // The drip preview — the exact plan the next cron tick executes, because
@@ -13,11 +12,11 @@ class $DripModel {
 
   // the app store — resolved and cached on first touch (store pattern)
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   get entries() {
-    return shallowRef<DripPlanEntry[]>([]);
+    return shallowRef<Api.DripPlanEntry[]>([]);
   }
 
   get cadenceDays() {

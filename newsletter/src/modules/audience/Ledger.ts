@@ -17,21 +17,21 @@ class $Ledger {
 
   // The whole ledger in one query — the drip planner folds it into
   // per-subscriber sent-sets and last-send times.
-  static async allRows(env: Env): Promise<SendRow[]> {
+  static async allRows(env: Env): Promise<Ledger.SendRow[]> {
     const { results } = await env.DB.prepare(
       'SELECT email, slug, sent_at AS sentAt FROM send',
-    ).all<SendRow>();
+    ).all<Ledger.SendRow>();
     return results;
   }
 
   // Everything one address has already received, newest first — the
   // dashboard's "emails already sent to this person" panel.
-  static async historyFor(env: Env, address: string): Promise<SendRow[]> {
+  static async historyFor(env: Env, address: string): Promise<Ledger.SendRow[]> {
     const { results } = await env.DB.prepare(
       'SELECT email, slug, sent_at AS sentAt FROM send WHERE email = ? ORDER BY sent_at DESC',
     )
       .bind(address)
-      .all<SendRow>();
+      .all<Ledger.SendRow>();
     return results;
   }
 
@@ -84,7 +84,7 @@ class $Ledger {
 
   // One page of the send log, newest first — the dashboard's "Sent"
   // tab. `search` matches recipient email OR post slug.
-  static async page(env: Env, query: SendLogQuery): Promise<SendLogPage> {
+  static async page(env: Env, query: Ledger.SendLogQuery): Promise<Ledger.SendLogPage> {
     const search = (query.search ?? '').trim();
     const searchPattern = `%${search}%`;
     const limit = Math.min(Math.max(1, query.limit ?? 50), 200);
@@ -97,7 +97,7 @@ class $Ledger {
           ' ORDER BY sent_at DESC, email LIMIT ?3 OFFSET ?4',
       )
         .bind(search, searchPattern, limit, offset)
-        .all<SendRow>(),
+        .all<Ledger.SendRow>(),
       env.DB.prepare('SELECT COUNT(*) AS total FROM send ' + whereClause)
         .bind(search, searchPattern)
         .first<{ total: number }>(),
@@ -105,11 +105,11 @@ class $Ledger {
     return { total: totalRow?.total ?? 0, rows, limit, offset };
   }
 
-  static async statsPerPost(env: Env): Promise<PostSendStats[]> {
+  static async statsPerPost(env: Env): Promise<Ledger.PostSendStats[]> {
     const { results } = await env.DB.prepare(
       'SELECT slug, COUNT(*) AS sendCount, MAX(sent_at) AS lastSentAt ' +
         'FROM send GROUP BY slug ORDER BY lastSentAt DESC',
-    ).all<PostSendStats>();
+    ).all<Ledger.PostSendStats>();
     return results;
   }
 
@@ -124,29 +124,30 @@ class $Ledger {
 export namespace Ledger {
   export const $Class = Static($Ledger);
   export let Class = $Class;
+
+  export interface SendRow {
+    email: string;
+    slug: string;
+    sentAt: number;
+  }
+
+  export interface SendLogQuery {
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }
+
+  export interface SendLogPage {
+    total: number;
+    rows: SendRow[];
+    limit: number;
+    offset: number;
+  }
+
+  export interface PostSendStats {
+    slug: string;
+    sendCount: number;
+    lastSentAt: number;
+  }
 }
 
-export interface SendRow {
-  email: string;
-  slug: string;
-  sentAt: number;
-}
-
-export interface SendLogQuery {
-  search?: string;
-  limit?: number;
-  offset?: number;
-}
-
-export interface SendLogPage {
-  total: number;
-  rows: SendRow[];
-  limit: number;
-  offset: number;
-}
-
-export interface PostSendStats {
-  slug: string;
-  sendCount: number;
-  lastSentAt: number;
-}

@@ -2,10 +2,6 @@
 import { QueueModel } from './QueueModel';
 
 const model = new QueueModel.Class();
-const {
-  // state refs
-  loading,
-} = model;
 </script>
 
 <template>
@@ -47,7 +43,7 @@ const {
           </tr>
         </thead>
         <tbody>
-          <tr v-if="loading && !model.upcoming.length">
+          <tr v-if="model.isLoadingEmpty">
             <td colspan="4" class="empty">Loading…</td>
           </tr>
           <tr v-else-if="!model.upcoming.length">
@@ -81,7 +77,7 @@ const {
             <td colspan="3" class="empty">Nothing has run yet.</td>
           </tr>
           <tr v-for="job in model.recent" :key="job.id">
-            <td class="muted press-nowrap">{{ model.dueLabel(job.executedAt ?? job.dueAt) }}</td>
+            <td class="muted press-nowrap">{{ model.ranLabel(job) }}</td>
             <td>{{ job.kind }}</td>
             <td>{{ model.resultLabel(job) }}</td>
           </tr>

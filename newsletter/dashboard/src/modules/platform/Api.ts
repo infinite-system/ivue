@@ -68,7 +68,7 @@ class $Api {
     search: string;
     limit: number;
     offset: number;
-  }): Promise<AudiencePage> {
+  }): Promise<Api.AudiencePage> {
     const parameters = new URLSearchParams({
       list: query.list,
       search: query.search,
@@ -78,7 +78,7 @@ class $Api {
     return this.request(`/admin/subscriber?${parameters}`);
   }
 
-  static subscriber(email: string): Promise<SubscriberDetail> {
+  static subscriber(email: string): Promise<Api.SubscriberDetail> {
     return this.request(
       `/admin/subscriber?email=${encodeURIComponent(email)}`,
     );
@@ -111,7 +111,7 @@ class $Api {
     search: string;
     limit: number;
     offset: number;
-  }): Promise<SendLogPage> {
+  }): Promise<Api.SendLogPage> {
     const parameters = new URLSearchParams({
       search: query.search,
       limit: String(query.limit),
@@ -124,11 +124,11 @@ class $Api {
     slug: string;
     emails: string[];
     force: boolean;
-  }): Promise<SendResult> {
+  }): Promise<Api.SendResult> {
     return this.post('/admin/send', payload);
   }
 
-  static broadcast(slug: string, list: string): Promise<BroadcastResult> {
+  static broadcast(slug: string, list: string): Promise<Api.BroadcastResult> {
     return this.post('/broadcast', { slug, list });
   }
 
@@ -136,7 +136,7 @@ class $Api {
     return this.post('/drip', {});
   }
 
-  static posts(): Promise<PostSummary[]> {
+  static posts(): Promise<Api.PostSummary[]> {
     return this.request('/admin/post');
   }
 
@@ -145,7 +145,7 @@ class $Api {
     search: string;
     limit: number;
     offset: number;
-  }): Promise<CommentPage> {
+  }): Promise<Api.CommentPage> {
     const parameters = new URLSearchParams({
       status: query.status,
       search: query.search,
@@ -177,11 +177,11 @@ class $Api {
     return response.text();
   }
 
-  static dripPreview(): Promise<DripPreviewResponse> {
+  static dripPreview(): Promise<Api.DripPreviewResponse> {
     return this.request('/admin/drip-preview');
   }
 
-  static lists(): Promise<ListSummary[]> {
+  static lists(): Promise<Api.ListSummary[]> {
     return this.request('/admin/list');
   }
 
@@ -200,7 +200,7 @@ class $Api {
     return this.post('/admin/list/delete', { list });
   }
 
-  static settings(): Promise<AdminSettings> {
+  static settings(): Promise<Api.AdminSettings> {
     return this.request('/admin/setting');
   }
 
@@ -214,7 +214,7 @@ class $Api {
     >;
     tweetTemplate?: string;
     tweetContentTemplate?: string;
-  }): Promise<AdminSettings> {
+  }): Promise<Api.AdminSettings> {
     return this.post('/admin/setting', settings);
   }
 
@@ -237,21 +237,21 @@ class $Api {
     return this.request(`/admin/post-text?slug=${encodeURIComponent(slug)}`);
   }
 
-  static tweets(): Promise<TweetRow[]> {
+  static tweets(): Promise<Api.TweetRow[]> {
     return this.request('/admin/tweet');
   }
 
   static schedule(job: {
-    kind: JobKind;
+    kind: Api.JobKind;
     payload: Record<string, string>;
     dueAt: number;
-  }): Promise<{ ok: boolean; job: ScheduledJob }> {
+  }): Promise<{ ok: boolean; job: Api.ScheduledJob }> {
     return this.post('/admin/schedule', job);
   }
 
   static scheduleList(): Promise<{
-    upcoming: ScheduledJob[];
-    recent: ScheduledJob[];
+    upcoming: Api.ScheduledJob[];
+    recent: Api.ScheduledJob[];
   }> {
     return this.request('/admin/schedule');
   }
@@ -267,7 +267,7 @@ class $Api {
     status?: string;
     kind?: string;
     wave?: number;
-  } = {}): Promise<PressPieceSummary[]> {
+  } = {}): Promise<Api.PressPieceSummary[]> {
     const parameters = new URLSearchParams();
     if (query.q) parameters.set('q', query.q);
     if (query.status) parameters.set('status', query.status);
@@ -277,7 +277,7 @@ class $Api {
     return this.request(`/admin/press/piece${suffix}`);
   }
 
-  static pressPiece(id: number): Promise<PressPiece> {
+  static pressPiece(id: number): Promise<Api.PressPiece> {
     return this.request(`/admin/press/piece/${id}`);
   }
 
@@ -286,23 +286,23 @@ class $Api {
     title?: string;
     base?: string;
     wave?: number;
-  }): Promise<PressPieceRecord> {
+  }): Promise<Api.PressPieceRecord> {
     return this.post('/admin/press/piece', input);
   }
 
   static pressPatchPiece(
     id: number,
     changes: Partial<
-      Pick<PressPieceRecord, 'title' | 'claim' | 'links' | 'banner' | 'base' | 'wave' | 'notes' | 'slug'>
+      Pick<Api.PressPieceRecord, 'title' | 'claim' | 'links' | 'banner' | 'base' | 'wave' | 'notes' | 'slug'>
     >,
-  ): Promise<PressPieceRecord> {
+  ): Promise<Api.PressPieceRecord> {
     return this.request(`/admin/press/piece/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(changes),
     });
   }
 
-  static pressBlogPosts(): Promise<BlogPostOption[]> {
+  static pressBlogPosts(): Promise<Api.BlogPostOption[]> {
     return this.request('/admin/press/blog-post');
   }
 
@@ -318,11 +318,19 @@ class $Api {
       meta?: Record<string, unknown>;
       mirrors?: string[];
     },
-  ): Promise<PressExpression> {
+  ): Promise<Api.PressExpression> {
     return this.post(`/admin/press/piece/${pieceId}/expression`, input);
   }
 
-  static pressExpression(id: number): Promise<PressExpression> {
+  static pressExpressionsForSource(key: string): Promise<Api.PressExpression[]> {
+    return this.request(`/admin/press/expression?source=${encodeURIComponent(key)}`);
+  }
+
+  static pressExpressionsForCalendar(calendarId: string): Promise<Api.PressExpression[]> {
+    return this.request(`/admin/press/expression?calendar=${encodeURIComponent(calendarId)}`);
+  }
+
+  static pressExpression(id: number): Promise<Api.PressExpression> {
     return this.request(`/admin/press/expression/${id}`);
   }
 
@@ -337,7 +345,7 @@ class $Api {
       skipped?: boolean;
       calendarId?: string | null;
     },
-  ): Promise<PressExpression> {
+  ): Promise<Api.PressExpression> {
     return this.request(`/admin/press/expression/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(changes),
@@ -349,11 +357,11 @@ class $Api {
     id: number,
     action: string,
     body: object = {},
-  ): Promise<PressExpression> {
+  ): Promise<Api.PressExpression> {
     return this.post(`/admin/press/expression/${id}/${action}`, body);
   }
 
-  static pressReorder(id: number, order: number[]): Promise<PressExpression> {
+  static pressReorder(id: number, order: number[]): Promise<Api.PressExpression> {
     return this.request(`/admin/press/expression/${id}/reorder`, {
       method: 'PATCH',
       body: JSON.stringify({ order }),
@@ -364,31 +372,31 @@ class $Api {
     return this.request(`/admin/press/expression/${id}/lint`);
   }
 
-  static pressRevisions(id: number): Promise<PressRevision[]> {
+  static pressRevisions(id: number): Promise<Api.PressRevision[]> {
     return this.request(`/admin/press/expression/${id}/revision`);
   }
 
-  static pressRestore(id: number, revisionId: number): Promise<PressExpression> {
+  static pressRestore(id: number, revisionId: number): Promise<Api.PressExpression> {
     return this.post(`/admin/press/expression/${id}/revision/${revisionId}/restore`, {});
   }
 
-  static pressBaseRevisions(pieceId: number): Promise<PressBaseRevision[]> {
+  static pressBaseRevisions(pieceId: number): Promise<Api.PressBaseRevision[]> {
     return this.request(`/admin/press/piece/${pieceId}/base-revision`);
   }
 
-  static pressRestoreBase(pieceId: number, revisionId: number): Promise<PressPieceRecord> {
+  static pressRestoreBase(pieceId: number, revisionId: number): Promise<Api.PressPieceRecord> {
     return this.post(`/admin/press/piece/${pieceId}/base-revision/${revisionId}/restore`, {});
   }
 
-  static pressPostings(pieceId?: number): Promise<PressPosting[]> {
+  static pressPostings(pieceId?: number): Promise<Api.PressPosting[]> {
     return this.request(pieceId ? `/admin/press/piece/${pieceId}/posting` : '/admin/press/posting');
   }
 
-  static pressQueue(): Promise<PressQueue> {
+  static pressQueue(): Promise<Api.PressQueue> {
     return this.request('/admin/press/queue');
   }
 
-  static stats(): Promise<Stats> {
+  static stats(): Promise<Api.Stats> {
     return this.request('/admin/stat');
   }
 }
@@ -396,305 +404,306 @@ class $Api {
 export namespace Api {
   export const $Class = Static($Api);
   export let Class = $Class;
-}
+  // ---- the shapes this surface speaks: Api.SubscriberRow, Api.PressExpression … ----
 
-// ---- response contracts (mirror src/modules on the Worker side) ----
+  // ---- response contracts (mirror src/modules on the Worker side) ----
 
-export interface SubscriberRow {
-  email: string;
-  list: string;
-  name: string;
-  timezone: string | null;
-  subscribedAt: number;
-  unsubscribedAt: number | null;
-  sendCount: number;
-  lastSentAt: number | null;
-}
+  export interface SubscriberRow {
+    email: string;
+    list: string;
+    name: string;
+    timezone: string | null;
+    subscribedAt: number;
+    unsubscribedAt: number | null;
+    sendCount: number;
+    lastSentAt: number | null;
+  }
 
-export interface AudiencePage {
-  total: number;
-  rows: SubscriberRow[];
-  limit: number;
-  offset: number;
-}
+  export interface AudiencePage {
+    total: number;
+    rows: SubscriberRow[];
+    limit: number;
+    offset: number;
+  }
 
-export interface SendHistoryRow {
-  email: string;
-  slug: string;
-  sentAt: number;
-}
+  export interface SendHistoryRow {
+    email: string;
+    slug: string;
+    sentAt: number;
+  }
 
-export type SendLogRow = SendHistoryRow;
+  export type SendLogRow = SendHistoryRow;
 
-export interface SendLogPage {
-  total: number;
-  rows: SendLogRow[];
-  limit: number;
-  offset: number;
-}
+  export interface SendLogPage {
+    total: number;
+    rows: SendLogRow[];
+    limit: number;
+    offset: number;
+  }
 
-export interface UpcomingSend {
-  slug: string;
-  title: string;
-  projectedAt: number;
-}
+  export interface UpcomingSend {
+    slug: string;
+    title: string;
+    projectedAt: number;
+  }
 
-export interface SubscriberDetail {
-  email: string;
-  memberships: SubscriberRow[];
-  history: SendHistoryRow[];
-  cadenceDays: number;
-  sendHourLocal: number;
-  defaultTimezone: string;
-  // the zone the drip actually uses for this address (their own, or
-  // the default fallback)
-  timezone: string;
-  upcoming: UpcomingSend[];
-}
+  export interface SubscriberDetail {
+    email: string;
+    memberships: SubscriberRow[];
+    history: SendHistoryRow[];
+    cadenceDays: number;
+    sendHourLocal: number;
+    defaultTimezone: string;
+    // the zone the drip actually uses for this address (their own, or
+    // the default fallback)
+    timezone: string;
+    upcoming: UpcomingSend[];
+  }
 
-export interface CommentRow {
-  id: number;
-  slug: string;
-  name: string;
-  email: string;
-  body: string;
-  submittedAt: number;
-  status: 'pending' | 'approved';
-  parentId: number | null;
-  rootId: number | null;
-  locked: number;
-  avatarSeed: string;
-}
+  export interface CommentRow {
+    id: number;
+    slug: string;
+    name: string;
+    email: string;
+    body: string;
+    submittedAt: number;
+    status: 'pending' | 'approved';
+    parentId: number | null;
+    rootId: number | null;
+    locked: number;
+    avatarSeed: string;
+  }
 
-export interface CommentPage {
-  total: number;
-  rows: CommentRow[];
-  limit: number;
-  offset: number;
-}
+  export interface CommentPage {
+    total: number;
+    rows: CommentRow[];
+    limit: number;
+    offset: number;
+  }
 
-export interface ListSummary {
-  list: string;
-  members: number;
-  active: number;
-}
+  export interface ListSummary {
+    list: string;
+    members: number;
+    active: number;
+  }
 
-export interface PostSummary {
-  slug: string;
-  title: string;
-  description: string;
-  url: string;
-  date: string | null;
-  timestamp: number;
-  embedImages: string[];
-  codeImages: string[];
-}
+  export interface PostSummary {
+    slug: string;
+    title: string;
+    description: string;
+    url: string;
+    date: string | null;
+    timestamp: number;
+    embedImages: string[];
+    codeImages: string[];
+  }
 
-export interface RecipientOutcome {
-  email: string;
-  errorCode: number;
-  message: string;
-}
+  export interface RecipientOutcome {
+    email: string;
+    errorCode: number;
+    message: string;
+  }
 
-export interface SendResult {
-  ok: boolean;
-  slug: string;
-  delivered: number;
-  outcomes: RecipientOutcome[];
-  skippedAsRepeat: string[];
-}
+  export interface SendResult {
+    ok: boolean;
+    slug: string;
+    delivered: number;
+    outcomes: RecipientOutcome[];
+    skippedAsRepeat: string[];
+  }
 
-export interface BroadcastResult {
-  ok: boolean;
-  slug: string;
-  recipients: number;
-  skippedAsRepeat: number;
-}
+  export interface BroadcastResult {
+    ok: boolean;
+    slug: string;
+    recipients: number;
+    skippedAsRepeat: number;
+  }
 
-export interface DripPlanEntry {
-  email: string;
-  name: string;
-  timezone: string;
-  list?: string;
-  nextSlug: string | null;
-  sentCount: number;
-  lastSentAt: number | null;
-  dueAt: number;
-  sendNow: boolean;
-}
+  export interface DripPlanEntry {
+    email: string;
+    name: string;
+    timezone: string;
+    list?: string;
+    nextSlug: string | null;
+    sentCount: number;
+    lastSentAt: number | null;
+    dueAt: number;
+    sendNow: boolean;
+  }
 
-export type ListScheduleOverrides = Record<
-  string,
-  { cadenceDays?: number; sendHourLocal?: number }
->;
+  export type ListScheduleOverrides = Record<
+    string,
+    { cadenceDays?: number; sendHourLocal?: number }
+  >;
 
-export interface DripPreviewResponse {
-  cadenceDays: number;
-  sendHourLocal: number;
-  defaultTimezone: string;
-  listOverrides: ListScheduleOverrides;
-  entries: DripPlanEntry[];
-}
+  export interface DripPreviewResponse {
+    cadenceDays: number;
+    sendHourLocal: number;
+    defaultTimezone: string;
+    listOverrides: ListScheduleOverrides;
+    entries: DripPlanEntry[];
+  }
 
-export interface AdminSettings {
-  cadenceDays: number;
-  sendHourLocal: number;
-  defaultTimezone: string;
-  listOverrides: ListScheduleOverrides;
-  tweetTemplate: string;
-  tweetContentTemplate: string;
-  xConfigured: boolean;
-  sender: {
-    senderName: string;
-    senderEmail: string;
-    replyTo: string;
-    notifyEmail: string;
-    postmarkStream: string;
-    defaultList: string;
-  };
-}
+  export interface AdminSettings {
+    cadenceDays: number;
+    sendHourLocal: number;
+    defaultTimezone: string;
+    listOverrides: ListScheduleOverrides;
+    tweetTemplate: string;
+    tweetContentTemplate: string;
+    xConfigured: boolean;
+    sender: {
+      senderName: string;
+      senderEmail: string;
+      replyTo: string;
+      notifyEmail: string;
+      postmarkStream: string;
+      defaultList: string;
+    };
+  }
 
-export interface TweetRow {
-  tweetId: string;
-  text: string;
-  slug: string | null;
-  postedAt: number;
-}
+  export interface TweetRow {
+    tweetId: string;
+    text: string;
+    slug: string | null;
+    postedAt: number;
+  }
 
-export type JobKind = 'broadcast' | 'tweet' | 'thread' | 'expression';
+  export type JobKind = 'broadcast' | 'tweet' | 'thread' | 'expression';
 
-export interface ScheduledJob {
-  id: number;
-  kind: JobKind;
-  payload: Record<string, string>;
-  dueAt: number;
-  createdAt: number;
-  executedAt: number | null;
-  result: { ok?: boolean; detail?: string; error?: string } | null;
-}
+  export interface ScheduledJob {
+    id: number;
+    kind: JobKind;
+    payload: Record<string, string>;
+    dueAt: number;
+    createdAt: number;
+    executedAt: number | null;
+    result: { ok?: boolean; detail?: string; error?: string } | null;
+  }
 
-export interface Stats {
-  lists: ListSummary[];
-  signups: { day: string; count: number }[];
-  perPost: { slug: string; sendCount: number; lastSentAt: number }[];
-  totalSends: number;
-}
+  export interface Stats {
+    lists: ListSummary[];
+    signups: { day: string; count: number }[];
+    perPost: { slug: string; sendCount: number; lastSentAt: number }[];
+    totalSends: number;
+  }
 
-// ---- press shapes (mirror newsletter/src/modules/press) ----
+  // ---- press shapes (mirror newsletter/src/modules/press) ----
 
-export interface PressLink {
-  label: string;
-  url: string;
-}
+  export interface PressLink {
+    label: string;
+    url: string;
+  }
 
-export interface PressPieceRecord {
-  id: number;
-  slug: string | null;
-  title: string;
-  claim: string;
-  links: PressLink[];
-  banner: string | null;
-  base: string;
-  wave: 1 | 2;
-  notes: string;
-  createdAt: number;
-  updatedAt: number;
-}
+  export interface PressPieceRecord {
+    id: number;
+    slug: string | null;
+    title: string;
+    claim: string;
+    links: PressLink[];
+    banner: string | null;
+    base: string;
+    wave: 1 | 2;
+    notes: string;
+    createdAt: number;
+    updatedAt: number;
+  }
 
-export interface PressState {
-  id: number;
-  kind: string;
-  mode: string;
-  venue: string;
-  status: string;
-  scheduledAt: number | null;
-  calendarId: string | null;
-}
+  export interface PressState {
+    id: number;
+    kind: string;
+    mode: string;
+    venue: string;
+    status: string;
+    scheduledAt: number | null;
+    calendarId: string | null;
+  }
 
-export interface PressPieceSummary extends PressPieceRecord {
-  expressions: PressState[];
-  nextDueAt: number | null;
-  calendarIds: string[];
-}
+  export interface PressPieceSummary extends PressPieceRecord {
+    expressions: PressState[];
+    nextDueAt: number | null;
+    calendarIds: string[];
+  }
 
-export interface PressMirror {
-  platform: string;
-  sentAt: number | null;
-  url: string | null;
-}
+  export interface PressMirror {
+    platform: string;
+    sentAt: number | null;
+    url: string | null;
+  }
 
-export interface PressExpression {
-  id: number;
-  pieceId: number;
-  kind: string;
-  mode: 'derived' | 'authored';
-  parentId: number | null;
-  position: number;
-  label: string;
-  venue: string;
-  body: string;
-  meta: Record<string, unknown>;
-  mirrors: PressMirror[];
-  status: 'draft' | 'approved' | 'scheduled' | 'due' | 'sent' | 'archived';
-  skipped: boolean;
-  calendarId: string | null;
-  approvedAt: number | null;
-  scheduledAt: number | null;
-  sentAt: number | null;
-  sentUrl: string | null;
-  createdAt: number;
-  updatedAt: number;
-  children: PressExpression[] | null;
-}
+  export interface PressExpression {
+    id: number;
+    pieceId: number;
+    kind: string;
+    mode: 'derived' | 'authored';
+    parentId: number | null;
+    position: number;
+    label: string;
+    venue: string;
+    body: string;
+    meta: Record<string, unknown>;
+    mirrors: PressMirror[];
+    status: 'draft' | 'approved' | 'scheduled' | 'due' | 'sent' | 'archived';
+    skipped: boolean;
+    calendarId: string | null;
+    approvedAt: number | null;
+    scheduledAt: number | null;
+    sentAt: number | null;
+    sentUrl: string | null;
+    createdAt: number;
+    updatedAt: number;
+    children: PressExpression[] | null;
+  }
 
-export interface PressPiece extends PressPieceRecord {
-  expressions: PressExpression[];
-}
+  export interface PressPiece extends PressPieceRecord {
+    expressions: PressExpression[];
+  }
 
-export interface PressRevision {
-  id: number;
-  body: string;
-  meta: Record<string, unknown>;
-  author: string;
-  savedAt: number;
-}
+  export interface PressRevision {
+    id: number;
+    body: string;
+    meta: Record<string, unknown>;
+    author: string;
+    savedAt: number;
+  }
 
-export interface PressBaseRevision {
-  id: number;
-  base: string;
-  author: string;
-  savedAt: number;
-}
+  export interface PressBaseRevision {
+    id: number;
+    base: string;
+    author: string;
+    savedAt: number;
+  }
 
-export interface PressPosting {
-  id: number;
-  expressionId: number;
-  platform: string;
-  venue: string;
-  url: string | null;
-  remoteIds: string[];
-  postedAt: number;
-  postedBy: 'api' | 'manual';
-  calendarId: string | null;
-  kind?: string;
-  pieceId?: number;
-  pieceTitle?: string;
-}
+  export interface PressPosting {
+    id: number;
+    expressionId: number;
+    platform: string;
+    venue: string;
+    url: string | null;
+    remoteIds: string[];
+    postedAt: number;
+    postedBy: 'api' | 'manual';
+    calendarId: string | null;
+    kind?: string;
+    pieceId?: number;
+    pieceTitle?: string;
+  }
 
-export interface PressQueueJob extends ScheduledJob {
-  expression: PressExpression | null;
-}
+  export interface PressQueueJob extends ScheduledJob {
+    expression: PressExpression | null;
+  }
 
-export interface PressQueue {
-  upcoming: PressQueueJob[];
-  recent: ScheduledJob[];
-  due: (PressExpression & { pieceTitle: string })[];
-}
+  export interface PressQueue {
+    upcoming: PressQueueJob[];
+    recent: ScheduledJob[];
+    due: (PressExpression & { pieceTitle: string })[];
+  }
 
-export interface BlogPostOption {
-  slug: string;
-  title: string;
-  description: string;
-  date: string | null;
-  url: string;
+  export interface BlogPostOption {
+    slug: string;
+    title: string;
+    description: string;
+    date: string | null;
+    url: string;
+  }
 }

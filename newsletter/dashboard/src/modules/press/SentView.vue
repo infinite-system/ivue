@@ -4,7 +4,6 @@ import { SentModel } from './SentModel';
 const model = new SentModel.Class();
 const {
   // state refs
-  loading,
   filter,
 } = model;
 </script>
@@ -34,7 +33,7 @@ const {
           </tr>
         </thead>
         <tbody>
-          <tr v-if="loading && !model.filtered.length">
+          <tr v-if="model.isLoadingEmpty">
             <td colspan="9" class="empty">Loading…</td>
           </tr>
           <tr v-else-if="model.isEmpty">
@@ -54,7 +53,7 @@ const {
             </td>
             <td class="muted">{{ model.remoteLabel(row) }}</td>
             <td class="muted">{{ model.byLabel(row) }}</td>
-            <td class="muted">{{ row.calendarId ?? '—' }}</td>
+            <td class="muted">{{ model.calendarLabel(row) }}</td>
           </tr>
         </tbody>
       </table>

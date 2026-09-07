@@ -5,7 +5,7 @@ defineProps<{ model: ExpressionModel.Instance }>();
 </script>
 
 <template>
-  <div class="ar-post" :class="'ar-' + model.kind">
+  <div class="ar-post" :class="model.articleTone">
     <label class="press-field press-cover-field">
       <span>Cover</span>
       <input :value="model.cover" :readonly="!model.canEdit" aria-label="Cover image" placeholder="/blog/slug.png" @input="model.onMetaInput('cover', $event)" />

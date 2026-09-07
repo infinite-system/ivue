@@ -7,9 +7,8 @@ Impossible if true: a ledger row hidden by a filter it matches
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SentModel } from './SentModel';
 import { Api } from '../platform/Api';
-import type { PressPosting } from '../platform/Api';
 
-const ROWS: PressPosting[] = [
+const ROWS: Api.PressPosting[] = [
   { id: 2, expressionId: 5, platform: 'x', venue: 'X', url: 'https://x.com/i/status/2', remoteIds: ['t1', 't2'], postedAt: 200, postedBy: 'api', calendarId: '2026-09-08--x', kind: 'x-thread', pieceId: 1, pieceTitle: 'Launch' },
   { id: 1, expressionId: 6, platform: 'reddit', venue: 'r/vuejs', url: null, remoteIds: [], postedAt: 100, postedBy: 'manual', calendarId: null, kind: 'reddit', pieceId: 1, pieceTitle: 'Launch' },
 ];

@@ -15,7 +15,7 @@ defineProps<{ model: ExpressionModel.Instance }>();
       </div>
       <p
         class="x-text"
-        :contenteditable="model.canEdit ? 'plaintext-only' : 'false'"
+        :contenteditable="model.editableAttribute"
         spellcheck="true"
         @input="model.onBodyInput($event)"
         @paste="model.onPaste($event)"

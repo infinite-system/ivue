@@ -4,6 +4,7 @@ Goal: Prove a piece is the argument alone — bootstrapped from a blog post by c
 // domain-invariant: $Piece — If the base is saved, then a base_revision holds the base BEFORE the save and every derived expression regenerates
 // domain-invariant: $Piece — If a piece starts from a blog post, then its base is a copy and the site is never read again
 Impossible if true: a piece refused, hidden, or flagged for having no expressions
+Impossible if true: a piece with a date, a status, a venue, or a job
 
 === GENERATOR-DESCRIBED ===
 $Piece owns title, claim, links, banner, base, wave, notes and nothing that belongs to a posting. Its list rolls up expression states; its detail nests them.
@@ -20,6 +21,7 @@ describe('Piece', () => {
     Posts.Class = Posts.$Class;
   });
 
+  // impossible-if-true: $Piece — a piece refused, hidden, or flagged for having no expressions
   it('a blank piece is a valid row with only a title and a base — zero expressions is the starting state', async () => {
     const env = makeTestEnv();
     const piece = await Piece.Class.create(env, { title: 'A voice post', base: 'Remember less. Generate more.' });

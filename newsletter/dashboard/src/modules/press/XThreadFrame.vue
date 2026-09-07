@@ -21,11 +21,11 @@ defineProps<{ model: ExpressionModel.Instance }>();
         <div class="x-head">
           <strong>{{ model.xName }}</strong>
           <span class="muted">{{ model.xHandle }}</span>
-          <span class="x-number">{{ entry.number === null ? 'skipped' : `${entry.number} / ${model.liveCount}` }}</span>
+          <span class="x-number">{{ model.segmentNumberLabel(entry) }}</span>
         </div>
         <p
           class="x-text"
-          :contenteditable="model.canEdit ? 'plaintext-only' : 'false'"
+          :contenteditable="model.editableAttribute"
           spellcheck="true"
           @input="model.onSegmentInput(entry.child, $event)"
           @paste="model.onPaste($event)"

@@ -31,6 +31,10 @@ class $PressApi {
       if (resource === 'queue' && method === 'GET') return await this.queue(env);
       if (resource === 'piece')
         return await this.piece(request, url, env, method, idText, id, action, subText, author);
+      if (resource === 'expression' && !idText && method === 'GET' && url.searchParams.has('calendar'))
+        return Http.Class.json(await Expression.Class.byCalendarId(env, url.searchParams.get('calendar') ?? ''));
+      if (resource === 'expression' && !idText && method === 'GET' && url.searchParams.has('source'))
+        return Http.Class.json(await Expression.Class.bySource(env, url.searchParams.get('source') ?? ''));
       if (resource === 'expression' && idText)
         return await this.expression(request, env, method, id, action, subText, author);
       return Http.Class.notFound();

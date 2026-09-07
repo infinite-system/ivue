@@ -2,13 +2,10 @@ import { Static } from 'ivue/extras';
 import { Http } from '../platform/Http';
 import { Security } from '../platform/Security';
 import { Posts } from '../content/Posts';
-import type { Post } from '../content/Posts';
 import { Settings } from '../config/Settings';
-import type { DripSchedule } from '../config/Settings';
 import { XPoster } from '../socials/XPoster';
 import { Tweets } from '../socials/Tweets';
 import { Scheduler } from '../schedule/Scheduler';
-import type { JobKind } from '../schedule/Scheduler';
 import { Audience } from '../audience/Audience';
 import { Comments } from '../comments/Comments';
 import { Ledger } from '../audience/Ledger';
@@ -148,12 +145,12 @@ class $AdminApi {
   // drip's own rule (hour H local, every N local calendar days)
   // unrolled to the end of the archive.
   static upcomingFor(
-    catalog: Post[],
+    catalog: Posts.Post[],
     history: { slug: string; sentAt: number }[],
     timezone: string,
-    schedule: DripSchedule,
+    schedule: Settings.DripSchedule,
     now: number,
-  ): UpcomingSend[] {
+  ): AdminApi.UpcomingSend[] {
     const sent = new Set(history.map((row) => row.slug));
     const lastSentAt = history.reduce(
       (latest, row) => Math.max(latest, row.sentAt),
@@ -551,14 +548,14 @@ class $AdminApi {
 
   static async schedule(request: Request, env: Env): Promise<Response> {
     const body = await Http.Class.readJsonBody<{
-      kind: JobKind;
+      kind: Scheduler.JobKind;
       payload: Record<string, string>;
       dueAt: number;
     }>(request);
     try {
       const job = await Scheduler.Class.schedule(
         env,
-        body.kind as JobKind,
+        body.kind as Scheduler.JobKind,
         (body.payload ?? {}) as never,
         Number(body.dueAt),
       );
@@ -673,10 +670,11 @@ class $AdminApi {
 export namespace AdminApi {
   export const $Class = Static($AdminApi);
   export let Class = $Class;
+
+  export interface UpcomingSend {
+    slug: string;
+    title: string;
+    projectedAt: number;
+  }
 }
 
-export interface UpcomingSend {
-  slug: string;
-  title: string;
-  projectedAt: number;
-}

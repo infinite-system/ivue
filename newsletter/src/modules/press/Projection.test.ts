@@ -72,6 +72,7 @@ describe('Projection', () => {
     expect(Projection.Class.lint('reddit', '# fine\n\n**fine**')).toEqual([]);
   });
 
+  // impossible-if-true: $Projection — a platform card shows text the platform would not accept
   it('limits: 280 on X, 300 Bluesky, 500 Mastodon, 80 for an HN title, a cover for an article', () => {
     const long = 'x'.repeat(281);
     expect(Projection.Class.lint('x-segment', long)).toEqual(['281 characters, the limit is 280']);

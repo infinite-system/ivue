@@ -1,7 +1,6 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type { PostSummary, ScheduledJob, TweetRow } from '../platform/Api';
 import { Format } from '../platform/Format';
 import { AppStore } from '../app/AppStore';
 
@@ -22,7 +21,7 @@ class $XComposeModel {
 
   // the app store — resolved and cached on first touch (store pattern)
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   get TWEET_LIMIT() {
@@ -47,7 +46,7 @@ class $XComposeModel {
   }
 
   get posts() {
-    return shallowRef<PostSummary[]>([]);
+    return shallowRef<Api.PostSummary[]>([]);
   }
 
   get template() {
@@ -59,7 +58,7 @@ class $XComposeModel {
   }
 
   get mode() {
-    return ref<ComposeMode>('link');
+    return ref<XComposeModel.ComposeMode>('link');
   }
 
   get xConfigured() {
@@ -79,7 +78,7 @@ class $XComposeModel {
   }
 
   get threadSegments() {
-    return ref<ThreadSegment[]>([]);
+    return ref<XComposeModel.ThreadSegment[]>([]);
   }
 
   get CODE_MARKER() {
@@ -107,7 +106,7 @@ class $XComposeModel {
   }
 
   get tweetLog() {
-    return shallowRef<TweetRow[]>([]);
+    return shallowRef<Api.TweetRow[]>([]);
   }
 
   get scheduleAt() {
@@ -115,7 +114,7 @@ class $XComposeModel {
   }
 
   get scheduledJobs() {
-    return shallowRef<ScheduledJob[]>([]);
+    return shallowRef<Api.ScheduledJob[]>([]);
   }
 
   get loading() {
@@ -250,12 +249,12 @@ class $XComposeModel {
     return this.threadRemaining(index) < 0;
   }
 
-  imageCountLabel(segment: ThreadSegment) {
+  imageCountLabel(segment: XComposeModel.ThreadSegment) {
     const count = segment.imageUrls.length;
     return count === 1 ? '1 image' : `${count} images`;
   }
 
-  tweetUrl(tweet: TweetRow) {
+  tweetUrl(tweet: Api.TweetRow) {
     return `https://x.com/i/status/${tweet.tweetId}`;
   }
 
@@ -286,7 +285,7 @@ class $XComposeModel {
 
   // ---- composing ----
 
-  fillTemplate(post: PostSummary): string {
+  fillTemplate(post: Api.PostSummary): string {
     const template =
       this.mode.value === 'content'
         ? this.contentTemplate.value
@@ -304,7 +303,7 @@ class $XComposeModel {
     this.postedUrl.value = '';
   }
 
-  setMode(mode: ComposeMode) {
+  setMode(mode: XComposeModel.ComposeMode) {
     this.mode.value = mode;
     this.prefill(); // a mode is a different draft — re-prefill the pick
   }
@@ -356,10 +355,10 @@ class $XComposeModel {
     plainText: string,
     url: string,
     images: { base?: string[]; code?: string[]; demo?: string[] } = {},
-  ): ThreadSegment[] {
+  ): XComposeModel.ThreadSegment[] {
     const limit = this.THREAD_SEGMENT_LIMIT;
     const contentCap = this.MAXIMUM_THREAD_TWEETS - 1;
-    const segments: ThreadSegment[] = [];
+    const segments: XComposeModel.ThreadSegment[] = [];
     let current = title;
     let currentImages: string[] = [...(images.base ?? [])];
     let truncated = false;
@@ -605,7 +604,7 @@ class $XComposeModel {
     }
   }
 
-  jobSummary(job: ScheduledJob) {
+  jobSummary(job: Api.ScheduledJob) {
     if (job.kind === 'thread') {
       try {
         const tweets = JSON.parse(job.payload.tweets ?? '[]') as (
@@ -628,11 +627,12 @@ export namespace XComposeModel {
   export const $Class = $XComposeModel;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
+
+  export type ComposeMode = 'link' | 'content' | 'thread';
+
+  export interface ThreadSegment {
+    text: string;
+    imageUrls: string[];
+  }
 }
 
-export type ComposeMode = 'link' | 'content' | 'thread';
-
-export interface ThreadSegment {
-  text: string;
-  imageUrls: string[];
-}

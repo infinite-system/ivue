@@ -5,8 +5,6 @@ import { Security } from '../platform/Security';
 import { Ledger } from '../audience/Ledger';
 import { Posts } from '../content/Posts';
 import { Audience } from '../audience/Audience';
-import type { Post } from '../content/Posts';
-import type { Subscriber } from '../audience/Audience';
 
 // Postmark delivery — batch API on the broadcast message stream. Only an
 // accepted message (ErrorCode 0) is written to the sends ledger, so a
@@ -47,7 +45,7 @@ class $Delivery {
   // ever: the ledger row is the guard, so a returning subscriber
   // resumes silently. Best-effort (rides waitUntil like the operator
   // ping) — a failure logs and the signup stands.
-  static async sendWelcome(env: Env, subscriber: Subscriber): Promise<void> {
+  static async sendWelcome(env: Env, subscriber: Audience.Subscriber): Promise<void> {
     try {
       if (await Ledger.Class.hasSend(env, subscriber.email, this.WELCOME_SLUG))
         return;
@@ -94,7 +92,7 @@ class $Delivery {
           ],
         }),
       });
-      const outcome = (await send.json()) as PostmarkOutcome;
+      const outcome = (await send.json()) as Delivery.PostmarkOutcome;
       if (!send.ok || outcome.ErrorCode !== 0)
         throw new Error(
           `Postmark ${send.status}: ${outcome.Message ?? 'welcome rejected'}`,
@@ -233,7 +231,7 @@ class $Delivery {
   // subscriber — the signup itself already committed.
   static async notifySignup(
     env: Env,
-    subscriber: Subscriber,
+    subscriber: Audience.Subscriber,
     list: string,
   ): Promise<void> {
     try {
@@ -301,11 +299,11 @@ class $Delivery {
 
   static async sendPost(
     env: Env,
-    post: Post,
-    recipients: Subscriber[],
-  ): Promise<DeliveryReport> {
+    post: Posts.Post,
+    recipients: Audience.Subscriber[],
+  ): Promise<Delivery.DeliveryReport> {
     let delivered = 0;
-    const outcomes: RecipientOutcome[] = [];
+    const outcomes: Delivery.RecipientOutcome[] = [];
     for (
       let start = 0;
       start < recipients.length;
@@ -379,7 +377,7 @@ class $Delivery {
       }
       // per-message results: ErrorCode 0 = accepted; anything else (e.g.
       // 406 inactive recipient) is logged and NOT written to the ledger
-      const results = (await response.json()) as PostmarkOutcome[];
+      const results = (await response.json()) as Delivery.PostmarkOutcome[];
       const timestamp = Http.Class.nowSeconds();
       const ledgerEntries = [];
       for (const [index, outcome] of results.entries()) {
@@ -415,20 +413,21 @@ class $Delivery {
 export namespace Delivery {
   export const $Class = Static($Delivery);
   export let Class = $Class;
+
+  export interface PostmarkOutcome {
+    ErrorCode: number;
+    Message: string;
+  }
+
+  export interface RecipientOutcome {
+    email: string;
+    errorCode: number;
+    message: string;
+  }
+
+  export interface DeliveryReport {
+    delivered: number;
+    outcomes: RecipientOutcome[];
+  }
 }
 
-export interface PostmarkOutcome {
-  ErrorCode: number;
-  Message: string;
-}
-
-export interface RecipientOutcome {
-  email: string;
-  errorCode: number;
-  message: string;
-}
-
-export interface DeliveryReport {
-  delivered: number;
-  outcomes: RecipientOutcome[];
-}

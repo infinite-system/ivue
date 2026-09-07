@@ -110,6 +110,7 @@ describe('PressApi', () => {
     expect((await call('/admin/press/expression/abc', env)).status).toBe(404);
   });
 
+  // impossible-if-true: $PressApi — a press route exists that the CLI cannot drive with curl
   it('schedule, reschedule, cancel, sent, postings, queue', async () => {
     const env = makeTestEnv({ ADMIN_SECRET: SECRET });
     const piece = (await call('/admin/press/piece', env, 'POST', { title: 'T', base: 'Words.' })).json;
@@ -125,6 +126,15 @@ describe('PressApi', () => {
     expect((await call(`/admin/press/expression/${post.id}/cancel`, env, 'POST', {})).json.status).toBe('approved');
     const sent = await call(`/admin/press/expression/${post.id}/sent`, env, 'POST', { url: 'https://linkedin.com/x', calendarId: '2026-09-08--linkedin' });
     expect(sent.json.status).toBe('sent');
+    // the calendar reads its copy by entry id
+    await call(`/admin/press/expression/${post.id}`, env, 'PATCH', { calendarId: '2026-09-08--linkedin' });
+    expect((await call('/admin/press/expression?calendar=2026-09-08--linkedin', env)).json.map((row: { id: number }) => row.id)).toEqual([post.id]);
+    // …or by the source key its copy was imported under
+    await call(`/admin/press/expression/${post.id}`, env, 'PATCH', { meta: { source: 'tasks/press-drafts/sol/01.md' } });
+    const hook = (await call(`/admin/press/piece/${piece.id}/expression`, env, 'POST', { kind: 'x-post', body: 'hook', meta: { artifactKey: 'x:hooks:2' } })).json;
+    expect((await call('/admin/press/expression?source=tasks%2Fpress-drafts%2Fsol%2F01.md', env)).json.map((row: { id: number }) => row.id)).toEqual([post.id]);
+    expect((await call('/admin/press/expression?source=x:hooks', env)).json.map((row: { id: number }) => row.id)).toEqual([hook.id]);
+    expect((await call('/admin/press/expression?source=x:hooks:2', env)).json.map((row: { id: number }) => row.id)).toEqual([hook.id]);
     const ledger = await call(`/admin/press/expression/${post.id}/posting`, env);
     expect(ledger.json[0]).toMatchObject({ platform: 'linkedin', venue: 'LinkedIn', url: 'https://linkedin.com/x', calendarId: '2026-09-08--linkedin', postedBy: 'manual' });
     expect((await call(`/admin/press/piece/${piece.id}/posting`, env)).json).toHaveLength(1);

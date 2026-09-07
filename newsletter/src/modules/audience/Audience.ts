@@ -16,13 +16,13 @@ class $Audience {
   }
 
   // Active recipients of one list: subscribed and not suppressed.
-  static async active(env: Env, list: string): Promise<Subscriber[]> {
+  static async active(env: Env, list: string): Promise<Audience.Subscriber[]> {
     const { results } = await env.DB.prepare(
       'SELECT email, name, timezone FROM subscriber WHERE list = ? ' +
         'AND email NOT IN (SELECT email FROM unsubscribe)',
     )
       .bind(list)
-      .all<Subscriber>();
+      .all<Audience.Subscriber>();
     return results;
   }
 
@@ -111,8 +111,8 @@ class $Audience {
   // dashboard table renders. Search matches email or name.
   static async page(
     env: Env,
-    query: AudiencePageQuery,
-  ): Promise<AudiencePage> {
+    query: Audience.AudiencePageQuery,
+  ): Promise<Audience.AudiencePage> {
     const list = query.list ?? '';
     const search = (query.search ?? '').trim();
     const searchPattern = `%${search}%`;
@@ -138,7 +138,7 @@ class $Audience {
           ' ORDER BY subscriber.subscribed_at DESC, subscriber.email LIMIT ?4 OFFSET ?5',
       )
         .bind(list, search, searchPattern, limit, offset)
-        .all<SubscriberRow>(),
+        .all<Audience.SubscriberRow>(),
       env.DB.prepare(
         'SELECT COUNT(*) AS total FROM subscriber subscriber ' + whereClause,
       )
@@ -152,7 +152,7 @@ class $Audience {
   static async memberships(
     env: Env,
     address: string,
-  ): Promise<SubscriberRow[]> {
+  ): Promise<Audience.SubscriberRow[]> {
     const { results } = await env.DB.prepare(
       'SELECT subscriber.email, subscriber.list, subscriber.name, ' +
         'subscriber.timezone, ' +
@@ -165,7 +165,7 @@ class $Audience {
         'WHERE subscriber.email = ?',
     )
       .bind(address)
-      .all<SubscriberRow>();
+      .all<Audience.SubscriberRow>();
     return results;
   }
 
@@ -189,14 +189,14 @@ class $Audience {
   // Every known list — the registry unioned with anything organically
   // present on subscriber rows — with membership aggregates. Empty
   // registered lists appear with zero members.
-  static async lists(env: Env): Promise<ListSummary[]> {
+  static async lists(env: Env): Promise<Audience.ListSummary[]> {
     const { results } = await env.DB.prepare(
       'SELECT registry.name AS list, COUNT(subscriber.email) AS members, ' +
         'COALESCE(SUM(CASE WHEN subscriber.email NOT IN (SELECT email FROM unsubscribe) THEN 1 ELSE 0 END), 0) AS active ' +
         'FROM (SELECT name FROM list UNION SELECT DISTINCT list FROM subscriber) registry ' +
         'LEFT JOIN subscriber subscriber ON subscriber.list = registry.name ' +
         'GROUP BY registry.name ORDER BY registry.name',
-    ).all<ListSummary>();
+    ).all<Audience.ListSummary>();
     return results;
   }
 
@@ -266,14 +266,14 @@ class $Audience {
     await env.DB.prepare('DELETE FROM list WHERE name = ?').bind(list).run();
   }
 
-  static async signupsByDay(env: Env, days: number): Promise<DayCount[]> {
+  static async signupsByDay(env: Env, days: number): Promise<Audience.DayCount[]> {
     const since = Http.Class.nowSeconds() - days * 86_400;
     const { results } = await env.DB.prepare(
       "SELECT date(subscribed_at, 'unixepoch') AS day, COUNT(*) AS count " +
         'FROM subscriber WHERE subscribed_at >= ? GROUP BY day ORDER BY day',
     )
       .bind(since)
-      .all<DayCount>();
+      .all<Audience.DayCount>();
     return results;
   }
 }
@@ -281,45 +281,46 @@ class $Audience {
 export namespace Audience {
   export const $Class = Static($Audience);
   export let Class = $Class;
+
+  export interface Subscriber {
+    email: string;
+    name: string;
+    // IANA zone captured at signup; null/absent = unknown (drip falls
+    // back to the default_timezone setting)
+    timezone?: string | null;
+  }
+
+  export interface SubscriberRow extends Subscriber {
+    list: string;
+    subscribedAt: number;
+    unsubscribedAt: number | null;
+    sendCount: number;
+    lastSentAt: number | null;
+  }
+
+  export interface AudiencePageQuery {
+    list?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }
+
+  export interface AudiencePage {
+    total: number;
+    rows: SubscriberRow[];
+    limit: number;
+    offset: number;
+  }
+
+  export interface ListSummary {
+    list: string;
+    members: number;
+    active: number;
+  }
+
+  export interface DayCount {
+    day: string;
+    count: number;
+  }
 }
 
-export interface Subscriber {
-  email: string;
-  name: string;
-  // IANA zone captured at signup; null/absent = unknown (drip falls
-  // back to the default_timezone setting)
-  timezone?: string | null;
-}
-
-export interface SubscriberRow extends Subscriber {
-  list: string;
-  subscribedAt: number;
-  unsubscribedAt: number | null;
-  sendCount: number;
-  lastSentAt: number | null;
-}
-
-export interface AudiencePageQuery {
-  list?: string;
-  search?: string;
-  limit?: number;
-  offset?: number;
-}
-
-export interface AudiencePage {
-  total: number;
-  rows: SubscriberRow[];
-  limit: number;
-  offset: number;
-}
-
-export interface ListSummary {
-  list: string;
-  members: number;
-  active: number;
-}
-
-export interface DayCount {
-  day: string;
-  count: number;
-}

@@ -1,3 +1,4 @@
 .dev.vars
 worker-configuration.d.ts
 node_modules
+press-batch.json

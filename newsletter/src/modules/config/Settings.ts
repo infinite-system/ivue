@@ -95,7 +95,7 @@ class $Settings {
   }
 
   // the drip's default clock in one read
-  static async dripSchedule(env: Env): Promise<DripSchedule> {
+  static async dripSchedule(env: Env): Promise<Settings.DripSchedule> {
     const [cadenceDays, sendHourLocal, defaultTimezone] = await Promise.all([
       this.cadenceDays(env),
       this.sendHourLocal(env),
@@ -117,11 +117,11 @@ class $Settings {
     return `list:${list}:${this.SEND_HOUR_KEY}`;
   }
 
-  static async listOverrides(env: Env): Promise<ListScheduleOverrides> {
+  static async listOverrides(env: Env): Promise<Settings.ListScheduleOverrides> {
     const { results } = await env.DB.prepare(
       "SELECT key, value FROM setting WHERE key LIKE 'list:%'",
     ).all<{ key: string; value: string }>();
-    const overrides: ListScheduleOverrides = {};
+    const overrides: Settings.ListScheduleOverrides = {};
     for (const row of results) {
       const match = row.key.match(/^list:(.+):([a-z_]+)$/);
       if (!match) continue;
@@ -140,7 +140,7 @@ class $Settings {
   static async dripScheduleForList(
     env: Env,
     list: string,
-  ): Promise<DripSchedule> {
+  ): Promise<Settings.DripSchedule> {
     const [defaults, overrides] = await Promise.all([
       this.dripSchedule(env),
       this.listOverrides(env),
@@ -274,15 +274,16 @@ class $Settings {
 export namespace Settings {
   export const $Class = Static($Settings);
   export let Class = $Class;
+
+  export interface DripSchedule {
+    cadenceDays: number;
+    sendHourLocal: number;
+    defaultTimezone: string;
+  }
+
+  export type ListScheduleOverrides = Record<
+    string,
+    { cadenceDays?: number; sendHourLocal?: number }
+  >;
 }
 
-export interface DripSchedule {
-  cadenceDays: number;
-  sendHourLocal: number;
-  defaultTimezone: string;
-}
-
-export type ListScheduleOverrides = Record<
-  string,
-  { cadenceDays?: number; sendHourLocal?: number }
->;

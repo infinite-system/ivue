@@ -5,13 +5,13 @@
 // ANCHOR: launch day = Tuesday 2026-09-08. If launch slides, entries
 // slide with it — dates are week-anchored judgments, not appointments.
 // Checkmark state does NOT live here (localStorage owns it) — this
-// file is the plan, not the progress. Every entry names the paste-ready
-// copy it posts (drafts: repo-relative markdown paths, or x:<group>[:n]
-// keys into x-launch-copy.ts); the dialog shows that copy beside the
-// entry with a Copy button. The standing X voice posts are generated
-// at the bottom on a Monday/Wednesday/Friday cadence from launch week.
+// file is the plan, not the progress. Every entry names the copy it
+// posts by press source key (a repo path the import recorded, or
+// x:<group>[:n] for the launch-thread copy); the dialog reads those
+// expressions from the Worker — the copy itself never lives in this
+// public file. The standing X voice posts are generated at the bottom
+// on a Monday/Wednesday/Friday cadence from launch week.
 
-import { X_POSTS, type XPostGroup } from './x-launch-copy';
 
 export interface PressEntry {
   /** stable id: `${date}--${venue-slug}` — the checkmark key */
@@ -26,8 +26,8 @@ export interface PressEntry {
   article: string;
   /** one line: what to post and the angle */
   angle: string;
-  /** the paste-ready copy: repo-relative .md paths and x:<group>[:n] keys */
-  drafts: string[];
+  /** the copy this entry posts, by press source key: a repo path the import recorded, or x:<group>[:n] */
+  copy: string[];
   /** minutes of human work expected */
   effortMin: number;
   /** 1 = Vue launch wave, 2 = agents-story wave */
@@ -61,7 +61,7 @@ const placement = (
   effortMin: number,
   wave: 1 | 2 = 1,
   lang: PressEntry['lang'] = 'en',
-  draft: string | string[] = [],
+  copy: string | string[] = [],
 ): PressEntry => ({
   id: `${date}--${venue.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
   date,
@@ -70,7 +70,7 @@ const placement = (
   channel,
   article,
   angle,
-  drafts: typeof draft === 'string' ? [draft] : draft,
+  copy: typeof copy === 'string' ? [copy] : copy,
   effortMin,
   wave,
   lang,
@@ -268,24 +268,84 @@ const PLANNED: PressEntry[] = [
 // One post per Monday, Wednesday, and Friday from the day after launch,
 // in the artifact's order — voice-only first, then the wider papers rung
 // by rung, then the field theory — skipping any day that already carries
-// an X entry. The copy is x-launch-copy.ts; each entry drafts one post.
+// an X entry. Only the press keys and the artifact labels live here; the
+// text is read from the Worker by key.
 const VOICE_START = '2026-09-09';
 const VOICE_WEEKDAYS: ReadonlySet<number> = new Set([1, 3, 5]);
-const VOICE_VENUES: Partial<Record<XPostGroup, string>> = {
+const VOICE_VENUES: Record<string, string> = {
   voice: 'X — voice post',
   deeper: 'X — from the papers',
   field: 'X — field theory',
 };
+const VOICE_POSTS: { key: string; group: string; label: string }[] = [
+  { key: 'x:voice:1', group: 'voice', label: '1 · reducer · the method' },
+  { key: 'x:voice:2', group: 'voice', label: '2 · reducer · the method' },
+  { key: 'x:voice:3', group: 'voice', label: '3 · reducer' },
+  { key: 'x:voice:4', group: 'voice', label: '4 · reducer' },
+  { key: 'x:voice:5', group: 'voice', label: '5 · reducer · the method' },
+  { key: 'x:voice:6', group: 'voice', label: '6 · reducer' },
+  { key: 'x:voice:7', group: 'voice', label: '7 · reducer' },
+  { key: 'x:voice:8', group: 'voice', label: '8 · reducer' },
+  { key: 'x:voice:9', group: 'voice', label: '9 · builder' },
+  { key: 'x:voice:10', group: 'voice', label: '10 · reducer' },
+  { key: 'x:voice:11', group: 'voice', label: '11 · reducer' },
+  { key: 'x:voice:12', group: 'voice', label: '12 · reducer' },
+  { key: 'x:voice:13', group: 'voice', label: '13 · reducer · the method' },
+  { key: 'x:voice:14', group: 'voice', label: '14 · reducer · the method' },
+  { key: 'x:voice:15', group: 'voice', label: '15 · builder' },
+  { key: 'x:voice:16', group: 'voice', label: '16 · reducer · the method' },
+  { key: 'x:voice:17', group: 'voice', label: '17 · reducer · the method' },
+  { key: 'x:voice:18', group: 'voice', label: '18 · reducer · the method' },
+  { key: 'x:voice:19', group: 'voice', label: '19 · reducer · personal' },
+  { key: 'x:deeper:1', group: 'deeper', label: '1 · reducer' },
+  { key: 'x:deeper:2', group: 'deeper', label: '2 · reducer' },
+  { key: 'x:deeper:3', group: 'deeper', label: '3 · reducer' },
+  { key: 'x:deeper:4', group: 'deeper', label: '4 · reducer' },
+  { key: 'x:deeper:5', group: 'deeper', label: '5 · reducer' },
+  { key: 'x:deeper:6', group: 'deeper', label: '6 · reducer' },
+  { key: 'x:deeper:7', group: 'deeper', label: '7 · reducer' },
+  { key: 'x:deeper:8', group: 'deeper', label: '8 · reducer' },
+  { key: 'x:deeper:9', group: 'deeper', label: '9 · reducer' },
+  { key: 'x:deeper:10', group: 'deeper', label: '10 · reducer' },
+  { key: 'x:deeper:11', group: 'deeper', label: '11 · reducer' },
+  { key: 'x:deeper:12', group: 'deeper', label: '12 · reducer' },
+  { key: 'x:deeper:13', group: 'deeper', label: '13 · builder' },
+  { key: 'x:deeper:14', group: 'deeper', label: '14 · reducer' },
+  { key: 'x:deeper:15', group: 'deeper', label: '15 · reducer' },
+  { key: 'x:deeper:16', group: 'deeper', label: '16 · reducer' },
+  { key: 'x:deeper:17', group: 'deeper', label: '17 · reducer' },
+  { key: 'x:deeper:18', group: 'deeper', label: '18 · reducer' },
+  { key: 'x:deeper:19', group: 'deeper', label: '19 · reducer' },
+  { key: 'x:deeper:20', group: 'deeper', label: '20 · reducer' },
+  { key: 'x:deeper:21', group: 'deeper', label: '21 · reducer' },
+  { key: 'x:deeper:22', group: 'deeper', label: '22 · reducer' },
+  { key: 'x:deeper:23', group: 'deeper', label: '23 · reducer' },
+  { key: 'x:deeper:24', group: 'deeper', label: '24 · reducer' },
+  { key: 'x:deeper:25', group: 'deeper', label: '25 · reducer' },
+  { key: 'x:deeper:26', group: 'deeper', label: '26 · reducer' },
+  { key: 'x:deeper:27', group: 'deeper', label: '27 · reducer' },
+  { key: 'x:deeper:28', group: 'deeper', label: '28 · reducer' },
+  { key: 'x:field:1', group: 'field', label: '1 · reducer' },
+  { key: 'x:field:2', group: 'field', label: '2 · reducer' },
+  { key: 'x:field:3', group: 'field', label: '3 · reducer' },
+  { key: 'x:field:4', group: 'field', label: '4 · reducer' },
+  { key: 'x:field:5', group: 'field', label: '5 · reducer' },
+  { key: 'x:field:6', group: 'field', label: '6 · reducer' },
+  { key: 'x:field:7', group: 'field', label: '7 · reducer' },
+  { key: 'x:field:8', group: 'field', label: '8 · reducer' },
+  { key: 'x:field:9', group: 'field', label: '9 · reducer' },
+  { key: 'x:field:10', group: 'field', label: '10 · reducer' },
+  { key: 'x:field:11', group: 'field', label: '11 · reducer' },
+  { key: 'x:field:12', group: 'field', label: '12 · reducer' },
+  { key: 'x:field:13', group: 'field', label: '13 · reducer' },
+  { key: 'x:field:14', group: 'field', label: '14 · reducer' },
+  { key: 'x:field:15', group: 'field', label: '15 · reducer' },
+  { key: 'x:field:16', group: 'field', label: '16 · builder' },
+  { key: 'x:field:17', group: 'field', label: '17 · reducer' },
+];
 
 const isoDate = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-
-const firstSentence = (text: string): string => {
-  const line = text.split('\n')[0];
-  const stop = line.search(/[.!?]\s/);
-  const sentence = stop > 0 ? line.slice(0, stop + 1) : line;
-  return sentence.length > 120 ? sentence.slice(0, 117) + '…' : sentence;
-};
 
 function voiceEntries(planned: PressEntry[]): PressEntry[] {
   const taken = new Set(
@@ -293,13 +353,11 @@ function voiceEntries(planned: PressEntry[]): PressEntry[] {
   );
   const entries: PressEntry[] = [];
   const cursor = new Date(VOICE_START + 'T00:00:00');
-  for (const post of X_POSTS) {
-    const venue = VOICE_VENUES[post.group];
-    if (!venue) continue;
+  for (const post of VOICE_POSTS) {
     while (!VOICE_WEEKDAYS.has(cursor.getDay()) || taken.has(isoDate(cursor)))
       cursor.setDate(cursor.getDate() + 1);
     entries.push(
-      placement(isoDate(cursor), venue, 'https://x.com', 'x', 'voice', firstSentence(post.text), 5, 1, 'en', post.key),
+      placement(isoDate(cursor), VOICE_VENUES[post.group], 'https://x.com', 'x', 'voice', post.label, 5, 1, 'en', post.key),
     );
     cursor.setDate(cursor.getDate() + 1);
   }

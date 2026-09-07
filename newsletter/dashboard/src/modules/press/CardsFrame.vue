@@ -7,10 +7,10 @@ defineProps<{ model: ExpressionModel.Instance }>();
 <template>
   <ol class="xc-cards" aria-label="Image cards">
     <li v-for="entry in model.numbered" :key="entry.child.id" class="xc-card" :class="model.segmentTone(entry.child)">
-      <span class="xc-index">{{ entry.number === null ? 'skipped' : entry.number }}</span>
+      <span class="xc-index">{{ model.cardIndexLabel(entry) }}</span>
       <p
         class="xc-text"
-        :contenteditable="model.canEdit ? 'plaintext-only' : 'false'"
+        :contenteditable="model.editableAttribute"
         spellcheck="true"
         @input="model.onSegmentInput(entry.child, $event)"
         @paste="model.onPaste($event)"

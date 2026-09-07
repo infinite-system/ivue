@@ -7,6 +7,8 @@ const {
   channelFilter,
   waveFilter,
   pendingOnly,
+  openExpressions,
+  loadingCopy,
   // element refs
   dialogEl,
 } = model;
@@ -196,77 +198,73 @@ const {
           <li class="release-pill">{{ model.openEntry.lang }}</li>
         </ul>
 
-        <section v-if="model.openDrafts.length" class="release-copy">
+        <section v-if="model.hasCopy" class="release-copy">
           <nav
-            v-if="model.hasDraftTabs"
+            v-if="model.hasCopyTabs"
             class="dialog-tabs"
             aria-label="Copy to post"
           >
             <button
-              v-for="draft in model.openDrafts"
-              :key="draft.key"
+              v-for="row in openExpressions"
+              :key="row.id"
               class="dialog-tab"
-              :class="{ active: model.isDraftActive(draft.key) }"
-              @click="model.showDraft(draft.key)"
+              :class="{ active: model.isExpressionActive(row) }"
+              @click="model.showExpression(row.id)"
             >
-              {{ draft.title }}
+              {{ model.expressionTitle(row) }}
             </button>
           </nav>
 
-          <div v-if="model.activeDraft" class="dialog-pane release-draft">
+          <div v-if="model.activeExpression" class="dialog-pane release-draft">
             <div class="release-draft-head">
               <div>
-                <h3>{{ model.activeDraft.title }}</h3>
-                <p v-if="model.activeDraft.subtitle" class="muted">
-                  {{ model.activeDraft.subtitle }}
+                <h3>{{ model.expressionTitle(model.activeExpression) }}</h3>
+                <p class="muted">
+                  <span class="press-badge" :class="model.activeStatusTone">{{ model.activeStatusLabel }}</span>
+                  <button class="linklike" @click="model.openInPress()">Open in Press</button>
                 </p>
               </div>
               <button
                 class="primary release-copy-btn"
-                :class="{ copied: model.isCopied(model.activeDraft.key) }"
-                @click="model.copyDraft(model.activeDraft)"
+                :class="{ copied: model.isCopied('all') }"
+                @click="model.copyActive()"
               >
-                {{ model.copyLabel(model.activeDraft.key) }}
+                {{ model.copyLabel('all') }}
               </button>
             </div>
 
             <ol
-              v-if="model.activeDraft.segments"
+              v-if="model.activeSegments"
               class="release-segments"
               aria-label="Thread segments"
             >
               <li
-                v-for="(segment, index) in model.activeDraft.segments"
-                :key="index"
+                v-for="(child, index) in model.activeSegments"
+                :key="child.id"
                 class="release-segment"
               >
                 <div class="release-segment-head">
                   <span class="muted">
-                    {{ model.segmentLabel(index, model.activeDraft.segments.length) }}
+                    {{ model.segmentLabel(index, model.activeSegments.length) }}
                   </span>
                   <button
                     class="ghost release-copy-btn"
-                    :class="{
-                      copied: model.isCopied(model.segmentKey(model.activeDraft, index)),
-                    }"
-                    @click="model.copySegment(model.activeDraft, index)"
+                    :class="{ copied: model.isCopied(model.segmentKey(child)) }"
+                    @click="model.copySegment(child)"
                   >
-                    {{ model.copyLabel(model.segmentKey(model.activeDraft, index)) }}
+                    {{ model.copyLabel(model.segmentKey(child)) }}
                   </button>
                 </div>
-                <pre class="release-text">{{ segment }}</pre>
+                <pre class="release-text">{{ child.body }}</pre>
               </li>
             </ol>
-            <pre v-else class="release-text">{{ model.activeDraft.body }}</pre>
-
-            <p class="release-draft-source muted">
-              Source: <code>{{ model.activeDraft.source }}</code>
-            </p>
+            <pre v-else class="release-text">{{ model.activeBody }}</pre>
           </div>
         </section>
+        <p v-else-if="loadingCopy" class="release-copy-empty muted">Reading the copy…</p>
         <p v-else class="release-copy-empty muted">
-          No copy prepared for this entry yet — the angle above is the
-          brief.
+          No copy in the press for this entry yet — the angle above is the
+          brief. Write it in the Press tab and it shows here.
         </p>
 
         <footer class="release-dialog-foot">
@@ -278,7 +276,12 @@ const {
             />
             {{ model.openEntryDoneLabel }}
           </label>
-          <button class="ghost" @click="model.closeDetail()">Close</button>
+          <div class="release-dialog-actions">
+            <button v-if="model.canScheduleHere" class="ghost" @click="model.scheduleHere()">
+              {{ model.scheduleHereLabel }}
+            </button>
+            <button class="ghost" @click="model.closeDetail()">Close</button>
+          </div>
         </footer>
       </div>
     </div>

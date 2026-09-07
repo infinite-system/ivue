@@ -126,7 +126,7 @@ class $Comments {
 
   // One row, by id — the internal shape (email included; callers are
   // server-side only).
-  static async rowFor(env: Env, id: number): Promise<CommentRow | null> {
+  static async rowFor(env: Env, id: number): Promise<Comments.CommentRow | null> {
     return env.DB.prepare(
       'SELECT id, slug, name, email, body, submitted_at AS submittedAt, ' +
         'status, parent_id AS parentId, root_id AS rootId, locked, ' +
@@ -134,7 +134,7 @@ class $Comments {
         'FROM comment WHERE id = ?',
     )
       .bind(id)
-      .first<CommentRow>();
+      .first<Comments.CommentRow>();
   }
 
   static async threadLocked(env: Env, rootId: number): Promise<boolean> {
@@ -214,8 +214,8 @@ class $Comments {
   // gets their own reply, and consent is always checked.
   static async replyRecipients(
     env: Env,
-    reply: CommentRow,
-  ): Promise<CommentRecipient[]> {
+    reply: Comments.CommentRow,
+  ): Promise<Comments.CommentRecipient[]> {
     const rootId = reply.rootId ?? reply.id;
     const { results: participants } = await env.DB.prepare(
       'SELECT id, name, email FROM comment ' +
@@ -240,7 +240,7 @@ class $Comments {
     }
 
     const authorEmail = reply.email.trim().toLowerCase();
-    const recipients: CommentRecipient[] = [];
+    const recipients: Comments.CommentRecipient[] = [];
     for (const [email, name] of addressed) {
       if (email === authorEmail) continue; // never your own reply
       if (!(await this.subscribed(env, rootId, email))) continue; // consent
@@ -270,7 +270,7 @@ class $Comments {
   // downward), and WITHOUT the email column — the projection is the
   // privacy guarantee. Thread shape (parentId/rootId), the lock flag
   // and the avatar seed ride along; the client assembles the tree.
-  static async approvedFor(env: Env, slug: string): Promise<PublicComment[]> {
+  static async approvedFor(env: Env, slug: string): Promise<Comments.PublicComment[]> {
     const { results } = await env.DB.prepare(
       'SELECT id, name, body, submitted_at AS submittedAt, ' +
         'parent_id AS parentId, root_id AS rootId, locked, ' +
@@ -278,13 +278,13 @@ class $Comments {
         "WHERE slug = ? AND status = 'approved' ORDER BY submitted_at, id",
     )
       .bind(slug)
-      .all<PublicComment>();
+      .all<Comments.PublicComment>();
     return results;
   }
 
   // The dashboard page: pending first (the moderation queue), then
   // newest; optional status filter and recipient/slug/body search.
-  static async page(env: Env, query: CommentPageQuery): Promise<CommentPage> {
+  static async page(env: Env, query: Comments.CommentPageQuery): Promise<Comments.CommentPage> {
     const status = (query.status ?? '').trim();
     const search = (query.search ?? '').trim();
     const searchPattern = `%${search}%`;
@@ -307,7 +307,7 @@ class $Comments {
           'LIMIT ?4 OFFSET ?5',
       )
         .bind(status, search, searchPattern, limit, offset)
-        .all<CommentRow>(),
+        .all<Comments.CommentRow>(),
       env.DB.prepare('SELECT COUNT(*) AS total FROM comment ' + whereClause)
         .bind(status, search, searchPattern)
         .first<{ total: number }>(),
@@ -372,41 +372,42 @@ class $Comments {
 export namespace Comments {
   export const $Class = Static($Comments);
   export let Class = $Class;
+
+  export interface PublicComment {
+    id: number;
+    name: string;
+    body: string;
+    submittedAt: number;
+    parentId: number | null;
+    rootId: number | null;
+    locked: number;
+    avatarSeed: string;
+  }
+
+  export interface CommentRow extends PublicComment {
+    slug: string;
+    email: string;
+    status: 'pending' | 'approved';
+    subscribeReplies?: number;
+  }
+
+  export interface CommentRecipient {
+    email: string;
+    name: string;
+  }
+
+  export interface CommentPageQuery {
+    status?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }
+
+  export interface CommentPage {
+    total: number;
+    rows: CommentRow[];
+    limit: number;
+    offset: number;
+  }
 }
 
-export interface PublicComment {
-  id: number;
-  name: string;
-  body: string;
-  submittedAt: number;
-  parentId: number | null;
-  rootId: number | null;
-  locked: number;
-  avatarSeed: string;
-}
-
-export interface CommentRow extends PublicComment {
-  slug: string;
-  email: string;
-  status: 'pending' | 'approved';
-  subscribeReplies?: number;
-}
-
-export interface CommentRecipient {
-  email: string;
-  name: string;
-}
-
-export interface CommentPageQuery {
-  status?: string;
-  search?: string;
-  limit?: number;
-  offset?: number;
-}
-
-export interface CommentPage {
-  total: number;
-  rows: CommentRow[];
-  limit: number;
-  offset: number;
-}

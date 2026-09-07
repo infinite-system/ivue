@@ -1,22 +1,35 @@
 import { Reactive } from 'ivue';
+import { Static } from 'ivue/extras';
 import { ref } from 'vue';
 import { Api } from '../platform/Api';
 import { AppRouter } from './AppRouter';
 
 // The application store — the ivue store pattern: one module singleton
-// reached through `AppStore.use()`, injected into models via a cached
-// `$`-getter (`get $app() { return AppStore.use(); }`), never passed
+// reached through `AppStore.Class.use()`, injected into models via a cached
+// `$`-getter (`get $app() { return AppStore.Class.use(); }`), never passed
 // down as a prop. Holds the session gate and toasts; ROUTING belongs to
 // vue-router (AppRouter) — the store only reads and pushes it, so the
 // URL stays the single source of truth for the open view and the open
 // email preview (/posts?preview=<slug>).
 class $AppStore {
+  // The ONE instance, as a `$`-static: constructed on first read, after
+  // the app exists, and cached on the receiver. It constructs through the
+  // namespace slot, so a test double swapped into `Class` is what gets
+  // built — the store has one receiver, the slot, so nothing forks.
+  protected static get $shared(): AppStore.Instance {
+    return new AppStore.Class();
+  }
+
+  static use(): AppStore.Instance {
+    return this.$shared;
+  }
+
   // the router — resolved and cached on first touch
   protected get $router() {
     return AppRouter.Class.$router;
   }
 
-  get DOMAINS(): { name: DomainName; label: string; home: ViewName }[] {
+  get DOMAINS(): { name: AppStore.DomainName; label: string; home: AppStore.ViewName }[] {
     return [
       { name: 'newsletter', label: 'Newsletter', home: 'subscribers' },
       { name: 'socials', label: 'Socials', home: 'x' },
@@ -25,7 +38,7 @@ class $AppStore {
     ];
   }
 
-  get TABS_BY_DOMAIN(): Record<DomainName, { name: ViewName; label: string }[]> {
+  get TABS_BY_DOMAIN(): Record<AppStore.DomainName, { name: AppStore.ViewName; label: string }[]> {
     return {
       newsletter: [
         { name: 'subscribers', label: 'Subscribers' },
@@ -71,7 +84,7 @@ class $AppStore {
   }
 
   get toasts() {
-    return ref<Toast[]>([]);
+    return ref<AppStore.Toast[]>([]);
   }
 
   // monotonic toast id source — survives dismissals, never reused
@@ -81,15 +94,15 @@ class $AppStore {
 
   // ---- routing (derived from the router's reactive currentRoute) ----
 
-  get view(): ViewName {
-    return (this.$router.currentRoute.value.name as ViewName) ?? 'subscribers';
+  get view(): AppStore.ViewName {
+    return (this.$router.currentRoute.value.name as AppStore.ViewName) ?? 'subscribers';
   }
 
   get emailPreviewSlug(): string {
     return String(this.$router.currentRoute.value.query.preview ?? '');
   }
 
-  get activeDomain(): DomainName {
+  get activeDomain(): AppStore.DomainName {
     const path = this.$router.currentRoute.value.path;
     if (path.startsWith('/socials')) return 'socials';
     if (path.startsWith('/release')) return 'release';
@@ -104,12 +117,8 @@ class $AppStore {
   }
 
   // the piece page belongs to the Pieces tab
-  get tabView(): ViewName {
+  get tabView(): AppStore.ViewName {
     return this.view === 'press-piece' ? 'press' : this.view;
-  }
-
-  openPiece(id: number) {
-    this.$router.push({ name: 'press-piece', params: { id: String(id) } });
   }
 
   get pieceId(): number {
@@ -127,29 +136,33 @@ class $AppStore {
   // The dialog's tab rides the query too (?subscriberTab=upcoming), so
   // a tab choice survives reload and back/forward. Sent is the default
   // and keeps the URL clean (vue-router drops undefined params).
-  get subscriberTab(): SubscriberTabName {
+  get subscriberTab(): AppStore.SubscriberTabName {
     return this.$router.currentRoute.value.query.subscriberTab === 'upcoming'
       ? 'upcoming'
       : 'sent';
   }
 
-  isOpen(view: ViewName) {
+  isOpen(view: AppStore.ViewName) {
     return this.tabView === view;
   }
 
-  isDomainOpen(domain: DomainName) {
+  isDomainOpen(domain: AppStore.DomainName) {
     return this.activeDomain === domain;
   }
 
-  open(view: ViewName) {
+  open(view: AppStore.ViewName) {
     this.$router.push({ name: view });
   }
 
-  sectionsLabel(domain: DomainName) {
+  sectionsLabel(domain: AppStore.DomainName) {
     return `${domain} sections`;
   }
 
-  openDomain(domain: DomainName) {
+  openPiece(id: number) {
+    this.$router.push({ name: 'press-piece', params: { id: String(id) } });
+  }
+
+  openDomain(domain: AppStore.DomainName) {
     const entry = this.DOMAINS.find((candidate) => candidate.name === domain);
     if (entry) this.open(entry.home);
   }
@@ -172,7 +185,7 @@ class $AppStore {
     });
   }
 
-  openSubscriberTab(tab: SubscriberTabName) {
+  openSubscriberTab(tab: AppStore.SubscriberTabName) {
     this.$router.push({
       query: {
         ...this.$router.currentRoute.value.query,
@@ -226,8 +239,8 @@ class $AppStore {
 
   // ---- toasts ----
 
-  notify(message: string, tone: ToastTone = 'info') {
-    const toast: Toast = { id: ++this.toastCounter.value, message, tone };
+  notify(message: string, tone: AppStore.ToastTone = 'info') {
+    const toast: AppStore.Toast = { id: ++this.toastCounter.value, message, tone };
     this.toasts.value = [...this.toasts.value, toast];
     setTimeout(() => this.dismiss(toast.id), 4500);
   }
@@ -252,40 +265,39 @@ class $AppStore {
 }
 
 export namespace AppStore {
-  export const $Class = $AppStore;
-  export let Class = Reactive($Class);
+  export const $Class = Static($AppStore); // anchor — it declares statics
+  export let Class = Reactive($Class); // reactive — use() does the one `new`
   export type Instance = typeof Class.Instance;
 
-  let singleton: Instance | null = null;
-  export function use(): Instance {
-    return (singleton ??= new Class());
+  export type DomainName = 'newsletter' | 'socials' | 'release' | 'press';
+
+  export type ViewName =
+    | 'subscribers'
+    | 'lists'
+    | 'sends'
+    | 'posts'
+    | 'comments'
+    | 'send'
+    | 'drip'
+    | 'stats'
+    | 'newsletter-settings'
+    | 'x'
+    | 'socials-settings'
+    | 'release'
+    | 'release-venues'
+    | 'press'
+    | 'press-piece'
+    | 'press-queue'
+    | 'press-sent';
+
+  export type ToastTone = 'info' | 'success' | 'error';
+
+  export type SubscriberTabName = 'sent' | 'upcoming';
+
+  export interface Toast {
+    id: number;
+    message: string;
+    tone: ToastTone;
   }
 }
 
-export type DomainName = 'newsletter' | 'socials' | 'release' | 'press';
-export type ViewName =
-  | 'subscribers'
-  | 'lists'
-  | 'sends'
-  | 'posts'
-  | 'comments'
-  | 'send'
-  | 'drip'
-  | 'stats'
-  | 'newsletter-settings'
-  | 'x'
-  | 'socials-settings'
-  | 'release'
-  | 'release-venues'
-  | 'press'
-  | 'press-piece'
-  | 'press-queue'
-  | 'press-sent';
-export type ToastTone = 'info' | 'success' | 'error';
-export type SubscriberTabName = 'sent' | 'upcoming';
-
-export interface Toast {
-  id: number;
-  message: string;
-  tone: ToastTone;
-}

@@ -1,8 +1,8 @@
 import { Reactive } from 'ivue';
+import { Static } from 'ivue/extras';
 import { Notify } from 'quasar';
 import { ref, shallowRef, watch } from 'vue';
 import { Api } from '../platform/Api';
-import type { PressExpression, PressMirror, PressPieceRecord, PressRevision } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 import { Format } from '../platform/Format';
 import { Markdown } from './Markdown';
@@ -20,10 +20,6 @@ class $ExpressionModel {
   static readonly X_HANDLE = '@ivue_dev';
   static readonly SENT_PLATFORMS = ['x', 'linkedin', 'reddit', 'devto', 'hn', 'bluesky', 'mastodon', 'threads', 'email', 'other'];
 
-  protected get $app() {
-    return AppStore.use();
-  }
-
   constructor(
     public props: ExpressionModel.Props,
     public emit: ExpressionModel.Emits,
@@ -33,6 +29,15 @@ class $ExpressionModel {
       () => props.expression,
       (expression) => this.adopt(expression),
     );
+  }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $ExpressionModel;
+  }
+
+  protected get $app() {
+    return AppStore.Class.use();
   }
 
   /* ---- state ---- */
@@ -93,7 +98,7 @@ class $ExpressionModel {
   }
 
   get revisions() {
-    return shallowRef<PressRevision[]>([]);
+    return shallowRef<Api.PressRevision[]>([]);
   }
 
   get revisionsOpen() {
@@ -114,11 +119,11 @@ class $ExpressionModel {
 
   /* ---- the record ---- */
 
-  get record(): PressExpression {
+  get record(): Api.PressExpression {
     return this.props.expression;
   }
 
-  get piece(): PressPieceRecord {
+  get piece(): Api.PressPieceRecord {
     return this.props.piece;
   }
 
@@ -142,12 +147,12 @@ class $ExpressionModel {
     return this.record.mode === 'authored';
   }
 
-  get children(): PressExpression[] {
+  get children(): Api.PressExpression[] {
     return this.record.children ?? [];
   }
 
   /** children with their live number (skipped ones carry none) */
-  get numbered(): { child: PressExpression; number: number | null; text: string }[] {
+  get numbered(): { child: Api.PressExpression; number: number | null; text: string }[] {
     let live = 0;
     return this.children.map((child) => {
       const text = this.segmentDrafts.value[child.id] ?? child.body;
@@ -167,6 +172,11 @@ class $ExpressionModel {
 
   get platformLabel(): string {
     return PressKinds.Class.platformLabel(this.kind);
+  }
+
+  get platformKey(): string {
+    const entry = Object.entries(PressKinds.Class.PLATFORM_LABELS).find(([, label]) => label === this.platformLabel);
+    return entry?.[0] ?? 'other';
   }
 
   get statusLabel(): string {
@@ -190,11 +200,11 @@ class $ExpressionModel {
   }
 
   get xName(): string {
-    return $ExpressionModel.X_NAME;
+    return this.self.X_NAME;
   }
 
   get xHandle(): string {
-    return $ExpressionModel.X_HANDLE;
+    return this.self.X_HANDLE;
   }
 
   /** the text as it will be copied or posted */
@@ -235,6 +245,10 @@ class $ExpressionModel {
 
   get renderedBody(): string {
     return Markdown.Class.render(this.bodyDraft.value);
+  }
+
+  get pieceLinkLabel(): string {
+    return this.piece.links[0]?.url ?? 'no link';
   }
 
   get renderedFirstComment(): string {
@@ -278,10 +292,13 @@ class $ExpressionModel {
     return String(this.metaDraft.value.to ?? this.record.venue);
   }
 
-  get mirrors(): { mirror: PressMirror; label: string; count: number; limit: number | null; over: boolean; sentLabel: string }[] {
+  get mirrors(): { mirror: Api.PressMirror; label: string; count: number; limit: number | null; over: boolean; sentLabel: string }[] {
+    // a thread mirrors tweet by tweet: the longest live tweet is what the limit meets
+    const count = this.isParent
+      ? Math.max(0, ...this.numbered.filter((entry) => entry.number !== null).map((entry) => PressKinds.Class.count(entry.text)))
+      : PressKinds.Class.count(this.copyText);
     return this.record.mirrors.map((mirror) => {
       const limit = PressKinds.Class.limit(mirror.platform);
-      const count = PressKinds.Class.count(this.copyText);
       return {
         mirror,
         label: PressKinds.Class.PLATFORM_LABELS[mirror.platform] ?? mirror.platform,
@@ -335,6 +352,32 @@ class $ExpressionModel {
     return this.isDerived;
   }
 
+  /** the returned-to-draft notice shows only while the text waits for approval again */
+  get showsReturnedNotice(): boolean {
+    return this.unapprovedBecause !== '' && this.canApprove;
+  }
+
+  get canOpenSchedule(): boolean {
+    return this.canSchedule || this.canReschedule;
+  }
+
+  get scheduleButtonLabel(): string {
+    return this.canReschedule ? 'Reschedule' : 'Schedule';
+  }
+
+  get scheduleSubmitLabel(): string {
+    return this.canReschedule ? 'Move it' : 'Schedule';
+  }
+
+  /** contenteditable's value: plain text where the card edits, off elsewhere */
+  get editableAttribute(): 'plaintext-only' | 'false' {
+    return this.canEdit ? 'plaintext-only' : 'false';
+  }
+
+  get articleTone(): string {
+    return `ar-${this.kind}`;
+  }
+
   get approveLabel(): string {
     return this.busy.value ? '…' : this.record.status === 'approved' ? 'Approved ✓' : 'Approve';
   }
@@ -374,7 +417,7 @@ class $ExpressionModel {
   }
 
   get sentPlatformOptions(): { label: string; value: string }[] {
-    return $ExpressionModel.SENT_PLATFORMS.map((platform) => ({
+    return this.self.SENT_PLATFORMS.map((platform) => ({
       label: PressKinds.Class.PLATFORM_LABELS[platform] ?? platform,
       value: platform,
     }));
@@ -389,7 +432,7 @@ class $ExpressionModel {
 
   /* ---- adopting a record ---- */
 
-  adopt(expression: PressExpression) {
+  adopt(expression: Api.PressExpression) {
     if (this.saveState.value === 'dirty' || this.saveState.value === 'saving') return;
     const drafts: Record<number, string> = {};
     for (const child of expression.children ?? []) drafts[child.id] = child.body;
@@ -401,24 +444,24 @@ class $ExpressionModel {
 
   /* ---- editing ---- */
 
-  segmentText(child: PressExpression): string {
+  segmentText(child: Api.PressExpression): string {
     return this.segmentDrafts.value[child.id] ?? child.body;
   }
 
-  segmentCount(child: PressExpression): number {
+  segmentCount(child: Api.PressExpression): number {
     return PressKinds.Class.count(this.segmentText(child));
   }
 
-  segmentOver(child: PressExpression): boolean {
+  segmentOver(child: Api.PressExpression): boolean {
     const limit = this.limit;
     return limit !== null && this.segmentCount(child) > limit;
   }
 
-  segmentCountLabel(child: PressExpression): string {
+  segmentCountLabel(child: Api.PressExpression): string {
     return this.limit === null ? `${this.segmentCount(child)}` : `${this.segmentCount(child)} / ${this.limit}`;
   }
 
-  onSegmentInput(child: PressExpression, event: Event) {
+  onSegmentInput(child: Api.PressExpression, event: Event) {
     const text = (event.target as HTMLElement).innerText.replace(/ /g, ' ');
     this.segmentDrafts.value = { ...this.segmentDrafts.value, [child.id]: text };
     this.markDirty(() => this.saveSegment(child));
@@ -449,7 +492,7 @@ class $ExpressionModel {
   markDirty(save: () => Promise<void>) {
     this.saveState.value = 'dirty';
     if (this.saveTimer.value !== null) clearTimeout(this.saveTimer.value);
-    this.saveTimer.value = setTimeout(() => save(), $ExpressionModel.AUTOSAVE_MS);
+    this.saveTimer.value = setTimeout(() => save(), this.self.AUTOSAVE_MS);
   }
 
   onKeydown(event: KeyboardEvent) {
@@ -471,7 +514,7 @@ class $ExpressionModel {
     } else await this.saveBody();
   }
 
-  async saveSegment(child: PressExpression) {
+  async saveSegment(child: Api.PressExpression) {
     const text = this.segmentText(child);
     if (text === child.body) {
       this.saveState.value = 'clean';
@@ -505,15 +548,24 @@ class $ExpressionModel {
 
   /* ---- segments ---- */
 
-  async setSkipped(child: PressExpression, skipped: boolean) {
+  async setSkipped(child: Api.PressExpression, skipped: boolean) {
     await this.act(() => Api.Class.pressPatchExpression(child.id, { skipped }));
   }
 
-  skipLabel(child: PressExpression): string {
+  skipLabel(child: Api.PressExpression): string {
     return child.skipped ? 'Restore' : 'Skip';
   }
 
-  segmentTone(child: PressExpression): string {
+  /** a card's index, or the word for a skipped one */
+  cardIndexLabel(entry: { number: number | null }): string {
+    return entry.number === null ? 'skipped' : String(entry.number);
+  }
+
+  segmentNumberLabel(entry: { number: number | null }): string {
+    return entry.number === null ? 'skipped' : `${entry.number} / ${this.liveCount}`;
+  }
+
+  segmentTone(child: Api.PressExpression): string {
     return child.skipped ? 'skipped' : this.segmentOver(child) ? 'over' : '';
   }
 
@@ -521,7 +573,7 @@ class $ExpressionModel {
     await this.act(() => Api.Class.pressAct(this.record.id, 'segment', { body: '' }));
   }
 
-  onDragStart(child: PressExpression) {
+  onDragStart(child: Api.PressExpression) {
     this.dragFromId.value = child.id;
   }
 
@@ -529,7 +581,7 @@ class $ExpressionModel {
     if (this.dragFromId.value !== null) event.preventDefault();
   }
 
-  async onDrop(target: PressExpression) {
+  async onDrop(target: Api.PressExpression) {
     const from = this.dragFromId.value;
     this.dragFromId.value = null;
     if (from === null || from === target.id) return;
@@ -538,7 +590,7 @@ class $ExpressionModel {
     await this.act(() => Api.Class.pressReorder(this.record.id, order));
   }
 
-  isDragging(child: PressExpression): boolean {
+  isDragging(child: Api.PressExpression): boolean {
     return this.dragFromId.value === child.id;
   }
 
@@ -637,11 +689,6 @@ class $ExpressionModel {
     this.sentOpen.value = true;
   }
 
-  get platformKey(): string {
-    const entry = Object.entries(PressKinds.Class.PLATFORM_LABELS).find(([, label]) => label === this.platformLabel);
-    return entry?.[0] ?? 'other';
-  }
-
   closeSent() {
     this.sentOpen.value = false;
   }
@@ -674,16 +721,16 @@ class $ExpressionModel {
     this.revisionsOpen.value = false;
   }
 
-  async restore(revision: PressRevision) {
+  async restore(revision: Api.PressRevision) {
     this.revisionsOpen.value = false;
     await this.act(() => Api.Class.pressRestore(this.record.id, revision.id), 'Restored as a new save');
   }
 
-  revisionLabel(revision: PressRevision): string {
+  revisionLabel(revision: Api.PressRevision): string {
     return `${Format.Class.dateTime(revision.savedAt)} · ${revision.author}`;
   }
 
-  revisionExcerpt(revision: PressRevision): string {
+  revisionExcerpt(revision: Api.PressRevision): string {
     const line = revision.body.split('\n').find((candidate) => candidate.trim()) ?? '';
     return line.length > 90 ? `${line.slice(0, 87)}…` : line;
   }
@@ -694,7 +741,7 @@ class $ExpressionModel {
     try {
       await navigator.clipboard.writeText(text);
       this.copiedKey.value = key;
-      setTimeout(() => this.clearCopied(key), $ExpressionModel.COPIED_MS);
+      setTimeout(() => this.clearCopied(key), this.self.COPIED_MS);
     } catch {
       Notify.create({ type: 'negative', message: 'Copy failed — select the text instead' });
     }
@@ -708,7 +755,7 @@ class $ExpressionModel {
     return this.copy(this.copyText, 'all');
   }
 
-  copySegment(child: PressExpression) {
+  copySegment(child: Api.PressExpression) {
     return this.copy(this.segmentText(child), `segment-${child.id}`);
   }
 
@@ -720,14 +767,14 @@ class $ExpressionModel {
     return this.copiedKey.value === key;
   }
 
-  segmentKey(child: PressExpression): string {
+  segmentKey(child: Api.PressExpression): string {
     return `segment-${child.id}`;
   }
 
   /* ---- helpers ---- */
 
   /** every footer verb: save first, call, replace the record, say what happened */
-  async act(call: () => Promise<PressExpression>, message?: string) {
+  async act(call: () => Promise<Api.PressExpression>, message?: string) {
     await this.saveNow();
     this.busy.value = true;
     try {
@@ -768,17 +815,17 @@ class $ExpressionModel {
 }
 
 export namespace ExpressionModel {
-  export const $Class = $ExpressionModel;
+  export const $Class = Static($ExpressionModel); // anchor — it declares statics
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 
   export interface Props {
-    expression: PressExpression;
-    piece: PressPieceRecord;
+    expression: Api.PressExpression;
+    piece: Api.PressPieceRecord;
   }
 
   export type Emits = {
-    (event: 'changed', record: PressExpression): void;
+    (event: 'changed', record: Api.PressExpression): void;
     (event: 'removed', id: number): void;
   };
 }

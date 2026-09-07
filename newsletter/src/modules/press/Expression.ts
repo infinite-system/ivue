@@ -3,7 +3,6 @@ import { Http } from '../platform/Http';
 import { XPoster } from '../socials/XPoster';
 import { Tweets } from '../socials/Tweets';
 import { Scheduler } from '../schedule/Scheduler';
-import type { JobResult } from '../schedule/Scheduler';
 import { Piece } from './Piece';
 import { Posting } from './Posting';
 import { Projection } from './Projection';
@@ -91,6 +90,25 @@ class $Expression {
       'SELECT * FROM expression WHERE calendar_id = ? AND parent_id IS NULL ORDER BY id',
     )
       .bind(calendarId)
+      .all<Expression.Row>();
+    const records: Expression.Record[] = [];
+    for (const row of results) records.push((await this.byId(env, row.id))!);
+    return records;
+  }
+
+  /**
+   * The calendar's lookup: an entry names its copy by source key — a
+   * repo path the import recorded in meta.source, or an artifact key
+   * (`x:thread`, `x:hooks`, `x:voice:3`) in meta.artifactKey; a group
+   * key without an index matches every post of the group.
+   */
+  static async bySource(env: Env, key: string): Promise<Expression.Record[]> {
+    const { results } = await env.DB.prepare(
+      'SELECT * FROM expression WHERE parent_id IS NULL AND status != \'archived\' AND (' +
+        "json_extract(meta, '$.source') = ? OR json_extract(meta, '$.artifactKey') = ? OR json_extract(meta, '$.artifactKey') LIKE ?" +
+        ') ORDER BY id',
+    )
+      .bind(key, key, key.split(':').length === 2 ? `${key}:%` : key)
       .all<Expression.Row>();
     const records: Expression.Record[] = [];
     for (const row of results) records.push((await this.byId(env, row.id))!);
@@ -417,7 +435,7 @@ class $Expression {
    * an edit after scheduling already cancelled the job and returned
    * the row to draft, so this guard is the belt to that suspender.
    */
-  static async executeJob(env: Env, payload: { expressionId: string; platform: string }): Promise<JobResult> {
+  static async executeJob(env: Env, payload: { expressionId: string; platform: string }): Promise<Scheduler.JobResult> {
     const id = Number(payload.expressionId);
     const current = await this.byId(env, id);
     if (!current) return { error: `expression ${id} no longer exists` };

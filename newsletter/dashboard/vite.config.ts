@@ -32,12 +32,6 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 5190,
-      // the release calendar bundles paste-ready copy from tasks/ and
-      // docs_v2/blog/ (?raw imports) — the dev server must be allowed to
-      // read them from outside the dashboard root
-      fs: {
-        allow: [fileURLToPath(new URL('../..', import.meta.url))],
-      },
       // every Worker endpoint the dashboard calls — /admin/* plus the two
       // top-level operator endpoints. Defaults to the LIVE Worker (real
       // data); set DEV_WORKER_ORIGIN in newsletter/.env (e.g.

@@ -80,7 +80,7 @@ const {
           </tr>
         </thead>
         <tbody>
-          <tr v-if="loading && !rows.length">
+          <tr v-if="model.isLoadingEmpty">
             <td colspan="5" class="empty">Loading…</td>
           </tr>
           <tr v-else-if="model.isEmpty">

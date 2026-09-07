@@ -4,7 +4,7 @@ import { RouterView } from 'vue-router';
 import { AppStore } from './AppStore';
 import SubscriberModal from '../subscriber/SubscriberModal.vue';
 
-const app = AppStore.use();
+const app = AppStore.Class.use();
 const {
   // state refs
   checking,

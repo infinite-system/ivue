@@ -8,9 +8,8 @@ Impossible if true: a card shows text the platform would not accept without sayi
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ExpressionModel } from './ExpressionModel';
 import { Api } from '../platform/Api';
-import type { PressExpression, PressPieceRecord } from '../platform/Api';
 
-const PIECE: PressPieceRecord = {
+const PIECE: Api.PressPieceRecord = {
   id: 1,
   slug: 'introducing-ivue',
   title: 'Launch',
@@ -24,7 +23,7 @@ const PIECE: PressPieceRecord = {
   updatedAt: 0,
 };
 
-function row(id: number, overrides: Partial<PressExpression> = {}): PressExpression {
+function row(id: number, overrides: Partial<Api.PressExpression> = {}): Api.PressExpression {
   return {
     id,
     pieceId: 1,
@@ -51,7 +50,7 @@ function row(id: number, overrides: Partial<PressExpression> = {}): PressExpress
   };
 }
 
-function thread(overrides: Partial<PressExpression> = {}): PressExpression {
+function thread(overrides: Partial<Api.PressExpression> = {}): Api.PressExpression {
   return row(100, {
     kind: 'x-thread',
     parentId: null,
@@ -64,7 +63,7 @@ function thread(overrides: Partial<PressExpression> = {}): PressExpression {
 }
 
 let calls: { id: number; action?: string; changes?: unknown; body?: unknown }[] = [];
-let changed: PressExpression[] = [];
+let changed: Api.PressExpression[] = [];
 let removed: number[] = [];
 
 beforeEach(() => {
