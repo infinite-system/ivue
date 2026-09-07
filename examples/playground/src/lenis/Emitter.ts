@@ -1,17 +1,14 @@
 /**
- * Emitter class to handle events
+ * Emitter — a minimal event bus.
  * @example
- * const emitter = new Emitter()
+ * const emitter = new Emitter.Class()
  * emitter.on('event', (data) => {
  *   console.log(data)
  * })
  * emitter.emit('event', 'data')
  */
-export class Emitter {
-  private events: Record<
-    string,
-    Array<(...args: unknown[]) => void> | undefined
-  > = {}
+class $Emitter {
+  protected events: Record<string, Array<(...args: unknown[]) => void> | undefined> = {}
 
   /**
    * Emit an event with the given data
@@ -56,4 +53,13 @@ export class Emitter {
   destroy() {
     this.events = {}
   }
+}
+
+export namespace Emitter {
+  export const $Class = $Emitter // raw — children `extends` this
+  export let Class = $Class // plain — no reactive state, no Reactive()
+  // raw-instance type — fields, parameters, returns
+  export type Model = InstanceType<typeof Class>
+  // the type of an unwrapping surface (none here; kept for the manifest)
+  export type Instance = InstanceType<typeof Class>
 }

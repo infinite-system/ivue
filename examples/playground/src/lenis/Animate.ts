@@ -1,15 +1,14 @@
-import { clamp, damp } from './maths'
-import type { EasingFunction, FromToOptions, OnUpdateCallback } from './types'
+import { LenisUtils } from './LenisUtils'
 
 /**
- * Animate class to handle value animations with lerping or easing
+ * Animate — a value animated by lerp or easing, under an optional speed cap
  *
  * @example
- * const animate = new Animate()
+ * const animate = new Animate.Class()
  * animate.fromTo(0, 100, { duration: 1, easing: (t) => t })
  * animate.advance(0.5) // 50
  */
-export class Animate {
+class $Animate {
   isRunning = false
   value = 0
   from = 0
@@ -19,9 +18,9 @@ export class Animate {
   // These are instanciated in the fromTo method
   lerp?: number
   duration?: number
-  easing?: EasingFunction
+  easing?: Animate.EasingFunction
   maxPxPerMs?: number
-  onUpdate?: OnUpdateCallback
+  onUpdate?: Animate.OnUpdateCallback
 
   /**
    * Advance the animation by the given delta time
@@ -36,13 +35,13 @@ export class Animate {
 
     if (this.duration && this.easing) {
       this.currentTime += deltaTime
-      const linearProgress = clamp(0, this.currentTime / this.duration, 1)
+      const linearProgress = LenisUtils.Class.clamp(0, this.currentTime / this.duration, 1)
 
       completed = linearProgress >= 1
       const easedProgress = completed ? 1 : this.easing(linearProgress)
       this.value = this.from + (this.to - this.from) * easedProgress
     } else if (this.lerp) {
-      this.value = damp(this.value, this.to, this.lerp * 60, deltaTime)
+      this.value = LenisUtils.Class.damp(this.value, this.to, this.lerp * 60, deltaTime)
       if (Math.round(this.value) === this.to) {
         this.value = this.to
         completed = true
@@ -90,7 +89,7 @@ export class Animate {
   fromTo(
     from: number,
     to: number,
-    { lerp, duration, easing, maxPxPerMs, onStart, onUpdate }: FromToOptions
+    { lerp, duration, easing, maxPxPerMs, onStart, onUpdate }: Animate.FromToOptions
   ) {
     this.from = this.value = from
     this.to = to
@@ -103,5 +102,49 @@ export class Animate {
 
     onStart?.()
     this.onUpdate = onUpdate
+  }
+}
+
+export namespace Animate {
+  export const $Class = $Animate // raw — children `extends` this
+  export let Class = $Class // plain — no reactive state, no Reactive()
+  // raw-instance type — fields, parameters, returns
+  export type Model = InstanceType<typeof Class>
+  // the type of an unwrapping surface (none here; kept for the manifest)
+  export type Instance = InstanceType<typeof Class>
+
+  export type EasingFunction = (time: number) => number
+  export type OnUpdateCallback = (value: number, completed: boolean) => void
+  export type OnStartCallback = () => void
+
+  export type FromToOptions = {
+    /**
+     * Linear interpolation (lerp) intensity (between 0 and 1)
+     * @default 0.1
+     */
+    lerp?: number
+    /**
+     * The most the value may move per millisecond; 0 is uncapped
+     * @default 0
+     */
+    maxPxPerMs?: number
+    /**
+     * The duration of the scroll animation (in s)
+     * @default 1
+     */
+    duration?: number
+    /**
+     * The easing function to use for the scroll animation
+     * @default (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+     */
+    easing?: EasingFunction
+    /**
+     * Called when the scroll starts
+     */
+    onStart?: OnStartCallback
+    /**
+     * Called when the scroll progress changes
+     */
+    onUpdate?: OnUpdateCallback
   }
 }

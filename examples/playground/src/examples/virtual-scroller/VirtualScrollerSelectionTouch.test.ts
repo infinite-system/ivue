@@ -1,31 +1,38 @@
 /*
 === GENERATOR ===
-Goal: Let a finger select text in a list where a drag already means scroll, by promoting a still hold into a selection and handing the moves to the owner as points.
-[Touch events keep firing on the node the finger landed on](virtual-scroller.invariants.md#touch-events-keep-firing-on-the-node-the-finger-landed-on)
+Goal: Let a finger select text in a virtual list without the system's selection: the class paints the range, owns two handles, and hands every drag to the same primitives the mouse uses.
+[On a touch device the selection is drawn by the class](virtual-scroller.invariants.md#on-a-touch-device-the-selection-is-drawn-by-the-class)
 [A long press turns the next move into a selection](virtual-scroller.invariants.md#a-long-press-turns-the-next-move-into-a-selection)
+[A drag scrolls from inside the edge zone](virtual-scroller.invariants.md#a-drag-scrolls-from-inside-the-edge-zone)
 [A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
-// domain-invariant: $VirtualScrollerSelectionTouch — If the finger moves past the slop before the hold fires, then the gesture is a scroll and the owner never hears of it.
-// domain-invariant: $VirtualScrollerSelectionTouch — If two fingers land, then no hold arms; if a second finger lands mid-drag, then the first finger keeps the focus.
-// domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts after a selecting drag, then the drag ends and the copy chip shows exactly when the owner holds a selection.
-// domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts without moving, or scrolls away, or is a tap, then the rows are selectable again and nothing was selected.
-// domain-invariant: $VirtualScrollerSelectionTouch — If a finger lands on an existing selection, then selectability locks like anywhere else; a tap there clears the selection and a long press hands the press to the owner, which extends.
-Impossible if true: The page scrolling while a touch selection is being extended.
-Impossible if true: A tap on the copy chip clearing the selection it is about to copy.
-Impossible if true: A finger on a native selection handle locking selectability.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If the device has neither touch points nor touch events, then attach does nothing: no overlay, no listeners, the rows stay selectable and the native selection paints as before.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, laid whole since the frame clips, and the handles sit beside the true ends — the start above the first line, the end below the last, offset outward — so they never cover the text — shown only while their own spot is on screen with the knob whole, hidden otherwise; a null range hides the overlay.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a handle, then any glide is held where the content is, the drag begins at once from the other end, the handle stops catching pointer events for its own drag, and lifting ends it with the chip offered.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a button or on the overlay, then no hold arms; a tap on an existing selection clears it; a swipe past the slop is a scroll.
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a second tap lands within the double-tap window and slop of the first, then the word under it is selected as a touch range and the chip is offered; mouse events synthesized after a touch are that touch's.
+Impossible if true: A native selection created by this class.
+Impossible if true: A handle drag that starts over instead of extending.
+Impossible if true: A swipe over selected text changing the selection instead of scrolling.
 
 === GENERATOR-DESCRIBED ===
-The owner is a plain object of the three primitives plus hasSelection,
-recording every call. Timers are faked so the long press is a clock
-advance, not a wait. Touch events are plain Events with a `touches` list
-attached, dispatched on real jsdom nodes — including a node removed from
-the document, which is the whole reason the listeners ride the origin
-node instead of the element.
+The owner is a plain object of the primitives plus a wrapper element the
+overlay is laid into. jsdom lays nothing out and has no touch points, so
+the device is faked through navigator.maxTouchPoints and a range's
+client rects are supplied by the spec; timers are faked for the hold.
+Touch events are plain Events with a `touches` list, dispatched on real
+nodes — the frame for the long press, the handle element for a handle
+drag.
 */
 
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { VirtualScrollerSelectionTouch } from './VirtualScrollerSelectionTouch';
+import { VirtualScrollerSelectionTouchCustom } from './VirtualScrollerSelectionTouchCustom';
+import type { VirtualScrollerSelection } from './VirtualScrollerSelection';
 
-const Gesture = VirtualScrollerSelectionTouch.Class;
+const Touch = VirtualScrollerSelectionTouchCustom.Class;
+const at = (index: number, offset: number): VirtualScrollerSelection.Position => ({
+  index,
+  offset
+});
 
 function touchEvent(type: string, touches: { x: number; y: number; id?: number }[]) {
   const event = new Event(type, { bubbles: true, cancelable: true });
@@ -39,207 +46,320 @@ function touchEvent(type: string, touches: { x: number; y: number; id?: number }
   return event as Event & { lenisStopPropagation?: boolean };
 }
 
-function gesture() {
+function device(touchPoints: number) {
+  Object.defineProperty(navigator, 'maxTouchPoints', { value: touchPoints, configurable: true });
+}
+
+function gesture(range: VirtualScrollerSelection.Range | null = null) {
+  const frame = document.createElement('div');
+  // jsdom lays nothing out: the frame's rect is the clip every box is cut to.
+  frame.getBoundingClientRect = () =>
+    ({ left: 0, top: 0, right: 800, bottom: 1000, width: 800, height: 1000 }) as DOMRect;
+  const wrapper = document.createElement('div');
+  const row = document.createElement('div');
+  row.className = 'virtual-scroller__item';
+  row.textContent = 'alpha beta gamma';
+  wrapper.appendChild(row);
+  frame.appendChild(wrapper);
+  document.body.appendChild(frame);
   const owner = {
     beginAt: vi.fn(() => true),
+    selectAt: vi.fn(() => true),
+    beginFromEnd: vi.fn(() => true),
     extendTo: vi.fn(),
     endDrag: vi.fn(),
     clear: vi.fn(),
     isInteractive: (target: EventTarget | null) =>
       target instanceof Element && target.closest('button, a, input') !== null,
-    isNearSelectionHandle: vi.fn(() => false),
-    hasSelection: false
+    holdScroll: vi.fn(),
+    hasSelection: range !== null,
+    range,
+    itemsWrapperElement: { value: wrapper }
   };
-  const instance = new Gesture(owner);
-  const element = document.createElement('div');
-  const row = document.createElement('div');
-  element.appendChild(row);
-  document.body.appendChild(element);
-  instance.attach(element);
-  return { owner, instance, element, row };
+  const instance = new Touch(owner);
+  instance.attach(frame);
+  return { owner, instance, frame, wrapper, row };
 }
 
 beforeEach(() => {
-  vi.useFakeTimers();
+  // performance.now() is faked too: the double tap and the mouse-after-touch
+  // windows read the clock, and advancing the timers must advance it.
+  vi.useFakeTimers({
+    toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date', 'performance']
+  });
+  device(5);
 });
 afterEach(() => {
   vi.useRealTimers();
+  device(0);
   document.body.innerHTML = '';
 });
 
-// domain-invariant: $VirtualScrollerSelectionTouch — If the finger moves past the slop before the hold fires, then the gesture is a scroll and the owner never hears of it.
-test('movement within the slop keeps the hold alive; past it, the gesture is a scroll', () => {
-  expect(Gesture.exceedsSlop(0)).toBe(false);
-  expect(Gesture.exceedsSlop(Gesture.SLOP_PX)).toBe(false);
-  expect(Gesture.exceedsSlop(Gesture.SLOP_PX + 0.1)).toBe(true);
-  expect(Gesture.distanceFrom({ x: 10, y: 10 }, 13, 14)).toBe(5);
-  expect(Gesture.distanceFrom({ x: 10, y: 10 }, 7, 6)).toBe(5);
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If the device has neither touch points nor touch events, then attach does nothing: no overlay, no listeners, the rows stay selectable and the native selection paints as before.
+// impossible-if-true: $VirtualScrollerSelectionTouchCustom — A native selection created by this class.
+test('without a touch point the class is inert: no overlay, selectable rows, and it paints nothing', () => {
+  device(0);
+  expect('ontouchstart' in window).toBe(false);
+  expect(Touch.isActive).toBe(false);
+  const { instance, frame, wrapper } = gesture();
+  expect(instance.paintsSelection).toBe(false);
+  expect(frame.style.userSelect).toBe('');
+  expect(wrapper.querySelector(`.${Touch.OVERLAY_CLASS}`)).toBeNull();
+  instance.paint(document.createRange());
+  expect(window.getSelection()!.rangeCount).toBe(0);
+  instance.dispose();
+});
 
-  const { owner, instance, row } = gesture();
+// invariant: On a touch device the selection is drawn by the class (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('with a touch point the overlay with its two handles is laid inside the wrapper, the rows lock only while a finger is down; dispose removes it all', () => {
+  const { instance, frame, wrapper, row } = gesture();
+  expect(instance.paintsSelection).toBe(true);
+  expect(frame.style.userSelect).toBe('');
   row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  row.dispatchEvent(touchEvent('touchmove', [{ x: 104, y: 103 }]));
-  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS / 2);
-  row.dispatchEvent(touchEvent('touchmove', [{ x: 100, y: 130 }]));
-  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
-  expect(owner.beginAt).not.toHaveBeenCalled();
-  expect(instance.selecting.value).toBe(false);
+  expect(frame.style.userSelect).toBe('none');
+  row.dispatchEvent(touchEvent('touchend', []));
+  expect(frame.style.userSelect).toBe('');
+  const overlay = wrapper.querySelector(`.${Touch.OVERLAY_CLASS}`) as HTMLElement;
+  expect(overlay).not.toBeNull();
+  expect(overlay.hidden).toBe(true);
+  expect(overlay.querySelectorAll(`.${Touch.HANDLE_CLASS}`)).toHaveLength(2);
+  expect(wrapper.style.position).toBe('relative');
+  instance.dispose();
+  expect(wrapper.querySelector(`.${Touch.OVERLAY_CLASS}`)).toBeNull();
+});
+
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, laid whole since the frame clips, and the handles sit beside the true ends — the start above the first line, the end below the last, offset outward — so they never cover the text — shown only while their own spot is on screen with the knob whole, hidden otherwise; a null range hides the overlay.
+test('painting a range lays one box per non-empty rect and puts the handles at the ends; painting null hides it all', () => {
+  const rects = [
+    { left: 20, top: 10, right: 320, bottom: 30, width: 300, height: 20 },
+    { left: 0, top: 30, right: 0, bottom: 50, width: 0, height: 20 },
+    { left: 0, top: 30, right: 120, bottom: 50, width: 120, height: 20 }
+  ];
+  expect(Touch.boxesFrom(rects as DOMRectReadOnly[], { left: 10, top: 5 })).toEqual([
+    { left: 10, top: 5, width: 300, height: 20 },
+    { left: -10, top: 25, width: 120, height: 20 }
+  ]);
+  expect(Touch.handlePositions([])).toBeNull();
+  // Clipped to the frame: a rect above it is dropped, one crossing its bottom is cut.
+  const frame = { left: 0, top: 0, right: 400, bottom: 40 };
+  expect(
+    Touch.boxesFrom(
+      [
+        { left: 20, top: -30, right: 320, bottom: -10, width: 300, height: 20 },
+        { left: 20, top: 30, right: 320, bottom: 50, width: 300, height: 20 }
+      ] as DOMRectReadOnly[],
+      { left: 0, top: 0 },
+      frame
+    )
+  ).toEqual([{ left: 20, top: 30, width: 300, height: 10 }]);
+
+  const { instance, wrapper, row } = gesture();
+  const range = document.createRange();
+  range.selectNodeContents(row);
+  range.getClientRects = () => rects as unknown as DOMRectList;
+  const overlay = wrapper.querySelector(`.${Touch.OVERLAY_CLASS}`) as HTMLElement;
+  // The overlay must be shown before it is measured: a hidden one has no rect.
+  const measured: boolean[] = [];
+  const originalRect = overlay.getBoundingClientRect.bind(overlay);
+  overlay.getBoundingClientRect = () => {
+    measured.push(overlay.hidden);
+    return originalRect();
+  };
+  instance.paint(range);
+  expect(measured).toEqual([false]);
+  expect(overlay.hidden).toBe(false);
+  const boxes = overlay.querySelectorAll(`.${Touch.BOX_CLASS}`);
+  expect(boxes).toHaveLength(2);
+  expect((boxes[0] as HTMLElement).style.transform).toBe('translate(20px, 10px)');
+  expect((boxes[0] as HTMLElement).style.width).toBe('300px');
+  const start = overlay.querySelector(`.${Touch.HANDLE_CLASS}--start`) as HTMLElement;
+  const end = overlay.querySelector(`.${Touch.HANDLE_CLASS}--end`) as HTMLElement;
+  // Beside the ends, offset outward and half the offset down — never over the text.
+  const offset = Touch.HANDLE_OFFSET_PX;
+  // The start's true spot is 4 px from the frame's top — its knob would
+  // hang off the top, so it is hidden until it scrolls fully into view.
+  const inset = Touch.HANDLE_KNOB_PX / 2;
+  expect(
+    Touch.handlePositions(
+      Touch.boxesFrom(rects as unknown as DOMRectReadOnly[], { left: 0, top: 0 } as DOMRect)
+    )
+  ).toEqual({
+    start: { x: 20 - offset, y: 10 - offset / 2 },
+    end: { x: 120 + offset, y: 50 + offset / 2 }
+  });
+  expect(start.hidden).toBe(true);
+  expect(end.hidden).toBe(false);
+  expect(end.style.transform).toBe(`translate(${120 + offset}px, ${50 + offset / 2}px)`);
+
+  // An end whose line is partly on screen but whose spot is past the edge
+  // has no handle yet — it appears only once its spot is fully in view;
+  // boxes are laid whole, the frame clips.
+  const visibleBottom = Math.min(1000, window.innerHeight);
+  range.getClientRects = () =>
+    [
+      rects[0],
+      { left: 0, top: visibleBottom - 10, right: 120, bottom: visibleBottom + 10, width: 120, height: 20 }
+    ] as unknown as DOMRectList;
+  instance.paint(range);
+  expect(end.hidden).toBe(true);
+  expect(overlay.querySelectorAll(`.${Touch.BOX_CLASS}`)).toHaveLength(2);
+  // An end that has scrolled wholly away has no handle either.
+  range.getClientRects = () =>
+    [
+      rects[0],
+      { left: 0, top: 1200, right: 120, bottom: 1220, width: 120, height: 20 }
+    ] as unknown as DOMRectList;
+  instance.paint(range);
+  expect(end.hidden).toBe(true);
+  expect(overlay.querySelectorAll(`.${Touch.BOX_CLASS}`)).toHaveLength(2);
+  // A scroll re-places the handles from the last paint and one rect read:
+  // the overlay moved up 1000 px, so the end's spot is on screen at its
+  // true position and the start's has left.
+  overlay.getBoundingClientRect = () => ({ left: 0, top: -1000, width: 800, height: 3000 }) as DOMRect;
+  instance.follow();
+  expect(start.hidden).toBe(true);
+  expect(end.hidden).toBe(false);
+  expect(end.style.transform).toBe(`translate(${120 + offset}px, ${1220 + offset / 2}px)`);
+  // Scrolled so the start's spot is 20 px inside the top: it shows, at its true spot.
+  overlay.getBoundingClientRect = () => ({ left: 0, top: 20 - (10 - offset / 2), width: 800, height: 3000 }) as DOMRect;
+  instance.follow();
+  expect(start.hidden).toBe(false);
+  expect(start.style.transform).toBe(`translate(${20 - offset}px, ${10 - offset / 2}px)`);
+  expect(inset).toBe(8);
+
+  // A smaller range shrinks the pool; null hides.
+  range.getClientRects = () => [rects[0]] as unknown as DOMRectList;
+  instance.paint(range);
+  expect(overlay.querySelectorAll(`.${Touch.BOX_CLASS}`)).toHaveLength(1);
+  instance.paint(null);
+  expect(overlay.hidden).toBe(true);
   instance.dispose();
 });
 
 // invariant: A long press turns the next move into a selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-// impossible-if-true: $VirtualScrollerSelectionTouch — The page scrolling while a touch selection is being extended.
-test('a still hold promotes at the long-press mark, and every move after it extends the selection while the page and the list are told to stay put', () => {
-  const { owner, instance, row, element } = gesture();
+// invariant: A drag scrolls from inside the edge zone (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a still hold promotes, the first move lays the anchor at the resting point through the owner, and every move is taken from the scroll', () => {
+  const { owner, instance, row } = gesture();
   row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  // The rows are non-selectable for the length of the hold: iOS's own
-  // long press finds nothing to select.
-  expect(element.style.userSelect).toBe('none');
-  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS - 1);
-  expect(instance.selecting.value).toBe(false);
-  vi.advanceTimersByTime(1);
+  vi.advanceTimersByTime(Touch.LONG_PRESS_MS);
   expect(instance.selecting.value).toBe(true);
   expect(owner.beginAt).not.toHaveBeenCalled();
-
-  // The first move lays the anchor at the resting point, with the rows selectable again.
   const move = touchEvent('touchmove', [{ x: 100, y: 180 }]);
   row.dispatchEvent(move);
-  expect(element.style.userSelect).toBe('');
   expect(owner.beginAt).toHaveBeenCalledWith(100, 100, 'touch');
   expect(owner.extendTo).toHaveBeenCalledWith(100, 180);
   expect(move.defaultPrevented).toBe(true);
   expect(move.lenisStopPropagation).toBe(true);
-  instance.dispose();
-});
-
-// domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts without moving, or scrolls away, or is a tap, then the rows are selectable again and nothing was selected.
-test('a tap, a swipe and a motionless long press all restore selectability and select nothing', () => {
-  const { owner, instance, row, element } = gesture();
-  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  row.dispatchEvent(touchEvent('touchend', []));
-  expect(element.style.userSelect).toBe('');
-
-  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  row.dispatchEvent(touchEvent('touchmove', [{ x: 100, y: 140 }]));
-  expect(element.style.userSelect).toBe('');
-
-  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
-  expect(element.style.userSelect).toBe('none');
-  row.dispatchEvent(touchEvent('touchend', []));
-  expect(element.style.userSelect).toBe('');
-  expect(owner.beginAt).not.toHaveBeenCalled();
-  expect(owner.endDrag).not.toHaveBeenCalled();
-  expect(instance.selecting.value).toBe(false);
-  instance.dispose();
-});
-
-// invariant: Touch events keep firing on the node the finger landed on (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-test('a finger whose origin row left the DOM still extends the selection, because the listeners ride the origin node', () => {
-  const { owner, instance, row } = gesture();
-  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
-  row.remove();
-  expect(row.isConnected).toBe(false);
-  row.dispatchEvent(touchEvent('touchmove', [{ x: 100, y: 190 }]));
-  expect(owner.extendTo).toHaveBeenLastCalledWith(100, 190);
-  instance.dispose();
-});
-
-// domain-invariant: $VirtualScrollerSelectionTouch — If two fingers land, then no hold arms; if a second finger lands mid-drag, then the first finger keeps the focus.
-test('two fingers never arm a hold, and a second finger mid-drag does not steal the focus', () => {
-  const pinch = gesture();
-  pinch.row.dispatchEvent(
-    touchEvent('touchstart', [
-      { x: 100, y: 100, id: 1 },
-      { x: 200, y: 100, id: 2 }
-    ])
-  );
-  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
-  expect(pinch.owner.beginAt).not.toHaveBeenCalled();
-  pinch.instance.dispose();
-
-  const { owner, instance, row } = gesture();
-  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100, id: 1 }]));
-  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
-  row.dispatchEvent(
-    touchEvent('touchmove', [
-      { x: 100, y: 150, id: 1 },
-      { x: 300, y: 300, id: 2 }
-    ])
-  );
-  expect(owner.extendTo).toHaveBeenLastCalledWith(100, 150);
-  // Only the second finger reported: the tracked one is absent, nothing moves.
-  row.dispatchEvent(touchEvent('touchmove', [{ x: 300, y: 320, id: 2 }]));
-  expect(owner.extendTo).toHaveBeenCalledTimes(1);
-  instance.dispose();
-});
-
-// domain-invariant: $VirtualScrollerSelectionTouch — If the finger lifts after a selecting drag, then the drag ends and the copy chip shows exactly when the owner holds a selection.
-// invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-test('lifting the finger ends the drag and reports selected exactly when the owner holds a selection; a cleared selection drops the chip', () => {
-  const { owner, instance, row } = gesture();
-  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
-  row.dispatchEvent(touchEvent('touchmove', [{ x: 100, y: 180 }]));
   owner.hasSelection = true;
   row.dispatchEvent(touchEvent('touchend', []));
   expect(owner.endDrag).toHaveBeenCalledTimes(1);
-  expect(instance.selecting.value).toBe(false);
+  expect(instance.selected.value).toBe(true);
+  instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a handle, then any glide is held where the content is, the drag begins at once from the other end, the handle stops catching pointer events for its own drag, and lifting ends it with the chip offered.
+// impossible-if-true: $VirtualScrollerSelectionTouchCustom — A handle drag that starts over instead of extending.
+// invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a finger on the end handle drags from the start at once, and on the start handle from the end', () => {
+  const range = { start: at(2, 3), end: at(6, 4) };
+  const { owner, instance, wrapper } = gesture(range);
+  const end = wrapper.querySelector(`.${Touch.HANDLE_CLASS}--end`) as HTMLElement;
+  const press = touchEvent('touchstart', [{ x: 200, y: 300 }]);
+  end.dispatchEvent(press);
+  expect(press.defaultPrevented).toBe(true);
+  expect(owner.beginFromEnd).toHaveBeenCalledWith(at(2, 3), 200, 300);
+  expect(owner.beginAt).not.toHaveBeenCalled();
+  // A grabbed handle holds any glide where the content is: its moves are
+  // flagged for Lenis to skip, so the glide would otherwise run on under
+  // the finger and read as a scroll.
+  expect(owner.holdScroll).toHaveBeenCalledTimes(1);
+  expect(end.style.pointerEvents).toBe('none');
+  expect(instance.selecting.value).toBe(true);
+  const move = touchEvent('touchmove', [{ x: 200, y: 360 }]);
+  end.dispatchEvent(move);
+  expect(owner.extendTo).toHaveBeenCalledWith(200, 360);
+  expect(move.lenisStopPropagation).toBe(true);
+  end.dispatchEvent(touchEvent('touchend', []));
+  expect(owner.endDrag).toHaveBeenCalledTimes(1);
+  expect(end.style.pointerEvents).toBe('');
   expect(instance.selected.value).toBe(true);
 
-  instance.onSelectionCleared();
-  expect(instance.selected.value).toBe(false);
-
-  // A tap (no hold) ends nothing.
-  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  row.dispatchEvent(touchEvent('touchend', []));
-  expect(owner.endDrag).toHaveBeenCalledTimes(1);
+  const start = wrapper.querySelector(`.${Touch.HANDLE_CLASS}--start`) as HTMLElement;
+  start.dispatchEvent(touchEvent('touchstart', [{ x: 40, y: 120 }]));
+  expect(owner.beginFromEnd).toHaveBeenLastCalledWith(at(6, 4), 40, 120);
+  start.dispatchEvent(touchEvent('touchend', []));
   instance.dispose();
 });
 
-// domain-invariant: $VirtualScrollerSelectionTouch — If a finger lands on an existing selection, then selectability locks like anywhere else; a tap there clears the selection and a long press hands the press to the owner, which extends.
-test('a finger on an existing selection still locks; a tap clears it, a long press and move extend it', () => {
-  const { owner, instance, row, element } = gesture();
-  owner.hasSelection = true;
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a finger lands on a button or on the overlay, then no hold arms; a tap on an existing selection clears it; a swipe past the slop is a scroll.
+test('a button and the overlay arm nothing, a tap on the selection clears it, a swipe is a scroll', () => {
+  const { owner, instance, row, wrapper, frame } = gesture({ start: at(0, 0), end: at(1, 2) });
+  const chip = document.createElement('button');
+  frame.appendChild(chip);
+  chip.dispatchEvent(touchEvent('touchstart', [{ x: 10, y: 10 }]));
+  expect(instance.holding).toBe(false);
+  const overlay = wrapper.querySelector(`.${Touch.OVERLAY_CLASS}`) as HTMLElement;
+  overlay.dispatchEvent(touchEvent('touchstart', [{ x: 10, y: 10 }]));
+  expect(instance.holding).toBe(false);
+
   row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  expect(element.style.userSelect).toBe('none');
   expect(instance.holding).toBe(true);
   row.dispatchEvent(touchEvent('touchend', []));
   expect(owner.clear).toHaveBeenCalledTimes(1);
-  expect(instance.holding).toBe(false);
 
   row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  vi.advanceTimersByTime(Gesture.LONG_PRESS_MS);
-  row.dispatchEvent(touchEvent('touchmove', [{ x: 100, y: 160 }]));
-  expect(owner.beginAt).toHaveBeenCalledWith(100, 100, 'touch');
-  expect(owner.extendTo).toHaveBeenCalledWith(100, 160);
+  row.dispatchEvent(touchEvent('touchmove', [{ x: 100, y: 140 }]));
+  expect(instance.holding).toBe(false);
+  vi.advanceTimersByTime(Touch.LONG_PRESS_MS);
+  expect(owner.beginAt).not.toHaveBeenCalled();
+  row.dispatchEvent(touchEvent('touchend', []));
   expect(owner.clear).toHaveBeenCalledTimes(1);
   instance.dispose();
 });
 
-// impossible-if-true: $VirtualScrollerSelectionTouch — A tap on the copy chip clearing the selection it is about to copy.
-test('a touch on a button inside the frame arms nothing and clears nothing — the chip keeps its selection', () => {
-  const { owner, instance, element } = gesture();
-  owner.hasSelection = true;
-  const chip = document.createElement('button');
-  element.appendChild(chip);
-  chip.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  expect(element.style.userSelect).toBe('');
+// domain-invariant: $VirtualScrollerSelectionTouchCustom — If a second tap lands within the double-tap window and slop of the first, then the word under it is selected as a touch range and the chip is offered; mouse events synthesized after a touch are that touch's.
+test('a double tap selects the word under it through the owner and offers the chip; a late second tap is a new tap', () => {
+  const { owner, instance, row, frame: element } = gesture();
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  row.dispatchEvent(touchEvent('touchend', []));
+  expect(instance.recentTouch).toBe(true);
+  vi.advanceTimersByTime(Touch.DOUBLE_TAP_MS - 50);
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 104, y: 98 }]));
+  expect(owner.selectAt).toHaveBeenCalledWith(104, 98, 'word', 'touch');
+  expect(instance.selected.value).toBe(true);
   expect(instance.holding).toBe(false);
-  chip.dispatchEvent(touchEvent('touchend', []));
+  // The rows are locked for the second tap, so the system's own double-tap
+  // selection finds nothing; the lock lifts when the tap ends, the word stays.
+  expect(element.style.userSelect).toBe('none');
+  row.dispatchEvent(touchEvent('touchend', []));
+  expect(element.style.userSelect).toBe('');
   expect(owner.clear).not.toHaveBeenCalled();
+
+  vi.advanceTimersByTime(Touch.DOUBLE_TAP_MS + 50);
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 104, y: 98 }]));
+  expect(owner.selectAt).toHaveBeenCalledTimes(1);
+  expect(instance.holding).toBe(true);
+  row.dispatchEvent(touchEvent('touchend', []));
+  vi.advanceTimersByTime(Touch.MOUSE_AFTER_TOUCH_MS + 10);
+  expect(instance.recentTouch).toBe(false);
   instance.dispose();
 });
 
-// impossible-if-true: $VirtualScrollerSelectionTouch — A finger on a native selection handle locking selectability.
-test('a finger on a native selection handle arms nothing — iOS drags the handle', () => {
-  const { owner, instance, row, element } = gesture();
-  owner.hasSelection = true;
-  (owner.isNearSelectionHandle as ReturnType<typeof vi.fn>).mockReturnValue(true);
+// impossible-if-true: $VirtualScrollerSelectionTouchCustom — A swipe over selected text changing the selection instead of scrolling.
+test('a swipe over selected text is a scroll — no drag begins and the selection stays; a tap there clears it', () => {
+  const { owner, instance, row } = gesture({ start: at(1, 0), end: at(3, 4) });
   row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
-  expect(element.style.userSelect).toBe('');
+  const move = touchEvent('touchmove', [{ x: 100, y: 160 }]);
+  row.dispatchEvent(move);
+  expect(owner.beginAt).not.toHaveBeenCalled();
+  expect(owner.extendTo).not.toHaveBeenCalled();
+  expect(move.defaultPrevented).toBe(false);
   expect(instance.holding).toBe(false);
   row.dispatchEvent(touchEvent('touchend', []));
   expect(owner.clear).not.toHaveBeenCalled();
+
+  row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  row.dispatchEvent(touchEvent('touchend', []));
+  expect(owner.clear).toHaveBeenCalledTimes(1);
   instance.dispose();
 });

@@ -1,19 +1,9 @@
-const version = 'ivue-docs-vendored';
-import { Animate } from './animate';
-import { Dimensions } from './dimensions';
-import { Emitter } from './emitter';
-import { clamp, modulo } from './maths';
-import type {
-  LenisEvent,
-  LenisOptions,
-  ScrollCallback,
-  Scrolling,
-  ScrollToOptions,
-  UserData,
-  VirtualScrollCallback,
-  VirtualScrollData
-} from './types';
-import { VirtualScroll } from './virtual-scroll';
+import { Static } from '../Static';
+import { Animate } from './Animate';
+import { Dimensions } from './Dimensions';
+import { Emitter } from './Emitter';
+import { LenisUtils } from './LenisUtils';
+import { VirtualScroll } from './VirtualScroll';
 
 // Technical explanation
 // - listen to 'wheel' events
@@ -23,142 +13,72 @@ import { VirtualScroll } from './virtual-scroll';
 // - animate scroll to targetScroll (smooth context)
 // - if animation is not running, listen to 'scroll' events (native context)
 
-type OptionalPick<T, F extends keyof T> = Omit<T, F> & Partial<Pick<T, F>>;
-
-const defaultEasing = (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t));
-
-/** True Safari (not Chrome/Chromium, which also carry "Safari" in the UA). */
-const IS_SAFARI =
-  typeof navigator !== 'undefined' &&
-  /^((?!chrome|chromium|android).)*safari/i.test(navigator.userAgent);
-
-/** How far back a flick's velocity is read off the finger's path. */
-export const FLICK_WINDOW_MS = 100;
-
-/** Lenis measures velocity in px per animation frame; a frame is ~16.7 ms. */
-const FRAME_MS = 16.7;
-
 /**
- * Drop trail samples older than the window — all but one: the newest
- * sample before the window stays as the anchor, so a lone move inside
- * the window still has a span. A whole re-flick coalesced into one
- * touchmove 260 ms after the touchstart would otherwise trim its seed
- * and read no velocity at all.
+ * Lenis — the scroll integrator the virtual scroller drives: a smooth wheel
+ * lerp, sync touch with a finger trail for the flick, a speed cap, fully
+ * virtual mode. Vendored and forked; the fork's rules are in
+ * `lenis.invariants.md`.
  */
-export function trimTrail(trail: Array<{ at: number; position: number }>, now: number, windowMs: number) {
-  while (trail.length > 2 && now - trail[1].at > windowMs) trail.shift();
-}
+class $Lenis {
+  /* Statics — constants the hot paths read, and the pure flick maths */
 
-/**
- * The flick's velocity in px per frame off the finger's trail: the
- * position change over the trail's span, scaled to a frame. The span is
- * at most the window: an anchor older than it (the touchstart seed, when
- * Android held the whole swipe back and delivered one move ~200 ms later)
- * counts as sitting at the window's edge, since a flick's velocity is
- * its last stretch, not its wait. Fewer than two samples, or a span too
- * short to read, fall back to the frame's own velocity.
- */
-// invariant: A flick's velocity is read off the finger's last stretch (examples/playground/src/lenis/lenis.invariants.md)
-export function trailVelocity(
-  trail: Array<{ at: number; position: number }>,
-  fallback: number,
-  windowMs = FLICK_WINDOW_MS
-): number {
-  if (trail.length < 2) return fallback;
-  const first = trail[0];
-  const last = trail[trail.length - 1];
-  const span = Math.min(windowMs, last.at - first.at);
-  if (span < 8) return fallback;
-  return ((last.position - first.position) / span) * FRAME_MS;
-}
+  /** Stamped on window.lenisVersion. */
+  protected static readonly VERSION = 'ivue-docs-vendored';
 
-export class Lenis {
-  private _isScrolling: Scrolling = false; // true when scroll is animating
-  private _isStopped = false; // true if user should not be able to scroll - enable/disable programmatically
-  private _isLocked = false; // same as isStopped but enabled/disabled when scroll reaches target
-  private _preventNextNativeScrollEvent = false;
-  private _resetVelocityTimeout: ReturnType<typeof setTimeout> | null = null;
-  private __rafID: number | null = null;
+  /** True Safari (not Chrome/Chromium, which also carry "Safari" in the UA).
+   *  Hot path: read on every transform write, so a field, evaluated once. */
+  protected static readonly IS_SAFARI =
+    typeof navigator !== 'undefined' &&
+    /^((?!chrome|chromium|android).)*safari/i.test(navigator.userAgent);
+
+  /** How far back a flick's velocity is read off the finger's path. */
+  static get FLICK_WINDOW_MS() {
+    return 100;
+  }
+
+  /** Lenis measures velocity in px per animation frame; a frame is ~16.7 ms. */
+  static get FRAME_MS() {
+    return 16.7;
+  }
+
+  /** The duration-based animation's easing when none is given. */
+  static defaultEasing(t: number) {
+    return Math.min(1, 1.001 - Math.pow(2, -10 * t));
+  }
 
   /**
-   * Whether or not the user is touching the screen
+   * Drop trail samples older than the window — all but one: the newest
+   * sample before the window stays as the anchor, so a lone move inside
+   * the window still has a span. A whole re-flick coalesced into one
+   * touchmove 260 ms after the touchstart would otherwise trim its seed
+   * and read no velocity at all.
    */
-  isTouching?: boolean;
-  /**
-   * Whether the last gesture was a touch — it picks which speed cap a
-   * gesture-driven scroll runs under, a flick's inertia included
-   */
-  lastInputTouch = false;
-  /**
-   * The finger's recent path — (time, target position) per touchmove
-   * inside FLICK_WINDOW_MS — so a flick's velocity is read off the finger's
-   * last stretch, not off the last animation frame. Android delivers the
-   * touchend after a frame with no touchmove often enough that the
-   * frame's velocity reads zero or stale there, and the flick dies.
-   */
-  private touchTrail: Array<{ at: number; position: number }> = [];
-  /**
-   * A touch has landed and no move has come yet. The glide keeps running
-   * until the first move — the finger then takes over from wherever the
-   * content is — and a touch that ends with no move stops it (tap to
-   * stop). Stopping at the touchstart froze the content for the ~200 ms
-   * Android holds the first move back, then jumped: a stall per re-flick.
-   */
-  private touchPending = false;
-  /**
-   * An optional sink for one line per gesture event and decision — the
-   * on-device touch log sets it; null costs nothing.
-   */
-  trace: ((line: string) => void) | null = null;
-  /**
-   * The time in ms since the lenis instance was created
-   */
-  time = 0;
-  /**
-   * User data that will be forwarded through the scroll event
-   *
-   * @example
-   * lenis.scrollTo(100, {
-   *   userData: {
-   *     foo: 'bar'
-   *   }
-   * })
-   */
-  userData: UserData = {};
-  /**
-   * The last velocity of the scroll
-   */
-  lastVelocity = 0;
-  /**
-   * The current velocity of the scroll
-   */
-  velocity = 0;
-  /**
-   * The direction of the scroll
-   */
-  direction: 1 | -1 | 0 = 0;
-  /**
-   * The options passed to the lenis instance
-   */
-  options: OptionalPick<
-    Required<LenisOptions>,
-    'duration' | 'easing' | 'prevent' | 'virtualScroll'
-  >;
-  /**
-   * The target scroll value
-   */
-  targetScroll: number;
-  /**
-   * The animated scroll value
-   */
-  animatedScroll: number;
+  static trimTrail(trail: Array<{ at: number; position: number }>, now: number, windowMs: number) {
+    while (trail.length > 2 && now - trail[1].at > windowMs) trail.shift();
+  }
 
-  // These are instanciated here as they don't need information from the options
-  private readonly animate = new Animate();
-  private readonly emitter = new Emitter();
-  // These are instanciated in the constructor as they need information from the options
-  readonly dimensions: Dimensions; // This is not private because it's used in the Snap class
-  private readonly virtualScroll: VirtualScroll;
+  /**
+   * The flick's velocity in px per frame off the finger's trail: the
+   * position change over the trail's span, scaled to a frame. The span is
+   * at most the window: an anchor older than it (the touchstart seed, when
+   * Android held the whole swipe back and delivered one move ~200 ms later)
+   * counts as sitting at the window's edge, since a flick's velocity is
+   * its last stretch, not its wait. Fewer than two samples, or a span too
+   * short to read, fall back to the frame's own velocity.
+   */
+  // invariant: A flick's velocity is read off the finger's last stretch (examples/playground/src/lenis/lenis.invariants.md)
+  static trailVelocity(
+    trail: Array<{ at: number; position: number }>,
+    fallback: number,
+    windowMs = this.FLICK_WINDOW_MS
+  ): number {
+    if (trail.length < 2) return fallback;
+    const first = trail[0];
+    const last = trail[trail.length - 1];
+    const span = Math.min(windowMs, last.at - first.at);
+    if (span < 8) return fallback;
+    return ((last.position - first.position) / span) * this.FRAME_MS;
+  }
 
   constructor({
     wrapper = window,
@@ -188,9 +108,24 @@ export class Lenis {
     autoToggle = false, // https://caniuse.com/?search=transition-behavior
     allowNestedScroll = false,
     __experimental__naiveDimensions = false
-  }: LenisOptions = {}) {
-    // Set version
-    window.lenisVersion = version;
+  }: Lenis.Options = {}) {
+    // The handlers are prototype methods (overridable, spy-able); bound
+    // once here so add/removeEventListener and the raf clock see one
+    // stable function each.
+    this.onScrollEnd = this.onScrollEnd.bind(this);
+    this.dispatchScrollendEvent = this.dispatchScrollendEvent.bind(this);
+    this.onTransitionEnd = this.onTransitionEnd.bind(this);
+    this.onClick = this.onClick.bind(this);
+    this.onPointerDown = this.onPointerDown.bind(this);
+    this.onVirtualScroll = this.onVirtualScroll.bind(this);
+    this.onNativeScroll = this.onNativeScroll.bind(this);
+    this.raf = this.raf.bind(this);
+
+    const self = this.self;
+    this.animate = new Animate.Class();
+    this.emitter = new Emitter.Class();
+    // Set version (the global the upstream library stamps)
+    (window as Window & { lenisVersion?: string }).lenisVersion = self.VERSION;
 
     // Check if wrapper is <html>, fallback to window
     if (!wrapper || wrapper === document.documentElement) {
@@ -199,7 +134,7 @@ export class Lenis {
 
     // flip to easing/time based animation if at least one of them is provided
     if (typeof duration === 'number' && typeof easing !== 'function') {
-      easing = defaultEasing;
+      easing = self.defaultEasing;
     } else if (typeof easing === 'function' && typeof duration !== 'number') {
       duration = 1;
     }
@@ -236,7 +171,7 @@ export class Lenis {
     };
 
     // Setup dimensions instance
-    this.dimensions = new Dimensions(wrapper, content, { autoResize });
+    this.dimensions = new Dimensions.Class(wrapper, content, { autoResize });
 
     // Setup class name
     this.updateClassName();
@@ -262,7 +197,7 @@ export class Lenis {
     );
 
     // Setup virtual scroll instance
-    this.virtualScroll = new VirtualScroll(eventsTarget as HTMLElement, {
+    this.virtualScroll = new VirtualScroll.Class(eventsTarget as HTMLElement, {
       touchMultiplier,
       wheelMultiplier
     });
@@ -275,8 +210,250 @@ export class Lenis {
     }
 
     if (this.options.autoRaf) {
-      this.__rafID = requestAnimationFrame(this.raf);
+      this.rafId = requestAnimationFrame(this.raf);
     }
+  }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $Lenis;
+  }
+
+  /* The instance */
+
+  protected scrolling: Lenis.Scrolling = false; // true when scroll is animating
+  protected stopped = false; // true if user should not be able to scroll - enable/disable programmatically
+  protected locked = false; // same as isStopped but enabled/disabled when scroll reaches target
+  protected nativeScrollEventSuppressed = false;
+  protected resetVelocityTimer: ReturnType<typeof setTimeout> | null = null;
+  protected rafId: number | null = null;
+
+  /**
+   * Whether or not the user is touching the screen
+   */
+  isTouching?: boolean;
+  /**
+   * Whether the last gesture was a touch — it picks which speed cap a
+   * gesture-driven scroll runs under, a flick's inertia included
+   */
+  lastInputTouch = false;
+  /**
+   * The finger's recent path — (time, target position) per touchmove
+   * inside FLICK_WINDOW_MS — so a flick's velocity is read off the finger's
+   * last stretch, not off the last animation frame. Android delivers the
+   * touchend after a frame with no touchmove often enough that the
+   * frame's velocity reads zero or stale there, and the flick dies.
+   */
+  protected touchTrail: Array<{ at: number; position: number }> = [];
+  /**
+   * A touch has landed and no move has come yet. The glide keeps running
+   * until the first move — the finger then takes over from wherever the
+   * content is — and a touch that ends with no move stops it (tap to
+   * stop). Stopping at the touchstart froze the content for the ~200 ms
+   * Android holds the first move back, then jumped: a stall per re-flick.
+   */
+  protected touchPending = false;
+  /**
+   * An optional sink for one line per gesture event and decision — the
+   * on-device touch log sets it; null costs nothing.
+   */
+  trace: ((line: string) => void) | null = null;
+  /**
+   * The time in ms since the lenis instance was created
+   */
+  time = 0;
+  /**
+   * User data that will be forwarded through the scroll event
+   *
+   * @example
+   * lenis.scrollTo(100, {
+   *   userData: {
+   *     foo: 'bar'
+   *   }
+   * })
+   */
+  userData: Lenis.UserData = {};
+  /**
+   * The last velocity of the scroll
+   */
+  lastVelocity = 0;
+  /**
+   * The current velocity of the scroll
+   */
+  velocity = 0;
+  /**
+   * The direction of the scroll
+   */
+  direction: 1 | -1 | 0 = 0;
+  /**
+   * The options passed to the lenis instance
+   */
+  options: Lenis.ResolvedOptions;
+  /**
+   * The target scroll value
+   */
+  targetScroll: number;
+  /**
+   * The animated scroll value
+   */
+  animatedScroll: number;
+
+  // The hosted parts — constructed in the constructor (a cross-module
+  // class read belongs inside a body, so any load order resolves).
+  protected readonly animate: Animate.Model;
+  protected readonly emitter: Emitter.Model;
+  readonly dimensions: Dimensions.Model; // public: the Snap class reads it
+  protected readonly virtualScroll: VirtualScroll.Model;
+
+
+  /**
+   * Subtracted from the applied translate (and added back on read-back) so
+   * a virtualized consumer can keep the RENDERED offset near zero while the
+   * scroll VALUE runs into the millions — GPU compositing is single
+   * precision, and past ~2^23 px even integer positions lose their
+   * sub-pixel placement in raster space (visible stutter deep in a
+   * 100k-item post, worst near its end). The consumer shifts its leading
+   * spacer by the same amount in the same frame; 0 (the default) is a
+   * numeric no-op. See VirtualScroller's renderBias.
+   */
+  renderOffset = 0;
+
+  /**
+   * VirtualScroller sets this: a PULL callback returning the maximum scroll
+   * derived from its COMPUTED content height (a cached Vue computed — each
+   * read is O(1) and can never be stale, no watcher needed). The DOM is
+   * deliberately much shorter than the virtual content — the composited
+   * layer stays small (a ~10M px layer carried visible compositor
+   * heaviness), the rendered window + spacers only ever span a few hundred
+   * k px — so a DOM-measured limit would clamp wheel scrolling to a
+   * fraction of the post.
+   */
+  virtualLimit: (() => number) | null = null;
+
+  /**
+   * The root element on which lenis is instanced
+   */
+  get rootElement() {
+    return (
+      this.options.wrapper === window ? document.documentElement : this.options.wrapper
+    ) as HTMLElement;
+  }
+
+  /**
+   * The limit which is the maximum scroll value
+   */
+  get limit() {
+    if (this.virtualLimit !== null) {
+      return this.virtualLimit();
+    }
+    if (this.options.__experimental__naiveDimensions) {
+      if (this.isHorizontal) {
+        return this.rootElement.scrollWidth - this.rootElement.clientWidth;
+      } else {
+        return this.rootElement.scrollHeight - this.rootElement.clientHeight;
+      }
+    } else {
+      return this.dimensions.limit[this.isHorizontal ? 'x' : 'y'];
+    }
+  }
+
+  /**
+   * Whether or not the scroll is horizontal
+   */
+  get isHorizontal() {
+    return this.options.orientation === 'horizontal';
+  }
+
+  /**
+   * The actual scroll value
+   */
+  get actualScroll() {
+    // value browser takes into account
+    // it has to be this way because of DOCTYPE declaration
+    const wrapper = this.options.wrapper as Window | HTMLElement;
+
+    return this.isHorizontal
+      ? ((wrapper as Window).scrollX ?? (wrapper as HTMLElement).scrollLeft)
+      : this.getTranslateY(this.options.content as HTMLElement);
+  }
+
+  /**
+   * The current scroll value
+   */
+  get scroll() {
+    return this.options.infinite
+      ? LenisUtils.Class.modulo(this.animatedScroll, this.limit)
+      : this.animatedScroll;
+  }
+
+  /**
+   * The progress of the scroll relative to the limit
+   */
+  get progress() {
+    // avoid progress to be NaN
+    return this.limit === 0 ? 1 : this.scroll / this.limit;
+  }
+
+  /**
+   * Current scroll state
+   */
+  get isScrolling() {
+    return this.scrolling;
+  }
+
+  protected set isScrolling(value: Lenis.Scrolling) {
+    if (this.scrolling !== value) {
+      this.scrolling = value;
+      this.updateClassName();
+    }
+  }
+
+  /**
+   * Check if lenis is stopped
+   */
+  get isStopped() {
+    return this.stopped;
+  }
+
+  protected set isStopped(value: boolean) {
+    if (this.stopped !== value) {
+      this.stopped = value;
+      this.updateClassName();
+    }
+  }
+
+  /**
+   * Check if lenis is locked
+   */
+  get isLocked() {
+    return this.locked;
+  }
+
+  protected set isLocked(value: boolean) {
+    if (this.locked !== value) {
+      this.locked = value;
+      this.updateClassName();
+    }
+  }
+
+  /**
+   * Check if lenis is smooth scrolling
+   */
+  get isSmooth() {
+    return this.isScrolling === 'smooth';
+  }
+
+  /**
+   * The class name applied to the wrapper element
+   */
+  get className() {
+    let className = 'lenis';
+    if (this.options.autoToggle) className += ' lenis-autoToggle';
+    if (this.isStopped) className += ' lenis-stopped';
+    if (this.isLocked) className += ' lenis-locked';
+    if (this.isScrolling) className += ' lenis-scrolling';
+    if (this.isScrolling === 'smooth') className += ' lenis-smooth';
+    return className;
   }
 
   /**
@@ -306,8 +483,8 @@ export class Lenis {
 
     this.cleanUpClassName();
 
-    if (this.__rafID) {
-      cancelAnimationFrame(this.__rafID);
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
     }
   }
 
@@ -318,10 +495,8 @@ export class Lenis {
    * @param callback Callback function
    * @returns Unsubscribe function
    */
-  on(event: 'scroll', callback: ScrollCallback): () => void;
-  on(event: 'virtual-scroll', callback: VirtualScrollCallback): () => void;
-  on(event: LenisEvent, callback: any) {
-    return this.emitter.on(event, callback);
+  on(event: Lenis.Event, callback: Lenis.ScrollCallback | VirtualScroll.Callback): () => void {
+    return this.emitter.on(event, callback as (...args: unknown[]) => void);
   }
 
   /**
@@ -330,21 +505,19 @@ export class Lenis {
    * @param event Event name
    * @param callback Callback function
    */
-  off(event: 'scroll', callback: ScrollCallback): void;
-  off(event: 'virtual-scroll', callback: VirtualScrollCallback): void;
-  off(event: LenisEvent, callback: any) {
-    return this.emitter.off(event, callback);
+  off(event: Lenis.Event, callback: Lenis.ScrollCallback | VirtualScroll.Callback): void {
+    this.emitter.off(event, callback as (...args: unknown[]) => void);
   }
 
-  private onScrollEnd = (e: Event | CustomEvent) => {
+  protected onScrollEnd(e: Event | CustomEvent) {
     if (!(e instanceof CustomEvent)) {
       if (this.isScrolling === 'smooth' || this.isScrolling === false) {
         e.stopPropagation();
       }
     }
-  };
+  }
 
-  private dispatchScrollendEvent = () => {
+  protected dispatchScrollendEvent() {
     this.options.wrapper.dispatchEvent(
       new CustomEvent('scrollend', {
         bubbles: this.options.wrapper === window,
@@ -354,9 +527,9 @@ export class Lenis {
         }
       })
     );
-  };
+  }
 
-  private onTransitionEnd = (event: TransitionEvent) => {
+  protected onTransitionEnd(event: TransitionEvent) {
     if (event.propertyName.includes('overflow')) {
       const property = this.isHorizontal ? 'overflow-x' : 'overflow-y';
 
@@ -370,19 +543,7 @@ export class Lenis {
         this.start();
       }
     }
-  };
-
-  /**
-   * Subtracted from the applied translate (and added back on read-back) so
-   * a virtualized consumer can keep the RENDERED offset near zero while the
-   * scroll VALUE runs into the millions — GPU compositing is single
-   * precision, and past ~2^23 px even integer positions lose their
-   * sub-pixel placement in raster space (visible stutter deep in a
-   * 100k-item post, worst near its end). The consumer shifts its leading
-   * spacer by the same amount in the same frame; 0 (the default) is a
-   * numeric no-op. See VirtualScroller's renderBias.
-   */
-  renderOffset = 0;
+  }
 
   /**
    * An external authority (VirtualScroller's setScrollPosition) wrote the
@@ -401,7 +562,7 @@ export class Lenis {
     this.animatedScroll = this.targetScroll = scroll;
   }
 
-  private setScroll(scroll: number) {
+  protected setScroll(scroll: number) {
     // behavior: 'instant' bypasses the scroll-behavior CSS property
 
     scroll -= this.renderOffset;
@@ -431,7 +592,7 @@ export class Lenis {
     if (this.isHorizontal) {
       (this.options.content as HTMLElement).style.transform = `translateX(${-rendered}px)`;
     } else {
-      if (IS_SAFARI) {
+      if (this.self.IS_SAFARI) {
         /** Safari mis-renders long translated content unless the layer is
          *  reset before every write — the original workaround. It is
          *  Safari-ONLY on purpose: the reset demotes (will-change: auto)
@@ -450,7 +611,7 @@ export class Lenis {
     }
   }
 
-  private onClick = (event: PointerEvent | MouseEvent) => {
+  protected onClick(event: PointerEvent | MouseEvent) {
     const path = event.composedPath();
     const anchor = path.find(
       (node) =>
@@ -476,15 +637,15 @@ export class Lenis {
         this.scrollTo(target, options);
       }
     }
-  };
+  }
 
-  private onPointerDown = (event: PointerEvent | MouseEvent) => {
+  protected onPointerDown(event: PointerEvent | MouseEvent) {
     if (event.button === 1) {
       this.reset();
     }
-  };
+  }
 
-  private onVirtualScroll = (data: VirtualScrollData) => {
+  protected onVirtualScroll(data: VirtualScroll.Data) {
     if (
       typeof this.options.virtualScroll === 'function' &&
       this.options.virtualScroll(data) === false
@@ -635,10 +796,10 @@ export class Lenis {
       // The touchstart seeded the trail above.
       if (event.type === 'touchmove') {
         this.touchTrail.push({ at: now, position: this.targetScroll + delta });
-        trimTrail(this.touchTrail, now, FLICK_WINDOW_MS);
+        this.self.trimTrail(this.touchTrail, now, this.self.FLICK_WINDOW_MS);
       } else if (isTouchEnd) {
         trailLength = this.touchTrail.length;
-        flickVelocity = trailVelocity(this.touchTrail, this.velocity);
+        flickVelocity = this.self.trailVelocity(this.touchTrail, this.velocity);
         this.touchTrail = [];
       }
     }
@@ -667,7 +828,7 @@ export class Lenis {
             easing: this.options.easing
           })
     });
-  };
+  }
 
   /**
    * Stop a glide where the content is, now. A touch that a class claims
@@ -687,7 +848,7 @@ export class Lenis {
   tune(
     options: Partial<
       Pick<
-        LenisOptions,
+        Lenis.Options,
         | 'wheelMultiplier'
         | 'touchMultiplier'
         | 'lerp'
@@ -714,23 +875,23 @@ export class Lenis {
     this.emit();
   }
 
-  private emit() {
+  protected emit() {
     this.emitter.emit('scroll', this);
   }
 
-  private onNativeScroll = () => {
+  protected onNativeScroll() {
     // Fully-virtual scrollers (the horizontal strip) never accept native
     // adoption: the wrapper's scrollLeft/scrollTop are pinned 0 by design,
     // and adopting them the instant a lerp completes teleports the content
     // back to the origin.
     if (this.options.ignoreNativeScroll) return;
-    if (this._resetVelocityTimeout !== null) {
-      clearTimeout(this._resetVelocityTimeout);
-      this._resetVelocityTimeout = null;
+    if (this.resetVelocityTimer !== null) {
+      clearTimeout(this.resetVelocityTimer);
+      this.resetVelocityTimer = null;
     }
 
-    if (this._preventNextNativeScrollEvent) {
-      this._preventNextNativeScrollEvent = false;
+    if (this.nativeScrollEventSuppressed) {
+      this.nativeScrollEventSuppressed = false;
       return;
     }
 
@@ -739,7 +900,7 @@ export class Lenis {
       this.animatedScroll = this.targetScroll = this.actualScroll;
       this.lastVelocity = this.velocity;
       this.velocity = this.animatedScroll - lastScroll;
-      this.direction = Math.sign(this.animatedScroll - lastScroll) as Lenis['direction'];
+      this.direction = Math.sign(this.animatedScroll - lastScroll) as $Lenis['direction'];
 
       if (!this.isStopped) {
         this.isScrolling = 'native';
@@ -748,7 +909,7 @@ export class Lenis {
       this.emit();
 
       if (this.velocity !== 0) {
-        this._resetVelocityTimeout = setTimeout(() => {
+        this.resetVelocityTimer = setTimeout(() => {
           this.lastVelocity = this.velocity;
           this.velocity = 0;
           this.isScrolling = false;
@@ -756,9 +917,9 @@ export class Lenis {
         }, 400);
       }
     }
-  };
+  }
 
-  private reset() {
+  protected reset() {
     this.isLocked = false;
     this.isScrolling = false;
     // Fully-virtual scrollers pin the wrapper's native scroll at 0, so
@@ -800,16 +961,16 @@ export class Lenis {
    *
    * @param time The time in ms from an external clock like `requestAnimationFrame` or Tempus
    */
-  raf = (time: number) => {
+  raf(time: number) {
     const deltaTime = time - (this.time || time);
     this.time = time;
 
     this.animate.advance(deltaTime * 0.001);
 
     if (this.options.autoRaf) {
-      this.__rafID = requestAnimationFrame(this.raf);
+      this.rafId = requestAnimationFrame(this.raf);
     }
-  };
+  }
 
   /**
    * Scroll to a target value
@@ -845,7 +1006,7 @@ export class Lenis {
       force = false, // scroll even if stopped
       programmatic = true, // called from outside of the class
       userData
-    }: ScrollToOptions = {}
+    }: Lenis.ScrollToOptions = {}
   ) {
     if ((this.isStopped || this.isLocked) && !force) return;
 
@@ -896,7 +1057,7 @@ export class Lenis {
         }
       }
     } else {
-      target = clamp(0, target, this.limit);
+      target = LenisUtils.Class.clamp(0, target, this.limit);
     }
 
     if (target === this.targetScroll) {
@@ -928,7 +1089,7 @@ export class Lenis {
 
     // flip to easing/time based animation if at least one of them is provided
     if (typeof duration === 'number' && typeof easing !== 'function') {
-      easing = defaultEasing;
+      easing = this.self.defaultEasing;
     } else if (typeof easing === 'function' && typeof duration !== 'number') {
       duration = 1;
     }
@@ -957,7 +1118,7 @@ export class Lenis {
         // updated
         this.lastVelocity = this.velocity;
         this.velocity = value - this.animatedScroll;
-        this.direction = Math.sign(this.velocity) as Lenis['direction'];
+        this.direction = Math.sign(this.velocity) as $Lenis['direction'];
 
         this.animatedScroll = value;
         this.setScroll(this.scroll);
@@ -986,15 +1147,15 @@ export class Lenis {
     });
   }
 
-  private preventNextNativeScrollEvent() {
-    this._preventNextNativeScrollEvent = true;
+  protected preventNextNativeScrollEvent() {
+    this.nativeScrollEventSuppressed = true;
 
     requestAnimationFrame(() => {
-      this._preventNextNativeScrollEvent = false;
+      this.nativeScrollEventSuppressed = false;
     });
   }
 
-  private checkNestedScroll(
+  protected checkNestedScroll(
     node: HTMLElement,
     { deltaX, deltaY }: { deltaX: number; deltaY: number }
   ) {
@@ -1112,7 +1273,7 @@ export class Lenis {
     return willScroll && hasOverflow && isScrollable;
   }
 
-  getTranslateY(element) {
+  getTranslateY(element: HTMLElement) {
     const style = window.getComputedStyle(element);
     const transform = style.transform;
 
@@ -1129,149 +1290,223 @@ export class Lenis {
     return element === this.options.content ? translated + this.renderOffset : translated;
   }
 
-  /**
-   * The root element on which lenis is instanced
-   */
-  get rootElement() {
-    return (
-      this.options.wrapper === window ? document.documentElement : this.options.wrapper
-    ) as HTMLElement;
-  }
-
-  /**
-   * VirtualScroller sets this: a PULL callback returning the maximum scroll
-   * derived from its COMPUTED content height (a cached Vue computed — each
-   * read is O(1) and can never be stale, no watcher needed). The DOM is
-   * deliberately much shorter than the virtual content — the composited
-   * layer stays small (a ~10M px layer carried visible compositor
-   * heaviness), the rendered window + spacers only ever span a few hundred
-   * k px — so a DOM-measured limit would clamp wheel scrolling to a
-   * fraction of the post.
-   */
-  virtualLimit: (() => number) | null = null;
-
-  /**
-   * The limit which is the maximum scroll value
-   */
-  get limit() {
-    if (this.virtualLimit !== null) {
-      return this.virtualLimit();
-    }
-    if (this.options.__experimental__naiveDimensions) {
-      if (this.isHorizontal) {
-        return this.rootElement.scrollWidth - this.rootElement.clientWidth;
-      } else {
-        return this.rootElement.scrollHeight - this.rootElement.clientHeight;
-      }
-    } else {
-      return this.dimensions.limit[this.isHorizontal ? 'x' : 'y'];
-    }
-  }
-
-  /**
-   * Whether or not the scroll is horizontal
-   */
-  get isHorizontal() {
-    return this.options.orientation === 'horizontal';
-  }
-
-  /**
-   * The actual scroll value
-   */
-  get actualScroll() {
-    // value browser takes into account
-    // it has to be this way because of DOCTYPE declaration
-    const wrapper = this.options.wrapper as Window | HTMLElement;
-
-    return this.isHorizontal
-      ? ((wrapper as Window).scrollX ?? (wrapper as HTMLElement).scrollLeft)
-      : this.getTranslateY(this.options.content as HTMLElement);
-  }
-
-  /**
-   * The current scroll value
-   */
-  get scroll() {
-    return this.options.infinite ? modulo(this.animatedScroll, this.limit) : this.animatedScroll;
-  }
-
-  /**
-   * The progress of the scroll relative to the limit
-   */
-  get progress() {
-    // avoid progress to be NaN
-    return this.limit === 0 ? 1 : this.scroll / this.limit;
-  }
-
-  /**
-   * Current scroll state
-   */
-  get isScrolling() {
-    return this._isScrolling;
-  }
-
-  private set isScrolling(value: Scrolling) {
-    if (this._isScrolling !== value) {
-      this._isScrolling = value;
-      this.updateClassName();
-    }
-  }
-
-  /**
-   * Check if lenis is stopped
-   */
-  get isStopped() {
-    return this._isStopped;
-  }
-
-  private set isStopped(value: boolean) {
-    if (this._isStopped !== value) {
-      this._isStopped = value;
-      this.updateClassName();
-    }
-  }
-
-  /**
-   * Check if lenis is locked
-   */
-  get isLocked() {
-    return this._isLocked;
-  }
-
-  private set isLocked(value: boolean) {
-    if (this._isLocked !== value) {
-      this._isLocked = value;
-      this.updateClassName();
-    }
-  }
-
-  /**
-   * Check if lenis is smooth scrolling
-   */
-  get isSmooth() {
-    return this.isScrolling === 'smooth';
-  }
-
-  /**
-   * The class name applied to the wrapper element
-   */
-  get className() {
-    let className = 'lenis';
-    if (this.options.autoToggle) className += ' lenis-autoToggle';
-    if (this.isStopped) className += ' lenis-stopped';
-    if (this.isLocked) className += ' lenis-locked';
-    if (this.isScrolling) className += ' lenis-scrolling';
-    if (this.isScrolling === 'smooth') className += ' lenis-smooth';
-    return className;
-  }
-
-  private updateClassName() {
+  protected updateClassName() {
     this.cleanUpClassName();
 
     this.rootElement.className = `${this.rootElement.className} ${this.className}`.trim();
   }
 
-  private cleanUpClassName() {
+  protected cleanUpClassName() {
     this.rootElement.className = this.rootElement.className.replace(/lenis(-\w+)?/g, '').trim();
   }
+}
+
+export namespace Lenis {
+  export const $Class = Static($Lenis); // anchor — it declares statics
+  export let Class = $Class; // plain — no reactive state, no Reactive()
+  // raw-instance type — fields, parameters, returns
+  export type Model = InstanceType<typeof Class>;
+  // the type of an unwrapping surface (none here; kept for the manifest)
+  export type Instance = InstanceType<typeof Class>;
+
+  export type UserData = Record<string, any>;
+  export type Scrolling = boolean | 'native' | 'smooth';
+  export type Event = 'scroll' | 'virtual-scroll';
+  export type ScrollCallback = (lenis: Model) => void;
+  export type Orientation = 'vertical' | 'horizontal';
+  export type GestureOrientation = 'vertical' | 'horizontal' | 'both';
+
+  export type ScrollToOptions = {
+    /**
+     * The offset to apply to the target value
+     * @default 0
+     */
+    offset?: number;
+    /**
+     * Skip the animation and jump to the target value immediately
+     * @default false
+     */
+    immediate?: boolean;
+    /**
+     * Lock the scroll to the target value
+     * @default false
+     */
+    lock?: boolean;
+    /**
+     * The duration of the scroll animation (in s)
+     */
+    duration?: number;
+    /**
+     * The easing function to use for the scroll animation
+     * @default (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+     */
+    easing?: Animate.EasingFunction;
+    /**
+     * Linear interpolation (lerp) intensity (between 0 and 1)
+     * @default 0.1
+     */
+    lerp?: number;
+    /**
+     * Called when the scroll starts
+     */
+    onStart?: (lenis: Model) => void;
+    /**
+     * Called when the scroll completes
+     */
+    onComplete?: (lenis: Model) => void;
+    /**
+     * Scroll even if stopped
+     * @default false
+     */
+    force?: boolean;
+    /**
+     * Scroll initiated from outside of the lenis instance
+     * @default false
+     */
+    programmatic?: boolean;
+    /**
+     * User data that will be forwarded through the scroll event
+     */
+    userData?: UserData;
+  };
+
+  /** The options as given. */
+  export type Options = {
+    /**
+     * The element that will be used as the scroll container
+     * @default window
+     */
+    wrapper?: Window | HTMLElement | Element;
+    /**
+     * The element that contains the content that will be scrolled, usually `wrapper`'s direct child
+     * @default document.documentElement
+     */
+    content?: HTMLElement | Element;
+    /**
+     * The element that will listen to `wheel` and `touch` events
+     * @default window
+     */
+    eventsTarget?: Window | HTMLElement | Element;
+    /**
+     * Smooth the scroll initiated by `wheel` events
+     * @default true
+     */
+    smoothWheel?: boolean;
+    /**
+     * Mimic touch device scroll while allowing scroll sync
+     * @default false
+     */
+    syncTouch?: boolean;
+    /**
+     * Linear interpolation (lerp) intensity (between 0 and 1)
+     * @default 0.075
+     */
+    syncTouchLerp?: number;
+    /**
+     * Manage the the strength of `syncTouch` inertia
+     * @default 35
+     */
+    touchInertiaMultiplier?: number;
+    /**
+     * Scroll duration in seconds
+     */
+    duration?: number;
+    /**
+     * Scroll easing function
+     * @default (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+     */
+    easing?: Animate.EasingFunction;
+    /**
+     * Linear interpolation (lerp) intensity (between 0 and 1)
+     * @default 0.1
+     */
+    lerp?: number;
+    /**
+     * Enable infinite scrolling
+     * @default false
+     */
+    infinite?: boolean;
+    /**
+     * The orientation of the scrolling. Can be `vertical` or `horizontal`
+     * @default vertical
+     */
+    orientation?: Orientation;
+    /**
+     * The orientation of the gestures. Can be `vertical`, `horizontal` or `both`
+     * @default vertical
+     */
+    gestureOrientation?: GestureOrientation;
+    /** Fully-virtual mode: never adopt the wrapper's native scroll — not on
+     *  native scroll events, and not in reset() when a lerp completes. */
+    ignoreNativeScroll?: boolean;
+    /**
+     * The multiplier to use for mouse wheel events
+     * @default 1
+     */
+    touchMultiplier?: number;
+    /**
+     * The multiplier to use for touch events
+     * @default 1
+     */
+    wheelMultiplier?: number;
+    /**
+     * The fastest a wheel scroll may move the content, in px per ms; 0 is uncapped
+     * @default 0
+     */
+    wheelMaxPxPerMs?: number;
+    /**
+     * The fastest a touch scroll or flick may move the content, in px per ms; 0 is uncapped
+     * @default 0
+     */
+    touchMaxPxPerMs?: number;
+    /**
+     * Resize instance automatically
+     * @default true
+     */
+    autoResize?: boolean;
+    /**
+     * Manually prevent scroll to be smoothed based on elements traversed by events
+     */
+    prevent?: (node: HTMLElement) => boolean;
+    /**
+     * Manually modify the events before they get consumed
+     */
+    virtualScroll?: (data: VirtualScroll.Data) => boolean;
+    /**
+     * Wether or not to enable overscroll on a nested Lenis instance, similar to CSS overscroll-behavior (https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior)
+     * @default true
+     */
+    overscroll?: boolean;
+    /**
+     * If `true`, Lenis will not try to detect the size of the content and wrapper
+     * @default false
+     */
+    autoRaf?: boolean;
+    /**
+     * If `true`, Lenis will automatically run `requestAnimationFrame` loop
+     * @default false
+     */
+    anchors?: boolean | ScrollToOptions;
+    /**
+     * If `true`, Lenis will automatically start/stop based on wrapper's overflow property
+     * @default false
+     */
+    autoToggle?: boolean;
+    /**
+     * If `true`, Lenis will allow nested scroll
+     * @default false
+     */
+    allowNestedScroll?: boolean;
+    /**
+     * If `true`, Lenis will use naive dimensions calculation
+     * @default false
+     */
+    __experimental__naiveDimensions?: boolean;
+  };
+  /** The options as resolved: every default filled, four left optional. */
+  export type ResolvedOptions = OptionalPick<
+    Required<Options>,
+    'duration' | 'easing' | 'prevent' | 'virtualScroll'
+  >;
+  type OptionalPick<T, F extends keyof T> = Omit<T, F> & Partial<Pick<T, F>>;
 }

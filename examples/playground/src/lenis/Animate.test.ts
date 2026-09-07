@@ -2,7 +2,7 @@
 === GENERATOR ===
 Goal: Move a value toward its target by lerp or easing, never faster than a cap the scroller sets from its motion knobs.
 [The feel is one nested prop complete at every depth](../examples/virtual-scroller/virtual-scroller.invariants.md#the-feel-is-one-nested-prop-complete-at-every-depth)
-// domain-invariant: Animate — If a speed cap is set, then no advance moves the value more than the cap times the elapsed time, a capped frame is never the last, and the value still arrives; at zero the cap is off.
+// domain-invariant: $Animate — If a speed cap is set, then no advance moves the value more than the cap times the elapsed time, a capped frame is never the last, and the value still arrives; at zero the cap is off.
 Impossible if true: A wheel scroll under a cap that jumps further in one frame than the cap allows.
 
 === GENERATOR-DESCRIBED ===
@@ -11,12 +11,12 @@ easing are upstream Lenis and are not re-proven here.
 */
 
 import { expect, test } from 'vitest';
-import { Animate } from './animate';
+import { Animate } from './Animate';
 
-// domain-invariant: Animate — If a speed cap is set, then no advance moves the value more than the cap times the elapsed time, a capped frame is never the last, and the value still arrives; at zero the cap is off.
+// domain-invariant: $Animate — If a speed cap is set, then no advance moves the value more than the cap times the elapsed time, a capped frame is never the last, and the value still arrives; at zero the cap is off.
 // invariant: The feel is one nested prop complete at every depth (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('a capped lerp moves at most cap × elapsed per frame, keeps running while capped, and still arrives', () => {
-  const capped = new Animate();
+  const capped = new Animate.Class();
   const seen: Array<[number, boolean]> = [];
   capped.fromTo(0, 1000, { lerp: 1, maxPxPerMs: 1, onUpdate: (value, done) => seen.push([value, done]) });
   capped.advance(0.016);
@@ -27,16 +27,16 @@ test('a capped lerp moves at most cap × elapsed per frame, keeps running while 
   expect(seen.length).toBeGreaterThan(60);
 
   // Uncapped, the same lerp's first frame moves far more than the cap allowed.
-  const free = new Animate();
+  const free = new Animate.Class();
   free.fromTo(0, 1000, { lerp: 1, maxPxPerMs: 0 });
   free.advance(0.016);
   expect(free.value).toBeGreaterThan(600);
 });
 
-// impossible-if-true: Animate — A wheel scroll under a cap that jumps further in one frame than the cap allows.
+// impossible-if-true: $Animate — A wheel scroll under a cap that jumps further in one frame than the cap allows.
 test('no capped frame ever exceeds cap × elapsed, whatever the lerp or the easing asks for', () => {
   for (const options of [{ lerp: 1 }, { duration: 0.001, easing: (t: number) => t }]) {
-    const animate = new Animate();
+    const animate = new Animate.Class();
     let previous = 0;
     let largest = 0;
     animate.fromTo(0, 5000, {

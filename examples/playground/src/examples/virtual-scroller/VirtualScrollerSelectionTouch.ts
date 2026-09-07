@@ -1,23 +1,35 @@
-// VirtualScrollerSelectionTouch.ts — the touch gesture that produces a text
-// selection over a virtual list, hosted by the selection.
+// VirtualScrollerSelectionTouchCustom.ts — text selection on a touch
+// device, drawn and driven by this class and not by the system.
 //
-// On a touchscreen a drag already means SCROLL, so selection needs a way
-// in that scrolling does not use. The browser's own convention is the long
-// press: hold a finger still for a moment and the next movement selects
-// instead of scrolling. This class owns exactly that gesture — the hold
-// timer, the slop that cancels it, the mode flag, and the one non-passive
-// listener it installs while selecting — and hands the scroller three
-// pointer-agnostic calls: begin at a point, extend to a point, end.
+// On a phone three parties contend for one finger: the system's native
+// text selection (its long press, its handles, its loupe), the list's own
+// touch scroll (Lenis, in JS), and the page. Every rule about who yields
+// is the system's and undocumented, and a virtual list cannot live with
+// the one thing the native selection is anchored to — DOM nodes that
+// recycle. So on a touch device a finger never creates a native selection:
 //
-// The selection itself (the logical range, the highlight, copy) is the
-// scroller's, and it does not know or care which input produced the
-// points. That is why the mouse path and this class share the primitives
-// and nothing else.
+//   - the rows are non-selectable for as long as a finger is down, so the
+//     system never starts a selection and never draws handles; the long
+//     press is this class's alone. Between touches the rows are selectable
+//     again — a mouse on the same device keeps its native selection and
+//     its Ctrl+C;
+//   - the range is painted by this class, as boxes from the DOM range's
+//     client rects, laid inside the items wrapper so they move with the
+//     transform for free and are recomputed when the range or the window
+//     changes;
+//   - two handles of this class's own sit at the range's ends; a touch on
+//     one extends from the other end, and the edge zone scrolls the list —
+//     the same primitives and the same loop the mouse path uses.
+//
+// The copy chip is the copy affordance (a phone has no Ctrl+C). The mouse
+// path is untouched: on a device with no touch points this class is
+// inert and the native selection paints as before.
 import { ref, shallowRef } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
+import type { VirtualScrollerSelection } from './VirtualScrollerSelection';
 
-class $VirtualScrollerSelectionTouch {
+class $VirtualScrollerSelectionTouchCustom {
   /* Knobs */
 
   /** How long a finger must hold still before movement selects. */
@@ -28,6 +40,59 @@ class $VirtualScrollerSelectionTouch {
   /** Movement (px) during the hold that turns the gesture back into a scroll. */
   static get SLOP_PX() {
     return 8;
+  }
+
+  /** Two taps this close in time and place select the word under them —
+   *  the touch form of the double click. */
+  static get DOUBLE_TAP_MS() {
+    return 300;
+  }
+
+  static get DOUBLE_TAP_SLOP_PX() {
+    return 24;
+  }
+
+  /** For how long after a touch the browser's synthesized mouse events
+   *  are still that touch's, and not a mouse. */
+  static get MOUSE_AFTER_TOUCH_MS() {
+    return 700;
+  }
+
+  /** How far beside the selection's end its handle sits — left of the
+   *  start, right of the end, and a little below — so the knob never
+   *  covers the text it marks. */
+  static get HANDLE_OFFSET_PX() {
+    return 12;
+  }
+
+  /** The handle's touch target, centred on its knob. */
+  static get HANDLE_TARGET_PX() {
+    return 44;
+  }
+
+  /** The knob the reader sees, centred in the target (the CSS's 16 px). */
+  static get HANDLE_KNOB_PX() {
+    return 16;
+  }
+
+  static get OVERLAY_CLASS() {
+    return 'virtual-scroller__touch-selection';
+  }
+
+  static get BOX_CLASS() {
+    return 'virtual-scroller__touch-box';
+  }
+
+  static get HANDLE_CLASS() {
+    return 'virtual-scroller__touch-handle';
+  }
+
+  /** Whether this device has a finger at all — the class is inert without
+   *  one. Both signals: an emulated WebKit reports no touch points yet
+   *  fires touch events. */
+  static get isActive(): boolean {
+    if (typeof navigator === 'undefined' || typeof window === 'undefined') return false;
+    return navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
   }
 
   /* Pure decisions — the spec covers these */
@@ -42,12 +107,87 @@ class $VirtualScrollerSelectionTouch {
     return Math.hypot(x - origin.x, y - origin.y);
   }
 
-  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  constructor(public owner: VirtualScrollerSelectionTouch.Owner) {}
+  /**
+   * Client rects to boxes relative to an origin rect (the overlay's),
+   * empty ones dropped — a range's rects include zero-width ones at node
+   * boundaries that would draw as hairlines. Boxes are laid whole: the
+   * range spans the padded rows above and below the viewport too, and the
+   * frame clips them (`contain: paint` keeps the clip on the compositor
+   * while the layer moves). An optional clip rect is still honoured.
+   */
+  static boxesFrom(
+    rects: ArrayLike<DOMRectReadOnly>,
+    origin: { left: number; top: number },
+    clip?: { left: number; top: number; right: number; bottom: number }
+  ): VirtualScrollerSelectionTouchCustom.Box[] {
+    const boxes: VirtualScrollerSelectionTouchCustom.Box[] = [];
+    for (let index = 0; index < rects.length; index++) {
+      const rect = rects[index];
+      const left = clip ? Math.max(rect.left, clip.left) : rect.left;
+      const top = clip ? Math.max(rect.top, clip.top) : rect.top;
+      const right = clip ? Math.min(rect.right, clip.right) : rect.right;
+      const bottom = clip ? Math.min(rect.bottom, clip.bottom) : rect.bottom;
+      if (right - left < 1 || bottom - top < 1) continue;
+      boxes.push({
+        left: left - origin.left,
+        top: top - origin.top,
+        width: right - left,
+        height: bottom - top
+      });
+    }
+    return boxes;
+  }
+
+  /** Where the two handles sit for a set of boxes: the start above the
+   *  first box's top-left, the end below the last box's bottom-right, each
+   *  offset outward — the system's own placement, and neither knob covers
+   *  the text it marks. */
+  static handlePositions(boxes: VirtualScrollerSelectionTouchCustom.Box[]): {
+    start: { x: number; y: number };
+    end: { x: number; y: number };
+  } | null {
+    if (boxes.length === 0) return null;
+    const first = boxes[0];
+    const last = boxes[boxes.length - 1];
+    const offset = this.HANDLE_OFFSET_PX;
+    return {
+      start: { x: first.left - offset, y: first.top - offset / 2 },
+      end: { x: last.left + last.width + offset, y: last.top + last.height + offset / 2 }
+    };
+  }
+
+  /** The part of a rect that is on screen. */
+  static visibleRect(rect: DOMRect): VirtualScrollerSelectionTouchCustom.Box {
+    const left = Math.max(0, rect.left);
+    const top = Math.max(0, rect.top);
+    const right = Math.min(window.innerWidth, rect.right);
+    const bottom = Math.min(window.innerHeight, rect.bottom);
+    return { left, top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
+  }
+
+  /** Whether a handle spot (overlay-relative) lies inside a visible rect
+   *  (viewport-relative) with its knob whole: inset by the knob's radius. */
+  static spotOnScreen(
+    at: { x: number; y: number },
+    origin: { left: number; top: number },
+    visible: VirtualScrollerSelectionTouchCustom.Box
+  ): boolean {
+    const inset = this.HANDLE_KNOB_PX / 2;
+    const x = at.x + origin.left;
+    const y = at.y + origin.top;
+    return (
+      x >= visible.left + inset &&
+      x <= visible.left + visible.width - inset &&
+      y >= visible.top + inset &&
+      y <= visible.top + visible.height - inset
+    );
+  }
+
+  constructor(public owner: VirtualScrollerSelectionTouchCustom.Owner) {}
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
-    return this.constructor as typeof $VirtualScrollerSelectionTouch;
+    return this.constructor as typeof $VirtualScrollerSelectionTouchCustom;
   }
 
   // MUTABLE STATE — whether a touch selection is being extended right now
@@ -61,28 +201,32 @@ class $VirtualScrollerSelectionTouch {
     return ref(false);
   }
 
-  /** True while a finger holds or selects — collapses of the native
-   *  selection in that window are the lock's doing, not the reader's. */
-  get holding() {
-    return this.hold.timer !== null || this.selecting.value;
-  }
-
-  /** This implementation rides the system's selection; it paints nothing. */
-  get paintsSelection() {
-    return false;
-  }
-
-  /** This implementation never needs mouse events told apart from a touch. */
-  get recentTouch() {
-    return false;
-  }
-
-  /** The element the listeners are attached to, once attached. */
+  /** The frame the touchstart listener is attached to, once attached. */
   get element() {
     return shallowRef<HTMLElement | null>(null);
   }
 
-  /** The hold in progress: where it started and the timer that promotes it. */
+  /** The overlay inside the items wrapper: boxes and the two handles. */
+  get overlay() {
+    return shallowRef<HTMLElement | null>(null);
+  }
+
+  /** True while a finger holds or selects. */
+  get holding() {
+    return this.hold.timer !== null || this.selecting.value;
+  }
+
+  /** The selection paints through this class on a touch device. */
+  get paintsSelection() {
+    return this.self.isActive;
+  }
+
+  /** Whether a touch ended recently enough that mouse events are its echo. */
+  get recentTouch() {
+    return performance.now() - this.tap.lastTouchAt < this.self.MOUSE_AFTER_TOUCH_MS;
+  }
+
+  /** The hold in progress, and the drag it may turn into. */
   protected readonly hold = {
     origin: { x: 0, y: 0 },
     timer: null as ReturnType<typeof setTimeout> | null,
@@ -94,43 +238,382 @@ class $VirtualScrollerSelectionTouch {
     /** whether a selection existed when the finger landed — a tap on it clears it */
     hadSelection: false,
     /** whether the finger moved past the slop (a swipe, not a tap) */
-    moved: false
+    moved: false,
+    /** the handle being dragged, if the finger landed on one */
+    handle: null as 'start' | 'end' | null,
+    /** whether this touch is the second tap of a double tap */
+    doubleTapped: false
+  };
+
+  /** The last tap, for the double tap; and the last touch, for the mouse
+   *  events synthesized after it. */
+  protected readonly tap = { at: null as number | null, x: 0, y: 0, lastTouchAt: 0 };
+
+  /** The overlay's parts, created once on attach. */
+  protected readonly parts = {
+    boxes: [] as HTMLElement[],
+    start: null as HTMLElement | null,
+    end: null as HTMLElement | null,
+    /** The last paint's boxes and handle spots (overlay-relative) and the
+     *  frame's visible rect, so a scroll re-places the handles from one
+     *  rect read instead of a repaint. */
+    laid: null as null | {
+      start: { x: number; y: number };
+      end: { x: number; y: number };
+      visible: VirtualScrollerSelectionTouchCustom.Box | null;
+    }
   };
 
   /* Lifetime — the host calls these from its own mount and unmount */
 
   /**
-   * Only `touchstart` lives on the element. Touch events keep firing on
-   * the node the finger LANDED on — even after that node leaves the DOM,
-   * and in a virtual list it does leave: the edge autoscroll recycles the
-   * origin row mid-drag. A detached node has no ancestors, so its events
-   * reach neither the element nor the document. They do still reach
-   * listeners on the node ITSELF. So once a hold is armed, move and end
-   * are listened for on the touch's own target node, and released when
-   * the gesture ends.
+   * Only `touchstart` lives on the frame. Touch events keep firing on the
+   * node the finger LANDED on — even after that node leaves the DOM, and
+   * in a virtual list it does — so once a hold is armed, move and end are
+   * listened for on the touch's own target node.
    */
+  // invariant: On a touch device the selection is drawn by the class (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   attach(element: HTMLElement) {
     this.detach();
+    if (!this.self.isActive) return;
     this.element.value = element;
     element.addEventListener('touchstart', this.onTouchStart, { passive: true });
+    this.mountOverlay();
   }
 
   detach() {
     this.stopFollowingTouch();
+    this.unlockSelectability();
     const element = this.element.value;
     if (!element) return;
     element.removeEventListener('touchstart', this.onTouchStart);
     this.element.value = null;
+    this.unmountOverlay();
+  }
+
+  /** Rows non-selectable while a finger is down — the system's long press
+   *  finds nothing to select, and this class paints its own range. */
+  protected lockSelectability() {
+    const element = this.element.value;
+    if (!element) return;
+    element.style.userSelect = 'none';
+    element.style.webkitUserSelect = 'none';
+  }
+
+  protected unlockSelectability() {
+    const element = this.element.value;
+    if (!element) return;
+    element.style.userSelect = '';
+    element.style.webkitUserSelect = '';
   }
 
   dispose() {
     this.cancelHold();
-    this.unlockSelectability();
     this.detach();
     this.selecting.value = false;
   }
 
-  // invariant: Touch events keep firing on the node the finger landed on (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  protected mountOverlay() {
+    const wrapper = this.owner.itemsWrapperElement.value;
+    if (!wrapper || this.overlay.value) return;
+    if (!wrapper.style.position) wrapper.style.position = 'relative';
+    const overlay = document.createElement('div');
+    overlay.className = this.self.OVERLAY_CLASS;
+    overlay.hidden = true;
+    const makeHandle = (which: 'start' | 'end') => {
+      const handle = document.createElement('div');
+      handle.className = `${this.self.HANDLE_CLASS} ${this.self.HANDLE_CLASS}--${which}`;
+      handle.dataset.handle = which;
+      handle.addEventListener('touchstart', this.onHandleTouchStart, { passive: false });
+      overlay.appendChild(handle);
+      return handle;
+    };
+    this.parts.start = makeHandle('start');
+    this.parts.end = makeHandle('end');
+    wrapper.appendChild(overlay);
+    this.overlay.value = overlay;
+  }
+
+  protected unmountOverlay() {
+    const overlay = this.overlay.value;
+    if (!overlay) return;
+    overlay.remove();
+    this.overlay.value = null;
+    this.parts.boxes = [];
+    this.parts.start = null;
+    this.parts.end = null;
+  }
+
+  /* Paint — the owner hands over the DOM range of the mounted part */
+
+  /**
+   * Draw the range: one box per client rect, the handles at the ends.
+   * Boxes are positioned relative to the overlay, which lives inside the
+   * transformed wrapper, so a scroll moves them with the rows for free;
+   * the owner calls this again whenever the range or the window changes.
+   */
+  // invariant: On a touch device the selection is drawn by the class (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  paint(range: Range | null) {
+    const overlay = this.overlay.value;
+    if (!overlay) return;
+    if (!range) {
+      overlay.hidden = true;
+      return;
+    }
+    const rects = typeof range.getClientRects === 'function' ? range.getClientRects() : [];
+    const frame = this.element.value;
+    // Shown BEFORE it is measured: a hidden element has no rect, and boxes
+    // laid from a zero origin land far outside the frame.
+    overlay.hidden = false;
+    const origin = overlay.getBoundingClientRect();
+    // Boxes are laid whole — the frame clips them (contain: paint) — so a
+    // scroll moves them with the rows and nothing is re-laid until the
+    // range or the window changes.
+    const boxes = this.self.boxesFrom(rects, origin);
+    if (boxes.length === 0) {
+      overlay.hidden = true;
+      this.parts.laid = null;
+      return;
+    }
+    this.paintBoxes(boxes);
+    const handles = this.self.handlePositions(boxes)!;
+    const clip = frame ? frame.getBoundingClientRect() : null;
+    this.parts.laid = {
+      start: handles.start,
+      end: handles.end,
+      visible: clip && this.self.visibleRect(clip)
+    };
+    this.placeHandles(origin);
+  }
+
+  /**
+   * A scroll moved the overlay under the frame: re-place the handles from
+   * the last paint's boxes and one rect read. A handle sits at its TRUE
+   * spot and shows only while that spot is on screen; an end that has
+   * scrolled away has no handle until its spot scrolls back in. (A handle
+   * pinned at the edge while its line was partly visible glided in with
+   * the line — it looked like a handle that had not finished hiding.)
+   */
+  follow() {
+    const overlay = this.overlay.value;
+    if (!overlay || overlay.hidden || !this.parts.laid) return;
+    this.placeHandles(overlay.getBoundingClientRect());
+  }
+
+  protected placeHandles(origin: { left: number; top: number }) {
+    const laid = this.parts.laid;
+    if (!laid) return;
+    const visible = laid.visible;
+    const shown = (at: { x: number; y: number }) =>
+      !visible || this.self.spotOnScreen(at, origin, visible);
+    this.placeHandle(this.parts.start, shown(laid.start) ? laid.start : null);
+    this.placeHandle(this.parts.end, shown(laid.end) ? laid.end : null);
+  }
+
+  protected paintBoxes(boxes: VirtualScrollerSelectionTouchCustom.Box[]) {
+    const overlay = this.overlay.value;
+    if (!overlay) return;
+    // Reuse box elements; grow or trim the pool to the count needed.
+    while (this.parts.boxes.length < boxes.length) {
+      const box = document.createElement('div');
+      box.className = this.self.BOX_CLASS;
+      overlay.insertBefore(box, this.parts.start);
+      this.parts.boxes.push(box);
+    }
+    while (this.parts.boxes.length > boxes.length) this.parts.boxes.pop()!.remove();
+    for (let index = 0; index < boxes.length; index++) {
+      const { left, top, width, height } = boxes[index];
+      const element = this.parts.boxes[index];
+      element.style.transform = `translate(${left}px, ${top}px)`;
+      element.style.width = `${width}px`;
+      element.style.height = `${height}px`;
+    }
+  }
+
+  protected placeHandle(handle: HTMLElement | null, at: { x: number; y: number } | null) {
+    if (!handle) return;
+    handle.hidden = at === null;
+    if (at) handle.style.transform = `translate(${at.x}px, ${at.y}px)`;
+  }
+
+  /* The gestures */
+
+  /** A finger lands on the rows: arm the hold. Two fingers is a pinch or a
+   *  scroll, never a selection; a button or a handle owns its own touch. */
+  onTouchStart(event: TouchEvent) {
+    this.cancelHold();
+    if (event.touches.length !== 1) return;
+    if (this.owner.isInteractive(event.target)) return;
+    if (event.target instanceof Element && event.target.closest(`.${this.self.OVERLAY_CLASS}`))
+      return;
+    const touch = event.touches[0];
+    this.tap.lastTouchAt = performance.now();
+    // The second tap of a double tap selects the word under it — with the
+    // rows locked like any other touch, so the system's own double-tap
+    // selection finds nothing, and followed to its end so the lock lifts.
+    if (this.isDoubleTap(touch.clientX, touch.clientY)) {
+      this.tap.at = null;
+      this.hold.doubleTapped = true;
+      this.hold.identifier = touch.identifier;
+      this.owner.holdScroll();
+      if (event.target) this.followTouch(event.target);
+      this.lockSelectability();
+      if (this.owner.selectAt(touch.clientX, touch.clientY, 'word', 'touch')) {
+        this.selected.value = true;
+      }
+      return;
+    }
+    this.hold.doubleTapped = false;
+    this.hold.origin = { x: touch.clientX, y: touch.clientY };
+    this.hold.identifier = touch.identifier;
+    this.hold.began = false;
+    this.hold.moved = false;
+    this.hold.handle = null;
+    this.hold.hadSelection = this.owner.hasSelection;
+    if (event.target) this.followTouch(event.target);
+    this.lockSelectability();
+    // Selected text is no different from any other: a swipe over it is a
+    // scroll, a tap on it clears it, a long press extends it. Only a
+    // handle changes the selection from the first move.
+    this.hold.timer = setTimeout(() => this.promoteHold(), this.self.LONG_PRESS_MS);
+  }
+
+  /** Whether a touch landing now, here, is the second tap of a double tap. */
+  protected isDoubleTap(x: number, y: number): boolean {
+    if (this.tap.at === null) return false;
+    if (performance.now() - this.tap.at > this.self.DOUBLE_TAP_MS) return false;
+    return this.self.distanceFrom(this.tap, x, y) <= this.self.DOUBLE_TAP_SLOP_PX;
+  }
+
+  /** The hold survived: from here movement selects. The anchor is laid
+   *  down by the first move, at the point the finger has been resting on. */
+  // invariant: A long press turns the next move into a selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  promoteHold() {
+    this.hold.timer = null;
+    this.owner.holdScroll();
+    this.selecting.value = true;
+    this.selected.value = false;
+  }
+
+  /**
+   * A finger lands on a handle: no hold, the drag is immediate. The other
+   * end stays fixed and the handle's end follows the finger — through the
+   * same extendTo as a mouse, edge zone and all. The dragged handle stops
+   * catching pointer events so the rows under it are hit-tested.
+   */
+  // invariant: On a touch device the selection is drawn by the class (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  onHandleTouchStart(event: TouchEvent) {
+    if (event.touches.length !== 1) return;
+    const handle = event.currentTarget as HTMLElement;
+    const which = handle.dataset.handle as 'start' | 'end';
+    const range = this.owner.range;
+    if (!range) return;
+    event.preventDefault();
+    this.cancelHold();
+    // The handle's moves are flagged for Lenis to skip, so a glide under
+    // the finger would run on — held here, where the content is.
+    this.owner.holdScroll();
+    const touch = event.touches[0];
+    this.hold.identifier = touch.identifier;
+    this.hold.handle = which;
+    this.hold.began = true;
+    this.hold.moved = false;
+    this.hold.hadSelection = true;
+    handle.style.pointerEvents = 'none';
+    this.followTouch(handle);
+    this.lockSelectability();
+    const fixed = which === 'end' ? range.start : range.end;
+    this.owner.beginFromEnd(fixed, touch.clientX, touch.clientY);
+    this.selecting.value = true;
+    this.selected.value = false;
+  }
+
+  /**
+   * The finger moves. Before the hold fires, moving past the slop means
+   * the user is scrolling — cancel the hold and stay out of the way.
+   * After it fires, or on a handle, the move extends the selection and is
+   * taken away from the scroll: `preventDefault` stops the page, and the
+   * flag Lenis already honours for cross-axis gestures stops the list.
+   */
+  onTouchMove(event: TouchEvent) {
+    const touch = this.trackedTouch(event);
+    if (!touch || this.hold.doubleTapped) return;
+    if (!this.selecting.value) {
+      const moved = this.self.distanceFrom(this.hold.origin, touch.clientX, touch.clientY);
+      if (this.self.exceedsSlop(moved)) {
+        this.hold.moved = true;
+        this.cancelHold();
+        this.stopFollowingTouch();
+        this.unlockSelectability();
+      }
+      return;
+    }
+    if (
+      this.self.exceedsSlop(this.self.distanceFrom(this.hold.origin, touch.clientX, touch.clientY))
+    ) {
+      this.hold.moved = true;
+    }
+    // The first move after a promotion lays the anchor down where the
+    // finger rested.
+    if (!this.hold.began) {
+      this.hold.began = this.owner.beginAt(this.hold.origin.x, this.hold.origin.y, 'touch');
+      if (!this.hold.began) {
+        this.selecting.value = false;
+        return;
+      }
+    }
+    event.preventDefault();
+    (event as TouchEvent & { lenisStopPropagation?: boolean }).lenisStopPropagation = true;
+    this.owner.extendTo(touch.clientX, touch.clientY);
+  }
+
+  /** The finger lifts: a cancelled hold was a tap or a scroll; a selecting
+   *  drag ends and leaves its range behind for the copy chip. */
+  onTouchEnd() {
+    this.cancelHold();
+    this.stopFollowingTouch();
+    this.unlockSelectability();
+    this.restoreHandle();
+    this.tap.lastTouchAt = performance.now();
+    // The second tap lifting: the word stays selected, nothing else happens.
+    if (this.hold.doubleTapped) {
+      this.hold.doubleTapped = false;
+      return;
+    }
+    const promoted = this.selecting.value;
+    this.selecting.value = false;
+    // A tap (no promotion, no move) is remembered for a possible double tap.
+    if (!promoted && !this.hold.moved && !this.hold.handle) {
+      this.tap.at = performance.now();
+      this.tap.x = this.hold.origin.x;
+      this.tap.y = this.hold.origin.y;
+    }
+    // A tap (no promotion, no move) on an existing selection dismisses it.
+    if (!promoted && this.hold.hadSelection && !this.hold.moved) {
+      this.owner.clear();
+      return;
+    }
+    if (!promoted) return;
+    // A hold that never moved is a long press with nothing under it.
+    if (!this.hold.began) return;
+    this.owner.endDrag();
+    this.selected.value = this.owner.hasSelection;
+  }
+
+  /** The selection was cleared by other means (an outside tap, a clear). */
+  onSelectionCleared() {
+    this.selected.value = false;
+    this.paint(null);
+  }
+
+  protected restoreHandle() {
+    if (!this.hold.handle) return;
+    const handle = this.hold.handle === 'end' ? this.parts.end : this.parts.start;
+    if (handle) handle.style.pointerEvents = '';
+    this.hold.handle = null;
+  }
+
   protected followTouch(target: EventTarget) {
     this.stopFollowingTouch();
     // touchmove must be able to preventDefault while selecting (it stops
@@ -150,136 +633,6 @@ class $VirtualScrollerSelectionTouch {
     this.hold.target = null;
   }
 
-  /* The gesture */
-
-  /** A finger lands: arm the hold. Two fingers is a pinch or a scroll, never a selection. */
-  /**
-   * A finger lands: arm the hold, and make the rows non-selectable for
-   * as long as it lasts. iOS runs its own long-press text selection on
-   * selectable text, at about the same moment this hold promotes; from
-   * then on the finger's movement belongs to that native machinery and
-   * never reaches these listeners. Non-selectable rows give its
-   * recogniser nothing to select. WebKit paints no highlight in
-   * non-selectable text (native or CSS Highlight API — measured), so
-   * selectability returns the moment the promoted finger first moves,
-   * right before the anchor is laid down, and on release for a tap or a
-   * swipe — a double tap still selects a word.
-   */
-  onTouchStart(event: TouchEvent) {
-    this.cancelHold();
-    if (event.touches.length !== 1) return;
-    // A button, a link, an input own their own tap — the copy chip above
-    // all: arming here would clear the selection before its click copies.
-    if (this.owner.isInteractive(event.target)) return;
-    const touch = event.touches[0];
-    // A finger on a handle of the native selection is dragging that handle;
-    // iOS owns the drag and selectionchange adopts the result.
-    if (this.owner.isNearSelectionHandle(touch.clientX, touch.clientY)) return;
-    this.hold.origin = { x: touch.clientX, y: touch.clientY };
-    this.hold.identifier = touch.identifier;
-    this.hold.began = false;
-    this.hold.moved = false;
-    if (event.target) this.followTouch(event.target);
-    // Always locked, selection or not: a finger on selected text is the
-    // reader about to EXTEND it with a long press (the owner extends from
-    // the far end when the press lands inside the range), and iOS must
-    // not take that press. A tap on it clears, as the system's would.
-    this.hold.hadSelection = this.owner.hasSelection;
-    this.lockSelectability();
-    this.hold.timer = setTimeout(() => this.promoteHold(), this.self.LONG_PRESS_MS);
-  }
-
-  /** The hold survived: from here movement selects. The anchor is laid
-   *  down by the first move, at the point the finger has been resting on. */
-  // invariant: A long press turns the next move into a selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  promoteHold() {
-    this.hold.timer = null;
-    this.selecting.value = true;
-    this.selected.value = false;
-  }
-
-  /** Rows non-selectable while a finger holds — see onTouchStart. */
-  protected lockSelectability() {
-    const element = this.element.value;
-    if (!element) return;
-    element.style.userSelect = 'none';
-    element.style.webkitUserSelect = 'none';
-  }
-
-  protected unlockSelectability() {
-    const element = this.element.value;
-    if (!element) return;
-    element.style.userSelect = '';
-    element.style.webkitUserSelect = '';
-  }
-
-  /**
-   * The finger moves. Before the hold fires, moving past the slop means
-   * the user is scrolling — cancel the hold and stay out of the way.
-   * After it fires, the move extends the selection and is taken away from
-   * the scroll: `preventDefault` stops the page, and the flag Lenis
-   * already honours for cross-axis gestures stops the list.
-   */
-  onTouchMove(event: TouchEvent) {
-    const touch = this.trackedTouch(event);
-    if (!touch) return;
-    if (!this.selecting.value) {
-      const moved = this.self.distanceFrom(this.hold.origin, touch.clientX, touch.clientY);
-      if (this.self.exceedsSlop(moved)) {
-        this.hold.moved = true;
-        this.cancelHold();
-        this.stopFollowingTouch();
-        this.unlockSelectability();
-      }
-      return;
-    }
-    // The first move after the promotion lays the anchor down where the
-    // finger rested — with the rows selectable again, so the highlight paints.
-    if (!this.hold.began) {
-      this.unlockSelectability();
-      this.hold.began = this.owner.beginAt(this.hold.origin.x, this.hold.origin.y, 'touch');
-      if (!this.hold.began) {
-        this.selecting.value = false;
-        return;
-      }
-    }
-    // invariant: A long press turns the next move into a selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-    event.preventDefault();
-    (event as TouchEvent & { lenisStopPropagation?: boolean }).lenisStopPropagation = true;
-    this.owner.extendTo(touch.clientX, touch.clientY);
-  }
-
-  /** The finger lifts: a cancelled hold was a tap or a scroll; a selecting
-   *  drag ends and leaves its range behind for the copy chip. */
-  onTouchEnd() {
-    this.cancelHold();
-    this.stopFollowingTouch();
-    this.unlockSelectability();
-    const promoted = this.selecting.value;
-    this.selecting.value = false;
-    // A tap (no promotion, no move) on an existing selection dismisses it.
-    if (!promoted && this.hold.hadSelection && !this.hold.moved) {
-      this.owner.clear();
-      return;
-    }
-    if (!promoted) return;
-    // A hold that never moved is a long press with nothing under it.
-    if (!this.hold.began) return;
-    this.owner.endDrag();
-    this.selected.value = this.owner.hasSelection;
-  }
-
-  /** The selection was cleared by other means (an outside tap, a clear). */
-  onSelectionCleared() {
-    this.selected.value = false;
-  }
-
-  /** Nothing to draw — the native selection paints itself. */
-  paint(_range: Range | null) {}
-
-  /** Nothing to follow — see paint. */
-  follow() {}
-
   protected cancelHold() {
     if (this.hold.timer !== null) clearTimeout(this.hold.timer);
     this.hold.timer = null;
@@ -295,22 +648,35 @@ class $VirtualScrollerSelectionTouch {
   }
 }
 
-export namespace VirtualScrollerSelectionTouch {
-  export const $Class = Static($VirtualScrollerSelectionTouch); // anchor — it declares statics
-  export let Class = Reactive($Class); // reactive — the scroller hosts one
+export namespace VirtualScrollerSelectionTouchCustom {
+  export const $Class = Static($VirtualScrollerSelectionTouchCustom); // anchor — it declares statics
+  export let Class = Reactive($Class); // reactive — the selection hosts one
   export type Instance = typeof Class.Instance;
 
-  /** What the gesture needs from the selection that hosts it: the three
-   *  pointer-agnostic primitives, and whether a selection exists. */
+  /** A painted box, relative to the overlay. */
+  export interface Box {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  }
+
+  /** What the gesture needs from the selection that hosts it. */
   export interface Owner {
     beginAt(x: number, y: number, input: 'mouse' | 'touch'): boolean;
+    /** Select the word or the row under a point as a settled range. */
+    selectAt(x: number, y: number, unit: 'word' | 'row', input: 'mouse' | 'touch'): boolean;
+    /** Begin a drag with one end fixed — a handle drag. */
+    beginFromEnd(fixed: VirtualScrollerSelection.Position, x: number, y: number): boolean;
     extendTo(x: number, y: number): void;
     endDrag(): void;
     clear(): void;
-    /** Whether a touch target owns its own gesture (a button, a link, an input). */
     isInteractive(target: EventTarget | null): boolean;
-    /** Whether a touch point lies on a handle of the native selection. */
-    isNearSelectionHandle(x: number, y: number): boolean;
+    /** Stop a glide where the content is: a claimed touch never scrolls. */
+    holdScroll(): void;
     readonly hasSelection: boolean;
+    readonly range: VirtualScrollerSelection.Range | null;
+    /** The wrapper the rows live in — the overlay is laid inside it. */
+    readonly itemsWrapperElement: { value: HTMLElement | null };
   }
 }

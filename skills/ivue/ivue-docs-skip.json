@@ -12,46 +12,21 @@
   {
     "path": "examples/playground/src/ivue.ts",
     "check": "declarations_use_full_descriptive_names",
-    "reason": "vendored copy of the engine (lib/Reactive.ts, synced by sync:examples) — the engine keeps its own conventions"
+    "reason": "vendored copy of the engine (lib/Reactive.ts, synced by sync:examples) \u2014 the engine keeps its own conventions"
   },
   {
-    "path": "examples/playground/src/lenis/animate.ts",
-    "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
-  },
-  {
-    "path": "examples/playground/src/lenis/dimensions.ts",
-    "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
-  },
-  {
-    "path": "examples/playground/src/lenis/emitter.ts",
-    "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
-  },
-  {
-    "path": "examples/playground/src/lenis/emitter.ts",
+    "path": "examples/playground/src/lenis/Emitter.ts",
     "check": "declarations_use_full_descriptive_names",
-    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
+    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) \u2014 not teaching code"
   },
   {
-    "path": "examples/playground/src/lenis/lenis.ts",
-    "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
-  },
-  {
-    "path": "examples/playground/src/lenis/lenis.ts",
+    "path": "examples/playground/src/lenis/Lenis.ts",
     "check": "declarations_use_full_descriptive_names",
-    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
+    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) \u2014 not teaching code"
   },
   {
-    "path": "examples/playground/src/lenis/maths.ts",
+    "path": "examples/playground/src/lenis/LenisUtils.ts",
     "check": "declarations_use_full_descriptive_names",
-    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
-  },
-  {
-    "path": "examples/playground/src/lenis/virtual-scroll.ts",
-    "check": "a_public_class_publishes_its_namespace_manifest",
-    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) — not teaching code"
+    "reason": "vendored third-party (the Lenis smooth-scroll library, ported as-is) \u2014 not teaching code"
   }
 ]

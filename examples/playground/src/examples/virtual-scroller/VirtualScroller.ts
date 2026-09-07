@@ -20,7 +20,7 @@ import {
   type ExtractPropDefaultTypes,
   type ReactiveInstance
 } from '../../ivue';
-import { Lenis } from '../../lenis/lenis';
+import { Lenis } from '../../lenis/Lenis';
 import { nestedProps, type NestedPartial, type NestedProps } from '../../nestedProps';
 import { Static } from '../../Static';
 import { VirtualScrollerPadding } from './VirtualScrollerPadding';
@@ -256,7 +256,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     onMounted(() => {
       if (!this.scrollElement.value || !this.scrollElementInner.value) return;
 
-      this.lenis = new Lenis({
+      this.lenis = new Lenis.Class({
         wrapper: this.scrollElement.value,
         content: this.scrollElementInner.value,
         orientation: this.lenisOrientation,
@@ -344,7 +344,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   /** Lenis, for paths that only run after mount created it. */
-  protected get lenisRequired(): Lenis {
+  protected get lenisRequired(): Lenis.Model {
     if (!this.lenis) throw new Error('VirtualScroller: lenis is created on mount');
     return this.lenis;
   }
@@ -777,7 +777,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   /* Autoplay (Lenis-driven) */
 
-  lenis: Lenis | null = null;
+  lenis: Lenis.Model | null = null;
 
   protected frame: number | null = null;
 

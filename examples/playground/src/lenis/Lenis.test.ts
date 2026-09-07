@@ -3,7 +3,7 @@
 Goal: Read a flick's velocity off the finger's last stretch of moves, so a touchend that lands after an idle frame still flicks at the finger's speed.
 [A flick's velocity is read off the finger's last stretch](lenis.invariants.md#a-flicks-velocity-is-read-off-the-fingers-last-stretch)
 [Android holds the first move back and may coalesce a swipe into one](lenis.invariants.md#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one)
-// domain-invariant: trailVelocity — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
+// domain-invariant: $Lenis — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
 
 === GENERATOR-DESCRIBED ===
@@ -12,9 +12,13 @@ lerp and the inertia multiplier are upstream Lenis.
 */
 
 import { expect, test } from 'vitest';
-import { FLICK_WINDOW_MS, trailVelocity, trimTrail } from './lenis';
+import { Lenis } from './Lenis';
 
-// domain-invariant: trailVelocity — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
+const { FLICK_WINDOW_MS } = Lenis.Class;
+const trailVelocity = Lenis.Class.trailVelocity;
+const trimTrail = Lenis.Class.trimTrail;
+
+// domain-invariant: $Lenis — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
 // invariant: A flick's velocity is read off the finger's last stretch (examples/playground/src/lenis/lenis.invariants.md)
 test('the flick velocity is read off the trail, and falls back to the frame velocity with too little trail', () => {
   const trail = [
@@ -31,7 +35,7 @@ test('the flick velocity is read off the trail, and falls back to the frame velo
   expect(trailVelocity([], 3)).toBe(3);
 });
 
-// impossible-if-true: trailVelocity — A flick that dies because the last animation frame before the touchend saw no move.
+// impossible-if-true: $Lenis — A flick that dies because the last animation frame before the touchend saw no move.
 // invariant: Android holds the first move back and may coalesce a swipe into one (examples/playground/src/lenis/lenis.invariants.md)
 test('a re-flick Android coalesced into one touchmove still flicks: the touchstart seeds the trail, so one move has a span', () => {
   // The log from the phone: touchstart at 10.99 s, one touchmove 190 ms
@@ -68,7 +72,7 @@ test('a re-flick Android coalesced into one touchmove still flicks: the touchsta
   expect(trailVelocity(atContent, 0)).toBeCloseTo((336 / FLICK_WINDOW_MS) * 16.7, 6);
 });
 
-// impossible-if-true: trailVelocity — A flick that dies because the last animation frame before the touchend saw no move.
+// impossible-if-true: $Lenis — A flick that dies because the last animation frame before the touchend saw no move.
 test('an idle frame before the touchend does not zero the flick: the trail still spans the finger’s moves', () => {
   const trail = [
     { at: 1000, position: 0 },
