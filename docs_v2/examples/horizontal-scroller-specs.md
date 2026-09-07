@@ -6,6 +6,10 @@ pageClass: benchmarks-wide examples-page
 relatedPosts: [a-million-rows-twelve-divs]
 ---
 
+<script setup>
+import LazyCodeGroup from '../.vitepress/theme/components/LazyCodeGroup.vue'
+</script>
+
 # Horizontal Scroller: Specs & Contract
 
 The source is on the [horizontal scroller](/examples/horizontal-scroller)
@@ -16,9 +20,11 @@ which the strip inherits by construction, are on
 [Virtual Scroller: Specs & Contract](/examples/virtual-scroller-specs); the
 method is on [Testing & Invariants](/guide/testing).
 
-::: code-group
-<<< ../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.test.ts [HorizontalVirtualScroller.test.ts]
-<<< ../../examples/playground/src/examples/text-marquee/TextChunker.test.ts [TextChunker.test.ts]
-<<< ../../examples/playground/src/examples/text-marquee/TextMarquee.test.ts [TextMarquee.test.ts]
-<<< ../../examples/playground/src/examples/text-marquee/text-marquee.invariants.md [text-marquee.invariants.md]
-:::
+<LazyCodeGroup
+  :files="[
+      { path: 'examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.test.ts', label: 'HorizontalVirtualScroller.test.ts' },
+      { path: 'examples/playground/src/examples/text-marquee/TextChunker.test.ts', label: 'TextChunker.test.ts' },
+      { path: 'examples/playground/src/examples/text-marquee/TextMarquee.test.ts', label: 'TextMarquee.test.ts' },
+      { path: 'examples/playground/src/examples/text-marquee/text-marquee.invariants.md', label: 'text-marquee.invariants.md' }
+  ]"
+/>

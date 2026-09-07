@@ -7,6 +7,7 @@ relatedPosts: [select-text-across-a-million-rows, a-million-rows-twelve-divs, sh
 ---
 
 <script setup>
+import LazyCodeGroup from '../.vitepress/theme/components/LazyCodeGroup.vue'
 import ExampleVirtualScroller from '../.vitepress/theme/components/examples/ExampleVirtualScroller.vue'
 import ExampleTextMarquee from '../.vitepress/theme/components/examples/ExampleTextMarquee.vue'
 </script>
@@ -60,17 +61,19 @@ The exact files running above, tabbed — the class alone is ~1,200 lines,
 so each block scrolls inside itself. The demo template is docs code;
 everything else is the production component.
 
-::: code-group
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.ts [VirtualScrollerSelection.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.ts [VirtualScrollerSelectionTouch.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.ts [VirtualScrollerPadding.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.ts [VirtualScrollerItem.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts [example]
-<<< @/.vitepress/theme/components/examples/ExampleVirtualScroller.vue [template]
-:::
+<LazyCodeGroup
+  :files="[
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScroller.ts', label: 'VirtualScroller.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScroller.vue', label: 'VirtualScroller.vue' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.ts', label: 'VirtualScrollerSelection.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.ts', label: 'VirtualScrollerSelectionTouch.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.ts', label: 'VirtualScrollerPadding.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.ts', label: 'VirtualScrollerItem.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue', label: 'VirtualScrollerItem.vue' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.ts', label: 'example' },
+      { path: 'docs_v2/.vitepress/theme/components/examples/ExampleVirtualScroller.vue', label: 'template' }
+  ]"
+/>
 
 Every class above has a colocated spec beside it, and the subsystem has a
 contract the spec headers bind to. The specs, the contract, and the Lenis
@@ -236,15 +239,17 @@ about one thing:
   <ExampleTextMarquee />
 </ClientOnly>
 
-::: code-group
-<<< ../../examples/playground/src/examples/text-marquee/TextMarquee.ts [TextMarquee.ts]
-<<< ../../examples/playground/src/examples/text-marquee/TextMarquee.vue [TextMarquee.vue]
-<<< ../../examples/playground/src/examples/text-marquee/TextChunker.ts [TextChunker.ts]
-<<< ../../examples/playground/src/examples/text-marquee/TextMarqueeExample.ts [example]
-<<< @/.vitepress/theme/components/examples/ExampleTextMarquee.vue [template]
-<<< ../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.ts [HorizontalVirtualScroller.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.vue [HorizontalVirtualScroller.vue]
-:::
+<LazyCodeGroup
+  :files="[
+      { path: 'examples/playground/src/examples/text-marquee/TextMarquee.ts', label: 'TextMarquee.ts' },
+      { path: 'examples/playground/src/examples/text-marquee/TextMarquee.vue', label: 'TextMarquee.vue' },
+      { path: 'examples/playground/src/examples/text-marquee/TextChunker.ts', label: 'TextChunker.ts' },
+      { path: 'examples/playground/src/examples/text-marquee/TextMarqueeExample.ts', label: 'example' },
+      { path: 'docs_v2/.vitepress/theme/components/examples/ExampleTextMarquee.vue', label: 'template' },
+      { path: 'examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.ts', label: 'HorizontalVirtualScroller.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.vue', label: 'HorizontalVirtualScroller.vue' }
+  ]"
+/>
 
 The scale math holds up to real books: 600k characters is ~1,500 chunks,
 the scroll extent a few million pixels — inside the scroller's

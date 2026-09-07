@@ -801,3 +801,29 @@ own whole than to arbitrate.
   thumb is its own component (a per-frame binding re-renders its
   component, whole), a scroll re-places the handles instead of repainting
   the boxes, and a touchcancel flicks like a touchend.
+
+## Source tabs on a docs page: `<<<` is eager, LazyCodeGroup is not
+
+- A VitePress `<<<` snippet is rendered into the PAGE's chunk at build
+  time. Nine source tabs plus seven specs and a 700-line contract put
+  256 KB of gzipped HTML on the scroller example page, downloaded and
+  parsed before the reader saw a row — "the scroller got heavy" was the
+  page, not the classes (the startup JS was ~300 ms of long tasks, mostly
+  the first rows measuring themselves).
+- `LazyCodeGroup` (`docs_v2/.vitepress/theme/components/`) + the
+  `lazy-source` Vite plugin (`docs_v2/.vitepress/plugins/`): one
+  highlighted chunk per file, imported when its tab opens; the page
+  imports only the loader map. The scroller page went 256 KB → 6.9 KB
+  gzipped; a tab switch loads exactly one chunk. The markup mirrors
+  VitePress's own code block (dual shiki themes, `line-numbers-mode`, the
+  `button.copy` the theme's delegated handler serves), so the CSS applies
+  as is. Pages pass `:files="[{ path, label }]"` with REPO-relative paths
+  under the plugin's roots (`examples/playground/src`, the docs example
+  components).
+- Two traps: a virtual module id must not END in a real extension —
+  `lazy-source:…/x.css` was claimed by vite:css and parsed as a stylesheet
+  (the id carries a `.highlight` suffix); and a per-instance module
+  counter for radio-group names drifts between the build's server render
+  (one process, many pages) and the client — use Vue's `useId()`.
+- "Hydration completed but contains mismatches" fires on EVERY page of the
+  built site, component or not — pre-existing, not a signal for new work.

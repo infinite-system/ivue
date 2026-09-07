@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import { lazySourcePlugin } from './plugins/lazy-source.mjs';
 import { defineConfig } from 'vitepress';
 
 const deployedCommit = process.env.GITHUB_SHA ?? '';
@@ -135,6 +136,9 @@ function blogSidebar() {
 
 export default defineConfig({
   vite: {
+    // Source tabs load on demand: one highlighted chunk per file, imported
+    // when its tab opens (see plugins/lazy-source.mjs and LazyCodeGroup).
+    plugins: [lazySourcePlugin()],
     define: {
       __IVUE_DEPLOYED_COMMIT__: JSON.stringify(deployedCommit),
     },

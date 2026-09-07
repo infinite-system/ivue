@@ -7,6 +7,7 @@ relatedPosts: [select-text-across-a-million-rows, ship-the-variant-keep-the-tuni
 ---
 
 <script setup>
+import LazyCodeGroup from '../.vitepress/theme/components/LazyCodeGroup.vue'
 import ExampleHorizontalScroller from '../.vitepress/theme/components/examples/ExampleHorizontalScroller.vue'
 </script>
 
@@ -89,16 +90,18 @@ The state destructure is the only other thing in `<script setup>`.
 The subclass first — the two files that ARE the horizontal scroller —
 then the base machinery they inherit, exactly as running above:
 
-::: code-group
-<<< ../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.ts [HorizontalVirtualScroller.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.vue [HorizontalVirtualScroller.vue]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.ts [VirtualScrollerItem.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue [VirtualScrollerItem.vue]
-<<< @/.vitepress/theme/components/examples/HorizontalScrollerExample.ts [example]
-<<< @/.vitepress/theme/components/examples/ExampleHorizontalScroller.vue [template]
-:::
+<LazyCodeGroup
+  :files="[
+      { path: 'examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.ts', label: 'HorizontalVirtualScroller.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/HorizontalVirtualScroller.vue', label: 'HorizontalVirtualScroller.vue' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScroller.ts', label: 'VirtualScroller.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScroller.vue', label: 'VirtualScroller.vue' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.ts', label: 'VirtualScrollerItem.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.vue', label: 'VirtualScrollerItem.vue' },
+      { path: 'docs_v2/.vitepress/theme/components/examples/HorizontalScrollerExample.ts', label: 'example' },
+      { path: 'docs_v2/.vitepress/theme/components/examples/ExampleHorizontalScroller.vue', label: 'template' }
+  ]"
+/>
 
 The strip's spec asserts every seam names the x axis; the marquee's two
 specs prove the chunker as a pure Static class and the marquee as

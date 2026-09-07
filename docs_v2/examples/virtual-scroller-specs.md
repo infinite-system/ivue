@@ -6,6 +6,10 @@ pageClass: benchmarks-wide examples-page
 relatedPosts: [select-text-across-a-million-rows, a-million-rows-twelve-divs]
 ---
 
+<script setup>
+import LazyCodeGroup from '../.vitepress/theme/components/LazyCodeGroup.vue'
+</script>
+
 # Virtual Scroller: Specs & Contract
 
 The source is on the [virtual scroller](/examples/virtual-scroller) page.
@@ -15,16 +19,18 @@ subsystem is held to. The method is on [Testing & Invariants](/guide/testing).
 
 ## The scroller's specs and contract
 
-::: code-group
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts [VirtualScroller.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts [VirtualScrollerSelection.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.test.ts [VirtualScrollerSelectionTouch.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.test.ts [VirtualScrollerPadding.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.test.ts [VirtualScrollerItem.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.test.ts [VirtualScrollerExample.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/hosted.ts [hosted.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md [virtual-scroller.invariants.md]
-:::
+<LazyCodeGroup
+  :files="[
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts', label: 'VirtualScroller.test.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts', label: 'VirtualScrollerSelection.test.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.test.ts', label: 'VirtualScrollerSelectionTouch.test.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.test.ts', label: 'VirtualScrollerPadding.test.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.test.ts', label: 'VirtualScrollerItem.test.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.test.ts', label: 'VirtualScrollerExample.test.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/hosted.ts', label: 'hosted.ts' },
+      { path: 'examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md', label: 'virtual-scroller.invariants.md' }
+  ]"
+/>
 
 ## The Lenis fork's specs and contract
 
@@ -33,12 +39,14 @@ class shape as everything else here: one seam per module, statics for the
 constants and the pure maths, handlers as prototype methods bound once.
 Its own contract records what a finger is guaranteed on every phone.
 
-::: code-group
-<<< ../../examples/playground/src/lenis/Lenis.test.ts [Lenis.test.ts]
-<<< ../../examples/playground/src/lenis/Animate.test.ts [Animate.test.ts]
-<<< ../../examples/playground/src/lenis/VirtualScroll.test.ts [VirtualScroll.test.ts]
-<<< ../../examples/playground/src/lenis/Dimensions.test.ts [Dimensions.test.ts]
-<<< ../../examples/playground/src/lenis/Emitter.test.ts [Emitter.test.ts]
-<<< ../../examples/playground/src/lenis/LenisUtils.test.ts [LenisUtils.test.ts]
-<<< ../../examples/playground/src/lenis/lenis.invariants.md [lenis.invariants.md]
-:::
+<LazyCodeGroup
+  :files="[
+      { path: 'examples/playground/src/lenis/Lenis.test.ts', label: 'Lenis.test.ts' },
+      { path: 'examples/playground/src/lenis/Animate.test.ts', label: 'Animate.test.ts' },
+      { path: 'examples/playground/src/lenis/VirtualScroll.test.ts', label: 'VirtualScroll.test.ts' },
+      { path: 'examples/playground/src/lenis/Dimensions.test.ts', label: 'Dimensions.test.ts' },
+      { path: 'examples/playground/src/lenis/Emitter.test.ts', label: 'Emitter.test.ts' },
+      { path: 'examples/playground/src/lenis/LenisUtils.test.ts', label: 'LenisUtils.test.ts' },
+      { path: 'examples/playground/src/lenis/lenis.invariants.md', label: 'lenis.invariants.md' }
+  ]"
+/>
