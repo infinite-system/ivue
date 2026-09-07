@@ -57,13 +57,17 @@ SFC is wiring).
    directly, and nothing edits the base from a projection. Approval is
    of the exact text, so a regenerated or edited approved expression
    returns to draft.
-10. **Table names are singular, always.** A table is named for what one
+10. **Table and route names are singular, always.** The same rule
+    reaches the API: `/admin/press/piece/:id`, `/expression/:id/posting`,
+    `GET /piece` for the list. A route names the resource, and the
+    resource is one thing; the list is a query on it, not a different
+    noun. A table is named for what one
    row IS: `piece`, `expression`, `posting`, `subscriber`, `send`. A
    plural name describes the container, not the row, and reads wrong
    in every query (`FROM subscriber WHERE email = ?` is the sentence).
-   The rule is written into `newsletter/CONVENTIONS.md`; the existing
-   plural tables migrate before the press tables land (see Migration
-   0011 below).
+    The rule is written into `newsletter/CONVENTIONS.md`; the existing
+    plural tables migrate before the press tables land (see Migration
+    0011 below).
 
 ## Architecture
 
@@ -288,25 +292,25 @@ approval, never typing.
 
 | method + path | does |
 | --- | --- |
-| `GET /pieces?status=&kind=&q=` | list pieces with per-kind expression states rolled up |
-| `POST /pieces` | create a piece (title, slug?, claim, wave); with `fromSlug` it bootstraps from a blog post: title, description → claim, banner, links, and the post's plain text copied into `base` |
-| `GET /blog-posts` | the site's posts (from `blog-index.json`) for the "start from a blog post" select |
-| `POST /pieces/:id/expressions` with `mode: derived` | adds a derived expression: regenerated from `base` now and on every base save; per-kind settings in `meta` |
-| `GET /pieces/:id` | a piece with its expressions, segments nested |
-| `PATCH /pieces/:id` | edit piece fields; a `base` change writes a `base_revision` row and regenerates every derived expression, returning approved ones to draft |
-| `GET /pieces/:id/base-revisions` · `POST …/base-revisions/:rev/restore` | undo for the base |
-| `POST /expressions/:id/detach` | derived → authored: the current body becomes hand-owned and stops regenerating; one-way |
-| `POST /pieces/:id/expressions` | add an expression (kind, body, meta); threads accept `segments: string[]` |
-| `GET /expressions/:id` | one expression with children, revisions count, mirrors |
-| `PATCH /expressions/:id` | body (authored only), meta, label, mirrors, skipped, calendar_id — writes a revision; `author` from the `X-Press-Author` header (`agent` when the CLI calls) |
-| `POST /expressions/:id/approve` / `/unapprove` | status draft ↔ approved (lint must pass) |
-| `POST /expressions/:id/segments` | append a segment; `PATCH /expressions/:id/reorder` takes ordered child ids |
-| `POST /expressions/:id/schedule` | `{ due_at }` → a `scheduled_job` row of kind `expression`; status → scheduled |
-| `POST /expressions/:id/post` | X kinds only: post now through XPoster (thread posts live segments in order); writes a `posting` row with the tweet ids; status → sent |
-| `POST /expressions/:id/sent` | `{ url, platform, venue?, calendar_id? }` manual mark for platforms without an API; writes a `posting` row; with a mirror platform it also stamps the mirror |
-| `GET /expressions/:id/postings` · `GET /pieces/:id/postings` | the ledger: every time and place this projection, or any of the piece's, went out |
-| `POST /expressions/:id/clone` | `{ kind }` → a new expression on the same piece with the body copied (X article → LinkedIn article) |
-| `GET /expressions/:id/revisions` · `POST …/revisions/:rev/restore` | history and undo |
+| `GET /piece?status=&kind=&q=` | list pieces with per-kind expression states rolled up |
+| `POST /piece` | create a piece (title, slug?, claim, wave); with `fromSlug` it bootstraps from a blog post: title, description → claim, banner, links, and the post's plain text copied into `base` |
+| `GET /blog-post` | the site's posts (from `blog-index.json`) for the "start from a blog post" select |
+| `POST /piece/:id/expression` with `mode: derived` | adds a derived expression: regenerated from `base` now and on every base save; per-kind settings in `meta` |
+| `GET /piece/:id` | a piece with its expressions, segments nested |
+| `PATCH /piece/:id` | edit piece fields; a `base` change writes a `base_revision` row and regenerates every derived expression, returning approved ones to draft |
+| `GET /piece/:id/base-revision` · `POST …/base-revision/:rev/restore` | undo for the base |
+| `POST /expression/:id/detach` | derived → authored: the current body becomes hand-owned and stops regenerating; one-way |
+| `POST /piece/:id/expression` | add an expression (kind, body, meta); threads accept `segments: string[]` |
+| `GET /expression/:id` | one expression with children, revisions count, mirrors |
+| `PATCH /expression/:id` | body (authored only), meta, label, mirrors, skipped, calendar_id — writes a revision; `author` from the `X-Press-Author` header (`agent` when the CLI calls) |
+| `POST /expression/:id/approve` / `/unapprove` | status draft ↔ approved (lint must pass) |
+| `POST /expression/:id/segment` | append a segment; `PATCH /expression/:id/reorder` takes ordered child ids |
+| `POST /expression/:id/schedule` | `{ due_at }` → a `scheduled_job` row of kind `expression`; status → scheduled |
+| `POST /expression/:id/post` | X kinds only: post now through XPoster (thread posts live segments in order); writes a `posting` row with the tweet ids; status → sent |
+| `POST /expression/:id/sent` | `{ url, platform, venue?, calendar_id? }` manual mark for platforms without an API; writes a `posting` row; with a mirror platform it also stamps the mirror |
+| `GET /expression/:id/posting` · `GET /piece/:id/posting` | the ledger: every time and place this projection, or any of the piece's, went out |
+| `POST /expression/:id/clone` | `{ kind }` → a new expression on the same piece with the body copied (X article → LinkedIn article) |
+| `GET /expression/:id/revision` · `POST …/revision/:rev/restore` | history and undo |
 | `POST /import` | one-shot: drafts + channel posts + artifact JSON → pieces and expressions |
 
 The scheduler's `expression` job: load the row at run time (so edits
@@ -320,7 +324,7 @@ Keeps everything shipped today, minus the bundled markdown:
 
 - Entries carry `expressionIds: number[]` instead of `drafts: string[]`
   (calendar data stays a committed file — the plan is not private;
-  the copy is). The dialog fetches `GET /expressions/:id` on open and
+  the copy is). The dialog fetches `GET /expression/:id` on open and
   shows the platform card read-only with Copy, plus a "Open in Press"
   link. Threads copy per segment and whole.
 - The dialog's "Mark as posted" also calls `POST …/sent` when the
@@ -351,7 +355,7 @@ Enter open, `a` approve the focused expression in the strip.
 ### New piece
 
 "New piece" opens a dialog with a **Start from a blog post** select
-(`QSelect` over `GET /blog-posts`, searchable) or a blank title; a
+(`QSelect` over `GET /blog-post`, searchable) or a blank title; a
 blank piece is how a pitch or a voice post starts, with the base as the
 email or the post itself. Adding expressions is a menu on the piece
 page, never a fixed set: a launch article might carry ten, a pitch
@@ -365,7 +369,7 @@ claim — the site is not touched and not re-read.
 
 ### The piece page
 
-`/press/pieces/:id`, a `QSplitter`: left the piece (title, claim,
+`/press/piece/:id`, a `QSplitter`: left the piece (title, claim,
 links, banner, notes, and the **base** in a markdown editor, all
 editable inline), right the expressions as `QTabs`, one tab per
 expression with its state dot and a **derived** or **authored** mark.

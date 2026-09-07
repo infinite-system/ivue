@@ -100,3 +100,8 @@ plural names the container, not the row, and every query reads wrong
 is not). Indexes follow the table (`send_by_email`, `comment_root`).
 Migration 0011 renamed every earlier table to this rule; a new
 migration that creates a plural table is wrong on arrival.
+
+The rule reaches routes too: `/admin/press/piece/:id`,
+`/admin/press/expression/:id/posting`, and `GET /admin/press/piece` for
+the list. A route names the resource, and the resource is one thing;
+the list is a query on it, not a different noun.
