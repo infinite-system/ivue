@@ -198,7 +198,7 @@ The full layout, with the tuned defaults:
 {
   "scroll": {
     "wheel": { "gain": 1,   "follow": 0.1, "maxPxPerMs": 0 },
-    "touch": { "gain": 1.3, "follow": 0.1, "inertia": 30, "maxPxPerMs": 0 }
+    "touch": { "gain": 1.3, "follow": 0.08, "inertia": 40, "maxPxPerMs": 0 }
   },
   "selection": {
     "autoscroll": {

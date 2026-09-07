@@ -32,6 +32,32 @@ const IS_SAFARI =
   typeof navigator !== 'undefined' &&
   /^((?!chrome|chromium|android).)*safari/i.test(navigator.userAgent);
 
+/** How far back a flick's velocity is read off the finger's path. */
+export const FLICK_WINDOW_MS = 100;
+
+/** Lenis measures velocity in px per animation frame; a frame is ~16.7 ms. */
+const FRAME_MS = 16.7;
+
+/** Drop trail samples older than the window. */
+export function trimTrail(trail: Array<{ at: number; position: number }>, now: number, windowMs: number) {
+  while (trail.length > 0 && now - trail[0].at > windowMs) trail.shift();
+}
+
+/**
+ * The flick's velocity in px per frame off the finger's trail: the
+ * position change over the trail's span, scaled to a frame. Fewer than
+ * two samples, or a span too short to read, fall back to the frame's own
+ * velocity.
+ */
+export function trailVelocity(trail: Array<{ at: number; position: number }>, fallback: number): number {
+  if (trail.length < 2) return fallback;
+  const first = trail[0];
+  const last = trail[trail.length - 1];
+  const span = last.at - first.at;
+  if (span < 8) return fallback;
+  return ((last.position - first.position) / span) * FRAME_MS;
+}
+
 export class Lenis {
   private _isScrolling: Scrolling = false; // true when scroll is animating
   private _isStopped = false; // true if user should not be able to scroll - enable/disable programmatically
@@ -49,6 +75,14 @@ export class Lenis {
    * gesture-driven scroll runs under, a flick's inertia included
    */
   lastInputTouch = false;
+  /**
+   * The finger's recent path — (time, target position) per touchmove
+   * inside FLICK_WINDOW_MS — so a flick's velocity is read off the finger's
+   * last stretch, not off the last animation frame. Android delivers the
+   * touchend after a frame with no touchmove often enough that the
+   * frame's velocity reads zero or stale there, and the flick dies.
+   */
+  private touchTrail: Array<{ at: number; position: number }> = [];
   /**
    * The time in ms since the lenis instance was created
    */
@@ -544,10 +578,23 @@ export class Lenis {
     const isSyncTouch = isTouch && this.options.syncTouch;
     const isTouchEnd = isTouch && event.type === 'touchend';
 
-    const hasTouchInertia = isTouchEnd && Math.abs(delta) > 5;
+    let flickVelocity = this.velocity;
+    if (isTouch) {
+      const now = performance.now();
+      if (event.type === 'touchstart') this.touchTrail = [];
+      else if (event.type === 'touchmove') {
+        this.touchTrail.push({ at: now, position: this.targetScroll + delta });
+        trimTrail(this.touchTrail, now, FLICK_WINDOW_MS);
+      } else if (isTouchEnd) {
+        flickVelocity = trailVelocity(this.touchTrail, this.velocity);
+        this.touchTrail = [];
+      }
+    }
+
+    const hasTouchInertia = isTouchEnd && (Math.abs(delta) > 5 || Math.abs(flickVelocity) > 0.5);
 
     if (hasTouchInertia) {
-      delta = this.velocity * this.options.touchInertiaMultiplier;
+      delta = flickVelocity * this.options.touchInertiaMultiplier;
     }
 
     this.scrollTo(this.targetScroll + delta, {
