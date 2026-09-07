@@ -29,6 +29,18 @@ test('the flick velocity is read off the trail, and falls back to the frame velo
 });
 
 // impossible-if-true: trailVelocity — A flick that dies because the last animation frame before the touchend saw no move.
+test('a re-flick Android coalesced into one touchmove still flicks: the touchstart seeds the trail, so one move has a span', () => {
+  // The log from the phone: touchstart at 10.99 s, one touchmove 190 ms
+  // later carrying 194 px, touchend 10 ms after; the frame velocity was
+  // zero since the tap-to-stop reset. Seeded, the trail reads the swipe.
+  const seeded = [
+    { at: 10_990, position: 12_887 },
+    { at: 11_180, position: 12_887 + 194 }
+  ];
+  expect(trailVelocity(seeded, 0)).toBeCloseTo((194 / 190) * 16.7, 6);
+});
+
+// impossible-if-true: trailVelocity — A flick that dies because the last animation frame before the touchend saw no move.
 test('an idle frame before the touchend does not zero the flick: the trail still spans the finger’s moves', () => {
   const trail = [
     { at: 1000, position: 0 },

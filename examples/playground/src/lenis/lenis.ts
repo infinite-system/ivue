@@ -591,13 +591,18 @@ export class Lenis {
     const isTouchEnd = isTouch && (event.type === 'touchend' || event.type === 'touchcancel');
 
     let flickVelocity = this.velocity;
+    let trailLength = 0;
     if (isTouch) {
       const now = performance.now();
-      if (event.type === 'touchstart') this.touchTrail = [];
+      // The touchstart seeds the trail: Android may coalesce a whole
+      // re-flick into ONE touchmove, and one move alone has no span to
+      // read a velocity from — with the start as the first sample it does.
+      if (event.type === 'touchstart') this.touchTrail = [{ at: now, position: this.targetScroll }];
       else if (event.type === 'touchmove') {
         this.touchTrail.push({ at: now, position: this.targetScroll + delta });
         trimTrail(this.touchTrail, now, FLICK_WINDOW_MS);
       } else if (isTouchEnd) {
+        trailLength = this.touchTrail.length;
         flickVelocity = trailVelocity(this.touchTrail, this.velocity);
         this.touchTrail = [];
       }
@@ -610,7 +615,7 @@ export class Lenis {
     }
     if (isTouchEnd) {
       this.trace?.(
-        `flick? ${hasTouchInertia} trail=${this.touchTrail.length} flickV=${flickVelocity.toFixed(2)} inertiaDelta=${Math.round(delta)}`
+        `flick? ${hasTouchInertia} trail=${trailLength} flickV=${flickVelocity.toFixed(2)} inertiaDelta=${Math.round(delta)}`
       );
     }
 
