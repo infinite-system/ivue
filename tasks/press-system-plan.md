@@ -19,6 +19,11 @@ SFC is wiring).
    track the base — the alternate hooks, single teasers, the Bluesky
    and Mastodon ports, pitch emails, the HN first comment. A derived
    expression can be detached into an authored one, never the reverse.
+   Expressions are **addable in any number**: a piece has as many as
+   its distribution needs, several of one kind when the kind is
+   venue-bound (one `email` per newsletter editor, one `reddit` per
+   subreddit), and sometimes exactly one — a pitch that exists only as
+   an email is a piece with one expression.
 2. **You edit the thing you will see.** The platform-shaped card is the
    editor for short kinds; long-form kinds get a split editor with the
    card as the live preview. Copy always yields the platform's
@@ -168,6 +173,7 @@ CREATE TABLE expression (
   parent_id   INTEGER REFERENCES expression(id),  -- segment → its thread / card set
   position    INTEGER NOT NULL DEFAULT 0,          -- order among siblings
   label       TEXT,                   -- "hook", "A · the kilobyte", card title
+  venue       TEXT,                   -- for venue-bound kinds: "JavaScript Weekly", "r/typescript", "dev.to" — what makes two rows of one kind distinct
   body        TEXT NOT NULL,          -- markdown subset (see projections); for derived rows the last regeneration, kept so the ledger and revisions hold the text that shipped
   meta        TEXT,                   -- JSON per kind: subreddit, title, canonical, tags, image; for derived rows also the projection settings (cover, fold paragraph, which paragraphs to drop)
   mirrors     TEXT,                   -- JSON [{platform, sent_at, url}] for x-* kinds
@@ -217,7 +223,8 @@ CREATE TABLE post_revision (
 CREATE INDEX post_revision_expression ON post_revision (expression_id, saved_at);
 ```
 
-Kinds: `x-thread` (parent) with `x-segment` children; `x-post`;
+Kinds (any number per piece, `venue` distinguishing rows of one kind):
+`x-thread` (parent) with `x-segment` children; `x-post`;
 `x-long` (long post, plain text, folds at 280); `x-article` (rich);
 `x-cards` (parent) with `x-card` children; `linkedin`;
 `linkedin-article`; `reddit`; `devto`; `hn`; `bluesky`; `mastodon`;
@@ -263,6 +270,7 @@ all in `Projection`:
 | linkedin | rules dropped; plain projection with the fold marked at ~210 |
 | reddit, devto | the full markdown; title from the piece; canonical link appended; subreddit / tags from meta |
 | hn | title from the piece (80 limit); the first comment is authored |
+| email | subject from the piece title unless `meta.subject` overrides; body = greeting from `meta` + the base with rules dropped + the sign-off; `meta` holds to, venue, greeting — one derived row per venue, detached when the venue wants a personal rewrite |
 
 `Projection.Class.plain(body)` strips markdown to what X accepts and
 counts it X-weighted (URL = 23). `Projection.Class.markdown(body)` is
@@ -337,7 +345,14 @@ Enter open, `a` approve the focused expression in the strip.
 ### New piece
 
 "New piece" opens a dialog with a **Start from a blog post** select
-(`QSelect` over `GET /blog-posts`, searchable) or a blank title. From a
+(`QSelect` over `GET /blog-posts`, searchable) or a blank title; a
+blank piece is how a pitch or a voice post starts, with the base as the
+email or the post itself. Adding expressions is a menu on the piece
+page, never a fixed set: a launch article might carry ten, a pitch
+carries one `email`, a Reddit essay carries one `reddit` per room.
+
+The select
+From a
 post it copies title, description, banner, links, and the plain text
 into `base`. The base is a copy: edit it, cut it down, change the
 claim — the site is not touched and not re-read.
@@ -426,8 +441,11 @@ Worker module carrying the six invariants above as records.
   article slug, expressions by channel (x threads split on `---` into
   segments);
 - `tasks/press-drafts/*/*.md` → expressions on the piece named by
-  their `source:` frontmatter (pitch emails as `email`, articles as
-  `devto`/`reddit`/etc. per `venue:`);
+  their `source:` frontmatter (pitch emails as one `email` row per
+  `venue:`, imported **authored** since each is already personalized;
+  articles as `devto`/`reddit`/etc. per `venue:`, authored likewise
+  because they were written before the base existed — detach is the
+  import's default, derivation is for what is written from here on);
 - the artifact's posts (the JSON already extracted in this session, or
   `x-launch-copy.ts`) → the launch piece's `x-thread`, `x-post`,
   `x-long`, `x-cards`, and 64 bare pieces for the voice posts, each
