@@ -41,7 +41,10 @@ SFC is wiring).
 5. **Two writers, one row.** The user edits in the dashboard; the agent
    edits through the admin API. Every save keeps a revision.
 6. **The calendar says when; the press says what.** They link both ways
-   by expression id and never duplicate each other's data.
+   by expression id and never duplicate each other's data. A piece is
+   never scheduled, posted, or placed on the calendar; only its
+   expressions are. The piece has no date, no status, and no venue —
+   those belong to the projection that goes out.
 7. **A blog post is a starting point, copied, never linked.** A piece
    bootstrapped from an article copies its text into the database as
    the piece's base and then diverges freely; the site is never read
@@ -412,8 +415,9 @@ the row is read at run time; that is for the ledger and the mirrors,
 never a way past approval. From the
 calendar, an entry with one expression offers **Schedule for this day**
 directly in the dialog; from the piece page, **Schedule per calendar**
-schedules every approved expression of the piece on its placed entries
-in one pass.
+is a shortcut that schedules each approved expression of the piece on
+its own placed entry, one job per expression — the piece itself is
+never the thing scheduled.
 
 ### Queue and Sent
 
@@ -502,6 +506,8 @@ Steps 0–6 are launch-week scope; 7–9 follow.
 - A projection edit that reaches the base.
 - An authored expression that changes because the base did.
 - A piece refused, hidden, or flagged for having no expressions.
+- A piece with a date, a status, a venue, or a job: scheduling,
+  posting, and calendar placement exist only on expressions.
 - A scheduled expression whose text is not the approved text (edits
   return it to draft and unschedule it).
 - A platform card that shows text the platform would not accept.
