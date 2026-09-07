@@ -90,7 +90,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       creepMsPerPx: { type: Number as PropType<number> },
       /** The motion knobs — the wheel's and the finger's gain, follow,
        *  inertia and speed cap. A partial object at any depth: whatever is
-       *  left out keeps the tuned default (see scrollKnobs). */
+       *  left out keeps the tuned default (see SCROLL_KNOBS). */
       scroll: { type: Object as PropType<NestedPartial<VirtualScroller.ScrollKnobs>> },
       /** The selection knobs — a pointer's and a finger's drag autoscroll
        *  cadence. A partial object at any depth (see selectionKnobs). */
@@ -129,7 +129,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       assumedSize: 30,
       paddingQuantity: 6,
       creepMsPerPx: undefined, // no default ON PURPOSE — see the comment above
-      scroll: this.scrollKnobs,
+      scroll: this.SCROLL_KNOBS,
       selection: this.selectionKnobs,
       // mounted rows read their own text; the data fallback is body, then id
       selectionText: undefined,
@@ -207,7 +207,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  content (gain), how fast the transform chases its target (follow —
    *  the lerp, higher is snappier), how far a flick carries (inertia), and
    *  the fastest the content may move (maxPxPerMs; 0 is uncapped). */
-  static get scrollKnobs(): VirtualScroller.ScrollKnobs {
+  static get SCROLL_KNOBS(): VirtualScroller.ScrollKnobs {
     return {
       wheel: { gain: 1, follow: 0.1, maxPxPerMs: 0 },
       touch: { gain: 1.3, follow: 0.1, inertia: 30, maxPxPerMs: 0 }
