@@ -215,6 +215,30 @@ The full layout, with the tuned defaults:
 
 The knobs are live: change a leaf and the mounted scroller re-tunes.
 
+## The Lenis fork, in the same shape
+
+The scroll integrator is a vendored fork of Lenis, and it is written to
+the same standard as the classes above — with one deliberate difference:
+no `Reactive()`. Its state is read inside the scroller's window walk every
+frame and never tracked, so nothing about it is reactive on purpose. What
+it keeps from the standard is the shape: one seam per module, `Class =
+$Class`, statics for the constants and the pure maths, every handler a
+prototype method bound once in the constructor (a subclass override wins,
+a spy sees it), `protected` as the floor, types in the namespace, and
+`Static()` anchoring the classes that declare statics. The fork's own
+contract is on the [specs page](/examples/virtual-scroller-specs).
+
+<LazyCodeGroup
+  :files="[
+      { path: 'examples/playground/src/lenis/Lenis.ts', label: 'Lenis.ts' },
+      { path: 'examples/playground/src/lenis/VirtualScroll.ts', label: 'VirtualScroll.ts' },
+      { path: 'examples/playground/src/lenis/Animate.ts', label: 'Animate.ts' },
+      { path: 'examples/playground/src/lenis/Dimensions.ts', label: 'Dimensions.ts' },
+      { path: 'examples/playground/src/lenis/Emitter.ts', label: 'Emitter.ts' },
+      { path: 'examples/playground/src/lenis/LenisUtils.ts', label: 'LenisUtils.ts' }
+  ]"
+/>
+
 ## A book as one scrolling line
 
 The same machinery, pointed at text: a **marquee** that scrolls a
