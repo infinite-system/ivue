@@ -22,8 +22,11 @@ SFC is wiring).
    Expressions are **addable in any number**: a piece has as many as
    its distribution needs, several of one kind when the kind is
    venue-bound (one `email` per newsletter editor, one `reddit` per
-   subreddit), and sometimes exactly one — a pitch that exists only as
-   an email is a piece with one expression.
+   subreddit), sometimes exactly one — a pitch that exists only as an
+   email is a piece with one expression — and sometimes none: a piece
+   is a valid row with only a title and a base, an argument still being
+   shaped, its channels undecided. Zero is the starting state of every
+   piece, not an error.
 2. **You edit the thing you will see.** The platform-shaped card is the
    editor for short kinds; long-form kinds get a split editor with the
    card as the live preview. Copy always yields the platform's
@@ -349,7 +352,9 @@ Enter open, `a` approve the focused expression in the strip.
 blank piece is how a pitch or a voice post starts, with the base as the
 email or the post itself. Adding expressions is a menu on the piece
 page, never a fixed set: a launch article might carry ten, a pitch
-carries one `email`, a Reddit essay carries one `reddit` per room.
+carries one `email`, a Reddit essay carries one `reddit` per room, and
+a piece in progress carries none — the list shows it with an empty
+strip and it never blocks anything.
 
 Starting from a post copies its title, description, banner, links, and
 plain text into `base`. The base is a copy: edit it, cut it down, change the
@@ -496,6 +501,7 @@ Steps 0–6 are launch-week scope; 7–9 follow.
 - A derived body edited anywhere but through the base (or detached first).
 - A projection edit that reaches the base.
 - An authored expression that changes because the base did.
+- A piece refused, hidden, or flagged for having no expressions.
 - A scheduled expression whose text is not the approved text (edits
   return it to draft and unschedule it).
 - A platform card that shows text the platform would not accept.
