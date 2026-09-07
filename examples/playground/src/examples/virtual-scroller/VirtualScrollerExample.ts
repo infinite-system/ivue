@@ -123,6 +123,15 @@ class $VirtualScrollerExample {
     return this.touchLog.value.join('\n');
   }
 
+  // MUTABLE STATE — the copy button's label, flipped for a moment after a copy.
+  get touchLogCopied() {
+    return ref(false);
+  }
+
+  get copyLogLabel() {
+    return this.touchLogCopied.value ? 'Copied' : 'Copy log';
+  }
+
   get playButtonLabel() {
     return this.isAutoPlaying ? 'pause' : 'autoplay';
   }
@@ -158,6 +167,24 @@ class $VirtualScrollerExample {
   logTouch(line: string) {
     const stamp = (performance.now() / 1000).toFixed(2);
     this.touchLog.value = [...this.touchLog.value.slice(-79), `${stamp}s ${line}`];
+  }
+
+  /** Put the whole log on the clipboard — a phone has no console to read. */
+  copyTouchLog() {
+    const text = this.touchLogText;
+    const done = () => {
+      this.touchLogCopied.value = true;
+      setTimeout(() => (this.touchLogCopied.value = false), 1200);
+    };
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(done, () => this.logTouch('copy failed'));
+      return;
+    }
+    this.logTouch('copy unavailable');
+  }
+
+  clearTouchLog() {
+    this.touchLog.value = [];
   }
 
   /**

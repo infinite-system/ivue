@@ -41,6 +41,12 @@ const {
         <div class="d-n">{{ example.selectedRowsLabel }}</div>
       </div>
     </div>
+    <div v-if="example.touchDebugEnabled" class="evs-touchlog-bar">
+      <button type="button" class="d-btn" @click="example.copyTouchLog()">
+        {{ example.copyLogLabel }}
+      </button>
+      <button type="button" class="d-btn" @click="example.clearTouchLog()">Clear log</button>
+    </div>
     <pre v-if="example.touchDebugEnabled" class="evs-touchlog">{{ example.touchLogText }}</pre>
 
     <div class="evs-frame">
@@ -91,6 +97,11 @@ const {
 <style scoped>
 .evs-stats {
   margin-bottom: 14px;
+}
+.evs-touchlog-bar {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 8px;
 }
 .evs-touchlog {
   max-height: 220px;
