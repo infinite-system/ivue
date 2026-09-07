@@ -1,7 +1,8 @@
 /*
 === GENERATOR ===
 Goal: Read a flick's velocity off the finger's last stretch of moves, so a touchend that lands after an idle frame still flicks at the finger's speed.
-[The feel is one nested prop complete at every depth](../examples/virtual-scroller/virtual-scroller.invariants.md#the-feel-is-one-nested-prop-complete-at-every-depth)
+[A flick's velocity is read off the finger's last stretch](lenis.invariants.md#a-flicks-velocity-is-read-off-the-fingers-last-stretch)
+[Android holds the first move back and may coalesce a swipe into one](lenis.invariants.md#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one)
 // domain-invariant: trailVelocity — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
 
@@ -14,7 +15,7 @@ import { expect, test } from 'vitest';
 import { FLICK_WINDOW_MS, trailVelocity, trimTrail } from './lenis';
 
 // domain-invariant: trailVelocity — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
-// invariant: The feel is one nested prop complete at every depth (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+// invariant: A flick's velocity is read off the finger's last stretch (examples/playground/src/lenis/lenis.invariants.md)
 test('the flick velocity is read off the trail, and falls back to the frame velocity with too little trail', () => {
   const trail = [
     { at: 1000, position: 0 },
@@ -31,6 +32,7 @@ test('the flick velocity is read off the trail, and falls back to the frame velo
 });
 
 // impossible-if-true: trailVelocity — A flick that dies because the last animation frame before the touchend saw no move.
+// invariant: Android holds the first move back and may coalesce a swipe into one (examples/playground/src/lenis/lenis.invariants.md)
 test('a re-flick Android coalesced into one touchmove still flicks: the touchstart seeds the trail, so one move has a span', () => {
   // The log from the phone: touchstart at 10.99 s, one touchmove 190 ms
   // later carrying 194 px, touchend 10 ms after; the frame velocity was

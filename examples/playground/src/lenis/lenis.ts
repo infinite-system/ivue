@@ -58,6 +58,7 @@ export function trimTrail(trail: Array<{ at: number; position: number }>, now: n
  * its last stretch, not its wait. Fewer than two samples, or a span too
  * short to read, fall back to the frame's own velocity.
  */
+// invariant: A flick's velocity is read off the finger's last stretch (examples/playground/src/lenis/lenis.invariants.md)
 export function trailVelocity(
   trail: Array<{ at: number; position: number }>,
   fallback: number,
@@ -521,6 +522,8 @@ export class Lenis {
       )} scrolling=${String(this.isScrolling)} v=${this.velocity.toFixed(1)} target=${Math.round(this.targetScroll)} anim=${Math.round(this.animatedScroll)} stopped=${this.isStopped} locked=${this.isLocked}`
     );
 
+    // invariant: A touch on a glide keeps it running until the first move (examples/playground/src/lenis/lenis.invariants.md)
+    // invariant: Android holds the first move back and may coalesce a swipe into one (examples/playground/src/lenis/lenis.invariants.md)
     if (this.options.syncTouch && isTouch && !this.isStopped && !this.isLocked) {
       if (event.type === 'touchstart' && isClickOrTap) {
         // The touch is pending: the glide runs on. The trail is seeded at
@@ -623,6 +626,7 @@ export class Lenis {
 
     this.lastInputTouch = isTouch;
     const isSyncTouch = isTouch && this.options.syncTouch;
+    // invariant: A touchcancel flicks like a touchend (examples/playground/src/lenis/lenis.invariants.md)
     const isTouchEnd = isTouch && (event.type === 'touchend' || event.type === 'touchcancel');
 
     let flickVelocity = this.velocity;
