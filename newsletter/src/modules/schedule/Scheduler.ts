@@ -40,12 +40,12 @@ class $Scheduler {
         );
     }
     await env.DB.prepare(
-      'INSERT INTO scheduled_jobs (kind, payload, due_at, created_at) VALUES (?, ?, ?, ?)',
+      'INSERT INTO scheduled_job (kind, payload, due_at, created_at) VALUES (?, ?, ?, ?)',
     )
       .bind(kind, JSON.stringify(payload), Math.floor(dueAt), now)
       .run();
     const row = await env.DB.prepare(
-      'SELECT * FROM scheduled_jobs ORDER BY id DESC LIMIT 1',
+      'SELECT * FROM scheduled_job ORDER BY id DESC LIMIT 1',
     ).first<JobRow>();
     return this.toJob(row!);
   }
@@ -56,10 +56,10 @@ class $Scheduler {
   }> {
     const [{ results: upcoming }, { results: recent }] = await Promise.all([
       env.DB.prepare(
-        'SELECT * FROM scheduled_jobs WHERE executed_at IS NULL ORDER BY due_at',
+        'SELECT * FROM scheduled_job WHERE executed_at IS NULL ORDER BY due_at',
       ).all<JobRow>(),
       env.DB.prepare(
-        'SELECT * FROM scheduled_jobs WHERE executed_at IS NOT NULL ORDER BY executed_at DESC LIMIT 20',
+        'SELECT * FROM scheduled_job WHERE executed_at IS NOT NULL ORDER BY executed_at DESC LIMIT 20',
       ).all<JobRow>(),
     ]);
     return {
@@ -71,7 +71,7 @@ class $Scheduler {
   // Cancel = delete, and only while still pending.
   static async cancel(env: Env, id: number): Promise<boolean> {
     const outcome = await env.DB.prepare(
-      'DELETE FROM scheduled_jobs WHERE id = ? AND executed_at IS NULL',
+      'DELETE FROM scheduled_job WHERE id = ? AND executed_at IS NULL',
     )
       .bind(id)
       .run();
@@ -81,7 +81,7 @@ class $Scheduler {
   static async runDue(env: Env): Promise<number> {
     const now = Http.Class.nowSeconds();
     const { results: due } = await env.DB.prepare(
-      'SELECT * FROM scheduled_jobs WHERE executed_at IS NULL AND due_at <= ? ORDER BY due_at',
+      'SELECT * FROM scheduled_job WHERE executed_at IS NULL AND due_at <= ? ORDER BY due_at',
     )
       .bind(now)
       .all<JobRow>();
@@ -89,14 +89,14 @@ class $Scheduler {
     for (const row of due) {
       // the claim: only the writer that flips NULL→now owns the job
       const claim = await env.DB.prepare(
-        'UPDATE scheduled_jobs SET executed_at = ? WHERE id = ? AND executed_at IS NULL',
+        'UPDATE scheduled_job SET executed_at = ? WHERE id = ? AND executed_at IS NULL',
       )
         .bind(now, row.id)
         .run();
       if (claim.meta.changes === 0) continue;
       const result = await this.execute(env, row);
       await env.DB.prepare(
-        'UPDATE scheduled_jobs SET result = ? WHERE id = ?',
+        'UPDATE scheduled_job SET result = ? WHERE id = ?',
       )
         .bind(JSON.stringify(result), row.id)
         .run();

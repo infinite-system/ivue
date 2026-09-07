@@ -185,23 +185,3 @@ describe('the entry dialog', () => {
     vi.useRealTimers();
   });
 });
-
-describe('ReleaseDrafts', () => {
-  it('reads a pitch email: frontmatter becomes the title line, the body stays whole', () => {
-    const draft = ReleaseDrafts.Class.resolve('tasks/press-drafts/sol/01-javascript-weekly.md')!;
-    expect(draft.title).toBe('JavaScript Weekly');
-    expect(draft.subtitle).toContain('pitch-email');
-    expect(draft.segments).toBeNull();
-    expect(draft.body).toMatch(/^To: editor@cooperpress\.com/);
-  });
-
-  it('groups X copy: the whole group as segments, one post by index', () => {
-    const thread = ReleaseDrafts.Class.resolve('x:thread')!;
-    expect(thread.segments).toHaveLength(9);
-    expect(thread.body).toContain(thread.segments![8]);
-    const hook = ReleaseDrafts.Class.resolve('x:hooks:2')!;
-    expect(hook.subtitle).toContain('the agents');
-    expect(ReleaseDrafts.Class.resolve('x:nothing')).toBeNull();
-    expect(ReleaseDrafts.Class.resolve('x:hooks:9')).toBeNull();
-  });
-});

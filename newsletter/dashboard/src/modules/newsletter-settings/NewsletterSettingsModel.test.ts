@@ -26,7 +26,7 @@ beforeEach(() => {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL) =>
-      String(input).includes('/admin/lists')
+      String(input).includes('/admin/list')
         ? new Response(JSON.stringify(LISTS))
         : new Response(JSON.stringify(SETTINGS)),
     ),

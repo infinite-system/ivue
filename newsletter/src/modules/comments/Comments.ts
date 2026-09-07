@@ -91,7 +91,7 @@ class $Comments {
     // approval (a comment that never goes public leaves nothing behind)
     const subscribeReplies = submission.subscribeReplies !== false ? 1 : 0;
     const outcome = await env.DB.prepare(
-      'INSERT INTO comments ' +
+      'INSERT INTO comment ' +
         '(slug, name, email, body, submitted_at, status, parent_id, root_id, ' +
         'avatar_seed, subscribe_replies) ' +
         "VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)",
@@ -114,7 +114,7 @@ class $Comments {
 
     // a top-level comment IS its own thread root
     if (!rootId && id > 0) {
-      await env.DB.prepare('UPDATE comments SET root_id = ? WHERE id = ?')
+      await env.DB.prepare('UPDATE comment SET root_id = ? WHERE id = ?')
         .bind(id, id)
         .run();
     }
@@ -131,7 +131,7 @@ class $Comments {
       'SELECT id, slug, name, email, body, submitted_at AS submittedAt, ' +
         'status, parent_id AS parentId, root_id AS rootId, locked, ' +
         'avatar_seed AS avatarSeed, subscribe_replies AS subscribeReplies ' +
-        'FROM comments WHERE id = ?',
+        'FROM comment WHERE id = ?',
     )
       .bind(id)
       .first<CommentRow>();
@@ -139,7 +139,7 @@ class $Comments {
 
   static async threadLocked(env: Env, rootId: number): Promise<boolean> {
     const row = await env.DB.prepare(
-      'SELECT locked FROM comments WHERE id = ?',
+      'SELECT locked FROM comment WHERE id = ?',
     )
       .bind(rootId)
       .first<{ locked: number }>();
@@ -157,7 +157,7 @@ class $Comments {
     if (!row) return false;
     const rootId = row.rootId ?? row.id;
     const outcome = await env.DB.prepare(
-      'UPDATE comments SET locked = ? WHERE id = ?',
+      'UPDATE comment SET locked = ? WHERE id = ?',
     )
       .bind(locked ? 1 : 0, rootId)
       .run();
@@ -172,7 +172,7 @@ class $Comments {
     email: string,
   ): Promise<void> {
     await env.DB.prepare(
-      'INSERT OR IGNORE INTO comment_subscriptions (root_id, email, created_at) ' +
+      'INSERT OR IGNORE INTO comment_subscription (root_id, email, created_at) ' +
         'VALUES (?, ?, ?)',
     )
       .bind(rootId, email.trim().toLowerCase(), Http.Class.nowSeconds())
@@ -185,7 +185,7 @@ class $Comments {
     email: string,
   ): Promise<boolean> {
     const outcome = await env.DB.prepare(
-      'DELETE FROM comment_subscriptions WHERE root_id = ? AND email = ?',
+      'DELETE FROM comment_subscription WHERE root_id = ? AND email = ?',
     )
       .bind(rootId, email.trim().toLowerCase())
       .run();
@@ -198,7 +198,7 @@ class $Comments {
     email: string,
   ): Promise<boolean> {
     const row = await env.DB.prepare(
-      'SELECT 1 AS present FROM comment_subscriptions WHERE root_id = ? AND email = ?',
+      'SELECT 1 AS present FROM comment_subscription WHERE root_id = ? AND email = ?',
     )
       .bind(rootId, email.trim().toLowerCase())
       .first<{ present: number }>();
@@ -218,7 +218,7 @@ class $Comments {
   ): Promise<CommentRecipient[]> {
     const rootId = reply.rootId ?? reply.id;
     const { results: participants } = await env.DB.prepare(
-      'SELECT id, name, email FROM comments ' +
+      'SELECT id, name, email FROM comment ' +
         "WHERE root_id = ? AND status = 'approved' AND id != ? ORDER BY id",
     )
       .bind(rootId, reply.id)
@@ -274,7 +274,7 @@ class $Comments {
     const { results } = await env.DB.prepare(
       'SELECT id, name, body, submitted_at AS submittedAt, ' +
         'parent_id AS parentId, root_id AS rootId, locked, ' +
-        'avatar_seed AS avatarSeed FROM comments ' +
+        'avatar_seed AS avatarSeed FROM comment ' +
         "WHERE slug = ? AND status = 'approved' ORDER BY submitted_at, id",
     )
       .bind(slug)
@@ -301,14 +301,14 @@ class $Comments {
         'SELECT id, slug, name, email, body, submitted_at AS submittedAt, ' +
           'status, parent_id AS parentId, root_id AS rootId, locked, ' +
           'avatar_seed AS avatarSeed ' +
-          'FROM comments ' +
+          'FROM comment ' +
           whereClause +
           " ORDER BY CASE status WHEN 'pending' THEN 0 ELSE 1 END, submitted_at DESC " +
           'LIMIT ?4 OFFSET ?5',
       )
         .bind(status, search, searchPattern, limit, offset)
         .all<CommentRow>(),
-      env.DB.prepare('SELECT COUNT(*) AS total FROM comments ' + whereClause)
+      env.DB.prepare('SELECT COUNT(*) AS total FROM comment ' + whereClause)
         .bind(status, search, searchPattern)
         .first<{ total: number }>(),
     ]);
@@ -317,7 +317,7 @@ class $Comments {
 
   static async pendingCount(env: Env): Promise<number> {
     const row = await env.DB.prepare(
-      "SELECT COUNT(*) AS total FROM comments WHERE status = 'pending'",
+      "SELECT COUNT(*) AS total FROM comment WHERE status = 'pending'",
     ).first<{ total: number }>();
     return row?.total ?? 0;
   }
@@ -330,7 +330,7 @@ class $Comments {
   // subscription is created HERE, from the intent recorded at submit.
   static async approve(env: Env, id: number): Promise<boolean> {
     const outcome = await env.DB.prepare(
-      "UPDATE comments SET status = 'approved' WHERE id = ? AND status = 'pending'",
+      "UPDATE comment SET status = 'approved' WHERE id = ? AND status = 'pending'",
     )
       .bind(id)
       .run();
@@ -352,8 +352,8 @@ class $Comments {
     const rootId = row.rootId ?? row.id;
     if (!row.parentId) {
       await env.DB.batch([
-        env.DB.prepare('DELETE FROM comments WHERE root_id = ?').bind(rootId),
-        env.DB.prepare('DELETE FROM comment_subscriptions WHERE root_id = ?').bind(
+        env.DB.prepare('DELETE FROM comment WHERE root_id = ?').bind(rootId),
+        env.DB.prepare('DELETE FROM comment_subscription WHERE root_id = ?').bind(
           rootId,
         ),
       ]);
@@ -361,9 +361,9 @@ class $Comments {
     }
     await env.DB.batch([
       env.DB.prepare(
-        'UPDATE comments SET parent_id = ? WHERE parent_id = ?',
+        'UPDATE comment SET parent_id = ? WHERE parent_id = ?',
       ).bind(rootId, id),
-      env.DB.prepare('DELETE FROM comments WHERE id = ?').bind(id),
+      env.DB.prepare('DELETE FROM comment WHERE id = ?').bind(id),
     ]);
     return true;
   }

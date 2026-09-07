@@ -14,7 +14,7 @@ beforeEach(() => {
       const url = String(input);
       if (url.includes('/admin/schedule'))
         return new Response(JSON.stringify({ upcoming: [], recent: [] }));
-      if (url.includes('/admin/settings'))
+      if (url.includes('/admin/setting'))
         return new Response(
           JSON.stringify({
             cadenceHours: 40,

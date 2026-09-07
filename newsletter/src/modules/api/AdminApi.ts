@@ -30,51 +30,53 @@ class $AdminApi {
 
     const route = `${request.method} ${url.pathname}`;
     switch (route) {
-      case 'GET /admin/subscribers':
-        return this.subscribers(url, env);
+      // one resource, one path: ?email= reads one subscriber, the rest
+      // of the query pages the audience
       case 'GET /admin/subscriber':
-        return this.subscriber(url, env);
-      case 'POST /admin/subscribers/add':
+        return url.searchParams.has('email')
+          ? this.subscriber(url, env)
+          : this.subscribers(url, env);
+      case 'POST /admin/subscriber/add':
         return this.add(request, env);
-      case 'POST /admin/subscribers/unsubscribe':
+      case 'POST /admin/subscriber/unsubscribe':
         return this.unsubscribe(request, env);
-      case 'POST /admin/subscribers/resubscribe':
+      case 'POST /admin/subscriber/resubscribe':
         return this.resubscribe(request, env);
-      case 'POST /admin/subscribers/remove':
+      case 'POST /admin/subscriber/remove':
         return this.remove(request, env);
       case 'POST /admin/send':
         return this.send(request, env);
-      case 'GET /admin/sends':
+      case 'GET /admin/send':
         return this.sends(url, env);
-      case 'GET /admin/comments':
+      case 'GET /admin/comment':
         return this.comments(url, env);
-      case 'POST /admin/comments/approve':
+      case 'POST /admin/comment/approve':
         return this.approveComment(request, env);
-      case 'POST /admin/comments/delete':
+      case 'POST /admin/comment/delete':
         return this.deleteComment(request, env);
-      case 'POST /admin/comments/lock':
+      case 'POST /admin/comment/lock':
         return this.lockComment(request, env);
-      case 'GET /admin/posts':
+      case 'GET /admin/post':
         return this.posts(env);
       case 'GET /admin/preview':
         return this.preview(url, env);
       case 'GET /admin/drip-preview':
         return this.dripPreview(env);
-      case 'GET /admin/lists':
+      case 'GET /admin/list':
         return this.lists(env);
-      case 'POST /admin/lists/create':
+      case 'POST /admin/list/create':
         return this.createList(request, env);
-      case 'POST /admin/lists/rename':
+      case 'POST /admin/list/rename':
         return this.renameList(request, env);
-      case 'POST /admin/lists/delete':
+      case 'POST /admin/list/delete':
         return this.deleteList(request, env);
-      case 'GET /admin/settings':
+      case 'GET /admin/setting':
         return this.settings(env);
-      case 'POST /admin/settings':
+      case 'POST /admin/setting':
         return this.saveSettings(request, env);
       case 'POST /admin/tweet':
         return this.tweet(request, env);
-      case 'GET /admin/tweets':
+      case 'GET /admin/tweet':
         return this.tweets(env);
       case 'POST /admin/thread':
         return this.thread(request, env);
@@ -86,7 +88,7 @@ class $AdminApi {
         return this.scheduleList(env);
       case 'POST /admin/schedule/cancel':
         return this.scheduleCancel(request, env);
-      case 'GET /admin/stats':
+      case 'GET /admin/stat':
         return this.stats(env);
       default:
         return Http.Class.notFound();
@@ -529,7 +531,7 @@ class $AdminApi {
   }
 
   // The thread composer's raw material — kilobytes, so on demand rather
-  // than riding every /admin/posts response.
+  // than riding every /admin/post response.
   static async postText(url: URL, env: Env): Promise<Response> {
     const slug = url.searchParams.get('slug') ?? '';
     const catalog = await Posts.Class.load(env);

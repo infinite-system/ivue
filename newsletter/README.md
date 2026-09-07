@@ -7,7 +7,7 @@ wrangler@4.120.1 types` regenerates `worker-configuration.d.ts` (the
 typed Env) after any config change, and `npx tsc --noEmit` typechecks.
 
 **The invariant:** at most one email per (subscriber, post), ever. The
-`sends` table is the invariant; the drip picks each subscriber's **oldest
+`send` table is the invariant; the drip picks each subscriber's **oldest
 unsent** post, so an ad-hoc `/broadcast` today can never be repeated by the
 drip later — there is no exclusion logic, just the ledger.
 
@@ -77,7 +77,7 @@ E2E_SEND_TO=newsletter@ivue.dev node newsletter/scripts/prod-walk.mjs
 Lists: migration 0002 gives subscribers a `list` column (default
 `newsletter` — the only list the cron drips). The same address may join
 several lists; an unsubscribe suppresses the ADDRESS globally, matching
-Postmark's per-address suppression. `/subscribe` and `/admin/subscribers/add`
+Postmark's per-address suppression. `/subscribe` and `/admin/subscriber/add`
 accept an optional `list`; `/broadcast` accepts `{slug, list}`.
 
 ## One-time setup
@@ -175,7 +175,7 @@ works, and the ledger recorded it:
 
 ```sh
 npx wrangler@4.120.1 d1 execute ivue-newsletter --remote \
-  --command='SELECT * FROM sends'
+  --command='SELECT * FROM send'
 ```
 
 ## Ad-hoc broadcast (also the future MCP tool surface)
@@ -245,7 +245,7 @@ order:
    rename only through committed history) and verify the renamed slugs
    kept their dates.
 4. Migrate D1 (remote AND local):
-   `UPDATE sends SET slug='<new>' WHERE slug='<old>'` — without this
+   `UPDATE send SET slug='<new>' WHERE slug='<old>'` — without this
    the drip sees the post as unsent and RE-MAILS it to everyone who
    already received it. Also check `tweets.slug` and pending
    `scheduled_jobs` payloads.
@@ -263,7 +263,7 @@ email — `blog-index-generator.mjs` writes
 it and fills `{{UNSUBSCRIBE_URL}}`. It ledgers as slug `welcome`, which
 does double duty: a returning subscriber is never re-welcomed, and the
 welcome's `sent_at` makes the FIRST dripped post wait one full cadence
-after signup. Admin-added subscribers (`/admin/subscribers/add`) get NO
+after signup. Admin-added subscribers (`/admin/subscriber/add`) get NO
 welcome — only the public form triggers it. Preview:
 `/admin/preview?slug=welcome` (also clickable anywhere the dashboard
 shows the `welcome` slug).
@@ -294,7 +294,7 @@ time. It drives the identicon on the site — the same person keeps the
 same avatar everywhere, and the address itself is not derivable from
 what the public endpoint serves.
 
-**Locking.** `POST /admin/comments/lock {id, locked}` (or the Lock
+**Locking.** `POST /admin/comment/lock {id, locked}` (or the Lock
 button in Newsletter → Comments) closes a thread: existing replies stay
 visible, new ones are refused server-side and the UI hides its reply
 buttons. Passing a reply's id locks the thread that reply belongs to.
@@ -366,11 +366,11 @@ npx tsc --noEmit                       # typecheck the Worker
 npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --remote
 npx wrangler@4.120.1 d1 migrations create ivue-newsletter <name>
 npx wrangler@4.120.1 d1 execute ivue-newsletter --remote \
-  --command='SELECT email, name, subscribed_at FROM subscribers'
+  --command='SELECT email, name, subscribed_at FROM subscriber'
 npx wrangler@4.120.1 d1 execute ivue-newsletter --remote \
-  --command='SELECT * FROM sends'
+  --command='SELECT * FROM send'
 npx wrangler@4.120.1 d1 execute ivue-newsletter --remote \
-  --command='SELECT * FROM unsubscribes'
+  --command='SELECT * FROM unsubscribe'
 npx wrangler@4.120.1 d1 export ivue-newsletter --remote --output=backup.sql
 
 # ---- secrets (take effect immediately, no redeploy) --------------------

@@ -238,8 +238,8 @@ class $Delivery {
   ): Promise<void> {
     try {
       const audienceSize = await env.DB.prepare(
-        'SELECT COUNT(DISTINCT email) AS total FROM subscribers ' +
-          'WHERE email NOT IN (SELECT email FROM unsubscribes)',
+        'SELECT COUNT(DISTINCT email) AS total FROM subscriber ' +
+          'WHERE email NOT IN (SELECT email FROM unsubscribe)',
       ).first<{ total: number }>();
       const response = await fetch(this.POSTMARK_EMAIL_URL, {
         method: 'POST',

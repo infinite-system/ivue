@@ -75,7 +75,7 @@ class $Api {
       limit: String(query.limit),
       offset: String(query.offset),
     });
-    return this.request(`/admin/subscribers?${parameters}`);
+    return this.request(`/admin/subscriber?${parameters}`);
   }
 
   static subscriber(email: string): Promise<SubscriberDetail> {
@@ -89,22 +89,22 @@ class $Api {
     name: string;
     list: string;
   }): Promise<{ ok: boolean }> {
-    return this.post('/admin/subscribers/add', entry);
+    return this.post('/admin/subscriber/add', entry);
   }
 
   static unsubscribeMany(emails: string[]): Promise<{ affected: number }> {
-    return this.post('/admin/subscribers/unsubscribe', { emails });
+    return this.post('/admin/subscriber/unsubscribe', { emails });
   }
 
   static resubscribeMany(emails: string[]): Promise<{ affected: number }> {
-    return this.post('/admin/subscribers/resubscribe', { emails });
+    return this.post('/admin/subscriber/resubscribe', { emails });
   }
 
   static removeMany(
     emails: string[],
     purgeSends: boolean,
   ): Promise<{ affected: number }> {
-    return this.post('/admin/subscribers/remove', { emails, purgeSends });
+    return this.post('/admin/subscriber/remove', { emails, purgeSends });
   }
 
   static sends(query: {
@@ -117,7 +117,7 @@ class $Api {
       limit: String(query.limit),
       offset: String(query.offset),
     });
-    return this.request(`/admin/sends?${parameters}`);
+    return this.request(`/admin/send?${parameters}`);
   }
 
   static send(payload: {
@@ -137,7 +137,7 @@ class $Api {
   }
 
   static posts(): Promise<PostSummary[]> {
-    return this.request('/admin/posts');
+    return this.request('/admin/post');
   }
 
   static comments(query: {
@@ -152,22 +152,22 @@ class $Api {
       limit: String(query.limit),
       offset: String(query.offset),
     });
-    return this.request(`/admin/comments?${parameters}`);
+    return this.request(`/admin/comment?${parameters}`);
   }
 
   static approveComment(id: number): Promise<{ ok: boolean }> {
-    return this.post('/admin/comments/approve', { id });
+    return this.post('/admin/comment/approve', { id });
   }
 
   static deleteComment(id: number): Promise<{ ok: boolean }> {
-    return this.post('/admin/comments/delete', { id });
+    return this.post('/admin/comment/delete', { id });
   }
 
   static lockComment(
     id: number,
     locked: boolean,
   ): Promise<{ ok: boolean; locked: boolean }> {
-    return this.post('/admin/comments/lock', { id, locked });
+    return this.post('/admin/comment/lock', { id, locked });
   }
 
   static async previewHtml(slug: string): Promise<string> {
@@ -182,26 +182,26 @@ class $Api {
   }
 
   static lists(): Promise<ListSummary[]> {
-    return this.request('/admin/lists');
+    return this.request('/admin/list');
   }
 
   static createList(list: string): Promise<{ ok: boolean; list: string }> {
-    return this.post('/admin/lists/create', { list });
+    return this.post('/admin/list/create', { list });
   }
 
   static renameList(
     from: string,
     to: string,
   ): Promise<{ ok: boolean; list: string }> {
-    return this.post('/admin/lists/rename', { from, to });
+    return this.post('/admin/list/rename', { from, to });
   }
 
   static deleteList(list: string): Promise<{ ok: boolean }> {
-    return this.post('/admin/lists/delete', { list });
+    return this.post('/admin/list/delete', { list });
   }
 
   static settings(): Promise<AdminSettings> {
-    return this.request('/admin/settings');
+    return this.request('/admin/setting');
   }
 
   static saveSettings(settings: {
@@ -215,7 +215,7 @@ class $Api {
     tweetTemplate?: string;
     tweetContentTemplate?: string;
   }): Promise<AdminSettings> {
-    return this.post('/admin/settings', settings);
+    return this.post('/admin/setting', settings);
   }
 
   static tweet(payload: {
@@ -238,7 +238,7 @@ class $Api {
   }
 
   static tweets(): Promise<TweetRow[]> {
-    return this.request('/admin/tweets');
+    return this.request('/admin/tweet');
   }
 
   static schedule(job: {
@@ -261,7 +261,7 @@ class $Api {
   }
 
   static stats(): Promise<Stats> {
-    return this.request('/admin/stats');
+    return this.request('/admin/stat');
   }
 }
 

@@ -18,8 +18,8 @@ class $Audience {
   // Active recipients of one list: subscribed and not suppressed.
   static async active(env: Env, list: string): Promise<Subscriber[]> {
     const { results } = await env.DB.prepare(
-      'SELECT email, name, timezone FROM subscribers WHERE list = ? ' +
-        'AND email NOT IN (SELECT email FROM unsubscribes)',
+      'SELECT email, name, timezone FROM subscriber WHERE list = ? ' +
+        'AND email NOT IN (SELECT email FROM unsubscribe)',
     )
       .bind(list)
       .all<Subscriber>();
@@ -39,28 +39,28 @@ class $Audience {
   ): Promise<void> {
     await env.DB.batch([
       env.DB.prepare(
-        'INSERT INTO subscribers (email, list, name, subscribed_at, timezone) VALUES (?, ?, ?, ?, ?) ' +
+        'INSERT INTO subscriber (email, list, name, subscribed_at, timezone) VALUES (?, ?, ?, ?, ?) ' +
           'ON CONFLICT(email, list) DO UPDATE SET name = excluded.name, ' +
           'timezone = COALESCE(excluded.timezone, timezone)',
       ).bind(address, list, name, Http.Class.nowSeconds(), timezone || null),
-      env.DB.prepare('DELETE FROM unsubscribes WHERE email = ?').bind(address),
+      env.DB.prepare('DELETE FROM unsubscribe WHERE email = ?').bind(address),
       // organic lists self-register, so the registry is always complete
       env.DB.prepare(
-        'INSERT OR IGNORE INTO lists (name, created_at) VALUES (?, ?)',
+        'INSERT OR IGNORE INTO list (name, created_at) VALUES (?, ?)',
       ).bind(list, Http.Class.nowSeconds()),
     ]);
   }
 
   static async suppress(env: Env, address: string): Promise<void> {
     await env.DB.prepare(
-      'INSERT OR REPLACE INTO unsubscribes (email, unsubscribed_at) VALUES (?, ?)',
+      'INSERT OR REPLACE INTO unsubscribe (email, unsubscribed_at) VALUES (?, ?)',
     )
       .bind(address, Http.Class.nowSeconds())
       .run();
   }
 
   static async unsuppress(env: Env, address: string): Promise<void> {
-    await env.DB.prepare('DELETE FROM unsubscribes WHERE email = ?')
+    await env.DB.prepare('DELETE FROM unsubscribe WHERE email = ?')
       .bind(address)
       .run();
   }
@@ -71,7 +71,7 @@ class $Audience {
     await env.DB.batch(
       addresses.map((address) =>
         env.DB.prepare(
-          'INSERT OR REPLACE INTO unsubscribes (email, unsubscribed_at) VALUES (?, ?)',
+          'INSERT OR REPLACE INTO unsubscribe (email, unsubscribed_at) VALUES (?, ?)',
         ).bind(address, timestamp),
       ),
     );
@@ -81,7 +81,7 @@ class $Audience {
     if (!addresses.length) return;
     await env.DB.batch(
       addresses.map((address) =>
-        env.DB.prepare('DELETE FROM unsubscribes WHERE email = ?').bind(
+        env.DB.prepare('DELETE FROM unsubscribe WHERE email = ?').bind(
           address,
         ),
       ),
@@ -98,10 +98,10 @@ class $Audience {
   ): Promise<void> {
     if (!addresses.length) return;
     const statements = addresses.flatMap((address) => [
-      env.DB.prepare('DELETE FROM subscribers WHERE email = ?').bind(address),
-      env.DB.prepare('DELETE FROM unsubscribes WHERE email = ?').bind(address),
+      env.DB.prepare('DELETE FROM subscriber WHERE email = ?').bind(address),
+      env.DB.prepare('DELETE FROM unsubscribe WHERE email = ?').bind(address),
       ...(purgeSends
-        ? [env.DB.prepare('DELETE FROM sends WHERE email = ?').bind(address)]
+        ? [env.DB.prepare('DELETE FROM send WHERE email = ?').bind(address)]
         : []),
     ]);
     await env.DB.batch(statements);
@@ -130,17 +130,17 @@ class $Audience {
           'subscriber.timezone, ' +
           'subscriber.subscribed_at AS subscribedAt, ' +
           'suppression.unsubscribed_at AS unsubscribedAt, ' +
-          '(SELECT COUNT(*) FROM sends WHERE sends.email = subscriber.email) AS sendCount, ' +
-          '(SELECT MAX(sent_at) FROM sends WHERE sends.email = subscriber.email) AS lastSentAt ' +
-          'FROM subscribers subscriber ' +
-          'LEFT JOIN unsubscribes suppression ON suppression.email = subscriber.email ' +
+          '(SELECT COUNT(*) FROM send WHERE send.email = subscriber.email) AS sendCount, ' +
+          '(SELECT MAX(sent_at) FROM send WHERE send.email = subscriber.email) AS lastSentAt ' +
+          'FROM subscriber subscriber ' +
+          'LEFT JOIN unsubscribe suppression ON suppression.email = subscriber.email ' +
           whereClause +
           ' ORDER BY subscriber.subscribed_at DESC, subscriber.email LIMIT ?4 OFFSET ?5',
       )
         .bind(list, search, searchPattern, limit, offset)
         .all<SubscriberRow>(),
       env.DB.prepare(
-        'SELECT COUNT(*) AS total FROM subscribers subscriber ' + whereClause,
+        'SELECT COUNT(*) AS total FROM subscriber subscriber ' + whereClause,
       )
         .bind(list, search, searchPattern)
         .first<{ total: number }>(),
@@ -158,10 +158,10 @@ class $Audience {
         'subscriber.timezone, ' +
         'subscriber.subscribed_at AS subscribedAt, ' +
         'suppression.unsubscribed_at AS unsubscribedAt, ' +
-        '(SELECT COUNT(*) FROM sends WHERE sends.email = subscriber.email) AS sendCount, ' +
-        '(SELECT MAX(sent_at) FROM sends WHERE sends.email = subscriber.email) AS lastSentAt ' +
-        'FROM subscribers subscriber ' +
-        'LEFT JOIN unsubscribes suppression ON suppression.email = subscriber.email ' +
+        '(SELECT COUNT(*) FROM send WHERE send.email = subscriber.email) AS sendCount, ' +
+        '(SELECT MAX(sent_at) FROM send WHERE send.email = subscriber.email) AS lastSentAt ' +
+        'FROM subscriber subscriber ' +
+        'LEFT JOIN unsubscribe suppression ON suppression.email = subscriber.email ' +
         'WHERE subscriber.email = ?',
     )
       .bind(address)
@@ -192,9 +192,9 @@ class $Audience {
   static async lists(env: Env): Promise<ListSummary[]> {
     const { results } = await env.DB.prepare(
       'SELECT registry.name AS list, COUNT(subscriber.email) AS members, ' +
-        'COALESCE(SUM(CASE WHEN subscriber.email NOT IN (SELECT email FROM unsubscribes) THEN 1 ELSE 0 END), 0) AS active ' +
-        'FROM (SELECT name FROM lists UNION SELECT DISTINCT list FROM subscribers) registry ' +
-        'LEFT JOIN subscribers subscriber ON subscriber.list = registry.name ' +
+        'COALESCE(SUM(CASE WHEN subscriber.email NOT IN (SELECT email FROM unsubscribe) THEN 1 ELSE 0 END), 0) AS active ' +
+        'FROM (SELECT name FROM list UNION SELECT DISTINCT list FROM subscriber) registry ' +
+        'LEFT JOIN subscriber subscriber ON subscriber.list = registry.name ' +
         'GROUP BY registry.name ORDER BY registry.name',
     ).all<ListSummary>();
     return results;
@@ -203,8 +203,8 @@ class $Audience {
   static async createList(env: Env, name: string): Promise<string> {
     const list = this.normalizeListName(name);
     const existing = await env.DB.prepare(
-      'SELECT name FROM lists WHERE name = ? ' +
-        'UNION SELECT DISTINCT list FROM subscribers WHERE list = ?',
+      'SELECT name FROM list WHERE name = ? ' +
+        'UNION SELECT DISTINCT list FROM subscriber WHERE list = ?',
     )
       .bind(list, list)
       .first<{ name: string }>();
@@ -215,7 +215,7 @@ class $Audience {
 
   static async registerList(env: Env, list: string): Promise<void> {
     await env.DB.prepare(
-      'INSERT OR IGNORE INTO lists (name, created_at) VALUES (?, ?)',
+      'INSERT OR IGNORE INTO list (name, created_at) VALUES (?, ?)',
     )
       .bind(list, Http.Class.nowSeconds())
       .run();
@@ -229,18 +229,18 @@ class $Audience {
     if (source === this.DEFAULT_LIST)
       throw new Error(`"${this.DEFAULT_LIST}" is the default list — it cannot be renamed.`);
     const collision = await env.DB.prepare(
-      'SELECT name FROM lists WHERE name = ? ' +
-        'UNION SELECT DISTINCT list FROM subscribers WHERE list = ?',
+      'SELECT name FROM list WHERE name = ? ' +
+        'UNION SELECT DISTINCT list FROM subscriber WHERE list = ?',
     )
       .bind(target, target)
       .first<{ name: string }>();
     if (collision) throw new Error(`List "${target}" already exists.`);
     await env.DB.batch([
       env.DB.prepare(
-        'INSERT OR IGNORE INTO lists (name, created_at) VALUES (?, ?)',
+        'INSERT OR IGNORE INTO list (name, created_at) VALUES (?, ?)',
       ).bind(target, Http.Class.nowSeconds()),
-      env.DB.prepare('DELETE FROM lists WHERE name = ?').bind(source),
-      env.DB.prepare('UPDATE subscribers SET list = ? WHERE list = ?').bind(
+      env.DB.prepare('DELETE FROM list WHERE name = ?').bind(source),
+      env.DB.prepare('UPDATE subscriber SET list = ? WHERE list = ?').bind(
         target,
         source,
       ),
@@ -255,7 +255,7 @@ class $Audience {
     if (list === this.DEFAULT_LIST)
       throw new Error(`"${this.DEFAULT_LIST}" is the default list — it cannot be deleted.`);
     const member = await env.DB.prepare(
-      'SELECT email FROM subscribers WHERE list = ? LIMIT 1',
+      'SELECT email FROM subscriber WHERE list = ? LIMIT 1',
     )
       .bind(list)
       .first<{ email: string }>();
@@ -263,14 +263,14 @@ class $Audience {
       throw new Error(
         `List "${list}" still has members — move or remove them first.`,
       );
-    await env.DB.prepare('DELETE FROM lists WHERE name = ?').bind(list).run();
+    await env.DB.prepare('DELETE FROM list WHERE name = ?').bind(list).run();
   }
 
   static async signupsByDay(env: Env, days: number): Promise<DayCount[]> {
     const since = Http.Class.nowSeconds() - days * 86_400;
     const { results } = await env.DB.prepare(
       "SELECT date(subscribed_at, 'unixepoch') AS day, COUNT(*) AS count " +
-        'FROM subscribers WHERE subscribed_at >= ? GROUP BY day ORDER BY day',
+        'FROM subscriber WHERE subscribed_at >= ? GROUP BY day ORDER BY day',
     )
       .bind(since)
       .all<DayCount>();

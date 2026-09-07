@@ -10,7 +10,7 @@ class $Tweets {
     postedAt: number,
   ): Promise<void> {
     await env.DB.prepare(
-      'INSERT OR IGNORE INTO tweets (tweet_id, text, slug, posted_at) VALUES (?, ?, ?, ?)',
+      'INSERT OR IGNORE INTO tweet (tweet_id, text, slug, posted_at) VALUES (?, ?, ?, ?)',
     )
       .bind(tweet.tweetId, tweet.text, tweet.slug, postedAt)
       .run();
@@ -19,7 +19,7 @@ class $Tweets {
   static async log(env: Env, limit = 50): Promise<TweetRow[]> {
     const { results } = await env.DB.prepare(
       'SELECT tweet_id AS tweetId, text, slug, posted_at AS postedAt ' +
-        'FROM tweets ORDER BY posted_at DESC LIMIT ?',
+        'FROM tweet ORDER BY posted_at DESC LIMIT ?',
     )
       .bind(Math.min(Math.max(1, limit), 200))
       .all<TweetRow>();

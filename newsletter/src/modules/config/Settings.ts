@@ -119,7 +119,7 @@ class $Settings {
 
   static async listOverrides(env: Env): Promise<ListScheduleOverrides> {
     const { results } = await env.DB.prepare(
-      "SELECT key, value FROM settings WHERE key LIKE 'list:%'",
+      "SELECT key, value FROM setting WHERE key LIKE 'list:%'",
     ).all<{ key: string; value: string }>();
     const overrides: ListScheduleOverrides = {};
     for (const row of results) {
@@ -235,7 +235,7 @@ class $Settings {
 
   static async read(env: Env, key: string): Promise<string | null> {
     const row = await env.DB.prepare(
-      'SELECT value FROM settings WHERE key = ?',
+      'SELECT value FROM setting WHERE key = ?',
     )
       .bind(key)
       .first<{ value: string }>();
@@ -244,7 +244,7 @@ class $Settings {
 
   static async write(env: Env, key: string, value: string): Promise<void> {
     await env.DB.prepare(
-      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      'INSERT OR REPLACE INTO setting (key, value) VALUES (?, ?)',
     )
       .bind(key, value)
       .run();
@@ -267,7 +267,7 @@ class $Settings {
   }
 
   static async remove(env: Env, key: string): Promise<void> {
-    await env.DB.prepare('DELETE FROM settings WHERE key = ?').bind(key).run();
+    await env.DB.prepare('DELETE FROM setting WHERE key = ?').bind(key).run();
   }
 }
 
