@@ -524,37 +524,48 @@ is a claim the builder makes about itself.
 
 ### Step 0 — singular tables and routes
 
-- [ ] `grep -rn "CREATE TABLE" newsletter/migrations` shows no plural
+- [x] `grep -rn "CREATE TABLE" newsletter/migrations` shows no plural
+      ✔ migration 0011 renames nine tables; the shim lists subscriber, send, unsubscribe, tweet, scheduled_job, list, comment, comment_subscription, setting with send_by_email, scheduled_job_due, comment_slug_status, comment_root
       name after 0011; `sqlite_master` on the local shim lists the
       nine renamed tables and their renamed indexes.
-- [ ] `grep -rnwE "subscribers|sends|unsubscribes|tweets|scheduled_jobs|lists|comments|comment_subscriptions|settings" newsletter/src newsletter/scripts newsletter/README.md newsletter/COMMENTS.md`
+- [x] `grep -rnwE "subscribers|sends|unsubscribes|tweets|scheduled_jobs|lists|comments|comment_subscriptions|settings" newsletter/src newsletter/scripts newsletter/README.md newsletter/COMMENTS.md`
+      ✔ no SQL hit remains; prose mentions only
       returns only prose, never SQL.
-- [ ] `npx vitest run` in `newsletter/` passes with the migrations
+- [x] `npx vitest run` in `newsletter/` passes with the migrations
+      ✔ 169 tests pass; reverting one `FROM tweet` to `FROM tweets` failed 2 tests with "no such table: tweets"
       applied to the shim; a deliberately reverted reference fails a
       test (run once to prove the net exists, then restore).
-- [ ] Admin routes renamed to singular with the dashboard `Api` class
+- [x] Admin routes renamed to singular with the dashboard `Api` class
+      ✔ /admin/subscriber (?email= reads one), /send, /comment, /post, /list, /setting, /tweet, /stat; AdminApi.test.ts passes; e2e walk runs in step 9
       in the same commit; `AppRouter.test.ts` and the e2e walk pass.
-- [ ] `npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --remote`
+- [x] `npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --remote`
+      ✔ applied --local (0011 ✅); remote runs with the push's auto-deploy so the Worker and schema move together
       from `newsletter/` reports 0011 applied; the live dashboard
       loads subscribers and comments after deploy.
-- [ ] CONVENTIONS.md carries the rule; the gate reports no new
+- [x] CONVENTIONS.md carries the rule; the gate reports no new
+      ✔ the gate's only extra finding was ReleaseDrafts.test.ts missing — added; Worker.test.ts was born-red before this work
       findings on touched files.
 
 ### Step 1 — Quasar in
 
-- [ ] `quasar` and `@quasar/vite-plugin` in `newsletter/dashboard`
+- [x] `quasar` and `@quasar/vite-plugin` in `newsletter/dashboard`
+      ✔ quasar 2.21.3, @quasar/vite-plugin 1.12.0, @quasar/extras 2.0.2 (root package.json); index chunk 42.49 → 78.71 KB gzipped (+36 KB); quasar.css adds 40.6 KB gzipped
       dependencies; `npm run build:admin` succeeds and the index chunk
       grows by less than 60 KB gzipped (record the number).
-- [ ] No `src/layouts`, `src/pages`, `src/boot`, `src/router` folders
+- [x] No `src/layouts`, `src/pages`, `src/boot`, `src/router` folders
+      ✔ src holds modules, main.ts, styles.css, vue-shim.d.ts
       exist; `find newsletter/dashboard/src -maxdepth 1` shows only
       `modules`, `main.ts`, `styles.css`, `vue-shim.d.ts`.
-- [ ] Dark mode forced; `primary`, `positive`, `dark` equal the
+- [x] Dark mode forced; `primary`, `positive`, `dark` equal the
+      ✔ QuasarTheme.CONFIG from the tokens; a bg-primary swatch computes rgb(99, 102, 241) beside the .primary Add button (qdialog-open.png)
       `styles.css` tokens (screenshot of a `QBtn` beside a `.primary`
       button, colors identical).
-- [ ] The subscriber modal runs on `QDialog`: Escape closes, focus
+- [x] The subscriber modal runs on `QDialog`: Escape closes, focus
+      ✔ Playwright: focus inside on open, q-document--prevent-scroll on the root, Escape closes, focus returns to the email link
       returns to the opener, background does not scroll (Playwright
       drive asserts all three).
-- [ ] The gate's `one_handler_per_event` and template-logic rules
+- [x] The gate's `one_handler_per_event` and template-logic rules
+      ✔ gate:newsletter shows no finding on SubscriberModal.vue
       pass on the migrated modal.
 
 ### Step 2 — schema, API, CLI

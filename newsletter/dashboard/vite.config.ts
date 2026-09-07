@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import { quasar } from '@quasar/vite-plugin';
 
 // The admin dashboard — an ivue application (Reactive/Static classes from
 // this repo's own lib source). Two run modes:
@@ -13,7 +14,10 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig(({ mode }) => {
   const secrets = loadEnv(mode, fileURLToPath(new URL('..', import.meta.url)), '');
   return {
-    plugins: [vue()],
+    // Quasar is a component library here, not a project layout: the
+    // plugin tree-shakes `import { QBtn } from 'quasar'` to per-component
+    // imports; modules keep living in src/modules/<domain>/
+    plugins: [vue(), quasar()],
     resolve: {
       alias: [
         {

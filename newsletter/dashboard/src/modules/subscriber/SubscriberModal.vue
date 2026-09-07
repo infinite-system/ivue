@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { QDialog } from 'quasar';
 import { SubscriberModel } from './SubscriberModel';
 import { Format } from '../platform/Format';
 
@@ -11,10 +12,12 @@ const {
 </script>
 
 <template>
-  <div
-    v-if="model.isOpen"
-    class="dialog-backdrop"
-    @click.self="model.close()"
+  <!-- QDialog owns the backdrop, the focus trap, Escape, and the scroll
+       lock; the route query still owns whether it is open -->
+  <q-dialog
+    :model-value="model.isOpen"
+    class="admin-dialog"
+    @hide="model.close()"
   >
     <aside class="dialog card" aria-label="Subscriber detail">
       <header class="dialog-head">
@@ -106,5 +109,5 @@ const {
         </section>
       </template>
     </aside>
-  </div>
+  </q-dialog>
 </template>

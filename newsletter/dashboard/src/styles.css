@@ -773,6 +773,12 @@ td {
   animation: fade-in 160ms ease-out;
 }
 
+/* inside a QDialog the card is the dialog; Quasar's inner wrapper only
+   positions it, so the card keeps every rule below */
+.admin-dialog .q-dialog__inner > .dialog {
+  max-width: none;
+}
+
 .dialog {
   width: min(42rem, 96vw);
   max-height: min(52rem, 88vh);
