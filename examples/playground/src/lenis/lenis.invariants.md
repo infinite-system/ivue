@@ -22,6 +22,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 - [A flick's velocity is read off the finger's last stretch](#a-flicks-velocity-is-read-off-the-fingers-last-stretch) — why a coalesced swipe still glides at the finger's speed.
 - [A touch on a glide keeps it running until the first move](#a-touch-on-a-glide-keeps-it-running-until-the-first-move) — why a re-flick has no stall.
 - [A touchcancel flicks like a touchend](#a-touchcancel-flicks-like-a-touchend) — why a browser claiming the gesture does not freeze the content.
+- [A flick carries the glide it interrupted](#a-flick-carries-the-glide-it-interrupted) — why flick after flick gains speed instead of restarting.
 
 **Mechanism:** The touchstart seeds a trail at the animated position and marks the touch pending while the glide runs on; the first move stops the glide, drops its target for the animated position, re-seeds the trail there and syncs the finger; every move appends to the trail inside a 100 ms window with one anchor kept before it; the end or cancel reads the velocity off the trail with the span capped at the window and scrolls to the inertia distance; an end with no move is the tap that stops the glide.
 
@@ -109,6 +110,28 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 **Last refined:** 2026-09-07
 
+### A flick carries the glide it interrupted
+
+**Invariant:** If a finger takes over a glide and then flicks the same way, then the glide's velocity at the take-over is added to the flick's, so a run of flicks gains speed instead of restarting from each finger's own; a flick the other way, a tap, or a glide already at rest carries nothing.
+
+**Scope:** `Lenis.ts` `carriedVelocity`, `carryVelocity`, the take-over branch and the flick in `onVirtualScroll`.
+
+**Mechanism:** The take-over stops the glide where the content is, which drops its momentum; the momentum is remembered as the velocity at that instant and paid back into the next flick's inertia when the directions agree. Native lists restart from zero on every touch, which reads as losing speed to a reader flicking to cover distance.
+
+**Generates:** The trace line "finger takes over, carrying v=…".
+
+**Rejected alternatives:** Letting the glide run on under the finger — a swipe then fights the glide. Restarting from the finger's velocity alone — each re-flick lost the speed the glide had left.
+
+**Evidence:** `Lenis.ts` `carryVelocity`. Test: "a flick the same way carries the interrupted glide's velocity; the other way, or with no glide, it carries nothing".
+
+**Impossible if true:** A run of same-way flicks whose glides get slower. A reverse flick that inherits the old direction's speed.
+
+**Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "carries"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-07
+
 ### A touchcancel flicks like a touchend
 
 **Invariant:** If the browser ends a touch with a touchcancel — Chrome on Android does when a touch-action token lets it claim the gesture — then the fork treats it as the touchend: the trail is read, the inertia fires, a pending touch counts as a tap.
@@ -137,3 +160,4 @@ Chosen invariants stand on reality invariants, never the reverse.
 - A coalesced swipe reading a velocity of zero — [A flick's velocity is read off the finger's last stretch](#a-flicks-velocity-is-read-off-the-fingers-last-stretch).
 - A flick logic proven on iOS alone — [Android holds the first move back and may coalesce a swipe into one](#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one).
 - A claimed gesture leaving the content frozen — [A touchcancel flicks like a touchend](#a-touchcancel-flicks-like-a-touchend).
+- A run of same-way flicks that slows down — [A flick carries the glide it interrupted](#a-flick-carries-the-glide-it-interrupted).

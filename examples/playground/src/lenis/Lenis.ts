@@ -219,6 +219,17 @@ class $Lenis {
     return this.constructor as typeof $Lenis;
   }
 
+  /**
+   * A flick's velocity with the interrupted glide's added back, when the
+   * flick runs the same way; a flick the other way, or a swipe too slow
+   * to be a flick, drops the carry.
+   */
+  // invariant: A flick carries the glide it interrupted (examples/playground/src/lenis/lenis.invariants.md)
+  static carryVelocity(flick: number, carried: number): number {
+    if (carried === 0 || Math.sign(flick) !== Math.sign(carried)) return flick;
+    return flick + carried;
+  }
+
   /* The instance */
 
   protected scrolling: Lenis.Scrolling = false; // true when scroll is animating
@@ -253,6 +264,13 @@ class $Lenis {
    * Android holds the first move back, then jumped: a stall per re-flick.
    */
   protected touchPending = false;
+  /**
+   * The glide's velocity at the moment a finger took it over, px per
+   * frame. A flick that follows in the same direction adds it back, so
+   * flick after flick GAINS speed instead of restarting from the finger's
+   * own: the glide the finger interrupted is not lost, it is carried.
+   */
+  protected carriedVelocity = 0;
   /**
    * An optional sink for one line per gesture event and decision — the
    * on-device touch log sets it; null costs nothing.
@@ -699,13 +717,16 @@ class $Lenis {
         // The finger takes over from where the content IS: the glide's
         // target, hundreds of px ahead, is dropped.
         this.touchPending = false;
+        // invariant: A flick carries the glide it interrupted (examples/playground/src/lenis/lenis.invariants.md)
+        this.carriedVelocity = this.velocity;
         this.animate.stop();
         this.targetScroll = this.animatedScroll;
         this.touchTrail[0] = { at: this.touchTrail[0]?.at ?? now, position: this.animatedScroll };
-        this.trace?.('finger takes over');
+        this.trace?.(`finger takes over, carrying v=${this.carriedVelocity.toFixed(1)}`);
       } else if (this.touchPending && (event.type === 'touchend' || event.type === 'touchcancel')) {
         // A touch with no move: tap to stop.
         this.touchPending = false;
+        this.carriedVelocity = 0;
         this.trace?.('tap-to-stop: reset');
         this.reset();
         return;
@@ -799,7 +820,11 @@ class $Lenis {
         this.self.trimTrail(this.touchTrail, now, this.self.FLICK_WINDOW_MS);
       } else if (isTouchEnd) {
         trailLength = this.touchTrail.length;
-        flickVelocity = this.self.trailVelocity(this.touchTrail, this.velocity);
+        flickVelocity = this.self.carryVelocity(
+          this.self.trailVelocity(this.touchTrail, this.velocity),
+          this.carriedVelocity
+        );
+        this.carriedVelocity = 0;
         this.touchTrail = [];
       }
     }

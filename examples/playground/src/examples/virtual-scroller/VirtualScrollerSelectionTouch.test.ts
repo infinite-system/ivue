@@ -7,7 +7,7 @@ Goal: Let a finger select text in a virtual list without the system's selection:
 [A drag scrolls from inside the edge zone](virtual-scroller.invariants.md#a-drag-scrolls-from-inside-the-edge-zone)
 [A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
 // domain-invariant: $VirtualScrollerSelectionTouch — If the device has neither touch points nor touch events, then attach does nothing: no overlay, no listeners, the rows stay selectable and the native selection paints as before.
-// domain-invariant: $VirtualScrollerSelectionTouch — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, laid whole since the frame clips, and the handles sit beside the true ends — the start above the first line, the end below the last, offset outward — so they never cover the text — shown while their line is wholly on screen, nudged inside the edge by the knob's radius at most, hidden while the line is partly on screen or gone; a null range hides the overlay.
+// domain-invariant: $VirtualScrollerSelectionTouch — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, laid whole since the frame clips, and the handles sit beside the true ends — the start above the first line, the end below the last, offset outward — so they never cover the text — shown while their spot is on screen or within the nudge reach outside it, nudged inside the edge by the knob's radius, hidden further out; a null range hides the overlay.
 // domain-invariant: $VirtualScrollerSelectionTouch — If a finger lands on a handle, then any glide is held where the content is, the drag begins at once from the other end, the handle stops catching pointer events for its own drag, and lifting ends it with the chip offered.
 // domain-invariant: $VirtualScrollerSelectionTouch — If a finger lands on a button or on the overlay, then no hold arms; a tap on an existing selection clears it; a swipe past the slop is a scroll.
 // domain-invariant: $VirtualScrollerSelectionTouch — If a second tap lands within the double-tap window and slop of the first, then the word under it is selected as a touch range and the chip is offered; mouse events synthesized after a touch are that touch's.
@@ -129,7 +129,7 @@ test('with a touch point the overlay with its two handles is laid inside the wra
   expect(wrapper.querySelector(`.${Touch.OVERLAY_CLASS}`)).toBeNull();
 });
 
-// domain-invariant: $VirtualScrollerSelectionTouch — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, laid whole since the frame clips, and the handles sit beside the true ends — the start above the first line, the end below the last, offset outward — so they never cover the text — shown while their line is wholly on screen, nudged inside the edge by the knob's radius at most, hidden while the line is partly on screen or gone; a null range hides the overlay.
+// domain-invariant: $VirtualScrollerSelectionTouch — If a DOM range is painted, then one box per non-empty client rect is laid relative to the overlay, laid whole since the frame clips, and the handles sit beside the true ends — the start above the first line, the end below the last, offset outward — so they never cover the text — shown while their spot is on screen or within the nudge reach outside it, nudged inside the edge by the knob's radius, hidden further out; a null range hides the overlay.
 test('painting a range lays one box per non-empty rect and puts the handles at the ends; painting null hides it all', () => {
   const rects = [
     { left: 20, top: 10, right: 320, bottom: 30, width: 300, height: 20 },
@@ -194,9 +194,9 @@ test('painting a range lays one box per non-empty rect and puts the handles at t
   expect(end.hidden).toBe(false);
   expect(end.style.transform).toBe(`translate(${120 + offset}px, ${50 + offset / 2}px)`);
 
-  // An end whose line is partly on screen but whose spot is past the edge
-  // has no handle yet — it appears only once its spot is fully in view;
-  // boxes are laid whole, the frame clips.
+  // An end whose line straddles the bottom edge: its spot sits 16 px past
+  // the edge, within the nudge reach, so the handle shows nudged inside to
+  // the knob's radius; boxes are laid whole, the frame clips.
   const visibleBottom = Math.min(1000, window.innerHeight);
   range.getClientRects = () =>
     [
@@ -204,7 +204,8 @@ test('painting a range lays one box per non-empty rect and puts the handles at t
       { left: 0, top: visibleBottom - 10, right: 120, bottom: visibleBottom + 10, width: 120, height: 20 }
     ] as unknown as DOMRectList;
   instance.paint(range);
-  expect(end.hidden).toBe(true);
+  expect(end.hidden).toBe(false);
+  expect(end.style.transform).toBe(`translate(${120 + offset}px, ${visibleBottom - inset}px)`);
   expect(overlay.querySelectorAll(`.${Touch.BOX_CLASS}`)).toHaveLength(2);
   // An end that has scrolled wholly away has no handle either.
   range.getClientRects = () =>
@@ -223,14 +224,15 @@ test('painting a range lays one box per non-empty rect and puts the handles at t
   expect(start.hidden).toBe(true);
   expect(end.hidden).toBe(false);
   expect(end.style.transform).toBe(`translate(${120 + offset}px, ${1220 + offset / 2}px)`);
-  // Scrolled so the start's line sits at the very top, wholly in view: the
-  // handle shows, its spot nudged inside to the knob's radius.
-  overlay.getBoundingClientRect = () => ({ left: 0, top: -10, width: 800, height: 3000 }) as DOMRect;
+  // Scrolled so the start's spot sits just within the nudge reach above the
+  // top: the handle shows, nudged inside to the knob's radius.
+  const reach = Touch.NUDGE_REACH_PX;
+  overlay.getBoundingClientRect = () => ({ left: 0, top: -(4 + reach), width: 800, height: 3000 }) as DOMRect;
   instance.follow();
   expect(start.hidden).toBe(false);
-  expect(start.style.transform).toBe(`translate(${20 - offset}px, ${inset + 10}px)`);
-  // One px further and the line is partly out of view: hidden, no glide.
-  overlay.getBoundingClientRect = () => ({ left: 0, top: -11, width: 800, height: 3000 }) as DOMRect;
+  expect(start.style.transform).toBe(`translate(${20 - offset}px, ${inset + 4 + reach}px)`);
+  // One px further out and it hides — no glide beyond the reach.
+  overlay.getBoundingClientRect = () => ({ left: 0, top: -(5 + reach), width: 800, height: 3000 }) as DOMRect;
   instance.follow();
   expect(start.hidden).toBe(true);
   // A start at the frame's left edge: its spot would sit in the clip 12 px

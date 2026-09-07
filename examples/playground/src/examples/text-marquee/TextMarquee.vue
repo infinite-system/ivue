@@ -68,9 +68,9 @@ defineExpose(marquee as TextMarquee.Instance);
    would leave the winner to stylesheet load order */
 .text-marquee .virtual-scroller__track.virtual-scroller__track--x {
   bottom: 0;
-  /* the hosts fade the line out over the outer ~5% (mask-image) — the
-     track ends rest inside the fully-opaque zone, not under the fade */
-  left: 5%;
-  right: 5%;
+  /* as wide as the strip's own track — the hosts' edge fade (mask-image)
+     softens its last few px, which reads as the line's own fade */
+  left: 10px;
+  right: 10px;
 }
 </style>

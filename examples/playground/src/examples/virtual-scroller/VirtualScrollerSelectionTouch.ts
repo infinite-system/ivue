@@ -165,20 +165,32 @@ class $VirtualScrollerSelectionTouch {
     return { left, top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
   }
 
-  /** Whether a box (overlay-relative) lies wholly inside a visible rect
-   *  (viewport-relative). */
-  static boxOnScreen(
-    box: VirtualScrollerSelectionTouch.Box,
+  /** How far outside the visible rect a handle's spot may sit and still
+   *  be nudged in rather than hidden: the offset that puts the knob beside
+   *  its line plus the knob's radius — the whole of what a spot beside a
+   *  line at the frame's very edge hangs off by, and no more, so a spot
+   *  further out is a line that has left and the handle hides at once. */
+  static get NUDGE_REACH_PX() {
+    return this.HANDLE_OFFSET_PX + this.HANDLE_KNOB_PX / 2;
+  }
+
+  /** Whether a handle spot (overlay-relative) lies within a visible rect
+   *  (viewport-relative) or within NUDGE_REACH_PX outside it. Judged on
+   *  the spot, not the line: a marquee chunk is hundreds of px wide and
+   *  is rarely wholly on screen, yet its end may well be. */
+  static spotWithinReach(
+    at: { x: number; y: number },
     origin: { left: number; top: number },
     visible: VirtualScrollerSelectionTouch.Box
   ): boolean {
-    const left = box.left + origin.left;
-    const top = box.top + origin.top;
+    const reach = this.NUDGE_REACH_PX;
+    const x = at.x + origin.left;
+    const y = at.y + origin.top;
     return (
-      left >= visible.left &&
-      left + box.width <= visible.left + visible.width &&
-      top >= visible.top &&
-      top + box.height <= visible.top + visible.height
+      x >= visible.left - reach &&
+      x <= visible.left + visible.width + reach &&
+      y >= visible.top - reach &&
+      y <= visible.top + visible.height + reach
     );
   }
 
@@ -278,8 +290,6 @@ class $VirtualScrollerSelectionTouch {
      *  frame's visible rect, so a scroll re-places the handles from one
      *  rect read instead of a repaint. */
     laid: null as null | {
-      first: VirtualScrollerSelectionTouch.Box;
-      last: VirtualScrollerSelectionTouch.Box;
       start: { x: number; y: number };
       end: { x: number; y: number };
       visible: VirtualScrollerSelectionTouch.Box | null;
@@ -401,8 +411,6 @@ class $VirtualScrollerSelectionTouch {
     const handles = this.self.handlePositions(boxes)!;
     const clip = frame ? frame.getBoundingClientRect() : null;
     this.parts.laid = {
-      first: boxes[0],
-      last: boxes[boxes.length - 1],
       start: handles.start,
       end: handles.end,
       visible: clip && this.self.visibleRect(clip)
@@ -412,12 +420,14 @@ class $VirtualScrollerSelectionTouch {
 
   /**
    * A scroll moved the overlay under the frame: re-place the handles from
-   * the last paint's boxes and one rect read. A handle shows while its
-   * LINE is wholly on screen, at its spot nudged inside the edge by the
-   * knob's radius at most; a line partly on screen or gone has no handle.
-   * (A handle pinned at the edge while its line was partly visible glided
-   * in with the line; a handle shown only when its own spot was on screen
-   * hid beside a first line at the top or a start at the left edge.)
+   * the last paint's spots and one rect read. A handle shows while its
+   * spot is on screen or within NUDGE_REACH_PX outside it, nudged inside
+   * the edge by the knob's radius; further out it hides. (A handle pinned
+   * at the edge while its line was partly visible glided in with the
+   * line; one shown only when its own spot was on screen hid beside a
+   * first line at the top or a start at the left edge; one judged on its
+   * whole line hid beside a marquee chunk, which is rarely wholly on
+   * screen.)
    */
   follow() {
     const overlay = this.overlay.value;
@@ -429,12 +439,12 @@ class $VirtualScrollerSelectionTouch {
     const laid = this.parts.laid;
     if (!laid) return;
     const visible = laid.visible;
-    const shown = (box: VirtualScrollerSelectionTouch.Box) =>
-      !visible || this.self.boxOnScreen(box, origin, visible);
+    const shown = (at: { x: number; y: number }) =>
+      !visible || this.self.spotWithinReach(at, origin, visible);
     const nudge = (at: { x: number; y: number }) =>
       visible ? this.self.nudgeInside(at, origin, visible) : at;
-    this.placeHandle(this.parts.start, shown(laid.first) ? nudge(laid.start) : null);
-    this.placeHandle(this.parts.end, shown(laid.last) ? nudge(laid.end) : null);
+    this.placeHandle(this.parts.start, shown(laid.start) ? nudge(laid.start) : null);
+    this.placeHandle(this.parts.end, shown(laid.end) ? nudge(laid.end) : null);
   }
 
   protected paintBoxes(boxes: VirtualScrollerSelectionTouch.Box[]) {

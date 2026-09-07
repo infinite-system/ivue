@@ -3,6 +3,8 @@
 Goal: Read a flick's velocity off the finger's last stretch of moves, so a touchend that lands after an idle frame still flicks at the finger's speed.
 [A flick's velocity is read off the finger's last stretch](lenis.invariants.md#a-flicks-velocity-is-read-off-the-fingers-last-stretch)
 [Android holds the first move back and may coalesce a swipe into one](lenis.invariants.md#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one)
+[A flick carries the glide it interrupted](lenis.invariants.md#a-flick-carries-the-glide-it-interrupted)
+// domain-invariant: $Lenis — If a flick runs the same way as the glide the finger interrupted, then the glide's velocity at the take-over is added to the flick's; a flick the other way, or no glide, adds nothing.
 // domain-invariant: $Lenis — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
 
@@ -86,4 +88,15 @@ test('an idle frame before the touchend does not zero the flick: the trail still
   trimTrail(paused, 400, FLICK_WINDOW_MS);
   expect(paused).toEqual([{ at: 50, position: 100 }, { at: 400, position: 100 }]);
   expect(trailVelocity(paused, 0)).toBe(0);
+});
+
+// domain-invariant: $Lenis — If a flick runs the same way as the glide the finger interrupted, then the glide's velocity at the take-over is added to the flick's; a flick the other way, or no glide, adds nothing.
+// invariant: A flick carries the glide it interrupted (examples/playground/src/lenis/lenis.invariants.md)
+test('a flick the same way carries the interrupted glide’s velocity; the other way, or with no glide, it carries nothing', () => {
+  const { carryVelocity } = Lenis.Class;
+  expect(carryVelocity(40, 25)).toBe(65);
+  expect(carryVelocity(-40, -25)).toBe(-65);
+  expect(carryVelocity(40, -25)).toBe(40);
+  expect(carryVelocity(40, 0)).toBe(40);
+  expect(carryVelocity(0, 25)).toBe(0);
 });
