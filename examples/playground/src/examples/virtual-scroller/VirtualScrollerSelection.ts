@@ -730,7 +730,17 @@ class $VirtualScrollerSelection {
 
   /** The chip says what it just did, for COPIED_MS, then offers again. */
   get copyChipLabel() {
-    return this.copied.value ? 'Copied ✓' : 'Copy';
+    return this.copied.value ? 'Copied' : 'Copy';
+  }
+
+  /** The chip's class object: the copied state colours it. */
+  get copyChipClass() {
+    return { 'virtual-scroller__copy--copied': this.copied.value };
+  }
+
+  /** Whether the chip shows its check mark. */
+  get showsCopiedMark() {
+    return this.copied.value;
   }
 
   /** The count in the chip's badge. */

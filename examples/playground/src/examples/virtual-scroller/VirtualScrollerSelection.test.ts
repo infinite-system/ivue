@@ -348,7 +348,9 @@ test('copy assembles the selected text from the owner’s row text with the owne
   return instance.copy().then(() => {
     expect(written).toEqual([instance.selectedText]);
     expect(instance.hasSelection).toBe(true);
-    expect(instance.copyChipLabel).toBe('Copied ✓');
+    expect(instance.copyChipLabel).toBe('Copied');
+    expect(instance.showsCopiedMark).toBe(true);
+    expect(instance.copyChipClass).toEqual({ 'virtual-scroller__copy--copied': true });
     instance.hideCopied();
     expect(instance.copyChipLabel).toBe('Copy');
     expect(instance.hasSelection).toBe(true);

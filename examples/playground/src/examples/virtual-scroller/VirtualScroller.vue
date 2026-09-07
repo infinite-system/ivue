@@ -67,8 +67,24 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
       v-if="virtualScroller.selection.showsCopyChip"
       type="button"
       class="virtual-scroller__copy"
+      :class="virtualScroller.selection.copyChipClass"
       @click="virtualScroller.selection.copy()"
     >
+      <svg
+        v-if="virtualScroller.selection.showsCopiedMark"
+        class="virtual-scroller__copy-mark"
+        viewBox="0 0 16 16"
+        aria-hidden="true"
+      >
+        <path
+          d="M3 8.5l3.2 3.2L13 5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
       {{ virtualScroller.selection.copyChipLabel }}
       <span class="virtual-scroller__copy-count">{{
         virtualScroller.selection.copyChipCount
@@ -238,13 +254,43 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
   cursor: pointer;
 }
 
+/* No platform tap flash: Android paints a blue rectangle over anything
+   tapped unless told not to — the frame, its buttons, the track. */
+.virtual-scroller,
+.virtual-scroller__copy,
+.virtual-scroller__track,
+.virtual-scroller__touch-handle {
+  -webkit-tap-highlight-color: transparent;
+}
 .virtual-scroller__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 11px;
+  /* the press shows at once on a phone — no tap delay before :active */
+  touch-action: manipulation;
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  background: rgba(99, 102, 241, 0.55);
+  backdrop-filter: blur(6px);
   transition:
     transform 0.08s ease,
-    background 0.15s ease;
+    background 0.3s ease,
+    border-color 0.3s ease;
 }
 .virtual-scroller__copy:active {
   /* the press is felt: the chip shrinks under the finger */
   transform: scale(0.92);
+}
+.virtual-scroller__copy--copied {
+  border-color: rgba(34, 197, 94, 0.55);
+  background: rgba(34, 197, 94, 0.62);
+}
+.virtual-scroller__copy-mark {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.virtual-scroller__copy-count {
+  margin-left: 1px;
 }
 </style>
