@@ -773,3 +773,31 @@ own whole than to arbitrate.
   compiler). The scroller's `scroll` / `selection` knob props are the
   worked example; the gate's ordering rule bites if the `props` field is
   declared above the constructor — declare it right after.
+
+## Phone-only scroll bugs: trace first, theorize never
+
+- Five theories in a row missed an Android-only "re-flick stalls" bug that
+  one on-device log named in minutes. `?touchdebug` on the scroller example
+  prints Lenis's own trace (`lenis.trace` sink: every gesture event, its
+  deltas, the skip flag, state, the flick decision with trail length and
+  velocity) with Copy/Clear buttons — over plain http the clipboard API is
+  absent, so the copy falls back to `execCommand`. Ask for a log BEFORE
+  changing code; check the timestamps restart near 0 after a reload, or the
+  paste is the previous capture.
+- What Android does that iOS does not: the first touchmove arrives only
+  past the OS touch slop, often ~200 ms after the touchstart, and a whole
+  quick swipe may be coalesced into ONE touchmove. Consequences, each a
+  separate fix: a per-frame velocity reads 0 at touchend (read it off a
+  100 ms trail of moves, seeded at the touchstart — BEFORE any early return
+  — at the ANIMATED position, with the anchor kept when it ages out of the
+  window and the span capped at the window); a one-sample axis lock reads a
+  straight swipe as sideways (a frame with touch-action none claims every
+  touch; the strip's lock needs a 1.5× cross-axis lead); a tap-to-stop on
+  the touchstart freezes the glide for the whole hold-back, then the sync
+  catch-up jumps — keep the glide running until the first move, and let a
+  touch that ends without a move be the tap that stops it.
+- The mid-flick fixes that were real but not the cause and still stand:
+  the pad shrinks only at rest (a mid-glide unmount burst is a hitch), the
+  thumb is its own component (a per-frame binding re-renders its
+  component, whole), a scroll re-places the handles instead of repainting
+  the boxes, and a touchcancel flicks like a touchend.
