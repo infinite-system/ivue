@@ -84,6 +84,11 @@ export class Lenis {
    */
   private touchTrail: Array<{ at: number; position: number }> = [];
   /**
+   * An optional sink for one line per gesture event and decision — the
+   * on-device touch log sets it; null costs nothing.
+   */
+  trace: ((line: string) => void) | null = null;
+  /**
    * The time in ms since the lenis instance was created
    */
   time = 0;
@@ -488,6 +493,11 @@ export class Lenis {
     // }
 
     const isClickOrTap = deltaX === 0 && deltaY === 0;
+    this.trace?.(
+      `${event.type} d=(${Math.round(deltaX)},${Math.round(deltaY)}) flag=${Boolean(
+        (event as Event & { lenisStopPropagation?: boolean }).lenisStopPropagation
+      )} scrolling=${String(this.isScrolling)} v=${this.velocity.toFixed(1)} target=${Math.round(this.targetScroll)} anim=${Math.round(this.animatedScroll)} stopped=${this.isStopped} locked=${this.isLocked}`
+    );
 
     const isTapToStop =
       this.options.syncTouch &&
@@ -498,6 +508,7 @@ export class Lenis {
       !this.isLocked;
 
     if (isTapToStop) {
+      this.trace?.('tap-to-stop: reset');
       this.reset();
       return;
     }
@@ -544,6 +555,7 @@ export class Lenis {
     const isSmooth = (this.options.syncTouch && isTouch) || (this.options.smoothWheel && isWheel);
 
     if (!isSmooth) {
+      this.trace?.('not smooth: native');
       this.isScrolling = 'native';
       this.animate.stop();
       // @ts-ignore
@@ -595,6 +607,11 @@ export class Lenis {
 
     if (hasTouchInertia) {
       delta = flickVelocity * this.options.touchInertiaMultiplier;
+    }
+    if (isTouchEnd) {
+      this.trace?.(
+        `flick? ${hasTouchInertia} trail=${this.touchTrail.length} flickV=${flickVelocity.toFixed(2)} inertiaDelta=${Math.round(delta)}`
+      );
     }
 
     this.scrollTo(this.targetScroll + delta, {

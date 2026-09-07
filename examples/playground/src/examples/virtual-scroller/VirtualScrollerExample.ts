@@ -157,7 +157,7 @@ class $VirtualScrollerExample {
   /** Append a diagnostic line (wall clock in seconds). */
   logTouch(line: string) {
     const stamp = (performance.now() / 1000).toFixed(2);
-    this.touchLog.value = [...this.touchLog.value.slice(-39), `${stamp}s ${line}`];
+    this.touchLog.value = [...this.touchLog.value.slice(-79), `${stamp}s ${line}`];
   }
 
   /**
@@ -225,6 +225,11 @@ class $VirtualScrollerExample {
       );
     }
     window.addEventListener('error', (event) => this.logTouch(`window error: ${event.message}`));
+    // Lenis reports every gesture event it receives and every decision it
+    // makes on it — which is the evidence a phone-only flick bug needs.
+    const lenis = (scroller as unknown as { lenis: { trace: ((line: string) => void) | null } | null })
+      .lenis;
+    if (lenis) lenis.trace = (line) => this.logTouch(`lenis ${line} autoplay=${scroller.isAutoPlaying}`);
     this.logTouch(
       `touch debug on — Highlight API: ${typeof CSS !== 'undefined' && 'highlights' in CSS}`
     );
