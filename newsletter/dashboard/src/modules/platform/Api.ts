@@ -260,6 +260,134 @@ class $Api {
     return this.post('/admin/schedule/cancel', { id });
   }
 
+  // ---- the press (/admin/press/<singular>/…) ----
+
+  static pressPieces(query: {
+    q?: string;
+    status?: string;
+    kind?: string;
+    wave?: number;
+  } = {}): Promise<PressPieceSummary[]> {
+    const parameters = new URLSearchParams();
+    if (query.q) parameters.set('q', query.q);
+    if (query.status) parameters.set('status', query.status);
+    if (query.kind) parameters.set('kind', query.kind);
+    if (query.wave) parameters.set('wave', String(query.wave));
+    const suffix = parameters.size ? `?${parameters}` : '';
+    return this.request(`/admin/press/piece${suffix}`);
+  }
+
+  static pressPiece(id: number): Promise<PressPiece> {
+    return this.request(`/admin/press/piece/${id}`);
+  }
+
+  static pressCreatePiece(input: {
+    fromSlug?: string;
+    title?: string;
+    base?: string;
+    wave?: number;
+  }): Promise<PressPieceRecord> {
+    return this.post('/admin/press/piece', input);
+  }
+
+  static pressPatchPiece(
+    id: number,
+    changes: Partial<
+      Pick<PressPieceRecord, 'title' | 'claim' | 'links' | 'banner' | 'base' | 'wave' | 'notes' | 'slug'>
+    >,
+  ): Promise<PressPieceRecord> {
+    return this.request(`/admin/press/piece/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(changes),
+    });
+  }
+
+  static pressBlogPosts(): Promise<BlogPostOption[]> {
+    return this.request('/admin/press/blog-post');
+  }
+
+  static pressAddExpression(
+    pieceId: number,
+    input: {
+      kind: string;
+      mode?: 'derived' | 'authored';
+      label?: string;
+      venue?: string;
+      body?: string;
+      segments?: string[] | null;
+      meta?: Record<string, unknown>;
+      mirrors?: string[];
+    },
+  ): Promise<PressExpression> {
+    return this.post(`/admin/press/piece/${pieceId}/expression`, input);
+  }
+
+  static pressExpression(id: number): Promise<PressExpression> {
+    return this.request(`/admin/press/expression/${id}`);
+  }
+
+  static pressPatchExpression(
+    id: number,
+    changes: {
+      body?: string;
+      meta?: Record<string, unknown>;
+      label?: string;
+      venue?: string;
+      mirrors?: unknown;
+      skipped?: boolean;
+      calendarId?: string | null;
+    },
+  ): Promise<PressExpression> {
+    return this.request(`/admin/press/expression/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(changes),
+    });
+  }
+
+  /** approve, unapprove, archive, schedule, reschedule, cancel, post, sent, clone, detach, segment */
+  static pressAct(
+    id: number,
+    action: string,
+    body: object = {},
+  ): Promise<PressExpression> {
+    return this.post(`/admin/press/expression/${id}/${action}`, body);
+  }
+
+  static pressReorder(id: number, order: number[]): Promise<PressExpression> {
+    return this.request(`/admin/press/expression/${id}/reorder`, {
+      method: 'PATCH',
+      body: JSON.stringify({ order }),
+    });
+  }
+
+  static pressLint(id: number): Promise<{ problems: string[] }> {
+    return this.request(`/admin/press/expression/${id}/lint`);
+  }
+
+  static pressRevisions(id: number): Promise<PressRevision[]> {
+    return this.request(`/admin/press/expression/${id}/revision`);
+  }
+
+  static pressRestore(id: number, revisionId: number): Promise<PressExpression> {
+    return this.post(`/admin/press/expression/${id}/revision/${revisionId}/restore`, {});
+  }
+
+  static pressBaseRevisions(pieceId: number): Promise<PressBaseRevision[]> {
+    return this.request(`/admin/press/piece/${pieceId}/base-revision`);
+  }
+
+  static pressRestoreBase(pieceId: number, revisionId: number): Promise<PressPieceRecord> {
+    return this.post(`/admin/press/piece/${pieceId}/base-revision/${revisionId}/restore`, {});
+  }
+
+  static pressPostings(pieceId?: number): Promise<PressPosting[]> {
+    return this.request(pieceId ? `/admin/press/piece/${pieceId}/posting` : '/admin/press/posting');
+  }
+
+  static pressQueue(): Promise<PressQueue> {
+    return this.request('/admin/press/queue');
+  }
+
   static stats(): Promise<Stats> {
     return this.request('/admin/stat');
   }
@@ -433,7 +561,7 @@ export interface TweetRow {
   postedAt: number;
 }
 
-export type JobKind = 'broadcast' | 'tweet' | 'thread';
+export type JobKind = 'broadcast' | 'tweet' | 'thread' | 'expression';
 
 export interface ScheduledJob {
   id: number;
@@ -450,4 +578,123 @@ export interface Stats {
   signups: { day: string; count: number }[];
   perPost: { slug: string; sendCount: number; lastSentAt: number }[];
   totalSends: number;
+}
+
+// ---- press shapes (mirror newsletter/src/modules/press) ----
+
+export interface PressLink {
+  label: string;
+  url: string;
+}
+
+export interface PressPieceRecord {
+  id: number;
+  slug: string | null;
+  title: string;
+  claim: string;
+  links: PressLink[];
+  banner: string | null;
+  base: string;
+  wave: 1 | 2;
+  notes: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface PressState {
+  id: number;
+  kind: string;
+  mode: string;
+  venue: string;
+  status: string;
+  scheduledAt: number | null;
+  calendarId: string | null;
+}
+
+export interface PressPieceSummary extends PressPieceRecord {
+  expressions: PressState[];
+  nextDueAt: number | null;
+  calendarIds: string[];
+}
+
+export interface PressMirror {
+  platform: string;
+  sentAt: number | null;
+  url: string | null;
+}
+
+export interface PressExpression {
+  id: number;
+  pieceId: number;
+  kind: string;
+  mode: 'derived' | 'authored';
+  parentId: number | null;
+  position: number;
+  label: string;
+  venue: string;
+  body: string;
+  meta: Record<string, unknown>;
+  mirrors: PressMirror[];
+  status: 'draft' | 'approved' | 'scheduled' | 'due' | 'sent' | 'archived';
+  skipped: boolean;
+  calendarId: string | null;
+  approvedAt: number | null;
+  scheduledAt: number | null;
+  sentAt: number | null;
+  sentUrl: string | null;
+  createdAt: number;
+  updatedAt: number;
+  children: PressExpression[] | null;
+}
+
+export interface PressPiece extends PressPieceRecord {
+  expressions: PressExpression[];
+}
+
+export interface PressRevision {
+  id: number;
+  body: string;
+  meta: Record<string, unknown>;
+  author: string;
+  savedAt: number;
+}
+
+export interface PressBaseRevision {
+  id: number;
+  base: string;
+  author: string;
+  savedAt: number;
+}
+
+export interface PressPosting {
+  id: number;
+  expressionId: number;
+  platform: string;
+  venue: string;
+  url: string | null;
+  remoteIds: string[];
+  postedAt: number;
+  postedBy: 'api' | 'manual';
+  calendarId: string | null;
+  kind?: string;
+  pieceId?: number;
+  pieceTitle?: string;
+}
+
+export interface PressQueueJob extends ScheduledJob {
+  expression: PressExpression | null;
+}
+
+export interface PressQueue {
+  upcoming: PressQueueJob[];
+  recent: ScheduledJob[];
+  due: (PressExpression & { pieceTitle: string })[];
+}
+
+export interface BlogPostOption {
+  slug: string;
+  title: string;
+  description: string;
+  date: string | null;
+  url: string;
 }

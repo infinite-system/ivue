@@ -134,7 +134,7 @@ class $Expression {
       .run();
     const id = outcome.meta.last_row_id;
     if (Projection.Class.isParentKind(input.kind))
-      await this.replaceChildren(env, id, input.pieceId, Projection.Class.childKind(input.kind), segments ?? [], now);
+      await this.replaceChildren(env, id, input.pieceId, Projection.Class.childKind(input.kind), segments ?? [], now, undefined, mode);
     return (await this.byId(env, id))!;
   }
 
@@ -567,13 +567,15 @@ class $Expression {
     texts: string[],
     now: number,
     skips?: boolean[],
+    mode: Expression.Mode = 'derived',
   ): Promise<void> {
     await env.DB.prepare('DELETE FROM expression WHERE parent_id = ?').bind(parentId).run();
+    // a segment's mode follows its parent: an authored thread's tweets edit in place
     for (const [position, text] of texts.entries())
       await env.DB.prepare(
         'INSERT INTO expression (piece_id, kind, mode, parent_id, position, body, skipped, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       )
-        .bind(pieceId, kind, 'derived', parentId, position, text, skips?.[position] ? 1 : 0, now, now)
+        .bind(pieceId, kind, mode, parentId, position, text, skips?.[position] ? 1 : 0, now, now)
         .run();
   }
 

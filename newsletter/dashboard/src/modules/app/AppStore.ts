@@ -21,6 +21,7 @@ class $AppStore {
       { name: 'newsletter', label: 'Newsletter', home: 'subscribers' },
       { name: 'socials', label: 'Socials', home: 'x' },
       { name: 'release', label: 'Release', home: 'release' },
+      { name: 'press', label: 'Press', home: 'press' },
     ];
   }
 
@@ -44,6 +45,11 @@ class $AppStore {
       release: [
         { name: 'release', label: 'Calendar' },
         { name: 'release-venues', label: 'Venues' },
+      ],
+      press: [
+        { name: 'press', label: 'Pieces' },
+        { name: 'press-queue', label: 'Queue' },
+        { name: 'press-sent', label: 'Sent' },
       ],
     };
   }
@@ -87,13 +93,27 @@ class $AppStore {
     const path = this.$router.currentRoute.value.path;
     if (path.startsWith('/socials')) return 'socials';
     if (path.startsWith('/release')) return 'release';
+    if (path.startsWith('/press')) return 'press';
     return 'newsletter';
   }
 
   // the release calendar runs the full viewport width — seven readable
   // day columns need it; every other view keeps the reading measure
   get contentClass(): Record<string, boolean> {
-    return { 'content--wide': this.activeDomain === 'release' };
+    return { 'content--wide': this.activeDomain === 'release' || this.activeDomain === 'press' };
+  }
+
+  // the piece page belongs to the Pieces tab
+  get tabView(): ViewName {
+    return this.view === 'press-piece' ? 'press' : this.view;
+  }
+
+  openPiece(id: number) {
+    this.$router.push({ name: 'press-piece', params: { id: String(id) } });
+  }
+
+  get pieceId(): number {
+    return Number(this.$router.currentRoute.value.params.id ?? 0);
   }
 
   // Any email address, anywhere in the app, opens that subscriber's
@@ -114,7 +134,7 @@ class $AppStore {
   }
 
   isOpen(view: ViewName) {
-    return this.view === view;
+    return this.tabView === view;
   }
 
   isDomainOpen(domain: DomainName) {
@@ -242,7 +262,7 @@ export namespace AppStore {
   }
 }
 
-export type DomainName = 'newsletter' | 'socials' | 'release';
+export type DomainName = 'newsletter' | 'socials' | 'release' | 'press';
 export type ViewName =
   | 'subscribers'
   | 'lists'
@@ -256,7 +276,11 @@ export type ViewName =
   | 'x'
   | 'socials-settings'
   | 'release'
-  | 'release-venues';
+  | 'release-venues'
+  | 'press'
+  | 'press-piece'
+  | 'press-queue'
+  | 'press-sent';
 export type ToastTone = 'info' | 'success' | 'error';
 export type SubscriberTabName = 'sent' | 'upcoming';
 
