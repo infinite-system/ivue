@@ -382,6 +382,9 @@ class $CheckStandard {
         if (ts.isArrayLiteralExpression(expression)) return expression.elements.every((element) => ts.isExpression(element) && isLiteral(element));
         if (ts.isObjectLiteralExpression(expression)) return expression.properties.every((property) => ts.isPropertyAssignment(property) && isLiteral(property.initializer));
         if (ts.isAsExpression(expression)) return isLiteral(expression.expression);
+        // A reference to another SCREAMING constant — `this.X`, `Other.Class.X` — is
+        // a constant too: a knobs tree composed of parts' constants stays a constant.
+        if (ts.isPropertyAccessExpression(expression)) return /^[A-Z][A-Z0-9_]*$/.test(expression.name.text) && expression.name.text.includes('_');
         return false;
       };
       for (const unit of context.sources) {
@@ -394,7 +397,7 @@ class $CheckStandard {
           const returned = member.body.statements.find(ts.isReturnStatement)?.expression;
           if (returned && isLiteral(returned)) continue;
           const camel = name.toLowerCase().replace(/_(\w)/g, (whole, letter: string) => letter.toUpperCase());
-          findings.push(this.finding(this.a_derived_static_getter_is_lower_camel_case, unit, this.lineOf(unit, member), `static get ${name}() derives its value — a derived getter is lowerCamel (\`${camel}\`); SCREAMING_SNAKE is for literal tunable constants`));
+          findings.push(this.finding(this.a_derived_static_getter_is_lower_camel_case, unit, this.lineOf(unit, member), `static get ${name}() derives its value — a derived getter is lowerCamel (\`${camel}\`); SCREAMING_SNAKE is for tunable constants: literals, or other SCREAMING constants composed`));
         }
       }
       return findings;
@@ -1345,10 +1348,10 @@ export namespace Scroller {
         }],
       },
       'a_derived_static_getter_is_lower_camel_case': {
-        claim: 'If a static getter derives its value from other members or classes, then its name is lowerCamel, and SCREAMING_SNAKE remains for literal tunable constants',
+        claim: 'If a static getter derives its value from other members or classes, then its name is lowerCamel, and SCREAMING_SNAKE remains for tunable constants: literals, or other SCREAMING constants composed',
         impossibility: 'a file breaking a_derived_static_getter_is_lower_camel_case passes the gate',
         red: [{ files: { 'src/Clock.ts': fixture.staticClass.replace('  static now() {', '  static get SCAN_LIMIT_HOURS() {\n    return Number(this.$zone.length) * 24;\n  }\n\n  static now() {') }, expectFindings: [/derives its value — a derived getter is lowerCamel \(`scanLimitHours`\)/] }],
-        green: [{ files: { 'src/Clock.ts': fixture.staticClass.replace('  static now() {', '  static get RETRY_LIMIT() {\n    return 3;\n  }\n\n  static get EMAIL_PATTERN() {\n    return /a+b/;\n  }\n\n  static get scanLimitHours() {\n    return Number(this.$zone.length) * 24;\n  }\n\n  static now() {') } }],
+        green: [{ files: { 'src/Clock.ts': fixture.staticClass.replace('  static now() {', '  static get RETRY_LIMIT() {\n    return 3;\n  }\n\n  static get EMAIL_PATTERN() {\n    return /a+b/;\n  }\n\n  static get KNOBS() {\n    return { retries: this.RETRY_LIMIT, pattern: Clock.Class.EMAIL_PATTERN };\n  }\n\n  static get scanLimitHours() {\n    return Number(this.$zone.length) * 24;\n  }\n\n  static now() {') } }],
       },
       'static_reads_go_through_self_not_the_base_class': {
         claim: 'If instance code reads its own statics, then it reads this.self, never the base class name or a per-site constructor cast',

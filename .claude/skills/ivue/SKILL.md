@@ -1274,7 +1274,7 @@ Constants use one form per role:
 
 | Role | Form |
 | --- | --- |
-| Tunable or overridable class constant | `static get SCREAMING_SNAKE_CASE()` |
+| Tunable or overridable class constant — a literal, or a tree composed of other SCREAMING constants (`{ mouse: Selection.Class.AUTOSCROLL_MOUSE }`) | `static get SCREAMING_SNAKE_CASE()` |
 | Protocol or byte constant on a hot path, never overridden | `static readonly SCREAMING_SNAKE_CASE` with a one-line hot-path comment |
 | Contributor or pane identity data | Instance `readonly lowerCamelCase` field |
 | Extensible constructed dependency | Field assigned from a prototype `createX()` factory method |

@@ -93,7 +93,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
        *  left out keeps the tuned default (see SCROLL_KNOBS). */
       scroll: { type: Object as PropType<NestedPartial<VirtualScroller.ScrollKnobs>> },
       /** The selection knobs — a pointer's and a finger's drag autoscroll
-       *  cadence. A partial object at any depth (see selectionKnobs). */
+       *  cadence. A partial object at any depth (see SELECTION_KNOBS). */
       selection: { type: Object as PropType<NestedPartial<VirtualScroller.SelectionKnobs>> },
       /** Accepted for API compatibility; the docs build renders the plain branch. */
       draggable: { type: Boolean as PropType<boolean> },
@@ -130,7 +130,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       paddingQuantity: 6,
       creepMsPerPx: undefined, // no default ON PURPOSE — see the comment above
       scroll: this.SCROLL_KNOBS,
-      selection: this.selectionKnobs,
+      selection: this.SELECTION_KNOBS,
       // mounted rows read their own text; the data fallback is body, then id
       selectionText: undefined,
       selectionJoin: '\n',
@@ -215,7 +215,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   /** The tuned selection cadences — the selection class's own profiles. */
-  static get selectionKnobs(): VirtualScroller.SelectionKnobs {
+  static get SELECTION_KNOBS(): VirtualScroller.SelectionKnobs {
     return {
       autoscroll: {
         mouse: VirtualScrollerSelection.Class.AUTOSCROLL_MOUSE,
