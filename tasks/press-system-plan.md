@@ -351,10 +351,8 @@ email or the post itself. Adding expressions is a menu on the piece
 page, never a fixed set: a launch article might carry ten, a pitch
 carries one `email`, a Reddit essay carries one `reddit` per room.
 
-The select
-From a
-post it copies title, description, banner, links, and the plain text
-into `base`. The base is a copy: edit it, cut it down, change the
+Starting from a post copies its title, description, banner, links, and
+plain text into `base`. The base is a copy: edit it, cut it down, change the
 claim — the site is not touched and not re-read.
 
 ### The piece page
