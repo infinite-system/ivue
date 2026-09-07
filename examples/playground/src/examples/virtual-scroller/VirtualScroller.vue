@@ -180,7 +180,7 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
   transform-style: preserve-3d;
   overscroll-behavior: contain;
 }
-/* The touch selection, drawn by VirtualScrollerSelectionTouchCustom: boxes
+/* The touch selection, drawn by VirtualScrollerSelectionTouch: boxes
    over the selected text and two handles at its ends, laid inside the
    items wrapper so a scroll moves them with the rows. */
 .virtual-scroller__touch-selection {

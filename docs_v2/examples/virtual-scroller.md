@@ -64,7 +64,6 @@ everything else is the production component.
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.ts [VirtualScroller.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.vue [VirtualScroller.vue]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.ts [VirtualScrollerSelection.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouchCustom.ts [VirtualScrollerSelectionTouchCustom.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.ts [VirtualScrollerSelectionTouch.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.ts [VirtualScrollerPadding.ts]
 <<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.ts [VirtualScrollerItem.ts]
@@ -74,20 +73,11 @@ everything else is the production component.
 :::
 
 Every class above has a colocated spec beside it, and the subsystem has a
-contract the spec headers bind to — the method is on
+contract the spec headers bind to. The specs, the contract, and the Lenis
+fork's own are on their own page —
+[Virtual Scroller: Specs & Contract](/examples/virtual-scroller-specs) —
+so this page carries the source alone; the method is on
 [Testing & Invariants](/guide/testing).
-
-::: code-group
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts [VirtualScroller.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts [VirtualScrollerSelection.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouchCustom.test.ts [VirtualScrollerSelectionTouchCustom.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerSelectionTouch.test.ts [VirtualScrollerSelectionTouch.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.test.ts [VirtualScrollerPadding.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.test.ts [VirtualScrollerItem.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/VirtualScrollerExample.test.ts [VirtualScrollerExample.test.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/hosted.ts [hosted.ts]
-<<< ../../examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md [virtual-scroller.invariants.md]
-:::
 
 The example lives in the unified playground at
 [`examples/playground/`](https://github.com/infinite-system/ivue/tree/main/examples/playground)

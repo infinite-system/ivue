@@ -28,7 +28,7 @@
 import { ref, shallowRef, watch, type ComputedRef, type Ref } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
-import { VirtualScrollerSelectionTouchCustom } from './VirtualScrollerSelectionTouchCustom';
+import { VirtualScrollerSelectionTouch } from './VirtualScrollerSelectionTouch';
 
 class $VirtualScrollerSelection {
   /* Knobs */
@@ -666,12 +666,12 @@ class $VirtualScrollerSelection {
   // HOSTED — the touch gesture (long press, then move); attached to the
   // frame by `attach`, disposed with this selection.
   // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  // The custom touch implementation draws and drives the selection itself
-  // on a touch device (VirtualScrollerSelectionTouchCustom); the earlier
-  // one, which rode the system's native selection, stays in
-  // VirtualScrollerSelectionTouch.ts — swap the class here to roll back.
+  // The touch class draws and drives the selection itself on a touch
+  // device; the earlier implementation, which rode the system's native
+  // selection, is gone (the tag touch-selection-native-rollback marks the
+  // last build that used it).
   protected get $touch() {
-    return new VirtualScrollerSelectionTouchCustom.Class(this);
+    return new VirtualScrollerSelectionTouch.Class(this);
   }
 
   /** The wrapper the rows live in, for the touch overlay laid inside it. */
@@ -1080,7 +1080,7 @@ class $VirtualScrollerSelection {
   applyHighlight() {
     // A range a finger made on a touch device: the touch class draws it
     // itself and the native selection is never created (see
-    // VirtualScrollerSelectionTouchCustom). A mouse's range on the same
+    // VirtualScrollerSelectionTouch). A mouse's range on the same
     // device stays native, Ctrl+C included.
     if (this.$touch.paintsSelection && this.input.touch) {
       this.$touch.paint(this.visibleDomRange());

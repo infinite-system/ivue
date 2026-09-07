@@ -1,4 +1,4 @@
-// VirtualScrollerSelectionTouchCustom.ts — text selection on a touch
+// VirtualScrollerSelectionTouch.ts — text selection on a touch
 // device, drawn and driven by this class and not by the system.
 //
 // On a phone three parties contend for one finger: the system's native
@@ -29,7 +29,7 @@ import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import type { VirtualScrollerSelection } from './VirtualScrollerSelection';
 
-class $VirtualScrollerSelectionTouchCustom {
+class $VirtualScrollerSelectionTouch {
   /* Knobs */
 
   /** How long a finger must hold still before movement selects. */
@@ -119,8 +119,8 @@ class $VirtualScrollerSelectionTouchCustom {
     rects: ArrayLike<DOMRectReadOnly>,
     origin: { left: number; top: number },
     clip?: { left: number; top: number; right: number; bottom: number }
-  ): VirtualScrollerSelectionTouchCustom.Box[] {
-    const boxes: VirtualScrollerSelectionTouchCustom.Box[] = [];
+  ): VirtualScrollerSelectionTouch.Box[] {
+    const boxes: VirtualScrollerSelectionTouch.Box[] = [];
     for (let index = 0; index < rects.length; index++) {
       const rect = rects[index];
       const left = clip ? Math.max(rect.left, clip.left) : rect.left;
@@ -142,7 +142,7 @@ class $VirtualScrollerSelectionTouchCustom {
    *  first box's top-left, the end below the last box's bottom-right, each
    *  offset outward — the system's own placement, and neither knob covers
    *  the text it marks. */
-  static handlePositions(boxes: VirtualScrollerSelectionTouchCustom.Box[]): {
+  static handlePositions(boxes: VirtualScrollerSelectionTouch.Box[]): {
     start: { x: number; y: number };
     end: { x: number; y: number };
   } | null {
@@ -157,7 +157,7 @@ class $VirtualScrollerSelectionTouchCustom {
   }
 
   /** The part of a rect that is on screen. */
-  static visibleRect(rect: DOMRect): VirtualScrollerSelectionTouchCustom.Box {
+  static visibleRect(rect: DOMRect): VirtualScrollerSelectionTouch.Box {
     const left = Math.max(0, rect.left);
     const top = Math.max(0, rect.top);
     const right = Math.min(window.innerWidth, rect.right);
@@ -165,29 +165,49 @@ class $VirtualScrollerSelectionTouchCustom {
     return { left, top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
   }
 
-  /** Whether a handle spot (overlay-relative) lies inside a visible rect
-   *  (viewport-relative) with its knob whole: inset by the knob's radius. */
-  static spotOnScreen(
-    at: { x: number; y: number },
+  /** Whether a box (overlay-relative) lies wholly inside a visible rect
+   *  (viewport-relative). */
+  static boxOnScreen(
+    box: VirtualScrollerSelectionTouch.Box,
     origin: { left: number; top: number },
-    visible: VirtualScrollerSelectionTouchCustom.Box
+    visible: VirtualScrollerSelectionTouch.Box
   ): boolean {
-    const inset = this.HANDLE_KNOB_PX / 2;
-    const x = at.x + origin.left;
-    const y = at.y + origin.top;
+    const left = box.left + origin.left;
+    const top = box.top + origin.top;
     return (
-      x >= visible.left + inset &&
-      x <= visible.left + visible.width - inset &&
-      y >= visible.top + inset &&
-      y <= visible.top + visible.height - inset
+      left >= visible.left &&
+      left + box.width <= visible.left + visible.width &&
+      top >= visible.top &&
+      top + box.height <= visible.top + visible.height
     );
   }
 
-  constructor(public owner: VirtualScrollerSelectionTouchCustom.Owner) {}
+  /** A handle spot (overlay-relative) nudged inside a visible rect
+   *  (viewport-relative) by no more than it hangs off, the knob's radius
+   *  as the inset: a spot beside a line at the frame's very edge — its
+   *  first line at the top, its start at the left — would otherwise sit
+   *  in the clip while the line is in plain view. */
+  static nudgeInside(
+    at: { x: number; y: number },
+    origin: { left: number; top: number },
+    visible: VirtualScrollerSelectionTouch.Box
+  ): { x: number; y: number } {
+    const inset = this.HANDLE_KNOB_PX / 2;
+    const minX = visible.left + inset - origin.left;
+    const maxX = visible.left + visible.width - inset - origin.left;
+    const minY = visible.top + inset - origin.top;
+    const maxY = visible.top + visible.height - inset - origin.top;
+    return {
+      x: Math.min(Math.max(at.x, minX), Math.max(minX, maxX)),
+      y: Math.min(Math.max(at.y, minY), Math.max(minY, maxY))
+    };
+  }
+
+  constructor(public owner: VirtualScrollerSelectionTouch.Owner) {}
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
-    return this.constructor as typeof $VirtualScrollerSelectionTouchCustom;
+    return this.constructor as typeof $VirtualScrollerSelectionTouch;
   }
 
   // MUTABLE STATE — whether a touch selection is being extended right now
@@ -258,9 +278,11 @@ class $VirtualScrollerSelectionTouchCustom {
      *  frame's visible rect, so a scroll re-places the handles from one
      *  rect read instead of a repaint. */
     laid: null as null | {
+      first: VirtualScrollerSelectionTouch.Box;
+      last: VirtualScrollerSelectionTouch.Box;
       start: { x: number; y: number };
       end: { x: number; y: number };
-      visible: VirtualScrollerSelectionTouchCustom.Box | null;
+      visible: VirtualScrollerSelectionTouch.Box | null;
     }
   };
 
@@ -379,6 +401,8 @@ class $VirtualScrollerSelectionTouchCustom {
     const handles = this.self.handlePositions(boxes)!;
     const clip = frame ? frame.getBoundingClientRect() : null;
     this.parts.laid = {
+      first: boxes[0],
+      last: boxes[boxes.length - 1],
       start: handles.start,
       end: handles.end,
       visible: clip && this.self.visibleRect(clip)
@@ -388,11 +412,12 @@ class $VirtualScrollerSelectionTouchCustom {
 
   /**
    * A scroll moved the overlay under the frame: re-place the handles from
-   * the last paint's boxes and one rect read. A handle sits at its TRUE
-   * spot and shows only while that spot is on screen; an end that has
-   * scrolled away has no handle until its spot scrolls back in. (A handle
-   * pinned at the edge while its line was partly visible glided in with
-   * the line — it looked like a handle that had not finished hiding.)
+   * the last paint's boxes and one rect read. A handle shows while its
+   * LINE is wholly on screen, at its spot nudged inside the edge by the
+   * knob's radius at most; a line partly on screen or gone has no handle.
+   * (A handle pinned at the edge while its line was partly visible glided
+   * in with the line; a handle shown only when its own spot was on screen
+   * hid beside a first line at the top or a start at the left edge.)
    */
   follow() {
     const overlay = this.overlay.value;
@@ -404,13 +429,15 @@ class $VirtualScrollerSelectionTouchCustom {
     const laid = this.parts.laid;
     if (!laid) return;
     const visible = laid.visible;
-    const shown = (at: { x: number; y: number }) =>
-      !visible || this.self.spotOnScreen(at, origin, visible);
-    this.placeHandle(this.parts.start, shown(laid.start) ? laid.start : null);
-    this.placeHandle(this.parts.end, shown(laid.end) ? laid.end : null);
+    const shown = (box: VirtualScrollerSelectionTouch.Box) =>
+      !visible || this.self.boxOnScreen(box, origin, visible);
+    const nudge = (at: { x: number; y: number }) =>
+      visible ? this.self.nudgeInside(at, origin, visible) : at;
+    this.placeHandle(this.parts.start, shown(laid.first) ? nudge(laid.start) : null);
+    this.placeHandle(this.parts.end, shown(laid.last) ? nudge(laid.end) : null);
   }
 
-  protected paintBoxes(boxes: VirtualScrollerSelectionTouchCustom.Box[]) {
+  protected paintBoxes(boxes: VirtualScrollerSelectionTouch.Box[]) {
     const overlay = this.overlay.value;
     if (!overlay) return;
     // Reuse box elements; grow or trim the pool to the count needed.
@@ -492,7 +519,17 @@ class $VirtualScrollerSelectionTouchCustom {
     this.hold.timer = null;
     this.owner.holdScroll();
     this.selecting.value = true;
-    this.selected.value = false;
+    // The hold selects the word under the finger at once — handles and
+    // chip — as the system's own long press does; a move that follows
+    // extends that word from its far end (beginAt's touch rule), and a
+    // lift with no move leaves the word selected. Nothing under the
+    // finger (a gap) keeps the older rule: the first move lays the anchor.
+    this.selected.value = this.owner.selectAt(
+      this.hold.origin.x,
+      this.hold.origin.y,
+      'word',
+      'touch'
+    );
   }
 
   /**
@@ -648,8 +685,8 @@ class $VirtualScrollerSelectionTouchCustom {
   }
 }
 
-export namespace VirtualScrollerSelectionTouchCustom {
-  export const $Class = Static($VirtualScrollerSelectionTouchCustom); // anchor — it declares statics
+export namespace VirtualScrollerSelectionTouch {
+  export const $Class = Static($VirtualScrollerSelectionTouch); // anchor — it declares statics
   export let Class = Reactive($Class); // reactive — the selection hosts one
   export type Instance = typeof Class.Instance;
 
