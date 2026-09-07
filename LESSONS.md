@@ -752,3 +752,24 @@ implementation stays in `VirtualScrollerSelectionTouch.ts`; one getter
 (`$touch`) swaps them. The mouse path is untouched. Rule for next time: a
 capability that must share one input with an opaque system is cheaper to
 own whole than to arbitrate.
+
+## Nested object props: Vue never merges, the class completes
+
+- Vue resolves a prop's default ONLY when the prop is absent. A page passing
+  `{ wheel: { gain: 2 } }` hands the class exactly that object; the sibling
+  defaults are gone. No cloner in `propsWithDefaults` can change that — it
+  decides what the default IS, never what a supplied object lacks.
+- The fill is possible at all because `propsDefaults` is a value the class
+  owns. `nestedProps(props, this.self.propsDefaults)` (`ivue/extras`) at
+  the constructor seam fills the nested objects IN PLACE — lodash's
+  `defaultsDeep` with arrays taken whole (verified case for case against
+  `mergeWith({}, defaults, supplied, (a, b) => isArray(b) ? b : undefined)`).
+  Vue's props proxy is shallow, so the nested objects are the parent's own
+  and writable; the props object itself is never written.
+- Rejected on the way: a merge in a getter (the class should READ complete
+  props), a Proxy or getter-per-key view (machinery for the one case a fill
+  misses: an object built anew on every parent render — covered by the
+  stable-object rule instead; a constant inline literal is hoisted by the
+  compiler). The scroller's `scroll` / `selection` knob props are the
+  worked example; the gate's ordering rule bites if the `props` field is
+  declared above the constructor — declare it right after.

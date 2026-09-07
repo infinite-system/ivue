@@ -70,6 +70,11 @@ class $VirtualScrollerSelectionTouchCustom {
     return 44;
   }
 
+  /** The knob the reader sees, centred in the target (the CSS's 16 px). */
+  static get HANDLE_KNOB_PX() {
+    return 16;
+  }
+
   static get OVERLAY_CLASS() {
     return 'virtual-scroller__touch-selection';
   }
@@ -149,6 +154,35 @@ class $VirtualScrollerSelectionTouchCustom {
     return {
       start: { x: first.left - offset, y: first.top - offset / 2 },
       end: { x: last.left + last.width + offset, y: last.top + last.height + offset / 2 }
+    };
+  }
+
+  /** The part of a rect that is on screen. */
+  static visibleRect(rect: DOMRect): VirtualScrollerSelectionTouchCustom.Box {
+    const left = Math.max(0, rect.left);
+    const top = Math.max(0, rect.top);
+    const right = Math.min(window.innerWidth, rect.right);
+    const bottom = Math.min(window.innerHeight, rect.bottom);
+    return { left, top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
+  }
+
+  /** A handle position (overlay-relative) pinned inside a visible rect
+   *  (viewport-relative), inset by the knob's radius so the knob stays
+   *  whole on screen; the touch target's inner half is what a finger
+   *  reaches, and it is inside the frame. */
+  static pinInside(
+    at: { x: number; y: number },
+    origin: { left: number; top: number },
+    visible: VirtualScrollerSelectionTouchCustom.Box
+  ): { x: number; y: number } {
+    const inset = this.HANDLE_KNOB_PX / 2;
+    const minX = visible.left + inset - origin.left;
+    const maxX = visible.left + visible.width - inset - origin.left;
+    const minY = visible.top + inset - origin.top;
+    const maxY = visible.top + visible.height - inset - origin.top;
+    return {
+      x: Math.min(Math.max(at.x, minX), Math.max(minX, maxX)),
+      y: Math.min(Math.max(at.y, minY), Math.max(minY, maxY))
     };
   }
 
@@ -334,18 +368,16 @@ class $VirtualScrollerSelectionTouchCustom {
       return;
     }
     this.paintBoxes(boxes);
-    // The handles sit at the TRUE ends; an end that lies outside the frame
-    // has no handle — one pinned at the clip line would sit half outside
-    // the frame, where a touch is a press elsewhere.
+    // The handles sit at the TRUE ends; an end that lies outside the
+    // visible frame keeps its handle pinned just inside the edge, whole,
+    // so a range that runs off-screen is still grabbable at that edge —
+    // and a grab there is already in the zone, so it scrolls at once.
     const handles = this.self.handlePositions(this.self.boxesFrom(rects, origin));
-    const inside = (at: { x: number; y: number }) =>
-      !clip ||
-      (at.x + origin.left >= clip.left &&
-        at.x + origin.left <= clip.right &&
-        at.y + origin.top >= clip.top &&
-        at.y + origin.top <= clip.bottom);
-    this.placeHandle(this.parts.start, handles && inside(handles.start) ? handles.start : null);
-    this.placeHandle(this.parts.end, handles && inside(handles.end) ? handles.end : null);
+    const visible = clip && this.self.visibleRect(clip);
+    const pin = (at: { x: number; y: number }) =>
+      visible ? this.self.pinInside(at, origin, visible) : at;
+    this.placeHandle(this.parts.start, handles && pin(handles.start));
+    this.placeHandle(this.parts.end, handles && pin(handles.end));
   }
 
   protected paintBoxes(boxes: VirtualScrollerSelectionTouchCustom.Box[]) {

@@ -19,6 +19,11 @@ export class VirtualScroll {
   }
   private emitter = new Emitter()
 
+  /** Re-tune the gesture multipliers after construction. */
+  tune(options: Partial<{ wheelMultiplier: number; touchMultiplier: number }>) {
+    Object.assign(this.options, options)
+  }
+
   constructor(
     private element: HTMLElement,
     private options = { wheelMultiplier: 1, touchMultiplier: 1 }

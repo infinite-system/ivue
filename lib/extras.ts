@@ -8,3 +8,4 @@
  */
 export { Static, type ClassConstructor } from './Static';
 export { LazyShared } from './LazyShared';
+export { nestedProps, type NestedPartial, type NestedProps } from './nestedProps';

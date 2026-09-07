@@ -20,6 +20,7 @@ export class Animate {
   lerp?: number
   duration?: number
   easing?: EasingFunction
+  maxPxPerMs?: number
   onUpdate?: OnUpdateCallback
 
   /**
@@ -31,6 +32,7 @@ export class Animate {
     if (!this.isRunning) return
 
     let completed = false
+    const previous = this.value
 
     if (this.duration && this.easing) {
       this.currentTime += deltaTime
@@ -49,6 +51,19 @@ export class Animate {
       // If no easing or lerp, just jump to the end value
       this.value = this.to
       completed = true
+    }
+
+    // The speed cap: the value moves no more than maxPxPerMs × elapsed
+    // per advance, whatever the lerp or the easing asked for. A capped
+    // frame is never the last one — the animation keeps running at the
+    // cap until it reaches its target.
+    if (this.maxPxPerMs && this.maxPxPerMs > 0) {
+      const maxStep = this.maxPxPerMs * deltaTime * 1000
+      const step = this.value - previous
+      if (Math.abs(step) > maxStep) {
+        this.value = previous + Math.sign(step) * maxStep
+        completed = false
+      }
     }
 
     if (completed) {
@@ -75,13 +90,14 @@ export class Animate {
   fromTo(
     from: number,
     to: number,
-    { lerp, duration, easing, onStart, onUpdate }: FromToOptions
+    { lerp, duration, easing, maxPxPerMs, onStart, onUpdate }: FromToOptions
   ) {
     this.from = this.value = from
     this.to = to
     this.lerp = lerp
     this.duration = duration
     this.easing = easing
+    this.maxPxPerMs = maxPxPerMs
     this.currentTime = 0
     this.isRunning = true
 

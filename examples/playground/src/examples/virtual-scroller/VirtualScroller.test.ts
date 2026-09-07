@@ -13,6 +13,8 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 [The copied text is the string the row renders](virtual-scroller.invariants.md#the-copied-text-is-the-string-the-row-renders)
 [The frame is never natively panned along its own axis](virtual-scroller.invariants.md#the-frame-is-never-natively-panned-along-its-own-axis)
 [WebKit re-rasterizes the layer on every autoscroll write](virtual-scroller.invariants.md#webkit-re-rasterizes-the-layer-on-every-autoscroll-write)
+[The feel is one nested prop complete at every depth](virtual-scroller.invariants.md#the-feel-is-one-nested-prop-complete-at-every-depth)
+// domain-invariant: $VirtualScroller — If a nested knob prop is read, then it is complete at every depth: a leaf the author supplied wins and every leaf left out is the tuned default, and Lenis is tuned from the same leaves.
 // domain-invariant: $VirtualScroller — If the props object is read, then it is the fusion of the static types and defaults: the required list carries no default and the creep knob unset reads as the tuned cadence.
 // domain-invariant: $VirtualScroller — If item i's position is asked, then it is the sum of the sizes before it, measured where known and the estimate elsewhere, whichever way the cursor walks there.
 // domain-invariant: $VirtualScroller — If a pixel offset is asked for its item, then anchoring that item at the returned fraction gives the same pixel back.
@@ -143,7 +145,10 @@ test('the props object fuses every default into the types, leaves the required l
   const props = VirtualScroller.Class.props;
   for (const [name, value] of Object.entries(VirtualScroller.Class.propsDefaults)) {
     if (value === undefined) continue;
-    expect(props[name as keyof typeof props]).toMatchObject({ default: value });
+    const declared = props[name as keyof typeof props] as { default: unknown };
+    // An object default is a factory — Vue's rule — and yields a fresh copy.
+    const resolved = typeof declared.default === 'function' ? declared.default() : declared.default;
+    expect(resolved).toEqual(value);
   }
   expect(props.modelValue).toMatchObject({ required: true });
   expect(props.modelValue).not.toHaveProperty('default');
@@ -153,6 +158,34 @@ test('the props object fuses every default into the types, leaves the required l
   expect(tuned.instance.probeCreepMsPerPx()).toBe(150);
   const set = scroller(rows(3), { creepMsPerPx: 20 });
   expect(set.instance.probeCreepMsPerPx()).toBe(20);
+  tuned.unmount();
+  set.unmount();
+});
+
+// domain-invariant: $VirtualScroller — If a nested knob prop is read, then it is complete at every depth: a leaf the author supplied wins and every leaf left out is the tuned default, and Lenis is tuned from the same leaves.
+// invariant: The feel is one nested prop complete at every depth (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a nested knob left out reads as its tuned default at every depth, a supplied leaf wins, and Lenis reads the merged leaves', () => {
+  const tuned = scroller(rows(3));
+  expect(tuned.instance.props.scroll).toEqual(VirtualScroller.Class.SCROLL_KNOBS);
+  expect(tuned.instance.autoscrollProfiles.mouse.zonePx).toBe(32);
+  const set = scroller(rows(3), {
+    scroll: { wheel: { gain: 2 } },
+    selection: { autoscroll: { touch: { rampMs: 1500 } } }
+  });
+  expect(set.instance.props.scroll.wheel).toEqual({ gain: 2, follow: 0.1, maxPxPerMs: 0 });
+  expect(set.instance.props.scroll.touch.inertia).toBe(30);
+  expect(set.instance.autoscrollProfiles.touch.rampMs).toBe(1500);
+  expect(set.instance.autoscrollProfiles.touch.zonePx).toBe(96);
+  expect(set.instance.autoscrollProfiles.mouse.rampMs).toBe(0);
+  expect(set.instance.lenisMotion).toEqual({
+    wheelMultiplier: 2,
+    lerp: 0.1,
+    wheelMaxPxPerMs: 0,
+    touchMultiplier: 1.3,
+    syncTouchLerp: 0.1,
+    touchInertiaMultiplier: 30,
+    touchMaxPxPerMs: 0
+  });
   tuned.unmount();
   set.unmount();
 });

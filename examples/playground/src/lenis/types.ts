@@ -10,6 +10,11 @@ export type FromToOptions = {
    */
   lerp?: number
   /**
+   * The most the value may move per millisecond; 0 is uncapped
+   * @default 0
+   */
+  maxPxPerMs?: number
+  /**
    * The duration of the scroll animation (in s)
    * @default 1
    */
@@ -179,6 +184,16 @@ export type LenisOptions = {
    * @default 1
    */
   wheelMultiplier?: number
+  /**
+   * The fastest a wheel scroll may move the content, in px per ms; 0 is uncapped
+   * @default 0
+   */
+  wheelMaxPxPerMs?: number
+  /**
+   * The fastest a touch scroll or flick may move the content, in px per ms; 0 is uncapped
+   * @default 0
+   */
+  touchMaxPxPerMs?: number
   /**
    * Resize instance automatically
    * @default true

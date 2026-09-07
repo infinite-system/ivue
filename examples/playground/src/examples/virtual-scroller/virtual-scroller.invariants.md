@@ -54,6 +54,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 - [A finger's drag paints without selecting](#a-fingers-drag-paints-without-selecting) — why iOS does not take the touch away mid-drag.
 - [WebKit re-rasterizes the layer on every autoscroll write](#webkit-re-rasterizes-the-layer-on-every-autoscroll-write) — why rows that mount under a held finger are not blank on iOS.
 - [On a touch device the selection is drawn by the class](#on-a-touch-device-the-selection-is-drawn-by-the-class) — why a phone never enters the system's selection mode at all.
+- [The feel is one nested prop complete at every depth](#the-feel-is-one-nested-prop-complete-at-every-depth) — why a page tunes one leaf and the rest stays tuned.
 
 **Mechanism:** The prefix-sum cursor turns an estimate plus a sparse map of measured sizes into positions in O(distance); the window walk mounts the rows the container covers plus the pad and reduces everything else to two spacers; the clamp and the rebase make the rendered numbers safe before Lenis writes them; the hosted capabilities add selection, touch and adaptive padding through owner interfaces of a handful of members, so each is a class with its own statics, its own spec and its own reason to exist.
 
@@ -549,19 +550,19 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### A drag scrolls from inside the edge zone
 
-**Invariant:** If a selecting pointer, mouse or finger, comes within its input's zone of the frame's start or end edge along the axis, then the list scrolls that way on that input's cadence: a pointer's (`AUTOSCROLL_MOUSE`, a 32 px zone, the speed rising on past the edge to full 160 px beyond it, since a pointer is small and can leave the frame) or a finger's (`AUTOSCROLL_TOUCH`, a 96 px zone, a light 0.06 px/ms at its inner boundary, full speed a fingertip before the edge and held from there on, since a finger cannot rest on the edge — past it is the page, its own text and its zoom); and the focus follows the rows sliding under the pointer; in the interior nothing scrolls. If a native selection handle drags the selection's end into that zone, then the list scrolls under the handle the same way while the system keeps re-selecting beneath it, and stops when the end leaves the zone or the changes stop.
+**Invariant:** If a selecting pointer, mouse or finger, comes within its input's zone of the frame's start or end edge along the axis — the VISIBLE edge, the frame's clipped to the viewport, since a frame taller than the screen has an edge no finger can reach — then the list scrolls that way on that input's cadence: a pointer's (`AUTOSCROLL_MOUSE`, a 32 px zone, the speed rising on past the edge to full 160 px beyond it, since a pointer is small and can leave the frame) or a finger's (`AUTOSCROLL_TOUCH`, a 96 px zone, a light 0.06 px/ms at its inner boundary, full speed a fingertip before the edge and held from there on, since a finger cannot rest on the edge — past it is the page, its own text and its zoom), each profile the scroller's `selection.autoscroll` knob, and where a profile's `rampMs` is above zero, holding in the zone lifts the speed from its depth floor to the maximum over that long, the clock restarting when the direction flips; and the focus follows the rows sliding under the pointer; in the interior nothing scrolls. If a native selection handle drags the selection's end into that zone, then the list scrolls under the handle the same way while the system keeps re-selecting beneath it, and stops when the end leaves the zone or the changes stop.
 
-**Scope:** `VirtualScrollerSelection.ts`: `edgePenetration`, `probePoint`, `extendTo`, `autoscrollStep`, the `AUTOSCROLL_MOUSE` and `AUTOSCROLL_TOUCH` profiles and `autoscrollProfile`; `followHandle`, `handleAutoscrollStep`, `HANDLE_SETTLE_MS` for the native handle path; both axes; mouse, finger and system handle.
+**Scope:** `VirtualScrollerSelection.ts`: `edgePenetration`, `visibleAxisEdges`, `probePoint`, `extendTo`, `autoscrollStep`, `autoscrollSpeed`, `heldInZone`, the `AUTOSCROLL_MOUSE` and `AUTOSCROLL_TOUCH` profiles as the defaults of the owner's `autoscrollProfiles`, and `autoscrollProfile`; `followHandle`, `handleAutoscrollStep`, `HANDLE_SETTLE_MS` for the native handle path; both axes; mouse, finger and system handle.
 
-**Mechanism:** `edgePenetration` is signed and continuous from the zone's inner boundary through the edge and beyond, so one ramp serves both; `probePoint` probes at the pointer while it is inside the frame and at the edge once it has left. A rule that scrolled only past the edge could never scroll a frame with no outside — a scroller that is the whole page. A handle drag reaches the class only as `selectionchange`: `followHandle` measures the moving end's caret rect, and while it sits in the zone `handleAutoscrollStep` scrolls under it without re-pinning the native selection (the system owns it; `applyHighlight` stands down), each adopted change keeping the loop alive.
+**Mechanism:** `edgePenetration` is signed and continuous from the zone's inner boundary through the edge and beyond, so one ramp serves both, and measures from `visibleAxisEdges`; `autoscrollSpeed` takes the depth floor and, with `heldInZone`'s clock, the hold ramp; `probePoint` probes at the pointer while it is inside the frame and at the edge once it has left. A rule that scrolled only past the edge could never scroll a frame with no outside — a scroller that is the whole page. A handle drag reaches the class only as `selectionchange`: `followHandle` measures the moving end's caret rect, and while it sits in the zone `handleAutoscrollStep` scrolls under it without re-pinning the native selection (the system owns it; `applyHighlight` stands down), each adopted change keeping the loop alive.
 
 **Rejected alternatives:** Scrolling only past the edge — a page-sized frame never scrolls a selection, up or down.
 
-**Evidence:** `VirtualScrollerSelection.ts` `edgePenetration`. Tests: "holding the pointer inside the edge zone scrolls forward at a crawl, past the frame faster, above it backward, and returning to the interior stops it", "a frame the size of the page still scrolls a selection: the zone lies inside the frame, so a pointer never has to leave it".
+**Evidence:** `VirtualScrollerSelection.ts` `edgePenetration`. Tests: "holding the pointer inside the edge zone scrolls forward at a crawl, past the frame faster, above it backward, and returning to the interior stops it", "a frame the size of the page still scrolls a selection: the zone lies inside the frame, so a pointer never has to leave it", "holding in the zone lifts the speed toward the maximum over rampMs, the hold clock restarts when the direction flips, and rampMs 0 ignores the hold", "a frame taller than the screen has its zones at the screen's edges, where a finger can reach them".
 
-**Impossible if true:** A selection drag held 10 px from the frame's bottom edge that does not scroll.
+**Impossible if true:** A selection drag held 10 px from the frame's bottom edge that does not scroll. A finger at the top of the screen, over a frame that runs above it, that does not scroll up.
 
-**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts -t "edge zone|size of the page"`
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts -t "edge zone|size of the page|rampMs|taller than the screen"`
 
 **Status:** provisional
 
@@ -627,7 +628,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### On a touch device the selection is drawn by the class
 
-**Invariant:** If the device has a touch point, then a finger never creates a native selection: the rows are non-selectable for as long as a finger is down, a range a finger made is painted by `VirtualScrollerSelectionTouchCustom` as boxes from the mounted DOM range's client rects, each clipped to the frame, laid inside the items wrapper, two handles of its own sit beside the range's ends, a handle drag begins at once from the other end through `beginFromEnd`; selected text is no different from any other — a swipe over it scrolls, a tap on it clears, a long press extends it; a mouse on the same device keeps the native selection and Ctrl+C; on a device with no touch point the class is inert and the native selection paints as before.
+**Invariant:** If the device has a touch point, then a finger never creates a native selection: the rows are non-selectable for as long as a finger is down, a range a finger made is painted by `VirtualScrollerSelectionTouchCustom` as boxes from the mounted DOM range's client rects, each clipped to the frame, laid inside the items wrapper, two handles of its own sit beside the range's ends — an end that lies off-screen keeps its handle pinned whole just inside the visible edge, so a range that runs off-screen is still grabbable there, and a grab there is already in the zone — a handle drag begins at once from the other end through `beginFromEnd`; selected text is no different from any other — a swipe over it scrolls, a tap on it clears, a long press extends it; a mouse on the same device keeps the native selection and Ctrl+C; on a device with no touch point the class is inert and the native selection paints as before.
 
 **Scope:** `VirtualScrollerSelectionTouchCustom.ts` whole; `VirtualScrollerSelection.ts` `$touch`, `applyHighlight` (the `paintsSelection` branch), `visibleDomRange`, `beginFromEnd`, `itemsWrapperElement`; the overlay rules in `VirtualScroller.vue`. The earlier implementation, which rode the system's selection, stays in `VirtualScrollerSelectionTouch.ts` for rollback: swap the class in `$touch`.
 
@@ -671,6 +672,26 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Last refined:** 2026-09-06
 
+### The feel is one nested prop complete at every depth
+
+**Invariant:** If a page passes `scroll` or `selection` as a partial object at any depth, then the class reads a complete object: every leaf the page supplied, every leaf it left out the tuned default — `scroll.wheel` and `scroll.touch` each a gain, a follow (the lerp), a `maxPxPerMs` cap (0 uncapped; touch also an inertia), `selection.autoscroll.mouse` and `.touch` each an autoscroll profile — and Lenis is tuned from those leaves at mount and again whenever they change; the content never moves faster than its input's cap on a gesture, while a programmatic seek is uncapped.
+
+**Scope:** `VirtualScroller.ts`: the `scroll` and `selection` props, `SCROLL_KNOBS`, `selectionKnobs`, the constructor's `nestedProps` seam, `lenisMotion`, `tuneMotion`, `autoscrollProfiles`; `lenis.ts` `tune`, `wheelMaxPxPerMs`, `touchMaxPxPerMs`, `lastInputTouch`; `animate.ts` `maxPxPerMs`; `virtual-scroll.ts` `tune`; `ivue/extras` `nestedProps`.
+
+**Mechanism:** Vue resolves a prop's default only when the prop is absent, so a supplied object arrives exactly as passed and its missing leaves are gone; the fill is possible because the defaults are a value the class owns (`propsDefaults`), where a compiler-only default has nothing to fill from. `nestedProps(props, propsDefaults)` fills in place — lodash's `defaultsDeep` with arrays taken whole: for every prop whose value and default are both plain objects, each leaf the supplied object lacks is written into it from the default, recursively, and a leaf it has is kept; Vue's props proxy is shallow, so the nested objects are the parent's own and are written directly, the props object itself untouched and returned typed complete. The parent passes a stable object (a constant inline literal is hoisted by Vue's compiler; a ref's value; a store field). `lenisMotion` derives Lenis's vocabulary from the merged leaves; the mount passes it and a watch over it calls `tune`. The cap lives in `Animate.advance`: a frame moves the value no more than the cap times the elapsed time and is never the last frame, so the lerp keeps running at the cap until it arrives; Lenis picks the cap by the last gesture's input and passes none for a programmatic scroll.
+
+**Rejected alternatives:** Merging in a getter per read — the class should read complete props, not merge them. A Proxy or a getter-per-key view over the props — machinery to do what a fill does, bought for the one case a fill does not cover (an object built anew on every parent render), which the stable-object rule covers instead. Lodash `mergeWith` with an array customizer — the same semantics (verified case for case), but `ivue/extras` carries no dependency; an app that has lodash may use it as well.
+
+**Evidence:** Tests: "a nested knob left out reads as its tuned default at every depth, a supplied leaf wins, and Lenis reads the merged leaves" (`VirtualScroller.test.ts`), "a capped lerp moves at most cap × elapsed per frame, keeps running while capped, and still arrives" (`../../lenis/animate.test.ts`), `lib/__tests__/nestedProps.vitest.spec.ts`.
+
+**Impossible if true:** A page passing `{ wheel: { gain: 2 } }` and losing the touch defaults. A wheel scroll under a cap that jumps further in one frame than the cap allows.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "nested knob"` and `npx vitest run examples/playground/src/lenis/animate.test.ts`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-06
+
 ## Impossibility boundary — what these invariants forbid
 
 - Blank canvas under the viewport during a flick whose gap is below the cap — [The pad covers the lerp gap exactly](#the-pad-covers-the-lerp-gap-exactly).
@@ -686,3 +707,4 @@ tier each record is proven at, and how the colocated tests bind to it.
 - The frame's scrollTop moving under a touch selection — [The frame is never natively panned along its own axis](#the-frame-is-never-natively-panned-along-its-own-axis).
 - A native selection changing under a held finger — [A finger's drag paints without selecting](#a-fingers-drag-paints-without-selecting).
 - A native selection created by a touch — [On a touch device the selection is drawn by the class](#on-a-touch-device-the-selection-is-drawn-by-the-class).
+- A partial knob object that drops the defaults beside it — [The feel is one nested prop complete at every depth](#the-feel-is-one-nested-prop-complete-at-every-depth).

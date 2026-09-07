@@ -45,6 +45,11 @@ export class Lenis {
    */
   isTouching?: boolean;
   /**
+   * Whether the last gesture was a touch — it picks which speed cap a
+   * gesture-driven scroll runs under, a flick's inertia included
+   */
+  lastInputTouch = false;
+  /**
    * The time in ms since the lenis instance was created
    */
   time = 0;
@@ -111,6 +116,8 @@ export class Lenis {
     ignoreNativeScroll = false, // fully-virtual mode: never adopt native scroll
     touchMultiplier = 1,
     wheelMultiplier = 1,
+    wheelMaxPxPerMs = 0,
+    touchMaxPxPerMs = 0,
     autoResize = true,
     prevent,
     virtualScroll,
@@ -154,6 +161,8 @@ export class Lenis {
       orientation,
       touchMultiplier,
       wheelMultiplier,
+      wheelMaxPxPerMs,
+      touchMaxPxPerMs,
       autoResize,
       prevent,
       virtualScroll,
@@ -531,6 +540,7 @@ export class Lenis {
 
     event.preventDefault();
 
+    this.lastInputTouch = isTouch;
     const isSyncTouch = isTouch && this.options.syncTouch;
     const isTouchEnd = isTouch && event.type === 'touchend';
 
@@ -554,6 +564,31 @@ export class Lenis {
           })
     });
   };
+
+  /**
+   * Re-tune the motion options after construction: the gains, the lerps,
+   * the flick inertia and the speed caps. Anything omitted is unchanged.
+   */
+  tune(
+    options: Partial<
+      Pick<
+        LenisOptions,
+        | 'wheelMultiplier'
+        | 'touchMultiplier'
+        | 'lerp'
+        | 'syncTouchLerp'
+        | 'touchInertiaMultiplier'
+        | 'wheelMaxPxPerMs'
+        | 'touchMaxPxPerMs'
+      >
+    >
+  ) {
+    Object.assign(this.options, options);
+    this.virtualScroll.tune({
+      ...(options.wheelMultiplier !== undefined && { wheelMultiplier: options.wheelMultiplier }),
+      ...(options.touchMultiplier !== undefined && { touchMultiplier: options.touchMultiplier })
+    });
+  }
 
   /**
    * Force lenis to recalculate the dimensions
@@ -783,10 +818,18 @@ export class Lenis {
       duration = 1;
     }
 
+    // A gesture's scroll runs under its input's speed cap; a programmatic
+    // seek is uncapped — it is asked for by name and lands where it says.
+    const maxPxPerMs = programmatic
+      ? 0
+      : this.lastInputTouch
+        ? this.options.touchMaxPxPerMs
+        : this.options.wheelMaxPxPerMs;
     this.animate.fromTo(this.animatedScroll, target, {
       duration,
       easing,
       lerp,
+      maxPxPerMs,
       onStart: () => {
         // started
         if (lock) this.isLocked = true;

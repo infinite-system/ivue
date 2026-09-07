@@ -121,6 +121,62 @@ once where it can be typed, reused, and read.
   compiler macro, so the same model runs under a template, a render
   function, or a Vapor template.
 
+## Nested defaults, complete at every depth
+
+A knobs prop is an object with objects inside: a wheel's gain, follow
+and cap; a finger's gain, follow, inertia and cap. A page should be
+able to set one leaf and keep the rest tuned. Vue does not do that.
+It resolves a default only when the prop is absent, so a page passing
+`{ wheel: { gain: 2 } }` hands the component exactly that object, and
+the touch defaults are gone.
+
+The fill is possible here because the defaults are a value the class
+owns. `nestedProps`, from `ivue/extras`, fills the props from them at
+the seam where props enter the class, once:
+
+```ts
+import { nestedProps, type NestedPartial } from 'ivue/extras';
+
+class $Scroller {
+  static get propsTypes() {
+    return definePropTypes({
+      scroll: { type: Object as PropType<NestedPartial<Scroller.ScrollKnobs>> },
+    });
+  }
+
+  static get propsDefaults() {
+    return { scroll: this.SCROLL_KNOBS };
+  }
+
+  props: Scroller.MergedProps;
+
+  constructor(props: Scroller.Props) {
+    this.props = nestedProps(props, this.self.propsDefaults);
+  }
+}
+```
+
+The class then reads `this.props.scroll.wheel.follow` and it is
+always there. The fill is in place, the semantics lodash's
+`defaultsDeep` with arrays taken whole: for every prop whose value and
+default are both plain objects, each leaf the supplied object lacks is
+written into it from the default, recursively, and a leaf it has is
+kept. Arrays, class instances and functions are never merged; whichever
+side supplies one, it is taken whole. Vue's props proxy is shallow, so
+the nested objects are the parent's own and are written directly; the
+props object itself is untouched and returned. `NestedPartial<T>` is
+the type a page may pass, and `NestedProps<P, D>` the type the class
+reads.
+
+The parent passes a stable object: a constant inline literal, which
+Vue's compiler hoists, a `ref`'s value, or a store field. An object
+built anew on every parent render arrives unfilled each time.
+
+A `withDefaults(defineProps<…>())` component cannot do this. Its
+defaults exist only inside the compiler and never reach runtime, so
+there is nothing to merge from. The [virtual scroller](/examples/virtual-scroller#tuning-the-feel)
+is the worked example.
+
 ## Where type-based props still belong
 
 Vue chose the type-based form for the architecture it assumed: the SFC

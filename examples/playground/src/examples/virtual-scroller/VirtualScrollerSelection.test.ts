@@ -11,6 +11,8 @@ Goal: Hold a text selection over a virtual list as a range over the DATA, so the
 [A native selection inside the frame is adopted as the logical range](virtual-scroller.invariants.md#a-native-selection-inside-the-frame-is-adopted-as-the-logical-range)
 [A finger's drag paints without selecting](virtual-scroller.invariants.md#a-fingers-drag-paints-without-selecting)
 [On a touch device the selection is drawn by the class](virtual-scroller.invariants.md#on-a-touch-device-the-selection-is-drawn-by-the-class)
+// domain-invariant: $VirtualScrollerSelection — If a profile's rampMs is above zero, then holding in the zone lifts the speed from its depth floor to the maximum over that long, the clock restarting when the direction flips; at zero the hold changes nothing.
+// domain-invariant: $VirtualScrollerSelection — If the frame runs past the viewport, then the zone sits inside the visible part of the frame, so a pointer at the screen's edge is in the zone.
 // domain-invariant: $VirtualScrollerSelection — If anchor and focus are given in either order, then the range is the same, and a range whose ends coincide is no selection.
 // domain-invariant: $VirtualScrollerSelection — If a range is clamped to the mounted window, then an end that scrolled out is pinned to the boundary row, and a range wholly outside the window is null.
 // domain-invariant: $VirtualScrollerSelection — If a point is over a row, then the position is that row at the caret's offset; in a gap it is the nearest row along the axis, at its start before it and its end after; over nothing it is null.
@@ -123,6 +125,10 @@ function owner(stage: Stage, join = '\n') {
     selectionAxis: 'y' as const,
     selectionJoin: join,
     creepFactor: 1,
+    autoscrollProfiles: {
+      mouse: Logic.AUTOSCROLL_MOUSE,
+      touch: Logic.AUTOSCROLL_TOUCH
+    },
     rowText,
     scrollBy: vi.fn(),
     nudgePaint: vi.fn(),
@@ -432,6 +438,44 @@ test('holding the pointer inside the edge zone scrolls forward at a crawl, past 
   frames.shift()!(1050.1);
   expect(owner.scrollBy.mock.calls.length).toBe(calls);
   instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelection — If a profile's rampMs is above zero, then holding in the zone lifts the speed from its depth floor to the maximum over that long, the clock restarting when the direction flips; at zero the hold changes nothing.
+// invariant: A drag scrolls from inside the edge zone (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('holding in the zone lifts the speed toward the maximum over rampMs, the hold clock restarts when the direction flips, and rampMs 0 ignores the hold', () => {
+  const mouse = Logic.AUTOSCROLL_MOUSE;
+  const ramped = { ...mouse, rampMs: 1000 };
+  const floor = mouse.minPxPerMs;
+  expect(Logic.autoscrollSpeed(0, 1, ramped, 0)).toBe(floor);
+  expect(Logic.autoscrollSpeed(0, 1, ramped, 500)).toBeCloseTo(floor + (mouse.maxPxPerMs - floor) / 2, 6);
+  expect(Logic.autoscrollSpeed(0, 1, ramped, 1000)).toBeCloseTo(mouse.maxPxPerMs, 6);
+  expect(Logic.autoscrollSpeed(0, 1, ramped, 5000)).toBeCloseTo(mouse.maxPxPerMs, 6);
+  // Depth still sets the floor the hold lifts from.
+  expect(Logic.autoscrollSpeed(mouse.zonePx, 1, ramped, 500)).toBeGreaterThan(
+    Logic.autoscrollSpeed(0, 1, ramped, 500)
+  );
+  // Off at 0: the hold changes nothing.
+  expect(Logic.autoscrollSpeed(0, 1, mouse, 5000)).toBe(floor);
+  // The hold clock: starts on entry, runs while the direction holds, restarts on a flip.
+  const hold = { since: null as number | null, sign: 0 };
+  expect(Logic.heldInZone(hold, 10, 1000)).toBe(0);
+  expect(Logic.heldInZone(hold, 30, 1400)).toBe(400);
+  expect(Logic.heldInZone(hold, -30, 1500)).toBe(0);
+  expect(Logic.heldInZone(hold, -5, 1800)).toBe(300);
+});
+
+// domain-invariant: $VirtualScrollerSelection — If the frame runs past the viewport, then the zone sits inside the visible part of the frame, so a pointer at the screen's edge is in the zone.
+// invariant: A drag scrolls from inside the edge zone (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a frame taller than the screen has its zones at the screen’s edges, where a finger can reach them', () => {
+  const { dom } = selection(0, 5);
+  const tall = { left: 0, top: -500, right: 800, bottom: 2000, width: 800, height: 2500 } as DOMRect;
+  dom.frame.getBoundingClientRect = () => tall;
+  const mouse = Logic.AUTOSCROLL_MOUSE;
+  expect(Logic.visibleAxisEdges(dom.frame, 'y')).toEqual([0, window.innerHeight]);
+  // At the frame's true top edge the pointer would be off-screen; at the screen's it is in the zone.
+  expect(Logic.edgePenetration(dom.frame, 60, 10, 'y', mouse)).toBeLessThan(0);
+  expect(Logic.edgePenetration(dom.frame, 60, window.innerHeight - 10, 'y', mouse)).toBeGreaterThan(0);
+  expect(Logic.edgePenetration(dom.frame, 60, window.innerHeight / 2, 'y', mouse)).toBe(0);
 });
 
 // invariant: A drag scrolls from inside the edge zone (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)

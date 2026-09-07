@@ -176,6 +176,52 @@ static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults
 }
 ```
 
+## Tuning the feel
+
+Two props carry every knob, as nested objects. A page sets the leaf it
+cares about and everything else keeps the tuned default, at any depth
+(the mechanism is [`nestedProps`](/guide/props-and-defaults#nested-defaults-complete-at-every-depth)):
+
+```vue
+<template>
+  <VirtualScroller
+    v-model="items"
+    :scroll="{ wheel: { gain: 1.6, maxPxPerMs: 6 } }"
+    :selection="{ autoscroll: { touch: { rampMs: 1500 } } }"
+  />
+</template>
+```
+
+The full layout, with the tuned defaults:
+
+```json
+{
+  "scroll": {
+    "wheel": { "gain": 1,   "follow": 0.1, "maxPxPerMs": 0 },
+    "touch": { "gain": 1.3, "follow": 0.1, "inertia": 30, "maxPxPerMs": 0 }
+  },
+  "selection": {
+    "autoscroll": {
+      "mouse": { "zonePx": 32, "restPx": 0,  "reachPx": 160, "minPxPerMs": 0.15, "maxPxPerMs": 2,   "rampMs": 0 },
+      "touch": { "zonePx": 96, "restPx": 24, "reachPx": 0,   "minPxPerMs": 0.06, "maxPxPerMs": 0.9, "rampMs": 0 }
+    }
+  }
+}
+```
+
+- **`gain`** is how far one wheel notch or one finger pixel moves the
+  content. **`follow`** is how fast the transform chases its target,
+  higher is snappier. **`inertia`** is how far a flick carries.
+  **`maxPxPerMs`** caps the speed of any gesture, 0 is uncapped; a
+  seek by name is never capped.
+- **`autoscroll`** is the drag-to-select cadence per input: the zone
+  inside each edge where scrolling begins, the band at the edge where
+  the speed stops changing, how far past the edge it may keep rising,
+  the two speeds, and **`rampMs`**, which lifts the speed toward the
+  maximum the longer the pointer holds in the zone. 0 is off.
+
+The knobs are live: change a leaf and the mounted scroller re-tunes.
+
 ## A book as one scrolling line
 
 The same machinery, pointed at text: a **marquee** that scrolls a

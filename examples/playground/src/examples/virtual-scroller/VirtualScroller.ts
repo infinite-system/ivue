@@ -21,6 +21,7 @@ import {
   type ReactiveInstance
 } from '../../ivue';
 import { Lenis } from '../../lenis/lenis';
+import { nestedProps, type NestedPartial, type NestedProps } from '../../nestedProps';
 import { Static } from '../../Static';
 import { VirtualScrollerPadding } from './VirtualScrollerPadding';
 import { VirtualScrollerSelection } from './VirtualScrollerSelection';
@@ -87,6 +88,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       /** Autoplay creep speed: ms of wall time per px. No default on purpose —
        *  unset falls back to the tuned reading cadence (see creepMsPerPx). */
       creepMsPerPx: { type: Number as PropType<number> },
+      /** The motion knobs — the wheel's and the finger's gain, follow,
+       *  inertia and speed cap. A partial object at any depth: whatever is
+       *  left out keeps the tuned default (see SCROLL_KNOBS). */
+      scroll: { type: Object as PropType<NestedPartial<VirtualScroller.ScrollKnobs>> },
+      /** The selection knobs — a pointer's and a finger's drag autoscroll
+       *  cadence. A partial object at any depth (see selectionKnobs). */
+      selection: { type: Object as PropType<NestedPartial<VirtualScroller.SelectionKnobs>> },
       /** Accepted for API compatibility; the docs build renders the plain branch. */
       draggable: { type: Boolean as PropType<boolean> },
       /** The text an item contributes to a copied selection when its row is
@@ -121,6 +129,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       assumedSize: 30,
       paddingQuantity: 6,
       creepMsPerPx: undefined, // no default ON PURPOSE — see the comment above
+      scroll: this.SCROLL_KNOBS,
+      selection: this.selectionKnobs,
       // mounted rows read their own text; the data fallback is body, then id
       selectionText: undefined,
       selectionJoin: '\n',
@@ -193,10 +203,29 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  cadence (1px per 150ms tick ≈ 6.7px/s), now integrated per FRAME. */
   protected static readonly CREEP_MS_PER_PX = 150;
 
-  constructor(
-    public props: VirtualScroller.Props<T>,
-    public emit: VirtualScroller.Emits
-  ) {
+  /** The tuned motion: how far a wheel notch or a finger's pixel moves the
+   *  content (gain), how fast the transform chases its target (follow —
+   *  the lerp, higher is snappier), how far a flick carries (inertia), and
+   *  the fastest the content may move (maxPxPerMs; 0 is uncapped). */
+  static get SCROLL_KNOBS(): VirtualScroller.ScrollKnobs {
+    return {
+      wheel: { gain: 1, follow: 0.1, maxPxPerMs: 0 },
+      touch: { gain: 1.3, follow: 0.1, inertia: 30, maxPxPerMs: 0 }
+    };
+  }
+
+  /** The tuned selection cadences — the selection class's own profiles. */
+  static get selectionKnobs(): VirtualScroller.SelectionKnobs {
+    return {
+      autoscroll: {
+        mouse: VirtualScrollerSelection.Class.AUTOSCROLL_MOUSE,
+        touch: VirtualScrollerSelection.Class.AUTOSCROLL_TOUCH
+      }
+    };
+  }
+
+  constructor(props: VirtualScroller.Props<T>, public emit: VirtualScroller.Emits) {
+    this.props = nestedProps(props, this.self.propsDefaults as VirtualScroller.KnobDefaults);
     this.elementSize = useElementSize(this.scrollElement);
     this.outerElementSize = useElementSize(this.scrollElement, undefined, {
       box: 'border-box'
@@ -236,11 +265,14 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
         syncTouch: true, // Sync touch events
         smoothWheel: true,
         autoRaf: false, // we drive it ourselves
-        syncTouchLerp: 0.1,
-        touchInertiaMultiplier: 30,
-        touchMultiplier: 1.3 // Sensitivity of touch scrolling
+        ...this.lenisMotion
       });
       this.lenis.on('virtual-scroll', this.onVirtualScroll);
+      // The motion knobs are live: a page re-tuning them re-tunes Lenis.
+      watch(
+        () => this.lenisMotion,
+        (motion) => this.tuneMotion(motion)
+      );
 
       // Gesture-axis lock (touch). Lenis only refuses a gesture whose
       // cross-axis delta is EXACTLY zero, and a finger swiping down a
@@ -293,6 +325,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   /* Template refs */
+
+  /** The props, complete at every depth: a nested knob an author leaves
+   *  out reads as its tuned default (see nestedProps). */
+  public props: VirtualScroller.MergedProps<T>;
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
@@ -459,6 +495,26 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  faster drag. */
   get creepFactor() {
     return this.self.CREEP_MS_PER_PX / this.creepMsPerPx;
+  }
+
+  /** The motion knobs as Lenis reads them — one object, so a watch over
+   *  it sees every leaf. */
+  get lenisMotion() {
+    const { wheel, touch } = this.props.scroll;
+    return {
+      wheelMultiplier: wheel.gain,
+      lerp: wheel.follow,
+      wheelMaxPxPerMs: wheel.maxPxPerMs,
+      touchMultiplier: touch.gain,
+      syncTouchLerp: touch.follow,
+      touchInertiaMultiplier: touch.inertia,
+      touchMaxPxPerMs: touch.maxPxPerMs
+    };
+  }
+
+  /** The two drag autoscroll cadences the selection scrolls with. */
+  get autoscrollProfiles() {
+    return this.props.selection.autoscroll;
   }
 
   /** Reactive autoplay state — true while the reading creep is armed.
@@ -1733,6 +1789,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return typeof body === 'string' ? body : String(item.id);
   }
 
+  /** Re-tune the mounted Lenis with the motion knobs as they change. */
+  tuneMotion(motion: VirtualScroller.LenisMotion) {
+    this.lenis?.tune(motion);
+  }
+
   /** Scroll by a signed delta along the axis, immediately — the edge
    *  autoscroll's step. It writes lenis's target directly, so an upward
    *  drag is a scroll up, never mistaken for the reader taking over. */
@@ -1827,6 +1888,32 @@ export namespace VirtualScroller {
   > & {
     modelValue: T[];
   };
+
+  /** The props as the class reads them: the nested knobs complete. */
+  export type MergedProps<T extends BaseItem> = NestedProps<Props<T>, KnobDefaults>;
+
+  /** The motion knobs in Lenis's vocabulary. */
+  export type LenisMotion = $VirtualScroller<BaseItem>['lenisMotion'];
+
+  /** The knob defaults' full shape — what a partial prop is completed from. */
+  export interface KnobDefaults {
+    scroll: ScrollKnobs;
+    selection: SelectionKnobs;
+  }
+
+  /** The motion knobs, per input. */
+  export interface ScrollKnobs {
+    wheel: { gain: number; follow: number; maxPxPerMs: number };
+    touch: { gain: number; follow: number; inertia: number; maxPxPerMs: number };
+  }
+
+  /** The selection knobs: a pointer's and a finger's autoscroll cadence. */
+  export interface SelectionKnobs {
+    autoscroll: {
+      mouse: VirtualScrollerSelection.AutoscrollProfile;
+      touch: VirtualScrollerSelection.AutoscrollProfile;
+    };
+  }
 
   export type Emits = ExtractEmitTypes<typeof $Class.emits>;
 

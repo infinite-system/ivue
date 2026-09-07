@@ -297,7 +297,12 @@ there.
   constants are plain static getters too — live knobs a subclass or test
   double overrides; the `$` prefix stays reserved for compute-once caches.
   Types and defaults stay two members ON PURPOSE: a variant re-tunes
-  defaults without re-typing.
+  defaults without re-typing. A nested object prop (a knobs tree) is
+  filled from the defaults at every depth with `nestedProps(props,
+  this.self.propsDefaults)` from `ivue/extras`, once, in the
+  constructor (in place — lodash's `defaultsDeep` with arrays taken
+  whole); the class reads complete props and never merges in a getter.
+  Vue itself never merges a supplied object with its default.
 - **Identity (namespace)** — `$Class` (raw, for children to extend),
   `Class` (`Reactive()`, for you to `new`), `Instance` (and `Model` when
   used).
