@@ -384,9 +384,20 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return 8;
   }
 
+  /** How much the cross-axis delta must exceed the own-axis delta for a
+   *  touch to be the page's. One sample decides — Android delivers the
+   *  first touchmove only past its own slop, already several px along a
+   *  noisy direction — so a merely diagonal start stays ours. */
+  protected get crossAxisBias(): number {
+    return 1.5;
+  }
+
   /** The axis this scroller answers to — cross-axis gestures are the
-   *  page's. A 'both' gesture orientation claims everything. */
+   *  page's. A 'both' gesture orientation claims everything, and so does
+   *  a frame whose touch-action is none: the browser has no cross-axis
+   *  gesture to run over it, so handing one over would only kill it. */
   protected get gestureOwnAxis(): 'x' | 'y' | null {
+    if (this.frameTouchAction === 'none') return null;
     if (this.lenisGestureOrientation === 'horizontal') return 'x';
     if (this.lenisGestureOrientation === 'vertical') return 'y';
     return null;
@@ -814,7 +825,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       const deltaX = Math.abs(touch.clientX - this.gestureOrigin.x);
       const deltaY = Math.abs(touch.clientY - this.gestureOrigin.y);
       if (Math.max(deltaX, deltaY) < this.gestureAxisThresholdPx) return;
-      this.gestureAxis = deltaX > deltaY ? 'x' : 'y';
+      const bias = this.crossAxisBias;
+      const clearlyX = deltaX > deltaY * bias;
+      const clearlyY = deltaY > deltaX * bias;
+      this.gestureAxis = clearlyX ? 'x' : clearlyY ? 'y' : ownAxis;
     }
     // a cross-axis gesture belongs to the page: lenis skips any event
     // carrying this flag, so its preventDefault never runs

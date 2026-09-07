@@ -127,5 +127,13 @@ test('a horizontal strip flags a downward touch for the page and keeps a sideway
   const sideways = touch(140, 104);
   instance.onTouchMoveCapture(sideways);
   expect(sideways.lenisStopPropagation).toBeUndefined();
+
+  // A merely diagonal start is ours: one noisy sample decides, and only a
+  // clearly downward one — past the bias — is the page's.
+  instance.onTouchEndCapture();
+  instance.onTouchStartCapture(touch(100, 100));
+  const diagonal = touch(112, 114);
+  instance.onTouchMoveCapture(diagonal);
+  expect(diagonal.lenisStopPropagation).toBeUndefined();
   unmount();
 });

@@ -474,26 +474,14 @@ test('shrinking the list re-derives the extent over what remains, prunes the mea
 });
 
 // invariant: A cross-axis touch belongs to the page (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-test('a vertical scroller flags a sideways touch for the page, keeps a downward one, and decides nothing under the threshold', () => {
+test('a vertical scroller claims every touch: its frame gives the browser no gesture, so there is nothing to hand to the page', () => {
   const { instance, unmount } = scroller(rows(3));
   instance.onTouchStartCapture(touch(100, 100));
-  const undecided = touch(103, 104);
-  instance.onTouchMoveCapture(undecided);
-  expect(undecided.lenisStopPropagation).toBeUndefined();
-
-  const sideways = touch(140, 104);
-  instance.onTouchMoveCapture(sideways);
-  expect(sideways.lenisStopPropagation).toBe(true);
-  // The axis is decided once per touch: a later move along y is still the page's.
-  const later = touch(140, 200);
-  instance.onTouchMoveCapture(later);
-  expect(later.lenisStopPropagation).toBe(true);
-
+  for (const move of [touch(103, 104), touch(140, 104), touch(140, 200)]) {
+    instance.onTouchMoveCapture(move);
+    expect(move.lenisStopPropagation).toBeUndefined();
+  }
   instance.onTouchEndCapture();
-  instance.onTouchStartCapture(touch(100, 100));
-  const downward = touch(104, 140);
-  instance.onTouchMoveCapture(downward);
-  expect(downward.lenisStopPropagation).toBeUndefined();
   unmount();
 });
 

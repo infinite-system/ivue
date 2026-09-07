@@ -316,17 +316,17 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### A cross-axis touch belongs to the page
 
-**Invariant:** If a touch moves past 8 px and its larger delta is on the axis the scroller does not own, then every later move of that touch is flagged `lenisStopPropagation` so Lenis never prevents the page's own scroll; a touch on the own axis is kept; under the threshold nothing is decided.
+**Invariant:** If a touch moves past 8 px and its cross-axis delta exceeds its own-axis delta by the bias (1.5×), then every later move of that touch is flagged `lenisStopPropagation` so Lenis never prevents the page's own scroll; a touch on the own axis, or merely diagonal, is kept; under the threshold nothing is decided; and a frame whose touch-action is `none` (the vertical scroller) claims every touch, since the browser has no cross-axis gesture to run over it and handing one over would only kill it.
 
-**Scope:** `VirtualScroller.ts` `onTouchStartCapture`, `onTouchMoveCapture`, `onTouchEndCapture`, `gestureOwnAxis`, `gestureAxisThresholdPx`; both axes.
+**Scope:** `VirtualScroller.ts` `onTouchStartCapture`, `onTouchMoveCapture`, `onTouchEndCapture`, `gestureOwnAxis`, `gestureAxisThresholdPx`, `crossAxisBias`; both axes.
 
-**Mechanism:** The capture-phase listeners decide the axis once per touch (Lenis binds on bubble) and mark cross-axis events with the flag Lenis already honours. A `'both'` gesture orientation claims everything.
+**Mechanism:** The capture-phase listeners decide the axis once per touch (Lenis binds on bubble) and mark cross-axis events with the flag Lenis already honours. One sample decides: Android delivers the first touchmove only past its own slop, already several px along a noisy direction, so without the bias a straight-enough second swipe mid-glide read as sideways and died — on the vertical scroller the touchstart had already frozen the glide, and the flagged swipe restarted nothing. A `'both'` gesture orientation claims everything.
 
 **Generates:** The horizontal strip's deltaX-only feel: a plain vertical wheel scrolls the page straight through.
 
 **Rejected alternatives:** Lenis's own check — it refuses a gesture only when the cross-axis delta is exactly zero, and a finger always drifts a pixel.
 
-**Evidence:** `VirtualScroller.ts` `onTouchMoveCapture`. Tests: "a vertical scroller flags a sideways touch for the page, keeps a downward one, and decides nothing under the threshold", "a horizontal strip flags a downward touch for the page and keeps a sideways one". Test: "a touch on the track is claimed from Lenis" — the built-in track flags its touches the same way, so a thumb drag never scrolls the content under it.
+**Evidence:** `VirtualScroller.ts` `onTouchMoveCapture`. Tests: "a vertical scroller claims every touch: its frame gives the browser no gesture, so there is nothing to hand to the page", "a horizontal strip flags a downward touch for the page and keeps a sideways one". Test: "a touch on the track is claimed from Lenis" — the built-in track flags its touches the same way, so a thumb drag never scrolls the content under it.
 
 **Impossible if true:** A vertical swipe over the horizontal strip that fails to scroll the page.
 
