@@ -573,11 +573,15 @@ class $VirtualScrollerSelection {
     // A finger's boxes are clipped to the frame when painted, so a scroll
     // that brings clipped-away text back into the frame must repaint
     // them, window change or not; a native highlight moves with the rows.
-    watch(
-      () => this.owner.scrollPosition.value,
-      () => this.repaintTouch(),
-      { flush: 'post' }
-    );
+    // Whether the class paints is a device fact that never changes, so a
+    // device with no touch point never starts this per-frame watch.
+    if (this.$touch.paintsSelection) {
+      watch(
+        () => this.owner.scrollPosition.value,
+        () => this.repaintTouch(),
+        { flush: 'post' }
+      );
+    }
   }
 
   /** The one cast per class: instance code reads its own statics here. */
@@ -994,7 +998,7 @@ class $VirtualScrollerSelection {
    *  when the range is not a finger's, since a native highlight needs no
    *  help to follow a scroll. */
   repaintTouch() {
-    if (!this.$touch.paintsSelection || !this.input.touch || !this.hasSelection) return;
+    if (!this.input.touch || !this.hasSelection) return;
     this.$touch.paint(this.visibleDomRange());
   }
 
