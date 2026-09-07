@@ -37,7 +37,13 @@ SFC is wiring).
 8. **Every posting is a ledger row.** When and where each projection
    went out is recorded per posting, so one expression can go out
    twice (launch, re-promotion) and the history stays whole.
-9. **Table names are singular, always.** A table is named for what one
+9. **Base changes propagate as changes, never as text.** Facts (numbers,
+   links, names) propagate mechanically through a guided replace; the
+   argument propagates editorially through a staleness flag and the
+   base diff shown beside each projection. Editing a projection never
+   touches the base. Approval is of the exact text: any body change on
+   an approved expression returns it to draft.
+10. **Table names are singular, always.** A table is named for what one
    row IS: `piece`, `expression`, `posting`, `subscriber`, `send`. A
    plural name describes the container, not the row, and reads wrong
    in every query (`FROM subscriber WHERE email = ?` is the sentence).
@@ -145,6 +151,8 @@ CREATE TABLE piece (
   links       TEXT,                   -- JSON [{label,url}]: receipts the expressions cite
   banner      TEXT,                   -- /blog/<slug>.png or NULL
   base        TEXT,                   -- the starting text, copied from the blog post (or written), edited freely
+  base_rev    INTEGER NOT NULL DEFAULT 1,  -- bumps on every base save (see base_revision)
+  facts       TEXT,                   -- JSON [{key, value}]: the mechanical parts — sizes, speedups, URLs, names
   wave        INTEGER NOT NULL DEFAULT 1,
   notes       TEXT,
   created_at  INTEGER NOT NULL,
@@ -164,6 +172,7 @@ CREATE TABLE expression (
   status      TEXT NOT NULL DEFAULT 'draft',  -- draft | approved | scheduled | sent | archived
   skipped     INTEGER NOT NULL DEFAULT 0,     -- segments only
   calendar_id TEXT,                   -- release-calendar entry id, when placed
+  base_rev    INTEGER NOT NULL DEFAULT 1,  -- the piece.base_rev this text was written or last reconciled against; behind = stale
   approved_at INTEGER,
   scheduled_at INTEGER,
   sent_at     INTEGER,
@@ -187,6 +196,17 @@ CREATE TABLE posting (              -- the ledger: when and where each projectio
 );
 CREATE INDEX posting_expression ON posting (expression_id, posted_at);
 
+CREATE TABLE base_revision (         -- the piece's base before each save, so the diff a projection is behind can be shown
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  piece_id  INTEGER NOT NULL REFERENCES piece(id),
+  rev       INTEGER NOT NULL,          -- the base_rev this row WAS
+  base      TEXT NOT NULL,
+  facts     TEXT,
+  author    TEXT NOT NULL,
+  saved_at  INTEGER NOT NULL
+);
+CREATE INDEX base_revision_piece ON base_revision (piece_id, rev);
+
 CREATE TABLE post_revision (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   expression_id INTEGER NOT NULL REFERENCES expression(id),
@@ -207,7 +227,10 @@ Kinds: `x-thread` (parent) with `x-segment` children; `x-post`;
 `expression.sent_at` / `sent_url` and a mirror's `sent_at` are the
 latest posting, denormalized for the list; `posting` is the truth.
 
-Rules the Worker enforces: a segment's `piece_id` equals its parent's;
+Rules the Worker enforces: a base save writes a `base_revision` row
+and bumps `piece.base_rev`; an expression whose `base_rev` is behind
+the piece's is stale (a derived state, never stored); a body change on
+an `approved` expression sets `status` back to `draft`; a segment's `piece_id` equals its parent's;
 approving a parent approves nothing on children (children have no
 status of their own; `skipped` is their only state); `status` moves
 only forward except `archived`, which any state can reach; every
@@ -240,7 +263,10 @@ approval, never typing.
 | `GET /blog-posts` | the site's posts (from `blog-index.json`) for the "start from a blog post" select |
 | `POST /pieces/:id/draft` | `{ kind }` → scaffold an expression from `base`: a thread split at paragraph boundaries under 280, a LinkedIn post from the opening paragraphs, a Reddit/dev.to body from the whole text with the canonical link; a starting point to rewrite, never a finished post |
 | `GET /pieces/:id` | a piece with its expressions, segments nested |
-| `PATCH /pieces/:id` | edit piece fields |
+| `PATCH /pieces/:id` | edit piece fields; a `base` or `facts` change writes a `base_revision` row and bumps `base_rev` |
+| `GET /pieces/:id/base-diff?from=&to=` | the base text between two revisions, as a line diff the piece page renders beside a stale projection |
+| `POST /pieces/:id/facts/replace` | `{ key, from, to }` → every projection of the piece containing `from`, with the proposed replacement; `POST …/facts/apply` applies the chosen ones (each a normal edit with a revision, approved ones return to draft) |
+| `POST /expressions/:id/reconcile` | stamps the expression's `base_rev` to the piece's current one after the change was carried by hand or by the agent |
 | `POST /pieces/:id/expressions` | add an expression (kind, body, meta); threads accept `segments: string[]` |
 | `GET /expressions/:id` | one expression with children, revisions count, mirrors |
 | `PATCH /expressions/:id` | body, meta, label, mirrors, skipped, calendar_id — writes a revision; `author` from the `X-Press-Author` header (`agent` when the CLI calls) |
@@ -312,6 +338,23 @@ above, marked as a draft to rewrite); "clone as" offers the compatible
 kinds. A **Postings** strip under the tabs lists every time and place
 the piece went out, from the ledger.
 
+### Base and projections
+
+The left pane holds the base and the **facts** table (key, value: `size
+→ 1.1 kB`, `speedup → 55–253×`, `intro → https://ivue.dev/blog/introducing-ivue`).
+Saving the base bumps its revision; every tab whose expression is
+behind shows a **stale** badge. Opening a stale tab shows a collapsible
+**base changed** panel above the card: the line diff between the
+revision the text was written against and now, with two actions —
+**Reconciled** (you carried it by hand; stamps the revision) and **Ask
+the agent** (copies a ready prompt naming the piece, the expression, and
+the diff; the agent edits through the CLI and reconciles). Changing a
+fact's value opens the **replace** review: every projection containing
+the old value, each with the proposed line, apply one or apply all;
+each application is an ordinary edit with a revision, and an approved
+expression that changed returns to draft with its badge showing why.
+Nothing in this flow writes into the base from a projection.
+
 Each tab renders the platform card as the editing surface:
 
 - **XThreadCard**: stacked tweet cards on the thread line; avatar,
@@ -347,6 +390,29 @@ Post now where an API exists, Mark sent with a URL elsewhere, and a
 revisions drawer (`QTimeline`, restore per entry). Autosave: 800 ms
 after the last edit, one PATCH, a toast only on failure. `⌘S` saves
 now.
+
+### Scheduling
+
+Every expression, and every mirror of an X expression, schedules on
+its own; a thread is one job. The **Schedule** control in the card
+footer opens `QDate` + `QTime` in the browser's zone with the ET time
+shown beside (launch clocks are ET); it is prefilled from the linked
+calendar entry's date when there is one, at the runbook's hour for that
+platform. Scheduling requires `approved`. It writes a `scheduled_job`
+of kind `expression` with `{ expressionId, platform }` and sets the
+status to `scheduled`; reschedule rewrites the job's `due_at`; cancel
+executes nothing and returns the expression to `approved`. At run time
+the cron loads the row: an X kind posts through `XPoster` (live
+segments in order, tweet ids into the `posting` row), any other platform
+flips the expression to **due** and it surfaces at the top of Queue and
+on the calendar with a "Copy and mark sent" action, since only X has an
+API we post to. A stale or edited-since-approval expression cannot be
+scheduled until re-approved, and an edit after scheduling ships the
+edited text because the job holds the id, not the body. From the
+calendar, an entry with one expression offers **Schedule for this day**
+directly in the dialog; from the piece page, **Schedule per calendar**
+schedules every approved expression of the piece on its placed entries
+in one pass.
 
 ### Queue and Sent
 
@@ -428,4 +494,8 @@ Steps 0–6 are launch-week scope; 7–9 follow.
   copied and marked it.
 - A piece that reads the live site at posting time.
 - A plural table name anywhere in the schema after migration 0011.
+- A base edit that rewrites a projection's text.
+- A projection edit that reaches the base.
+- A scheduled expression whose text is not the approved text (edits
+  return it to draft and unschedule it).
 - A platform card that shows text the platform would not accept.
