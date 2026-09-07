@@ -407,8 +407,11 @@ segments in order, tweet ids into the `posting` row), any other platform
 flips the expression to **due** and it surfaces at the top of Queue and
 on the calendar with a "Copy and mark sent" action, since only X has an
 API we post to. A stale or edited-since-approval expression cannot be
-scheduled until re-approved, and an edit after scheduling ships the
-edited text because the job holds the id, not the body. From the
+scheduled until re-approved, and an edit after scheduling cancels the
+job and returns the expression to draft — nothing ships that was not
+approved as the exact text. The job holds the id, not the body, so
+the row is read at run time; that is for the ledger and the mirrors,
+never a way past approval. From the
 calendar, an entry with one expression offers **Schedule for this day**
 directly in the dialog; from the piece page, **Schedule per calendar**
 schedules every approved expression of the piece on its placed entries
