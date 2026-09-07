@@ -827,3 +827,26 @@ own whole than to arbitrate.
   (one process, many pages) and the client — use Vue's `useId()`.
 - "Hydration completed but contains mismatches" fires on EVERY page of the
   built site, component or not — pre-existing, not a signal for new work.
+
+## One DOM event, one handler (a ruling with a gate)
+
+- A template never binds two events to one method and a class never
+  registers one method for two event types: `@pointercancel` gets
+  `onTrackPointerCancel` whose body delegates to `onTrackPointerUp`, a
+  track's `touchstart`/`touchmove` get `onTrackTouchStart`/`onTrackTouchMove`
+  even when both only claim the touch, `@error` beside `@load` gets
+  `onImageError`. The reason is the override seam: a subclass extends the
+  cancel alone by name instead of re-deriving the event from its object.
+  The gate check `one_handler_per_event` enforces it per element (same
+  event with different modifiers to different handlers is fine); the
+  benchmark grid arms are skip-listed because their identical binding IS
+  what the numbers compare.
+- Two more scroller rules from the same night: a thumb drag never stops
+  autoplay (it re-arms the creep on release either way and starts it from
+  rest when forward), and a seek's converge loop must yield to the reading
+  creep — with the creep at speed a repeated "jump to 500k" alternated
+  between two positions every 100 ms, each mount shifting the target and
+  each shift re-pinning the landing under the creep. Reproduce such loops
+  with a Playwright sampler before theorising (scratch `jump-loop2.cjs`).
+- The component sweep runs in CI as an advisory job (`continue-on-error`):
+  a red row without a blocked deploy.

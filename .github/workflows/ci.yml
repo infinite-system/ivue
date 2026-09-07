@@ -30,3 +30,42 @@ jobs:
 
       - name: standard gate over docs + playground
         run: npm run gate:docs
+
+  # The component sweep drives the BUILT docs and playground in a real
+  # Chromium: every demo's controls, the touch selection, the sub-pixel
+  # continuity of a scroll. It does not block a deploy — a phone-only
+  # regression it catches is still worth a red row — so the job may fail
+  # without failing the run.
+  sweep:
+    name: component sweep (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set Node.js 22.x
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22.x
+          package-manager-cache: false
+
+      - name: npm install (root, docs, playground)
+        run: |
+          npm install
+          npm --prefix docs_v2 ci
+          npm --prefix examples/playground install
+
+      - name: playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: build docs and playground
+        run: |
+          npm run build:docs
+          npm --prefix examples/playground run build
+
+      - name: serve both and sweep
+        run: |
+          (npx --yes serve docs_v2/.vitepress/dist -l 5189 > /dev/null 2>&1 &)
+          (npm --prefix examples/playground exec -- vite preview --port 5190 > /dev/null 2>&1 &)
+          sleep 5
+          npm run sweep:components

@@ -91,49 +91,34 @@ vendored inside it. Run it without cloning anything:
 — StackBlitz imports the folder straight from GitHub, so every push
 redeploys the example automatically.
 
-## What to notice
+## Features
 
-- **Rows in the DOM** stays at the window size while you fly through
-  1,000,000 items — watch the counter while scrolling.
-- **Jumps converge.** A jump lands on an estimated position, then re-applies
-  as the fresh window measures in — watch the landing settle onto row
-  #500,000.
-- **Text selection is a range over the data.** A native selection is
-  anchored to DOM nodes, and this list recycles its nodes, so the browser's
-  selection collapses as soon as a row scrolls out and copy sees only what
-  is mounted. Here the scroller owns it: mousedown records a logical anchor
-  (item index + character offset), a drag near or past either edge
-  autoscrolls at a speed that ramps with distance and follows the
-  reading-speed knob, the
-  highlight is re-pinned to whatever rows are mounted after every window
-  change, and copy assembles its text from the items — rows that were
-  never on screen together included. All of it lives in
-  `VirtualScrollerSelection`, a hosted class the scroller reaches through
-  one `$`-getter: the pure statics (range math, text assembly, the ramp)
-  with their own DOM-free spec, the three cells, the mouse handlers, the
-  autoscroll and follow loops. The scroller supplies what only it knows
-  through a small owner interface: its elements, the axis, a row's text
-  by index, and a way to scroll by a delta. On touch, a long press starts
-  the selection (a `VirtualScrollerSelectionTouch` hosted by the selection owns
-  the hold and the slop) and a chip copies it, since a phone has no
-  Ctrl+C. A double click selects the word under the caret and a triple
-  click the row, the browser's own units given back over the data.
-  During any drag a per-frame follow loop keeps the focus under the
-  pointer while content slides beneath it.
-- **The pad follows the flick.** The window walk is anchored at the
-  scroll target, the destination of the wheel lerp, while the transform
-  travels there over many frames. A fixed pad leaves the rows between the
-  two unmounted, and a hard flick showed blank canvas for a third of its
-  frames. `VirtualScrollerPadding`, hosted through one `$`-getter, sizes
-  the pad per walk: the lerp gap in rows on the trailing end, exact every
-  frame, plus a velocity lookahead on the leading end held with
-  hysteresis, and one more walk after the flick settles so the pad never
-  outlives it. Measured on three flick strengths, 91 frames each: 21, 28
-  and 35 uncovered frames before, zero after, and the window rests at its
-  base size again within half a second.
-- **The scrollbar is code.** `overflow-anchor: none` and a `translateZ`
-  compositor layer keep the browser out of the way; Lenis takes its clamp
-  from the computed content height, not the DOM.
+- **A million rows, a dozen in the DOM.** The window between two spacers
+  is all the browser holds; every operation is O(window). Watch the row
+  counter while you fly through the list.
+- **Scrolling is code.** A forked Lenis drives `translateY`; momentum,
+  wheel and touch feel are tuned, not inherited, and the clamp comes from
+  the computed content height.
+- **Sizes are learned, jumps converge.** Rows are estimated until seen,
+  measured once as they pass, and a jump re-pins its landing as the fresh
+  window measures in.
+- **Text selection over the data.** The anchor is an item index and a
+  character offset, so the highlight survives row recycling and copy
+  assembles rows that were never on screen together. Double click selects
+  the word, triple click the row, a drag near either edge autoscrolls.
+- **Touch selection drawn by the class.** A long press selects the word
+  under the finger with two handles and a Copy chip; a handle drag
+  extends; a flick carries the glide it interrupted, on Android as on iOS.
+- **The pad follows the flick.** Adaptive padding covers the lerp gap and
+  looks ahead by velocity, then rests at its base: three flick strengths
+  showed 21, 28 and 35 blank frames before and zero after.
+- **Reading creep.** Autoplay scrolls at a reading pace, the speed slider
+  takes effect mid-glide, and a wheel, a flick or a thumb drag never
+  fights it.
+- **Capabilities, hosted.** Selection, touch and padding are their own
+  classes reached through one `$`-getter each, and they see the scroller
+  only through a small owner interface, so each has its own statics, its
+  own spec and its own reason to exist.
 
 ## The contract lives on the class
 
@@ -150,15 +135,12 @@ const props = defineProps(
 const emit = defineEmits(VirtualScroller.Class.emits) as VirtualScroller.Emits;
 ```
 
-`defineProps` receives a plain **runtime object** (types and defaults
-fused by [`propsWithDefaults`](/guide/extensible-components)), so the
-compiler never resolves a cross-file type inside a macro, and the cast
-recovers the generic `<T>` precision a runtime map cannot carry. The
-payoff is the same one the class hierarchy already has, because it IS
-the class hierarchy: a subclass component composes its surface with
-**`super`**. `HorizontalVirtualScroller` — the same tuned class rotated
-sideways through its axis seams — inherits every prop and states its one
-real difference in one override:
+`defineProps` receives a plain runtime object, fused by
+[`propsWithDefaults`](/guide/extensible-components), and the cast
+recovers the generic `<T>` a runtime map cannot carry. A subclass
+component composes its surface with `super`: `HorizontalVirtualScroller`,
+the same class rotated through its axis seams, inherits every prop and
+states its one difference in one override:
 
 ```ts
 static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults {
@@ -217,16 +199,13 @@ The knobs are live: change a leaf and the mounted scroller re-tunes.
 
 ## The Lenis fork, in the same shape
 
-The scroll integrator is a vendored fork of Lenis, and it is written to
-the same standard as the classes above — with one deliberate difference:
-no `Reactive()`. Its state is read inside the scroller's window walk every
-frame and never tracked, so nothing about it is reactive on purpose. What
-it keeps from the standard is the shape: one seam per module, `Class =
-$Class`, statics for the constants and the pure maths, every handler a
-prototype method bound once in the constructor (a subclass override wins,
-a spy sees it), `protected` as the floor, types in the namespace, and
-`Static()` anchoring the classes that declare statics. The fork's own
-contract is on the [specs page](/examples/virtual-scroller-specs).
+The scroll integrator is a vendored fork of Lenis in the same shape as
+the classes above, with one deliberate difference: no `Reactive()`. Its
+state is read every frame inside the window walk and never tracked. The
+shape is the rest of the standard: one seam per module, `Class = $Class`,
+statics for constants and pure maths, handlers as prototype methods bound
+once, `protected` as the floor, types in the namespace. Its contract is
+on the [specs page](/examples/virtual-scroller-specs).
 
 <LazyCodeGroup
   :files="[
