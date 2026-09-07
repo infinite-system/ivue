@@ -515,3 +515,194 @@ Steps 0–6 are launch-week scope; 7–9 follow.
 - A scheduled expression whose text is not the approved text (edits
   return it to draft and unschedule it).
 - A platform card that shows text the platform would not accept.
+
+## Verification checklist
+
+Each step is done when every line under it is observed, not asserted:
+a test name, a command with its output, or a screenshot. Nothing here
+is a claim the builder makes about itself.
+
+### Step 0 — singular tables and routes
+
+- [ ] `grep -rn "CREATE TABLE" newsletter/migrations` shows no plural
+      name after 0011; `sqlite_master` on the local shim lists the
+      nine renamed tables and their renamed indexes.
+- [ ] `grep -rnwE "subscribers|sends|unsubscribes|tweets|scheduled_jobs|lists|comments|comment_subscriptions|settings" newsletter/src newsletter/scripts newsletter/README.md newsletter/COMMENTS.md`
+      returns only prose, never SQL.
+- [ ] `npx vitest run` in `newsletter/` passes with the migrations
+      applied to the shim; a deliberately reverted reference fails a
+      test (run once to prove the net exists, then restore).
+- [ ] Admin routes renamed to singular with the dashboard `Api` class
+      in the same commit; `AppRouter.test.ts` and the e2e walk pass.
+- [ ] `npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --remote`
+      from `newsletter/` reports 0011 applied; the live dashboard
+      loads subscribers and comments after deploy.
+- [ ] CONVENTIONS.md carries the rule; the gate reports no new
+      findings on touched files.
+
+### Step 1 — Quasar in
+
+- [ ] `quasar` and `@quasar/vite-plugin` in `newsletter/dashboard`
+      dependencies; `npm run build:admin` succeeds and the index chunk
+      grows by less than 60 KB gzipped (record the number).
+- [ ] No `src/layouts`, `src/pages`, `src/boot`, `src/router` folders
+      exist; `find newsletter/dashboard/src -maxdepth 1` shows only
+      `modules`, `main.ts`, `styles.css`, `vue-shim.d.ts`.
+- [ ] Dark mode forced; `primary`, `positive`, `dark` equal the
+      `styles.css` tokens (screenshot of a `QBtn` beside a `.primary`
+      button, colors identical).
+- [ ] The subscriber modal runs on `QDialog`: Escape closes, focus
+      returns to the opener, background does not scroll (Playwright
+      drive asserts all three).
+- [ ] The gate's `one_handler_per_event` and template-logic rules
+      pass on the migrated modal.
+
+### Step 2 — schema, API, CLI
+
+- [ ] Migration 0012 creates `piece`, `expression`, `posting`,
+      `post_revision`, `base_revision` with the indexes named in the
+      plan; `PRAGMA foreign_key_list(expression)` shows `piece` and
+      `expression` parents.
+- [ ] Worker tests, one per rule: a segment inherits its parent's
+      piece; `PATCH body` on a derived row rejects; a base save writes
+      a `base_revision` and regenerates every derived row; a body
+      change on an approved row returns it to draft and deletes its
+      pending job; skip flags survive a same-count regeneration and
+      clear otherwise; `status` never moves backward except to
+      archived; every body/meta patch writes a `post_revision` with
+      the author from the header.
+- [ ] Every route in the API table answers with the documented shape
+      (a test per row, singular paths); unknown ids return 404, a
+      plural path returns 404.
+- [ ] The `expression` job: an X kind posts through a stubbed
+      `XPoster` and writes a `posting` row with tweet ids per live
+      segment; a non-X kind flips to `due` and posts nothing; a job
+      whose expression is no longer approved executes nothing.
+- [ ] `node newsletter/scripts/press.mjs list|show|edit|approve|skip`
+      round-trips against local `wrangler dev`; `edit` leaves a
+      revision with `author = agent`.
+- [ ] `press.invariants.md` beside the Worker module carries the
+      invariants above as records; `check_invariants.mjs --all --refs`
+      adds no problems.
+
+### Step 3 — import
+
+- [ ] `press.mjs import --dry-run` prints the counts: 42 drafts, 5
+      channel posts, 78 artifact posts, and the pieces they group
+      into; the real run matches the dry run.
+- [ ] Threads split on `---` into segment rows in order; the launch
+      thread has 9 segments; the image-card set has 4.
+- [ ] Approvals and destinations read from the artifact database
+      (`review/posts`) appear as `approved` status and mirrors on the
+      matching expressions (spot-check three ids).
+- [ ] Imported drafts are `authored`; nothing imported is `derived`.
+- [ ] Every imported expression has a `venue` where its source had
+      one (the 14 pitch emails, the Reddit and gallery drafts).
+
+### Step 4 — Pieces list and piece page shell
+
+- [ ] `/press` is a top-level domain tab; `/press/piece`, `/press/queue`,
+      `/press/sent` route by name; `AppRouter.test.ts` lists them.
+- [ ] The list renders one row per piece with the kind strip colored
+      by state; a piece with no expressions shows an empty strip and
+      opens normally.
+- [ ] Filters narrow by status, kind, wave, and text (Playwright
+      asserts row counts); keyboard ↑↓ Enter and `a` work.
+- [ ] New piece from a blog post copies title, description, banner,
+      links, and plain text into the base; the site is not fetched
+      again afterwards (network log shows one `GET /blog-post` and one
+      `POST /piece`).
+- [ ] Autosave: one `PATCH` per pause, none per keystroke (network
+      log during a typed sentence); `⌘S` saves at once; a failed save
+      toasts once.
+- [ ] Revisions drawer lists saves newest first; restore writes a new
+      revision rather than deleting one.
+
+### Step 5 — X thread and X post cards
+
+- [ ] The thread card renders segments on the thread line with the
+      weighted count per segment; a URL counts 23; a segment past 280
+      shows red and blocks approval (the lint message names the
+      segment).
+- [ ] Skipping a segment strikes it through, renumbers the live ones,
+      and Copy live thread omits it; unskip restores it in place.
+- [ ] Drag reorder persists positions (reload shows the new order).
+- [ ] The base editor's gutter shows the same counts as the cards.
+- [ ] Clicking into a derived card's text moves the cursor to that
+      place in the base; no character can be typed into the card.
+- [ ] Detach turns the card editable in place and stops regeneration
+      (edit the base afterwards, the detached text does not change).
+- [ ] Mirror chips show Bluesky 300 and Mastodon 500 counts on the
+      same text; each mirror has its own sent mark.
+- [ ] Approve toggle on the thread only; Post now posts live segments
+      in order through the poster (local stub), records tweet ids,
+      status `sent`, a `posting` row per posting.
+- [ ] Screenshots in both themes of a thread with one skipped segment
+      and one over-limit segment.
+
+### Step 6 — calendar on rows, artifact retired
+
+- [ ] Calendar entries carry `expressionIds`; the dialog fetches
+      `GET /expression/:id` on open (network log) and shows the card
+      read-only with Copy per segment and whole.
+- [ ] `ReleaseDrafts.ts` and `x-launch-copy.ts` are deleted; the
+      Release chunk is under 10 KB gzipped (record it).
+- [ ] Mark as posted in the dialog writes a `posting` row with the
+      entry's venue and `calendar_id`; the piece page's Postings strip
+      shows it.
+- [ ] Schedule for this day from the dialog creates one job with the
+      entry's date; Queue shows it; cancel removes it and the
+      expression returns to approved.
+- [ ] The artifact reads back its final approvals into the import
+      before it is retired; its gallery entry is deleted or marked
+      superseded.
+
+### Step 7 — the other cards
+
+- [ ] LinkedIn: fold marked at the platform's position; post and
+      article variants; `linkedin-article` regenerates from the base
+      with the banner as cover.
+- [ ] Reddit: subreddit from `venue`, title editable, markdown
+      rendered, canonical link appended once.
+- [ ] dev.to: tags and canonical in meta; the rendered body matches
+      the markdown projection byte for byte on Copy.
+- [ ] HN: title over 80 blocks approval; the first comment is an
+      authored child.
+- [ ] Email: subject, greeting, sign-off from meta; Copy yields
+      subject + blank line + body; one row per venue.
+- [ ] X article and LinkedIn article: split editor, cover required by
+      the lint, headings and images render.
+- [ ] Image cards: four cards from headings or segments; Render PNGs
+      produces files through the banner pipeline at 1200×675 (view
+      one).
+- [ ] The plain-text lint rejects bold, headings, lists, and images on
+      every plain kind (one test per construct).
+
+### Step 8 — Queue and Sent, manual sending
+
+- [ ] Queue lists jobs of every kind soonest first with the ET time;
+      due non-X expressions sit on top with Copy and mark sent.
+- [ ] Sent is the `posting` ledger; filtering by piece shows every
+      platform and venue that piece went to, with URLs and remote ids.
+- [ ] A second posting of the same expression adds a row and keeps
+      the first (re-promotion test).
+- [ ] The cron run on a due job for a non-X kind flips status to
+      `due` and creates the notification the dashboard shows.
+
+### Step 9 — cleanup
+
+- [ ] `git ls-files tasks/press-drafts docs_v2/blog | grep -E "press-drafts|^docs_v2/blog/(hn|x|reddit|linkedin)-"`
+      returns nothing; the build validator no longer needs the
+      channel-post gate for those files (or keeps it for future notes,
+      stated either way).
+- [ ] `newsletter/README.md` documents the press commands and the
+      singular route rule; LESSONS.md carries what the build taught.
+- [ ] `npm run gate:newsletter` adds no findings on the press module;
+      `npx vitest run --coverage` in `newsletter/` reports the press
+      Worker module at 100% on every metric.
+- [ ] The e2e walk (`newsletter/scripts/e2e-walk.mjs`) covers: open
+      Press, create a piece from a blog post, add a thread, skip a
+      segment, approve, schedule from the calendar, mark sent, see it
+      in Sent — with a screenshot per stop in `newsletter/e2e-shots/`.
+- [ ] The impossibility list at the end of this plan is walked once by
+      hand on the live dashboard, each line with a one-word result.
