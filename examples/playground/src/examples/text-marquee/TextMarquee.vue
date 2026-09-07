@@ -53,13 +53,14 @@ defineExpose(marquee as TextMarquee.Instance);
   white-space: pre;
 }
 /* cross-axis room below the line for the built-in track (padding-bottom
-   is off the scroll axis), plus MAIN-axis padding matching the hosts'
+   is off the scroll axis) — enough that a finger dragging the line does
+   not land on the thumb — plus MAIN-axis padding matching the hosts'
    5% edge fade: computeScrollExtent adds padding-left/right through
    axisPaddingProps, so the book's first and last words rest INSIDE the
    opaque zone — without this the end of the text clamps flush to the
    strip edge and the fade permanently hides the closing words */
 .text-marquee .virtual-scroller--x {
-  padding-bottom: 18px;
+  padding-bottom: 30px;
   padding-left: 5%;
   padding-right: 5%;
 }

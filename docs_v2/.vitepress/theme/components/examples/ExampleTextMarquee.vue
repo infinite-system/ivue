@@ -86,7 +86,8 @@ const {
   margin-bottom: 14px;
 }
 .etm-frame :deep(.text-marquee) {
-  padding: 20px 0;
+  /* the track sits close to the frame's edge; the room is above it */
+  padding: 20px 0 6px;
   font-size: 15px;
   line-height: 1.6;
   color: var(--vp-c-text-1);
