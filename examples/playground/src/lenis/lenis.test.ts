@@ -23,6 +23,8 @@ test('the flick velocity is read off the trail, and falls back to the frame velo
   ];
   // 200 px over 100 ms = 2 px/ms ≈ 33.4 px per 16.7 ms frame.
   expect(trailVelocity(trail, 0)).toBeCloseTo(33.4, 6);
+  // A span longer than the window reads as the window.
+  expect(trailVelocity([{ at: 0, position: 0 }, { at: 400, position: 200 }], 0)).toBeCloseTo(33.4, 6);
   expect(trailVelocity([trail[0]], 7)).toBe(7);
   expect(trailVelocity([trail[0], { at: 1004, position: 50 }], 7)).toBe(7);
   expect(trailVelocity([], 3)).toBe(3);
@@ -37,7 +39,8 @@ test('a re-flick Android coalesced into one touchmove still flicks: the touchsta
     { at: 10_990, position: 12_887 },
     { at: 11_180, position: 12_887 + 194 }
   ];
-  expect(trailVelocity(seeded, 0)).toBeCloseTo((194 / 190) * 16.7, 6);
+  // The 190 ms wait is not the flick: the span counts as the window.
+  expect(trailVelocity(seeded, 0)).toBeCloseTo((194 / FLICK_WINDOW_MS) * 16.7, 6);
   // The seed sits outside the window by the time the move lands; the trim
   // keeps it as the anchor all the same (the phone's second log: 260 ms).
   const late = [
@@ -46,7 +49,7 @@ test('a re-flick Android coalesced into one touchmove still flicks: the touchsta
   ];
   trimTrail(late, 6_610, FLICK_WINDOW_MS);
   expect(late).toHaveLength(2);
-  expect(trailVelocity(late, 0)).toBeCloseTo((257 / 260) * 16.7, 6);
+  expect(trailVelocity(late, 0)).toBeCloseTo((257 / FLICK_WINDOW_MS) * 16.7, 6);
   // The seed is the animated position, not the glide's target: seeded at
   // the target (13476, 327 px ahead of the content at 13149) the phone's
   // 336 px swipe read as 1.19 px/frame; seeded where the content is, it
@@ -60,7 +63,7 @@ test('a re-flick Android coalesced into one touchmove still flicks: the touchsta
     { at: 15_980, position: 13_149 },
     { at: 16_100, position: 13_149 + 336 }
   ];
-  expect(trailVelocity(atContent, 0)).toBeCloseTo((336 / 120) * 16.7, 6);
+  expect(trailVelocity(atContent, 0)).toBeCloseTo((336 / FLICK_WINDOW_MS) * 16.7, 6);
 });
 
 // impossible-if-true: trailVelocity — A flick that dies because the last animation frame before the touchend saw no move.

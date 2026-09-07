@@ -51,15 +51,22 @@ export function trimTrail(trail: Array<{ at: number; position: number }>, now: n
 
 /**
  * The flick's velocity in px per frame off the finger's trail: the
- * position change over the trail's span, scaled to a frame. Fewer than
- * two samples, or a span too short to read, fall back to the frame's own
- * velocity.
+ * position change over the trail's span, scaled to a frame. The span is
+ * at most the window: an anchor older than it (the touchstart seed, when
+ * Android held the whole swipe back and delivered one move ~200 ms later)
+ * counts as sitting at the window's edge, since a flick's velocity is
+ * its last stretch, not its wait. Fewer than two samples, or a span too
+ * short to read, fall back to the frame's own velocity.
  */
-export function trailVelocity(trail: Array<{ at: number; position: number }>, fallback: number): number {
+export function trailVelocity(
+  trail: Array<{ at: number; position: number }>,
+  fallback: number,
+  windowMs = FLICK_WINDOW_MS
+): number {
   if (trail.length < 2) return fallback;
   const first = trail[0];
   const last = trail[trail.length - 1];
-  const span = last.at - first.at;
+  const span = Math.min(windowMs, last.at - first.at);
   if (span < 8) return fallback;
   return ((last.position - first.position) / span) * FRAME_MS;
 }
