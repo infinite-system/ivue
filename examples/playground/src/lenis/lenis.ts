@@ -513,6 +513,14 @@ export class Lenis {
       !this.isStopped &&
       !this.isLocked;
 
+    // The touchstart seeds the flick trail BEFORE any early return: a
+    // touch that stops a glide returns right here, and its swipe still
+    // needs the start as the trail's first sample (Android may coalesce
+    // the whole swipe into one touchmove, which alone has no span).
+    if (isTouch && event.type === 'touchstart') {
+      this.touchTrail = [{ at: performance.now(), position: this.targetScroll }];
+    }
+
     if (isTapToStop) {
       this.trace?.('tap-to-stop: reset');
       this.reset();
@@ -600,11 +608,8 @@ export class Lenis {
     let trailLength = 0;
     if (isTouch) {
       const now = performance.now();
-      // The touchstart seeds the trail: Android may coalesce a whole
-      // re-flick into ONE touchmove, and one move alone has no span to
-      // read a velocity from — with the start as the first sample it does.
-      if (event.type === 'touchstart') this.touchTrail = [{ at: now, position: this.targetScroll }];
-      else if (event.type === 'touchmove') {
+      // The touchstart seeded the trail above, ahead of the tap-to-stop return.
+      if (event.type === 'touchmove') {
         this.touchTrail.push({ at: now, position: this.targetScroll + delta });
         trimTrail(this.touchTrail, now, FLICK_WINDOW_MS);
       } else if (isTouchEnd) {
