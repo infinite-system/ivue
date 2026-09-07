@@ -1,6 +1,7 @@
 <script lang="ts" setup generic="T extends VirtualScroller.BaseItem">
 import { VirtualScroller } from './VirtualScroller';
 import VirtualScrollerItem from './VirtualScrollerItem.vue';
+import VirtualScrollerTrack from './VirtualScrollerTrack.vue';
 
 // The namespace carries the whole contract (props types + defaults merged
 // by propsWithDefaults, emits, slots, expose type) — the macros receive
@@ -17,8 +18,6 @@ const virtualScroller = new VirtualScroller.Class<T>(props, emit);
 // THE STATE DESTRUCTURE — every Ref/Computed the template touches, grouped.
 // Methods and plain getters stay DOTTED on the instance.
 const {
-  // state refs
-  scrollbarDragging,
   // computed refs
   visibleItems,
   // element refs
@@ -75,20 +74,13 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
         virtualScroller.selection.copyChipCount
       }}</span>
     </button>
-    <div
+    <!-- Its own component: the thumb follows the scroll position every
+         frame, and that read must re-render the track alone, never the
+         rows above it. -->
+    <VirtualScrollerTrack
       v-if="virtualScroller.scrollbarVisible"
-      class="virtual-scroller__track"
-      @pointerdown="virtualScroller.onTrackPointerDown"
-      @pointermove="virtualScroller.onTrackPointerMove"
-      @pointerup="virtualScroller.onTrackPointerUp"
-      @pointercancel="virtualScroller.onTrackPointerUp"
-    >
-      <div
-        class="virtual-scroller__thumb"
-        :class="{ dragging: scrollbarDragging }"
-        :style="virtualScroller.scrollbarThumbStyle"
-      ></div>
-    </div>
+      :scroller="virtualScroller as VirtualScroller.Instance<VirtualScroller.BaseItem>"
+    />
   </div>
 </template>
 <style>

@@ -2,6 +2,7 @@
 import { HorizontalVirtualScroller } from './HorizontalVirtualScroller';
 import type { VirtualScroller } from './VirtualScroller';
 import VirtualScrollerItem from './VirtualScrollerItem.vue';
+import VirtualScrollerTrack from './VirtualScrollerTrack.vue';
 
 // Pure wiring — the CLASS carries the contract (static getters), with the
 // horizontal default already fused in (assumedSize 300 re-tuned by the
@@ -18,8 +19,6 @@ const virtualScroller = new HorizontalVirtualScroller.Class<T>(props, emit);
 
 // THE STATE DESTRUCTURE — every Ref/Computed the template touches, grouped.
 const {
-  // state refs
-  scrollbarDragging,
   // computed refs
   visibleItems,
   // element refs
@@ -61,20 +60,10 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
       </div>
       <div :style="{ width: virtualScroller.trailingSpacerPx, flex: '0 0 auto' }"></div>
     </div>
-    <div
+    <VirtualScrollerTrack
       v-if="virtualScroller.scrollbarVisible"
-      class="virtual-scroller__track virtual-scroller__track--x"
-      @pointerdown="virtualScroller.onTrackPointerDown"
-      @pointermove="virtualScroller.onTrackPointerMove"
-      @pointerup="virtualScroller.onTrackPointerUp"
-      @pointercancel="virtualScroller.onTrackPointerUp"
-    >
-      <div
-        class="virtual-scroller__thumb virtual-scroller__thumb--x"
-        :class="{ dragging: scrollbarDragging }"
-        :style="virtualScroller.scrollbarThumbStyle"
-      ></div>
-    </div>
+      :scroller="virtualScroller as VirtualScroller.Instance<VirtualScroller.BaseItem>"
+    />
     <button
       v-if="virtualScroller.selection.showsCopyChip"
       type="button"

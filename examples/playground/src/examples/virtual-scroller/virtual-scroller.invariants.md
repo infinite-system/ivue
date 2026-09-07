@@ -240,7 +240,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Generates:** The `// computed: expensive + render-suppression` justification on `visibleItems`; the flat frame cost of a scroll inside the window.
 
-**Evidence:** `VirtualScroller.ts` `computeVisibleItems`. Test: "the window covers the container from the item under the scroll top, padded on both ends, and keeps its identity while unchanged".
+**Evidence:** `VirtualScroller.ts` `computeVisibleItems`. Test: "the window covers the container from the item under the scroll top, padded on both ends, and keeps its identity while unchanged". Test: "a scroll frame re-renders the thumb, never the scroller with its rows" — the thumb, the one per-frame reader, is its own component (`VirtualScrollerTrack.vue`), so a scroll frame with an unchanged window re-renders no row.
 
 **Impossible if true:** A re-render of the rows for a scroll that did not change the window.
 
@@ -326,7 +326,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Rejected alternatives:** Lenis's own check — it refuses a gesture only when the cross-axis delta is exactly zero, and a finger always drifts a pixel.
 
-**Evidence:** `VirtualScroller.ts` `onTouchMoveCapture`. Tests: "a vertical scroller flags a sideways touch for the page, keeps a downward one, and decides nothing under the threshold", "a horizontal strip flags a downward touch for the page and keeps a sideways one".
+**Evidence:** `VirtualScroller.ts` `onTouchMoveCapture`. Tests: "a vertical scroller flags a sideways touch for the page, keeps a downward one, and decides nothing under the threshold", "a horizontal strip flags a downward touch for the page and keeps a sideways one". Test: "a touch on the track is claimed from Lenis" — the built-in track flags its touches the same way, so a thumb drag never scrolls the content under it.
 
 **Impossible if true:** A vertical swipe over the horizontal strip that fails to scroll the page.
 

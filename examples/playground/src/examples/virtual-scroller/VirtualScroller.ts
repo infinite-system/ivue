@@ -729,6 +729,19 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return this.props.scrollbar && this.scrollbarThumbFraction > 0;
   }
 
+  /** The track's class object: the axis modifier comes from the seam. */
+  get scrollbarTrackClass() {
+    return { 'virtual-scroller__track--x': this.selectionAxis === 'x' };
+  }
+
+  /** The thumb's class object: the axis modifier and the drag state. */
+  get scrollbarThumbClass() {
+    return {
+      'virtual-scroller__thumb--x': this.selectionAxis === 'x',
+      dragging: this.scrollbarDragging.value
+    };
+  }
+
   /** The thumb's size and offset along the track — main-axis property
    *  names come from the axis seam, so the same geometry renders as
    *  height/top on the vertical track and width/left on the horizontal. */
@@ -1414,6 +1427,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   onTrackPointerUp() {
     this.scrollbarDragging.value = false;
+  }
+
+  /** A finger on the track is the track's: Lenis listens for touches on
+   *  the frame and would scroll the content under the thumb drag. The
+   *  flag makes Lenis skip the event; the pointer capture drives the seek. */
+  claimTouch(event: TouchEvent) {
+    (event as TouchEvent & { lenisStopPropagation?: boolean }).lenisStopPropagation = true;
   }
 
   seekToPointer(event: PointerEvent) {

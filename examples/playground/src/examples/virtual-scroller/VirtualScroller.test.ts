@@ -15,6 +15,8 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 [WebKit re-rasterizes the layer on every autoscroll write](virtual-scroller.invariants.md#webkit-re-rasterizes-the-layer-on-every-autoscroll-write)
 [The feel is one nested prop complete at every depth](virtual-scroller.invariants.md#the-feel-is-one-nested-prop-complete-at-every-depth)
 // domain-invariant: $VirtualScroller — If a nested knob prop is read, then it is complete at every depth: a leaf the author supplied wins and every leaf left out is the tuned default, and Lenis is tuned from the same leaves.
+// domain-invariant: $VirtualScroller — If the scroll position changes with the window unchanged, then the scroller's own template does not re-render: the thumb, the one per-frame reader, is its own component.
+// domain-invariant: $VirtualScroller — If a finger lands on the track, then the touch is flagged for Lenis to skip, so the thumb drag seeks and the content does not scroll under it.
 // domain-invariant: $VirtualScroller — If the props object is read, then it is the fusion of the static types and defaults: the required list carries no default and the creep knob unset reads as the tuned cadence.
 // domain-invariant: $VirtualScroller — If item i's position is asked, then it is the sum of the sizes before it, measured where known and the estimate elsewhere, whichever way the cursor walks there.
 // domain-invariant: $VirtualScroller — If a pixel offset is asked for its item, then anchoring that item at the returned fraction gives the same pixel back.
@@ -39,6 +41,7 @@ the converge loop need a browser and are driven by the component sweep.
 */
 
 import { nextTick, ref } from 'vue';
+import { mount } from '@vue/test-utils';
 import { expect, test, vi } from 'vitest';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
@@ -160,6 +163,68 @@ test('the props object fuses every default into the types, leaves the required l
   expect(set.instance.probeCreepMsPerPx()).toBe(20);
   tuned.unmount();
   set.unmount();
+});
+
+// domain-invariant: $VirtualScroller — If a finger lands on the track, then the touch is flagged for Lenis to skip, so the thumb drag seeks and the content does not scroll under it.
+// invariant: A cross-axis touch belongs to the page (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a touch on the track is claimed from Lenis', () => {
+  const { instance, unmount } = scroller(rows(3));
+  const event = new Event('touchstart') as TouchEvent & { lenisStopPropagation?: boolean };
+  instance.claimTouch(event);
+  expect(event.lenisStopPropagation).toBe(true);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the scroll position changes with the window unchanged, then the scroller's own template does not re-render: the thumb, the one per-frame reader, is its own component.
+// invariant: An unchanged window keeps its array identity (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a scroll frame re-renders the thumb, never the scroller with its rows', async () => {
+  // jsdom has no ResizeObserver; the mounted SFC's size observers get an inert one.
+  class InertResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  vi.stubGlobal('ResizeObserver', InertResizeObserver);
+  // jsdom lays out nothing: the extent and the frame are pinned so the
+  // thumb has travel and its progress reads the position.
+  const extent = vi
+    .spyOn(VirtualScroller.Class.prototype, 'scrollExtent', 'get')
+    .mockReturnValue(ref(6000) as unknown as VirtualScroller.Instance<Row>['scrollExtent']);
+  const frameSize = vi
+    .spyOn(VirtualScroller.Class.prototype, 'containerOuterSize', 'get')
+    .mockReturnValue(ref(400));
+  // The playground's tsc has no .vue shim (the 19 baseline errors are all this).
+  // @ts-expect-error — resolved by vite at run time
+  const Sfc = (await import('./VirtualScroller.vue')).default;
+  const wrapper = mount(Sfc, {
+    props: { modelValue: rows(200), scrollbar: true },
+    slots: { item: '<span>row</span>' }
+  });
+  const exposed = (wrapper.vm as unknown as { $: { exposed: unknown } }).$.exposed as {
+    scrollPosition: { value: number };
+  };
+  await nextTick();
+  const thumb = wrapper.find('.virtual-scroller__thumb');
+  expect(thumb.exists()).toBe(true);
+  const track = wrapper.findComponent({ name: 'VirtualScrollerTrack' });
+  // Render counts: the compiled render function is read off the instance
+  // on every render, so a spy on it counts renders.
+  const scrollerRenders = vi.spyOn(wrapper.vm.$ as unknown as { render: () => unknown }, 'render');
+  const trackRenders = track.exists()
+    ? vi.spyOn(track.vm.$ as unknown as { render: () => unknown }, 'render')
+    : null;
+  const styleBefore = thumb.attributes('style');
+  for (let step = 1; step <= 10; step++) {
+    exposed.scrollPosition.value = step * 100;
+    await nextTick();
+  }
+  expect(thumb.attributes('style')).not.toBe(styleBefore);
+  expect(trackRenders?.mock.calls.length ?? 0).toBeGreaterThanOrEqual(10);
+  expect(scrollerRenders).not.toHaveBeenCalled();
+  wrapper.unmount();
+  extent.mockRestore();
+  frameSize.mockRestore();
+  vi.unstubAllGlobals();
 });
 
 // domain-invariant: $VirtualScroller — If a nested knob prop is read, then it is complete at every depth: a leaf the author supplied wins and every leaf left out is the tuned default, and Lenis is tuned from the same leaves.
