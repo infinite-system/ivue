@@ -11,10 +11,14 @@ SFC is wiring).
 
 1. **The piece is the essence; a platform is an expression.** An
    argument (usually a blog article, sometimes a bare voice post) owns
-   authored expressions: an X thread, an X article, a LinkedIn post, a
-   Reddit post. Expressions are written, not derived. The only real
-   derivation is a **mirror**: the same text re-checked under another
-   platform's limit (X → Bluesky, Mastodon, Threads).
+   expressions of two modes. **Derived** expressions are the base
+   projected by a per-kind function — the X thread (the base split on
+   its `---` rules), the X article, the X image cards, the LinkedIn
+   post and article, Reddit, dev.to — and regenerate when the base
+   changes. **Authored** expressions are written by hand and never
+   track the base — the alternate hooks, single teasers, the Bluesky
+   and Mastodon ports, pitch emails, the HN first comment. A derived
+   expression can be detached into an authored one, never the reverse.
 2. **You edit the thing you will see.** The platform-shaped card is the
    editor for short kinds; long-form kinds get a split editor with the
    card as the live preview. Copy always yields the platform's
@@ -37,12 +41,11 @@ SFC is wiring).
 8. **Every posting is a ledger row.** When and where each projection
    went out is recorded per posting, so one expression can go out
    twice (launch, re-promotion) and the history stays whole.
-9. **Base changes propagate as changes, never as text.** Facts (numbers,
-   links, names) propagate mechanically through a guided replace; the
-   argument propagates editorially through a staleness flag and the
-   base diff shown beside each projection. Editing a projection never
-   touches the base. Approval is of the exact text: any body change on
-   an approved expression returns it to draft.
+9. **The base is edited in one place.** A base save regenerates every
+   derived expression of the piece; nothing edits a derived body
+   directly, and nothing edits the base from a projection. Approval is
+   of the exact text, so a regenerated or edited approved expression
+   returns to draft.
 10. **Table names are singular, always.** A table is named for what one
    row IS: `piece`, `expression`, `posting`, `subscriber`, `send`. A
    plural name describes the container, not the row, and reads wrong
@@ -150,9 +153,7 @@ CREATE TABLE piece (
   claim       TEXT,                   -- the one-line thesis
   links       TEXT,                   -- JSON [{label,url}]: receipts the expressions cite
   banner      TEXT,                   -- /blog/<slug>.png or NULL
-  base        TEXT,                   -- the starting text, copied from the blog post (or written), edited freely
-  base_rev    INTEGER NOT NULL DEFAULT 1,  -- bumps on every base save (see base_revision)
-  facts       TEXT,                   -- JSON [{key, value}]: the mechanical parts — sizes, speedups, URLs, names
+  base        TEXT,                   -- the starting text, copied from the blog post (or written), edited freely; `---` rules mark thread breaks
   wave        INTEGER NOT NULL DEFAULT 1,
   notes       TEXT,
   created_at  INTEGER NOT NULL,
@@ -163,16 +164,16 @@ CREATE TABLE expression (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   piece_id    INTEGER NOT NULL REFERENCES piece(id),
   kind        TEXT NOT NULL,          -- see kinds below
+  mode        TEXT NOT NULL DEFAULT 'authored',  -- derived (regenerated from piece.base) | authored (hand-written)
   parent_id   INTEGER REFERENCES expression(id),  -- segment → its thread / card set
   position    INTEGER NOT NULL DEFAULT 0,          -- order among siblings
   label       TEXT,                   -- "hook", "A · the kilobyte", card title
-  body        TEXT NOT NULL,          -- markdown subset (see projections)
-  meta        TEXT,                   -- JSON per kind: subreddit, title, canonical, tags, image
+  body        TEXT NOT NULL,          -- markdown subset (see projections); for derived rows the last regeneration, kept so the ledger and revisions hold the text that shipped
+  meta        TEXT,                   -- JSON per kind: subreddit, title, canonical, tags, image; for derived rows also the projection settings (cover, fold paragraph, which paragraphs to drop)
   mirrors     TEXT,                   -- JSON [{platform, sent_at, url}] for x-* kinds
   status      TEXT NOT NULL DEFAULT 'draft',  -- draft | approved | scheduled | sent | archived
   skipped     INTEGER NOT NULL DEFAULT 0,     -- segments only
   calendar_id TEXT,                   -- release-calendar entry id, when placed
-  base_rev    INTEGER NOT NULL DEFAULT 1,  -- the piece.base_rev this text was written or last reconciled against; behind = stale
   approved_at INTEGER,
   scheduled_at INTEGER,
   sent_at     INTEGER,
@@ -196,16 +197,14 @@ CREATE TABLE posting (              -- the ledger: when and where each projectio
 );
 CREATE INDEX posting_expression ON posting (expression_id, posted_at);
 
-CREATE TABLE base_revision (         -- the piece's base before each save, so the diff a projection is behind can be shown
+CREATE TABLE base_revision (         -- the piece's base before each save: undo for the one text everything derives from
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
   piece_id  INTEGER NOT NULL REFERENCES piece(id),
-  rev       INTEGER NOT NULL,          -- the base_rev this row WAS
   base      TEXT NOT NULL,
-  facts     TEXT,
   author    TEXT NOT NULL,
   saved_at  INTEGER NOT NULL
 );
-CREATE INDEX base_revision_piece ON base_revision (piece_id, rev);
+CREATE INDEX base_revision_piece ON base_revision (piece_id, saved_at);
 
 CREATE TABLE post_revision (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -228,9 +227,12 @@ Kinds: `x-thread` (parent) with `x-segment` children; `x-post`;
 latest posting, denormalized for the list; `posting` is the truth.
 
 Rules the Worker enforces: a base save writes a `base_revision` row
-and bumps `piece.base_rev`; an expression whose `base_rev` is behind
-the piece's is stale (a derived state, never stored); a body change on
-an `approved` expression sets `status` back to `draft`; a segment's `piece_id` equals its parent's;
+and regenerates every `derived` expression of the piece (segments
+replaced in place, skip flags kept by position where the segment
+count is unchanged, cleared otherwise); a `PATCH` of `body` on a
+`derived` row is refused — edit the base or detach; a body change or
+regeneration of an `approved` expression sets `status` back to `draft`
+and cancels its job; a segment's `piece_id` equals its parent's;
 approving a parent approves nothing on children (children have no
 status of their own; `skipped` is their only state); `status` moves
 only forward except `archived`, which any state can reach; every
@@ -248,6 +250,20 @@ what survives:
 | reddit, devto, hn (comment) | markdown | the full subset | none |
 | x-article, linkedin-article | rich | full subset + images | image required for cover |
 
+Derived kinds regenerate from `piece.base` through one function each,
+all in `Projection`:
+
+| kind | derivation from the base |
+| --- | --- |
+| x-thread | split on `---` rules into segments; each must project plain under 280 or the lint flags it; the last segment carries the link unless a segment already has one |
+| x-post | the first segment |
+| x-long | rules dropped, paragraphs kept; the first ~280 must stand alone (lint) |
+| x-article, linkedin-article | the full markdown, cover from the banner, title from the piece |
+| x-cards | one card per `## ` heading or, without headings, per segment up to four |
+| linkedin | rules dropped; plain projection with the fold marked at ~210 |
+| reddit, devto | the full markdown; title from the piece; canonical link appended; subreddit / tags from meta |
+| hn | title from the piece (80 limit); the first comment is authored |
+
 `Projection.Class.plain(body)` strips markdown to what X accepts and
 counts it X-weighted (URL = 23). `Projection.Class.markdown(body)` is
 identity. Copy uses the projection; the poster uses the projection;
@@ -261,15 +277,14 @@ approval, never typing.
 | `GET /pieces?status=&kind=&q=` | list pieces with per-kind expression states rolled up |
 | `POST /pieces` | create a piece (title, slug?, claim, wave); with `fromSlug` it bootstraps from a blog post: title, description → claim, banner, links, and the post's plain text copied into `base` |
 | `GET /blog-posts` | the site's posts (from `blog-index.json`) for the "start from a blog post" select |
-| `POST /pieces/:id/draft` | `{ kind }` → scaffold an expression from `base`: a thread split at paragraph boundaries under 280, a LinkedIn post from the opening paragraphs, a Reddit/dev.to body from the whole text with the canonical link; a starting point to rewrite, never a finished post |
+| `POST /pieces/:id/expressions` with `mode: derived` | adds a derived expression: regenerated from `base` now and on every base save; per-kind settings in `meta` |
 | `GET /pieces/:id` | a piece with its expressions, segments nested |
-| `PATCH /pieces/:id` | edit piece fields; a `base` or `facts` change writes a `base_revision` row and bumps `base_rev` |
-| `GET /pieces/:id/base-diff?from=&to=` | the base text between two revisions, as a line diff the piece page renders beside a stale projection |
-| `POST /pieces/:id/facts/replace` | `{ key, from, to }` → every projection of the piece containing `from`, with the proposed replacement; `POST …/facts/apply` applies the chosen ones (each a normal edit with a revision, approved ones return to draft) |
-| `POST /expressions/:id/reconcile` | stamps the expression's `base_rev` to the piece's current one after the change was carried by hand or by the agent |
+| `PATCH /pieces/:id` | edit piece fields; a `base` change writes a `base_revision` row and regenerates every derived expression, returning approved ones to draft |
+| `GET /pieces/:id/base-revisions` · `POST …/base-revisions/:rev/restore` | undo for the base |
+| `POST /expressions/:id/detach` | derived → authored: the current body becomes hand-owned and stops regenerating; one-way |
 | `POST /pieces/:id/expressions` | add an expression (kind, body, meta); threads accept `segments: string[]` |
 | `GET /expressions/:id` | one expression with children, revisions count, mirrors |
-| `PATCH /expressions/:id` | body, meta, label, mirrors, skipped, calendar_id — writes a revision; `author` from the `X-Press-Author` header (`agent` when the CLI calls) |
+| `PATCH /expressions/:id` | body (authored only), meta, label, mirrors, skipped, calendar_id — writes a revision; `author` from the `X-Press-Author` header (`agent` when the CLI calls) |
 | `POST /expressions/:id/approve` / `/unapprove` | status draft ↔ approved (lint must pass) |
 | `POST /expressions/:id/segments` | append a segment; `PATCH /expressions/:id/reorder` takes ordered child ids |
 | `POST /expressions/:id/schedule` | `{ due_at }` → a `scheduled_job` row of kind `expression`; status → scheduled |
@@ -332,64 +347,29 @@ claim — the site is not touched and not re-read.
 `/press/pieces/:id`, a `QSplitter`: left the piece (title, claim,
 links, banner, notes, and the **base** in a markdown editor, all
 editable inline), right the expressions as `QTabs`, one tab per
-expression with its state dot. Add-expression menu offers every kind,
-each with two entries: **blank** and **draft from base** (the scaffold
-above, marked as a draft to rewrite); "clone as" offers the compatible
-kinds. A **Postings** strip under the tabs lists every time and place
+expression with its state dot and a **derived** or **authored** mark.
+Add-expression menu offers every kind in its natural mode (derived for
+the thread, articles, cards, LinkedIn, Reddit, dev.to; authored for
+hooks, teasers, ports, emails, the HN comment); "clone as" offers the
+compatible kinds. A **Postings** strip under the tabs lists every time and place
 the piece went out, from the ledger.
 
 ### Base and projections
 
-The left pane holds the base and the **facts** table (key, value: `size
-→ 1.1 kB`, `speedup → 55–253×`, `intro → https://ivue.dev/blog/introducing-ivue`).
-Saving the base bumps its revision; every tab whose expression is
-behind shows a **stale** badge. Opening a stale tab shows a collapsible
-**base changed** panel above the card: the line diff between the
-revision the text was written against and now, with two actions —
-**Reconciled** (you carried it by hand; stamps the revision) and **Ask
-the agent** (copies a ready prompt naming the piece, the expression, and
-the diff; the agent edits through the CLI and reconciles). Changing a
-fact's value opens the **replace** review: every projection containing
-the old value, each with the proposed line, apply one or apply all;
-each application is an ordinary edit with a revision, and an approved
-expression that changed returns to draft with its badge showing why.
-Nothing in this flow writes into the base from a projection.
-
-Each tab renders the platform card as the editing surface:
-
-- **XThreadCard**: stacked tweet cards on the thread line; avatar,
-  name, handle from settings; each segment contenteditable (paste
-  flattened to text), weighted count, red past 280, the fold marked;
-  link cards for bare URLs; a skip toggle per segment (struck-through
-  and dimmed when skipped, live segments renumbered); drag to reorder;
-  add segment; the approve toggle and mirror chips (Bluesky 300,
-  Mastodon 500, Threads 500 with their own counts) at the top; Copy
-  live thread / Copy segment; Post now; Schedule.
-- **XPostCard**: one card, same anatomy. **XLongCard**: one card with
-  the fold at 280 marked "Show more" — the preview paragraph must
-  stand alone.
-- **XArticleCard**: split editor (`QSplitter`), markdown left, the
-  article right in X's article typography with cover, title, body.
-- **XCardsCard**: four typographic cards rendered at 1200×675 scaled
-  down, each editable; "Render PNGs" calls the site's banner pipeline
-  (`docs_v2/scripts/brand-image-generator.mjs`) through a Worker
-  endpoint that queues a render job, or, first cut, prints the card
-  HTML for the local render script.
-- **LinkedInCard**: the post card with avatar, name, headline, the
-  fold at LinkedIn's ~210 characters marked "…more"; contenteditable.
-  **LinkedInArticleCard**: split editor like the X article.
-- **RedditCard**: subreddit header (from meta), editable title, split
-  markdown editor, rendered body, vote column; flair field in meta.
-- **DevtoCard**: title, tags, canonical URL fields; split editor.
-- **HnCard**: title with the 80 limit, the first comment beneath.
-- **EmailCard**: To, Subject, plain body; Copy copies subject + body.
-
-Every card shares one footer: status pill, approve toggle, Copy,
-Schedule (`QDate` + `QTime` in the user's zone, shown in ET beside),
-Post now where an API exists, Mark sent with a URL elsewhere, and a
-revisions drawer (`QTimeline`, restore per entry). Autosave: 800 ms
-after the last edit, one PATCH, a toast only on failure. `⌘S` saves
-now.
+The base is the one text you edit for every derived expression: a
+markdown editor on the left with the `---` rules that mark thread
+breaks, and a live segment count and per-segment X count in its
+gutter so the thread is shaped while the base is written. Saving the
+base regenerates every derived tab; their cards are previews with
+Copy, the skip toggle per segment, and the kind's settings (cover,
+subreddit, tags, which paragraphs the LinkedIn post keeps). A derived
+card is not editable in place — clicking into its text jumps to the
+matching place in the base. **Detach** turns a derived expression into
+an authored one when a platform needs a rewrite the projection cannot
+express; from then on it is hand-owned and edited in its card like any
+authored expression. Authored expressions (hooks, teasers, ports,
+emails) never track the base; a note on their tab shows the base's
+last-saved time so you can decide whether they still fit.
 
 ### Scheduling
 
@@ -497,8 +477,9 @@ Steps 0–6 are launch-week scope; 7–9 follow.
   copied and marked it.
 - A piece that reads the live site at posting time.
 - A plural table name anywhere in the schema after migration 0011.
-- A base edit that rewrites a projection's text.
+- A derived body edited anywhere but through the base (or detached first).
 - A projection edit that reaches the base.
+- An authored expression that changes because the base did.
 - A scheduled expression whose text is not the approved text (edits
   return it to draft and unschedule it).
 - A platform card that shows text the platform would not accept.
