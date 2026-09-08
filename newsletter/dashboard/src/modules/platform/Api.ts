@@ -368,6 +368,15 @@ class $Api {
     });
   }
 
+  /** an image or video for the editors: the raw file, its type in the header, its name in the query */
+  static pressUploadAsset(file: File): Promise<Api.PressAsset> {
+    return this.request(`/admin/press/asset?name=${encodeURIComponent(file.name)}`, {
+      method: 'POST',
+      body: file,
+      headers: { 'content-type': file.type || 'application/octet-stream' },
+    });
+  }
+
   static pressLint(id: number): Promise<{ problems: string[] }> {
     return this.request(`/admin/press/expression/${id}/lint`);
   }
@@ -623,6 +632,13 @@ export namespace Api {
     expressions: PressState[];
     nextDueAt: number | null;
     calendarIds: string[];
+  }
+
+  export interface PressAsset {
+    key: string;
+    url: string;
+    contentType: string;
+    size: number;
   }
 
   export interface PressMirror {

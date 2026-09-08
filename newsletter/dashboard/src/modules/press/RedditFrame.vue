@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ExpressionModel } from './ExpressionModel';
+import MarkdownEditor from './MarkdownEditor.vue';
 
 defineProps<{ model: ExpressionModel.Instance }>();
 </script>
@@ -22,15 +23,14 @@ defineProps<{ model: ExpressionModel.Instance }>();
         @input="model.onMetaInput('title', $event)"
       />
       <div class="press-split">
-        <textarea
+        <MarkdownEditor
           v-if="model.canEdit"
-          class="press-md-editor"
-          :value="model.bodyDraft.value"
-          spellcheck="true"
-          aria-label="Markdown"
-          @input="model.onBodyInput($event)"
-          @blur="model.saveBody()"
-        ></textarea>
+          :model-value="model.bodyDraft.value"
+          placeholder="Write the body. Drop images or video anywhere; paste a YouTube link for a player."
+          min-height="22rem"
+          @update:model-value="model.onBodyChange($event)"
+          @save="model.saveBody()"
+        />
         <div class="rd-rendered press-rendered" v-html="model.renderedBody"></div>
       </div>
       <p class="muted rd-actions" aria-hidden="true">💬 Comments · Share · Save</p>

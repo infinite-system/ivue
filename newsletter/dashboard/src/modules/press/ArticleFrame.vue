@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ExpressionModel } from './ExpressionModel';
+import MarkdownEditor from './MarkdownEditor.vue';
 
 defineProps<{ model: ExpressionModel.Instance }>();
 </script>
@@ -14,15 +15,14 @@ defineProps<{ model: ExpressionModel.Instance }>();
     <input class="ar-title" :value="model.title" :readonly="!model.canEdit" aria-label="Title" placeholder="Title" @input="model.onMetaInput('title', $event)" />
     <p class="muted ar-byline">{{ model.xName }} · {{ model.platformLabel }}</p>
     <div class="press-split">
-      <textarea
+      <MarkdownEditor
         v-if="model.canEdit"
-        class="press-md-editor"
-        :value="model.bodyDraft.value"
-        spellcheck="true"
-        aria-label="Markdown"
-        @input="model.onBodyInput($event)"
-        @blur="model.saveBody()"
-      ></textarea>
+        :model-value="model.bodyDraft.value"
+        placeholder="Write the body. Drop images or video anywhere; paste a YouTube link for a player."
+        min-height="22rem"
+        @update:model-value="model.onBodyChange($event)"
+        @save="model.saveBody()"
+      />
       <div class="ar-rendered press-rendered" v-html="model.renderedBody"></div>
     </div>
   </div>

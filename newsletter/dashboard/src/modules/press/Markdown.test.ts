@@ -26,4 +26,15 @@ describe('Markdown', () => {
     expect(Markdown.Class.render('<script>alert(1)</script>')).toBe('<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>');
     expect(Markdown.Class.render('![alt](https://x/i.png)')).toBe('<p><img alt="alt" src="https://x/i.png"></p>');
   });
+
+  it('embeds a media link alone on its line: YouTube as a player, a video file as a video, and leaves prose links alone', () => {
+    const html = Markdown.Class.render('Watch:\n\nhttps://youtu.be/dQw4w9WgXcQ?t=5\n\nhttps://cdn.test/press-asset/1-clip.mp4\n\nRead https://ivue.dev here');
+    expect(html).toContain('<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"');
+    expect(html).toContain('<video class="press-video" controls preload="metadata" src="https://cdn.test/press-asset/1-clip.mp4">');
+    expect(html).toContain('<a href="https://ivue.dev" target="_blank" rel="noreferrer">https://ivue.dev</a>');
+    expect(Markdown.Class.youtubeId('https://www.youtube.com/shorts/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+    expect(Markdown.Class.youtubeId('https://ivue.dev/watch?v=dQw4w9WgXcQ')).toBeNull();
+    expect(Markdown.Class.isVideoUrl('https://x.test/a.png')).toBe(false);
+    expect(Markdown.Class.render('```\nopen fence')).toBe('<pre><code>open fence</code></pre>');
+  });
 });

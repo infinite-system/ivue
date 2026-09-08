@@ -2,6 +2,7 @@ import { Static } from 'ivue/extras';
 import { Http } from './Http';
 import { PublicApi } from '../api/PublicApi';
 import { AdminApi } from '../api/AdminApi';
+import { Asset } from '../press/Asset';
 import { Drip } from '../delivery/Drip';
 import { Scheduler } from '../schedule/Scheduler';
 
@@ -79,6 +80,9 @@ class $Worker {
         return PublicApi.Class.drip(request, env);
       if (url.pathname === '/postmark-webhook' && request.method === 'POST')
         return PublicApi.Class.postmarkWebhook(request, env);
+      // the press's assets: public reads (the X poster and the cards fetch them)
+      if (url.pathname.startsWith(Asset.Class.PUBLIC_PATH) && request.method === 'GET')
+        return Asset.Class.serve(env, url.pathname.slice(Asset.Class.PUBLIC_PATH.length));
       if (url.pathname.startsWith('/admin/'))
         return AdminApi.Class.handle(request, url, env);
       return Http.Class.notFound();

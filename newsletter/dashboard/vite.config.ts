@@ -33,11 +33,11 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5190,
       // every Worker endpoint the dashboard calls — /admin/* plus the two
-      // top-level operator endpoints. Defaults to the LIVE Worker (real
+      // top-level operator endpoints and the press's public asset reads. Defaults to the LIVE Worker (real
       // data); set DEV_WORKER_ORIGIN in newsletter/.env (e.g.
       // http://localhost:8787) to target a local `wrangler dev` instead.
       proxy: Object.fromEntries(
-        ['/admin', '/broadcast', '/drip'].map((path) => [
+        ['/admin', '/broadcast', '/drip', '/press-asset'].map((path) => [
           path,
           {
             target:

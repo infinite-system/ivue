@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ExpressionModel } from './ExpressionModel';
+import MarkdownEditor from './MarkdownEditor.vue';
 
 defineProps<{ model: ExpressionModel.Instance }>();
 </script>
@@ -27,15 +28,14 @@ defineProps<{ model: ExpressionModel.Instance }>();
     </div>
     <div class="hn-comment">
       <p class="muted">{{ model.xName.toLowerCase() }} just now — the first comment (posted immediately)</p>
-      <textarea
+      <MarkdownEditor
         v-if="model.canEdit"
-        class="press-md-editor hn-comment-editor"
-        :value="model.firstComment"
-        spellcheck="true"
-        aria-label="First comment"
+        :model-value="model.firstComment"
         placeholder="The first comment: history in three sentences, the misdiagnosis, what had to be true, the receipts, two weaknesses, the link."
-        @input="model.onMetaInput('firstComment', $event)"
-      ></textarea>
+        min-height="12rem"
+        @update:model-value="model.onFirstCommentChange($event)"
+        @save="model.saveBody()"
+      />
       <div class="hn-rendered press-rendered" v-html="model.renderedFirstComment"></div>
     </div>
   </div>

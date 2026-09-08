@@ -32,6 +32,16 @@ defineProps<{ model: ExpressionModel.Instance }>();
           @blur="model.saveSegment(entry.child)"
           v-text="entry.child.body"
         ></p>
+        <div v-if="model.showsMedia(entry.child)" class="x-media" :class="{ drop: model.canEdit }" @dragover="model.onImageDragOver($event)" @drop="model.onImageDrop(entry.child, $event)">
+          <figure v-for="url in model.imageUrls(entry.child)" :key="url" class="x-media-item">
+            <img :src="url" alt="" />
+            <button v-if="model.canEdit" class="x-media-remove" type="button" title="Remove image" @click="model.removeImage(entry.child, url)">×</button>
+          </figure>
+          <label v-if="model.canAddImage(entry.child)" class="x-media-add" title="Drop images here or pick from disk">
+            <span>+ image</span>
+            <input type="file" accept="image/*" multiple hidden @change="model.onImagePicked(entry.child, $event)" />
+          </label>
+        </div>
         <div class="x-foot">
           <span class="x-count" :class="{ over: model.segmentOver(entry.child), folds: model.segmentPastFold(entry.child) }">{{ model.segmentCountLabel(entry.child) }}</span>
           <span v-if="model.segmentPastFold(entry.child)" class="x-fold-note">folds at 280</span>

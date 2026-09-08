@@ -2943,3 +2943,306 @@ input[type='datetime-local'] {
   min-height: 12rem;
   font-family: inherit;
 }
+
+/* ---- the markdown editor (Tiptap) ---- */
+
+.press-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.press-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.press-toolbar button,
+.press-toolbar-file {
+  min-width: 30px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  font: 500 13px/1 inherit;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.press-toolbar button:hover,
+.press-toolbar-file:hover {
+  background: var(--panel-raised);
+  color: var(--text);
+}
+
+.press-toolbar button.on {
+  background: rgba(129, 140, 248, 0.22);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.press-toolbar-gap {
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--panel-edge);
+}
+
+.press-toolbar-status {
+  margin-left: auto;
+  padding: 0 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.press-editor-surface {
+  border: 1px solid var(--panel-edge);
+  border-radius: 8px;
+  background: var(--bg);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.press-editor-surface:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.22);
+}
+
+.press-editor.uploading .press-editor-surface {
+  border-style: dashed;
+}
+
+.press-editor.readonly .press-editor-surface {
+  background: transparent;
+}
+
+.press-editor-surface > div {
+  min-height: inherit;
+}
+
+.press-prose {
+  min-height: inherit;
+  padding: 12px 14px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text);
+  outline: none;
+  overflow-wrap: anywhere;
+}
+
+.press-prose > * {
+  margin: 0;
+}
+
+.press-prose > * + * {
+  margin-top: 0.7em;
+}
+
+.press-prose h1,
+.press-prose h2,
+.press-prose h3 {
+  margin: 1em 0 0.3em;
+  line-height: 1.25;
+}
+
+.press-prose h1 {
+  font-size: 1.5em;
+}
+
+.press-prose h2 {
+  font-size: 1.25em;
+}
+
+.press-prose h3 {
+  font-size: 1.1em;
+}
+
+.press-prose ul,
+.press-prose ol {
+  padding-left: 1.4em;
+}
+
+.press-prose blockquote {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--panel-edge);
+  color: var(--text-dim);
+}
+
+.press-prose code {
+  font: 0.92em ui-monospace, SFMono-Regular, Menlo, monospace;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--panel-raised);
+}
+
+.press-prose pre {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--panel-raised);
+  overflow-x: auto;
+}
+
+.press-prose pre code {
+  padding: 0;
+  background: transparent;
+}
+
+.press-prose hr {
+  border: 0;
+  border-top: 2px dashed var(--panel-edge);
+  margin: 14px 0;
+  position: relative;
+}
+
+.press-base .press-prose hr::after {
+  content: 'tweet break';
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 6px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: var(--bg);
+}
+
+.press-prose a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.press-prose img,
+.press-prose video,
+.press-video {
+  display: block;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.press-prose img.ProseMirror-selectednode,
+.press-prose video.ProseMirror-selectednode,
+.press-prose div[data-youtube-video].ProseMirror-selectednode {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.press-prose div[data-youtube-video],
+.press-embed {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+
+.press-prose div[data-youtube-video] iframe,
+.press-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.press-prose p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--text-dim);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.press-prose .ProseMirror-gapcursor::after {
+  border-top: 1px solid var(--text);
+}
+
+/* ---- images on tweets ---- */
+
+.x-media {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 4px;
+  border-radius: 12px;
+}
+
+.x-media.drop {
+  padding: 4px;
+  outline: 1px dashed transparent;
+}
+
+.x-media.drop:hover {
+  outline-color: var(--panel-edge);
+}
+
+.x-media-item {
+  position: relative;
+  margin: 0;
+  flex: 1 1 calc(50% - 6px);
+  min-width: 120px;
+  max-width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--panel-edge);
+}
+
+.x-media-item:only-of-type {
+  flex-basis: 100%;
+}
+
+.x-media-item img {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+}
+
+.x-media-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.x-media-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px dashed var(--panel-edge);
+  border-radius: 10px;
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.x-media-add:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}

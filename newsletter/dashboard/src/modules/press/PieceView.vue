@@ -2,6 +2,7 @@
 import { QDialog, QMenu, QSplitter, QTab, QTabs } from 'quasar';
 import { PieceModel } from './PieceModel';
 import ExpressionCard from './ExpressionCard.vue';
+import MarkdownEditor from './MarkdownEditor.vue';
 
 const model = new PieceModel.Class();
 const {
@@ -41,7 +42,7 @@ const {
           <div class="press-base">
             <div class="press-base-head">
               <h3>Base</h3>
-              <span class="muted">every derived expression regenerates from this text; <code>---</code> marks a tweet break</span>
+              <span class="muted">every derived expression regenerates from this text; a rule (<code>---</code>) marks a tweet break; drop images and video straight in</span>
               <button class="ghost" type="button" @click="model.openBaseRevisions()">History</button>
             </div>
             <div class="press-base-body">
@@ -51,13 +52,13 @@ const {
                   <span class="press-gutter-count">{{ entry.count }}</span>
                 </li>
               </ol>
-              <textarea
+              <MarkdownEditor
                 v-model="baseDraft"
                 class="press-base-editor"
-                spellcheck="true"
-                aria-label="Base text"
-                placeholder="The argument. Split tweets with a line holding only ---"
-              ></textarea>
+                placeholder="The argument. A rule (---) splits tweets; Enter starts a paragraph, Shift+Enter a line."
+                min-height="24rem"
+                @save="model.flush()"
+              />
             </div>
           </div>
 

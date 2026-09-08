@@ -937,3 +937,34 @@ own whole than to arbitrate.
   bare `|`, an alternation; the replacement lands at the first two spaces
   of the file. Use `#` as the delimiter — and not when the text holds `#`
   color codes either; Python for anything with both.
+
+## Tiptap + R2 in the press: the serializer lies, workerd outlives its parent
+
+- `tiptap-markdown` escapes `*`, `[`, `]`, `_`, `#` on the way out and ends
+  a soft line break with `\` + newline, so an untouched body would grow
+  backslashes on its first keystroke and every derived tweet would carry
+  them. Normalize the serializer's output (strip `\` before punctuation
+  and the backslash breaks) and keep a `lastMarkdown` guard so the
+  parent's echo of the emitted text never resets the document. Prove the
+  round-trip with a jsdom test (`// @vitest-environment jsdom`) that loads
+  the press's subset and expects the identical string back.
+- A block Image node serializes without closing its block in
+  `tiptap-markdown` (the next paragraph lands on the image line);
+  override `storage.markdown.serialize` with a `closeBlock`. Custom nodes
+  (YouTube, video) get their markdown spec the same way, and a markdown-it
+  core rule turns a bare media URL paragraph into the HTML the node parses.
+- `view.someProp('handleDrop', f => f(...))` returns `undefined` when the
+  handler returns `false`; call `view.props.handleDrop` directly in tests.
+- A new public path on the newsletter Worker must be listed in
+  `assets.run_worker_first`, or the SPA fallback answers it with
+  index.html (curl showed `text/html` for `/press-asset/<key>`).
+- `fuser -k 8787/tcp` kills wrangler's node but the live `wrangler dev`
+  respawns workerd and keeps the port; the surviving workerd then hangs
+  every request. Stop the wrangler process tree by pid (`ps -eo
+  pid,ppid,cmd | grep wrangler`) and restart with `run_in_background`.
+- `wrangler types` only knows secrets a local `.dev.vars` lists; a fresh
+  worktree without one loses `ADMIN_SECRET` & co. from `Env`. Declare
+  the required secrets in `src/env-secrets.d.ts` so types hold everywhere.
+- R2 is off by default on an account: `wrangler r2 bucket create` fails
+  with API code 10042 until R2 is enabled once in the Cloudflare dashboard.
+

@@ -365,6 +365,28 @@ repo. Design and invariants: `tasks/press-system-plan.md`,
 - **The calendar says when, the press says what.** A calendar entry names
   its copy by press source key and reads it from the Worker; Mark as
   posted there writes the ledger with the entry's venue and id.
+- **Bodies are edited in Tiptap, stored as markdown.** The base and every
+  markdown card (articles, Reddit, dev.to, the HN first comment, plain
+  text) open in a Tiptap editor; what lands in D1 is normalized markdown
+  (the serializer's `\` escapes and backslash line breaks come off, so
+  the text a tweet derives from is verbatim). Enter starts a paragraph,
+  Shift+Enter a line break; a rule (`---`) is a tweet break in the base.
+- **Images and video live in R2.** Drop or paste a file into any editor
+  (or pick one from the toolbar) and it uploads to the `PRESS_ASSETS`
+  bucket (`ivue-press`) through `POST /admin/press/asset?name=…` (raw
+  body, type in the header, 25 MB cap, images and mp4/webm/mov only) and
+  comes back at `<WORKER_ORIGIN>/press-asset/<ms>-<token>-<slug>.<ext>` —
+  a public, immutable, year-cached read the Worker answers before the SPA
+  fallback (`run_worker_first`). Tweets and cards take up to four images
+  each (drop onto the card) into `meta.imageUrls`, which the X poster
+  attaches. A YouTube link on its own line (or pasted) becomes a player;
+  a video file link becomes a `<video>`; both stay bare links in the
+  stored markdown. **R2 must be enabled once in the Cloudflare dashboard**
+  before `wrangler r2 bucket create ivue-press` succeeds (API error
+  10042 otherwise); the deploy fails until the bucket exists. Locally,
+  wrangler simulates the bucket; start the Worker with
+  `--var WORKER_ORIGIN:http://<your-vm-ip>:5190` so asset URLs resolve
+  through the vite proxy (`/press-asset` is proxied like `/admin`).
 - **Tables and routes are singular** (`piece`, `expression`, `posting`;
   `/admin/press/piece/:id`, `/admin/press/expression/:id/posting`).
 

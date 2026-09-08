@@ -5,6 +5,7 @@ import { Scheduler } from '../schedule/Scheduler';
 import { Piece } from './Piece';
 import { Expression } from './Expression';
 import { Posting } from './Posting';
+import { Asset } from './Asset';
 import { Projection } from './Projection';
 
 // The press routes — /admin/press/<resource>[/<id>[/<action>[/<sub>]]],
@@ -29,6 +30,7 @@ class $PressApi {
       if (resource === 'posting' && method === 'GET' && !idText)
         return Http.Class.json(await Posting.Class.recent(env, Number(url.searchParams.get('limit') ?? 200)));
       if (resource === 'queue' && method === 'GET') return await this.queue(env);
+      if (resource === 'asset' && method === 'POST') return await this.upload(request, url, env);
       if (resource === 'piece')
         return await this.piece(request, url, env, method, idText, id, action, subText, author);
       if (resource === 'expression' && !idText && method === 'GET' && url.searchParams.has('calendar'))
@@ -208,6 +210,16 @@ class $PressApi {
         url: post.url,
       })),
     );
+  }
+
+  /** an image or video dropped into an editor: the raw body, its type in the header, its name in the query */
+  static async upload(request: Request, url: URL, env: Env): Promise<Response> {
+    const stored = await Asset.Class.put(env, {
+      name: url.searchParams.get('name') ?? 'asset',
+      contentType: (request.headers.get('content-type') ?? '').split(';')[0].trim(),
+      body: await request.arrayBuffer(),
+    });
+    return Http.Class.json(stored);
   }
 
   /** every pending job with its expression resolved, soonest first */

@@ -18,6 +18,8 @@ class $ExpressionModel {
   static readonly COPIED_MS = 1400;
   static readonly X_NAME = 'Evgeny';
   static readonly X_HANDLE = '@ivue_dev';
+  /** X attaches at most four images to one post */
+  static readonly MAX_IMAGES = 4;
   static readonly SENT_PLATFORMS = ['x', 'linkedin', 'reddit', 'devto', 'hn', 'bluesky', 'mastodon', 'threads', 'email', 'other'];
 
   constructor(
@@ -481,6 +483,87 @@ class $ExpressionModel {
   setMeta(key: string, value: unknown) {
     this.metaDraft.value = { ...this.metaDraft.value, [key]: value };
     this.markDirty(() => this.saveBody());
+  }
+
+  /** the markdown editor hands over normalized markdown */
+  onBodyChange(markdown: string) {
+    this.bodyDraft.value = markdown;
+    this.markDirty(() => this.saveBody());
+  }
+
+  onFirstCommentChange(markdown: string) {
+    this.setMeta('firstComment', markdown);
+  }
+
+  /* ---- images on tweets ---- */
+
+  imageUrls(target: Api.PressExpression): string[] {
+    const meta = target.id === this.record.id ? this.metaDraft.value : target.meta;
+    return Array.isArray(meta.imageUrls) ? (meta.imageUrls as string[]) : [];
+  }
+
+  hasImages(target: Api.PressExpression): boolean {
+    return this.imageUrls(target).length > 0;
+  }
+
+  /** the media strip shows while the card edits or while there is something to show */
+  showsMedia(target: Api.PressExpression): boolean {
+    return this.canEdit || this.hasImages(target);
+  }
+
+  canAddImage(target: Api.PressExpression): boolean {
+    return this.canEdit && this.imageUrls(target).length < this.self.MAX_IMAGES;
+  }
+
+  onImageDragOver(event: DragEvent) {
+    if (this.canEdit) event.preventDefault();
+  }
+
+  onImageDrop(target: Api.PressExpression, event: DragEvent) {
+    event.preventDefault();
+    void this.attachImages(target, Array.from(event.dataTransfer?.files ?? []));
+  }
+
+  onImagePicked(target: Api.PressExpression, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    void this.attachImages(target, files);
+  }
+
+  /** upload every image, then one PATCH with the strip appended (X takes four) */
+  async attachImages(target: Api.PressExpression, files: File[]) {
+    const images = files.filter((file) => file.type.startsWith('image/'));
+    if (!this.canEdit || !images.length) return;
+    this.busy.value = true;
+    try {
+      const urls = [...this.imageUrls(target)];
+      for (const file of images) {
+        if (urls.length >= this.self.MAX_IMAGES) break;
+        urls.push((await Api.Class.pressUploadAsset(file)).url);
+      }
+      await this.saveImages(target, urls);
+    } catch (error) {
+      this.$app.reportFailure(error);
+    } finally {
+      this.busy.value = false;
+    }
+  }
+
+  async removeImage(target: Api.PressExpression, url: string) {
+    await this.saveImages(
+      target,
+      this.imageUrls(target).filter((existing) => existing !== url),
+    );
+  }
+
+  async saveImages(target: Api.PressExpression, imageUrls: string[]) {
+    if (target.id === this.record.id) {
+      this.metaDraft.value = { ...this.metaDraft.value, imageUrls };
+      await this.saveBody();
+      return;
+    }
+    await this.patch(target.id, { meta: { ...target.meta, imageUrls } });
   }
 
   onMetaInput(key: string, event: Event) {

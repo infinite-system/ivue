@@ -766,6 +766,26 @@ is a claim the builder makes about itself.
       ✔ walked on the local dashboard + Worker (the live one moves with the push): results below
       hand on the live dashboard, each line with a one-word result.
 
+### Step 10 — Tiptap editors and the R2 asset store (added 2026-09-08)
+
+- [x] `newsletter/src/modules/press/Asset.ts` stores under a unique key,
+      ✔ Asset.test.ts: key `^\d+-[a-z0-9]{4}-slug.ext`, two same-name puts differ, served with type + immutable cache, 404 on malformed key, refuses type/empty/oversize
+      serves publicly with the stored type, refuses everything else.
+- [x] `POST /admin/press/asset?name=` uploads through the admin secret;
+      ✔ PressApi route (test: 200 + served; text body 400; empty body 400); local curl → `{"key":"…-local-test.png","url":"http://10.211.55.7:5190/press-asset/…"}`
+      `GET /press-asset/<key>` is public and listed in `run_worker_first`.
+- [x] Every markdown body (base, article, Reddit, dev.to, HN comment,
+      ✔ MarkdownEditor.vue on EditorModel (ivue class); PressEditor round-trip test proves the stored subset comes back byte-identical
+      plain) edits in Tiptap and stores normalized markdown.
+- [x] Drop / paste / pick uploads images and video into the document;
+      ✔ EditorModel tests: hosted types upload + insert image/video nodes, a text file is not claimed, a failed upload reports; YouTube/video links route to nodes
+      a YouTube link becomes a player; tweets take four images each.
+- [x] `npx vitest run --coverage`: press files 100%; dashboard tsc, Worker
+      ✔ 237 tests; Asset/PressApi/Markdown/PressEditor/EditorModel 100% lines; gate back to the 5 pre-existing GmailUi/wrangler-tmp findings; build:admin ok
+      tsc, gate, `npm run build:admin` all pass.
+- [ ] R2 enabled on the account and `ivue-press` created (user: dashboard
+      toggle, then `cd newsletter && npx wrangler@4.120.1 r2 bucket create ivue-press`).
+
 ### The impossibility walk (2026-09-08, local dashboard + Worker)
 
 | impossibility | result | how |

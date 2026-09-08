@@ -5,6 +5,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { DatabaseSync as DatabaseSyncType } from 'node:sqlite';
+import { TestBucket } from './TestBucket';
 
 // vitest's bundled vite predates the node:sqlite builtin and cannot
 // resolve a static import of it — fetch the module at runtime instead
@@ -95,6 +96,7 @@ export function makeTestEnv(
 ): Env {
   return {
     DB: new TestDatabase.Class() as unknown as Env['DB'],
+    PRESS_ASSETS: new TestBucket.Class() as unknown as Env['PRESS_ASSETS'],
     SITE_ORIGIN: 'https://ivue.dev',
     WORKER_ORIGIN: 'https://newsletter.test',
     SENDER_NAME: 'ivue.dev',
