@@ -73,9 +73,9 @@ describe('Projection', () => {
   });
 
   // impossible-if-true: $Projection — a platform card shows text the platform would not accept
-  it('limits: 280 on X, 300 Bluesky, 500 Mastodon, 80 for an HN title, a cover for an article', () => {
-    const long = 'x'.repeat(281);
-    expect(Projection.Class.lint('x-segment', long)).toEqual(['281 characters, the limit is 280']);
+  it('limits: 25,000 on X (Premium; 280 is only the fold), 300 Bluesky, 500 Mastodon, 80 for an HN title, a cover for an article', () => {
+    expect(Projection.Class.lint('x-segment', 'x'.repeat(281))).toEqual([]);
+    expect(Projection.Class.lint('x-segment', 'x'.repeat(25_001))).toEqual(['25001 characters, the limit is 25000']);
     expect(Projection.Class.lint('bluesky', 'x'.repeat(300))).toEqual([]);
     expect(Projection.Class.lint('mastodon', 'x'.repeat(501))[0]).toMatch(/limit is 500/);
     expect(Projection.Class.lint('hn', 'x'.repeat(81))[0]).toMatch(/limit is 80/);

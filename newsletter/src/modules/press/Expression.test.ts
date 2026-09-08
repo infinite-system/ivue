@@ -107,8 +107,8 @@ describe('Expression', () => {
   it('approval is of the exact text: the lint must pass, and every segment skipped is refused', async () => {
     const env = makeTestEnv();
     const piece = await pieceWithBase(env);
-    const long = await Expression.Class.create(env, { pieceId: piece.id, kind: 'x-post', body: 'x'.repeat(281) });
-    await expect(Expression.Class.approve(env, long.id)).rejects.toThrow(/281 characters/);
+    const long = await Expression.Class.create(env, { pieceId: piece.id, kind: 'bluesky', body: 'x'.repeat(301) });
+    await expect(Expression.Class.approve(env, long.id)).rejects.toThrow(/301 characters/);
     const thread = await Expression.Class.create(env, { pieceId: piece.id, kind: 'x-thread', segments: ['a', 'b'] });
     for (const child of thread.children!) await Expression.Class.patch(env, child.id, { skipped: true });
     await expect(Expression.Class.approve(env, thread.id)).rejects.toThrow(/every segment is skipped/);

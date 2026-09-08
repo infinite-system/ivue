@@ -33,7 +33,8 @@ defineProps<{ model: ExpressionModel.Instance }>();
           v-text="entry.child.body"
         ></p>
         <div class="x-foot">
-          <span class="x-count" :class="{ over: model.segmentOver(entry.child) }">{{ model.segmentCountLabel(entry.child) }}</span>
+          <span class="x-count" :class="{ over: model.segmentOver(entry.child), folds: model.segmentPastFold(entry.child) }">{{ model.segmentCountLabel(entry.child) }}</span>
+          <span v-if="model.segmentPastFold(entry.child)" class="x-fold-note">folds at 280</span>
           <button class="ghost x-action" type="button" @click="model.copySegment(entry.child)">{{ model.copyLabel(model.segmentKey(entry.child)) }}</button>
           <button class="ghost x-action" type="button" @click="model.setSkipped(entry.child, !entry.child.skipped)">{{ model.skipLabel(entry.child) }}</button>
         </div>

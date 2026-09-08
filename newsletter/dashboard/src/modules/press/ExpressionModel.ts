@@ -457,6 +457,11 @@ class $ExpressionModel {
     return limit !== null && this.segmentCount(child) > limit;
   }
 
+  /** past 280 the tweet folds behind Show more — a signal, not a block */
+  segmentPastFold(child: Api.PressExpression): boolean {
+    return this.segmentCount(child) > PressKinds.Class.xFold;
+  }
+
   segmentCountLabel(child: Api.PressExpression): string {
     return this.limit === null ? `${this.segmentCount(child)}` : `${this.segmentCount(child)} / ${this.limit}`;
   }

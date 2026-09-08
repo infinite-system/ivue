@@ -2578,6 +2578,17 @@ input[type='datetime-local'] {
   font-weight: 600;
 }
 
+.x-count.folds,
+.x-fold-note {
+  color: #fbbf24;
+}
+
+.x-fold-note {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .x-action {
   min-height: 26px;
   padding: 2px 10px;

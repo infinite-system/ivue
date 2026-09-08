@@ -57,11 +57,14 @@ class $Projection {
     'email',
     'note',
   ];
+  /** the account is Premium: an X post may run to the long-post ceiling; 280 is only the fold */
+  static readonly X_LIMIT = 25_000;
   /** character limits by kind (X-weighted where X counts) */
   static readonly LIMITS: Record<string, number> = {
-    'x-segment': 280,
-    'x-post': 280,
-    'x-card': 280,
+    'x-segment': 25_000,
+    'x-post': 25_000,
+    'x-long': 25_000,
+    'x-card': 25_000,
     bluesky: 300,
     mastodon: 500,
     threads: 500,

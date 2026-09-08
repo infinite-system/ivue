@@ -162,7 +162,7 @@ describe('PressApi', () => {
           base: 'a\n\n---\n\nb',
           expressions: [
             { kind: 'x-thread', segments: ['a', 'b'], approved: true, label: 'launch thread' },
-            { kind: 'x-post', body: 'x'.repeat(300), approved: true },
+            { kind: 'bluesky', body: 'x'.repeat(301), approved: true },
             { kind: 'unknown-kind', body: 'x' },
           ],
         },
@@ -174,7 +174,7 @@ describe('PressApi', () => {
     const detail = (await call('/admin/press/piece?q=launch', env)).json[0];
     expect(detail.expressions.map((state: { kind: string; status: string }) => [state.kind, state.status])).toEqual([
       ['x-thread', 'approved'],
-      ['x-post', 'draft'],
+      ['bluesky', 'draft'],
       ['email', 'draft'],
     ]);
     void Expression;

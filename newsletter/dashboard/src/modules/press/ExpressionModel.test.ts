@@ -115,7 +115,7 @@ describe('ExpressionModel', () => {
     expect(model.liveCount).toBe(2);
     expect(model.copyText).toBe('Tweet 1\n\nTweet 3');
     expect(model.mirrors[0]).toMatchObject({ label: 'Bluesky', limit: 300, over: false, sentLabel: 'not sent' });
-    expect(model.limit).toBe(280);
+    expect(model.limit).toBe(25000);
     expect(model.kindLabel).toBe('X thread');
     expect(model.frame).toBe('x-thread');
   });
@@ -127,8 +127,9 @@ describe('ExpressionModel', () => {
     type('see https://ivue.dev/blog/a-long-slug-that-goes-on-and-on');
     expect(model.segmentCount(child)).toBe(4 + 23);
     type('x'.repeat(281));
-    expect(model.segmentOver(child)).toBe(true);
-    expect(model.segmentCountLabel(child)).toBe('281 / 280');
+    expect(model.segmentOver(child)).toBe(false);
+    expect(model.segmentCountLabel(child)).toBe('281 / 25000');
+    expect(model.segmentPastFold(child)).toBe(true);
     expect(model.saveState.value).toBe('dirty');
     expect(calls).toEqual([]);
     await vi.advanceTimersByTimeAsync(ExpressionModel.Class.AUTOSAVE_MS + 10);
@@ -194,7 +195,7 @@ describe('ExpressionModel', () => {
     expect(post.afterFold).toBe(' tail');
     const short = make(row(6, { kind: 'x-post', parentId: null, body: 'short' }));
     expect(short.afterFold).toBe('');
-    expect(short.countLabel).toBe('5 / 280');
+    expect(short.countLabel).toBe('5 / 25000');
     const email = make(row(7, { kind: 'email', parentId: null, body: 'Hi', meta: { subject: 'S', to: 'e@x' } }));
     expect(email.copyText).toBe('S\n\nHi');
     expect(email.emailTo).toBe('e@x');
