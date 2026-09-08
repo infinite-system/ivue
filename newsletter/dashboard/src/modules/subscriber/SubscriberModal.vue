@@ -13,10 +13,12 @@ const {
 
 <template>
   <!-- QDialog owns the backdrop, the focus trap, Escape, and the scroll
-       lock; the route query still owns whether it is open -->
+       lock; the route query still owns whether it is open — so a tab
+       change (a query change) must not dismiss it -->
   <q-dialog
     :model-value="model.isOpen"
     class="admin-dialog"
+    no-route-dismiss
     @hide="model.close()"
   >
     <aside class="dialog card" aria-label="Subscriber detail">

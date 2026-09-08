@@ -594,7 +594,7 @@ try {
   await page.click('.tab[data-tab="press-queue"]');
   await page.waitForSelector('[data-view="press-queue"]', { timeout: 15_000 });
   await page.waitForFunction(
-    () => document.body.innerText.includes('X thread'),
+    () => document.querySelector('[data-view="press-queue"]')?.innerText.includes('X thread'),
     undefined,
     { timeout: 10_000 },
   );
@@ -617,7 +617,11 @@ try {
     { timeout: 10_000 },
   );
   await page.click('.tab[data-tab="press-sent"]');
-  await page.waitForSelector('[data-view="press-sent"] tbody tr', { timeout: 15_000 });
+  await page.waitForFunction(
+    () => document.querySelector('[data-view="press-sent"]')?.innerText.includes('https://x.com/i/status/e2e'),
+    undefined,
+    { timeout: 15_000 },
+  );
   check(
     'the ledger shows the posting with its URL',
     (await page.locator('[data-view="press-sent"]').innerText()).includes('https://x.com/i/status/e2e'),

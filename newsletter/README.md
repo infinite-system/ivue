@@ -66,6 +66,10 @@ npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --local   # from newsle
 npx wrangler@4.120.1 dev --port 8787 \
   --var ADMIN_SECRET:e2e-local-secret --var POSTMARK_SERVER_TOKEN:invalid-local-token
 node newsletter/scripts/e2e-walk.mjs                                # from repo root
+# the walk expects a seeded local audience: 30+ subscribers including
+# evgeny@ivue.dev with `send` rows for one-kilobyte-feature and
+# the-field-not-the-rules (add subscribers through POST /admin/subscriber/add,
+# sends with `d1 execute --local`); the press stations create their own rows
 
 # production walk (read-only + one sanctioned test send)
 set -a; . newsletter/.env; set +a

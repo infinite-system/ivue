@@ -774,9 +774,15 @@ td {
 }
 
 /* inside a QDialog the card is the dialog; Quasar's inner wrapper only
-   positions it, so the card keeps every rule below */
+   positions it, so the card keeps every rule below. Quasar re-enables
+   pointer events only on a direct `div` child — our cards are asides and
+   forms, so the rule is widened to every direct child. */
 .admin-dialog .q-dialog__inner > .dialog {
   max-width: none;
+}
+
+.q-dialog__inner > * {
+  pointer-events: all;
 }
 
 .dialog {
