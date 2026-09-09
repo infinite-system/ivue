@@ -26,6 +26,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Components:** One per gear, each delete-testable:
 - [Rendered sizes are known only after a row mounts](#rendered-sizes-are-known-only-after-a-row-mounts) — why positions are prefix sums over an estimate that refines.
+- [The reader's row stays put while sizes settle](#the-readers-row-stays-put-while-sizes-settle) — why a row measuring above the reader never moves the content under them.
 - [A native selection dies with the node that anchors it](#a-native-selection-dies-with-the-node-that-anchors-it) — why the selection cannot be the browser's.
 - [Touch events keep firing on the node the finger landed on](#touch-events-keep-firing-on-the-node-the-finger-landed-on) — why the gesture's listeners ride the origin node.
 - [The transform lerps to the target over many frames](#the-transform-lerps-to-the-target-over-many-frames) — why a target-anchored window leaves a gap to cover.
