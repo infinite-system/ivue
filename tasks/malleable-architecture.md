@@ -494,7 +494,7 @@ chat example is the first tree to be converted — the build is
 `tasks/ai-chat-kit.md`.
 
 - **A model owns its kit as a lazy static.** `static get $kit()` returns
-  the roles the model's subtree composes, each a `{ ns, view }` pair
+  the roles the model's subtree composes, each a `{ namespace, view }` pair
   for a role with its own model or `{ view }` for a leaf that takes props.
   A lazy getter, cached per class, is what makes the model↔view import
   cycle harmless: neither side reads the other at module init. A
@@ -502,14 +502,14 @@ chat example is the first tree to be converted — the build is
 - **The entry is what crosses the seam.** A parent renders
   `<component :is="model.kit.Message.view" :kit="model.kit.Message" …props />`:
   the entry's view, handed the entry itself as the one prop, plus the
-  child's own props. An entry is `{ view, ns?, props?, subkit? }`:
+  child's own props. An entry is `{ view, namespace?, props?, subkit? }`:
   the view, the namespace whose `Class` the view constructs, props the consumer set for
   the role, and a patch over the child's own kit. Nothing else travels
   — no inject. A child's model reads its kit from its own class,
   `this.self.$kit`, so a swapped class brings its own kit with it.
 - **Every view constructs its own model — the class its entry names.**
   The SFC stays the wiring the standard describes, one `new` in setup:
-  `new (props.kit?.ns.Class ?? Message.Class)(props)`. The fallback is for
+  `new (props.kit?.namespace.Class ?? Message.Class)(props)`. The fallback is for
   a view mounted on its own (a docs demo, a spec). Props live on the
   class's static contract (`propsTypes`, `propsDefaults`, `props`), so
   an entry's `props` are laid over the class's defaults in the
