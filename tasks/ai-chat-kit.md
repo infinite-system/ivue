@@ -19,7 +19,7 @@ shipped instance to point at.
 
 - **`static get $kit()` on every model that composes.** A lazy static
   getter, cached per class, returning the roles that model's subtree
-  needs as `{ model, view }` pairs (a parent-owned child) or `{ view }`
+  needs as `{ model, view }` pairs (a role with its own model) or `{ view }`
   (a leaf that takes props). Lazy is what makes the model↔view import
   cycle harmless: nothing reads the other side at module init. A
   subclass extends by spread: `{ ...super.$kit, Scroller: { … } }`.
