@@ -332,6 +332,12 @@ import ToolCallPartView from './parts/ToolCallPart.vue';
 import ToolBatchPartView from './parts/ToolBatchPart.vue';
 import AttachmentPartView from './parts/AttachmentPart.vue';
 import SystemPartView from './parts/SystemPart.vue';
+import MessageGutterView from './sections/MessageGutter.vue';
+import MessageHeadView from './sections/MessageHead.vue';
+import MessageStubView from './sections/MessageStub.vue';
+import MessagePartsView from './sections/MessageParts.vue';
+import MessageAwaitView from './sections/MessageAwait.vue';
+import MessageFootView from './sections/MessageFoot.vue';
 import { ToolBatchPart } from './parts/ToolBatchPart';
 import { ToolCallModel } from './tools/ToolCallModel';
 
@@ -440,7 +446,7 @@ const model = new (props.kit?.namespace.Class ?? ChatMessage.Class)(props);
 ```
 
 ```vue
-<!-- MessageHead.vue — one section, markup only over the row model -->
+<!-- sections/MessageHead.vue — one section, markup only over the row model -->
 <script setup lang="ts">
 import type { Kit } from '../Kit';
 import type { ChatMessage } from '../ChatMessage';
@@ -459,7 +465,7 @@ defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
 ```
 
 ```vue
-<!-- MessageParts.vue — the collection section: it renders the parts, and the await line below them -->
+<!-- sections/MessageParts.vue — the collection section: it renders the parts, and the await line below them -->
 <script setup lang="ts">
 import type { Kit } from '../Kit';
 import type { ChatMessage } from '../ChatMessage';
