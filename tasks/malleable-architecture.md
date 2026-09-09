@@ -489,8 +489,9 @@ The `template` + `runner` sketch above still has each component
 choosing between its own markup and a dynamic view. Reduced further,
 the choice leaves the component entirely, and the four moves below are
 the whole mechanism. Nothing about who constructs changes: every view
-still constructs its own model in setup, as the standard says. The AI chat example is the first tree to be
-converted — the build is `tasks/ai-chat-kit.md`.
+still constructs its own model in setup, as the standard says. The AI
+chat example is the first tree to be converted — the build is
+`tasks/ai-chat-kit.md`.
 
 - **A model owns its kit as a lazy static.** `static get $kit()` returns
   the roles the model's subtree composes, each a `{ model, view }` pair
@@ -498,22 +499,27 @@ converted — the build is `tasks/ai-chat-kit.md`.
   A lazy getter, cached per class, is what makes the model↔view import
   cycle harmless: neither side reads the other at module init. A
   subclass overrides by spread; a one-off is `with({ Role: … })`.
-- **The kit travels as a prop, not through inject.** A parent's
-  template passes its kit to every child it composes; a child's model
-  reads `this.props.kit ?? this.self.$kit`. Local override with a global
-  fallback falls out of the composition that already exists, and a
-  model built in a test with no kit uses its own.
-- **Every view constructs its own model — from the kit's entry.** The
-  SFC stays the wiring the standard describes, one `new` in setup; the
-  class it news is `kit.Role.model`, so an override can swap the model
-  class and the view from one place, and neither file changes. Hooks in
-  the constructor bind to the view's own component, as today. A parent
-  never constructs a child.
-- **Templates name roles.** A parent renders
-  `<component :is="model.kit.Message.view" :kit="model.kit" …props />`.
-  There is no shell component: the parent chose the entry and knows the
-  view; the view knows the model. `<component :is>` is Vapor's
-  dynamic-component path too, so the mechanism is neutral to the runtime.
+- **The class is what crosses the seam.** A parent renders
+  `<component :is="model.kit.Message.view" :model="model.kit.Message.model" …props />`:
+  the entry's view, handed the entry's model CLASS as a prop, plus the
+  child's own props. Nothing else travels — no kit prop, no inject. A
+  child's model reads its kit from its own class, `this.self.$kit`, so a
+  swapped class brings its own kit with it.
+- **Every view constructs its own model — the class it was handed.**
+  The SFC stays the wiring the standard describes, one `new` in setup:
+  `new (props.model ?? Message.Class)(props)`. The fallback is for a view
+  mounted on its own (a docs demo, a spec). Hooks in the constructor bind
+  to the view's own component, as today. A parent never constructs a
+  child.
+- **Override is subclassing.** A subclass with a different `$kit` swaps
+  its whole subtree, and the parent's kit names the subclass. A swap
+  that must reach a deep leaf — a different code block under every tool
+  card — is a chain of small subclasses, each a two-line spread, rather
+  than a merge walking a tree. Explicit, greppable, and the same move
+  the overlay ledger already makes.
+- **There is no shell component.** The parent chose the entry and
+  knows both halves; `<component :is>` is Vapor's dynamic-component path
+  too, so the mechanism is neutral to the runtime.
 - **State that must outlive a view lives on the parent's model as
   data**, as it already does (the chat keeps expanded ids, the stream's
   revision and the clock on `Chat`). Ownership of models never moves;
@@ -1447,8 +1453,8 @@ Post-release, as a ladder — each rung is a shippable artifact:
 
 1. The kit on ONE tree: the AI chat example converted per
    `tasks/ai-chat-kit.md` (kit as `static get $kit`, pairs of model and
-   view, the kit passed down as a prop, `:is` at every seam, every view
-   still constructing its own model); measure mount cost
+   view, the model class passed down as the one prop, `:is` at every
+   seam, every view constructing the class it was handed); measure mount cost
    before and after; then the kit ruling goes to the gate. This
    supersedes the earlier "universal shell" rung — the shell dissolved
    into the parent's kit (see "The kit", above).
