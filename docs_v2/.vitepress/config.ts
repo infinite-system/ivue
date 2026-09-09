@@ -146,13 +146,25 @@ export default defineConfig({
       // The home hero imports the real engine from ../lib/Reactive.ts.
       // One Vue copy for both the docs and the lib, or tracking breaks.
       dedupe: ['vue'],
-      alias: {
+      alias: [
         // The playground is the canonical source of every example — docs
         // demos import the SAME classes the example pages show as code.
-        '@examples': fileURLToPath(
-          new URL('../../examples/playground/src/examples', import.meta.url),
-        ),
-      },
+        {
+          find: '@examples',
+          replacement: fileURLToPath(
+            new URL('../../examples/playground/src/examples', import.meta.url),
+          ),
+        },
+        // The AI chat example colours code at runtime through shiki, which
+        // lives in this site's install; the playground files that import
+        // it sit outside this package, so the bare specifier needs the
+        // path. Only the bare name: shiki's own `shiki/wasm` import must
+        // keep resolving through its package exports.
+        {
+          find: /^shiki$/,
+          replacement: fileURLToPath(new URL('../node_modules/shiki', import.meta.url)),
+        },
+      ],
     },
     server: {
       fs: { allow: ['../..'] },
@@ -754,6 +766,7 @@ export default defineConfig({
               { text: 'Virtual Scroller: Specs', link: '/examples/virtual-scroller-specs' },
               { text: 'Horizontal Scroller: 1M Items', link: '/examples/horizontal-scroller' },
               { text: 'Horizontal Scroller: Specs', link: '/examples/horizontal-scroller-specs' },
+              { text: 'AI Chat: a real session', link: '/examples/ai-chat' },
               { text: 'Formula Grid: 1M Cells', link: '/examples/formula-grid' },
               { text: 'Flyweight Grid: 20M Cells', link: '/examples/flyweight-grid' },
             ],
@@ -818,6 +831,7 @@ export default defineConfig({
             { text: 'Virtual Scroller: Specs', link: '/examples/virtual-scroller-specs' },
             { text: 'Horizontal Scroller: 1M Items', link: '/examples/horizontal-scroller' },
             { text: 'Horizontal Scroller: Specs', link: '/examples/horizontal-scroller-specs' },
+            { text: 'AI Chat: a real session', link: '/examples/ai-chat' },
             { text: 'Formula Grid: 1M Cells', link: '/examples/formula-grid' },
             { text: 'Flyweight Grid: 20M Cells', link: '/examples/flyweight-grid' },
           ],

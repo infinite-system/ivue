@@ -1,0 +1,386 @@
+{
+  "builtAt": "2026-09-09T17:24:23.030Z",
+  "source": {
+    "file": "566fe626-e30e-4195-b057-18d7724adbb0.jsonl",
+    "lines": 82169
+  },
+  "count": 10350,
+  "pageSize": 200,
+  "pages": [
+    {
+      "index": 0,
+      "bytes": 765655,
+      "messages": 200,
+      "firstId": "422e588e-e203-4015-84e0-40281f5ffcca"
+    },
+    {
+      "index": 1,
+      "bytes": 1399395,
+      "messages": 200,
+      "firstId": "7aa427ca-aff7-4554-9044-45bf13920f92"
+    },
+    {
+      "index": 2,
+      "bytes": 1201213,
+      "messages": 200,
+      "firstId": "58ad0e9b-8229-4f74-a62e-11036a20939a"
+    },
+    {
+      "index": 3,
+      "bytes": 1241766,
+      "messages": 200,
+      "firstId": "batch-a32e8c1a-4314-41fa-9b2f-10c548cb7b05"
+    },
+    {
+      "index": 4,
+      "bytes": 1957385,
+      "messages": 200,
+      "firstId": "4b2d68df-b286-4191-a4bb-9eab89da29be"
+    },
+    {
+      "index": 5,
+      "bytes": 3688906,
+      "messages": 200,
+      "firstId": "a6af8f86-9344-406e-8ed9-cbed6e27d2be"
+    },
+    {
+      "index": 6,
+      "bytes": 1685596,
+      "messages": 200,
+      "firstId": "batch-f83227f0-be97-4768-be0b-e5a4142b624c"
+    },
+    {
+      "index": 7,
+      "bytes": 785863,
+      "messages": 200,
+      "firstId": "4ec66ba0-480d-498c-9800-5213dd1e73c1"
+    },
+    {
+      "index": 8,
+      "bytes": 649977,
+      "messages": 200,
+      "firstId": "a580fbc3-7b62-4040-ac36-65872b85c5a8"
+    },
+    {
+      "index": 9,
+      "bytes": 555898,
+      "messages": 200,
+      "firstId": "batch-2ce76859-ac8b-4dfe-aec7-b353a99b98bc"
+    },
+    {
+      "index": 10,
+      "bytes": 500587,
+      "messages": 200,
+      "firstId": "4bffbe46-db65-4682-abb7-20da93643efb"
+    },
+    {
+      "index": 11,
+      "bytes": 703093,
+      "messages": 200,
+      "firstId": "0be3bceb-9ccc-4d9a-9413-9912b1d3b6c2"
+    },
+    {
+      "index": 12,
+      "bytes": 488868,
+      "messages": 200,
+      "firstId": "c62af1f6-e90c-4e8e-ad93-86729bda0528"
+    },
+    {
+      "index": 13,
+      "bytes": 1301351,
+      "messages": 200,
+      "firstId": "9a0afdf2-cfc2-4d3e-9abe-eee22b74e6c7"
+    },
+    {
+      "index": 14,
+      "bytes": 454488,
+      "messages": 200,
+      "firstId": "482ff1c2-cf8c-461e-821e-146cc7b7b99e"
+    },
+    {
+      "index": 15,
+      "bytes": 433217,
+      "messages": 200,
+      "firstId": "batch-2b2db691-3fb4-4d13-93dd-2d26ac44a6c6"
+    },
+    {
+      "index": 16,
+      "bytes": 476272,
+      "messages": 200,
+      "firstId": "batch-f8c28bf2-dd95-4919-b281-08da7be33968"
+    },
+    {
+      "index": 17,
+      "bytes": 598215,
+      "messages": 200,
+      "firstId": "1dadb590-1c18-4460-9b7e-715cd28e2df2"
+    },
+    {
+      "index": 18,
+      "bytes": 490680,
+      "messages": 200,
+      "firstId": "8a482b82-b2e7-4df8-a0ab-5e5872745f79"
+    },
+    {
+      "index": 19,
+      "bytes": 404738,
+      "messages": 200,
+      "firstId": "c76a10c2-805c-4860-b44b-7de054891d30"
+    },
+    {
+      "index": 20,
+      "bytes": 869016,
+      "messages": 200,
+      "firstId": "79acd8fb-db9c-4bcb-bcdc-b827b5a10548"
+    },
+    {
+      "index": 21,
+      "bytes": 725487,
+      "messages": 200,
+      "firstId": "477e531f-990f-4d6e-9299-69fe4737ed05"
+    },
+    {
+      "index": 22,
+      "bytes": 773483,
+      "messages": 200,
+      "firstId": "3f13b35a-0f7a-4e1f-a523-f787d5934f75"
+    },
+    {
+      "index": 23,
+      "bytes": 880843,
+      "messages": 200,
+      "firstId": "batch-95bc7569-4308-494c-81e8-882dd6cfc432"
+    },
+    {
+      "index": 24,
+      "bytes": 805553,
+      "messages": 200,
+      "firstId": "b79cf5c8-add9-45f8-b2c3-4d3f0c857f05"
+    },
+    {
+      "index": 25,
+      "bytes": 797971,
+      "messages": 200,
+      "firstId": "4075e306-9f70-42a3-8c2c-f395036bec5f"
+    },
+    {
+      "index": 26,
+      "bytes": 700276,
+      "messages": 200,
+      "firstId": "4cb490be-e745-49c3-8a55-13c9e1a2800b"
+    },
+    {
+      "index": 27,
+      "bytes": 555832,
+      "messages": 200,
+      "firstId": "c56e45e2-0b8a-4872-b723-2dbf8d4b2888"
+    },
+    {
+      "index": 28,
+      "bytes": 639395,
+      "messages": 200,
+      "firstId": "6bb7f395-cd04-4dc9-8943-a0b2cafd5c72"
+    },
+    {
+      "index": 29,
+      "bytes": 635258,
+      "messages": 200,
+      "firstId": "37cdb676-b788-40db-b8ab-d050df88f909"
+    },
+    {
+      "index": 30,
+      "bytes": 691759,
+      "messages": 200,
+      "firstId": "5bf0b6d7-1ef3-40a6-89bf-3e5c897551aa"
+    },
+    {
+      "index": 31,
+      "bytes": 716340,
+      "messages": 200,
+      "firstId": "e70a2a33-8c3e-4719-9b83-cd1a79a4dc78"
+    },
+    {
+      "index": 32,
+      "bytes": 1129727,
+      "messages": 200,
+      "firstId": "75c48e7a-1aeb-4769-8302-68da9574a6bf"
+    },
+    {
+      "index": 33,
+      "bytes": 571445,
+      "messages": 200,
+      "firstId": "ed924af6-442b-4754-b02a-195849a2beb6"
+    },
+    {
+      "index": 34,
+      "bytes": 599600,
+      "messages": 200,
+      "firstId": "13347938-e210-428b-b529-eb3bc3b2b790"
+    },
+    {
+      "index": 35,
+      "bytes": 885649,
+      "messages": 200,
+      "firstId": "12158ca7-5cb9-4fe6-b940-53629e20de01"
+    },
+    {
+      "index": 36,
+      "bytes": 658223,
+      "messages": 200,
+      "firstId": "6b8b6f0b-18dd-4ed3-8b20-7cf7329b2fbc"
+    },
+    {
+      "index": 37,
+      "bytes": 593830,
+      "messages": 200,
+      "firstId": "batch-12839114-9c85-4642-a7bb-019ab6992eb9"
+    },
+    {
+      "index": 38,
+      "bytes": 686190,
+      "messages": 200,
+      "firstId": "2fba4c64-7e57-4fb3-b6b2-0ba09ba03ada"
+    },
+    {
+      "index": 39,
+      "bytes": 485134,
+      "messages": 200,
+      "firstId": "716a2e44-ebad-421d-a474-7fe6d1739471"
+    },
+    {
+      "index": 40,
+      "bytes": 528115,
+      "messages": 200,
+      "firstId": "c7a6c488-d896-428c-87d5-1ec257144ec1"
+    },
+    {
+      "index": 41,
+      "bytes": 567283,
+      "messages": 200,
+      "firstId": "7e9f89d6-57aa-462f-83b3-6f1896c326b3"
+    },
+    {
+      "index": 42,
+      "bytes": 724733,
+      "messages": 200,
+      "firstId": "ac4c5516-6163-4784-8088-930fd33b5131"
+    },
+    {
+      "index": 43,
+      "bytes": 584409,
+      "messages": 200,
+      "firstId": "38c9a224-c3f8-4f39-989e-2047423f2b46"
+    },
+    {
+      "index": 44,
+      "bytes": 1669203,
+      "messages": 200,
+      "firstId": "2d397d18-976f-404e-bf5f-58c42e9af0d7"
+    },
+    {
+      "index": 45,
+      "bytes": 1203899,
+      "messages": 200,
+      "firstId": "d6fb0a96-5d66-4e89-bec9-47c74dc0aa12"
+    },
+    {
+      "index": 46,
+      "bytes": 749392,
+      "messages": 200,
+      "firstId": "16f8b8b0-a297-44a3-b129-4171342cc36d"
+    },
+    {
+      "index": 47,
+      "bytes": 1140851,
+      "messages": 200,
+      "firstId": "b46505f5-0ce5-45ae-b038-de275acd44cb"
+    },
+    {
+      "index": 48,
+      "bytes": 837839,
+      "messages": 200,
+      "firstId": "64370055-b642-4446-95d0-cb5ccdda81e5"
+    },
+    {
+      "index": 49,
+      "bytes": 754319,
+      "messages": 200,
+      "firstId": "64e59c94-0e8e-444d-ae41-35edf3246b87"
+    },
+    {
+      "index": 50,
+      "bytes": 1506923,
+      "messages": 200,
+      "firstId": "4506b2af-8025-4d5d-a321-f9b56eaada13"
+    },
+    {
+      "index": 51,
+      "bytes": 797332,
+      "messages": 150,
+      "firstId": "f0d1e0fb-e625-4fc6-bd0f-fe1f9410c0c8"
+    }
+  ],
+  "totalBytes": 45248472,
+  "indexBytes": 1601946,
+  "firstAt": 1782850937437,
+  "lastAt": 1788974111546,
+  "roles": {
+    "assistant": 6417,
+    "system": 2114,
+    "user": 1819
+  },
+  "models": {
+    "claude-opus-4-8": 251,
+    "<synthetic>": 18,
+    "claude-fable-5": 4785,
+    "claude-opus-5": 404,
+    "claude-fable-5-1": 959
+  },
+  "tools": {
+    "Bash": 8009,
+    "Read": 1308,
+    "Write": 766,
+    "ToolSearch": 34,
+    "TaskCreate": 18,
+    "TaskUpdate": 29,
+    "Edit": 1561,
+    "Skill": 21,
+    "mcp__playwright__browser_run_code_unsafe": 303,
+    "mcp__playwright__browser_take_screenshot": 3,
+    "mcp__playwright__browser_close": 7,
+    "mcp__playwright__browser_navigate": 9,
+    "WebSearch": 13,
+    "WebFetch": 29,
+    "mcp__playwright__browser_console_messages": 4,
+    "mcp__playwright__browser_snapshot": 1,
+    "Agent": 32,
+    "TaskStop": 11,
+    "ListAgents": 1,
+    "AskUserQuestion": 8,
+    "PushNotification": 1,
+    "ScheduleWakeup": 1,
+    "SendMessage": 18,
+    "Artifact": 36,
+    "SendFeedback": 1,
+    "EnterWorktree": 1
+  },
+  "calls": 12225,
+  "subagents": 24,
+  "images": {
+    "kept": 60,
+    "dropped": 1804
+  },
+  "scrub": {
+    "home-path": 56113,
+    "email": 3552,
+    "lan-ip": 649,
+    "session-url": 371,
+    "authorization-header": 208,
+    "bearer": 173,
+    "secret-assignment": 105,
+    "bare-gmail": 10,
+    "pem-block": 6,
+    "pem-marker": 9,
+    "api-key": 4
+  }
+}

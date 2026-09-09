@@ -1,0 +1,397 @@
+import { computed, ref, shallowRef } from 'vue';
+import { Reactive } from '../../ivue';
+import { Static } from '../../Static';
+import type { VirtualScroller } from '../virtual-scroller/VirtualScroller';
+import type { Chat } from './Chat';
+import type { ChatApi } from './ChatApi';
+import { ChatExport } from './ChatExport';
+
+// The index: every message as one line, from the small index file, so
+// the whole thread is listed and filtered without a content page. A
+// second virtual scroller over the filtered ids; a click seeks the chat;
+// selection is a set of ids plus an anchor, so shift-click takes the
+// range in the current filtered order and a filter never loses a pick.
+// Export gathers the selected messages in thread order, loading the
+// pages they need.
+class $Index {
+  static readonly ROLE_LABELS: Record<Index.RoleFilter, string> = { all: 'All', user: 'You', assistant: 'Agent' };
+  static readonly TOOL_LABELS: Record<Index.ToolFilter, string> = { include: 'With tools', exclude: 'No tools', only: 'Tools only' };
+  static readonly EXPORT_LABELS: Record<Chat.ExportForm, string> = { markdown: 'Markdown', plain: 'Plain text', jsonl: 'JSONL' };
+  static readonly MIN_WIDTH = 280;
+  static readonly MAX_WIDTH = 720;
+
+  static saveFile(text: string, name: string) {
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = name;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  constructor(public props: Index.Props) {}
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $Index;
+  }
+
+  get chat(): Chat.Model {
+    return this.props.chat;
+  }
+
+  /* ---- state ---- */
+
+  get role() {
+    return ref<Index.RoleFilter>('all');
+  }
+
+  get tools() {
+    return ref<Index.ToolFilter>('include');
+  }
+
+  get query() {
+    return ref('');
+  }
+
+  get selected() {
+    return shallowRef<Set<string>>(new Set());
+  }
+
+  get anchorId() {
+    return ref<string | null>(null);
+  }
+
+  get focusedIndex() {
+    return ref(0);
+  }
+
+  get width() {
+    return ref(360);
+  }
+
+  get exportForm() {
+    return ref<Chat.ExportForm>('markdown');
+  }
+
+  get exporting() {
+    return ref(false);
+  }
+
+  get copied() {
+    return ref(false);
+  }
+
+  get resizing() {
+    return ref(false);
+  }
+
+  // TEMPLATE-REF TARGET — the index's own scroller
+  get scroller() {
+    return ref<VirtualScroller.Exposed<Index.Row> | null>(null);
+  }
+
+  /* ---- the filtered list ---- */
+
+  get roleOptions(): { value: Index.RoleFilter; label: string }[] {
+    return (Object.keys(this.self.ROLE_LABELS) as Index.RoleFilter[]).map((value) => ({ value, label: this.self.ROLE_LABELS[value] }));
+  }
+
+  get toolOptions(): { value: Index.ToolFilter; label: string }[] {
+    return (Object.keys(this.self.TOOL_LABELS) as Index.ToolFilter[]).map((value) => ({ value, label: this.self.TOOL_LABELS[value] }));
+  }
+
+  get exportOptions(): { value: Chat.ExportForm; label: string }[] {
+    return (Object.keys(this.self.EXPORT_LABELS) as Chat.ExportForm[]).map((value) => ({ value, label: this.self.EXPORT_LABELS[value] }));
+  }
+
+  // computed: stable-handle — the scroller's modelValue must be ONE list per
+  // filter state, not a fresh array on every read; THIN, the walk is filterRows().
+  get rows() {
+    return computed(() => this.filterRows());
+  }
+
+  get count(): number {
+    return this.rows.value.length;
+  }
+
+  get countLabel(): string {
+    const total = this.chat.indexRows.value.length;
+    return this.count === total ? `${total.toLocaleString('en-US')} messages` : `${this.count.toLocaleString('en-US')} of ${total.toLocaleString('en-US')}`;
+  }
+
+  get selectedCount(): number {
+    return this.selected.value.size;
+  }
+
+  get hasSelection(): boolean {
+    return this.selectedCount > 0;
+  }
+
+  get selectedLabel(): string {
+    return this.selectedCount === 1 ? '1 selected' : `${this.selectedCount.toLocaleString('en-US')} selected`;
+  }
+
+  get allShownSelected(): boolean {
+    return this.count > 0 && this.rows.value.every((row) => this.selected.value.has(row.id));
+  }
+
+  get exportLabel(): string {
+    return this.exporting.value ? 'Preparing…' : `Export ${this.self.EXPORT_LABELS[this.exportForm.value]}`;
+  }
+
+  get copyLabel(): string {
+    return this.copied.value ? 'Copied' : 'Copy Markdown';
+  }
+
+  get widthPx(): string {
+    return `${this.width.value}px`;
+  }
+
+  get selectAllLabel(): string {
+    return this.allShownSelected ? 'Clear shown' : 'Select shown';
+  }
+
+  /* ---- the walk behind rows ---- */
+
+  filterRows(): Index.Row[] {
+    const role = this.role.value;
+    const tools = this.tools.value;
+    const query = this.query.value.trim().toLowerCase();
+    const output: Index.Row[] = [];
+    this.chat.indexRows.value.forEach((entry, at) => {
+      if (role === 'user' && entry.r !== 'u') return;
+      if (role === 'assistant' && entry.r !== 'a') return;
+      if (tools === 'exclude' && entry.c > 0) return;
+      if (tools === 'only' && entry.c === 0) return;
+      if (query && !entry.t.toLowerCase().includes(query)) return;
+      output.push({ id: entry.id, body: '', position: String(at + 1), index: at, entry });
+    });
+    return output;
+  }
+  /* ---- per row ---- */
+
+  isSelected(row: Index.Row): boolean {
+    return this.selected.value.has(row.id);
+  }
+
+  isCurrent(row: Index.Row): boolean {
+    return this.chat.focusedId.value === row.id;
+  }
+
+  isFocusedRow(row: Index.Row): boolean {
+    return this.focusedIndex.value === this.rows.value.indexOf(row);
+  }
+
+  roleMark(row: Index.Row): string {
+    return row.entry.r === 'u' ? 'you' : row.entry.r === 'a' ? 'agent' : 'sys';
+  }
+
+  roleClass(row: Index.Row): string {
+    return `ix-role-${row.entry.r}`;
+  }
+
+  timeLabel(row: Index.Row): string {
+    if (!row.entry.at) return '';
+    const date = new Date(row.entry.at);
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+
+  toolsLabel(row: Index.Row): string {
+    return row.entry.c ? `${row.entry.c} tool${row.entry.c === 1 ? '' : 's'}` : '';
+  }
+
+  previewText(row: Index.Row): string {
+    return row.entry.t || '(no text)';
+  }
+
+  rowText(row: Index.Row): string {
+    return `${this.roleMark(row)} ${row.entry.t}`;
+  }
+
+  rowClass(row: Index.Row): Record<string, boolean> {
+    return { 'ac-selected': this.isSelected(row), 'ac-current': this.isCurrent(row), 'ac-focused': this.isFocusedRow(row) };
+  }
+
+  /* ---- selection ---- */
+
+  /** click picks one and sets the anchor; shift takes the range; ctrl or cmd toggles without moving the anchor */
+  onRowClick(row: Index.Row, event: MouseEvent) {
+    if (event.shiftKey && this.anchorId.value) this.selectRange(this.anchorId.value, row.id);
+    else if (event.metaKey || event.ctrlKey) this.toggleOne(row.id);
+    else {
+      this.selected.value = new Set([row.id]);
+      this.anchorId.value = row.id;
+    }
+    this.focusedIndex.value = this.rows.value.indexOf(row);
+  }
+
+  /** the checkbox: toggle, and become the anchor */
+  onRowCheck(row: Index.Row, event: Event) {
+    event.stopPropagation();
+    this.toggleOne(row.id);
+    this.anchorId.value = row.id;
+    this.focusedIndex.value = this.rows.value.indexOf(row);
+  }
+
+  toggleOne(id: string) {
+    const next = new Set(this.selected.value);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    this.selected.value = next;
+  }
+
+  /** every row between two ids in the current filtered order joins the selection */
+  selectRange(fromId: string, toId: string) {
+    const rows = this.rows.value;
+    const from = rows.findIndex((row) => row.id === fromId);
+    const to = rows.findIndex((row) => row.id === toId);
+    if (from < 0 || to < 0) return;
+    const [start, end] = from <= to ? [from, to] : [to, from];
+    const next = new Set(this.selected.value);
+    for (let at = start; at <= end; at++) next.add(rows[at].id);
+    this.selected.value = next;
+  }
+
+  toggleAllShown() {
+    const next = new Set(this.selected.value);
+    if (this.allShownSelected) for (const row of this.rows.value) next.delete(row.id);
+    else for (const row of this.rows.value) next.add(row.id);
+    this.selected.value = next;
+  }
+
+  clearSelection() {
+    this.selected.value = new Set();
+    this.anchorId.value = null;
+  }
+
+  /* ---- navigation ---- */
+
+  seek(row: Index.Row) {
+    this.chat.jumpTo(row.index);
+  }
+
+  onRowDoubleClick(row: Index.Row) {
+    this.seek(row);
+  }
+
+  onKeydown(event: KeyboardEvent) {
+    const rows = this.rows.value;
+    if (!rows.length) return;
+    const current = Math.max(0, Math.min(rows.length - 1, this.focusedIndex.value));
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const next = Math.max(0, Math.min(rows.length - 1, current + (event.key === 'ArrowDown' ? 1 : -1)));
+      this.focusedIndex.value = next;
+      if (event.shiftKey) {
+        if (!this.anchorId.value) this.anchorId.value = rows[current].id;
+        this.selectRange(this.anchorId.value, rows[next].id);
+      }
+      this.scroller.value?.scrollToIndex(next, undefined, false);
+    } else if (event.key === ' ') {
+      event.preventDefault();
+      this.toggleOne(rows[current].id);
+      this.anchorId.value = rows[current].id;
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      this.seek(rows[current]);
+    } else if (event.key === 'Escape') this.chat.closeIndex();
+  }
+
+  /* ---- filters ---- */
+
+  setRole(value: Index.RoleFilter) {
+    this.role.value = value;
+  }
+
+  setTools(value: Index.ToolFilter) {
+    this.tools.value = value;
+  }
+
+  isRole(value: Index.RoleFilter): boolean {
+    return this.role.value === value;
+  }
+
+  isTools(value: Index.ToolFilter): boolean {
+    return this.tools.value === value;
+  }
+
+  clearQuery() {
+    this.query.value = '';
+  }
+
+  /* ---- resize ---- */
+
+  onResizeStart(event: PointerEvent) {
+    event.preventDefault();
+    this.resizing.value = true;
+    const startX = event.clientX;
+    const startWidth = this.width.value;
+    const move = (moveEvent: PointerEvent) => this.resizeTo(startWidth + (startX - moveEvent.clientX));
+    const up = () => {
+      this.resizing.value = false;
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  }
+
+  resizeTo(width: number) {
+    this.width.value = Math.max(this.self.MIN_WIDTH, Math.min(this.self.MAX_WIDTH, Math.round(width)));
+  }
+
+  /* ---- export ---- */
+
+  /** the selected messages in thread order, as the chosen form */
+  async exportText(): Promise<string> {
+    const messages = await this.chat.messagesFor(this.selected.value);
+    return ChatExport.Class.text(messages, this.exportForm.value);
+  }
+
+  async download() {
+    if (!this.hasSelection || this.exporting.value) return;
+    this.exporting.value = true;
+    try {
+      const text = await this.exportText();
+      const extension = this.exportForm.value === 'markdown' ? 'md' : this.exportForm.value === 'plain' ? 'txt' : 'jsonl';
+      this.self.saveFile(text, `chat-selection.${extension}`);
+    } finally {
+      this.exporting.value = false;
+    }
+  }
+
+  async copyMarkdown() {
+    if (!this.hasSelection) return;
+    const messages = await this.chat.messagesFor(this.selected.value);
+    const text = ChatExport.Class.text(messages, 'markdown');
+    try {
+      await navigator.clipboard.writeText(text);
+      this.copied.value = true;
+      setTimeout(() => (this.copied.value = false), 1600);
+    } catch {
+      this.copied.value = false;
+    }
+  }
+
+}
+
+export namespace Index {
+  export const $Class = Static($Index);
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+
+  export interface Props {
+    chat: Chat.Model;
+  }
+
+  export type RoleFilter = 'all' | 'user' | 'assistant';
+  export type ToolFilter = 'include' | 'exclude' | 'only';
+
+  export interface Row extends VirtualScroller.BaseItem {
+    index: number;
+    entry: ChatApi.IndexRow;
+  }
+}

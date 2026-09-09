@@ -899,3 +899,48 @@ own whole than to arbitrate.
   bare `|`, an ALTERNATION — the replacement lands at the first two spaces
   of the file. Use `#` as the delimiter for patterns that contain `|`,
   and a heredoc or Python for CSS blocks that contain `#` colors.
+
+## The AI chat example: a real session, pages on demand, shiki outside its package
+
+- Claude Code session files are JSONL with ~18 record types; only `user`,
+  `assistant` and `system` carry the conversation. An assistant turn is
+  several records sharing `message.id` (one per block); a `tool_result`
+  lives in a user record and joins its `tool_use` by id; the structured
+  result sits beside it as `toolUseResult`. In this session's 577 MB log
+  the bookkeeping was a third of the records and most of the bytes. Parse
+  as a stream (readline / `File.stream()`), never as one string.
+- The shipped sample (`docs_v2/scripts/chat-sample.ts`, vite-node with
+  `--` before the args) is built from a real session: keep, scrub, cut tool
+  outputs in the middle, budget images, refuse to write if a forbidden
+  pattern survives. The first key regex matched base64 and vite hashes
+  (`sk…`, `rk…`); anchor key shapes to their real prefixes. A `-----BEGIN`
+  that never closes still has to go. `Read` of an image stores its bytes
+  as `file.base64` in the structured result — route it into the image
+  budget or it dominates the sample.
+- A ref read dotted in a template (`v-if="chat.loadingThread"`) is always
+  truthy; the overlay stayed up over a loaded thread. Name a getter.
+- The scroller needs geometry before `scrollToIndex` can land: jump to the
+  latest message after `nextTick()` from setting the rows, not in the same
+  tick — otherwise the thread opens at the top.
+- shiki lives only in `docs_v2/node_modules`; playground files that import
+  it resolve neither from the playground nor from the docs vite root.
+  Alias the BARE specifier only (`{ find: /^shiki$/, replacement: <dir> }`):
+  a plain `shiki: <dir>` alias rewrites shiki's own `shiki/wasm` import into
+  a directory path and breaks the docs build. Use
+  `createJavaScriptRegexEngine()` (no wasm fetch) and exclude shiki from
+  the playground's `optimizeDeps` (esbuild stalls on its wasm chunk with a
+  504). The root vitest config carries the same alias for tests.
+- `.vue` imports from `.ts` (a component registry) need a `shims-vue.d.ts`
+  in the playground; adding it made the scroller test's `@ts-expect-error`
+  on a `.vue` import unused.
+- In a built docs page, the first `.ac-batch-head` in DOM order sits above
+  the frame (the thread opens at the bottom): Playwright's click on it hits
+  the prose. Pick an element whose box is inside the frame.
+- The standards gate on the playground: no `Static()` anchor without a
+  static, statics before the constructor, getters before methods, no
+  logic in templates (ternaries, `||`, built strings), `protected` never
+  `private` (the docs build's private-ban check fails the pipeline), and a
+  second class in a file goes to its own file. Colocated specs are
+  `X.test.ts` beside `X.ts`; the header needs `=== GENERATOR-DESCRIBED ===`
+  and every contract link a `// invariant: Name (path)` on a test.
+

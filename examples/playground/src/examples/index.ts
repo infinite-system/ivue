@@ -12,6 +12,7 @@ import { manifest as chooseField } from './fields/choose-field/manifest';
 import { manifest as mediaField } from './fields/media-field/manifest';
 import { manifest as virtualScroller } from './virtual-scroller/manifest';
 import { manifest as textMarquee } from './text-marquee/manifest';
+import { manifest as aiChat } from './ai-chat/manifest';
 import { manifest as formulaGrid } from './formula-grid/manifest';
 import { manifest as flyweightGrid } from './flyweight-grid/manifest';
 import { manifest as benchmarks } from './benchmarks/manifest';
@@ -88,6 +89,7 @@ export const examples: ExampleEntry[] = [
     ...textMarquee,
     load: () => import('./text-marquee/TextMarqueeExample.vue'),
   },
+  { ...aiChat, load: () => import('./ai-chat/AiChatRoute.vue') },
   {
     ...formulaGrid,
     load: () => import('./formula-grid/FormulaGridExample.vue'),

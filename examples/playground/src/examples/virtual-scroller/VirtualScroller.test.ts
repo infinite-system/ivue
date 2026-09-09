@@ -267,8 +267,6 @@ test('a scroll frame re-renders the thumb, never the scroller with its rows', as
   const frameSize = vi
     .spyOn(VirtualScroller.Class.prototype, 'containerOuterSize', 'get')
     .mockReturnValue(ref(400));
-  // The playground's tsc has no .vue shim (the 19 baseline errors are all this).
-  // @ts-expect-error — resolved by vite at run time
   const Sfc = (await import('./VirtualScroller.vue')).default;
   const wrapper = mount(Sfc, {
     props: { modelValue: rows(200), scrollbar: true },
