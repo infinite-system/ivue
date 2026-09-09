@@ -58,6 +58,10 @@ function fakeScroller() {
     containerOuterSize: 400,
     estimatedItemSize: 80,
     seeks: [] as { index: number; animate: boolean }[],
+    cancelled: 0,
+    cancelSeek() {
+      this.cancelled++;
+    },
     scrollToIndex(index: number, _after?: () => void, animate = true) {
       this.seeks.push({ index, animate });
     },
@@ -227,6 +231,7 @@ describe('Chat', () => {
     await settle(10);
     expect(chat.isExpanded('a')).toBe(false);
     chat.toggle('a');
+    expect(scroller.cancelled).toBe(1);
     chat.expand('a');
     expect(chat.isExpanded('a')).toBe(true);
     chat.toggle('a');

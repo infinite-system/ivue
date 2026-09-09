@@ -17,6 +17,8 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If a nested knob prop is read, then it is complete at every depth: a leaf the author supplied wins and every leaf left out is the tuned default, and Lenis is tuned from the same leaves.
 // domain-invariant: $VirtualScroller — If the scroll position changes with the window unchanged, then the scroller's own template does not re-render: the thumb, the one per-frame reader, is its own component.
 // domain-invariant: $VirtualScroller — If the reading creep moves on from a seek's landing, then the seek's converge loop ends with the next position shift instead of re-pinning the landing under the creep.
+
+// domain-invariant: $VirtualScroller — If the reader scrolled between two waves of a seek's converge loop, or the owner cancels the seek, then the next position shift ends the loop instead of re-pinning the landing.
 // domain-invariant: $VirtualScroller — If the thumb is dragged, then autoplay is never stopped by it: a playing scroller re-arms the creep on release either way, a drag deeper in the scroll direction from rest starts it as a forward wheel does, and while the thumb is held the creep waits.
 // domain-invariant: $VirtualScroller — If a finger lands on the track, then the touch is flagged for Lenis to skip, so the thumb drag seeks and the content does not scroll under it.
 // domain-invariant: $VirtualScroller — If the props object is read, then it is the fusion of the static types and defaults: the required list carries no default and the creep knob unset reads as the tuned cadence.
@@ -195,6 +197,32 @@ test('a seek keeps converging while sizes refine at rest, and lets go the moment
   // The creep is running: the next shift ends the loop, no snap-back.
   instance.probeStartCreep();
   instance.syncItemSize(11, 80);
+  await nextTick();
+  expect(instance.probeConverging()).toBe(false);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the reader scrolled between two waves of a seek's converge loop, or the owner cancels the seek, then the next position shift ends the loop instead of re-pinning the landing.
+// invariant: A seek names an item not a pixel (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a seek lets go when the reader has scrolled since the last landing, and when the owner cancels it', async () => {
+  const { instance, unmount } = scroller(rows(1000));
+  instance.scrollElement.value = document.createElement('div');
+  instance.scrollToIndex(500, undefined, false);
+  await nextTick();
+  expect(instance.probeConverging()).toBe(true);
+  // the reader moved on (a glide that ended before the next wave): the shift ends the loop
+  instance.scrollPosition.value = Number(instance.scrollPosition.value) + 240;
+  instance.syncItemSize(10, 80);
+  await nextTick();
+  expect(instance.probeConverging()).toBe(false);
+  // a fresh seek, cancelled by the owner: no wave re-pins it
+  instance.scrollToIndex(300, undefined, false);
+  await nextTick();
+  expect(instance.probeConverging()).toBe(true);
+  instance.cancelSeek();
+  expect(instance.probeConverging()).toBe(false);
+  instance.cancelSeek();
+  instance.syncItemSize(12, 80);
   await nextTick();
   expect(instance.probeConverging()).toBe(false);
   unmount();
