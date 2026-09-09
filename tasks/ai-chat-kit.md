@@ -1,12 +1,13 @@
 # The AI chat on the kit — the first malleable tree
 
 Convert `examples/playground/src/examples/ai-chat/` from its two
-registries (`Parts`, `Tools`) and self-constructing views to the kit
-design settled on 2026-09-09: every model carries `static get $kit`, a
-template names roles and never components, a parent constructs its
-children and hands its kit down, and a view is a projection over a model
-it did not construct. The design itself is recorded in
-`tasks/malleable-architecture.md` under "The kit"; this file is the build.
+registries (`Parts`, `Tools`) to the kit design settled on 2026-09-09:
+every model carries `static get $kit`, a template names roles and never
+components, the kit travels down as a prop, and every view still
+constructs its own model — from the kit's entry for its role, so the
+model class and the view are both swappable from one place. The design
+itself is recorded in `tasks/malleable-architecture.md` under "The kit";
+this file is the build.
 
 Status: designed, not started. Trigger: the first time a second view of
 any chat model is wanted (a different scroller for the chat only, a
@@ -22,32 +23,30 @@ shipped instance to point at.
   (a leaf that takes props). Lazy is what makes the model↔view import
   cycle harmless: nothing reads the other side at module init. A
   subclass extends by spread: `{ ...super.$kit, Scroller: { … } }`.
-- **The kit flows down the object graph.** A parent constructs its
-  children — `new this.kit.Message.model(props, this.kit)` — and a child
-  reads `get kit() { return this.props.kit ?? this.self.$kit }`. The
-  child's static is the default, the parent's kit the override, so one
-  override on `Chat`'s kit reaches every tool card below it, and a model
-  constructed in a test with no kit falls back to its own. No inject.
-- **Templates name roles.** A parent-owned child renders as
-  `<component :is="model.kit.Message.view" :model="message" />`; a leaf
-  renders as `<component :is="model.kit.CodeBlock.view" :code=… />`
-  with props. No shell component: the parent chose the pair, so it
-  knows both halves.
-- **Views are projections.** A view takes `model` as a prop and
-  constructs nothing. The one exception is a view mounted on its own
-  (a docs demo, a test): `props.model ?? new X.Class(props)`, one
-  instance either way.
-- **Lifetime decides the seam.** A child whose state must outlive its
-  element (a message row, a tool call, the composer, the index, the
-  scroller) is parent-owned and crosses the seam as a model. A leaf
-  whose state lives and dies with its element (a code block, an
-  attachment figure, the tool head) crosses as props and constructs its
-  own small model in setup, as today.
-- **DOM lifecycle stays with the view.** A parent-owned model's
-  constructor runs in the parent's setup, so `onMounted` there binds to
-  the parent. Anything that needs the element — the text part colouring
-  its fences, the code block colouring itself — stays in the view or
-  becomes `model.attach(element)` called from the view's own mount.
+- **The kit travels as a prop.** A parent's template passes its kit to
+  every child it composes — `<component :is="model.kit.Message.view" :kit="model.kit" :row="item" />`
+  — and the child's model reads `get kit() { return this.props.kit ?? this.self.$kit }`.
+  The child's own static is the default, the kit it was handed the
+  override, so one override on `Chat`'s kit reaches every tool card
+  below it, and a model constructed in a test with no kit falls back
+  to its own. No inject, and no parent ever constructs a child.
+- **Every view constructs its own model, as the standard says.** The
+  SFC is the wiring: `defineProps`, one `new`, the destructure. What
+  the kit adds is where the class comes from: the view constructs the
+  kit's entry for its role, `new (props.kit ?? Default).Message.model(props)`,
+  so a kit override can swap the model class as well as the view
+  without either file changing. Lifecycle hooks in the constructor bind
+  to the view's own component, exactly as today.
+- **Templates name roles.** A child renders as
+  `<component :is="model.kit.Message.view" :kit="model.kit" …props />`;
+  a leaf the same way with its props. No shell component: the parent
+  chose the entry, so it knows the view; the view knows the model.
+- **State that outlives a view lives on the parent's model as data.**
+  Expanded ids, the streaming reply's revision, the clock, the loaded
+  pages all sit on `Chat` today and stay there; a row's view can mount
+  and unmount freely because nothing it must remember lives on it.
+  Ownership of models does not move; only the choice of class and view
+  does.
 - **Vapor-neutral.** Views are SFCs, seams are `<component :is>`, the
   models never touch the VDOM. Nothing here is a render function.
 
@@ -58,30 +57,29 @@ shipped instance to point at.
 | `parts/Parts.ts` registry (kind → component) | `ChatMessage.$kit`: `Text`, `Thinking`, `ToolCall`, `ToolBatch`, `Attachment`, `System` — the row model resolves `kit[part.kind]` |
 | `tools/Tools.ts` registry (name → component, prefix families, generic fallback) | `ToolCallModel.$kit`-level `Tools` map on `ChatMessage.$kit` with the same lookup as a method: `toolFor(name)`; each entry `{ model: BashCall.Class, view: BashCallView }` |
 | `ToolHead.vue`, `ToolFoot.vue`, `CodeBlock.vue` used by name in every card | `ToolCallModel.$kit`: `Head`, `Foot`, `CodeBlock` as leaf entries; cards render `<component :is="model.kit.Head.view" :model="model" />` |
-| `Chat.ts` reaches the scroller through `ref="scroller"` | `Chat.$kit.Scroller = { model: VirtualScroller.Class, view: VirtualScrollerView }`; the chat constructs and holds the scroller model, reads `visibleIndex`, calls `scrollToIndex` on it directly; the view takes `model` |
-| `ChatComposer.vue`, `ChatIndex.vue` construct their models | `Chat` constructs `Composer` and `Index` with its kit; the views project them |
-| `ChatMessage.vue` constructs a row model per row in the scroller's slot | `Chat` keeps a map id → row model, constructed on first render (the window bounds it to a few dozen live instances); the slot renders `<component :is="chat.kit.Message.view" :model="chat.rowModel(item)" />` |
-| `SubThread.vue` constructs | a nested thread is rows of the same kind, from the same map |
+| `Chat.ts` reaches the scroller through `ref="scroller"` | unchanged: the scroller's view constructs its model and exposes it; the chat keeps its template ref. The entry `Chat.$kit.Scroller = { model: VirtualScroller.Class, view: VirtualScrollerView }` is what a page overrides to put a different scroller under the chat |
+| `ChatComposer.vue`, `ChatIndex.vue` construct their models | unchanged in who constructs; they construct the kit's `Composer.model` / `Index.model` and receive `:kit` |
+| `ChatMessage.vue` constructs a row model per row in the scroller's slot | unchanged; the slot renders `<component :is="chat.kit.Message.view" :kit="chat.kit" :row="item" :chat="chat" />` |
+| `SubThread.vue` constructs | unchanged; a nested thread renders rows through the same entry |
 
-Every current test keeps its subject: the classes' logic does not move.
-What changes is who constructs, and that the views stop importing each
-other.
+Every current test keeps its subject: the classes' logic does not move,
+and nobody's constructor moves. What changes is that a view names its
+role's entry instead of a class and a component, and that the views stop
+importing each other.
 
 ## Friction to learn from (the reason the chat goes first)
 
-- **The scroller's SFC constructs its own model** and exposes it through
-  `defineExpose`. Making it a view over a `model` prop is the one change
-  outside the chat folder, and it is the change the whole design
-  depends on: a parent-owned scroller is what lets the chat drop the
-  template ref, and what lets a page swap the scroller's view without
-  touching its class. The scroller's own example and the horizontal
-  scroller keep working through the standalone fallback.
-- **Row models outlive their views.** Expanded state, the streaming
-  reply's revision, the clock all already live on `Chat`; the row model
-  becomes a thin projection holder. Check that a row scrolling out and
-  back gets the same model (the map guarantees it) and that memory stays
-  bounded (prune models for rows outside the window plus a margin, the
-  same rule as pages).
+- **The scroller is the one child outside the folder.** It stays as it
+  is — its view constructs and exposes its model — and enters the kit
+  as an entry. The friction is only that a swapped scroller view must
+  expose the same surface the chat reads (`visibleIndex`,
+  `scrollToIndex`, `scrollPosition`, `estimatedItemSize`), which is the
+  argument for naming that surface as the role's contract.
+- **A view constructing from the kit** is the one new line in every
+  view: `new (props.kit ?? Kit).Role.model(props)`. Check that a view
+  mounted with no kit (a docs demo, a spec) still constructs the
+  default, and that the gate's "one `new` in setup" reading accepts the
+  indirection.
 - **The generic fallback is a kit entry**, not a branch: `toolFor(name)`
   returns `kit.Tools[name] ?? kit.Tools.byPrefix(name) ?? kit.Tools.Generic`.
   The rule "rendering never branches on a name" survives; the lookup
@@ -92,19 +90,17 @@ other.
 - [ ] `npx vitest run examples/playground/src/examples/ai-chat`: every
       existing spec passes with its subject unchanged; no spec imports a
       `.vue` file except the kit-resolution spec.
-- [ ] A spec constructs the whole chat graph (`Chat` → rows → tool
-      calls) with no component mounted, and asserts `kit` resolution:
-      a child with no kit uses its own static; a child handed a kit uses
-      the parent's; `toolFor` falls back to `Generic`.
+- [ ] A spec constructs models with and without a `kit` prop and asserts
+      resolution: a model with no kit uses its own static; a model
+      handed a kit uses it; `toolFor` falls back to `Generic`.
 - [ ] A subclass `FancyChat` overriding one entry of `$kit` (`Scroller`)
       renders the chat with the other scroller view and nothing else
       changed — the playground gets a second route to show it.
 - [ ] A root-kit override of `CodeBlock` reaches every tool card without
       touching any tool class.
-- [ ] `VirtualScroller.vue` takes `model` as a prop; the scroller
-      example, the horizontal scroller and the text marquee still pass
-      their suites and the standalone fallback constructs when no model
-      is given.
+- [ ] The scroller is untouched: its suite, the horizontal scroller and
+      the text marquee pass unchanged; the chat reaches it through the
+      kit's `Scroller` entry and the same template ref as before.
 - [ ] The browser drives from the plan (`tasks/ai-chat-scroller-plan.md`)
       pass unchanged: pages on demand, tool cards, index selection,
       streaming, the twelve-glide anchor drive at zero jerks.
@@ -116,10 +112,9 @@ other.
 ## Impossibilities (what this build forbids)
 
 - A template that names a component it composes.
-- A view that constructs the model it shows, except the standalone
-  fallback.
+- A parent that constructs a child's model.
+- A view that constructs anything but its own model.
 - A model that names its own view.
-- A swap that needs a model class edited.
-- A child rendered with a kit its parent did not hand it, when the
-  parent has one.
+- A swap that needs a model class or a view edited.
+- A child rendered without the kit its parent holds.
 - A shell component between a parent and its child's view.

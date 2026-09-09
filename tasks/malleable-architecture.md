@@ -488,7 +488,8 @@ shipped ones. The hidden eval window becomes unnecessary.
 The `template` + `runner` sketch above still has each component
 choosing between its own markup and a dynamic view. Reduced further,
 the choice leaves the component entirely, and the four moves below are
-the whole mechanism. The AI chat example is the first tree to be
+the whole mechanism. Nothing about who constructs changes: every view
+still constructs its own model in setup, as the standard says. The AI chat example is the first tree to be
 converted — the build is `tasks/ai-chat-kit.md`.
 
 - **A model owns its kit as a lazy static.** `static get $kit()` returns
@@ -497,31 +498,35 @@ converted — the build is `tasks/ai-chat-kit.md`.
   A lazy getter, cached per class, is what makes the model↔view import
   cycle harmless: neither side reads the other at module init. A
   subclass overrides by spread; a one-off is `with({ Role: … })`.
-- **The kit flows down the object graph, not through Vue.** A parent
-  constructs its children and hands its kit in as the second
-  constructor argument; a child reads `this.props.kit ?? this.self.$kit`.
-  Local override with a global fallback falls out of the ownership
-  chain that already exists — no provide/inject, and a model built in a
-  test with no kit uses its own.
-- **Templates name roles.** A parent renders `<component :is="model.kit.Message.view" :model="message" />`;
-  a leaf renders `<component :is="model.kit.CodeBlock.view" :code=… />`.
-  There is no shell component: the parent chose the pair and knows both
-  halves. `<component :is>` is Vapor's dynamic-component path too, so
-  the mechanism is neutral to the runtime.
-- **Lifetime decides the seam.** A child whose state must outlive its
-  element crosses the seam as a model the parent holds; a leaf whose
-  state dies with its element crosses as props and constructs its own
-  small model in setup. Handing a model to a leaf would give the parent
-  a lifetime it does not want.
+- **The kit travels as a prop, not through inject.** A parent's
+  template passes its kit to every child it composes; a child's model
+  reads `this.props.kit ?? this.self.$kit`. Local override with a global
+  fallback falls out of the composition that already exists, and a
+  model built in a test with no kit uses its own.
+- **Every view constructs its own model — from the kit's entry.** The
+  SFC stays the wiring the standard describes, one `new` in setup; the
+  class it news is `kit.Role.model`, so an override can swap the model
+  class and the view from one place, and neither file changes. Hooks in
+  the constructor bind to the view's own component, as today. A parent
+  never constructs a child.
+- **Templates name roles.** A parent renders
+  `<component :is="model.kit.Message.view" :kit="model.kit" …props />`.
+  There is no shell component: the parent chose the entry and knows the
+  view; the view knows the model. `<component :is>` is Vapor's
+  dynamic-component path too, so the mechanism is neutral to the runtime.
+- **State that must outlive a view lives on the parent's model as
+  data**, as it already does (the chat keeps expanded ids, the stream's
+  revision and the clock on `Chat`). Ownership of models never moves;
+  only the choice of class and view does.
 
 What this changes about the sketch: `runner` and `template` stop being
 props a component accepts and become entries in its parent's kit; the
 fallback boolean disappears; the "one real cost" table above still
 holds, and the per-render cost is unchanged (`:is` with a stable
 component reference short-circuits the same way). What it forbids: a
-template that names a component it composes, a view that constructs
-the model it shows (except a standalone fallback), a model that names
-its own view, and a swap that edits a model class.
+template that names a component it composes, a parent that constructs
+a child's model, a model that names its own view, and a swap that
+edits a model class or a view.
 
 ## Boundaries to respect (named in discussion)
 
@@ -1442,8 +1447,8 @@ Post-release, as a ladder — each rung is a shippable artifact:
 
 1. The kit on ONE tree: the AI chat example converted per
    `tasks/ai-chat-kit.md` (kit as `static get $kit`, pairs of model and
-   view, the kit handed down at construction, `:is` at every seam, the
-   scroller as a view over a parent-owned model); measure mount cost
+   view, the kit passed down as a prop, `:is` at every seam, every view
+   still constructing its own model); measure mount cost
    before and after; then the kit ruling goes to the gate. This
    supersedes the earlier "universal shell" rung — the shell dissolved
    into the parent's kit (see "The kit", above).
