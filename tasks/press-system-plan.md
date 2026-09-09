@@ -783,8 +783,8 @@ is a claim the builder makes about itself.
 - [x] `npx vitest run --coverage`: press files 100%; dashboard tsc, Worker
       ✔ 237 tests; Asset/PressApi/Markdown/PressEditor/EditorModel 100% lines; gate back to the 5 pre-existing GmailUi/wrangler-tmp findings; build:admin ok
       tsc, gate, `npm run build:admin` all pass.
-- [ ] R2 enabled on the account and `ivue-press` created (user: dashboard
-      toggle, then `cd newsletter && npx wrangler@4.120.1 r2 bucket create ivue-press`).
+- [x] R2 enabled on the account and `ivue-press` created.
+      ✔ 2026-09-09: user enabled R2; `wrangler r2 bucket create ivue-press` → `r2 bucket list` shows ivue-press (created 2026-09-09T00:27:40Z); the PRESS_ASSETS binding in wrangler.jsonc already matched, wrangler's offer to add one was declined
 
 ### The impossibility walk (2026-09-08, local dashboard + Worker)
 
