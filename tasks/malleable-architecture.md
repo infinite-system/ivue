@@ -502,7 +502,7 @@ chat example is the first tree to be converted — the build is
 - **The entry is what crosses the seam.** A parent renders
   `<component :is="model.kit.Message.view" :kit="model.kit.Message" …props />`:
   the entry's view, handed the entry itself as the one prop, plus the
-  child's own props. An entry is `{ view, model?, props?, subtree? }`:
+  child's own props. An entry is `{ view, model?, props?, subkit? }`:
   the view, the class the view constructs, props the consumer set for
   the role, and a patch over the child's own kit. Nothing else travels
   — no inject. A child's model reads its kit from its own class,
@@ -517,7 +517,7 @@ chat example is the first tree to be converted — the build is
 - **Override is subclassing, resolved once.** A subclass with a
   different `$kit` swaps its whole subtree, and the parent's kit names
   the subclass. A swap that must reach a deep leaf is one nested
-  literal — an entry's optional `subtree` is a patch over the child's
+  literal — an entry's optional `subkit` is a patch over the child's
   kit — which `Kit.resolve` turns into derived subclasses at kit build
   time, cached per asking class and frozen, so one tree never changes
   another. The same move the overlay ledger makes, from data.
