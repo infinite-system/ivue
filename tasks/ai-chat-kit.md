@@ -84,6 +84,30 @@ export namespace Kit {
 
   export type Of<Roles extends string> = Record<Roles, Entry>;
 
+  const cache = new WeakMap<Function, object>();
+
+  /** one kit per class that asks — keyed by the class, so a subclass never reads its parent's */
+  export function cached<K extends object>(owner: Function, build: () => K): K {
+    let kit = cache.get(owner) as K | undefined;
+    if (!kit) {
+      kit = deepFreeze(build());
+      cache.set(owner, kit);
+    }
+    return kit;
+  }
+
+  /** a resolved kit is shared by reference between trees and must never be written */
+  function deepFreeze<K extends object>(value: K): K {
+    for (const inner of Object.values(value)) {
+      if (typeof inner === 'object' && inner !== null && !Object.isFrozen(inner) && !isClass(inner)) deepFreeze(inner);
+    }
+    return Object.freeze(value);
+  }
+
+  function isClass(value: object): boolean {
+    return typeof value === 'function';
+  }
+
   /** every entry with a subtree becomes an entry whose model is a derived class */
   export function resolve<K extends object>(kit: K): K {
     return Object.fromEntries(
@@ -96,7 +120,7 @@ export namespace Kit {
     return Reactive(
       class extends Base {
         static get $kit() {
-          return (this as any).cachedKit ??= resolve(merge(Base.$kit, patch));
+          return cached(this, () => resolve(merge(Base.$kit, patch)));
         }
       },
     );
@@ -148,15 +172,13 @@ class $Chat {
   // imports the views, and nobody reads the other side until a template
   // renders. `Chat.$kit` and `FancyChat.$kit` are different objects.
   static get $kit() {
-    return this.cachedKit ??= {
+    return Kit.cached(this, () => ({
       Scroller: { model: VirtualScroller.Class, view: VirtualScrollerView },
       Message: { model: ChatMessage.Class, view: ChatMessageView },
       Composer: { model: Composer.Class, view: ChatComposerView },
       Index: { model: Index.Class, view: ChatIndexView },
-    } satisfies Kit.Of<'Scroller' | 'Message' | 'Composer' | 'Index'>;
+    }) satisfies Kit.Of<'Scroller' | 'Message' | 'Composer' | 'Index'>);
   }
-
-  protected static cachedKit?: ReturnType<typeof $Chat.$kit>;
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
@@ -179,9 +201,12 @@ export namespace Chat {
 }
 ```
 
-The `cachedKit` static holds the object per class because a static getter
-re-runs on every read; `??=` on `this` keys the cache by the class that
-was asked, so a subclass's getter builds and caches its own.
+A static getter re-runs on every read, so the kit is cached — by the
+class that asked, in a `WeakMap`, never in a static field. A static
+field read through `this` resolves up the static prototype chain, so a
+subclass that had not built its own yet would find and return its
+parent's kit. `Kit.cached(this, …)` is what keeps every class's kit its
+own.
 
 ### `AiChatExample.vue` — the root template names roles
 
@@ -257,7 +282,7 @@ import { ToolCallModel } from './tools/ToolCallModel';
 
 class $ChatMessage {
   static get $kit() {
-    return this.cachedKit ??= {
+    return Kit.cached(this, () => ({
       // parts by kind — the registry `Parts.ts` was, as entries
       text: { view: TextPartView },
       thinking: { view: ThinkingPartView },
@@ -267,10 +292,8 @@ class $ChatMessage {
       tool_batch: { model: ToolBatchPart.Class, view: ToolBatchPartView },
       // the tool cards are reached through the tool base's kit, one hop down
       Tool: { model: ToolCallModel.Class, view: ToolCallPartView },
-    } satisfies Kit.Of<SessionLog.Part['kind'] | 'Tool'>;
+    }) satisfies Kit.Of<SessionLog.Part['kind'] | 'Tool'>);
   }
-
-  protected static cachedKit?: ReturnType<typeof $ChatMessage.$kit>;
 
   constructor(public props: ChatMessage.Props) {}
 
@@ -365,7 +388,7 @@ import GenericCallView from './GenericCall.vue';
 
 class $ToolCallModel {
   static get $kit() {
-    return this.cachedKit ??= {
+    return Kit.cached(this, () => ({
       Head: { view: ToolHeadView },
       Foot: { view: ToolFootView },
       CodeBlock: { model: CodeBlock.Class, view: CodeBlockView },
@@ -384,10 +407,8 @@ class $ToolCallModel {
         WebSearch: { model: WebFetchCall.Class, view: WebFetchCallView },
         Artifact: { model: ArtifactCall.Class, view: ArtifactCallView },
       } as Record<string, Kit.Entry>,
-    };
+    }));
   }
-
-  protected static cachedKit?: ReturnType<typeof $ToolCallModel.$kit>;
 
   /** the lookup `Tools.componentFor` was: exact name, then family, then generic */
   static toolFor(name: string): Kit.Entry {
@@ -544,10 +565,10 @@ import SnapScrollerView from '../snap-scroller/SnapScroller.vue';
 
 class $FancyChat extends Chat.$Class {
   static override get $kit() {
-    return this.cachedKit ??= {
+    return Kit.cached(this, () => ({
       ...super.$kit,
       Scroller: { model: SnapScroller.Class, view: SnapScrollerView },
-    };
+    }));
   }
 }
 
@@ -580,7 +601,7 @@ import TerminalBlockView from './TerminalBlock.vue';
 
 class $TerminalChat extends Chat.$Class {
   static override get $kit() {
-    return this.cachedKit ??= Kit.resolve({
+    return Kit.cached(this, () => Kit.resolve({
       ...super.$kit,
       Message: {
         ...super.$kit.Message,
@@ -596,7 +617,7 @@ class $TerminalChat extends Chat.$Class {
           },
         },
       },
-    });
+    }));
   }
 }
 
@@ -623,7 +644,7 @@ class $MonoChat extends Chat.$Class {
   static override get $kit() {
     const block = { CodeBlock: { model: MonoBlock.Class, view: MonoBlockView } };
     const tools = Chat.$Class.$kit.Message.model.$kit.Tool.model.$kit;
-    return this.cachedKit ??= Kit.resolve({
+    return Kit.cached(this, () => Kit.resolve({
       ...super.$kit,
       Message: {
         ...super.$kit.Message,
@@ -639,7 +660,7 @@ class $MonoChat extends Chat.$Class {
           },
         },
       },
-    });
+    }));
   }
 }
 ```
@@ -649,6 +670,18 @@ comprehension is the honest form of "all of them". The alternative, a
 card reading a leaf from anywhere but its own class, is what the design
 forbids, and this is the price: one line per card, generated from the
 base's map so a new tool is covered without editing this override.
+
+### One tree never changes another
+
+An override builds new objects all the way down: `merge` starts from a
+spread of the base and recurses into maps and entries; `derive` makes a
+new subclass and only reads `Base.$kit`. After `TerminalChat.$kit`
+resolves, `Chat.$kit.Message.model` is still `ChatMessage.Class`,
+`ChatMessage.$kit.Tool.model` is still the base, and
+`BashCall.$kit.CodeBlock.model` is still `CodeBlock.Class`. Entries the
+override did not touch are shared by reference between the two kits,
+which is why a resolved kit is frozen: sharing is safe only when nothing
+can write. The spec below pins both facts.
 
 ### Where `derive` runs
 
@@ -681,6 +714,18 @@ it('resolves each kit from its own class, and a subclass swaps one entry', () =>
   expect(FancyChat.Class.$kit.Scroller.model).toBe(SnapScroller.Class);
   expect(FancyChat.Class.$kit.Message).toBe(Chat.Class.$kit.Message);
   expect(Chat.Class.$kit.Scroller.model).toBe(VirtualScroller.Class);
+});
+
+it('an override never reaches another tree, and a kit is its own class\'s', () => {
+  const terminal = TerminalChat.Class.$kit;
+  expect(terminal.Message.model).not.toBe(ChatMessage.Class);
+  expect(Chat.Class.$kit.Message.model).toBe(ChatMessage.Class);
+  expect(ChatMessage.Class.$kit.Tool.model).toBe(ToolCallModel.Class);
+  expect(BashCall.Class.$kit.CodeBlock.model).toBe(CodeBlock.Class);
+  expect(terminal.Composer).toBe(Chat.Class.$kit.Composer); // untouched entries are shared, and frozen
+  expect(Object.isFrozen(terminal.Composer)).toBe(true);
+  expect(Chat.Class.$kit).not.toBe(FancyChat.Class.$kit); // the cache is keyed by the asking class
+  expect(FancyChat.Class.$kit).toBe(FancyChat.Class.$kit);
 });
 
 it('a view constructs the class it is handed', async () => {
@@ -731,11 +776,13 @@ importing each other.
 - **A deep swap is one literal, resolved once.** An override's entry
   may carry `subtree`, a patch over the child's own kit; `Kit.resolve`
   turns every reach into a derived class at kit build time, cached per
-  class. A class's own `$kit` never carries `subtree`. Verify at
-  conversion: `Reactive` over a subclass of an already-transformed class
+  class. A class's own `$kit` never carries `subtree`. The cache is a
+  `WeakMap` keyed by the asking class, never a static field — a static
+  field read through `this` walks the static chain and hands a subclass
+  its parent's kit. Verify at conversion: `Reactive` over a subclass of an already-transformed class
   leaves inherited members alone (the engine's repeated-call guard says
-  it does), and a derived class's `self` reads its own statics, which
-  the `??=` on `this` depends on.
+  it does), and `Kit.cached` keyed by a derived anonymous class stays
+  distinct from its base's entry.
 - **The generic fallback is a kit entry**, not a branch: `toolFor(name)`
   returns `kit.Tools[name] ?? kit.Tools.byPrefix(name) ?? kit.Tools.Generic`.
   The rule "rendering never branches on a name" survives; the lookup
