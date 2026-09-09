@@ -502,7 +502,7 @@ chat example is the first tree to be converted — the build is
 - **The entry is what crosses the seam.** A parent renders
   `<component :is="model.kit.Message.view" :kit="model.kit.Message" …props />`:
   the entry's view, handed the entry itself as the one prop, plus the
-  child's own props. An entry is `{ view, model?, props?, kit? }`:
+  child's own props. An entry is `{ view, model?, props?, subkit? }`:
   the view, the class the view constructs, props the consumer set for
   the role, and a patch over the child's own kit. Nothing else travels
   — no inject. A child's model reads its kit from its own class,
