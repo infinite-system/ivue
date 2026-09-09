@@ -1005,7 +1005,7 @@ importing each other.
   field read through `this` walks the static chain and hands a subclass
   its parent's kit. Verify at conversion: `Reactive` over a subclass of an already-transformed class
   leaves inherited members alone (the engine's repeated-call guard says
-  it does), and `Kit.cached` keyed by a derived anonymous class stays
+  it does), and `Kit.Class.cached` keyed by a derived anonymous class stays
   distinct from its base's entry.
 - **Containers as roles.** With tag-name defaults the skeleton is free;
   a swapped container is one component instance per container per
