@@ -325,7 +325,14 @@ class $ChatMessage {
       ToolBatch: { model: ToolBatchPart.Class, view: ToolBatchPartView },
       // the tool cards are reached through the tool base's kit, one hop down
       Tool: { model: ToolCallModel.Class, view: ToolCallPartView },
-    }) satisfies Kit.Of<ChatMessage.PartRole | 'Tool'>);
+      // containers — the row's skeleton; a tag name costs no component instance
+      Row: { view: 'article' },
+      Gutter: { view: 'div' },
+      Head: { view: 'header' },
+      Parts: { view: 'div' },
+      Await: { view: 'div' },
+      Foot: { view: 'footer' },
+    }) satisfies Kit.Of<ChatMessage.PartRole | 'Tool' | ChatMessage.ContainerRole>);
   }
 
   /** a part kind (the log's snake_case) names its role (the kit's PascalCase) */
@@ -376,6 +383,7 @@ export namespace ChatMessage {
   // contract — `propsTypes` with `row`, `chat` required and `...Kit.propsTypes`; see CodeBlock below.
 
   export type PartRole = 'Text' | 'Thinking' | 'Attachment' | 'System' | 'ToolCall' | 'ToolBatch';
+  export type ContainerRole = 'Row' | 'Gutter' | 'Head' | 'Parts' | 'Await' | 'Foot';
 
   /** what every part view receives — `Parts.Props` was, moved here when `Parts.ts` goes */
   export interface PartProps<Part extends SessionLog.Part = SessionLog.Part> {
@@ -397,22 +405,54 @@ const model = new (props.kit?.model ?? ChatMessage.Class)(props);
 </script>
 
 <template>
-  <article class="ac-msg" :class="model.rowClass">
-    …header and stub unchanged…
-    <div v-else class="ac-parts">
-      <component
-        :is="model.partView(part)"
-        v-for="(part, at) in model.parts"
-        :key="model.partKey(part, at)"
-        :kit="model.partEntry(part)"
-        :part="part"
-        :chat="chat"
-        :message="model.message"
-      />
+  <component :is="model.kit.Row.view" class="ac-msg" :class="model.rowClass">
+    <component :is="model.kit.Gutter.view" class="ac-msg-gutter">
+      <span class="ac-msg-avatar" aria-hidden="true">{{ model.avatarLetter }}</span>
+    </component>
+    <div class="ac-msg-body">
+      <component :is="model.kit.Head.view" class="ac-msg-head">
+        <strong class="ac-msg-role">{{ model.roleLabel }}</strong>
+        <span v-if="model.modelLabel" class="ac-msg-model">{{ model.modelLabel }}</span>
+        <span class="ac-msg-time">{{ model.timeLabel }}</span>
+        <span class="ac-msg-index">{{ model.indexLabel }}</span>
+      </component>
+
+      <div v-if="model.isStub" class="ac-stub" :style="model.stubStyle">…unchanged…</div>
+
+      <component v-else :is="model.kit.Parts.view" class="ac-parts">
+        <component
+          :is="model.partView(part)"
+          v-for="(part, at) in model.parts"
+          :key="model.partKey(part, at)"
+          :kit="model.partEntry(part)"
+          :part="part"
+          :chat="chat"
+          :message="model.message"
+        />
+        <component v-if="model.isAwaitingFirstToken" :is="model.kit.Await.view" class="ac-await">
+          <span class="ac-spinner" aria-hidden="true"></span>
+          <span>{{ model.awaitingLabel }}</span>
+        </component>
+      </component>
+
+      <component v-if="model.receiptLabel" :is="model.kit.Foot.view" class="ac-msg-foot">{{ model.receiptLabel }}</component>
     </div>
-  </article>
+  </component>
 </template>
 ```
+
+The containers are roles too. `<component :is>` takes a tag name, so an
+entry whose view is `'div'` renders a plain element with no component
+instance, and the `class` on the `<component>` lands on the element as
+an attribute; the base kit costs nothing it did not cost before. A
+consumer swaps a container for a small SFC with a `<slot />` — a
+two-column head, a parts container that groups by kind, a gutter that
+shows an avatar image — and the row's own view never changes. The
+rule for which elements become roles: a wrapper with a class of its own
+is a role; an element that carries text is content and stays markup.
+The model already decides what fills every slot; with containers as
+roles it also names what wraps them, and a getter may choose a
+container per state where that is wanted.
 
 `Parts.ts` is deleted. Roles are PascalCase everywhere in a kit; the
 log's snake_case kinds map to them through one static table, so the
@@ -958,6 +998,13 @@ importing each other.
   leaves inherited members alone (the engine's repeated-call guard says
   it does), and `Kit.cached` keyed by a derived anonymous class stays
   distinct from its base's entry.
+- **Containers as roles.** With tag-name defaults the skeleton is free;
+  a swapped container is one component instance per container per
+  visible row, a dozen rows deep in the window — noise, but measured in
+  the mount-cost line of the checklist. A swapped container view must
+  render `<slot />` and let `class` fall through (the default
+  `inheritAttrs` does), otherwise the row's classes vanish; the spec for
+  a container swap mounts one and asserts the class is on the element.
 - **The generic fallback is a kit entry**, not a branch: `toolFor(name)`
   returns `kit.Tools[name] ?? kit.Tools.byPrefix(name) ?? kit.Tools.Generic`.
   The rule "rendering never branches on a name" survives; the lookup
@@ -977,6 +1024,10 @@ importing each other.
       changed — the playground gets a second route to show it.
 - [ ] A root-kit override of `CodeBlock` reaches every tool card without
       touching any tool class.
+- [ ] Containers: the base kit renders the row with the same element
+      tags and classes as today (snapshot the row's outer HTML before and
+      after); a `Head` swapped for a two-column SFC keeps `ac-msg-head` on
+      its root and shows the same labels.
 - [ ] The scroller changes by one optional prop: its suite, the
       horizontal scroller and the text marquee pass unchanged; the chat
       reaches it through the kit's `Scroller` entry and the same template
@@ -1005,3 +1056,4 @@ importing each other.
 - A swap, or a configuration a view already exposes as a prop, that needs a model class or a view edited.
 - Anything but the one entry passed down for the kit's sake.
 - A shell component between a parent and its child's view.
+- A wrapper with a class of its own that is not a role, or a text-carrying element that is one.
