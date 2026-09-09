@@ -50,10 +50,10 @@ shipped instance to point at.
 - **Override is subclassing.** A subclass with a spread `$kit` swaps a
   role: `FancyChat.$kit.Scroller = { model: SnapScroller.Class, view: SnapScrollerView }`.
   A swap that must reach a deep leaf is the same spread with an optional
-  `kit` on the entry — a patch over the child's own kit — which
+  `subkit` on the entry — a patch over the child's own kit — which
   `Kit.resolve` turns into derived subclasses once, at kit build time.
   One literal names the path from the root to the leaf; a class's own
-  `$kit` never carries `kit`.
+  `$kit` never carries `subkit`.
 - **Templates name roles.** Every child, leaf or not, renders through
   `<component :is="model.kit.Role.view" …>`; a leaf that has no model of
   its own simply has no `model` in its entry and takes its props. No
@@ -81,7 +81,7 @@ import type { Component } from 'vue';
 import { Reactive } from '../../ivue';
 
 // An entry names a role's view and, when the role has a model of its own,
-// the class that view constructs. `kit` is optional and appears only
+// the class that view constructs. `subkit` is optional and appears only
 // in an override: a patch over the model's own $kit, applied when the kit
 // resolves. A kit is a record of entries or of nested records of entries.
 export namespace Kit {
@@ -90,10 +90,10 @@ export namespace Kit {
     model?: Model;
     /** optional: prop defaults for this role — laid over the model's `propsDefaults` when the kit resolves */
     props?: Record<string, unknown>;
-    kit?: Patch;
+    subkit?: Patch;
   }
 
-  /** a patch is a kit whose every field is optional; `{ kit }` alone keeps model and view */
+  /** a patch is a kit whose every field is optional; `{ subkit }` alone keeps model and view */
   export type Patch = { [role: string]: Partial<Entry> | Patch };
 
   export type Of<Roles extends string> = Record<Roles, Entry>;
@@ -127,7 +127,7 @@ export namespace Kit {
     return typeof value === 'function';
   }
 
-  /** every entry with a kit becomes an entry whose model is a derived class */
+  /** every entry with a subkit becomes an entry whose model is a derived class */
   export function resolve<K extends object>(kit: K): K {
     return Object.fromEntries(
       Object.entries(kit).map(([role, value]) => [role, isEntry(value) ? resolveEntry(value) : resolve(value as object)]),
@@ -150,11 +150,11 @@ export namespace Kit {
     );
   }
 
-  /** an entry with a kit or props becomes an entry whose model is a derived class; the fields are consumed */
+  /** an entry with a subkit or props becomes an entry whose model is a derived class; the fields are consumed */
   function resolveEntry(entry: Entry): Entry {
-    if (!entry.model || (!entry.kit && !entry.props)) return entry;
-    const { kit, props, ...rest } = entry;
-    return { ...rest, model: derive(entry.model, kit, props) };
+    if (!entry.model || (!entry.subkit && !entry.props)) return entry;
+    const { subkit, props, ...rest } = entry;
+    return { ...rest, model: derive(entry.model, subkit, props) };
   }
 
   function merge(base: any, patch: Patch): any {
@@ -167,12 +167,12 @@ export namespace Kit {
   }
 
   function isEntry(value: unknown): value is Entry {
-    return typeof value === 'object' && value !== null && ('view' in value || 'model' in value || 'kit' in value);
+    return typeof value === 'object' && value !== null && ('view' in value || 'model' in value || 'subkit' in value);
   }
 }
 ```
 
-A class's own `$kit` is written plain, with no `kit` or `props`
+A class's own `$kit` is written plain, with no `subkit` or `props`
 anywhere; it needs no `resolve`. Both fields belong to overrides, where
 a patch names how deep it reaches and what it tunes, and the resolver
 turns each into a derived class once, cached on the class that asked.
@@ -716,7 +716,7 @@ class $DenseChat extends Chat.$Class {
       // every code block under every card capped lower, no class touched
       Message: {
         ...super.$kit.Message,
-        kit: { Tool: { kit: { CodeBlock: { props: { cap: 2_000 } } } } },
+        subkit: { Tool: { subkit: { CodeBlock: { props: { cap: 2_000 } } } } },
       },
     }));
   }
@@ -750,12 +750,12 @@ class $TerminalChat extends Chat.$Class {
       ...super.$kit,
       Message: {
         ...super.$kit.Message,
-        kit: {
+        subkit: {
           Tool: {
-            kit: {
+            subkit: {
               Tools: {
                 Bash: {
-                  kit: { CodeBlock: { model: TerminalBlock.Class, view: TerminalBlockView } },
+                  subkit: { CodeBlock: { model: TerminalBlock.Class, view: TerminalBlockView } },
                 },
               },
             },
@@ -775,7 +775,7 @@ export namespace TerminalChat {
 
 One class, one literal. The nesting is the path from the root to the
 leaf — Message, Tool, Tools.Bash, CodeBlock — and every hop that says
-only `kit` keeps its model and view. `resolve` derives a
+only `subkit` keeps its model and view. `resolve` derives a
 `ChatMessage` subclass whose kit names a derived `ToolCallModel`
 subclass whose `Tools.Bash` names a derived `BashCall` subclass whose
 `CodeBlock` is the terminal block; each derived class caches its own
@@ -793,14 +793,14 @@ class $MonoChat extends Chat.$Class {
       ...super.$kit,
       Message: {
         ...super.$kit.Message,
-        kit: {
+        subkit: {
           Tool: {
-            kit: {
+            subkit: {
               ...block, // the base's own entry, read by any card that does not override
-              Generic: { kit: block },
-              Mcp: { kit: block },
-              Task: { kit: block },
-              Tools: Object.fromEntries(Object.keys(tools.Tools).map((name) => [name, { kit: block }])),
+              Generic: { subkit: block },
+              Mcp: { subkit: block },
+              Task: { subkit: block },
+              Tools: Object.fromEntries(Object.keys(tools.Tools).map((name) => [name, { subkit: block }])),
             },
           },
         },
@@ -947,9 +947,9 @@ importing each other.
   `Kit.propsTypes` into the contract it already has; every existing use
   is untouched.
 - **A deep swap is one literal, resolved once.** An override's entry
-  may carry `kit`, a patch over the child's own kit; `Kit.resolve`
+  may carry `subkit`, a patch over the child's own kit; `Kit.resolve`
   turns every reach into a derived class at kit build time, cached per
-  class. A class's own `$kit` never carries `kit`. The cache is a
+  class. A class's own `$kit` never carries `subkit`. The cache is a
   `WeakMap` keyed by the asking class, never a static field — a static
   field read through `this` walks the static chain and hands a subclass
   its parent's kit. Verify at conversion: `Reactive` over a subclass of an already-transformed class
