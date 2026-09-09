@@ -957,4 +957,13 @@ own whole than to arbitrate.
   the file's header comment when the anchor text appears there too (the
   generator header repeats each test's claim): the test silently never
   runs. Anchor on the body's `test(` line, and grep the line number after.
+- The scroller kept an ABSOLUTE scroll position while rows above the reader
+  measured: every mount above the viewport moved the content under them,
+  by a screen or more when a placeholder became a long message — and the
+  estimate never calibrates for a list opened at the bottom. The fix is
+  content anchoring (`captureAnchor`/`restoreAnchor` around every size
+  change): the row under the leading edge stays where it was; a glide
+  keeps its lerp by shifting both endpoints; a seek's landing shifts with
+  it. Under a 1.2 s page throttle, a far seek and a 60,000 px fling now
+  hold the same row at the same pixel while pages land.
 
