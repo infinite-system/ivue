@@ -26,9 +26,9 @@ shipped instance to point at.
 - **The entry crosses the seam.** A parent renders
   `<component :is="chat.kit.Message.view" :kit="chat.kit.Message" :row="item" :chat="chat" />`:
   the entry's view, the entry itself as the one prop `kit`, the child's
-  own props. An entry is `{ view, model?, props?, subkit? }` — the
-  view, the class the view constructs, props the consumer set for the
-  role, and a patch for the child's own kit. No inject. The child's
+  own props. An entry is `{ view, model?, props?, kit? }` — the
+  view, the class the view constructs, prop defaults the consumer set
+  for the role, and a patch over the roles below the model. No inject. The child's
   model reads its kit from its own class — `get kit() { return this.self.$kit }`
   — so a swapped class brings its own kit, and no parent ever
   constructs a child.
@@ -926,12 +926,12 @@ importing each other.
   `nestedProps`. This is the larger half of the conversion by line
   count and it is what makes an entry's `props` free: a derived class
   overriding `propsDefaults` is the standard's own move.
-- **Two things called kit.** A model's `kit` is its class's `$kit`, the
-  roles below it; a view's `props.kit` is the entry it was rendered
-  through, one role from above. The same word for two neighbours on
-  one seam is deliberate — a view hands its entry's model the roles
-  that model then hands down — but if it reads wrong at conversion,
-  the prop is renamed `entry` once, everywhere, and nothing else moves.
+- **`kit` means the roles below.** A model's `kit` is its class's
+  `$kit`; an entry's `kit` is the roles below the entry's model,
+  patched. The one use that means something else is the view's prop:
+  `props.kit` is the entry from above, not the roles below. If that
+  reads wrong at conversion, the prop is renamed `entry` once,
+  everywhere, and nothing else moves.
 - **Two layers of defaults.** Vue applies the base contract's defaults
   at the boundary, from `X.Class.props` compiled into the view; a
   derived class's defaults apply in the constructor through
