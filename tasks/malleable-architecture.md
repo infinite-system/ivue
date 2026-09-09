@@ -483,6 +483,46 @@ shipped ones. The hidden eval window becomes unnecessary.
   not shell-avoidance. Per-cell malleability ("override how a CELL
   renders") is a headline capability, not a tax.
 
+### The kit: the template axis, reduced (2026-09-09)
+
+The `template` + `runner` sketch above still has each component
+choosing between its own markup and a dynamic view. Reduced further,
+the choice leaves the component entirely, and the four moves below are
+the whole mechanism. The AI chat example is the first tree to be
+converted — the build is `tasks/ai-chat-kit.md`.
+
+- **A model owns its kit as a lazy static.** `static get $kit()` returns
+  the roles the model's subtree composes, each a `{ model, view }` pair
+  for a parent-owned child or `{ view }` for a leaf that takes props.
+  A lazy getter, cached per class, is what makes the model↔view import
+  cycle harmless: neither side reads the other at module init. A
+  subclass overrides by spread; a one-off is `with({ Role: … })`.
+- **The kit flows down the object graph, not through Vue.** A parent
+  constructs its children and hands its kit in as the second
+  constructor argument; a child reads `this.props.kit ?? this.self.$kit`.
+  Local override with a global fallback falls out of the ownership
+  chain that already exists — no provide/inject, and a model built in a
+  test with no kit uses its own.
+- **Templates name roles.** A parent renders `<component :is="model.kit.Message.view" :model="message" />`;
+  a leaf renders `<component :is="model.kit.CodeBlock.view" :code=… />`.
+  There is no shell component: the parent chose the pair and knows both
+  halves. `<component :is>` is Vapor's dynamic-component path too, so
+  the mechanism is neutral to the runtime.
+- **Lifetime decides the seam.** A child whose state must outlive its
+  element crosses the seam as a model the parent holds; a leaf whose
+  state dies with its element crosses as props and constructs its own
+  small model in setup. Handing a model to a leaf would give the parent
+  a lifetime it does not want.
+
+What this changes about the sketch: `runner` and `template` stop being
+props a component accepts and become entries in its parent's kit; the
+fallback boolean disappears; the "one real cost" table above still
+holds, and the per-render cost is unchanged (`:is` with a stable
+component reference short-circuits the same way). What it forbids: a
+template that names a component it composes, a view that constructs
+the model it shows (except a standalone fallback), a model that names
+its own view, and a swap that edits a model class.
+
 ## Boundaries to respect (named in discussion)
 
 - **Constructions are malleable; live instances are not.** Swapping a
@@ -1400,10 +1440,13 @@ is at each component's OWN inner `:is`; ruling refined above.)
 
 Post-release, as a ladder — each rung is a shippable artifact:
 
-1. The universal shell: `Malleable.propsTypes` base contract + the
-   shell shape on ONE docs demo component (runner + template +
-   :is/fallback); measure the runtime-string tier's real cost; add
-   the shell ruling to the gate.
+1. The kit on ONE tree: the AI chat example converted per
+   `tasks/ai-chat-kit.md` (kit as `static get $kit`, pairs of model and
+   view, the kit handed down at construction, `:is` at every seam, the
+   scroller as a view over a parent-owned model); measure mount cost
+   before and after; then the kit ruling goes to the gate. This
+   supersedes the earlier "universal shell" rung — the shell dissolved
+   into the parent's kit (see "The kit", above).
 2. The overlay ledger: persist + replay generated subclasses for one
    surface (a settings page, a list view).
 3. The recovery layer on that surface: error-boundary quarantine,
