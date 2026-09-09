@@ -41,11 +41,15 @@ shipped instance to point at.
 - **Props live on the class contract.** Every chat class moves from a
   type-only `Props` interface to the standard's statics — `propsTypes`,
   `propsDefaults`, `props` — and declares its own `kit` prop, typed to
-  itself. An entry's `props` then needs no mechanism of its own: the constructor's `nestedProps` line fills omitted props from
-  `Kit.Class.defaults(props, this.self.propsDefaults)`, the class's
-  defaults with the entry's laid over them. Kit props are defaults: they
-  apply where the template omitted the prop, and a card that passes
-  `:cap` keeps its value.
+  itself. The constructor's one props line becomes
+  `Kit.Class.nestedProps(this, props, this.self.propsDefaults)`: the
+  standard's nested fill, then the instance's `props` installed as a
+  read-through layer where the entry's `props` win and everything else
+  falls to Vue's props, leaf-tracked. Kit props are overrides: a
+  consumer who sets `cap` on the entry caps every block, whatever a
+  card passes. And a key the base contract never declared is readable
+  through the same layer, so a kit can extend a class's props with
+  values of its own.
 - **Override is subclassing.** A subclass with a spread `$kit` swaps a
   role: `FancyChat.$kit.Scroller = { namespace: SnapScroller, view: SnapScrollerView }`.
   A swap that must reach a deep leaf is the same spread with an optional
@@ -78,7 +82,7 @@ the only new member on any class is `$kit`.
 ```ts
 import type { Component } from 'vue';
 import { Reactive } from '../../ivue';
-import { Static } from '../../Static';
+import { nestedProps, Static, type NestedProps } from '../../Static';
 
 // The kit's helpers, as statics on one class — the shape `Parts` and
 // `Tools` had. An entry names a role's view and, when the role has a
@@ -88,10 +92,25 @@ import { Static } from '../../Static';
 // when the kit resolves. A kit is a record of entries or of nested
 // records of entries.
 class $Kit {
-  /** the class's defaults with the entry's `props` laid over them — what the constructor fills omitted props from */
-  static defaults<Defaults extends object>(props: { kit?: Kit.Entry }, classDefaults: Defaults): Defaults {
+  /** the constructor's props line: the standard's nested fill from the class defaults, then the
+   *  instance's `props` installed as a read-through layer — the entry's `props` win, every other key
+   *  falls to Vue's props (leaf-tracked, since the layer only forwards reads). Vue's props proxy is
+   *  readonly at the top level, so this is the only way an entry's value reaches a flat prop; and a
+   *  key the base contract never declared is readable too, which is how a kit EXTENDS a class's props. */
+  static nestedProps<Props extends { kit?: Kit.Entry }, Defaults extends object>(
+    instance: { props: Props },
+    props: Props,
+    defaults: Defaults,
+  ): NestedProps<Props, Defaults> {
+    const filled = nestedProps(props, defaults);
     const fromKit = props.kit?.props;
-    return fromKit ? { ...classDefaults, ...fromKit } : classDefaults;
+    instance.props = fromKit
+      ? (new Proxy(filled, {
+          get: (target, key) => (key in fromKit ? fromKit[key as string] : target[key as keyof typeof target]),
+          has: (target, key) => key in fromKit || key in target,
+        }) as Props)
+      : (filled as Props);
+    return instance.props as NestedProps<Props, Defaults>;
   }
 
   /** one kit per class that asks — keyed by the class, so a subclass never reads its parent's */
@@ -197,10 +216,11 @@ differently in a literal. A class's own `$kit` is written plain, with no
 to overrides. `subkit` names how deep a patch reaches and the resolver
 turns each reach into a derived class once, cached on the class that
 asked. `props` names what the patch tunes and never generates a class:
-the constructor's one `nestedProps` line fills omitted props from
-`Kit.Class.defaults(props, this.self.propsDefaults)`, the class's
-defaults with the entry's laid over them — the standard's own
-mechanism, and nothing at the view. `Kit` declares no prop: a
+the constructor's one props line, `Kit.Class.nestedProps(this, props, this.self.propsDefaults)`,
+does the standard's nested fill and then installs the instance's
+`props` as a layer where the entry's values win — nothing at the view,
+and the instance is passed so the helper installs the result and the
+line stays one statement. `Kit` declares no prop: a
 kit-rendered class declares `kit` in its own `propsTypes`, typed
 `Kit.Entry<typeof X>` to its own namespace, so `props.kit?.namespace.Class` is that class
 and the `new` in the view is typed. The class owns its contract; `Kit`
@@ -686,8 +706,8 @@ class $CodeBlock {
   }
 
   constructor(public props: CodeBlock.Props) {
-    // fills what the template omitted: the class's defaults, the entry's laid over them
-    nestedProps(props, Kit.Class.defaults(props, this.self.propsDefaults));
+    // the standard's fill, then this.props reads the entry's values first
+    Kit.Class.nestedProps(this, props, this.self.propsDefaults);
     onMounted(() => this.colour());
     // …
   }
@@ -726,13 +746,17 @@ const model = new (props.kit?.namespace.Class ?? CodeBlock.Class)(props);
 ```
 
 When a consumer's kit says `CodeBlock: { …, props: { cap: 2_000 } }`,
-the entry arrives in `props.kit`, and the constructor's `nestedProps`
-fills `cap` with `2_000` wherever the card left `:cap` off, because
-`Kit.Class.defaults` laid the entry's props over the class's. No class
-is generated for it. Vue's own defaults, compiled from
-`CodeBlock.Class.props`, still run at the boundary for the base
-contract; the merged defaults run in the constructor. No proxy, no
-second props mechanism — the standard's contract is the only one.
+the entry arrives in `props.kit`, and after the constructor's line
+`this.props.cap` reads `2_000` whatever the card passed, because the
+layer reads the entry first. No class is generated for it. Vue's props
+proxy is readonly at the top level — `nestedProps` fills only inside
+nested objects — so the layer is the only way an entry's value reaches
+a flat prop, and it is the one place the design puts a read-through:
+installed by the class's own contract line, typed as the class's
+`Props`, and invisible to the view. A key the base contract never
+declared reads through the same layer, so a kit can hand a class a prop
+Vue never saw; the parent template still cannot pass one, which is the
+half of Vue's boundary that stays.
 
 ### `VirtualScroller.vue` — one optional prop, everything else untouched
 
@@ -799,7 +823,7 @@ class $DenseChat extends Chat.$Class {
   static override get $kit() {
     return Kit.Class.cached(this, () => Kit.Class.resolve({
       ...super.$kit,
-      // the same scroller, tuned: the entry's props are laid over the class's defaults at construction
+      // the same scroller, tuned: the entry's props win over whatever the root template passes
       Scroller: { ...super.$kit.Scroller, props: { assumedSize: 64, paddingQuantity: 10 } },
       // every code block under every card capped lower, no class touched
       Message: {
@@ -813,13 +837,11 @@ class $DenseChat extends Chat.$Class {
 
 A patch entry may carry only `props`; `merge` lays it over the base
 entry, so model and view are kept, and no class is derived — the entry
-reaches the constructor as `props.kit` and its `props` are laid over
-the class's defaults there. These are defaults: `assumedSize`
-applies because the root template stops passing `:assumed-size` once
-the role is tuned from the kit, and `cap` applies wherever a card left
-`:cap` off. A consumer who needs to force a value past a template that
-sets it derives the class and overrides the prop getter — the ordinary
-move, not a kit feature. This is the consumer's dial for anything a
+reaches the constructor as `props.kit` and its `props` win there:
+`assumedSize` is `64` whatever the root template passes, `cap` is
+`2_000` under every card. The kit is the consumer's word and it is
+final; a template that wants a say sets the prop on the entry, not on
+the tag. This is the consumer's dial for anything a
 view already exposes as a prop, and it is why the class alone was not
 enough to hand down: the entry is the unit of override, and props are
 one of its three axes.
@@ -1008,14 +1030,19 @@ it('a view constructs the class it is handed', async () => {
   expect(wrapper.vm.model).toBeInstanceOf(TerminalMessage.Class);
 });
 
-it('an entry\'s props fill what the template omitted, and the template still wins where it speaks', () => {
+it('an entry\'s props win over the template\'s, extend the contract, and leave the rest leaf-tracked', () => {
   const entry = DenseChat.Class.$kit.Message.namespace.Class.$kit.Tool.namespace.Class.$kit.CodeBlock;
   expect(entry.namespace).toBe(CodeBlock); // props alone derive nothing
   expect(entry.props).toEqual({ cap: 2_000 });
-  expect(CodeBlock.Class.propsDefaults.cap).toBeNull();
   expect(new CodeBlock.Class({ code: 'a', kit: entry }).props.cap).toBe(2_000);
-  expect(new CodeBlock.Class({ code: 'a', cap: 100, kit: entry }).props.cap).toBe(100);
-  expect(new CodeBlock.Class({ code: 'a' }).props.cap).toBeNull();
+  expect(new CodeBlock.Class({ code: 'a', cap: 100, kit: entry }).props.cap).toBe(2_000);
+  expect(new CodeBlock.Class({ code: 'a', cap: 100 }).props.cap).toBe(100);
+  const extended = new CodeBlock.Class({ code: 'a', kit: { view: CodeBlockView, props: { theme: 'mono' } } });
+  expect((extended.props as Record<string, unknown>).theme).toBe('mono'); // a key Vue never declared
+  const live = shallowReactive({ code: 'a', lang: 'ts', kit: entry });
+  const block = new CodeBlock.Class(live);
+  live.lang = 'json';
+  expect(block.props.lang).toBe('json'); // reads not owned by the entry fall through to Vue's props
 });
 ```
 
@@ -1052,27 +1079,26 @@ importing each other.
 - **Every chat class moves onto the static props contract.** Today the
   folder declares type-only `Props` interfaces; the build gives each
   class `propsTypes`, `propsDefaults` and `props`, declares its own
-  `kit` prop typed to itself, and fills omitted props in the
-  constructor with `nestedProps(props, Kit.Class.defaults(props, this.self.propsDefaults))`.
+  `kit` prop typed to itself, and replaces the standard's `nestedProps`
+  line with `Kit.Class.nestedProps(this, props, this.self.propsDefaults)`.
   This is the larger half of the conversion by line count and it is
-  what makes an entry's `props` free: one merged defaults object in the
-  line the standard already has.
+  what makes an entry's `props` free: one helper in the line the
+  standard already has.
 - **Two things called kit.** A model's `kit` is its class's `$kit`, the
   roles below it; a view's `props.kit` is the entry it was rendered
   through, one role from above. The same word for two neighbours on
   one seam is deliberate — a view hands its entry's model the roles
   that model then hands down — but if it reads wrong at conversion,
   the prop is renamed `entry` once, everywhere, and nothing else moves.
-- **Two layers of defaults.** Vue applies the base contract's defaults
-  at the boundary, from `X.Class.props` compiled into the view; the
-  merged defaults apply in the constructor through `nestedProps`. A prop with a non-`undefined` base default is therefore
-  never "omitted" by the time the constructor runs, and an entry's
-  value for it would not apply. The ruling: a prop a kit may tune has
-  `undefined` as its base default and the class resolves the fallback
-  in its getter — `cap` and `assumedSize` are declared that way — or
-  the view declares `defineProps(X.Class.propsTypes)` and leaves every
-  default to the constructor. Decide once at conversion; the spec pins
-  whichever it is.
+- **The props layer.** Vue's props proxy is readonly at the top level,
+  so an entry's value can only reach a flat prop through a layer the
+  class installs over its props — which is why the helper takes the
+  instance. Two things to verify: that a `Proxy` over Vue's shallow
+  props proxy keeps every forwarded read leaf-tracked (it should; the
+  layer calls `target[key]` on the original), and that the spec's
+  `has` trap is enough for `'kit' in props` checks. The layer is the
+  one read-through in the design; it lives in the contract line, not at
+  the view, and a class without an entry gets its plain props back.
 - **The scroller's `kit` prop.** `VirtualScroller.ts` spreads
   a `kit` prop into the contract it already has; every existing use
   is untouched.
