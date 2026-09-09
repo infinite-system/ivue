@@ -499,24 +499,28 @@ chat example is the first tree to be converted — the build is
   A lazy getter, cached per class, is what makes the model↔view import
   cycle harmless: neither side reads the other at module init. A
   subclass overrides by spread; a one-off is `with({ Role: … })`.
-- **The class is what crosses the seam.** A parent renders
-  `<component :is="model.kit.Message.view" :model="model.kit.Message.model" …props />`:
-  the entry's view, handed the entry's model CLASS as a prop, plus the
-  child's own props. Nothing else travels — no kit prop, no inject. A
-  child's model reads its kit from its own class, `this.self.$kit`, so a
-  swapped class brings its own kit with it.
-- **Every view constructs its own model — the class it was handed.**
+- **The entry is what crosses the seam.** A parent renders
+  `<component :is="model.kit.Message.view" :kit="model.kit.Message" …props />`:
+  the entry's view, handed the entry itself as the one prop, plus the
+  child's own props. An entry is `{ view, model?, props?, subtree? }`:
+  the view, the class the view constructs, props the consumer set for
+  the role, and a patch over the child's own kit. Nothing else travels
+  — no inject. A child's model reads its kit from its own class,
+  `this.self.$kit`, so a swapped class brings its own kit with it.
+- **Every view constructs its own model — the class its entry names.**
   The SFC stays the wiring the standard describes, one `new` in setup:
-  `new (props.model ?? Message.Class)(props)`. The fallback is for a view
-  mounted on its own (a docs demo, a spec). Hooks in the constructor bind
-  to the view's own component, as today. A parent never constructs a
-  child.
-- **Override is subclassing.** A subclass with a different `$kit` swaps
-  its whole subtree, and the parent's kit names the subclass. A swap
-  that must reach a deep leaf — a different code block under every tool
-  card — is a chain of small subclasses, each a two-line spread, rather
-  than a merge walking a tree. Explicit, greppable, and the same move
-  the overlay ledger already makes.
+  `new (props.kit?.model ?? Message.Class)(Kit.props(props))`. The
+  fallback is for a view mounted on its own (a docs demo, a spec);
+  `Kit.props` lays the entry's props over the template's, so a consumer
+  tunes a role without a class. Hooks in the constructor bind to the
+  view's own component, as today. A parent never constructs a child.
+- **Override is subclassing, resolved once.** A subclass with a
+  different `$kit` swaps its whole subtree, and the parent's kit names
+  the subclass. A swap that must reach a deep leaf is one nested
+  literal — an entry's optional `subtree` is a patch over the child's
+  kit — which `Kit.resolve` turns into derived subclasses at kit build
+  time, cached per asking class and frozen, so one tree never changes
+  another. The same move the overlay ledger makes, from data.
 - **There is no shell component.** The parent chose the entry and
   knows both halves; `<component :is>` is Vapor's dynamic-component path
   too, so the mechanism is neutral to the runtime.
@@ -1453,8 +1457,8 @@ Post-release, as a ladder — each rung is a shippable artifact:
 
 1. The kit on ONE tree: the AI chat example converted per
    `tasks/ai-chat-kit.md` (kit as `static get $kit`, pairs of model and
-   view, the model class passed down as the one prop, `:is` at every
-   seam, every view constructing the class it was handed); measure mount cost
+   view, the entry passed down as the one prop, `:is` at every seam,
+   every view constructing the class its entry names); measure mount cost
    before and after; then the kit ruling goes to the gate. This
    supersedes the earlier "universal shell" rung — the shell dissolved
    into the parent's kit (see "The kit", above).
