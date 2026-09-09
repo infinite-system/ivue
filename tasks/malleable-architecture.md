@@ -523,14 +523,14 @@ chat example is the first tree to be converted — the build is
   kit — which `Kit.Class.resolve` turns into derived subclasses at kit build
   time, cached per asking class and frozen, so one tree never changes
   another. The same move the overlay ledger makes, from data.
-- **Containers are roles too.** `<component :is>` takes a tag name, so
-  a kit's container entries default to `'div'`, `'header'`, `'article'`
-  at no component cost, and a consumer swaps one for an SFC that
-  receives its entry and the parent's model (bound only when the entry
-  is a component, never onto a tag) and renders the slot or its own
-  children — the subtree rearranges without touching its view, and
-  without a wrapper component. A wrapper with a class of its own is a
-  role; an element that carries text is not.
+- **Sections are roles too.** A view's sections — a row's gutter, head,
+  parts, foot — are entries whose base views are small markup SFCs over
+  the parent's model, each rendering its own children, handed the entry
+  and the model like any child. Every seam in the tree is then one
+  shape, `:is` from the entry, `:kit` the entry, then props, and a swap
+  of any section brings a template and, through a namespace on its
+  entry, a class. The cost is one component instance per section per
+  mounted parent, measured before it is accepted.
 - **There is no shell component.** The parent chose the entry and
   knows both halves; `<component :is>` is Vapor's dynamic-component path
   too, so the mechanism is neutral to the runtime.
