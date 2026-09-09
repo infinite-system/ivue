@@ -53,13 +53,606 @@ shipped instance to point at.
 - **Vapor-neutral.** Views are SFCs, seams are `<component :is>`, the
   models never touch the VDOM. Nothing here is a render function.
 
+## The code
+
+Every sample below is the shape the converted file takes. Paths are
+the chat folder's; the standard's namespace pattern is unchanged, and
+the only new member on any class is `$kit`.
+
+### `Kit.ts` — the two shapes an entry can have
+
+```ts
+import type { Component } from 'vue';
+
+// An entry names a role's view and, when the role has a model of its own,
+// the class that view constructs. A leaf that takes props has no model.
+// A kit is a record of entries; a model's `static get $kit()` returns one.
+export namespace Kit {
+  export interface Entry<Model = unknown> {
+    view: Component;
+    model?: Model;
+  }
+
+  export type Of<Roles extends string> = Record<Roles, Entry>;
+}
+```
+
+### `Chat.ts` — the root names four roles
+
+```ts
+import { Reactive } from '../../ivue';
+import { Static } from '../../Static';
+import type { Kit } from './Kit';
+import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
+import VirtualScrollerView from '../virtual-scroller/VirtualScroller.vue';
+import { ChatMessage } from './ChatMessage';
+import ChatMessageView from './ChatMessage.vue';
+import { Composer } from './Composer';
+import ChatComposerView from './ChatComposer.vue';
+import { Index } from './Index';
+import ChatIndexView from './ChatIndex.vue';
+
+class $Chat {
+  // Lazy and cached per class: the views import this module, this module
+  // imports the views, and nobody reads the other side until a template
+  // renders. `Chat.$kit` and `FancyChat.$kit` are different objects.
+  static get $kit() {
+    return this.cachedKit ??= {
+      Scroller: { model: VirtualScroller.Class, view: VirtualScrollerView },
+      Message: { model: ChatMessage.Class, view: ChatMessageView },
+      Composer: { model: Composer.Class, view: ChatComposerView },
+      Index: { model: Index.Class, view: ChatIndexView },
+    } satisfies Kit.Of<'Scroller' | 'Message' | 'Composer' | 'Index'>;
+  }
+
+  protected static cachedKit?: ReturnType<typeof $Chat.$kit>;
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $Chat;
+  }
+
+  /** the kit is the class's; a subclass with its own `$kit` swaps the subtree */
+  get kit() {
+    return this.self.$kit;
+  }
+
+  // …everything the chat already owns: rows, pages, streaming, the clock
+}
+
+export namespace Chat {
+  export const $Class = Static($Chat);
+  export let Class = Reactive($Class);
+  export type Model = InstanceType<typeof Class>;
+  export type Instance = typeof Class.Instance;
+}
+```
+
+The `cachedKit` static holds the object per class because a static getter
+re-runs on every read; `??=` on `this` keys the cache by the class that
+was asked, so a subclass's getter builds and caches its own.
+
+### `AiChatExample.vue` — the root template names roles
+
+```vue
+<script setup lang="ts">
+import { Chat } from './Chat';
+import './ai-chat.css';
+
+const props = defineProps<{ dark?: boolean; model?: typeof Chat.Class }>();
+
+// the root constructs the class it was handed, or its own
+const chat = new (props.model ?? Chat.Class)();
+
+const {
+  // state refs
+  rows,
+  indexOpen,
+  error,
+  // element refs
+  scroller,
+} = chat;
+</script>
+
+<template>
+  <div class="ai-chat" :class="{ 'ac-dark': dark, 'ac-index-open': indexOpen }">
+    <header class="ac-top">…unchanged…</header>
+
+    <p v-if="error" class="ac-error">{{ error }}</p>
+
+    <div class="ac-main">
+      <section class="ac-thread">
+        <component
+          :is="chat.kit.Scroller.view"
+          ref="scroller"
+          :model="chat.kit.Scroller.model"
+          scrollbar
+          v-model="rows"
+          :assumed-size="96"
+          :padding-quantity="6"
+          :selection-text="chat.rowText"
+        >
+          <template #item="{ item }">
+            <component :is="chat.kit.Message.view" :model="chat.kit.Message.model" :row="item" :chat="chat" />
+          </template>
+        </component>
+        <button v-if="chat.showsJumpToLatest" type="button" class="ac-jump" @click="chat.jumpToLatest()">↓ latest</button>
+      </section>
+      <component :is="chat.kit.Index.view" v-if="indexOpen" :model="chat.kit.Index.model" :chat="chat" />
+    </div>
+
+    <component :is="chat.kit.Composer.view" :model="chat.kit.Composer.model" :chat="chat" />
+  </div>
+</template>
+```
+
+No component import remains in the root. The scroller keeps its
+template ref, its `v-model`, its slot and every prop; the only
+difference from today is that its tag is an `:is` and it receives its
+class.
+
+### `ChatMessage.ts` + `ChatMessage.vue` — a row resolves its parts
+
+```ts
+// ChatMessage.ts
+import TextPartView from './parts/TextPart.vue';
+import ThinkingPartView from './parts/ThinkingPart.vue';
+import ToolCallPartView from './parts/ToolCallPart.vue';
+import ToolBatchPartView from './parts/ToolBatchPart.vue';
+import AttachmentPartView from './parts/AttachmentPart.vue';
+import SystemPartView from './parts/SystemPart.vue';
+import { ToolBatchPart } from './parts/ToolBatchPart';
+import { ToolCallModel } from './tools/ToolCallModel';
+
+class $ChatMessage {
+  static get $kit() {
+    return this.cachedKit ??= {
+      // parts by kind — the registry `Parts.ts` was, as entries
+      text: { view: TextPartView },
+      thinking: { view: ThinkingPartView },
+      attachment: { view: AttachmentPartView },
+      system: { view: SystemPartView },
+      tool_call: { view: ToolCallPartView },
+      tool_batch: { model: ToolBatchPart.Class, view: ToolBatchPartView },
+      // the tool cards are reached through the tool base's kit, one hop down
+      Tool: { model: ToolCallModel.Class, view: ToolCallPartView },
+    } satisfies Kit.Of<SessionLog.Part['kind'] | 'Tool'>;
+  }
+
+  protected static cachedKit?: ReturnType<typeof $ChatMessage.$kit>;
+
+  constructor(public props: ChatMessage.Props) {}
+
+  protected get self() {
+    return this.constructor as typeof $ChatMessage;
+  }
+
+  get kit() {
+    return this.self.$kit;
+  }
+
+  /** a kind the kit does not name renders as text — the registry's old fallback */
+  partEntry(part: SessionLog.Part): Kit.Entry {
+    return this.kit[part.kind] ?? this.kit.text;
+  }
+
+  partView(part: SessionLog.Part) {
+    return this.partEntry(part).view;
+  }
+
+  partModel(part: SessionLog.Part) {
+    return this.partEntry(part).model;
+  }
+
+  // …roleLabel, rowClass, stub members, partKey — unchanged
+}
+
+export namespace ChatMessage {
+  export const $Class = Static($ChatMessage);
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+
+  export interface Props {
+    row: Chat.Row;
+    chat: Chat.Model;
+    /** the class this view constructs; the parent's kit supplies it */
+    model?: typeof Class;
+  }
+
+  /** what every part view receives — `Parts.Props` was, moved here when `Parts.ts` goes */
+  export interface PartProps<Part extends SessionLog.Part = SessionLog.Part> {
+    part: Part;
+    chat: Chat.Model;
+    message: SessionLog.Message | null;
+  }
+}
+```
+
+```vue
+<!-- ChatMessage.vue -->
+<script setup lang="ts">
+import { ChatMessage } from './ChatMessage';
+
+const props = defineProps<ChatMessage.Props>();
+
+const model = new (props.model ?? ChatMessage.Class)(props);
+</script>
+
+<template>
+  <article class="ac-msg" :class="model.rowClass">
+    …header and stub unchanged…
+    <div v-else class="ac-parts">
+      <component
+        :is="model.partView(part)"
+        v-for="(part, at) in model.parts"
+        :key="model.partKey(part, at)"
+        :model="model.partModel(part)"
+        :part="part"
+        :chat="chat"
+        :message="model.message"
+      />
+    </div>
+  </article>
+</template>
+```
+
+`Parts.ts` is deleted. A leaf part (text, thinking) receives `model`
+as `undefined` and ignores it; its view constructs its own small class
+as today. `tool_batch` has a model and constructs the one it is handed.
+
+### `ToolCallModel.ts` — the tool base owns the cards and the shared leaves
+
+```ts
+import ToolHeadView from './ToolHead.vue';
+import ToolFootView from './ToolFoot.vue';
+import { CodeBlock } from './CodeBlock';
+import CodeBlockView from './CodeBlock.vue';
+import { BashCall } from './BashCall';
+import BashCallView from './BashCall.vue';
+// …one pair per tool, as `Tools.ts` imports today
+import GenericCallView from './GenericCall.vue';
+
+class $ToolCallModel {
+  static get $kit() {
+    return this.cachedKit ??= {
+      Head: { view: ToolHeadView },
+      Foot: { view: ToolFootView },
+      CodeBlock: { model: CodeBlock.Class, view: CodeBlockView },
+      Generic: { model: ToolCallModel.Class, view: GenericCallView },
+      Mcp: { model: McpCall.Class, view: McpCallView },
+      Task: { model: TaskCall.Class, view: TaskCallView },
+      Tools: {
+        Bash: { model: BashCall.Class, view: BashCallView },
+        Edit: { model: EditCall.Class, view: EditCallView },
+        NotebookEdit: { model: EditCall.Class, view: EditCallView },
+        Read: { model: ReadCall.Class, view: ReadCallView },
+        Write: { model: WriteCall.Class, view: WriteCallView },
+        Agent: { model: AgentCall.Class, view: AgentCallView },
+        Skill: { model: SkillCall.Class, view: SkillCallView },
+        WebFetch: { model: WebFetchCall.Class, view: WebFetchCallView },
+        WebSearch: { model: WebFetchCall.Class, view: WebFetchCallView },
+        Artifact: { model: ArtifactCall.Class, view: ArtifactCallView },
+      } as Record<string, Kit.Entry>,
+    };
+  }
+
+  protected static cachedKit?: ReturnType<typeof $ToolCallModel.$kit>;
+
+  /** the lookup `Tools.componentFor` was: exact name, then family, then generic */
+  static toolFor(name: string): Kit.Entry {
+    const kit = this.$kit;
+    const exact = kit.Tools[name];
+    if (exact) return exact;
+    if (name.startsWith('mcp__')) return kit.Mcp;
+    if (/^Task(Create|Update|List|Get|Stop|Output)$/.test(name)) return kit.Task;
+    return kit.Generic;
+  }
+
+  constructor(public props: ToolCallModel.Props) {}
+
+  protected get self() {
+    return this.constructor as typeof $ToolCallModel;
+  }
+
+  get kit() {
+    return this.self.$kit;
+  }
+
+  // …call, chat, name, icon, summary, sections, toggle, cap — unchanged
+}
+
+export namespace ToolCallModel {
+  export const $Class = Static($ToolCallModel);
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+
+  export interface Props {
+    call: SessionLog.ToolCall;
+    chat: Chat.Model;
+    message: SessionLog.Message | null;
+    model?: typeof Class;
+  }
+}
+```
+
+`Tools.ts` is deleted; `toolFor` is its lookup as a static on the base,
+reading `this.$kit`, so a subclass of the base that overrides the map
+is looked up through its own kit. The base and each tool card import
+each other, which is the cycle the lazy getter exists for.
+
+### `ToolCallPart.vue` — the seam that picks a card
+
+```vue
+<script setup lang="ts">
+import type { SessionLog } from '../SessionLog';
+import type { ChatMessage } from '../ChatMessage';
+import { ToolCallModel } from '../tools/ToolCallModel';
+
+// A part with one call: look the card up on the tool base the row's kit
+// names, then render it with the class it names. Markup only.
+const props = defineProps<ChatMessage.PartProps<SessionLog.ToolCallPart> & { model?: typeof ToolCallModel.Class }>();
+
+const base = props.model ?? ToolCallModel.Class;
+</script>
+
+<template>
+  <component
+    :is="base.toolFor(part.call.name).view"
+    :model="base.toolFor(part.call.name).model"
+    :call="part.call"
+    :chat="chat"
+    :message="message"
+  />
+</template>
+```
+
+This leaf is the one place a template calls a method twice for one
+element. If the gate objects, the part becomes a two-line class with a
+`card` getter and the template reads `model.card.view` and
+`model.card.model`; the shape is the same.
+
+### `BashCall.vue` — a card renders its leaves through the base's kit
+
+```vue
+<script setup lang="ts">
+import { BashCall } from './BashCall';
+import type { ToolCallModel } from './ToolCallModel';
+
+const props = defineProps<ToolCallModel.Props>();
+
+const model = new (props.model ?? BashCall.Class)(props);
+</script>
+
+<template>
+  <div class="ac-tool ac-tool-bash" :class="model.cardClass">
+    <component :is="model.kit.Head.view" :tool="model" />
+    <div v-if="model.isExpanded" class="ac-tool-body">
+      <p v-if="model.description" class="ac-tool-caption">{{ model.description }}</p>
+      <section class="ac-tool-section">
+        <h5>command <span v-if="model.ranInBackground" class="ac-tag">background</span></h5>
+        <component :is="model.kit.CodeBlock.view" :model="model.kit.CodeBlock.model" :code="model.command" lang="bash" :cap="model.cap" wrap />
+      </section>
+      <section v-if="model.hasStdout" class="ac-tool-section">
+        <h5>stdout <span class="ac-tag" :class="model.stateClass">{{ model.exitLabel }}</span></h5>
+        <component :is="model.kit.CodeBlock.view" :model="model.kit.CodeBlock.model" :code="model.stdout" lang="text" :cap="model.cap" wrap />
+      </section>
+      <component :is="model.kit.Foot.view" :tool="model" />
+    </div>
+  </div>
+</template>
+```
+
+`BashCall.ts` does not change: it extends the base and inherits `$kit`
+through the static chain, so `BashCall.$kit === ToolCallModel.$kit`
+until a subclass says otherwise. `ToolHead` and `ToolFoot` take the
+instance as `tool` rather than `model`, because `model` is now the word
+for a class crossing a seam and the two must not share a name.
+
+### `CodeBlock.vue` — a leaf with a model constructs what it is handed
+
+```vue
+<script setup lang="ts">
+import { CodeBlock } from './CodeBlock';
+
+const props = defineProps<CodeBlock.Props>(); // Props gains `model?: typeof CodeBlock.Class`
+
+const model = new (props.model ?? CodeBlock.Class)(props);
+</script>
+
+<template>
+  <div class="ac-code" :class="model.blockClass" :style="model.blockStyle" v-html="model.renderedHtml"></div>
+</template>
+```
+
+### `VirtualScroller.vue` — one optional prop, everything else untouched
+
+```ts
+// VirtualScroller.vue, the two lines that change
+const props = defineProps({ ...VirtualScroller.Class.props, model: { type: Function, required: false } }) as unknown as VirtualScroller.Props<T>;
+const virtualScroller = new ((props.model as typeof VirtualScroller.Class | undefined) ?? VirtualScroller.Class)<T>(props, emit);
+```
+
+The scroller's own example, the horizontal scroller and the text
+marquee never pass `model`, so they construct the default exactly as
+before.
+
+## Extensions — what the kit makes a two-line change
+
+Each of these is a subclass with a spread `$kit`, and the parent's kit
+naming the subclass. None edits a file in the chat folder.
+
+### A different scroller under the chat only
+
+```ts
+// FancyChat.ts
+import { Reactive } from '../../ivue';
+import { Static } from '../../Static';
+import { Chat } from './Chat';
+import { SnapScroller } from '../snap-scroller/SnapScroller';
+import SnapScrollerView from '../snap-scroller/SnapScroller.vue';
+
+class $FancyChat extends Chat.$Class {
+  static override get $kit() {
+    return this.cachedKit ??= {
+      ...super.$kit,
+      Scroller: { model: SnapScroller.Class, view: SnapScrollerView },
+    };
+  }
+}
+
+export namespace FancyChat {
+  export const $Class = Static($FancyChat);
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+}
+```
+
+```vue
+<!-- the playground's second route -->
+<AiChatExample :model="FancyChat.Class" />
+```
+
+The scroller's contract with the chat is the surface `Chat` reads:
+`visibleIndex`, `scrollToIndex`, `scrollPosition`, `estimatedItemSize`,
+`cancelSeek`, the `item` slot. A swapped view must expose the same, and
+naming that surface as `Chat.ScrollerContract` is the first thing the
+conversion writes down.
+
+### A different code block under one tool
+
+```ts
+// TerminalBashCall.ts — stdout as a terminal emulation, only for Bash
+class $TerminalBashCall extends BashCall.$Class {
+  static override get $kit() {
+    return this.cachedKit ??= {
+      ...super.$kit,
+      CodeBlock: { model: TerminalBlock.Class, view: TerminalBlockView },
+    };
+  }
+}
+```
+
+```ts
+// and the row's tool base names it — a subclass of the base with one map entry changed
+class $TerminalTools extends ToolCallModel.$Class {
+  static override get $kit() {
+    return this.cachedKit ??= {
+      ...super.$kit,
+      Tools: { ...super.$kit.Tools, Bash: { model: TerminalBashCall.Class, view: BashCallView } },
+    };
+  }
+}
+
+class $TerminalMessage extends ChatMessage.$Class {
+  static override get $kit() {
+    return this.cachedKit ??= { ...super.$kit, Tool: { model: TerminalTools.Class, view: ToolCallPartView } };
+  }
+}
+
+class $TerminalChat extends Chat.$Class {
+  static override get $kit() {
+    return this.cachedKit ??= { ...super.$kit, Message: { model: TerminalMessage.Class, view: ChatMessageView } };
+  }
+}
+```
+
+Four subclasses, each one entry, tracing the path from the root to the
+leaf. That is the cost of "a model reads only its own class's kit": a
+deep swap names every hop. It is also the value: reading `TerminalChat`
+tells you exactly which subtree differs from `Chat`, and nothing else
+can differ.
+
+### The same code block under every tool
+
+Every card extends the base, and the base's `CodeBlock` entry is what
+each card reads, so one subclass of the base would reach every card if
+the cards extended it. They do not: `BashCall` extends the base that
+shipped, not a subclass made later. A swap under every card is
+therefore a generated subclass per card, which is one helper:
+
+```ts
+// Kit.ts
+export namespace Kit {
+  /** a subclass of `Base` whose kit is `Base.$kit` with `patch` spread over it */
+  export function derive<Base extends { $kit: object }>(Base: Base, patch: Partial<Base['$kit']>): Base {
+    return Reactive(
+      class extends (Base as unknown as new (...args: unknown[]) => object) {
+        static get $kit() {
+          return (this as any).cachedKit ??= { ...(Base as any).$kit, ...patch };
+        }
+      } as unknown as Base,
+    );
+  }
+
+  /** every entry's model re-derived with the same patch */
+  export function deriveAll(entries: Record<string, Entry>, patch: object): Record<string, Entry> {
+    return Object.fromEntries(Object.entries(entries).map(([name, entry]) => [name, entry.model ? { ...entry, model: derive(entry.model as any, patch) } : entry]));
+  }
+}
+```
+
+```ts
+class $MonoTools extends ToolCallModel.$Class {
+  static override get $kit() {
+    const block = { CodeBlock: { model: MonoBlock.Class, view: MonoBlockView } };
+    return this.cachedKit ??= {
+      ...super.$kit,
+      ...block,
+      Generic: { ...super.$kit.Generic, model: Kit.derive(super.$kit.Generic.model, block) },
+      Mcp: { ...super.$kit.Mcp, model: Kit.derive(super.$kit.Mcp.model, block) },
+      Task: { ...super.$kit.Task, model: Kit.derive(super.$kit.Task.model, block) },
+      Tools: Kit.deriveAll(super.$kit.Tools, block),
+    };
+  }
+}
+```
+
+`derive` builds an anonymous subclass with the patched kit and runs it
+through `Reactive`, which is the move the overlay ledger in
+`tasks/malleable-architecture.md` makes for every generated override.
+Two things to verify when the chat is converted: that `Reactive` over a
+subclass of an already-transformed class leaves inherited members alone
+(the engine's repeated-call guard says it does), and that a derived
+class's `self` cast still reads its own statics, which the `??=` on
+`this` depends on.
+
+### A row rendered somewhere else
+
+```vue
+<!-- an embed of one message, outside the chat: hand the row and a chat, get the same card -->
+<component :is="Chat.$kit.Message.view" :model="Chat.$kit.Message.model" :row="row" :chat="chat" />
+```
+
+Any parent that holds a chat can render its rows with the chat's own
+choices, because the kit is a static on a class the parent can import.
+There is no context to be inside of.
+
+### What a test does
+
+```ts
+it('resolves each kit from its own class, and a subclass swaps one entry', () => {
+  expect(ChatMessage.Class.$kit.tool_batch.model).toBe(ToolBatchPart.Class);
+  expect(ToolCallModel.Class.toolFor('Bash').model).toBe(BashCall.Class);
+  expect(ToolCallModel.Class.toolFor('mcp__x__y')).toBe(ToolCallModel.Class.$kit.Mcp);
+  expect(ToolCallModel.Class.toolFor('Nobody')).toBe(ToolCallModel.Class.$kit.Generic);
+  expect(FancyChat.Class.$kit.Scroller.model).toBe(SnapScroller.Class);
+  expect(FancyChat.Class.$kit.Message).toBe(Chat.Class.$kit.Message);
+  expect(Chat.Class.$kit.Scroller.model).toBe(VirtualScroller.Class);
+});
+
+it('a view constructs the class it is handed', async () => {
+  const wrapper = mount(ChatMessageView, { props: { row, chat, model: TerminalMessage.Class } });
+  expect(wrapper.vm.model).toBeInstanceOf(TerminalMessage.Class);
+});
+```
+
 ## The mapping
 
 | today | after |
 | --- | --- |
-| `parts/Parts.ts` registry (kind → component) | `ChatMessage.$kit`: `Text`, `Thinking`, `ToolCall`, `ToolBatch`, `Attachment`, `System` — the row model resolves `kit[part.kind]` |
-| `tools/Tools.ts` registry (name → component, prefix families, generic fallback) | `ToolCallModel.$kit`-level `Tools` map on `ChatMessage.$kit` with the same lookup as a method: `toolFor(name)`; each entry `{ model: BashCall.Class, view: BashCallView }` |
-| `ToolHead.vue`, `ToolFoot.vue`, `CodeBlock.vue` used by name in every card | `ToolCallModel.$kit`: `Head`, `Foot`, `CodeBlock` as leaf entries; cards render `<component :is="model.kit.Head.view" :model="model" />` |
+| `parts/Parts.ts` registry (kind → component) | `ChatMessage.$kit` keyed by part kind; the row model resolves `partEntry(part)`, text as the fallback |
+| `tools/Tools.ts` registry (name → component, prefix families, generic fallback) | `ToolCallModel.$kit.Tools` plus `Mcp`, `Task`, `Generic` entries; the lookup is the static `toolFor(name)` on the base |
+| `ToolHead.vue`, `ToolFoot.vue`, `CodeBlock.vue` used by name in every card | `ToolCallModel.$kit`: `Head`, `Foot` as leaf entries taking `tool`, `CodeBlock` as a pair; cards render `<component :is="model.kit.Head.view" :tool="model" />` |
 | `Chat.ts` reaches the scroller through `ref="scroller"` | unchanged: the scroller's view constructs the class it is handed and exposes it; the chat keeps its template ref. The entry `Chat.$kit.Scroller = { model: VirtualScroller.Class, view: VirtualScrollerView }` is what a page overrides to put a different scroller under the chat |
 | `ChatComposer.vue`, `ChatIndex.vue` construct their models | unchanged in who constructs; each news `props.model ?? Composer.Class` and is rendered through `chat.kit.Composer` |
 | `ChatMessage.vue` constructs a row model per row in the scroller's slot | unchanged; the slot renders `<component :is="chat.kit.Message.view" :model="chat.kit.Message.model" :row="item" :chat="chat" />` |
@@ -88,6 +681,16 @@ importing each other.
 - **The scroller's `model` prop.** `VirtualScroller.vue` gains the same
   optional prop; its default is its own class, so every existing use is
   untouched.
+- **`ToolHead` and `ToolFoot` take the card's instance as `tool`.** Today
+  the prop is `model`; the kit reserves that word for a class crossing a
+  seam, so the two leaves rename their prop once. Every card's template
+  changes the same two lines.
+- **A deep swap names every hop.** Swapping the code block under one
+  tool is four one-entry subclasses from the root to the leaf (see the
+  extension above). The chain is the price of a model reading only its
+  own class's kit; `Kit.derive` keeps the all-cards case to one helper
+  call per entry. If the chain proves too heavy in practice, that is the
+  signal to revisit — not before.
 - **The generic fallback is a kit entry**, not a branch: `toolFor(name)`
   returns `kit.Tools[name] ?? kit.Tools.byPrefix(name) ?? kit.Tools.Generic`.
   The rule "rendering never branches on a name" survives; the lookup
