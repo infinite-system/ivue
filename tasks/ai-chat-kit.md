@@ -245,7 +245,7 @@ own.
 import { Chat } from './Chat';
 import './ai-chat.css';
 
-const props = defineProps<{ dark?: boolean } & Kit.Rendered<typeof Chat.Class>>();
+const props = defineProps(Chat.Class.props); // dark, and ...Kit.propsTypes
 
 // the root constructs the class it was handed, or its own
 const chat = new (props.kit?.model ?? Chat.Class)();
