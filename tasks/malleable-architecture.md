@@ -494,7 +494,7 @@ converted — the build is `tasks/ai-chat-kit.md`.
 
 - **A model owns its kit as a lazy static.** `static get $kit()` returns
   the roles the model's subtree composes, each a `{ model, view }` pair
-  for a parent-owned child or `{ view }` for a leaf that takes props.
+  for a role with its own model or `{ view }` for a leaf that takes props.
   A lazy getter, cached per class, is what makes the model↔view import
   cycle harmless: neither side reads the other at module init. A
   subclass overrides by spread; a one-off is `with({ Role: … })`.
