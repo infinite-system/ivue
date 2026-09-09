@@ -247,6 +247,12 @@ test('measuring rows above the anchored row moves the scroll by the same amount;
   expect(instance.captureAnchor()!.index).toBe(inView);
   instance.syncItemSize(inView, assumed + 600);
   expect(Number(instance.scrollPosition.value)).toBe(scrollBefore + 300);
+  // mid-glide: the glide is asked to move with the content
+  const shifted: number[] = [];
+  (instance as unknown as { lenis: unknown }).lenis = { isScrolling: 'smooth', shiftBy: (delta: number) => shifted.push(delta) };
+  instance.syncItemSize(90, assumed + 250);
+  expect(shifted).toEqual([250]);
+  (instance as unknown as { lenis: unknown }).lenis = null;
   unmount();
 });
 

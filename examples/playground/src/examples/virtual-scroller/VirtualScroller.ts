@@ -1155,7 +1155,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    */
   // invariant: The reader's row stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   captureAnchor(): VirtualScroller.Anchor | undefined {
-    const scroll = Number(this.scrollPosition.value);
+    // mid-glide the reader sees the animated position, not the lerp's
+    // target: a row growing between the two would otherwise be read as
+    // below the anchor (no shift) while it is on screen, and the content
+    // under the reader would move — a backward jerk in every glide it hit
+    const lenis = this.lenis;
+    const scroll = lenis && lenis.isScrolling ? lenis.animatedScroll : Number(this.scrollPosition.value);
     const edge = this.scrollDirection.value === 'up' ? scroll + Math.max(0, this.containerOuterSize.value - 1) : scroll;
     const at = this.getIndexAtPosition(edge);
     if (!at) return undefined;
@@ -1181,8 +1186,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (this.seekAppliedPosition !== null) this.seekAppliedPosition += delta;
     const lenis = this.lenis;
     if (lenis && lenis.isScrolling) {
-      lenis.targetScroll += delta;
-      lenis.animatedScroll += delta;
+      // the glide moves with the content: its lerp keeps its remaining
+      // distance and the compensation paints in this frame
+      lenis.shiftBy(delta);
       return;
     }
     const next = Math.max(0, Number(this.scrollPosition.value) + delta);

@@ -2,6 +2,7 @@
 === GENERATOR ===
 Goal: Move a value toward its target by lerp or easing, never faster than a cap the scroller sets from its motion knobs.
 [The feel is one nested prop complete at every depth](../examples/virtual-scroller/virtual-scroller.invariants.md#the-feel-is-one-nested-prop-complete-at-every-depth)
+// domain-invariant: $Animate — If a running lerp is shifted, then its origin, value and target move by the shift and the remaining distance stays what it was
 // domain-invariant: $Animate — If a speed cap is set, then no advance moves the value more than the cap times the elapsed time, a capped frame is never the last, and the value still arrives; at zero the cap is off.
 Impossible if true: A wheel scroll under a cap that jumps further in one frame than the cap allows.
 
@@ -52,3 +53,18 @@ test('no capped frame ever exceeds cap × elapsed, whatever the lerp or the easi
     expect(animate.value).toBe(5000);
   }
 });
+
+// domain-invariant: $Animate — If a running lerp is shifted, then its origin, value and target move by the shift and the remaining distance stays what it was
+test('a shifted lerp keeps its remaining distance and arrives at the shifted target', () => {
+  const animate = new Animate.Class();
+  animate.fromTo(0, 100, { lerp: 0.1 });
+  animate.advance(1 / 60);
+  const remaining = animate.to - animate.value;
+  animate.shift(250);
+  expect(animate.to).toBe(350);
+  expect(animate.from).toBe(250);
+  expect(animate.to - animate.value).toBeCloseTo(remaining, 6);
+  for (let frame = 0; frame < 400 && animate.isRunning; frame++) animate.advance(1 / 60);
+  expect(animate.value).toBe(350);
+});
+
