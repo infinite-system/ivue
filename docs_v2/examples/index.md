@@ -73,6 +73,9 @@ templates and Vite will update the running playground.
   class-extended square-tile variant.
 - **[Virtual scroller on Lenis](/examples/virtual-scroller)** — 1,000,000
   rows, a handful of divs; scrolling itself is virtual.
+- **[AI chat on the scroller](/examples/ai-chat)** — a real 10,000-message
+  Claude Code session: pages fetched on demand, tool calls that expand to
+  their code, an index that selects and exports.
 - **[The formula grid](/examples/formula-grid)** — real Excel-syntax
   formulas over a virtualized million-cell sheet, dependency graph
   discovered by Vue.

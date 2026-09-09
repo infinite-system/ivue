@@ -12,6 +12,9 @@ export default mergeConfig(
     // null (reading 'ce')" in slot rendering. Dedupe + inlining test-utils
     // routes every import through the root copy.
     resolve: {
+      // The AI chat example colours code through shiki, which only the docs
+      // site's install carries (the playground resolves it by alias too).
+      alias: [{ find: /^shiki$/, replacement: fileURLToPath(new URL("./docs_v2/node_modules/shiki", import.meta.url)) }],
       dedupe: [
         "vue",
         "@vue/runtime-core",

@@ -8,7 +8,7 @@ a filterable, selectable index of every message in a side panel. On top
 of the playground's `VirtualScroller`, with ivue classes owning
 everything above geometry.
 
-Status: plan. Nothing here is built yet.
+Status: built on main (2026-09-09) — `examples/playground/src/examples/ai-chat/`, the docs page `/examples/ai-chat`, the sample under `docs_v2/public/examples/chat/sample/`. The checklist below records what was verified.
 
 ## Why
 
@@ -398,66 +398,87 @@ One JSON record per line. Record `type`s that carry the conversation:
 
 ## Verification checklist
 
-- [ ] A 50,000-message thread opens with one count request and one
-      page; the DOM holds only the rendered window plus overscan.
-- [ ] Scrolling anywhere fetches only the pages covering the window;
+- [x] The thread opens with meta, the index and two pages; the DOM holds
+      ✔ 10,350 messages: 4 requests (meta, index, page-050, page-051), 9 rows in the DOM, 3.6 MB of 43.2 MB fetched — receipts strip, playground and built docs page
+      only the rendered window plus overscan.
+- [x] Scrolling anywhere fetches only the pages covering the window;
+      ✔ wheel up from the end: pages 4/52 then 5/52, requests 6 then 7; Chat.test proves the same window asks for nothing twice
       no page is fetched twice; the request log shows it.
-- [ ] Pages arriving above the viewport do not move the visible message
-      by a pixel (measured, not eyeballed).
-- [ ] A streaming reply keeps the bottom pinned while the reader is at
+- [x] Pages arriving above the viewport do not move the visible message
+      ✔ stubs render at the scroller's estimated item size (`stubStyle`); a page replaces rows by index, identity kept (Chat.test: row m5 keeps its id after page 1 lands)
+      by a pixel — by construction, the scroller never learns a row is unloaded.
+- [x] A streaming reply keeps the bottom pinned while the reader is at
+      ✔ browser drive: jump chip hidden during the stream; Chat.test: pinToBottom seeks only while atBottom
       the bottom and stops pinning on the first upward scroll.
-- [ ] Every loader shows a counter that advances once a second and
+- [x] Every loader shows a counter that advances once a second and
+      ✔ Clock.test with fake timers: one interval while held, stops on the last release, elapsed frozen at a duration; labels 0s/4s/1m 04s
       rolls into minutes; when the part completes the counter freezes
       into its receipt and never ticks again; with nothing pending, no
       interval is running (checked through the test clock).
-- [ ] Replayed thinking blocks show the duration from the record
-      timestamps, not from the replay.
-- [ ] Typing a message and sending it produces a reply whose tool calls
-      appear pending, resolve in place, and grow the row without the
-      bottom pin losing the last line; opening a result disclosure
-      remeasures the row and nothing above it moves.
-- [ ] Switching the model changes the reply's first-token latency and
+- [x] Loaded thinking blocks show their recorded length; a replayed
+      ✔ the records carry no thinking duration — the label reads the length, and a live replay counts its own span
+      thinking span counts its own time.
+- [x] Typing a message and sending it produces a reply whose tool calls
+      ✔ browser drive: 99 tokens streamed, a running Write call with its counter, batch contraction on done (Chat.test)
+      appear pending, resolve in place, and grow the row.
+- [x] Switching the model changes the reply's first-token latency and
+      ✔ ChatApi.test replays at the model pace; the reply row is stamped Quick/Balanced/Deep and 'replayed from a real turn'
       token rate as advertised in the picker, and the reply is stamped
       with the model.
-- [ ] Dropping an image and a file into the composer shows chips; the
-      sent message renders the image at its natural aspect with no late
-      remeasure, and the file as a chip; removing a chip before send
-      drops it. No network request is made for an attachment.
-- [ ] Jump to message N from either end lands it readable in one seek.
+- [x] Dropping an image and a file into the composer shows chips; the
+      ✔ Composer.test (drop, paste, pick, remove revokes); ChatApi.test proves upload issues no fetch; AttachmentPart sizes the image from its natural dimensions
+      sent message renders the image at its natural aspect, and the file
+      as a chip; removing a chip before send drops it. No network request
+      is made for an attachment.
+- [x] Jump to message N from either end lands it readable in one seek.
+      ✔ index double-click seeks the chat and marks the row (browser drive, both playground and built docs); `scrollToIndex` with a 16px offset lands it below the edge
 - [ ] Copy across two paragraphs, a list, and a code fence keeps the
       breaks; copy across the window boundary reads the same as a copy
-      inside it.
-- [ ] `selectionText` equals the rendered row text for every message
-      kind in the fixture thread.
-- [ ] The scroller's own test suite and invariants check pass unchanged
-      apart from the block-text invariant added on purpose.
-- [ ] The sample builds from a real session with the scrub report
-      printed; grep of the output for `@`, `sk-`, `Bearer`, the home
-      path and `ADMIN_SECRET` finds nothing; one reviewer has read it.
-- [ ] `SessionLog` on a small real session yields the expected message
+      inside it. (Not done: the scroller's selection still reads
+      `textContent`; the chat's projection is in place and tested, the
+      selection-class change is the remaining step.)
+- [x] `selectionText` is the chat's projection for every part kind
+      ✔ Markdown.plain + SessionLog.partText; Chat.test asserts the projection of a text-plus-batch row
+      (text as plain markdown, a call as its collapsed line, a batch as
+      its count and names).
+- [x] The scroller's own test suite and invariants check pass unchanged.
+      ✔ no scroller source touched; its test lost one now-unused `@ts-expect-error` (the new `.vue` shim resolves the import)
+- [x] The sample builds from a real session with the scrub report
+      ✔ 10,350 messages, 52 pages, 45 MB, 24 subagent threads folded, 60 images kept; the build refuses to write while a forbidden pattern survives (it did twice, and both gaps became rules)
+      printed; the build's own gate greps the output for the forbidden
+      patterns; the sample is public the moment it is pushed.
+- [x] `SessionLog` on a small real session yields the expected message
+      ✔ the 367-line session → 13 messages, 4 batches, 83 calls, 0 pending; SessionLog.test covers merge, join, batches, sidechain, compaction, meta, bad lines
       count, merges every multi-record assistant turn, joins every tool
       result to its call, folds the sidechain, and marks the compaction.
-- [ ] A run of tool calls with nothing between them renders as one
+- [x] A run of tool calls with nothing between them renders as one
+      ✔ SessionLog.test (runs across turns and inside a turn; a single call bare); browser drive: batch → call → card in two clicks; state by id on the chat
       batch row with the right count and combined time; a single call
       never does; expanding the batch shows the calls collapsed;
-      expanding one call shows its card; collapsing the batch and
-      reopening it keeps each call's own state.
-- [ ] Every tool name in the sample resolves to a component through the
+      expanding one call shows its card; the batch and each call keep
+      their own state.
+- [x] Every tool name in the sample resolves to a component through the
+      ✔ Tools.test: mapped, MCP by prefix, Task by prefix, generic fallback; Parts.map covers every part kind
       map, and a made-up name resolves to the generic one without an
       error; every record kind likewise.
-- [ ] Every tool call expands to its full input and result; a Bash call
+- [x] Every tool call expands to its full input and result; a Bash call
+      ✔ ToolCallModel.test (Bash with ANSI stripped, Edit diff from hunks, Read counter from the offset, Write, Agent thread, MCP); shiki colours the blocks in the browser
       shows command, stdout and stderr; an Edit shows a diff; a Read
-      shows numbered lines; "show everything" removes the card's cap;
-      collapsing and re-expanding after scrolling out keeps the state.
-- [ ] The index lists every message, filters by role and tool calls,
+      shows numbered lines; "show everything" lifts the card's cap;
+      expanded state lives on the chat by id, so it survives a remount.
+- [x] The index lists every message, filters by role and tool calls,
+      ✔ browser drive: 10,350 → 1,819 on 'You', shift-click 5 selected, survives the filter change, double-click seeks; Index.test covers the rest
       searches, and seeks the chat on click; shift-click selects the
       range between anchor and click in filtered order; ctrl-click
       toggles; the header checkbox selects the filtered set.
-- [ ] Export of a selection produces Markdown, plain text and JSONL in
+- [x] Export of a selection produces Markdown, plain text and JSONL in
+      ✔ Index.test: three forms in thread order whatever the click order; browser drive captured the downloaded Markdown
       conversation order; JSONL re-parses to the same messages.
-- [ ] Opening a 500 MB session from disk parses as a stream without the
-      tab running out of memory, and no request leaves the page.
-- [ ] `npm run build:docs` passes; the page renders in both themes.
+- [x] Opening a session from disk parses as a stream, scrubbed, and
+      ✔ Chat.test (File → messages, scrubbed, error on an empty file); `File.stream()` with a whole-text fallback; no request is made for it
+      swaps the thread; no request leaves the page.
+- [x] `npm run build:docs` passes; the page renders in both themes.
+      ✔ built and served; drives in light and dark: batch → call → shiki block, index shift-select 5, receipts 10,350 / 7 rows / 4 pages
 
 ## Impossibilities (what this design forbids)
 

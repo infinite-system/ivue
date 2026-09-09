@@ -1,0 +1,162 @@
+import { Reactive } from '../../ivue';
+import { Static } from '../../Static';
+import type { Chat } from './Chat';
+import { Clock } from './Clock';
+import type { SessionLog } from './SessionLog';
+
+// One row of the thread: a stub with its loader while the page is on the
+// way, then the message — role, time, model stamp, and its parts, each
+// rendered by the component the registry names for its kind. A row that
+// is being streamed re-reads the chat's revision, so in-place growth of
+// its message re-renders this row and nothing else.
+class $ChatMessage {
+  static readonly ROLE_LABELS: Record<SessionLog.Role, string> = { user: 'You', assistant: 'Agent', system: 'System' };
+
+  constructor(public props: ChatMessage.Props) {}
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $ChatMessage;
+  }
+
+  get chat(): Chat.Model {
+    return this.props.chat;
+  }
+
+  get row(): Chat.Row {
+    return this.props.row;
+  }
+
+  /** the message, re-read on every in-place change the chat announces */
+  get message(): SessionLog.Message | null {
+    void this.chat.revision.value;
+    return this.row.message;
+  }
+
+  get isStub(): boolean {
+    return this.message === null;
+  }
+
+  get role(): SessionLog.Role {
+    return this.row.role;
+  }
+
+  get roleLabel(): string {
+    return this.self.ROLE_LABELS[this.role];
+  }
+
+  get roleClass(): string {
+    return `ac-msg-${this.role}`;
+  }
+
+  get rowClass(): Record<string, boolean> {
+    return {
+      [this.roleClass]: true,
+      'ac-msg-stub': this.isStub,
+      'ac-msg-streaming': this.isStreamingRow,
+      'ac-msg-focused': this.chat.isFocused(this.row),
+      'ac-msg-system': this.role === 'system',
+    };
+  }
+
+  get parts(): SessionLog.Part[] {
+    return this.message?.parts ?? [];
+  }
+
+  get isStreamingRow(): boolean {
+    return this.chat.streaming.value?.row.id === this.row.id;
+  }
+
+  get timeLabel(): string {
+    const at = this.message?.timestamp ?? this.row.message?.timestamp ?? 0;
+    if (!at) return '';
+    const date = new Date(at);
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+
+  get dateLabel(): string {
+    const at = this.message?.timestamp ?? 0;
+    return at ? new Date(at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+  }
+
+  get modelLabel(): string {
+    return this.message?.model ?? '';
+  }
+
+  get isReplay(): boolean {
+    return Boolean(this.message?.replay);
+  }
+
+  get replayLabel(): string {
+    return this.isReplay ? 'replayed from a real turn' : '';
+  }
+
+  /** the reply's stamp once it is done: tokens and wall time */
+  get receiptLabel(): string {
+    const message = this.message;
+    if (!message || message.role !== 'assistant') return '';
+    const pieces: string[] = [];
+    const tokens = message.usage?.output_tokens;
+    if (tokens) pieces.push(`${tokens.toLocaleString('en-US')} tokens`);
+    if (message.durationMs) pieces.push(Clock.Class.label(message.durationMs));
+    return pieces.join(' · ');
+  }
+
+  /** while the reply waits for its first token: the model name with the counter */
+  get isAwaitingFirstToken(): boolean {
+    const streaming = this.chat.streaming.value;
+    return Boolean(streaming && streaming.row.id === this.row.id && streaming.firstTokenAt === null && !streaming.thinking && this.parts.length === 0);
+  }
+
+  get awaitingLabel(): string {
+    const streaming = this.chat.streaming.value;
+    if (!streaming) return '';
+    return `${this.modelLabel} · ${Clock.Class.label(this.chat.clock.elapsed(streaming.startedAt, null), true)}`;
+  }
+
+  get indexLabel(): string {
+    return `#${(this.row.index + 1).toLocaleString('en-US')}`;
+  }
+
+  /* ---- the stub ---- */
+
+  get stubLabel(): string {
+    return this.row.preview || `${this.roleLabel} message`;
+  }
+
+  get isPageLoading(): boolean {
+    return this.chat.isPagePending(this.row);
+  }
+
+  get stubElapsedLabel(): string {
+    if (!this.isPageLoading) return '';
+    return Clock.Class.label(this.chat.clock.elapsed(this.chat.pageStartedAt(this.row), null), true);
+  }
+
+  get stubStatusLabel(): string {
+    return this.isPageLoading ? `page ${this.row.page + 1} · ${this.stubElapsedLabel}` : `page ${this.row.page + 1}`;
+  }
+
+  /** the stub's height is the scroller's estimate, so a page landing never moves the geometry */
+  get stubStyle(): Record<string, string> {
+    const size = this.chat.scroller.value?.estimatedItemSize ?? 72;
+    return { height: `${Math.max(48, Math.round(size))}px` };
+  }
+
+  partKey(part: SessionLog.Part, at: number): string {
+    if (part.kind === 'tool_call') return part.call.id;
+    if (part.kind === 'tool_batch') return `batch-${part.calls[0]?.id ?? at}`;
+    return `${part.kind}-${at}`;
+  }
+}
+
+export namespace ChatMessage {
+  export const $Class = Static($ChatMessage);
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+
+  export interface Props {
+    row: Chat.Row;
+    chat: Chat.Model;
+  }
+}
