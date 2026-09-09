@@ -966,4 +966,11 @@ own whole than to arbitrate.
   keeps its lerp by shifting both endpoints; a seek's landing shifts with
   it. Under a 1.2 s page throttle, a far seek and a 60,000 px fling now
   hold the same row at the same pixel while pages land.
+- Anchor on the edge the reader reads FROM: scrolling down, the top row;
+  scrolling up, the bottom row — then a row growing inside the view
+  expands upward, away from what was just read (the user's "flip the
+  rows" instinct, without touching layout). With anchoring in place the
+  estimate may calibrate anywhere, not just near the top. When measuring
+  drift after a fling, wait for the lerp tail: 700 ms after the last wheel
+  the glide still has ~25 px to go, and that reads as a phantom shift.
 

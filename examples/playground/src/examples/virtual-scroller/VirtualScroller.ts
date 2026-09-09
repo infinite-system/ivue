@@ -882,14 +882,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * items, so swapping the assumption for the tail cannot move anything
    * visible — the change lands entirely in the trailing spacer.
    */
+  /** Swap the assumed size for the measured average, once, after twenty
+   *  rows have measured. The anchor around the wave that calls this
+   *  absorbs the shift, so a list opened at its end calibrates too. */
   protected maybeCalibrateEstimate() {
     if (this.calibratedAssumed !== null) return;
     const length = toRaw(this.items.value).length;
     if (this.measuredCount < 20 || this.measuredCount >= length) return;
-    const scrollPosition = this.scrollPosition.value;
-    const scrollTop =
-      typeof scrollPosition === 'number' ? scrollPosition : parseFloat(scrollPosition) || 0;
-    if (scrollTop > this.containerSize.value) return;
     this.calibratedAssumed = this.measuredSum / this.measuredCount;
     this.updatePositionsImmediately();
   }
@@ -1145,16 +1144,20 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   /**
-   * The row under the viewport's leading edge and where its top sits, taken
-   * before a wave of size changes. Restoring it afterwards keeps the
-   * reader's row where it was: rows above it measure as they mount (a
-   * placeholder becoming its content, an estimate becoming a size), and
-   * every such change would otherwise move the content under the reader.
+   * The row under the edge the reader is reading from and where its top
+   * sits, taken before a wave of size changes. Restoring it afterwards
+   * keeps that row where it was: rows measure as they mount (a placeholder
+   * becoming its content, an estimate becoming a size), and every such
+   * change would otherwise move the content under the reader. Scrolling
+   * down, the edge is the top: rows above grow away from the reader.
+   * Scrolling up, it is the bottom: a row growing inside the view then
+   * expands UPWARD — the rows the reader just read stay where they are.
    */
   // invariant: The reader's row stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   captureAnchor(): VirtualScroller.Anchor | undefined {
     const scroll = Number(this.scrollPosition.value);
-    const at = this.getIndexAtPosition(scroll);
+    const edge = this.scrollDirection.value === 'up' ? scroll + Math.max(0, this.containerOuterSize.value - 1) : scroll;
+    const at = this.getIndexAtPosition(edge);
     if (!at) return undefined;
     const top = this.getIndexPosition(at.index);
     return top === undefined ? undefined : { index: at.index, top };
