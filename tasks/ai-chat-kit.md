@@ -40,9 +40,8 @@ shipped instance to point at.
   in the constructor bind to the view's own component, exactly as today.
 - **Props live on the class contract.** Every chat class moves from a
   type-only `Props` interface to the standard's statics — `propsTypes`,
-  `propsDefaults`, `props` — and spreads `Kit.Class.propsTypesFor<Model>()`
-  in for the entry. An entry's `props` then needs no mechanism of its
-  own: the constructor's `nestedProps` line fills omitted props from
+  `propsDefaults`, `props` — and declares its own `kit` prop, typed to
+  itself. An entry's `props` then needs no mechanism of its own: the constructor's `nestedProps` line fills omitted props from
   `Kit.Class.defaults(props, this.self.propsDefaults)`, the class's
   defaults with the entry's laid over them. Kit props are defaults: they
   apply where the template omitted the prop, and a card that passes
@@ -77,8 +76,8 @@ the only new member on any class is `$kit`.
 ### `Kit.ts` — an entry, a patch, and the resolver
 
 ```ts
-import type { Component, PropType } from 'vue';
-import { definePropTypes, Reactive } from '../../ivue';
+import type { Component } from 'vue';
+import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 
 // The kit's helpers, as statics on one class — the shape `Parts` and
@@ -89,14 +88,6 @@ import { Static } from '../../Static';
 // when the kit resolves. A kit is a record of entries or of nested
 // records of entries.
 class $Kit {
-  /** the one prop every kit-rendered class spreads into its `propsTypes`: the entry it was
-   *  rendered through, typed to that class's own model — a method, because a getter cannot be generic */
-  static propsTypesFor<Model>() {
-    return definePropTypes({
-      kit: { type: Object as PropType<Kit.Entry<Model>> },
-    });
-  }
-
   /** the class's defaults with the entry's `props` laid over them — what the constructor fills omitted props from */
   static defaults<Defaults extends object>(props: { kit?: Kit.Entry }, classDefaults: Defaults): Defaults {
     const fromKit = props.kit?.props;
@@ -192,10 +183,11 @@ asked. `props` names what the patch tunes and never generates a class:
 the constructor's one `nestedProps` line fills omitted props from
 `Kit.Class.defaults(props, this.self.propsDefaults)`, the class's
 defaults with the entry's laid over them — the standard's own
-mechanism, and nothing at the view. `Kit.Class.propsTypesFor<Model>()`
-is the one prop a kit-rendered class spreads into its `propsTypes`; a
-method rather than a getter because the entry is typed to each class's
-own model, so `props.kit?.model` is that class and the `new` is typed.
+mechanism, and nothing at the view. `Kit` declares no prop: a
+kit-rendered class declares `kit` in its own `propsTypes`, typed
+`Kit.Entry<typeof $X>` to itself, so `props.kit?.model` is that class
+and the `new` in the view is typed. The class owns its contract; `Kit`
+only transforms per instance.
 
 ### `Chat.ts` — the root names four roles
 
@@ -260,7 +252,7 @@ own.
 import { Chat } from './Chat';
 import './ai-chat.css';
 
-const props = defineProps(Chat.Class.props); // dark, and ...Kit.Class.propsTypesFor<Model>()
+const props = defineProps(Chat.Class.props); // dark, and kit
 
 // the root constructs the class it was handed, or its own
 const chat = new (props.kit?.model ?? Chat.Class)();
@@ -393,7 +385,7 @@ export namespace ChatMessage {
     kit?: Kit.Entry<typeof Class>;
   }
   // …in the build, this interface becomes `ExtractPropTypes<typeof $Class.props>` over a static
-  // contract — `propsTypes` with `row`, `chat` required and `...Kit.Class.propsTypesFor<Model>()`; see CodeBlock below.
+  // contract — `propsTypes` with `row`, `chat` required and `kit`; see CodeBlock below.
 
   export type PartRole = 'Text' | 'Thinking' | 'Attachment' | 'System' | 'ToolCall' | 'ToolBatch';
   export type ContainerRole = 'Row' | 'Gutter' | 'Head' | 'Parts' | 'Await' | 'Foot';
@@ -562,7 +554,7 @@ import { ToolCallModel } from '../tools/ToolCallModel';
 
 // A part with one call: look the card up on the tool base the row's kit
 // names, then render it with the class it names. Markup only.
-const props = defineProps(ToolCallPart.Class.props); // part, chat, message, and ...Kit.Class.propsTypesFor<Model>()
+const props = defineProps(ToolCallPart.Class.props); // part, chat, message, and kit
 
 const base = props.kit?.model ?? ToolCallModel.Class;
 </script>
@@ -639,7 +631,8 @@ class $CodeBlock {
       wrap: { type: Boolean as PropType<boolean> },
       tone: { type: String as PropType<'plain' | 'error' | 'muted'> },
       startLine: { type: Number as PropType<number> },
-      ...Kit.Class.propsTypesFor<typeof $CodeBlock>(),
+      /** the entry this view was rendered through — the class's own prop, typed to the class */
+      kit: { type: Object as PropType<Kit.Entry<typeof $CodeBlock>> },
     });
   }
 
@@ -705,7 +698,7 @@ second props mechanism — the standard's contract is the only one.
 ```ts
 // VirtualScroller.ts — one spread in the contract it already has
 static get propsTypes() {
-  return definePropTypes({ ...super.propsTypes /* the existing map */, ...Kit.Class.propsTypesFor<typeof $VirtualScroller>() });
+  return definePropTypes({ ...super.propsTypes /* the existing map */, kit: { type: Object as PropType<Kit.Entry<typeof $VirtualScroller>> } });
 }
 
 // VirtualScroller.vue — the one line that changes
@@ -977,8 +970,8 @@ importing each other.
   setup" reading accepts the indirection.
 - **Every chat class moves onto the static props contract.** Today the
   folder declares type-only `Props` interfaces; the build gives each
-  class `propsTypes`, `propsDefaults` and `props`, spreads
-  `Kit.Class.propsTypesFor<Model>()` in, and fills omitted props in the
+  class `propsTypes`, `propsDefaults` and `props`, declares its own
+  `kit` prop typed to itself, and fills omitted props in the
   constructor with `nestedProps(props, Kit.Class.defaults(props, this.self.propsDefaults))`.
   This is the larger half of the conversion by line count and it is
   what makes an entry's `props` free: one merged defaults object in the
@@ -1000,7 +993,7 @@ importing each other.
   default to the constructor. Decide once at conversion; the spec pins
   whichever it is.
 - **The scroller's `kit` prop.** `VirtualScroller.ts` spreads
-  `Kit.Class.propsTypesFor<typeof $VirtualScroller>()` into the contract it already has; every existing use
+  a `kit` prop into the contract it already has; every existing use
   is untouched.
 - **A deep swap is one literal, resolved once.** An override's entry
   may carry `subkit`, a patch over the child's own kit; `Kit.Class.resolve`
@@ -1047,7 +1040,7 @@ importing each other.
       reaches it through the kit's `Scroller` entry and the same template
       ref as before.
 - [ ] Every chat class declares `propsTypes`, `propsDefaults`, `props`
-      with `Kit.Class.propsTypesFor<Model>()` spread in; every view is `defineProps(X.Class.props)`;
+      with a `kit` prop typed to the class; every view is `defineProps(X.Class.props)`;
       the gate's contract checks pass on the folder.
 - [ ] A props-carrying entry becomes defaults: `DenseChat` renders the
       scroller at its entry's `assumedSize` and every code block at the
