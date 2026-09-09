@@ -113,7 +113,7 @@ class $Kit {
 
   /** a derived namespace: `$Class` extends the base's raw class with a `$kit` that is the base's
    *  deep-merged with `patch` and resolved; `Class` is `Reactive($Class)` — what a subclass file would export */
-  static derive<Ns extends Kit.Namespace>(namespace: Ns, patch: Kit.Patch): Ns {
+  static derive<Space extends Kit.Namespace>(namespace: Space, patch: Kit.Patch): Space {
     const kit = this;
     const Base = namespace.$Class as any;
     const $Class = class extends Base {
