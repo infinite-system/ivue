@@ -172,8 +172,10 @@ export namespace Kit {
 }
 ```
 
-A class's own `$kit` is written plain, with no `subkit` or `props`
-anywhere; it needs no `resolve`. Both fields belong to overrides, where
+The name is deliberate: a `kit` is roles, a `subkit` is a patch over
+the roles one level down. The two are different things and read
+differently in a literal. A class's own `$kit` is written plain, with no
+`subkit` or `props` anywhere; it needs no `resolve`. Both fields belong to overrides, where
 a patch names how deep it reaches and what it tunes, and the resolver
 turns each into a derived class once, cached on the class that asked.
 An entry's `props` is sugar for a `propsDefaults` override on that
