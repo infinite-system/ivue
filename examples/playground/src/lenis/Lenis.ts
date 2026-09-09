@@ -580,6 +580,22 @@ class $Lenis {
     this.animatedScroll = this.targetScroll = scroll;
   }
 
+  /**
+   * The content shifted under a running glide — rows above the reader
+   * changed size — and the scroller asks the glide to move with it: the
+   * target, the animated position and the running lerp's origin, value
+   * and target all shift by `delta`, so the remaining distance, the
+   * velocity and the easing are exactly what they were. The transform is
+   * written at once: the DOM already holds the new size, and a frame late
+   * is a visible jerk.
+   */
+  shiftBy(delta: number) {
+    this.targetScroll += delta;
+    this.animatedScroll += delta;
+    if (this.animate.isRunning) this.animate.shift(delta);
+    this.setScroll(this.scroll);
+  }
+
   protected setScroll(scroll: number) {
     // behavior: 'instant' bypasses the scroll-behavior CSS property
 

@@ -74,6 +74,15 @@ class $Animate {
   }
 
   /** Stop the animation */
+  /** Move a running lerp bodily: the content it travels over shifted
+   *  under it, so its origin, its value and its target shift by the same
+   *  amount and the remaining distance stays what it was. */
+  shift(delta: number) {
+    this.from += delta
+    this.value += delta
+    this.to += delta
+  }
+
   stop() {
     this.isRunning = false
   }

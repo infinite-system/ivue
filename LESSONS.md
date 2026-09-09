@@ -973,4 +973,13 @@ own whole than to arbitrate.
   estimate may calibrate anywhere, not just near the top. When measuring
   drift after a fling, wait for the lerp tail: 700 ms after the last wheel
   the glide still has ~25 px to go, and that reads as a phantom shift.
+- A mid-glide compensation cannot be a field write on Lenis: the glide is
+  an `Animate` object with its own origin, value and target, and its
+  `onUpdate` overwrites `animatedScroll` every frame, so a shift written to
+  the fields is undone on the next frame — a backward jerk in every glide
+  that crossed a size change. `Lenis.shiftBy(delta)` moves the target, the
+  animated position AND the running lerp (`Animate.shift`), then paints in
+  the same frame (the DOM already holds the new size; a frame late shows).
+  Measure glides by a row's on-screen motion tracked by id, never by the
+  transform: the transform legitimately moves by every compensation.
 
