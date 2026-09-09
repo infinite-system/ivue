@@ -93,6 +93,11 @@ const EXCLUDED_DIRECTORY_PATHS = new Set([
   'scripts/retired-smokes',
   'tmp',
   'agent-dispatches',
+  // the AI chat example's sample is a real session's tool outputs — pages
+  // of JSON that quote this repo's own annotation lines — and the built
+  // site copies it: generated data, never a contract or a witness
+  'docs_v2/public/examples/chat',
+  'docs_v2/.vitepress/dist',
   '.invar',
 ]);
 const ANNOT_RE =

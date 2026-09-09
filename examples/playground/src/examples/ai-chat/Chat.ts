@@ -17,12 +17,14 @@ import { Markdown } from './Markdown';
 // bottom stays pinned only while the reader is there. One clock times
 // every wait.
 class $Chat {
-  /** pages fetched beyond the window, each side */
-  static readonly PAGE_MARGIN = 1;
+  /** pages fetched beyond the window, each side — two, so a row is loaded before it can mount in the padding */
+  static readonly PAGE_MARGIN = 2;
   /** within this many px of the end, the reader counts as at the bottom */
   static readonly BOTTOM_THRESHOLD_PX = 48;
   /** how often a streaming reply re-pins the bottom */
   static readonly PIN_EVERY_MS = 120;
+  /** how long after a reply ends its last pin may keep converging */
+  static readonly SEEK_RELEASE_MS = 1200;
   static readonly STUB_ROLE: Record<string, SessionLog.Role> = { u: 'user', a: 'assistant', s: 'system' };
 
   static bytes(count: number): string {
@@ -446,7 +448,9 @@ class $Chat {
     return this.expanded.value.has(id);
   }
 
+  /** the reader acts on the content: a seek still converging must not re-pin under them */
   toggle(id: string) {
+    this.scroller.value?.cancelSeek();
     const next = new Set(this.expanded.value);
     if (next.has(id)) next.delete(id);
     else next.add(id);
@@ -543,6 +547,9 @@ class $Chat {
       this.streaming.value = null;
       this.bump();
       this.pinToBottom();
+      // the last pin converges on the reply's final layout, then lets go:
+      // a card the reader opens later is theirs to open where it is
+      setTimeout(() => this.scroller.value?.cancelSeek(), this.self.SEEK_RELEASE_MS);
     }
   }
 

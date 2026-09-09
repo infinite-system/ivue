@@ -10,9 +10,9 @@ import type { SessionLog } from './SessionLog';
 // model; the page says so.
 class $ChatApi {
   /** simulated latency on top of the real fetch, so a loader is visible on a fast link */
-  static readonly LATENCY_MS: [number, number] = [220, 620];
+  static readonly LATENCY_MS: [number, number] = [120, 360];
   static readonly SLOW_EVERY = 11;
-  static readonly SLOW_MS = 1400;
+  static readonly SLOW_MS = 700;
 
   static readonly MODELS: ChatApi.Model[] = [
     { id: 'quick', label: 'Quick', detail: 'small · 200k context', tokensPerSecond: 160, firstTokenMs: 320, toolScale: 0.15 },

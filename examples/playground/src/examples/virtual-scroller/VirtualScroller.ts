@@ -774,6 +774,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  at a time). */
   protected reapplyScrollToIndex: (() => void) | null = null;
   protected scrollToIndexQuietTimer: ReturnType<typeof setTimeout> | null = null;
+  /** The position the converge loop last landed on (after the clamp) — a
+   *  scroll position that differs from it is the reader having moved on. */
+  protected seekAppliedPosition: number | null = null;
 
   /* Autoplay (Lenis-driven) */
 
@@ -1572,6 +1575,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
         const position = targetPosition();
         if (position === undefined) return;
         this.setScrollPosition(-position, animate);
+        this.seekAppliedPosition = Number(this.scrollPosition.value);
         nextTick(() => {
           afterCallback?.();
         });
@@ -1596,6 +1600,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       if (this.stopScrollToIndexReapply === stop) {
         this.stopScrollToIndexReapply = null;
         this.reapplyScrollToIndex = null;
+        this.seekAppliedPosition = null;
       }
     };
     this.reapplyScrollToIndex = setScroll;
@@ -1605,6 +1610,14 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       () => this.onIndexPositionShift()
     );
     this.scrollToIndexQuietTimer = setTimeout(stop, 600);
+  }
+
+  /** End a seek's converge loop now. The owner calls it when the reader
+   *  acts on the content instead of scrolling — opening a card, for one —
+   *  so the next size shift is the reader's own and never re-pins the
+   *  landing under them. A no-op when no loop is armed. */
+  cancelSeek() {
+    this.stopScrollToIndexReapply?.();
   }
 
   /** One wave of the converge loop: the reader taking over ends it; any
@@ -1618,6 +1631,14 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // every shift re-pinned the landing under it — a 6 px snap-back every
     // few frames, for as long as the creep ran.
     if (this.lenis?.isScrolling || this.creepFrame !== null) {
+      stop();
+      return;
+    }
+    // The reader scrolled between two waves (a glide that ended before this
+    // shift, a scrollbar drag): the position is no longer the landing's.
+    // Re-pinning now would yank the reader back to a target they left.
+    const applied = this.seekAppliedPosition;
+    if (applied !== null && Math.abs(Number(this.scrollPosition.value) - applied) > 1) {
       stop();
       return;
     }

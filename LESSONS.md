@@ -943,4 +943,18 @@ own whole than to arbitrate.
   second class in a file goes to its own file. Colocated specs are
   `X.test.ts` beside `X.ts`; the header needs `=== GENERATOR-DESCRIBED ===`
   and every contract link a `// invariant: Name (path)` on a test.
+- A seek's converge loop (`scrollToIndex`) re-pins its landing on every
+  position shift until 600 ms of quiet. In the chat, shifts keep coming
+  (pages landing, shiki colouring), so the loop outlived the reader's
+  intent: a wheel glide that ended between two waves, or a card opened
+  above the target, yanked the view back to the landing. Two guards, one
+  in the scroller: a scroll position that no longer matches the last
+  landing ends the loop, and `cancelSeek()` lets the owner end it when
+  the reader acts on the content. A row that mounts as a stub and then
+  grows when its page lands moves everything below it; prefetch two pages
+  of margin so rows are loaded before they can mount in the padding.
+- A block inserted by a "replace the first occurrence" edit can land inside
+  the file's header comment when the anchor text appears there too (the
+  generator header repeats each test's claim): the test silently never
+  runs. Anchor on the body's `test(` line, and grep the line number after.
 
