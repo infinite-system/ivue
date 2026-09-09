@@ -314,17 +314,27 @@ import { ToolCallModel } from './tools/ToolCallModel';
 class $ChatMessage {
   static get $kit() {
     return Kit.cached(this, () => ({
-      // parts by kind — the registry `Parts.ts` was, as entries
-      text: { view: TextPartView },
-      thinking: { view: ThinkingPartView },
-      attachment: { view: AttachmentPartView },
-      system: { view: SystemPartView },
-      tool_call: { view: ToolCallPartView },
-      tool_batch: { model: ToolBatchPart.Class, view: ToolBatchPartView },
+      // parts by role — the registry `Parts.ts` was, as entries; roles are PascalCase
+      Text: { view: TextPartView },
+      Thinking: { view: ThinkingPartView },
+      Attachment: { view: AttachmentPartView },
+      System: { view: SystemPartView },
+      ToolCall: { view: ToolCallPartView },
+      ToolBatch: { model: ToolBatchPart.Class, view: ToolBatchPartView },
       // the tool cards are reached through the tool base's kit, one hop down
       Tool: { model: ToolCallModel.Class, view: ToolCallPartView },
-    }) satisfies Kit.Of<SessionLog.Part['kind'] | 'Tool'>);
+    }) satisfies Kit.Of<ChatMessage.PartRole | 'Tool'>);
   }
+
+  /** a part kind (the log's snake_case) names its role (the kit's PascalCase) */
+  static readonly PART_ROLES: Record<SessionLog.Part['kind'], ChatMessage.PartRole> = {
+    text: 'Text',
+    thinking: 'Thinking',
+    attachment: 'Attachment',
+    system: 'System',
+    tool_call: 'ToolCall',
+    tool_batch: 'ToolBatch',
+  };
 
   constructor(public props: ChatMessage.Props) {}
 
@@ -338,7 +348,8 @@ class $ChatMessage {
 
   /** a kind the kit does not name renders as text — the registry's old fallback */
   partEntry(part: SessionLog.Part): Kit.Entry {
-    return this.kit[part.kind] ?? this.kit.text;
+    const role = this.self.PART_ROLES[part.kind];
+    return (role && this.kit[role]) ?? this.kit.Text;
   }
 
   partView(part: SessionLog.Part) {
@@ -361,6 +372,8 @@ export namespace ChatMessage {
   }
   // …in the build, this interface becomes `ExtractPropTypes<typeof $Class.props>` over a static
   // contract — `propsTypes` with `row`, `chat` required and `...Kit.propsTypes`; see CodeBlock below.
+
+  export type PartRole = 'Text' | 'Thinking' | 'Attachment' | 'System' | 'ToolCall' | 'ToolBatch';
 
   /** what every part view receives — `Parts.Props` was, moved here when `Parts.ts` goes */
   export interface PartProps<Part extends SessionLog.Part = SessionLog.Part> {
@@ -399,9 +412,12 @@ const model = new (props.kit?.model ?? ChatMessage.Class)(props);
 </template>
 ```
 
-`Parts.ts` is deleted. A leaf part (text, thinking) receives an entry
-with no model and constructs its own small class as today. `tool_batch`
-has a model and constructs the one it is handed.
+`Parts.ts` is deleted. Roles are PascalCase everywhere in a kit; the
+log's snake_case kinds map to them through one static table, so the
+kit never carries a data format's spelling. A leaf part (Text,
+Thinking) receives an entry with no model and constructs its own small
+class as today. `ToolBatch` has a model and constructs the one it is
+handed.
 
 ### `ToolCallModel.ts` — the tool base owns the cards and the shared leaves
 
@@ -836,7 +852,8 @@ There is no context to be inside of.
 
 ```ts
 it('resolves each kit from its own class, and a subclass swaps one entry', () => {
-  expect(ChatMessage.Class.$kit.tool_batch.model).toBe(ToolBatchPart.Class);
+  expect(ChatMessage.Class.$kit.ToolBatch.model).toBe(ToolBatchPart.Class);
+  expect(ChatMessage.Class.PART_ROLES.tool_batch).toBe('ToolBatch');
   expect(ToolCallModel.Class.toolFor('Bash').model).toBe(BashCall.Class);
   expect(ToolCallModel.Class.toolFor('mcp__x__y')).toBe(ToolCallModel.Class.$kit.Mcp);
   expect(ToolCallModel.Class.toolFor('Nobody')).toBe(ToolCallModel.Class.$kit.Generic);
@@ -876,7 +893,7 @@ it('an entry\'s props become the derived class\'s defaults, and the template sti
 
 | today | after |
 | --- | --- |
-| `parts/Parts.ts` registry (kind → component) | `ChatMessage.$kit` keyed by part kind; the row model resolves `partEntry(part)`, text as the fallback |
+| `parts/Parts.ts` registry (kind → component) | `ChatMessage.$kit` keyed by PascalCase role (`Text`, `ToolBatch`…), `PART_ROLES` mapping kind → role; the row model resolves `partEntry(part)`, `Text` as the fallback |
 | `tools/Tools.ts` registry (name → component, prefix families, generic fallback) | `ToolCallModel.$kit.Tools` plus `Mcp`, `Task`, `Generic` entries; the lookup is the static `toolFor(name)` on the base |
 | `ToolHead.vue`, `ToolFoot.vue`, `CodeBlock.vue` used by name in every card | `ToolCallModel.$kit`: `Head`, `Foot` as markup leaves, `CodeBlock` as a pair; cards render `<component :is="model.kit.Head.view" :model="model" />` and `<component :is="model.kit.CodeBlock.view" :kit="model.kit.CodeBlock" …props />` |
 | `Chat.ts` reaches the scroller through `ref="scroller"` | unchanged: the scroller's view constructs the class its entry names and exposes it; the chat keeps its template ref. The entry `Chat.$kit.Scroller = { model: VirtualScroller.Class, view: VirtualScrollerView }` is what a page overrides to put a different scroller under the chat |
