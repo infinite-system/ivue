@@ -512,10 +512,9 @@ chat example is the first tree to be converted — the build is
   `new (props.kit?.namespace.Class ?? Message.Class)(props)`. The fallback is for
   a view mounted on its own (a docs demo, a spec). Props live on the
   class's static contract (`propsTypes`, `propsDefaults`, `props`), and
-  the contract line `Kit.Class.nestedProps(this, props, this.self.propsDefaults)`
-  installs the instance's props as an object whose own keys are the
-  entry's `props` and whose prototype is Vue's props — the entry wins,
-  the rest reads through by plain prototype delegation, no proxy. A
+  the contract line `this.props = nestedProps([props.kit?.props, props], this.self.propsDefaults)`
+  layers the entry's props over Vue's — `nestedProps` takes layers in
+  priority order, own keys over a live prototype, no proxy — so a
   consumer tunes or extends a role's props without a class, inside the
   contract line, never at the view. Hooks in the constructor bind to the view's own component,
   as today. A parent never constructs a child.
