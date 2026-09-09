@@ -509,11 +509,13 @@ chat example is the first tree to be converted — the build is
   `this.self.$kit`, so a swapped class brings its own kit with it.
 - **Every view constructs its own model — the class its entry names.**
   The SFC stays the wiring the standard describes, one `new` in setup:
-  `new (props.kit?.model ?? Message.Class)(Kit.props(props))`. The
-  fallback is for a view mounted on its own (a docs demo, a spec);
-  `Kit.props` lays the entry's props over the template's, so a consumer
-  tunes a role without a class. Hooks in the constructor bind to the
-  view's own component, as today. A parent never constructs a child.
+  `new (props.kit?.model ?? Message.Class)(props)`. The fallback is for
+  a view mounted on its own (a docs demo, a spec). Props live on the
+  class's static contract (`propsTypes`, `propsDefaults`, `props`), so
+  an entry's `props` is a `propsDefaults` override on a derived class —
+  a consumer tunes a role without a class and without a second props
+  mechanism. Hooks in the constructor bind to the view's own component,
+  as today. A parent never constructs a child.
 - **Override is subclassing, resolved once.** A subclass with a
   different `$kit` swaps its whole subtree, and the parent's kit names
   the subclass. A swap that must reach a deep leaf is one nested
