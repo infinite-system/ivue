@@ -88,10 +88,11 @@ import { Static } from '../../Static';
 // when the kit resolves. A kit is a record of entries or of nested
 // records of entries.
 class $Kit {
-  /** what a container seam binds: nothing for a tag name, the model for a component — so a swapped
-   *  container can render its own children from the model, and a tag never gets an object attribute */
-  static containerProps(entry: Kit.Entry, model: object): Record<string, unknown> {
-    return typeof entry.view === 'string' ? {} : { model };
+  /** what a container seam binds: the entry as `kit` and the parent's model as `model` for a component —
+   *  the same seam every role has — and nothing for a tag name, since Vue would stringify an object onto
+   *  the element. Vue drops `undefined` attributes, so `{}` and explicit undefineds render the same. */
+  static containerProps(entry: Kit.Entry, model: object): { kit?: Kit.Entry; model?: object } {
+    return typeof entry.view === 'string' ? {} : { kit: entry, model };
   }
 
   /** the class's defaults with the entry's `props` laid over them — what the constructor fills omitted props from */
@@ -384,7 +385,7 @@ class $ChatMessage {
     return this.self.$kit;
   }
 
-  /** a container seam's bindings: `{}` for a tag, `{ model: this }` for a component */
+  /** a container seam's bindings: `{}` for a tag, `{ kit, model: this }` for a component */
   containerProps(role: ChatMessage.ContainerRole): Record<string, unknown> {
     return Kit.Class.containerProps(this.kit[role], this);
   }
@@ -483,8 +484,12 @@ consumer swaps a container for a small SFC, and the row's own view
 never changes. Each container seam also carries
 `v-bind="model.containerProps('Role')"`: nothing when the entry is a
 tag, so no object ever lands on an element as an attribute, and
-`{ model }` when it is a component. A swapped container therefore has
-the row's model and chooses — render `<slot />` and keep the parent's
+`{ kit, model }` when it is a component — the entry, as at every other
+seam, plus the parent's model the way a row receives `chat`. A swapped
+container is therefore an ordinary kit-rendered view: it reads its
+entry's props defaults, its subkit reaches below it, and if an override
+gives the entry a namespace it constructs its own class. It has the
+row's model and chooses — render `<slot />` and keep the parent's
 children in the parent's order (a two-column head, a gutter with an
 avatar image), or ignore the slot and render its own children from the
 model (a parts container that groups by kind, filters thinking out,
@@ -925,11 +930,12 @@ shipped class at load, is a derived class the app never had a file for.
 ### A container that rearranges its children
 
 ```vue
-<!-- GroupedParts.vue — a Parts container that renders from the model, not the slot -->
+<!-- GroupedParts.vue — a Parts container that renders from the model, not the slot; markup only -->
 <script setup lang="ts">
+import type { Kit } from '../Kit';
 import type { ChatMessage } from '../ChatMessage';
 
-defineProps<{ model: ChatMessage.Instance }>();
+defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
 </script>
 
 <template>
@@ -954,8 +960,8 @@ class $GroupedChat extends Chat.$Class {
 }
 ```
 
-The container receives `model` because its entry is a component, so
-`containerProps` bound it; it ignores the slot and lays the parts out
+The container receives `kit` and `model` because its entry is a
+component, so `containerProps` bound both; it ignores the slot and lays the parts out
 its own way through the same `partView` and `partEntry` the row uses,
 so every part still renders through the kit. `textParts` and
 `toolParts` are two getters on the row model — the arrangement's logic
@@ -1090,8 +1096,11 @@ importing each other.
   through (the default `inheritAttrs` does), otherwise the row's classes
   vanish; the spec for a container swap mounts one and asserts the class
   is on the element. `containerProps` must return `{}` for a tag: a
-  `model` attribute on a `div` is the failure it exists to prevent, and
-  the base-kit snapshot in the checklist would catch it.
+  `kit` or `model` attribute on a `div` is the failure it exists to
+  prevent, and the base-kit snapshot in the checklist would catch it.
+  A container that grows state gets a namespace on its entry and its
+  own class, and then it is a role like the rest — the seam does not
+  change.
 - **The generic fallback is a kit entry**, not a branch: `toolFor(name)`
   returns `kit.Tools[name] ?? kit.Tools.byPrefix(name) ?? kit.Tools.Generic`.
   The rule "rendering never branches on a name" survives; the lookup
