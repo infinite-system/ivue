@@ -512,9 +512,9 @@ chat example is the first tree to be converted — the build is
   `new (props.kit?.model ?? Message.Class)(props)`. The fallback is for
   a view mounted on its own (a docs demo, a spec). Props live on the
   class's static contract (`propsTypes`, `propsDefaults`, `props`), so
-  an entry's `props` is a `propsDefaults` override on a derived class —
-  a consumer tunes a role without a class and without a second props
-  mechanism. Hooks in the constructor bind to the view's own component,
+  an entry's `props` are laid over the class's defaults in the
+  constructor's one `nestedProps` line — a consumer tunes a role without
+  a class and without a second props mechanism. Hooks in the constructor bind to the view's own component,
   as today. A parent never constructs a child.
 - **Override is subclassing, resolved once.** A subclass with a
   different `$kit` swaps its whole subtree, and the parent's kit names
