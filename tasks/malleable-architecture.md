@@ -523,6 +523,11 @@ chat example is the first tree to be converted — the build is
   kit — which `Kit.resolve` turns into derived subclasses at kit build
   time, cached per asking class and frozen, so one tree never changes
   another. The same move the overlay ledger makes, from data.
+- **Containers are roles too.** `<component :is>` takes a tag name, so
+  a kit's container entries default to `'div'`, `'header'`, `'article'`
+  at no component cost, and a consumer swaps one for an SFC with a
+  slot to rearrange a subtree without touching its view. A wrapper with
+  a class of its own is a role; an element that carries text is not.
 - **There is no shell component.** The parent chose the entry and
   knows both halves; `<component :is>` is Vapor's dynamic-component path
   too, so the mechanism is neutral to the runtime.
