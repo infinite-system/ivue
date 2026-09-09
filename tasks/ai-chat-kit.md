@@ -40,9 +40,9 @@ shipped instance to point at.
   in the constructor bind to the view's own component, exactly as today.
 - **Props live on the class contract.** Every chat class moves from a
   type-only `Props` interface to the standard's statics — `propsTypes`,
-  `propsDefaults`, `props` — and spreads `Kit.propsTypes` in for the
+  `propsDefaults`, `props` — and spreads `Kit.Class.propsTypes` in for the
   entry. An entry's `props` then needs no mechanism of its own:
-  `Kit.resolve` derives a class whose `propsDefaults` lay the entry's
+  `Kit.Class.resolve` derives a class whose `propsDefaults` lay the entry's
   values over the base's, and the constructor fills omitted props from
   `this.self.propsDefaults` as the standard already says. Kit props are
   defaults: they apply where the template omitted the prop, and a card
@@ -51,7 +51,7 @@ shipped instance to point at.
   role: `FancyChat.$kit.Scroller = { model: SnapScroller.Class, view: SnapScrollerView }`.
   A swap that must reach a deep leaf is the same spread with an optional
   `subkit` on the entry — a patch over the child's own kit — which
-  `Kit.resolve` turns into derived subclasses once, at kit build time.
+  `Kit.Class.resolve` turns into derived subclasses once, at kit build time.
   One literal names the path from the root to the leaf; a class's own
   `$kit` never carries `subkit`.
 - **Templates name roles.** Every child, leaf or not, renders through
@@ -77,16 +77,96 @@ the only new member on any class is `$kit`.
 ### `Kit.ts` — an entry, a patch, and the resolver
 
 ```ts
-import type { Component } from 'vue';
-import { Reactive } from '../../ivue';
+import type { Component, PropType } from 'vue';
+import { definePropTypes, Reactive } from '../../ivue';
+import { Static } from '../../Static';
 
-// An entry names a role's view and, when the role has a model of its own,
-// the class that view constructs. `subkit` is optional and appears only
-// in an override: a patch over the model's own $kit, applied when the kit
-// resolves. A kit is a record of entries or of nested records of entries.
+// The kit's helpers, as statics on one class — the shape `Parts` and
+// `Tools` had. An entry names a role's view and, when the role has a
+// model of its own, the class that view constructs. `props` and
+// `subkit` are optional and appear only in an override: prop defaults
+// for the role, and a patch over the model's own $kit, both applied
+// when the kit resolves. A kit is a record of entries or of nested
+// records of entries.
+class $Kit {
+  /** the one prop every kit-rendered class spreads into its `propsTypes`: the entry it was rendered through */
+  static get propsTypes() {
+    return definePropTypes({
+      kit: { type: Object as PropType<Kit.Entry> },
+    });
+  }
+
+  /** one kit per class that asks — keyed by the class, so a subclass never reads its parent's */
+  static cached<K extends object>(owner: Function, build: () => K): K {
+    let kit = this.CACHE.get(owner) as K | undefined;
+    if (!kit) {
+      kit = this.deepFreeze(build());
+      this.CACHE.set(owner, kit);
+    }
+    return kit;
+  }
+
+  /** every entry with a subkit or props becomes an entry whose model is a derived class */
+  static resolve<K extends object>(kit: K): K {
+    return Object.fromEntries(
+      Object.entries(kit).map(([role, value]) => [role, this.isEntry(value) ? this.resolveEntry(value) : this.resolve(value as object)]),
+    ) as K;
+  }
+
+  /** a subclass of `Base`: its `$kit` is `Base.$kit` deep-merged with `patch` and resolved;
+   *  its `propsDefaults` are `Base.propsDefaults` with `defaults` laid over them */
+  static derive(Base: any, patch: Kit.Patch = {}, defaults: Record<string, unknown> = {}) {
+    const kit = this;
+    return Reactive(
+      class extends Base {
+        static get $kit() {
+          return kit.cached(this, () => kit.resolve(kit.merge(Base.$kit, patch)));
+        }
+
+        static get propsDefaults() {
+          return { ...Base.propsDefaults, ...defaults };
+        }
+      },
+    );
+  }
+
+  protected static readonly CACHE = new WeakMap<Function, object>();
+
+  protected static resolveEntry(entry: Kit.Entry): Kit.Entry {
+    if (!entry.model || (!entry.subkit && !entry.props)) return entry;
+    const { subkit, props, ...rest } = entry;
+    return { ...rest, model: this.derive(entry.model, subkit, props) };
+  }
+
+  protected static merge(base: any, patch: Kit.Patch): any {
+    const out = { ...base };
+    for (const [role, value] of Object.entries(patch)) {
+      const current = base[role];
+      out[role] = this.isEntry(current) || this.isEntry(value) ? { ...current, ...value } : this.merge(current ?? {}, value as Kit.Patch);
+    }
+    return out;
+  }
+
+  protected static isEntry(value: unknown): value is Kit.Entry {
+    return typeof value === 'object' && value !== null && ('view' in value || 'model' in value || 'subkit' in value);
+  }
+
+  /** a resolved kit is shared by reference between trees and must never be written */
+  protected static deepFreeze<K extends object>(value: K): K {
+    for (const inner of Object.values(value)) {
+      if (typeof inner === 'object' && inner !== null && !Object.isFrozen(inner)) this.deepFreeze(inner);
+    }
+    return Object.freeze(value);
+  }
+}
+
 export namespace Kit {
+  export const $Class = Static($Kit);
+  export let Class = $Class;
+
   export interface Entry<Model = unknown> {
-    view: Component;
+    /** a component, or a tag name — a tag renders a plain element with no component instance */
+    view: Component | string;
     model?: Model;
     /** optional: prop defaults for this role — laid over the model's `propsDefaults` when the kit resolves */
     props?: Record<string, unknown>;
@@ -97,90 +177,19 @@ export namespace Kit {
   export type Patch = { [role: string]: Partial<Entry> | Patch };
 
   export type Of<Roles extends string> = Record<Roles, Entry>;
-
-  /** the one prop every kit-rendered class adds to its `propsTypes`: the entry it was rendered through */
-  export const propsTypes = definePropTypes({
-    kit: { type: Object as PropType<Entry> },
-  });
-
-  const cache = new WeakMap<Function, object>();
-
-  /** one kit per class that asks — keyed by the class, so a subclass never reads its parent's */
-  export function cached<K extends object>(owner: Function, build: () => K): K {
-    let kit = cache.get(owner) as K | undefined;
-    if (!kit) {
-      kit = deepFreeze(build());
-      cache.set(owner, kit);
-    }
-    return kit;
-  }
-
-  /** a resolved kit is shared by reference between trees and must never be written */
-  function deepFreeze<K extends object>(value: K): K {
-    for (const inner of Object.values(value)) {
-      if (typeof inner === 'object' && inner !== null && !Object.isFrozen(inner) && !isClass(inner)) deepFreeze(inner);
-    }
-    return Object.freeze(value);
-  }
-
-  function isClass(value: object): boolean {
-    return typeof value === 'function';
-  }
-
-  /** every entry with a subkit becomes an entry whose model is a derived class */
-  export function resolve<K extends object>(kit: K): K {
-    return Object.fromEntries(
-      Object.entries(kit).map(([role, value]) => [role, isEntry(value) ? resolveEntry(value) : resolve(value as object)]),
-    ) as K;
-  }
-
-  /** a subclass of `Base`: its `$kit` is `Base.$kit` deep-merged with `patch` and resolved;
-   *  its `propsDefaults` are `Base.propsDefaults` with `defaults` laid over them */
-  export function derive(Base: any, patch: Patch = {}, defaults: Record<string, unknown> = {}) {
-    return Reactive(
-      class extends Base {
-        static get $kit() {
-          return cached(this, () => resolve(merge(Base.$kit, patch)));
-        }
-
-        static get propsDefaults() {
-          return { ...Base.propsDefaults, ...defaults };
-        }
-      },
-    );
-  }
-
-  /** an entry with a subkit or props becomes an entry whose model is a derived class; the fields are consumed */
-  function resolveEntry(entry: Entry): Entry {
-    if (!entry.model || (!entry.subkit && !entry.props)) return entry;
-    const { subkit, props, ...rest } = entry;
-    return { ...rest, model: derive(entry.model, subkit, props) };
-  }
-
-  function merge(base: any, patch: Patch): any {
-    const out = { ...base };
-    for (const [role, value] of Object.entries(patch)) {
-      const current = base[role];
-      out[role] = isEntry(current) || isEntry(value) ? { ...current, ...value } : merge(current ?? {}, value as Patch);
-    }
-    return out;
-  }
-
-  function isEntry(value: unknown): value is Entry {
-    return typeof value === 'object' && value !== null && ('view' in value || 'model' in value || 'subkit' in value);
-  }
 }
 ```
 
 The name is deliberate: a `kit` is roles, a `subkit` is a patch over
 the roles one level down. The two are different things and read
 differently in a literal. A class's own `$kit` is written plain, with no
-`subkit` or `props` anywhere; it needs no `resolve`. Both fields belong to overrides, where
-a patch names how deep it reaches and what it tunes, and the resolver
-turns each into a derived class once, cached on the class that asked.
-An entry's `props` is sugar for a `propsDefaults` override on that
-derived class: the standard's own mechanism, and nothing at the view.
-`Kit.propsTypes` is the one prop a kit-rendered class spreads into its
+`subkit` or `props` anywhere; it needs no `resolve`. Both fields belong
+to overrides, where a patch names how deep it reaches and what it
+tunes, and the resolver turns each into a derived class once, cached on
+the class that asked. An entry's `props` is sugar for a `propsDefaults`
+override on that derived class: the standard's own mechanism, and
+nothing at the view. `Kit.Class.propsTypes` is a static getter like any
+class's own, and the one prop a kit-rendered class spreads into its
 `propsTypes`, so the entry arrives through the same contract as every
 other prop.
 
@@ -204,7 +213,7 @@ class $Chat {
   // imports the views, and nobody reads the other side until a template
   // renders. `Chat.$kit` and `FancyChat.$kit` are different objects.
   static get $kit() {
-    return Kit.cached(this, () => ({
+    return Kit.Class.cached(this, () => ({
       Scroller: { model: VirtualScroller.Class, view: VirtualScrollerView },
       Message: { model: ChatMessage.Class, view: ChatMessageView },
       Composer: { model: Composer.Class, view: ChatComposerView },
@@ -237,7 +246,7 @@ A static getter re-runs on every read, so the kit is cached — by the
 class that asked, in a `WeakMap`, never in a static field. A static
 field read through `this` resolves up the static prototype chain, so a
 subclass that had not built its own yet would find and return its
-parent's kit. `Kit.cached(this, …)` is what keeps every class's kit its
+parent's kit. `Kit.Class.cached(this, …)` is what keeps every class's kit its
 own.
 
 ### `AiChatExample.vue` — the root template names roles
@@ -247,7 +256,7 @@ own.
 import { Chat } from './Chat';
 import './ai-chat.css';
 
-const props = defineProps(Chat.Class.props); // dark, and ...Kit.propsTypes
+const props = defineProps(Chat.Class.props); // dark, and ...Kit.Class.propsTypes
 
 // the root constructs the class it was handed, or its own
 const chat = new (props.kit?.model ?? Chat.Class)();
@@ -315,7 +324,7 @@ import { ToolCallModel } from './tools/ToolCallModel';
 
 class $ChatMessage {
   static get $kit() {
-    return Kit.cached(this, () => ({
+    return Kit.Class.cached(this, () => ({
       // parts by role — the registry `Parts.ts` was, as entries; roles are PascalCase
       Text: { view: TextPartView },
       Thinking: { view: ThinkingPartView },
@@ -380,7 +389,7 @@ export namespace ChatMessage {
     kit?: Kit.Entry<typeof Class>;
   }
   // …in the build, this interface becomes `ExtractPropTypes<typeof $Class.props>` over a static
-  // contract — `propsTypes` with `row`, `chat` required and `...Kit.propsTypes`; see CodeBlock below.
+  // contract — `propsTypes` with `row`, `chat` required and `...Kit.Class.propsTypes`; see CodeBlock below.
 
   export type PartRole = 'Text' | 'Thinking' | 'Attachment' | 'System' | 'ToolCall' | 'ToolBatch';
   export type ContainerRole = 'Row' | 'Gutter' | 'Head' | 'Parts' | 'Await' | 'Foot';
@@ -475,7 +484,7 @@ import GenericCallView from './GenericCall.vue';
 
 class $ToolCallModel {
   static get $kit() {
-    return Kit.cached(this, () => ({
+    return Kit.Class.cached(this, () => ({
       Head: { view: ToolHeadView },
       Foot: { view: ToolFootView },
       CodeBlock: { model: CodeBlock.Class, view: CodeBlockView },
@@ -549,7 +558,7 @@ import { ToolCallModel } from '../tools/ToolCallModel';
 
 // A part with one call: look the card up on the tool base the row's kit
 // names, then render it with the class it names. Markup only.
-const props = defineProps(ToolCallPart.Class.props); // part, chat, message, and ...Kit.propsTypes
+const props = defineProps(ToolCallPart.Class.props); // part, chat, message, and ...Kit.Class.propsTypes
 
 const base = props.kit?.model ?? ToolCallModel.Class;
 </script>
@@ -626,7 +635,7 @@ class $CodeBlock {
       wrap: { type: Boolean as PropType<boolean> },
       tone: { type: String as PropType<'plain' | 'error' | 'muted'> },
       startLine: { type: Number as PropType<number> },
-      ...Kit.propsTypes,
+      ...Kit.Class.propsTypes,
     });
   }
 
@@ -679,7 +688,7 @@ const model = new (props.kit?.model ?? CodeBlock.Class)(props);
 ```
 
 When a consumer's kit says `CodeBlock: { …, props: { cap: 2_000 } }`,
-`Kit.resolve` derives a `CodeBlock` subclass whose `propsDefaults` are
+`Kit.Class.resolve` derives a `CodeBlock` subclass whose `propsDefaults` are
 the base's with `cap: 2_000` laid over, and the entry's `model` becomes
 that class. The view constructs it; the constructor's `nestedProps`
 fills `cap` from the derived defaults wherever the card left `:cap`
@@ -693,7 +702,7 @@ standard's contract is the only one.
 ```ts
 // VirtualScroller.ts — one spread in the contract it already has
 static get propsTypes() {
-  return definePropTypes({ ...super.propsTypes /* the existing map */, ...Kit.propsTypes });
+  return definePropTypes({ ...super.propsTypes /* the existing map */, ...Kit.Class.propsTypes });
 }
 
 // VirtualScroller.vue — the one line that changes
@@ -721,7 +730,7 @@ import SnapScrollerView from '../snap-scroller/SnapScroller.vue';
 
 class $FancyChat extends Chat.$Class {
   static override get $kit() {
-    return Kit.cached(this, () => ({
+    return Kit.Class.cached(this, () => ({
       ...super.$kit,
       Scroller: { model: SnapScroller.Class, view: SnapScrollerView },
     }));
@@ -751,7 +760,7 @@ conversion writes down.
 ```ts
 class $DenseChat extends Chat.$Class {
   static override get $kit() {
-    return Kit.cached(this, () => Kit.resolve({
+    return Kit.Class.cached(this, () => Kit.Class.resolve({
       ...super.$kit,
       // the same scroller, tuned: the entry's props are the derived class's defaults
       Scroller: { ...super.$kit.Scroller, props: { assumedSize: 64, paddingQuantity: 10 } },
@@ -788,7 +797,7 @@ import TerminalBlockView from './TerminalBlock.vue';
 
 class $TerminalChat extends Chat.$Class {
   static override get $kit() {
-    return Kit.cached(this, () => Kit.resolve({
+    return Kit.Class.cached(this, () => Kit.Class.resolve({
       ...super.$kit,
       Message: {
         ...super.$kit.Message,
@@ -831,7 +840,7 @@ class $MonoChat extends Chat.$Class {
   static override get $kit() {
     const block = { CodeBlock: { model: MonoBlock.Class, view: MonoBlockView } };
     const tools = Chat.$Class.$kit.Message.model.$kit.Tool.model.$kit;
-    return Kit.cached(this, () => Kit.resolve({
+    return Kit.Class.cached(this, () => Kit.Class.resolve({
       ...super.$kit,
       Message: {
         ...super.$kit.Message,
@@ -964,7 +973,7 @@ importing each other.
 - **Every chat class moves onto the static props contract.** Today the
   folder declares type-only `Props` interfaces; the build gives each
   class `propsTypes`, `propsDefaults` and `props`, spreads
-  `Kit.propsTypes` in, and fills omitted props in the constructor with
+  `Kit.Class.propsTypes` in, and fills omitted props in the constructor with
   `nestedProps`. This is the larger half of the conversion by line
   count and it is what makes an entry's `props` free: a derived class
   overriding `propsDefaults` is the standard's own move.
@@ -986,10 +995,10 @@ importing each other.
   default to the constructor. Decide once at conversion; the spec pins
   whichever it is.
 - **The scroller's `kit` prop.** `VirtualScroller.ts` spreads
-  `Kit.propsTypes` into the contract it already has; every existing use
+  `Kit.Class.propsTypes` into the contract it already has; every existing use
   is untouched.
 - **A deep swap is one literal, resolved once.** An override's entry
-  may carry `subkit`, a patch over the child's own kit; `Kit.resolve`
+  may carry `subkit`, a patch over the child's own kit; `Kit.Class.resolve`
   turns every reach into a derived class at kit build time, cached per
   class. A class's own `$kit` never carries `subkit`. The cache is a
   `WeakMap` keyed by the asking class, never a static field — a static
@@ -1033,7 +1042,7 @@ importing each other.
       reaches it through the kit's `Scroller` entry and the same template
       ref as before.
 - [ ] Every chat class declares `propsTypes`, `propsDefaults`, `props`
-      with `Kit.propsTypes` spread in; every view is `defineProps(X.Class.props)`;
+      with `Kit.Class.propsTypes` spread in; every view is `defineProps(X.Class.props)`;
       the gate's contract checks pass on the folder.
 - [ ] A props-carrying entry becomes defaults: `DenseChat` renders the
       scroller at its entry's `assumedSize` and every code block at the
