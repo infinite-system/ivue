@@ -35,10 +35,13 @@ shipped instance to point at.
   Lifecycle hooks in the constructor bind to the view's own component,
   exactly as today. The prop is typed `typeof ChatMessage.Class`, so a
   subclass is assignable and anything else is not.
-- **Override is subclassing.** `class $FancyMessage extends ChatMessage.$Class { static get $kit() { return { ...super.$kit, CodeBlock: … } } }`,
-  and `FancyChat.$kit.Message = { model: FancyMessage.Class, view: ChatMessageView }`.
-  A swap that must reach a deep leaf is a chain of such subclasses, one
-  spread each; a swap of one role is one entry.
+- **Override is subclassing.** A subclass with a spread `$kit` swaps a
+  role: `FancyChat.$kit.Scroller = { model: SnapScroller.Class, view: SnapScrollerView }`.
+  A swap that must reach a deep leaf is the same spread with an optional
+  `subtree` on the entry — a patch over the child's own kit — which
+  `Kit.resolve` turns into derived subclasses once, at kit build time.
+  One literal names the path from the root to the leaf; a class's own
+  `$kit` never carries `subtree`.
 - **Templates name roles.** Every child, leaf or not, renders through
   `<component :is="model.kit.Role.view" …>`; a leaf that has no model of
   its own simply has no `model` in its entry and takes its props. No
@@ -59,23 +62,71 @@ Every sample below is the shape the converted file takes. Paths are
 the chat folder's; the standard's namespace pattern is unchanged, and
 the only new member on any class is `$kit`.
 
-### `Kit.ts` — the two shapes an entry can have
+### `Kit.ts` — an entry, a patch, and the resolver
 
 ```ts
 import type { Component } from 'vue';
+import { Reactive } from '../../ivue';
 
 // An entry names a role's view and, when the role has a model of its own,
-// the class that view constructs. A leaf that takes props has no model.
-// A kit is a record of entries; a model's `static get $kit()` returns one.
+// the class that view constructs. `subtree` is optional and appears only
+// in an override: a patch over the model's own $kit, applied when the kit
+// resolves. A kit is a record of entries or of nested records of entries.
 export namespace Kit {
   export interface Entry<Model = unknown> {
     view: Component;
     model?: Model;
+    subtree?: Patch;
   }
 
+  /** a patch is a kit whose every field is optional; `{ subtree }` alone keeps model and view */
+  export type Patch = { [role: string]: Partial<Entry> | Patch };
+
   export type Of<Roles extends string> = Record<Roles, Entry>;
+
+  /** every entry with a subtree becomes an entry whose model is a derived class */
+  export function resolve<K extends object>(kit: K): K {
+    return Object.fromEntries(
+      Object.entries(kit).map(([role, value]) => [role, isEntry(value) ? resolveEntry(value) : resolve(value as object)]),
+    ) as K;
+  }
+
+  /** a subclass of `Base` whose `$kit` is `Base.$kit` deep-merged with `patch`, itself resolved */
+  export function derive(Base: any, patch: Patch) {
+    return Reactive(
+      class extends Base {
+        static get $kit() {
+          return (this as any).cachedKit ??= resolve(merge(Base.$kit, patch));
+        }
+      },
+    );
+  }
+
+  function resolveEntry(entry: Entry): Entry {
+    if (!entry.subtree || !entry.model) return entry;
+    const { subtree, ...rest } = entry;
+    return { ...rest, model: derive(entry.model, subtree) };
+  }
+
+  function merge(base: any, patch: Patch): any {
+    const out = { ...base };
+    for (const [role, value] of Object.entries(patch)) {
+      const current = base[role];
+      out[role] = isEntry(current) || isEntry(value) ? { ...current, ...value } : merge(current ?? {}, value as Patch);
+    }
+    return out;
+  }
+
+  function isEntry(value: unknown): value is Entry {
+    return typeof value === 'object' && value !== null && ('view' in value || 'model' in value || 'subtree' in value);
+  }
 }
 ```
+
+A class's own `$kit` is written plain, with no `subtree` anywhere; it
+needs no `resolve`. `subtree` and `resolve` belong to overrides, where a
+patch names how deep it reaches and the resolver turns each reach into
+a derived class once, cached on the class that asked.
 
 ### `Chat.ts` — the root names four roles
 
@@ -521,100 +572,92 @@ conversion writes down.
 ### A different code block under one tool
 
 ```ts
-// TerminalBashCall.ts — stdout as a terminal emulation, only for Bash
-class $TerminalBashCall extends BashCall.$Class {
-  static override get $kit() {
-    return this.cachedKit ??= {
-      ...super.$kit,
-      CodeBlock: { model: TerminalBlock.Class, view: TerminalBlockView },
-    };
-  }
-}
-```
-
-```ts
-// and the row's tool base names it — a subclass of the base with one map entry changed
-class $TerminalTools extends ToolCallModel.$Class {
-  static override get $kit() {
-    return this.cachedKit ??= {
-      ...super.$kit,
-      Tools: { ...super.$kit.Tools, Bash: { model: TerminalBashCall.Class, view: BashCallView } },
-    };
-  }
-}
-
-class $TerminalMessage extends ChatMessage.$Class {
-  static override get $kit() {
-    return this.cachedKit ??= { ...super.$kit, Tool: { model: TerminalTools.Class, view: ToolCallPartView } };
-  }
-}
+// TerminalChat.ts — stdout as a terminal emulation, only under Bash
+import { Kit } from './Kit';
+import { Chat } from './Chat';
+import { TerminalBlock } from './TerminalBlock';
+import TerminalBlockView from './TerminalBlock.vue';
 
 class $TerminalChat extends Chat.$Class {
   static override get $kit() {
-    return this.cachedKit ??= { ...super.$kit, Message: { model: TerminalMessage.Class, view: ChatMessageView } };
+    return this.cachedKit ??= Kit.resolve({
+      ...super.$kit,
+      Message: {
+        ...super.$kit.Message,
+        subtree: {
+          Tool: {
+            subtree: {
+              Tools: {
+                Bash: {
+                  subtree: { CodeBlock: { model: TerminalBlock.Class, view: TerminalBlockView } },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
   }
+}
+
+export namespace TerminalChat {
+  export const $Class = Static($TerminalChat);
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
 }
 ```
 
-Four subclasses, each one entry, tracing the path from the root to the
-leaf. That is the cost of "a model reads only its own class's kit": a
-deep swap names every hop. It is also the value: reading `TerminalChat`
-tells you exactly which subtree differs from `Chat`, and nothing else
-can differ.
+One class, one literal. The nesting is the path from the root to the
+leaf — Message, Tool, Tools.Bash, CodeBlock — and every hop that says
+only `subtree` keeps its model and view. `resolve` derives a
+`ChatMessage` subclass whose kit names a derived `ToolCallModel`
+subclass whose `Tools.Bash` names a derived `BashCall` subclass whose
+`CodeBlock` is the terminal block; each derived class caches its own
+kit; `TerminalChat.$kit` is built once. Reading the literal tells you
+exactly which subtree differs from `Chat`, and nothing else can differ.
 
 ### The same code block under every tool
 
-Every card extends the base, and the base's `CodeBlock` entry is what
-each card reads, so one subclass of the base would reach every card if
-the cards extended it. They do not: `BashCall` extends the base that
-shipped, not a subclass made later. A swap under every card is
-therefore a generated subclass per card, which is one helper:
-
 ```ts
-// Kit.ts
-export namespace Kit {
-  /** a subclass of `Base` whose kit is `Base.$kit` with `patch` spread over it */
-  export function derive<Base extends { $kit: object }>(Base: Base, patch: Partial<Base['$kit']>): Base {
-    return Reactive(
-      class extends (Base as unknown as new (...args: unknown[]) => object) {
-        static get $kit() {
-          return (this as any).cachedKit ??= { ...(Base as any).$kit, ...patch };
-        }
-      } as unknown as Base,
-    );
-  }
-
-  /** every entry's model re-derived with the same patch */
-  export function deriveAll(entries: Record<string, Entry>, patch: object): Record<string, Entry> {
-    return Object.fromEntries(Object.entries(entries).map(([name, entry]) => [name, entry.model ? { ...entry, model: derive(entry.model as any, patch) } : entry]));
-  }
-}
-```
-
-```ts
-class $MonoTools extends ToolCallModel.$Class {
+class $MonoChat extends Chat.$Class {
   static override get $kit() {
     const block = { CodeBlock: { model: MonoBlock.Class, view: MonoBlockView } };
-    return this.cachedKit ??= {
+    const tools = Chat.$Class.$kit.Message.model.$kit.Tool.model.$kit;
+    return this.cachedKit ??= Kit.resolve({
       ...super.$kit,
-      ...block,
-      Generic: { ...super.$kit.Generic, model: Kit.derive(super.$kit.Generic.model, block) },
-      Mcp: { ...super.$kit.Mcp, model: Kit.derive(super.$kit.Mcp.model, block) },
-      Task: { ...super.$kit.Task, model: Kit.derive(super.$kit.Task.model, block) },
-      Tools: Kit.deriveAll(super.$kit.Tools, block),
-    };
+      Message: {
+        ...super.$kit.Message,
+        subtree: {
+          Tool: {
+            subtree: {
+              ...block, // the base's own entry, read by any card that does not override
+              Generic: { subtree: block },
+              Mcp: { subtree: block },
+              Task: { subtree: block },
+              Tools: Object.fromEntries(Object.keys(tools.Tools).map((name) => [name, { subtree: block }])),
+            },
+          },
+        },
+      },
+    });
   }
 }
 ```
 
-`derive` builds an anonymous subclass with the patched kit and runs it
-through `Reactive`, which is the move the overlay ledger in
-`tasks/malleable-architecture.md` makes for every generated override.
-Two things to verify when the chat is converted: that `Reactive` over a
-subclass of an already-transformed class leaves inherited members alone
-(the engine's repeated-call guard says it does), and that a derived
-class's `self` cast still reads its own statics, which the `??=` on
-`this` depends on.
+Every card is a class of its own, so every card is named — the map
+comprehension is the honest form of "all of them". The alternative, a
+card reading a leaf from anywhere but its own class, is what the design
+forbids, and this is the price: one line per card, generated from the
+base's map so a new tool is covered without editing this override.
+
+### Where `derive` runs
+
+`resolve` runs inside a static getter, so derived classes exist only
+after the first read of the override's kit, and only for the overrides
+that were read. A chat that never mounts `TerminalChat` never derives a
+thing. The overlay ledger in `tasks/malleable-architecture.md` is the
+same call made from data: a persisted patch, resolved against the
+shipped class at load, is a derived class the app never had a file for.
 
 ### A row rendered somewhere else
 
@@ -685,12 +728,14 @@ importing each other.
   the prop is `model`; the kit reserves that word for a class crossing a
   seam, so the two leaves rename their prop once. Every card's template
   changes the same two lines.
-- **A deep swap names every hop.** Swapping the code block under one
-  tool is four one-entry subclasses from the root to the leaf (see the
-  extension above). The chain is the price of a model reading only its
-  own class's kit; `Kit.derive` keeps the all-cards case to one helper
-  call per entry. If the chain proves too heavy in practice, that is the
-  signal to revisit — not before.
+- **A deep swap is one literal, resolved once.** An override's entry
+  may carry `subtree`, a patch over the child's own kit; `Kit.resolve`
+  turns every reach into a derived class at kit build time, cached per
+  class. A class's own `$kit` never carries `subtree`. Verify at
+  conversion: `Reactive` over a subclass of an already-transformed class
+  leaves inherited members alone (the engine's repeated-call guard says
+  it does), and a derived class's `self` reads its own statics, which
+  the `??=` on `this` depends on.
 - **The generic fallback is a kit entry**, not a branch: `toolFor(name)`
   returns `kit.Tools[name] ?? kit.Tools.byPrefix(name) ?? kit.Tools.Generic`.
   The rule "rendering never branches on a name" survives; the lookup
