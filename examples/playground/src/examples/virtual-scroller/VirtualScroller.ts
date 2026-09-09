@@ -1130,6 +1130,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       if (row === null) continue;
       sizes.push([+row - 1, this.rectSize(element) / (scale > 0 ? scale : 1)]);
     }
+    const anchor = this.captureAnchor();
     for (const [index, size] of sizes) {
       if (measured[index] !== size) {
         this.syncItemSize(index, size, false);
@@ -1139,11 +1140,71 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (changed) {
       this.bumpGeometryVersion();
       this.maybeCalibrateEstimate();
+      this.restoreAnchor(anchor);
     }
   }
 
+  /**
+   * The row under the viewport's leading edge and where its top sits, taken
+   * before a wave of size changes. Restoring it afterwards keeps the
+   * reader's row where it was: rows above it measure as they mount (a
+   * placeholder becoming its content, an estimate becoming a size), and
+   * every such change would otherwise move the content under the reader.
+   */
+  // invariant: The reader's row stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  captureAnchor(): VirtualScroller.Anchor | undefined {
+    const scroll = Number(this.scrollPosition.value);
+    const at = this.getIndexAtPosition(scroll);
+    if (!at) return undefined;
+    const top = this.getIndexPosition(at.index);
+    return top === undefined ? undefined : { index: at.index, top };
+  }
+
+  /** Put the anchored row back where it was: the scroll moves by exactly
+   *  what the content above it moved, with no visible motion. */
+  restoreAnchor(anchor: VirtualScroller.Anchor | undefined) {
+    if (!anchor) return;
+    const top = this.getIndexPosition(anchor.index);
+    if (top === undefined) return;
+    const delta = top - anchor.top;
+    if (Math.abs(delta) < 0.5) return;
+    this.shiftScroll(delta);
+  }
+
+  /** Move the scroll by a delta the content itself moved. A running glide
+   *  keeps its lerp — both endpoints shift — and a seek's landing shifts
+   *  with it, so the converge loop does not mistake this for the reader. */
+  protected shiftScroll(delta: number) {
+    if (this.seekAppliedPosition !== null) this.seekAppliedPosition += delta;
+    const lenis = this.lenis;
+    if (lenis && lenis.isScrolling) {
+      lenis.targetScroll += delta;
+      lenis.animatedScroll += delta;
+      return;
+    }
+    const next = Math.max(0, Number(this.scrollPosition.value) + delta);
+    if (lenis) lenis.targetScroll = next;
+    this.setScrollPosition(-next, false, true, false);
+  }
+
   // invariant: Rendered sizes are known only after a row mounts (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  /**
+   * One row's size, from its own mount capture or a caller. On its own
+   * (`doUpdatePositions`) the change is anchored: the row under the
+   * viewport's leading edge stays where it was. A batch caller passes
+   * false, anchors once around the whole wave, and bumps geometry itself.
+   */
   syncItemSize(index: number, size: number, doUpdatePositions = true) {
+    if (!doUpdatePositions) {
+      this.applyItemSize(index, size, false);
+      return;
+    }
+    const anchor = this.captureAnchor();
+    this.applyItemSize(index, size, true);
+    this.restoreAnchor(anchor);
+  }
+
+  protected applyItemSize(index: number, size: number, doUpdatePositions: boolean) {
     if (index < 0) return;
     if (index >= toRaw(this.items.value).length) {
       // Beyond the current list (mid-edit shift loops): keep the value for
@@ -2036,6 +2097,12 @@ export namespace VirtualScroller {
   export interface ItemsChangeEmitArgs {
     start: number;
     end: number;
+  }
+
+  /** the row under the viewport's leading edge and its top, before a wave of size changes */
+  export interface Anchor {
+    index: number;
+    top: number;
   }
 
   export interface ItemContext<T extends BaseItem> {

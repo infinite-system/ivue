@@ -2,6 +2,7 @@
 === GENERATOR ===
 Goal: Render a window of a few dozen rows over a list of any length, at the exact pixel the scroll names, with sizes learned as rows pass through.
 [Rendered sizes are known only after a row mounts](virtual-scroller.invariants.md#rendered-sizes-are-known-only-after-a-row-mounts)
+[The reader's row stays put while sizes settle](virtual-scroller.invariants.md#the-readers-row-stays-put-while-sizes-settle)
 [The scroll position lands inside the scrollable range](virtual-scroller.invariants.md#the-scroll-position-lands-inside-the-scrollable-range)
 [An unchanged window keeps its array identity](virtual-scroller.invariants.md#an-unchanged-window-keeps-its-array-identity)
 [The two spacers and the rendered rows sum to the extent](virtual-scroller.invariants.md#the-two-spacers-and-the-rendered-rows-sum-to-the-extent)
@@ -18,6 +19,7 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If the scroll position changes with the window unchanged, then the scroller's own template does not re-render: the thumb, the one per-frame reader, is its own component.
 // domain-invariant: $VirtualScroller — If the reading creep moves on from a seek's landing, then the seek's converge loop ends with the next position shift instead of re-pinning the landing under the creep.
 
+// domain-invariant: $VirtualScroller — If rows above the row under the viewport's leading edge change size, then the scroll moves by exactly that change and the reader's row stays where it was; rows below it move nothing.
 // domain-invariant: $VirtualScroller — If the reader scrolled between two waves of a seek's converge loop, or the owner cancels the seek, then the next position shift ends the loop instead of re-pinning the landing.
 // domain-invariant: $VirtualScroller — If the thumb is dragged, then autoplay is never stopped by it: a playing scroller re-arms the creep on release either way, a drag deeper in the scroll direction from rest starts it as a forward wheel does, and while the thumb is held the creep waits.
 // domain-invariant: $VirtualScroller — If a finger lands on the track, then the touch is flagged for Lenis to skip, so the thumb drag seeks and the content does not scroll under it.
@@ -199,6 +201,36 @@ test('a seek keeps converging while sizes refine at rest, and lets go the moment
   instance.syncItemSize(11, 80);
   await nextTick();
   expect(instance.probeConverging()).toBe(false);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If rows above the row under the viewport's leading edge change size, then the scroll moves by exactly that change and the reader's row stays where it was; rows below it move nothing.
+// invariant: The reader's row stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('measuring rows above the anchored row moves the scroll by the same amount; rows below move nothing', async () => {
+  const { instance, unmount } = scroller(rows(1000));
+  instance.scrollElement.value = document.createElement('div');
+  const assumed = instance.estimatedItemSize;
+  instance.setScrollPosition(-(assumed * 100 + 10), false);
+  await nextTick();
+  const before = Number(instance.scrollPosition.value);
+  expect(instance.captureAnchor()).toEqual({ index: 100, top: assumed * 100 });
+  // three rows above the anchor grow by 200 each as they mount: the reader's row stays put
+  for (const index of [97, 98, 99]) instance.syncItemSize(index, assumed + 200);
+  expect(Number(instance.scrollPosition.value)).toBe(before + 600);
+  expect(instance.captureAnchor()).toMatchObject({ index: 100 });
+  // a row below the anchor grows: nothing moves
+  instance.syncItemSize(101, assumed + 500);
+  expect(Number(instance.scrollPosition.value)).toBe(before + 600);
+  // a row above shrinks: the scroll follows it up
+  instance.syncItemSize(98, assumed - 30);
+  expect(Number(instance.scrollPosition.value)).toBe(before + 370);
+  // a batch wave anchors once around the whole wave
+  const anchor = instance.captureAnchor();
+  instance.syncItemSize(96, assumed + 100, false);
+  instance.syncItemSize(95, assumed + 100, false);
+  instance.restoreAnchor(anchor);
+  expect(Number(instance.scrollPosition.value)).toBe(before + 570);
+  instance.restoreAnchor(undefined);
   unmount();
 });
 

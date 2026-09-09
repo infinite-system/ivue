@@ -206,6 +206,30 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Last refined:** 2026-09-06
 
+### The reader's row stays put while sizes settle
+
+**Invariant:** If rows above the row under the viewport's leading edge change size — a row measuring as it mounts, a placeholder becoming its content, a batch re-measure — then the scroll moves by exactly what the content above moved, and that row stays where the reader had it. Rows below it move nothing.
+
+**Scope:** `VirtualScroller.ts`: `captureAnchor`, `restoreAnchor`, `shiftScroll`, and the two paths that change sizes — `syncItemSize` on its own (an item's mount capture) and `remeasureRenderedItems` (the wrapper's observer, anchored once around its wave). Applies to every list the scroller renders, at any scroll position but the top, where nothing sits above the anchor.
+
+**Renegotiable at:** Layout — a list whose rows above the viewport never changed size would not need it; every virtual list's rows do, because sizes are known only after a row mounts.
+
+**Mechanism:** `captureAnchor` names the row under the leading edge (`getIndexAtPosition`) and its top; after the sizes land, `restoreAnchor` reads the row's new top and `shiftScroll` moves the scroll by the difference. At rest the move is a direct write that lenis adopts; mid-glide both lerp endpoints shift so the glide keeps its remaining distance; a seek's recorded landing shifts with it, so the converge loop does not read the move as the reader taking over.
+
+**Generates:** Chat-shaped lists that open at the bottom and load content upward, where the estimate is never calibrated and every mounted row above the reader is a size change; the post player's paragraphs settling on a phone.
+
+**Rejected alternatives:** Keeping an absolute scroll position — every mount above the reader moved the content under them, by a screen or more when a placeholder became a long message.
+
+**Evidence:** `VirtualScroller.ts` `captureAnchor`, `restoreAnchor`, `shiftScroll`. Test: "measuring rows above the anchored row moves the scroll by the same amount; rows below move nothing".
+
+**Impossible if true:** A row above the reader's changing size and the reader's row moving on screen. A row below the reader's changing size and the scroll position changing.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "anchored row"`; in the AI chat example with content pages throttled to 1.2 s, a far seek through the index and a 60,000 px fling both hold the row under the leading edge at the same pixel while pages land.
+
+**Status:** provisional
+
+**Last refined:** 2026-09-09
+
 ## Chosen invariants
 
 ### The scroll position lands inside the scrollable range
