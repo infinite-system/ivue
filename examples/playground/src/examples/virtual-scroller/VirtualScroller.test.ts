@@ -231,6 +231,22 @@ test('measuring rows above the anchored row moves the scroll by the same amount;
   instance.restoreAnchor(anchor);
   expect(Number(instance.scrollPosition.value)).toBe(before + 570);
   instance.restoreAnchor(undefined);
+  // scrolling up, the anchor is the row under the bottom edge: a row above
+  // it inside the view growing expands upward, so the scroll moves by its growth
+  instance.scrollDirection.value = 'up';
+  const bottomRow = instance.captureAnchor()!.index;
+  expect(bottomRow).toBeGreaterThan(100);
+  const inView = bottomRow - 1;
+  const scrollBefore = Number(instance.scrollPosition.value);
+  instance.syncItemSize(inView, assumed + 300);
+  expect(Number(instance.scrollPosition.value)).toBe(scrollBefore + 300);
+  expect(instance.captureAnchor()!.index).toBe(bottomRow);
+  // scrolling down, the anchor is the row under the top edge — that same row —
+  // and its own growth moves nothing
+  instance.scrollDirection.value = 'down';
+  expect(instance.captureAnchor()!.index).toBe(inView);
+  instance.syncItemSize(inView, assumed + 600);
+  expect(Number(instance.scrollPosition.value)).toBe(scrollBefore + 300);
   unmount();
 });
 

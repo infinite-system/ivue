@@ -81,7 +81,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Renegotiable at:** Layout — a browser lays out only what is in the DOM; a list that knew every size up front would not need the estimate.
 
-**Mechanism:** `measuredSizes` is sparse; `estimatedItemSize` fills the holes. `syncItemSize` keeps `measuredSum`, `measuredCount` and the cursor's `offset === P(cursor.index)` exact in O(1); `getIndexPosition` walks the cursor to the asked index, so the answer is the same whichever way it walks. `maybeCalibrateEstimate` swaps the assumption once, near the top, where the change lands entirely in the trailing spacer.
+**Mechanism:** `measuredSizes` is sparse; `estimatedItemSize` fills the holes. `syncItemSize` keeps `measuredSum`, `measuredCount` and the cursor's `offset === P(cursor.index)` exact in O(1); `getIndexPosition` walks the cursor to the asked index, so the answer is the same whichever way it walks. `maybeCalibrateEstimate` swaps the assumption once, after twenty rows have measured; the anchor around that wave (see _The reader's row stays put while sizes settle_) absorbs the shift wherever the reader is.
 
 **Generates:** The `assumedSize` prop and the marquee's exact width seeding; the converge loop in `scrollToIndex`, which re-applies a landing as sizes refine.
 
@@ -209,13 +209,13 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### The reader's row stays put while sizes settle
 
-**Invariant:** If rows above the row under the viewport's leading edge change size — a row measuring as it mounts, a placeholder becoming its content, a batch re-measure — then the scroll moves by exactly what the content above moved, and that row stays where the reader had it. Rows below it move nothing.
+**Invariant:** If rows above the row under the edge the reader reads from change size — a row measuring as it mounts, a placeholder becoming its content, a batch re-measure, the estimate calibrating — then the scroll moves by exactly what the content above moved, and that row stays where the reader had it. Scrolling down the edge is the top; scrolling up it is the bottom, so a row growing inside the view expands upward, away from what was just read. Rows below the anchor move nothing.
 
 **Scope:** `VirtualScroller.ts`: `captureAnchor`, `restoreAnchor`, `shiftScroll`, and the two paths that change sizes — `syncItemSize` on its own (an item's mount capture) and `remeasureRenderedItems` (the wrapper's observer, anchored once around its wave). Applies to every list the scroller renders, at any scroll position but the top, where nothing sits above the anchor.
 
 **Renegotiable at:** Layout — a list whose rows above the viewport never changed size would not need it; every virtual list's rows do, because sizes are known only after a row mounts.
 
-**Mechanism:** `captureAnchor` names the row under the leading edge (`getIndexAtPosition`) and its top; after the sizes land, `restoreAnchor` reads the row's new top and `shiftScroll` moves the scroll by the difference. At rest the move is a direct write that lenis adopts; mid-glide both lerp endpoints shift so the glide keeps its remaining distance; a seek's recorded landing shifts with it, so the converge loop does not read the move as the reader taking over.
+**Mechanism:** `captureAnchor` names the row under the reading edge (`getIndexAtPosition` at the scroll position, or at the position plus the frame's border-box size when the last scroll went up) and its top; after the sizes land, `restoreAnchor` reads the row's new top and `shiftScroll` moves the scroll by the difference. At rest the move is a direct write that lenis adopts; mid-glide both lerp endpoints shift so the glide keeps its remaining distance; a seek's recorded landing shifts with it, so the converge loop does not read the move as the reader taking over.
 
 **Generates:** Chat-shaped lists that open at the bottom and load content upward, where the estimate is never calibrated and every mounted row above the reader is a size change; the post player's paragraphs settling on a phone.
 
