@@ -525,8 +525,10 @@ chat example is the first tree to be converted — the build is
   another. The same move the overlay ledger makes, from data.
 - **Containers are roles too.** `<component :is>` takes a tag name, so
   a kit's container entries default to `'div'`, `'header'`, `'article'`
-  at no component cost, and a consumer swaps one for an SFC with a
-  slot to rearrange a subtree without touching its view. A wrapper with
+  at no component cost, and a consumer swaps one for an SFC that
+  receives the model (bound only when the entry is a component, never
+  onto a tag) and renders the slot or its own children — the subtree
+  rearranges without touching its view, and without a wrapper component. A wrapper with
   a class of its own is a role; an element that carries text is not.
 - **There is no shell component.** The parent chose the entry and
   knows both halves; `<component :is>` is Vapor's dynamic-component path

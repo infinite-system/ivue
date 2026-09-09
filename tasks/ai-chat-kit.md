@@ -88,6 +88,12 @@ import { Static } from '../../Static';
 // when the kit resolves. A kit is a record of entries or of nested
 // records of entries.
 class $Kit {
+  /** what a container seam binds: nothing for a tag name, the model for a component — so a swapped
+   *  container can render its own children from the model, and a tag never gets an object attribute */
+  static containerProps(entry: Kit.Entry, model: object): Record<string, unknown> {
+    return typeof entry.view === 'string' ? {} : { model };
+  }
+
   /** the class's defaults with the entry's `props` laid over them — what the constructor fills omitted props from */
   static defaults<Defaults extends object>(props: { kit?: Kit.Entry }, classDefaults: Defaults): Defaults {
     const fromKit = props.kit?.props;
@@ -378,6 +384,11 @@ class $ChatMessage {
     return this.self.$kit;
   }
 
+  /** a container seam's bindings: `{}` for a tag, `{ model: this }` for a component */
+  containerProps(role: ChatMessage.ContainerRole): Record<string, unknown> {
+    return Kit.Class.containerProps(this.kit[role], this);
+  }
+
   /** a kind the kit does not name renders as text — the registry's old fallback */
   partEntry(part: SessionLog.Part): Kit.Entry {
     const role = this.self.PART_ROLES[part.kind];
@@ -428,12 +439,12 @@ const model = new (props.kit?.namespace.Class ?? ChatMessage.Class)(props);
 </script>
 
 <template>
-  <component :is="model.kit.Row.view" class="ac-msg" :class="model.rowClass">
-    <component :is="model.kit.Gutter.view" class="ac-msg-gutter">
+  <component :is="model.kit.Row.view" v-bind="model.containerProps('Row')" class="ac-msg" :class="model.rowClass">
+    <component :is="model.kit.Gutter.view" v-bind="model.containerProps('Gutter')" class="ac-msg-gutter">
       <span class="ac-msg-avatar" aria-hidden="true">{{ model.avatarLetter }}</span>
     </component>
     <div class="ac-msg-body">
-      <component :is="model.kit.Head.view" class="ac-msg-head">
+      <component :is="model.kit.Head.view" v-bind="model.containerProps('Head')" class="ac-msg-head">
         <strong class="ac-msg-role">{{ model.roleLabel }}</strong>
         <span v-if="model.modelLabel" class="ac-msg-model">{{ model.modelLabel }}</span>
         <span class="ac-msg-time">{{ model.timeLabel }}</span>
@@ -442,7 +453,7 @@ const model = new (props.kit?.namespace.Class ?? ChatMessage.Class)(props);
 
       <div v-if="model.isStub" class="ac-stub" :style="model.stubStyle">…unchanged…</div>
 
-      <component v-else :is="model.kit.Parts.view" class="ac-parts">
+      <component v-else :is="model.kit.Parts.view" v-bind="model.containerProps('Parts')" class="ac-parts">
         <component
           :is="model.partView(part)"
           v-for="(part, at) in model.parts"
@@ -452,13 +463,13 @@ const model = new (props.kit?.namespace.Class ?? ChatMessage.Class)(props);
           :chat="chat"
           :message="model.message"
         />
-        <component v-if="model.isAwaitingFirstToken" :is="model.kit.Await.view" class="ac-await">
+        <component v-if="model.isAwaitingFirstToken" :is="model.kit.Await.view" v-bind="model.containerProps('Await')" class="ac-await">
           <span class="ac-spinner" aria-hidden="true"></span>
           <span>{{ model.awaitingLabel }}</span>
         </component>
       </component>
 
-      <component v-if="model.receiptLabel" :is="model.kit.Foot.view" class="ac-msg-foot">{{ model.receiptLabel }}</component>
+      <component v-if="model.receiptLabel" :is="model.kit.Foot.view" v-bind="model.containerProps('Foot')" class="ac-msg-foot">{{ model.receiptLabel }}</component>
     </div>
   </component>
 </template>
@@ -468,14 +479,22 @@ The containers are roles too. `<component :is>` takes a tag name, so an
 entry whose view is `'div'` renders a plain element with no component
 instance, and the `class` on the `<component>` lands on the element as
 an attribute; the base kit costs nothing it did not cost before. A
-consumer swaps a container for a small SFC with a `<slot />` — a
-two-column head, a parts container that groups by kind, a gutter that
-shows an avatar image — and the row's own view never changes. The
-rule for which elements become roles: a wrapper with a class of its own
-is a role; an element that carries text is content and stays markup.
-The model already decides what fills every slot; with containers as
-roles it also names what wraps them, and a getter may choose a
-container per state where that is wanted.
+consumer swaps a container for a small SFC, and the row's own view
+never changes. Each container seam also carries
+`v-bind="model.containerProps('Role')"`: nothing when the entry is a
+tag, so no object ever lands on an element as an attribute, and
+`{ model }` when it is a component. A swapped container therefore has
+the row's model and chooses — render `<slot />` and keep the parent's
+children in the parent's order (a two-column head, a gutter with an
+avatar image), or ignore the slot and render its own children from the
+model (a parts container that groups by kind, filters thinking out,
+or puts tool batches last). Arrangement is malleable without a wrapper
+component, and the base layer still costs no instance. The rule for
+which elements become roles: a wrapper with a class of its own is a
+role; an element that carries text is content and stays markup. The
+model already decides what fills every slot; with containers as roles
+it also names what wraps them, and a getter may choose a container per
+state where that is wanted.
 
 `Parts.ts` is deleted. Roles are PascalCase everywhere in a kit; the
 log's snake_case kinds map to them through one static table, so the
@@ -903,6 +922,45 @@ thing. The overlay ledger in `tasks/malleable-architecture.md` is the
 same call made from data: a persisted patch, resolved against the
 shipped class at load, is a derived class the app never had a file for.
 
+### A container that rearranges its children
+
+```vue
+<!-- GroupedParts.vue — a Parts container that renders from the model, not the slot -->
+<script setup lang="ts">
+import type { ChatMessage } from '../ChatMessage';
+
+defineProps<{ model: ChatMessage.Instance }>();
+</script>
+
+<template>
+  <div class="ac-parts ac-parts-grouped">
+    <component v-for="part in model.textParts" :is="model.partView(part)" :key="model.partKey(part, 0)" :kit="model.partEntry(part)" :part="part" :chat="model.chat" :message="model.message" />
+    <details v-if="model.toolParts.length" class="ac-parts-tools">
+      <summary>{{ model.toolParts.length }} tool calls</summary>
+      <component v-for="part in model.toolParts" :is="model.partView(part)" :key="model.partKey(part, 0)" :kit="model.partEntry(part)" :part="part" :chat="model.chat" :message="model.message" />
+    </details>
+  </div>
+</template>
+```
+
+```ts
+class $GroupedChat extends Chat.$Class {
+  static override get $kit() {
+    return Kit.Class.cached(this, () => Kit.Class.resolve({
+      ...super.$kit,
+      Message: { ...super.$kit.Message, subkit: { Parts: { view: GroupedPartsView } } },
+    }));
+  }
+}
+```
+
+The container receives `model` because its entry is a component, so
+`containerProps` bound it; it ignores the slot and lays the parts out
+its own way through the same `partView` and `partEntry` the row uses,
+so every part still renders through the kit. `textParts` and
+`toolParts` are two getters on the row model — the arrangement's logic
+stays on the class, the container is markup.
+
 ### A row rendered somewhere else
 
 ```vue
@@ -1027,10 +1085,13 @@ importing each other.
 - **Containers as roles.** With tag-name defaults the skeleton is free;
   a swapped container is one component instance per container per
   visible row, a dozen rows deep in the window — noise, but measured in
-  the mount-cost line of the checklist. A swapped container view must
-  render `<slot />` and let `class` fall through (the default
-  `inheritAttrs` does), otherwise the row's classes vanish; the spec for
-  a container swap mounts one and asserts the class is on the element.
+  the mount-cost line of the checklist. A swapped container view takes
+  `model`, renders `<slot />` or its own children, and lets `class` fall
+  through (the default `inheritAttrs` does), otherwise the row's classes
+  vanish; the spec for a container swap mounts one and asserts the class
+  is on the element. `containerProps` must return `{}` for a tag: a
+  `model` attribute on a `div` is the failure it exists to prevent, and
+  the base-kit snapshot in the checklist would catch it.
 - **The generic fallback is a kit entry**, not a branch: `toolFor(name)`
   returns `kit.Tools[name] ?? kit.Tools.byPrefix(name) ?? kit.Tools.Generic`.
   The rule "rendering never branches on a name" survives; the lookup
@@ -1083,3 +1144,4 @@ importing each other.
 - Anything but the one entry passed down for the kit's sake.
 - A shell component between a parent and its child's view.
 - A wrapper with a class of its own that is not a role, or a text-carrying element that is one.
+- An object bound to a tag-name view, or a component container that cannot reach the model.
