@@ -519,7 +519,7 @@ chat example is the first tree to be converted — the build is
 - **Override is subclassing, resolved once.** A subclass with a
   different `$kit` swaps its whole subtree, and the parent's kit names
   the subclass. A swap that must reach a deep leaf is one nested
-  literal — an entry's optional `subkit` is a patch over the child's
+  literal — an entry's optional `kit` is a patch over the child's
   kit — which `Kit.resolve` turns into derived subclasses at kit build
   time, cached per asking class and frozen, so one tree never changes
   another. The same move the overlay ledger makes, from data.
