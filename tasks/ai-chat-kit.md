@@ -19,14 +19,14 @@ shipped instance to point at.
 
 - **`static get $kit()` on every model that composes.** A lazy static
   getter, cached per class, returning the roles that model's subtree
-  needs as `{ ns, view }` pairs (a role with its own class) or `{ view }`
+  needs as `{ namespace, view }` pairs (a role with its own class) or `{ view }`
   (a leaf that takes props). Lazy is what makes the model↔view import
   cycle harmless: nothing reads the other side at module init. A
   subclass extends by spread: `{ ...super.$kit, Scroller: { … } }`.
 - **The entry crosses the seam.** A parent renders
   `<component :is="chat.kit.Message.view" :kit="chat.kit.Message" :row="item" :chat="chat" />`:
   the entry's view, the entry itself as the one prop `kit`, the child's
-  own props. An entry is `{ view, ns?, props?, subkit? }` — the
+  own props. An entry is `{ view, namespace?, props?, subkit? }` — the
   view, the namespace whose `Class` the view constructs, props the consumer set for the
   role, and a patch for the child's own kit. No inject. The child's
   model reads its kit from its own class — `get kit() { return this.self.$kit }`
@@ -35,7 +35,7 @@ shipped instance to point at.
 - **Every view constructs the class it was handed.** The SFC is the
   wiring: `defineProps(ChatMessage.Class.props)`, one `new`, the
   destructure. The one line the kit adds is
-  `new (props.kit?.ns.Class ?? ChatMessage.Class)(props)`; the fallback is
+  `new (props.kit?.namespace.Class ?? ChatMessage.Class)(props)`; the fallback is
   for a view mounted on its own (a docs demo, a spec). Lifecycle hooks
   in the constructor bind to the view's own component, exactly as today.
 - **Props live on the class contract.** Every chat class moves from a
@@ -47,7 +47,7 @@ shipped instance to point at.
   apply where the template omitted the prop, and a card that passes
   `:cap` keeps its value.
 - **Override is subclassing.** A subclass with a spread `$kit` swaps a
-  role: `FancyChat.$kit.Scroller = { ns: SnapScroller, view: SnapScrollerView }`.
+  role: `FancyChat.$kit.Scroller = { namespace: SnapScroller, view: SnapScrollerView }`.
   A swap that must reach a deep leaf is the same spread with an optional
   `subkit` on the entry — a patch over the child's own kit — which
   `Kit.Class.resolve` turns into derived subclasses once, at kit build time.
@@ -113,23 +113,23 @@ class $Kit {
 
   /** a derived namespace: `$Class` extends the base's raw class with a `$kit` that is the base's
    *  deep-merged with `patch` and resolved; `Class` is `Reactive($Class)` — what a subclass file would export */
-  static derive<Ns extends Kit.Namespace>(ns: Ns, patch: Kit.Patch): Ns {
+  static derive<Ns extends Kit.Namespace>(namespace: Ns, patch: Kit.Patch): Ns {
     const kit = this;
-    const Base = ns.$Class as any;
+    const Base = namespace.$Class as any;
     const $Class = class extends Base {
       static get $kit() {
         return kit.cached(this, () => kit.resolve(kit.merge(Base.$kit, patch)));
       }
     };
-    return { ...ns, $Class, Class: Reactive($Class) };
+    return { ...namespace, $Class, Class: Reactive($Class) };
   }
 
   protected static readonly CACHE = new WeakMap<Function, object>();
 
   protected static resolveEntry(entry: Kit.Entry): Kit.Entry {
-    if (!entry.ns || !entry.subkit) return entry;
+    if (!entry.namespace || !entry.subkit) return entry;
     const { subkit, ...rest } = entry;
-    return { ...rest, ns: this.derive(entry.ns, subkit) };
+    return { ...rest, namespace: this.derive(entry.namespace, subkit) };
   }
 
   protected static merge(base: any, patch: Kit.Patch): any {
@@ -142,7 +142,7 @@ class $Kit {
   }
 
   protected static isEntry(value: unknown): value is Kit.Entry {
-    return typeof value === 'object' && value !== null && ('view' in value || 'ns' in value || 'subkit' in value);
+    return typeof value === 'object' && value !== null && ('view' in value || 'namespace' in value || 'subkit' in value);
   }
 
   /** a resolved kit is shared by reference between trees and must never be written */
@@ -165,11 +165,11 @@ export namespace Kit {
     Class: new (...args: any[]) => object;
   }
 
-  export interface Entry<Ns extends Namespace = Namespace> {
+  export interface Entry<Space extends Namespace = Namespace> {
     /** a component, or a tag name — a tag renders a plain element with no component instance */
     view: Component | string;
     /** the role's namespace — `$Class`, `Class`, and whatever else it exports; absent for a markup leaf */
-    ns?: Ns;
+    namespace?: Space;
     /** optional: prop defaults for this role — laid over the model's `propsDefaults` when it constructs */
     props?: Record<string, unknown>;
     subkit?: Patch;
@@ -182,7 +182,7 @@ export namespace Kit {
 }
 ```
 
-An entry names a role's view and its namespace — `ns`, the object the
+An entry names a role's view and its namespace — `namespace`, the object the
 class's own file exports, with `$Class` to extend and `Class` to
 construct. The namespace is the unit because it is the identity the
 codebase already exports, because `derive` then extends `$Class` (the
@@ -203,7 +203,7 @@ the constructor's one `nestedProps` line fills omitted props from
 defaults with the entry's laid over them — the standard's own
 mechanism, and nothing at the view. `Kit` declares no prop: a
 kit-rendered class declares `kit` in its own `propsTypes`, typed
-`Kit.Entry<typeof X>` to its own namespace, so `props.kit?.ns.Class` is that class
+`Kit.Entry<typeof X>` to its own namespace, so `props.kit?.namespace.Class` is that class
 and the `new` in the view is typed. The class owns its contract; `Kit`
 only transforms per instance.
 
@@ -228,10 +228,10 @@ class $Chat {
   // renders. `Chat.$kit` and `FancyChat.$kit` are different objects.
   static get $kit() {
     return Kit.Class.cached(this, () => ({
-      Scroller: { ns: VirtualScroller, view: VirtualScrollerView },
-      Message: { ns: ChatMessage, view: ChatMessageView },
-      Composer: { ns: Composer, view: ChatComposerView },
-      Index: { ns: Index, view: ChatIndexView },
+      Scroller: { namespace: VirtualScroller, view: VirtualScrollerView },
+      Message: { namespace: ChatMessage, view: ChatMessageView },
+      Composer: { namespace: Composer, view: ChatComposerView },
+      Index: { namespace: Index, view: ChatIndexView },
     }) satisfies Kit.Of<'Scroller' | 'Message' | 'Composer' | 'Index'>);
   }
 
@@ -273,7 +273,7 @@ import './ai-chat.css';
 const props = defineProps(Chat.Class.props); // dark, and kit
 
 // the root constructs the class it was handed, or its own
-const chat = new (props.kit?.ns.Class ?? Chat.Class)();
+const chat = new (props.kit?.namespace.Class ?? Chat.Class)();
 
 const {
   // state refs
@@ -345,9 +345,9 @@ class $ChatMessage {
       Attachment: { view: AttachmentPartView },
       System: { view: SystemPartView },
       ToolCall: { view: ToolCallPartView },
-      ToolBatch: { ns: ToolBatchPart, view: ToolBatchPartView },
+      ToolBatch: { namespace: ToolBatchPart, view: ToolBatchPartView },
       // the tool cards are reached through the tool base's kit, one hop down
-      Tool: { ns: ToolCallModel, view: ToolCallPartView },
+      Tool: { namespace: ToolCallModel, view: ToolCallPartView },
       // containers — the row's skeleton; a tag name costs no component instance
       Row: { view: 'article' },
       Gutter: { view: 'div' },
@@ -424,7 +424,7 @@ import { ChatMessage } from './ChatMessage';
 
 const props = defineProps(ChatMessage.Class.props);
 
-const model = new (props.kit?.ns.Class ?? ChatMessage.Class)(props);
+const model = new (props.kit?.namespace.Class ?? ChatMessage.Class)(props);
 </script>
 
 <template>
@@ -501,21 +501,21 @@ class $ToolCallModel {
     return Kit.Class.cached(this, () => ({
       Head: { view: ToolHeadView },
       Foot: { view: ToolFootView },
-      CodeBlock: { ns: CodeBlock, view: CodeBlockView },
-      Generic: { ns: ToolCallModel, view: GenericCallView },
-      Mcp: { ns: McpCall, view: McpCallView },
-      Task: { ns: TaskCall, view: TaskCallView },
+      CodeBlock: { namespace: CodeBlock, view: CodeBlockView },
+      Generic: { namespace: ToolCallModel, view: GenericCallView },
+      Mcp: { namespace: McpCall, view: McpCallView },
+      Task: { namespace: TaskCall, view: TaskCallView },
       Tools: {
-        Bash: { ns: BashCall, view: BashCallView },
-        Edit: { ns: EditCall, view: EditCallView },
-        NotebookEdit: { ns: EditCall, view: EditCallView },
-        Read: { ns: ReadCall, view: ReadCallView },
-        Write: { ns: WriteCall, view: WriteCallView },
-        Agent: { ns: AgentCall, view: AgentCallView },
-        Skill: { ns: SkillCall, view: SkillCallView },
-        WebFetch: { ns: WebFetchCall, view: WebFetchCallView },
-        WebSearch: { ns: WebFetchCall, view: WebFetchCallView },
-        Artifact: { ns: ArtifactCall, view: ArtifactCallView },
+        Bash: { namespace: BashCall, view: BashCallView },
+        Edit: { namespace: EditCall, view: EditCallView },
+        NotebookEdit: { namespace: EditCall, view: EditCallView },
+        Read: { namespace: ReadCall, view: ReadCallView },
+        Write: { namespace: WriteCall, view: WriteCallView },
+        Agent: { namespace: AgentCall, view: AgentCallView },
+        Skill: { namespace: SkillCall, view: SkillCallView },
+        WebFetch: { namespace: WebFetchCall, view: WebFetchCallView },
+        WebSearch: { namespace: WebFetchCall, view: WebFetchCallView },
+        Artifact: { namespace: ArtifactCall, view: ArtifactCallView },
       } as Record<string, Kit.Entry>,
     }));
   }
@@ -574,7 +574,7 @@ import { ToolCallModel } from '../tools/ToolCallModel';
 // names, then render it with the class it names. Markup only.
 const props = defineProps(ToolCallPart.Class.props); // part, chat, message, and kit
 
-const base = props.kit?.ns.Class ?? ToolCallModel.Class;
+const base = props.kit?.namespace.Class ?? ToolCallModel.Class;
 </script>
 
 <template>
@@ -591,7 +591,7 @@ const base = props.kit?.ns.Class ?? ToolCallModel.Class;
 This leaf is the one place a template calls a method twice for one
 element. If the gate objects, the part becomes a two-line class with a
 `card` getter and the template reads `model.card.view` and
-`model.card.ns`; the shape is the same.
+`model.card.namespace`; the shape is the same.
 
 ### `BashCall.vue` — a card renders its leaves through the base's kit
 
@@ -602,7 +602,7 @@ import type { ToolCallModel } from './ToolCallModel';
 
 const props = defineProps(BashCall.Class.props);
 
-const model = new (props.kit?.ns.Class ?? BashCall.Class)(props);
+const model = new (props.kit?.namespace.Class ?? BashCall.Class)(props);
 </script>
 
 <template>
@@ -694,7 +694,7 @@ import { CodeBlock } from './CodeBlock';
 
 const props = defineProps(CodeBlock.Class.props);
 
-const model = new (props.kit?.ns.Class ?? CodeBlock.Class)(props);
+const model = new (props.kit?.namespace.Class ?? CodeBlock.Class)(props);
 </script>
 
 <template>
@@ -720,7 +720,7 @@ static get propsTypes() {
 }
 
 // VirtualScroller.vue — the one line that changes
-const virtualScroller = new (props.kit?.ns.Class ?? VirtualScroller.Class)<T>(props, emit);
+const virtualScroller = new (props.kit?.namespace.Class ?? VirtualScroller.Class)<T>(props, emit);
 ```
 
 The scroller's own example, the horizontal scroller and the text
@@ -746,7 +746,7 @@ class $FancyChat extends Chat.$Class {
   static override get $kit() {
     return Kit.Class.cached(this, () => ({
       ...super.$kit,
-      Scroller: { ns: SnapScroller, view: SnapScrollerView },
+      Scroller: { namespace: SnapScroller, view: SnapScrollerView },
     }));
   }
 }
@@ -760,7 +760,7 @@ export namespace FancyChat {
 
 ```vue
 <!-- the playground's second route -->
-<AiChatExample :kit="{ ns: FancyChat, view: AiChatExample }" />
+<AiChatExample :kit="{ namespace: FancyChat, view: AiChatExample }" />
 ```
 
 The scroller's contract with the chat is the surface `Chat` reads:
@@ -821,7 +821,7 @@ class $TerminalChat extends Chat.$Class {
             subkit: {
               Tools: {
                 Bash: {
-                  subkit: { CodeBlock: { ns: TerminalBlock, view: TerminalBlockView } },
+                  subkit: { CodeBlock: { namespace: TerminalBlock, view: TerminalBlockView } },
                 },
               },
             },
@@ -853,8 +853,8 @@ exactly which subtree differs from `Chat`, and nothing else can differ.
 ```ts
 class $MonoChat extends Chat.$Class {
   static override get $kit() {
-    const block = { CodeBlock: { ns: MonoBlock, view: MonoBlockView } };
-    const tools = Chat.$Class.$kit.Message.ns.Class.$kit.Tool.ns.Class.$kit;
+    const block = { CodeBlock: { namespace: MonoBlock, view: MonoBlockView } };
+    const tools = Chat.$Class.$kit.Message.namespace.Class.$kit.Tool.namespace.Class.$kit;
     return Kit.Class.cached(this, () => Kit.Class.resolve({
       ...super.$kit,
       Message: {
@@ -887,9 +887,9 @@ base's map so a new tool is covered without editing this override.
 An override builds new objects all the way down: `merge` starts from a
 spread of the base and recurses into maps and entries; `derive` makes a
 new subclass and only reads `Base.$kit`. After `TerminalChat.$kit`
-resolves, `Chat.$kit.Message.ns` is still `ChatMessage`,
-`ChatMessage.$kit.Tool.ns` is still the base, and
-`BashCall.$kit.CodeBlock.ns` is still `CodeBlock`. Entries the
+resolves, `Chat.$kit.Message.namespace` is still `ChatMessage`,
+`ChatMessage.$kit.Tool.namespace` is still the base, and
+`BashCall.$kit.CodeBlock.namespace` is still `CodeBlock`. Entries the
 override did not touch are shared by reference between the two kits,
 which is why a resolved kit is frozen: sharing is safe only when nothing
 can write. The spec below pins both facts.
@@ -918,23 +918,23 @@ There is no context to be inside of.
 
 ```ts
 it('resolves each kit from its own class, and a subclass swaps one entry', () => {
-  expect(ChatMessage.Class.$kit.ToolBatch.ns).toBe(ToolBatchPart);
+  expect(ChatMessage.Class.$kit.ToolBatch.namespace).toBe(ToolBatchPart);
   expect(ChatMessage.Class.PART_ROLES.tool_batch).toBe('ToolBatch');
-  expect(ToolCallModel.Class.toolFor('Bash').ns).toBe(BashCall);
+  expect(ToolCallModel.Class.toolFor('Bash').namespace).toBe(BashCall);
   expect(ToolCallModel.Class.toolFor('mcp__x__y')).toBe(ToolCallModel.Class.$kit.Mcp);
   expect(ToolCallModel.Class.toolFor('Nobody')).toBe(ToolCallModel.Class.$kit.Generic);
-  expect(FancyChat.Class.$kit.Scroller.ns).toBe(SnapScroller);
+  expect(FancyChat.Class.$kit.Scroller.namespace).toBe(SnapScroller);
   expect(FancyChat.Class.$kit.Message).toBe(Chat.Class.$kit.Message);
-  expect(Chat.Class.$kit.Scroller.ns).toBe(VirtualScroller);
+  expect(Chat.Class.$kit.Scroller.namespace).toBe(VirtualScroller);
 });
 
 it('an override never reaches another tree, and a kit is its own class\'s', () => {
   const terminal = TerminalChat.Class.$kit;
-  expect(terminal.Message.ns).not.toBe(ChatMessage);
-  expect(terminal.Message.ns.$Class.prototype).toBeInstanceOf(ChatMessage.$Class);
-  expect(Chat.Class.$kit.Message.ns).toBe(ChatMessage);
-  expect(ChatMessage.Class.$kit.Tool.ns).toBe(ToolCallModel);
-  expect(BashCall.Class.$kit.CodeBlock.ns).toBe(CodeBlock);
+  expect(terminal.Message.namespace).not.toBe(ChatMessage);
+  expect(terminal.Message.namespace.$Class.prototype).toBeInstanceOf(ChatMessage.$Class);
+  expect(Chat.Class.$kit.Message.namespace).toBe(ChatMessage);
+  expect(ChatMessage.Class.$kit.Tool.namespace).toBe(ToolCallModel);
+  expect(BashCall.Class.$kit.CodeBlock.namespace).toBe(CodeBlock);
   expect(terminal.Composer).toBe(Chat.Class.$kit.Composer); // untouched entries are shared, and frozen
   expect(Object.isFrozen(terminal.Composer)).toBe(true);
   expect(Chat.Class.$kit).not.toBe(FancyChat.Class.$kit); // the cache is keyed by the asking class
@@ -942,13 +942,13 @@ it('an override never reaches another tree, and a kit is its own class\'s', () =
 });
 
 it('a view constructs the class it is handed', async () => {
-  const wrapper = mount(ChatMessageView, { props: { row, chat, kit: { ns: TerminalMessage, view: ChatMessageView } } });
+  const wrapper = mount(ChatMessageView, { props: { row, chat, kit: { namespace: TerminalMessage, view: ChatMessageView } } });
   expect(wrapper.vm.model).toBeInstanceOf(TerminalMessage.Class);
 });
 
 it('an entry\'s props fill what the template omitted, and the template still wins where it speaks', () => {
-  const entry = DenseChat.Class.$kit.Message.ns.Class.$kit.Tool.ns.Class.$kit.CodeBlock;
-  expect(entry.ns).toBe(CodeBlock); // props alone derive nothing
+  const entry = DenseChat.Class.$kit.Message.namespace.Class.$kit.Tool.namespace.Class.$kit.CodeBlock;
+  expect(entry.namespace).toBe(CodeBlock); // props alone derive nothing
   expect(entry.props).toEqual({ cap: 2_000 });
   expect(CodeBlock.Class.propsDefaults.cap).toBeNull();
   expect(new CodeBlock.Class({ code: 'a', kit: entry }).props.cap).toBe(2_000);
@@ -964,8 +964,8 @@ it('an entry\'s props fill what the template omitted, and the template still win
 | `parts/Parts.ts` registry (kind → component) | `ChatMessage.$kit` keyed by PascalCase role (`Text`, `ToolBatch`…), `PART_ROLES` mapping kind → role; the row model resolves `partEntry(part)`, `Text` as the fallback |
 | `tools/Tools.ts` registry (name → component, prefix families, generic fallback) | `ToolCallModel.$kit.Tools` plus `Mcp`, `Task`, `Generic` entries; the lookup is the static `toolFor(name)` on the base |
 | `ToolHead.vue`, `ToolFoot.vue`, `CodeBlock.vue` used by name in every card | `ToolCallModel.$kit`: `Head`, `Foot` as markup leaves, `CodeBlock` as a pair; cards render `<component :is="model.kit.Head.view" :model="model" />` and `<component :is="model.kit.CodeBlock.view" :kit="model.kit.CodeBlock" …props />` |
-| `Chat.ts` reaches the scroller through `ref="scroller"` | unchanged: the scroller's view constructs the class its entry names and exposes it; the chat keeps its template ref. The entry `Chat.$kit.Scroller = { ns: VirtualScroller, view: VirtualScrollerView }` is what a page overrides to put a different scroller under the chat |
-| `ChatComposer.vue`, `ChatIndex.vue` construct their models | unchanged in who constructs; each news `props.kit?.ns.Class ?? Composer.Class` and is rendered through `chat.kit.Composer` |
+| `Chat.ts` reaches the scroller through `ref="scroller"` | unchanged: the scroller's view constructs the class its entry names and exposes it; the chat keeps its template ref. The entry `Chat.$kit.Scroller = { namespace: VirtualScroller, view: VirtualScrollerView }` is what a page overrides to put a different scroller under the chat |
+| `ChatComposer.vue`, `ChatIndex.vue` construct their models | unchanged in who constructs; each news `props.kit?.namespace.Class ?? Composer.Class` and is rendered through `chat.kit.Composer` |
 | `ChatMessage.vue` constructs a row model per row in the scroller's slot | unchanged; the slot renders `<component :is="chat.kit.Message.view" :kit="chat.kit.Message" :row="item" :chat="chat" />` |
 | `SubThread.vue` constructs | unchanged; a nested thread renders rows through the same entry |
 
@@ -983,7 +983,7 @@ importing each other.
   `scrollToIndex`, `scrollPosition`, `estimatedItemSize`), which is the
   argument for naming that surface as the role's contract.
 - **A view constructing the class it was handed** is the one new line
-  in every view: `new (props.kit?.ns.Class ?? Default.Class)(props)`.
+  in every view: `new (props.kit?.namespace.Class ?? Default.Class)(props)`.
   Check that a view mounted with no `kit` prop (a docs demo, a spec)
   still constructs the default, and that the gate's "one `new` in
   setup" reading accepts the indirection.
