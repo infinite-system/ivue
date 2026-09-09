@@ -260,7 +260,7 @@ own.
 import { Chat } from './Chat';
 import './ai-chat.css';
 
-const props = defineProps(Chat.Class.props); // dark, and ...Kit.Class.propsTypes
+const props = defineProps(Chat.Class.props); // dark, and ...Kit.Class.propsTypesFor<Model>()
 
 // the root constructs the class it was handed, or its own
 const chat = new (props.kit?.model ?? Chat.Class)();
@@ -393,7 +393,7 @@ export namespace ChatMessage {
     kit?: Kit.Entry<typeof Class>;
   }
   // …in the build, this interface becomes `ExtractPropTypes<typeof $Class.props>` over a static
-  // contract — `propsTypes` with `row`, `chat` required and `...Kit.Class.propsTypes`; see CodeBlock below.
+  // contract — `propsTypes` with `row`, `chat` required and `...Kit.Class.propsTypesFor<Model>()`; see CodeBlock below.
 
   export type PartRole = 'Text' | 'Thinking' | 'Attachment' | 'System' | 'ToolCall' | 'ToolBatch';
   export type ContainerRole = 'Row' | 'Gutter' | 'Head' | 'Parts' | 'Await' | 'Foot';
@@ -562,7 +562,7 @@ import { ToolCallModel } from '../tools/ToolCallModel';
 
 // A part with one call: look the card up on the tool base the row's kit
 // names, then render it with the class it names. Markup only.
-const props = defineProps(ToolCallPart.Class.props); // part, chat, message, and ...Kit.Class.propsTypes
+const props = defineProps(ToolCallPart.Class.props); // part, chat, message, and ...Kit.Class.propsTypesFor<Model>()
 
 const base = props.kit?.model ?? ToolCallModel.Class;
 </script>
