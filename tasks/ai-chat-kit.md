@@ -705,9 +705,13 @@ generated for it, and nothing intercepts a read.
 The line rests on one addition to `nestedProps` in `ivue/extras`: the
 first argument may be an array of layers in priority order. Each
 earlier layer becomes own properties of an object whose prototype is
-the next, ending on the last layer, which stays the live base; an
-`undefined` layer is skipped; then the nested fill from the defaults
-runs as today. So `cap` is an own property copied from the frozen entry,
+the next — defined through descriptors, not assigned, because an
+assignment would walk into Vue's readonly props proxy and be refused —
+ending on the last layer, which stays the live base; an `undefined`
+layer is skipped; then the nested fill from the defaults runs as today.
+`this.props = …` on the instance is an ordinary field write on a raw
+object Vue never wraps; the standard's `nestedProps` line already has
+that shape. So `cap` is an own property copied from the frozen entry,
 and `lang`, which the entry does not own, walks the prototype chain into
 Vue's shallow reactive proxy exactly as a direct read would, tracked
 exactly as a direct read would be. Vue's props are readonly at the top
@@ -729,11 +733,14 @@ export function nestedProps<P extends object, D extends object>(
   // …the existing fill over `target`, unchanged
 }
 
-/** layers in priority order: own properties over the next, the last is the live base */
+/** layers in priority order: own properties over the next, the last is the live base.
+ *  DEFINE, never assign: an assignment walks the prototype chain, and when the prototype is Vue's
+ *  props proxy its `set` trap fires (readonly in dev — warns, defines nothing). Descriptors go
+ *  straight onto the child and never consult the prototype. */
 function layer<P extends object>(layers: ReadonlyArray<Partial<P> | undefined>): P {
   const present = layers.filter((value): value is Partial<P> => value !== undefined);
   const base = present.pop() as P;
-  return present.reduceRight<P>((below, above) => Object.assign(Object.create(below), above), base);
+  return present.reduceRight<P>((below, above) => Object.create(below, Object.getOwnPropertyDescriptors(above)), base);
 }
 ```
 
@@ -1076,8 +1083,13 @@ importing each other.
   read that misses the own keys reaches Vue's props proxy as the
   prototype with the child object as receiver; Vue's `get` handler uses
   `Reflect.get(target, key, receiver)` and tracks on `target`, so the
-  read is tracked — asserted with a live parent update. A call whose
-  only present layer is Vue's props gets that object back untouched.
+  read is tracked — asserted with a live parent update. A second thing
+  it pins: the layer is built with `Object.create(below, descriptors)`,
+  never `Object.assign` — an assignment onto the child walks the chain
+  into Vue's `shallowReadonly` props and its `set` trap refuses it in
+  dev, leaving the child empty. The spec runs under a dev-mode Vue with
+  a real `defineProps` object as the base. A call whose only present
+  layer is Vue's props gets that object back untouched.
 - **The scroller's `kit` prop.** `VirtualScroller.ts` spreads
   a `kit` prop into the contract it already has; every existing use
   is untouched.
