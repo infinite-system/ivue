@@ -47,7 +47,7 @@ describe('Markdown', () => {
   // domain-invariant: $Markdown — If a block is pipe rows under a header and a rule row, then it renders as a table with inline cells, and a lone pipe line stays a paragraph
   it('a pipe table renders as a table: header, rule, rows, cells inline; a lone pipe line is a paragraph', () => {
     const html = Markdown.Class.render('| tool | calls |\n|---|---:|\n| `Bash` | **4** |\n| Read \\| Write | 2 |\n\njust | a line');
-    expect(html).toContain('<table><thead><tr><th>tool</th><th>calls</th></tr></thead><tbody><tr><td><code>Bash</code></td><td><strong>4</strong></td></tr><tr><td>Read | Write</td><td>2</td></tr></tbody></table>');
+    expect(html).toContain('<div class="chat-table"><table><thead><tr><th>tool</th><th>calls</th></tr></thead><tbody><tr><td><code>Bash</code></td><td><strong>4</strong></td></tr><tr><td>Read | Write</td><td>2</td></tr></tbody></table></div>');
     expect(html).toContain('<p>just | a line</p>');
     expect(Markdown.Class.render('| only | a header |')).toBe('<p>| only | a header |</p>');
   });
