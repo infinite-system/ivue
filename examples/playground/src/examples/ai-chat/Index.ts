@@ -1,4 +1,4 @@
-import { computed, ref, shallowRef } from 'vue';
+import { computed, onMounted, ref, shallowRef, watch } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
@@ -25,6 +25,7 @@ class $Index {
 
   static readonly ROLE_LABELS: Record<Index.RoleFilter, string> = { all: 'All', user: 'You', assistant: 'Agent' };
   static readonly TOOL_LABELS: Record<Index.ToolFilter, string> = { include: 'With tools', exclude: 'No tools', only: 'Tools only' };
+  static readonly ORDER_LABELS: Record<Index.Order, string> = { oldest: 'Oldest first', newest: 'Newest first' };
   static readonly EXPORT_LABELS: Record<Chat.ExportForm, string> = { markdown: 'Markdown', plain: 'Plain text', jsonl: 'JSONL' };
   static readonly MIN_WIDTH = 280;
   static readonly MAX_WIDTH = 720;
@@ -40,7 +41,16 @@ class $Index {
     anchor.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
-  constructor(public props: Index.Props) {}
+  constructor(public props: Index.Props) {
+    // the list reads like the chat: it opens at its end, and every new filtering lands there
+    // again (or at its start when the newest is first) — after the scroller has its rows
+    onMounted(() => this.landAfterFilter());
+    watch(
+      () => this.rows.value,
+      () => this.landAfterFilter(),
+      { flush: 'post' },
+    );
+  }
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
@@ -59,6 +69,10 @@ class $Index {
 
   get role() {
     return ref<Index.RoleFilter>('all');
+  }
+
+  get order() {
+    return ref<Index.Order>('oldest');
   }
 
   get tools() {
@@ -110,6 +124,10 @@ class $Index {
 
   get roleOptions(): { value: Index.RoleFilter; label: string }[] {
     return (Object.keys(this.self.ROLE_LABELS) as Index.RoleFilter[]).map((value) => ({ value, label: this.self.ROLE_LABELS[value] }));
+  }
+
+  get orderOptions(): { value: Index.Order; label: string }[] {
+    return (Object.keys(this.self.ORDER_LABELS) as Index.Order[]).map((value) => ({ value, label: this.self.ORDER_LABELS[value] }));
   }
 
   get toolOptions(): { value: Index.ToolFilter; label: string }[] {
@@ -182,7 +200,15 @@ class $Index {
       if (query && !entry.t.toLowerCase().includes(query)) return;
       output.push({ id: entry.id, body: '', position: String(at + 1), index: at, entry });
     });
-    return output;
+    return this.order.value === 'newest' ? output.reverse() : output;
+  }
+
+  /** where a fresh list lands: its end in thread order, its start when the newest is first */
+  landAfterFilter() {
+    const scroller = this.scroller.value;
+    const count = this.rows.value.length;
+    if (!scroller || !count) return;
+    scroller.scrollToIndex(this.order.value === 'newest' ? 0 : count - 1, undefined, false, 0);
   }
   /* ---- per row ---- */
 
@@ -319,6 +345,14 @@ class $Index {
     this.role.value = value;
   }
 
+  setOrder(value: Index.Order) {
+    this.order.value = value;
+  }
+
+  isOrder(value: Index.Order): boolean {
+    return this.order.value === value;
+  }
+
   setTools(value: Index.ToolFilter) {
     this.tools.value = value;
   }
@@ -403,6 +437,7 @@ export namespace Index {
 
   export type RoleFilter = 'all' | 'user' | 'assistant';
   export type ToolFilter = 'include' | 'exclude' | 'only';
+  export type Order = 'oldest' | 'newest';
 
   export interface Row extends VirtualScroller.BaseItem {
     index: number;
