@@ -330,6 +330,12 @@ class $Index {
     this.seek(row);
   }
 
+  /** the key landed in a text field — the search box, or any other input in the panel */
+  isTyping(event: KeyboardEvent): boolean {
+    const target = event.target as HTMLElement | null;
+    return Boolean(target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable));
+  }
+
   onKeydown(event: KeyboardEvent) {
     // the chord that opened the panel closes it, wherever in the panel the focus sits
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
@@ -337,6 +343,8 @@ class $Index {
       this.chat.closeIndex();
       return;
     }
+    // typing in the search box is typing: a space or an arrow there is the box's, not the list's
+    if (this.isTyping(event)) return;
     const rows = this.rows.value;
     if (!rows.length) return;
     const current = Math.max(0, Math.min(rows.length - 1, this.focusedIndex.value));

@@ -147,7 +147,7 @@ describe('Index', () => {
     unmount();
   });
 
-  it('keyboard: arrows move, shift extends, space picks, enter seeks, escape closes', () => {
+  it('keyboard: arrows move, shift extends, space picks, enter seeks, escape closes, and typing in the box is left alone', () => {
     const { chat, index, unmount } = make();
     const jump = vi.spyOn(chat, 'jumpTo');
     const key = (key: string, shiftKey = false) => ({ key, shiftKey, preventDefault() {} }) as KeyboardEvent;
@@ -155,6 +155,12 @@ describe('Index', () => {
     index.onKeydown(key('ArrowDown', true));
     expect(index.focusedIndex.value).toBe(2);
     expect([...index.selected.value].sort()).toEqual(['b', 'c']);
+    // a space typed in the search box is the box's
+    const typed = { key: ' ', shiftKey: false, preventDefault: vi.fn(), target: { tagName: 'INPUT' } } as unknown as KeyboardEvent;
+    const selectedBefore = index.selectedCount;
+    index.onKeydown(typed);
+    expect(typed.preventDefault).not.toHaveBeenCalled();
+    expect(index.selectedCount).toBe(selectedBefore);
     index.onKeydown(key(' '));
     expect(index.isSelected(index.rows.value[2])).toBe(false);
     index.onKeydown(key('ArrowUp'));
