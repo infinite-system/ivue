@@ -3,6 +3,7 @@ import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
 import { SubThread } from '../tools/SubThread';
 import SubThreadView from '../tools/SubThread.vue';
+import { Markdown } from '../Markdown';
 import type { SessionLog } from '../SessionLog';
 import type { Part } from './Part';
 
@@ -64,6 +65,11 @@ class $SystemPart {
 
   get showsDetail(): boolean {
     return this.isExpanded && this.part.detail.trim().length > 0;
+  }
+
+  /** the detail — a compaction summary is markdown — rendered like any prose */
+  get detailHtml(): string {
+    return Markdown.Class.render(this.part.detail);
   }
 
   get children(): SessionLog.Message[] {

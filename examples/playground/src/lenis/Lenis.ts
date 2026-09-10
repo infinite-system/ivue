@@ -1299,7 +1299,10 @@ class $Lenis {
       hasOverflow = hasOverflowX;
       isScrollable = isScrollableX;
     } else if (orientation === 'y') {
-      scroll = this.getTranslateY(node as HTMLElement);
+      // a nested box scrolls natively: its position is scrollTop, never a transform — read off the
+      // transform, a box scrolled down still read as sitting at its top, and every upward wheel
+      // over it went to the thread instead
+      scroll = node.scrollTop;
       maxScroll = scrollHeight - clientHeight;
       delta = deltaY;
 

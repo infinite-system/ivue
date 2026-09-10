@@ -602,16 +602,18 @@
 }
 .ai-chat .ac-system-detail {
   margin: 4px 0 0 20px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   border-radius: 8px;
   background: var(--ac-panel);
   color: var(--ac-dim);
-  font: 12.5px/1.5 inherit;
-  font-family: inherit;
-  white-space: pre-wrap;
+  font-size: 12.5px;
   overflow-wrap: anywhere;
   max-height: 360px;
   overflow: auto;
+  scrollbar-width: thin;
+}
+.ai-chat .ac-system-detail > :last-child {
+  margin-bottom: 0;
 }
 
 /* ---- attachments ---- */

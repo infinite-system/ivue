@@ -15,7 +15,7 @@ const model = new ((props.kit?.namespace.Class as typeof SystemPart.Class | unde
       <span class="ac-system-text">{{ model.part.text }}</span>
       <span v-if="model.hasDetail" class="ac-system-toggle">{{ model.toggleLabel }}</span>
     </button>
-    <pre v-if="model.showsDetail" class="ac-system-detail">{{ model.part.detail }}</pre>
+    <div v-if="model.showsDetail" class="ac-system-detail ac-text" v-html="model.detailHtml"></div>
     <component v-if="model.showsThread" :is="model.kit.SubThread.vue" :kit="model.kit.SubThread" :messages="model.children" :chat="chat" />
   </div>
 </template>
