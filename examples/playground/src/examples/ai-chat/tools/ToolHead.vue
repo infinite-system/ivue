@@ -10,7 +10,10 @@ defineProps<{ model: ToolCallModel.Instance }>();
 
 <template>
   <button type="button" class="ac-tool-head" @click="model.toggle()">
-    <span class="ac-tool-icon" aria-hidden="true">{{ model.icon }}</span>
+    <span class="ac-tool-icon" aria-hidden="true">
+      <span v-if="model.isRunning" class="ac-spinner ac-tool-spinner"></span>
+      <template v-else>{{ model.icon }}</template>
+    </span>
     <span class="ac-tool-name">{{ model.name }}</span>
     <span v-if="model.hasTitle" class="ac-tool-title">{{ model.title }}</span>
     <span v-if="model.isFileTool" class="ac-tool-path" :title="model.filePath">
@@ -19,7 +22,6 @@ defineProps<{ model: ToolCallModel.Instance }>();
     </span>
     <span v-else class="ac-tool-summary">{{ model.summary }}</span>
     <span class="ac-tool-state" :class="model.stateClass">
-      <span v-if="model.isRunning" class="ac-spinner" aria-hidden="true"></span>
       {{ model.elapsedLabel }}
     </span>
   </button>

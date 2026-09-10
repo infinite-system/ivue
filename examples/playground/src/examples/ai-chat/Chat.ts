@@ -767,6 +767,13 @@ class $Chat {
         break;
     }
     this.bump();
+    // a card or a thought is a whole block arriving at once: land it after it has measured, so the
+    // reader sees the call and its spinner the moment it appears; words pin on a cadence
+    if (event.type === 'tool_call' || event.type === 'tool_result' || event.type === 'thinking_start' || event.type === 'thinking_end') {
+      streaming.lastPinAt = Date.now();
+      void this.settleAtBottom();
+      return;
+    }
     const now = Date.now();
     if (now - streaming.lastPinAt >= this.self.PIN_EVERY_MS) {
       streaming.lastPinAt = now;
