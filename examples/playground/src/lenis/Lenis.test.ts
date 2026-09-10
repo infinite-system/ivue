@@ -6,7 +6,9 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 [A flick carries the glide it interrupted](lenis.invariants.md#a-flick-carries-the-glide-it-interrupted)
 // domain-invariant: $Lenis — If a flick runs the same way as the glide the finger interrupted, then the glide's velocity at the take-over is added to the flick's; a flick the other way, or no glide, adds nothing.
 // domain-invariant: $Lenis — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
+// domain-invariant: $Lenis — If a nested box scrolls natively and can still move the way the wheel asks, then the wheel is the box's, in either direction
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
+Impossible if true: A wheel up over a nested box scrolled down that moves the list instead of the box.
 
 === GENERATOR-DESCRIBED ===
 The trail is the one thing the fork adds to touch inertia; the sync
@@ -99,4 +101,40 @@ test('a flick the same way carries the interrupted glide’s velocity; the other
   expect(carryVelocity(40, -25)).toBe(40);
   expect(carryVelocity(40, 0)).toBe(40);
   expect(carryVelocity(0, 25)).toBe(0);
+});
+
+// domain-invariant: $Lenis — If a nested box scrolls natively and can still move the way the wheel asks, then the wheel is the box's, in either direction
+// impossible-if-true: $Lenis — A wheel up over a nested box scrolled down that moves the list instead of the box.
+test('a nested native box keeps the wheel in both directions while it can still move', () => {
+  // jsdom has no ResizeObserver; the constructor wires one for the wrapper
+  class ObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  const hadObserver = 'ResizeObserver' in globalThis;
+  if (!hadObserver) (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
+  const wrapper = document.createElement('div');
+  const content = document.createElement('div');
+  wrapper.appendChild(content);
+  document.body.appendChild(wrapper);
+  const lenis = new Lenis.Class({ wrapper, content, allowNestedScroll: true, autoRaf: false });
+  const box = document.createElement('div');
+  box.style.overflowY = 'auto';
+  Object.defineProperty(box, 'scrollHeight', { value: 400, configurable: true });
+  Object.defineProperty(box, 'clientHeight', { value: 100, configurable: true });
+  const check = (scrollTop: number, deltaY: number) => {
+    box.scrollTop = scrollTop;
+    Object.defineProperty(box, 'scrollTop', { value: scrollTop, configurable: true, writable: true });
+    delete (box as unknown as { _lenis?: unknown })._lenis;
+    return (lenis as unknown as { checkNestedScroll: (node: HTMLElement, delta: { deltaX: number; deltaY: number }) => boolean }).checkNestedScroll(box, { deltaX: 0, deltaY });
+  };
+  expect(check(0, 10)).toBe(true); // at the top, a wheel down is the box's
+  expect(check(0, -10)).toBe(false); // at the top, a wheel up has nowhere to go: the list's
+  expect(check(150, -10)).toBe(true); // scrolled down, a wheel up is the box's
+  expect(check(150, 10)).toBe(true);
+  expect(check(300, 10)).toBe(false); // at the bottom, a wheel down is the list's
+  lenis.destroy();
+  wrapper.remove();
+  if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
 });
