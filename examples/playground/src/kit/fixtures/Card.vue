@@ -10,9 +10,9 @@ defineExpose(model as Card.Instance);
 
 <template>
   <article class="card">
-    <component :is="model.kit.Head.view" :kit="model.kit.Head" :model="model" />
-    <component :is="model.kit.Body.view" :kit="model.kit.Body" :model="model" />
-    <component :is="model.kit.Frame.view" :kit="model.kit.Frame" :model="model">
+    <component :is="model.kit.Head.vue" :kit="model.kit.Head" :model="model" />
+    <component :is="model.kit.Body.vue" :kit="model.kit.Body" :model="model" />
+    <component :is="model.kit.Frame.vue" :kit="model.kit.Frame" :model="model">
       <em class="slotted">{{ model.title }}</em>
     </component>
   </article>

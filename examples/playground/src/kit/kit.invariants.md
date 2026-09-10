@@ -17,7 +17,7 @@ with a class contract. They exist for the spec and for the design task
 
 ### A tree is malleable when every seam carries one entry and every class reads only its own kit
 
-**Invariant:** If every model declares its roles as `static get $kit()`, every seam is `<component :is="model.kit.Role.view" :kit="model.kit.Role" …props />`, every view constructs the class its entry names, and every model reads its kit from its own class, then any role at any depth can be swapped, derived or tuned from outside by a subclass, and no swap reaches a tree that did not ask for it.
+**Invariant:** If every model declares its roles as `static get $kit()`, every seam is `<component :is="model.kit.Role.vue" :kit="model.kit.Role" …props />`, every view constructs the class its entry names, and every model reads its kit from its own class, then any role at any depth can be swapped, derived or tuned from outside by a subclass, and no swap reaches a tree that did not ask for it.
 
 **Scope:** `Kit.ts` and every class that declares `$kit`. Vue 3.5, the reactive-proxy runtime; Vapor is not exercised.
 
@@ -29,7 +29,7 @@ with a class contract. They exist for the spec and for the design task
 - [Kit props reach the getters an author opens](#kit-props-reach-the-getters-an-author-opens) — why a consumer's values travel as a prop and never into props.
 - [Props and emits are fixed per component object](#props-and-emits-are-fixed-per-component-object) — the reality the rewrapped view answers.
 
-**Mechanism:** `Static()` caches a `$`-prefixed static getter once per receiver through an own-property guard, so `$kit` costs one build per class and a subclass builds its own. `resolve` walks a kit, derives the namespace of every entry with a `subkit` and rewraps its view; `derive` extends the base's `$Class` with a `$kit` that is the base's merged with the patch; `view` copies a compiled SFC's fields under a class's `props` and `emits`. Every function reads the base and returns new objects; a resolved kit is frozen in shape.
+**Mechanism:** `Static()` caches a `$`-prefixed static getter once per receiver through an own-property guard, so `$kit` costs one build per class and a subclass builds its own. `resolve` walks a kit, derives the namespace of every entry with a `subkit` and rewraps its view; `derive` extends the base's `$Class` with a `$kit` that is the base's merged with the patch; `vue` copies a compiled SFC's fields under a class's `props` and `emits`. Every function reads the base and returns new objects; a resolved kit is frozen in shape.
 
 **Generates:** The colocated `Kit.test.ts`; the design in `tasks/ai-chat-kit.md` and the "The kit" section of `tasks/malleable-architecture.md`; the conversion of the AI chat example, when it comes.
 
@@ -95,9 +95,9 @@ with a class contract. They exist for the spec and for the design task
 
 **Invariant:** If an override's kit is read, then every derived namespace, rewrapped view and merged entry it produces is a new object, the base namespaces and views are unchanged, and an entry the override did not touch is the base's own object inside the resolved kit.
 
-**Scope:** `Kit.Class.resolve`, `derive`, `view`, `merge`, `mergeEntry`, `deepFreeze`. Every override at every depth, including one resolved from data at runtime.
+**Scope:** `Kit.Class.resolve`, `derive`, `vue`, `merge`, `mergeEntry`, `deepFreeze`. Every override at every depth, including one resolved from data at runtime.
 
-**Mechanism:** `merge` reads the base kit through the base class (so it is the base's cached object) and spreads into fresh objects; `derive` extends `namespace.$Class` and returns `{ ...namespace, $Class, Class }`; `view` copies the compiled SFC object; `resolve` freezes the result's maps and entries but stops at a namespace (its `Class` slot is the global override), a view (Vue's object) and a `props` bag (the consumer's). A props-only patch derives nothing; a namespace-only patch rewraps the kept view.
+**Mechanism:** `merge` reads the base kit through the base class (so it is the base's cached object) and spreads into fresh objects; `derive` extends `namespace.$Class` and returns `{ ...namespace, $Class, Class }`; `vue` copies the compiled SFC object; `resolve` freezes the result's maps and entries but stops at a namespace (its `Class` slot is the global override), a view (Vue's object) and a `props` bag (the consumer's). A props-only patch derives nothing; a namespace-only patch rewraps the kept view.
 
 **Generates:** The `subkit` field on an entry; one nested literal per deep override instead of a chain of subclass files; the overlay ledger's runtime derivation in `tasks/malleable-architecture.md`.
 
@@ -115,7 +115,7 @@ with a class contract. They exist for the spec and for the design task
 
 ### The entry crosses the seam
 
-**Invariant:** If a parent renders a role, then the seam is `<component :is="entry.view" :kit="entry" …props />` and nothing else travels; the view constructs `new (props.kit?.namespace.Class ?? Own.Class)(props)`; and a listener or slot content the parent attaches at the seam survives any swap of the view or the class behind it.
+**Invariant:** If a parent renders a role, then the seam is `<component :is="entry.vue" :kit="entry" …props />` and nothing else travels; the view constructs `new (props.kit?.namespace.Class ?? Own.Class)(props)`; and a listener or slot content the parent attaches at the seam survives any swap of the view or the class behind it.
 
 **Scope:** Every seam in a kit-rendered tree, sections included: a section's base view is a markup SFC over the parent's model that renders its own children, so a swap of a section may keep or rearrange them.
 
@@ -139,7 +139,7 @@ with a class contract. They exist for the spec and for the design task
 
 **Invariant:** If a derived class declares a prop or an event its base did not, then the view that renders it is a fresh component object carrying the base view's fields and the derived class's `props` and `emits`, so the parent can pass the prop and the child can emit the event; through the unwrapped base view the widened contract is invisible on both sides — no value in, no default out, a dev warning on emit.
 
-**Scope:** `Kit.Class.view`, called by `resolveEntry` for a derived namespace and by `mergeEntry` for a patch that names a namespace and keeps the view; also callable by hand for an override literal.
+**Scope:** `Kit.Class.vue`, called by `resolveEntry` for a derived namespace and by `mergeEntry` for a patch that names a namespace and keeps the view; also callable by hand for an override literal.
 
 **Mechanism:** Stands on [Props and emits are fixed per component object](#props-and-emits-are-fixed-per-component-object). A compiled SFC is a plain object of a few fields (`setup`, `render`, `props`, `emits`, `__name`, `__scopeId`, `__file`, `__hmrId`), so a copy with two fields replaced is a component with the same template and a different declared contract. Vue defaults only the props a view declared, and `nestedProps` never writes a top-level prop, so a derived default for an undeclared prop never applies either.
 

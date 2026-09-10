@@ -53,10 +53,10 @@ a subclass never sees its parent's kit.
 class $Card {
   static get $kit() {
     return {
-      Head: { view: CardHeadView },
-      Body: { view: CardBodyView },
-      Frame: { view: FrameView },
-      Code: { namespace: Code, view: CodeView },
+      Head: { vue: CardHeadView },
+      Body: { vue: CardBodyView },
+      Frame: { vue: FrameView },
+      Code: { namespace: Code, vue: CodeView },
     } satisfies Kit.Of<Card.Role>;
   }
 
@@ -73,7 +73,7 @@ composes. It renders the role's view and hands it the role's entry as
 ```vue
 <!-- CardBody.vue — the body renders the code blocks through the Code seam -->
 <component
-  :is="model.kit.Code.view"
+  :is="model.kit.Code.vue"
   v-for="item in model.items"
   :key="item"
   :kit="model.kit.Code"
@@ -113,9 +113,9 @@ class $FancyCard extends Card.$Class {
   static override get $kit() {
     return {
       ...super.$kit,
-      Head: { view: FancyHeadView },
-      Body: { view: GroupedBodyView },
-      Frame: { view: FancyFrameView },
+      Head: { vue: FancyHeadView },
+      Body: { vue: GroupedBodyView },
+      Frame: { vue: FancyFrameView },
     };
   }
 }
@@ -157,9 +157,9 @@ rendering its own children. The card's view keeps only its skeleton.
 ```vue
 <!-- Card.vue -->
 <article class="card">
-  <component :is="model.kit.Head.view" :kit="model.kit.Head" :model="model" />
-  <component :is="model.kit.Body.view" :kit="model.kit.Body" :model="model" />
-  <component :is="model.kit.Frame.view" :kit="model.kit.Frame" :model="model">
+  <component :is="model.kit.Head.vue" :kit="model.kit.Head" :model="model" />
+  <component :is="model.kit.Body.vue" :kit="model.kit.Body" :model="model" />
+  <component :is="model.kit.Frame.vue" :kit="model.kit.Frame" :model="model">
     <em class="slotted">{{ model.title }}</em>
   </component>
 </article>
@@ -211,14 +211,14 @@ Props and emits in Vue belong to the component object, fixed once when
 the module loads. A subclass that adds a `theme` prop or a `select`
 event knows about them; the compiled base view does not. So when an
 entry names a widened namespace, `resolve` pairs it with a rewrapped
-view: a fresh component object with the base view's `setup` and
+vue: a fresh component object with the base view's `setup` and
 `render` and the derived class's `props` and `emits`.
 
 ```ts
 // the same view over a widened contract — one small object, once per derived role
 static view(view: Component, namespace: Kit.Namespace): Component {
   const Class = namespace.Class;
-  return { ...view, props: Class.props, emits: Class.emits };
+  return { ...vue, props: Class.props, emits: Class.emits };
 }
 ```
 

@@ -10,7 +10,7 @@ defineProps<{ kit: Kit.Entry; model: Card.Instance }>();
 <template>
   <div class="grouped-body">
     <component
-      :is="model.kit.Code.view"
+      :is="model.kit.Code.vue"
       v-for="item in model.reversedItems"
       :key="item"
       :kit="model.kit.Code"

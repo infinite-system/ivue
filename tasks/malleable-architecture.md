@@ -494,15 +494,15 @@ chat example is the first tree to be converted — the build is
 `tasks/ai-chat-kit.md`.
 
 - **A model owns its kit as a lazy static.** `static get $kit()` returns
-  the roles the model's subtree composes, each a `{ namespace, view }` pair
-  for a role with its own model or `{ view }` for a leaf that takes props.
+  the roles the model's subtree composes, each a `{ namespace, vue }` pair
+  for a role with its own model or `{ vue }` for a leaf that takes props.
   A lazy getter, cached per class, is what makes the model↔view import
   cycle harmless: neither side reads the other at module init. A
   subclass overrides by spread; a one-off is `with({ Role: … })`.
 - **The entry is what crosses the seam.** A parent renders
-  `<component :is="model.kit.Message.view" :kit="model.kit.Message" …props />`:
+  `<component :is="model.kit.Message.vue" :kit="model.kit.Message" …props />`:
   the entry's view, handed the entry itself as the one prop, plus the
-  child's own props. An entry is `{ view, namespace?, props?, subkit? }`:
+  child's own props. An entry is `{ vue, namespace?, props?, subkit? }`:
   the view, the namespace whose `Class` the view constructs, props the consumer set for
   the role, and a patch over the child's own kit. Nothing else travels
   — no inject. A child's model reads its kit from its own class,

@@ -20,7 +20,7 @@ import FancyFrameView from '@kit/fixtures/FancyFrame.vue';
 class $ExampleMalleability {
   /** The overrides, built once per receiver: every one is the shipped Panel plus a patch. */
   static get $variants(): ExampleMalleability.Variant[] {
-    const sections = { Head: { view: FancyHeadView }, Body: { view: GroupedBodyView }, Frame: { view: FancyFrameView } };
+    const sections = { Head: { vue: FancyHeadView }, Body: { vue: GroupedBodyView }, Frame: { vue: FancyFrameView } };
     const leaf = { Code: { namespace: ThemedCode } };
     const knobs = { Code: { props: { cap: 3, theme: 'paper' } } };
     return [
@@ -38,9 +38,9 @@ class $ExampleMalleability {
         patch: `Kit.Class.derive(Panel, {
   Card: {
     subkit: {
-      Head: { view: FancyHeadView },
-      Body: { view: GroupedBodyView },
-      Frame: { view: FancyFrameView },
+      Head: { vue: FancyHeadView },
+      Body: { vue: GroupedBodyView },
+      Frame: { vue: FancyFrameView },
     },
   },
 })`,
@@ -71,9 +71,9 @@ class $ExampleMalleability {
         patch: `Kit.Class.derive(Panel, {
   Card: {
     subkit: {
-      Head: { view: FancyHeadView },
-      Body: { view: GroupedBodyView },
-      Frame: { view: FancyFrameView },
+      Head: { vue: FancyHeadView },
+      Body: { vue: GroupedBodyView },
+      Frame: { vue: FancyFrameView },
       Code: { namespace: ThemedCode, props: { cap: 3 } },
     },
   },
@@ -108,7 +108,7 @@ class $ExampleMalleability {
     return Boolean(namespace.derivedFrom);
   }
 
-  static viewName(view: unknown): string {
+  static viewName(vue: unknown): string {
     const name = (view as { __name?: string }).__name;
     return name ? `${name}.vue` : 'view';
   }
@@ -132,7 +132,7 @@ class $ExampleMalleability {
 
   /** The entry the seam receives: the chosen namespace, the one Panel.vue. */
   get entry(): Kit.Entry {
-    return { namespace: this.selected.namespace, view: PanelView };
+    return { namespace: this.selected.namespace, vue: PanelView };
   }
 
   get titles(): string[] {
@@ -165,7 +165,7 @@ class $ExampleMalleability {
       key: `${depth}-${role}`,
       role,
       depth,
-      view: self.viewName(entry.view),
+      vue: self.viewName(entry.vue),
       className: namespace ? self.baseName(namespace) : '',
       derived: namespace ? self.isDerived(namespace) : false,
       props: entry.props ? JSON.stringify(entry.props) : '',
@@ -196,7 +196,7 @@ export namespace ExampleMalleability {
     key: string;
     role: string;
     depth: number;
-    view: string;
+    vue: string;
     className: string;
     derived: boolean;
     props: string;

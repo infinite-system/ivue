@@ -5,7 +5,7 @@ import { Code } from './Code';
 
 // A subclass that WIDENS the contract: a declared `theme` prop the parent
 // may pass, and a `select` event the child may emit. The base view knows
-// neither; `Kit.Class.view` pairs this class with a view that declares both.
+// neither; `Kit.Class.vue` pairs this class with a view that declares both.
 class $ThemedCode extends Code.$Class {
   static override get propsTypes() {
     return definePropTypes({
