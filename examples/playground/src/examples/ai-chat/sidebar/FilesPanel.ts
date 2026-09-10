@@ -5,6 +5,7 @@ import { Kit } from '../../../kit/Kit';
 import { VirtualScroller } from '../../virtual-scroller/VirtualScroller';
 import VirtualScrollerView from '../../virtual-scroller/VirtualScroller.vue';
 import type { Chat } from '../Chat';
+import { Icons } from '../Icons';
 import type { SessionLog } from '../SessionLog';
 
 // The files this session touched, read off the loaded messages: every
@@ -37,6 +38,10 @@ class $FilesPanel {
     return this.self.$kit;
   }
 
+  get searchIcon(): string {
+    return Icons.$Class.PATHS.search;
+  }
+
   get chat(): Chat.Model {
     return this.props.chat;
   }
@@ -44,6 +49,20 @@ class $FilesPanel {
   /** the paths whose records are open */
   get expanded() {
     return shallowRef<Set<string>>(new Set());
+  }
+
+  /** the records whose diff is unfolded — a record shows its count first */
+  get openRecords() {
+    return shallowRef<Set<string>>(new Set());
+  }
+
+  get query() {
+    return ref('');
+  }
+
+  // TEMPLATE-REF TARGET — the search box
+  get searchElement() {
+    return ref<HTMLInputElement | null>(null);
   }
 
   // TEMPLATE-REF TARGET — the panel's own scroller
@@ -58,7 +77,7 @@ class $FilesPanel {
   }
 
   /** every file named by a loaded call, most touched first */
-  get files(): FilesPanel.File[] {
+  get allFiles(): FilesPanel.File[] {
     void this.chat.revision.value;
     const files = new Map<string, FilesPanel.File>();
     for (const row of this.chat.rows.value) {
@@ -68,8 +87,22 @@ class $FilesPanel {
     return [...files.values()].sort((left, right) => right.count - left.count || left.path.localeCompare(right.path));
   }
 
+  /** the files the search leaves: every word of the query somewhere in the path */
+  get files(): FilesPanel.File[] {
+    const words = this.query.value.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return this.allFiles;
+    return this.allFiles.filter((file) => {
+      const path = file.path.toLowerCase();
+      return words.every((word) => path.includes(word));
+    });
+  }
+
   get count(): number {
     return this.files.length;
+  }
+
+  get isFiltered(): boolean {
+    return this.query.value.trim().length > 0;
   }
 
   get hasFiles(): boolean {
@@ -81,7 +114,12 @@ class $FilesPanel {
   }
 
   get countLabel(): string {
-    return this.count === 1 ? '1 file' : `${this.count.toLocaleString('en-US')} files`;
+    const count = this.count === 1 ? '1 file' : `${this.count.toLocaleString('en-US')} files`;
+    return this.isFiltered ? `${count} of ${this.allFiles.length.toLocaleString('en-US')}` : count;
+  }
+
+  get hasNoMatch(): boolean {
+    return this.isFiltered && this.count === 0;
   }
 
   isFile(row: FilesPanel.Row): boolean {
@@ -105,7 +143,27 @@ class $FilesPanel {
   }
 
   recordClass(record: FilesPanel.Record): Record<string, boolean> {
-    return { [`ac-rec-${record.kind}`]: true };
+    return { [`ac-rec-${record.kind}`]: true, 'ac-open': this.isRecordOpen(record) };
+  }
+
+  isRecordOpen(record: FilesPanel.Record): boolean {
+    return this.openRecords.value.has(record.id);
+  }
+
+  recordGlyph(record: FilesPanel.Record): string {
+    return this.isRecordOpen(record) ? '▾' : '▸';
+  }
+
+  /** the record folded: how many lines it added and removed, or what it read */
+  diffSummary(record: FilesPanel.Record): string {
+    if (record.kind === 'reads') return this.diffOf(record)[0].text;
+    const input = record.call.input;
+    const added = record.kind === 'writes' ? this.lineCount(input.content) : this.lineCount(input.new_string ?? input.new_source);
+    const removed = record.kind === 'writes' ? 0 : this.lineCount(input.old_string ?? input.old_source);
+    const pieces: string[] = [];
+    if (added) pieces.push(`+${added.toLocaleString('en-US')}`);
+    if (removed) pieces.push(`−${removed.toLocaleString('en-US')}`);
+    return pieces.join(' ') || 'no change';
   }
 
   recordIndexLabel(record: FilesPanel.Record): string {
@@ -164,6 +222,19 @@ class $FilesPanel {
     this.chat.search(file.name);
   }
 
+  /** a record unfolds its diff, or folds it back to the count */
+  toggleRecord(record: FilesPanel.Record) {
+    const next = new Set(this.openRecords.value);
+    if (next.has(record.id)) next.delete(record.id);
+    else next.add(record.id);
+    this.openRecords.value = next;
+  }
+
+  clearQuery() {
+    this.query.value = '';
+    this.searchElement.value?.focus();
+  }
+
   /** a file opens into its records, or folds them away */
   toggle(file: FilesPanel.File) {
     const next = new Set(this.expanded.value);
@@ -186,6 +257,11 @@ class $FilesPanel {
       for (const record of file.records) rows.push({ id: `r:${record.id}`, body: '', position: String(rows.length + 1), kind: 'record', file, record });
     }
     return rows;
+  }
+
+  protected lineCount(text: unknown): number {
+    const value = String(text ?? '');
+    return value ? value.split('\n').length : 0;
   }
 
   protected collect(message: SessionLog.Message, files: Map<string, FilesPanel.File>) {
