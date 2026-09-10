@@ -15,6 +15,6 @@ const model = new ((props.kit?.namespace.Class as typeof ThinkingPart.Class | un
       <span v-else class="ac-thinking-dot" aria-hidden="true"></span>
       <span class="ac-thinking-label">{{ model.headLabel }}</span>
     </button>
-    <pre v-if="model.isExpanded" class="ac-thinking-text">{{ model.part.text }}</pre>
+    <pre v-if="model.isExpanded" class="ac-thinking-text">{{ model.text }}</pre>
   </div>
 </template>

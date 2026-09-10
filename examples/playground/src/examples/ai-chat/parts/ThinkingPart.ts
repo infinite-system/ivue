@@ -21,8 +21,14 @@ class $ThinkingPart {
     return this.part.durationMs === null && this.part.startedAt !== undefined;
   }
 
+  /** open by default: the chat's toggled set holds the thoughts a reader FOLDED */
   get isExpanded(): boolean {
-    return this.props.chat.isExpanded(this.id);
+    return !this.props.chat.isExpanded(this.id);
+  }
+
+  /** the thought without the trailing newline the log keeps — it would pad the block's bottom */
+  get text(): string {
+    return this.part.text.replace(/\s+$/, '');
   }
 
   get elapsedLabel(): string {
