@@ -145,6 +145,8 @@ describe('an override never reaches another tree', () => {
   it('a subkit two levels deep derives the path and leaves every base namespace exactly as it was', () => {
     const themedCard = ThemedPanel.$Class.$kit!.Card as Kit.Entry;
     expect(themedCard.namespace).not.toBe(Card);
+    expect(themedCard.namespace!.derivedFrom).toBe(Card); // the base, named — class names do not survive minification
+    expect(Card.derivedFrom).toBeUndefined();
     expect(themedCard.namespace!.$Class.prototype).toBeInstanceOf(Card.$Class);
     expect(themedCard.view).not.toBe(CardView); // rewrapped over the derived Card
     const derivedKit = themedCard.namespace!.Class.$kit as Record<string, Kit.Entry>;

@@ -128,7 +128,8 @@ class $Kit {
 
   /** A derived namespace: `$Class` extends the base's raw class with a `$kit` that is the base's
    *  deep-merged with `patch` and resolved; `Class` is `Reactive($Class)` — what a subclass file
-   *  would export. The base namespace is only read. */
+   *  would export — and `derivedFrom` names the base, since a minified build keeps no class names
+   *  an inspector could read. The base namespace is only read. */
   static derive<Space extends Kit.Namespace>(namespace: Space, patch: Kit.Patch): Space {
     const kit = this;
     const Base = namespace.$Class as Kit.NamespaceClass;
@@ -139,7 +140,7 @@ class $Kit {
         }
       },
     );
-    return { ...namespace, $Class, Class: Reactive($Class) };
+    return { ...namespace, $Class, Class: Reactive($Class), derivedFrom: namespace };
   }
 
   /** The same view over a different contract: a fresh component object with the base view's
@@ -217,6 +218,8 @@ export namespace Kit {
   export interface Namespace {
     $Class: NamespaceClass;
     Class: NamespaceClass;
+    /** set by `derive`: the namespace this one was derived from */
+    derivedFrom?: Namespace;
   }
 
   export interface Entry<Space extends Namespace = Namespace> {

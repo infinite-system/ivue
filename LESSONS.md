@@ -1008,3 +1008,19 @@ own whole than to arbitrate.
 - **The invariants checker wants `## Reality-based invariants` then `## Chosen invariants` exactly**, no
   `---` rules between records (they break the `Last refined` field parse), and every record linked from
   the `## Generator` record's Components list, or it reports "no mechanism claims".
+
+## Infinite Malleability docs page (2026-09-10)
+
+- **Class names do not survive the docs build.** esbuild minifies `class $Card` to a one-letter name, so
+  an inspector that reads `constructor.name` (or walks the chain for a `$`-prefixed ancestor) prints `?`
+  in production and worked only in vitest. `Kit.Class.derive` now stamps `derivedFrom` on the namespace
+  it returns, and the demo names classes through a `Map<namespace, label>`. Never read class names at
+  runtime in anything that ships.
+- **"Hydration completed but contains mismatches" is site-wide in the built docs** — it prints on
+  /guide/extensible-components, /guide/flyweight and /examples/ai-chat with no kit demo on the page.
+  Pre-existing; do not chase it as a new component's fault. (Verified with tmp/drive-hydration.mjs.)
+- **A docs demo of a fixture tree carries the tree's CSS.** The kit fixtures have no styles by design; the
+  demo component styles `.card`, `.code[data-theme]`… under its own root class so the page owns the look.
+- **A declared prop with a default beats the kit's value for it.** `ThemedCode` declares `theme` with
+  default `'mono'`, so an entry's `props.theme` no longer decides; the combined demo variant drops it
+  rather than show a knob that does nothing. When a subclass declares a knob as a prop, say so.
