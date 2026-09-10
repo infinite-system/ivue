@@ -174,13 +174,13 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Renegotiable at:** GPU compositing precision — single-precision floats lose sub-pixel placement past about 2^23 px.
 
-**Mechanism:** All scroll math stays absolute; only the two render outputs are shifted by the same bias, so their difference, everything visible, is unchanged. `loop` rebases before Lenis writes the frame's transform so the spacer (this frame's flush) and the transform shift together.
+**Mechanism:** All scroll math stays absolute; only the two render outputs are shifted by the same bias, so their difference, everything visible, is unchanged. `loop` rebases from the ANIMATED scroll before Lenis writes the frame's transform so the spacer (this frame's flush) and the transform shift together; a write that moves the position without writing the transform (`setScrollPosition` with `translateY` false — the loop's target write) never rebases, because the target and the animated scroll can straddle a chunk boundary and a second rebase from the target flipped the bias mid-frame: the spacer on the new bias, the transform on the old, a whole chunk apart for that frame.
 
 **Generates:** The `renderBias` ref (a ref, because the spacer binding must re-render on rebase); the `RENDER_BIAS_CHUNK` static.
 
-**Evidence:** `VirtualScroller.ts` `updateRenderBias`, the `renderBias` doc comment. Test: "deep in the list the render bias rebases the leading spacer by whole chunks".
+**Evidence:** `VirtualScroller.ts` `updateRenderBias`, `setScrollPosition`, the `renderBias` doc comment. Tests: "deep in the list the render bias rebases the leading spacer by whole chunks", "a position write without a transform write leaves the render bias alone". Seen on the chat: one frame in a long wheel up rendered the rows 63k px off the viewport, at the tick where the target crossed a chunk the animated scroll had not.
 
-**Impossible if true:** A leading spacer or transform rendered above about 131k px. A bias that is not a multiple of the chunk.
+**Impossible if true:** A leading spacer or transform rendered above about 131k px. A bias that is not a multiple of the chunk. A spacer and a transform a chunk apart within one frame.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "rebases the leading spacer"`
 
@@ -538,19 +538,19 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### The pad covers the lerp gap exactly
 
-**Invariant:** If the window walk runs during a lerp, then the trailing pad is the lerp gap in rows (`|targetScroll − animatedScroll| / rowSize`, rounded up, capped at 160), and the leading pad is the base plus a velocity lookahead held with hysteresis.
+**Invariant:** If the window walk runs during a lerp, then the window covers the animated position in PIXELS over the measured sizes — the walk extends past the target by the lerp gap (`|targetScroll − animatedScroll|`) toward the animated side, whatever the rows between measure — and on top of that the trailing pad is the gap in rows of the estimate (rounded up, capped at 160) and the leading pad is the base plus a velocity lookahead held with hysteresis.
 
-**Scope:** `VirtualScrollerPadding.ts`: `rowsBehind`, `rowsAhead`, `split`, `settle`, `pad`; the scroller's `scrollGap`, `scrollVelocity`, `halfPaddingQuantity` and `estimatedItemSize` accessors.
+**Scope:** `VirtualScroller.ts` `computeVisibleItems` (the pixel extension over `scrollGap`); `VirtualScrollerPadding.ts`: `rowsBehind`, `rowsAhead`, `split`, `settle`, `pad`; the scroller's `scrollGap`, `scrollVelocity`, `halfPaddingQuantity` and `estimatedItemSize` accessors.
 
-**Mechanism:** The gap term is exact and needs no hysteresis: it shrinks every frame as the lerp converges, and the rows it releases are behind the viewport. The lookahead grows the frame the velocity does, holds for as long as the content moves, and shrinks only at rest once the settle window has passed since it last grew, so the decay tail of a flick never unmounts a burst of rows mid-glide — a visible hitch on a phone — and keeps what the next flick needs; a reversal drops the held level at once.
+**Mechanism:** The reader sees the animated position while the walk starts at the target, so the rows between must be mounted. A pad counted in rows of the estimate under-covers a gap whose rows measure shorter than it — a 35px system line, a one-line question, against a 160px estimate — and the bottom of the viewport went blank on a long wheel up; the walk now extends in pixels over the measured sizes, so coverage is exact whatever the rows measure, and the row pad on top of it is the lookahead. The gap term is exact and needs no hysteresis: it shrinks every frame as the lerp converges, and the rows it releases are behind the viewport. The lookahead grows the frame the velocity does, holds for as long as the content moves, and shrinks only at rest once the settle window has passed since it last grew, so the decay tail of a flick never unmounts a burst of rows mid-glide — a visible hitch on a phone — and keeps what the next flick needs; a reversal drops the held level at once.
 
 **Generates:** The `padding.before` / `padding.after` split the walk reads instead of one symmetric constant.
 
 **Rejected alternatives:** A velocity pad alone — measured identical to no pad (21/28/35 uncovered frames of 91), because the gap is the whole story.
 
-**Evidence:** `VirtualScrollerPadding.ts` `pad`. Tests: "rows behind cover the lerp gap exactly, rounded up and capped", "pad() follows the lerp gap frame by frame and holds the lookahead across a decaying tail, reading the owner each call". Probe: 0/0/0 uncovered frames at 2000/4000/8000 px flicks (`docs_v2/examples/virtual-scroller.md`).
+**Evidence:** `VirtualScroller.ts` `computeVisibleItems`, `VirtualScrollerPadding.ts` `pad`. Tests: "mid-lerp the window covers the animated position in pixels, over rows far shorter than the estimate", "rows behind cover the lerp gap exactly, rounded up and capped", "pad() follows the lerp gap frame by frame and holds the lookahead across a decaying tail, reading the owner each call". Probe: 0/0/0 uncovered frames at 2000/4000/8000 px flicks (`docs_v2/examples/virtual-scroller.md`); on the chat, 120 wheel ticks up over short system rows: 0 uncovered frames, where the row pad alone left 3 with up to 243px blank at the bottom.
 
-**Impossible if true:** A pad that shrinks on the first frame of a flick's decay. Blank canvas under the viewport while the gap in rows is below the cap.
+**Impossible if true:** A pad that shrinks on the first frame of a flick's decay. Blank canvas under the viewport while the gap in rows is below the cap. A viewport bottom left uncovered mid-lerp because the rows behind the target measure shorter than the estimate.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.test.ts`
 

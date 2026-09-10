@@ -3,6 +3,7 @@
 Goal: Prove each tool card reads its own shape out of a call: a shell call shows command, stdout and stderr with ANSI stripped and its exit state; an edit is a unified diff from the recorded hunks or from the strings; a read is the numbered listing with its numbers turned into a counter that starts where the read started; a write is the file; every card's collapsed line is the projection's text; the registry maps every name and falls back.
 [Full granularity in two clicks](../ai-chat.invariants.md#full-granularity-in-two-clicks)
 // domain-invariant: $ToolCallModel — If a call is expanded, then the card shows the full input and the full result, capped only by a cap the reader can lift
+// domain-invariant: $CodeBlock — If the copy button is pressed, then the whole code as given reaches the clipboard, not the capped view, and the button says so for a moment
 Impossible if true: an expanded card holds back part of its result behind anything but the cap the reader can lift
 
 === GENERATOR-DESCRIBED ===
