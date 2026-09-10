@@ -226,6 +226,17 @@ describe('Chat', () => {
     expect(chat.clock.isTicking).toBe(false);
     expect(chat.indexRows.value.at(-1)).toMatchObject({ id: reply.id, r: 'a', c: 2 });
 
+    // a call or a thought lands after it has measured; words pin on the cadence
+    const landing = vi.spyOn(chat, 'settleAtBottom').mockResolvedValue(undefined);
+    const replyMessage = reply.message as SessionLog.Message;
+    chat.streaming.value = { row: reply, message: replyMessage, startedAt: Date.now(), controller: new AbortController(), release: () => undefined, firstTokenAt: null, lastPinAt: 0, thinking: null, sourceId: 'x' };
+    chat.applyEvent(chat.streaming.value, { type: 'tool_call', call: { id: 'late', name: 'Bash', input: {}, state: 'running', result: null, durationMs: null, startedAt: 0, children: null } });
+    expect(landing).toHaveBeenCalledTimes(1);
+    chat.applyEvent(chat.streaming.value, { type: 'token', text: 'word ' });
+    expect(landing).toHaveBeenCalledTimes(1);
+    chat.streaming.value = null;
+    landing.mockRestore();
+
     // the pin: nothing while the reader is away from the bottom, the thread's end when there
     chat.atBottom.value = false;
     scroller.positions = [];

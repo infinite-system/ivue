@@ -1266,6 +1266,12 @@
   font-size: 13px;
   background: var(--ac-panel-2);
 }
+.ai-chat .ac-tool-spinner {
+  width: 12px;
+  height: 12px;
+  border-width: 2px;
+  vertical-align: 0;
+}
 .ai-chat .ac-tool-running .ac-tool-icon {
   background: var(--ac-accent-soft);
   color: var(--ac-accent);
@@ -1470,7 +1476,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 22px;
-  margin-top: 15px;
   padding: 9px 24px 10px;
   border-top: 1px solid var(--ac-line);
   background: var(--ac-panel);
@@ -1517,7 +1522,7 @@
 
 /* ---- the composer: a floating card that lights up when it has you ---- */
 .ai-chat .ac-composer {
-  padding: 8px 22px 12px;
+  padding: 8px 14px 12px;
   border-top: 0;
   background: linear-gradient(180deg, transparent, var(--ac-bg) 45%);
 }

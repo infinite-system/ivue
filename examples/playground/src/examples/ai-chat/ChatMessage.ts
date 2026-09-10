@@ -192,10 +192,11 @@ class $ChatMessage {
     return Boolean(streaming && streaming.row.id === this.row.id && streaming.firstTokenAt === null && !streaming.thinking && this.parts.length === 0);
   }
 
+  /** the line under the head while the reply has nothing yet: one "Thinking…" and its clock */
   get awaitingLabel(): string {
     const streaming = this.chat.streaming.value;
     if (!streaming) return '';
-    return `${this.modelLabel} · ${Clock.Class.label(this.chat.clock.elapsed(streaming.startedAt, null), true)}`;
+    return `Thinking… · ${Clock.Class.label(this.chat.clock.elapsed(streaming.startedAt, null), true)}`;
   }
 
   get indexLabel(): string {

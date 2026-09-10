@@ -35,7 +35,6 @@ const {
         <span class="ac-model-hint">{{ model.modelHint }}</span>
         <span class="ac-composer-spacer"></span>
         <button type="button" class="ac-search-btn" title="Search the thread (⌘K)" @click="chat.toggleSearch()"><svg class="ac-btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.searchIcon" /></svg><span class="ac-sr">Search the thread</span></button>
-        <span v-if="chat.isStreaming" class="ac-streaming-note"><span class="ac-spinner" aria-hidden="true"></span> {{ model.sendLabel }}</span>
         <button v-if="chat.isStreaming" type="button" class="ac-stop" title="Stop" @click="model.stop()"><span aria-hidden="true">■</span><span class="ac-sr">Stop</span></button>
         <button v-else type="submit" class="ac-send" :disabled="!model.canSend" :title="model.sendLabel"><span aria-hidden="true">↑</span><span class="ac-sr">{{ model.sendLabel }}</span></button>
       </div>
