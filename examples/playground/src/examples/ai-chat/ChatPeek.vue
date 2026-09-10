@@ -19,8 +19,10 @@ defineExpose(model as Peek.Instance);
 </script>
 
 <template>
-  <Transition name="ac-peek">
-    <aside v-if="open" class="ac-peek" :style="model.style">
+  <Teleport to="body">
+    <div class="ai-chat ac-portal" :class="model.portalClass" :data-theme="model.theme" :data-density="model.density">
+      <Transition name="ac-peek">
+        <aside v-if="open" class="ac-peek" :style="model.style" @pointerenter="model.onCardEnter()" @pointerleave="model.onCardLeave()">
       <div class="ac-index-search ac-peek-search">
         <svg class="ac-search-icon" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.searchIcon" /></svg>
         <input ref="searchElement" v-model="query" type="search" class="ac-search" placeholder="Search the thread…" aria-label="Search the thread" @focus="model.onSearchFocus()" @blur="model.onSearchBlur()" @keydown="model.onSearchKeydown($event)" />
@@ -52,6 +54,8 @@ defineExpose(model as Peek.Instance);
         </component>
       </div>
       <span class="ac-peek-tail" aria-hidden="true"></span>
-    </aside>
-  </Transition>
+        </aside>
+      </Transition>
+    </div>
+  </Teleport>
 </template>

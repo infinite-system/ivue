@@ -29,7 +29,7 @@ function rows(count: number): Chat.Row[] {
 }
 
 function thread(trackTop: number, trackHeight: number, target: Element | null) {
-  const track = { getBoundingClientRect: () => ({ top: trackTop, height: trackHeight }) } as unknown as HTMLElement;
+  const track = { getBoundingClientRect: () => ({ top: trackTop, height: trackHeight, left: 0 }) } as unknown as HTMLElement;
   const element = {
     querySelector: () => track,
     getBoundingClientRect: () => ({ top: 100 }),
@@ -37,9 +37,9 @@ function thread(trackTop: number, trackHeight: number, target: Element | null) {
   return { element, track, target };
 }
 
-function move(peek: Peek.Model, y: number, _target: Element | null, over: 'track' | 'card' | 'none') {
+function move(peek: Peek.Model, y: number, _target: Element | null, over: 'track' | 'none') {
   const thread$ = thread(200, 400, _target);
-  const closest = (selector: string) => (over === 'card' && selector.includes('peek') ? thread$.element : null);
+  const closest = () => null;
   const target = { closest };
   (thread$.track as unknown as { contains: (node: unknown) => boolean }).contains = (node) => over === 'track' && node === target;
   peek.onThreadPointerMove({ currentTarget: thread$.element, target, clientY: y } as unknown as PointerEvent);
@@ -74,7 +74,8 @@ describe('Peek', () => {
     expect(peek.previewText(peek.row as Chat.Row)).toBe('message 500');
     expect(peek.roleMark(peek.row as Chat.Row)).toBe('you');
     expect(peek.rowClass(peek.row as Chat.Row)['ac-role-user']).toBe(true);
-    expect(peek.style.top).toBe(`${300 - peek.cardHeight / 2}px`);
+    expect(peek.style.top).toBe(`${400 - peek.cardHeight / 2}px`);
+    expect(peek.style.left).toBe('8px'); // the fake track sits at the viewport's left: the card stays inside the window
     expect(peek.timeLabel(peek.row as Chat.Row)).toMatch(/^\d\d:\d\d$/);
     // past the ends the index clamps
     move(peek, 0, null, 'track');
@@ -88,7 +89,12 @@ describe('Peek', () => {
     move(peek, 350, null, 'none');
     expect(peek.open.value).toBe(true);
     vi.advanceTimersByTime(Peek.$Class.LINGER_MS - 1);
-    move(peek, 350, null, 'card');
+    peek.onCardEnter(); // crossed into the card: it holds
+    vi.advanceTimersByTime(Peek.$Class.LINGER_MS);
+    expect(peek.open.value).toBe(true);
+    peek.onCardLeave();
+    vi.advanceTimersByTime(Peek.$Class.LINGER_MS - 1);
+    peek.onCardEnter();
     vi.advanceTimersByTime(Peek.$Class.LINGER_MS);
     expect(peek.open.value).toBe(true);
     peek.onThreadPointerLeave();
