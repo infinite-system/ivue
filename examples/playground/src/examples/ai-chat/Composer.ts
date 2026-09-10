@@ -98,6 +98,11 @@ class $Composer {
   /* ---- handlers ---- */
 
   onKeydown(event: KeyboardEvent) {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      this.chat.search('');
+      return;
+    }
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       void this.send();

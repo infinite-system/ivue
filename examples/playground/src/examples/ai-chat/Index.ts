@@ -1,4 +1,4 @@
-import { computed, onMounted, ref, shallowRef, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, shallowRef, watch } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
@@ -27,8 +27,6 @@ class $Index {
   static readonly TOOL_LABELS: Record<Index.ToolFilter, string> = { include: 'With tools', exclude: 'No tools', only: 'Tools only' };
   static readonly ORDER_LABELS: Record<Index.Order, string> = { oldest: 'Oldest first', newest: 'Newest first' };
   static readonly EXPORT_LABELS: Record<Chat.ExportForm, string> = { markdown: 'Markdown', plain: 'Plain text', jsonl: 'JSONL' };
-  static readonly MIN_WIDTH = 280;
-  static readonly MAX_WIDTH = 720;
 
   static saveFile(text: string, name: string) {
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
@@ -49,6 +47,12 @@ class $Index {
       () => this.rows.value,
       () => this.landAfterFilter(),
       { flush: 'post' },
+    );
+    // a search the chat asked for — a file's name, or nothing — takes the box and the focus
+    watch(
+      () => this.chat.searchRequest.value,
+      (request) => this.takeSearch(request),
+      { immediate: true },
     );
   }
 
@@ -83,6 +87,11 @@ class $Index {
     return ref('');
   }
 
+  // TEMPLATE-REF TARGET — the search box, focused when the chat asks for a search
+  get searchElement() {
+    return ref<HTMLInputElement | null>(null);
+  }
+
   get selected() {
     return shallowRef<Set<string>>(new Set());
   }
@@ -95,10 +104,6 @@ class $Index {
     return ref(0);
   }
 
-  get width() {
-    return ref(360);
-  }
-
   get exportForm() {
     return ref<Chat.ExportForm>('markdown');
   }
@@ -108,10 +113,6 @@ class $Index {
   }
 
   get copied() {
-    return ref(false);
-  }
-
-  get resizing() {
     return ref(false);
   }
 
@@ -177,10 +178,6 @@ class $Index {
     return this.copied.value ? 'Copied' : 'Copy Markdown';
   }
 
-  get widthPx(): string {
-    return `${this.width.value}px`;
-  }
-
   get selectAllLabel(): string {
     return this.allShownSelected ? 'Clear shown' : 'Select shown';
   }
@@ -201,6 +198,13 @@ class $Index {
       output.push({ id: entry.id, body: '', position: String(at + 1), index: at, entry });
     });
     return this.order.value === 'newest' ? output.reverse() : output;
+  }
+
+  takeSearch(request: string | null) {
+    if (request === null) return;
+    this.query.value = request;
+    this.chat.searchRequest.value = null;
+    void nextTick(() => this.searchElement.value?.focus());
   }
 
   /** where a fresh list lands: its end in thread order, its start when the newest is first */
@@ -370,25 +374,6 @@ class $Index {
   }
 
   /* ---- resize ---- */
-
-  onResizeStart(event: PointerEvent) {
-    event.preventDefault();
-    this.resizing.value = true;
-    const startX = event.clientX;
-    const startWidth = this.width.value;
-    const move = (moveEvent: PointerEvent) => this.resizeTo(startWidth + (startX - moveEvent.clientX));
-    const up = () => {
-      this.resizing.value = false;
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-  }
-
-  resizeTo(width: number) {
-    this.width.value = Math.max(this.self.MIN_WIDTH, Math.min(this.self.MAX_WIDTH, Math.round(width)));
-  }
 
   /* ---- export ---- */
 

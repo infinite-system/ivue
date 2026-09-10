@@ -10,6 +10,9 @@ import { Composer } from './Composer';
 import ChatComposerView from './ChatComposer.vue';
 import { Index } from './Index';
 import ChatIndexView from './ChatIndex.vue';
+import { Sidebar } from './sidebar/Sidebar';
+import SidebarView from './sidebar/Sidebar.vue';
+import type { ChatSettings } from './ChatSettings';
 import { ChatApi } from './ChatApi';
 import { Clock } from './Clock';
 import { SessionLog } from './SessionLog';
@@ -32,6 +35,7 @@ class $Chat {
       Message: { namespace: ChatMessage, vue: ChatMessageView },
       Composer: { namespace: Composer, vue: ChatComposerView },
       Index: { namespace: Index, vue: ChatIndexView },
+      Sidebar: { namespace: Sidebar, vue: SidebarView },
     } satisfies Kit.Of<Chat.Role>;
   }
 
@@ -76,7 +80,7 @@ class $Chat {
   static tokenCount(message: SessionLog.Message): number {
     return message.parts.reduce((count, part) => count + (part.kind === 'text' || part.kind === 'thinking' ? ChatApi.Class.tokens(part.text).length : 0), 0);
   }
-  constructor() {
+  constructor(public props: Chat.Props = {}) {
     onMounted(() => this.load());
     onBeforeUnmount(() => this.dispose());
     watch(
@@ -101,6 +105,20 @@ class $Chat {
   /** the kit is the class's; a subclass with its own `$kit` swaps the subtree */
   get kit() {
     return this.self.$kit;
+  }
+
+  /* ---- the look: closed here; ConfiguredChat is the layer that opens these to the kit and the settings ---- */
+
+  get theme(): ChatSettings.Theme {
+    return 'midnight';
+  }
+
+  get density(): ChatSettings.Density {
+    return 'cozy';
+  }
+
+  get tree(): string {
+    return 'shipped';
   }
 
   /** the one clock every loader reads — owned here, disposed here */
@@ -204,8 +222,18 @@ class $Chat {
     return ref('');
   }
 
-  get indexOpen() {
-    return ref(false);
+  /** the side panel that is open, if any */
+  get sidebarTab() {
+    return ref<Chat.SidebarTab | null>(null);
+  }
+
+  /** a search the index should take up when it opens: the text, or an empty string to focus the box */
+  get searchRequest() {
+    return ref<string | null>(null);
+  }
+
+  get indexOpen(): boolean {
+    return this.sidebarTab.value === 'Index';
   }
 
   /** the row the reader last landed on through the index, for the mark */
@@ -335,7 +363,7 @@ class $Chat {
   }
 
   get indexToggleLabel(): string {
-    return this.indexOpen.value ? 'Close index' : 'Index';
+    return this.indexOpen ? 'Close index' : 'Index';
   }
 
   get fileLoadLabel(): string {
@@ -522,11 +550,29 @@ class $Chat {
   }
 
   toggleIndex() {
-    this.indexOpen.value = !this.indexOpen.value;
+    this.toggleSidebar('Index');
+  }
+
+  toggleSidebar(tab: Chat.SidebarTab) {
+    this.sidebarTab.value = this.sidebarTab.value === tab ? null : tab;
+  }
+
+  openSidebar(tab: Chat.SidebarTab) {
+    this.sidebarTab.value = tab;
+  }
+
+  closeSidebar() {
+    this.sidebarTab.value = null;
+  }
+
+  /** open the index on a search: a file's name from the files panel, or nothing to focus the box */
+  search(text: string) {
+    this.searchRequest.value = text;
+    this.openSidebar('Index');
   }
 
   closeIndex() {
-    this.indexOpen.value = false;
+    this.closeSidebar();
   }
 
   /* ---- sending and the replayed reply ---- */
@@ -782,7 +828,14 @@ export namespace Chat {
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
   export type Model = InstanceType<typeof Class>;
-  export type Role = 'Scroller' | 'Message' | 'Composer' | 'Index';
+  export type Role = 'Scroller' | 'Message' | 'Composer' | 'Index' | 'Sidebar';
+  export type SidebarTab = 'Index' | 'Files' | 'Settings';
+
+  export interface Props {
+    dark?: boolean;
+    /** the entry the root was rendered through: the class it constructs, the consumer's props */
+    kit?: Kit.Entry;
+  }
 
   /** one row of the scroller: a stub until its page lands, then the message */
   export interface Row extends VirtualScroller.BaseItem {
