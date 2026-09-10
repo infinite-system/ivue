@@ -66,9 +66,13 @@ class $ExampleMalleability {
       {
         id: 'engine',
         label: 'Engine swapped',
-        tagline: 'The code block is now HljsCode, a subclass that colours through highlight.js instead of shiki: one static overridden, everything else inherited.',
+        tagline: 'The code block is now HljsCode: highlight.js instead of shiki, one static overridden, everything else inherited. Same theme name, another engine’s reading of it; the foot says which.',
         patch: `Kit.Class.derive(Gallery, {
-  Snippet: { subkit: { Code: { namespace: HljsCode } } },
+  Snippet: {
+    subkit: {
+      Code: { namespace: HljsCode },
+    },
+  },
 })`,
         namespace: Kit.Class.derive(Gallery, { Snippet: { subkit: engine } }),
         files: [
@@ -85,7 +89,13 @@ class $ExampleMalleability {
         patch: `Kit.Class.derive(Gallery, {
   Snippet: {
     subkit: {
-      Code: { props: { theme: 'dracula', lineNumbers: true, maxLines: 8 } },
+      Code: {
+        props: {
+          theme: 'dracula',
+          lineNumbers: true,
+          maxLines: 8,
+        },
+      },
     },
   },
 })`,
@@ -104,7 +114,14 @@ class $ExampleMalleability {
     subkit: {
       Head: { vue: TabHeadView },
       Foot: { vue: StatsFootView },
-      Code: { namespace: HljsCode, props: { theme: 'nord', lineNumbers: true, maxLines: 8 } },
+      Code: {
+        namespace: HljsCode,
+        props: {
+          theme: 'nord',
+          lineNumbers: true,
+          maxLines: 8,
+        },
+      },
     },
   },
 })`,
@@ -147,6 +164,17 @@ class $ExampleMalleability {
     return Object.entries(props)
       .map(([key, value]) => `${key}: ${typeof value === 'string' ? `'${value}'` : JSON.stringify(value)}`)
       .join(', ');
+  }
+
+  /** The override literal, coloured minimally — strings, literals, the names — with no engine at all. */
+  static patchHtml(patch: string): string {
+    const escaped = patch.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return escaped
+      .replace(/'[^']*'/g, (match) => `<span class="mal-str">${match}</span>`)
+      .replace(/\b(true|false|null|\d+)\b/g, '<span class="mal-lit">$1</span>')
+      .replace(/\b([A-Z][A-Za-z]+)\b/g, '<span class="mal-id">$1</span>')
+      .replace(/\b(subkit|namespace|vue|props)(?=:)/g, '<span class="mal-key">$1</span>')
+      .replace(/(\/\/.*)$/gm, '<span class="mal-cmt">$1</span>');
   }
 
   static viewName(view: unknown): string {
@@ -195,6 +223,21 @@ class $ExampleMalleability {
       const changedProps = Boolean(was && was.props !== line.props);
       return { ...line, wasView: was?.vue ?? '', wasClass: was?.className ?? '', changedView, changedClass, changedProps, changed: changedView || changedClass || changedProps };
     });
+  }
+
+  /** what the live column shows, in a line: the engine, the theme, the sections */
+  get liveLabel(): string {
+    const lines = this.inspector;
+    const code = lines.find((line) => line.role === 'Code');
+    const head = lines.find((line) => line.role === 'Head');
+    const engine = code?.className === 'HljsCode' ? 'highlight.js' : 'shiki';
+    const theme = code?.props.match(/theme: '([^']+)'/)?.[1] ?? 'github-light';
+    const sections = head?.vue === 'TabHead.vue' ? 'tab bar + status bar' : 'plain head + foot';
+    return `${engine} · ${theme} · ${sections}`;
+  }
+
+  get patchHtml(): string {
+    return this.self.patchHtml(this.selected.patch);
   }
 
   get changedCount(): number {

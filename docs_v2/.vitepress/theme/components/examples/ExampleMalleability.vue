@@ -33,7 +33,7 @@ const {
     <div class="mal-stage">
       <section class="mal-live">
         <div class="mal-caption">Gallery.vue, rendered with this entry</div>
-        <p class="mal-legend"><span class="mal-swatch"></span> parts the override replaced or tuned</p>
+        <p class="mal-legend">{{ demo.liveLabel }}</p>
         <!-- the seam: the entry's vue, the entry as `kit`, the child's own props -->
         <component :is="demo.entry.vue" :key="selectedId" :kit="demo.entry" />
       </section>
@@ -45,10 +45,9 @@ const {
           <li
             v-for="line in demo.inspector"
             :key="line.key"
-            :style="{ '--depth': line.depth }"
             :class="{ 'mal-changed': line.changed }"
           >
-            <span class="mal-role">{{ line.role }}</span>
+            <span class="mal-role" :style="{ '--depth': line.depth }">{{ line.role }}</span>
             <span class="mal-cells">
               <span class="mal-cell">
                 <template v-if="line.changedView"><s class="mal-was">{{ line.wasView }}</s><span class="mal-now">{{ line.vue }}</span></template>
@@ -65,7 +64,7 @@ const {
         </ol>
 
         <div class="mal-caption">The override, as data</div>
-        <pre class="mal-patch"><code>{{ demo.selected.patch }}</code></pre>
+        <pre class="mal-patch"><code v-html="demo.patchHtml"></code></pre>
       </section>
     </div>
 
@@ -123,19 +122,14 @@ const {
   grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
   gap: 16px;
   /* one height for every override, so switching tabs never moves what is below */
-  min-height: 760px;
+  min-height: 1010px;
 }
 .mal-live {
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
-/* the live tree scrolls inside its column instead of growing the stage */
-.mal-live .gallery {
-  max-height: 640px;
-  overflow: auto;
-  padding-right: 4px;
-}
+
 @media (max-width: 720px) {
   .mal-stage {
     grid-template-columns: minmax(0, 1fr);
@@ -162,61 +156,50 @@ const {
   font-size: 12px;
   color: var(--vp-c-text-3);
 }
-.mal-swatch {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  border: 2px solid var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
-}
-.mal-tree {
+.malleability-embed .mal-tree {
   list-style: none;
   margin: 0 0 14px;
   padding: 6px 0;
+  padding-left: 5px;
   border-top: 1px solid var(--vp-c-divider);
   border-bottom: 1px solid var(--vp-c-divider);
   font-family: var(--vp-font-family-mono);
   font-size: 12px;
 }
-.mal-tree li {
+.malleability-embed .mal-tree li {
   display: grid;
-  grid-template-columns: 5.5em minmax(0, 1fr);
+  grid-template-columns: 4.5em minmax(0, 1fr);
   column-gap: 8px;
   align-items: baseline;
   min-height: 26px;
-  padding: 2px 6px 2px calc(6px + var(--depth) * 16px);
+  margin: 0;
+  padding: 3px 0;
   border-radius: 6px;
   color: var(--vp-c-text-2);
 }
-.mal-tree li.mal-changed {
+.malleability-embed .mal-tree li + li {
+  margin-top: 1px;
+}
+.malleability-embed .mal-tree li.mal-changed {
+  padding: 4px 8px;
   background: var(--vp-c-brand-soft);
 }
 .mal-role {
   color: var(--vp-c-text-1);
   font-weight: 600;
+  opacity: calc(1 - var(--depth) * 0.2);
 }
 .mal-cells {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.mal-cell {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  column-gap: 12px;
-  row-gap: 2px;
-}
-.mal-cell {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  align-items: baseline;
   gap: 6px;
-  white-space: nowrap;
-}
-.mal-cell-props {
-  flex-wrap: wrap;
-  white-space: normal;
-}
-.mal-cell + .mal-cell::before {
-  content: '·';
-  color: var(--vp-c-text-3);
+  min-width: 0;
 }
 .mal-same {
   color: var(--vp-c-text-3);
@@ -246,6 +229,24 @@ const {
   color: var(--vp-c-brand-1);
   font-size: 10px;
   line-height: 16px;
+}
+.mal-str {
+  color: var(--vp-c-brand-1);
+}
+.mal-lit {
+  color: var(--vp-c-text-2);
+  font-weight: 600;
+}
+.mal-id {
+  color: var(--vp-c-text-1);
+  font-weight: 600;
+}
+.mal-key {
+  color: var(--vp-c-text-3);
+}
+.mal-cmt {
+  color: var(--vp-c-text-3);
+  font-style: italic;
 }
 .mal-patch {
   min-height: 150px;
@@ -294,6 +295,14 @@ const {
 }
 .malleability-embed .snip-name {
   font-weight: 600;
+}
+.malleability-embed .snip-engine {
+  margin-right: auto;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid var(--snip-accent);
+  color: var(--snip-accent);
+  font-size: 10px;
 }
 .malleability-embed .snip-lang {
   padding: 0 6px;
@@ -456,17 +465,18 @@ const {
 }
 /* highlight.js classes tokens; each theme is a small stylesheet, keyed by the block's theme */
 .malleability-embed .hljs .hljs-comment { font-style: italic; }
-.malleability-embed .hljs[data-theme='github-light'] .hljs-keyword { color: #cf222e; }
-.malleability-embed .hljs[data-theme='github-light'] .hljs-string { color: #0a3069; }
-.malleability-embed .hljs[data-theme='github-light'] .hljs-comment { color: #6e7781; }
-.malleability-embed .hljs[data-theme='github-light'] .hljs-number { color: #0550ae; }
+.malleability-embed .hljs[data-theme='github-light'] { background: #fafafa !important; }
+.malleability-embed .hljs[data-theme='github-light'] .hljs-keyword { color: #a626a4; font-weight: 600; }
+.malleability-embed .hljs[data-theme='github-light'] .hljs-string { color: #50a14f; }
+.malleability-embed .hljs[data-theme='github-light'] .hljs-comment { color: #a0a1a7; }
+.malleability-embed .hljs[data-theme='github-light'] .hljs-number { color: #986801; }
 .malleability-embed .hljs[data-theme='github-light'] .hljs-title,
 .malleability-embed .hljs[data-theme='github-light'] .hljs-name,
-.malleability-embed .hljs[data-theme='github-light'] .hljs-selector-class { color: #8250df; }
+.malleability-embed .hljs[data-theme='github-light'] .hljs-selector-class { color: #4078f2; }
 .malleability-embed .hljs[data-theme='github-light'] .hljs-attr,
 .malleability-embed .hljs[data-theme='github-light'] .hljs-attribute,
-.malleability-embed .hljs[data-theme='github-light'] .hljs-built_in { color: #116329; }
-.malleability-embed .hljs[data-theme='github-light'] .hljs-tag { color: #24292e; }
+.malleability-embed .hljs[data-theme='github-light'] .hljs-built_in { color: #c18401; }
+.malleability-embed .hljs[data-theme='github-light'] .hljs-tag { color: #e45649; }
 .malleability-embed .hljs[data-theme='dracula'] .hljs-keyword { color: #ff79c6; }
 .malleability-embed .hljs[data-theme='dracula'] .hljs-string { color: #f1fa8c; }
 .malleability-embed .hljs[data-theme='dracula'] .hljs-comment { color: #6272a4; }
