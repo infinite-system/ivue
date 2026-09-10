@@ -183,12 +183,16 @@ class $Peek {
     const track = thread.querySelector<HTMLElement>('.virtual-scroller__track');
     if (!track || !this.count) return;
     const target = event.target as HTMLElement | null;
-    const overTrack = Boolean(target?.closest('.virtual-scroller__track'));
+    // the card first: its own scroller has a track too, and a pointer on it must not move the card
     const overCard = Boolean(target?.closest('.ac-peek'));
+    if (overCard) {
+      this.cancelLinger();
+      return;
+    }
+    const overTrack = Boolean(target && track.contains(target));
     if (!overTrack && !this.chat.thumbDragging) {
-      // over the card the wheel walks it; anywhere else the card lingers, then goes
-      if (overCard) this.cancelLinger();
-      else if (this.open.value) this.leave();
+      // anywhere else the card lingers, then goes
+      if (this.open.value) this.leave();
       return;
     }
     const rect = track.getBoundingClientRect();

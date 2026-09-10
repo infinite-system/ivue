@@ -36,10 +36,12 @@ function thread(trackTop: number, trackHeight: number, target: Element | null) {
   return { element, track, target };
 }
 
-function move(peek: Peek.Model, y: number, target: Element | null, over: 'track' | 'card' | 'none') {
-  const thread$ = thread(200, 400, target);
-  const closest = (selector: string) => (over === 'track' && selector.includes('track') ? thread$.track : over === 'card' && selector.includes('peek') ? thread$.element : null);
-  peek.onThreadPointerMove({ currentTarget: thread$.element, target: { closest }, clientY: y } as unknown as PointerEvent);
+function move(peek: Peek.Model, y: number, _target: Element | null, over: 'track' | 'card' | 'none') {
+  const thread$ = thread(200, 400, _target);
+  const closest = (selector: string) => (over === 'card' && selector.includes('peek') ? thread$.element : null);
+  const target = { closest };
+  (thread$.track as unknown as { contains: (node: unknown) => boolean }).contains = (node) => over === 'track' && node === target;
+  peek.onThreadPointerMove({ currentTarget: thread$.element, target, clientY: y } as unknown as PointerEvent);
 }
 
 describe('Peek', () => {
