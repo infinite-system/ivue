@@ -4,8 +4,8 @@ import type { RouteLocation, Router } from 'vue-router';
 
 // The application router — vue-router owns the URL. Three DOMAINS, each a
 // nested layout with its own section tabs: /newsletter/* (the audience
-// machine), /socials/* (publishing), and /release/* (the launch calendar
-// and where it has landed). Every leaf route is NAMED by its
+// machine), /socials/* (publishing), /release/* (the launch calendar) and
+// /press/* (the pieces, their platform projections, the queue, the ledger). Every leaf route is NAMED by its
 // ViewName so the store reads/pushes views by name. Route components are
 // lazy imports: the router module never touches a .vue file at load
 // time, so it stays importable in node tests (and the views code-split
@@ -102,6 +102,34 @@ class $AppRouter {
             path: 'venues',
             name: 'release-venues',
             component: () => import('../release/ReleaseVenuesView.vue'),
+          },
+        ],
+      },
+      {
+        path: '/press',
+        component: () => import('./DomainLayout.vue'),
+        props: { domain: 'press' },
+        children: [
+          { path: '', redirect: { name: 'press' } },
+          {
+            path: 'piece',
+            name: 'press',
+            component: () => import('../press/PiecesView.vue'),
+          },
+          {
+            path: 'piece/:id',
+            name: 'press-piece',
+            component: () => import('../press/PieceView.vue'),
+          },
+          {
+            path: 'queue',
+            name: 'press-queue',
+            component: () => import('../press/QueueView.vue'),
+          },
+          {
+            path: 'sent',
+            name: 'press-sent',
+            component: () => import('../press/SentView.vue'),
           },
         ],
       },

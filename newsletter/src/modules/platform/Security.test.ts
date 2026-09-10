@@ -27,13 +27,13 @@ describe('Security', () => {
 
   it('bearerAuthorized accepts the admin secret and nothing else', async () => {
     const env = makeTestEnv();
-    const authorized = new Request('https://newsletter.test/admin/stats', {
+    const authorized = new Request('https://newsletter.test/admin/stat', {
       headers: { authorization: 'Bearer test-admin-secret' },
     });
-    const wrong = new Request('https://newsletter.test/admin/stats', {
+    const wrong = new Request('https://newsletter.test/admin/stat', {
       headers: { authorization: 'Bearer nope' },
     });
-    const absent = new Request('https://newsletter.test/admin/stats');
+    const absent = new Request('https://newsletter.test/admin/stat');
     expect(await Security.Class.bearerAuthorized(authorized, env)).toBe(true);
     expect(await Security.Class.bearerAuthorized(wrong, env)).toBe(false);
     expect(await Security.Class.bearerAuthorized(absent, env)).toBe(false);

@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import { quasar } from '@quasar/vite-plugin';
 
 // The admin dashboard — an ivue application (Reactive/Static classes from
 // this repo's own lib source). Two run modes:
@@ -13,7 +14,10 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig(({ mode }) => {
   const secrets = loadEnv(mode, fileURLToPath(new URL('..', import.meta.url)), '');
   return {
-    plugins: [vue()],
+    // Quasar is a component library here, not a project layout: the
+    // plugin tree-shakes `import { QBtn } from 'quasar'` to per-component
+    // imports; modules keep living in src/modules/<domain>/
+    plugins: [vue(), quasar()],
     resolve: {
       alias: [
         {
@@ -28,18 +32,12 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 5190,
-      // the release calendar bundles paste-ready copy from tasks/ and
-      // docs_v2/blog/ (?raw imports) — the dev server must be allowed to
-      // read them from outside the dashboard root
-      fs: {
-        allow: [fileURLToPath(new URL('../..', import.meta.url))],
-      },
       // every Worker endpoint the dashboard calls — /admin/* plus the two
-      // top-level operator endpoints. Defaults to the LIVE Worker (real
+      // top-level operator endpoints and the press's public asset reads. Defaults to the LIVE Worker (real
       // data); set DEV_WORKER_ORIGIN in newsletter/.env (e.g.
       // http://localhost:8787) to target a local `wrangler dev` instead.
       proxy: Object.fromEntries(
-        ['/admin', '/broadcast', '/drip'].map((path) => [
+        ['/admin', '/broadcast', '/drip', '/press-asset'].map((path) => [
           path,
           {
             target:

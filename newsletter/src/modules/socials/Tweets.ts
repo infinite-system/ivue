@@ -10,19 +10,19 @@ class $Tweets {
     postedAt: number,
   ): Promise<void> {
     await env.DB.prepare(
-      'INSERT OR IGNORE INTO tweets (tweet_id, text, slug, posted_at) VALUES (?, ?, ?, ?)',
+      'INSERT OR IGNORE INTO tweet (tweet_id, text, slug, posted_at) VALUES (?, ?, ?, ?)',
     )
       .bind(tweet.tweetId, tweet.text, tweet.slug, postedAt)
       .run();
   }
 
-  static async log(env: Env, limit = 50): Promise<TweetRow[]> {
+  static async log(env: Env, limit = 50): Promise<Tweets.TweetRow[]> {
     const { results } = await env.DB.prepare(
       'SELECT tweet_id AS tweetId, text, slug, posted_at AS postedAt ' +
-        'FROM tweets ORDER BY posted_at DESC LIMIT ?',
+        'FROM tweet ORDER BY posted_at DESC LIMIT ?',
     )
       .bind(Math.min(Math.max(1, limit), 200))
-      .all<TweetRow>();
+      .all<Tweets.TweetRow>();
     return results;
   }
 }
@@ -30,11 +30,12 @@ class $Tweets {
 export namespace Tweets {
   export const $Class = Static($Tweets);
   export let Class = $Class;
+
+  export interface TweetRow {
+    tweetId: string;
+    text: string;
+    slug: string | null;
+    postedAt: number;
+  }
 }
 
-export interface TweetRow {
-  tweetId: string;
-  text: string;
-  slug: string | null;
-  postedAt: number;
-}

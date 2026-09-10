@@ -1,9 +1,7 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef, watch } from 'vue';
 import { Api } from '../platform/Api';
-import type { SubscriberDetail } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
-import type { SubscriberTabName } from '../app/AppStore';
 
 // The subscriber modal's model: whichever email address rides the
 // route's `subscriber` query, this loads that address's memberships,
@@ -20,11 +18,11 @@ class $SubscriberModel {
 
   // the app store — resolved and cached on first touch (store pattern)
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   get detail() {
-    return shallowRef<SubscriberDetail | null>(null);
+    return shallowRef<Api.SubscriberDetail | null>(null);
   }
 
   get loading() {
@@ -32,14 +30,14 @@ class $SubscriberModel {
   }
 
   // ---- tabs (routable — the active tab lives in the URL) ----
-  get TABS(): { name: SubscriberTabName; label: string }[] {
+  get TABS(): { name: AppStore.SubscriberTabName; label: string }[] {
     return [
       { name: 'sent', label: 'Sent' },
       { name: 'upcoming', label: 'Upcoming' },
     ];
   }
 
-  get activeTab(): SubscriberTabName {
+  get activeTab(): AppStore.SubscriberTabName {
     return this.$app.subscriberTab;
   }
 
@@ -95,15 +93,15 @@ class $SubscriberModel {
   }
 
   // ---- tabs ----
-  isTabOpen(tab: SubscriberTabName) {
+  isTabOpen(tab: AppStore.SubscriberTabName) {
     return this.activeTab === tab;
   }
 
-  openTab(tab: SubscriberTabName) {
+  openTab(tab: AppStore.SubscriberTabName) {
     this.$app.openSubscriberTab(tab);
   }
 
-  tabLabel(tab: SubscriberTabName) {
+  tabLabel(tab: AppStore.SubscriberTabName) {
     const label = this.TABS.find((entry) => entry.name === tab)?.label ?? tab;
     if (!this.detail.value) return label;
     const count =
@@ -111,7 +109,7 @@ class $SubscriberModel {
     return `${label} (${count})`;
   }
 
-  timezoneLabel(membership: SubscriberDetail['memberships'][number]) {
+  timezoneLabel(membership: Api.SubscriberDetail['memberships'][number]) {
     return (
       membership.timezone ??
       (this.detail.value?.defaultTimezone ?? '') + ' (default)'

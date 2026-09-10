@@ -2,7 +2,7 @@
 // labels — all prototype members, no mount needed.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CommentsModel } from './CommentsModel';
-import type { CommentRow } from '../platform/Api';
+import type { Api } from '../platform/Api';
 
 beforeEach(() => {
   vi.stubGlobal('sessionStorage', {
@@ -21,7 +21,7 @@ beforeEach(() => {
   );
 });
 
-function makeRow(overrides: Partial<CommentRow>): CommentRow {
+function makeRow(overrides: Partial<Api.CommentRow>): Api.CommentRow {
   return {
     id: 1,
     slug: 'first-post',

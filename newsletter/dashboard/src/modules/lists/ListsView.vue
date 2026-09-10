@@ -2,7 +2,7 @@
 import { ListsModel } from './ListsModel';
 import { AppStore } from '../app/AppStore';
 
-const app = AppStore.use();
+const app = AppStore.Class.use();
 
 const model = new ListsModel.Class();
 const {

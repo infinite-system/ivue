@@ -6,18 +6,22 @@ import {
   type PressChannel,
   type PressEntry,
 } from './release-calendar.data';
-import { ReleaseDrafts } from './ReleaseDrafts';
+import { Api } from '../platform/Api';
+import { AppStore } from '../app/AppStore';
+import { PressKinds } from '../press/PressKinds';
 
 // The release calendar — six months of planned placements rendered as a
 // month grid, checkable per entry, each entry opening a dialog that holds
 // the copy to post. The PLAN is committed data (release-calendar.data.ts);
 // the PROGRESS is the user's own and lives in localStorage, so checking a
-// box never needs a deploy. Rendering is observation-bounded: only the
-// open month materializes day cells, and only the open entry resolves
-// its drafts.
+// box never needs a deploy. The COPY is the press's rows, read from the
+// Worker by the entry's source keys when the dialog opens — the calendar
+// says when, the press says what. Rendering is observation-bounded: only
+// the open month materializes day cells.
 class $ReleaseCalendarModel {
   protected static readonly STORAGE_KEY = 'ivue-press-done-v1';
   static readonly COPIED_MS = 1400;
+  static readonly SCHEDULE_HOUR = 9;
   static readonly WEEKDAYS = [
     'Monday',
     'Tuesday',
@@ -60,6 +64,10 @@ class $ReleaseCalendarModel {
     return this.constructor as typeof $ReleaseCalendarModel;
   }
 
+  protected get $app() {
+    return AppStore.Class.use();
+  }
+
   /* ---- state ---- */
 
   /** first day of the month currently on screen */
@@ -92,9 +100,18 @@ class $ReleaseCalendarModel {
     return ref<string | null>(null);
   }
 
-  /** which of the open entry's drafts is showing */
-  get activeDraftKey() {
-    return ref<string | null>(null);
+  /** the press rows behind the open entry, read by its source keys */
+  get openExpressions() {
+    return shallowRef<Api.PressExpression[]>([]);
+  }
+
+  get loadingCopy() {
+    return ref(false);
+  }
+
+  /** which of the open entry's expressions is showing */
+  get activeExpressionId() {
+    return ref<number | null>(null);
   }
 
   /** key of the text copied a moment ago — its button reads Copied */
@@ -223,26 +240,57 @@ class $ReleaseCalendarModel {
     return this.openEntry !== null;
   }
 
-  /** the open entry's copy, resolved — missing keys are dropped */
-  get openDrafts(): ReleaseDrafts.Draft[] {
+  get activeExpression(): Api.PressExpression | null {
+    const rows = this.openExpressions.value;
+    const id = this.activeExpressionId.value;
+    return rows.find((row) => row.id === id) ?? rows[0] ?? null;
+  }
+
+  get hasCopyTabs(): boolean {
+    return this.openExpressions.value.length > 1;
+  }
+
+  get hasCopy(): boolean {
+    return this.openExpressions.value.length > 0;
+  }
+
+  /** the live segments of a thread, else null */
+  get activeSegments(): Api.PressExpression[] | null {
+    const row = this.activeExpression;
+    if (!row?.children) return null;
+    return row.children.filter((child) => !child.skipped);
+  }
+
+  get activeBody(): string {
+    const row = this.activeExpression;
+    if (!row) return '';
+    if (row.children) return (this.activeSegments ?? []).map((child) => child.body).join('\n\n');
+    return row.body;
+  }
+
+  get activeStatusLabel(): string {
+    const row = this.activeExpression;
+    return row ? PressKinds.Class.statusLabel(row.status) : '';
+  }
+
+  get activeStatusTone(): string {
+    const row = this.activeExpression;
+    return row ? `state-${row.status}` : '';
+  }
+
+  /** one placement, one expression: the dialog can schedule and mark it directly */
+  get singleExpression(): Api.PressExpression | null {
+    const rows = this.openExpressions.value;
+    return rows.length === 1 ? rows[0] : null;
+  }
+
+  get canScheduleHere(): boolean {
+    return this.singleExpression?.status === 'approved';
+  }
+
+  get scheduleHereLabel(): string {
     const entry = this.openEntry;
-    if (!entry) return [];
-    const drafts: ReleaseDrafts.Draft[] = [];
-    for (const key of entry.drafts) {
-      const draft = ReleaseDrafts.Class.resolve(key);
-      if (draft) drafts.push(draft);
-    }
-    return drafts;
-  }
-
-  get activeDraft(): ReleaseDrafts.Draft | null {
-    const drafts = this.openDrafts;
-    const key = this.activeDraftKey.value;
-    return drafts.find((draft) => draft.key === key) ?? drafts[0] ?? null;
-  }
-
-  get hasDraftTabs(): boolean {
-    return this.openDrafts.length > 1;
+    return entry ? `Schedule for ${this.dateLabel(entry)}` : 'Schedule';
   }
 
   get openEntryIsDone(): boolean {
@@ -386,9 +434,24 @@ class $ReleaseCalendarModel {
     this.persistDone();
   }
 
-  toggleOpenDone() {
+  /** the dialog's checkbox: the calendar's mark, and the ledger when one expression is behind the entry */
+  async toggleOpenDone() {
     const entry = this.openEntry;
-    if (entry) this.toggleDone(entry.id);
+    if (!entry) return;
+    const wasDone = this.isDone(entry.id);
+    this.toggleDone(entry.id);
+    const single = this.singleExpression;
+    if (!wasDone && single && single.status !== 'sent') {
+      try {
+        const fresh = await Api.Class.pressAct(single.id, 'sent', {
+          venue: entry.venue,
+          calendarId: entry.id,
+        });
+        this.replaceExpression(fresh);
+      } catch (error) {
+        this.$app.reportFailure(error);
+      }
+    }
   }
 
   /** open the entry's dialog; remembers the card so focus can return */
@@ -397,9 +460,36 @@ class $ReleaseCalendarModel {
     // duck-typed so the model runs where no DOM exists (node tests)
     this.returnFocusEl.value =
       target && typeof target.focus === 'function' ? target : null;
-    this.activeDraftKey.value = null;
+    this.activeExpressionId.value = null;
     this.copiedKey.value = null;
+    this.openExpressions.value = [];
     this.openId.value = id;
+    this.loadCopy();
+  }
+
+  /** the press rows behind the open entry, one lookup per source key, deduped */
+  async loadCopy() {
+    const entry = this.openEntry;
+    if (!entry || !entry.copy.length) return;
+    this.loadingCopy.value = true;
+    try {
+      const seen = new Map<number, Api.PressExpression>();
+      for (const key of entry.copy) {
+        for (const row of await Api.Class.pressExpressionsForSource(key))
+          if (!seen.has(row.id)) seen.set(row.id, row);
+      }
+      if (this.openId.value === entry.id) this.openExpressions.value = [...seen.values()];
+    } catch (error) {
+      this.$app.reportFailure(error);
+    } finally {
+      this.loadingCopy.value = false;
+    }
+  }
+
+  replaceExpression(fresh: Api.PressExpression) {
+    this.openExpressions.value = this.openExpressions.value.map((row) =>
+      row.id === fresh.id ? fresh : row,
+    );
   }
 
   closeDetail() {
@@ -420,12 +510,38 @@ class $ReleaseCalendarModel {
     else if (previousId) this.returnFocusEl.value?.focus();
   }
 
-  showDraft(key: string) {
-    this.activeDraftKey.value = key;
+  showExpression(id: number) {
+    this.activeExpressionId.value = id;
   }
 
-  isDraftActive(key: string): boolean {
-    return this.activeDraft?.key === key;
+  isExpressionActive(row: Api.PressExpression): boolean {
+    return this.activeExpression?.id === row.id;
+  }
+
+  expressionTitle(row: Api.PressExpression): string {
+    const venue = row.venue && row.venue !== 'X' ? ` · ${row.venue}` : '';
+    return `${PressKinds.Class.label(row.kind)}${venue}`;
+  }
+
+  openInPress() {
+    const row = this.activeExpression;
+    if (row) this.$app.openPiece(row.pieceId);
+  }
+
+  /** the entry's day at the launch hour, local */
+  async scheduleHere() {
+    const entry = this.openEntry;
+    const single = this.singleExpression;
+    if (!entry || !single) return;
+    const dueAt = Math.floor(
+      new Date(`${entry.date}T${String(this.self.SCHEDULE_HOUR).padStart(2, '0')}:00:00`).getTime() / 1000,
+    );
+    try {
+      const fresh = await Api.Class.pressAct(single.id, 'schedule', { dueAt });
+      this.replaceExpression(fresh);
+    } catch (error) {
+      this.$app.reportFailure(error);
+    }
   }
 
   /* ---- labels ---- */
@@ -490,8 +606,8 @@ class $ReleaseCalendarModel {
     return this.copiedKey.value === key;
   }
 
-  segmentKey(draft: ReleaseDrafts.Draft, index: number): string {
-    return `${draft.key}#${index}`;
+  segmentKey(child: Api.PressExpression): string {
+    return `segment-${child.id}`;
   }
 
   segmentLabel(index: number, count: number): string {
@@ -500,14 +616,12 @@ class $ReleaseCalendarModel {
 
   /* ---- clipboard ---- */
 
-  async copyDraft(draft: ReleaseDrafts.Draft) {
-    await this.copyText(draft.key, draft.body);
+  async copyActive() {
+    await this.copyText('all', this.activeBody);
   }
 
-  async copySegment(draft: ReleaseDrafts.Draft, index: number) {
-    const text = draft.segments?.[index];
-    if (text !== undefined)
-      await this.copyText(this.segmentKey(draft, index), text);
+  async copySegment(child: Api.PressExpression) {
+    await this.copyText(this.segmentKey(child), child.body);
   }
 
   async copyText(key: string, text: string) {

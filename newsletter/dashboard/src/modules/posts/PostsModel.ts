@@ -1,7 +1,6 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef, watch } from 'vue';
 import { Api } from '../platform/Api';
-import type { PostSummary } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 
 // The post catalog with the email preview: the EXACT html a subscriber
@@ -24,11 +23,11 @@ class $PostsModel {
 
   // the app store — resolved and cached on first touch (store pattern)
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   get posts() {
-    return shallowRef<PostSummary[]>([]);
+    return shallowRef<Api.PostSummary[]>([]);
   }
 
   get loading() {

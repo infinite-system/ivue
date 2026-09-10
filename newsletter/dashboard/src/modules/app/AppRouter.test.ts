@@ -33,6 +33,10 @@ describe('AppRouter', () => {
         ['socials-settings', '/socials/settings'],
         ['release', '/release/calendar'],
         ['release-venues', '/release/venues'],
+        ['press', '/press/piece'],
+        ['press-piece', '/press/piece/:id'],
+        ['press-queue', '/press/queue'],
+        ['press-sent', '/press/sent'],
       ]),
     );
     // run_worker_first claims GET /drip — the SPA must never route there

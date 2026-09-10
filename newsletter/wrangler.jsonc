@@ -28,7 +28,8 @@
 			"/broadcast",
 			"/drip",
 			"/postmark-webhook",
-			"/admin/*"
+			"/admin/*",
+			"/press-asset/*"
 		]
 	},
 	"observability": {
@@ -44,6 +45,16 @@
 			"*/5 * * * *"
 		]
 	},
+	// the press's asset store: dropped images and video for the cards,
+	// written by POST /admin/press/asset, served publicly at /press-asset/<key>
+	// (the X poster fetches those URLs). Free tier; create once with
+	// `npx wrangler@4.120.1 r2 bucket create ivue-press`.
+	"r2_buckets": [
+		{
+			"binding": "PRESS_ASSETS",
+			"bucket_name": "ivue-press"
+		}
+	],
 	"d1_databases": [
 		{
 			"binding": "DB",

@@ -1,11 +1,6 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type {
-  AudiencePage,
-  ListSummary,
-  SubscriberRow,
-} from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 
 // The subscribers table: server-side pagination and search, list filter,
@@ -19,7 +14,7 @@ class $SubscribersModel {
 
   // the app store — resolved and cached on first touch (store pattern)
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   get PAGE_SIZE() {
@@ -28,7 +23,7 @@ class $SubscribersModel {
 
   // ---- table state ----
   get rows() {
-    return shallowRef<SubscriberRow[]>([]);
+    return shallowRef<Api.SubscriberRow[]>([]);
   }
 
   get total() {
@@ -48,7 +43,7 @@ class $SubscribersModel {
   }
 
   get lists() {
-    return shallowRef<ListSummary[]>([]);
+    return shallowRef<Api.ListSummary[]>([]);
   }
 
   get loading() {
@@ -123,7 +118,7 @@ class $SubscribersModel {
     }
   }
 
-  applyPage(page: AudiencePage) {
+  applyPage(page: Api.AudiencePage) {
     this.rows.value = page.rows;
     this.total.value = page.total;
     // selection only ever refers to visible rows
@@ -156,11 +151,11 @@ class $SubscribersModel {
     this.refresh();
   }
 
-  rowKey(row: SubscriberRow) {
+  rowKey(row: Api.SubscriberRow) {
     return row.email + ' ' + row.list;
   }
 
-  selectLabel(row: SubscriberRow) {
+  selectLabel(row: Api.SubscriberRow) {
     return `Select ${row.email}`;
   }
 

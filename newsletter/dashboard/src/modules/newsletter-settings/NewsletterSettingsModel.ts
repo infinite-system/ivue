@@ -1,7 +1,6 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type { AdminSettings, ListSummary } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 
 // Newsletter settings: the drip clock — cadence in days, send hour in
@@ -15,15 +14,15 @@ class $NewsletterSettingsModel {
 
   // the app store — resolved and cached on first touch (store pattern)
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   get settings() {
-    return shallowRef<AdminSettings | null>(null);
+    return shallowRef<Api.AdminSettings | null>(null);
   }
 
   get lists() {
-    return shallowRef<ListSummary[]>([]);
+    return shallowRef<Api.ListSummary[]>([]);
   }
 
   // ---- drafts (defaults) ----
@@ -139,7 +138,7 @@ class $NewsletterSettingsModel {
     }
   }
 
-  applySettings(settings: AdminSettings, lists?: ListSummary[]) {
+  applySettings(settings: Api.AdminSettings, lists?: Api.ListSummary[]) {
     this.settings.value = settings;
     if (lists) this.lists.value = lists;
     this.cadenceDaysDraft.value = String(settings.cadenceDays);

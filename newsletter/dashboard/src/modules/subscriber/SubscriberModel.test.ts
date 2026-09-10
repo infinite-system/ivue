@@ -2,7 +2,7 @@
 // cadence narration — all prototype members, testable without a mount.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SubscriberModel } from './SubscriberModel';
-import type { SubscriberDetail } from '../platform/Api';
+import type { Api } from '../platform/Api';
 
 // The model reacts to the route's ?subscriber= query through the app
 // store; with no query set it stays closed and loads nothing, so the
@@ -19,7 +19,7 @@ beforeEach(() => {
   );
 });
 
-function makeDetail(overrides: Partial<SubscriberDetail>): SubscriberDetail {
+function makeDetail(overrides: Partial<Api.SubscriberDetail>): Api.SubscriberDetail {
   return {
     email: 'ada@ivue.dev',
     memberships: [

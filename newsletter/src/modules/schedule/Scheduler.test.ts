@@ -88,7 +88,7 @@ describe('Scheduler', () => {
     // not due yet — nothing runs
     expect(await Scheduler.Class.runDue(env)).toBe(0);
     // force it due
-    await env.DB.prepare('UPDATE scheduled_jobs SET due_at = 1').run();
+    await env.DB.prepare('UPDATE scheduled_job SET due_at = 1').run();
     expect(await Scheduler.Class.runDue(env)).toBe(1);
     const { recent } = await Scheduler.Class.list(env);
     expect(recent[0].result).toMatchObject({ ok: true });
@@ -109,7 +109,7 @@ describe('Scheduler', () => {
       { text: 'Scheduled hello', slug: 'first-post' },
       farFuture(),
     );
-    await env.DB.prepare('UPDATE scheduled_jobs SET due_at = 1').run();
+    await env.DB.prepare('UPDATE scheduled_job SET due_at = 1').run();
     expect(await Scheduler.Class.runDue(env)).toBe(1);
     const log = await Tweets.Class.log(env);
     expect(log[0]).toMatchObject({ tweetId: '77', slug: 'first-post' });
@@ -128,7 +128,7 @@ describe('Scheduler', () => {
       },
       farFuture(),
     );
-    await env.DB.prepare('UPDATE scheduled_jobs SET due_at = 1').run();
+    await env.DB.prepare('UPDATE scheduled_job SET due_at = 1').run();
     expect(await Scheduler.Class.runDue(env)).toBe(1);
     expect(calls.tweetCalls).toHaveLength(3);
     expect(calls.tweetCalls[2].reply).toEqual({
@@ -176,7 +176,7 @@ describe('Scheduler', () => {
       { text: 'Doomed', slug: '' },
       farFuture(),
     );
-    await env.DB.prepare('UPDATE scheduled_jobs SET due_at = 1').run();
+    await env.DB.prepare('UPDATE scheduled_job SET due_at = 1').run();
     expect(await Scheduler.Class.runDue(env)).toBe(1);
     const { recent } = await Scheduler.Class.list(env);
     expect(recent[0].result?.error).toContain('credentials');

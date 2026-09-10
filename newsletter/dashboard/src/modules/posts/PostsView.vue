@@ -3,7 +3,7 @@ import { PostsModel } from './PostsModel';
 import { AppStore } from '../app/AppStore';
 import { Format } from '../platform/Format';
 
-const app = AppStore.use();
+const app = AppStore.Class.use();
 const model = new PostsModel.Class();
 const {
   // state refs

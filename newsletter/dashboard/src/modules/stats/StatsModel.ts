@@ -1,7 +1,6 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type { Stats } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 
 // System stats: list totals, signups over the last 60 days, and sends
@@ -13,11 +12,11 @@ class $StatsModel {
 
   // the app store — resolved and cached on first touch (store pattern)
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   get stats() {
-    return shallowRef<Stats | null>(null);
+    return shallowRef<Api.Stats | null>(null);
   }
 
   get loading() {

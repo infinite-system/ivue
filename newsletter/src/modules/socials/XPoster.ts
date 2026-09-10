@@ -37,7 +37,7 @@ class $XPoster {
     env: Env,
     text: string,
     imageUrls: string[] = [],
-  ): Promise<TweetResult> {
+  ): Promise<XPoster.TweetResult> {
     const mediaIds = await this.uploadImages(env, imageUrls);
     return this.postTweet(env, text, { mediaIds });
   }
@@ -49,8 +49,8 @@ class $XPoster {
   // pick up by hand.
   static async postThread(
     env: Env,
-    segments: ThreadSegment[],
-  ): Promise<ThreadResult> {
+    segments: XPoster.ThreadSegment[],
+  ): Promise<XPoster.ThreadResult> {
     if (segments.length > this.MAXIMUM_THREAD_TWEETS)
       throw new Error(
         `A thread holds at most ${this.MAXIMUM_THREAD_TWEETS} tweets.`,
@@ -142,7 +142,7 @@ class $XPoster {
       mediaIds?: string[];
       inReplyTo?: string;
     } = {},
-  ): Promise<TweetResult> {
+  ): Promise<XPoster.TweetResult> {
     const authorization = await this.authorizationHeader(
       env,
       'POST',
@@ -259,17 +259,18 @@ class $XPoster {
 export namespace XPoster {
   export const $Class = Static($XPoster);
   export let Class = $Class;
+
+  export interface TweetResult {
+    tweetId: string;
+  }
+
+  export interface ThreadSegment {
+    text: string;
+    imageUrls?: string[];
+  }
+
+  export interface ThreadResult {
+    tweetIds: string[];
+  }
 }
 
-export interface TweetResult {
-  tweetId: string;
-}
-
-export interface ThreadSegment {
-  text: string;
-  imageUrls?: string[];
-}
-
-export interface ThreadResult {
-  tweetIds: string[];
-}

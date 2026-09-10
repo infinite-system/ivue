@@ -67,15 +67,15 @@ submit (POST /comment)          → row INSERTed as 'pending'
                                 → subscribe_replies opt-in RECORDED (row created at approve)
                                 → operator notified (NOTIFY_EMAIL)
                                 → NOTHING is public yet
-approve (POST /admin/comments/approve)
+approve (POST /admin/comment/approve)
                                 → status = 'approved' (the ONLY path to public;
                                   guarded by status='pending' → true exactly once)
                                 → author's reply subscription created (if opted in)
                                 → if it is a reply: reply notifications go out NOW
-delete (POST /admin/comments/delete)
+delete (POST /admin/comment/delete)
                                 → root: whole thread + its subscriptions
                                 → reply: its answers re-parent to the root
-lock/unlock (POST /admin/comments/lock)
+lock/unlock (POST /admin/comment/lock)
                                 → root.locked = 0/1
 ```
 
@@ -96,7 +96,7 @@ lock/unlock (POST /admin/comments/lock)
 ### 2.2 `Comments.approvedFor(slug)` — the public projection
 
 `SELECT id, name, body, submitted_at, parent_id, root_id, locked,
-avatar_seed FROM comments WHERE slug=? AND status='approved' ORDER BY
+avatar_seed FROM comment WHERE slug=? AND status='approved' ORDER BY
 submitted_at, id`. **The email column is structurally absent** — this
 query is the privacy guarantee, tested by asserting the exact key set
 of the public row.
@@ -170,10 +170,10 @@ dashboard SPA shell (cost me an hour).
 
 ## 5. Admin routes (Bearer `ADMIN_SECRET`)
 
-`GET /admin/comments` (page: pending first, then newest; status filter;
-search over slug/name/email/body), `POST /admin/comments/approve {id}`
-(→ notifications), `POST /admin/comments/delete {id}`,
-`POST /admin/comments/lock {id, locked}`.
+`GET /admin/comment` (page: pending first, then newest; status filter;
+search over slug/name/email/body), `POST /admin/comment/approve {id}`
+(→ notifications), `POST /admin/comment/delete {id}`,
+`POST /admin/comment/lock {id, locked}`.
 
 Dashboard (`newsletter/dashboard/src/modules/comments/`): queue table
 with Approve / Lock|Unlock / Delete; reply rows show "↳ reply in thread
