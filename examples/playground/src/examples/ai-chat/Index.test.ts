@@ -3,6 +3,7 @@
 Goal: Prove the index lists every message from the small index rows without a content page, filters by role, tool calls and text, seeks the chat on a click, and keeps a selection that is a set of ids with an anchor: click picks one, shift-click takes the range in the filtered order, ctrl-click toggles, a filter change loses nothing, and export leaves in thread order in the chosen form.
 [Selection is a set of ids](./ai-chat.invariants.md#selection-is-a-set-of-ids)
 // domain-invariant: $Index — If a filter changes, then every selected id stays selected
+// domain-invariant: $Index — If the list is filtered or ordered, then it lands at its end in thread order and at its start when the newest is first, the way the chat opens at its end
 // domain-invariant: $Index — If shift is held on a click, then every row between the anchor and the click in the filtered order joins the selection
 Impossible if true: an export leaves in the order the rows were clicked
 
@@ -24,6 +25,7 @@ const rows: ChatApi.IndexRow[] = [
   { id: 'd', r: 'u', t: 'next question', c: 0, at: 1_700_000_120_000 },
   { id: 'e', r: 'a', t: 'plain answer', c: 0, at: 1_700_000_180_000 },
   { id: 'f', r: 'a', t: 'more tools', c: 1, at: 1_700_000_240_000 },
+  { id: 'g', r: 's', t: 'Context compacted', c: 0, at: 1_700_000_300_000 },
 ];
 
 function make() {
@@ -32,8 +34,17 @@ function make() {
   const host = hosted(() => new Chat.Class());
   const chat = host.instance;
   chat.applyIndex(rows);
-  const index = new Index.Class({ chat });
-  return { chat, index, unmount: host.unmount };
+  // the index is hosted too: its constructor lands the list on mount and after every filtering
+  const indexHost = hosted(() => new Index.Class({ chat }));
+  const index = indexHost.instance;
+  return {
+    chat,
+    index,
+    unmount: () => {
+      indexHost.unmount();
+      host.unmount();
+    },
+  };
 }
 
 const click = (extra: Partial<MouseEvent> = {}) => ({ shiftKey: false, metaKey: false, ctrlKey: false, ...extra }) as MouseEvent;
@@ -43,24 +54,47 @@ describe('Index', () => {
     vi.restoreAllMocks();
   });
 
+  // domain-invariant: $Index — If the list is filtered or ordered, then it lands at its end in thread order and at its start when the newest is first, the way the chat opens at its end
+  it('lands at the end of the list in thread order, at the start when the newest is first, and reverses on demand', async () => {
+    const { index, unmount } = make();
+    const seeks: number[] = [];
+    index.scroller.value = { scrollToIndex: (at: number) => seeks.push(at) } as never;
+    index.landAfterFilter();
+    expect(seeks).toEqual([6]); // the end, like the chat
+    index.setOrder('newest');
+    expect(index.rows.value.map((row) => row.id)).toEqual(['g', 'f', 'e', 'd', 'c', 'b', 'a']);
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(seeks.at(-1)).toBe(0); // the start: the newest is first now
+    index.setRole('user');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(index.rows.value.map((row) => row.id)).toEqual(['d', 'a']);
+    expect(seeks.at(-1)).toBe(0);
+    index.setOrder('oldest');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(index.rows.value.map((row) => row.id)).toEqual(['a', 'd']);
+    expect(seeks.at(-1)).toBe(1);
+    unmount();
+  });
+
   it('lists every message from the index rows and filters by role, tool calls and text', () => {
     const { index, unmount } = make();
-    expect(index.count).toBe(6);
-    expect(index.countLabel).toBe('6 messages');
+    expect(index.count).toBe(7);
+    expect(index.countLabel).toBe('7 messages');
     index.setRole('user');
     expect(index.rows.value.map((row) => row.id)).toEqual(['a', 'd']);
-    expect(index.countLabel).toBe('2 of 6');
+    expect(index.countLabel).toBe('2 of 7');
     index.setRole('assistant');
-    index.setTools('only');
-    expect(index.rows.value.map((row) => row.id)).toEqual(['b', 'f']);
     index.setTools('exclude');
     expect(index.rows.value.map((row) => row.id)).toEqual(['e']);
     index.setRole('all');
+    index.setTools('compaction');
+    expect(index.rows.value.map((row) => row.id)).toEqual(['g']);
     index.setTools('include');
     index.query.value = 'TOOLS';
     expect(index.rows.value.map((row) => row.id)).toEqual(['b', 'f']);
     index.clearQuery();
-    expect(index.count).toBe(6);
+    expect(index.count).toBe(7);
     expect(index.isRole('all')).toBe(true);
     expect(index.isTools('include')).toBe(true);
     const row = index.rows.value[1];
@@ -96,7 +130,7 @@ describe('Index', () => {
     expect(index.isSelected(index.rows.value[1])).toBe(true);
     expect(index.rowClass(index.rows.value[1])).toMatchObject({ 'ac-selected': true });
     index.toggleAllShown();
-    expect(index.selectedCount).toBe(6);
+    expect(index.selectedCount).toBe(7);
     expect(index.allShownSelected).toBe(true);
     expect(index.selectAllLabel).toBe('Clear shown');
     index.toggleAllShown();
@@ -113,7 +147,7 @@ describe('Index', () => {
     unmount();
   });
 
-  it('keyboard: arrows move, shift extends, space picks, enter seeks, escape closes', () => {
+  it('keyboard: arrows move, shift extends, space picks, enter seeks, escape closes, and typing in the box is left alone', () => {
     const { chat, index, unmount } = make();
     const jump = vi.spyOn(chat, 'jumpTo');
     const key = (key: string, shiftKey = false) => ({ key, shiftKey, preventDefault() {} }) as KeyboardEvent;
@@ -121,29 +155,24 @@ describe('Index', () => {
     index.onKeydown(key('ArrowDown', true));
     expect(index.focusedIndex.value).toBe(2);
     expect([...index.selected.value].sort()).toEqual(['b', 'c']);
+    // a space typed in the search box is the box's
+    const typed = { key: ' ', shiftKey: false, preventDefault: vi.fn(), target: { tagName: 'INPUT' } } as unknown as KeyboardEvent;
+    const selectedBefore = index.selectedCount;
+    index.onKeydown(typed);
+    expect(typed.preventDefault).not.toHaveBeenCalled();
+    expect(index.selectedCount).toBe(selectedBefore);
     index.onKeydown(key(' '));
     expect(index.isSelected(index.rows.value[2])).toBe(false);
     index.onKeydown(key('ArrowUp'));
     index.onKeydown(key('Enter'));
     expect(jump).toHaveBeenCalledWith(1);
-    chat.indexOpen.value = true;
+    chat.openSidebar('Index');
     index.onKeydown(key('Escape'));
-    expect(chat.indexOpen.value).toBe(false);
+    expect(chat.indexOpen).toBe(false);
     expect(index.isFocusedRow(index.rows.value[1])).toBe(true);
     index.onRowDoubleClick(index.rows.value[4]);
     expect(jump).toHaveBeenLastCalledWith(4);
     expect(index.isCurrent(index.rows.value[4])).toBe(true);
-    unmount();
-  });
-
-  it('resizes within bounds', () => {
-    const { index, unmount } = make();
-    index.resizeTo(100);
-    expect(index.width.value).toBe(Index.Class.MIN_WIDTH);
-    index.resizeTo(5000);
-    expect(index.width.value).toBe(Index.Class.MAX_WIDTH);
-    index.resizeTo(400.4);
-    expect(index.widthPx).toBe('400px');
     unmount();
   });
 

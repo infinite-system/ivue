@@ -1,3 +1,4 @@
+import { Static } from '../Static'
 import { LenisUtils } from './LenisUtils'
 
 /**
@@ -9,6 +10,9 @@ import { LenisUtils } from './LenisUtils'
  * animate.advance(0.5) // 50
  */
 class $Animate {
+  /** a lerp this close to its target is complete — half a pixel, the band `Math.round` gave integer targets */
+  static readonly SETTLE_PX = 0.5
+
   isRunning = false
   value = 0
   from = 0
@@ -42,7 +46,11 @@ class $Animate {
       this.value = this.from + (this.to - this.from) * easedProgress
     } else if (this.lerp) {
       this.value = LenisUtils.Class.damp(this.value, this.to, this.lerp * 60, deltaTime)
-      if (Math.round(this.value) === this.to) {
+      // Within half a pixel the lerp is done and snaps. Upstream tested
+      // `Math.round(value) === to`, which a fractional target — a shifted
+      // lerp, a rebased offset — can never satisfy: the animation then runs
+      // forever at a velocity of 1e-6 px and the scroller never rests.
+      if (Math.abs(this.value - this.to) < Animate.$Class.SETTLE_PX) {
         this.value = this.to
         completed = true
       }
@@ -115,7 +123,7 @@ class $Animate {
 }
 
 export namespace Animate {
-  export const $Class = $Animate // raw — children `extends` this
+  export const $Class = Static($Animate) // anchored — the settle band is a static
   export let Class = $Class // plain — no reactive state, no Reactive()
   // raw-instance type — fields, parameters, returns
   export type Model = InstanceType<typeof Class>

@@ -1,7 +1,20 @@
 import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
-import type { VirtualScroller } from '../virtual-scroller/VirtualScroller';
+import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
+import VirtualScrollerView from '../virtual-scroller/VirtualScroller.vue';
+import { Kit } from '../../kit/Kit';
+import { ChatMessage } from './ChatMessage';
+import ChatMessageView from './ChatMessage.vue';
+import { Composer } from './Composer';
+import ChatComposerView from './ChatComposer.vue';
+import { Index } from './Index';
+import ChatIndexView from './ChatIndex.vue';
+import { Sidebar } from './sidebar/Sidebar';
+import { Peek } from './Peek';
+import ChatPeekView from './ChatPeek.vue';
+import SidebarView from './sidebar/Sidebar.vue';
+import type { ChatSettings } from './ChatSettings';
 import { ChatApi } from './ChatApi';
 import { Clock } from './Clock';
 import { SessionLog } from './SessionLog';
@@ -17,6 +30,18 @@ import { Markdown } from './Markdown';
 // bottom stays pinned only while the reader is there. One clock times
 // every wait.
 class $Chat {
+  /** the roles the thread composes — the scroller, a row, the composer, the index — built once per class by Static() */
+  static get $kit() {
+    return {
+      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView },
+      Message: { namespace: ChatMessage, vue: ChatMessageView },
+      Composer: { namespace: Composer, vue: ChatComposerView },
+      Index: { namespace: Index, vue: ChatIndexView },
+      Sidebar: { namespace: Sidebar, vue: SidebarView },
+      Peek: { namespace: Peek, vue: ChatPeekView },
+    } satisfies Kit.Of<Chat.Role>;
+  }
+
   /** pages fetched beyond the window, each side — two, so a row is loaded before it can mount in the padding */
   static readonly PAGE_MARGIN = 2;
   /** within this many px of the end, the reader counts as at the bottom */
@@ -26,6 +51,11 @@ class $Chat {
   /** how long after a reply ends its last pin may keep converging */
   static readonly SEEK_RELEASE_MS = 1200;
   static readonly STUB_ROLE: Record<string, SessionLog.Role> = { u: 'user', a: 'assistant', s: 'system' };
+
+  /** one paint later — a frame where there is one, a tick where there is not */
+  static frame(): Promise<void> {
+    return new Promise((resolve) => (typeof requestAnimationFrame === 'function' ? requestAnimationFrame(() => resolve()) : setTimeout(resolve, 16)));
+  }
 
   static bytes(count: number): string {
     if (count < 1024) return `${count} B`;
@@ -58,7 +88,7 @@ class $Chat {
   static tokenCount(message: SessionLog.Message): number {
     return message.parts.reduce((count, part) => count + (part.kind === 'text' || part.kind === 'thinking' ? ChatApi.Class.tokens(part.text).length : 0), 0);
   }
-  constructor() {
+  constructor(public props: Chat.Props = {}) {
     onMounted(() => this.load());
     onBeforeUnmount(() => this.dispose());
     watch(
@@ -69,11 +99,34 @@ class $Chat {
       () => this.scrollOffset,
       () => this.onScroll(),
     );
+    watch(
+      () => this.thumbDragging,
+      (dragging) => this.onThumbDrag(dragging),
+    );
   }
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
     return this.constructor as typeof $Chat;
+  }
+
+  /** the kit is the class's; a subclass with its own `$kit` swaps the subtree */
+  get kit() {
+    return this.self.$kit;
+  }
+
+  /* ---- the look: closed here; ConfiguredChat is the layer that opens these to the kit and the settings ---- */
+
+  get theme(): ChatSettings.Theme {
+    return 'midnight';
+  }
+
+  get density(): ChatSettings.Density {
+    return 'cozy';
+  }
+
+  get tree(): string {
+    return 'shipped';
   }
 
   /** the one clock every loader reads — owned here, disposed here */
@@ -130,6 +183,21 @@ class $Chat {
     return ref(true);
   }
 
+  /** whether the latest message's top is inside the viewport — the chip hides as soon as it is */
+  get latestInView() {
+    return ref(true);
+  }
+
+  /** the window reached while the thumb was held — fetched on the drop, not on the way */
+  get heldWindow() {
+    return shallowRef<{ start: number; end: number } | null>(null);
+  }
+
+  /** the scrollbar's thumb is being dragged: rows fly past as skeletons and no page is asked for */
+  get thumbDragging(): boolean {
+    return Boolean(this.scroller.value?.scrollbarDragging);
+  }
+
   get streaming() {
     return shallowRef<Chat.Streaming | null>(null);
   }
@@ -162,8 +230,18 @@ class $Chat {
     return ref('');
   }
 
-  get indexOpen() {
-    return ref(false);
+  /** the side panel that is open, if any */
+  get sidebarTab() {
+    return ref<Chat.SidebarTab | null>(null);
+  }
+
+  /** a search the index should take up when it opens: the text, or an empty string to focus the box */
+  get searchRequest() {
+    return ref<string | null>(null);
+  }
+
+  get indexOpen(): boolean {
+    return this.sidebarTab.value === 'Index';
   }
 
   /** the row the reader last landed on through the index, for the mark */
@@ -174,6 +252,11 @@ class $Chat {
   // TEMPLATE-REF TARGET — the scroller's exposed instance
   get scroller() {
     return ref<VirtualScroller.Exposed<Chat.Row> | null>(null);
+  }
+
+  // TEMPLATE-REF TARGET — the scrollbar peek's exposed instance
+  get peek() {
+    return ref<Peek.Exposed | null>(null);
   }
 
   /* ---- derived ---- */
@@ -226,7 +309,7 @@ class $Chat {
   }
 
   get showsJumpToLatest(): boolean {
-    return this.hasThread && !this.atBottom.value;
+    return this.hasThread && !this.latestInView.value;
   }
 
   get pendingPageCount(): number {
@@ -293,7 +376,7 @@ class $Chat {
   }
 
   get indexToggleLabel(): string {
-    return this.indexOpen.value ? 'Close index' : 'Index';
+    return this.indexOpen ? 'Close index' : 'Index';
   }
 
   get fileLoadLabel(): string {
@@ -343,15 +426,29 @@ class $Chat {
       page: Math.floor(at / pageSize),
       role: this.self.STUB_ROLE[entry.r] ?? 'system',
       preview: entry.t,
+      calls: entry.c,
+      at: entry.at,
       message: null,
     }));
   }
 
   onWindow(range: { start: number; end: number }) {
     if (this.source.value !== 'sample' || !this.count) return;
+    if (this.thumbDragging) {
+      this.heldWindow.value = range;
+      return;
+    }
+    this.heldWindow.value = null;
     const first = Math.max(0, Math.floor(range.start / this.pageSize) - this.self.PAGE_MARGIN);
     const last = Math.min(this.pageCount - 1, Math.floor(Math.max(range.end - 1, 0) / this.pageSize) + this.self.PAGE_MARGIN);
     for (let page = first; page <= last; page++) void this.ensurePage(page);
+  }
+
+  /** the thumb dropped: the window it landed on loads now */
+  onThumbDrag(dragging: boolean) {
+    if (dragging) return;
+    const held = this.heldWindow.value;
+    if (held) this.onWindow(held);
   }
 
   async ensurePage(page: number) {
@@ -408,6 +505,19 @@ class $Chat {
     const container = Number(scroller.containerOuterSize ?? 0);
     const offset = this.scrollOffset;
     this.atBottom.value = extent <= container || offset + container >= extent - this.self.BOTTOM_THRESHOLD_PX;
+    // the chip points at the latest message: once its top is on screen the reader has reached
+    // it, however long it runs below the fold
+    const latestTop = scroller.getIndexPosition?.(this.latestIndex);
+    this.latestInView.value = this.atBottom.value || (typeof latestTop === 'number' && latestTop < offset + container - this.self.BOTTOM_THRESHOLD_PX);
+  }
+
+  /** the thread hands the peek every pointer move — it decides whether the track is under it */
+  onThreadPointerMove(event: PointerEvent) {
+    this.peek.value?.onThreadPointerMove(event);
+  }
+
+  onThreadPointerLeave() {
+    this.peek.value?.onThreadPointerLeave();
   }
 
   jumpTo(index: number, animate = true) {
@@ -417,11 +527,25 @@ class $Chat {
     this.scroller.value?.scrollToIndex(target, undefined, animate, 16);
   }
 
+  /**
+   * The sent message is on screen before the reply's wait begins: the
+   * scroller lays a new row out on the next tick and measures it on its
+   * first paint, so a single jump lands short of the end — jump, let it
+   * paint, jump again onto the measured geometry.
+   */
+  async landLatest() {
+    await nextTick();
+    this.jumpToLatest(false);
+    await this.self.frame();
+    this.jumpToLatest(false);
+  }
+
   jumpToLatest(animate = true) {
     const scroller = this.scroller.value;
     if (!scroller || !this.count) return;
     scroller.scrollToIndex(this.latestIndex, undefined, animate, 0);
     this.atBottom.value = true;
+    this.latestInView.value = true;
   }
 
   /** a streaming reply grows: keep the last line in view while the reader is at the bottom */
@@ -463,11 +587,35 @@ class $Chat {
   }
 
   toggleIndex() {
-    this.indexOpen.value = !this.indexOpen.value;
+    this.toggleSidebar('Index');
+  }
+
+  toggleSidebar(tab: Chat.SidebarTab) {
+    this.sidebarTab.value = this.sidebarTab.value === tab ? null : tab;
+  }
+
+  openSidebar(tab: Chat.SidebarTab) {
+    this.sidebarTab.value = tab;
+  }
+
+  closeSidebar() {
+    this.sidebarTab.value = null;
+  }
+
+  /** open the index on a search: a file's name from the files panel, or nothing to focus the box */
+  search(text: string) {
+    this.searchRequest.value = text;
+    this.openSidebar('Index');
   }
 
   closeIndex() {
-    this.indexOpen.value = false;
+    this.closeSidebar();
+  }
+
+  /** the composer's search button and ⌘K: open the index to search, or close it when it is the open panel */
+  toggleSearch() {
+    if (this.sidebarTab.value === 'Index') this.closeSidebar();
+    else this.search('');
   }
 
   /* ---- sending and the replayed reply ---- */
@@ -481,7 +629,7 @@ class $Chat {
     if (!parts.length) return;
     const now = Date.now();
     this.append({ id: `local-user-${now}`, index: this.count, role: 'user', timestamp: now, parts, sidechain: false });
-    this.jumpToLatest(false);
+    await this.landLatest();
     const source = await this.pickSource(request.text);
     await this.reply(source, ChatApi.Class.model(request.model));
   }
@@ -495,6 +643,8 @@ class $Chat {
       page: -1,
       role: message.role,
       preview: this.self.messageText(message).replace(/\s+/g, ' ').slice(0, 96),
+      calls: this.self.callCount(message),
+      at: message.timestamp,
       message,
     };
     this.rows.value = [...this.rows.value, row];
@@ -695,6 +845,8 @@ class $Chat {
       page: -1,
       role: message.role,
       preview: this.indexRows.value[at].t,
+      calls: this.indexRows.value[at].c,
+      at: message.timestamp,
       message,
     }));
     void nextTick(() => this.jumpToLatest(false));
@@ -723,6 +875,14 @@ export namespace Chat {
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
   export type Model = InstanceType<typeof Class>;
+  export type Role = 'Scroller' | 'Message' | 'Composer' | 'Index' | 'Sidebar' | 'Peek';
+  export type SidebarTab = 'Index' | 'Files' | 'Settings';
+
+  export interface Props {
+    dark?: boolean;
+    /** the entry the root was rendered through: the class it constructs, the consumer's props */
+    kit?: Kit.Entry;
+  }
 
   /** one row of the scroller: a stub until its page lands, then the message */
   export interface Row extends VirtualScroller.BaseItem {
@@ -730,6 +890,10 @@ export namespace Chat {
     page: number;
     role: SessionLog.Role;
     preview: string;
+    /** how many tool calls it made — known from the index before the page loads */
+    calls: number;
+    /** when it was said — known from the index before the page loads */
+    at: number;
     message: SessionLog.Message | null;
   }
 

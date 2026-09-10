@@ -1,15 +1,36 @@
 import { Reactive } from '../../../ivue';
+import { Static } from '../../../Static';
+import { Kit } from '../../../kit/Kit';
+import { Icons } from '../Icons';
+import { ToolCallPart } from './ToolCallPart';
+import ToolCallPartView from './ToolCallPart.vue';
 import { Clock } from '../Clock';
 import type { SessionLog } from '../SessionLog';
 import { ToolCallModel } from '../tools/ToolCallModel';
-import type { Parts } from './Parts';
+import type { Part } from './Part';
 
 // A run of tool calls as one row: the count, the tools' icons in order,
 // the combined time, a mark if any failed. It opens to its calls, each
 // collapsed and each with its own state, so the batch and a call never
 // reset each other.
 class $ToolBatchPart {
-  constructor(public props: Parts.Props<SessionLog.ToolBatchPart>) {}
+  /** the one role a batch composes: the part that picks a card per call */
+  static get $kit() {
+    return {
+      Call: { namespace: ToolCallPart, vue: ToolCallPartView },
+    } satisfies Kit.Of<'Call'>;
+  }
+
+  constructor(public props: Part.Props<SessionLog.ToolBatchPart>) {}
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $ToolBatchPart;
+  }
+
+  get kit() {
+    return this.self.$kit;
+  }
 
   get part(): SessionLog.ToolBatchPart {
     return this.props.part;
@@ -35,8 +56,18 @@ class $ToolBatchPart {
     return `${this.count} tool calls`;
   }
 
-  get icons(): { key: string; icon: string; name: string }[] {
-    return this.calls.map((call) => ({ key: call.id, icon: ToolCallModel.Class.ICONS[call.name] ?? (call.name.startsWith('mcp__') ? '⌘' : '⚙'), name: call.name }));
+  /** one icon per kind of call, with how many: `❯⁴ ✎²` rather than a row of four dollars */
+  get icons(): ToolBatchPart.IconGroup[] {
+    const groups = new Map<string, ToolBatchPart.IconGroup>();
+    for (const call of this.calls) {
+      const icon = ToolCallModel.Class.ICONS[call.name] ?? (call.name.startsWith('mcp__') ? '⌘' : call.name.startsWith('Task') ? '☑' : '⚙');
+      const group = groups.get(icon);
+      if (group) {
+        group.count += 1;
+        group.isMany = true;
+      } else groups.set(icon, { key: icon, icon, name: call.name, count: 1, isMany: false });
+    }
+    return [...groups.values()];
   }
 
   get namesLabel(): string {
@@ -69,17 +100,31 @@ class $ToolBatchPart {
     return { 'ac-batch-open': this.isExpanded, 'ac-batch-failed': this.hasFailure, 'ac-batch-running': this.isRunning };
   }
 
-  get toggleLabel(): string {
-    return this.isExpanded ? '▾' : '▸';
+  /** one chevron; the batch's open class turns it */
+  get chevronIcon(): string {
+    return Icons.$Class.PATHS.chevron;
   }
 
   toggle() {
     this.props.chat.toggle(this.id);
   }
+
+  /** a call as the single-call part reads it, so a batch renders through the same seam */
+  partFor(call: SessionLog.ToolCall): SessionLog.ToolCallPart {
+    return { kind: 'tool_call', call };
+  }
 }
 
 export namespace ToolBatchPart {
-  export const $Class = $ToolBatchPart;
+  export interface IconGroup {
+    key: string;
+    icon: string;
+    name: string;
+    count: number;
+    isMany: boolean;
+  }
+
+  export const $Class = Static($ToolBatchPart);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

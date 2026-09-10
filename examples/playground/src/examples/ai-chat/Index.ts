@@ -1,10 +1,14 @@
-import { computed, ref, shallowRef } from 'vue';
+import { computed, nextTick, onMounted, ref, shallowRef, watch } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
-import type { VirtualScroller } from '../virtual-scroller/VirtualScroller';
+import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
+import VirtualScrollerView from '../virtual-scroller/VirtualScroller.vue';
+import { Kit } from '../../kit/Kit';
+import { Icons } from './Icons';
 import type { Chat } from './Chat';
 import type { ChatApi } from './ChatApi';
 import { ChatExport } from './ChatExport';
+import { SessionLog } from './SessionLog';
 
 // The index: every message as one line, from the small index file, so
 // the whole thread is listed and filtered without a content page. A
@@ -14,11 +18,17 @@ import { ChatExport } from './ChatExport';
 // Export gathers the selected messages in thread order, loading the
 // pages they need.
 class $Index {
+  /** the one role the index composes: its own scroller over the filtered rows */
+  static get $kit() {
+    return {
+      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView },
+    } satisfies Kit.Of<'Scroller'>;
+  }
+
   static readonly ROLE_LABELS: Record<Index.RoleFilter, string> = { all: 'All', user: 'You', assistant: 'Agent' };
-  static readonly TOOL_LABELS: Record<Index.ToolFilter, string> = { include: 'With tools', exclude: 'No tools', only: 'Tools only' };
+  static readonly TOOL_LABELS: Record<Index.ToolFilter, string> = { include: 'With tools', exclude: 'No tools', compaction: 'Compaction only' };
+  static readonly ORDER_LABELS: Record<Index.Order, string> = { oldest: 'Oldest first', newest: 'Newest first' };
   static readonly EXPORT_LABELS: Record<Chat.ExportForm, string> = { markdown: 'Markdown', plain: 'Plain text', jsonl: 'JSONL' };
-  static readonly MIN_WIDTH = 280;
-  static readonly MAX_WIDTH = 720;
 
   static saveFile(text: string, name: string) {
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
@@ -31,11 +41,38 @@ class $Index {
     anchor.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
-  constructor(public props: Index.Props) {}
+  constructor(public props: Index.Props) {
+    // the list reads like the chat: it opens at its end, and every new filtering lands there
+    // again (or at its start when the newest is first) — after the scroller has its rows
+    onMounted(() => this.landAfterFilter());
+    watch(
+      () => this.rows.value,
+      () => this.landAfterFilter(),
+      { flush: 'post' },
+    );
+    // a search the chat asked for — a file's name, or nothing — takes the box and the focus
+    watch(
+      () => this.chat.searchRequest.value,
+      (request) => this.takeSearch(request),
+      { immediate: true },
+    );
+  }
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
     return this.constructor as typeof $Index;
+  }
+
+  get kit() {
+    return this.self.$kit;
+  }
+
+  get searchIcon(): string {
+    return Icons.$Class.PATHS.search;
+  }
+
+  get jumpIcon(): string {
+    return Icons.$Class.PATHS.jump;
   }
 
   get chat(): Chat.Model {
@@ -48,12 +85,21 @@ class $Index {
     return ref<Index.RoleFilter>('all');
   }
 
+  get order() {
+    return ref<Index.Order>('oldest');
+  }
+
   get tools() {
     return ref<Index.ToolFilter>('include');
   }
 
   get query() {
     return ref('');
+  }
+
+  // TEMPLATE-REF TARGET — the search box, focused when the chat asks for a search
+  get searchElement() {
+    return ref<HTMLInputElement | null>(null);
   }
 
   get selected() {
@@ -68,10 +114,6 @@ class $Index {
     return ref(0);
   }
 
-  get width() {
-    return ref(360);
-  }
-
   get exportForm() {
     return ref<Chat.ExportForm>('markdown');
   }
@@ -84,10 +126,6 @@ class $Index {
     return ref(false);
   }
 
-  get resizing() {
-    return ref(false);
-  }
-
   // TEMPLATE-REF TARGET — the index's own scroller
   get scroller() {
     return ref<VirtualScroller.Exposed<Index.Row> | null>(null);
@@ -97,6 +135,10 @@ class $Index {
 
   get roleOptions(): { value: Index.RoleFilter; label: string }[] {
     return (Object.keys(this.self.ROLE_LABELS) as Index.RoleFilter[]).map((value) => ({ value, label: this.self.ROLE_LABELS[value] }));
+  }
+
+  get orderOptions(): { value: Index.Order; label: string }[] {
+    return (Object.keys(this.self.ORDER_LABELS) as Index.Order[]).map((value) => ({ value, label: this.self.ORDER_LABELS[value] }));
   }
 
   get toolOptions(): { value: Index.ToolFilter; label: string }[] {
@@ -146,10 +188,6 @@ class $Index {
     return this.copied.value ? 'Copied' : 'Copy Markdown';
   }
 
-  get widthPx(): string {
-    return `${this.width.value}px`;
-  }
-
   get selectAllLabel(): string {
     return this.allShownSelected ? 'Clear shown' : 'Select shown';
   }
@@ -165,11 +203,26 @@ class $Index {
       if (role === 'user' && entry.r !== 'u') return;
       if (role === 'assistant' && entry.r !== 'a') return;
       if (tools === 'exclude' && entry.c > 0) return;
-      if (tools === 'only' && entry.c === 0) return;
+      if (tools === 'compaction' && !SessionLog.Class.isCompaction(entry.r, entry.t)) return;
       if (query && !entry.t.toLowerCase().includes(query)) return;
       output.push({ id: entry.id, body: '', position: String(at + 1), index: at, entry });
     });
-    return output;
+    return this.order.value === 'newest' ? output.reverse() : output;
+  }
+
+  takeSearch(request: string | null) {
+    if (request === null) return;
+    this.query.value = request;
+    this.chat.searchRequest.value = null;
+    void nextTick(() => this.searchElement.value?.focus());
+  }
+
+  /** where a fresh list lands: its end in thread order, its start when the newest is first */
+  landAfterFilter() {
+    const scroller = this.scroller.value;
+    const count = this.rows.value.length;
+    if (!scroller || !count) return;
+    scroller.scrollToIndex(this.order.value === 'newest' ? 0 : count - 1, undefined, false, 0);
   }
   /* ---- per row ---- */
 
@@ -277,7 +330,21 @@ class $Index {
     this.seek(row);
   }
 
+  /** the key landed in a text field — the search box, or any other input in the panel */
+  isTyping(event: KeyboardEvent): boolean {
+    const target = event.target as HTMLElement | null;
+    return Boolean(target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable));
+  }
+
   onKeydown(event: KeyboardEvent) {
+    // the chord that opened the panel closes it, wherever in the panel the focus sits
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      this.chat.closeIndex();
+      return;
+    }
+    // typing in the search box is typing: a space or an arrow there is the box's, not the list's
+    if (this.isTyping(event)) return;
     const rows = this.rows.value;
     if (!rows.length) return;
     const current = Math.max(0, Math.min(rows.length - 1, this.focusedIndex.value));
@@ -306,6 +373,14 @@ class $Index {
     this.role.value = value;
   }
 
+  setOrder(value: Index.Order) {
+    this.order.value = value;
+  }
+
+  isOrder(value: Index.Order): boolean {
+    return this.order.value === value;
+  }
+
   setTools(value: Index.ToolFilter) {
     this.tools.value = value;
   }
@@ -323,25 +398,6 @@ class $Index {
   }
 
   /* ---- resize ---- */
-
-  onResizeStart(event: PointerEvent) {
-    event.preventDefault();
-    this.resizing.value = true;
-    const startX = event.clientX;
-    const startWidth = this.width.value;
-    const move = (moveEvent: PointerEvent) => this.resizeTo(startWidth + (startX - moveEvent.clientX));
-    const up = () => {
-      this.resizing.value = false;
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-  }
-
-  resizeTo(width: number) {
-    this.width.value = Math.max(this.self.MIN_WIDTH, Math.min(this.self.MAX_WIDTH, Math.round(width)));
-  }
 
   /* ---- export ---- */
 
@@ -385,10 +441,12 @@ export namespace Index {
 
   export interface Props {
     chat: Chat.Model;
+    kit?: Kit.Entry;
   }
 
   export type RoleFilter = 'all' | 'user' | 'assistant';
-  export type ToolFilter = 'include' | 'exclude' | 'only';
+  export type ToolFilter = 'include' | 'exclude' | 'compaction';
+  export type Order = 'oldest' | 'newest';
 
   export interface Row extends VirtualScroller.BaseItem {
     index: number;

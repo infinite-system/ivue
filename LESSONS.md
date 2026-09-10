@@ -1095,3 +1095,42 @@ own whole than to arbitrate.
   the required secrets in `src/env-secrets.d.ts` so types hold everywhere.
 - R2 is off by default on an account: `wrangler r2 bucket create` fails
   with API code 10042 until R2 is enabled once in the Cloudflare dashboard.
+
+## The chat on the kit (2026-09-10, branch ai-chat-kit)
+
+- **The SFC compiler cannot resolve `typeof <imported namespace>` inside a `defineProps<T>()` type.** A
+  `kit?: Kit.Entry<typeof ChatMessage>` field in a Props interface kills the view with "Unresolvable type
+  reference". Keep `kit?: Kit.Entry` untyped at the SFC boundary and cast at the one `new`:
+  `new ((props.kit?.namespace.Class as typeof X.Class | undefined) ?? X.Class)(props)`.
+- **The compiler also walks the imports of the file a Props type lives in.** Part props defined on the row
+  model's namespace made two part views fail to compile while four others passed; a type-only
+  `parts/Part.ts` (`Part.Props<…>`) with three type imports fixed it. Keep view prop types in files that
+  import nothing but types.
+- **A stale compiled-type cache survives HMR.** After changing a `.ts` that a `.vue`'s `defineProps<T>()`
+  resolves, the dev server kept serving the old error until restarted. Restart vite when a props type moves.
+- **The gate reads a view's model owner from `new X.Class(`.** The seam form hid it, so every class
+  hosted by the scroller looked like it outlived components. `constructedNamespaceOf` now unwraps
+  `((… as …) ?? X.Class)` in both `modelConstructions` and the watch-lifetime scan; green fixture added.
+- **A batch renders its calls through `ToolCallPart`**, whose kit owns the card map — so one override of a
+  card reaches single calls and batches. The tool base's kit has only its leaves (Head, Foot, CodeBlock,
+  SubThread); importing the subclasses from the base would be a top-level cycle (`extends` needs the base
+  evaluated first), which a lazy `$kit` cannot help.
+- **Pages are held while the scrollbar's thumb is dragged** (`Chat.heldWindow`, released by a watch on
+  `scroller.scrollbarDragging`): rows fly past as skeletons and only the drop's window loads.
+- **A part the stream appends to in place never re-renders on its own.** `last.text += event.text` mutates a
+  plain object; `TextPart.text` read only `props.part.text`, so a reply's words appeared all at once when the
+  stream ended. The chat bumps `revision` per event: the getter reads `chat.revision.value` first, then the
+  part. Any view over a mutated-in-place record needs that subscription.
+- **The open sidebar tab lives in the settings store, not on the chat**, because a change of tree remounts
+  the example (`ChatShell` keys on the tree id) and a ref on the chat resets with it; `ConfiguredChat` overrides
+  `sidebarTab` to the store's ref. Drives that pick a tree then click the panel found this.
+- **A static data table must not read another module's `$Class` at load time** — the gate's
+  `cross_module_class_reads_happen_inside_bodies` flags it. `Sidebar.TABS` carries icon names; a method
+  resolves them from `Icons.$Class.PATHS`.
+- **Playwright's "move away" point must actually leave the element**: a peek card 320px wide beside the
+  track swallowed a pointer moved 300px left of the track, and the drive read a bug that was not there.
+  Instrument `pointermove` targets before touching the code.
+- **The scrollbar peek is a second scroller over the same rows** (`Peek`, role on `Chat.$kit`): `v-model` binds
+  the chat's `rows` ref, previews and times come from the index, so a peek never fetches. The thread's section
+  forwards `pointermove` to the peek, which tests `closest('.virtual-scroller__track')` — the track lives inside
+  the scroller component and owns its own pointer capture during a drag.

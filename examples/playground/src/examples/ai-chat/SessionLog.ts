@@ -111,6 +111,14 @@ class $SessionLog {
     }
   }
 
+  /** the text a compaction record projects — the index and its filters know a compaction by it */
+  static readonly COMPACTION_TEXT = 'Context compacted';
+
+  /** a compaction, as the index row or the chat row carries it: a system message with the compaction text */
+  static isCompaction(role: string, text: string): boolean {
+    return role.startsWith('s') && text.startsWith(this.COMPACTION_TEXT);
+  }
+
   /** the plain text a message projects — what copy and the index read */
   static messageText(message: SessionLog.Message): string {
     return message.parts.map((part) => this.partText(part)).filter(Boolean).join('\n');

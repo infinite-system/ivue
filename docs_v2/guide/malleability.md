@@ -329,7 +329,8 @@ Vue reads component options as own keys.
 The class behind it all, and the smaller tree the specs mount: a panel
 above a card above three sections and a code leaf, chosen for proving
 rather than for looks. The demo's own tree is under the demo, tab by
-tab.
+tab. On GitHub: [the kit and its spec tree](https://github.com/infinite-system/ivue/tree/main/examples/playground/src/kit)
+and [the demo's tree](https://github.com/infinite-system/ivue/tree/main/docs_v2/.vitepress/theme/components/examples/malleability).
 
 <LazyCodeGroup
   :files="[

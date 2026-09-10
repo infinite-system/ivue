@@ -108,7 +108,9 @@ class $ChatApi {
         yield { type: 'thinking_end', text: '' };
       } else if (part.kind === 'text') {
         for (const chunk of this.tokens(part.text)) {
-          await this.sleep(tokenMs, signal);
+          // a model does not tick like a metronome: words arrive in a jittered cadence, and a
+          // sentence's end or a line break holds a beat longer
+          await this.sleep(tokenMs * this.cadence(chunk), signal);
           yield { type: 'token', text: chunk };
         }
       } else if (part.kind === 'tool_call' || part.kind === 'tool_batch') {
@@ -125,6 +127,12 @@ class $ChatApi {
   }
 
   /** word-sized tokens, whitespace kept, so the text reads as it streams */
+  /** the pace of one word: 0.5–1.5× the model's rate, ×3 after a sentence or a line break */
+  static cadence(chunk: string): number {
+    const pause = /[.!?:]\s*$|\n\s*$/.test(chunk) ? 3 : 1;
+    return (0.5 + this.random()) * pause;
+  }
+
   static tokens(text: string): string[] {
     return text.match(/\S+\s*|\s+/g) ?? [];
   }

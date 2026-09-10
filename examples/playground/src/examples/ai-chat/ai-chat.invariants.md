@@ -47,12 +47,26 @@ bottom (within the threshold of the end). The first scroll away releases
 the pin; a "latest" chip brings it back. A seek from the index lands the
 message readable, never cut at the edge.
 
-## Rendering is a registry
+## The track is a map of the thread
 
-A part kind names its component; a tool name names its card; an MCP name
-maps by prefix; a name nobody mapped renders through the generic card.
-Nothing branches on a kind or a name — it looks it up — so a record the
-parser has not seen never breaks the page.
+A pointer over the scrollbar's track names a fraction of the thread, and
+the peek beside it shows the rows at that fraction from the index the
+chat already holds: preview, role and time, never a page. The card is a
+scroller of its own over the same rows, so the wheel walks it and a row
+jumps the thread there. While the thumb is dragged the card follows the
+pointer.
+
+## Rendering is a kit
+
+Every model that composes declares its roles as `static get $kit()`, a
+record of entries — a part per kind on the row, a card per tool name on
+the part that picks cards, the sections of the row, the leaves of a card
+— and every seam renders `<component :is="model.kit.Role.vue" :kit="model.kit.Role" …props />`.
+A model reads its kit from its own class, so a subclass swaps any role
+by naming another entry, and nothing branches on a kind or a name — it
+looks the entry up, with the generic card and the text part as the
+fallbacks — so a record the parser has not seen never breaks the page.
+The mechanism and its proofs: `../../kit/kit.invariants.md`.
 
 ## Full granularity in two clicks
 
@@ -87,6 +101,16 @@ moving the anchor. Changing a filter never loses a pick. Export leaves in
 thread order, whatever order the picks were made in, after loading the
 pages the selection needs.
 
+## Configuration is a layer
+
+`Chat` reads nothing but its own props: its theme, density and tree are
+getters returning the shipped defaults. `ConfiguredChat` is the layer that
+opens them — one getter each, reading the kit entry's props, then the
+page's settings, then `super` — and the root binds whatever the layer
+says. Precedence is inheritance order; a tree the reader picks is a
+`Kit.Class.derive` over the configured chat, and the shipped classes never
+learn that a settings panel exists.
+
 ## Nothing leaves the tab
 
 A typed message, an attachment, an opened session file: none of it is
@@ -102,13 +126,15 @@ the same rules before a character renders.
 If the invariants hold, none of these can exist in a correct state:
 
 - a page requested that no window needs, or requested twice
+- a peek that fetches a page, or one that shows a row other than the
+  track position's
 - the scroller knowing that a row is unloaded, or a placeholder measured
   at a size other than the estimate
 - a streaming reply moving the viewport while the reader is away from
   the bottom
 - a batch that holds one call, or one that hides a call more than two
   clicks deep
-- a renderer that branches on a tool name instead of looking it up
+- a renderer that branches on a tool name instead of looking it up, or a seam that names a component instead of an entry
 - a timer per row, or a counter that ticks after its part is done
 - a copy whose text differs between a mounted and an unmounted row
 - a selection lost by changing a filter, or an export out of thread order
