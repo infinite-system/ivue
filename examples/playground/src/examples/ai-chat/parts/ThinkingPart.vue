@@ -14,7 +14,6 @@ const model = new ((props.kit?.namespace.Class as typeof ThinkingPart.Class | un
       <span v-if="model.isLive" class="ac-spinner ac-spinner-soft" aria-hidden="true"></span>
       <span v-else class="ac-thinking-dot" aria-hidden="true"></span>
       <span class="ac-thinking-label">{{ model.headLabel }}</span>
-      <span class="ac-thinking-toggle">{{ model.toggleLabel }}</span>
     </button>
     <pre v-if="model.isExpanded" class="ac-thinking-text">{{ model.part.text }}</pre>
   </div>
