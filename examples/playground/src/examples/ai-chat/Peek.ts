@@ -13,8 +13,8 @@ import type { Kit } from '../../kit/Kit';
 // the pointer, showing the messages that live at that position — a mini
 // virtual scroller over the same rows, so the wheel walks it and a click
 // jumps the thread there. It reads previews the index already carries,
-// so a peek never fetches a page. While the thumb is dragged the peek
-// follows it. A search box at its top narrows the card to the rows whose
+// so a peek never fetches a page. A dragged thumb is the reader's own
+// seek: the card closes and stays closed until the drag ends. A search box at its top narrows the card to the rows whose
 // preview holds every word, and the same role and tools pickers as the
 // index narrow it further; while the box holds text or focus the card
 // stays, so the reader can type without the pointer pinning it.
@@ -237,8 +237,14 @@ class $Peek {
       this.cancelLinger();
       return;
     }
+    // a dragged thumb is a seek, not a look: no card while the thumb is held
+    if (this.chat.thumbDragging) {
+      this.cancelOpen();
+      if (this.open.value) this.close();
+      return;
+    }
     const overTrack = Boolean(target && track.contains(target));
-    if (!overTrack && !this.chat.thumbDragging) {
+    if (!overTrack) {
       // anywhere else a pending open is dropped, and an open card lingers, then goes
       this.cancelOpen();
       if (this.open.value) this.leave();
@@ -248,8 +254,8 @@ class $Peek {
     const fraction = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
     this.y.value = event.clientY - thread.getBoundingClientRect().top;
     const index = Math.round(fraction * (this.count - 1));
-    // an open card and a dragged thumb follow at once; a closed card waits for the pointer to rest
-    if (this.open.value || this.chat.thumbDragging) this.show(index);
+    // an open card follows at once; a closed card waits for the pointer to rest
+    if (this.open.value) this.show(index);
     else this.showAfterDelay(index);
   }
 
