@@ -9,6 +9,7 @@ import { Static } from '../../Static';
 class $ChatSettings {
   static readonly THEMES: ChatSettings.Option<ChatSettings.Theme>[] = [
     { value: 'midnight', label: 'Midnight', hint: 'the shipped dark palette' },
+    { value: 'light', label: 'Light', hint: 'the shipped light palette' },
     { value: 'ivory', label: 'Ivory', hint: 'paper and ink' },
     { value: 'terminal', label: 'Terminal', hint: 'phosphor on black, mono' },
   ];
@@ -54,7 +55,7 @@ export namespace ChatSettings {
   export type Instance = typeof Class.Instance;
   export type Model = InstanceType<typeof Class>;
 
-  export type Theme = 'midnight' | 'ivory' | 'terminal';
+  export type Theme = 'midnight' | 'light' | 'ivory' | 'terminal';
   export type Density = 'cozy' | 'compact';
   export type SidebarTab = 'Index' | 'Files' | 'Settings';
 
