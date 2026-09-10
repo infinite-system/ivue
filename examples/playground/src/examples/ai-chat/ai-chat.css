@@ -2745,3 +2745,19 @@
 .ai-chat .virtual-scroller::-webkit-scrollbar {
   display: none;
 }
+
+/* the thinking line is its own toggle: it lights on hover, no 'show' word */
+.ai-chat .ac-thinking-head {
+  margin: 0 -8px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  width: calc(100% + 16px);
+  transition: background 0.12s, color 0.12s;
+}
+.ai-chat .ac-thinking-head:hover {
+  background: var(--ac-panel-2);
+  color: var(--ac-text);
+}
+.ai-chat .ac-thinking-head:hover .ac-thinking-label {
+  color: var(--ac-accent);
+}

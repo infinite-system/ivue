@@ -39,10 +39,6 @@ class $ThinkingPart {
     return this.elapsedLabel ? `thought for ${this.elapsedLabel} · ${this.lengthLabel}` : `thinking · ${this.lengthLabel}`;
   }
 
-  get toggleLabel(): string {
-    return this.isExpanded ? 'hide' : 'show';
-  }
-
   toggle() {
     this.props.chat.toggle(this.id);
   }
