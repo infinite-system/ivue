@@ -1939,36 +1939,58 @@
 .ai-chat .ac-rec-writes .ac-file-record-tool {
   color: var(--ac-ok);
 }
+.ai-chat .ac-file-record-index {
+  padding: 0 5px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ac-accent);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.ai-chat .ac-file-record-index:hover {
+  background: var(--ac-bg);
+  text-decoration: underline;
+}
 .ai-chat .ac-file-record-go {
   margin-left: auto;
-  width: 20px;
-  height: 20px;
-  border: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--ac-line-soft);
   border-radius: 6px;
-  background: transparent;
-  opacity: 0;
+  background: var(--ac-bg);
+  opacity: 0.75;
   color: var(--ac-accent);
   cursor: pointer;
-  transition: opacity 0.12s, background 0.12s;
+  transition: opacity 0.12s, border-color 0.12s;
 }
+.ai-chat .ac-file-record:hover .ac-file-record-go,
 .ai-chat .ac-file-record-go:hover {
-  background: var(--ac-bg);
+  opacity: 1;
+  border-color: var(--ac-accent);
 }
 .ai-chat .ac-file-diff {
   margin: 4px 0 0;
   padding: 0 0 4px;
+  /* long lines scroll sideways inside the record, and the wheel stays here until the edge */
   display: block;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
   line-height: 1.5;
-  /* long lines scroll sideways inside the record; the wheel stays here until the edge */
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
 }
+/* the lines share one block as wide as the longest of them and at least the record, so
+   every line's ground runs the full scroll width, not just behind its text */
+.ai-chat .ac-file-diff-lines {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+}
 .ai-chat .ac-dl {
   display: block;
-  min-width: max-content;
   padding: 0 6px;
   white-space: pre;
 }
@@ -2012,6 +2034,13 @@
   white-space: nowrap;
 }
 /* settings */
+.ai-chat .ac-settings-list {
+  flex: 1;
+  min-height: 0;
+}
+.ai-chat .ac-settings-list > .virtual-scroller {
+  height: 100%;
+}
 .ai-chat .ac-setting {
   padding: 12px 14px;
   border-bottom: 1px solid var(--ac-line-soft);
