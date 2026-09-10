@@ -163,11 +163,10 @@ class $ExampleMalleability {
     return Boolean(namespace.derivedFrom);
   }
 
-  /** `theme: 'dracula', lineNumbers: true` — the props bag as the reader would write it */
+  /** the props bag as the reader would write it, one setting per line */
   static propsLabel(props: Record<string, unknown>): string {
-    return Object.entries(props)
-      .map(([key, value]) => `${key}: ${typeof value === 'string' ? `'${value}'` : JSON.stringify(value)}`)
-      .join(', ');
+    const lines = Object.entries(props).map(([key, value]) => `  ${key}: ${typeof value === 'string' ? `'${value}'` : JSON.stringify(value)},`);
+    return ['{', ...lines, '}'].join('\n');
   }
 
   /** The override literal, coloured minimally — strings, literals, the names — with no engine at all. */

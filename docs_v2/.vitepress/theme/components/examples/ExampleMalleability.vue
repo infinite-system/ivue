@@ -58,7 +58,10 @@ const {
                 <span v-else class="mal-same">{{ line.className }}</span>
                 <span v-if="line.derived" class="mal-badge">derived</span>
               </span>
-              <span v-if="line.props" class="mal-cell mal-cell-props"><span class="mal-now mal-props">{{ line.props }}</span></span>
+              <span v-if="line.props" class="mal-cell mal-cell-props">
+                <span class="mal-now mal-props">prop overrides — the settings this entry turns, read by the layer's getters before super</span>
+                <pre class="mal-props-literal">{{ line.props }}</pre>
+              </span>
             </span>
           </li>
         </ol>
@@ -227,6 +230,28 @@ const {
   color: var(--vp-c-brand-1);
   font-size: 10px;
   line-height: 16px;
+}
+.mal-cell-props {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+}
+.mal-props {
+  white-space: normal;
+  font-family: var(--vp-font-family-base);
+  font-size: 11px;
+  font-weight: 500;
+}
+.mal-props-literal {
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--vp-c-bg);
+  color: var(--vp-c-brand-1);
+  font-family: var(--vp-font-family-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre;
 }
 .mal-str {
   color: var(--vp-c-brand-1);
