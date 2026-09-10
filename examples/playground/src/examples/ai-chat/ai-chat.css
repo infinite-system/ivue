@@ -1885,7 +1885,7 @@
   border-color: var(--ac-line);
 }
 .ai-chat .ac-files-search {
-  margin: 0 12px 8px;
+  margin: 10px 12px 8px;
 }
 .ai-chat .ac-files-search .ac-search {
   width: 100%;
