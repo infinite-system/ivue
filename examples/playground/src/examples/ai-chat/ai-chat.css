@@ -1483,9 +1483,15 @@
   line-height: 1.25;
 }
 .ai-chat .ac-stats-actions {
+  /* the button alone, centred on the receipts' row; the last request is a receipt like the rest */
   display: flex;
   align-items: center;
-  gap: 8px;
+  margin-left: auto;
+}
+.ai-chat .ac-stats .ac-receipts dd.ac-last,
+.ai-chat .ac-stats .ac-receipts dd.ac-fetching {
+  font-weight: 500;
+  color: var(--ac-dim);
 }
 .ai-chat .ac-stats .ac-btn {
   padding: 5px 10px;
