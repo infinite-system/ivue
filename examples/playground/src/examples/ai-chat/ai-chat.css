@@ -2761,3 +2761,10 @@
 .ai-chat .ac-thinking-head:hover .ac-thinking-label {
   color: var(--ac-accent);
 }
+
+/* a tool card's code — the command, its output, a file — reads smaller than prose code, so more of it fits */
+.ai-chat .ac-tool-body pre.chat-code {
+  font-size: 11.5px;
+  line-height: 1.5;
+  padding: 8px 10px;
+}
