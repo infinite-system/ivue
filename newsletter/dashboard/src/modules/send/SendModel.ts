@@ -1,13 +1,6 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type {
-  ListSummary,
-  PostSummary,
-  RecipientOutcome,
-  ScheduledJob,
-  SendResult,
-} from '../platform/Api';
 import { Format } from '../platform/Format';
 import { AppStore } from '../app/AppStore';
 
@@ -22,15 +15,15 @@ class $SendModel {
 
   // the app store — resolved and cached on first touch (store pattern)
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   get posts() {
-    return shallowRef<PostSummary[]>([]);
+    return shallowRef<Api.PostSummary[]>([]);
   }
 
   get lists() {
-    return shallowRef<ListSummary[]>([]);
+    return shallowRef<Api.ListSummary[]>([]);
   }
 
   // ---- targeted send ----
@@ -51,7 +44,7 @@ class $SendModel {
   }
 
   get result() {
-    return shallowRef<SendResult | null>(null);
+    return shallowRef<Api.SendResult | null>(null);
   }
 
   // ---- broadcast + drip (arm-then-confirm) ----
@@ -65,11 +58,11 @@ class $SendModel {
   }
 
   get scheduledJobs() {
-    return shallowRef<ScheduledJob[]>([]);
+    return shallowRef<Api.ScheduledJob[]>([]);
   }
 
   get recentJobs() {
-    return shallowRef<ScheduledJob[]>([]);
+    return shallowRef<Api.ScheduledJob[]>([]);
   }
 
   get scheduleDueAt() {
@@ -138,11 +131,11 @@ class $SendModel {
     return this.result.value?.skippedAsRepeat.join(', ') ?? '';
   }
 
-  outcomeAccepted(outcome: RecipientOutcome) {
+  outcomeAccepted(outcome: Api.RecipientOutcome) {
     return outcome.errorCode === 0;
   }
 
-  outcomeLabel(outcome: RecipientOutcome) {
+  outcomeLabel(outcome: Api.RecipientOutcome) {
     return this.outcomeAccepted(outcome) ? 'accepted' : outcome.message;
   }
 

@@ -13,6 +13,6 @@
       "ivue": ["../../lib/index.ts"]
     }
   },
-  "include": ["src/**/*.ts", "../../lib/**/*.ts"],
+  "include": ["src/**/*.ts", "../../lib/**/*.ts", "../src/modules/press/Projection.ts"],
   "exclude": ["../../lib/__tests__"]
 }

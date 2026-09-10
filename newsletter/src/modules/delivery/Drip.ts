@@ -6,13 +6,6 @@ import { Settings } from '../config/Settings';
 import { Audience } from '../audience/Audience';
 import { Ledger } from '../audience/Ledger';
 import { Delivery } from './Delivery';
-import type { Post } from '../content/Posts';
-import type { Subscriber } from '../audience/Audience';
-import type { SendRow } from '../audience/Ledger';
-import type {
-  DripSchedule,
-  ListScheduleOverrides,
-} from '../config/Settings';
 
 // The drip: each due subscriber receives their oldest unsent post,
 // every `cadenceDays` calendar days, at `sendHourLocal` in the
@@ -37,7 +30,7 @@ class $Drip {
     epochSeconds: number,
     lastSentAt: number,
     timezone: string,
-    schedule: DripSchedule,
+    schedule: Settings.DripSchedule,
   ): boolean {
     if (LocalTime.Class.hourAt(epochSeconds, timezone) !== schedule.sendHourLocal)
       return false;
@@ -55,7 +48,7 @@ class $Drip {
     fromEpoch: number,
     lastSentAt: number,
     timezone: string,
-    schedule: DripSchedule,
+    schedule: Settings.DripSchedule,
   ): number {
     const hourStart = Math.floor(fromEpoch / 3600) * 3600;
     for (let step = 0; step <= this.dueScanLimitHours; step++) {
@@ -66,7 +59,7 @@ class $Drip {
     return hourStart; // unreachable with valid settings; fail safe
   }
 
-  static zoneOf(subscriber: Subscriber, schedule: DripSchedule): string {
+  static zoneOf(subscriber: Audience.Subscriber, schedule: Settings.DripSchedule): string {
     return (
       LocalTime.Class.normalizeTimezone(subscriber.timezone) ||
       schedule.defaultTimezone
@@ -74,12 +67,12 @@ class $Drip {
   }
 
   static plan(
-    posts: Post[],
-    recipients: Subscriber[],
-    sendRows: SendRow[],
-    schedule: DripSchedule,
+    posts: Posts.Post[],
+    recipients: Audience.Subscriber[],
+    sendRows: Ledger.SendRow[],
+    schedule: Settings.DripSchedule,
     now: number,
-  ): DripPlanEntry[] {
+  ): Drip.DripPlanEntry[] {
     const sentByEmail = new Map<string, Set<string>>();
     const lastSentByEmail = new Map<string, number>();
     for (const row of sendRows) {
@@ -118,7 +111,7 @@ class $Drip {
   // schedule (per-list overrides over the defaults). An email enrolled
   // in several lists is planned once, under the FIRST list that
   // carries it (list order), so one pass never queues it twice.
-  static async planAll(env: Env, now: number): Promise<DripPlanEntry[]> {
+  static async planAll(env: Env, now: number): Promise<Drip.DripPlanEntry[]> {
     const posts = await Posts.Class.load(env); // oldest first
     if (!posts.length) return [];
     const lists = await Audience.Class.lists(env);
@@ -127,7 +120,7 @@ class $Drip {
     const overrides = await Settings.Class.listOverrides(env);
 
     const planned = new Set<string>();
-    const entries: DripPlanEntry[] = [];
+    const entries: Drip.DripPlanEntry[] = [];
     for (const { list } of lists) {
       const recipients = (await Audience.Class.active(env, list)).filter(
         (recipient) => !planned.has(recipient.email),
@@ -151,7 +144,7 @@ class $Drip {
     if (!posts.length) return 0;
     const entries = await this.planAll(env, Http.Class.nowSeconds());
 
-    const queueBySlug = new Map<string, Subscriber[]>();
+    const queueBySlug = new Map<string, Audience.Subscriber[]>();
     for (const entry of entries) {
       if (!entry.sendNow || !entry.nextSlug) continue;
       let queue = queueBySlug.get(entry.nextSlug);
@@ -173,7 +166,7 @@ class $Drip {
   }
 
   // The dashboard's preview: the same plan the next cron tick executes.
-  static async preview(env: Env): Promise<DripPreview> {
+  static async preview(env: Env): Promise<Drip.DripPreview> {
     const [defaults, overrides, entries] = await Promise.all([
       Settings.Class.dripSchedule(env),
       Settings.Class.listOverrides(env),
@@ -186,21 +179,22 @@ class $Drip {
 export namespace Drip {
   export const $Class = Static($Drip);
   export let Class = $Class;
+
+  export interface DripPreview extends Settings.DripSchedule {
+    listOverrides: Settings.ListScheduleOverrides;
+    entries: DripPlanEntry[];
+  }
+
+  export interface DripPlanEntry {
+    email: string;
+    name: string;
+    timezone: string;
+    list?: string;
+    nextSlug: string | null;
+    sentCount: number;
+    lastSentAt: number | null;
+    dueAt: number;
+    sendNow: boolean;
+  }
 }
 
-export interface DripPreview extends DripSchedule {
-  listOverrides: ListScheduleOverrides;
-  entries: DripPlanEntry[];
-}
-
-export interface DripPlanEntry {
-  email: string;
-  name: string;
-  timezone: string;
-  list?: string;
-  nextSlug: string | null;
-  sentCount: number;
-  lastSentAt: number | null;
-  dueAt: number;
-  sendNow: boolean;
-}

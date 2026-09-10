@@ -2,7 +2,7 @@
 // schedule narration — all prototype members, no mount needed.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ListsModel } from './ListsModel';
-import type { AdminSettings } from '../platform/Api';
+import type { Api } from '../platform/Api';
 
 const SETTINGS = {
   cadenceDays: 2,
@@ -11,7 +11,7 @@ const SETTINGS = {
   listOverrides: { vip: { sendHourLocal: 18 } },
   // only the schedule fields matter here; the X/sender fields the type
   // has since gained are irrelevant to these derivations
-} as unknown as AdminSettings;
+} as unknown as Api.AdminSettings;
 
 beforeEach(() => {
   vi.stubGlobal('sessionStorage', {

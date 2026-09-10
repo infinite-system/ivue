@@ -7,7 +7,7 @@ wrangler@4.120.1 types` regenerates `worker-configuration.d.ts` (the
 typed Env) after any config change, and `npx tsc --noEmit` typechecks.
 
 **The invariant:** at most one email per (subscriber, post), ever. The
-`sends` table is the invariant; the drip picks each subscriber's **oldest
+`send` table is the invariant; the drip picks each subscriber's **oldest
 unsent** post, so an ad-hoc `/broadcast` today can never be repeated by the
 drip later — there is no exclusion logic, just the ledger.
 
@@ -66,6 +66,10 @@ npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --local   # from newsle
 npx wrangler@4.120.1 dev --port 8787 \
   --var ADMIN_SECRET:e2e-local-secret --var POSTMARK_SERVER_TOKEN:invalid-local-token
 node newsletter/scripts/e2e-walk.mjs                                # from repo root
+# the walk expects a seeded local audience: 30+ subscribers including
+# evgeny@ivue.dev with `send` rows for one-kilobyte-feature and
+# the-field-not-the-rules (add subscribers through POST /admin/subscriber/add,
+# sends with `d1 execute --local`); the press stations create their own rows
 
 # production walk (read-only + one sanctioned test send)
 set -a; . newsletter/.env; set +a
@@ -77,7 +81,7 @@ E2E_SEND_TO=newsletter@ivue.dev node newsletter/scripts/prod-walk.mjs
 Lists: migration 0002 gives subscribers a `list` column (default
 `newsletter` — the only list the cron drips). The same address may join
 several lists; an unsubscribe suppresses the ADDRESS globally, matching
-Postmark's per-address suppression. `/subscribe` and `/admin/subscribers/add`
+Postmark's per-address suppression. `/subscribe` and `/admin/subscriber/add`
 accept an optional `list`; `/broadcast` accepts `{slug, list}`.
 
 ## One-time setup
@@ -175,7 +179,7 @@ works, and the ledger recorded it:
 
 ```sh
 npx wrangler@4.120.1 d1 execute ivue-newsletter --remote \
-  --command='SELECT * FROM sends'
+  --command='SELECT * FROM send'
 ```
 
 ## Ad-hoc broadcast (also the future MCP tool surface)
@@ -245,7 +249,7 @@ order:
    rename only through committed history) and verify the renamed slugs
    kept their dates.
 4. Migrate D1 (remote AND local):
-   `UPDATE sends SET slug='<new>' WHERE slug='<old>'` — without this
+   `UPDATE send SET slug='<new>' WHERE slug='<old>'` — without this
    the drip sees the post as unsent and RE-MAILS it to everyone who
    already received it. Also check `tweets.slug` and pending
    `scheduled_jobs` payloads.
@@ -263,7 +267,7 @@ email — `blog-index-generator.mjs` writes
 it and fills `{{UNSUBSCRIBE_URL}}`. It ledgers as slug `welcome`, which
 does double duty: a returning subscriber is never re-welcomed, and the
 welcome's `sent_at` makes the FIRST dripped post wait one full cadence
-after signup. Admin-added subscribers (`/admin/subscribers/add`) get NO
+after signup. Admin-added subscribers (`/admin/subscriber/add`) get NO
 welcome — only the public form triggers it. Preview:
 `/admin/preview?slug=welcome` (also clickable anywhere the dashboard
 shows the `welcome` slug).
@@ -294,7 +298,7 @@ time. It drives the identicon on the site — the same person keeps the
 same avatar everywhere, and the address itself is not derivable from
 what the public endpoint serves.
 
-**Locking.** `POST /admin/comments/lock {id, locked}` (or the Lock
+**Locking.** `POST /admin/comment/lock {id, locked}` (or the Lock
 button in Newsletter → Comments) closes a thread: existing replies stay
 visible, new ones are refused server-side and the UI hides its reply
 buttons. Passing a reply's id locks the thread that reply belongs to.
@@ -339,6 +343,76 @@ projected send time (`GET /admin/subscriber` unrolls the drip's own
 rule — one email per cadence from the last send — to the end of the
 archive). Unsubscribed addresses show a "pipeline paused" banner.
 
+## The press (`/press` in the dashboard)
+
+The printing desk. A **piece** is the argument (title, claim, links,
+banner, the **base** text); its **expressions** are the platform
+projections — an X thread, a LinkedIn post, a Reddit post, an email —
+each a card that is also the editor. Every posting, by the Worker or by
+hand, is a row in the **posting** ledger. Copy lives in D1, never in the
+repo. Design and invariants: `tasks/press-system-plan.md`,
+`src/modules/press/press.invariants.md`.
+
+- **Two modes.** A *derived* expression regenerates from the base on
+  every base save (its text is read-only in the card — edit the base, or
+  Detach). An *authored* expression is hand-written and never tracks the
+  base. Threads split the base on `---` rules.
+- **Approval is of the exact text.** The lint (limits, plain-text
+  constructs, a cover for articles) must pass; any edit or regeneration
+  of an approved row returns it to draft and cancels its job.
+- **Only X posts through an API.** Everything else comes due in the Queue
+  with Copy and Mark sent; the ledger row is the same shape either way.
+- **The calendar says when, the press says what.** A calendar entry names
+  its copy by press source key and reads it from the Worker; Mark as
+  posted there writes the ledger with the entry's venue and id.
+- **Bodies are edited in Tiptap, stored as markdown.** The base and every
+  markdown card (articles, Reddit, dev.to, the HN first comment, plain
+  text) open in a Tiptap editor; what lands in D1 is normalized markdown
+  (the serializer's `\` escapes and backslash line breaks come off, so
+  the text a tweet derives from is verbatim). Enter starts a paragraph,
+  Shift+Enter a line break; a rule (`---`) is a tweet break in the base.
+- **Images and video live in R2.** Drop or paste a file into any editor
+  (or pick one from the toolbar) and it uploads to the `PRESS_ASSETS`
+  bucket (`ivue-press`) through `POST /admin/press/asset?name=…` (raw
+  body, type in the header, 25 MB cap, images and mp4/webm/mov only) and
+  comes back at `<WORKER_ORIGIN>/press-asset/<ms>-<token>-<slug>.<ext>` —
+  a public, immutable, year-cached read the Worker answers before the SPA
+  fallback (`run_worker_first`). Tweets and cards take up to four images
+  each (drop onto the card) into `meta.imageUrls`, which the X poster
+  attaches. A YouTube link on its own line (or pasted) becomes a player;
+  a video file link becomes a `<video>`; both stay bare links in the
+  stored markdown. **R2 must be enabled once in the Cloudflare dashboard**
+  before `wrangler r2 bucket create ivue-press` succeeds (API error
+  10042 otherwise); the deploy fails until the bucket exists. Locally,
+  wrangler simulates the bucket; start the Worker with
+  `--var WORKER_ORIGIN:http://<your-vm-ip>:5190` so asset URLs resolve
+  through the vite proxy (`/press-asset` is proxied like `/admin`).
+- **Tables and routes are singular** (`piece`, `expression`, `posting`;
+  `/admin/press/piece/:id`, `/admin/press/expression/:id/posting`).
+
+The agent's door is the same API, with `X-Press-Author: agent` so every
+revision names who wrote:
+
+```bash
+# from the repo root; PRESS_ORIGIN + ADMIN_SECRET from the environment or newsletter/.env
+node newsletter/scripts/press.mjs list [--q text] [--status approved] [--kind x-thread] [--wave 1]
+node newsletter/scripts/press.mjs show <pieceId>            # the piece, its base, every expression with segments
+node newsletter/scripts/press.mjs expression <id>           # one expression as JSON
+node newsletter/scripts/press.mjs edit <id> --body-file path | --body "text" | --label "…" | --venue "…"
+node newsletter/scripts/press.mjs base <pieceId> --body-file path   # saves the base; derived rows regenerate
+node newsletter/scripts/press.mjs approve|unapprove|detach|archive <id>
+node newsletter/scripts/press.mjs skip <segmentId> [--restore]
+node newsletter/scripts/press.mjs sent <id> --url … [--platform bluesky] [--venue …] [--calendar-id …]
+node newsletter/scripts/press.mjs postings [<pieceId>]      # the ledger
+node newsletter/scripts/press.mjs queue
+node newsletter/scripts/press.mjs import <batch.json> [--dry-run]   # one-shot; the batch stays out of the repo
+node newsletter/scripts/press-cards.mjs <expressionId>      # an image-card set → 1200×675 PNGs in newsletter/press-cards/
+```
+
+Local development: `wrangler dev` on :8787 with the migrations applied
+`--local`, and the dashboard with `DEV_WORKER_ORIGIN=http://localhost:8787
+ADMIN_SECRET=<the dev secret>` so the proxy targets the local Worker.
+
 ## Notes
 
 - Per-message batch outcomes are honored: only `ErrorCode 0` (accepted)
@@ -366,11 +440,11 @@ npx tsc --noEmit                       # typecheck the Worker
 npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --remote
 npx wrangler@4.120.1 d1 migrations create ivue-newsletter <name>
 npx wrangler@4.120.1 d1 execute ivue-newsletter --remote \
-  --command='SELECT email, name, subscribed_at FROM subscribers'
+  --command='SELECT email, name, subscribed_at FROM subscriber'
 npx wrangler@4.120.1 d1 execute ivue-newsletter --remote \
-  --command='SELECT * FROM sends'
+  --command='SELECT * FROM send'
 npx wrangler@4.120.1 d1 execute ivue-newsletter --remote \
-  --command='SELECT * FROM unsubscribes'
+  --command='SELECT * FROM unsubscribe'
 npx wrangler@4.120.1 d1 export ivue-newsletter --remote --output=backup.sql
 
 # ---- secrets (take effect immediately, no redeploy) --------------------

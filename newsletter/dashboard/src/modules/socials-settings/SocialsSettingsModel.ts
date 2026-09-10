@@ -1,7 +1,6 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type { AdminSettings } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 
 // Socials settings: the tweet template ({title}/{url} placeholders) and
@@ -13,11 +12,11 @@ class $SocialsSettingsModel {
 
   // the app store — resolved and cached on first touch (store pattern)
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   get settings() {
-    return shallowRef<AdminSettings | null>(null);
+    return shallowRef<Api.AdminSettings | null>(null);
   }
 
   get templateDraft() {

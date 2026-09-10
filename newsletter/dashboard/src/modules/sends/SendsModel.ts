@@ -1,7 +1,6 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type { SendLogRow } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 
 // The global send log: every (recipient, post) delivery ever recorded in
@@ -15,7 +14,7 @@ class $SendsModel {
 
   // the app store — resolved and cached on first touch (store pattern)
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   get PAGE_SIZE() {
@@ -23,7 +22,7 @@ class $SendsModel {
   }
 
   get rows() {
-    return shallowRef<SendLogRow[]>([]);
+    return shallowRef<Api.SendLogRow[]>([]);
   }
 
   get total() {
@@ -75,7 +74,7 @@ class $SendsModel {
     }
   }
 
-  rowKey(row: SendLogRow) {
+  rowKey(row: Api.SendLogRow) {
     return row.email + ' ' + row.slug;
   }
 

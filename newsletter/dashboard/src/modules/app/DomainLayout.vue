@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
-import { AppStore, type DomainName } from './AppStore';
+import { AppStore } from './AppStore';
 
-const props = defineProps<{ domain: DomainName }>();
+const props = defineProps<{ domain: AppStore.DomainName }>();
 
-const app = AppStore.use();
+const app = AppStore.Class.use();
 </script>
 
 <template>

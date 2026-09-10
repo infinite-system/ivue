@@ -1028,3 +1028,70 @@ own whole than to arbitrate.
   playground**, because it needs shiki and highlight.js from the docs install; highlight.js is a docs_v2
   devDependency for it (`highlight.js/lib/core` + four languages). The spec tree in `examples/playground/src/kit/`
   stays minimal on purpose. A demo tree carries its own CSS; the fixture files have none.
+## The press: copy in D1, cards as editors, types in the namespace
+
+- Types live INSIDE the namespace — `Api.PressExpression`, `Posts.Post`,
+  `Scheduler.JobKind` — never beside it. The gate's
+  `a_class_file_holds_only_imports_class_namespace_and_types` says so and
+  had been flagging thirteen files; treating those findings as "pre-existing
+  style" and copying the surrounding shape was the mistake. A gate finding
+  in a file you touch is yours, whoever left it.
+- The store singleton is the skill's shape: `protected static get $shared()`
+  + `static use()` on the class, `Static($X)` anchor, consumers call
+  `AppStore.Class.use()`. A `let singleton` in the namespace is the same
+  violation as a type there.
+- Segment rows follow their parent's mode. `replaceChildren` hard-coding
+  `derived` made every imported (authored) thread's tweets refuse edits
+  with a 400 that only showed up in the browser drive, not in tests that
+  never patched a segment of an authored thread. Drive the real path.
+- `return promise` inside `try` does not catch the rejection; the press
+  router needed `return await` so store errors become JSON 400s. Three API
+  tests failed with the raw throw before that.
+- A `td` with `display: flex` breaks table layout so badly that Playwright
+  reports the `<table>` intercepting the row's click. Put flex on an inner
+  div.
+- `import.meta.glob` of files outside the dashboard root needs
+  `server.fs.allow` for the dev server and nothing for the build — and
+  bundling copy that way put 93 KB of unsent posts into a public chunk.
+  The press keeps copy in D1; the calendar asks the Worker by source key.
+- The worktree lacked `newsletter/worker-configuration.d.ts` (gitignored,
+  generated): copy it from the main tree or run `wrangler types` before
+  the first tsc in a fresh worktree.
+- Quasar 2.21 + `@quasar/vite-plugin` 2.x wants `@vitejs/plugin-vue` 6 and
+  Vite 6+; this repo is on Vite 4, so pin `@quasar/vite-plugin@^1.12`.
+  Icons: use `quasar/icon-set/svg-material-icons` instead of the font CSS
+  (the ligature font showed `arrow_drop_down` as text under the dev server).
+- perl `s|…|…|` with a `\|` in the PATTERN: the escaped delimiter becomes a
+  bare `|`, an alternation; the replacement lands at the first two spaces
+  of the file. Use `#` as the delimiter — and not when the text holds `#`
+  color codes either; Python for anything with both.
+
+## Tiptap + R2 in the press: the serializer lies, workerd outlives its parent
+
+- `tiptap-markdown` escapes `*`, `[`, `]`, `_`, `#` on the way out and ends
+  a soft line break with `\` + newline, so an untouched body would grow
+  backslashes on its first keystroke and every derived tweet would carry
+  them. Normalize the serializer's output (strip `\` before punctuation
+  and the backslash breaks) and keep a `lastMarkdown` guard so the
+  parent's echo of the emitted text never resets the document. Prove the
+  round-trip with a jsdom test (`// @vitest-environment jsdom`) that loads
+  the press's subset and expects the identical string back.
+- A block Image node serializes without closing its block in
+  `tiptap-markdown` (the next paragraph lands on the image line);
+  override `storage.markdown.serialize` with a `closeBlock`. Custom nodes
+  (YouTube, video) get their markdown spec the same way, and a markdown-it
+  core rule turns a bare media URL paragraph into the HTML the node parses.
+- `view.someProp('handleDrop', f => f(...))` returns `undefined` when the
+  handler returns `false`; call `view.props.handleDrop` directly in tests.
+- A new public path on the newsletter Worker must be listed in
+  `assets.run_worker_first`, or the SPA fallback answers it with
+  index.html (curl showed `text/html` for `/press-asset/<key>`).
+- `fuser -k 8787/tcp` kills wrangler's node but the live `wrangler dev`
+  respawns workerd and keeps the port; the surviving workerd then hangs
+  every request. Stop the wrangler process tree by pid (`ps -eo
+  pid,ppid,cmd | grep wrangler`) and restart with `run_in_background`.
+- `wrangler types` only knows secrets a local `.dev.vars` lists; a fresh
+  worktree without one loses `ADMIN_SECRET` & co. from `Env`. Declare
+  the required secrets in `src/env-secrets.d.ts` so types hold everywhere.
+- R2 is off by default on an account: `wrangler r2 bucket create` fails
+  with API code 10042 until R2 is enabled once in the Cloudflare dashboard.

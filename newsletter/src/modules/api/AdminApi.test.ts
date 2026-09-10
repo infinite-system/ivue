@@ -41,7 +41,7 @@ describe('AdminApi', () => {
   // domain-invariant: $AdminApi — If a request lacks the admin bearer, then every admin route refuses it
   it('rejects a wrong or missing bearer on every route', async () => {
     const env = makeTestEnv();
-    const url = new URL('https://newsletter.test/admin/subscribers');
+    const url = new URL('https://newsletter.test/admin/subscriber');
     const anonymous = await AdminApi.Class.handle(new Request(url), url, env);
     expect(anonymous.status).toBe(401);
   });
@@ -51,7 +51,7 @@ describe('AdminApi', () => {
     await Audience.Class.enroll(env, 'ada@ivue.dev', 'Ada', 'newsletter');
     await Audience.Class.enroll(env, 'bo@ivue.dev', 'Bo', 'newsletter');
     const page = (await (
-      await call('/admin/subscribers?search=ada&limit=10', env)
+      await call('/admin/subscriber?search=ada&limit=10', env)
     ).json()) as { total: number; rows: { email: string }[] };
     expect(page.total).toBe(1);
     expect(page.rows[0].email).toBe('ada@ivue.dev');
@@ -148,23 +148,23 @@ describe('AdminApi', () => {
 
   it('add, bulk unsubscribe/resubscribe, and remove round-trip', async () => {
     const env = makeTestEnv();
-    await call('/admin/subscribers/add', env, 'POST', {
+    await call('/admin/subscriber/add', env, 'POST', {
       email: 'ada@ivue.dev',
       name: 'Ada',
       list: 'vip',
     });
     expect(await Audience.Class.active(env, 'vip')).toHaveLength(1);
 
-    await call('/admin/subscribers/unsubscribe', env, 'POST', {
+    await call('/admin/subscriber/unsubscribe', env, 'POST', {
       emails: ['ada@ivue.dev'],
     });
     expect(await Audience.Class.active(env, 'vip')).toHaveLength(0);
-    await call('/admin/subscribers/resubscribe', env, 'POST', {
+    await call('/admin/subscriber/resubscribe', env, 'POST', {
       emails: ['ada@ivue.dev'],
     });
     expect(await Audience.Class.active(env, 'vip')).toHaveLength(1);
 
-    await call('/admin/subscribers/remove', env, 'POST', {
+    await call('/admin/subscriber/remove', env, 'POST', {
       emails: ['ada@ivue.dev'],
       purgeSends: true,
     });
@@ -207,7 +207,7 @@ describe('AdminApi', () => {
       { email: 'bo@ivue.dev', slug: 'first-post', sentAt: 200 },
     ]);
     const log = (await (
-      await call('/admin/sends?search=ada&limit=10', env)
+      await call('/admin/send?search=ada&limit=10', env)
     ).json()) as { total: number; rows: { email: string; sentAt: number }[] };
     expect(log.total).toBe(1);
     expect(log.rows[0]).toMatchObject({ email: 'ada@ivue.dev', sentAt: 100 });
@@ -216,7 +216,7 @@ describe('AdminApi', () => {
   it('posts strips email bodies; preview serves the exact email html', async () => {
     const env = makeTestEnv();
     installFetchStub({ posts: [makePost('first-post', 1)] });
-    const summaries = (await (await call('/admin/posts', env)).json()) as {
+    const summaries = (await (await call('/admin/post', env)).json()) as {
       slug: string;
       emailHtml?: string;
     }[];
@@ -231,7 +231,7 @@ describe('AdminApi', () => {
 
   it('settings roundtrip: drip clock + per-list overrides save, invalid values refused', async () => {
     const env = makeTestEnv();
-    const initial = (await (await call('/admin/settings', env)).json()) as {
+    const initial = (await (await call('/admin/setting', env)).json()) as {
       cadenceDays: number;
       sendHourLocal: number;
       defaultTimezone: string;
@@ -243,13 +243,13 @@ describe('AdminApi', () => {
     expect(initial.defaultTimezone).toBe('America/Toronto');
     expect(initial.listOverrides).toEqual({});
 
-    await call('/admin/settings', env, 'POST', {
+    await call('/admin/setting', env, 'POST', {
       cadenceDays: 3,
       sendHourLocal: 7,
       defaultTimezone: 'Europe/Berlin',
       listSchedules: { vip: { cadenceDays: 1, sendHourLocal: 18 } },
     });
-    const updated = (await (await call('/admin/settings', env)).json()) as {
+    const updated = (await (await call('/admin/setting', env)).json()) as {
       cadenceDays: number;
       sendHourLocal: number;
       defaultTimezone: string;
@@ -267,24 +267,24 @@ describe('AdminApi', () => {
     });
 
     // clearing an override reverts the list to the defaults
-    await call('/admin/settings', env, 'POST', {
+    await call('/admin/setting', env, 'POST', {
       listSchedules: { vip: { cadenceDays: null, sendHourLocal: null } },
     });
-    const cleared = (await (await call('/admin/settings', env)).json()) as {
+    const cleared = (await (await call('/admin/setting', env)).json()) as {
       listOverrides: Record<string, unknown>;
     };
     expect(cleared.listOverrides).toEqual({});
 
     expect(
-      (await call('/admin/settings', env, 'POST', { cadenceDays: 0 })).status,
+      (await call('/admin/setting', env, 'POST', { cadenceDays: 0 })).status,
     ).toBe(400);
     expect(
-      (await call('/admin/settings', env, 'POST', { sendHourLocal: 24 }))
+      (await call('/admin/setting', env, 'POST', { sendHourLocal: 24 }))
         .status,
     ).toBe(400);
     expect(
       (
-        await call('/admin/settings', env, 'POST', {
+        await call('/admin/setting', env, 'POST', {
           defaultTimezone: 'Not/AZone',
         })
       ).status,
@@ -321,7 +321,7 @@ describe('AdminApi', () => {
       tweetId: '42',
       url: 'https://x.com/i/status/42',
     });
-    const log = (await (await call('/admin/tweets', configured)).json()) as {
+    const log = (await (await call('/admin/tweet', configured)).json()) as {
       tweetId: string;
       slug: string;
     }[];
@@ -374,7 +374,7 @@ describe('AdminApi', () => {
 
   it('settings carries the tweet template and X status; template saves', async () => {
     const env = makeTestEnv();
-    const initial = (await (await call('/admin/settings', env)).json()) as {
+    const initial = (await (await call('/admin/setting', env)).json()) as {
       tweetTemplate: string;
       xConfigured: boolean;
       sender: { senderEmail: string };
@@ -383,15 +383,15 @@ describe('AdminApi', () => {
     expect(initial.xConfigured).toBe(false);
     expect(initial.sender.senderEmail).toBe('newsletter@ivue.dev');
 
-    await call('/admin/settings', env, 'POST', {
+    await call('/admin/setting', env, 'POST', {
       tweetTemplate: 'Read this: {title} {url}',
     });
-    const updated = (await (await call('/admin/settings', env)).json()) as {
+    const updated = (await (await call('/admin/setting', env)).json()) as {
       tweetTemplate: string;
     };
     expect(updated.tweetTemplate).toBe('Read this: {title} {url}');
     expect(
-      (await call('/admin/settings', env, 'POST', { tweetTemplate: '  ' }))
+      (await call('/admin/setting', env, 'POST', { tweetTemplate: '  ' }))
         .status,
     ).toBe(400);
   });
@@ -436,31 +436,31 @@ describe('AdminApi', () => {
     await Audience.Class.enroll(env, 'ada@ivue.dev', 'Ada', 'newsletter');
 
     // create — appears with zero members; duplicates and junk refused
-    await call('/admin/lists/create', env, 'POST', { list: 'VIP ' });
-    let lists = (await (await call('/admin/lists', env)).json()) as {
+    await call('/admin/list/create', env, 'POST', { list: 'VIP ' });
+    let lists = (await (await call('/admin/list', env)).json()) as {
       list: string;
       members: number;
     }[];
     expect(lists.map((entry) => entry.list)).toEqual(['newsletter', 'vip']);
     expect(lists.find((entry) => entry.list === 'vip')?.members).toBe(0);
     expect(
-      (await call('/admin/lists/create', env, 'POST', { list: 'vip' })).status,
+      (await call('/admin/list/create', env, 'POST', { list: 'vip' })).status,
     ).toBe(400);
     expect(
-      (await call('/admin/lists/create', env, 'POST', { list: 'Bad Name!' }))
+      (await call('/admin/list/create', env, 'POST', { list: 'Bad Name!' }))
         .status,
     ).toBe(400);
 
     // rename — members and schedule overrides travel with the name
     await Audience.Class.enroll(env, 'bo@ivue.dev', 'Bo', 'vip');
-    await call('/admin/settings', env, 'POST', {
+    await call('/admin/setting', env, 'POST', {
       listSchedules: { vip: { sendHourLocal: 18 } },
     });
-    await call('/admin/lists/rename', env, 'POST', {
+    await call('/admin/list/rename', env, 'POST', {
       from: 'vip',
       to: 'insiders',
     });
-    lists = (await (await call('/admin/lists', env)).json()) as {
+    lists = (await (await call('/admin/list', env)).json()) as {
       list: string;
       members: number;
     }[];
@@ -469,7 +469,7 @@ describe('AdminApi', () => {
       'newsletter',
     ]);
     expect(lists.find((entry) => entry.list === 'insiders')?.members).toBe(1);
-    const settings = (await (await call('/admin/settings', env)).json()) as {
+    const settings = (await (await call('/admin/setting', env)).json()) as {
       listOverrides: Record<string, { sendHourLocal?: number }>;
     };
     expect(settings.listOverrides).toEqual({
@@ -479,22 +479,22 @@ describe('AdminApi', () => {
     // delete — refused while members remain, allowed once empty; the
     // default list is protected from both rename and delete
     expect(
-      (await call('/admin/lists/delete', env, 'POST', { list: 'insiders' }))
+      (await call('/admin/list/delete', env, 'POST', { list: 'insiders' }))
         .status,
     ).toBe(400);
-    await call('/admin/subscribers/remove', env, 'POST', {
+    await call('/admin/subscriber/remove', env, 'POST', {
       emails: ['bo@ivue.dev'],
       purgeSends: false,
     });
     expect(
-      (await call('/admin/lists/delete', env, 'POST', { list: 'insiders' }))
+      (await call('/admin/list/delete', env, 'POST', { list: 'insiders' }))
         .status,
     ).toBe(200);
     expect(
-      (await call('/admin/lists/rename', env, 'POST', { from: 'newsletter', to: 'other' })).status,
+      (await call('/admin/list/rename', env, 'POST', { from: 'newsletter', to: 'other' })).status,
     ).toBe(400);
     expect(
-      (await call('/admin/lists/delete', env, 'POST', { list: 'newsletter' }))
+      (await call('/admin/list/delete', env, 'POST', { list: 'newsletter' }))
         .status,
     ).toBe(400);
   });
@@ -518,7 +518,7 @@ describe('AdminApi', () => {
     // the projected slot is 9am in the subscriber's (default) zone
     expect(LocalTime.Class.hourAt(plan.entries[0].dueAt, 'America/Toronto')).toBe(9);
 
-    const stats = (await (await call('/admin/stats', env)).json()) as {
+    const stats = (await (await call('/admin/stat', env)).json()) as {
       lists: { list: string }[];
       totalSends: number;
     };
@@ -546,7 +546,7 @@ describe('AdminApi', () => {
       parentId: rootId,
     });
 
-    const response = await call('/admin/comments/approve', env, 'POST', {
+    const response = await call('/admin/comment/approve', env, 'POST', {
       id: replyId,
     });
     expect(response.status).toBe(200);
@@ -567,7 +567,7 @@ describe('AdminApi', () => {
     ).toHaveLength(1);
 
     // G8: a second Approve (stale tab, raw POST) is a 404 and mails NOBODY
-    const again = await call('/admin/comments/approve', env, 'POST', {
+    const again = await call('/admin/comment/approve', env, 'POST', {
       id: replyId,
     });
     expect(again.status).toBe(404);
@@ -589,21 +589,21 @@ describe('AdminApi', () => {
     });
     await Comments.Class.approve(env, rootId);
 
-    const locked = await call('/admin/comments/lock', env, 'POST', {
+    const locked = await call('/admin/comment/lock', env, 'POST', {
       id: rootId,
       locked: true,
     });
     expect(await locked.json()).toEqual({ ok: true, locked: true });
     expect(await Comments.Class.threadLocked(env, rootId)).toBe(true);
 
-    const unlocked = await call('/admin/comments/lock', env, 'POST', {
+    const unlocked = await call('/admin/comment/lock', env, 'POST', {
       id: rootId,
       locked: false,
     });
     expect(await unlocked.json()).toEqual({ ok: true, locked: false });
     expect(await Comments.Class.threadLocked(env, rootId)).toBe(false);
 
-    const missing = await call('/admin/comments/lock', env, 'POST', {
+    const missing = await call('/admin/comment/lock', env, 'POST', {
       id: 4242,
       locked: true,
     });

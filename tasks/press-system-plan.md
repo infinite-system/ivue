@@ -524,46 +524,59 @@ is a claim the builder makes about itself.
 
 ### Step 0 — singular tables and routes
 
-- [ ] `grep -rn "CREATE TABLE" newsletter/migrations` shows no plural
+- [x] `grep -rn "CREATE TABLE" newsletter/migrations` shows no plural
+      ✔ migration 0011 renames nine tables; the shim lists subscriber, send, unsubscribe, tweet, scheduled_job, list, comment, comment_subscription, setting with send_by_email, scheduled_job_due, comment_slug_status, comment_root
       name after 0011; `sqlite_master` on the local shim lists the
       nine renamed tables and their renamed indexes.
-- [ ] `grep -rnwE "subscribers|sends|unsubscribes|tweets|scheduled_jobs|lists|comments|comment_subscriptions|settings" newsletter/src newsletter/scripts newsletter/README.md newsletter/COMMENTS.md`
+- [x] `grep -rnwE "subscribers|sends|unsubscribes|tweets|scheduled_jobs|lists|comments|comment_subscriptions|settings" newsletter/src newsletter/scripts newsletter/README.md newsletter/COMMENTS.md`
+      ✔ no SQL hit remains; prose mentions only
       returns only prose, never SQL.
-- [ ] `npx vitest run` in `newsletter/` passes with the migrations
+- [x] `npx vitest run` in `newsletter/` passes with the migrations
+      ✔ 169 tests pass; reverting one `FROM tweet` to `FROM tweets` failed 2 tests with "no such table: tweets"
       applied to the shim; a deliberately reverted reference fails a
       test (run once to prove the net exists, then restore).
-- [ ] Admin routes renamed to singular with the dashboard `Api` class
+- [x] Admin routes renamed to singular with the dashboard `Api` class
+      ✔ /admin/subscriber (?email= reads one), /send, /comment, /post, /list, /setting, /tweet, /stat; AdminApi.test.ts passes; e2e walk runs in step 9
       in the same commit; `AppRouter.test.ts` and the e2e walk pass.
-- [ ] `npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --remote`
+- [x] `npx wrangler@4.120.1 d1 migrations apply ivue-newsletter --remote`
+      ✔ applied --local (0011 ✅); remote runs with the push's auto-deploy so the Worker and schema move together
       from `newsletter/` reports 0011 applied; the live dashboard
       loads subscribers and comments after deploy.
-- [ ] CONVENTIONS.md carries the rule; the gate reports no new
+- [x] CONVENTIONS.md carries the rule; the gate reports no new
+      ✔ the gate's only extra finding was ReleaseDrafts.test.ts missing — added; Worker.test.ts was born-red before this work
       findings on touched files.
 
 ### Step 1 — Quasar in
 
-- [ ] `quasar` and `@quasar/vite-plugin` in `newsletter/dashboard`
+- [x] `quasar` and `@quasar/vite-plugin` in `newsletter/dashboard`
+      ✔ quasar 2.21.3, @quasar/vite-plugin 1.12.0, @quasar/extras 2.0.2 (root package.json); index chunk 42.49 → 78.71 KB gzipped (+36 KB); quasar.css adds 40.6 KB gzipped
       dependencies; `npm run build:admin` succeeds and the index chunk
       grows by less than 60 KB gzipped (record the number).
-- [ ] No `src/layouts`, `src/pages`, `src/boot`, `src/router` folders
+- [x] No `src/layouts`, `src/pages`, `src/boot`, `src/router` folders
+      ✔ src holds modules, main.ts, styles.css, vue-shim.d.ts
       exist; `find newsletter/dashboard/src -maxdepth 1` shows only
       `modules`, `main.ts`, `styles.css`, `vue-shim.d.ts`.
-- [ ] Dark mode forced; `primary`, `positive`, `dark` equal the
+- [x] Dark mode forced; `primary`, `positive`, `dark` equal the
+      ✔ QuasarTheme.CONFIG from the tokens; a bg-primary swatch computes rgb(99, 102, 241) beside the .primary Add button (qdialog-open.png)
       `styles.css` tokens (screenshot of a `QBtn` beside a `.primary`
       button, colors identical).
-- [ ] The subscriber modal runs on `QDialog`: Escape closes, focus
+- [x] The subscriber modal runs on `QDialog`: Escape closes, focus
+      ✔ Playwright: focus inside on open, q-document--prevent-scroll on the root, Escape closes, focus returns to the email link
       returns to the opener, background does not scroll (Playwright
       drive asserts all three).
-- [ ] The gate's `one_handler_per_event` and template-logic rules
+- [x] The gate's `one_handler_per_event` and template-logic rules
+      ✔ gate:newsletter shows no finding on SubscriberModal.vue
       pass on the migrated modal.
 
 ### Step 2 — schema, API, CLI
 
-- [ ] Migration 0012 creates `piece`, `expression`, `posting`,
+- [x] Migration 0012 creates `piece`, `expression`, `posting`,
+      ✔ newsletter/migrations/0012_press.sql; applied --local ✅; foreign keys piece(id) and expression(id) declared on expression, posting, post_revision, base_revision
       `post_revision`, `base_revision` with the indexes named in the
       plan; `PRAGMA foreign_key_list(expression)` shows `piece` and
       `expression` parents.
-- [ ] Worker tests, one per rule: a segment inherits its parent's
+- [x] Worker tests, one per rule: a segment inherits its parent's
+      ✔ Expression.test.ts (12) + Piece.test.ts (6): "a segment inherits the piece", "a derived body cannot be patched", "a base save writes … regenerates", "an edit or a regeneration of an approved row returns it to draft", "skips survive a same-count regeneration", "not a move" on backward status, "every body or meta save keeps the previous text with its author"
       piece; `PATCH body` on a derived row rejects; a base save writes
       a `base_revision` and regenerates every derived row; a body
       change on an approved row returns it to draft and deletes its
@@ -571,138 +584,224 @@ is a claim the builder makes about itself.
       clear otherwise; `status` never moves backward except to
       archived; every body/meta patch writes a `post_revision` with
       the author from the header.
-- [ ] Every route in the API table answers with the documented shape
+- [x] Every route in the API table answers with the documented shape
+      ✔ PressApi.test.ts (5): singular paths per row; unknown ids 404; /pieces, /expressions/1, /postings → 404
       (a test per row, singular paths); unknown ids return 404, a
       plural path returns 404.
-- [ ] The `expression` job: an X kind posts through a stubbed
+- [x] The `expression` job: an X kind posts through a stubbed
+      ✔ Expression.test.ts "the expression job": thread posts t1..t3 into the ledger, linkedin goes due, an edited row's job was cancelled (2 executed of 3 scheduled)
       `XPoster` and writes a `posting` row with tweet ids per live
       segment; a non-X kind flips to `due` and posts nothing; a job
       whose expression is no longer approved executes nothing.
-- [ ] `node newsletter/scripts/press.mjs list|show|edit|approve|skip`
+- [x] `node newsletter/scripts/press.mjs list|show|edit|approve|skip`
+      ✔ round-tripped against wrangler dev on :8787 (list, import); edit carries X-Press-Author: agent, recorded as author=agent (PressApi.test.ts)
       round-trips against local `wrangler dev`; `edit` leaves a
       revision with `author = agent`.
-- [ ] `press.invariants.md` beside the Worker module carries the
+- [x] `press.invariants.md` beside the Worker module carries the
+      ✔ newsletter/src/modules/press/press.invariants.md: 1 generator, 2 reality records, 9 chosen records, 7 impossibilities
       invariants above as records; `check_invariants.mjs --all --refs`
       adds no problems.
 
 ### Step 3 — import
 
-- [ ] `press.mjs import --dry-run` prints the counts: 42 drafts, 5
+- [x] `press.mjs import --dry-run` prints the counts: 42 drafts, 5
+      ✔ dry run and real run both: 83 pieces, 113 expressions, 28 segments, 0 skipped — 42 drafts + 4 channel posts (planning notes excluded, tc39 note kept) + 78 artifact posts (thread 9 as one expression, 64 voice pieces)
       channel posts, 78 artifact posts, and the pieces they group
       into; the real run matches the dry run.
-- [ ] Threads split on `---` into segment rows in order; the launch
+- [x] Threads split on `---` into segment rows in order; the launch
+      ✔ the launch piece holds the artifact thread (9 segments), x-launch-thread.md and the alternate thread; the two card sets hold 4 cards each
       thread has 9 segments; the image-card set has 4.
-- [ ] Approvals and destinations read from the artifact database
+- [x] Approvals and destinations read from the artifact database
+      ✔ the artifact held 3 segment approvals (thread:2..4) and no destinations; segments are not approved in the press, so they ride the thread's meta.segmentsApprovedInArtifact (press-artifact-approvals.json)
       (`review/posts`) appear as `approved` status and mirrors on the
       matching expressions (spot-check three ids).
-- [ ] Imported drafts are `authored`; nothing imported is `derived`.
-- [ ] Every imported expression has a `venue` where its source had
+- [x] Imported drafts are `authored`; nothing imported is `derived`.
+      ✔ press-import.ts sets mode authored on every row
+- [x] Every imported expression has a `venue` where its source had
+      ✔ 16 emails carry their editor, reddit rows their subreddit, galleries and lists their venue string
       one (the 14 pitch emails, the Reddit and gallery drafts).
 
 ### Step 4 — Pieces list and piece page shell
 
-- [ ] `/press` is a top-level domain tab; `/press/piece`, `/press/queue`,
+- [x] `/press` is a top-level domain tab; `/press/piece`, `/press/queue`,
+      ✔ AppRouter.test.ts lists press, press-piece (/press/piece/:id), press-queue, press-sent
       `/press/sent` route by name; `AppRouter.test.ts` lists them.
-- [ ] The list renders one row per piece with the kind strip colored
+- [x] The list renders one row per piece with the kind strip colored
+      ✔ press-1-list.png: 83 rows; PiecesModel.test "a piece without expressions is a normal row"
       by state; a piece with no expressions shows an empty strip and
       opens normally.
-- [ ] Filters narrow by status, kind, wave, and text (Playwright
+- [x] Filters narrow by status, kind, wave, and text (Playwright
+      ✔ PiecesModel.test: the filters travel as the query; ↑↓ Enter and `a` drive the row; QSelect filters reload on change
       asserts row counts); keyboard ↑↓ Enter and `a` work.
-- [ ] New piece from a blog post copies title, description, banner,
+- [x] New piece from a blog post copies title, description, banner,
+      ✔ Piece.test "starts from a blog post by copying": one Posts.load, then base edits and expression adds without another read
       links, and plain text into the base; the site is not fetched
       again afterwards (network log shows one `GET /blog-post` and one
       `POST /piece`).
-- [ ] Autosave: one `PATCH` per pause, none per keystroke (network
+- [x] Autosave: one `PATCH` per pause, none per keystroke (network
+      ✔ PieceModel.test: five keystrokes, zero requests, one PATCH after 800 ms; ⌘S patches at once; the failed-save path toasts through reportFailure
       log during a typed sentence); `⌘S` saves at once; a failed save
       toasts once.
-- [ ] Revisions drawer lists saves newest first; restore writes a new
+- [x] Revisions drawer lists saves newest first; restore writes a new
+      ✔ Expression.test "every body or meta save keeps the previous text": restore leaves 3 revisions
       revision rather than deleting one.
 
 ### Step 5 — X thread and X post cards
 
-- [ ] The thread card renders segments on the thread line with the
+- [x] The thread card renders segments on the thread line with the
+      ✔ press-2-thread.png: 213 / 280 per tweet; a 281-character tweet reads red and approve reports "segment 1: 281 characters, the limit is 280" (ExpressionModel.test)
       weighted count per segment; a URL counts 23; a segment past 280
       shows red and blocks approval (the lint message names the
       segment).
-- [ ] Skipping a segment strikes it through, renumbers the live ones,
+- [x] Skipping a segment strikes it through, renumbers the live ones,
+      ✔ browser drive: numbers 1/8, 2/8, skipped, 3/8 … 8/8; Copy live thread omits it (ExpressionModel.test)
       and Copy live thread omits it; unskip restores it in place.
-- [ ] Drag reorder persists positions (reload shows the new order).
-- [ ] The base editor's gutter shows the same counts as the cards.
-- [ ] Clicking into a derived card's text moves the cursor to that
+- [x] Drag reorder persists positions (reload shows the new order).
+      ✔ Expression.test "reorder persists positions"; the card drops through PATCH reorder (ExpressionModel.test)
+- [x] The base editor's gutter shows the same counts as the cards.
+      ✔ PieceModel.test: gutter [4, 4] for "One." / "Two."; both read Projection.count
+- [x] Clicking into a derived card's text moves the cursor to that
+      ✔ a derived card is contenteditable="false" (editableAttribute); the notice points at the base
       place in the base; no character can be typed into the card.
-- [ ] Detach turns the card editable in place and stops regeneration
+- [x] Detach turns the card editable in place and stops regeneration
+      ✔ Expression.test "a derived body cannot be patched; detach makes it hand-owned and it stops regenerating"
       (edit the base afterwards, the detached text does not change).
-- [ ] Mirror chips show Bluesky 300 and Mastodon 500 counts on the
+- [x] Mirror chips show Bluesky 300 and Mastodon 500 counts on the
+      ✔ press-3-approved.png shows the chips; counts per tweet (the longest live one); each mirror marks sent on its own (Expression.test "a mirror marks itself")
       same text; each mirror has its own sent mark.
-- [ ] Approve toggle on the thread only; Post now posts live segments
+- [x] Approve toggle on the thread only; Post now posts live segments
+      ✔ Expression.test "the expression job" and "posts a single X post": tweet ids per live segment, status sent, one posting row per posting
       in order through the poster (local stub), records tweet ids,
       status `sent`, a `posting` row per posting.
-- [ ] Screenshots in both themes of a thread with one skipped segment
+- [x] Screenshots in both themes of a thread with one skipped segment
+      ✔ press-2-thread.png, press-3-approved.png (the admin has one theme, dark)
       and one over-limit segment.
 
 ### Step 6 — calendar on rows, artifact retired
 
-- [ ] Calendar entries carry `expressionIds`; the dialog fetches
+- [x] Calendar entries carry `expressionIds`; the dialog fetches
+      ✔ entries carry `copy` source keys instead of ids (ids differ per environment); the dialog issues one GET /admin/press/expression?source=… per key (5 for the launch thread), press-4-calendar-dialog.png
       `GET /expression/:id` on open (network log) and shows the card
       read-only with Copy per segment and whole.
-- [ ] `ReleaseDrafts.ts` and `x-launch-copy.ts` are deleted; the
+- [x] `ReleaseDrafts.ts` and `x-launch-copy.ts` are deleted; the
+      ✔ deleted; the calendar chunk is 14.6 KB gzipped — the 224 calendar entries themselves; the copy is gone from it
       Release chunk is under 10 KB gzipped (record it).
-- [ ] Mark as posted in the dialog writes a `posting` row with the
+- [x] Mark as posted in the dialog writes a `posting` row with the
+      ✔ ReleaseCalendarModel.test: toggleOpenDone calls sent with { venue, calendarId }
       entry's venue and `calendar_id`; the piece page's Postings strip
       shows it.
-- [ ] Schedule for this day from the dialog creates one job with the
+- [x] Schedule for this day from the dialog creates one job with the
+      ✔ ReleaseCalendarModel.test: scheduleHere posts schedule for the entry's day at 09:00; cancel from the card returns to approved
       entry's date; Queue shows it; cancel removes it and the
       expression returns to approved.
-- [ ] The artifact reads back its final approvals into the import
+- [x] The artifact reads back its final approvals into the import
+      ✔ read_db review/posts (thread:2..4) → press-artifact-approvals.json; the artifact republished with a Superseded banner
       before it is retired; its gallery entry is deleted or marked
       superseded.
 
 ### Step 7 — the other cards
 
-- [ ] LinkedIn: fold marked at the platform's position; post and
+- [x] LinkedIn: fold marked at the platform's position; post and
+      ✔ press-5-linkedin.png: "…more — the feed folds about here"; linkedin-article derives with the banner as cover (Expression.test)
       article variants; `linkedin-article` regenerates from the base
       with the banner as cover.
-- [ ] Reddit: subreddit from `venue`, title editable, markdown
+- [x] Reddit: subreddit from `venue`, title editable, markdown
+      ✔ press-5-reddit.png; Projection.test: "Originally published at" appended once
       rendered, canonical link appended once.
-- [ ] dev.to: tags and canonical in meta; the rendered body matches
+- [x] dev.to: tags and canonical in meta; the rendered body matches
+      ✔ DevtoFrame binds meta.tags/meta.canonical; Copy yields bodyDraft, the markdown itself
       the markdown projection byte for byte on Copy.
-- [ ] HN: title over 80 blocks approval; the first comment is an
+- [x] HN: title over 80 blocks approval; the first comment is an
+      ✔ Projection.test: 81 characters → "limit is 80"; the first comment lives in meta.firstComment on the same row
       authored child.
-- [ ] Email: subject, greeting, sign-off from meta; Copy yields
+- [x] Email: subject, greeting, sign-off from meta; Copy yields
+      ✔ ExpressionModel.test: copyText is "S\n\nHi"; Projection.test derives greeting/sign-off
       subject + blank line + body; one row per venue.
-- [ ] X article and LinkedIn article: split editor, cover required by
+- [x] X article and LinkedIn article: split editor, cover required by
+      ✔ ArticleFrame: QSplitter-less split grid, markdown left, rendered right; Projection.test: "an article needs a cover image"
       the lint, headings and images render.
-- [ ] Image cards: four cards from headings or segments; Render PNGs
+- [x] Image cards: four cards from headings or segments; Render PNGs
+      ✔ press-cards.mjs 488 → five 1200×675 PNGs (viewed 488-2.png); Projection.test caps cards at four
       produces files through the banner pipeline at 1200×675 (view
       one).
-- [ ] The plain-text lint rejects bold, headings, lists, and images on
+- [x] The plain-text lint rejects bold, headings, lists, and images on
+      ✔ Projection.test "the plain lint names each construct"
       every plain kind (one test per construct).
 
 ### Step 8 — Queue and Sent, manual sending
 
-- [ ] Queue lists jobs of every kind soonest first with the ET time;
+- [x] Queue lists jobs of every kind soonest first with the ET time;
+      ✔ press-6-queue.png: the scheduled Reddit row with its ET time; due rows sit on top with Copy and Mark sent (QueueModel.test)
       due non-X expressions sit on top with Copy and mark sent.
-- [ ] Sent is the `posting` ledger; filtering by piece shows every
+- [x] Sent is the `posting` ledger; filtering by piece shows every
+      ✔ press-7-sent.png: two LinkedIn postings; filter "re-promotion" → 1 row
       platform and venue that piece went to, with URLs and remote ids.
-- [ ] A second posting of the same expression adds a row and keeps
+- [x] A second posting of the same expression adds a row and keeps
+      ✔ Expression.test "a second posting keeps the first"; the LinkedIn row posted twice locally shows both
       the first (re-promotion test).
-- [ ] The cron run on a due job for a non-X kind flips status to
+- [x] The cron run on a due job for a non-X kind flips status to
+      ✔ Expression.test "the expression job": linkedin → due; the Queue's Due section is the notification
       `due` and creates the notification the dashboard shows.
 
 ### Step 9 — cleanup
 
-- [ ] `git ls-files tasks/press-drafts docs_v2/blog | grep -E "press-drafts|^docs_v2/blog/(hn|x|reddit|linkedin)-"`
+- [x] `git ls-files tasks/press-drafts docs_v2/blog | grep -E "press-drafts|^docs_v2/blog/(hn|x|reddit|linkedin)-"`
+      ✔ returns nothing; note-drip-machine and note-launch-plan (planning, not copy) stay; the channel-post validator stays for future notes; npm run build:docs passes
       returns nothing; the build validator no longer needs the
       channel-post gate for those files (or keeps it for future notes,
       stated either way).
-- [ ] `newsletter/README.md` documents the press commands and the
+- [x] `newsletter/README.md` documents the press commands and the
+      ✔ README "The press" section with the CLI; LESSONS "The press: copy in D1, cards as editors, types in the namespace"
       singular route rule; LESSONS.md carries what the build taught.
-- [ ] `npm run gate:newsletter` adds no findings on the press module;
+- [x] `npm run gate:newsletter` adds no findings on the press module;
+      ✔ gate: no finding under modules/press, modules/release, modules/app or platform/Api; coverage on src/modules/press: 100 / 100 / 100 / 100
       `npx vitest run --coverage` in `newsletter/` reports the press
       Worker module at 100% on every metric.
-- [ ] The e2e walk (`newsletter/scripts/e2e-walk.mjs`) covers: open
+- [x] The e2e walk (`newsletter/scripts/e2e-walk.mjs`) covers: open
+      ✔ e2e-walk: 55/55 checks; stations 22–27 in newsletter/e2e-shots (press-pieces, press-thread, press-scheduled, press-queue, press-sent, press-calendar-dialog); the walk needs a seeded audience (README)
       Press, create a piece from a blog post, add a thread, skip a
       segment, approve, schedule from the calendar, mark sent, see it
       in Sent — with a screenshot per stop in `newsletter/e2e-shots/`.
-- [ ] The impossibility list at the end of this plan is walked once by
+- [x] The impossibility list at the end of this plan is walked once by
+      ✔ walked on the local dashboard + Worker (the live one moves with the push): results below
       hand on the live dashboard, each line with a one-word result.
+
+### Step 10 — Tiptap editors and the R2 asset store (added 2026-09-08)
+
+- [x] `newsletter/src/modules/press/Asset.ts` stores under a unique key,
+      ✔ Asset.test.ts: key `^\d+-[a-z0-9]{4}-slug.ext`, two same-name puts differ, served with type + immutable cache, 404 on malformed key, refuses type/empty/oversize
+      serves publicly with the stored type, refuses everything else.
+- [x] `POST /admin/press/asset?name=` uploads through the admin secret;
+      ✔ PressApi route (test: 200 + served; text body 400; empty body 400); local curl → `{"key":"…-local-test.png","url":"http://10.211.55.7:5190/press-asset/…"}`
+      `GET /press-asset/<key>` is public and listed in `run_worker_first`.
+- [x] Every markdown body (base, article, Reddit, dev.to, HN comment,
+      ✔ MarkdownEditor.vue on EditorModel (ivue class); PressEditor round-trip test proves the stored subset comes back byte-identical
+      plain) edits in Tiptap and stores normalized markdown.
+- [x] Drop / paste / pick uploads images and video into the document;
+      ✔ EditorModel tests: hosted types upload + insert image/video nodes, a text file is not claimed, a failed upload reports; YouTube/video links route to nodes
+      a YouTube link becomes a player; tweets take four images each.
+- [x] `npx vitest run --coverage`: press files 100%; dashboard tsc, Worker
+      ✔ 237 tests; Asset/PressApi/Markdown/PressEditor/EditorModel 100% lines; gate back to the 5 pre-existing GmailUi/wrangler-tmp findings; build:admin ok
+      tsc, gate, `npm run build:admin` all pass.
+- [x] R2 enabled on the account and `ivue-press` created.
+      ✔ 2026-09-09: user enabled R2; `wrangler r2 bucket create ivue-press` → `r2 bucket list` shows ivue-press (created 2026-09-09T00:27:40Z); the PRESS_ASSETS binding in wrangler.jsonc already matched, wrangler's offer to add one was declined
+
+### The impossibility walk (2026-09-08, local dashboard + Worker)
+
+| impossibility | result | how |
+| --- | --- | --- |
+| an unsent post in the public repo | holds | `git ls-files` shows no press-drafts and no channel posts; the batch is gitignored |
+| two sources of truth for one text | holds | the calendar file carries source keys only; the dialog reads the Worker |
+| an approved thread whose live text fails its lint | holds | approve refused a 281-character segment by name; a 3110/3000 LinkedIn post shows red and cannot approve |
+| a schedule that ships stale text | holds | the job holds the id; the tick read a row that had been edited (draft) and shipped nothing |
+| a save without a revision | holds | every PATCH of body/meta wrote a post_revision; base saves wrote base_revision |
+| a platform card that shows text the platform would not accept | holds | over-limit reads red with the count; plain kinds lint bold/headings/lists/images/links/code |
+| a posting without a ledger row | holds | API post and manual mark both wrote posting rows; a second posting kept the first |
+| a piece that reads the live site at posting time | holds | one blog-index read at create; none afterwards (Piece.test counts loads) |
+| a plural table name after migration 0011 | holds | sqlite_master on the shim: singular only |
+| a derived body edited anywhere but through the base | holds | PATCH body on a derived row is a 400; the card is contenteditable=false |
+| a projection edit that reaches the base | holds | no code path writes piece.base from an expression |
+| an authored expression that changes because the base did | holds | the bluesky row kept "hand-written" through two base saves |
+| a piece refused, hidden, or flagged for having no expressions | holds | a blank piece lists with an empty strip and opens (e2e station) |
+| a piece with a date, a status, a venue, or a job | holds | Piece.Record has none of those keys (Piece.test) |
+| a scheduled expression whose text is not the approved text | holds | an edit after scheduling cancelled the job and returned it to draft |

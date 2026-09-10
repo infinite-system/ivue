@@ -8,7 +8,7 @@ import { Static } from 'ivue/extras';
 class $Ledger {
   static async sentSetForSlug(env: Env, slug: string): Promise<Set<string>> {
     const { results } = await env.DB.prepare(
-      'SELECT email FROM sends WHERE slug = ?',
+      'SELECT email FROM send WHERE slug = ?',
     )
       .bind(slug)
       .all<{ email: string }>();
@@ -17,21 +17,21 @@ class $Ledger {
 
   // The whole ledger in one query — the drip planner folds it into
   // per-subscriber sent-sets and last-send times.
-  static async allRows(env: Env): Promise<SendRow[]> {
+  static async allRows(env: Env): Promise<Ledger.SendRow[]> {
     const { results } = await env.DB.prepare(
-      'SELECT email, slug, sent_at AS sentAt FROM sends',
-    ).all<SendRow>();
+      'SELECT email, slug, sent_at AS sentAt FROM send',
+    ).all<Ledger.SendRow>();
     return results;
   }
 
   // Everything one address has already received, newest first — the
   // dashboard's "emails already sent to this person" panel.
-  static async historyFor(env: Env, address: string): Promise<SendRow[]> {
+  static async historyFor(env: Env, address: string): Promise<Ledger.SendRow[]> {
     const { results } = await env.DB.prepare(
-      'SELECT email, slug, sent_at AS sentAt FROM sends WHERE email = ? ORDER BY sent_at DESC',
+      'SELECT email, slug, sent_at AS sentAt FROM send WHERE email = ? ORDER BY sent_at DESC',
     )
       .bind(address)
-      .all<SendRow>();
+      .all<Ledger.SendRow>();
     return results;
   }
 
@@ -43,7 +43,7 @@ class $Ledger {
     slug: string,
   ): Promise<boolean> {
     const row = await env.DB.prepare(
-      'SELECT 1 AS present FROM sends WHERE email = ? AND slug = ? LIMIT 1',
+      'SELECT 1 AS present FROM send WHERE email = ? AND slug = ? LIMIT 1',
     )
       .bind(address, slug)
       .first<{ present: number }>();
@@ -58,7 +58,7 @@ class $Ledger {
     await env.DB.batch(
       entries.map((entry) =>
         env.DB.prepare(
-          'INSERT OR IGNORE INTO sends (email, slug, sent_at) VALUES (?, ?, ?)',
+          'INSERT OR IGNORE INTO send (email, slug, sent_at) VALUES (?, ?, ?)',
         ).bind(entry.email, entry.slug, entry.sentAt),
       ),
     );
@@ -74,7 +74,7 @@ class $Ledger {
     if (!addresses.length) return;
     await env.DB.batch(
       addresses.map((address) =>
-        env.DB.prepare('DELETE FROM sends WHERE email = ? AND slug = ?').bind(
+        env.DB.prepare('DELETE FROM send WHERE email = ? AND slug = ?').bind(
           address,
           slug,
         ),
@@ -84,7 +84,7 @@ class $Ledger {
 
   // One page of the send log, newest first — the dashboard's "Sent"
   // tab. `search` matches recipient email OR post slug.
-  static async page(env: Env, query: SendLogQuery): Promise<SendLogPage> {
+  static async page(env: Env, query: Ledger.SendLogQuery): Promise<Ledger.SendLogPage> {
     const search = (query.search ?? '').trim();
     const searchPattern = `%${search}%`;
     const limit = Math.min(Math.max(1, query.limit ?? 50), 200);
@@ -92,30 +92,30 @@ class $Ledger {
     const whereClause = "WHERE (?1 = '' OR email LIKE ?2 OR slug LIKE ?2)";
     const [{ results: rows }, totalRow] = await Promise.all([
       env.DB.prepare(
-        'SELECT email, slug, sent_at AS sentAt FROM sends ' +
+        'SELECT email, slug, sent_at AS sentAt FROM send ' +
           whereClause +
           ' ORDER BY sent_at DESC, email LIMIT ?3 OFFSET ?4',
       )
         .bind(search, searchPattern, limit, offset)
-        .all<SendRow>(),
-      env.DB.prepare('SELECT COUNT(*) AS total FROM sends ' + whereClause)
+        .all<Ledger.SendRow>(),
+      env.DB.prepare('SELECT COUNT(*) AS total FROM send ' + whereClause)
         .bind(search, searchPattern)
         .first<{ total: number }>(),
     ]);
     return { total: totalRow?.total ?? 0, rows, limit, offset };
   }
 
-  static async statsPerPost(env: Env): Promise<PostSendStats[]> {
+  static async statsPerPost(env: Env): Promise<Ledger.PostSendStats[]> {
     const { results } = await env.DB.prepare(
       'SELECT slug, COUNT(*) AS sendCount, MAX(sent_at) AS lastSentAt ' +
-        'FROM sends GROUP BY slug ORDER BY lastSentAt DESC',
-    ).all<PostSendStats>();
+        'FROM send GROUP BY slug ORDER BY lastSentAt DESC',
+    ).all<Ledger.PostSendStats>();
     return results;
   }
 
   static async totalSends(env: Env): Promise<number> {
     const row = await env.DB.prepare(
-      'SELECT COUNT(*) AS total FROM sends',
+      'SELECT COUNT(*) AS total FROM send',
     ).first<{ total: number }>();
     return row?.total ?? 0;
   }
@@ -124,29 +124,30 @@ class $Ledger {
 export namespace Ledger {
   export const $Class = Static($Ledger);
   export let Class = $Class;
+
+  export interface SendRow {
+    email: string;
+    slug: string;
+    sentAt: number;
+  }
+
+  export interface SendLogQuery {
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }
+
+  export interface SendLogPage {
+    total: number;
+    rows: SendRow[];
+    limit: number;
+    offset: number;
+  }
+
+  export interface PostSendStats {
+    slug: string;
+    sendCount: number;
+    lastSentAt: number;
+  }
 }
 
-export interface SendRow {
-  email: string;
-  slug: string;
-  sentAt: number;
-}
-
-export interface SendLogQuery {
-  search?: string;
-  limit?: number;
-  offset?: number;
-}
-
-export interface SendLogPage {
-  total: number;
-  rows: SendRow[];
-  limit: number;
-  offset: number;
-}
-
-export interface PostSendStats {
-  slug: string;
-  sendCount: number;
-  lastSentAt: number;
-}

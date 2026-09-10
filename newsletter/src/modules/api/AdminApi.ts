@@ -2,18 +2,16 @@ import { Static } from 'ivue/extras';
 import { Http } from '../platform/Http';
 import { Security } from '../platform/Security';
 import { Posts } from '../content/Posts';
-import type { Post } from '../content/Posts';
 import { Settings } from '../config/Settings';
-import type { DripSchedule } from '../config/Settings';
 import { XPoster } from '../socials/XPoster';
 import { Tweets } from '../socials/Tweets';
 import { Scheduler } from '../schedule/Scheduler';
-import type { JobKind } from '../schedule/Scheduler';
 import { Audience } from '../audience/Audience';
 import { Comments } from '../comments/Comments';
 import { Ledger } from '../audience/Ledger';
 import { Delivery } from '../delivery/Delivery';
 import { Drip } from '../delivery/Drip';
+import { PressApi } from '../press/PressApi';
 
 // The dashboard's JSON API — every /admin/* route, all behind the same
 // timing-safe Bearer ADMIN_SECRET check. The dashboard is a pure client
@@ -28,53 +26,59 @@ class $AdminApi {
     if (!(await Security.Class.bearerAuthorized(request, env)))
       return Http.Class.json({ error: 'Unauthorized' }, 401);
 
+    // the press has ids in its paths — its own router, same auth
+    if (url.pathname.startsWith('/admin/press/'))
+      return PressApi.Class.handle(request, url, env);
+
     const route = `${request.method} ${url.pathname}`;
     switch (route) {
-      case 'GET /admin/subscribers':
-        return this.subscribers(url, env);
+      // one resource, one path: ?email= reads one subscriber, the rest
+      // of the query pages the audience
       case 'GET /admin/subscriber':
-        return this.subscriber(url, env);
-      case 'POST /admin/subscribers/add':
+        return url.searchParams.has('email')
+          ? this.subscriber(url, env)
+          : this.subscribers(url, env);
+      case 'POST /admin/subscriber/add':
         return this.add(request, env);
-      case 'POST /admin/subscribers/unsubscribe':
+      case 'POST /admin/subscriber/unsubscribe':
         return this.unsubscribe(request, env);
-      case 'POST /admin/subscribers/resubscribe':
+      case 'POST /admin/subscriber/resubscribe':
         return this.resubscribe(request, env);
-      case 'POST /admin/subscribers/remove':
+      case 'POST /admin/subscriber/remove':
         return this.remove(request, env);
       case 'POST /admin/send':
         return this.send(request, env);
-      case 'GET /admin/sends':
+      case 'GET /admin/send':
         return this.sends(url, env);
-      case 'GET /admin/comments':
+      case 'GET /admin/comment':
         return this.comments(url, env);
-      case 'POST /admin/comments/approve':
+      case 'POST /admin/comment/approve':
         return this.approveComment(request, env);
-      case 'POST /admin/comments/delete':
+      case 'POST /admin/comment/delete':
         return this.deleteComment(request, env);
-      case 'POST /admin/comments/lock':
+      case 'POST /admin/comment/lock':
         return this.lockComment(request, env);
-      case 'GET /admin/posts':
+      case 'GET /admin/post':
         return this.posts(env);
       case 'GET /admin/preview':
         return this.preview(url, env);
       case 'GET /admin/drip-preview':
         return this.dripPreview(env);
-      case 'GET /admin/lists':
+      case 'GET /admin/list':
         return this.lists(env);
-      case 'POST /admin/lists/create':
+      case 'POST /admin/list/create':
         return this.createList(request, env);
-      case 'POST /admin/lists/rename':
+      case 'POST /admin/list/rename':
         return this.renameList(request, env);
-      case 'POST /admin/lists/delete':
+      case 'POST /admin/list/delete':
         return this.deleteList(request, env);
-      case 'GET /admin/settings':
+      case 'GET /admin/setting':
         return this.settings(env);
-      case 'POST /admin/settings':
+      case 'POST /admin/setting':
         return this.saveSettings(request, env);
       case 'POST /admin/tweet':
         return this.tweet(request, env);
-      case 'GET /admin/tweets':
+      case 'GET /admin/tweet':
         return this.tweets(env);
       case 'POST /admin/thread':
         return this.thread(request, env);
@@ -86,7 +90,7 @@ class $AdminApi {
         return this.scheduleList(env);
       case 'POST /admin/schedule/cancel':
         return this.scheduleCancel(request, env);
-      case 'GET /admin/stats':
+      case 'GET /admin/stat':
         return this.stats(env);
       default:
         return Http.Class.notFound();
@@ -141,12 +145,12 @@ class $AdminApi {
   // drip's own rule (hour H local, every N local calendar days)
   // unrolled to the end of the archive.
   static upcomingFor(
-    catalog: Post[],
+    catalog: Posts.Post[],
     history: { slug: string; sentAt: number }[],
     timezone: string,
-    schedule: DripSchedule,
+    schedule: Settings.DripSchedule,
     now: number,
-  ): UpcomingSend[] {
+  ): AdminApi.UpcomingSend[] {
     const sent = new Set(history.map((row) => row.slug));
     const lastSentAt = history.reduce(
       (latest, row) => Math.max(latest, row.sentAt),
@@ -529,7 +533,7 @@ class $AdminApi {
   }
 
   // The thread composer's raw material — kilobytes, so on demand rather
-  // than riding every /admin/posts response.
+  // than riding every /admin/post response.
   static async postText(url: URL, env: Env): Promise<Response> {
     const slug = url.searchParams.get('slug') ?? '';
     const catalog = await Posts.Class.load(env);
@@ -544,14 +548,14 @@ class $AdminApi {
 
   static async schedule(request: Request, env: Env): Promise<Response> {
     const body = await Http.Class.readJsonBody<{
-      kind: JobKind;
+      kind: Scheduler.JobKind;
       payload: Record<string, string>;
       dueAt: number;
     }>(request);
     try {
       const job = await Scheduler.Class.schedule(
         env,
-        body.kind as JobKind,
+        body.kind as Scheduler.JobKind,
         (body.payload ?? {}) as never,
         Number(body.dueAt),
       );
@@ -666,10 +670,11 @@ class $AdminApi {
 export namespace AdminApi {
   export const $Class = Static($AdminApi);
   export let Class = $Class;
+
+  export interface UpcomingSend {
+    slug: string;
+    title: string;
+    projectedAt: number;
+  }
 }
 
-export interface UpcomingSend {
-  slug: string;
-  title: string;
-  projectedAt: number;
-}

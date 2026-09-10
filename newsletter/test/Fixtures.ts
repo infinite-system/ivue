@@ -2,10 +2,10 @@
 // the two external surfaces (the site's blog-index.json and Postmark's
 // batch API).
 import { vi } from 'vitest';
-import type { Post } from '../src/modules/content/Posts';
-import type { PostmarkOutcome } from '../src/modules/delivery/Delivery';
+import type { Posts } from '../src/modules/content/Posts';
+import type { Delivery } from '../src/modules/delivery/Delivery';
 
-export function makePost(slug: string, timestamp: number): Post {
+export function makePost(slug: string, timestamp: number): Posts.Post {
   return {
     slug,
     title: `Title of ${slug}`,
@@ -26,7 +26,7 @@ export interface FetchStubOptions {
   // domains whose stubbed MX resolves to Google (Workspace recipients)
   googleMxDomains?: string[];
   // one outcome per message, applied in order; default accepts everything
-  postmarkOutcome?: (recipient: string) => PostmarkOutcome;
+  postmarkOutcome?: (recipient: string) => Delivery.PostmarkOutcome;
   postmarkStatus?: number;
 }
 

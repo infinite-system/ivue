@@ -1,7 +1,6 @@
 import { Reactive } from 'ivue';
 import { ref, shallowRef } from 'vue';
 import { Api } from '../platform/Api';
-import type { AdminSettings, ListSummary } from '../platform/Api';
 import { AppStore } from '../app/AppStore';
 
 // List management: every list with its membership counts and effective
@@ -15,7 +14,7 @@ class $ListsModel {
 
   // the app store — resolved and cached on first touch (store pattern)
   protected get $app() {
-    return AppStore.use();
+    return AppStore.Class.use();
   }
 
   get DEFAULT_LIST() {
@@ -23,11 +22,11 @@ class $ListsModel {
   }
 
   get lists() {
-    return shallowRef<ListSummary[]>([]);
+    return shallowRef<Api.ListSummary[]>([]);
   }
 
   get settings() {
-    return shallowRef<AdminSettings | null>(null);
+    return shallowRef<Api.AdminSettings | null>(null);
   }
 
   get loading() {
@@ -73,11 +72,11 @@ class $ListsModel {
     return this.renamingList.value === list;
   }
 
-  canDelete(entry: ListSummary) {
+  canDelete(entry: Api.ListSummary) {
     return !this.isDefault(entry.list) && entry.members === 0;
   }
 
-  deleteHint(entry: ListSummary) {
+  deleteHint(entry: Api.ListSummary) {
     if (this.isDefault(entry.list)) return 'default list';
     if (entry.members > 0) return 'has members';
     return '';
