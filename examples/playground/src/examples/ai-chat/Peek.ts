@@ -32,6 +32,8 @@ class $Peek {
   static readonly HEAD_PX = 104;
   /** the card stays this long after the pointer leaves, so it can be crossed into */
   static readonly LINGER_MS = 220;
+  /** a pointer must rest on the track this long before the card opens — a pass across it opens nothing */
+  static readonly OPEN_DELAY_MS = 350;
 
   constructor(public props: Peek.Props) {
     watch(
@@ -68,6 +70,11 @@ class $Peek {
   }
 
   get lingerTimer() {
+    return shallowRef<ReturnType<typeof setTimeout> | null>(null);
+  }
+
+  /** the open delay, armed by the first move over the track and cancelled by leaving it */
+  get openTimer() {
     return shallowRef<ReturnType<typeof setTimeout> | null>(null);
   }
 
@@ -231,17 +238,22 @@ class $Peek {
     }
     const overTrack = Boolean(target && track.contains(target));
     if (!overTrack && !this.chat.thumbDragging) {
-      // anywhere else the card lingers, then goes
+      // anywhere else a pending open is dropped, and an open card lingers, then goes
+      this.cancelOpen();
       if (this.open.value) this.leave();
       return;
     }
     const rect = track.getBoundingClientRect();
     const fraction = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
     this.y.value = event.clientY - thread.getBoundingClientRect().top;
-    this.show(Math.round(fraction * (this.count - 1)));
+    const index = Math.round(fraction * (this.count - 1));
+    // an open card and a dragged thumb follow at once; a closed card waits for the pointer to rest
+    if (this.open.value || this.chat.thumbDragging) this.show(index);
+    else this.showAfterDelay(index);
   }
 
   onThreadPointerLeave() {
+    this.cancelOpen();
     this.leave();
   }
 
@@ -283,7 +295,25 @@ class $Peek {
     else scroller.scrollToIndex(Math.max(0, this.index.value - Math.floor(this.self.ROWS / 2)), undefined, false, 0);
   }
 
+  /** the position tracks the pointer while the delay runs, so the card opens on the row under it */
+  showAfterDelay(index: number) {
+    this.index.value = index;
+    if (this.openTimer.value) return;
+    this.openTimer.value = setTimeout(() => this.openNow(), this.self.OPEN_DELAY_MS);
+  }
+
+  openNow() {
+    this.openTimer.value = null;
+    this.show(this.index.value);
+  }
+
+  cancelOpen() {
+    if (this.openTimer.value) clearTimeout(this.openTimer.value);
+    this.openTimer.value = null;
+  }
+
   show(index: number) {
+    this.cancelOpen();
     this.cancelLinger();
     this.index.value = index;
     this.open.value = true;
