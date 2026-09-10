@@ -1304,25 +1304,56 @@
   vertical-align: super;
   line-height: 0;
 }
-/* tables in a message */
-.ai-chat .ac-text table {
+/* tables in a message: the frame is the wrapper's — one border, one radius — and it scrolls a wide
+   table sideways; the cells draw only the inner grid, so every corner rounds with the frame */
+.ai-chat .ac-text .chat-table {
   margin: 8px 0;
-  border-collapse: collapse;
-  font-size: 12.5px;
-  display: block;
   max-width: 100%;
   overflow-x: auto;
+  border: 1px solid var(--ac-line);
+  border-radius: 10px;
+  scrollbar-width: thin;
+}
+.ai-chat .ac-text table {
+  margin: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  font-size: 12.5px;
 }
 .ai-chat .ac-text th,
 .ai-chat .ac-text td {
   padding: 4px 10px;
-  border: 1px solid var(--ac-line);
+  border: 0;
+  border-right: 1px solid var(--ac-line);
+  border-bottom: 1px solid var(--ac-line);
   text-align: left;
   vertical-align: top;
+}
+.ai-chat .ac-text th:last-child,
+.ai-chat .ac-text td:last-child {
+  border-right: 0;
+}
+.ai-chat .ac-text tr:last-child td {
+  border-bottom: 0;
 }
 .ai-chat .ac-text th {
   background: var(--ac-panel-2);
   font-weight: 600;
+}
+/* the head's ground and the last row keep the frame's radius at every corner */
+.ai-chat .ac-text thead tr:first-child th:first-child {
+  border-top-left-radius: 9px;
+}
+.ai-chat .ac-text thead tr:first-child th:last-child {
+  border-top-right-radius: 9px;
+}
+.ai-chat .ac-text tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 9px;
+}
+.ai-chat .ac-text tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 9px;
 }
 /* skeletons: bars in place of a preview, still at the estimated size */
 .ai-chat .ac-stub {

@@ -54,7 +54,8 @@ class $Markdown {
     const [head, ...body] = rows.map(cells);
     const thead = `<thead><tr>${head.map((cell) => `<th>${cell}</th>`).join('')}</tr></thead>`;
     const tbody = body.length ? `<tbody>${body.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>` : '';
-    return `<table>${thead}${tbody}</table>`;
+    // the wrapper scrolls a wide table sideways and carries the rounded frame; a table cannot clip its own corners
+    return `<div class="chat-table"><table>${thead}${tbody}</table></div>`;
   }
 
   static isTableRow(line: string): boolean {
