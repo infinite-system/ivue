@@ -46,8 +46,6 @@ class $Chat {
   static readonly PAGE_MARGIN = 2;
   /** within this many px of the end, the reader counts as at the bottom */
   static readonly BOTTOM_THRESHOLD_PX = 48;
-  /** how often a streaming reply re-pins the bottom */
-  static readonly PIN_EVERY_MS = 120;
   /** how long after a reply ends its last pin may keep converging */
   static readonly SEEK_RELEASE_MS = 1200;
   static readonly STUB_ROLE: Record<string, SessionLog.Role> = { u: 'user', a: 'assistant', s: 'system' };
@@ -191,6 +189,11 @@ class $Chat {
   /** the window reached while the thumb was held — fetched on the drop, not on the way */
   get heldWindow() {
     return shallowRef<{ start: number; end: number } | null>(null);
+  }
+
+  /** a landing is in flight — pin, paint, pin — so the next word's landing waits for it */
+  get landing() {
+    return ref(false);
   }
 
   /** the scrollbar's thumb is being dragged: rows fly past as skeletons and no page is asked for */
@@ -570,12 +573,18 @@ class $Chat {
    * new end, on nothing. Pin, let it paint, pin again.
    */
   async settleAtBottom() {
-    this.pinToBottom();
-    await nextTick();
-    await this.self.frame();
-    this.pinToBottom();
-    await this.self.frame();
-    this.pinToBottom();
+    if (this.landing.value) return;
+    this.landing.value = true;
+    try {
+      this.pinToBottom();
+      await nextTick();
+      await this.self.frame();
+      this.pinToBottom();
+      await this.self.frame();
+      this.pinToBottom();
+    } finally {
+      this.landing.value = false;
+    }
   }
 
   isFocused(row: Chat.Row): boolean {
@@ -774,11 +783,10 @@ class $Chat {
       void this.settleAtBottom();
       return;
     }
-    const now = Date.now();
-    if (now - streaming.lastPinAt >= this.self.PIN_EVERY_MS) {
-      streaming.lastPinAt = now;
-      this.pinToBottom();
-    }
+    // every word lands after its line has measured, so the caret is never left under the fold; a landing
+    // already in flight covers the words that arrive during its paints
+    streaming.lastPinAt = Date.now();
+    void this.settleAtBottom();
   }
 
   /** when the reply is done, its runs of calls contract to batches like any loaded turn */

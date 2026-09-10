@@ -233,7 +233,7 @@ describe('Chat', () => {
     chat.applyEvent(chat.streaming.value, { type: 'tool_call', call: { id: 'late', name: 'Bash', input: {}, state: 'running', result: null, durationMs: null, startedAt: 0, children: null } });
     expect(landing).toHaveBeenCalledTimes(1);
     chat.applyEvent(chat.streaming.value, { type: 'token', text: 'word ' });
-    expect(landing).toHaveBeenCalledTimes(1);
+    expect(landing).toHaveBeenCalledTimes(2);
     chat.streaming.value = null;
     landing.mockRestore();
 
