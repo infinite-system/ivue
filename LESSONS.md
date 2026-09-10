@@ -983,3 +983,28 @@ own whole than to arbitrate.
   Measure glides by a row's on-screen motion tracked by id, never by the
   transform: the transform legitimately moves by every compensation.
 
+
+## The kit (2026-09-10): what the fixture tree taught before the chat conversion
+
+- **`Static()` already caches a `$`-prefixed static getter per receiver.** A `static get $kit()` needs no
+  WeakMap and no static field: the engine stores the value as an own property of the class that read it.
+  Corollary the spec pinned: `super.$kit` inside an override runs the parent's getter body FOR THE CHILD
+  receiver, so a child's untouched entries are equal to the parent's, never the same objects. Identity
+  of untouched entries holds only inside `Kit.Class.resolve`, where `merge` reads the base through the
+  base class. Never assert entry identity across a subclass boundary.
+- **The gate's dollar-getter rule is for INSTANCE getters.** `a_composable_is_injected_by_a_one_call_dollar_getter`
+  now skips static accessors; a static `$` getter is a compute-once cache and may take several
+  statements (green fixture added to `$fixtures`).
+- **`wrapper.vm` from @vue/test-utils is a foreign receiver for ivue instances.** A method read through it
+  reaches the engine's lazy-bound accessor with test-utils' proxy as `this`, which `resolveRaw` cannot map
+  to the instance — `vm.method` comes back undefined while plain getters happen to work. Read the model
+  through `wrapper.vm.$.exposed` (the object `defineExpose` received) in specs.
+- **A derived class's default for a prop the view never declared never applies.** Vue defaults only the
+  props the compiled view declared and `nestedProps` never writes a top-level prop, so through the base
+  view a widened contract is invisible on both sides: no value in, no default out, a dev warning on emit.
+  `Kit.Class.view` (a fresh component object with the class's `props`/`emits`) is the only route.
+- **Vue's contract statics fuse a fresh object per read.** `X.Class.props` and `X.Class.emits` are new
+  objects on every access (validators are new functions), so compare by keys/`toEqual`, never `toBe`.
+- **The invariants checker wants `## Reality-based invariants` then `## Chosen invariants` exactly**, no
+  `---` rules between records (they break the `Last refined` field parse), and every record linked from
+  the `## Generator` record's Components list, or it reports "no mechanism claims".
