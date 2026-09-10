@@ -18,7 +18,7 @@ event the shipped class never declared. The tree the authors shipped
 stays exactly as it was, and a second tree on the same page can differ
 from the first in one leaf three levels down.
 
-Pick an override below. The tree is a gallery of code snippets, each a
+Pick an override below. The tree is a gallery of snippet cards, each a
 head, a syntax-coloured block and a foot. The same `Gallery.vue` renders
 every override: the head becomes an editor tab bar, the foot a status
 bar, the colour engine swaps from shiki to highlight.js, the theme, the

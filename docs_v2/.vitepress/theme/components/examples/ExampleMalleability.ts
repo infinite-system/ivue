@@ -28,7 +28,7 @@ class $ExampleMalleability {
       {
         id: 'shipped',
         label: 'As shipped',
-        tagline: 'The tree its authors wrote: three snippets, a plain head, shiki in github-light, a foot with a copy button.',
+        tagline: 'The tree its authors wrote: a snippet card with a plain head, shiki in github-light, and a foot with a copy button.',
         patch: '// nothing — Gallery as its file exports it',
         namespace: Gallery,
         files: [

@@ -122,7 +122,7 @@ const {
   grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
   gap: 16px;
   /* one height for every override, so switching tabs never moves what is below */
-  min-height: 1010px;
+  min-height: 860px;
 }
 .mal-live {
   display: flex;
