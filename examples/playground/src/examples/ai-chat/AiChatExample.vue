@@ -52,7 +52,7 @@ const {
 
     <div class="ac-main">
       <section class="ac-thread">
-        <VirtualScroller ref="scroller" scrollbar v-model="rows" :assumed-size="96" :padding-quantity="6" :selection-text="chat.rowText">
+        <VirtualScroller ref="scroller" scrollbar :auto-repeat="false" v-model="rows" :assumed-size="96" :padding-quantity="6" :selection-text="chat.rowText">
           <template #item="{ item }">
             <ChatMessage :row="item" :chat="chat" />
           </template>
