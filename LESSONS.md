@@ -1024,3 +1024,7 @@ own whole than to arbitrate.
 - **A declared prop with a default beats the kit's value for it.** `ThemedCode` declares `theme` with
   default `'mono'`, so an entry's `props.theme` no longer decides; the combined demo variant drops it
   rather than show a knob that does nothing. When a subclass declares a knob as a prop, say so.
+- **The malleability demo's tree lives in docs_v2 (`theme/components/examples/malleability/`), not the
+  playground**, because it needs shiki and highlight.js from the docs install; highlight.js is a docs_v2
+  devDependency for it (`highlight.js/lib/core` + four languages). The spec tree in `examples/playground/src/kit/`
+  stays minimal on purpose. A demo tree carries its own CSS; the fixture files have none.
