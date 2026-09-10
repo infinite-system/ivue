@@ -1414,9 +1414,21 @@
 /* skeletons: bars in place of a preview, still at the estimated size */
 .ai-chat .ac-stub {
   align-items: flex-start;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 8px 10px 6px;
   background: none;
   animation: none;
+  overflow: hidden;
+}
+.ai-chat .ac-skel-card {
+  height: 20px;
+  border-radius: 7px;
+  box-shadow: inset 2px 0 0 var(--ac-line);
+  opacity: 0.8;
+}
+.ai-chat .ac-stub .ac-stub-status {
+  margin-top: auto;
 }
 .ai-chat .ac-skel {
   display: block;

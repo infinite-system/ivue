@@ -30,6 +30,13 @@ import type { SessionLog } from './SessionLog';
 // is being streamed re-reads the chat's revision, so in-place growth of
 // its message re-renders this row and nothing else.
 class $ChatMessage {
+  /** what the skeleton's frame takes: the stub's padding and its status line — the row's own head sits above it */
+  static readonly SKELETON_FRAME_PX = 36;
+  static readonly SKELETON_LINE_PX = 16;
+  static readonly SKELETON_CARD_PX = 26;
+  static readonly SKELETON_MAX_LINES = 6;
+  static readonly SKELETON_MAX_CARDS = 2;
+
   /** the roles a row composes: a part per kind, and its own sections — built once per class by Static() */
   static get $kit() {
     return {
@@ -209,12 +216,32 @@ class $ChatMessage {
     return this.row.preview || `${this.roleLabel} message`;
   }
 
-  /** the skeleton's bars: two or three, their widths from the preview's length so rows differ */
-  get skeletonLines(): string[] {
+  /**
+   * The skeleton fills the stub's height the way the row will: a head of
+   * two pills, then text lines and — for a turn that made calls — card
+   * bars, as many as the estimate has room for; widths come from the
+   * preview's length so neighbouring rows differ.
+   */
+  get skeletonBlocks(): ChatMessage.SkeletonBlock[] {
+    const self = this.self;
+    const room = this.stubHeight - self.SKELETON_FRAME_PX;
+    const cards = Math.min(self.SKELETON_MAX_CARDS, this.row.calls);
+    const lines = Math.max(1, Math.min(self.SKELETON_MAX_LINES, Math.floor((room - cards * self.SKELETON_CARD_PX) / self.SKELETON_LINE_PX)));
     const length = this.row.preview.length;
-    const first = 55 + (length % 30);
-    const second = 30 + ((length * 7) % 40);
-    return length > 60 ? [`${first}%`, `${second}%`, `${20 + (length % 25)}%`] : [`${first}%`, `${second}%`];
+    const blocks: ChatMessage.SkeletonBlock[] = [];
+    for (let at = 0; at < lines; at++) {
+      const last = at === lines - 1;
+      const width = last ? 25 + ((length * (at + 3)) % 40) : 72 + ((length * (at + 1)) % 26);
+      blocks.push({ kind: 'line', width: `${width}%` });
+    }
+    for (let at = 0; at < cards; at++) blocks.push({ kind: 'card', width: `${58 + ((length * (at + 5)) % 30)}%` });
+    return blocks;
+  }
+
+  /** the stub's height in px — the scroller's estimate, never under the minimum */
+  get stubHeight(): number {
+    const size = this.chat.scroller.value?.estimatedItemSize ?? 72;
+    return Math.max(48, Math.round(size));
   }
 
   get isPageLoading(): boolean {
@@ -232,8 +259,11 @@ class $ChatMessage {
 
   /** the stub's height is the scroller's estimate, so a page landing never moves the geometry */
   get stubStyle(): Record<string, string> {
-    const size = this.chat.scroller.value?.estimatedItemSize ?? 72;
-    return { height: `${Math.max(48, Math.round(size))}px` };
+    return { height: `${this.stubHeight}px` };
+  }
+
+  skeletonClass(block: ChatMessage.SkeletonBlock): Record<string, boolean> {
+    return { 'ac-skel-card': block.kind === 'card' };
   }
 
   /** the entry for a part: its kind's role, or Text for a kind nobody mapped */
@@ -254,6 +284,11 @@ class $ChatMessage {
 }
 
 export namespace ChatMessage {
+  export interface SkeletonBlock {
+    kind: 'line' | 'card';
+    width: string;
+  }
+
   export const $Class = Static($ChatMessage);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
