@@ -46,14 +46,16 @@ shipped instance to point at.
   itself. The constructor's props line is the standard's, unchanged:
   `nestedProps(props, this.self.propsDefaults)`. An entry's `props` need
   no mechanism at all: `kit` is a prop, so `this.props.kit.props.cap` is
-  an ordinary tracked read, and each class decides in its prop getters
-  which props the kit may tune — `this.props.kit?.props?.cap ?? this.props.cap`
-  — and which props the kit adds — `get theme() { return this.props.kit?.props?.theme }`.
-  The path is the documentation: a getter naming both is a tunable, a
-  getter naming only the kit is an extension, a getter naming only Vue's
-  prop is out of the kit's reach on purpose. Forcing a prop the author
-  did not open is a getter override on a derived class, the ordinary
-  move.
+  an ordinary tracked read. The rule is the getter-layer rule: a class
+  reads its own props and nothing else (closed by default); a setting
+  is a getter; opening one is a layer, a subclass whose getter reads
+  the entry and falls back to `super` —
+  `override get cap() { return this.props.kit?.props?.cap ?? super.cap }`.
+  Layers stack by inheritance, the source is the layer's choice (the
+  entry, a settings store, a tenant record), and forcing a value is a
+  layer whose getter returns it. No generated openers, no `open: [...]`
+  list — we tried the mechanism route and every step cost more than the
+  getter.
 - **Override is subclassing.** A subclass with a spread `$kit` swaps a
   role: `FancyChat.$kit.Scroller = { namespace: SnapScroller, vue: SnapScrollerView }`.
   A swap that must reach a deep leaf is the same spread with an optional
@@ -883,60 +885,65 @@ The scroller's contract with the chat is the surface `Chat` reads:
 naming that surface as `Chat.ScrollerContract` is the first thing the
 conversion writes down.
 
-### Configuration without a subclass — props on an entry
+### Configuration is a layer — a setting is a getter
+
+`CodeBlock` reads its own props and nothing else. The layer that opens
+its settings to the kit is a subclass, one getter per setting, the
+entry's word first and `super` after:
+
+```ts
+// ConfiguredBlock.ts — the configuration layer over CodeBlock
+class $ConfiguredBlock extends CodeBlock.$Class {
+  override get cap(): number | null {
+    return (this.props.kit?.props?.cap as number | null | undefined) ?? super.cap;
+  }
+
+  override get wrap(): boolean {
+    return (this.props.kit?.props?.wrap as boolean | undefined) ?? super.wrap;
+  }
+}
+
+export namespace ConfiguredBlock {
+  export const $Class = Static($ConfiguredBlock);
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+}
+```
 
 ```ts
 class $DenseChat extends Chat.$Class {
   static override get $kit() {
     return Kit.Class.resolve({
       ...super.$kit,
-      // the same scroller, tuned through the knobs its class reads from the kit
-      Scroller: { ...super.$kit.Scroller, props: { assumedSize: 64, paddingQuantity: 10 } },
-      // every code block under every card capped lower — `cap` is a tunable on CodeBlock
       Message: {
         ...super.$kit.Message,
-        subkit: { Tool: { subkit: { CodeBlock: { props: { cap: 2_000 } } } } },
+        subkit: { Tool: { subkit: { CodeBlock: { namespace: ConfiguredBlock, props: { cap: 2_000 } } } } },
       },
     });
   }
 }
 ```
 
-A patch entry may carry only `props`; `merge` lays it over the base
-entry, so namespace and view are kept and no class is derived. The
-values reach the class as `this.props.kit.props` and its getters decide:
-`cap` is a tunable on `CodeBlock`, so every block reads `2_000`;
-`assumedSize` is a tunable on the scroller once its getter reads the
-kit first. A knob the class did not open is not a knob, and the next
-extension shows the route past that. This is the consumer's dial for
-what an author chose to expose, and it is why the class alone was not
-enough to hand down: the entry is the unit of override, and props are
-one of its three axes.
+The entry names the layer and turns the knob; every block under every
+card reads `2_000`. What the rule buys, beyond one file:
 
-### Forcing a provided prop — a getter override
+- **Layers stack by inheritance.** A user-preference layer over an
+  org-policy layer over `ConfiguredBlock` is three subclasses, each
+  `mine ?? super`; precedence is inheritance order.
+- **The source is the layer's choice.** The entry's `props` here; a
+  settings store (`this.$settings.cap ?? super.cap`), a tenant record
+  or an experiment bucket elsewhere, with the same getter shape.
+- **Forcing a value is the same move.** `override get cap() { return 2_000 }`
+  reaches past anything the parent passed. `props` on an entry is a
+  consumer turning a knob a layer opened; a constant getter is a
+  consumer reaching past the parent. Same shape, different left side.
+- **A setting can compute.** Clamp, map, combine two sources, log the
+  read — one more line in the same getter, where a generated opener
+  would need a new option.
 
-```ts
-// CappedBlock.ts — the author never opened `cap`; the consumer reaches past the contract
-class $CappedBlock extends CodeBlock.$Class {
-  override get cap(): number | null {
-    return 2_000;
-  }
-}
-
-export namespace CappedBlock {
-  export const $Class = Static($CappedBlock);
-  export let Class = Reactive($Class);
-  export type Instance = typeof Class.Instance;
-}
-
-// and the entry names it
-subkit: { Tool: { subkit: { CodeBlock: { namespace: CappedBlock } } } }
-```
-
-One line, no mechanism, every prop of every class. It also reads
-truthfully: `props` on an entry is a consumer turning a knob the author
-exposed; a getter override is a consumer reaching past what the author
-exposed. Different acts, different shapes.
+The scroller gets the same treatment when the chat wants to tune it:
+a `ConfiguredScroller` layer over `VirtualScroller` opening
+`assumedSize` and `paddingQuantity`, named in `Chat.$kit.Scroller`.
 
 ### A different code block under one tool
 
@@ -1288,11 +1295,12 @@ importing each other.
   one seam is deliberate — a view hands its entry's model the roles
   that model then hands down — but if it reads wrong at conversion,
   the prop is renamed `entry` once, everywhere, and nothing else moves.
-- **Tunables are a decision, not a default.** A getter that reads
-  `this.props.kit?.props?.x ?? this.props.x` opens `x` to the kit; the
-  conversion decides per class which props open (`cap`, the scroller's
-  sizes) and leaves the rest closed. No engine change: `nestedProps`,
-  `this.props` and Vue's props object are exactly what they are today.
+- **A setting is a getter, and the base is closed.** No class in the
+  chat reads the kit's props directly; a `Configured…` layer over it
+  does, one `?? super` getter per setting (`ConfiguredBlock` for `cap`
+  and `wrap`, `ConfiguredScroller` for the sizes), and the kit names the
+  layer. No engine change: `nestedProps`, `this.props` and Vue's props
+  object are exactly what they are today.
 - **The scroller's `kit` prop.** `VirtualScroller.ts` spreads
   a `kit` prop into the contract it already has; every existing use
   is untouched.
@@ -1374,3 +1382,4 @@ importing each other.
 - An entry whose view declares a different contract than its namespace.
 - A listener attached anywhere but the seam, or slot content passed into a role whose contract names no such slot.
 - A view styled by anything but the class names its role's contract lists, or a rewrapped view that lost its scope id.
+- A setting reached by anything but a getter, or a base class that reads the kit's props when a layer could.

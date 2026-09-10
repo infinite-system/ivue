@@ -512,11 +512,14 @@ chat example is the first tree to be converted — the build is
   `new (props.kit?.namespace.Class ?? Message.Class)(props)`. The fallback is for
   a view mounted on its own (a docs demo, a spec). Props live on the
   class's static contract (`propsTypes`, `propsDefaults`, `props`), and
-  `kit` is one of them, so an entry's `props` need no mechanism: a class
-  opens a prop to the kit in its getter
-  (`this.props.kit?.props?.cap ?? this.props.cap`), adds one through the
-  kit (`this.props.kit?.props?.theme`), or leaves it closed; forcing a
-  closed prop is a getter override on a derived class. Hooks in the
+  `kit` is one of them, so an entry's `props` need no mechanism. The
+  getter-layer rule: a class reads its own props and is closed to the
+  kit; a setting is a getter; opening one is a layer, a subclass whose
+  getter reads the entry and falls back to `super`
+  (`override get cap() { return this.props.kit?.props?.cap ?? super.cap }`).
+  Layers stack by inheritance, the source is the layer's choice, and an
+  app's settings, flags and layout preferences become one patch over
+  the root's kit — persisted as data, resolved at boot. Hooks in the
   constructor bind to the view's own component, as today. A parent never
   constructs a child.
 - **A derived contract reaches Vue.** Props and emits are per component

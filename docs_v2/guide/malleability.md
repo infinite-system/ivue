@@ -21,9 +21,10 @@ from the first in one leaf three levels down.
 Pick an override below. The tree is a gallery of snippet cards, each a
 head, a syntax-coloured block and a foot. The same `Gallery.vue` renders
 every override: the head becomes an editor tab bar, the foot a status
-bar, the colour engine swaps from shiki to highlight.js, the theme, the
-line numbers and the fold arrive as knobs. Nothing is passed down but
-the entry at each seam.
+bar, the colour engine swaps from shiki to highlight.js, and a
+configuration layer opens the theme, the line numbers and the fold as
+settings the entry turns. Nothing is passed down but the entry at each
+seam.
 
 <ExampleMalleability />
 
@@ -185,37 +186,96 @@ the frame's slot and the body's `@copy` survive every swap. The cost is
 one component instance per section per mounted card, the same order
 the leaves already cost.
 
-## Knobs without a class
+## A setting is a getter
 
-An entry may carry `props`, the consumer's values for that role. `kit`
-is a declared prop, so `this.props.kit.props.cap` is an ordinary tracked
-read, and each class decides in its getters which props the kit may
-tune.
+A class reads its own props and nothing else. It is closed to the kit
+by default, and the author never decides what is tunable.
 
 ```ts
-// Code.ts — three getters, three decisions
-/** a prop the kit may tune: the consumer's value first, then what the parent passed */
-get cap(): number | null {
-  return this.props.kit?.props?.cap ?? this.props.cap;
-}
-
-/** a prop the kit cannot touch — on purpose: the code is the parent's */
-get code(): string {
-  return this.props.code;
-}
-
-/** a prop that exists only through the kit — the path says so */
-get theme(): string | undefined {
-  return this.props.kit?.props?.theme;
+// Code.ts — closed: reads what its parent passed, and only that
+get theme(): Code.Theme {
+  return this.props.theme;
 }
 ```
 
-The path is the documentation. A getter that names both is a knob the
-author opened, a getter that names only the kit is a prop the class has
-only through the kit, a getter that names only Vue's prop is closed on
-purpose. Forcing a closed prop is a getter override on a derived class,
-the ordinary move. Nothing is merged, layered or proxied, and Vue's
-props object is exactly the one the class has always read.
+Opening a setting is a layer: a subclass whose getter reads a source
+and falls back to `super`. The kit's entry may carry `props`, and `kit`
+is a declared prop, so `this.props.kit.props.theme` is an ordinary
+tracked read.
+
+```ts
+// ConfiguredCode.ts — the layer: one getter per setting, the entry's word first
+class $ConfiguredCode extends Code.$Class {
+  override get theme(): Code.Theme {
+    return this.props.kit?.props?.theme ?? super.theme;
+  }
+
+  override get maxLines(): number | null {
+    return this.props.kit?.props?.maxLines ?? super.maxLines;
+  }
+}
+```
+
+The entry then names the layer and turns the knobs:
+
+```ts
+Code: { namespace: ConfiguredCode, props: { theme: 'dracula', maxLines: 8 } }
+```
+
+That is the whole rule, and it is deliberately not a mechanism. A
+setting is a getter. Override is `super`. A layer is a subclass. What
+falls out:
+
+- **Layers stack by inheritance.** A user preference over an org
+  policy over the shipped default is three subclasses, each `mine ?? super`.
+  Precedence is inheritance order, the one thing every reader of a
+  class already understands. No merge, no priority numbers.
+- **The source is the layer's choice.** The entry's `props` is one
+  source. A settings store is another, `this.$settings.theme ?? super.theme`.
+  A URL parameter, a tenant record, an experiment bucket. Same getter
+  shape, different left side. The kit decides which class sits at the
+  seam; the class decides what it listens to.
+- **A setting can be more than a lookup.** Clamp it, map it, combine
+  two sources, log the read. It is one more line in the same getter.
+- **Forcing a value is the same move.** A layer whose getter returns
+  a constant reaches past anything the parent passed. Nothing is
+  merged, layered or proxied, and Vue's props object is exactly the
+  one the class has always read.
+
+The demo's `Code` opens nothing. `ConfiguredCode` opens three settings,
+and `HljsCode` stacks on it, so the engine swap keeps the knobs.
+
+## Configuration at the seams
+
+Put the two halves together and an application's settings stop being a
+system of their own. A settings page and a theme engine are both a
+patch over the root's kit.
+
+- **A setting is an entry's prop.** Theme, density, line numbers, date
+  format: each is a getter some layer opened, and the settings page
+  writes the patch that turns it. No settings store threaded through
+  props, no provide/inject, no global read from inside a component.
+- **A feature flag is a namespace swap.** The new flow is a subclass
+  named in the patch. On for this user, off for that one, both trees on
+  one page if a support view needs it. Rolling back is dropping the
+  entry.
+- **A layout preference is a section swap.** Compact rows or cards,
+  the sidebar left or right, a tab bar or a plain head. The patch names
+  the view; nothing above it changes.
+- **The persisted form is the patch itself.** One object per user,
+  per organisation, per device, resolved against the shipped root at
+  boot with `Kit.Class.derive`. Reset to defaults is the absence of a
+  patch, not a migration.
+- **Switching live is cheap.** A new patch derives a new root, the
+  mount re-keys, and every derived class and rewrapped view is built
+  once for that patch. The shipped classes are untouched throughout.
+
+The boundary is honest: this covers what a tree looks like and which
+class runs at each seam. A setting that changes what data flows, a
+different API host, a different permission model, lives in the models
+and the stores where it always did. The kit moves the presentation and
+the composition axis out of the code and into data, which is most of
+what a settings page ever was.
 
 ## A widened contract reaches Vue
 
