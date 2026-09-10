@@ -35,7 +35,7 @@ describe('Composer', () => {
     expect(composer.canSend).toBe(true);
     composer.modelId.value = 'deep';
     expect(composer.model.id).toBe('deep');
-    expect(composer.modelHint).toContain('45 tok/s');
+    expect(composer.modelHint).toContain('30 tok/s');
     const shiftEnter = { key: 'Enter', shiftKey: true, preventDefault: vi.fn() } as unknown as KeyboardEvent;
     composer.onKeydown(shiftEnter);
     expect(send).not.toHaveBeenCalled();

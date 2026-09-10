@@ -548,12 +548,34 @@ class $Chat {
     this.latestInView.value = true;
   }
 
-  /** a streaming reply grows: keep the last line in view while the reader is at the bottom */
+  /**
+   * A streaming reply grows: keep its newest line in view while the reader
+   * is at the bottom. The pin is the thread's END — the last row's bottom
+   * at the viewport's bottom — never the row's top, so a reply taller than
+   * the viewport shows where it is being written, not where it began.
+   */
   pinToBottom() {
     if (!this.atBottom.value) return;
     const scroller = this.scroller.value;
     if (!scroller) return;
-    scroller.scrollToIndex(this.latestIndex, undefined, false, 0);
+    const extent = Number(scroller.scrollExtent ?? 0);
+    const container = Number(scroller.containerOuterSize ?? 0);
+    scroller.setScrollPosition(-Math.max(0, extent - container), false, true, false);
+  }
+
+  /**
+   * The reply's last pin lands on its final layout: 'done' contracts the
+   * calls into batches, the row shrinks on the next render and measures
+   * on the paint after — a pin before that leaves the viewport past the
+   * new end, on nothing. Pin, let it paint, pin again.
+   */
+  async settleAtBottom() {
+    this.pinToBottom();
+    await nextTick();
+    await this.self.frame();
+    this.pinToBottom();
+    await this.self.frame();
+    this.pinToBottom();
   }
 
   isFocused(row: Chat.Row): boolean {
@@ -696,8 +718,7 @@ class $Chat {
       release();
       this.streaming.value = null;
       this.bump();
-      this.pinToBottom();
-      // the last pin converges on the reply's final layout, then lets go:
+      void this.settleAtBottom();
       // a card the reader opens later is theirs to open where it is
       setTimeout(() => this.scroller.value?.cancelSeek(), this.self.SEEK_RELEASE_MS);
     }

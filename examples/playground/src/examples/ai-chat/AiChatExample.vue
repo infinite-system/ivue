@@ -51,7 +51,6 @@ const {
         <div><dt>requests</dt><dd>{{ chat.requestCountLabel }}</dd></div>
         <div><dt>tokens streamed</dt><dd>{{ chat.tokensLabel }}</dd></div>
         <div v-if="chat.isFetching"><dt>fetching</dt><dd class="ac-fetching"><span class="ac-spinner" aria-hidden="true"></span> {{ chat.fetchingLabel }}</dd></div>
-        <div v-else-if="chat.lastRequestLabel"><dt>last request</dt><dd class="ac-last">{{ chat.lastRequestLabel }}</dd></div>
       </dl>
       <div class="ac-stats-actions">
         <label class="ac-btn" :class="{ 'ac-busy': chat.isLoadingFile }">

@@ -59,7 +59,11 @@ function fakeScroller() {
     containerOuterSize: 400,
     estimatedItemSize: 80,
     seeks: [] as { index: number; animate: boolean }[],
+    positions: [] as number[],
     cancelled: 0,
+    setScrollPosition(position: number) {
+      this.positions.push(position);
+    },
     cancelSeek() {
       this.cancelled++;
     },
@@ -222,14 +226,14 @@ describe('Chat', () => {
     expect(chat.clock.isTicking).toBe(false);
     expect(chat.indexRows.value.at(-1)).toMatchObject({ id: reply.id, r: 'a', c: 2 });
 
-    // the pin: nothing while the reader is away from the bottom, the last row when there
+    // the pin: nothing while the reader is away from the bottom, the thread's end when there
     chat.atBottom.value = false;
-    scroller.seeks = [];
+    scroller.positions = [];
     chat.pinToBottom();
-    expect(scroller.seeks).toEqual([]);
+    expect(scroller.positions).toEqual([]);
     chat.atBottom.value = true;
     chat.pinToBottom();
-    expect(scroller.seeks).toEqual([{ index: chat.latestIndex, animate: false }]);
+    expect(scroller.positions).toEqual([-(scroller.scrollExtent - scroller.containerOuterSize)]);
     unmount();
   });
 
