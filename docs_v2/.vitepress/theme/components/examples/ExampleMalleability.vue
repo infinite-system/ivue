@@ -121,8 +121,6 @@ const {
   display: grid;
   grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
   gap: 16px;
-  /* the height of the shipped tree; the two settings overrides run a little taller */
-  min-height: 640px;
 }
 .mal-live {
   display: flex;
@@ -145,7 +143,7 @@ const {
   color: var(--vp-c-text-3);
 }
 .mal-files-caption {
-  margin-top: 18px;
+  margin-top: 10px;
 }
 .mal-legend {
   display: flex;
@@ -249,7 +247,6 @@ const {
   font-style: italic;
 }
 .mal-patch {
-  min-height: 150px;
   margin: 0;
   padding: 10px 12px;
   border-radius: 8px;
