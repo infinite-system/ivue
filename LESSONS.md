@@ -1095,3 +1095,25 @@ own whole than to arbitrate.
   the required secrets in `src/env-secrets.d.ts` so types hold everywhere.
 - R2 is off by default on an account: `wrangler r2 bucket create` fails
   with API code 10042 until R2 is enabled once in the Cloudflare dashboard.
+
+## The chat on the kit (2026-09-10, branch ai-chat-kit)
+
+- **The SFC compiler cannot resolve `typeof <imported namespace>` inside a `defineProps<T>()` type.** A
+  `kit?: Kit.Entry<typeof ChatMessage>` field in a Props interface kills the view with "Unresolvable type
+  reference". Keep `kit?: Kit.Entry` untyped at the SFC boundary and cast at the one `new`:
+  `new ((props.kit?.namespace.Class as typeof X.Class | undefined) ?? X.Class)(props)`.
+- **The compiler also walks the imports of the file a Props type lives in.** Part props defined on the row
+  model's namespace made two part views fail to compile while four others passed; a type-only
+  `parts/Part.ts` (`Part.Props<…>`) with three type imports fixed it. Keep view prop types in files that
+  import nothing but types.
+- **A stale compiled-type cache survives HMR.** After changing a `.ts` that a `.vue`'s `defineProps<T>()`
+  resolves, the dev server kept serving the old error until restarted. Restart vite when a props type moves.
+- **The gate reads a view's model owner from `new X.Class(`.** The seam form hid it, so every class
+  hosted by the scroller looked like it outlived components. `constructedNamespaceOf` now unwraps
+  `((… as …) ?? X.Class)` in both `modelConstructions` and the watch-lifetime scan; green fixture added.
+- **A batch renders its calls through `ToolCallPart`**, whose kit owns the card map — so one override of a
+  card reaches single calls and batches. The tool base's kit has only its leaves (Head, Foot, CodeBlock,
+  SubThread); importing the subclasses from the base would be a top-level cycle (`extends` needs the base
+  evaluated first), which a lazy `$kit` cannot help.
+- **Pages are held while the scrollbar's thumb is dragged** (`Chat.heldWindow`, released by a watch on
+  `scroller.scrollbarDragging`): rows fly past as skeletons and only the drop's window loads.

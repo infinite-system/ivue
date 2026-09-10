@@ -55,8 +55,18 @@ class $ToolBatchPart {
     return `${this.count} tool calls`;
   }
 
-  get icons(): { key: string; icon: string; name: string }[] {
-    return this.calls.map((call) => ({ key: call.id, icon: ToolCallModel.Class.ICONS[call.name] ?? (call.name.startsWith('mcp__') ? '⌘' : '⚙'), name: call.name }));
+  /** one icon per kind of call, with how many: `❯⁴ ✎²` rather than a row of four dollars */
+  get icons(): ToolBatchPart.IconGroup[] {
+    const groups = new Map<string, ToolBatchPart.IconGroup>();
+    for (const call of this.calls) {
+      const icon = ToolCallModel.Class.ICONS[call.name] ?? (call.name.startsWith('mcp__') ? '⌘' : call.name.startsWith('Task') ? '☑' : '⚙');
+      const group = groups.get(icon);
+      if (group) {
+        group.count += 1;
+        group.isMany = true;
+      } else groups.set(icon, { key: icon, icon, name: call.name, count: 1, isMany: false });
+    }
+    return [...groups.values()];
   }
 
   get namesLabel(): string {
@@ -89,8 +99,9 @@ class $ToolBatchPart {
     return { 'ac-batch-open': this.isExpanded, 'ac-batch-failed': this.hasFailure, 'ac-batch-running': this.isRunning };
   }
 
+  /** one triangle; the batch's open class turns it */
   get toggleLabel(): string {
-    return this.isExpanded ? '▾' : '▸';
+    return '▸';
   }
 
   toggle() {
@@ -104,6 +115,14 @@ class $ToolBatchPart {
 }
 
 export namespace ToolBatchPart {
+  export interface IconGroup {
+    key: string;
+    icon: string;
+    name: string;
+    count: number;
+    isMany: boolean;
+  }
+
   export const $Class = Static($ToolBatchPart);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
