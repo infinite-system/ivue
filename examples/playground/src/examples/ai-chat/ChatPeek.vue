@@ -7,11 +7,13 @@ const model = new ((props.kit?.namespace.Class as typeof Peek.Class | undefined)
 const {
   // state refs
   open,
+  query,
+  // computed refs
+  rows,
   // element refs
   scroller,
+  searchElement,
 } = model;
-// the mini scroller walks the thread's own rows — the chat's ref, bound as v-model
-const { rows } = model.chat;
 
 defineExpose(model as Peek.Instance);
 </script>
@@ -19,13 +21,19 @@ defineExpose(model as Peek.Instance);
 <template>
   <Transition name="ac-peek">
     <aside v-if="open" class="ac-peek" :style="model.style">
+      <div class="ac-index-search ac-peek-search">
+        <svg class="ac-search-icon" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.searchIcon" /></svg>
+        <input ref="searchElement" v-model="query" type="search" class="ac-search" placeholder="Search the thread…" aria-label="Search the thread" @focus="model.onSearchFocus()" @blur="model.onSearchBlur()" @keydown="model.onSearchKeydown($event)" />
+        <button v-if="query" type="button" class="ac-link" @click="model.clearQuery()">clear</button>
+      </div>
       <header class="ac-peek-head">
         <span class="ac-peek-pos">{{ model.positionLabel }}</span>
         <span class="ac-peek-date">{{ model.dateLabel }}</span>
+        <span class="ac-peek-match">{{ model.matchLabel }}</span>
         <span class="ac-peek-pct">{{ model.percentLabel }}</span>
       </header>
       <div class="ac-peek-list" :style="model.listStyle">
-        <component :is="model.kit.Scroller.vue" ref="scroller" :kit="model.kit.Scroller" :auto-repeat="false" v-model="rows" :assumed-size="30" :padding-quantity="4">
+        <component :is="model.kit.Scroller.vue" ref="scroller" :kit="model.kit.Scroller" :auto-repeat="false" scrollbar :model-value="rows" :assumed-size="30" :padding-quantity="4">
           <template #item="{ item }">
             <div class="ac-peek-row" :class="model.rowClass(item)" @click="model.select(item)">
               <span class="ac-peek-role">{{ model.roleMark(item) }}</span>

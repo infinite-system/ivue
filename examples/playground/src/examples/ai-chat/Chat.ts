@@ -52,6 +52,11 @@ class $Chat {
   static readonly SEEK_RELEASE_MS = 1200;
   static readonly STUB_ROLE: Record<string, SessionLog.Role> = { u: 'user', a: 'assistant', s: 'system' };
 
+  /** one paint later — a frame where there is one, a tick where there is not */
+  static frame(): Promise<void> {
+    return new Promise((resolve) => (typeof requestAnimationFrame === 'function' ? requestAnimationFrame(() => resolve()) : setTimeout(resolve, 16)));
+  }
+
   static bytes(count: number): string {
     if (count < 1024) return `${count} B`;
     if (count < 1024 * 1024) return `${(count / 1024).toFixed(0)} KB`;
@@ -521,6 +526,19 @@ class $Chat {
     this.scroller.value?.scrollToIndex(target, undefined, animate, 16);
   }
 
+  /**
+   * The sent message is on screen before the reply's wait begins: the
+   * scroller lays a new row out on the next tick and measures it on its
+   * first paint, so a single jump lands short of the end — jump, let it
+   * paint, jump again onto the measured geometry.
+   */
+  async landLatest() {
+    await nextTick();
+    this.jumpToLatest(false);
+    await this.self.frame();
+    this.jumpToLatest(false);
+  }
+
   jumpToLatest(animate = true) {
     const scroller = this.scroller.value;
     if (!scroller || !this.count) return;
@@ -610,7 +628,7 @@ class $Chat {
     if (!parts.length) return;
     const now = Date.now();
     this.append({ id: `local-user-${now}`, index: this.count, role: 'user', timestamp: now, parts, sidechain: false });
-    this.jumpToLatest(false);
+    await this.landLatest();
     const source = await this.pickSource(request.text);
     await this.reply(source, ChatApi.Class.model(request.model));
   }

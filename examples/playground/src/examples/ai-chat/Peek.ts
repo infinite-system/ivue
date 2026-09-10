@@ -1,9 +1,10 @@
-import { ref, shallowRef, type ShallowUnwrapRef } from 'vue';
+import { computed, ref, shallowRef, type ShallowUnwrapRef } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
 import VirtualScrollerView from '../virtual-scroller/VirtualScroller.vue';
 import type { Chat } from './Chat';
+import { Icons } from './Icons';
 import type { Kit } from '../../kit/Kit';
 
 // The scrollbar's peek: hover the track and a small card slides in beside
@@ -11,7 +12,9 @@ import type { Kit } from '../../kit/Kit';
 // virtual scroller over the same rows, so the wheel walks it and a click
 // jumps the thread there. It reads previews the index already carries,
 // so a peek never fetches a page. While the thumb is dragged the peek
-// follows it.
+// follows it. A search box at its top narrows the card to the rows whose
+// preview holds every word; while the box holds text or focus the card
+// stays, so the reader can type without the pointer pinning it.
 class $Peek {
   /** the roles the peek composes — the mini scroller; built once per class by Static() */
   static get $kit() {
@@ -23,7 +26,8 @@ class $Peek {
   /** rows the card shows at once */
   static readonly ROWS = 7;
   static readonly ROW_PX = 30;
-  static readonly HEAD_PX = 30;
+  /** the search row and the position line above the list */
+  static readonly HEAD_PX = 70;
   /** the card stays this long after the pointer leaves, so it can be crossed into */
   static readonly LINGER_MS = 220;
 
@@ -60,21 +64,59 @@ class $Peek {
     return shallowRef<ReturnType<typeof setTimeout> | null>(null);
   }
 
+  get query() {
+    return ref('');
+  }
+
+  get searchFocused() {
+    return ref(false);
+  }
+
+  // TEMPLATE-REF TARGET — the search box
+  get searchElement() {
+    return ref<HTMLInputElement | null>(null);
+  }
+
+  // computed: stable-handle — the mini scroller's modelValue must be ONE list per
+  // change of rows or query, not a fresh array per read
+  get rows() {
+    return computed(() => this.filtered());
+  }
+
   // TEMPLATE-REF TARGET — the mini scroller's exposed instance
   get scroller() {
     return ref<VirtualScroller.Exposed<Chat.Row> | null>(null);
   }
 
-  get rows() {
+  get allRows() {
     return this.chat.rows;
   }
 
   get count(): number {
-    return this.rows.value.length;
+    return this.allRows.value.length;
   }
 
   get row(): Chat.Row | undefined {
-    return this.rows.value[this.index.value];
+    return this.allRows.value[this.index.value];
+  }
+
+  get searchIcon(): string {
+    return Icons.$Class.PATHS.search;
+  }
+
+  get isFiltered(): boolean {
+    return this.query.value.trim().length > 0;
+  }
+
+  /** the card holds while the reader is typing — text in the box, or focus on it */
+  get isPinned(): boolean {
+    return this.isFiltered || this.searchFocused.value;
+  }
+
+  get matchLabel(): string {
+    if (!this.isFiltered) return '';
+    const matches = this.rows.value.length;
+    return matches === 1 ? '1 match' : `${matches.toLocaleString('en-US')} matches`;
   }
 
   get listHeight(): number {
@@ -154,22 +196,59 @@ class $Peek {
     this.leave();
   }
 
+  onSearchFocus() {
+    this.cancelLinger();
+    this.searchFocused.value = true;
+  }
+
+  onSearchBlur() {
+    this.searchFocused.value = false;
+    if (!this.isFiltered) this.leave();
+  }
+
+  /** Escape clears the search, and closes the card once it is clear */
+  onSearchKeydown(event: KeyboardEvent) {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    if (this.isFiltered) this.query.value = '';
+    else this.close();
+  }
+
+  clearQuery() {
+    this.query.value = '';
+    this.searchElement.value?.focus();
+  }
+
   show(index: number) {
     this.cancelLinger();
     this.index.value = index;
     this.open.value = true;
-    // the hot row sits in the middle of the card
-    this.scroller.value?.scrollToIndex(Math.max(0, index - Math.floor(this.self.ROWS / 2)), undefined, false, 0);
+    // the hot row sits in the middle of the card; a filtered card keeps the reader's place in the matches
+    if (!this.isFiltered) this.scroller.value?.scrollToIndex(Math.max(0, index - Math.floor(this.self.ROWS / 2)), undefined, false, 0);
   }
 
-  /** the card lingers so the pointer can cross the gap into it */
+  /** the card lingers so the pointer can cross the gap into it; a search in progress holds it */
   leave() {
     this.cancelLinger();
+    if (this.isPinned) return;
     this.lingerTimer.value = setTimeout(() => this.close(), this.self.LINGER_MS);
   }
 
   close() {
     this.open.value = false;
+    this.query.value = '';
+    this.searchFocused.value = false;
+  }
+
+  /** the rows the card lists: all of them, or those whose preview holds every word of the query */
+  protected filtered(): Chat.Row[] {
+    const words = this.query.value.toLowerCase().split(/\s+/).filter(Boolean);
+    const rows = this.allRows.value;
+    if (!words.length) return rows;
+    return rows.filter((row) => {
+      const text = `${this.roleMark(row)} ${row.preview}`.toLowerCase();
+      return words.every((word) => text.includes(word));
+    });
   }
 
   cancelLinger() {

@@ -43,6 +43,16 @@ describe('FilesPanel', () => {
     expect(panel.countLabel).toBe('2 files');
     expect(panel.touchesLabel(panel.files[0])).toBe('2 reads · 1 edit');
     expect(panel.files[0].dir).toBe('/x');
+    // the search keeps the files whose path holds every word
+    panel.query.value = 'index';
+    expect(panel.files.map((file) => file.name)).toEqual(['Index.ts']);
+    expect(panel.countLabel).toBe('1 file of 2');
+    panel.query.value = 'x ts';
+    expect(panel.count).toBe(2);
+    panel.query.value = 'nothing';
+    expect(panel.hasNoMatch).toBe(true);
+    panel.clearQuery();
+    expect(panel.count).toBe(2);
     panel.open(panel.files[1]);
     expect(chat.sidebarTab.value).toBe('Index');
     expect(chat.searchRequest.value).toBe('Index.ts');
@@ -67,6 +77,16 @@ describe('FilesPanel', () => {
     expect(panel.rows.value.map((row) => row.kind)).toEqual(['file', 'record', 'record', 'record']);
     expect(panel.rows.value.map((row) => row.id)).toEqual(['f:/x/Chat.ts', 'r:1', 'r:2', 'r:3']);
     const [, editRow, writeRow, readRow] = panel.rows.value;
+    // a record is folded to its count first
+    expect(panel.isRecordOpen(editRow.record as FilesPanel.Record)).toBe(false);
+    expect(panel.diffSummary(editRow.record as FilesPanel.Record)).toBe('+2 −2');
+    expect(panel.diffSummary(writeRow.record as FilesPanel.Record)).toBe('+30');
+    expect(panel.diffSummary(readRow.record as FilesPanel.Record)).toBe('read from line 10, 5 lines');
+    panel.toggleRecord(editRow.record as FilesPanel.Record);
+    expect(panel.isRecordOpen(editRow.record as FilesPanel.Record)).toBe(true);
+    expect(panel.recordClass(editRow.record as FilesPanel.Record)['ac-open']).toBe(true);
+    panel.toggleRecord(editRow.record as FilesPanel.Record);
+    expect(panel.isRecordOpen(editRow.record as FilesPanel.Record)).toBe(false);
     expect(panel.diffOf(editRow.record as FilesPanel.Record)).toEqual([
       { sign: '-', text: 'a' },
       { sign: '-', text: 'b' },

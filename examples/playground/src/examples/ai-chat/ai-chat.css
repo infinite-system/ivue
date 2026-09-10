@@ -1884,15 +1884,38 @@
   color: var(--ac-accent);
   border-color: var(--ac-line);
 }
+.ai-chat .ac-files-search {
+  margin: 0 12px 8px;
+}
+.ai-chat .ac-files-search .ac-search {
+  width: 100%;
+}
 .ai-chat .ac-file-record {
   margin: 0 6px;
-  padding: 6px 8px 8px 30px;
+  padding: 5px 8px 5px 22px;
   background: var(--ac-panel-2);
   cursor: pointer;
   border-top: 1px solid var(--ac-line-soft);
 }
 .ai-chat .ac-file-record:hover .ac-file-record-go {
   opacity: 1;
+}
+.ai-chat .ac-file-record.ac-open {
+  padding-bottom: 8px;
+}
+.ai-chat .ac-file-record-glyph {
+  width: 10px;
+  color: var(--ac-muted);
+  font-size: 10px;
+}
+.ai-chat .ac-file-record-summary {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  color: var(--ac-dim);
+}
+.ai-chat .ac-rec-edits .ac-file-record-summary,
+.ai-chat .ac-rec-writes .ac-file-record-summary {
+  color: var(--ac-ok);
 }
 .ai-chat .ac-file-record-head {
   display: flex;
@@ -1918,9 +1941,18 @@
 }
 .ai-chat .ac-file-record-go {
   margin-left: auto;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   opacity: 0;
   color: var(--ac-accent);
-  transition: opacity 0.12s;
+  cursor: pointer;
+  transition: opacity 0.12s, background 0.12s;
+}
+.ai-chat .ac-file-record-go:hover {
+  background: var(--ac-bg);
 }
 .ai-chat .ac-file-diff {
   margin: 4px 0 0;
@@ -2361,7 +2393,7 @@
 .ai-chat .ac-peek {
   position: absolute;
   right: 22px;
-  width: 320px;
+  width: 460px;
   border: 1px solid var(--ac-line);
   border-radius: 12px;
   background: color-mix(in srgb, var(--ac-panel) 82%, transparent);
@@ -2398,6 +2430,16 @@
 .ai-chat .ac-peek-pct {
   margin-left: auto;
   color: var(--ac-accent);
+}
+.ai-chat .ac-peek-match {
+  color: var(--ac-accent);
+}
+.ai-chat .ac-peek-search {
+  margin: 8px 8px 4px;
+}
+.ai-chat .ac-peek-search .ac-search {
+  width: 100%;
+  height: 28px;
 }
 .ai-chat .ac-peek-list {
   position: relative;

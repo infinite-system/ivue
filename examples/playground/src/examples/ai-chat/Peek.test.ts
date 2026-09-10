@@ -1,6 +1,6 @@
 /*
 === GENERATOR ===
-Goal: Prove the scrollbar peek maps a pointer's position on the track to a row of the thread and shows it from the index the chat already holds, that it follows a dragged thumb, lingers only long enough to be crossed into, and that picking a row jumps the thread there — never asking for a page.
+Goal: Prove the scrollbar peek maps a pointer's position on the track to a row of the thread and shows it from the index the chat already holds, that it follows a dragged thumb, lingers only long enough to be crossed into, that its search narrows the card to matching previews and holds it open while the reader types, and that picking a row jumps the thread there — never asking for a page.
 [Loading lives above the scroller](./ai-chat.invariants.md#loading-lives-above-the-scroller)
 // domain-invariant: $Peek — If the pointer is over the track at a fraction of its height, then the card shows the row at that fraction of the thread, from the index, and a picked row jumps the thread there
 Impossible if true: a peek that fetches a page
@@ -95,6 +95,28 @@ describe('Peek', () => {
     expect(peek.open.value).toBe(true);
     expect(peek.index.value).toBe(250);
     chat.scroller.value = null;
+
+    // a search narrows the card to the rows whose preview holds every word, and holds the card open
+    move(peek, 400, null, 'track');
+    peek.query.value = 'message 99';
+    // every preview that holds "99": 99, 199 … 999, and 990 … 998
+    expect(peek.rows.value.map((row) => row.index)).toEqual([99, 199, 299, 399, 499, 599, 699, 799, 899, 990, 991, 992, 993, 994, 995, 996, 997, 998, 999]);
+    expect(peek.matchLabel).toBe('19 matches');
+    expect(peek.isPinned).toBe(true);
+    peek.onThreadPointerLeave();
+    vi.advanceTimersByTime(Peek.$Class.LINGER_MS * 2);
+    expect(peek.open.value).toBe(true);
+    peek.onSearchKeydown({ key: 'Escape', preventDefault: () => undefined } as KeyboardEvent);
+    expect(peek.query.value).toBe('');
+    expect(peek.rows.value).toHaveLength(1001);
+    peek.onSearchFocus();
+    peek.onThreadPointerLeave();
+    vi.advanceTimersByTime(Peek.$Class.LINGER_MS * 2);
+    expect(peek.open.value).toBe(true);
+    peek.onSearchBlur();
+    vi.advanceTimersByTime(Peek.$Class.LINGER_MS * 2);
+    expect(peek.open.value).toBe(false);
+    move(peek, 400, null, 'track');
 
     // a pick jumps the thread and closes the card
     peek.select(chat.rows.value[42]);
