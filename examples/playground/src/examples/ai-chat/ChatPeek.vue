@@ -35,9 +35,9 @@ defineExpose(model as Peek.Instance);
         </div>
       </div>
       <header class="ac-peek-head">
-        <span class="ac-peek-pos">{{ model.positionLabel }}</span>
         <span class="ac-peek-date">{{ model.dateLabel }}</span>
         <span class="ac-peek-match">{{ model.matchLabel }}</span>
+        <span class="ac-peek-pos">{{ model.positionLabel }}</span>
         <span class="ac-peek-pct">{{ model.percentLabel }}</span>
       </header>
       <div class="ac-peek-list" :style="model.listStyle">

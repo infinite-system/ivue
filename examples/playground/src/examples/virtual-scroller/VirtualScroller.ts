@@ -746,6 +746,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return ref(false);
   }
 
+  /** nothing left for the frame loop to paint: no input arriving, no lerp remaining, no creep */
+  get isAtRest(): boolean {
+    const lenis = this.lenisRequired;
+    return !this.isAutoPlaying.value && !this.virtualScrolling && lenis.isScrolling === false && Math.abs(lenis.targetScroll - lenis.animatedScroll) < 0.5;
+  }
+
   /** The track renders only when asked for AND there is travel to show. */
   get scrollbarVisible() {
     return this.props.scrollbar && this.scrollbarThumbFraction > 0;
@@ -1807,9 +1813,17 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // the spacer (rendered by this frame's flush) must shift together.
     this.updateRenderBias(Math.abs(lenis.scroll ?? 0));
     lenis.raf(now); // keep Lenis in sync
-    this.frame = requestAnimationFrame(this.loop);
     this.setScrollPosition(-lenis.targetScroll, false, false);
+    // The loop runs only while there is motion to paint: a glide still
+    // lerping, input still arriving, or the creep. At rest it parks, and the
+    // next input wakes it — a scroller nobody touches costs no frames.
+    if (this.isAtRest) {
+      this.frame = null;
+      return;
+    }
+    this.frame = requestAnimationFrame(this.loop);
   }
+
 
   startAutoPlay(delay = 500, callback = () => {}) {
     this.isAutoPlaying.value = true;

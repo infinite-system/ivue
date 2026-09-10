@@ -2457,24 +2457,24 @@
   font-variant-numeric: tabular-nums;
 }
 .ai-chat .ac-peek-pos {
+  margin-left: auto;
   font-weight: 600;
   color: var(--ac-text);
 }
 .ai-chat .ac-peek-pct {
-  margin-left: auto;
   color: var(--ac-accent);
 }
 .ai-chat .ac-peek-match {
   color: var(--ac-accent);
 }
 .ai-chat .ac-peek-search {
-  margin: 8px 8px 4px;
+  margin: 8px 8px 8px;
 }
 .ai-chat .ac-peek-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 0 8px 6px;
+  margin: 0 8px 2px;
 }
 .ai-chat .ac-peek-filters .ac-seg button {
   padding: 3px 8px;
