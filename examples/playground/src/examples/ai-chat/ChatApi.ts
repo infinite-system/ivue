@@ -15,10 +15,17 @@ class $ChatApi {
   static readonly SLOW_MS = 700;
 
   static readonly MODELS: ChatApi.Model[] = [
-    { id: 'quick', label: 'Quick', detail: 'small · 200k context', tokensPerSecond: 160, firstTokenMs: 320, toolScale: 0.15 },
-    { id: 'default', label: 'Balanced', detail: 'mid · 200k context', tokensPerSecond: 85, firstTokenMs: 900, toolScale: 0.3 },
-    { id: 'deep', label: 'Deep', detail: 'large · 1M context', tokensPerSecond: 45, firstTokenMs: 2400, toolScale: 0.5 },
+    { id: 'quick', label: 'Quick', detail: 'small · 200k context', tokensPerSecond: 120, firstTokenMs: 400, toolScale: 0.15 },
+    { id: 'default', label: 'Balanced', detail: 'mid · 200k context', tokensPerSecond: 60, firstTokenMs: 1200, toolScale: 0.3 },
+    { id: 'deep', label: 'Deep', detail: 'large · 1M context', tokensPerSecond: 30, firstTokenMs: 2600, toolScale: 0.5 },
   ];
+
+  /** a word is more than one token, and the page paints one word per beat — the stream paces words at a
+   *  reading pace, the model is rated in tokens */
+  static readonly WORD_TOKENS = 2.4;
+  /** thinking streams slower than prose, and a thought spans at least this long, so its clock counts */
+  static readonly THINK_FACTOR = 1.2;
+  static readonly THINK_MIN_MS = 4000;
 
   /** the mock's one shared state: the sample's base URL, the request count the latency model keys on, the seed */
   static readonly STATE: ChatApi.State = { baseUrl: '/examples/chat/sample/', requestCount: 0, seed: 7, simulateLatency: true };
@@ -101,8 +108,9 @@ class $ChatApi {
       if (part.kind === 'thinking') {
         yield { type: 'thinking_start', text: '' };
         const chunks = this.tokens(part.text);
+        const thinkMs = Math.max(tokenMs * this.THINK_FACTOR, this.THINK_MIN_MS / Math.max(1, chunks.length));
         for (const chunk of chunks) {
-          await this.sleep(tokenMs * 0.6, signal);
+          await this.sleep(thinkMs, signal);
           yield { type: 'thinking_token', text: chunk };
         }
         yield { type: 'thinking_end', text: '' };
@@ -110,7 +118,7 @@ class $ChatApi {
         for (const chunk of this.tokens(part.text)) {
           // a model does not tick like a metronome: words arrive in a jittered cadence, and a
           // sentence's end or a line break holds a beat longer
-          await this.sleep(tokenMs * this.cadence(chunk), signal);
+          await this.sleep(tokenMs * this.WORD_TOKENS * this.cadence(chunk), signal);
           yield { type: 'token', text: chunk };
         }
       } else if (part.kind === 'tool_call' || part.kind === 'tool_batch') {
@@ -127,10 +135,10 @@ class $ChatApi {
   }
 
   /** word-sized tokens, whitespace kept, so the text reads as it streams */
-  /** the pace of one word: 0.5–1.5× the model's rate, ×3 after a sentence or a line break */
+  /** the pace of one word: 0.8–1.2× the model's rate — a light, even jitter — ×2.5 after a sentence or a line break */
   static cadence(chunk: string): number {
-    const pause = /[.!?:]\s*$|\n\s*$/.test(chunk) ? 3 : 1;
-    return (0.5 + this.random()) * pause;
+    const pause = /[.!?:]\s*$|\n\s*$/.test(chunk) ? 2.5 : 1;
+    return (0.8 + this.random() * 0.4) * pause;
   }
 
   static tokens(text: string): string[] {

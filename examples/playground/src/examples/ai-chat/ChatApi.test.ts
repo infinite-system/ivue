@@ -3,6 +3,7 @@
 Goal: Prove the mock server is honest: every request is timed and sized, the latency model is deterministic, a reply replays a real turn as ordered events at the picked model's pace, and an upload never leaves the browser.
 // domain-invariant: $ChatApi — If a request completes, then its log carries the bytes and the time it took
 // domain-invariant: $ChatApi — If a turn is replayed, then its events arrive in the turn's own order: tokens for text, a call before its result
+// domain-invariant: $ChatApi — If a replayed turn thinks, then its thinking spans at least THINK_MIN_MS, so the clock over it counts
 Impossible if true: an upload issues a network request
 
 === GENERATOR-DESCRIBED ===
@@ -124,4 +125,22 @@ describe('ChatApi', () => {
     expect(await ChatApi.Class.imageSize('blob:bad')).toBeNull();
     globalThis.Image = image;
   });
+});
+
+// domain-invariant: $ChatApi — If a replayed turn thinks, then its thinking spans at least THINK_MIN_MS, so the clock over it counts
+it('a thought spans at least the minimum, however short its text', async () => {
+  vi.useFakeTimers();
+  const source: SessionLog.Message = { id: 't', index: 0, role: 'assistant', timestamp: 0, sidechain: false, parts: [{ kind: 'thinking', text: 'plan it', durationMs: 5, startedAt: 0 }] };
+  const model = ChatApi.Class.model('quick');
+  const events: string[] = [];
+  const run = (async () => {
+    for await (const event of ChatApi.Class.stream(source, model)) events.push(event.type);
+  })();
+  await vi.advanceTimersByTimeAsync(model.firstTokenMs + ChatApi.$Class.THINK_MIN_MS / 2);
+  expect(events).toContain('thinking_start');
+  expect(events).not.toContain('thinking_end');
+  await vi.advanceTimersByTimeAsync(ChatApi.$Class.THINK_MIN_MS);
+  await run;
+  expect(events.at(-2)).toBe('thinking_end');
+  vi.useRealTimers();
 });

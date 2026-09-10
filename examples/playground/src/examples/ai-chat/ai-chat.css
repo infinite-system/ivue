@@ -436,10 +436,20 @@
   border-top: 1px solid var(--ac-line);
   margin: 10px 0;
 }
-.ai-chat .ac-text-streaming > :last-child::after {
-  content: '▍';
+.ai-chat {
+  --ac-caret: #3b82f6;
+}
+/* the caret rides the newest word, so it follows the text into a list, a table or a code block */
+.ai-chat .ac-tok::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
   margin-left: 2px;
-  color: var(--ac-accent);
+  vertical-align: -0.15em;
+  border-radius: 1px;
+  background: var(--ac-caret);
+  box-shadow: 0 0 6px var(--ac-caret), 0 0 12px color-mix(in srgb, var(--ac-caret) 55%, transparent);
   animation: ac-blink 1s steps(2) infinite;
 }
 @keyframes ac-blink {
@@ -1443,8 +1453,14 @@
 .ai-chat .ac-batch-head:hover .ac-batch-toggle {
   color: var(--ac-accent);
 }
-.ai-chat .ac-tool-open > .ac-tool-head .ac-tool-toggle,
 .ai-chat .ac-batch-open > .ac-batch-head .ac-batch-toggle {
+  transform: rotate(90deg);
+}
+/* a tool's own icon is its fold: it turns down when the card opens, so there is no second arrow */
+.ai-chat .ac-tool-icon {
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.ai-chat .ac-tool-open > .ac-tool-head .ac-tool-icon {
   transform: rotate(90deg);
 }
 
@@ -1454,6 +1470,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 22px;
+  margin-top: 15px;
   padding: 9px 24px 10px;
   border-top: 1px solid var(--ac-line);
   background: var(--ac-panel);
@@ -1685,7 +1702,7 @@
 /* the word that just arrived fades and lifts into place; every render is fresh nodes, so once each */
 .ai-chat .ac-tok {
   display: inline-block;
-  animation: ac-tok-in 0.26s ease-out both;
+  animation: ac-tok-in 0.42s ease-out both;
 }
 @keyframes ac-tok-in {
   from {
