@@ -6,6 +6,7 @@ import { Gallery } from './malleability/Gallery';
 import GalleryView from './malleability/Gallery.vue';
 import { Snippet } from './malleability/Snippet';
 import { Code } from './malleability/Code';
+import { ConfiguredCode } from './malleability/ConfiguredCode';
 import { HljsCode } from './malleability/HljsCode';
 import TabHeadView from './malleability/TabHead.vue';
 import StatsFootView from './malleability/StatsFoot.vue';
@@ -22,7 +23,7 @@ class $ExampleMalleability {
   static get $variants(): ExampleMalleability.Variant[] {
     const sections = { Head: { vue: TabHeadView }, Foot: { vue: StatsFootView } };
     const engine = { Code: { namespace: HljsCode } };
-    const knobs = { Code: { props: { theme: 'dracula', lineNumbers: true, maxLines: 8 } } };
+    const knobs = { Code: { namespace: ConfiguredCode, props: { theme: 'dracula', lineNumbers: true, maxLines: 8 } } };
     const root = 'docs_v2/.vitepress/theme/components/examples/malleability';
     return [
       {
@@ -85,11 +86,12 @@ class $ExampleMalleability {
       {
         id: 'knobs',
         label: 'Knobs turned',
-        tagline: 'No class touched: the Code entry carries a theme, line numbers and a fold, and the getters Code opened to the kit read them first.',
+        tagline: 'Code is closed to the kit. ConfiguredCode is the layer that opens three settings, each one getter reading the entry and falling back to super; the entry turns them.',
         patch: `Kit.Class.derive(Gallery, {
   Snippet: {
     subkit: {
       Code: {
+        namespace: ConfiguredCode,
         props: {
           theme: 'dracula',
           lineNumbers: true,
@@ -101,14 +103,15 @@ class $ExampleMalleability {
 })`,
         namespace: Kit.Class.derive(Gallery, { Snippet: { subkit: knobs } }),
         files: [
-          { path: `${root}/Code.ts`, label: 'Code.ts — the getters that read the kit' },
+          { path: `${root}/ConfiguredCode.ts`, label: 'ConfiguredCode.ts — the layer' },
+          { path: `${root}/Code.ts`, label: 'Code.ts — closed, reads only its props' },
           { path: `${root}/Snippet.ts`, label: 'Snippet.ts — reads the same theme for its sections' },
         ],
       },
       {
         id: 'all',
         label: 'All of it',
-        tagline: 'Sections, engine and knobs in one literal: tab bar, status bar, highlight.js in nord, numbered and folded. The shipped tree is exactly as it was.',
+        tagline: 'Sections, engine and settings in one literal: tab bar, status bar, highlight.js in nord, numbered and folded. HljsCode stacks on the layer, so the knobs stay open. The shipped tree is exactly as it was.',
         patch: `Kit.Class.derive(Gallery, {
   Snippet: {
     subkit: {
@@ -144,6 +147,7 @@ class $ExampleMalleability {
       [Gallery, 'Gallery'],
       [Snippet, 'Snippet'],
       [Code, 'Code'],
+      [ConfiguredCode, 'ConfiguredCode'],
       [HljsCode, 'HljsCode'],
     ]);
   }

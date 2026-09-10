@@ -7,9 +7,9 @@ import type { Kit } from '@kit/Kit';
 import { Shiki } from './Shiki';
 
 // One block of code, coloured by an engine the class names as a static,
-// so a subclass swaps the engine by overriding one getter. Three knobs
-// are open to the kit — `theme`, `lineNumbers`, `maxLines` — and the
-// code itself is closed to it: the code is the snippet's.
+// so a subclass swaps the engine by overriding one getter. The class
+// reads its own props and nothing else: it is closed to the kit. A
+// setting is a getter, and opening one is a layer — see ConfiguredCode.
 class $Code {
   /** what each theme paints the block with, so the sections around it can match */
   static readonly PALETTES: Record<Code.Theme, Code.Palette> = {
@@ -82,7 +82,6 @@ class $Code {
     return ref(0);
   }
 
-  /** closed to the kit on purpose: the code is the snippet's */
   get code(): string {
     return this.props.code;
   }
@@ -91,17 +90,16 @@ class $Code {
     return this.props.lang;
   }
 
-  /** a knob the kit may turn: the consumer's theme first, then what the parent passed */
   get theme(): Code.Theme {
-    return (this.props.kit?.props?.theme as Code.Theme | undefined) ?? this.props.theme;
+    return this.props.theme;
   }
 
   get lineNumbers(): boolean {
-    return (this.props.kit?.props?.lineNumbers as boolean | undefined) ?? this.props.lineNumbers;
+    return this.props.lineNumbers;
   }
 
   get maxLines(): number | null {
-    return (this.props.kit?.props?.maxLines as number | null | undefined) ?? this.props.maxLines;
+    return this.props.maxLines;
   }
 
   get lines(): string[] {

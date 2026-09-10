@@ -159,15 +159,15 @@ with a class contract. They exist for the spec and for the design task
 
 ### Kit props reach the getters an author opens
 
-**Invariant:** If an entry carries `props`, then the class reads them only where its own getters say so — `this.props.kit?.props?.cap ?? this.props.cap` opens `cap` to the kit and the kit wins, `this.props.kit?.props?.theme` is a prop the class has only through the kit, `this.props.code` is closed to it — and a prop the kit does not own stays live to the parent.
+**Invariant:** If an entry carries `props`, then the class reads them only where a getter says so — a setting is a getter; a base class reads its own props and is closed to the kit; a layer is a subclass whose getter reads the entry and falls back to `super` (`this.props.kit?.props?.cap ?? super.cap`), so the kit wins where a layer opened it and nowhere else — and a prop no layer owns stays live to the parent. The fixture `Code` opens its getters in place (`?? this.props.cap`) to keep the spec small; the layer form is the same read one class up.
 
 **Scope:** Every kit-rendered class. `Kit.ts` has no hand in it: `kit` is a declared prop, so the read is an ordinary tracked read through Vue's props proxy. Vue's props are readonly at the top level in dev, so no value can be written into props from outside the parent; a runtime that allowed the write would not change the ruling, which is that the getter is the class's word on what a prop means.
 
 **Mechanism:** The entry arrives as the `kit` prop like any other prop. Vue refuses a top-level write into props with a warning, so no merge into props exists, and `nestedProps` keeps its one-argument form. Forcing a prop the author did not open is a getter override on a derived class, the ordinary move.
 
-**Generates:** The three getter shapes on `Code.ts`; the `DenseCard` override in the spec; the rule "a kit reaches a prop only through a getter that reads it".
+**Generates:** The three getter shapes on `Code.ts`; the `DenseCard` override in the spec; the rule "a setting is a getter, override is `super`, a layer is a subclass"; the docs demo's `ConfiguredCode` layer over a closed `Code`.
 
-**Rejected alternatives:** A proxy over props at the view or in a helper — a second props mechanism, and `this.props` stops being Vue's object; a derived class carrying `propsDefaults` — Vue defaults at the boundary first, so the values never applied to declared props; `Object.create` over Vue's props — a new identity for `this.props`; a `v-bind` of the entry's props at the seam — order-dependent and forgettable.
+**Rejected alternatives:** A proxy over props at the view or in a helper — a second props mechanism, and `this.props` stops being Vue's object; a derived class carrying `propsDefaults` — Vue defaults at the boundary first, so the values never applied to declared props; `Object.create` over Vue's props — a new identity for `this.props`; a `v-bind` of the entry's props at the seam — order-dependent and forgettable; a generated opener (`derive(Code, { open: [...] })`) — a mechanism to spare a getter, which costs more than the getter and cannot compute.
 
 **Evidence:** `Kit.test.ts`: "a tunable reads the kit first, an extension reads only the kit, a closed prop never reads it", "a prop the kit does not own stays live to the parent; one the kit owns stays the kit's", "Vue refuses a top-level write into props".
 
@@ -177,7 +177,7 @@ with a class contract. They exist for the spec and for the design task
 
 **Status:** provisional
 
-**Last refined:** 2026-09-10
+**Last refined:** 2026-09-11
 
 ## Impossibility boundary — what these invariants forbid
 

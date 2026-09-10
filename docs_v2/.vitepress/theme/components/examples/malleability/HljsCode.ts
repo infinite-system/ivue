@@ -1,11 +1,13 @@
 import { Reactive } from '../../../../../../lib/Reactive';
 import { Static } from '../../../../../../lib/Static';
-import { Code } from './Code';
+import type { Code } from './Code';
+import { ConfiguredCode } from './ConfiguredCode';
 import { Hljs } from './Hljs';
 
 // The same block, a different colour engine: one static overridden.
-// Everything else — the knobs, the fold, the copy — is inherited.
-class $HljsCode extends Code.$Class {
+// It stacks on the configuration layer, so its knobs stay open; the
+// fold and the copy are inherited from Code.
+class $HljsCode extends ConfiguredCode.$Class {
   static override get engine(): Code.Engine {
     return Hljs.Class;
   }
