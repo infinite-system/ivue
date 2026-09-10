@@ -16,28 +16,9 @@ class $Gallery {
     } satisfies Kit.Of<'Snippet'>;
   }
 
-  /** the snippets a gallery shows when its parent passes none: a counter and its view */
+  /** the snippets a gallery shows when its parent passes none: one counter class */
   static get SAMPLES(): Snippet.Source[] {
     return [
-      {
-        name: 'Counter.vue',
-        lang: 'vue',
-        code: [
-          '<script setup lang="ts">',
-          "import { Counter } from './Counter';",
-          '',
-          'const counter = new Counter.Class();',
-          '',
-          'const { count } = counter;',
-          '</script>',
-          '',
-          '<template>',
-          '  <button class="counter" @click="counter.increment()">',
-          '    {{ count }} × 2 = {{ counter.doubled }}',
-          '  </button>',
-          '</template>',
-        ].join('\n'),
-      },
       {
         name: 'Counter.ts',
         lang: 'typescript',
