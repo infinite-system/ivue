@@ -2469,6 +2469,16 @@
 .ai-chat .ac-peek-search {
   margin: 8px 8px 4px;
 }
+.ai-chat .ac-peek-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 8px 6px;
+}
+.ai-chat .ac-peek-filters .ac-seg button {
+  padding: 3px 8px;
+  font-size: 11px;
+}
 .ai-chat .ac-peek-search .ac-search {
   width: 100%;
   height: 28px;
@@ -2493,10 +2503,6 @@
 }
 .ai-chat .ac-peek-row:hover {
   background: var(--ac-panel-2);
-}
-.ai-chat .ac-peek-row.ac-peek-hot {
-  background: var(--ac-accent-soft);
-  box-shadow: inset 2px 0 0 var(--ac-accent);
 }
 .ai-chat .ac-peek-role {
   font-size: 10px;
