@@ -1117,3 +1117,20 @@ own whole than to arbitrate.
   evaluated first), which a lazy `$kit` cannot help.
 - **Pages are held while the scrollbar's thumb is dragged** (`Chat.heldWindow`, released by a watch on
   `scroller.scrollbarDragging`): rows fly past as skeletons and only the drop's window loads.
+- **A part the stream appends to in place never re-renders on its own.** `last.text += event.text` mutates a
+  plain object; `TextPart.text` read only `props.part.text`, so a reply's words appeared all at once when the
+  stream ended. The chat bumps `revision` per event: the getter reads `chat.revision.value` first, then the
+  part. Any view over a mutated-in-place record needs that subscription.
+- **The open sidebar tab lives in the settings store, not on the chat**, because a change of tree remounts
+  the example (`ChatShell` keys on the tree id) and a ref on the chat resets with it; `ConfiguredChat` overrides
+  `sidebarTab` to the store's ref. Drives that pick a tree then click the panel found this.
+- **A static data table must not read another module's `$Class` at load time** — the gate's
+  `cross_module_class_reads_happen_inside_bodies` flags it. `Sidebar.TABS` carries icon names; a method
+  resolves them from `Icons.$Class.PATHS`.
+- **Playwright's "move away" point must actually leave the element**: a peek card 320px wide beside the
+  track swallowed a pointer moved 300px left of the track, and the drive read a bug that was not there.
+  Instrument `pointermove` targets before touching the code.
+- **The scrollbar peek is a second scroller over the same rows** (`Peek`, role on `Chat.$kit`): `v-model` binds
+  the chat's `rows` ref, previews and times come from the index, so a peek never fetches. The thread's section
+  forwards `pointermove` to the peek, which tests `closest('.virtual-scroller__track')` — the track lives inside
+  the scroller component and owns its own pointer capture during a drag.
