@@ -70,6 +70,10 @@ class $Index {
     return Icons.$Class.PATHS.search;
   }
 
+  get jumpIcon(): string {
+    return Icons.$Class.PATHS.jump;
+  }
+
   get chat(): Chat.Model {
     return this.props.chat;
   }

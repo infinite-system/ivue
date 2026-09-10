@@ -1005,24 +1005,69 @@
 }
 .ai-chat .ac-seg {
   display: inline-flex;
-  border: 1px solid var(--ac-line);
-  border-radius: 8px;
-  overflow: hidden;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--ac-line-soft);
+  border-radius: 999px;
+  background: var(--ac-panel-2);
 }
 .ai-chat .ac-seg button {
-  padding: 4px 9px;
+  padding: 4px 11px;
   border: 0;
-  background: var(--ac-bg);
+  border-radius: 999px;
+  background: transparent;
   color: var(--ac-dim);
+  font: inherit;
   font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
   cursor: pointer;
+  transition: color 0.12s, background 0.12s, box-shadow 0.12s;
 }
-.ai-chat .ac-seg button + button {
-  border-left: 1px solid var(--ac-line);
+.ai-chat .ac-seg button:hover {
+  color: var(--ac-text);
 }
 .ai-chat .ac-seg button.ac-on {
-  background: var(--ac-accent);
-  color: #fff;
+  background: var(--ac-bg);
+  color: var(--ac-accent);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 0 0 1px var(--ac-line-soft);
+}
+.ai-chat .ac-seg button:focus-visible {
+  outline: 2px solid var(--ac-accent);
+  outline-offset: 1px;
+}
+/* the go buttons: one arrow glyph, drawn the same wherever a row can jump */
+.ai-chat .ac-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ac-accent);
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.12s, background 0.12s, border-color 0.12s, transform 0.12s;
+}
+.ai-chat .ac-go:hover {
+  opacity: 1;
+  background: var(--ac-accent-soft);
+  border-color: var(--ac-line-soft);
+  transform: translateX(1px);
+}
+.ai-chat .ac-go-icon {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .ai-chat .ac-index-search {
   display: flex;
@@ -1108,10 +1153,6 @@
 }
 .ai-chat .ac-ix-go {
   flex: 0 0 auto;
-  border: 0;
-  background: none;
-  color: var(--ac-accent);
-  cursor: pointer;
   opacity: 0;
 }
 .ai-chat .ac-ix-row:hover .ac-ix-go,
@@ -1898,22 +1939,9 @@
   grid-column: 4;
   grid-row: 1 / span 2;
   align-self: center;
-  width: 22px;
-  height: 22px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ac-muted);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.12s, color 0.12s, border-color 0.12s;
 }
-.ai-chat .ac-file:hover .ac-file-go {
-  opacity: 1;
-}
-.ai-chat .ac-file-go:hover {
-  color: var(--ac-accent);
-  border-color: var(--ac-line);
+.ai-chat .ac-files-filters {
+  margin: 0 12px 8px;
 }
 .ai-chat .ac-files-search {
   margin: 10px 12px 8px;
@@ -1927,9 +1955,6 @@
   background: var(--ac-panel-2);
   cursor: pointer;
   border-top: 1px solid var(--ac-line-soft);
-}
-.ai-chat .ac-file-record:hover .ac-file-record-go {
-  opacity: 1;
 }
 .ai-chat .ac-file-record.ac-open {
   padding-bottom: 8px;
@@ -1986,20 +2011,6 @@
 }
 .ai-chat .ac-file-record-go {
   margin-left: auto;
-  width: 22px;
-  height: 22px;
-  border: 1px solid var(--ac-line-soft);
-  border-radius: 6px;
-  background: var(--ac-bg);
-  opacity: 0.75;
-  color: var(--ac-accent);
-  cursor: pointer;
-  transition: opacity 0.12s, border-color 0.12s;
-}
-.ai-chat .ac-file-record:hover .ac-file-record-go,
-.ai-chat .ac-file-record-go:hover {
-  opacity: 1;
-  border-color: var(--ac-accent);
 }
 .ai-chat .ac-file-diff {
   margin: 4px 0 0;
