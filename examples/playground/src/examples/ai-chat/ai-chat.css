@@ -1956,18 +1956,21 @@
 }
 .ai-chat .ac-file-diff {
   margin: 4px 0 0;
-  padding: 0;
-  display: grid;
+  padding: 0 0 4px;
+  display: block;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
   line-height: 1.5;
-  overflow: hidden;
+  /* long lines scroll sideways inside the record; the wheel stays here until the edge */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
 }
 .ai-chat .ac-dl {
+  display: block;
+  min-width: max-content;
   padding: 0 6px;
   white-space: pre;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .ai-chat .ac-dl-add {
   color: var(--ac-ok);
