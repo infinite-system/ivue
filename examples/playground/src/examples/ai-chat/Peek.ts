@@ -33,6 +33,9 @@ class $Peek {
   static readonly HEAD_PX = 104;
   /** the card stays this long after the pointer leaves, so it can be crossed into */
   static readonly LINGER_MS = 220;
+  static readonly CARD_WIDTH = 460;
+  /** the space between the card's right edge and the track */
+  static readonly CARD_GAP = 10;
   /** a pointer must rest on the track this long before the card opens — a pass across it opens nothing */
   static readonly OPEN_DELAY_MS = 350;
 
@@ -60,8 +63,13 @@ class $Peek {
     return ref(false);
   }
 
-  /** the pointer's y inside the thread, where the card is anchored */
+  /** the pointer's y in the viewport, where the card is centred */
   get y() {
+    return ref(0);
+  }
+
+  /** the track's left edge in the viewport — the card's right edge sits beside it */
+  get anchorLeft() {
     return ref(0);
   }
 
@@ -168,10 +176,30 @@ class $Peek {
     return { height: `${this.listHeight}px` };
   }
 
-  /** the card is centred on the pointer, kept inside the thread */
+  /**
+   * The card is teleported to the body, so a side panel's clipping never
+   * cuts it: fixed in the viewport, centred on the pointer, its right edge
+   * beside the track, kept inside the window.
+   */
   get style(): Record<string, string> {
-    const top = Math.max(8, this.y.value - this.cardHeight / 2);
-    return { top: `${top}px` };
+    const height = this.cardHeight;
+    const viewport = typeof window === 'undefined' ? 800 : window.innerHeight;
+    const top = Math.max(8, Math.min(viewport - height - 8, this.y.value - height / 2));
+    const left = Math.max(8, this.anchorLeft.value - this.self.CARD_WIDTH - this.self.CARD_GAP);
+    return { top: `${top}px`, left: `${left}px` };
+  }
+
+  /** the portal carries the chat's theme with it: the card leaves the .ai-chat root */
+  get theme(): string {
+    return this.chat.theme;
+  }
+
+  get density(): string {
+    return this.chat.density;
+  }
+
+  get portalClass(): Record<string, boolean> {
+    return { 'ac-dark': Boolean(this.chat.props.dark) };
   }
 
   get positionLabel(): string {
@@ -231,12 +259,6 @@ class $Peek {
     const track = thread.querySelector<HTMLElement>('.virtual-scroller__track');
     if (!track || !this.count) return;
     const target = event.target as HTMLElement | null;
-    // the card first: its own scroller has a track too, and a pointer on it must not move the card
-    const overCard = Boolean(target?.closest('.ac-peek'));
-    if (overCard) {
-      this.cancelLinger();
-      return;
-    }
     // a dragged thumb is a seek, not a look: no card while the thumb is held
     if (this.chat.thumbDragging) {
       this.cancelOpen();
@@ -252,7 +274,8 @@ class $Peek {
     }
     const rect = track.getBoundingClientRect();
     const fraction = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
-    this.y.value = event.clientY - thread.getBoundingClientRect().top;
+    this.y.value = event.clientY;
+    this.anchorLeft.value = rect.left;
     const index = Math.round(fraction * (this.count - 1));
     // an open card follows at once; a closed card waits for the pointer to rest
     if (this.open.value) this.show(index);
@@ -261,6 +284,15 @@ class $Peek {
 
   onThreadPointerLeave() {
     this.cancelOpen();
+    this.leave();
+  }
+
+  /** the card is outside the thread: over it, it holds; off it, it lingers, then goes */
+  onCardEnter() {
+    this.cancelLinger();
+  }
+
+  onCardLeave() {
     this.leave();
   }
 

@@ -2839,3 +2839,13 @@
 .ai-chat .ac-msg .ac-msg-head {
   margin-bottom: 10px;
 }
+
+/* the peek's portal: an .ai-chat root for the theme's tokens with no box of its own, and the card fixed in the viewport */
+.ai-chat.ac-portal {
+  display: contents;
+}
+.ai-chat.ac-portal .ac-peek {
+  position: fixed;
+  right: auto;
+  z-index: 60;
+}
