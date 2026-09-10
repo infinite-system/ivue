@@ -2670,3 +2670,10 @@
 .ai-chat[data-theme='terminal'] {
   scrollbar-color: var(--ac-line) transparent;
 }
+/* the virtual scrollers draw their own thumb; the browser's stays hidden on them */
+.ai-chat .virtual-scroller {
+  scrollbar-width: none;
+}
+.ai-chat .virtual-scroller::-webkit-scrollbar {
+  display: none;
+}
