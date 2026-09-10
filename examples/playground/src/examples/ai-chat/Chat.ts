@@ -11,6 +11,8 @@ import ChatComposerView from './ChatComposer.vue';
 import { Index } from './Index';
 import ChatIndexView from './ChatIndex.vue';
 import { Sidebar } from './sidebar/Sidebar';
+import { Peek } from './Peek';
+import ChatPeekView from './ChatPeek.vue';
 import SidebarView from './sidebar/Sidebar.vue';
 import type { ChatSettings } from './ChatSettings';
 import { ChatApi } from './ChatApi';
@@ -36,6 +38,7 @@ class $Chat {
       Composer: { namespace: Composer, vue: ChatComposerView },
       Index: { namespace: Index, vue: ChatIndexView },
       Sidebar: { namespace: Sidebar, vue: SidebarView },
+      Peek: { namespace: Peek, vue: ChatPeekView },
     } satisfies Kit.Of<Chat.Role>;
   }
 
@@ -246,6 +249,11 @@ class $Chat {
     return ref<VirtualScroller.Exposed<Chat.Row> | null>(null);
   }
 
+  // TEMPLATE-REF TARGET — the scrollbar peek's exposed instance
+  get peek() {
+    return ref<Peek.Exposed | null>(null);
+  }
+
   /* ---- derived ---- */
 
   get count(): number {
@@ -413,6 +421,7 @@ class $Chat {
       page: Math.floor(at / pageSize),
       role: this.self.STUB_ROLE[entry.r] ?? 'system',
       preview: entry.t,
+      at: entry.at,
       message: null,
     }));
   }
@@ -496,6 +505,15 @@ class $Chat {
     this.latestInView.value = this.atBottom.value || (typeof latestTop === 'number' && latestTop < offset + container - this.self.BOTTOM_THRESHOLD_PX);
   }
 
+  /** the thread hands the peek every pointer move — it decides whether the track is under it */
+  onThreadPointerMove(event: PointerEvent) {
+    this.peek.value?.onThreadPointerMove(event);
+  }
+
+  onThreadPointerLeave() {
+    this.peek.value?.onThreadPointerLeave();
+  }
+
   jumpTo(index: number, animate = true) {
     if (!this.count) return;
     const target = Math.max(0, Math.min(this.latestIndex, index));
@@ -575,6 +593,12 @@ class $Chat {
     this.closeSidebar();
   }
 
+  /** the composer's search button and ⌘K: open the index to search, or close it when it is the open panel */
+  toggleSearch() {
+    if (this.sidebarTab.value === 'Index') this.closeSidebar();
+    else this.search('');
+  }
+
   /* ---- sending and the replayed reply ---- */
 
   /** the user's message joins the thread, then a real turn replays as the reply */
@@ -600,6 +624,7 @@ class $Chat {
       page: -1,
       role: message.role,
       preview: this.self.messageText(message).replace(/\s+/g, ' ').slice(0, 96),
+      at: message.timestamp,
       message,
     };
     this.rows.value = [...this.rows.value, row];
@@ -800,6 +825,7 @@ class $Chat {
       page: -1,
       role: message.role,
       preview: this.indexRows.value[at].t,
+      at: message.timestamp,
       message,
     }));
     void nextTick(() => this.jumpToLatest(false));
@@ -828,7 +854,7 @@ export namespace Chat {
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
   export type Model = InstanceType<typeof Class>;
-  export type Role = 'Scroller' | 'Message' | 'Composer' | 'Index' | 'Sidebar';
+  export type Role = 'Scroller' | 'Message' | 'Composer' | 'Index' | 'Sidebar' | 'Peek';
   export type SidebarTab = 'Index' | 'Files' | 'Settings';
 
   export interface Props {
@@ -843,6 +869,8 @@ export namespace Chat {
     page: number;
     role: SessionLog.Role;
     preview: string;
+    /** when it was said — known from the index before the page loads */
+    at: number;
     message: SessionLog.Message | null;
   }
 

@@ -1,0 +1,108 @@
+/*
+=== GENERATOR ===
+Goal: Prove the scrollbar peek maps a pointer's position on the track to a row of the thread and shows it from the index the chat already holds, that it follows a dragged thumb, lingers only long enough to be crossed into, and that picking a row jumps the thread there — never asking for a page.
+[Loading lives above the scroller](./ai-chat.invariants.md#loading-lives-above-the-scroller)
+// domain-invariant: $Peek — If the pointer is over the track at a fraction of its height, then the card shows the row at that fraction of the thread, from the index, and a picked row jumps the thread there
+Impossible if true: a peek that fetches a page
+
+=== GENERATOR-DESCRIBED ===
+$Peek reads the chat's rows — every one a stub with its preview and time from the index — and a mini scroller of them opens beside the track at the pointer's row.
+*/
+import { describe, expect, it, vi } from 'vitest';
+import { Chat } from './Chat';
+import { Peek } from './Peek';
+import { hosted } from '../virtual-scroller/hosted';
+
+function rows(count: number): Chat.Row[] {
+  return Array.from({ length: count }, (_, at) => ({
+    id: `m${at}`,
+    body: '',
+    position: String(at + 1),
+    index: at,
+    page: Math.floor(at / 200),
+    role: at % 2 ? 'assistant' : 'user',
+    preview: `message ${at}`,
+    at: Date.UTC(2026, 8, 9, 13, at % 60),
+    message: null,
+  }));
+}
+
+function thread(trackTop: number, trackHeight: number, target: Element | null) {
+  const track = { getBoundingClientRect: () => ({ top: trackTop, height: trackHeight }) } as unknown as HTMLElement;
+  const element = {
+    querySelector: () => track,
+    getBoundingClientRect: () => ({ top: 100 }),
+  } as unknown as HTMLElement;
+  return { element, track, target };
+}
+
+function move(peek: Peek.Model, y: number, target: Element | null, over: 'track' | 'card' | 'none') {
+  const thread$ = thread(200, 400, target);
+  const closest = (selector: string) => (over === 'track' && selector.includes('track') ? thread$.track : over === 'card' && selector.includes('peek') ? thread$.element : null);
+  peek.onThreadPointerMove({ currentTarget: thread$.element, target: { closest }, clientY: y } as unknown as PointerEvent);
+}
+
+describe('Peek', () => {
+  // domain-invariant: $Peek — If the pointer is over the track at a fraction of its height, then the card shows the row at that fraction of the thread, from the index, and a picked row jumps the thread there
+  // impossible-if-true: $Peek — a peek that fetches a page
+  // invariant: Loading lives above the scroller (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
+  it('maps the track position to a row, follows the thumb, lingers, and a pick jumps the thread', () => {
+    vi.useFakeTimers();
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
+    const host = hosted(() => new Chat.Class());
+    const chat = host.instance;
+    chat.rows.value = rows(1001);
+    const ensurePage = vi.spyOn(chat, 'ensurePage');
+    const jumpTo = vi.spyOn(chat, 'jumpTo').mockImplementation(() => undefined);
+    const peek = new Peek.Class({ chat });
+    expect(peek.open.value).toBe(false);
+
+    // half way down a 400px track that starts at 200 → the middle row
+    move(peek, 400, null, 'track');
+    expect(peek.open.value).toBe(true);
+    expect(peek.index.value).toBe(500);
+    expect(peek.positionLabel).toBe('#501 of 1,001');
+    expect(peek.percentLabel).toBe('50%');
+    expect(peek.row?.preview).toBe('message 500');
+    expect(peek.previewText(peek.row as Chat.Row)).toBe('message 500');
+    expect(peek.roleMark(peek.row as Chat.Row)).toBe('you');
+    expect(peek.rowClass(peek.row as Chat.Row)['ac-peek-hot']).toBe(true);
+    expect(peek.style.top).toBe(`${300 - peek.cardHeight / 2}px`);
+    expect(peek.timeLabel(peek.row as Chat.Row)).toMatch(/^\d\d:\d\d$/);
+    // past the ends the index clamps
+    move(peek, 0, null, 'track');
+    expect(peek.index.value).toBe(0);
+    move(peek, 5000, null, 'track');
+    expect(peek.index.value).toBe(1000);
+    // the card is served from the index: no page was asked for
+    expect(ensurePage).not.toHaveBeenCalled();
+
+    // off the track the card lingers, then goes; back over it within the linger it stays
+    move(peek, 350, null, 'none');
+    expect(peek.open.value).toBe(true);
+    vi.advanceTimersByTime(Peek.$Class.LINGER_MS - 1);
+    move(peek, 350, null, 'card');
+    vi.advanceTimersByTime(Peek.$Class.LINGER_MS);
+    expect(peek.open.value).toBe(true);
+    peek.onThreadPointerLeave();
+    vi.advanceTimersByTime(Peek.$Class.LINGER_MS);
+    expect(peek.open.value).toBe(false);
+
+    // a dragged thumb reopens the card wherever the pointer is
+    const scroller = { scrollbarDragging: true } as unknown as NonNullable<typeof chat.scroller.value>;
+    chat.scroller.value = scroller;
+    move(peek, 300, null, 'none');
+    expect(peek.open.value).toBe(true);
+    expect(peek.index.value).toBe(250);
+    chat.scroller.value = null;
+
+    // a pick jumps the thread and closes the card
+    peek.select(chat.rows.value[42]);
+    expect(jumpTo).toHaveBeenCalledWith(42);
+    expect(peek.open.value).toBe(false);
+    expect(ensurePage).not.toHaveBeenCalled();
+    host.unmount();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+});

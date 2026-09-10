@@ -47,6 +47,15 @@ bottom (within the threshold of the end). The first scroll away releases
 the pin; a "latest" chip brings it back. A seek from the index lands the
 message readable, never cut at the edge.
 
+## The track is a map of the thread
+
+A pointer over the scrollbar's track names a fraction of the thread, and
+the peek beside it shows the rows at that fraction from the index the
+chat already holds: preview, role and time, never a page. The card is a
+scroller of its own over the same rows, so the wheel walks it and a row
+jumps the thread there. While the thumb is dragged the card follows the
+pointer.
+
 ## Rendering is a kit
 
 Every model that composes declares its roles as `static get $kit()`, a
@@ -117,6 +126,8 @@ the same rules before a character renders.
 If the invariants hold, none of these can exist in a correct state:
 
 - a page requested that no window needs, or requested twice
+- a peek that fetches a page, or one that shows a row other than the
+  track position's
 - the scroller knowing that a row is unloaded, or a placeholder measured
   at a size other than the estimate
 - a streaming reply moving the viewport while the reader is away from

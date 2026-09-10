@@ -16,6 +16,7 @@ const {
   error,
   // element refs
   scroller,
+  peek,
 } = chat;
 </script>
 
@@ -25,12 +26,13 @@ const {
     <p v-if="error" class="ac-error">{{ error }}</p>
 
     <div class="ac-main">
-      <section class="ac-thread">
+      <section class="ac-thread" @pointermove="chat.onThreadPointerMove($event)" @pointerleave="chat.onThreadPointerLeave()">
         <component :is="chat.kit.Scroller.vue" ref="scroller" :kit="chat.kit.Scroller" scrollbar :auto-repeat="false" v-model="rows" :assumed-size="96" :padding-quantity="6" :selection-text="chat.rowText">
           <template #item="{ item }">
             <component :is="chat.kit.Message.vue" :kit="chat.kit.Message" :row="item" :chat="chat" />
           </template>
         </component>
+        <component :is="chat.kit.Peek.vue" ref="peek" :kit="chat.kit.Peek" :chat="chat" />
         <button v-if="chat.showsJumpToLatest" type="button" class="ac-jump" @click="chat.jumpToLatest()"><span aria-hidden="true">↓</span> Jump to bottom</button>
         <div v-if="chat.isLoadingThread" class="ac-loading-thread"><span class="ac-spinner" aria-hidden="true"></span> loading the index…</div>
       </section>
