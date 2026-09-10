@@ -1415,7 +1415,7 @@
 .ai-chat .ac-stub {
   align-items: flex-start;
   justify-content: flex-start;
-  gap: 6px;
+  gap: 10px;
   padding: 8px 10px 6px;
   background: none;
   animation: none;

@@ -9,7 +9,7 @@ defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
 
 <template>
   <div class="ac-stub" :style="model.stubStyle" :title="model.stubLabel">
-    <span v-for="(block, at) in model.skeletonBlocks" :key="at" class="ac-skel" :class="model.skeletonClass(block)" :style="{ width: block.width }"></span>
+    <span v-for="(block, at) in model.skeletonBlocks" :key="at" class="ac-skel" :class="model.skeletonClass(block)" :style="model.skeletonStyle(block)"></span>
     <span class="ac-stub-status" :class="{ 'ac-live': model.isPageLoading }">
       <span v-if="model.isPageLoading" class="ac-spinner" aria-hidden="true"></span>
       {{ model.stubStatusLabel }}
