@@ -32,10 +32,19 @@ import type { SessionLog } from './SessionLog';
 class $ChatMessage {
   /** what the skeleton's frame takes: the stub's padding and its status line — the row's own head sits above it */
   static readonly SKELETON_FRAME_PX = 36;
-  static readonly SKELETON_LINE_PX = 16;
+  static readonly SKELETON_LINE_PX = 20;
   static readonly SKELETON_CARD_PX = 26;
   static readonly SKELETON_MAX_LINES = 6;
   static readonly SKELETON_MAX_CARDS = 2;
+  /** the faintest and the firmest a skeleton line gets */
+  static readonly SKELETON_OPACITY_MIN = 0.35;
+  static readonly SKELETON_OPACITY_MAX = 0.7;
+
+  /** a line's opacity between the bounds, varied by the preview's length and the line's place */
+  static skeletonOpacity(length: number, at: number): number {
+    const span = this.SKELETON_OPACITY_MAX - this.SKELETON_OPACITY_MIN;
+    return Math.round((this.SKELETON_OPACITY_MIN + span * (((length * 13 + at * 7) % 11) / 10)) * 100) / 100;
+  }
 
   /** the roles a row composes: a part per kind, and its own sections — built once per class by Static() */
   static get $kit() {
@@ -232,9 +241,9 @@ class $ChatMessage {
     for (let at = 0; at < lines; at++) {
       const last = at === lines - 1;
       const width = last ? 25 + ((length * (at + 3)) % 40) : 72 + ((length * (at + 1)) % 26);
-      blocks.push({ kind: 'line', width: `${width}%` });
+      blocks.push({ kind: 'line', width: `${width}%`, opacity: self.skeletonOpacity(length, at) });
     }
-    for (let at = 0; at < cards; at++) blocks.push({ kind: 'card', width: `${58 + ((length * (at + 5)) % 30)}%` });
+    for (let at = 0; at < cards; at++) blocks.push({ kind: 'card', width: `${58 + ((length * (at + 5)) % 30)}%`, opacity: self.skeletonOpacity(length, lines + at) });
     return blocks;
   }
 
@@ -266,6 +275,10 @@ class $ChatMessage {
     return { 'ac-skel-card': block.kind === 'card' };
   }
 
+  skeletonStyle(block: ChatMessage.SkeletonBlock): Record<string, string> {
+    return { width: block.width, opacity: String(block.opacity) };
+  }
+
   /** the entry for a part: its kind's role, or Text for a kind nobody mapped */
   partEntry(part: SessionLog.Part): Kit.Entry {
     const role = this.self.PART_ROLES[part.kind];
@@ -287,6 +300,8 @@ export namespace ChatMessage {
   export interface SkeletonBlock {
     kind: 'line' | 'card';
     width: string;
+    /** each line a little fainter or firmer than its neighbour — depth, not a flat stack */
+    opacity: number;
   }
 
   export const $Class = Static($ChatMessage);
