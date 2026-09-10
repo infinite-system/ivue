@@ -18,7 +18,12 @@ event the shipped class never declared. The tree the authors shipped
 stays exactly as it was, and a second tree on the same page can differ
 from the first in one leaf three levels down.
 
-Pick an override below. The same `Panel.vue` renders every one of them.
+Pick an override below. The tree is a gallery of code snippets, each a
+head, a syntax-coloured block and a foot. The same `Gallery.vue` renders
+every override: the head becomes an editor tab bar, the foot a status
+bar, the colour engine swaps from shiki to highlight.js, the theme, the
+line numbers and the fold arrive as knobs. Nothing is passed down but
+the entry at each seam.
 
 <ExampleMalleability />
 
@@ -26,7 +31,9 @@ Nothing in that demo edits a file. Each override is a subclass of the
 shipped root, written as one literal and derived at runtime. The tree
 beside the render is the resolved kit read against the shipped one: a
 struck name is what a role was, the arrow is what it is now, and the
-files below the stage are the ones the override brought.
+files below the stage are the ones the override brought. The sections
+match the block they frame because the card reads the theme off the
+same entry the block reads it from.
 
 > **A tree is malleable when every seam passes one entry and every
 > class reads only its own kit.**
@@ -41,6 +48,10 @@ everyone else.
 ivue components are already [classes with their contract as data](/guide/extensible-components).
 Infinite Malleability adds one more piece of data and one rule for
 templates.
+
+The samples below are from the spec's tree, whose files sit under
+"The source" at the end; the demo's tree has the same shape with a
+snippet card in place of the card.
 
 **The kit is a static on the class.** A model that composes others
 declares the roles its subtree needs as `static get $kit()`, a record of
@@ -255,8 +266,10 @@ Vue reads component options as own keys.
 
 ## The source
 
-The tree the demo renders, and the class behind it. These are the files
-the specs mount.
+The class behind it all, and the smaller tree the specs mount: a panel
+above a card above three sections and a code leaf, chosen for proving
+rather than for looks. The demo's own tree is under the demo, tab by
+tab.
 
 <LazyCodeGroup
   :files="[
@@ -274,8 +287,9 @@ the specs mount.
   ]"
 />
 
-The demo component itself is written the same way, one class owning
-the variants and the inspector, its view wiring only.
+The demo component is written the same way, one class owning the
+variants and the inspector, its view wiring only; the demo's tree is
+the tab set under each override above.
 
 <LazyCodeGroup
   :files="[

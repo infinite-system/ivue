@@ -2,133 +2,132 @@ import { ref } from 'vue';
 import { Reactive } from '../../../../../lib/Reactive';
 import { Static } from '../../../../../lib/Static';
 import { Kit } from '@kit/Kit';
-import { Panel } from '@kit/fixtures/Panel';
-import { Card } from '@kit/fixtures/Card';
-import { Code } from '@kit/fixtures/Code';
-import PanelView from '@kit/fixtures/Panel.vue';
-import { ThemedCode } from '@kit/fixtures/ThemedCode';
-import FancyHeadView from '@kit/fixtures/FancyHead.vue';
-import GroupedBodyView from '@kit/fixtures/GroupedBody.vue';
-import FancyFrameView from '@kit/fixtures/FancyFrame.vue';
+import { Gallery } from './malleability/Gallery';
+import GalleryView from './malleability/Gallery.vue';
+import { Snippet } from './malleability/Snippet';
+import { Code } from './malleability/Code';
+import { HljsCode } from './malleability/HljsCode';
+import TabHeadView from './malleability/TabHead.vue';
+import StatsFootView from './malleability/StatsFoot.vue';
 
-// The live proof for the Infinite Malleability page: one shipped tree
-// (a panel of cards, each with a head, a body of code blocks and a frame)
-// and four overrides written as data, each a `Kit.Class.derive` over the
-// shipped root. The reader picks an override; the same Panel.vue renders
-// it, because the entry handed to the seam names a different namespace.
-// The inspector beside it walks the resolved kit and names what changed.
+// The live proof for the Infinite Malleability page: one shipped tree — a
+// gallery of snippet cards, each a head, a shiki-coloured code block and a
+// foot — and four overrides written as data, each a `Kit.Class.derive`
+// over the shipped root. The reader picks an override; the same
+// Gallery.vue renders it, because the entry handed to the seam names a
+// different namespace. The inspector beside it reads the resolved kit
+// against the shipped one and names what changed.
 class $ExampleMalleability {
-  /** The overrides, built once per receiver: every one is the shipped Panel plus a patch. */
+  /** The overrides, built once per receiver: every one is the shipped Gallery plus a patch. */
   static get $variants(): ExampleMalleability.Variant[] {
-    const sections = { Head: { vue: FancyHeadView }, Body: { vue: GroupedBodyView }, Frame: { vue: FancyFrameView } };
-    const leaf = { Code: { namespace: ThemedCode } };
-    const knobs = { Code: { props: { cap: 3, theme: 'paper' } } };
+    const sections = { Head: { vue: TabHeadView }, Foot: { vue: StatsFootView } };
+    const engine = { Code: { namespace: HljsCode } };
+    const knobs = { Code: { props: { theme: 'dracula', lineNumbers: true, maxLines: 8 } } };
+    const root = 'docs_v2/.vitepress/theme/components/examples/malleability';
     return [
       {
         id: 'shipped',
         label: 'As shipped',
-        tagline: 'The tree its authors wrote: a panel, two cards, code capped at four characters.',
-        patch: '// nothing — Panel as its file exports it',
-        namespace: Panel,
+        tagline: 'The tree its authors wrote: three snippets, a plain head, shiki in github-light, a foot with a copy button.',
+        patch: '// nothing — Gallery as its file exports it',
+        namespace: Gallery,
         files: [
-          { path: 'examples/playground/src/kit/fixtures/Panel.ts', label: 'Panel.ts' },
-          { path: 'examples/playground/src/kit/fixtures/Panel.vue', label: 'Panel.vue' },
-          { path: 'examples/playground/src/kit/fixtures/Card.ts', label: 'Card.ts' },
-          { path: 'examples/playground/src/kit/fixtures/Card.vue', label: 'Card.vue' },
-          { path: 'examples/playground/src/kit/fixtures/CardHead.vue', label: 'CardHead.vue' },
-          { path: 'examples/playground/src/kit/fixtures/CardBody.vue', label: 'CardBody.vue' },
-          { path: 'examples/playground/src/kit/fixtures/Frame.vue', label: 'Frame.vue' },
-          { path: 'examples/playground/src/kit/fixtures/Code.ts', label: 'Code.ts' },
-          { path: 'examples/playground/src/kit/fixtures/Code.vue', label: 'Code.vue' },
+          { path: `${root}/Gallery.ts`, label: 'Gallery.ts' },
+          { path: `${root}/Gallery.vue`, label: 'Gallery.vue' },
+          { path: `${root}/Snippet.ts`, label: 'Snippet.ts' },
+          { path: `${root}/Snippet.vue`, label: 'Snippet.vue' },
+          { path: `${root}/SnippetHead.vue`, label: 'SnippetHead.vue' },
+          { path: `${root}/SnippetFoot.vue`, label: 'SnippetFoot.vue' },
+          { path: `${root}/Code.ts`, label: 'Code.ts' },
+          { path: `${root}/Code.vue`, label: 'Code.vue' },
+          { path: `${root}/Shiki.ts`, label: 'Shiki.ts' },
         ],
       },
       {
         id: 'sections',
         label: 'Sections swapped',
-        tagline: 'Three sections of the card replaced two levels down. Card.vue and Panel.vue are untouched.',
-        patch: `Kit.Class.derive(Panel, {
-  Card: {
+        tagline: 'The head becomes an editor tab bar and the foot a status bar, both painted from the block’s palette. Snippet.vue and Gallery.vue are untouched.',
+        patch: `Kit.Class.derive(Gallery, {
+  Snippet: {
     subkit: {
-      Head: { vue: FancyHeadView },
-      Body: { vue: GroupedBodyView },
-      Frame: { vue: FancyFrameView },
+      Head: { vue: TabHeadView },
+      Foot: { vue: StatsFootView },
     },
   },
 })`,
-        namespace: Kit.Class.derive(Panel, { Card: { subkit: sections } }),
+        namespace: Kit.Class.derive(Gallery, { Snippet: { subkit: sections } }),
         files: [
-          { path: 'examples/playground/src/kit/fixtures/FancyHead.vue', label: 'FancyHead.vue' },
-          { path: 'examples/playground/src/kit/fixtures/GroupedBody.vue', label: 'GroupedBody.vue' },
-          { path: 'examples/playground/src/kit/fixtures/FancyFrame.vue', label: 'FancyFrame.vue' },
-          { path: 'examples/playground/src/kit/fixtures/FancyCard.ts', label: 'FancyCard.ts — the same swap as a subclass file' },
-          { path: 'examples/playground/src/kit/fixtures/CardHead.vue', label: 'CardHead.vue — what Head was' },
-          { path: 'examples/playground/src/kit/fixtures/CardBody.vue', label: 'CardBody.vue — what Body was' },
+          { path: `${root}/TabHead.vue`, label: 'TabHead.vue' },
+          { path: `${root}/StatsFoot.vue`, label: 'StatsFoot.vue' },
+          { path: `${root}/SnippetHead.vue`, label: 'SnippetHead.vue — what Head was' },
+          { path: `${root}/SnippetFoot.vue`, label: 'SnippetFoot.vue — what Foot was' },
         ],
       },
       {
-        id: 'leaf',
-        label: 'Leaf class widened',
-        tagline: 'The code block is now ThemedCode, a subclass with a theme prop and a select event. Its view was rewrapped to declare both.',
-        patch: `Kit.Class.derive(Panel, {
-  Card: { subkit: { Code: { namespace: ThemedCode } } },
+        id: 'engine',
+        label: 'Engine swapped',
+        tagline: 'The code block is now HljsCode, a subclass that colours through highlight.js instead of shiki: one static overridden, everything else inherited.',
+        patch: `Kit.Class.derive(Gallery, {
+  Snippet: { subkit: { Code: { namespace: HljsCode } } },
 })`,
-        namespace: Kit.Class.derive(Panel, { Card: { subkit: leaf } }),
+        namespace: Kit.Class.derive(Gallery, { Snippet: { subkit: engine } }),
         files: [
-          { path: 'examples/playground/src/kit/fixtures/ThemedCode.ts', label: 'ThemedCode.ts' },
-          { path: 'examples/playground/src/kit/fixtures/Code.ts', label: 'Code.ts — what it extends' },
-          { path: 'examples/playground/src/kit/fixtures/Code.vue', label: 'Code.vue — the view, rewrapped' },
+          { path: `${root}/HljsCode.ts`, label: 'HljsCode.ts' },
+          { path: `${root}/Hljs.ts`, label: 'Hljs.ts' },
+          { path: `${root}/Code.ts`, label: 'Code.ts — what it extends' },
+          { path: `${root}/Shiki.ts`, label: 'Shiki.ts — the engine it replaced' },
         ],
       },
       {
         id: 'knobs',
         label: 'Knobs turned',
-        tagline: 'No class touched: the Code entry carries props, and the getters Code opened to the kit read them first.',
-        patch: `Kit.Class.derive(Panel, {
-  Card: { subkit: { Code: { props: { cap: 3, theme: 'paper' } } } },
+        tagline: 'No class touched: the Code entry carries a theme, line numbers and a fold, and the getters Code opened to the kit read them first.',
+        patch: `Kit.Class.derive(Gallery, {
+  Snippet: {
+    subkit: {
+      Code: { props: { theme: 'dracula', lineNumbers: true, maxLines: 8 } },
+    },
+  },
 })`,
-        namespace: Kit.Class.derive(Panel, { Card: { subkit: knobs } }),
+        namespace: Kit.Class.derive(Gallery, { Snippet: { subkit: knobs } }),
         files: [
-          { path: 'examples/playground/src/kit/fixtures/Code.ts', label: 'Code.ts — the getters that read the kit' },
-          { path: 'examples/playground/src/kit/fixtures/CardBody.vue', label: 'CardBody.vue — still passes :cap="4"' },
+          { path: `${root}/Code.ts`, label: 'Code.ts — the getters that read the kit' },
+          { path: `${root}/Snippet.ts`, label: 'Snippet.ts — reads the same theme for its sections' },
         ],
       },
       {
         id: 'all',
         label: 'All of it',
-        tagline: 'Sections, class and a knob in one literal. ThemedCode declares theme as a prop with its own default, so the kit no longer decides it. The shipped tree is exactly as it was.',
-        patch: `Kit.Class.derive(Panel, {
-  Card: {
+        tagline: 'Sections, engine and knobs in one literal: tab bar, status bar, highlight.js in nord, numbered and folded. The shipped tree is exactly as it was.',
+        patch: `Kit.Class.derive(Gallery, {
+  Snippet: {
     subkit: {
-      Head: { vue: FancyHeadView },
-      Body: { vue: GroupedBodyView },
-      Frame: { vue: FancyFrameView },
-      Code: { namespace: ThemedCode, props: { cap: 3 } },
+      Head: { vue: TabHeadView },
+      Foot: { vue: StatsFootView },
+      Code: { namespace: HljsCode, props: { theme: 'nord', lineNumbers: true, maxLines: 8 } },
     },
   },
 })`,
-        namespace: Kit.Class.derive(Panel, {
-          Card: { subkit: { ...sections, Code: { namespace: ThemedCode, props: { cap: 3 } } } },
+        namespace: Kit.Class.derive(Gallery, {
+          Snippet: { subkit: { ...sections, Code: { namespace: HljsCode, props: { theme: 'nord', lineNumbers: true, maxLines: 8 } } } },
         }),
         files: [
-          { path: 'examples/playground/src/kit/fixtures/FancyHead.vue', label: 'FancyHead.vue' },
-          { path: 'examples/playground/src/kit/fixtures/GroupedBody.vue', label: 'GroupedBody.vue' },
-          { path: 'examples/playground/src/kit/fixtures/FancyFrame.vue', label: 'FancyFrame.vue' },
-          { path: 'examples/playground/src/kit/fixtures/ThemedCode.ts', label: 'ThemedCode.ts' },
+          { path: `${root}/TabHead.vue`, label: 'TabHead.vue' },
+          { path: `${root}/StatsFoot.vue`, label: 'StatsFoot.vue' },
+          { path: `${root}/HljsCode.ts`, label: 'HljsCode.ts' },
           { path: 'examples/playground/src/kit/Kit.ts', label: 'Kit.ts — resolve, derive, view' },
         ],
       },
     ];
   }
 
-  static readonly TITLES = ['alpha', 'beta'];
-
   /** The namespaces the tree is built from, by name — a minified build keeps no class names. */
   static get $named(): Map<Kit.Namespace, string> {
     return new Map<Kit.Namespace, string>([
-      [Panel, 'Panel'],
-      [Card, 'Card'],
+      [Gallery, 'Gallery'],
+      [Snippet, 'Snippet'],
       [Code, 'Code'],
-      [ThemedCode, 'ThemedCode'],
+      [HljsCode, 'HljsCode'],
     ]);
   }
 
@@ -143,7 +142,7 @@ class $ExampleMalleability {
     return Boolean(namespace.derivedFrom);
   }
 
-  /** `cap: 3, theme: 'paper'` — the props bag as the reader would write it */
+  /** `theme: 'dracula', lineNumbers: true` — the props bag as the reader would write it */
   static propsLabel(props: Record<string, unknown>): string {
     return Object.entries(props)
       .map(([key, value]) => `${key}: ${typeof value === 'string' ? `'${value}'` : JSON.stringify(value)}`)
@@ -172,26 +171,22 @@ class $ExampleMalleability {
     return this.variants.find((variant) => variant.id === this.selectedId.value) ?? this.variants[0];
   }
 
-  /** The entry the seam receives: the chosen namespace, the one Panel.vue. */
+  /** The entry the seam receives: the chosen namespace, the one Gallery.vue. */
   get entry(): Kit.Entry {
-    return { namespace: this.selected.namespace, vue: PanelView };
-  }
-
-  get titles(): string[] {
-    return this.self.TITLES;
+    return { namespace: this.selected.namespace, vue: GalleryView };
   }
 
   /** The shipped tree's lines, the baseline every override is read against. */
   get baseline(): ExampleMalleability.Line[] {
     const lines: ExampleMalleability.Line[] = [];
-    this.walk('Panel', { namespace: Panel, vue: PanelView }, 0, lines);
+    this.walk('Gallery', { namespace: Gallery, vue: GalleryView }, 0, lines);
     return lines;
   }
 
   /** The resolved kit as lines, from the root down, each marked with what the override changed. */
   get inspector(): ExampleMalleability.Line[] {
     const lines: ExampleMalleability.Line[] = [];
-    this.walk('Panel', this.entry, 0, lines);
+    this.walk('Gallery', this.entry, 0, lines);
     const before = new Map(this.baseline.map((line) => [line.key, line]));
     return lines.map((line) => {
       const was = before.get(line.key);
@@ -210,10 +205,6 @@ class $ExampleMalleability {
     const count = this.changedCount;
     if (count === 0) return 'nothing changed — this is the shipped tree';
     return `${count} of ${this.inspector.length} roles changed; every other role is the shipped one`;
-  }
-
-  get isShipped(): boolean {
-    return this.selected.id === 'shipped';
   }
 
   isSelected(variant: ExampleMalleability.Variant): boolean {
@@ -256,7 +247,7 @@ export namespace ExampleMalleability {
   export type Instance = typeof Class.Instance;
 
   export interface Variant {
-    id: 'shipped' | 'sections' | 'leaf' | 'knobs' | 'all';
+    id: 'shipped' | 'sections' | 'engine' | 'knobs' | 'all';
     label: string;
     tagline: string;
     /** the override as the reader would write it */
