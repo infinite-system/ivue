@@ -36,7 +36,9 @@ class $TextPart {
     return ref(0);
   }
 
+  /** the part's text — read through the chat's revision, which bumps on every streamed token; the part itself is a plain object the stream appends to in place */
   get text(): string {
+    void this.props.chat.revision.value;
     return this.props.part.text;
   }
 

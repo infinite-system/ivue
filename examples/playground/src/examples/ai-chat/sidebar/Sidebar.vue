@@ -23,12 +23,12 @@ const model = new ((props.kit?.namespace.Class as typeof Sidebar.Class | undefin
         :aria-pressed="model.isActive(tab)"
         @click="model.select(tab)"
       >
-        <span class="ac-rail-icon" aria-hidden="true">{{ tab.icon }}</span>
+        <svg class="ac-rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.iconOf(tab)" /></svg>
         <span class="ac-rail-label">{{ tab.label }}</span>
       </button>
       <span class="ac-rail-spacer"></span>
       <button v-if="model.isOpen" type="button" class="ac-rail-btn ac-rail-collapse" title="Collapse" @click="model.close()">
-        <span class="ac-rail-icon" aria-hidden="true">»</span>
+        <svg class="ac-rail-icon" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.collapseIcon" /></svg>
       </button>
     </nav>
   </aside>

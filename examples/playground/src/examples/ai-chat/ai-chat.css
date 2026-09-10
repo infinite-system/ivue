@@ -1677,9 +1677,9 @@
 .ai-chat .ac-msg-foot {
   margin-top: 4px;
 }
-/* the thinking line's "show" sits on the same right edge as a card's time */
+/* the thinking line's "show" sits on the same right edge as the head's turn number */
 .ai-chat .ac-thinking-toggle {
-  padding-right: 8px;
+  padding-right: 0;
 }
 
 /* ---- the side: a rail that is always there, a panel that opens beside it ---- */
@@ -1762,14 +1762,49 @@
   color: var(--ac-accent);
 }
 .ai-chat .ac-rail-icon {
-  font-size: 17px;
-  line-height: 1;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .ai-chat .ac-rail-spacer {
   flex: 1;
 }
 .ai-chat .ac-rail-collapse .ac-rail-icon {
-  font-size: 15px;
+  width: 18px;
+  height: 18px;
+}
+.ai-chat .ac-btn-icon {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ai-chat .ac-index-search {
+  position: relative;
+}
+.ai-chat .ac-search-icon {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  transform: translateY(-50%);
+  fill: none;
+  stroke: var(--ac-muted);
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.ai-chat .ac-index-search .ac-search {
+  padding-left: 30px;
 }
 /* panes */
 .ai-chat .ac-panel-pane {
@@ -2057,4 +2092,298 @@
 }
 .ai-chat[data-tree='minimal'] .ac-minimal-head .ac-msg-index {
   margin-left: 0;
+}
+
+/* ---- the model picker: a pill and a menu of cards ---- */
+.ai-chat .ac-picker {
+  position: relative;
+  display: inline-flex;
+}
+.ai-chat .ac-model-icon {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--ac-accent);
+}
+.ai-chat .ac-model-name {
+  font-weight: 600;
+}
+.ai-chat .ac-picker-open .ac-model {
+  border-color: var(--ac-accent);
+  box-shadow: 0 0 0 3px var(--ac-accent-soft);
+}
+.ai-chat .ac-picker-open .ac-model-caret {
+  transform: rotate(180deg);
+}
+.ai-chat .ac-model-caret {
+  transition: transform 0.18s;
+}
+.ai-chat .ac-picker-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  width: 300px;
+  padding: 6px;
+  border: 1px solid var(--ac-line);
+  border-radius: 14px;
+  background: var(--ac-panel);
+  box-shadow: var(--ac-shadow), 0 0 0 1px var(--ac-line-soft) inset;
+  backdrop-filter: blur(10px);
+  z-index: 30;
+  transform-origin: bottom left;
+  animation: ac-pop 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+@keyframes ac-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ai-chat .ac-picker-title {
+  padding: 6px 10px 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ac-muted);
+}
+.ai-chat .ac-picker-card {
+  display: grid;
+  grid-template-columns: 24px 1fr 16px;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ac-text);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.12s, border-color 0.12s;
+}
+.ai-chat .ac-picker-card:hover,
+.ai-chat .ac-picker-card.ac-cursor {
+  background: var(--ac-panel-2);
+}
+.ai-chat .ac-picker-card.ac-picked {
+  border-color: var(--ac-accent);
+  background: var(--ac-accent-soft);
+}
+.ai-chat .ac-picker-icon {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: var(--ac-accent);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ai-chat .ac-picker-body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.ai-chat .ac-picker-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.ai-chat .ac-picker-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+.ai-chat .ac-picker-detail {
+  font-size: 11px;
+  color: var(--ac-muted);
+}
+.ai-chat .ac-picker-meter {
+  display: grid;
+  grid-template-columns: 1fr 104px;
+  align-items: center;
+  gap: 8px;
+}
+.ai-chat .ac-picker-track {
+  position: relative;
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--ac-line-soft);
+  overflow: hidden;
+}
+.ai-chat .ac-picker-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+  transform-origin: left;
+  animation: ac-grow 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes ac-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+.ai-chat .ac-picker-speed {
+  background: linear-gradient(90deg, #6366f1, #34d399);
+}
+.ai-chat .ac-picker-wait {
+  background: linear-gradient(90deg, #f59e0b, #f43f5e);
+  opacity: 0.8;
+}
+.ai-chat .ac-picker-meter-label {
+  font-size: 10.5px;
+  line-height: 1;
+  color: var(--ac-dim);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.ai-chat .ac-picker-check {
+  font-size: 12px;
+  color: var(--ac-accent);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.ai-chat .ac-picker-card.ac-picked .ac-picker-check {
+  opacity: 1;
+}
+
+/* ---- the scrollbar peek: a card of rows at the pointer's position ---- */
+.ai-chat .ac-peek {
+  position: absolute;
+  right: 22px;
+  width: 320px;
+  border: 1px solid var(--ac-line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ac-panel) 82%, transparent);
+  backdrop-filter: blur(12px) saturate(1.2);
+  box-shadow: var(--ac-shadow), 0 0 0 1px var(--ac-line-soft) inset;
+  overflow: hidden;
+  z-index: 20;
+  pointer-events: auto;
+}
+.ai-chat .ac-peek-enter-active,
+.ai-chat .ac-peek-leave-active {
+  transition: opacity 0.14s, transform 0.14s;
+}
+.ai-chat .ac-peek-enter-from,
+.ai-chat .ac-peek-leave-to {
+  opacity: 0;
+  transform: translateX(8px);
+}
+.ai-chat .ac-peek-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--ac-line-soft);
+  font-size: 11px;
+  color: var(--ac-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ai-chat .ac-peek-pos {
+  font-weight: 600;
+  color: var(--ac-text);
+}
+.ai-chat .ac-peek-pct {
+  margin-left: auto;
+  color: var(--ac-accent);
+}
+.ai-chat .ac-peek-list {
+  position: relative;
+}
+.ai-chat .ac-peek-list .virtual-scroller {
+  height: 100%;
+}
+.ai-chat .ac-peek-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.ai-chat .ac-peek-row:hover {
+  background: var(--ac-panel-2);
+}
+.ai-chat .ac-peek-row.ac-peek-hot {
+  background: var(--ac-accent-soft);
+  box-shadow: inset 2px 0 0 var(--ac-accent);
+}
+.ai-chat .ac-peek-role {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ac-muted);
+}
+.ai-chat .ac-peek-row.ac-role-user .ac-peek-role {
+  color: var(--ac-accent);
+}
+.ai-chat .ac-peek-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ac-text);
+}
+.ai-chat .ac-peek-time {
+  font-size: 10.5px;
+  color: var(--ac-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ai-chat .ac-peek-tail {
+  position: absolute;
+  top: 50%;
+  right: -5px;
+  width: 8px;
+  height: 8px;
+  transform: translateY(-50%) rotate(45deg);
+  background: var(--ac-panel);
+  border-top: 1px solid var(--ac-line);
+  border-right: 1px solid var(--ac-line);
+}
+.ai-chat .ac-composer-card .ac-send:not(:disabled) {
+  box-shadow: 0 0 0 0 var(--ac-accent-soft);
+  animation: ac-ready 1.8s ease-out infinite;
+}
+@keyframes ac-ready {
+  0% {
+    box-shadow: 0 0 0 0 var(--ac-accent-soft);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.ai-chat .ac-streaming .ac-model-dot {
+  animation: ac-pulse 1s ease-in-out infinite;
+}
+@keyframes ac-pulse {
+  50% {
+    transform: scale(1.5);
+    opacity: 0.6;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-chat .ac-picker-menu,
+  .ai-chat .ac-picker-bar,
+  .ai-chat .ac-send,
+  .ai-chat .ac-model-dot {
+    animation: none;
+  }
 }

@@ -4,6 +4,9 @@ import { Static } from '../../Static';
 import { ChatApi } from './ChatApi';
 import type { Chat } from './Chat';
 import type { Kit } from '../../kit/Kit';
+import { ModelPicker } from './ModelPicker';
+import { Icons } from './Icons';
+import ChatModelPickerView from './ChatModelPicker.vue';
 import type { SessionLog } from './SessionLog';
 
 // The input row: a draft, the picked model, attachments that came in by
@@ -11,6 +14,13 @@ import type { SessionLog } from './SessionLog';
 // network), and a send that hands the thread one request. Enter sends,
 // Shift+Enter breaks a line.
 class $Composer {
+  /** the roles the composer composes — the model picker; built once per class by Static() */
+  static get $kit() {
+    return {
+      Picker: { namespace: ModelPicker, vue: ChatModelPickerView },
+    } satisfies Kit.Of<Composer.Role>;
+  }
+
   static readonly DEFAULT_MODEL = 'default';
 
   constructor(public props: Composer.Props) {}
@@ -18,6 +28,15 @@ class $Composer {
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
     return this.constructor as typeof $Composer;
+  }
+
+  get kit() {
+    return this.self.$kit;
+  }
+
+  /** the rail's search glyph, so the two search affordances match */
+  get searchIcon(): string {
+    return Icons.$Class.PATHS.search;
   }
 
   get chat(): Chat.Model {
@@ -100,7 +119,7 @@ class $Composer {
   onKeydown(event: KeyboardEvent) {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
-      this.chat.search('');
+      this.chat.toggleSearch();
       return;
     }
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -173,6 +192,8 @@ export namespace Composer {
   export const $Class = Static($Composer);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
+
+  export type Role = 'Picker';
 
   export interface Props {
     chat: Chat.Model;

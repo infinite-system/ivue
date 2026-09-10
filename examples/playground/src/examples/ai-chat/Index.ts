@@ -4,6 +4,7 @@ import { Static } from '../../Static';
 import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
 import VirtualScrollerView from '../virtual-scroller/VirtualScroller.vue';
 import { Kit } from '../../kit/Kit';
+import { Icons } from './Icons';
 import type { Chat } from './Chat';
 import type { ChatApi } from './ChatApi';
 import { ChatExport } from './ChatExport';
@@ -63,6 +64,10 @@ class $Index {
 
   get kit() {
     return this.self.$kit;
+  }
+
+  get searchIcon(): string {
+    return Icons.$Class.PATHS.search;
   }
 
   get chat(): Chat.Model {
@@ -321,6 +326,12 @@ class $Index {
   }
 
   onKeydown(event: KeyboardEvent) {
+    // the chord that opened the panel closes it, wherever in the panel the focus sits
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      this.chat.closeIndex();
+      return;
+    }
     const rows = this.rows.value;
     if (!rows.length) return;
     const current = Math.max(0, Math.min(rows.length - 1, this.focusedIndex.value));

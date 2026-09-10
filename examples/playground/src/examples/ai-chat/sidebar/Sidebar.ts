@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
+import { Icons } from '../Icons';
 import { Kit } from '../../../kit/Kit';
 import type { Chat } from '../Chat';
 import { Index } from '../Index';
@@ -23,10 +24,11 @@ class $Sidebar {
     } satisfies Kit.Of<Chat.SidebarTab>;
   }
 
+
   static readonly TABS: Sidebar.Tab[] = [
-    { id: 'Index', label: 'Index', icon: '⌕', hint: 'Search and select messages (⌘K)' },
-    { id: 'Files', label: 'Files', icon: '▤', hint: 'The files this session touched' },
-    { id: 'Settings', label: 'Settings', icon: '⚙', hint: 'Theme, density and the tree' },
+    { id: 'Index', label: 'Index', icon: 'search', hint: 'Search and select messages (⌘K)' },
+    { id: 'Files', label: 'Files', icon: 'files', hint: 'The files this session touched' },
+    { id: 'Settings', label: 'Settings', icon: 'settings', hint: 'Theme, density and the tree' },
   ];
   static readonly MIN_WIDTH = 280;
   static readonly MAX_WIDTH = 720;
@@ -66,6 +68,10 @@ class $Sidebar {
     return this.tab !== null;
   }
 
+  get collapseIcon(): string {
+    return Icons.$Class.PATHS.collapse;
+  }
+
   /** the entry for the open tab; the rail alone when nothing is open */
   get entry(): Kit.Entry | null {
     return this.tab ? this.kit[this.tab] : null;
@@ -81,6 +87,11 @@ class $Sidebar {
 
   isActive(tab: Sidebar.Tab): boolean {
     return this.tab === tab.id;
+  }
+
+  /** a tab's glyph path, by the name the table carries */
+  iconOf(tab: Sidebar.Tab): string {
+    return Icons.$Class.PATHS[tab.icon];
   }
 
   select(tab: Sidebar.Tab) {
@@ -124,7 +135,7 @@ export namespace Sidebar {
   export interface Tab {
     id: Chat.SidebarTab;
     label: string;
-    icon: string;
+    icon: Icons.Name;
     hint: string;
   }
 }

@@ -7,7 +7,6 @@ const model = new ((props.kit?.namespace.Class as typeof Composer.Class | undefi
 const {
   // state refs
   draft,
-  modelId,
   attachments,
   dragOver,
   // element refs
@@ -32,16 +31,10 @@ const {
           <span class="ac-attach-icon" aria-hidden="true">+</span>
           <input type="file" multiple hidden @change="model.onPick($event)" />
         </label>
-        <label class="ac-model" :title="model.modelHint">
-          <span class="ac-model-dot" aria-hidden="true"></span>
-          <select v-model="modelId" class="ac-model-select">
-            <option v-for="option in model.models" :key="option.id" :value="option.id">{{ option.label }}</option>
-          </select>
-          <span class="ac-model-caret" aria-hidden="true">▾</span>
-        </label>
+        <component :is="model.kit.Picker.vue" :kit="model.kit.Picker" :composer="model" />
         <span class="ac-model-hint">{{ model.modelHint }}</span>
         <span class="ac-composer-spacer"></span>
-        <button type="button" class="ac-search-btn" title="Search the thread (⌘K)" @click="chat.search('')"><span aria-hidden="true">⌕</span><span class="ac-sr">Search the thread</span></button>
+        <button type="button" class="ac-search-btn" title="Search the thread (⌘K)" @click="chat.toggleSearch()"><svg class="ac-btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.searchIcon" /></svg><span class="ac-sr">Search the thread</span></button>
         <span v-if="chat.isStreaming" class="ac-streaming-note"><span class="ac-spinner" aria-hidden="true"></span> {{ model.sendLabel }}</span>
         <button v-if="chat.isStreaming" type="button" class="ac-stop" title="Stop" @click="model.stop()"><span aria-hidden="true">■</span><span class="ac-sr">Stop</span></button>
         <button v-else type="submit" class="ac-send" :disabled="!model.canSend" :title="model.sendLabel"><span aria-hidden="true">↑</span><span class="ac-sr">{{ model.sendLabel }}</span></button>

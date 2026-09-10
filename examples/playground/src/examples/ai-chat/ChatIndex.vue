@@ -36,6 +36,7 @@ const {
         </div>
       </div>
       <div class="ac-index-search">
+        <svg class="ac-search-icon" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.searchIcon" /></svg>
         <input ref="searchElement" v-model="query" type="search" class="ac-search" placeholder="Search messages…" aria-label="Search messages" />
         <button v-if="query" type="button" class="ac-link" @click="model.clearQuery()">clear</button>
       </div>
