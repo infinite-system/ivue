@@ -53,6 +53,15 @@ describe('FilesPanel', () => {
     expect(panel.hasNoMatch).toBe(true);
     panel.clearQuery();
     expect(panel.count).toBe(2);
+    // the kind pickers keep the files touched that way
+    panel.setKind('writes');
+    expect(panel.files.map((file) => file.name)).toEqual(['Index.ts']);
+    panel.setKind('edits');
+    expect(panel.files.map((file) => file.name)).toEqual(['Chat.ts']);
+    expect(panel.isKind('edits')).toBe(true);
+    expect(panel.countLabel).toBe('1 file of 2');
+    panel.setKind('all');
+    expect(panel.count).toBe(2);
     panel.open(panel.files[1]);
     expect(chat.sidebarTab.value).toBe('Index');
     expect(chat.searchRequest.value).toBe('Index.ts');

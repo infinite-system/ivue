@@ -24,6 +24,7 @@ class $FilesPanel {
   }
 
   static readonly FILE_TOOLS: Record<string, keyof FilesPanel.Counts> = { Read: 'reads', Edit: 'edits', NotebookEdit: 'edits', Write: 'writes' };
+  static readonly KIND_LABELS: Record<FilesPanel.Kind, string> = { all: 'All', reads: 'Read', edits: 'Edited', writes: 'Written' };
   /** a record's diff shows this many lines before it folds */
   static readonly DIFF_CAP = 24;
 
@@ -42,6 +43,18 @@ class $FilesPanel {
     return Icons.$Class.PATHS.search;
   }
 
+  get jumpIcon(): string {
+    return Icons.$Class.PATHS.jump;
+  }
+
+  get openIcon(): string {
+    return Icons.$Class.PATHS.open;
+  }
+
+  get kindOptions(): { value: FilesPanel.Kind; label: string }[] {
+    return (Object.keys(this.self.KIND_LABELS) as FilesPanel.Kind[]).map((value) => ({ value, label: this.self.KIND_LABELS[value] }));
+  }
+
   get chat(): Chat.Model {
     return this.props.chat;
   }
@@ -58,6 +71,11 @@ class $FilesPanel {
 
   get query() {
     return ref('');
+  }
+
+  /** the touch a file must have to be listed — all, or one kind */
+  get kind() {
+    return ref<FilesPanel.Kind>('all');
   }
 
   // TEMPLATE-REF TARGET — the search box
@@ -87,11 +105,13 @@ class $FilesPanel {
     return [...files.values()].sort((left, right) => right.count - left.count || left.path.localeCompare(right.path));
   }
 
-  /** the files the search leaves: every word of the query somewhere in the path */
+  /** the files the search and the kind leave: every word of the query somewhere in the path, and a touch of the kind */
   get files(): FilesPanel.File[] {
     const words = this.query.value.toLowerCase().split(/\s+/).filter(Boolean);
-    if (!words.length) return this.allFiles;
+    const kind = this.kind.value;
+    if (!words.length && kind === 'all') return this.allFiles;
     return this.allFiles.filter((file) => {
+      if (kind !== 'all' && file[kind] === 0) return false;
       const path = file.path.toLowerCase();
       return words.every((word) => path.includes(word));
     });
@@ -102,7 +122,7 @@ class $FilesPanel {
   }
 
   get isFiltered(): boolean {
-    return this.query.value.trim().length > 0;
+    return this.query.value.trim().length > 0 || this.kind.value !== 'all';
   }
 
   get hasFiles(): boolean {
@@ -120,6 +140,14 @@ class $FilesPanel {
 
   get hasNoMatch(): boolean {
     return this.isFiltered && this.count === 0;
+  }
+
+  isKind(value: FilesPanel.Kind): boolean {
+    return this.kind.value === value;
+  }
+
+  setKind(value: FilesPanel.Kind) {
+    this.kind.value = value;
   }
 
   isFile(row: FilesPanel.Row): boolean {
@@ -300,6 +328,7 @@ export namespace FilesPanel {
   }
 
   export type Role = 'Scroller';
+  export type Kind = 'all' | keyof Counts;
 
   export interface File extends Counts {
     path: string;

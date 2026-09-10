@@ -59,7 +59,7 @@ const {
             <span class="ac-ix-text">{{ model.previewText(item) }}</span>
             <span v-if="model.toolsLabel(item)" class="ac-ix-tools">{{ model.toolsLabel(item) }}</span>
             <span class="ac-ix-time">{{ model.timeLabel(item) }}</span>
-            <button type="button" class="ac-ix-go" title="Show in the chat" @click.stop="model.seek(item)">→</button>
+            <button type="button" class="ac-ix-go ac-go" title="Show in the chat" @click.stop="model.seek(item)"><svg class="ac-go-icon" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.jumpIcon" /></svg></button>
           </div>
         </template>
       </component>
