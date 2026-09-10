@@ -3,14 +3,14 @@ import { Reactive } from '../../../ivue';
 import { Highlighter } from '../Highlighter';
 import { Markdown } from '../Markdown';
 import type { SessionLog } from '../SessionLog';
-import type { Parts } from './Parts';
+import type { Part } from './Part';
 
 // Prose: the markdown subset rendered to HTML, with every fenced block
 // coloured after the paint — shiki runs once per block, cached, and the
 // plain escaped block is what the row shows until then, so a row never
 // waits on colour. A streaming text part re-renders as it grows.
 class $TextPart {
-  constructor(public props: Parts.Props<SessionLog.TextPart>) {
+  constructor(public props: Part.Props<SessionLog.TextPart>) {
     onMounted(() => this.colour());
     onBeforeUnmount(() => this.cancel());
     watch(

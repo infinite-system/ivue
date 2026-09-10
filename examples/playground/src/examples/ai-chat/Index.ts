@@ -1,7 +1,9 @@
 import { computed, ref, shallowRef } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
-import type { VirtualScroller } from '../virtual-scroller/VirtualScroller';
+import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
+import VirtualScrollerView from '../virtual-scroller/VirtualScroller.vue';
+import { Kit } from '../../kit/Kit';
 import type { Chat } from './Chat';
 import type { ChatApi } from './ChatApi';
 import { ChatExport } from './ChatExport';
@@ -14,6 +16,13 @@ import { ChatExport } from './ChatExport';
 // Export gathers the selected messages in thread order, loading the
 // pages they need.
 class $Index {
+  /** the one role the index composes: its own scroller over the filtered rows */
+  static get $kit() {
+    return {
+      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView },
+    } satisfies Kit.Of<'Scroller'>;
+  }
+
   static readonly ROLE_LABELS: Record<Index.RoleFilter, string> = { all: 'All', user: 'You', assistant: 'Agent' };
   static readonly TOOL_LABELS: Record<Index.ToolFilter, string> = { include: 'With tools', exclude: 'No tools', only: 'Tools only' };
   static readonly EXPORT_LABELS: Record<Chat.ExportForm, string> = { markdown: 'Markdown', plain: 'Plain text', jsonl: 'JSONL' };
@@ -36,6 +45,10 @@ class $Index {
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
     return this.constructor as typeof $Index;
+  }
+
+  get kit() {
+    return this.self.$kit;
   }
 
   get chat(): Chat.Model {
@@ -385,6 +398,7 @@ export namespace Index {
 
   export interface Props {
     chat: Chat.Model;
+    kit?: Kit.Entry;
   }
 
   export type RoleFilter = 'all' | 'user' | 'assistant';

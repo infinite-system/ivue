@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import type { SessionLog } from '../SessionLog';
-import type { Parts } from './Parts';
+import type { Part } from './Part';
 import { SystemPart } from './SystemPart';
-import SubThread from '../tools/SubThread.vue';
 
-const props = defineProps<Parts.Props<SessionLog.SystemPart>>();
+const props = defineProps<Part.Props<SessionLog.SystemPart>>();
 
-const model = new SystemPart.Class(props);
+const model = new ((props.kit?.namespace.Class as typeof SystemPart.Class | undefined) ?? SystemPart.Class)(props);
 </script>
 
 <template>
@@ -17,6 +16,6 @@ const model = new SystemPart.Class(props);
       <span v-if="model.hasDetail" class="ac-system-toggle">{{ model.toggleLabel }}</span>
     </button>
     <pre v-if="model.showsDetail" class="ac-system-detail">{{ model.part.detail }}</pre>
-    <SubThread v-if="model.showsThread" :messages="model.children" :chat="chat" />
+    <component v-if="model.showsThread" :is="model.kit.SubThread.vue" :kit="model.kit.SubThread" :messages="model.children" :chat="chat" />
   </div>
 </template>

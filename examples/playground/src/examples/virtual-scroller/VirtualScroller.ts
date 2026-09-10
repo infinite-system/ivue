@@ -23,6 +23,7 @@ import {
 import { Lenis } from '../../lenis/Lenis';
 import { nestedProps, type NestedPartial, type NestedProps } from '../../nestedProps';
 import { Static } from '../../Static';
+import type { Kit } from '../../kit/Kit';
 import { VirtualScrollerPadding } from './VirtualScrollerPadding';
 import { VirtualScrollerSelection } from './VirtualScrollerSelection';
 
@@ -109,7 +110,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       dragHandleSelector: { type: String as PropType<string> },
       dragClass: { type: String as PropType<string> },
       dragGhostClass: { type: String as PropType<string> },
-      dragChosenClass: { type: String as PropType<string> }
+      dragChosenClass: { type: String as PropType<string> },
+      /** the kit entry this scroller was rendered through, when a parent's kit names it */
+      kit: { type: Object as PropType<Kit.Entry<typeof VirtualScroller>> }
     });
   }
 
@@ -138,7 +141,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       dragHandleSelector: '.sortable-drag-handle',
       dragClass: 'sortable-drag',
       dragGhostClass: 'sortable-ghost',
-      dragChosenClass: 'sortable-chosen'
+      dragChosenClass: 'sortable-chosen',
+      kit: undefined
     };
   }
 

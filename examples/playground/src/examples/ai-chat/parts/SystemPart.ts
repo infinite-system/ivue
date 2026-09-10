@@ -1,19 +1,33 @@
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
+import { Kit } from '../../../kit/Kit';
+import { SubThread } from '../tools/SubThread';
+import SubThreadView from '../tools/SubThread.vue';
 import type { SessionLog } from '../SessionLog';
-import type { Parts } from './Parts';
+import type { Part } from './Part';
 
 // A system record, by subtype: a compaction is a divider with the
 // summary folded under it, a turn duration a quiet timestamp line, a
 // hook summary a small card, a folded subagent thread a note.
 class $SystemPart {
+  /** the one role a system line composes: the thread its children form */
+  static get $kit() {
+    return {
+      SubThread: { namespace: SubThread, vue: SubThreadView },
+    } satisfies Kit.Of<'SubThread'>;
+  }
+
   static readonly ICONS: Record<string, string> = { compaction: '⟲', turn_duration: '◷', stop_hook_summary: '⚙', subagent: '⑂' };
 
-  constructor(public props: Parts.Props<SessionLog.SystemPart>) {}
+  constructor(public props: Part.Props<SessionLog.SystemPart>) {}
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
     return this.constructor as typeof $SystemPart;
+  }
+
+  get kit() {
+    return this.self.$kit;
   }
 
   get part(): SessionLog.SystemPart {

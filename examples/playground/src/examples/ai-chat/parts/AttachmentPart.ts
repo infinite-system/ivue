@@ -1,11 +1,11 @@
 import { Reactive } from '../../../ivue';
 import type { SessionLog } from '../SessionLog';
-import type { Parts } from './Parts';
+import type { Part } from './Part';
 
 // An attachment: an image at its natural aspect (the size is known, so a
 // late load never remeasures), or a file chip with name, size and type.
 class $AttachmentPart {
-  constructor(public props: Parts.Props<SessionLog.AttachmentPart>) {}
+  constructor(public props: Part.Props<SessionLog.AttachmentPart>) {}
 
   get part(): SessionLog.AttachmentPart {
     return this.props.part;

@@ -716,6 +716,18 @@ class $CheckStandard {
     });
   }
 
+  /** The namespace a `new` constructs through its `.Class` slot: `new X.Class(…)`, or the kit's
+   *  seam form `new ((props.kit?.namespace.Class as typeof X.Class | undefined) ?? X.Class)(…)`,
+   *  whose fallback names the view's own class. Null for anything else. */
+  static constructedNamespaceOf(node: ts.NewExpression): string | null {
+    let callee: ts.Expression = node.expression;
+    while (ts.isParenthesizedExpression(callee)) callee = callee.expression;
+    if (ts.isBinaryExpression(callee) && callee.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken) callee = callee.right;
+    while (ts.isParenthesizedExpression(callee)) callee = callee.expression;
+    if (ts.isPropertyAccessExpression(callee) && callee.name.text === 'Class' && ts.isIdentifier(callee.expression)) return callee.expression.text;
+    return null;
+  }
+
   static get watch_lifetime_matches_the_instance_owner(): CheckStandard.StandardCheck {
     return this.defineCheck('watch_lifetime_matches_the_instance_owner', (context) => {
       const findings: CheckStandard.Finding[] = [];
@@ -729,8 +741,9 @@ class $CheckStandard {
       for (const unit of context.sources) {
         const classFile = this.classFileOf(unit);
         this.forEachDescendant(unit.ast, (node) => {
-          if (!ts.isNewExpression(node) || !ts.isPropertyAccessExpression(node.expression) || node.expression.name.text !== 'Class' || !ts.isIdentifier(node.expression.expression)) return;
-          const constructed = node.expression.expression.text;
+          if (!ts.isNewExpression(node)) return;
+          const constructed = this.constructedNamespaceOf(node);
+          if (!constructed) return;
           let ancestor: ts.Node | undefined = node.parent;
           while (ancestor && ancestor !== classFile?.rawClass) ancestor = ancestor.parent;
           if (classFile && ancestor === classFile.rawClass) {
@@ -1454,7 +1467,9 @@ export namespace Scroller {
           expectFindings: [/second model is constructed \(`spare`\)/],
           expectCount: 1,
         }],
-        green: [{ files: { ...box, 'src/Box.vue': fixture.validSfc } }],
+        green: [
+          { files: { ...box, 'src/Box.vue': fixture.validSfc.replace('new Box.Class(props)', 'new ((props.kit?.namespace.Class as typeof Box.Class | undefined) ?? Box.Class)(props)') } },
+          { files: { ...box, 'src/Box.vue': fixture.validSfc } }],
       },
       'script_setup_is_wiring_only': {
         claim: 'If a component has a model, then its script setup declares no parallel state, derivation, watcher, or free function',
@@ -1780,8 +1795,10 @@ export namespace Scroller {
       if (!ts.isVariableStatement(statement)) continue;
       for (const declaration of statement.declarationList.declarations) {
         const initializer = declaration.initializer;
-        if (initializer && ts.isNewExpression(initializer) && ts.isPropertyAccessExpression(initializer.expression) && initializer.expression.name.text === 'Class' && ts.isIdentifier(initializer.expression.expression) && ts.isIdentifier(declaration.name))
-          constructions.push({ variable: declaration.name.text, namespace: initializer.expression.expression.text, node: declaration });
+        if (!initializer || !ts.isNewExpression(initializer) || !ts.isIdentifier(declaration.name)) continue;
+        // `new X.Class(…)`, or the kit's seam form whose `??` fallback names the view's own class
+        const namespace = this.constructedNamespaceOf(initializer);
+        if (namespace) constructions.push({ variable: declaration.name.text, namespace, node: declaration });
       }
     }
     return constructions;

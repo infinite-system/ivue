@@ -1,50 +1,20 @@
 <script setup lang="ts">
 import { ChatMessage } from './ChatMessage';
-import { Parts } from './parts/Parts';
 
 const props = defineProps<ChatMessage.Props>();
 
-const model = new ChatMessage.Class(props);
+// the one `new`: the class the entry names, or this view's own
+const model = new ((props.kit?.namespace.Class as typeof ChatMessage.Class | undefined) ?? ChatMessage.Class)(props);
 </script>
 
 <template>
   <article class="ac-msg" :class="model.rowClass">
-    <div class="ac-msg-gutter">
-      <span class="ac-msg-avatar" aria-hidden="true">{{ model.roleLabel.slice(0, 1) }}</span>
-    </div>
+    <component :is="model.kit.Gutter.vue" :kit="model.kit.Gutter" :model="model" />
     <div class="ac-msg-body">
-      <header class="ac-msg-head">
-        <strong class="ac-msg-role">{{ model.roleLabel }}</strong>
-        <span v-if="model.modelLabel" class="ac-msg-model">{{ model.modelLabel }}</span>
-        <span v-if="model.replayLabel" class="ac-msg-replay">{{ model.replayLabel }}</span>
-        <span class="ac-msg-time">{{ model.timeLabel }}</span>
-        <span class="ac-msg-index">{{ model.indexLabel }}</span>
-      </header>
-
-      <div v-if="model.isStub" class="ac-stub" :style="model.stubStyle">
-        <span class="ac-stub-text">{{ model.stubLabel }}</span>
-        <span class="ac-stub-status" :class="{ 'ac-live': model.isPageLoading }">
-          <span v-if="model.isPageLoading" class="ac-spinner" aria-hidden="true"></span>
-          {{ model.stubStatusLabel }}
-        </span>
-      </div>
-
-      <div v-else class="ac-parts">
-        <component
-          :is="Parts.Class.componentFor(part.kind)"
-          v-for="(part, at) in model.parts"
-          :key="model.partKey(part, at)"
-          :part="part"
-          :chat="chat"
-          :message="model.message"
-        />
-        <div v-if="model.isAwaitingFirstToken" class="ac-await">
-          <span class="ac-spinner" aria-hidden="true"></span>
-          <span>{{ model.awaitingLabel }}</span>
-        </div>
-      </div>
-
-      <footer v-if="model.receiptLabel" class="ac-msg-foot">{{ model.receiptLabel }}</footer>
+      <component :is="model.kit.Head.vue" :kit="model.kit.Head" :model="model" />
+      <component v-if="model.isStub" :is="model.kit.Stub.vue" :kit="model.kit.Stub" :model="model" />
+      <component v-else :is="model.kit.Parts.vue" :kit="model.kit.Parts" :model="model" />
+      <component v-if="model.receiptLabel" :is="model.kit.Foot.vue" :kit="model.kit.Foot" :model="model" />
     </div>
   </article>
 </template>
