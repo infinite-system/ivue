@@ -30,6 +30,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 - [A native selection dies with the node that anchors it](#a-native-selection-dies-with-the-node-that-anchors-it) — why the selection cannot be the browser's.
 - [Touch events keep firing on the node the finger landed on](#touch-events-keep-firing-on-the-node-the-finger-landed-on) — why the gesture's listeners ride the origin node.
 - [The transform lerps to the target over many frames](#the-transform-lerps-to-the-target-over-many-frames) — why a target-anchored window leaves a gap to cover.
+- [The frame loop runs only while there is motion](#the-frame-loop-runs-only-while-there-is-motion) — why a scroller nobody touches costs no frames.
 - [Rendered offsets are rebased by whole chunks](#rendered-offsets-are-rebased-by-whole-chunks) — why a reader a million rows deep does not stutter.
 - [The scroll position lands inside the scrollable range](#the-scroll-position-lands-inside-the-scrollable-range) — why no input can poison the position.
 - [An unchanged window keeps its array identity](#an-unchanged-window-keeps-its-array-identity) — why a scroll inside the window does not re-render the rows.
@@ -232,6 +233,28 @@ tier each record is proven at, and how the colocated tests bind to it.
 **Last refined:** 2026-09-09
 
 ## Chosen invariants
+
+### The frame loop runs only while there is motion
+
+**Invariant:** If the frame loop finds nothing to paint — no input arriving (`virtualScrolling` false), no lerp remaining (`isScrolling === false` and target within half a pixel of animated), and no creep (`isAutoPlaying` false) — then it parks itself (`frame = null`) instead of requesting the next frame, and the next input wakes it; a scroller nobody touches requests no frames.
+
+**Scope:** `VirtualScroller.ts` `loop`, `isAtRest`, the wake in `onVirtualScroll`; the creep keeps its own frame under autoplay.
+
+**Mechanism:** The loop paints `lenis.targetScroll` every frame while Lenis lerps. A seek animates through the inner element's CSS transition, not the loop, so once Lenis is at rest there is nothing for the loop to write. `onVirtualScroll` already requests a frame only when none is armed, so parking and waking need no new state. Rest depends on [A lerp completes within half a pixel of any target](../../lenis/lenis.invariants.md#a-lerp-completes-within-half-a-pixel-of-any-target): without it a glide never settles and the loop never parks.
+
+**Generates:** A chat with the thread, the peek and a side panel open — three scrollers — costs zero frames until one is touched. The creep's own frame is unaffected.
+
+**Rejected alternatives:** Parking on a timer after the last input (a long glide would be cut). Parking on `isScrolling` alone (a target written directly, without a lerp, still needs one paint).
+
+**Evidence:** `VirtualScroller.ts` `loop`, `isAtRest`. Test: "the frame loop parks itself at rest and the next wheel wakes it". Measured on the chat (Chromium, `requestAnimationFrame` counted per second): 0 before the first wheel, 60 during the glide, 0 once settled; before the fix, 60 forever after the first wheel.
+
+**Impossible if true:** A scroller at rest requesting a frame every tick. A wheel after rest that does not move the content.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "parks itself at rest"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-10
 
 ### The scroll position lands inside the scrollable range
 
@@ -720,6 +743,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 ## Impossibility boundary — what these invariants forbid
 
 - Blank canvas under the viewport during a flick whose gap is below the cap — [The pad covers the lerp gap exactly](#the-pad-covers-the-lerp-gap-exactly).
+- A scroller at rest requesting a frame every tick — [The frame loop runs only while there is motion](#the-frame-loop-runs-only-while-there-is-motion).
 - A highlight that collapses when its anchor row recycles — [The selection is a range over the data](#the-selection-is-a-range-over-the-data).
 - A copy that stops at the mounted rows — [The selection is a range over the data](#the-selection-is-a-range-over-the-data).
 - A rendered scroll position outside the extent — [The scroll position lands inside the scrollable range](#the-scroll-position-lands-inside-the-scrollable-range).

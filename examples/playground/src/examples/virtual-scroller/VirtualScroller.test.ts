@@ -32,6 +32,9 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded; only a landing snaps.
 // domain-invariant: $VirtualScroller — If nudgePaint runs on WebKit, then the inner layer's will-change is cycled through auto with a layout read between; elsewhere it does nothing.
 // domain-invariant: $VirtualScroller — If the frame scrolls natively, then the offset becomes a virtual scroll and the frame is zeroed; Lenis never adopts a native scroll on either axis.
+// domain-invariant: $VirtualScroller — If the frame loop finds nothing to paint — no input arriving, no lerp remaining, no creep — then it parks itself, and the next input wakes it; a scroller nobody touches requests no frames
+[The frame loop runs only while there is motion](virtual-scroller.invariants.md#the-frame-loop-runs-only-while-there-is-motion)
+Impossible if true: A scroller at rest requesting a frame every tick.
 Impossible if true: A rendered scroll position beyond the extent.
 Impossible if true: An item outside the list with a position.
 Impossible if true: A window whose spacers plus rows sum to anything but the extent.
@@ -771,5 +774,40 @@ test('a native scroll of the frame is handed to the virtual scroll and zeroed, a
   // At rest, a scroll event with nothing to hand over does nothing.
   instance.onScroll(new Event('scroll'));
   expect(scrollBy).toHaveBeenCalledTimes(1);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the frame loop finds nothing to paint — no input arriving, no lerp remaining, no creep — then it parks itself, and the next input wakes it; a scroller nobody touches requests no frames
+// impossible-if-true: $VirtualScroller — A scroller at rest requesting a frame every tick.
+// invariant: The frame loop runs only while there is motion (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('the frame loop parks itself at rest and the next wheel wakes it', () => {
+  vi.useFakeTimers();
+  const { instance, unmount } = scroller(rows(50));
+  const raf = vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation(() => 7);
+  const noop = () => undefined;
+  const lenis = { time: 0, isScrolling: false as boolean | string, targetScroll: 100, animatedScroll: 100, scroll: 100, stop: noop, start: noop, destroy: noop, raf: noop };
+  (instance as unknown as { lenis: unknown }).lenis = lenis;
+  const frames = instance as unknown as { frame: number | null };
+  // a glide still lerping keeps the loop running
+  lenis.isScrolling = 'smooth';
+  lenis.animatedScroll = 60;
+  frames.frame = 1;
+  instance.loop(16);
+  expect(instance.isAtRest).toBe(false);
+  expect(frames.frame).toBe(7);
+  // settled: the loop parks
+  lenis.isScrolling = false;
+  lenis.animatedScroll = 100;
+  raf.mockClear();
+  instance.loop(32);
+  expect(instance.isAtRest).toBe(true);
+  expect(frames.frame).toBeNull();
+  expect(raf).not.toHaveBeenCalled();
+  // the next wheel wakes it
+  instance.onVirtualScroll({ deltaX: 0, deltaY: 120 });
+  expect(frames.frame).toBe(7);
+  raf.mockRestore();
+  (instance as unknown as { lenis: unknown }).lenis = null;
+  vi.useRealTimers();
   unmount();
 });

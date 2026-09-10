@@ -23,6 +23,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 - [A touch on a glide keeps it running until the first move](#a-touch-on-a-glide-keeps-it-running-until-the-first-move) — why a re-flick has no stall.
 - [A touchcancel flicks like a touchend](#a-touchcancel-flicks-like-a-touchend) — why a browser claiming the gesture does not freeze the content.
 - [A flick carries the glide it interrupted](#a-flick-carries-the-glide-it-interrupted) — why flick after flick gains speed instead of restarting.
+- [A lerp completes within half a pixel of any target](#a-lerp-completes-within-half-a-pixel-of-any-target) — why a glide always ends, and the scroller can rest.
 
 **Mechanism:** The touchstart seeds a trail at the animated position and marks the touch pending while the glide runs on; the first move stops the glide, drops its target for the animated position, re-seeds the trail there and syncs the finger; every move appends to the trail inside a 100 ms window with one anchor kept before it; the end or cancel reads the velocity off the trail with the span capped at the window and scrolls to the inertia distance; an end with no move is the tap that stops the glide.
 
@@ -65,6 +66,28 @@ Chosen invariants stand on reality invariants, never the reverse.
 **Last refined:** 2026-09-07
 
 ## Chosen invariants
+
+### A lerp completes within half a pixel of any target
+
+**Invariant:** If a lerp's value comes within `SETTLE_PX` (0.5 px) of its target, then it snaps to the target and completes, whatever the target's fraction; Lenis then leaves `isScrolling` and the scroller's frame loop may rest.
+
+**Scope:** `Animate.ts` `advance`, `SETTLE_PX`.
+
+**Mechanism:** Upstream completed on `Math.round(value) === to`, which only an integer target satisfies. `scrollTo` rounds its targets, but a shifted lerp (`shift`) and a rebased offset move `to` by fractional deltas, and the damp then approaches a target it can never round onto: the animation runs forever at a velocity near 1e-6 px, `isScrolling` stays `smooth`, and every consumer of rest — the scroller's frame loop, the creep, the anchor capture — sees a glide that never ends. A distance band completes the same integer cases and every fractional one.
+
+**Generates:** The scroller's parked frame loop at rest; `isScrolling === false` after every wheel glide.
+
+**Rejected alternatives:** Rounding every write to `to` (a shifted lerp must keep its exact remaining distance). A smaller band (a 0.1 lerp needs ~40 more frames to close from 0.5 to 0.01 px, all invisible).
+
+**Evidence:** `Animate.ts` `advance`. Test: "a lerp toward a fractional target completes and snaps to it". Measured before the fix on the chat: after one wheel tick the scroller's loop ran at 60 frames/s indefinitely with `isScrolling: 'smooth'`, `target − animated ≈ 1e-5`.
+
+**Impossible if true:** A lerp toward a fractional target that never completes. A settled glide still reporting `isScrolling`.
+
+**Verification:** `npx vitest run examples/playground/src/lenis/Animate.test.ts -t "fractional target"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-10
 
 ### A flick's velocity is read off the finger's last stretch
 
@@ -157,6 +180,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 ## Impossibility boundary — what these invariants forbid
 
 - A re-flick that stalls — [A touch on a glide keeps it running until the first move](#a-touch-on-a-glide-keeps-it-running-until-the-first-move).
+- A settled glide that never completes — [A lerp completes within half a pixel of any target](#a-lerp-completes-within-half-a-pixel-of-any-target).
 - A coalesced swipe reading a velocity of zero — [A flick's velocity is read off the finger's last stretch](#a-flicks-velocity-is-read-off-the-fingers-last-stretch).
 - A flick logic proven on iOS alone — [Android holds the first move back and may coalesce a swipe into one](#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one).
 - A claimed gesture leaving the content frozen — [A touchcancel flicks like a touchend](#a-touchcancel-flicks-like-a-touchend).
