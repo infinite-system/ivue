@@ -519,6 +519,14 @@ chat example is the first tree to be converted — the build is
   closed prop is a getter override on a derived class. Hooks in the
   constructor bind to the view's own component, as today. A parent never
   constructs a child.
+- **A derived contract reaches Vue.** Props and emits are per component
+  definition in Vue, so a class derived by `subkit` that adds a prop or
+  an event is paired, at resolve time, with a fresh component object —
+  the base view's `setup` and `render`, the derived class's `props` and
+  `emits` — once per derived role, never per instance. The parent can
+  pass the prop, the child can emit the event, no file changes. Emits
+  stay object form on the contract; listeners attach to the seam, so
+  swaps keep them, and changing one is a section swap.
 - **Override is subclassing, resolved once.** A subclass with a
   different `$kit` swaps its whole subtree, and the parent's kit names
   the subclass. A swap that must reach a deep leaf is one nested
