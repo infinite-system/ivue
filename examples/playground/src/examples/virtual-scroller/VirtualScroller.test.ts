@@ -35,7 +35,9 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If the frame loop finds nothing to paint — no input arriving, no lerp remaining, no creep — then it parks itself, and the next input wakes it; a scroller nobody touches requests no frames
 [The frame loop runs only while there is motion](virtual-scroller.invariants.md#the-frame-loop-runs-only-while-there-is-motion)
 Impossible if true: A scroller at rest requesting a frame every tick.
+// domain-invariant: $VirtualScroller — If a rendered row shrinks and the rows above it stay put, then the position is pulled back inside the range, so the viewport never rests past the last row
 Impossible if true: A rendered scroll position beyond the extent.
+Impossible if true: A viewport resting past the last row after it shrank.
 Impossible if true: An item outside the list with a position.
 Impossible if true: A window whose spacers plus rows sum to anything but the extent.
 
@@ -809,5 +811,25 @@ test('the frame loop parks itself at rest and the next wheel wakes it', () => {
   raf.mockRestore();
   (instance as unknown as { lenis: unknown }).lenis = null;
   vi.useRealTimers();
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If a rendered row shrinks and the rows above it stay put, then the position is pulled back inside the range, so the viewport never rests past the last row
+// impossible-if-true: $VirtualScroller — A viewport resting past the last row after it shrank.
+// invariant: The scroll position lands inside the scrollable range (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a last row that shrinks pulls the position back inside the range; a row that shrinks above the reader moves nothing extra', () => {
+  const { instance, unmount } = scroller(rows(10), { assumedSize: 30 });
+  // 300 px of content, 100 px container: at the very end
+  instance.setScrollPosition(-200, false);
+  expect(instance.scrollPosition.value).toBe(200);
+  // the last row re-renders 20 px shorter: the range ends at 180 now, and so does the position
+  instance.syncItemSize(9, 10);
+  expect(instance.scrollExtent.value).toBe(280);
+  expect(instance.scrollPosition.value).toBe(180);
+  // a row above the reader shrinking is the anchor's business: the position follows the content, still in range
+  instance.setScrollPosition(-100, false);
+  instance.syncItemSize(0, 10);
+  expect(instance.scrollPosition.value).toBeLessThanOrEqual(instance.scrollExtent.value - 100);
+  expect(instance.scrollPosition.value).toBe(80);
   unmount();
 });

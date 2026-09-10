@@ -1130,6 +1130,14 @@ own whole than to arbitrate.
 - **Playwright's "move away" point must actually leave the element**: a peek card 320px wide beside the
   track swallowed a pointer moved 300px left of the track, and the drive read a bug that was not there.
   Instrument `pointermove` targets before touching the code.
+- **A row that shrinks at the end of the list left the viewport past the content.** The scroller's
+  re-measure restores the anchor row (the one under the reading edge), which only moves the position by
+  what the content ABOVE the reader changed; the last row re-rendering shorter — a streaming reply whose
+  partial markdown was taller than its final render, a tall card folded at the end — changes nothing above,
+  so nothing re-clamped and the viewport rested past the last row on nothing. `clampScrollPosition` now runs
+  after every re-measure (spec + record on "The scroll position lands inside the scrollable range"). The
+  symptom read as "the reply is blank until it finishes" and "the canvas scrolled past the last item".
+  Headless drives never hit it because the sampled turns did not shrink; the user's did.
 - **The scrollbar peek is a second scroller over the same rows** (`Peek`, role on `Chat.$kit`): `v-model` binds
   the chat's `rows` ref, previews and times come from the index, so a peek never fetches. The thread's section
   forwards `pointermove` to the peek, which tests `closest('.virtual-scroller__track')` — the track lives inside

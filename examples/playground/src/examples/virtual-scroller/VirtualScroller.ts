@@ -1153,7 +1153,23 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       this.bumpGeometryVersion();
       this.maybeCalibrateEstimate();
       this.restoreAnchor(anchor);
+      this.clampScrollPosition();
     }
+  }
+
+  /**
+   * The content shrank under the reader — the last row re-rendered
+   * shorter, a tall card folded — and the anchor row above it did not
+   * move, so the anchor restore had nothing to shift: the position is
+   * pulled back inside the range here, so the viewport never rests past
+   * the last row on nothing.
+   */
+  // invariant: The scroll position lands inside the scrollable range (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  clampScrollPosition() {
+    const container = this.offsetSize(this.scrollElement.value);
+    const max = Math.max(0, this.scrollExtent.value - container);
+    if (Number(this.scrollPosition.value) <= max) return;
+    this.setScrollPosition(-max, false, true, false);
   }
 
   /**
@@ -1229,6 +1245,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const anchor = this.captureAnchor();
     this.applyItemSize(index, size, true);
     this.restoreAnchor(anchor);
+    this.clampScrollPosition();
   }
 
   protected applyItemSize(index: number, size: number, doUpdatePositions: boolean) {
