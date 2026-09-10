@@ -1591,3 +1591,25 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+/* the word that just arrived fades and lifts into place; every render is fresh nodes, so once each */
+.ai-chat .ac-tok {
+  display: inline-block;
+  animation: ac-tok-in 0.26s ease-out both;
+}
+@keyframes ac-tok-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-chat .ac-tok {
+    animation: none;
+  }
+}

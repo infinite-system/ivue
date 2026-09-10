@@ -32,6 +32,9 @@ const {
         <div class="ac-seg" role="group" aria-label="Tool calls">
           <button v-for="option in model.toolOptions" :key="option.value" type="button" :class="{ 'ac-on': model.isTools(option.value) }" @click="model.setTools(option.value)">{{ option.label }}</button>
         </div>
+        <div class="ac-seg" role="group" aria-label="Order">
+          <button v-for="option in model.orderOptions" :key="option.value" type="button" :class="{ 'ac-on': model.isOrder(option.value) }" @click="model.setOrder(option.value)">{{ option.label }}</button>
+        </div>
       </div>
       <div class="ac-index-search">
         <input v-model="query" type="search" class="ac-search" placeholder="Search messages…" aria-label="Search messages" />
