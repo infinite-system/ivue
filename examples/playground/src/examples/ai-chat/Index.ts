@@ -8,6 +8,7 @@ import { Icons } from './Icons';
 import type { Chat } from './Chat';
 import type { ChatApi } from './ChatApi';
 import { ChatExport } from './ChatExport';
+import { SessionLog } from './SessionLog';
 
 // The index: every message as one line, from the small index file, so
 // the whole thread is listed and filtered without a content page. A
@@ -25,7 +26,7 @@ class $Index {
   }
 
   static readonly ROLE_LABELS: Record<Index.RoleFilter, string> = { all: 'All', user: 'You', assistant: 'Agent' };
-  static readonly TOOL_LABELS: Record<Index.ToolFilter, string> = { include: 'With tools', exclude: 'No tools', only: 'Tools only' };
+  static readonly TOOL_LABELS: Record<Index.ToolFilter, string> = { include: 'With tools', exclude: 'No tools', compaction: 'Compaction only' };
   static readonly ORDER_LABELS: Record<Index.Order, string> = { oldest: 'Oldest first', newest: 'Newest first' };
   static readonly EXPORT_LABELS: Record<Chat.ExportForm, string> = { markdown: 'Markdown', plain: 'Plain text', jsonl: 'JSONL' };
 
@@ -202,7 +203,7 @@ class $Index {
       if (role === 'user' && entry.r !== 'u') return;
       if (role === 'assistant' && entry.r !== 'a') return;
       if (tools === 'exclude' && entry.c > 0) return;
-      if (tools === 'only' && entry.c === 0) return;
+      if (tools === 'compaction' && !SessionLog.Class.isCompaction(entry.r, entry.t)) return;
       if (query && !entry.t.toLowerCase().includes(query)) return;
       output.push({ id: entry.id, body: '', position: String(at + 1), index: at, entry });
     });
@@ -436,7 +437,7 @@ export namespace Index {
   }
 
   export type RoleFilter = 'all' | 'user' | 'assistant';
-  export type ToolFilter = 'include' | 'exclude' | 'only';
+  export type ToolFilter = 'include' | 'exclude' | 'compaction';
   export type Order = 'oldest' | 'newest';
 
   export interface Row extends VirtualScroller.BaseItem {

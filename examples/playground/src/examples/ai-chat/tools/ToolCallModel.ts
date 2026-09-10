@@ -1,6 +1,7 @@
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
+import { Icons } from '../Icons';
 import { CodeBlock } from './CodeBlock';
 import CodeBlockView from './CodeBlock.vue';
 import { SubThread } from './SubThread';
@@ -160,9 +161,9 @@ class $ToolCallModel {
     return this.isExpanded ? 'collapse' : 'expand';
   }
 
-  /** one triangle; the card's open class turns it */
-  get toggleGlyph(): string {
-    return '▸';
+  /** one chevron; the card's open class turns it */
+  get chevronIcon(): string {
+    return Icons.$Class.PATHS.chevron;
   }
 
   get stateClass(): string {

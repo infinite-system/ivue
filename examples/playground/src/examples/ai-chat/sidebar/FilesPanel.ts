@@ -51,6 +51,10 @@ class $FilesPanel {
     return Icons.$Class.PATHS.open;
   }
 
+  get chevronIcon(): string {
+    return Icons.$Class.PATHS.chevron;
+  }
+
   get kindOptions(): { value: FilesPanel.Kind; label: string }[] {
     return (Object.keys(this.self.KIND_LABELS) as FilesPanel.Kind[]).map((value) => ({ value, label: this.self.KIND_LABELS[value] }));
   }
@@ -158,9 +162,6 @@ class $FilesPanel {
     return this.expanded.value.has(file.path);
   }
 
-  toggleGlyph(file: FilesPanel.File): string {
-    return this.isExpanded(file) ? '▾' : '▸';
-  }
 
   fileClass(row: FilesPanel.Row): Record<string, boolean> {
     return { 'ac-open': this.isExpanded(row.file) };
@@ -178,9 +179,6 @@ class $FilesPanel {
     return this.openRecords.value.has(record.id);
   }
 
-  recordGlyph(record: FilesPanel.Record): string {
-    return this.isRecordOpen(record) ? '▾' : '▸';
-  }
 
   /** the record folded: how many lines it added and removed, or what it read */
   diffSummary(record: FilesPanel.Record): string {

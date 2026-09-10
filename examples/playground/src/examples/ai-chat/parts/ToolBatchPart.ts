@@ -1,6 +1,7 @@
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
+import { Icons } from '../Icons';
 import { ToolCallPart } from './ToolCallPart';
 import ToolCallPartView from './ToolCallPart.vue';
 import { Clock } from '../Clock';
@@ -99,9 +100,9 @@ class $ToolBatchPart {
     return { 'ac-batch-open': this.isExpanded, 'ac-batch-failed': this.hasFailure, 'ac-batch-running': this.isRunning };
   }
 
-  /** one triangle; the batch's open class turns it */
-  get toggleLabel(): string {
-    return '▸';
+  /** one chevron; the batch's open class turns it */
+  get chevronIcon(): string {
+    return Icons.$Class.PATHS.chevron;
   }
 
   toggle() {

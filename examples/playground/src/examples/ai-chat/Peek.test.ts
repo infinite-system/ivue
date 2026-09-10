@@ -20,8 +20,8 @@ function rows(count: number): Chat.Row[] {
     position: String(at + 1),
     index: at,
     page: Math.floor(at / 200),
-    role: at % 2 ? 'assistant' : 'user',
-    preview: `message ${at}`,
+    role: at % 100 === 50 ? 'system' : at % 2 ? 'assistant' : 'user',
+    preview: at % 100 === 50 ? 'Context compacted' : `message ${at}`,
     calls: at % 3,
     at: Date.UTC(2026, 8, 9, 13, at % 60),
     message: null,
@@ -125,9 +125,11 @@ describe('Peek', () => {
     // the pickers narrow by role and by tool calls, and Escape resets them once the box is clear
     peek.setRole('user');
     expect(peek.rows.value.every((row) => row.role === 'user')).toBe(true);
-    expect(peek.rows.value).toHaveLength(501);
-    peek.setTools('only');
-    expect(peek.rows.value.every((row) => row.role === 'user' && row.calls > 0)).toBe(true);
+    expect(peek.rows.value).toHaveLength(491);
+    peek.setRole('all');
+    peek.setTools('compaction');
+    expect(peek.rows.value.map((row) => row.index)).toEqual([50, 150, 250, 350, 450, 550, 650, 750, 850, 950]);
+    peek.setRole('user');
     peek.setTools('exclude');
     expect(peek.rows.value.every((row) => row.calls === 0)).toBe(true);
     expect(peek.isPinned).toBe(true);
