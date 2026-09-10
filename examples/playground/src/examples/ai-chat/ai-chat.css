@@ -2145,6 +2145,9 @@
   border: 1px solid var(--ac-line);
   background: linear-gradient(135deg, #0b0f19 50%, #818cf8 50%);
 }
+.ai-chat .ac-choice-swatch[data-theme='light'] {
+  background: linear-gradient(135deg, #ffffff 50%, #4f46e5 50%);
+}
 .ai-chat .ac-choice-swatch[data-theme='ivory'] {
   background: linear-gradient(135deg, #fbf7ef 50%, #b45309 50%);
 }
@@ -2196,6 +2199,28 @@
 }
 
 /* ---- themes: palettes the configuration layer picks ---- */
+/* the plain light theme: the root palette, picked on purpose — it holds on a dark page too */
+.ai-chat[data-theme='light'],
+.ai-chat.ac-dark[data-theme='light'] {
+  --ac-bg: #ffffff;
+  --ac-panel: #f6f7fb;
+  --ac-panel-2: #eef0f6;
+  --ac-line: rgba(15, 23, 42, 0.12);
+  --ac-line-soft: rgba(15, 23, 42, 0.07);
+  --ac-text: #0f172a;
+  --ac-dim: #5b6478;
+  --ac-muted: #8a93a8;
+  --ac-accent: #4f46e5;
+  --ac-accent-soft: rgba(79, 70, 229, 0.12);
+  --ac-user: #eef2ff;
+  --ac-code-bg: #f3f4f8;
+  --ac-ok: #059669;
+  --ac-err: #dc2626;
+  --ac-warn: #d97706;
+  --ac-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.35);
+  background: var(--ac-bg);
+  color: var(--ac-text);
+}
 .ai-chat[data-theme='ivory'],
 .ai-chat.ac-dark[data-theme='ivory'] {
   --ac-bg: #fbf7ef;
