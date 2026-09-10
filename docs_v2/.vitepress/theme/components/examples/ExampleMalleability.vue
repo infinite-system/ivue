@@ -121,8 +121,8 @@ const {
   display: grid;
   grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
   gap: 16px;
-  /* one height for every override, so switching tabs never moves what is below */
-  min-height: 860px;
+  /* the height of the shipped tree; the two settings overrides run a little taller */
+  min-height: 640px;
 }
 .mal-live {
   display: flex;
