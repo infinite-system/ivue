@@ -449,7 +449,7 @@
   vertical-align: -0.15em;
   border-radius: 1px;
   background: var(--ac-caret);
-  box-shadow: 0 0 6px var(--ac-caret), 0 0 12px color-mix(in srgb, var(--ac-caret) 55%, transparent);
+  box-shadow: 0 0 4px var(--ac-caret);
   animation: ac-blink 1s steps(2) infinite;
 }
 @keyframes ac-blink {
@@ -1709,17 +1709,15 @@
   display: inline-block;
   animation: ac-tok-in 0.42s ease-out both;
 }
-/* the word fades by colour, not opacity: the caret it carries stays solid while the word arrives */
+/* the word fades by colour, not opacity, and lifts without a blur: the caret it carries stays crisp */
 @keyframes ac-tok-in {
   from {
     color: transparent;
     transform: translateY(3px);
-    filter: blur(2px);
   }
   to {
     color: inherit;
     transform: none;
-    filter: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
