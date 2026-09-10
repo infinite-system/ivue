@@ -41,7 +41,7 @@ The consequence that sounds wrong and is not: a write to a cell nobody
 is watching allocates nothing and notifies no one. Twenty million cells
 exist; only the few hundred you can see cost anything.
 
-The plain version, for a ten-year-old: the spreadsheet is a dark
+The plain version: the spreadsheet is a dark
 warehouse. Only the shelf you are standing in front of has a light on.
 Turning on a light costs something. Having twenty million shelves does
 not.

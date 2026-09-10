@@ -38,10 +38,10 @@ same entry the block reads it from.
 > **A tree is malleable when every seam passes one entry and every
 > class reads only its own kit.**
 
-The ten-year-old version: every component keeps a list of the parts it
-is made of. To change a part, you hand the component a different list.
-Nobody rewires anything, and the original list is still there for
-everyone else.
+In plain terms: every component keeps a list of the parts it is made
+of. To change a part, you hand the component a different list. Nobody
+rewires anything, and the original list is still there for everyone
+else.
 
 ## The four moves
 
