@@ -1,4 +1,4 @@
-import { computed, ref, shallowRef, type ShallowUnwrapRef } from 'vue';
+import { computed, nextTick, ref, shallowRef, watch, type ShallowUnwrapRef } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
@@ -31,7 +31,12 @@ class $Peek {
   /** the card stays this long after the pointer leaves, so it can be crossed into */
   static readonly LINGER_MS = 220;
 
-  constructor(public props: Peek.Props) {}
+  constructor(public props: Peek.Props) {
+    watch(
+      () => this.query.value,
+      () => this.onQueryChange(),
+    );
+  }
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
@@ -217,6 +222,15 @@ class $Peek {
   clearQuery() {
     this.query.value = '';
     this.searchElement.value?.focus();
+  }
+
+  /** the list changes under the scroll: a search lands on its first match, a cleared one back on the hot row */
+  async onQueryChange() {
+    await nextTick();
+    const scroller = this.scroller.value;
+    if (!scroller) return;
+    if (this.isFiltered) scroller.scrollToIndex(0, undefined, false, 0);
+    else scroller.scrollToIndex(Math.max(0, this.index.value - Math.floor(this.self.ROWS / 2)), undefined, false, 0);
   }
 
   show(index: number) {
