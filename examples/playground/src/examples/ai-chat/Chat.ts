@@ -87,6 +87,10 @@ class $Chat {
       () => this.scrollOffset,
       () => this.onScroll(),
     );
+    watch(
+      () => this.thumbDragging,
+      (dragging) => this.onThumbDrag(dragging),
+    );
   }
 
   /** The one cast per class: instance code reads its own statics here. */
@@ -151,6 +155,21 @@ class $Chat {
 
   get atBottom() {
     return ref(true);
+  }
+
+  /** whether the latest message's top is inside the viewport — the chip hides as soon as it is */
+  get latestInView() {
+    return ref(true);
+  }
+
+  /** the window reached while the thumb was held — fetched on the drop, not on the way */
+  get heldWindow() {
+    return shallowRef<{ start: number; end: number } | null>(null);
+  }
+
+  /** the scrollbar's thumb is being dragged: rows fly past as skeletons and no page is asked for */
+  get thumbDragging(): boolean {
+    return Boolean(this.scroller.value?.scrollbarDragging);
   }
 
   get streaming() {
@@ -249,7 +268,7 @@ class $Chat {
   }
 
   get showsJumpToLatest(): boolean {
-    return this.hasThread && !this.atBottom.value;
+    return this.hasThread && !this.latestInView.value;
   }
 
   get pendingPageCount(): number {
@@ -372,9 +391,21 @@ class $Chat {
 
   onWindow(range: { start: number; end: number }) {
     if (this.source.value !== 'sample' || !this.count) return;
+    if (this.thumbDragging) {
+      this.heldWindow.value = range;
+      return;
+    }
+    this.heldWindow.value = null;
     const first = Math.max(0, Math.floor(range.start / this.pageSize) - this.self.PAGE_MARGIN);
     const last = Math.min(this.pageCount - 1, Math.floor(Math.max(range.end - 1, 0) / this.pageSize) + this.self.PAGE_MARGIN);
     for (let page = first; page <= last; page++) void this.ensurePage(page);
+  }
+
+  /** the thumb dropped: the window it landed on loads now */
+  onThumbDrag(dragging: boolean) {
+    if (dragging) return;
+    const held = this.heldWindow.value;
+    if (held) this.onWindow(held);
   }
 
   async ensurePage(page: number) {
@@ -431,6 +462,10 @@ class $Chat {
     const container = Number(scroller.containerOuterSize ?? 0);
     const offset = this.scrollOffset;
     this.atBottom.value = extent <= container || offset + container >= extent - this.self.BOTTOM_THRESHOLD_PX;
+    // the chip points at the latest message: once its top is on screen the reader has reached
+    // it, however long it runs below the fold
+    const latestTop = scroller.getIndexPosition?.(this.latestIndex);
+    this.latestInView.value = this.atBottom.value || (typeof latestTop === 'number' && latestTop < offset + container - this.self.BOTTOM_THRESHOLD_PX);
   }
 
   jumpTo(index: number, animate = true) {
@@ -445,6 +480,7 @@ class $Chat {
     if (!scroller || !this.count) return;
     scroller.scrollToIndex(this.latestIndex, undefined, animate, 0);
     this.atBottom.value = true;
+    this.latestInView.value = true;
   }
 
   /** a streaming reply grows: keep the last line in view while the reader is at the bottom */

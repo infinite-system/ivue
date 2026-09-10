@@ -161,24 +161,6 @@
 }
 
 /* ---- top strip ---- */
-.ai-chat .ac-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 18px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--ac-line);
-  background: var(--ac-panel);
-}
-.ai-chat .ac-top-title {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 200px;
-}
-.ai-chat .ac-top-title .ac-muted {
-  font-size: 12px;
-}
 .ai-chat .ac-receipts {
   display: flex;
   flex-wrap: wrap;
@@ -205,11 +187,6 @@
 .ai-chat .ac-receipts dd .ac-muted {
   font-size: 11px;
   font-weight: 400;
-}
-.ai-chat .ac-top-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 .ai-chat .ac-fetching,
 .ai-chat .ac-last {
@@ -1167,4 +1144,450 @@
   .ai-chat .ac-receipts {
     display: none;
   }
+}
+
+/* ---- the second pass: room, quieter cards, a clearer head ---- */
+/* the top bar: the receipts get air, the actions take a line of their own */
+.ai-chat .ac-receipts {
+  gap: 8px 26px;
+}
+.ai-chat .ac-receipts dt {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+.ai-chat .ac-receipts dd {
+  font-size: 14px;
+  line-height: 1.3;
+}
+/* rows: more air left and right, and extra on the right for the scrollbar that rides the content */
+.ai-chat .ac-msg {
+  padding: 14px 34px 14px 22px;
+  gap: 14px;
+}
+.ai-chat .ac-msg-system {
+  padding: 6px 34px 6px 22px;
+}
+.ai-chat .ac-msg-head {
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.ai-chat .ac-msg-date {
+  color: var(--ac-muted);
+}
+.ai-chat .ac-msg-ago {
+  color: var(--ac-muted);
+  opacity: 0.8;
+}
+.ai-chat .ac-msg-ago::before {
+  content: '·';
+  margin-right: 10px;
+}
+/* tool cards: no box — an arrow leads, the body hangs off a thin rule */
+.ai-chat .ac-tool {
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  overflow: visible;
+}
+.ai-chat .ac-tool-running,
+.ai-chat .ac-tool-failed {
+  border: 0;
+}
+.ai-chat .ac-tool-head {
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 8px;
+}
+.ai-chat .ac-tool-head:hover {
+  background: var(--ac-panel-2);
+}
+.ai-chat .ac-tool-toggle {
+  width: 12px;
+  color: var(--ac-muted);
+  font-size: 11px;
+  text-align: center;
+}
+.ai-chat .ac-tool-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  font-size: 13px;
+  background: var(--ac-panel-2);
+}
+.ai-chat .ac-tool-running .ac-tool-icon {
+  background: var(--ac-accent-soft);
+  color: var(--ac-accent);
+}
+.ai-chat .ac-tool-failed .ac-tool-icon {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--ac-err);
+}
+.ai-chat .ac-tool-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ac-text);
+}
+.ai-chat .ac-tool-title + .ac-tool-summary::before,
+.ai-chat .ac-tool-title + .ac-tool-path::before {
+  content: '—';
+  margin-right: 8px;
+  color: var(--ac-muted);
+}
+.ai-chat .ac-tool-path {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  color: var(--ac-dim);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+.ai-chat .ac-tool-dir {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ac-muted);
+}
+.ai-chat .ac-tool-file {
+  flex: 0 0 auto;
+  color: var(--ac-text);
+  font-weight: 600;
+}
+.ai-chat .ac-tool-body {
+  margin: 2px 0 4px 15px;
+  padding: 2px 0 6px 14px;
+  border-top: 0;
+  border-left: 2px solid var(--ac-line);
+}
+.ai-chat .ac-tool-running .ac-tool-body {
+  border-left-color: var(--ac-accent-soft);
+}
+.ai-chat .ac-tool-failed .ac-tool-body {
+  border-left-color: rgba(220, 38, 38, 0.35);
+}
+/* batches: no box either; the arrow leads here too; the hover keeps the corners */
+.ai-chat .ac-batch {
+  border: 0;
+  background: none;
+}
+.ai-chat .ac-batch-open {
+  border: 0;
+}
+.ai-chat .ac-batch-body {
+  margin-left: 15px;
+  padding-left: 10px;
+  border-left: 2px solid var(--ac-line);
+}
+.ai-chat .ac-batch-head {
+  border-radius: 9px;
+}
+.ai-chat .ac-batch-toggle {
+  width: 12px;
+  margin: 0;
+  font-size: 11px;
+  text-align: center;
+}
+.ai-chat .ac-batch-icon {
+  position: relative;
+}
+.ai-chat .ac-batch-sup {
+  margin-left: 1px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--ac-accent);
+  vertical-align: super;
+  line-height: 0;
+}
+/* tables in a message */
+.ai-chat .ac-text table {
+  margin: 8px 0;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.ai-chat .ac-text th,
+.ai-chat .ac-text td {
+  padding: 4px 10px;
+  border: 1px solid var(--ac-line);
+  text-align: left;
+  vertical-align: top;
+}
+.ai-chat .ac-text th {
+  background: var(--ac-panel-2);
+  font-weight: 600;
+}
+/* skeletons: bars in place of a preview, still at the estimated size */
+.ai-chat .ac-stub {
+  align-items: flex-start;
+  gap: 8px;
+  background: none;
+  animation: none;
+}
+.ai-chat .ac-skel {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--ac-panel-2) 0%, var(--ac-line) 45%, var(--ac-panel-2) 90%);
+  background-size: 200% 100%;
+  animation: ac-shimmer 1.6s linear infinite;
+}
+.ai-chat .ac-stub-status {
+  align-self: flex-end;
+  color: var(--ac-muted);
+}
+/* one triangle for every toggle, turned by the open state */
+.ai-chat .ac-tool-toggle,
+.ai-chat .ac-batch-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ac-muted);
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+.ai-chat .ac-tool-head:hover .ac-tool-toggle,
+.ai-chat .ac-batch-head:hover .ac-batch-toggle {
+  color: var(--ac-accent);
+}
+.ai-chat .ac-tool-open > .ac-tool-head .ac-tool-toggle,
+.ai-chat .ac-batch-open > .ac-batch-head .ac-batch-toggle {
+  transform: rotate(90deg);
+}
+
+/* ---- the stats strip: the receipts live under the chat, not over it ---- */
+.ai-chat .ac-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 22px;
+  padding: 9px 24px 10px;
+  border-top: 1px solid var(--ac-line);
+  background: var(--ac-panel);
+  font-size: 12px;
+}
+.ai-chat .ac-stats-title {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 170px;
+}
+.ai-chat .ac-stats-title strong {
+  font-size: 12.5px;
+}
+.ai-chat .ac-stats-title .ac-muted {
+  font-size: 11px;
+}
+.ai-chat .ac-stats .ac-receipts {
+  flex: 1;
+  gap: 4px 20px;
+}
+.ai-chat .ac-stats .ac-receipts dt {
+  font-size: 9.5px;
+}
+.ai-chat .ac-stats .ac-receipts dd {
+  font-size: 13px;
+  line-height: 1.25;
+}
+.ai-chat .ac-stats-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-chat .ac-stats .ac-btn {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* ---- the composer: a floating card that lights up when it has you ---- */
+.ai-chat .ac-composer {
+  padding: 8px 22px 12px;
+  border-top: 0;
+  background: linear-gradient(180deg, transparent, var(--ac-bg) 45%);
+}
+.ai-chat .ac-composer-card {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  background:
+    linear-gradient(var(--ac-panel), var(--ac-panel)) padding-box,
+    linear-gradient(135deg, var(--ac-line), var(--ac-line)) border-box;
+  box-shadow: var(--ac-shadow);
+  transition: box-shadow 0.25s ease, background 0.25s ease, transform 0.2s ease;
+}
+.ai-chat .ac-composer-card:focus-within {
+  background:
+    linear-gradient(var(--ac-panel), var(--ac-panel)) padding-box,
+    linear-gradient(135deg, #6366f1, #22d3ee 55%, #34d399) border-box;
+  box-shadow: 0 0 0 4px var(--ac-accent-soft), 0 18px 40px -20px rgba(99, 102, 241, 0.55);
+}
+.ai-chat .ac-composer.ac-streaming .ac-composer-card {
+  background:
+    linear-gradient(var(--ac-panel), var(--ac-panel)) padding-box,
+    linear-gradient(135deg, #6366f1, #22d3ee, #34d399, #6366f1) border-box;
+  background-size: 100% 100%, 300% 300%;
+  animation: ac-border-flow 3s linear infinite;
+}
+@keyframes ac-border-flow {
+  0% { background-position: 0 0, 0% 50%; }
+  100% { background-position: 0 0, 300% 50%; }
+}
+.ai-chat .ac-composer.ac-drag-over .ac-composer-card {
+  background:
+    linear-gradient(var(--ac-accent-soft), var(--ac-accent-soft)) padding-box,
+    linear-gradient(135deg, #6366f1, #22d3ee) border-box;
+  box-shadow: 0 0 0 4px var(--ac-accent-soft);
+}
+.ai-chat .ac-composer.ac-drag-over {
+  outline: none;
+}
+.ai-chat .ac-composer .ac-attachments {
+  padding: 12px 14px 0;
+  margin: 0;
+}
+.ai-chat .ac-input {
+  min-height: 46px;
+  max-height: 40vh;
+  padding: 14px 16px 6px;
+  border: 0;
+  border-radius: 18px 18px 0 0;
+  background: transparent;
+  resize: none;
+  font-size: 14.5px;
+  line-height: 1.5;
+  field-sizing: content;
+}
+.ai-chat .ac-input:focus {
+  outline: none;
+  box-shadow: none;
+  border-color: transparent;
+}
+.ai-chat .ac-composer-bar {
+  margin: 0;
+  padding: 4px 8px 8px 10px;
+  gap: 8px;
+}
+.ai-chat .ac-attach {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--ac-line);
+  border-radius: 50%;
+  color: var(--ac-dim);
+  font-size: 18px;
+  line-height: 1;
+  transition: border-color 0.15s, color 0.15s, transform 0.15s;
+}
+.ai-chat .ac-attach:hover {
+  border-color: var(--ac-accent);
+  color: var(--ac-accent);
+  transform: rotate(90deg);
+}
+.ai-chat .ac-model {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--ac-line);
+  border-radius: 999px;
+  background: var(--ac-bg);
+  color: var(--ac-text);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.ai-chat .ac-model:hover {
+  border-color: var(--ac-accent);
+}
+.ai-chat .ac-model-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #34d399);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+}
+.ai-chat .ac-model-select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+}
+.ai-chat .ac-model-caret {
+  color: var(--ac-muted);
+  font-size: 10px;
+}
+.ai-chat .ac-model-hint {
+  font-size: 11.5px;
+}
+.ai-chat .ac-streaming-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ac-accent);
+}
+.ai-chat .ac-send,
+.ai-chat .ac-stop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.ai-chat .ac-send {
+  background: linear-gradient(135deg, #6366f1, #4f46e5 55%, #22d3ee);
+  box-shadow: 0 8px 20px -10px rgba(99, 102, 241, 0.9);
+}
+.ai-chat .ac-send:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 12px 24px -10px rgba(99, 102, 241, 1);
+}
+.ai-chat .ac-send:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.ai-chat .ac-send:disabled {
+  opacity: 0.35;
+  cursor: default;
+  box-shadow: none;
+}
+.ai-chat .ac-stop {
+  background: var(--ac-text);
+  font-size: 12px;
+}
+.ai-chat .ac-stop:hover {
+  transform: scale(1.04);
+}
+.ai-chat .ac-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

@@ -4,6 +4,7 @@ Goal: Prove the markdown subset renders only its own constructs as tags, keeps a
 [The projection is the rendered text](./ai-chat.invariants.md#the-projection-is-the-rendered-text)
 // domain-invariant: $Markdown — If a message carries markup, then it renders as escaped text, never as tags
 // domain-invariant: $Markdown — If a fenced block names a language, then the rendered block carries it for the highlighter
+// domain-invariant: $Markdown — If a block is pipe rows under a header and a rule row, then it renders as a table with inline cells, and a lone pipe line stays a paragraph
 Impossible if true: a message injects a tag into the page
 
 === GENERATOR-DESCRIBED ===
@@ -43,6 +44,14 @@ describe('Markdown', () => {
   });
 
   // invariant: The projection is the rendered text (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
+  // domain-invariant: $Markdown — If a block is pipe rows under a header and a rule row, then it renders as a table with inline cells, and a lone pipe line stays a paragraph
+  it('a pipe table renders as a table: header, rule, rows, cells inline; a lone pipe line is a paragraph', () => {
+    const html = Markdown.Class.render('| tool | calls |\n|---|---:|\n| `Bash` | **4** |\n| Read \\| Write | 2 |\n\njust | a line');
+    expect(html).toContain('<table><thead><tr><th>tool</th><th>calls</th></tr></thead><tbody><tr><td><code>Bash</code></td><td><strong>4</strong></td></tr><tr><td>Read | Write</td><td>2</td></tr></tbody></table>');
+    expect(html).toContain('<p>just | a line</p>');
+    expect(Markdown.Class.render('| only | a header |')).toBe('<p>| only | a header |</p>');
+  });
+
   it('the plain projection is the rendered text with block boundaries kept', () => {
     const plain = Markdown.Class.plain('# Title\n\n**bold** and `code` [link](https://ivue.dev)\n\n```ts\nconst a = 1;\n```\n\n> quoted\n\n---');
     expect(plain).toBe('Title\n\nbold and code link\n\nconst a = 1;\n\nquoted');

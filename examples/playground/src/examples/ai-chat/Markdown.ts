@@ -42,6 +42,29 @@ class $Markdown {
       .replace(/(^|[^"'>=])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noreferrer">$2</a>');
   }
 
+  /** a pipe table: the first row heads it, every other row is a body row; cells render inline */
+  static table(rows: string[]): string {
+    const cells = (row: string) =>
+      row
+        .trim()
+        .replace(/^\|/, '')
+        .replace(/\|$/, '')
+        .split(/(?<!\\)\|/)
+        .map((cell) => this.inline(cell.replace(/\\\|/g, '|').trim()));
+    const [head, ...body] = rows.map(cells);
+    const thead = `<thead><tr>${head.map((cell) => `<th>${cell}</th>`).join('')}</tr></thead>`;
+    const tbody = body.length ? `<tbody>${body.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>` : '';
+    return `<table>${thead}${tbody}</table>`;
+  }
+
+  static isTableRow(line: string): boolean {
+    return /^\s*\|.*\|\s*$/.test(line);
+  }
+
+  static isTableRule(line: string): boolean {
+    return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(line) && line.includes('-');
+  }
+
   /** a fenced block: escaped code with its language on the element for the highlighter */
   static fence(code: string, language: string): string {
     const lang = language.replace(/[^a-z0-9+#-]/gi, '').toLowerCase();
@@ -65,7 +88,19 @@ class $Markdown {
       }
       list = null;
     };
-    for (const line of lines) {
+    for (let at = 0; at < lines.length; at++) {
+      const line = lines[at];
+      // a table: a header row, an alignment row, then rows — every line starts with a pipe
+      if (!fence && this.isTableRow(line) && this.isTableRule(lines[at + 1] ?? '')) {
+        flushParagraph();
+        flushList();
+        const rows: string[] = [line];
+        at += 2;
+        while (at < lines.length && this.isTableRow(lines[at])) rows.push(lines[at++]);
+        at--;
+        html.push(this.table(rows));
+        continue;
+      }
       if (fence) {
         if (/^```/.test(line)) {
           html.push(this.fence(fence.lines.join('\n'), fence.language));

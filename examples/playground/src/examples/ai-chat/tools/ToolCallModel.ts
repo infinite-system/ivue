@@ -29,11 +29,12 @@ class $ToolCallModel {
   }
 
   static readonly ICONS: Record<string, string> = {
-    Bash: '$',
-    Edit: '±',
-    Write: '✎',
-    Read: '☰',
-    Agent: '⑂',
+    Bash: '❯',
+    Edit: '✎',
+    NotebookEdit: '✎',
+    Write: '✚',
+    Read: '≡',
+    Agent: '⇶',
     Skill: '◈',
     WebFetch: '⇣',
     WebSearch: '⌕',
@@ -42,7 +43,6 @@ class $ToolCallModel {
     Glob: '✱',
     ToolSearch: '⌕',
     AskUserQuestion: '?',
-    NotebookEdit: '✎',
   };
   /** result text past this many characters folds behind "show everything" */
   static readonly CAP = 4_000;
@@ -79,6 +79,43 @@ class $ToolCallModel {
 
   get summary(): string {
     return SessionLog.Class.callSummary(this.call);
+  }
+
+  /** the action's own title — a shell call's description, an agent's brief — shown before the argument */
+  get title(): string {
+    const description = this.input.description;
+    return typeof description === 'string' ? description.split('\n')[0].trim() : '';
+  }
+
+  get hasTitle(): boolean {
+    return this.title !== '';
+  }
+
+  /** the path a file tool names, empty for every other tool */
+  get filePath(): string {
+    const path = this.input.file_path ?? this.input.notebook_path ?? this.input.path;
+    return typeof path === 'string' ? path.trim() : '';
+  }
+
+  get isFileTool(): boolean {
+    return this.filePath !== '';
+  }
+
+  /** the file's own name — always shown whole; the directory is what truncates */
+  get fileName(): string {
+    return this.filePath.split('/').pop() ?? '';
+  }
+
+  get fileDir(): string {
+    const segments = this.filePath.split('/');
+    segments.pop();
+    return segments.length ? `${segments.join('/')}/` : '';
+  }
+
+  /** the directory shortened to its last two segments — `…/examples/ai-chat/` — so the file name stays whole */
+  get fileDirShort(): string {
+    const segments = this.fileDir.split('/').filter(Boolean);
+    return segments.length > 2 ? `…/${segments.slice(-2).join('/')}/` : this.fileDir;
   }
 
   /** the collapsed line's text — exactly what the projection says for this part */
@@ -123,8 +160,9 @@ class $ToolCallModel {
     return this.isExpanded ? 'collapse' : 'expand';
   }
 
+  /** one triangle; the card's open class turns it */
   get toggleGlyph(): string {
-    return this.isExpanded ? '▾' : '▸';
+    return '▸';
   }
 
   get stateClass(): string {

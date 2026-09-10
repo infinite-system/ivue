@@ -6,6 +6,7 @@ Goal: Prove the thread loads as stubs from one small index and fills a page only
 // domain-invariant: $Chat — If a window reaches a page, then that page is fetched once and its messages replace their stubs by index
 // domain-invariant: $Chat — If the reader is not at the bottom, then a streaming reply never moves the viewport
 // domain-invariant: $Chat — If a reply finishes, then its runs of calls contract to batches like any loaded turn
+// domain-invariant: $Chat — If the thumb is being dragged, then a window it reaches fetches nothing and its rows stay skeletons; the drop fetches the window it landed on
 Impossible if true: a page is requested that no window needs
 Impossible if true: the scroller learns that a row is unloaded
 
@@ -115,6 +116,40 @@ describe('Chat', () => {
     chat.onWindow({ start: 4, end: 6 });
     await settle(4);
     expect(served).toHaveLength(4);
+    unmount();
+  });
+
+  // domain-invariant: $Chat — If the thumb is being dragged, then a window it reaches fetches nothing and its rows stay skeletons; the drop fetches the window it landed on
+  // invariant: Loading lives above the scroller (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
+  it('a window reached while the thumb is held fetches nothing; the drop fetches where it landed', async () => {
+    const { instance: chat, unmount } = hosted(() => new Chat.Class());
+    const scroller = fakeScroller() as ReturnType<typeof fakeScroller> & { scrollbarDragging: boolean };
+    scroller.scrollbarDragging = true;
+    chat.scroller.value = scroller as never;
+    await settle(10);
+    expect(served).toEqual(['meta.json', 'index.json']);
+    chat.onWindow({ start: 0, end: 2 });
+    await settle(6);
+    expect(served).toHaveLength(2); // the window is held, nothing asked for
+    expect(chat.heldWindow.value).toEqual({ start: 0, end: 2 });
+    expect(chat.rows.value[1].message).toBeNull();
+    chat.onWindow({ start: 4, end: 6 }); // the thumb moved on: only the last window matters
+    scroller.scrollbarDragging = false;
+    chat.onThumbDrag(false);
+    await settle(10);
+    expect(served.slice(2).sort()).toEqual(['page-000.json', 'page-001.json']);
+    expect(chat.heldWindow.value).toBeNull();
+    expect(chat.rows.value[5].message).not.toBeNull();
+    unmount();
+  });
+
+  it('the rest of the index test: projections and labels', async () => {
+    const { instance: chat, unmount } = hosted(() => new Chat.Class());
+    const scroller = fakeScroller();
+    chat.scroller.value = scroller as never;
+    await settle(10);
+    chat.onWindow({ start: 4, end: 6 });
+    await settle(10);
     expect(chat.rowText(chat.rows.value[3])).toBe('answer with calls\n2 tool calls: Bash, Read');
     expect(chat.rowText({ ...chat.rows.value[0], message: null })).toBe('');
     expect(chat.pagesLabel).toBe('2 / 2');

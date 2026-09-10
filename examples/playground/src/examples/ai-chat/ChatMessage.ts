@@ -58,6 +58,19 @@ class $ChatMessage {
     tool_batch: 'ToolBatch',
   };
 
+  /** the distance from `at` to `now` in the coarsest unit that is at least one */
+  static relative(at: number, now: number): string {
+    const dayMs = 86_400_000;
+    const days = Math.floor((now - at) / dayMs);
+    if (days <= 0) return 'today';
+    if (days === 1) return 'yesterday';
+    if (days < 7) return `${days} days ago`;
+    if (days < 30) return `${Math.floor(days / 7)} week${days < 14 ? '' : 's'} ago`;
+    if (days < 365) return `${Math.floor(days / 30)} month${days < 60 ? '' : 's'} ago`;
+    const years = Math.floor(days / 365);
+    return `${years} year${years === 1 ? '' : 's'} ago`;
+  }
+
   static readonly ROLE_LABELS: Record<SessionLog.Role, string> = { user: 'You', assistant: 'Agent', system: 'System' };
 
   constructor(public props: ChatMessage.Props) {}
@@ -131,9 +144,23 @@ class $ChatMessage {
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   }
 
+  /** `Fri, Jul 30` — the year only when it is not this one */
   get dateLabel(): string {
     const at = this.message?.timestamp ?? 0;
-    return at ? new Date(at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    if (!at) return '';
+    const date = new Date(at);
+    const sameYear = date.getFullYear() === new Date().getFullYear();
+    return date.toLocaleDateString('en-US', sameYear ? { weekday: 'short', month: 'short', day: 'numeric' } : { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  /** `3 days ago`, `today`, `2 months ago` — how far back the message sits */
+  get relativeLabel(): string {
+    const at = this.message?.timestamp ?? 0;
+    return at ? this.self.relative(at, Date.now()) : '';
+  }
+
+  get hasDate(): boolean {
+    return this.dateLabel !== '';
   }
 
   get modelLabel(): string {
@@ -179,6 +206,14 @@ class $ChatMessage {
 
   get stubLabel(): string {
     return this.row.preview || `${this.roleLabel} message`;
+  }
+
+  /** the skeleton's bars: two or three, their widths from the preview's length so rows differ */
+  get skeletonLines(): string[] {
+    const length = this.row.preview.length;
+    const first = 55 + (length % 30);
+    const second = 30 + ((length * 7) % 40);
+    return length > 60 ? [`${first}%`, `${second}%`, `${20 + (length % 25)}%`] : [`${first}%`, `${second}%`];
   }
 
   get isPageLoading(): boolean {
