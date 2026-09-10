@@ -3,16 +3,16 @@ import type { Kit } from '../../kit/Kit';
 import { Chat } from './Chat';
 import './ai-chat.css';
 
+// inline on purpose: the SFC compiler resolves this literal, and would not resolve Chat.Props through Chat.ts's imports
 const props = defineProps<{ dark?: boolean; kit?: Kit.Entry }>();
 
 // the root constructs the class it was handed, or its own
-const chat = new ((props.kit?.namespace.Class as typeof Chat.Class | undefined) ?? Chat.Class)();
+const chat = new ((props.kit?.namespace.Class as typeof Chat.Class | undefined) ?? Chat.Class)(props);
 
 // the state destructure — every Ref the template touches, grouped
 const {
   // state refs
   rows,
-  indexOpen,
   error,
   // element refs
   scroller,
@@ -20,7 +20,7 @@ const {
 </script>
 
 <template>
-  <div class="ai-chat" :class="{ 'ac-dark': dark, 'ac-index-open': indexOpen }">
+  <div class="ai-chat" :class="{ 'ac-dark': dark, 'ac-side-is-open': chat.indexOpen }" :data-theme="chat.theme" :data-density="chat.density" :data-tree="chat.tree">
 
     <p v-if="error" class="ac-error">{{ error }}</p>
 
@@ -31,10 +31,10 @@ const {
             <component :is="chat.kit.Message.vue" :kit="chat.kit.Message" :row="item" :chat="chat" />
           </template>
         </component>
-        <button v-if="chat.showsJumpToLatest" type="button" class="ac-jump" @click="chat.jumpToLatest()">↓ latest</button>
+        <button v-if="chat.showsJumpToLatest" type="button" class="ac-jump" @click="chat.jumpToLatest()"><span aria-hidden="true">↓</span> Jump to bottom</button>
         <div v-if="chat.isLoadingThread" class="ac-loading-thread"><span class="ac-spinner" aria-hidden="true"></span> loading the index…</div>
       </section>
-      <component :is="chat.kit.Index.vue" v-if="indexOpen" :kit="chat.kit.Index" :chat="chat" />
+      <component :is="chat.kit.Sidebar.vue" :kit="chat.kit.Sidebar" :chat="chat" />
     </div>
 
     <component :is="chat.kit.Composer.vue" :kit="chat.kit.Composer" :chat="chat" />
@@ -60,7 +60,6 @@ const {
           {{ chat.fileLoadLabel }}
           <input type="file" accept=".jsonl,application/jsonl,text/plain" hidden @change="chat.open(($event.target as HTMLInputElement).files![0])" />
         </label>
-        <button type="button" class="ac-btn" :class="{ 'ac-on': indexOpen }" @click="chat.toggleIndex()">{{ chat.indexToggleLabel }}</button>
       </div>
     </footer>
   </div>

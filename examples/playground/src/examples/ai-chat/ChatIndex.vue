@@ -8,22 +8,21 @@ const {
   // state refs
   query,
   exportForm,
-  resizing,
   // computed refs
   rows,
   // element refs
   scroller,
+  searchElement,
 } = model;
 </script>
 
 <template>
-  <aside class="ac-index" :class="{ 'ac-resizing': resizing }" :style="{ width: model.widthPx }" tabindex="0" @keydown="model.onKeydown($event)">
-    <div class="ac-index-grip" title="Drag to resize" @pointerdown="model.onResizeStart($event)"></div>
+  <section class="ac-index" tabindex="0" @keydown="model.onKeydown($event)">
     <header class="ac-index-head">
       <div class="ac-index-title">
         <strong>Index</strong>
         <span class="ac-muted">{{ model.countLabel }}</span>
-        <button type="button" class="ac-link ac-index-close" @click="chat.closeIndex()">close</button>
+        <button type="button" class="ac-link ac-index-close" @click="chat.closeSidebar()">close</button>
       </div>
       <div class="ac-index-filters">
         <div class="ac-seg" role="group" aria-label="Role">
@@ -37,7 +36,7 @@ const {
         </div>
       </div>
       <div class="ac-index-search">
-        <input v-model="query" type="search" class="ac-search" placeholder="Search messages…" aria-label="Search messages" />
+        <input ref="searchElement" v-model="query" type="search" class="ac-search" placeholder="Search messages…" aria-label="Search messages" />
         <button v-if="query" type="button" class="ac-link" @click="model.clearQuery()">clear</button>
       </div>
       <div class="ac-index-select">
@@ -73,5 +72,5 @@ const {
       <button type="button" class="ac-btn" :disabled="!model.hasSelection" @click="model.copyMarkdown()">{{ model.copyLabel }}</button>
       <p class="ac-index-hint">click selects · shift-click a range · ctrl-click toggles · ↑↓ move · space picks · enter shows</p>
     </footer>
-  </aside>
+  </section>
 </template>

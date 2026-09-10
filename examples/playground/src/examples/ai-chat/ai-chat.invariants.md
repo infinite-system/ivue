@@ -92,6 +92,16 @@ moving the anchor. Changing a filter never loses a pick. Export leaves in
 thread order, whatever order the picks were made in, after loading the
 pages the selection needs.
 
+## Configuration is a layer
+
+`Chat` reads nothing but its own props: its theme, density and tree are
+getters returning the shipped defaults. `ConfiguredChat` is the layer that
+opens them — one getter each, reading the kit entry's props, then the
+page's settings, then `super` — and the root binds whatever the layer
+says. Precedence is inheritance order; a tree the reader picks is a
+`Kit.Class.derive` over the configured chat, and the shipped classes never
+learn that a settings panel exists.
+
 ## Nothing leaves the tab
 
 A typed message, an attachment, an opened session file: none of it is

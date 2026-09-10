@@ -159,24 +159,13 @@ describe('Index', () => {
     index.onKeydown(key('ArrowUp'));
     index.onKeydown(key('Enter'));
     expect(jump).toHaveBeenCalledWith(1);
-    chat.indexOpen.value = true;
+    chat.openSidebar('Index');
     index.onKeydown(key('Escape'));
-    expect(chat.indexOpen.value).toBe(false);
+    expect(chat.indexOpen).toBe(false);
     expect(index.isFocusedRow(index.rows.value[1])).toBe(true);
     index.onRowDoubleClick(index.rows.value[4]);
     expect(jump).toHaveBeenLastCalledWith(4);
     expect(index.isCurrent(index.rows.value[4])).toBe(true);
-    unmount();
-  });
-
-  it('resizes within bounds', () => {
-    const { index, unmount } = make();
-    index.resizeTo(100);
-    expect(index.width.value).toBe(Index.Class.MIN_WIDTH);
-    index.resizeTo(5000);
-    expect(index.width.value).toBe(Index.Class.MAX_WIDTH);
-    index.resizeTo(400.4);
-    expect(index.widthPx).toBe('400px');
     unmount();
   });
 
