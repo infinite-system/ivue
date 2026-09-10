@@ -18,10 +18,10 @@ class $Card {
   /** cached once per receiver class by Static(): `Card.$kit` and `FancyCard.$kit` are different objects */
   static get $kit() {
     return {
-      Head: { view: CardHeadView },
-      Body: { view: CardBodyView },
-      Frame: { view: FrameView },
-      Code: { namespace: Code, view: CodeView },
+      Head: { vue: CardHeadView },
+      Body: { vue: CardBodyView },
+      Frame: { vue: FrameView },
+      Code: { namespace: Code, vue: CodeView },
     } satisfies Kit.Of<Card.Role>;
   }
 

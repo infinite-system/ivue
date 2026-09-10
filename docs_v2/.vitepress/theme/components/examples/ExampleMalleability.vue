@@ -33,7 +33,7 @@ const {
       <div class="mal-live">
         <div class="mal-caption">Panel.vue, rendered with this entry</div>
         <!-- the seam: the entry's view, the entry as `kit`, the child's own props -->
-        <component :is="demo.entry.view" :key="selectedId" :kit="demo.entry" :titles="demo.titles" />
+        <component :is="demo.entry.vue" :key="selectedId" :kit="demo.entry" :titles="demo.titles" />
       </div>
       <div class="mal-side">
         <div class="mal-caption">The override, as data</div>
@@ -42,7 +42,7 @@ const {
         <ul class="mal-tree">
           <li v-for="line in demo.inspector" :key="line.key" :style="{ '--depth': line.depth }" :class="{ 'mal-derived': line.derived }">
             <span class="mal-role">{{ line.role }}</span>
-            <span class="mal-view">{{ line.view }}</span>
+            <span class="mal-view">{{ line.vue }}</span>
             <span v-if="line.className" class="mal-class">{{ line.className }}</span>
             <span v-if="line.derived" class="mal-badge">derived</span>
             <span v-if="line.props" class="mal-props">{{ line.props }}</span>

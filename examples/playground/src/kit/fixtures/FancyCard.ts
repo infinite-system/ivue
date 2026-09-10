@@ -10,9 +10,9 @@ class $FancyCard extends Card.$Class {
   static override get $kit() {
     return {
       ...super.$kit,
-      Head: { view: FancyHeadView },
-      Body: { view: GroupedBodyView },
-      Frame: { view: FancyFrameView },
+      Head: { vue: FancyHeadView },
+      Body: { vue: GroupedBodyView },
+      Frame: { vue: FancyFrameView },
     };
   }
 }

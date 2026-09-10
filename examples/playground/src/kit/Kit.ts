@@ -7,7 +7,7 @@ import { Static } from '../Static';
 // A model declares `static get $kit()` returning a record of entries. An
 // entry names a role's view and, when the role has a class of its own, the
 // namespace that view constructs. A parent's template renders every seam
-// as `<component :is="model.kit.Role.view" :kit="model.kit.Role" …props />`;
+// as `<component :is="model.kit.Role.vue" :kit="model.kit.Role" …props />`;
 // the child's view constructs `new (props.kit?.namespace.Class ?? X.Class)(props)`.
 // A model reads its kit from its own class and nowhere else, so a swapped
 // class brings its own kit and no parent ever constructs a child.
@@ -70,7 +70,7 @@ class $Kit {
     if (!entry.namespace || !entry.subkit) return entry;
     const { subkit, ...rest } = entry;
     const namespace = this.derive(entry.namespace, subkit);
-    return { ...rest, namespace, view: this.view(entry.view, namespace) };
+    return { ...rest, namespace, vue: this.view(entry.vue, namespace) };
   }
 
   protected static merge(base: Record<string, unknown>, patch: Kit.Patch): Record<string, unknown> {
@@ -90,12 +90,12 @@ class $Kit {
    *  own view is left alone — that view declares what it declares. */
   protected static mergeEntry(current: Kit.Entry | undefined, patch: Partial<Kit.Entry>): Kit.Entry {
     const merged = { ...current, ...patch } as Kit.Entry;
-    if (patch.namespace && !patch.view && current?.view) merged.view = this.view(current.view, patch.namespace);
+    if (patch.namespace && !patch.vue && current?.vue) merged.vue = this.view(current.vue, patch.namespace);
     return merged;
   }
 
   protected static isEntry(value: unknown): value is Kit.Entry {
-    return typeof value === 'object' && value !== null && ('view' in value || 'namespace' in value || 'subkit' in value);
+    return typeof value === 'object' && value !== null && ('vue' in value || 'namespace' in value || 'subkit' in value);
   }
 
   /** Freeze the kit's SHAPE — role maps and entries — and stop at an entry's leaves: a namespace
@@ -105,7 +105,7 @@ class $Kit {
     const entry = this.isEntry(value);
     for (const [key, inner] of Object.entries(value)) {
       if (typeof inner !== 'object' || inner === null || Object.isFrozen(inner)) continue;
-      if (entry && (key === 'namespace' || key === 'view' || key === 'props')) continue;
+      if (entry && (key === 'namespace' || key === 'vue' || key === 'props')) continue;
       this.deepFreeze(inner);
     }
     return Object.freeze(value);
@@ -132,7 +132,7 @@ export namespace Kit {
   }
 
   export interface Entry<Space extends Namespace = Namespace> {
-    view: Component;
+    vue: Component;
     /** the role's namespace — `$Class`, `Class`, and whatever else it exports; absent for a markup leaf */
     namespace?: Space;
     /** the consumer's values for this role, read by the class's own getters as `this.props.kit.props.x` */

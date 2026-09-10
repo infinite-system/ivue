@@ -11,7 +11,7 @@ defineExpose(model as Panel.Instance);
 <template>
   <div class="panel">
     <component
-      :is="model.kit.Card.view"
+      :is="model.kit.Card.vue"
       v-for="title in model.titles"
       :key="title"
       :kit="model.kit.Card"
