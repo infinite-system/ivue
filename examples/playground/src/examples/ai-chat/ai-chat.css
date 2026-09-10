@@ -1435,6 +1435,10 @@
   width: 16px;
   height: 16px;
 }
+/* the count sits close to its chevron */
+.ai-chat .ac-batch-toggle {
+  margin-right: -4px;
+}
 .ai-chat .ac-tool-head:hover .ac-tool-toggle,
 .ai-chat .ac-batch-head:hover .ac-batch-toggle {
   color: var(--ac-accent);
@@ -2631,4 +2635,38 @@
 }
 .ai-chat[data-theme='terminal'] .ac-rail-label {
   font-size: 9.5px;
+}
+
+/* ---- native scrollbars: the ones the browser draws — a wide table, a diff, a code block, the
+   composer — take the theme's line and accent, so every theme keeps its own scrollbars.
+   Chromium and Firefox read the standard pair; Safari reads the -webkit- parts. */
+.ai-chat,
+.ai-chat * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ac-line) transparent;
+}
+.ai-chat ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+.ai-chat ::-webkit-scrollbar-track,
+.ai-chat ::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.ai-chat ::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--ac-line);
+  background-clip: padding-box;
+}
+.ai-chat ::-webkit-scrollbar-thumb:hover {
+  background: var(--ac-accent);
+  background-clip: padding-box;
+}
+.ai-chat[data-theme='terminal'] ::-webkit-scrollbar-thumb {
+  border-radius: 0;
+}
+.ai-chat[data-theme='terminal'] *,
+.ai-chat[data-theme='terminal'] {
+  scrollbar-color: var(--ac-line) transparent;
 }
