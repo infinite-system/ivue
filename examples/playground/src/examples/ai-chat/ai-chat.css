@@ -1029,10 +1029,9 @@
   color: var(--ac-text);
 }
 .ai-chat .ac-seg button.ac-on {
-  background: var(--ac-bg);
-  color: var(--ac-accent);
-  font-weight: 600;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 0 0 1px var(--ac-line-soft);
+  background: var(--ac-accent);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
 }
 .ai-chat .ac-seg button:focus-visible {
   outline: 2px solid var(--ac-accent);
