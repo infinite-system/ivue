@@ -300,13 +300,4 @@ the tab set under each override above.
   ]"
 />
 
-## Where it stands
-
-The kit is measured, not promised: twenty specs mount the fixture tree
-under a dev-mode Vue 3.5 and assert every claim on this page, including
-the ones about Vue. What is not yet exercised is Vapor, and the first
-production tree to be converted is the
-[AI chat example](/examples/ai-chat), whose plan lives in the repository
-as `tasks/ai-chat-kit.md`.
-
 > **Hold the seam and everything above it becomes replaceable.**

@@ -16,7 +16,7 @@ class $Gallery {
     } satisfies Kit.Of<'Snippet'>;
   }
 
-  /** the snippets a gallery shows when its parent passes none: a counter, its view, its style */
+  /** the snippets a gallery shows when its parent passes none: a counter and its view */
   static get SAMPLES(): Snippet.Source[] {
     return [
       {
@@ -36,24 +36,6 @@ class $Gallery {
           '    {{ count }} × 2 = {{ counter.doubled }}',
           '  </button>',
           '</template>',
-        ].join('\n'),
-      },
-      {
-        name: 'counter.css',
-        lang: 'css',
-        code: [
-          '.counter {',
-          '  display: inline-flex;',
-          '  gap: 8px;',
-          '  padding: 6px 12px;',
-          '  border-radius: 999px;',
-          '  background: var(--brand-soft);',
-          '}',
-          '',
-          '.counter:hover {',
-          '  background: var(--brand);',
-          '  color: white;',
-          '}',
         ].join('\n'),
       },
       {
