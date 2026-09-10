@@ -426,6 +426,7 @@ class $Chat {
       page: Math.floor(at / pageSize),
       role: this.self.STUB_ROLE[entry.r] ?? 'system',
       preview: entry.t,
+      calls: entry.c,
       at: entry.at,
       message: null,
     }));
@@ -642,6 +643,7 @@ class $Chat {
       page: -1,
       role: message.role,
       preview: this.self.messageText(message).replace(/\s+/g, ' ').slice(0, 96),
+      calls: this.self.callCount(message),
       at: message.timestamp,
       message,
     };
@@ -843,6 +845,7 @@ class $Chat {
       page: -1,
       role: message.role,
       preview: this.indexRows.value[at].t,
+      calls: this.indexRows.value[at].c,
       at: message.timestamp,
       message,
     }));
@@ -887,6 +890,8 @@ export namespace Chat {
     page: number;
     role: SessionLog.Role;
     preview: string;
+    /** how many tool calls it made — known from the index before the page loads */
+    calls: number;
     /** when it was said — known from the index before the page loads */
     at: number;
     message: SessionLog.Message | null;

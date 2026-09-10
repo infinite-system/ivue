@@ -22,6 +22,7 @@ function rows(count: number): Chat.Row[] {
     page: Math.floor(at / 200),
     role: at % 2 ? 'assistant' : 'user',
     preview: `message ${at}`,
+    calls: at % 3,
     at: Date.UTC(2026, 8, 9, 13, at % 60),
     message: null,
   }));
@@ -68,7 +69,7 @@ describe('Peek', () => {
     expect(peek.row?.preview).toBe('message 500');
     expect(peek.previewText(peek.row as Chat.Row)).toBe('message 500');
     expect(peek.roleMark(peek.row as Chat.Row)).toBe('you');
-    expect(peek.rowClass(peek.row as Chat.Row)['ac-peek-hot']).toBe(true);
+    expect(peek.rowClass(peek.row as Chat.Row)['ac-role-user']).toBe(true);
     expect(peek.style.top).toBe(`${300 - peek.cardHeight / 2}px`);
     expect(peek.timeLabel(peek.row as Chat.Row)).toMatch(/^\d\d:\d\d$/);
     // past the ends the index clamps
@@ -110,6 +111,19 @@ describe('Peek', () => {
     expect(peek.open.value).toBe(true);
     peek.onSearchKeydown({ key: 'Escape', preventDefault: () => undefined } as KeyboardEvent);
     expect(peek.query.value).toBe('');
+    expect(peek.rows.value).toHaveLength(1001);
+    // the pickers narrow by role and by tool calls, and Escape resets them once the box is clear
+    peek.setRole('user');
+    expect(peek.rows.value.every((row) => row.role === 'user')).toBe(true);
+    expect(peek.rows.value).toHaveLength(501);
+    peek.setTools('only');
+    expect(peek.rows.value.every((row) => row.role === 'user' && row.calls > 0)).toBe(true);
+    peek.setTools('exclude');
+    expect(peek.rows.value.every((row) => row.calls === 0)).toBe(true);
+    expect(peek.isPinned).toBe(true);
+    peek.onSearchKeydown({ key: 'Escape', preventDefault: () => undefined } as KeyboardEvent);
+    expect(peek.isRole('all')).toBe(true);
+    expect(peek.isTools('include')).toBe(true);
     expect(peek.rows.value).toHaveLength(1001);
     peek.onSearchFocus();
     peek.onThreadPointerLeave();

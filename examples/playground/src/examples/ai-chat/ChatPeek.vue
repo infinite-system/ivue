@@ -26,6 +26,14 @@ defineExpose(model as Peek.Instance);
         <input ref="searchElement" v-model="query" type="search" class="ac-search" placeholder="Search the thread…" aria-label="Search the thread" @focus="model.onSearchFocus()" @blur="model.onSearchBlur()" @keydown="model.onSearchKeydown($event)" />
         <button v-if="query" type="button" class="ac-link" @click="model.clearQuery()">clear</button>
       </div>
+      <div class="ac-peek-filters">
+        <div class="ac-seg" role="group" aria-label="Role">
+          <button v-for="option in model.roleOptions" :key="option.value" type="button" :class="{ 'ac-on': model.isRole(option.value) }" @click="model.setRole(option.value)">{{ option.label }}</button>
+        </div>
+        <div class="ac-seg" role="group" aria-label="Tool calls">
+          <button v-for="option in model.toolOptions" :key="option.value" type="button" :class="{ 'ac-on': model.isTools(option.value) }" @click="model.setTools(option.value)">{{ option.label }}</button>
+        </div>
+      </div>
       <header class="ac-peek-head">
         <span class="ac-peek-pos">{{ model.positionLabel }}</span>
         <span class="ac-peek-date">{{ model.dateLabel }}</span>

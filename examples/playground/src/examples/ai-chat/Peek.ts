@@ -5,6 +5,7 @@ import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
 import VirtualScrollerView from '../virtual-scroller/VirtualScroller.vue';
 import type { Chat } from './Chat';
 import { Icons } from './Icons';
+import { Index } from './Index';
 import type { Kit } from '../../kit/Kit';
 
 // The scrollbar's peek: hover the track and a small card slides in beside
@@ -13,7 +14,8 @@ import type { Kit } from '../../kit/Kit';
 // jumps the thread there. It reads previews the index already carries,
 // so a peek never fetches a page. While the thumb is dragged the peek
 // follows it. A search box at its top narrows the card to the rows whose
-// preview holds every word; while the box holds text or focus the card
+// preview holds every word, and the same role and tools pickers as the
+// index narrow it further; while the box holds text or focus the card
 // stays, so the reader can type without the pointer pinning it.
 class $Peek {
   /** the roles the peek composes — the mini scroller; built once per class by Static() */
@@ -26,14 +28,14 @@ class $Peek {
   /** rows the card shows at once */
   static readonly ROWS = 7;
   static readonly ROW_PX = 30;
-  /** the search row and the position line above the list */
-  static readonly HEAD_PX = 70;
+  /** the search row, the pickers and the position line above the list */
+  static readonly HEAD_PX = 104;
   /** the card stays this long after the pointer leaves, so it can be crossed into */
   static readonly LINGER_MS = 220;
 
   constructor(public props: Peek.Props) {
     watch(
-      () => this.query.value,
+      () => [this.query.value, this.role.value, this.tools.value],
       () => this.onQueryChange(),
     );
   }
@@ -77,6 +79,14 @@ class $Peek {
     return ref(false);
   }
 
+  get role() {
+    return ref<Index.RoleFilter>('all');
+  }
+
+  get tools() {
+    return ref<Index.ToolFilter>('include');
+  }
+
   // TEMPLATE-REF TARGET — the search box
   get searchElement() {
     return ref<HTMLInputElement | null>(null);
@@ -109,14 +119,28 @@ class $Peek {
     return Icons.$Class.PATHS.search;
   }
 
-  get isFiltered(): boolean {
+  get roleOptions(): { value: Index.RoleFilter; label: string }[] {
+    return (Object.keys(Index.$Class.ROLE_LABELS) as Index.RoleFilter[]).map((value) => ({ value, label: Index.$Class.ROLE_LABELS[value] }));
+  }
+
+  get toolOptions(): { value: Index.ToolFilter; label: string }[] {
+    return (Object.keys(Index.$Class.TOOL_LABELS) as Index.ToolFilter[]).map((value) => ({ value, label: Index.$Class.TOOL_LABELS[value] }));
+  }
+
+  get hasQuery(): boolean {
     return this.query.value.trim().length > 0;
   }
 
-  /** the card holds while the reader is typing — text in the box, or focus on it */
+  /** anything narrows the list: words in the box, a role, a tools pick */
+  get isFiltered(): boolean {
+    return this.hasQuery || this.role.value !== 'all' || this.tools.value !== 'include';
+  }
+
+  /** the card holds while the reader is narrowing it — a filter set, text in the box, or focus on it */
   get isPinned(): boolean {
     return this.isFiltered || this.searchFocused.value;
   }
+
 
   get matchLabel(): string {
     if (!this.isFiltered) return '';
@@ -159,12 +183,28 @@ class $Peek {
     return `${Math.round((this.index.value / (this.count - 1)) * 100)}%`;
   }
 
+  isRole(value: Index.RoleFilter): boolean {
+    return this.role.value === value;
+  }
+
+  isTools(value: Index.ToolFilter): boolean {
+    return this.tools.value === value;
+  }
+
+  setRole(value: Index.RoleFilter) {
+    this.role.value = value;
+  }
+
+  setTools(value: Index.ToolFilter) {
+    this.tools.value = value;
+  }
+
   roleMark(row: Chat.Row): string {
     return row.role === 'user' ? 'you' : row.role === 'assistant' ? 'agent' : 'sys';
   }
 
   rowClass(row: Chat.Row): Record<string, boolean> {
-    return { 'ac-peek-hot': row.index === this.index.value, [`ac-role-${row.role}`]: true };
+    return { [`ac-role-${row.role}`]: true };
   }
 
   previewText(row: Chat.Row): string {
@@ -215,12 +255,18 @@ class $Peek {
     if (!this.isFiltered) this.leave();
   }
 
-  /** Escape clears the search, and closes the card once it is clear */
+  /** Escape clears the search, then the pickers, and closes the card once it is clear */
   onSearchKeydown(event: KeyboardEvent) {
     if (event.key !== 'Escape') return;
     event.preventDefault();
-    if (this.isFiltered) this.query.value = '';
+    if (this.hasQuery) this.query.value = '';
+    else if (this.isFiltered) this.resetFilters();
     else this.close();
+  }
+
+  resetFilters() {
+    this.role.value = 'all';
+    this.tools.value = 'include';
   }
 
   clearQuery() {
@@ -255,15 +301,22 @@ class $Peek {
   close() {
     this.open.value = false;
     this.query.value = '';
+    this.resetFilters();
     this.searchFocused.value = false;
   }
 
   /** the rows the card lists: all of them, or those whose preview holds every word of the query */
   protected filtered(): Chat.Row[] {
     const words = this.query.value.toLowerCase().split(/\s+/).filter(Boolean);
+    const role = this.role.value;
+    const tools = this.tools.value;
     const rows = this.allRows.value;
-    if (!words.length) return rows;
+    if (!this.isFiltered) return rows;
     return rows.filter((row) => {
+      if (role !== 'all' && row.role !== role) return false;
+      if (tools === 'exclude' && row.calls > 0) return false;
+      if (tools === 'only' && row.calls === 0) return false;
+      if (!words.length) return true;
       const text = `${this.roleMark(row)} ${row.preview}`.toLowerCase();
       return words.every((word) => text.includes(word));
     });
