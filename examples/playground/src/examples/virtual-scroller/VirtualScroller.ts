@@ -268,6 +268,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
         ignoreNativeScroll: this.lenisIgnoreNativeScroll,
         syncTouch: true, // Sync touch events
         smoothWheel: true,
+        // a scrollable element inside a row — a wide code block, a diff — takes the wheel
+        // until it reaches its own edge; only then does the gesture move the list
+        allowNestedScroll: true,
         autoRaf: false, // we drive it ourselves
         ...this.lenisMotion
       });
