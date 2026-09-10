@@ -3,7 +3,7 @@ title: 'Select text across a million rows'
 description: 'Drag-select in a virtual list breaks because a native selection is anchored to DOM nodes that the list recycles. Give the scroller a selection that is a range over the data instead: the highlight survives, copy reaches rows never on screen together, and both scroll axes get it through one seam.'
 date: 2026-09
 tags: [patterns, architecture, performance]
-relatedPosts: [a-million-rows-twelve-divs, ship-the-variant-keep-the-tuning, templates-with-nothing-to-debug, single-file-models]
+relatedPosts: [fix-the-scroller-never-open-the-selection, a-million-rows-twelve-divs, ship-the-variant-keep-the-tuning, templates-with-nothing-to-debug, single-file-models]
 ---
 
 # Select text across a million rows
