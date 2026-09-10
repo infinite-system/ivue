@@ -978,13 +978,26 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       cursor.offset = startOffset;
     }
 
-    // Walk forward until the window covers the container size.
+    // Walk forward until the window covers the container size — and, mid-lerp, the
+    // animated position too: the reader sees the animated position while the walk starts
+    // at the target, and the rows between are covered in PIXELS over their measured sizes.
+    // A pad counted in rows of the estimate under-covers a gap over rows shorter than it
+    // (a 35px system line against a 160px estimate) and the bottom of the viewport goes blank.
+    // invariant: The pad covers the lerp gap exactly (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+    const gap = this.scrollGap;
+    const behindPx = Math.max(0, -gap);
     let end = start;
     let endOffset = startOffset;
-    const bottom = startOffset + this.containerSize.value;
+    const bottom = startOffset + this.containerSize.value + behindPx;
     while (end < itemCount && endOffset < bottom) {
       endOffset += measured[end] ?? assumed;
       end++;
+    }
+    // scrolling down the animated position is ABOVE the target: cover it the same way
+    const aheadPx = Math.max(0, gap);
+    while (start > 0 && startOffset > scrollTop - aheadPx) {
+      start--;
+      startOffset -= measured[start] ?? assumed;
     }
 
     // invariant: The pad covers the lerp gap exactly (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
@@ -1468,7 +1481,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
     const absolutePosition = Math.abs(position);
 
-    this.updateRenderBias(absolutePosition);
+    // The bias moves only with a write that also writes the transform: the frame loop
+    // rebases from the ANIMATED scroll before Lenis writes its transform, and its target
+    // write (translateY false) must not rebase again from the target — with the two
+    // straddling a chunk boundary the bias flipped mid-frame, the spacer on the new bias
+    // and the transform on the old, a whole chunk apart for that frame.
+    // invariant: Rendered offsets are rebased by whole chunks (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+    if (translateY) this.updateRenderBias(absolutePosition);
 
     this.scrollPosition.value = absolutePosition;
     if (this.scrollElementInner.value) {

@@ -1130,6 +1130,15 @@ own whole than to arbitrate.
 - **Playwright's "move away" point must actually leave the element**: a peek card 320px wide beside the
   track swallowed a pointer moved 300px left of the track, and the drive read a bug that was not there.
   Instrument `pointermove` targets before touching the code.
+- **A long wheel up blanked the bottom of the viewport and, once, threw the rows 63k px off.** Two
+  pre-existing scroller faults found by sampling a 120-tick wheel-up (`tmp/drive-up.mjs`): the window
+  walked from the lerp's TARGET and padded "rows behind" as gap ÷ estimated row size, so a gap over rows
+  far shorter than the estimate (35px system lines vs a 160px estimate) went uncovered — the walk now
+  extends in pixels over measured sizes to the animated position; and the loop rebased the render bias
+  twice a frame, from the animated scroll and again from the target, which flipped the bias when the two
+  straddled a 65,536px chunk — a position write without a transform write never rebases now. Both are
+  specs; both records extended. Bisect trick that settled "is it today's change?": `git checkout <old> --
+  <files>`, drive, `git checkout HEAD -- <files>`.
 - **A row that shrinks at the end of the list left the viewport past the content.** The scroller's
   re-measure restores the anchor row (the one under the reading edge), which only moves the position by
   what the content ABOVE the reader changed; the last row re-rendering shorter — a streaming reply whose

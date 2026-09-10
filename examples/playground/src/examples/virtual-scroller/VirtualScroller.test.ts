@@ -13,6 +13,7 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 [Shrinking the list prunes the measurements at its new end](virtual-scroller.invariants.md#shrinking-the-list-prunes-the-measurements-at-its-new-end)
 [The copied text is the string the row renders](virtual-scroller.invariants.md#the-copied-text-is-the-string-the-row-renders)
 [The frame is never natively panned along its own axis](virtual-scroller.invariants.md#the-frame-is-never-natively-panned-along-its-own-axis)
+[The pad covers the lerp gap exactly](virtual-scroller.invariants.md#the-pad-covers-the-lerp-gap-exactly)
 [WebKit re-rasterizes the layer on every autoscroll write](virtual-scroller.invariants.md#webkit-re-rasterizes-the-layer-on-every-autoscroll-write)
 [The feel is one nested prop complete at every depth](virtual-scroller.invariants.md#the-feel-is-one-nested-prop-complete-at-every-depth)
 // domain-invariant: $VirtualScroller — If a nested knob prop is read, then it is complete at every depth: a leaf the author supplied wins and every leaf left out is the tuned default, and Lenis is tuned from the same leaves.
@@ -36,7 +37,11 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 [The frame loop runs only while there is motion](virtual-scroller.invariants.md#the-frame-loop-runs-only-while-there-is-motion)
 Impossible if true: A scroller at rest requesting a frame every tick.
 // domain-invariant: $VirtualScroller — If a rendered row shrinks and the rows above it stay put, then the position is pulled back inside the range, so the viewport never rests past the last row
+// domain-invariant: $VirtualScroller — If the walk runs mid-lerp, then the window covers the animated position in pixels over the measured sizes, whatever the rows between it and the target measure
+// domain-invariant: $VirtualScroller — If a write moves the position without writing the transform, then the render bias stays where the frame's transform write put it
 Impossible if true: A rendered scroll position beyond the extent.
+Impossible if true: A viewport bottom left uncovered mid-lerp because the rows behind the target measure shorter than the estimate.
+Impossible if true: A spacer and a transform a chunk apart within one frame.
 Impossible if true: A viewport resting past the last row after it shrank.
 Impossible if true: An item outside the list with a position.
 Impossible if true: A window whose spacers plus rows sum to anything but the extent.
@@ -831,5 +836,49 @@ test('a last row that shrinks pulls the position back inside the range; a row th
   instance.syncItemSize(0, 10);
   expect(instance.scrollPosition.value).toBeLessThanOrEqual(instance.scrollExtent.value - 100);
   expect(instance.scrollPosition.value).toBe(80);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the walk runs mid-lerp, then the window covers the animated position in pixels over the measured sizes, whatever the rows between it and the target measure
+// impossible-if-true: $VirtualScroller — A viewport bottom left uncovered mid-lerp because the rows behind the target measure shorter than the estimate.
+// invariant: The pad covers the lerp gap exactly (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('mid-lerp the window covers the animated position in pixels, over rows far shorter than the estimate', () => {
+  const { instance, unmount } = scroller(rows(60), { assumedSize: 100, paddingQuantity: 0 });
+  // 100 px container; the target sits at row 10 (1000 px); the reader still sees 1400..1500
+  const noop = () => undefined;
+  (instance as unknown as { lenis: unknown }).lenis = { time: 0, isScrolling: 'smooth', targetScroll: 1000, animatedScroll: 1400, scroll: 1400, stop: noop, start: noop, destroy: noop, raf: noop };
+  // the rows behind the target are short: 20 px each from row 11 on
+  for (let index = 11; index < 40; index++) instance.syncItemSize(index, 20, false);
+  instance.setScrollPosition(-1000, false, false);
+  void instance.visibleItems.value; // the walk runs on read
+  const window = instance.visibleIndex.value;
+  const coveredTo = instance.getIndexPosition(window.end) ?? Number.POSITIVE_INFINITY;
+  // rows 11.. at 20 px: 1500 px is 25 short rows past 1000 — the window must reach it
+  expect(coveredTo).toBeGreaterThanOrEqual(1500);
+  // scrolling down the gap flips: the animated position is above the target and the window reaches back to it
+  (instance as unknown as { lenis: { targetScroll: number; animatedScroll: number } }).lenis.targetScroll = 1600;
+  (instance as unknown as { lenis: { targetScroll: number; animatedScroll: number } }).lenis.animatedScroll = 1300;
+  instance.setScrollPosition(-1600, false, false);
+  void instance.visibleItems.value;
+  expect(instance.getIndexPosition(instance.visibleIndex.value.start) ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(1300);
+  (instance as unknown as { lenis: unknown }).lenis = null;
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If a write moves the position without writing the transform, then the render bias stays where the frame's transform write put it
+// impossible-if-true: $VirtualScroller — A spacer and a transform a chunk apart within one frame.
+// invariant: Rendered offsets are rebased by whole chunks (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a position write without a transform write leaves the render bias alone', () => {
+  const { instance, unmount } = scroller(rows(100_000), { assumedSize: 30 });
+  const chunk = instance.probeRenderBiasChunk();
+  // the frame's transform write put the bias on the third chunk
+  instance.setScrollPosition(-(chunk * 3 + 10), false, true);
+  expect(instance.probeRenderBias()).toBe(chunk * 2);
+  // the target, one chunk further, written without the transform: the bias holds
+  instance.setScrollPosition(-(chunk * 4 + 10), false, false);
+  expect(instance.probeRenderBias()).toBe(chunk * 2);
+  // a transform write moves it
+  instance.setScrollPosition(-(chunk * 4 + 10), false, true);
+  expect(instance.probeRenderBias()).toBe(chunk * 3);
   unmount();
 });
