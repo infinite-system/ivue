@@ -108,7 +108,7 @@ class $ExampleMalleability {
     return Boolean(namespace.derivedFrom);
   }
 
-  static viewName(vue: unknown): string {
+  static viewName(view: unknown): string {
     const name = (view as { __name?: string }).__name;
     return name ? `${name}.vue` : 'view';
   }
