@@ -42,10 +42,6 @@ const {
     <component :is="chat.kit.Composer.vue" :kit="chat.kit.Composer" :chat="chat" />
 
     <footer class="ac-stats">
-      <div class="ac-stats-title">
-        <strong>AI chat on the virtual scroller</strong>
-        <span class="ac-muted">{{ chat.sourceLabel }}</span>
-      </div>
       <dl class="ac-receipts">
         <div><dt>messages</dt><dd>{{ chat.countLabel }}</dd></div>
         <div><dt>rows in the DOM</dt><dd class="ac-grad">{{ chat.domRowCount }}</dd></div>
@@ -54,10 +50,10 @@ const {
         <div><dt>fetched</dt><dd>{{ chat.bytesLabel }} <span class="ac-muted">of {{ chat.totalBytesLabel }}</span></dd></div>
         <div><dt>requests</dt><dd>{{ chat.requestCountLabel }}</dd></div>
         <div><dt>tokens streamed</dt><dd>{{ chat.tokensLabel }}</dd></div>
+        <div v-if="chat.isFetching"><dt>fetching</dt><dd class="ac-fetching"><span class="ac-spinner" aria-hidden="true"></span> {{ chat.fetchingLabel }}</dd></div>
+        <div v-else-if="chat.lastRequestLabel"><dt>last request</dt><dd class="ac-last">{{ chat.lastRequestLabel }}</dd></div>
       </dl>
       <div class="ac-stats-actions">
-        <span v-if="chat.isFetching" class="ac-fetching"><span class="ac-spinner" aria-hidden="true"></span> {{ chat.fetchingLabel }}</span>
-        <span v-else-if="chat.lastRequestLabel" class="ac-muted ac-last">{{ chat.lastRequestLabel }}</span>
         <label class="ac-btn" :class="{ 'ac-busy': chat.isLoadingFile }">
           {{ chat.fileLoadLabel }}
           <input type="file" accept=".jsonl,application/jsonl,text/plain" hidden @change="chat.open(($event.target as HTMLInputElement).files![0])" />
