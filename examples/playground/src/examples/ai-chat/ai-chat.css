@@ -2485,7 +2485,8 @@
   gap: 8px;
   align-items: center;
   height: 30px;
-  padding: 0 10px;
+  /* room on the right for the card's own scrollbar, so it never covers the time */
+  padding: 0 22px 0 10px;
   font-size: 12px;
   cursor: pointer;
   transition: background 0.1s;
