@@ -96,19 +96,38 @@ import { Static } from '../../Static';
 class $Kit {
   protected static readonly CACHE = new WeakMap<Function, object>();
 
+  /** the same view over a derived class's contract: a fresh component object — a compiled SFC is
+   *  eight fields, `setup`, `render`, `props`, `emits`, `__name`… — with `props` and `emits` taken from
+   *  the class. Once per derived entry, at kit build time; never per instance. Fresh because the view
+   *  object is shared by every kit that names it, and because Vue caches normalized options by object. */
+  static view<Space extends Kit.Namespace>(view: Component, namespace: Space): Component {
+    const Class = namespace.Class as any;
+    return { ...(view as object), props: Class.props, emits: Class.emits } as Component;
+  }
+
   protected static resolveEntry(entry: Kit.Entry): Kit.Entry {
     if (!entry.namespace || !entry.subkit) return entry;
     const { subkit, ...rest } = entry;
-    return { ...rest, namespace: this.derive(entry.namespace, subkit) };
+    const namespace = this.derive(entry.namespace, subkit);
+    return { ...rest, namespace, view: this.view(entry.view, namespace) };
   }
 
   protected static merge(base: any, patch: Kit.Patch): any {
     const out = { ...base };
     for (const [role, value] of Object.entries(patch)) {
       const current = base[role];
-      out[role] = this.isEntry(current) || this.isEntry(value) ? { ...current, ...value } : this.merge(current ?? {}, value as Kit.Patch);
+      out[role] = this.isEntry(current) || this.isEntry(value) ? this.mergeEntry(current, value as Partial<Kit.Entry>) : this.merge(current ?? {}, value as Kit.Patch);
     }
     return out;
+  }
+
+  /** a patch that names a namespace and keeps the base view gets that view rewrapped over the new
+   *  class, so `{ namespace: ThemedBlock }` alone declares what ThemedBlock declares; a patch that
+   *  brings its own view is left alone — that view declares what it declares */
+  protected static mergeEntry(current: Kit.Entry | undefined, patch: Partial<Kit.Entry>): Kit.Entry {
+    const merged = { ...current, ...patch } as Kit.Entry;
+    if (patch.namespace && !patch.view && current?.view) merged.view = this.view(current.view, patch.namespace);
+    return merged;
   }
 
   protected static isEntry(value: unknown): value is Kit.Entry {
@@ -116,10 +135,14 @@ class $Kit {
   }
 
   /** a resolved kit is shared by reference between trees and must never be written */
+  /** freeze the kit's SHAPE — role maps and entries — and stop at an entry's leaves: a namespace (its
+   *  `Class` slot is the global override), a view (Vue's object, not ours), a `props` bag (the
+   *  consumer's). Frozen entries are what make sharing them between kits safe. */
   protected static deepFreeze<K extends object>(value: K): K {
-    for (const inner of Object.values(value)) {
-      // entries and maps freeze; a namespace object is left alone — its `Class` slot is the global override
-      if (typeof inner === 'object' && inner !== null && !Object.isFrozen(inner) && !('$Class' in inner)) this.deepFreeze(inner);
+    for (const [key, inner] of Object.entries(value)) {
+      if (typeof inner !== 'object' || inner === null || Object.isFrozen(inner)) continue;
+      if (this.isEntry(value) && (key === 'namespace' || key === 'view' || key === 'props')) continue;
+      this.deepFreeze(inner);
     }
     return Object.freeze(value);
   }
@@ -725,9 +748,11 @@ A consumer who needs a prop the author did not open derives the class
 and overrides the getter — `override get cap() { return 2_000 }` — and
 points the entry's `namespace` at it. That is the ordinary move and it
 reaches every prop of every class; the entry's `props` are the sugar
-for the knobs an author chose to expose. The one boundary that stays is
-Vue's own: a parent template cannot pass a key the contract does not
-declare, but the kit can, because `kit` is declared.
+for the knobs an author chose to expose. Vue's own boundary — a parent
+template cannot pass a key the component did not declare, a child
+cannot emit an event it did not declare without a dev warning — is
+closed by `Kit.Class.view`, below: a derived class's widened contract
+becomes the declared contract of the view that renders it.
 
 ### `VirtualScroller.vue` — one optional prop, everything else untouched
 
@@ -935,6 +960,77 @@ override did not touch are shared by reference between the two kits,
 which is why a resolved kit is frozen: sharing is safe only when nothing
 can write. The spec below pins both facts.
 
+### A derived class widens its contract, and its view declares it
+
+Props and emits in Vue are per component definition, never per
+instance: `defineProps(X.Class.props)` and `defineEmits(X.Class.emits)`
+are compiler markers that become fixed `props` and `emits` fields on
+the compiled SFC object, evaluated once when the module loads, and the
+compiler rejects a setup-scope reference in either. So a class derived
+by `subkit` that adds a prop or an event knows about it, and the base
+view does not.
+
+`resolveEntry` closes that: a derived entry's view is
+`Kit.Class.view(entry.view, derived)`, a fresh component object with
+the base view's `setup` and `render` and the derived class's `props`
+and `emits`. The parent can pass the new prop and it arrives in
+`props`; the child can emit the new event and Vue knows it. The base
+`.vue` file is never touched, and a hand-written subclass with its own
+SFC is rewrapped to the same thing it already declared.
+
+```ts
+// a subkit that widens CodeBlock's contract — the view follows without a file
+class $ThemedBlock extends CodeBlock.$Class {
+  static override get propsTypes() {
+    return definePropTypes({ ...super.propsTypes, theme: { type: String as PropType<'mono' | 'paper'> } });
+  }
+
+  static override get propsDefaults(): ExtractPropDefaultTypes<typeof $ThemedBlock.propsTypes> {
+    return { ...super.propsDefaults, theme: 'mono' };
+  }
+
+  static override get props() {
+    return propsWithDefaults(this.propsDefaults, this.propsTypes);
+  }
+
+  static override get emits() {
+    return { ...super.emits, select: (code: string) => typeof code === 'string' };
+  }
+
+  get theme(): 'mono' | 'paper' {
+    return this.props.theme;
+  }
+}
+```
+
+```ts
+// the explicit form — in any kit literal, or for a standalone mount of the widened class over the base SFC
+CodeBlock: { namespace: ThemedBlock, view: Kit.Class.view(CodeBlockView, ThemedBlock) }
+
+// the short form inside an override — `merge` rewraps the kept view over the named namespace
+subkit: { Tool: { subkit: { CodeBlock: { namespace: ThemedBlock } } } }
+
+// a subkit that DERIVES the class (no file) — `resolveEntry` rewraps the view over the derived namespace
+subkit: { Tool: { subkit: { CodeBlock: { subkit: { … } } } } }
+```
+
+Three ways to arrive, one result: the entry's view declares the
+entry's namespace's contract. `Kit.Class.view` is the function; `merge`
+calls it when a patch names a namespace and keeps the view; `resolveEntry`
+calls it when a patch derives the namespace; a patch that brings its own
+view is left alone, since that view declares what it declares. A section
+view that renders code blocks may then pass `:theme="…"` and listen
+`@select="…"`, and both are declared. Emits, in object form on
+the contract as the standard already has them, need nothing else from
+the kit: a listener attaches to the seam, so every swap keeps the
+parent's handlers, and adding or removing one is a section swap, the
+change a template owns.
+
+Two things to verify at conversion: that the spread carries everything
+a compiled SFC needs (`__name`, `__scopeId`, `__hmrId`, `__file`), and
+that a Vapor component object survives the same spread, since the
+design claims neutrality on that runtime.
+
 ### Where `derive` runs
 
 `resolve` runs inside a static getter, so derived classes exist only
@@ -1017,6 +1113,8 @@ it('an override never reaches another tree, and a kit is its own class\'s', () =
   expect(BashCall.Class.$kit.CodeBlock.namespace).toBe(CodeBlock);
   expect(terminal.Composer).toBe(Chat.Class.$kit.Composer); // untouched entries are shared, and frozen
   expect(Object.isFrozen(terminal.Composer)).toBe(true);
+  expect(Object.isFrozen(terminal.Composer.view)).toBe(false); // the freeze stops at the entry's leaves
+  expect(Object.isFrozen(terminal.Composer.namespace)).toBe(false);
   expect(Chat.Class.$kit).not.toBe(FancyChat.Class.$kit); // the cache is keyed by the asking class
   expect(FancyChat.Class.$kit).toBe(FancyChat.Class.$kit);
 });
@@ -1098,7 +1196,10 @@ importing each other.
   its parent's kit. Verify at conversion: `Reactive` over a subclass of an already-transformed class
   leaves inherited members alone (the engine's repeated-call guard says
   it does), and `Kit.Class.cached` keyed by a derived anonymous class stays
-  distinct from its base's entry.
+  distinct from its base's entry. And `Kit.Class.view`: the spread of
+  a compiled SFC must carry every field Vue and the dev tools read
+  (`__name`, `__scopeId`, `__hmrId`, `__file`), and the same must hold
+  for a Vapor component object.
 - **Sections as roles.** Each section is one component instance per
   visible row — six for a row, the same order as the tool cards already
   cost, a dozen rows deep in the window. Measured in the mount-cost line
@@ -1137,6 +1238,10 @@ importing each other.
 - [ ] Every chat class declares `propsTypes`, `propsDefaults`, `props`
       with a `kit` prop typed to the class; every view is `defineProps(X.Class.props)`;
       the gate's contract checks pass on the folder.
+- [ ] A derived class that widens its contract renders through a view
+      that declares it: `ThemedBlock` receives `:theme` in `props` and
+      emits `select` with no dev warning; the base `CodeBlockView`
+      object is unchanged and `Chat.$kit` still names it.
 - [ ] A props-carrying entry reaches the getters that open to it:
       `DenseChat` renders every code block at the entry's `cap` whatever
       the cards pass, and `CappedBlock` forces it where the author did not
@@ -1160,3 +1265,5 @@ importing each other.
 - A shell component between a parent and its child's view.
 - A seam with any shape but `:is` from the entry, `:kit` the entry, then props.
 - A section of a view that is not a role, or a section that cannot reach the model it belongs to.
+- An entry whose view declares a different contract than its namespace.
+- A listener attached anywhere but the seam.
