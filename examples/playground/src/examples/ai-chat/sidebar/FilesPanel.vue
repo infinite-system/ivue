@@ -44,11 +44,11 @@ const {
               <span class="ac-file-record-glyph" aria-hidden="true">{{ model.recordGlyph(item.record) }}</span>
               <span class="ac-file-record-tool">{{ model.recordLabel(item.record) }}</span>
               <span class="ac-file-record-summary">{{ model.diffSummary(item.record) }}</span>
-              <span class="ac-file-record-index">{{ model.recordIndexLabel(item.record) }}</span>
+              <button type="button" class="ac-file-record-index" title="Show this message in the chat" @click.stop="model.jump(item.record)">{{ model.recordIndexLabel(item.record) }}</button>
               <span class="ac-file-record-time">{{ model.recordTimeLabel(item.record) }}</span>
-              <button type="button" class="ac-file-record-go" title="Show in the chat" @click.stop="model.jump(item.record)">→</button>
+              <button type="button" class="ac-file-record-go" title="Show this message in the chat" @click.stop="model.jump(item.record)">→</button>
             </div>
-            <pre v-if="model.isRecordOpen(item.record)" class="ac-file-diff"><span v-for="(line, at) in model.diffOf(item.record)" :key="at" class="ac-dl" :class="model.lineClass(line)">{{ line.sign }}{{ line.text }}</span></pre>
+            <pre v-if="model.isRecordOpen(item.record)" class="ac-file-diff"><span class="ac-file-diff-lines"><span v-for="(line, at) in model.diffOf(item.record)" :key="at" class="ac-dl" :class="model.lineClass(line)">{{ line.sign }}{{ line.text }}</span></span></pre>
           </div>
         </template>
       </component>
