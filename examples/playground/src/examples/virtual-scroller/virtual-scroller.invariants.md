@@ -258,25 +258,25 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### The scroll position lands inside the scrollable range
 
-**Invariant:** If any path asks to scroll to a position, then the position written is clamped into `[0, extent − container]`, and a non-finite position is refused with the last position standing.
+**Invariant:** If any path asks to scroll to a position, then the position written is clamped into `[0, extent − container]`, and a non-finite position is refused with the last position standing; and if a rendered row shrinks while the rows above it stay put, then the position is pulled back inside the range, so the viewport never rests past the last row.
 
-**Scope:** `VirtualScroller.ts` `setScrollPosition` — the one write path for `scrollPosition`, the transform and `lenis.targetScroll`; `scrollBy` for the selection's autoscroll.
+**Scope:** `VirtualScroller.ts` `setScrollPosition` — the one write path for `scrollPosition`, the transform and `lenis.targetScroll`; `scrollBy` for the selection's autoscroll; `clampScrollPosition` after every re-measure (`remeasureRenderedItems`, `syncItemSize`).
 
-**Mechanism:** `setScrollPosition` tests `Number.isFinite` first, then clamps against `scrollExtent` and the container's border-box size, then writes. Every caller (the frame loop, seeks, the creep, the selection autoscroll) goes through it.
+**Mechanism:** `setScrollPosition` tests `Number.isFinite` first, then clamps against `scrollExtent` and the container's border-box size, then writes. Every caller (the frame loop, seeks, the creep, the selection autoscroll) goes through it. A re-measure restores the anchor row, which moves the position by what the content ABOVE the reader changed — but the last row re-rendering shorter (a streaming reply whose partial markdown was taller than its final render, a tall card folded at the end) changes nothing above the reader, so the anchor restore shifts nothing and the position, set when the row was tall, is left past the new end: `clampScrollPosition` pulls it back after every re-measure.
 
 **Generates:** The bottom clamp the seek bar relies on; `lenis.virtualLimit`, which takes the same box.
 
 **Rejected alternatives:** Trusting the caller — a single NaN poisons `lenis.targetScroll` and freezes the scroller until remount, and invalid transforms are silently ignored so nothing recovers.
 
-**Evidence:** `VirtualScroller.ts` `setScrollPosition`. Test: "a scroll position is clamped into the scrollable range, and a non-finite one is refused".
+**Evidence:** `VirtualScroller.ts` `setScrollPosition`, `clampScrollPosition`. Tests: "a scroll position is clamped into the scrollable range, and a non-finite one is refused", "a last row that shrinks pulls the position back inside the range; a row that shrinks above the reader moves nothing extra". Seen on the chat: a streaming reply left the viewport blank past its row until the reply ended, and a folded card at the end left the canvas scrolled past the last item.
 
-**Impossible if true:** A rendered scroll position beyond the extent. A NaN reaching `lenis.targetScroll`.
+**Impossible if true:** A rendered scroll position beyond the extent. A NaN reaching `lenis.targetScroll`. A viewport resting past the last row after it shrank.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "clamped into the scrollable range"`
 
 **Status:** provisional
 
-**Last refined:** 2026-09-06
+**Last refined:** 2026-09-10
 
 ### An unchanged window keeps its array identity
 
