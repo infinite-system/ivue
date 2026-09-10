@@ -1743,8 +1743,16 @@
   padding: 18px 44px 18px 30px;
   gap: 12px;
 }
-/* the prose: tight between lines, air around the block */
-.ai-chat .ac-text {
+/* the prose: tight between lines, air around the block. The elements are named, not left to
+   inherit: on the docs page VitePress sets `.vp-doc p` to 28px directly, which beats inheritance. */
+.ai-chat .ac-text,
+.ai-chat .ac-text p,
+.ai-chat .ac-text li,
+.ai-chat .ac-text blockquote,
+.ai-chat .ac-text h1,
+.ai-chat .ac-text h2,
+.ai-chat .ac-text h3,
+.ai-chat .ac-text h4 {
   line-height: 1.3;
 }
 .ai-chat .ac-msg-system {
