@@ -2042,7 +2042,8 @@
   height: 100%;
 }
 .ai-chat .ac-setting {
-  padding: 12px 14px;
+  /* room on the right for the panel's own scrollbar */
+  padding: 12px 24px 12px 14px;
   border-bottom: 1px solid var(--ac-line-soft);
 }
 .ai-chat .ac-setting h5 {
