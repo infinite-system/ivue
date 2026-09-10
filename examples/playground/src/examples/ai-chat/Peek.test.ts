@@ -1,6 +1,6 @@
 /*
 === GENERATOR ===
-Goal: Prove the scrollbar peek maps a pointer's position on the track to a row of the thread and shows it from the index the chat already holds once the pointer rests there, that a pass across the track opens nothing, that it follows a dragged thumb at once, lingers only long enough to be crossed into, that its search narrows the card to matching previews and holds it open while the reader types, and that picking a row jumps the thread there — never asking for a page.
+Goal: Prove the scrollbar peek maps a pointer's position on the track to a row of the thread and shows it from the index the chat already holds once the pointer rests there, that a pass across the track opens nothing, that a dragged thumb closes it and keeps it closed, lingers only long enough to be crossed into, that its search narrows the card to matching previews and holds it open while the reader types, and that picking a row jumps the thread there — never asking for a page.
 [Loading lives above the scroller](./ai-chat.invariants.md#loading-lives-above-the-scroller)
 // domain-invariant: $Peek — If the pointer is over the track at a fraction of its height, then the card shows the row at that fraction of the thread, from the index, and a picked row jumps the thread there
 Impossible if true: a peek that fetches a page
@@ -101,16 +101,22 @@ describe('Peek', () => {
     vi.advanceTimersByTime(Peek.$Class.OPEN_DELAY_MS * 2);
     expect(peek.open.value).toBe(false);
 
-    // a dragged thumb reopens the card wherever the pointer is, at once
+    // a dragged thumb is a seek: the card closes and does not open while the thumb is held
+    move(peek, 400, null, 'track');
+    vi.advanceTimersByTime(Peek.$Class.OPEN_DELAY_MS);
+    expect(peek.open.value).toBe(true);
     const scroller = { scrollbarDragging: true } as unknown as NonNullable<typeof chat.scroller.value>;
     chat.scroller.value = scroller;
-    move(peek, 300, null, 'none');
-    expect(peek.open.value).toBe(true);
-    expect(peek.index.value).toBe(250);
+    move(peek, 300, null, 'track');
+    expect(peek.open.value).toBe(false);
+    vi.advanceTimersByTime(Peek.$Class.OPEN_DELAY_MS * 2);
+    expect(peek.open.value).toBe(false);
     chat.scroller.value = null;
 
     // a search narrows the card to the rows whose preview holds every word, and holds the card open
     move(peek, 400, null, 'track');
+    vi.advanceTimersByTime(Peek.$Class.OPEN_DELAY_MS);
+    expect(peek.open.value).toBe(true);
     peek.query.value = 'message 99';
     // every preview that holds "99": 99, 199 … 999, and 990 … 998
     expect(peek.rows.value.map((row) => row.index)).toEqual([99, 199, 299, 399, 499, 599, 699, 799, 899, 990, 991, 992, 993, 994, 995, 996, 997, 998, 999]);
