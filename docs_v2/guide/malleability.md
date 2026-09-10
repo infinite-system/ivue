@@ -1,7 +1,7 @@
 ---
 title: Infinite Malleability
 description: Replace any part of any component tree — a view, a class, a section, a knob, a declared prop or event — at any depth, from outside, without editing a file. One static on the class holds the roles; one seam shape passes one entry; an override is a subclass written as data.
-relatedPosts: [runtime-props-all-along, ship-the-variant-keep-the-tuning, the-options-api-everyone-wanted]
+relatedPosts: [fix-the-scroller-never-open-the-selection, runtime-props-all-along, ship-the-variant-keep-the-tuning, the-options-api-everyone-wanted]
 ---
 
 <script setup>
