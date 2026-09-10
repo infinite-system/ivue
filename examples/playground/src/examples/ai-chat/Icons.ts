@@ -12,6 +12,9 @@ class $Icons {
     collapse: 'M6 6l6 6-6 6M13 6l6 6-6 6',
     /** the disclosure chevron — every fold in the chat turns this one */
     chevron: 'M9 6l6 6-6 6',
+    /** copy a block to the clipboard, and the check that says it went */
+    copy: 'M9 9h10v10H9zM5 15V5h10',
+    check: 'M5 12l4 4L19 6',
     /** go to a message in the thread */
     jump: 'M4 12h15M13 6l6 6-6 6',
     /** open somewhere else — the index on a file */

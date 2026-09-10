@@ -16,6 +16,7 @@ import { BashCall } from './BashCall';
 import { EditCall } from './EditCall';
 import { ReadCall } from './ReadCall';
 import { WriteCall } from './WriteCall';
+import { CodeBlock } from './CodeBlock';
 import { AgentCall } from './AgentCall';
 import { McpCall } from './McpCall';
 import { hosted } from '../../virtual-scroller/hosted';
@@ -64,6 +65,11 @@ describe('tool cards', () => {
     const call = makeCall('Bash', { command: 'npm test\necho done', description: 'Run the tests', run_in_background: true }, { text: 'unused', structured: { stdout: '\u001b[32mok\u001b[0m 3 passed', stderr: 'warn', interrupted: false } });
     const model = new BashCall.Class({ call, chat, message: null });
     expect(model.command).toBe('npm test\necho done');
+    expect(model.commandText).toBe('npm test\necho done'); // written across lines: shown as written
+    // a one-line chain breaks at each step; separators inside quotes stay
+    expect(BashCall.$Class.breakLines('cd ~/dev; grep \'"a; b"\' x.json | head -3 && echo "ok || no" || exit 1')).toBe(
+      'cd ~/dev;\ngrep \'"a; b"\' x.json\n  | head -3\n  && echo "ok || no"\n  || exit 1',
+    );
     expect(model.stdout).toBe('ok 3 passed');
     expect(model.stderr).toBe('warn');
     expect(model.ranInBackground).toBe(true);
@@ -130,4 +136,29 @@ describe('tool cards', () => {
     expect(mcp.icon).toBe('⌘');
     unmount();
   });
+});
+
+// domain-invariant: $CodeBlock — If the copy button is pressed, then the whole code as given reaches the clipboard, not the capped view, and the button says so for a moment
+it('a code block copies its whole code and says so for a moment', async () => {
+  vi.useFakeTimers();
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  Object.defineProperty(globalThis.navigator, 'clipboard', { value: { writeText }, configurable: true });
+  const block = hosted(() => new CodeBlock.Class({ code: 'one\ntwo\nthree', cap: 1 }));
+  expect(block.instance.isCapped).toBe(true);
+  await block.instance.copy();
+  expect(writeText).toHaveBeenCalledWith('one\ntwo\nthree');
+  expect(block.instance.copied.value).toBe(true);
+  expect(block.instance.copyLabel).toBe('Copied');
+  vi.advanceTimersByTime(CodeBlock.$Class.COPIED_MS);
+  expect(block.instance.copied.value).toBe(false);
+  expect(block.instance.copyLabel).toBe('Copy');
+  // no async clipboard — a plain-http page on a LAN address — the legacy command copies instead
+  Object.defineProperty(globalThis.navigator, 'clipboard', { value: undefined, configurable: true });
+  const legacy = vi.fn().mockReturnValue(true);
+  Object.defineProperty(document, 'execCommand', { value: legacy, configurable: true });
+  await block.instance.copy();
+  expect(legacy).toHaveBeenCalledWith('copy');
+  expect(block.instance.copyLabel).toBe('Copied');
+  block.unmount();
+  vi.useRealTimers();
 });

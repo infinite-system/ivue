@@ -7,6 +7,50 @@ import { ToolCallModel } from './ToolCallModel';
 class $BashCall extends ToolCallModel.$Class {
   static readonly ANSI = /\x1b\[[0-9;]*[A-Za-z]/g;
 
+  /**
+   * A one-line command chained with `;`, `&&`, `||` or a pipe breaks at
+   * each chain point, the continuation indented, so a long line reads as
+   * the steps it is. Separators inside quotes are left alone, and a
+   * command the author already broke across lines is shown as written.
+   */
+  static breakLines(command: string): string {
+    if (command.includes('\n')) return command;
+    let output = '';
+    let quote: string | null = null;
+    for (let at = 0; at < command.length; at++) {
+      const char = command[at];
+      if (quote) {
+        output += char;
+        if (char === quote && command[at - 1] !== '\\') quote = null;
+        continue;
+      }
+      if (char === '"' || char === "'" || char === '`') {
+        quote = char;
+        output += char;
+        continue;
+      }
+      const two = command.slice(at, at + 2);
+      if (two === '&&' || two === '||') {
+        output = output.trimEnd() + '\n  ' + two + ' ';
+        at += 1;
+        while (command[at + 1] === ' ') at++;
+        continue;
+      }
+      if (char === ';') {
+        output = output.trimEnd() + ';\n';
+        while (command[at + 1] === ' ') at++;
+        continue;
+      }
+      if (char === '|') {
+        output = output.trimEnd() + '\n  | ';
+        while (command[at + 1] === ' ') at++;
+        continue;
+      }
+      output += char;
+    }
+    return output;
+  }
+
   /** The one cast per class: instance code reads its own statics here. */
   protected override get self() {
     return this.constructor as typeof $BashCall;
@@ -14,6 +58,11 @@ class $BashCall extends ToolCallModel.$Class {
 
   get command(): string {
     return String(this.input.command ?? '');
+  }
+
+  /** the command as the block shows it: one chain step per line */
+  get commandText(): string {
+    return this.self.breakLines(this.command);
   }
 
   get description(): string {

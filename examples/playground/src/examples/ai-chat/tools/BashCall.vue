@@ -14,7 +14,7 @@ const model = new ((props.kit?.namespace.Class as typeof BashCall.Class | undefi
       <p v-if="model.description" class="ac-tool-caption">{{ model.description }}</p>
       <section class="ac-tool-section">
         <h5>command <span v-if="model.ranInBackground" class="ac-tag">background</span></h5>
-        <component :is="model.kit.CodeBlock.vue" :kit="model.kit.CodeBlock" :code="model.command" lang="bash" :cap="model.cap" wrap />
+        <component :is="model.kit.CodeBlock.vue" :kit="model.kit.CodeBlock" :code="model.commandText" lang="bash" :cap="model.cap" wrap />
       </section>
       <section v-if="model.hasStdout" class="ac-tool-section">
         <h5>stdout <span class="ac-tag" :class="model.stateClass">{{ model.exitLabel }}</span></h5>
