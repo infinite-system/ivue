@@ -20,8 +20,9 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If the reading creep moves on from a seek's landing, then the seek's converge loop ends with the next position shift instead of re-pinning the landing under the creep.
 
 // domain-invariant: $VirtualScroller — If rows above the row under the viewport's leading edge change size, then the scroll moves by exactly that change and the reader's row stays where it was; rows below it move nothing.
+// domain-invariant: $VirtualScroller — If the reader is at rest, then the anchor is the row under the top edge whatever the last direction was, so a row that grows from a click grows downward; only while moving up is the bottom edge the anchor.
 // domain-invariant: $VirtualScroller — If the reader scrolled between two waves of a seek's converge loop, or the owner cancels the seek, then the next position shift ends the loop instead of re-pinning the landing.
-// domain-invariant: $VirtualScroller — If the thumb is dragged, then autoplay is never stopped by it: a playing scroller re-arms the creep on release either way, a drag deeper in the scroll direction from rest starts it as a forward wheel does, and while the thumb is held the creep waits.
+// domain-invariant: $VirtualScroller — If the thumb is dragged on a scroller that plays, then autoplay is never stopped by it: a playing scroller re-arms the creep on release either way, a drag deeper in the scroll direction from rest starts it as a forward wheel does, and while the thumb is held the creep waits; a list without autoPlay never arms the creep from a wheel or a drag, so it never reaches the auto-repeat reset.
 // domain-invariant: $VirtualScroller — If a finger lands on the track, then the touch is flagged for Lenis to skip, so the thumb drag seeks and the content does not scroll under it.
 // domain-invariant: $VirtualScroller — If the props object is read, then it is the fusion of the static types and defaults: the required list carries no default and the creep knob unset reads as the tuned cadence.
 // domain-invariant: $VirtualScroller — If item i's position is asked, then it is the sum of the sizes before it, measured where known and the estimate elsewhere, whichever way the cursor walks there.
@@ -31,6 +32,9 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded; only a landing snaps.
 // domain-invariant: $VirtualScroller — If nudgePaint runs on WebKit, then the inner layer's will-change is cycled through auto with a layout read between; elsewhere it does nothing.
 // domain-invariant: $VirtualScroller — If the frame scrolls natively, then the offset becomes a virtual scroll and the frame is zeroed; Lenis never adopts a native scroll on either axis.
+// domain-invariant: $VirtualScroller — If the frame loop finds nothing to paint — no input arriving, no lerp remaining, no creep — then it parks itself, and the next input wakes it; a scroller nobody touches requests no frames
+[The frame loop runs only while there is motion](virtual-scroller.invariants.md#the-frame-loop-runs-only-while-there-is-motion)
+Impossible if true: A scroller at rest requesting a frame every tick.
 Impossible if true: A rendered scroll position beyond the extent.
 Impossible if true: An item outside the list with a position.
 Impossible if true: A window whose spacers plus rows sum to anything but the extent.
@@ -89,6 +93,10 @@ class $Probe extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<R
 
   probeVirtualScrolling() {
     return this.virtualScrolling;
+  }
+
+  probeSetVirtualScrolling(value: boolean) {
+    this.virtualScrolling = value;
   }
 
   probeConverging() {
@@ -205,6 +213,7 @@ test('a seek keeps converging while sizes refine at rest, and lets go the moment
 });
 
 // domain-invariant: $VirtualScroller — If rows above the row under the viewport's leading edge change size, then the scroll moves by exactly that change and the reader's row stays where it was; rows below it move nothing.
+// domain-invariant: $VirtualScroller — If the reader is at rest, then the anchor is the row under the top edge whatever the last direction was, so a row that grows from a click grows downward; only while moving up is the bottom edge the anchor.
 // invariant: The reader's row stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('measuring rows above the anchored row moves the scroll by the same amount; rows below move nothing', async () => {
   const { instance, unmount } = scroller(rows(1000));
@@ -231,9 +240,11 @@ test('measuring rows above the anchored row moves the scroll by the same amount;
   instance.restoreAnchor(anchor);
   expect(Number(instance.scrollPosition.value)).toBe(before + 570);
   instance.restoreAnchor(undefined);
-  // scrolling up, the anchor is the row under the bottom edge: a row above
-  // it inside the view growing expands upward, so the scroll moves by its growth
+  // scrolling up — actually moving — the anchor is the row under the bottom
+  // edge: a row above it inside the view growing expands upward, so the
+  // scroll moves by its growth
   instance.scrollDirection.value = 'up';
+  instance.probeSetVirtualScrolling(true);
   const bottomRow = instance.captureAnchor()!.index;
   expect(bottomRow).toBeGreaterThan(100);
   const inView = bottomRow - 1;
@@ -246,6 +257,13 @@ test('measuring rows above the anchored row moves the scroll by the same amount;
   instance.scrollDirection.value = 'down';
   expect(instance.captureAnchor()!.index).toBe(inView);
   instance.syncItemSize(inView, assumed + 600);
+  expect(Number(instance.scrollPosition.value)).toBe(scrollBefore + 300);
+  // at rest after an up-scroll — a click opened a card — the anchor is the
+  // top edge again: the row grows downward and the scroll does not move
+  instance.probeSetVirtualScrolling(false);
+  instance.scrollDirection.value = 'up';
+  expect(instance.captureAnchor()!.index).toBe(inView);
+  instance.syncItemSize(inView, assumed + 900);
   expect(Number(instance.scrollPosition.value)).toBe(scrollBefore + 300);
   // mid-glide: the glide is asked to move with the content
   const shifted: number[] = [];
@@ -282,10 +300,10 @@ test('a seek lets go when the reader has scrolled since the last landing, and wh
   unmount();
 });
 
-// domain-invariant: $VirtualScroller — If the thumb is dragged, then autoplay is never stopped by it: a playing scroller re-arms the creep on release either way, a drag deeper in the scroll direction from rest starts it as a forward wheel does, and while the thumb is held the creep waits.
+// domain-invariant: $VirtualScroller — If the thumb is dragged on a scroller that plays, then autoplay is never stopped by it: a playing scroller re-arms the creep on release either way, a drag deeper in the scroll direction from rest starts it as a forward wheel does, and while the thumb is held the creep waits; a list without autoPlay never arms the creep from a wheel or a drag, so it never reaches the auto-repeat reset.
 test('a thumb drag never stops autoplay: it re-arms on release either way, starts it from rest when forward, and the creep waits while the thumb is held', () => {
   vi.useFakeTimers();
-  const { instance, unmount } = scroller(rows(50));
+  const { instance, unmount } = scroller(rows(50), { autoPlay: true });
   const track = document.createElement('div');
   track.className = 'virtual-scroller__track';
   track.getBoundingClientRect = () => ({ top: 0, height: 100, left: 0, width: 12 }) as DOMRect;
@@ -317,6 +335,34 @@ test('a thumb drag never stops autoplay: it re-arms on release either way, start
   instance.onTrackPointerUp();
   expect(instance.isAutoPlaying.value).toBe(true);
   play.mockRestore();
+  vi.useRealTimers();
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the thumb is dragged on a scroller that plays, then autoplay is never stopped by it: a playing scroller re-arms the creep on release either way, a drag deeper in the scroll direction from rest starts it as a forward wheel does, and while the thumb is held the creep waits; a list without autoPlay never arms the creep from a wheel or a drag, so it never reaches the auto-repeat reset.
+test('a list without autoPlay never arms the creep: not from a forward wheel, not from a forward thumb drag', () => {
+  vi.useFakeTimers();
+  const { instance, unmount } = scroller(rows(50));
+  // jsdom mounts no Lenis; the wheel path only resets its clock and parks a frame
+  const noop = () => undefined;
+  (instance as unknown as { lenis: unknown }).lenis = { time: 0, isScrolling: false, stop: noop, start: noop, destroy: noop, raf: noop };
+  (instance as unknown as { frame: number }).frame = 1;
+  const track = document.createElement('div');
+  track.className = 'virtual-scroller__track';
+  track.getBoundingClientRect = () => ({ top: 0, height: 100, left: 0, width: 12 }) as DOMRect;
+  track.setPointerCapture = () => {};
+  const pointer = (clientY: number) => ({ currentTarget: track, pointerId: 1, clientX: 6, clientY }) as unknown as PointerEvent;
+  const play = vi.spyOn(instance, 'play').mockImplementation(() => undefined);
+  instance.onVirtualScroll({ deltaX: 0, deltaY: 120 });
+  expect(instance.isAutoPlaying.value).toBe(false);
+  instance.onTrackPointerDown(pointer(20));
+  instance.onTrackPointerMove(pointer(80));
+  instance.onTrackPointerUp();
+  expect(instance.isAutoPlaying.value).toBe(false);
+  vi.advanceTimersByTime(20);
+  expect(play).not.toHaveBeenCalled();
+  play.mockRestore();
+  (instance as unknown as { lenis: unknown }).lenis = null;
   vi.useRealTimers();
   unmount();
 });
@@ -728,5 +774,40 @@ test('a native scroll of the frame is handed to the virtual scroll and zeroed, a
   // At rest, a scroll event with nothing to hand over does nothing.
   instance.onScroll(new Event('scroll'));
   expect(scrollBy).toHaveBeenCalledTimes(1);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the frame loop finds nothing to paint — no input arriving, no lerp remaining, no creep — then it parks itself, and the next input wakes it; a scroller nobody touches requests no frames
+// impossible-if-true: $VirtualScroller — A scroller at rest requesting a frame every tick.
+// invariant: The frame loop runs only while there is motion (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('the frame loop parks itself at rest and the next wheel wakes it', () => {
+  vi.useFakeTimers();
+  const { instance, unmount } = scroller(rows(50));
+  const raf = vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation(() => 7);
+  const noop = () => undefined;
+  const lenis = { time: 0, isScrolling: false as boolean | string, targetScroll: 100, animatedScroll: 100, scroll: 100, stop: noop, start: noop, destroy: noop, raf: noop };
+  (instance as unknown as { lenis: unknown }).lenis = lenis;
+  const frames = instance as unknown as { frame: number | null };
+  // a glide still lerping keeps the loop running
+  lenis.isScrolling = 'smooth';
+  lenis.animatedScroll = 60;
+  frames.frame = 1;
+  instance.loop(16);
+  expect(instance.isAtRest).toBe(false);
+  expect(frames.frame).toBe(7);
+  // settled: the loop parks
+  lenis.isScrolling = false;
+  lenis.animatedScroll = 100;
+  raf.mockClear();
+  instance.loop(32);
+  expect(instance.isAtRest).toBe(true);
+  expect(frames.frame).toBeNull();
+  expect(raf).not.toHaveBeenCalled();
+  // the next wheel wakes it
+  instance.onVirtualScroll({ deltaX: 0, deltaY: 120 });
+  expect(frames.frame).toBe(7);
+  raf.mockRestore();
+  (instance as unknown as { lenis: unknown }).lenis = null;
+  vi.useRealTimers();
   unmount();
 });

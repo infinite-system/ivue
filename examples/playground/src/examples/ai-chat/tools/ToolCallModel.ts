@@ -1,5 +1,13 @@
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
+import { Kit } from '../../../kit/Kit';
+import { Icons } from '../Icons';
+import { CodeBlock } from './CodeBlock';
+import CodeBlockView from './CodeBlock.vue';
+import { SubThread } from './SubThread';
+import SubThreadView from './SubThread.vue';
+import ToolHeadView from './ToolHead.vue';
+import ToolFootView from './ToolFoot.vue';
 import type { Chat } from '../Chat';
 import { Clock } from '../Clock';
 import { Highlighter } from '../Highlighter';
@@ -11,12 +19,23 @@ import { SessionLog } from '../SessionLog';
 // result. A tool's own class extends this and names its sections; the
 // generic card renders input as JSON and the result as text.
 class $ToolCallModel {
+  /** the roles every card composes: its head and foot, the code block, and a nested thread */
+  static get $kit() {
+    return {
+      Head: { vue: ToolHeadView },
+      Foot: { vue: ToolFootView },
+      CodeBlock: { namespace: CodeBlock, vue: CodeBlockView },
+      SubThread: { namespace: SubThread, vue: SubThreadView },
+    } satisfies Kit.Of<ToolCallModel.Role>;
+  }
+
   static readonly ICONS: Record<string, string> = {
-    Bash: '$',
-    Edit: '±',
-    Write: '✎',
-    Read: '☰',
-    Agent: '⑂',
+    Bash: '❯',
+    Edit: '✎',
+    NotebookEdit: '✎',
+    Write: '✚',
+    Read: '≡',
+    Agent: '⇶',
     Skill: '◈',
     WebFetch: '⇣',
     WebSearch: '⌕',
@@ -25,7 +44,6 @@ class $ToolCallModel {
     Glob: '✱',
     ToolSearch: '⌕',
     AskUserQuestion: '?',
-    NotebookEdit: '✎',
   };
   /** result text past this many characters folds behind "show everything" */
   static readonly CAP = 4_000;
@@ -35,6 +53,11 @@ class $ToolCallModel {
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
     return this.constructor as typeof $ToolCallModel;
+  }
+
+  /** the kit is the class's — a tool that overrides `$kit` swaps its own leaves */
+  get kit() {
+    return this.self.$kit;
   }
 
   get call(): SessionLog.ToolCall {
@@ -57,6 +80,43 @@ class $ToolCallModel {
 
   get summary(): string {
     return SessionLog.Class.callSummary(this.call);
+  }
+
+  /** the action's own title — a shell call's description, an agent's brief — shown before the argument */
+  get title(): string {
+    const description = this.input.description;
+    return typeof description === 'string' ? description.split('\n')[0].trim() : '';
+  }
+
+  get hasTitle(): boolean {
+    return this.title !== '';
+  }
+
+  /** the path a file tool names, empty for every other tool */
+  get filePath(): string {
+    const path = this.input.file_path ?? this.input.notebook_path ?? this.input.path;
+    return typeof path === 'string' ? path.trim() : '';
+  }
+
+  get isFileTool(): boolean {
+    return this.filePath !== '';
+  }
+
+  /** the file's own name — always shown whole; the directory is what truncates */
+  get fileName(): string {
+    return this.filePath.split('/').pop() ?? '';
+  }
+
+  get fileDir(): string {
+    const segments = this.filePath.split('/');
+    segments.pop();
+    return segments.length ? `${segments.join('/')}/` : '';
+  }
+
+  /** the directory shortened to its last two segments — `…/examples/ai-chat/` — so the file name stays whole */
+  get fileDirShort(): string {
+    const segments = this.fileDir.split('/').filter(Boolean);
+    return segments.length > 2 ? `…/${segments.slice(-2).join('/')}/` : this.fileDir;
   }
 
   /** the collapsed line's text — exactly what the projection says for this part */
@@ -101,8 +161,9 @@ class $ToolCallModel {
     return this.isExpanded ? 'collapse' : 'expand';
   }
 
-  get toggleGlyph(): string {
-    return this.isExpanded ? '▾' : '▸';
+  /** one chevron; the card's open class turns it */
+  get chevronIcon(): string {
+    return Icons.$Class.PATHS.chevron;
   }
 
   get stateClass(): string {
@@ -195,7 +256,11 @@ export namespace ToolCallModel {
     call: SessionLog.ToolCall;
     chat: Chat.Model;
     message: SessionLog.Message | null;
+    /** the entry this view was rendered through: the class it constructs */
+    kit?: Kit.Entry;
   }
+
+  export type Role = 'Head' | 'Foot' | 'CodeBlock' | 'SubThread';
 
   export interface Section {
     title: string;

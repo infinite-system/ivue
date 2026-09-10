@@ -23,6 +23,7 @@ import {
 import { Lenis } from '../../lenis/Lenis';
 import { nestedProps, type NestedPartial, type NestedProps } from '../../nestedProps';
 import { Static } from '../../Static';
+import type { Kit } from '../../kit/Kit';
 import { VirtualScrollerPadding } from './VirtualScrollerPadding';
 import { VirtualScrollerSelection } from './VirtualScrollerSelection';
 
@@ -109,7 +110,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       dragHandleSelector: { type: String as PropType<string> },
       dragClass: { type: String as PropType<string> },
       dragGhostClass: { type: String as PropType<string> },
-      dragChosenClass: { type: String as PropType<string> }
+      dragChosenClass: { type: String as PropType<string> },
+      /** the kit entry this scroller was rendered through, when a parent's kit names it */
+      kit: { type: Object as PropType<Kit.Entry<typeof VirtualScroller>> }
     });
   }
 
@@ -138,7 +141,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       dragHandleSelector: '.sortable-drag-handle',
       dragClass: 'sortable-drag',
       dragGhostClass: 'sortable-ghost',
-      dragChosenClass: 'sortable-chosen'
+      dragChosenClass: 'sortable-chosen',
+      kit: undefined
     };
   }
 
@@ -264,6 +268,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
         ignoreNativeScroll: this.lenisIgnoreNativeScroll,
         syncTouch: true, // Sync touch events
         smoothWheel: true,
+        // a scrollable element inside a row — a wide code block, a diff — takes the wheel
+        // until it reaches its own edge; only then does the gesture move the list
+        allowNestedScroll: true,
         autoRaf: false, // we drive it ourselves
         ...this.lenisMotion
       });
@@ -739,6 +746,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return ref(false);
   }
 
+  /** nothing left for the frame loop to paint: no input arriving, no lerp remaining, no creep */
+  get isAtRest(): boolean {
+    const lenis = this.lenisRequired;
+    return !this.isAutoPlaying.value && !this.virtualScrolling && lenis.isScrolling === false && Math.abs(lenis.targetScroll - lenis.animatedScroll) < 0.5;
+  }
+
   /** The track renders only when asked for AND there is travel to show. */
   get scrollbarVisible() {
     return this.props.scrollbar && this.scrollbarThumbFraction > 0;
@@ -1160,8 +1173,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // below the anchor (no shift) while it is on screen, and the content
     // under the reader would move — a backward jerk in every glide it hit
     const lenis = this.lenis;
-    const scroll = lenis && lenis.isScrolling ? lenis.animatedScroll : Number(this.scrollPosition.value);
-    const edge = this.scrollDirection.value === 'up' ? scroll + Math.max(0, this.containerOuterSize.value - 1) : scroll;
+    const gliding = Boolean(lenis && lenis.isScrolling);
+    const scroll = gliding ? lenis!.animatedScroll : Number(this.scrollPosition.value);
+    // the bottom edge is the anchor only while the reader is actually moving
+    // up: at rest, a row that grows (a card opened by a click) must grow
+    // DOWNWARD from where the reader left it, whatever the last direction was
+    const moving = gliding || this.virtualScrolling;
+    const edge = moving && this.scrollDirection.value === 'up' ? scroll + Math.max(0, this.containerOuterSize.value - 1) : scroll;
     const at = this.getIndexAtPosition(edge);
     if (!at) return undefined;
     const top = this.getIndexPosition(at.index);
@@ -1540,7 +1558,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.scrollbarDragging.value = false;
     this.virtualScrolling = false;
     const forward = this.thumbDrag.to > this.thumbDrag.from;
-    if (forward && !this.props.snapToItems) this.isAutoPlaying.value = true;
+    if (forward && this.props.autoPlay && !this.props.snapToItems) this.isAutoPlaying.value = true;
     if (this.isAutoPlaying.value) {
       this.scrollDirection.value = 'down';
       clearTimeout(this.autoscrollTimeout);
@@ -1725,7 +1743,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // the settle chain below resumes the creep once the input rests.
     if (this.isAutoPlaying.value && delta < 0) {
       this.stopAutoPlay();
-    } else if (!this.isAutoPlaying.value && delta > 0 && !this.props.snapToItems) {
+    } else if (!this.isAutoPlaying.value && delta > 0 && this.props.autoPlay && !this.props.snapToItems) {
+      // reading intent re-arms the creep — on a scroller that plays at all;
+      // a plain list (a chat) never creeps, and so never reaches the
+      // auto-repeat reset that would send it back to the top
       this.isAutoPlaying.value = true;
     }
     this.virtualScrolling = true;
@@ -1792,9 +1813,17 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // the spacer (rendered by this frame's flush) must shift together.
     this.updateRenderBias(Math.abs(lenis.scroll ?? 0));
     lenis.raf(now); // keep Lenis in sync
-    this.frame = requestAnimationFrame(this.loop);
     this.setScrollPosition(-lenis.targetScroll, false, false);
+    // The loop runs only while there is motion to paint: a glide still
+    // lerping, input still arriving, or the creep. At rest it parks, and the
+    // next input wakes it — a scroller nobody touches costs no frames.
+    if (this.isAtRest) {
+      this.frame = null;
+      return;
+    }
+    this.frame = requestAnimationFrame(this.loop);
   }
+
 
   startAutoPlay(delay = 500, callback = () => {}) {
     this.isAutoPlaying.value = true;

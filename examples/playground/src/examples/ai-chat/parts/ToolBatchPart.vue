@@ -1,30 +1,29 @@
 <script setup lang="ts">
 import type { SessionLog } from '../SessionLog';
-import type { Parts } from './Parts';
+import type { Part } from './Part';
 import { ToolBatchPart } from './ToolBatchPart';
-import { Tools } from '../tools/Tools';
 
-const props = defineProps<Parts.Props<SessionLog.ToolBatchPart>>();
+const props = defineProps<Part.Props<SessionLog.ToolBatchPart>>();
 
-const model = new ToolBatchPart.Class(props);
+const model = new ((props.kit?.namespace.Class as typeof ToolBatchPart.Class | undefined) ?? ToolBatchPart.Class)(props);
 </script>
 
 <template>
   <div class="ac-batch" :class="model.batchClass">
     <button type="button" class="ac-batch-head" @click="model.toggle()">
+      <svg class="ac-batch-toggle ac-chevron" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.chevronIcon" /></svg>
       <span class="ac-batch-count">{{ model.countLabel }}</span>
       <span class="ac-batch-icons" aria-hidden="true">
-        <span v-for="entry in model.icons" :key="entry.key" class="ac-batch-icon" :title="entry.name">{{ entry.icon }}</span>
+        <span v-for="entry in model.icons" :key="entry.key" class="ac-batch-icon" :title="entry.name">{{ entry.icon }}<sup v-if="entry.isMany" class="ac-batch-sup">{{ entry.count }}</sup></span>
       </span>
       <span class="ac-batch-names">{{ model.namesLabel }}</span>
       <span class="ac-batch-time" :class="{ 'ac-state-failed': model.hasFailure }">
         <span v-if="model.isRunning" class="ac-spinner" aria-hidden="true"></span>
         {{ model.timeLabel }}
       </span>
-      <span class="ac-batch-toggle" aria-hidden="true">{{ model.toggleLabel }}</span>
     </button>
     <div v-if="model.isExpanded" class="ac-batch-body">
-      <component :is="Tools.Class.componentFor(call.name)" v-for="call in model.calls" :key="call.id" :call="call" :chat="chat" :message="message" />
+      <component :is="model.kit.Call.vue" v-for="call in model.calls" :key="call.id" :kit="model.kit.Call" :part="model.partFor(call)" :chat="chat" :message="message" />
     </div>
   </div>
 </template>

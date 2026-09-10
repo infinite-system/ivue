@@ -1,5 +1,6 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Reactive } from '../../../ivue';
+import type { Kit } from '../../../kit/Kit';
 import { Highlighter } from '../Highlighter';
 
 // One block of code on a card: plain and escaped on the first paint,
@@ -82,5 +83,6 @@ export namespace CodeBlock {
     startLine?: number;
     tone?: 'plain' | 'error' | 'muted';
     wrap?: boolean;
+    kit?: Kit.Entry;
   }
 }

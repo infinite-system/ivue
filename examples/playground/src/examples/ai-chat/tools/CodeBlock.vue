@@ -3,7 +3,7 @@ import { CodeBlock } from './CodeBlock';
 
 const props = defineProps<CodeBlock.Props>();
 
-const model = new CodeBlock.Class(props);
+const model = new ((props.kit?.namespace.Class as typeof CodeBlock.Class | undefined) ?? CodeBlock.Class)(props);
 </script>
 
 <template>

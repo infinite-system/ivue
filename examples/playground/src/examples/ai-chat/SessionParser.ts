@@ -126,7 +126,7 @@ class $SessionParser {
         index: -1,
         role: 'system',
         timestamp: SessionLog.Class.epoch(record),
-        parts: [{ kind: 'system', subtype: 'compaction', text: 'Context compacted', detail: text, durationMs: null }],
+        parts: [{ kind: 'system', subtype: 'compaction', text: SessionLog.Class.COMPACTION_TEXT, detail: text, durationMs: null }],
         sidechain: Boolean(record.isSidechain),
       });
       return;
