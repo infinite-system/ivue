@@ -9,7 +9,7 @@ props the entry sets. The design
 itself is recorded in `tasks/malleable-architecture.md` under "The kit";
 this file is the build.
 
-Status: converted on branch `ai-chat-kit` (2026-09-10): every seam an entry, `Parts.ts` and `Tools.ts` gone, the row's sections roles, the card map on `ToolCallPart`; the standard's gate learned the seam's construction form. Awaiting review before merge. Trigger: the first time a second view of
+Status: converted on branch `ai-chat-kit` (2026-09-10): every seam an entry, `Parts.ts` and `Tools.ts` gone, the row's sections roles, the card map on `ToolCallPart`; the standard's gate learned the seam's construction form. Awaiting review before merge. Later on the branch: sidebar rail (Index / Files / Settings), the configuration layer (`ConfiguredChat` + settings store), tree and theme variants, the scrollbar peek, the model picker, matched SVG icons, streaming words rendered per token. Trigger: the first time a second view of
 any chat model is wanted (a different scroller for the chat only, a
 different code block for one page, an embed of the thread elsewhere) —
 or the moment the standard is ready to take the kit rule and needs a
