@@ -1740,8 +1740,12 @@
 
 /* ---- rows, third pass: compact and fresh; the turn number sits with the time ---- */
 .ai-chat .ac-msg {
-  padding: 10px 44px 10px 30px;
+  padding: 14px 44px 14px 30px;
   gap: 12px;
+}
+/* the prose: a touch tighter between lines, more air around the block */
+.ai-chat .ac-text {
+  line-height: 1.42;
 }
 .ai-chat .ac-msg-system {
   padding: 4px 44px 4px 30px;
