@@ -1415,17 +1415,25 @@
   color: var(--ac-muted);
 }
 /* one triangle for every toggle, turned by the open state */
-.ai-chat .ac-tool-toggle,
-.ai-chat .ac-batch-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  font-size: 15px;
-  line-height: 1;
+.ai-chat .ac-chevron {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   color: var(--ac-muted);
   transition: transform 0.15s ease, color 0.15s ease;
+}
+.ai-chat .ac-chevron.ac-turned {
+  transform: rotate(90deg);
+}
+.ai-chat .ac-tool-toggle,
+.ai-chat .ac-batch-toggle {
+  width: 16px;
+  height: 16px;
 }
 .ai-chat .ac-tool-head:hover .ac-tool-toggle,
 .ai-chat .ac-batch-head:hover .ac-batch-toggle {
@@ -1931,8 +1939,12 @@
 .ai-chat .ac-file-toggle {
   grid-row: 1 / span 2;
   align-self: center;
-  color: var(--ac-muted);
-  font-size: 10px;
+  width: 15px;
+  height: 15px;
+}
+.ai-chat .ac-file:hover .ac-file-toggle,
+.ai-chat .ac-file-record:hover .ac-file-record-glyph {
+  color: var(--ac-accent);
 }
 .ai-chat .ac-file-go {
   grid-column: 4;
@@ -1959,9 +1971,8 @@
   padding-bottom: 8px;
 }
 .ai-chat .ac-file-record-glyph {
-  width: 10px;
-  color: var(--ac-muted);
-  font-size: 10px;
+  width: 14px;
+  height: 14px;
 }
 .ai-chat .ac-file-record-summary {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;

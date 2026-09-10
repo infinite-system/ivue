@@ -11,7 +11,7 @@ const model = new ((props.kit?.namespace.Class as typeof ToolBatchPart.Class | u
 <template>
   <div class="ac-batch" :class="model.batchClass">
     <button type="button" class="ac-batch-head" @click="model.toggle()">
-      <span class="ac-batch-toggle" aria-hidden="true">{{ model.toggleLabel }}</span>
+      <svg class="ac-batch-toggle ac-chevron" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.chevronIcon" /></svg>
       <span class="ac-batch-count">{{ model.countLabel }}</span>
       <span class="ac-batch-icons" aria-hidden="true">
         <span v-for="entry in model.icons" :key="entry.key" class="ac-batch-icon" :title="entry.name">{{ entry.icon }}<sup v-if="entry.isMany" class="ac-batch-sup">{{ entry.count }}</sup></span>

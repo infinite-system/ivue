@@ -6,6 +6,7 @@ import VirtualScrollerView from '../virtual-scroller/VirtualScroller.vue';
 import type { Chat } from './Chat';
 import { Icons } from './Icons';
 import { Index } from './Index';
+import { SessionLog } from './SessionLog';
 import type { Kit } from '../../kit/Kit';
 
 // The scrollbar's peek: hover the track and a small card slides in beside
@@ -345,7 +346,7 @@ class $Peek {
     return rows.filter((row) => {
       if (role !== 'all' && row.role !== role) return false;
       if (tools === 'exclude' && row.calls > 0) return false;
-      if (tools === 'only' && row.calls === 0) return false;
+      if (tools === 'compaction' && !SessionLog.Class.isCompaction(row.role, row.preview)) return false;
       if (!words.length) return true;
       const text = `${this.roleMark(row)} ${row.preview}`.toLowerCase();
       return words.every((word) => text.includes(word));

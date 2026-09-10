@@ -25,6 +25,7 @@ const rows: ChatApi.IndexRow[] = [
   { id: 'd', r: 'u', t: 'next question', c: 0, at: 1_700_000_120_000 },
   { id: 'e', r: 'a', t: 'plain answer', c: 0, at: 1_700_000_180_000 },
   { id: 'f', r: 'a', t: 'more tools', c: 1, at: 1_700_000_240_000 },
+  { id: 'g', r: 's', t: 'Context compacted', c: 0, at: 1_700_000_300_000 },
 ];
 
 function make() {
@@ -59,9 +60,9 @@ describe('Index', () => {
     const seeks: number[] = [];
     index.scroller.value = { scrollToIndex: (at: number) => seeks.push(at) } as never;
     index.landAfterFilter();
-    expect(seeks).toEqual([5]); // the end, like the chat
+    expect(seeks).toEqual([6]); // the end, like the chat
     index.setOrder('newest');
-    expect(index.rows.value.map((row) => row.id)).toEqual(['f', 'e', 'd', 'c', 'b', 'a']);
+    expect(index.rows.value.map((row) => row.id)).toEqual(['g', 'f', 'e', 'd', 'c', 'b', 'a']);
     await Promise.resolve();
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(seeks.at(-1)).toBe(0); // the start: the newest is first now
@@ -78,22 +79,22 @@ describe('Index', () => {
 
   it('lists every message from the index rows and filters by role, tool calls and text', () => {
     const { index, unmount } = make();
-    expect(index.count).toBe(6);
-    expect(index.countLabel).toBe('6 messages');
+    expect(index.count).toBe(7);
+    expect(index.countLabel).toBe('7 messages');
     index.setRole('user');
     expect(index.rows.value.map((row) => row.id)).toEqual(['a', 'd']);
-    expect(index.countLabel).toBe('2 of 6');
+    expect(index.countLabel).toBe('2 of 7');
     index.setRole('assistant');
-    index.setTools('only');
-    expect(index.rows.value.map((row) => row.id)).toEqual(['b', 'f']);
     index.setTools('exclude');
     expect(index.rows.value.map((row) => row.id)).toEqual(['e']);
     index.setRole('all');
+    index.setTools('compaction');
+    expect(index.rows.value.map((row) => row.id)).toEqual(['g']);
     index.setTools('include');
     index.query.value = 'TOOLS';
     expect(index.rows.value.map((row) => row.id)).toEqual(['b', 'f']);
     index.clearQuery();
-    expect(index.count).toBe(6);
+    expect(index.count).toBe(7);
     expect(index.isRole('all')).toBe(true);
     expect(index.isTools('include')).toBe(true);
     const row = index.rows.value[1];
@@ -129,7 +130,7 @@ describe('Index', () => {
     expect(index.isSelected(index.rows.value[1])).toBe(true);
     expect(index.rowClass(index.rows.value[1])).toMatchObject({ 'ac-selected': true });
     index.toggleAllShown();
-    expect(index.selectedCount).toBe(6);
+    expect(index.selectedCount).toBe(7);
     expect(index.allShownSelected).toBe(true);
     expect(index.selectAllLabel).toBe('Clear shown');
     index.toggleAllShown();

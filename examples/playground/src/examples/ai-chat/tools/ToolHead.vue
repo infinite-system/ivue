@@ -10,7 +10,7 @@ defineProps<{ model: ToolCallModel.Instance }>();
 
 <template>
   <button type="button" class="ac-tool-head" @click="model.toggle()">
-    <span class="ac-tool-toggle" aria-hidden="true">{{ model.toggleGlyph }}</span>
+    <svg class="ac-tool-toggle ac-chevron" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.chevronIcon" /></svg>
     <span class="ac-tool-icon" aria-hidden="true">{{ model.icon }}</span>
     <span class="ac-tool-name">{{ model.name }}</span>
     <span v-if="model.hasTitle" class="ac-tool-title">{{ model.title }}</span>

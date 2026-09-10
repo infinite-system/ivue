@@ -38,7 +38,7 @@ const {
       <component :is="model.kit.Scroller.vue" ref="scroller" :kit="model.kit.Scroller" scrollbar :auto-repeat="false" :model-value="rows" :assumed-size="48" :padding-quantity="8" :selection-text="model.rowText">
         <template #item="{ item }">
           <div v-if="model.isFile(item)" class="ac-file" :class="model.fileClass(item)" :title="item.file.path" @click="model.toggle(item.file)">
-            <span class="ac-file-toggle" aria-hidden="true">{{ model.toggleGlyph(item.file) }}</span>
+            <svg class="ac-file-toggle ac-chevron" :class="{ 'ac-turned': model.isExpanded(item.file) }" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.chevronIcon" /></svg>
             <span class="ac-file-name">{{ item.file.name }}</span>
             <span class="ac-file-dir">{{ item.file.dir }}</span>
             <span class="ac-file-touches">{{ model.touchesLabel(item.file) }}</span>
@@ -46,7 +46,7 @@ const {
           </div>
           <div v-else class="ac-file-record" :class="model.recordClass(item.record)" @click="model.toggleRecord(item.record)">
             <div class="ac-file-record-head">
-              <span class="ac-file-record-glyph" aria-hidden="true">{{ model.recordGlyph(item.record) }}</span>
+              <svg class="ac-file-record-glyph ac-chevron" :class="{ 'ac-turned': model.isRecordOpen(item.record) }" viewBox="0 0 24 24" aria-hidden="true"><path :d="model.chevronIcon" /></svg>
               <span class="ac-file-record-tool">{{ model.recordLabel(item.record) }}</span>
               <span class="ac-file-record-summary">{{ model.diffSummary(item.record) }}</span>
               <button type="button" class="ac-file-record-index" title="Show this message in the chat" @click.stop="model.jump(item.record)">{{ model.recordIndexLabel(item.record) }}</button>
