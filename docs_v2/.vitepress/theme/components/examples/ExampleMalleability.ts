@@ -30,6 +30,17 @@ class $ExampleMalleability {
         tagline: 'The tree its authors wrote: a panel, two cards, code capped at four characters.',
         patch: '// nothing — Panel as its file exports it',
         namespace: Panel,
+        files: [
+          { path: 'examples/playground/src/kit/fixtures/Panel.ts', label: 'Panel.ts' },
+          { path: 'examples/playground/src/kit/fixtures/Panel.vue', label: 'Panel.vue' },
+          { path: 'examples/playground/src/kit/fixtures/Card.ts', label: 'Card.ts' },
+          { path: 'examples/playground/src/kit/fixtures/Card.vue', label: 'Card.vue' },
+          { path: 'examples/playground/src/kit/fixtures/CardHead.vue', label: 'CardHead.vue' },
+          { path: 'examples/playground/src/kit/fixtures/CardBody.vue', label: 'CardBody.vue' },
+          { path: 'examples/playground/src/kit/fixtures/Frame.vue', label: 'Frame.vue' },
+          { path: 'examples/playground/src/kit/fixtures/Code.ts', label: 'Code.ts' },
+          { path: 'examples/playground/src/kit/fixtures/Code.vue', label: 'Code.vue' },
+        ],
       },
       {
         id: 'sections',
@@ -45,6 +56,14 @@ class $ExampleMalleability {
   },
 })`,
         namespace: Kit.Class.derive(Panel, { Card: { subkit: sections } }),
+        files: [
+          { path: 'examples/playground/src/kit/fixtures/FancyHead.vue', label: 'FancyHead.vue' },
+          { path: 'examples/playground/src/kit/fixtures/GroupedBody.vue', label: 'GroupedBody.vue' },
+          { path: 'examples/playground/src/kit/fixtures/FancyFrame.vue', label: 'FancyFrame.vue' },
+          { path: 'examples/playground/src/kit/fixtures/FancyCard.ts', label: 'FancyCard.ts — the same swap as a subclass file' },
+          { path: 'examples/playground/src/kit/fixtures/CardHead.vue', label: 'CardHead.vue — what Head was' },
+          { path: 'examples/playground/src/kit/fixtures/CardBody.vue', label: 'CardBody.vue — what Body was' },
+        ],
       },
       {
         id: 'leaf',
@@ -54,6 +73,11 @@ class $ExampleMalleability {
   Card: { subkit: { Code: { namespace: ThemedCode } } },
 })`,
         namespace: Kit.Class.derive(Panel, { Card: { subkit: leaf } }),
+        files: [
+          { path: 'examples/playground/src/kit/fixtures/ThemedCode.ts', label: 'ThemedCode.ts' },
+          { path: 'examples/playground/src/kit/fixtures/Code.ts', label: 'Code.ts — what it extends' },
+          { path: 'examples/playground/src/kit/fixtures/Code.vue', label: 'Code.vue — the view, rewrapped' },
+        ],
       },
       {
         id: 'knobs',
@@ -63,6 +87,10 @@ class $ExampleMalleability {
   Card: { subkit: { Code: { props: { cap: 3, theme: 'paper' } } } },
 })`,
         namespace: Kit.Class.derive(Panel, { Card: { subkit: knobs } }),
+        files: [
+          { path: 'examples/playground/src/kit/fixtures/Code.ts', label: 'Code.ts — the getters that read the kit' },
+          { path: 'examples/playground/src/kit/fixtures/CardBody.vue', label: 'CardBody.vue — still passes :cap="4"' },
+        ],
       },
       {
         id: 'all',
@@ -81,6 +109,13 @@ class $ExampleMalleability {
         namespace: Kit.Class.derive(Panel, {
           Card: { subkit: { ...sections, Code: { namespace: ThemedCode, props: { cap: 3 } } } },
         }),
+        files: [
+          { path: 'examples/playground/src/kit/fixtures/FancyHead.vue', label: 'FancyHead.vue' },
+          { path: 'examples/playground/src/kit/fixtures/GroupedBody.vue', label: 'GroupedBody.vue' },
+          { path: 'examples/playground/src/kit/fixtures/FancyFrame.vue', label: 'FancyFrame.vue' },
+          { path: 'examples/playground/src/kit/fixtures/ThemedCode.ts', label: 'ThemedCode.ts' },
+          { path: 'examples/playground/src/kit/Kit.ts', label: 'Kit.ts — resolve, derive, view' },
+        ],
       },
     ];
   }
@@ -106,6 +141,13 @@ class $ExampleMalleability {
 
   static isDerived(namespace: Kit.Namespace): boolean {
     return Boolean(namespace.derivedFrom);
+  }
+
+  /** `cap: 3, theme: 'paper'` — the props bag as the reader would write it */
+  static propsLabel(props: Record<string, unknown>): string {
+    return Object.entries(props)
+      .map(([key, value]) => `${key}: ${typeof value === 'string' ? `'${value}'` : JSON.stringify(value)}`)
+      .join(', ');
   }
 
   static viewName(view: unknown): string {
@@ -139,11 +181,35 @@ class $ExampleMalleability {
     return this.self.TITLES;
   }
 
-  /** The resolved kit as lines, from the root down: what the reader's choice actually changed. */
+  /** The shipped tree's lines, the baseline every override is read against. */
+  get baseline(): ExampleMalleability.Line[] {
+    const lines: ExampleMalleability.Line[] = [];
+    this.walk('Panel', { namespace: Panel, vue: PanelView }, 0, lines);
+    return lines;
+  }
+
+  /** The resolved kit as lines, from the root down, each marked with what the override changed. */
   get inspector(): ExampleMalleability.Line[] {
     const lines: ExampleMalleability.Line[] = [];
     this.walk('Panel', this.entry, 0, lines);
-    return lines;
+    const before = new Map(this.baseline.map((line) => [line.key, line]));
+    return lines.map((line) => {
+      const was = before.get(line.key);
+      const changedView = Boolean(was && was.vue !== line.vue);
+      const changedClass = Boolean(was && was.className !== line.className);
+      const changedProps = Boolean(was && was.props !== line.props);
+      return { ...line, wasView: was?.vue ?? '', wasClass: was?.className ?? '', changedView, changedClass, changedProps, changed: changedView || changedClass || changedProps };
+    });
+  }
+
+  get changedCount(): number {
+    return this.inspector.filter((line) => line.changed).length;
+  }
+
+  get changedLabel(): string {
+    const count = this.changedCount;
+    if (count === 0) return 'nothing changed — this is the shipped tree';
+    return `${count} of ${this.inspector.length} roles changed; every other role is the shipped one`;
   }
 
   get isShipped(): boolean {
@@ -168,7 +234,13 @@ class $ExampleMalleability {
       vue: self.viewName(entry.vue),
       className: namespace ? self.baseName(namespace) : '',
       derived: namespace ? self.isDerived(namespace) : false,
-      props: entry.props ? JSON.stringify(entry.props) : '',
+      props: entry.props ? self.propsLabel(entry.props) : '',
+      wasView: '',
+      wasClass: '',
+      changedView: false,
+      changedClass: false,
+      changedProps: false,
+      changed: false,
     });
     const kit = namespace?.Class.$kit;
     if (!kit) return;
@@ -190,6 +262,8 @@ export namespace ExampleMalleability {
     /** the override as the reader would write it */
     patch: string;
     namespace: Kit.Namespace;
+    /** the files this override brings or touches, shown beside the live tree */
+    files: { path: string; label: string }[];
   }
 
   export interface Line {
@@ -200,5 +274,11 @@ export namespace ExampleMalleability {
     className: string;
     derived: boolean;
     props: string;
+    wasView: string;
+    wasClass: string;
+    changedView: boolean;
+    changedClass: boolean;
+    changedProps: boolean;
+    changed: boolean;
   }
 }

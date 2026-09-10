@@ -23,9 +23,10 @@ Pick an override below. The same `Panel.vue` renders every one of them.
 <ExampleMalleability />
 
 Nothing in that demo edits a file. Each override is a subclass of the
-shipped root, written as one literal and derived at runtime, and the
-inspector walks the resolved roles to show what changed: a section view
-here, a `derived` class there, a bag of props on one entry.
+shipped root, written as one literal and derived at runtime. The tree
+beside the render is the resolved kit read against the shipped one: a
+struck name is what a role was, the arrow is what it is now, and the
+files below the stage are the ones the override brought.
 
 > **A tree is malleable when every seam passes one entry and every
 > class reads only its own kit.**
