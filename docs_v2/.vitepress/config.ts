@@ -155,6 +155,12 @@ export default defineConfig({
             new URL('../../examples/playground/src/examples', import.meta.url),
           ),
         },
+        // The Infinite Malleability page mounts the kit's fixture tree — the
+        // same files its source tabs show.
+        {
+          find: '@kit',
+          replacement: fileURLToPath(new URL('../../examples/playground/src/kit', import.meta.url)),
+        },
         // The AI chat example colours code at runtime through shiki, which
         // lives in this site's install; the playground files that import
         // it sit outside this package, so the bare specifier needs the
@@ -717,6 +723,7 @@ export default defineConfig({
               { text: 'Static() — Capability Classes', link: '/guide/static' },
               { text: 'Caches, Registries & self', link: '/guide/caches-and-registries' },
               { text: 'Backend ivue', link: '/guide/backend' },
+              { text: 'Infinite Malleability', link: '/guide/malleability' },
             ],
           },
           {
@@ -895,6 +902,7 @@ export default defineConfig({
             { text: 'Static() — Capability Classes', link: '/guide/static' },
             { text: 'Caches, Registries & self', link: '/guide/caches-and-registries' },
             { text: 'Backend ivue', link: '/guide/backend' },
+            { text: 'Infinite Malleability', link: '/guide/malleability' },
           ],
         },
         {
