@@ -209,7 +209,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### The reader's row stays put while sizes settle
 
-**Invariant:** If rows above the row under the edge the reader reads from change size — a row measuring as it mounts, a placeholder becoming its content, a batch re-measure, the estimate calibrating — then the scroll moves by exactly what the content above moved, and that row stays where the reader had it. Scrolling down the edge is the top; scrolling up it is the bottom, so a row growing inside the view expands upward, away from what was just read. Rows below the anchor move nothing.
+**Invariant:** If rows above the row under the edge the reader reads from change size — a row measuring as it mounts, a placeholder becoming its content, a batch re-measure, the estimate calibrating — then the scroll moves by exactly what the content above moved, and that row stays where the reader had it. Scrolling down the edge is the top; while actually moving up it is the bottom, so a row growing inside the view expands upward, away from what was just read; at rest the edge is the top whatever the last direction was, so a row a click opened grows downward from where the reader left it. Rows below the anchor move nothing.
 
 **Scope:** `VirtualScroller.ts`: `captureAnchor`, `restoreAnchor`, `shiftScroll`, and the two paths that change sizes — `syncItemSize` on its own (an item's mount capture) and `remeasureRenderedItems` (the wrapper's observer, anchored once around its wave). Applies to every list the scroller renders, at any scroll position but the top, where nothing sits above the anchor.
 

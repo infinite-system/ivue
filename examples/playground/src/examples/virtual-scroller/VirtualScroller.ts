@@ -1160,8 +1160,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // below the anchor (no shift) while it is on screen, and the content
     // under the reader would move — a backward jerk in every glide it hit
     const lenis = this.lenis;
-    const scroll = lenis && lenis.isScrolling ? lenis.animatedScroll : Number(this.scrollPosition.value);
-    const edge = this.scrollDirection.value === 'up' ? scroll + Math.max(0, this.containerOuterSize.value - 1) : scroll;
+    const gliding = Boolean(lenis && lenis.isScrolling);
+    const scroll = gliding ? lenis!.animatedScroll : Number(this.scrollPosition.value);
+    // the bottom edge is the anchor only while the reader is actually moving
+    // up: at rest, a row that grows (a card opened by a click) must grow
+    // DOWNWARD from where the reader left it, whatever the last direction was
+    const moving = gliding || this.virtualScrolling;
+    const edge = moving && this.scrollDirection.value === 'up' ? scroll + Math.max(0, this.containerOuterSize.value - 1) : scroll;
     const at = this.getIndexAtPosition(edge);
     if (!at) return undefined;
     const top = this.getIndexPosition(at.index);
@@ -1540,7 +1545,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.scrollbarDragging.value = false;
     this.virtualScrolling = false;
     const forward = this.thumbDrag.to > this.thumbDrag.from;
-    if (forward && !this.props.snapToItems) this.isAutoPlaying.value = true;
+    if (forward && this.props.autoPlay && !this.props.snapToItems) this.isAutoPlaying.value = true;
     if (this.isAutoPlaying.value) {
       this.scrollDirection.value = 'down';
       clearTimeout(this.autoscrollTimeout);
@@ -1725,7 +1730,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // the settle chain below resumes the creep once the input rests.
     if (this.isAutoPlaying.value && delta < 0) {
       this.stopAutoPlay();
-    } else if (!this.isAutoPlaying.value && delta > 0 && !this.props.snapToItems) {
+    } else if (!this.isAutoPlaying.value && delta > 0 && this.props.autoPlay && !this.props.snapToItems) {
+      // reading intent re-arms the creep — on a scroller that plays at all;
+      // a plain list (a chat) never creeps, and so never reaches the
+      // auto-repeat reset that would send it back to the top
       this.isAutoPlaying.value = true;
     }
     this.virtualScrolling = true;
