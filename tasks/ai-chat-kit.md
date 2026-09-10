@@ -1031,6 +1031,43 @@ a compiled SFC needs (`__name`, `__scopeId`, `__hmrId`, `__file`), and
 that a Vapor component object survives the same spread, since the
 design claims neutrality on that runtime.
 
+### Slots are contract, not mechanism
+
+A slot attaches to the seam the way a listener does: `<component :is>`
+passes its slot content to whatever view the entry names, so a swap of
+view or class keeps the parent's slot content with no work. In this
+tree there is exactly one slot at a seam — the scroller's `#item`,
+which the root fills with the message seam — and every other child
+renders its own children from the model, because sections are roles.
+
+So a slot is a line in a role's contract, beside its exposed surface
+and its emits: the scroller's contract says "renders an `item` slot
+with the element as its props", and a swapped scroller view must render
+that slot under that name or the chat is blank. A consumer who wants
+different slot content changes the template that provides it, which is
+a section swap — the same answer as for a listener. Nothing in `Kit`
+carries slot content, and a parent never passes slot content into a
+role that did not name the slot.
+
+### Styles follow class names, and a scope id travels with its view
+
+The chat styles itself from one stylesheet, `ai-chat.css`, by class
+name: `ac-msg`, `ac-tool`, `ac-code`. A view is styled because it
+renders those names; a swapped view that keeps them is styled the same
+and one that drops them is not, by intent, since it brings its own look.
+The class names a role's view renders are therefore part of the role's
+contract, and the base-kit HTML snapshot in the checklist pins them.
+
+Scoped styles change none of this. A `<style scoped>` block applies to
+the elements its own view renders, through the view's `__scopeId`; a
+swapped view has its own scope and its own styles, as it should. The
+one crossing Vue makes — a parent's scope id stamped on a child's root
+element so the parent may style the child's root — is applied to
+whatever component sits at the seam, so it survives a swap too. And
+`Kit.Class.view` spreads the compiled view, so a rewrapped view keeps
+its `__scopeId` and its styles apply unchanged; that field is on the
+verification list for exactly this reason.
+
 ### Where `derive` runs
 
 `resolve` runs inside a static getter, so derived classes exist only
@@ -1266,4 +1303,5 @@ importing each other.
 - A seam with any shape but `:is` from the entry, `:kit` the entry, then props.
 - A section of a view that is not a role, or a section that cannot reach the model it belongs to.
 - An entry whose view declares a different contract than its namespace.
-- A listener attached anywhere but the seam.
+- A listener attached anywhere but the seam, or slot content passed into a role whose contract names no such slot.
+- A view styled by anything but the class names its role's contract lists, or a rewrapped view that lost its scope id.
