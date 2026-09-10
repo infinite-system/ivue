@@ -497,7 +497,9 @@ class $CheckStandard {
         for (const member of classFile.rawClass.members) {
           if (ts.isPropertyDeclaration(member) && member.initializer && ts.isCallExpression(member.initializer) && ts.isIdentifier(member.initializer.expression) && /^use[A-Z]/.test(member.initializer.expression.text))
             findings.push(this.finding(this.a_composable_is_injected_by_a_one_call_dollar_getter, unit, this.lineOf(unit, member), `\`${this.memberName(member)} = ${member.initializer.expression.text}()\` runs at construction — inject it as \`protected get $${this.memberName(member)}() { return ${member.initializer.expression.text}() }\``));
-          if (ts.isGetAccessorDeclaration(member) && this.memberName(member).startsWith('$') && member.body) {
+          // Instance dollar getters only: a STATIC `$` getter is Static()'s compute-once cache
+          // (a class's `$kit`, a fixture table), built from as many statements as it needs.
+          if (ts.isGetAccessorDeclaration(member) && !this.isStaticMember(member) && this.memberName(member).startsWith('$') && member.body) {
             const statements = member.body.statements;
             const single = statements.length === 1 && ts.isReturnStatement(statements[0]) && !!statements[0].expression && (ts.isCallExpression(statements[0].expression) || ts.isNewExpression(statements[0].expression) || ts.isPropertyAccessExpression(statements[0].expression));
             if (!single)
@@ -1418,7 +1420,11 @@ export namespace Scroller {
         claim: 'If a class uses a composable or store, then a dollar getter returns the one call, never an eager field',
         impossibility: 'a file breaking a_composable_is_injected_by_a_one_call_dollar_getter passes the gate',
         red: [{ files: { 'src/Box.ts': fixture.validClass.replace('  get height() {', "  mouse = useMouse();\n\n  private get $project() {\n    const store = useProjectStore();\n    store.warm();\n    return store;\n  }\n\n  get height() {").replace("import { ref, watch } from 'vue';", "import { ref, watch } from 'vue';\nimport { useMouse } from '@vueuse/core';\nimport { useProjectStore } from './stores';") }, expectFindings: [/runs at construction/, /does more than one call/] }],
-        green: [{ files: { 'src/Box.ts': fixture.validClass.replace('  get height() {', '  private get $project() {\n    return useProjectStore();\n  }\n\n  get height() {').replace("import { ref, watch } from 'vue';", "import { ref, watch } from 'vue';\nimport { useProjectStore } from './stores';") } }],
+        green: [
+          { files: { 'src/Box.ts': fixture.validClass.replace('  get height() {', '  private get $project() {\n    return useProjectStore();\n  }\n\n  get height() {').replace("import { ref, watch } from 'vue';", "import { ref, watch } from 'vue';\nimport { useProjectStore } from './stores';") } },
+          // a STATIC `$` getter is a compute-once cache, free to build its value in several statements
+          { files: { 'src/Clock.ts': fixture.staticClass.replace('    return Intl.DateTimeFormat().resolvedOptions().timeZone;', '    const options = Intl.DateTimeFormat().resolvedOptions();\n    return options.timeZone;') } },
+        ],
       },
       'instance_types_only_unwrapping_surfaces': {
         claim: 'If a raw collection or parameter is typed, then it uses Model, and if an unwrapping surface is typed, then it uses Instance',

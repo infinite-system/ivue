@@ -9,7 +9,9 @@ props the entry sets. The design
 itself is recorded in `tasks/malleable-architecture.md` under "The kit";
 this file is the build.
 
-Status: designed, not started. Trigger: the first time a second view of
+Status: designed; `Kit.ts` built and proven against a fixture tree
+(`examples/playground/src/kit/`, 20 specs, 2026-09-10); the chat not yet
+converted. Trigger: the first time a second view of
 any chat model is wanted (a different scroller for the chat only, a
 different code block for one page, an embed of the thread elsewhere) —
 or the moment the standard is ready to take the kit rule and needs a
@@ -81,28 +83,77 @@ the only new member on any class is `$kit`.
 
 ### `Kit.ts` — an entry, a patch, and the resolver
 
+The class as it exists at `examples/playground/src/kit/Kit.ts`, proven by
+`Kit.test.ts` and `kit.invariants.md` beside it against a real fixture
+tree (a panel above a card above three sections and a code leaf, every
+view a `<script setup>` SFC):
+
 ```ts
 import type { Component } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 
-// The kit's helpers, as statics on one class — the shape `Parts` and
-// `Tools` had. An entry names a role's view and, when the role has a
-// model of its own, the class that view constructs. `props` and
-// `subkit` are optional and appear only in an override: prop defaults
-// for the role, and a patch over the model's own $kit, both applied
-// when the kit resolves. A kit is a record of entries or of nested
-// records of entries.
+// The kit: the roles a model's subtree composes, as data on the class.
+//
+// A model declares `static get $kit()` returning a record of entries. An
+// entry names a role's view and, when the role has a class of its own, the
+// namespace that view constructs. A parent's template renders every seam
+// as `<component :is="model.kit.Role.view" :kit="model.kit.Role" …props />`;
+// the child's view constructs `new (props.kit?.namespace.Class ?? X.Class)(props)`.
+// A model reads its kit from its own class and nowhere else, so a swapped
+// class brings its own kit and no parent ever constructs a child.
+//
+// `$kit` is a `$`-prefixed static getter, so `Static()` caches it once per
+// receiver class through its own-property guard: a subclass that has not
+// built its kit yet never sees its parent's. Nothing here caches.
+//
+// Overrides are subclasses. A subclass spreads `super.$kit` and replaces
+// entries; an entry in an override may carry `subkit`, a patch over the
+// roles below its namespace, which `resolve` turns into a derived namespace
+// once, at kit build time. An entry may carry `props`, the consumer's
+// values for the role, which the role's class reads in the getters its
+// author opened (`this.props.kit?.props?.cap ?? this.props.cap`). Every
+// function here builds new objects and reads the base; one tree never
+// changes another.
 class $Kit {
-  protected static readonly CACHE = new WeakMap<Function, object>();
+  /** Every entry with a `subkit` becomes an entry whose namespace is derived and whose view
+   *  declares the derived contract; every other entry passes through untouched. */
+  static resolve<K extends object>(kit: K): K {
+    const out: Record<string, unknown> = {};
+    for (const [role, value] of Object.entries(kit)) {
+      out[role] = this.isEntry(value) ? this.resolveEntry(value) : this.resolve(value as object);
+    }
+    return this.deepFreeze(out) as K;
+  }
 
-  /** the same view over a derived class's contract: a fresh component object — a compiled SFC is
-   *  eight fields, `setup`, `render`, `props`, `emits`, `__name`… — with `props` and `emits` taken from
-   *  the class. Once per derived entry, at kit build time; never per instance. Fresh because the view
-   *  object is shared by every kit that names it, and because Vue caches normalized options by object. */
+  /** A derived namespace: `$Class` extends the base's raw class with a `$kit` that is the base's
+   *  deep-merged with `patch` and resolved; `Class` is `Reactive($Class)` — what a subclass file
+   *  would export. The base namespace is only read. */
+  static derive<Space extends Kit.Namespace>(namespace: Space, patch: Kit.Patch): Space {
+    const kit = this;
+    const Base = namespace.$Class as Kit.NamespaceClass;
+    const $Class = Static(
+      class extends Base {
+        static get $kit() {
+          return kit.resolve(kit.merge(Base.$kit ?? {}, patch));
+        }
+      },
+    );
+    return { ...namespace, $Class, Class: Reactive($Class) };
+  }
+
+  /** The same view over a different contract: a fresh component object with the base view's
+   *  `setup` and `render` and the namespace's `props` and `emits`. Fresh because the view object
+   *  is shared by every kit that names it — writing onto it would widen every tree — and because
+   *  Vue caches a component's normalized options per app by that object, so a mounted view keeps
+   *  its first contract whatever is written onto it later. A copy, not `Object.create`: Vue reads
+   *  component options as own keys, and a prototype-backed view renders nothing. */
   static view<Space extends Kit.Namespace>(view: Component, namespace: Space): Component {
-    const Class = namespace.Class as any;
-    return { ...(view as object), props: Class.props, emits: Class.emits } as Component;
+    const Class = namespace.Class as Kit.NamespaceClass;
+    const copy: Record<string, unknown> = { ...(view as object) };
+    if (Class.props) copy.props = Class.props;
+    if (Class.emits) copy.emits = Class.emits;
+    return copy as Component;
   }
 
   protected static resolveEntry(entry: Kit.Entry): Kit.Entry {
@@ -112,18 +163,21 @@ class $Kit {
     return { ...rest, namespace, view: this.view(entry.view, namespace) };
   }
 
-  protected static merge(base: any, patch: Kit.Patch): any {
-    const out = { ...base };
+  protected static merge(base: Record<string, unknown>, patch: Kit.Patch): Record<string, unknown> {
+    const out: Record<string, unknown> = { ...base };
     for (const [role, value] of Object.entries(patch)) {
       const current = base[role];
-      out[role] = this.isEntry(current) || this.isEntry(value) ? this.mergeEntry(current, value as Partial<Kit.Entry>) : this.merge(current ?? {}, value as Kit.Patch);
+      out[role] =
+        this.isEntry(current) || this.isEntry(value)
+          ? this.mergeEntry(current as Kit.Entry | undefined, value as Partial<Kit.Entry>)
+          : this.merge((current as Record<string, unknown>) ?? {}, value as Kit.Patch);
     }
     return out;
   }
 
-  /** a patch that names a namespace and keeps the base view gets that view rewrapped over the new
-   *  class, so `{ namespace: ThemedBlock }` alone declares what ThemedBlock declares; a patch that
-   *  brings its own view is left alone — that view declares what it declares */
+  /** A patch that names a namespace and keeps the base view gets that view rewrapped over the new
+   *  class, so `{ namespace: Themed }` alone declares what Themed declares; a patch that brings its
+   *  own view is left alone — that view declares what it declares. */
   protected static mergeEntry(current: Kit.Entry | undefined, patch: Partial<Kit.Entry>): Kit.Entry {
     const merged = { ...current, ...patch } as Kit.Entry;
     if (patch.namespace && !patch.view && current?.view) merged.view = this.view(current.view, patch.namespace);
@@ -134,14 +188,14 @@ class $Kit {
     return typeof value === 'object' && value !== null && ('view' in value || 'namespace' in value || 'subkit' in value);
   }
 
-  /** a resolved kit is shared by reference between trees and must never be written */
-  /** freeze the kit's SHAPE — role maps and entries — and stop at an entry's leaves: a namespace (its
-   *  `Class` slot is the global override), a view (Vue's object, not ours), a `props` bag (the
+  /** Freeze the kit's SHAPE — role maps and entries — and stop at an entry's leaves: a namespace
+   *  (its `Class` slot is the global override), a view (Vue's object), a `props` bag (the
    *  consumer's). Frozen entries are what make sharing them between kits safe. */
   protected static deepFreeze<K extends object>(value: K): K {
+    const entry = this.isEntry(value);
     for (const [key, inner] of Object.entries(value)) {
       if (typeof inner !== 'object' || inner === null || Object.isFrozen(inner)) continue;
-      if (this.isEntry(value) && (key === 'namespace' || key === 'view' || key === 'props')) continue;
+      if (entry && (key === 'namespace' || key === 'view' || key === 'props')) continue;
       this.deepFreeze(inner);
     }
     return Object.freeze(value);
@@ -152,36 +206,54 @@ export namespace Kit {
   export const $Class = Static($Kit);
   export let Class = $Class;
 
-  /** what a namespace is at runtime: the raw class to extend and the reactive class to construct */
+  /** A class as the kit reads it: the contract statics and the kit, all optional. */
+  export type NamespaceClass = (abstract new (...args: any[]) => object) & {
+    $kit?: Record<string, unknown>;
+    props?: Record<string, unknown>;
+    emits?: Record<string, unknown>;
+  };
+
+  /** What a namespace is at runtime: the raw class to extend and the reactive class to construct. */
   export interface Namespace {
-    $Class: abstract new (...args: any[]) => object;
-    Class: new (...args: any[]) => object;
+    $Class: NamespaceClass;
+    Class: NamespaceClass;
   }
 
   export interface Entry<Space extends Namespace = Namespace> {
     view: Component;
     /** the role's namespace — `$Class`, `Class`, and whatever else it exports; absent for a markup leaf */
     namespace?: Space;
-    /** optional: the consumer's values for this role — read by the class's own getters as `this.props.kit.props.x` */
+    /** the consumer's values for this role, read by the class's own getters as `this.props.kit.props.x` */
     props?: Record<string, unknown>;
+    /** an override only: a patch over the roles below this entry's namespace */
     subkit?: Patch;
   }
 
-  /** a patch is a kit whose every field is optional; `{ subkit }` alone keeps namespace and view */
+  /** A patch is a kit whose every field is optional; `{ subkit }` alone keeps namespace and view. */
   export type Patch = { [role: string]: Partial<Entry> | Patch };
 
   export type Of<Roles extends string> = Record<Roles, Entry>;
 }
 ```
 
-An entry names a role's view and its namespace — `namespace`, the object the
-class's own file exports, with `$Class` to extend and `Class` to
+No cache lives in `Kit`. `$kit` is a `$`-prefixed static getter, and
+`Static()` already caches such a getter once per receiver class through
+an own-property guard, so a subclass that has not built its kit never
+sees its parent's, in any read order. One consequence the spec pinned:
+`super.$kit` inside an override runs the parent's getter body for the
+child receiver, so the child's untouched entries are equal to the
+parent's, not the same objects. Identity of untouched entries holds
+inside a resolved kit, where `merge` reads the base through the base
+class. Sharing is by equality; the freeze is what makes it safe.
+
+An entry names a role's view and its namespace — `namespace`, the object
+the class's own file exports, with `$Class` to extend and `Class` to
 construct. The namespace is the unit because it is the identity the
 codebase already exports, because `derive` then extends `$Class` (the
 sanctioned move) and returns what a subclass file would export, and
 because the kit's local swap and the `let Class` slot's global swap
 become one object seen at two scopes. A resolved kit freezes its
-entries and maps but never a namespace, so the slot stays writable.
+entries and maps but never a namespace, a view or a `props` bag.
 
 The name is deliberate: a `kit` is roles, a `subkit` is a patch over
 the roles one level down. The two are different things and read
@@ -191,12 +263,11 @@ to overrides. `subkit` names how deep a patch reaches and the resolver
 turns each reach into a derived class once, cached on the class that
 asked. `props` names what the patch tunes and never generates a class:
 the entry is a prop, so the class reads `this.props.kit.props` where it
-chooses to, in its own getters. `Kit` has no hand in props and
-`nestedProps` is untouched. `Kit` declares no prop: a
-kit-rendered class declares `kit` in its own `propsTypes`, typed
-`Kit.Entry<typeof X>` to its own namespace, so `props.kit?.namespace.Class` is that class
-and the `new` in the view is typed. The class owns its contract; `Kit`
-only transforms per instance.
+chooses to, in its own getters. `Kit` declares no prop: a kit-rendered
+class declares `kit` in its own `propsTypes`, typed
+`Kit.Entry<typeof X>` to its own namespace, so `props.kit?.namespace.Class`
+is that class and the `new` in the view is typed. The class owns its
+contract; `Kit` only resolves.
 
 ### `Chat.ts` — the root names four roles
 
@@ -218,12 +289,12 @@ class $Chat {
   // imports the views, and nobody reads the other side until a template
   // renders. `Chat.$kit` and `FancyChat.$kit` are different objects.
   static get $kit() {
-    return Kit.Class.cached(this, () => ({
+    return {
       Scroller: { namespace: VirtualScroller, view: VirtualScrollerView },
       Message: { namespace: ChatMessage, view: ChatMessageView },
       Composer: { namespace: Composer, view: ChatComposerView },
       Index: { namespace: Index, view: ChatIndexView },
-    }) satisfies Kit.Of<'Scroller' | 'Message' | 'Composer' | 'Index'>);
+    } satisfies Kit.Of<'Scroller' | 'Message' | 'Composer' | 'Index'>;
   }
 
   /** The one cast per class: instance code reads its own statics here. */
@@ -247,12 +318,9 @@ export namespace Chat {
 }
 ```
 
-A static getter re-runs on every read, so the kit is cached — by the
-class that asked, in a `WeakMap`, never in a static field. A static
-field read through `this` resolves up the static prototype chain, so a
-subclass that had not built its own yet would find and return its
-parent's kit. `Kit.Class.cached(this, …)` is what keeps every class's kit its
-own.
+A `$`-prefixed static getter under `Static()` is cached once per
+receiver class, so `$kit` is built once per class and a subclass builds
+its own; no cache lives in `Kit`.
 
 ### `AiChatExample.vue` — the root template names roles
 
@@ -335,7 +403,7 @@ import { ToolCallModel } from './tools/ToolCallModel';
 
 class $ChatMessage {
   static get $kit() {
-    return Kit.Class.cached(this, () => ({
+    return {
       // parts by role — the registry `Parts.ts` was, as entries; roles are PascalCase
       Text: { view: TextPartView },
       Thinking: { view: ThinkingPartView },
@@ -352,7 +420,7 @@ class $ChatMessage {
       Parts: { view: MessagePartsView },
       Await: { view: MessageAwaitView },
       Foot: { view: MessageFootView },
-    }) satisfies Kit.Of<ChatMessage.PartRole | 'Tool' | ChatMessage.SectionRole>);
+    } satisfies Kit.Of<ChatMessage.PartRole | 'Tool' | ChatMessage.SectionRole>;
   }
 
   /** a part kind (the log's snake_case) names its role (the kit's PascalCase) */
@@ -513,7 +581,7 @@ import GenericCallView from './GenericCall.vue';
 
 class $ToolCallModel {
   static get $kit() {
-    return Kit.Class.cached(this, () => ({
+    return {
       Head: { view: ToolHeadView },
       Foot: { view: ToolFootView },
       CodeBlock: { namespace: CodeBlock, view: CodeBlockView },
@@ -532,7 +600,7 @@ class $ToolCallModel {
         WebSearch: { namespace: WebFetchCall, view: WebFetchCallView },
         Artifact: { namespace: ArtifactCall, view: ArtifactCallView },
       } as Record<string, Kit.Entry>,
-    }));
+    });
   }
 
   /** the lookup `Tools.componentFor` was: exact name, then family, then generic */
@@ -787,10 +855,10 @@ import SnapScrollerView from '../snap-scroller/SnapScroller.vue';
 
 class $FancyChat extends Chat.$Class {
   static override get $kit() {
-    return Kit.Class.cached(this, () => ({
+    return {
       ...super.$kit,
       Scroller: { namespace: SnapScroller, view: SnapScrollerView },
-    }));
+    });
   }
 }
 
@@ -817,7 +885,7 @@ conversion writes down.
 ```ts
 class $DenseChat extends Chat.$Class {
   static override get $kit() {
-    return Kit.Class.cached(this, () => Kit.Class.resolve({
+    return Kit.Class.resolve({
       ...super.$kit,
       // the same scroller, tuned through the knobs its class reads from the kit
       Scroller: { ...super.$kit.Scroller, props: { assumedSize: 64, paddingQuantity: 10 } },
@@ -826,7 +894,7 @@ class $DenseChat extends Chat.$Class {
         ...super.$kit.Message,
         subkit: { Tool: { subkit: { CodeBlock: { props: { cap: 2_000 } } } } },
       },
-    }));
+    });
   }
 }
 ```
@@ -878,7 +946,7 @@ import TerminalBlockView from './TerminalBlock.vue';
 
 class $TerminalChat extends Chat.$Class {
   static override get $kit() {
-    return Kit.Class.cached(this, () => Kit.Class.resolve({
+    return Kit.Class.resolve({
       ...super.$kit,
       Message: {
         ...super.$kit.Message,
@@ -894,7 +962,7 @@ class $TerminalChat extends Chat.$Class {
           },
         },
       },
-    }));
+    });
   }
 }
 
@@ -921,7 +989,7 @@ class $MonoChat extends Chat.$Class {
   static override get $kit() {
     const block = { CodeBlock: { namespace: MonoBlock, view: MonoBlockView } };
     const tools = Chat.$Class.$kit.Message.namespace.Class.$kit.Tool.namespace.Class.$kit;
-    return Kit.Class.cached(this, () => Kit.Class.resolve({
+    return Kit.Class.resolve({
       ...super.$kit,
       Message: {
         ...super.$kit.Message,
@@ -937,7 +1005,7 @@ class $MonoChat extends Chat.$Class {
           },
         },
       },
-    }));
+    });
   }
 }
 ```
@@ -1026,10 +1094,11 @@ the kit: a listener attaches to the seam, so every swap keeps the
 parent's handlers, and adding or removing one is a section swap, the
 change a template owns.
 
-Two things to verify at conversion: that the spread carries everything
-a compiled SFC needs (`__name`, `__scopeId`, `__hmrId`, `__file`), and
-that a Vapor component object survives the same spread, since the
-design claims neutrality on that runtime.
+Verified by `Kit.test.ts`: the rewrapped view carries every field the
+compiled SFC had, `__scopeId` included, and a prop only the derived
+class declares arrives through it while falling through the base view as
+an attribute. Still open: a Vapor component object surviving the same
+spread, since the design claims neutrality on that runtime.
 
 ### Slots are contract, not mechanism
 
@@ -1102,10 +1171,10 @@ defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
 ```ts
 class $GroupedChat extends Chat.$Class {
   static override get $kit() {
-    return Kit.Class.cached(this, () => Kit.Class.resolve({
+    return Kit.Class.resolve({
       ...super.$kit,
       Message: { ...super.$kit.Message, subkit: { Parts: { view: GroupedPartsView } } },
-    }));
+    });
   }
 }
 ```
@@ -1227,16 +1296,13 @@ importing each other.
 - **A deep swap is one literal, resolved once.** An override's entry
   may carry `subkit`, a patch over the child's own kit; `Kit.Class.resolve`
   turns every reach into a derived class at kit build time, cached per
-  class. A class's own `$kit` never carries `subkit`. The cache is a
-  `WeakMap` keyed by the asking class, never a static field — a static
-  field read through `this` walks the static chain and hands a subclass
-  its parent's kit. Verify at conversion: `Reactive` over a subclass of an already-transformed class
-  leaves inherited members alone (the engine's repeated-call guard says
-  it does), and `Kit.Class.cached` keyed by a derived anonymous class stays
-  distinct from its base's entry. And `Kit.Class.view`: the spread of
-  a compiled SFC must carry every field Vue and the dev tools read
-  (`__name`, `__scopeId`, `__hmrId`, `__file`), and the same must hold
-  for a Vapor component object.
+  class by `Static()`'s own `$`-getter guard. A class's own `$kit` never
+  carries `subkit`. Verified by `Kit.test.ts` (2026-09-10): `Reactive`
+  over a subclass of an already-transformed class leaves inherited
+  members alone — cells cached, methods bound, `self` reading the derived
+  statics — and a derived class's `$kit` is its own. `Kit.Class.view`
+  carries every field the compiled SFC had, `__scopeId` included, under
+  Vue 3.5; a Vapor component object is not yet exercised.
 - **Sections as roles.** Each section is one component instance per
   visible row — six for a row, the same order as the tool cards already
   cost, a dozen rows deep in the window. Measured in the mount-cost line
