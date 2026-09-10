@@ -1,7 +1,15 @@
 import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
-import type { VirtualScroller } from '../virtual-scroller/VirtualScroller';
+import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
+import VirtualScrollerView from '../virtual-scroller/VirtualScroller.vue';
+import { Kit } from '../../kit/Kit';
+import { ChatMessage } from './ChatMessage';
+import ChatMessageView from './ChatMessage.vue';
+import { Composer } from './Composer';
+import ChatComposerView from './ChatComposer.vue';
+import { Index } from './Index';
+import ChatIndexView from './ChatIndex.vue';
 import { ChatApi } from './ChatApi';
 import { Clock } from './Clock';
 import { SessionLog } from './SessionLog';
@@ -17,6 +25,16 @@ import { Markdown } from './Markdown';
 // bottom stays pinned only while the reader is there. One clock times
 // every wait.
 class $Chat {
+  /** the roles the thread composes — the scroller, a row, the composer, the index — built once per class by Static() */
+  static get $kit() {
+    return {
+      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView },
+      Message: { namespace: ChatMessage, vue: ChatMessageView },
+      Composer: { namespace: Composer, vue: ChatComposerView },
+      Index: { namespace: Index, vue: ChatIndexView },
+    } satisfies Kit.Of<Chat.Role>;
+  }
+
   /** pages fetched beyond the window, each side — two, so a row is loaded before it can mount in the padding */
   static readonly PAGE_MARGIN = 2;
   /** within this many px of the end, the reader counts as at the bottom */
@@ -74,6 +92,11 @@ class $Chat {
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
     return this.constructor as typeof $Chat;
+  }
+
+  /** the kit is the class's; a subclass with its own `$kit` swaps the subtree */
+  get kit() {
+    return this.self.$kit;
   }
 
   /** the one clock every loader reads — owned here, disposed here */
@@ -723,6 +746,7 @@ export namespace Chat {
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
   export type Model = InstanceType<typeof Class>;
+  export type Role = 'Scroller' | 'Message' | 'Composer' | 'Index';
 
   /** one row of the scroller: a stub until its page lands, then the message */
   export interface Row extends VirtualScroller.BaseItem {

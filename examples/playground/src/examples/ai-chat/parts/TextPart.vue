@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { SessionLog } from '../SessionLog';
-import type { Parts } from './Parts';
+import type { Part } from './Part';
 import { TextPart } from './TextPart';
 
-const props = defineProps<Parts.Props<SessionLog.TextPart>>();
+const props = defineProps<Part.Props<SessionLog.TextPart>>();
 
-const model = new TextPart.Class(props);
+const model = new ((props.kit?.namespace.Class as typeof TextPart.Class | undefined) ?? TextPart.Class)(props);
 const {
   // element refs
   element,

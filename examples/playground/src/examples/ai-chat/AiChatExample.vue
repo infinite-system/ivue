@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import VirtualScroller from '../virtual-scroller/VirtualScroller.vue';
+import type { Kit } from '../../kit/Kit';
 import { Chat } from './Chat';
-import ChatMessage from './ChatMessage.vue';
-import ChatComposer from './ChatComposer.vue';
-import ChatIndex from './ChatIndex.vue';
 import './ai-chat.css';
 
-defineProps<{ dark?: boolean }>();
+const props = defineProps<{ dark?: boolean; kit?: Kit.Entry }>();
 
-const chat = new Chat.Class();
+// the root constructs the class it was handed, or its own
+const chat = new ((props.kit?.namespace.Class as typeof Chat.Class | undefined) ?? Chat.Class)();
 
 // the state destructure — every Ref the template touches, grouped
 const {
@@ -52,17 +50,17 @@ const {
 
     <div class="ac-main">
       <section class="ac-thread">
-        <VirtualScroller ref="scroller" scrollbar :auto-repeat="false" v-model="rows" :assumed-size="96" :padding-quantity="6" :selection-text="chat.rowText">
+        <component :is="chat.kit.Scroller.vue" ref="scroller" :kit="chat.kit.Scroller" scrollbar :auto-repeat="false" v-model="rows" :assumed-size="96" :padding-quantity="6" :selection-text="chat.rowText">
           <template #item="{ item }">
-            <ChatMessage :row="item" :chat="chat" />
+            <component :is="chat.kit.Message.vue" :kit="chat.kit.Message" :row="item" :chat="chat" />
           </template>
-        </VirtualScroller>
+        </component>
         <button v-if="chat.showsJumpToLatest" type="button" class="ac-jump" @click="chat.jumpToLatest()">↓ latest</button>
         <div v-if="chat.isLoadingThread" class="ac-loading-thread"><span class="ac-spinner" aria-hidden="true"></span> loading the index…</div>
       </section>
-      <ChatIndex v-if="indexOpen" :chat="chat" />
+      <component :is="chat.kit.Index.vue" v-if="indexOpen" :kit="chat.kit.Index" :chat="chat" />
     </div>
 
-    <ChatComposer :chat="chat" />
+    <component :is="chat.kit.Composer.vue" :kit="chat.kit.Composer" :chat="chat" />
   </div>
 </template>

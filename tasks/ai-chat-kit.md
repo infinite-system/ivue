@@ -9,9 +9,7 @@ props the entry sets. The design
 itself is recorded in `tasks/malleable-architecture.md` under "The kit";
 this file is the build.
 
-Status: designed; `Kit.ts` built and proven against a fixture tree
-(`examples/playground/src/kit/`, 20 specs, 2026-09-10); the chat not yet
-converted. Trigger: the first time a second view of
+Status: converted on branch `ai-chat-kit` (2026-09-10): every seam an entry, `Parts.ts` and `Tools.ts` gone, the row's sections roles, the card map on `ToolCallPart`; the standard's gate learned the seam's construction form. Awaiting review before merge. Trigger: the first time a second view of
 any chat model is wanted (a different scroller for the chat only, a
 different code block for one page, an embed of the thread elsewhere) —
 or the moment the standard is ready to take the kit rule and needs a

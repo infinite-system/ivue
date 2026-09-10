@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { SessionLog } from '../SessionLog';
-import type { Parts } from './Parts';
+import type { Part } from './Part';
 import { ThinkingPart } from './ThinkingPart';
 
-const props = defineProps<Parts.Props<SessionLog.ThinkingPart>>();
+const props = defineProps<Part.Props<SessionLog.ThinkingPart>>();
 
-const model = new ThinkingPart.Class(props);
+const model = new ((props.kit?.namespace.Class as typeof ThinkingPart.Class | undefined) ?? ThinkingPart.Class)(props);
 </script>
 
 <template>

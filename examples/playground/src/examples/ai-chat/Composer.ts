@@ -3,6 +3,7 @@ import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import { ChatApi } from './ChatApi';
 import type { Chat } from './Chat';
+import type { Kit } from '../../kit/Kit';
 import type { SessionLog } from './SessionLog';
 
 // The input row: a draft, the picked model, attachments that came in by
@@ -170,5 +171,6 @@ export namespace Composer {
 
   export interface Props {
     chat: Chat.Model;
+    kit?: Kit.Entry;
   }
 }

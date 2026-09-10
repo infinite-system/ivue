@@ -13,7 +13,8 @@ const emit = defineEmits(VirtualScroller.Class.emits) as VirtualScroller.Emits;
 
 defineSlots<VirtualScroller.Slots<T>>();
 
-const virtualScroller = new VirtualScroller.Class<T>(props, emit);
+// the class the entry names, or this view's own
+const virtualScroller = new (props.kit?.namespace.Class ?? VirtualScroller.Class)<T>(props, emit);
 
 // THE STATE DESTRUCTURE — every Ref/Computed the template touches, grouped.
 // Methods and plain getters stay DOTTED on the instance.

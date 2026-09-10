@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import VirtualScroller from '../virtual-scroller/VirtualScroller.vue';
 import { Index } from './Index';
 
 const props = defineProps<Index.Props>();
 
-const model = new Index.Class(props);
+const model = new ((props.kit?.namespace.Class as typeof Index.Class | undefined) ?? Index.Class)(props);
 const {
   // state refs
   query,
@@ -49,7 +48,7 @@ const {
     </header>
 
     <div class="ac-index-list">
-      <VirtualScroller ref="scroller" scrollbar :model-value="rows" :assumed-size="46" :padding-quantity="10" :selection-text="model.rowText">
+      <component :is="model.kit.Scroller.vue" ref="scroller" :kit="model.kit.Scroller" scrollbar :model-value="rows" :assumed-size="46" :padding-quantity="10" :selection-text="model.rowText">
         <template #item="{ item }">
           <div class="ac-ix-row" :class="model.rowClass(item)" @click="model.onRowClick(item, $event)" @dblclick="model.onRowDoubleClick(item)">
             <input type="checkbox" class="ac-ix-check" :checked="model.isSelected(item)" @click="model.onRowCheck(item, $event)" />
@@ -60,7 +59,7 @@ const {
             <button type="button" class="ac-ix-go" title="Show in the chat" @click.stop="model.seek(item)">→</button>
           </div>
         </template>
-      </VirtualScroller>
+      </component>
     </div>
 
     <footer class="ac-index-foot">

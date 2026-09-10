@@ -1,5 +1,12 @@
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
+import { Kit } from '../../../kit/Kit';
+import { CodeBlock } from './CodeBlock';
+import CodeBlockView from './CodeBlock.vue';
+import { SubThread } from './SubThread';
+import SubThreadView from './SubThread.vue';
+import ToolHeadView from './ToolHead.vue';
+import ToolFootView from './ToolFoot.vue';
 import type { Chat } from '../Chat';
 import { Clock } from '../Clock';
 import { Highlighter } from '../Highlighter';
@@ -11,6 +18,16 @@ import { SessionLog } from '../SessionLog';
 // result. A tool's own class extends this and names its sections; the
 // generic card renders input as JSON and the result as text.
 class $ToolCallModel {
+  /** the roles every card composes: its head and foot, the code block, and a nested thread */
+  static get $kit() {
+    return {
+      Head: { vue: ToolHeadView },
+      Foot: { vue: ToolFootView },
+      CodeBlock: { namespace: CodeBlock, vue: CodeBlockView },
+      SubThread: { namespace: SubThread, vue: SubThreadView },
+    } satisfies Kit.Of<ToolCallModel.Role>;
+  }
+
   static readonly ICONS: Record<string, string> = {
     Bash: '$',
     Edit: '±',
@@ -35,6 +52,11 @@ class $ToolCallModel {
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
     return this.constructor as typeof $ToolCallModel;
+  }
+
+  /** the kit is the class's — a tool that overrides `$kit` swaps its own leaves */
+  get kit() {
+    return this.self.$kit;
   }
 
   get call(): SessionLog.ToolCall {
@@ -195,7 +217,11 @@ export namespace ToolCallModel {
     call: SessionLog.ToolCall;
     chat: Chat.Model;
     message: SessionLog.Message | null;
+    /** the entry this view was rendered through: the class it constructs */
+    kit?: Kit.Entry;
   }
+
+  export type Role = 'Head' | 'Foot' | 'CodeBlock' | 'SubThread';
 
   export interface Section {
     title: string;
