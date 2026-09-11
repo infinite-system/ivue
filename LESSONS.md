@@ -1130,6 +1130,11 @@ own whole than to arbitrate.
 - **Playwright's "move away" point must actually leave the element**: a peek card 320px wide beside the
   track swallowed a pointer moved 300px left of the track, and the drive read a bug that was not there.
   Instrument `pointermove` targets before touching the code.
+- **Prettier runs on every Edit/Write through a PostToolUse hook** (`.claude/hooks/prettier-on-edit.mjs`,
+  wired in `.claude/settings.json`): a written `.ts`/`.vue` under `examples/playground/src` or the docs
+  theme components is formatted in place before the next tool call. The hook reads the tool call from
+  stdin, formats only that file, and never fails the edit. After a hook reformat, `Read` before an `Edit`
+  whose `old_string` spans the touched region.
 - **The kit entry's view field is `view`, not `vue`.** It names the role's view; Vue is how this one is
   expressed, and the field must not carry the framework's name. The rename touched the entry key, every
   `.kit.Role.view` access, `Kit.ts`'s merge keys, the docs demo and the guide. A regex over `.vue` before
