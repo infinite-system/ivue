@@ -18,6 +18,7 @@ the spec proves the shipped catalog and not a copy of its patches.
 import { describe, expect, it } from 'vitest';
 import { ref } from 'vue';
 import { Kit } from '../../kit/Kit';
+import { KitInspect } from '../../kit/KitInspect';
 import type { Chat } from './Chat';
 import { ChatMessage } from './ChatMessage';
 import type { SessionLog } from './SessionLog';
@@ -187,7 +188,7 @@ describe('the row is a container of roles', () => {
       'Foot'
     ]);
     expect(ChatVariants.Class.tree('compact').namespace.layer).toBe('compact');
-    expect(Kit.Class.tree(ChatVariants.Class.tree('compact').namespace)).toContain(
+    expect(KitInspect.Class.tree(ChatVariants.Class.tree('compact').namespace)).toContain(
       '1 Rule: view <hr> · class - · bind yes · view←compact, bind←compact, position←compact'
     );
   });

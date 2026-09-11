@@ -1200,3 +1200,25 @@ own whole than to arbitrate.
   diff described above.
 - **The Playwright tree picker must be scoped to the Tree section**: the density section also has a
   `Compact` choice, so `.ac-choice:has-text("Compact")` clicks density first.
+
+## The role tree, second pass (2026-09-11): types that reach the child, and the render path
+
+- **`satisfies` infers nothing per entry; a call does.** `Kit.Class.entry(Namespace, View, { bind })` infers the
+  namespace from its argument and `Owner`/`Item` from the contextual return type (the kit's declared
+  `X.Roles`), so a bind's result is held to `Partial<PropsOf<N>> & Attrs`. A return object literal in an arrow
+  is NOT excess-property checked against a contextual return type (freshness is lost); `Kit.Exact<R, N>` maps
+  every key of the inferred result that is neither a prop nor an attribute to `never`, and `derive`'s
+  `patch: P & Kit.Checked<Space, P>` applies the same to nested binds and to order relations. The `P & Check<P>`
+  shape never produces excess-property errors on P's own keys — a wrong anchor KEY is caught only by mapping
+  P's keys to `never`, not by a `Record<Base | Added, …>` target.
+- **A conditional type on a type parameter makes its variance unmeasurable.** `item: [Item] extends [never] ?
+  undefined : Item` made `Entry<$Strip, string, typeof Code>` fail to assign to the loose `Kit.Entry` even
+  with `bind` as a method signature. `item: Item` and `key: string | number | undefined` assign in one
+  direction, which method bivariance accepts.
+- **The chain is data; the report reads it.** `derive` leaves `derivedFrom`, `patch`, `layer` and stays silent;
+  `KitInspect` (never imported by `Kit.ts`, never on the render path) lists contacts, warns or throws, prints
+  the tree. Kit.ts went 156 → 582 → 567 lines with the types (the class body is about 300); the render path is
+  `seam` alone: ~1 ns per unbound call and ~6 ns per bound call over a million calls under vite-node.
+- **Declared kit types break the instance/static cycle.** `Chat.Roles` names each role's namespace explicitly so
+  nested subkit binds are typed (`Message: Kit.Entry<$Chat, undefined, typeof ChatMessage>`); an inferred
+  `Chat.$kit` re-entered the "referenced in its own type annotation" cycle at once.

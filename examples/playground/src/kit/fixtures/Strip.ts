@@ -25,11 +25,10 @@ class $Strip {
       Head: { view: StripHeadView },
       Body: { view: StripBodyView },
       Foot: { view: StripFootView },
-      Item: {
-        namespace: Code,
-        view: CodeView,
+      // the typed form: the bind's result is checked against Code's props, the seam against the strip
+      Item: Kit.Class.entry(Code, CodeView, {
         bind: ({ model, item, key }) => ({ code: item, cap: model.cap, 'data-key': key })
-      },
+      }),
       order: ['Head', 'Body', 'Foot']
     };
   }
@@ -99,7 +98,10 @@ export namespace Strip {
   export type Props = ExtractPropTypes<typeof $Class.props>;
   export type SectionRole = 'Head' | 'Body' | 'Foot';
   export type Role = SectionRole | 'Item';
-  /** declared, so the container's instance type and its kit can name each other */
-  export type Roles = Kit.Of<SectionRole, $Strip> &
-    Kit.Roles<'Item', $Strip, string> & { order: readonly SectionRole[] };
+  /** declared, so the container's instance type and its kit can name each other; the Item entry
+   *  names its namespace so a bind is held to Code's contract */
+  export type Roles = Kit.Of<SectionRole, $Strip> & {
+    Item: Kit.Entry<$Strip, string, typeof Code>;
+    order: readonly SectionRole[];
+  };
 }

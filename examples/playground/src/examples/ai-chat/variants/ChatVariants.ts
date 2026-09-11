@@ -25,7 +25,7 @@ class $ChatVariants {
             subkit: { order: { without: ['Gutter'] }, Head: { view: BubbleHeadView } }
           }
         },
-        { name: 'bubbles' }
+        'bubbles'
       ),
       minimal: Kit.Class.derive(
         ConfiguredChat,
@@ -34,7 +34,7 @@ class $ChatVariants {
             subkit: { order: { without: ['Gutter', 'Foot'] }, Head: { view: MinimalHeadView } }
           }
         },
-        { name: 'minimal' }
+        'minimal'
       ),
       compact: Kit.Class.derive(
         ConfiguredChat,
@@ -51,7 +51,7 @@ class $ChatVariants {
             }
           }
         },
-        { name: 'compact' }
+        'compact'
       )
     };
     return TreeCatalog.Class.TREES.map((entry) => ({

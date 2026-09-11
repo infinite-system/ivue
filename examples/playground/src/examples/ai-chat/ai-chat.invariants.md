@@ -98,6 +98,20 @@ stand in for an absent section. The shipped row is untouched by all of
 them, and the layout the gutter needs is the row's own CSS grid, not a
 wrapper the template would have to name.
 
+## A wrapper is layout, not a role
+
+The row's sections are siblings under `.ac-msg`; no element wraps a
+subset of them. The gutter beside the head, the parts and the foot is the
+row's own CSS grid — the gutter in the first column and row, every
+section after it in the second column, and with no gutter every section
+spanning the row — and the bubble tree's bubble is an absolutely
+positioned `::before` inside the row's outer padding. A wrapper element
+would be a section the template names, which no patch could drop or
+move, or a container role that needs a class for a `<div>`. Rejected: a
+grid-item pseudo-element spanning every row as the bubble — auto-placed
+sections avoid the cells it occupies and land in implicit rows below the
+box, so the bubble draws above the content it should surround.
+
 ## Full granularity in two clicks
 
 A batch opens to its calls; a call opens to its full input and full
@@ -167,6 +181,7 @@ If the invariants hold, none of these can exist in a correct state:
 - a renderer that branches on a tool name instead of looking it up, or a seam that names a component instead of an entry
 - a container template that names one of its sections, or a `seamProps` that switches on a role
 - a tree variant that copies the row's template, or a view that renders nothing to stand in for a dropped section
+- an element inside the row that wraps a subset of its sections
 - a timer per row, or a counter that ticks after its part is done
 - a copy whose text differs between a mounted and an unmounted row
 - a selection lost by changing a filter, or an export out of thread order

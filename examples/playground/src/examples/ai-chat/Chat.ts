@@ -31,7 +31,7 @@ import { Markdown } from './Markdown';
 // every wait.
 class $Chat {
   /** the roles the thread composes — the scroller, a row, the composer, the index — built once per class by Static() */
-  static get $kit(): Kit.Of<Chat.Role> {
+  static get $kit(): Chat.Roles {
     return {
       Scroller: { namespace: VirtualScroller, view: VirtualScrollerView },
       Message: { namespace: ChatMessage, view: ChatMessageView },
@@ -1027,6 +1027,16 @@ export namespace Chat {
   export type Instance = typeof Class.Instance;
   export type Model = InstanceType<typeof Class>;
   export type Role = 'Scroller' | 'Message' | 'Composer' | 'Index' | 'Sidebar' | 'Peek';
+  /** the thread's kit with each role's namespace named — declared, not inferred, because every
+   *  child's instance type names the chat's and an inferred kit would name itself */
+  export type Roles = Kit.Of<Role, $Chat> & {
+    Scroller: Kit.Entry<$Chat, undefined, typeof VirtualScroller>;
+    Message: Kit.Entry<$Chat, undefined, typeof ChatMessage>;
+    Composer: Kit.Entry<$Chat, undefined, typeof Composer>;
+    Index: Kit.Entry<$Chat, undefined, typeof Index>;
+    Sidebar: Kit.Entry<$Chat, undefined, typeof Sidebar>;
+    Peek: Kit.Entry<$Chat, undefined, typeof Peek>;
+  };
   export type SidebarTab = 'Index' | 'Files' | 'Settings';
 
   /** what the thread asks of the peek it holds — the two forwards, not the peek's whole instance,

@@ -51,7 +51,10 @@ class $ChatMessage {
   }
 
   /** the roles a row composes — a part per kind, fed its part through `bind`, and its own sections in
-   *  the order the template renders — built once per class by Static() */
+   *  the order the template renders — built once per class by Static(). The part entries stay plain
+   *  literals rather than `Kit.Class.entry(TextPart, …)`: each part view declares `part` as its own
+   *  kind, while the seam's item is the union the kind→role lookup narrows at runtime, so a typed
+   *  entry would refuse the one bind all six share. */
   static get $kit(): ChatMessage.Roles {
     return {
       Text: { namespace: TextPart, view: TextPartView, bind: this.bindPart },
