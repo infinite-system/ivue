@@ -6,7 +6,7 @@ const docs = new ExperimentalDocs.Class();
 // the state destructure — every Ref the template touches, grouped
 const {
   // state refs
-  isVisible,
+  isVisible
 } = docs;
 </script>
 

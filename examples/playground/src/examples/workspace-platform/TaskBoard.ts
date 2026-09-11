@@ -56,7 +56,7 @@ class $TaskBoard {
 
   drop(status: TaskStatus) {
     const task = this.$workspace.tasks.value.find(
-      (candidate) => candidate.id === this.draggingTaskId.value,
+      (candidate) => candidate.id === this.draggingTaskId.value
     );
     task?.setStatus(status);
     this.endDrag();

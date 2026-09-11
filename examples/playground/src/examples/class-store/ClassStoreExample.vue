@@ -7,8 +7,8 @@ import ReactiveViewPanel from './ReactiveViewPanel.vue';
 <template>
   <div class="pane pane-wide">
     <p class="note">
-      Three independent components, ZERO props between them — each calls
-      ProjectStore.Class.use() and receives the same singleton class instance.
+      Three independent components, ZERO props between them — each calls ProjectStore.Class.use()
+      and receives the same singleton class instance.
     </p>
     <div class="store-grid">
       <section>

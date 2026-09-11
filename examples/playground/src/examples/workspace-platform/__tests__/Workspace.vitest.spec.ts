@@ -19,10 +19,7 @@ describe('Workspace platform model', () => {
     expect(workspace.completionRate).toBe(25);
 
     workspace.priorityFilter.value = 'urgent';
-    expect(workspace.filteredTasks.map((task) => task.id)).toEqual([
-      'OR-241',
-      'OR-243',
-    ]);
+    expect(workspace.filteredTasks.map((task) => task.id)).toEqual(['OR-241', 'OR-243']);
 
     workspace.search.value = 'readiness';
     expect(workspace.filteredTasks.map((task) => task.id)).toEqual(['OR-243']);
@@ -30,9 +27,7 @@ describe('Workspace platform model', () => {
 
   it('updates every view when a task moves', () => {
     const workspace = new Workspace.Class();
-    const task = workspace.tasks.value.find(
-      (candidate) => candidate.id === 'OR-241',
-    )!;
+    const task = workspace.tasks.value.find((candidate) => candidate.id === 'OR-241')!;
 
     expect(workspace.tasksByStatus('in-progress')).toContain(task);
     task.setStatus('done');
@@ -62,9 +57,7 @@ describe('Workspace platform model', () => {
   it('computes workload from live task estimates and status', () => {
     const workspace = new Workspace.Class();
     const before = workspace.workloadFor('noah');
-    const task = workspace.tasks.value.find(
-      (candidate) => candidate.id === 'OR-312',
-    )!;
+    const task = workspace.tasks.value.find((candidate) => candidate.id === 'OR-312')!;
 
     task.estimateHours.value += 5;
     expect(workspace.workloadFor('noah')).toBe(before + 5);
@@ -128,9 +121,7 @@ describe('Workspace template models', () => {
     example.newTaskTitle.value = 'Owned by the application class';
     example.submitTask();
 
-    expect(example.workspace.selectedTask?.title.value).toBe(
-      'Owned by the application class',
-    );
+    expect(example.workspace.selectedTask?.title.value).toBe('Owned by the application class');
     expect(example.creatingTask.value).toBe(false);
     expect(example.newTaskTitle.value).toBe('');
   });

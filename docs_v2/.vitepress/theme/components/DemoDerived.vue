@@ -14,7 +14,7 @@ const {
   fahrenheitRunsShown,
   statusRunsShown,
   // computed refs
-  status,
+  status
 } = view;
 </script>
 

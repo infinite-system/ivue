@@ -21,11 +21,7 @@ defineExpose(field as ContactField.Instance);
 </script>
 
 <template>
-  <ChooseField
-    :class="field.rootClass"
-    :model-value="props.modelValue"
-    :runner="field"
-  >
+  <ChooseField :class="field.rootClass" :model-value="props.modelValue" :runner="field">
     <!-- CONTACT OPTION: avatar + name (+ email in full mode) -->
     <template #option="scope">
       <q-item

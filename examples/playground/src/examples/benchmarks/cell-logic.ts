@@ -71,13 +71,8 @@ export function numericOf(raw: string): number {
 }
 
 /** Display string: formatted number, a dot for blanks, or the raw text. */
-export function displayOf(
-  raw: string,
-  isNumber: boolean,
-  numeric: number,
-): string {
-  if (isNumber)
-    return numeric.toLocaleString('en-US', { maximumFractionDigits: 2 });
+export function displayOf(raw: string, isNumber: boolean, numeric: number): string {
+  if (isNumber) return numeric.toLocaleString('en-US', { maximumFractionDigits: 2 });
   return raw === '' ? '·' : raw;
 }
 

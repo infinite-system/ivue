@@ -8,7 +8,7 @@ const project = ProjectStore.Class.use();
 const {
   // state refs
   projectName,
-  filter,
+  filter
 } = project;
 </script>
 
@@ -20,9 +20,7 @@ const {
       <button class="btn" type="button" @click="project.toggleDoneFilter()">
         filter: {{ filter }}
       </button>
-      <span class="mono">
-        {{ project.completedCount }} done · {{ project.progressPercent }}%
-      </span>
+      <span class="mono"> {{ project.completedCount }} done · {{ project.progressPercent }}% </span>
     </div>
   </div>
 </template>

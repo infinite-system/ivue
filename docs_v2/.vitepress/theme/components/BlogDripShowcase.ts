@@ -22,7 +22,7 @@ class $BlogDripShowcase {
         position: '',
         title: post.title,
         url: post.url,
-        image: post.image,
+        image: post.image
       }));
   }
 
@@ -75,9 +75,7 @@ class $BlogDripShowcase {
     return ref<HTMLElement | null>(null);
   }
   get scroller() {
-    return shallowRef<HorizontalScrollerNs.Exposed<BlogDripShowcase.DripItem> | null>(
-      null,
-    );
+    return shallowRef<HorizontalScrollerNs.Exposed<BlogDripShowcase.DripItem> | null>(null);
   }
 
   // STATE — the delivery theater the template renders
@@ -105,9 +103,8 @@ class $BlogDripShowcase {
     const arriving = item.id === this.arrivingId.value;
     return {
       'drip-card--arriving': arriving,
-      'drip-card--delivered':
-        index <= this.deliveredThrough.value && !arriving,
-      'drip-card--sealed': index > this.deliveredThrough.value && !arriving,
+      'drip-card--delivered': index <= this.deliveredThrough.value && !arriving,
+      'drip-card--sealed': index > this.deliveredThrough.value && !arriving
     };
   }
 
@@ -132,9 +129,8 @@ class $BlogDripShowcase {
     if (!scrollerInstance) return 0;
     const position = parseFloat(String(scrollerInstance.scrollPosition)) || 0;
     return (
-      scrollerInstance.getIndexAtPosition(
-        position + scrollerInstance.containerOuterSize / 2,
-      )?.index ?? 0
+      scrollerInstance.getIndexAtPosition(position + scrollerInstance.containerOuterSize / 2)
+        ?.index ?? 0
     );
   }
 
@@ -153,10 +149,7 @@ class $BlogDripShowcase {
   settleDelivery(index: number) {
     this.pendingIndex.value = undefined;
     this.arrivingId.value = '';
-    this.deliveredThrough.value = Math.max(
-      this.deliveredThrough.value,
-      index,
-    );
+    this.deliveredThrough.value = Math.max(this.deliveredThrough.value, index);
   }
 
   /** Load AND wrap start identically: the clamped cards left of center are
@@ -173,8 +166,7 @@ class $BlogDripShowcase {
 
   advance() {
     const scrollerInstance = this.scroller.value;
-    if (!scrollerInstance || !this.inView.value || this.hovering.value || document.hidden)
-      return;
+    if (!scrollerInstance || !this.inView.value || this.hovering.value || document.hidden) return;
     if (scrollerInstance.lenis?.isScrolling) return; // the reader owns it
     if (this.current.value >= this.items.length - 1) {
       // the loop wrapped — reset to the start and begin a fresh cycle
@@ -183,24 +175,19 @@ class $BlogDripShowcase {
       return;
     }
     this.current.value += 1;
-    scrollerInstance.scrollToIndex(this.current.value, () =>
-      this.deliver(this.current.value),
-    );
+    scrollerInstance.scrollToIndex(this.current.value, () => this.deliver(this.current.value));
   }
 
   onMount() {
     if (this.items.length < 2) return;
     this.observer.value = new IntersectionObserver(
       ([entry]) => this.onVisibility(entry.isIntersecting),
-      { threshold: 0.35 },
+      { threshold: 0.35 }
     );
     if (this.root.value) this.observer.value.observe(this.root.value);
     // first cycle after the strip has measured its opening cards
     setTimeout(() => this.startCycle(), 600);
-    this.timer.value = setInterval(
-      () => this.advance(),
-      this.self.ADVANCE_EVERY_MS,
-    );
+    this.timer.value = setInterval(() => this.advance(), this.self.ADVANCE_EVERY_MS);
   }
 
   startCycle() {
@@ -221,10 +208,7 @@ class $BlogDripShowcase {
     clearTimeout(this.kickTimer.value);
     if (this.timer.value) clearInterval(this.timer.value);
     this.kickTimer.value = setTimeout(() => this.advance(), 1000);
-    this.timer.value = setInterval(
-      () => this.advance(),
-      this.self.ADVANCE_EVERY_MS,
-    );
+    this.timer.value = setInterval(() => this.advance(), this.self.ADVANCE_EVERY_MS);
   }
 
   dispose() {

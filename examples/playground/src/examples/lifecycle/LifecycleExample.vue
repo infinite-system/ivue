@@ -12,17 +12,16 @@ const {
   ticks,
   crossings,
   temp,
-  fired,
+  fired
 } = example;
 </script>
 
 <template>
   <div class="pane">
     <p class="note">
-      <strong>Component lifetime</strong> — Ticker's constructor ran inside
-      setup: its plain watch() and onMounted/onUnmounted register against
-      this component, and unmount releases the interval through an ordinary
-      dispose() method.
+      <strong>Component lifetime</strong> — Ticker's constructor ran inside setup: its plain watch()
+      and onMounted/onUnmounted register against this component, and unmount releases the interval
+      through an ordinary dispose() method.
     </p>
     <div class="vals">
       <div>
@@ -45,11 +44,10 @@ const {
     </div>
 
     <p class="note">
-      <strong>Outliving instance</strong> — Start registers a watcher in the
-      Sensor's lazily created effect scope. Suspend calls
-      $stopEffects({ reset: false }): the watcher dies but every value
-      survives — start resumes where it left off. Dispose calls
-      $stopEffects(): the scope stops AND every cached cell is dropped.
+      <strong>Outliving instance</strong> — Start registers a watcher in the Sensor's lazily created
+      effect scope. Suspend calls $stopEffects({ reset: false }): the watcher dies but every value
+      survives — start resumes where it left off. Dispose calls $stopEffects(): the scope stops AND
+      every cached cell is dropped.
     </p>
     <div class="vals">
       <div>
@@ -78,16 +76,10 @@ const {
         v-model.number="temp"
         aria-label="temperature"
       />
-      <button class="btn primary" type="button" @click="example.startWatch()">
-        start
-      </button>
+      <button class="btn primary" type="button" @click="example.startWatch()">start</button>
       <button class="btn" type="button" @click="example.stopWatch()">stop</button>
-      <button class="btn" type="button" @click="example.suspendSensor()">
-        suspend
-      </button>
-      <button class="btn" type="button" @click="example.disposeSensor()">
-        dispose
-      </button>
+      <button class="btn" type="button" @click="example.suspendSensor()">suspend</button>
+      <button class="btn" type="button" @click="example.disposeSensor()">dispose</button>
     </div>
   </div>
 </template>

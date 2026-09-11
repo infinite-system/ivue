@@ -17,7 +17,6 @@ import { FlyweightLogic } from '../FlyweightLogic';
 import type { FlyweightSheet } from './FlyweightSheet';
 
 class $FlyweightCell {
-
   constructor(sheet: FlyweightSheet.Model, row: number, col: number) {
     this.sheet = sheet;
     this.row = row;

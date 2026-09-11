@@ -11,13 +11,13 @@ const model = new (
 
 <template>
   <div class="ac-tool ac-tool-bash" :class="model.cardClass">
-    <component :is="model.kit.Head.vue" :model="model" />
+    <component :is="model.kit.Head.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <p v-if="model.description" class="ac-tool-caption">{{ model.description }}</p>
       <section class="ac-tool-section">
         <h5>command <span v-if="model.ranInBackground" class="ac-tag">background</span></h5>
         <component
-          :is="model.kit.CodeBlock.vue"
+          :is="model.kit.CodeBlock.view"
           :kit="model.kit.CodeBlock"
           :code="model.commandText"
           lang="bash"
@@ -30,7 +30,7 @@ const model = new (
           stdout <span class="ac-tag" :class="model.stateClass">{{ model.exitLabel }}</span>
         </h5>
         <component
-          :is="model.kit.CodeBlock.vue"
+          :is="model.kit.CodeBlock.view"
           :kit="model.kit.CodeBlock"
           :code="model.stdout"
           lang="text"
@@ -41,7 +41,7 @@ const model = new (
       <section v-if="model.hasStderr" class="ac-tool-section">
         <h5>stderr</h5>
         <component
-          :is="model.kit.CodeBlock.vue"
+          :is="model.kit.CodeBlock.view"
           :kit="model.kit.CodeBlock"
           :code="model.stderr"
           lang="text"
@@ -53,7 +53,7 @@ const model = new (
       <p v-if="model.hasNoOutput" class="ac-tool-caption ac-muted">
         no output · {{ model.exitLabel }}
       </p>
-      <component :is="model.kit.Foot.vue" :model="model" />
+      <component :is="model.kit.Foot.view" :model="model" />
     </div>
   </div>
 </template>

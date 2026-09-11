@@ -7,5 +7,5 @@ const shell = new ChatShell.Class(props);
 </script>
 
 <template>
-  <component :is="shell.entry.vue" :key="shell.treeId" :kit="shell.entry" :dark="shell.dark" />
+  <component :is="shell.entry.view" :key="shell.treeId" :kit="shell.entry" :dark="shell.dark" />
 </template>

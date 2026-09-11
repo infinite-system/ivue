@@ -29,7 +29,7 @@ class $BlogPostDate {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-      timeZone: 'UTC',
+      timeZone: 'UTC'
     });
   }
 

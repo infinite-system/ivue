@@ -40,13 +40,13 @@ class $BlogComments {
     onMounted(() => this.onMount());
     watch(
       () => this.slug,
-      () => this.resetForSlug(),
+      () => this.resetForSlug()
     );
     // the top-level form and the inline reply form are DIFFERENT
     // elements — swapping forms must tear down the old widget
     watch(
       () => this.turnstileElement.value,
-      (element) => this.onTurnstileElement(element),
+      (element) => this.onTurnstileElement(element)
     );
   }
 
@@ -229,7 +229,7 @@ class $BlogComments {
   // PER-THREAD READS — one name per template condition
   repliesOf(rootId: number): BlogComments.PublicComment[] {
     return this.comments.value.filter(
-      (comment) => comment.parentId && (comment.rootId ?? 0) === rootId,
+      (comment) => comment.parentId && (comment.rootId ?? 0) === rootId
     );
   }
 
@@ -316,31 +316,24 @@ class $BlogComments {
   /** The inline reply form lives inside the thread it answers — on the
    *  root or on any of its replies. */
   formIsInThread(rootId: number) {
-    return (
-      this.formIsOn(rootId) ||
-      this.repliesOf(rootId).some((reply) => this.formIsOn(reply.id))
-    );
+    return this.formIsOn(rootId) || this.repliesOf(rootId).some((reply) => this.formIsOn(reply.id));
   }
 
   doneInThread(rootId: number) {
-    return (
-      this.doneOn(rootId) ||
-      this.repliesOf(rootId).some((reply) => this.doneOn(reply.id))
-    );
+    return this.doneOn(rootId) || this.repliesOf(rootId).some((reply) => this.doneOn(reply.id));
   }
 
   formatDate(unixSeconds: number) {
     return new Date(unixSeconds * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
+      day: 'numeric'
     });
   }
 
   // ACTIONS — the tree
   expand(rootId: number) {
-    if (!this.isExpanded(rootId))
-      this.expandedRoots.value = [...this.expandedRoots.value, rootId];
+    if (!this.isExpanded(rootId)) this.expandedRoots.value = [...this.expandedRoots.value, rootId];
   }
 
   collapse(rootId: number) {
@@ -370,7 +363,7 @@ class $BlogComments {
     if (!this.isBlogPost) return;
     try {
       const response = await fetch(
-        `${this.self.ENDPOINT}/comments?slug=${encodeURIComponent(this.slug)}`,
+        `${this.self.ENDPOINT}/comments?slug=${encodeURIComponent(this.slug)}`
       );
       if (response.ok) this.comments.value = await response.json();
     } catch {
@@ -413,7 +406,7 @@ class $BlogComments {
     try {
       const response = await fetch(
         `${this.self.ENDPOINT}/comment-subscription?thread=${thread}` +
-          `&email=${encodeURIComponent(address)}&token=${encodeURIComponent(token)}`,
+          `&email=${encodeURIComponent(address)}&token=${encodeURIComponent(token)}`
       );
       if (!response.ok) return;
       const payload = await response.json();
@@ -435,8 +428,8 @@ class $BlogComments {
         body: JSON.stringify({
           thread: this.followedThread.value,
           email: this.followEmail.value,
-          token: this.followToken.value,
-        }),
+          token: this.followToken.value
+        })
       });
       if (response.ok) {
         this.following.value = false;
@@ -464,7 +457,7 @@ class $BlogComments {
     try {
       localStorage.setItem(
         this.self.IDENTITY_KEY,
-        JSON.stringify({ name: this.name.value, email: this.email.value }),
+        JSON.stringify({ name: this.name.value, email: this.email.value })
       );
     } catch {
       /* storage is a convenience, never a requirement */
@@ -504,8 +497,7 @@ class $BlogComments {
   // ACTIONS — Turnstile
   async renderTurnstile() {
     const sitekey = this.self.TURNSTILE_SITE_KEY;
-    if (!sitekey || !this.turnstileElement.value || this.turnstileWidgetId.value)
-      return;
+    if (!sitekey || !this.turnstileElement.value || this.turnstileWidgetId.value) return;
     await loadTurnstileScript();
     const turnstile = (window as any).turnstile;
     if (!turnstile || !this.turnstileElement.value) return;
@@ -515,7 +507,7 @@ class $BlogComments {
       theme: 'dark',
       appearance: 'interaction-only',
       callback: (token: string) => this.onTurnstileToken(token),
-      'expired-callback': () => this.onTurnstileExpired(),
+      'expired-callback': () => this.onTurnstileExpired()
     });
   }
 
@@ -576,10 +568,8 @@ class $BlogComments {
           subscribeReplies: this.subscribeReplies.value,
           subscribe: this.alsoSubscribe.value,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? '',
-          ...(this.turnstileToken.value
-            ? { turnstileToken: this.turnstileToken.value }
-            : {}),
-        }),
+          ...(this.turnstileToken.value ? { turnstileToken: this.turnstileToken.value } : {})
+        })
       });
       const payload = await response.json().catch(() => ({}));
       if (response.ok) {
@@ -589,8 +579,7 @@ class $BlogComments {
         this.rememberIdentity();
       } else {
         this.state.value = 'error';
-        this.message.value =
-          payload.error ?? 'Could not submit — try again in a minute.';
+        this.message.value = payload.error ?? 'Could not submit — try again in a minute.';
       }
     } catch {
       this.state.value = 'error';

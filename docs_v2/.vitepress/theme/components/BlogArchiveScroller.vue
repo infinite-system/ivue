@@ -10,7 +10,7 @@ const {
   archiveItems,
   // element refs
   scroller,
-  viewport,
+  viewport
 } = archive;
 </script>
 

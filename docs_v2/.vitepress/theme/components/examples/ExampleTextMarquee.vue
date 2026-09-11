@@ -17,7 +17,7 @@ const {
   // state refs
   speed,
   // element refs
-  marquee,
+  marquee
 } = example;
 </script>
 
@@ -61,13 +61,7 @@ const {
       </button>
       <label class="etm-speed">
         speed
-        <input
-          v-model.number="speed"
-          type="range"
-          min="20"
-          max="600"
-          step="10"
-        />
+        <input v-model.number="speed" type="range" min="20" max="600" step="10" />
         <span class="etm-speed-value">{{ example.speedLabel }}</span>
       </label>
     </div>
@@ -92,20 +86,8 @@ const {
   line-height: 1.6;
   color: var(--vp-c-text-1);
   /* the line enters and leaves through a soft edge, not a hard clip */
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent,
-    black 5%,
-    black 95%,
-    transparent
-  );
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    black 5%,
-    black 95%,
-    transparent
-  );
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);
 }
 
 .etm-btn-icon {

@@ -17,7 +17,7 @@ class $ToolBatchPart {
   /** the one role a batch composes: the part that picks a card per call */
   static get $kit() {
     return {
-      Call: { namespace: ToolCallPart, vue: ToolCallPartView }
+      Call: { namespace: ToolCallPart, view: ToolCallPartView }
     } satisfies Kit.Of<'Call'>;
   }
 

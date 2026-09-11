@@ -34,20 +34,20 @@ import McpCallView from '../tools/McpCall.vue';
 class $ToolCallPart {
   static get $kit() {
     return {
-      Generic: { namespace: ToolCallModel, vue: GenericCallView },
-      Mcp: { namespace: McpCall, vue: McpCallView },
-      Task: { namespace: TaskCall, vue: TaskCallView },
+      Generic: { namespace: ToolCallModel, view: GenericCallView },
+      Mcp: { namespace: McpCall, view: McpCallView },
+      Task: { namespace: TaskCall, view: TaskCallView },
       Tools: {
-        Bash: { namespace: BashCall, vue: BashCallView },
-        Edit: { namespace: EditCall, vue: EditCallView },
-        NotebookEdit: { namespace: EditCall, vue: EditCallView },
-        Read: { namespace: ReadCall, vue: ReadCallView },
-        Write: { namespace: WriteCall, vue: WriteCallView },
-        Agent: { namespace: AgentCall, vue: AgentCallView },
-        Skill: { namespace: SkillCall, vue: SkillCallView },
-        WebFetch: { namespace: WebFetchCall, vue: WebFetchCallView },
-        WebSearch: { namespace: WebFetchCall, vue: WebFetchCallView },
-        Artifact: { namespace: ArtifactCall, vue: ArtifactCallView }
+        Bash: { namespace: BashCall, view: BashCallView },
+        Edit: { namespace: EditCall, view: EditCallView },
+        NotebookEdit: { namespace: EditCall, view: EditCallView },
+        Read: { namespace: ReadCall, view: ReadCallView },
+        Write: { namespace: WriteCall, view: WriteCallView },
+        Agent: { namespace: AgentCall, view: AgentCallView },
+        Skill: { namespace: SkillCall, view: SkillCallView },
+        WebFetch: { namespace: WebFetchCall, view: WebFetchCallView },
+        WebSearch: { namespace: WebFetchCall, view: WebFetchCallView },
+        Artifact: { namespace: ArtifactCall, view: ArtifactCallView }
       } as Record<string, Kit.Entry>
     };
   }

@@ -6,12 +6,7 @@ import { Reactive } from '../../ivue';
 import { ErrorNotification } from './ErrorNotification';
 import { Kernel } from './Kernel';
 import { Notification } from './Notification';
-import {
-  activityPlugin,
-  stickyPlugin,
-  type NotificationPlugin,
-} from './plugins';
-
+import { activityPlugin, stickyPlugin, type NotificationPlugin } from './plugins';
 
 class $ExtensibleKernelExample {
   constructor() {
@@ -44,21 +39,19 @@ class $ExtensibleKernelExample {
       label: 'Sticky Plugin',
       description: 'Keeps toasts visible until they are dismissed.',
       enabledEffect: 'Gold accent · pinned · auto-dismiss disabled',
-      make: stickyPlugin,
+      make: stickyPlugin
     },
     {
       id: 'activity',
       label: 'Activity Plugin',
       description: 'Observes toast delivery without changing the toast UI.',
       enabledEffect: 'Every SHOW appears in the event stream',
-      make: activityPlugin,
-    },
+      make: activityPlugin
+    }
   ];
 
   get visibleNotifications() {
-    return this.notifications.value.filter(
-      (entry) => !entry.notification.isDismissed.value,
-    );
+    return this.notifications.value.filter((entry) => !entry.notification.isDismissed.value);
   }
   get hasVisibleNotifications() {
     return this.visibleNotifications.length > 0;
@@ -99,14 +92,14 @@ class $ExtensibleKernelExample {
     Kernel.Class.sealClassGraph();
     this.graph.value = Kernel.Class.getClassGraph();
     this.notifications.value = visibleNotifications.map((entry) =>
-      this.buildNotification(entry.kind, entry.notification.message, entry.id),
+      this.buildNotification(entry.kind, entry.notification.message, entry.id)
     );
   }
 
   togglePlugin(pluginId: string) {
     this.activePlugins.value = {
       ...this.activePlugins.value,
-      [pluginId]: !this.activePlugins.value[pluginId],
+      [pluginId]: !this.activePlugins.value[pluginId]
     };
     this.reboot();
   }
@@ -114,7 +107,7 @@ class $ExtensibleKernelExample {
   buildNotification(
     kind: ExtensibleKernelExample.NotificationKind,
     message: string,
-    id = ++this.nextNotificationId.value,
+    id = ++this.nextNotificationId.value
   ): ExtensibleKernelExample.NotificationEntry {
     const notification =
       kind === 'error'
@@ -126,13 +119,8 @@ class $ExtensibleKernelExample {
 
   addNotification(kind: ExtensibleKernelExample.NotificationKind) {
     const message =
-      kind === 'error'
-        ? 'Upload failed — retry the request.'
-        : 'Draft saved to the cloud.';
-    this.notifications.value = [
-      ...this.notifications.value,
-      this.buildNotification(kind, message),
-    ];
+      kind === 'error' ? 'Upload failed — retry the request.' : 'Draft saved to the cloud.';
+    this.notifications.value = [...this.notifications.value, this.buildNotification(kind, message)];
   }
 
   tick() {
@@ -184,5 +172,4 @@ export namespace ExtensibleKernelExample {
     extends: string | null;
     plugins: string[];
   }
-
 }

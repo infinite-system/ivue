@@ -6,21 +6,31 @@ const search = new BlogSidebarSearch.Class();
 // the state destructure
 const {
   // state refs
-  query,
+  query
 } = search;
 </script>
 
 <template>
   <div v-if="search.isBlogSection" class="blog-rail-head">
-    <a
-      class="blog-rail-all"
-      :class="{ active: search.isBlogIndex }"
-      :href="search.allArticlesHref"
-    >All articles</a>
+    <a class="blog-rail-all" :class="{ active: search.isBlogIndex }" :href="search.allArticlesHref"
+      >All articles</a
+    >
     <div class="blog-rail-search">
-      <svg class="blog-rail-search__icon" width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+      <svg
+        class="blog-rail-search__icon"
+        width="13"
+        height="13"
+        viewBox="0 0 15 15"
+        fill="none"
+        aria-hidden="true"
+      >
         <circle cx="6.5" cy="6.5" r="4.6" stroke="currentColor" stroke-width="1.6" />
-        <path d="m10.3 10.3 3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        <path
+          d="m10.3 10.3 3.2 3.2"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
       </svg>
       <input
         v-model="query"
@@ -35,7 +45,9 @@ const {
         class="blog-rail-search__clear"
         aria-label="Clear search"
         @click="search.clear()"
-      >×</button>
+      >
+        ×
+      </button>
     </div>
     <div v-if="search.searching" class="blog-rail-results" role="list">
       <p class="blog-rail-results__count">

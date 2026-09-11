@@ -61,7 +61,7 @@ pointer.
 Every model that composes declares its roles as `static get $kit()`, a
 record of entries — a part per kind on the row, a card per tool name on
 the part that picks cards, the sections of the row, the leaves of a card
-— and every seam renders `<component :is="model.kit.Role.vue" :kit="model.kit.Role" …props />`.
+— and every seam renders `<component :is="model.kit.Role.view" :kit="model.kit.Role" …props />`.
 A model reads its kit from its own class, so a subclass swaps any role
 by naming another entry, and nothing branches on a kind or a name — it
 looks the entry up, with the generic card and the text part as the

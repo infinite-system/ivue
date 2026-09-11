@@ -131,7 +131,9 @@ class $StackBlitzPlayground {
       return;
     }
     if (!window.isSecureContext) {
-      this.showFallback('The embedded workspace needs HTTPS. Open the full StackBlitz workspace while using this local server.');
+      this.showFallback(
+        'The embedded workspace needs HTTPS. Open the full StackBlitz workspace while using this local server.'
+      );
       return;
     }
     if (!('serviceWorker' in navigator)) {
@@ -143,8 +145,13 @@ class $StackBlitzPlayground {
       return;
     }
     try {
-      const registration = await navigator.serviceWorker.register(withBase(this.self.SERVICE_WORKER_PATH));
-      const workerIsActive = await this.activatesWithin(registration, this.self.WORKER_ACTIVATION_TIMEOUT_MS);
+      const registration = await navigator.serviceWorker.register(
+        withBase(this.self.SERVICE_WORKER_PATH)
+      );
+      const workerIsActive = await this.activatesWithin(
+        registration,
+        this.self.WORKER_ACTIVATION_TIMEOUT_MS
+      );
       if (!workerIsActive) {
         this.showFallback('The embedded StackBlitz workspace could not start in this browser.');
         return;
@@ -167,7 +174,10 @@ class $StackBlitzPlayground {
   startEmbed() {
     this.ready.value = true;
     void nextTick(() => this.watchEmbedBoot());
-    this.embedRetryTimer.value = window.setTimeout(() => this.retryEmbed(), this.self.EMBED_RETRY_DELAY_MS);
+    this.embedRetryTimer.value = window.setTimeout(
+      () => this.retryEmbed(),
+      this.self.EMBED_RETRY_DELAY_MS
+    );
   }
 
   retryEmbed() {

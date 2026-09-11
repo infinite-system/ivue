@@ -9,12 +9,11 @@ const example = new ComposableExample.Class();
 <template>
   <div class="pane">
     <p class="note">
-      Two directions of the same seam. <strong>Hosting:</strong> useMouse
-      lives inside the Pointer class — private, created once on the first
-      read; the readouts are plain getters over it.
-      <strong>Publishing:</strong> the undo history is an ivue class behind a
-      one-line useUndoHistory() face; every list operation records a step,
-      and undo / redo / the rail only move its cursor.
+      Two directions of the same seam. <strong>Hosting:</strong> useMouse lives inside the Pointer
+      class — private, created once on the first read; the readouts are plain getters over it.
+      <strong>Publishing:</strong> the undo history is an ivue class behind a one-line
+      useUndoHistory() face; every list operation records a step, and undo / redo / the rail only
+      move its cursor.
     </p>
 
     <div class="vals">
@@ -36,13 +35,28 @@ const example = new ComposableExample.Class();
       <button class="btn primary" type="button" @click="example.list.add()">
         {{ example.list.addLabel }}
       </button>
-      <button class="btn" type="button" :disabled="example.list.isEmpty" @click="example.list.double()">
+      <button
+        class="btn"
+        type="button"
+        :disabled="example.list.isEmpty"
+        @click="example.list.double()"
+      >
         double
       </button>
-      <button class="btn" type="button" :disabled="example.list.isEmpty" @click="example.list.sort()">
+      <button
+        class="btn"
+        type="button"
+        :disabled="example.list.isEmpty"
+        @click="example.list.sort()"
+      >
         sort
       </button>
-      <button class="btn" type="button" :disabled="example.list.isEmpty" @click="example.list.reverse()">
+      <button
+        class="btn"
+        type="button"
+        :disabled="example.list.isEmpty"
+        @click="example.list.reverse()"
+      >
         reverse
       </button>
     </div>
@@ -70,7 +84,10 @@ const example = new ComposableExample.Class();
         v-for="(entry, index) in example.list.steps"
         :key="index"
         class="step"
-        :class="{ current: example.history.isCurrent(index), ahead: example.history.isAhead(index) }"
+        :class="{
+          current: example.history.isCurrent(index),
+          ahead: example.history.isAhead(index)
+        }"
         @click="example.history.jumpTo(index)"
       >
         {{ entry.label }}
@@ -81,7 +98,6 @@ const example = new ComposableExample.Class();
       <span v-if="example.list.isEmpty" class="mono">empty — add something</span>
       <span v-for="(item, index) in example.list.items" :key="index" class="chip">{{ item }}</span>
     </div>
-
   </div>
 </template>
 

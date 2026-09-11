@@ -164,7 +164,7 @@ If the design holds, none of these can occur:
   concern only; UI traces small formulas).
 - **Volatile functions** (`NOW()`…) need a tick signal — not wired.
 - `pauseTracking`/`resetTracking` come from `@vue/reactivity` (public
-  exports of the reactivity package, not re-exported by `vue`).
+  exports of the reactivity package, not re-exported by `view`).
 - Self-referential ranges resolve to `#REF!` via the cycle guard, matching
   the formula grid.
 

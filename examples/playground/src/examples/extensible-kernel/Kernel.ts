@@ -27,7 +27,7 @@ class $Kernel {
       ns,
       parentClass: parentClass === Object ? undefined : parentClass,
       makes: [],
-      plugins: [],
+      plugins: []
     });
   }
 
@@ -35,7 +35,7 @@ class $Kernel {
   static registerClass(
     name: string,
     make: (Base: Kernel.AnyClass) => Kernel.AnyClass,
-    plugin = 'plugin',
+    plugin = 'plugin'
   ) {
     const node = this.nodes.get(name);
     if (!node) throw new Error(`kernel: '${name}' is not defined`);
@@ -74,10 +74,8 @@ class $Kernel {
     const byClass = this.nodeByClass();
     return [...this.nodes.values()].map((node) => ({
       name: node.name,
-      extends: node.parentClass
-        ? (byClass.get(node.parentClass)?.name ?? null)
-        : null,
-      plugins: [...node.plugins],
+      extends: node.parentClass ? (byClass.get(node.parentClass)?.name ?? null) : null,
+      plugins: [...node.plugins]
     }));
   }
 
@@ -87,9 +85,7 @@ class $Kernel {
     return map;
   }
 
-  protected static topoOrder(
-    byClass: Map<Kernel.AnyClass, Kernel.Node>,
-  ): Kernel.Node[] {
+  protected static topoOrder(byClass: Map<Kernel.AnyClass, Kernel.Node>): Kernel.Node[] {
     const out: Kernel.Node[] = [];
     const seen = new Set<string>();
     const visit = (node: Kernel.Node) => {

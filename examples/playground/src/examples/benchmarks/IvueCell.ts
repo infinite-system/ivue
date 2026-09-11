@@ -21,7 +21,6 @@ import { Reactive } from '../../ivue';
 import { cssOf, displayOf, isNumberOf, numericOf } from './cell-logic';
 
 class $IvueCell {
-
   constructor(row: number, col: number, initial: string) {
     this.row = row;
     this.col = col;

@@ -19,7 +19,7 @@ const sections = model.sections;
 
     <div class="ac-settings-list">
       <component
-        :is="model.kit.Scroller.vue"
+        :is="model.kit.Scroller.view"
         :kit="model.kit.Scroller"
         scrollbar
         :auto-repeat="false"

@@ -55,7 +55,7 @@ const {
           <span class="ac-attach-icon" aria-hidden="true">+</span>
           <input type="file" multiple hidden @change="model.onPick($event)" />
         </label>
-        <component :is="model.kit.Picker.vue" :kit="model.kit.Picker" :composer="model" />
+        <component :is="model.kit.Picker.view" :kit="model.kit.Picker" :composer="model" />
         <span class="ac-model-hint">{{ model.modelHint }}</span>
         <span class="ac-composer-spacer"></span>
         <button

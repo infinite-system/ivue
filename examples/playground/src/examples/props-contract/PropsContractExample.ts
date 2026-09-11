@@ -12,15 +12,18 @@ class $PropsContractExample {
   get values() {
     return ref<PropsContractExample.Values>({
       label: 'runtime',
-      ...Badge.Class.propsDefaults,
+      ...Badge.Class.propsDefaults
     });
   }
 
   // DERIVED — the knobs panel, read off the contract
   get controls(): PropsContractExample.Control[] {
     const types = Badge.Class.propsTypes;
-    const defaults: Partial<Record<PropsContractExample.PropName, unknown>> = Badge.Class.propsDefaults;
-    const choices: Partial<Record<PropsContractExample.PropName, readonly PropsContractExample.Choice[]>> = Badge.Class.propsChoices;
+    const defaults: Partial<Record<PropsContractExample.PropName, unknown>> =
+      Badge.Class.propsDefaults;
+    const choices: Partial<
+      Record<PropsContractExample.PropName, readonly PropsContractExample.Choice[]>
+    > = Badge.Class.propsChoices;
     return (Object.keys(types) as PropsContractExample.PropName[]).map((name) => {
       const declaration = types[name] as PropsContractExample.Declaration;
       return {
@@ -29,7 +32,7 @@ class $PropsContractExample {
         required: declaration.required === true,
         defaultValue: defaults[name],
         validator: declaration.validator,
-        choices: choices[name],
+        choices: choices[name]
       };
     });
   }
@@ -79,7 +82,9 @@ class $PropsContractExample {
   }
 
   get validityLabel() {
-    return this.hasInvalid ? `validator rejects: ${this.invalidNames.join(', ')}` : 'every value passes its validator';
+    return this.hasInvalid
+      ? `validator rejects: ${this.invalidNames.join(', ')}`
+      : 'every value passes its validator';
   }
 
   // PER-CONTROL — named template conditions and labels
@@ -108,7 +113,9 @@ class $PropsContractExample {
   }
 
   defaultLabel(control: PropsContractExample.Control) {
-    return control.required ? 'required, no default' : `default: ${JSON.stringify(control.defaultValue)}`;
+    return control.required
+      ? 'required, no default'
+      : `default: ${JSON.stringify(control.defaultValue)}`;
   }
 
   currentLabel(control: PropsContractExample.Control) {

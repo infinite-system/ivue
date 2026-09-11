@@ -39,7 +39,7 @@ const {
         @pointerleave="chat.onThreadPointerLeave()"
       >
         <component
-          :is="chat.kit.Scroller.vue"
+          :is="chat.kit.Scroller.view"
           ref="scroller"
           :kit="chat.kit.Scroller"
           scrollbar
@@ -51,14 +51,14 @@ const {
         >
           <template #item="{ item }">
             <component
-              :is="chat.kit.Message.vue"
+              :is="chat.kit.Message.view"
               :kit="chat.kit.Message"
               :row="item"
               :chat="chat"
             />
           </template>
         </component>
-        <component :is="chat.kit.Peek.vue" ref="peek" :kit="chat.kit.Peek" :chat="chat" />
+        <component :is="chat.kit.Peek.view" ref="peek" :kit="chat.kit.Peek" :chat="chat" />
         <button
           v-if="chat.showsJumpToLatest"
           type="button"
@@ -71,10 +71,10 @@ const {
           <span class="ac-spinner" aria-hidden="true"></span> loading the index…
         </div>
       </section>
-      <component :is="chat.kit.Sidebar.vue" :kit="chat.kit.Sidebar" :chat="chat" />
+      <component :is="chat.kit.Sidebar.view" :kit="chat.kit.Sidebar" :chat="chat" />
     </div>
 
-    <component :is="chat.kit.Composer.vue" :kit="chat.kit.Composer" :chat="chat" />
+    <component :is="chat.kit.Composer.view" :kit="chat.kit.Composer" :chat="chat" />
 
     <footer class="ac-stats">
       <dl class="ac-receipts">

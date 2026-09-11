@@ -16,10 +16,7 @@ const workspace = Workspace.Class.use();
     </header>
     <div class="ow-activity__stream">
       <article v-for="entry in workspace.activities.value" :key="entry.id">
-        <MemberAvatar
-          :member="workspace.memberById(entry.actorId)"
-          size="small"
-        />
+        <MemberAvatar :member="workspace.memberById(entry.actorId)" size="small" />
         <p>
           <strong>{{ workspace.memberById(entry.actorId)?.name }}</strong>
           {{ entry.text }}

@@ -27,7 +27,7 @@ class $HeroTypewriter {
       'Reactive backend.',
       'Mock-free tests.',
       '100% coverage.',
-      'Real object graphs.',
+      'Real object graphs.'
     ];
   }
 

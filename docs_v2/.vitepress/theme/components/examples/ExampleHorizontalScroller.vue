@@ -19,7 +19,7 @@ const {
   items,
   speed,
   // element refs
-  scroller,
+  scroller
 } = example;
 </script>
 
@@ -58,7 +58,9 @@ const {
         <template #item="{ item }">
           <!-- one line on purpose: the space between the two spans is the
                only whitespace the card's text carries, so copy matches it -->
-          <div class="ehs-card"><b>#{{ Number(item.position).toLocaleString() }}</b> <span>{{ item.body }}</span></div>
+          <div class="ehs-card">
+            <b>#{{ Number(item.position).toLocaleString() }}</b> <span>{{ item.body }}</span>
+          </div>
         </template>
       </HorizontalVirtualScroller>
     </div>
@@ -67,12 +69,8 @@ const {
       <button class="d-btn primary" type="button" @click="example.jumpTo(499999)">
         jump to #500,000
       </button>
-      <button class="d-btn" type="button" @click="example.jumpToEnd()">
-        jump to the end
-      </button>
-      <button class="d-btn" type="button" @click="example.jumpTo(0)">
-        back to the start
-      </button>
+      <button class="d-btn" type="button" @click="example.jumpToEnd()">jump to the end</button>
+      <button class="d-btn" type="button" @click="example.jumpTo(0)">back to the start</button>
       <button
         class="d-btn"
         :class="{ 'ehs-playing': example.isAutoPlaying }"
@@ -84,13 +82,7 @@ const {
       </button>
       <label class="ehs-speed">
         speed
-        <input
-          v-model.number="speed"
-          type="range"
-          min="10"
-          max="600"
-          step="10"
-        />
+        <input v-model.number="speed" type="range" min="10" max="600" step="10" />
         <span class="ehs-speed-value">{{ example.speedLabel }}</span>
       </label>
     </div>

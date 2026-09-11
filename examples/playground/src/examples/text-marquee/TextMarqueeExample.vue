@@ -9,7 +9,7 @@ const {
   // state refs
   speed,
   // element refs
-  marquee,
+  marquee
 } = example;
 </script>
 
@@ -18,32 +18,21 @@ const {
     <header class="example-header">
       <p>{{ example.statsLabel }}</p>
       <nav>
-        <button
-          type="button"
-          :class="{ playing: example.isPlaying }"
-          @click="example.togglePlay()"
-        >
+        <button type="button" :class="{ playing: example.isPlaying }" @click="example.togglePlay()">
           <span class="btn-icon">{{ example.playButtonIcon }}</span>
           {{ example.playButtonLabel }}
         </button>
         <label class="speed">
           speed
-          <input
-            v-model.number="speed"
-            type="range"
-            min="20"
-            max="600"
-            step="10"
-          />
+          <input v-model.number="speed" type="range" min="20" max="600" step="10" />
           <span class="speed-value">{{ example.speedLabel }}</span>
         </label>
       </nav>
     </header>
     <main class="example-body">
       <p class="hint">
-        A ~400k-character book as ONE line. Shift+wheel or swipe scrubs it;
-        the slider changes speed mid-glide — a plain vertical wheel still
-        scrolls the page.
+        A ~400k-character book as ONE line. Shift+wheel or swipe scrubs it; the slider changes speed
+        mid-glide — a plain vertical wheel still scrolls the page.
       </p>
       <TextMarquee
         ref="marquee"
@@ -135,19 +124,7 @@ nav button.playing {
   line-height: 1.6;
   color: #dbe1f4;
   /* the line enters and leaves through a soft edge, not a hard clip */
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent,
-    black 5%,
-    black 95%,
-    transparent
-  );
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    black 5%,
-    black 95%,
-    transparent
-  );
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);
 }
 </style>

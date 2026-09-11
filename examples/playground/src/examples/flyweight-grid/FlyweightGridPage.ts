@@ -14,7 +14,7 @@ import {
   ref,
   shallowRef,
   watch,
-  type ComputedRef,
+  type ComputedRef
 } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
@@ -41,7 +41,7 @@ class $FlyweightGridPage {
     // component scope owns and stops it on unmount.
     watch(
       () => this.startRow,
-      () => this.scheduleEviction(),
+      () => this.scheduleEviction()
     );
 
     onMounted(() => {
@@ -89,14 +89,14 @@ class $FlyweightGridPage {
       fineRefs: 0,
       blockRefs: 0,
       formulaComputeds: 0,
-      adHocFormulas: 0,
+      adHocFormulas: 0
     });
   }
 
   // --- non-reactive infra (timers) ---
   protected readonly timers = {
     census: null as ReturnType<typeof setInterval> | null,
-    evict: null as ReturnType<typeof setTimeout> | null,
+    evict: null as ReturnType<typeof setTimeout> | null
   };
 
   // --- derived (plain getters) ---
@@ -123,14 +123,19 @@ class $FlyweightGridPage {
     return this.scrollTop.value * this.scrollScale;
   }
   get startRow() {
-    return Math.max(0, Math.floor(this.virtualTop / FlyweightLogic.Class.ROW_HEIGHT) - FlyweightLogic.Class.OVERSCAN);
+    return Math.max(
+      0,
+      Math.floor(this.virtualTop / FlyweightLogic.Class.ROW_HEIGHT) - FlyweightLogic.Class.OVERSCAN
+    );
   }
   get endRow() {
-    const visibleCount = Math.ceil(FlyweightLogic.Class.VIEWPORT_HEIGHT / FlyweightLogic.Class.ROW_HEIGHT);
+    const visibleCount = Math.ceil(
+      FlyweightLogic.Class.VIEWPORT_HEIGHT / FlyweightLogic.Class.ROW_HEIGHT
+    );
     return this.sheet.value
       ? Math.min(
           this.sheet.value.rows,
-          this.startRow + visibleCount + FlyweightLogic.Class.OVERSCAN * 2,
+          this.startRow + visibleCount + FlyweightLogic.Class.OVERSCAN * 2
         )
       : 0;
   }
@@ -164,16 +169,16 @@ class $FlyweightGridPage {
     return [
       {
         label: `SUM(A1:A${lastRow})`,
-        total: sheet.liveFormula(`SUM(A1:A${lastRow})`),
+        total: sheet.liveFormula(`SUM(A1:A${lastRow})`)
       },
       {
         label: `AVERAGE(B1:B${lastRow})`,
-        total: sheet.liveFormula(`AVERAGE(B1:B${lastRow})`),
+        total: sheet.liveFormula(`AVERAGE(B1:B${lastRow})`)
       },
       {
         label: `SUM(D1:D${lastRow})`,
-        total: sheet.liveFormula(`SUM(D1:D${lastRow})`),
-      },
+        total: sheet.liveFormula(`SUM(D1:D${lastRow})`)
+      }
     ];
   }
 
@@ -183,9 +188,7 @@ class $FlyweightGridPage {
   }
   get activeSource() {
     const editing = this.editing.value;
-    return editing && this.sheet.value
-      ? this.sheet.value.sourceAt(editing.row, editing.col)
-      : '';
+    return editing && this.sheet.value ? this.sheet.value.sourceAt(editing.row, editing.col) : '';
   }
   get activeRefLabel() {
     return this.activeRef || 'fx';
@@ -223,7 +226,7 @@ class $FlyweightGridPage {
     this.pollCensus();
     // eslint-disable-next-line no-console
     console.log(
-      `[flyweight] created ${(FlyweightLogic.Class.ROWS_1M * FlyweightLogic.Class.COLS).toLocaleString()} cells in ${this.creationMs.value.toFixed(1)}ms`,
+      `[flyweight] created ${(FlyweightLogic.Class.ROWS_1M * FlyweightLogic.Class.COLS).toLocaleString()} cells in ${this.creationMs.value.toFixed(1)}ms`
     );
   }
 
@@ -281,7 +284,7 @@ class $FlyweightGridPage {
       if (!sheet) return;
       sheet.evictOutsideRows(
         Math.max(0, this.startRow - this.self.EVICT_MARGIN_ROWS),
-        this.endRow + this.self.EVICT_MARGIN_ROWS,
+        this.endRow + this.self.EVICT_MARGIN_ROWS
       );
       this.pollCensus();
     }, 300);
@@ -291,10 +294,11 @@ class $FlyweightGridPage {
     const scrollEl = this.scrollEl.value;
     if (!this.sheet.value || !scrollEl) return;
     const targetPx =
-      (row * FlyweightLogic.Class.ROW_HEIGHT - FlyweightLogic.Class.VIEWPORT_HEIGHT / 2) / this.scrollScale;
+      (row * FlyweightLogic.Class.ROW_HEIGHT - FlyweightLogic.Class.VIEWPORT_HEIGHT / 2) /
+      this.scrollScale;
     const clamped = Math.max(
       0,
-      Math.min(targetPx, this.totalHeight - FlyweightLogic.Class.VIEWPORT_HEIGHT),
+      Math.min(targetPx, this.totalHeight - FlyweightLogic.Class.VIEWPORT_HEIGHT)
     );
     scrollEl.scrollTop = clamped;
     this.scrollTop.value = clamped;
@@ -314,17 +318,15 @@ class $FlyweightGridPage {
         this.sheet.value?.write(row, col, input),
       cellText: (row: number, col: number) => {
         const cellEl = document.querySelector(
-          `[data-grid-cell][data-row="${row}"][data-col="${col}"]`,
+          `[data-grid-cell][data-row="${row}"][data-col="${col}"]`
         );
         return cellEl ? (cellEl.textContent || '').trim() : null;
       },
       cellValue: (row: number, col: number) => {
         const value = this.sheet.value?.valueAt(row, col);
-        return value && typeof value === 'object'
-          ? String(value)
-          : (value ?? null);
+        return value && typeof value === 'object' ? String(value) : (value ?? null);
       },
-      startRow: () => this.startRow,
+      startRow: () => this.startRow
     };
   }
 }

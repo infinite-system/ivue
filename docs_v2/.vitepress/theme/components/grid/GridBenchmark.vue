@@ -18,7 +18,7 @@ const {
   // element refs — one per arm, distinct names since three coexist
   composableScrollEl,
   ivueScrollEl,
-  pojoScrollEl,
+  pojoScrollEl
 } = benchmark;
 </script>
 
@@ -41,18 +41,14 @@ const {
       </button>
       <span v-if="benchmark.hasAny" class="d-mono gb-last-build">
         last build:
-        {{ benchmark.lastBuildLabel }} cells &times; 3
-        arms
+        {{ benchmark.lastBuildLabel }} cells &times; 3 arms
       </span>
     </div>
     <p v-if="benchmark.isMillionBuild" class="gb-warning">
-      ⚠ 1M cells &times; 3 arms in memory at once — mostly the composable arm's
-      ~758&nbsp;MB. Fine on a modern desktop browser; may be heavy on a
-      memory-constrained device.
+      ⚠ 1M cells &times; 3 arms in memory at once — mostly the composable arm's ~758&nbsp;MB. Fine
+      on a modern desktop browser; may be heavy on a memory-constrained device.
     </p>
-    <p v-if="!benchmark.hasAny" class="gb-hint">
-      Nothing built yet — click a button above.
-    </p>
+    <p v-if="!benchmark.hasAny" class="gb-hint">Nothing built yet — click a button above.</p>
     <p v-else class="gb-hint">
       Best measured fully reactive result. POJO is the non-reactive floor.
       <BenchmarkWinner placement="after" />
@@ -71,8 +67,7 @@ const {
           <span class="gb-label">{{ arm.label }}</span>
         </div>
         <div class="gb-compare-num">
-          {{ benchmark.creationLabel(arm)
-          }}<span class="gb-unit">ms</span
+          {{ benchmark.creationLabel(arm) }}<span class="gb-unit">ms</span
           ><BenchmarkWinner v-if="benchmark.isIvueArm(arm)" placement="after" />
         </div>
         <div class="gb-compare-sub">
@@ -125,19 +120,9 @@ const {
             </div>
             <div class="gc-sum gc-head-cell">Σ</div>
           </div>
-          <div
-            class="gc-viewport"
-            :style="benchmark.viewportStyle('composable')"
-          >
-            <div
-              class="gc-rows"
-              :style="benchmark.rowsStyle('composable')"
-            >
-              <div
-                v-for="row in benchmark.composable.visibleRows.value"
-                :key="row"
-                class="gc-row"
-              >
+          <div class="gc-viewport" :style="benchmark.viewportStyle('composable')">
+            <div class="gc-rows" :style="benchmark.rowsStyle('composable')">
+              <div v-for="row in benchmark.composable.visibleRows.value" :key="row" class="gc-row">
                 <div class="gc-rownum">{{ benchmark.rowNumber(row) }}</div>
                 <div
                   v-for="(cell, columnIndex) in benchmark.composable.model.value[row]"
@@ -179,14 +164,8 @@ const {
             </div>
             <div class="gc-sum gc-head-cell">Σ</div>
           </div>
-          <div
-            class="gc-viewport"
-            :style="benchmark.viewportStyle('ivue')"
-          >
-            <div
-              class="gc-rows"
-              :style="benchmark.rowsStyle('ivue')"
-            >
+          <div class="gc-viewport" :style="benchmark.viewportStyle('ivue')">
+            <div class="gc-rows" :style="benchmark.rowsStyle('ivue')">
               <div v-for="row in benchmark.ivue.visibleRows.value" :key="row" class="gc-row">
                 <div class="gc-rownum">{{ benchmark.rowNumber(row) }}</div>
                 <div
@@ -215,12 +194,7 @@ const {
       </div>
 
       <!-- POJO arm — display-only, non-reactive by design (no click-to-edit) -->
-      <div
-        v-else
-        ref="pojoScrollEl"
-        class="gc-grid-scroll"
-        @scroll="benchmark.pojo.onScroll"
-      >
+      <div v-else ref="pojoScrollEl" class="gc-grid-scroll" @scroll="benchmark.pojo.onScroll">
         <div class="gc-inner">
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
@@ -229,14 +203,8 @@ const {
             </div>
             <div class="gc-sum gc-head-cell">Σ</div>
           </div>
-          <div
-            class="gc-viewport"
-            :style="benchmark.viewportStyle('pojo')"
-          >
-            <div
-              class="gc-rows"
-              :style="benchmark.rowsStyle('pojo')"
-            >
+          <div class="gc-viewport" :style="benchmark.viewportStyle('pojo')">
+            <div class="gc-rows" :style="benchmark.rowsStyle('pojo')">
               <div v-for="row in benchmark.pojo.visibleRows.value" :key="row" class="gc-row">
                 <div class="gc-rownum">{{ benchmark.rowNumber(row) }}</div>
                 <div
@@ -256,10 +224,8 @@ const {
       </div>
 
       <div class="gb-mounted-note d-mono">
-        {{ benchmark.mountedCellsLabel }} DOM
-        cells mounted for this view (virtualized) out of
-        {{ benchmark.activeModelCellsLabel }} in the
-        model.
+        {{ benchmark.mountedCellsLabel }} DOM cells mounted for this view (virtualized) out of
+        {{ benchmark.activeModelCellsLabel }} in the model.
       </div>
     </div>
   </DemoBox>

@@ -16,7 +16,7 @@ const model = new (
         title="Drag to resize"
         @pointerdown="model.onResizeStart($event)"
       ></div>
-      <component :is="model.entry!.vue" :kit="model.entry" :chat="chat" />
+      <component :is="model.entry!.view" :kit="model.entry" :chat="chat" />
     </div>
     <nav class="ac-rail" aria-label="Side panels">
       <button

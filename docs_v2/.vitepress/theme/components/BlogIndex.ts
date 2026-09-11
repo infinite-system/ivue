@@ -24,7 +24,7 @@ class $BlogIndex {
       reddit: 'REDDIT',
       x: '𝕏 THREAD',
       linkedin: 'LINKEDIN',
-      note: 'NOTE',
+      note: 'NOTE'
     };
   }
 
@@ -46,10 +46,7 @@ class $BlogIndex {
   constructor() {
     // a narrower filter can strand the page index — any filter change
     // starts from page 1 and collapses an expanded tag row
-    watch(
-      [() => this.activeTag.value, () => this.searchQuery.value],
-      () => this.resetPage(),
-    );
+    watch([() => this.activeTag.value, () => this.searchQuery.value], () => this.resetPage());
     onMounted(() => this.onMount());
   }
 
@@ -117,7 +114,7 @@ class $BlogIndex {
       }
     }
     return [...counts.entries()].sort(
-      (first, second) => second[1] - first[1] || first[0].localeCompare(second[0]),
+      (first, second) => second[1] - first[1] || first[0].localeCompare(second[0])
     );
   }
   /** Search RANKS, not just filters (blog-search.ts — shared with the
@@ -161,7 +158,7 @@ class $BlogIndex {
     const tag = this.activeTag.value;
     return rankPosts(
       this.visiblePosts.filter((post) => !tag || post.tags.includes(tag)),
-      this.searchQuery.value,
+      this.searchQuery.value
     );
   }
 
@@ -231,7 +228,7 @@ class $BlogIndex {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      timeZone: 'UTC',
+      timeZone: 'UTC'
     });
   }
 
@@ -348,10 +345,7 @@ class $BlogIndex {
   }
 
   onDocumentClick(event: MouseEvent) {
-    if (
-      this.expandedTagsSlug.value &&
-      !(event.target as Element | null)?.closest?.('.foot-tags')
-    )
+    if (this.expandedTagsSlug.value && !(event.target as Element | null)?.closest?.('.foot-tags'))
       this.expandedTagsSlug.value = null;
   }
 }

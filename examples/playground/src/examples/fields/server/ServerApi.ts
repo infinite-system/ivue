@@ -46,7 +46,7 @@ class $ServerApi {
     const response = await this.active.request('GET', path);
     return {
       data: response?.data ?? response ?? [],
-      pagination: response?.pagination,
+      pagination: response?.pagination
     };
   }
 
@@ -65,7 +65,10 @@ class $ServerApi {
   /* Media endpoints */
 
   static async uploadMedia(files: File[], name?: string): Promise<ServerApi.MediaRow[]> {
-    const response = await this.active.request('POST', '/media/upload', { files, payload: { name } });
+    const response = await this.active.request('POST', '/media/upload', {
+      files,
+      payload: { name }
+    });
     return response?.data ?? response ?? [];
   }
 
@@ -74,7 +77,11 @@ class $ServerApi {
     return (await this.getCustom(`/media?${query}`)) ?? [];
   }
 
-  static async updateMedia(payload: { id: string; name?: string; caption?: string }): Promise<ServerApi.MediaRow> {
+  static async updateMedia(payload: {
+    id: string;
+    name?: string;
+    caption?: string;
+  }): Promise<ServerApi.MediaRow> {
     return await this.postCustom('/media/update', payload);
   }
 
@@ -122,7 +129,7 @@ export namespace ServerApi {
     request(
       method: 'GET' | 'POST' | 'PUT' | 'DELETE',
       path: string,
-      options?: RequestOptions,
+      options?: RequestOptions
     ): Promise<any>;
   }
 }

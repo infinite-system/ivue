@@ -38,45 +38,24 @@ const { comment } = details;
         <div class="ow-detail__fields">
           <label>
             <span>Status</span>
-            <select
-              :value="details.task.status.value"
-              @change="details.updateStatus($event)"
-            >
-              <option
-                v-for="status in STATUS_ORDER"
-                :key="status"
-                :value="status"
-              >
+            <select :value="details.task.status.value" @change="details.updateStatus($event)">
+              <option v-for="status in STATUS_ORDER" :key="status" :value="status">
                 {{ STATUS_META[status].label }}
               </option>
             </select>
           </label>
           <label>
             <span>Assignee</span>
-            <select
-              :value="details.task.assigneeId.value"
-              @change="details.updateAssignee($event)"
-            >
-              <option
-                v-for="member in details.members"
-                :key="member.id"
-                :value="member.id"
-              >
+            <select :value="details.task.assigneeId.value" @change="details.updateAssignee($event)">
+              <option v-for="member in details.members" :key="member.id" :value="member.id">
                 {{ member.name }}
               </option>
             </select>
           </label>
           <label>
             <span>Priority</span>
-            <select
-              :value="details.task.priority.value"
-              @change="details.updatePriority($event)"
-            >
-              <option
-                v-for="(meta, priority) in PRIORITY_META"
-                :key="priority"
-                :value="priority"
-              >
+            <select :value="details.task.priority.value" @change="details.updatePriority($event)">
+              <option v-for="(meta, priority) in PRIORITY_META" :key="priority" :value="priority">
                 {{ meta.label }}
               </option>
             </select>
@@ -96,10 +75,7 @@ const { comment } = details;
           ></textarea>
         </section>
 
-        <section
-          v-if="details.task.checklist.value.length"
-          class="ow-detail-section"
-        >
+        <section v-if="details.task.checklist.value.length" class="ow-detail-section">
           <header>
             <h3>Checklist</h3>
             <span>{{ details.task.checklistProgress }}%</span>
@@ -127,25 +103,17 @@ const { comment } = details;
             Comments <span>{{ details.task.comments.value.length }}</span>
           </h3>
           <article v-for="entry in details.task.comments.value" :key="entry.id">
-            <MemberAvatar
-              :member="details.memberById(entry.authorId)"
-              size="small"
-            />
+            <MemberAvatar :member="details.memberById(entry.authorId)" size="small" />
             <div>
               <strong>{{ details.memberById(entry.authorId)?.name }}</strong>
               <small>{{ entry.createdAt }}</small>
               <p>{{ entry.body }}</p>
             </div>
           </article>
-          <form
-            class="ow-comment-form"
-            @submit.prevent="details.submitComment()"
-          >
+          <form class="ow-comment-form" @submit.prevent="details.submitComment()">
             <MemberAvatar :member="details.memberById('you')" size="small" />
             <input v-model="comment" placeholder="Write a comment…" />
-            <button type="submit" :disabled="details.isCommentSubmitDisabled">
-              Send
-            </button>
+            <button type="submit" :disabled="details.isCommentSubmitDisabled">Send</button>
           </form>
         </section>
       </div>

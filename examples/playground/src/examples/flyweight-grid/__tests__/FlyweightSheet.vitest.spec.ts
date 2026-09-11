@@ -24,7 +24,7 @@ beforeAll(() => {
   creationMs = performance.now() - startedAt;
   // eslint-disable-next-line no-console
   console.log(
-    `[flyweight] created ${(ROWS * COLS).toLocaleString()} cells in ${creationMs.toFixed(1)}ms`,
+    `[flyweight] created ${(ROWS * COLS).toLocaleString()} cells in ${creationMs.toFixed(1)}ms`
   );
 });
 
@@ -68,7 +68,7 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
         void sheet.valueAt(10, 0);
         observerRuns++;
       },
-      { flush: 'sync' },
+      { flush: 'sync' }
     );
     expect(observerRuns).toBe(1);
     const fineRefsAfterObserve = sheet.stats().fineRefs;
@@ -132,7 +132,7 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
     const stopWatch = watch(
       () => sheet.valueAt(targetRow, 7), // =IF(A>0,B,C)
       () => recomputes++,
-      { flush: 'sync' },
+      { flush: 'sync' }
     );
 
     // A > 0 → tracked branch is B; editing C (dead branch) must NOT recompute.
@@ -188,8 +188,7 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
 
     // In-range write → exactly one recompute, correct delta.
     const originalValue = sheet.rawAt(123_456, 0);
-    const originalNumber =
-      typeof originalValue === 'number' ? originalValue : 0;
+    const originalNumber = typeof originalValue === 'number' ? originalValue : 0;
     sheet.write(123_456, 0, String(originalNumber + 1000));
     expect(recomputes).toBe(1);
     expect(num(total.value)).toBeCloseTo(manualSum + 1000, 6);
@@ -210,7 +209,7 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
 
     let recomputes = 0;
     const stopWatch = watch(sumOfColumnE, () => recomputes++, {
-      flush: 'sync',
+      flush: 'sync'
     });
 
     let manualSum = 0;
@@ -218,22 +217,18 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
       const valueA = sheet.rawAt(row, 0);
       const valueB = sheet.rawAt(row, 1);
       manualSum +=
-        (typeof valueA === 'number' ? valueA : 0) +
-        (typeof valueB === 'number' ? valueB : 0);
+        (typeof valueA === 'number' ? valueA : 0) + (typeof valueB === 'number' ? valueB : 0);
     }
     expect(num(sumOfColumnE.value)).toBeCloseTo(manualSum, 6);
 
     // Transitive observation, priced: exactly the 200 formulas materialized.
     const statsAfter = sheet.stats();
-    expect(statsAfter.formulaComputeds - statsBefore.formulaComputeds).toBe(
-      200,
-    );
+    expect(statsAfter.formulaComputeds - statsBefore.formulaComputeds).toBe(200);
 
     // Edit an INPUT (column A, outside the E range): A250 → E250 → block →
     // SUM recomputes with the correct new total. No fine edge from SUM to A.
     const originalValue = sheet.rawAt(249, 0);
-    const originalNumber =
-      typeof originalValue === 'number' ? originalValue : 0;
+    const originalNumber = typeof originalValue === 'number' ? originalValue : 0;
     sheet.write(249, 0, String(originalNumber + 500));
     expect(recomputes).toBeGreaterThanOrEqual(1);
     expect(num(sumOfColumnE.value)).toBeCloseTo(manualSum + 500, 6);
@@ -255,7 +250,7 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
     const stopWatch = watch(
       () => sheet.valueAt(42, 10), // K43 — a data cell
       (cellValue) => seenValues.push(cellValue),
-      { flush: 'sync' },
+      { flush: 'sync' }
     );
     sheet.write(42, 10, '5');
     sheet.write(42, 10, '=A43+1');
@@ -286,11 +281,10 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
     const stopWatch = watch(
       () => cell.value,
       () => observerRuns++,
-      { flush: 'sync' },
+      { flush: 'sync' }
     );
     const originalValue = sheet.rawAt(0, 0);
-    const originalNumber =
-      typeof originalValue === 'number' ? originalValue : 0;
+    const originalNumber = typeof originalValue === 'number' ? originalValue : 0;
     cell.sheet.write(0, 0, String(originalNumber + 1));
     expect(observerRuns).toBe(1);
     stopWatch();
@@ -313,11 +307,10 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
     const stopWatch = watch(
       () => sheet.valueAt(1000, 4),
       () => observerRuns++,
-      { flush: 'sync' },
+      { flush: 'sync' }
     );
     const originalNearby = sheet.rawAt(1000, 0);
-    const originalNearbyNumber =
-      typeof originalNearby === 'number' ? originalNearby : 0;
+    const originalNearbyNumber = typeof originalNearby === 'number' ? originalNearby : 0;
     sheet.write(1000, 0, String(originalNearbyNumber + 3));
     expect(observerRuns).toBe(1);
     expect(num(sheet.valueAt(1000, 4))).toBeCloseTo(nearbyValueE + 3, 8);
@@ -327,24 +320,18 @@ describe('FlyweightSheet @ 20 × 1,000,000 (20M cells)', () => {
     // RELEASED cell re-materializes fresh and CORRECT — including a write
     // that happened while it was unobserved (peek-only bump hit nothing).
     const originalFarA = sheet.rawAt(800_000, 0);
-    const originalFarNumber =
-      typeof originalFarA === 'number' ? originalFarA : 0;
+    const originalFarNumber = typeof originalFarA === 'number' ? originalFarA : 0;
     sheet.write(800_000, 0, String(originalFarNumber + 7));
     const farValueB = sheet.rawAt(800_000, 1);
     const farNumberB = typeof farValueB === 'number' ? farValueB : 0;
-    expect(num(sheet.valueAt(800_000, 4))).toBeCloseTo(
-      originalFarNumber + 7 + farNumberB,
-      8,
-    );
+    expect(num(sheet.valueAt(800_000, 4))).toBeCloseTo(originalFarNumber + 7 + farNumberB, 8);
     restoreSeed(800_000, 0);
   });
 
   it('release drops the overlay; ground truth and correctness survive', () => {
     const statsBefore = sheet.stats();
     expect(
-      statsBefore.fineRefs +
-        statsBefore.blockRefs +
-        statsBefore.formulaComputeds,
+      statsBefore.fineRefs + statsBefore.blockRefs + statsBefore.formulaComputeds
     ).toBeGreaterThan(0);
     sheet.releaseAll();
     const statsAfter = sheet.stats();

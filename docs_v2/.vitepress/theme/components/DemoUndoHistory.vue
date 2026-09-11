@@ -15,15 +15,31 @@ const list = new GroceryList.Class();
   >
     <div class="d-row">
       <button class="d-btn primary" type="button" @click="list.add()">{{ list.addLabel }}</button>
-      <button class="d-btn" type="button" :disabled="list.isEmpty" @click="list.double()">double</button>
-      <button class="d-btn" type="button" :disabled="list.isEmpty" @click="list.sort()">sort</button>
-      <button class="d-btn" type="button" :disabled="list.isEmpty" @click="list.reverse()">reverse</button>
+      <button class="d-btn" type="button" :disabled="list.isEmpty" @click="list.double()">
+        double
+      </button>
+      <button class="d-btn" type="button" :disabled="list.isEmpty" @click="list.sort()">
+        sort
+      </button>
+      <button class="d-btn" type="button" :disabled="list.isEmpty" @click="list.reverse()">
+        reverse
+      </button>
     </div>
     <div class="d-row">
-      <button class="d-btn" type="button" :disabled="!list.history.canUndo" @click="list.history.undo()">
+      <button
+        class="d-btn"
+        type="button"
+        :disabled="!list.history.canUndo"
+        @click="list.history.undo()"
+      >
         Undo
       </button>
-      <button class="d-btn" type="button" :disabled="!list.history.canRedo" @click="list.history.redo()">
+      <button
+        class="d-btn"
+        type="button"
+        :disabled="!list.history.canRedo"
+        @click="list.history.redo()"
+      >
         Redo
       </button>
       <span class="d-mono">{{ list.history.positionLabel }}</span>

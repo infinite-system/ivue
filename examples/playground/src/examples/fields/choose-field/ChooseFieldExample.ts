@@ -50,7 +50,7 @@ class $ChooseFieldExample {
     { name: 'Hobby', description: 'For side projects', icon: 'rocket_launch' },
     { name: 'Pro', description: 'For production apps', icon: 'workspace_premium' },
     { name: 'Team', description: 'Shared workspaces', icon: 'groups' },
-    { name: 'Enterprise', description: 'SSO, audit, SLAs', icon: 'apartment' },
+    { name: 'Enterprise', description: 'SSO, audit, SLAs', icon: 'apartment' }
   ];
 
   readonly variants = [
@@ -59,14 +59,14 @@ class $ChooseFieldExample {
       icon: 'person',
       default: true as const,
       fetchFilters: "kind = 'person'",
-      fetchSort: 'name:asc',
+      fetchSort: 'name:asc'
     },
     {
       label: 'Companies',
       icon: 'apartment',
       fetchFilters: "kind = 'company'",
-      fetchSort: 'name:asc',
-    },
+      fetchSort: 'name:asc'
+    }
   ];
 
   async resetSandbox() {

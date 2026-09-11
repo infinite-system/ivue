@@ -9,7 +9,7 @@ const example = new PropsContractExample.Class();
 // the state destructure
 const {
   // state refs
-  values,
+  values
 } = example;
 </script>
 
@@ -17,15 +17,19 @@ const {
   <div class="pane pane-props">
     <p class="note">
       Nothing below is hand-listed. The knobs are read off
-      <code>Badge.Class.propsTypes</code>, seeded from
-      <code>Badge.Class.propsDefaults</code>, and their choices come from
-      <code>Badge.Class.propsChoices</code>; the ledger is the difference
-      between Badge's contract and IconBadge's. Pick size 0 and the
-      class's own validator says so — it is a value the panel can call.
+      <code>Badge.Class.propsTypes</code>, seeded from <code>Badge.Class.propsDefaults</code>, and
+      their choices come from <code>Badge.Class.propsChoices</code>; the ledger is the difference
+      between Badge's contract and IconBadge's. Pick size 0 and the class's own validator says so —
+      it is a value the panel can call.
     </p>
 
     <div class="knobs">
-      <div v-for="control in example.controls" :key="control.name" class="knob" :class="{ 'knob--invalid': example.isInvalid(control) }">
+      <div
+        v-for="control in example.controls"
+        :key="control.name"
+        class="knob"
+        :class="{ 'knob--invalid': example.isInvalid(control) }"
+      >
         <span class="k">{{ control.name }}</span>
         <span v-if="example.hasChoices(control)" class="choices">
           <button

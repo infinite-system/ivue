@@ -16,17 +16,16 @@ const {
   teamPicks,
   tagPicks,
   variantPick,
-  resetting,
+  resetting
 } = example;
 </script>
 
 <template>
   <div class="pane pane-fields">
     <p class="note">
-      One production-grade select component, eight configurations — every
-      variation below is the SAME ChooseField class, driven entirely by
-      props. Server search, pagination and option creation run against the
-      in-browser mock backend (localStorage); point ServerApi at
+      One production-grade select component, eight configurations — every variation below is the
+      SAME ChooseField class, driven entirely by props. Server search, pagination and option
+      creation run against the in-browser mock backend (localStorage); point ServerApi at
       server-node/server.ts and nothing else changes.
     </p>
 
@@ -144,17 +143,10 @@ const {
     </div>
 
     <div class="row" style="margin-top: 20px">
-      <button
-        class="btn"
-        type="button"
-        :disabled="resetting"
-        @click="example.resetSandbox()"
-      >
+      <button class="btn" type="button" :disabled="resetting" @click="example.resetSandbox()">
         {{ example.resetLabel }}
       </button>
-      <span class="mono">
-        your edits live in localStorage — private to this browser
-      </span>
+      <span class="mono"> your edits live in localStorage — private to this browser </span>
     </div>
   </div>
 </template>

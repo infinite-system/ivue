@@ -13,10 +13,7 @@ class $SaleProduct extends Product.$Class {
   }
 
   override receipt(): string[] {
-    return [
-      ...super.receipt(),
-      `sale −${Math.round(this.discount.value * 100)}%`,
-    ];
+    return [...super.receipt(), `sale −${Math.round(this.discount.value * 100)}%`];
   }
 }
 

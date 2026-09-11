@@ -7,7 +7,7 @@ const example = new InheritanceExample.Class();
 // the state destructure
 const {
   // forwarded cells — the plain-getter chain
-  price,
+  price
 } = example;
 </script>
 
@@ -40,15 +40,9 @@ const {
       </div>
     </div>
     <div class="d-row">
-      <button class="d-btn primary" type="button" @click="example.bumpPrice()">
-        price +$6
-      </button>
-      <button class="d-btn" type="button" @click="example.bumpDiscount()">
-        deeper sale
-      </button>
-      <button class="d-btn" type="button" @click="example.toggleTax()">
-        toggle tax
-      </button>
+      <button class="d-btn primary" type="button" @click="example.bumpPrice()">price +$6</button>
+      <button class="d-btn" type="button" @click="example.bumpDiscount()">deeper sale</button>
+      <button class="d-btn" type="button" @click="example.toggleTax()">toggle tax</button>
     </div>
   </DemoBox>
 </template>

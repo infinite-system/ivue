@@ -11,7 +11,7 @@ class $MemberAvatar {
   static get propsTypes() {
     return definePropTypes({
       member: { type: Object as PropType<Member.Model> },
-      size: { type: String as PropType<MemberAvatar.Size> },
+      size: { type: String as PropType<MemberAvatar.Size> }
     });
   }
 

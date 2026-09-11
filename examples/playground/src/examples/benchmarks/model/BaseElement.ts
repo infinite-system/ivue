@@ -2,7 +2,6 @@ import { computed, ref } from 'vue';
 import { Reactive } from '../../../ivue';
 
 class $BaseElement {
-
   // A simple reactive state for the base element
   get opacity() {
     return ref(1.0);

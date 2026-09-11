@@ -6,7 +6,7 @@ const example = new ExtensibleKernelExample.Class();
 const {
   // state refs
   activityLog,
-  graph,
+  graph
 } = example;
 </script>
 
@@ -26,11 +26,7 @@ const {
           >
             Show saved toast
           </button>
-          <button
-            class="btn"
-            type="button"
-            @click="example.addNotification('error')"
-          >
+          <button class="btn" type="button" @click="example.addNotification('error')">
             Show error toast
           </button>
         </div>
@@ -42,9 +38,7 @@ const {
           <strong>Acme workspace</strong>
         </div>
         <div class="kx-app-canvas">
-          <div class="kx-page-copy">
-            <span></span><span></span><span></span>
-          </div>
+          <div class="kx-page-copy"><span></span><span></span><span></span></div>
 
           <div class="kx-toast-region" aria-live="polite">
             <article
@@ -73,9 +67,7 @@ const {
                   class="kx-progress"
                   aria-hidden="true"
                 >
-                  <span
-                    :style="{ width: entry.notification.lifetimeWidth }"
-                  ></span>
+                  <span :style="{ width: entry.notification.lifetimeWidth }"></span>
                 </div>
               </div>
               <button
@@ -336,8 +328,7 @@ const {
   min-height: 360px;
   padding: 20px;
   background:
-    radial-gradient(circle at 30% 15%, rgba(99, 102, 241, 0.09), transparent 35%),
-    #0d1324;
+    radial-gradient(circle at 30% 15%, rgba(99, 102, 241, 0.09), transparent 35%), #0d1324;
 }
 .kx-page-copy {
   display: grid;

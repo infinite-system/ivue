@@ -11,11 +11,19 @@ defineExpose(model as Code.Instance);
 </script>
 
 <template>
-  <div class="code-block" :class="model.blockClass" :style="model.blockStyle" :data-engine="model.engineLabel" :data-theme="model.theme">
+  <div
+    class="code-block"
+    :class="model.blockClass"
+    :style="model.blockStyle"
+    :data-engine="model.engineLabel"
+    :data-theme="model.theme"
+  >
     <ol v-if="model.lineNumbers" class="code-gutter" aria-hidden="true">
       <li v-for="line in model.visibleLineCount" :key="line">{{ line }}</li>
     </ol>
     <div class="code-html" v-html="model.renderedHtml"></div>
-    <button v-if="model.isFoldable" type="button" class="code-fold" @click="model.toggleFold()">{{ model.foldLabel }}</button>
+    <button v-if="model.isFoldable" type="button" class="code-fold" @click="model.toggleFold()">
+      {{ model.foldLabel }}
+    </button>
   </div>
 </template>

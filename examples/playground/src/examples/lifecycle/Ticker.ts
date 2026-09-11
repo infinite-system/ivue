@@ -11,7 +11,7 @@ class $Ticker {
     // plain watch — lands in the COMPONENT's scope, reaped on unmount
     watch(
       () => this.ticks.value,
-      (ticks) => this.onTick(ticks),
+      (ticks) => this.onTick(ticks)
     );
     // lifecycle hooks — register against the mounting component
     onMounted(() => this.startTicking());

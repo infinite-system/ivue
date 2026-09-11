@@ -12,7 +12,7 @@ const model = new (
   <div class="ac-subthread">
     <p class="ac-subthread-head">{{ model.countLabel }}</p>
     <component
-      :is="model.kit.Message.vue"
+      :is="model.kit.Message.view"
       v-for="row in model.rows"
       :key="row.id"
       :kit="model.kit.Message"

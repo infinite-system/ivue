@@ -22,10 +22,10 @@ class $ToolCallModel {
   /** the roles every card composes: its head and foot, the code block, and a nested thread */
   static get $kit() {
     return {
-      Head: { vue: ToolHeadView },
-      Foot: { vue: ToolFootView },
-      CodeBlock: { namespace: CodeBlock, vue: CodeBlockView },
-      SubThread: { namespace: SubThread, vue: SubThreadView }
+      Head: { view: ToolHeadView },
+      Foot: { view: ToolFootView },
+      CodeBlock: { namespace: CodeBlock, view: CodeBlockView },
+      SubThread: { namespace: SubThread, view: SubThreadView }
     } satisfies Kit.Of<ToolCallModel.Role>;
   }
 

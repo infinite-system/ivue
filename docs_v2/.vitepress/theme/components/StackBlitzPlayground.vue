@@ -12,7 +12,7 @@ const {
   fallback,
   fallbackMessage,
   // element refs
-  embedFrame,
+  embedFrame
 } = playground;
 </script>
 

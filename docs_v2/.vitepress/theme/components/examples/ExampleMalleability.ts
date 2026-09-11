@@ -21,15 +21,21 @@ import StatsFootView from './malleability/StatsFoot.vue';
 class $ExampleMalleability {
   /** The overrides, built once per receiver: every one is the shipped Gallery plus a patch. */
   static get $variants(): ExampleMalleability.Variant[] {
-    const sections = { Head: { vue: TabHeadView }, Foot: { vue: StatsFootView } };
+    const sections = { Head: { view: TabHeadView }, Foot: { view: StatsFootView } };
     const engine = { Code: { namespace: HljsCode } };
-    const knobs = { Code: { namespace: ConfiguredCode, props: { theme: 'dracula', lineNumbers: true, maxLines: 8 } } };
+    const knobs = {
+      Code: {
+        namespace: ConfiguredCode,
+        props: { theme: 'dracula', lineNumbers: true, maxLines: 8 }
+      }
+    };
     const root = 'docs_v2/.vitepress/theme/components/examples/malleability';
     return [
       {
         id: 'shipped',
         label: 'As shipped',
-        tagline: 'The tree its authors wrote: a snippet card with a plain head, shiki in github-light, and a foot with a copy button.',
+        tagline:
+          'The tree its authors wrote: a snippet card with a plain head, shiki in github-light, and a foot with a copy button.',
         patch: '// nothing — Gallery as its file exports it',
         namespace: Gallery,
         files: [
@@ -41,18 +47,19 @@ class $ExampleMalleability {
           { path: `${root}/SnippetFoot.vue`, label: 'SnippetFoot.vue' },
           { path: `${root}/Code.ts`, label: 'Code.ts' },
           { path: `${root}/Code.vue`, label: 'Code.vue' },
-          { path: `${root}/Shiki.ts`, label: 'Shiki.ts' },
-        ],
+          { path: `${root}/Shiki.ts`, label: 'Shiki.ts' }
+        ]
       },
       {
         id: 'sections',
         label: 'Sections swapped',
-        tagline: 'The head becomes an editor tab bar and the foot a status bar, both painted from the block’s palette. Snippet.vue and Gallery.vue are untouched.',
+        tagline:
+          'The head becomes an editor tab bar and the foot a status bar, both painted from the block’s palette. Snippet.vue and Gallery.vue are untouched.',
         patch: `Kit.Class.derive(Gallery, {
   Snippet: {
     subkit: {
-      Head: { vue: TabHeadView },
-      Foot: { vue: StatsFootView },
+      Head: { view: TabHeadView },
+      Foot: { view: StatsFootView },
     },
   },
 })`,
@@ -61,13 +68,14 @@ class $ExampleMalleability {
           { path: `${root}/TabHead.vue`, label: 'TabHead.vue' },
           { path: `${root}/StatsFoot.vue`, label: 'StatsFoot.vue' },
           { path: `${root}/SnippetHead.vue`, label: 'SnippetHead.vue — what Head was' },
-          { path: `${root}/SnippetFoot.vue`, label: 'SnippetFoot.vue — what Foot was' },
-        ],
+          { path: `${root}/SnippetFoot.vue`, label: 'SnippetFoot.vue — what Foot was' }
+        ]
       },
       {
         id: 'engine',
         label: 'Engine swapped',
-        tagline: 'The code block is now HljsCode: highlight.js instead of shiki, one static overridden, everything else inherited. Same theme name, another engine’s reading of it; the foot says which.',
+        tagline:
+          'The code block is now HljsCode: highlight.js instead of shiki, one static overridden, everything else inherited. Same theme name, another engine’s reading of it; the foot says which.',
         patch: `Kit.Class.derive(Gallery, {
   Snippet: {
     subkit: {
@@ -80,13 +88,14 @@ class $ExampleMalleability {
           { path: `${root}/HljsCode.ts`, label: 'HljsCode.ts' },
           { path: `${root}/Hljs.ts`, label: 'Hljs.ts' },
           { path: `${root}/Code.ts`, label: 'Code.ts — what it extends' },
-          { path: `${root}/Shiki.ts`, label: 'Shiki.ts — the engine it replaced' },
-        ],
+          { path: `${root}/Shiki.ts`, label: 'Shiki.ts — the engine it replaced' }
+        ]
       },
       {
         id: 'knobs',
         label: 'Knobs turned',
-        tagline: 'Code is closed to the kit. ConfiguredCode is the layer that opens three settings, each one getter reading the entry and falling back to super; the entry turns them.',
+        tagline:
+          'Code is closed to the kit. ConfiguredCode is the layer that opens three settings, each one getter reading the entry and falling back to super; the entry turns them.',
         patch: `Kit.Class.derive(Gallery, {
   Snippet: {
     subkit: {
@@ -105,18 +114,22 @@ class $ExampleMalleability {
         files: [
           { path: `${root}/ConfiguredCode.ts`, label: 'ConfiguredCode.ts — the layer' },
           { path: `${root}/Code.ts`, label: 'Code.ts — closed, reads only its props' },
-          { path: `${root}/Snippet.ts`, label: 'Snippet.ts — reads the same theme for its sections' },
-        ],
+          {
+            path: `${root}/Snippet.ts`,
+            label: 'Snippet.ts — reads the same theme for its sections'
+          }
+        ]
       },
       {
         id: 'all',
         label: 'All of it',
-        tagline: 'Sections, engine and settings in one literal: tab bar, status bar, highlight.js in nord, numbered and folded. HljsCode stacks on the layer, so the knobs stay open. The shipped tree is exactly as it was.',
+        tagline:
+          'Sections, engine and settings in one literal: tab bar, status bar, highlight.js in nord, numbered and folded. HljsCode stacks on the layer, so the knobs stay open. The shipped tree is exactly as it was.',
         patch: `Kit.Class.derive(Gallery, {
   Snippet: {
     subkit: {
-      Head: { vue: TabHeadView },
-      Foot: { vue: StatsFootView },
+      Head: { view: TabHeadView },
+      Foot: { view: StatsFootView },
       Code: {
         namespace: HljsCode,
         props: {
@@ -129,15 +142,23 @@ class $ExampleMalleability {
   },
 })`,
         namespace: Kit.Class.derive(Gallery, {
-          Snippet: { subkit: { ...sections, Code: { namespace: HljsCode, props: { theme: 'nord', lineNumbers: true, maxLines: 8 } } } },
+          Snippet: {
+            subkit: {
+              ...sections,
+              Code: {
+                namespace: HljsCode,
+                props: { theme: 'nord', lineNumbers: true, maxLines: 8 }
+              }
+            }
+          }
         }),
         files: [
           { path: `${root}/TabHead.vue`, label: 'TabHead.vue' },
           { path: `${root}/StatsFoot.vue`, label: 'StatsFoot.vue' },
           { path: `${root}/HljsCode.ts`, label: 'HljsCode.ts' },
-          { path: 'examples/playground/src/kit/Kit.ts', label: 'Kit.ts — resolve, derive, view' },
-        ],
-      },
+          { path: 'examples/playground/src/kit/Kit.ts', label: 'Kit.ts — resolve, derive, view' }
+        ]
+      }
     ];
   }
 
@@ -148,7 +169,7 @@ class $ExampleMalleability {
       [Snippet, 'Snippet'],
       [Code, 'Code'],
       [ConfiguredCode, 'ConfiguredCode'],
-      [HljsCode, 'HljsCode'],
+      [HljsCode, 'HljsCode']
     ]);
   }
 
@@ -165,7 +186,10 @@ class $ExampleMalleability {
 
   /** the props bag as the reader would write it, one setting per line */
   static propsLabel(props: Record<string, unknown>): string {
-    const lines = Object.entries(props).map(([key, value]) => `  ${key}: ${typeof value === 'string' ? `'${value}'` : JSON.stringify(value)},`);
+    const lines = Object.entries(props).map(
+      ([key, value]) =>
+        `  ${key}: ${typeof value === 'string' ? `'${value}'` : JSON.stringify(value)},`
+    );
     return ['{', ...lines, '}'].join('\n');
   }
 
@@ -199,18 +223,20 @@ class $ExampleMalleability {
   }
 
   get selected(): ExampleMalleability.Variant {
-    return this.variants.find((variant) => variant.id === this.selectedId.value) ?? this.variants[0];
+    return (
+      this.variants.find((variant) => variant.id === this.selectedId.value) ?? this.variants[0]
+    );
   }
 
   /** The entry the seam receives: the chosen namespace, the one Gallery.vue. */
   get entry(): Kit.Entry {
-    return { namespace: this.selected.namespace, vue: GalleryView };
+    return { namespace: this.selected.namespace, view: GalleryView };
   }
 
   /** The shipped tree's lines, the baseline every override is read against. */
   get baseline(): ExampleMalleability.Line[] {
     const lines: ExampleMalleability.Line[] = [];
-    this.walk('Gallery', { namespace: Gallery, vue: GalleryView }, 0, lines);
+    this.walk('Gallery', { namespace: Gallery, view: GalleryView }, 0, lines);
     return lines;
   }
 
@@ -221,10 +247,18 @@ class $ExampleMalleability {
     const before = new Map(this.baseline.map((line) => [line.key, line]));
     return lines.map((line) => {
       const was = before.get(line.key);
-      const changedView = Boolean(was && was.vue !== line.vue);
+      const changedView = Boolean(was && was.view !== line.view);
       const changedClass = Boolean(was && was.className !== line.className);
       const changedProps = Boolean(was && was.props !== line.props);
-      return { ...line, wasView: was?.vue ?? '', wasClass: was?.className ?? '', changedView, changedClass, changedProps, changed: changedView || changedClass || changedProps };
+      return {
+        ...line,
+        wasView: was?.view ?? '',
+        wasClass: was?.className ?? '',
+        changedView,
+        changedClass,
+        changedProps,
+        changed: changedView || changedClass || changedProps
+      };
     });
   }
 
@@ -235,7 +269,7 @@ class $ExampleMalleability {
     const head = lines.find((line) => line.role === 'Head');
     const engine = code?.className === 'HljsCode' ? 'highlight.js' : 'shiki';
     const theme = code?.props.match(/theme: '([^']+)'/)?.[1] ?? 'github-light';
-    const sections = head?.vue === 'TabHead.vue' ? 'tab bar + status bar' : 'plain head + foot';
+    const sections = head?.view === 'TabHead.vue' ? 'tab bar + status bar' : 'plain head + foot';
     return `${engine} · ${theme} · ${sections}`;
   }
 
@@ -268,7 +302,7 @@ class $ExampleMalleability {
       key: `${depth}-${role}`,
       role,
       depth,
-      vue: self.viewName(entry.vue),
+      view: self.viewName(entry.view),
       className: namespace ? self.baseName(namespace) : '',
       derived: namespace ? self.isDerived(namespace) : false,
       props: entry.props ? self.propsLabel(entry.props) : '',
@@ -277,7 +311,7 @@ class $ExampleMalleability {
       changedView: false,
       changedClass: false,
       changedProps: false,
-      changed: false,
+      changed: false
     });
     const kit = namespace?.Class.$kit;
     if (!kit) return;
@@ -307,7 +341,7 @@ export namespace ExampleMalleability {
     key: string;
     role: string;
     depth: number;
-    vue: string;
+    view: string;
     className: string;
     derived: boolean;
     props: string;

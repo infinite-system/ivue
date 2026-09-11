@@ -69,10 +69,7 @@ async function putBlob(key: string, blob: Blob) {
 async function getBlob(key: string): Promise<Blob | undefined> {
   const db = await openMediaDb();
   return await new Promise((resolve, reject) => {
-    const request = db
-      .transaction(BLOB_STORE, 'readonly')
-      .objectStore(BLOB_STORE)
-      .get(key);
+    const request = db.transaction(BLOB_STORE, 'readonly').objectStore(BLOB_STORE).get(key);
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
@@ -116,7 +113,7 @@ async function makeThumbnail(blob: Blob, maxWidth = 400): Promise<Blob | null> {
     canvas.height = Math.max(1, Math.round(bitmap.height * scale));
     canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     return await new Promise((resolve) =>
-      canvas.toBlob((result) => resolve(result), 'image/jpeg', 0.85),
+      canvas.toBlob((result) => resolve(result), 'image/jpeg', 0.85)
     );
   } catch {
     return null;
@@ -141,7 +138,7 @@ function listEndpoint(collection: any[], query: URLSearchParams) {
     const start = (page - 1) * rowsPerPage;
     return {
       data: rows.slice(start, start + rowsPerPage),
-      pagination: { page, rowsPerPage, rowsNumber: rows.length },
+      pagination: { page, rowsPerPage, rowsNumber: rows.length }
     };
   }
   return { data: rows };
@@ -151,7 +148,7 @@ async function hydrateMediaRow(row: ServerApi.MediaRow): Promise<ServerApi.Media
   return {
     ...row,
     url: await urlFor(row.key),
-    thumbnailUrl: (await urlFor(`thumb:${row.key}`)) || (await urlFor(row.key)),
+    thumbnailUrl: (await urlFor(`thumb:${row.key}`)) || (await urlFor(row.key))
   };
 }
 
@@ -163,111 +160,105 @@ export function createMockServerTransport(): ServerApi.ServerTransport {
 async function mockServerRequest(
   method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   path: string,
-  options: ServerApi.RequestOptions = {},
+  options: ServerApi.RequestOptions = {}
 ) {
-    await wait(LATENCY_MS);
-    const [pathname, queryString] = path.split('?');
-    const query = new URLSearchParams(queryString ?? '');
-    const segments = pathname.split('/').filter(Boolean);
+  await wait(LATENCY_MS);
+  const [pathname, queryString] = path.split('?');
+  const query = new URLSearchParams(queryString ?? '');
+  const segments = pathname.split('/').filter(Boolean);
 
-    /* ---- media endpoints ---- */
-    if (segments[0] === 'media') {
-      if (method === 'POST' && segments[1] === 'upload') {
-        const uploaded: ServerApi.MediaRow[] = [];
-        for (const file of options.files ?? []) {
-          const key = `m${nextId++}`;
-          await putBlob(key, file);
-          const thumbnail = await makeThumbnail(file);
-          if (thumbnail) await putBlob(`thumb:${key}`, thumbnail);
-          const row: ServerApi.MediaRow = {
-            id: key,
-            key,
-            name: options.payload?.name || file.name,
-            mimetype: file.type || 'application/octet-stream',
-            size: file.size,
-            url: '',
-            thumbnailUrl: '',
-            createdAt: new Date().toISOString(),
-          };
-          collections.media.push(row);
-          uploaded.push(await hydrateMediaRow(row));
-        }
-        saveCollections(collections);
-        return { data: uploaded };
+  /* ---- media endpoints ---- */
+  if (segments[0] === 'media') {
+    if (method === 'POST' && segments[1] === 'upload') {
+      const uploaded: ServerApi.MediaRow[] = [];
+      for (const file of options.files ?? []) {
+        const key = `m${nextId++}`;
+        await putBlob(key, file);
+        const thumbnail = await makeThumbnail(file);
+        if (thumbnail) await putBlob(`thumb:${key}`, thumbnail);
+        const row: ServerApi.MediaRow = {
+          id: key,
+          key,
+          name: options.payload?.name || file.name,
+          mimetype: file.type || 'application/octet-stream',
+          size: file.size,
+          url: '',
+          thumbnailUrl: '',
+          createdAt: new Date().toISOString()
+        };
+        collections.media.push(row);
+        uploaded.push(await hydrateMediaRow(row));
       }
-      if (method === 'POST' && segments[1] === 'update') {
-        const row = collections.media.find(
-          (media) => media.id === options.payload?.id,
-        );
-        if (row) {
-          if (options.payload.name !== undefined) row.name = options.payload.name;
-          if (options.payload.caption !== undefined) {
-            row.caption = options.payload.caption;
-          }
-          saveCollections(collections);
-          return { data: await hydrateMediaRow(row) };
-        }
-        return { data: null };
-      }
-      if (method === 'DELETE' && segments[1]) {
-        const index = collections.media.findIndex(
-          (media) => media.id === segments[1],
-        );
-        if (index >= 0) {
-          const [row] = collections.media.splice(index, 1);
-          await deleteBlob(row.key);
-          await deleteBlob(`thumb:${row.key}`);
-          saveCollections(collections);
-        }
-        return { data: true };
-      }
-      if (method === 'GET') {
-        const ids = [...query.entries()]
-          .filter(([name]) => name.startsWith('ids['))
-          .map(([, value]) => value);
-        const rows = ids.length
-          ? collections.media.filter((media) => ids.includes(media.id))
-          : listEndpoint(collections.media, query).data;
-        return { data: await Promise.all(rows.map(hydrateMediaRow)) };
-      }
-    }
-
-    /* ---- generic entity CRUD: /<collection>[/<id>] ---- */
-    const name = segments[0];
-    if (!name) throw new Error(`MockServer: empty path '${path}'`);
-    collections[name] ??= [];
-    const collection = collections[name];
-
-    if (method === 'GET') return listEndpoint(collection, query);
-
-    if (method === 'POST') {
-      const row = { id: String(nextId++), ...options.payload };
-      collection.push(row);
       saveCollections(collections);
-      return { data: row };
+      return { data: uploaded };
     }
-
-    if (method === 'PUT') {
-      const row = collection.find((entry) => String(entry.id) === segments[1]);
+    if (method === 'POST' && segments[1] === 'update') {
+      const row = collections.media.find((media) => media.id === options.payload?.id);
       if (row) {
-        Object.assign(row, options.payload);
+        if (options.payload.name !== undefined) row.name = options.payload.name;
+        if (options.payload.caption !== undefined) {
+          row.caption = options.payload.caption;
+        }
         saveCollections(collections);
+        return { data: await hydrateMediaRow(row) };
       }
-      return { data: row ?? null };
+      return { data: null };
     }
-
-    if (method === 'DELETE') {
-      const index = collection.findIndex(
-        (entry) => String(entry.id) === segments[1],
-      );
+    if (method === 'DELETE' && segments[1]) {
+      const index = collections.media.findIndex((media) => media.id === segments[1]);
       if (index >= 0) {
-        collection.splice(index, 1);
+        const [row] = collections.media.splice(index, 1);
+        await deleteBlob(row.key);
+        await deleteBlob(`thumb:${row.key}`);
         saveCollections(collections);
       }
       return { data: true };
     }
+    if (method === 'GET') {
+      const ids = [...query.entries()]
+        .filter(([name]) => name.startsWith('ids['))
+        .map(([, value]) => value);
+      const rows = ids.length
+        ? collections.media.filter((media) => ids.includes(media.id))
+        : listEndpoint(collections.media, query).data;
+      return { data: await Promise.all(rows.map(hydrateMediaRow)) };
+    }
+  }
 
-    throw new Error(`MockServer: unhandled ${method} ${path}`);
+  /* ---- generic entity CRUD: /<collection>[/<id>] ---- */
+  const name = segments[0];
+  if (!name) throw new Error(`MockServer: empty path '${path}'`);
+  collections[name] ??= [];
+  const collection = collections[name];
+
+  if (method === 'GET') return listEndpoint(collection, query);
+
+  if (method === 'POST') {
+    const row = { id: String(nextId++), ...options.payload };
+    collection.push(row);
+    saveCollections(collections);
+    return { data: row };
+  }
+
+  if (method === 'PUT') {
+    const row = collection.find((entry) => String(entry.id) === segments[1]);
+    if (row) {
+      Object.assign(row, options.payload);
+      saveCollections(collections);
+    }
+    return { data: row ?? null };
+  }
+
+  if (method === 'DELETE') {
+    const index = collection.findIndex((entry) => String(entry.id) === segments[1]);
+    if (index >= 0) {
+      collection.splice(index, 1);
+      saveCollections(collections);
+    }
+    return { data: true };
+  }
+
+  throw new Error(`MockServer: unhandled ${method} ${path}`);
 }
 
 /**
@@ -281,14 +272,14 @@ export async function ensureSeedMedia(): Promise<ServerApi.MediaRow[]> {
   const SEED_VERSION = 'v2';
   const seedPrefix = `seed-${SEED_VERSION}-`;
   const staleSeeds = collections.media.filter(
-    (row: ServerApi.MediaRow) => row.key.startsWith('seed-') && !row.key.startsWith(seedPrefix),
+    (row: ServerApi.MediaRow) => row.key.startsWith('seed-') && !row.key.startsWith(seedPrefix)
   );
   for (const stale of staleSeeds) {
     await deleteBlob(stale.key);
     collections.media.splice(collections.media.indexOf(stale), 1);
   }
   const existingSeeds = collections.media.filter((row: ServerApi.MediaRow) =>
-    row.key.startsWith(seedPrefix),
+    row.key.startsWith(seedPrefix)
   );
   if (existingSeeds.length) {
     return Promise.all(existingSeeds.map(hydrateMediaRow));
@@ -299,22 +290,22 @@ export async function ensureSeedMedia(): Promise<ServerApi.MediaRow[]> {
       from: '#6366f1',
       to: '#34d399',
       // mountains under a star
-      icon: '<path d="M60 340 L170 180 L240 270 L300 200 L420 340 Z" fill="rgba(255,255,255,0.85)"/><path d="M240 96 l14 34 36 3 -27 24 8 36 -31 -19 -31 19 8 -36 -27 -24 36 -3 z" fill="rgba(255,255,255,0.95)"/>',
+      icon: '<path d="M60 340 L170 180 L240 270 L300 200 L420 340 Z" fill="rgba(255,255,255,0.85)"/><path d="M240 96 l14 34 36 3 -27 24 8 36 -31 -19 -31 19 8 -36 -27 -24 36 -3 z" fill="rgba(255,255,255,0.95)"/>'
     },
     {
       name: 'ember.svg',
       from: '#f59e0b',
       to: '#ef4444',
       // a flame
-      icon: '<path d="M240 110 C 300 170 320 210 320 260 A 80 80 0 0 1 160 260 C 160 225 180 200 200 180 C 198 215 214 228 228 230 C 214 190 222 150 240 110 Z" fill="rgba(255,255,255,0.9)"/>',
+      icon: '<path d="M240 110 C 300 170 320 210 320 260 A 80 80 0 0 1 160 260 C 160 225 180 200 200 180 C 198 215 214 228 228 230 C 214 190 222 150 240 110 Z" fill="rgba(255,255,255,0.9)"/>'
     },
     {
       name: 'tide.svg',
       from: '#0ea5e9',
       to: '#8b5cf6',
       // waves
-      icon: '<g stroke="rgba(255,255,255,0.9)" stroke-width="22" stroke-linecap="round" fill="none"><path d="M90 210 q 37 -44 75 0 t 75 0 75 0 75 0"/><path d="M90 280 q 37 -44 75 0 t 75 0 75 0 75 0"/></g>',
-    },
+      icon: '<g stroke="rgba(255,255,255,0.9)" stroke-width="22" stroke-linecap="round" fill="none"><path d="M90 210 q 37 -44 75 0 t 75 0 75 0 75 0"/><path d="M90 280 q 37 -44 75 0 t 75 0 75 0 75 0"/></g>'
+    }
   ];
   const seeded: ServerApi.MediaRow[] = [];
   for (const [index, art] of artworks.entries()) {
@@ -330,7 +321,7 @@ export async function ensureSeedMedia(): Promise<ServerApi.MediaRow[]> {
       size: blob.size,
       url: '',
       thumbnailUrl: '',
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     };
     collections.media.push(row);
     seeded.push(await hydrateMediaRow(row));

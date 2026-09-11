@@ -21,7 +21,7 @@ defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
     />
     <component
       v-if="model.isAwaitingFirstToken"
-      :is="model.kit.Await.vue"
+      :is="model.kit.Await.view"
       :kit="model.kit.Await"
       :model="model"
     />

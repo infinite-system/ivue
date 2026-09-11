@@ -16,18 +16,12 @@
  * uniform interface.
  */
 import { computed, ref, shallowRef } from 'vue';
-import {
-  COLS,
-  OVERSCAN,
-  ROW_HEIGHT,
-  ROWS,
-  VIEWPORT_HEIGHT,
-} from './cell-logic';
+import { COLS, OVERSCAN, ROW_HEIGHT, ROWS, VIEWPORT_HEIGHT } from './cell-logic';
 import { useRowWindow } from './useRowWindow';
 
 export function useGridArm<T>(
   makeRow: (row: number, col: number) => T,
-  readNumeric: (cell: T) => number,
+  readNumeric: (cell: T) => number
 ) {
   const model = shallowRef<T[][]>([]);
   const hasModel = ref(false);
@@ -38,7 +32,7 @@ export function useGridArm<T>(
     rowCount: () => model.value.length,
     rowHeight: ROW_HEIGHT,
     viewportHeight: VIEWPORT_HEIGHT,
-    overscan: OVERSCAN,
+    overscan: OVERSCAN
   });
 
   /** Count of cell nodes currently mounted in the DOM (viewport-sized). */
@@ -58,7 +52,8 @@ export function useGridArm<T>(
     const rows: T[][] = new Array(rowCount);
     for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
       const row: T[] = new Array(COLS);
-      for (let columnIndex = 0; columnIndex < COLS; columnIndex++) row[columnIndex] = makeRow(rowIndex, columnIndex);
+      for (let columnIndex = 0; columnIndex < COLS; columnIndex++)
+        row[columnIndex] = makeRow(rowIndex, columnIndex);
       rows[rowIndex] = row;
     }
     creationMs.value = performance.now() - t0;
@@ -71,14 +66,17 @@ export function useGridArm<T>(
     const row = model.value[rowIndex];
     if (!row) return 0;
     let sum = 0;
-    for (let columnIndex = 0; columnIndex < row.length; columnIndex++) sum += readNumeric(row[columnIndex]);
+    for (let columnIndex = 0; columnIndex < row.length; columnIndex++)
+      sum += readNumeric(row[columnIndex]);
     return sum;
   }
 
   // --- click-to-edit ---
   const editing = ref<{ rowIndex: number; columnIndex: number } | null>(null);
   const isEditing = (rowIndex: number, columnIndex: number) =>
-    !!editing.value && editing.value.rowIndex === rowIndex && editing.value.columnIndex === columnIndex;
+    !!editing.value &&
+    editing.value.rowIndex === rowIndex &&
+    editing.value.columnIndex === columnIndex;
   const edit = (rowIndex: number, columnIndex: number) => {
     editing.value = { rowIndex, columnIndex };
   };
@@ -115,6 +113,6 @@ export function useGridArm<T>(
     edit,
     commitEdit,
     rowSum,
-    createModel,
+    createModel
   };
 }

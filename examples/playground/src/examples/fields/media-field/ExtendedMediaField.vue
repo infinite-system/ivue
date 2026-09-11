@@ -28,7 +28,7 @@ const field = ExtendedMediaField.Class.runner(props, emit);
 const {
   // state refs — the v-model targets of the inline editors
   renameDraft,
-  captionDraft,
+  captionDraft
 } = field;
 
 defineExpose(field as ExtendedMediaField.Instance);
@@ -39,11 +39,7 @@ const vFocus = ExtendedMediaField.Class.focusDirective;
 </script>
 
 <template>
-  <MediaField
-    v-bind="props"
-    class="extended-media"
-    :runner="field"
-  >
+  <MediaField v-bind="props" class="extended-media" :runner="field">
     <!-- SORT TOGGLE + TOTAL SIZE — injected after the base header -->
     <template #after--header="{ field }">
       <div v-if="field.hasFiles" class="extended-media__toolbar">
@@ -57,11 +53,7 @@ const vFocus = ExtendedMediaField.Class.focusDirective;
         >
           <q-tooltip class="bg-grey-9">Toggle sort order</q-tooltip>
         </q-btn>
-        <q-badge
-          color="grey-3"
-          text-color="black"
-          :label="field.totalLabel"
-        />
+        <q-badge color="grey-3" text-color="black" :label="field.totalLabel" />
       </div>
     </template>
 

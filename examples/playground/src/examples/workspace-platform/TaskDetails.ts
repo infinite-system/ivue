@@ -44,15 +44,11 @@ class $TaskDetails {
   }
 
   updateStatus(event: Event) {
-    this.task.setStatus(
-      (event.target as HTMLSelectElement).value as TaskStatus,
-    );
+    this.task.setStatus((event.target as HTMLSelectElement).value as TaskStatus);
   }
 
   updatePriority(event: Event) {
-    this.task.setPriority(
-      (event.target as HTMLSelectElement).value as TaskPriority,
-    );
+    this.task.setPriority((event.target as HTMLSelectElement).value as TaskPriority);
   }
 
   updateAssignee(event: Event) {

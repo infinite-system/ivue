@@ -13,18 +13,17 @@ const {
   galleryMedia,
   documentMedia,
   extendedMedia,
-  resetting,
+  resetting
 } = example;
 </script>
 
 <template>
   <div class="pane pane-fields">
     <p class="note">
-      A production-grade uploader: drag-drop, thumbnails, lightbox preview,
-      rename, download, delete — every byte stored in YOUR browser
-      (IndexedDB) by the mock backend. Point ServerApi at
-      server-node/server.ts and the same component uploads to disk or S3
-      with sharp-generated thumbnails.
+      A production-grade uploader: drag-drop, thumbnails, lightbox preview, rename, download, delete
+      — every byte stored in YOUR browser (IndexedDB) by the mock backend. Point ServerApi at
+      server-node/server.ts and the same component uploads to disk or S3 with sharp-generated
+      thumbnails.
     </p>
 
     <div class="field-grid">
@@ -88,17 +87,10 @@ const {
     </div>
 
     <div class="row" style="margin-top: 20px">
-      <button
-        class="btn"
-        type="button"
-        :disabled="resetting"
-        @click="example.resetSandbox()"
-      >
+      <button class="btn" type="button" :disabled="resetting" @click="example.resetSandbox()">
         {{ example.resetLabel }}
       </button>
-      <span class="mono">
-        files live in IndexedDB — private to this browser
-      </span>
+      <span class="mono"> files live in IndexedDB — private to this browser </span>
     </div>
   </div>
 </template>

@@ -107,7 +107,10 @@ defineProps<{ title: string; note?: string }>();
   color: var(--vp-c-text-1);
   background: color-mix(in srgb, currentColor 5%, transparent);
   border: 1px solid var(--vp-c-divider);
-  transition: transform 0.15s ease, filter 0.15s ease, border-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease,
+    border-color 0.15s ease;
 }
 .dbx :deep(.d-btn.primary) {
   color: #fff;

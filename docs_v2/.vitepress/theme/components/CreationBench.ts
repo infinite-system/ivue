@@ -46,9 +46,8 @@ class $CreationBench {
   async runBench() {
     this.isRunning.value = true;
     await new Promise((resolve) => setTimeout(resolve, 30)); // let the button paint
-    const { InteractiveBox } = await import(
-      '../../../../examples/playground/src/examples/benchmarks/model/InteractiveBox'
-    );
+    const { InteractiveBox } =
+      await import('../../../../examples/playground/src/examples/benchmarks/model/InteractiveBox');
     const { INSTANCE_COUNT, CALL_COUNT } = this.self;
 
     // 1. creation — instances retained in an array, nothing elidable

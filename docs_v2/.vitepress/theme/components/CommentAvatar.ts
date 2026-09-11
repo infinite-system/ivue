@@ -14,7 +14,7 @@ class $CommentAvatar {
     return definePropTypes({
       seed: { type: String as PropType<string>, required: true },
       name: { type: String as PropType<string>, required: true },
-      size: { type: Number as PropType<number> },
+      size: { type: Number as PropType<number> }
     });
   }
 

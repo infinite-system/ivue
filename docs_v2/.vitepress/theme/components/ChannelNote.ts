@@ -14,7 +14,7 @@ class $ChannelNote {
       reddit: 'Reddit',
       x: 'X thread',
       linkedin: 'LinkedIn',
-      note: 'Planning note',
+      note: 'Planning note'
     };
   }
 
@@ -29,7 +29,7 @@ class $ChannelNote {
     onMounted(() => this.annotateThreadSegments());
     watch(
       () => this.page.value.relativePath,
-      () => this.scheduleAnnotate(),
+      () => this.scheduleAnnotate()
     );
   }
 
@@ -50,7 +50,7 @@ class $ChannelNote {
   }
   get channelName() {
     const channel = this.channel;
-    return channel ? this.self.CHANNEL_NAMES[channel] ?? channel : '';
+    return channel ? (this.self.CHANNEL_NAMES[channel] ?? channel) : '';
   }
   get isThread() {
     return this.channel === 'x';
@@ -79,7 +79,12 @@ class $ChannelNote {
     this.insertCount(documentBody, null, characters, segmentNumber);
   }
 
-  insertCount(documentBody: Element, anchor: Element | null, characters: number, segmentNumber: number) {
+  insertCount(
+    documentBody: Element,
+    anchor: Element | null,
+    characters: number,
+    segmentNumber: number
+  ) {
     if (characters === 0) return;
     const limit = this.self.X_LIMIT;
     const label = document.createElement('div');

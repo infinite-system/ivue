@@ -30,7 +30,7 @@ class $BlogArchiveScroller {
     // the viewport ref fills late — watch it instead of assuming mount order.
     watch(
       () => this.viewport.value,
-      (element) => this.observeViewport(element),
+      (element) => this.observeViewport(element)
     );
     onBeforeUnmount(() => this.dispose());
   }
@@ -77,7 +77,7 @@ class $BlogArchiveScroller {
       title: post.title,
       excerpt: post.excerpt,
       date: post.date,
-      current: post.url === currentUrl,
+      current: post.url === currentUrl
     }));
   }
 
@@ -94,16 +94,15 @@ class $BlogArchiveScroller {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      timeZone: 'UTC',
+      timeZone: 'UTC'
     });
   }
 
   observeViewport(element: HTMLElement | null) {
     if (!element || this.observer.value) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => this.onVisibility(entry),
-      { threshold: this.self.VISIBILITY_THRESHOLD },
-    );
+    const observer = new IntersectionObserver(([entry]) => this.onVisibility(entry), {
+      threshold: this.self.VISIBILITY_THRESHOLD
+    });
     observer.observe(element);
     this.observer.value = observer;
   }

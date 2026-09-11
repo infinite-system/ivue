@@ -87,7 +87,7 @@ defineExpose(model as Peek.Instance);
           </header>
           <div class="ac-peek-list" :style="model.listStyle">
             <component
-              :is="model.kit.Scroller.vue"
+              :is="model.kit.Scroller.view"
               ref="scroller"
               :kit="model.kit.Scroller"
               :auto-repeat="false"

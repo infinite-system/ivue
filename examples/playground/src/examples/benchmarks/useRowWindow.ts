@@ -28,11 +28,11 @@ export function useRowWindow(opts: RowWindowOptions) {
   const totalHeight = computed(() => opts.rowCount() * opts.rowHeight);
 
   const startRow = computed(() =>
-    Math.max(0, Math.floor(scrollTop.value / opts.rowHeight) - overscan),
+    Math.max(0, Math.floor(scrollTop.value / opts.rowHeight) - overscan)
   );
 
   const endRow = computed(() =>
-    Math.min(opts.rowCount(), startRow.value + visibleCount + overscan * 2),
+    Math.min(opts.rowCount(), startRow.value + visibleCount + overscan * 2)
   );
 
   const offsetY = computed(() => startRow.value * opts.rowHeight);
@@ -55,6 +55,6 @@ export function useRowWindow(opts: RowWindowOptions) {
     endRow,
     offsetY,
     visibleRows,
-    onScroll,
+    onScroll
   };
 }

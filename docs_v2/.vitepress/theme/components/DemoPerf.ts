@@ -5,7 +5,7 @@ import { Reactive } from '../../../../lib/Reactive';
 import {
   benchComposable,
   benchIvue,
-  benchReactive,
+  benchReactive
 } from '../../../../examples/playground/src/examples/benchmarks/creationBench';
 
 class $DemoPerf {

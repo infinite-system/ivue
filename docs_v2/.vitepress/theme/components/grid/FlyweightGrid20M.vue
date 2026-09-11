@@ -10,7 +10,7 @@ const {
   // state refs
   gridApp,
   isLoading,
-  loadError,
+  loadError
 } = gate;
 </script>
 
@@ -21,10 +21,9 @@ const {
   >
     <div v-if="!gate.isLoaded" class="fwl-gate">
       <p class="fwl-copy">
-        20 columns × 1,000,000 rows, fully reactive at 4.7 bytes per cell.
-        Nothing downloads until you click — the model code and the formula
-        parser load on demand, then one more click creates all 20,000,000
-        cells in your browser.
+        20 columns × 1,000,000 rows, fully reactive at 4.7 bytes per cell. Nothing downloads until
+        you click — the model code and the formula parser load on demand, then one more click
+        creates all 20,000,000 cells in your browser.
       </p>
       <button class="d-btn primary" type="button" :disabled="isLoading" @click="gate.loadGrid()">
         {{ gate.buttonLabel }}

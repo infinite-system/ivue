@@ -23,19 +23,13 @@ export interface ComposableCell {
   touch(): void;
 }
 
-export function createComposableCell(
-  row: number,
-  col: number,
-  initial: string,
-): ComposableCell {
+export function createComposableCell(row: number, col: number, initial: string): ComposableCell {
   const raw = ref(initial);
 
   // Eager: all four Computeds are allocated the moment the cell is created.
   const numericValue = computed(() => numericOf(raw.value));
   const isNumber = computed(() => isNumberOf(raw.value));
-  const display = computed(() =>
-    displayOf(raw.value, isNumber.value, numericValue.value),
-  );
+  const display = computed(() => displayOf(raw.value, isNumber.value, numericValue.value));
   const cssClass = computed(() => cssOf(isNumber.value, numericValue.value));
 
   return {
@@ -51,6 +45,6 @@ export function createComposableCell(
       void this.isNumber.value;
       void this.cssClass.value;
       void this.numericValue.value;
-    },
+    }
   };
 }

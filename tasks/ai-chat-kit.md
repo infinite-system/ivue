@@ -24,7 +24,7 @@ shipped instance to point at.
   cycle harmless: nothing reads the other side at module init. A
   subclass extends by spread: `{ ...super.$kit, Scroller: { … } }`.
 - **The entry crosses the seam.** A parent renders
-  `<component :is="chat.kit.Message.vue" :kit="chat.kit.Message" :row="item" :chat="chat" />`:
+  `<component :is="chat.kit.Message.view" :kit="chat.kit.Message" :row="item" :chat="chat" />`:
   the entry's view, the entry itself as the one prop `kit`, the child's
   own props. An entry is `{ vue, namespace?, props?, subkit? }` — the
   view, the namespace whose `Class` the view constructs, props the consumer set for the
@@ -55,14 +55,14 @@ shipped instance to point at.
   list — we tried the mechanism route and every step cost more than the
   getter.
 - **Override is subclassing.** A subclass with a spread `$kit` swaps a
-  role: `FancyChat.$kit.Scroller = { namespace: SnapScroller, vue: SnapScrollerView }`.
+  role: `FancyChat.$kit.Scroller = { namespace: SnapScroller, view: SnapScrollerView }`.
   A swap that must reach a deep leaf is the same spread with an optional
   `subkit` on the entry — a patch over the child's own kit — which
   `Kit.Class.resolve` turns into derived subclasses once, at kit build time.
   One literal names the path from the root to the leaf; a class's own
   `$kit` never carries `subkit`.
 - **Templates name roles.** Every child, leaf or not, renders through
-  `<component :is="model.kit.Role.vue" …>`; a leaf that has no model of
+  `<component :is="model.kit.Role.view" …>`; a leaf that has no model of
   its own simply has no `model` in its entry and takes its props. No
   shell component: the parent chose the entry, so it knows the view;
   the view knows the model.
@@ -98,7 +98,7 @@ import { Static } from '../../Static';
 // A model declares `static get $kit()` returning a record of entries. An
 // entry names a role's view and, when the role has a class of its own, the
 // namespace that view constructs. A parent's template renders every seam
-// as `<component :is="model.kit.Role.vue" :kit="model.kit.Role" …props />`;
+// as `<component :is="model.kit.Role.view" :kit="model.kit.Role" …props />`;
 // the child's view constructs `new (props.kit?.namespace.Class ?? X.Class)(props)`.
 // A model reads its kit from its own class and nowhere else, so a swapped
 // class brings its own kit and no parent ever constructs a child.
@@ -161,7 +161,7 @@ class $Kit {
     if (!entry.namespace || !entry.subkit) return entry;
     const { subkit, ...rest } = entry;
     const namespace = this.derive(entry.namespace, subkit);
-    return { ...rest, namespace, vue: this.view(entry.vue, namespace) };
+    return { ...rest, namespace, view: this.view(entry.view, namespace) };
   }
 
   protected static merge(base: Record<string, unknown>, patch: Kit.Patch): Record<string, unknown> {
@@ -181,12 +181,12 @@ class $Kit {
    *  own view is left alone — that view declares what it declares. */
   protected static mergeEntry(current: Kit.Entry | undefined, patch: Partial<Kit.Entry>): Kit.Entry {
     const merged = { ...current, ...patch } as Kit.Entry;
-    if (patch.namespace && !patch.vue && current?.vue) merged.vue = this.view(current.vue, patch.namespace);
+    if (patch.namespace && !patch.view && current?.view) merged.view = this.view(current.view, patch.namespace);
     return merged;
   }
 
   protected static isEntry(value: unknown): value is Kit.Entry {
-    return typeof value === 'object' && value !== null && ('vue' in value || 'namespace' in value || 'subkit' in value);
+    return typeof value === 'object' && value !== null && ('view' in value || 'namespace' in value || 'subkit' in value);
   }
 
   /** Freeze the kit's SHAPE — role maps and entries — and stop at an entry's leaves: a namespace
@@ -196,7 +196,7 @@ class $Kit {
     const entry = this.isEntry(value);
     for (const [key, inner] of Object.entries(value)) {
       if (typeof inner !== 'object' || inner === null || Object.isFrozen(inner)) continue;
-      if (entry && (key === 'namespace' || key === 'vue' || key === 'props')) continue;
+      if (entry && (key === 'namespace' || key === 'view' || key === 'props')) continue;
       this.deepFreeze(inner);
     }
     return Object.freeze(value);
@@ -223,7 +223,7 @@ export namespace Kit {
   }
 
   export interface Entry<Space extends Namespace = Namespace> {
-    vue: Component;
+    view: Component;
     /** the role's namespace — `$Class`, `Class`, and whatever else it exports; absent for a markup leaf */
     namespace?: Space;
     /** the consumer's values for this role, read by the class's own getters as `this.props.kit.props.x` */
@@ -293,10 +293,10 @@ class $Chat {
   // renders. `Chat.$kit` and `FancyChat.$kit` are different objects.
   static get $kit() {
     return {
-      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView },
-      Message: { namespace: ChatMessage, vue: ChatMessageView },
-      Composer: { namespace: Composer, vue: ChatComposerView },
-      Index: { namespace: Index, vue: ChatIndexView },
+      Scroller: { namespace: VirtualScroller, view: VirtualScrollerView },
+      Message: { namespace: ChatMessage, view: ChatMessageView },
+      Composer: { namespace: Composer, view: ChatComposerView },
+      Index: { namespace: Index, view: ChatIndexView },
     } satisfies Kit.Of<'Scroller' | 'Message' | 'Composer' | 'Index'>;
   }
 
@@ -356,7 +356,7 @@ const {
     <div class="ac-main">
       <section class="ac-thread">
         <component
-          :is="chat.kit.Scroller.vue"
+          :is="chat.kit.Scroller.view"
           ref="scroller"
           :kit="chat.kit.Scroller"
           scrollbar
@@ -366,15 +366,15 @@ const {
           :selection-text="chat.rowText"
         >
           <template #item="{ item }">
-            <component :is="chat.kit.Message.vue" :kit="chat.kit.Message" :row="item" :chat="chat" />
+            <component :is="chat.kit.Message.view" :kit="chat.kit.Message" :row="item" :chat="chat" />
           </template>
         </component>
         <button v-if="chat.showsJumpToLatest" type="button" class="ac-jump" @click="chat.jumpToLatest()">↓ latest</button>
       </section>
-      <component :is="chat.kit.Index.vue" v-if="indexOpen" :kit="chat.kit.Index" :chat="chat" />
+      <component :is="chat.kit.Index.view" v-if="indexOpen" :kit="chat.kit.Index" :chat="chat" />
     </div>
 
-    <component :is="chat.kit.Composer.vue" :kit="chat.kit.Composer" :chat="chat" />
+    <component :is="chat.kit.Composer.view" :kit="chat.kit.Composer" :chat="chat" />
   </div>
 </template>
 ```
@@ -408,21 +408,21 @@ class $ChatMessage {
   static get $kit() {
     return {
       // parts by role — the registry `Parts.ts` was, as entries; roles are PascalCase
-      Text: { vue: TextPartView },
-      Thinking: { vue: ThinkingPartView },
-      Attachment: { vue: AttachmentPartView },
-      System: { vue: SystemPartView },
-      ToolCall: { vue: ToolCallPartView },
-      ToolBatch: { namespace: ToolBatchPart, vue: ToolBatchPartView },
+      Text: { view: TextPartView },
+      Thinking: { view: ThinkingPartView },
+      Attachment: { view: AttachmentPartView },
+      System: { view: SystemPartView },
+      ToolCall: { view: ToolCallPartView },
+      ToolBatch: { namespace: ToolBatchPart, view: ToolBatchPartView },
       // the tool cards are reached through the tool base's kit, one hop down
-      Tool: { namespace: ToolCallModel, vue: ToolCallPartView },
+      Tool: { namespace: ToolCallModel, view: ToolCallPartView },
       // the row's sections — each a markup view over the row model, swappable with a class of its own
-      Gutter: { vue: MessageGutterView },
-      Head: { vue: MessageHeadView },
-      Stub: { vue: MessageStubView },
-      Parts: { vue: MessagePartsView },
-      Await: { vue: MessageAwaitView },
-      Foot: { vue: MessageFootView },
+      Gutter: { view: MessageGutterView },
+      Head: { view: MessageHeadView },
+      Stub: { view: MessageStubView },
+      Parts: { view: MessagePartsView },
+      Await: { view: MessageAwaitView },
+      Foot: { view: MessageFootView },
     } satisfies Kit.Of<ChatMessage.PartRole | 'Tool' | ChatMessage.SectionRole>;
   }
 
@@ -453,7 +453,7 @@ class $ChatMessage {
   }
 
   partView(part: SessionLog.Part) {
-    return this.partEntry(part).vue;
+    return this.partEntry(part).view;
   }
 
   // …roleLabel, rowClass, stub members, partKey — unchanged
@@ -497,12 +497,12 @@ const model = new (props.kit?.namespace.Class ?? ChatMessage.Class)(props);
 
 <template>
   <article class="ac-msg" :class="model.rowClass">
-    <component :is="model.kit.Gutter.vue" :kit="model.kit.Gutter" :model="model" />
+    <component :is="model.kit.Gutter.view" :kit="model.kit.Gutter" :model="model" />
     <div class="ac-msg-body">
-      <component :is="model.kit.Head.vue" :kit="model.kit.Head" :model="model" />
-      <component v-if="model.isStub" :is="model.kit.Stub.vue" :kit="model.kit.Stub" :model="model" />
-      <component v-else :is="model.kit.Parts.vue" :kit="model.kit.Parts" :model="model" />
-      <component v-if="model.receiptLabel" :is="model.kit.Foot.vue" :kit="model.kit.Foot" :model="model" />
+      <component :is="model.kit.Head.view" :kit="model.kit.Head" :model="model" />
+      <component v-if="model.isStub" :is="model.kit.Stub.view" :kit="model.kit.Stub" :model="model" />
+      <component v-else :is="model.kit.Parts.view" :kit="model.kit.Parts" :model="model" />
+      <component v-if="model.receiptLabel" :is="model.kit.Foot.view" :kit="model.kit.Foot" :model="model" />
     </div>
   </article>
 </template>
@@ -547,7 +547,7 @@ defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
       :chat="model.chat"
       :message="model.message"
     />
-    <component v-if="model.isAwaitingFirstToken" :is="model.kit.Await.vue" :kit="model.kit.Await" :model="model" />
+    <component v-if="model.isAwaitingFirstToken" :is="model.kit.Await.view" :kit="model.kit.Await" :model="model" />
   </div>
 </template>
 ```
@@ -585,23 +585,23 @@ import GenericCallView from './GenericCall.vue';
 class $ToolCallModel {
   static get $kit() {
     return {
-      Head: { vue: ToolHeadView },
-      Foot: { vue: ToolFootView },
-      CodeBlock: { namespace: CodeBlock, vue: CodeBlockView },
-      Generic: { namespace: ToolCallModel, vue: GenericCallView },
-      Mcp: { namespace: McpCall, vue: McpCallView },
-      Task: { namespace: TaskCall, vue: TaskCallView },
+      Head: { view: ToolHeadView },
+      Foot: { view: ToolFootView },
+      CodeBlock: { namespace: CodeBlock, view: CodeBlockView },
+      Generic: { namespace: ToolCallModel, view: GenericCallView },
+      Mcp: { namespace: McpCall, view: McpCallView },
+      Task: { namespace: TaskCall, view: TaskCallView },
       Tools: {
-        Bash: { namespace: BashCall, vue: BashCallView },
-        Edit: { namespace: EditCall, vue: EditCallView },
-        NotebookEdit: { namespace: EditCall, vue: EditCallView },
-        Read: { namespace: ReadCall, vue: ReadCallView },
-        Write: { namespace: WriteCall, vue: WriteCallView },
-        Agent: { namespace: AgentCall, vue: AgentCallView },
-        Skill: { namespace: SkillCall, vue: SkillCallView },
-        WebFetch: { namespace: WebFetchCall, vue: WebFetchCallView },
-        WebSearch: { namespace: WebFetchCall, vue: WebFetchCallView },
-        Artifact: { namespace: ArtifactCall, vue: ArtifactCallView },
+        Bash: { namespace: BashCall, view: BashCallView },
+        Edit: { namespace: EditCall, view: EditCallView },
+        NotebookEdit: { namespace: EditCall, view: EditCallView },
+        Read: { namespace: ReadCall, view: ReadCallView },
+        Write: { namespace: WriteCall, view: WriteCallView },
+        Agent: { namespace: AgentCall, view: AgentCallView },
+        Skill: { namespace: SkillCall, view: SkillCallView },
+        WebFetch: { namespace: WebFetchCall, view: WebFetchCallView },
+        WebSearch: { namespace: WebFetchCall, view: WebFetchCallView },
+        Artifact: { namespace: ArtifactCall, view: ArtifactCallView },
       } as Record<string, Kit.Entry>,
     });
   }
@@ -665,7 +665,7 @@ const base = props.kit?.namespace.Class ?? ToolCallModel.Class;
 
 <template>
   <component
-    :is="base.toolFor(part.call.name).vue"
+    :is="base.toolFor(part.call.name).view"
     :kit="base.toolFor(part.call.name)"
     :call="part.call"
     :chat="chat"
@@ -693,18 +693,18 @@ const model = new (props.kit?.namespace.Class ?? BashCall.Class)(props);
 
 <template>
   <div class="ac-tool ac-tool-bash" :class="model.cardClass">
-    <component :is="model.kit.Head.vue" :model="model" />
+    <component :is="model.kit.Head.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <p v-if="model.description" class="ac-tool-caption">{{ model.description }}</p>
       <section class="ac-tool-section">
         <h5>command <span v-if="model.ranInBackground" class="ac-tag">background</span></h5>
-        <component :is="model.kit.CodeBlock.vue" :kit="model.kit.CodeBlock" :code="model.command" lang="bash" :cap="model.cap" wrap />
+        <component :is="model.kit.CodeBlock.view" :kit="model.kit.CodeBlock" :code="model.command" lang="bash" :cap="model.cap" wrap />
       </section>
       <section v-if="model.hasStdout" class="ac-tool-section">
         <h5>stdout <span class="ac-tag" :class="model.stateClass">{{ model.exitLabel }}</span></h5>
-        <component :is="model.kit.CodeBlock.vue" :kit="model.kit.CodeBlock" :code="model.stdout" lang="text" :cap="model.cap" wrap />
+        <component :is="model.kit.CodeBlock.view" :kit="model.kit.CodeBlock" :code="model.stdout" lang="text" :cap="model.cap" wrap />
       </section>
-      <component :is="model.kit.Foot.vue" :model="model" />
+      <component :is="model.kit.Foot.view" :model="model" />
     </div>
   </div>
 </template>
@@ -860,7 +860,7 @@ class $FancyChat extends Chat.$Class {
   static override get $kit() {
     return {
       ...super.$kit,
-      Scroller: { namespace: SnapScroller, vue: SnapScrollerView },
+      Scroller: { namespace: SnapScroller, view: SnapScrollerView },
     });
   }
 }
@@ -874,7 +874,7 @@ export namespace FancyChat {
 
 ```vue
 <!-- the playground's second route -->
-<AiChatExample :kit="{ namespace: FancyChat, vue: AiChatExample }" />
+<AiChatExample :kit="{ namespace: FancyChat, view: AiChatExample }" />
 ```
 
 The scroller's contract with the chat is the surface `Chat` reads:
@@ -963,7 +963,7 @@ class $TerminalChat extends Chat.$Class {
             subkit: {
               Tools: {
                 Bash: {
-                  subkit: { CodeBlock: { namespace: TerminalBlock, vue: TerminalBlockView } },
+                  subkit: { CodeBlock: { namespace: TerminalBlock, view: TerminalBlockView } },
                 },
               },
             },
@@ -995,7 +995,7 @@ exactly which subtree differs from `Chat`, and nothing else can differ.
 ```ts
 class $MonoChat extends Chat.$Class {
   static override get $kit() {
-    const block = { CodeBlock: { namespace: MonoBlock, vue: MonoBlockView } };
+    const block = { CodeBlock: { namespace: MonoBlock, view: MonoBlockView } };
     const tools = Chat.$Class.$kit.Message.namespace.Class.$kit.Tool.namespace.Class.$kit;
     return Kit.Class.resolve({
       ...super.$kit,
@@ -1047,7 +1047,7 @@ by `subkit` that adds a prop or an event knows about it, and the base
 view does not.
 
 `resolveEntry` closes that: a derived entry's view is
-`Kit.Class.view(entry.vue, derived)`, a fresh component object with
+`Kit.Class.view(entry.view, derived)`, a fresh component object with
 the base view's `setup` and `render` and the derived class's `props`
 and `emits`. The parent can pass the new prop and it arrives in
 `props`; the child can emit the new event and Vue knows it. The base
@@ -1081,7 +1081,7 @@ class $ThemedBlock extends CodeBlock.$Class {
 
 ```ts
 // the explicit form — in any kit literal, or for a standalone mount of the widened class over the base SFC
-CodeBlock: { namespace: ThemedBlock, vue: Kit.Class.view(CodeBlockView, ThemedBlock) }
+CodeBlock: { namespace: ThemedBlock, view: Kit.Class.view(CodeBlockView, ThemedBlock) }
 
 // the short form inside an override — `merge` rewraps the kept view over the named namespace
 subkit: { Tool: { subkit: { CodeBlock: { namespace: ThemedBlock } } } }
@@ -1181,7 +1181,7 @@ class $GroupedChat extends Chat.$Class {
   static override get $kit() {
     return Kit.Class.resolve({
       ...super.$kit,
-      Message: { ...super.$kit.Message, subkit: { Parts: { vue: GroupedPartsView } } },
+      Message: { ...super.$kit.Message, subkit: { Parts: { view: GroupedPartsView } } },
     });
   }
 }
@@ -1197,7 +1197,7 @@ stays on the class, the container is markup.
 
 ```vue
 <!-- an embed of one message, outside the chat: hand the row and a chat, get the same card -->
-<component :is="Chat.$kit.Message.vue" :kit="Chat.$kit.Message" :row="row" :chat="chat" />
+<component :is="Chat.$kit.Message.view" :kit="Chat.$kit.Message" :row="row" :chat="chat" />
 ```
 
 Any parent that holds a chat can render its rows with the chat's own
@@ -1227,14 +1227,14 @@ it('an override never reaches another tree, and a kit is its own class\'s', () =
   expect(BashCall.Class.$kit.CodeBlock.namespace).toBe(CodeBlock);
   expect(terminal.Composer).toBe(Chat.Class.$kit.Composer); // untouched entries are shared, and frozen
   expect(Object.isFrozen(terminal.Composer)).toBe(true);
-  expect(Object.isFrozen(terminal.Composer.vue)).toBe(false); // the freeze stops at the entry's leaves
+  expect(Object.isFrozen(terminal.Composer.view)).toBe(false); // the freeze stops at the entry's leaves
   expect(Object.isFrozen(terminal.Composer.namespace)).toBe(false);
   expect(Chat.Class.$kit).not.toBe(FancyChat.Class.$kit); // the cache is keyed by the asking class
   expect(FancyChat.Class.$kit).toBe(FancyChat.Class.$kit);
 });
 
 it('a view constructs the class it is handed', async () => {
-  const wrapper = mount(ChatMessageView, { props: { row, chat, kit: { namespace: TerminalMessage, vue: ChatMessageView } } });
+  const wrapper = mount(ChatMessageView, { props: { row, chat, kit: { namespace: TerminalMessage, view: ChatMessageView } } });
   expect(wrapper.vm.model).toBeInstanceOf(TerminalMessage.Class);
 });
 
@@ -1244,8 +1244,8 @@ it('a tunable reads the kit first, an extension reads only the kit, a closed pro
   expect(entry.props).toEqual({ cap: 2_000 });
   expect(new CodeBlock.Class({ code: 'a', cap: 100, kit: entry }).cap).toBe(2_000);
   expect(new CodeBlock.Class({ code: 'a', cap: 100 }).cap).toBe(100);
-  expect(new CodeBlock.Class({ code: 'a', kit: { vue: CodeBlockView, props: { theme: 'mono' } } }).theme).toBe('mono');
-  expect(new CodeBlock.Class({ code: 'a', kit: { vue: CodeBlockView, props: { code: 'b' } } }).code).toBe('a');
+  expect(new CodeBlock.Class({ code: 'a', kit: { view: CodeBlockView, props: { theme: 'mono' } } }).theme).toBe('mono');
+  expect(new CodeBlock.Class({ code: 'a', kit: { view: CodeBlockView, props: { code: 'b' } } }).code).toBe('a');
   expect(new CappedBlock.Class({ code: 'a', cap: 100 }).cap).toBe(2_000); // the getter override reaches past the contract
 });
 ```
@@ -1256,10 +1256,10 @@ it('a tunable reads the kit first, an extension reads only the kit, a closed pro
 | --- | --- |
 | `parts/Parts.ts` registry (kind → component) | `ChatMessage.$kit` keyed by PascalCase role (`Text`, `ToolBatch`…), `PART_ROLES` mapping kind → role; the row model resolves `partEntry(part)`, `Text` as the fallback |
 | `tools/Tools.ts` registry (name → component, prefix families, generic fallback) | `ToolCallModel.$kit.Tools` plus `Mcp`, `Task`, `Generic` entries; the lookup is the static `toolFor(name)` on the base |
-| `ToolHead.vue`, `ToolFoot.vue`, `CodeBlock.vue` used by name in every card | `ToolCallModel.$kit`: `Head`, `Foot` as markup leaves, `CodeBlock` as a pair; cards render `<component :is="model.kit.Head.vue" :model="model" />` and `<component :is="model.kit.CodeBlock.vue" :kit="model.kit.CodeBlock" …props />` |
-| `Chat.ts` reaches the scroller through `ref="scroller"` | unchanged: the scroller's view constructs the class its entry names and exposes it; the chat keeps its template ref. The entry `Chat.$kit.Scroller = { namespace: VirtualScroller, vue: VirtualScrollerView }` is what a page overrides to put a different scroller under the chat |
+| `ToolHead.vue`, `ToolFoot.vue`, `CodeBlock.vue` used by name in every card | `ToolCallModel.$kit`: `Head`, `Foot` as markup leaves, `CodeBlock` as a pair; cards render `<component :is="model.kit.Head.view" :model="model" />` and `<component :is="model.kit.CodeBlock.view" :kit="model.kit.CodeBlock" …props />` |
+| `Chat.ts` reaches the scroller through `ref="scroller"` | unchanged: the scroller's view constructs the class its entry names and exposes it; the chat keeps its template ref. The entry `Chat.$kit.Scroller = { namespace: VirtualScroller, view: VirtualScrollerView }` is what a page overrides to put a different scroller under the chat |
 | `ChatComposer.vue`, `ChatIndex.vue` construct their models | unchanged in who constructs; each news `props.kit?.namespace.Class ?? Composer.Class` and is rendered through `chat.kit.Composer` |
-| `ChatMessage.vue` constructs a row model per row in the scroller's slot | unchanged; the slot renders `<component :is="chat.kit.Message.vue" :kit="chat.kit.Message" :row="item" :chat="chat" />` |
+| `ChatMessage.vue` constructs a row model per row in the scroller's slot | unchanged; the slot renders `<component :is="chat.kit.Message.view" :kit="chat.kit.Message" :row="item" :chat="chat" />` |
 | `SubThread.vue` constructs | unchanged; a nested thread renders rows through the same entry |
 
 Every current test keeps its subject: the classes' logic does not move,
@@ -1276,7 +1276,7 @@ importing each other.
   `scrollToIndex`, `scrollPosition`, `estimatedItemSize`), which is the
   argument for naming that surface as the role's contract.
 - **A view constructing the class it was handed** is the one new line
-  in every vue: `new (props.kit?.namespace.Class ?? Default.Class)(props)`.
+  in every view: `new (props.kit?.namespace.Class ?? Default.Class)(props)`.
   Check that a view mounted with no `kit` prop (a docs demo, a spec)
   still constructs the default, and that the gate's "one `new` in
   setup" reading accepts the indirection.

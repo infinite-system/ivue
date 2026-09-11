@@ -8,7 +8,7 @@ const bench = new CreationBench.Class();
 // the state destructure
 const {
   // state refs
-  isRunning,
+  isRunning
 } = bench;
 </script>
 

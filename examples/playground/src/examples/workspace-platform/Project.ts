@@ -3,7 +3,6 @@ import { Reactive } from '../../ivue';
 import type { ProjectSeed } from './types';
 
 class $Project {
-
   constructor(seed: ProjectSeed) {
     this.id = seed.id;
     this.icon = seed.icon;

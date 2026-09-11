@@ -434,7 +434,7 @@ Three tiers, increasing power and cost:
 | --- | --- | --- |
 | path | `defineAsyncComponent` + dynamic import | precompiled, full SFC perf; template set known at build (glob) |
 | runtime string | Vue full build w/ runtime compiler | ~14 kB extra gzip; CSP `unsafe-eval`; no SFC-time optimizations (patch flags, hoisting) |
-| runtime .vue file | vue3-sfc-loader or similar | true drop-a-file-in; slowest compile, biggest surface |
+| runtime .view file | vue3-sfc-loader or similar | true drop-a-file-in; slowest compile, biggest surface |
 
 Design sketch: components accept `template` + `runner`; the base
 template renders `<component :is>` when a dynamic view is present and
@@ -500,7 +500,7 @@ chat example is the first tree to be converted — the build is
   cycle harmless: neither side reads the other at module init. A
   subclass overrides by spread; a one-off is `with({ Role: … })`.
 - **The entry is what crosses the seam.** A parent renders
-  `<component :is="model.kit.Message.vue" :kit="model.kit.Message" …props />`:
+  `<component :is="model.kit.Message.view" :kit="model.kit.Message" …props />`:
   the entry's view, handed the entry itself as the one prop, plus the
   child's own props. An entry is `{ vue, namespace?, props?, subkit? }`:
   the view, the namespace whose `Class` the view constructs, props the consumer set for

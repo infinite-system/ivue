@@ -10,7 +10,7 @@ const drip = new BlogDripShowcase.Class();
 const {
   // element refs
   root,
-  scroller,
+  scroller
 } = drip;
 </script>
 
@@ -50,7 +50,14 @@ const {
                 decoding="async"
               />
               <span class="drip-card__envelope" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <rect x="3" y="6" width="18" height="13" rx="2" />
                   <path d="M3.5 7.5 12 13.5l8.5-6" />
                 </svg>
@@ -122,7 +129,9 @@ const {
   line-height: 0;
   /* NO border on the wrapper, ever — the hover ring lives on the image
      itself (outline), so there is exactly one edge and one radius */
-  transition: transform 0.25s, box-shadow 0.25s;
+  transition:
+    transform 0.25s,
+    box-shadow 0.25s;
 }
 .drip-card:hover .drip-card__frame {
   transform: translateY(-3px);
@@ -203,7 +212,9 @@ const {
   box-shadow: 0 4px 12px -4px rgba(52, 211, 153, 0.55);
   opacity: 0;
   transform: scale(0.6);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
   pointer-events: none;
 }
 .drip-card--delivered .drip-card__check {

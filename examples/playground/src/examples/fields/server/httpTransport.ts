@@ -37,6 +37,6 @@ export function httpTransport(baseUrl: string): ServerApi.ServerTransport {
         throw new Error(`${method} ${path} → ${response.status}`);
       }
       return await response.json();
-    },
+    }
   };
 }

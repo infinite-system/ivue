@@ -6,11 +6,7 @@
 import { ref } from 'vue';
 import { Reactive } from '../../../ivue';
 import { ServerApi } from '../server/ServerApi';
-import {
-  ensureSeedMedia,
-  createMockServerTransport,
-  resetMockServer,
-} from '../server/MockServer';
+import { ensureSeedMedia, createMockServerTransport, resetMockServer } from '../server/MockServer';
 
 class $MediaFieldExample {
   // Preexisting media: the server already holds these images — the field
