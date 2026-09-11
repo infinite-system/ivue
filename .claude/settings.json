@@ -8,5 +8,18 @@
   },
   "enabledPlugins": {
     "ui-ux-pro-max@ui-ux-pro-max-skill": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/prettier-on-edit.mjs"
+          }
+        ]
+      }
+    ]
   }
 }
