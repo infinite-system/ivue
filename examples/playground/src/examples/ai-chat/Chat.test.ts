@@ -76,7 +76,7 @@ const META: ChatApi.Meta = {
   subagents: 0,
   source: { file: 'x.jsonl', lines: 9 }
 };
-const INDEX: ChatApi.IndexRow[] = THREAD.map((entry) => ({
+const INDEX: ChatApi.IndexRecord[] = THREAD.map((entry) => ({
   id: entry.id,
   r: entry.role[0],
   t: (entry.parts[0] as SessionLog.TextPart).text,
@@ -299,7 +299,11 @@ describe('Chat', () => {
     expect(chat.revision.value).toBeGreaterThan(revisionBefore);
     expect(chat.isStreaming).toBe(false);
     expect(chat.clock.isTicking).toBe(false);
-    expect(chat.indexRows.value.at(-1)).toMatchObject({ id: reply.id, r: 'a', c: 2 });
+    expect(chat.indexRows.value.at(-1)).toMatchObject({
+      id: reply.id,
+      role: 'assistant',
+      calls: 2
+    });
 
     // a call or a thought lands after it has measured; words pin on the cadence
     const landing = vi.spyOn(chat, 'settleAtBottom').mockResolvedValue(undefined);

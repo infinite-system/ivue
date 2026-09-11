@@ -18,14 +18,14 @@ import type { ChatApi } from './ChatApi';
 import type { SessionLog } from './SessionLog';
 import { hosted } from '../virtual-scroller/hosted';
 
-const rows: ChatApi.IndexRow[] = [
-  { id: 'a', r: 'u', t: 'hello there', c: 0, at: 1_700_000_000_000 },
-  { id: 'b', r: 'a', t: 'running tools', c: 3, at: 1_700_000_060_000 },
-  { id: 'c', r: 's', t: 'Turn took 4s', c: 0, at: 0 },
-  { id: 'd', r: 'u', t: 'next question', c: 0, at: 1_700_000_120_000 },
-  { id: 'e', r: 'a', t: 'plain answer', c: 0, at: 1_700_000_180_000 },
-  { id: 'f', r: 'a', t: 'more tools', c: 1, at: 1_700_000_240_000 },
-  { id: 'g', r: 's', t: 'Context compacted', c: 0, at: 1_700_000_300_000 }
+const rows: ChatApi.IndexEntry[] = [
+  { id: 'a', role: 'user', text: 'hello there', calls: 0, at: 1_700_000_000_000 },
+  { id: 'b', role: 'assistant', text: 'running tools', calls: 3, at: 1_700_000_060_000 },
+  { id: 'c', role: 'system', text: 'Turn took 4s', calls: 0, at: 0 },
+  { id: 'd', role: 'user', text: 'next question', calls: 0, at: 1_700_000_120_000 },
+  { id: 'e', role: 'assistant', text: 'plain answer', calls: 0, at: 1_700_000_180_000 },
+  { id: 'f', role: 'assistant', text: 'more tools', calls: 1, at: 1_700_000_240_000 },
+  { id: 'g', role: 'system', text: 'Context compacted', calls: 0, at: 1_700_000_300_000 }
 ];
 
 function make() {
@@ -106,7 +106,7 @@ describe('Index', () => {
     expect(index.timeLabel(index.rows.value[2])).toBe('');
     expect(index.timeLabel(row)).toMatch(/^\d\d:\d\d$/);
     expect(index.rowText(row)).toBe('agent running tools');
-    expect(index.previewText({ ...row, entry: { ...row.entry, t: '' } })).toBe('(no text)');
+    expect(index.previewText({ ...row, entry: { ...row.entry, text: '' } })).toBe('(no text)');
     unmount();
   });
 

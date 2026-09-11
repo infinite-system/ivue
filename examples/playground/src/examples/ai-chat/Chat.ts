@@ -48,12 +48,6 @@ class $Chat {
   static readonly BOTTOM_THRESHOLD_PX = 48;
   /** how long after a reply ends its last pin may keep converging */
   static readonly SEEK_RELEASE_MS = 1200;
-  static readonly STUB_ROLE: Record<string, SessionLog.Role> = {
-    u: 'user',
-    a: 'assistant',
-    s: 'system'
-  };
-
   /** one paint later — a frame where there is one, a tick where there is not */
   static frame(): Promise<void> {
     return new Promise((resolve) =>
@@ -169,7 +163,7 @@ class $Chat {
   }
 
   get indexRows() {
-    return shallowRef<ChatApi.IndexRow[]>([]);
+    return shallowRef<ChatApi.IndexEntry[]>([]);
   }
 
   get loadedPages() {
@@ -443,7 +437,7 @@ class $Chat {
   }
 
   /** the index becomes the rows: every message a stub with its role and preview */
-  applyIndex(index: ChatApi.IndexRow[]) {
+  applyIndex(index: ChatApi.IndexEntry[]) {
     this.indexRows.value = index;
     const pageSize = this.pageSize;
     this.rows.value = index.map((entry, at) => ({
@@ -452,9 +446,9 @@ class $Chat {
       position: String(at + 1),
       index: at,
       page: Math.floor(at / pageSize),
-      role: this.self.STUB_ROLE[entry.r] ?? 'system',
-      preview: entry.t,
-      calls: entry.c,
+      role: entry.role,
+      preview: entry.text,
+      calls: entry.calls,
       at: entry.at,
       message: null
     }));
@@ -722,9 +716,9 @@ class $Chat {
       ...this.indexRows.value,
       {
         id: row.id,
-        r: message.role[0],
-        t: row.preview,
-        c: this.self.callCount(message),
+        role: message.role,
+        text: row.preview,
+        calls: this.self.callCount(message),
         at: message.timestamp
       }
     ];
@@ -920,7 +914,9 @@ class $Chat {
   refreshIndexRow(message: SessionLog.Message) {
     const preview = this.self.messageText(message).replace(/\s+/g, ' ').slice(0, 96);
     this.indexRows.value = this.indexRows.value.map((entry) =>
-      entry.id === message.id ? { ...entry, t: preview, c: this.self.callCount(message) } : entry
+      entry.id === message.id
+        ? { ...entry, text: preview, calls: this.self.callCount(message) }
+        : entry
     );
     const at = this.rows.value.findIndex((row) => row.id === message.id);
     if (at >= 0) {
@@ -983,9 +979,9 @@ class $Chat {
     this.expanded.value = new Set();
     this.indexRows.value = messages.map((message) => ({
       id: message.id,
-      r: message.role[0],
-      t: this.self.messageText(message).replace(/\s+/g, ' ').slice(0, 96),
-      c: this.self.callCount(message),
+      role: message.role,
+      text: this.self.messageText(message).replace(/\s+/g, ' ').slice(0, 96),
+      calls: this.self.callCount(message),
       at: message.timestamp
     }));
     this.rows.value = messages.map((message, at) => ({
@@ -995,8 +991,8 @@ class $Chat {
       index: at,
       page: -1,
       role: message.role,
-      preview: this.indexRows.value[at].t,
-      calls: this.indexRows.value[at].c,
+      preview: this.indexRows.value[at].text,
+      calls: this.indexRows.value[at].calls,
       at: message.timestamp,
       message
     }));
