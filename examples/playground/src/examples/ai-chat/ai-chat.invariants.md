@@ -61,12 +61,42 @@ pointer.
 Every model that composes declares its roles as `static get $kit()`, a
 record of entries — a part per kind on the row, a card per tool name on
 the part that picks cards, the sections of the row, the leaves of a card
-— and every seam renders `<component :is="model.kit.Role.view" :kit="model.kit.Role" …props />`.
-A model reads its kit from its own class, so a subclass swaps any role
-by naming another entry, and nothing branches on a kind or a name — it
-looks the entry up, with the generic card and the text part as the
+— and every seam renders `<component :is="model.kit.Role.view" v-bind="model.seamProps(Role)" />`.
+A container renders its sections from the kit's `order`, one seam per
+role, with `v-if="model.shows(role)"` naming presence; the row's six
+sections (Gutter, Head, Stub, Parts, Await, Foot) are that order, and the
+parts are a second loop of their own, the part travelling as the seam's
+item. A model reads its kit from its own class, so a subclass swaps any
+role by naming another entry, and nothing branches on a kind or a name —
+it looks the entry up, with the generic card and the text part as the
 fallbacks — so a record the parser has not seen never breaks the page.
 The mechanism and its proofs: `../../kit/kit.invariants.md`.
+
+## The seam is built by one method that never names a role
+
+`seamProps(role, item?, key?)` on a container is the one place a seam's
+props come from, and it reads the entry alone: the entry's `bind` over
+`{ model, item, key, inherited }`, or `{ model, kit }` when the entry has
+none. It never switches on the role's name — the kit is already the table
+keyed by role, and a switch would be that table copied where no patch can
+reach it. A part receives its part because every part entry binds
+`{ part: item, chat, message }`; a section receives the model because it
+binds nothing; a tag role a layer inserts receives only what its bind
+says. Presence is `shows(role)`, a named method a layer overrides with a
+`super` fallback, never a bind.
+
+## A tree variant is a patch over the row's order
+
+A tree the reader picks is `Kit.Class.derive` over the configured chat
+that edits the row's order by relations against names and swaps a section
+or two: Bubbles drops the gutter (`without`) and swaps the head; Minimal
+drops the gutter and the foot and swaps the head; Compact drops the
+gutter, inserts a rule under the head — a tag role, `{ view: 'hr' }` —
+and moves the foot above the parts, dressing it through `bind`. No
+variant copies `ChatMessage.vue` or ships a view that renders nothing to
+stand in for an absent section. The shipped row is untouched by all of
+them, and the layout the gutter needs is the row's own CSS grid, not a
+wrapper the template would have to name.
 
 ## Full granularity in two clicks
 
@@ -135,6 +165,8 @@ If the invariants hold, none of these can exist in a correct state:
 - a batch that holds one call, or one that hides a call more than two
   clicks deep
 - a renderer that branches on a tool name instead of looking it up, or a seam that names a component instead of an entry
+- a container template that names one of its sections, or a `seamProps` that switches on a role
+- a tree variant that copies the row's template, or a view that renders nothing to stand in for a dropped section
 - a timer per row, or a counter that ticks after its part is done
 - a copy whose text differs between a mounted and an unmounted row
 - a selection lost by changing a filter, or an export out of thread order

@@ -1166,3 +1166,37 @@ own whole than to arbitrate.
   the chat's `rows` ref, previews and times come from the index, so a peek never fetches. The thread's section
   forwards `pointermove` to the peek, which tests `closest('.virtual-scroller__track')` — the track lives inside
   the scroller component and owns its own pointer capture during a drag.
+
+## The role tree (2026-09-11): order, bind and the container conversion
+
+- **A container's wrapper element is layout, not a role.** `ChatMessage.vue` had `<div class="ac-msg-body">`
+  around head/parts/foot. A `v-for` over `order` cannot emit a wrapper, and a wrapper role would need its
+  own class for a `<div>`. The row is a CSS grid instead: the gutter sits in column 1 row 1, everything
+  after it (`.ac-msg-gutter ~ *`) in column 2, and with no gutter every section spans the row. The bubble
+  tree draws its bubble as an absolutely positioned `::before` inside the row's outer padding. A grid-item
+  pseudo-element spanning `1 / 1 / -1 / -1` does NOT work: auto-placed sections avoid the cells it
+  occupies and land in implicit rows below the box.
+- **`seam` guarantees the entry.** The design's part bind returned `{ part, chat, message }` without `kit`,
+  which would leave every part view constructing its own class. `Kit.Class.seam` spreads the bind's result
+  after `kit: entry` for any role with a namespace; a tag role gets only the bind. Containers delegate:
+  `seamProps(role, item?, key?) { return Kit.Class.seam(this, this.kit[role], item, key) }`.
+- **Annotate `$kit` when the kit's type names the owner.** `Kit.Of<Role, $ChatMessage>` puts the instance
+  type inside the static's type; the instance's `kit` getter reads the static back, and tsc reports
+  "referenced directly or indirectly in its own type annotation" across the whole chat (Sidebar, Peek,
+  SubThread...). A declared return type (`static get $kit(): ChatMessage.Roles`) breaks the cycle. The same
+  fix on `Chat.$kit` and a narrow `Chat.PeekHandle` for the peek template ref removed 77 pre-existing
+  circular-type errors from the playground tsc baseline (107 lines → 30).
+- **A property-typed `bind` is not assignable to a method-typed one under strictFunctionTypes.** An entry
+  literal's `bind: (seam: Seam<$Strip, string>) => …` failed against `Entry<unknown, never>` until `bind`
+  became a method signature in the interface (`bind?(seam): Bound`), which compares bivariantly.
+- **`Kit.Class.tree` must guard cycles.** The chat's kit is cyclic (System part → SubThread → Message →
+  System part); a naive recursive print overflowed the stack. The printer carries the set of classes open
+  above it and prints `(a kit already printed above)` on a repeat.
+- **`Static()`'s bound subclass is named `SelectedClass`** and `derive`'s subclass is anonymous, so a printed
+  class name walks `Object.getPrototypeOf` until a real name appears.
+- **The worktree has no `node_modules`.** Symlink the main checkout's root, `docs_v2` and
+  `examples/playground` node_modules into the worktree (all three are gitignored); `npx vue-tsc` is not
+  installed and the npx-cached 3.3.11 fails against the cached TypeScript, so the typecheck stays the tsc
+  diff described above.
+- **The Playwright tree picker must be scoped to the Tree section**: the density section also has a
+  `Compact` choice, so `.ac-choice:has-text("Compact")` clicks density first.

@@ -1,7 +1,7 @@
 import { Static } from '../../../Static';
 
 // The trees a reader can pick, as data the settings panel can show: an id,
-// a label, a hint, and the override as the reader would write it. The
+// a label, a hint, and the patch as the reader would write it. The
 // namespaces the ids resolve to live in ChatVariants, outside the chat's
 // tree, so no class inside the tree imports the layer that extends it.
 class $TreeCatalog {
@@ -15,11 +15,11 @@ class $TreeCatalog {
     {
       id: 'bubbles',
       label: 'Bubbles',
-      hint: 'no gutter, a quiet head, the body in a bubble',
+      hint: 'no gutter, a quiet head, the row in a bubble',
       patch: `Kit.Class.derive(ConfiguredChat, {
   Message: {
     subkit: {
-      Gutter: { view: NoGutterView },
+      order: { without: ['Gutter'] },
       Head: { view: BubbleHeadView },
     },
   },
@@ -32,9 +32,28 @@ class $TreeCatalog {
       patch: `Kit.Class.derive(ConfiguredChat, {
   Message: {
     subkit: {
-      Gutter: { view: NoGutterView },
+      order: { without: ['Gutter', 'Foot'] },
       Head: { view: MinimalHeadView },
-      Foot: { view: MinimalFootView },
+    },
+  },
+})`
+    },
+    {
+      id: 'compact',
+      label: 'Compact',
+      hint: 'a rule under the head, the receipt above the parts',
+      patch: `Kit.Class.derive(ConfiguredChat, {
+  Message: {
+    subkit: {
+      order: {
+        without: ['Gutter'],
+        after: { Head: ['Rule'] },
+        move: { Foot: { before: 'Parts' } },
+      },
+      Rule: { view: 'hr', bind: () => ({ class: 'ac-rule' }) },
+      Foot: {
+        bind: ({ inherited }) => ({ ...inherited(), class: 'ac-foot-lead' }),
+      },
     },
   },
 })`

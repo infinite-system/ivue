@@ -2,28 +2,19 @@
 import type { Kit } from '../../../kit/Kit';
 import type { ChatMessage } from '../ChatMessage';
 
-// The collection section: every part of the message through its own seam,
-// the entry the row's kit names for the part's kind, then the await line
-// while a reply waits for its first token. Markup only.
+// The list section: every part of the message through its own seam — the
+// entry the row's kit names for the part's kind, fed the part as the
+// seam's item and the loop's key. Markup only.
 defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
 </script>
 
 <template>
   <div class="ac-parts">
     <component
-      :is="model.partView(part)"
       v-for="(part, at) in model.parts"
       :key="model.partKey(part, at)"
-      :kit="model.partEntry(part)"
-      :part="part"
-      :chat="model.chat"
-      :message="model.message"
-    />
-    <component
-      v-if="model.isAwaitingFirstToken"
-      :is="model.kit.Await.view"
-      :kit="model.kit.Await"
-      :model="model"
+      :is="model.partView(part)"
+      v-bind="model.seamProps(model.partRole(part), part, model.partKey(part, at))"
     />
   </div>
 </template>

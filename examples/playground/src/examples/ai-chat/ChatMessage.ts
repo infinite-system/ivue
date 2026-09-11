@@ -21,6 +21,7 @@ import MessageAwaitView from './sections/MessageAwait.vue';
 import MessageFootView from './sections/MessageFoot.vue';
 import type { Chat } from './Chat';
 import { Clock } from './Clock';
+import type { Part } from './parts/Part';
 import type { SessionLog } from './SessionLog';
 
 // One row of the thread: a stub with its loader while the page is on the
@@ -49,22 +50,29 @@ class $ChatMessage {
     );
   }
 
-  /** the roles a row composes: a part per kind, and its own sections — built once per class by Static() */
-  static get $kit() {
+  /** the roles a row composes — a part per kind, fed its part through `bind`, and its own sections in
+   *  the order the template renders — built once per class by Static() */
+  static get $kit(): ChatMessage.Roles {
     return {
-      Text: { namespace: TextPart, view: TextPartView },
-      Thinking: { namespace: ThinkingPart, view: ThinkingPartView },
-      Attachment: { namespace: AttachmentPart, view: AttachmentPartView },
-      System: { namespace: SystemPart, view: SystemPartView },
-      ToolCall: { namespace: ToolCallPart, view: ToolCallPartView },
-      ToolBatch: { namespace: ToolBatchPart, view: ToolBatchPartView },
+      Text: { namespace: TextPart, view: TextPartView, bind: this.bindPart },
+      Thinking: { namespace: ThinkingPart, view: ThinkingPartView, bind: this.bindPart },
+      Attachment: { namespace: AttachmentPart, view: AttachmentPartView, bind: this.bindPart },
+      System: { namespace: SystemPart, view: SystemPartView, bind: this.bindPart },
+      ToolCall: { namespace: ToolCallPart, view: ToolCallPartView, bind: this.bindPart },
+      ToolBatch: { namespace: ToolBatchPart, view: ToolBatchPartView, bind: this.bindPart },
       Gutter: { view: MessageGutterView },
       Head: { view: MessageHeadView },
       Stub: { view: MessageStubView },
       Parts: { view: MessagePartsView },
       Await: { view: MessageAwaitView },
-      Foot: { view: MessageFootView }
-    } satisfies Kit.Of<ChatMessage.PartRole | ChatMessage.SectionRole>;
+      Foot: { view: MessageFootView },
+      order: ['Gutter', 'Head', 'Stub', 'Parts', 'Await', 'Foot']
+    };
+  }
+
+  /** what every part receives from the row: its part, the chat, the message — the seam's item is the part */
+  static bindPart({ model, item }: Kit.Seam<$ChatMessage, SessionLog.Part>): Part.Props {
+    return { part: item, chat: model.chat, message: model.message };
   }
 
   /** a part kind (the log's snake_case) names its role (the kit's PascalCase) */
@@ -214,6 +222,10 @@ class $ChatMessage {
     return pieces.join(' · ');
   }
 
+  get hasReceipt(): boolean {
+    return this.receiptLabel !== '';
+  }
+
   /** while the reply waits for its first token: the model name with the counter */
   get isAwaitingFirstToken(): boolean {
     const streaming = this.chat.streaming.value;
@@ -313,10 +325,43 @@ class $ChatMessage {
     return { width: block.width, opacity: String(block.opacity) };
   }
 
-  /** the entry for a part: its kind's role, or Text for a kind nobody mapped */
-  partEntry(part: SessionLog.Part): Kit.Entry {
+  /**
+   * Whether a section renders this pass: the stub and the parts are the two states of one row, the
+   * await line shows while the reply has nothing yet, the foot once there is a receipt; every other
+   * role always. A layer overrides this for the roles it adds and falls back to `super`.
+   */
+  shows(role: ChatMessage.SectionRole): boolean {
+    switch (role) {
+      case 'Stub':
+        return this.isStub;
+      case 'Parts':
+        return !this.isStub;
+      case 'Await':
+        return this.isAwaitingFirstToken;
+      case 'Foot':
+        return this.hasReceipt;
+      default:
+        return true;
+    }
+  }
+
+  /**
+   * What a seam hands the role's view: the entry's `bind` over the seam, or `{ model, kit }` when
+   * the entry has none. Never a branch on the role's name — the entry is the table.
+   */
+  // invariant: The seam is built by one method that never names a role (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
+  seamProps(role: ChatMessage.Role, item?: SessionLog.Part, key?: string | number): Kit.Bound {
+    return Kit.Class.seam(this, this.kit[role], item, key);
+  }
+
+  /** the role for a part: its kind's, or Text for a kind nobody mapped */
+  partRole(part: SessionLog.Part): ChatMessage.PartRole {
     const role = this.self.PART_ROLES[part.kind];
-    return (role && this.kit[role]) ?? this.kit.Text;
+    return role && role in this.kit ? role : 'Text';
+  }
+
+  partEntry(part: SessionLog.Part): Kit.Entry {
+    return this.kit[this.partRole(part)];
   }
 
   partView(part: SessionLog.Part) {
@@ -351,4 +396,9 @@ export namespace ChatMessage {
 
   export type PartRole = 'Text' | 'Thinking' | 'Attachment' | 'System' | 'ToolCall' | 'ToolBatch';
   export type SectionRole = 'Gutter' | 'Head' | 'Stub' | 'Parts' | 'Await' | 'Foot';
+  export type Role = PartRole | SectionRole;
+  /** the row's kit: its sections in an order, and a part role per kind fed its part — declared, so the
+   *  row's instance type and its kit can name each other */
+  export type Roles = Kit.Of<SectionRole, $ChatMessage> &
+    Kit.Roles<PartRole, $ChatMessage, SessionLog.Part> & { order: readonly SectionRole[] };
 }

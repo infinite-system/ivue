@@ -11,22 +11,13 @@ const model = new (
 
 <template>
   <article class="ac-msg" :class="model.rowClass">
-    <component :is="model.kit.Gutter.view" :kit="model.kit.Gutter" :model="model" />
-    <div class="ac-msg-body">
-      <component :is="model.kit.Head.view" :kit="model.kit.Head" :model="model" />
+    <!-- the row's sections are the kit's order: each seam renders the role's view over what the entry binds -->
+    <template v-for="role in model.kit.order" :key="role">
       <component
-        v-if="model.isStub"
-        :is="model.kit.Stub.view"
-        :kit="model.kit.Stub"
-        :model="model"
+        v-if="model.shows(role)"
+        :is="model.kit[role].view"
+        v-bind="model.seamProps(role)"
       />
-      <component v-else :is="model.kit.Parts.view" :kit="model.kit.Parts" :model="model" />
-      <component
-        v-if="model.receiptLabel"
-        :is="model.kit.Foot.view"
-        :kit="model.kit.Foot"
-        :model="model"
-      />
-    </div>
+    </template>
   </article>
 </template>

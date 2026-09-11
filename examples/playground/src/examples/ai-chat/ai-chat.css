@@ -246,12 +246,27 @@
   background: var(--ac-bg);
 }
 
-/* ---- message rows ---- */
+/* ---- message rows: a grid of the row's sections — the gutter in the first column, every
+   section after it in the second; with no gutter, every section spans the row ---- */
 .ai-chat .ac-msg {
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: repeat(8, auto);
+  column-gap: 12px;
+  align-content: start;
   padding: 12px 18px;
   border-bottom: 1px solid var(--ac-line-soft);
+}
+.ai-chat .ac-msg > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.ai-chat .ac-msg > .ac-msg-gutter {
+  grid-column: 1;
+  grid-row: 1;
+}
+.ai-chat .ac-msg > .ac-msg-gutter ~ * {
+  grid-column: 2;
 }
 .ai-chat .ac-msg-user {
   background: var(--ac-user);
@@ -263,7 +278,7 @@
   box-shadow: inset 3px 0 0 var(--ac-accent);
 }
 .ai-chat .ac-msg-gutter {
-  flex: 0 0 28px;
+  width: 28px;
 }
 .ai-chat .ac-msg-system .ac-msg-gutter {
   visibility: hidden;
@@ -287,10 +302,6 @@
 .ai-chat .ac-msg-user .ac-msg-avatar {
   background: var(--ac-accent);
   color: #fff;
-}
-.ai-chat .ac-msg-body {
-  flex: 1;
-  min-width: 0;
 }
 .ai-chat .ac-msg-head {
   display: flex;
@@ -2355,26 +2366,30 @@
   margin: 4px 0;
 }
 
-/* ---- trees ---- */
-.ai-chat .ac-gutter-none,
-.ai-chat .ac-foot-none {
-  display: none;
-}
+/* ---- trees: the bubble is the row's own pseudo-element, drawn inside the row's outer padding — no
+   wrapper element, so the template names no section ---- */
 .ai-chat[data-tree='bubbles'] .ac-msg {
-  padding: 8px 44px 8px 30px;
+  position: relative;
+  padding: 18px 58px 20px 44px;
   border-bottom: 0;
 }
-.ai-chat[data-tree='bubbles'] .ac-msg-body {
-  padding: 10px 14px 12px;
+.ai-chat[data-tree='bubbles'] .ac-msg::before {
+  content: '';
+  position: absolute;
+  inset: 8px 44px 8px 30px;
   border: 1px solid var(--ac-line-soft);
   border-radius: 16px 16px 16px 4px;
   background: var(--ac-panel);
 }
+.ai-chat[data-tree='bubbles'] .ac-msg > * {
+  position: relative;
+}
 .ai-chat[data-tree='bubbles'] .ac-msg-user {
+  padding-left: calc(12% + 44px);
   background: none;
 }
-.ai-chat[data-tree='bubbles'] .ac-msg-user .ac-msg-body {
-  margin-left: 12%;
+.ai-chat[data-tree='bubbles'] .ac-msg-user::before {
+  left: calc(12% + 30px);
   border-radius: 16px 16px 4px 16px;
   background: var(--ac-accent-soft);
 }
@@ -2393,6 +2408,22 @@
 }
 .ai-chat[data-tree='minimal'] .ac-minimal-head .ac-msg-index {
   margin-left: 0;
+}
+.ai-chat[data-tree='compact'] .ac-msg {
+  padding: 6px 44px 8px 30px;
+}
+.ai-chat .ac-rule {
+  width: 100%;
+  height: 0;
+  margin: 0 0 6px;
+  border: 0;
+  border-top: 1px dashed var(--ac-line);
+}
+.ai-chat .ac-foot-lead {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 /* ---- the model picker: a pill and a menu of cards ---- */

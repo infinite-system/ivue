@@ -31,7 +31,7 @@ import { Markdown } from './Markdown';
 // every wait.
 class $Chat {
   /** the roles the thread composes — the scroller, a row, the composer, the index — built once per class by Static() */
-  static get $kit() {
+  static get $kit(): Kit.Of<Chat.Role> {
     return {
       Scroller: { namespace: VirtualScroller, view: VirtualScrollerView },
       Message: { namespace: ChatMessage, view: ChatMessageView },
@@ -39,7 +39,7 @@ class $Chat {
       Index: { namespace: Index, view: ChatIndexView },
       Sidebar: { namespace: Sidebar, view: SidebarView },
       Peek: { namespace: Peek, view: ChatPeekView }
-    } satisfies Kit.Of<Chat.Role>;
+    };
   }
 
   /** pages fetched beyond the window, each side — two, so a row is loaded before it can mount in the padding */
@@ -275,7 +275,7 @@ class $Chat {
 
   // TEMPLATE-REF TARGET — the scrollbar peek's exposed instance
   get peek() {
-    return ref<Peek.Exposed | null>(null);
+    return ref<Chat.PeekHandle | null>(null);
   }
 
   /* ---- derived ---- */
@@ -1028,6 +1028,13 @@ export namespace Chat {
   export type Model = InstanceType<typeof Class>;
   export type Role = 'Scroller' | 'Message' | 'Composer' | 'Index' | 'Sidebar' | 'Peek';
   export type SidebarTab = 'Index' | 'Files' | 'Settings';
+
+  /** what the thread asks of the peek it holds — the two forwards, not the peek's whole instance,
+   *  so the chat's type never names the peek's while the peek's names the chat's */
+  export interface PeekHandle {
+    onThreadPointerMove(event: PointerEvent): void;
+    onThreadPointerLeave(): void;
+  }
 
   export interface Props {
     dark?: boolean;
