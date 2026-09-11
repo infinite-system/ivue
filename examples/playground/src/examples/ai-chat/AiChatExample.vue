@@ -46,11 +46,10 @@ const {
         <div><dt>messages</dt><dd>{{ chat.countLabel }}</dd></div>
         <div><dt>rows in the DOM</dt><dd class="ac-grad">{{ chat.domRowCount }}</dd></div>
         <div><dt>loaded</dt><dd>{{ chat.loadedLabel }}</dd></div>
-        <div><dt>pages</dt><dd>{{ chat.pagesLabel }}</dd></div>
+        <div><dt>pages</dt><dd :title="chat.fetchingLabel"><span class="ac-spinner ac-spinner-soft ac-pages-spinner" :class="{ 'ac-idle': !chat.isFetching }" aria-hidden="true"></span>{{ chat.pagesLabel }}</dd></div>
         <div><dt>fetched</dt><dd>{{ chat.bytesLabel }} <span class="ac-muted">of {{ chat.totalBytesLabel }}</span></dd></div>
         <div><dt>requests</dt><dd>{{ chat.requestCountLabel }}</dd></div>
         <div><dt>tokens streamed</dt><dd>{{ chat.tokensLabel }}</dd></div>
-        <div v-if="chat.isFetching"><dt>fetching</dt><dd class="ac-fetching"><span class="ac-spinner" aria-hidden="true"></span> {{ chat.fetchingLabel }}</dd></div>
       </dl>
       <div class="ac-stats-actions">
         <label class="ac-btn" :class="{ 'ac-busy': chat.isLoadingFile }">

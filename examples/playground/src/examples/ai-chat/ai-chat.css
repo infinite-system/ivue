@@ -2849,3 +2849,16 @@
   right: auto;
   z-index: 60;
 }
+
+/* a fetch never adds a receipt, and never widens one — the strip's height would move the whole
+   thread — it spins inside the pages receipt, in space that is reserved while idle */
+.ai-chat .ac-pages-spinner {
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+.ai-chat .ac-pages-spinner.ac-idle {
+  visibility: hidden;
+  animation: none;
+}
