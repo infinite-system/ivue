@@ -233,11 +233,11 @@ class $Index {
     const query = this.query.value.trim().toLowerCase();
     const output: Index.Row[] = [];
     this.chat.indexRows.value.forEach((entry, at) => {
-      if (role === 'user' && entry.r !== 'u') return;
-      if (role === 'assistant' && entry.r !== 'a') return;
-      if (tools === 'exclude' && entry.c > 0) return;
-      if (tools === 'compaction' && !SessionLog.Class.isCompaction(entry.r, entry.t)) return;
-      if (query && !entry.t.toLowerCase().includes(query)) return;
+      if (role === 'user' && entry.role !== 'user') return;
+      if (role === 'assistant' && entry.role !== 'assistant') return;
+      if (tools === 'exclude' && entry.calls > 0) return;
+      if (tools === 'compaction' && !SessionLog.Class.isCompaction(entry.role, entry.text)) return;
+      if (query && !entry.text.toLowerCase().includes(query)) return;
       output.push({ id: entry.id, body: '', position: String(at + 1), index: at, entry });
     });
     return this.order.value === 'newest' ? output.reverse() : output;
@@ -272,11 +272,11 @@ class $Index {
   }
 
   roleMark(row: Index.Row): string {
-    return row.entry.r === 'u' ? 'you' : row.entry.r === 'a' ? 'agent' : 'sys';
+    return row.entry.role === 'user' ? 'you' : row.entry.role === 'assistant' ? 'agent' : 'sys';
   }
 
   roleClass(row: Index.Row): string {
-    return `ix-role-${row.entry.r}`;
+    return `ix-role-${row.entry.role[0]}`;
   }
 
   timeLabel(row: Index.Row): string {
@@ -286,15 +286,15 @@ class $Index {
   }
 
   toolsLabel(row: Index.Row): string {
-    return row.entry.c ? `${row.entry.c} tool${row.entry.c === 1 ? '' : 's'}` : '';
+    return row.entry.calls ? `${row.entry.calls} tool${row.entry.calls === 1 ? '' : 's'}` : '';
   }
 
   previewText(row: Index.Row): string {
-    return row.entry.t || '(no text)';
+    return row.entry.text || '(no text)';
   }
 
   rowText(row: Index.Row): string {
-    return `${this.roleMark(row)} ${row.entry.t}`;
+    return `${this.roleMark(row)} ${row.entry.text}`;
   }
 
   rowClass(row: Index.Row): Record<string, boolean> {
@@ -497,6 +497,6 @@ export namespace Index {
 
   export interface Row extends VirtualScroller.BaseItem {
     index: number;
-    entry: ChatApi.IndexRow;
+    entry: ChatApi.IndexEntry;
   }
 }

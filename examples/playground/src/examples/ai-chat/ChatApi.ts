@@ -120,8 +120,29 @@ class $ChatApi {
     return this.fetchJson<ChatApi.Meta>('meta.json', signal);
   }
 
-  static index(signal?: AbortSignal) {
-    return this.fetchJson<ChatApi.IndexRow[]>('index.json', signal);
+  /** the index, parsed into entries: the file's one-letter keys stop here */
+  static async index(
+    signal?: AbortSignal
+  ): Promise<{ data: ChatApi.IndexEntry[]; log: ChatApi.RequestLog }> {
+    const { data, log } = await this.fetchJson<ChatApi.IndexRecord[]>('index.json', signal);
+    return { data: data.map((record) => this.entry(record)), log };
+  }
+
+  /** the role letters the index file carries — the file is sized for the network, the entry for the reader */
+  static readonly INDEX_ROLES: Record<string, SessionLog.Role> = {
+    u: 'user',
+    a: 'assistant',
+    s: 'system'
+  };
+
+  static entry(record: ChatApi.IndexRecord): ChatApi.IndexEntry {
+    return {
+      id: record.id,
+      role: this.INDEX_ROLES[record.r] ?? 'system',
+      text: record.t,
+      calls: record.c,
+      at: record.at
+    };
   }
 
   static page(index: number, signal?: AbortSignal) {
@@ -265,11 +286,21 @@ export namespace ChatApi {
   }
 
   /** one line of the index: id, role initial, preview, tool count, time */
-  export interface IndexRow {
+  /** one row of `index.json` as the file carries it: keys of one letter, 10,350 times over */
+  export interface IndexRecord {
     id: string;
     r: string;
     t: string;
     c: number;
+    at: number;
+  }
+
+  /** one message as the index knows it, named in full: what every panel reads */
+  export interface IndexEntry {
+    id: string;
+    role: SessionLog.Role;
+    text: string;
+    calls: number;
     at: number;
   }
 

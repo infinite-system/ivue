@@ -49,9 +49,9 @@ describe('FilesPanel', () => {
     const host = hosted(() => new Chat.Class());
     const chat = host.instance;
     chat.applyIndex([
-      { id: 'a', r: 'a', t: 'one', c: 1, at: 1 },
-      { id: 'b', r: 'a', t: 'two', c: 3, at: 2 },
-      { id: 'c', r: 'a', t: 'unloaded', c: 2, at: 3 }
+      { id: 'a', role: 'assistant', text: 'one', calls: 1, at: 1 },
+      { id: 'b', role: 'assistant', text: 'two', calls: 3, at: 2 },
+      { id: 'c', role: 'assistant', text: 'unloaded', calls: 2, at: 3 }
     ]);
     chat.rows.value[0].message = message('a', 0, [
       { kind: 'tool_call', call: call('1', 'Read', '/x/Chat.ts') }
@@ -112,7 +112,7 @@ describe('FilesPanel', () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
     const host = hosted(() => new Chat.Class());
     const chat = host.instance;
-    chat.applyIndex([{ id: 'a', r: 'a', t: 'one', c: 3, at: 1 }]);
+    chat.applyIndex([{ id: 'a', role: 'assistant', text: 'one', calls: 3, at: 1 }]);
     const edit = {
       ...call('1', 'Edit', '/x/Chat.ts'),
       input: { file_path: '/x/Chat.ts', old_string: 'a\nb', new_string: 'a\nc' }
