@@ -7,7 +7,7 @@ const project = ProjectStore.Class.use();
 // the state destructure
 const {
   // state refs
-  projectName,
+  projectName
 } = project;
 </script>
 
@@ -22,9 +22,7 @@ const {
       </div>
       <div>
         <div class="k">done</div>
-        <div class="n grad">
-          {{ project.completedCount }}/{{ project.taskCount }}
-        </div>
+        <div class="n grad">{{ project.completedCount }}/{{ project.taskCount }}</div>
       </div>
       <div>
         <div class="k">progress</div>
@@ -32,10 +30,7 @@ const {
       </div>
     </div>
     <div class="stats__bar">
-      <div
-        class="stats__fill"
-        :style="project.progressBarStyle"
-      />
+      <div class="stats__fill" :style="project.progressBarStyle" />
     </div>
   </div>
 </template>

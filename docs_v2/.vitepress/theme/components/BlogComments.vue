@@ -20,7 +20,7 @@ const {
   followEmail,
   // element refs
   bodyElement,
-  turnstileElement,
+  turnstileElement
 } = discussion;
 </script>
 
@@ -32,14 +32,9 @@ const {
     </h2>
 
     <!-- arrived from a reply notification: say so, and offer one click out -->
-    <p
-      v-if="discussion.isFollowing"
-      class="blog-comments__follow"
-      role="status"
-    >
+    <p v-if="discussion.isFollowing" class="blog-comments__follow" role="status">
       <span
-        >You follow replies on this thread as
-        <strong>{{ followEmail }}</strong
+        >You follow replies on this thread as <strong>{{ followEmail }}</strong
         >.</span
       >
       <button type="button" @click="discussion.stopFollowing()">
@@ -66,9 +61,7 @@ const {
           <CommentAvatar :seed="root.avatarSeed" :name="root.name" />
           <div class="blog-comments__meta">
             <span class="blog-comments__name">{{ root.name }}</span>
-            <span class="blog-comments__date">{{
-              discussion.formatDate(root.submittedAt)
-            }}</span>
+            <span class="blog-comments__date">{{ discussion.formatDate(root.submittedAt) }}</span>
           </div>
           <span v-if="root.locked" class="blog-comments__lock" title="Replies locked"
             >🔒 locked</span
@@ -102,11 +95,7 @@ const {
               :class="{ 'is-highlighted': discussion.isHighlighted(reply.id) }"
             >
               <div class="blog-comments__head">
-                <CommentAvatar
-                  :seed="reply.avatarSeed"
-                  :name="reply.name"
-                  :size="26"
-                />
+                <CommentAvatar :seed="reply.avatarSeed" :name="reply.name" :size="26" />
                 <div class="blog-comments__meta">
                   <span class="blog-comments__name">{{ reply.name }}</span>
                   <span class="blog-comments__date">{{
@@ -135,9 +124,7 @@ const {
                 :size="26"
               />
               <div class="blog-comments__meta">
-                <span class="blog-comments__name">{{
-                  discussion.latestReply(root.id)!.name
-                }}</span>
+                <span class="blog-comments__name">{{ discussion.latestReply(root.id)!.name }}</span>
                 <span class="blog-comments__date">{{
                   discussion.formatDate(discussion.latestReply(root.id)!.submittedAt)
                 }}</span>
@@ -250,12 +237,14 @@ const {
         </p>
       </li>
     </ol>
-    <p v-else-if="loaded" class="blog-comments__empty">
-      No comments yet — start the conversation.
-    </p>
+    <p v-else-if="loaded" class="blog-comments__empty">No comments yet — start the conversation.</p>
 
     <!-- a new top-level comment -->
-    <form v-if="discussion.showsNewForm" class="blog-comments__form" @submit.prevent="discussion.submit()">
+    <form
+      v-if="discussion.showsNewForm"
+      class="blog-comments__form"
+      @submit.prevent="discussion.submit()"
+    >
       <div class="blog-comments__row">
         <input
           v-model="name"

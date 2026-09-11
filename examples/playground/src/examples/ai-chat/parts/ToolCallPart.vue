@@ -10,7 +10,7 @@ const model = new (
 
 <template>
   <component
-    :is="model.card.vue"
+    :is="model.card.view"
     :kit="model.card"
     :call="model.call"
     :chat="chat"

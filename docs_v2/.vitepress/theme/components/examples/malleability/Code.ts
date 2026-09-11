@@ -1,6 +1,12 @@
 import type { ExtractPropTypes, PropType } from 'vue';
 import { onMounted, ref, watch } from 'vue';
-import { definePropTypes, propsWithDefaults, Reactive, type ExtractEmitTypes, type ExtractPropDefaultTypes } from '../../../../../../lib/Reactive';
+import {
+  definePropTypes,
+  propsWithDefaults,
+  Reactive,
+  type ExtractEmitTypes,
+  type ExtractPropDefaultTypes
+} from '../../../../../../lib/Reactive';
 import { nestedProps } from '../../../../../../lib/nestedProps';
 import { Static } from '../../../../../../lib/Static';
 import type { Kit } from '@kit/Kit';
@@ -16,7 +22,7 @@ class $Code {
     'github-light': { background: '#ffffff', foreground: '#24292e', accent: '#0969da' },
     'one-dark-pro': { background: '#282c34', foreground: '#abb2bf', accent: '#61afef' },
     dracula: { background: '#282a36', foreground: '#f8f8f2', accent: '#bd93f9' },
-    nord: { background: '#2e3440', foreground: '#d8dee9', accent: '#88c0d0' },
+    nord: { background: '#2e3440', foreground: '#d8dee9', accent: '#88c0d0' }
   };
 
   static get propsTypes() {
@@ -28,12 +34,18 @@ class $Code {
       /** fold the block past this many lines; null shows everything */
       maxLines: { type: Number as PropType<number | null> },
       /** the entry this view was rendered through — the class's own prop, typed to its namespace */
-      kit: { type: Object as PropType<Kit.Entry<typeof Code>> },
+      kit: { type: Object as PropType<Kit.Entry<typeof Code>> }
     });
   }
 
   static get propsDefaults(): ExtractPropDefaultTypes<typeof $Code.propsTypes> {
-    return { lang: 'text', theme: 'github-light', lineNumbers: false, maxLines: null, kit: undefined };
+    return {
+      lang: 'text',
+      theme: 'github-light',
+      lineNumbers: false,
+      maxLines: null,
+      kit: undefined
+    };
   }
 
   static get props() {
@@ -42,7 +54,7 @@ class $Code {
 
   static get emits() {
     return {
-      copy: (code: string) => typeof code === 'string',
+      copy: (code: string) => typeof code === 'string'
     };
   }
 
@@ -53,13 +65,13 @@ class $Code {
 
   constructor(
     public props: Code.Props,
-    public emit: Code.Emits,
+    public emit: Code.Emits
   ) {
     nestedProps(props, this.self.propsDefaults);
     onMounted(() => this.colour());
     watch(
       () => [this.visibleCode, this.theme, this.lang],
-      () => this.colour(),
+      () => this.colour()
     );
   }
 
@@ -144,7 +156,11 @@ class $Code {
 
   get blockStyle(): Record<string, string> {
     const palette = this.palette;
-    return { '--code-bg': palette.background, '--code-fg': palette.foreground, '--code-accent': palette.accent };
+    return {
+      '--code-bg': palette.background,
+      '--code-fg': palette.foreground,
+      '--code-accent': palette.accent
+    };
   }
 
   get blockClass(): Record<string, boolean> {

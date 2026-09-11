@@ -19,7 +19,7 @@ class $FilesPanel {
   /** the one role the panel composes: its own scroller over files and their open records */
   static get $kit() {
     return {
-      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView }
+      Scroller: { namespace: VirtualScroller, view: VirtualScrollerView }
     } satisfies Kit.Of<FilesPanel.Role>;
   }
 

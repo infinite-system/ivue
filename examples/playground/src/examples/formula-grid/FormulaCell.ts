@@ -26,7 +26,6 @@ import type { FormulaLogic } from './FormulaLogic';
 import type { Sheet } from './Sheet';
 
 class $FormulaCell {
-
   constructor(sheet: Sheet.Model, row: number, col: number, initial: string) {
     this.sheet = sheet;
     this.row = row;

@@ -18,10 +18,7 @@ const board = new TaskBoardModel.Class();
       @drop.prevent="board.drop(status)"
     >
       <header>
-        <span
-          class="ow-status-dot"
-          :style="{ background: STATUS_META[status].color }"
-        ></span>
+        <span class="ow-status-dot" :style="{ background: STATUS_META[status].color }"></span>
         <strong>{{ STATUS_META[status].label }}</strong>
         <span>{{ board.tasksByStatus(status).length }}</span>
         <button type="button" aria-label="Column menu">
@@ -46,17 +43,9 @@ const board = new TaskBoardModel.Class();
         </span>
         <strong>{{ task.title.value }}</strong>
         <span class="ow-board-card__tags">
-          <em
-            v-for="tag in task.tags.value.slice(0, 2)"
-            :key="tag"
-            :data-tag="tag"
-            >{{ tag }}</em
-          >
+          <em v-for="tag in task.tags.value.slice(0, 2)" :key="tag" :data-tag="tag">{{ tag }}</em>
         </span>
-        <span
-          v-if="task.checklist.value.length"
-          class="ow-board-card__progress"
-        >
+        <span v-if="task.checklist.value.length" class="ow-board-card__progress">
           <i><b :style="task.checklistBarStyle"></b></i>
           {{ task.completedChecklistCount }}/{{ task.checklist.value.length }}
         </span>
@@ -73,9 +62,7 @@ const board = new TaskBoardModel.Class();
         </footer>
       </button>
 
-      <div v-if="!board.hasTasks(status)" class="ow-board-empty">
-        Drop a task here
-      </div>
+      <div v-if="!board.hasTasks(status)" class="ow-board-empty">Drop a task here</div>
     </section>
   </div>
 </template>

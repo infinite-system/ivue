@@ -16,7 +16,7 @@ export async function installQuasar() {
   const [{ Quasar }] = await Promise.all([
     import('quasar'),
     // layered so Quasar's body-level resets never restyle the shell
-    import('./quasar-layered.css'),
+    import('./quasar-layered.css')
   ]);
   app.use(Quasar, { config: { dark: true } }); // match the playground's dark shell
 }

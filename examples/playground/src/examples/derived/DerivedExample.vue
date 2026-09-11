@@ -11,17 +11,16 @@ const {
   fahrenheitRunsShown,
   statusRunsShown,
   // computed refs
-  status,
+  status
 } = view;
 </script>
 
 <template>
   <div class="pane">
     <p class="note">
-      Drag the slider: celsius is a dependency of BOTH, so both bodies run.
-      Now click re-render: the plain getter re-derives (zero bytes, re-run per
-      render) while the computed body stays frozen — that skip is what its
-      ~300 bytes buy.
+      Drag the slider: celsius is a dependency of BOTH, so both bodies run. Now click re-render: the
+      plain getter re-derives (zero bytes, re-run per render) while the computed body stays frozen —
+      that skip is what its ~300 bytes buy.
     </p>
     <div class="vals">
       <div>

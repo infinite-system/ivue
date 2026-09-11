@@ -113,7 +113,9 @@ class $FlyweightLogic {
       case 8:
         return `=H${rowNumber}*2`;
       case 9:
-        return row % this.RUNSUM_BLOCK === 0 ? `=A${rowNumber}` : `=J${rowNumber - 1}+A${rowNumber}`;
+        return row % this.RUNSUM_BLOCK === 0
+          ? `=A${rowNumber}`
+          : `=J${rowNumber - 1}+A${rowNumber}`;
       default:
         if (col % 2 === 0) return null;
         return `=${this.colLabel(col - 1)}${rowNumber}+${this.colLabel(col - 2)}${rowNumber}`;
@@ -136,9 +138,7 @@ class $FlyweightLogic {
    * (measured: 27ms @ 10k cells → 40s @ 200k) — bulk aggregation belongs to
    * the columnar layer.
    */
-  static matchSimpleAggregate(
-    body: string,
-  ): FlyweightLogic.SimpleAggregate | null {
+  static matchSimpleAggregate(body: string): FlyweightLogic.SimpleAggregate | null {
     const match = this.AGG_RE.exec(body);
     if (!match) return null;
     const aggregate = match[1].toUpperCase() as FlyweightLogic.SimpleAggregate['fn'];
@@ -146,8 +146,7 @@ class $FlyweightLogic {
     const startRow = parseInt(match[3], 10);
     const endCol = this.colIndexFromLabel(match[4].toUpperCase());
     const endRow = parseInt(match[5], 10);
-    if (startRow < 1 || startCol < 1 || endRow < startRow || endCol < startCol)
-      return null;
+    if (startRow < 1 || startCol < 1 || endRow < startRow || endCol < startCol) return null;
     return { fn: aggregate, startRow, startCol, endRow, endCol };
   }
 
@@ -164,13 +163,9 @@ class $FlyweightLogic {
 
   /** Structural FormulaError detection (no parser import here). */
   static isFormulaError(
-    value: FlyweightLogic.CellValue,
+    value: FlyweightLogic.CellValue
   ): value is { _error?: string; error?: string } {
-    return (
-      typeof value === 'object' &&
-      value !== null &&
-      ('_error' in value || 'error' in value)
-    );
+    return typeof value === 'object' && value !== null && ('_error' in value || 'error' in value);
   }
 
   /** Resolve a NON-formula literal: '' → null, numeric → number, else text. */
@@ -184,8 +179,7 @@ class $FlyweightLogic {
   /** Display string for a resolved value. */
   static displayOf(value: FlyweightLogic.CellValue): string {
     if (value == null) return '·';
-    if (this.isFormulaError(value))
-      return String(value.error ?? value._error ?? '#ERR');
+    if (this.isFormulaError(value)) return String(value.error ?? value._error ?? '#ERR');
     if (typeof value === 'number') {
       return Number.isFinite(value)
         ? value.toLocaleString('en-US', { maximumFractionDigits: 2 })
@@ -222,16 +216,11 @@ export namespace FlyweightLogic {
     Blank = 0,
     Number = 1,
     Text = 2,
-    Formula = 3,
+    Formula = 3
   }
 
   /** A value a cell can resolve to (FormulaError detected structurally). */
-  export type CellValue =
-    | number
-    | string
-    | boolean
-    | null
-    | { _error?: string; error?: string };
+  export type CellValue = number | string | boolean | null | { _error?: string; error?: string };
 
   export interface SimpleAggregate {
     fn: 'SUM' | 'AVERAGE' | 'MIN' | 'MAX' | 'COUNT';

@@ -7,14 +7,18 @@ const stamp = new BlogPublishedDate.Class();
 const {
   // state refs
   published,
-  updated,
+  updated
 } = stamp;
 </script>
 
 <template>
   <p v-if="stamp.hasRecord" class="blog-published-date">
-    <span v-if="published">Published: <time>{{ published }}</time></span>
-    <span v-if="updated">Last updated: <time>{{ updated }}</time></span>
+    <span v-if="published"
+      >Published: <time>{{ published }}</time></span
+    >
+    <span v-if="updated"
+      >Last updated: <time>{{ updated }}</time></span
+    >
   </p>
 </template>
 

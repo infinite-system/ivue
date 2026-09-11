@@ -9,11 +9,10 @@ import {
   type TaskComment,
   type TaskPriority,
   type TaskSeed,
-  type TaskStatus,
+  type TaskStatus
 } from './types';
 
 class $Task {
-
   constructor(workspace: Task.Owner, seed: TaskSeed, dueDate: string) {
     this.workspace = workspace;
     this.id = seed.id;
@@ -28,7 +27,7 @@ class $Task {
     this.tags.value = [...seed.tags];
     this.checklist.value = (seed.checklist ?? []).map((item) => ({ ...item }));
     this.comments.value = (seed.comments ?? []).map((comment) => ({
-      ...comment,
+      ...comment
     }));
   }
 
@@ -92,9 +91,7 @@ class $Task {
 
   get checklistProgress() {
     if (this.checklist.value.length === 0) return 0;
-    return Math.round(
-      (this.completedChecklistCount / this.checklist.value.length) * 100,
-    );
+    return Math.round((this.completedChecklistCount / this.checklist.value.length) * 100);
   }
 
   get checklistBarStyle() {
@@ -125,11 +122,10 @@ class $Task {
     if (this.dueDayOffset === 0) return 'Today';
     if (this.dueDayOffset === 1) return 'Tomorrow';
     if (this.dueDayOffset === -1) return '1 day overdue';
-    if (this.dueDayOffset < -1)
-      return `${Math.abs(this.dueDayOffset)} days overdue`;
+    if (this.dueDayOffset < -1) return `${Math.abs(this.dueDayOffset)} days overdue`;
     return new Intl.DateTimeFormat('en', {
       month: 'short',
-      day: 'numeric',
+      day: 'numeric'
     }).format(new Date(`${this.dueDate.value}T12:00:00`));
   }
 
@@ -139,7 +135,7 @@ class $Task {
     this.workspace.recordActivity(
       'you',
       '→',
-      `moved ${this.title.value} to ${STATUS_META[status].label}`,
+      `moved ${this.title.value} to ${STATUS_META[status].label}`
     );
   }
 
@@ -149,7 +145,7 @@ class $Task {
     this.workspace.recordActivity(
       'you',
       '!',
-      `set ${this.title.value} to ${PRIORITY_META[priority].label} priority`,
+      `set ${this.title.value} to ${PRIORITY_META[priority].label} priority`
     );
   }
 
@@ -160,19 +156,15 @@ class $Task {
     this.workspace.recordActivity(
       'you',
       '@',
-      `assigned ${this.title.value} to ${member?.name ?? 'Unassigned'}`,
+      `assigned ${this.title.value} to ${member?.name ?? 'Unassigned'}`
     );
   }
 
   toggleChecklist(itemId: string) {
     this.checklist.value = this.checklist.value.map((item) =>
-      item.id === itemId ? { ...item, done: !item.done } : item,
+      item.id === itemId ? { ...item, done: !item.done } : item
     );
-    this.workspace.recordActivity(
-      'you',
-      '✓',
-      `updated the checklist on ${this.title.value}`,
-    );
+    this.workspace.recordActivity('you', '✓', `updated the checklist on ${this.title.value}`);
   }
 
   addComment(body: string) {
@@ -184,14 +176,10 @@ class $Task {
         id: `comment-${Date.now()}`,
         authorId: 'you',
         body: trimmed,
-        createdAt: 'Just now',
-      },
+        createdAt: 'Just now'
+      }
     ];
-    this.workspace.recordActivity(
-      'you',
-      '+',
-      `commented on ${this.title.value}`,
-    );
+    this.workspace.recordActivity('you', '+', `commented on ${this.title.value}`);
   }
 }
 

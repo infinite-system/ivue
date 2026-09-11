@@ -35,7 +35,7 @@ class $FormulaGridExample {
       rowCount: () => (this.sheet.value ? this.sheet.value.rows : 0),
       rowHeight: this.Logic.ROW_HEIGHT,
       viewportHeight: this.Logic.VIEWPORT_HEIGHT,
-      overscan: this.Logic.OVERSCAN,
+      overscan: this.Logic.OVERSCAN
     });
   }
   get window() {
@@ -149,11 +149,7 @@ class $FormulaGridExample {
   }
 
   isEditing(row: number, col: number) {
-    return (
-      !!this.editing.value &&
-      this.editing.value.r === row &&
-      this.editing.value.c === col
-    );
+    return !!this.editing.value && this.editing.value.r === row && this.editing.value.c === col;
   }
 
   edit(row: number, col: number) {

@@ -51,11 +51,9 @@ class $DerivedExample {
 
   startMirroring() {
     this.syncRunCounters();
-    watch(
-      [() => this.celsius.value, () => this.ticks.value],
-      () => this.syncRunCounters(),
-      { flush: 'post' },
-    );
+    watch([() => this.celsius.value, () => this.ticks.value], () => this.syncRunCounters(), {
+      flush: 'post'
+    });
   }
 
   syncRunCounters() {

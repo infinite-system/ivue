@@ -4,7 +4,6 @@ import { Reactive } from '../../ivue';
 import { ComputedProduct } from './ComputedProduct';
 
 class $ComputedSaleProduct extends ComputedProduct.$Class {
-
   get discount() {
     return ref(0.2);
   }

@@ -10,10 +10,7 @@ const list = new TaskListModel.Class();
   <div class="ow-list">
     <section v-for="status in STATUS_ORDER" :key="status" class="ow-list-group">
       <header class="ow-list-group__head">
-        <span
-          class="ow-status-dot"
-          :style="{ background: STATUS_META[status].color }"
-        ></span>
+        <span class="ow-status-dot" :style="{ background: STATUS_META[status].color }"></span>
         <strong>{{ STATUS_META[status].label }}</strong>
         <span>{{ list.tasksByStatus(status).length }}</span>
         <i></i>
@@ -26,10 +23,7 @@ const list = new TaskListModel.Class();
         class="ow-task-row"
         @click="list.openTask(task)"
       >
-        <span
-          class="ow-task-row__check"
-          :class="{ done: list.isComplete(status) }"
-        >
+        <span class="ow-task-row__check" :class="{ done: list.isComplete(status) }">
           <span v-if="list.isComplete(status)" class="ow-symbol">✓</span>
         </span>
         <span class="ow-task-row__main">
@@ -37,11 +31,7 @@ const list = new TaskListModel.Class();
           <small>{{ task.id }} · {{ task.project?.name.value }}</small>
         </span>
         <span class="ow-task-row__tags">
-          <em
-            v-for="tag in task.tags.value.slice(0, 2)"
-            :key="tag"
-            :data-tag="tag"
-          >
+          <em v-for="tag in task.tags.value.slice(0, 2)" :key="tag" :data-tag="tag">
             {{ tag }}
           </em>
         </span>
@@ -68,9 +58,7 @@ const list = new TaskListModel.Class();
         </select>
       </button>
 
-      <p v-if="!list.hasTasks(status)" class="ow-empty-row">
-        No matching tasks
-      </p>
+      <p v-if="!list.hasTasks(status)" class="ow-empty-row">No matching tasks</p>
     </section>
   </div>
 </template>

@@ -21,4 +21,3 @@ export namespace ErrorNotification {
   export let Class = Reactive($Class); // live binding — you `new` this
   export type Instance = typeof Class.Instance; // expose & reactive() interop
 }
-

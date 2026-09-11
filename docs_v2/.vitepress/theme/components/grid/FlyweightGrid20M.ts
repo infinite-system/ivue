@@ -32,9 +32,8 @@ class $FlyweightGrid20M {
     this.isLoading.value = true;
     this.loadError.value = '';
     try {
-      const module = await import(
-        '../../../../../examples/playground/src/examples/flyweight-grid/FlyweightGridApp.vue'
-      );
+      const module =
+        await import('../../../../../examples/playground/src/examples/flyweight-grid/FlyweightGridApp.vue');
       this.gridApp.value = module.default;
     } catch (error) {
       this.loadError.value = String(error);

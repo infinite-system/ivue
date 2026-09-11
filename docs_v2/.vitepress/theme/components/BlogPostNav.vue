@@ -5,17 +5,14 @@ const nav = new BlogPostNav.Class();
 </script>
 
 <template>
-  <nav
-    v-if="nav.hasNav"
-    class="blog-post-nav"
-    aria-label="More posts"
-  >
-    <a
-      v-if="nav.olderPost"
-      class="blog-post-nav__card"
-      :href="nav.postHref(nav.olderPost)"
-    >
-      <img class="blog-post-nav__thumb" :src="nav.imageSrc(nav.olderPost)" :alt="nav.olderPost.title" loading="lazy" />
+  <nav v-if="nav.hasNav" class="blog-post-nav" aria-label="More posts">
+    <a v-if="nav.olderPost" class="blog-post-nav__card" :href="nav.postHref(nav.olderPost)">
+      <img
+        class="blog-post-nav__thumb"
+        :src="nav.imageSrc(nav.olderPost)"
+        :alt="nav.olderPost.title"
+        loading="lazy"
+      />
       <div class="blog-post-nav__body">
         <span class="blog-post-nav__title">{{ nav.olderPost.title }}</span>
         <span class="blog-post-nav__excerpt">{{ nav.olderPost.excerpt }}</span>
@@ -28,7 +25,12 @@ const nav = new BlogPostNav.Class();
       class="blog-post-nav__card blog-post-nav__card--newer"
       :href="nav.postHref(nav.newerPost)"
     >
-      <img class="blog-post-nav__thumb" :src="nav.imageSrc(nav.newerPost)" :alt="nav.newerPost.title" loading="lazy" />
+      <img
+        class="blog-post-nav__thumb"
+        :src="nav.imageSrc(nav.newerPost)"
+        :alt="nav.newerPost.title"
+        loading="lazy"
+      />
       <div class="blog-post-nav__body">
         <span class="blog-post-nav__title">{{ nav.newerPost.title }}</span>
         <span class="blog-post-nav__excerpt">{{ nav.newerPost.excerpt }}</span>

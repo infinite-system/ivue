@@ -12,7 +12,7 @@ const {
   email,
   message,
   // element refs
-  turnstileElement,
+  turnstileElement
 } = quickJoin;
 </script>
 
@@ -56,7 +56,12 @@ const {
             <span class="quickjoin__button-label--full">Join the frontier</span>
             <span class="quickjoin__button-label--short">Join</span>
           </template>
-          <svg v-if="!quickJoin.sending" class="quickjoin__plane" viewBox="0 0 24 24" aria-hidden="true">
+          <svg
+            v-if="!quickJoin.sending"
+            class="quickjoin__plane"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
             <!-- folded paper plane: three facets, opacity carries the 3D -->
             <path fill="currentColor" d="M22 3 3 10.5l7.5 1.7L22 3Z" />
             <path fill="currentColor" fill-opacity="0.72" d="M22 3 10.5 12.2l1.6 8.3L22 3Z" />
@@ -107,7 +112,9 @@ const {
   background: var(--vp-c-bg);
   color: var(--vp-c-text-1);
   font-size: 13px;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 .quickjoin__input:focus {
   outline: none;
@@ -140,7 +147,10 @@ const {
   font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
-  transition: filter 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
+  transition:
+    filter 0.18s ease,
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
   box-shadow: 0 8px 22px -10px rgba(99, 102, 241, 0.55);
 }
 .quickjoin__button:hover {

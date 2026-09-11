@@ -14,7 +14,7 @@ class $Badge {
       label: { type: String, required: true },
       tone: { type: String as PropType<Badge.Tone> },
       size: { type: Number, validator: (size: number) => size > 0 },
-      rounded: { type: Boolean },
+      rounded: { type: Boolean }
     });
   }
 
@@ -31,7 +31,7 @@ class $Badge {
     return {
       label: ['runtime', 'props', 'value', 'ivue'],
       tone: ['neutral', 'success', 'danger'] as readonly Badge.Tone[],
-      size: [0, 12, 14, 16, 20, 28],
+      size: [0, 12, 14, 16, 20, 28]
     };
   }
 

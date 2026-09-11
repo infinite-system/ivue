@@ -14,7 +14,7 @@ class $SystemPart {
   /** the one role a system line composes: the thread its children form */
   static get $kit() {
     return {
-      SubThread: { namespace: SubThread, vue: SubThreadView }
+      SubThread: { namespace: SubThread, view: SubThreadView }
     } satisfies Kit.Of<'SubThread'>;
   }
 

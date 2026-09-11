@@ -24,20 +24,12 @@
  */
 import FormulaParser from 'fast-formula-parser';
 import { pauseTracking, resetTracking } from '@vue/reactivity';
-import {
-  computed,
-  ref,
-  watch,
-  type ComputedRef,
-  type Ref,
-  type WatchStopHandle,
-} from 'vue';
+import { computed, ref, watch, type ComputedRef, type Ref, type WatchStopHandle } from 'vue';
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { FlyweightLogic } from '../FlyweightLogic';
 
 class $FlyweightSheet {
-
   /** The parser's error class, read off the parser module once per class —
    *  a static so a subclass can substitute the error shape it evaluates to. */
   protected static get $FormulaError() {
@@ -87,7 +79,7 @@ class $FlyweightSheet {
 
     this.parser = new FormulaParser({
       onCell: (cellRef) => this.pointValue(cellRef.row, cellRef.col),
-      onRange: (rangeRef) => this.rangeValues(rangeRef as FlyweightSheet.RangeRef),
+      onRange: (rangeRef) => this.rangeValues(rangeRef as FlyweightSheet.RangeRef)
     });
   }
 
@@ -258,8 +250,7 @@ class $FlyweightSheet {
     if (cellCount <= this.Logic.FINE_RANGE_LIMIT) {
       for (let row = startRow; row <= endRow; row++) {
         const rowValues: FlyweightLogic.CellValue[] = [];
-        for (let col = startCol; col <= endCol; col++)
-          rowValues.push(this.valueAt(row, col));
+        for (let col = startCol; col <= endCol; col++) rowValues.push(this.valueAt(row, col));
         values.push(rowValues);
       }
       return values;
@@ -283,7 +274,7 @@ class $FlyweightSheet {
           rowValues.push(
             this.columns[col].kind[row] === FlyweightLogic.Kind.Formula
               ? this.formulaValue(row, col).value
-              : this.rawAt(row, col),
+              : this.rawAt(row, col)
           );
         }
         values.push(rowValues);
@@ -307,9 +298,8 @@ class $FlyweightSheet {
       const value = computed<FlyweightLogic.CellValue>(() => this.evaluateCell(row, col));
       const stopBridge = watch(
         value,
-        (newValue, oldValue) =>
-          this.onFormulaValueChanged(row, col, newValue, oldValue),
-        { flush: 'sync' },
+        (newValue, oldValue) => this.onFormulaValueChanged(row, col, newValue, oldValue),
+        { flush: 'sync' }
       );
       entry = { value, stopBridge };
       this.formulaCache.set(cellKey, entry);
@@ -326,7 +316,7 @@ class $FlyweightSheet {
     row: number,
     col: number,
     newValue: FlyweightLogic.CellValue,
-    oldValue: FlyweightLogic.CellValue,
+    oldValue: FlyweightLogic.CellValue
   ): void {
     if (newValue !== oldValue) this.bumpBlock(row, col);
   }
@@ -343,7 +333,7 @@ class $FlyweightSheet {
     if (body.trim().length === 0) return null;
 
     const cellKey = this.cellKey(row, col);
-    if (this.evaluating.has(cellKey)) return new (this.self.$FormulaError)('#REF!');
+    if (this.evaluating.has(cellKey)) return new this.self.$FormulaError('#REF!');
     this.evaluating.add(cellKey);
     try {
       // COLUMNAR FAST PATH: a bare aggregate over one range is computed
@@ -358,12 +348,12 @@ class $FlyweightSheet {
       return this.parser.parse(body, {
         row: row + 1,
         col: col + 1,
-        sheet: 'Sheet1',
+        sheet: 'Sheet1'
       }) as FlyweightLogic.CellValue;
     } catch (error) {
       return error instanceof (this.self.$FormulaError as unknown as Function)
         ? (error as FlyweightLogic.CellValue)
-        : new (this.self.$FormulaError)('#ERROR!');
+        : new this.self.$FormulaError('#ERROR!');
     } finally {
       this.evaluating.delete(cellKey);
     }
@@ -391,12 +381,12 @@ class $FlyweightSheet {
       return this.parser.parse(body, {
         row: 1,
         col: 1,
-        sheet: 'Sheet1',
+        sheet: 'Sheet1'
       }) as FlyweightLogic.CellValue;
     } catch (error) {
       return error instanceof (this.self.$FormulaError as unknown as Function)
         ? (error as FlyweightLogic.CellValue)
-        : new (this.self.$FormulaError)('#ERROR!');
+        : new this.self.$FormulaError('#ERROR!');
     }
   }
 
@@ -456,7 +446,7 @@ class $FlyweightSheet {
         case 'SUM':
           return sum;
         case 'AVERAGE':
-          return count === 0 ? new (this.self.$FormulaError)('#DIV/0!') : sum / count;
+          return count === 0 ? new this.self.$FormulaError('#DIV/0!') : sum / count;
         case 'COUNT':
           return count;
         case 'MIN':
@@ -464,7 +454,7 @@ class $FlyweightSheet {
         case 'MAX':
           return count === 0 ? 0 : max;
         default:
-          return new (this.self.$FormulaError)('#VALUE!'); // unreachable — union is exhaustive
+          return new this.self.$FormulaError('#VALUE!'); // unreachable — union is exhaustive
       }
     } finally {
       if (!isFineTier) resetTracking();
@@ -522,7 +512,7 @@ class $FlyweightSheet {
       this.parser.parse(body, {
         row: oneBasedRow,
         col: oneBasedCol,
-        sheet: 'Sheet1',
+        sheet: 'Sheet1'
       });
     } catch {
       /* keep whatever reads happened before the error */
@@ -550,7 +540,7 @@ class $FlyweightSheet {
       fineRefs: this.cellVersions.size,
       blockRefs: this.blockVersions.size,
       formulaComputeds: this.formulaCache.size,
-      adHocFormulas: this.adHocCache.size,
+      adHocFormulas: this.adHocCache.size
     };
   }
 
@@ -639,5 +629,4 @@ export namespace FlyweightSheet {
     /** Stops the derived-write bridge watcher (see formulaValue). */
     stopBridge: WatchStopHandle;
   }
-
 }

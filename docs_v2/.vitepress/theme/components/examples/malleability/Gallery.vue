@@ -11,7 +11,7 @@ defineExpose(model as Gallery.Instance);
 <template>
   <div class="gallery">
     <component
-      :is="model.kit.Snippet.vue"
+      :is="model.kit.Snippet.view"
       v-for="snippet in model.snippets"
       :key="snippet.name"
       :kit="model.kit.Snippet"

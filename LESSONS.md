@@ -1130,6 +1130,11 @@ own whole than to arbitrate.
 - **Playwright's "move away" point must actually leave the element**: a peek card 320px wide beside the
   track swallowed a pointer moved 300px left of the track, and the drive read a bug that was not there.
   Instrument `pointermove` targets before touching the code.
+- **The kit entry's view field is `view`, not `vue`.** It names the role's view; Vue is how this one is
+  expressed, and the field must not carry the framework's name. The rename touched the entry key, every
+  `.kit.Role.view` access, `Kit.ts`'s merge keys, the docs demo and the guide. A regex over `.vue` before
+  a space also renamed file names in prose (`Gallery.vue renders it`) — property access is always
+  `.kit.Name.view` / `entry.view`, a bare `Name.vue` in prose is a file; check the diff for that.
 - **Prettier is configured (`.prettierrc`: printWidth 100, single quotes, no trailing commas) but nothing
   ran it.** 107 playground files drifted, 87 in ai-chat, because every file was written by hand and never
   formatted. `npm run format` (and `format:check`) now cover `examples/playground/src` and the docs theme

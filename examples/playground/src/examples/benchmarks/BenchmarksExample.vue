@@ -13,66 +13,53 @@ const {
   running,
   boxCreationMs,
   methodMs,
-  boxRunning,
+  boxRunning
 } = bench;
 </script>
 
 <template>
   <div class="pane">
     <p class="note">
-      Same shape for all three: two state values and a derived area. Numbers
-      depend on your machine — the ratio is the point. Every instance is
-      retained and touched after timing so the JIT cannot elide the work.
+      Same shape for all three: two state values and a derived area. Numbers depend on your machine
+      — the ratio is the point. Every instance is retained and touched after timing so the JIT
+      cannot elide the work.
     </p>
     <div class="vals">
       <div>
         <div class="k">ivue · new Class()</div>
         <div class="n grad">
-          {{ bench.format(ivueMs)
-          }}<BenchmarkWinner v-if="bench.hasIvueResult" placement="after" />
+          {{ bench.format(ivueMs) }}<BenchmarkWinner v-if="bench.hasIvueResult" placement="after" />
         </div>
       </div>
       <div>
         <div class="k">
           reactive(new X())
-          <span v-if="bench.hasReactiveResult"
-            >· {{ bench.ratio(reactiveMs) }}</span
-          >
+          <span v-if="bench.hasReactiveResult">· {{ bench.ratio(reactiveMs) }}</span>
         </div>
         <div class="n">{{ bench.format(reactiveMs) }}</div>
       </div>
       <div>
         <div class="k">
           composable factory
-          <span v-if="bench.hasComposableResult">
-            · {{ bench.ratio(composableMs) }}
-          </span>
+          <span v-if="bench.hasComposableResult"> · {{ bench.ratio(composableMs) }} </span>
         </div>
         <div class="n">{{ bench.format(composableMs) }}</div>
       </div>
     </div>
     <div class="row">
-      <button
-        class="btn primary"
-        type="button"
-        :disabled="running"
-        @click="bench.runCreation()"
-      >
+      <button class="btn primary" type="button" :disabled="running" @click="bench.runCreation()">
         {{ bench.creationButtonLabel }}
       </button>
     </div>
 
     <p class="note" style="margin-top: 28px">
-      InteractiveBox is a three-level Reactive() hierarchy hosting a composable.
-      Creation stays plain-object cheap because nothing materializes until first
-      access; the method benchmark hammers a prototype-bound method with
-      reactive reads inside.
+      InteractiveBox is a three-level Reactive() hierarchy hosting a composable. Creation stays
+      plain-object cheap because nothing materializes until first access; the method benchmark
+      hammers a prototype-bound method with reactive reads inside.
     </p>
     <div class="vals">
       <div>
-        <div class="k">
-          create {{ bench.instanceCountLabel }} InteractiveBoxes
-        </div>
+        <div class="k">create {{ bench.instanceCountLabel }} InteractiveBoxes</div>
         <div class="n grad">{{ bench.format(boxCreationMs) }}</div>
       </div>
       <div>

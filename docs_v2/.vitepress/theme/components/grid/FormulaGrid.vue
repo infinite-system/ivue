@@ -27,7 +27,7 @@ const {
   sheet,
   loading,
   // element refs
-  scrollEl,
+  scrollEl
 } = grid;
 </script>
 
@@ -37,12 +37,7 @@ const {
     note="The model is the exact Sheet/FormulaCell code the measured numbers were produced with; the parser (fast-formula-parser, 280 Excel functions) loads on demand when you click. Live numbers are illustrative — the controlled gc-forced protocol lives in demo/formula/RESULTS.md."
   >
     <div class="d-row fg-controls">
-      <button
-        class="d-btn primary"
-        type="button"
-        :disabled="loading"
-        @click="grid.createSmall()"
-      >
+      <button class="d-btn primary" type="button" :disabled="loading" @click="grid.createSmall()">
         {{ grid.createLabel }}
       </button>
       <button
@@ -55,46 +50,35 @@ const {
         Create 1M cells
       </button>
       <span v-if="grid.hasModel" class="d-mono">
-        {{ grid.modelCellsLabel }} cells &middot; 52.5% live formulas
-        &middot; created in {{ grid.creationLabel }} ms
+        {{ grid.modelCellsLabel }} cells &middot; 52.5% live formulas &middot; created in
+        {{ grid.creationLabel }} ms
       </span>
     </div>
 
     <p v-if="!grid.hasModel" class="fg-hint">
-      Nothing built yet. Every cell in columns E–J (and every odd column
-      beyond) holds a real formula — <code>=A1+B1</code>,
-      <code>=SUM(A1:D1)</code>, <code>=IF(A1&gt;0,B1,C1)</code>, a running
-      sum — evaluated by a real parser, with the dependency graph discovered
-      by Vue.
+      Nothing built yet. Every cell in columns E–J (and every odd column beyond) holds a real
+      formula — <code>=A1+B1</code>, <code>=SUM(A1:D1)</code>, <code>=IF(A1&gt;0,B1,C1)</code>, a
+      running sum — evaluated by a real parser, with the dependency graph discovered by Vue.
     </p>
 
     <template v-if="grid.hasModel">
       <p class="fg-hint">
         Click a cell to edit its formula or value. Try it: set
-        <strong>A1</strong> to <code>5000</code> and watch E1, G1, H1, I1 and
-        the J column cascade. Select <strong>I1</strong> and flip A1's sign —
-        the tracked dependency set shifts branches.
+        <strong>A1</strong> to <code>5000</code> and watch E1, G1, H1, I1 and the J column cascade.
+        Select <strong>I1</strong> and flip A1's sign — the tracked dependency set shifts branches.
       </p>
 
       <!-- fx bar: active cell's literal text + its LIVE tracked deps -->
       <div class="fx-bar fg-fx">
-        <span class="fx-name">{{
-          grid.activeName
-        }}</span>
-        <span v-if="grid.activeCell" class="fx-val">{{
-          grid.activeCell.raw.value
-        }}</span>
+        <span class="fx-name">{{ grid.activeName }}</span>
+        <span v-if="grid.activeCell" class="fx-val">{{ grid.activeCell.raw.value }}</span>
         <span v-else class="fx-empty">click a cell to see its formula</span>
         <span v-if="grid.hasActiveDeps" class="fg-deps d-mono">
           reads: {{ grid.activeDepsLabel }}
         </span>
       </div>
 
-      <div
-        ref="scrollEl"
-        class="gc-grid-scroll"
-        @scroll="grid.window.onScroll"
-      >
+      <div ref="scrollEl" class="gc-grid-scroll" @scroll="grid.window.onScroll">
         <div class="gc-inner">
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
@@ -102,14 +86,8 @@ const {
               {{ grid.headerLabel(column) }}
             </div>
           </div>
-          <div
-            class="gc-viewport"
-            :style="grid.viewportStyle"
-          >
-            <div
-              class="gc-rows"
-              :style="grid.rowsStyle"
-            >
+          <div class="gc-viewport" :style="grid.viewportStyle">
+            <div class="gc-rows" :style="grid.rowsStyle">
               <div v-for="row in grid.window.visibleRows.value" :key="row" class="gc-row">
                 <div class="gc-rownum">{{ grid.rowNumber(row) }}</div>
                 <div
@@ -140,9 +118,9 @@ const {
       </div>
 
       <div class="fg-mounted d-mono">
-        {{ grid.mountedCellsLabel }} DOM cells mounted (virtualized)
-        out of {{ grid.modelCellsLabel }} in the model — an unrendered
-        formula cell never allocates its ref or computed.
+        {{ grid.mountedCellsLabel }} DOM cells mounted (virtualized) out of
+        {{ grid.modelCellsLabel }} in the model — an unrendered formula cell never allocates its ref
+        or computed.
       </div>
     </template>
   </DemoBox>

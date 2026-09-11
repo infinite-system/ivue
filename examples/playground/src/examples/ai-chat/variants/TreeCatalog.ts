@@ -19,8 +19,8 @@ class $TreeCatalog {
       patch: `Kit.Class.derive(ConfiguredChat, {
   Message: {
     subkit: {
-      Gutter: { vue: NoGutterView },
-      Head: { vue: BubbleHeadView },
+      Gutter: { view: NoGutterView },
+      Head: { view: BubbleHeadView },
     },
   },
 })`
@@ -32,9 +32,9 @@ class $TreeCatalog {
       patch: `Kit.Class.derive(ConfiguredChat, {
   Message: {
     subkit: {
-      Gutter: { vue: NoGutterView },
-      Head: { vue: MinimalHeadView },
-      Foot: { vue: MinimalFootView },
+      Gutter: { view: NoGutterView },
+      Head: { view: MinimalHeadView },
+      Foot: { view: MinimalFootView },
     },
   },
 })`

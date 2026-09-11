@@ -25,9 +25,8 @@ const {
   // computed refs
   visibleRows,
   // element refs
-  scrollEl,
+  scrollEl
 } = page;
-
 </script>
 
 <template>
@@ -35,17 +34,15 @@ const {
     <header>
       <h1>Flyweight Grid — 20 × 1,000,000 <small>(20,000,000 cells)</small></h1>
       <p class="fw-sub">
-        Columnar ground truth · flyweight cell facades · two-tier discovered
-        dependency graph. Google Sheets caps at 10M cells — this document cannot
-        exist there. The census below is the law, live:
+        Columnar ground truth · flyweight cell facades · two-tier discovered dependency graph.
+        Google Sheets caps at 10M cells — this document cannot exist there. The census below is the
+        law, live:
         <em>cost ∝ observed, never ∝ existing.</em>
       </p>
     </header>
 
     <div class="fw-controls">
-      <button class="fw-btn" @click="page.createModel()">
-        create model (20M cells)
-      </button>
+      <button class="fw-btn" @click="page.createModel()">create model (20M cells)</button>
       <template v-if="page.hasModel">
         <span class="fw-stat"
           ><b>{{ page.modelCells.toLocaleString() }}</b> cells</span
@@ -54,16 +51,13 @@ const {
           ><b>{{ creationMs.toFixed(1) }}</b> ms create</span
         >
         <span class="fw-stat"
-          ><b>{{ census.fineRefs.toLocaleString() }}</b> fine
-          refs</span
+          ><b>{{ census.fineRefs.toLocaleString() }}</b> fine refs</span
         >
         <span class="fw-stat"
-          ><b>{{ census.blockRefs.toLocaleString() }}</b> block
-          refs</span
+          ><b>{{ census.blockRefs.toLocaleString() }}</b> block refs</span
         >
         <span class="fw-stat"
-          ><b>{{ census.formulaComputeds.toLocaleString() }}</b>
-          formula computeds</span
+          ><b>{{ census.formulaComputeds.toLocaleString() }}</b> formula computeds</span
         >
       </template>
     </div>
@@ -71,11 +65,7 @@ const {
     <template v-if="page.hasModel">
       <!-- Live totals over the FULL million rows (block tier: 245 edges each) -->
       <div class="fw-totals">
-        <span
-          v-for="entry in page.totals"
-          :key="entry.label"
-          class="fw-total"
-        >
+        <span v-for="entry in page.totals" :key="entry.label" class="fw-total">
           <code>{{ entry.label }}</code> =
           <b>{{ Logic.displayOf(entry.total.value) }}</b>
         </span>
@@ -90,24 +80,13 @@ const {
         <div class="gc-inner">
           <div class="gc-head">
             <div class="gc-rownum gc-head-cell">#</div>
-            <div
-              v-for="col in Logic.COLS"
-              :key="col"
-              class="gc-cell gc-head-cell"
-            >
+            <div v-for="col in Logic.COLS" :key="col" class="gc-cell gc-head-cell">
               {{ page.headerLabel(col) }}
             </div>
           </div>
           <div class="gc-viewport" :style="page.viewportStyle">
-            <div
-              class="gc-rows"
-              :style="page.rowsStyle"
-            >
-              <div
-                v-for="pageRow in visibleRows"
-                :key="pageRow.row"
-                class="gc-row"
-              >
+            <div class="gc-rows" :style="page.rowsStyle">
+              <div v-for="pageRow in visibleRows" :key="pageRow.row" class="gc-row">
                 <div class="gc-rownum">
                   {{ page.rowNumber(pageRow.row) }}
                 </div>
@@ -139,8 +118,8 @@ const {
       </div>
     </template>
     <div v-else class="fw-empty">
-      No model yet — click <b>create model (20M cells)</b>. Creation fills
-      ~95&nbsp;MB of typed arrays and allocates <b>zero</b> reactive state.
+      No model yet — click <b>create model (20M cells)</b>. Creation fills ~95&nbsp;MB of typed
+      arrays and allocates <b>zero</b> reactive state.
     </div>
   </section>
 </template>

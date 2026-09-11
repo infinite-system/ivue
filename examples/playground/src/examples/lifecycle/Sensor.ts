@@ -54,7 +54,7 @@ class $Sensor {
     // now, on the first call, never before
     this.stopWatcher.value = this.$watch(
       () => this.temp.value,
-      (newTemp: number, oldTemp: number) => this.onTempChanged(newTemp, oldTemp),
+      (newTemp: number, oldTemp: number) => this.onTempChanged(newTemp, oldTemp)
     );
   }
 

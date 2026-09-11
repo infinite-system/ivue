@@ -9,7 +9,7 @@ const {
   // state refs
   seeAll,
   searchQuery,
-  activeTag,
+  activeTag
 } = index;
 </script>
 
@@ -34,9 +34,21 @@ const {
 
   <div class="blog-search">
     <div class="blog-search__field">
-      <svg class="blog-search__icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+      <svg
+        class="blog-search__icon"
+        width="15"
+        height="15"
+        viewBox="0 0 15 15"
+        fill="none"
+        aria-hidden="true"
+      >
         <circle cx="6.5" cy="6.5" r="4.6" stroke="currentColor" stroke-width="1.6" />
-        <path d="m10.3 10.3 3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        <path
+          d="m10.3 10.3 3.2 3.2"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
       </svg>
       <input
         v-model="searchQuery"
@@ -114,7 +126,12 @@ const {
   </div>
 
   <div v-if="index.isCardsView" class="blog-list">
-    <a v-for="post in index.pagedPosts" :key="post.slug" class="blog-card" :href="index.postHref(post)">
+    <a
+      v-for="post in index.pagedPosts"
+      :key="post.slug"
+      class="blog-card"
+      :href="index.postHref(post)"
+    >
       <div v-if="!post.image" class="thumb thumb--channel">
         {{ index.thumbLabel(post) }}
       </div>
@@ -143,7 +160,9 @@ const {
                 class="foot-tag"
                 :class="{ 'foot-tag--active': index.isActiveTag(tag) }"
                 @click.prevent.stop="index.toggleTag(tag)"
-              >{{ tag }}</button>
+              >
+                {{ tag }}
+              </button>
               <button
                 v-if="index.hasOverlayTags(post)"
                 type="button"
@@ -151,13 +170,12 @@ const {
                 :class="{ 'foot-tag--active': index.isExpanded(post) }"
                 :aria-label="index.overlayTagsLabel(post)"
                 @click.prevent.stop="index.toggleTagExpand(post)"
-              >+{{ index.overlayTags(post).length }}</button>
+              >
+                +{{ index.overlayTags(post).length }}
+              </button>
               <!-- anchored overlay: the reveal floats on the pill, so the
                    card never grows and grid neighbors never jump -->
-              <span
-                v-if="index.showsOverlay(post)"
-                class="foot-tags__overlay"
-              >
+              <span v-if="index.showsOverlay(post)" class="foot-tags__overlay">
                 <button
                   v-for="tag in index.overlayTags(post)"
                   :key="tag"
@@ -165,7 +183,9 @@ const {
                   class="foot-tag"
                   :class="{ 'foot-tag--active': index.isActiveTag(tag) }"
                   @click.prevent.stop="index.toggleTag(tag)"
-                >{{ tag }}</button>
+                >
+                  {{ tag }}
+                </button>
               </span>
             </span>
           </span>
@@ -176,7 +196,12 @@ const {
   </div>
 
   <div v-else class="blog-rows">
-    <a v-for="post in index.pagedPosts" :key="post.slug" class="blog-row" :href="index.postHref(post)">
+    <a
+      v-for="post in index.pagedPosts"
+      :key="post.slug"
+      class="blog-row"
+      :href="index.postHref(post)"
+    >
       <div v-if="!post.image" class="thumb thumb--channel">
         {{ index.thumbLabel(post) }}
       </div>
@@ -205,21 +230,27 @@ const {
                 class="foot-tag"
                 :class="{ 'foot-tag--active': index.isActiveTag(tag) }"
                 @click.prevent.stop="index.toggleTag(tag)"
-              >{{ tag }}</button>
+              >
+                {{ tag }}
+              </button>
               <button
                 v-if="index.hasHiddenTags(post)"
                 type="button"
                 class="foot-tag foot-tag--more"
                 :aria-label="index.hiddenTagsLabel(post)"
                 @click.prevent.stop="index.toggleTagExpand(post)"
-              >+{{ index.hiddenTagCount(post) }}</button>
+              >
+                +{{ index.hiddenTagCount(post) }}
+              </button>
               <button
                 v-else-if="index.isExpanded(post)"
                 type="button"
                 class="foot-tag foot-tag--more"
                 aria-label="Collapse tags"
                 @click.prevent.stop="index.toggleTagExpand(post)"
-              >−</button>
+              >
+                −
+              </button>
             </span>
           </span>
           <span class="go">Read the post →</span>
@@ -260,4 +291,3 @@ const {
 
   <NewsletterQuickJoin placement="blog-footer" align="center" />
 </template>
-

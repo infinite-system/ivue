@@ -6,7 +6,7 @@ const slider = new PerfSlider.Class();
 // the state destructure — every Ref the template touches, grouped
 const {
   // element refs
-  trackElement,
+  trackElement
 } = slider;
 </script>
 
@@ -16,25 +16,14 @@ const {
     @touchstart.passive="slider.onTouchStart"
     @touchend.passive="slider.onTouchEnd"
   >
-    <div
-      class="perf-slider-viewport"
-      :style="slider.viewportStyle"
-    >
-      <div
-        ref="trackElement"
-        class="perf-slider-track"
-        :style="slider.trackStyle"
-      >
+    <div class="perf-slider-viewport" :style="slider.viewportStyle">
+      <div ref="trackElement" class="perf-slider-track" :style="slider.trackStyle">
         <slot />
       </div>
     </div>
 
     <div class="perf-slider-controls">
-      <button
-        class="perf-slider-arrow prev"
-        aria-label="Previous slide"
-        @click="slider.previous()"
-      >
+      <button class="perf-slider-arrow prev" aria-label="Previous slide" @click="slider.previous()">
         ‹
       </button>
       <div class="perf-slider-dots" role="tablist">
@@ -49,11 +38,7 @@ const {
           @click="slider.goToSlide(index)"
         />
       </div>
-      <button
-        class="perf-slider-arrow next"
-        aria-label="Next slide"
-        @click="slider.next()"
-      >
+      <button class="perf-slider-arrow next" aria-label="Next slide" @click="slider.next()">
         ›
       </button>
     </div>
@@ -100,7 +85,9 @@ const {
   line-height: 1;
   cursor: pointer;
   z-index: 2;
-  transition: color 0.2s, border-color 0.2s;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
   flex: none;
 }
 .perf-slider-arrow:hover {
@@ -120,7 +107,9 @@ const {
   padding: 0;
   background: var(--vp-c-divider);
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  transition:
+    background 0.2s,
+    transform 0.2s;
 }
 .perf-slider-dot.active {
   background: var(--vp-c-brand-1);

@@ -8,7 +8,7 @@ class $BenchmarkWinner {
 
   static get propsTypes() {
     return definePropTypes({
-      placement: { type: String as PropType<BenchmarkWinner.Placement> },
+      placement: { type: String as PropType<BenchmarkWinner.Placement> }
     });
   }
 

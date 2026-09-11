@@ -25,7 +25,7 @@ const model = new (
     <div v-if="model.showsDetail" class="ac-system-detail ac-text" v-html="model.detailHtml"></div>
     <component
       v-if="model.showsThread"
-      :is="model.kit.SubThread.vue"
+      :is="model.kit.SubThread.view"
       :kit="model.kit.SubThread"
       :messages="model.children"
       :chat="chat"

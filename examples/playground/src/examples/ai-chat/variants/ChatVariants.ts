@@ -18,14 +18,14 @@ class $ChatVariants {
     const namespaces: Record<string, Kit.Namespace> = {
       shipped: ConfiguredChat,
       bubbles: Kit.Class.derive(ConfiguredChat, {
-        Message: { subkit: { Gutter: { vue: NoGutterView }, Head: { vue: BubbleHeadView } } }
+        Message: { subkit: { Gutter: { view: NoGutterView }, Head: { view: BubbleHeadView } } }
       }),
       minimal: Kit.Class.derive(ConfiguredChat, {
         Message: {
           subkit: {
-            Gutter: { vue: NoGutterView },
-            Head: { vue: MinimalHeadView },
-            Foot: { vue: MinimalFootView }
+            Gutter: { view: NoGutterView },
+            Head: { view: MinimalHeadView },
+            Foot: { view: MinimalFootView }
           }
         }
       })

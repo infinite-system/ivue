@@ -14,7 +14,7 @@ class $RelatedPosts {
 
   static get propsTypes() {
     return definePropTypes({
-      variant: { type: String as PropType<RelatedPosts.Variant> },
+      variant: { type: String as PropType<RelatedPosts.Variant> }
     });
   }
 
@@ -42,7 +42,7 @@ class $RelatedPosts {
     // a route change collapses the grid again
     watch(
       () => this.page.value.relativePath,
-      () => this.collapse(),
+      () => this.collapse()
     );
   }
 

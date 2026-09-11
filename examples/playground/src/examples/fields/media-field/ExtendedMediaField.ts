@@ -16,8 +16,6 @@ import { Reactive } from '../../../ivue';
 import { ServerApi } from '../server/ServerApi';
 import { MediaField } from './MediaField';
 
-
-
 export class $ExtendedMediaField extends MediaField.$Class {
   // --- state ---
   get sortMode() {
@@ -94,9 +92,7 @@ export class $ExtendedMediaField extends MediaField.$Class {
     if (this.sortMode.value === 'name') {
       return rows.sort((left, right) => left.name.localeCompare(right.name));
     }
-    return rows.sort((left, right) =>
-      right.createdAt.localeCompare(left.createdAt),
-    );
+    return rows.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   }
 
   toggleSortMode() {
@@ -202,5 +198,4 @@ export namespace ExtendedMediaField {
   /* Types */
 
   export type MediaSortMode = 'newest' | 'name';
-
 }

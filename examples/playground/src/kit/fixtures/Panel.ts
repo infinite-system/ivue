@@ -16,7 +16,7 @@ import CardView from './Card.vue';
 class $Panel {
   static get $kit() {
     return {
-      Card: { namespace: Card, vue: CardView }
+      Card: { namespace: Card, view: CardView }
     } satisfies Kit.Of<'Card'>;
   }
 

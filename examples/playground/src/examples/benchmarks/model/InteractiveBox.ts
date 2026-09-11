@@ -4,7 +4,6 @@ import { Reactive } from '../../../ivue';
 import { Container } from './Container';
 
 class $InteractiveBox extends Container.$Class {
-
   constructor(props: { id: number }) {
     super();
     this.id = props.id;
@@ -63,7 +62,7 @@ class $InteractiveBox extends Container.$Class {
   get label() {
     return computed({
       get: () => this.describeLabel(),
-      set: (text: string) => this.parseLabel(text),
+      set: (text: string) => this.parseLabel(text)
     });
   }
 
@@ -103,9 +102,9 @@ class $InteractiveBox extends Container.$Class {
   // Benchmark function: Simulates heavy collision detection math
   calculatePhysics() {
     // Pythagorean theorem + some random math overhead
-    return Math.sqrt(
-      Math.pow(this.width.value, 2) + Math.pow(this.height.value, 2)
-    ) * Math.random();
+    return (
+      Math.sqrt(Math.pow(this.width.value, 2) + Math.pow(this.height.value, 2)) * Math.random()
+    );
   }
 }
 

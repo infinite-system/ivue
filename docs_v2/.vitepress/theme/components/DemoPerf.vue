@@ -9,7 +9,7 @@ const perf = new DemoPerf.Class();
 // the state destructure
 const {
   // state refs
-  running,
+  running
 } = perf;
 </script>
 
@@ -22,8 +22,7 @@ const {
       <div>
         <div class="d-k">ivue &middot; new Class()</div>
         <div class="d-n grad">
-          {{ perf.ivueLabel
-          }}<BenchmarkWinner v-if="perf.hasIvueResult" placement="after" />
+          {{ perf.ivueLabel }}<BenchmarkWinner v-if="perf.hasIvueResult" placement="after" />
         </div>
       </div>
       <div>
@@ -42,12 +41,7 @@ const {
       </div>
     </div>
     <div class="d-row">
-      <button
-        class="d-btn primary"
-        type="button"
-        :disabled="running"
-        @click="perf.run()"
-      >
+      <button class="d-btn primary" type="button" :disabled="running" @click="perf.run()">
         {{ perf.buttonLabel }}
       </button>
     </div>

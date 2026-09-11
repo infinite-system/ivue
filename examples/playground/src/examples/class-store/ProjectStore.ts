@@ -5,9 +5,7 @@ import { reactive, ref, shallowRef } from 'vue';
 import { Reactive, type ReactiveHelpers } from '../../ivue';
 import { Static } from '../../Static';
 
-
 class $ProjectStore {
-
   /** The ONE store instance — a `$`-static, so it constructs on first
    *  read (after the app exists, immune to module-load order) and is
    *  cached on the receiver. It constructs through the namespace slot, so
@@ -52,7 +50,7 @@ class $ProjectStore {
     return shallowRef<ProjectStore.ProjectTask[]>([
       { id: 1, title: 'Design the flight plan', done: true },
       { id: 2, title: 'Fuel the first stage', done: false },
-      { id: 3, title: 'Run the countdown checklist', done: false },
+      { id: 3, title: 'Run the countdown checklist', done: false }
     ]);
   }
 
@@ -92,15 +90,12 @@ class $ProjectStore {
   addTask(title: string) {
     const trimmed = title.trim();
     if (!trimmed) return;
-    this.tasks.value = [
-      ...this.tasks.value,
-      { id: Date.now(), title: trimmed, done: false },
-    ];
+    this.tasks.value = [...this.tasks.value, { id: Date.now(), title: trimmed, done: false }];
   }
 
   toggleTask(id: number) {
     this.tasks.value = this.tasks.value.map((task) =>
-      task.id === id ? { ...task, done: !task.done } : task,
+      task.id === id ? { ...task, done: !task.done } : task
     );
   }
 
@@ -138,7 +133,7 @@ class $ProjectStore {
   persist() {
     const state = {
       projectName: this.projectName.value,
-      tasks: this.tasks.value,
+      tasks: this.tasks.value
     };
     try {
       localStorage.setItem(this.self.STORAGE_KEY, JSON.stringify(state));
@@ -164,5 +159,4 @@ export namespace ProjectStore {
   }
 
   export type TaskFilter = 'all' | 'active' | 'done';
-
 }

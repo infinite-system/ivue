@@ -6,7 +6,7 @@ const playground = new Playground.Class();
 // the state destructure — every Ref the template touches, grouped
 const {
   // state refs
-  route,
+  route
 } = playground;
 </script>
 
@@ -31,18 +31,12 @@ const {
     <section class="stage">
       <header class="stage-header">
         <h2>{{ playground.activeExample.title }}</h2>
-        <a
-          href="https://infinite-system.github.io/ivue/"
-          target="_blank"
-          rel="noreferrer"
+        <a href="https://infinite-system.github.io/ivue/" target="_blank" rel="noreferrer"
           >docs ↗</a
         >
       </header>
       <div class="stage-body">
-        <component
-          :is="playground.activeComponent"
-          :key="playground.activeSlug"
-        />
+        <component :is="playground.activeComponent" :key="playground.activeSlug" />
       </div>
     </section>
   </div>

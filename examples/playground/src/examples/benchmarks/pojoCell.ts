@@ -15,11 +15,7 @@ export interface PojoCell {
   raw: string;
 }
 
-export function createPojoCell(
-  row: number,
-  col: number,
-  initial: string,
-): PojoCell {
+export function createPojoCell(row: number, col: number, initial: string): PojoCell {
   return { row, col, raw: initial };
 }
 

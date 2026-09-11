@@ -25,7 +25,7 @@ class $NewsletterQuickJoin {
   static get propsTypes() {
     return definePropTypes({
       placement: { type: String as PropType<string> },
-      align: { type: String as PropType<NewsletterQuickJoin.Align> },
+      align: { type: String as PropType<NewsletterQuickJoin.Align> }
     });
   }
 
@@ -153,7 +153,7 @@ class $NewsletterQuickJoin {
       callback: (token: string) => this.onTurnstileToken(token),
       'expired-callback': () => this.onTurnstileToken(''),
       'before-interactive-callback': () => this.onChallenge(true),
-      'after-interactive-callback': () => this.onChallenge(false),
+      'after-interactive-callback': () => this.onChallenge(false)
     });
   }
 
@@ -198,10 +198,8 @@ class $NewsletterQuickJoin {
           name: this.name.value,
           email: this.email.value,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? '',
-          ...(this.turnstileToken.value
-            ? { turnstileToken: this.turnstileToken.value }
-            : {}),
-        }),
+          ...(this.turnstileToken.value ? { turnstileToken: this.turnstileToken.value } : {})
+        })
       });
       const payload = await response.json().catch(() => ({}));
       if (response.ok) {
@@ -209,8 +207,7 @@ class $NewsletterQuickJoin {
         captureEvent('newsletter_signup', { placement: this.placement });
       } else {
         this.state.value = 'error';
-        this.message.value =
-          payload.error ?? 'Could not subscribe — try again in a minute.';
+        this.message.value = payload.error ?? 'Could not subscribe — try again in a minute.';
       }
     } catch {
       this.state.value = 'error';

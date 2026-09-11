@@ -34,7 +34,9 @@ class $BlogPublishedDate {
     return match ? match[1] : null;
   }
   get record(): BlogPublishedDate.DateRecord | null {
-    return this.slug ? (dates as Record<string, BlogPublishedDate.DateRecord>)[this.slug] ?? null : null;
+    return this.slug
+      ? ((dates as Record<string, BlogPublishedDate.DateRecord>)[this.slug] ?? null)
+      : null;
   }
   get hasRecord() {
     return !!this.record;
@@ -44,13 +46,15 @@ class $BlogPublishedDate {
   formatStamp(milliseconds: number) {
     return new Date(milliseconds).toLocaleString('en-US', {
       dateStyle: 'medium',
-      timeStyle: 'short',
+      timeStyle: 'short'
     });
   }
 
   onMount() {
-    if (this.record?.timestamp) this.published.value = this.formatStamp(this.record.timestamp * 1000);
-    if (this.page.value.lastUpdated) this.updated.value = this.formatStamp(this.page.value.lastUpdated);
+    if (this.record?.timestamp)
+      this.published.value = this.formatStamp(this.record.timestamp * 1000);
+    if (this.page.value.lastUpdated)
+      this.updated.value = this.formatStamp(this.page.value.lastUpdated);
   }
 }
 

@@ -16,14 +16,13 @@ import {
   type ExtractPropDefaultTypes,
   definePropTypes,
   propsWithDefaults,
-  Reactive,
+  Reactive
 } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Field } from '../Field';
 import { ServerApi } from '../server/ServerApi';
 
 export class $MediaField extends Field.$Class {
-
   /* Contract — the shared field surface (model, label, hint, density,
      states) comes from Field through `super`; only the media-specific
      params and the narrowed model type are declared here. */
@@ -34,7 +33,7 @@ export class $MediaField extends Field.$Class {
       ...super.propsTypes,
       /** Narrowed from the base's `any`: rows, ids, a mix, or null. */
       modelValue: {
-        type: [Object, Array, String] as PropType<MediaField.Model>,
+        type: [Object, Array, String] as PropType<MediaField.Model>
       },
       multiple: { type: Boolean as PropType<boolean> },
       /** Comma-separated accept list — extensions (`.pdf`) and mime patterns (`image/*`). */
@@ -48,14 +47,12 @@ export class $MediaField extends Field.$Class {
       canDownload: { type: Boolean as PropType<boolean> },
       canRename: { type: Boolean as PropType<boolean> },
       canRenameCaption: { type: Boolean as PropType<boolean> },
-      canRemove: { type: Boolean as PropType<boolean> },
+      canRemove: { type: Boolean as PropType<boolean> }
     });
   }
 
   /** Params Defaults */
-  static override get propsDefaults(): ExtractPropDefaultTypes<
-    typeof $MediaField.propsTypes
-  > {
+  static override get propsDefaults(): ExtractPropDefaultTypes<typeof $MediaField.propsTypes> {
     return {
       ...super.propsDefaults,
       multiple: false,
@@ -68,7 +65,7 @@ export class $MediaField extends Field.$Class {
       canDownload: true,
       canRename: true,
       canRenameCaption: true,
-      canRemove: true,
+      canRemove: true
     };
   }
 
@@ -84,7 +81,7 @@ export class $MediaField extends Field.$Class {
    */
   static get focusDirective() {
     return {
-      mounted: (element: HTMLInputElement) => element.focus(),
+      mounted: (element: HTMLInputElement) => element.focus()
     };
   }
 
@@ -94,19 +91,19 @@ export class $MediaField extends Field.$Class {
       'update:modelValue': (value: MediaField.Model) => true,
       uploaded: (rows: MediaField.Item[]) => true,
       removed: (row: MediaField.Item) => true,
-      error: (message: string) => true,
+      error: (message: string) => true
     };
   }
 
   constructor(
     public props: MediaField.Props,
-    public emit: MediaField.Emits,
+    public emit: MediaField.Emits
   ) {
     super();
     watch(
       () => this.props.modelValue,
       (value) => this.hydrateModel(value),
-      { immediate: true },
+      { immediate: true }
     );
   }
 
@@ -296,23 +293,13 @@ export class $MediaField extends Field.$Class {
 
   /** Bare ids in the model are fetched; rows are used as-is. Echoes of our own emit are skipped by id-comparison. */
   async hydrateModel(value: MediaField.Model | undefined) {
-    const entries =
-      value == null || value === ''
-        ? []
-        : Array.isArray(value)
-          ? value
-          : [value];
+    const entries = value == null || value === '' ? [] : Array.isArray(value) ? value : [value];
     const limited = this.multiple ? entries : entries.slice(0, 1);
-    const ids = limited.map((entry) =>
-      typeof entry === 'string' ? entry : entry.id,
-    );
+    const ids = limited.map((entry) => (typeof entry === 'string' ? entry : entry.id));
 
-    if (ids.join(',') === this.files.value.map((row) => row.id).join(','))
-      return;
+    if (ids.join(',') === this.files.value.map((row) => row.id).join(',')) return;
 
-    const missingIds = limited.filter(
-      (entry): entry is string => typeof entry === 'string',
-    );
+    const missingIds = limited.filter((entry): entry is string => typeof entry === 'string');
     const fetchedRows = new Map<string, MediaField.Item>();
     if (missingIds.length) {
       this.isHydrating.value = true;
@@ -401,10 +388,7 @@ export class $MediaField extends Field.$Class {
 
   emitModel() {
     const rows = this.files.value;
-    this.emit(
-      'update:modelValue',
-      this.multiple ? [...rows] : (rows[0] ?? null),
-    );
+    this.emit('update:modelValue', this.multiple ? [...rows] : (rows[0] ?? null));
   }
 
   emitUploaded(rows: MediaField.Item[]) {
@@ -484,9 +468,7 @@ export class $MediaField extends Field.$Class {
       if (!this.isAccepted(file)) {
         problems.push(`${file.name} is not an accepted type.`);
       } else if (file.size > this.maxFileSize) {
-        problems.push(
-          `${file.name} exceeds the ${this.maxFileSizeLabel} limit.`,
-        );
+        problems.push(`${file.name} exceeds the ${this.maxFileSizeLabel} limit.`);
       } else {
         acceptedFiles.push(file);
       }
@@ -522,9 +504,7 @@ export class $MediaField extends Field.$Class {
       this.setError(`Failed to remove ${row.name}.`);
       return;
     }
-    const foundIndex = this.files.value.findIndex(
-      (existing) => existing.id === row.id,
-    );
+    const foundIndex = this.files.value.findIndex((existing) => existing.id === row.id);
     if (foundIndex !== -1) this.files.value.splice(foundIndex, 1);
 
     if (this.previewIndex.value >= this.files.value.length) {
@@ -662,10 +642,7 @@ export class $MediaField extends Field.$Class {
     if (!+bytes) return '0 B';
     const kilobyte = 1024;
     const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const unitIndex = Math.min(
-      units.length - 1,
-      Math.floor(Math.log(bytes) / Math.log(kilobyte)),
-    );
+    const unitIndex = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(kilobyte)));
     const amount = bytes / Math.pow(kilobyte, unitIndex);
     return `${parseFloat(amount.toFixed(decimals))} ${units[unitIndex]}`;
   }
@@ -702,11 +679,7 @@ export namespace MediaField {
    * `ServerApi.Class.getMedia`. Single mode holds one entry (or null), multiple
    * mode holds an array.
    */
-  export type Model =
-    | Item
-    | string
-    | Array<Item | string>
-    | null;
+  export type Model = Item | string | Array<Item | string> | null;
 
   /**
    * Slot props. `field` is typed loose on purpose: the runner prop can swap

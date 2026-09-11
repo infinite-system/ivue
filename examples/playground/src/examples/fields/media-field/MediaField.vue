@@ -8,14 +8,7 @@
 //      `item` slot REPLACES the whole per-file row (ExtendedMediaField.vue
 //      swaps the list rows for a square-tile grid through it).
 // ExtendedMediaField.vue uses BOTH at once.
-import {
-  QBadge,
-  QBtn,
-  QIcon,
-  QLinearProgress,
-  QSpinner,
-  QTooltip,
-} from 'quasar';
+import { QBadge, QBtn, QIcon, QLinearProgress, QSpinner, QTooltip } from 'quasar';
 
 import { MediaField } from './MediaField';
 import MediaFieldPreviewDialog from './MediaFieldPreviewDialog.vue';
@@ -37,7 +30,7 @@ const {
   errorMessage,
   previewOpen,
   // element refs
-  fileInput,
+  fileInput
 } = media;
 
 defineExpose(media as MediaField.Instance);
@@ -50,7 +43,7 @@ defineExpose(media as MediaField.Instance);
       'media-field--dense': media.dense,
       'media-field--disabled': media.disable,
       'media-field--readonly': media.readonly,
-      'media-field--error': media.hasError,
+      'media-field--error': media.hasError
     }"
   >
     <!-- HEADER -->
@@ -76,7 +69,7 @@ defineExpose(media as MediaField.Instance);
       class="media-field__dropzone"
       :class="{
         'media-field__dropzone--over': isDragOver,
-        'media-field__dropzone--clickable': media.canAddMore,
+        'media-field__dropzone--clickable': media.canAddMore
       }"
       @dragover="media.onDragOver"
       @dragleave="media.onDragLeave"
@@ -99,8 +92,7 @@ defineExpose(media as MediaField.Instance);
             <q-icon name="cloud_upload" size="34px" color="grey-6" />
             <div class="media-field__empty-hint">{{ media.dropHint }}</div>
             <div class="media-field__empty-types">
-              {{ media.acceptedTypesText }} — up to
-              {{ media.maxFileSizeLabel }} each
+              {{ media.acceptedTypesText }} — up to {{ media.maxFileSizeLabel }} each
             </div>
           </div>
         </slot>
@@ -231,24 +223,9 @@ defineExpose(media as MediaField.Instance);
 
             <!-- ROW ACTIONS — remove at the far right, top-aligned -->
             <div class="media-field__row-side" @click.stop>
-              <slot
-                name="before--item-actions"
-                :row="row"
-                :index="index"
-                :field="media"
-              />
-              <slot
-                name="item-actions"
-                :row="row"
-                :index="index"
-                :field="media"
-              />
-              <slot
-                name="after--item-actions"
-                :row="row"
-                :index="index"
-                :field="media"
-              />
+              <slot name="before--item-actions" :row="row" :index="index" :field="media" />
+              <slot name="item-actions" :row="row" :index="index" :field="media" />
+              <slot name="after--item-actions" :row="row" :index="index" :field="media" />
               <q-btn
                 v-if="media.canRemove"
                 dense
@@ -266,11 +243,7 @@ defineExpose(media as MediaField.Instance);
         </div>
 
         <!-- ADD-MORE AFFORDANCE -->
-        <div
-          v-if="media.canAddMore"
-          class="media-field__add"
-          @click="media.pickFiles()"
-        >
+        <div v-if="media.canAddMore" class="media-field__add" @click="media.pickFiles()">
           <q-icon name="attach_file" size="16px" />
           <span class="media-field__add-label">Add files</span>
         </div>
@@ -335,7 +308,9 @@ defineExpose(media as MediaField.Instance);
   border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
   border-radius: 6px;
   background: color-mix(in srgb, currentColor 3%, transparent);
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
 .media-field__dropzone--over {
@@ -412,8 +387,7 @@ defineExpose(media as MediaField.Instance);
   border-radius: 4px;
   overflow: hidden;
   background: color-mix(in srgb, currentColor 8%, transparent);
-  box-shadow: inset 2px 0 10px 5px
-    color-mix(in srgb, currentColor 7%, transparent);
+  box-shadow: inset 2px 0 10px 5px color-mix(in srgb, currentColor 7%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;

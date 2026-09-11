@@ -7,7 +7,7 @@ const demo = new ExampleMalleability.Class();
 // the state destructure — every Ref the template touches
 const {
   // state refs
-  selectedId,
+  selectedId
 } = demo;
 </script>
 
@@ -35,7 +35,7 @@ const {
         <div class="mal-caption">Gallery.vue, rendered with this entry</div>
         <p class="mal-legend">{{ demo.liveLabel }}</p>
         <!-- the seam: the entry's vue, the entry as `kit`, the child's own props -->
-        <component :is="demo.entry.vue" :key="selectedId" :kit="demo.entry" />
+        <component :is="demo.entry.view" :key="selectedId" :kit="demo.entry" />
       </section>
 
       <section class="mal-side">
@@ -50,16 +50,25 @@ const {
             <span class="mal-role" :style="{ '--depth': line.depth }">{{ line.role }}</span>
             <span class="mal-cells">
               <span class="mal-cell">
-                <template v-if="line.changedView"><s class="mal-was">{{ line.wasView }}</s><span class="mal-now">{{ line.vue }}</span></template>
-                <span v-else class="mal-same">{{ line.vue }}</span>
+                <template v-if="line.changedView"
+                  ><s class="mal-was">{{ line.wasView }}</s
+                  ><span class="mal-now">{{ line.view }}</span></template
+                >
+                <span v-else class="mal-same">{{ line.view }}</span>
               </span>
               <span class="mal-cell" v-if="line.className">
-                <template v-if="line.changedClass"><s class="mal-was">{{ line.wasClass }}</s><span class="mal-now">{{ line.className }}</span></template>
+                <template v-if="line.changedClass"
+                  ><s class="mal-was">{{ line.wasClass }}</s
+                  ><span class="mal-now">{{ line.className }}</span></template
+                >
                 <span v-else class="mal-same">{{ line.className }}</span>
                 <span v-if="line.derived" class="mal-badge">derived</span>
               </span>
               <span v-if="line.props" class="mal-cell mal-cell-props">
-                <span class="mal-now mal-props">prop overrides — the settings this entry turns, read by the layer's getters before super</span>
+                <span class="mal-now mal-props"
+                  >prop overrides — the settings this entry turns, read by the layer's getters
+                  before super</span
+                >
                 <pre class="mal-props-literal">{{ line.props }}</pre>
               </span>
             </span>
@@ -102,7 +111,9 @@ const {
   font: inherit;
   font-size: 13px;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 .mal-tab:hover {
   border-color: var(--vp-c-brand-2);
@@ -486,50 +497,111 @@ const {
   cursor: pointer;
 }
 /* highlight.js classes tokens; each theme is a small stylesheet, keyed by the block's theme */
-.malleability-embed .hljs .hljs-comment { font-style: italic; }
-.malleability-embed .hljs[data-theme='github-light'] { background: #fafafa !important; }
-.malleability-embed .hljs[data-theme='github-light'] .hljs-keyword { color: #a626a4; font-weight: 600; }
-.malleability-embed .hljs[data-theme='github-light'] .hljs-string { color: #50a14f; }
-.malleability-embed .hljs[data-theme='github-light'] .hljs-comment { color: #a0a1a7; }
-.malleability-embed .hljs[data-theme='github-light'] .hljs-number { color: #986801; }
+.malleability-embed .hljs .hljs-comment {
+  font-style: italic;
+}
+.malleability-embed .hljs[data-theme='github-light'] {
+  background: #fafafa !important;
+}
+.malleability-embed .hljs[data-theme='github-light'] .hljs-keyword {
+  color: #a626a4;
+  font-weight: 600;
+}
+.malleability-embed .hljs[data-theme='github-light'] .hljs-string {
+  color: #50a14f;
+}
+.malleability-embed .hljs[data-theme='github-light'] .hljs-comment {
+  color: #a0a1a7;
+}
+.malleability-embed .hljs[data-theme='github-light'] .hljs-number {
+  color: #986801;
+}
 .malleability-embed .hljs[data-theme='github-light'] .hljs-title,
 .malleability-embed .hljs[data-theme='github-light'] .hljs-name,
-.malleability-embed .hljs[data-theme='github-light'] .hljs-selector-class { color: #4078f2; }
+.malleability-embed .hljs[data-theme='github-light'] .hljs-selector-class {
+  color: #4078f2;
+}
 .malleability-embed .hljs[data-theme='github-light'] .hljs-attr,
 .malleability-embed .hljs[data-theme='github-light'] .hljs-attribute,
-.malleability-embed .hljs[data-theme='github-light'] .hljs-built_in { color: #c18401; }
-.malleability-embed .hljs[data-theme='github-light'] .hljs-tag { color: #e45649; }
-.malleability-embed .hljs[data-theme='dracula'] .hljs-keyword { color: #ff79c6; }
-.malleability-embed .hljs[data-theme='dracula'] .hljs-string { color: #f1fa8c; }
-.malleability-embed .hljs[data-theme='dracula'] .hljs-comment { color: #6272a4; }
-.malleability-embed .hljs[data-theme='dracula'] .hljs-number { color: #bd93f9; }
+.malleability-embed .hljs[data-theme='github-light'] .hljs-built_in {
+  color: #c18401;
+}
+.malleability-embed .hljs[data-theme='github-light'] .hljs-tag {
+  color: #e45649;
+}
+.malleability-embed .hljs[data-theme='dracula'] .hljs-keyword {
+  color: #ff79c6;
+}
+.malleability-embed .hljs[data-theme='dracula'] .hljs-string {
+  color: #f1fa8c;
+}
+.malleability-embed .hljs[data-theme='dracula'] .hljs-comment {
+  color: #6272a4;
+}
+.malleability-embed .hljs[data-theme='dracula'] .hljs-number {
+  color: #bd93f9;
+}
 .malleability-embed .hljs[data-theme='dracula'] .hljs-title,
 .malleability-embed .hljs[data-theme='dracula'] .hljs-name,
-.malleability-embed .hljs[data-theme='dracula'] .hljs-selector-class { color: #50fa7b; }
+.malleability-embed .hljs[data-theme='dracula'] .hljs-selector-class {
+  color: #50fa7b;
+}
 .malleability-embed .hljs[data-theme='dracula'] .hljs-attr,
 .malleability-embed .hljs[data-theme='dracula'] .hljs-attribute,
-.malleability-embed .hljs[data-theme='dracula'] .hljs-built_in { color: #8be9fd; }
-.malleability-embed .hljs[data-theme='dracula'] .hljs-tag { color: #ff79c6; }
-.malleability-embed .hljs[data-theme='nord'] .hljs-keyword { color: #81a1c1; }
-.malleability-embed .hljs[data-theme='nord'] .hljs-string { color: #a3be8c; }
-.malleability-embed .hljs[data-theme='nord'] .hljs-comment { color: #616e88; }
-.malleability-embed .hljs[data-theme='nord'] .hljs-number { color: #b48ead; }
+.malleability-embed .hljs[data-theme='dracula'] .hljs-built_in {
+  color: #8be9fd;
+}
+.malleability-embed .hljs[data-theme='dracula'] .hljs-tag {
+  color: #ff79c6;
+}
+.malleability-embed .hljs[data-theme='nord'] .hljs-keyword {
+  color: #81a1c1;
+}
+.malleability-embed .hljs[data-theme='nord'] .hljs-string {
+  color: #a3be8c;
+}
+.malleability-embed .hljs[data-theme='nord'] .hljs-comment {
+  color: #616e88;
+}
+.malleability-embed .hljs[data-theme='nord'] .hljs-number {
+  color: #b48ead;
+}
 .malleability-embed .hljs[data-theme='nord'] .hljs-title,
 .malleability-embed .hljs[data-theme='nord'] .hljs-name,
-.malleability-embed .hljs[data-theme='nord'] .hljs-selector-class { color: #88c0d0; }
+.malleability-embed .hljs[data-theme='nord'] .hljs-selector-class {
+  color: #88c0d0;
+}
 .malleability-embed .hljs[data-theme='nord'] .hljs-attr,
 .malleability-embed .hljs[data-theme='nord'] .hljs-attribute,
-.malleability-embed .hljs[data-theme='nord'] .hljs-built_in { color: #8fbcbb; }
-.malleability-embed .hljs[data-theme='nord'] .hljs-tag { color: #81a1c1; }
-.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-keyword { color: #c678dd; }
-.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-string { color: #98c379; }
-.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-comment { color: #5c6370; }
-.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-number { color: #d19a66; }
+.malleability-embed .hljs[data-theme='nord'] .hljs-built_in {
+  color: #8fbcbb;
+}
+.malleability-embed .hljs[data-theme='nord'] .hljs-tag {
+  color: #81a1c1;
+}
+.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-keyword {
+  color: #c678dd;
+}
+.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-string {
+  color: #98c379;
+}
+.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-comment {
+  color: #5c6370;
+}
+.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-number {
+  color: #d19a66;
+}
 .malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-title,
 .malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-name,
-.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-selector-class { color: #61afef; }
+.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-selector-class {
+  color: #61afef;
+}
 .malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-attr,
 .malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-attribute,
-.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-built_in { color: #e5c07b; }
-.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-tag { color: #e06c75; }
+.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-built_in {
+  color: #e5c07b;
+}
+.malleability-embed .hljs[data-theme='one-dark-pro'] .hljs-tag {
+  color: #e06c75;
+}
 </style>

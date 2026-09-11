@@ -2,14 +2,14 @@
 import { ExampleFieldEmbed } from './ExampleFieldEmbed';
 
 const embed = new ExampleFieldEmbed.Class(
-  () => import('@examples/fields/media-field/MediaFieldExample.vue'),
+  () => import('@examples/fields/media-field/MediaFieldExample.vue')
 );
 
 // the state destructure
 const {
   // state refs
   example,
-  failure,
+  failure
 } = embed;
 </script>
 

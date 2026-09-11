@@ -16,7 +16,7 @@ class $TaxedProduct extends SaleProduct.$Class {
     return [
       ...super.receipt(),
       `tax +${Math.round(this.taxRate.value * 100)}%`,
-      `due — $${this.total.toFixed(2)}`,
+      `due — $${this.total.toFixed(2)}`
     ];
   }
 }

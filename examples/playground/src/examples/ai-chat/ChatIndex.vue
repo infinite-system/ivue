@@ -102,7 +102,7 @@ const {
 
     <div class="ac-index-list">
       <component
-        :is="model.kit.Scroller.vue"
+        :is="model.kit.Scroller.view"
         ref="scroller"
         :kit="model.kit.Scroller"
         scrollbar

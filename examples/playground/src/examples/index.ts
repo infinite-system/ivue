@@ -47,56 +47,52 @@ export const examples: ExampleEntry[] = [
   { ...counter, load: () => import('./counter/CounterExample.vue') },
   {
     ...propsContract,
-    load: () => import('./props-contract/PropsContractExample.vue'),
+    load: () => import('./props-contract/PropsContractExample.vue')
   },
   { ...derived, load: () => import('./derived/DerivedExample.vue') },
   { ...lifecycle, load: () => import('./lifecycle/LifecycleExample.vue') },
   {
     ...inheritance,
-    load: () => import('./inheritance/InheritanceExample.vue'),
+    load: () => import('./inheritance/InheritanceExample.vue')
   },
   { ...composable, load: () => import('./composable/ComposableExample.vue') },
   // Advanced
   {
     ...classStore,
-    load: () => import('./class-store/ClassStoreExample.vue'),
+    load: () => import('./class-store/ClassStoreExample.vue')
   },
   {
     ...workspacePlatform,
-    load: () => import('./workspace-platform/WorkspacePlatformExample.vue'),
+    load: () => import('./workspace-platform/WorkspacePlatformExample.vue')
   },
   {
     ...extensibleKernel,
-    load: () => import('./extensible-kernel/ExtensibleKernelExample.vue'),
+    load: () => import('./extensible-kernel/ExtensibleKernelExample.vue')
   },
   {
     ...chooseField,
-    load: withQuasar(
-      () => import('./fields/choose-field/ChooseFieldExample.vue'),
-    ),
+    load: withQuasar(() => import('./fields/choose-field/ChooseFieldExample.vue'))
   },
   {
     ...mediaField,
-    load: withQuasar(
-      () => import('./fields/media-field/MediaFieldExample.vue'),
-    ),
+    load: withQuasar(() => import('./fields/media-field/MediaFieldExample.vue'))
   },
   {
     ...virtualScroller,
-    load: () => import('./virtual-scroller/VirtualScrollerExample.vue'),
+    load: () => import('./virtual-scroller/VirtualScrollerExample.vue')
   },
   {
     ...textMarquee,
-    load: () => import('./text-marquee/TextMarqueeExample.vue'),
+    load: () => import('./text-marquee/TextMarqueeExample.vue')
   },
   { ...aiChat, load: () => import('./ai-chat/AiChatRoute.vue') },
   {
     ...formulaGrid,
-    load: () => import('./formula-grid/FormulaGridExample.vue'),
+    load: () => import('./formula-grid/FormulaGridExample.vue')
   },
   {
     ...flyweightGrid,
-    load: () => import('./flyweight-grid/FlyweightGridExample.vue'),
+    load: () => import('./flyweight-grid/FlyweightGridExample.vue')
   },
-  { ...benchmarks, load: () => import('./benchmarks/BenchmarksExample.vue') },
+  { ...benchmarks, load: () => import('./benchmarks/BenchmarksExample.vue') }
 ];

@@ -51,7 +51,10 @@ class $GroceryList {
 
   double() {
     if (this.isEmpty) return;
-    this.$history.push('double everything', this.items.map((item) => this.doubled(item)));
+    this.$history.push(
+      'double everything',
+      this.items.map((item) => this.doubled(item))
+    );
   }
 
   /** `milk` → `2× milk`, `2× milk` → `4× milk` — the multiplier compounds. */

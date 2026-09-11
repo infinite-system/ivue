@@ -4,12 +4,11 @@ import { Static } from '../../../Static';
 import { BaseElement } from './BaseElement';
 
 class $Container extends BaseElement.$Class {
-
   /** A shared global state (simulating global config) — ONE cell in a
    *  static readonly field, so every receiver resolves to the same theme. */
   protected static readonly sharedTheme = ref({
     primaryColor: 'blue',
-    scaleFactor: 1.0,
+    scaleFactor: 1.0
   });
 
   static get $theme() {

@@ -49,7 +49,7 @@ class $IvueHero {
   start() {
     watch(
       () => this.count.value,
-      (newCount, oldCount) => this.recordChange(newCount, oldCount),
+      (newCount, oldCount) => this.recordChange(newCount, oldCount)
     );
     this.$typewriter.start();
   }

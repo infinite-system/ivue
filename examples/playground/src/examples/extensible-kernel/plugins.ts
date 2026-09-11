@@ -3,9 +3,7 @@
 // owner's key, `core/Notification`.
 import { $Notification } from './Notification';
 
-export type NotificationPlugin = (
-  Base: typeof $Notification,
-) => typeof $Notification;
+export type NotificationPlugin = (Base: typeof $Notification) => typeof $Notification;
 
 export const activityPlugin: NotificationPlugin = (Base) =>
   class extends Base {

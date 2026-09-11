@@ -55,29 +55,18 @@ export interface ActivityEntry {
   createdAt: string;
 }
 
-export const STATUS_ORDER: TaskStatus[] = [
-  'backlog',
-  'in-progress',
-  'review',
-  'done',
-];
+export const STATUS_ORDER: TaskStatus[] = ['backlog', 'in-progress', 'review', 'done'];
 
-export const STATUS_META: Record<
-  TaskStatus,
-  { label: string; color: string; short: string }
-> = {
+export const STATUS_META: Record<TaskStatus, { label: string; color: string; short: string }> = {
   backlog: { label: 'Backlog', color: '#94a3b8', short: '○' },
   'in-progress': { label: 'In progress', color: '#6366f1', short: '◐' },
   review: { label: 'Review', color: '#f59e0b', short: '◒' },
-  done: { label: 'Complete', color: '#10b981', short: '●' },
+  done: { label: 'Complete', color: '#10b981', short: '●' }
 };
 
-export const PRIORITY_META: Record<
-  TaskPriority,
-  { label: string; color: string }
-> = {
+export const PRIORITY_META: Record<TaskPriority, { label: string; color: string }> = {
   urgent: { label: 'Urgent', color: '#ef4444' },
   high: { label: 'High', color: '#f97316' },
   normal: { label: 'Normal', color: '#6366f1' },
-  low: { label: 'Low', color: '#94a3b8' },
+  low: { label: 'Low', color: '#94a3b8' }
 };

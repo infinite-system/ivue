@@ -11,7 +11,7 @@ const {
   finaleText,
   // state refs
   lastChange,
-  fired,
+  fired
 } = hero;
 </script>
 
@@ -23,7 +23,12 @@ const {
       <svg class="mark" viewBox="0 0 48 48" fill="none">
         <path
           d="M10.6 24 C 10.6 17.6, 19 17, 24 24 C 29 31, 37.4 30.4, 37.4 24 C 37.4 17.6, 29 17, 24 24 C 19 31, 10.6 30.4, 10.6 24 Z"
-          stroke="url(#ivh-g)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+          stroke="url(#ivh-g)"
+          stroke-width="2.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="none"
+        />
         <defs>
           <linearGradient id="ivh-g" x1="8" y1="14" x2="40" y2="34" gradientUnits="userSpaceOnUse">
             <stop stop-color="#818CF8" />
@@ -53,16 +58,20 @@ const {
             height="128"
           />
         </div>
-        <h1 class="ivh-title" aria-label="Plain classes. Full reactivity. Infinite scalability. One kilobyte. Built for AI.">
+        <h1
+          class="ivh-title"
+          aria-label="Plain classes. Full reactivity. Infinite scalability. One kilobyte. Built for AI."
+        >
           <span class="row fall fall-1">Plain classes.</span>
           <span class="row fall fall-2">Full reactivity.</span>
           <span class="row shine fall fall-3">Infinite scalability.</span>
-          <span class="row grad">{{ finaleText }}<span class="ivh-caret" aria-hidden="true" /></span>
+          <span class="row grad"
+            >{{ finaleText }}<span class="ivh-caret" aria-hidden="true"
+          /></span>
         </h1>
         <p class="ivh-tag">
-          Native TypeScript classes become fine-grained Vue 3 state. No proxy
-          per instance. No decorators. No component coupling. Nothing paid
-          until first access.
+          Native TypeScript classes become fine-grained Vue 3 state. No proxy per instance. No
+          decorators. No component coupling. Nothing paid until first access.
         </p>
         <div class="ivh-actions">
           <a class="btn brand" :href="withBase('/guide/getting-started')">Get Started</a>
@@ -71,7 +80,10 @@ const {
       </div>
 
       <div class="ivh-demo" aria-label="Live counter demo">
-        <pre class="code" aria-hidden="true"><code><span class="kw">class</span> <span class="cl">$Counter</span> {
+        <pre
+          class="code"
+          aria-hidden="true"
+        ><code><span class="kw">class</span> <span class="cl">$Counter</span> {
   <span class="kw">get</span> <span class="fn">count</span>() {
     <span class="kw">return</span> <span class="fn">ref</span>(<span class="nu">0</span>)
   }
@@ -96,7 +108,9 @@ const {
             </div>
           </div>
           <div class="controls">
-            <button class="ctl minus" type="button" @click="hero.counter.decrement()">&minus;1</button>
+            <button class="ctl minus" type="button" @click="hero.counter.decrement()">
+              &minus;1
+            </button>
             <button class="ctl plus" type="button" @click="hero.counter.increment()">+1</button>
             <button class="ctl ghost" type="button" @click="hero.counter.reset()">Reset</button>
           </div>
@@ -108,8 +122,8 @@ const {
         </div>
 
         <div class="note">
-          Live. This counter is a <code>Reactive()</code> class instance,
-          running the same 1&nbsp;kB engine that ships.
+          Live. This counter is a <code>Reactive()</code> class instance, running the same 1&nbsp;kB
+          engine that ships.
         </div>
       </div>
     </div>
@@ -245,8 +259,14 @@ const {
   animation: ivh-caret-blink 1.1s steps(1) infinite;
 }
 @keyframes ivh-caret-blink {
-  0%, 54% { opacity: 1; }
-  55%, 100% { opacity: 0; }
+  0%,
+  54% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .ivh-caret {
@@ -373,7 +393,11 @@ const {
   font-weight: 600;
   font-size: 0.95rem;
   text-decoration: none;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, filter 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    filter 0.18s ease;
 }
 .btn.brand {
   color: #fff;
@@ -421,10 +445,18 @@ const {
   border-bottom: 1px solid rgba(148, 163, 184, 0.14);
   overflow-x: auto;
 }
-.code .kw { color: #c084fc; }
-.code .fn { color: #7dd3fc; }
-.code .cl { color: #fbbf24; }
-.code .nu { color: #f0abfc; }
+.code .kw {
+  color: #c084fc;
+}
+.code .fn {
+  color: #7dd3fc;
+}
+.code .cl {
+  color: #fbbf24;
+}
+.code .nu {
+  color: #f0abfc;
+}
 
 .live {
   padding: 20px 22px 6px;
@@ -473,7 +505,10 @@ const {
   font-weight: 650;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease, border-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease,
+    border-color 0.15s ease;
 }
 .ctl.plus {
   color: #fff;
@@ -543,8 +578,12 @@ const {
     }
   }
   @keyframes ivh-pop {
-    from { transform: scale(1.12); }
-    to { transform: scale(1); }
+    from {
+      transform: scale(1.12);
+    }
+    to {
+      transform: scale(1);
+    }
   }
   .ivh-title {
     animation: ivh-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -559,54 +598,54 @@ const {
     animation: ivh-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
   }
   .ivh-title .shine {
-  background: linear-gradient(
-    110deg,
-    #7dd3fc 0%,
-    #7dd3fc 38%,
-    #6ee7b7 47%,
-    #34d399 50%,
-    #6ee7b7 53%,
-    #7dd3fc 62%,
-    #7dd3fc 100%
-  );
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: ivh-shine 9s linear infinite;
-}
-:root:not(.dark) .ivh-title .shine {
-  background-image: linear-gradient(
-    110deg,
-    #0ea5e9 0%,
-    #0ea5e9 38%,
-    #5bbdf2 47%,
-    #a3daf9 50%,
-    #5bbdf2 53%,
-    #0ea5e9 62%,
-    #0ea5e9 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-@keyframes ivh-shine {
-  /* one 4s sweep, then a 5s rest — the gradient is periodic, so the
+    background: linear-gradient(
+      110deg,
+      #7dd3fc 0%,
+      #7dd3fc 38%,
+      #6ee7b7 47%,
+      #34d399 50%,
+      #6ee7b7 53%,
+      #7dd3fc 62%,
+      #7dd3fc 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: ivh-shine 9s linear infinite;
+  }
+  :root:not(.dark) .ivh-title .shine {
+    background-image: linear-gradient(
+      110deg,
+      #0ea5e9 0%,
+      #0ea5e9 38%,
+      #5bbdf2 47%,
+      #a3daf9 50%,
+      #5bbdf2 53%,
+      #0ea5e9 62%,
+      #0ea5e9 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  @keyframes ivh-shine {
+    /* one 4s sweep, then a 5s rest — the gradient is periodic, so the
      resting frame and the restarting frame are identical */
-  0% {
-    background-position: 0% 0;
+    0% {
+      background-position: 0% 0;
+    }
+    44.44% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
-  44.44% {
-    background-position: -200% 0;
+  @media (prefers-reduced-motion: reduce) {
+    .ivh-title .shine {
+      animation: none;
+    }
   }
-  100% {
-    background-position: -200% 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ivh-title .shine {
-    animation: none;
-  }
-}
 
   .pop {
     animation: ivh-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1);

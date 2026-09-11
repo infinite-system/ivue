@@ -13,9 +13,7 @@ class $UndoHistory {
   // MUTABLE STATE — replaced wholesale on every push, never mutated in
   // place, so shallowRef is the right cell.
   get entries() {
-    return shallowRef<UndoHistory.Snapshot[]>([
-      { label: 'start', items: [] },
-    ]);
+    return shallowRef<UndoHistory.Snapshot[]>([{ label: 'start', items: [] }]);
   }
   get cursor() {
     return ref(0);

@@ -25,7 +25,7 @@ const model = new (
     </button>
     <div v-if="model.isExpanded" class="ac-batch-body">
       <component
-        :is="model.kit.Call.vue"
+        :is="model.kit.Call.view"
         v-for="call in model.calls"
         :key="call.id"
         :kit="model.kit.Call"

@@ -7,7 +7,7 @@ import { Reactive } from '../../ivue';
 export class $Notification {
   constructor(
     public message: string,
-    public reportActivity: (event: string) => void,
+    public reportActivity: (event: string) => void
   ) {}
 
   get isDismissed() {
@@ -61,4 +61,3 @@ export namespace Notification {
   export let Class = Reactive($Class); // live binding — you `new` this
   export type Instance = typeof Class.Instance; // expose & reactive() interop
 }
-

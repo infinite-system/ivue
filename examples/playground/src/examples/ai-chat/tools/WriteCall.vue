@@ -11,7 +11,7 @@ const model = new (
 
 <template>
   <div class="ac-tool ac-tool-write" :class="model.cardClass">
-    <component :is="model.kit.Head.vue" :model="model" />
+    <component :is="model.kit.Head.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <section class="ac-tool-section">
         <h5>
@@ -20,7 +20,7 @@ const model = new (
           <span v-if="model.wasOverwrite" class="ac-tag">overwrote</span>
         </h5>
         <component
-          :is="model.kit.CodeBlock.vue"
+          :is="model.kit.CodeBlock.view"
           :kit="model.kit.CodeBlock"
           :code="model.content"
           :lang="model.language"
@@ -31,7 +31,7 @@ const model = new (
       <section v-if="model.showsError" class="ac-tool-section">
         <h5>error</h5>
         <component
-          :is="model.kit.CodeBlock.vue"
+          :is="model.kit.CodeBlock.view"
           :kit="model.kit.CodeBlock"
           :code="model.resultText"
           lang="text"
@@ -40,7 +40,7 @@ const model = new (
           wrap
         />
       </section>
-      <component :is="model.kit.Foot.vue" :model="model" />
+      <component :is="model.kit.Foot.view" :model="model" />
     </div>
   </div>
 </template>

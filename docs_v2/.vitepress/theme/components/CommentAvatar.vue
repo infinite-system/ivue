@@ -21,12 +21,7 @@ const avatar = new CommentAvatar.Class(props as CommentAvatar.Props);
         <stop offset="100%" :stop-color="avatar.secondStopColor" />
       </linearGradient>
     </defs>
-    <rect
-      width="20"
-      height="20"
-      rx="6"
-      :fill="avatar.gradientFill"
-    />
+    <rect width="20" height="20" rx="6" :fill="avatar.gradientFill" />
     <g fill="#ffffff" fill-opacity="0.9">
       <rect
         v-for="(cell, index) in avatar.cells"

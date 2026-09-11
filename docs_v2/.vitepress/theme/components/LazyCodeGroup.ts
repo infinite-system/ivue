@@ -64,7 +64,9 @@ class $LazyCodeGroup {
   }
 
   get statusText() {
-    return this.activeFailure ? `Could not load ${this.activeFile.label}: ${this.activeFailure}` : 'Loading…';
+    return this.activeFailure
+      ? `Could not load ${this.activeFile.label}: ${this.activeFailure}`
+      : 'Loading…';
   }
 
   inputId(index: number) {

@@ -10,11 +10,10 @@ import {
   type ActivityEntry,
   type TaskPriority,
   type TaskStatus,
-  type WorkspaceView,
+  type WorkspaceView
 } from './types';
 
 class $Workspace {
-
   /** The app-wide workspace singleton — a `$`-static: constructed on
    *  first use through the namespace slot, after the app exists. */
   protected static get $shared(): Workspace.Model {
@@ -96,9 +95,7 @@ class $Workspace {
   }
 
   get selectedTask() {
-    return this.tasks.value.find(
-      (task) => task.id === this.selectedTaskId.value,
-    );
+    return this.tasks.value.find((task) => task.id === this.selectedTaskId.value);
   }
 
   get isAllSelected() {
@@ -123,9 +120,7 @@ class $Workspace {
 
   get projectTasks() {
     if (this.selectedProjectId.value === 'all') return this.tasks.value;
-    return this.tasks.value.filter(
-      (task) => task.projectId === this.selectedProjectId.value,
-    );
+    return this.tasks.value.filter((task) => task.projectId === this.selectedProjectId.value);
   }
 
   get filteredTasks() {
@@ -144,18 +139,14 @@ class $Workspace {
         return false;
       }
       if (!query) return true;
-      return [
-        task.id,
-        task.title.value,
-        task.assignee?.name ?? '',
-        ...task.tags.value,
-      ].some((value) => value.toLowerCase().includes(query));
+      return [task.id, task.title.value, task.assignee?.name ?? '', ...task.tags.value].some(
+        (value) => value.toLowerCase().includes(query)
+      );
     });
   }
 
   get completedCount() {
-    return this.projectTasks.filter((task) => task.status.value === 'done')
-      .length;
+    return this.projectTasks.filter((task) => task.status.value === 'done').length;
   }
 
   get completionRate() {
@@ -164,9 +155,7 @@ class $Workspace {
   }
 
   get activeCount() {
-    return this.projectTasks.filter(
-      (task) => task.status.value === 'in-progress',
-    ).length;
+    return this.projectTasks.filter((task) => task.status.value === 'in-progress').length;
   }
 
   get overdueCount() {
@@ -204,8 +193,7 @@ class $Workspace {
   }
 
   taskCountForProject(projectId: string) {
-    return this.tasks.value.filter((task) => task.projectId === projectId)
-      .length;
+    return this.tasks.value.filter((task) => task.projectId === projectId).length;
   }
 
   tasksByStatus(status: TaskStatus) {
@@ -214,18 +202,12 @@ class $Workspace {
 
   workloadFor(memberId: string) {
     return this.tasks.value
-      .filter(
-        (task) =>
-          task.assigneeId.value === memberId && task.status.value !== 'done',
-      )
+      .filter((task) => task.assigneeId.value === memberId && task.status.value !== 'done')
       .reduce((hours, task) => hours + task.estimateHours.value, 0);
   }
 
   workloadPercent(member: Member.Model) {
-    return Math.min(
-      100,
-      Math.round((this.workloadFor(member.id) / member.capacity.value) * 100),
-    );
+    return Math.min(100, Math.round((this.workloadFor(member.id) / member.capacity.value) * 100));
   }
 
   /** Whether a project is the selected one (a per-item template condition). */
@@ -278,9 +260,9 @@ class $Workspace {
         assigneeId: 'you',
         dueOffset: 7,
         estimateHours: 3,
-        tags: ['new'],
+        tags: ['new']
       },
-      this.self.dateAtOffset(7),
+      this.self.dateAtOffset(7)
     );
     this.tasks.value = [task, ...this.tasks.value];
     this.recordActivity('you', '+', `created ${trimmed}`);
@@ -294,9 +276,9 @@ class $Workspace {
         actorId,
         icon,
         text,
-        createdAt: 'Just now',
+        createdAt: 'Just now'
       },
-      ...this.activities.value,
+      ...this.activities.value
     ].slice(0, 12);
   }
 
@@ -310,11 +292,11 @@ class $Workspace {
     this.projects.value = Seeds.Class.projects.map((seed) => new Project.Class(seed));
     this.members.value = Seeds.Class.members.map((seed) => new Member.Class(seed));
     this.tasks.value = Seeds.Class.tasks.map(
-      (seed) => new Task.Class(this, seed, this.self.dateAtOffset(seed.dueOffset)),
+      (seed) => new Task.Class(this, seed, this.self.dateAtOffset(seed.dueOffset))
     );
     this.activities.value = Seeds.Class.activities.map((entry, index) => ({
       ...entry,
-      id: index + 1,
+      id: index + 1
     }));
     this.selectedProjectId.value = 'launch';
     this.selectedTaskId.value = null;

@@ -11,7 +11,12 @@ import { Shiki } from './Shiki';
 // signature as Shiki, which is all a Code subclass needs to swap it in.
 class $Hljs {
   static readonly label = 'highlight.js';
-  static readonly LANGUAGES: Record<string, string> = { typescript: 'typescript', javascript: 'javascript', vue: 'xml', css: 'css' };
+  static readonly LANGUAGES: Record<string, string> = {
+    typescript: 'typescript',
+    javascript: 'javascript',
+    view: 'xml',
+    css: 'css'
+  };
 
   /** the registered engine, once */
   protected static get $engine(): typeof hljs {

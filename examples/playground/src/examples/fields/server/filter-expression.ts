@@ -54,10 +54,7 @@ function tokenize(expression: string): Token[] {
       }
       index++; // closing quote
       tokens.push({ kind: 'string', value });
-    } else if (
-      /[0-9]/.test(char) ||
-      (char === '-' && /[0-9]/.test(source[index + 1]))
-    ) {
+    } else if (/[0-9]/.test(char) || (char === '-' && /[0-9]/.test(source[index + 1]))) {
       let value = char;
       index++;
       while (index < source.length && /[0-9.]/.test(source[index])) {
@@ -74,11 +71,7 @@ function tokenize(expression: string): Token[] {
     } else {
       let value = char;
       index++;
-      if (
-        '<>!='.includes(char) &&
-        index < source.length &&
-        '<>='.includes(source[index])
-      ) {
+      if ('<>!='.includes(char) && index < source.length && '<>='.includes(source[index])) {
         value += source[index++];
       }
       tokens.push({ kind: 'op', value });
@@ -177,9 +170,7 @@ class Parser {
     const left = this.parseOperand();
     const operatorToken = this.next();
     const operator =
-      operatorToken.kind === 'ident'
-        ? operatorToken.value.toUpperCase()
-        : operatorToken.value;
+      operatorToken.kind === 'ident' ? operatorToken.value.toUpperCase() : operatorToken.value;
 
     if (operator === 'IN') {
       this.next(); // lparen

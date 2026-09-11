@@ -14,7 +14,7 @@ const {
   taxRate,
   computedPrice,
   computedDiscount,
-  computedTaxRate,
+  computedTaxRate
 } = example;
 </script>
 
@@ -22,9 +22,9 @@ const {
   <div class="inheritance-stack">
     <div class="pane">
       <p class="note">
-        total is a plain-getter chain — each level refines super.total, zero
-        computeds allocated. Every receipt() line is written by a different
-        class in the chain. Write to any level's ref and everything re-derives.
+        total is a plain-getter chain — each level refines super.total, zero computeds allocated.
+        Every receipt() line is written by a different class in the chain. Write to any level's ref
+        and everything re-derives.
       </p>
       <div class="receipt">
         <div v-for="(line, index) in product.receipt()" :key="index">
@@ -50,27 +50,16 @@ const {
         </div>
       </div>
       <div class="row">
-        <button class="btn primary" type="button" @click="example.bumpPrice()">
-          price +$6
-        </button>
-        <button
-          class="btn"
-          type="button"
-          @click="example.bumpDiscount()"
-        >
-          deeper sale
-        </button>
-        <button class="btn" type="button" @click="example.toggleTax()">
-          toggle tax
-        </button>
+        <button class="btn primary" type="button" @click="example.bumpPrice()">price +$6</button>
+        <button class="btn" type="button" @click="example.bumpDiscount()">deeper sale</button>
+        <button class="btn" type="button" @click="example.toggleTax()">toggle tax</button>
       </div>
     </div>
 
     <div class="pane">
       <p class="note">
-        Every level now declares a computed named total. The child reads
-        super.total.value, so all three cached cells coexist on the same
-        instance instead of overwriting one another.
+        Every level now declares a computed named total. The child reads super.total.value, so all
+        three cached cells coexist on the same instance instead of overwriting one another.
       </p>
       <div class="vals computed-vals">
         <div>
@@ -90,20 +79,10 @@ const {
         <button class="btn primary" type="button" @click="example.bumpComputedPrice()">
           price +$6
         </button>
-        <button
-          class="btn"
-          type="button"
-          @click="example.bumpComputedDiscount()"
-        >
+        <button class="btn" type="button" @click="example.bumpComputedDiscount()">
           deeper sale
         </button>
-        <button
-          class="btn"
-          type="button"
-          @click="example.toggleComputedTax()"
-        >
-          toggle tax
-        </button>
+        <button class="btn" type="button" @click="example.toggleComputedTax()">toggle tax</button>
       </div>
     </div>
   </div>

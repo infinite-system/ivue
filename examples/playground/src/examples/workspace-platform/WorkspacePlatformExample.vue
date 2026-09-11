@@ -43,9 +43,7 @@ const { creatingTask, newTaskTitle } = example;
               aria-label="3 unread notifications"
             ></i>
           </button>
-          <button type="button">
-            <span class="ow-symbol">▦</span>Dashboards
-          </button>
+          <button type="button"><span class="ow-symbol">▦</span>Dashboards</button>
         </nav>
 
         <section class="ow-project-nav">
@@ -71,9 +69,7 @@ const { creatingTask, newTaskTitle } = example;
             :class="{ active: workspace.isSelected(project) }"
             @click="workspace.selectProject(project.id)"
           >
-            <i class="ow-symbol" :style="{ color: project.color }">{{
-              project.icon
-            }}</i>
+            <i class="ow-symbol" :style="{ color: project.color }">{{ project.icon }}</i>
             <span>{{ project.name.value }}</span>
             <small>{{ workspace.taskCountForProject(project.id) }}</small>
           </button>
@@ -81,16 +77,9 @@ const { creatingTask, newTaskTitle } = example;
 
         <section class="ow-workload">
           <header><span>Team workload</span><small>This week</small></header>
-          <div
-            v-for="member in workspace.members.value.slice(0, 4)"
-            :key="member.id"
-          >
+          <div v-for="member in workspace.members.value.slice(0, 4)" :key="member.id">
             <MemberAvatar :member="member" size="small" />
-            <i
-              ><b
-                :style="{ width: workspace.workloadWidth(member) }"
-              ></b
-            ></i>
+            <i><b :style="{ width: workspace.workloadWidth(member) }"></b></i>
             <small>{{ workspace.workloadFor(member.id) }}h</small>
           </div>
         </section>
@@ -109,8 +98,7 @@ const { creatingTask, newTaskTitle } = example;
       <main class="ow-main">
         <header class="ow-topbar">
           <div>
-            <span>Orbit Labs</span><i>/</i
-            ><strong>{{ workspace.title }}</strong>
+            <span>Orbit Labs</span><i>/</i><strong>{{ workspace.title }}</strong>
           </div>
           <div class="ow-topbar__people">
             <MemberAvatar
@@ -119,11 +107,7 @@ const { creatingTask, newTaskTitle } = example;
               :member="member"
               size="small"
             />
-            <button
-              type="button"
-              title="Reset example"
-              @click="workspace.reset()"
-            >
+            <button type="button" title="Reset example" @click="workspace.reset()">
               <span class="ow-symbol">↻</span>
             </button>
             <button type="button" class="ow-share">Share</button>
@@ -132,10 +116,7 @@ const { creatingTask, newTaskTitle } = example;
 
         <div class="ow-page-head">
           <div class="ow-page-title">
-            <span
-              class="ow-page-icon"
-              :style="{ background: workspace.selectedProjectColor }"
-            >
+            <span class="ow-page-icon" :style="{ background: workspace.selectedProjectColor }">
               {{ workspace.selectedProjectIcon }}
             </span>
             <div>
@@ -182,84 +163,48 @@ const { creatingTask, newTaskTitle } = example;
           <div class="ow-view-actions">
             <select v-model="assigneeFilter" aria-label="Filter by assignee">
               <option value="all">All assignees</option>
-              <option
-                v-for="member in workspace.members.value"
-                :key="member.id"
-                :value="member.id"
-              >
+              <option v-for="member in workspace.members.value" :key="member.id" :value="member.id">
                 {{ member.name }}
               </option>
             </select>
             <select v-model="priorityFilter" aria-label="Filter by priority">
               <option value="all">All priorities</option>
-              <option
-                v-for="(meta, priority) in PRIORITY_META"
-                :key="priority"
-                :value="priority"
-              >
+              <option v-for="(meta, priority) in PRIORITY_META" :key="priority" :value="priority">
                 {{ meta.label }} priority
               </option>
             </select>
-            <button
-              v-if="workspace.filterCount"
-              type="button"
-              @click="workspace.clearFilters()"
-            >
+            <button v-if="workspace.filterCount" type="button" @click="workspace.clearFilters()">
               Clear {{ workspace.filterCount }}
             </button>
-            <button
-              type="button"
-              class="ow-new-task"
-              @click="example.toggleTaskCreation()"
-            >
+            <button type="button" class="ow-new-task" @click="example.toggleTaskCreation()">
               <span class="ow-symbol">＋</span> New task
             </button>
           </div>
         </div>
 
-        <form
-          v-if="creatingTask"
-          class="ow-quick-add"
-          @submit.prevent="example.submitTask()"
-        >
+        <form v-if="creatingTask" class="ow-quick-add" @submit.prevent="example.submitTask()">
           <span>＋</span>
-          <input
-            v-model="newTaskTitle"
-            autofocus
-            placeholder="What needs to be done?"
-          />
+          <input v-model="newTaskTitle" autofocus placeholder="What needs to be done?" />
           <small>Backlog · Assigned to you</small>
-          <button type="button" @click="example.cancelTaskCreation()">
-            Cancel
-          </button>
-          <button type="submit" :disabled="example.isTaskSubmitDisabled">
-            Create task
-          </button>
+          <button type="button" @click="example.cancelTaskCreation()">Cancel</button>
+          <button type="submit" :disabled="example.isTaskSubmitDisabled">Create task</button>
         </form>
 
         <div class="ow-content">
           <div class="ow-work-surface">
             <TaskList v-if="workspace.isListView" />
             <TaskBoard v-else />
-            <div
-              v-if="workspace.hasNoTasks"
-              class="ow-no-results"
-            >
+            <div v-if="workspace.hasNoTasks" class="ow-no-results">
               <span>⌕</span>
               <strong>No tasks match these filters</strong>
-              <button type="button" @click="workspace.clearFilters()">
-                Clear filters
-              </button>
+              <button type="button" @click="workspace.clearFilters()">Clear filters</button>
             </div>
           </div>
           <ActivityPanel />
         </div>
       </main>
 
-      <TaskDetails
-        v-if="workspace.selectedTask"
-        :task="workspace.selectedTask"
-      />
+      <TaskDetails v-if="workspace.selectedTask" :task="workspace.selectedTask" />
     </div>
   </div>
 </template>

@@ -11,7 +11,7 @@ const model = new (
 
 <template>
   <div class="ac-tool ac-tool-web" :class="model.cardClass">
-    <component :is="model.kit.Head.vue" :model="model" />
+    <component :is="model.kit.Head.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <p class="ac-tool-caption">
         <a v-if="model.url" class="ac-path" :href="model.url" target="_blank" rel="noreferrer">{{
@@ -23,7 +23,7 @@ const model = new (
       <section v-for="section in model.sections" :key="section.title" class="ac-tool-section">
         <h5>{{ section.title }}</h5>
         <component
-          :is="model.kit.CodeBlock.vue"
+          :is="model.kit.CodeBlock.view"
           :kit="model.kit.CodeBlock"
           :code="section.code"
           :lang="section.lang"
@@ -32,7 +32,7 @@ const model = new (
           wrap
         />
       </section>
-      <component :is="model.kit.Foot.vue" :model="model" />
+      <component :is="model.kit.Foot.view" :model="model" />
     </div>
   </div>
 </template>

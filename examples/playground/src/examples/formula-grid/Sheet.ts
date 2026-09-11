@@ -44,7 +44,7 @@ class $Sheet {
           this,
           rowIndex + 1,
           columnIndex + 1,
-          initialFormula(rowIndex, columnIndex),
+          initialFormula(rowIndex, columnIndex)
         );
       }
       grid[rowIndex] = rowArr;
@@ -53,7 +53,7 @@ class $Sheet {
 
     this.parser = new FormulaParser({
       onCell: (ref) => this.cellValueAt(ref.row, ref.col),
-      onRange: (ref) => this.rangeValues(ref as Sheet.RangeRef),
+      onRange: (ref) => this.rangeValues(ref as Sheet.RangeRef)
     });
   }
 
@@ -83,8 +83,7 @@ class $Sheet {
 
   /** O(1) 1-based lookup. Out of bounds → undefined. */
   cellAt(row: number, col: number): FormulaCell.Model | undefined {
-    if (row < 1 || row > this.rows || col < 1 || col > this.cols)
-      return undefined;
+    if (row < 1 || row > this.rows || col < 1 || col > this.cols) return undefined;
     return this.grid[row - 1][col - 1];
   }
 
@@ -126,7 +125,7 @@ class $Sheet {
       return this.parser.parse(body, {
         row: cell.row,
         col: cell.col,
-        sheet: 'Sheet1',
+        sheet: 'Sheet1'
       }) as FormulaLogic.CellValue;
     } catch (error) {
       return error instanceof (FormulaError as unknown as Function)

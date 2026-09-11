@@ -18,18 +18,12 @@ class $Playground {
   // plain fields, never mutated. A route never loads the others' code.
   readonly examples = examples;
   readonly routeComponents: Record<string, Component> = Object.fromEntries(
-    examples.map((example) => [
-      example.slug,
-      defineAsyncComponent(example.load),
-    ]),
+    examples.map((example) => [example.slug, defineAsyncComponent(example.load)])
   );
 
   // DERIVED — plain getters, reactive via leaf tracking.
   get activeExample(): ExampleEntry {
-    return (
-      this.examples.find((example) => example.slug === this.route.value) ??
-      this.examples[0]
-    );
+    return this.examples.find((example) => example.slug === this.route.value) ?? this.examples[0];
   }
 
   get activeComponent(): Component {

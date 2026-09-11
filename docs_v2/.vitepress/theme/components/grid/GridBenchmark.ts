@@ -24,7 +24,7 @@ import {
   cssOf,
   displayOf,
   isNumberOf,
-  numericOf,
+  numericOf
 } from '../../../../../examples/playground/src/examples/benchmarks/cell-logic';
 import { useGridArm } from '../../../../../examples/playground/src/examples/benchmarks/useGridArm';
 
@@ -35,7 +35,7 @@ class $GridBenchmark {
     return [
       { key: 'composable', tag: 'Arm A', label: 'Composable', accent: 'sky' },
       { key: 'ivue', tag: 'Arm B', label: 'ivue', accent: 'indigo' },
-      { key: 'pojo', tag: 'Arm C', label: 'POJO floor', accent: 'slate' },
+      { key: 'pojo', tag: 'Arm C', label: 'POJO floor', accent: 'slate' }
     ];
   }
 
@@ -47,7 +47,7 @@ class $GridBenchmark {
   static get MEASURED_HEAP(): Record<number, Record<GridBenchmark.ArmKey, string>> {
     return {
       [ROWS]: { composable: '77.3 MB', ivue: '5.7 MB', pojo: '4.5 MB' },
-      [ROWS_MILLION]: { composable: '757.7 MB', ivue: '41.7 MB', pojo: '40.5 MB' },
+      [ROWS_MILLION]: { composable: '757.7 MB', ivue: '41.7 MB', pojo: '40.5 MB' }
     };
   }
 
@@ -82,21 +82,21 @@ class $GridBenchmark {
   protected get $composable() {
     return useGridArm(
       (row: number, col: number) => this.makeComposableCell(row, col),
-      (cell) => cell.numericValue.value,
+      (cell) => cell.numericValue.value
     );
   }
 
   protected get $ivue() {
     return useGridArm(
       (row: number, col: number) => this.makeIvueCell(row, col),
-      (cell) => cell.numericValue.value,
+      (cell) => cell.numericValue.value
     );
   }
 
   protected get $pojo() {
     return useGridArm(
       (row: number, col: number) => this.makePojoCell(row, col),
-      (cell) => numericOf(cell.raw),
+      (cell) => numericOf(cell.raw)
     );
   }
 
@@ -136,7 +136,9 @@ class $GridBenchmark {
   }
 
   get hasAny() {
-    return this.$composable.hasModel.value || this.$ivue.hasModel.value || this.$pojo.hasModel.value;
+    return (
+      this.$composable.hasModel.value || this.$ivue.hasModel.value || this.$pojo.hasModel.value
+    );
   }
 
   get isMillionBuild() {

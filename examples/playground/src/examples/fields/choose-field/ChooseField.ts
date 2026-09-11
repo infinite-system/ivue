@@ -24,14 +24,13 @@ import {
   type IFnParameter,
   definePropTypes,
   propsWithDefaults,
-  Reactive,
+  Reactive
 } from '../../../ivue';
 import { Static } from '../../../Static';
 import { ServerApi } from '../server/ServerApi';
 import { Field } from '../Field';
 
 class $ChooseField extends Field.$Class {
-
   /** Sentinel `value` of the synthetic "Create …" option row — a live
    *  static knob (no `$`): a subclass can re-key it. */
   static get createOptionValue() {
@@ -71,7 +70,7 @@ class $ChooseField extends Field.$Class {
       clearIcon: { type: String as PropType<string> },
       /** New Value Mode */
       newValueMode: {
-        type: String as PropType<'add' | 'add-unique' | 'toggle' | undefined>,
+        type: String as PropType<'add' | 'add-unique' | 'toggle' | undefined>
       },
       /** === QSelect Overrides End === */
 
@@ -110,14 +109,12 @@ class $ChooseField extends Field.$Class {
       /** Create */
       createPath: { type: String as PropType<string> },
       createLabel: { type: String as PropType<string> },
-      createEntityAsOption: { type: Boolean as PropType<boolean> },
+      createEntityAsOption: { type: Boolean as PropType<boolean> }
     });
   }
 
   /** Params Defaults */
-  static override get propsDefaults(): ExtractPropDefaultTypes<
-    typeof $ChooseField.propsTypes
-  > {
+  static override get propsDefaults(): ExtractPropDefaultTypes<typeof $ChooseField.propsTypes> {
     return {
       ...super.propsDefaults,
 
@@ -178,7 +175,7 @@ class $ChooseField extends Field.$Class {
       /** Create */
       createPath: '', // POST endpoint enabling the create-new-option affordance.
       createLabel: '',
-      createEntityAsOption: true, // Show the create affordance as the first option row while typing.
+      createEntityAsOption: true // Show the create affordance as the first option row while typing.
     };
   }
 
@@ -192,13 +189,13 @@ class $ChooseField extends Field.$Class {
   static get emits() {
     return {
       'update:model-value': (value: any) => true,
-      remove: (details: IFnParameter<QSelectProps, 'onRemove', 0>) => true,
+      remove: (details: IFnParameter<QSelectProps, 'onRemove', 0>) => true
     };
   }
 
   constructor(
     public props: ChooseField.Props,
-    public emit: ChooseField.Emits,
+    public emit: ChooseField.Emits
   ) {
     super();
     this.activeVariantIndex.value = this.defaultActiveVariantIndex;
@@ -211,19 +208,19 @@ class $ChooseField extends Field.$Class {
       watch(
         () => this.props.options,
         () => this.applyFilter(this.searchTerm.value),
-        { immediate: true },
+        { immediate: true }
       );
     }
 
     // Server-side query changed (variant switch or prop change) → refetch.
     watch(
       () => this.serverQuerySignature,
-      () => this.onServerQueryChanged(),
+      () => this.onServerQueryChanged()
     );
     // Client-side refinement changed → re-filter the loaded options.
     watch(
       () => this.clientQuerySignature,
-      () => this.applyFilter(this.searchTerm.value),
+      () => this.applyFilter(this.searchTerm.value)
     );
   }
 
@@ -286,7 +283,7 @@ class $ChooseField extends Field.$Class {
   get model() {
     return computed({
       get: () => this.readModel(),
-      set: (value: any) => this.onModelWrite(value),
+      set: (value: any) => this.onModelWrite(value)
     });
   }
 
@@ -539,7 +536,7 @@ class $ChooseField extends Field.$Class {
     return [
       ...this.prependOptions,
       ...(this.fetchPath ? this.fetchedOptions.value : this.options),
-      ...this.appendOptions,
+      ...this.appendOptions
     ];
   }
 
@@ -548,9 +545,7 @@ class $ChooseField extends Field.$Class {
   }
 
   get labelKeys() {
-    return this.props.optionLabel
-      ? [this.props.optionLabel]
-      : this.props.optionLabelPriority;
+    return this.props.optionLabel ? [this.props.optionLabel] : this.props.optionLabelPriority;
   }
 
   get descriptionKeys() {
@@ -637,11 +632,11 @@ class $ChooseField extends Field.$Class {
     this.fetching.value = true;
     this.fetchedPages.value = {
       ...this.fetchedPages.value,
-      [this.fetchPage.value]: true,
+      [this.fetchPage.value]: true
     };
     try {
       const result = await ServerApi.Class.getPaginated<ChooseField.KeyValueRow>(
-        this.fetchFullPath,
+        this.fetchFullPath
       );
       this.lastFetchedCount.value = result.data.length;
       this.fetchPage.value++;
@@ -724,14 +719,12 @@ class $ChooseField extends Field.$Class {
     if (this.optionFilters.length) {
       refined = refined.filter((option) =>
         this.optionFilters.every(
-          (filter) => (option as ChooseField.KeyValueRow)?.[filter.key] === filter.value,
-        ),
+          (filter) => (option as ChooseField.KeyValueRow)?.[filter.key] === filter.value
+        )
       );
     }
     if (this.optionSort) {
-      refined = [...refined].sort((first, second) =>
-        this.compareBySort(first, second),
-      );
+      refined = [...refined].sort((first, second) => this.compareBySort(first, second));
     }
     return refined;
   }
@@ -758,7 +751,7 @@ class $ChooseField extends Field.$Class {
     return Object.values(option as ChooseField.KeyValueRow).some((cellValue) =>
       String(cellValue ?? '')
         .toLowerCase()
-        .includes(needle),
+        .includes(needle)
     );
   }
 
@@ -821,9 +814,9 @@ class $ChooseField extends Field.$Class {
         ...(this.props.optionLabel ? { [this.props.optionLabel]: text } : {}),
         createTerm: term,
         icon: 'add',
-        value: this.self.createOptionValue,
+        value: this.self.createOptionValue
       },
-      ...this.displayedOptions.value,
+      ...this.displayedOptions.value
     ];
   }
 
@@ -868,11 +861,10 @@ class $ChooseField extends Field.$Class {
         ? this.props.modelValue
         : this.props.modelValue
           ? [this.props.modelValue]
-          : []),
+          : [])
     ];
     return pools.find(
-      (option) =>
-        String(this.optionLabelOf(option)).trim().toLowerCase() === wanted,
+      (option) => String(this.optionLabelOf(option)).trim().toLowerCase() === wanted
     );
   }
 
@@ -885,15 +877,13 @@ class $ChooseField extends Field.$Class {
     return selected.some(
       (entry: any) =>
         this.optionValueOf(entry) === this.optionValueOf(option) &&
-        this.optionLabelOf(entry) === this.optionLabelOf(option),
+        this.optionLabelOf(entry) === this.optionLabelOf(option)
     );
   }
 
   selectCreated(created: ChooseField.KeyValueRow) {
     if (this.multiple) {
-      const current = Array.isArray(this.props.modelValue)
-        ? this.props.modelValue
-        : [];
+      const current = Array.isArray(this.props.modelValue) ? this.props.modelValue : [];
       this.updateModelValue([...current, created]);
     } else {
       this.updateModelValue(created);
@@ -911,7 +901,11 @@ class $ChooseField extends Field.$Class {
   onModelWrite(value: any) {
     const isArrayValue = Array.isArray(value);
     const lastAdded = isArrayValue ? value[value.length - 1] : value;
-    if ([lastAdded, (lastAdded as ChooseField.KeyValueRow)?.value].includes(this.self.createOptionValue)) {
+    if (
+      [lastAdded, (lastAdded as ChooseField.KeyValueRow)?.value].includes(
+        this.self.createOptionValue
+      )
+    ) {
       this.createOption();
       return;
     }
@@ -926,7 +920,6 @@ class $ChooseField extends Field.$Class {
     this.emit('remove', details);
   }
 }
-
 
 export namespace ChooseField {
   /* Identity */

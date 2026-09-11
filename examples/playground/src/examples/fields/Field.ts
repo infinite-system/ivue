@@ -12,7 +12,7 @@ import {
   definePropTypes,
   propsWithDefaults,
   Reactive,
-  type ExtractPropDefaultTypes,
+  type ExtractPropDefaultTypes
 } from '../../ivue';
 import { Static } from '../../Static';
 
@@ -36,13 +36,11 @@ class $Field {
        * subclass with ITS props and emit and hands it down, so every emit
        * leaves through the wrapper). Unset = this component's own Class.
        */
-      runner: { type: [Function, Object] as PropType<any> },
+      runner: { type: [Function, Object] as PropType<any> }
     });
   }
 
-  static get propsDefaults(): ExtractPropDefaultTypes<
-    typeof $Field.propsTypes
-  > {
+  static get propsDefaults(): ExtractPropDefaultTypes<typeof $Field.propsTypes> {
     return {
       modelValue: null,
       label: '',
@@ -52,7 +50,7 @@ class $Field {
       readonly: false,
       loading: false,
       outlined: true,
-      runner: null,
+      runner: null
     };
   }
 
@@ -71,11 +69,7 @@ class $Field {
    * field SFC is one line — `X.Class.runner(props, emit)` — and therefore
    * its own swap point.
    */
-  static runner<This extends typeof $Field>(
-    this: This,
-    props: any,
-    emit: any,
-  ): InstanceType<This> {
+  static runner<This extends typeof $Field>(this: This, props: any, emit: any): InstanceType<This> {
     const runner = props.runner;
     if (typeof runner === 'object' && runner !== null) return runner;
     const RunnerClass = (typeof runner === 'function' ? runner : this) as This;

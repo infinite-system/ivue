@@ -52,18 +52,18 @@ class $ChatMessage {
   /** the roles a row composes: a part per kind, and its own sections — built once per class by Static() */
   static get $kit() {
     return {
-      Text: { namespace: TextPart, vue: TextPartView },
-      Thinking: { namespace: ThinkingPart, vue: ThinkingPartView },
-      Attachment: { namespace: AttachmentPart, vue: AttachmentPartView },
-      System: { namespace: SystemPart, vue: SystemPartView },
-      ToolCall: { namespace: ToolCallPart, vue: ToolCallPartView },
-      ToolBatch: { namespace: ToolBatchPart, vue: ToolBatchPartView },
-      Gutter: { vue: MessageGutterView },
-      Head: { vue: MessageHeadView },
-      Stub: { vue: MessageStubView },
-      Parts: { vue: MessagePartsView },
-      Await: { vue: MessageAwaitView },
-      Foot: { vue: MessageFootView }
+      Text: { namespace: TextPart, view: TextPartView },
+      Thinking: { namespace: ThinkingPart, view: ThinkingPartView },
+      Attachment: { namespace: AttachmentPart, view: AttachmentPartView },
+      System: { namespace: SystemPart, view: SystemPartView },
+      ToolCall: { namespace: ToolCallPart, view: ToolCallPartView },
+      ToolBatch: { namespace: ToolBatchPart, view: ToolBatchPartView },
+      Gutter: { view: MessageGutterView },
+      Head: { view: MessageHeadView },
+      Stub: { view: MessageStubView },
+      Parts: { view: MessagePartsView },
+      Await: { view: MessageAwaitView },
+      Foot: { view: MessageFootView }
     } satisfies Kit.Of<ChatMessage.PartRole | ChatMessage.SectionRole>;
   }
 
@@ -320,7 +320,7 @@ class $ChatMessage {
   }
 
   partView(part: SessionLog.Part) {
-    return this.partEntry(part).vue;
+    return this.partEntry(part).view;
   }
 
   partKey(part: SessionLog.Part, at: number): string {

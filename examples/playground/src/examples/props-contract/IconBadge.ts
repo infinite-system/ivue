@@ -11,7 +11,7 @@ class $IconBadge extends Badge.$Class {
   static override get propsTypes() {
     return definePropTypes({
       ...super.propsTypes,
-      icon: { type: String },
+      icon: { type: String }
     });
   }
 

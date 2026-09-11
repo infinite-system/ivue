@@ -10,7 +10,7 @@ class $ContactAvatar {
   static get propsTypes() {
     return definePropTypes({
       name: { type: String as PropType<string>, required: true },
-      size: { type: Number as PropType<number> },
+      size: { type: Number as PropType<number> }
     });
   }
 
@@ -50,7 +50,7 @@ class $ContactAvatar {
       width: `${size}px`,
       height: `${size}px`,
       fontSize: `${Math.round(size * 0.42)}px`,
-      backgroundColor: this.backgroundColor,
+      backgroundColor: this.backgroundColor
     };
   }
 }

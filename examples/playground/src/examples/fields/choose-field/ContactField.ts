@@ -5,7 +5,7 @@ import {
   type ExtractPropDefaultTypes,
   definePropTypes,
   propsWithDefaults,
-  Reactive,
+  Reactive
 } from '../../../ivue';
 import { Static } from '../../../Static';
 import { ChooseField } from './ChooseField';
@@ -22,7 +22,6 @@ import { ChooseField } from './ChooseField';
  * templates.
  */
 class $ContactField extends ChooseField.$Class {
-
   /* Contract — the choose-field contract, preconfigured for contacts:
      chips on, server search + pagination against '/contact',
      contact-shaped label/description priorities — plus one prop of its
@@ -33,13 +32,11 @@ class $ContactField extends ChooseField.$Class {
       ...super.propsTypes,
 
       /** Compact display mode: smaller avatar, name only, denser rows. */
-      compact: { type: Boolean as PropType<boolean> },
+      compact: { type: Boolean as PropType<boolean> }
     });
   }
 
-  static override get propsDefaults(): ExtractPropDefaultTypes<
-    typeof $ContactField.propsTypes
-  > {
+  static override get propsDefaults(): ExtractPropDefaultTypes<typeof $ContactField.propsTypes> {
     return {
       ...super.propsDefaults,
 
@@ -60,7 +57,7 @@ class $ContactField extends ChooseField.$Class {
       createLabel: 'Create contact',
 
       /** Custom contact params. */
-      compact: false,
+      compact: false
     };
   }
 
@@ -118,10 +115,7 @@ class $ContactField extends ChooseField.$Class {
    * @extends @see {$ChooseField.newValueMode}
    */
   override get newValueMode() {
-    return (
-      super.newValueMode ??
-      (this.optionValue === 'email' ? 'add-unique' : super.newValueMode)
-    );
+    return super.newValueMode ?? (this.optionValue === 'email' ? 'add-unique' : super.newValueMode);
   }
 
   /** Full mode shows the email line under the name — when there is one. */

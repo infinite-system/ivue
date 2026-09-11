@@ -1,14 +1,5 @@
 <script lang="ts" setup>
-import {
-  QBtn,
-  QChip,
-  QIcon,
-  QItem,
-  QItemLabel,
-  QItemSection,
-  QSelect,
-  QTooltip,
-} from 'quasar';
+import { QBtn, QChip, QIcon, QItem, QItemLabel, QItemSection, QSelect, QTooltip } from 'quasar';
 
 import { ChooseField } from './ChooseField';
 
@@ -27,7 +18,7 @@ const {
   // computed refs
   model,
   // element refs
-  selectEl,
+  selectEl
 } = choose;
 
 /**
@@ -40,7 +31,7 @@ const slots = defineSlots<ChooseField.Slots>();
 const activeSlots = new Set(
   Object.keys(slots)
     .map((slotName) => slotName.replace(/^(before|after)--/, ''))
-    .concat(['prepend', 'selected-item', 'before-options', 'option', 'no-option']),
+    .concat(['prepend', 'selected-item', 'before-options', 'option', 'no-option'])
 );
 
 defineExpose(choose as ChooseField.Instance);
@@ -139,20 +130,14 @@ defineExpose(choose as ChooseField.Instance);
       <template v-else-if="choose.isOptionSlot(slot)">
         <slot name="before--option" v-bind="choose.slotScope(scope)" />
         <slot name="option" v-bind="choose.slotScope(scope)">
-          <q-item
-            v-bind="scope.itemProps"
-            class="ivue-choose__option"
-            :class="choose.optionClass"
-          >
+          <q-item v-bind="scope.itemProps" class="ivue-choose__option" :class="choose.optionClass">
             <q-item-section v-if="choose.optionIconOf(scope.opt)" avatar>
               <q-icon :name="choose.optionIconOf(scope.opt)" />
             </q-item-section>
             <q-item-section>
               <q-item-label v-if="scope.opt?.createTerm">
                 {{ choose.createLabel }}
-                <span class="ivue-choose__create-term">{{
-                  scope.opt.createTerm
-                }}</span>
+                <span class="ivue-choose__create-term">{{ scope.opt.createTerm }}</span>
               </q-item-label>
               <q-item-label v-else>
                 {{ choose.optionLabelOf(scope.opt) }}
@@ -184,16 +169,10 @@ defineExpose(choose as ChooseField.Instance);
             >
           </div>
           <!-- CREATE AFFORDANCE when nothing matches -->
-          <q-item
-            v-if="choose.canCreateFrom(scope)"
-            clickable
-            @click="choose.createOption()"
-          >
+          <q-item v-if="choose.canCreateFrom(scope)" clickable @click="choose.createOption()">
             <q-item-section avatar><q-icon name="add" /></q-item-section>
             <q-item-section>
-              <q-item-label>
-                {{ choose.createLabel }}: "{{ scope.inputValue }}"
-              </q-item-label>
+              <q-item-label> {{ choose.createLabel }}: "{{ scope.inputValue }}" </q-item-label>
             </q-item-section>
           </q-item>
           <q-item v-else>
@@ -300,5 +279,4 @@ defineExpose(choose as ChooseField.Instance);
   font-size: 18px;
   margin-right: 6px;
 }
-
 </style>

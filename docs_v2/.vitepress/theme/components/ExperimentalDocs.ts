@@ -55,7 +55,8 @@ class $ExperimentalDocs {
       sessionStorage.setItem(this.self.STORAGE_KEY, queryValue);
     }
     this.isVisible.value =
-      queryValue === '1' || (queryValue !== '0' && sessionStorage.getItem(this.self.STORAGE_KEY) === '1');
+      queryValue === '1' ||
+      (queryValue !== '0' && sessionStorage.getItem(this.self.STORAGE_KEY) === '1');
   }
 }
 

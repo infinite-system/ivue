@@ -98,7 +98,9 @@ class $FormulaLogic {
         return `=IF(A${rowNumber}>0,B${rowNumber},C${rowNumber})`;
       case 9:
         // Running sum, reset at the top of each RUNSUM_BLOCK-row block.
-        return row % this.RUNSUM_BLOCK === 0 ? `=A${rowNumber}` : `=J${rowNumber - 1}+A${rowNumber}`;
+        return row % this.RUNSUM_BLOCK === 0
+          ? `=A${rowNumber}`
+          : `=J${rowNumber - 1}+A${rowNumber}`;
       default:
         // Filler mesh: even columns are input data; odd columns sum the two
         // cells immediately to their left (one data, one formula) — a real
@@ -121,13 +123,9 @@ class $FormulaLogic {
 
   /** Structural FormulaError detection — avoids importing the parser here. */
   static isFormulaError(
-    value: FormulaLogic.CellValue,
+    value: FormulaLogic.CellValue
   ): value is { _error?: string; error?: string } {
-    return (
-      typeof value === 'object' &&
-      value !== null &&
-      ('_error' in value || 'error' in value)
-    );
+    return typeof value === 'object' && value !== null && ('_error' in value || 'error' in value);
   }
 
   /**
@@ -138,16 +136,13 @@ class $FormulaLogic {
     const trimmed = text.trim();
     if (trimmed.length === 0) return null;
     const asNumber = Number(trimmed);
-    return !Number.isNaN(asNumber) && Number.isFinite(asNumber)
-      ? asNumber
-      : text;
+    return !Number.isNaN(asNumber) && Number.isFinite(asNumber) ? asNumber : text;
   }
 
   /** Display string for a resolved value. */
   static displayOf(value: FormulaLogic.CellValue): string {
     if (value == null) return '·';
-    if (this.isFormulaError(value))
-      return String(value.error ?? value._error ?? '#ERR');
+    if (this.isFormulaError(value)) return String(value.error ?? value._error ?? '#ERR');
     if (typeof value === 'number') {
       return Number.isFinite(value)
         ? value.toLocaleString('en-US', { maximumFractionDigits: 2 })
@@ -174,10 +169,5 @@ export namespace FormulaLogic {
   export let Class = $Class; // selection — a variant grid swaps this
 
   /** A value a cell can resolve to. `FormulaError` is detected structurally. */
-  export type CellValue =
-    | number
-    | string
-    | boolean
-    | null
-    | { _error?: string; error?: string };
+  export type CellValue = number | string | boolean | null | { _error?: string; error?: string };
 }

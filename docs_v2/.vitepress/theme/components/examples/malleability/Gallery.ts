@@ -1,5 +1,10 @@
 import type { ExtractPropTypes, PropType } from 'vue';
-import { definePropTypes, propsWithDefaults, Reactive, type ExtractPropDefaultTypes } from '../../../../../../lib/Reactive';
+import {
+  definePropTypes,
+  propsWithDefaults,
+  Reactive,
+  type ExtractPropDefaultTypes
+} from '../../../../../../lib/Reactive';
 import { nestedProps } from '../../../../../../lib/nestedProps';
 import { Static } from '../../../../../../lib/Static';
 import { Kit } from '@kit/Kit';
@@ -12,7 +17,7 @@ import SnippetView from './Snippet.vue';
 class $Gallery {
   static get $kit() {
     return {
-      Snippet: { namespace: Snippet, vue: SnippetView },
+      Snippet: { namespace: Snippet, view: SnippetView }
     } satisfies Kit.Of<'Snippet'>;
   }
 
@@ -43,16 +48,16 @@ class $Gallery {
           'export namespace Counter {',
           '  export const $Class = $Counter;',
           '  export let Class = Reactive($Class);',
-          '}',
-        ].join('\n'),
-      },
+          '}'
+        ].join('\n')
+      }
     ];
   }
 
   static get propsTypes() {
     return definePropTypes({
       snippets: { type: Array as PropType<Snippet.Source[]> },
-      kit: { type: Object as PropType<Kit.Entry<typeof Gallery>> },
+      kit: { type: Object as PropType<Kit.Entry<typeof Gallery>> }
     });
   }
 

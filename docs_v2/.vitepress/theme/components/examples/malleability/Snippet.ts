@@ -1,6 +1,11 @@
 import type { ExtractPropTypes, PropType } from 'vue';
 import { ref } from 'vue';
-import { definePropTypes, propsWithDefaults, Reactive, type ExtractPropDefaultTypes } from '../../../../../../lib/Reactive';
+import {
+  definePropTypes,
+  propsWithDefaults,
+  Reactive,
+  type ExtractPropDefaultTypes
+} from '../../../../../../lib/Reactive';
 import { nestedProps } from '../../../../../../lib/nestedProps';
 import { Static } from '../../../../../../lib/Static';
 import { Kit } from '@kit/Kit';
@@ -16,9 +21,9 @@ import SnippetFootView from './SnippetFoot.vue';
 class $Snippet {
   static get $kit() {
     return {
-      Head: { vue: SnippetHeadView },
-      Foot: { vue: SnippetFootView },
-      Code: { namespace: Code, vue: CodeView },
+      Head: { view: SnippetHeadView },
+      Foot: { view: SnippetFootView },
+      Code: { namespace: Code, view: CodeView }
     } satisfies Kit.Of<Snippet.Role>;
   }
 
@@ -27,7 +32,7 @@ class $Snippet {
   static get propsTypes() {
     return definePropTypes({
       snippet: { type: Object as PropType<Snippet.Source>, required: true },
-      kit: { type: Object as PropType<Kit.Entry<typeof Snippet>> },
+      kit: { type: Object as PropType<Kit.Entry<typeof Snippet>> }
     });
   }
 
@@ -99,7 +104,11 @@ class $Snippet {
   /** the card paints its sections from the block's palette */
   get cardStyle(): Record<string, string> {
     const palette = this.palette;
-    return { '--snip-bg': palette.background, '--snip-fg': palette.foreground, '--snip-accent': palette.accent };
+    return {
+      '--snip-bg': palette.background,
+      '--snip-fg': palette.foreground,
+      '--snip-accent': palette.accent
+    };
   }
 
   get copyLabel(): string {
@@ -112,7 +121,8 @@ class $Snippet {
 
   /** the block's copy event, or the foot's button */
   onCopy(code: string) {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) navigator.clipboard.writeText(code).catch(() => undefined);
+    if (typeof navigator !== 'undefined' && navigator.clipboard)
+      navigator.clipboard.writeText(code).catch(() => undefined);
     this.copied.value = true;
     setTimeout(() => this.resetCopied(), this.self.COPIED_FOR_MS);
   }

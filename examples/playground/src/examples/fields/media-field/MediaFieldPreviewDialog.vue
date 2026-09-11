@@ -23,7 +23,7 @@ export interface MediaFieldPreviewDialogEmits {
 class $MediaFieldPreviewDialog {
   constructor(
     public props: MediaFieldPreviewDialogProps,
-    public emit: MediaFieldPreviewDialogEmits,
+    public emit: MediaFieldPreviewDialogEmits
   ) {}
 
   // --- state ---
@@ -57,9 +57,7 @@ class $MediaFieldPreviewDialog {
     return this.activeFile ? this.field.fileExtension(this.activeFile) : '';
   }
   get isRenamingActive() {
-    return (
-      !!this.activeFile && this.field.renameId.value === this.activeFile.id
-    );
+    return !!this.activeFile && this.field.renameId.value === this.activeFile.id;
   }
 
   beginRename() {
@@ -77,7 +75,7 @@ class $MediaFieldPreviewDialog {
   get isOpenModel() {
     return computed({
       get: () => this.isOpenValue(),
-      set: (open: boolean) => this.setOpen(open),
+      set: (open: boolean) => this.setOpen(open)
     });
   }
 
@@ -147,23 +145,15 @@ const {
   isImageLoading,
   isMaximized,
   // computed refs
-  isOpenModel,
+  isOpenModel
 } = dialog;
 
 defineExpose(dialog as MediaFieldPreviewDialog.Instance);
 </script>
 
 <template>
-  <q-dialog
-    v-model="isOpenModel"
-    class="media-preview"
-    :maximized="isMaximized"
-    no-shake
-  >
-    <q-card
-      class="media-preview__card"
-      :class="{ 'media-preview__card--maximized': isMaximized }"
-    >
+  <q-dialog v-model="isOpenModel" class="media-preview" :maximized="isMaximized" no-shake>
+    <q-card class="media-preview__card" :class="{ 'media-preview__card--maximized': isMaximized }">
       <!-- STAGE -->
       <div class="media-preview__stage" v-if="dialog.activeFile">
         <img
@@ -175,11 +165,7 @@ defineExpose(dialog as MediaFieldPreviewDialog.Instance);
           @error="dialog.onImageError()"
         />
         <div v-else class="media-preview__placeholder">
-          <q-icon
-            :name="dialog.field.fileIcon(dialog.activeFile)"
-            size="72px"
-            color="grey-5"
-          />
+          <q-icon :name="dialog.field.fileIcon(dialog.activeFile)" size="72px" color="grey-5" />
           <div class="media-preview__placeholder-extension">
             {{ dialog.activeExtension }}
           </div>

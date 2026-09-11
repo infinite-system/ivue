@@ -31,9 +31,7 @@ const example = new InheritanceExample.Class();
       <button class="d-btn" type="button" @click="example.bumpComputedDiscount()">
         deeper sale
       </button>
-      <button class="d-btn" type="button" @click="example.toggleComputedTax()">
-        toggle tax
-      </button>
+      <button class="d-btn" type="button" @click="example.toggleComputedTax()">toggle tax</button>
     </div>
   </DemoBox>
 </template>

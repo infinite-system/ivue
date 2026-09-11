@@ -1,4 +1,12 @@
-import { onMounted, onUnmounted, ref, shallowRef, useId, type ExtractPropTypes, type PropType } from 'vue';
+import {
+  onMounted,
+  onUnmounted,
+  ref,
+  shallowRef,
+  useId,
+  type ExtractPropTypes,
+  type PropType
+} from 'vue';
 import { useRoute } from 'vitepress';
 import { definePropTypes, propsWithDefaults, Reactive } from '../../../../lib/Reactive';
 import { Static } from '../../../../lib/Static';
@@ -36,7 +44,7 @@ class $NewsletterSignup {
 
   static get propsTypes() {
     return definePropTypes({
-      placement: { type: String as PropType<NewsletterSignup.Placement>, required: true },
+      placement: { type: String as PropType<NewsletterSignup.Placement>, required: true }
     });
   }
 
@@ -111,10 +119,7 @@ class $NewsletterSignup {
 
   // DERIVED
   get isBlogPost() {
-    return (
-      /^\/blog\/.+/.test(this.route.path) &&
-      !this.route.path.endsWith('/blog/')
-    );
+    return /^\/blog\/.+/.test(this.route.path) && !this.route.path.endsWith('/blog/');
   }
 
   /** toast+pill ride every NON-blog-post page (desktop) — a post already
@@ -128,10 +133,7 @@ class $NewsletterSignup {
   }
 
   get cardVisible() {
-    return (
-      this.belongsHere &&
-      (this.placement !== 'toast' || this.toastVisible.value)
-    );
+    return this.belongsHere && (this.placement !== 'toast' || this.toastVisible.value);
   }
 
   get dismissable() {
@@ -174,10 +176,7 @@ class $NewsletterSignup {
     return !this.succeeded;
   }
   get quickLeadVisible() {
-    return (
-      (this.placement === 'toast' || this.placement === 'aside') &&
-      !this.succeeded
-    );
+    return (this.placement === 'toast' || this.placement === 'aside') && !this.succeeded;
   }
   get buttonLabel() {
     return this.sending ? 'Joining…' : 'Join the list';
@@ -200,14 +199,8 @@ class $NewsletterSignup {
     this.mounted.value = true;
     if (this.placement !== 'toast') return;
     window.addEventListener('ivue:newsletter-open', this.onOpenRequested);
-    const dismissedAt = Number(
-      localStorage.getItem(this.self.DISMISSED_KEY) ?? 0,
-    );
-    if (
-      Date.now() - dismissedAt <
-      this.self.DISMISS_DAYS * 86_400_000
-    )
-      return;
+    const dismissedAt = Number(localStorage.getItem(this.self.DISMISSED_KEY) ?? 0);
+    if (Date.now() - dismissedAt < this.self.DISMISS_DAYS * 86_400_000) return;
     window.setTimeout(() => this.revealToast(), 9_000);
   }
 
@@ -264,7 +257,7 @@ class $NewsletterSignup {
       // interact — the passive "Success!" badge never shows
       appearance: 'interaction-only',
       callback: (token: string) => this.onTurnstileToken(token),
-      'expired-callback': () => this.onTurnstileToken(''),
+      'expired-callback': () => this.onTurnstileToken('')
     });
   }
 
@@ -296,8 +289,7 @@ class $NewsletterSignup {
     if (!this.email.value || this.sending) return;
     if (!this.self.ENDPOINT) {
       this.state.value = 'error';
-      this.message.value =
-        'Signups open very soon — follow @evgenykalash on X meanwhile.';
+      this.message.value = 'Signups open very soon — follow @evgenykalash on X meanwhile.';
       return;
     }
     this.state.value = 'sending'; // guard double-submits through the token wait
@@ -312,10 +304,8 @@ class $NewsletterSignup {
           // the drip sends at the subscriber's LOCAL morning — the
           // browser knows the IANA zone for free
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? '',
-          ...(this.turnstileToken.value
-            ? { turnstileToken: this.turnstileToken.value }
-            : {}),
-        }),
+          ...(this.turnstileToken.value ? { turnstileToken: this.turnstileToken.value } : {})
+        })
       });
       const payload = await response.json().catch(() => ({}));
       if (response.ok) {
@@ -327,13 +317,11 @@ class $NewsletterSignup {
       } else {
         this.state.value = 'error';
         this.message.value =
-          payload.error ??
-          'Could not subscribe right now — try again in a minute.';
+          payload.error ?? 'Could not subscribe right now — try again in a minute.';
       }
     } catch {
       this.state.value = 'error';
-      this.message.value =
-        'Could not subscribe right now — try again in a minute.';
+      this.message.value = 'Could not subscribe right now — try again in a minute.';
     } finally {
       // tokens are single-use — a fresh widget state for any retry
       this.resetTurnstile();

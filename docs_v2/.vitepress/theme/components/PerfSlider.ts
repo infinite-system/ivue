@@ -73,7 +73,9 @@ class $PerfSlider {
   }
 
   get isNarrowScreen() {
-    return typeof window !== 'undefined' && window.matchMedia(this.self.NARROW_SCREEN_QUERY).matches;
+    return (
+      typeof window !== 'undefined' && window.matchMedia(this.self.NARROW_SCREEN_QUERY).matches
+    );
   }
 
   /** Whether a dot (1-based, as `v-for="index in slideCount"` counts) is the active slide. */
@@ -106,7 +108,8 @@ class $PerfSlider {
   }
 
   measureActiveSlide() {
-    const slide = this.trackElement.value?.children[this.activeIndex.value] as HTMLElement | undefined;
+    const slide = this.trackElement.value?.children[this.activeIndex.value] as
+      HTMLElement | undefined;
     if (!slide) return;
     this.viewportHeight.value = slide.offsetHeight;
     this.observe(slide);
@@ -138,7 +141,8 @@ class $PerfSlider {
   onTouchEnd(event: TouchEvent) {
     if (this.isNarrowScreen) return;
     const deltaX = (event.changedTouches[0]?.clientX ?? 0) - this.touchStartX.value;
-    if (Math.abs(deltaX) > this.self.SWIPE_THRESHOLD_PX) this.goTo(this.activeIndex.value + (deltaX < 0 ? 1 : -1));
+    if (Math.abs(deltaX) > this.self.SWIPE_THRESHOLD_PX)
+      this.goTo(this.activeIndex.value + (deltaX < 0 ? 1 : -1));
   }
 }
 

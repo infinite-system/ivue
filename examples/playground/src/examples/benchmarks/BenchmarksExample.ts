@@ -2,12 +2,7 @@
 import { ref } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
-import {
-  INSTANCE_COUNT,
-  benchIvue,
-  benchReactive,
-  benchComposable,
-} from './creationBench';
+import { INSTANCE_COUNT, benchIvue, benchReactive, benchComposable } from './creationBench';
 
 class $BenchmarksExample {
   static readonly CALL_COUNT = 200_000;

@@ -42,11 +42,7 @@ const { temp, fired, lastChange } = sensor;
       />
     </div>
     <div class="d-row">
-      <button
-        class="d-btn primary"
-        type="button"
-        @click="sensor.toggleWatch()"
-      >
+      <button class="d-btn primary" type="button" @click="sensor.toggleWatch()">
         {{ sensor.toggleLabel }}
       </button>
       <button class="d-btn" type="button" @click="sensor.suspend">Suspend (reset: false)</button>

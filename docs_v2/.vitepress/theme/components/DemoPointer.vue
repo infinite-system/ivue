@@ -8,7 +8,7 @@ const demo = new DemoPointer.Class();
 // the state destructure
 const {
   // element refs
-  padEl,
+  padEl
 } = demo;
 </script>
 

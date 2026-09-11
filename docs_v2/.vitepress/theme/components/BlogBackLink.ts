@@ -51,7 +51,7 @@ class $BlogBackLink {
     onUnmounted(() => this.onUnmount());
     watch(
       () => this.route.path,
-      (path) => this.onRouteChange(path),
+      (path) => this.onRouteChange(path)
     );
   }
 

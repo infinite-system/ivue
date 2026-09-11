@@ -8,18 +8,14 @@ const project = board.project;
 // the state destructure
 const {
   // state refs
-  newTaskTitle,
+  newTaskTitle
 } = board;
 </script>
 
 <template>
   <div class="board">
     <div class="board__add">
-      <input
-        v-model="newTaskTitle"
-        placeholder="add a task…"
-        @keyup.enter="board.submitTask()"
-      />
+      <input v-model="newTaskTitle" placeholder="add a task…" @keyup.enter="board.submitTask()" />
       <button class="btn primary" type="button" @click="board.submitTask()">add</button>
     </div>
     <div class="board__filters">
@@ -37,11 +33,7 @@ const {
     <ul class="board__list">
       <li v-for="task in project.visibleTasks" :key="task.id">
         <label :class="{ done: task.done }">
-          <input
-            type="checkbox"
-            :checked="task.done"
-            @change="project.toggleTask(task.id)"
-          />
+          <input type="checkbox" :checked="task.done" @change="project.toggleTask(task.id)" />
           {{ task.title }}
         </label>
       </li>
