@@ -29,7 +29,12 @@ describe('ConfiguredChat', () => {
     const settings = ChatSettings.Class.use();
     const shipped = hosted(() => new Chat.Class());
     const configured = hosted(() => new ConfiguredChat.Class());
-    const pinned = hosted(() => new ConfiguredChat.Class({ kit: { namespace: ConfiguredChat, vue: {} as never, props: { theme: 'terminal' } } }));
+    const pinned = hosted(
+      () =>
+        new ConfiguredChat.Class({
+          kit: { namespace: ConfiguredChat, vue: {} as never, props: { theme: 'terminal' } }
+        })
+    );
     expect(configured.instance.theme).toBe('midnight');
     settings.theme.value = 'ivory';
     settings.density.value = 'compact';
@@ -45,7 +50,11 @@ describe('ConfiguredChat', () => {
     expect(ChatVariants.Class.tree('shipped').namespace).toBe(ConfiguredChat);
     expect(ChatVariants.Class.tree('bubbles').namespace.derivedFrom).toBe(ConfiguredChat);
     expect(ChatVariants.Class.tree('nope').id).toBe('shipped');
-    expect(ConfiguredChat.Class.$kit.Message).toBe(Chat.Class.$kit.Message === ConfiguredChat.Class.$kit.Message ? Chat.Class.$kit.Message : ConfiguredChat.Class.$kit.Message);
+    expect(ConfiguredChat.Class.$kit.Message).toBe(
+      Chat.Class.$kit.Message === ConfiguredChat.Class.$kit.Message
+        ? Chat.Class.$kit.Message
+        : ConfiguredChat.Class.$kit.Message
+    );
     pinned.unmount();
     configured.unmount();
     shipped.unmount();

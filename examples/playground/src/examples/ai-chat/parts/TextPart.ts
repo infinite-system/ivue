@@ -23,7 +23,7 @@ class $TextPart {
     watch(
       () => this.html,
       () => this.colour(),
-      { flush: 'post' },
+      { flush: 'post' }
     );
   }
 
@@ -46,7 +46,9 @@ class $TextPart {
     if (!this.isStreamingTail) return Markdown.Class.render(this.text);
     const self = this.self;
     const marked = this.text.replace(/(\S+)(\s*)$/, `${self.TOKEN_OPEN}$1${self.TOKEN_CLOSE}$2`);
-    return Markdown.Class.render(marked).replace(self.TOKEN_OPEN, '<span class="ac-tok">').replace(self.TOKEN_CLOSE, '</span>');
+    return Markdown.Class.render(marked)
+      .replace(self.TOKEN_OPEN, '<span class="ac-tok">')
+      .replace(self.TOKEN_CLOSE, '</span>');
   }
 
   /** The one cast per class: instance code reads its own statics here. */

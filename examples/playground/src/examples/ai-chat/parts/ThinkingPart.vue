@@ -5,7 +5,9 @@ import { ThinkingPart } from './ThinkingPart';
 
 const props = defineProps<Part.Props<SessionLog.ThinkingPart>>();
 
-const model = new ((props.kit?.namespace.Class as typeof ThinkingPart.Class | undefined) ?? ThinkingPart.Class)(props);
+const model = new (
+  (props.kit?.namespace.Class as typeof ThinkingPart.Class | undefined) ?? ThinkingPart.Class
+)(props);
 </script>
 
 <template>

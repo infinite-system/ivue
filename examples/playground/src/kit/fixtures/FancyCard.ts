@@ -12,7 +12,7 @@ class $FancyCard extends Card.$Class {
       ...super.$kit,
       Head: { vue: FancyHeadView },
       Body: { vue: GroupedBodyView },
-      Frame: { vue: FancyFrameView },
+      Frame: { vue: FancyFrameView }
     };
   }
 }

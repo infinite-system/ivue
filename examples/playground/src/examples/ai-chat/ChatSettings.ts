@@ -11,12 +11,12 @@ class $ChatSettings {
     { value: 'midnight', label: 'Midnight', hint: 'the shipped dark palette' },
     { value: 'light', label: 'Light', hint: 'the shipped light palette' },
     { value: 'ivory', label: 'Ivory', hint: 'paper and ink' },
-    { value: 'terminal', label: 'Terminal', hint: 'phosphor on black, mono' },
+    { value: 'terminal', label: 'Terminal', hint: 'phosphor on black, mono' }
   ];
 
   static readonly DENSITIES: ChatSettings.Option<ChatSettings.Density>[] = [
     { value: 'cozy', label: 'Cozy', hint: 'room to read' },
-    { value: 'compact', label: 'Compact', hint: 'more thread per screen' },
+    { value: 'compact', label: 'Compact', hint: 'more thread per screen' }
   ];
 
   protected static singleton: ChatSettings.Model | null = null;

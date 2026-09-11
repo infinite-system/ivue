@@ -23,7 +23,9 @@ describe('ModelPicker', () => {
     const picker = hosted(() => new ModelPicker.Class({ composer })).instance;
     expect(picker.models).toBe(composer.models);
     expect(picker.pickedLabel).toBe('Balanced');
-    const widths = picker.models.map((model) => Number.parseInt(picker.speedStyle(model).width, 10));
+    const widths = picker.models.map((model) =>
+      Number.parseInt(picker.speedStyle(model).width, 10)
+    );
     expect(Math.max(...widths)).toBe(100);
     expect(widths.every((width) => width > 0 && width <= 100)).toBe(true);
     expect(picker.waitStyle(picker.models[2]).width).toBe('100%');
@@ -39,7 +41,8 @@ describe('ModelPicker', () => {
     expect(picker.isPicked(picker.models[2])).toBe(true);
     expect(picker.cardClass(picker.models[2])['ac-picked']).toBe(true);
 
-    const key = (name: string) => picker.onKeydown({ key: name, preventDefault: () => undefined } as KeyboardEvent);
+    const key = (name: string) =>
+      picker.onKeydown({ key: name, preventDefault: () => undefined } as KeyboardEvent);
     key('ArrowUp'); // opens on the picked card, then steps up
     expect(picker.open.value).toBe(true);
     expect(picker.cursor.value).toBe(1);
@@ -55,7 +58,9 @@ describe('ModelPicker', () => {
 
     picker.show();
     const inside = {} as Node;
-    picker.rootElement.value = { contains: (node: Node) => node === inside } as unknown as HTMLElement;
+    picker.rootElement.value = {
+      contains: (node: Node) => node === inside
+    } as unknown as HTMLElement;
     picker.onDocumentPointerDown({ target: inside } as unknown as PointerEvent);
     expect(picker.open.value).toBe(true);
     picker.onDocumentPointerDown({ target: {} } as unknown as PointerEvent);

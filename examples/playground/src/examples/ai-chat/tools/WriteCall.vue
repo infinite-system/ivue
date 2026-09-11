@@ -4,7 +4,9 @@ import type { ToolCallModel } from './ToolCallModel';
 
 const props = defineProps<ToolCallModel.Props>();
 
-const model = new ((props.kit?.namespace.Class as typeof WriteCall.Class | undefined) ?? WriteCall.Class)(props);
+const model = new (
+  (props.kit?.namespace.Class as typeof WriteCall.Class | undefined) ?? WriteCall.Class
+)(props);
 </script>
 
 <template>
@@ -17,11 +19,26 @@ const model = new ((props.kit?.namespace.Class as typeof WriteCall.Class | undef
           <span class="ac-tag">{{ model.lineCountLabel }}</span>
           <span v-if="model.wasOverwrite" class="ac-tag">overwrote</span>
         </h5>
-        <component :is="model.kit.CodeBlock.vue" :kit="model.kit.CodeBlock" :code="model.content" :lang="model.language" :cap="model.cap" :start-line="1" />
+        <component
+          :is="model.kit.CodeBlock.vue"
+          :kit="model.kit.CodeBlock"
+          :code="model.content"
+          :lang="model.language"
+          :cap="model.cap"
+          :start-line="1"
+        />
       </section>
       <section v-if="model.showsError" class="ac-tool-section">
         <h5>error</h5>
-        <component :is="model.kit.CodeBlock.vue" :kit="model.kit.CodeBlock" :code="model.resultText" lang="text" :cap="model.cap" tone="error" wrap />
+        <component
+          :is="model.kit.CodeBlock.vue"
+          :kit="model.kit.CodeBlock"
+          :code="model.resultText"
+          lang="text"
+          :cap="model.cap"
+          tone="error"
+          wrap
+        />
       </section>
       <component :is="model.kit.Foot.vue" :model="model" />
     </div>

@@ -19,12 +19,22 @@ class $FilesPanel {
   /** the one role the panel composes: its own scroller over files and their open records */
   static get $kit() {
     return {
-      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView },
+      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView }
     } satisfies Kit.Of<FilesPanel.Role>;
   }
 
-  static readonly FILE_TOOLS: Record<string, keyof FilesPanel.Counts> = { Read: 'reads', Edit: 'edits', NotebookEdit: 'edits', Write: 'writes' };
-  static readonly KIND_LABELS: Record<FilesPanel.Kind, string> = { all: 'All', reads: 'Read', edits: 'Edited', writes: 'Written' };
+  static readonly FILE_TOOLS: Record<string, keyof FilesPanel.Counts> = {
+    Read: 'reads',
+    Edit: 'edits',
+    NotebookEdit: 'edits',
+    Write: 'writes'
+  };
+  static readonly KIND_LABELS: Record<FilesPanel.Kind, string> = {
+    all: 'All',
+    reads: 'Read',
+    edits: 'Edited',
+    writes: 'Written'
+  };
   /** a record's diff shows this many lines before it folds */
   static readonly DIFF_CAP = 24;
 
@@ -56,7 +66,10 @@ class $FilesPanel {
   }
 
   get kindOptions(): { value: FilesPanel.Kind; label: string }[] {
-    return (Object.keys(this.self.KIND_LABELS) as FilesPanel.Kind[]).map((value) => ({ value, label: this.self.KIND_LABELS[value] }));
+    return (Object.keys(this.self.KIND_LABELS) as FilesPanel.Kind[]).map((value) => ({
+      value,
+      label: this.self.KIND_LABELS[value]
+    }));
   }
 
   get chat(): Chat.Model {
@@ -106,7 +119,9 @@ class $FilesPanel {
       if (!row.message) continue;
       this.collect(row.message, files);
     }
-    return [...files.values()].sort((left, right) => right.count - left.count || left.path.localeCompare(right.path));
+    return [...files.values()].sort(
+      (left, right) => right.count - left.count || left.path.localeCompare(right.path)
+    );
   }
 
   /** the files the search and the kind leave: every word of the query somewhere in the path, and a touch of the kind */
@@ -162,7 +177,6 @@ class $FilesPanel {
     return this.expanded.value.has(file.path);
   }
 
-
   fileClass(row: FilesPanel.Row): Record<string, boolean> {
     return { 'ac-open': this.isExpanded(row.file) };
   }
@@ -179,13 +193,16 @@ class $FilesPanel {
     return this.openRecords.value.has(record.id);
   }
 
-
   /** the record folded: how many lines it added and removed, or what it read */
   diffSummary(record: FilesPanel.Record): string {
     if (record.kind === 'reads') return this.diffOf(record)[0].text;
     const input = record.call.input;
-    const added = record.kind === 'writes' ? this.lineCount(input.content) : this.lineCount(input.new_string ?? input.new_source);
-    const removed = record.kind === 'writes' ? 0 : this.lineCount(input.old_string ?? input.old_source);
+    const added =
+      record.kind === 'writes'
+        ? this.lineCount(input.content)
+        : this.lineCount(input.new_string ?? input.new_source);
+    const removed =
+      record.kind === 'writes' ? 0 : this.lineCount(input.old_string ?? input.old_source);
     const pieces: string[] = [];
     if (added) pieces.push(`+${added.toLocaleString('en-US')}`);
     if (removed) pieces.push(`−${removed.toLocaleString('en-US')}`);
@@ -208,22 +225,35 @@ class $FilesPanel {
     if (record.kind === 'reads') {
       const offset = input.offset;
       const limit = input.limit;
-      const range = offset === undefined && limit === undefined ? 'whole file' : `from line ${Number(offset ?? 1).toLocaleString('en-US')}${limit !== undefined ? `, ${Number(limit).toLocaleString('en-US')} lines` : ''}`;
+      const range =
+        offset === undefined && limit === undefined
+          ? 'whole file'
+          : `from line ${Number(offset ?? 1).toLocaleString('en-US')}${limit !== undefined ? `, ${Number(limit).toLocaleString('en-US')} lines` : ''}`;
       return [{ sign: ' ', text: `read ${range}` }];
     }
     if (record.kind === 'writes') {
-      for (const line of String(input.content ?? '').split('\n')) lines.push({ sign: '+', text: line });
+      for (const line of String(input.content ?? '').split('\n'))
+        lines.push({ sign: '+', text: line });
     } else {
-      for (const line of String(input.old_string ?? input.old_source ?? '').split('\n')) if (line || lines.length) lines.push({ sign: '-', text: line });
-      for (const line of String(input.new_string ?? input.new_source ?? '').split('\n')) lines.push({ sign: '+', text: line });
+      for (const line of String(input.old_string ?? input.old_source ?? '').split('\n'))
+        if (line || lines.length) lines.push({ sign: '-', text: line });
+      for (const line of String(input.new_string ?? input.new_source ?? '').split('\n'))
+        lines.push({ sign: '+', text: line });
     }
     const cap = this.self.DIFF_CAP;
     if (lines.length <= cap) return lines;
-    return [...lines.slice(0, cap), { sign: ' ', text: `… ${(lines.length - cap).toLocaleString('en-US')} more lines` }];
+    return [
+      ...lines.slice(0, cap),
+      { sign: ' ', text: `… ${(lines.length - cap).toLocaleString('en-US')} more lines` }
+    ];
   }
 
   lineClass(line: FilesPanel.DiffLine): Record<string, boolean> {
-    return { 'ac-dl-add': line.sign === '+', 'ac-dl-del': line.sign === '-', 'ac-dl-ctx': line.sign === ' ' };
+    return {
+      'ac-dl-add': line.sign === '+',
+      'ac-dl-del': line.sign === '-',
+      'ac-dl-ctx': line.sign === ' '
+    };
   }
 
   /** the plain text a row projects, for the scroller's copy */
@@ -278,9 +308,24 @@ class $FilesPanel {
   protected flatten(): FilesPanel.Row[] {
     const rows: FilesPanel.Row[] = [];
     for (const file of this.files) {
-      rows.push({ id: `f:${file.path}`, body: '', position: String(rows.length + 1), kind: 'file', file, record: null });
+      rows.push({
+        id: `f:${file.path}`,
+        body: '',
+        position: String(rows.length + 1),
+        kind: 'file',
+        file,
+        record: null
+      });
       if (!this.expanded.value.has(file.path)) continue;
-      for (const record of file.records) rows.push({ id: `r:${record.id}`, body: '', position: String(rows.length + 1), kind: 'record', file, record });
+      for (const record of file.records)
+        rows.push({
+          id: `r:${record.id}`,
+          body: '',
+          position: String(rows.length + 1),
+          kind: 'record',
+          file,
+          record
+        });
     }
     return rows;
   }
@@ -292,15 +337,33 @@ class $FilesPanel {
 
   protected collect(message: SessionLog.Message, files: Map<string, FilesPanel.File>) {
     for (const part of message.parts) {
-      const calls = part.kind === 'tool_call' ? [part.call] : part.kind === 'tool_batch' ? part.calls : [];
+      const calls =
+        part.kind === 'tool_call' ? [part.call] : part.kind === 'tool_batch' ? part.calls : [];
       for (const call of calls) {
         const kind = this.self.FILE_TOOLS[call.name];
         const path = call.input.file_path ?? call.input.notebook_path;
         if (!kind || typeof path !== 'string' || !path) continue;
-        const file = files.get(path) ?? { path, name: path.split('/').pop() ?? path, dir: path.split('/').slice(0, -1).join('/'), reads: 0, edits: 0, writes: 0, count: 0, lastIndex: message.index, records: [] };
+        const file = files.get(path) ?? {
+          path,
+          name: path.split('/').pop() ?? path,
+          dir: path.split('/').slice(0, -1).join('/'),
+          reads: 0,
+          edits: 0,
+          writes: 0,
+          count: 0,
+          lastIndex: message.index,
+          records: []
+        };
         file[kind] += 1;
         file.count += 1;
-        file.records.push({ id: call.id, tool: call.name, kind, messageIndex: message.index, at: message.timestamp, call });
+        file.records.push({
+          id: call.id,
+          tool: call.name,
+          kind,
+          messageIndex: message.index,
+          at: message.timestamp,
+          call
+        });
         file.lastIndex = Math.max(file.lastIndex, message.index);
         files.set(path, file);
       }

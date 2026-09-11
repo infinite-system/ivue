@@ -1,4 +1,4 @@
-import { Static } from '../Static'
+import { Static } from '../Static';
 
 /**
  * LenisUtils — the fork's pure helpers: the maths the lerp and the clamp
@@ -15,7 +15,7 @@ class $LenisUtils {
    * @returns Clamped value
    */
   static clamp(min: number, input: number, max: number) {
-    return Math.max(min, Math.min(input, max))
+    return Math.max(min, Math.min(input, max));
   }
 
   /**
@@ -26,7 +26,7 @@ class $LenisUtils {
    * @returns Truncated value
    */
   static truncate(value: number, decimals = 0) {
-    return parseFloat(value.toFixed(decimals))
+    return parseFloat(value.toFixed(decimals));
   }
 
   /**
@@ -38,7 +38,7 @@ class $LenisUtils {
    * @returns Interpolated value
    */
   static lerp(x: number, y: number, t: number) {
-    return (1 - t) * x + t * y
+    return (1 - t) * x + t * y;
   }
 
   /**
@@ -52,7 +52,7 @@ class $LenisUtils {
    * @returns Damped value
    */
   static damp(x: number, y: number, lambda: number, deltaTime: number) {
-    return this.lerp(x, y, 1 - Math.exp(-lambda * deltaTime))
+    return this.lerp(x, y, 1 - Math.exp(-lambda * deltaTime));
   }
 
   /**
@@ -64,24 +64,24 @@ class $LenisUtils {
    * @returns Modulo
    */
   static modulo(n: number, d: number) {
-    return ((n % d) + d) % d
+    return ((n % d) + d) % d;
   }
 
   /** A function that runs `delay` ms after its last call, with that call's arguments and `this`. */
   static debounce<CB extends (...args: any[]) => void>(callback: CB, delay: number) {
-    let timer: ReturnType<typeof setTimeout> | undefined
+    let timer: ReturnType<typeof setTimeout> | undefined;
     return function <T>(this: T, ...args: Parameters<typeof callback>) {
-      let context = this
-      clearTimeout(timer)
+      let context = this;
+      clearTimeout(timer);
       timer = setTimeout(() => {
-        timer = undefined
-        callback.apply(context, args)
-      }, delay)
-    }
+        timer = undefined;
+        callback.apply(context, args);
+      }, delay);
+    };
   }
 }
 
 export namespace LenisUtils {
-  export const $Class = Static($LenisUtils) // anchor — it declares statics
-  export let Class = $Class // plain — statics only
+  export const $Class = Static($LenisUtils); // anchor — it declares statics
+  export let Class = $Class; // plain — statics only
 }

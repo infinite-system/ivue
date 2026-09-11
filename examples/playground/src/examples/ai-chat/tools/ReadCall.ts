@@ -23,7 +23,9 @@ class $ReadCall extends ToolCallModel.$Class {
   }
 
   get isImage(): boolean {
-    return this.hasImages || /\.(png|jpe?g|gif|webp|avif)$/i.test(String(this.input.file_path ?? ''));
+    return (
+      this.hasImages || /\.(png|jpe?g|gif|webp|avif)$/i.test(String(this.input.file_path ?? ''))
+    );
   }
 
   get rangeLabel(): string {
@@ -51,7 +53,9 @@ class $ReadCall extends ToolCallModel.$Class {
   get lineCountLabel(): string {
     const file = this.structured.file as { numLines?: number; totalLines?: number } | undefined;
     if (!file?.numLines) return '';
-    return file.totalLines && file.totalLines !== file.numLines ? `${file.numLines} of ${file.totalLines} lines` : `${file.numLines} lines`;
+    return file.totalLines && file.totalLines !== file.numLines
+      ? `${file.numLines} of ${file.totalLines} lines`
+      : `${file.numLines} lines`;
   }
 
   get showsCode(): boolean {
@@ -68,7 +72,9 @@ class $ReadCall extends ToolCallModel.$Class {
 
   override get sections(): ToolCallModel.Section[] {
     if (!this.resultText) return [];
-    return [{ title: this.filePath, code: this.code, lang: this.language, startLine: this.startLine }];
+    return [
+      { title: this.filePath, code: this.code, lang: this.language, startLine: this.startLine }
+    ];
   }
 }
 

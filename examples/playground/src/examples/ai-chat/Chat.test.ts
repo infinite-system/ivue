@@ -20,19 +20,69 @@ import type { SessionLog } from './SessionLog';
 import { hosted } from '../virtual-scroller/hosted';
 
 const PAGE_SIZE = 3;
-const message = (id: string, role: SessionLog.Role, text: string, extra: Partial<SessionLog.Message> = {}): SessionLog.Message => ({ id, index: 0, role, timestamp: 1_000 + Number(id.replace(/\D/g, '')), parts: [{ kind: 'text', text }], sidechain: false, ...extra });
-const call = (id: string, name: string): SessionLog.ToolCall => ({ id, name, input: { command: 'ls' }, state: 'done', result: { text: 'ok', images: [], isError: false, structured: null }, durationMs: 100, startedAt: 0, children: null });
+const message = (
+  id: string,
+  role: SessionLog.Role,
+  text: string,
+  extra: Partial<SessionLog.Message> = {}
+): SessionLog.Message => ({
+  id,
+  index: 0,
+  role,
+  timestamp: 1_000 + Number(id.replace(/\D/g, '')),
+  parts: [{ kind: 'text', text }],
+  sidechain: false,
+  ...extra
+});
+const call = (id: string, name: string): SessionLog.ToolCall => ({
+  id,
+  name,
+  input: { command: 'ls' },
+  state: 'done',
+  result: { text: 'ok', images: [], isError: false, structured: null },
+  durationMs: 100,
+  startedAt: 0,
+  children: null
+});
 
 const THREAD: SessionLog.Message[] = [
   message('m0', 'user', 'first question'),
   message('m1', 'assistant', 'first answer about scrollers'),
   message('m2', 'user', 'second'),
-  message('m3', 'assistant', 'answer with calls', { parts: [{ kind: 'text', text: 'answer with calls' }, { kind: 'tool_batch', calls: [call('c1', 'Bash'), call('c2', 'Read')], messageIds: ['m3'] }] }),
+  message('m3', 'assistant', 'answer with calls', {
+    parts: [
+      { kind: 'text', text: 'answer with calls' },
+      { kind: 'tool_batch', calls: [call('c1', 'Bash'), call('c2', 'Read')], messageIds: ['m3'] }
+    ]
+  }),
   message('m4', 'user', 'third'),
-  message('m5', 'assistant', 'last answer'),
+  message('m5', 'assistant', 'last answer')
 ];
-const META: ChatApi.Meta = { count: THREAD.length, pageSize: PAGE_SIZE, pages: [{ index: 0, bytes: 1, messages: 3, firstId: 'm0' }, { index: 1, bytes: 1, messages: 3, firstId: 'm3' }], totalBytes: 2, indexBytes: 1, firstAt: 0, lastAt: 0, roles: {}, models: {}, tools: {}, calls: 2, subagents: 0, source: { file: 'x.jsonl', lines: 9 } };
-const INDEX: ChatApi.IndexRow[] = THREAD.map((entry) => ({ id: entry.id, r: entry.role[0], t: (entry.parts[0] as SessionLog.TextPart).text, c: entry.parts.some((part) => part.kind === 'tool_batch') ? 2 : 0, at: entry.timestamp }));
+const META: ChatApi.Meta = {
+  count: THREAD.length,
+  pageSize: PAGE_SIZE,
+  pages: [
+    { index: 0, bytes: 1, messages: 3, firstId: 'm0' },
+    { index: 1, bytes: 1, messages: 3, firstId: 'm3' }
+  ],
+  totalBytes: 2,
+  indexBytes: 1,
+  firstAt: 0,
+  lastAt: 0,
+  roles: {},
+  models: {},
+  tools: {},
+  calls: 2,
+  subagents: 0,
+  source: { file: 'x.jsonl', lines: 9 }
+};
+const INDEX: ChatApi.IndexRow[] = THREAD.map((entry) => ({
+  id: entry.id,
+  r: entry.role[0],
+  t: (entry.parts[0] as SessionLog.TextPart).text,
+  c: entry.parts.some((part) => part.kind === 'tool_batch') ? 2 : 0,
+  at: entry.timestamp
+}));
 
 let served: string[] = [];
 
@@ -44,7 +94,12 @@ function serve() {
     if (name === 'meta.json') return new Response(JSON.stringify(META));
     if (name === 'index.json') return new Response(JSON.stringify(INDEX));
     const page = /page-(\d+)\.json/.exec(name);
-    if (page) return new Response(JSON.stringify(THREAD.slice(Number(page[1]) * PAGE_SIZE, Number(page[1]) * PAGE_SIZE + PAGE_SIZE)));
+    if (page)
+      return new Response(
+        JSON.stringify(
+          THREAD.slice(Number(page[1]) * PAGE_SIZE, Number(page[1]) * PAGE_SIZE + PAGE_SIZE)
+        )
+      );
     return new Response('nope', { status: 404 });
   });
 }
@@ -69,18 +124,24 @@ function fakeScroller() {
     },
     scrollToIndex(index: number, _after?: () => void, animate = true) {
       this.seeks.push({ index, animate });
-    },
+    }
   };
 }
 
 /** let the mocked requests (each a macrotask) and the ticks between them run */
 async function settle(times = 6) {
-  for (let count = 0; count < times; count++) await new Promise((resolve) => setTimeout(resolve, 0));
+  for (let count = 0; count < times; count++)
+    await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 describe('Chat', () => {
   beforeEach(() => {
-    ChatApi.Class.configure({ baseUrl: '/sample/', simulateLatency: false, requestCount: 0, seed: 7 });
+    ChatApi.Class.configure({
+      baseUrl: '/sample/',
+      simulateLatency: false,
+      requestCount: 0,
+      seed: 7
+    });
     serve();
   });
   afterEach(() => {
@@ -100,7 +161,12 @@ describe('Chat', () => {
     expect(served).toEqual(['meta.json', 'index.json']);
     expect(chat.count).toBe(6);
     expect(chat.rows.value.every((row) => row.message === null)).toBe(true);
-    expect(chat.rows.value[3]).toMatchObject({ id: 'm3', role: 'assistant', page: 1, preview: 'answer with calls' });
+    expect(chat.rows.value[3]).toMatchObject({
+      id: 'm3',
+      role: 'assistant',
+      page: 1,
+      preview: 'answer with calls'
+    });
     expect(chat.isLoadingThread).toBe(false);
     expect(scroller.seeks.at(-1)).toEqual({ index: 5, animate: false });
 
@@ -127,7 +193,9 @@ describe('Chat', () => {
   // invariant: Loading lives above the scroller (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
   it('a window reached while the thumb is held fetches nothing; the drop fetches where it landed', async () => {
     const { instance: chat, unmount } = hosted(() => new Chat.Class());
-    const scroller = fakeScroller() as ReturnType<typeof fakeScroller> & { scrollbarDragging: boolean };
+    const scroller = fakeScroller() as ReturnType<typeof fakeScroller> & {
+      scrollbarDragging: boolean;
+    };
     scroller.scrollbarDragging = true;
     chat.scroller.value = scroller as never;
     await settle(10);
@@ -196,7 +264,10 @@ describe('Chat', () => {
       yield { type: 'tool_call', call: call('r1', 'Bash') } as ChatApi.StreamEvent;
       yield { type: 'tool_result', call: call('r1', 'Bash') } as ChatApi.StreamEvent;
       yield { type: 'tool_call', call: call('r2', 'Read') } as ChatApi.StreamEvent;
-      yield { type: 'tool_result', call: { ...call('r2', 'Read'), state: 'failed' } } as ChatApi.StreamEvent;
+      yield {
+        type: 'tool_result',
+        call: { ...call('r2', 'Read'), state: 'failed' }
+      } as ChatApi.StreamEvent;
       yield { type: 'done', text: '' } as ChatApi.StreamEvent;
     });
     vi.spyOn(chat, 'pickSource').mockResolvedValue(source);
@@ -213,7 +284,11 @@ describe('Chat', () => {
     expect(user.message?.parts).toEqual([{ kind: 'text', text: 'show me scrollers' }]);
     expect(reply.message?.replay).toBe(true);
     expect(reply.message?.model).toBe('Quick');
-    expect(reply.message?.parts.map((part) => part.kind)).toEqual(['thinking', 'text', 'tool_batch']);
+    expect(reply.message?.parts.map((part) => part.kind)).toEqual([
+      'thinking',
+      'text',
+      'tool_batch'
+    ]);
     const batch = reply.message?.parts[2];
     if (batch?.kind !== 'tool_batch') throw new Error('expected a batch');
     expect(batch.calls.map((entry) => entry.state)).toEqual(['done', 'failed']);
@@ -229,8 +304,30 @@ describe('Chat', () => {
     // a call or a thought lands after it has measured; words pin on the cadence
     const landing = vi.spyOn(chat, 'settleAtBottom').mockResolvedValue(undefined);
     const replyMessage = reply.message as SessionLog.Message;
-    chat.streaming.value = { row: reply, message: replyMessage, startedAt: Date.now(), controller: new AbortController(), release: () => undefined, firstTokenAt: null, lastPinAt: 0, thinking: null, sourceId: 'x' };
-    chat.applyEvent(chat.streaming.value, { type: 'tool_call', call: { id: 'late', name: 'Bash', input: {}, state: 'running', result: null, durationMs: null, startedAt: 0, children: null } });
+    chat.streaming.value = {
+      row: reply,
+      message: replyMessage,
+      startedAt: Date.now(),
+      controller: new AbortController(),
+      release: () => undefined,
+      firstTokenAt: null,
+      lastPinAt: 0,
+      thinking: null,
+      sourceId: 'x'
+    };
+    chat.applyEvent(chat.streaming.value, {
+      type: 'tool_call',
+      call: {
+        id: 'late',
+        name: 'Bash',
+        input: {},
+        state: 'running',
+        result: null,
+        durationMs: null,
+        startedAt: 0,
+        children: null
+      }
+    });
     expect(landing).toHaveBeenCalledTimes(1);
     chat.applyEvent(chat.streaming.value, { type: 'token', text: 'word ' });
     expect(landing).toHaveBeenCalledTimes(2);
@@ -258,7 +355,9 @@ describe('Chat', () => {
     await chat.send({ text: 'x', model: 'quick', attachments: [] });
     expect(chat.count).toBe(before);
     chat.stopStreaming();
-    expect((chat.streaming.value as unknown as { controller: AbortController }).controller.signal.aborted).toBe(true);
+    expect(
+      (chat.streaming.value as unknown as { controller: AbortController }).controller.signal.aborted
+    ).toBe(true);
     chat.streaming.value = null;
     unmount();
   });
@@ -319,15 +418,30 @@ describe('Chat', () => {
     const { instance: chat, unmount } = hosted(() => new Chat.Class());
     await settle(10);
     const records = [
-      { type: 'user', uuid: 'f1', timestamp: '2026-09-09T10:00:00.000Z', message: { role: 'user', content: 'from disk ekalashnikov@gmail.com' } },
-      { type: 'assistant', uuid: 'f2', timestamp: '2026-09-09T10:00:01.000Z', message: { id: 'api', model: 'm', content: [{ type: 'text', text: 'reply' }] } },
+      {
+        type: 'user',
+        uuid: 'f1',
+        timestamp: '2026-09-09T10:00:00.000Z',
+        message: { role: 'user', content: 'from disk ekalashnikov@gmail.com' }
+      },
+      {
+        type: 'assistant',
+        uuid: 'f2',
+        timestamp: '2026-09-09T10:00:01.000Z',
+        message: { id: 'api', model: 'm', content: [{ type: 'text', text: 'reply' }] }
+      }
     ];
-    const file = new File([records.map((record) => JSON.stringify(record)).join('\n')], 'session.jsonl');
+    const file = new File(
+      [records.map((record) => JSON.stringify(record)).join('\n')],
+      'session.jsonl'
+    );
     await chat.open(file);
     expect(chat.error.value).toBe('');
     expect(chat.source.value).toBe('file');
     expect(chat.count).toBe(2);
-    expect(chat.rows.value[0].message?.parts).toEqual([{ kind: 'text', text: 'from disk user@example.com' }]);
+    expect(chat.rows.value[0].message?.parts).toEqual([
+      { kind: 'text', text: 'from disk user@example.com' }
+    ]);
     expect(chat.sourceLabel).toContain('session.jsonl');
     expect(chat.fileLines.value).toBe(2);
     await chat.open(new File(['{"type":"mode"}'], 'empty.jsonl'));
@@ -340,7 +454,10 @@ describe('Chat', () => {
     await settle(10);
     const messages = await chat.messagesFor(new Set(['m5', 'm0']));
     expect(messages.map((entry) => entry.id)).toEqual(['m0', 'm5']);
-    expect(served.filter((name) => name.startsWith('page-')).sort()).toEqual(['page-000.json', 'page-001.json']);
+    expect(served.filter((name) => name.startsWith('page-')).sort()).toEqual([
+      'page-000.json',
+      'page-001.json'
+    ]);
     unmount();
   });
 });

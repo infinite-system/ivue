@@ -1130,6 +1130,11 @@ own whole than to arbitrate.
 - **Playwright's "move away" point must actually leave the element**: a peek card 320px wide beside the
   track swallowed a pointer moved 300px left of the track, and the drive read a bug that was not there.
   Instrument `pointermove` targets before touching the code.
+- **Prettier is configured (`.prettierrc`: printWidth 100, single quotes, no trailing commas) but nothing
+  ran it.** 107 playground files drifted, 87 in ai-chat, because every file was written by hand and never
+  formatted. `npm run format` (and `format:check`) now cover `examples/playground/src` and the docs theme
+  components — run `format` before committing playground or docs-component code. A reformat is safe to
+  verify the usual way: suites, gate, checker, tsc, docs build all held after 115 files changed.
 - **A long wheel up blanked the bottom of the viewport and, once, threw the rows 63k px off.** Two
   pre-existing scroller faults found by sampling a 120-tick wheel-up (`tmp/drive-up.mjs`): the window
   walked from the lerp's TARGET and padded "rows behind" as gap ÷ estimated row size, so a gap over rows

@@ -28,14 +28,16 @@ describe('Scrub', () => {
           'ghp_abcdefghijklmnopqrstuvwxyz0123456789',
           '-----BEGIN OPENSSH PRIVATE KEY-----\nabc\n-----END OPENSSH PRIVATE KEY-----',
           'grep -----BEGIN',
-          'ends with @gmail.com',
+          'ends with @gmail.com'
         ],
-        number: 7,
-      },
+        number: 7
+      }
     };
     const scrubbed = Scrub.Class.value(record, counts);
     const json = JSON.stringify(scrubbed);
-    expect(scrubbed.text).toBe('mail user@example.com from ~/dev at 10.0.0.1 via https://claude.ai/code/session_[redacted]');
+    expect(scrubbed.text).toBe(
+      'mail user@example.com from ~/dev at 10.0.0.1 via https://claude.ai/code/session_[redacted]'
+    );
     expect(scrubbed.nested.list[0]).toBe('Authorization: [redacted]');
     expect(scrubbed.nested.list[1]).toBe('ADMIN_SECRET=[redacted]');
     expect(scrubbed.nested.list[2]).toBe('ADMIN_SECRET=e2e-local-secret');
@@ -47,7 +49,18 @@ describe('Scrub', () => {
     expect(scrubbed.nested.list[8]).toBe('ends with @example.com');
     expect(scrubbed.nested.number).toBe(7);
     expect(Scrub.Class.survivors(json)).toEqual([]);
-    expect(counts).toMatchObject({ email: 1, 'home-path': 1, 'lan-ip': 1, 'session-url': 1, 'authorization-header': 1, 'secret-assignment': 1, 'api-key': 2, 'pem-block': 1, 'pem-marker': 1, 'bare-gmail': 1 });
+    expect(counts).toMatchObject({
+      email: 1,
+      'home-path': 1,
+      'lan-ip': 1,
+      'session-url': 1,
+      'authorization-header': 1,
+      'secret-assignment': 1,
+      'api-key': 2,
+      'pem-block': 1,
+      'pem-marker': 1,
+      'bare-gmail': 1
+    });
     expect(Scrub.Class.survivors('call me at me@gmail.com')).toEqual(['@gmail\\.com']);
     expect(Scrub.Class.text('plain text')).toBe('plain text');
     expect(Scrub.Class.value(null)).toBeNull();

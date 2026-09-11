@@ -51,7 +51,7 @@ class $CodeBlock {
     onBeforeUnmount(() => this.cancel());
     watch(
       () => this.visibleCode,
-      () => this.colour(),
+      () => this.colour()
     );
   }
 
@@ -114,7 +114,7 @@ class $CodeBlock {
       'ac-code-numbered': Boolean(this.props.startLine),
       'ac-code-error': this.props.tone === 'error',
       'ac-code-muted': this.props.tone === 'muted',
-      'ac-code-wrap': Boolean(this.props.wrap),
+      'ac-code-wrap': Boolean(this.props.wrap)
     };
   }
 

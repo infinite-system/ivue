@@ -14,11 +14,16 @@ class $SystemPart {
   /** the one role a system line composes: the thread its children form */
   static get $kit() {
     return {
-      SubThread: { namespace: SubThread, vue: SubThreadView },
+      SubThread: { namespace: SubThread, vue: SubThreadView }
     } satisfies Kit.Of<'SubThread'>;
   }
 
-  static readonly ICONS: Record<string, string> = { compaction: '⟲', turn_duration: '◷', stop_hook_summary: '⚙', subagent: '⑂' };
+  static readonly ICONS: Record<string, string> = {
+    compaction: '⟲',
+    turn_duration: '◷',
+    stop_hook_summary: '⚙',
+    subagent: '⑂'
+  };
 
   constructor(public props: Part.Props<SessionLog.SystemPart>) {}
 

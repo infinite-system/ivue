@@ -37,7 +37,7 @@ test('emit calls the subscribers in order with the arguments; off and the return
 });
 
 // impossible-if-true: $Emitter — A callback called after it unsubscribed. A callback of one event called by another event's emit.
-test('an emit never reaches another event\'s subscribers, and an emit with no subscribers is a no-op', () => {
+test("an emit never reaches another event's subscribers, and an emit with no subscribers is a no-op", () => {
   const emitter = new Emitter.Class();
   const onScroll = vi.fn();
   emitter.on('scroll', onScroll);

@@ -1,5 +1,11 @@
 import type { ExtractPropTypes, PropType } from 'vue';
-import { definePropTypes, propsWithDefaults, Reactive, type ExtractEmitTypes, type ExtractPropDefaultTypes } from '../../ivue';
+import {
+  definePropTypes,
+  propsWithDefaults,
+  Reactive,
+  type ExtractEmitTypes,
+  type ExtractPropDefaultTypes
+} from '../../ivue';
 import { nestedProps } from '../../nestedProps';
 import { Static } from '../../Static';
 import type { Kit } from '../Kit';
@@ -15,7 +21,7 @@ class $Code {
       lang: { type: String as PropType<string> },
       cap: { type: Number as PropType<number | null> },
       /** the entry this view was rendered through — the class's own prop, typed to its namespace */
-      kit: { type: Object as PropType<Kit.Entry<typeof Code>> },
+      kit: { type: Object as PropType<Kit.Entry<typeof Code>> }
     });
   }
 
@@ -29,13 +35,13 @@ class $Code {
 
   static get emits() {
     return {
-      copy: (code: string) => typeof code === 'string',
+      copy: (code: string) => typeof code === 'string'
     };
   }
 
   constructor(
     public props: Code.Props,
-    public emit: Code.Emits,
+    public emit: Code.Emits
   ) {
     nestedProps(props, this.self.propsDefaults);
   }

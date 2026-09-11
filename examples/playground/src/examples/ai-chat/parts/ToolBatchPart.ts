@@ -17,7 +17,7 @@ class $ToolBatchPart {
   /** the one role a batch composes: the part that picks a card per call */
   static get $kit() {
     return {
-      Call: { namespace: ToolCallPart, vue: ToolCallPartView },
+      Call: { namespace: ToolCallPart, vue: ToolCallPartView }
     } satisfies Kit.Of<'Call'>;
   }
 
@@ -60,7 +60,9 @@ class $ToolBatchPart {
   get icons(): ToolBatchPart.IconGroup[] {
     const groups = new Map<string, ToolBatchPart.IconGroup>();
     for (const call of this.calls) {
-      const icon = ToolCallModel.Class.ICONS[call.name] ?? (call.name.startsWith('mcp__') ? '⌘' : call.name.startsWith('Task') ? '☑' : '⚙');
+      const icon =
+        ToolCallModel.Class.ICONS[call.name] ??
+        (call.name.startsWith('mcp__') ? '⌘' : call.name.startsWith('Task') ? '☑' : '⚙');
       const group = groups.get(icon);
       if (group) {
         group.count += 1;
@@ -73,7 +75,9 @@ class $ToolBatchPart {
   get namesLabel(): string {
     const counts = new Map<string, number>();
     for (const call of this.calls) counts.set(call.name, (counts.get(call.name) ?? 0) + 1);
-    return [...counts.entries()].map(([name, count]) => (count > 1 ? `${name} ×${count}` : name)).join(', ');
+    return [...counts.entries()]
+      .map(([name, count]) => (count > 1 ? `${name} ×${count}` : name))
+      .join(', ');
   }
 
   get hasFailure(): boolean {
@@ -90,14 +94,22 @@ class $ToolBatchPart {
 
   get timeLabel(): string {
     if (this.isRunning) {
-      const running = this.calls.find((call) => call.state === 'running' || call.state === 'pending');
-      return running?.startedAt ? Clock.Class.label(this.props.chat.clock.elapsed(running.startedAt, null), true) : '';
+      const running = this.calls.find(
+        (call) => call.state === 'running' || call.state === 'pending'
+      );
+      return running?.startedAt
+        ? Clock.Class.label(this.props.chat.clock.elapsed(running.startedAt, null), true)
+        : '';
     }
     return this.totalMs ? Clock.Class.label(this.totalMs) : '';
   }
 
   get batchClass(): Record<string, boolean> {
-    return { 'ac-batch-open': this.isExpanded, 'ac-batch-failed': this.hasFailure, 'ac-batch-running': this.isRunning };
+    return {
+      'ac-batch-open': this.isExpanded,
+      'ac-batch-failed': this.hasFailure,
+      'ac-batch-running': this.isRunning
+    };
   }
 
   /** one chevron; the batch's open class turns it */

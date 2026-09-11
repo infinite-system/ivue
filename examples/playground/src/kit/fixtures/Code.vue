@@ -11,7 +11,9 @@ defineExpose(model as Code.Instance);
 </script>
 
 <template>
-  <pre class="code" :data-lang="model.lang" :data-theme="model.theme" @click="model.copy()">{{ model.visible }}</pre>
+  <pre class="code" :data-lang="model.lang" :data-theme="model.theme" @click="model.copy()">{{
+    model.visible
+  }}</pre>
 </template>
 
 <style scoped>

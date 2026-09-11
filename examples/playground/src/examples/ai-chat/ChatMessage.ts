@@ -43,7 +43,10 @@ class $ChatMessage {
   /** a line's opacity between the bounds, varied by the preview's length and the line's place */
   static skeletonOpacity(length: number, at: number): number {
     const span = this.SKELETON_OPACITY_MAX - this.SKELETON_OPACITY_MIN;
-    return Math.round((this.SKELETON_OPACITY_MIN + span * (((length * 13 + at * 7) % 11) / 10)) * 100) / 100;
+    return (
+      Math.round((this.SKELETON_OPACITY_MIN + span * (((length * 13 + at * 7) % 11) / 10)) * 100) /
+      100
+    );
   }
 
   /** the roles a row composes: a part per kind, and its own sections — built once per class by Static() */
@@ -60,7 +63,7 @@ class $ChatMessage {
       Stub: { vue: MessageStubView },
       Parts: { vue: MessagePartsView },
       Await: { vue: MessageAwaitView },
-      Foot: { vue: MessageFootView },
+      Foot: { vue: MessageFootView }
     } satisfies Kit.Of<ChatMessage.PartRole | ChatMessage.SectionRole>;
   }
 
@@ -71,7 +74,7 @@ class $ChatMessage {
     attachment: 'Attachment',
     system: 'System',
     tool_call: 'ToolCall',
-    tool_batch: 'ToolBatch',
+    tool_batch: 'ToolBatch'
   };
 
   /** the distance from `at` to `now` in the coarsest unit that is at least one */
@@ -87,7 +90,11 @@ class $ChatMessage {
     return `${years} year${years === 1 ? '' : 's'} ago`;
   }
 
-  static readonly ROLE_LABELS: Record<SessionLog.Role, string> = { user: 'You', assistant: 'Agent', system: 'System' };
+  static readonly ROLE_LABELS: Record<SessionLog.Role, string> = {
+    user: 'You',
+    assistant: 'Agent',
+    system: 'System'
+  };
 
   constructor(public props: ChatMessage.Props) {}
 
@@ -141,7 +148,7 @@ class $ChatMessage {
       'ac-msg-stub': this.isStub,
       'ac-msg-streaming': this.isStreamingRow,
       'ac-msg-focused': this.chat.isFocused(this.row),
-      'ac-msg-system': this.role === 'system',
+      'ac-msg-system': this.role === 'system'
     };
   }
 
@@ -166,7 +173,12 @@ class $ChatMessage {
     if (!at) return '';
     const date = new Date(at);
     const sameYear = date.getFullYear() === new Date().getFullYear();
-    return date.toLocaleDateString('en-US', sameYear ? { weekday: 'short', month: 'short', day: 'numeric' } : { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString(
+      'en-US',
+      sameYear
+        ? { weekday: 'short', month: 'short', day: 'numeric' }
+        : { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }
+    );
   }
 
   /** `3 days ago`, `today`, `2 months ago` — how far back the message sits */
@@ -205,7 +217,13 @@ class $ChatMessage {
   /** while the reply waits for its first token: the model name with the counter */
   get isAwaitingFirstToken(): boolean {
     const streaming = this.chat.streaming.value;
-    return Boolean(streaming && streaming.row.id === this.row.id && streaming.firstTokenAt === null && !streaming.thinking && this.parts.length === 0);
+    return Boolean(
+      streaming &&
+      streaming.row.id === this.row.id &&
+      streaming.firstTokenAt === null &&
+      !streaming.thinking &&
+      this.parts.length === 0
+    );
   }
 
   /** the line under the head while the reply has nothing yet: one "Thinking…" and its clock */
@@ -235,7 +253,13 @@ class $ChatMessage {
     const self = this.self;
     const room = this.stubHeight - self.SKELETON_FRAME_PX;
     const cards = Math.min(self.SKELETON_MAX_CARDS, this.row.calls);
-    const lines = Math.max(1, Math.min(self.SKELETON_MAX_LINES, Math.floor((room - cards * self.SKELETON_CARD_PX) / self.SKELETON_LINE_PX)));
+    const lines = Math.max(
+      1,
+      Math.min(
+        self.SKELETON_MAX_LINES,
+        Math.floor((room - cards * self.SKELETON_CARD_PX) / self.SKELETON_LINE_PX)
+      )
+    );
     const length = this.row.preview.length;
     const blocks: ChatMessage.SkeletonBlock[] = [];
     for (let at = 0; at < lines; at++) {
@@ -243,7 +267,12 @@ class $ChatMessage {
       const width = last ? 25 + ((length * (at + 3)) % 40) : 72 + ((length * (at + 1)) % 26);
       blocks.push({ kind: 'line', width: `${width}%`, opacity: self.skeletonOpacity(length, at) });
     }
-    for (let at = 0; at < cards; at++) blocks.push({ kind: 'card', width: `${58 + ((length * (at + 5)) % 30)}%`, opacity: self.skeletonOpacity(length, lines + at) });
+    for (let at = 0; at < cards; at++)
+      blocks.push({
+        kind: 'card',
+        width: `${58 + ((length * (at + 5)) % 30)}%`,
+        opacity: self.skeletonOpacity(length, lines + at)
+      });
     return blocks;
   }
 
@@ -259,11 +288,16 @@ class $ChatMessage {
 
   get stubElapsedLabel(): string {
     if (!this.isPageLoading) return '';
-    return Clock.Class.label(this.chat.clock.elapsed(this.chat.pageStartedAt(this.row), null), true);
+    return Clock.Class.label(
+      this.chat.clock.elapsed(this.chat.pageStartedAt(this.row), null),
+      true
+    );
   }
 
   get stubStatusLabel(): string {
-    return this.isPageLoading ? `page ${this.row.page + 1} · ${this.stubElapsedLabel}` : `page ${this.row.page + 1}`;
+    return this.isPageLoading
+      ? `page ${this.row.page + 1} · ${this.stubElapsedLabel}`
+      : `page ${this.row.page + 1}`;
   }
 
   /** the stub's height is the scroller's estimate, so a page landing never moves the geometry */

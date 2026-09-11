@@ -7,8 +7,10 @@ import { Static } from '../../Static';
 class $Icons {
   static readonly PATHS = {
     search: 'M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM20 20l-4.6-4.6',
-    files: 'M4 6.5A1.5 1.5 0 0 1 5.5 5H9l2 2h7.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5zM4 11h16',
-    settings: 'M4 7h4M12 7h8M12 7a2 2 0 1 1-4 0 2 2 0 0 1 4 0M4 17h8M16 17h4M16 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0',
+    files:
+      'M4 6.5A1.5 1.5 0 0 1 5.5 5H9l2 2h7.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5zM4 11h16',
+    settings:
+      'M4 7h4M12 7h8M12 7a2 2 0 1 1-4 0 2 2 0 0 1 4 0M4 17h8M16 17h4M16 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0',
     collapse: 'M6 6l6 6-6 6M13 6l6 6-6 6',
     /** the disclosure chevron — every fold in the chat turns this one */
     chevron: 'M9 6l6 6-6 6',
@@ -18,7 +20,7 @@ class $Icons {
     /** go to a message in the thread */
     jump: 'M4 12h15M13 6l6 6-6 6',
     /** open somewhere else — the index on a file */
-    open: 'M7 17 17 7M9 7h8v8',
+    open: 'M7 17 17 7M9 7h8v8'
   };
 }
 

@@ -43,10 +43,7 @@ defineExpose(virtualScroller as HorizontalVirtualScroller.Instance<T>);
          and items flow in a row. -->
     <div ref="scrollElementInner" class="virtual-scroller-inner virtual-scroller-inner--x">
       <div :style="{ width: virtualScroller.leadingSpacerPx, flex: '0 0 auto' }"></div>
-      <div
-        ref="itemsWrapperElement"
-        class="virtual-scroller__row"
-      >
+      <div ref="itemsWrapperElement" class="virtual-scroller__row">
         <VirtualScrollerItem
           v-for="element in visibleItems"
           :key="element.id"

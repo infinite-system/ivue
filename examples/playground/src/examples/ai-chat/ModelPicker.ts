@@ -15,7 +15,7 @@ class $ModelPicker {
   static readonly ICONS: Record<string, string> = {
     quick: 'M13 2 4 14h6l-1 8 9-12h-6l1-8z',
     default: 'M12 3v18M5 7l7-4 7 4M3 15l2-8 2 8a2 2 0 0 1-4 0zM17 15l2-8 2 8a2 2 0 0 1-4 0z',
-    deep: 'M9 4a3 3 0 0 0-3 3v1a3 3 0 0 0-2 5 3 3 0 0 0 2 5v1a3 3 0 0 0 6 0V4a3 3 0 0 0-3 0zM15 4a3 3 0 0 1 3 3v1a3 3 0 0 1 2 5 3 3 0 0 1-2 5v1a3 3 0 0 1-6 0V4a3 3 0 0 1 3 0z',
+    deep: 'M9 4a3 3 0 0 0-3 3v1a3 3 0 0 0-2 5 3 3 0 0 0 2 5v1a3 3 0 0 0 6 0V4a3 3 0 0 0-3 0zM15 4a3 3 0 0 1 3 3v1a3 3 0 0 1 2 5 3 3 0 0 1-2 5v1a3 3 0 0 1-6 0V4a3 3 0 0 1 3 0z'
   };
   static readonly DOT = 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z';
 
@@ -115,7 +115,10 @@ class $ModelPicker {
   }
 
   show() {
-    this.cursor.value = Math.max(0, this.models.findIndex((model) => this.isPicked(model)));
+    this.cursor.value = Math.max(
+      0,
+      this.models.findIndex((model) => this.isPicked(model))
+    );
     this.open.value = true;
   }
 

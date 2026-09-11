@@ -58,13 +58,16 @@ function exposed<T>(wrapper: { vm: { $: { exposed: unknown } } }): T {
 
 /** A tree of derived namespaces: an override two levels deep, written once as data. */
 const ThemedPanel = Kit.Class.derive(Panel, {
-  Card: { subkit: { Head: { vue: FancyHeadView }, Code: { namespace: ThemedCode } } },
+  Card: { subkit: { Head: { vue: FancyHeadView }, Code: { namespace: ThemedCode } } }
 });
 
 /** An override that brings the widened view by hand — the explicit form of the same thing. */
 class $ThemedCard extends Card.$Class {
   static override get $kit() {
-    return { ...super.$kit, Code: { namespace: ThemedCode, vue: Kit.Class.view(CodeView, ThemedCode) } };
+    return {
+      ...super.$kit,
+      Code: { namespace: ThemedCode, vue: Kit.Class.view(CodeView, ThemedCode) }
+    };
   }
 }
 const ThemedCard = { $Class: Static($ThemedCard), Class: Reactive(Static($ThemedCard)) };
@@ -72,7 +75,10 @@ const ThemedCard = { $Class: Static($ThemedCard), Class: Reactive(Static($Themed
 /** A consumer turning knobs: the Code role's entry carries props. */
 class $DenseCard extends Card.$Class {
   static override get $kit() {
-    return { ...super.$kit, Code: { ...super.$kit.Code, props: { cap: 2, code: 'ignored', theme: 'paper' } } };
+    return {
+      ...super.$kit,
+      Code: { ...super.$kit.Code, props: { cap: 2, code: 'ignored', theme: 'paper' } }
+    };
   }
 }
 const DenseCard = { $Class: Static($DenseCard), Class: Reactive(Static($DenseCard)) };
@@ -204,7 +210,10 @@ describe('an override never reaches another tree', () => {
   it('a derived class is a working ivue class: cells cached, methods bound, self reads its own statics', () => {
     const Derived = Kit.Class.derive(Card, { Head: { vue: FancyHeadView } });
     expect(Derived.$Class.$kit).toBe(Derived.$Class.$kit); // cached once per derived class too
-    const instance = new (Derived.Class as typeof Card.Class)({ title: 't', items: ['a'] } as Card.Props);
+    const instance = new (Derived.Class as typeof Card.Class)({
+      title: 't',
+      items: ['a']
+    } as Card.Props);
     expect(instance.copied).toBe(instance.copied);
     expect(instance.kit.Head.vue).toBe(FancyHeadView);
     expect(instance.kit.Body.vue).toBe(CardBodyView);
@@ -231,19 +240,26 @@ describe('the entry crosses the seam', () => {
   });
 
   // impossible-if-true: $Kit — a view constructing anything but its entry's namespace Class
-  it('a view handed an entry constructs that entry\'s Class, and the swapped sections render with slot and listener intact', async () => {
-    const wrapper = mount(CardView, { props: { title: 'Fancy', items, kit: { namespace: FancyCard, vue: CardView } } });
+  it("a view handed an entry constructs that entry's Class, and the swapped sections render with slot and listener intact", async () => {
+    const wrapper = mount(CardView, {
+      props: { title: 'Fancy', items, kit: { namespace: FancyCard, vue: CardView } }
+    });
     expect(exposed(wrapper)).toBeInstanceOf(FancyCard.Class);
     expect(wrapper.find('.fancy-head').text()).toBe('★ Fancy ★');
     expect(wrapper.find('.card-head').exists()).toBe(false);
-    expect(wrapper.findAll('.grouped-body .code').map((node) => node.text())).toEqual(['hi', 'abcdefg']); // rearranged from the model, no cap
+    expect(wrapper.findAll('.grouped-body .code').map((node) => node.text())).toEqual([
+      'hi',
+      'abcdefg'
+    ]); // rearranged from the model, no cap
     expect(wrapper.find('.fancy-frame .slotted').text()).toBe('Fancy'); // the slot filled at the seam survived the swap
     await wrapper.findAll('.code')[0].trigger('click');
     expect(exposed<Card.Instance>(wrapper).copiedCount).toBe(1); // the listener at the seam survived the swap
   });
 
-  it('swapping the leaf\'s class through the kit keeps the body\'s listener at the seam', async () => {
-    const wrapper = mount(CardView, { props: { title: 'Themed', items, kit: { namespace: ThemedCard, vue: CardView } } });
+  it("swapping the leaf's class through the kit keeps the body's listener at the seam", async () => {
+    const wrapper = mount(CardView, {
+      props: { title: 'Themed', items, kit: { namespace: ThemedCard, vue: CardView } }
+    });
     const code = wrapper.findAll('.code');
     expect(code.map((node) => node.attributes('data-theme'))).toEqual(['mono', 'mono']); // ThemedCode's default
     await code[1].trigger('click');
@@ -252,7 +268,9 @@ describe('the entry crosses the seam', () => {
 
   it('two trees on one page keep their own kits', () => {
     const plain = mount(CardView, { props: { title: 'A', items } });
-    const fancy = mount(CardView, { props: { title: 'B', items, kit: { namespace: FancyCard, vue: CardView } } });
+    const fancy = mount(CardView, {
+      props: { title: 'B', items, kit: { namespace: FancyCard, vue: CardView } }
+    });
     expect(plain.find('.card-head').exists()).toBe(true);
     expect(plain.find('.fancy-head').exists()).toBe(false);
     expect(fancy.find('.fancy-head').exists()).toBe(true);
@@ -260,9 +278,16 @@ describe('the entry crosses the seam', () => {
   });
 
   it('an override two levels deep reaches the leaf through a real mount, and the plain root does not see it', () => {
-    const themed = mount(PanelView, { props: { titles: ['a', 'b'], kit: { namespace: ThemedPanel, vue: PanelView } } });
+    const themed = mount(PanelView, {
+      props: { titles: ['a', 'b'], kit: { namespace: ThemedPanel, vue: PanelView } }
+    });
     expect(themed.findAll('.fancy-head').length).toBe(2);
-    expect(themed.findAll('.code').map((node) => node.attributes('data-theme'))).toEqual(['mono', 'mono', 'mono', 'mono']);
+    expect(themed.findAll('.code').map((node) => node.attributes('data-theme'))).toEqual([
+      'mono',
+      'mono',
+      'mono',
+      'mono'
+    ]);
     const plain = mount(PanelView, { props: { titles: ['a'] } });
     expect(plain.findAll('.card-head').length).toBe(1);
     expect(plain.find('.code').attributes('data-theme')).toBeUndefined();
@@ -272,7 +297,7 @@ describe('the entry crosses the seam', () => {
 describe('a derived contract reaches Vue', () => {
   // domain-invariant: $Kit — If a view is rewrapped, then it is a fresh object carrying the base view's fields and the class's props and emits
   // invariant: A derived contract reaches Vue (examples/playground/src/kit/kit.invariants.md)
-  it('the rewrapped view is a fresh object with every base field, the class\'s props and emits, and the scope id', () => {
+  it("the rewrapped view is a fresh object with every base field, the class's props and emits, and the scope id", () => {
     const rewrapped = Kit.Class.view(CodeView, ThemedCode) as Record<string, unknown>;
     const base = CodeView as unknown as Record<string, unknown>;
     expect(rewrapped).not.toBe(base);
@@ -297,7 +322,9 @@ describe('a derived contract reaches Vue', () => {
     expect(exposed<ThemedCode.Instance>(widened).theme).toBe('paper');
     expect(widened.find('.code').attributes('theme')).toBeUndefined();
     expect(widened.find('.code').attributes('data-theme')).toBe('paper');
-    const narrow = mount(CodeView, { props: { code: 'abc', theme: 'paper', kit: { namespace: ThemedCode, vue: CodeView } } as never });
+    const narrow = mount(CodeView, {
+      props: { code: 'abc', theme: 'paper', kit: { namespace: ThemedCode, vue: CodeView } } as never
+    });
     expect(exposed(narrow)).toBeInstanceOf(ThemedCode.Class);
     expect(narrow.find('.code').attributes('theme')).toBe('paper'); // not a prop here: an attribute
     // FINDING: the derived class's DEFAULT for `theme` never applies either — Vue defaults only the
@@ -315,7 +342,9 @@ describe('a derived contract reaches Vue', () => {
     exposed<ThemedCode.Instance>(widened).select();
     expect(widened.emitted('select')).toEqual([['abc']]);
     expect(warn).not.toHaveBeenCalled();
-    const narrow = mount(CodeView, { props: { code: 'abc', kit: { namespace: ThemedCode, vue: CodeView } } as never });
+    const narrow = mount(CodeView, {
+      props: { code: 'abc', kit: { namespace: ThemedCode, vue: CodeView } } as never
+    });
     exposed<ThemedCode.Instance>(narrow).select();
     expect(narrow.emitted('select')).toEqual([['abc']]);
     expect(warn).toHaveBeenCalledTimes(1);
@@ -330,7 +359,7 @@ describe('the two reasons a rewrap is a fresh object, tested against Vue itself'
    *  and across apps a mutation IS honored (the first version of this probe proved exactly that). */
   // domain-invariant: $Kit — If a mounted view object's props are widened in place, then Vue's cached normalized options ignore the change, which is why a rewrap is a fresh object
   // invariant: A derived contract reaches Vue (examples/playground/src/kit/kit.invariants.md)
-  it('widening a shared view\'s props in place after its first mount changes nothing Vue reads, inside one app', async () => {
+  it("widening a shared view's props in place after its first mount changes nothing Vue reads, inside one app", async () => {
     const view = CodeView as unknown as { props: Record<string, unknown> };
     const before = view.props;
     const second = shallowRef(false);
@@ -339,9 +368,11 @@ describe('the two reasons a rewrap is a fresh object, tested against Vue itself'
       setup() {
         return () => [
           h(CodeView as Component, { code: 'warm', class: 'first' }),
-          second.value ? h(CodeView as Component, { code: 'abc', theme: 'paper', kit, class: 'second' }) : null,
+          second.value
+            ? h(CodeView as Component, { code: 'abc', theme: 'paper', kit, class: 'second' })
+            : null
         ];
-      },
+      }
     });
     const wrapper = mount(Host); // one app: CodeView's options are normalized and cached here
     view.props = ThemedCode.Class.props as Record<string, unknown>; // the mutation the design forbids
@@ -353,7 +384,9 @@ describe('the two reasons a rewrap is a fresh object, tested against Vue itself'
       view.props = before;
     }
     // across apps the same mutation would have been honored — which is why identity, not the cache, is the load-bearing reason
-    const fresh = mount(Kit.Class.view(CodeView, ThemedCode), { props: { code: 'abc', theme: 'paper', kit } as never });
+    const fresh = mount(Kit.Class.view(CodeView, ThemedCode), {
+      props: { code: 'abc', theme: 'paper', kit } as never
+    });
     expect(fresh.find('.code').attributes('theme')).toBeUndefined();
   });
 
@@ -361,7 +394,7 @@ describe('the two reasons a rewrap is a fresh object, tested against Vue itself'
   it('a view made by Object.create over the base does not render at all — Vue reads component options as own keys', () => {
     const created = Object.create(CodeView as object, {
       props: { value: ThemedCode.Class.props, enumerable: true },
-      emits: { value: ThemedCode.Class.emits, enumerable: true },
+      emits: { value: ThemedCode.Class.emits, enumerable: true }
     });
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const wrapper = mount(created, { props: { code: 'abc' } as never });
@@ -375,23 +408,34 @@ describe('kit props reach the getters an author opens', () => {
   // impossible-if-true: $Kit — a kit value reaching a prop no getter opened
   // invariant: Kit props reach the getters an author opens (examples/playground/src/kit/kit.invariants.md)
   it('a tunable reads the kit first, an extension reads only the kit, a closed prop never reads it', () => {
-    const wrapper = mount(CardView, { props: { title: 'Dense', items: ['abcdefg', 'hi'], kit: { namespace: DenseCard, vue: CardView } } });
+    const wrapper = mount(CardView, {
+      props: {
+        title: 'Dense',
+        items: ['abcdefg', 'hi'],
+        kit: { namespace: DenseCard, vue: CardView }
+      }
+    });
     const code = wrapper.findAll('.code');
     expect(code.map((node) => node.text())).toEqual(['ab', 'hi']); // kit cap 2 beat the body's :cap="4"
     expect(code.map((node) => node.attributes('data-theme'))).toEqual(['paper', 'paper']); // an extension
     expect(wrapper.text()).not.toContain('ignored'); // `code` is closed to the kit
     const entry = Card.$Class.$kit.Code;
-    const plain = new Code.Class({ code: 'abcdefg', cap: 4, kit: entry } as Code.Props, (() => {}) as Code.Emits);
+    const plain = new Code.Class(
+      { code: 'abcdefg', cap: 4, kit: entry } as Code.Props,
+      (() => {}) as Code.Emits
+    );
     expect(plain.cap).toBe(4); // an entry without props changes nothing
     expect(plain.theme).toBeUndefined();
   });
 
-  it('a prop the kit does not own stays live to the parent; one the kit owns stays the kit\'s', async () => {
+  it("a prop the kit does not own stays live to the parent; one the kit owns stays the kit's", async () => {
     const live = mount(CodeView, { props: { code: 'abcdef', cap: 2 } });
     expect(live.find('.code').text()).toBe('ab');
     await live.setProps({ cap: 3 });
     expect(live.find('.code').text()).toBe('abc');
-    const owned = mount(CodeView, { props: { code: 'abcdef', cap: 2, kit: { namespace: Code, vue: CodeView, props: { cap: 1 } } } });
+    const owned = mount(CodeView, {
+      props: { code: 'abcdef', cap: 2, kit: { namespace: Code, vue: CodeView, props: { cap: 1 } } }
+    });
     expect(owned.find('.code').text()).toBe('a');
     await owned.setProps({ cap: 5 });
     expect(owned.find('.code').text()).toBe('a');

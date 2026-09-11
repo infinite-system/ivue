@@ -4,7 +4,9 @@ import type { ToolCallModel } from './ToolCallModel';
 
 const props = defineProps<ToolCallModel.Props>();
 
-const model = new ((props.kit?.namespace.Class as typeof TaskCall.Class | undefined) ?? TaskCall.Class)(props);
+const model = new (
+  (props.kit?.namespace.Class as typeof TaskCall.Class | undefined) ?? TaskCall.Class
+)(props);
 </script>
 
 <template>
@@ -18,7 +20,15 @@ const model = new ((props.kit?.namespace.Class as typeof TaskCall.Class | undefi
       </p>
       <section v-for="section in model.sections" :key="section.title" class="ac-tool-section">
         <h5>{{ section.title }}</h5>
-        <component :is="model.kit.CodeBlock.vue" :kit="model.kit.CodeBlock" :code="section.code" :lang="section.lang" :cap="model.cap" :tone="section.tone" wrap />
+        <component
+          :is="model.kit.CodeBlock.vue"
+          :kit="model.kit.CodeBlock"
+          :code="section.code"
+          :lang="section.lang"
+          :cap="model.cap"
+          :tone="section.tone"
+          wrap
+        />
       </section>
       <component :is="model.kit.Foot.vue" :model="model" />
     </div>

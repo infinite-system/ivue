@@ -22,7 +22,7 @@ class $Peek {
   /** the roles the peek composes — the mini scroller; built once per class by Static() */
   static get $kit() {
     return {
-      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView },
+      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView }
     } satisfies Kit.Of<Peek.Role>;
   }
 
@@ -42,7 +42,7 @@ class $Peek {
   constructor(public props: Peek.Props) {
     watch(
       () => [this.query.value, this.role.value, this.tools.value],
-      () => this.onQueryChange(),
+      () => this.onQueryChange()
     );
   }
 
@@ -136,11 +136,17 @@ class $Peek {
   }
 
   get roleOptions(): { value: Index.RoleFilter; label: string }[] {
-    return (Object.keys(Index.$Class.ROLE_LABELS) as Index.RoleFilter[]).map((value) => ({ value, label: Index.$Class.ROLE_LABELS[value] }));
+    return (Object.keys(Index.$Class.ROLE_LABELS) as Index.RoleFilter[]).map((value) => ({
+      value,
+      label: Index.$Class.ROLE_LABELS[value]
+    }));
   }
 
   get toolOptions(): { value: Index.ToolFilter; label: string }[] {
-    return (Object.keys(Index.$Class.TOOL_LABELS) as Index.ToolFilter[]).map((value) => ({ value, label: Index.$Class.TOOL_LABELS[value] }));
+    return (Object.keys(Index.$Class.TOOL_LABELS) as Index.ToolFilter[]).map((value) => ({
+      value,
+      label: Index.$Class.TOOL_LABELS[value]
+    }));
   }
 
   get hasQuery(): boolean {
@@ -156,7 +162,6 @@ class $Peek {
   get isPinned(): boolean {
     return this.isFiltered || this.searchFocused.value;
   }
-
 
   get matchLabel(): string {
     if (!this.isFiltered) return '';
@@ -331,7 +336,13 @@ class $Peek {
     const scroller = this.scroller.value;
     if (!scroller) return;
     if (this.isFiltered) scroller.scrollToIndex(0, undefined, false, 0);
-    else scroller.scrollToIndex(Math.max(0, this.index.value - Math.floor(this.self.ROWS / 2)), undefined, false, 0);
+    else
+      scroller.scrollToIndex(
+        Math.max(0, this.index.value - Math.floor(this.self.ROWS / 2)),
+        undefined,
+        false,
+        0
+      );
   }
 
   /** the position tracks the pointer while the delay runs, so the card opens on the row under it */
@@ -357,7 +368,13 @@ class $Peek {
     this.index.value = index;
     this.open.value = true;
     // the hot row sits in the middle of the card; a filtered card keeps the reader's place in the matches
-    if (!this.isFiltered) this.scroller.value?.scrollToIndex(Math.max(0, index - Math.floor(this.self.ROWS / 2)), undefined, false, 0);
+    if (!this.isFiltered)
+      this.scroller.value?.scrollToIndex(
+        Math.max(0, index - Math.floor(this.self.ROWS / 2)),
+        undefined,
+        false,
+        0
+      );
   }
 
   /** the card lingers so the pointer can cross the gap into it; a search in progress holds it */
@@ -384,7 +401,8 @@ class $Peek {
     return rows.filter((row) => {
       if (role !== 'all' && row.role !== role) return false;
       if (tools === 'exclude' && row.calls > 0) return false;
-      if (tools === 'compaction' && !SessionLog.Class.isCompaction(row.role, row.preview)) return false;
+      if (tools === 'compaction' && !SessionLog.Class.isCompaction(row.role, row.preview))
+        return false;
       if (!words.length) return true;
       const text = `${this.roleMark(row)} ${row.preview}`.toLowerCase();
       return words.every((word) => text.includes(word));

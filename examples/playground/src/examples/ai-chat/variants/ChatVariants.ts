@@ -18,13 +18,22 @@ class $ChatVariants {
     const namespaces: Record<string, Kit.Namespace> = {
       shipped: ConfiguredChat,
       bubbles: Kit.Class.derive(ConfiguredChat, {
-        Message: { subkit: { Gutter: { vue: NoGutterView }, Head: { vue: BubbleHeadView } } },
+        Message: { subkit: { Gutter: { vue: NoGutterView }, Head: { vue: BubbleHeadView } } }
       }),
       minimal: Kit.Class.derive(ConfiguredChat, {
-        Message: { subkit: { Gutter: { vue: NoGutterView }, Head: { vue: MinimalHeadView }, Foot: { vue: MinimalFootView } } },
-      }),
+        Message: {
+          subkit: {
+            Gutter: { vue: NoGutterView },
+            Head: { vue: MinimalHeadView },
+            Foot: { vue: MinimalFootView }
+          }
+        }
+      })
     };
-    return TreeCatalog.Class.TREES.map((entry) => ({ ...entry, namespace: namespaces[entry.id] ?? ConfiguredChat }));
+    return TreeCatalog.Class.TREES.map((entry) => ({
+      ...entry,
+      namespace: namespaces[entry.id] ?? ConfiguredChat
+    }));
   }
 
   /** a tree by id, the shipped one for an id nobody knows */

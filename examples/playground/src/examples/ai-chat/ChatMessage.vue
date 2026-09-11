@@ -4,7 +4,9 @@ import { ChatMessage } from './ChatMessage';
 const props = defineProps<ChatMessage.Props>();
 
 // the one `new`: the class the entry names, or this view's own
-const model = new ((props.kit?.namespace.Class as typeof ChatMessage.Class | undefined) ?? ChatMessage.Class)(props);
+const model = new (
+  (props.kit?.namespace.Class as typeof ChatMessage.Class | undefined) ?? ChatMessage.Class
+)(props);
 </script>
 
 <template>
@@ -12,9 +14,19 @@ const model = new ((props.kit?.namespace.Class as typeof ChatMessage.Class | und
     <component :is="model.kit.Gutter.vue" :kit="model.kit.Gutter" :model="model" />
     <div class="ac-msg-body">
       <component :is="model.kit.Head.vue" :kit="model.kit.Head" :model="model" />
-      <component v-if="model.isStub" :is="model.kit.Stub.vue" :kit="model.kit.Stub" :model="model" />
+      <component
+        v-if="model.isStub"
+        :is="model.kit.Stub.vue"
+        :kit="model.kit.Stub"
+        :model="model"
+      />
       <component v-else :is="model.kit.Parts.vue" :kit="model.kit.Parts" :model="model" />
-      <component v-if="model.receiptLabel" :is="model.kit.Foot.vue" :kit="model.kit.Foot" :model="model" />
+      <component
+        v-if="model.receiptLabel"
+        :is="model.kit.Foot.vue"
+        :kit="model.kit.Foot"
+        :model="model"
+      />
     </div>
   </article>
 </template>

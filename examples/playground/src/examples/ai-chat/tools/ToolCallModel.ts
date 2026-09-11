@@ -25,7 +25,7 @@ class $ToolCallModel {
       Head: { vue: ToolHeadView },
       Foot: { vue: ToolFootView },
       CodeBlock: { namespace: CodeBlock, vue: CodeBlockView },
-      SubThread: { namespace: SubThread, vue: SubThreadView },
+      SubThread: { namespace: SubThread, vue: SubThreadView }
     } satisfies Kit.Of<ToolCallModel.Role>;
   }
 
@@ -43,7 +43,7 @@ class $ToolCallModel {
     Grep: '⌕',
     Glob: '✱',
     ToolSearch: '⌕',
-    AskUserQuestion: '?',
+    AskUserQuestion: '?'
   };
   /** result text past this many characters folds behind "show everything" */
   static readonly CAP = 4_000;
@@ -141,7 +141,10 @@ class $ToolCallModel {
   }
 
   get elapsedLabel(): string {
-    if (this.isRunning) return this.call.startedAt ? Clock.Class.label(this.chat.clock.elapsed(this.call.startedAt, null), true) : '';
+    if (this.isRunning)
+      return this.call.startedAt
+        ? Clock.Class.label(this.chat.clock.elapsed(this.call.startedAt, null), true)
+        : '';
     return this.call.durationMs !== null ? Clock.Class.label(this.call.durationMs) : '';
   }
 
@@ -154,7 +157,11 @@ class $ToolCallModel {
   }
 
   get cardClass(): Record<string, boolean> {
-    return { 'ac-tool-open': this.isExpanded, 'ac-tool-running': this.isRunning, 'ac-tool-failed': this.isFailed };
+    return {
+      'ac-tool-open': this.isExpanded,
+      'ac-tool-running': this.isRunning,
+      'ac-tool-failed': this.isFailed
+    };
   }
 
   get toggleLabel(): string {
@@ -191,7 +198,9 @@ class $ToolCallModel {
 
   get structured(): Record<string, unknown> {
     const structured = this.call.result?.structured;
-    return structured && typeof structured === 'object' && !Array.isArray(structured) ? (structured as Record<string, unknown>) : {};
+    return structured && typeof structured === 'object' && !Array.isArray(structured)
+      ? (structured as Record<string, unknown>)
+      : {};
   }
 
   get hasResult(): boolean {
@@ -225,8 +234,16 @@ class $ToolCallModel {
 
   /** the blocks the expanded card renders — a tool's own class names its own */
   get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [{ title: 'input', code: this.inputJson, lang: 'json' }];
-    if (this.resultText) sections.push({ title: this.isFailed ? 'error' : 'result', code: this.resultText, lang: 'text', tone: this.isFailed ? 'error' : 'plain' });
+    const sections: ToolCallModel.Section[] = [
+      { title: 'input', code: this.inputJson, lang: 'json' }
+    ];
+    if (this.resultText)
+      sections.push({
+        title: this.isFailed ? 'error' : 'result',
+        code: this.resultText,
+        lang: 'text',
+        tone: this.isFailed ? 'error' : 'plain'
+      });
     return sections;
   }
 

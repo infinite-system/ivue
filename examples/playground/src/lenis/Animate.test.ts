@@ -22,7 +22,11 @@ import { Animate } from './Animate';
 test('a capped lerp moves at most cap × elapsed per frame, keeps running while capped, and still arrives', () => {
   const capped = new Animate.Class();
   const seen: Array<[number, boolean]> = [];
-  capped.fromTo(0, 1000, { lerp: 1, maxPxPerMs: 1, onUpdate: (value, done) => seen.push([value, done]) });
+  capped.fromTo(0, 1000, {
+    lerp: 1,
+    maxPxPerMs: 1,
+    onUpdate: (value, done) => seen.push([value, done])
+  });
   capped.advance(0.016);
   expect(seen[0]).toEqual([16, false]);
   for (let frame = 0; frame < 200 && capped.isRunning; frame++) capped.advance(0.016);
@@ -71,14 +75,16 @@ test('a shifted lerp keeps its remaining distance and arrives at the shifted tar
   expect(animate.value).toBe(350);
 });
 
-
 // domain-invariant: $Animate — If a lerp comes within half a pixel of its target, then it snaps to the target and completes, whether the target is an integer or not
 // impossible-if-true: $Animate — A lerp toward a fractional target that never completes.
 // invariant: A lerp completes within half a pixel of any target (examples/playground/src/lenis/lenis.invariants.md)
 test('a lerp toward a fractional target completes and snaps to it', () => {
   const fractional = new Animate.Class();
   let done = false;
-  fractional.fromTo(0, 518.2035169397, { lerp: 0.1, onUpdate: (_value, completed) => (done = completed) });
+  fractional.fromTo(0, 518.2035169397, {
+    lerp: 0.1,
+    onUpdate: (_value, completed) => (done = completed)
+  });
   for (let frame = 0; frame < 400 && fractional.isRunning; frame++) fractional.advance(0.016);
   expect(fractional.isRunning).toBe(false);
   expect(done).toBe(true);

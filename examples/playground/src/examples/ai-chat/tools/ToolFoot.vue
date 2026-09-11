@@ -11,6 +11,8 @@ defineProps<{ model: ToolCallModel.Instance }>();
     <img v-for="(image, at) in model.images" :key="at" :src="image" alt="" loading="lazy" />
   </div>
   <div v-if="model.showsCapControl" class="ac-tool-foot">
-    <button type="button" class="ac-link" @click="model.toggleAll()">{{ model.showAllLabel }}</button>
+    <button type="button" class="ac-link" @click="model.toggleAll()">
+      {{ model.showAllLabel }}
+    </button>
   </div>
 </template>

@@ -26,7 +26,7 @@ class $SessionLog {
     /<command-message>[\s\S]*?<\/command-message>/g,
     /<command-name>[\s\S]*?<\/command-name>/g,
     /<command-args>[\s\S]*?<\/command-args>/g,
-    /<local-command-stdout>[\s\S]*?<\/local-command-stdout>/g,
+    /<local-command-stdout>[\s\S]*?<\/local-command-stdout>/g
   ];
 
   /** the whole text at once — the tests' and the build script's door */
@@ -67,7 +67,9 @@ class $SessionLog {
     if (content === undefined || content === null) return '';
     if (typeof content === 'string') return content;
     return content
-      .map((block) => (block.type === 'text' ? block.text ?? '' : block.type === 'image' ? '[image]' : ''))
+      .map((block) =>
+        block.type === 'text' ? (block.text ?? '') : block.type === 'image' ? '[image]' : ''
+      )
       .filter(Boolean)
       .join('\n');
   }
@@ -77,13 +79,18 @@ class $SessionLog {
     if (!Array.isArray(content)) return [];
     return content
       .filter((block) => block.type === 'image' && block.source?.data)
-      .map((block) => `data:${block.source?.media_type ?? 'image/png'};base64,${block.source?.data}`);
+      .map(
+        (block) => `data:${block.source?.media_type ?? 'image/png'};base64,${block.source?.data}`
+      );
   }
 
   /** `tool: name` and the first line of what mattered — the collapsed line and the index's text */
   static callSummary(call: SessionLog.ToolCall): string {
     const input = call.input;
-    const first = (value: unknown) => String(value ?? '').split('\n')[0].trim();
+    const first = (value: unknown) =>
+      String(value ?? '')
+        .split('\n')[0]
+        .trim();
     switch (call.name) {
       case 'Bash':
         return first(input.command);
@@ -121,7 +128,10 @@ class $SessionLog {
 
   /** the plain text a message projects — what copy and the index read */
   static messageText(message: SessionLog.Message): string {
-    return message.parts.map((part) => this.partText(part)).filter(Boolean).join('\n');
+    return message.parts
+      .map((part) => this.partText(part))
+      .filter(Boolean)
+      .join('\n');
   }
 
   static partText(part: SessionLog.Part): string {
@@ -196,7 +206,8 @@ export namespace SessionLog {
     is_error?: boolean;
   }
 
-  export type ResultContent = string | { type: string; text?: string; source?: { media_type?: string; data?: string } }[];
+  export type ResultContent =
+    string | { type: string; text?: string; source?: { media_type?: string; data?: string } }[];
 
   export interface Usage {
     input_tokens?: number;
@@ -263,7 +274,8 @@ export namespace SessionLog {
     detail: string;
     durationMs: number | null;
   }
-  export type Part = TextPart | ThinkingPart | ToolCallPart | ToolBatchPart | AttachmentPart | SystemPart;
+  export type Part =
+    TextPart | ThinkingPart | ToolCallPart | ToolBatchPart | AttachmentPart | SystemPart;
 
   export interface Message {
     id: string;

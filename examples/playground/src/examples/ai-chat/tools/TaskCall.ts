@@ -22,8 +22,15 @@ class $TaskCall extends ToolCallModel.$Class {
 
   override get sections(): ToolCallModel.Section[] {
     const sections: ToolCallModel.Section[] = [];
-    if (this.description) sections.push({ title: 'description', code: this.description, lang: 'markdown' });
-    if (this.resultText) sections.push({ title: 'result', code: this.resultText, lang: 'text', tone: this.isFailed ? 'error' : 'plain' });
+    if (this.description)
+      sections.push({ title: 'description', code: this.description, lang: 'markdown' });
+    if (this.resultText)
+      sections.push({
+        title: 'result',
+        code: this.resultText,
+        lang: 'text',
+        tone: this.isFailed ? 'error' : 'plain'
+      });
     return sections;
   }
 }

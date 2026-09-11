@@ -31,7 +31,14 @@ class $McpCall extends ToolCallModel.$Class {
     const sections: ToolCallModel.Section[] = [];
     if (this.code) sections.push({ title: 'code', code: this.code, lang: 'javascript' });
     else sections.push({ title: 'input', code: this.inputJson, lang: 'json' });
-    if (this.resultText) sections.push({ title: 'result', code: this.resultPretty, lang: this.resultPretty.startsWith('{') || this.resultPretty.startsWith('[') ? 'json' : 'text', tone: this.isFailed ? 'error' : 'plain' });
+    if (this.resultText)
+      sections.push({
+        title: 'result',
+        code: this.resultPretty,
+        lang:
+          this.resultPretty.startsWith('{') || this.resultPretty.startsWith('[') ? 'json' : 'text',
+        tone: this.isFailed ? 'error' : 'plain'
+      });
     return sections;
   }
 }

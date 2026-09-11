@@ -480,7 +480,10 @@ test('holding in the zone lifts the speed toward the maximum over rampMs, the ho
   const ramped = { ...mouse, rampMs: 1000 };
   const floor = mouse.minPxPerMs;
   expect(Logic.autoscrollSpeed(0, 1, ramped, 0)).toBe(floor);
-  expect(Logic.autoscrollSpeed(0, 1, ramped, 500)).toBeCloseTo(floor + (mouse.maxPxPerMs - floor) / 2, 6);
+  expect(Logic.autoscrollSpeed(0, 1, ramped, 500)).toBeCloseTo(
+    floor + (mouse.maxPxPerMs - floor) / 2,
+    6
+  );
   expect(Logic.autoscrollSpeed(0, 1, ramped, 1000)).toBeCloseTo(mouse.maxPxPerMs, 6);
   expect(Logic.autoscrollSpeed(0, 1, ramped, 5000)).toBeCloseTo(mouse.maxPxPerMs, 6);
   // Depth still sets the floor the hold lifts from.
@@ -501,13 +504,22 @@ test('holding in the zone lifts the speed toward the maximum over rampMs, the ho
 // invariant: A drag scrolls from inside the edge zone (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('a frame taller than the screen has its zones at the screen’s edges, where a finger can reach them', () => {
   const { dom } = selection(0, 5);
-  const tall = { left: 0, top: -500, right: 800, bottom: 2000, width: 800, height: 2500 } as DOMRect;
+  const tall = {
+    left: 0,
+    top: -500,
+    right: 800,
+    bottom: 2000,
+    width: 800,
+    height: 2500
+  } as DOMRect;
   dom.frame.getBoundingClientRect = () => tall;
   const mouse = Logic.AUTOSCROLL_MOUSE;
   expect(Logic.visibleAxisEdges(dom.frame, 'y')).toEqual([0, window.innerHeight]);
   // At the frame's true top edge the pointer would be off-screen; at the screen's it is in the zone.
   expect(Logic.edgePenetration(dom.frame, 60, 10, 'y', mouse)).toBeLessThan(0);
-  expect(Logic.edgePenetration(dom.frame, 60, window.innerHeight - 10, 'y', mouse)).toBeGreaterThan(0);
+  expect(Logic.edgePenetration(dom.frame, 60, window.innerHeight - 10, 'y', mouse)).toBeGreaterThan(
+    0
+  );
   expect(Logic.edgePenetration(dom.frame, 60, window.innerHeight / 2, 'y', mouse)).toBe(0);
 });
 
@@ -791,15 +803,15 @@ test('on a touch device the highlight is the touch class’s overlay and the nat
     expect(end.hidden).toBe(true);
     expect(overlay.querySelectorAll('.virtual-scroller__touch-box')).toHaveLength(1);
     // A mouse drag on the same device keeps the native selection and drops the overlay.
-  instance.beginAt(60, 20);
-  instance.extendTo(30, 100);
-  instance.endDrag();
-  expect(overlay.hidden).toBe(true);
-  expect(window.getSelection()!.rangeCount).toBe(1);
-  instance.clear();
-  Range.prototype.getClientRects = originalRects;
-  Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, configurable: true });
-  instance.dispose();
+    instance.beginAt(60, 20);
+    instance.extendTo(30, 100);
+    instance.endDrag();
+    expect(overlay.hidden).toBe(true);
+    expect(window.getSelection()!.rangeCount).toBe(1);
+    instance.clear();
+    Range.prototype.getClientRects = originalRects;
+    Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, configurable: true });
+    instance.dispose();
   });
 });
 

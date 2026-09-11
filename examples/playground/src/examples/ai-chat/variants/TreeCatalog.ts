@@ -10,7 +10,7 @@ class $TreeCatalog {
       id: 'shipped',
       label: 'Shipped',
       hint: 'the chat as its files export it',
-      patch: '// nothing — ConfiguredChat as its file exports it',
+      patch: '// nothing — ConfiguredChat as its file exports it'
     },
     {
       id: 'bubbles',
@@ -23,7 +23,7 @@ class $TreeCatalog {
       Head: { vue: BubbleHeadView },
     },
   },
-})`,
+})`
     },
     {
       id: 'minimal',
@@ -37,8 +37,8 @@ class $TreeCatalog {
       Foot: { vue: MinimalFootView },
     },
   },
-})`,
-    },
+})`
+    }
   ];
 
   /** an entry by id, the shipped one for an id nobody knows */

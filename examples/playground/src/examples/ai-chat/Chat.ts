@@ -38,7 +38,7 @@ class $Chat {
       Composer: { namespace: Composer, vue: ChatComposerView },
       Index: { namespace: Index, vue: ChatIndexView },
       Sidebar: { namespace: Sidebar, vue: SidebarView },
-      Peek: { namespace: Peek, vue: ChatPeekView },
+      Peek: { namespace: Peek, vue: ChatPeekView }
     } satisfies Kit.Of<Chat.Role>;
   }
 
@@ -48,11 +48,19 @@ class $Chat {
   static readonly BOTTOM_THRESHOLD_PX = 48;
   /** how long after a reply ends its last pin may keep converging */
   static readonly SEEK_RELEASE_MS = 1200;
-  static readonly STUB_ROLE: Record<string, SessionLog.Role> = { u: 'user', a: 'assistant', s: 'system' };
+  static readonly STUB_ROLE: Record<string, SessionLog.Role> = {
+    u: 'user',
+    a: 'assistant',
+    s: 'system'
+  };
 
   /** one paint later — a frame where there is one, a tick where there is not */
   static frame(): Promise<void> {
-    return new Promise((resolve) => (typeof requestAnimationFrame === 'function' ? requestAnimationFrame(() => resolve()) : setTimeout(resolve, 16)));
+    return new Promise((resolve) =>
+      typeof requestAnimationFrame === 'function'
+        ? requestAnimationFrame(() => resolve())
+        : setTimeout(resolve, 16)
+    );
   }
 
   static bytes(count: number): string {
@@ -63,13 +71,20 @@ class $Chat {
 
   static messageText(message: SessionLog.Message): string {
     return message.parts
-      .map((part) => (part.kind === 'text' ? Markdown.Class.plain(part.text) : SessionLog.Class.partText(part)))
+      .map((part) =>
+        part.kind === 'text' ? Markdown.Class.plain(part.text) : SessionLog.Class.partText(part)
+      )
       .filter(Boolean)
       .join('\n');
   }
 
   static callCount(message: SessionLog.Message): number {
-    return message.parts.reduce((count, part) => count + (part.kind === 'tool_call' ? 1 : part.kind === 'tool_batch' ? part.calls.length : 0), 0);
+    return message.parts.reduce(
+      (count, part) =>
+        count +
+        (part.kind === 'tool_call' ? 1 : part.kind === 'tool_batch' ? part.calls.length : 0),
+      0
+    );
   }
 
   /** a file's whole text where streams are missing: Blob.text, else a FileReader */
@@ -84,22 +99,29 @@ class $Chat {
   }
 
   static tokenCount(message: SessionLog.Message): number {
-    return message.parts.reduce((count, part) => count + (part.kind === 'text' || part.kind === 'thinking' ? ChatApi.Class.tokens(part.text).length : 0), 0);
+    return message.parts.reduce(
+      (count, part) =>
+        count +
+        (part.kind === 'text' || part.kind === 'thinking'
+          ? ChatApi.Class.tokens(part.text).length
+          : 0),
+      0
+    );
   }
   constructor(public props: Chat.Props = {}) {
     onMounted(() => this.load());
     onBeforeUnmount(() => this.dispose());
     watch(
       () => this.windowRange,
-      (range) => this.onWindow(range),
+      (range) => this.onWindow(range)
     );
     watch(
       () => this.scrollOffset,
-      () => this.onScroll(),
+      () => this.onScroll()
     );
     watch(
       () => this.thumbDragging,
-      (dragging) => this.onThumbDrag(dragging),
+      (dragging) => this.onThumbDrag(dragging)
     );
   }
 
@@ -336,9 +358,12 @@ class $Chat {
   }
 
   get sourceLabel(): string {
-    if (this.source.value === 'file') return `${this.fileName.value} · ${this.fileLines.value.toLocaleString('en-US')} lines, parsed in this tab`;
+    if (this.source.value === 'file')
+      return `${this.fileName.value} · ${this.fileLines.value.toLocaleString('en-US')} lines, parsed in this tab`;
     const meta = this.meta.value;
-    return meta ? `${meta.source.file.slice(0, 8)}… · a real Claude Code session, scrubbed` : 'loading the sample…';
+    return meta
+      ? `${meta.source.file.slice(0, 8)}… · a real Claude Code session, scrubbed`
+      : 'loading the sample…';
   }
 
   get countLabel(): string {
@@ -431,7 +456,7 @@ class $Chat {
       preview: entry.t,
       calls: entry.c,
       at: entry.at,
-      message: null,
+      message: null
     }));
   }
 
@@ -443,7 +468,10 @@ class $Chat {
     }
     this.heldWindow.value = null;
     const first = Math.max(0, Math.floor(range.start / this.pageSize) - this.self.PAGE_MARGIN);
-    const last = Math.min(this.pageCount - 1, Math.floor(Math.max(range.end - 1, 0) / this.pageSize) + this.self.PAGE_MARGIN);
+    const last = Math.min(
+      this.pageCount - 1,
+      Math.floor(Math.max(range.end - 1, 0) / this.pageSize) + this.self.PAGE_MARGIN
+    );
     for (let page = first; page <= last; page++) void this.ensurePage(page);
   }
 
@@ -507,11 +535,15 @@ class $Chat {
     const extent = Number(scroller.scrollExtent ?? 0);
     const container = Number(scroller.containerOuterSize ?? 0);
     const offset = this.scrollOffset;
-    this.atBottom.value = extent <= container || offset + container >= extent - this.self.BOTTOM_THRESHOLD_PX;
+    this.atBottom.value =
+      extent <= container || offset + container >= extent - this.self.BOTTOM_THRESHOLD_PX;
     // the chip points at the latest message: once its top is on screen the reader has reached
     // it, however long it runs below the fold
     const latestTop = scroller.getIndexPosition?.(this.latestIndex);
-    this.latestInView.value = this.atBottom.value || (typeof latestTop === 'number' && latestTop < offset + container - this.self.BOTTOM_THRESHOLD_PX);
+    this.latestInView.value =
+      this.atBottom.value ||
+      (typeof latestTop === 'number' &&
+        latestTop < offset + container - this.self.BOTTOM_THRESHOLD_PX);
   }
 
   /** the thread hands the peek every pointer move — it decides whether the track is under it */
@@ -659,7 +691,14 @@ class $Chat {
     parts.push(...request.attachments);
     if (!parts.length) return;
     const now = Date.now();
-    this.append({ id: `local-user-${now}`, index: this.count, role: 'user', timestamp: now, parts, sidechain: false });
+    this.append({
+      id: `local-user-${now}`,
+      index: this.count,
+      role: 'user',
+      timestamp: now,
+      parts,
+      sidechain: false
+    });
     await this.landLatest();
     const source = await this.pickSource(request.text);
     await this.reply(source, ChatApi.Class.model(request.model));
@@ -676,10 +715,19 @@ class $Chat {
       preview: this.self.messageText(message).replace(/\s+/g, ' ').slice(0, 96),
       calls: this.self.callCount(message),
       at: message.timestamp,
-      message,
+      message
     };
     this.rows.value = [...this.rows.value, row];
-    this.indexRows.value = [...this.indexRows.value, { id: row.id, r: message.role[0], t: row.preview, c: this.self.callCount(message), at: message.timestamp }];
+    this.indexRows.value = [
+      ...this.indexRows.value,
+      {
+        id: row.id,
+        r: message.role[0],
+        t: row.preview,
+        c: this.self.callCount(message),
+        at: message.timestamp
+      }
+    ];
     return row;
   }
 
@@ -688,13 +736,30 @@ class $Chat {
    * one whose words meet the draft's; the last loaded page otherwise.
    */
   async pickSource(text: string): Promise<SessionLog.Message> {
-    const words = text.toLowerCase().split(/\W+/).filter((word) => word.length > 3);
+    const words = text
+      .toLowerCase()
+      .split(/\W+/)
+      .filter((word) => word.length > 3);
     const candidates = this.rows.value
       .map((row) => row.message)
-      .filter((message): message is SessionLog.Message => Boolean(message && message.role === 'assistant' && !message.id.startsWith('local-')));
-    const withText = candidates.filter((message) => message.parts.some((part) => part.kind === 'text'));
+      .filter((message): message is SessionLog.Message =>
+        Boolean(message && message.role === 'assistant' && !message.id.startsWith('local-'))
+      );
+    const withText = candidates.filter((message) =>
+      message.parts.some((part) => part.kind === 'text')
+    );
     const pool = withText.length ? withText : candidates;
-    if (!pool.length) return { id: 'fallback', index: 0, role: 'assistant', timestamp: Date.now(), parts: [{ kind: 'text', text: 'No turn is loaded yet to replay — scroll the thread first.' }], sidechain: false };
+    if (!pool.length)
+      return {
+        id: 'fallback',
+        index: 0,
+        role: 'assistant',
+        timestamp: Date.now(),
+        parts: [
+          { kind: 'text', text: 'No turn is loaded yet to replay — scroll the thread first.' }
+        ],
+        sidechain: false
+      };
     let best = pool[Math.floor(ChatApi.Class.random() * pool.length)];
     let bestScore = 0;
     for (const message of pool) {
@@ -710,16 +775,37 @@ class $Chat {
 
   async reply(source: SessionLog.Message, model: ChatApi.Model) {
     const startedAt = Date.now();
-    const message: SessionLog.Message = { id: `local-reply-${startedAt}`, index: this.count, role: 'assistant', timestamp: startedAt, parts: [], sidechain: false, model: model.label, replay: true };
+    const message: SessionLog.Message = {
+      id: `local-reply-${startedAt}`,
+      index: this.count,
+      role: 'assistant',
+      timestamp: startedAt,
+      parts: [],
+      sidechain: false,
+      model: model.label,
+      replay: true
+    };
     const row = this.append(message);
     const controller = new AbortController();
     const release = this.clock.hold();
-    const streaming: Chat.Streaming = { row, message, startedAt, controller, release, firstTokenAt: null, lastPinAt: 0, thinking: null, sourceId: source.id };
+    const streaming: Chat.Streaming = {
+      row,
+      message,
+      startedAt,
+      controller,
+      release,
+      firstTokenAt: null,
+      lastPinAt: 0,
+      thinking: null,
+      sourceId: source.id
+    };
     this.streaming.value = streaming;
     try {
-      for await (const event of ChatApi.Class.stream(source, model, controller.signal)) this.applyEvent(streaming, event);
+      for await (const event of ChatApi.Class.stream(source, model, controller.signal))
+        this.applyEvent(streaming, event);
     } catch (error) {
-      if (!(error instanceof DOMException && error.name === 'AbortError')) this.error.value = error instanceof Error ? error.message : String(error);
+      if (!(error instanceof DOMException && error.name === 'AbortError'))
+        this.error.value = error instanceof Error ? error.message : String(error);
     } finally {
       message.durationMs = Date.now() - startedAt;
       message.usage = { output_tokens: this.self.tokenCount(message) };
@@ -738,7 +824,12 @@ class $Chat {
     const last = message.parts[message.parts.length - 1];
     switch (event.type) {
       case 'thinking_start': {
-        const part: SessionLog.ThinkingPart = { kind: 'thinking', text: '', durationMs: null, startedAt: Date.now() };
+        const part: SessionLog.ThinkingPart = {
+          kind: 'thinking',
+          text: '',
+          durationMs: null,
+          startedAt: Date.now()
+        };
         message.parts.push(part);
         streaming.thinking = part;
         break;
@@ -747,7 +838,8 @@ class $Chat {
         if (streaming.thinking) streaming.thinking.text += event.text;
         break;
       case 'thinking_end':
-        if (streaming.thinking) streaming.thinking.durationMs = Date.now() - (streaming.thinking.startedAt ?? Date.now());
+        if (streaming.thinking)
+          streaming.thinking.durationMs = Date.now() - (streaming.thinking.startedAt ?? Date.now());
         streaming.thinking = null;
         break;
       case 'token':
@@ -757,12 +849,22 @@ class $Chat {
         else message.parts.push({ kind: 'text', text: event.text });
         break;
       case 'tool_call': {
-        const call: SessionLog.ToolCall = { ...event.call, state: 'running', result: null, durationMs: null, startedAt: Date.now(), children: null };
+        const call: SessionLog.ToolCall = {
+          ...event.call,
+          state: 'running',
+          result: null,
+          durationMs: null,
+          startedAt: Date.now(),
+          children: null
+        };
         message.parts.push({ kind: 'tool_call', call });
         break;
       }
       case 'tool_result': {
-        const part = message.parts.find((candidate): candidate is SessionLog.ToolCallPart => candidate.kind === 'tool_call' && candidate.call.id === event.call.id);
+        const part = message.parts.find(
+          (candidate): candidate is SessionLog.ToolCallPart =>
+            candidate.kind === 'tool_call' && candidate.call.id === event.call.id
+        );
         if (part) {
           part.call.result = event.call.result;
           part.call.state = event.call.state === 'failed' ? 'failed' : 'done';
@@ -778,7 +880,12 @@ class $Chat {
     this.bump();
     // a card or a thought is a whole block arriving at once: land it after it has measured, so the
     // reader sees the call and its spinner the moment it appears; words pin on a cadence
-    if (event.type === 'tool_call' || event.type === 'tool_result' || event.type === 'thinking_start' || event.type === 'thinking_end') {
+    if (
+      event.type === 'tool_call' ||
+      event.type === 'tool_result' ||
+      event.type === 'thinking_start' ||
+      event.type === 'thinking_end'
+    ) {
       streaming.lastPinAt = Date.now();
       void this.settleAtBottom();
       return;
@@ -812,7 +919,9 @@ class $Chat {
   /** a reply's index row learns its final preview and tool count once the stream ends */
   refreshIndexRow(message: SessionLog.Message) {
     const preview = this.self.messageText(message).replace(/\s+/g, ' ').slice(0, 96);
-    this.indexRows.value = this.indexRows.value.map((entry) => (entry.id === message.id ? { ...entry, t: preview, c: this.self.callCount(message) } : entry));
+    this.indexRows.value = this.indexRows.value.map((entry) =>
+      entry.id === message.id ? { ...entry, t: preview, c: this.self.callCount(message) } : entry
+    );
     const at = this.rows.value.findIndex((row) => row.id === message.id);
     if (at >= 0) {
       const next = this.rows.value.slice();
@@ -872,7 +981,13 @@ class $Chat {
     this.loadedPages.value = new Set();
     this.pendingPages.value = new Map();
     this.expanded.value = new Set();
-    this.indexRows.value = messages.map((message) => ({ id: message.id, r: message.role[0], t: this.self.messageText(message).replace(/\s+/g, ' ').slice(0, 96), c: this.self.callCount(message), at: message.timestamp }));
+    this.indexRows.value = messages.map((message) => ({
+      id: message.id,
+      r: message.role[0],
+      t: this.self.messageText(message).replace(/\s+/g, ' ').slice(0, 96),
+      c: this.self.callCount(message),
+      at: message.timestamp
+    }));
     this.rows.value = messages.map((message, at) => ({
       id: message.id,
       body: '',
@@ -883,7 +998,7 @@ class $Chat {
       preview: this.indexRows.value[at].t,
       calls: this.indexRows.value[at].c,
       at: message.timestamp,
-      message,
+      message
     }));
     void nextTick(() => this.jumpToLatest(false));
   }
@@ -893,9 +1008,13 @@ class $Chat {
   /** the messages for a set of ids, in thread order, their pages loaded first */
   async messagesFor(ids: Set<string>): Promise<SessionLog.Message[]> {
     const rows = this.rows.value.filter((row) => ids.has(row.id));
-    const pages = new Set(rows.filter((row) => !row.message && row.page >= 0).map((row) => row.page));
+    const pages = new Set(
+      rows.filter((row) => !row.message && row.page >= 0).map((row) => row.page)
+    );
     await Promise.all([...pages].map((page) => this.ensurePage(page)));
-    return this.rows.value.filter((row) => ids.has(row.id) && row.message).map((row) => row.message as SessionLog.Message);
+    return this.rows.value
+      .filter((row) => ids.has(row.id) && row.message)
+      .map((row) => row.message as SessionLog.Message);
   }
 
   /* ---- teardown ---- */

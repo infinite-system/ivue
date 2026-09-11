@@ -7,7 +7,9 @@ import './ai-chat.css';
 const props = defineProps<{ dark?: boolean; kit?: Kit.Entry }>();
 
 // the root constructs the class it was handed, or its own
-const chat = new ((props.kit?.namespace.Class as typeof Chat.Class | undefined) ?? Chat.Class)(props);
+const chat = new ((props.kit?.namespace.Class as typeof Chat.Class | undefined) ?? Chat.Class)(
+  props
+);
 
 // the state destructure — every Ref the template touches, grouped
 const {
@@ -16,25 +18,58 @@ const {
   error,
   // element refs
   scroller,
-  peek,
+  peek
 } = chat;
 </script>
 
 <template>
-  <div class="ai-chat" :class="{ 'ac-dark': dark, 'ac-side-is-open': chat.indexOpen }" :data-theme="chat.theme" :data-density="chat.density" :data-tree="chat.tree">
-
+  <div
+    class="ai-chat"
+    :class="{ 'ac-dark': dark, 'ac-side-is-open': chat.indexOpen }"
+    :data-theme="chat.theme"
+    :data-density="chat.density"
+    :data-tree="chat.tree"
+  >
     <p v-if="error" class="ac-error">{{ error }}</p>
 
     <div class="ac-main">
-      <section class="ac-thread" @pointermove="chat.onThreadPointerMove($event)" @pointerleave="chat.onThreadPointerLeave()">
-        <component :is="chat.kit.Scroller.vue" ref="scroller" :kit="chat.kit.Scroller" scrollbar :auto-repeat="false" v-model="rows" :assumed-size="96" :padding-quantity="6" :selection-text="chat.rowText">
+      <section
+        class="ac-thread"
+        @pointermove="chat.onThreadPointerMove($event)"
+        @pointerleave="chat.onThreadPointerLeave()"
+      >
+        <component
+          :is="chat.kit.Scroller.vue"
+          ref="scroller"
+          :kit="chat.kit.Scroller"
+          scrollbar
+          :auto-repeat="false"
+          v-model="rows"
+          :assumed-size="96"
+          :padding-quantity="6"
+          :selection-text="chat.rowText"
+        >
           <template #item="{ item }">
-            <component :is="chat.kit.Message.vue" :kit="chat.kit.Message" :row="item" :chat="chat" />
+            <component
+              :is="chat.kit.Message.vue"
+              :kit="chat.kit.Message"
+              :row="item"
+              :chat="chat"
+            />
           </template>
         </component>
         <component :is="chat.kit.Peek.vue" ref="peek" :kit="chat.kit.Peek" :chat="chat" />
-        <button v-if="chat.showsJumpToLatest" type="button" class="ac-jump" @click="chat.jumpToLatest()"><span aria-hidden="true">↓</span> Jump to bottom</button>
-        <div v-if="chat.isLoadingThread" class="ac-loading-thread"><span class="ac-spinner" aria-hidden="true"></span> loading the index…</div>
+        <button
+          v-if="chat.showsJumpToLatest"
+          type="button"
+          class="ac-jump"
+          @click="chat.jumpToLatest()"
+        >
+          <span aria-hidden="true">↓</span> Jump to bottom
+        </button>
+        <div v-if="chat.isLoadingThread" class="ac-loading-thread">
+          <span class="ac-spinner" aria-hidden="true"></span> loading the index…
+        </div>
       </section>
       <component :is="chat.kit.Sidebar.vue" :kit="chat.kit.Sidebar" :chat="chat" />
     </div>
@@ -43,18 +78,53 @@ const {
 
     <footer class="ac-stats">
       <dl class="ac-receipts">
-        <div><dt>messages</dt><dd>{{ chat.countLabel }}</dd></div>
-        <div><dt>rows in the DOM</dt><dd class="ac-grad">{{ chat.domRowCount }}</dd></div>
-        <div><dt>loaded</dt><dd>{{ chat.loadedLabel }}</dd></div>
-        <div><dt>pages</dt><dd :title="chat.fetchingLabel"><span class="ac-spinner ac-spinner-soft ac-pages-spinner" :class="{ 'ac-idle': !chat.isFetching }" aria-hidden="true"></span>{{ chat.pagesLabel }}</dd></div>
-        <div><dt>fetched</dt><dd>{{ chat.bytesLabel }} <span class="ac-muted">of {{ chat.totalBytesLabel }}</span></dd></div>
-        <div><dt>requests</dt><dd>{{ chat.requestCountLabel }}</dd></div>
-        <div><dt>tokens streamed</dt><dd>{{ chat.tokensLabel }}</dd></div>
+        <div>
+          <dt>messages</dt>
+          <dd>{{ chat.countLabel }}</dd>
+        </div>
+        <div>
+          <dt>rows in the DOM</dt>
+          <dd class="ac-grad">{{ chat.domRowCount }}</dd>
+        </div>
+        <div>
+          <dt>loaded</dt>
+          <dd>{{ chat.loadedLabel }}</dd>
+        </div>
+        <div>
+          <dt>pages</dt>
+          <dd :title="chat.fetchingLabel">
+            <span
+              class="ac-spinner ac-spinner-soft ac-pages-spinner"
+              :class="{ 'ac-idle': !chat.isFetching }"
+              aria-hidden="true"
+            ></span
+            >{{ chat.pagesLabel }}
+          </dd>
+        </div>
+        <div>
+          <dt>fetched</dt>
+          <dd>
+            {{ chat.bytesLabel }} <span class="ac-muted">of {{ chat.totalBytesLabel }}</span>
+          </dd>
+        </div>
+        <div>
+          <dt>requests</dt>
+          <dd>{{ chat.requestCountLabel }}</dd>
+        </div>
+        <div>
+          <dt>tokens streamed</dt>
+          <dd>{{ chat.tokensLabel }}</dd>
+        </div>
       </dl>
       <div class="ac-stats-actions">
         <label class="ac-btn" :class="{ 'ac-busy': chat.isLoadingFile }">
           {{ chat.fileLoadLabel }}
-          <input type="file" accept=".jsonl,application/jsonl,text/plain" hidden @change="chat.open(($event.target as HTMLInputElement).files![0])" />
+          <input
+            type="file"
+            accept=".jsonl,application/jsonl,text/plain"
+            hidden
+            @change="chat.open(($event.target as HTMLInputElement).files![0])"
+          />
         </label>
       </div>
     </footer>

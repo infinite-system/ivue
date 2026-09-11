@@ -77,7 +77,9 @@ class $BashCall extends ToolCallModel.$Class {
 
   get stderr(): string {
     const structured = this.structured;
-    return typeof structured.stderr === 'string' ? structured.stderr.replace(this.self.ANSI, '') : '';
+    return typeof structured.stderr === 'string'
+      ? structured.stderr.replace(this.self.ANSI, '')
+      : '';
   }
 
   get wasInterrupted(): boolean {
@@ -108,9 +110,12 @@ class $BashCall extends ToolCallModel.$Class {
   }
 
   override get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [{ title: 'command', code: this.command, lang: 'bash' }];
+    const sections: ToolCallModel.Section[] = [
+      { title: 'command', code: this.command, lang: 'bash' }
+    ];
     if (this.hasStdout) sections.push({ title: 'stdout', code: this.stdout, lang: 'text' });
-    if (this.hasStderr) sections.push({ title: 'stderr', code: this.stderr, lang: 'text', tone: 'error' });
+    if (this.hasStderr)
+      sections.push({ title: 'stderr', code: this.stderr, lang: 'text', tone: 'error' });
     return sections;
   }
 }

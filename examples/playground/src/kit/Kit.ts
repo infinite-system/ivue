@@ -47,7 +47,7 @@ class $Kit {
         static get $kit() {
           return kit.resolve(kit.merge(Base.$kit ?? {}, patch));
         }
-      },
+      }
     );
     return { ...namespace, $Class, Class: Reactive($Class), derivedFrom: namespace };
   }
@@ -88,14 +88,22 @@ class $Kit {
   /** A patch that names a namespace and keeps the base view gets that view rewrapped over the new
    *  class, so `{ namespace: Themed }` alone declares what Themed declares; a patch that brings its
    *  own view is left alone — that view declares what it declares. */
-  protected static mergeEntry(current: Kit.Entry | undefined, patch: Partial<Kit.Entry>): Kit.Entry {
+  protected static mergeEntry(
+    current: Kit.Entry | undefined,
+    patch: Partial<Kit.Entry>
+  ): Kit.Entry {
     const merged = { ...current, ...patch } as Kit.Entry;
-    if (patch.namespace && !patch.vue && current?.vue) merged.vue = this.view(current.vue, patch.namespace);
+    if (patch.namespace && !patch.vue && current?.vue)
+      merged.vue = this.view(current.vue, patch.namespace);
     return merged;
   }
 
   protected static isEntry(value: unknown): value is Kit.Entry {
-    return typeof value === 'object' && value !== null && ('vue' in value || 'namespace' in value || 'subkit' in value);
+    return (
+      typeof value === 'object' &&
+      value !== null &&
+      ('vue' in value || 'namespace' in value || 'subkit' in value)
+    );
   }
 
   /** Freeze the kit's SHAPE — role maps and entries — and stop at an entry's leaves: a namespace

@@ -290,7 +290,10 @@ class $VirtualScrollerSelection {
       const insideY =
         axis === 'y' ? clampedY : Math.min(rect.bottom - 1, Math.max(rect.top + 1, clampedY));
       const caret = this.caretFromPoint(insideX, insideY);
-      return { index: this.rowIndexOf(nearest), offset: caret ? this.offsetInRow(nearest, caret) : 0 };
+      return {
+        index: this.rowIndexOf(nearest),
+        offset: caret ? this.offsetInRow(nearest, caret) : 0
+      };
     }
 
     // Before the nearest row selects from its start; after, to its end.
@@ -308,10 +311,7 @@ class $VirtualScrollerSelection {
   /** The frame's VISIBLE edges along the axis: its edges clipped to the
    *  viewport. A frame taller than the screen has an edge no finger can
    *  reach; the zone sits inside the part that is on screen. */
-  static visibleAxisEdges(
-    element: Element,
-    axis: VirtualScrollerSelection.Axis
-  ): [number, number] {
+  static visibleAxisEdges(element: Element, axis: VirtualScrollerSelection.Axis): [number, number] {
     const [start, end] = this.axisEdges(element, axis);
     const limit = axis === 'y' ? window.innerHeight : window.innerWidth;
     return [Math.max(0, start), Math.min(limit, end)];

@@ -4,7 +4,9 @@ import type { ToolCallModel } from './ToolCallModel';
 
 const props = defineProps<ToolCallModel.Props>();
 
-const model = new ((props.kit?.namespace.Class as typeof ReadCall.Class | undefined) ?? ReadCall.Class)(props);
+const model = new (
+  (props.kit?.namespace.Class as typeof ReadCall.Class | undefined) ?? ReadCall.Class
+)(props);
 </script>
 
 <template>
@@ -17,7 +19,15 @@ const model = new ((props.kit?.namespace.Class as typeof ReadCall.Class | undefi
           <span class="ac-tag">{{ model.rangeLabel }}</span>
           <span v-if="model.lineCountLabel" class="ac-tag">{{ model.lineCountLabel }}</span>
         </h5>
-        <component :is="model.kit.CodeBlock.vue" :kit="model.kit.CodeBlock" v-if="model.showsCode" :code="model.code" :lang="model.language" :cap="model.cap" :start-line="model.startLine" />
+        <component
+          :is="model.kit.CodeBlock.vue"
+          :kit="model.kit.CodeBlock"
+          v-if="model.showsCode"
+          :code="model.code"
+          :lang="model.language"
+          :cap="model.cap"
+          :start-line="model.startLine"
+        />
         <p v-else-if="model.showsEmpty" class="ac-tool-caption ac-muted">{{ model.emptyLabel }}</p>
       </section>
       <component :is="model.kit.Foot.vue" :model="model" />

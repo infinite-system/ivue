@@ -323,7 +323,6 @@ class $Lenis {
   readonly dimensions: Dimensions.Model; // public: the Snap class reads it
   protected readonly virtualScroll: VirtualScroll.Model;
 
-
   /**
    * Subtracted from the applied translate (and added back on read-back) so
    * a virtualized consumer can keep the RENDERED offset near zero while the
