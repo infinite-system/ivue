@@ -92,6 +92,88 @@ The same shape consumes a Pinia store or any `useX()` service. And when
 the shared thing is yours, the store itself is an ivue class — that is
 the next section.
 
+### The simplest form: call it in the constructor
+
+In a class a component constructs, the constructor body IS the
+component's setup. A composable the class always needs, that is cheap to
+create and belongs to that component's scope, can be called there and
+kept on a field:
+
+```ts
+// BlogPostNav.ts — the older/newer post cards under an article
+import { useRoute } from 'vitepress';
+
+class $BlogPostNav {
+  constructor() {
+    this.route = useRoute();
+  }
+
+  protected readonly route: ReturnType<typeof useRoute>;
+
+  get isBlogPost() {
+    return /^\/blog\/.+/.test(this.route.path);
+  }
+}
+```
+
+This is the simplest host there is, and it is correct because the call
+happens inside setup, after `super()`, on an instance a component owns.
+It is not the field-initializer form the standard bans: `route =
+useRoute()` as a class field runs before the constructor body, in every
+test that touches the class, and at module order's mercy in a cycle.
+
+The `$`-getter is the same call made lazy. Reach for it when the
+composable may not be needed on every instance, when it must resolve
+after the app is ready (a store), when the class outlives a component,
+or when a subclass or a test should be able to override it. Reach for
+the constructor when none of that applies and the route, the i18n
+instance or the theme is simply part of what the class is.
+
+### Caching a module-global once per class: the static `$`-getter
+
+The same `$` convention works on statics, and there it caches once per
+class instead of once per instance. Anything expensive that comes from
+outside the class — a module-level data import, a filtered view of it,
+a parsed table — sits behind a `static get $name()` and is built the
+first time any instance reads it, then shared by all of them. The same
+file:
+
+```ts
+// BlogPostNav.ts
+import { Static } from 'ivue/extras';
+import { data as allPosts } from '../../../blog/blog.data.mjs';
+
+class $BlogPostNav {
+  /** the public archive, newest-first, built once per class */
+  static get $posts(): BlogPostNav.Post[] {
+    return (allPosts as BlogPostNav.Post[]).filter((post) => !post.private);
+  }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $BlogPostNav;
+  }
+
+  get currentIndex() {
+    return this.self.$posts.findIndex((post) => post.url === this.route.path);
+  }
+}
+
+export namespace BlogPostNav {
+  export const $Class = Static($BlogPostNav); // anchored — the class has statics
+  export let Class = Reactive($Class);
+  export type Instance = typeof Class.Instance;
+}
+```
+
+`allPosts` is a build-time data import that every article page shares.
+Filtering it per instance would repeat the work on every mount;
+filtering it at module evaluation would run before anything asked and
+pin the import order. The static `$`-getter does it on first touch, once
+per class, and a subclass gets its own cached copy because `Static()`
+caches per receiver. The rules for these getters are on the
+[statics page](/guide/static#cached-static-getters).
+
 ## Stores: a singleton behind `use()`
 
 Shared application state — session, navigation, toasts, the current
