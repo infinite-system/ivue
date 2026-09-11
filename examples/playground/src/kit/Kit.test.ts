@@ -7,6 +7,9 @@ Goal: Prove the kit's five claims against a real component tree — a root, a ca
 [A derived contract reaches Vue](./kit.invariants.md#a-derived-contract-reaches-vue)
 [Kit props reach the getters an author opens](./kit.invariants.md#kit-props-reach-the-getters-an-author-opens)
 [Props and emits are fixed per component object](./kit.invariants.md#props-and-emits-are-fixed-per-component-object)
+[An order is edited only through relations against names](./kit.invariants.md#an-order-is-edited-only-through-relations-against-names)
+[A bind is a projection the layer above extends](./kit.invariants.md#a-bind-is-a-projection-the-layer-above-extends)
+[A second write to one field is reported never merged](./kit.invariants.md#a-second-write-to-one-field-is-reported-never-merged)
 // domain-invariant: $Kit — If a class's `$kit` is read through a subclass, then the subclass gets its own kit object built by its own getter, in any read order
 // domain-invariant: $Kit — If an entry carries a subkit, then resolve derives its namespace and rewraps its view, and every untouched entry keeps its identity
 // domain-invariant: $Kit — If an entry names a namespace and keeps the base view, then merge rewraps the view over that namespace
@@ -14,13 +17,25 @@ Goal: Prove the kit's five claims against a real component tree — a root, a ca
 // domain-invariant: $Kit — If a kit is resolved, then its maps and entries are frozen and its namespaces, views and props bags are not
 // domain-invariant: $Kit — If a view's compiled props and emits are fixed, then a prop only a derived class declares falls through the base view as an attribute, its default never applies, and emitting its event warns
 // domain-invariant: $Kit — If a mounted view object's props are widened in place, then Vue's cached normalized options ignore the change, which is why a rewrap is a fresh object
+// domain-invariant: $Kit — If a patch edits `order`, then `without` runs first and every move and insert lands against its anchor by name, an inserted role anchoring a later one of the same patch, and two layers on one anchor land in derivation order with the outer layer nearest the anchor
+// domain-invariant: $Kit — If an order relation names a role the order lacks, names one role twice, contradicts itself, or places a role no entry declares, then derive throws before any class is built
+// domain-invariant: $Kit — If an entry's view is a tag name, then the seam renders that element with what the bind returns and nothing else — no entry, no model
+// domain-invariant: $Kit — If a layer binds a role a layer below already bound, then its seam's `inherited` runs the layer below's bind on the same seam, down to the default `{ model, kit }`
+// domain-invariant: $Kit — If a seam is built, then a bound role with a class receives its entry beside what the bind returned, an unbound role receives `{ model, kit }` and no seam object, and no role's name is read
+// domain-invariant: $Kit — If two layers replace one field of one entry or move one role, then derive names both layers in order, as a warning by default and a throw when strict; a bind written twice is composition, not a contact
+// domain-invariant: $Kit — If a derived namespace is printed, then every seam shows its position, role, view, class, bind and the layer that set each, and a nested kit prints below its role
 Impossible if true: a base kit changed by reading an override's kit
 Impossible if true: a view constructing anything but its entry's namespace Class
 Impossible if true: a kit value reaching a prop no getter opened
+Impossible if true: an absolute order list accepted by derive
 
 === GENERATOR-DESCRIBED ===
-$Kit is three statics — resolve, derive, view — over data a class declares
-as `static get $kit()`. The cache is Static()'s own `$` guard, keyed by the
+$Kit is four statics — resolve, derive, view, seam — over data a class
+declares as `static get $kit()`, plus the readers `layers`, `conflicts` and
+`tree`. The Strip fixture is the container: its view renders `order` and
+`seamProps`, its body feeds items through a bound role, and every order
+test derives it by relations — never a list, which derive refuses — so an
+upstream role added to Strip later lands in every derived tree untouched. The cache is Static()'s own `$` guard, keyed by the
 receiver's own property, so no cache lives here. The fixtures are real:
 Card.vue, Code.vue, Panel.vue and their sections compile through
 @vitejs/plugin-vue and mount with @vue/test-utils under a dev-mode Vue, so
@@ -44,6 +59,10 @@ import { FancyCard } from './fixtures/FancyCard';
 import FancyHeadView from './fixtures/FancyHead.vue';
 import { Panel } from './fixtures/Panel';
 import PanelView from './fixtures/Panel.vue';
+import { Strip } from './fixtures/Strip';
+import StripView from './fixtures/Strip.vue';
+import StripHeadView from './fixtures/StripHead.vue';
+import StripFootView from './fixtures/StripFoot.vue';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -213,7 +232,7 @@ describe('an override never reaches another tree', () => {
     const instance = new (Derived.Class as typeof Card.Class)({
       title: 't',
       items: ['a']
-    } as Card.Props);
+    } as unknown as Card.Props);
     expect(instance.copied).toBe(instance.copied);
     expect(instance.kit.Head.view).toBe(FancyHeadView);
     expect(instance.kit.Body.view).toBe(CardBodyView);
@@ -222,7 +241,7 @@ describe('an override never reaches another tree', () => {
     expect(instance.copiedCount).toBe(1);
     expect(instance.reversedItems).toEqual(['a']);
     expect(typeof instance.$watch).toBe('function');
-    expect(new Card.Class({ title: 't', items: [] } as Card.Props).kit.Head.view).toBe(
+    expect(new Card.Class({ title: 't', items: [] } as unknown as Card.Props).kit.Head.view).toBe(
       CardHeadView
     );
   });
@@ -427,7 +446,7 @@ describe('kit props reach the getters an author opens', () => {
     expect(wrapper.text()).not.toContain('ignored'); // `code` is closed to the kit
     const entry = Card.$Class.$kit.Code;
     const plain = new Code.Class(
-      { code: 'abcdefg', cap: 4, kit: entry } as Code.Props,
+      { code: 'abcdefg', cap: 4, kit: entry } as unknown as Code.Props,
       (() => {}) as Code.Emits
     );
     expect(plain.cap).toBe(4); // an entry without props changes nothing
@@ -458,5 +477,287 @@ describe('kit props reach the getters an author opens', () => {
     expect(model.cap).toBe(2);
     expect(warn).toHaveBeenCalledTimes(1);
     expect(String(warn.mock.calls[0][0])).toContain('target is readonly');
+  });
+});
+
+/** A strip through a namespace: the view constructs the class the entry names. */
+function mountStrip(namespace: Kit.Namespace, items: string[] = ['abcdef', 'xy']) {
+  return mount(StripView, {
+    props: { title: 'S', items, cap: 3, kit: { namespace, view: StripView } } as never
+  });
+}
+
+/** The strip's children in document order, each as its tag and class. */
+function sections(wrapper: { findAll: (selector: string) => { element: Element }[] }): string[] {
+  return wrapper
+    .findAll('.strip > *')
+    .map((node) => `${node.element.tagName.toLowerCase()}.${node.element.className}`);
+}
+
+describe('an order is edited only through relations against names', () => {
+  // domain-invariant: $Kit — If a patch edits `order`, then `without` runs first and every move and insert lands against its anchor by name, an inserted role anchoring a later one of the same patch, and two layers on one anchor land in derivation order with the outer layer nearest the anchor
+  // invariant: An order is edited only through relations against names (examples/playground/src/kit/kit.invariants.md)
+  it('after, before, without and move resolve against names, and the mounted strip renders the resolved order', () => {
+    const Badged = Kit.Class.derive(Strip, {
+      order: {
+        after: { Head: ['Badge', 'Pin'] },
+        before: { Foot: ['Rule'] },
+        without: ['Body'],
+        move: { Head: { after: 'Foot' } }
+      },
+      Badge: { view: StripFootView, bind: ({ inherited }) => ({ ...inherited(), class: 'badge' }) },
+      Pin: { view: 'span', bind: () => ({ class: 'pin' }) },
+      Rule: { view: 'hr', bind: () => ({ class: 'rule' }) }
+    });
+    expect(Badged.$Class.$kit!.order).toEqual(['Rule', 'Foot', 'Head', 'Badge', 'Pin']);
+    expect(Strip.$Class.$kit.order).toEqual(['Head', 'Body', 'Foot']); // the base list, untouched
+    expect(Object.isFrozen(Badged.$Class.$kit!.order)).toBe(true);
+    const wrapper = mountStrip(Badged);
+    expect(sections(wrapper)).toEqual([
+      'hr.rule',
+      'footer.strip-foot',
+      'header.strip-head',
+      'footer.strip-foot badge',
+      'span.pin'
+    ]);
+    expect(wrapper.find('.badge').text()).toBe('2'); // Badge received the model through inherited()
+  });
+
+  // domain-invariant: $Kit — If a patch edits `order`, then `without` runs first and every move and insert lands against its anchor by name, an inserted role anchoring a later one of the same patch, and two layers on one anchor land in derivation order with the outer layer nearest the anchor
+  it('two layers on one anchor land in derivation order, the outer layer nearest the anchor, and a third layer sees both', () => {
+    const One = Kit.Class.derive(
+      Strip,
+      { order: { after: { Head: ['A'] } }, A: { view: 'i', bind: () => ({ class: 'a' }) } },
+      { name: 'one' }
+    );
+    const Two = Kit.Class.derive(
+      One,
+      { order: { after: { Head: ['B'] } }, B: { view: 'b', bind: () => ({ class: 'b' }) } },
+      { name: 'two' }
+    );
+    expect(One.$Class.$kit!.order).toEqual(['Head', 'A', 'Body', 'Foot']);
+    expect(Two.$Class.$kit!.order).toEqual(['Head', 'B', 'A', 'Body', 'Foot']);
+    // a third layer anchors on a role the second inserted: names resolve across layers
+    const Three = Kit.Class.derive(Two, { order: { move: { Foot: { before: 'B' } } } });
+    expect(Three.$Class.$kit!.order).toEqual(['Head', 'Foot', 'B', 'A', 'Body']);
+    expect(Kit.Class.layers(Three).map((layer) => layer.layer)).toEqual([
+      undefined,
+      'one',
+      'two',
+      'layer 3'
+    ]);
+    expect(Three.derivedFrom).toBe(Two);
+    expect(sections(mountStrip(Two))).toEqual([
+      'header.strip-head',
+      'b.b',
+      'i.a',
+      'div.strip-body',
+      'footer.strip-foot'
+    ]);
+  });
+
+  // domain-invariant: $Kit — If an order relation names a role the order lacks, names one role twice, contradicts itself, or places a role no entry declares, then derive throws before any class is built
+  // impossible-if-true: $Kit — an absolute order list accepted by derive
+  // invariant: An order is edited only through relations against names (examples/playground/src/kit/kit.invariants.md)
+  it('a list, a missing anchor, a missing role, a cycle, a role named twice, an undeclared role and a re-insert are each refused at derive time', () => {
+    const derive = (patch: Kit.Patch) => () => Kit.Class.derive(Strip, patch);
+    expect(derive({ order: ['Head', 'Foot'] as never })).toThrow(/never a list/);
+    expect(derive({ order: { after: { Nope: ['X'] } }, X: { view: 'i' } })).toThrow(
+      /"Nope" but the order has no such role/
+    );
+    expect(derive({ order: { without: ['Nope'] } })).toThrow(
+      /"Nope" but the order has no such role/
+    );
+    expect(derive({ order: { move: { Nope: { after: 'Head' } } } })).toThrow(
+      /"Nope" but the order has no such role/
+    );
+    expect(
+      derive({ order: { move: { Head: { after: 'Foot' }, Foot: { after: 'Head' } } } })
+    ).toThrow(/cycle: Foot → Head → Foot|cycle: Head → Foot → Head/);
+    expect(derive({ order: { move: { Head: { before: 'Head' } } } })).toThrow(/against itself/);
+    expect(
+      derive({ order: { after: { Head: ['A'] }, before: { Foot: ['A'] } }, A: { view: 'i' } })
+    ).toThrow(/"A" is named twice/);
+    expect(derive({ order: { after: { Head: ['Ghost'] } } })).toThrow(
+      /names "Ghost" but no entry declares it/
+    );
+    expect(derive({ order: { after: { Foot: ['Head'] } } })).toThrow(
+      /"Head" is already in the order/
+    );
+    expect(() => Kit.Class.derive(Card, { order: { without: ['Head'] } })).toThrow(
+      /the base declares none/
+    );
+    expect(Strip.$Class.$kit.order).toEqual(['Head', 'Body', 'Foot']); // nothing above reached the base
+  });
+
+  // domain-invariant: $Kit — If an entry's view is a tag name, then the seam renders that element with what the bind returns and nothing else — no entry, no model
+  it('a tag role renders its element with the bind and nothing else, and a tag view passes through view() unwrapped', () => {
+    const Ruled = Kit.Class.derive(Strip, {
+      order: { after: { Head: ['Rule'] } },
+      Rule: { view: 'hr', bind: () => ({ class: 'rule', 'data-role': 'rule' }) }
+    });
+    const wrapper = mountStrip(Ruled);
+    const rule = wrapper.find('hr.rule');
+    expect(rule.exists()).toBe(true);
+    expect(Object.keys(rule.attributes())).toEqual(['class', 'data-role']); // no kit, no model landed on the element
+    expect(Kit.Class.view('hr', Code)).toBe('hr');
+    expect(
+      Kit.Class.seam({}, (Ruled.$Class.$kit as unknown as Record<string, Kit.Entry>).Rule)
+    ).toEqual({
+      class: 'rule',
+      'data-role': 'rule'
+    });
+  });
+});
+
+describe('a bind is a projection the layer above extends', () => {
+  // domain-invariant: $Kit — If a seam is built, then a bound role with a class receives its entry beside what the bind returned, an unbound role receives `{ model, kit }` and no seam object, and no role's name is read
+  // invariant: The entry crosses the seam (examples/playground/src/kit/kit.invariants.md)
+  it('seam() hands an unbound role { model, kit }, a bound class role its entry beside the bind, and a tag role only the bind', () => {
+    const model = { cap: 3 };
+    const kit = Strip.$Class.$kit;
+    expect(Kit.Class.seam(model, kit.Head)).toEqual({ model, kit: kit.Head });
+    expect(Kit.Class.seam(model, kit.Head).kit).toBe(kit.Head);
+    expect(Kit.Class.seam(model, kit.Item, 'abc', 0)).toEqual({
+      kit: kit.Item,
+      code: 'abc',
+      cap: 3,
+      'data-key': 0
+    });
+    const seen: unknown[] = [];
+    const spy: Kit.Entry = { view: 'i', bind: (seam) => (seen.push(seam), {}) };
+    Kit.Class.seam(model, spy, 'x', 'k');
+    expect(seen[0]).toMatchObject({ model, item: 'x', key: 'k' });
+    expect((seen[0] as Kit.Seam).inherited()).toEqual({ model, kit: spy }); // the default, closed over this seam
+  });
+
+  // domain-invariant: $Kit — If a layer binds a role a layer below already bound, then its seam's `inherited` runs the layer below's bind on the same seam, down to the default `{ model, kit }`
+  // invariant: A bind is a projection the layer above extends (examples/playground/src/kit/kit.invariants.md)
+  it('two layers over a bound role compose through inherited, and the mounted items carry every layer', () => {
+    const Capped = Kit.Class.derive(Strip, {
+      Item: { bind: ({ inherited }) => ({ ...inherited(), cap: 1 }) }
+    });
+    const Tagged = Kit.Class.derive(Capped, {
+      Item: { bind: ({ inherited, key }) => ({ ...inherited(), lang: `k${key}` }) }
+    });
+    const model = { cap: 3 };
+    const entry = Tagged.$Class.$kit!.Item as Kit.Entry;
+    expect(Kit.Class.seam(model, entry, 'abc', 0)).toEqual({
+      kit: entry,
+      code: 'abc',
+      cap: 1,
+      'data-key': 0,
+      lang: 'k0'
+    });
+    expect(Kit.Class.seam(model, Strip.$Class.$kit.Item, 'abc', 0).cap).toBe(3); // the base bind, untouched
+    const wrapper = mountStrip(Tagged);
+    const codes = wrapper.findAll('.code');
+    expect(codes.map((node) => node.text())).toEqual(['a', 'x']); // cap 1 from the middle layer
+    expect(codes.map((node) => node.attributes('data-lang'))).toEqual(['k0', 'k1']); // lang from the outer layer
+    expect(codes.map((node) => node.attributes('data-key'))).toEqual(['0', '1']); // the base bind's key
+    // a layer that ignores inherited replaces the feeding wholesale
+    const Replaced = Kit.Class.derive(Capped, {
+      Item: { bind: ({ item }) => ({ code: `${item}!` }) }
+    });
+    expect(
+      mountStrip(Replaced)
+        .findAll('.code')
+        .map((node) => node.text())
+    ).toEqual(['abcdef!', 'xy!']);
+  });
+
+  it('shows() decides presence: the base hides the foot over no items, a layer overrides it with a super fallback', () => {
+    expect(sections(mountStrip(Strip, []))).toEqual(['header.strip-head', 'div.strip-body']);
+    expect(sections(mountStrip(Strip))).toEqual([
+      'header.strip-head',
+      'div.strip-body',
+      'footer.strip-foot'
+    ]);
+    class $Headless extends Strip.$Class {
+      override shows(role: Strip.SectionRole): boolean {
+        return role === 'Head' ? false : super.shows(role);
+      }
+    }
+    const Headless = { $Class: Static($Headless), Class: Reactive(Static($Headless)) };
+    expect(sections(mountStrip(Headless))).toEqual(['div.strip-body', 'footer.strip-foot']);
+  });
+});
+
+describe('a second write to one field is reported, never merged', () => {
+  // domain-invariant: $Kit — If two layers replace one field of one entry or move one role, then derive names both layers in order, as a warning by default and a throw when strict; a bind written twice is composition, not a contact
+  // invariant: A second write to one field is reported never merged (examples/playground/src/kit/kit.invariants.md)
+  it('a view written twice warns with both layers in order, throws when strict, and the last write wins', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const One = Kit.Class.derive(Strip, { Head: { view: StripFootView } }, { name: 'one' });
+    expect(warn).not.toHaveBeenCalled(); // the shipped base is not a layer
+    const Two = Kit.Class.derive(One, { Head: { view: StripHeadView } }, { name: 'two' });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0][0])).toContain('Head.view: written by one, then two');
+    expect((Two.$Class.$kit!.Head as Kit.Entry).view).toBe(StripHeadView);
+    expect(() =>
+      Kit.Class.derive(Two, { Head: { view: StripFootView } }, { name: 'app', strict: true })
+    ).toThrow(/Head\.view: written by one, then two, then app/);
+    expect(Kit.Class.conflicts(Two, { Head: { view: StripFootView } }, 'app')).toEqual([
+      'Head.view: written by one, then two, then app'
+    ]);
+  });
+
+  // domain-invariant: $Kit — If two layers replace one field of one entry or move one role, then derive names both layers in order, as a warning by default and a throw when strict; a bind written twice is composition, not a contact
+  it('a role moved twice is a contact, an insert beside another is not, a bind over a bind is not, and a nested write is keyed by its path', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const Moved = Kit.Class.derive(
+      Strip,
+      { order: { move: { Foot: { before: 'Head' } } } },
+      { name: 'one' }
+    );
+    Kit.Class.derive(Moved, { order: { move: { Foot: { after: 'Body' } } } }, { name: 'two' });
+    expect(String(warn.mock.calls[0][0])).toContain('#move:Foot: written by one, then two');
+    warn.mockClear();
+    const Inserted = Kit.Class.derive(Strip, {
+      order: { after: { Head: ['A'] } },
+      A: { view: 'i' }
+    });
+    Kit.Class.derive(Inserted, { order: { after: { Head: ['B'] } }, B: { view: 'b' } });
+    const Bound = Kit.Class.derive(Strip, { Item: { bind: ({ inherited }) => inherited() } });
+    Kit.Class.derive(Bound, { Item: { bind: ({ inherited }) => inherited() } });
+    expect(warn).not.toHaveBeenCalled();
+    const Nested = Kit.Class.derive(
+      Panel,
+      { Card: { subkit: { Head: { view: FancyHeadView } } } },
+      { name: 'fancy' }
+    );
+    expect(
+      Kit.Class.conflicts(Nested, { Card: { subkit: { Head: { view: CardHeadView } } } }, 'plain')
+    ).toEqual(['Card.Head.view: written by fancy, then plain']);
+  });
+
+  // domain-invariant: $Kit — If a derived namespace is printed, then every seam shows its position, role, view, class, bind and the layer that set each, and a nested kit prints below its role
+  it('tree() prints every seam with its position, view, class, bind and the layer that set each', () => {
+    const One = Kit.Class.derive(
+      Strip,
+      { order: { after: { Head: ['A'] } }, A: { view: 'i', bind: () => ({ class: 'a' }) } },
+      { name: 'one' }
+    );
+    const Two = Kit.Class.derive(
+      One,
+      { order: { move: { Foot: { before: 'Body' } } }, Head: { view: StripFootView } },
+      { name: 'two' }
+    );
+    const printed = Kit.Class.tree(Two).split('\n');
+    expect(printed[0]).toBe('order: Head A Foot Body');
+    expect(printed).toContain('0 Head: view StripFoot · class - · bind no · view←two');
+    expect(printed).toContain(
+      '1 A: view <i> · class - · bind yes · view←one, bind←one, position←one'
+    );
+    expect(printed).toContain('2 Foot: view StripFoot · class - · bind no · position←two');
+    expect(printed).toContain('3 Body: view StripBody · class - · bind no · base');
+    expect(printed).toContain('- Item: view Code · class $Code · bind yes · base');
+    const nested = Kit.Class.tree(ThemedPanel).split('\n');
+    expect(nested[0]).toBe('- Card: view Card · class $Card + 1 layer(s) · bind no · base');
+    expect(nested).toContain('  - Head: view FancyHead · class - · bind no · view←layer 1');
+    expect(nested).toContain(
+      '  - Code: view Code · class $ThemedCode · bind no · namespace←layer 1'
+    );
+    expect(Kit.Class.tree(Strip).split('\n')[0]).toBe('order: Head Body Foot');
   });
 });

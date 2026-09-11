@@ -9,15 +9,16 @@ annotations (`// invariant: <name> (examples/playground/src/kit/kit.invariants.m
 and by the generator header of the colocated `Kit.test.ts`.
 
 The fixtures under `fixtures/` are the proving tree: `Panel` above `Card`
-above three sections and a `Code` leaf, every view a `<script setup>` SFC
-with a class contract. They exist for the spec and for the design task
+above three sections and a `Code` leaf, and `Strip`, a container whose view
+renders its kit's `order` and feeds its items through a bound role, every
+view a `<script setup>` SFC with a class contract. They exist for the spec and for the design task
 `tasks/ai-chat-kit.md`, which this file's records govern.
 
 ## Generator
 
 ### A tree is malleable when every seam carries one entry and every class reads only its own kit
 
-**Invariant:** If every model declares its roles as `static get $kit()`, every seam is `<component :is="model.kit.Role.view" :kit="model.kit.Role" …props />`, every view constructs the class its entry names, and every model reads its kit from its own class, then any role at any depth can be swapped, derived or tuned from outside by a subclass, and no swap reaches a tree that did not ask for it.
+**Invariant:** If every model declares its roles as `static get $kit()`, every seam is `<component :is="model.kit.Role.view" v-bind="model.seamProps(Role)" />` — a container looping that seam over its kit's `order` — every view constructs the class its entry names, and every model reads its kit from its own class, then any role at any depth can be swapped, derived, tuned, fed, inserted, dropped or moved from outside by a patch that names roles and never positions, and no patch reaches a tree that did not ask for it.
 
 **Scope:** `Kit.ts` and every class that declares `$kit`. Vue 3.5, the reactive-proxy runtime; Vapor is not exercised.
 
@@ -28,20 +29,23 @@ with a class contract. They exist for the spec and for the design task
 - [A derived contract reaches Vue](#a-derived-contract-reaches-vue) — why a widened class comes with a rewrapped view.
 - [Kit props reach the getters an author opens](#kit-props-reach-the-getters-an-author-opens) — why a consumer's values travel as a prop and never into props.
 - [Props and emits are fixed per component object](#props-and-emits-are-fixed-per-component-object) — the reality the rewrapped view answers.
+- [An order is edited only through relations against names](#an-order-is-edited-only-through-relations-against-names) — why a container's children are data a layer edits without a copy, and why a list is refused.
+- [A bind is a projection the layer above extends](#a-bind-is-a-projection-the-layer-above-extends) — why what a child receives is on the entry and composes through `inherited`.
+- [A second write to one field is reported never merged](#a-second-write-to-one-field-is-reported-never-merged) — why several layers stay readable.
 
-**Mechanism:** `Static()` caches a `$`-prefixed static getter once per receiver through an own-property guard, so `$kit` costs one build per class and a subclass builds its own. `resolve` walks a kit, derives the namespace of every entry with a `subkit` and rewraps its view; `derive` extends the base's `$Class` with a `$kit` that is the base's merged with the patch; `view` copies a compiled SFC's fields under a class's `props` and `emits`. Every function reads the base and returns new objects; a resolved kit is frozen in shape.
+**Mechanism:** `Static()` caches a `$`-prefixed static getter once per receiver through an own-property guard, so `$kit` costs one build per class and a subclass builds its own. `resolve` walks a kit, derives the namespace of every entry with a `subkit` and rewraps its view; `derive` extends the base's `$Class` with a `$kit` that is the base's merged with the patch, resolves the patch's `order` relations against the base's list, composes a patch's `bind` over the base's, and reports a field two layers wrote; `view` copies a compiled SFC's fields under a class's `props` and `emits`; `seam` builds what a seam hands a child from the entry alone. Every function reads the base and returns new objects; a resolved kit is frozen in shape.
 
 **Generates:** The colocated `Kit.test.ts`; the design in `tasks/ai-chat-kit.md` and the "The kit" section of `tasks/malleable-architecture.md`; the conversion of the AI chat example, when it comes.
 
-**Impossible if true:** A base kit changed by reading an override's kit. A view constructing anything but its entry's namespace `Class`. A kit value reaching a prop no getter opened. A widened prop or event unknown to the view that renders the widened class.
+**Impossible if true:** A base kit changed by reading an override's kit. A view constructing anything but its entry's namespace `Class`. A kit value reaching a prop no getter opened. A widened prop or event unknown to the view that renders the widened class. A layer holding a container's list, or a container naming a role in its template.
 
-**Evidence:** `Kit.test.ts`, 20 specs, every one mounting or constructing real fixtures.
+**Evidence:** `Kit.test.ts`, 30 specs, every one mounting or constructing real fixtures.
 
 **Verification:** `npx vitest run examples/playground/src/kit` green, then `node .claude/skills/invariants/scripts/check_invariants.mjs --all --refs` clean, then `npm run gate:docs` at zero findings.
 
 **Status:** provisional
 
-**Last refined:** 2026-09-10
+**Last refined:** 2026-09-11
 
 ## Reality-based invariants
 
@@ -179,6 +183,70 @@ with a class contract. They exist for the spec and for the design task
 
 **Last refined:** 2026-09-11
 
+### An order is edited only through relations against names
+
+**Invariant:** If a container's kit carries `order` and a patch edits it, then the patch names roles and their neighbours — `after`, `before`, `without`, `move` — and never a list; `without` runs first, then every move and insert lands against its anchor by name, an inserted role anchoring a later one of the same patch; two layers on one anchor land in derivation order, the outer layer nearest the anchor; and a list, a name the order lacks, a role named twice in one patch, relations that contradict each other, a re-insert of a present role, or a placed role no entry declares throws at derive time.
+
+**Scope:** `Kit.Class.derive` over any kit with `order`; `merge`, `order`, `relationsOf`, `refuseCycle`. The container's template is `<template v-for="role in model.kit.order" :key="role"><component v-if="model.shows(role)" :is="model.kit[role].view" v-bind="model.seamProps(role)" /></template>`; presence is `shows(role)`, a named method a layer overrides with a `super` fallback, never a bind. A markup leaf between roles is a tag role — an entry whose `view` is a tag name and has no `namespace`; a wrapper around a subset is a container role with an order of its own.
+
+**Mechanism:** A held list is a snapshot: a role upstream adds later vanishes from every layer that holds one, and two such layers cannot compose. A relation names what it knows and nothing else, so an upstream addition lands where upstream put it. `order` applies `without`, then runs moves and inserts to a fixpoint as their anchors become present — a stuck relation is a missing name; `refuseCycle` walks the relations as "X precedes Y" edges first, so a contradiction throws before any role is placed; `merge` checks every role the resolved order names against the resolved entries.
+
+**Generates:** The `ChatMessage` row as a container of six roles; the Bubbles, Minimal and Compact trees as patches (`examples/playground/src/examples/ai-chat/variants/ChatVariants.ts`); the `Strip` fixture; the design `tasks/malleable-templates.md`.
+
+**Rejected alternatives:** A layer writing the full order — a snapshot that drops upstream roles and cannot compose; appending at a missing anchor and carrying on — hides a false assumption; a priority number per patch — per-seam priorities are the tangle; key order of a `subkit` as list order — membership and sequence are different facts; parts and sections as one loop — they differ by the seam's `item` and `key`, and the difference is the contract; dropping `before` — the first position has no predecessor to be after.
+
+**Evidence:** `Kit.test.ts`: "after, before, without and move resolve against names, and the mounted strip renders the resolved order", "two layers on one anchor land in derivation order, the outer layer nearest the anchor, and a third layer sees both", "a list, a missing anchor, a missing role, a cycle, a role named twice, an undeclared role and a re-insert are each refused at derive time", "a tag role renders its element with the bind and nothing else, and a tag view passes through view() unwrapped"; `ChatMessage.test.ts`: "bubbles, minimal and compact are patches over the order — nothing copied, the shipped row untouched".
+
+**Impossible if true:** A derived kit whose `order` came from a list in a patch. A relation against a name the order lacks resolving silently. A container's template naming one of its sections.
+
+**Verification:** `npx vitest run examples/playground/src/kit -t "relations against names"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-11
+
+### A bind is a projection the layer above extends
+
+**Invariant:** If an entry carries `bind`, then what its role's view receives is `bind({ model, item, key, inherited })` — one argument, names never positions; `item` and `key` are the list's under a list container and `undefined` under a section container; `inherited()` takes no arguments and is the layer below's bind closed over the same seam, the default `{ model, kit }` when no layer bound — and a role with a class always receives its entry beside what the bind returned, so its view constructs the class the kit names; a role without `bind` receives `{ model, kit }` and no seam object is built; a tag role receives only what its bind says.
+
+**Scope:** `Kit.Class.seam`, called by every container's `seamProps(role, item?, key?)`; `mergeEntry` for the composition. A bind reads and returns: it never creates state, calls a composable, or writes to the model — heavy logic stays on the class and a bind composes named getters and methods. It runs inside the container's render, so every read it makes is tracked by that render, as an inline binding's was.
+
+**Mechanism:** `seam` reads the entry and nothing else — a container never branches on a role's name because the kit already is the table keyed by role. `mergeEntry` wraps a patch's bind so that its seam's `inherited` runs the base's bind on the same seam; a chain of layers nests the wrap, so each layer's `inherited` is the layer below's resolved bind and the innermost is the seam's default. `seam` spreads the bind's result after `kit: entry` for a role with a namespace — the entry crosses the seam by construction, not by every bind author remembering it.
+
+**Generates:** The parts loop of `ChatMessage` (`bind: this.bindPart` on every part entry, the part as the seam's item); the Compact tree's dressed foot; `props` on an entry stays a different thing — pulled by the child through `?? super`, where `bind` is pushed by the parent.
+
+**Rejected alternatives:** A `seamProps` that switches on the role name — a lookup table keyed by role, duplicated from the kit, unpatchable; a separate `attrs` field — a fragment of `bind`, since props, attrs and listeners are one `v-bind` object; positional bind arguments — a later field would touch every bind; presence through `bind` — a bind returns props, and a role that is not there has none to return.
+
+**Evidence:** `Kit.test.ts`: "seam() hands an unbound role { model, kit }, a bound class role its entry beside the bind, and a tag role only the bind", "two layers over a bound role compose through inherited, and the mounted items carry every layer", "shows() decides presence: the base hides the foot over no items, a layer overrides it with a super fallback"; `ChatMessage.test.ts`: "seamProps() hands a section the model and its entry, and a part its entry beside the bind — one method, no role named".
+
+**Impossible if true:** A bound role with a class rendering without its entry. A layer's `inherited()` returning anything but the layer below's bind over the same seam. A seam object allocated for an unbound role.
+
+**Verification:** `npx vitest run examples/playground/src/kit -t "the layer above extends"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-11
+
+### A second write to one field is reported never merged
+
+**Invariant:** If a patch replaces a field (`view`, `namespace`, `props`) of an entry a layer below already replaced, or moves a role a layer below already moved, then `derive` reports the contact naming every layer that wrote it in derivation order — a console warning by default, a throw when `strict` is passed — and the last write wins; a `bind` over a `bind` and an insert beside another are composition, not contacts; the shipped base is not a layer, so a first replacement is silent.
+
+**Scope:** `Kit.Class.derive`, `conflicts`, `writesOf`, `reportConflicts`; every chain `[p1, p2, p3].reduce(derive, Base)`. Precedence is derivation order alone: later wins everywhere, the way a later stylesheet or a subclass wins. The app resolves a contact as the last layer, and the report shows that it did. `derivedFrom`, `patch` and `layer` on every derived namespace are what `Kit.Class.tree` reads to print the resolved tree: each seam's position, role, view, class, bind, and the layer that set each.
+
+**Mechanism:** Every derived namespace carries the patch it is and a name (`options.name`, else `layer N`); `writesOf` flattens a patch to keys — `Message.Head.view`, `Message#move:Foot` — and `conflicts` intersects the new patch's keys with the chain's, exempting `.bind` and inserted positions. Nothing is merged: `mergeEntry` still spreads the patch over the base, so the report describes what happened and changes nothing.
+
+**Rejected alternatives:** A priority number per patch or per seam — a second ordering to reconcile with the chain; silent last-wins — the diagram nobody can read after thirty plugins; merging two views — there is no such thing.
+
+**Evidence:** `Kit.test.ts`: "a view written twice warns with both layers in order, throws when strict, and the last write wins", "a role moved twice is a contact, an insert beside another is not, a bind over a bind is not, and a nested write is keyed by its path", "tree() prints every seam with its position, view, class, bind and the layer that set each".
+
+**Impossible if true:** Two layers replacing one field with no line in the report. A strict derive returning a namespace over a contact. A printed tree that cannot say which layer set a seam's view.
+
+**Verification:** `npx vitest run examples/playground/src/kit -t "reported, never merged"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-11
+
 ## Impossibility boundary — what these invariants forbid
 
 If the invariants hold, none of these can exist in a correct state:
@@ -189,6 +257,9 @@ If the invariants hold, none of these can exist in a correct state:
 - a listener or slot lost by swapping the component behind a seam
 - a widened prop or event unknown to the view that renders the widened class
 - a kit value in Vue's props, or in a getter that did not read it
+- a layer holding a container's list, a relation against a name that is not there resolving silently, or a container's template naming one of its sections
+- a bound role with a class rendering without its entry, or a layer's `inherited()` returning anything but the layer below's bind
+- two layers replacing one field with no line in the report
 
 A change that introduces any of the above is breaking an invariant, not
 adding a feature — re-derive from here before writing it.

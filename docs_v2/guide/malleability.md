@@ -277,6 +277,25 @@ and the stores where it always did. The kit moves the presentation and
 the composition axis out of the code and into data, which is most of
 what a settings page ever was.
 
+## A container's children are data
+
+A leaf is markup. A container is an ordered list of roles, and that list
+is on the kit too, as `order`. The container's template loops one seam
+over it — `<component v-for="role in model.kit.order" :is="model.kit[role].view" v-bind="model.seamProps(role)" />`
+— so a layer inserts, drops, moves or dresses a section without copying
+the template. A patch edits `order` only by relations against names:
+`after: { Head: ['Badge'] }`, `before: { Foot: ['Rule'] }`,
+`without: ['Gutter']`, `move: { Foot: { before: 'Parts' } }`. `derive`
+refuses a list, because a held list is a snapshot that drops every role
+upstream adds later. Markup between roles is a role whose view is a tag
+name, `Rule: { view: 'hr' }`. What a child receives is `bind` on the
+entry, a plain function of `{ model, item, key, inherited }`, and a layer
+extends the layer below through `inherited()`. Two layers writing one
+field is reported by `derive`, and `Kit.Class.tree` prints the resolved
+tree with the layer that set each seam. The chat example's message row
+is the first container built this way, and its three tree variants are
+patches over it. The records: `examples/playground/src/kit/kit.invariants.md`.
+
 ## A widened contract reaches Vue
 
 Props and emits in Vue belong to the component object, fixed once when
