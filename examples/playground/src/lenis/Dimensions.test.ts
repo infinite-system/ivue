@@ -14,7 +14,11 @@ limit through lenis.virtualLimit, so this spec pins the measured path.
 import { expect, test, vi } from 'vitest';
 import { Dimensions } from './Dimensions';
 
-function sized(wrapper: HTMLElement, content: HTMLElement, size: { client: number; scroll: number }) {
+function sized(
+  wrapper: HTMLElement,
+  content: HTMLElement,
+  size: { client: number; scroll: number }
+) {
   for (const [name, value] of [
     ['clientWidth', size.client],
     ['clientHeight', size.client],

@@ -27,7 +27,13 @@ class $SkillCall extends ToolCallModel.$Class {
   override get sections(): ToolCallModel.Section[] {
     const sections: ToolCallModel.Section[] = [];
     if (this.args) sections.push({ title: 'arguments', code: this.args, lang: 'text' });
-    if (this.resultText) sections.push({ title: 'loaded', code: this.resultText, lang: 'markdown', tone: this.isFailed ? 'error' : 'plain' });
+    if (this.resultText)
+      sections.push({
+        title: 'loaded',
+        code: this.resultText,
+        lang: 'markdown',
+        tone: this.isFailed ? 'error' : 'plain'
+      });
     return sections;
   }
 }

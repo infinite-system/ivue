@@ -47,8 +47,8 @@ class $ToolCallPart {
         Skill: { namespace: SkillCall, vue: SkillCallView },
         WebFetch: { namespace: WebFetchCall, vue: WebFetchCallView },
         WebSearch: { namespace: WebFetchCall, vue: WebFetchCallView },
-        Artifact: { namespace: ArtifactCall, vue: ArtifactCallView },
-      } as Record<string, Kit.Entry>,
+        Artifact: { namespace: ArtifactCall, vue: ArtifactCallView }
+      } as Record<string, Kit.Entry>
     };
   }
 

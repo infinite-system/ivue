@@ -33,7 +33,15 @@ test('the flick velocity is read off the trail, and falls back to the frame velo
   // 200 px over 100 ms = 2 px/ms ≈ 33.4 px per 16.7 ms frame.
   expect(trailVelocity(trail, 0)).toBeCloseTo(33.4, 6);
   // A span longer than the window reads as the window.
-  expect(trailVelocity([{ at: 0, position: 0 }, { at: 400, position: 200 }], 0)).toBeCloseTo(33.4, 6);
+  expect(
+    trailVelocity(
+      [
+        { at: 0, position: 0 },
+        { at: 400, position: 200 }
+      ],
+      0
+    )
+  ).toBeCloseTo(33.4, 6);
   expect(trailVelocity([trail[0]], 7)).toBe(7);
   expect(trailVelocity([trail[0], { at: 1004, position: 50 }], 7)).toBe(7);
   expect(trailVelocity([], 3)).toBe(3);
@@ -86,9 +94,16 @@ test('an idle frame before the touchend does not zero the flick: the trail still
   // The frame's own velocity read zero (no move in the last 16 ms); the trail says otherwise.
   expect(trailVelocity(trail, 0)).toBeGreaterThan(30);
   // The window drops what is older than FLICK_WINDOW_MS, so a pause mid-touch is not a flick.
-  const paused = [{ at: 0, position: 0 }, { at: 50, position: 100 }, { at: 400, position: 100 }];
+  const paused = [
+    { at: 0, position: 0 },
+    { at: 50, position: 100 },
+    { at: 400, position: 100 }
+  ];
   trimTrail(paused, 400, FLICK_WINDOW_MS);
-  expect(paused).toEqual([{ at: 50, position: 100 }, { at: 400, position: 100 }]);
+  expect(paused).toEqual([
+    { at: 50, position: 100 },
+    { at: 400, position: 100 }
+  ]);
   expect(trailVelocity(paused, 0)).toBe(0);
 });
 
@@ -113,7 +128,8 @@ test('a nested native box keeps the wheel in both directions while it can still 
     disconnect() {}
   }
   const hadObserver = 'ResizeObserver' in globalThis;
-  if (!hadObserver) (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
+  if (!hadObserver)
+    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
   const wrapper = document.createElement('div');
   const content = document.createElement('div');
   wrapper.appendChild(content);
@@ -125,9 +141,20 @@ test('a nested native box keeps the wheel in both directions while it can still 
   Object.defineProperty(box, 'clientHeight', { value: 100, configurable: true });
   const check = (scrollTop: number, deltaY: number) => {
     box.scrollTop = scrollTop;
-    Object.defineProperty(box, 'scrollTop', { value: scrollTop, configurable: true, writable: true });
+    Object.defineProperty(box, 'scrollTop', {
+      value: scrollTop,
+      configurable: true,
+      writable: true
+    });
     delete (box as unknown as { _lenis?: unknown })._lenis;
-    return (lenis as unknown as { checkNestedScroll: (node: HTMLElement, delta: { deltaX: number; deltaY: number }) => boolean }).checkNestedScroll(box, { deltaX: 0, deltaY });
+    return (
+      lenis as unknown as {
+        checkNestedScroll: (
+          node: HTMLElement,
+          delta: { deltaX: number; deltaY: number }
+        ) => boolean;
+      }
+    ).checkNestedScroll(box, { deltaX: 0, deltaY });
   };
   expect(check(0, 10)).toBe(true); // at the top, a wheel down is the box's
   expect(check(0, -10)).toBe(false); // at the top, a wheel up has nowhere to go: the list's

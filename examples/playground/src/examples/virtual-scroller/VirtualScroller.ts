@@ -228,7 +228,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     };
   }
 
-  constructor(props: VirtualScroller.Props<T>, public emit: VirtualScroller.Emits) {
+  constructor(
+    props: VirtualScroller.Props<T>,
+    public emit: VirtualScroller.Emits
+  ) {
     this.props = nestedProps(props, this.self.propsDefaults as VirtualScroller.KnobDefaults);
     this.elementSize = useElementSize(this.scrollElement);
     this.outerElementSize = useElementSize(this.scrollElement, undefined, {
@@ -749,7 +752,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** nothing left for the frame loop to paint: no input arriving, no lerp remaining, no creep */
   get isAtRest(): boolean {
     const lenis = this.lenisRequired;
-    return !this.isAutoPlaying.value && !this.virtualScrolling && lenis.isScrolling === false && Math.abs(lenis.targetScroll - lenis.animatedScroll) < 0.5;
+    return (
+      !this.isAutoPlaying.value &&
+      !this.virtualScrolling &&
+      lenis.isScrolling === false &&
+      Math.abs(lenis.targetScroll - lenis.animatedScroll) < 0.5
+    );
   }
 
   /** The track renders only when asked for AND there is travel to show. */
@@ -1208,7 +1216,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // up: at rest, a row that grows (a card opened by a click) must grow
     // DOWNWARD from where the reader left it, whatever the last direction was
     const moving = gliding || this.virtualScrolling;
-    const edge = moving && this.scrollDirection.value === 'up' ? scroll + Math.max(0, this.containerOuterSize.value - 1) : scroll;
+    const edge =
+      moving && this.scrollDirection.value === 'up'
+        ? scroll + Math.max(0, this.containerOuterSize.value - 1)
+        : scroll;
     const at = this.getIndexAtPosition(edge);
     if (!at) return undefined;
     const top = this.getIndexPosition(at.index);
@@ -1779,7 +1790,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // the settle chain below resumes the creep once the input rests.
     if (this.isAutoPlaying.value && delta < 0) {
       this.stopAutoPlay();
-    } else if (!this.isAutoPlaying.value && delta > 0 && this.props.autoPlay && !this.props.snapToItems) {
+    } else if (
+      !this.isAutoPlaying.value &&
+      delta > 0 &&
+      this.props.autoPlay &&
+      !this.props.snapToItems
+    ) {
       // reading intent re-arms the creep — on a scroller that plays at all;
       // a plain list (a chat) never creeps, and so never reaches the
       // auto-repeat reset that would send it back to the top
@@ -1859,7 +1875,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     }
     this.frame = requestAnimationFrame(this.loop);
   }
-
 
   startAutoPlay(delay = 500, callback = () => {}) {
     this.isAutoPlaying.value = true;

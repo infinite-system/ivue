@@ -201,7 +201,14 @@ test('painting a range lays one box per non-empty rect and puts the handles at t
   range.getClientRects = () =>
     [
       rects[0],
-      { left: 0, top: visibleBottom - 10, right: 120, bottom: visibleBottom + 10, width: 120, height: 20 }
+      {
+        left: 0,
+        top: visibleBottom - 10,
+        right: 120,
+        bottom: visibleBottom + 10,
+        width: 120,
+        height: 20
+      }
     ] as unknown as DOMRectList;
   instance.paint(range);
   expect(end.hidden).toBe(false);
@@ -219,7 +226,8 @@ test('painting a range lays one box per non-empty rect and puts the handles at t
   // A scroll re-places the handles from the last paint and one rect read:
   // the overlay moved up 1000 px, so the end's spot is on screen at its
   // true position and the start's has left.
-  overlay.getBoundingClientRect = () => ({ left: 0, top: -1000, width: 800, height: 3000 }) as DOMRect;
+  overlay.getBoundingClientRect = () =>
+    ({ left: 0, top: -1000, width: 800, height: 3000 }) as DOMRect;
   instance.follow();
   expect(start.hidden).toBe(true);
   expect(end.hidden).toBe(false);
@@ -227,17 +235,20 @@ test('painting a range lays one box per non-empty rect and puts the handles at t
   // Scrolled so the start's spot sits just within the nudge reach above the
   // top: the handle shows, nudged inside to the knob's radius.
   const reach = Touch.NUDGE_REACH_PX;
-  overlay.getBoundingClientRect = () => ({ left: 0, top: -(4 + reach), width: 800, height: 3000 }) as DOMRect;
+  overlay.getBoundingClientRect = () =>
+    ({ left: 0, top: -(4 + reach), width: 800, height: 3000 }) as DOMRect;
   instance.follow();
   expect(start.hidden).toBe(false);
   expect(start.style.transform).toBe(`translate(${20 - offset}px, ${inset + 4 + reach}px)`);
   // One px further out and it hides — no glide beyond the reach.
-  overlay.getBoundingClientRect = () => ({ left: 0, top: -(5 + reach), width: 800, height: 3000 }) as DOMRect;
+  overlay.getBoundingClientRect = () =>
+    ({ left: 0, top: -(5 + reach), width: 800, height: 3000 }) as DOMRect;
   instance.follow();
   expect(start.hidden).toBe(true);
   // A start at the frame's left edge: its spot would sit in the clip 12 px
   // left of the text; nudged in, the knob overlaps the first characters.
-  overlay.getBoundingClientRect = () => ({ left: -20, top: 0, width: 800, height: 3000 }) as DOMRect;
+  overlay.getBoundingClientRect = () =>
+    ({ left: -20, top: 0, width: 800, height: 3000 }) as DOMRect;
   instance.follow();
   expect(start.hidden).toBe(false);
   expect(start.style.transform).toBe(`translate(${20 + inset}px, ${inset}px)`);

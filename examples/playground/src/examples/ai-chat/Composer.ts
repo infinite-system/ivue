@@ -17,7 +17,7 @@ class $Composer {
   /** the roles the composer composes — the model picker; built once per class by Static() */
   static get $kit() {
     return {
-      Picker: { namespace: ModelPicker, vue: ChatModelPickerView },
+      Picker: { namespace: ModelPicker, vue: ChatModelPickerView }
     } satisfies Kit.Of<Composer.Role>;
   }
 
@@ -95,7 +95,9 @@ class $Composer {
   }
 
   get placeholder(): string {
-    return this.chat.isStreaming ? 'The reply is streaming — a replay of a real turn' : 'Type a message, drop an image or a file. Enter sends, Shift+Enter breaks the line.';
+    return this.chat.isStreaming
+      ? 'The reply is streaming — a replay of a real turn'
+      : 'Type a message, drop an image or a file. Enter sends, Shift+Enter breaks the line.';
   }
 
   get attachmentCountLabel(): string {
@@ -176,7 +178,11 @@ class $Composer {
 
   async send() {
     if (!this.canSend) return;
-    const request = { text: this.draft.value, model: this.modelId.value, attachments: this.attachments.value };
+    const request = {
+      text: this.draft.value,
+      model: this.modelId.value,
+      attachments: this.attachments.value
+    };
     this.draft.value = '';
     this.attachments.value = [];
     this.inputElement.value?.focus();

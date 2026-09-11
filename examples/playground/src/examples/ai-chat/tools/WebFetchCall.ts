@@ -24,7 +24,8 @@ class $WebFetchCall extends ToolCallModel.$Class {
     const structured = this.structured;
     const pieces: string[] = [];
     if (typeof structured.code === 'number') pieces.push(`HTTP ${structured.code}`);
-    if (typeof structured.bytes === 'number') pieces.push(`${(structured.bytes / 1024).toFixed(0)} KB`);
+    if (typeof structured.bytes === 'number')
+      pieces.push(`${(structured.bytes / 1024).toFixed(0)} KB`);
     if (typeof structured.durationMs === 'number') pieces.push(`${structured.durationMs} ms`);
     return pieces.join(' · ');
   }
@@ -32,7 +33,13 @@ class $WebFetchCall extends ToolCallModel.$Class {
   override get sections(): ToolCallModel.Section[] {
     const sections: ToolCallModel.Section[] = [];
     if (this.prompt) sections.push({ title: 'asked', code: this.prompt, lang: 'text' });
-    if (this.resultText) sections.push({ title: this.isSearch ? 'results' : 'answer', code: this.resultText, lang: 'markdown', tone: this.isFailed ? 'error' : 'plain' });
+    if (this.resultText)
+      sections.push({
+        title: this.isSearch ? 'results' : 'answer',
+        code: this.resultText,
+        lang: 'markdown',
+        tone: this.isFailed ? 'error' : 'plain'
+      });
     return sections;
   }
 }

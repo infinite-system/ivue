@@ -46,7 +46,13 @@ class $AgentCall extends ToolCallModel.$Class {
   override get sections(): ToolCallModel.Section[] {
     const sections: ToolCallModel.Section[] = [];
     if (this.prompt) sections.push({ title: 'prompt', code: this.prompt, lang: 'markdown' });
-    if (this.resultText) sections.push({ title: 'report', code: this.resultText, lang: 'markdown', tone: this.isFailed ? 'error' : 'plain' });
+    if (this.resultText)
+      sections.push({
+        title: 'report',
+        code: this.resultText,
+        lang: 'markdown',
+        tone: this.isFailed ? 'error' : 'plain'
+      });
     return sections;
   }
 

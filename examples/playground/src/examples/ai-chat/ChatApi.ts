@@ -15,9 +15,30 @@ class $ChatApi {
   static readonly SLOW_MS = 700;
 
   static readonly MODELS: ChatApi.Model[] = [
-    { id: 'quick', label: 'Quick', detail: 'small · 200k context', tokensPerSecond: 120, firstTokenMs: 400, toolScale: 0.15 },
-    { id: 'default', label: 'Balanced', detail: 'mid · 200k context', tokensPerSecond: 60, firstTokenMs: 1200, toolScale: 0.3 },
-    { id: 'deep', label: 'Deep', detail: 'large · 1M context', tokensPerSecond: 30, firstTokenMs: 2600, toolScale: 0.5 },
+    {
+      id: 'quick',
+      label: 'Quick',
+      detail: 'small · 200k context',
+      tokensPerSecond: 120,
+      firstTokenMs: 400,
+      toolScale: 0.15
+    },
+    {
+      id: 'default',
+      label: 'Balanced',
+      detail: 'mid · 200k context',
+      tokensPerSecond: 60,
+      firstTokenMs: 1200,
+      toolScale: 0.3
+    },
+    {
+      id: 'deep',
+      label: 'Deep',
+      detail: 'large · 1M context',
+      tokensPerSecond: 30,
+      firstTokenMs: 2600,
+      toolScale: 0.5
+    }
   ];
 
   /** a word is more than one token, and the page paints one word per beat — the stream paces words at a
@@ -28,7 +49,12 @@ class $ChatApi {
   static readonly THINK_MIN_MS = 4000;
 
   /** the mock's one shared state: the sample's base URL, the request count the latency model keys on, the seed */
-  static readonly STATE: ChatApi.State = { baseUrl: '/examples/chat/sample/', requestCount: 0, seed: 7, simulateLatency: true };
+  static readonly STATE: ChatApi.State = {
+    baseUrl: '/examples/chat/sample/',
+    requestCount: 0,
+    seed: 7,
+    simulateLatency: true
+  };
 
   static configure(options: Partial<ChatApi.State>) {
     Object.assign(this.STATE, options);
@@ -71,14 +97,22 @@ class $ChatApi {
   }
 
   /** one GET of the sample, timed and sized */
-  static async fetchJson<Result>(name: string, signal?: AbortSignal): Promise<{ data: Result; log: ChatApi.RequestLog }> {
+  static async fetchJson<Result>(
+    name: string,
+    signal?: AbortSignal
+  ): Promise<{ data: Result; log: ChatApi.RequestLog }> {
     const started = Date.now();
     const url = `${this.STATE.baseUrl}${name}`;
     const wait = this.latency();
     const [response] = await Promise.all([fetch(url, { signal }), this.sleep(wait, signal)]);
     if (!response.ok) throw new Error(`${name}: HTTP ${response.status}`);
     const text = await response.text();
-    const log: ChatApi.RequestLog = { name, bytes: text.length, ms: Date.now() - started, at: started };
+    const log: ChatApi.RequestLog = {
+      name,
+      bytes: text.length,
+      ms: Date.now() - started,
+      at: started
+    };
     return { data: JSON.parse(text) as Result, log };
   }
 
@@ -91,7 +125,10 @@ class $ChatApi {
   }
 
   static page(index: number, signal?: AbortSignal) {
-    return this.fetchJson<SessionLog.Message[]>(`page-${String(index).padStart(3, '0')}.json`, signal);
+    return this.fetchJson<SessionLog.Message[]>(
+      `page-${String(index).padStart(3, '0')}.json`,
+      signal
+    );
   }
 
   /**
@@ -101,14 +138,21 @@ class $ChatApi {
    * proportional to the real one (scaled by the model, capped), thinking
    * as its own timed span. Every wait is abortable.
    */
-  static async *stream(source: SessionLog.Message, model: ChatApi.Model, signal?: AbortSignal): AsyncGenerator<ChatApi.StreamEvent> {
+  static async *stream(
+    source: SessionLog.Message,
+    model: ChatApi.Model,
+    signal?: AbortSignal
+  ): AsyncGenerator<ChatApi.StreamEvent> {
     const tokenMs = 1000 / model.tokensPerSecond;
     await this.sleep(model.firstTokenMs, signal);
     for (const part of source.parts) {
       if (part.kind === 'thinking') {
         yield { type: 'thinking_start', text: '' };
         const chunks = this.tokens(part.text);
-        const thinkMs = Math.max(tokenMs * this.THINK_FACTOR, this.THINK_MIN_MS / Math.max(1, chunks.length));
+        const thinkMs = Math.max(
+          tokenMs * this.THINK_FACTOR,
+          this.THINK_MIN_MS / Math.max(1, chunks.length)
+        );
         for (const chunk of chunks) {
           await this.sleep(thinkMs, signal);
           yield { type: 'thinking_token', text: chunk };
@@ -151,7 +195,13 @@ class $ChatApi {
    */
   static async upload(file: File): Promise<SessionLog.AttachmentPart> {
     const url = URL.createObjectURL(file);
-    const part: SessionLog.AttachmentPart = { kind: 'attachment', name: file.name, size: file.size, mimeType: file.type, url };
+    const part: SessionLog.AttachmentPart = {
+      kind: 'attachment',
+      name: file.name,
+      size: file.size,
+      mimeType: file.type,
+      url
+    };
     if (file.type.startsWith('image/')) {
       const size = await this.imageSize(url);
       if (size) Object.assign(part, size);
@@ -224,6 +274,9 @@ export namespace ChatApi {
   }
 
   export type StreamEvent =
-    | { type: 'token' | 'thinking_token' | 'thinking_start' | 'thinking_end' | 'done'; text: string }
+    | {
+        type: 'token' | 'thinking_token' | 'thinking_start' | 'thinking_end' | 'done';
+        text: string;
+      }
     | { type: 'tool_call' | 'tool_result'; call: SessionLog.ToolCall };
 }

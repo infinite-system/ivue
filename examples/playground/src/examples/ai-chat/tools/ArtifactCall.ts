@@ -22,8 +22,16 @@ class $ArtifactCall extends ToolCallModel.$Class {
   }
 
   override get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [{ title: 'input', code: this.inputJson, lang: 'json' }];
-    if (this.resultText) sections.push({ title: 'result', code: this.resultText, lang: 'text', tone: this.isFailed ? 'error' : 'plain' });
+    const sections: ToolCallModel.Section[] = [
+      { title: 'input', code: this.inputJson, lang: 'json' }
+    ];
+    if (this.resultText)
+      sections.push({
+        title: 'result',
+        code: this.resultText,
+        lang: 'text',
+        tone: this.isFailed ? 'error' : 'plain'
+      });
     return sections;
   }
 }

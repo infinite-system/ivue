@@ -36,11 +36,19 @@ describe('Composer', () => {
     composer.modelId.value = 'deep';
     expect(composer.model.id).toBe('deep');
     expect(composer.modelHint).toContain('30 tok/s');
-    const shiftEnter = { key: 'Enter', shiftKey: true, preventDefault: vi.fn() } as unknown as KeyboardEvent;
+    const shiftEnter = {
+      key: 'Enter',
+      shiftKey: true,
+      preventDefault: vi.fn()
+    } as unknown as KeyboardEvent;
     composer.onKeydown(shiftEnter);
     expect(send).not.toHaveBeenCalled();
     expect(shiftEnter.preventDefault).not.toHaveBeenCalled();
-    const enter = { key: 'Enter', shiftKey: false, preventDefault: vi.fn() } as unknown as KeyboardEvent;
+    const enter = {
+      key: 'Enter',
+      shiftKey: false,
+      preventDefault: vi.fn()
+    } as unknown as KeyboardEvent;
     composer.onKeydown(enter);
     await Promise.resolve();
     expect(enter.preventDefault).toHaveBeenCalled();
@@ -65,13 +73,26 @@ describe('Composer', () => {
     const { instance: chat, unmount } = hosted(() => new Chat.Class());
     const composer = new Composer.Class({ chat });
     let resolveUpload: ((part: never) => void) | null = null;
-    vi.spyOn(ChatApi.Class, 'upload').mockImplementation(
-      (file) => new Promise((resolve) => (resolveUpload = resolve as never)).then(() => ({ kind: 'attachment' as const, name: file.name, size: file.size, mimeType: file.type, url: `blob:${file.name}` })),
+    vi.spyOn(ChatApi.Class, 'upload').mockImplementation((file) =>
+      new Promise((resolve) => (resolveUpload = resolve as never)).then(() => ({
+        kind: 'attachment' as const,
+        name: file.name,
+        size: file.size,
+        mimeType: file.type,
+        url: `blob:${file.name}`
+      }))
     );
     const revoke = vi.fn();
-    Object.defineProperty(URL, 'revokeObjectURL', { value: revoke, configurable: true, writable: true });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      value: revoke,
+      configurable: true,
+      writable: true
+    });
     const image = new File(['xx'], 'a.png', { type: 'image/png' });
-    composer.onDrop({ preventDefault() {}, dataTransfer: { files: [image] } } as unknown as DragEvent);
+    composer.onDrop({
+      preventDefault() {},
+      dataTransfer: { files: [image] }
+    } as unknown as DragEvent);
     expect(composer.uploading.value).toBe(1);
     expect(composer.canSend).toBe(false);
     resolveUpload!(undefined as never);
@@ -82,8 +103,14 @@ describe('Composer', () => {
     expect(composer.sizeLabel(composer.attachments.value[0])).toBe('2 B');
     expect(composer.attachmentCountLabel).toBe('1 attachment');
     expect(composer.canSend).toBe(true);
-    composer.onPaste({ preventDefault() {}, clipboardData: { files: [] } } as unknown as ClipboardEvent);
-    composer.onPaste({ preventDefault() {}, clipboardData: { files: [new File(['y'], 'n.txt', { type: 'text/plain' })] } } as unknown as ClipboardEvent);
+    composer.onPaste({
+      preventDefault() {},
+      clipboardData: { files: [] }
+    } as unknown as ClipboardEvent);
+    composer.onPaste({
+      preventDefault() {},
+      clipboardData: { files: [new File(['y'], 'n.txt', { type: 'text/plain' })] }
+    } as unknown as ClipboardEvent);
     resolveUpload!(undefined as never);
     await Promise.resolve();
     await Promise.resolve();
@@ -93,10 +120,16 @@ describe('Composer', () => {
     resolveUpload!(undefined as never);
     await Promise.resolve();
     await Promise.resolve();
-    expect(composer.attachments.value.map((entry) => entry.name)).toEqual(['a.png', 'n.txt', 'c.md']);
+    expect(composer.attachments.value.map((entry) => entry.name)).toEqual([
+      'a.png',
+      'n.txt',
+      'c.md'
+    ]);
     expect(composer.attachmentCountLabel).toBe('3 attachments');
     expect(composer.sizeLabel({ ...composer.attachments.value[0], size: 3 * 1024 })).toBe('3 KB');
-    expect(composer.sizeLabel({ ...composer.attachments.value[0], size: 3 * 1024 * 1024 })).toBe('3.0 MB');
+    expect(composer.sizeLabel({ ...composer.attachments.value[0], size: 3 * 1024 * 1024 })).toBe(
+      '3.0 MB'
+    );
     composer.remove(composer.attachments.value[0]);
     expect(revoke).toHaveBeenCalledWith('blob:a.png');
     expect(composer.attachments.value).toHaveLength(2);
@@ -107,7 +140,12 @@ describe('Composer', () => {
     const send = vi.spyOn(chat, 'send').mockResolvedValue(undefined);
     composer.draft.value = 'with files';
     await composer.send();
-    expect(send).toHaveBeenCalledWith(expect.objectContaining({ text: 'with files', attachments: expect.arrayContaining([expect.objectContaining({ name: 'n.txt' })]) }));
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: 'with files',
+        attachments: expect.arrayContaining([expect.objectContaining({ name: 'n.txt' })])
+      })
+    );
     expect(composer.attachments.value).toEqual([]);
     unmount();
   });

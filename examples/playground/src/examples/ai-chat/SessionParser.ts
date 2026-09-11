@@ -88,14 +88,15 @@ class $SessionParser {
         model: message.model,
         usage: message.usage,
         apiId,
-        sidechain: isSidechain,
+        sidechain: isSidechain
       };
       this.openApiId = apiId;
       this.openIsSidechain = isSidechain;
       this.target(record).push(this.open);
     } else if (message.usage) this.open.usage = message.usage;
     for (const block of message.content) {
-      if (block.type === 'text' && block.text?.trim()) this.open.parts.push({ kind: 'text', text: block.text });
+      if (block.type === 'text' && block.text?.trim())
+        this.open.parts.push({ kind: 'text', text: block.text });
       else if (block.type === 'thinking' && block.thinking?.trim())
         this.open.parts.push({ kind: 'thinking', text: block.thinking, durationMs: null });
       else if (block.type === 'tool_use' && block.id) {
@@ -107,7 +108,7 @@ class $SessionParser {
           result: null,
           durationMs: null,
           startedAt: this.open.timestamp,
-          children: null,
+          children: null
         };
         this.calls.set(block.id, { call, startedAt: this.open.timestamp });
         this.open.parts.push({ kind: 'tool_call', call });
@@ -120,14 +121,25 @@ class $SessionParser {
     if (!message) return;
     if (record.isCompactSummary) {
       this.closeOpen();
-      const text = typeof message.content === 'string' ? message.content : SessionLog.Class.resultText(message.content as SessionLog.ResultContent);
+      const text =
+        typeof message.content === 'string'
+          ? message.content
+          : SessionLog.Class.resultText(message.content as SessionLog.ResultContent);
       this.target(record).push({
         id: record.uuid ?? `compact-${this.lineCount}`,
         index: -1,
         role: 'system',
         timestamp: SessionLog.Class.epoch(record),
-        parts: [{ kind: 'system', subtype: 'compaction', text: SessionLog.Class.COMPACTION_TEXT, detail: text, durationMs: null }],
-        sidechain: Boolean(record.isSidechain),
+        parts: [
+          {
+            kind: 'system',
+            subtype: 'compaction',
+            text: SessionLog.Class.COMPACTION_TEXT,
+            detail: text,
+            durationMs: null
+          }
+        ],
+        sidechain: Boolean(record.isSidechain)
       });
       return;
     }
@@ -142,7 +154,7 @@ class $SessionParser {
         role: 'user',
         timestamp: SessionLog.Class.epoch(record),
         parts: [{ kind: 'text', text }],
-        sidechain: Boolean(record.isSidechain),
+        sidechain: Boolean(record.isSidechain)
       });
       return;
     }
@@ -158,7 +170,7 @@ class $SessionParser {
           text: SessionLog.Class.resultText(block.content),
           images: SessionLog.Class.resultImages(block.content),
           isError: Boolean(block.is_error),
-          structured: record.toolUseResult ?? null,
+          structured: record.toolUseResult ?? null
         };
         call.state = block.is_error ? 'failed' : 'done';
         call.durationMs = receivedAt && startedAt ? Math.max(0, receivedAt - startedAt) : null;
@@ -176,7 +188,7 @@ class $SessionParser {
         role: 'user',
         timestamp: receivedAt,
         parts: [{ kind: 'text', text: typed.join('\n\n') }],
-        sidechain: Boolean(record.isSidechain),
+        sidechain: Boolean(record.isSidechain)
       });
     }
   }
@@ -204,10 +216,10 @@ class $SessionParser {
           subtype,
           text,
           detail: typeof record.content === 'string' ? record.content : '',
-          durationMs: record.durationMs ?? null,
-        },
+          durationMs: record.durationMs ?? null
+        }
       ],
-      sidechain: Boolean(record.isSidechain),
+      sidechain: Boolean(record.isSidechain)
     });
   }
 
@@ -245,9 +257,17 @@ class $SessionParser {
         index: -1,
         role: 'system',
         timestamp: thread[0].timestamp,
-        parts: [{ kind: 'system', subtype: 'subagent', text: `Subagent thread (${thread.length} messages)`, detail: '', durationMs: null }],
+        parts: [
+          {
+            kind: 'system',
+            subtype: 'subagent',
+            text: `Subagent thread (${thread.length} messages)`,
+            detail: '',
+            durationMs: null
+          }
+        ],
         sidechain: false,
-        children: this.batch(thread),
+        children: this.batch(thread)
       });
     return messages;
   }
@@ -262,8 +282,14 @@ class $SessionParser {
     let run: SessionLog.Message[] = [];
     const flush = () => {
       if (!run.length) return;
-      const calls = run.flatMap((message) => message.parts.filter((part): part is SessionLog.ToolCallPart => part.kind === 'tool_call').map((part) => part.call));
-      const thinking = run.flatMap((message) => message.parts.filter((part): part is SessionLog.ThinkingPart => part.kind === 'thinking'));
+      const calls = run.flatMap((message) =>
+        message.parts
+          .filter((part): part is SessionLog.ToolCallPart => part.kind === 'tool_call')
+          .map((part) => part.call)
+      );
+      const thinking = run.flatMap((message) =>
+        message.parts.filter((part): part is SessionLog.ThinkingPart => part.kind === 'thinking')
+      );
       if (calls.length >= 2) {
         const first = run[0];
         const last = run[run.length - 1];
@@ -272,10 +298,13 @@ class $SessionParser {
           index: -1,
           role: 'assistant',
           timestamp: first.timestamp,
-          parts: [...thinking, { kind: 'tool_batch', calls, messageIds: run.map((message) => message.id) }],
+          parts: [
+            ...thinking,
+            { kind: 'tool_batch', calls, messageIds: run.map((message) => message.id) }
+          ],
           model: last.model,
           usage: last.usage,
-          sidechain: first.sidechain,
+          sidechain: first.sidechain
         });
       } else output.push(...run);
       run = [];

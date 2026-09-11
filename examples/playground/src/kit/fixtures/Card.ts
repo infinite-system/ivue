@@ -1,6 +1,11 @@
 import type { ExtractPropTypes, PropType } from 'vue';
 import { ref } from 'vue';
-import { definePropTypes, propsWithDefaults, Reactive, type ExtractPropDefaultTypes } from '../../ivue';
+import {
+  definePropTypes,
+  propsWithDefaults,
+  Reactive,
+  type ExtractPropDefaultTypes
+} from '../../ivue';
 import { nestedProps } from '../../nestedProps';
 import { Static } from '../../Static';
 import { Kit } from '../Kit';
@@ -21,7 +26,7 @@ class $Card {
       Head: { vue: CardHeadView },
       Body: { vue: CardBodyView },
       Frame: { vue: FrameView },
-      Code: { namespace: Code, vue: CodeView },
+      Code: { namespace: Code, vue: CodeView }
     } satisfies Kit.Of<Card.Role>;
   }
 
@@ -29,7 +34,7 @@ class $Card {
     return definePropTypes({
       title: { type: String as PropType<string>, required: true },
       items: { type: Array as PropType<string[]> },
-      kit: { type: Object as PropType<Kit.Entry<typeof Card>> },
+      kit: { type: Object as PropType<Kit.Entry<typeof Card>> }
     });
   }
 

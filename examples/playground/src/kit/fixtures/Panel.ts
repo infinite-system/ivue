@@ -1,5 +1,10 @@
 import type { ExtractPropTypes, PropType } from 'vue';
-import { definePropTypes, propsWithDefaults, Reactive, type ExtractPropDefaultTypes } from '../../ivue';
+import {
+  definePropTypes,
+  propsWithDefaults,
+  Reactive,
+  type ExtractPropDefaultTypes
+} from '../../ivue';
 import { nestedProps } from '../../nestedProps';
 import { Static } from '../../Static';
 import { Kit } from '../Kit';
@@ -11,14 +16,14 @@ import CardView from './Card.vue';
 class $Panel {
   static get $kit() {
     return {
-      Card: { namespace: Card, vue: CardView },
+      Card: { namespace: Card, vue: CardView }
     } satisfies Kit.Of<'Card'>;
   }
 
   static get propsTypes() {
     return definePropTypes({
       titles: { type: Array as PropType<string[]> },
-      kit: { type: Object as PropType<Kit.Entry<typeof Panel>> },
+      kit: { type: Object as PropType<Kit.Entry<typeof Panel>> }
     });
   }
 

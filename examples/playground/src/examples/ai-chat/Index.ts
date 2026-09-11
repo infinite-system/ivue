@@ -21,14 +21,29 @@ class $Index {
   /** the one role the index composes: its own scroller over the filtered rows */
   static get $kit() {
     return {
-      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView },
+      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView }
     } satisfies Kit.Of<'Scroller'>;
   }
 
-  static readonly ROLE_LABELS: Record<Index.RoleFilter, string> = { all: 'All', user: 'You', assistant: 'Agent' };
-  static readonly TOOL_LABELS: Record<Index.ToolFilter, string> = { include: 'With tools', exclude: 'No tools', compaction: 'Compaction only' };
-  static readonly ORDER_LABELS: Record<Index.Order, string> = { oldest: 'Oldest first', newest: 'Newest first' };
-  static readonly EXPORT_LABELS: Record<Chat.ExportForm, string> = { markdown: 'Markdown', plain: 'Plain text', jsonl: 'JSONL' };
+  static readonly ROLE_LABELS: Record<Index.RoleFilter, string> = {
+    all: 'All',
+    user: 'You',
+    assistant: 'Agent'
+  };
+  static readonly TOOL_LABELS: Record<Index.ToolFilter, string> = {
+    include: 'With tools',
+    exclude: 'No tools',
+    compaction: 'Compaction only'
+  };
+  static readonly ORDER_LABELS: Record<Index.Order, string> = {
+    oldest: 'Oldest first',
+    newest: 'Newest first'
+  };
+  static readonly EXPORT_LABELS: Record<Chat.ExportForm, string> = {
+    markdown: 'Markdown',
+    plain: 'Plain text',
+    jsonl: 'JSONL'
+  };
 
   static saveFile(text: string, name: string) {
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
@@ -48,13 +63,13 @@ class $Index {
     watch(
       () => this.rows.value,
       () => this.landAfterFilter(),
-      { flush: 'post' },
+      { flush: 'post' }
     );
     // a search the chat asked for — a file's name, or nothing — takes the box and the focus
     watch(
       () => this.chat.searchRequest.value,
       (request) => this.takeSearch(request),
-      { immediate: true },
+      { immediate: true }
     );
   }
 
@@ -134,19 +149,31 @@ class $Index {
   /* ---- the filtered list ---- */
 
   get roleOptions(): { value: Index.RoleFilter; label: string }[] {
-    return (Object.keys(this.self.ROLE_LABELS) as Index.RoleFilter[]).map((value) => ({ value, label: this.self.ROLE_LABELS[value] }));
+    return (Object.keys(this.self.ROLE_LABELS) as Index.RoleFilter[]).map((value) => ({
+      value,
+      label: this.self.ROLE_LABELS[value]
+    }));
   }
 
   get orderOptions(): { value: Index.Order; label: string }[] {
-    return (Object.keys(this.self.ORDER_LABELS) as Index.Order[]).map((value) => ({ value, label: this.self.ORDER_LABELS[value] }));
+    return (Object.keys(this.self.ORDER_LABELS) as Index.Order[]).map((value) => ({
+      value,
+      label: this.self.ORDER_LABELS[value]
+    }));
   }
 
   get toolOptions(): { value: Index.ToolFilter; label: string }[] {
-    return (Object.keys(this.self.TOOL_LABELS) as Index.ToolFilter[]).map((value) => ({ value, label: this.self.TOOL_LABELS[value] }));
+    return (Object.keys(this.self.TOOL_LABELS) as Index.ToolFilter[]).map((value) => ({
+      value,
+      label: this.self.TOOL_LABELS[value]
+    }));
   }
 
   get exportOptions(): { value: Chat.ExportForm; label: string }[] {
-    return (Object.keys(this.self.EXPORT_LABELS) as Chat.ExportForm[]).map((value) => ({ value, label: this.self.EXPORT_LABELS[value] }));
+    return (Object.keys(this.self.EXPORT_LABELS) as Chat.ExportForm[]).map((value) => ({
+      value,
+      label: this.self.EXPORT_LABELS[value]
+    }));
   }
 
   // computed: stable-handle — the scroller's modelValue must be ONE list per
@@ -161,7 +188,9 @@ class $Index {
 
   get countLabel(): string {
     const total = this.chat.indexRows.value.length;
-    return this.count === total ? `${total.toLocaleString('en-US')} messages` : `${this.count.toLocaleString('en-US')} of ${total.toLocaleString('en-US')}`;
+    return this.count === total
+      ? `${total.toLocaleString('en-US')} messages`
+      : `${this.count.toLocaleString('en-US')} of ${total.toLocaleString('en-US')}`;
   }
 
   get selectedCount(): number {
@@ -173,7 +202,9 @@ class $Index {
   }
 
   get selectedLabel(): string {
-    return this.selectedCount === 1 ? '1 selected' : `${this.selectedCount.toLocaleString('en-US')} selected`;
+    return this.selectedCount === 1
+      ? '1 selected'
+      : `${this.selectedCount.toLocaleString('en-US')} selected`;
   }
 
   get allShownSelected(): boolean {
@@ -181,7 +212,9 @@ class $Index {
   }
 
   get exportLabel(): string {
-    return this.exporting.value ? 'Preparing…' : `Export ${this.self.EXPORT_LABELS[this.exportForm.value]}`;
+    return this.exporting.value
+      ? 'Preparing…'
+      : `Export ${this.self.EXPORT_LABELS[this.exportForm.value]}`;
   }
 
   get copyLabel(): string {
@@ -265,7 +298,11 @@ class $Index {
   }
 
   rowClass(row: Index.Row): Record<string, boolean> {
-    return { 'ac-selected': this.isSelected(row), 'ac-current': this.isCurrent(row), 'ac-focused': this.isFocusedRow(row) };
+    return {
+      'ac-selected': this.isSelected(row),
+      'ac-current': this.isCurrent(row),
+      'ac-focused': this.isFocusedRow(row)
+    };
   }
 
   /* ---- selection ---- */
@@ -333,7 +370,10 @@ class $Index {
   /** the key landed in a text field — the search box, or any other input in the panel */
   isTyping(event: KeyboardEvent): boolean {
     const target = event.target as HTMLElement | null;
-    return Boolean(target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable));
+    return Boolean(
+      target &&
+      (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+    );
   }
 
   onKeydown(event: KeyboardEvent) {
@@ -350,7 +390,10 @@ class $Index {
     const current = Math.max(0, Math.min(rows.length - 1, this.focusedIndex.value));
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
-      const next = Math.max(0, Math.min(rows.length - 1, current + (event.key === 'ArrowDown' ? 1 : -1)));
+      const next = Math.max(
+        0,
+        Math.min(rows.length - 1, current + (event.key === 'ArrowDown' ? 1 : -1))
+      );
       this.focusedIndex.value = next;
       if (event.shiftKey) {
         if (!this.anchorId.value) this.anchorId.value = rows[current].id;
@@ -412,7 +455,12 @@ class $Index {
     this.exporting.value = true;
     try {
       const text = await this.exportText();
-      const extension = this.exportForm.value === 'markdown' ? 'md' : this.exportForm.value === 'plain' ? 'txt' : 'jsonl';
+      const extension =
+        this.exportForm.value === 'markdown'
+          ? 'md'
+          : this.exportForm.value === 'plain'
+            ? 'txt'
+            : 'jsonl';
       this.self.saveFile(text, `chat-selection.${extension}`);
     } finally {
       this.exporting.value = false;
@@ -431,7 +479,6 @@ class $Index {
       this.copied.value = false;
     }
   }
-
 }
 
 export namespace Index {

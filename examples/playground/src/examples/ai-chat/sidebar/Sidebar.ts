@@ -20,15 +20,14 @@ class $Sidebar {
     return {
       Index: { namespace: Index, vue: ChatIndexView },
       Files: { namespace: FilesPanel, vue: FilesPanelView },
-      Settings: { namespace: SettingsPanel, vue: SettingsPanelView },
+      Settings: { namespace: SettingsPanel, vue: SettingsPanelView }
     } satisfies Kit.Of<Chat.SidebarTab>;
   }
-
 
   static readonly TABS: Sidebar.Tab[] = [
     { id: 'Index', label: 'Index', icon: 'search', hint: 'Search and select messages (⌘K)' },
     { id: 'Files', label: 'Files', icon: 'files', hint: 'The files this session touched' },
-    { id: 'Settings', label: 'Settings', icon: 'settings', hint: 'Theme, density and the tree' },
+    { id: 'Settings', label: 'Settings', icon: 'settings', hint: 'Theme, density and the tree' }
   ];
   static readonly MIN_WIDTH = 280;
   static readonly MAX_WIDTH = 720;
@@ -118,7 +117,10 @@ class $Sidebar {
   }
 
   resizeTo(width: number) {
-    this.width.value = Math.max(this.self.MIN_WIDTH, Math.min(this.self.MAX_WIDTH, Math.round(width)));
+    this.width.value = Math.max(
+      this.self.MIN_WIDTH,
+      Math.min(this.self.MAX_WIDTH, Math.round(width))
+    );
   }
 }
 

@@ -24,15 +24,17 @@ function rows(count: number): Chat.Row[] {
     preview: at % 100 === 50 ? 'Context compacted' : `message ${at}`,
     calls: at % 3,
     at: Date.UTC(2026, 8, 9, 13, at % 60),
-    message: null,
+    message: null
   }));
 }
 
 function thread(trackTop: number, trackHeight: number, target: Element | null) {
-  const track = { getBoundingClientRect: () => ({ top: trackTop, height: trackHeight, left: 0 }) } as unknown as HTMLElement;
+  const track = {
+    getBoundingClientRect: () => ({ top: trackTop, height: trackHeight, left: 0 })
+  } as unknown as HTMLElement;
   const element = {
     querySelector: () => track,
-    getBoundingClientRect: () => ({ top: 100 }),
+    getBoundingClientRect: () => ({ top: 100 })
   } as unknown as HTMLElement;
   return { element, track, target };
 }
@@ -41,8 +43,13 @@ function move(peek: Peek.Model, y: number, _target: Element | null, over: 'track
   const thread$ = thread(200, 400, _target);
   const closest = () => null;
   const target = { closest };
-  (thread$.track as unknown as { contains: (node: unknown) => boolean }).contains = (node) => over === 'track' && node === target;
-  peek.onThreadPointerMove({ currentTarget: thread$.element, target, clientY: y } as unknown as PointerEvent);
+  (thread$.track as unknown as { contains: (node: unknown) => boolean }).contains = (node) =>
+    over === 'track' && node === target;
+  peek.onThreadPointerMove({
+    currentTarget: thread$.element,
+    target,
+    clientY: y
+  } as unknown as PointerEvent);
 }
 
 describe('Peek', () => {
@@ -111,7 +118,9 @@ describe('Peek', () => {
     move(peek, 400, null, 'track');
     vi.advanceTimersByTime(Peek.$Class.OPEN_DELAY_MS);
     expect(peek.open.value).toBe(true);
-    const scroller = { scrollbarDragging: true } as unknown as NonNullable<typeof chat.scroller.value>;
+    const scroller = { scrollbarDragging: true } as unknown as NonNullable<
+      typeof chat.scroller.value
+    >;
     chat.scroller.value = scroller;
     move(peek, 300, null, 'track');
     expect(peek.open.value).toBe(false);
@@ -125,7 +134,9 @@ describe('Peek', () => {
     expect(peek.open.value).toBe(true);
     peek.query.value = 'message 99';
     // every preview that holds "99": 99, 199 … 999, and 990 … 998
-    expect(peek.rows.value.map((row) => row.index)).toEqual([99, 199, 299, 399, 499, 599, 699, 799, 899, 990, 991, 992, 993, 994, 995, 996, 997, 998, 999]);
+    expect(peek.rows.value.map((row) => row.index)).toEqual([
+      99, 199, 299, 399, 499, 599, 699, 799, 899, 990, 991, 992, 993, 994, 995, 996, 997, 998, 999
+    ]);
     expect(peek.matchLabel).toBe('19 matches');
     expect(peek.isPinned).toBe(true);
     peek.onThreadPointerLeave();
@@ -140,7 +151,9 @@ describe('Peek', () => {
     expect(peek.rows.value).toHaveLength(491);
     peek.setRole('all');
     peek.setTools('compaction');
-    expect(peek.rows.value.map((row) => row.index)).toEqual([50, 150, 250, 350, 450, 550, 650, 750, 850, 950]);
+    expect(peek.rows.value.map((row) => row.index)).toEqual([
+      50, 150, 250, 350, 450, 550, 650, 750, 850, 950
+    ]);
     peek.setRole('user');
     peek.setTools('exclude');
     expect(peek.rows.value.every((row) => row.calls === 0)).toBe(true);

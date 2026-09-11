@@ -274,7 +274,10 @@ test('measuring rows above the anchored row moves the scroll by the same amount;
   expect(Number(instance.scrollPosition.value)).toBe(scrollBefore + 300);
   // mid-glide: the glide is asked to move with the content
   const shifted: number[] = [];
-  (instance as unknown as { lenis: unknown }).lenis = { isScrolling: 'smooth', shiftBy: (delta: number) => shifted.push(delta) };
+  (instance as unknown as { lenis: unknown }).lenis = {
+    isScrolling: 'smooth',
+    shiftBy: (delta: number) => shifted.push(delta)
+  };
   instance.syncItemSize(90, assumed + 250);
   expect(shifted).toEqual([250]);
   (instance as unknown as { lenis: unknown }).lenis = null;
@@ -352,13 +355,21 @@ test('a list without autoPlay never arms the creep: not from a forward wheel, no
   const { instance, unmount } = scroller(rows(50));
   // jsdom mounts no Lenis; the wheel path only resets its clock and parks a frame
   const noop = () => undefined;
-  (instance as unknown as { lenis: unknown }).lenis = { time: 0, isScrolling: false, stop: noop, start: noop, destroy: noop, raf: noop };
+  (instance as unknown as { lenis: unknown }).lenis = {
+    time: 0,
+    isScrolling: false,
+    stop: noop,
+    start: noop,
+    destroy: noop,
+    raf: noop
+  };
   (instance as unknown as { frame: number }).frame = 1;
   const track = document.createElement('div');
   track.className = 'virtual-scroller__track';
   track.getBoundingClientRect = () => ({ top: 0, height: 100, left: 0, width: 12 }) as DOMRect;
   track.setPointerCapture = () => {};
-  const pointer = (clientY: number) => ({ currentTarget: track, pointerId: 1, clientX: 6, clientY }) as unknown as PointerEvent;
+  const pointer = (clientY: number) =>
+    ({ currentTarget: track, pointerId: 1, clientX: 6, clientY }) as unknown as PointerEvent;
   const play = vi.spyOn(instance, 'play').mockImplementation(() => undefined);
   instance.onVirtualScroll({ deltaX: 0, deltaY: 120 });
   expect(instance.isAutoPlaying.value).toBe(false);
@@ -792,7 +803,17 @@ test('the frame loop parks itself at rest and the next wheel wakes it', () => {
   const { instance, unmount } = scroller(rows(50));
   const raf = vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation(() => 7);
   const noop = () => undefined;
-  const lenis = { time: 0, isScrolling: false as boolean | string, targetScroll: 100, animatedScroll: 100, scroll: 100, stop: noop, start: noop, destroy: noop, raf: noop };
+  const lenis = {
+    time: 0,
+    isScrolling: false as boolean | string,
+    targetScroll: 100,
+    animatedScroll: 100,
+    scroll: 100,
+    stop: noop,
+    start: noop,
+    destroy: noop,
+    raf: noop
+  };
   (instance as unknown as { lenis: unknown }).lenis = lenis;
   const frames = instance as unknown as { frame: number | null };
   // a glide still lerping keeps the loop running
@@ -846,7 +867,17 @@ test('mid-lerp the window covers the animated position in pixels, over rows far 
   const { instance, unmount } = scroller(rows(60), { assumedSize: 100, paddingQuantity: 0 });
   // 100 px container; the target sits at row 10 (1000 px); the reader still sees 1400..1500
   const noop = () => undefined;
-  (instance as unknown as { lenis: unknown }).lenis = { time: 0, isScrolling: 'smooth', targetScroll: 1000, animatedScroll: 1400, scroll: 1400, stop: noop, start: noop, destroy: noop, raf: noop };
+  (instance as unknown as { lenis: unknown }).lenis = {
+    time: 0,
+    isScrolling: 'smooth',
+    targetScroll: 1000,
+    animatedScroll: 1400,
+    scroll: 1400,
+    stop: noop,
+    start: noop,
+    destroy: noop,
+    raf: noop
+  };
   // the rows behind the target are short: 20 px each from row 11 on
   for (let index = 11; index < 40; index++) instance.syncItemSize(index, 20, false);
   instance.setScrollPosition(-1000, false, false);
@@ -856,11 +887,17 @@ test('mid-lerp the window covers the animated position in pixels, over rows far 
   // rows 11.. at 20 px: 1500 px is 25 short rows past 1000 — the window must reach it
   expect(coveredTo).toBeGreaterThanOrEqual(1500);
   // scrolling down the gap flips: the animated position is above the target and the window reaches back to it
-  (instance as unknown as { lenis: { targetScroll: number; animatedScroll: number } }).lenis.targetScroll = 1600;
-  (instance as unknown as { lenis: { targetScroll: number; animatedScroll: number } }).lenis.animatedScroll = 1300;
+  (
+    instance as unknown as { lenis: { targetScroll: number; animatedScroll: number } }
+  ).lenis.targetScroll = 1600;
+  (
+    instance as unknown as { lenis: { targetScroll: number; animatedScroll: number } }
+  ).lenis.animatedScroll = 1300;
   instance.setScrollPosition(-1600, false, false);
   void instance.visibleItems.value;
-  expect(instance.getIndexPosition(instance.visibleIndex.value.start) ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(1300);
+  expect(
+    instance.getIndexPosition(instance.visibleIndex.value.start) ?? Number.POSITIVE_INFINITY
+  ).toBeLessThanOrEqual(1300);
   (instance as unknown as { lenis: unknown }).lenis = null;
   unmount();
 });

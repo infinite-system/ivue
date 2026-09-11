@@ -27,8 +27,11 @@ class $WriteCall extends ToolCallModel.$Class {
   }
 
   override get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [{ title: this.filePath, code: this.content, lang: this.language, startLine: 1 }];
-    if (this.isFailed && this.resultText) sections.push({ title: 'error', code: this.resultText, lang: 'text', tone: 'error' });
+    const sections: ToolCallModel.Section[] = [
+      { title: this.filePath, code: this.content, lang: this.language, startLine: 1 }
+    ];
+    if (this.isFailed && this.resultText)
+      sections.push({ title: 'error', code: this.resultText, lang: 'text', tone: 'error' });
     return sections;
   }
 }

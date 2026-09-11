@@ -25,7 +25,7 @@ const rows: ChatApi.IndexRow[] = [
   { id: 'd', r: 'u', t: 'next question', c: 0, at: 1_700_000_120_000 },
   { id: 'e', r: 'a', t: 'plain answer', c: 0, at: 1_700_000_180_000 },
   { id: 'f', r: 'a', t: 'more tools', c: 1, at: 1_700_000_240_000 },
-  { id: 'g', r: 's', t: 'Context compacted', c: 0, at: 1_700_000_300_000 },
+  { id: 'g', r: 's', t: 'Context compacted', c: 0, at: 1_700_000_300_000 }
 ];
 
 function make() {
@@ -43,11 +43,12 @@ function make() {
     unmount: () => {
       indexHost.unmount();
       host.unmount();
-    },
+    }
   };
 }
 
-const click = (extra: Partial<MouseEvent> = {}) => ({ shiftKey: false, metaKey: false, ctrlKey: false, ...extra }) as MouseEvent;
+const click = (extra: Partial<MouseEvent> = {}) =>
+  ({ shiftKey: false, metaKey: false, ctrlKey: false, ...extra }) as MouseEvent;
 
 describe('Index', () => {
   afterEach(() => {
@@ -150,13 +151,19 @@ describe('Index', () => {
   it('keyboard: arrows move, shift extends, space picks, enter seeks, escape closes, and typing in the box is left alone', () => {
     const { chat, index, unmount } = make();
     const jump = vi.spyOn(chat, 'jumpTo');
-    const key = (key: string, shiftKey = false) => ({ key, shiftKey, preventDefault() {} }) as KeyboardEvent;
+    const key = (key: string, shiftKey = false) =>
+      ({ key, shiftKey, preventDefault() {} }) as KeyboardEvent;
     index.onKeydown(key('ArrowDown'));
     index.onKeydown(key('ArrowDown', true));
     expect(index.focusedIndex.value).toBe(2);
     expect([...index.selected.value].sort()).toEqual(['b', 'c']);
     // a space typed in the search box is the box's
-    const typed = { key: ' ', shiftKey: false, preventDefault: vi.fn(), target: { tagName: 'INPUT' } } as unknown as KeyboardEvent;
+    const typed = {
+      key: ' ',
+      shiftKey: false,
+      preventDefault: vi.fn(),
+      target: { tagName: 'INPUT' }
+    } as unknown as KeyboardEvent;
     const selectedBefore = index.selectedCount;
     index.onKeydown(typed);
     expect(typed.preventDefault).not.toHaveBeenCalled();
@@ -180,24 +187,78 @@ describe('Index', () => {
   it('export gathers the selection in thread order in each form, downloads, and copies markdown', async () => {
     const { chat, index, unmount } = make();
     const messages: SessionLog.Message[] = [
-      { id: 'a', index: 0, role: 'user', timestamp: 1_700_000_000_000, parts: [{ kind: 'text', text: 'hello **there**' }], sidechain: false },
-      { id: 'b', index: 1, role: 'assistant', timestamp: 1_700_000_060_000, parts: [{ kind: 'thinking', text: 'plan\nmore', durationMs: 1 }, { kind: 'tool_call', call: { id: 'c1', name: 'Bash', input: { command: 'ls' }, state: 'done', result: { text: 'out', images: [], isError: false, structured: null }, durationMs: 1, startedAt: 0, children: null } }], sidechain: false },
-      { id: 'c', index: 2, role: 'system', timestamp: 0, parts: [{ kind: 'system', subtype: 'turn_duration', text: 'Turn took 4s', detail: '', durationMs: 4000 }], sidechain: false },
+      {
+        id: 'a',
+        index: 0,
+        role: 'user',
+        timestamp: 1_700_000_000_000,
+        parts: [{ kind: 'text', text: 'hello **there**' }],
+        sidechain: false
+      },
+      {
+        id: 'b',
+        index: 1,
+        role: 'assistant',
+        timestamp: 1_700_000_060_000,
+        parts: [
+          { kind: 'thinking', text: 'plan\nmore', durationMs: 1 },
+          {
+            kind: 'tool_call',
+            call: {
+              id: 'c1',
+              name: 'Bash',
+              input: { command: 'ls' },
+              state: 'done',
+              result: { text: 'out', images: [], isError: false, structured: null },
+              durationMs: 1,
+              startedAt: 0,
+              children: null
+            }
+          }
+        ],
+        sidechain: false
+      },
+      {
+        id: 'c',
+        index: 2,
+        role: 'system',
+        timestamp: 0,
+        parts: [
+          {
+            kind: 'system',
+            subtype: 'turn_duration',
+            text: 'Turn took 4s',
+            detail: '',
+            durationMs: 4000
+          }
+        ],
+        sidechain: false
+      }
     ];
-    vi.spyOn(chat, 'messagesFor').mockImplementation(async (ids) => messages.filter((entry) => ids.has(entry.id)));
+    vi.spyOn(chat, 'messagesFor').mockImplementation(async (ids) =>
+      messages.filter((entry) => ids.has(entry.id))
+    );
     index.onRowClick(index.rows.value[2], click());
     index.onRowClick(index.rows.value[0], click({ ctrlKey: true }));
     index.onRowClick(index.rows.value[1], click({ ctrlKey: true }));
     const markdown = await index.exportText();
     expect(markdown.indexOf('## user')).toBeLessThan(markdown.indexOf('## assistant'));
     expect(markdown).toContain('> thinking: plan\n> more');
-    expect(markdown).toContain('**Bash**\n\n```json\n{\n  "command": "ls"\n}\n```\n\n```\nout\n```');
+    expect(markdown).toContain(
+      '**Bash**\n\n```json\n{\n  "command": "ls"\n}\n```\n\n```\nout\n```'
+    );
     expect(markdown).toContain('## system');
     index.exportForm.value = 'plain';
-    expect(await index.exportText()).toContain('[user] 2023-11-14T22:13:20.000Z\n\nhello **there**');
+    expect(await index.exportText()).toContain(
+      '[user] 2023-11-14T22:13:20.000Z\n\nhello **there**'
+    );
     index.exportForm.value = 'jsonl';
     const jsonl = await index.exportText();
-    expect(jsonl.split('\n').map((line) => (JSON.parse(line) as SessionLog.Message).id)).toEqual(['a', 'b', 'c']);
+    expect(jsonl.split('\n').map((line) => (JSON.parse(line) as SessionLog.Message).id)).toEqual([
+      'a',
+      'b',
+      'c'
+    ]);
     expect(ChatExport.Class.text(messages, 'plain')).toContain('thinking: plan\nmore');
     expect(ChatExport.Class.text(messages, 'plain')).toContain('Bash {\n  "command": "ls"\n}\nout');
 

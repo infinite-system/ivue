@@ -16,7 +16,7 @@ class $SettingsPanel {
   /** the one role the panel composes: its own scroller over the sections */
   static get $kit() {
     return {
-      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView },
+      Scroller: { namespace: VirtualScroller, vue: VirtualScrollerView }
     } satisfies Kit.Of<SettingsPanel.Role>;
   }
 
@@ -24,7 +24,7 @@ class $SettingsPanel {
   static readonly SECTIONS: SettingsPanel.Section[] = [
     { id: 'theme', body: '', position: '1', label: 'Theme' },
     { id: 'density', body: '', position: '2', label: 'Density' },
-    { id: 'tree', body: '', position: '3', label: 'Tree' },
+    { id: 'tree', body: '', position: '3', label: 'Tree' }
   ];
 
   constructor(public props: SettingsPanel.Props) {}

@@ -48,10 +48,7 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
       <!-- The whole leading/trailing content, reduced to two empty divs.
            Rendered items flow normally between them at their real sizes. -->
       <div :style="{ height: virtualScroller.leadingSpacerPx }"></div>
-      <div
-        ref="itemsWrapperElement"
-        :style="{ width: '100%' }"
-      >
+      <div ref="itemsWrapperElement" :style="{ width: '100%' }">
         <VirtualScrollerItem
           v-for="element in visibleItems"
           :key="element.id"

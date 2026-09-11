@@ -19,6 +19,11 @@ defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
       :chat="model.chat"
       :message="model.message"
     />
-    <component v-if="model.isAwaitingFirstToken" :is="model.kit.Await.vue" :kit="model.kit.Await" :model="model" />
+    <component
+      v-if="model.isAwaitingFirstToken"
+      :is="model.kit.Await.vue"
+      :kit="model.kit.Await"
+      :model="model"
+    />
   </div>
 </template>

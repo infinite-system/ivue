@@ -32,7 +32,11 @@ class $ThinkingPart {
   }
 
   get elapsedLabel(): string {
-    if (this.isLive) return Clock.Class.label(this.props.chat.clock.elapsed(this.part.startedAt ?? Date.now(), null), true);
+    if (this.isLive)
+      return Clock.Class.label(
+        this.props.chat.clock.elapsed(this.part.startedAt ?? Date.now(), null),
+        true
+      );
     return this.part.durationMs !== null ? Clock.Class.label(this.part.durationMs) : '';
   }
 
@@ -42,7 +46,9 @@ class $ThinkingPart {
 
   get headLabel(): string {
     if (this.isLive) return `thinking · ${this.elapsedLabel}`;
-    return this.elapsedLabel ? `thought for ${this.elapsedLabel} · ${this.lengthLabel}` : `thinking · ${this.lengthLabel}`;
+    return this.elapsedLabel
+      ? `thought for ${this.elapsedLabel} · ${this.lengthLabel}`
+      : `thinking · ${this.lengthLabel}`;
   }
 
   toggle() {

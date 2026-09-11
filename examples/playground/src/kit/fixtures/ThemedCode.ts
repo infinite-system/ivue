@@ -1,5 +1,11 @@
 import type { ExtractPropTypes, PropType } from 'vue';
-import { definePropTypes, propsWithDefaults, Reactive, type ExtractEmitTypes, type ExtractPropDefaultTypes } from '../../ivue';
+import {
+  definePropTypes,
+  propsWithDefaults,
+  Reactive,
+  type ExtractEmitTypes,
+  type ExtractPropDefaultTypes
+} from '../../ivue';
 import { Static } from '../../Static';
 import { Code } from './Code';
 
@@ -10,7 +16,7 @@ class $ThemedCode extends Code.$Class {
   static override get propsTypes() {
     return definePropTypes({
       ...super.propsTypes,
-      theme: { type: String as PropType<'mono' | 'paper'> },
+      theme: { type: String as PropType<'mono' | 'paper'> }
     });
   }
 
@@ -25,7 +31,7 @@ class $ThemedCode extends Code.$Class {
   static override get emits() {
     return {
       ...super.emits,
-      select: (code: string) => typeof code === 'string',
+      select: (code: string) => typeof code === 'string'
     };
   }
 

@@ -13,11 +13,19 @@ class $ConfiguredChat extends Chat.$Class {
   }
 
   override get theme(): ChatSettings.Theme {
-    return (this.props.kit?.props?.theme as ChatSettings.Theme | undefined) ?? this.$settings.theme.value ?? super.theme;
+    return (
+      (this.props.kit?.props?.theme as ChatSettings.Theme | undefined) ??
+      this.$settings.theme.value ??
+      super.theme
+    );
   }
 
   override get density(): ChatSettings.Density {
-    return (this.props.kit?.props?.density as ChatSettings.Density | undefined) ?? this.$settings.density.value ?? super.density;
+    return (
+      (this.props.kit?.props?.density as ChatSettings.Density | undefined) ??
+      this.$settings.density.value ??
+      super.density
+    );
   }
 
   override get tree(): string {

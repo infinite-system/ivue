@@ -15,7 +15,10 @@ import { hosted } from '../../virtual-scroller/hosted';
 it('a code block copies its whole code and says so for a moment', async () => {
   vi.useFakeTimers();
   const writeText = vi.fn().mockResolvedValue(undefined);
-  Object.defineProperty(globalThis.navigator, 'clipboard', { value: { writeText }, configurable: true });
+  Object.defineProperty(globalThis.navigator, 'clipboard', {
+    value: { writeText },
+    configurable: true
+  });
   const block = hosted(() => new CodeBlock.Class({ code: 'one\ntwo\nthree', cap: 1 }));
   expect(block.instance.isCapped).toBe(true);
   await block.instance.copy();
@@ -26,7 +29,10 @@ it('a code block copies its whole code and says so for a moment', async () => {
   expect(block.instance.copied.value).toBe(false);
   expect(block.instance.copyLabel).toBe('Copy');
   // no async clipboard — a plain-http page on a LAN address — the legacy command copies instead
-  Object.defineProperty(globalThis.navigator, 'clipboard', { value: undefined, configurable: true });
+  Object.defineProperty(globalThis.navigator, 'clipboard', {
+    value: undefined,
+    configurable: true
+  });
   const legacy = vi.fn().mockReturnValue(true);
   Object.defineProperty(document, 'execCommand', { value: legacy, configurable: true });
   await block.instance.copy();
