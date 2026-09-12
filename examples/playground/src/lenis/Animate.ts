@@ -50,7 +50,7 @@ class $Animate {
       // `Math.round(value) === to`, which a fractional target — a shifted
       // lerp, a rebased offset — can never satisfy: the animation then runs
       // forever at a velocity of 1e-6 px and the scroller never rests.
-      if (Math.abs(this.value - this.to) < Animate.$Class.SETTLE_PX) {
+      if (Math.abs(this.value - this.to) < Animate.Class.SETTLE_PX) {
         this.value = this.to;
         completed = true;
       }

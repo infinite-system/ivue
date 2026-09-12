@@ -25,7 +25,7 @@ class $HorizontalVirtualScroller<
   /* Contract — inherited whole; ONE default re-tuned. `props` needs no
      override: it reads through the receiver and fuses THESE defaults
      with the inherited types. */
-  static override get propsDefaults(): typeof VirtualScroller.$Class.propsDefaults {
+  static override get propsDefaults(): typeof VirtualScroller.Class.propsDefaults {
     return {
       ...super.propsDefaults,
       assumedSize: 300 // cards are ~hundreds of px wide where rows are tens tall

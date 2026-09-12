@@ -50,19 +50,19 @@ class $FilesPanel {
   }
 
   get searchIcon(): string {
-    return Icons.$Class.PATHS.search;
+    return Icons.Class.PATHS.search;
   }
 
   get jumpIcon(): string {
-    return Icons.$Class.PATHS.jump;
+    return Icons.Class.PATHS.jump;
   }
 
   get openIcon(): string {
-    return Icons.$Class.PATHS.open;
+    return Icons.Class.PATHS.open;
   }
 
   get chevronIcon(): string {
-    return Icons.$Class.PATHS.chevron;
+    return Icons.Class.PATHS.chevron;
   }
 
   get kindOptions(): { value: FilesPanel.Kind; label: string }[] {

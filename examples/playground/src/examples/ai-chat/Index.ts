@@ -83,11 +83,11 @@ class $Index {
   }
 
   get searchIcon(): string {
-    return Icons.$Class.PATHS.search;
+    return Icons.Class.PATHS.search;
   }
 
   get jumpIcon(): string {
-    return Icons.$Class.PATHS.jump;
+    return Icons.Class.PATHS.jump;
   }
 
   get chat(): Chat.Model {

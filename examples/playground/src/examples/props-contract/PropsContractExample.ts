@@ -172,7 +172,7 @@ export namespace PropsContractExample {
   export let Class = Reactive($Class); // reactive — you `new` this
   export type Instance = typeof Class.Instance; // defineExpose type & reactive() interop
 
-  export type PropName = keyof typeof Badge.$Class.propsTypes;
+  export type PropName = keyof typeof Badge.Class.propsTypes;
   export type Values = Record<PropName, unknown> & { label: string };
   export type Kind = 'number' | 'boolean' | 'text';
   export type Choice = string | number;

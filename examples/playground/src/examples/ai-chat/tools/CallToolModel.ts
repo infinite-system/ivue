@@ -170,7 +170,7 @@ class $CallToolModel {
 
   /** one chevron; the card's open class turns it */
   get chevronIcon(): string {
-    return Icons.$Class.PATHS.chevron;
+    return Icons.Class.PATHS.chevron;
   }
 
   get stateClass(): string {

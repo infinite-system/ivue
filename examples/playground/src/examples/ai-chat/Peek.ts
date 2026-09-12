@@ -132,20 +132,20 @@ class $Peek {
   }
 
   get searchIcon(): string {
-    return Icons.$Class.PATHS.search;
+    return Icons.Class.PATHS.search;
   }
 
   get roleOptions(): { value: Index.RoleFilter; label: string }[] {
-    return (Object.keys(Index.$Class.ROLE_LABELS) as Index.RoleFilter[]).map((value) => ({
+    return (Object.keys(Index.Class.ROLE_LABELS) as Index.RoleFilter[]).map((value) => ({
       value,
-      label: Index.$Class.ROLE_LABELS[value]
+      label: Index.Class.ROLE_LABELS[value]
     }));
   }
 
   get toolOptions(): { value: Index.ToolFilter; label: string }[] {
-    return (Object.keys(Index.$Class.TOOL_LABELS) as Index.ToolFilter[]).map((value) => ({
+    return (Object.keys(Index.Class.TOOL_LABELS) as Index.ToolFilter[]).map((value) => ({
       value,
-      label: Index.$Class.TOOL_LABELS[value]
+      label: Index.Class.TOOL_LABELS[value]
     }));
   }
 

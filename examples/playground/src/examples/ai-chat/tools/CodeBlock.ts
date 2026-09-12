@@ -73,7 +73,7 @@ class $CodeBlock {
   }
 
   get copyIcon(): string {
-    return this.copied.value ? Icons.$Class.PATHS.check : Icons.$Class.PATHS.copy;
+    return this.copied.value ? Icons.Class.PATHS.check : Icons.Class.PATHS.copy;
   }
 
   get copyLabel(): string {

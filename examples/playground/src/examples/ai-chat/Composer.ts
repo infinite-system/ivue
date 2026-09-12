@@ -36,7 +36,7 @@ class $Composer {
 
   /** the rail's search glyph, so the two search affordances match */
   get searchIcon(): string {
-    return Icons.$Class.PATHS.search;
+    return Icons.Class.PATHS.search;
   }
 
   get chat(): Chat.Model {

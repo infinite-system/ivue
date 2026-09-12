@@ -114,7 +114,7 @@ class $PartToolBatch {
 
   /** one chevron; the batch's open class turns it */
   get chevronIcon(): string {
-    return Icons.$Class.PATHS.chevron;
+    return Icons.Class.PATHS.chevron;
   }
 
   toggle() {

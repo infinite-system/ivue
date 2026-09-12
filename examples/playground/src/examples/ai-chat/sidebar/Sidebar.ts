@@ -68,7 +68,7 @@ class $Sidebar {
   }
 
   get collapseIcon(): string {
-    return Icons.$Class.PATHS.collapse;
+    return Icons.Class.PATHS.collapse;
   }
 
   /** the entry for the open tab; the rail alone when nothing is open */
@@ -90,7 +90,7 @@ class $Sidebar {
 
   /** a tab's glyph path, by the name the table carries */
   iconOf(tab: Sidebar.Tab): string {
-    return Icons.$Class.PATHS[tab.icon];
+    return Icons.Class.PATHS[tab.icon];
   }
 
   select(tab: Sidebar.Tab) {
