@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type { Kit } from '../../../kit/Kit';
-import type { ChatMessage } from '../ChatMessage';
+import type { ChatMessage } from './ChatMessage';
 
 // A swapped head for the bubble tree: the name and the time on one quiet line.
-defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
+defineProps<ChatMessage.SectionProps>();
 </script>
 
 <template>

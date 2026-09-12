@@ -1,28 +1,28 @@
-import { Reactive } from '../../ivue';
-import { Static } from '../../Static';
-import { Kit } from '../../kit/Kit';
-import { TextPart } from './parts/TextPart';
-import TextPartView from './parts/TextPart.vue';
-import { ThinkingPart } from './parts/ThinkingPart';
-import ThinkingPartView from './parts/ThinkingPart.vue';
-import { AttachmentPart } from './parts/AttachmentPart';
-import AttachmentPartView from './parts/AttachmentPart.vue';
-import { SystemPart } from './parts/SystemPart';
-import SystemPartView from './parts/SystemPart.vue';
-import { ToolCallPart } from './parts/ToolCallPart';
-import ToolCallPartView from './parts/ToolCallPart.vue';
-import { ToolBatchPart } from './parts/ToolBatchPart';
-import ToolBatchPartView from './parts/ToolBatchPart.vue';
-import MessageGutterView from './sections/MessageGutter.vue';
-import MessageHeadView from './sections/MessageHead.vue';
-import MessageStubView from './sections/MessageStub.vue';
-import MessagePartsView from './sections/MessageParts.vue';
-import MessageAwaitView from './sections/MessageAwait.vue';
-import MessageFootView from './sections/MessageFoot.vue';
-import type { Chat } from './Chat';
-import { Clock } from './Clock';
-import type { Part } from './parts/Part';
-import type { SessionLog } from './SessionLog';
+import { Reactive } from '../../../ivue';
+import { Static } from '../../../Static';
+import { Kit } from '../../../kit/Kit';
+import { TextPart } from '../parts/TextPart';
+import TextPartView from '../parts/TextPart.vue';
+import { ThinkingPart } from '../parts/ThinkingPart';
+import ThinkingPartView from '../parts/ThinkingPart.vue';
+import { AttachmentPart } from '../parts/AttachmentPart';
+import AttachmentPartView from '../parts/AttachmentPart.vue';
+import { SystemPart } from '../parts/SystemPart';
+import SystemPartView from '../parts/SystemPart.vue';
+import { ToolCallPart } from '../parts/ToolCallPart';
+import ToolCallPartView from '../parts/ToolCallPart.vue';
+import { ToolBatchPart } from '../parts/ToolBatchPart';
+import ToolBatchPartView from '../parts/ToolBatchPart.vue';
+import GutterView from './Gutter.vue';
+import HeadView from './Head.vue';
+import StubView from './Stub.vue';
+import PartsView from './Parts.vue';
+import AwaitView from './Await.vue';
+import FootView from './Foot.vue';
+import type { Chat } from '../Chat';
+import { Clock } from '../Clock';
+import type { Part } from '../parts/Part';
+import type { SessionLog } from '../SessionLog';
 
 // One row of the thread: a stub with its loader while the page is on the
 // way, then the message — role, time, model stamp, and its parts, each
@@ -63,12 +63,12 @@ class $ChatMessage {
       System: { namespace: SystemPart, view: SystemPartView, bind: this.bindPart },
       ToolCall: { namespace: ToolCallPart, view: ToolCallPartView, bind: this.bindPart },
       ToolBatch: { namespace: ToolBatchPart, view: ToolBatchPartView, bind: this.bindPart },
-      Gutter: { view: MessageGutterView },
-      Head: { view: MessageHeadView },
-      Stub: { view: MessageStubView },
-      Parts: { view: MessagePartsView },
-      Await: { view: MessageAwaitView },
-      Foot: { view: MessageFootView },
+      Gutter: { view: GutterView },
+      Head: { view: HeadView },
+      Stub: { view: StubView },
+      Parts: { view: PartsView },
+      Await: { view: AwaitView },
+      Foot: { view: FootView },
       order: ['Gutter', 'Head', 'Stub', 'Parts', 'Await', 'Foot']
     };
   }
@@ -400,6 +400,12 @@ export namespace ChatMessage {
     chat: Chat.Model;
     /** the entry this view was rendered through: the class it constructs */
     kit?: Kit.Entry;
+  }
+
+  /** what every section receives from the row: its entry and the row model */
+  export interface SectionProps {
+    kit: Kit.Entry;
+    model: Instance;
   }
 
   export type PartRole = 'Text' | 'Thinking' | 'Attachment' | 'System' | 'ToolCall' | 'ToolBatch';

@@ -17,12 +17,12 @@ the spec proves the shipped catalog and not a copy of its patches.
 */
 import { describe, expect, it } from 'vitest';
 import { ref } from 'vue';
-import { Kit } from '../../kit/Kit';
-import { KitInspect } from '../../kit/KitInspect';
-import type { Chat } from './Chat';
+import { Kit } from '../../../kit/Kit';
+import { KitInspect } from '../../../kit/KitInspect';
+import type { Chat } from '../Chat';
 import { ChatMessage } from './ChatMessage';
-import type { SessionLog } from './SessionLog';
-import { ChatVariants } from './variants/ChatVariants';
+import type { SessionLog } from '../SessionLog';
+import { ChatVariants } from '../variants/ChatVariants';
 
 /** The chat as the row reads it: a revision to subscribe to, a streaming slot, and the probes. */
 function stubChat(streaming: Chat.Streaming | null = null): Chat.Model {

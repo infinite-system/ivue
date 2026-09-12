@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import type { Kit } from '../../../kit/Kit';
-import type { ChatMessage } from '../ChatMessage';
+import type { ChatMessage } from './ChatMessage';
 
 // The row before its page lands: a skeleton at the scroller's estimated
 // size, so a landing moves nothing, with the page's loader. Markup only.
-defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
+defineProps<ChatMessage.SectionProps>();
 </script>
 
 <template>

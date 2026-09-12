@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type { Kit } from '../../../kit/Kit';
-import type { ChatMessage } from '../ChatMessage';
+import type { ChatMessage } from './ChatMessage';
 
 // A swapped head for the minimal tree: the turn number and the time, nothing else.
-defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
+defineProps<ChatMessage.SectionProps>();
 </script>
 
 <template>

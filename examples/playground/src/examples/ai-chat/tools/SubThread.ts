@@ -1,8 +1,8 @@
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
-import { ChatMessage } from '../ChatMessage';
-import ChatMessageView from '../ChatMessage.vue';
+import { ChatMessage } from '../message/ChatMessage';
+import ChatMessageView from '../message/ChatMessage.vue';
 import type { Chat } from '../Chat';
 import type { SessionLog } from '../SessionLog';
 

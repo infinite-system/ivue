@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type { Kit } from '../../../kit/Kit';
-import type { ChatMessage } from '../ChatMessage';
+import type { ChatMessage } from './ChatMessage';
 
 // The reply's receipt: tokens and wall time. Markup only.
-defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
+defineProps<ChatMessage.SectionProps>();
 </script>
 
 <template>

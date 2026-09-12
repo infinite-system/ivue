@@ -95,7 +95,7 @@ part is done.
 
 <LazyCodeGroup
   :files="[
-    { path: 'examples/playground/src/examples/ai-chat/ChatMessage.ts', label: 'ChatMessage.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/ChatMessage.ts', label: 'message/ChatMessage.ts' },
     { path: 'examples/playground/src/examples/ai-chat/parts/Parts.ts', label: 'parts/Parts.ts' },
     { path: 'examples/playground/src/examples/ai-chat/parts/ToolBatchPart.ts', label: 'ToolBatchPart.ts' },
     { path: 'examples/playground/src/examples/ai-chat/tools/Tools.ts', label: 'tools/Tools.ts' },

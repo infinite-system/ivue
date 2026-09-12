@@ -2,8 +2,8 @@ import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
 import { ConfiguredChat } from '../ConfiguredChat';
 import { TreeCatalog } from './TreeCatalog';
-import BubbleHeadView from './BubbleHead.vue';
-import MinimalHeadView from './MinimalHead.vue';
+import BubbleHeadView from '../message/BubbleHead.vue';
+import MinimalHeadView from '../message/MinimalHead.vue';
 
 // The trees a reader can pick, resolved: the shipped chat, and patches over
 // it — each a `Kit.Class.derive` of the configured chat that edits the

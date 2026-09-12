@@ -93,7 +93,7 @@ or two: Bubbles drops the gutter (`without`) and swaps the head; Minimal
 drops the gutter and the foot and swaps the head; Compact drops the
 gutter, inserts a rule under the head — a tag role, `{ view: 'hr' }` —
 and moves the foot above the parts, dressing it through `bind`. No
-variant copies `ChatMessage.vue` or ships a view that renders nothing to
+variant copies `message/ChatMessage.vue` or ships a view that renders nothing to
 stand in for an absent section. The shipped row is untouched by all of
 them, and the layout the gutter needs is the row's own CSS grid, not a
 wrapper the template would have to name.

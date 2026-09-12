@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type { Kit } from '../../../kit/Kit';
-import type { ChatMessage } from '../ChatMessage';
+import type { ChatMessage } from './ChatMessage';
 
 // The row's gutter: the avatar letter. Markup only, over the row model.
-defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
+defineProps<ChatMessage.SectionProps>();
 </script>
 
 <template>
