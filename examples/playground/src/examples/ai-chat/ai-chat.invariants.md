@@ -64,7 +64,7 @@ the part that picks cards, the sections of the row, the leaves of a card
 — and every seam renders `<component :is="model.kit.Role.view" v-bind="model.seamProps(Role)" />`.
 A container renders its sections from the kit's `order`, one seam per
 role, with `v-if="model.shows(role)"` naming presence; the row's six
-sections (Gutter, Head, Stub, MessageParts, Await, Foot) are that order, and the
+sections (Gutter, Header, Stub, MessageParts, Await, Footer) are that order, and the
 parts are a second loop of their own, the part travelling as the seam's
 item. A model reads its kit from its own class, so a subclass swaps any
 role by naming another entry, and nothing branches on a kind or a name —

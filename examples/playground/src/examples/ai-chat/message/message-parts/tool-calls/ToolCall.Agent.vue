@@ -11,7 +11,7 @@ const model = new (
 
 <template>
   <div class="ac-tool ac-tool-agent" :class="model.cardClass">
-    <component :is="model.kit.Head.view" :model="model" />
+    <component :is="model.kit.Header.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <p class="ac-tool-caption">
         <span class="ac-tag">{{ model.agentType }}</span>
@@ -42,7 +42,7 @@ const model = new (
           :chat="chat"
         />
       </div>
-      <component :is="model.kit.Foot.view" :model="model" />
+      <component :is="model.kit.Footer.view" :model="model" />
     </div>
   </div>
 </template>

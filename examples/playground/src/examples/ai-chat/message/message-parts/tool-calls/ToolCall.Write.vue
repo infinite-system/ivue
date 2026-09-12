@@ -11,7 +11,7 @@ const model = new (
 
 <template>
   <div class="ac-tool ac-tool-write" :class="model.cardClass">
-    <component :is="model.kit.Head.view" :model="model" />
+    <component :is="model.kit.Header.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <section class="ac-tool-section">
         <h5>
@@ -40,7 +40,7 @@ const model = new (
           wrap
         />
       </section>
-      <component :is="model.kit.Foot.view" :model="model" />
+      <component :is="model.kit.Footer.view" :model="model" />
     </div>
   </div>
 </template>

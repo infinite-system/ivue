@@ -14,11 +14,11 @@ import MessagePartToolCallView from './message-parts/MessagePart.ToolCall.vue';
 import { MessagePartToolBatch } from './message-parts/MessagePart.ToolBatch';
 import MessagePartToolBatchView from './message-parts/MessagePart.ToolBatch.vue';
 import GutterView from './ChatMessage.Gutter.vue';
-import HeadView from './ChatMessage.Head.vue';
+import HeaderView from './ChatMessage.Header.vue';
 import StubView from './ChatMessage.Stub.vue';
 import MessagePartsView from './ChatMessage.MessageParts.vue';
 import AwaitView from './ChatMessage.Await.vue';
-import FootView from './ChatMessage.Foot.vue';
+import FooterView from './ChatMessage.Footer.vue';
 import type { Chat } from '../Chat';
 import { Clock } from '../Clock';
 import type { MessagePart } from './message-parts/MessagePart';
@@ -80,12 +80,12 @@ class $ChatMessage {
         bind: this.bindPart
       },
       Gutter: { view: GutterView },
-      Head: { view: HeadView },
+      Header: { view: HeaderView },
       Stub: { view: StubView },
       MessageParts: { view: MessagePartsView },
       Await: { view: AwaitView },
-      Foot: { view: FootView },
-      order: ['Gutter', 'Head', 'Stub', 'MessageParts', 'Await', 'Foot']
+      Footer: { view: FooterView },
+      order: ['Gutter', 'Header', 'Stub', 'MessageParts', 'Await', 'Footer']
     };
   }
 
@@ -357,7 +357,7 @@ class $ChatMessage {
         return !this.isStub;
       case 'Await':
         return this.isAwaitingFirstToken;
-      case 'Foot':
+      case 'Footer':
         return this.hasReceipt;
       default:
         return true;
@@ -425,7 +425,7 @@ export namespace ChatMessage {
   }
 
   export type PartRole = 'Text' | 'Thinking' | 'Attachment' | 'System' | 'ToolCall' | 'ToolBatch';
-  export type SectionRole = 'Gutter' | 'Head' | 'Stub' | 'MessageParts' | 'Await' | 'Foot';
+  export type SectionRole = 'Gutter' | 'Header' | 'Stub' | 'MessageParts' | 'Await' | 'Footer';
   export type Role = PartRole | SectionRole;
   /** the row's kit: its sections in an order, and a part role per kind fed its part — declared, so the
    *  row's instance type and its kit can name each other */

@@ -6,8 +6,8 @@ import { ToolCallCodeBlock } from './ToolCall.CodeBlock';
 import ToolCallCodeBlockView from './ToolCall.CodeBlock.vue';
 import { ToolCallSubThread } from './ToolCall.SubThread';
 import ToolCallSubThreadView from './ToolCall.SubThread.vue';
-import ToolCallHeadView from './ToolCall.Head.vue';
-import ToolCallFootView from './ToolCall.Foot.vue';
+import ToolCallHeaderView from './ToolCall.Header.vue';
+import ToolCallFooterView from './ToolCall.Footer.vue';
 import type { Chat } from '../../../Chat';
 import { Clock } from '../../../Clock';
 import { Highlighter } from '../../../Highlighter';
@@ -22,8 +22,8 @@ class $ToolCall {
   /** the roles every card composes: its head and foot, the code block, and a nested thread */
   static get $kit() {
     return {
-      Head: { view: ToolCallHeadView },
-      Foot: { view: ToolCallFootView },
+      Header: { view: ToolCallHeaderView },
+      Footer: { view: ToolCallFooterView },
       CodeBlock: { view: ToolCallCodeBlockView, namespace: ToolCallCodeBlock },
       SubThread: { view: ToolCallSubThreadView, namespace: ToolCallSubThread }
     } satisfies Kit.Of<ToolCall.Role>;
@@ -275,7 +275,7 @@ export namespace ToolCall {
     kit?: Kit.Entry;
   }
 
-  export type Role = 'Head' | 'Foot' | 'CodeBlock' | 'SubThread';
+  export type Role = 'Header' | 'Footer' | 'CodeBlock' | 'SubThread';
 
   export interface Section {
     title: string;

@@ -11,7 +11,7 @@ const model = new (
 
 <template>
   <div class="ac-tool ac-tool-generic" :class="model.cardClass">
-    <component :is="model.kit.Head.view" :model="model" />
+    <component :is="model.kit.Header.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <section v-for="section in model.sections" :key="section.title" class="ac-tool-section">
         <h5>{{ section.title }}</h5>
@@ -25,7 +25,7 @@ const model = new (
           wrap
         />
       </section>
-      <component :is="model.kit.Foot.view" :model="model" />
+      <component :is="model.kit.Footer.view" :model="model" />
     </div>
   </div>
 </template>

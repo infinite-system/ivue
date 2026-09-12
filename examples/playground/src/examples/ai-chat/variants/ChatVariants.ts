@@ -2,8 +2,8 @@ import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
 import { ConfiguredChat } from '../ConfiguredChat';
 import { TreeCatalog } from './TreeCatalog';
-import BubbleHeadView from '../message/ChatMessage.Head.Bubble.vue';
-import MinimalHeadView from '../message/ChatMessage.Head.Minimal.vue';
+import HeaderBubbleView from '../message/ChatMessage.Header.Bubble.vue';
+import HeaderMinimalView from '../message/ChatMessage.Header.Minimal.vue';
 
 // The trees a reader can pick, resolved: the shipped chat, and patches over
 // it — each a `Kit.Class.derive` of the configured chat that edits the
@@ -22,7 +22,7 @@ class $ChatVariants {
         ConfiguredChat,
         {
           Message: {
-            subkit: { order: { without: ['Gutter'] }, Head: { view: BubbleHeadView } }
+            subkit: { order: { without: ['Gutter'] }, Header: { view: HeaderBubbleView } }
           }
         },
         'bubbles'
@@ -31,7 +31,10 @@ class $ChatVariants {
         ConfiguredChat,
         {
           Message: {
-            subkit: { order: { without: ['Gutter', 'Foot'] }, Head: { view: MinimalHeadView } }
+            subkit: {
+              order: { without: ['Gutter', 'Footer'] },
+              Header: { view: HeaderMinimalView }
+            }
           }
         },
         'minimal'
@@ -43,11 +46,11 @@ class $ChatVariants {
             subkit: {
               order: {
                 without: ['Gutter'],
-                after: { Head: ['Rule'] },
-                move: { Foot: { before: 'MessageParts' } }
+                after: { Header: ['Rule'] },
+                move: { Footer: { before: 'MessageParts' } }
               },
               Rule: { view: 'hr', bind: () => ({ class: 'ac-rule' }) },
-              Foot: { bind: ({ inherited }) => ({ ...inherited(), class: 'ac-foot-lead' }) }
+              Footer: { bind: ({ inherited }) => ({ ...inherited(), class: 'ac-foot-lead' }) }
             }
           }
         },

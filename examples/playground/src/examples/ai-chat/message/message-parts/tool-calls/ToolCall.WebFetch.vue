@@ -12,7 +12,7 @@ const model = new (
 
 <template>
   <div class="ac-tool ac-tool-web" :class="model.cardClass">
-    <component :is="model.kit.Head.view" :model="model" />
+    <component :is="model.kit.Header.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <p class="ac-tool-caption">
         <a v-if="model.url" class="ac-path" :href="model.url" target="_blank" rel="noreferrer">{{
@@ -33,7 +33,7 @@ const model = new (
           wrap
         />
       </section>
-      <component :is="model.kit.Foot.view" :model="model" />
+      <component :is="model.kit.Footer.view" :model="model" />
     </div>
   </div>
 </template>

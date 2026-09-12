@@ -418,11 +418,11 @@ class $ChatMessage {
       Tool: { view: MessagePartToolCallView, namespace: ToolCall },
       // the row's sections — each a markup view over the row model, swappable with a class of its own
       Gutter: { view: MessageGutterView },
-      Head: { view: MessageHeadView },
+      Header: { view: MessageHeadView },
       Stub: { view: MessageStubView },
       Parts: { view: MessagePartsView },
       Await: { view: MessageAwaitView },
-      Foot: { view: MessageFootView },
+      Footer: { view: MessageFootView },
     } satisfies Kit.Of<ChatMessage.PartRole | 'Tool' | ChatMessage.SectionRole>;
   }
 
@@ -474,7 +474,7 @@ export namespace ChatMessage {
   // contract — `propsTypes` with `row`, `chat` required and `kit`; see CodeBlock below.
 
   export type PartRole = 'Text' | 'Thinking' | 'Attachment' | 'System' | 'ToolCall' | 'ToolBatch';
-  export type SectionRole = 'Gutter' | 'Head' | 'Stub' | 'Parts' | 'Await' | 'Foot';
+  export type SectionRole = 'Gutter' | 'Header' | 'Stub' | 'Parts' | 'Await' | 'Footer';
 
   /** what every part view receives — `Parts.Props` was, moved here when `Parts.ts` goes */
   export interface PartProps<Part extends SessionLog.Part = SessionLog.Part> {
@@ -499,10 +499,10 @@ const model = new (props.kit?.namespace.Class ?? ChatMessage.Class)(props);
   <article class="ac-msg" :class="model.rowClass">
     <component :is="model.kit.Gutter.view" :kit="model.kit.Gutter" :model="model" />
     <div class="ac-msg-body">
-      <component :is="model.kit.Head.view" :kit="model.kit.Head" :model="model" />
+      <component :is="model.kit.Header.view" :kit="model.kit.Header" :model="model" />
       <component v-if="model.isStub" :is="model.kit.Stub.view" :kit="model.kit.Stub" :model="model" />
       <component v-else :is="model.kit.Parts.view" :kit="model.kit.Parts" :model="model" />
-      <component v-if="model.receiptLabel" :is="model.kit.Foot.view" :kit="model.kit.Foot" :model="model" />
+      <component v-if="model.receiptLabel" :is="model.kit.Footer.view" :kit="model.kit.Footer" :model="model" />
     </div>
   </article>
 </template>
@@ -585,8 +585,8 @@ import ToolCallGenericView from './ToolCallGeneric.vue';
 class $ToolCall {
   static get $kit() {
     return {
-      Head: { view: ToolHeadView },
-      Foot: { view: ToolFootView },
+      Header: { view: ToolHeadView },
+      Footer: { view: ToolFootView },
       CodeBlock: { view: CodeBlockView, namespace: CodeBlock },
       Generic: { view: ToolCallGenericView, namespace: ToolCall },
       Mcp: { view: ToolCallMcpView, namespace: ToolCallMcp },
@@ -693,7 +693,7 @@ const model = new (props.kit?.namespace.Class ?? ToolCallBash.Class)(props);
 
 <template>
   <div class="ac-tool ac-tool-bash" :class="model.cardClass">
-    <component :is="model.kit.Head.view" :model="model" />
+    <component :is="model.kit.Header.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <p v-if="model.description" class="ac-tool-caption">{{ model.description }}</p>
       <section class="ac-tool-section">
@@ -704,7 +704,7 @@ const model = new (props.kit?.namespace.Class ?? ToolCallBash.Class)(props);
         <h5>stdout <span class="ac-tag" :class="model.stateClass">{{ model.exitLabel }}</span></h5>
         <component :is="model.kit.CodeBlock.view" :kit="model.kit.CodeBlock" :code="model.stdout" lang="text" :cap="model.cap" wrap />
       </section>
-      <component :is="model.kit.Foot.view" :model="model" />
+      <component :is="model.kit.Footer.view" :model="model" />
     </div>
   </div>
 </template>
@@ -1256,7 +1256,7 @@ it('a tunable reads the kit first, an extension reads only the kit, a closed pro
 | --- | --- |
 | `parts/Parts.ts` registry (kind → component) | `ChatMessage.$kit` keyed by PascalCase role (`Text`, `ToolBatch`…), `PART_ROLES` mapping kind → role; the row model resolves `partEntry(part)`, `Text` as the fallback |
 | `tools/Tools.ts` registry (name → component, prefix families, generic fallback) | `ToolCall.$kit.Tools` plus `Mcp`, `Task`, `Generic` entries; the lookup is the static `toolFor(name)` on the base |
-| `ToolHead.vue`, `ToolFoot.vue`, `CodeBlock.vue` used by name in every card | `ToolCall.$kit`: `Head`, `Foot` as markup leaves, `CodeBlock` as a pair; cards render `<component :is="model.kit.Head.view" :model="model" />` and `<component :is="model.kit.CodeBlock.view" :kit="model.kit.CodeBlock" …props />` |
+| `ToolHead.vue`, `ToolFoot.vue`, `CodeBlock.vue` used by name in every card | `ToolCall.$kit`: `Header`, `Footer` as markup leaves, `CodeBlock` as a pair; cards render `<component :is="model.kit.Header.view" :model="model" />` and `<component :is="model.kit.CodeBlock.view" :kit="model.kit.CodeBlock" …props />` |
 | `Chat.ts` reaches the scroller through `ref="scroller"` | unchanged: the scroller's view constructs the class its entry names and exposes it; the chat keeps its template ref. The entry `Chat.$kit.Scroller = { view: VirtualScrollerView, namespace: VirtualScroller }` is what a page overrides to put a different scroller under the chat |
 | `ChatComposer.vue`, `ChatIndex.vue` construct their models | unchanged in who constructs; each news `props.kit?.namespace.Class ?? Composer.Class` and is rendered through `chat.kit.Composer` |
 | `ChatMessage.vue` constructs a row model per row in the scroller's slot | unchanged; the slot renders `<component :is="chat.kit.Message.view" :kit="chat.kit.Message" :row="item" :chat="chat" />` |
@@ -1340,7 +1340,7 @@ importing each other.
       touching any tool class.
 - [ ] Sections: the base kit renders the row with the same element tags
       and classes as today (snapshot the row's outer HTML before and
-      after); a `Head` swapped for a two-column SFC with its own class
+      after); a `Header` swapped for a two-column SFC with its own class
       shows the same labels, and `GroupedChat` renders tool calls under
       a `details`.
 - [ ] The scroller changes by one optional prop: its suite, the

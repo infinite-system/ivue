@@ -20,7 +20,7 @@ class $TreeCatalog {
   Message: {
     subkit: {
       order: { without: ['Gutter'] },
-      Head: { view: BubbleHeadView },
+      Header: { view: HeaderBubbleView },
     },
   },
 })`
@@ -32,8 +32,8 @@ class $TreeCatalog {
       patch: `Kit.Class.derive(ConfiguredChat, {
   Message: {
     subkit: {
-      order: { without: ['Gutter', 'Foot'] },
-      Head: { view: MinimalHeadView },
+      order: { without: ['Gutter', 'Footer'] },
+      Header: { view: HeaderMinimalView },
     },
   },
 })`
@@ -47,11 +47,11 @@ class $TreeCatalog {
     subkit: {
       order: {
         without: ['Gutter'],
-        after: { Head: ['Rule'] },
-        move: { Foot: { before: 'MessageParts' } },
+        after: { Header: ['Rule'] },
+        move: { Footer: { before: 'MessageParts' } },
       },
       Rule: { view: 'hr', bind: () => ({ class: 'ac-rule' }) },
-      Foot: {
+      Footer: {
         bind: ({ inherited }) => ({ ...inherited(), class: 'ac-foot-lead' }),
       },
     },

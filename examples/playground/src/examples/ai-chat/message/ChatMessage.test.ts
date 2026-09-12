@@ -78,11 +78,11 @@ describe('the row is a container of roles', () => {
     const stub = new ChatMessage.Class({ row: row(null), chat: stubChat() });
     expect(ChatMessage.Class.$kit.order).toEqual([
       'Gutter',
-      'Head',
+      'Header',
       'Stub',
       'MessageParts',
       'Await',
-      'Foot'
+      'Footer'
     ]);
     expect(stub.kit.order.map((role) => stub.shows(role))).toEqual([
       true,
@@ -119,7 +119,7 @@ describe('the row is a container of roles', () => {
       } as Chat.Streaming)
     });
     expect(awaiting.shows('Await')).toBe(true);
-    expect(awaiting.shows('Foot')).toBe(false);
+    expect(awaiting.shows('Footer')).toBe(false);
   });
 
   // domain-invariant: $ChatMessage — If a seam is built for a role, then a section receives `{ model, kit }`, a part receives its entry beside `{ part, chat, message }` from the entry's bind, and a kind nobody mapped renders through Text
@@ -147,19 +147,19 @@ describe('the row is a container of roles', () => {
     expect(model.partKey(textPart, 3)).toBe('text-3');
     // the method is the kit's: a tag role added by a layer receives only its bind, through the same call
     const Ruled = Kit.Class.derive(ChatMessage, {
-      order: { after: { Head: ['Rule'] } },
+      order: { after: { Header: ['Rule'] } },
       Rule: { view: 'hr', bind: () => ({ class: 'ac-rule' }) }
     });
     const ruled = new (Ruled.Class as typeof ChatMessage.Class)({ row: row(reply), chat });
     expect(ruled.seamProps('Rule' as ChatMessage.Role)).toEqual({ class: 'ac-rule' });
     expect(ruled.kit.order).toEqual([
       'Gutter',
-      'Head',
+      'Header',
       'Rule',
       'Stub',
       'MessageParts',
       'Await',
-      'Foot'
+      'Footer'
     ]);
   });
 
@@ -167,34 +167,40 @@ describe('the row is a container of roles', () => {
   it('bubbles, minimal and compact are patches over the order — nothing copied, the shipped row untouched', () => {
     expect(messageKit('shipped').order).toEqual([
       'Gutter',
-      'Head',
+      'Header',
       'Stub',
       'MessageParts',
       'Await',
-      'Foot'
+      'Footer'
     ]);
-    expect(messageKit('bubbles').order).toEqual(['Head', 'Stub', 'MessageParts', 'Await', 'Foot']);
-    expect(messageKit('bubbles').Head.view).not.toBe(messageKit('shipped').Head.view);
-    expect(messageKit('minimal').order).toEqual(['Head', 'Stub', 'MessageParts', 'Await']);
+    expect(messageKit('bubbles').order).toEqual([
+      'Header',
+      'Stub',
+      'MessageParts',
+      'Await',
+      'Footer'
+    ]);
+    expect(messageKit('bubbles').Header.view).not.toBe(messageKit('shipped').Header.view);
+    expect(messageKit('minimal').order).toEqual(['Header', 'Stub', 'MessageParts', 'Await']);
     const compact = messageKit('compact');
-    expect(compact.order).toEqual(['Head', 'Rule', 'Stub', 'Foot', 'MessageParts', 'Await']);
+    expect(compact.order).toEqual(['Header', 'Rule', 'Stub', 'Footer', 'MessageParts', 'Await']);
     expect(compact.Rule.view).toBe('hr');
     expect(compact.Rule.namespace).toBeUndefined();
-    expect(compact.Head.view).toBe(messageKit('shipped').Head.view); // untouched, the shipped head
+    expect(compact.Header.view).toBe(messageKit('shipped').Header.view); // untouched, the shipped head
     const model = new ChatMessage.Class({ row: row(reply), chat: stubChat() });
     expect(Kit.Class.seam(model, compact.Rule)).toEqual({ class: 'ac-rule' });
-    expect(Kit.Class.seam(model, compact.Foot)).toEqual({
+    expect(Kit.Class.seam(model, compact.Footer)).toEqual({
       model,
-      kit: compact.Foot,
+      kit: compact.Footer,
       class: 'ac-foot-lead'
     });
     expect(ChatMessage.Class.$kit.order).toEqual([
       'Gutter',
-      'Head',
+      'Header',
       'Stub',
       'MessageParts',
       'Await',
-      'Foot'
+      'Footer'
     ]);
     expect(ChatVariants.Class.tree('compact').namespace.layer).toBe('compact');
     expect(KitInspect.Class.tree(ChatVariants.Class.tree('compact').namespace)).toContain(

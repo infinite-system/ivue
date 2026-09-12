@@ -45,7 +45,7 @@ list order; an absolute `order` list; `seamProps` as a switch on role names; pre
 ## Build order
 
 `ChatMessage` on `order` + `seamProps` first; Bubbles and Minimal become patches (`without: ['Gutter']`,
-a Head entry); then a third variant nobody planned. If that third one is a patch and not a copy, extend the
+a Header entry); then a third variant nobody planned. If that third one is a patch and not a copy, extend the
 kit spec (`kit.invariants.md`) with the relations, `bind`, and the conflict report, and move on to the next
 container (tool card body, composer bar). The chat root stays literal: three children of three shapes.
 

@@ -11,7 +11,7 @@ const model = new (
 
 <template>
   <div class="ac-tool ac-tool-bash" :class="model.cardClass">
-    <component :is="model.kit.Head.view" :model="model" />
+    <component :is="model.kit.Header.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <p v-if="model.description" class="ac-tool-caption">{{ model.description }}</p>
       <section class="ac-tool-section">
@@ -53,7 +53,7 @@ const model = new (
       <p v-if="model.hasNoOutput" class="ac-tool-caption ac-muted">
         no output · {{ model.exitLabel }}
       </p>
-      <component :is="model.kit.Foot.view" :model="model" />
+      <component :is="model.kit.Footer.view" :model="model" />
     </div>
   </div>
 </template>
