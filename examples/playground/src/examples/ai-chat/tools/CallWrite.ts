@@ -1,9 +1,9 @@
 import { Reactive } from '../../../ivue';
-import { ToolCallModel } from './ToolCallModel';
+import { CallToolModel } from './CallToolModel';
 
 // A write: the whole file as written, highlighted by its extension,
 // with line numbers from one.
-class $CallWrite extends ToolCallModel.$Class {
+class $CallWrite extends CallToolModel.$Class {
   get filePath(): string {
     return this.pathLabel(this.input.file_path);
   }
@@ -26,8 +26,8 @@ class $CallWrite extends ToolCallModel.$Class {
     return Array.isArray(patch) && patch.length > 0;
   }
 
-  override get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [
+  override get sections(): CallToolModel.Section[] {
+    const sections: CallToolModel.Section[] = [
       { title: this.filePath, code: this.content, lang: this.language, startLine: 1 }
     ];
     if (this.isFailed && this.resultText)

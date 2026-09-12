@@ -16,7 +16,7 @@ import { CallBash } from '../tools/CallBash';
 import CallBashView from '../tools/CallBash.vue';
 import { CallMcp } from '../tools/CallMcp';
 import { CallTask } from '../tools/CallTask';
-import { ToolCallModel } from '../tools/ToolCallModel';
+import { CallToolModel } from '../tools/CallToolModel';
 import CallGenericView from '../tools/CallGeneric.vue';
 
 describe('PartToolCall', () => {
@@ -28,7 +28,7 @@ describe('PartToolCall', () => {
     expect(PartToolCall.Class.toolFor('mcp__playwright__browser_snapshot').namespace).toBe(CallMcp);
     expect(PartToolCall.Class.toolFor('TaskUpdate').namespace).toBe(CallTask);
     expect(PartToolCall.Class.toolFor('NeverHeardOfIt')).toEqual({
-      namespace: ToolCallModel,
+      namespace: CallToolModel,
       view: CallGenericView
     });
     expect(PartToolCall.Class.isMapped('Edit')).toBe(true);
@@ -41,7 +41,7 @@ describe('PartToolCall', () => {
       }
     }
     const QuietPart = Static($QuietPart);
-    expect(QuietPart.toolFor('Bash').namespace).toBe(ToolCallModel);
+    expect(QuietPart.toolFor('Bash').namespace).toBe(CallToolModel);
     expect(PartToolCall.Class.toolFor('Bash').namespace).toBe(CallBash);
     // a batch renders its calls through this part, so the swap reaches batches too
     expect(PartToolBatch.Class.$kit.Call.namespace).toBe(PartToolCall);

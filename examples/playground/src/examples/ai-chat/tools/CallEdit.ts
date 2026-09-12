@@ -1,10 +1,10 @@
 import { Reactive } from '../../../ivue';
-import { ToolCallModel } from './ToolCallModel';
+import { CallToolModel } from './CallToolModel';
 
 // An edit: a unified diff of old against new with the file path as its
 // header. The structured patch the tool recorded is the source when it
 // exists; the call's own old and new strings otherwise.
-class $CallEdit extends ToolCallModel.$Class {
+class $CallEdit extends CallToolModel.$Class {
   get filePath(): string {
     return this.pathLabel(this.input.file_path ?? this.input.notebook_path);
   }
@@ -47,8 +47,8 @@ class $CallEdit extends ToolCallModel.$Class {
     return `+${added} −${removed}`;
   }
 
-  override get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [
+  override get sections(): CallToolModel.Section[] {
+    const sections: CallToolModel.Section[] = [
       { title: this.filePath, code: this.diff, lang: 'diff' }
     ];
     if (this.isFailed && this.resultText)

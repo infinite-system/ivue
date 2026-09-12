@@ -1,8 +1,8 @@
 import { Reactive } from '../../../ivue';
-import { ToolCallModel } from './ToolCallModel';
+import { CallToolModel } from './CallToolModel';
 
 // The task tools: a subject, a status, and the note that went with it.
-class $CallTask extends ToolCallModel.$Class {
+class $CallTask extends CallToolModel.$Class {
   get verb(): string {
     return this.name.replace(/^Task/, '').toLowerCase() || 'task';
   }
@@ -20,8 +20,8 @@ class $CallTask extends ToolCallModel.$Class {
     return String(this.input.description ?? '');
   }
 
-  override get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [];
+  override get sections(): CallToolModel.Section[] {
+    const sections: CallToolModel.Section[] = [];
     if (this.description)
       sections.push({ title: 'description', code: this.description, lang: 'markdown' });
     if (this.resultText)

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { CallWebFetch } from './CallWebFetch';
-import type { ToolCallModel } from './ToolCallModel';
+import type { CallToolModel } from './CallToolModel';
 
-const props = defineProps<ToolCallModel.Props>();
+const props = defineProps<CallToolModel.Props>();
 
 const model = new (
   (props.kit?.namespace.Class as typeof CallWebFetch.Class | undefined) ?? CallWebFetch.Class

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { CallEdit } from './CallEdit';
-import type { ToolCallModel } from './ToolCallModel';
+import type { CallToolModel } from './CallToolModel';
 
-const props = defineProps<ToolCallModel.Props>();
+const props = defineProps<CallToolModel.Props>();
 
 const model = new (
   (props.kit?.namespace.Class as typeof CallEdit.Class | undefined) ?? CallEdit.Class

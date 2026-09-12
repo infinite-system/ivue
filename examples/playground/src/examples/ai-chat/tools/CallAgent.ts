@@ -1,10 +1,10 @@
 import { Reactive } from '../../../ivue';
 import type { SessionLog } from '../SessionLog';
-import { ToolCallModel } from './ToolCallModel';
+import { CallToolModel } from './CallToolModel';
 
 // A subagent: its description and prompt, its report, and the thread it
 // ran folded under it, rendered by the same parts as the main thread.
-class $CallAgent extends ToolCallModel.$Class {
+class $CallAgent extends CallToolModel.$Class {
   get description(): string {
     return String(this.input.description ?? '');
   }
@@ -43,8 +43,8 @@ class $CallAgent extends ToolCallModel.$Class {
     return typeof structured.resolvedModel === 'string' ? structured.resolvedModel : '';
   }
 
-  override get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [];
+  override get sections(): CallToolModel.Section[] {
+    const sections: CallToolModel.Section[] = [];
     if (this.prompt) sections.push({ title: 'prompt', code: this.prompt, lang: 'markdown' });
     if (this.resultText)
       sections.push({

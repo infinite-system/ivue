@@ -6,7 +6,7 @@ import { PartToolCall } from './PartToolCall';
 import PartToolCallView from './PartToolCall.vue';
 import { Clock } from '../Clock';
 import type { SessionLog } from '../SessionLog';
-import { ToolCallModel } from '../tools/ToolCallModel';
+import { CallToolModel } from '../tools/CallToolModel';
 import type { Part } from './Part';
 
 // A run of tool calls as one row: the count, the tools' icons in order,
@@ -61,7 +61,7 @@ class $PartToolBatch {
     const groups = new Map<string, PartToolBatch.IconGroup>();
     for (const call of this.calls) {
       const icon =
-        ToolCallModel.Class.ICONS[call.name] ??
+        CallToolModel.Class.ICONS[call.name] ??
         (call.name.startsWith('mcp__') ? '⌘' : call.name.startsWith('Task') ? '☑' : '⚙');
       const group = groups.get(icon);
       if (group) {

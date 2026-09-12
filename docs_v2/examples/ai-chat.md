@@ -99,7 +99,7 @@ part is done.
     { path: 'examples/playground/src/examples/ai-chat/parts/Parts.ts', label: 'parts/Parts.ts' },
     { path: 'examples/playground/src/examples/ai-chat/parts/PartToolBatch.ts', label: 'PartToolBatch.ts' },
     { path: 'examples/playground/src/examples/ai-chat/tools/Tools.ts', label: 'tools/Tools.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/tools/ToolCallModel.ts', label: 'ToolCallModel.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/tools/CallToolModel.ts', label: 'CallToolModel.ts' },
     { path: 'examples/playground/src/examples/ai-chat/tools/CallBash.ts', label: 'CallBash.ts' },
     { path: 'examples/playground/src/examples/ai-chat/tools/CallEdit.ts', label: 'CallEdit.ts' },
     { path: 'examples/playground/src/examples/ai-chat/tools/CallRead.ts', label: 'CallRead.ts' },

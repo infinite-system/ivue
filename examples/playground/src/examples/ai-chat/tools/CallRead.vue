@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { CallRead } from './CallRead';
-import type { ToolCallModel } from './ToolCallModel';
+import type { CallToolModel } from './CallToolModel';
 
-const props = defineProps<ToolCallModel.Props>();
+const props = defineProps<CallToolModel.Props>();
 
 const model = new (
   (props.kit?.namespace.Class as typeof CallRead.Class | undefined) ?? CallRead.Class

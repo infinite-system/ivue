@@ -1,9 +1,9 @@
 import { Reactive } from '../../../ivue';
-import { ToolCallModel } from './ToolCallModel';
+import { CallToolModel } from './CallToolModel';
 
 // A skill invocation: the skill's name and its arguments; the result is
 // the skill's instructions, folded as markdown.
-class $CallSkill extends ToolCallModel.$Class {
+class $CallSkill extends CallToolModel.$Class {
   get skill(): string {
     return String(this.input.skill ?? this.input.name ?? '');
   }
@@ -24,8 +24,8 @@ class $CallSkill extends ToolCallModel.$Class {
     return { 'ac-state-failed': !this.succeeded };
   }
 
-  override get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [];
+  override get sections(): CallToolModel.Section[] {
+    const sections: CallToolModel.Section[] = [];
     if (this.args) sections.push({ title: 'arguments', code: this.args, lang: 'text' });
     if (this.resultText)
       sections.push({

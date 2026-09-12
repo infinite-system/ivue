@@ -1,10 +1,10 @@
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
-import { ToolCallModel } from './ToolCallModel';
+import { CallToolModel } from './CallToolModel';
 
 // A shell call: the command as a shell block, stdout and stderr as
 // terminal blocks with ANSI stripped, the exit state marked.
-class $CallBash extends ToolCallModel.$Class {
+class $CallBash extends CallToolModel.$Class {
   static readonly ANSI = /\x1b\[[0-9;]*[A-Za-z]/g;
 
   /**
@@ -109,8 +109,8 @@ class $CallBash extends ToolCallModel.$Class {
     return this.hasResult && !this.hasStdout && !this.hasStderr;
   }
 
-  override get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [
+  override get sections(): CallToolModel.Section[] {
+    const sections: CallToolModel.Section[] = [
       { title: 'command', code: this.command, lang: 'bash' }
     ];
     if (this.hasStdout) sections.push({ title: 'stdout', code: this.stdout, lang: 'text' });

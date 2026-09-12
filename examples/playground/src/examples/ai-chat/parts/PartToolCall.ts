@@ -3,7 +3,7 @@ import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
 import type { SessionLog } from '../SessionLog';
 import type { Part } from './Part';
-import { ToolCallModel } from '../tools/ToolCallModel';
+import { CallToolModel } from '../tools/CallToolModel';
 import CallGenericView from '../tools/CallGeneric.vue';
 import { CallBash } from '../tools/CallBash';
 import CallBashView from '../tools/CallBash.vue';
@@ -34,7 +34,7 @@ import CallMcpView from '../tools/CallMcp.vue';
 class $PartToolCall {
   static get $kit() {
     return {
-      Generic: { namespace: ToolCallModel, view: CallGenericView },
+      Generic: { namespace: CallToolModel, view: CallGenericView },
       Mcp: { namespace: CallMcp, view: CallMcpView },
       Task: { namespace: CallTask, view: CallTaskView },
       Tools: {

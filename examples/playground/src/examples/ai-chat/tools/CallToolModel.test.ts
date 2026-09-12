@@ -2,16 +2,16 @@
 === GENERATOR ===
 Goal: Prove each tool card reads its own shape out of a call: a shell call shows command, stdout and stderr with ANSI stripped and its exit state; an edit is a unified diff from the recorded hunks or from the strings; a read is the numbered listing with its numbers turned into a counter that starts where the read started; a write is the file; every card's collapsed line is the projection's text; the registry maps every name and falls back.
 [Full granularity in two clicks](../ai-chat.invariants.md#full-granularity-in-two-clicks)
-// domain-invariant: $ToolCallModel — If a call is expanded, then the card shows the full input and the full result, capped only by a cap the reader can lift
+// domain-invariant: $CallToolModel — If a call is expanded, then the card shows the full input and the full result, capped only by a cap the reader can lift
 Impossible if true: an expanded card holds back part of its result behind anything but the cap the reader can lift
 
 === GENERATOR-DESCRIBED ===
-$ToolCallModel and its tool classes read each call's own shape: shell, edit, read, write, agent, MCP, and the generic fallback.
+$CallToolModel and its tool classes read each call's own shape: shell, edit, read, write, agent, MCP, and the generic fallback.
 */
 import { describe, expect, it, vi } from 'vitest';
 import { Chat } from '../Chat';
 import type { SessionLog } from '../SessionLog';
-import { ToolCallModel } from './ToolCallModel';
+import { CallToolModel } from './CallToolModel';
 import { CallBash } from './CallBash';
 import { CallEdit } from './CallEdit';
 import { CallRead } from './CallRead';
@@ -50,13 +50,13 @@ function chatHost() {
 }
 
 describe('tool cards', () => {
-  // domain-invariant: $ToolCallModel — If a call is expanded, then the card shows the full input and the full result, capped only by a cap the reader can lift
+  // domain-invariant: $CallToolModel — If a call is expanded, then the card shows the full input and the full result, capped only by a cap the reader can lift
   // invariant: Full granularity in two clicks (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
-  // impossible-if-true: $ToolCallModel — an expanded card holds back part of its result behind anything but the cap the reader can lift
+  // impossible-if-true: $CallToolModel — an expanded card holds back part of its result behind anything but the cap the reader can lift
   it('the base card: head text, state, expansion on the chat, the cap and its lift', () => {
     const { instance: chat, unmount } = chatHost();
     const call = makeCall('Mystery', { thing: 'first line\nsecond' }, { text: 'x'.repeat(5000) });
-    const model = new ToolCallModel.Class({ call, chat, message: null });
+    const model = new CallToolModel.Class({ call, chat, message: null });
     expect(model.headText).toBe('Mystery first line');
     expect(model.icon).toBe('⚙');
     expect(model.stateLabel).toBe('done');
@@ -71,12 +71,12 @@ describe('tool cards', () => {
     });
     expect(model.sections.map((section) => section.title)).toEqual(['input', 'result']);
     expect(model.isCapped).toBe(true);
-    expect(model.cap).toBe(ToolCallModel.Class.CAP);
+    expect(model.cap).toBe(CallToolModel.Class.CAP);
     model.toggleAll();
     expect(model.showsAll).toBe(true);
     expect(model.cap).toBeNull();
     expect(model.showAllLabel).toBe('Show less');
-    const pending = new ToolCallModel.Class({
+    const pending = new CallToolModel.Class({
       call: makeCall('Bash', { command: 'ls' }, null, {
         startedAt: Date.now() - 3000,
         state: 'running'

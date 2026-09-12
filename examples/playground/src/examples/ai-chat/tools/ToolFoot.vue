@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { ToolCallModel } from './ToolCallModel';
+import type { CallToolModel } from './CallToolModel';
 
 // The expanded card's foot: the cap control and the images a result
 // carried — markup only.
-defineProps<{ model: ToolCallModel.Instance }>();
+defineProps<{ model: CallToolModel.Instance }>();
 </script>
 
 <template>

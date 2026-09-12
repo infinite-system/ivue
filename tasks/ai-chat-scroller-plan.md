@@ -462,7 +462,7 @@ One JSON record per line. Record `type`s that carry the conversation:
       map, and a made-up name resolves to the generic one without an
       error; every record kind likewise.
 - [x] Every tool call expands to its full input and result; a Bash call
-      ✔ ToolCallModel.test (Bash with ANSI stripped, Edit diff from hunks, Read counter from the offset, Write, Agent thread, MCP); shiki colours the blocks in the browser
+      ✔ CallToolModel.test (Bash with ANSI stripped, Edit diff from hunks, Read counter from the offset, Write, Agent thread, MCP); shiki colours the blocks in the browser
       shows command, stdout and stderr; an Edit shows a diff; a Read
       shows numbered lines; "show everything" lifts the card's cap;
       expanded state lives on the chat by id, so it survives a remount.

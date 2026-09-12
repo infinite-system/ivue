@@ -1,12 +1,12 @@
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
-import { ToolCallModel } from './ToolCallModel';
+import { CallToolModel } from './CallToolModel';
 
 // A read: the file with line numbers, highlighted by its extension,
 // starting at the line the tool was asked for. The tool's listing is
 // `number<tab>line`; the numbers come off for colour and go back on as
 // a counter, so a listing that began at line 400 says 400.
-class $CallRead extends ToolCallModel.$Class {
+class $CallRead extends CallToolModel.$Class {
   static readonly NUMBERED = /^\s*(\d+)\t/;
 
   /** The one cast per class: instance code reads its own statics here. */
@@ -70,7 +70,7 @@ class $CallRead extends ToolCallModel.$Class {
     return this.isRunning ? 'reading…' : 'no content recorded';
   }
 
-  override get sections(): ToolCallModel.Section[] {
+  override get sections(): CallToolModel.Section[] {
     if (!this.resultText) return [];
     return [
       { title: this.filePath, code: this.code, lang: this.language, startLine: this.startLine }

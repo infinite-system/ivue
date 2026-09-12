@@ -1,9 +1,9 @@
 import { Reactive } from '../../../ivue';
-import { ToolCallModel } from './ToolCallModel';
+import { CallToolModel } from './CallToolModel';
 
 // An MCP tool: the server and the tool from the name, input and result
 // as JSON, and a screenshot when the result carried one.
-class $CallMcp extends ToolCallModel.$Class {
+class $CallMcp extends CallToolModel.$Class {
   get server(): string {
     return this.name.split('__')[1] ?? '';
   }
@@ -27,8 +27,8 @@ class $CallMcp extends ToolCallModel.$Class {
     }
   }
 
-  override get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [];
+  override get sections(): CallToolModel.Section[] {
+    const sections: CallToolModel.Section[] = [];
     if (this.code) sections.push({ title: 'code', code: this.code, lang: 'javascript' });
     else sections.push({ title: 'input', code: this.inputJson, lang: 'json' });
     if (this.resultText)

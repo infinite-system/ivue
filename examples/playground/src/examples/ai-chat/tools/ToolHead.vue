@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { ToolCallModel } from './ToolCallModel';
+import type { CallToolModel } from './CallToolModel';
 
 // The collapsed line every tool card shares: the arrow, the icon, the
 // name, the action's title when it has one, then the argument — a file
 // tool keeps its file name whole and truncates the directory instead.
 // Markup only; the model supplies every word and state.
-defineProps<{ model: ToolCallModel.Instance }>();
+defineProps<{ model: CallToolModel.Instance }>();
 </script>
 
 <template>

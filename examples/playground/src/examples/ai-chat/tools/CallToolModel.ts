@@ -18,7 +18,7 @@ import { SessionLog } from '../SessionLog';
 // the chat by call id, the "show everything" cap, and the raw input and
 // result. A tool's own class extends this and names its sections; the
 // generic card renders input as JSON and the result as text.
-class $ToolCallModel {
+class $CallToolModel {
   /** the roles every card composes: its head and foot, the code block, and a nested thread */
   static get $kit() {
     return {
@@ -26,7 +26,7 @@ class $ToolCallModel {
       Foot: { view: ToolFootView },
       CodeBlock: { namespace: CodeBlock, view: CodeBlockView },
       SubThread: { namespace: SubThread, view: SubThreadView }
-    } satisfies Kit.Of<ToolCallModel.Role>;
+    } satisfies Kit.Of<CallToolModel.Role>;
   }
 
   static readonly ICONS: Record<string, string> = {
@@ -48,11 +48,11 @@ class $ToolCallModel {
   /** result text past this many characters folds behind "show everything" */
   static readonly CAP = 4_000;
 
-  constructor(public props: ToolCallModel.Props) {}
+  constructor(public props: CallToolModel.Props) {}
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
-    return this.constructor as typeof $ToolCallModel;
+    return this.constructor as typeof $CallToolModel;
   }
 
   /** the kit is the class's — a tool that overrides `$kit` swaps its own leaves */
@@ -233,8 +233,8 @@ class $ToolCallModel {
   }
 
   /** the blocks the expanded card renders — a tool's own class names its own */
-  get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [
+  get sections(): CallToolModel.Section[] {
+    const sections: CallToolModel.Section[] = [
       { title: 'input', code: this.inputJson, lang: 'json' }
     ];
     if (this.resultText)
@@ -264,8 +264,8 @@ class $ToolCallModel {
   }
 }
 
-export namespace ToolCallModel {
-  export const $Class = Static($ToolCallModel);
+export namespace CallToolModel {
+  export const $Class = Static($CallToolModel);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 

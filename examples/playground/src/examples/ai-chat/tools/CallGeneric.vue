@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ToolCallModel } from './ToolCallModel';
+import { CallToolModel } from './CallToolModel';
 
 // Any tool the kit does not name: input as JSON, result as text.
-const props = defineProps<ToolCallModel.Props>();
+const props = defineProps<CallToolModel.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof ToolCallModel.Class | undefined) ?? ToolCallModel.Class
+  (props.kit?.namespace.Class as typeof CallToolModel.Class | undefined) ?? CallToolModel.Class
 )(props);
 </script>
 

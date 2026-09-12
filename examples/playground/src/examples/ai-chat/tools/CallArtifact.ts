@@ -1,9 +1,9 @@
 import { Reactive } from '../../../ivue';
-import { ToolCallModel } from './ToolCallModel';
+import { CallToolModel } from './CallToolModel';
 
 // An artifact action: what was published or read, and the link that
 // came back.
-class $CallArtifact extends ToolCallModel.$Class {
+class $CallArtifact extends CallToolModel.$Class {
   get action(): string {
     return String(this.input.action ?? 'publish');
   }
@@ -21,8 +21,8 @@ class $CallArtifact extends ToolCallModel.$Class {
     return typeof version === 'string' ? `v${version}` : '';
   }
 
-  override get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [
+  override get sections(): CallToolModel.Section[] {
+    const sections: CallToolModel.Section[] = [
       { title: 'input', code: this.inputJson, lang: 'json' }
     ];
     if (this.resultText)

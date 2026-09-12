@@ -1,9 +1,9 @@
 import { Reactive } from '../../../ivue';
-import { ToolCallModel } from './ToolCallModel';
+import { CallToolModel } from './CallToolModel';
 
 // A fetch or a search: the URL or the query, the status and bytes the
 // tool recorded, and what came back.
-class $CallWebFetch extends ToolCallModel.$Class {
+class $CallWebFetch extends CallToolModel.$Class {
   get url(): string {
     return String(this.input.url ?? '');
   }
@@ -30,8 +30,8 @@ class $CallWebFetch extends ToolCallModel.$Class {
     return pieces.join(' · ');
   }
 
-  override get sections(): ToolCallModel.Section[] {
-    const sections: ToolCallModel.Section[] = [];
+  override get sections(): CallToolModel.Section[] {
+    const sections: CallToolModel.Section[] = [];
     if (this.prompt) sections.push({ title: 'asked', code: this.prompt, lang: 'text' });
     if (this.resultText)
       sections.push({
