@@ -84,7 +84,7 @@ class $ThemedCard extends Card.$Class {
   static override get $kit() {
     return {
       ...super.$kit,
-      Code: { namespace: ThemedCode, view: Kit.Class.view(CodeView, ThemedCode) as typeof CodeView }
+      Code: { view: Kit.Class.view(CodeView, ThemedCode) as typeof CodeView, namespace: ThemedCode }
     };
   }
 }
@@ -200,7 +200,7 @@ describe('an override never reaches another tree', () => {
     expect(renamed.namespace).toBe(ThemedCode);
     expect(renamed.view).not.toBe(CodeView);
     expect((renamed.view as { props: object }).props).toHaveProperty('theme'); // `props` is fused per read, so equality, not identity
-    const Brought = Kit.Class.derive(Card, { Code: { namespace: ThemedCode, view: CardHeadView } });
+    const Brought = Kit.Class.derive(Card, { Code: { view: CardHeadView, namespace: ThemedCode } });
     expect((Brought.$Class.$kit!.Code as Kit.Entry).view).toBe(CardHeadView); // a brought view is left alone
   });
 
@@ -262,7 +262,7 @@ describe('the entry crosses the seam', () => {
   // impossible-if-true: $Kit — a view constructing anything but its entry's namespace Class
   it("a view handed an entry constructs that entry's Class, and the swapped sections render with slot and listener intact", async () => {
     const wrapper = mount(CardView, {
-      props: { title: 'Fancy', items, kit: { namespace: FancyCard, view: CardView } }
+      props: { title: 'Fancy', items, kit: { view: CardView, namespace: FancyCard } }
     });
     expect(exposed(wrapper)).toBeInstanceOf(FancyCard.Class);
     expect(wrapper.find('.fancy-head').text()).toBe('★ Fancy ★');
@@ -278,7 +278,7 @@ describe('the entry crosses the seam', () => {
 
   it("swapping the leaf's class through the kit keeps the body's listener at the seam", async () => {
     const wrapper = mount(CardView, {
-      props: { title: 'Themed', items, kit: { namespace: ThemedCard, view: CardView } }
+      props: { title: 'Themed', items, kit: { view: CardView, namespace: ThemedCard } }
     });
     const code = wrapper.findAll('.code');
     expect(code.map((node) => node.attributes('data-theme'))).toEqual(['mono', 'mono']); // ThemedCode's default
@@ -289,7 +289,7 @@ describe('the entry crosses the seam', () => {
   it('two trees on one page keep their own kits', () => {
     const plain = mount(CardView, { props: { title: 'A', items } });
     const fancy = mount(CardView, {
-      props: { title: 'B', items, kit: { namespace: FancyCard, view: CardView } }
+      props: { title: 'B', items, kit: { view: CardView, namespace: FancyCard } }
     });
     expect(plain.find('.card-head').exists()).toBe(true);
     expect(plain.find('.fancy-head').exists()).toBe(false);
@@ -299,7 +299,7 @@ describe('the entry crosses the seam', () => {
 
   it('an override two levels deep reaches the leaf through a real mount, and the plain root does not see it', () => {
     const themed = mount(PanelView, {
-      props: { titles: ['a', 'b'], kit: { namespace: ThemedPanel, view: PanelView } }
+      props: { titles: ['a', 'b'], kit: { view: PanelView, namespace: ThemedPanel } }
     });
     expect(themed.findAll('.fancy-head').length).toBe(2);
     expect(themed.findAll('.code').map((node) => node.attributes('data-theme'))).toEqual([
@@ -337,8 +337,8 @@ describe('a derived contract reaches Vue', () => {
   // invariant: Props and emits are fixed per component object (examples/playground/src/kit/kit.invariants.md)
   it('a prop only the derived class declares arrives through the rewrapped view and falls through as an attribute on the base view', () => {
     const entry = {
-      namespace: ThemedCode,
-      view: Kit.Class.view(CodeView, ThemedCode) as typeof CodeView
+      view: Kit.Class.view(CodeView, ThemedCode) as typeof CodeView,
+      namespace: ThemedCode
     };
     const widened = mount(entry.view, {
       props: { code: 'abc', theme: 'paper', kit: entry } as never
@@ -351,7 +351,7 @@ describe('a derived contract reaches Vue', () => {
       props: {
         code: 'abc',
         theme: 'paper',
-        kit: { namespace: ThemedCode, view: CodeView }
+        kit: { view: CodeView, namespace: ThemedCode }
       } as never
     });
     expect(exposed(narrow)).toBeInstanceOf(ThemedCode.Class);
@@ -367,15 +367,15 @@ describe('a derived contract reaches Vue', () => {
   it('an event only the derived class declares emits cleanly through the rewrapped view and warns through the base view', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const entry = {
-      namespace: ThemedCode,
-      view: Kit.Class.view(CodeView, ThemedCode) as typeof CodeView
+      view: Kit.Class.view(CodeView, ThemedCode) as typeof CodeView,
+      namespace: ThemedCode
     };
     const widened = mount(entry.view, { props: { code: 'abc', kit: entry } as never });
     exposed<ThemedCode.Instance>(widened).select();
     expect(widened.emitted('select')).toEqual([['abc']]);
     expect(warn).not.toHaveBeenCalled();
     const narrow = mount(CodeView, {
-      props: { code: 'abc', kit: { namespace: ThemedCode, view: CodeView } } as never
+      props: { code: 'abc', kit: { view: CodeView, namespace: ThemedCode } } as never
     });
     exposed<ThemedCode.Instance>(narrow).select();
     expect(narrow.emitted('select')).toEqual([['abc']]);
@@ -395,7 +395,7 @@ describe('the two reasons a rewrap is a fresh object, tested against Vue itself'
     const view = CodeView as unknown as { props: Record<string, unknown> };
     const before = view.props;
     const second = shallowRef(false);
-    const kit = { namespace: ThemedCode, view: CodeView };
+    const kit = { view: CodeView, namespace: ThemedCode };
     const Host = defineComponent({
       setup() {
         return () => [
@@ -444,7 +444,7 @@ describe('kit props reach the getters an author opens', () => {
       props: {
         title: 'Dense',
         items: ['abcdefg', 'hi'],
-        kit: { namespace: DenseCard, view: CardView }
+        kit: { view: CardView, namespace: DenseCard }
       }
     });
     const code = wrapper.findAll('.code');
@@ -466,7 +466,7 @@ describe('kit props reach the getters an author opens', () => {
     await live.setProps({ cap: 3 });
     expect(live.find('.code').text()).toBe('abc');
     const owned = mount(CodeView, {
-      props: { code: 'abcdef', cap: 2, kit: { namespace: Code, view: CodeView, props: { cap: 1 } } }
+      props: { code: 'abcdef', cap: 2, kit: { view: CodeView, namespace: Code, props: { cap: 1 } } }
     });
     expect(owned.find('.code').text()).toBe('a');
     await owned.setProps({ cap: 5 });
@@ -729,14 +729,14 @@ describe('the types hold a bind to its child and an anchor to its base', () => {
   // domain-invariant: $Kit — If an entry names its namespace, then a bind is checked against that child's props, a subkit bind sees the child's instance as its model, and a top-level patch's order relations are checked against the base's roles and the patch's own — at compile time
   // invariant: A bind is a projection the layer above extends (examples/playground/src/kit/kit.invariants.md)
   it('a typed entry refuses a wrong prop name and a subkit bind refuses a field its model lacks; the right names compile', () => {
-    const typed: Strip.Roles['Item'] = Kit.Class.entry(Code, CodeView, {
+    const typed: Strip.Roles['Item'] = Kit.Class.entry(CodeView, Code, {
       bind: ({ model, item }) => ({ code: item, cap: model.cap })
     });
-    const wrongProp: Strip.Roles['Item'] = Kit.Class.entry(Code, CodeView, {
+    const wrongProp: Strip.Roles['Item'] = Kit.Class.entry(CodeView, Code, {
       // @ts-expect-error `cod` is not one of Code's props
       bind: ({ item }) => ({ cod: item })
     });
-    const wrongModel: Strip.Roles['Item'] = Kit.Class.entry(Code, CodeView, {
+    const wrongModel: Strip.Roles['Item'] = Kit.Class.entry(CodeView, Code, {
       // @ts-expect-error the strip has no `nope`
       bind: ({ model }) => ({ code: String(model.nope) })
     });

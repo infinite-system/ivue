@@ -13,7 +13,7 @@ class $SubThread {
   /** the one role a thread composes: a row per message, the same row the top thread renders */
   static get $kit() {
     return {
-      Message: { namespace: ChatMessage, view: ChatMessageView }
+      Message: { view: ChatMessageView, namespace: ChatMessage }
     } satisfies Kit.Of<'Message'>;
   }
 

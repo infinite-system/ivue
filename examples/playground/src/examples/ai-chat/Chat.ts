@@ -33,12 +33,12 @@ class $Chat {
   /** the roles the thread composes — the scroller, a row, the composer, the index — built once per class by Static() */
   static get $kit(): Chat.Roles {
     return {
-      Scroller: { namespace: VirtualScroller, view: VirtualScrollerView },
-      Message: { namespace: ChatMessage, view: ChatMessageView },
-      Composer: { namespace: Composer, view: ChatComposerView },
-      Index: { namespace: Index, view: ChatIndexView },
-      Sidebar: { namespace: Sidebar, view: SidebarView },
-      Peek: { namespace: Peek, view: ChatPeekView }
+      Scroller: { view: VirtualScrollerView, namespace: VirtualScroller },
+      Message: { view: ChatMessageView, namespace: ChatMessage },
+      Composer: { view: ChatComposerView, namespace: Composer },
+      Index: { view: ChatIndexView, namespace: Index },
+      Sidebar: { view: SidebarView, namespace: Sidebar },
+      Peek: { view: ChatPeekView, namespace: Peek }
     };
   }
 

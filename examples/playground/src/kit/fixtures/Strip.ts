@@ -26,7 +26,7 @@ class $Strip {
       Body: { view: StripBodyView },
       Foot: { view: StripFootView },
       // the typed form: the bind's result is checked against Code's props, the seam against the strip
-      Item: Kit.Class.entry(Code, CodeView, {
+      Item: Kit.Class.entry(CodeView, Code, {
         bind: ({ model, item, key }) => ({ code: item, cap: model.cap, 'data-key': key })
       }),
       order: ['Head', 'Body', 'Foot']

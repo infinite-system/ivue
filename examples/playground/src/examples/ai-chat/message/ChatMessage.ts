@@ -57,12 +57,12 @@ class $ChatMessage {
    *  entry would refuse the one bind all six share. */
   static get $kit(): ChatMessage.Roles {
     return {
-      Text: { namespace: PartText, view: PartTextView, bind: this.bindPart },
-      Thinking: { namespace: PartThinking, view: PartThinkingView, bind: this.bindPart },
-      Attachment: { namespace: PartAttachment, view: PartAttachmentView, bind: this.bindPart },
-      System: { namespace: PartSystem, view: PartSystemView, bind: this.bindPart },
-      ToolCall: { namespace: PartToolCall, view: PartToolCallView, bind: this.bindPart },
-      ToolBatch: { namespace: PartToolBatch, view: PartToolBatchView, bind: this.bindPart },
+      Text: { view: PartTextView, namespace: PartText, bind: this.bindPart },
+      Thinking: { view: PartThinkingView, namespace: PartThinking, bind: this.bindPart },
+      Attachment: { view: PartAttachmentView, namespace: PartAttachment, bind: this.bindPart },
+      System: { view: PartSystemView, namespace: PartSystem, bind: this.bindPart },
+      ToolCall: { view: PartToolCallView, namespace: PartToolCall, bind: this.bindPart },
+      ToolBatch: { view: PartToolBatchView, namespace: PartToolBatch, bind: this.bindPart },
       Gutter: { view: GutterView },
       Head: { view: HeadView },
       Stub: { view: StubView },

@@ -65,11 +65,11 @@ class $Kit {
     Item = undefined,
     Rest extends Kit.EntryRest<Owner, Item, N> = Kit.EntryRest<Owner, Item, N>
   >(
-    namespace: N,
     view: Component | string,
+    namespace: N,
     rest?: Rest & Kit.EntryCheck<Rest, { namespace: N }>
   ): Kit.Entry<Owner, Item, N> {
-    return { ...rest, namespace, view };
+    return { ...rest, view, namespace };
   }
 
   /** What a seam hands a role's view: the entry's `bind` over the seam, or `{ model, kit }` when

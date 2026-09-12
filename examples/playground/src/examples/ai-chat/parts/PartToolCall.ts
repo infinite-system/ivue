@@ -34,20 +34,20 @@ import CallMcpView from '../tools/CallMcp.vue';
 class $PartToolCall {
   static get $kit() {
     return {
-      Generic: { namespace: CallToolModel, view: CallGenericView },
-      Mcp: { namespace: CallMcp, view: CallMcpView },
-      Task: { namespace: CallTask, view: CallTaskView },
+      Generic: { view: CallGenericView, namespace: CallToolModel },
+      Mcp: { view: CallMcpView, namespace: CallMcp },
+      Task: { view: CallTaskView, namespace: CallTask },
       Tools: {
-        Bash: { namespace: CallBash, view: CallBashView },
-        Edit: { namespace: CallEdit, view: CallEditView },
-        NotebookEdit: { namespace: CallEdit, view: CallEditView },
-        Read: { namespace: CallRead, view: CallReadView },
-        Write: { namespace: CallWrite, view: CallWriteView },
-        Agent: { namespace: CallAgent, view: CallAgentView },
-        Skill: { namespace: CallSkill, view: CallSkillView },
-        WebFetch: { namespace: CallWebFetch, view: CallWebFetchView },
-        WebSearch: { namespace: CallWebFetch, view: CallWebFetchView },
-        Artifact: { namespace: CallArtifact, view: CallArtifactView }
+        Bash: { view: CallBashView, namespace: CallBash },
+        Edit: { view: CallEditView, namespace: CallEdit },
+        NotebookEdit: { view: CallEditView, namespace: CallEdit },
+        Read: { view: CallReadView, namespace: CallRead },
+        Write: { view: CallWriteView, namespace: CallWrite },
+        Agent: { view: CallAgentView, namespace: CallAgent },
+        Skill: { view: CallSkillView, namespace: CallSkill },
+        WebFetch: { view: CallWebFetchView, namespace: CallWebFetch },
+        WebSearch: { view: CallWebFetchView, namespace: CallWebFetch },
+        Artifact: { view: CallArtifactView, namespace: CallArtifact }
       } as Record<string, Kit.Entry>
     };
   }

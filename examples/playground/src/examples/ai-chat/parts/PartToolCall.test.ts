@@ -24,12 +24,12 @@ describe('PartToolCall', () => {
   // domain-invariant: $PartToolCall — If a tool name is not mapped, then the generic card's entry renders it; an MCP name and a task name map by family; the lookup reads the part's own kit, so a subclass swaps a card by naming another entry
   // impossible-if-true: $PartToolCall — a tool name reaches a renderer that branches on it
   it("maps every known name, MCP and task names by family, and falls back to the generic card — through the part's own kit", () => {
-    expect(PartToolCall.Class.toolFor('Bash')).toEqual({ namespace: CallBash, view: CallBashView });
+    expect(PartToolCall.Class.toolFor('Bash')).toEqual({ view: CallBashView, namespace: CallBash });
     expect(PartToolCall.Class.toolFor('mcp__playwright__browser_snapshot').namespace).toBe(CallMcp);
     expect(PartToolCall.Class.toolFor('TaskUpdate').namespace).toBe(CallTask);
     expect(PartToolCall.Class.toolFor('NeverHeardOfIt')).toEqual({
-      namespace: CallToolModel,
-      view: CallGenericView
+      view: CallGenericView,
+      namespace: CallToolModel
     });
     expect(PartToolCall.Class.isMapped('Edit')).toBe(true);
     expect(PartToolCall.Class.isMapped('mcp__x__y')).toBe(true);

@@ -32,7 +32,7 @@ describe('ConfiguredChat', () => {
     const pinned = hosted(
       () =>
         new ConfiguredChat.Class({
-          kit: { namespace: ConfiguredChat, view: {} as never, props: { theme: 'terminal' } }
+          kit: { view: {} as never, namespace: ConfiguredChat, props: { theme: 'terminal' } }
         })
     );
     expect(configured.instance.theme).toBe('midnight');

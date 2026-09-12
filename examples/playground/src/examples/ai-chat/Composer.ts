@@ -17,7 +17,7 @@ class $Composer {
   /** the roles the composer composes — the model picker; built once per class by Static() */
   static get $kit() {
     return {
-      Picker: { namespace: ModelPicker, view: ChatModelPickerView }
+      Picker: { view: ChatModelPickerView, namespace: ModelPicker }
     } satisfies Kit.Of<Composer.Role>;
   }
 

@@ -64,7 +64,7 @@ container (tool card body, composer bar). The chat root stays literal: three chi
 - `derive` is silent; reading a chain back is `KitInspect.ts`. `derive` leaves `derivedFrom`, `patch` and
   `layer` on the namespace; `KitInspect.Class.conflicts` lists the contacts, `report` warns or throws when
   strict, `tree` prints the resolved tree. `Kit.ts` never imports it and the render path never runs it.
-- The types reach this far: an entry written as `Kit.Class.entry(Namespace, View, { bind })` holds its bind to
+- The types reach this far: an entry written as `Kit.Class.entry(View, Namespace, { bind })` holds its bind to
   the child's props and refuses a stray key; a subkit bind sees the child's instance; a top-level patch's order
   relations are checked against the base's roles and the patch's own, and a derived namespace's kit type carries
   the roles a layer added. Below a `subkit` the added names are open and the runtime check holds the line. The

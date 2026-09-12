@@ -57,7 +57,9 @@ snippet card in place of the card.
 **The kit is a static on the class.** A model that composes others
 declares the roles its subtree needs as `static get $kit()`, a record of
 entries. An entry names a role's view and, when the role has a class of
-its own, the namespace that view constructs. Under `Static()` a
+its own, the namespace that view constructs. The kit is what you read to
+see the component, the way you would read a template, so `view` comes
+first in every entry: what renders, then what runs it. Under `Static()` a
 `$`-prefixed getter is built once per class and cached on that class, so
 a subclass never sees its parent's kit.
 
@@ -69,7 +71,7 @@ class $Card {
       Head: { view: CardHeadView },
       Body: { view: CardBodyView },
       Frame: { view: FrameView },
-      Code: { namespace: Code, view: CodeView },
+      Code: { view: CodeView, namespace: Code },
     } satisfies Kit.Of<Card.Role>;
   }
 

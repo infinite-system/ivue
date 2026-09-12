@@ -22,7 +22,7 @@ class $Peek {
   /** the roles the peek composes — the mini scroller; built once per class by Static() */
   static get $kit() {
     return {
-      Scroller: { namespace: VirtualScroller, view: VirtualScrollerView }
+      Scroller: { view: VirtualScrollerView, namespace: VirtualScroller }
     } satisfies Kit.Of<Peek.Role>;
   }
 

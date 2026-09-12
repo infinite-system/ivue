@@ -26,7 +26,7 @@ class $Card {
       Head: { view: CardHeadView },
       Body: { view: CardBodyView },
       Frame: { view: FrameView },
-      Code: { namespace: Code, view: CodeView }
+      Code: { view: CodeView, namespace: Code }
     } satisfies Kit.Of<Card.Role>;
   }
 

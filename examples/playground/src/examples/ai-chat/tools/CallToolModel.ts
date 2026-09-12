@@ -24,8 +24,8 @@ class $CallToolModel {
     return {
       Head: { view: ToolHeadView },
       Foot: { view: ToolFootView },
-      CodeBlock: { namespace: CodeBlock, view: CodeBlockView },
-      SubThread: { namespace: SubThread, view: SubThreadView }
+      CodeBlock: { view: CodeBlockView, namespace: CodeBlock },
+      SubThread: { view: SubThreadView, namespace: SubThread }
     } satisfies Kit.Of<CallToolModel.Role>;
   }
 

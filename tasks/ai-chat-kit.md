@@ -55,7 +55,7 @@ shipped instance to point at.
   list — we tried the mechanism route and every step cost more than the
   getter.
 - **Override is subclassing.** A subclass with a spread `$kit` swaps a
-  role: `FancyChat.$kit.Scroller = { namespace: SnapScroller, view: SnapScrollerView }`.
+  role: `FancyChat.$kit.Scroller = { view: SnapScrollerView, namespace: SnapScroller }`.
   A swap that must reach a deep leaf is the same spread with an optional
   `subkit` on the entry — a patch over the child's own kit — which
   `Kit.Class.resolve` turns into derived subclasses once, at kit build time.
@@ -293,10 +293,10 @@ class $Chat {
   // renders. `Chat.$kit` and `FancyChat.$kit` are different objects.
   static get $kit() {
     return {
-      Scroller: { namespace: VirtualScroller, view: VirtualScrollerView },
-      Message: { namespace: ChatMessage, view: ChatMessageView },
-      Composer: { namespace: Composer, view: ChatComposerView },
-      Index: { namespace: Index, view: ChatIndexView },
+      Scroller: { view: VirtualScrollerView, namespace: VirtualScroller },
+      Message: { view: ChatMessageView, namespace: ChatMessage },
+      Composer: { view: ChatComposerView, namespace: Composer },
+      Index: { view: ChatIndexView, namespace: Index },
     } satisfies Kit.Of<'Scroller' | 'Message' | 'Composer' | 'Index'>;
   }
 
@@ -413,9 +413,9 @@ class $ChatMessage {
       Attachment: { view: AttachmentPartView },
       System: { view: SystemPartView },
       ToolCall: { view: PartToolCallView },
-      ToolBatch: { namespace: PartToolBatch, view: ToolBatchPartView },
+      ToolBatch: { view: ToolBatchPartView, namespace: PartToolBatch },
       // the tool cards are reached through the tool base's kit, one hop down
-      Tool: { namespace: CallToolModel, view: PartToolCallView },
+      Tool: { view: PartToolCallView, namespace: CallToolModel },
       // the row's sections — each a markup view over the row model, swappable with a class of its own
       Gutter: { view: MessageGutterView },
       Head: { view: MessageHeadView },
@@ -587,21 +587,21 @@ class $CallToolModel {
     return {
       Head: { view: ToolHeadView },
       Foot: { view: ToolFootView },
-      CodeBlock: { namespace: CodeBlock, view: CodeBlockView },
-      Generic: { namespace: CallToolModel, view: CallGenericView },
-      Mcp: { namespace: CallMcp, view: CallMcpView },
-      Task: { namespace: CallTask, view: CallTaskView },
+      CodeBlock: { view: CodeBlockView, namespace: CodeBlock },
+      Generic: { view: CallGenericView, namespace: CallToolModel },
+      Mcp: { view: CallMcpView, namespace: CallMcp },
+      Task: { view: CallTaskView, namespace: CallTask },
       Tools: {
-        Bash: { namespace: CallBash, view: CallBashView },
-        Edit: { namespace: CallEdit, view: CallEditView },
-        NotebookEdit: { namespace: CallEdit, view: CallEditView },
-        Read: { namespace: CallRead, view: CallReadView },
-        Write: { namespace: CallWrite, view: CallWriteView },
-        Agent: { namespace: CallAgent, view: CallAgentView },
-        Skill: { namespace: CallSkill, view: CallSkillView },
-        WebFetch: { namespace: CallWebFetch, view: CallWebFetchView },
-        WebSearch: { namespace: CallWebFetch, view: CallWebFetchView },
-        Artifact: { namespace: CallArtifact, view: CallArtifactView },
+        Bash: { view: CallBashView, namespace: CallBash },
+        Edit: { view: CallEditView, namespace: CallEdit },
+        NotebookEdit: { view: CallEditView, namespace: CallEdit },
+        Read: { view: CallReadView, namespace: CallRead },
+        Write: { view: CallWriteView, namespace: CallWrite },
+        Agent: { view: CallAgentView, namespace: CallAgent },
+        Skill: { view: CallSkillView, namespace: CallSkill },
+        WebFetch: { view: CallWebFetchView, namespace: CallWebFetch },
+        WebSearch: { view: CallWebFetchView, namespace: CallWebFetch },
+        Artifact: { view: CallArtifactView, namespace: CallArtifact },
       } as Record<string, Kit.Entry>,
     });
   }
@@ -860,7 +860,7 @@ class $FancyChat extends Chat.$Class {
   static override get $kit() {
     return {
       ...super.$kit,
-      Scroller: { namespace: SnapScroller, view: SnapScrollerView },
+      Scroller: { view: SnapScrollerView, namespace: SnapScroller },
     });
   }
 }
@@ -874,7 +874,7 @@ export namespace FancyChat {
 
 ```vue
 <!-- the playground's second route -->
-<AiChatExample :kit="{ namespace: FancyChat, view: AiChatExample }" />
+<AiChatExample :kit="{ view: AiChatExample, namespace: FancyChat }" />
 ```
 
 The scroller's contract with the chat is the surface `Chat` reads:
@@ -963,7 +963,7 @@ class $TerminalChat extends Chat.$Class {
             subkit: {
               Tools: {
                 Bash: {
-                  subkit: { CodeBlock: { namespace: TerminalBlock, view: TerminalBlockView } },
+                  subkit: { CodeBlock: { view: TerminalBlockView, namespace: TerminalBlock } },
                 },
               },
             },
@@ -995,7 +995,7 @@ exactly which subtree differs from `Chat`, and nothing else can differ.
 ```ts
 class $MonoChat extends Chat.$Class {
   static override get $kit() {
-    const block = { CodeBlock: { namespace: MonoBlock, view: MonoBlockView } };
+    const block = { CodeBlock: { view: MonoBlockView, namespace: MonoBlock } };
     const tools = Chat.$Class.$kit.Message.namespace.Class.$kit.Tool.namespace.Class.$kit;
     return Kit.Class.resolve({
       ...super.$kit,
@@ -1081,7 +1081,7 @@ class $ThemedBlock extends CodeBlock.$Class {
 
 ```ts
 // the explicit form — in any kit literal, or for a standalone mount of the widened class over the base SFC
-CodeBlock: { namespace: ThemedBlock, view: Kit.Class.view(CodeBlockView, ThemedBlock) }
+CodeBlock: { view: Kit.Class.view(CodeBlockView, ThemedBlock), namespace: ThemedBlock }
 
 // the short form inside an override — `merge` rewraps the kept view over the named namespace
 subkit: { Tool: { subkit: { CodeBlock: { namespace: ThemedBlock } } } }
@@ -1234,7 +1234,7 @@ it('an override never reaches another tree, and a kit is its own class\'s', () =
 });
 
 it('a view constructs the class it is handed', async () => {
-  const wrapper = mount(ChatMessageView, { props: { row, chat, kit: { namespace: TerminalMessage, view: ChatMessageView } } });
+  const wrapper = mount(ChatMessageView, { props: { row, chat, kit: { view: ChatMessageView, namespace: TerminalMessage } } });
   expect(wrapper.vm.model).toBeInstanceOf(TerminalMessage.Class);
 });
 
@@ -1257,7 +1257,7 @@ it('a tunable reads the kit first, an extension reads only the kit, a closed pro
 | `parts/Parts.ts` registry (kind → component) | `ChatMessage.$kit` keyed by PascalCase role (`Text`, `ToolBatch`…), `PART_ROLES` mapping kind → role; the row model resolves `partEntry(part)`, `Text` as the fallback |
 | `tools/Tools.ts` registry (name → component, prefix families, generic fallback) | `CallToolModel.$kit.Tools` plus `Mcp`, `Task`, `Generic` entries; the lookup is the static `toolFor(name)` on the base |
 | `ToolHead.vue`, `ToolFoot.vue`, `CodeBlock.vue` used by name in every card | `CallToolModel.$kit`: `Head`, `Foot` as markup leaves, `CodeBlock` as a pair; cards render `<component :is="model.kit.Head.view" :model="model" />` and `<component :is="model.kit.CodeBlock.view" :kit="model.kit.CodeBlock" …props />` |
-| `Chat.ts` reaches the scroller through `ref="scroller"` | unchanged: the scroller's view constructs the class its entry names and exposes it; the chat keeps its template ref. The entry `Chat.$kit.Scroller = { namespace: VirtualScroller, view: VirtualScrollerView }` is what a page overrides to put a different scroller under the chat |
+| `Chat.ts` reaches the scroller through `ref="scroller"` | unchanged: the scroller's view constructs the class its entry names and exposes it; the chat keeps its template ref. The entry `Chat.$kit.Scroller = { view: VirtualScrollerView, namespace: VirtualScroller }` is what a page overrides to put a different scroller under the chat |
 | `ChatComposer.vue`, `ChatIndex.vue` construct their models | unchanged in who constructs; each news `props.kit?.namespace.Class ?? Composer.Class` and is rendered through `chat.kit.Composer` |
 | `ChatMessage.vue` constructs a row model per row in the scroller's slot | unchanged; the slot renders `<component :is="chat.kit.Message.view" :kit="chat.kit.Message" :row="item" :chat="chat" />` |
 | `SubThread.vue` constructs | unchanged; a nested thread renders rows through the same entry |

@@ -21,7 +21,7 @@ class $Index {
   /** the one role the index composes: its own scroller over the filtered rows */
   static get $kit() {
     return {
-      Scroller: { namespace: VirtualScroller, view: VirtualScrollerView }
+      Scroller: { view: VirtualScrollerView, namespace: VirtualScroller }
     } satisfies Kit.Of<'Scroller'>;
   }
 

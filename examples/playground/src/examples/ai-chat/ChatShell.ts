@@ -37,7 +37,7 @@ class $ChatShell {
 
   /** the entry the seam receives: the chosen tree's namespace, the one example view */
   get entry(): Kit.Entry {
-    return { namespace: this.tree.namespace, view: this.self.EXAMPLE_VIEW };
+    return { view: this.self.EXAMPLE_VIEW, namespace: this.tree.namespace };
   }
 }
 

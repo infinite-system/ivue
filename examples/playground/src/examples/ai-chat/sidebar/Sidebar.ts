@@ -18,9 +18,9 @@ import SettingsPanelView from './SettingsPanel.vue';
 class $Sidebar {
   static get $kit() {
     return {
-      Index: { namespace: Index, view: ChatIndexView },
-      Files: { namespace: FilesPanel, view: FilesPanelView },
-      Settings: { namespace: SettingsPanel, view: SettingsPanelView }
+      Index: { view: ChatIndexView, namespace: Index },
+      Files: { view: FilesPanelView, namespace: FilesPanel },
+      Settings: { view: SettingsPanelView, namespace: SettingsPanel }
     } satisfies Kit.Of<Chat.SidebarTab>;
   }
 
