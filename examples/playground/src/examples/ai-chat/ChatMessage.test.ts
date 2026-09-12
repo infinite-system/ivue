@@ -134,6 +134,7 @@ describe('the row is a container of roles', () => {
       expect(seam.kit).toBe(model.kit[role]);
     }
     expect(model.partRole(textPart)).toBe('Text');
+    expect(model.partProps(textPart, 0)).toEqual(model.seamProps('Text', textPart, 'text-0'));
     expect(model.seamProps('Text', textPart, 'text-0')).toEqual({
       kit: model.kit.Text,
       part: textPart,

@@ -371,6 +371,11 @@ class $ChatMessage {
     return this.partEntry(part).view;
   }
 
+  /** the seam for a part: its role's entry, fed the part as the item and the loop's key */
+  partProps(part: SessionLog.Part, at: number): Kit.Bound {
+    return this.seamProps(this.partRole(part), part, this.partKey(part, at));
+  }
+
   partKey(part: SessionLog.Part, at: number): string {
     if (part.kind === 'tool_call') return part.call.id;
     if (part.kind === 'tool_batch') return `batch-${part.calls[0]?.id ?? at}`;

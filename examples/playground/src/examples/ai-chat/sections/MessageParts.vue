@@ -14,7 +14,7 @@ defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
       v-for="(part, at) in model.parts"
       :key="model.partKey(part, at)"
       :is="model.partView(part)"
-      v-bind="model.seamProps(model.partRole(part), part, model.partKey(part, at))"
+      v-bind="model.partProps(part, at)"
     />
   </div>
 </template>
