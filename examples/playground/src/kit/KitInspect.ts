@@ -1,5 +1,5 @@
 import type { Component } from 'vue';
-import { Static } from '../Static';
+import { Static, STATIC_RAW } from '../Static';
 import { Kit } from './Kit';
 
 // Reading a chain of layers back. `derive` leaves `derivedFrom`, `patch`
@@ -52,8 +52,10 @@ class $KitInspect {
    *  whether a bind feeds it, and the layer that last set each of those — `base` when none did.
    *  A role whose namespace declares a kit prints its own tree below it, indented. */
   static tree(namespace: Kit.Namespace): string {
-    const layers = this.layers(namespace).filter((layer) => layer.patch);
-    return this.treeLines(namespace, layers, [], '', new Set()).join('\n');
+    const writes = new Map<Kit.Namespace, Set<string>>();
+    for (const layer of this.layers(namespace))
+      if (layer.patch) writes.set(layer, new Set(this.writesOf(layer.patch)));
+    return this.treeLines(namespace, writes, [], '', new Set()).join('\n');
   }
 
   /** A layer's name: the one given to `derive`, else its place in the chain. */
@@ -94,12 +96,13 @@ class $KitInspect {
     return keys;
   }
 
-  /** The layers are the root's: a nested namespace derived by `resolve` keys its writes from its
-   *  own kit, while the root's patches carry the whole path. A kit that names a class already open
-   *  above it — a part whose sub-thread renders rows — prints once; the repeat is marked. */
+  /** The layers are the root's, their writes computed once in `tree`: a nested namespace derived by
+   *  `derive` keys its writes from its own kit, while the root's patches carry the whole path. A
+   *  kit that names a class already open above it — a part whose sub-thread renders rows — prints
+   *  once; the repeat is marked. */
   protected static treeLines(
     namespace: Kit.Namespace,
-    layers: Kit.Namespace[],
+    writes: Map<Kit.Namespace, Set<string>>,
     path: string[],
     indent: string,
     open: Set<Kit.NamespaceClass>
@@ -120,20 +123,24 @@ class $KitInspect {
       const entry = kit[role] as Kit.Entry;
       if (!Kit.Class.isEntry(entry)) continue;
       const at = order.indexOf(role);
-      const setBy = this.settersOf(layers, [...path, role], at >= 0);
+      const setBy = this.settersOf(writes, [...path, role], at >= 0);
       lines.push(
         `${indent}${at >= 0 ? at : '-'} ${role}: view ${this.viewName(entry.view)} · class ${this.className(entry.namespace)} · bind ${entry.bind ? 'yes' : 'no'} · ${setBy}`
       );
       if (entry.namespace)
         lines.push(
-          ...this.treeLines(entry.namespace, layers, [...path, role], `${indent}  `, open)
+          ...this.treeLines(entry.namespace, writes, [...path, role], `${indent}  `, open)
         );
     }
     return lines;
   }
 
   /** `view←bubbles, position←compact`, or `base` when no layer touched the role. */
-  protected static settersOf(layers: Kit.Namespace[], path: string[], ordered: boolean): string {
+  protected static settersOf(
+    writes: Map<Kit.Namespace, Set<string>>,
+    path: string[],
+    ordered: boolean
+  ): string {
     const fields = [...this.REPLACED_FIELDS, 'bind', ...(ordered ? ['position'] : [])];
     const setters: string[] = [];
     for (const field of fields) {
@@ -141,7 +148,8 @@ class $KitInspect {
         field === 'position'
           ? `${path.slice(0, -1).join('.')}#position:${path[path.length - 1]}`
           : `${path.join('.')}.${field}`;
-      const owner = layers.filter((layer) => this.writesOf(layer.patch!).includes(key)).pop();
+      let owner: Kit.Namespace | undefined;
+      for (const [layer, keys] of writes) if (keys.has(key)) owner = layer;
       if (owner) setters.push(`${field}←${this.nameOf(owner)}`);
     }
     return setters.length ? setters.join(', ') : 'base';
@@ -153,14 +161,20 @@ class $KitInspect {
     return named.__name ?? named.name ?? 'component';
   }
 
-  /** The raw class's name, read past the anonymous subclass `derive` writes and the bound subclass
-   *  `Static()` returns; a minified build prints whatever survived, which is why the chain is data. */
+  /** The raw class's name: a bound subclass `Static()` returns names the class it wrapped under
+   *  `STATIC_RAW`, and the anonymous subclass `derive` writes has no name, so the walk unwraps the
+   *  first and steps over the second until a named class stands. A minified build prints whatever
+   *  survived, which is why the chain is data. */
   protected static className(namespace: Kit.Namespace | undefined): string {
     if (!namespace) return '-';
     const chain = this.layers(namespace);
-    let raw: Kit.NamespaceClass | null = chain[0].$Class as Kit.NamespaceClass;
-    while (raw && (raw.name === '' || raw.name === 'SelectedClass'))
-      raw = Object.getPrototypeOf(raw) as Kit.NamespaceClass | null;
+    let raw = chain[0].$Class as
+      (Kit.NamespaceClass & { [STATIC_RAW]?: Kit.NamespaceClass }) | null;
+    while (raw) {
+      if (Object.hasOwn(raw, STATIC_RAW)) raw = raw[STATIC_RAW] ?? null;
+      else if (raw.name === '') raw = Object.getPrototypeOf(raw);
+      else break;
+    }
     const base = raw?.name || 'class';
     return chain.length > 1 ? `${base} + ${chain.length - 1} layer(s)` : base;
   }

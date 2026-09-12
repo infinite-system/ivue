@@ -28,45 +28,32 @@ import { Static } from '../Static';
 // layers — lives in `KitInspect.ts`, which imports this file and not the
 // other way round.
 class $Kit {
-  /** Every entry with a `subkit` becomes an entry whose namespace is derived and whose view
-   *  declares the derived contract; `order` and every other entry pass through untouched. */
-  static resolve<K extends object>(kit: K): K {
-    const out: Record<string, unknown> = {};
-    for (const [role, value] of Object.entries(kit)) {
-      if (role === 'order') out.order = value;
-      else if (!this.isEntry(value)) out[role] = this.resolve(value as object);
-      else if (!value.namespace || !value.subkit) out[role] = value;
-      else {
-        const { subkit, ...rest } = value;
-        const namespace = this.derive(value.namespace, subkit as never);
-        out[role] = { ...rest, namespace, view: this.view(value.view, namespace) };
-      }
-    }
-    return this.deepFreeze(out) as K;
-  }
-
   /** A derived namespace: `$Class` extends the base's raw class with a `$kit` that is the base's
-   *  merged with `patch` and resolved; `Class` is `Reactive($Class)` — what a subclass file would
-   *  export. The chain is data on the result — `derivedFrom`, `patch`, `layer` — for whoever reads
-   *  it back. The base namespace is only read; the patch is merged once here, so a relation that
-   *  cannot resolve throws at derive time and not at the first render. */
+   *  merged with `patch`, once, here — so a relation that cannot resolve throws at derive time —
+   *  and frozen in shape; `Class` is `Reactive($Class)`, what a subclass file would export. The
+   *  chain is data on the result — `derivedFrom`, `patch`, `layer` — for whoever reads it back. */
   static derive<Space extends Kit.Namespace, P extends Kit.PatchOf<Space>>(
     namespace: Space,
     patch: P & Kit.Checked<Space, P>,
     layer?: string
   ): Space & Kit.Derived<Space, P> {
-    const kit = this;
     const Base = namespace.$Class as Kit.NamespaceClass;
-    this.merge(Base.$kit ?? {}, patch as Kit.Patch);
+    const merged = this.freeze(this.merge(Base.$kit ?? {}, patch as Kit.Patch));
     const $Class = Static(
       class extends Base {
         static override get $kit() {
-          return kit.resolve(kit.merge(Base.$kit ?? {}, patch as Kit.Patch));
+          return merged;
         }
       }
     );
     const derived = { $Class, Class: Reactive($Class), derivedFrom: namespace, patch, layer };
     return { ...namespace, ...derived } as unknown as Space & Kit.Derived<Space, P>;
+  }
+
+  /** A kit literal with `subkit` reaches written by hand, resolved: the form a subclass file takes
+   *  when it does what `derive` does from data. */
+  static resolve<K extends object>(kit: K): K {
+    return this.freeze(this.merge({}, kit as Kit.Patch)) as K;
   }
 
   /** An entry whose types come from its namespace: the bind's result is held to the child's props,
@@ -120,72 +107,56 @@ class $Kit {
     return copy as Component;
   }
 
-  /** An entry is a value that names a view, a namespace or a subkit; anything else in a kit is a
-   *  nested map of roles. */
-  static isEntry(value: unknown): value is Kit.Entry {
-    return (
-      typeof value === 'object' &&
-      value !== null &&
-      !Array.isArray(value) &&
-      ('view' in value || 'namespace' in value || 'subkit' in value)
-    );
-  }
-
-  /** The base kit with the patch over it: entries merged, `order` resolved through its relations,
-   *  and every role the order names checked to have an entry. */
+  /** The base kit with the patch over it: an entry is merged over the base's, a map of roles under
+   *  a role (a part's cards by tool name) is merged role by role, `order` is resolved through its
+   *  relations, and every role the order names must have an entry. */
   protected static merge(base: Record<string, unknown>, patch: Kit.Patch): Record<string, unknown> {
     const out: Record<string, unknown> = { ...base };
-    for (const [role, value] of Object.entries(patch)) {
+    for (const role in patch) {
+      const value = patch[role];
       if (value === undefined) continue;
-      if (role === 'order') {
+      const current = base[role];
+      if (role === 'order')
         out.order = this.order(
           base.order as readonly string[] | undefined,
           value as Kit.OrderPatch
         );
-        continue;
-      }
-      const current = base[role];
-      out[role] =
-        this.isEntry(current) || this.isEntry(value)
-          ? this.mergeEntry(current as Kit.Entry | undefined, value as Partial<Kit.Entry>)
-          : this.merge((current as Record<string, unknown>) ?? {}, value as Kit.Patch);
+      else if (this.isEntry(current) || this.isEntry(value))
+        out[role] = this.mergeEntry(current as Kit.Entry | undefined, value as Partial<Kit.Entry>);
+      else out[role] = this.merge((current as Record<string, unknown>) ?? {}, value as Kit.Patch);
     }
     for (const role of (out.order as readonly string[] | undefined) ?? [])
-      if (!this.isEntry(out[role]))
+      if (!out[role])
         throw new Error(`Kit.derive: the order names "${role}" but no entry declares it`);
     return out;
   }
 
-  /** A patch that names a namespace and keeps the base view gets that view rewrapped over the new
-   *  class; a patch that brings its own view is left alone. A patch's `bind` closes over the layer
-   *  below's: the seam it receives carries `inherited`, which runs the base's bind on the same
-   *  seam, or the seam's own default when the base had none. */
+  /** The patch's fields over the base entry's. A `subkit` derives the child's namespace here and
+   *  is not kept; the view is rewrapped over a namespace the patch changed — brought a namespace
+   *  and no view, or a subkit — so the entry declares what its class declares; a brought view over
+   *  the same namespace is left alone. A patch's `bind` closes over the layer below's: the seam it
+   *  receives carries `inherited`, which runs the base's bind on a copy of the same seam. */
   protected static mergeEntry(
     current: Kit.Entry | undefined,
     patch: Partial<Kit.Entry>
   ): Kit.Entry {
-    const merged = { ...current, ...patch } as Kit.Entry;
-    if (patch.namespace && !patch.view && current?.view)
-      merged.view = this.view(current.view, patch.namespace);
+    const { subkit, ...fields } = patch;
+    const merged = { ...current, ...fields } as Kit.Entry;
+    if (subkit && merged.namespace)
+      merged.namespace = this.derive(merged.namespace, subkit as never);
+    if ((subkit || (patch.namespace && !patch.view)) && merged.namespace && merged.view)
+      merged.view = this.view(merged.view, merged.namespace);
     const below = current?.bind;
     const above = patch.bind;
-    if (above && below)
-      merged.bind = (seam) => {
-        const inherited = seam.inherited;
-        seam.inherited = () => {
-          seam.inherited = inherited; // the layer below sees its own inherited, not this wrapper
-          return below(seam);
-        };
-        return above(seam);
-      };
+    if (above && below) merged.bind = (seam) => above({ ...seam, inherited: () => below(seam) });
     return merged;
   }
 
   /** The base order with one patch's relations applied. Guards first: a list is refused, a base
-   *  without an order is refused, a role named twice is refused, relations that contradict each
-   *  other are refused. Then one walk: every pass applies each relation whose anchor the list now
-   *  holds — a removal's anchor is the role itself — so an inserted role anchors a later relation
-   *  of the same patch; a pass that applies nothing is a name the order never holds. */
+   *  without an order is refused, a role named twice is refused. Then one walk: every pass applies
+   *  each relation whose anchor stands in the list and is not itself waiting to be placed, so an
+   *  inserted role anchors a later relation of the same patch; a pass that applies nothing is a
+   *  name the order never holds or relations that wait on each other, and the throw lists them. */
   // invariant: An order is edited only through relations against names (examples/playground/src/kit/kit.invariants.md)
   protected static order(base: readonly string[] | undefined, patch: Kit.OrderPatch): string[] {
     if (Array.isArray(patch))
@@ -193,19 +164,37 @@ class $Kit {
         'Kit.derive: `order` in a patch takes relations (after, before, without, move), never a list — a list is a snapshot that drops every role upstream adds later'
       );
     if (!base) throw new Error('Kit.derive: the patch edits `order` but the base declares none');
-    const relations = this.relationsOf(patch);
-    this.refuseCycle(relations);
     const next = [...base];
-    let pending = relations;
+    let pending = this.relationsOf(patch);
     while (pending.length) {
       const waiting: Kit.Relation[] = [];
       for (const relation of pending)
-        if (next.indexOf(relation.anchor) < 0) waiting.push(relation);
+        if (next.indexOf(relation.anchor) < 0 || this.placing(pending, relation))
+          waiting.push(relation);
         else this.apply(next, relation);
-      if (waiting.length === pending.length) this.at(next, waiting[0].anchor);
+      if (waiting.length === pending.length) {
+        const list: string[] = [];
+        for (const relation of waiting)
+          list.push(
+            relation.kind === 'without'
+              ? `"without ${relation.role}"`
+              : `"${relation.kind === 'move' ? 'move ' : ''}${relation.role} ${relation.side} ${relation.anchor}"`
+          );
+        throw new Error(
+          `Kit.derive: these order relations cannot be placed — a name the order lacks, or relations that wait on each other: ${list.join(', ')}`
+        );
+      }
       pending = waiting;
     }
     return next;
+  }
+
+  /** Whether another pending relation still places this one's anchor. */
+  protected static placing(pending: Kit.Relation[], relation: Kit.Relation): boolean {
+    for (const other of pending)
+      if (other !== relation && other.kind !== 'without' && other.role === relation.anchor)
+        return true;
+    return false;
   }
 
   /** A removal takes the role out; a move takes it out and places it; an insert places it. */
@@ -217,7 +206,7 @@ class $Kit {
         `Kit.derive: "${relation.role}" is already in the order — move it, or name it once`
       );
     next.splice(
-      this.at(next, relation.anchor) + (relation.side === 'after' ? 1 : 0),
+      next.indexOf(relation.anchor) + (relation.side === 'after' ? 1 : 0),
       0,
       relation.role
     );
@@ -235,7 +224,7 @@ class $Kit {
 
   /** The patch's relations as one list: each names the role it removes or places, the side, and
    *  the anchor. A run of names after one anchor chains, so `after: { Head: ['Badge', 'Pin'] }` puts
-   *  Pin after Badge. A role named twice across the relations is refused here. */
+   *  Pin after Badge. A role named twice, or moved against itself, is refused here. */
   protected static relationsOf(patch: Kit.OrderPatch): Kit.Relation[] {
     const relations: Kit.Relation[] = [];
     const named = new Set<string>();
@@ -283,45 +272,27 @@ class $Kit {
     return relations;
   }
 
-  /** Every placing relation is an edge "X precedes Y" in the resolved order; a cycle among those
-   *  edges is a patch asking for two orders at once, refused before anything is placed. */
-  protected static refuseCycle(relations: Kit.Relation[]): void {
-    const after = new Map<string, string[]>();
-    for (const relation of relations) {
-      if (relation.kind === 'without') continue;
-      const first = relation.side === 'after' ? relation.anchor : relation.role;
-      const second = relation.side === 'after' ? relation.role : relation.anchor;
-      const following = after.get(first);
-      if (following) following.push(second);
-      else after.set(first, [second]);
-    }
-    const visiting = new Set<string>();
-    const done = new Set<string>();
-    const visit = (node: string, trail: string[]) => {
-      if (done.has(node)) return;
-      if (visiting.has(node))
-        throw new Error(
-          `Kit.derive: the order relations form a cycle: ${[...trail, node].join(' → ')}`
-        );
-      visiting.add(node);
-      for (const following of after.get(node) ?? []) visit(following, [...trail, node]);
-      visiting.delete(node);
-      done.add(node);
-    };
-    for (const node of after.keys()) visit(node, []);
-  }
-
-  /** Freeze the kit's SHAPE — role maps, entries and the order — and stop at an entry's leaves: a
+  /** Freeze the kit's SHAPE — the map, every entry, a map of roles under a role, the order — and
+   *  stop at an entry's leaves: a
    *  namespace (its `Class` slot is the global override), a view (Vue's object), a `props` bag (the
    *  consumer's). Frozen entries are what make sharing them between kits safe. */
-  protected static deepFreeze<K extends object>(value: K): K {
-    const entry = this.isEntry(value);
-    for (const [key, inner] of Object.entries(value)) {
-      if (typeof inner !== 'object' || inner === null || Object.isFrozen(inner)) continue;
-      if (entry && (key === 'namespace' || key === 'view' || key === 'props')) continue;
-      this.deepFreeze(inner);
+  protected static freeze<K extends object>(kit: K): K {
+    for (const role in kit) {
+      const inner = (kit as Record<string, unknown>)[role];
+      if (role === 'order' || this.isEntry(inner)) Object.freeze(inner);
+      else this.freeze(inner as object);
     }
-    return Object.freeze(value);
+    return Object.freeze(kit);
+  }
+
+  /** An entry names a view, a namespace or a subkit; any other object under a role is a map of roles. */
+  static isEntry(value: unknown): value is Kit.Entry {
+    return (
+      typeof value === 'object' &&
+      value !== null &&
+      !Array.isArray(value) &&
+      ('view' in value || 'namespace' in value || 'subkit' in value)
+    );
   }
 }
 

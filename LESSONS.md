@@ -1222,3 +1222,26 @@ own whole than to arbitrate.
 - **Declared kit types break the instance/static cycle.** `Chat.Roles` names each role's namespace explicitly so
   nested subkit binds are typed (`Message: Kit.Entry<$Chat, undefined, typeof ChatMessage>`); an inferred
   `Chat.$kit` re-entered the "referenced in its own type annotation" cycle at once.
+
+## The kit reduction (2026-09-11): which premises held
+
+- **A kit may hold a map of roles under a role.** `ToolCallPart.$kit` keeps its cards under `Tools`, keyed by
+  tool name, so `isEntry` and the recursion in `merge` and `freeze` stay; deleting the concept broke the chat's
+  printed tree at once (an entry without a `view`). Grep every `$kit` before deleting a kit concept.
+- **A base `$kit` literal never carries a `subkit` in code**, so the subkit derives inside `mergeEntry` and the
+  derive getter returns the one merged, frozen object. `Kit.Class.resolve` stays as a one-liner because the
+  malleability guide documents the hand-written subclass form that calls it.
+- **The stall is the cycle guard only if a relation also waits for its anchor to settle.** A fixpoint that applies
+  any relation whose anchor is present silently applies `move Head after Foot` and `move Foot after Head` (both
+  anchors are base roles). The rule "an anchor being placed by another pending relation is not settled" turns
+  every cycle into a stall, and the stall's throw lists the relations that could not be placed. Measured with
+  `examples/playground/src/kit/Kit.bench.js` (median of five, vite-node): the clean three-relation order went
+  468 → 294 ns, the refused cycle 5566 → 2784 ns, a derive over an eight-role base 5931 → 5056 ns, `seam`
+  unchanged (1.8/6.2/86.6 → 1.5/6.4/78.6 ns for unbound / bound / two layers).
+- **A closure that swaps `seam.inherited` in place breaks a bind that reads `seam.inherited()` twice** (the second
+  read finds the default). The plain form — a copy of the seam with the layer below's `inherited` — costs one
+  object per layered call and is the one the record keeps. The spec that catches it reads `seam.inherited` off
+  the seam each time; a destructured `inherited` captured the wrapper once and passed against the defect.
+- **`Static()` names its raw class under `STATIC_RAW`**, so tooling prints a class by name without knowing the
+  wrapper's own name; read it as an own property — inherited through the prototype chain it names the
+  grandparent's raw class.

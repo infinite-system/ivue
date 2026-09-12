@@ -17,7 +17,7 @@ Goal: Prove the kit's five claims against a real component tree — a root, a ca
 // domain-invariant: $Kit — If a view's compiled props and emits are fixed, then a prop only a derived class declares falls through the base view as an attribute, its default never applies, and emitting its event warns
 // domain-invariant: $Kit — If a mounted view object's props are widened in place, then Vue's cached normalized options ignore the change, which is why a rewrap is a fresh object
 // domain-invariant: $Kit — If a patch edits `order`, then `without` runs first and every move and insert lands against its anchor by name, an inserted role anchoring a later one of the same patch, and two layers on one anchor land in derivation order with the outer layer nearest the anchor
-// domain-invariant: $Kit — If an order relation names a role the order lacks, names one role twice, contradicts itself, or places a role no entry declares, then derive throws before any class is built
+// domain-invariant: $Kit — If an order relation names a role the order lacks, names one role twice, waits on a relation that waits on it, or places a role no entry declares, then derive throws before any class is built
 // domain-invariant: $Kit — If an entry's view is a tag name, then the seam renders that element with what the bind returns and nothing else — no entry, no model
 // domain-invariant: $Kit — If a layer binds a role a layer below already bound, then its seam's `inherited` runs the layer below's bind on the same seam, down to the default `{ model, kit }`
 // domain-invariant: $Kit — If a seam is built, then a bound role with a class receives its entry beside what the bind returned, an unbound role receives `{ model, kit }` and no seam object, and no role's name is read
@@ -563,25 +563,23 @@ describe('an order is edited only through relations against names', () => {
     ]);
   });
 
-  // domain-invariant: $Kit — If an order relation names a role the order lacks, names one role twice, contradicts itself, or places a role no entry declares, then derive throws before any class is built
+  // domain-invariant: $Kit — If an order relation names a role the order lacks, names one role twice, waits on a relation that waits on it, or places a role no entry declares, then derive throws before any class is built
   // impossible-if-true: $Kit — an absolute order list accepted by derive
   // invariant: An order is edited only through relations against names (examples/playground/src/kit/kit.invariants.md)
-  it('a list, a missing anchor, a missing role, a cycle, a role named twice, an undeclared role and a re-insert are each refused at derive time', () => {
+  it('a list, a missing anchor, a missing role, relations that wait on each other, a role named twice, an undeclared role and a re-insert are each refused at derive time', () => {
     // kits built from data reach derive untyped: the runtime arm of every refusal
     const derive = (patch: Kit.Patch) => () => Kit.Class.derive(Strip, patch as never);
     expect(derive({ order: ['Head', 'Foot'] as never })).toThrow(/never a list/);
     expect(derive({ order: { after: { Nope: ['X'] } }, X: { view: 'i' } })).toThrow(
-      /"Nope" but the order has no such role/
+      /cannot be placed.*"X after Nope"/
     );
-    expect(derive({ order: { without: ['Nope'] } })).toThrow(
-      /"Nope" but the order has no such role/
-    );
+    expect(derive({ order: { without: ['Nope'] } })).toThrow(/cannot be placed.*"without Nope"/);
     expect(derive({ order: { move: { Nope: { after: 'Head' } } } })).toThrow(
       /"Nope" but the order has no such role/
     );
     expect(
       derive({ order: { move: { Head: { after: 'Foot' }, Foot: { after: 'Head' } } } })
-    ).toThrow(/cycle: Foot → Head → Foot|cycle: Head → Foot → Head/);
+    ).toThrow(/cannot be placed.*"move Head after Foot", "move Foot after Head"/);
     expect(derive({ order: { move: { Head: { before: 'Head' } } } })).toThrow(/against itself/);
     expect(
       derive({ order: { after: { Head: ['A'] }, before: { Foot: ['A'] } }, A: { view: 'i' } })
@@ -674,6 +672,25 @@ describe('a bind is a projection the layer above extends', () => {
     ).toEqual(['abcdef!', 'xy!']);
   });
 
+  // domain-invariant: $Kit — If a layer binds a role a layer below already bound, then its seam's `inherited` runs the layer below's bind on the same seam, down to the default `{ model, kit }`
+  it("a layer's bind may call inherited() twice and gets the layer below's result both times", () => {
+    const Capped = Kit.Class.derive(Strip, {
+      Item: { bind: ({ inherited }) => ({ ...inherited(), cap: 1 }) }
+    });
+    const Twice = Kit.Class.derive(Capped, {
+      Item: {
+        // read off the seam each time, not destructured once: the seam is one object
+        bind: (seam) => {
+          const first = seam.inherited();
+          const second = seam.inherited();
+          return { ...first, lang: first.cap === second.cap ? 'same' : 'differs' };
+        }
+      }
+    });
+    const seam = Kit.Class.seam({ cap: 3 }, Twice.$Class.$kit.Item as Kit.Entry, 'ab', 0);
+    expect(seam).toMatchObject({ code: 'ab', cap: 1, lang: 'same' });
+  });
+
   it('shows() decides presence: the base hides the foot over no items, a layer overrides it with a super fallback', () => {
     expect(sections(mountStrip(Strip, []))).toEqual(['header.strip-head', 'div.strip-body']);
     expect(sections(mountStrip(Strip))).toEqual([
@@ -688,6 +705,20 @@ describe('a bind is a projection the layer above extends', () => {
     }
     const Headless = { $Class: Static($Headless), Class: Reactive(Static($Headless)) };
     expect(sections(mountStrip(Headless))).toEqual(['div.strip-body', 'footer.strip-foot']);
+  });
+});
+
+describe('derive merges once', () => {
+  // domain-invariant: $Kit — If an entry carries a subkit, then resolve derives its namespace and rewraps its view, and every untouched entry keeps its identity
+  it('derive merges the patch once, at derive time, and the getter resolves that one result', () => {
+    const original = (Kit.Class as unknown as { merge: (...args: unknown[]) => unknown }).merge;
+    const counted = vi.fn((...args: unknown[]) => original(...args));
+    vi.spyOn(Kit.Class as unknown as { merge: unknown }, 'merge', 'get').mockReturnValue(counted);
+    const Derived = Kit.Class.derive(Strip, { Head: { view: StripFootView } });
+    expect(counted).toHaveBeenCalledTimes(1);
+    expect(Derived.$Class.$kit.Head.view).toBe(StripFootView);
+    expect(Derived.$Class.$kit).toBe(Derived.$Class.$kit);
+    expect(counted).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -742,7 +773,7 @@ describe('the types hold a bind to its child and an anchor to its base', () => {
         order: { after: { Nope: ['Badge'] } },
         Badge: { view: 'i' }
       })
-    ).toThrow(/no such role/);
+    ).toThrow(/cannot be placed/);
     expect(() =>
       Kit.Class.derive(Strip, {
         // @ts-expect-error `Ghost` is a name this patch never declares
@@ -754,7 +785,7 @@ describe('the types hold a bind to its child and an anchor to its base', () => {
         // @ts-expect-error `Nope` is not a base role to remove
         order: { without: ['Nope'] }
       })
-    ).toThrow(/no such role/);
+    ).toThrow(/cannot be placed/);
     expect(() =>
       Kit.Class.derive(Strip, {
         // @ts-expect-error an order is relations, never a list

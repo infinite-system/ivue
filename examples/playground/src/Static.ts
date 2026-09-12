@@ -49,8 +49,13 @@ const hasOwn = Object.hasOwn;
 // symbols that back symbol-keyed methods.
 const issuedCacheKeys = new Set<PropertyKey>();
 
+/** The key under which a bound subclass names the raw class `Static()` wrapped — for tooling that
+ *  prints a class by name and must see past the wrapper. */
+export const STATIC_RAW = Symbol.for('ivue.static.raw');
+
 export function Static<Class extends ClassConstructor>(targetClass: Class): Class {
   const SelectedClass = class extends targetClass {};
+  Object.defineProperty(SelectedClass, STATIC_RAW, { configurable: true, value: targetClass });
   const visitedKeys = new Set<PropertyKey>();
 
   for (
