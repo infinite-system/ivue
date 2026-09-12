@@ -1,5 +1,5 @@
-import { Reactive } from '../../../ivue';
-import type { SessionLog } from '../SessionLog';
+import { Reactive } from '../../../../../ivue';
+import type { SessionLog } from '../../../SessionLog';
 import { CallToolModel } from './CallToolModel';
 
 // A subagent: its description and prompt, its report, and the thread it

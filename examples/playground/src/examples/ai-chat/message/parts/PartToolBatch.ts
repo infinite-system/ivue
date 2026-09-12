@@ -1,12 +1,12 @@
-import { Reactive } from '../../../ivue';
-import { Static } from '../../../Static';
-import { Kit } from '../../../kit/Kit';
-import { Icons } from '../Icons';
+import { Reactive } from '../../../../ivue';
+import { Static } from '../../../../Static';
+import { Kit } from '../../../../kit/Kit';
+import { Icons } from '../../Icons';
 import { PartToolCall } from './PartToolCall';
 import PartToolCallView from './PartToolCall.vue';
-import { Clock } from '../Clock';
-import type { SessionLog } from '../SessionLog';
-import { CallToolModel } from '../tools/CallToolModel';
+import { Clock } from '../../Clock';
+import type { SessionLog } from '../../SessionLog';
+import { CallToolModel } from './calls/CallToolModel';
 import type { Part } from './Part';
 
 // A run of tool calls as one row: the count, the tools' icons in order,

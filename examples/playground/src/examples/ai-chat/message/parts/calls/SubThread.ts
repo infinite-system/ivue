@@ -1,10 +1,10 @@
-import { Reactive } from '../../../ivue';
-import { Static } from '../../../Static';
-import { Kit } from '../../../kit/Kit';
-import { ChatMessage } from '../message/ChatMessage';
-import ChatMessageView from '../message/ChatMessage.vue';
-import type { Chat } from '../Chat';
-import type { SessionLog } from '../SessionLog';
+import { Reactive } from '../../../../../ivue';
+import { Static } from '../../../../../Static';
+import { Kit } from '../../../../../kit/Kit';
+import { ChatMessage } from '../../ChatMessage';
+import ChatMessageView from '../../ChatMessage.vue';
+import type { Chat } from '../../../Chat';
+import type { SessionLog } from '../../../SessionLog';
 
 // A nested thread (a subagent's run) inside a card: the messages as
 // rows the message component understands, rendered in flow — a nested

@@ -1,4 +1,4 @@
-import { Reactive } from '../../../ivue';
+import { Reactive } from '../../../../../ivue';
 import { CallToolModel } from './CallToolModel';
 
 // A skill invocation: the skill's name and its arguments; the result is

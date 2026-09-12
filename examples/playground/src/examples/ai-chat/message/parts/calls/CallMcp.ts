@@ -1,4 +1,4 @@
-import { Reactive } from '../../../ivue';
+import { Reactive } from '../../../../../ivue';
 import { CallToolModel } from './CallToolModel';
 
 // An MCP tool: the server and the tool from the name, input and result

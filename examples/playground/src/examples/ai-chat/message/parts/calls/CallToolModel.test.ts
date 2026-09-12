@@ -1,7 +1,7 @@
 /*
 === GENERATOR ===
 Goal: Prove each tool card reads its own shape out of a call: a shell call shows command, stdout and stderr with ANSI stripped and its exit state; an edit is a unified diff from the recorded hunks or from the strings; a read is the numbered listing with its numbers turned into a counter that starts where the read started; a write is the file; every card's collapsed line is the projection's text; the registry maps every name and falls back.
-[Full granularity in two clicks](../ai-chat.invariants.md#full-granularity-in-two-clicks)
+[Full granularity in two clicks](../../../ai-chat.invariants.md#full-granularity-in-two-clicks)
 // domain-invariant: $CallToolModel — If a call is expanded, then the card shows the full input and the full result, capped only by a cap the reader can lift
 Impossible if true: an expanded card holds back part of its result behind anything but the cap the reader can lift
 
@@ -9,8 +9,8 @@ Impossible if true: an expanded card holds back part of its result behind anythi
 $CallToolModel and its tool classes read each call's own shape: shell, edit, read, write, agent, MCP, and the generic fallback.
 */
 import { describe, expect, it, vi } from 'vitest';
-import { Chat } from '../Chat';
-import type { SessionLog } from '../SessionLog';
+import { Chat } from '../../../Chat';
+import type { SessionLog } from '../../../SessionLog';
 import { CallToolModel } from './CallToolModel';
 import { CallBash } from './CallBash';
 import { CallEdit } from './CallEdit';
@@ -18,7 +18,7 @@ import { CallRead } from './CallRead';
 import { CallWrite } from './CallWrite';
 import { CallAgent } from './CallAgent';
 import { CallMcp } from './CallMcp';
-import { hosted } from '../../virtual-scroller/hosted';
+import { hosted } from '../../../../virtual-scroller/hosted';
 
 function makeCall(
   name: string,

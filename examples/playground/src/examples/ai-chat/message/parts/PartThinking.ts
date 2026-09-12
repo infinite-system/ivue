@@ -1,6 +1,6 @@
-import { Reactive } from '../../../ivue';
-import { Clock } from '../Clock';
-import type { SessionLog } from '../SessionLog';
+import { Reactive } from '../../../../ivue';
+import { Clock } from '../../Clock';
+import type { SessionLog } from '../../SessionLog';
 import type { Part } from './Part';
 
 // Thinking: while it runs, a loader with the live counter; done, one

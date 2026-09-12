@@ -1,5 +1,5 @@
-import { Reactive } from '../../../ivue';
-import type { SessionLog } from '../SessionLog';
+import { Reactive } from '../../../../ivue';
+import type { SessionLog } from '../../SessionLog';
 import type { Part } from './Part';
 
 // An attachment: an image at its natural aspect (the size is known, so a

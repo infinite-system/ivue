@@ -1,9 +1,9 @@
 import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { Reactive } from '../../../ivue';
-import { Static } from '../../../Static';
-import type { Kit } from '../../../kit/Kit';
-import { Highlighter } from '../Highlighter';
-import { Icons } from '../Icons';
+import { Reactive } from '../../../../../ivue';
+import { Static } from '../../../../../Static';
+import type { Kit } from '../../../../../kit/Kit';
+import { Highlighter } from '../../../Highlighter';
+import { Icons } from '../../../Icons';
 
 // One block of code on a card: plain and escaped on the first paint,
 // coloured when shiki answers (cached, so a remount is free), cut at

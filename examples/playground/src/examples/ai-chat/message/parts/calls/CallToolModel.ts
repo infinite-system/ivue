@@ -1,17 +1,17 @@
-import { Reactive } from '../../../ivue';
-import { Static } from '../../../Static';
-import { Kit } from '../../../kit/Kit';
-import { Icons } from '../Icons';
+import { Reactive } from '../../../../../ivue';
+import { Static } from '../../../../../Static';
+import { Kit } from '../../../../../kit/Kit';
+import { Icons } from '../../../Icons';
 import { CodeBlock } from './CodeBlock';
 import CodeBlockView from './CodeBlock.vue';
 import { SubThread } from './SubThread';
 import SubThreadView from './SubThread.vue';
 import ToolHeadView from './ToolHead.vue';
 import ToolFootView from './ToolFoot.vue';
-import type { Chat } from '../Chat';
-import { Clock } from '../Clock';
-import { Highlighter } from '../Highlighter';
-import { SessionLog } from '../SessionLog';
+import type { Chat } from '../../../Chat';
+import { Clock } from '../../../Clock';
+import { Highlighter } from '../../../Highlighter';
+import { SessionLog } from '../../../SessionLog';
 
 // What every tool card shares: the collapsed line (icon, name, the one
 // argument that matters, state, elapsed), the expansion state kept on

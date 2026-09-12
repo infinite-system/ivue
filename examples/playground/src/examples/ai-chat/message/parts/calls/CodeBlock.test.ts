@@ -9,7 +9,7 @@ $CodeBlock writes through the async clipboard where it exists and the legacy com
 */
 import { expect, it, vi } from 'vitest';
 import { CodeBlock } from './CodeBlock';
-import { hosted } from '../../virtual-scroller/hosted';
+import { hosted } from '../../../../virtual-scroller/hosted';
 // domain-invariant: $CodeBlock — If the copy button is pressed, then the whole code as given reaches the clipboard, not the capped view, and the button says so for a moment
 // impossible-if-true: $CodeBlock — a copy of the capped view
 it('a code block copies its whole code and says so for a moment', async () => {

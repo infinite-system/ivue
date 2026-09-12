@@ -1,4 +1,4 @@
-import { Reactive } from '../../../ivue';
+import { Reactive } from '../../../../../ivue';
 import { CallToolModel } from './CallToolModel';
 
 // An artifact action: what was published or read, and the link that

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SessionLog } from '../SessionLog';
+import type { SessionLog } from '../../SessionLog';
 import type { Part } from './Part';
 import { PartAttachment } from './PartAttachment';
 

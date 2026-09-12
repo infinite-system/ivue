@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ChatMessage } from './ChatMessage';
+import type { ChatMessage } from '../ChatMessage';
 
 // The list section: every part of the message through its own seam — the
 // entry the row's kit names for the part's kind, fed the part as the

@@ -1,5 +1,5 @@
-import { Reactive } from '../../../ivue';
-import { Static } from '../../../Static';
+import { Reactive } from '../../../../../ivue';
+import { Static } from '../../../../../Static';
 import { CallToolModel } from './CallToolModel';
 
 // A read: the file with line numbers, highlighted by its extension,

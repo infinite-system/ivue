@@ -1,6 +1,6 @@
-import type { Kit } from '../../../kit/Kit';
-import type { Chat } from '../Chat';
-import type { SessionLog } from '../SessionLog';
+import type { Kit } from '../../../../kit/Kit';
+import type { Chat } from '../../Chat';
+import type { SessionLog } from '../../SessionLog';
 
 // What every part view receives: the part, the chat, the message it
 // belongs to, and the entry the row's kit rendered it through. Types

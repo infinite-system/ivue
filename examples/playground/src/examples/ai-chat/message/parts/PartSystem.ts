@@ -1,10 +1,10 @@
-import { Reactive } from '../../../ivue';
-import { Static } from '../../../Static';
-import { Kit } from '../../../kit/Kit';
-import { SubThread } from '../tools/SubThread';
-import SubThreadView from '../tools/SubThread.vue';
-import { Markdown } from '../Markdown';
-import type { SessionLog } from '../SessionLog';
+import { Reactive } from '../../../../ivue';
+import { Static } from '../../../../Static';
+import { Kit } from '../../../../kit/Kit';
+import { SubThread } from './calls/SubThread';
+import SubThreadView from './calls/SubThread.vue';
+import { Markdown } from '../../Markdown';
+import type { SessionLog } from '../../SessionLog';
 import type { Part } from './Part';
 
 // A system record, by subtype: a compaction is a divider with the

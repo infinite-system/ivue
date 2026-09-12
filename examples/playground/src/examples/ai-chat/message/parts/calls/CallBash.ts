@@ -1,5 +1,5 @@
-import { Reactive } from '../../../ivue';
-import { Static } from '../../../Static';
+import { Reactive } from '../../../../../ivue';
+import { Static } from '../../../../../Static';
 import { CallToolModel } from './CallToolModel';
 
 // A shell call: the command as a shell block, stdout and stderr as

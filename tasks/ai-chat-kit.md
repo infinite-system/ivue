@@ -389,20 +389,20 @@ the role.
 
 ```ts
 // ChatMessage.ts
-import TextPartView from './parts/PartText.vue';
-import ThinkingPartView from './parts/PartThinking.vue';
-import PartToolCallView from './parts/PartToolCall.vue';
-import ToolBatchPartView from './parts/PartToolBatch.vue';
-import AttachmentPartView from './parts/PartAttachment.vue';
-import SystemPartView from './parts/PartSystem.vue';
+import TextPartView from './message/parts/PartText.vue';
+import ThinkingPartView from './message/parts/PartThinking.vue';
+import PartToolCallView from './message/parts/PartToolCall.vue';
+import ToolBatchPartView from './message/parts/PartToolBatch.vue';
+import AttachmentPartView from './message/parts/PartAttachment.vue';
+import SystemPartView from './message/parts/PartSystem.vue';
 import MessageGutterView from './sections/MessageGutter.vue';
 import MessageHeadView from './sections/MessageHead.vue';
 import MessageStubView from './sections/MessageStub.vue';
 import MessagePartsView from './sections/MessageParts.vue';
 import MessageAwaitView from './sections/MessageAwait.vue';
 import MessageFootView from './sections/MessageFoot.vue';
-import { PartToolBatch } from './parts/PartToolBatch';
-import { CallToolModel } from './tools/CallToolModel';
+import { PartToolBatch } from './message/parts/PartToolBatch';
+import { CallToolModel } from './message/parts/calls/CallToolModel';
 
 class $ChatMessage {
   static get $kit() {
@@ -654,7 +654,7 @@ each other, which is the cycle the lazy getter exists for.
 <script setup lang="ts">
 import type { SessionLog } from '../SessionLog';
 import type { ChatMessage } from '../ChatMessage';
-import { CallToolModel } from '../tools/CallToolModel';
+import { CallToolModel } from '../calls/CallToolModel';
 
 // A part with one call: look the card up on the tool base the row's kit
 // names, then render it with the class it names. Markup only.

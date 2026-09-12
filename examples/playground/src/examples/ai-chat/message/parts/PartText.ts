@@ -1,9 +1,9 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { Reactive } from '../../../ivue';
-import { Static } from '../../../Static';
-import { Highlighter } from '../Highlighter';
-import { Markdown } from '../Markdown';
-import type { SessionLog } from '../SessionLog';
+import { Reactive } from '../../../../ivue';
+import { Static } from '../../../../Static';
+import { Highlighter } from '../../Highlighter';
+import { Markdown } from '../../Markdown';
+import type { SessionLog } from '../../SessionLog';
 import type { Part } from './Part';
 
 // Prose: the markdown subset rendered to HTML, with every fenced block

@@ -91,20 +91,19 @@ part is done.
   ]"
 />
 
-## The parts and the tools
+## The parts and the calls
 
 <LazyCodeGroup
   :files="[
     { path: 'examples/playground/src/examples/ai-chat/message/ChatMessage.ts', label: 'message/ChatMessage.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/parts/Parts.ts', label: 'parts/Parts.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/parts/PartToolBatch.ts', label: 'PartToolBatch.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/tools/Tools.ts', label: 'tools/Tools.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/tools/CallToolModel.ts', label: 'CallToolModel.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/tools/CallBash.ts', label: 'CallBash.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/tools/CallEdit.ts', label: 'CallEdit.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/tools/CallRead.ts', label: 'CallRead.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/tools/CallAgent.ts', label: 'CallAgent.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/tools/CodeBlock.ts', label: 'CodeBlock.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/parts/PartToolCall.ts', label: 'parts/PartToolCall.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/parts/PartToolBatch.ts', label: 'parts/PartToolBatch.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/parts/calls/CallToolModel.ts', label: 'calls/CallToolModel.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/parts/calls/CallBash.ts', label: 'CallBash.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/parts/calls/CallEdit.ts', label: 'CallEdit.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/parts/calls/CallRead.ts', label: 'CallRead.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/parts/calls/CallAgent.ts', label: 'CallAgent.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/parts/calls/CodeBlock.ts', label: 'CodeBlock.ts' },
     { path: 'examples/playground/src/examples/ai-chat/Highlighter.ts', label: 'Highlighter.ts' },
     { path: 'examples/playground/src/examples/ai-chat/Markdown.ts', label: 'Markdown.ts' },
     { path: 'examples/playground/src/examples/ai-chat/Scrub.ts', label: 'Scrub.ts' }
