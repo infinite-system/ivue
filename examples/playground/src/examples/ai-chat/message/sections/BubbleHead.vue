@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ChatMessage } from './ChatMessage';
+import type { ChatMessage } from '../ChatMessage';
 
 // A swapped head for the bubble tree: the name and the time on one quiet line.
 defineProps<ChatMessage.SectionProps>();

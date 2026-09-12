@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ChatMessage } from './ChatMessage';
+import type { ChatMessage } from '../ChatMessage';
 
 // The row's head: who, which model, when. Markup only, over the row model.
 defineProps<ChatMessage.SectionProps>();

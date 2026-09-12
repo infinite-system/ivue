@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ChatMessage } from './ChatMessage';
+import type { ChatMessage } from '../ChatMessage';
 
 // The reply's receipt: tokens and wall time. Markup only.
 defineProps<ChatMessage.SectionProps>();

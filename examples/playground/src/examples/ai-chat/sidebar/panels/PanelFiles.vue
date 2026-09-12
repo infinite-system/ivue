@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { FilesPanel } from './FilesPanel';
+import { PanelFiles } from './PanelFiles';
 
-const props = defineProps<FilesPanel.Props>();
+const props = defineProps<PanelFiles.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof FilesPanel.Class | undefined) ?? FilesPanel.Class
+  (props.kit?.namespace.Class as typeof PanelFiles.Class | undefined) ?? PanelFiles.Class
 )(props);
 const {
   // state refs

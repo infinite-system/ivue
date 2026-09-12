@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ChatMessage } from './ChatMessage';
+import type { ChatMessage } from '../ChatMessage';
 
 // A swapped head for the minimal tree: the turn number and the time, nothing else.
 defineProps<ChatMessage.SectionProps>();

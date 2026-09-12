@@ -6,10 +6,10 @@ import { Kit } from '../../../kit/Kit';
 import type { Chat } from '../Chat';
 import { Index } from '../Index';
 import ChatIndexView from '../ChatIndex.vue';
-import { FilesPanel } from './FilesPanel';
-import FilesPanelView from './FilesPanel.vue';
-import { SettingsPanel } from './SettingsPanel';
-import SettingsPanelView from './SettingsPanel.vue';
+import { PanelFiles } from './panels/PanelFiles';
+import PanelFilesView from './panels/PanelFiles.vue';
+import { PanelSettings } from './panels/PanelSettings';
+import PanelSettingsView from './panels/PanelSettings.vue';
 
 // The chat's side: a rail of tabs that is always there, and a panel that
 // opens beside it for the tab the reader picked — the index, the files the
@@ -19,8 +19,8 @@ class $Sidebar {
   static get $kit() {
     return {
       Index: { view: ChatIndexView, namespace: Index },
-      Files: { view: FilesPanelView, namespace: FilesPanel },
-      Settings: { view: SettingsPanelView, namespace: SettingsPanel }
+      Files: { view: PanelFilesView, namespace: PanelFiles },
+      Settings: { view: PanelSettingsView, namespace: PanelSettings }
     } satisfies Kit.Of<Chat.SidebarTab>;
   }
 

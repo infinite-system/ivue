@@ -1,44 +1,44 @@
-import { Reactive } from '../../../ivue';
-import { Static } from '../../../Static';
-import { Kit } from '../../../kit/Kit';
-import { VirtualScroller } from '../../virtual-scroller/VirtualScroller';
-import VirtualScrollerView from '../../virtual-scroller/VirtualScroller.vue';
-import type { Chat } from '../Chat';
-import { ChatSettings } from '../ChatSettings';
-import { TreeCatalog } from '../variants/TreeCatalog';
+import { Reactive } from '../../../../ivue';
+import { Static } from '../../../../Static';
+import { Kit } from '../../../../kit/Kit';
+import { VirtualScroller } from '../../../virtual-scroller/VirtualScroller';
+import VirtualScrollerView from '../../../virtual-scroller/VirtualScroller.vue';
+import type { Chat } from '../../Chat';
+import { ChatSettings } from '../../ChatSettings';
+import { TreeCatalog } from '../../variants/TreeCatalog';
 
 // The settings panel: the theme, the density and the tree. Every choice
 // writes the page's settings store; the configuration layer reads the
 // theme and the density on the next render, and the shell derives a new
 // root for the tree. The panel shows the override each tree is, as data.
 // Its sections are rows of its own scroller, like every list in the side.
-class $SettingsPanel {
+class $PanelSettings {
   /** the one role the panel composes: its own scroller over the sections */
   static get $kit() {
     return {
       Scroller: { view: VirtualScrollerView, namespace: VirtualScroller }
-    } satisfies Kit.Of<SettingsPanel.Role>;
+    } satisfies Kit.Of<PanelSettings.Role>;
   }
 
   /** the sections, in order — each a row of the scroller */
-  static readonly SECTIONS: SettingsPanel.Section[] = [
+  static readonly SECTIONS: PanelSettings.Section[] = [
     { id: 'theme', body: '', position: '1', label: 'Theme' },
     { id: 'density', body: '', position: '2', label: 'Density' },
     { id: 'tree', body: '', position: '3', label: 'Tree' }
   ];
 
-  constructor(public props: SettingsPanel.Props) {}
+  constructor(public props: PanelSettings.Props) {}
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
-    return this.constructor as typeof $SettingsPanel;
+    return this.constructor as typeof $PanelSettings;
   }
 
   get kit() {
     return this.self.$kit;
   }
 
-  get sections(): SettingsPanel.Section[] {
+  get sections(): PanelSettings.Section[] {
     return this.self.SECTIONS;
   }
 
@@ -71,11 +71,11 @@ class $SettingsPanel {
     return this.tree.patch;
   }
 
-  isSection(section: SettingsPanel.Section, id: SettingsPanel.SectionId): boolean {
+  isSection(section: PanelSettings.Section, id: PanelSettings.SectionId): boolean {
     return section.id === id;
   }
 
-  rowText(section: SettingsPanel.Section): string {
+  rowText(section: PanelSettings.Section): string {
     return section.label;
   }
 
@@ -104,8 +104,8 @@ class $SettingsPanel {
   }
 }
 
-export namespace SettingsPanel {
-  export const $Class = Static($SettingsPanel);
+export namespace PanelSettings {
+  export const $Class = Static($PanelSettings);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 

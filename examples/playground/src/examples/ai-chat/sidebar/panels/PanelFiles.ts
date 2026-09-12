@@ -1,12 +1,12 @@
 import { computed, ref, shallowRef } from 'vue';
-import { Reactive } from '../../../ivue';
-import { Static } from '../../../Static';
-import { Kit } from '../../../kit/Kit';
-import { VirtualScroller } from '../../virtual-scroller/VirtualScroller';
-import VirtualScrollerView from '../../virtual-scroller/VirtualScroller.vue';
-import type { Chat } from '../Chat';
-import { Icons } from '../Icons';
-import type { SessionLog } from '../SessionLog';
+import { Reactive } from '../../../../ivue';
+import { Static } from '../../../../Static';
+import { Kit } from '../../../../kit/Kit';
+import { VirtualScroller } from '../../../virtual-scroller/VirtualScroller';
+import VirtualScrollerView from '../../../virtual-scroller/VirtualScroller.vue';
+import type { Chat } from '../../Chat';
+import { Icons } from '../../Icons';
+import type { SessionLog } from '../../SessionLog';
 
 // The files this session touched, read off the loaded messages: every
 // Read, Edit and Write call names a path, and this panel counts them per
@@ -15,21 +15,21 @@ import type { SessionLog } from '../SessionLog';
 // thread it has seen. The list is a virtual scroller: a file opens into
 // its records, each a diff of what the call did, and a record jumps the
 // thread to its message. The index button opens the index on the file.
-class $FilesPanel {
+class $PanelFiles {
   /** the one role the panel composes: its own scroller over files and their open records */
   static get $kit() {
     return {
       Scroller: { view: VirtualScrollerView, namespace: VirtualScroller }
-    } satisfies Kit.Of<FilesPanel.Role>;
+    } satisfies Kit.Of<PanelFiles.Role>;
   }
 
-  static readonly FILE_TOOLS: Record<string, keyof FilesPanel.Counts> = {
+  static readonly FILE_TOOLS: Record<string, keyof PanelFiles.Counts> = {
     Read: 'reads',
     Edit: 'edits',
     NotebookEdit: 'edits',
     Write: 'writes'
   };
-  static readonly KIND_LABELS: Record<FilesPanel.Kind, string> = {
+  static readonly KIND_LABELS: Record<PanelFiles.Kind, string> = {
     all: 'All',
     reads: 'Read',
     edits: 'Edited',
@@ -38,11 +38,11 @@ class $FilesPanel {
   /** a record's diff shows this many lines before it folds */
   static readonly DIFF_CAP = 24;
 
-  constructor(public props: FilesPanel.Props) {}
+  constructor(public props: PanelFiles.Props) {}
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
-    return this.constructor as typeof $FilesPanel;
+    return this.constructor as typeof $PanelFiles;
   }
 
   get kit() {
@@ -65,8 +65,8 @@ class $FilesPanel {
     return Icons.Class.PATHS.chevron;
   }
 
-  get kindOptions(): { value: FilesPanel.Kind; label: string }[] {
-    return (Object.keys(this.self.KIND_LABELS) as FilesPanel.Kind[]).map((value) => ({
+  get kindOptions(): { value: PanelFiles.Kind; label: string }[] {
+    return (Object.keys(this.self.KIND_LABELS) as PanelFiles.Kind[]).map((value) => ({
       value,
       label: this.self.KIND_LABELS[value]
     }));
@@ -92,7 +92,7 @@ class $FilesPanel {
 
   /** the touch a file must have to be listed — all, or one kind */
   get kind() {
-    return ref<FilesPanel.Kind>('all');
+    return ref<PanelFiles.Kind>('all');
   }
 
   // TEMPLATE-REF TARGET — the search box
@@ -102,7 +102,7 @@ class $FilesPanel {
 
   // TEMPLATE-REF TARGET — the panel's own scroller
   get scroller() {
-    return ref<VirtualScroller.Exposed<FilesPanel.Row> | null>(null);
+    return ref<VirtualScroller.Exposed<PanelFiles.Row> | null>(null);
   }
 
   // computed: stable-handle — the scroller's modelValue must be ONE list per
@@ -112,9 +112,9 @@ class $FilesPanel {
   }
 
   /** every file named by a loaded call, most touched first */
-  get allFiles(): FilesPanel.File[] {
+  get allFiles(): PanelFiles.File[] {
     void this.chat.revision.value;
-    const files = new Map<string, FilesPanel.File>();
+    const files = new Map<string, PanelFiles.File>();
     for (const row of this.chat.rows.value) {
       if (!row.message) continue;
       this.collect(row.message, files);
@@ -125,7 +125,7 @@ class $FilesPanel {
   }
 
   /** the files the search and the kind leave: every word of the query somewhere in the path, and a touch of the kind */
-  get files(): FilesPanel.File[] {
+  get files(): PanelFiles.File[] {
     const words = this.query.value.toLowerCase().split(/\s+/).filter(Boolean);
     const kind = this.kind.value;
     if (!words.length && kind === 'all') return this.allFiles;
@@ -161,40 +161,40 @@ class $FilesPanel {
     return this.isFiltered && this.count === 0;
   }
 
-  isKind(value: FilesPanel.Kind): boolean {
+  isKind(value: PanelFiles.Kind): boolean {
     return this.kind.value === value;
   }
 
-  setKind(value: FilesPanel.Kind) {
+  setKind(value: PanelFiles.Kind) {
     this.kind.value = value;
   }
 
-  isFile(row: FilesPanel.Row): boolean {
+  isFile(row: PanelFiles.Row): boolean {
     return row.kind === 'file';
   }
 
-  isExpanded(file: FilesPanel.File): boolean {
+  isExpanded(file: PanelFiles.File): boolean {
     return this.expanded.value.has(file.path);
   }
 
-  fileClass(row: FilesPanel.Row): Record<string, boolean> {
+  fileClass(row: PanelFiles.Row): Record<string, boolean> {
     return { 'ac-open': this.isExpanded(row.file) };
   }
 
-  recordLabel(record: FilesPanel.Record): string {
+  recordLabel(record: PanelFiles.Record): string {
     return record.tool;
   }
 
-  recordClass(record: FilesPanel.Record): Record<string, boolean> {
+  recordClass(record: PanelFiles.Record): Record<string, boolean> {
     return { [`ac-rec-${record.kind}`]: true, 'ac-open': this.isRecordOpen(record) };
   }
 
-  isRecordOpen(record: FilesPanel.Record): boolean {
+  isRecordOpen(record: PanelFiles.Record): boolean {
     return this.openRecords.value.has(record.id);
   }
 
   /** the record folded: how many lines it added and removed, or what it read */
-  diffSummary(record: FilesPanel.Record): string {
+  diffSummary(record: PanelFiles.Record): string {
     if (record.kind === 'reads') return this.diffOf(record)[0].text;
     const input = record.call.input;
     const added =
@@ -209,19 +209,19 @@ class $FilesPanel {
     return pieces.join(' ') || 'no change';
   }
 
-  recordIndexLabel(record: FilesPanel.Record): string {
+  recordIndexLabel(record: PanelFiles.Record): string {
     return `#${(record.messageIndex + 1).toLocaleString('en-US')}`;
   }
 
-  recordTimeLabel(record: FilesPanel.Record): string {
+  recordTimeLabel(record: PanelFiles.Record): string {
     const date = new Date(record.at);
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   }
 
   /** what the call did to the file, as diff lines: an edit's old and new, a write's content, a read's range */
-  diffOf(record: FilesPanel.Record): FilesPanel.DiffLine[] {
+  diffOf(record: PanelFiles.Record): PanelFiles.DiffLine[] {
     const input = record.call.input;
-    const lines: FilesPanel.DiffLine[] = [];
+    const lines: PanelFiles.DiffLine[] = [];
     if (record.kind === 'reads') {
       const offset = input.offset;
       const limit = input.limit;
@@ -248,7 +248,7 @@ class $FilesPanel {
     ];
   }
 
-  lineClass(line: FilesPanel.DiffLine): Record<string, boolean> {
+  lineClass(line: PanelFiles.DiffLine): Record<string, boolean> {
     return {
       'ac-dl-add': line.sign === '+',
       'ac-dl-del': line.sign === '-',
@@ -257,15 +257,15 @@ class $FilesPanel {
   }
 
   /** the plain text a row projects, for the scroller's copy */
-  rowText(row: FilesPanel.Row): string {
+  rowText(row: PanelFiles.Row): string {
     if (row.kind === 'file') return row.file.path;
-    const record = row.record as FilesPanel.Record;
+    const record = row.record as PanelFiles.Record;
     return `${record.tool} ${this.recordIndexLabel(record)}\n${this.diffOf(record)
       .map((line) => `${line.sign}${line.text}`)
       .join('\n')}`;
   }
 
-  touchesLabel(file: FilesPanel.File): string {
+  touchesLabel(file: PanelFiles.File): string {
     const pieces: string[] = [];
     if (file.reads) pieces.push(`${file.reads} read${file.reads === 1 ? '' : 's'}`);
     if (file.edits) pieces.push(`${file.edits} edit${file.edits === 1 ? '' : 's'}`);
@@ -274,12 +274,12 @@ class $FilesPanel {
   }
 
   /** open the index on the messages that touched this file */
-  open(file: FilesPanel.File) {
+  open(file: PanelFiles.File) {
     this.chat.search(file.name);
   }
 
   /** a record unfolds its diff, or folds it back to the count */
-  toggleRecord(record: FilesPanel.Record) {
+  toggleRecord(record: PanelFiles.Record) {
     const next = new Set(this.openRecords.value);
     if (next.has(record.id)) next.delete(record.id);
     else next.add(record.id);
@@ -292,7 +292,7 @@ class $FilesPanel {
   }
 
   /** a file opens into its records, or folds them away */
-  toggle(file: FilesPanel.File) {
+  toggle(file: PanelFiles.File) {
     const next = new Set(this.expanded.value);
     if (next.has(file.path)) next.delete(file.path);
     else next.add(file.path);
@@ -300,13 +300,13 @@ class $FilesPanel {
   }
 
   /** a record jumps the thread to the message that made it */
-  jump(record: FilesPanel.Record) {
+  jump(record: PanelFiles.Record) {
     this.chat.jumpTo(record.messageIndex);
   }
 
   /** files in order, each followed by its records when open */
-  protected flatten(): FilesPanel.Row[] {
-    const rows: FilesPanel.Row[] = [];
+  protected flatten(): PanelFiles.Row[] {
+    const rows: PanelFiles.Row[] = [];
     for (const file of this.files) {
       rows.push({
         id: `f:${file.path}`,
@@ -335,7 +335,7 @@ class $FilesPanel {
     return value ? value.split('\n').length : 0;
   }
 
-  protected collect(message: SessionLog.Message, files: Map<string, FilesPanel.File>) {
+  protected collect(message: SessionLog.Message, files: Map<string, PanelFiles.File>) {
     for (const part of message.parts) {
       const calls =
         part.kind === 'tool_call' ? [part.call] : part.kind === 'tool_batch' ? part.calls : [];
@@ -372,8 +372,8 @@ class $FilesPanel {
   }
 }
 
-export namespace FilesPanel {
-  export const $Class = Static($FilesPanel);
+export namespace PanelFiles {
+  export const $Class = Static($PanelFiles);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 

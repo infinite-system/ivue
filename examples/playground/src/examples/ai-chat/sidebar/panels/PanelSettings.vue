@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { SettingsPanel } from './SettingsPanel';
+import { PanelSettings } from './PanelSettings';
 
-const props = defineProps<SettingsPanel.Props>();
+const props = defineProps<PanelSettings.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof SettingsPanel.Class | undefined) ?? SettingsPanel.Class
+  (props.kit?.namespace.Class as typeof PanelSettings.Class | undefined) ?? PanelSettings.Class
 )(props);
 // the sections are a static table: read once for the scroller's list
 const sections = model.sections;
