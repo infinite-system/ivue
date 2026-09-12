@@ -1,22 +1,21 @@
 <script setup lang="ts">
-import { TaskCall } from './TaskCall';
+import { CallSkill } from './CallSkill';
 import type { ToolCallModel } from './ToolCallModel';
 
 const props = defineProps<ToolCallModel.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof TaskCall.Class | undefined) ?? TaskCall.Class
+  (props.kit?.namespace.Class as typeof CallSkill.Class | undefined) ?? CallSkill.Class
 )(props);
 </script>
 
 <template>
-  <div class="ac-tool ac-tool-task" :class="model.cardClass">
+  <div class="ac-tool ac-tool-skill" :class="model.cardClass">
     <component :is="model.kit.Head.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <p class="ac-tool-caption">
-        <span class="ac-tag">{{ model.verb }}</span>
-        <span class="ac-path">{{ model.subject }}</span>
-        <span v-if="model.status" class="ac-tag">{{ model.status }}</span>
+        <span class="ac-tag">/{{ model.skill }}</span>
+        <span class="ac-tag" :class="model.statusClass">{{ model.statusLabel }}</span>
       </p>
       <section v-for="section in model.sections" :key="section.title" class="ac-tool-section">
         <h5>{{ section.title }}</h5>

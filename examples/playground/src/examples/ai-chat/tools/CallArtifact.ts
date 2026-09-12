@@ -3,7 +3,7 @@ import { ToolCallModel } from './ToolCallModel';
 
 // An artifact action: what was published or read, and the link that
 // came back.
-class $ArtifactCall extends ToolCallModel.$Class {
+class $CallArtifact extends ToolCallModel.$Class {
   get action(): string {
     return String(this.input.action ?? 'publish');
   }
@@ -36,8 +36,8 @@ class $ArtifactCall extends ToolCallModel.$Class {
   }
 }
 
-export namespace ArtifactCall {
-  export const $Class = $ArtifactCall;
+export namespace CallArtifact {
+  export const $Class = $CallArtifact;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

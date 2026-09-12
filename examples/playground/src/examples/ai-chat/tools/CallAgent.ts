@@ -4,7 +4,7 @@ import { ToolCallModel } from './ToolCallModel';
 
 // A subagent: its description and prompt, its report, and the thread it
 // ran folded under it, rendered by the same parts as the main thread.
-class $AgentCall extends ToolCallModel.$Class {
+class $CallAgent extends ToolCallModel.$Class {
   get description(): string {
     return String(this.input.description ?? '');
   }
@@ -61,8 +61,8 @@ class $AgentCall extends ToolCallModel.$Class {
   }
 }
 
-export namespace AgentCall {
-  export const $Class = $AgentCall;
+export namespace CallAgent {
+  export const $Class = $CallAgent;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

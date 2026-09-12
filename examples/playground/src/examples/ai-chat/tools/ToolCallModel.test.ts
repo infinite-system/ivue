@@ -12,12 +12,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { Chat } from '../Chat';
 import type { SessionLog } from '../SessionLog';
 import { ToolCallModel } from './ToolCallModel';
-import { BashCall } from './BashCall';
-import { EditCall } from './EditCall';
-import { ReadCall } from './ReadCall';
-import { WriteCall } from './WriteCall';
-import { AgentCall } from './AgentCall';
-import { McpCall } from './McpCall';
+import { CallBash } from './CallBash';
+import { CallEdit } from './CallEdit';
+import { CallRead } from './CallRead';
+import { CallWrite } from './CallWrite';
+import { CallAgent } from './CallAgent';
+import { CallMcp } from './CallMcp';
 import { hosted } from '../../virtual-scroller/hosted';
 
 function makeCall(
@@ -100,12 +100,12 @@ describe('tool cards', () => {
         structured: { stdout: '\u001b[32mok\u001b[0m 3 passed', stderr: 'warn', interrupted: false }
       }
     );
-    const model = new BashCall.Class({ call, chat, message: null });
+    const model = new CallBash.Class({ call, chat, message: null });
     expect(model.command).toBe('npm test\necho done');
     expect(model.commandText).toBe('npm test\necho done'); // written across lines: shown as written
     // a one-line chain breaks at each step; separators inside quotes stay
     expect(
-      BashCall.$Class.breakLines(
+      CallBash.$Class.breakLines(
         'cd ~/dev; grep \'"a; b"\' x.json | head -3 && echo "ok || no" || exit 1'
       )
     ).toBe('cd ~/dev;\ngrep \'"a; b"\' x.json\n  | head -3\n  && echo "ok || no"\n  || exit 1');
@@ -114,7 +114,7 @@ describe('tool cards', () => {
     expect(model.ranInBackground).toBe(true);
     expect(model.exitLabel).toBe('exit 0');
     expect(model.sections.map((section) => section.title)).toEqual(['command', 'stdout', 'stderr']);
-    const silent = new BashCall.Class({
+    const silent = new CallBash.Class({
       call: makeCall(
         'Bash',
         { command: 'true' },
@@ -125,7 +125,7 @@ describe('tool cards', () => {
     });
     expect(silent.hasNoOutput).toBe(true);
     expect(silent.exitLabel).toBe('interrupted');
-    const failed = new BashCall.Class({
+    const failed = new CallBash.Class({
       call: makeCall('Bash', { command: 'false' }, { text: 'boom', isError: true }),
       chat,
       message: null
@@ -140,7 +140,7 @@ describe('tool cards', () => {
     const hunks = [
       { oldStart: 1, oldLines: 2, newStart: 1, newLines: 2, lines: [' a', '-b', '+c'] }
     ];
-    const model = new EditCall.Class({
+    const model = new CallEdit.Class({
       call: makeCall(
         'Edit',
         { file_path: '~/dev/app.ts', old_string: 'b', new_string: 'c', replace_all: true },
@@ -154,7 +154,7 @@ describe('tool cards', () => {
     expect(model.diff).toBe('@@ -1,2 +1,2 @@\n a\n-b\n+c');
     expect(model.changeLabel).toBe('+1 −1');
     expect(model.replacesAll).toBe(true);
-    const plain = new EditCall.Class({
+    const plain = new CallEdit.Class({
       call: makeCall('Edit', { file_path: 'x.py', old_string: 'one\ntwo', new_string: 'three' }),
       chat,
       message: null
@@ -166,7 +166,7 @@ describe('tool cards', () => {
 
   it('a read: numbers come off the listing and the counter starts where the read started', () => {
     const { instance: chat, unmount } = chatHost();
-    const model = new ReadCall.Class({
+    const model = new CallRead.Class({
       call: makeCall(
         'Read',
         { file_path: 'lib/Reactive.ts', offset: 400, limit: 2 },
@@ -183,7 +183,7 @@ describe('tool cards', () => {
     expect(model.rangeLabel).toBe('from line 400, 2 lines');
     expect(model.lineCountLabel).toBe('2 of 900 lines');
     expect(model.sections[0]).toMatchObject({ lang: 'typescript', startLine: 400 });
-    const image = new ReadCall.Class({
+    const image = new CallRead.Class({
       call: makeCall('Read', { file_path: 'shot.png' }, { images: ['data:image/png;base64,AAAA'] }),
       chat,
       message: null
@@ -196,7 +196,7 @@ describe('tool cards', () => {
 
   it('a write is the file with a line count; an agent folds its thread; an MCP call splits its name', () => {
     const { instance: chat, unmount } = chatHost();
-    const write = new WriteCall.Class({
+    const write = new CallWrite.Class({
       call: makeCall(
         'Write',
         { file_path: 'a.vue', content: '<template>\n</template>' },
@@ -218,7 +218,7 @@ describe('tool cards', () => {
         sidechain: true
       }
     ];
-    const agent = new AgentCall.Class({
+    const agent = new CallAgent.Class({
       call: makeCall(
         'Agent',
         { description: 'survey', prompt: 'look', subagent_type: 'Explore' },
@@ -234,7 +234,7 @@ describe('tool cards', () => {
     expect(agent.isThreadOpen).toBe(true);
     expect(agent.sections.map((section) => section.title)).toEqual(['prompt', 'report']);
     expect(agent.modelLabel).toBe('sonnet');
-    const mcp = new McpCall.Class({
+    const mcp = new CallMcp.Class({
       call: makeCall(
         'mcp__playwright__browser_run_code_unsafe',
         { code: 'await page.goto("x")' },

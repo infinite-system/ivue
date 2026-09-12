@@ -4,7 +4,7 @@ import { ToolCallModel } from './ToolCallModel';
 // An edit: a unified diff of old against new with the file path as its
 // header. The structured patch the tool recorded is the source when it
 // exists; the call's own old and new strings otherwise.
-class $EditCall extends ToolCallModel.$Class {
+class $CallEdit extends ToolCallModel.$Class {
   get filePath(): string {
     return this.pathLabel(this.input.file_path ?? this.input.notebook_path);
   }
@@ -17,10 +17,10 @@ class $EditCall extends ToolCallModel.$Class {
     return Boolean(this.input.replace_all);
   }
 
-  get hunks(): EditCall.Hunk[] {
+  get hunks(): CallEdit.Hunk[] {
     const patch = this.structured.structuredPatch;
     return Array.isArray(patch)
-      ? (patch as EditCall.Hunk[]).filter((hunk) => Array.isArray(hunk.lines))
+      ? (patch as CallEdit.Hunk[]).filter((hunk) => Array.isArray(hunk.lines))
       : [];
   }
 
@@ -57,8 +57,8 @@ class $EditCall extends ToolCallModel.$Class {
   }
 }
 
-export namespace EditCall {
-  export const $Class = $EditCall;
+export namespace CallEdit {
+  export const $Class = $CallEdit;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 

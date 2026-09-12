@@ -6,12 +6,12 @@ import { ToolCallModel } from './ToolCallModel';
 // starting at the line the tool was asked for. The tool's listing is
 // `number<tab>line`; the numbers come off for colour and go back on as
 // a counter, so a listing that began at line 400 says 400.
-class $ReadCall extends ToolCallModel.$Class {
+class $CallRead extends ToolCallModel.$Class {
   static readonly NUMBERED = /^\s*(\d+)\t/;
 
   /** The one cast per class: instance code reads its own statics here. */
   protected override get self() {
-    return this.constructor as typeof $ReadCall;
+    return this.constructor as typeof $CallRead;
   }
 
   get filePath(): string {
@@ -78,8 +78,8 @@ class $ReadCall extends ToolCallModel.$Class {
   }
 }
 
-export namespace ReadCall {
-  export const $Class = Static($ReadCall);
+export namespace CallRead {
+  export const $Class = Static($CallRead);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

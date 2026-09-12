@@ -3,7 +3,7 @@ import { ToolCallModel } from './ToolCallModel';
 
 // A fetch or a search: the URL or the query, the status and bytes the
 // tool recorded, and what came back.
-class $WebFetchCall extends ToolCallModel.$Class {
+class $CallWebFetch extends ToolCallModel.$Class {
   get url(): string {
     return String(this.input.url ?? '');
   }
@@ -44,8 +44,8 @@ class $WebFetchCall extends ToolCallModel.$Class {
   }
 }
 
-export namespace WebFetchCall {
-  export const $Class = $WebFetchCall;
+export namespace CallWebFetch {
+  export const $Class = $CallWebFetch;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

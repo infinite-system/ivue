@@ -3,7 +3,7 @@ import { ToolCallModel } from './ToolCallModel';
 
 // A write: the whole file as written, highlighted by its extension,
 // with line numbers from one.
-class $WriteCall extends ToolCallModel.$Class {
+class $CallWrite extends ToolCallModel.$Class {
   get filePath(): string {
     return this.pathLabel(this.input.file_path);
   }
@@ -36,8 +36,8 @@ class $WriteCall extends ToolCallModel.$Class {
   }
 }
 
-export namespace WriteCall {
-  export const $Class = $WriteCall;
+export namespace CallWrite {
+  export const $Class = $CallWrite;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

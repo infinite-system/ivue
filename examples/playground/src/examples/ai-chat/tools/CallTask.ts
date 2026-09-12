@@ -2,7 +2,7 @@ import { Reactive } from '../../../ivue';
 import { ToolCallModel } from './ToolCallModel';
 
 // The task tools: a subject, a status, and the note that went with it.
-class $TaskCall extends ToolCallModel.$Class {
+class $CallTask extends ToolCallModel.$Class {
   get verb(): string {
     return this.name.replace(/^Task/, '').toLowerCase() || 'task';
   }
@@ -35,8 +35,8 @@ class $TaskCall extends ToolCallModel.$Class {
   }
 }
 
-export namespace TaskCall {
-  export const $Class = $TaskCall;
+export namespace CallTask {
+  export const $Class = $CallTask;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

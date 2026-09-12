@@ -274,22 +274,22 @@ One JSON record per line. Record `type`s that carry the conversation:
     the state (pending, running, done, failed) and the elapsed time.
     Expanded, a card with the full input and the full result, rendered
     by the tool's own component:
-    - `BashCall`: the command as a shell block; stdout and stderr as
+    - `CallBash`: the command as a shell block; stdout and stderr as
       terminal blocks with ANSI stripped, the exit state marked.
-    - `EditCall`: a unified diff of old against new with the file path
+    - `CallEdit`: a unified diff of old against new with the file path
       as its header, highlighted by the file's language.
-    - `ReadCall` and `WriteCall`: the file with line numbers,
+    - `CallRead` and `CallWrite`: the file with line numbers,
       highlighted by extension; Read shows the offset and limit it was
       called with.
-    - `AgentCall`: the sidechain folded under it, as a nested thread
+    - `CallAgent`: the sidechain folded under it, as a nested thread
       rendered by the same parts.
-    - `SkillCall`, `WebFetchCall`, `ArtifactCall`, `TaskCall`: a header
+    - `CallSkill`, `CallWebFetch`, `CallArtifact`, `CallTask`: a header
       with the one argument that matters (the skill name, the URL, the
       artifact title, the task subject) and the result as text.
-    - `McpCall`: the server and tool from the name, input and result
+    - `CallMcp`: the server and tool from the name, input and result
       as JSON; a Playwright call shows its screenshot when the result
       carries an image.
-    - `GenericCall`: the input as pretty JSON and the result as text or
+    - `CallGeneric`: the input as pretty JSON and the result as text or
       JSON, whichever it is; the fallback for any name not in the map.
     A "show everything" control drops the card's own length cap; only
     the scrub script's marker remains. Opening a card grows the row and

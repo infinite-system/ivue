@@ -1,21 +1,23 @@
 <script setup lang="ts">
-import { McpCall } from './McpCall';
+import { CallArtifact } from './CallArtifact';
 import type { ToolCallModel } from './ToolCallModel';
 
 const props = defineProps<ToolCallModel.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof McpCall.Class | undefined) ?? McpCall.Class
+  (props.kit?.namespace.Class as typeof CallArtifact.Class | undefined) ?? CallArtifact.Class
 )(props);
 </script>
 
 <template>
-  <div class="ac-tool ac-tool-mcp" :class="model.cardClass">
+  <div class="ac-tool ac-tool-artifact" :class="model.cardClass">
     <component :is="model.kit.Head.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <p class="ac-tool-caption">
-        <span class="ac-tag">{{ model.server }}</span>
-        <span class="ac-path">{{ model.tool }}</span>
+        <span class="ac-tag">{{ model.action }}</span>
+        <span class="ac-path">{{ model.title }}</span>
+        <span v-if="model.versionLabel" class="ac-tag">{{ model.versionLabel }}</span>
+        <a v-if="model.resultUrl" :href="model.resultUrl" target="_blank" rel="noreferrer">open</a>
       </p>
       <section v-for="section in model.sections" :key="section.title" class="ac-tool-section">
         <h5>{{ section.title }}</h5>

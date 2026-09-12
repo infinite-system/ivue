@@ -3,7 +3,7 @@ import { ToolCallModel } from './ToolCallModel';
 
 // A skill invocation: the skill's name and its arguments; the result is
 // the skill's instructions, folded as markdown.
-class $SkillCall extends ToolCallModel.$Class {
+class $CallSkill extends ToolCallModel.$Class {
   get skill(): string {
     return String(this.input.skill ?? this.input.name ?? '');
   }
@@ -38,8 +38,8 @@ class $SkillCall extends ToolCallModel.$Class {
   }
 }
 
-export namespace SkillCall {
-  export const $Class = $SkillCall;
+export namespace CallSkill {
+  export const $Class = $CallSkill;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

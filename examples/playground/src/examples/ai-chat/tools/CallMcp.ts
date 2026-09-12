@@ -3,7 +3,7 @@ import { ToolCallModel } from './ToolCallModel';
 
 // An MCP tool: the server and the tool from the name, input and result
 // as JSON, and a screenshot when the result carried one.
-class $McpCall extends ToolCallModel.$Class {
+class $CallMcp extends ToolCallModel.$Class {
   get server(): string {
     return this.name.split('__')[1] ?? '';
   }
@@ -43,8 +43,8 @@ class $McpCall extends ToolCallModel.$Class {
   }
 }
 
-export namespace McpCall {
-  export const $Class = $McpCall;
+export namespace CallMcp {
+  export const $Class = $CallMcp;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

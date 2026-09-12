@@ -4,7 +4,7 @@ import { ToolCallModel } from './ToolCallModel';
 
 // A shell call: the command as a shell block, stdout and stderr as
 // terminal blocks with ANSI stripped, the exit state marked.
-class $BashCall extends ToolCallModel.$Class {
+class $CallBash extends ToolCallModel.$Class {
   static readonly ANSI = /\x1b\[[0-9;]*[A-Za-z]/g;
 
   /**
@@ -53,7 +53,7 @@ class $BashCall extends ToolCallModel.$Class {
 
   /** The one cast per class: instance code reads its own statics here. */
   protected override get self() {
-    return this.constructor as typeof $BashCall;
+    return this.constructor as typeof $CallBash;
   }
 
   get command(): string {
@@ -120,8 +120,8 @@ class $BashCall extends ToolCallModel.$Class {
   }
 }
 
-export namespace BashCall {
-  export const $Class = Static($BashCall);
+export namespace CallBash {
+  export const $Class = Static($CallBash);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

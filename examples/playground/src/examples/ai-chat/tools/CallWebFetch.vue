@@ -1,22 +1,24 @@
 <script setup lang="ts">
-import { AgentCall } from './AgentCall';
+import { CallWebFetch } from './CallWebFetch';
 import type { ToolCallModel } from './ToolCallModel';
 
 const props = defineProps<ToolCallModel.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof AgentCall.Class | undefined) ?? AgentCall.Class
+  (props.kit?.namespace.Class as typeof CallWebFetch.Class | undefined) ?? CallWebFetch.Class
 )(props);
 </script>
 
 <template>
-  <div class="ac-tool ac-tool-agent" :class="model.cardClass">
+  <div class="ac-tool ac-tool-web" :class="model.cardClass">
     <component :is="model.kit.Head.view" :model="model" />
     <div v-if="model.isExpanded" class="ac-tool-body">
       <p class="ac-tool-caption">
-        <span class="ac-tag">{{ model.agentType }}</span>
-        <span v-if="model.modelLabel" class="ac-tag">{{ model.modelLabel }}</span>
-        {{ model.description }}
+        <a v-if="model.url" class="ac-path" :href="model.url" target="_blank" rel="noreferrer">{{
+          model.url
+        }}</a>
+        <span v-else class="ac-path">{{ model.query }}</span>
+        <span v-if="model.statusLabel" class="ac-tag">{{ model.statusLabel }}</span>
       </p>
       <section v-for="section in model.sections" :key="section.title" class="ac-tool-section">
         <h5>{{ section.title }}</h5>
@@ -30,18 +32,6 @@ const model = new (
           wrap
         />
       </section>
-      <div v-if="model.hasThread" class="ac-tool-thread">
-        <button type="button" class="ac-link" @click="model.toggleThread()">
-          {{ model.threadLabel }}
-        </button>
-        <component
-          :is="model.kit.SubThread.view"
-          :kit="model.kit.SubThread"
-          v-if="model.isThreadOpen"
-          :messages="model.thread"
-          :chat="chat"
-        />
-      </div>
       <component :is="model.kit.Foot.view" :model="model" />
     </div>
   </div>

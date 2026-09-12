@@ -391,7 +391,7 @@ the role.
 // ChatMessage.ts
 import TextPartView from './parts/PartText.vue';
 import ThinkingPartView from './parts/PartThinking.vue';
-import ToolCallPartView from './parts/PartToolCall.vue';
+import PartToolCallView from './parts/PartToolCall.vue';
 import ToolBatchPartView from './parts/PartToolBatch.vue';
 import AttachmentPartView from './parts/PartAttachment.vue';
 import SystemPartView from './parts/PartSystem.vue';
@@ -412,10 +412,10 @@ class $ChatMessage {
       Thinking: { view: ThinkingPartView },
       Attachment: { view: AttachmentPartView },
       System: { view: SystemPartView },
-      ToolCall: { view: ToolCallPartView },
+      ToolCall: { view: PartToolCallView },
       ToolBatch: { namespace: PartToolBatch, view: ToolBatchPartView },
       // the tool cards are reached through the tool base's kit, one hop down
-      Tool: { namespace: ToolCallModel, view: ToolCallPartView },
+      Tool: { namespace: ToolCallModel, view: PartToolCallView },
       // the row's sections — each a markup view over the row model, swappable with a class of its own
       Gutter: { view: MessageGutterView },
       Head: { view: MessageHeadView },
@@ -577,10 +577,10 @@ import ToolHeadView from './ToolHead.vue';
 import ToolFootView from './ToolFoot.vue';
 import { CodeBlock } from './CodeBlock';
 import CodeBlockView from './CodeBlock.vue';
-import { BashCall } from './BashCall';
-import BashCallView from './BashCall.vue';
+import { CallBash } from './CallBash';
+import CallBashView from './CallBash.vue';
 // …one pair per tool, as `Tools.ts` imports today
-import GenericCallView from './GenericCall.vue';
+import CallGenericView from './CallGeneric.vue';
 
 class $ToolCallModel {
   static get $kit() {
@@ -588,20 +588,20 @@ class $ToolCallModel {
       Head: { view: ToolHeadView },
       Foot: { view: ToolFootView },
       CodeBlock: { namespace: CodeBlock, view: CodeBlockView },
-      Generic: { namespace: ToolCallModel, view: GenericCallView },
-      Mcp: { namespace: McpCall, view: McpCallView },
-      Task: { namespace: TaskCall, view: TaskCallView },
+      Generic: { namespace: ToolCallModel, view: CallGenericView },
+      Mcp: { namespace: CallMcp, view: CallMcpView },
+      Task: { namespace: CallTask, view: CallTaskView },
       Tools: {
-        Bash: { namespace: BashCall, view: BashCallView },
-        Edit: { namespace: EditCall, view: EditCallView },
-        NotebookEdit: { namespace: EditCall, view: EditCallView },
-        Read: { namespace: ReadCall, view: ReadCallView },
-        Write: { namespace: WriteCall, view: WriteCallView },
-        Agent: { namespace: AgentCall, view: AgentCallView },
-        Skill: { namespace: SkillCall, view: SkillCallView },
-        WebFetch: { namespace: WebFetchCall, view: WebFetchCallView },
-        WebSearch: { namespace: WebFetchCall, view: WebFetchCallView },
-        Artifact: { namespace: ArtifactCall, view: ArtifactCallView },
+        Bash: { namespace: CallBash, view: CallBashView },
+        Edit: { namespace: CallEdit, view: CallEditView },
+        NotebookEdit: { namespace: CallEdit, view: CallEditView },
+        Read: { namespace: CallRead, view: CallReadView },
+        Write: { namespace: CallWrite, view: CallWriteView },
+        Agent: { namespace: CallAgent, view: CallAgentView },
+        Skill: { namespace: CallSkill, view: CallSkillView },
+        WebFetch: { namespace: CallWebFetch, view: CallWebFetchView },
+        WebSearch: { namespace: CallWebFetch, view: CallWebFetchView },
+        Artifact: { namespace: CallArtifact, view: CallArtifactView },
       } as Record<string, Kit.Entry>,
     });
   }
@@ -679,16 +679,16 @@ element. If the gate objects, the part becomes a two-line class with a
 `card` getter and the template reads `model.card.vue` and
 `model.card.namespace`; the shape is the same.
 
-### `BashCall.vue` — a card renders its leaves through the base's kit
+### `CallBash.vue` — a card renders its leaves through the base's kit
 
 ```vue
 <script setup lang="ts">
-import { BashCall } from './BashCall';
+import { CallBash } from './CallBash';
 import type { ToolCallModel } from './ToolCallModel';
 
-const props = defineProps(BashCall.Class.props);
+const props = defineProps(CallBash.Class.props);
 
-const model = new (props.kit?.namespace.Class ?? BashCall.Class)(props);
+const model = new (props.kit?.namespace.Class ?? CallBash.Class)(props);
 </script>
 
 <template>
@@ -710,8 +710,8 @@ const model = new (props.kit?.namespace.Class ?? BashCall.Class)(props);
 </template>
 ```
 
-`BashCall.ts` does not change: it extends the base and inherits `$kit`
-through the static chain, so `BashCall.$kit === ToolCallModel.$kit`
+`CallBash.ts` does not change: it extends the base and inherits `$kit`
+through the static chain, so `CallBash.$kit === ToolCallModel.$kit`
 until a subclass says otherwise. `ToolHead` and `ToolFoot` are markup
 leaves that take the card's instance as `model`, exactly as today; they
 render through the kit so a consumer can replace them, and take no
@@ -985,7 +985,7 @@ One class, one literal. The nesting is the path from the root to the
 leaf — Message, Tool, Tools.Bash, CodeBlock — and every hop that says
 only `subkit` keeps its model and view. `resolve` derives a
 `ChatMessage` subclass whose kit names a derived `ToolCallModel`
-subclass whose `Tools.Bash` names a derived `BashCall` subclass whose
+subclass whose `Tools.Bash` names a derived `CallBash` subclass whose
 `CodeBlock` is the terminal block; each derived class caches its own
 kit; `TerminalChat.$kit` is built once. Reading the literal tells you
 exactly which subtree differs from `Chat`, and nothing else can differ.
@@ -1031,7 +1031,7 @@ spread of the base and recurses into maps and entries; `derive` makes a
 new subclass and only reads `Base.$kit`. After `TerminalChat.$kit`
 resolves, `Chat.$kit.Message.namespace` is still `ChatMessage`,
 `ChatMessage.$kit.Tool.namespace` is still the base, and
-`BashCall.$kit.CodeBlock.namespace` is still `CodeBlock`. Entries the
+`CallBash.$kit.CodeBlock.namespace` is still `CodeBlock`. Entries the
 override did not touch are shared by reference between the two kits,
 which is why a resolved kit is frozen: sharing is safe only when nothing
 can write. The spec below pins both facts.
@@ -1210,7 +1210,7 @@ There is no context to be inside of.
 it('resolves each kit from its own class, and a subclass swaps one entry', () => {
   expect(ChatMessage.Class.$kit.ToolBatch.namespace).toBe(PartToolBatch);
   expect(ChatMessage.Class.PART_ROLES.tool_batch).toBe('ToolBatch');
-  expect(ToolCallModel.Class.toolFor('Bash').namespace).toBe(BashCall);
+  expect(ToolCallModel.Class.toolFor('Bash').namespace).toBe(CallBash);
   expect(ToolCallModel.Class.toolFor('mcp__x__y')).toBe(ToolCallModel.Class.$kit.Mcp);
   expect(ToolCallModel.Class.toolFor('Nobody')).toBe(ToolCallModel.Class.$kit.Generic);
   expect(FancyChat.Class.$kit.Scroller.namespace).toBe(SnapScroller);
@@ -1224,7 +1224,7 @@ it('an override never reaches another tree, and a kit is its own class\'s', () =
   expect(terminal.Message.namespace.$Class.prototype).toBeInstanceOf(ChatMessage.$Class);
   expect(Chat.Class.$kit.Message.namespace).toBe(ChatMessage);
   expect(ChatMessage.Class.$kit.Tool.namespace).toBe(ToolCallModel);
-  expect(BashCall.Class.$kit.CodeBlock.namespace).toBe(CodeBlock);
+  expect(CallBash.Class.$kit.CodeBlock.namespace).toBe(CodeBlock);
   expect(terminal.Composer).toBe(Chat.Class.$kit.Composer); // untouched entries are shared, and frozen
   expect(Object.isFrozen(terminal.Composer)).toBe(true);
   expect(Object.isFrozen(terminal.Composer.view)).toBe(false); // the freeze stops at the entry's leaves

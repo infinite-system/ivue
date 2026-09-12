@@ -4,27 +4,27 @@ import { Kit } from '../../../kit/Kit';
 import type { SessionLog } from '../SessionLog';
 import type { Part } from './Part';
 import { ToolCallModel } from '../tools/ToolCallModel';
-import GenericCallView from '../tools/GenericCall.vue';
-import { BashCall } from '../tools/BashCall';
-import BashCallView from '../tools/BashCall.vue';
-import { EditCall } from '../tools/EditCall';
-import EditCallView from '../tools/EditCall.vue';
-import { ReadCall } from '../tools/ReadCall';
-import ReadCallView from '../tools/ReadCall.vue';
-import { WriteCall } from '../tools/WriteCall';
-import WriteCallView from '../tools/WriteCall.vue';
-import { AgentCall } from '../tools/AgentCall';
-import AgentCallView from '../tools/AgentCall.vue';
-import { SkillCall } from '../tools/SkillCall';
-import SkillCallView from '../tools/SkillCall.vue';
-import { WebFetchCall } from '../tools/WebFetchCall';
-import WebFetchCallView from '../tools/WebFetchCall.vue';
-import { ArtifactCall } from '../tools/ArtifactCall';
-import ArtifactCallView from '../tools/ArtifactCall.vue';
-import { TaskCall } from '../tools/TaskCall';
-import TaskCallView from '../tools/TaskCall.vue';
-import { McpCall } from '../tools/McpCall';
-import McpCallView from '../tools/McpCall.vue';
+import CallGenericView from '../tools/CallGeneric.vue';
+import { CallBash } from '../tools/CallBash';
+import CallBashView from '../tools/CallBash.vue';
+import { CallEdit } from '../tools/CallEdit';
+import CallEditView from '../tools/CallEdit.vue';
+import { CallRead } from '../tools/CallRead';
+import CallReadView from '../tools/CallRead.vue';
+import { CallWrite } from '../tools/CallWrite';
+import CallWriteView from '../tools/CallWrite.vue';
+import { CallAgent } from '../tools/CallAgent';
+import CallAgentView from '../tools/CallAgent.vue';
+import { CallSkill } from '../tools/CallSkill';
+import CallSkillView from '../tools/CallSkill.vue';
+import { CallWebFetch } from '../tools/CallWebFetch';
+import CallWebFetchView from '../tools/CallWebFetch.vue';
+import { CallArtifact } from '../tools/CallArtifact';
+import CallArtifactView from '../tools/CallArtifact.vue';
+import { CallTask } from '../tools/CallTask';
+import CallTaskView from '../tools/CallTask.vue';
+import { CallMcp } from '../tools/CallMcp';
+import CallMcpView from '../tools/CallMcp.vue';
 
 // One tool call: the part that picks the card. Its kit names a card per
 // tool, two families by prefix, and the generic card for a name nobody
@@ -34,20 +34,20 @@ import McpCallView from '../tools/McpCall.vue';
 class $PartToolCall {
   static get $kit() {
     return {
-      Generic: { namespace: ToolCallModel, view: GenericCallView },
-      Mcp: { namespace: McpCall, view: McpCallView },
-      Task: { namespace: TaskCall, view: TaskCallView },
+      Generic: { namespace: ToolCallModel, view: CallGenericView },
+      Mcp: { namespace: CallMcp, view: CallMcpView },
+      Task: { namespace: CallTask, view: CallTaskView },
       Tools: {
-        Bash: { namespace: BashCall, view: BashCallView },
-        Edit: { namespace: EditCall, view: EditCallView },
-        NotebookEdit: { namespace: EditCall, view: EditCallView },
-        Read: { namespace: ReadCall, view: ReadCallView },
-        Write: { namespace: WriteCall, view: WriteCallView },
-        Agent: { namespace: AgentCall, view: AgentCallView },
-        Skill: { namespace: SkillCall, view: SkillCallView },
-        WebFetch: { namespace: WebFetchCall, view: WebFetchCallView },
-        WebSearch: { namespace: WebFetchCall, view: WebFetchCallView },
-        Artifact: { namespace: ArtifactCall, view: ArtifactCallView }
+        Bash: { namespace: CallBash, view: CallBashView },
+        Edit: { namespace: CallEdit, view: CallEditView },
+        NotebookEdit: { namespace: CallEdit, view: CallEditView },
+        Read: { namespace: CallRead, view: CallReadView },
+        Write: { namespace: CallWrite, view: CallWriteView },
+        Agent: { namespace: CallAgent, view: CallAgentView },
+        Skill: { namespace: CallSkill, view: CallSkillView },
+        WebFetch: { namespace: CallWebFetch, view: CallWebFetchView },
+        WebSearch: { namespace: CallWebFetch, view: CallWebFetchView },
+        Artifact: { namespace: CallArtifact, view: CallArtifactView }
       } as Record<string, Kit.Entry>
     };
   }

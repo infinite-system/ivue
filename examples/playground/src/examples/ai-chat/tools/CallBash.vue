@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { BashCall } from './BashCall';
+import { CallBash } from './CallBash';
 import type { ToolCallModel } from './ToolCallModel';
 
 const props = defineProps<ToolCallModel.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof BashCall.Class | undefined) ?? BashCall.Class
+  (props.kit?.namespace.Class as typeof CallBash.Class | undefined) ?? CallBash.Class
 )(props);
 </script>
 
