@@ -12,12 +12,12 @@ import type { Part } from './Part';
 // waits on colour. A streaming text part re-renders as it grows, and the
 // word that just arrived is wrapped so the page can fade it in: every
 // render is fresh nodes, so each word animates exactly once.
-class $TextPart {
+class $PartText {
   /** private-use marks around the newest word; markdown leaves them alone and the render swaps them for a span */
   static readonly TOKEN_OPEN = '\uE000';
   static readonly TOKEN_CLOSE = '\uE001';
 
-  constructor(public props: Part.Props<SessionLog.TextPart>) {
+  constructor(public props: Part.Props<SessionLog.PartText>) {
     onMounted(() => this.colour());
     onBeforeUnmount(() => this.cancel());
     watch(
@@ -53,7 +53,7 @@ class $TextPart {
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
-    return this.constructor as typeof $TextPart;
+    return this.constructor as typeof $PartText;
   }
 
   get isStreamingTail(): boolean {
@@ -82,8 +82,8 @@ class $TextPart {
   }
 }
 
-export namespace TextPart {
-  export const $Class = Static($TextPart);
+export namespace PartText {
+  export const $Class = Static($PartText);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

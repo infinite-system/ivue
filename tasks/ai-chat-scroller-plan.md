@@ -426,7 +426,7 @@ One JSON record per line. Record `type`s that carry the conversation:
       token rate as advertised in the picker, and the reply is stamped
       with the model.
 - [x] Dropping an image and a file into the composer shows chips; the
-      ✔ Composer.test (drop, paste, pick, remove revokes); ChatApi.test proves upload issues no fetch; AttachmentPart sizes the image from its natural dimensions
+      ✔ Composer.test (drop, paste, pick, remove revokes); ChatApi.test proves upload issues no fetch; PartAttachment sizes the image from its natural dimensions
       sent message renders the image at its natural aspect, and the file
       as a chip; removing a chip before send drops it. No network request
       is made for an attachment.

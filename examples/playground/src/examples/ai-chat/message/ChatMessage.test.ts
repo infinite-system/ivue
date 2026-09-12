@@ -1,9 +1,9 @@
 /*
 === GENERATOR ===
 Goal: Prove the row is a container of roles: its sections render in the kit's `order`, presence is one named method per role, every seam is built by one method that reads the entry and never the role's name, a part travels as the seam's item through the entry's bind, and the tree variants a reader picks are patches over that order — a dropped gutter is `without`, a rule is a tag role inserted `after`, a receipt above the parts is a `move` — never a copied template.
-[Rendering is a kit](./ai-chat.invariants.md#rendering-is-a-kit)
-[The seam is built by one method that never names a role](./ai-chat.invariants.md#the-seam-is-built-by-one-method-that-never-names-a-role)
-[A tree variant is a patch over the row's order](./ai-chat.invariants.md#a-tree-variant-is-a-patch-over-the-rows-order)
+[Rendering is a kit](../ai-chat.invariants.md#rendering-is-a-kit)
+[The seam is built by one method that never names a role](../ai-chat.invariants.md#the-seam-is-built-by-one-method-that-never-names-a-role)
+[A tree variant is a patch over the row's order](../ai-chat.invariants.md#a-tree-variant-is-a-patch-over-the-rows-order)
 // domain-invariant: $ChatMessage — If a section role is asked whether it shows, then the stub and the parts are the two states of one row, the await line shows only while the reply has nothing, the foot only with a receipt, and every other role always
 // domain-invariant: $ChatMessage — If a seam is built for a role, then a section receives `{ model, kit }`, a part receives its entry beside `{ part, chat, message }` from the entry's bind, and a kind nobody mapped renders through Text
 Impossible if true: a row's template names a section, or seamProps branches on a role
@@ -52,7 +52,7 @@ function row(message: SessionLog.Message | null): Chat.Row {
   } as Chat.Row;
 }
 
-const textPart: SessionLog.TextPart = { kind: 'text', text: 'hello' };
+const textPart: SessionLog.PartText = { kind: 'text', text: 'hello' };
 const reply: SessionLog.Message = {
   id: 'm1',
   index: 0,

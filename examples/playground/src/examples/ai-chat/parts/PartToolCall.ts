@@ -31,7 +31,7 @@ import McpCallView from '../tools/McpCall.vue';
 // mapped, so rendering never branches on a name — it looks the entry up.
 // A batch renders each of its calls through this same part, so one
 // override of a card here reaches single calls and batches alike.
-class $ToolCallPart {
+class $PartToolCall {
   static get $kit() {
     return {
       Generic: { namespace: ToolCallModel, view: GenericCallView },
@@ -69,11 +69,11 @@ class $ToolCallPart {
     return name in this.$kit.Tools || name.startsWith('mcp__') || this.TASK_TOOLS.test(name);
   }
 
-  constructor(public props: ToolCallPart.Props) {}
+  constructor(public props: PartToolCall.Props) {}
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
-    return this.constructor as typeof $ToolCallPart;
+    return this.constructor as typeof $PartToolCall;
   }
 
   get kit() {
@@ -90,9 +90,9 @@ class $ToolCallPart {
   }
 }
 
-export namespace ToolCallPart {
-  export const $Class = Static($ToolCallPart);
+export namespace PartToolCall {
+  export const $Class = Static($PartToolCall);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
-  export type Props = Part.Props<SessionLog.ToolCallPart>;
+  export type Props = Part.Props<SessionLog.PartToolCall>;
 }

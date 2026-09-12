@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ToolCallPart } from './ToolCallPart';
+import { PartToolCall } from './PartToolCall';
 
-const props = defineProps<ToolCallPart.Props>();
+const props = defineProps<PartToolCall.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof ToolCallPart.Class | undefined) ?? ToolCallPart.Class
+  (props.kit?.namespace.Class as typeof PartToolCall.Class | undefined) ?? PartToolCall.Class
 )(props);
 </script>
 

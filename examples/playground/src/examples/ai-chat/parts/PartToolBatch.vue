@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { SessionLog } from '../SessionLog';
 import type { Part } from './Part';
-import { ToolBatchPart } from './ToolBatchPart';
+import { PartToolBatch } from './PartToolBatch';
 
-const props = defineProps<Part.Props<SessionLog.ToolBatchPart>>();
+const props = defineProps<Part.Props<SessionLog.PartToolBatch>>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof ToolBatchPart.Class | undefined) ?? ToolBatchPart.Class
+  (props.kit?.namespace.Class as typeof PartToolBatch.Class | undefined) ?? PartToolBatch.Class
 )(props);
 </script>
 

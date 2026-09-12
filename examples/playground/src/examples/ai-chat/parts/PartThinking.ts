@@ -6,10 +6,10 @@ import type { Part } from './Part';
 // Thinking: while it runs, a loader with the live counter; done, one
 // folded line with the duration and the length that expands to the text.
 // The counter is the chat's clock read through a getter — no timer here.
-class $ThinkingPart {
-  constructor(public props: Part.Props<SessionLog.ThinkingPart>) {}
+class $PartThinking {
+  constructor(public props: Part.Props<SessionLog.PartThinking>) {}
 
-  get part(): SessionLog.ThinkingPart {
+  get part(): SessionLog.PartThinking {
     return this.props.part;
   }
 
@@ -56,8 +56,8 @@ class $ThinkingPart {
   }
 }
 
-export namespace ThinkingPart {
-  export const $Class = $ThinkingPart;
+export namespace PartThinking {
+  export const $Class = $PartThinking;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

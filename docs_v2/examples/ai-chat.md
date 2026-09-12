@@ -97,7 +97,7 @@ part is done.
   :files="[
     { path: 'examples/playground/src/examples/ai-chat/message/ChatMessage.ts', label: 'message/ChatMessage.ts' },
     { path: 'examples/playground/src/examples/ai-chat/parts/Parts.ts', label: 'parts/Parts.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/parts/ToolBatchPart.ts', label: 'ToolBatchPart.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/parts/PartToolBatch.ts', label: 'PartToolBatch.ts' },
     { path: 'examples/playground/src/examples/ai-chat/tools/Tools.ts', label: 'tools/Tools.ts' },
     { path: 'examples/playground/src/examples/ai-chat/tools/ToolCallModel.ts', label: 'ToolCallModel.ts' },
     { path: 'examples/playground/src/examples/ai-chat/tools/BashCall.ts', label: 'BashCall.ts' },

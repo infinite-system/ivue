@@ -2,8 +2,8 @@ import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
 import { Icons } from '../Icons';
-import { ToolCallPart } from './ToolCallPart';
-import ToolCallPartView from './ToolCallPart.vue';
+import { PartToolCall } from './PartToolCall';
+import PartToolCallView from './PartToolCall.vue';
 import { Clock } from '../Clock';
 import type { SessionLog } from '../SessionLog';
 import { ToolCallModel } from '../tools/ToolCallModel';
@@ -13,26 +13,26 @@ import type { Part } from './Part';
 // the combined time, a mark if any failed. It opens to its calls, each
 // collapsed and each with its own state, so the batch and a call never
 // reset each other.
-class $ToolBatchPart {
+class $PartToolBatch {
   /** the one role a batch composes: the part that picks a card per call */
   static get $kit() {
     return {
-      Call: { namespace: ToolCallPart, view: ToolCallPartView }
+      Call: { namespace: PartToolCall, view: PartToolCallView }
     } satisfies Kit.Of<'Call'>;
   }
 
-  constructor(public props: Part.Props<SessionLog.ToolBatchPart>) {}
+  constructor(public props: Part.Props<SessionLog.PartToolBatch>) {}
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
-    return this.constructor as typeof $ToolBatchPart;
+    return this.constructor as typeof $PartToolBatch;
   }
 
   get kit() {
     return this.self.$kit;
   }
 
-  get part(): SessionLog.ToolBatchPart {
+  get part(): SessionLog.PartToolBatch {
     return this.props.part;
   }
 
@@ -57,8 +57,8 @@ class $ToolBatchPart {
   }
 
   /** one icon per kind of call, with how many: `❯⁴ ✎²` rather than a row of four dollars */
-  get icons(): ToolBatchPart.IconGroup[] {
-    const groups = new Map<string, ToolBatchPart.IconGroup>();
+  get icons(): PartToolBatch.IconGroup[] {
+    const groups = new Map<string, PartToolBatch.IconGroup>();
     for (const call of this.calls) {
       const icon =
         ToolCallModel.Class.ICONS[call.name] ??
@@ -122,12 +122,12 @@ class $ToolBatchPart {
   }
 
   /** a call as the single-call part reads it, so a batch renders through the same seam */
-  partFor(call: SessionLog.ToolCall): SessionLog.ToolCallPart {
+  partFor(call: SessionLog.ToolCall): SessionLog.PartToolCall {
     return { kind: 'tool_call', call };
   }
 }
 
-export namespace ToolBatchPart {
+export namespace PartToolBatch {
   export interface IconGroup {
     key: string;
     icon: string;
@@ -136,7 +136,7 @@ export namespace ToolBatchPart {
     isMany: boolean;
   }
 
-  export const $Class = Static($ToolBatchPart);
+  export const $Class = Static($PartToolBatch);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

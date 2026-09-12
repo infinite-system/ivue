@@ -284,11 +284,11 @@ class $SessionParser {
       if (!run.length) return;
       const calls = run.flatMap((message) =>
         message.parts
-          .filter((part): part is SessionLog.ToolCallPart => part.kind === 'tool_call')
+          .filter((part): part is SessionLog.PartToolCall => part.kind === 'tool_call')
           .map((part) => part.call)
       );
       const thinking = run.flatMap((message) =>
-        message.parts.filter((part): part is SessionLog.ThinkingPart => part.kind === 'thinking')
+        message.parts.filter((part): part is SessionLog.PartThinking => part.kind === 'thinking')
       );
       if (calls.length >= 2) {
         const first = run[0];

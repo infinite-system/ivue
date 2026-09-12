@@ -9,7 +9,7 @@ props the entry sets. The design
 itself is recorded in `tasks/malleable-architecture.md` under "The kit";
 this file is the build.
 
-Status: converted on branch `ai-chat-kit` (2026-09-10): every seam an entry, `Parts.ts` and `Tools.ts` gone, the row's sections roles, the card map on `ToolCallPart`; the standard's gate learned the seam's construction form. Awaiting review before merge. Later on the branch: sidebar rail (Index / Files / Settings), the configuration layer (`ConfiguredChat` + settings store), tree and theme variants, the scrollbar peek, the model picker, matched SVG icons, streaming words rendered per token. Trigger: the first time a second view of
+Status: converted on branch `ai-chat-kit` (2026-09-10): every seam an entry, `Parts.ts` and `Tools.ts` gone, the row's sections roles, the card map on `PartToolCall`; the standard's gate learned the seam's construction form. Awaiting review before merge. Later on the branch: sidebar rail (Index / Files / Settings), the configuration layer (`ConfiguredChat` + settings store), tree and theme variants, the scrollbar peek, the model picker, matched SVG icons, streaming words rendered per token. Trigger: the first time a second view of
 any chat model is wanted (a different scroller for the chat only, a
 different code block for one page, an embed of the thread elsewhere) —
 or the moment the standard is ready to take the kit rule and needs a
@@ -389,19 +389,19 @@ the role.
 
 ```ts
 // ChatMessage.ts
-import TextPartView from './parts/TextPart.vue';
-import ThinkingPartView from './parts/ThinkingPart.vue';
-import ToolCallPartView from './parts/ToolCallPart.vue';
-import ToolBatchPartView from './parts/ToolBatchPart.vue';
-import AttachmentPartView from './parts/AttachmentPart.vue';
-import SystemPartView from './parts/SystemPart.vue';
+import TextPartView from './parts/PartText.vue';
+import ThinkingPartView from './parts/PartThinking.vue';
+import ToolCallPartView from './parts/PartToolCall.vue';
+import ToolBatchPartView from './parts/PartToolBatch.vue';
+import AttachmentPartView from './parts/PartAttachment.vue';
+import SystemPartView from './parts/PartSystem.vue';
 import MessageGutterView from './sections/MessageGutter.vue';
 import MessageHeadView from './sections/MessageHead.vue';
 import MessageStubView from './sections/MessageStub.vue';
 import MessagePartsView from './sections/MessageParts.vue';
 import MessageAwaitView from './sections/MessageAwait.vue';
 import MessageFootView from './sections/MessageFoot.vue';
-import { ToolBatchPart } from './parts/ToolBatchPart';
+import { PartToolBatch } from './parts/PartToolBatch';
 import { ToolCallModel } from './tools/ToolCallModel';
 
 class $ChatMessage {
@@ -413,7 +413,7 @@ class $ChatMessage {
       Attachment: { view: AttachmentPartView },
       System: { view: SystemPartView },
       ToolCall: { view: ToolCallPartView },
-      ToolBatch: { namespace: ToolBatchPart, view: ToolBatchPartView },
+      ToolBatch: { namespace: PartToolBatch, view: ToolBatchPartView },
       // the tool cards are reached through the tool base's kit, one hop down
       Tool: { namespace: ToolCallModel, view: ToolCallPartView },
       // the row's sections — each a markup view over the row model, swappable with a class of its own
@@ -648,7 +648,7 @@ reading `this.$kit`, so a subclass of the base that overrides the map
 is looked up through its own kit. The base and each tool card import
 each other, which is the cycle the lazy getter exists for.
 
-### `ToolCallPart.vue` — the seam that picks a card
+### `PartToolCall.vue` — the seam that picks a card
 
 ```vue
 <script setup lang="ts">
@@ -658,7 +658,7 @@ import { ToolCallModel } from '../tools/ToolCallModel';
 
 // A part with one call: look the card up on the tool base the row's kit
 // names, then render it with the class it names. Markup only.
-const props = defineProps(ToolCallPart.Class.props); // part, chat, message, and kit
+const props = defineProps(PartToolCall.Class.props); // part, chat, message, and kit
 
 const base = props.kit?.namespace.Class ?? ToolCallModel.Class;
 </script>
@@ -1208,7 +1208,7 @@ There is no context to be inside of.
 
 ```ts
 it('resolves each kit from its own class, and a subclass swaps one entry', () => {
-  expect(ChatMessage.Class.$kit.ToolBatch.namespace).toBe(ToolBatchPart);
+  expect(ChatMessage.Class.$kit.ToolBatch.namespace).toBe(PartToolBatch);
   expect(ChatMessage.Class.PART_ROLES.tool_batch).toBe('ToolBatch');
   expect(ToolCallModel.Class.toolFor('Bash').namespace).toBe(BashCall);
   expect(ToolCallModel.Class.toolFor('mcp__x__y')).toBe(ToolCallModel.Class.$kit.Mcp);

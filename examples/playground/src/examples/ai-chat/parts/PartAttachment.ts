@@ -4,10 +4,10 @@ import type { Part } from './Part';
 
 // An attachment: an image at its natural aspect (the size is known, so a
 // late load never remeasures), or a file chip with name, size and type.
-class $AttachmentPart {
-  constructor(public props: Part.Props<SessionLog.AttachmentPart>) {}
+class $PartAttachment {
+  constructor(public props: Part.Props<SessionLog.PartAttachment>) {}
 
-  get part(): SessionLog.AttachmentPart {
+  get part(): SessionLog.PartAttachment {
     return this.props.part;
   }
 
@@ -32,8 +32,8 @@ class $AttachmentPart {
   }
 }
 
-export namespace AttachmentPart {
-  export const $Class = $AttachmentPart;
+export namespace PartAttachment {
+  export const $Class = $PartAttachment;
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

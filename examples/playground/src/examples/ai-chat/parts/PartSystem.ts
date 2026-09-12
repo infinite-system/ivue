@@ -10,7 +10,7 @@ import type { Part } from './Part';
 // A system record, by subtype: a compaction is a divider with the
 // summary folded under it, a turn duration a quiet timestamp line, a
 // hook summary a small card, a folded subagent thread a note.
-class $SystemPart {
+class $PartSystem {
   /** the one role a system line composes: the thread its children form */
   static get $kit() {
     return {
@@ -25,18 +25,18 @@ class $SystemPart {
     subagent: '⑂'
   };
 
-  constructor(public props: Part.Props<SessionLog.SystemPart>) {}
+  constructor(public props: Part.Props<SessionLog.PartSystem>) {}
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
-    return this.constructor as typeof $SystemPart;
+    return this.constructor as typeof $PartSystem;
   }
 
   get kit() {
     return this.self.$kit;
   }
 
-  get part(): SessionLog.SystemPart {
+  get part(): SessionLog.PartSystem {
     return this.props.part;
   }
 
@@ -90,8 +90,8 @@ class $SystemPart {
   }
 }
 
-export namespace SystemPart {
-  export const $Class = Static($SystemPart);
+export namespace PartSystem {
+  export const $Class = Static($PartSystem);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

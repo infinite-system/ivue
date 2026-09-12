@@ -1,18 +1,18 @@
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
-import { TextPart } from '../parts/TextPart';
-import TextPartView from '../parts/TextPart.vue';
-import { ThinkingPart } from '../parts/ThinkingPart';
-import ThinkingPartView from '../parts/ThinkingPart.vue';
-import { AttachmentPart } from '../parts/AttachmentPart';
-import AttachmentPartView from '../parts/AttachmentPart.vue';
-import { SystemPart } from '../parts/SystemPart';
-import SystemPartView from '../parts/SystemPart.vue';
-import { ToolCallPart } from '../parts/ToolCallPart';
-import ToolCallPartView from '../parts/ToolCallPart.vue';
-import { ToolBatchPart } from '../parts/ToolBatchPart';
-import ToolBatchPartView from '../parts/ToolBatchPart.vue';
+import { PartText } from '../parts/PartText';
+import PartTextView from '../parts/PartText.vue';
+import { PartThinking } from '../parts/PartThinking';
+import PartThinkingView from '../parts/PartThinking.vue';
+import { PartAttachment } from '../parts/PartAttachment';
+import PartAttachmentView from '../parts/PartAttachment.vue';
+import { PartSystem } from '../parts/PartSystem';
+import PartSystemView from '../parts/PartSystem.vue';
+import { PartToolCall } from '../parts/PartToolCall';
+import PartToolCallView from '../parts/PartToolCall.vue';
+import { PartToolBatch } from '../parts/PartToolBatch';
+import PartToolBatchView from '../parts/PartToolBatch.vue';
 import GutterView from './MessageGutter.vue';
 import HeadView from './MessageHead.vue';
 import StubView from './MessageStub.vue';
@@ -52,17 +52,17 @@ class $ChatMessage {
 
   /** the roles a row composes — a part per kind, fed its part through `bind`, and its own sections in
    *  the order the template renders — built once per class by Static(). The part entries stay plain
-   *  literals rather than `Kit.Class.entry(TextPart, …)`: each part view declares `part` as its own
+   *  literals rather than `Kit.Class.entry(PartText, …)`: each part view declares `part` as its own
    *  kind, while the seam's item is the union the kind→role lookup narrows at runtime, so a typed
    *  entry would refuse the one bind all six share. */
   static get $kit(): ChatMessage.Roles {
     return {
-      Text: { namespace: TextPart, view: TextPartView, bind: this.bindPart },
-      Thinking: { namespace: ThinkingPart, view: ThinkingPartView, bind: this.bindPart },
-      Attachment: { namespace: AttachmentPart, view: AttachmentPartView, bind: this.bindPart },
-      System: { namespace: SystemPart, view: SystemPartView, bind: this.bindPart },
-      ToolCall: { namespace: ToolCallPart, view: ToolCallPartView, bind: this.bindPart },
-      ToolBatch: { namespace: ToolBatchPart, view: ToolBatchPartView, bind: this.bindPart },
+      Text: { namespace: PartText, view: PartTextView, bind: this.bindPart },
+      Thinking: { namespace: PartThinking, view: PartThinkingView, bind: this.bindPart },
+      Attachment: { namespace: PartAttachment, view: PartAttachmentView, bind: this.bindPart },
+      System: { namespace: PartSystem, view: PartSystemView, bind: this.bindPart },
+      ToolCall: { namespace: PartToolCall, view: PartToolCallView, bind: this.bindPart },
+      ToolBatch: { namespace: PartToolBatch, view: PartToolBatchView, bind: this.bindPart },
       Gutter: { view: GutterView },
       Head: { view: HeadView },
       Stub: { view: StubView },

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { SessionLog } from '../SessionLog';
 import type { Part } from './Part';
-import { SystemPart } from './SystemPart';
+import { PartSystem } from './PartSystem';
 
-const props = defineProps<Part.Props<SessionLog.SystemPart>>();
+const props = defineProps<Part.Props<SessionLog.PartSystem>>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof SystemPart.Class | undefined) ?? SystemPart.Class
+  (props.kit?.namespace.Class as typeof PartSystem.Class | undefined) ?? PartSystem.Class
 )(props);
 </script>
 

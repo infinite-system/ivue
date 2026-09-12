@@ -214,9 +214,9 @@ class $ChatApi {
    * The attachment mock: a name, a size, an object URL, and for images
    * their natural size read locally — nothing is sent anywhere.
    */
-  static async upload(file: File): Promise<SessionLog.AttachmentPart> {
+  static async upload(file: File): Promise<SessionLog.PartAttachment> {
     const url = URL.createObjectURL(file);
-    const part: SessionLog.AttachmentPart = {
+    const part: SessionLog.PartAttachment = {
       kind: 'attachment',
       name: file.name,
       size: file.size,

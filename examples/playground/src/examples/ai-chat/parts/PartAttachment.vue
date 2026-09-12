@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { SessionLog } from '../SessionLog';
 import type { Part } from './Part';
-import { AttachmentPart } from './AttachmentPart';
+import { PartAttachment } from './PartAttachment';
 
-const props = defineProps<Part.Props<SessionLog.AttachmentPart>>();
+const props = defineProps<Part.Props<SessionLog.PartAttachment>>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof AttachmentPart.Class | undefined) ?? AttachmentPart.Class
+  (props.kit?.namespace.Class as typeof PartAttachment.Class | undefined) ?? PartAttachment.Class
 )(props);
 </script>
 

@@ -238,27 +238,27 @@ export namespace SessionLog {
     children: Message[] | null;
   }
 
-  export interface TextPart {
+  export interface PartText {
     kind: 'text';
     text: string;
   }
-  export interface ThinkingPart {
+  export interface PartThinking {
     kind: 'thinking';
     text: string;
     durationMs: number | null;
     /** set while a replayed reply is thinking — the counter's start */
     startedAt?: number;
   }
-  export interface ToolCallPart {
+  export interface PartToolCall {
     kind: 'tool_call';
     call: ToolCall;
   }
-  export interface ToolBatchPart {
+  export interface PartToolBatch {
     kind: 'tool_batch';
     calls: ToolCall[];
     messageIds: string[];
   }
-  export interface AttachmentPart {
+  export interface PartAttachment {
     kind: 'attachment';
     name: string;
     size: number;
@@ -267,7 +267,7 @@ export namespace SessionLog {
     width?: number;
     height?: number;
   }
-  export interface SystemPart {
+  export interface PartSystem {
     kind: 'system';
     subtype: string;
     text: string;
@@ -275,7 +275,7 @@ export namespace SessionLog {
     durationMs: number | null;
   }
   export type Part =
-    TextPart | ThinkingPart | ToolCallPart | ToolBatchPart | AttachmentPart | SystemPart;
+    PartText | PartThinking | PartToolCall | PartToolBatch | PartAttachment | PartSystem;
 
   export interface Message {
     id: string;
