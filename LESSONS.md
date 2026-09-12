@@ -1245,3 +1245,16 @@ own whole than to arbitrate.
 - **`Static()` names its raw class under `STATIC_RAW`**, so tooling prints a class by name without knowing the
   wrapper's own name; read it as an own property — inherited through the prototype chain it names the
   grandparent's raw class.
+
+## Named exports for namespaces, default only for SFCs (2026-09-11)
+
+Considered and refused: `namespace X {…}; export default X;` so consumers write
+`import X from './X'` (TS rejects `export default namespace` outright; the
+two-statement form compiles and carries the types). Refused because every
+class file has a sibling `X.vue` whose only export is default, so the pair
+`import { X } from './X'` / `import XView from './X.vue'` tells the reader
+which of the two a line imports before the path; making both default forces an
+alias at every call site. Named exports also fix one name per module (default
+imports let each file invent its own), and auto-import / rename-symbol work
+from the export name, which agents get right first try. Two braces saved is a
+character reduction that widens the naming space — the wrong direction.
