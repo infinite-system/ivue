@@ -52,7 +52,7 @@ function row(message: SessionLog.Message | null): Chat.Row {
   } as Chat.Row;
 }
 
-const textPart: SessionLog.PartText = { kind: 'text', text: 'hello' };
+const textPart: SessionLog.TextPart = { kind: 'text', text: 'hello' };
 const reply: SessionLog.Message = {
   id: 'm1',
   index: 0,

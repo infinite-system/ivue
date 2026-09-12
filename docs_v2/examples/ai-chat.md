@@ -91,19 +91,19 @@ part is done.
   ]"
 />
 
-## The parts and the calls
+## The parts and the tool calls
 
 <LazyCodeGroup
   :files="[
     { path: 'examples/playground/src/examples/ai-chat/message/ChatMessage.ts', label: 'message/ChatMessage.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/message/parts/PartToolCall.ts', label: 'parts/PartToolCall.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/message/parts/PartToolBatch.ts', label: 'parts/PartToolBatch.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/message/parts/calls/CallToolModel.ts', label: 'calls/CallToolModel.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/message/parts/calls/CallBash.ts', label: 'CallBash.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/message/parts/calls/CallEdit.ts', label: 'CallEdit.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/message/parts/calls/CallRead.ts', label: 'CallRead.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/message/parts/calls/CallAgent.ts', label: 'CallAgent.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/message/parts/calls/CodeBlock.ts', label: 'CodeBlock.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/message-parts/MessagePart.ToolCall.ts', label: 'MessagePart.ToolCall.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/message-parts/MessagePart.ToolBatch.ts', label: 'MessagePart.ToolBatch.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/message-parts/tool-calls/ToolCall.ts', label: 'tool-calls/ToolCall.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/message-parts/tool-calls/ToolCall.Bash.ts', label: 'ToolCall.Bash.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/message-parts/tool-calls/ToolCall.Edit.ts', label: 'ToolCall.Edit.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/message-parts/tool-calls/ToolCall.Read.ts', label: 'ToolCall.Read.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/message-parts/tool-calls/ToolCall.Agent.ts', label: 'ToolCall.Agent.ts' },
+    { path: 'examples/playground/src/examples/ai-chat/message/message-parts/tool-calls/ToolCall.CodeBlock.ts', label: 'ToolCall.CodeBlock.ts' },
     { path: 'examples/playground/src/examples/ai-chat/Highlighter.ts', label: 'Highlighter.ts' },
     { path: 'examples/playground/src/examples/ai-chat/Markdown.ts', label: 'Markdown.ts' },
     { path: 'examples/playground/src/examples/ai-chat/Scrub.ts', label: 'Scrub.ts' }

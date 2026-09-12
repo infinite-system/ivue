@@ -9,7 +9,7 @@ props the entry sets. The design
 itself is recorded in `tasks/malleable-architecture.md` under "The kit";
 this file is the build.
 
-Status: converted on branch `ai-chat-kit` (2026-09-10): every seam an entry, `Parts.ts` and `Tools.ts` gone, the row's sections roles, the card map on `PartToolCall`; the standard's gate learned the seam's construction form. Awaiting review before merge. Later on the branch: sidebar rail (Index / Files / Settings), the configuration layer (`ConfiguredChat` + settings store), tree and theme variants, the scrollbar peek, the model picker, matched SVG icons, streaming words rendered per token. Trigger: the first time a second view of
+Status: converted on branch `ai-chat-kit` (2026-09-10): every seam an entry, `Parts.ts` and `Tools.ts` gone, the row's sections roles, the card map on `MessagePartToolCall`; the standard's gate learned the seam's construction form. Awaiting review before merge. Later on the branch: sidebar rail (Index / Files / Settings), the configuration layer (`ConfiguredChat` + settings store), tree and theme variants, the scrollbar peek, the model picker, matched SVG icons, streaming words rendered per token. Trigger: the first time a second view of
 any chat model is wanted (a different scroller for the chat only, a
 different code block for one page, an embed of the thread elsewhere) —
 or the moment the standard is ready to take the kit rule and needs a
@@ -389,20 +389,20 @@ the role.
 
 ```ts
 // ChatMessage.ts
-import TextPartView from './message/parts/PartText.vue';
-import ThinkingPartView from './message/parts/PartThinking.vue';
-import PartToolCallView from './message/parts/PartToolCall.vue';
-import ToolBatchPartView from './message/parts/PartToolBatch.vue';
-import AttachmentPartView from './message/parts/PartAttachment.vue';
-import SystemPartView from './message/parts/PartSystem.vue';
+import TextPartView from './message/parts/MessagePartText.vue';
+import ThinkingPartView from './message/parts/MessagePartThinking.vue';
+import MessagePartToolCallView from './message/parts/MessagePartToolCall.vue';
+import ToolBatchPartView from './message/parts/MessagePartToolBatch.vue';
+import AttachmentPartView from './message/parts/MessagePartAttachment.vue';
+import SystemPartView from './message/parts/MessagePartSystem.vue';
 import MessageGutterView from './sections/MessageGutter.vue';
 import MessageHeadView from './sections/MessageHead.vue';
 import MessageStubView from './sections/MessageStub.vue';
 import MessagePartsView from './sections/MessageParts.vue';
 import MessageAwaitView from './sections/MessageAwait.vue';
 import MessageFootView from './sections/MessageFoot.vue';
-import { PartToolBatch } from './message/parts/PartToolBatch';
-import { CallToolModel } from './message/parts/calls/CallToolModel';
+import { MessagePartToolBatch } from './message/parts/PartToolBatch';
+import { ToolCall } from './message/parts/calls/CallToolModel';
 
 class $ChatMessage {
   static get $kit() {
@@ -412,10 +412,10 @@ class $ChatMessage {
       Thinking: { view: ThinkingPartView },
       Attachment: { view: AttachmentPartView },
       System: { view: SystemPartView },
-      ToolCall: { view: PartToolCallView },
-      ToolBatch: { view: ToolBatchPartView, namespace: PartToolBatch },
+      ToolCall: { view: MessagePartToolCallView },
+      ToolBatch: { view: ToolBatchPartView, namespace: MessagePartToolBatch },
       // the tool cards are reached through the tool base's kit, one hop down
-      Tool: { view: PartToolCallView, namespace: CallToolModel },
+      Tool: { view: MessagePartToolCallView, namespace: ToolCall },
       // the row's sections — each a markup view over the row model, swappable with a class of its own
       Gutter: { view: MessageGutterView },
       Head: { view: MessageHeadView },
@@ -570,38 +570,38 @@ Thinking) receives an entry with no model and constructs its own small
 class as today. `ToolBatch` has a model and constructs the one it is
 handed.
 
-### `CallToolModel.ts` — the tool base owns the cards and the shared leaves
+### `ToolCall.ts` — the tool base owns the cards and the shared leaves
 
 ```ts
 import ToolHeadView from './ToolHead.vue';
 import ToolFootView from './ToolFoot.vue';
 import { CodeBlock } from './CodeBlock';
 import CodeBlockView from './CodeBlock.vue';
-import { CallBash } from './CallBash';
-import CallBashView from './CallBash.vue';
+import { ToolCallBash } from './CallBash';
+import ToolCallBashView from './ToolCallBash.vue';
 // …one pair per tool, as `Tools.ts` imports today
-import CallGenericView from './CallGeneric.vue';
+import ToolCallGenericView from './ToolCallGeneric.vue';
 
-class $CallToolModel {
+class $ToolCall {
   static get $kit() {
     return {
       Head: { view: ToolHeadView },
       Foot: { view: ToolFootView },
       CodeBlock: { view: CodeBlockView, namespace: CodeBlock },
-      Generic: { view: CallGenericView, namespace: CallToolModel },
-      Mcp: { view: CallMcpView, namespace: CallMcp },
-      Task: { view: CallTaskView, namespace: CallTask },
+      Generic: { view: ToolCallGenericView, namespace: ToolCall },
+      Mcp: { view: ToolCallMcpView, namespace: ToolCallMcp },
+      Task: { view: ToolCallTaskView, namespace: ToolCallTask },
       Tools: {
-        Bash: { view: CallBashView, namespace: CallBash },
-        Edit: { view: CallEditView, namespace: CallEdit },
-        NotebookEdit: { view: CallEditView, namespace: CallEdit },
-        Read: { view: CallReadView, namespace: CallRead },
-        Write: { view: CallWriteView, namespace: CallWrite },
-        Agent: { view: CallAgentView, namespace: CallAgent },
-        Skill: { view: CallSkillView, namespace: CallSkill },
-        WebFetch: { view: CallWebFetchView, namespace: CallWebFetch },
-        WebSearch: { view: CallWebFetchView, namespace: CallWebFetch },
-        Artifact: { view: CallArtifactView, namespace: CallArtifact },
+        Bash: { view: ToolCallBashView, namespace: ToolCallBash },
+        Edit: { view: ToolCallEditView, namespace: ToolCallEdit },
+        NotebookEdit: { view: ToolCallEditView, namespace: ToolCallEdit },
+        Read: { view: ToolCallReadView, namespace: ToolCallRead },
+        Write: { view: ToolCallWriteView, namespace: ToolCallWrite },
+        Agent: { view: ToolCallAgentView, namespace: ToolCallAgent },
+        Skill: { view: ToolCallSkillView, namespace: ToolCallSkill },
+        WebFetch: { view: ToolCallWebFetchView, namespace: ToolCallWebFetch },
+        WebSearch: { view: ToolCallWebFetchView, namespace: ToolCallWebFetch },
+        Artifact: { view: ToolCallArtifactView, namespace: ToolCallArtifact },
       } as Record<string, Kit.Entry>,
     });
   }
@@ -616,10 +616,10 @@ class $CallToolModel {
     return kit.Generic;
   }
 
-  constructor(public props: CallToolModel.Props) {}
+  constructor(public props: ToolCall.Props) {}
 
   protected get self() {
-    return this.constructor as typeof $CallToolModel;
+    return this.constructor as typeof $ToolCall;
   }
 
   get kit() {
@@ -629,8 +629,8 @@ class $CallToolModel {
   // …call, chat, name, icon, summary, sections, toggle, cap — unchanged
 }
 
-export namespace CallToolModel {
-  export const $Class = Static($CallToolModel);
+export namespace ToolCall {
+  export const $Class = Static($ToolCall);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 
@@ -638,7 +638,7 @@ export namespace CallToolModel {
     call: SessionLog.ToolCall;
     chat: Chat.Model;
     message: SessionLog.Message | null;
-    kit?: Kit.Entry<typeof CallToolModel>;
+    kit?: Kit.Entry<typeof ToolCall>;
   }
 }
 ```
@@ -648,19 +648,19 @@ reading `this.$kit`, so a subclass of the base that overrides the map
 is looked up through its own kit. The base and each tool card import
 each other, which is the cycle the lazy getter exists for.
 
-### `PartToolCall.vue` — the seam that picks a card
+### `MessagePartToolCall.vue` — the seam that picks a card
 
 ```vue
 <script setup lang="ts">
 import type { SessionLog } from '../SessionLog';
 import type { ChatMessage } from '../ChatMessage';
-import { CallToolModel } from '../calls/CallToolModel';
+import { ToolCall } from '../calls/CallToolModel';
 
 // A part with one call: look the card up on the tool base the row's kit
 // names, then render it with the class it names. Markup only.
-const props = defineProps(PartToolCall.Class.props); // part, chat, message, and kit
+const props = defineProps(MessagePartToolCall.Class.props); // part, chat, message, and kit
 
-const base = props.kit?.namespace.Class ?? CallToolModel.Class;
+const base = props.kit?.namespace.Class ?? ToolCall.Class;
 </script>
 
 <template>
@@ -679,16 +679,16 @@ element. If the gate objects, the part becomes a two-line class with a
 `card` getter and the template reads `model.card.vue` and
 `model.card.namespace`; the shape is the same.
 
-### `CallBash.vue` — a card renders its leaves through the base's kit
+### `ToolCallBash.vue` — a card renders its leaves through the base's kit
 
 ```vue
 <script setup lang="ts">
-import { CallBash } from './CallBash';
-import type { CallToolModel } from './CallToolModel';
+import { ToolCallBash } from './CallBash';
+import type { ToolCall } from './CallToolModel';
 
-const props = defineProps(CallBash.Class.props);
+const props = defineProps(ToolCallBash.Class.props);
 
-const model = new (props.kit?.namespace.Class ?? CallBash.Class)(props);
+const model = new (props.kit?.namespace.Class ?? ToolCallBash.Class)(props);
 </script>
 
 <template>
@@ -710,8 +710,8 @@ const model = new (props.kit?.namespace.Class ?? CallBash.Class)(props);
 </template>
 ```
 
-`CallBash.ts` does not change: it extends the base and inherits `$kit`
-through the static chain, so `CallBash.$kit === CallToolModel.$kit`
+`ToolCallBash.ts` does not change: it extends the base and inherits `$kit`
+through the static chain, so `ToolCallBash.$kit === ToolCall.$kit`
 until a subclass says otherwise. `ToolHead` and `ToolFoot` are markup
 leaves that take the card's instance as `model`, exactly as today; they
 render through the kit so a consumer can replace them, and take no
@@ -984,8 +984,8 @@ export namespace TerminalChat {
 One class, one literal. The nesting is the path from the root to the
 leaf — Message, Tool, Tools.Bash, CodeBlock — and every hop that says
 only `subkit` keeps its model and view. `resolve` derives a
-`ChatMessage` subclass whose kit names a derived `CallToolModel`
-subclass whose `Tools.Bash` names a derived `CallBash` subclass whose
+`ChatMessage` subclass whose kit names a derived `ToolCall`
+subclass whose `Tools.Bash` names a derived `ToolCallBash` subclass whose
 `CodeBlock` is the terminal block; each derived class caches its own
 kit; `TerminalChat.$kit` is built once. Reading the literal tells you
 exactly which subtree differs from `Chat`, and nothing else can differ.
@@ -1031,7 +1031,7 @@ spread of the base and recurses into maps and entries; `derive` makes a
 new subclass and only reads `Base.$kit`. After `TerminalChat.$kit`
 resolves, `Chat.$kit.Message.namespace` is still `ChatMessage`,
 `ChatMessage.$kit.Tool.namespace` is still the base, and
-`CallBash.$kit.CodeBlock.namespace` is still `CodeBlock`. Entries the
+`ToolCallBash.$kit.CodeBlock.namespace` is still `CodeBlock`. Entries the
 override did not touch are shared by reference between the two kits,
 which is why a resolved kit is frozen: sharing is safe only when nothing
 can write. The spec below pins both facts.
@@ -1208,11 +1208,11 @@ There is no context to be inside of.
 
 ```ts
 it('resolves each kit from its own class, and a subclass swaps one entry', () => {
-  expect(ChatMessage.Class.$kit.ToolBatch.namespace).toBe(PartToolBatch);
+  expect(ChatMessage.Class.$kit.ToolBatch.namespace).toBe(MessagePartToolBatch);
   expect(ChatMessage.Class.PART_ROLES.tool_batch).toBe('ToolBatch');
-  expect(CallToolModel.Class.toolFor('Bash').namespace).toBe(CallBash);
-  expect(CallToolModel.Class.toolFor('mcp__x__y')).toBe(CallToolModel.Class.$kit.Mcp);
-  expect(CallToolModel.Class.toolFor('Nobody')).toBe(CallToolModel.Class.$kit.Generic);
+  expect(ToolCall.Class.toolFor('Bash').namespace).toBe(ToolCallBash);
+  expect(ToolCall.Class.toolFor('mcp__x__y')).toBe(ToolCall.Class.$kit.Mcp);
+  expect(ToolCall.Class.toolFor('Nobody')).toBe(ToolCall.Class.$kit.Generic);
   expect(FancyChat.Class.$kit.Scroller.namespace).toBe(SnapScroller);
   expect(FancyChat.Class.$kit.Message).toBe(Chat.Class.$kit.Message);
   expect(Chat.Class.$kit.Scroller.namespace).toBe(VirtualScroller);
@@ -1223,8 +1223,8 @@ it('an override never reaches another tree, and a kit is its own class\'s', () =
   expect(terminal.Message.namespace).not.toBe(ChatMessage);
   expect(terminal.Message.namespace.$Class.prototype).toBeInstanceOf(ChatMessage.$Class);
   expect(Chat.Class.$kit.Message.namespace).toBe(ChatMessage);
-  expect(ChatMessage.Class.$kit.Tool.namespace).toBe(CallToolModel);
-  expect(CallBash.Class.$kit.CodeBlock.namespace).toBe(CodeBlock);
+  expect(ChatMessage.Class.$kit.Tool.namespace).toBe(ToolCall);
+  expect(ToolCallBash.Class.$kit.CodeBlock.namespace).toBe(CodeBlock);
   expect(terminal.Composer).toBe(Chat.Class.$kit.Composer); // untouched entries are shared, and frozen
   expect(Object.isFrozen(terminal.Composer)).toBe(true);
   expect(Object.isFrozen(terminal.Composer.view)).toBe(false); // the freeze stops at the entry's leaves
@@ -1255,8 +1255,8 @@ it('a tunable reads the kit first, an extension reads only the kit, a closed pro
 | today | after |
 | --- | --- |
 | `parts/Parts.ts` registry (kind → component) | `ChatMessage.$kit` keyed by PascalCase role (`Text`, `ToolBatch`…), `PART_ROLES` mapping kind → role; the row model resolves `partEntry(part)`, `Text` as the fallback |
-| `tools/Tools.ts` registry (name → component, prefix families, generic fallback) | `CallToolModel.$kit.Tools` plus `Mcp`, `Task`, `Generic` entries; the lookup is the static `toolFor(name)` on the base |
-| `ToolHead.vue`, `ToolFoot.vue`, `CodeBlock.vue` used by name in every card | `CallToolModel.$kit`: `Head`, `Foot` as markup leaves, `CodeBlock` as a pair; cards render `<component :is="model.kit.Head.view" :model="model" />` and `<component :is="model.kit.CodeBlock.view" :kit="model.kit.CodeBlock" …props />` |
+| `tools/Tools.ts` registry (name → component, prefix families, generic fallback) | `ToolCall.$kit.Tools` plus `Mcp`, `Task`, `Generic` entries; the lookup is the static `toolFor(name)` on the base |
+| `ToolHead.vue`, `ToolFoot.vue`, `CodeBlock.vue` used by name in every card | `ToolCall.$kit`: `Head`, `Foot` as markup leaves, `CodeBlock` as a pair; cards render `<component :is="model.kit.Head.view" :model="model" />` and `<component :is="model.kit.CodeBlock.view" :kit="model.kit.CodeBlock" …props />` |
 | `Chat.ts` reaches the scroller through `ref="scroller"` | unchanged: the scroller's view constructs the class its entry names and exposes it; the chat keeps its template ref. The entry `Chat.$kit.Scroller = { view: VirtualScrollerView, namespace: VirtualScroller }` is what a page overrides to put a different scroller under the chat |
 | `ChatComposer.vue`, `ChatIndex.vue` construct their models | unchanged in who constructs; each news `props.kit?.namespace.Class ?? Composer.Class` and is rendered through `chat.kit.Composer` |
 | `ChatMessage.vue` constructs a row model per row in the scroller's slot | unchanged; the slot renders `<component :is="chat.kit.Message.view" :kit="chat.kit.Message" :row="item" :chat="chat" />` |

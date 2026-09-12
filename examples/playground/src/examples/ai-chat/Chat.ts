@@ -818,7 +818,7 @@ class $Chat {
     const last = message.parts[message.parts.length - 1];
     switch (event.type) {
       case 'thinking_start': {
-        const part: SessionLog.PartThinking = {
+        const part: SessionLog.ThinkingPart = {
           kind: 'thinking',
           text: '',
           durationMs: null,
@@ -856,7 +856,7 @@ class $Chat {
       }
       case 'tool_result': {
         const part = message.parts.find(
-          (candidate): candidate is SessionLog.PartToolCall =>
+          (candidate): candidate is SessionLog.ToolCallPart =>
             candidate.kind === 'tool_call' && candidate.call.id === event.call.id
         );
         if (part) {
@@ -1068,7 +1068,7 @@ export namespace Chat {
   export interface Request {
     text: string;
     model: string;
-    attachments: SessionLog.PartAttachment[];
+    attachments: SessionLog.AttachmentPart[];
   }
 
   export interface Streaming {
@@ -1079,7 +1079,7 @@ export namespace Chat {
     lastPinAt: number;
     controller: AbortController;
     release: () => void;
-    thinking: SessionLog.PartThinking | null;
+    thinking: SessionLog.ThinkingPart | null;
     sourceId: string;
   }
 

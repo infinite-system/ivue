@@ -52,7 +52,7 @@ class $Composer {
   }
 
   get attachments() {
-    return shallowRef<SessionLog.PartAttachment[]>([]);
+    return shallowRef<SessionLog.AttachmentPart[]>([]);
   }
 
   get uploading() {
@@ -105,11 +105,11 @@ class $Composer {
     return count === 1 ? '1 attachment' : `${count} attachments`;
   }
 
-  isImage(attachment: SessionLog.PartAttachment): boolean {
+  isImage(attachment: SessionLog.AttachmentPart): boolean {
     return attachment.mimeType.startsWith('image/');
   }
 
-  sizeLabel(attachment: SessionLog.PartAttachment): string {
+  sizeLabel(attachment: SessionLog.AttachmentPart): string {
     const size = attachment.size;
     if (size < 1024) return `${size} B`;
     if (size < 1024 * 1024) return `${(size / 1024).toFixed(0)} KB`;
@@ -171,7 +171,7 @@ class $Composer {
     }
   }
 
-  remove(attachment: SessionLog.PartAttachment) {
+  remove(attachment: SessionLog.AttachmentPart) {
     this.attachments.value = this.attachments.value.filter((entry) => entry !== attachment);
     if (attachment.url.startsWith('blob:')) URL.revokeObjectURL(attachment.url);
   }

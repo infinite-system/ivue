@@ -79,7 +79,7 @@ const META: ChatApi.Meta = {
 const INDEX: ChatApi.IndexRecord[] = THREAD.map((entry) => ({
   id: entry.id,
   r: entry.role[0],
-  t: (entry.parts[0] as SessionLog.PartText).text,
+  t: (entry.parts[0] as SessionLog.TextPart).text,
   c: entry.parts.some((part) => part.kind === 'tool_batch') ? 2 : 0,
   at: entry.timestamp
 }));

@@ -11,8 +11,8 @@ $Sidebar holds the rail's tabs and the panel's width; the open tab lives on the 
 import { describe, expect, it, vi } from 'vitest';
 import { Chat } from '../Chat';
 import { Index } from '../Index';
-import { PanelFiles } from './panels/PanelFiles';
-import { PanelSettings } from './panels/PanelSettings';
+import { SidebarFiles } from './Sidebar.Files';
+import { SidebarSettings } from './Sidebar.Settings';
 import { Sidebar } from './Sidebar';
 import { hosted } from '../../virtual-scroller/hosted';
 
@@ -31,9 +31,9 @@ describe('Sidebar', () => {
     expect(chat.sidebarTab.value).toBe('Index');
     expect(side.entry?.namespace).toBe(Index);
     side.select(side.tabs[1]);
-    expect(side.entry?.namespace).toBe(PanelFiles);
+    expect(side.entry?.namespace).toBe(SidebarFiles);
     side.select(side.tabs[2]);
-    expect(side.entry?.namespace).toBe(PanelSettings);
+    expect(side.entry?.namespace).toBe(SidebarSettings);
     expect(side.isActive(side.tabs[2])).toBe(true);
     side.select(side.tabs[2]); // the same tab again collapses the panel
     expect(side.isOpen).toBe(false);

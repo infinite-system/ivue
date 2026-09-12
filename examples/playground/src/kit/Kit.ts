@@ -384,7 +384,7 @@ export namespace Kit {
     subkit?: KitPatch<KitOf<N>, ModelOf<N>>;
     /** What the parent hands the child, from the seam; absent, the child receives `{ model, kit }`.
      *  A method signature on purpose: a method's parameter compares bivariantly, so an entry whose
-     *  bind names its owner and item (`Seam<$Row, Part, typeof PartText>`) still assigns to the
+     *  bind names its owner and item (`Seam<$Row, Part, typeof MessagePartText>`) still assigns to the
      *  loose `Kit.Entry` a view's `kit` prop declares. As a property, every typed kit would fail at
      *  its own prop boundary. */
     bind?(seam: Seam<Owner, Item, N>): Bound<N>;

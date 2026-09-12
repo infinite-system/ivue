@@ -1,27 +1,27 @@
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
-import { PartText } from './parts/PartText';
-import PartTextView from './parts/PartText.vue';
-import { PartThinking } from './parts/PartThinking';
-import PartThinkingView from './parts/PartThinking.vue';
-import { PartAttachment } from './parts/PartAttachment';
-import PartAttachmentView from './parts/PartAttachment.vue';
-import { PartSystem } from './parts/PartSystem';
-import PartSystemView from './parts/PartSystem.vue';
-import { PartToolCall } from './parts/PartToolCall';
-import PartToolCallView from './parts/PartToolCall.vue';
-import { PartToolBatch } from './parts/PartToolBatch';
-import PartToolBatchView from './parts/PartToolBatch.vue';
-import GutterView from './sections/MessageGutter.vue';
-import HeadView from './sections/MessageHead.vue';
-import StubView from './sections/MessageStub.vue';
-import PartsView from './parts/MessageParts.vue';
-import AwaitView from './sections/MessageAwait.vue';
-import FootView from './sections/MessageFoot.vue';
+import { MessagePartText } from './message-parts/MessagePart.Text';
+import MessagePartTextView from './message-parts/MessagePart.Text.vue';
+import { MessagePartThinking } from './message-parts/MessagePart.Thinking';
+import MessagePartThinkingView from './message-parts/MessagePart.Thinking.vue';
+import { MessagePartAttachment } from './message-parts/MessagePart.Attachment';
+import MessagePartAttachmentView from './message-parts/MessagePart.Attachment.vue';
+import { MessagePartSystem } from './message-parts/MessagePart.System';
+import MessagePartSystemView from './message-parts/MessagePart.System.vue';
+import { MessagePartToolCall } from './message-parts/MessagePart.ToolCall';
+import MessagePartToolCallView from './message-parts/MessagePart.ToolCall.vue';
+import { MessagePartToolBatch } from './message-parts/MessagePart.ToolBatch';
+import MessagePartToolBatchView from './message-parts/MessagePart.ToolBatch.vue';
+import GutterView from './ChatMessage.Gutter.vue';
+import HeadView from './ChatMessage.Head.vue';
+import StubView from './ChatMessage.Stub.vue';
+import PartsView from './ChatMessage.Parts.vue';
+import AwaitView from './ChatMessage.Await.vue';
+import FootView from './ChatMessage.Foot.vue';
 import type { Chat } from '../Chat';
 import { Clock } from '../Clock';
-import type { Part } from './parts/Part';
+import type { MessagePart } from './message-parts/MessagePart';
 import type { SessionLog } from '../SessionLog';
 
 // One row of the thread: a stub with its loader while the page is on the
@@ -52,17 +52,33 @@ class $ChatMessage {
 
   /** the roles a row composes — a part per kind, fed its part through `bind`, and its own sections in
    *  the order the template renders — built once per class by Static(). The part entries stay plain
-   *  literals rather than `Kit.Class.entry(PartText, …)`: each part view declares `part` as its own
+   *  literals rather than `Kit.Class.entry(MessagePartText, …)`: each part view declares `part` as its own
    *  kind, while the seam's item is the union the kind→role lookup narrows at runtime, so a typed
    *  entry would refuse the one bind all six share. */
   static get $kit(): ChatMessage.Roles {
     return {
-      Text: { view: PartTextView, namespace: PartText, bind: this.bindPart },
-      Thinking: { view: PartThinkingView, namespace: PartThinking, bind: this.bindPart },
-      Attachment: { view: PartAttachmentView, namespace: PartAttachment, bind: this.bindPart },
-      System: { view: PartSystemView, namespace: PartSystem, bind: this.bindPart },
-      ToolCall: { view: PartToolCallView, namespace: PartToolCall, bind: this.bindPart },
-      ToolBatch: { view: PartToolBatchView, namespace: PartToolBatch, bind: this.bindPart },
+      Text: { view: MessagePartTextView, namespace: MessagePartText, bind: this.bindPart },
+      Thinking: {
+        view: MessagePartThinkingView,
+        namespace: MessagePartThinking,
+        bind: this.bindPart
+      },
+      Attachment: {
+        view: MessagePartAttachmentView,
+        namespace: MessagePartAttachment,
+        bind: this.bindPart
+      },
+      System: { view: MessagePartSystemView, namespace: MessagePartSystem, bind: this.bindPart },
+      ToolCall: {
+        view: MessagePartToolCallView,
+        namespace: MessagePartToolCall,
+        bind: this.bindPart
+      },
+      ToolBatch: {
+        view: MessagePartToolBatchView,
+        namespace: MessagePartToolBatch,
+        bind: this.bindPart
+      },
       Gutter: { view: GutterView },
       Head: { view: HeadView },
       Stub: { view: StubView },
@@ -74,7 +90,7 @@ class $ChatMessage {
   }
 
   /** what every part receives from the row: its part, the chat, the message — the seam's item is the part */
-  static bindPart({ model, item }: Kit.Seam<$ChatMessage, SessionLog.Part>): Part.Props {
+  static bindPart({ model, item }: Kit.Seam<$ChatMessage, SessionLog.Part>): MessagePart.Props {
     return { part: item, chat: model.chat, message: model.message };
   }
 

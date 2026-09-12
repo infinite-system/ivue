@@ -274,22 +274,22 @@ One JSON record per line. Record `type`s that carry the conversation:
     the state (pending, running, done, failed) and the elapsed time.
     Expanded, a card with the full input and the full result, rendered
     by the tool's own component:
-    - `CallBash`: the command as a shell block; stdout and stderr as
+    - `ToolCallBash`: the command as a shell block; stdout and stderr as
       terminal blocks with ANSI stripped, the exit state marked.
-    - `CallEdit`: a unified diff of old against new with the file path
+    - `ToolCallEdit`: a unified diff of old against new with the file path
       as its header, highlighted by the file's language.
-    - `CallRead` and `CallWrite`: the file with line numbers,
+    - `ToolCallRead` and `ToolCallWrite`: the file with line numbers,
       highlighted by extension; Read shows the offset and limit it was
       called with.
-    - `CallAgent`: the sidechain folded under it, as a nested thread
+    - `ToolCallAgent`: the sidechain folded under it, as a nested thread
       rendered by the same parts.
-    - `CallSkill`, `CallWebFetch`, `CallArtifact`, `CallTask`: a header
+    - `ToolCallSkill`, `ToolCallWebFetch`, `ToolCallArtifact`, `ToolCallTask`: a header
       with the one argument that matters (the skill name, the URL, the
       artifact title, the task subject) and the result as text.
-    - `CallMcp`: the server and tool from the name, input and result
+    - `ToolCallMcp`: the server and tool from the name, input and result
       as JSON; a Playwright call shows its screenshot when the result
       carries an image.
-    - `CallGeneric`: the input as pretty JSON and the result as text or
+    - `ToolCallGeneric`: the input as pretty JSON and the result as text or
       JSON, whichever it is; the fallback for any name not in the map.
     A "show everything" control drops the card's own length cap; only
     the scrub script's marker remains. Opening a card grows the row and
@@ -426,7 +426,7 @@ One JSON record per line. Record `type`s that carry the conversation:
       token rate as advertised in the picker, and the reply is stamped
       with the model.
 - [x] Dropping an image and a file into the composer shows chips; the
-      ✔ Composer.test (drop, paste, pick, remove revokes); ChatApi.test proves upload issues no fetch; PartAttachment sizes the image from its natural dimensions
+      ✔ Composer.test (drop, paste, pick, remove revokes); ChatApi.test proves upload issues no fetch; MessagePartAttachment sizes the image from its natural dimensions
       sent message renders the image at its natural aspect, and the file
       as a chip; removing a chip before send drops it. No network request
       is made for an attachment.
@@ -462,7 +462,7 @@ One JSON record per line. Record `type`s that carry the conversation:
       map, and a made-up name resolves to the generic one without an
       error; every record kind likewise.
 - [x] Every tool call expands to its full input and result; a Bash call
-      ✔ CallToolModel.test (Bash with ANSI stripped, Edit diff from hunks, Read counter from the offset, Write, Agent thread, MCP); shiki colours the blocks in the browser
+      ✔ ToolCall.test (Bash with ANSI stripped, Edit diff from hunks, Read counter from the offset, Write, Agent thread, MCP); shiki colours the blocks in the browser
       shows command, stdout and stderr; an Edit shows a diff; a Read
       shows numbered lines; "show everything" lifts the card's cap;
       expanded state lives on the chat by id, so it survives a remount.
