@@ -16,7 +16,7 @@ import MessagePartToolBatchView from './message-parts/MessagePart.ToolBatch.vue'
 import GutterView from './ChatMessage.Gutter.vue';
 import HeadView from './ChatMessage.Head.vue';
 import StubView from './ChatMessage.Stub.vue';
-import PartsView from './ChatMessage.Parts.vue';
+import MessagePartsView from './ChatMessage.MessageParts.vue';
 import AwaitView from './ChatMessage.Await.vue';
 import FootView from './ChatMessage.Foot.vue';
 import type { Chat } from '../Chat';
@@ -82,10 +82,10 @@ class $ChatMessage {
       Gutter: { view: GutterView },
       Head: { view: HeadView },
       Stub: { view: StubView },
-      Parts: { view: PartsView },
+      MessageParts: { view: MessagePartsView },
       Await: { view: AwaitView },
       Foot: { view: FootView },
-      order: ['Gutter', 'Head', 'Stub', 'Parts', 'Await', 'Foot']
+      order: ['Gutter', 'Head', 'Stub', 'MessageParts', 'Await', 'Foot']
     };
   }
 
@@ -353,7 +353,7 @@ class $ChatMessage {
     switch (role) {
       case 'Stub':
         return this.isStub;
-      case 'Parts':
+      case 'MessageParts':
         return !this.isStub;
       case 'Await':
         return this.isAwaitingFirstToken;
@@ -425,7 +425,7 @@ export namespace ChatMessage {
   }
 
   export type PartRole = 'Text' | 'Thinking' | 'Attachment' | 'System' | 'ToolCall' | 'ToolBatch';
-  export type SectionRole = 'Gutter' | 'Head' | 'Stub' | 'Parts' | 'Await' | 'Foot';
+  export type SectionRole = 'Gutter' | 'Head' | 'Stub' | 'MessageParts' | 'Await' | 'Foot';
   export type Role = PartRole | SectionRole;
   /** the row's kit: its sections in an order, and a part role per kind fed its part — declared, so the
    *  row's instance type and its kit can name each other */

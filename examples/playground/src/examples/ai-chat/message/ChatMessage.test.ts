@@ -80,7 +80,7 @@ describe('the row is a container of roles', () => {
       'Gutter',
       'Head',
       'Stub',
-      'Parts',
+      'MessageParts',
       'Await',
       'Foot'
     ]);
@@ -152,7 +152,15 @@ describe('the row is a container of roles', () => {
     });
     const ruled = new (Ruled.Class as typeof ChatMessage.Class)({ row: row(reply), chat });
     expect(ruled.seamProps('Rule' as ChatMessage.Role)).toEqual({ class: 'ac-rule' });
-    expect(ruled.kit.order).toEqual(['Gutter', 'Head', 'Rule', 'Stub', 'Parts', 'Await', 'Foot']);
+    expect(ruled.kit.order).toEqual([
+      'Gutter',
+      'Head',
+      'Rule',
+      'Stub',
+      'MessageParts',
+      'Await',
+      'Foot'
+    ]);
   });
 
   // invariant: A tree variant is a patch over the row's order (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
@@ -161,15 +169,15 @@ describe('the row is a container of roles', () => {
       'Gutter',
       'Head',
       'Stub',
-      'Parts',
+      'MessageParts',
       'Await',
       'Foot'
     ]);
-    expect(messageKit('bubbles').order).toEqual(['Head', 'Stub', 'Parts', 'Await', 'Foot']);
+    expect(messageKit('bubbles').order).toEqual(['Head', 'Stub', 'MessageParts', 'Await', 'Foot']);
     expect(messageKit('bubbles').Head.view).not.toBe(messageKit('shipped').Head.view);
-    expect(messageKit('minimal').order).toEqual(['Head', 'Stub', 'Parts', 'Await']);
+    expect(messageKit('minimal').order).toEqual(['Head', 'Stub', 'MessageParts', 'Await']);
     const compact = messageKit('compact');
-    expect(compact.order).toEqual(['Head', 'Rule', 'Stub', 'Foot', 'Parts', 'Await']);
+    expect(compact.order).toEqual(['Head', 'Rule', 'Stub', 'Foot', 'MessageParts', 'Await']);
     expect(compact.Rule.view).toBe('hr');
     expect(compact.Rule.namespace).toBeUndefined();
     expect(compact.Head.view).toBe(messageKit('shipped').Head.view); // untouched, the shipped head
@@ -184,7 +192,7 @@ describe('the row is a container of roles', () => {
       'Gutter',
       'Head',
       'Stub',
-      'Parts',
+      'MessageParts',
       'Await',
       'Foot'
     ]);

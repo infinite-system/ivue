@@ -4,7 +4,7 @@ import { SidebarSettings } from './Sidebar.Settings';
 const props = defineProps<SidebarSettings.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof SidebarSettings.Class | undefined) ?? SidebarSettings.Class
+  (props.kit?.namespace?.Class as typeof SidebarSettings.Class | undefined) ?? SidebarSettings.Class
 )(props);
 // the sections are a static table: read once for the scroller's list
 const sections = model.sections;

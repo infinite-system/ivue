@@ -48,7 +48,7 @@ class $TreeCatalog {
       order: {
         without: ['Gutter'],
         after: { Head: ['Rule'] },
-        move: { Foot: { before: 'Parts' } },
+        move: { Foot: { before: 'MessageParts' } },
       },
       Rule: { view: 'hr', bind: () => ({ class: 'ac-rule' }) },
       Foot: {
