@@ -1293,3 +1293,14 @@ re-wrap guard skips `STATIC_RAW` and the issued keys explicitly instead of
 matching registered-symbol prefixes. Found by proving `bind: this.bindPart`
 extends through `super` — the shape that makes a named bind the true one.
 The engine spec `super reaches the parent under Static()` binds it.
+
+## After a compaction, the skill must be re-read (2026-09-13)
+
+A context compaction leaves the ivue skill as a summary. Every standards
+violation the gate caught late in this session — a getter above the
+constructor, a subclass declaring a static without the `Static()` anchor,
+`void item` noise — landed after a compaction and traced to editing from the
+summary. The first ivue edit after any compaction starts cold: read
+`.claude/skills/ivue/SKILL.md` in full, and `kit.generator.md` before a kit.
+Observed from the outside through the ai-chat instrument, which is the
+point of the instrument.
