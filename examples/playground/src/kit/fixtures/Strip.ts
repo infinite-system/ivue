@@ -27,7 +27,9 @@ class $Strip extends KitContainer.$Class<Strip.Roles, string> {
       Body: { view: StripBodyView },
       Footer: { view: StripFooterView },
       // an inline bind returning an attribute beside props: `entry` refuses a wrong key, a literal would not
-      Item: Kit.Class.entry(CodeView, Code, {
+      Item: Kit.Class.entry({
+        view: CodeView,
+        namespace: Code,
         bind: ({ model, item, key }) => ({ code: item, cap: model.cap, 'data-key': key })
       }),
       order: ['Header', 'Body', 'Footer']
