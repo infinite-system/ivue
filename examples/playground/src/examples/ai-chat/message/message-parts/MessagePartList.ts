@@ -21,18 +21,32 @@ import type { SessionLog } from '../../SessionLog';
 // The parts of one message as a list: every part renders through the entry
 // this kit names for its kind, fed the part as the seam's item and a key
 // that survives streaming. The row hands the list its parts, the chat and
-// the message; the list owns which role a part takes and what identifies it.
+// the message; the entries say which kind each takes, the list says what identifies one.
 class $MessagePartList extends KitContainer.$Class<MessagePartList.Roles, SessionLog.Part> {
-  /** a role per part kind — built once per class by Static(); a subclass with its own swaps the leaves */
+  /** a role per part kind, each saying which kind it takes; Text takes none and so takes the rest —
+   *  built once per class by Static(); a layer adds a kind by adding an entry */
   static override get $kit(): MessagePartList.Roles {
     return {
       Text: this.entry(MessagePartTextView, MessagePartText),
-      Thinking: this.entry(MessagePartThinkingView, MessagePartThinking),
-      Attachment: this.entry(MessagePartAttachmentView, MessagePartAttachment),
-      System: this.entry(MessagePartSystemView, MessagePartSystem),
-      ToolCall: this.entry(MessagePartToolCallView, MessagePartToolCall),
-      ToolBatch: this.entry(MessagePartToolBatchView, MessagePartToolBatch)
+      Thinking: this.entry(MessagePartThinkingView, MessagePartThinking, {
+        takes: this.kind('thinking')
+      }),
+      Attachment: this.entry(MessagePartAttachmentView, MessagePartAttachment, {
+        takes: this.kind('attachment')
+      }),
+      System: this.entry(MessagePartSystemView, MessagePartSystem, { takes: this.kind('system') }),
+      ToolCall: this.entry(MessagePartToolCallView, MessagePartToolCall, {
+        takes: this.kind('tool_call')
+      }),
+      ToolBatch: this.entry(MessagePartToolBatchView, MessagePartToolBatch, {
+        takes: this.kind('tool_batch')
+      })
     };
+  }
+
+  /** the predicate for one part kind */
+  static kind(kind: SessionLog.Part['kind']) {
+    return (part: SessionLog.Part) => part.kind === kind;
   }
 
   /** what every part receives from the list: its part, the chat, the message — the seam's item is the part */
@@ -42,16 +56,6 @@ class $MessagePartList extends KitContainer.$Class<MessagePartList.Roles, Sessio
   }: Kit.Seam<$MessagePartList, SessionLog.Part>): MessagePart.Props {
     return { part: item, chat: model.chat, message: model.message };
   }
-
-  /** a part kind (the log's snake_case) names its role (the kit's PascalCase) */
-  static readonly PART_ROLES: Record<SessionLog.Part['kind'], MessagePartList.Role> = {
-    text: 'Text',
-    thinking: 'Thinking',
-    attachment: 'Attachment',
-    system: 'System',
-    tool_call: 'ToolCall',
-    tool_batch: 'ToolBatch'
-  };
 
   constructor(public props: MessagePartList.Props) {
     super();
@@ -75,12 +79,6 @@ class $MessagePartList extends KitContainer.$Class<MessagePartList.Roles, Sessio
 
   get message(): SessionLog.Message | null {
     return this.props.message;
-  }
-
-  /** the role a part takes: its kind's, or Text for a kind nobody mapped */
-  override roleOf(part: SessionLog.Part): MessagePartList.Role {
-    const role = this.self.PART_ROLES[part.kind];
-    return role && role in this.kit ? role : 'Text';
   }
 
   /** what identifies a part in the list: a call's id, a batch's first call, else its kind and place */

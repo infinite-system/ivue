@@ -12,6 +12,7 @@ bind every entry built by `entry()` carries. No thread is needed: the props are
 the parts, the chat and the message, and every getter reads them.
 */
 import { describe, expect, it } from 'vitest';
+import { Kit } from '../../../../kit/Kit';
 import { MessagePartList } from './MessagePartList';
 import { MessagePartText } from './MessagePart.Text';
 import type { Chat } from '../../Chat';
@@ -46,6 +47,25 @@ describe('the parts of a message are a compositor of their own', () => {
     const unknown = { kind: 'hologram', text: 'x' } as unknown as SessionLog.Part;
     expect(list.roleOf(unknown)).toBe('Text');
     expect(list.entryOf(unknown)).toBe(list.kit.Text);
+  });
+
+  // domain-invariant: $MessagePartList — If a layer adds an entry whose takes holds for a kind, then a part of that kind renders through it, and the shipped list still sends the kind to Text
+  it('a layer adds a part kind by data: an entry with takes, no table and no subclass', () => {
+    const image = { kind: 'image', url: 'x.png' } as unknown as SessionLog.Part;
+    const WithImages = Kit.Class.derive(MessagePartList, {
+      Image: {
+        view: 'img',
+        takes: (part: SessionLog.Part) => (part as { kind: string }).kind === 'image'
+      }
+    });
+    const list = new (WithImages.Class as typeof MessagePartList.Class)({
+      parts: [image],
+      chat,
+      message
+    });
+    expect(list.roleOf(image)).toBe('Image');
+    expect(list.viewOf(image)).toBe('img');
+    expect(new MessagePartList.Class({ parts: [image], chat, message }).roleOf(image)).toBe('Text');
   });
 
   it("a key is a call id, a batch's first call, or the kind and place", () => {

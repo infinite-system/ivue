@@ -5,11 +5,11 @@ import { Kit } from './Kit';
 // The base of every class that composes others through a kit. It holds
 // what every compositor wrote by hand and never differently: the kit read
 // off its own class, and one seam method that reads an entry and never a
-// role's name, and presence read off the entry's `shows`. A list role adds two facts the container supplies — which
+// role's name, presence read off the entry's `shows`, and dispatch read off the entries'
+// `takes`. A list role adds two facts the container supplies — which
 // role an item takes and what identifies it — and receives the entry, the
 // view and the props for that item without writing another line. A
-// container with one entry role supplies neither: the role is the only one.
-// A dispatch is a list of one: `roleOf` picks the card by an external name.
+// container whose entries say what they take supplies only `keyOf`.
 class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unknown> {
   /** the compositor's roles — a subclass declares its own and swaps the subtree */
   static get $kit(): object {
@@ -26,7 +26,7 @@ class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unk
   static entry<
     N extends Kit.Namespace,
     Owner = unknown,
-    Item = undefined,
+    Item = unknown,
     Rest extends Kit.EntryRest<Owner, Item, N> = Kit.EntryRest<Owner, Item, N>
   >(
     view: Kit.View,
@@ -38,11 +38,31 @@ class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unk
     return bind && !entry.bind ? { ...entry, bind } : entry;
   }
 
-  /** the one role a kit with a single entry role has, else nothing; built once per class */
-  static get $onlyRole(): string | undefined {
-    const kit = this.$kit as Record<string, unknown>;
-    const roles = Object.keys(kit).filter((role) => role !== 'order');
-    return roles.length === 1 ? roles[0] : undefined;
+  /** How this kit dispatches an item, read off its entries once per class: the roles with `takes`, in
+   *  declaration order, and the fallback — the one role without `takes`, or the only role. */
+  static get $dispatch(): KitContainer.Dispatch {
+    const kit = this.$kit as Record<string, Kit.Entry>;
+    const takers: KitContainer.Taker[] = [];
+    const rest: string[] = [];
+    for (const role of Object.keys(kit)) {
+      if (role === 'order') continue;
+      const takes = kit[role].takes;
+      if (takes) takers.push([role, takes as (item: unknown) => boolean]);
+      else rest.push(role);
+    }
+    return { takers, fallback: rest.length === 1 ? rest[0] : undefined };
+  }
+
+  /** the role an item takes: the first whose `takes` holds, else the fallback; a kit that can answer
+   *  neither is asked a question it never declared, and says so */
+  static roleFor(item: unknown): string {
+    const { takers, fallback } = this.$dispatch;
+    for (let at = 0; at < takers.length; at++) if (takers[at][1](item)) return takers[at][0];
+    if (fallback === undefined)
+      throw new Error(
+        `${this.name}: no role takes this item — an entry's takes must hold, or one entry must have none`
+      );
+    return fallback;
   }
 
   /** The one cast per class: instance code reads its own statics here. Typed as the statics every
@@ -70,14 +90,10 @@ class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unk
     return entry.shows ? entry.shows(this) : true;
   }
 
-  /** the role an item takes — the container's fact; a kit with one entry role needs no answer */
+  /** the role an item takes — read off the entries' `takes`; a container overrides this only for a
+   *  rule the entries cannot state */
   roleOf(item: Item): KitContainer.RoleOf<Roles> {
-    const role = this.self.$onlyRole;
-    if (role === undefined)
-      throw new Error(
-        `${this.constructor.name}: roleOf() is not defined — a kit with several roles names which one an item takes`
-      );
-    return role as KitContainer.RoleOf<Roles>;
+    return this.self.roleFor(item) as KitContainer.RoleOf<Roles>;
   }
 
   /** what identifies an item in its list — the container's fact; the loop's index by default */
@@ -112,7 +128,14 @@ export namespace KitContainer {
   /** what every container's class carries, read through `self`: its kit and its one role when it has one */
   export interface Statics<Roles extends object> {
     readonly $kit: Roles;
-    readonly $onlyRole: string | undefined;
+    readonly $dispatch: Dispatch;
+    roleFor(item: unknown): string;
+  }
+
+  export type Taker = readonly [role: string, takes: (item: unknown) => boolean];
+  export interface Dispatch {
+    readonly takers: readonly Taker[];
+    readonly fallback: string | undefined;
   }
 
   /** the keys of a kit that hold an entry — every key but `order` */
