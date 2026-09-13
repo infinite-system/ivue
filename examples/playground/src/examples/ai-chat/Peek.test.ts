@@ -20,7 +20,7 @@ function rows(count: number): Chat.Row[] {
     position: String(at + 1),
     index: at,
     page: Math.floor(at / 200),
-    role: at % 100 === 50 ? 'system' : at % 2 ? 'assistant' : 'user',
+    speaker: at % 100 === 50 ? 'system' : at % 2 ? 'assistant' : 'user',
     preview: at % 100 === 50 ? 'Context compacted' : `message ${at}`,
     calls: at % 3,
     at: Date.UTC(2026, 8, 9, 13, at % 60),
@@ -145,7 +145,7 @@ describe('Peek', () => {
     peek.onSearchKeydown({ key: 'Escape', preventDefault: () => undefined } as KeyboardEvent);
     expect(peek.query.value).toBe('');
     expect(peek.rows.value).toHaveLength(1001);
-    // the pickers narrow by role and by tool calls, and Escape resets them once the box is clear
+    // the pickers narrow by speaker and by tool calls, and Escape resets them once the box is clear
     peek.setSpeaker('user');
     expect(peek.rows.value.every((row) => row.speaker === 'user')).toBe(true);
     expect(peek.rows.value).toHaveLength(491);

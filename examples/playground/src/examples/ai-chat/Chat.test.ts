@@ -22,13 +22,13 @@ import { hosted } from '../virtual-scroller/hosted';
 const PAGE_SIZE = 3;
 const message = (
   id: string,
-  role: SessionLog.Speaker,
+  speaker: SessionLog.Speaker,
   text: string,
   extra: Partial<SessionLog.Message> = {}
 ): SessionLog.Message => ({
   id,
   index: 0,
-  role,
+  speaker,
   timestamp: 1_000 + Number(id.replace(/\D/g, '')),
   parts: [{ kind: 'text', text }],
   sidechain: false,
