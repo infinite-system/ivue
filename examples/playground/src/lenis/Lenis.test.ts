@@ -7,15 +7,19 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 // domain-invariant: $Lenis — If a flick runs the same way as the glide the finger interrupted, then the glide's velocity at the take-over is added to the flick's; a flick the other way, or no glide, adds nothing.
 // domain-invariant: $Lenis — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
 // domain-invariant: $Lenis — If a nested box scrolls natively and can still move the way the wheel asks, then the wheel is the box's, in either direction
+// domain-invariant: $Lenis — If the content shifts under a finger's drag, then the trail shifts with it, so the flick's velocity is the finger's motion and never the shift's.
+// domain-invariant: $Lenis — If overscroll is on and a gesture at an end asks for more than the end has, then the scroller takes none of it and scrolls the nearest scrollable ancestor, else the window, by the gesture's own delta; an inward gesture, or overscroll off, is taken as before.
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
 Impossible if true: A wheel up over a nested box scrolled down that moves the list instead of the box.
+Impossible if true: A swipe over rows that measured taller mid-drag reading a velocity of zero.
+Impossible if true: A wheel up at the top of the thread that moves nothing.
 
 === GENERATOR-DESCRIBED ===
 The trail is the one thing the fork adds to touch inertia; the sync
 lerp and the inertia multiplier are upstream Lenis.
 */
 
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { Lenis } from './Lenis';
 
 const { FLICK_WINDOW_MS } = Lenis.Class;
@@ -163,5 +167,129 @@ test('a nested native box keeps the wheel in both directions while it can still 
   expect(check(300, 10)).toBe(false); // at the bottom, a wheel down is the list's
   lenis.destroy();
   wrapper.remove();
+  if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
+});
+
+// domain-invariant: $Lenis — If the content shifts under a finger's drag, then the trail shifts with it, so the flick's velocity is the finger's motion and never the shift's.
+// impossible-if-true: $Lenis — A swipe over rows that measured taller mid-drag reading a velocity of zero.
+test('a shift under the finger moves the trail with the content: the flick reads the finger, not the rows that grew', () => {
+  class ObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  const hadObserver = 'ResizeObserver' in globalThis;
+  if (!hadObserver)
+    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
+  const wrapper = document.createElement('div');
+  const content = document.createElement('div');
+  wrapper.appendChild(content);
+  document.body.appendChild(wrapper);
+  const lenis = new Lenis.Class({ wrapper, content, autoRaf: false, syncTouch: true });
+  const inner = lenis as unknown as {
+    touchTrail: Array<{ at: number; position: number }>;
+    animatedScroll: number;
+    targetScroll: number;
+  };
+  // the finger drags up 300 px over three moves; rows above measure 1000 px taller between them
+  inner.animatedScroll = inner.targetScroll = 5000;
+  inner.touchTrail = [
+    { at: 1000, position: 5000 },
+    { at: 1016, position: 4900 }
+  ];
+  lenis.shiftBy(1000);
+  // the finger goes on from where the shifted content is: two more 100 px moves
+  inner.touchTrail.push({ at: 1032, position: inner.targetScroll - 200 });
+  inner.touchTrail.push({ at: 1048, position: inner.targetScroll - 300 });
+  // the trail reads as the finger's 300 px over 48 ms, whatever the rows did
+  expect(inner.touchTrail.map((point) => point.position)).toEqual([6000, 5900, 5800, 5700]);
+  expect(Lenis.Class.trailVelocity(inner.touchTrail, 0)).toBeCloseTo((-300 / 48) * 16.7, 6);
+  lenis.destroy();
+  wrapper.remove();
+  if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
+});
+
+// domain-invariant: $Lenis — If overscroll is on and a gesture at an end asks for more than the end has, then the scroller takes none of it and scrolls the nearest scrollable ancestor, else the window, by the gesture's own delta; an inward gesture, or overscroll off, is taken as before.
+// impossible-if-true: $Lenis — A wheel up at the top of the thread that moves nothing.
+test('an outward gesture at a limit is handed to the page, an inward one is taken; overscroll off takes both', () => {
+  class ObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  const hadObserver = 'ResizeObserver' in globalThis;
+  if (!hadObserver)
+    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
+  const scrollBy = vi.spyOn(window, 'scrollBy').mockImplementation(() => undefined);
+  const build = (overscroll: boolean) => {
+    const wrapper = document.createElement('div');
+    const content = document.createElement('div');
+    wrapper.appendChild(content);
+    document.body.appendChild(wrapper);
+    const lenis = new Lenis.Class({
+      wrapper,
+      content,
+      autoRaf: false,
+      overscroll,
+      wheelMultiplier: 2,
+      touchMultiplier: 1.3
+    });
+    lenis.virtualLimit = () => 1000;
+    const gesture = (type: string, deltaY: number) => {
+      const event = {
+        type,
+        ctrlKey: false,
+        preventDefault: vi.fn(),
+        composedPath: () => [content, wrapper, document.body],
+        target: content
+      };
+      (
+        lenis as unknown as {
+          onVirtualScroll: (data: { deltaX: number; deltaY: number; event: unknown }) => void;
+        }
+      ).onVirtualScroll({ deltaX: 0, deltaY, event });
+      return event;
+    };
+    return { lenis, wrapper, gesture };
+  };
+  // the pure decision: at the start only a backward delta is outward, at the end only a forward one, a still delta never
+  expect(Lenis.Class.isOutward(0, 1000, -100)).toBe(true);
+  expect(Lenis.Class.isOutward(0, 1000, 100)).toBe(false);
+  expect(Lenis.Class.isOutward(1000, 1000, 100)).toBe(true);
+  expect(Lenis.Class.isOutward(999.6, 1000, 100)).toBe(true);
+  expect(Lenis.Class.isOutward(500, 1000, 100)).toBe(false);
+  expect(Lenis.Class.isOutward(0, 0, 100)).toBe(true);
+  expect(Lenis.Class.isOutward(0, 1000, 0)).toBe(false);
+  // on: a wheel up at the top is the page's, by the un-multiplied notch; a wheel down is the scroller's
+  const on = build(true);
+  const up = on.gesture('wheel', -200);
+  expect(up.preventDefault).toHaveBeenCalled();
+  expect(scrollBy).toHaveBeenLastCalledWith(0, -100);
+  expect(on.lenis.targetScroll).toBe(0);
+  const down = on.gesture('wheel', 200);
+  expect(down.preventDefault).toHaveBeenCalled();
+  expect(on.lenis.targetScroll).toBe(200);
+  expect(scrollBy).toHaveBeenCalledTimes(1);
+  // a scrollable ancestor takes the hand-off before the window does
+  const box = document.createElement('div');
+  box.style.overflowY = 'auto';
+  Object.defineProperty(box, 'scrollHeight', { value: 4000, configurable: true });
+  Object.defineProperty(box, 'clientHeight', { value: 400, configurable: true });
+  box.scrollTop = 50;
+  document.body.appendChild(box);
+  box.appendChild(on.wrapper);
+  on.gesture('wheel', -200);
+  expect(box.scrollTop).toBe(50 - 100);
+  expect(scrollBy).toHaveBeenCalledTimes(1);
+  on.lenis.destroy();
+  box.remove();
+  // off: both directions stay inside — the page never moves
+  const off = build(false);
+  const kept = off.gesture('wheel', -200);
+  expect(kept.preventDefault).toHaveBeenCalled();
+  expect(scrollBy).toHaveBeenCalledTimes(1);
+  off.lenis.destroy();
+  off.wrapper.remove();
+  scrollBy.mockRestore();
   if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
 });

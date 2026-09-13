@@ -54,7 +54,7 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
           :key="element.id"
           class="virtual-scroller__item"
           :index="element.index"
-          @size-updated="(size) => virtualScroller.syncItemSize(element.index, size)"
+          @size-updated="(size) => virtualScroller.captureItemSize(element.index, size)"
         >
           <slot name="item" v-bind="element"></slot>
         </VirtualScrollerItem>

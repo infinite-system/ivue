@@ -1304,3 +1304,42 @@ summary. The first ivue edit after any compaction starts cold: read
 `.claude/skills/ivue/SKILL.md` in full, and `kit.generator.md` before a kit.
 Observed from the outside through the ai-chat instrument, which is the
 point of the instrument.
+
+## A spec pasted into the generator header never runs (2026-09-13)
+
+Three specs — the estimate calibration, the container-grows clamp, the
+Lenis trail shift — sat inside the `/* === GENERATOR === … */` block
+comment of their test files, green because they were comments. The
+insertion anchor was a `// domain-invariant:` line, and the first
+occurrence of that line is the header's claim, not the annotation above
+the test. Before trusting a green run after adding a spec: count `test(`
+inside the header (`awk '/=== GENERATOR ===/,/^\*\//' X.test.ts | grep -c
+"^test("` must be 0) and check the suite total went up. The invariants
+checker's "header domain-invariant has no annotated test" was the tell,
+misread as bookkeeping.
+
+## The docs dev server served the old scroller after edits (2026-09-13)
+
+Playwright traces against `localhost:5174` measured the pre-edit
+`VirtualScroller.ts` for two rounds: the "after" traces still showed
+the per-row `syncItemSize` path. The server ran from the right worktree;
+its module cache did not pick up files under `examples/playground` written
+by a script. Before a Playwright verification of scroller or Lenis edits,
+confirm with `curl -s "http://localhost:5174/@fs$PWD/<file>" | grep -c
+<new symbol>` and restart the server (kill by port, `npm run dev:docs`)
+when it reads 0.
+
+## A phone flick's tail, traced (2026-09-13)
+
+"Chokes just before the end" on Android was three things, none visible
+without a per-frame trace (rAF logger + wrapped `computeVisibleItems`,
+`shiftScroll`, `clampScrollPosition` under Pixel emulation with CDP
+touch events): the pad behind the target was re-trimmed every settle
+window through the lerp's crawl (a chunk of unmounts, a geometry bump and
+a layout per row each time — now held with the lookahead and released at
+rest); every row capture anchored, wrote the transform and forced a layout
+on its own (now one coalesced wave per patch); and the first flick from a
+freshly opened chat's end read a velocity of zero because the anchor
+shifts of rows measuring above the reader were written into the finger's
+trail (the trail now shifts with the content), then what glide there was
+died on a clamp that compared a stale position cell against the new limit.

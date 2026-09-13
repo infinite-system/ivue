@@ -24,6 +24,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 - [A touchcancel flicks like a touchend](#a-touchcancel-flicks-like-a-touchend) — why a browser claiming the gesture does not freeze the content.
 - [A flick carries the glide it interrupted](#a-flick-carries-the-glide-it-interrupted) — why flick after flick gains speed instead of restarting.
 - [A lerp completes within half a pixel of any target](#a-lerp-completes-within-half-a-pixel-of-any-target) — why a glide always ends, and the scroller can rest.
+- [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page) — why a reader at an end is never trapped inside the scroller.
 
 **Mechanism:** The touchstart seeds a trail at the animated position and marks the touch pending while the glide runs on; the first move stops the glide, drops its target for the animated position, re-seeds the trail there and syncs the finger; every move appends to the trail inside a 100 ms window with one anchor kept before it; the end or cancel reads the velocity off the trail with the span capped at the window and scrolls to the inertia distance; an end with no move is the tap that stops the glide.
 
@@ -91,7 +92,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 ### A flick's velocity is read off the finger's last stretch
 
-**Invariant:** If a touch ends or is cancelled, then the flick's velocity is the position change over the finger's trail — samples inside `FLICK_WINDOW_MS` (100 ms) plus one anchor kept before the window — scaled to a frame, with the span capped at the window; the trail is seeded at the touchstart at the ANIMATED position, before any early return, and re-seeded there when the finger takes over a glide; fewer than two samples, or a span under 8 ms, fall back to the frame's velocity; a pause mid-touch reads as no flick since its anchor and its move share a position.
+**Invariant:** If a touch ends or is cancelled, then the flick's velocity is the position change over the finger's trail — samples inside `FLICK_WINDOW_MS` (100 ms) plus one anchor kept before the window — scaled to a frame, with the span capped at the window; the trail is seeded at the touchstart at the ANIMATED position, before any early return, and re-seeded there when the finger takes over a glide; fewer than two samples, or a span under 8 ms, fall back to the frame's velocity; a pause mid-touch reads as no flick since its anchor and its move share a position; a shift of the content under the finger (rows above the reader measuring, `shiftBy`) moves every trail position by the same delta, so the velocity stays the finger's.
 
 **Scope:** `Lenis.ts` `trailVelocity`, `trimTrail`, `FLICK_WINDOW_MS`, the `touchTrail` state and its seeding in `onVirtualScroll`.
 
@@ -99,11 +100,11 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 **Generates:** `Lenis.test.ts`: the trail, the seed, the late anchor, the seed at the target versus the content, the pause.
 
-**Rejected alternatives:** The last frame's velocity (zero at a coalesced touchend). Seeding at the target (a 336 px swipe read 1.19 px/frame). Trimming every sample older than the window (the seed vanished; `trail=1`). The true span for a held-back move (a third of the glide of a multi-move swipe).
+**Rejected alternatives:** The last frame's velocity (zero at a coalesced touchend). A trail left where it was under a shift (the finger's 300 px cancelled by 1000 px of rows growing: no inertia). Seeding at the target (a 336 px swipe read 1.19 px/frame). Trimming every sample older than the window (the seed vanished; `trail=1`). The true span for a held-back move (a third of the glide of a multi-move swipe).
 
 **Evidence:** `Lenis.ts` `trailVelocity`. Tests: "the flick velocity is read off the trail, and falls back to the frame velocity with too little trail", "a re-flick Android coalesced into one touchmove still flicks: the touchstart seeds the trail, so one move has a span", "an idle frame before the touchend does not zero the flick: the trail still spans the finger's moves".
 
-**Impossible if true:** A swipe delivered as one touchmove reading a velocity of zero. A seed that is not where the content is.
+**Impossible if true:** A swipe delivered as one touchmove reading a velocity of zero. A seed that is not where the content is. A swipe over rows that measured taller mid-drag reading as still — the first flick from the end of a freshly opened chat did, as every row above mounted and shifted the trail.
 
 **Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts`
 
@@ -177,11 +178,34 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 **Last refined:** 2026-09-07
 
+### An outward gesture at a limit belongs to the page
+
+**Invariant:** If `overscroll` is on (the default), the scroller is not the window and not infinite, and a gesture asks for more than an end has — back at the start, on past the end, either way on a list shorter than its frame — then the scroller takes none of it: the event is cancelled and the nearest scrollable ancestor (else the window) is scrolled by the gesture's own, un-multiplied delta — a wheel notch or the finger's move; no stop flag is set. With `overscroll` off every gesture stays inside.
+
+**Scope:** `Lenis.ts` `isOutward`, `LIMIT_TOLERANCE_PX`, `chainToAncestor`, the gate at the top of `onVirtualScroll`'s gesture path; `VirtualScroller.ts` the `overscroll` prop (default true) passed as the Lenis option; the peek's `:overscroll="false"`.
+
+**Mechanism:** A nested scroller that swallows every wheel and touch traps the reader: at the end of the thread the page under it never moves, and a phone reader at the top of a list cannot reach the page above it. Native nested scrollers chain to their ancestor at the ends; the fork chains the same way at the one point it can decide — the gesture that would leave the range. Neither gesture can be left to the browser: the frame is `overflow: auto`, so an uncancelled wheel pans the frame itself, which the scroller zeroes (measured: the page stayed put), and a touch has `touch-action: none` under it. So the fork cancels and writes `scrollTop` on the ancestor by the un-multiplied delta itself — the same hand-off for both. A card floating over the page — the peek — must not push the page it floats on, so it turns the hand-off off.
+
+**Generates:** The `overscroll` prop; the peek's opt-out; a reader who reaches the top of the chat and keeps scrolling arriving at the page's title.
+
+**Rejected alternatives:** Leaving the wheel uncancelled so the document scrolls natively — the overflow:auto frame takes it first and the scroller zeroes it. `touch-action: pan-y` on the frame so the browser pans the page itself — the browser decides a gesture on its first move, so a finger that reached the end mid-drag would never hand off, and the record "The frame is never natively panned along its own axis" holds for a reason (Android claiming a sloppy second swipe).
+
+**Evidence:** `Lenis.ts` `isOutward`, `chainToAncestor`. Tests: "an outward wheel at a limit is left to the page, an inward one is taken; overscroll off takes both", "an outward touchmove at a limit scrolls the nearest scrollable ancestor by the finger's move".
+
+**Impossible if true:** A wheel up at the top of the thread that moves nothing. A touch at the end of a list that cannot reach the page. The peek pushing the page under it.
+
+**Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "outward"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-13
+
 ## Impossibility boundary — what these invariants forbid
 
 - A re-flick that stalls — [A touch on a glide keeps it running until the first move](#a-touch-on-a-glide-keeps-it-running-until-the-first-move).
 - A settled glide that never completes — [A lerp completes within half a pixel of any target](#a-lerp-completes-within-half-a-pixel-of-any-target).
 - A coalesced swipe reading a velocity of zero — [A flick's velocity is read off the finger's last stretch](#a-flicks-velocity-is-read-off-the-fingers-last-stretch).
 - A flick logic proven on iOS alone — [Android holds the first move back and may coalesce a swipe into one](#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one).
+- A wheel up at the top of the thread that moves nothing — [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page).
 - A claimed gesture leaving the content frozen — [A touchcancel flicks like a touchend](#a-touchcancel-flicks-like-a-touchend).
 - A run of same-way flicks that slows down — [A flick carries the glide it interrupted](#a-flick-carries-the-glide-it-interrupted).

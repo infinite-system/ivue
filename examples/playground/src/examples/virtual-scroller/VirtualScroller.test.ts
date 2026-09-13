@@ -19,7 +19,6 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If a nested knob prop is read, then it is complete at every depth: a leaf the author supplied wins and every leaf left out is the tuned default, and Lenis is tuned from the same leaves.
 // domain-invariant: $VirtualScroller — If the scroll position changes with the window unchanged, then the scroller's own template does not re-render: the thumb, the one per-frame reader, is its own component.
 // domain-invariant: $VirtualScroller — If the reading creep moves on from a seek's landing, then the seek's converge loop ends with the next position shift instead of re-pinning the landing under the creep.
-
 // domain-invariant: $VirtualScroller — If rows above the row under the viewport's leading edge change size, then the scroll moves by exactly that change and the reader's row stays where it was; rows below it move nothing.
 // domain-invariant: $VirtualScroller — If the reader is at rest, then the anchor is the row under the top edge whatever the last direction was, so a row that grows from a click grows downward; only while moving up is the bottom edge the anchor.
 // domain-invariant: $VirtualScroller — If the reader scrolled between two waves of a seek's converge loop, or the owner cancels the seek, then the next position shift ends the loop instead of re-pinning the landing.
@@ -27,23 +26,8 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If a finger lands on the track, then the touch is flagged for Lenis to skip, so the thumb drag seeks and the content does not scroll under it.
 // domain-invariant: $VirtualScroller — If the props object is read, then it is the fusion of the static types and defaults: the required list carries no default and the creep knob unset reads as the tuned cadence.
 // domain-invariant: $VirtualScroller — If a measurement wave leaves at least five rows measured, then the estimate becomes their average once and stays there; a wave with fewer changes nothing, and a later wave changes nothing
-// impossible-if-true: $VirtualScroller — an estimate that first calibrates under the reader's first gesture on a phone, or one that drifts after it calibrated
-// invariant: Rendered sizes are known only after a row mounts (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-test('the estimate calibrates on the first wave with five measured rows, once — the first screen on any device, never under a gesture', () => {
-  const { instance, unmount } = scroller(rows(1000), { assumedSize: 30 });
-  for (const index of [0, 1, 2, 3]) instance.syncItemSize(index, 150);
-  instance.probeCalibrate();
-  expect(instance.estimatedItemSize).toBe(30);
-  instance.syncItemSize(4, 150);
-  instance.probeCalibrate();
-  expect(instance.estimatedItemSize).toBe(150);
-  expect(instance.scrollExtent.value).toBe(150 * 1000);
-  for (const index of [5, 6, 7, 8, 9, 10]) instance.syncItemSize(index, 400);
-  instance.probeCalibrate();
-  expect(instance.estimatedItemSize).toBe(150);
-  unmount();
-});
-
+// domain-invariant: $VirtualScroller — If the container grows while the position rests at the end, then the position moves to the new end, so the last row keeps the bottom edge instead of floating above a blank strip.
+// domain-invariant: $VirtualScroller — If a patch mounts or unmounts a wave of rows, then their captures apply together: one geometry bump, one anchor taken before the first and restored after the last, one clamp — never a transform write between two rows' reads.
 // domain-invariant: $VirtualScroller — If item i's position is asked, then it is the sum of the sizes before it, measured where known and the estimate elsewhere, whichever way the cursor walks there.
 // domain-invariant: $VirtualScroller — If a pixel offset is asked for its item, then anchoring that item at the returned fraction gives the same pixel back.
 // domain-invariant: $VirtualScroller — If the window changes, then itemsChanged fires once with the padded bounds; a scroll that keeps the window fires nothing.
@@ -63,6 +47,9 @@ Impossible if true: A spacer and a transform a chunk apart within one frame.
 Impossible if true: A viewport resting past the last row after it shrank.
 Impossible if true: An item outside the list with a position.
 Impossible if true: A window whose spacers plus rows sum to anything but the extent.
+Impossible if true: an estimate that first calibrates under the reader's first gesture on a phone, or one that drifts after it calibrated
+Impossible if true: A container that grew leaving the last row above its bottom edge.
+Impossible if true: A row capture that moves the content before the wave's last row has been read.
 
 === GENERATOR-DESCRIBED ===
 Every spec runs headless. The scroller is hosted in a throwaway component
@@ -126,6 +113,10 @@ class $Probe extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<R
 
   probeConverging() {
     return this.stopScrollToIndexReapply !== null;
+  }
+
+  probeGeometryVersion() {
+    return this.geometryVersion.value;
   }
 
   probeCalibrate() {
@@ -443,7 +434,10 @@ test('a scroll frame re-renders the thumb, never the scroller with its rows', as
   const exposed = (wrapper.vm as unknown as { $: { exposed: unknown } }).$.exposed as {
     scrollPosition: { value: number };
   };
-  await nextTick();
+  // jsdom measures every row at 0, and each wave of captures lands a
+  // microtask after its patch: drain the cascade so the rows are settled
+  // before the scroll frames are counted
+  for (let hop = 0; hop < 200; hop++) await nextTick();
   const thumb = wrapper.find('.virtual-scroller__thumb');
   expect(thumb.exists()).toBe(true);
   const track = wrapper.findComponent({ name: 'VirtualScrollerTrack' });
@@ -939,5 +933,74 @@ test('a position write without a transform write leaves the render bias alone', 
   // a transform write moves it
   instance.setScrollPosition(-(chunk * 4 + 10), false, true);
   expect(instance.probeRenderBias()).toBe(chunk * 3);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If a measurement wave leaves at least five rows measured, then the estimate becomes their average once and stays there; a wave with fewer changes nothing, and a later wave changes nothing
+// impossible-if-true: $VirtualScroller — an estimate that first calibrates under the reader's first gesture on a phone, or one that drifts after it calibrated
+// invariant: Rendered sizes are known only after a row mounts (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('the estimate calibrates on the first wave with five measured rows, once — the first screen on any device, never under a gesture', () => {
+  const { instance, unmount } = scroller(rows(1000), { assumedSize: 30 });
+  for (const index of [0, 1, 2, 3]) instance.syncItemSize(index, 150);
+  instance.probeCalibrate();
+  expect(instance.estimatedItemSize).toBe(30);
+  instance.syncItemSize(4, 150);
+  instance.probeCalibrate();
+  expect(instance.estimatedItemSize).toBe(150);
+  expect(instance.scrollExtent.value).toBe(150 * 1000);
+  for (const index of [5, 6, 7, 8, 9, 10]) instance.syncItemSize(index, 400);
+  instance.probeCalibrate();
+  expect(instance.estimatedItemSize).toBe(150);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the container grows while the position rests at the end, then the position moves to the new end, so the last row keeps the bottom edge instead of floating above a blank strip.
+// impossible-if-true: $VirtualScroller — A container that grew leaving the last row above its bottom edge.
+test('a container that grows pulls a position resting at the end back to the new end', async () => {
+  const { instance, unmount } = scroller(rows(100), { assumedSize: 30 });
+  // 3000 px of content in a 100 px frame: the end is 2900
+  instance.setScrollPosition(-2900, false);
+  expect(Number(instance.scrollPosition.value)).toBe(2900);
+  // the address bar folds away: the frame is 400 px, the end is 2600
+  instance.frameSize.value = 400;
+  await nextTick();
+  expect(Number(instance.scrollPosition.value)).toBe(2600);
+  // a frame that shrinks back moves nothing — the position is inside the range
+  instance.frameSize.value = 100;
+  await nextTick();
+  expect(Number(instance.scrollPosition.value)).toBe(2600);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If a patch mounts or unmounts a wave of rows, then their captures apply together: one geometry bump, one anchor taken before the first and restored after the last, one clamp — never a transform write between two rows' reads.
+// impossible-if-true: $VirtualScroller — A row capture that moves the content before the wave's last row has been read.
+test('a wave of row captures coalesces into one anchored application', async () => {
+  const { instance, unmount } = scroller(rows(100), { assumedSize: 30 });
+  instance.setScrollPosition(-600, false);
+  const version = instance.probeGeometryVersion();
+  const captureAnchor = vi.spyOn(instance, 'captureAnchor');
+  const restoreAnchor = vi.spyOn(instance, 'restoreAnchor');
+  const clamp = vi.spyOn(instance, 'clampScrollPosition');
+  // three rows above the reader measure taller — in one patch
+  instance.captureItemSize(10, 80);
+  instance.captureItemSize(11, 90);
+  instance.captureItemSize(12, 100);
+  // nothing applied yet: the anchor was taken once, before any size landed
+  expect(captureAnchor).toHaveBeenCalledTimes(1);
+  expect(instance.probeGeometryVersion()).toBe(version);
+  expect(instance.getIndexPosition(13)).toBe(13 * 30);
+  await Promise.resolve();
+  // the wave landed together: one bump, one restore, one clamp, all three sizes
+  expect(instance.probeGeometryVersion()).toBe(version + 1);
+  expect(restoreAnchor).toHaveBeenCalledTimes(1);
+  expect(clamp).toHaveBeenCalledTimes(1);
+  expect(instance.getIndexPosition(13)).toBe(10 * 30 + 80 + 90 + 100);
+  // the reader's row stayed put: the scroll moved by exactly the growth above it
+  expect(Number(instance.scrollPosition.value)).toBe(600 + 50 + 60 + 70);
+  // a capture that repeats a known size is not a change: no bump, no anchor work
+  instance.captureItemSize(10, 80);
+  await Promise.resolve();
+  expect(instance.probeGeometryVersion()).toBe(version + 1);
+  expect(restoreAnchor).toHaveBeenCalledTimes(1);
   unmount();
 });

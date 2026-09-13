@@ -91,6 +91,7 @@ defineExpose(model as Peek.Instance);
               ref="scroller"
               :kit="model.kit.Scroller"
               :auto-repeat="false"
+              :overscroll="false"
               scrollbar
               :model-value="rows"
               :assumed-size="30"

@@ -80,6 +80,23 @@ class $Lenis {
     return ((last.position - first.position) / span) * this.FRAME_MS;
   }
 
+  /** Within this many px of an end the content counts as at it. */
+  static get LIMIT_TOLERANCE_PX() {
+    return 0.5;
+  }
+
+  /**
+   * A gesture that asks for more than an end has: back at the start, on
+   * past the end — the page's to scroll, never this scroller's. A list
+   * shorter than its frame (limit 0) has nothing of its own either way.
+   */
+  // invariant: An outward gesture at a limit belongs to the page (examples/playground/src/lenis/lenis.invariants.md)
+  static isOutward(scroll: number, limit: number, delta: number): boolean {
+    if (delta < 0) return scroll <= this.LIMIT_TOLERANCE_PX;
+    if (delta > 0) return scroll >= limit - this.LIMIT_TOLERANCE_PX;
+    return false;
+  }
+
   /**
    * A flick's velocity with the interrupted glide's added back, when the
    * flick runs the same way; a flick the other way, or a swipe too slow
@@ -592,6 +609,11 @@ class $Lenis {
     this.targetScroll += delta;
     this.animatedScroll += delta;
     if (this.animate.isRunning) this.animate.shift(delta);
+    // the finger's trail shifts with the content too: its positions are
+    // where the content was under each move, and a flick's velocity is the
+    // finger's motion over them — rows measuring above the reader mid-drag
+    // moved the positions without the finger, and the flick read as still
+    for (const point of this.touchTrail) point.position += delta;
     this.setScroll(this.scroll);
   }
 
@@ -676,6 +698,32 @@ class $Lenis {
     if (event.button === 1) {
       this.reset();
     }
+  }
+
+  /**
+   * Scroll what holds this scroller by a gesture's delta: the nearest
+   * ancestor that overflows on the axis, else the window. The frame pans
+   * nothing natively on its own axis, so the hand-off is the fork's own
+   * write.
+   */
+  // invariant: An outward gesture at a limit belongs to the page (examples/playground/src/lenis/lenis.invariants.md)
+  protected chainToAncestor(delta: number) {
+    const horizontal = this.isHorizontal;
+    let node = this.rootElement.parentElement;
+    while (node) {
+      const style = getComputedStyle(node);
+      const overflow = horizontal ? style.overflowX : style.overflowY;
+      const scrollable =
+        (overflow === 'auto' || overflow === 'scroll') &&
+        (horizontal ? node.scrollWidth > node.clientWidth : node.scrollHeight > node.clientHeight);
+      if (scrollable) {
+        if (horizontal) node.scrollLeft += delta;
+        else node.scrollTop += delta;
+        return;
+      }
+      node = node.parentElement;
+    }
+    window.scrollBy(horizontal ? delta : 0, horizontal ? 0 : delta);
   }
 
   protected onVirtualScroll(data: VirtualScroll.Data) {
@@ -804,6 +852,27 @@ class $Lenis {
       delta = Math.abs(deltaY) > Math.abs(deltaX) ? deltaY : deltaX;
     } else if (this.options.gestureOrientation === 'horizontal') {
       delta = deltaX;
+    }
+
+    // An outward gesture at a limit is the page's. The frame is overflow:auto and
+    // its own axis is never the browser's — an uncancelled wheel would pan the
+    // frame natively and be zeroed, a touch has `touch-action: none` under it — so
+    // the fork cancels the event and moves the nearest scrollable ancestor by the
+    // gesture's own, un-multiplied delta. No stop flag is set. `overscroll: false`
+    // keeps every gesture inside — a card over the page, like the peek, wants that.
+    // invariant: An outward gesture at a limit belongs to the page (examples/playground/src/lenis/lenis.invariants.md)
+    if (
+      this.options.overscroll &&
+      !this.options.infinite &&
+      this.options.wrapper !== window &&
+      this.self.isOutward(this.animatedScroll, this.limit, delta)
+    ) {
+      event.preventDefault();
+      if (isWheel || event.type === 'touchmove') {
+        const gain = isTouch ? this.options.touchMultiplier : this.options.wheelMultiplier;
+        this.chainToAncestor(delta / (gain || 1));
+      }
+      return;
     }
 
     if (

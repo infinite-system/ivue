@@ -8,8 +8,9 @@ Goal: Size the rows mounted beyond the visible window from the motion itself, so
 [A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
 // domain-invariant: $VirtualScrollerPadding — If the content moves at a speed, then the rows ahead cover the distance it travels in the lookahead, rounded up and capped, and a crawl counts as still.
 // domain-invariant: $VirtualScrollerPadding — If a pad is split, then the lookahead rows sit on the end the content moves toward and the gap rows on the end it comes from; at rest both ends carry the base.
-// domain-invariant: $VirtualScrollerPadding — If a new reading arrives, then a higher level replaces the held one at once, a lower one never shrinks it while the content moves, rest shrinks it after the settle window, and a reversal drops it immediately.
+// domain-invariant: $VirtualScrollerPadding — If a new reading arrives, then a higher level — rows ahead or rows behind — raises the held one at once, a lower one never shrinks either while the content moves, rest shrinks both after the settle window, and a reversal drops them immediately.
 Impossible if true: A pad that shrinks on the first frame of a flick's decay.
+Impossible if true: Gap rows trimmed while the lerp still travels.
 
 === GENERATOR-DESCRIBED ===
 The owner is a plain object of the four fields the pad reads; the walk
@@ -50,6 +51,9 @@ test('rows behind cover the lerp gap exactly, rounded up and capped', () => {
   expect(Logic.rowsBehind(848, 56)).toBe(16);
   expect(Logic.rowsBehind(-848, 56)).toBe(16);
   expect(Logic.rowsBehind(0, 56)).toBe(0);
+  // the lerp's settle band: a sub-pixel gap is rest, not one more row
+  expect(Logic.rowsBehind(0.4, 56)).toBe(0);
+  expect(Logic.rowsBehind(1, 56)).toBe(1);
   expect(Logic.rowsBehind(1_000_000, 56)).toBe(Logic.MAX_ROWS_GAP);
 });
 
@@ -60,31 +64,50 @@ test('the split puts the lookahead rows ahead of the motion and the gap rows beh
   expect(Logic.split(3, 12, 16, 0)).toEqual({ before: 3, after: 3 });
 });
 
-// domain-invariant: $VirtualScrollerPadding — If a new reading arrives, then a higher level replaces the held one at once, a lower one never shrinks it while the content moves, rest shrinks it after the settle window, and a reversal drops it immediately.
+// domain-invariant: $VirtualScrollerPadding — If a new reading arrives, then a higher level — rows ahead or rows behind — raises the held one at once, a lower one never shrinks either while the content moves, rest shrinks both after the settle window, and a reversal drops them immediately.
 // impossible-if-true: $VirtualScrollerPadding — A pad that shrinks on the first frame of a flick's decay.
+// impossible-if-true: $VirtualScrollerPadding — Gap rows trimmed while the lerp still travels.
 test('settle grows at once, holds through the decay, shrinks at rest after the settle window, and drops on a turn', () => {
-  const start = { ahead: 0, direction: 0 as const, since: 0 };
-  const grown = Logic.settle(start, 10, 1, 100);
-  expect(grown).toEqual({ ahead: 10, direction: 1, since: 100 });
+  const start = { ahead: 0, behind: 0, gapPx: 0, direction: 0 as const, since: 0 };
+  const grown = Logic.settle(start, 10, 20, 800, 1, 100);
+  expect(grown).toEqual({ ahead: 10, behind: 20, gapPx: 800, direction: 1, since: 100 });
   // Lower readings while the content still moves keep the held level —
   // however long the decay tail runs — so no burst of unmounts lands mid-glide.
-  expect(Logic.settle(grown, 4, 1, 101)).toBe(grown);
-  expect(Logic.settle(grown, 4, 1, 100 + Logic.SETTLE_MS - 1)).toBe(grown);
-  expect(Logic.settle(grown, 4, 1, 100 + Logic.SETTLE_MS * 5)).toBe(grown);
-  // Rest inside the window still holds; rest once the window has passed shrinks.
-  expect(Logic.settle(grown, 0, 0, 100 + Logic.SETTLE_MS - 1)).toBe(grown);
-  expect(Logic.settle(grown, 0, 0, 100 + Logic.SETTLE_MS)).toEqual({
+  // The gap rows are held the same way: the lerp closing its gap trims nothing.
+  expect(Logic.settle(grown, 4, 12, 480, 1, 101)).toBe(grown);
+  expect(Logic.settle(grown, 4, 2, 80, 1, 100 + Logic.SETTLE_MS - 1)).toBe(grown);
+  expect(Logic.settle(grown, 4, 0, 0, 1, 100 + Logic.SETTLE_MS * 5)).toBe(grown);
+  expect(Logic.settle(grown, 0, 1, 20, 1, 100 + Logic.SETTLE_MS * 5)).toBe(grown);
+  // One side growing raises that side and keeps the others' levels.
+  expect(Logic.settle(grown, 12, 5, 200, 1, 120)).toEqual({
+    ahead: 12,
+    behind: 20,
+    gapPx: 800,
+    direction: 1,
+    since: 120
+  });
+  // Rest inside the window still holds; rest once the window has passed releases everything.
+  expect(Logic.settle(grown, 0, 0, 0, 0, 100 + Logic.SETTLE_MS - 1)).toBe(grown);
+  expect(Logic.settle(grown, 0, 0, 0, 0, 100 + Logic.SETTLE_MS)).toEqual({
     ahead: 0,
+    behind: 0,
+    gapPx: 0,
     direction: 1,
     since: 100 + Logic.SETTLE_MS
   });
   // A reversal drops to the new reading immediately — the held rows face the wrong way.
-  expect(Logic.settle(grown, 2, -1, 150)).toEqual({ ahead: 2, direction: -1, since: 150 });
+  expect(Logic.settle(grown, 2, 3, 120, -1, 150)).toEqual({
+    ahead: 2,
+    behind: 3,
+    gapPx: 120,
+    direction: -1,
+    since: 150
+  });
 });
 
 // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 // invariant: Lenis is read inside the walk never tracked (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-test('pad() follows the lerp gap frame by frame and holds the lookahead across a decaying tail, reading the owner each call', () => {
+test('pad() holds the gap rows and the lookahead across a decaying tail and releases both at rest, reading the owner each call', () => {
   const owner = {
     halfPaddingQuantity: 3,
     scrollVelocity: 40,
@@ -94,14 +117,14 @@ test('pad() follows the lerp gap frame by frame and holds the lookahead across a
   const padding = new Logic(owner);
   // Flick: 20 rows of gap behind the target-anchored window, 15 of lookahead beyond it.
   expect(padding.pad(0)).toEqual({ before: 23, after: 18 });
-  // The lerp converges: the gap shrinks at once, the lookahead is held.
+  // The lerp converges: neither the gap rows nor the lookahead shrink mid-glide.
   owner.scrollVelocity = 8;
   owner.scrollGap = 80;
-  expect(padding.pad(100)).toEqual({ before: 5, after: 18 });
-  // Still moving past the window: the lookahead is held, not shrunk mid-glide.
+  expect(padding.pad(100)).toEqual({ before: 23, after: 18 });
+  // Still moving past the window: both held, nothing unmounts in the tail.
   owner.scrollGap = 0;
-  expect(padding.pad(100 + Logic.SETTLE_MS)).toEqual({ before: 3, after: 18 });
-  // At rest: the lookahead drops to the base.
+  expect(padding.pad(100 + Logic.SETTLE_MS)).toEqual({ before: 23, after: 18 });
+  // At rest: both drop to the base, in one walk.
   owner.scrollVelocity = 0;
   expect(padding.pad(200 + Logic.SETTLE_MS)).toEqual({ before: 3, after: 3 });
   // A flick back: everything mirrors.
@@ -109,6 +132,10 @@ test('pad() follows the lerp gap frame by frame and holds the lookahead across a
   owner.scrollGap = -800;
   expect(padding.pad(1000)).toEqual({ before: 18, after: 23 });
   expect(padding.rowsAhead).toBe(15);
+  expect(padding.rowsBehind).toBe(20);
+  // the held gap in px sits on the end side of a flick back, nothing on the start side
+  expect(padding.gapEndPx).toBe(800);
+  expect(padding.gapStartPx).toBe(0);
   expect(padding.before).toBe(18);
   expect(padding.after).toBe(23);
   padding.dispose();

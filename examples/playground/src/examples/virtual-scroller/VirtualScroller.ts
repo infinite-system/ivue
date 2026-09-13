@@ -71,6 +71,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       },
       /** Render the built-in draggable scrollbar over the VIRTUAL position. */
       scrollbar: { type: Boolean as PropType<boolean> },
+      /** At an end, an outward wheel or touch scrolls the page (the nearest
+       *  scrollable ancestor, else the document) — like CSS overscroll-behavior
+       *  auto. False keeps every gesture inside: a card over the page wants that. */
+      overscroll: { type: Boolean as PropType<boolean> },
       autoPlay: { type: Boolean as PropType<boolean> },
       autoPlayDelay: { type: Number as PropType<number> },
       autoRepeat: { type: Boolean as PropType<boolean> },
@@ -124,6 +128,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   static get propsDefaults(): ExtractPropDefaultTypes<typeof $VirtualScroller.propsTypes> {
     return {
       scrollbar: false,
+      overscroll: true,
       autoPlay: false,
       autoPlayDelay: 500,
       autoRepeat: true,
@@ -260,6 +265,17 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       () => this.updatePositionsImmediately()
     );
 
+    // The container grew — a phone's address bar folded away, a panel
+    // closed — and the range shrank by the same amount: a position resting
+    // at the old end now sits past the new one, and the last row floats
+    // above a blank strip. Pull it back in; a reader at the end stays at
+    // the end.
+    // invariant: The scroll position lands inside the scrollable range (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+    watch(
+      () => this.containerOuterSize.value,
+      () => this.clampScrollPosition()
+    );
+
     if (this.autoPlay.value) this.startAutoPlay(this.props.autoPlayDelay);
 
     onMounted(() => {
@@ -272,6 +288,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
         gestureOrientation: this.lenisGestureOrientation,
         ignoreNativeScroll: this.lenisIgnoreNativeScroll,
         syncTouch: true, // Sync touch events
+        overscroll: this.props.overscroll,
         smoothWheel: true,
         // a scrollable element inside a row — a wide code block, a diff — takes the wheel
         // until it reaches its own edge; only then does the gesture move the list
@@ -812,6 +829,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** A thumb drag's track fractions at its start and its latest move —
    *  their order on release is the drag's direction. */
   protected readonly thumbDrag = { from: 0, to: 0 };
+  /** The row captures of the current patch, applied together by flushItemSizes. */
+  protected pendingSizes: [number, number][] = [];
+  /** The anchor taken at the wave's first capture, restored once at the flush. */
+  protected pendingAnchor: VirtualScroller.Anchor | undefined = undefined;
 
   protected virtualScrollTimeout: ReturnType<typeof setTimeout> | undefined;
 
@@ -994,9 +1015,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // at the target, and the rows between are covered in PIXELS over their measured sizes.
     // A pad counted in rows of the estimate under-covers a gap over rows shorter than it
     // (a 35px system line against a 160px estimate) and the bottom of the viewport goes blank.
+    // The gap is read through the pad, which holds it: the exact gap shrinks every frame as
+    // the lerp converges, and a walk mid-tail would trim the rows it no longer needs — a burst
+    // of unmounts while the content still crawls. Held, they release once, at rest.
     // invariant: The pad covers the lerp gap exactly (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-    const gap = this.scrollGap;
-    const behindPx = Math.max(0, -gap);
+    const pad = this.$padding;
+    const padding = pad.pad();
+    const behindPx = pad.gapEndPx;
     let end = start;
     let endOffset = startOffset;
     const bottom = startOffset + this.containerSize.value + behindPx;
@@ -1005,14 +1030,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       end++;
     }
     // scrolling down the animated position is ABOVE the target: cover it the same way
-    const aheadPx = Math.max(0, gap);
+    const aheadPx = pad.gapStartPx;
     while (start > 0 && startOffset > scrollTop - aheadPx) {
       start--;
       startOffset -= measured[start] ?? assumed;
     }
 
-    // invariant: The pad covers the lerp gap exactly (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-    const padding = this.$padding.pad();
     const paddedStart = Math.max(0, start - padding.before);
     end += padding.after + 1;
 
@@ -1248,8 +1271,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const lenis = this.lenis;
     if (lenis && lenis.isScrolling) {
       // the glide moves with the content: its lerp keeps its remaining
-      // distance and the compensation paints in this frame
+      // distance and the compensation paints in this frame. The position
+      // cell follows the shifted target — the clamp that runs after a
+      // shift reads it, and a stale target above the new limit read as
+      // out of range and adopted the limit, killing the glide.
       lenis.shiftBy(delta);
+      this.scrollPosition.value = Math.max(0, lenis.targetScroll);
       return;
     }
     const next = Math.max(0, Number(this.scrollPosition.value) + delta);
@@ -1264,6 +1291,46 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * viewport's leading edge stays where it was. A batch caller passes
    * false, anchors once around the whole wave, and bumps geometry itself.
    */
+  /**
+   * A row's own capture — its mount or its unmount. A wave of rows lands
+   * in one patch, so their captures coalesce: the anchor is taken at the
+   * first, the sizes collect, and one microtask applies them all, bumps
+   * geometry once, restores the anchor once and clamps once. Anchored per
+   * row, each capture wrote the transform between the next row's reads —
+   * a forced layout per row, dozens on a flick's mount frame on a phone.
+   */
+  // invariant: The reader's row stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: An item captures its size once in and once out (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  captureItemSize(index: number, size: number) {
+    if (this.pendingSizes.length === 0) {
+      this.pendingAnchor = this.captureAnchor();
+      queueMicrotask(this.flushItemSizes);
+    }
+    this.pendingSizes.push([index, size]);
+  }
+
+  /** The wave's one application: every collected size, one bump, one anchor restore, one clamp. */
+  flushItemSizes() {
+    const sizes = this.pendingSizes;
+    const anchor = this.pendingAnchor;
+    if (sizes.length === 0) return;
+    this.pendingSizes = [];
+    this.pendingAnchor = undefined;
+    const measured = toRaw(this.measuredSizes.value);
+    let changed = false;
+    for (const [index, size] of sizes) {
+      if (measured[index] === size) continue;
+      this.applyItemSize(index, size, false);
+      changed = true;
+    }
+    if (!changed) return;
+    // the estimate calibrates on the wrapper observer's wave, as before; a
+    // row's own capture only records
+    this.bumpGeometryVersion();
+    this.restoreAnchor(anchor);
+    this.clampScrollPosition();
+  }
+
   syncItemSize(index: number, size: number, doUpdatePositions = true) {
     if (!doUpdatePositions) {
       this.applyItemSize(index, size, false);

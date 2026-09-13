@@ -30,10 +30,13 @@
 //     it, a flick that stops the creep would leave its pad mounted.
 //
 // The hysteresis is what keeps the window from thrashing. A pad grows the
-// frame the velocity does; it holds for as long as the content moves and
-// shrinks only at rest, once SETTLE_MS has passed since it last grew, so
-// the decay tail of a flick never unmounts a burst of rows mid-glide (a
-// visible hitch on a phone) and keeps what the next flick needs.
+// frame the velocity or the gap does; it holds for as long as the content
+// moves and shrinks only at rest, once SETTLE_MS has passed since it last
+// grew, so the decay tail of a flick never unmounts a burst of rows
+// mid-glide (a visible hitch on a phone) and keeps what the next flick
+// needs. The gap rows are held the same way: exact per frame they would
+// be trimmed on every walk of the tail — a chunk of unmounts, each with
+// its own layout, every settle window while the content still crawls.
 import { ref } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
@@ -67,6 +70,10 @@ class $VirtualScrollerPadding {
     return 0.5;
   }
 
+  /** Below this lerp gap (px) the content counts as landed — the lerp's own settle band. */
+  static get STILL_GAP_PX() {
+    return 0.5;
+  }
   /** Lenis reports velocity per animation frame; this converts it to per ms. */
   static get FRAME_MS() {
     return 16.7;
@@ -92,6 +99,8 @@ class $VirtualScrollerPadding {
   // invariant: The transform lerps to the target over many frames (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   static rowsBehind(gapPx: number, rowSize: number): number {
     if (rowSize <= 0) return 0;
+    // a sub-pixel gap is the lerp's settle band: at rest, no rows
+    if (Math.abs(gapPx) < this.STILL_GAP_PX) return 0;
     return Math.min(this.MAX_ROWS_GAP, Math.ceil(Math.abs(gapPx) / rowSize));
   }
 
@@ -120,25 +129,37 @@ class $VirtualScrollerPadding {
 
   /**
    * The held level after a new reading, with hysteresis: a higher reading
-   * replaces the level at once; a lower reading never shrinks it while
-   * the content still moves — the decay tail of a flick is when a burst
-   * of unmounts would be seen as a hitch — and rest shrinks it once the
-   * settle window has passed since the last growth; a direction change
-   * drops the level to the reading, since rows held ahead of the old
-   * direction are behind the new one.
+   * — rows ahead or rows behind — raises its level at once; a lower one
+   * never shrinks either while the content still moves — the decay tail
+   * of a flick is when a burst of unmounts would be seen as a hitch — and
+   * rest shrinks both once the settle window has passed since the last
+   * growth; a direction change drops the level to the reading, since rows
+   * held ahead of the old direction are behind the new one.
    */
   static settle(
     held: VirtualScrollerPadding.Held,
     ahead: number,
+    behind: number,
+    gapPx: number,
     direction: -1 | 0 | 1,
     now: number
   ): VirtualScrollerPadding.Held {
     const turned = direction !== 0 && held.direction !== 0 && direction !== held.direction;
-    if (turned || ahead >= held.ahead) {
-      return { ahead, direction: direction || held.direction, since: now };
+    if (turned) return { ahead, behind, gapPx, direction, since: now };
+    const grew = ahead > held.ahead || behind > held.behind || gapPx > held.gapPx;
+    if (grew) {
+      return {
+        ahead: Math.max(ahead, held.ahead),
+        behind: Math.max(behind, held.behind),
+        gapPx: Math.max(gapPx, held.gapPx),
+        direction: direction || held.direction,
+        since: now
+      };
     }
-    if (ahead === 0 && now - held.since >= this.SETTLE_MS) {
-      return { ahead, direction: held.direction, since: now };
+    const still = ahead === 0 && behind === 0;
+    const padded = held.ahead > 0 || held.behind > 0 || held.gapPx > 0;
+    if (still && padded && now - held.since >= this.SETTLE_MS) {
+      return { ahead: 0, behind: 0, gapPx: 0, direction: held.direction, since: now };
     }
     return held;
   }
@@ -163,7 +184,13 @@ class $VirtualScrollerPadding {
 
   /** The held level — plain, not reactive: nothing renders it, and the
    *  window walk that reads it already reruns on every scroll position. */
-  protected readonly held: VirtualScrollerPadding.Held = { ahead: 0, direction: 0, since: 0 };
+  protected readonly held: VirtualScrollerPadding.Held = {
+    ahead: 0,
+    behind: 0,
+    gapPx: 0,
+    direction: 0,
+    since: 0
+  };
 
   /** The pad the last walk used, for anyone who wants to show it. */
   protected readonly last: VirtualScrollerPadding.Pad = { before: 0, after: 0 };
@@ -174,6 +201,20 @@ class $VirtualScrollerPadding {
   /** Rows the last walk mounted ahead of the motion, beyond the base. */
   get rowsAhead() {
     return this.held.ahead;
+  }
+  /** Rows the last walk held behind the target, over the lerp gap. */
+  get rowsBehind() {
+    return this.held.behind;
+  }
+  /** The held gap in px on the START side: scrolling forward the animated
+   *  position is before the target, and the walk reaches back to it. */
+  get gapStartPx() {
+    return this.held.direction > 0 ? this.held.gapPx : 0;
+  }
+  /** The held gap in px on the END side: scrolling back the animated
+   *  position is past the target, and the walk reaches on to it. */
+  get gapEndPx() {
+    return this.held.direction < 0 ? this.held.gapPx : 0;
   }
 
   get before() {
@@ -186,10 +227,10 @@ class $VirtualScrollerPadding {
 
   /**
    * The pad for this evaluation of the window: the scroller calls it once
-   * per walk. The gap rows are exact and follow the lerp frame by frame;
-   * the lookahead rows go through the held level. The direction is the
-   * gap's when there is one (the lerp says where the content is going),
-   * the velocity's otherwise.
+   * per walk. The gap rows and the lookahead rows both go through the
+   * held level: they grow at once and release together at rest. The
+   * direction is the gap's when there is one (the lerp says where the
+   * content is going), the velocity's otherwise.
    */
   pad(now = performance.now()): VirtualScrollerPadding.Pad {
     const self = this.self;
@@ -199,12 +240,13 @@ class $VirtualScrollerPadding {
     const gap = this.owner.scrollGap;
     const behind = self.rowsBehind(gap, rowSize);
     const ahead = self.rowsAhead(velocity, rowSize);
+    const gapPx = Math.abs(gap) < self.STILL_GAP_PX ? 0 : Math.abs(gap);
     const direction = behind > 0 ? self.directionOf(gap) : self.directionOf(velocity);
-    Object.assign(this.held, self.settle(this.held, ahead, direction, now));
+    Object.assign(this.held, self.settle(this.held, ahead, behind, gapPx, direction, now));
     const pad = self.split(
       this.owner.halfPaddingQuantity,
       this.held.ahead,
-      behind,
+      this.held.behind,
       this.held.direction || direction
     );
     this.last.before = pad.before;
@@ -243,10 +285,13 @@ export namespace VirtualScrollerPadding {
     after: number;
   }
 
-  /** The held velocity level: rows ahead, the direction they face, and
-   *  when that level was set. */
+  /** The held level: rows ahead of the motion, rows behind the target over
+   *  the lerp gap, the direction they face, and when the level last grew. */
   export interface Held {
     ahead: number;
+    behind: number;
+    /** the lerp gap in px, held: the walk's pixel extension over the rows between */
+    gapPx: number;
     direction: -1 | 0 | 1;
     since: number;
   }
