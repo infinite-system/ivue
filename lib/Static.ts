@@ -47,8 +47,13 @@ const hasOwn = Object.hasOwn;
 // symbols that back symbol-keyed methods.
 const issuedCacheKeys = new Set<PropertyKey>();
 
+/** The key under which a bound subclass names the raw class `Static()` wrapped — for tooling that
+ *  prints a class by name and must see past the wrapper. */
+export const STATIC_RAW = Symbol.for('ivue.static.raw');
+
 export function Static<Class extends ClassConstructor>(targetClass: Class): Class {
   const SelectedClass = class extends targetClass {};
+  Object.defineProperty(SelectedClass, STATIC_RAW, { configurable: true, value: targetClass });
   const visitedKeys = new Set<PropertyKey>();
 
   for (
@@ -61,36 +66,37 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
       visitedKeys.add(key);
 
       // An already-wrapped ancestor that has been READ owns its bind/cache
-      // symbol properties. They are runtime residue, not API — re-wrapping
-      // them would install an ancestor-bound function where the child's
-      // own chain lookup expects to bind for itself.
-      if (typeof key === 'symbol' && Symbol.keyFor(key)?.startsWith('ivue.static')) continue;
-      if (issuedCacheKeys.has(key)) continue; // the unregistered symbols backing symbol-keyed methods
+      // symbol properties, and every wrapper names its raw class. They are
+      // runtime residue, not API — re-wrapping them would install an
+      // ancestor-bound function where the child's own chain lookup expects
+      // to bind for itself, or bind the raw class as if it were a method.
+      if (key === STATIC_RAW || issuedCacheKeys.has(key)) continue;
 
       const descriptor = Object.getOwnPropertyDescriptor(currentClass, key)!;
 
       if (typeof descriptor.value === 'function') {
-      // HOT-LOOP READY — measured, twice, after two wrong theories. The
-      // bind happens ONCE: the first read defines an own bind-key
-      // property holding the bound function; every later read returns
-      // it. A HOISTED bound method is exactly plain-function speed
-      // (in-browser, 9M calls, fresh-page medians: module fn 31.7ms,
-      // hoisted bound method 30.0ms). The ONLY per-call cost is reading
-      // the method THROUGH the accessor inside the loop (84.6ms same
-      // loop) — so in a million-call loop, destructure the methods once
-      // (`const { method } = X.Class` — a late read of the mutable slot,
-      // so a subclass swap is still honored) and pay the accessor once.
-      // Ordinary call counts never notice any of this.
-      //
-      // Benchmark honestly: a shared bench(fn) harness makes the call
-      // site megamorphic and slows every variant measured after the
-      // first — that artifact once misread bound calls as "48% slower."
-      // Fresh page per variant, dedicated loops.
+        // HOT-LOOP READY — measured, twice, after two wrong theories. The
+        // bind happens ONCE: the first read defines an own bind-key
+        // property holding the bound function; every later read returns
+        // it. A HOISTED bound method is exactly plain-function speed
+        // (in-browser, 9M calls, fresh-page medians: module fn 31.7ms,
+        // hoisted bound method 30.0ms). The ONLY per-call cost is reading
+        // the method THROUGH the accessor inside the loop (84.6ms same
+        // loop) — so in a million-call loop, destructure the methods once
+        // (`const { method } = X.Class` — a late read of the mutable slot,
+        // so a subclass swap is still honored) and pay the accessor once.
+        // Ordinary call counts never notice any of this.
+        //
+        // Benchmark honestly: a shared bench(fn) harness makes the call
+        // site megamorphic and slows every variant measured after the
+        // first — that artifact once misread bound calls as "48% slower."
+        // Fresh page per variant, dedicated loops.
+        // One symbol PER ACCESSOR, never per name: a child's override and the parent's method must
+        // cache under different keys on one receiver, or `super.method()` in the override reads the
+        // parent's accessor with `this` as the child, finds the child's own bound override under the
+        // shared name-key, and recurses.
         const method = descriptor.value;
-        const bindKey =
-          typeof key === 'string'
-            ? Symbol.for(`ivue.staticBound.${key}`)
-            : Symbol('ivue.staticBound');
+        const bindKey = Symbol(`ivue.staticBound.${String(key)}`);
         issuedCacheKeys.add(bindKey);
 
         Object.defineProperty(SelectedClass, key, {
@@ -100,11 +106,11 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
             if (!hasOwn(this, bindKey)) {
               Object.defineProperty(this, bindKey, {
                 configurable: true,
-                value: method.bind(this),
+                value: method.bind(this)
               });
             }
             return this[bindKey];
-          },
+          }
         });
       } else if (
         descriptor.get &&
@@ -112,8 +118,10 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
         typeof key === 'string' &&
         key.startsWith('$')
       ) {
+        // The same discipline for a `$`-cache: a child's `super.$x` must reach the parent's value,
+        // not the child's own cache under a shared name-key.
         const getter = descriptor.get;
-        const cacheKey = Symbol.for(`ivue.staticCache.${key}`);
+        const cacheKey = Symbol(`ivue.staticCache.${key}`);
         issuedCacheKeys.add(cacheKey);
 
         Object.defineProperty(SelectedClass, key, {
@@ -123,11 +131,11 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
             if (!hasOwn(this, cacheKey)) {
               Object.defineProperty(this, cacheKey, {
                 configurable: true,
-                value: getter.call(this),
+                value: getter.call(this)
               });
             }
             return this[cacheKey];
-          },
+          }
         });
       }
     }

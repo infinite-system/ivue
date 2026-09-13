@@ -1279,3 +1279,17 @@ zero errors. Also from the same run: `Entry.namespace` is optional (a
 tag role has none), so a view reads `props.kit?.namespace?.Class`, cast
 to its own `typeof X.Class | undefined`; and a generic SFC is typed by
 vue-tsc as a function, which `Kit.View` admits.
+
+## `super.method()` in a static override recursed under `Static()` (2026-09-13)
+
+`Static()` cached each bound method under `Symbol.for('ivue.staticBound.<name>')`
+— one registered symbol per NAME, shared by every accessor of that name in a
+hierarchy. A child's `static override greet() { return super.greet() }` read
+the parent's accessor with `this` as the child, found the child's own bound
+override already cached under the shared key, and called itself until the
+stack blew. Same latent defect for `$`-caches (`super.$kit` could return the
+child's cached value). Fix: one unregistered `Symbol(...)` per accessor; the
+re-wrap guard skips `STATIC_RAW` and the issued keys explicitly instead of
+matching registered-symbol prefixes. Found by proving `bind: this.bindPart`
+extends through `super` — the shape that makes a named bind the true one.
+The engine spec `super reaches the parent under Static()` binds it.

@@ -506,3 +506,41 @@ describe('Static $-cached getters', () => {
     expect(Wide.$metrics).toBe(Wide.$metrics); // and cached
   });
 });
+
+describe('super reaches the parent under Static()', () => {
+  it('a static override calling super.method() gets the parent method bound to the child, in either read order', () => {
+    class $Base {
+      static greet(name: string): string {
+        return `hi ${name}`;
+      }
+      static get $table(): Record<string, number> {
+        return { a: 1 };
+      }
+    }
+    const Base = Static($Base);
+    class $Loud extends Base {
+      static override greet(name: string): string {
+        return super.greet(name).toUpperCase();
+      }
+      static override get $table(): Record<string, number> {
+        return { ...super.$table, b: 2 };
+      }
+    }
+    const Loud = Static($Loud);
+    expect(Loud.greet('x')).toBe('HI X');
+    expect(Loud.$table).toEqual({ a: 1, b: 2 });
+    expect(Base.greet('y')).toBe('hi y');
+    expect(Base.$table).toEqual({ a: 1 });
+    // parent read first, then a fresh child
+    class $Quiet extends Base {
+      static override greet(name: string): string {
+        return `(${super.greet(name)})`;
+      }
+    }
+    const Quiet = Static($Quiet);
+    expect(Quiet.greet('z')).toBe('(hi z)');
+    // the child's bound method is stable and the parent's own binding is its own
+    expect(Loud.greet).toBe(Loud.greet);
+    expect(Loud.greet).not.toBe(Base.greet);
+  });
+});

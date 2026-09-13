@@ -68,11 +68,11 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
       visitedKeys.add(key);
 
       // An already-wrapped ancestor that has been READ owns its bind/cache
-      // symbol properties. They are runtime residue, not API — re-wrapping
-      // them would install an ancestor-bound function where the child's
-      // own chain lookup expects to bind for itself.
-      if (typeof key === 'symbol' && Symbol.keyFor(key)?.startsWith('ivue.static')) continue;
-      if (issuedCacheKeys.has(key)) continue; // the unregistered symbols backing symbol-keyed methods
+      // symbol properties, and every wrapper names its raw class. They are
+      // runtime residue, not API — re-wrapping them would install an
+      // ancestor-bound function where the child's own chain lookup expects
+      // to bind for itself, or bind the raw class as if it were a method.
+      if (key === STATIC_RAW || issuedCacheKeys.has(key)) continue;
 
       const descriptor = Object.getOwnPropertyDescriptor(currentClass, key)!;
 
@@ -93,11 +93,12 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
         // site megamorphic and slows every variant measured after the
         // first — that artifact once misread bound calls as "48% slower."
         // Fresh page per variant, dedicated loops.
+        // One symbol PER ACCESSOR, never per name: a child's override and the parent's method must
+        // cache under different keys on one receiver, or `super.method()` in the override reads the
+        // parent's accessor with `this` as the child, finds the child's own bound override under the
+        // shared name-key, and recurses.
         const method = descriptor.value;
-        const bindKey =
-          typeof key === 'string'
-            ? Symbol.for(`ivue.staticBound.${key}`)
-            : Symbol('ivue.staticBound');
+        const bindKey = Symbol(`ivue.staticBound.${String(key)}`);
         issuedCacheKeys.add(bindKey);
 
         Object.defineProperty(SelectedClass, key, {
@@ -119,8 +120,10 @@ export function Static<Class extends ClassConstructor>(targetClass: Class): Clas
         typeof key === 'string' &&
         key.startsWith('$')
       ) {
+        // The same discipline for a `$`-cache: a child's `super.$x` must reach the parent's value,
+        // not the child's own cache under a shared name-key.
         const getter = descriptor.get;
-        const cacheKey = Symbol.for(`ivue.staticCache.${key}`);
+        const cacheKey = Symbol(`ivue.staticCache.${key}`);
         issuedCacheKeys.add(cacheKey);
 
         Object.defineProperty(SelectedClass, key, {
