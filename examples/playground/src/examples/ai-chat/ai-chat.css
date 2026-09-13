@@ -3060,6 +3060,43 @@
   .ai-chat .ac-more {
     display: inline-flex;
   }
+  /* settings sized to the phone: options in a two-column grid, tighter cards, one section per screen */
+  .ai-chat .ac-setting {
+    padding: 10px 12px;
+  }
+  .ai-chat .ac-setting h5 {
+    margin-bottom: 6px;
+  }
+  .ai-chat .ac-choice-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 6px;
+  }
+  .ai-chat .ac-choice {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0 8px;
+    align-content: start;
+    padding: 7px 9px;
+    border-radius: 8px;
+  }
+  .ai-chat .ac-choice-swatch {
+    width: 18px;
+    height: 18px;
+  }
+  .ai-chat .ac-choice-label {
+    font-size: 12.5px;
+  }
+  .ai-chat .ac-choice-hint {
+    font-size: 10.5px;
+    line-height: 1.3;
+  }
+  .ai-chat .ac-patch {
+    margin-top: 8px;
+    font-size: 10.5px;
+  }
+  .ai-chat .ac-pane-head {
+    padding: 10px 12px;
+  }
   .ai-chat .ac-more-btn.ac-on {
     color: #fff;
     background: var(--ac-accent);
