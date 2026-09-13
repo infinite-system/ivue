@@ -138,7 +138,7 @@ class $ChatApi {
   static entry(record: ChatApi.IndexRecord): ChatApi.IndexEntry {
     return {
       id: record.id,
-      role: this.INDEX_SPEAKERS[record.r] ?? 'system',
+      speaker: this.INDEX_SPEAKERS[record.r] ?? 'system',
       text: record.t,
       calls: record.c,
       at: record.at
