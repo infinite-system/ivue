@@ -12,9 +12,9 @@ import { Kit } from '../Kit';
 import { KitContainer } from '../KitContainer';
 import { Code } from './Code';
 import CodeView from './Code.vue';
-import CardHeadView from './CardHead.vue';
-import CardBodyView from './CardBody.vue';
-import FrameView from './Frame.vue';
+import CardHeaderView from './Card.Header.vue';
+import CardBodyView from './Card.Body.vue';
+import FrameView from './Card.Frame.vue';
 
 // A model that composes: its kit names the sections of its view and the
 // one leaf role with a class. The views import this module and this module
@@ -24,7 +24,7 @@ class $Card extends KitContainer.$Class<Card.Roles> {
   /** cached once per receiver class by Static(): `Card.$kit` and `FancyCard.$kit` are different objects */
   static override get $kit(): Card.Roles {
     return {
-      Head: { view: CardHeadView },
+      Header: { view: CardHeaderView },
       Body: { view: CardBodyView },
       Frame: { view: FrameView },
       Code: { view: CodeView, namespace: Code }
@@ -84,12 +84,12 @@ class $Card extends KitContainer.$Class<Card.Roles> {
 
 export namespace Card {
   /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
-  export type Roles = Kit.Of<'Head' | 'Body' | 'Frame', $Card> & {
+  export type Roles = Kit.Of<'Header' | 'Body' | 'Frame', $Card> & {
     Code: Kit.Entry<$Card, undefined, typeof Code>;
   };
   export const $Class = Static($Card);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
   export type Props = ExtractPropTypes<typeof $Class.props>;
-  export type Role = 'Head' | 'Body' | 'Frame' | 'Code';
+  export type Role = 'Header' | 'Body' | 'Frame' | 'Code';
 }

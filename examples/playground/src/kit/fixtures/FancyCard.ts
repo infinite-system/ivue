@@ -1,18 +1,18 @@
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import { Card } from './Card';
-import FancyHeadView from './FancyHead.vue';
-import GroupedBodyView from './GroupedBody.vue';
-import FancyFrameView from './FancyFrame.vue';
+import CardHeaderFancyView from './Card.Header.Fancy.vue';
+import CardBodyGroupedView from './Card.Body.Grouped.vue';
+import CardFrameFancyView from './Card.Frame.Fancy.vue';
 
 // An override is a subclass: three sections swapped, the Code role kept.
 class $FancyCard extends Card.$Class {
   static override get $kit() {
     return {
       ...super.$kit,
-      Head: { view: FancyHeadView },
-      Body: { view: GroupedBodyView },
-      Frame: { view: FancyFrameView }
+      Header: { view: CardHeaderFancyView },
+      Body: { view: CardBodyGroupedView },
+      Frame: { view: CardFrameFancyView }
     };
   }
 }

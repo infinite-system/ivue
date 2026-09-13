@@ -49,19 +49,19 @@ import { Kit } from './Kit';
 import { KitInspect } from './KitInspect';
 import { Card } from './fixtures/Card';
 import CardView from './fixtures/Card.vue';
-import CardHeadView from './fixtures/CardHead.vue';
-import CardBodyView from './fixtures/CardBody.vue';
+import CardHeaderView from './fixtures/Card.Header.vue';
+import CardBodyView from './fixtures/Card.Body.vue';
 import { Code } from './fixtures/Code';
 import CodeView from './fixtures/Code.vue';
 import { ThemedCode } from './fixtures/ThemedCode';
 import { FancyCard } from './fixtures/FancyCard';
-import FancyHeadView from './fixtures/FancyHead.vue';
+import CardHeaderFancyView from './fixtures/Card.Header.Fancy.vue';
 import { Panel } from './fixtures/Panel';
 import PanelView from './fixtures/Panel.vue';
 import { Strip } from './fixtures/Strip';
 import StripView from './fixtures/Strip.vue';
-import StripHeadView from './fixtures/StripHead.vue';
-import StripFootView from './fixtures/StripFoot.vue';
+import StripHeaderView from './fixtures/Strip.Header.vue';
+import StripFooterView from './fixtures/Strip.Footer.vue';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -76,7 +76,7 @@ function exposed<T>(wrapper: { vm: { $: { exposed: unknown } } }): T {
 
 /** A tree of derived namespaces: an override two levels deep, written once as data. */
 const ThemedPanel = Kit.Class.derive(Panel, {
-  Card: { subkit: { Head: { view: FancyHeadView }, Code: { namespace: ThemedCode } } }
+  Card: { subkit: { Header: { view: CardHeaderFancyView }, Code: { namespace: ThemedCode } } }
 });
 
 /** An override that brings the widened view by hand — the explicit form of the same thing. */
@@ -110,8 +110,8 @@ describe('a class reads only its own kit', () => {
     expect(Card.Class.$kit).toBe(base); // Reactive() returns the same class object
     const fancy = FancyCard.$Class.$kit;
     expect(fancy).not.toBe(base);
-    expect(fancy.Head.view).toBe(FancyHeadView);
-    expect(base.Head.view).toBe(CardHeadView);
+    expect(fancy.Header.view).toBe(CardHeaderFancyView);
+    expect(base.Header.view).toBe(CardHeaderView);
     // FINDING: `super.$kit` runs the parent's getter body FOR THE CHILD receiver (Static() caches per
     // receiver), so the child's untouched entries are fresh literals equal to the parent's, not the
     // same objects. Identity of untouched entries holds only inside a resolved kit, where `merge`
@@ -124,28 +124,28 @@ describe('a class reads only its own kit', () => {
   it('a subclass read BEFORE its parent still builds its own kit, and the parent then builds its own', () => {
     class $Early extends Card.$Class {
       static override get $kit() {
-        return { ...super.$kit, Head: { view: FancyHeadView } };
+        return { ...super.$kit, Header: { view: CardHeaderFancyView } };
       }
     }
     const Early = Static($Early);
     class $Fresh {
       static get $kit() {
-        return { Head: { view: CardHeadView } };
+        return { Header: { view: CardHeaderView } };
       }
     }
     class $FreshChild extends $Fresh {
       static override get $kit() {
-        return { ...super.$kit, Head: { view: FancyHeadView } };
+        return { ...super.$kit, Header: { view: CardHeaderFancyView } };
       }
     }
     const Fresh = Static($Fresh);
     const FreshChild = Static($FreshChild);
     // child first, on a hierarchy nobody has read yet
-    expect(FreshChild.$kit.Head.view).toBe(FancyHeadView);
-    expect(Fresh.$kit.Head.view).toBe(CardHeadView);
+    expect(FreshChild.$kit.Header.view).toBe(CardHeaderFancyView);
+    expect(Fresh.$kit.Header.view).toBe(CardHeaderView);
     expect(FreshChild.$kit).not.toBe(Fresh.$kit);
-    expect(Early.$kit.Head.view).toBe(FancyHeadView);
-    expect(Card.$Class.$kit.Head.view).toBe(CardHeadView);
+    expect(Early.$kit.Header.view).toBe(CardHeaderFancyView);
+    expect(Card.$Class.$kit.Header.view).toBe(CardHeaderView);
   });
 
   /** A subclass that does not override `$kit` inherits the GETTER, not the object: Static()'s cache
@@ -156,8 +156,8 @@ describe('a class reads only its own kit', () => {
     const Plain = Static($Plain);
     expect(Plain.$kit).not.toBe(Card.$Class.$kit);
     expect(Plain.$kit).toEqual(Card.$Class.$kit);
-    expect(Plain.$kit.Head).not.toBe(Card.$Class.$kit.Head);
-    expect(Plain.$kit.Head.view).toBe(Card.$Class.$kit.Head.view); // the leaves are the shared objects
+    expect(Plain.$kit.Header).not.toBe(Card.$Class.$kit.Header);
+    expect(Plain.$kit.Header.view).toBe(Card.$Class.$kit.Header.view); // the leaves are the shared objects
     expect(Plain.$kit.Code.namespace).toBe(Code);
   });
 });
@@ -174,7 +174,7 @@ describe('an override never reaches another tree', () => {
     expect(themedCard.namespace!.$Class.prototype).toBeInstanceOf(Card.$Class);
     expect(themedCard.view).not.toBe(CardView); // rewrapped over the derived Card
     const derivedKit = themedCard.namespace!.Class.$kit as Record<string, Kit.Entry>;
-    expect(derivedKit.Head.view).toBe(FancyHeadView);
+    expect(derivedKit.Header.view).toBe(CardHeaderFancyView);
     expect(derivedKit.Code.namespace).toBe(ThemedCode);
     expect(derivedKit.Code.view).not.toBe(CodeView); // merge rewrapped the kept view over ThemedCode
     expect(derivedKit.Body).toBe(Card.$Class.$kit.Body); // untouched, shared
@@ -182,7 +182,7 @@ describe('an override never reaches another tree', () => {
     // the base tree, after all of that
     expect(Panel.$Class.$kit.Card.namespace).toBe(Card);
     expect(Panel.$Class.$kit.Card.view).toBe(CardView);
-    expect(Card.$Class.$kit.Head.view).toBe(CardHeadView);
+    expect(Card.$Class.$kit.Header.view).toBe(CardHeaderView);
     expect(Card.$Class.$kit.Code.namespace).toBe(Code);
     expect(Card.$Class.$kit.Code.view).toBe(CodeView);
     expect(Code.$Class.propsTypes).not.toHaveProperty('theme');
@@ -200,8 +200,10 @@ describe('an override never reaches another tree', () => {
     expect(renamed.namespace).toBe(ThemedCode);
     expect(renamed.view).not.toBe(CodeView);
     expect((renamed.view as { props: object }).props).toHaveProperty('theme'); // `props` is fused per read, so equality, not identity
-    const Brought = Kit.Class.derive(Card, { Code: { view: CardHeadView, namespace: ThemedCode } });
-    expect((Brought.$Class.$kit!.Code as Kit.Entry).view).toBe(CardHeadView); // a brought view is left alone
+    const Brought = Kit.Class.derive(Card, {
+      Code: { view: CardHeaderView, namespace: ThemedCode }
+    });
+    expect((Brought.$Class.$kit!.Code as Kit.Entry).view).toBe(CardHeaderView); // a brought view is left alone
   });
 
   // domain-invariant: $Kit — If a kit is resolved, then its maps and entries are frozen and its namespaces, views and props bags are not
@@ -226,22 +228,22 @@ describe('an override never reaches another tree', () => {
    *  behave as a hand-written subclass file would: cached cells, bound methods, `self` reading the
    *  derived statics, the engine helpers present, inherited members intact. */
   it('a derived class is a working ivue class: cells cached, methods bound, self reads its own statics', () => {
-    const Derived = Kit.Class.derive(Card, { Head: { view: FancyHeadView } });
+    const Derived = Kit.Class.derive(Card, { Header: { view: CardHeaderFancyView } });
     expect(Derived.$Class.$kit).toBe(Derived.$Class.$kit); // cached once per derived class too
     const instance = new (Derived.Class as typeof Card.Class)({
       title: 't',
       items: ['a']
     } as unknown as Card.Props);
     expect(instance.copied).toBe(instance.copied);
-    expect(instance.kit.Head.view).toBe(FancyHeadView);
+    expect(instance.kit.Header.view).toBe(CardHeaderFancyView);
     expect(instance.kit.Body.view).toBe(CardBodyView);
     const { onCopy } = instance;
     onCopy('x');
     expect(instance.copiedCount).toBe(1);
     expect(instance.reversedItems).toEqual(['a']);
     expect(typeof instance.$watch).toBe('function');
-    expect(new Card.Class({ title: 't', items: [] } as unknown as Card.Props).kit.Head.view).toBe(
-      CardHeadView
+    expect(new Card.Class({ title: 't', items: [] } as unknown as Card.Props).kit.Header.view).toBe(
+      CardHeaderView
     );
   });
 });
@@ -507,17 +509,20 @@ describe('an order is edited only through relations against names', () => {
   it('after, before, without and move resolve against names, and the mounted strip renders the resolved order', () => {
     const Badged = Kit.Class.derive(Strip, {
       order: {
-        after: { Head: ['Badge', 'Pin'] },
-        before: { Foot: ['Rule'] },
+        after: { Header: ['Badge', 'Pin'] },
+        before: { Footer: ['Rule'] },
         without: ['Body'],
-        move: { Head: { after: 'Foot' } }
+        move: { Header: { after: 'Footer' } }
       },
-      Badge: { view: StripFootView, bind: ({ inherited }) => ({ ...inherited(), class: 'badge' }) },
+      Badge: {
+        view: StripFooterView,
+        bind: ({ inherited }) => ({ ...inherited(), class: 'badge' })
+      },
       Pin: { view: 'span', bind: () => ({ class: 'pin' }) },
       Rule: { view: 'hr', bind: () => ({ class: 'rule' }) }
     });
-    expect(Badged.$Class.$kit!.order).toEqual(['Rule', 'Foot', 'Head', 'Badge', 'Pin']);
-    expect(Strip.$Class.$kit.order).toEqual(['Head', 'Body', 'Foot']); // the base list, untouched
+    expect(Badged.$Class.$kit!.order).toEqual(['Rule', 'Footer', 'Header', 'Badge', 'Pin']);
+    expect(Strip.$Class.$kit.order).toEqual(['Header', 'Body', 'Footer']); // the base list, untouched
     expect(Object.isFrozen(Badged.$Class.$kit!.order)).toBe(true);
     const wrapper = mountStrip(Badged);
     expect(sections(wrapper)).toEqual([
@@ -534,19 +539,19 @@ describe('an order is edited only through relations against names', () => {
   it('two layers on one anchor land in derivation order, the outer layer nearest the anchor, and a third layer sees both', () => {
     const One = Kit.Class.derive(
       Strip,
-      { order: { after: { Head: ['A'] } }, A: { view: 'i', bind: () => ({ class: 'a' }) } },
+      { order: { after: { Header: ['A'] } }, A: { view: 'i', bind: () => ({ class: 'a' }) } },
       'one'
     );
     const Two = Kit.Class.derive(
       One,
-      { order: { after: { Head: ['B'] } }, B: { view: 'b', bind: () => ({ class: 'b' }) } },
+      { order: { after: { Header: ['B'] } }, B: { view: 'b', bind: () => ({ class: 'b' }) } },
       'two'
     );
-    expect(One.$Class.$kit!.order).toEqual(['Head', 'A', 'Body', 'Foot']);
-    expect(Two.$Class.$kit!.order).toEqual(['Head', 'B', 'A', 'Body', 'Foot']);
+    expect(One.$Class.$kit!.order).toEqual(['Header', 'A', 'Body', 'Footer']);
+    expect(Two.$Class.$kit!.order).toEqual(['Header', 'B', 'A', 'Body', 'Footer']);
     // a third layer anchors on a role the second inserted: names resolve across layers
-    const Three = Kit.Class.derive(Two, { order: { move: { Foot: { before: 'B' } } } });
-    expect(Three.$Class.$kit!.order).toEqual(['Head', 'Foot', 'B', 'A', 'Body']);
+    const Three = Kit.Class.derive(Two, { order: { move: { Footer: { before: 'B' } } } });
+    expect(Three.$Class.$kit!.order).toEqual(['Header', 'Footer', 'B', 'A', 'Body']);
     expect(KitInspect.Class.layers(Three).map((layer) => KitInspect.Class.nameOf(layer))).toEqual([
       'layer 0',
       'one',
@@ -569,37 +574,37 @@ describe('an order is edited only through relations against names', () => {
   it('a list, a missing anchor, a missing role, relations that wait on each other, a role named twice, an undeclared role and a re-insert are each refused at derive time', () => {
     // kits built from data reach derive untyped: the runtime arm of every refusal
     const derive = (patch: Kit.Patch) => () => Kit.Class.derive(Strip, patch as never);
-    expect(derive({ order: ['Head', 'Foot'] as never })).toThrow(/never a list/);
+    expect(derive({ order: ['Header', 'Footer'] as never })).toThrow(/never a list/);
     expect(derive({ order: { after: { Nope: ['X'] } }, X: { view: 'i' } })).toThrow(
       /cannot be placed.*"X after Nope"/
     );
     expect(derive({ order: { without: ['Nope'] } })).toThrow(/cannot be placed.*"without Nope"/);
-    expect(derive({ order: { move: { Nope: { after: 'Head' } } } })).toThrow(
+    expect(derive({ order: { move: { Nope: { after: 'Header' } } } })).toThrow(
       /"Nope" but the order has no such role/
     );
     expect(
-      derive({ order: { move: { Head: { after: 'Foot' }, Foot: { after: 'Head' } } } })
-    ).toThrow(/cannot be placed.*"move Head after Foot", "move Foot after Head"/);
-    expect(derive({ order: { move: { Head: { before: 'Head' } } } })).toThrow(/against itself/);
+      derive({ order: { move: { Header: { after: 'Footer' }, Footer: { after: 'Header' } } } })
+    ).toThrow(/cannot be placed.*"move Header after Footer", "move Footer after Header"/);
+    expect(derive({ order: { move: { Header: { before: 'Header' } } } })).toThrow(/against itself/);
     expect(
-      derive({ order: { after: { Head: ['A'] }, before: { Foot: ['A'] } }, A: { view: 'i' } })
+      derive({ order: { after: { Header: ['A'] }, before: { Footer: ['A'] } }, A: { view: 'i' } })
     ).toThrow(/"A" is named twice/);
-    expect(derive({ order: { after: { Head: ['Ghost'] } } })).toThrow(
+    expect(derive({ order: { after: { Header: ['Ghost'] } } })).toThrow(
       /names "Ghost" but no entry declares it/
     );
-    expect(derive({ order: { after: { Foot: ['Head'] } } })).toThrow(
-      /"Head" is already in the order/
+    expect(derive({ order: { after: { Footer: ['Header'] } } })).toThrow(
+      /"Header" is already in the order/
     );
-    expect(() => Kit.Class.derive(Card, { order: { without: ['Head'] } })).toThrow(
+    expect(() => Kit.Class.derive(Card, { order: { without: ['Header'] } })).toThrow(
       /the base declares none/
     );
-    expect(Strip.$Class.$kit.order).toEqual(['Head', 'Body', 'Foot']); // nothing above reached the base
+    expect(Strip.$Class.$kit.order).toEqual(['Header', 'Body', 'Footer']); // nothing above reached the base
   });
 
   // domain-invariant: $Kit — If an entry's view is a tag name, then the seam renders that element with what the bind returns and nothing else — no entry, no model
   it('a tag role renders its element with the bind and nothing else, and a tag view passes through view() unwrapped', () => {
     const Ruled = Kit.Class.derive(Strip, {
-      order: { after: { Head: ['Rule'] } },
+      order: { after: { Header: ['Rule'] } },
       Rule: { view: 'hr', bind: () => ({ class: 'rule', 'data-role': 'rule' }) }
     });
     const wrapper = mountStrip(Ruled);
@@ -622,8 +627,8 @@ describe('a bind is a projection the layer above extends', () => {
   it('seam() hands an unbound role { model, kit }, a bound class role its entry beside the bind, and a tag role only the bind', () => {
     const model = { cap: 3 };
     const kit = Strip.$Class.$kit;
-    expect(Kit.Class.seam(model, kit.Head)).toEqual({ model, kit: kit.Head });
-    expect(Kit.Class.seam(model, kit.Head).kit).toBe(kit.Head);
+    expect(Kit.Class.seam(model, kit.Header)).toEqual({ model, kit: kit.Header });
+    expect(Kit.Class.seam(model, kit.Header).kit).toBe(kit.Header);
     expect(Kit.Class.seam(model, kit.Item, 'abc', 0)).toEqual({
       kit: kit.Item,
       code: 'abc',
@@ -698,12 +703,12 @@ describe('a bind is a projection the layer above extends', () => {
       'div.strip-body',
       'footer.strip-foot'
     ]);
-    const Headless = Kit.Class.derive(Strip, { Head: { shows: () => false } }, 'headless');
+    const Headless = Kit.Class.derive(Strip, { Header: { shows: () => false } }, 'headless');
     expect(sections(mountStrip(Headless))).toEqual(['div.strip-body', 'footer.strip-foot']);
     // a later layer replaces the rule; the base's is not composed under it
-    const FootAlways = Kit.Class.derive(Headless, { Foot: { shows: () => true } });
+    const FootAlways = Kit.Class.derive(Headless, { Footer: { shows: () => true } });
     expect(sections(mountStrip(FootAlways, []))).toEqual(['div.strip-body', 'footer.strip-foot']);
-    expect(Strip.$Class.$kit.Foot.shows).toBeDefined();
+    expect(Strip.$Class.$kit.Footer.shows).toBeDefined();
     expect(KitInspect.Class.report(FootAlways)).toEqual([]);
   });
 });
@@ -714,9 +719,9 @@ describe('derive merges once', () => {
     const original = (Kit.Class as unknown as { merge: (...args: unknown[]) => unknown }).merge;
     const counted = vi.fn((...args: unknown[]) => original(...args));
     vi.spyOn(Kit.Class as unknown as { merge: unknown }, 'merge', 'get').mockReturnValue(counted);
-    const Derived = Kit.Class.derive(Strip, { Head: { view: StripFootView } });
+    const Derived = Kit.Class.derive(Strip, { Header: { view: StripFooterView } });
     expect(counted).toHaveBeenCalledTimes(1);
-    expect(Derived.$Class.$kit.Head.view).toBe(StripFootView);
+    expect(Derived.$Class.$kit.Header.view).toBe(StripFooterView);
     expect(Derived.$Class.$kit).toBe(Derived.$Class.$kit);
     expect(counted).toHaveBeenCalledTimes(1);
   });
@@ -763,10 +768,14 @@ describe('the types hold a bind to its child and an anchor to its base', () => {
   // invariant: An order is edited only through relations against names (examples/playground/src/kit/kit.invariants.md)
   it('a patch refuses an anchor the base lacks, an inserted name it does not declare, and a list; and a later layer knows the roles an earlier one added', () => {
     const Right = Kit.Class.derive(Strip, {
-      order: { after: { Head: ['Badge'] }, without: ['Body'], move: { Foot: { before: 'Badge' } } },
+      order: {
+        after: { Header: ['Badge'] },
+        without: ['Body'],
+        move: { Footer: { before: 'Badge' } }
+      },
       Badge: { view: 'i' }
     });
-    expect(Right.$Class.$kit.order).toEqual(['Head', 'Foot', 'Badge']);
+    expect(Right.$Class.$kit.order).toEqual(['Header', 'Footer', 'Badge']);
     expect(() =>
       Kit.Class.derive(Strip, {
         // @ts-expect-error `Nope` is neither a base role nor one this patch declares
@@ -777,7 +786,7 @@ describe('the types hold a bind to its child and an anchor to its base', () => {
     expect(() =>
       Kit.Class.derive(Strip, {
         // @ts-expect-error `Ghost` is a name this patch never declares
-        order: { after: { Head: ['Ghost'] } }
+        order: { after: { Header: ['Ghost'] } }
       })
     ).toThrow(/no entry declares it/);
     expect(() =>
@@ -789,11 +798,11 @@ describe('the types hold a bind to its child and an anchor to its base', () => {
     expect(() =>
       Kit.Class.derive(Strip, {
         // @ts-expect-error an order is relations, never a list
-        order: ['Head', 'Foot']
+        order: ['Header', 'Footer']
       })
     ).toThrow(/never a list/);
     // the derived namespace's kit type carries `Badge`, so the next layer anchors on it and compiles
-    const Later = Kit.Class.derive(Right, { order: { move: { Head: { after: 'Badge' } } } });
-    expect(Later.$Class.$kit.order).toEqual(['Foot', 'Badge', 'Head']);
+    const Later = Kit.Class.derive(Right, { order: { move: { Header: { after: 'Badge' } } } });
+    expect(Later.$Class.$kit.order).toEqual(['Footer', 'Badge', 'Header']);
   });
 });

@@ -68,7 +68,7 @@ a subclass never sees its parent's kit.
 class $Card {
   static get $kit() {
     return {
-      Head: { view: CardHeadView },
+      Header: { view: CardHeaderView },
       Body: { view: CardBodyView },
       Frame: { view: FrameView },
       Code: { view: CodeView, namespace: Code },
@@ -128,9 +128,9 @@ class $FancyCard extends Card.$Class {
   static override get $kit() {
     return {
       ...super.$kit,
-      Head: { view: FancyHeadView },
-      Body: { view: GroupedBodyView },
-      Frame: { view: FancyFrameView },
+      Header: { view: CardHeaderFancyView },
+      Body: { view: CardBodyGroupedView },
+      Frame: { view: CardFrameFancyView },
     };
   }
 }
@@ -172,7 +172,7 @@ rendering its own children. The card's view keeps only its skeleton.
 ```vue
 <!-- Card.vue -->
 <article class="card">
-  <component :is="model.kit.Head.view" :kit="model.kit.Head" :model="model" />
+  <component :is="model.kit.Header.view" :kit="model.kit.Header" :model="model" />
   <component :is="model.kit.Body.view" :kit="model.kit.Body" :model="model" />
   <component :is="model.kit.Frame.view" :kit="model.kit.Frame" :model="model">
     <em class="slotted">{{ model.title }}</em>
@@ -286,8 +286,8 @@ is on the kit too, as `order`. The container's template loops one seam
 over it — `<component v-for="role in model.kit.order" :is="model.kit[role].view" v-bind="model.seam(role)" />`
 — so a layer inserts, drops, moves or dresses a section without copying
 the template. A patch edits `order` only by relations against names:
-`after: { Head: ['Badge'] }`, `before: { Foot: ['Rule'] }`,
-`without: ['Gutter']`, `move: { Foot: { before: 'Parts' } }`. `derive`
+`after: { Header: ['Badge'] }`, `before: { Footer: ['Rule'] }`,
+`without: ['Gutter']`, `move: { Footer: { before: 'Parts' } }`. `derive`
 refuses a list, because a held list is a snapshot that drops every role
 upstream adds later. Markup between roles is a role whose view is a tag
 name, `Rule: { view: 'hr' }`. What a child receives is `bind` on the

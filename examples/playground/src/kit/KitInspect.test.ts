@@ -18,10 +18,10 @@ import { Kit } from './Kit';
 import { KitInspect } from './KitInspect';
 import { Panel } from './fixtures/Panel';
 import { Strip } from './fixtures/Strip';
-import StripHeadView from './fixtures/StripHead.vue';
-import StripFootView from './fixtures/StripFoot.vue';
-import CardHeadView from './fixtures/CardHead.vue';
-import FancyHeadView from './fixtures/FancyHead.vue';
+import StripHeaderView from './fixtures/Strip.Header.vue';
+import StripFooterView from './fixtures/Strip.Footer.vue';
+import CardHeaderView from './fixtures/Card.Header.vue';
+import CardHeaderFancyView from './fixtures/Card.Header.Fancy.vue';
 import { ThemedCode } from './fixtures/ThemedCode';
 
 afterEach(() => {
@@ -30,7 +30,7 @@ afterEach(() => {
 
 /** A tree of derived namespaces: an override two levels deep, written once as data. */
 const ThemedPanel = Kit.Class.derive(Panel, {
-  Card: { subkit: { Head: { view: FancyHeadView }, Code: { namespace: ThemedCode } } }
+  Card: { subkit: { Header: { view: CardHeaderFancyView }, Code: { namespace: ThemedCode } } }
 });
 
 describe('a kit is read as its template', () => {
@@ -62,41 +62,45 @@ describe('a second write to one field is reported, never merged', () => {
   // invariant: A second write to one field is reported never merged (examples/playground/src/kit/kit.invariants.md)
   it('a view written twice warns with both layers in order, throws when strict, and the last write wins', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const One = Kit.Class.derive(Strip, { Head: { view: StripFootView } }, 'one');
+    const One = Kit.Class.derive(Strip, { Header: { view: StripFooterView } }, 'one');
     expect(KitInspect.Class.report(One)).toEqual([]);
     expect(warn).not.toHaveBeenCalled(); // the shipped base is not a layer
-    const Two = Kit.Class.derive(One, { Head: { view: StripHeadView } }, 'two');
-    expect(KitInspect.Class.report(Two)).toEqual(['Head.view: written by one, then two']);
+    const Two = Kit.Class.derive(One, { Header: { view: StripHeaderView } }, 'two');
+    expect(KitInspect.Class.report(Two)).toEqual(['Header.view: written by one, then two']);
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(String(warn.mock.calls[0][0])).toContain('Head.view: written by one, then two');
-    expect(Two.$Class.$kit.Head.view).toBe(StripHeadView); // derive itself stays silent and the last write wins
-    const App = Kit.Class.derive(Two, { Head: { view: StripFootView } }, 'app');
+    expect(String(warn.mock.calls[0][0])).toContain('Header.view: written by one, then two');
+    expect(Two.$Class.$kit.Header.view).toBe(StripHeaderView); // derive itself stays silent and the last write wins
+    const App = Kit.Class.derive(Two, { Header: { view: StripFooterView } }, 'app');
     expect(() => KitInspect.Class.report(App, { strict: true })).toThrow(
-      /Head\.view: written by one, then two, then app/
+      /Header\.view: written by one, then two, then app/
     );
     expect(KitInspect.Class.conflicts(App)).toEqual([
-      'Head.view: written by one, then two, then app'
+      'Header.view: written by one, then two, then app'
     ]);
   });
 
   // domain-invariant: $KitInspect — If two layers replace one field of one entry or move one role, then the chain names both layers in order — a warning by default, a throw when strict; a bind written twice is composition, not a contact
   it('a role moved twice is a contact, an insert beside another is not, a bind over a bind is not, and a nested write is keyed by its path', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const Moved = Kit.Class.derive(Strip, { order: { move: { Foot: { before: 'Head' } } } }, 'one');
+    const Moved = Kit.Class.derive(
+      Strip,
+      { order: { move: { Footer: { before: 'Header' } } } },
+      'one'
+    );
     const MovedAgain = Kit.Class.derive(
       Moved,
-      { order: { move: { Foot: { after: 'Body' } } } },
+      { order: { move: { Footer: { after: 'Body' } } } },
       'two'
     );
-    expect(KitInspect.Class.report(MovedAgain)).toEqual(['#move:Foot: written by one, then two']);
-    expect(String(warn.mock.calls[0][0])).toContain('#move:Foot: written by one, then two');
+    expect(KitInspect.Class.report(MovedAgain)).toEqual(['#move:Footer: written by one, then two']);
+    expect(String(warn.mock.calls[0][0])).toContain('#move:Footer: written by one, then two');
     warn.mockClear();
     const Inserted = Kit.Class.derive(Strip, {
-      order: { after: { Head: ['A'] } },
+      order: { after: { Header: ['A'] } },
       A: { view: 'i' }
     });
     const InsertedBeside = Kit.Class.derive(Inserted, {
-      order: { after: { Head: ['B'] } },
+      order: { after: { Header: ['B'] } },
       B: { view: 'b' }
     });
     const Bound = Kit.Class.derive(Strip, { Item: { bind: ({ inherited }) => inherited() } });
@@ -106,16 +110,16 @@ describe('a second write to one field is reported, never merged', () => {
     expect(warn).not.toHaveBeenCalled();
     const Nested = Kit.Class.derive(
       Panel,
-      { Card: { subkit: { Head: { view: FancyHeadView } } } },
+      { Card: { subkit: { Header: { view: CardHeaderFancyView } } } },
       'fancy'
     );
     const Plain = Kit.Class.derive(
       Nested,
-      { Card: { subkit: { Head: { view: CardHeadView } } } },
+      { Card: { subkit: { Header: { view: CardHeaderView } } } },
       'plain'
     );
     expect(KitInspect.Class.conflicts(Plain)).toEqual([
-      'Card.Head.view: written by fancy, then plain'
+      'Card.Header.view: written by fancy, then plain'
     ]);
   });
 
@@ -123,29 +127,29 @@ describe('a second write to one field is reported, never merged', () => {
   it('tree() prints every seam with its position, view, class, bind and the layer that set each', () => {
     const One = Kit.Class.derive(
       Strip,
-      { order: { after: { Head: ['A'] } }, A: { view: 'i', bind: () => ({ class: 'a' }) } },
+      { order: { after: { Header: ['A'] } }, A: { view: 'i', bind: () => ({ class: 'a' }) } },
       'one'
     );
     const Two = Kit.Class.derive(
       One,
-      { order: { move: { Foot: { before: 'Body' } } }, Head: { view: StripFootView } },
+      { order: { move: { Footer: { before: 'Body' } } }, Header: { view: StripFooterView } },
       'two'
     );
     const printed = KitInspect.Class.tree(Two).split('\n');
-    expect(printed[0]).toBe('order: Head A Foot Body');
-    expect(printed).toContain('0 Head: view StripFoot · class - · bind no · view←two');
+    expect(printed[0]).toBe('order: Header A Footer Body');
+    expect(printed).toContain('0 Header: view Strip.Footer · class - · bind no · view←two');
     expect(printed).toContain(
       '1 A: view <i> · class - · bind yes · view←one, bind←one, position←one'
     );
-    expect(printed).toContain('2 Foot: view StripFoot · class - · bind no · position←two');
-    expect(printed).toContain('3 Body: view StripBody · class - · bind no · base');
+    expect(printed).toContain('2 Footer: view Strip.Footer · class - · bind no · position←two');
+    expect(printed).toContain('3 Body: view Strip.Body · class - · bind no · base');
     expect(printed).toContain('- Item: view Code · class $Code · bind yes · base');
     const nested = KitInspect.Class.tree(ThemedPanel).split('\n');
     expect(nested[0]).toBe('- Card: view Card · class $Card + 1 layer(s) · bind no · base');
-    expect(nested).toContain('  - Head: view FancyHead · class - · bind no · view←layer 1');
+    expect(nested).toContain('  - Header: view Card.Header.Fancy · class - · bind no · view←layer 1');
     expect(nested).toContain(
       '  - Code: view Code · class $ThemedCode · bind no · namespace←layer 1'
     );
-    expect(KitInspect.Class.tree(Strip).split('\n')[0]).toBe('order: Head Body Foot');
+    expect(KitInspect.Class.tree(Strip).split('\n')[0]).toBe('order: Header Body Footer');
   });
 });

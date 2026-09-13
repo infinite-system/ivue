@@ -218,7 +218,7 @@ class $Kit {
   }
 
   /** The patch's relations as one list: each names the role it removes or places, the side, and
-   *  the anchor. A run of names after one anchor chains, so `after: { Head: ['Badge', 'Pin'] }` puts
+   *  the anchor. A run of names after one anchor chains, so `after: { Header: ['Badge', 'Pin'] }` puts
    *  Pin after Badge. A role named twice, or moved against itself, is refused here. */
   protected static relationsOf(patch: Kit.OrderPatch): Kit.Relation[] {
     const relations: Kit.Relation[] = [];

@@ -94,8 +94,8 @@ class $KitInspect {
     return layer.layer ?? `layer ${this.layers(layer).length - 1}`;
   }
 
-  /** Every write a patch makes, as keys: `Message.Head.view` for a replaced field, `Message.Head.bind`
-   *  for a bind, `Message#move:Foot` for a move, `Message#position:Badge` for any role a relation placed. */
+  /** Every write a patch makes, as keys: `Message.Header.view` for a replaced field, `Message.Header.bind`
+   *  for a bind, `Message#move:Footer` for a move, `Message#position:Badge` for any role a relation placed. */
   static writesOf(patch: Kit.Patch, path: string[] = []): string[] {
     const keys: string[] = [];
     const prefix = path.join('.');

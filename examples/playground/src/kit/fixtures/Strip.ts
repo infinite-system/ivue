@@ -11,9 +11,9 @@ import { Kit } from '../Kit';
 import { KitContainer } from '../KitContainer';
 import { Code } from './Code';
 import CodeView from './Code.vue';
-import StripHeadView from './StripHead.vue';
-import StripBodyView from './StripBody.vue';
-import StripFootView from './StripFoot.vue';
+import StripHeaderView from './Strip.Header.vue';
+import StripBodyView from './Strip.Body.vue';
+import StripFooterView from './Strip.Footer.vue';
 
 // A container: its sections are roles the view renders in the kit's
 // `order`, and its body is a list container that feeds every item through
@@ -23,14 +23,14 @@ class $Strip extends KitContainer.$Class<Strip.Roles, string> {
   /** the sections in their order, and the list role with the bind that feeds each item */
   static override get $kit(): Strip.Roles {
     return {
-      Head: { view: StripHeadView },
+      Header: { view: StripHeaderView },
       Body: { view: StripBodyView },
-      Foot: { view: StripFootView, shows: (strip) => strip.hasItems },
+      Footer: { view: StripFooterView, shows: (strip) => strip.hasItems },
       // the typed form: the bind's result is checked against Code's props, the seam against the strip
       Item: this.entry(CodeView, Code, {
         bind: ({ model, item, key }) => ({ code: item, cap: model.cap, 'data-key': key })
       }),
-      order: ['Head', 'Body', 'Foot']
+      order: ['Header', 'Body', 'Footer']
     };
   }
 
@@ -83,7 +83,7 @@ export namespace Strip {
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
   export type Props = ExtractPropTypes<typeof $Class.props>;
-  export type SectionRole = 'Head' | 'Body' | 'Foot';
+  export type SectionRole = 'Header' | 'Body' | 'Footer';
   export type Role = SectionRole | 'Item';
   /** declared, so the container's instance type and its kit can name each other; the Item entry
    *  names its namespace so a bind is held to Code's contract */
