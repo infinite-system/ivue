@@ -1,6 +1,7 @@
 import { Reactive } from '../../../../ivue';
 import { Static } from '../../../../Static';
 import { Kit } from '../../../../kit/Kit';
+import { KitContainer } from '../../../../kit/KitContainer';
 import { ToolCallSubThread } from './tool-calls/ToolCall.SubThread';
 import ToolCallSubThreadView from './tool-calls/ToolCall.SubThread.vue';
 import { Markdown } from '../../Markdown';
@@ -10,11 +11,15 @@ import type { MessagePart } from './MessagePart';
 // A system record, by subtype: a compaction is a divider with the
 // summary folded under it, a turn duration a quiet timestamp line, a
 // hook summary a small card, a folded subagent thread a note.
-class $MessagePartSystem {
+class $MessagePartSystem extends KitContainer.$Class<MessagePartSystem.Roles> {
   /** the one role a system line composes: the thread its children form */
-  static get $kit(): MessagePartSystem.Roles {
+  static override get $kit(): MessagePartSystem.Roles {
     return {
-      SubThread: { view: ToolCallSubThreadView, namespace: ToolCallSubThread }
+      SubThread: {
+        view: ToolCallSubThreadView,
+        namespace: ToolCallSubThread,
+        bind: this.bindThread
+      }
     };
   }
 
@@ -25,15 +30,20 @@ class $MessagePartSystem {
     subagent: '⑂'
   };
 
-  constructor(public props: MessagePart.Props<SessionLog.SystemPart>) {}
-
-  /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
-    return this.constructor as typeof $MessagePartSystem;
+  /** what the folded thread receives: the children a system line carried, and the chat */
+  static bindThread({
+    model
+  }: Kit.Seam<$MessagePartSystem, undefined, typeof ToolCallSubThread>): ToolCallSubThread.Props {
+    return { messages: model.children, chat: model.props.chat };
   }
 
-  get kit() {
-    return this.self.$kit;
+  constructor(public props: MessagePart.Props<SessionLog.SystemPart>) {
+    super();
+  }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected override get self() {
+    return this.constructor as typeof $MessagePartSystem;
   }
 
   get part(): SessionLog.SystemPart {

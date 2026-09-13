@@ -48,7 +48,11 @@ class $ToolCallEdit extends ToolCall.$Class {
   }
 
   override get sections(): ToolCall.Section[] {
-    const sections: ToolCall.Section[] = [{ title: this.filePath, code: this.diff, lang: 'diff' }];
+    const tags: ToolCall.Tag[] = [{ text: this.changeLabel }];
+    if (this.replacesAll) tags.push({ text: 'replace all' });
+    const sections: ToolCall.Section[] = [
+      { title: this.filePath, code: this.diff, lang: 'diff', pathTitle: true, tags, wrap: false }
+    ];
     if (this.isFailed && this.resultText)
       sections.push({ title: 'error', code: this.resultText, lang: 'text', tone: 'error' });
     return sections;

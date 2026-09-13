@@ -1,10 +1,17 @@
 import { Reactive } from '../../../../../ivue';
+import { Static } from '../../../../../Static';
 import type { SessionLog } from '../../../SessionLog';
 import { ToolCall } from './ToolCall';
+import ToolCallCaptionAgentView from './ToolCall.Caption.Agent.vue';
 
 // A subagent: its description and prompt, its report, and the thread it
 // ran folded under it, rendered by the same parts as the main thread.
 class $ToolCallAgent extends ToolCall.$Class {
+  /** this card's caption has its own line; every other role is the base's */
+  static override get $kit(): ToolCall.Roles {
+    return { ...super.$kit, Caption: { view: ToolCallCaptionAgentView } };
+  }
+
   get description(): string {
     return String(this.input.description ?? '');
   }
@@ -15,27 +22,6 @@ class $ToolCallAgent extends ToolCall.$Class {
 
   get agentType(): string {
     return String(this.input.subagent_type ?? 'general');
-  }
-
-  get thread(): SessionLog.Message[] {
-    return this.call.children ?? [];
-  }
-
-  get hasThread(): boolean {
-    return this.thread.length > 0;
-  }
-
-  get threadId(): string {
-    return `${this.call.id}:thread`;
-  }
-
-  get isThreadOpen(): boolean {
-    return this.chat.isExpanded(this.threadId);
-  }
-
-  get threadLabel(): string {
-    const count = this.thread.length;
-    return `${this.isThreadOpen ? 'hide' : 'show'} the subagent's thread · ${count.toLocaleString('en-US')} message${count === 1 ? '' : 's'}`;
   }
 
   get modelLabel(): string {
@@ -55,14 +41,10 @@ class $ToolCallAgent extends ToolCall.$Class {
       });
     return sections;
   }
-
-  toggleThread() {
-    this.chat.toggle(this.threadId);
-  }
 }
 
 export namespace ToolCallAgent {
-  export const $Class = $ToolCallAgent;
+  export const $Class = Static($ToolCallAgent);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

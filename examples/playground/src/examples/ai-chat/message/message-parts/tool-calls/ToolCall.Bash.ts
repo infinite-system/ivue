@@ -69,6 +69,10 @@ class $ToolCallBash extends ToolCall.$Class {
     return String(this.input.description ?? '');
   }
 
+  override get caption(): string {
+    return this.description;
+  }
+
   get stdout(): string {
     const structured = this.structured;
     const text = typeof structured.stdout === 'string' ? structured.stdout : this.resultText;
@@ -110,10 +114,30 @@ class $ToolCallBash extends ToolCall.$Class {
   }
 
   override get sections(): ToolCall.Section[] {
-    const sections: ToolCall.Section[] = [{ title: 'command', code: this.command, lang: 'bash' }];
-    if (this.hasStdout) sections.push({ title: 'stdout', code: this.stdout, lang: 'text' });
+    const sections: ToolCall.Section[] = [
+      {
+        title: 'command',
+        code: this.commandText,
+        lang: 'bash',
+        tags: this.ranInBackground ? [{ text: 'background' }] : []
+      }
+    ];
+    if (this.hasStdout)
+      sections.push({
+        title: 'stdout',
+        code: this.stdout,
+        lang: 'text',
+        tags: [{ text: this.exitLabel, class: this.stateClass }]
+      });
     if (this.hasStderr)
       sections.push({ title: 'stderr', code: this.stderr, lang: 'text', tone: 'error' });
+    if (this.hasNoOutput)
+      sections.push({
+        title: 'output',
+        code: '',
+        lang: 'text',
+        note: `no output · ${this.exitLabel}`
+      });
     return sections;
   }
 }

@@ -13,11 +13,10 @@ import { Static } from '../../../../Static';
 import { MessagePartToolCall } from './MessagePart.ToolCall';
 import { MessagePartToolBatch } from './MessagePart.ToolBatch';
 import { ToolCallBash } from './tool-calls/ToolCall.Bash';
-import ToolCallBashView from './tool-calls/ToolCall.Bash.vue';
 import { ToolCallMcp } from './tool-calls/ToolCall.Mcp';
 import { ToolCallTask } from './tool-calls/ToolCall.Task';
 import { ToolCall } from './tool-calls/ToolCall';
-import ToolCallGenericView from './tool-calls/ToolCall.Generic.vue';
+import ToolCallView from './tool-calls/ToolCall.vue';
 
 describe('PartToolCall', () => {
   // invariant: Rendering is a kit (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
@@ -25,7 +24,7 @@ describe('PartToolCall', () => {
   // impossible-if-true: $MessagePartToolCall — a tool name reaches a renderer that branches on it
   it("maps every known name, MCP and task names by family, and falls back to the generic card — through the part's own kit", () => {
     expect(MessagePartToolCall.Class.toolFor('Bash')).toMatchObject({
-      view: ToolCallBashView,
+      view: ToolCallView,
       namespace: ToolCallBash
     });
     expect(MessagePartToolCall.Class.toolFor('mcp__playwright__browser_snapshot').namespace).toBe(
@@ -33,7 +32,7 @@ describe('PartToolCall', () => {
     );
     expect(MessagePartToolCall.Class.toolFor('TaskUpdate').namespace).toBe(ToolCallTask);
     expect(MessagePartToolCall.Class.toolFor('NeverHeardOfIt')).toMatchObject({
-      view: ToolCallGenericView,
+      view: ToolCallView,
       namespace: ToolCall
     });
     expect(MessagePartToolCall.Class.isMapped('Edit')).toBe(true);

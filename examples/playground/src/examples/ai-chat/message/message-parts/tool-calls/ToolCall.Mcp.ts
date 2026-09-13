@@ -1,9 +1,16 @@
 import { Reactive } from '../../../../../ivue';
+import { Static } from '../../../../../Static';
 import { ToolCall } from './ToolCall';
+import ToolCallCaptionMcpView from './ToolCall.Caption.Mcp.vue';
 
 // An MCP tool: the server and the tool from the name, input and result
 // as JSON, and a screenshot when the result carried one.
 class $ToolCallMcp extends ToolCall.$Class {
+  /** this card's caption has its own line; every other role is the base's */
+  static override get $kit(): ToolCall.Roles {
+    return { ...super.$kit, Caption: { view: ToolCallCaptionMcpView } };
+  }
+
   get server(): string {
     return this.name.split('__')[1] ?? '';
   }
@@ -44,7 +51,7 @@ class $ToolCallMcp extends ToolCall.$Class {
 }
 
 export namespace ToolCallMcp {
-  export const $Class = $ToolCallMcp;
+  export const $Class = Static($ToolCallMcp);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

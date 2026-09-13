@@ -5,7 +5,7 @@ import type { ToolCall } from './ToolCall';
 // name, the action's title when it has one, then the argument — a file
 // tool keeps its file name whole and truncates the directory instead.
 // Markup only; the model supplies every word and state.
-defineProps<{ model: ToolCall.Instance }>();
+defineProps<ToolCall.SectionProps>();
 </script>
 
 <template>

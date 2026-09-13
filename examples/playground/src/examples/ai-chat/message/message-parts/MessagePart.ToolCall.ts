@@ -5,27 +5,17 @@ import { KitContainer } from '../../../../kit/KitContainer';
 import type { SessionLog } from '../../SessionLog';
 import type { MessagePart } from './MessagePart';
 import { ToolCall } from './tool-calls/ToolCall';
-import ToolCallGenericView from './tool-calls/ToolCall.Generic.vue';
+import ToolCallView from './tool-calls/ToolCall.vue';
 import { ToolCallBash } from './tool-calls/ToolCall.Bash';
-import ToolCallBashView from './tool-calls/ToolCall.Bash.vue';
 import { ToolCallEdit } from './tool-calls/ToolCall.Edit';
-import ToolCallEditView from './tool-calls/ToolCall.Edit.vue';
 import { ToolCallRead } from './tool-calls/ToolCall.Read';
-import ToolCallReadView from './tool-calls/ToolCall.Read.vue';
 import { ToolCallWrite } from './tool-calls/ToolCall.Write';
-import ToolCallWriteView from './tool-calls/ToolCall.Write.vue';
 import { ToolCallAgent } from './tool-calls/ToolCall.Agent';
-import ToolCallAgentView from './tool-calls/ToolCall.Agent.vue';
 import { ToolCallSkill } from './tool-calls/ToolCall.Skill';
-import ToolCallSkillView from './tool-calls/ToolCall.Skill.vue';
 import { ToolCallWebFetch } from './tool-calls/ToolCall.WebFetch';
-import ToolCallWebFetchView from './tool-calls/ToolCall.WebFetch.vue';
 import { ToolCallArtifact } from './tool-calls/ToolCall.Artifact';
-import ToolCallArtifactView from './tool-calls/ToolCall.Artifact.vue';
 import { ToolCallTask } from './tool-calls/ToolCall.Task';
-import ToolCallTaskView from './tool-calls/ToolCall.Task.vue';
 import { ToolCallMcp } from './tool-calls/ToolCall.Mcp';
-import ToolCallMcpView from './tool-calls/ToolCall.Mcp.vue';
 
 // One tool call: the part that picks the card. Its kit names a card per
 // tool, two families by prefix, and the generic card for a name nobody
@@ -39,19 +29,19 @@ class $MessagePartToolCall extends KitContainer.$Class<
   /** the cards: one per tool name, and three families — the generic card, MCP, and the task tools */
   static override get $kit(): MessagePartToolCall.Roles {
     return {
-      Generic: { view: ToolCallGenericView, namespace: ToolCall, bind: this.bindCard },
-      Mcp: { view: ToolCallMcpView, namespace: ToolCallMcp, bind: this.bindCard },
-      Task: { view: ToolCallTaskView, namespace: ToolCallTask, bind: this.bindCard },
-      Bash: { view: ToolCallBashView, namespace: ToolCallBash, bind: this.bindCard },
-      Edit: { view: ToolCallEditView, namespace: ToolCallEdit, bind: this.bindCard },
-      NotebookEdit: { view: ToolCallEditView, namespace: ToolCallEdit, bind: this.bindCard },
-      Read: { view: ToolCallReadView, namespace: ToolCallRead, bind: this.bindCard },
-      Write: { view: ToolCallWriteView, namespace: ToolCallWrite, bind: this.bindCard },
-      Agent: { view: ToolCallAgentView, namespace: ToolCallAgent, bind: this.bindCard },
-      Skill: { view: ToolCallSkillView, namespace: ToolCallSkill, bind: this.bindCard },
-      WebFetch: { view: ToolCallWebFetchView, namespace: ToolCallWebFetch, bind: this.bindCard },
-      WebSearch: { view: ToolCallWebFetchView, namespace: ToolCallWebFetch, bind: this.bindCard },
-      Artifact: { view: ToolCallArtifactView, namespace: ToolCallArtifact, bind: this.bindCard }
+      Generic: { view: ToolCallView, namespace: ToolCall, bind: this.bindCard },
+      Mcp: { view: ToolCallView, namespace: ToolCallMcp, bind: this.bindCard },
+      Task: { view: ToolCallView, namespace: ToolCallTask, bind: this.bindCard },
+      Bash: { view: ToolCallView, namespace: ToolCallBash, bind: this.bindCard },
+      Edit: { view: ToolCallView, namespace: ToolCallEdit, bind: this.bindCard },
+      NotebookEdit: { view: ToolCallView, namespace: ToolCallEdit, bind: this.bindCard },
+      Read: { view: ToolCallView, namespace: ToolCallRead, bind: this.bindCard },
+      Write: { view: ToolCallView, namespace: ToolCallWrite, bind: this.bindCard },
+      Agent: { view: ToolCallView, namespace: ToolCallAgent, bind: this.bindCard },
+      Skill: { view: ToolCallView, namespace: ToolCallSkill, bind: this.bindCard },
+      WebFetch: { view: ToolCallView, namespace: ToolCallWebFetch, bind: this.bindCard },
+      WebSearch: { view: ToolCallView, namespace: ToolCallWebFetch, bind: this.bindCard },
+      Artifact: { view: ToolCallView, namespace: ToolCallArtifact, bind: this.bindCard }
     };
   }
 

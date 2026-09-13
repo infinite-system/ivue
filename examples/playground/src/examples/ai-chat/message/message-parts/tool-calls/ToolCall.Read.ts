@@ -71,9 +71,20 @@ class $ToolCallRead extends ToolCall.$Class {
   }
 
   override get sections(): ToolCall.Section[] {
-    if (!this.resultText) return [];
+    if (this.isImage) return [];
+    const tags: ToolCall.Tag[] = [{ text: this.rangeLabel }];
+    if (this.lineCountLabel) tags.push({ text: this.lineCountLabel });
     return [
-      { title: this.filePath, code: this.code, lang: this.language, startLine: this.startLine }
+      {
+        title: this.filePath,
+        code: this.showsCode ? this.code : '',
+        lang: this.language,
+        startLine: this.startLine,
+        pathTitle: true,
+        tags,
+        wrap: false,
+        note: this.showsEmpty ? this.emptyLabel : undefined
+      }
     ];
   }
 }

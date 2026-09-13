@@ -27,9 +27,7 @@ const model = new (
     <component
       v-if="model.showsThread"
       :is="model.kit.SubThread.view"
-      :kit="model.kit.SubThread"
-      :messages="model.children"
-      :chat="chat"
+      v-bind="model.seam('SubThread')"
     />
   </div>
 </template>

@@ -1,8 +1,15 @@
 import { Reactive } from '../../../../../ivue';
+import { Static } from '../../../../../Static';
 import { ToolCall } from './ToolCall';
+import ToolCallCaptionTaskView from './ToolCall.Caption.Task.vue';
 
 // The task tools: a subject, a status, and the note that went with it.
 class $ToolCallTask extends ToolCall.$Class {
+  /** this card's caption has its own line; every other role is the base's */
+  static override get $kit(): ToolCall.Roles {
+    return { ...super.$kit, Caption: { view: ToolCallCaptionTaskView } };
+  }
+
   get verb(): string {
     return this.name.replace(/^Task/, '').toLowerCase() || 'task';
   }
@@ -36,7 +43,7 @@ class $ToolCallTask extends ToolCall.$Class {
 }
 
 export namespace ToolCallTask {
-  export const $Class = $ToolCallTask;
+  export const $Class = Static($ToolCallTask);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

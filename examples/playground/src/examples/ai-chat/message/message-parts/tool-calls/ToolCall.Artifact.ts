@@ -1,9 +1,16 @@
 import { Reactive } from '../../../../../ivue';
+import { Static } from '../../../../../Static';
 import { ToolCall } from './ToolCall';
+import ToolCallCaptionArtifactView from './ToolCall.Caption.Artifact.vue';
 
 // An artifact action: what was published or read, and the link that
 // came back.
 class $ToolCallArtifact extends ToolCall.$Class {
+  /** this card's caption has its own line; every other role is the base's */
+  static override get $kit(): ToolCall.Roles {
+    return { ...super.$kit, Caption: { view: ToolCallCaptionArtifactView } };
+  }
+
   get action(): string {
     return String(this.input.action ?? 'publish');
   }
@@ -35,7 +42,7 @@ class $ToolCallArtifact extends ToolCall.$Class {
 }
 
 export namespace ToolCallArtifact {
-  export const $Class = $ToolCallArtifact;
+  export const $Class = Static($ToolCallArtifact);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }

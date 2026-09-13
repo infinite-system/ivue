@@ -27,8 +27,18 @@ class $ToolCallWrite extends ToolCall.$Class {
   }
 
   override get sections(): ToolCall.Section[] {
+    const tags: ToolCall.Tag[] = [{ text: this.lineCountLabel }];
+    if (this.wasOverwrite) tags.push({ text: 'overwrote' });
     const sections: ToolCall.Section[] = [
-      { title: this.filePath, code: this.content, lang: this.language, startLine: 1 }
+      {
+        title: this.filePath,
+        code: this.content,
+        lang: this.language,
+        startLine: 1,
+        pathTitle: true,
+        tags,
+        wrap: false
+      }
     ];
     if (this.isFailed && this.resultText)
       sections.push({ title: 'error', code: this.resultText, lang: 'text', tone: 'error' });
