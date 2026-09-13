@@ -8,7 +8,7 @@ import MessagePartToolBatchCallsView from './MessagePart.ToolBatch.Calls.vue';
 import MessagePartToolBatchHeadView from './MessagePart.ToolBatch.Head.vue';
 import { Clock } from '../../Clock';
 import type { SessionLog } from '../../SessionLog';
-import { ToolCall } from './tool-calls/ToolCall';
+import { ToolCall } from './tool-call/ToolCall';
 import type { MessagePart } from './MessagePart';
 
 // A run of tool calls as one row: the count, the tools' icons in order,

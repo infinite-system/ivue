@@ -62,11 +62,11 @@ message/
   ChatMessage.ts / .vue / .test.ts        the compositor
   ChatMessage.Header.vue                  a classless leaf: role Header of ChatMessage
   ChatMessage.Header.Bubble.vue           an alternate view for the same role
-  message-parts/
+  message-part/
     MessagePartList.ts / .vue             the list: a compositor of its own
     MessagePart.ts                        the family's shared Props
     MessagePart.Text.ts / .vue            role Text, class $MessagePartText
-    tool-calls/
+    tool-call/
       ToolCall.ts                         the base of the calls
       ToolCall.Header.vue                 a classless leaf of ToolCall
       ToolCall.Bash.ts / .vue             role Bash, class $ToolCallBash
@@ -205,8 +205,8 @@ import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
 import { KitContainer } from '../../../kit/KitContainer';
-import { MessagePartList } from './message-parts/MessagePartList';
-import MessagePartListView from './message-parts/MessagePartList.vue';
+import { MessagePartList } from './message-part/MessagePartList';
+import MessagePartListView from './message-part/MessagePartList.vue';
 import GutterView from './ChatMessage.Gutter.vue';
 import HeaderView from './ChatMessage.Header.vue';
 import StubView from './ChatMessage.Stub.vue';
@@ -378,7 +378,7 @@ no state and constructs nothing.
 ### A list compositor, its classed roles, and a shared bind
 
 ```ts
-// message/message-parts/MessagePartList.ts — the parts of one message as a list
+// message/message-part/MessagePartList.ts — the parts of one message as a list
 import { Reactive } from '../../../../ivue';
 import { Static } from '../../../../Static';
 import { Kit } from '../../../../kit/Kit';
@@ -482,7 +482,7 @@ export namespace MessagePartList {
 ```
 
 ```vue
-<!-- message/message-parts/MessagePartList.vue — a list renders one shape -->
+<!-- message/message-part/MessagePartList.vue — a list renders one shape -->
 <script setup lang="ts">
 import { MessagePartList } from './MessagePartList';
 
@@ -506,7 +506,7 @@ const model = new (
 ```
 
 ```ts
-// message/message-parts/MessagePart.Text.ts — role Text of the list; the stem spells $MessagePartText
+// message/message-part/MessagePart.Text.ts — role Text of the list; the stem spells $MessagePartText
 import { Reactive } from '../../../../ivue';
 import { Static } from '../../../../Static';
 import type { MessagePart } from './MessagePart';
@@ -542,7 +542,7 @@ type (`SessionLog.TextPart`) keeps its own name.
 ### A dispatch is a list of one
 
 ```ts
-// message/message-parts/MessagePart.ToolCall.ts — one card, chosen by tool name
+// message/message-part/MessagePart.ToolCall.ts — one card, chosen by tool name
 class $MessagePartToolCall extends KitContainer.$Class<
   MessagePartToolCall.Roles,
   SessionLog.ToolCall
@@ -593,7 +593,7 @@ class $MessagePartToolCall extends KitContainer.$Class<
 ```
 
 ```vue
-<!-- message/message-parts/MessagePart.ToolCall.vue -->
+<!-- message/message-part/MessagePart.ToolCall.vue -->
 <template>
   <component :is="model.viewOf(model.call)" v-bind="model.propsOf(model.call)" />
 </template>

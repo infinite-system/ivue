@@ -23,7 +23,7 @@ import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
 import { KitInspect } from '../../../kit/KitInspect';
 import { Chat } from '../Chat';
-import { MessagePartList } from './message-parts/MessagePartList';
+import { MessagePartList } from './message-part/MessagePartList';
 import { ChatMessage } from './ChatMessage';
 import type { SessionLog } from '../SessionLog';
 import { ChatVariants } from '../variants/ChatVariants';

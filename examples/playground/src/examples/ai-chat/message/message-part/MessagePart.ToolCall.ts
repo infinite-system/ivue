@@ -4,18 +4,18 @@ import { Kit } from '../../../../kit/Kit';
 import { KitContainer } from '../../../../kit/KitContainer';
 import type { SessionLog } from '../../SessionLog';
 import type { MessagePart } from './MessagePart';
-import { ToolCall } from './tool-calls/ToolCall';
-import ToolCallView from './tool-calls/ToolCall.vue';
-import { ToolCallBash } from './tool-calls/ToolCall.Bash';
-import { ToolCallEdit } from './tool-calls/ToolCall.Edit';
-import { ToolCallRead } from './tool-calls/ToolCall.Read';
-import { ToolCallWrite } from './tool-calls/ToolCall.Write';
-import { ToolCallAgent } from './tool-calls/ToolCall.Agent';
-import { ToolCallSkill } from './tool-calls/ToolCall.Skill';
-import { ToolCallWebFetch } from './tool-calls/ToolCall.WebFetch';
-import { ToolCallArtifact } from './tool-calls/ToolCall.Artifact';
-import { ToolCallTask } from './tool-calls/ToolCall.Task';
-import { ToolCallMcp } from './tool-calls/ToolCall.Mcp';
+import { ToolCall } from './tool-call/ToolCall';
+import ToolCallView from './tool-call/ToolCall.vue';
+import { ToolCallBash } from './tool-call/ToolCall.Bash';
+import { ToolCallEdit } from './tool-call/ToolCall.Edit';
+import { ToolCallRead } from './tool-call/ToolCall.Read';
+import { ToolCallWrite } from './tool-call/ToolCall.Write';
+import { ToolCallAgent } from './tool-call/ToolCall.Agent';
+import { ToolCallSkill } from './tool-call/ToolCall.Skill';
+import { ToolCallWebFetch } from './tool-call/ToolCall.WebFetch';
+import { ToolCallArtifact } from './tool-call/ToolCall.Artifact';
+import { ToolCallTask } from './tool-call/ToolCall.Task';
+import { ToolCallMcp } from './tool-call/ToolCall.Mcp';
 
 // One tool call: the part that picks the card. Its kit names a card per
 // tool, two families by prefix, and the generic card for a name nobody

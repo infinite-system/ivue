@@ -12,11 +12,11 @@ import { describe, expect, it } from 'vitest';
 import { Static } from '../../../../Static';
 import { MessagePartToolCall } from './MessagePart.ToolCall';
 import { MessagePartToolBatchCalls } from './MessagePart.ToolBatch.Calls';
-import { ToolCallBash } from './tool-calls/ToolCall.Bash';
-import { ToolCallMcp } from './tool-calls/ToolCall.Mcp';
-import { ToolCallTask } from './tool-calls/ToolCall.Task';
-import { ToolCall } from './tool-calls/ToolCall';
-import ToolCallView from './tool-calls/ToolCall.vue';
+import { ToolCallBash } from './tool-call/ToolCall.Bash';
+import { ToolCallMcp } from './tool-call/ToolCall.Mcp';
+import { ToolCallTask } from './tool-call/ToolCall.Task';
+import { ToolCall } from './tool-call/ToolCall';
+import ToolCallView from './tool-call/ToolCall.vue';
 
 describe('PartToolCall', () => {
   // invariant: Rendering is a kit (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
