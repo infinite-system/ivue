@@ -3427,6 +3427,17 @@
   .ai-chat .ac-msg-ago::before {
     content: none;
   }
+  /* code on a phone: a smaller face, tighter padding, and a narrower gutter of line numbers */
+  .ai-chat .chat-code,
+  .ai-chat pre.chat-code {
+    padding: 8px 8px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .ai-chat .ac-code-numbered .chat-code .line::before {
+    width: 2.2em;
+    margin-right: 6px;
+  }
   .ai-chat .ac-msg-system {
     padding: 4px 12px 4px 10px;
   }
