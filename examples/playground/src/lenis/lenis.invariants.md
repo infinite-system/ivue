@@ -25,6 +25,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 - [A flick carries the glide it interrupted](#a-flick-carries-the-glide-it-interrupted) — why flick after flick gains speed instead of restarting.
 - [A lerp completes within half a pixel of any target](#a-lerp-completes-within-half-a-pixel-of-any-target) — why a glide always ends, and the scroller can rest.
 - [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page) — why a reader at an end is never trapped inside the scroller.
+- [A cross-axis wheel belongs to what is under it](#a-cross-axis-wheel-belongs-to-what-is-under-it) — why a trackpad can scroll a code block sideways.
 
 **Mechanism:** The touchstart seeds a trail at the animated position and marks the touch pending while the glide runs on; the first move stops the glide, drops its target for the animated position, re-seeds the trail there and syncs the finger; every move appends to the trail inside a 100 ms window with one anchor kept before it; the end or cancel reads the velocity off the trail with the span capped at the window and scrolls to the inertia distance; an end with no move is the tap that stops the glide.
 
@@ -200,6 +201,28 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 **Last refined:** 2026-09-13
 
+### A cross-axis wheel belongs to what is under it
+
+**Invariant:** If a wheel's delta runs mostly across the scroller's gesture orientation — more sideways than along, on a vertical scroller — then the fork treats it as no gesture of its own: no cancel, no scroll, no stop flag, so the browser scrolls whatever under the pointer scrolls that way; a wheel along the orientation is the scroller's however little it drifts across.
+
+**Scope:** `Lenis.ts` `isUnknownGesture` in `onVirtualScroll`, for the wheel.
+
+**Mechanism:** Upstream refuses a wheel only when its along-axis delta is exactly zero, and a trackpad hand never swipes exactly sideways: the few px of drift made the whole swipe the list's, which jittered by the drift while the code block under the pointer never moved. Comparing the two deltas settles it the way the browser itself settles a gesture's axis. The nested-scroll check cannot stand in: on a vertical scroller it looks only at blocks that overflow vertically.
+
+**Generates:** Code blocks and tables in the chat that a trackpad scrolls sideways.
+
+**Rejected alternatives:** Extending the nested-scroll check to the other axis — the swipe would still be prevented over anything that is not a scrollable block, where the page's own sideways scroll (none) is harmless anyway.
+
+**Evidence:** `Lenis.ts` `isUnknownGesture`. Test: "a wheel mostly across the axis is left alone; one along it with a little drift is taken".
+
+**Impossible if true:** A trackpad swiping a code block sideways that scrolls the list by its drift. A vertical wheel with a few px of sideways drift that the list ignores.
+
+**Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "across the axis"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-13
+
 ## Impossibility boundary — what these invariants forbid
 
 - A re-flick that stalls — [A touch on a glide keeps it running until the first move](#a-touch-on-a-glide-keeps-it-running-until-the-first-move).
@@ -207,5 +230,6 @@ Chosen invariants stand on reality invariants, never the reverse.
 - A coalesced swipe reading a velocity of zero — [A flick's velocity is read off the finger's last stretch](#a-flicks-velocity-is-read-off-the-fingers-last-stretch).
 - A flick logic proven on iOS alone — [Android holds the first move back and may coalesce a swipe into one](#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one).
 - A wheel up at the top of the thread that moves nothing — [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page).
+- A sideways trackpad swipe over a code block that moves the list — [A cross-axis wheel belongs to what is under it](#a-cross-axis-wheel-belongs-to-what-is-under-it).
 - A claimed gesture leaving the content frozen — [A touchcancel flicks like a touchend](#a-touchcancel-flicks-like-a-touchend).
 - A run of same-way flicks that slows down — [A flick carries the glide it interrupted](#a-flick-carries-the-glide-it-interrupted).

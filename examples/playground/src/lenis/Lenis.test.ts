@@ -4,6 +4,7 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 [A flick's velocity is read off the finger's last stretch](lenis.invariants.md#a-flicks-velocity-is-read-off-the-fingers-last-stretch)
 [Android holds the first move back and may coalesce a swipe into one](lenis.invariants.md#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one)
 [A flick carries the glide it interrupted](lenis.invariants.md#a-flick-carries-the-glide-it-interrupted)
+[A cross-axis wheel belongs to what is under it](lenis.invariants.md#a-cross-axis-wheel-belongs-to-what-is-under-it)
 [A touch on a glide keeps it running until the first move](lenis.invariants.md#a-touch-on-a-glide-keeps-it-running-until-the-first-move)
 // domain-invariant: $Lenis — If a flick runs the same way as the glide the finger interrupted, then the glide's velocity at the take-over is added to the flick's; a flick the other way, or no glide, adds nothing.
 // domain-invariant: $Lenis — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
@@ -11,11 +12,13 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 // domain-invariant: $Lenis — If the content shifts under a finger's drag, then the trail shifts with it, so the flick's velocity is the finger's motion and never the shift's.
 // domain-invariant: $Lenis — If overscroll is on and a gesture at an end asks for more than the end has, then the scroller takes none of it and scrolls the nearest scrollable ancestor, else the window, by the gesture's own delta; an inward gesture, or overscroll off, is taken as before.
 // domain-invariant: $Lenis — If a finger lands on a glide, then the glide's target is pulled to a few frames of travel ahead under a steep lerp and its momentum is remembered for a flick the same way; the first move takes over where the content is.
+// domain-invariant: $Lenis — If a wheel runs mostly across the scroller's axis, then the scroller leaves it alone — no cancel, no scroll — so whatever scrolls that way under the pointer takes it; a wheel along the axis with a little drift across is the scroller's.
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
 Impossible if true: A wheel up over a nested box scrolled down that moves the list instead of the box.
 Impossible if true: A swipe over rows that measured taller mid-drag reading a velocity of zero.
 Impossible if true: A wheel up at the top of the thread that moves nothing.
 Impossible if true: A reversal that waits for the old glide to run its distance.
+Impossible if true: A trackpad swiping a code block sideways that scrolls the list by its drift.
 
 === GENERATOR-DESCRIBED ===
 The trail is the one thing the fork adds to touch inertia; the sync
@@ -358,6 +361,54 @@ test('a finger on a glide brakes it to a few frames ahead and keeps its momentum
   expect(inner.touchPending).toBe(false);
   expect(inner.carriedVelocity).toBe(velocity);
   expect(lenis.targetScroll).toBe(Math.round(at - 40));
+  lenis.destroy();
+  wrapper.remove();
+  if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
+});
+
+// domain-invariant: $Lenis — If a wheel runs mostly across the scroller's axis, then the scroller leaves it alone — no cancel, no scroll — so whatever scrolls that way under the pointer takes it; a wheel along the axis with a little drift across is the scroller's.
+// impossible-if-true: $Lenis — A trackpad swiping a code block sideways that scrolls the list by its drift.
+// invariant: A cross-axis wheel belongs to what is under it (examples/playground/src/lenis/lenis.invariants.md)
+test('a wheel mostly across the axis is left alone; one along it with a little drift is taken', () => {
+  class ObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  const hadObserver = 'ResizeObserver' in globalThis;
+  if (!hadObserver)
+    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
+  const wrapper = document.createElement('div');
+  const content = document.createElement('div');
+  wrapper.appendChild(content);
+  document.body.appendChild(wrapper);
+  const lenis = new Lenis.Class({ wrapper, content, autoRaf: false });
+  lenis.virtualLimit = () => 10_000;
+  const inner = lenis as unknown as { targetScroll: number; animatedScroll: number };
+  inner.targetScroll = inner.animatedScroll = 500;
+  const wheel = (deltaX: number, deltaY: number) => {
+    const event = {
+      type: 'wheel',
+      ctrlKey: false,
+      preventDefault: vi.fn(),
+      composedPath: () => [content, wrapper, document.body],
+      target: content
+    };
+    (
+      lenis as unknown as {
+        onVirtualScroll: (data: { deltaX: number; deltaY: number; event: unknown }) => void;
+      }
+    ).onVirtualScroll({ deltaX, deltaY, event });
+    return event;
+  };
+  // a trackpad swipe across, with the drift a hand always carries: not this scroller's
+  const across = wheel(120, -6);
+  expect(across.preventDefault).not.toHaveBeenCalled();
+  expect(lenis.targetScroll).toBe(500);
+  // along the axis, drifting a little across: taken as ever
+  const along = wheel(4, 120);
+  expect(along.preventDefault).toHaveBeenCalled();
+  expect(lenis.targetScroll).toBe(620);
   lenis.destroy();
   wrapper.remove();
   if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;

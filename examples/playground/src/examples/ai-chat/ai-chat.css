@@ -509,6 +509,8 @@
     Menlo,
     monospace;
   overflow-x: auto;
+  /* a finger pans this block sideways itself: the frame's touch-action is none */
+  touch-action: pan-x;
   color: var(--ac-text);
 }
 .ai-chat .ac-code .chat-code {
@@ -1482,6 +1484,8 @@
   margin: 8px 0;
   max-width: 100%;
   overflow-x: auto;
+  /* a finger pans this block sideways itself: the frame's touch-action is none */
+  touch-action: pan-x;
   border: 1px solid var(--ac-line);
   border-radius: 10px;
   scrollbar-width: thin;
@@ -2299,6 +2303,8 @@
   font-size: 11px;
   line-height: 1.5;
   overflow-x: auto;
+  /* a finger pans this block sideways itself: the frame's touch-action is none */
+  touch-action: pan-x;
   overflow-y: hidden;
   scrollbar-width: thin;
 }

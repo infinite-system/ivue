@@ -411,6 +411,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   protected gestureOrigin = { x: 0, y: 0 };
 
+  /** The touch began inside an element that scrolls across the own axis — a code block, a
+   *  table — and the browser's pan is the default for it until the finger is clearly ours. */
+  protected gestureInPannable = false;
+
   /** Below this the finger has not said which way it is going yet. */
   protected get gestureAxisThresholdPx(): number {
     return 8;
@@ -877,22 +881,51 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (!touch) return;
     this.gestureAxis = null;
     this.gestureOrigin = { x: touch.clientX, y: touch.clientY };
+    this.gestureInPannable = this.pannableAncestor(event.target as Element | null) !== null;
+  }
+
+  /** The nearest ancestor of a touch, inside the frame, that scrolls across the own axis and
+   *  has somewhere to go — the element the browser would pan. */
+  protected pannableAncestor(target: Element | null): HTMLElement | null {
+    const frame = this.scrollElement.value;
+    const across = this.selectionAxis === 'y';
+    let node = target instanceof HTMLElement ? target : null;
+    while (node && node !== frame) {
+      const style = getComputedStyle(node);
+      const overflow = across ? style.overflowX : style.overflowY;
+      const scrollable =
+        (overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') &&
+        (across ? node.scrollWidth > node.clientWidth : node.scrollHeight > node.clientHeight);
+      if (scrollable) return node;
+      node = node.parentElement;
+    }
+    return null;
   }
 
   // invariant: A cross-axis touch belongs to the page (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   onTouchMoveCapture(event: TouchEvent) {
-    const ownAxis = this.gestureOwnAxis;
+    const pannable = this.gestureInPannable;
+    const ownAxis = this.gestureOwnAxis ?? (pannable ? this.selectionAxis : null);
     if (!ownAxis) return; // 'both' — every gesture is ours
     const touch = event.touches[0];
     if (!touch) return;
     if (!this.gestureAxis) {
       const deltaX = Math.abs(touch.clientX - this.gestureOrigin.x);
       const deltaY = Math.abs(touch.clientY - this.gestureOrigin.y);
-      if (Math.max(deltaX, deltaY) < this.gestureAxisThresholdPx) return;
       const bias = this.crossAxisBias;
       const clearlyX = deltaX > deltaY * bias;
       const clearlyY = deltaY > deltaX * bias;
-      this.gestureAxis = clearlyX ? 'x' : clearlyY ? 'y' : ownAxis;
+      if (pannable) {
+        // inside a block that scrolls across the axis the browser's pan is the default: the
+        // first move decides — the browser decides its own gesture on it, and a move Lenis
+        // has prevented kills the pan for the whole touch — and only a clearly own-axis
+        // move is ours; a finger drifting a few px up while it scrolls code sideways is not
+        const clearlyOwn = ownAxis === 'y' ? clearlyY : clearlyX;
+        this.gestureAxis = clearlyOwn ? ownAxis : ownAxis === 'y' ? 'x' : 'y';
+      } else {
+        if (Math.max(deltaX, deltaY) < this.gestureAxisThresholdPx) return;
+        this.gestureAxis = clearlyX ? 'x' : clearlyY ? 'y' : ownAxis;
+      }
     }
     // a cross-axis gesture belongs to the page: lenis skips any event
     // carrying this flag, so its preventDefault never runs

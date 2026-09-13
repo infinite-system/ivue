@@ -41,6 +41,7 @@ Impossible if true: A scroller at rest requesting a frame every tick.
 // domain-invariant: $VirtualScroller — If a rendered row shrinks and the rows above it stay put, then the position is pulled back inside the range, so the viewport never rests past the last row
 // domain-invariant: $VirtualScroller — If the walk runs mid-lerp, then the window covers the animated position in pixels over the measured sizes, whatever the rows between it and the target measure
 // domain-invariant: $VirtualScroller — If a write moves the position without writing the transform, then the render bias stays where the frame's transform write put it
+// domain-invariant: $VirtualScroller — If a touch begins inside an element that scrolls across the own axis with room to go, then the browser's pan is the default from the first move and only a clearly own-axis move is the scroller's; a block with nowhere to go changes nothing.
 Impossible if true: A rendered scroll position beyond the extent.
 Impossible if true: A viewport bottom left uncovered mid-lerp because the rows behind the target measure shorter than the estimate.
 Impossible if true: A spacer and a transform a chunk apart within one frame.
@@ -50,6 +51,7 @@ Impossible if true: A window whose spacers plus rows sum to anything but the ext
 Impossible if true: an estimate that first calibrates under the reader's first gesture on a phone, or one that drifts after it calibrated
 Impossible if true: A container that grew leaving the last row above its bottom edge.
 Impossible if true: A row capture that moves the content before the wave's last row has been read.
+Impossible if true: A finger scrolling a code block sideways that scrolls the list by its drift.
 
 === GENERATOR-DESCRIBED ===
 Every spec runs headless. The scroller is hosted in a throwaway component
@@ -729,6 +731,51 @@ test('a vertical scroller claims every touch: its frame gives the browser no ges
     expect(move.lenisStopPropagation).toBeUndefined();
   }
   instance.onTouchEndCapture();
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If a touch begins inside an element that scrolls across the own axis with room to go, then the browser's pan is the default from the first move and only a clearly own-axis move is the scroller's; a block with nowhere to go changes nothing.
+// impossible-if-true: $VirtualScroller — A finger scrolling a code block sideways that scrolls the list by its drift.
+// invariant: A cross-axis touch belongs to the page (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test("a touch that begins in a sideways-scrolling block is the browser's from its first move, unless it is clearly vertical", () => {
+  const { instance, unmount } = scroller(rows(3));
+  const frame = document.createElement('div');
+  const block = document.createElement('pre');
+  block.style.overflowX = 'auto';
+  Object.defineProperty(block, 'scrollWidth', { value: 800, configurable: true });
+  Object.defineProperty(block, 'clientWidth', { value: 300, configurable: true });
+  const code = document.createElement('code');
+  block.appendChild(code);
+  frame.appendChild(block);
+  document.body.appendChild(frame);
+  instance.scrollElement.value = frame;
+  const at = (x: number, y: number, target: Element) =>
+    ({ touches: [{ clientX: x, clientY: y }], target }) as unknown as TouchEvent & {
+      lenisStopPropagation?: boolean;
+    };
+  // sideways with a little drift: the browser's, from the very first move
+  instance.onTouchStartCapture(at(100, 100, code));
+  const sideways = at(104, 101, code);
+  instance.onTouchMoveCapture(sideways);
+  expect(sideways.lenisStopPropagation).toBe(true);
+  const later = at(160, 110, code);
+  instance.onTouchMoveCapture(later);
+  expect(later.lenisStopPropagation).toBe(true);
+  instance.onTouchEndCapture();
+  // clearly down: the scroller's
+  instance.onTouchStartCapture(at(100, 100, code));
+  const down = at(101, 108, code);
+  instance.onTouchMoveCapture(down);
+  expect(down.lenisStopPropagation).toBeUndefined();
+  instance.onTouchEndCapture();
+  // the same block with nowhere to scroll: every touch is the scroller's
+  Object.defineProperty(block, 'scrollWidth', { value: 300, configurable: true });
+  instance.onTouchStartCapture(at(100, 100, code));
+  const flat = at(140, 101, code);
+  instance.onTouchMoveCapture(flat);
+  expect(flat.lenisStopPropagation).toBeUndefined();
+  instance.onTouchEndCapture();
+  frame.remove();
   unmount();
 });
 

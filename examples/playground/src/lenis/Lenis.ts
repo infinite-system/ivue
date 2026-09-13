@@ -823,9 +823,17 @@ class $Lenis {
     //   !this.options.infinite &&
     //   deltaY <= 5 // touch pull to refresh, not reliable yet
 
+    // A wheel that runs mostly across the axis is not this scroller's: a
+    // trackpad swiping a code block sideways carries a few px of drift on
+    // the other axis, and taking that drift scrolled the list under the
+    // block while the block itself never moved. Left alone, the browser
+    // scrolls whatever under the pointer scrolls that way.
+    // invariant: A cross-axis wheel belongs to what is under it (examples/playground/src/lenis/lenis.invariants.md)
     const isUnknownGesture =
-      (this.options.gestureOrientation === 'vertical' && deltaY === 0) ||
-      (this.options.gestureOrientation === 'horizontal' && deltaX === 0);
+      (this.options.gestureOrientation === 'vertical' &&
+        (deltaY === 0 || (isWheel && Math.abs(deltaX) > Math.abs(deltaY)))) ||
+      (this.options.gestureOrientation === 'horizontal' &&
+        (deltaX === 0 || (isWheel && Math.abs(deltaY) > Math.abs(deltaX))));
 
     if (isClickOrTap || isUnknownGesture) {
       // console.log('prevent')
