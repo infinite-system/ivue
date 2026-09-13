@@ -137,6 +137,33 @@ prefix or pattern, then the generic card — and the thirteen cards are flat
 roles beside the three families. `entryOf`, `viewOf` and `propsOf` fall
 out. A list of one is still a list.
 
+### Eleven card templates were one
+
+Every tool card rendered the same forty lines — the frame, the header
+seam, an expanded body, a loop of code blocks, the footer seam — and
+differed only in a caption line and, for four tools, hand-written sections.
+The variation was entirely in the class. Now `ToolCall.vue` renders every
+card as its sections in order — `Header, Caption, Sections, Thread,
+Footer` — and a tool's class supplies its `sections` as data (a title, a
+path, tags, a tone, whether to wrap, a note for an empty block), its
+`caption`, and for six tools a `Caption` entry pointing at a view of its
+own. The blocks are a list compositor of their own, `ToolCallSections`,
+fed by a bind and rendering one `CodeBlock` role per section. The
+expanded state is presence at each leaf's root; the body wrapper became a
+CSS rail on the leaves past the header. Every seam passes props through a
+bind — the three places where markup still handed a prop to a child were
+the header seam, the block seam and the sub-thread seam, and all three are
+gone. A plugin can now patch any card's caption, sections or blocks by
+data, which nothing could do while the cards were templates.
+
+One type fact came out of it. `Bound<N>` was `Partial<PropsOf<N>> & Attrs`,
+and `Attrs` is keyed by template literals; an interface — every child's
+`Props` — has no implicit index signature, so no named static bind
+returning its child's `Props` was assignable to it. The row's compiled by
+an accident of intersection. `Bound<N>` is a union now: `Partial<Props>`
+alone admits the interface, `Partial<Props> & Attrs` admits an attribute
+beside the props, and a wrong key matches neither.
+
 ### Plugins compose by data
 
 `[p1, p2, p3].reduce(derive, Base)`; later wins, the way a later stylesheet
