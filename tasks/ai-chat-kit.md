@@ -398,7 +398,7 @@ import SystemPartView from './message/parts/MessagePartSystem.vue';
 import MessageGutterView from './sections/MessageGutter.vue';
 import MessageHeadView from './sections/MessageHead.vue';
 import MessageStubView from './sections/MessageStub.vue';
-import MessagePartsView from './sections/MessageParts.vue';
+import MessagePartsView from './sections/MessagePartList.vue';
 import MessageAwaitView from './sections/MessageAwait.vue';
 import MessageFootView from './sections/MessageFoot.vue';
 import { MessagePartToolBatch } from './message/parts/PartToolBatch';
@@ -528,7 +528,7 @@ defineProps<{ kit: Kit.Entry; model: ChatMessage.Instance }>();
 ```
 
 ```vue
-<!-- sections/MessageParts.vue — the collection section: it renders the parts, and the await line below them -->
+<!-- sections/MessagePartList.vue — the collection section: it renders the parts, and the await line below them -->
 <script setup lang="ts">
 import type { Kit } from '../Kit';
 import type { ChatMessage } from '../ChatMessage';

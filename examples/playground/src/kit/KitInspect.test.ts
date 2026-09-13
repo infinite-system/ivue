@@ -33,6 +33,28 @@ const ThemedPanel = Kit.Class.derive(Panel, {
   Card: { subkit: { Head: { view: FancyHeadView }, Code: { namespace: ThemedCode } } }
 });
 
+describe('a kit is read as its template', () => {
+  // domain-invariant: $KitInspect — If a kit's entries are declared in a sequence other than its order, then report() names the kit with both sequences; a kit declared as it is ordered is silent
+  it('misordered() names a kit whose declaration reads in another sequence than its order, and is silent when they agree', () => {
+    expect(KitInspect.Class.misordered(Strip)).toEqual([]);
+    // a hand-written subclass that declares its sections backwards but keeps the order
+    class $Shuffled extends Strip.$Class {
+      static override get $kit() {
+        const kit = super.$kit as Record<string, unknown> & { order: readonly string[] };
+        const roles = kit.order.slice().reverse();
+        return {
+          ...Object.fromEntries(roles.map((role) => [role, kit[role]])),
+          order: kit.order
+        } as typeof kit;
+      }
+    }
+    const Shuffled = { ...Strip, $Class: $Shuffled, Class: $Shuffled } as unknown as typeof Strip;
+    const lines = KitInspect.Class.misordered(Shuffled);
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatch(/declared .* — order reads /);
+  });
+});
+
 describe('a second write to one field is reported, never merged', () => {
   // domain-invariant: $KitInspect — If two layers replace one field of one entry or move one role, then the chain names both layers in order — a warning by default, a throw when strict; a bind written twice is composition, not a contact
   // impossible-if-true: $KitInspect — two layers replacing one field with no line in the report

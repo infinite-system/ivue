@@ -47,7 +47,7 @@ class $ChatVariants {
               order: {
                 without: ['Gutter'],
                 after: { Header: ['Rule'] },
-                move: { Footer: { before: 'MessageParts' } }
+                move: { Footer: { before: 'MessagePartList' } }
               },
               Rule: { view: 'hr', bind: () => ({ class: 'ac-rule' }) },
               Footer: { bind: ({ inherited }) => ({ ...inherited(), class: 'ac-foot-lead' }) }

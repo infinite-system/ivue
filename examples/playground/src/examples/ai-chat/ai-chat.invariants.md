@@ -64,7 +64,7 @@ the part that picks cards, the sections of the row, the leaves of a card
 — and every seam renders `<component :is="model.kit.Role.view" v-bind="model.seam(Role)" />`.
 A container renders its sections from the kit's `order`, one seam per
 role, with `v-if="model.shows(role)"` naming presence; the row's six
-sections (Gutter, Header, Stub, MessageParts, Await, Footer) are that order, and the
+sections (Gutter, Header, Stub, MessagePartList, Await, Footer) are that order, and the
 parts are a second loop of their own, the part travelling as the seam's
 item. A model reads its kit from its own class, so a subclass swaps any
 role by naming another entry, and nothing branches on a kind or a name —
@@ -74,7 +74,7 @@ The mechanism and its proofs: `../../kit/kit.invariants.md`.
 
 ## The seam is built by one method that never names a role
 
-`seam(role, item?, key?)` — inherited from `KitContainer` by every compositor — is the one place a seam's
+`seam(role, item?, key?)` — inherited from `KitContainer` by every compositor, with `propsOf(item, at)` for a list — is the one place a seam's
 props come from, and it reads the entry alone: the entry's `bind` over
 `{ model, item, key, inherited }`, or `{ model, kit }` when the entry has
 none. It never switches on the role's name — the kit is already the table

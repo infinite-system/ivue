@@ -38,11 +38,40 @@ class $KitInspect {
       .map(([key, layers]) => `${key}: written by ${layers.join(', then ')}`);
   }
 
-  /** The contacts as a report: a console warning, or a throw when strict. Silent when there are none. */
+  /** A kit is read as its template, so a hand-written kit declares its entries in the sequence `order`
+   *  places them: one line per declared kit in the tree whose declaration reads in another sequence —
+   *  the roles as declared, then as ordered. A derived layer is skipped: `merge` appends what a patch
+   *  inserts, so only the base a person wrote is held to it. Unplaced roles may sit anywhere. */
+  static misordered(
+    namespace: Kit.Namespace,
+    path: string[] = [],
+    seen = new Set<Kit.NamespaceClass>()
+  ): string[] {
+    const Class = namespace.$Class as Kit.NamespaceClass;
+    const kit = Class.$kit as Record<string, unknown> | undefined;
+    if (!kit || seen.has(Class)) return [];
+    seen.add(Class);
+    const lines: string[] = [];
+    const order = kit.order as readonly string[] | undefined;
+    if (order && !namespace.derivedFrom) {
+      const declared = Object.keys(kit).filter((role) => order.includes(role));
+      if (declared.join(' ') !== order.join(' '))
+        lines.push(
+          `${[...path, this.className(namespace)].join('.')}: declared ${declared.join(' ')} — order reads ${order.join(' ')}`
+        );
+    }
+    for (const [role, value] of Object.entries(kit))
+      if (Kit.Class.isEntry(value) && value.namespace)
+        lines.push(...this.misordered(value.namespace, [...path, role], seen));
+    return lines;
+  }
+
+  /** The contacts and the misdeclared orders as a report: a console warning, or a throw when
+   *  strict. Silent when there are none. */
   static report(namespace: Kit.Namespace, options: KitInspect.ReportOptions = {}): string[] {
-    const lines = this.conflicts(namespace);
+    const lines = [...this.conflicts(namespace), ...this.misordered(namespace)];
     if (!lines.length) return lines;
-    const report = `Kit: two layers wrote one field — the last write wins:\n  ${lines.join('\n  ')}`;
+    const report = `Kit: a layer contact or a kit declared out of its order:\n  ${lines.join('\n  ')}`;
     if (options.strict) throw new Error(report);
     console.warn(report);
     return lines;

@@ -2,27 +2,15 @@ import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
 import { KitContainer } from '../../../kit/KitContainer';
-import { MessagePartText } from './message-parts/MessagePart.Text';
-import MessagePartTextView from './message-parts/MessagePart.Text.vue';
-import { MessagePartThinking } from './message-parts/MessagePart.Thinking';
-import MessagePartThinkingView from './message-parts/MessagePart.Thinking.vue';
-import { MessagePartAttachment } from './message-parts/MessagePart.Attachment';
-import MessagePartAttachmentView from './message-parts/MessagePart.Attachment.vue';
-import { MessagePartSystem } from './message-parts/MessagePart.System';
-import MessagePartSystemView from './message-parts/MessagePart.System.vue';
-import { MessagePartToolCall } from './message-parts/MessagePart.ToolCall';
-import MessagePartToolCallView from './message-parts/MessagePart.ToolCall.vue';
-import { MessagePartToolBatch } from './message-parts/MessagePart.ToolBatch';
-import MessagePartToolBatchView from './message-parts/MessagePart.ToolBatch.vue';
+import { MessagePartList } from './message-parts/MessagePartList';
+import MessagePartListView from './message-parts/MessagePartList.vue';
 import GutterView from './ChatMessage.Gutter.vue';
 import HeaderView from './ChatMessage.Header.vue';
 import StubView from './ChatMessage.Stub.vue';
-import MessagePartsView from './ChatMessage.MessageParts.vue';
 import AwaitView from './ChatMessage.Await.vue';
 import FooterView from './ChatMessage.Footer.vue';
 import type { Chat } from '../Chat';
 import { Clock } from '../Clock';
-import type { MessagePart } from './message-parts/MessagePart';
 import type { SessionLog } from '../SessionLog';
 
 // One row of the thread: a stub with its loader while the page is on the
@@ -31,7 +19,7 @@ import type { SessionLog } from '../SessionLog';
 // own sections are roles too, so any of them swaps from outside. A row that
 // is being streamed re-reads the chat's revision, so in-place growth of
 // its message re-renders this row and nothing else.
-class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles, SessionLog.Part> {
+class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles> {
   /** what the skeleton's frame takes: the stub's padding and its status line — the row's own head sits above it */
   static readonly SKELETON_FRAME_PX = 36;
   static readonly SKELETON_LINE_PX = 20;
@@ -51,66 +39,24 @@ class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles, SessionLog.Par
     );
   }
 
-  /** the roles a row composes — a part per kind, fed its part through `bind`, and its own sections in
-   *  the order the template renders — built once per class by Static(). The part entries stay plain
-   *  literals rather than `Kit.Class.entry(MessagePartText, …)`: each part view declares `part` as its own
-   *  kind, while the seam's item is the union the kind→role lookup narrows at runtime, so a typed
-   *  entry would refuse the one bind all six share. */
+  /** the row's sections in the order the template renders them — built once per class by Static(); the
+   *  parts are a compositor of their own, fed by this container's one bind */
   static override get $kit(): ChatMessage.Roles {
     return {
-      Text: { view: MessagePartTextView, namespace: MessagePartText, bind: this.bindMessagePart },
-      Thinking: {
-        view: MessagePartThinkingView,
-        namespace: MessagePartThinking,
-        bind: this.bindMessagePart
-      },
-      Attachment: {
-        view: MessagePartAttachmentView,
-        namespace: MessagePartAttachment,
-        bind: this.bindMessagePart
-      },
-      System: {
-        view: MessagePartSystemView,
-        namespace: MessagePartSystem,
-        bind: this.bindMessagePart
-      },
-      ToolCall: {
-        view: MessagePartToolCallView,
-        namespace: MessagePartToolCall,
-        bind: this.bindMessagePart
-      },
-      ToolBatch: {
-        view: MessagePartToolBatchView,
-        namespace: MessagePartToolBatch,
-        bind: this.bindMessagePart
-      },
       Gutter: { view: GutterView },
       Header: { view: HeaderView },
       Stub: { view: StubView },
-      MessageParts: { view: MessagePartsView },
+      MessagePartList: this.entry(MessagePartListView, MessagePartList),
       Await: { view: AwaitView },
       Footer: { view: FooterView },
-      order: ['Gutter', 'Header', 'Stub', 'MessageParts', 'Await', 'Footer']
+      order: ['Gutter', 'Header', 'Stub', 'MessagePartList', 'Await', 'Footer']
     };
   }
 
-  /** what every part receives from the row: its part, the chat, the message — the seam's item is the part */
-  static bindMessagePart({
-    model,
-    item
-  }: Kit.Seam<$ChatMessage, SessionLog.Part>): MessagePart.Props {
-    return { part: item, chat: model.chat, message: model.message };
+  /** what the parts list receives from the row: the message's parts, the chat, the message */
+  static override bindEntry({ model }: Kit.Seam<$ChatMessage>): MessagePartList.Props {
+    return { parts: model.parts, chat: model.chat, message: model.message };
   }
-
-  /** a part kind (the log's snake_case) names its role (the kit's PascalCase) */
-  static readonly PART_ROLES: Record<SessionLog.Part['kind'], ChatMessage.PartRole> = {
-    text: 'Text',
-    thinking: 'Thinking',
-    attachment: 'Attachment',
-    system: 'System',
-    tool_call: 'ToolCall',
-    tool_batch: 'ToolBatch'
-  };
 
   /** the distance from `at` to `now` in the coarsest unit that is at least one */
   static relative(at: number, now: number): string {
@@ -354,11 +300,11 @@ class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles, SessionLog.Par
    * await line shows while the reply has nothing yet, the foot once there is a receipt; every other
    * role always. A layer overrides this for the roles it adds and falls back to `super`.
    */
-  shows(role: ChatMessage.SectionRole): boolean {
+  shows(role: ChatMessage.Role): boolean {
     switch (role) {
       case 'Stub':
         return this.isStub;
-      case 'MessageParts':
+      case 'MessagePartList':
         return !this.isStub;
       case 'Await':
         return this.isAwaitingFirstToken;
@@ -367,19 +313,6 @@ class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles, SessionLog.Par
       default:
         return true;
     }
-  }
-
-  /** the role a part takes: its kind's, or Text for a kind nobody mapped */
-  override roleOf(part: SessionLog.Part): ChatMessage.PartRole {
-    const role = this.self.PART_ROLES[part.kind];
-    return role && role in this.kit ? role : 'Text';
-  }
-
-  /** what identifies a part in the row: a call's id, a batch's first call, else its kind and place */
-  override keyOf(part: SessionLog.Part, at: number): string {
-    if (part.kind === 'tool_call') return part.call.id;
-    if (part.kind === 'tool_batch') return `batch-${part.calls[0]?.id ?? at}`;
-    return `${part.kind}-${at}`;
   }
 }
 
@@ -408,11 +341,8 @@ export namespace ChatMessage {
     model: Instance;
   }
 
-  export type PartRole = 'Text' | 'Thinking' | 'Attachment' | 'System' | 'ToolCall' | 'ToolBatch';
-  export type SectionRole = 'Gutter' | 'Header' | 'Stub' | 'MessageParts' | 'Await' | 'Footer';
-  export type Role = PartRole | SectionRole;
-  /** the row's kit: its sections in an order, and a part role per kind fed its part — declared, so the
-   *  row's instance type and its kit can name each other */
-  export type Roles = Kit.Of<SectionRole, $ChatMessage> &
-    Kit.Roles<PartRole, $ChatMessage, SessionLog.Part> & { order: readonly SectionRole[] };
+  export type Role = 'Gutter' | 'Header' | 'Stub' | 'MessagePartList' | 'Await' | 'Footer';
+  /** the row's kit: its sections in an order — declared, so the row's instance type and its kit can
+   *  name each other */
+  export type Roles = Kit.Of<Role, $ChatMessage> & { order: readonly Role[] };
 }

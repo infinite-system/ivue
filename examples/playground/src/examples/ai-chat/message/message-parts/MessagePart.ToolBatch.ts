@@ -21,12 +21,12 @@ class $MessagePartToolBatch extends KitContainer.$Class<
   /** the one role a batch composes: the part that picks a card per call */
   static override get $kit(): MessagePartToolBatch.Roles {
     return {
-      Call: { view: MessagePartToolCallView, namespace: MessagePartToolCall, bind: this.bindCall }
+      Call: this.entry(MessagePartToolCallView, MessagePartToolCall)
     };
   }
 
   /** what a call's card receives from the batch: the call as a part, the chat, the message */
-  static bindCall({
+  static override bindEntry({
     model,
     item
   }: Kit.Seam<

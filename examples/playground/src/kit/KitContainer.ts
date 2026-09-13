@@ -1,3 +1,4 @@
+import type { Component } from 'vue';
 import { Static } from '../Static';
 import { Kit } from './Kit';
 
@@ -13,6 +14,22 @@ class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unk
   /** the compositor's roles — a subclass declares its own and swaps the subtree */
   static get $kit(): object {
     return {};
+  }
+
+  /** What every entry this container builds hands its child, from the seam — a subclass declares it;
+   *  absent, an entry built by `entry()` has no bind and its child receives `{ model, kit }`. */
+  static bindEntry?(seam: Kit.Seam<any, any>): Kit.Bound;
+
+  /** An entry of this container's kit: the view, the class it constructs, and the container's
+   *  `bindEntry` when it declares one. Loosely typed on purpose: the bind is typed where it is
+   *  declared, and a container's one bind serves every kind its seam's item narrows to. */
+  static entry(
+    view: Component | string,
+    namespace?: Kit.Namespace,
+    rest?: Partial<Kit.Entry>
+  ): Kit.Entry {
+    const bind = this.bindEntry;
+    return bind ? { view, namespace, bind, ...rest } : { view, namespace, ...rest };
   }
 
   /** the one role a kit with a single entry role has, else nothing; built once per class */

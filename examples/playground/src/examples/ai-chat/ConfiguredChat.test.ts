@@ -13,9 +13,16 @@ import { Chat } from './Chat';
 import { ChatSettings } from './ChatSettings';
 import { ConfiguredChat } from './ConfiguredChat';
 import { ChatVariants } from './variants/ChatVariants';
+import { KitInspect } from '../../kit/KitInspect';
 import { hosted } from '../virtual-scroller/hosted';
 
 describe('ConfiguredChat', () => {
+  // invariant: Rendering is a kit (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
+  it('every hand-written kit in the chat declares its sections in the sequence its order renders them', () => {
+    expect(KitInspect.Class.misordered(Chat)).toEqual([]);
+    expect(KitInspect.Class.report(Chat)).toEqual([]);
+  });
+
   afterEach(() => {
     ChatSettings.Class.reset();
     vi.restoreAllMocks();

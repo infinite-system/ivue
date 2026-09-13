@@ -5,7 +5,7 @@ Goal: Prove the row is a container of roles: its sections render in the kit's `o
 [The seam is built by one method that never names a role](../ai-chat.invariants.md#the-seam-is-built-by-one-method-that-never-names-a-role)
 [A tree variant is a patch over the row's order](../ai-chat.invariants.md#a-tree-variant-is-a-patch-over-the-rows-order)
 // domain-invariant: $ChatMessage — If a section role is asked whether it shows, then the stub and the parts are the two states of one row, the await line shows only while the reply has nothing, the foot only with a receipt, and every other role always
-// domain-invariant: $ChatMessage — If a seam is built for a role, then a section receives `{ model, kit }`, a part receives its entry beside `{ part, chat, message }` from the entry's bind, and a kind nobody mapped renders through Text
+// domain-invariant: $ChatMessage — If a seam is built for a role, then a section receives `{ model, kit }` and the parts list receives the message's parts, the chat and the message from the row's one bind
 Impossible if true: a row's template names a section, or seam() branches on a role
 
 === GENERATOR-DESCRIBED ===
@@ -80,7 +80,7 @@ describe('the row is a container of roles', () => {
       'Gutter',
       'Header',
       'Stub',
-      'MessageParts',
+      'MessagePartList',
       'Await',
       'Footer'
     ]);
@@ -122,29 +122,24 @@ describe('the row is a container of roles', () => {
     expect(awaiting.shows('Footer')).toBe(false);
   });
 
-  // domain-invariant: $ChatMessage — If a seam is built for a role, then a section receives `{ model, kit }`, a part receives its entry beside `{ part, chat, message }` from the entry's bind, and a kind nobody mapped renders through Text
+  // domain-invariant: $ChatMessage — If a seam is built for a role, then a section receives `{ model, kit }` and the parts list receives the message's parts, the chat and the message from the row's one bind
   // impossible-if-true: $ChatMessage — a row's template names a section, or seam() branches on a role
   // invariant: The seam is built by one method that never names a role (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
-  it('seam() hands a section the model and its entry, and a part its entry beside the bind — one method, no role named', () => {
+  it('seam() hands a section the model and its entry, and the parts list what it renders — one method, no role named', () => {
     const chat = stubChat();
     const model = new ChatMessage.Class({ row: row(reply), chat });
-    for (const role of model.kit.order) {
+    for (const role of model.kit.order.filter((role) => role !== 'MessagePartList')) {
       const seam = model.seam(role);
       expect(seam).toEqual({ model, kit: model.kit[role] });
       expect(seam.kit).toBe(model.kit[role]);
     }
-    expect(model.roleOf(textPart)).toBe('Text');
-    expect(model.propsOf(textPart, 0)).toEqual(model.seam('Text', textPart, 'text-0'));
-    expect(model.seam('Text', textPart, 'text-0')).toEqual({
-      kit: model.kit.Text,
-      part: textPart,
+    // the parts are a compositor of their own: the row's one bind hands the list what it renders
+    expect(model.seam('MessagePartList')).toEqual({
+      kit: model.kit.MessagePartList,
+      parts: [textPart],
       chat,
       message: reply
     });
-    const unknown = { kind: 'hologram', text: 'x' } as unknown as SessionLog.Part;
-    expect(model.roleOf(unknown)).toBe('Text');
-    expect(model.entryOf(unknown)).toBe(model.kit.Text);
-    expect(model.keyOf(textPart, 3)).toBe('text-3');
     // the method is the kit's: a tag role added by a layer receives only its bind, through the same call
     const Ruled = Kit.Class.derive(ChatMessage, {
       order: { after: { Header: ['Rule'] } },
@@ -157,7 +152,7 @@ describe('the row is a container of roles', () => {
       'Header',
       'Rule',
       'Stub',
-      'MessageParts',
+      'MessagePartList',
       'Await',
       'Footer'
     ]);
@@ -169,21 +164,21 @@ describe('the row is a container of roles', () => {
       'Gutter',
       'Header',
       'Stub',
-      'MessageParts',
+      'MessagePartList',
       'Await',
       'Footer'
     ]);
     expect(messageKit('bubbles').order).toEqual([
       'Header',
       'Stub',
-      'MessageParts',
+      'MessagePartList',
       'Await',
       'Footer'
     ]);
     expect(messageKit('bubbles').Header.view).not.toBe(messageKit('shipped').Header.view);
-    expect(messageKit('minimal').order).toEqual(['Header', 'Stub', 'MessageParts', 'Await']);
+    expect(messageKit('minimal').order).toEqual(['Header', 'Stub', 'MessagePartList', 'Await']);
     const compact = messageKit('compact');
-    expect(compact.order).toEqual(['Header', 'Rule', 'Stub', 'Footer', 'MessageParts', 'Await']);
+    expect(compact.order).toEqual(['Header', 'Rule', 'Stub', 'Footer', 'MessagePartList', 'Await']);
     expect(compact.Rule.view).toBe('hr');
     expect(compact.Rule.namespace).toBeUndefined();
     expect(compact.Header.view).toBe(messageKit('shipped').Header.view); // untouched, the shipped head
@@ -198,7 +193,7 @@ describe('the row is a container of roles', () => {
       'Gutter',
       'Header',
       'Stub',
-      'MessageParts',
+      'MessagePartList',
       'Await',
       'Footer'
     ]);
