@@ -483,7 +483,9 @@ test('a nested knob left out reads as its tuned default at every depth, a suppli
     selection: { autoscroll: { touch: { rampMs: 1500 } } }
   });
   expect(set.instance.props.scroll.wheel).toEqual({ gain: 2, follow: 0.1, maxPxPerMs: 0 });
-  expect(set.instance.props.scroll.touch.inertia).toBe(40);
+  expect(set.instance.props.scroll.touch.inertia).toBe(
+    VirtualScroller.Class.SCROLL_KNOBS.touch.inertia
+  );
   expect(set.instance.autoscrollProfiles.touch.rampMs).toBe(1500);
   expect(set.instance.autoscrollProfiles.touch.zonePx).toBe(96);
   expect(set.instance.autoscrollProfiles.mouse.rampMs).toBe(0);
@@ -491,9 +493,9 @@ test('a nested knob left out reads as its tuned default at every depth, a suppli
     wheelMultiplier: 2,
     lerp: 0.1,
     wheelMaxPxPerMs: 0,
-    touchMultiplier: 1.3,
-    syncTouchLerp: 0.08,
-    touchInertiaMultiplier: 40,
+    touchMultiplier: VirtualScroller.Class.SCROLL_KNOBS.touch.gain,
+    syncTouchLerp: VirtualScroller.Class.SCROLL_KNOBS.touch.follow,
+    touchInertiaMultiplier: VirtualScroller.Class.SCROLL_KNOBS.touch.inertia,
     touchMaxPxPerMs: 0
   });
   tuned.unmount();

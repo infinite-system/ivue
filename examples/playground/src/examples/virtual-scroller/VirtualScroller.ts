@@ -220,12 +220,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  the fastest the content may move (maxPxPerMs; 0 is uncapped). Touch
    *  is a native list's: the content follows the finger one to one (a
    *  gain above one read as twitchy under the finger), and a flick carries
-   *  sixty frames of the finger's speed under a lower lerp — it leaves
+   *  fifty frames of the finger's speed under a lower lerp — it leaves
    *  faster and glides longer than the forty under 0.08 it replaced. */
   static get SCROLL_KNOBS(): VirtualScroller.ScrollKnobs {
     return {
       wheel: { gain: 1, follow: 0.1, maxPxPerMs: 0 },
-      touch: { gain: 1, follow: 0.06, inertia: 60, maxPxPerMs: 0 }
+      touch: { gain: 1, follow: 0.06, inertia: 50, maxPxPerMs: 0 }
     };
   }
 
