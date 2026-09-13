@@ -7,8 +7,7 @@ Impossible if true: the list's template names a part kind, or the row knows whic
 
 === GENERATOR-DESCRIBED ===
 $MessagePartList extends KitContainer: `roleOf` and `keyOf` are the two facts it
-supplies, `entryOf`, `viewOf` and `propsOf` fall out, and `bindEntry` is the one
-bind every entry built by `entry()` carries. No thread is needed: the props are
+supplies, `entryOf`, `viewOf` and `propsOf` fall out, and every entry names `bindPart`. No thread is needed: the props are
 the parts, the chat and the message, and every getter reads them.
 */
 import { describe, expect, it } from 'vitest';

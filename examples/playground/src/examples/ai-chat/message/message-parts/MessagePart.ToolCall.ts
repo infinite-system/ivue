@@ -39,24 +39,24 @@ class $MessagePartToolCall extends KitContainer.$Class<
   /** the cards: one per tool name, and three families — the generic card, MCP, and the task tools */
   static override get $kit(): MessagePartToolCall.Roles {
     return {
-      Generic: this.entry(ToolCallGenericView, ToolCall),
-      Mcp: this.entry(ToolCallMcpView, ToolCallMcp),
-      Task: this.entry(ToolCallTaskView, ToolCallTask),
-      Bash: this.entry(ToolCallBashView, ToolCallBash),
-      Edit: this.entry(ToolCallEditView, ToolCallEdit),
-      NotebookEdit: this.entry(ToolCallEditView, ToolCallEdit),
-      Read: this.entry(ToolCallReadView, ToolCallRead),
-      Write: this.entry(ToolCallWriteView, ToolCallWrite),
-      Agent: this.entry(ToolCallAgentView, ToolCallAgent),
-      Skill: this.entry(ToolCallSkillView, ToolCallSkill),
-      WebFetch: this.entry(ToolCallWebFetchView, ToolCallWebFetch),
-      WebSearch: this.entry(ToolCallWebFetchView, ToolCallWebFetch),
-      Artifact: this.entry(ToolCallArtifactView, ToolCallArtifact)
+      Generic: { view: ToolCallGenericView, namespace: ToolCall, bind: this.bindCard },
+      Mcp: { view: ToolCallMcpView, namespace: ToolCallMcp, bind: this.bindCard },
+      Task: { view: ToolCallTaskView, namespace: ToolCallTask, bind: this.bindCard },
+      Bash: { view: ToolCallBashView, namespace: ToolCallBash, bind: this.bindCard },
+      Edit: { view: ToolCallEditView, namespace: ToolCallEdit, bind: this.bindCard },
+      NotebookEdit: { view: ToolCallEditView, namespace: ToolCallEdit, bind: this.bindCard },
+      Read: { view: ToolCallReadView, namespace: ToolCallRead, bind: this.bindCard },
+      Write: { view: ToolCallWriteView, namespace: ToolCallWrite, bind: this.bindCard },
+      Agent: { view: ToolCallAgentView, namespace: ToolCallAgent, bind: this.bindCard },
+      Skill: { view: ToolCallSkillView, namespace: ToolCallSkill, bind: this.bindCard },
+      WebFetch: { view: ToolCallWebFetchView, namespace: ToolCallWebFetch, bind: this.bindCard },
+      WebSearch: { view: ToolCallWebFetchView, namespace: ToolCallWebFetch, bind: this.bindCard },
+      Artifact: { view: ToolCallArtifactView, namespace: ToolCallArtifact, bind: this.bindCard }
     };
   }
 
   /** what every card receives from the part: the call, the chat, the message */
-  static override bindEntry({ model }: Kit.Seam<$MessagePartToolCall>): ToolCall.Props {
+  static bindCard({ model }: Kit.Seam<$MessagePartToolCall>): ToolCall.Props {
     return { call: model.call, chat: model.props.chat, message: model.props.message };
   }
 

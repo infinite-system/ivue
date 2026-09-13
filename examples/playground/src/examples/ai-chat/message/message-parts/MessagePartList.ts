@@ -23,23 +23,38 @@ import type { SessionLog } from '../../SessionLog';
 // that survives streaming. The row hands the list its parts, the chat and
 // the message; the list owns which role a part takes and what identifies it.
 class $MessagePartList extends KitContainer.$Class<MessagePartList.Roles, SessionLog.Part> {
-  /** a role per part kind — built once per class by Static(); a subclass with its own swaps the leaves */
+  /** a role per part kind, each naming the one bind they share — a plain literal, not the typed
+   *  `Kit.Class.entry`, because each part class declares `part` as its own kind while the seam's item is
+   *  the union `roleOf` narrows at runtime; built once per class by Static() */
   static override get $kit(): MessagePartList.Roles {
     return {
-      Text: this.entry(MessagePartTextView, MessagePartText),
-      Thinking: this.entry(MessagePartThinkingView, MessagePartThinking),
-      Attachment: this.entry(MessagePartAttachmentView, MessagePartAttachment),
-      System: this.entry(MessagePartSystemView, MessagePartSystem),
-      ToolCall: this.entry(MessagePartToolCallView, MessagePartToolCall),
-      ToolBatch: this.entry(MessagePartToolBatchView, MessagePartToolBatch)
+      Text: { view: MessagePartTextView, namespace: MessagePartText, bind: this.bindPart },
+      Thinking: {
+        view: MessagePartThinkingView,
+        namespace: MessagePartThinking,
+        bind: this.bindPart
+      },
+      Attachment: {
+        view: MessagePartAttachmentView,
+        namespace: MessagePartAttachment,
+        bind: this.bindPart
+      },
+      System: { view: MessagePartSystemView, namespace: MessagePartSystem, bind: this.bindPart },
+      ToolCall: {
+        view: MessagePartToolCallView,
+        namespace: MessagePartToolCall,
+        bind: this.bindPart
+      },
+      ToolBatch: {
+        view: MessagePartToolBatchView,
+        namespace: MessagePartToolBatch,
+        bind: this.bindPart
+      }
     };
   }
 
   /** what every part receives from the list: its part, the chat, the message — the seam's item is the part */
-  static override bindEntry({
-    model,
-    item
-  }: Kit.Seam<$MessagePartList, SessionLog.Part>): MessagePart.Props {
+  static bindPart({ model, item }: Kit.Seam<$MessagePartList, SessionLog.Part>): MessagePart.Props {
     return { part: item, chat: model.chat, message: model.message };
   }
 

@@ -14,15 +14,12 @@ class $ToolCallSubThread extends KitContainer.$Class<ToolCallSubThread.Roles, Ch
   /** the one role a thread composes: a row per message, the same row the top thread renders */
   static override get $kit(): ToolCallSubThread.Roles {
     return {
-      Message: this.entry(ChatMessageView, ChatMessage)
+      Message: { view: ChatMessageView, namespace: ChatMessage, bind: this.bindRow }
     };
   }
 
   /** what a row receives from the thread: itself and the chat */
-  static override bindEntry({
-    model,
-    item
-  }: Kit.Seam<$ToolCallSubThread, Chat.Row>): ChatMessage.Props {
+  static bindRow({ model, item }: Kit.Seam<$ToolCallSubThread, Chat.Row>): ChatMessage.Props {
     return { row: item, chat: model.props.chat };
   }
 

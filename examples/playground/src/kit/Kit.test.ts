@@ -740,14 +740,14 @@ describe('the types hold a bind to its child and an anchor to its base', () => {
   // domain-invariant: $Kit — If an entry names its namespace, then a bind is checked against that child's props, a subkit bind sees the child's instance as its model, and a top-level patch's order relations are checked against the base's roles and the patch's own — at compile time
   // invariant: A bind is a projection the layer above extends (examples/playground/src/kit/kit.invariants.md)
   it('a typed entry refuses a wrong prop name and a subkit bind refuses a field its model lacks; the right names compile', () => {
-    const typed: Strip.Roles['Item'] = Strip.Class.entry(CodeView, Code, {
+    const typed: Strip.Roles['Item'] = Kit.Class.entry(CodeView, Code, {
       bind: ({ model, item }) => ({ code: item, cap: model.cap })
     });
-    const wrongProp: Strip.Roles['Item'] = Strip.Class.entry(CodeView, Code, {
+    const wrongProp: Strip.Roles['Item'] = Kit.Class.entry(CodeView, Code, {
       // @ts-expect-error `cod` is not one of Code's props
       bind: ({ item }) => ({ cod: item })
     });
-    const wrongModel: Strip.Roles['Item'] = Strip.Class.entry(CodeView, Code, {
+    const wrongModel: Strip.Roles['Item'] = Kit.Class.entry(CodeView, Code, {
       // @ts-expect-error the strip has no `nope`
       bind: ({ model }) => ({ code: String(model.nope) })
     });

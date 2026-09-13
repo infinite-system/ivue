@@ -27,7 +27,7 @@ class $Strip extends KitContainer.$Class<Strip.Roles, string> {
       Body: { view: StripBodyView },
       Footer: { view: StripFooterView },
       // the typed form: the bind's result is checked against Code's props, the seam against the strip
-      Item: this.entry(CodeView, Code, {
+      Item: Kit.Class.entry(CodeView, Code, {
         bind: ({ model, item, key }) => ({ code: item, cap: model.cap, 'data-key': key })
       }),
       order: ['Header', 'Body', 'Footer']

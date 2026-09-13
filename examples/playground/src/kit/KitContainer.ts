@@ -1,42 +1,21 @@
-import type { Component } from 'vue';
 import { Static } from '../Static';
 import { Kit } from './Kit';
 
 // The base of every class that composes others through a kit. It holds
 // what every compositor wrote by hand and never differently: the kit read
 // off its own class, and one seam method that reads an entry and never a
-// role's name. Presence is not the container's: a leaf's root carries its own
-// `v-if` on a named getter of the model. A list role adds two facts the container supplies — which
-// role an item takes and what identifies it — and receives the entry, the
-// view and the props for that item without writing another line. A
-// container with one entry role supplies neither: the role is the only one.
-// A dispatch is a list of one: `roleOf` picks the card by an external name.
+// role's name. It declares nothing about an entry — an entry says everything
+// about itself in the kit, its bind included — and nothing about presence,
+// which is a leaf's own root `v-if` on a named getter of the model. A list
+// role adds two facts the container supplies — which role an item takes and
+// what identifies it — and receives the entry, the view and the props for
+// that item without writing another line. A container with one entry role
+// supplies neither: the role is the only one. A dispatch is a list of one:
+// `roleOf` picks the card by an external name.
 class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unknown> {
   /** the compositor's roles — a subclass declares its own and swaps the subtree */
   static get $kit(): object {
     return {};
-  }
-
-  /** What every entry this container builds hands its child, from the seam — a subclass declares it;
-   *  absent, an entry built by `entry()` has no bind and its child receives `{ model, kit }`. */
-  static bindEntry?(seam: Kit.Seam<any, any>): Kit.Bound;
-
-  /** An entry of this container's kit: `Kit.Class.entry` — the view, the class it constructs, and a
-   *  `rest` checked against that class's props — plus the container's `bindEntry` when it declares
-   *  one and the entry brings no bind of its own. */
-  static entry<
-    N extends Kit.Namespace,
-    Owner = unknown,
-    Item = undefined,
-    Rest extends Kit.EntryRest<Owner, Item, N> = Kit.EntryRest<Owner, Item, N>
-  >(
-    view: Kit.View,
-    namespace: N,
-    rest?: Rest & Kit.EntryCheck<Rest, { namespace: N }>
-  ): Kit.Entry<Owner, Item, N> {
-    const entry = Kit.Class.entry<N, Owner, Item, Rest>(view, namespace, rest);
-    const bind = this.bindEntry;
-    return bind && !entry.bind ? { ...entry, bind } : entry;
   }
 
   /** the one role a kit with a single entry role has, else nothing; built once per class */

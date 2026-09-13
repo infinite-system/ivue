@@ -48,7 +48,11 @@ class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles> {
       Gutter: { view: GutterView },
       Header: { view: HeaderView },
       Stub: { view: StubView },
-      MessagePartList: this.entry(MessagePartListView, MessagePartList),
+      MessagePartList: {
+        view: MessagePartListView,
+        namespace: MessagePartList,
+        bind: this.bindPartList
+      },
       Await: { view: AwaitView },
       Footer: { view: FooterView },
       order: ['Gutter', 'Header', 'Stub', 'MessagePartList', 'Await', 'Footer']
@@ -56,7 +60,7 @@ class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles> {
   }
 
   /** what the parts list receives from the row: the message's parts, the chat, the message */
-  static override bindEntry({ model }: Kit.Seam<$ChatMessage>): MessagePartList.Props {
+  static bindPartList({ model }: Kit.Seam<$ChatMessage>): MessagePartList.Props {
     return { parts: model.parts, chat: model.chat, message: model.message };
   }
 
