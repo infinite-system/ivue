@@ -1,4 +1,3 @@
-import { Reactive, type ReactiveInstance } from '../ivue';
 import { Static } from '../Static';
 import { Kit } from './Kit';
 
@@ -75,12 +74,12 @@ class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unk
 
 export namespace KitContainer {
   export const $Class = Static($KitContainer);
-  // generic: `Reactive()` erases the type parameters, so the constructor is cast back to its own type
-  export let Class = Reactive($Class) as unknown as typeof $Class;
+  // plain — never instantiated; the first subclass's Reactive() reaches this prototype on its walk
+  export let Class = $Class;
   export type Instance<
     Roles extends object = Record<string, Kit.Entry>,
     Item = unknown
-  > = ReactiveInstance<$KitContainer<Roles, Item>>;
+  > = InstanceType<typeof $KitContainer<Roles, Item>>;
 
   /** the keys of a kit that hold an entry — never `order`, never a role map */
   export type RoleOf<Roles extends object> = {
