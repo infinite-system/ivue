@@ -1361,3 +1361,16 @@ a steady 50 ms max under the same throttle. The A/B harness (`ab.tmp.sh`:
 restart the server, trace three runs, print slow/max/long/rows) and the
 profile script are the way to settle such a question; the row leaf stayed
 for its structural benefit, not for speed.
+
+## The scroller's feel has a command (2026-09-13)
+
+Unit specs bind every mechanism of the day's scroller fixes, but the
+thing the reader feels — a flick's tail, the first flick from a chat's
+end, a reversal, a send that follows — is a number on a phone profile.
+`npm run probe:scroller` drives the docs dev server (Pixel profile, CDP
+touch events) and checks those numbers against thresholds with margin
+over the measured values: max frame, long tasks, row unmounts during the
+tail, the glide's peak and length, the reversal's latency, the gap after
+a send. A breach exits 1. Run it after any change to `VirtualScroller`,
+`VirtualScrollerPadding`, `Lenis` or the chat's pin, with the dev server
+up; the unit suite cannot see a forced layout or a 100 ms frame.

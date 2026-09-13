@@ -554,11 +554,11 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Impossible if true:** A pad that shrinks on the first frame of a flick's decay. Gap rows trimmed while the lerp still travels. Blank canvas under the viewport while the gap in rows is below the cap. A viewport bottom left uncovered mid-lerp because the rows behind the target measure shorter than the estimate.
 
-**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.test.ts`
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.test.ts`; the feel itself, `npm run probe:scroller` against the docs dev server — a flick's tail unmounting a row, or a frame past 84 ms, fails it.
 
 **Status:** provisional
 
-**Last refined:** 2026-09-06
+**Last refined:** 2026-09-13
 
 ### Hot paths read no layout
 
