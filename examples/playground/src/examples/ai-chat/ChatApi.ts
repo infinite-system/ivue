@@ -145,11 +145,30 @@ class $ChatApi {
     };
   }
 
-  static page(index: number, signal?: AbortSignal) {
-    return this.fetchJson<SessionLog.Message[]>(
+  static async page(index: number, signal?: AbortSignal) {
+    const { data, log } = await this.fetchJson<unknown[]>(
       `page-${String(index).padStart(3, '0')}.json`,
       signal
     );
+    return { data: data.map((record) => this.adopt(record)), log };
+  }
+
+  /** A message as the page file carries it becomes the chat's: the file says `role` where the chat
+   *  says `speaker`, at every depth — a sub-thread's messages ride inside a part's `children`. */
+  static adopt(record: unknown): SessionLog.Message {
+    const walk = (value: unknown): unknown => {
+      if (Array.isArray(value)) return value.map(walk);
+      if (!value || typeof value !== 'object') return value;
+      const object = value as Record<string, unknown>;
+      const out: Record<string, unknown> = {};
+      for (const key of Object.keys(object)) out[key] = walk(object[key]);
+      if ('parts' in object && typeof object.role === 'string' && object.speaker === undefined) {
+        out.speaker = object.role;
+        delete out.role;
+      }
+      return out;
+    };
+    return walk(record) as SessionLog.Message;
   }
 
   /**

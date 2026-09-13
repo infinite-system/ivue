@@ -204,7 +204,7 @@ async function main() {
     message.parts.reduce((count, part) => count + (part.kind === 'tool_call' ? 1 : part.kind === 'tool_batch' ? part.calls.length : 0), 0);
   const index = messages.map((message) => ({
     id: message.id,
-    r: message.role[0],
+    r: message.speaker[0],
     t: preview(message),
     c: toolCount(message),
     at: message.timestamp,
@@ -232,7 +232,7 @@ async function main() {
     indexBytes: indexJson.length,
     firstAt: messages[0]?.timestamp ?? 0,
     lastAt: messages[messages.length - 1]?.timestamp ?? 0,
-    roles: messages.reduce<Record<string, number>>((acc, message) => ((acc[message.role] = (acc[message.role] ?? 0) + 1), acc), {}),
+    roles: messages.reduce<Record<string, number>>((acc, message) => ((acc[message.speaker] = (acc[message.speaker] ?? 0) + 1), acc), {}),
     models,
     tools,
     calls: callCount,
