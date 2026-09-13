@@ -70,7 +70,7 @@ view a `<script setup>` SFC with a class contract. They exist for the spec and f
 
 **Status:** provisional
 
-**Last refined:** 2026-09-10
+**Last refined:** 2026-09-13
 
 ## Chosen invariants
 
@@ -248,6 +248,28 @@ view a `<script setup>` SFC with a class contract. They exist for the spec and f
 
 **Last refined:** 2026-09-11
 
+### A kit declares one level
+
+**Invariant:** If a class composes others, then its kit declares exactly the roles its own template renders — an entry per role, an `order` when the template loops, a role map when one role dispatches by an external name — and nothing below that level; the class an entry names declares the next level in its own kit; the tree is classes pointing at namespaces and is never written as one nested object; and a view that loops over seams is a compositor with a class of its own, never a classless leaf whose roles a parent declares for it. `KitContainer` is that class's base: the kit and `seam` inherited, `roleOf` and `keyOf` the two facts a list supplies, `entryOf` the one a dispatch supplies, `viewOf` and `propsOf` derived, `entry()` attaching the container's `bindEntry` to every entry it builds.
+
+**Scope:** every compositor. `subkit` is the only place one kit mentions another's roles, and it edits them — a patch downward, never a declaration. A role map (`Tools`, keyed by tool name) is owned by the compositor whose template dispatches into it; a map never has a class of its own, which is the test: if what sits below would need a class, it is a child and declares itself.
+
+**Mechanism:** one level per class means a patch names a role and a `subkit` for the next level, a class swap replaces a whole subtree, `derive` on a leaf never touches a root, and `KitInspect.tree` reads the tree back by walking `namespace` to `$kit` to `namespace`. `MessagePartList` is the case that closed it: the row once held `roleOf`, `keyOf`, the kind table and the part bind on behalf of a classless list view; as a compositor it owns them, the row is sections only, and the row feeds it through one bind.
+
+**Generates:** `KitContainer.ts`; the folder rule (`Compositor.Role.vue` for a classless leaf, `Family.Role.ts` for a classed role, a subfolder where a role is itself a compositor); `KitInspect.misordered`, since a kit read as a template is declared in the sequence its `order` renders.
+
+**Rejected alternatives:** a `children` field on an entry — a third kind of thing under an entry, a branch in every walk, and `subkit` with the opposite meaning; a `Parts` map on the row holding the part roles — kept the row declaring roles it does not render; a per-class kit object carrying `propsOf` and friends — a seam needs the model, so either the template names it twice or an object is allocated per row, and the kit stops being data; mixin capabilities — the kit is the essence of a compositor, one base per essence, everything else held.
+
+**Evidence:** `MessagePartList.test.ts`; `ChatMessage.test.ts`: "seam() hands a section the model and its entry, and the parts list what it renders"; `ConfiguredChat.test.ts`: "every hand-written kit in the chat declares its sections in the sequence its order renders them"; `KitInspect.test.ts`: "misordered() names a kit whose declaration reads in another sequence than its order".
+
+**Impossible if true:** A kit declaring a role its own template does not render. A root object that knows a whole tree. A patch that needs a path. A view looping over seams whose roles a parent declares for it. A `children` field on an entry.
+
+**Verification:** `npx vitest run examples/playground/src/examples/ai-chat/message examples/playground/src/kit/KitInspect.test.ts examples/playground/src/examples/ai-chat/ConfiguredChat.test.ts`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-13
+
 ## Impossibility boundary — what these invariants forbid
 
 If the invariants hold, none of these can exist in a correct state:
@@ -261,6 +283,7 @@ If the invariants hold, none of these can exist in a correct state:
 - a layer holding a container's list, a relation against a name that is not there resolving silently, or a container's template naming one of its sections
 - a bound role with a class rendering without its entry, or a layer's `inherited()` returning anything but the layer below's bind
 - two layers replacing one field with no line in the report
+- a kit that declares a role its own template does not render, a root object that knows a whole tree, a patch that needs a path, or a looping view whose roles a parent declares for it
 
 A change that introduces any of the above is breaking an invariant, not
 adding a feature — re-derive from here before writing it.
