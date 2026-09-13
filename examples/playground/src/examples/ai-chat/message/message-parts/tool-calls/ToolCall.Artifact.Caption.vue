@@ -2,7 +2,7 @@
 import type { Kit } from '../../../../../kit/Kit';
 import type { ToolCallArtifact } from './ToolCall.Artifact';
 
-// The Artifact card's caption — its own line above the blocks. Markup only, over the card model.
+// The Artifact card's caption, role Caption of its own kit: its line above the blocks. Markup only.
 defineProps<{ kit: Kit.Entry; model: ToolCallArtifact.Instance }>();
 </script>
 

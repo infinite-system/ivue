@@ -323,11 +323,15 @@ export namespace Kit {
   }
 
   /** What a bind returns and what a seam hands a child: any of the child's props (the child keeps
-   *  its defaults for the rest) and attributes. Under the loose `Namespace` the props are `any`,
-   *  and so is the whole — a tag role's bind and a loosely typed entry's are unchecked. */
+   *  its defaults for the rest), with attributes beside them or not. A union on purpose: `Attrs` is
+   *  keyed by template literals, and an interface — every child's `Props` — has no implicit index
+   *  signature, so `Partial<Props> & Attrs` would refuse a named static bind that returns the child's
+   *  `Props`; the first member admits it, the second admits an attribute beside the props, and a key
+   *  that is neither matches no member. Under the loose `Namespace` the props are `any`, and so is
+   *  the whole — a tag role's bind and a loosely typed entry's are unchecked. */
   export type Bound<N extends Namespace = Namespace> = 0 extends 1 & PropsOf<N>
     ? any
-    : Partial<PropsOf<N>> & Attrs;
+    : Partial<PropsOf<N>> | (Partial<PropsOf<N>> & Attrs);
 
   /** The one argument a bind takes: the container's model; under a list container the item and
    *  the key the loop gave it, `undefined` under a section container; and `inherited`, the layer

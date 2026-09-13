@@ -2,7 +2,7 @@
 import type { Kit } from '../../../../../kit/Kit';
 import type { ToolCallAgent } from './ToolCall.Agent';
 
-// The Agent card's caption — its own line above the blocks. Markup only, over the card model.
+// The Agent card's caption, role Caption of its own kit: its line above the blocks. Markup only.
 defineProps<{ kit: Kit.Entry; model: ToolCallAgent.Instance }>();
 </script>
 

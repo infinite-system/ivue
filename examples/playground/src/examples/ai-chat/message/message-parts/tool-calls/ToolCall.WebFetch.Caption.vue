@@ -2,7 +2,7 @@
 import type { Kit } from '../../../../../kit/Kit';
 import type { ToolCallWebFetch } from './ToolCall.WebFetch';
 
-// The WebFetch card's caption — its own line above the blocks. Markup only, over the card model.
+// The WebFetch card's caption, role Caption of its own kit: its line above the blocks. Markup only.
 defineProps<{ kit: Kit.Entry; model: ToolCallWebFetch.Instance }>();
 </script>
 

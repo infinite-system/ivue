@@ -2,7 +2,7 @@
 import type { Kit } from '../../../../../kit/Kit';
 import type { ToolCallMcp } from './ToolCall.Mcp';
 
-// The Mcp card's caption — its own line above the blocks. Markup only, over the card model.
+// The Mcp card's caption, role Caption of its own kit: its line above the blocks. Markup only.
 defineProps<{ kit: Kit.Entry; model: ToolCallMcp.Instance }>();
 </script>
 

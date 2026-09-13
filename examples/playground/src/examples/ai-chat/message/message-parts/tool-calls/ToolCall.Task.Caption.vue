@@ -2,7 +2,7 @@
 import type { Kit } from '../../../../../kit/Kit';
 import type { ToolCallTask } from './ToolCall.Task';
 
-// The Task card's caption — its own line above the blocks. Markup only, over the card model.
+// The Task card's caption, role Caption of its own kit: its line above the blocks. Markup only.
 defineProps<{ kit: Kit.Entry; model: ToolCallTask.Instance }>();
 </script>
 

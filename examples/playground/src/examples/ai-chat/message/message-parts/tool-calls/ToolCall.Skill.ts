@@ -1,14 +1,14 @@
 import { Reactive } from '../../../../../ivue';
 import { Static } from '../../../../../Static';
 import { ToolCall } from './ToolCall';
-import ToolCallCaptionSkillView from './ToolCall.Caption.Skill.vue';
+import ToolCallSkillCaptionView from './ToolCall.Skill.Caption.vue';
 
 // A skill invocation: the skill's name and its arguments; the result is
 // the skill's instructions, folded as markdown.
 class $ToolCallSkill extends ToolCall.$Class {
   /** this card's caption has its own line; every other role is the base's */
   static override get $kit(): ToolCall.Roles {
-    return { ...super.$kit, Caption: { view: ToolCallCaptionSkillView } };
+    return { ...super.$kit, Caption: { view: ToolCallSkillCaptionView } };
   }
 
   get skill(): string {

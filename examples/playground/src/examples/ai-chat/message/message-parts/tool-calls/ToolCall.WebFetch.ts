@@ -1,14 +1,14 @@
 import { Reactive } from '../../../../../ivue';
 import { Static } from '../../../../../Static';
 import { ToolCall } from './ToolCall';
-import ToolCallCaptionWebFetchView from './ToolCall.Caption.WebFetch.vue';
+import ToolCallWebFetchCaptionView from './ToolCall.WebFetch.Caption.vue';
 
 // A fetch or a search: the URL or the query, the status and bytes the
 // tool recorded, and what came back.
 class $ToolCallWebFetch extends ToolCall.$Class {
   /** this card's caption has its own line; every other role is the base's */
   static override get $kit(): ToolCall.Roles {
-    return { ...super.$kit, Caption: { view: ToolCallCaptionWebFetchView } };
+    return { ...super.$kit, Caption: { view: ToolCallWebFetchCaptionView } };
   }
 
   get url(): string {

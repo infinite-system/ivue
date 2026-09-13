@@ -2,14 +2,14 @@ import { Reactive } from '../../../../../ivue';
 import { Static } from '../../../../../Static';
 import type { SessionLog } from '../../../SessionLog';
 import { ToolCall } from './ToolCall';
-import ToolCallCaptionAgentView from './ToolCall.Caption.Agent.vue';
+import ToolCallAgentCaptionView from './ToolCall.Agent.Caption.vue';
 
 // A subagent: its description and prompt, its report, and the thread it
 // ran folded under it, rendered by the same parts as the main thread.
 class $ToolCallAgent extends ToolCall.$Class {
   /** this card's caption has its own line; every other role is the base's */
   static override get $kit(): ToolCall.Roles {
-    return { ...super.$kit, Caption: { view: ToolCallCaptionAgentView } };
+    return { ...super.$kit, Caption: { view: ToolCallAgentCaptionView } };
   }
 
   get description(): string {
