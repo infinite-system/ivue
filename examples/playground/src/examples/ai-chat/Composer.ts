@@ -179,6 +179,13 @@ class $Composer extends KitContainer.$Class<Composer.Roles> {
 
   /* ---- handlers ---- */
 
+  /** every input lands in the draft, mid-composition included: a phone's keyboard composes a
+   *  word at a time, and a v-model that waits for the composition to end left the send
+   *  asleep until the box lost focus */
+  onInput(event: Event) {
+    this.draft.value = (event.target as HTMLTextAreaElement).value;
+  }
+
   onKeydown(event: KeyboardEvent) {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();

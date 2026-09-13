@@ -43,10 +43,11 @@ const {
       </div>
       <textarea
         ref="inputElement"
-        v-model="draft"
+        :value="draft"
         class="ac-input"
         rows="1"
         :placeholder="model.placeholder"
+        @input="model.onInput($event)"
         @keydown="model.onKeydown($event)"
         @paste="model.onPaste($event)"
       ></textarea>

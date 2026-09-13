@@ -7,6 +7,7 @@ Goal: Prove the thread loads as stubs from one small index and fills a page only
 // domain-invariant: $Chat — If the reader is not at the bottom, then a streaming reply never moves the viewport
 // domain-invariant: $Chat — If a reply finishes, then its runs of calls contract to batches like any loaded turn
 // domain-invariant: $Chat — If the thumb is being dragged, then a window it reaches fetches nothing and its rows stay skeletons; the drop fetches the window it landed on
+// domain-invariant: $Chat — If the reader is at the bottom and the content grows under them, then the pin holds and follows the new end; only the reader's own scroll up lets it go
 Impossible if true: a page is requested that no window needs
 Impossible if true: the scroller learns that a row is unloaded
 
@@ -462,6 +463,37 @@ describe('Chat', () => {
       'page-000.json',
       'page-001.json'
     ]);
+    unmount();
+  });
+
+  // domain-invariant: $Chat — If the reader is at the bottom and the content grows under them, then the pin holds and follows the new end; only the reader's own scroll up lets it go
+  it('content growing under a reader at the bottom keeps the pin and follows the end; a scroll up lets go', () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
+    const { instance: chat, unmount } = hosted(() => new Chat.Class());
+    const scroller = {
+      scrollExtent: 1000,
+      containerOuterSize: 400,
+      scrollPosition: 600,
+      getIndexPosition: () => 0,
+      setScrollPosition: vi.fn(),
+      scrollToIndex: vi.fn()
+    };
+    chat.scroller.value = scroller as never;
+    chat.onScroll();
+    expect(chat.atBottom.value).toBe(true);
+    // a sent message and a reply's first row: the end moves 200 px, the reader does not
+    scroller.scrollExtent = 1200;
+    chat.onScroll();
+    expect(chat.atBottom.value).toBe(true);
+    expect(scroller.setScrollPosition).toHaveBeenLastCalledWith(-800, false, true, false);
+    // the reader scrolls up: the pin lets go
+    scroller.scrollPosition = 300;
+    chat.onScroll();
+    expect(chat.atBottom.value).toBe(false);
+    // and back to the end: it takes again
+    scroller.scrollPosition = 800;
+    chat.onScroll();
+    expect(chat.atBottom.value).toBe(true);
     unmount();
   });
 });

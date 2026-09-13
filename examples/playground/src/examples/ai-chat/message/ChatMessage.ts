@@ -216,6 +216,11 @@ class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles> {
     return this.isReplay ? 'replayed from a real turn' : '';
   }
 
+  /** the same tag in one word, for a phone's head where the model tag steps aside for it */
+  get replayShortLabel(): string {
+    return this.isReplay ? 'Replayed' : '';
+  }
+
   /** the reply's stamp once it is done: tokens and wall time */
   get receiptLabel(): string {
     const message = this.message;

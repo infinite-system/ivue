@@ -167,6 +167,26 @@ the same rules before a character renders.
 
 ---
 
+## The pin lets go only under the reader's own scroll
+
+**Invariant:** If the reader is at the bottom (within `BOTTOM_THRESHOLD_PX` of the end) and the content grows under them — a sent message, a reply's first row, a card unfolding below — then the pin holds and the thread follows the new end; the pin lets go only when the scroll offset moves up between two reads, the reader's own scroll.
+
+**Scope:** `Chat.ts` `onScroll`, `scrollMark`, `pinToBottom`, `BOTTOM_THRESHOLD_PX`; the watch over `scrollOffset` in the constructor.
+
+**Mechanism:** The at-bottom read compared the offset to the extent alone, so anything that grew the extent by more than the threshold unpinned the reader without a scroll: a send appended the message and the reply's stub, the end moved 49 px, and the reply streamed under a "Jump to bottom" chip on a phone. Keeping the last offset tells the two apart: content growth leaves the offset where it was and the pin follows; a reader scrolling up lowers it and the pin lets go.
+
+**Generates:** A reply that streams into view on a phone after a send.
+
+**Evidence:** `Chat.ts` `onScroll`. Test: "content growing under a reader at the bottom keeps the pin and follows the end; a scroll up lets go".
+
+**Impossible if true:** A reader who sent a message watching the reply under a "Jump to bottom" chip. A pin that survives the reader's own scroll up.
+
+**Verification:** `npx vitest run examples/playground/src/examples/ai-chat/Chat.test.ts -t "keeps the pin"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-13
+
 ## Impossibility boundary — what these invariants forbid
 
 If the invariants hold, none of these can exist in a correct state:

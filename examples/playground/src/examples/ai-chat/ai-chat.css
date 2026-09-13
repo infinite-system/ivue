@@ -319,6 +319,9 @@
   font-size: 12.5px;
 }
 .ai-chat .ac-msg-model,
+.ai-chat .ac-msg-replay-short {
+  display: none;
+}
 .ai-chat .ac-msg-replay {
   padding: 0 7px;
   border-radius: 999px;
@@ -3443,6 +3446,16 @@
   .ai-chat .ac-send:disabled {
     border: 1.5px solid var(--ac-line);
     background: transparent;
+  }
+  /* a replayed reply on a phone: one word, "Replayed", where the model tag stood */
+  .ai-chat .ac-msg-head:has(.ac-msg-replay) .ac-msg-model {
+    display: none;
+  }
+  .ai-chat .ac-msg-replay-long {
+    display: none;
+  }
+  .ai-chat .ac-msg-replay-short {
+    display: inline;
   }
   /* code on a phone: a smaller face, tighter padding, and a narrower gutter of line numbers */
   .ai-chat .chat-code,
