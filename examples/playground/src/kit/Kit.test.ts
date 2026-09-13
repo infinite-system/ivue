@@ -719,6 +719,28 @@ describe('a bind is a projection the layer above extends', () => {
   });
 });
 
+describe('the edges of a patch', () => {
+  // domain-invariant: $Kit — If a base class declares no kit, then derive starts from an empty one; if a patch names a field as undefined or a relation with no names, then nothing is written and nothing moves
+  it('a base without a kit derives from nothing, an undefined field writes nothing, an empty relation moves nothing', () => {
+    class $Blank {}
+    const Blank = { $Class: Static($Blank), Class: Static($Blank) };
+    const Grown = Kit.Class.derive(Blank, { Only: { view: 'i' } });
+    expect(Object.keys(Grown.$Class.$kit as object)).toEqual(['Only']);
+    const Same = Kit.Class.derive(Strip, {
+      Header: undefined,
+      order: { after: { Header: undefined }, before: { Footer: undefined } }
+    } as never);
+    expect(Same.$Class.$kit.Header).toBe(Strip.$Class.$kit.Header);
+    expect(Same.$Class.$kit.order).toEqual(['Header', 'Body', 'Footer']);
+    expect(
+      KitInspect.Class.writesOf({
+        Header: undefined,
+        order: { after: { Header: undefined } }
+      } as never)
+    ).toEqual([]);
+  });
+});
+
 describe('derive merges once', () => {
   // domain-invariant: $Kit — If an entry carries a subkit, then resolve derives its namespace and rewraps its view, and every untouched entry keeps its identity
   it('derive merges the patch once, at derive time, and the getter resolves that one result', () => {

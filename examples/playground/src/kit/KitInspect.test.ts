@@ -14,8 +14,10 @@ namespace derived by `resolve` keys its writes from its own kit; the
 root's patches carry the whole path, so the tree is read from the root.
 */
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Static } from '../Static';
 import { Kit } from './Kit';
 import { KitInspect } from './KitInspect';
+import { KitContainer } from './KitContainer';
 import { Panel } from './fixtures/Panel';
 import { Strip } from './fixtures/Strip';
 import StripHeaderView from './fixtures/Strip.Header.vue';
@@ -53,6 +55,23 @@ describe('a kit is read as its template', () => {
     const lines = KitInspect.Class.misordered(Shuffled);
     expect(lines).toHaveLength(1);
     expect(lines[0]).toMatch(/declared .* — order reads /);
+  });
+});
+
+describe('what the printer says when a name is missing', () => {
+  // domain-invariant: $KitInspect — If a view has no name or a class chain ends in an anonymous class, then the tree prints `component` and `class` rather than nothing
+  it('an unnamed view prints as component, a chain of anonymous classes prints as class', () => {
+    const anonymousView = { render: () => null } as never;
+    const $Nameless = class extends KitContainer.$Class {
+      static override get $kit() {
+        // a class expression takes its property's name; indexing a literal keeps it nameless
+        const nameless = [class {}][0] as never;
+        return { Only: { view: anonymousView, namespace: { $Class: nameless, Class: nameless } } };
+      }
+    };
+    const Nameless = { $Class: Static($Nameless), Class: Static($Nameless) };
+    const printed = KitInspect.Class.tree(Nameless);
+    expect(printed).toContain('- Only: view component · class class · bind no · base');
   });
 });
 

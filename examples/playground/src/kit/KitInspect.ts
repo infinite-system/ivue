@@ -194,10 +194,11 @@ class $KitInspect {
   protected static className(namespace: Kit.Namespace | undefined): string {
     if (!namespace) return '-';
     const chain = this.layers(namespace);
-    let raw = chain[0].$Class as
-      (Kit.NamespaceClass & { [STATIC_RAW]?: Kit.NamespaceClass }) | null;
+    let raw: Kit.NamespaceClass | null = chain[0].$Class as Kit.NamespaceClass;
     while (raw) {
-      if (Object.hasOwn(raw, STATIC_RAW)) raw = raw[STATIC_RAW] ?? null;
+      // `Static()` always names the class it wrapped under the key, so an own key holds a class
+      if (Object.hasOwn(raw, STATIC_RAW))
+        raw = (raw as Kit.NamespaceClass & { [STATIC_RAW]: Kit.NamespaceClass })[STATIC_RAW];
       else if (raw.name === '') raw = Object.getPrototypeOf(raw);
       else break;
     }
