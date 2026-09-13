@@ -35,17 +35,23 @@ class $ThemedCode extends Code.$Class {
     };
   }
 
+  /** The widened contract, redeclared for the type only: `declare` emits no field and runs nothing,
+   *  and a props bag with one more field or an emit that takes one more event assigns to the base's,
+   *  so every read of `this.props` and every call of `this.emit` below is typed to this class. */
+  declare props: ThemedCode.Props;
+  declare emit: ThemedCode.Emits;
+
   protected override get self() {
     return this.constructor as typeof $ThemedCode;
   }
 
   /** the declared prop wins; the kit's `theme` is the fallback the base class already reads */
   override get theme(): string | undefined {
-    return (this.props as ThemedCode.Props).theme ?? super.theme;
+    return this.props.theme ?? super.theme;
   }
 
   select() {
-    (this.emit as ThemedCode.Emits)('select', this.visible);
+    this.emit('select', this.visible);
   }
 }
 
