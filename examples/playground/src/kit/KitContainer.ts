@@ -20,12 +20,22 @@ class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unk
    *  absent, an entry built by `entry()` has no bind and its child receives `{ model, kit }`. */
   static bindEntry?(seam: Kit.Seam<any, any>): Kit.Bound;
 
-  /** An entry of this container's kit: the view, the class it constructs, and the container's
-   *  `bindEntry` when it declares one. Loosely typed on purpose: the bind is typed where it is
-   *  declared, and a container's one bind serves every kind its seam's item narrows to. */
-  static entry(view: Kit.View, namespace?: Kit.Namespace, rest?: Partial<Kit.Entry>): Kit.Entry {
+  /** An entry of this container's kit: `Kit.Class.entry` — the view, the class it constructs, and a
+   *  `rest` checked against that class's props — plus the container's `bindEntry` when it declares
+   *  one and the entry brings no bind of its own. */
+  static entry<
+    N extends Kit.Namespace,
+    Owner = unknown,
+    Item = undefined,
+    Rest extends Kit.EntryRest<Owner, Item, N> = Kit.EntryRest<Owner, Item, N>
+  >(
+    view: Kit.View,
+    namespace: N,
+    rest?: Rest & Kit.EntryCheck<Rest, { namespace: N }>
+  ): Kit.Entry<Owner, Item, N> {
+    const entry = Kit.Class.entry<N, Owner, Item, Rest>(view, namespace, rest);
     const bind = this.bindEntry;
-    return bind ? { view, namespace, bind, ...rest } : { view, namespace, ...rest };
+    return bind && !entry.bind ? { ...entry, bind } : entry;
   }
 
   /** the one role a kit with a single entry role has, else nothing; built once per class */

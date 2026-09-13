@@ -8,6 +8,7 @@ import {
 import { nestedProps } from '../../nestedProps';
 import { Static } from '../../Static';
 import { Kit } from '../Kit';
+import { KitContainer } from '../KitContainer';
 import { Code } from './Code';
 import CodeView from './Code.vue';
 import StripHeadView from './StripHead.vue';
@@ -18,15 +19,15 @@ import StripFootView from './StripFoot.vue';
 // `order`, and its body is a list container that feeds every item through
 // the `Item` role's bind. Nothing in the view names a section; a patch
 // inserts, drops, moves or dresses one by relations against names.
-class $Strip {
+class $Strip extends KitContainer.$Class<Strip.Roles, string> {
   /** the sections in their order, and the list role with the bind that feeds each item */
-  static get $kit(): Strip.Roles {
+  static override get $kit(): Strip.Roles {
     return {
       Head: { view: StripHeadView },
       Body: { view: StripBodyView },
       Foot: { view: StripFootView, shows: (strip) => strip.hasItems },
       // the typed form: the bind's result is checked against Code's props, the seam against the strip
-      Item: Kit.Class.entry(CodeView, Code, {
+      Item: this.entry(CodeView, Code, {
         bind: ({ model, item, key }) => ({ code: item, cap: model.cap, 'data-key': key })
       }),
       order: ['Head', 'Body', 'Foot']
@@ -51,17 +52,13 @@ class $Strip {
   }
 
   constructor(public props: Strip.Props) {
+    super();
     nestedProps(props, this.self.propsDefaults);
   }
 
   /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
+  protected override get self() {
     return this.constructor as typeof $Strip;
-  }
-
-  /** the kit is the class's; a subclass with its own `$kit` swaps the subtree */
-  get kit() {
-    return this.self.$kit;
   }
 
   get title(): string {
@@ -78,17 +75,6 @@ class $Strip {
 
   get hasItems(): boolean {
     return this.items.length > 0;
-  }
-
-  /** whether a role renders: the entry's `shows` over this strip, or always — never a branch on the name */
-  shows(role: Strip.SectionRole): boolean {
-    const entry = this.kit[role] as Kit.Entry;
-    return entry.shows ? entry.shows(this) : true;
-  }
-
-  /** what a seam hands the role's view — the entry's bind, or `{ model, kit }`; never a branch on the name */
-  seam(role: Strip.Role, item?: string, key?: string | number): Kit.Bound {
-    return Kit.Class.seam(this, this.kit[role], item, key);
   }
 }
 

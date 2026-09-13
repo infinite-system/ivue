@@ -8,13 +8,14 @@ import {
 import { nestedProps } from '../../nestedProps';
 import { Static } from '../../Static';
 import { Kit } from '../Kit';
+import { KitContainer } from '../KitContainer';
 import { Card } from './Card';
 import CardView from './Card.vue';
 
 // A root above the card: two levels, so an override can reach a leaf two
 // hops down through `subkit`.
-class $Panel {
-  static get $kit(): Panel.Roles {
+class $Panel extends KitContainer.$Class<Panel.Roles> {
+  static override get $kit(): Panel.Roles {
     return {
       Card: { view: CardView, namespace: Card }
     };
@@ -36,15 +37,12 @@ class $Panel {
   }
 
   constructor(public props: Panel.Props) {
+    super();
     nestedProps(props, this.self.propsDefaults);
   }
 
-  protected get self() {
+  protected override get self() {
     return this.constructor as typeof $Panel;
-  }
-
-  get kit() {
-    return this.self.$kit;
   }
 
   get titles(): string[] {

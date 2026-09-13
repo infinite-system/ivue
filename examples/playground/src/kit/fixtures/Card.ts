@@ -9,6 +9,7 @@ import {
 import { nestedProps } from '../../nestedProps';
 import { Static } from '../../Static';
 import { Kit } from '../Kit';
+import { KitContainer } from '../KitContainer';
 import { Code } from './Code';
 import CodeView from './Code.vue';
 import CardHeadView from './CardHead.vue';
@@ -19,9 +20,9 @@ import FrameView from './Frame.vue';
 // one leaf role with a class. The views import this module and this module
 // imports the views; the lazy `$kit` getter is what makes the cycle
 // harmless — nobody reads the other side at module init.
-class $Card {
+class $Card extends KitContainer.$Class<Card.Roles> {
   /** cached once per receiver class by Static(): `Card.$kit` and `FancyCard.$kit` are different objects */
-  static get $kit(): Card.Roles {
+  static override get $kit(): Card.Roles {
     return {
       Head: { view: CardHeadView },
       Body: { view: CardBodyView },
@@ -47,17 +48,13 @@ class $Card {
   }
 
   constructor(public props: Card.Props) {
+    super();
     nestedProps(props, this.self.propsDefaults);
   }
 
   /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
+  protected override get self() {
     return this.constructor as typeof $Card;
-  }
-
-  /** the kit is the class's; a subclass with its own `$kit` swaps the subtree */
-  get kit() {
-    return this.self.$kit;
   }
 
   get copied() {
