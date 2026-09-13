@@ -9,6 +9,7 @@ const model = new ((props.kit?.namespace?.Class as typeof Index.Class | undefine
 const {
   // state refs
   tools,
+  order,
   query,
   exportForm,
   // computed refs
@@ -25,8 +26,10 @@ const {
       <div class="ac-index-title">
         <strong>Index</strong>
         <span class="ac-muted">{{ model.countLabel }}</span>
-        <button type="button" class="ac-link ac-index-close" @click="chat.closeSidebar()">
-          close
+        <button type="button" class="ac-close" title="Close" @click="chat.closeSidebar()">
+          <svg class="ac-close-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path :d="model.closeIcon" />
+          </svg>
         </button>
       </div>
       <div class="ac-index-filters">
@@ -41,29 +44,36 @@ const {
             {{ option.label }}
           </button>
         </div>
-        <select
-          class="ac-pick"
-          aria-label="Tool calls"
-          :value="tools"
-          @change="model.onToolsPick($event)"
-        >
-          <option v-for="option in model.toolOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-        <button
-          type="button"
-          class="ac-order"
-          :class="{ 'ac-newest': model.isNewestFirst }"
-          :title="model.orderTitle"
-          :aria-label="model.orderTitle"
-          @click="model.toggleOrder()"
-        >
-          <span>Date</span>
-          <svg class="ac-order-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path :d="model.orderIcon" />
+        <span class="ac-pick-wrap">
+          <select
+            class="ac-pick"
+            aria-label="Tool calls"
+            :value="tools"
+            @change="model.onToolsPick($event)"
+          >
+            <option v-for="option in model.toolOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <svg class="ac-pick-caret" viewBox="0 0 24 24" aria-hidden="true">
+            <path :d="model.caretIcon" />
           </svg>
-        </button>
+        </span>
+        <span class="ac-pick-wrap ac-pick-order">
+          <select
+            class="ac-pick"
+            aria-label="Order"
+            :value="order"
+            @change="model.onOrderPick($event)"
+          >
+            <option v-for="option in model.orderOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <svg class="ac-pick-caret" viewBox="0 0 24 24" aria-hidden="true">
+            <path :d="model.caretIcon" />
+          </svg>
+        </span>
       </div>
       <div class="ac-index-search">
         <svg class="ac-search-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -85,6 +95,7 @@ const {
         <label class="ac-check-all">
           <input
             type="checkbox"
+            class="ac-check"
             :checked="model.allShownSelected"
             @change="model.toggleAllShown()"
           />
@@ -100,9 +111,17 @@ const {
           clear
         </button>
       </div>
+      <div class="ac-peek-head ac-index-pos">
+        <span class="ac-peek-pos">{{ model.positionLabel }}</span>
+        <span class="ac-peek-match">{{ model.matchLabel }}</span>
+        <span class="ac-peek-when">
+          <span class="ac-peek-date">{{ model.dateLabel }}</span>
+          <span class="ac-peek-pct">{{ model.percentLabel }}</span>
+        </span>
+      </div>
     </header>
 
-    <div class="ac-index-list">
+    <div class="ac-index-list" @pointerleave="model.onListLeave()">
       <component
         :is="model.kit.Scroller.view"
         ref="scroller"
@@ -117,12 +136,13 @@ const {
           <div
             class="ac-ix-row"
             :class="model.rowClass(item)"
+            @pointerenter="model.onRowEnter(item)"
             @click="model.onRowClick(item, $event)"
             @dblclick="model.onRowDoubleClick(item)"
           >
             <input
               type="checkbox"
-              class="ac-ix-check"
+              class="ac-ix-check ac-check"
               :checked="model.isSelected(item)"
               @click="model.onRowCheck(item, $event)"
             />
@@ -153,31 +173,40 @@ const {
     </div>
 
     <footer class="ac-index-foot">
-      <select v-model="exportForm" class="ac-select" aria-label="Export form">
-        <option v-for="option in model.exportOptions" :key="option.value" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
+      <span class="ac-pick-wrap">
+        <select v-model="exportForm" class="ac-pick" aria-label="Export form">
+          <option v-for="option in model.exportOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <svg class="ac-pick-caret" viewBox="0 0 24 24" aria-hidden="true">
+          <path :d="model.caretIcon" />
+        </svg>
+      </span>
       <button
         type="button"
-        class="ac-btn ac-btn-primary"
+        class="ac-pill ac-pill-primary"
         :disabled="!model.hasSelection"
+        :title="model.exportTitle"
         @click="model.download()"
       >
-        {{ model.exportLabel }}
+        <svg class="ac-pill-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path :d="model.downloadIcon" />
+        </svg>
+        <span>{{ model.exportLabel }}</span>
       </button>
       <button
         type="button"
-        class="ac-btn"
+        class="ac-pill"
         :disabled="!model.hasSelection"
+        title="Copy the selection as Markdown"
         @click="model.copyMarkdown()"
       >
-        {{ model.copyLabel }}
+        <svg class="ac-pill-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path :d="model.copyIcon" />
+        </svg>
+        <span>{{ model.copyLabel }}</span>
       </button>
-      <p class="ac-index-hint">
-        click selects · shift-click a range · ctrl-click toggles · ↑↓ move · space picks · enter
-        shows
-      </p>
     </footer>
   </section>
 </template>

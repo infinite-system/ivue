@@ -8,15 +8,35 @@ import { Static } from '../../Static';
 // kit's entry and before the shipped default.
 class $ChatSettings {
   static readonly THEMES: ChatSettings.Option<ChatSettings.Theme>[] = [
-    { value: 'midnight', label: 'Midnight', hint: 'the shipped dark palette' },
-    { value: 'light', label: 'Light', hint: 'the shipped light palette' },
-    { value: 'ivory', label: 'Ivory', hint: 'paper and ink' },
-    { value: 'terminal', label: 'Terminal', hint: 'phosphor on black, mono' }
+    {
+      value: 'midnight',
+      label: 'Midnight',
+      hint: 'the shipped dark palette',
+      tags: ['dark', 'night', 'black', 'default']
+    },
+    {
+      value: 'light',
+      label: 'Light',
+      hint: 'the shipped light palette',
+      tags: ['bright', 'white', 'day']
+    },
+    { value: 'ivory', label: 'Ivory', hint: 'paper and ink', tags: ['warm', 'sepia', 'cream'] },
+    {
+      value: 'terminal',
+      label: 'Terminal',
+      hint: 'phosphor on black, mono',
+      tags: ['green', 'mono', 'hacker', 'console', 'dark']
+    }
   ];
 
   static readonly DENSITIES: ChatSettings.Option<ChatSettings.Density>[] = [
-    { value: 'cozy', label: 'Cozy', hint: 'room to read' },
-    { value: 'compact', label: 'Compact', hint: 'more thread per screen' }
+    { value: 'cozy', label: 'Cozy', hint: 'room to read', tags: ['spacious', 'airy', 'large'] },
+    {
+      value: 'compact',
+      label: 'Compact',
+      hint: 'more thread per screen',
+      tags: ['dense', 'tight', 'small']
+    }
   ];
 
   protected static singleton: ChatSettings.Model | null = null;
@@ -63,5 +83,7 @@ export namespace ChatSettings {
     value: Value;
     label: string;
     hint: string;
+    /** words a reader might search for it by, beyond its label and hint */
+    tags: string[];
   }
 }

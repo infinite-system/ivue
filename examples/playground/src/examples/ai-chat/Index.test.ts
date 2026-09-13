@@ -138,7 +138,7 @@ describe('Index', () => {
     index.toggleAllShown();
     expect(index.selectedCount).toBe(7);
     expect(index.allShownSelected).toBe(true);
-    expect(index.selectAllLabel).toBe('Clear shown');
+    expect(index.selectAllLabel).toBe('Clear all');
     index.toggleAllShown();
     expect(index.selectedCount).toBe(0);
     index.onRowCheck(index.rows.value[2], { stopPropagation() {} } as Event);
@@ -270,7 +270,7 @@ describe('Index', () => {
     const save = vi.spyOn(Index.Class, 'saveFile').mockImplementation(() => {});
     await index.download();
     expect(save).toHaveBeenCalledWith(jsonl, 'chat-selection.jsonl');
-    expect(index.exportLabel).toBe('Export JSONL');
+    expect(index.exportLabel).toBe('Export');
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     await index.copyMarkdown();

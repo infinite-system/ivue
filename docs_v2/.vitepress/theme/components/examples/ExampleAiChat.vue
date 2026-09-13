@@ -73,12 +73,10 @@ import ChatShell from '../../../../../examples/playground/src/examples/ai-chat/C
   color: var(--vp-c-text-2);
 }
 .eac-frame {
+  /* a height only: the chat draws its own two cards — the stats under this head, the
+     window below them */
   height: min(78vh, 820px);
   min-height: 560px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 0 0 14px 14px;
-  overflow: hidden;
-  box-shadow: 0 22px 60px -28px rgba(99, 102, 241, 0.4);
 }
 @media (max-width: 640px) {
   /* the chat is the page on a phone: edge to edge, most of the screen */
@@ -94,11 +92,9 @@ import ChatShell from '../../../../../examples/playground/src/examples/ai-chat/C
     display: none;
   }
   .eac-frame {
-    height: calc(100dvh - 120px);
+    /* svh, not dvh: the address bar folding away must not resize the chat under a reader */
+    height: calc(100svh - 120px);
     min-height: 480px;
-    border-radius: 0;
-    border-left: 0;
-    border-right: 0;
   }
 }
 </style>

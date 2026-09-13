@@ -170,12 +170,64 @@ class $Index {
     return this.self.ORDER_LABELS[this.order.value];
   }
 
-  get orderIcon(): string {
-    return Icons.Class.PATHS.arrow;
-  }
-
   get wrenchIcon(): string {
     return Icons.Class.PATHS.wrench;
+  }
+
+  get closeIcon(): string {
+    return Icons.Class.PATHS.close;
+  }
+
+  /** the pick lists' caret: the model picker's chevron, turned down by the css */
+  get caretIcon(): string {
+    return Icons.Class.PATHS.chevron;
+  }
+
+  get downloadIcon(): string {
+    return Icons.Class.PATHS.download;
+  }
+
+  get copyIcon(): string {
+    return this.copied.value ? Icons.Class.PATHS.check : Icons.Class.PATHS.copy;
+  }
+
+  /** the row under the pointer in the list: the head line reads it, else the current row */
+  get hovered() {
+    return shallowRef<Index.Row | null>(null);
+  }
+
+  get focusRow(): Index.Row | undefined {
+    return this.hovered.value ?? this.rows.value.find((row) => this.isCurrent(row));
+  }
+
+  get positionLabel(): string {
+    const row = this.focusRow;
+    const total = this.chat.indexRows.value.length;
+    if (!row || !total) return '';
+    return `#${(row.index + 1).toLocaleString('en-US')} of ${total.toLocaleString('en-US')}`;
+  }
+
+  get dateLabel(): string {
+    const row = this.focusRow;
+    if (!row?.entry.at) return '';
+    return new Date(row.entry.at).toLocaleDateString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  get percentLabel(): string {
+    const row = this.focusRow;
+    const total = this.chat.indexRows.value.length;
+    if (!row || total < 2) return '';
+    return `${Math.round((row.index / (total - 1)) * 100)}%`;
+  }
+
+  /** what the filters left, when they left less than everything */
+  get matchLabel(): string {
+    const total = this.chat.indexRows.value.length;
+    return this.count === total ? '' : `${this.count.toLocaleString('en-US')} match`;
   }
 
   get toolOptions(): { value: Index.ToolFilter; label: string }[] {
@@ -228,17 +280,19 @@ class $Index {
   }
 
   get exportLabel(): string {
-    return this.exporting.value
-      ? 'Preparing…'
-      : `Export ${this.self.EXPORT_LABELS[this.exportForm.value]}`;
+    return this.exporting.value ? 'Preparing…' : 'Export';
+  }
+
+  get exportTitle(): string {
+    return `Download the selection as ${this.self.EXPORT_LABELS[this.exportForm.value]}`;
   }
 
   get copyLabel(): string {
-    return this.copied.value ? 'Copied' : 'Copy Markdown';
+    return this.copied.value ? 'Copied' : 'Copy';
   }
 
   get selectAllLabel(): string {
-    return this.allShownSelected ? 'Clear shown' : 'Select shown';
+    return this.allShownSelected ? 'Clear all' : 'Select all';
   }
 
   /* ---- the walk behind rows ---- */
@@ -321,6 +375,18 @@ class $Index {
   /** the tools filter as a pick list: the value the reader chose */
   onToolsPick(event: Event) {
     this.setTools((event.target as HTMLSelectElement).value as Index.ToolFilter);
+  }
+
+  onOrderPick(event: Event) {
+    this.setOrder((event.target as HTMLSelectElement).value as Index.Order);
+  }
+
+  onRowEnter(row: Index.Row) {
+    this.hovered.value = row;
+  }
+
+  onListLeave() {
+    this.hovered.value = null;
   }
 
   previewText(row: Index.Row): string {

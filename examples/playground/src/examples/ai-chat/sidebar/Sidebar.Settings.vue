@@ -6,24 +6,50 @@ const props = defineProps<SidebarSettings.Props>();
 const model = new (
   (props.kit?.namespace?.Class as typeof SidebarSettings.Class | undefined) ?? SidebarSettings.Class
 )(props);
-// the sections are a static table: read once for the scroller's list
-const sections = model.sections;
+const {
+  // state refs
+  query,
+  // computed refs
+  rows,
+  // element refs
+  searchElement
+} = model;
 </script>
 
 <template>
   <section class="ac-panel-pane ac-settings">
     <header class="ac-pane-head">
       <strong>Settings</strong>
-      <span class="ac-muted">a configuration layer over the shipped chat</span>
+      <span class="ac-muted ac-pane-sub">a configuration layer over the shipped chat</span>
+      <button type="button" class="ac-close" title="Close" @click="model.close()">
+        <svg class="ac-close-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path :d="model.closeIcon" />
+        </svg>
+      </button>
     </header>
 
-    <div class="ac-settings-list">
+    <div class="ac-index-search ac-settings-search">
+      <svg class="ac-search-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path :d="model.searchIcon" />
+      </svg>
+      <input
+        ref="searchElement"
+        v-model="query"
+        type="search"
+        class="ac-search"
+        placeholder="Search settings…"
+        aria-label="Search settings"
+      />
+      <button v-if="query" type="button" class="ac-link" @click="model.clearQuery()">clear</button>
+    </div>
+    <p v-if="model.hasNoMatch" class="ac-pane-empty">No setting matches.</p>
+    <div v-else class="ac-settings-list">
       <component
         :is="model.kit.Scroller.view"
         :kit="model.kit.Scroller"
         scrollbar
         :auto-repeat="false"
-        :model-value="sections"
+        :model-value="rows"
         :assumed-size="220"
         :padding-quantity="3"
         :selection-text="model.rowText"

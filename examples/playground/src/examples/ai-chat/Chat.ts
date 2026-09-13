@@ -571,7 +571,14 @@ class $Chat extends KitContainer.$Class<Chat.Roles> {
   jumpToLatest(animate = true) {
     const scroller = this.scroller.value;
     if (!scroller || !this.count) return;
-    scroller.scrollToIndex(this.latestIndex, undefined, animate, 0);
+    // the very bottom: the last row's end against the frame's end, not its top at the top
+    scroller.scrollToIndex(
+      this.latestIndex,
+      undefined,
+      animate,
+      scroller.containerOuterSize ?? 0,
+      1
+    );
     this.atBottom.value = true;
     this.latestInView.value = true;
   }

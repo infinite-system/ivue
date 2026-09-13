@@ -85,6 +85,10 @@ class $SidebarFiles extends KitContainer.$Class<SidebarFiles.Roles, SidebarFiles
     return this.props.chat;
   }
 
+  get closeIcon(): string {
+    return Icons.Class.PATHS.close;
+  }
+
   /** the paths whose records are open */
   get expanded() {
     return shallowRef<Set<string>>(new Set());
@@ -177,6 +181,10 @@ class $SidebarFiles extends KitContainer.$Class<SidebarFiles.Roles, SidebarFiles
 
   override keyOf(item: SidebarFiles.Row): string {
     return item.id;
+  }
+
+  close() {
+    this.chat.closeSidebar();
   }
 
   isKind(value: SidebarFiles.Kind): boolean {

@@ -9,12 +9,14 @@ class $TreeCatalog {
     {
       id: 'shipped',
       label: 'Shipped',
+      tags: ['default', 'stock', 'plain'],
       hint: 'the chat as its files export it',
       patch: '// nothing — ConfiguredChat as its file exports it'
     },
     {
       id: 'bubbles',
       label: 'Bubbles',
+      tags: ['messenger', 'round', 'chat'],
       hint: 'no gutter, a quiet head, the row in a bubble',
       patch: `Kit.Class.derive(ConfiguredChat, {
   Message: {
@@ -28,6 +30,7 @@ class $TreeCatalog {
     {
       id: 'minimal',
       label: 'Minimal',
+      tags: ['bare', 'clean', 'quiet'],
       hint: 'turn number and time only, no receipts',
       patch: `Kit.Class.derive(ConfiguredChat, {
   Message: {
@@ -41,6 +44,7 @@ class $TreeCatalog {
     {
       id: 'compact',
       label: 'Compact',
+      tags: ['dense', 'tight', 'small'],
       hint: 'a rule under the head, the receipt above the parts',
       patch: `Kit.Class.derive(ConfiguredChat, {
   Message: {
@@ -74,6 +78,8 @@ export namespace TreeCatalog {
     id: string;
     label: string;
     hint: string;
+    /** words a reader might search for it by, beyond its label and hint */
+    tags: string[];
     /** the override as the reader would write it */
     patch: string;
   }

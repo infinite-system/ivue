@@ -1,9 +1,11 @@
+import { computed, ref } from 'vue';
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
 import { VirtualScroller } from '../../virtual-scroller/VirtualScroller';
 import VirtualScrollerView from '../../virtual-scroller/VirtualScroller.vue';
 import type { Chat } from '../Chat';
+import { Icons } from '../Icons';
 import { ChatSettings } from '../ChatSettings';
 import { TreeCatalog } from '../variants/TreeCatalog';
 
@@ -22,10 +24,35 @@ class $SidebarSettings {
 
   /** the sections, in order — each a row of the scroller */
   static readonly SECTIONS: SidebarSettings.Section[] = [
-    { id: 'theme', body: '', position: '1', label: 'Theme' },
-    { id: 'density', body: '', position: '2', label: 'Density' },
-    { id: 'tree', body: '', position: '3', label: 'Tree' }
+    {
+      id: 'theme',
+      body: '',
+      position: '1',
+      label: 'Theme',
+      tags: ['colors', 'palette', 'appearance', 'look', 'dark', 'light', 'mode']
+    },
+    {
+      id: 'density',
+      body: '',
+      position: '2',
+      label: 'Density',
+      tags: ['spacing', 'size', 'padding', 'rows', 'zoom']
+    },
+    {
+      id: 'tree',
+      body: '',
+      position: '3',
+      label: 'Tree',
+      tags: ['layout', 'template', 'variant', 'kit', 'override', 'shape', 'style']
+    }
   ];
+
+  /** Whether a query's words all land somewhere in a label, a hint or the tags. */
+  static matches(words: string[], label: string, hint: string, tags: string[]): boolean {
+    if (!words.length) return true;
+    const haystack = `${label} ${hint} ${tags.join(' ')}`.toLowerCase();
+    return words.every((word) => haystack.includes(word));
+  }
 
   constructor(public props: SidebarSettings.Props) {}
 
@@ -42,6 +69,38 @@ class $SidebarSettings {
     return this.self.SECTIONS;
   }
 
+  // MUTABLE STATE — the search
+  get query() {
+    return ref('');
+  }
+
+  // TEMPLATE-REF TARGET — the search box
+  get searchElement() {
+    return ref<HTMLInputElement | null>(null);
+  }
+
+  // computed: stable-handle — the scroller's modelValue must be ONE list per change of the query
+  get rows() {
+    return computed(() => this.filterSections());
+  }
+
+  get searchIcon(): string {
+    return Icons.Class.PATHS.search;
+  }
+
+  /** the query as words, lowercased */
+  get words(): string[] {
+    return this.query.value.toLowerCase().split(/\s+/).filter(Boolean);
+  }
+
+  get hasQuery(): boolean {
+    return this.words.length > 0;
+  }
+
+  get hasNoMatch(): boolean {
+    return this.hasQuery && this.rows.value.length === 0;
+  }
+
   protected get $settings(): ChatSettings.Model {
     return ChatSettings.Class.use();
   }
@@ -50,16 +109,21 @@ class $SidebarSettings {
     return this.props.chat;
   }
 
+  get closeIcon(): string {
+    return Icons.Class.PATHS.close;
+  }
+
+  /** a section's own words match: then every option shows, whatever the words say of them */
   get themes(): ChatSettings.Option<ChatSettings.Theme>[] {
-    return ChatSettings.Class.THEMES;
+    return this.optionsOf('theme', ChatSettings.Class.THEMES);
   }
 
   get densities(): ChatSettings.Option<ChatSettings.Density>[] {
-    return ChatSettings.Class.DENSITIES;
+    return this.optionsOf('density', ChatSettings.Class.DENSITIES);
   }
 
   get trees(): TreeCatalog.Entry[] {
-    return TreeCatalog.Class.TREES;
+    return this.optionsOf('tree', TreeCatalog.Class.TREES);
   }
 
   get tree(): TreeCatalog.Entry {
@@ -69,6 +133,50 @@ class $SidebarSettings {
   /** the override the current tree is, as the reader would write it */
   get patch(): string {
     return this.tree.patch;
+  }
+
+  close() {
+    this.chat.closeSidebar();
+  }
+
+  clearQuery() {
+    this.query.value = '';
+    this.searchElement.value?.focus();
+  }
+
+  /** the sections the query leaves: a section whose own words match, or one with a matching option */
+  protected filterSections(): SidebarSettings.Section[] {
+    const words = this.words;
+    if (!words.length) return this.sections;
+    return this.sections.filter(
+      (section) =>
+        this.sectionMatches(section) ||
+        this.optionsOf(section.id, this.allOptions(section.id)).length > 0
+    );
+  }
+
+  protected sectionMatches(section: SidebarSettings.Section): boolean {
+    return this.self.matches(this.words, section.label, '', section.tags);
+  }
+
+  protected allOptions(id: SidebarSettings.SectionId): SidebarSettings.Choice[] {
+    if (id === 'theme') return ChatSettings.Class.THEMES;
+    if (id === 'density') return ChatSettings.Class.DENSITIES;
+    return TreeCatalog.Class.TREES;
+  }
+
+  /** the options of a section the query leaves: all of them when the section itself matches */
+  protected optionsOf<Choice extends SidebarSettings.Choice>(
+    id: SidebarSettings.SectionId,
+    options: Choice[]
+  ): Choice[] {
+    const words = this.words;
+    if (!words.length) return options;
+    const section = this.sections.find((entry) => entry.id === id);
+    if (section && this.sectionMatches(section)) return options;
+    return options.filter((option) =>
+      this.self.matches(words, option.label, option.hint, option.tags)
+    );
   }
 
   isSection(section: SidebarSettings.Section, id: SidebarSettings.SectionId): boolean {
@@ -117,6 +225,15 @@ export namespace SidebarSettings {
   export interface Section extends VirtualScroller.BaseItem {
     id: SectionId;
     label: string;
+    /** words a reader might search the section by */
+    tags: string[];
+  }
+
+  /** what every option of every section has: the words a search reads */
+  export interface Choice {
+    label: string;
+    hint: string;
+    tags: string[];
   }
 
   export interface Props {

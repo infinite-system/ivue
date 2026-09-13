@@ -22,7 +22,7 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  background: var(--ac-bg);
+  background: transparent;
   color: var(--ac-text);
   font-size: 14px;
   line-height: 1.5;
@@ -1039,12 +1039,9 @@
 }
 .ai-chat .ac-index-title {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   font-size: 13px;
-}
-.ai-chat .ac-index-close {
-  margin-left: auto;
 }
 .ai-chat .ac-index-filters {
   display: flex;
@@ -1060,26 +1057,17 @@
   padding: 3px 6px;
   font-size: 10.5px;
 }
-.ai-chat .ac-order {
+.ai-chat .ac-pick-wrap {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+}
+.ai-chat .ac-pick-order {
   margin-left: auto;
-  padding: 3px 6px 3px 8px;
-  border: 1px solid var(--ac-line-soft);
-  border-radius: 999px;
-  background: var(--ac-panel-2);
-  color: var(--ac-dim);
-  font: inherit;
-  font-size: 10.5px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
 }
-.ai-chat .ac-order:hover {
-  color: var(--ac-text);
-}
-.ai-chat .ac-order-icon {
+.ai-chat .ac-pick-caret {
+  position: absolute;
+  right: 6px;
   width: 12px;
   height: 12px;
   fill: none;
@@ -1087,10 +1075,9 @@
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: transform 0.15s ease;
-}
-.ai-chat .ac-order.ac-newest .ac-order-icon {
-  transform: rotate(180deg);
+  color: var(--ac-dim);
+  transform: rotate(90deg);
+  pointer-events: none;
 }
 .ai-chat .ac-seg {
   display: inline-flex;
@@ -1178,13 +1165,71 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  /* the head pads 12px and the rows 10px: the check sits over the rows' checks */
+  margin-left: -2px;
   font-size: 12px;
 }
 .ai-chat .ac-check-all {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
+}
+/* the index's head line: the peek's, under the head's own rule */
+.ai-chat .ac-index-pos {
+  height: 26px;
+  margin: 2px -12px -10px;
+  padding: 0 12px;
+  border-top: 1px solid var(--ac-line-soft);
+  border-bottom: 0;
+}
+/* the check: a clear box, and a tick that springs in */
+.ai-chat .ac-check {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  border: 1.5px solid var(--ac-line);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+.ai-chat .ac-check::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--ac-accent);
+  border-width: 0 2px 2px 0;
+  opacity: 0;
+  transform: rotate(45deg) scale(0);
+  transform-origin: center;
+  transition:
+    transform 0.2s cubic-bezier(0.2, 1.6, 0.4, 1),
+    opacity 0.12s;
+}
+.ai-chat .ac-check:hover {
+  border-color: var(--ac-accent);
+}
+.ai-chat .ac-check:checked {
+  border-color: var(--ac-accent);
+  background: var(--ac-accent-soft);
+}
+.ai-chat .ac-check:checked::after {
+  opacity: 1;
+  transform: rotate(45deg) scale(1);
+}
+.ai-chat .ac-check:focus-visible {
+  outline: 2px solid var(--ac-accent);
+  outline-offset: 2px;
 }
 .ai-chat .ac-index-list {
   flex: 1;
@@ -1264,19 +1309,14 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-/* the tools filter as a pick list, drawn as one more pill */
+/* a pick list drawn as one more pill, its caret the model picker's chevron */
 .ai-chat .ac-pick {
   appearance: none;
   -webkit-appearance: none;
-  padding: 3px 20px 3px 9px;
+  padding: 3px 22px 3px 9px;
   border: 1px solid var(--ac-line-soft);
   border-radius: 999px;
-  background:
-    linear-gradient(45deg, transparent 50%, var(--ac-dim) 50%) calc(100% - 12px) 55% / 4px 4px
-      no-repeat,
-    linear-gradient(-45deg, transparent 50%, var(--ac-dim) 50%) calc(100% - 8px) 55% / 4px 4px
-      no-repeat,
-    var(--ac-panel-2);
+  background: var(--ac-panel-2);
   color: var(--ac-dim);
   font: inherit;
   font-size: 10.5px;
@@ -1284,6 +1324,9 @@
   cursor: pointer;
 }
 .ai-chat .ac-pick:hover {
+  color: var(--ac-text);
+}
+.ai-chat .ac-pick-wrap:hover .ac-pick-caret {
   color: var(--ac-text);
 }
 .ai-chat .ac-ix-go {
@@ -1296,17 +1339,61 @@
 }
 .ai-chat .ac-index-foot {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 6px;
+  padding: 8px 12px;
   border-top: 1px solid var(--ac-line);
 }
-.ai-chat .ac-index-hint {
-  flex-basis: 100%;
-  margin: 0;
+.ai-chat .ac-index-foot .ac-pick-wrap {
+  margin-right: auto;
+}
+/* the export actions: two pills with a glyph each */
+.ai-chat .ac-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px 4px 9px;
+  border: 1px solid var(--ac-line-soft);
+  border-radius: 999px;
+  background: var(--ac-panel-2);
+  color: var(--ac-dim);
+  font: inherit;
   font-size: 11px;
-  color: var(--ac-muted);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background-color 0.15s;
+}
+.ai-chat .ac-pill:hover {
+  color: var(--ac-text);
+  border-color: var(--ac-line);
+}
+.ai-chat .ac-pill:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.ai-chat .ac-pill-primary {
+  background: var(--ac-accent);
+  border-color: var(--ac-accent);
+  color: #fff;
+}
+.ai-chat .ac-pill-primary:hover:not(:disabled) {
+  color: #fff;
+  border-color: var(--ac-accent);
+  filter: brightness(1.08);
+}
+.ai-chat .ac-pill-icon {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* ---- the second pass: room, quieter cards, a clearer head ---- */
@@ -1614,14 +1701,44 @@
 
 /* ---- the stats strip: the receipts live under the chat, not over it ---- */
 .ai-chat .ac-stats {
+  /* one line, always: the receipts scroll sideways rather than wrap, so the bar keeps its
+     height and the window below never resizes when a number grows */
   display: flex;
-  flex-wrap: wrap;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px 22px;
-  padding: 9px 24px 10px;
-  border-bottom: 1px solid var(--ac-line);
+  height: 52px;
+  padding: 0 24px;
+  border: 1px solid var(--ac-line);
+  border-top: 0;
+  border-radius: 0 0 14px 14px;
   background: var(--ac-panel);
   font-size: 12px;
+}
+.ai-chat .ac-stats .ac-receipts {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ai-chat .ac-stats .ac-receipts::-webkit-scrollbar {
+  display: none;
+}
+.ai-chat .ac-stats .ac-receipts > div {
+  flex: 0 0 auto;
+}
+/* the chat window: its own card under the stats, with a breath of space between */
+.ai-chat .ac-window {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin-top: 14px;
+  border: 1px solid var(--ac-line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--ac-bg);
+  box-shadow: 0 22px 60px -28px rgba(99, 102, 241, 0.4);
 }
 .ai-chat .ac-stats-title {
   display: flex;
@@ -2166,16 +2283,50 @@
 }
 .ai-chat .ac-pane-head {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: 8px;
-  padding: 12px 14px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--ac-line);
   font-size: 12.5px;
+  white-space: nowrap;
 }
-.ai-chat .ac-pane-note {
-  flex-basis: 100%;
+.ai-chat .ac-pane-sub {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 11px;
+}
+/* the close of a panel or a card: one glyph, at the right of every head */
+.ai-chat .ac-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ac-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+.ai-chat .ac-close:hover {
+  background: var(--ac-panel-2);
+  color: var(--ac-text);
+}
+.ai-chat .ac-close-icon {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
 }
 .ai-chat .ac-pane-empty {
   margin: 0;
@@ -2360,6 +2511,9 @@
   white-space: nowrap;
 }
 /* settings */
+.ai-chat .ac-settings-search {
+  margin: 8px 14px;
+}
 .ai-chat .ac-settings-list {
   flex: 1;
   min-height: 0;
@@ -3159,7 +3313,7 @@
   }
   .ai-chat .ac-choice-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: 1fr;
     gap: 6px;
   }
   .ai-chat .ac-choice {
@@ -3192,23 +3346,25 @@
     background: var(--ac-accent);
     border-color: var(--ac-accent);
   }
-  /* the receipts stay, tighter */
+  /* the receipts stay, tighter; the cards run edge to edge */
   .ai-chat .ac-stats {
     gap: 6px 14px;
-    padding: 8px 14px;
+    height: 46px;
+    padding: 0 14px;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
   }
   .ai-chat .ac-stats .ac-receipts {
-    flex-wrap: nowrap;
     gap: 0 18px;
-    overflow-x: auto;
-    scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }
-  .ai-chat .ac-stats .ac-receipts::-webkit-scrollbar {
-    display: none;
-  }
-  .ai-chat .ac-stats .ac-receipts > div {
-    flex: 0 0 auto;
+  .ai-chat .ac-window {
+    margin-top: 10px;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
   .ai-chat .ac-stats .ac-receipts dd {
     font-size: 12px;

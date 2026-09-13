@@ -22,7 +22,12 @@ const {
     <header class="ac-pane-head">
       <strong>Files</strong>
       <span class="ac-muted">{{ model.countLabel }}</span>
-      <span class="ac-muted ac-pane-note">{{ model.coverageLabel }}</span>
+      <span class="ac-muted ac-pane-sub">{{ model.coverageLabel }}</span>
+      <button type="button" class="ac-close" title="Close" @click="model.close()">
+        <svg class="ac-close-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path :d="model.closeIcon" />
+        </svg>
+      </button>
     </header>
     <div class="ac-index-search ac-files-search">
       <svg class="ac-search-icon" viewBox="0 0 24 24" aria-hidden="true">
