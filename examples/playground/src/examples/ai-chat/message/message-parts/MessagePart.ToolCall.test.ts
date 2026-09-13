@@ -42,7 +42,7 @@ describe('PartToolCall', () => {
     // a subclass swaps one card by naming another entry; the base map is untouched
     class $QuietPart extends MessagePartToolCall.$Class {
       static override get $kit() {
-        return { ...super.$kit, Tools: { ...super.$kit.Tools, Bash: super.$kit.Generic } };
+        return { ...super.$kit, Bash: super.$kit.Generic };
       }
     }
     const QuietPart = Static($QuietPart);

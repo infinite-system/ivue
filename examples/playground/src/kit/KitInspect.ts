@@ -60,9 +60,11 @@ class $KitInspect {
           `${[...path, this.className(namespace)].join('.')}: declared ${declared.join(' ')} — order reads ${order.join(' ')}`
         );
     }
-    for (const [role, value] of Object.entries(kit))
-      if (Kit.Class.isEntry(value) && value.namespace)
-        lines.push(...this.misordered(value.namespace, [...path, role], seen));
+    for (const [role, value] of Object.entries(kit)) {
+      if (role === 'order') continue;
+      const entry = value as Kit.Entry;
+      if (entry.namespace) lines.push(...this.misordered(entry.namespace, [...path, role], seen));
+    }
     return lines;
   }
 
@@ -113,10 +115,6 @@ class $KitInspect {
       }
       const here = [...path, role].join('.');
       const entry = value as Partial<Kit.Entry>;
-      if (!Kit.Class.isEntry(value) && !('bind' in entry || 'props' in entry)) {
-        keys.push(...this.writesOf(value as Kit.Patch, [...path, role]));
-        continue;
-      }
       for (const field of this.REPLACED_FIELDS)
         if (entry[field as keyof Kit.Entry] !== undefined) keys.push(`${here}.${field}`);
       if (entry.bind) keys.push(`${here}.bind`);
@@ -150,7 +148,6 @@ class $KitInspect {
     if (order.length) lines.push(`${indent}order: ${order.join(' ')}`);
     for (const role of roles) {
       const entry = kit[role] as Kit.Entry;
-      if (!Kit.Class.isEntry(entry)) continue;
       const at = order.indexOf(role);
       const setBy = this.settersOf(writes, [...path, role], at >= 0);
       lines.push(

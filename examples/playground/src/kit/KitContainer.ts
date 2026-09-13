@@ -9,7 +9,7 @@ import { Kit } from './Kit';
 // role an item takes and what identifies it — and receives the entry, the
 // view and the props for that item without writing another line. A
 // container with one entry role supplies neither: the role is the only one.
-// A dispatch keyed below a role map overrides `entryOf` instead of `roleOf`.
+// A dispatch is a list of one: `roleOf` picks the card by an external name.
 class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unknown> {
   /** the compositor's roles — a subclass declares its own and swaps the subtree */
   static get $kit(): object {
@@ -35,9 +35,7 @@ class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unk
   /** the one role a kit with a single entry role has, else nothing; built once per class */
   static get $onlyRole(): string | undefined {
     const kit = this.$kit as Record<string, unknown>;
-    const roles = Object.keys(kit).filter(
-      (role) => role !== 'order' && Kit.Class.isEntry(kit[role])
-    );
+    const roles = Object.keys(kit).filter((role) => role !== 'order');
     return roles.length === 1 ? roles[0] : undefined;
   }
 
@@ -75,7 +73,7 @@ class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unk
     return at;
   }
 
-  /** the entry that renders an item: its role's — a dispatch keyed below a role map overrides this */
+  /** the entry that renders an item: its role's */
   entryOf(item: Item): Kit.Entry {
     return this.kit[this.roleOf(item)] as Kit.Entry;
   }
@@ -105,9 +103,6 @@ export namespace KitContainer {
     readonly $onlyRole: string | undefined;
   }
 
-  /** the keys of a kit that hold an entry — never `order`, never a role map */
-  export type RoleOf<Roles extends object> = {
-    [Role in keyof Roles]: Roles[Role] extends Kit.Entry ? Role : never;
-  }[keyof Roles] &
-    string;
+  /** the keys of a kit that hold an entry — every key but `order` */
+  export type RoleOf<Roles extends object> = Exclude<keyof Roles, 'order'> & string;
 }

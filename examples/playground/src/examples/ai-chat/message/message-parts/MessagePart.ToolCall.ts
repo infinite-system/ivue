@@ -36,24 +36,22 @@ class $MessagePartToolCall extends KitContainer.$Class<
   MessagePartToolCall.Roles,
   SessionLog.ToolCall
 > {
-  /** the cards: a family role per shape of call, and a map of a card per tool name */
+  /** the cards: one per tool name, and three families — the generic card, MCP, and the task tools */
   static override get $kit(): MessagePartToolCall.Roles {
     return {
       Generic: this.entry(ToolCallGenericView, ToolCall),
       Mcp: this.entry(ToolCallMcpView, ToolCallMcp),
       Task: this.entry(ToolCallTaskView, ToolCallTask),
-      Tools: {
-        Bash: this.entry(ToolCallBashView, ToolCallBash),
-        Edit: this.entry(ToolCallEditView, ToolCallEdit),
-        NotebookEdit: this.entry(ToolCallEditView, ToolCallEdit),
-        Read: this.entry(ToolCallReadView, ToolCallRead),
-        Write: this.entry(ToolCallWriteView, ToolCallWrite),
-        Agent: this.entry(ToolCallAgentView, ToolCallAgent),
-        Skill: this.entry(ToolCallSkillView, ToolCallSkill),
-        WebFetch: this.entry(ToolCallWebFetchView, ToolCallWebFetch),
-        WebSearch: this.entry(ToolCallWebFetchView, ToolCallWebFetch),
-        Artifact: this.entry(ToolCallArtifactView, ToolCallArtifact)
-      }
+      Bash: this.entry(ToolCallBashView, ToolCallBash),
+      Edit: this.entry(ToolCallEditView, ToolCallEdit),
+      NotebookEdit: this.entry(ToolCallEditView, ToolCallEdit),
+      Read: this.entry(ToolCallReadView, ToolCallRead),
+      Write: this.entry(ToolCallWriteView, ToolCallWrite),
+      Agent: this.entry(ToolCallAgentView, ToolCallAgent),
+      Skill: this.entry(ToolCallSkillView, ToolCallSkill),
+      WebFetch: this.entry(ToolCallWebFetchView, ToolCallWebFetch),
+      WebSearch: this.entry(ToolCallWebFetchView, ToolCallWebFetch),
+      Artifact: this.entry(ToolCallArtifactView, ToolCallArtifact)
     };
   }
 
@@ -64,19 +62,22 @@ class $MessagePartToolCall extends KitContainer.$Class<
 
   static readonly TASK_TOOLS = /^Task(Create|Update|List|Get|Stop|Output)$/;
 
-  /** the card for a tool name: exact, then family by prefix, then the generic card */
+  /** the role for a tool name: its own card, then a family by prefix, then the generic card */
+  static roleFor(name: string): MessagePartToolCall.Role {
+    if (Object.hasOwn(this.$kit, name)) return name as MessagePartToolCall.Role;
+    if (name.startsWith('mcp__')) return 'Mcp';
+    if (this.TASK_TOOLS.test(name)) return 'Task';
+    return 'Generic';
+  }
+
+  /** the card for a tool name */
   static toolFor(name: string): Kit.Entry {
-    const kit = this.$kit;
-    const exact = kit.Tools[name];
-    if (exact) return exact;
-    if (name.startsWith('mcp__')) return kit.Mcp;
-    if (this.TASK_TOOLS.test(name)) return kit.Task;
-    return kit.Generic;
+    return this.$kit[this.roleFor(name)];
   }
 
   /** whether a name has a card of its own or a family's */
   static isMapped(name: string): boolean {
-    return name in this.$kit.Tools || name.startsWith('mcp__') || this.TASK_TOOLS.test(name);
+    return Object.hasOwn(this.$kit, name) || name.startsWith('mcp__') || this.TASK_TOOLS.test(name);
   }
 
   constructor(public props: MessagePartToolCall.Props) {
@@ -92,16 +93,28 @@ class $MessagePartToolCall extends KitContainer.$Class<
     return this.props.part.call;
   }
 
-  /** the card that renders a call: by name, family, or the generic — a dispatch, so the entry is the fact */
-  override entryOf(call: SessionLog.ToolCall): Kit.Entry {
-    return this.self.toolFor(call.name);
+  /** the role a call takes: its tool's card, a family's, or the generic — the one fact of a dispatch */
+  override roleOf(call: SessionLog.ToolCall): MessagePartToolCall.Role {
+    return this.self.roleFor(call.name);
   }
 }
 
 export namespace MessagePartToolCall {
-  export type Roles = Kit.Roles<'Generic' | 'Mcp' | 'Task', $MessagePartToolCall> & {
-    Tools: Record<string, Kit.Entry<$MessagePartToolCall>>;
-  };
+  export type Role =
+    | 'Generic'
+    | 'Mcp'
+    | 'Task'
+    | 'Bash'
+    | 'Edit'
+    | 'NotebookEdit'
+    | 'Read'
+    | 'Write'
+    | 'Agent'
+    | 'Skill'
+    | 'WebFetch'
+    | 'WebSearch'
+    | 'Artifact';
+  export type Roles = Kit.Roles<Role, $MessagePartToolCall>;
 
   export const $Class = Static($MessagePartToolCall);
   export let Class = Reactive($Class);

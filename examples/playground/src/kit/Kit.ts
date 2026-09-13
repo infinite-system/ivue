@@ -107,9 +107,8 @@ class $Kit {
     return copy as Component;
   }
 
-  /** The base kit with the patch over it: an entry is merged over the base's, a map of roles under
-   *  a role (a part's cards by tool name) is merged role by role, `order` is resolved through its
-   *  relations, and every role the order names must have an entry. */
+  /** The base kit with the patch over it: an entry is merged over the base's, `order` is resolved
+   *  through its relations, and every role the order names must have an entry. */
   protected static merge(base: Record<string, unknown>, patch: Kit.Patch): Record<string, unknown> {
     const out: Record<string, unknown> = { ...base };
     for (const role in patch) {
@@ -121,9 +120,8 @@ class $Kit {
           base.order as readonly string[] | undefined,
           value as Kit.OrderPatch
         );
-      else if (this.isEntry(current) || this.isEntry(value))
+      else
         out[role] = this.mergeEntry(current as Kit.Entry | undefined, value as Partial<Kit.Entry>);
-      else out[role] = this.merge((current as Record<string, unknown>) ?? {}, value as Kit.Patch);
     }
     for (const role of (out.order as readonly string[] | undefined) ?? [])
       if (!out[role])
@@ -272,27 +270,12 @@ class $Kit {
     return relations;
   }
 
-  /** Freeze the kit's SHAPE — the map, every entry, a map of roles under a role, the order — and
-   *  stop at an entry's leaves: a
+  /** Freeze the kit's SHAPE — the record, every entry, the order — and stop at an entry's leaves: a
    *  namespace (its `Class` slot is the global override), a view (Vue's object), a `props` bag (the
    *  consumer's). Frozen entries are what make sharing them between kits safe. */
   protected static freeze<K extends object>(kit: K): K {
-    for (const role in kit) {
-      const inner = (kit as Record<string, unknown>)[role];
-      if (role === 'order' || this.isEntry(inner)) Object.freeze(inner);
-      else this.freeze(inner as object);
-    }
+    for (const role in kit) Object.freeze((kit as Record<string, unknown>)[role]);
     return Object.freeze(kit);
-  }
-
-  /** An entry names a view, a namespace or a subkit; any other object under a role is a map of roles. */
-  static isEntry(value: unknown): value is Kit.Entry {
-    return (
-      typeof value === 'object' &&
-      value !== null &&
-      !Array.isArray(value) &&
-      ('view' in value || 'namespace' in value || 'subkit' in value)
-    );
   }
 }
 
