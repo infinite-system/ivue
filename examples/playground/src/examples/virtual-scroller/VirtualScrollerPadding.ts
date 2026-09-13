@@ -133,8 +133,9 @@ class $VirtualScrollerPadding {
    * never shrinks either while the content still moves — the decay tail
    * of a flick is when a burst of unmounts would be seen as a hitch — and
    * rest shrinks both once the settle window has passed since the last
-   * growth; a direction change drops the level to the reading, since rows
-   * held ahead of the old direction are behind the new one.
+   * growth; a direction change turns the direction and keeps the levels —
+   * the rows held the old way release at rest with the rest, never on the
+   * reversal's own frame.
    */
   static settle(
     held: VirtualScrollerPadding.Held,
@@ -144,10 +145,12 @@ class $VirtualScrollerPadding {
     direction: -1 | 0 | 1,
     now: number
   ): VirtualScrollerPadding.Held {
+    // a reversal turns the direction and keeps the levels: the rows held
+    // the old way unmount at rest like any other — dropping them here put
+    // a burst of unmounts on the very frame the finger reversed
     const turned = direction !== 0 && held.direction !== 0 && direction !== held.direction;
-    if (turned) return { ahead, behind, gapPx, direction, since: now };
     const grew = ahead > held.ahead || behind > held.behind || gapPx > held.gapPx;
-    if (grew) {
+    if (turned || grew) {
       return {
         ahead: Math.max(ahead, held.ahead),
         behind: Math.max(behind, held.behind),

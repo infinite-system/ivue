@@ -85,6 +85,16 @@ class $Lenis {
     return 0.5;
   }
 
+  /** A touch on a glide pulls its target to this many frames of travel ahead: the brake's length. */
+  static get TOUCH_BRAKE_FRAMES() {
+    return 4;
+  }
+
+  /** The brake's lerp — steep, so the content settles under the finger within a few frames. */
+  static get TOUCH_BRAKE_LERP() {
+    return 0.35;
+  }
+
   /**
    * A gesture that asks for more than an end has: back at the start, on
    * past the end — the page's to scroll, never this scroller's. A list
@@ -768,20 +778,31 @@ class $Lenis {
     // invariant: Android holds the first move back and may coalesce a swipe into one (examples/playground/src/lenis/lenis.invariants.md)
     if (this.options.syncTouch && isTouch && !this.isStopped && !this.isLocked) {
       if (event.type === 'touchstart' && isClickOrTap) {
-        // The touch is pending: the glide runs on. The trail is seeded at
-        // the animated position now and re-seeded at the first move, so a
-        // whole swipe Android coalesces into one move still has a span.
+        // The touch is pending: the glide runs on, braked — its target is
+        // pulled to a few frames ahead, so the content eases to a stop under
+        // the finger the way a native list stops dead on the touch, without
+        // the freeze-then-jump a hard stop gave Android's held-back first
+        // move. The momentum is remembered now, before the brake takes it,
+        // for a flick the same way. The trail is seeded at the animated
+        // position now and re-seeded at the first move, so a whole swipe
+        // Android coalesces into one move still has a span.
         this.touchPending = true;
         this.touchTrail = [{ at: now, position: this.animatedScroll }];
-        this.trace?.('touch pending: glide runs on');
+        // invariant: A flick carries the glide it interrupted (examples/playground/src/lenis/lenis.invariants.md)
+        this.carriedVelocity = this.velocity;
+        if (this.animate.isRunning) {
+          this.scrollTo(this.animatedScroll + this.velocity * this.self.TOUCH_BRAKE_FRAMES, {
+            programmatic: false,
+            lerp: this.self.TOUCH_BRAKE_LERP
+          });
+        }
+        this.trace?.(`touch pending: glide brakes, carrying v=${this.carriedVelocity.toFixed(1)}`);
         return;
       }
       if (this.touchPending && event.type === 'touchmove') {
         // The finger takes over from where the content IS: the glide's
         // target, hundreds of px ahead, is dropped.
         this.touchPending = false;
-        // invariant: A flick carries the glide it interrupted (examples/playground/src/lenis/lenis.invariants.md)
-        this.carriedVelocity = this.velocity;
         this.animate.stop();
         this.targetScroll = this.animatedScroll;
         this.touchTrail[0] = { at: this.touchTrail[0]?.at ?? now, position: this.animatedScroll };

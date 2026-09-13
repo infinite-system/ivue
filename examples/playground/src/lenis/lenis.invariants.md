@@ -114,15 +114,15 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 ### A touch on a glide keeps it running until the first move
 
-**Invariant:** If a finger lands while the content glides, then the glide runs on and the touch is pending; if that finger then moves, then the glide stops where the content is, the glide's target is dropped for the animated position, the trail is re-seeded there and the finger's sync takes over; if that finger lifts or is cancelled with no move, then the glide is reset — the tap that stops it; and if a class claims the touch for itself and flags its moves for Lenis to skip, then it calls `hold()` and the glide stops where the content is, since the pending touch would never see the move that takes over.
+**Invariant:** If a finger lands while the content glides, then the glide runs on, braked — its target pulled to `TOUCH_BRAKE_FRAMES` frames of travel ahead under `TOUCH_BRAKE_LERP`, so the content eases to a stop under the finger within a few frames — the touch is pending, and the glide's momentum is remembered at that instant for a flick the same way; if that finger then moves, then the glide stops where the content is, the glide's target is dropped for the animated position, the trail is re-seeded there and the finger's sync takes over; if that finger lifts or is cancelled with no move, then the glide is reset — the tap that stops it; and if a class claims the touch for itself and flags its moves for Lenis to skip, then it calls `hold()` and the glide stops where the content is, since the pending touch would never see the move that takes over.
 
 **Scope:** `Lenis.ts` `touchPending`, `hold`, and the touchstart / first-move / end branches of `onVirtualScroll`; the scroller's `holdScroll` seam down to the touch class.
 
-**Mechanism:** Stopping at the touchstart froze the content for the whole hold-back Android imposes on the first move, then the sync catch-up jumped: freeze, gap, jump, per re-flick — the stall five other fixes could not touch. Running on until the first move, the finger meets the content where it is.
+**Mechanism:** Stopping at the touchstart froze the content for the whole hold-back Android imposes on the first move, then the sync catch-up jumped: freeze, gap, jump, per re-flick — the stall five other fixes could not touch. Running on until the first move, the finger meets the content where it is. Running on unbraked, a reversal waited out the hold-back with the content still travelling the old way at 25 px a frame — a native list stops dead on the touch, and the reader felt ours "still thinking it was moving"; the brake stops it in a few frames without the freeze, and the momentum a same-way re-flick pays back is read before the brake takes it.
 
 **Generates:** The trace lines "touch pending: glide runs on", "finger takes over", "tap-to-stop: reset".
 
-**Rejected alternatives:** Upstream Lenis's tap-to-stop on the touchstart — right on iOS, a stall on Android.
+**Rejected alternatives:** Upstream Lenis's tap-to-stop on the touchstart — right on iOS, a stall on Android. Running on unbraked — a reversal that lags the finger by the hold-back's travel.
 
 **Evidence:** The fifth on-device log: every re-flick firing with inertia 580 to 2609 px and still a stall felt on each; the sixth run, after this record, with none.
 
@@ -140,7 +140,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 **Scope:** `Lenis.ts` `carriedVelocity`, `carryVelocity`, the take-over branch and the flick in `onVirtualScroll`.
 
-**Mechanism:** The take-over stops the glide where the content is, which drops its momentum; the momentum is remembered as the velocity at that instant and paid back into the next flick's inertia when the directions agree. Native lists restart from zero on every touch, which reads as losing speed to a reader flicking to cover distance.
+**Mechanism:** The take-over stops the glide where the content is, which drops its momentum; the momentum is remembered as the velocity at the touchstart, before the brake takes it, and paid back into the next flick's inertia when the directions agree. Native lists restart from zero on every touch, which reads as losing speed to a reader flicking to cover distance.
 
 **Generates:** The trace line "finger takes over, carrying v=…".
 

@@ -4,15 +4,18 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 [A flick's velocity is read off the finger's last stretch](lenis.invariants.md#a-flicks-velocity-is-read-off-the-fingers-last-stretch)
 [Android holds the first move back and may coalesce a swipe into one](lenis.invariants.md#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one)
 [A flick carries the glide it interrupted](lenis.invariants.md#a-flick-carries-the-glide-it-interrupted)
+[A touch on a glide keeps it running until the first move](lenis.invariants.md#a-touch-on-a-glide-keeps-it-running-until-the-first-move)
 // domain-invariant: $Lenis — If a flick runs the same way as the glide the finger interrupted, then the glide's velocity at the take-over is added to the flick's; a flick the other way, or no glide, adds nothing.
 // domain-invariant: $Lenis — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
 // domain-invariant: $Lenis — If a nested box scrolls natively and can still move the way the wheel asks, then the wheel is the box's, in either direction
 // domain-invariant: $Lenis — If the content shifts under a finger's drag, then the trail shifts with it, so the flick's velocity is the finger's motion and never the shift's.
 // domain-invariant: $Lenis — If overscroll is on and a gesture at an end asks for more than the end has, then the scroller takes none of it and scrolls the nearest scrollable ancestor, else the window, by the gesture's own delta; an inward gesture, or overscroll off, is taken as before.
+// domain-invariant: $Lenis — If a finger lands on a glide, then the glide's target is pulled to a few frames of travel ahead under a steep lerp and its momentum is remembered for a flick the same way; the first move takes over where the content is.
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
 Impossible if true: A wheel up over a nested box scrolled down that moves the list instead of the box.
 Impossible if true: A swipe over rows that measured taller mid-drag reading a velocity of zero.
 Impossible if true: A wheel up at the top of the thread that moves nothing.
+Impossible if true: A reversal that waits for the old glide to run its distance.
 
 === GENERATOR-DESCRIBED ===
 The trail is the one thing the fork adds to touch inertia; the sync
@@ -291,5 +294,71 @@ test('an outward gesture at a limit is handed to the page, an inward one is take
   off.lenis.destroy();
   off.wrapper.remove();
   scrollBy.mockRestore();
+  if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
+});
+
+// domain-invariant: $Lenis — If a finger lands on a glide, then the glide's target is pulled to a few frames of travel ahead under a steep lerp and its momentum is remembered for a flick the same way; the first move takes over where the content is.
+// impossible-if-true: $Lenis — A reversal that waits for the old glide to run its distance.
+// invariant: A touch on a glide keeps it running until the first move (examples/playground/src/lenis/lenis.invariants.md)
+test('a finger on a glide brakes it to a few frames ahead and keeps its momentum for a flick the same way', () => {
+  class ObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  const hadObserver = 'ResizeObserver' in globalThis;
+  if (!hadObserver)
+    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
+  const wrapper = document.createElement('div');
+  const content = document.createElement('div');
+  wrapper.appendChild(content);
+  document.body.appendChild(wrapper);
+  const lenis = new Lenis.Class({ wrapper, content, autoRaf: false, syncTouch: true });
+  lenis.virtualLimit = () => 100_000;
+  const gesture = (type: string, deltaY: number) => {
+    const event = {
+      type,
+      ctrlKey: false,
+      preventDefault: vi.fn(),
+      composedPath: () => [content, wrapper, document.body],
+      target: content
+    };
+    (
+      lenis as unknown as {
+        onVirtualScroll: (data: { deltaX: number; deltaY: number; event: unknown }) => void;
+      }
+    ).onVirtualScroll({ deltaX: 0, deltaY, event });
+  };
+  const inner = lenis as unknown as { carriedVelocity: number; touchPending: boolean };
+  // a glide toward 4000, two frames in: moving fast, far from its target
+  lenis.scrollTo(4000, { programmatic: false, lerp: 0.08 });
+  lenis.raf(0);
+  lenis.raf(16.7);
+  lenis.raf(33.4);
+  const velocity = lenis.velocity;
+  expect(velocity).toBeGreaterThan(50);
+  expect(lenis.targetScroll).toBe(4000);
+  // the finger lands: the target is pulled to a few frames ahead, the momentum is kept
+  gesture('touchstart', 0);
+  expect(inner.touchPending).toBe(true);
+  expect(inner.carriedVelocity).toBe(velocity);
+  expect(lenis.targetScroll).toBe(
+    Math.round(lenis.animatedScroll + velocity * Lenis.Class.TOUCH_BRAKE_FRAMES)
+  );
+  expect(lenis.targetScroll - lenis.animatedScroll).toBeLessThan(4000 - lenis.animatedScroll);
+  // a few frames on, the content has all but settled under the finger: a
+  // quarter of the glide's speed, where the unbraked glide would still run
+  const before = lenis.animatedScroll;
+  for (let frame = 3; frame < 12; frame++) lenis.raf(frame * 16.7);
+  expect(Math.abs(lenis.velocity)).toBeLessThan(velocity * 0.25);
+  expect(lenis.animatedScroll - before).toBeLessThan(velocity * Lenis.Class.TOUCH_BRAKE_FRAMES);
+  // the first move takes over where the content is, the momentum still carried
+  const at = lenis.animatedScroll;
+  gesture('touchmove', -40);
+  expect(inner.touchPending).toBe(false);
+  expect(inner.carriedVelocity).toBe(velocity);
+  expect(lenis.targetScroll).toBe(Math.round(at - 40));
+  lenis.destroy();
+  wrapper.remove();
   if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
 });
