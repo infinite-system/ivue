@@ -56,9 +56,13 @@ class $Kit {
     return this.freeze(this.merge({}, kit as Kit.Patch)) as K;
   }
 
-  /** An entry whose types come from its namespace: the bind's result is held to the child's props,
-   *  its `subkit` to the child's kit; `Owner` and `Item` arrive from the kit the entry sits in
-   *  (`static get $kit(): X.Roles`). At runtime this is the object it was given. */
+  /** An entry whose bind's keys are refused where they are wrong. A declared `Roles` type already
+   *  holds a literal's bind to `Bound<N>`, but `Attrs` is keyed by template literals (`data-*`, `aria-*`,
+   *  `on*`), and TypeScript stops excess-property checks against a type with an index signature — so
+   *  a literal's bind may return a key that is neither a prop nor an attribute unrefused. This generic
+   *  infers the bind's result and runs `Exact` over its keys, which no annotation can. Use it for a
+   *  bind written inline; a named static bind whose return is annotated `Child.Props` needs it not,
+   *  since `Props` carries no index signature. At runtime this is the object it was given. */
   static entry<
     N extends Kit.Namespace,
     Owner = unknown,
