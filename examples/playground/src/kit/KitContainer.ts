@@ -5,7 +5,8 @@ import { Kit } from './Kit';
 // The base of every class that composes others through a kit. It holds
 // what every compositor wrote by hand and never differently: the kit read
 // off its own class, and one seam method that reads an entry and never a
-// role's name, and presence read off the entry's `shows`. A list role adds two facts the container supplies — which
+// role's name. Presence is not the container's: a leaf's root carries its own
+// `v-if` on a named getter of the model. A list role adds two facts the container supplies — which
 // role an item takes and what identifies it — and receives the entry, the
 // view and the props for that item without writing another line. A
 // container with one entry role supplies neither: the role is the only one.
@@ -62,12 +63,6 @@ class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unk
    */
   seam(role: KitContainer.RoleOf<Roles>, item?: Item, key?: string | number): Kit.Bound {
     return Kit.Class.seam(this, this.kit[role] as Kit.Entry, item, key);
-  }
-
-  /** whether a role renders this pass: the entry's `shows` over this model, or always */
-  shows(role: KitContainer.RoleOf<Roles>): boolean {
-    const entry = this.kit[role] as Kit.Entry;
-    return entry.shows ? entry.shows(this) : true;
   }
 
   /** the role an item takes — the container's fact; a kit with one entry role needs no answer */

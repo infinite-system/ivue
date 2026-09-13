@@ -11,9 +11,9 @@ const model = new (
 
 <template>
   <article class="ac-msg" :class="model.rowClass">
-    <!-- the row's sections are the kit's order: each seam renders the role's view over what the entry binds -->
+    <!-- the row's sections are the kit's order: each seam renders the role's view over what the entry binds; a leaf decides its own presence at its root -->
     <template v-for="role in model.kit.order" :key="role">
-      <component v-if="model.shows(role)" :is="model.kit[role].view" v-bind="model.seam(role)" />
+      <component :is="model.kit[role].view" v-bind="model.seam(role)" />
     </template>
   </article>
 </template>

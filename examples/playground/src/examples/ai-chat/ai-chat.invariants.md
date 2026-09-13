@@ -63,7 +63,8 @@ record of entries — a part per kind on the row, a card per tool name on
 the part that picks cards, the sections of the row, the leaves of a card
 — and every seam renders `<component :is="model.kit.Role.view" v-bind="model.seam(Role)" />`.
 A container renders its sections from the kit's `order`, one seam per
-role, with `v-if="model.shows(role)"` naming presence; the row's six
+role; a leaf decides its own presence at its root, `v-if` on a named
+getter of the model; the row's six
 sections (Gutter, Header, Stub, MessagePartList, Await, Footer) are that order, and the
 parts are a second loop of their own, the part travelling as the seam's
 item. A model reads its kit from its own class, so a subclass swaps any
@@ -82,9 +83,9 @@ keyed by role, and a switch would be that table copied where no patch can
 reach it. A part receives its part because every part entry binds
 `{ part: item, chat, message }`; a section receives the model because it
 binds nothing; a tag role a layer inserts receives only what its bind
-says. Presence is the entry's `shows` predicate over the model, read by
-`shows(role)` and changed by a layer as data (`Footer: { shows: () => true }`),
-never a bind.
+says. Presence is never the seam's: a leaf's root carries `v-if` on a
+named getter of the model (`hasReceipt`, `isStub`), and a layer changes it
+by overriding the getter with a `super` fallback, never through a bind.
 
 ## A tree variant is a patch over the row's order
 

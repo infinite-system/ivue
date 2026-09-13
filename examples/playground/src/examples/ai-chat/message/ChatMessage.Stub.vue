@@ -7,7 +7,7 @@ defineProps<ChatMessage.SectionProps>();
 </script>
 
 <template>
-  <div class="ac-stub" :style="model.stubStyle" :title="model.stubLabel">
+  <div v-if="model.isStub" class="ac-stub" :style="model.stubStyle" :title="model.stubLabel">
     <span
       v-for="(block, at) in model.skeletonBlocks"
       :key="at"

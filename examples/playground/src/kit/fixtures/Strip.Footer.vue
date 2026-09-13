@@ -7,5 +7,5 @@ defineProps<{ kit: Kit.Entry; model: Strip.Instance }>();
 </script>
 
 <template>
-  <footer class="strip-foot">{{ model.items.length }}</footer>
+  <footer v-if="model.hasItems" class="strip-foot">{{ model.items.length }}</footer>
 </template>

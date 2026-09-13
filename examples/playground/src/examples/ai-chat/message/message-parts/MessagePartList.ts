@@ -77,6 +77,11 @@ class $MessagePartList extends KitContainer.$Class<MessagePartList.Roles, Sessio
     return this.props.message;
   }
 
+  /** the list renders once the message is here; a stub row has no parts to list */
+  get hasMessage(): boolean {
+    return this.message !== null;
+  }
+
   /** the role a part takes: its kind's, or Text for a kind nobody mapped */
   override roleOf(part: SessionLog.Part): MessagePartList.Role {
     const role = this.self.PART_ROLES[part.kind];

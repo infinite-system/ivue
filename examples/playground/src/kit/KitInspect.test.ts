@@ -146,7 +146,9 @@ describe('a second write to one field is reported, never merged', () => {
     expect(printed).toContain('- Item: view Code · class $Code · bind yes · base');
     const nested = KitInspect.Class.tree(ThemedPanel).split('\n');
     expect(nested[0]).toBe('- Card: view Card · class $Card + 1 layer(s) · bind no · base');
-    expect(nested).toContain('  - Header: view Card.Header.Fancy · class - · bind no · view←layer 1');
+    expect(nested).toContain(
+      '  - Header: view Card.Header.Fancy · class - · bind no · view←layer 1'
+    );
     expect(nested).toContain(
       '  - Code: view Code · class $ThemedCode · bind no · namespace←layer 1'
     );

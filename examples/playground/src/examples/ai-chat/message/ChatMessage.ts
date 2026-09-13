@@ -39,20 +39,18 @@ class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles> {
     );
   }
 
-  /** the row's sections in the order the template renders them, each with its presence — the stub and
-   *  the parts are the two states of one row, the await line shows while the reply has nothing yet, the
-   *  footer once there is a receipt; built once per class by Static(). The parts are a compositor of
-   *  their own, fed by this container's one bind. */
+  /** the row's sections in the order the template renders them — built once per class by Static(). Each
+   *  leaf decides its own presence at its root: the stub and the parts are the two states of one row, the
+   *  await line shows while the reply has nothing yet, the footer once there is a receipt. The parts are a
+   *  compositor of their own, fed by this container's one bind. */
   static override get $kit(): ChatMessage.Roles {
     return {
       Gutter: { view: GutterView },
       Header: { view: HeaderView },
-      Stub: { view: StubView, shows: (row) => row.isStub },
-      MessagePartList: this.entry(MessagePartListView, MessagePartList, {
-        shows: (row: $ChatMessage) => !row.isStub
-      }),
-      Await: { view: AwaitView, shows: (row) => row.isAwaitingFirstToken },
-      Footer: { view: FooterView, shows: (row) => row.hasReceipt },
+      Stub: { view: StubView },
+      MessagePartList: this.entry(MessagePartListView, MessagePartList),
+      Await: { view: AwaitView },
+      Footer: { view: FooterView },
       order: ['Gutter', 'Header', 'Stub', 'MessagePartList', 'Await', 'Footer']
     };
   }

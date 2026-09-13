@@ -1,10 +1,10 @@
 /*
 === GENERATOR ===
-Goal: Prove the row is a container of roles: its sections render in the kit's `order`, presence is one named method per role, every seam is built by one method that reads the entry and never the role's name, a part travels as the seam's item through the entry's bind, and the tree variants a reader picks are patches over that order — a dropped gutter is `without`, a rule is a tag role inserted `after`, a receipt above the parts is a `move` — never a copied template.
+Goal: Prove the row is a container of roles: its sections render in the kit's `order`, presence is each leaf's own root `v-if` on a named getter of the row, every seam is built by one method that reads the entry and never the role's name, a part travels as the seam's item through the entry's bind, and the tree variants a reader picks are patches over that order — a dropped gutter is `without`, a rule is a tag role inserted `after`, a receipt above the parts is a `move` — never a copied template.
 [Rendering is a kit](../ai-chat.invariants.md#rendering-is-a-kit)
 [The seam is built by one method that never names a role](../ai-chat.invariants.md#the-seam-is-built-by-one-method-that-never-names-a-role)
 [A tree variant is a patch over the row's order](../ai-chat.invariants.md#a-tree-variant-is-a-patch-over-the-rows-order)
-// domain-invariant: $ChatMessage — If a section role is asked whether it shows, then the answer is its entry's `shows` over the row — the stub and the parts are the two states of one row, the await line shows only while the reply has nothing, the foot only with a receipt, every other role always — and a layer changes it by data
+// domain-invariant: $ChatMessage — If a leaf reads its presence off the row, then the stub and the parts are the two states of one row, the await line shows only while the reply has nothing, the foot only with a receipt, and a layer changes presence by overriding the getter with a super fallback
 // domain-invariant: $ChatMessage — If a seam is built for a role, then a section receives `{ model, kit }` and the parts list receives the message's parts, the chat and the message from the row's one bind
 // domain-invariant: $ChatMessage — If a chat patch carries a subkit for the row and the row's subkit one for the parts list, then the part it names renders through the swapped view with the list's own bind, and every shipped kit on the path is untouched
 Impossible if true: a row's template names a section, or seam() branches on a role
@@ -12,12 +12,14 @@ Impossible if true: a row's template names a section, or seam() branches on a ro
 === GENERATOR-DESCRIBED ===
 $ChatMessage reads the chat through a stub here — a revision, a streaming
 slot, the focus and page probes — because the row's own decisions never
-need a thread: `shows` and `seam` are plain methods over the props.
+need a thread: the presence getters and `seam` are plain reads over the props.
 The variants are read through ChatVariants, the file that derives them, so
 the spec proves the shipped catalog and not a copy of its patches.
 */
 import { describe, expect, it } from 'vitest';
 import { ref } from 'vue';
+import { Reactive } from '../../../ivue';
+import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
 import { KitInspect } from '../../../kit/KitInspect';
 import { Chat } from '../Chat';
@@ -74,9 +76,9 @@ function messageKit(tree: string) {
 }
 
 describe('the row is a container of roles', () => {
-  // domain-invariant: $ChatMessage — If a section role is asked whether it shows, then the answer is its entry's `shows` over the row — the stub and the parts are the two states of one row, the await line shows only while the reply has nothing, the foot only with a receipt, every other role always — and a layer changes it by data
+  // domain-invariant: $ChatMessage — If a leaf reads its presence off the row, then the stub and the parts are the two states of one row, the await line shows only while the reply has nothing, the foot only with a receipt, and a layer changes presence by overriding the getter with a super fallback
   // invariant: Rendering is a kit (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
-  it("presence is the kit's: stub or parts, the await line while empty, the foot with a receipt — and a layer patches it", () => {
+  it("presence is each leaf's own getter: stub or parts, the await line while empty, the foot with a receipt — and a layer overrides it", () => {
     const stub = new ChatMessage.Class({ row: row(null), chat: stubChat() });
     expect(ChatMessage.Class.$kit.order).toEqual([
       'Gutter',
@@ -86,20 +88,10 @@ describe('the row is a container of roles', () => {
       'Await',
       'Footer'
     ]);
-    expect(stub.kit.order.map((role) => stub.shows(role))).toEqual([
-      true,
-      true,
-      true,
-      false,
-      false,
-      false
-    ]);
+    expect([stub.isStub, stub.isAwaitingFirstToken, stub.hasReceipt]).toEqual([true, false, false]);
     const loaded = new ChatMessage.Class({ row: row(reply), chat: stubChat() });
-    expect(loaded.kit.order.map((role) => loaded.shows(role))).toEqual([
-      true,
-      true,
+    expect([loaded.isStub, loaded.isAwaitingFirstToken, loaded.hasReceipt]).toEqual([
       false,
-      true,
       false,
       true
     ]);
@@ -120,16 +112,21 @@ describe('the row is a container of roles', () => {
         startedAt: 0
       } as Chat.Streaming)
     });
-    expect(awaiting.shows('Await')).toBe(true);
-    expect(awaiting.shows('Footer')).toBe(false);
-    // presence is the entry's, so a layer changes it by data and the row names no role in code
-    const Receipted = Kit.Class.derive(ChatMessage, { Footer: { shows: () => true } });
-    const receipted = new (Receipted.Class as typeof ChatMessage.Class)({
+    expect(awaiting.isAwaitingFirstToken).toBe(true);
+    expect(awaiting.hasReceipt).toBe(false);
+    // the kit carries no presence, so a layer changes it where every other fact of the model lives
+    class $Receipted extends ChatMessage.$Class {
+      override get hasReceipt(): boolean {
+        return true;
+      }
+    }
+    const receipted = new (Reactive(Static($Receipted)) as typeof ChatMessage.Class)({
       row: row(null),
       chat: stubChat()
     });
-    expect(receipted.shows('Footer')).toBe(true);
-    expect(stub.shows('Footer')).toBe(false);
+    expect(receipted.hasReceipt).toBe(true);
+    expect(stub.hasReceipt).toBe(false);
+    expect(Object.keys(ChatMessage.Class.$kit.Footer)).toEqual(['view']);
   });
 
   // domain-invariant: $ChatMessage — If a seam is built for a role, then a section receives `{ model, kit }` and the parts list receives the message's parts, the chat and the message from the row's one bind

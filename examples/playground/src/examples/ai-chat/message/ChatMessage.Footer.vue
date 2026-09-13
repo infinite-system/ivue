@@ -6,5 +6,5 @@ defineProps<ChatMessage.SectionProps>();
 </script>
 
 <template>
-  <footer class="ac-msg-foot">{{ model.receiptLabel }}</footer>
+  <footer v-if="model.hasReceipt" class="ac-msg-foot">{{ model.receiptLabel }}</footer>
 </template>

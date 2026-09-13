@@ -696,20 +696,26 @@ describe('a bind is a projection the layer above extends', () => {
     expect(seam).toMatchObject({ code: 'ab', cap: 1, lang: 'same' });
   });
 
-  it("presence is the entry's shows over the model: the base hides the foot over no items, a layer patches it by data", () => {
+  it("presence is the leaf's own: its root carries a v-if on a named getter of the model, and a layer changes it by overriding the getter", () => {
     expect(sections(mountStrip(Strip, []))).toEqual(['header.strip-head', 'div.strip-body']);
     expect(sections(mountStrip(Strip))).toEqual([
       'header.strip-head',
       'div.strip-body',
       'footer.strip-foot'
     ]);
-    const Headless = Kit.Class.derive(Strip, { Header: { shows: () => false } }, 'headless');
-    expect(sections(mountStrip(Headless))).toEqual(['div.strip-body', 'footer.strip-foot']);
-    // a later layer replaces the rule; the base's is not composed under it
-    const FootAlways = Kit.Class.derive(Headless, { Footer: { shows: () => true } });
-    expect(sections(mountStrip(FootAlways, []))).toEqual(['div.strip-body', 'footer.strip-foot']);
-    expect(Strip.$Class.$kit.Footer.shows).toBeDefined();
-    expect(KitInspect.Class.report(FootAlways)).toEqual([]);
+    class $FootAlways extends Strip.$Class {
+      override get hasItems(): boolean {
+        return true;
+      }
+    }
+    const FootAlways = { $Class: Static($FootAlways), Class: Reactive(Static($FootAlways)) };
+    expect(sections(mountStrip(FootAlways, []))).toEqual([
+      'header.strip-head',
+      'div.strip-body',
+      'footer.strip-foot'
+    ]);
+    // the kit carries no presence: an entry is view, namespace, props, bind
+    expect(Object.keys(Strip.$Class.$kit.Footer)).toEqual(['view']);
   });
 });
 

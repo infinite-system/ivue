@@ -10,7 +10,7 @@ const model = new (
 </script>
 
 <template>
-  <div class="ac-parts">
+  <div v-if="model.hasMessage" class="ac-parts">
     <component
       v-for="(part, at) in model.parts"
       :key="model.keyOf(part, at)"

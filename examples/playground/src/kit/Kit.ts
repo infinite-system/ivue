@@ -372,10 +372,6 @@ export namespace Kit {
      *  loose `Kit.Entry` a view's `kit` prop declares. As a property, every typed kit would fail at
      *  its own prop boundary. */
     bind?(seam: Seam<Owner, Item, N>): Bound<N>;
-    /** Whether the role renders this pass, over the compositor's model; absent, always. The kit's
-     *  `v-if`, beside the view it guards, so a layer changes presence by data: `Footer: { shows: () => true }`.
-     *  A later layer's rule replaces the one below — presence is one predicate, not a composition. */
-    shows?(model: Owner): boolean;
   }
 
   /** What `entry()` takes beside the namespace and the view. */

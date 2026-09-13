@@ -6,7 +6,7 @@ defineProps<ChatMessage.SectionProps>();
 </script>
 
 <template>
-  <div class="ac-await">
+  <div v-if="model.isAwaitingFirstToken" class="ac-await">
     <span class="ac-spinner" aria-hidden="true"></span>
     <span>{{ model.awaitingLabel }}</span>
   </div>
