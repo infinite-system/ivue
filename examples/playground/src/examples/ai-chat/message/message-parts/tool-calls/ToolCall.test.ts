@@ -103,12 +103,13 @@ describe('tool cards', () => {
     const model = new ToolCallBash.Class({ call, chat, message: null });
     expect(model.command).toBe('npm test\necho done');
     expect(model.commandText).toBe('npm test\necho done'); // written across lines: shown as written
-    // a one-line chain breaks at each step; separators inside quotes stay
+    // a one-line chain breaks at each step with the operator trailing, so the text pastes into a
+    // shell as written; separators inside quotes stay
     expect(
       ToolCallBash.$Class.breakLines(
         'cd ~/dev; grep \'"a; b"\' x.json | head -3 && echo "ok || no" || exit 1'
       )
-    ).toBe('cd ~/dev;\ngrep \'"a; b"\' x.json\n  | head -3\n  && echo "ok || no"\n  || exit 1');
+    ).toBe('cd ~/dev;\ngrep \'"a; b"\' x.json |\n  head -3 &&\n  echo "ok || no" ||\n  exit 1');
     expect(model.stdout).toBe('ok 3 passed');
     expect(model.stderr).toBe('warn');
     expect(model.ranInBackground).toBe(true);

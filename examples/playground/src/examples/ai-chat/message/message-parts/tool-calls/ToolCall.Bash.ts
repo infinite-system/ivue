@@ -10,7 +10,10 @@ class $ToolCallBash extends ToolCall.$Class {
   /**
    * A one-line command chained with `;`, `&&`, `||` or a pipe breaks at
    * each chain point, the continuation indented, so a long line reads as
-   * the steps it is. Separators inside quotes are left alone, and a
+   * the steps it is — and pastes into a shell as written: `;` ends its
+   * line, and `&&`, `||` and `|` trail theirs, which is where a shell
+   * continues a line without a backslash (a line that starts with `&&` is
+   * a syntax error). Separators inside quotes are left alone, and a
    * command the author already broke across lines is shown as written.
    */
   static breakLines(command: string): string {
@@ -31,7 +34,7 @@ class $ToolCallBash extends ToolCall.$Class {
       }
       const two = command.slice(at, at + 2);
       if (two === '&&' || two === '||') {
-        output = output.trimEnd() + '\n  ' + two + ' ';
+        output = output.trimEnd() + ' ' + two + '\n  ';
         at += 1;
         while (command[at + 1] === ' ') at++;
         continue;
@@ -42,7 +45,7 @@ class $ToolCallBash extends ToolCall.$Class {
         continue;
       }
       if (char === '|') {
-        output = output.trimEnd() + '\n  | ';
+        output = output.trimEnd() + ' |\n  ';
         while (command[at + 1] === ' ') at++;
         continue;
       }
