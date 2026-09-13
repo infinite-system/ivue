@@ -24,7 +24,7 @@ class $Strip {
     return {
       Head: { view: StripHeadView },
       Body: { view: StripBodyView },
-      Foot: { view: StripFootView },
+      Foot: { view: StripFootView, shows: (strip) => strip.hasItems },
       // the typed form: the bind's result is checked against Code's props, the seam against the strip
       Item: Kit.Class.entry(CodeView, Code, {
         bind: ({ model, item, key }) => ({ code: item, cap: model.cap, 'data-key': key })
@@ -80,9 +80,10 @@ class $Strip {
     return this.items.length > 0;
   }
 
-  /** the foot shows only over items; every other role always — a layer overrides this and falls back to `super` */
+  /** whether a role renders: the entry's `shows` over this strip, or always — never a branch on the name */
   shows(role: Strip.SectionRole): boolean {
-    return role === 'Foot' ? this.hasItems : true;
+    const entry = this.kit[role] as Kit.Entry;
+    return entry.shows ? entry.shows(this) : true;
   }
 
   /** what a seam hands the role's view — the entry's bind, or `{ model, kit }`; never a branch on the name */

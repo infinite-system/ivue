@@ -691,20 +691,20 @@ describe('a bind is a projection the layer above extends', () => {
     expect(seam).toMatchObject({ code: 'ab', cap: 1, lang: 'same' });
   });
 
-  it('shows() decides presence: the base hides the foot over no items, a layer overrides it with a super fallback', () => {
+  it("presence is the entry's shows over the model: the base hides the foot over no items, a layer patches it by data", () => {
     expect(sections(mountStrip(Strip, []))).toEqual(['header.strip-head', 'div.strip-body']);
     expect(sections(mountStrip(Strip))).toEqual([
       'header.strip-head',
       'div.strip-body',
       'footer.strip-foot'
     ]);
-    class $Headless extends Strip.$Class {
-      override shows(role: Strip.SectionRole): boolean {
-        return role === 'Head' ? false : super.shows(role);
-      }
-    }
-    const Headless = { $Class: Static($Headless), Class: Reactive(Static($Headless)) };
+    const Headless = Kit.Class.derive(Strip, { Head: { shows: () => false } }, 'headless');
     expect(sections(mountStrip(Headless))).toEqual(['div.strip-body', 'footer.strip-foot']);
+    // a later layer replaces the rule; the base's is not composed under it
+    const FootAlways = Kit.Class.derive(Headless, { Foot: { shows: () => true } });
+    expect(sections(mountStrip(FootAlways, []))).toEqual(['div.strip-body', 'footer.strip-foot']);
+    expect(Strip.$Class.$kit.Foot.shows).toBeDefined();
+    expect(KitInspect.Class.report(FootAlways)).toEqual([]);
   });
 });
 

@@ -82,8 +82,9 @@ keyed by role, and a switch would be that table copied where no patch can
 reach it. A part receives its part because every part entry binds
 `{ part: item, chat, message }`; a section receives the model because it
 binds nothing; a tag role a layer inserts receives only what its bind
-says. Presence is `shows(role)`, a named method a layer overrides with a
-`super` fallback, never a bind.
+says. Presence is the entry's `shows` predicate over the model, read by
+`shows(role)` and changed by a layer as data (`Footer: { shows: () => true }`),
+never a bind.
 
 ## A tree variant is a patch over the row's order
 

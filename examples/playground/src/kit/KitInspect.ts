@@ -10,8 +10,8 @@ import { Kit } from './Kit';
 // the app's render path never does, and `Kit.ts` never imports it.
 class $KitInspect {
   /** The fields of an entry two layers may both write. `bind` composes through `inherited` and
-   *  `subkit` recurses, so neither is a contact; these three replace, so a second write is one. */
-  static readonly REPLACED_FIELDS: readonly string[] = ['view', 'namespace', 'props'];
+   *  `subkit` recurses, so neither is a contact; these four replace, so a second write is one. */
+  static readonly REPLACED_FIELDS: readonly string[] = ['view', 'namespace', 'props', 'shows'];
 
   /** The derivation chain, base first: the shipped namespace, then every layer over it. */
   static layers(namespace: Kit.Namespace): Kit.Namespace[] {
