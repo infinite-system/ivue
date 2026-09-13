@@ -13,21 +13,8 @@ const model = new (
 
 <template>
   <div class="ac-system" :class="model.subtypeClass">
-    <button
-      type="button"
-      class="ac-system-line"
-      :disabled="!model.hasDetail"
-      @click="model.toggle()"
-    >
-      <span class="ac-system-icon" aria-hidden="true">{{ model.icon }}</span>
-      <span class="ac-system-text">{{ model.part.text }}</span>
-      <span v-if="model.hasDetail" class="ac-system-toggle">{{ model.toggleLabel }}</span>
-    </button>
-    <div v-if="model.showsDetail" class="ac-system-detail ac-text" v-html="model.detailHtml"></div>
-    <component
-      v-if="model.showsThread"
-      :is="model.kit.SubThread.view"
-      v-bind="model.seam('SubThread')"
-    />
+    <template v-for="role in model.kit.order" :key="role">
+      <component :is="model.kit[role].view" v-bind="model.seam(role)" />
+    </template>
   </div>
 </template>

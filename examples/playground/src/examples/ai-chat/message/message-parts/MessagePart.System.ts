@@ -4,6 +4,9 @@ import { Kit } from '../../../../kit/Kit';
 import { KitContainer } from '../../../../kit/KitContainer';
 import { ToolCallSubThread } from './tool-calls/ToolCall.SubThread';
 import ToolCallSubThreadView from './tool-calls/ToolCall.SubThread.vue';
+import MessagePartSystemLineView from './MessagePart.System.Line.vue';
+import MessagePartSystemDetailView from './MessagePart.System.Detail.vue';
+import MessagePartSystemThreadView from './MessagePart.System.Thread.vue';
 import { Markdown } from '../../Markdown';
 import type { SessionLog } from '../../SessionLog';
 import type { MessagePart } from './MessagePart';
@@ -12,14 +15,19 @@ import type { MessagePart } from './MessagePart';
 // summary folded under it, a turn duration a quiet timestamp line, a
 // hook summary a small card, a folded subagent thread a note.
 class $MessagePartSystem extends KitContainer.$Class<MessagePartSystem.Roles> {
-  /** the one role a system line composes: the thread its children form */
+  /** the line in its order — the clickable line, the detail it folds, the thread its children form —
+   *  and the nested thread's own role, which the Thread leaf hosts */
   static override get $kit(): MessagePartSystem.Roles {
     return {
+      Line: { view: MessagePartSystemLineView },
+      Detail: { view: MessagePartSystemDetailView },
+      Thread: { view: MessagePartSystemThreadView },
       SubThread: {
         view: ToolCallSubThreadView,
         namespace: ToolCallSubThread,
         bind: this.bindThread
-      }
+      },
+      order: ['Line', 'Detail', 'Thread']
     };
   }
 
@@ -102,9 +110,17 @@ class $MessagePartSystem extends KitContainer.$Class<MessagePartSystem.Roles> {
 
 export namespace MessagePartSystem {
   /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
-  export type Roles = {
+  export type Role = 'Line' | 'Detail' | 'Thread';
+  export type Roles = Kit.Roles<Role, $MessagePartSystem> & {
     SubThread: Kit.Entry<$MessagePartSystem, undefined, typeof ToolCallSubThread>;
+    order: readonly Role[];
   };
+
+  /** what every leaf of the line receives: its entry and the line model */
+  export interface SectionProps {
+    kit: Kit.Entry;
+    model: Instance;
+  }
   export const $Class = Static($MessagePartSystem);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;

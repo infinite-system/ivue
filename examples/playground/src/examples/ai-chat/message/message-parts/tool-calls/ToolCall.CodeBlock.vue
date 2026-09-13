@@ -10,7 +10,7 @@ const model = new (
 </script>
 
 <template>
-  <div class="ac-code-host">
+  <div v-if="model.hasCode" class="ac-code-host">
     <div
       class="ac-code"
       :class="model.blockClass"

@@ -3,8 +3,9 @@ import { Static } from '../../../../Static';
 import { Kit } from '../../../../kit/Kit';
 import { KitContainer } from '../../../../kit/KitContainer';
 import { Icons } from '../../Icons';
-import { MessagePartToolCall } from './MessagePart.ToolCall';
-import MessagePartToolCallView from './MessagePart.ToolCall.vue';
+import { MessagePartToolBatchCalls } from './MessagePart.ToolBatch.Calls';
+import MessagePartToolBatchCallsView from './MessagePart.ToolBatch.Calls.vue';
+import MessagePartToolBatchHeadView from './MessagePart.ToolBatch.Head.vue';
 import { Clock } from '../../Clock';
 import type { SessionLog } from '../../SessionLog';
 import { ToolCall } from './tool-calls/ToolCall';
@@ -14,26 +15,28 @@ import type { MessagePart } from './MessagePart';
 // the combined time, a mark if any failed. It opens to its calls, each
 // collapsed and each with its own state, so the batch and a call never
 // reset each other.
-class $MessagePartToolBatch extends KitContainer.$Class<
-  MessagePartToolBatch.Roles,
-  SessionLog.ToolCall
-> {
-  /** the one role a batch composes: the part that picks a card per call */
+class $MessagePartToolBatch extends KitContainer.$Class<MessagePartToolBatch.Roles> {
+  /** the batch in its order: its one row, then its calls as a list of their own */
   static override get $kit(): MessagePartToolBatch.Roles {
     return {
-      Call: { view: MessagePartToolCallView, namespace: MessagePartToolCall, bind: this.bindCall }
+      Head: { view: MessagePartToolBatchHeadView },
+      Calls: {
+        view: MessagePartToolBatchCallsView,
+        namespace: MessagePartToolBatchCalls,
+        bind: this.bindCalls
+      },
+      order: ['Head', 'Calls']
     };
   }
 
-  /** what a call's card receives from the batch: the call as a part, the chat, the message */
-  static bindCall({
-    model,
-    item
-  }: Kit.Seam<
-    $MessagePartToolBatch,
-    SessionLog.ToolCall
-  >): MessagePart.Props<SessionLog.ToolCallPart> {
-    return { part: model.partFor(item), chat: model.props.chat, message: model.props.message };
+  /** what the calls list receives from the batch: the calls, the chat, the message, and whether it is open */
+  static bindCalls({ model }: Kit.Seam<$MessagePartToolBatch>): MessagePartToolBatchCalls.Props {
+    return {
+      calls: model.calls,
+      chat: model.props.chat,
+      message: model.props.message,
+      expanded: model.isExpanded
+    };
   }
 
   constructor(public props: MessagePart.Props<SessionLog.ToolBatchPart>) {
@@ -130,22 +133,27 @@ class $MessagePartToolBatch extends KitContainer.$Class<
     return Icons.Class.PATHS.chevron;
   }
 
+  get timeClass(): Record<string, boolean> {
+    return { 'ac-state-failed': this.hasFailure };
+  }
+
   toggle() {
     this.props.chat.toggle(this.id);
-  }
-
-  /** a call as the single-call part reads it, so a batch renders through the same seam */
-  partFor(call: SessionLog.ToolCall): SessionLog.ToolCallPart {
-    return { kind: 'tool_call', call };
-  }
-
-  override keyOf(call: SessionLog.ToolCall): string {
-    return call.id;
   }
 }
 
 export namespace MessagePartToolBatch {
-  export type Roles = Kit.Roles<'Call', $MessagePartToolBatch, SessionLog.ToolCall>;
+  export type Role = 'Head' | 'Calls';
+  export type Roles = Kit.Roles<'Head', $MessagePartToolBatch> & {
+    Calls: Kit.Entry<$MessagePartToolBatch, undefined, typeof MessagePartToolBatchCalls>;
+    order: readonly Role[];
+  };
+
+  /** what every leaf of the batch receives: its entry and the batch model */
+  export interface SectionProps {
+    kit: Kit.Entry;
+    model: Instance;
+  }
 
   export interface IconGroup {
     key: string;

@@ -2,38 +2,27 @@ import { Reactive } from '../../../../../ivue';
 import { Static } from '../../../../../Static';
 import { Kit } from '../../../../../kit/Kit';
 import { KitContainer } from '../../../../../kit/KitContainer';
-import { ToolCallCodeBlock } from './ToolCall.CodeBlock';
-import ToolCallCodeBlockView from './ToolCall.CodeBlock.vue';
+import { ToolCallSection } from './ToolCall.Section';
+import ToolCallSectionView from './ToolCall.Section.vue';
 import type { ToolCall } from './ToolCall';
 
 // The blocks of an expanded card as a list: every section renders through
-// the one code-block role, fed the section as the seam's item and the
-// card's cap. The card hands the list its sections and whether it is open;
-// the list owns what identifies a block.
+// the one Section role — a compositor of its own — fed the section as the
+// seam's item and the card's cap. The card hands the list its sections and
+// whether it is open; the list owns what identifies a section.
 class $ToolCallSections extends KitContainer.$Class<ToolCallSections.Roles, ToolCall.Section> {
   static override get $kit(): ToolCallSections.Roles {
     return {
-      CodeBlock: { view: ToolCallCodeBlockView, namespace: ToolCallCodeBlock, bind: this.bindBlock }
+      Section: { view: ToolCallSectionView, namespace: ToolCallSection, bind: this.bindSection }
     };
   }
 
-  /** what a block receives: the section's code and its face, and the card's cap */
-  static bindBlock({
+  /** what a section receives: its data and the card's cap */
+  static bindSection({
     model,
     item
-  }: Kit.Seam<
-    $ToolCallSections,
-    ToolCall.Section,
-    typeof ToolCallCodeBlock
-  >): ToolCallCodeBlock.Props {
-    return {
-      code: item.code,
-      lang: item.lang,
-      cap: model.cap,
-      tone: item.tone,
-      startLine: item.startLine,
-      wrap: item.wrap ?? true
-    };
+  }: Kit.Seam<$ToolCallSections, ToolCall.Section>): ToolCallSection.Props {
+    return { section: item, cap: model.cap };
   }
 
   constructor(public props: ToolCallSections.Props) {
@@ -56,7 +45,7 @@ class $ToolCallSections extends KitContainer.$Class<ToolCallSections.Roles, Tool
     return this.props.expanded;
   }
 
-  /** a block is identified by its place and its title — titles repeat across cards, never within one place */
+  /** a section is identified by its place and its title — titles repeat across cards, never within one place */
   override keyOf(section: ToolCall.Section, at: number): string {
     return `${at}:${section.title}`;
   }
@@ -75,6 +64,6 @@ export namespace ToolCallSections {
   }
 
   export type Roles = {
-    CodeBlock: Kit.Entry<$ToolCallSections, ToolCall.Section, typeof ToolCallCodeBlock>;
+    Section: Kit.Entry<$ToolCallSections, ToolCall.Section, typeof ToolCallSection>;
   };
 }

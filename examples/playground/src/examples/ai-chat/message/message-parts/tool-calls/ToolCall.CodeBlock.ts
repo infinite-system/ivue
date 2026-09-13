@@ -55,6 +55,11 @@ class $ToolCallCodeBlock {
     );
   }
 
+  /** an empty block renders nothing — the section's note stands in */
+  get hasCode(): boolean {
+    return this.props.code.length > 0;
+  }
+
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
     return this.constructor as typeof $ToolCallCodeBlock;

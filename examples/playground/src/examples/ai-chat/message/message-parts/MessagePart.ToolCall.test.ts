@@ -11,7 +11,7 @@ $MessagePartToolCall is the part that picks a card: its kit is the map from a to
 import { describe, expect, it } from 'vitest';
 import { Static } from '../../../../Static';
 import { MessagePartToolCall } from './MessagePart.ToolCall';
-import { MessagePartToolBatch } from './MessagePart.ToolBatch';
+import { MessagePartToolBatchCalls } from './MessagePart.ToolBatch.Calls';
 import { ToolCallBash } from './tool-calls/ToolCall.Bash';
 import { ToolCallMcp } from './tool-calls/ToolCall.Mcp';
 import { ToolCallTask } from './tool-calls/ToolCall.Task';
@@ -48,6 +48,6 @@ describe('PartToolCall', () => {
     expect(QuietPart.toolFor('Bash').namespace).toBe(ToolCall);
     expect(MessagePartToolCall.Class.toolFor('Bash').namespace).toBe(ToolCallBash);
     // a batch renders its calls through this part, so the swap reaches batches too
-    expect(MessagePartToolBatch.Class.$kit.Call.namespace).toBe(MessagePartToolCall);
+    expect(MessagePartToolBatchCalls.Class.$kit.Call.namespace).toBe(MessagePartToolCall);
   });
 });
