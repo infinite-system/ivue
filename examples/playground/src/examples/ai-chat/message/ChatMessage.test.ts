@@ -6,6 +6,7 @@ Goal: Prove the row is a container of roles: its sections render in the kit's `o
 [A tree variant is a patch over the row's order](../ai-chat.invariants.md#a-tree-variant-is-a-patch-over-the-rows-order)
 // domain-invariant: $ChatMessage — If a section role is asked whether it shows, then the stub and the parts are the two states of one row, the await line shows only while the reply has nothing, the foot only with a receipt, and every other role always
 // domain-invariant: $ChatMessage — If a seam is built for a role, then a section receives `{ model, kit }` and the parts list receives the message's parts, the chat and the message from the row's one bind
+// domain-invariant: $ChatMessage — If a chat patch carries a subkit for the row and the row's subkit one for the parts list, then the part it names renders through the swapped view with the list's own bind, and every shipped kit on the path is untouched
 Impossible if true: a row's template names a section, or seam() branches on a role
 
 === GENERATOR-DESCRIBED ===
@@ -19,7 +20,8 @@ import { describe, expect, it } from 'vitest';
 import { ref } from 'vue';
 import { Kit } from '../../../kit/Kit';
 import { KitInspect } from '../../../kit/KitInspect';
-import type { Chat } from '../Chat';
+import { Chat } from '../Chat';
+import { MessagePartList } from './message-parts/MessagePartList';
 import { ChatMessage } from './ChatMessage';
 import type { SessionLog } from '../SessionLog';
 import { ChatVariants } from '../variants/ChatVariants';
@@ -201,5 +203,30 @@ describe('the row is a container of roles', () => {
     expect(KitInspect.Class.tree(ChatVariants.Class.tree('compact').namespace)).toContain(
       '1 Rule: view <hr> · class - · bind yes · view←compact, bind←compact, position←compact'
     );
+  });
+
+  // domain-invariant: $ChatMessage — If a chat patch carries a subkit for the row and the row's subkit one for the parts list, then the part it names renders through the swapped view with the list's own bind, and every shipped kit on the path is untouched
+  // invariant: A tree variant is a patch over the row's order (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
+  it('a subkit reaches two levels down — chat, row, parts list — and swaps one part view over the same bind', () => {
+    const Themed = Kit.Class.derive(
+      Chat,
+      { Message: { subkit: { MessagePartList: { subkit: { Text: { view: 'pre' } } } } } },
+      'themed'
+    );
+    const rowEntry = Themed.$Class.$kit.Message as Kit.Entry;
+    const listEntry = (rowEntry.namespace!.$Class.$kit as Record<string, Kit.Entry>)
+      .MessagePartList;
+    const parts = listEntry.namespace!.$Class.$kit as Record<string, Kit.Entry>;
+    expect(parts.Text.view).toBe('pre');
+    expect(parts.Text.namespace).toBe(MessagePartList.$Class.$kit.Text.namespace);
+    expect(parts.Text.bind).toBe(MessagePartList.$Class.$kit.Text.bind);
+    expect(parts.Thinking).toBe(MessagePartList.$Class.$kit.Thinking);
+    expect(MessagePartList.$Class.$kit.Text.view).not.toBe('pre');
+    expect(ChatMessage.$Class.$kit.MessagePartList.namespace).toBe(MessagePartList);
+    const DerivedList = listEntry.namespace!.Class as typeof MessagePartList.Class;
+    const list = new DerivedList({ parts: [textPart], chat: stubChat(), message: null });
+    expect(list.viewOf(textPart)).toBe('pre');
+    expect(list.propsOf(textPart, 0)).toMatchObject({ part: textPart, message: null });
+    expect(KitInspect.Class.tree(Themed)).toMatch(/Text: view <pre> .* view←themed/);
   });
 });
