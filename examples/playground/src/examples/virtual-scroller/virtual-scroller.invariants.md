@@ -46,6 +46,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 - [The copied text is the string the row renders](#the-copied-text-is-the-string-the-row-renders) — why a copy that spans the window boundary reads as one text.
 - [A long press turns the next move into a selection](#a-long-press-turns-the-next-move-into-a-selection) — why touch can select in a list where a drag means scroll.
 - [A multi-click selects the word or the row under it](#a-multi-click-selects-the-word-or-the-row-under-it) — why double click still works after the native selection is taken away.
+- [A list may refuse selection](#a-list-may-refuse-selection) — why the index and the peek never select a row's text.
 - [The pad covers the lerp gap exactly](#the-pad-covers-the-lerp-gap-exactly) — why a flick never shows canvas.
 - [Lenis is read inside the walk never tracked](#lenis-is-read-inside-the-walk-never-tracked) — why the pad costs no extra walks.
 - [A pad never outlives its flick](#a-pad-never-outlives-its-flick) — why a resting list mounts its base rows only.
@@ -520,7 +521,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### A multi-click selects the word or the row under it
 
-**Invariant:** If a primary mousedown carries a click count of two, then the word around the caret is selected; if three or more, the row; both as settled ranges with no drag, and the native multi-click selection is prevented like the drag-selection is. On a touch device the double tap is the touch class's own gesture (two taps within `DOUBLE_TAP_MS` and `DOUBLE_TAP_SLOP_PX`), selecting the word as a touch range with the chip offered, and the mouse events the browser synthesizes after a touch are ignored for `MOUSE_AFTER_TOUCH_MS`.
+**Invariant:** If the `selection.multiClick` knob is on (it is off by default: a long press is the touch's way into a selection, and a reader tapping a row twice to open it found a word selected) and a primary mousedown carries a click count of two, then the word around the caret is selected; if three or more, the row; both as settled ranges with no drag, and the native multi-click selection is prevented like the drag-selection is. On a touch device the double tap is the touch class's own gesture (two taps within `DOUBLE_TAP_MS` and `DOUBLE_TAP_SLOP_PX`), selecting the word as a touch range with the chip offered, and the mouse events the browser synthesizes after a touch are ignored for `MOUSE_AFTER_TOUCH_MS`.
 
 **Scope:** `VirtualScrollerSelection.ts`: `onMouseDown` (the `event.detail` branch), `selectAt`, `wordBoundsAt`.
 
@@ -595,6 +596,26 @@ tier each record is proven at, and how the colocated tests bind to it.
 **Status:** provisional
 
 **Last refined:** 2026-09-06
+
+### A list may refuse selection
+
+**Invariant:** If the `selection.enabled` knob is off (it is on by default), then no gesture selects — a press returns before it begins, the touch class is never attached — and the frame carries a class whose `user-select: none` refuses the native selection too; the files list keeps it on, so a file name can be copied.
+
+**Scope:** `VirtualScroller.ts` `selectionEnabled`, `frameClass`, `SELECTION_KNOBS.enabled`; `VirtualScrollerSelection.ts` `attach`, `onMouseDown`, the owner's `selectionEnabled`; the ai-chat index and peek passing `:selection="{ enabled: false }"`.
+
+**Mechanism:** An index or a peek is a list of controls: a press there means pick, and a drag that painted a selection over its rows was noise the reader had to clear. One knob at the scroller turns every way in off at once, and the frame's class refuses the browser's own selection on the same rows.
+
+**Generates:** The index and the peek as pure controls; the files list keeping copyable names.
+
+**Evidence:** `VirtualScroller.ts` `selectionEnabled`. Test: "a list that refused selection selects nothing on a press and attaches no touch gesture".
+
+**Impossible if true:** A press on a list that refused selection starting a drag. A native selection painted over the index's rows.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerSelection.test.ts -t "refused"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-13
 
 ### A drag scrolls from inside the edge zone
 

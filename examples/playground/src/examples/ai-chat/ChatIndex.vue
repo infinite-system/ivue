@@ -10,6 +10,7 @@ const {
   // state refs
   tools,
   order,
+  rangeArmed,
   query,
   exportForm,
   // computed refs
@@ -103,6 +104,15 @@ const {
         </label>
         <span class="ac-muted">{{ model.selectedLabel }}</span>
         <button
+          v-if="model.canArmRange"
+          type="button"
+          class="ac-pill ac-range-pill"
+          :class="{ 'ac-on': rangeArmed }"
+          @click="model.armRange()"
+        >
+          {{ model.rangeLabel }}
+        </button>
+        <button
           v-if="model.hasSelection"
           type="button"
           class="ac-link"
@@ -127,6 +137,7 @@ const {
         ref="scroller"
         :kit="model.kit.Scroller"
         scrollbar
+        :selection="{ enabled: false }"
         :model-value="rows"
         :assumed-size="46"
         :padding-quantity="10"

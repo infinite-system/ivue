@@ -488,7 +488,7 @@ class $VirtualScrollerSelectionTouch {
     // The second tap of a double tap selects the word under it — with the
     // rows locked like any other touch, so the system's own double-tap
     // selection finds nothing, and followed to its end so the lock lifts.
-    if (this.isDoubleTap(touch.clientX, touch.clientY)) {
+    if (this.owner.multiClickSelects && this.isDoubleTap(touch.clientX, touch.clientY)) {
       this.tap.at = null;
       this.hold.doubleTapped = true;
       this.hold.identifier = touch.identifier;
@@ -728,6 +728,8 @@ export namespace VirtualScrollerSelectionTouch {
     /** Stop a glide where the content is: a claimed touch never scrolls. */
     holdScroll(): void;
     readonly hasSelection: boolean;
+    /** Whether a double tap selects the word under it — the scroller's knob, off by default. */
+    readonly multiClickSelects: boolean;
     readonly range: VirtualScrollerSelection.Range | null;
     /** The wrapper the rows live in — the overlay is laid inside it. */
     readonly itemsWrapperElement: { value: HTMLElement | null };

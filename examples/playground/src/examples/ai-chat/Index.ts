@@ -101,7 +101,7 @@ class $Index {
   }
 
   get order() {
-    return ref<Index.Order>('oldest');
+    return ref<Index.Order>('newest');
   }
 
   get tools() {
@@ -119,6 +119,12 @@ class $Index {
 
   get selected() {
     return shallowRef<Set<string>>(new Set());
+  }
+
+  /** a range is armed: the next row picked joins every row between the anchor and it — a
+   *  phone's shift-click, where there is no shift */
+  get rangeArmed() {
+    return ref(false);
   }
 
   get anchorId() {
@@ -191,13 +197,22 @@ class $Index {
     return this.copied.value ? Icons.Class.PATHS.check : Icons.Class.PATHS.copy;
   }
 
-  /** the row under the pointer in the list: the head line reads it, else the current row */
+  /** the row under the pointer in the list: the head line reads it over the last pick */
   get hovered() {
     return shallowRef<Index.Row | null>(null);
   }
 
+  /** the last pick — the anchor — as a row of the current list */
+  get anchorRow(): Index.Row | undefined {
+    const id = this.anchorId.value;
+    return id ? this.rows.value.find((row) => row.id === id) : undefined;
+  }
+
+  /** what the head line describes: the row under the pointer, else the last pick, else the chat's row */
   get focusRow(): Index.Row | undefined {
-    return this.hovered.value ?? this.rows.value.find((row) => this.isCurrent(row));
+    return (
+      this.hovered.value ?? this.anchorRow ?? this.rows.value.find((row) => this.isCurrent(row))
+    );
   }
 
   get positionLabel(): string {
@@ -293,6 +308,15 @@ class $Index {
 
   get selectAllLabel(): string {
     return this.allShownSelected ? 'Clear all' : 'Select all';
+  }
+
+  /** a range can be armed once a row is the anchor */
+  get canArmRange(): boolean {
+    return this.anchorId.value !== null && this.hasSelection;
+  }
+
+  get rangeLabel(): string {
+    return this.rangeArmed.value ? 'Tap the end of the range' : 'Select range';
   }
 
   /* ---- the walk behind rows ---- */
@@ -409,6 +433,7 @@ class $Index {
 
   /** click picks one and sets the anchor; shift takes the range; ctrl or cmd toggles without moving the anchor */
   onRowClick(row: Index.Row, event: MouseEvent) {
+    if (this.takeArmedRange(row)) return;
     if (event.shiftKey && this.anchorId.value) this.selectRange(this.anchorId.value, row.id);
     else if (event.metaKey || event.ctrlKey) this.toggleOne(row.id);
     else {
@@ -421,9 +446,26 @@ class $Index {
   /** the checkbox: toggle, and become the anchor */
   onRowCheck(row: Index.Row, event: Event) {
     event.stopPropagation();
+    if (this.takeArmedRange(row)) return;
     this.toggleOne(row.id);
     this.anchorId.value = row.id;
     this.focusedIndex.value = this.rows.value.indexOf(row);
+  }
+
+  /** arm the next pick to take the range from the anchor; a second press disarms */
+  armRange() {
+    if (!this.canArmRange) return;
+    this.rangeArmed.value = !this.rangeArmed.value;
+  }
+
+  /** an armed range takes the pick: the rows from the anchor to it join, the pick is the new anchor */
+  protected takeArmedRange(row: Index.Row): boolean {
+    if (!this.rangeArmed.value || !this.anchorId.value) return false;
+    this.selectRange(this.anchorId.value, row.id);
+    this.anchorId.value = row.id;
+    this.focusedIndex.value = this.rows.value.indexOf(row);
+    this.rangeArmed.value = false;
+    return true;
   }
 
   toggleOne(id: string) {

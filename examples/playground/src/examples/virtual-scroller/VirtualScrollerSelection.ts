@@ -714,6 +714,11 @@ class $VirtualScrollerSelection {
     return this.self.isEmpty(range) ? null : range;
   }
 
+  /** the scroller's knob, read by the touch class for its double tap */
+  get multiClickSelects(): boolean {
+    return this.owner.multiClickSelects;
+  }
+
   get hasSelection() {
     return this.range !== null;
   }
@@ -810,6 +815,9 @@ class $VirtualScrollerSelection {
   /* Lifetime — the scroller calls these from its own mount and unmount */
 
   attach(element: HTMLElement) {
+    // a list that refuses selection attaches nothing: no touch class, no native adoption
+    // invariant: A list may refuse selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+    if (!this.owner.selectionEnabled) return;
     this.$touch.attach(element);
     document.addEventListener('selectionchange', this.onSelectionChange);
   }
@@ -962,6 +970,8 @@ class $VirtualScrollerSelection {
    * Links, buttons and inputs inside a row keep their own gesture.
    */
   onMouseDown(event: MouseEvent) {
+    // invariant: A list may refuse selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+    if (!this.owner.selectionEnabled) return;
     const isPrimaryButton = event.button === 0;
     if (!isPrimaryButton || this.self.isInteractive(event.target)) return;
     // A touch is followed by synthesized mouse events; on a device where
@@ -969,9 +979,11 @@ class $VirtualScrollerSelection {
     if (this.$touch.paintsSelection && this.$touch.recentTouch) return;
     // The second click of a double click selects the word, the third the
     // row — the browser's own multi-click units, which the preventDefault
-    // below would otherwise take away with the drag-selection.
+    // below would otherwise take away with the drag-selection. Off by
+    // default: then a multi-click is nothing of the selection's.
     // invariant: A multi-click selects the word or the row under it (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     if (event.detail >= 2) {
+      if (!this.multiClickSelects) return;
       const unit = event.detail === 2 ? 'word' : 'row';
       if (this.selectAt(event.clientX, event.clientY, unit)) event.preventDefault();
       return;
@@ -1552,6 +1564,10 @@ export namespace VirtualScrollerSelection {
     readonly selectionAxis: Axis;
     /** What joins the rows of a copied selection. */
     readonly selectionJoin: string;
+    /** Whether a multi-click or a double tap selects — the scroller's knob. */
+    readonly multiClickSelects: boolean;
+    /** Whether the rows can be selected at all — the scroller's knob. */
+    readonly selectionEnabled: boolean;
     /** The drag autoscroll's speed factor (a faster reading creep is a faster drag). */
     readonly creepFactor: number;
     /** The two autoscroll cadences: a pointer's and a finger's. */

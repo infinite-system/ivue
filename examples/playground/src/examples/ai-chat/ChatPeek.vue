@@ -95,6 +95,7 @@ defineExpose(model as Peek.Instance);
               :auto-repeat="false"
               :overscroll="false"
               scrollbar
+              :selection="{ enabled: false }"
               :model-value="rows"
               :assumed-size="30"
               :padding-quantity="4"

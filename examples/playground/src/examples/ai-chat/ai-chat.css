@@ -254,7 +254,7 @@
   column-gap: 12px;
   align-content: start;
   padding: 12px 18px;
-  border-bottom: 1px solid var(--ac-line-soft);
+  /* no rule between rows: the gutter and the air are the separation */
 }
 .ai-chat .ac-msg > * {
   grid-column: 1 / -1;
@@ -1245,7 +1245,7 @@
   height: 30px;
   /* room on the right for the panel's own scrollbar, so it never covers the go button */
   padding: 0 24px 0 10px;
-  border-bottom: 1px solid var(--ac-line-soft);
+  /* no rule between rows: the gutter and the air are the separation */
   font-size: 12px;
   color: var(--ac-text);
   cursor: pointer;
@@ -1347,6 +1347,16 @@
 }
 .ai-chat .ac-index-foot .ac-pick-wrap {
   margin-right: auto;
+}
+/* the range pill: a phone's shift-click — hidden past a phone, armed in the accent */
+.ai-chat .ac-range-pill {
+  display: none;
+  padding: 2px 9px;
+}
+.ai-chat .ac-range-pill.ac-on {
+  background: var(--ac-accent);
+  border-color: var(--ac-accent);
+  color: #fff;
 }
 /* the export actions: two pills with a glyph each */
 .ai-chat .ac-pill {
@@ -2522,8 +2532,8 @@
   height: 100%;
 }
 .ai-chat .ac-setting {
-  /* room on the right for the panel's own scrollbar */
-  padding: 12px 24px 12px 14px;
+  /* room on the right for the panel's own scrollbar, which rides the content */
+  padding: 12px 30px 12px 14px;
   border-bottom: 1px solid var(--ac-line-soft);
 }
 .ai-chat .ac-setting h5 {
@@ -3306,7 +3316,7 @@
   }
   /* settings sized to the phone: options in a two-column grid, tighter cards, one section per screen */
   .ai-chat .ac-setting {
-    padding: 10px 12px;
+    padding: 10px 26px 10px 12px;
   }
   .ai-chat .ac-setting h5 {
     margin-bottom: 6px;
@@ -3341,6 +3351,23 @@
   .ai-chat .ac-pane-head {
     padding: 10px 12px;
   }
+  .ai-chat .ac-range-pill {
+    display: inline-flex;
+  }
+  /* a finger's checks: a bigger box on a taller row */
+  .ai-chat .ac-ix-row {
+    height: 36px;
+  }
+  .ai-chat .ac-ix-check {
+    width: 18px;
+    height: 18px;
+  }
+  .ai-chat .ac-ix-check::after {
+    left: 5px;
+    top: 2px;
+    width: 5px;
+    height: 9px;
+  }
   .ai-chat .ac-more-btn.ac-on {
     color: #fff;
     background: var(--ac-accent);
@@ -3365,6 +3392,25 @@
     border-right: 0;
     border-radius: 0;
     box-shadow: none;
+  }
+  /* the rows use the width: a hand's worth of padding, and the tool cards and a batch's
+     calls stand flush with no rail under the arrow, so the code in an expansion is wider */
+  .ai-chat .ac-msg {
+    padding: 10px 12px 10px 10px;
+    column-gap: 8px;
+  }
+  .ai-chat .ac-msg-system {
+    padding: 4px 12px 4px 10px;
+  }
+  .ai-chat .ac-tool-head ~ * {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+  .ai-chat .ac-batch-body {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
   }
   .ai-chat .ac-stats .ac-receipts dd {
     font-size: 12px;

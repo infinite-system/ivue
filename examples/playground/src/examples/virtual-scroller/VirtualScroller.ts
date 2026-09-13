@@ -232,10 +232,16 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** The tuned selection cadences — the selection class's own profiles. */
   static get SELECTION_KNOBS(): VirtualScroller.SelectionKnobs {
     return {
+      // on: rows can be selected and copied; a list of controls — an index, a peek — turns it off
+      enabled: true,
       autoscroll: {
         mouse: VirtualScrollerSelection.Class.AUTOSCROLL_MOUSE,
         touch: VirtualScrollerSelection.Class.AUTOSCROLL_TOUCH
-      }
+      },
+      // off: a double click or a double tap selects nothing until a list asks for it — a
+      // long press is the touch's way into a selection, and a reader tapping a row twice
+      // to open it found a word selected instead
+      multiClick: false
     };
   }
 
@@ -550,6 +556,21 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** What joins the rows of a copied selection (the prop, defaulted). */
   get selectionJoin() {
     return this.props.selectionJoin;
+  }
+
+  /** Whether a multi-click or a double tap selects (the `selection.multiClick` knob). */
+  get multiClickSelects(): boolean {
+    return this.props.selection.multiClick;
+  }
+
+  /** Whether the rows can be selected at all (the `selection.enabled` knob). */
+  get selectionEnabled(): boolean {
+    return this.props.selection.enabled;
+  }
+
+  /** The frame's class object: the axis, and the refusal of selection when the knob is off. */
+  get frameClass(): Record<string, boolean> {
+    return { 'virtual-scroller--unselectable': !this.selectionEnabled };
   }
 
   /** The drag autoscroll's speed factor: a faster reading creep is a
@@ -2312,10 +2333,14 @@ export namespace VirtualScroller {
 
   /** The selection knobs: a pointer's and a finger's autoscroll cadence. */
   export interface SelectionKnobs {
+    /** whether rows can be selected at all — off, no gesture selects and the rows refuse the native selection */
+    enabled: boolean;
     autoscroll: {
       mouse: VirtualScrollerSelection.AutoscrollProfile;
       touch: VirtualScrollerSelection.AutoscrollProfile;
     };
+    /** a double click selects the word and a triple click the row; a double tap the word — when on */
+    multiClick: boolean;
   }
 
   export type Emits = ExtractEmitTypes<typeof $Class.emits>;

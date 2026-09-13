@@ -34,6 +34,7 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
     ref="scrollElement"
     :style="{ touchAction: virtualScroller.frameTouchAction }"
     class="virtual-scroller"
+    :class="virtualScroller.frameClass"
     @scroll="virtualScroller.onScroll"
     @copy="virtualScroller.selection.onCopyEvent"
     @mousedown="virtualScroller.selection.onMouseDown"
@@ -98,6 +99,11 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
   </div>
 </template>
 <style>
+/* a list that refuses selection: no gesture selects (the class returns early) and the rows refuse the native one */
+.virtual-scroller--unselectable {
+  user-select: none;
+  -webkit-user-select: none;
+}
 .virtual-scroller {
   height: 100%;
   overflow: auto;

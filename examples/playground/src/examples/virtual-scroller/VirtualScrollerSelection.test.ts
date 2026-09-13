@@ -1,6 +1,7 @@
 /*
 === GENERATOR ===
 Goal: Hold a text selection over a virtual list as a range over the DATA, so the highlight survives row recycling and copy reaches rows that were never on screen together.
+[A list may refuse selection](virtual-scroller.invariants.md#a-list-may-refuse-selection)
 [A native selection dies with the node that anchors it](virtual-scroller.invariants.md#a-native-selection-dies-with-the-node-that-anchors-it)
 [The selection is a range over the data](virtual-scroller.invariants.md#the-selection-is-a-range-over-the-data)
 [Text offsets are measured against the trimmed row text](virtual-scroller.invariants.md#text-offsets-are-measured-against-the-trimmed-row-text)
@@ -25,8 +26,10 @@ Goal: Hold a text selection over a virtual list as a range over the DATA, so the
 // domain-invariant: $VirtualScrollerSelection — If a native handle drags the selection's end into the edge zone, then the list scrolls under it frame by frame until the end leaves the zone or the selection stops changing; the native selection is never re-pinned while it does.
 // domain-invariant: $VirtualScrollerSelection — If a touch lands within reach of the native selection's first or last caret, then it is a handle grab; elsewhere, or with no native selection in the frame, it is not.
 // domain-invariant: $VirtualScrollerSelection — If the reader dismisses a natively pinned selection, then the logical range and the chip go with it; a collapse of our own making (a range scrolled out, a clear) does not.
+// domain-invariant: $VirtualScrollerSelection — If the enabled knob is off, then a press selects nothing and the class attaches no touch gesture; on, everything below holds.
 Impossible if true: A selection whose anchor equals its focus.
 Impossible if true: Clearing our selection removing a highlight the reader made elsewhere on the page.
+Impossible if true: A press on a list that refused selection starting a drag.
 
 === GENERATOR-DESCRIBED ===
 jsdom has no layout, so the three DOM readers the class rests on are
@@ -124,6 +127,8 @@ function owner(stage: Stage, join = '\n') {
     scrollPosition: ref<string | number>(0),
     selectionAxis: 'y' as const,
     selectionJoin: join,
+    multiClickSelects: true,
+    selectionEnabled: true,
     creepFactor: 1,
     autoscrollProfiles: {
       mouse: Logic.AUTOSCROLL_MOUSE,
@@ -426,6 +431,15 @@ test('a double click selects the word under the caret and a triple click the row
   expect(instance.range).toEqual({ start: at(1, 0), end: at(1, rowText(1).length) });
   expect(instance.selectedText).toBe(rowText(1));
   instance.dispose();
+
+  // the knob off — the scroller's default: a double click is nothing of the selection's
+  const off = selection(0, 5);
+  (off.owner as { multiClickSelects: boolean }).multiClickSelects = false;
+  const ignored = press(60, 60, { detail: 2 });
+  off.instance.onMouseDown(ignored);
+  expect(ignored.defaultPrevented).toBe(false);
+  expect(off.instance.range).toBeNull();
+  off.instance.dispose();
 });
 
 // domain-invariant: $VirtualScrollerSelection — If the pointer nears an edge or passes it, then the drag scrolls that way at a speed that ramps from a crawl at the zone's inner boundary to the maximum past the edge: an upward drag scrolls up.
@@ -834,5 +848,23 @@ test('clear drops only a highlight inside our frame', () => {
   instance.clear();
   expect(instance.hasSelection).toBe(false);
   expect(window.getSelection()!.toString()).toBe('reader');
+  instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelection — If the enabled knob is off, then a press selects nothing and the class attaches no touch gesture; on, everything below holds.
+// impossible-if-true: $VirtualScrollerSelection — A press on a list that refused selection starting a drag.
+// invariant: A list may refuse selection (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a list that refused selection selects nothing on a press and attaches no touch gesture', () => {
+  const { instance, owner } = selection(0, 5);
+  (owner as { selectionEnabled: boolean }).selectionEnabled = false;
+  const pressed = press(60, 60);
+  instance.onMouseDown(pressed);
+  expect(pressed.defaultPrevented).toBe(false);
+  expect(instance.dragging.value).toBe(false);
+  expect(instance.range).toBeNull();
+  const frame = document.createElement('div');
+  instance.attach(frame);
+  const touch = (instance as unknown as { $touch: { element: { value: unknown } } }).$touch;
+  expect(touch.element.value).toBeNull();
   instance.dispose();
 });

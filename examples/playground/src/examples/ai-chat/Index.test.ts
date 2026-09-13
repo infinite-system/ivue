@@ -5,6 +5,7 @@ Goal: Prove the index lists every message from the small index rows without a co
 // domain-invariant: $Index — If a filter changes, then every selected id stays selected
 // domain-invariant: $Index — If the list is filtered or ordered, then it lands at its top in either order
 // domain-invariant: $Index — If shift is held on a click, then every row between the anchor and the click in the filtered order joins the selection
+// domain-invariant: $Index — If a range is armed, then the next pick takes every row between the anchor and it, becomes the anchor, and disarms; the head line reads the row under the pointer, else the last pick
 Impossible if true: an export leaves in the order the rows were clicked
 
 === GENERATOR-DESCRIBED ===
@@ -37,6 +38,8 @@ function make() {
   // the index is hosted too: its constructor lands the list on mount and after every filtering
   const indexHost = hosted(() => new Index.Class({ chat }));
   const index = indexHost.instance;
+  // the specs read the list in thread order; the default (newest first) has its own check
+  index.setOrder('oldest');
   return {
     chat,
     index,
@@ -62,11 +65,13 @@ describe('Index', () => {
     index.scroller.value = { scrollToIndex: (at: number) => seeks.push(at) } as never;
     index.landAfterFilter();
     expect(seeks).toEqual([0]); // the top
-    expect(index.isNewestFirst).toBe(false);
-    expect(index.orderTitle).toBe('Oldest first');
-    index.toggleOrder();
-    expect(index.isNewestFirst).toBe(true);
-    expect(index.orderTitle).toBe('Newest first');
+    // the newest is first by default; the pick turns it over
+    const fresh = new Index.Class({ chat: index.chat });
+    expect(fresh.isNewestFirst).toBe(true);
+    expect(fresh.orderTitle).toBe('Newest first');
+    fresh.toggleOrder();
+    expect(fresh.isNewestFirst).toBe(false);
+    expect(fresh.orderTitle).toBe('Oldest first');
     index.setOrder('newest');
     expect(index.rows.value.map((row) => row.id)).toEqual(['g', 'f', 'e', 'd', 'c', 'b', 'a']);
     await Promise.resolve();
@@ -118,6 +123,7 @@ describe('Index', () => {
   // domain-invariant: $Index — If shift is held on a click, then every row between the anchor and the click in the filtered order joins the selection
   // domain-invariant: $Index — If a filter changes, then every selected id stays selected
   // invariant: Selection is a set of ids (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
+  // domain-invariant: $Index — If a range is armed, then the next pick takes every row between the anchor and it, becomes the anchor, and disarms; the head line reads the row under the pointer, else the last pick
   it('click picks one and anchors, shift-click takes the range in filtered order, ctrl-click toggles, and a filter keeps the picks', () => {
     const { index, unmount } = make();
     index.setSpeaker('assistant');
@@ -150,6 +156,24 @@ describe('Index', () => {
     index.anchorId.value = 'ghost';
     index.onRowClick(index.rows.value[0], click({ shiftKey: true }));
     expect(index.selectedCount).toBe(0);
+    // a phone's shift-click: arm a range, and the next pick takes every row from the anchor
+    index.clearSelection();
+    index.onRowCheck(index.rows.value[1], { stopPropagation() {} } as Event);
+    expect(index.canArmRange).toBe(true);
+    expect(index.rangeLabel).toBe('Select range');
+    index.armRange();
+    expect(index.rangeArmed.value).toBe(true);
+    expect(index.rangeLabel).toBe('Tap the end of the range');
+    index.onRowCheck(index.rows.value[4], { stopPropagation() {} } as Event);
+    expect([1, 2, 3, 4].every((at) => index.isSelected(index.rows.value[at]))).toBe(true);
+    expect(index.rangeArmed.value).toBe(false);
+    expect(index.anchorId.value).toBe(index.rows.value[4].id);
+    // the head line reads the last pick, and the row under the pointer over it
+    expect(index.positionLabel).toBe(`#${index.rows.value[4].index + 1} of 7`);
+    index.onRowEnter(index.rows.value[0]);
+    expect(index.positionLabel).toBe(`#${index.rows.value[0].index + 1} of 7`);
+    index.onListLeave();
+    expect(index.positionLabel).toBe(`#${index.rows.value[4].index + 1} of 7`);
     unmount();
   });
 

@@ -74,6 +74,7 @@ function gesture(range: VirtualScrollerSelection.Range | null = null) {
       target instanceof Element && target.closest('button, a, input') !== null,
     holdScroll: vi.fn(),
     hasSelection: range !== null,
+    multiClickSelects: true,
     range,
     itemsWrapperElement: { value: wrapper }
   };
@@ -404,6 +405,18 @@ test('a double tap selects the word under it through the owner and offers the ch
   vi.advanceTimersByTime(Touch.MOUSE_AFTER_TOUCH_MS + 10);
   expect(instance.recentTouch).toBe(false);
   instance.dispose();
+
+  // the knob off — the scroller's default: a second tap is a tap, and selects nothing
+  const quiet = gesture();
+  (quiet.owner as { multiClickSelects: boolean }).multiClickSelects = false;
+  quiet.row.dispatchEvent(touchEvent('touchstart', [{ x: 100, y: 100 }]));
+  quiet.row.dispatchEvent(touchEvent('touchend', []));
+  vi.advanceTimersByTime(Touch.DOUBLE_TAP_MS - 50);
+  quiet.row.dispatchEvent(touchEvent('touchstart', [{ x: 104, y: 98 }]));
+  expect(quiet.owner.selectAt).not.toHaveBeenCalled();
+  expect(quiet.instance.selected.value).toBe(false);
+  quiet.row.dispatchEvent(touchEvent('touchend', []));
+  quiet.instance.dispose();
 });
 
 // impossible-if-true: $VirtualScrollerSelectionTouch — A swipe over selected text changing the selection instead of scrolling.
