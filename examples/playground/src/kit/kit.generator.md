@@ -164,6 +164,22 @@ an accident of intersection. `Bound<N>` is a union now: `Partial<Props>`
 alone admits the interface, `Partial<Props> & Attrs` admits an attribute
 beside the props, and a wrong key matches neither.
 
+### A leaf never wraps a seam in markup
+
+The last shape the rule flushed out: a list whose per-item template was a
+`section` wrapper, an `h5` title with tags, the block seam and a note
+paragraph. That is a card template one level down — markup naming what an
+item renders — and a layer could reach none of it. The item became a
+compositor of its own: `ToolCallSection` with `Title, Block, Note` in an
+order, the title and the note as classless leaves at their own roots, the
+code block rendering nothing over no code so the note stands in. The same
+test found two more: the system line (a button, a folded detail, a thread)
+and the batch (a head row, then its calls). Each is now a container whose
+template is the one-line loop, with its former markup as leaves. The rule
+that decides it every time: if markup sits between a compositor and a seam,
+the markup is a leaf of a compositor whose order places the seam; a
+wrapper around a seam is a compositor, or it is nothing.
+
 ### Plugins compose by data
 
 `[p1, p2, p3].reduce(derive, Base)`; later wins, the way a later stylesheet
