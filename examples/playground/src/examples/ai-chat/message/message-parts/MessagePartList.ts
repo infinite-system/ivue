@@ -23,9 +23,9 @@ import type { SessionLog } from '../../SessionLog';
 // that survives streaming. The row hands the list its parts, the chat and
 // the message; the list owns which role a part takes and what identifies it.
 class $MessagePartList extends KitContainer.$Class<MessagePartList.Roles, SessionLog.Part> {
-  /** a role per part kind, each naming the one bind they share — a plain literal, not the typed
-   *  `Kit.Class.entry`, because each part class declares `part` as its own kind while the seam's item is
-   *  the union `roleOf` narrows at runtime; built once per class by Static() */
+  /** a role per part kind, each naming the one bind they share; `Roles` types the entries loosely on
+   *  purpose — each part class declares `part` as its own kind while the seam's item is the union
+   *  `roleOf` narrows at runtime; built once per class by Static() */
   static override get $kit(): MessagePartList.Roles {
     return {
       Text: { view: MessagePartTextView, namespace: MessagePartText, bind: this.bindPart },

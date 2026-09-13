@@ -56,23 +56,6 @@ class $Kit {
     return this.freeze(this.merge({}, kit as Kit.Patch)) as K;
   }
 
-  /** An entry whose bind's keys are refused where they are wrong. A declared `Roles` type already
-   *  holds a literal's bind to `Bound<N>`, but `Attrs` is keyed by template literals (`data-*`, `aria-*`,
-   *  `on*`), and TypeScript stops excess-property checks against a type with an index signature — so
-   *  a literal's bind may return a key that is neither a prop nor an attribute unrefused. This generic
-   *  infers the bind's result and runs `Exact` over its keys, which no annotation can. The shape is the
-   *  literal's own, so the entry reads the same either way. Use it for a bind written inline; a named
-   *  static bind whose return is annotated `Child.Props` needs it not,
-   *  since `Props` carries no index signature. At runtime this is the object it was given. */
-  static entry<
-    N extends Kit.Namespace,
-    Owner = unknown,
-    Item = undefined,
-    E extends Kit.Entry<Owner, Item, N> = Kit.Entry<Owner, Item, N>
-  >(entry: E & { namespace: N } & Kit.EntryCheck<E, { namespace: N }>): Kit.Entry<Owner, Item, N> {
-    return entry;
-  }
-
   /** What a seam hands a role's view: the entry's `bind` over the seam, or `{ model, kit }` when
    *  the entry has none — no seam object is built then. A role with a class always receives its
    *  entry, so its view constructs the class the kit names whatever the bind returned; a tag role

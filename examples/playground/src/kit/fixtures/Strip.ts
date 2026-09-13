@@ -26,14 +26,15 @@ class $Strip extends KitContainer.$Class<Strip.Roles, string> {
       Header: { view: StripHeaderView },
       Body: { view: StripBodyView },
       Footer: { view: StripFooterView },
-      // an inline bind returning an attribute beside props: `entry` refuses a wrong key, a literal would not
-      Item: Kit.Class.entry({
-        view: CodeView,
-        namespace: Code,
-        bind: ({ model, item, key }) => ({ code: item, cap: model.cap, 'data-key': key })
-      }),
+      Item: { view: CodeView, namespace: Code, bind: this.bindItem },
       order: ['Header', 'Body', 'Footer']
     };
+  }
+
+  /** what each item's code block receives: the item as its code, the strip's cap, the key as an
+   *  attribute — `Bound` because an attribute rides along; a bind of props alone annotates `Props` */
+  static bindItem({ model, item, key }: Kit.Seam<$Strip, string>): Kit.Bound<typeof Code> {
+    return { code: item, cap: model.cap, 'data-key': key };
   }
 
   static get propsTypes() {

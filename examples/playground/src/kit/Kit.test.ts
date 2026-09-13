@@ -21,7 +21,7 @@ Goal: Prove the kit's five claims against a real component tree — a root, a ca
 // domain-invariant: $Kit — If an entry's view is a tag name, then the seam renders that element with what the bind returns and nothing else — no entry, no model
 // domain-invariant: $Kit — If a layer binds a role a layer below already bound, then its seam's `inherited` runs the layer below's bind on the same seam, down to the default `{ model, kit }`
 // domain-invariant: $Kit — If a seam is built, then a bound role with a class receives its entry beside what the bind returned, an unbound role receives `{ model, kit }` and no seam object, and no role's name is read
-// domain-invariant: $Kit — If an entry names its namespace, then a bind is checked against that child's props, a subkit bind sees the child's instance as its model, and a top-level patch's order relations are checked against the base's roles and the patch's own — at compile time
+// domain-invariant: $Kit — If a kit declares its Roles type and its binds are named statics with annotated returns, then a bind is checked against its child's props, a subkit bind sees the child's instance as its model, and a top-level patch's order relations are checked against the base's roles and the patch's own — at compile time
 Impossible if true: a base kit changed by reading an override's kit
 Impossible if true: a view constructing anything but its entry's namespace Class
 Impossible if true: a kit value reaching a prop no getter opened
@@ -737,26 +737,31 @@ describe('the types hold a bind to its child and an anchor to its base', () => {
   /** Compile-time specs: every `@ts-expect-error` line is an assertion that tsc refuses the line
    *  under it, and the positive arms beside them must compile. The runtime checks stay for kits
    *  built from data (the refusals spec above); this block proves the errors arrive earlier. */
-  // domain-invariant: $Kit — If an entry names its namespace, then a bind is checked against that child's props, a subkit bind sees the child's instance as its model, and a top-level patch's order relations are checked against the base's roles and the patch's own — at compile time
+  // domain-invariant: $Kit — If a kit declares its Roles type and its binds are named statics with annotated returns, then a bind is checked against its child's props, a subkit bind sees the child's instance as its model, and a top-level patch's order relations are checked against the base's roles and the patch's own — at compile time
   // invariant: A bind is a projection the layer above extends (examples/playground/src/kit/kit.invariants.md)
-  it('a typed entry refuses a wrong prop name and a subkit bind refuses a field its model lacks; the right names compile', () => {
-    const typed: Strip.Roles['Item'] = Kit.Class.entry({
+  it('a declared Roles type refuses a bind over a field its model lacks, a static bind refuses a wrong prop at its return, a subkit bind is checked the same; the right names compile', () => {
+    const typed: Strip.Roles['Item'] = {
       view: CodeView,
       namespace: Code,
       bind: ({ model, item }) => ({ code: item, cap: model.cap })
-    });
-    const wrongProp: Strip.Roles['Item'] = Kit.Class.entry({
-      view: CodeView,
-      namespace: Code,
-      // @ts-expect-error `cod` is not one of Code's props
-      bind: ({ item }) => ({ cod: item })
-    });
-    const wrongModel: Strip.Roles['Item'] = Kit.Class.entry({
+    };
+    const wrongModel: Strip.Roles['Item'] = {
       view: CodeView,
       namespace: Code,
       // @ts-expect-error the strip has no `nope`
       bind: ({ model }) => ({ code: String(model.nope) })
-    });
+    };
+    // a base bind is a named static with its return annotated `Child.Props`: a wrong key is refused
+    // at the declaration — `Props` has no index signature, so the literal it returns is checked whole
+    class $Typo extends Strip.$Class {
+      static bindTypo({
+        item
+      }: Kit.Seam<InstanceType<typeof Strip.$Class>, string>): Partial<Code.Props> {
+        // @ts-expect-error `cod` is not one of Code's props
+        return { cod: item };
+      }
+    }
+    void $Typo;
     const Nested = Kit.Class.derive(Panel, {
       Card: { subkit: { Code: { bind: ({ model }) => ({ code: model.title, cap: 2 }) } } }
     });
@@ -772,11 +777,10 @@ describe('the types hold a bind to its child and an anchor to its base', () => {
     expect(typed.namespace).toBe(Code);
     for (const namespace of [Nested, NestedWrongField, NestedWrongProp])
       expect(namespace.derivedFrom).toBe(Panel);
-    void wrongProp;
     void wrongModel;
   });
 
-  // domain-invariant: $Kit — If an entry names its namespace, then a bind is checked against that child's props, a subkit bind sees the child's instance as its model, and a top-level patch's order relations are checked against the base's roles and the patch's own — at compile time
+  // domain-invariant: $Kit — If a kit declares its Roles type and its binds are named statics with annotated returns, then a bind is checked against its child's props, a subkit bind sees the child's instance as its model, and a top-level patch's order relations are checked against the base's roles and the patch's own — at compile time
   // invariant: An order is edited only through relations against names (examples/playground/src/kit/kit.invariants.md)
   it('a patch refuses an anchor the base lacks, an inserted name it does not declare, and a list; and a later layer knows the roles an earlier one added', () => {
     const Right = Kit.Class.derive(Strip, {
