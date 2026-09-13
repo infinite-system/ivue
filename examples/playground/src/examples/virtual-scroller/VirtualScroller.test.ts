@@ -1,6 +1,7 @@
 /*
 === GENERATOR ===
 Goal: Render a window of a few dozen rows over a list of any length, at the exact pixel the scroll names, with sizes learned as rows pass through.
+[Hot paths read no layout](virtual-scroller.invariants.md#hot-paths-read-no-layout)
 [Rendered sizes are known only after a row mounts](virtual-scroller.invariants.md#rendered-sizes-are-known-only-after-a-row-mounts)
 [The reader's row stays put while sizes settle](virtual-scroller.invariants.md#the-readers-row-stays-put-while-sizes-settle)
 [The scroll position lands inside the scrollable range](virtual-scroller.invariants.md#the-scroll-position-lands-inside-the-scrollable-range)
@@ -42,6 +43,8 @@ Impossible if true: A scroller at rest requesting a frame every tick.
 // domain-invariant: $VirtualScroller — If the walk runs mid-lerp, then the window covers the animated position in pixels over the measured sizes, whatever the rows between it and the target measure
 // domain-invariant: $VirtualScroller — If a write moves the position without writing the transform, then the render bias stays where the frame's transform write put it
 // domain-invariant: $VirtualScroller — If a touch begins inside an element that scrolls across the own axis with room to go, then the browser's pan is the default from the first move and only a clearly own-axis move is the scroller's; a block with nowhere to go changes nothing.
+// domain-invariant: $VirtualScroller — If rows above the reader shift the scroll while a glide runs, then the glide keeps its remaining distance, the position cell follows the shifted target, the clamp adopts nothing, and contentShift has grown by the shift
+// domain-invariant: $VirtualScroller — If a frame's position write, the clamp or the limit runs, then it reads the observed container size and never the element's offsetHeight, scrollTop or a rect — no layout is forced on a frame
 Impossible if true: A rendered scroll position beyond the extent.
 Impossible if true: A viewport bottom left uncovered mid-lerp because the rows behind the target measure shorter than the estimate.
 Impossible if true: A spacer and a transform a chunk apart within one frame.
@@ -52,6 +55,8 @@ Impossible if true: an estimate that first calibrates under the reader's first g
 Impossible if true: A container that grew leaving the last row above its bottom edge.
 Impossible if true: A row capture that moves the content before the wave's last row has been read.
 Impossible if true: A finger scrolling a code block sideways that scrolls the list by its drift.
+Impossible if true: A glide killed by a clamp that read a position the shift had already moved.
+Impossible if true: A layout read on the per-frame position write.
 
 === GENERATOR-DESCRIBED ===
 Every spec runs headless. The scroller is hosted in a throwaway component
@@ -1063,4 +1068,101 @@ test('a wave of row captures coalesces into one anchored application', async () 
   expect(instance.probeGeometryVersion()).toBe(version + 1);
   expect(restoreAnchor).toHaveBeenCalledTimes(1);
   unmount();
+});
+
+// domain-invariant: $VirtualScroller — If rows above the reader shift the scroll while a glide runs, then the glide keeps its remaining distance, the position cell follows the shifted target, the clamp adopts nothing, and contentShift has grown by the shift
+// impossible-if-true: $VirtualScroller — A glide killed by a clamp that read a position the shift had already moved.
+// invariant: The reader's row stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a shift under a running glide moves the glide and the position cell together, adopts nothing, and sums into contentShift', () => {
+  const { instance, unmount } = scroller(rows(200), { assumedSize: 30 });
+  instance.setScrollPosition(-3000, false);
+  const lenis = {
+    time: 0,
+    isScrolling: 'smooth' as const,
+    targetScroll: 3000,
+    animatedScroll: 2600,
+    scroll: 2600,
+    shiftBy: vi.fn(function (
+      this: { targetScroll: number; animatedScroll: number },
+      delta: number
+    ) {
+      this.targetScroll += delta;
+      this.animatedScroll += delta;
+    }),
+    adoptExternalScroll: vi.fn(),
+    stop() {},
+    start() {},
+    destroy() {},
+    raf() {}
+  };
+  (instance as unknown as { lenis: unknown }).lenis = lenis;
+  expect(instance.contentShift).toBe(0);
+  // two rows above the anchor measure 100 px taller each: the content shifts 200 px
+  instance.syncItemSize(10, 130);
+  instance.syncItemSize(11, 130);
+  expect(lenis.shiftBy).toHaveBeenCalledTimes(2);
+  expect(lenis.targetScroll).toBe(3200);
+  expect(lenis.animatedScroll).toBe(2800);
+  // the position cell followed the target — a clamp reading it sees the truth
+  expect(Number(instance.scrollPosition.value)).toBe(3200);
+  expect(lenis.adoptExternalScroll).not.toHaveBeenCalled();
+  expect(instance.contentShift).toBe(200);
+  // a row below the anchor measuring moves nothing and shifts nothing
+  instance.syncItemSize(150, 130);
+  expect(lenis.shiftBy).toHaveBeenCalledTimes(2);
+  expect(instance.contentShift).toBe(200);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If a frame's position write, the clamp or the limit runs, then it reads the observed container size and never the element's offsetHeight, scrollTop or a rect — no layout is forced on a frame
+// impossible-if-true: $VirtualScroller — A layout read on the per-frame position write.
+// invariant: Hot paths read no layout (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('the per-frame position write, the clamp and the limit read the observed size and force no layout', () => {
+  // the tuned class itself, not the probe: the probe pins offsetSize and would hide a read
+  const emit = vi.fn();
+  const props = {
+    ...VirtualScroller.Class.propsDefaults,
+    modelValue: rows(100),
+    assumedSize: 30
+  } as VirtualScroller.Props<Row>;
+  const host = hosted(
+    () => new VirtualScroller.Class(props, emit as unknown as VirtualScroller.Emits)
+  );
+  const instance = host.instance;
+  const reads = { offsetHeight: 0, scrollTop: 0, rect: 0 };
+  const frame = document.createElement('div');
+  Object.defineProperty(frame, 'offsetHeight', {
+    get() {
+      reads.offsetHeight++;
+      return 400;
+    }
+  });
+  Object.defineProperty(frame, 'scrollTop', {
+    get() {
+      reads.scrollTop++;
+      return 0;
+    },
+    set() {}
+  });
+  frame.getBoundingClientRect = () => {
+    reads.rect++;
+    return { height: 400, width: 300, top: 0, left: 0, bottom: 400, right: 300 } as DOMRect;
+  };
+  // jsdom reports no padding: name it, or the extent reads NaN and clamps nothing
+  frame.style.paddingTop = '0px';
+  frame.style.paddingBottom = '0px';
+  instance.scrollElement.value = frame;
+  // the observer has reported: the hot paths read this cell
+  (
+    instance as unknown as { outerElementSize: { height: { value: number } } }
+  ).outerElementSize.height.value = 400;
+  const before = { ...reads };
+  instance.setScrollPosition(-100, false);
+  instance.setScrollPosition(-2600, false);
+  instance.clampScrollPosition();
+  instance.setScrollPosition(-3000, false);
+  expect(reads).toEqual(before);
+  // the observed size drives the clamp: 3000 px of rows in a 400 px frame end at 2600
+  expect(Number(instance.scrollPosition.value)).toBe(2600);
+  host.unmount();
 });

@@ -27,9 +27,11 @@ Goal: Hold a text selection over a virtual list as a range over the DATA, so the
 // domain-invariant: $VirtualScrollerSelection — If a touch lands within reach of the native selection's first or last caret, then it is a handle grab; elsewhere, or with no native selection in the frame, it is not.
 // domain-invariant: $VirtualScrollerSelection — If the reader dismisses a natively pinned selection, then the logical range and the chip go with it; a collapse of our own making (a range scrolled out, a clear) does not.
 // domain-invariant: $VirtualScrollerSelection — If the enabled knob is off, then a press selects nothing and the class attaches no touch gesture; on, everything below holds.
+// domain-invariant: $VirtualScrollerSelection — If the highlight is applied with no range and nothing ever painted, then it returns before it reads the document's selection; once a range has been shown, a later empty pass clears
 Impossible if true: A selection whose anchor equals its focus.
 Impossible if true: Clearing our selection removing a highlight the reader made elsewhere on the page.
 Impossible if true: A press on a list that refused selection starting a drag.
+Impossible if true: A window change on a plain scroll reading the document selection.
 
 === GENERATOR-DESCRIBED ===
 jsdom has no layout, so the three DOM readers the class rests on are
@@ -866,5 +868,29 @@ test('a list that refused selection selects nothing on a press and attaches no t
   instance.attach(frame);
   const touch = (instance as unknown as { $touch: { element: { value: unknown } } }).$touch;
   expect(touch.element.value).toBeNull();
+  instance.dispose();
+});
+
+// domain-invariant: $VirtualScrollerSelection — If the highlight is applied with no range and nothing ever painted, then it returns before it reads the document's selection; once a range has been shown, a later empty pass clears
+// impossible-if-true: $VirtualScrollerSelection — A window change on a plain scroll reading the document selection.
+// invariant: The selection is a range over the data (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('with no range and nothing painted the highlight pass reads no selection; after a range it clears', () => {
+  const { instance } = selection(0, 5);
+  const getSelection = vi.spyOn(window, 'getSelection');
+  // every window change re-pins the highlight: on a plain scroll that is nothing to do
+  instance.applyHighlight();
+  instance.applyHighlight();
+  expect(getSelection).not.toHaveBeenCalled();
+  // a range shown once means a later empty pass has something to clear
+  const pressed = press(60, 60);
+  instance.onMouseDown(pressed);
+  instance.extendTo(60, 100);
+  instance.endDrag();
+  expect(instance.range).not.toBeNull();
+  getSelection.mockClear();
+  instance.clear();
+  instance.applyHighlight();
+  expect(getSelection).toHaveBeenCalled();
+  getSelection.mockRestore();
   instance.dispose();
 });

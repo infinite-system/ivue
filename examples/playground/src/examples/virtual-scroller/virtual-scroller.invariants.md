@@ -49,6 +49,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 - [A list may refuse selection](#a-list-may-refuse-selection) — why the index and the peek never select a row's text.
 - [The pad covers the lerp gap exactly](#the-pad-covers-the-lerp-gap-exactly) — why a flick never shows canvas.
 - [Lenis is read inside the walk never tracked](#lenis-is-read-inside-the-walk-never-tracked) — why the pad costs no extra walks.
+- [Hot paths read no layout](#hot-paths-read-no-layout) — why a frame's position write forces no layout.
 - [A pad never outlives its flick](#a-pad-never-outlives-its-flick) — why a resting list mounts its base rows only.
 - [A hosted capability reaches its owner through an interface](#a-hosted-capability-reaches-its-owner-through-an-interface) — why selection, touch and padding are each testable without a scroller.
 - [A drag scrolls from inside the edge zone](#a-drag-scrolls-from-inside-the-edge-zone) — why a selection scrolls even when the frame is the page.
@@ -213,7 +214,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If rows above the row under the edge the reader reads from change size — a row measuring as it mounts, a placeholder becoming its content, a batch re-measure, the estimate calibrating — then the scroll moves by exactly what the content above moved, and that row stays where the reader had it. Scrolling down the edge is the top; while actually moving up it is the bottom, so a row growing inside the view expands upward, away from what was just read; at rest the edge is the top whatever the last direction was, so a row a click opened grows downward from where the reader left it. Rows below the anchor move nothing.
 
-**Scope:** `VirtualScroller.ts`: `captureAnchor`, `restoreAnchor`, `shiftScroll`, and the two paths that change sizes — `syncItemSize` on its own (an item's mount capture) and `remeasureRenderedItems` (the wrapper's observer, anchored once around its wave). Applies to every list the scroller renders, at any scroll position but the top, where nothing sits above the anchor.
+**Scope:** `VirtualScroller.ts`: `captureAnchor`, `restoreAnchor`, `shiftScroll`, `contentShift`, and the paths that change sizes — `syncItemSize` on its own, the coalesced capture wave (`captureItemSize` / `flushItemSizes`) and `remeasureRenderedItems` (the wrapper's observer, anchored once around its wave). Under a running glide `shiftScroll` moves the glide through `lenis.shiftBy` AND sets the position cell to the shifted target, so the clamp that follows reads the truth; a stale cell above the new limit read as out of range, adopted the limit and killed the flick. `contentShift` sums every shift, so a reader of the position can subtract the content's motion from the reader's own. Applies to every list the scroller renders, at any scroll position but the top, where nothing sits above the anchor.
 
 **Renegotiable at:** Layout — a list whose rows above the viewport never changed size would not need it; every virtual list's rows do, because sizes are known only after a row mounts.
 
@@ -558,6 +559,28 @@ tier each record is proven at, and how the colocated tests bind to it.
 **Status:** provisional
 
 **Last refined:** 2026-09-06
+
+### Hot paths read no layout
+
+**Invariant:** If code runs on every frame or every scroll read — the frame loop's position write, the clamp, Lenis's limit, the walk — then it reads the container's size from the resize observer's cell (`containerOuterSize`, through `containerSpan`) and never the element's `offsetHeight`, `scrollTop`, `scrollHeight` or a rect; before the observer's first report `containerSpan` falls back to the element once. A row's own capture reads one rect, on mount only; the wrapper observer reads the rendered rows' rects once per wave.
+
+**Scope:** `VirtualScroller.ts` `containerSpan`, `setScrollPosition`, `clampScrollPosition`, the `virtualLimit` callback, `scrollToIndex`'s centring, `snapToNearest`; `VirtualScrollerItem.ts` `capture` (mount only); `VirtualScrollerSelection.ts` `applyHighlight` (returns before `getSelection` when nothing is shown).
+
+**Mechanism:** A layout read after a patch forces the layout the browser was going to do at paint, and forces it again for every read that a later write invalidates. A CPU profile of two flicks on a phone profile put 191 ms in live `offsetHeight` reads, 163 ms in a `scrollTop` read on the position write, 711 ms in the rows' unmount captures and 191 ms in the highlight pass reading the document selection on every window change — none of them on the walk or the render. The observer's cell is already the size; reading it costs nothing and forces nothing.
+
+**Generates:** The `containerSpan` accessor; the mount-only capture; the highlight pass's early return.
+
+**Rejected alternatives:** Reading the element and caching per frame — the first read of a frame still forces the layout the patch dirtied.
+
+**Evidence:** The CPU profile in LESSONS ("Profile before spreading the work"). Tests: "the per-frame position write, the clamp and the limit read the observed size and force no layout", "with no range and nothing painted the highlight pass reads no selection; after a range it clears", "the size is reported once, on mount, as the rect — never on unmount, never in between".
+
+**Impossible if true:** A layout read on the per-frame position write. A rect read on unmount. A window change on a plain scroll reading the document selection.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller -t "force no layout|reads no selection|never on unmount"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-13
 
 ### Lenis is read inside the walk never tracked
 
