@@ -11,6 +11,10 @@ supplies, `entryOf`, `viewOf` and `propsOf` fall out, and every entry names `bin
 the parts, the chat and the message, and every getter reads them.
 */
 import { describe, expect, it } from 'vitest';
+import { Reactive } from '../../../../ivue';
+import { Static } from '../../../../Static';
+import type { Kit } from '../../../../kit/Kit';
+import type { MessagePart } from './MessagePart';
 import { MessagePartList } from './MessagePartList';
 import { MessagePartText } from './MessagePart.Text';
 import type { Chat } from '../../Chat';
@@ -45,6 +49,23 @@ describe('the parts of a message are a compositor of their own', () => {
     const unknown = { kind: 'hologram', text: 'x' } as unknown as SessionLog.Part;
     expect(list.roleOf(unknown)).toBe('Text');
     expect(list.entryOf(unknown)).toBe(list.kit.Text);
+  });
+
+  // domain-invariant: $MessagePartList — If a subclass overrides the named bind with a super fallback, then every part it renders receives the extension and the shipped list is untouched
+  it('the bind is a named static, so a subclass extends it through super and its kit — never redeclared — hands every part the extension', () => {
+    class $Dense extends MessagePartList.$Class {
+      static override bindPart(
+        seam: Kit.Seam<InstanceType<typeof MessagePartList.$Class>, SessionLog.Part>
+      ): MessagePart.Props & { dense: boolean } {
+        return { ...super.bindPart(seam), dense: true };
+      }
+    }
+    const Dense = Reactive(Static($Dense));
+    const dense = new Dense({ parts: [textPart], chat, message });
+    expect(dense.propsOf(textPart, 0)).toMatchObject({ part: textPart, dense: true });
+    const base = new MessagePartList.Class({ parts: [textPart], chat, message });
+    expect(base.propsOf(textPart, 0)).not.toHaveProperty('dense');
+    expect(Dense.$kit.Text.bind).not.toBe(MessagePartList.$Class.$kit.Text.bind);
   });
 
   it("a key is a call id, a batch's first call, or the kind and place", () => {
