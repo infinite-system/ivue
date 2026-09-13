@@ -93,8 +93,8 @@ import ChatShell from '../../../../../examples/playground/src/examples/ai-chat/C
   }
   .eac-frame {
     /* svh, not dvh: the address bar folding away must not resize the chat under a reader */
-    height: calc(100svh - 120px);
-    min-height: 480px;
+    height: calc(100svh - 72px);
+    min-height: 520px;
   }
 }
 </style>
