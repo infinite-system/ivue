@@ -62,7 +62,7 @@ class $Kit {
   static entry<
     N extends Kit.Namespace,
     Owner = unknown,
-    Item = unknown,
+    Item = undefined,
     Rest extends Kit.EntryRest<Owner, Item, N> = Kit.EntryRest<Owner, Item, N>
   >(
     view: Kit.View,
@@ -376,10 +376,6 @@ export namespace Kit {
      *  `v-if`, beside the view it guards, so a layer changes presence by data: `Footer: { shows: () => true }`.
      *  A later layer's rule replaces the one below — presence is one predicate, not a composition. */
     shows?(model: Owner): boolean;
-    /** Whether this role renders an item, for a list that dispatches by what the item is. The first
-     *  entry whose `takes` holds, in declaration order, renders it; the one entry without `takes` is
-     *  the fallback. A layer adds a kind by adding an entry with `takes` — data, never a table in code. */
-    takes?(item: Item): boolean;
   }
 
   /** What `entry()` takes beside the namespace and the view. */

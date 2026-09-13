@@ -9,8 +9,7 @@ Impossible if true: a tool name reaches a renderer that branches on it
 $MessagePartToolCall is the part that picks a card: its kit is the map from a tool name to a card's entry, with two families by prefix and the generic fallback; a batch renders each call through it.
 */
 import { describe, expect, it } from 'vitest';
-import { Kit } from '../../../../kit/Kit';
-import type { SessionLog } from '../../SessionLog';
+import { Static } from '../../../../Static';
 import { MessagePartToolCall } from './MessagePart.ToolCall';
 import { MessagePartToolBatch } from './MessagePart.ToolBatch';
 import { ToolCallBash } from './tool-calls/ToolCall.Bash';
@@ -40,21 +39,16 @@ describe('PartToolCall', () => {
     expect(MessagePartToolCall.Class.isMapped('Edit')).toBe(true);
     expect(MessagePartToolCall.Class.isMapped('mcp__x__y')).toBe(true);
     expect(MessagePartToolCall.Class.isMapped('NeverHeardOfIt')).toBe(false);
-    // a layer swaps one card's view and class; what the card takes is the base entry's and survives
-    const QuietPart = Kit.Class.derive(MessagePartToolCall, {
-      Bash: { view: ToolCallGenericView, namespace: ToolCall }
-    }).$Class;
+    // a subclass swaps one card by naming another entry; the base map is untouched
+    class $QuietPart extends MessagePartToolCall.$Class {
+      static override get $kit() {
+        return { ...super.$kit, Bash: super.$kit.Generic };
+      }
+    }
+    const QuietPart = Static($QuietPart);
     expect(QuietPart.toolFor('Bash').namespace).toBe(ToolCall);
-    expect(QuietPart.isMapped('Bash')).toBe(true);
     expect(MessagePartToolCall.Class.toolFor('Bash').namespace).toBe(ToolCallBash);
     // a batch renders its calls through this part, so the swap reaches batches too
     expect(MessagePartToolBatch.Class.$kit.Call.namespace).toBe(MessagePartToolCall);
-    // a layer adds a card by data: an entry that says which name it takes
-    const WithGrep = Kit.Class.derive(MessagePartToolCall, {
-      Grep: { view: 'pre', takes: (call: SessionLog.ToolCall) => call.name === 'Grep' }
-    });
-    expect(WithGrep.$Class.toolFor('Grep').view).toBe('pre');
-    expect(WithGrep.$Class.isMapped('Grep')).toBe(true);
-    expect(MessagePartToolCall.Class.isMapped('Grep')).toBe(false);
   });
 });

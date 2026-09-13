@@ -40,36 +40,19 @@ class $MessagePartToolCall extends KitContainer.$Class<
   static override get $kit(): MessagePartToolCall.Roles {
     return {
       Generic: this.entry(ToolCallGenericView, ToolCall),
-      Mcp: this.entry(ToolCallMcpView, ToolCallMcp, {
-        takes: (call) => call.name.startsWith('mcp__')
-      }),
-      Task: this.entry(ToolCallTaskView, ToolCallTask, {
-        takes: (call) => this.TASK_TOOLS.test(call.name)
-      }),
-      Bash: this.entry(ToolCallBashView, ToolCallBash, { takes: this.named('Bash') }),
-      Edit: this.entry(ToolCallEditView, ToolCallEdit, { takes: this.named('Edit') }),
-      NotebookEdit: this.entry(ToolCallEditView, ToolCallEdit, {
-        takes: this.named('NotebookEdit')
-      }),
-      Read: this.entry(ToolCallReadView, ToolCallRead, { takes: this.named('Read') }),
-      Write: this.entry(ToolCallWriteView, ToolCallWrite, { takes: this.named('Write') }),
-      Agent: this.entry(ToolCallAgentView, ToolCallAgent, { takes: this.named('Agent') }),
-      Skill: this.entry(ToolCallSkillView, ToolCallSkill, { takes: this.named('Skill') }),
-      WebFetch: this.entry(ToolCallWebFetchView, ToolCallWebFetch, {
-        takes: this.named('WebFetch')
-      }),
-      WebSearch: this.entry(ToolCallWebFetchView, ToolCallWebFetch, {
-        takes: this.named('WebSearch')
-      }),
-      Artifact: this.entry(ToolCallArtifactView, ToolCallArtifact, {
-        takes: this.named('Artifact')
-      })
+      Mcp: this.entry(ToolCallMcpView, ToolCallMcp),
+      Task: this.entry(ToolCallTaskView, ToolCallTask),
+      Bash: this.entry(ToolCallBashView, ToolCallBash),
+      Edit: this.entry(ToolCallEditView, ToolCallEdit),
+      NotebookEdit: this.entry(ToolCallEditView, ToolCallEdit),
+      Read: this.entry(ToolCallReadView, ToolCallRead),
+      Write: this.entry(ToolCallWriteView, ToolCallWrite),
+      Agent: this.entry(ToolCallAgentView, ToolCallAgent),
+      Skill: this.entry(ToolCallSkillView, ToolCallSkill),
+      WebFetch: this.entry(ToolCallWebFetchView, ToolCallWebFetch),
+      WebSearch: this.entry(ToolCallWebFetchView, ToolCallWebFetch),
+      Artifact: this.entry(ToolCallArtifactView, ToolCallArtifact)
     };
-  }
-
-  /** the predicate for one tool name */
-  static named(name: string) {
-    return (call: SessionLog.ToolCall) => call.name === name;
   }
 
   /** what every card receives from the part: the call, the chat, the message */
@@ -79,14 +62,22 @@ class $MessagePartToolCall extends KitContainer.$Class<
 
   static readonly TASK_TOOLS = /^Task(Create|Update|List|Get|Stop|Output)$/;
 
-  /** the card for a tool name: the entry whose `takes` holds, else the generic card */
-  static toolFor(name: string): Kit.Entry {
-    return this.$kit[this.roleFor({ name } as SessionLog.ToolCall) as MessagePartToolCall.Role];
+  /** the role for a tool name: its own card, then a family by prefix, then the generic card */
+  static roleFor(name: string): MessagePartToolCall.Role {
+    if (Object.hasOwn(this.$kit, name)) return name as MessagePartToolCall.Role;
+    if (name.startsWith('mcp__')) return 'Mcp';
+    if (this.TASK_TOOLS.test(name)) return 'Task';
+    return 'Generic';
   }
 
-  /** whether a name has a card of its own or a family's — anything but the fallback */
+  /** the card for a tool name */
+  static toolFor(name: string): Kit.Entry {
+    return this.$kit[this.roleFor(name)];
+  }
+
+  /** whether a name has a card of its own or a family's */
   static isMapped(name: string): boolean {
-    return this.roleFor({ name } as SessionLog.ToolCall) !== 'Generic';
+    return Object.hasOwn(this.$kit, name) || name.startsWith('mcp__') || this.TASK_TOOLS.test(name);
   }
 
   constructor(public props: MessagePartToolCall.Props) {
@@ -100,6 +91,11 @@ class $MessagePartToolCall extends KitContainer.$Class<
 
   get call(): SessionLog.ToolCall {
     return this.props.part.call;
+  }
+
+  /** the role a call takes: its tool's card, a family's, or the generic — the one fact of a dispatch */
+  override roleOf(call: SessionLog.ToolCall): MessagePartToolCall.Role {
+    return this.self.roleFor(call.name);
   }
 }
 
@@ -118,7 +114,7 @@ export namespace MessagePartToolCall {
     | 'WebFetch'
     | 'WebSearch'
     | 'Artifact';
-  export type Roles = Kit.Roles<Role, $MessagePartToolCall, SessionLog.ToolCall>;
+  export type Roles = Kit.Roles<Role, $MessagePartToolCall>;
 
   export const $Class = Static($MessagePartToolCall);
   export let Class = Reactive($Class);
