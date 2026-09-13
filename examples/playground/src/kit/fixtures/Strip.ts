@@ -32,7 +32,8 @@ class $Strip extends KitContainer.$Class<Strip.Roles, string> {
   }
 
   /** what each item's code block receives: the item as its code, the strip's cap, the key as an
-   *  attribute — `Bound` because an attribute rides along; a bind of props alone annotates `Props` */
+   *  attribute — annotated `Bound` because an attribute rides along; the annotation is what makes a
+   *  wrong key an error at the `return` */
   static bindItem({ model, item, key }: Kit.Seam<$Strip, string>): Kit.Bound<typeof Code> {
     return { code: item, cap: model.cap, 'data-key': key };
   }

@@ -751,8 +751,9 @@ describe('the types hold a bind to its child and an anchor to its base', () => {
       // @ts-expect-error the strip has no `nope`
       bind: ({ model }) => ({ code: String(model.nope) })
     };
-    // a base bind is a named static with its return annotated `Child.Props`: a wrong key is refused
-    // at the declaration — `Props` has no index signature, so the literal it returns is checked whole
+    // a base bind is a named static with an annotated return: the literal it returns is fresh where
+    // it meets the annotation, so a wrong key is refused there — an unannotated inline arrow would
+    // infer its return first and let the key through, which is why an inline bind belongs in a patch
     class $Typo extends Strip.$Class {
       static bindTypo({
         item
