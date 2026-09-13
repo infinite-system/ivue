@@ -8,7 +8,7 @@ class $ToolCallArtifact extends ToolCall.$Class {
     return String(this.input.action ?? 'publish');
   }
 
-  get title(): string {
+  override get title(): string {
     return String(this.input.title ?? this.structured.title ?? this.input.file_path ?? '');
   }
 

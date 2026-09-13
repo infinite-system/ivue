@@ -44,6 +44,9 @@ class $ToolCallSubThread extends KitContainer.$Class<ToolCallSubThread.Roles, Ch
       page: -1,
       speaker: message.speaker,
       preview: '',
+      calls: message.parts.filter((part) => part.kind === 'tool_call' || part.kind === 'tool_batch')
+        .length,
+      at: message.timestamp,
       message
     }));
   }

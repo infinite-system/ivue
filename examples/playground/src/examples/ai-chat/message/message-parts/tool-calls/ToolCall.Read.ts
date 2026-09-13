@@ -14,7 +14,7 @@ class $ToolCallRead extends ToolCall.$Class {
     return this.constructor as typeof $ToolCallRead;
   }
 
-  get filePath(): string {
+  override get filePath(): string {
     return this.pathLabel(this.input.file_path);
   }
 

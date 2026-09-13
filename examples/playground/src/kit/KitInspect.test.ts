@@ -40,12 +40,13 @@ describe('a kit is read as its template', () => {
     // a hand-written subclass that declares its sections backwards but keeps the order
     class $Shuffled extends Strip.$Class {
       static override get $kit() {
-        const kit = super.$kit as Record<string, unknown> & { order: readonly string[] };
+        const kit = super.$kit;
+        const table = kit as unknown as Record<string, unknown>;
         const roles = kit.order.slice().reverse();
         return {
-          ...Object.fromEntries(roles.map((role) => [role, kit[role]])),
+          ...Object.fromEntries(roles.map((role) => [role, table[role]])),
           order: kit.order
-        } as typeof kit;
+        } as unknown as typeof kit;
       }
     }
     const Shuffled = { ...Strip, $Class: $Shuffled, Class: $Shuffled } as unknown as typeof Strip;

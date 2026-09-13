@@ -41,9 +41,10 @@ class $KitContainer<Roles extends object = Record<string, Kit.Entry>, Item = unk
     return roles.length === 1 ? roles[0] : undefined;
   }
 
-  /** The one cast per class: instance code reads its own statics here; a subclass narrows it. */
-  protected get self() {
-    return this.constructor as typeof $KitContainer & { $kit: Roles };
+  /** The one cast per class: instance code reads its own statics here. Typed as the statics every
+   *  container has, so a subclass's own `self` — its whole constructor — narrows it without conflict. */
+  protected get self(): KitContainer.Statics<Roles> {
+    return this.constructor as unknown as KitContainer.Statics<Roles>;
   }
 
   /** the kit is the class's: a subclass with its own `$kit` swaps the subtree */
@@ -97,6 +98,12 @@ export namespace KitContainer {
     Roles extends object = Record<string, Kit.Entry>,
     Item = unknown
   > = InstanceType<typeof $KitContainer<Roles, Item>>;
+
+  /** what every container's class carries, read through `self`: its kit and its one role when it has one */
+  export interface Statics<Roles extends object> {
+    readonly $kit: Roles;
+    readonly $onlyRole: string | undefined;
+  }
 
   /** the keys of a kit that hold an entry — never `order`, never a role map */
   export type RoleOf<Roles extends object> = {

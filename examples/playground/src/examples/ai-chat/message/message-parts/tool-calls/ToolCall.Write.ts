@@ -4,7 +4,7 @@ import { ToolCall } from './ToolCall';
 // A write: the whole file as written, highlighted by its extension,
 // with line numbers from one.
 class $ToolCallWrite extends ToolCall.$Class {
-  get filePath(): string {
+  override get filePath(): string {
     return this.pathLabel(this.input.file_path);
   }
 

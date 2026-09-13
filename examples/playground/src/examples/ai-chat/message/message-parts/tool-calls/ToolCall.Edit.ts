@@ -5,7 +5,7 @@ import { ToolCall } from './ToolCall';
 // header. The structured patch the tool recorded is the source when it
 // exists; the call's own old and new strings otherwise.
 class $ToolCallEdit extends ToolCall.$Class {
-  get filePath(): string {
+  override get filePath(): string {
     return this.pathLabel(this.input.file_path ?? this.input.notebook_path);
   }
 

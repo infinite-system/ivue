@@ -198,6 +198,8 @@ export namespace Composer {
   export const $Class = Static($Composer);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
+  // raw-instance type — the picker holds and reads its composer; the raw class, so the kit that names the picker does not cycle
+  export type Model = $Composer;
 
   export type Role = 'Picker';
 
