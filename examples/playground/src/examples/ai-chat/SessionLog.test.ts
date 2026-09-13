@@ -59,7 +59,7 @@ const prompt = (uuid: string, text: string, seconds: number, extra: object = {})
     type: 'user',
     uuid,
     timestamp: at(seconds),
-    message: { speaker: 'user', content: text },
+    message: { role: 'user', content: text },
     ...extra
   });
 
@@ -140,7 +140,7 @@ const SESSION = [
     uuid: 'c1',
     timestamp: at(14),
     isCompactSummary: true,
-    message: { speaker: 'user', content: 'Summary of everything' }
+    message: { role: 'user', content: 'Summary of everything' }
   }),
   prompt('m1', 'meta text', 15, { isMeta: true }),
   assistant(

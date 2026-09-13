@@ -426,7 +426,7 @@ describe('Chat', () => {
         type: 'user',
         uuid: 'f1',
         timestamp: '2026-09-09T10:00:00.000Z',
-        message: { speaker: 'user', content: 'from disk ekalashnikov@gmail.com' }
+        message: { role: 'user', content: 'from disk ekalashnikov@gmail.com' }
       },
       {
         type: 'assistant',
