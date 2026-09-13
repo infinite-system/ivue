@@ -1,6 +1,7 @@
 import { Reactive } from '../../../../ivue';
 import { Static } from '../../../../Static';
 import { Kit } from '../../../../kit/Kit';
+import { KitContainer } from '../../../../kit/KitContainer';
 import { Icons } from '../../Icons';
 import { MessagePartToolCall } from './MessagePart.ToolCall';
 import MessagePartToolCallView from './MessagePart.ToolCall.vue';
@@ -13,23 +14,35 @@ import type { MessagePart } from './MessagePart';
 // the combined time, a mark if any failed. It opens to its calls, each
 // collapsed and each with its own state, so the batch and a call never
 // reset each other.
-class $MessagePartToolBatch {
+class $MessagePartToolBatch extends KitContainer.$Class<
+  MessagePartToolBatch.Roles,
+  SessionLog.ToolCall
+> {
   /** the one role a batch composes: the part that picks a card per call */
-  static get $kit() {
+  static override get $kit(): MessagePartToolBatch.Roles {
     return {
-      Call: { view: MessagePartToolCallView, namespace: MessagePartToolCall }
-    } satisfies Kit.Of<'Call'>;
+      Call: { view: MessagePartToolCallView, namespace: MessagePartToolCall, bind: this.bindCall }
+    };
   }
 
-  constructor(public props: MessagePart.Props<SessionLog.ToolBatchPart>) {}
+  /** what a call's card receives from the batch: the call as a part, the chat, the message */
+  static bindCall({
+    model,
+    item
+  }: Kit.Seam<
+    $MessagePartToolBatch,
+    SessionLog.ToolCall
+  >): MessagePart.Props<SessionLog.ToolCallPart> {
+    return { part: model.partFor(item), chat: model.props.chat, message: model.props.message };
+  }
+
+  constructor(public props: MessagePart.Props<SessionLog.ToolBatchPart>) {
+    super();
+  }
 
   /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
+  protected override get self() {
     return this.constructor as typeof $MessagePartToolBatch;
-  }
-
-  get kit() {
-    return this.self.$kit;
   }
 
   get part(): SessionLog.ToolBatchPart {
@@ -125,9 +138,15 @@ class $MessagePartToolBatch {
   partFor(call: SessionLog.ToolCall): SessionLog.ToolCallPart {
     return { kind: 'tool_call', call };
   }
+
+  override keyOf(call: SessionLog.ToolCall): string {
+    return call.id;
+  }
 }
 
 export namespace MessagePartToolBatch {
+  export type Roles = Kit.Roles<'Call', $MessagePartToolBatch, SessionLog.ToolCall>;
+
   export interface IconGroup {
     key: string;
     icon: string;

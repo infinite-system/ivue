@@ -13,12 +13,10 @@ const model = new (
   <div class="ac-subthread">
     <p class="ac-subthread-head">{{ model.countLabel }}</p>
     <component
-      :is="model.kit.Message.view"
-      v-for="row in model.rows"
-      :key="row.id"
-      :kit="model.kit.Message"
-      :row="row"
-      :chat="chat"
+      v-for="(row, at) in model.rows"
+      :key="model.keyOf(row)"
+      :is="model.viewOf(row)"
+      v-bind="model.propsOf(row, at)"
     />
   </div>
 </template>

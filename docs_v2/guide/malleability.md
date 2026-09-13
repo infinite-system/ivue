@@ -283,7 +283,7 @@ what a settings page ever was.
 
 A leaf is markup. A container is an ordered list of roles, and that list
 is on the kit too, as `order`. The container's template loops one seam
-over it — `<component v-for="role in model.kit.order" :is="model.kit[role].view" v-bind="model.seamProps(role)" />`
+over it — `<component v-for="role in model.kit.order" :is="model.kit[role].view" v-bind="model.seam(role)" />`
 — so a layer inserts, drops, moves or dresses a section without copying
 the template. A patch edits `order` only by relations against names:
 `after: { Head: ['Badge'] }`, `before: { Foot: ['Rule'] }`,

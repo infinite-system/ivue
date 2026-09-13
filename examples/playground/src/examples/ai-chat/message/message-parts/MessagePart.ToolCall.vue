@@ -10,11 +10,5 @@ const model = new (
 </script>
 
 <template>
-  <component
-    :is="model.card.view"
-    :kit="model.card"
-    :call="model.call"
-    :chat="chat"
-    :message="message"
-  />
+  <component :is="model.viewOf(model.call)" v-bind="model.propsOf(model.call)" />
 </template>

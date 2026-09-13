@@ -1,6 +1,7 @@
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
+import { KitContainer } from '../../../kit/KitContainer';
 import { MessagePartText } from './message-parts/MessagePart.Text';
 import MessagePartTextView from './message-parts/MessagePart.Text.vue';
 import { MessagePartThinking } from './message-parts/MessagePart.Thinking';
@@ -30,7 +31,7 @@ import type { SessionLog } from '../SessionLog';
 // own sections are roles too, so any of them swaps from outside. A row that
 // is being streamed re-reads the chat's revision, so in-place growth of
 // its message re-renders this row and nothing else.
-class $ChatMessage {
+class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles, SessionLog.Part> {
   /** what the skeleton's frame takes: the stub's padding and its status line — the row's own head sits above it */
   static readonly SKELETON_FRAME_PX = 36;
   static readonly SKELETON_LINE_PX = 20;
@@ -55,7 +56,7 @@ class $ChatMessage {
    *  literals rather than `Kit.Class.entry(MessagePartText, …)`: each part view declares `part` as its own
    *  kind, while the seam's item is the union the kind→role lookup narrows at runtime, so a typed
    *  entry would refuse the one bind all six share. */
-  static get $kit(): ChatMessage.Roles {
+  static override get $kit(): ChatMessage.Roles {
     return {
       Text: { view: MessagePartTextView, namespace: MessagePartText, bind: this.bindMessagePart },
       Thinking: {
@@ -130,16 +131,13 @@ class $ChatMessage {
     system: 'System'
   };
 
-  constructor(public props: ChatMessage.Props) {}
-
-  /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
-    return this.constructor as typeof $ChatMessage;
+  constructor(public props: ChatMessage.Props) {
+    super();
   }
 
-  /** the kit is the class's; a subclass with its own `$kit` swaps the subtree */
-  get kit() {
-    return this.self.$kit;
+  /** The one cast per class: instance code reads its own statics here. */
+  protected override get self() {
+    return this.constructor as typeof $ChatMessage;
   }
 
   get chat(): Chat.Model {
@@ -371,35 +369,14 @@ class $ChatMessage {
     }
   }
 
-  /**
-   * What a seam hands the role's view: the entry's `bind` over the seam, or `{ model, kit }` when
-   * the entry has none. Never a branch on the role's name — the entry is the table.
-   */
-  // invariant: The seam is built by one method that never names a role (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
-  seamProps(role: ChatMessage.Role, item?: SessionLog.Part, key?: string | number): Kit.Bound {
-    return Kit.Class.seam(this, this.kit[role], item, key);
-  }
-
-  /** the role for a part: its kind's, or Text for a kind nobody mapped */
-  partRole(part: SessionLog.Part): ChatMessage.PartRole {
+  /** the role a part takes: its kind's, or Text for a kind nobody mapped */
+  override roleOf(part: SessionLog.Part): ChatMessage.PartRole {
     const role = this.self.PART_ROLES[part.kind];
     return role && role in this.kit ? role : 'Text';
   }
 
-  partEntry(part: SessionLog.Part): Kit.Entry {
-    return this.kit[this.partRole(part)];
-  }
-
-  partView(part: SessionLog.Part) {
-    return this.partEntry(part).view;
-  }
-
-  /** the seam for a part: its role's entry, fed the part as the item and the loop's key */
-  partProps(part: SessionLog.Part, at: number): Kit.Bound {
-    return this.seamProps(this.partRole(part), part, this.partKey(part, at));
-  }
-
-  partKey(part: SessionLog.Part, at: number): string {
+  /** what identifies a part in the row: a call's id, a batch's first call, else its kind and place */
+  override keyOf(part: SessionLog.Part, at: number): string {
     if (part.kind === 'tool_call') return part.call.id;
     if (part.kind === 'tool_batch') return `batch-${part.calls[0]?.id ?? at}`;
     return `${part.kind}-${at}`;

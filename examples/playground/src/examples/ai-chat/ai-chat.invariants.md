@@ -61,7 +61,7 @@ pointer.
 Every model that composes declares its roles as `static get $kit()`, a
 record of entries — a part per kind on the row, a card per tool name on
 the part that picks cards, the sections of the row, the leaves of a card
-— and every seam renders `<component :is="model.kit.Role.view" v-bind="model.seamProps(Role)" />`.
+— and every seam renders `<component :is="model.kit.Role.view" v-bind="model.seam(Role)" />`.
 A container renders its sections from the kit's `order`, one seam per
 role, with `v-if="model.shows(role)"` naming presence; the row's six
 sections (Gutter, Header, Stub, MessageParts, Await, Footer) are that order, and the
@@ -74,7 +74,7 @@ The mechanism and its proofs: `../../kit/kit.invariants.md`.
 
 ## The seam is built by one method that never names a role
 
-`seamProps(role, item?, key?)` on a container is the one place a seam's
+`seam(role, item?, key?)` — inherited from `KitContainer` by every compositor — is the one place a seam's
 props come from, and it reads the entry alone: the entry's `bind` over
 `{ model, item, key, inherited }`, or `{ model, kit }` when the entry has
 none. It never switches on the role's name — the kit is already the table
@@ -179,7 +179,7 @@ If the invariants hold, none of these can exist in a correct state:
 - a batch that holds one call, or one that hides a call more than two
   clicks deep
 - a renderer that branches on a tool name instead of looking it up, or a seam that names a component instead of an entry
-- a container template that names one of its sections, or a `seamProps` that switches on a role
+- a container template that names one of its sections, or a `seam()` that switches on a role
 - a tree variant that copies the row's template, or a view that renders nothing to stand in for a dropped section
 - an element inside the row that wraps a subset of its sections
 - a timer per row, or a counter that ticks after its part is done

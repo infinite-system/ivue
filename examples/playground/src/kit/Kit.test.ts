@@ -31,7 +31,7 @@ Impossible if true: an absolute order list accepted by derive
 $Kit is five statics — resolve, derive, entry, seam, view — over data a
 class declares as `static get $kit()`; reading a chain back is KitInspect's,
 proven beside it. The Strip fixture is the container: its view renders `order` and
-`seamProps`, its body feeds items through a bound role, and every order
+`seam`, its body feeds items through a bound role, and every order
 test derives it by relations — never a list, which derive refuses — so an
 upstream role added to Strip later lands in every derived tree untouched. The cache is Static()'s own `$` guard, keyed by the
 receiver's own property, so no cache lives here. The fixtures are real:

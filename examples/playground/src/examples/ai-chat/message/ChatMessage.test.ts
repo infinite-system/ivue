@@ -6,12 +6,12 @@ Goal: Prove the row is a container of roles: its sections render in the kit's `o
 [A tree variant is a patch over the row's order](../ai-chat.invariants.md#a-tree-variant-is-a-patch-over-the-rows-order)
 // domain-invariant: $ChatMessage — If a section role is asked whether it shows, then the stub and the parts are the two states of one row, the await line shows only while the reply has nothing, the foot only with a receipt, and every other role always
 // domain-invariant: $ChatMessage — If a seam is built for a role, then a section receives `{ model, kit }`, a part receives its entry beside `{ part, chat, message }` from the entry's bind, and a kind nobody mapped renders through Text
-Impossible if true: a row's template names a section, or seamProps branches on a role
+Impossible if true: a row's template names a section, or seam() branches on a role
 
 === GENERATOR-DESCRIBED ===
 $ChatMessage reads the chat through a stub here — a revision, a streaming
 slot, the focus and page probes — because the row's own decisions never
-need a thread: `shows` and `seamProps` are plain methods over the props.
+need a thread: `shows` and `seam` are plain methods over the props.
 The variants are read through ChatVariants, the file that derives them, so
 the spec proves the shipped catalog and not a copy of its patches.
 */
@@ -123,35 +123,35 @@ describe('the row is a container of roles', () => {
   });
 
   // domain-invariant: $ChatMessage — If a seam is built for a role, then a section receives `{ model, kit }`, a part receives its entry beside `{ part, chat, message }` from the entry's bind, and a kind nobody mapped renders through Text
-  // impossible-if-true: $ChatMessage — a row's template names a section, or seamProps branches on a role
+  // impossible-if-true: $ChatMessage — a row's template names a section, or seam() branches on a role
   // invariant: The seam is built by one method that never names a role (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
-  it('seamProps() hands a section the model and its entry, and a part its entry beside the bind — one method, no role named', () => {
+  it('seam() hands a section the model and its entry, and a part its entry beside the bind — one method, no role named', () => {
     const chat = stubChat();
     const model = new ChatMessage.Class({ row: row(reply), chat });
     for (const role of model.kit.order) {
-      const seam = model.seamProps(role);
+      const seam = model.seam(role);
       expect(seam).toEqual({ model, kit: model.kit[role] });
       expect(seam.kit).toBe(model.kit[role]);
     }
-    expect(model.partRole(textPart)).toBe('Text');
-    expect(model.partProps(textPart, 0)).toEqual(model.seamProps('Text', textPart, 'text-0'));
-    expect(model.seamProps('Text', textPart, 'text-0')).toEqual({
+    expect(model.roleOf(textPart)).toBe('Text');
+    expect(model.propsOf(textPart, 0)).toEqual(model.seam('Text', textPart, 'text-0'));
+    expect(model.seam('Text', textPart, 'text-0')).toEqual({
       kit: model.kit.Text,
       part: textPart,
       chat,
       message: reply
     });
     const unknown = { kind: 'hologram', text: 'x' } as unknown as SessionLog.Part;
-    expect(model.partRole(unknown)).toBe('Text');
-    expect(model.partEntry(unknown)).toBe(model.kit.Text);
-    expect(model.partKey(textPart, 3)).toBe('text-3');
+    expect(model.roleOf(unknown)).toBe('Text');
+    expect(model.entryOf(unknown)).toBe(model.kit.Text);
+    expect(model.keyOf(textPart, 3)).toBe('text-3');
     // the method is the kit's: a tag role added by a layer receives only its bind, through the same call
     const Ruled = Kit.Class.derive(ChatMessage, {
       order: { after: { Header: ['Rule'] } },
       Rule: { view: 'hr', bind: () => ({ class: 'ac-rule' }) }
     });
     const ruled = new (Ruled.Class as typeof ChatMessage.Class)({ row: row(reply), chat });
-    expect(ruled.seamProps('Rule' as ChatMessage.Role)).toEqual({ class: 'ac-rule' });
+    expect(ruled.seam('Rule' as ChatMessage.Role)).toEqual({ class: 'ac-rule' });
     expect(ruled.kit.order).toEqual([
       'Gutter',
       'Header',

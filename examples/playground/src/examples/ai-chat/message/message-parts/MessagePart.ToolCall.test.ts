@@ -24,7 +24,7 @@ describe('PartToolCall', () => {
   // domain-invariant: $MessagePartToolCall — If a tool name is not mapped, then the generic card's entry renders it; an MCP name and a task name map by family; the lookup reads the part's own kit, so a subclass swaps a card by naming another entry
   // impossible-if-true: $MessagePartToolCall — a tool name reaches a renderer that branches on it
   it("maps every known name, MCP and task names by family, and falls back to the generic card — through the part's own kit", () => {
-    expect(MessagePartToolCall.Class.toolFor('Bash')).toEqual({
+    expect(MessagePartToolCall.Class.toolFor('Bash')).toMatchObject({
       view: ToolCallBashView,
       namespace: ToolCallBash
     });
@@ -32,7 +32,7 @@ describe('PartToolCall', () => {
       ToolCallMcp
     );
     expect(MessagePartToolCall.Class.toolFor('TaskUpdate').namespace).toBe(ToolCallTask);
-    expect(MessagePartToolCall.Class.toolFor('NeverHeardOfIt')).toEqual({
+    expect(MessagePartToolCall.Class.toolFor('NeverHeardOfIt')).toMatchObject({
       view: ToolCallGenericView,
       namespace: ToolCall
     });

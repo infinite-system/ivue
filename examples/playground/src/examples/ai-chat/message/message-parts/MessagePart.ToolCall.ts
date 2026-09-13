@@ -1,6 +1,8 @@
 import { Reactive } from '../../../../ivue';
 import { Static } from '../../../../Static';
+import type { Component } from 'vue';
 import { Kit } from '../../../../kit/Kit';
+import { KitContainer } from '../../../../kit/KitContainer';
 import type { SessionLog } from '../../SessionLog';
 import type { MessagePart } from './MessagePart';
 import { ToolCall } from './tool-calls/ToolCall';
@@ -31,25 +33,39 @@ import ToolCallMcpView from './tool-calls/ToolCall.Mcp.vue';
 // mapped, so rendering never branches on a name — it looks the entry up.
 // A batch renders each of its calls through this same part, so one
 // override of a card here reaches single calls and batches alike.
-class $MessagePartToolCall {
-  static get $kit() {
+class $MessagePartToolCall extends KitContainer.$Class<
+  MessagePartToolCall.Roles,
+  SessionLog.ToolCall
+> {
+  /** the cards: a family role per shape of call, and a map of a card per tool name */
+  static override get $kit(): MessagePartToolCall.Roles {
     return {
-      Generic: { view: ToolCallGenericView, namespace: ToolCall },
-      Mcp: { view: ToolCallMcpView, namespace: ToolCallMcp },
-      Task: { view: ToolCallTaskView, namespace: ToolCallTask },
+      Generic: this.card(ToolCallGenericView, ToolCall),
+      Mcp: this.card(ToolCallMcpView, ToolCallMcp),
+      Task: this.card(ToolCallTaskView, ToolCallTask),
       Tools: {
-        Bash: { view: ToolCallBashView, namespace: ToolCallBash },
-        Edit: { view: ToolCallEditView, namespace: ToolCallEdit },
-        NotebookEdit: { view: ToolCallEditView, namespace: ToolCallEdit },
-        Read: { view: ToolCallReadView, namespace: ToolCallRead },
-        Write: { view: ToolCallWriteView, namespace: ToolCallWrite },
-        Agent: { view: ToolCallAgentView, namespace: ToolCallAgent },
-        Skill: { view: ToolCallSkillView, namespace: ToolCallSkill },
-        WebFetch: { view: ToolCallWebFetchView, namespace: ToolCallWebFetch },
-        WebSearch: { view: ToolCallWebFetchView, namespace: ToolCallWebFetch },
-        Artifact: { view: ToolCallArtifactView, namespace: ToolCallArtifact }
-      } as Record<string, Kit.Entry>
+        Bash: this.card(ToolCallBashView, ToolCallBash),
+        Edit: this.card(ToolCallEditView, ToolCallEdit),
+        NotebookEdit: this.card(ToolCallEditView, ToolCallEdit),
+        Read: this.card(ToolCallReadView, ToolCallRead),
+        Write: this.card(ToolCallWriteView, ToolCallWrite),
+        Agent: this.card(ToolCallAgentView, ToolCallAgent),
+        Skill: this.card(ToolCallSkillView, ToolCallSkill),
+        WebFetch: this.card(ToolCallWebFetchView, ToolCallWebFetch),
+        WebSearch: this.card(ToolCallWebFetchView, ToolCallWebFetch),
+        Artifact: this.card(ToolCallArtifactView, ToolCallArtifact)
+      }
     };
+  }
+
+  /** a card: the view, the class it constructs, and what every card receives */
+  static card(view: Component, namespace: Kit.Namespace): Kit.Entry<$MessagePartToolCall> {
+    return { view, namespace, bind: this.bindCall };
+  }
+
+  /** what a card receives from the part: the call, the chat, the message */
+  static bindCall({ model }: Kit.Seam<$MessagePartToolCall>): ToolCall.Props {
+    return { call: model.call, chat: model.props.chat, message: model.props.message };
   }
 
   static readonly TASK_TOOLS = /^Task(Create|Update|List|Get|Stop|Output)$/;
@@ -69,28 +85,30 @@ class $MessagePartToolCall {
     return name in this.$kit.Tools || name.startsWith('mcp__') || this.TASK_TOOLS.test(name);
   }
 
-  constructor(public props: MessagePartToolCall.Props) {}
-
-  /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
-    return this.constructor as typeof $MessagePartToolCall;
+  constructor(public props: MessagePartToolCall.Props) {
+    super();
   }
 
-  get kit() {
-    return this.self.$kit;
+  /** The one cast per class: instance code reads its own statics here. */
+  protected override get self() {
+    return this.constructor as typeof $MessagePartToolCall;
   }
 
   get call(): SessionLog.ToolCall {
     return this.props.part.call;
   }
 
-  /** the entry that renders this call */
-  get card(): Kit.Entry {
-    return this.self.toolFor(this.call.name);
+  /** the card that renders a call: by name, family, or the generic — a dispatch, so the entry is the fact */
+  override entryOf(call: SessionLog.ToolCall): Kit.Entry {
+    return this.self.toolFor(call.name);
   }
 }
 
 export namespace MessagePartToolCall {
+  export type Roles = Kit.Roles<'Generic' | 'Mcp' | 'Task', $MessagePartToolCall> & {
+    Tools: Record<string, Kit.Entry<$MessagePartToolCall>>;
+  };
+
   export const $Class = Static($MessagePartToolCall);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;

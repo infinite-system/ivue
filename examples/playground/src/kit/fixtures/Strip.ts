@@ -86,7 +86,7 @@ class $Strip {
   }
 
   /** what a seam hands the role's view — the entry's bind, or `{ model, kit }`; never a branch on the name */
-  seamProps(role: Strip.Role, item?: string, key?: string | number): Kit.Bound {
+  seam(role: Strip.Role, item?: string, key?: string | number): Kit.Bound {
     return Kit.Class.seam(this, this.kit[role], item, key);
   }
 }

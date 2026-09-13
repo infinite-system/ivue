@@ -11,9 +11,9 @@ defineProps<ChatMessage.SectionProps>();
   <div class="ac-parts">
     <component
       v-for="(part, at) in model.parts"
-      :key="model.partKey(part, at)"
-      :is="model.partView(part)"
-      v-bind="model.partProps(part, at)"
+      :key="model.keyOf(part, at)"
+      :is="model.viewOf(part)"
+      v-bind="model.propsOf(part, at)"
     />
   </div>
 </template>

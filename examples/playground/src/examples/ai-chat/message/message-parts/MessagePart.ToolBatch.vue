@@ -26,13 +26,10 @@ const model = new (
     </button>
     <div v-if="model.isExpanded" class="ac-batch-body">
       <component
-        :is="model.kit.Call.view"
-        v-for="call in model.calls"
-        :key="call.id"
-        :kit="model.kit.Call"
-        :part="model.partFor(call)"
-        :chat="chat"
-        :message="message"
+        v-for="(call, at) in model.calls"
+        :key="model.keyOf(call)"
+        :is="model.viewOf(call)"
+        v-bind="model.propsOf(call, at)"
       />
     </div>
   </div>

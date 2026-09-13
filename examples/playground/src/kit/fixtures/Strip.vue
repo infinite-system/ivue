@@ -15,7 +15,7 @@ defineExpose(model as Strip.Instance);
       <component
         v-if="model.shows(role)"
         :is="model.kit[role].view"
-        v-bind="model.seamProps(role)"
+        v-bind="model.seam(role)"
       />
     </template>
   </section>

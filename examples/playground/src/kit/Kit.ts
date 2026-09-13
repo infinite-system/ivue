@@ -9,7 +9,7 @@ import { Static } from '../Static';
 // and, when the role has a class of its own, the namespace that view
 // constructs. A container's kit carries `order`, the sequence its template
 // renders: `<component v-for="role in model.kit.order" :is="model.kit[role].view"
-// v-bind="model.seamProps(role)" />`. `seamProps` returns `Kit.Class.seam`:
+// v-bind="model.seam(role)" />`. `seam` returns `Kit.Class.seam`:
 // what the entry's `bind` says, or `{ model, kit }`; the child's view
 // constructs `new (props.kit?.namespace.Class ?? X.Class)(props)`. A model
 // reads its kit from its own class and nowhere else, so a swapped class

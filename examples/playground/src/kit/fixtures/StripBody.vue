@@ -13,7 +13,7 @@ defineProps<{ kit: Kit.Entry; model: Strip.Instance }>();
       v-for="(item, at) in model.items"
       :key="item"
       :is="model.kit.Item.view"
-      v-bind="model.seamProps('Item', item, at)"
+      v-bind="model.seam('Item', item, at)"
     />
   </div>
 </template>
