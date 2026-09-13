@@ -5,11 +5,13 @@ import { KitContainer } from '../../../../../kit/KitContainer';
 import { ToolCallCodeBlock } from './ToolCall.CodeBlock';
 import ToolCallCodeBlockView from './ToolCall.CodeBlock.vue';
 import ToolCallSectionTitleView from './ToolCall.Section.Title.vue';
+import ToolCallSectionImageView from './ToolCall.Section.Image.vue';
 import ToolCallSectionNoteView from './ToolCall.Section.Note.vue';
 import type { ToolCall } from './ToolCall';
 
-// One block of an expanded card: its title line, the code block, and the
-// note that stands in for an empty block — three roles in an order, each
+// One block of an expanded card: its title line, the code block, the image
+// a result carried, and the note that stands in for an empty block — four
+// roles in an order, each
 // deciding its own presence. The list hands a section its data and the
 // card's cap; the section owns what its leaves read.
 class $ToolCallSection extends KitContainer.$Class<ToolCallSection.Roles> {
@@ -17,8 +19,9 @@ class $ToolCallSection extends KitContainer.$Class<ToolCallSection.Roles> {
     return {
       Title: { view: ToolCallSectionTitleView },
       Block: { view: ToolCallCodeBlockView, namespace: ToolCallCodeBlock, bind: this.bindBlock },
+      Image: { view: ToolCallSectionImageView },
       Note: { view: ToolCallSectionNoteView },
-      order: ['Title', 'Block', 'Note']
+      order: ['Title', 'Block', 'Image', 'Note']
     };
   }
 
@@ -84,8 +87,16 @@ class $ToolCallSection extends KitContainer.$Class<ToolCallSection.Roles> {
     return this.section.wrap ?? true;
   }
 
+  get image(): string {
+    return this.section.image ?? '';
+  }
+
+  get hasImage(): boolean {
+    return this.image !== '';
+  }
+
   get hasNote(): boolean {
-    return this.code === '' && Boolean(this.section.note);
+    return this.code === '' && !this.hasImage && Boolean(this.section.note);
   }
 
   get note(): string {
@@ -110,8 +121,8 @@ export namespace ToolCallSection {
     model: Instance;
   }
 
-  export type Role = 'Title' | 'Block' | 'Note';
-  export type Roles = Kit.Roles<'Title' | 'Note', $ToolCallSection> & {
+  export type Role = 'Title' | 'Block' | 'Image' | 'Note';
+  export type Roles = Kit.Roles<'Title' | 'Image' | 'Note', $ToolCallSection> & {
     Block: Kit.Entry<$ToolCallSection, undefined, typeof ToolCallCodeBlock>;
     order: readonly Role[];
   };

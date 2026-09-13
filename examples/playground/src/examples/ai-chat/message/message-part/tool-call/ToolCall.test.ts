@@ -191,6 +191,22 @@ describe('tool cards', () => {
     });
     expect(image.isImage).toBe(true);
     expect(image.sections).toEqual([]);
+    // the image itself renders as a section after the tool's own — once, though the log carried it twice
+    const twice = new ToolCallRead.Class({
+      call: {
+        ...image.call,
+        result: {
+          ...image.call.result!,
+          images: ['data:image/png;base64,AAAA', 'data:image/png;base64,AAAA']
+        }
+      },
+      chat,
+      message: null
+    });
+    expect(twice.images).toEqual(['data:image/png;base64,AAAA']);
+    expect(twice.imageSections).toEqual([
+      { title: 'image', code: '', lang: 'text', image: 'data:image/png;base64,AAAA' }
+    ]);
     expect(image.rangeLabel).toBe('whole file');
     unmount();
   });

@@ -49,7 +49,11 @@ class $ToolCall extends KitContainer.$Class<ToolCall.Roles> {
 
   /** what the blocks list receives from the card: the sections, the cap, and whether the card is open */
   static bindSections({ model }: Kit.Seam<$ToolCall>): ToolCallSections.Props {
-    return { sections: model.sections, cap: model.cap, expanded: model.isExpanded };
+    return {
+      sections: [...model.sections, ...model.imageSections],
+      cap: model.cap,
+      expanded: model.isExpanded
+    };
   }
 
   /** what a nested thread receives: the messages a call carried, and the chat */
@@ -247,6 +251,10 @@ class $ToolCall extends KitContainer.$Class<ToolCall.Roles> {
     return this.isCapped || this.showsAll;
   }
 
+  get showsTail(): boolean {
+    return this.isExpanded && this.showsCapControl;
+  }
+
   /* ---- input and result ---- */
 
   get input(): Record<string, unknown> {
@@ -272,8 +280,19 @@ class $ToolCall extends KitContainer.$Class<ToolCall.Roles> {
     return this.call.result?.text ?? '';
   }
 
+  /** the images a result carried, each once — a log can carry one image twice, as a content block and as the file */
   get images(): string[] {
-    return this.call.result?.images ?? [];
+    return [...new Set(this.call.result?.images ?? [])];
+  }
+
+  /** a result's images render as sections after the tool's own, one image per section */
+  get imageSections(): ToolCall.Section[] {
+    return this.images.map((image, at) => ({
+      title: this.images.length > 1 ? `image ${at + 1}` : 'image',
+      code: '',
+      lang: 'text',
+      image
+    }));
   }
 
   get hasImages(): boolean {
@@ -374,5 +393,7 @@ export namespace ToolCall {
     wrap?: boolean;
     /** what stands in for an empty block */
     note?: string;
+    /** an image the result carried, as a data URL — rendered in place of a block */
+    image?: string;
   }
 }

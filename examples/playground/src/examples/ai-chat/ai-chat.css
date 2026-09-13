@@ -799,14 +799,20 @@
   letter-spacing: 0;
   font-weight: 500;
 }
-.ai-chat .ac-tool-images {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+/* an image stays inside its section: never wider than the rail's column, never taller than a
+   screen's worth, and scaled to fit both */
+.ai-chat .ac-tool-image {
+  margin: 4px 0 0;
+  max-width: 100%;
+  overflow: hidden;
 }
-.ai-chat .ac-tool-images img {
-  max-width: min(100%, 520px);
+.ai-chat .ac-tool-image img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(100%, 720px);
+  max-height: 480px;
+  object-fit: contain;
   border-radius: 8px;
   border: 1px solid var(--ac-line);
 }

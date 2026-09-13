@@ -7,7 +7,14 @@
 // cut in the middle with a marker, images kept within a budget), writes
 // numbered pages plus meta.json, and refuses to write anything a
 // forbidden pattern survives in. Prints the scrub report.
-import { createReadStream, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  createReadStream,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  rmSync,
+  writeFileSync
+} from 'node:fs';
 import { createInterface } from 'node:readline';
 import { basename, dirname, join, resolve } from 'node:path';
 import { SessionLog } from '../../examples/playground/src/examples/ai-chat/SessionLog';
@@ -22,7 +29,7 @@ const CAPS = {
   thinking: 6_000,
   text: 24_000,
   imageBytes: 160_000,
-  imageBudget: 60,
+  imageBudget: 60
 };
 
 const [input, outArgument] = process.argv.slice(2);
@@ -32,9 +39,15 @@ if (!input) {
 }
 const outDir = resolve(outArgument ?? 'docs_v2/public/examples/chat/sample');
 
-async function parseFile(path: string): Promise<{ messages: SessionLog.Message[]; parser: SessionParser.Model }> {
+async function parseFile(
+  path: string
+): Promise<{ messages: SessionLog.Message[]; parser: SessionParser.Model }> {
   const parser = new SessionParser.Class({ scrub: true });
-  for await (const line of createInterface({ input: createReadStream(path, 'utf8'), crlfDelay: Infinity })) parser.line(line);
+  for await (const line of createInterface({
+    input: createReadStream(path, 'utf8'),
+    crlfDelay: Infinity
+  }))
+    parser.line(line);
   return { messages: parser.finish(), parser };
 }
 
@@ -63,7 +76,8 @@ function shrinkValue(value: unknown, limit: number): unknown {
   if (Array.isArray(value)) return value.slice(0, 200).map((entry) => shrinkValue(entry, limit));
   if (value && typeof value === 'object') {
     const output: Record<string, unknown> = {};
-    for (const [key, entry] of Object.entries(value as Record<string, unknown>)) output[key] = shrinkValue(entry, limit);
+    for (const [key, entry] of Object.entries(value as Record<string, unknown>))
+      output[key] = shrinkValue(entry, limit);
     return output;
   }
   return value;
@@ -88,7 +102,9 @@ function dedupe(call: SessionLog.ToolCall) {
       const file = structured.file as Record<string, unknown> | undefined;
       if (file && typeof file.content === 'string') file.content = '';
       if (file && typeof file.base64 === 'string' && file.base64) {
-        call.result.images.push(`data:${String(file.type ?? 'image/png')};base64,${file.base64}`);
+        const url = `data:${String(file.type ?? 'image/png')};base64,${file.base64}`;
+        // the content block usually carries the same bytes; one image, once
+        if (!call.result.images.includes(url)) call.result.images.push(url);
         file.base64 = '';
       }
       break;
@@ -154,7 +170,8 @@ async function main() {
       if (!file || !files.has(file)) continue;
       const thread = await parseFile(join(sessionDir, file));
       call.children = thread.messages;
-      for (const [rule, count] of Object.entries(thread.parser.scrubCounts)) scrub[rule] = (scrub[rule] ?? 0) + count;
+      for (const [rule, count] of Object.entries(thread.parser.scrubCounts))
+        scrub[rule] = (scrub[rule] ?? 0) + count;
       subagents++;
     }
   }
@@ -178,7 +195,8 @@ async function main() {
 
   // where the bytes are, for tuning the caps
   const weight: Record<string, number> = {};
-  const add = (key: string, value: unknown) => (weight[key] = (weight[key] ?? 0) + JSON.stringify(value ?? '').length);
+  const add = (key: string, value: unknown) =>
+    (weight[key] = (weight[key] ?? 0) + JSON.stringify(value ?? '').length);
   for (const message of messages) {
     for (const part of message.parts) {
       if (part.kind === 'text' || part.kind === 'thinking') add(part.kind, part.text);
@@ -195,19 +213,32 @@ async function main() {
       }
     }
   }
-  console.log('weight MB:', Object.entries(weight).sort((a, b) => b[1] - a[1]).slice(0, 14).map(([key, bytes]) => `${key} ${(bytes / 1e6).toFixed(1)}`).join(', '));
+  console.log(
+    'weight MB:',
+    Object.entries(weight)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 14)
+      .map(([key, bytes]) => `${key} ${(bytes / 1e6).toFixed(1)}`)
+      .join(', ')
+  );
 
   // the index: one small row per message, so the side panel lists and
   // filters the whole thread without a single content page
-  const preview = (message: SessionLog.Message) => SessionLog.Class.messageText(message).replace(/\s+/g, ' ').trim().slice(0, 96);
+  const preview = (message: SessionLog.Message) =>
+    SessionLog.Class.messageText(message).replace(/\s+/g, ' ').trim().slice(0, 96);
   const toolCount = (message: SessionLog.Message) =>
-    message.parts.reduce((count, part) => count + (part.kind === 'tool_call' ? 1 : part.kind === 'tool_batch' ? part.calls.length : 0), 0);
+    message.parts.reduce(
+      (count, part) =>
+        count +
+        (part.kind === 'tool_call' ? 1 : part.kind === 'tool_batch' ? part.calls.length : 0),
+      0
+    );
   const index = messages.map((message) => ({
     id: message.id,
     r: message.speaker[0],
     t: preview(message),
     c: toolCount(message),
-    at: message.timestamp,
+    at: message.timestamp
   }));
   const indexJson = JSON.stringify(index);
   for (const pattern of Scrub.Class.survivors(indexJson)) survivors.add(pattern);
@@ -217,7 +248,8 @@ async function main() {
   const models: Record<string, number> = {};
   const tools: Record<string, number> = {};
   let callCount = 0;
-  for (const message of messages) if (message.model) models[message.model] = (models[message.model] ?? 0) + 1;
+  for (const message of messages)
+    if (message.model) models[message.model] = (models[message.model] ?? 0) + 1;
   for (const call of allCalls(messages)) {
     callCount++;
     tools[call.name] = (tools[call.name] ?? 0) + 1;
@@ -232,23 +264,43 @@ async function main() {
     indexBytes: indexJson.length,
     firstAt: messages[0]?.timestamp ?? 0,
     lastAt: messages[messages.length - 1]?.timestamp ?? 0,
-    roles: messages.reduce<Record<string, number>>((acc, message) => ((acc[message.speaker] = (acc[message.speaker] ?? 0) + 1), acc), {}),
+    roles: messages.reduce<Record<string, number>>(
+      (acc, message) => ((acc[message.speaker] = (acc[message.speaker] ?? 0) + 1), acc),
+      {}
+    ),
     models,
     tools,
     calls: callCount,
     subagents,
     images: { kept: imagesKept, dropped: imagesDropped },
-    scrub,
+    scrub
   };
   writeFileSync(join(outDir, 'meta.json'), JSON.stringify(meta, null, 2));
 
   const seconds = ((performance.now() - started) / 1000).toFixed(1);
-  console.log(`parsed ${parser.lines.toLocaleString()} lines → ${messages.length.toLocaleString()} messages in ${seconds}s`);
-  console.log(`pages ${pages.length} × ${PAGE_SIZE}, ${(totalBytes / 1e6).toFixed(1)} MB, subagent threads folded: ${subagents}, images kept ${imagesKept} / dropped ${imagesDropped}`);
+  console.log(
+    `parsed ${parser.lines.toLocaleString()} lines → ${messages.length.toLocaleString()} messages in ${seconds}s`
+  );
+  console.log(
+    `pages ${pages.length} × ${PAGE_SIZE}, ${(totalBytes / 1e6).toFixed(1)} MB, subagent threads folded: ${subagents}, images kept ${imagesKept} / dropped ${imagesDropped}`
+  );
   const sizes = pages.map((page) => page.bytes).sort((a, b) => a - b);
-  console.log(`page bytes: min ${(sizes[0] / 1e3).toFixed(0)}k median ${(sizes[sizes.length >> 1] / 1e3).toFixed(0)}k max ${(sizes[sizes.length - 1] / 1e3).toFixed(0)}k`);
-  console.log('scrubbed:', Object.entries(scrub).map(([rule, count]) => `${rule} ×${count}`).join(', ') || 'nothing');
-  console.log('tools:', Object.entries(tools).sort((a, b) => b[1] - a[1]).map(([name, count]) => `${name} ${count}`).join(', '));
+  console.log(
+    `page bytes: min ${(sizes[0] / 1e3).toFixed(0)}k median ${(sizes[sizes.length >> 1] / 1e3).toFixed(0)}k max ${(sizes[sizes.length - 1] / 1e3).toFixed(0)}k`
+  );
+  console.log(
+    'scrubbed:',
+    Object.entries(scrub)
+      .map(([rule, count]) => `${rule} ×${count}`)
+      .join(', ') || 'nothing'
+  );
+  console.log(
+    'tools:',
+    Object.entries(tools)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, count]) => `${name} ${count}`)
+      .join(', ')
+  );
   if (survivors.size) {
     console.error(`FORBIDDEN PATTERNS SURVIVED: ${[...survivors].join(' | ')} — output removed`);
     rmSync(outDir, { recursive: true, force: true });
