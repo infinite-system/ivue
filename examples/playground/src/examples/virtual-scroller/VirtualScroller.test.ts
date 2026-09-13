@@ -26,6 +26,24 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If the thumb is dragged on a scroller that plays, then autoplay is never stopped by it: a playing scroller re-arms the creep on release either way, a drag deeper in the scroll direction from rest starts it as a forward wheel does, and while the thumb is held the creep waits; a list without autoPlay never arms the creep from a wheel or a drag, so it never reaches the auto-repeat reset.
 // domain-invariant: $VirtualScroller — If a finger lands on the track, then the touch is flagged for Lenis to skip, so the thumb drag seeks and the content does not scroll under it.
 // domain-invariant: $VirtualScroller — If the props object is read, then it is the fusion of the static types and defaults: the required list carries no default and the creep knob unset reads as the tuned cadence.
+// domain-invariant: $VirtualScroller — If a measurement wave leaves at least five rows measured, then the estimate becomes their average once and stays there; a wave with fewer changes nothing, and a later wave changes nothing
+// impossible-if-true: $VirtualScroller — an estimate that first calibrates under the reader's first gesture on a phone, or one that drifts after it calibrated
+// invariant: Rendered sizes are known only after a row mounts (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('the estimate calibrates on the first wave with five measured rows, once — the first screen on any device, never under a gesture', () => {
+  const { instance, unmount } = scroller(rows(1000), { assumedSize: 30 });
+  for (const index of [0, 1, 2, 3]) instance.syncItemSize(index, 150);
+  instance.probeCalibrate();
+  expect(instance.estimatedItemSize).toBe(30);
+  instance.syncItemSize(4, 150);
+  instance.probeCalibrate();
+  expect(instance.estimatedItemSize).toBe(150);
+  expect(instance.scrollExtent.value).toBe(150 * 1000);
+  for (const index of [5, 6, 7, 8, 9, 10]) instance.syncItemSize(index, 400);
+  instance.probeCalibrate();
+  expect(instance.estimatedItemSize).toBe(150);
+  unmount();
+});
+
 // domain-invariant: $VirtualScroller — If item i's position is asked, then it is the sum of the sizes before it, measured where known and the estimate elsewhere, whichever way the cursor walks there.
 // domain-invariant: $VirtualScroller — If a pixel offset is asked for its item, then anchoring that item at the returned fraction gives the same pixel back.
 // domain-invariant: $VirtualScroller — If the window changes, then itemsChanged fires once with the padded bounds; a scroll that keeps the window fires nothing.
@@ -108,6 +126,10 @@ class $Probe extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<R
 
   probeConverging() {
     return this.stopScrollToIndexReapply !== null;
+  }
+
+  probeCalibrate() {
+    this.maybeCalibrateEstimate();
   }
 
   probeStartCreep() {

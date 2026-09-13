@@ -172,6 +172,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   protected static readonly TRAILING_SPACER_RENDER_CAP = 2048;
 
   protected static readonly RENDER_BIAS_CHUNK = 65536;
+  /** measured rows the estimate calibrates on — the first screen's worth, so it lands before a gesture */
+  protected static readonly CALIBRATION_ROWS = 5;
 
   /**
    * Device-pixel snap for LANDINGS (seeks/jumps): a resting position on
@@ -898,18 +900,19 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   /**
-   * One-time estimate calibration. Runs only while the reader is near the
-   * top: there the scrollTop→content mapping goes through fully-measured
-   * items, so swapping the assumption for the tail cannot move anything
-   * visible — the change lands entirely in the trailing spacer.
+   * One-time estimate calibration: swap the assumed size for the measured
+   * average, once, on the first measurement wave that has CALIBRATION_ROWS
+   * rows — the first screen, on any device — and freeze it. The anchor
+   * around the wave absorbs the shift, so a list opened at its end
+   * calibrates too. It has to land on the load wave: on a phone the rows
+   * measure five times the assumption, so a calibration that waited for a
+   * later wave fired under the reader's first swipe, grew the extent
+   * fivefold mid-gesture, and sent the thumb up the track and back.
    */
-  /** Swap the assumed size for the measured average, once, after twenty
-   *  rows have measured. The anchor around the wave that calls this
-   *  absorbs the shift, so a list opened at its end calibrates too. */
   protected maybeCalibrateEstimate() {
     if (this.calibratedAssumed !== null) return;
     const length = toRaw(this.items.value).length;
-    if (this.measuredCount < 20 || this.measuredCount >= length) return;
+    if (this.measuredCount < this.self.CALIBRATION_ROWS || this.measuredCount >= length) return;
     this.calibratedAssumed = this.measuredSum / this.measuredCount;
     this.updatePositionsImmediately();
   }
