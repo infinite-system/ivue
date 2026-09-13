@@ -3,12 +3,14 @@
 Goal: Prove the scrollbar peek maps a pointer's position on the track to a row of the thread and shows it from the index the chat already holds once the pointer rests there, that a pass across the track opens nothing, that a dragged thumb closes it and keeps it closed, lingers only long enough to be crossed into, that its search narrows the card to matching previews and holds it open while the reader types, and that picking a row jumps the thread there — never asking for a page.
 [Loading lives above the scroller](./ai-chat.invariants.md#loading-lives-above-the-scroller)
 // domain-invariant: $Peek — If the pointer is over the track at a fraction of its height, then the card shows the row at that fraction of the thread, from the index, and a picked row jumps the thread there
+// domain-invariant: $Peek — If the card opens, then its scroller — which mounts on the tick after `open` flips — is sought to the hot row
 Impossible if true: a peek that fetches a page
 
 === GENERATOR-DESCRIBED ===
 $Peek reads the chat's rows — every one a stub with its preview and time from the index — and a mini scroller of them opens beside the track at the pointer's row.
 */
 import { describe, expect, it, vi } from 'vitest';
+import { nextTick } from 'vue';
 import { Chat } from './Chat';
 import { Peek } from './Peek';
 import { hosted } from '../virtual-scroller/hosted';
@@ -179,6 +181,42 @@ describe('Peek', () => {
     expect(ensurePage).not.toHaveBeenCalled();
     host.unmount();
     vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  // domain-invariant: $Peek — If the card opens, then its scroller — which mounts on the tick after `open` flips — is sought to the hot row
+  it('a fresh card seeks its scroller to the hot row after the mount tick, not before', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
+    const host = hosted(() => new Chat.Class());
+    const chat = host.instance;
+    chat.rows.value = rows(1001);
+    const peek = new Peek.Class({ chat });
+    const scrollToIndex = vi.fn();
+    // the card's scroller does not exist when show() runs — the template mounts it on the next tick
+    peek.show(500);
+    expect(peek.open.value).toBe(true);
+    expect(peek.scroller.value).toBeNull();
+    peek.scroller.value = { scrollToIndex } as unknown as NonNullable<typeof peek.scroller.value>;
+    await nextTick();
+    expect(scrollToIndex).toHaveBeenCalledWith(
+      500 - Math.floor(Peek.$Class.ROWS / 2),
+      undefined,
+      false,
+      0
+    );
+    // a search lands on its first match; clearing it returns to the hot row
+    peek.query.value = 'message 99';
+    await peek.onQueryChange();
+    expect(scrollToIndex).toHaveBeenLastCalledWith(0, undefined, false, 0);
+    peek.query.value = '';
+    await peek.onQueryChange();
+    expect(scrollToIndex).toHaveBeenLastCalledWith(
+      500 - Math.floor(Peek.$Class.ROWS / 2),
+      undefined,
+      false,
+      0
+    );
+    host.unmount();
     vi.restoreAllMocks();
   });
 });

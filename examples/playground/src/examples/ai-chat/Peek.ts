@@ -332,17 +332,9 @@ class $Peek {
 
   /** the list changes under the scroll: a search lands on its first match, a cleared one back on the hot row */
   async onQueryChange() {
+    if (!this.isFiltered) return this.scrollToHotRow();
     await nextTick();
-    const scroller = this.scroller.value;
-    if (!scroller) return;
-    if (this.isFiltered) scroller.scrollToIndex(0, undefined, false, 0);
-    else
-      scroller.scrollToIndex(
-        Math.max(0, this.index.value - Math.floor(this.self.ROWS / 2)),
-        undefined,
-        false,
-        0
-      );
+    this.scroller.value?.scrollToIndex(0, undefined, false, 0);
   }
 
   /** the position tracks the pointer while the delay runs, so the card opens on the row under it */
@@ -368,13 +360,18 @@ class $Peek {
     this.index.value = index;
     this.open.value = true;
     // the hot row sits in the middle of the card; a filtered card keeps the reader's place in the matches
-    if (!this.isFiltered)
-      this.scroller.value?.scrollToIndex(
-        Math.max(0, index - Math.floor(this.self.ROWS / 2)),
-        undefined,
-        false,
-        0
-      );
+    if (!this.isFiltered) this.scrollToHotRow();
+  }
+
+  /** the card mounts on the tick after `open` flips, so its scroller exists only then — seek after it */
+  async scrollToHotRow() {
+    await nextTick();
+    this.scroller.value?.scrollToIndex(
+      Math.max(0, this.index.value - Math.floor(this.self.ROWS / 2)),
+      undefined,
+      false,
+      0
+    );
   }
 
   /** the card lingers so the pointer can cross the gap into it; a search in progress holds it */
