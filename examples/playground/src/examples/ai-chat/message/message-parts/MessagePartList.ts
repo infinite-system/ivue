@@ -62,7 +62,10 @@ class $MessagePartList extends KitContainer.$Class<MessagePartList.Roles, Sessio
     return this.constructor as typeof $MessagePartList;
   }
 
+  /** the parts grow in place while a reply streams, so the list re-reads the chat's revision — the
+   *  array is the same object; the revision is what says it changed */
   get parts(): SessionLog.Part[] {
+    void this.chat.revision.value;
     return this.props.parts;
   }
 

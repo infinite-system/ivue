@@ -251,7 +251,6 @@
 .ai-chat .ac-msg {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: repeat(8, auto);
   column-gap: 12px;
   align-content: start;
   padding: 12px 18px;
@@ -1227,7 +1226,7 @@
 /* rows: more air left and right, and extra on the right for the scrollbar that rides the content */
 .ai-chat .ac-msg {
   padding: 14px 34px 14px 22px;
-  gap: 14px;
+  column-gap: 14px;
 }
 .ai-chat .ac-msg-system {
   padding: 6px 34px 6px 22px;
@@ -1754,7 +1753,7 @@
 /* ---- rows, third pass: compact and fresh; the turn number sits with the time ---- */
 .ai-chat .ac-msg {
   padding: 18px 44px 18px 30px;
-  gap: 12px;
+  column-gap: 12px;
 }
 /* the prose: tight between lines, air around the block. The elements are named, not left to
    inherit: on the docs page VitePress sets `.vp-doc p` to 28px directly, which beats inheritance. */
@@ -2341,7 +2340,7 @@
 /* ---- density ---- */
 .ai-chat[data-density='compact'] .ac-msg {
   padding: 6px 40px 6px 26px;
-  gap: 10px;
+  column-gap: 10px;
   font-size: 13px;
 }
 .ai-chat[data-density='compact'] .ac-msg-head {
