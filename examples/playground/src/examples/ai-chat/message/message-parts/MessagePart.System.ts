@@ -12,10 +12,10 @@ import type { MessagePart } from './MessagePart';
 // hook summary a small card, a folded subagent thread a note.
 class $MessagePartSystem {
   /** the one role a system line composes: the thread its children form */
-  static get $kit() {
+  static get $kit(): MessagePartSystem.Roles {
     return {
       SubThread: { view: ToolCallSubThreadView, namespace: ToolCallSubThread }
-    } satisfies Kit.Of<'SubThread'>;
+    };
   }
 
   static readonly ICONS: Record<string, string> = {
@@ -91,6 +91,10 @@ class $MessagePartSystem {
 }
 
 export namespace MessagePartSystem {
+  /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
+  export type Roles = {
+    SubThread: Kit.Entry<$MessagePartSystem, undefined, typeof ToolCallSubThread>;
+  };
   export const $Class = Static($MessagePartSystem);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;

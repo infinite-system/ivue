@@ -16,12 +16,12 @@ import SidebarSettingsView from './Sidebar.Settings.vue';
 // session touched, the settings. The panel resizes by its grip and
 // collapses back to the rail. Each tab is a role of this kit.
 class $Sidebar {
-  static get $kit() {
+  static get $kit(): Sidebar.Roles {
     return {
       Index: { view: ChatIndexView, namespace: Index },
       Files: { view: SidebarFilesView, namespace: SidebarFiles },
       Settings: { view: SidebarSettingsView, namespace: SidebarSettings }
-    } satisfies Kit.Of<Chat.SidebarTab>;
+    };
   }
 
   static readonly TABS: Sidebar.Tab[] = [
@@ -125,6 +125,12 @@ class $Sidebar {
 }
 
 export namespace Sidebar {
+  /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
+  export type Roles = {
+    Index: Kit.Entry<$Sidebar, undefined, typeof Index>;
+    Files: Kit.Entry<$Sidebar, undefined, typeof SidebarFiles>;
+    Settings: Kit.Entry<$Sidebar, undefined, typeof SidebarSettings>;
+  };
   export const $Class = Static($Sidebar);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;

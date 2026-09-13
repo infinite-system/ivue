@@ -20,13 +20,13 @@ import { SessionLog } from '../../../SessionLog';
 // generic card renders input as JSON and the result as text.
 class $ToolCall {
   /** the roles every card composes: its head and foot, the code block, and a nested thread */
-  static get $kit() {
+  static get $kit(): ToolCall.Roles {
     return {
       Header: { view: ToolCallHeaderView },
       Footer: { view: ToolCallFooterView },
       CodeBlock: { view: ToolCallCodeBlockView, namespace: ToolCallCodeBlock },
       SubThread: { view: ToolCallSubThreadView, namespace: ToolCallSubThread }
-    } satisfies Kit.Of<ToolCall.Role>;
+    };
   }
 
   static readonly ICONS: Record<string, string> = {
@@ -263,6 +263,11 @@ class $ToolCall {
 }
 
 export namespace ToolCall {
+  /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
+  export type Roles = Kit.Of<'Header' | 'Footer', $ToolCall> & {
+    CodeBlock: Kit.Entry<$ToolCall, undefined, typeof ToolCallCodeBlock>;
+    SubThread: Kit.Entry<$ToolCall, undefined, typeof ToolCallSubThread>;
+  };
   export const $Class = Static($ToolCall);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;

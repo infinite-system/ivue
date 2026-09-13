@@ -6,7 +6,7 @@ import { MessagePartToolBatch } from './MessagePart.ToolBatch';
 const props = defineProps<MessagePart.Props<SessionLog.ToolBatchPart>>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof MessagePartToolBatch.Class | undefined) ??
+  (props.kit?.namespace?.Class as typeof MessagePartToolBatch.Class | undefined) ??
   MessagePartToolBatch.Class
 )(props);
 </script>

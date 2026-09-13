@@ -4,7 +4,7 @@ import { MessagePartToolCall } from './MessagePart.ToolCall';
 const props = defineProps<MessagePartToolCall.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof MessagePartToolCall.Class | undefined) ??
+  (props.kit?.namespace?.Class as typeof MessagePartToolCall.Class | undefined) ??
   MessagePartToolCall.Class
 )(props);
 </script>

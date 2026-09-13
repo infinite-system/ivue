@@ -5,7 +5,10 @@ const props = defineProps(Code.Class.props);
 const emit = defineEmits(Code.Class.emits) as Code.Emits;
 
 // the one `new`: the class the entry names, or this view's own
-const model = new (props.kit?.namespace.Class ?? Code.Class)(props, emit);
+const model = new ((props.kit?.namespace?.Class as typeof Code.Class | undefined) ?? Code.Class)(
+  props,
+  emit
+);
 
 defineExpose(model as Code.Instance);
 </script>

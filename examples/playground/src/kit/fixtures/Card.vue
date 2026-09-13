@@ -3,7 +3,9 @@ import { Card } from './Card';
 
 const props = defineProps(Card.Class.props);
 
-const model = new (props.kit?.namespace.Class ?? Card.Class)(props);
+const model = new ((props.kit?.namespace?.Class as typeof Card.Class | undefined) ?? Card.Class)(
+  props
+);
 
 defineExpose(model as Card.Instance);
 </script>

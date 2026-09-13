@@ -20,10 +20,10 @@ import type { Kit } from '../../kit/Kit';
 // stays, so the reader can type without the pointer pinning it.
 class $Peek {
   /** the roles the peek composes — the mini scroller; built once per class by Static() */
-  static get $kit() {
+  static get $kit(): Peek.Roles {
     return {
       Scroller: { view: VirtualScrollerView, namespace: VirtualScroller }
-    } satisfies Kit.Of<Peek.Role>;
+    };
   }
 
   /** rows the card shows at once */
@@ -422,6 +422,8 @@ class $Peek {
 }
 
 export namespace Peek {
+  /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
+  export type Roles = { Scroller: Kit.Entry<$Peek, undefined, typeof VirtualScroller> };
   export const $Class = Static($Peek);
   export let Class = Reactive($Class);
   export type Model = InstanceType<typeof Class>;

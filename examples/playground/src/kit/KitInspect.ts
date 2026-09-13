@@ -181,7 +181,7 @@ class $KitInspect {
     return setters.length ? setters.join(', ') : 'base';
   }
 
-  protected static viewName(view: Component | string): string {
+  protected static viewName(view: Kit.View): string {
     if (typeof view === 'string') return `<${view}>`;
     const named = view as { __name?: string; name?: string };
     return named.__name ?? named.name ?? 'component';

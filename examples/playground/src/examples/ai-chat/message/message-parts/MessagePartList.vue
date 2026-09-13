@@ -5,7 +5,7 @@ const props = defineProps<MessagePartList.Props>();
 
 // the one `new`: the class the entry names, or this view's own
 const model = new (
-  (props.kit?.namespace.Class as typeof MessagePartList.Class | undefined) ?? MessagePartList.Class
+  (props.kit?.namespace?.Class as typeof MessagePartList.Class | undefined) ?? MessagePartList.Class
 )(props);
 </script>
 

@@ -6,7 +6,7 @@ import { MessagePartSystem } from './MessagePart.System';
 const props = defineProps<MessagePart.Props<SessionLog.SystemPart>>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof MessagePartSystem.Class | undefined) ??
+  (props.kit?.namespace?.Class as typeof MessagePartSystem.Class | undefined) ??
   MessagePartSystem.Class
 )(props);
 </script>

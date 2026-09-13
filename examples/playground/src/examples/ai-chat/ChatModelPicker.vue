@@ -4,7 +4,7 @@ import { ModelPicker } from './ModelPicker';
 const props = defineProps<ModelPicker.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof ModelPicker.Class | undefined) ?? ModelPicker.Class
+  (props.kit?.namespace?.Class as typeof ModelPicker.Class | undefined) ?? ModelPicker.Class
 )(props);
 const {
   // state refs

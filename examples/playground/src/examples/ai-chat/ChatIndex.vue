@@ -3,7 +3,7 @@ import { Index } from './Index';
 
 const props = defineProps<Index.Props>();
 
-const model = new ((props.kit?.namespace.Class as typeof Index.Class | undefined) ?? Index.Class)(
+const model = new ((props.kit?.namespace?.Class as typeof Index.Class | undefined) ?? Index.Class)(
   props
 );
 const {

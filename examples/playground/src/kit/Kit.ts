@@ -65,7 +65,7 @@ class $Kit {
     Item = undefined,
     Rest extends Kit.EntryRest<Owner, Item, N> = Kit.EntryRest<Owner, Item, N>
   >(
-    view: Component | string,
+    view: Kit.View,
     namespace: N,
     rest?: Rest & Kit.EntryCheck<Rest, { namespace: N }>
   ): Kit.Entry<Owner, Item, N> {
@@ -95,10 +95,7 @@ class $Kit {
    *  is shared by every kit that names it — writing onto it would widen every tree — and because
    *  Vue caches a component's normalized options per app by that object. A copy, not
    *  `Object.create`: Vue reads component options as own keys. A tag name passes through. */
-  static view<Space extends Kit.Namespace>(
-    view: Component | string,
-    namespace: Space
-  ): Component | string {
+  static view<Space extends Kit.Namespace>(view: Kit.View, namespace: Space): Kit.View {
     if (typeof view === 'string') return view;
     const Class = namespace.Class as Kit.NamespaceClass;
     const copy: Record<string, unknown> = { ...(view as object) };
@@ -292,6 +289,10 @@ export namespace Kit {
 
   /** What a namespace is at runtime: the raw class to extend and the reactive class to construct;
    *  a derived one carries the chain it came from. */
+  /** what a role renders: a component, a tag name for a markup role, or a generic SFC — which
+   *  vue-tsc types as a function of its type parameter rather than a `Component` */
+  export type View = Component | string | ((...args: never[]) => unknown);
+
   export interface Namespace {
     $Class: NamespaceClass;
     Class: NamespaceClass;
@@ -358,7 +359,7 @@ export namespace Kit {
 
   export interface Entry<Owner = unknown, Item = unknown, N extends Namespace = Namespace> {
     /** the role's markup: an SFC, or a tag name for a markup role */
-    view: Component | string;
+    view: View;
     /** the role's namespace — `$Class`, `Class`, and whatever else it exports; absent for a tag role */
     namespace?: N;
     /** the consumer's values for this role, read by the class's own getters as `this.props.kit.props.x` */

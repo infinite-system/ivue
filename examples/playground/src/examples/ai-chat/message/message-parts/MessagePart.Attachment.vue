@@ -6,7 +6,7 @@ import { MessagePartAttachment } from './MessagePart.Attachment';
 const props = defineProps<MessagePart.Props<SessionLog.AttachmentPart>>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof MessagePartAttachment.Class | undefined) ??
+  (props.kit?.namespace?.Class as typeof MessagePartAttachment.Class | undefined) ??
   MessagePartAttachment.Class
 )(props);
 </script>

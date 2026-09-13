@@ -7,7 +7,7 @@ import './ai-chat.css';
 const props = defineProps<{ dark?: boolean; kit?: Kit.Entry }>();
 
 // the root constructs the class it was handed, or its own
-const chat = new ((props.kit?.namespace.Class as typeof Chat.Class | undefined) ?? Chat.Class)(
+const chat = new ((props.kit?.namespace?.Class as typeof Chat.Class | undefined) ?? Chat.Class)(
   props
 );
 

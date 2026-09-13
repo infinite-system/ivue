@@ -5,7 +5,7 @@ import { ToolCall } from './ToolCall';
 const props = defineProps<ToolCall.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof ToolCall.Class | undefined) ?? ToolCall.Class
+  (props.kit?.namespace?.Class as typeof ToolCall.Class | undefined) ?? ToolCall.Class
 )(props);
 </script>
 

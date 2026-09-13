@@ -3,7 +3,9 @@ import { Panel } from './Panel';
 
 const props = defineProps(Panel.Class.props);
 
-const model = new (props.kit?.namespace.Class ?? Panel.Class)(props);
+const model = new ((props.kit?.namespace?.Class as typeof Panel.Class | undefined) ?? Panel.Class)(
+  props
+);
 
 defineExpose(model as Panel.Instance);
 </script>

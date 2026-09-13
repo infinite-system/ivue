@@ -3,7 +3,7 @@ import { Peek } from './Peek';
 
 const props = defineProps<Peek.Props>();
 
-const model = new ((props.kit?.namespace.Class as typeof Peek.Class | undefined) ?? Peek.Class)(
+const model = new ((props.kit?.namespace?.Class as typeof Peek.Class | undefined) ?? Peek.Class)(
   props
 );
 const {

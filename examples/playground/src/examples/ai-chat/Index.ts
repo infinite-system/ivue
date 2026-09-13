@@ -19,10 +19,10 @@ import { SessionLog } from './SessionLog';
 // pages they need.
 class $Index {
   /** the one role the index composes: its own scroller over the filtered rows */
-  static get $kit() {
+  static get $kit(): Index.Roles {
     return {
       Scroller: { view: VirtualScrollerView, namespace: VirtualScroller }
-    } satisfies Kit.Of<'Scroller'>;
+    };
   }
 
   static readonly SPEAKER_LABELS: Record<Index.SpeakerFilter, string> = {
@@ -487,6 +487,8 @@ class $Index {
 }
 
 export namespace Index {
+  /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
+  export type Roles = { Scroller: Kit.Entry<$Index, undefined, typeof VirtualScroller> };
   export const $Class = Static($Index);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;

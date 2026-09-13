@@ -5,7 +5,7 @@ const props = defineProps<ChatMessage.Props>();
 
 // the one `new`: the class the entry names, or this view's own
 const model = new (
-  (props.kit?.namespace.Class as typeof ChatMessage.Class | undefined) ?? ChatMessage.Class
+  (props.kit?.namespace?.Class as typeof ChatMessage.Class | undefined) ?? ChatMessage.Class
 )(props);
 </script>
 

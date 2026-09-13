@@ -6,7 +6,7 @@ import { MessagePartText } from './MessagePart.Text';
 const props = defineProps<MessagePart.Props<SessionLog.TextPart>>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof MessagePartText.Class | undefined) ?? MessagePartText.Class
+  (props.kit?.namespace?.Class as typeof MessagePartText.Class | undefined) ?? MessagePartText.Class
 )(props);
 const {
   // element refs

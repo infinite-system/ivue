@@ -4,7 +4,7 @@ import { ToolCallCodeBlock } from './ToolCall.CodeBlock';
 const props = defineProps<ToolCallCodeBlock.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof ToolCallCodeBlock.Class | undefined) ??
+  (props.kit?.namespace?.Class as typeof ToolCallCodeBlock.Class | undefined) ??
   ToolCallCodeBlock.Class
 )(props);
 </script>

@@ -21,13 +21,13 @@ import FrameView from './Frame.vue';
 // harmless — nobody reads the other side at module init.
 class $Card {
   /** cached once per receiver class by Static(): `Card.$kit` and `FancyCard.$kit` are different objects */
-  static get $kit() {
+  static get $kit(): Card.Roles {
     return {
       Head: { view: CardHeadView },
       Body: { view: CardBodyView },
       Frame: { view: FrameView },
       Code: { view: CodeView, namespace: Code }
-    } satisfies Kit.Of<Card.Role>;
+    };
   }
 
   static get propsTypes() {
@@ -86,6 +86,10 @@ class $Card {
 }
 
 export namespace Card {
+  /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
+  export type Roles = Kit.Of<'Head' | 'Body' | 'Frame', $Card> & {
+    Code: Kit.Entry<$Card, undefined, typeof Code>;
+  };
   export const $Class = Static($Card);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;

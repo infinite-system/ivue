@@ -6,7 +6,7 @@ import { MessagePartThinking } from './MessagePart.Thinking';
 const props = defineProps<MessagePart.Props<SessionLog.ThinkingPart>>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof MessagePartThinking.Class | undefined) ??
+  (props.kit?.namespace?.Class as typeof MessagePartThinking.Class | undefined) ??
   MessagePartThinking.Class
 )(props);
 </script>

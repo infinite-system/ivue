@@ -17,10 +17,10 @@ import type { SessionLog } from '../SessionLog';
 // thread to its message. The index button opens the index on the file.
 class $SidebarFiles {
   /** the one role the panel composes: its own scroller over files and their open records */
-  static get $kit() {
+  static get $kit(): SidebarFiles.Roles {
     return {
       Scroller: { view: VirtualScrollerView, namespace: VirtualScroller }
-    } satisfies Kit.Of<SidebarFiles.Role>;
+    };
   }
 
   static readonly FILE_TOOLS: Record<string, keyof SidebarFiles.Counts> = {
@@ -373,6 +373,8 @@ class $SidebarFiles {
 }
 
 export namespace SidebarFiles {
+  /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
+  export type Roles = { Scroller: Kit.Entry<$SidebarFiles, undefined, typeof VirtualScroller> };
   export const $Class = Static($SidebarFiles);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;

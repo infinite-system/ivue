@@ -15,10 +15,10 @@ import type { SessionLog } from './SessionLog';
 // Shift+Enter breaks a line.
 class $Composer {
   /** the roles the composer composes — the model picker; built once per class by Static() */
-  static get $kit() {
+  static get $kit(): Composer.Roles {
     return {
       Picker: { view: ChatModelPickerView, namespace: ModelPicker }
-    } satisfies Kit.Of<Composer.Role>;
+    };
   }
 
   static readonly DEFAULT_MODEL = 'default';
@@ -195,6 +195,8 @@ class $Composer {
 }
 
 export namespace Composer {
+  /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
+  export type Roles = { Picker: Kit.Entry<$Composer, undefined, typeof ModelPicker> };
   export const $Class = Static($Composer);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;

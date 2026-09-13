@@ -4,7 +4,7 @@ import { Composer } from './Composer';
 const props = defineProps<Composer.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof Composer.Class | undefined) ?? Composer.Class
+  (props.kit?.namespace?.Class as typeof Composer.Class | undefined) ?? Composer.Class
 )(props);
 const {
   // state refs

@@ -1258,3 +1258,24 @@ alias at every call site. Named exports also fix one name per module (default
 imports let each file invent its own), and auto-import / rename-symbol work
 from the export name, which agents get right first try. Two braces saved is a
 character reduction that widens the naming space — the wrong direction.
+
+## `$kit` declares its return type, or the types cycle (2026-09-13)
+
+`static get $kit() { return {…} satisfies Kit.Of<X.Role>; }` keeps the
+literal's inferred type, which carries each view's concrete SFC component
+type; a classless leaf's props name `X.Instance`, whose `kit` is that
+literal — TS2615 "circularly references itself in mapped type", TS7023 on
+`$kit` and `kit`, TS2502 on `model` in the leaf. The fix is a declared
+return type, `static get $kit(): X.Roles`, with `Roles` naming each
+entry's namespace (`Kit.Entry<$X, undefined, typeof Child>`) so typed
+subkits keep their child model, and `view` typed as `Kit.View` — never the
+component's own type. Only `vue-tsc` sees this, because the cycle closes
+through `.vue` files: plain `tsc` on the playground is clean either way.
+Run it pinned — `npx -y -p vue-tsc@2 -p typescript@5 vue-tsc --noEmit -p
+examples/playground/tsconfig.json` — an unpinned `npx vue-tsc` resolves
+TypeScript 7 and dies on `./lib/tsc`; and read a run to its end: on
+`main` it crashes inside TypeScript and prints no errors, which is not
+zero errors. Also from the same run: `Entry.namespace` is optional (a
+tag role has none), so a view reads `props.kit?.namespace?.Class`, cast
+to its own `typeof X.Class | undefined`; and a generic SFC is typed by
+vue-tsc as a function, which `Kit.View` admits.

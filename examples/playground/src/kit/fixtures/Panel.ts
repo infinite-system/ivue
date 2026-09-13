@@ -14,10 +14,10 @@ import CardView from './Card.vue';
 // A root above the card: two levels, so an override can reach a leaf two
 // hops down through `subkit`.
 class $Panel {
-  static get $kit() {
+  static get $kit(): Panel.Roles {
     return {
       Card: { view: CardView, namespace: Card }
-    } satisfies Kit.Of<'Card'>;
+    };
   }
 
   static get propsTypes() {
@@ -57,6 +57,8 @@ class $Panel {
 }
 
 export namespace Panel {
+  /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
+  export type Roles = { Card: Kit.Entry<$Panel, undefined, typeof Card> };
   export const $Class = Static($Panel);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;

@@ -4,7 +4,7 @@ import { ToolCallSubThread } from './ToolCall.SubThread';
 const props = defineProps<ToolCallSubThread.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof ToolCallSubThread.Class | undefined) ??
+  (props.kit?.namespace?.Class as typeof ToolCallSubThread.Class | undefined) ??
   ToolCallSubThread.Class
 )(props);
 </script>

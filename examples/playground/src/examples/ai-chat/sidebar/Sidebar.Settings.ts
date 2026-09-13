@@ -14,10 +14,10 @@ import { TreeCatalog } from '../variants/TreeCatalog';
 // Its sections are rows of its own scroller, like every list in the side.
 class $SidebarSettings {
   /** the one role the panel composes: its own scroller over the sections */
-  static get $kit() {
+  static get $kit(): SidebarSettings.Roles {
     return {
       Scroller: { view: VirtualScrollerView, namespace: VirtualScroller }
-    } satisfies Kit.Of<SidebarSettings.Role>;
+    };
   }
 
   /** the sections, in order — each a row of the scroller */
@@ -105,6 +105,8 @@ class $SidebarSettings {
 }
 
 export namespace SidebarSettings {
+  /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
+  export type Roles = { Scroller: Kit.Entry<$SidebarSettings, undefined, typeof VirtualScroller> };
   export const $Class = Static($SidebarSettings);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;

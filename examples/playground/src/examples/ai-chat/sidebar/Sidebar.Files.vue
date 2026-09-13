@@ -4,7 +4,7 @@ import { SidebarFiles } from './Sidebar.Files';
 const props = defineProps<SidebarFiles.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof SidebarFiles.Class | undefined) ?? SidebarFiles.Class
+  (props.kit?.namespace?.Class as typeof SidebarFiles.Class | undefined) ?? SidebarFiles.Class
 )(props);
 const {
   // state refs

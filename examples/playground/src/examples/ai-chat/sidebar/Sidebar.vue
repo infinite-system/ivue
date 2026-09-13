@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 const props = defineProps<Sidebar.Props>();
 
 const model = new (
-  (props.kit?.namespace.Class as typeof Sidebar.Class | undefined) ?? Sidebar.Class
+  (props.kit?.namespace?.Class as typeof Sidebar.Class | undefined) ?? Sidebar.Class
 )(props);
 </script>
 
