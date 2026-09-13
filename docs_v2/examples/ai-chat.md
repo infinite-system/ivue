@@ -87,7 +87,7 @@ part is done.
     { path: 'examples/playground/src/examples/ai-chat/Index.ts', label: 'Index.ts' },
     { path: 'examples/playground/src/examples/ai-chat/Composer.ts', label: 'Composer.ts' },
     { path: 'examples/playground/src/examples/ai-chat/Clock.ts', label: 'Clock.ts' },
-    { path: 'examples/playground/src/examples/ai-chat/AiChatExample.vue', label: 'AiChatExample.vue' }
+    { path: 'examples/playground/src/examples/ai-chat/Chat.vue', label: 'Chat.vue' }
   ]"
 />
 

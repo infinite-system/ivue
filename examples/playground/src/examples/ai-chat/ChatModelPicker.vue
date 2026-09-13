@@ -29,7 +29,9 @@ const {
         <path :d="model.pickedIcon" />
       </svg>
       <span class="ac-model-name">{{ model.pickedLabel }}</span>
-      <span class="ac-model-caret" aria-hidden="true">▾</span>
+      <svg class="ac-model-caret ac-chevron" viewBox="0 0 24 24" aria-hidden="true">
+        <path :d="model.caretIcon" />
+      </svg>
     </button>
     <div v-if="open" class="ac-picker-menu" role="listbox">
       <div class="ac-picker-title">Model</div>

@@ -1,6 +1,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
+import { Icons } from './Icons';
 import { ChatApi } from './ChatApi';
 import type { Composer } from './Composer';
 import type { Kit } from '../../kit/Kit';
@@ -57,6 +58,11 @@ class $ModelPicker {
 
   get pickedLabel(): string {
     return this.picked.label;
+  }
+
+  /** one chevron, turned down by the css; the open menu turns it up */
+  get caretIcon(): string {
+    return Icons.Class.PATHS.chevron;
   }
 
   get pickedIcon(): string {

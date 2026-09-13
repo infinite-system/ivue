@@ -30,6 +30,7 @@ const {
     :data-density="chat.density"
     :data-tree="chat.tree"
   >
+    <component :is="chat.kit.Stats.view" v-bind="chat.seam('Stats')" />
     <p v-if="error" class="ac-error">{{ error }}</p>
 
     <div class="ac-main">
@@ -75,58 +76,5 @@ const {
     </div>
 
     <component :is="chat.kit.Composer.view" :kit="chat.kit.Composer" :chat="chat" />
-
-    <footer class="ac-stats">
-      <dl class="ac-receipts">
-        <div>
-          <dt>messages</dt>
-          <dd>{{ chat.countLabel }}</dd>
-        </div>
-        <div>
-          <dt>rows in the DOM</dt>
-          <dd class="ac-grad">{{ chat.domRowCount }}</dd>
-        </div>
-        <div>
-          <dt>loaded</dt>
-          <dd>{{ chat.loadedLabel }}</dd>
-        </div>
-        <div>
-          <dt>pages</dt>
-          <dd :title="chat.fetchingLabel">
-            <span
-              class="ac-spinner ac-spinner-soft ac-pages-spinner"
-              :class="{ 'ac-idle': !chat.isFetching }"
-              aria-hidden="true"
-            ></span
-            >{{ chat.pagesLabel }}
-          </dd>
-        </div>
-        <div>
-          <dt>fetched</dt>
-          <dd>
-            {{ chat.bytesLabel }} <span class="ac-muted">of {{ chat.totalBytesLabel }}</span>
-          </dd>
-        </div>
-        <div>
-          <dt>requests</dt>
-          <dd>{{ chat.requestCountLabel }}</dd>
-        </div>
-        <div>
-          <dt>tokens streamed</dt>
-          <dd>{{ chat.tokensLabel }}</dd>
-        </div>
-      </dl>
-      <div class="ac-stats-actions">
-        <label class="ac-btn" :class="{ 'ac-busy': chat.isLoadingFile }">
-          {{ chat.fileLoadLabel }}
-          <input
-            type="file"
-            accept=".jsonl,application/jsonl,text/plain"
-            hidden
-            @change="chat.open(($event.target as HTMLInputElement).files![0])"
-          />
-        </label>
-      </div>
-    </footer>
   </div>
 </template>

@@ -56,8 +56,22 @@ const {
           <input type="file" multiple hidden @change="model.onPick($event)" />
         </label>
         <component :is="model.kit.Picker.view" :kit="model.kit.Picker" :composer="model" />
-        <span class="ac-model-hint">{{ model.modelHint }}</span>
         <span class="ac-composer-spacer"></span>
+        <span class="ac-more">
+          <button
+            type="button"
+            class="ac-more-btn"
+            :class="{ 'ac-on': model.isPanelOpen }"
+            :title="model.moreTitle"
+            :aria-expanded="model.isMenuOpen"
+            @click="model.toggleMenu()"
+          >
+            <svg class="ac-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path :d="model.moreIcon" /></svg
+            ><span class="ac-sr">{{ model.moreTitle }}</span>
+          </button>
+          <component :is="model.kit.Menu.view" v-bind="model.seam('Menu')" />
+        </span>
         <button
           type="button"
           class="ac-search-btn"

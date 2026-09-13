@@ -3,15 +3,15 @@ import { Static } from '../../Static';
 import type { Kit } from '../../kit/Kit';
 import { ChatSettings } from './ChatSettings';
 import { ChatVariants } from './variants/ChatVariants';
-import AiChatExampleView from './AiChatExample.vue';
+import ChatView from './Chat.vue';
 
 // The shell around the example: it reads the page's settings and hands the
 // example the entry for the tree the reader picked. The tree's namespace
-// is the whole difference between two renders — the same AiChatExample.vue
+// is the whole difference between two renders — the same Chat.vue
 // constructs whichever class the entry names. A change of tree remounts;
 // a change of theme or density does not, the layer reads those live.
 class $ChatShell {
-  static readonly EXAMPLE_VIEW = AiChatExampleView;
+  static readonly EXAMPLE_VIEW = ChatView;
 
   constructor(public props: ChatShell.Props) {}
 

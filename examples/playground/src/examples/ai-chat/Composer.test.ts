@@ -3,6 +3,7 @@
 Goal: Prove the composer sends exactly one request with the draft, the picked model and the attachments, only when there is something to send and nothing is streaming; that Enter sends and Shift+Enter does not; and that a dropped, pasted or picked file becomes an attachment through the upload mock and leaves cleanly.
 // domain-invariant: $Composer — If the draft is blank and nothing is attached, then send is disabled
 // domain-invariant: $Composer — If Enter is pressed without Shift, then the draft is sent and cleared
+// domain-invariant: $Composer — If the screen is compact, then the menu lists the rail's tabs and picking one opens that panel
 Impossible if true: a send goes out while a reply is streaming
 
 === GENERATOR-DESCRIBED ===
@@ -12,6 +13,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Chat } from './Chat';
 import { ChatApi } from './ChatApi';
 import { Composer } from './Composer';
+import { Icons } from './Icons';
 import { hosted } from '../virtual-scroller/hosted';
 
 describe('Composer', () => {
@@ -147,6 +149,40 @@ describe('Composer', () => {
       })
     );
     expect(composer.attachments.value).toEqual([]);
+    unmount();
+  });
+
+  // domain-invariant: $Composer — If the screen is compact, then the menu lists the rail's tabs and picking one opens that panel
+  it('the menu is the rail on a phone: its tabs, its open panel; the placeholder drops the key hint there', () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
+    const { instance: chat, unmount } = hosted(() => new Chat.Class());
+    const composer = new Composer.Class({ chat });
+    expect(composer.kit.Menu.view).toBeDefined();
+    expect(composer.tabs.map((tab) => tab.id)).toEqual(['Index', 'Files', 'Settings']);
+    expect(composer.iconOf(composer.tabs[1])).toBe(Icons.Class.PATHS.files);
+    expect(composer.isMenuOpen).toBe(false);
+    composer.toggleMenu();
+    expect(composer.isMenuOpen).toBe(true);
+    composer.pick(composer.tabs[1]);
+    expect(composer.isMenuOpen).toBe(false);
+    expect(composer.isActive(composer.tabs[1])).toBe(true);
+    expect(composer.isActive(composer.tabs[0])).toBe(false);
+    expect(composer.isPanelOpen).toBe(true);
+    expect(composer.moreTitle).toBe('Close the panel');
+    composer.toggleMenu();
+    expect(composer.isPanelOpen).toBe(false);
+    expect(composer.isMenuOpen).toBe(false);
+    expect(composer.moreTitle).toBe('Index, files and settings');
+    const matchMedia = vi.fn().mockReturnValue({ matches: false });
+    Object.defineProperty(window, 'matchMedia', {
+      value: matchMedia,
+      configurable: true,
+      writable: true
+    });
+    expect(composer.placeholder).toContain('Enter to send, Shift-Enter for line-break');
+    matchMedia.mockReturnValue({ matches: true });
+    expect(composer.isCompact).toBe(true);
+    expect(composer.placeholder).toBe('Type a message, drop an image or a file.');
     unmount();
   });
 });

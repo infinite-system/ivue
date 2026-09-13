@@ -4,6 +4,8 @@ import { Static } from '../../Static';
 import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
 import VirtualScrollerView from '../virtual-scroller/VirtualScroller.vue';
 import { Kit } from '../../kit/Kit';
+import { KitContainer } from '../../kit/KitContainer';
+import ChatStatsView from './Chat.Stats.vue';
 import { ChatMessage } from './message/ChatMessage';
 import ChatMessageView from './message/ChatMessage.vue';
 import { Composer } from './Composer';
@@ -29,10 +31,11 @@ import { Markdown } from './Markdown';
 // viewport moves nothing. Replies replay real turns as a stream; the
 // bottom stays pinned only while the reader is there. One clock times
 // every wait.
-class $Chat {
+class $Chat extends KitContainer.$Class<Chat.Roles> {
   /** the roles the thread composes — the scroller, a row, the composer, the index — built once per class by Static() */
-  static get $kit(): Chat.Roles {
+  static override get $kit(): Chat.Roles {
     return {
+      Stats: { view: ChatStatsView },
       Scroller: { view: VirtualScrollerView, namespace: VirtualScroller },
       Message: { view: ChatMessageView, namespace: ChatMessage },
       Composer: { view: ChatComposerView, namespace: Composer },
@@ -103,6 +106,7 @@ class $Chat {
     );
   }
   constructor(public props: Chat.Props = {}) {
+    super();
     onMounted(() => this.load());
     onBeforeUnmount(() => this.dispose());
     watch(
@@ -120,13 +124,8 @@ class $Chat {
   }
 
   /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
+  protected override get self() {
     return this.constructor as typeof $Chat;
-  }
-
-  /** the kit is the class's; a subclass with its own `$kit` swaps the subtree */
-  get kit() {
-    return this.self.$kit;
   }
 
   /* ---- the look: closed here; ConfiguredChat is the layer that opens these to the kit and the settings ---- */
@@ -1026,7 +1025,13 @@ export namespace Chat {
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
   export type Model = InstanceType<typeof Class>;
-  export type Role = 'Scroller' | 'Message' | 'Composer' | 'Index' | 'Sidebar' | 'Peek';
+  export type Role = 'Stats' | 'Scroller' | 'Message' | 'Composer' | 'Index' | 'Sidebar' | 'Peek';
+
+  /** what the chat's own leaves receive: their entry and the chat model */
+  export interface SectionProps {
+    kit: Kit.Entry;
+    model: Instance;
+  }
   /** the thread's kit with each role's namespace named — declared, not inferred, because every
    *  child's instance type names the chat's and an inferred kit would name itself */
   export type Roles = Kit.Of<Role, $Chat> & {

@@ -1228,21 +1228,6 @@
   color: var(--ac-muted);
 }
 
-@media (max-width: 860px) {
-  .ai-chat .ac-index {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: min(92vw, 420px) !important;
-    box-shadow: var(--ac-shadow);
-    z-index: 5;
-  }
-  .ai-chat .ac-receipts {
-    display: none;
-  }
-}
-
 /* ---- the second pass: room, quieter cards, a clearer head ---- */
 /* the top bar: the receipts get air, the actions take a line of their own */
 .ai-chat .ac-receipts {
@@ -1551,7 +1536,7 @@
   align-items: center;
   gap: 8px 22px;
   padding: 9px 24px 10px;
-  border-top: 1px solid var(--ac-line);
+  border-bottom: 1px solid var(--ac-line);
   background: var(--ac-panel);
   font-size: 12px;
 }
@@ -1736,8 +1721,64 @@
   outline: none;
 }
 .ai-chat .ac-model-caret {
+  width: 15px;
+  height: 15px;
   color: var(--ac-muted);
-  font-size: 10px;
+  transform: rotate(90deg);
+  transition: transform 0.15s ease;
+}
+/* the more menu: hidden past a phone, a small sheet above Send on one */
+.ai-chat .ac-more {
+  position: relative;
+  display: none;
+}
+.ai-chat .ac-more-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--ac-line);
+  border-radius: 50%;
+  background: var(--ac-panel);
+  color: var(--ac-dim);
+  cursor: pointer;
+}
+.ai-chat .ac-more-btn[aria-expanded='true'] {
+  color: var(--ac-accent);
+  border-color: var(--ac-accent);
+}
+.ai-chat .ac-more-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 6px;
+  border: 1px solid var(--ac-line);
+  border-radius: 12px;
+  background: var(--ac-panel);
+  box-shadow: var(--ac-shadow);
+  z-index: 6;
+}
+.ai-chat .ac-more-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ac-text);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.ai-chat .ac-more-item:hover,
+.ai-chat .ac-more-item.ac-on {
+  background: var(--ac-accent-soft);
+  color: var(--ac-accent);
 }
 .ai-chat .ac-model-hint {
   font-size: 11.5px;
@@ -1780,12 +1821,17 @@
   transform: scale(0.96);
 }
 .ai-chat .ac-send:disabled {
-  opacity: 0.35;
+  /* a quiet grey circle with a legible arrow, never a washed-out gradient */
+  background: var(--ac-panel-2);
+  color: var(--ac-muted);
+  opacity: 1;
   cursor: default;
   box-shadow: none;
 }
 .ai-chat .ac-stop {
-  background: var(--ac-text);
+  /* the accent, solid: white on it in every theme */
+  background: var(--ac-accent);
+  color: #fff;
   font-size: 12px;
 }
 .ai-chat .ac-stop:hover {
@@ -2527,9 +2573,6 @@
   border-color: var(--ac-accent);
   box-shadow: 0 0 0 3px var(--ac-accent-soft);
 }
-.ai-chat .ac-picker-open .ac-model-caret {
-  transform: rotate(180deg);
-}
 .ai-chat .ac-model-caret {
   transition: transform 0.18s;
 }
@@ -2984,4 +3027,63 @@
 .ai-chat .ac-pages-spinner.ac-idle {
   visibility: hidden;
   animation: none;
+}
+
+/* the phone layout — last, so it wins every rule above at equal specificity */
+@media (max-width: 860px) {
+  /* a phone: the rail folds into the composer's menu, and an open panel covers the thread */
+  .ai-chat .ac-rail {
+    display: none;
+  }
+  .ai-chat .ac-main {
+    position: relative;
+  }
+  /* the panel covers the thread only — the composer, and its menu, stay reachable */
+  .ai-chat .ac-side {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .ai-chat .ac-side-panel {
+    position: absolute;
+    inset: 0;
+    width: auto !important;
+    max-width: none;
+    pointer-events: auto;
+    border-left: 0;
+    box-shadow: var(--ac-shadow);
+  }
+  .ai-chat .ac-side-grip {
+    display: none;
+  }
+  .ai-chat .ac-more {
+    display: inline-flex;
+  }
+  .ai-chat .ac-more-btn.ac-on {
+    color: #fff;
+    background: var(--ac-accent);
+    border-color: var(--ac-accent);
+  }
+  /* the receipts stay, tighter */
+  .ai-chat .ac-stats {
+    gap: 6px 14px;
+    padding: 8px 14px;
+  }
+  .ai-chat .ac-stats .ac-receipts {
+    flex-wrap: nowrap;
+    gap: 0 18px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ai-chat .ac-stats .ac-receipts::-webkit-scrollbar {
+    display: none;
+  }
+  .ai-chat .ac-stats .ac-receipts > div {
+    flex: 0 0 auto;
+  }
+  .ai-chat .ac-stats .ac-receipts dd {
+    font-size: 12px;
+  }
 }

@@ -4,6 +4,9 @@ import { Static } from '../../Static';
 import { ChatApi } from './ChatApi';
 import type { Chat } from './Chat';
 import type { Kit } from '../../kit/Kit';
+import { KitContainer } from '../../kit/KitContainer';
+import { Sidebar } from './sidebar/Sidebar';
+import ComposerMenuView from './Composer.Menu.vue';
 import { ModelPicker } from './ModelPicker';
 import { Icons } from './Icons';
 import ChatModelPickerView from './ChatModelPicker.vue';
@@ -13,30 +16,49 @@ import type { SessionLog } from './SessionLog';
 // drop, paste or the picker (through the upload mock, never the
 // network), and a send that hands the thread one request. Enter sends,
 // Shift+Enter breaks a line.
-class $Composer {
+class $Composer extends KitContainer.$Class<Composer.Roles> {
   /** the roles the composer composes — the model picker; built once per class by Static() */
-  static get $kit(): Composer.Roles {
+  static override get $kit(): Composer.Roles {
     return {
-      Picker: { view: ChatModelPickerView, namespace: ModelPicker }
+      Picker: { view: ChatModelPickerView, namespace: ModelPicker },
+      Menu: { view: ComposerMenuView }
     };
   }
 
   static readonly DEFAULT_MODEL = 'default';
 
-  constructor(public props: Composer.Props) {}
-
-  /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
-    return this.constructor as typeof $Composer;
+  constructor(public props: Composer.Props) {
+    super();
   }
 
-  get kit() {
-    return this.self.$kit;
+  /** The one cast per class: instance code reads its own statics here. */
+  protected override get self() {
+    return this.constructor as typeof $Composer;
   }
 
   /** the rail's search glyph, so the two search affordances match */
   get searchIcon(): string {
     return Icons.Class.PATHS.search;
+  }
+
+  get moreIcon(): string {
+    return Icons.Class.PATHS.more;
+  }
+
+  /** the side panels, as the menu lists them on a phone — the rail's own tabs */
+  get tabs(): Sidebar.Tab[] {
+    return Sidebar.Class.TABS;
+  }
+
+  get menuOpen() {
+    return ref(false);
+  }
+
+  /** a narrow screen: the rail folds into the menu and the placeholder drops its key hint */
+  get isCompact(): boolean {
+    return (
+      typeof window !== 'undefined' && Boolean(window.matchMedia?.('(max-width: 860px)').matches)
+    );
   }
 
   get chat(): Chat.Model {
@@ -94,10 +116,25 @@ class $Composer {
     return this.chat.isStreaming ? 'Replying…' : 'Send';
   }
 
+  get isMenuOpen(): boolean {
+    return this.menuOpen.value;
+  }
+
+  /** a side panel is open: on a phone the menu button is its close */
+  get isPanelOpen(): boolean {
+    return this.chat.sidebarTab.value !== null;
+  }
+
+  get moreTitle(): string {
+    return this.isPanelOpen ? 'Close the panel' : 'Index, files and settings';
+  }
+
+  /** a phone has no Enter to explain; the desktop line names both keys */
   get placeholder(): string {
-    return this.chat.isStreaming
-      ? 'The reply is streaming — a replay of a real turn'
-      : 'Type a message, drop an image or a file. Enter sends, Shift+Enter breaks the line.';
+    if (this.chat.isStreaming) return 'The reply is streaming — a replay of a real turn';
+    return this.isCompact
+      ? 'Type a message, drop an image or a file.'
+      : 'Type a message, drop an image or a file. Enter to send, Shift-Enter for line-break.';
   }
 
   get attachmentCountLabel(): string {
@@ -114,6 +151,30 @@ class $Composer {
     if (size < 1024) return `${size} B`;
     if (size < 1024 * 1024) return `${(size / 1024).toFixed(0)} KB`;
     return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  iconOf(tab: Sidebar.Tab): string {
+    return Icons.Class.PATHS[tab.icon];
+  }
+
+  isActive(tab: Sidebar.Tab): boolean {
+    return this.chat.sidebarTab.value === tab.id;
+  }
+
+  /** the menu, or — while a panel covers the thread on a phone — that panel's close */
+  toggleMenu() {
+    if (this.isPanelOpen) {
+      this.menuOpen.value = false;
+      this.chat.toggleSidebar(this.chat.sidebarTab.value!);
+      return;
+    }
+    this.menuOpen.value = !this.menuOpen.value;
+  }
+
+  /** open a side panel from the menu, and close the menu */
+  pick(tab: Sidebar.Tab) {
+    this.menuOpen.value = false;
+    this.chat.toggleSidebar(tab.id);
   }
 
   /* ---- handlers ---- */
@@ -196,14 +257,23 @@ class $Composer {
 
 export namespace Composer {
   /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
-  export type Roles = { Picker: Kit.Entry<$Composer, undefined, typeof ModelPicker> };
+  export type Roles = {
+    Picker: Kit.Entry<$Composer, undefined, typeof ModelPicker>;
+    Menu: Kit.Entry<$Composer>;
+  };
+
+  /** what the composer's own leaves receive: their entry and the composer model */
+  export interface SectionProps {
+    kit: Kit.Entry;
+    model: Instance;
+  }
   export const $Class = Static($Composer);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
   // raw-instance type — the picker holds and reads its composer; the raw class, so the kit that names the picker does not cycle
   export type Model = $Composer;
 
-  export type Role = 'Picker';
+  export type Role = 'Picker' | 'Menu';
 
   export interface Props {
     chat: Chat.Model;

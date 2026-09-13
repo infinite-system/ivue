@@ -20,7 +20,9 @@ class $Icons {
     /** go to a message in the thread */
     jump: 'M4 12h15M13 6l6 6-6 6',
     /** open somewhere else — the index on a file */
-    open: 'M7 17 17 7M9 7h8v8'
+    open: 'M7 17 17 7M9 7h8v8',
+    /** the more menu — the side panels, on a phone */
+    more: 'M5 12h.01M12 12h.01M19 12h.01'
   };
 }
 
