@@ -39,7 +39,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 - [The thumb never shrinks below a grabbable fraction](#the-thumb-never-shrinks-below-a-grabbable-fraction) — why a million rows still have a scrollbar.
 - [A cross-axis touch belongs to the page](#a-cross-axis-touch-belongs-to-the-page) — why a horizontal strip does not trap a vertical swipe.
 - [Every axis dependency goes through a seam getter](#every-axis-dependency-goes-through-a-seam-getter) — why the horizontal scroller is a hundred lines.
-- [An item captures its size once in and once out](#an-item-captures-its-size-once-in-and-once-out) — why sizes are truthful without a per-row observer.
+- [An item captures its size once, on mount](#an-item-captures-its-size-once-on-mount) — why sizes are truthful without a per-row observer, and why an unmount reads nothing.
 - [Shrinking the list prunes the measurements at its new end](#shrinking-the-list-prunes-the-measurements-at-its-new-end) — why a splice cannot leave the extent stale.
 - [The selection is a range over the data](#the-selection-is-a-range-over-the-data) — why the highlight survives recycling and copy reaches unmounted rows.
 - [Text offsets are measured against the trimmed row text](#text-offsets-are-measured-against-the-trimmed-row-text) — why a copied row does not start three characters off.
@@ -404,25 +404,25 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Last refined:** 2026-09-06
 
-### An item captures its size once in and once out
+### An item captures its size once, on mount
 
-**Invariant:** If a row mounts or is about to unmount, then it reports its main-axis size once each time, in layout pixels (its rect divided by the parent's rect-to-layout scale), and never in between.
+**Invariant:** If a row mounts, then it reports its main-axis rect once, in screen pixels, and never again — not on unmount, not in between; the scroller's capture wave divides the reports by the wrapper's rect-to-layout scale once, so the size map is layout pixels under any ancestor transform.
 
-**Scope:** `VirtualScrollerItem.ts` `capture`, its two hooks; the scroller's `remeasureRenderedItems`, which is the one continuous observer, on the wrapper.
+**Scope:** `VirtualScrollerItem.ts` `capture`, its one hook; the scroller's `captureItemSize` / `flushItemSizes` (the wave and its one scale), `wrapperScale`, and `remeasureRenderedItems`, the one continuous observer, on the wrapper.
 
-**Mechanism:** Items render in normal flow, so the browser positions them at their real size with no bookkeeping; the parent needs sizes only for spacer and estimate math. A single wrapper `ResizeObserver` re-reads the rendered window when a rendered size changes, so continuous per-item observation is unnecessary.
+**Mechanism:** Items render in normal flow, so the browser positions them at their real size with no bookkeeping; the parent needs sizes only for spacer and estimate math. A single wrapper `ResizeObserver` re-reads the rendered window when a rendered size changes, so continuous per-item observation is unnecessary — and so an unmount has nothing to add: the observer kept the size current while the row was mounted. The unmount capture read a rect between the patch's removals, a forced layout per row; a phone profile spent 711 ms in captures over two flicks of the files list, the largest single cost of the flick. The per-row scale read was two more layout reads per row for one ratio.
 
-**Rejected alternatives:** A `ResizeObserver` per item — bursts of callbacks during scroll at 100k items, each invalidating geometry, measured as jitter.
+**Rejected alternatives:** A `ResizeObserver` per item — bursts of callbacks during scroll at 100k items, each invalidating geometry, measured as jitter. A capture on unmount — the forced layouts above, for a size the observer already had.
 
-**Evidence:** `VirtualScrollerItem.ts` `capture` doc comment. Tests: "the size is reported once on mount and once on unmount, and never in between", "under a half-scale ancestor the reported size is the rect doubled back to layout pixels".
+**Evidence:** `VirtualScrollerItem.ts` `capture` doc comment; the CPU profile of two files-list flicks under 4x throttling. Tests: "the size is reported once, on mount, as the rect — never on unmount, never in between", "under a half-scale ancestor the item reports the rect as it is, and the scroller takes the scale out".
 
-**Impossible if true:** A size report while no element is attached. A size map built from screen pixels under a scaled ancestor.
+**Impossible if true:** A size report while no element is attached. A size report on unmount. A size map built from screen pixels under a scaled ancestor.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerItem.test.ts`
 
 **Status:** provisional
 
-**Last refined:** 2026-09-06
+**Last refined:** 2026-09-13
 
 ### Shrinking the list prunes the measurements at its new end
 

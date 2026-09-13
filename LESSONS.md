@@ -1343,3 +1343,21 @@ freshly opened chat's end read a velocity of zero because the anchor
 shifts of rows measuring above the reader were written into the finger's
 trail (the trail now shifts with the content), then what glide there was
 died on a clamp that compared a stale position cell against the new limit.
+
+## Profile before spreading the work (2026-09-13)
+
+The files-list flick "choked" on a phone. Two structural guesses were
+measured first and both lost: a row leaf instead of inline slot rows was a
+wash on the burst (the walk's re-render was never the cost), and a
+per-frame mount budget with catch-up frames made it worse (more walks,
+each paying the fixed per-walk overhead; max frame 167–217 ms against
+67–100 at HEAD). A CDP CPU profile under 4x throttling then named the real
+costs in one run: the row's unmount capture (711 ms of forced layouts over
+two flicks), a live `offsetHeight` read on every frame's clamp and limit
+(191 ms), a `scrollTop` read in the per-frame position write (163 ms), and
+the selection's highlight pass reading the document selection on every
+window change with no selection (191 ms). Removing those took the flick to
+a steady 50 ms max under the same throttle. The A/B harness (`ab.tmp.sh`:
+restart the server, trace three runs, print slow/max/long/rows) and the
+profile script are the way to settle such a question; the row leaf stayed
+for its structural benefit, not for speed.

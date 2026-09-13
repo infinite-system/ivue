@@ -2,6 +2,8 @@ import { computed, ref, shallowRef } from 'vue';
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
+import { KitContainer } from '../../../kit/KitContainer';
+import SidebarFilesRowView from './Sidebar.Files.Row.vue';
 import { VirtualScroller } from '../../virtual-scroller/VirtualScroller';
 import VirtualScrollerView from '../../virtual-scroller/VirtualScroller.vue';
 import type { Chat } from '../Chat';
@@ -15,12 +17,21 @@ import type { SessionLog } from '../SessionLog';
 // thread it has seen. The list is a virtual scroller: a file opens into
 // its records, each a diff of what the call did, and a record jumps the
 // thread to its message. The index button opens the index on the file.
-class $SidebarFiles {
-  /** the one role the panel composes: its own scroller over files and their open records */
-  static get $kit(): SidebarFiles.Roles {
+class $SidebarFiles extends KitContainer.$Class<SidebarFiles.Roles, SidebarFiles.Row> {
+  /** the roles the panel composes: its scroller over files and their open records, and the row each renders as */
+  static override get $kit(): SidebarFiles.Roles {
     return {
-      Scroller: { view: VirtualScrollerView, namespace: VirtualScroller }
+      Scroller: { view: VirtualScrollerView, namespace: VirtualScroller },
+      Row: { view: SidebarFilesRowView, bind: this.bindRow }
     };
+  }
+
+  /** what a row receives from the list: itself and the panel — the seam's item is the row */
+  static bindRow({
+    model,
+    item
+  }: Kit.Seam<$SidebarFiles, SidebarFiles.Row>): SidebarFiles.RowProps {
+    return { model: model as SidebarFiles.Instance, item };
   }
 
   static readonly FILE_TOOLS: Record<string, keyof SidebarFiles.Counts> = {
@@ -38,15 +49,13 @@ class $SidebarFiles {
   /** a record's diff shows this many lines before it folds */
   static readonly DIFF_CAP = 24;
 
-  constructor(public props: SidebarFiles.Props) {}
-
-  /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
-    return this.constructor as typeof $SidebarFiles;
+  constructor(public props: SidebarFiles.Props) {
+    super();
   }
 
-  get kit() {
-    return this.self.$kit;
+  /** The one cast per class: instance code reads its own statics here. */
+  protected override get self() {
+    return this.constructor as typeof $SidebarFiles;
   }
 
   get searchIcon(): string {
@@ -159,6 +168,15 @@ class $SidebarFiles {
 
   get hasNoMatch(): boolean {
     return this.isFiltered && this.count === 0;
+  }
+
+  /** every item of the list is a row; the scroller is the other role */
+  override roleOf(): SidebarFiles.Role {
+    return 'Row';
+  }
+
+  override keyOf(item: SidebarFiles.Row): string {
+    return item.id;
   }
 
   isKind(value: SidebarFiles.Kind): boolean {
@@ -374,7 +392,10 @@ class $SidebarFiles {
 
 export namespace SidebarFiles {
   /** the roles this class composes — declared, so a view's props and this kit never name each other's inferred types */
-  export type Roles = { Scroller: Kit.Entry<$SidebarFiles, undefined, typeof VirtualScroller> };
+  export type Roles = {
+    Scroller: Kit.Entry<$SidebarFiles, undefined, typeof VirtualScroller>;
+    Row: Kit.Entry<$SidebarFiles, Row>;
+  };
   export const $Class = Static($SidebarFiles);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
@@ -390,7 +411,13 @@ export namespace SidebarFiles {
     writes: number;
   }
 
-  export type Role = 'Scroller';
+  export type Role = 'Scroller' | 'Row';
+
+  /** what the row leaf receives: its row and the panel model */
+  export interface RowProps {
+    model: Instance;
+    item: Row;
+  }
   export type Kind = 'all' | keyof Counts;
 
   export interface File extends Counts {

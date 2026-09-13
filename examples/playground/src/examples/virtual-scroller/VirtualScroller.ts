@@ -332,8 +332,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // can never be stale.
       this.$selection.attach(element);
 
-      this.lenis.virtualLimit = () =>
-        Math.max(0, this.scrollExtent.value - this.offsetSize(this.scrollElement.value));
+      this.lenis.virtualLimit = () => Math.max(0, this.scrollExtent.value - this.containerSpan);
     });
 
     onBeforeUnmount(() => {
@@ -498,6 +497,16 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    */
   get containerOuterSize() {
     return this.outerElementSize.height;
+  }
+
+  /** The frame's main-axis size as the resize observer last reported it — the
+   *  hot paths read this, never the element: an `offsetHeight` read after a
+   *  patch forces a layout, and the frame loop, the clamp and the limit each
+   *  read it every frame (measured: 191 ms of forced layouts over two flicks).
+   *  Before the first report it falls back to the element once. */
+  protected get containerSpan(): number {
+    const observed = this.containerOuterSize.value;
+    return observed > 0 ? observed : this.offsetSize(this.scrollElement.value);
   }
 
   /* Scroll state */
@@ -1169,6 +1178,15 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * O(window), driven by the single wrapper ResizeObserver. Reads happen
    * in one layout pass (no interleaved writes); only changed sizes sync.
    */
+  /** The wrapper's rect-to-layout ratio: an ancestor transform scale, 1 when none. */
+  protected wrapperScale(): number {
+    const wrapper = this.itemsWrapperElement.value;
+    if (!wrapper) return 1;
+    const wrapperSize = this.offsetSize(wrapper);
+    const scale = wrapperSize > 0 ? this.rectSize(wrapper) / wrapperSize : 1;
+    return scale > 0 ? scale : 1;
+  }
+
   protected remeasureRenderedItems() {
     const wrapper = this.itemsWrapperElement.value;
     if (!wrapper) return;
@@ -1179,15 +1197,14 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // flow renders at full layout size — the map diverges from the flow
     // and index-targeted jumps land short by exactly that drift. The
     // wrapper's rect-to-layout ratio is the scale; divide it out.
-    const wrapperSize = this.offsetSize(wrapper);
-    const scale = wrapperSize > 0 ? this.rectSize(wrapper) / wrapperSize : 1;
+    const scale = this.wrapperScale();
     const measured = toRaw(this.measuredSizes.value);
     let changed = false;
     const sizes: [number, number][] = [];
     for (const element of rendered) {
       const row = element.getAttribute('aria-rowindex');
       if (row === null) continue;
-      sizes.push([+row - 1, this.rectSize(element) / (scale > 0 ? scale : 1)]);
+      sizes.push([+row - 1, this.rectSize(element) / scale]);
     }
     const anchor = this.captureAnchor();
     for (const [index, size] of sizes) {
@@ -1213,7 +1230,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    */
   // invariant: The scroll position lands inside the scrollable range (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   clampScrollPosition() {
-    const container = this.offsetSize(this.scrollElement.value);
+    const container = this.containerSpan;
     const max = Math.max(0, this.scrollExtent.value - container);
     if (Number(this.scrollPosition.value) <= max) return;
     this.setScrollPosition(-max, false, true, false);
@@ -1300,8 +1317,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * a forced layout per row, dozens on a flick's mount frame on a phone.
    */
   // invariant: The reader's row stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  // invariant: An item captures its size once in and once out (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: An item captures its size once, on mount (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   captureItemSize(index: number, size: number) {
+    // `size` is the row's rect in screen px; the flush divides the wave by the wrapper's scale
     if (this.pendingSizes.length === 0) {
       this.pendingAnchor = this.captureAnchor();
       queueMicrotask(this.flushItemSizes);
@@ -1316,9 +1334,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (sizes.length === 0) return;
     this.pendingSizes = [];
     this.pendingAnchor = undefined;
+    // rects are screen px; the map is layout px — one wrapper scale for the whole wave
+    const scale = this.wrapperScale();
     const measured = toRaw(this.measuredSizes.value);
     let changed = false;
-    for (const [index, size] of sizes) {
+    for (const [index, rect] of sizes) {
+      const size = rect / scale;
       if (measured[index] === size) continue;
       this.applyItemSize(index, size, false);
       changed = true;
@@ -1545,19 +1566,21 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // nothing ever recovers). Refuse it.
     // invariant: The scroll position lands inside the scrollable range (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     if (!Number.isFinite(position)) return;
-    const containerSize = this.offsetSize(this.scrollElement.value);
+    const containerSize = this.containerSpan;
     if (position > 0 || this.scrollExtent.value < containerSize) position = 0;
 
-    // Prevent scrolling down beyond last paragraph
+    // Prevent scrolling down beyond the last row. The frame's native
+    // scrollTop is not read here: the frame is never natively panned along
+    // its own axis (onScroll converts and zeroes any offset it gets), and a
+    // scrollTop read on this per-frame path forced a layout after every
+    // patch (measured: 163 ms over two flicks on a phone profile).
+    // invariant: The frame is never natively panned along its own axis (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     if (
-      Math.abs(position) + containerSize + (this.scrollElement.value?.scrollTop ?? 0) >
-        this.scrollExtent.value &&
+      Math.abs(position) + containerSize > this.scrollExtent.value &&
       this.scrollExtent.value > containerSize
     ) {
-      position = -(
-        // Must be negative
-        this.scrollExtent.value - containerSize - (this.scrollElement.value?.scrollTop ?? 0)
-      );
+      // Must be negative
+      position = -(this.scrollExtent.value - containerSize);
     }
 
     const absolutePosition = Math.abs(position);
@@ -1577,10 +1600,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       } else {
         this.scrollElementInner.value.style.transitionDuration = '0.45s';
       }
-    }
-
-    if (position == 0 && this.scrollElement.value?.scrollTop) {
-      this.scrollElement.value!.scrollTop = 0;
     }
 
     if (translateY && this.scrollElementInner.value) {
@@ -1637,7 +1656,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    */
   seekToProgress(fraction: number) {
     const clamped = Math.min(Math.max(fraction, 0), 1);
-    const container = this.offsetSize(this.scrollElement.value);
+    const container = this.containerSpan;
     const target = clamped * Math.max(0, this.scrollExtent.value - container);
     const at = this.getIndexAtPosition(target);
     if (!at) return;
@@ -1726,10 +1745,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // The rendered flow starts AFTER the container's leading main-axis
     // padding, but prefix-sum positions do not include it — subtract it,
     // or every "centered" landing sits paddingStart px past center.
-    return Math.max(
-      0,
-      (this.offsetSize(this.scrollElement.value) - size) / 2 - this.mainAxisPaddingStart()
-    );
+    return Math.max(0, (this.containerSpan - size) / 2 - this.mainAxisPaddingStart());
   }
 
   /** Leading main-axis padding of the scroll container (see
@@ -1918,9 +1934,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // The probe point lives in POSITION space: the container's visual
     // center minus the leading padding that the rendered flow adds.
     const at = this.getIndexAtPosition(
-      centered
-        ? offset + this.offsetSize(this.scrollElement.value) / 2 - this.mainAxisPaddingStart()
-        : offset
+      centered ? offset + this.containerSpan / 2 - this.mainAxisPaddingStart() : offset
     );
     if (!at) return;
     const target = centered ? at.index : at.fraction > 0.5 ? at.index + 1 : at.index;
@@ -2067,7 +2081,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const lenis = this.lenisRequired;
     lenis.targetScroll += dt / this.creepMsPerPx;
 
-    const container = this.offsetSize(this.scrollElement.value);
+    const container = this.containerSpan;
     const atEnd = lenis.actualScroll + container >= this.scrollExtent.value - 10;
 
     if (this.props.autoRepeat && atEnd) {

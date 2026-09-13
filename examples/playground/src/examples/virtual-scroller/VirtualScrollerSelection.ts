@@ -662,6 +662,9 @@ class $VirtualScrollerSelection {
 
   /** The "Copied" moment's timer — a holder, not state: nothing renders it. */
   protected readonly copiedMoment = { timer: null as ReturnType<typeof setTimeout> | null };
+  /** Whether a highlight of ours — native or painted — may be on the document: false until
+   *  the first range is shown. A plain holder: nothing renders it. */
+  protected readonly highlight = { painted: false };
 
   /** The input driving the live drag: a finger's drag paints through the
    *  CSS Highlight API and hands the range to the native selection only on
@@ -1094,14 +1097,21 @@ class $VirtualScrollerSelection {
   }
 
   applyHighlight() {
+    // No range and nothing ever painted: nothing to pin, nothing to clear.
+    // This runs after every window change; reading the document selection
+    // here on a plain scroll cost a layout per walk (measured: 191 ms over
+    // two flicks on a phone profile).
+    if (!this.range && !this.highlight.painted) return;
     // A range a finger made on a touch device: the touch class draws it
     // itself and the native selection is never created (see
     // VirtualScrollerSelectionTouch). A mouse's range on the same
     // device stays native, Ctrl+C included.
     if (this.$touch.paintsSelection && this.input.touch) {
+      this.highlight.painted = true;
       this.$touch.paint(this.visibleDomRange());
       return;
     }
+    this.highlight.painted = Boolean(this.range);
     this.$touch.paint(null);
     const range = this.range;
     const wrapper = this.owner.itemsWrapperElement.value;

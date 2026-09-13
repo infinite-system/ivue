@@ -1,6 +1,6 @@
 // VirtualScrollerItem.ts — one rendered row's model: a template ref and
 // the ONE-SHOT size capture the parent scroller's spacer math needs.
-import { onBeforeUnmount, onMounted, ref, type PropType } from 'vue';
+import { onMounted, ref, type PropType } from 'vue';
 import { definePropTypes, propsWithDefaults, Reactive } from '../../ivue';
 import { Static } from '../../Static';
 
@@ -33,12 +33,13 @@ class $VirtualScrollerItem {
     public props: VirtualScrollerItem.Props,
     public emit: VirtualScrollerItem.Emits
   ) {
-    // Capture once on mount (seeds the estimate the moment the item enters
-    // the window) and once right before unmount (the final size — the only
-    // one that matters once the item leaves the window).
-    // invariant: An item captures its size once in and once out (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+    // Capture once, on mount: the size the moment the item enters the
+    // window. Nothing on unmount — the wrapper observer kept the size
+    // current while the row was mounted, and an unmount capture read its
+    // rect between the patch's removals, a forced layout per row (measured:
+    // 711 ms of captures over two flicks on a phone profile).
+    // invariant: An item captures its size once, on mount (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     onMounted(() => this.capture());
-    onBeforeUnmount(() => this.capture());
   }
 
   /** The row element (a template ref). */
@@ -61,27 +62,15 @@ class $VirtualScrollerItem {
    * Continuous observation is what caused measurable jitter at 100k items:
    * bursts of resize callbacks during scroll, each invalidating geometry.
    *
-   * Sizes are reported in LAYOUT px: an ancestor transform scale (the post
-   * card scales to fit the window) shrinks every rect readout, and a size
-   * map built from scaled values diverges from the real flow by the scale
-   * factor — landing every index-targeted jump short. The parent stack's
-   * rect-to-layout ratio is the current scale; divide it out.
+   * The size is the row's rect in screen px; the scroller divides the
+   * wave by the wrapper's rect-to-layout ratio once, so an ancestor
+   * transform scale is taken out there, not per row.
    */
   capture() {
     const element = this.element.value;
     if (!element) return;
-    const parent = element.parentElement;
-    const horizontal = this.isHorizontal;
-    const parentLayout = horizontal ? (parent?.offsetWidth ?? 0) : (parent?.offsetHeight ?? 0);
-    const parentRect = parent
-      ? horizontal
-        ? parent.getBoundingClientRect().width
-        : parent.getBoundingClientRect().height
-      : 0;
-    const scale = parent && parentLayout > 0 ? parentRect / parentLayout : 1;
     const rect = element.getBoundingClientRect();
-    const size = horizontal ? rect.width : rect.height;
-    this.emit('sizeUpdated', scale > 0 ? size / scale : size);
+    this.emit('sizeUpdated', this.isHorizontal ? rect.width : rect.height);
   }
 }
 
