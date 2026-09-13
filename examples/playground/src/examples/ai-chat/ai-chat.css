@@ -3427,6 +3427,23 @@
   .ai-chat .ac-msg-ago::before {
     content: none;
   }
+  /* the send on a phone: finger-sized, and its ready state wears a standing glow ring — there
+     is no hover to lift it, and a phone set to less motion silences the pulse */
+  .ai-chat .ac-send,
+  .ai-chat .ac-stop {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+  .ai-chat .ac-send:not(:disabled) {
+    box-shadow:
+      0 0 0 3px var(--ac-accent-soft),
+      0 10px 22px -8px rgba(99, 102, 241, 0.95);
+  }
+  .ai-chat .ac-send:disabled {
+    border: 1.5px solid var(--ac-line);
+    background: transparent;
+  }
   /* code on a phone: a smaller face, tighter padding, and a narrower gutter of line numbers */
   .ai-chat .chat-code,
   .ai-chat pre.chat-code {
