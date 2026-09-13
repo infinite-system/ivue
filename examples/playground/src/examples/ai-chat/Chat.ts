@@ -153,8 +153,9 @@ class $Chat extends KitContainer.$Class<Chat.Roles> {
     return this.$clock;
   }
 
-  /** the offset the last scroll read left: a lower one is the reader scrolling up — a plain holder */
-  protected readonly scrollMark = { offset: 0 };
+  /** the reader's own offset (the position less the content's shifts) the last scroll read
+   *  left: a lower one is the reader scrolling up — a plain holder */
+  protected readonly scrollMark = { own: 0 };
 
   /** the hold the mount takes on the clock, and its release — a plain holder, nothing renders it */
   protected readonly clockHold = { release: null as (() => void) | null };
@@ -548,15 +549,19 @@ class $Chat extends KitContainer.$Class<Chat.Roles> {
     const nearBottom =
       extent <= container || offset + container >= extent - this.self.BOTTOM_THRESHOLD_PX;
     // only the reader's own scroll up lets go of the bottom: content growing under a pinned
-    // reader — a sent message, a reply's first row — moved the end, not the reader, and the
-    // pin follows it. Measured: a send left the end 49 px away, one past the threshold, and
-    // the reply streamed under a "Jump to bottom" chip.
+    // reader — a sent message, a reply's first row, a batch unfolding — moved the end, not
+    // the reader. The pin HOLDS through that and never moves the reader by itself: the
+    // reply's own pins follow the end while it streams, and a batch the reader opened stays
+    // where they opened it. Measured: a send left the end 49 px away, one past the
+    // threshold, and the reply streamed under a "Jump to bottom" chip.
     // invariant: The pin lets go only under the reader's own scroll (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
-    const scrolledUp = offset < this.scrollMark.offset - 1;
-    this.scrollMark.offset = offset;
+    // in the reader's own space: a row measuring above them shifts the offset without them
+    const shift = Number(scroller.contentShift ?? 0);
+    const own = offset - shift;
+    const scrolledUp = own < this.scrollMark.own - 1;
+    this.scrollMark.own = own;
     const keeps = this.atBottom.value && !scrolledUp;
     this.atBottom.value = nearBottom || keeps;
-    if (this.atBottom.value && !nearBottom) this.pinToBottom();
     // the chip points at the latest message: once its top is on screen the reader has reached
     // it, however long it runs below the fold
     const latestTop = scroller.getIndexPosition?.(this.latestIndex);
@@ -609,7 +614,7 @@ class $Chat extends KitContainer.$Class<Chat.Roles> {
     this.atBottom.value = true;
     this.latestInView.value = true;
     // the reader is put at the end: a later offset below it is their own scroll up
-    this.scrollMark.offset = this.endOffset;
+    this.scrollMark.own = this.endOffset - Number(scroller.contentShift ?? 0);
   }
 
   /**
@@ -624,7 +629,7 @@ class $Chat extends KitContainer.$Class<Chat.Roles> {
     if (!scroller) return;
     const end = this.endOffset;
     scroller.setScrollPosition(-end, false, true, false);
-    this.scrollMark.offset = end;
+    this.scrollMark.own = end - Number(scroller.contentShift ?? 0);
   }
 
   /**

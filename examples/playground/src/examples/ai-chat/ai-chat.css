@@ -3460,9 +3460,9 @@
   /* code on a phone: a smaller face, tighter padding, and a narrower gutter of line numbers */
   .ai-chat .chat-code,
   .ai-chat pre.chat-code {
-    padding: 8px 8px;
-    font-size: 11px;
-    line-height: 1.5;
+    padding: 7px 8px;
+    font-size: 10px;
+    line-height: 1.45;
   }
   .ai-chat .ac-code-numbered .chat-code .line::before {
     width: 2.2em;

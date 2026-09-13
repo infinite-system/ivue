@@ -734,6 +734,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return this.lenis?.velocity ?? 0;
   }
 
+  /** The px the content has shifted under the reader so far, summed — the position less this
+   *  is the reader's own motion (the chat's pin reads it: a shift is never a scroll up). */
+  get contentShift(): number {
+    return this.shiftMark.total;
+  }
+
   /** The lerp gap: how far the transform still has to travel to the
    *  target, in px, signed like the velocity. The window walk is anchored
    *  at the target; this is what the trailing pad must cover. */
@@ -868,6 +874,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** A thumb drag's track fractions at its start and its latest move —
    *  their order on release is the drag's direction. */
   protected readonly thumbDrag = { from: 0, to: 0 };
+  /** Every px the content ever shifted under the reader (rows measuring above the anchor),
+   *  summed: a reader of the position subtracts it to see the reader's own motion alone. */
+  protected readonly shiftMark = { total: 0 };
   /** The row captures of the current patch, applied together by flushItemSizes. */
   protected pendingSizes: [number, number][] = [];
   /** The anchor taken at the wave's first capture, restored once at the flush. */
@@ -1343,6 +1352,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  keeps its lerp — both endpoints shift — and a seek's landing shifts
    *  with it, so the converge loop does not mistake this for the reader. */
   protected shiftScroll(delta: number) {
+    this.shiftMark.total += delta;
     if (this.seekAppliedPosition !== null) this.seekAppliedPosition += delta;
     const lenis = this.lenis;
     if (lenis && lenis.isScrolling) {

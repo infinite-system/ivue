@@ -7,7 +7,7 @@ Goal: Prove the thread loads as stubs from one small index and fills a page only
 // domain-invariant: $Chat — If the reader is not at the bottom, then a streaming reply never moves the viewport
 // domain-invariant: $Chat — If a reply finishes, then its runs of calls contract to batches like any loaded turn
 // domain-invariant: $Chat — If the thumb is being dragged, then a window it reaches fetches nothing and its rows stay skeletons; the drop fetches the window it landed on
-// domain-invariant: $Chat — If the reader is at the bottom and the content grows under them, then the pin holds and follows the new end; only the reader's own scroll up lets it go
+// domain-invariant: $Chat — If the reader is at the bottom and the content grows under them, then the pin holds without moving them, so the reply's own pins follow the end; only the reader's own scroll up lets it go
 Impossible if true: a page is requested that no window needs
 Impossible if true: the scroller learns that a row is unloaded
 
@@ -466,8 +466,8 @@ describe('Chat', () => {
     unmount();
   });
 
-  // domain-invariant: $Chat — If the reader is at the bottom and the content grows under them, then the pin holds and follows the new end; only the reader's own scroll up lets it go
-  it('content growing under a reader at the bottom keeps the pin and follows the end; a scroll up lets go', () => {
+  // domain-invariant: $Chat — If the reader is at the bottom and the content grows under them, then the pin holds without moving them, so the reply's own pins follow the end; only the reader's own scroll up lets it go
+  it('content growing under a reader at the bottom keeps the pin without moving them; a scroll up lets go', () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
     const { instance: chat, unmount } = hosted(() => new Chat.Class());
     const scroller = {
@@ -481,13 +481,23 @@ describe('Chat', () => {
     chat.scroller.value = scroller as never;
     chat.onScroll();
     expect(chat.atBottom.value).toBe(true);
-    // a sent message and a reply's first row: the end moves 200 px, the reader does not
+    // a sent message and a reply's first row: the end moves 200 px, the reader does not — the
+    // pin holds, and moves nobody by itself (a batch the reader opened must stay put)
     scroller.scrollExtent = 1200;
     chat.onScroll();
     expect(chat.atBottom.value).toBe(true);
+    expect(scroller.setScrollPosition).not.toHaveBeenCalled();
+    // the reply's own pin, guarded by the held state, is what follows the end
+    chat.pinToBottom();
     expect(scroller.setScrollPosition).toHaveBeenLastCalledWith(-800, false, true, false);
+    scroller.scrollPosition = 800;
+    // rows measuring above the reader shift the offset down: not a scroll up, the pin holds
+    (scroller as { contentShift?: number }).contentShift = -150;
+    scroller.scrollPosition = 650;
+    chat.onScroll();
+    expect(chat.atBottom.value).toBe(true);
     // the reader scrolls up: the pin lets go
-    scroller.scrollPosition = 300;
+    scroller.scrollPosition = 350;
     chat.onScroll();
     expect(chat.atBottom.value).toBe(false);
     // and back to the end: it takes again
