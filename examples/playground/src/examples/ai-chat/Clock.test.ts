@@ -68,4 +68,26 @@ describe('Clock', () => {
     expect(Clock.Class.label(64_000)).toBe('1m 04s');
     expect(Clock.Class.label(3_720_000)).toBe('1h 02m');
   });
+
+  it('the minute floors now to its minute, so a relative label re-renders when it turns and not each tick; a minute hold turns it without the fine interval', () => {
+    vi.useFakeTimers();
+    const clock = new Clock.Class();
+    const release = clock.holdMinute();
+    expect(clock.isTicking).toBe(false);
+    const before = clock.now.value;
+    vi.advanceTimersByTime(Clock.$Class.MINUTE_MS);
+    expect(clock.now.value).toBeGreaterThanOrEqual(before + Clock.$Class.MINUTE_MS);
+    release();
+    release();
+    expect(clock.minuteTimer.value).toBeNull();
+    vi.useRealTimers();
+    const at = Date.UTC(2026, 8, 13, 12, 34, 56, 789);
+    clock.now.value = at;
+    expect(clock.minuteOf(at)).toBe(Date.UTC(2026, 8, 13, 12, 34));
+    expect(clock.minuteNow.value).toBe(Date.UTC(2026, 8, 13, 12, 34));
+    clock.now.value = at + 2_000;
+    expect(clock.minuteNow.value).toBe(Date.UTC(2026, 8, 13, 12, 34));
+    clock.now.value = at + 4_000;
+    expect(clock.minuteNow.value).toBe(Date.UTC(2026, 8, 13, 12, 35));
+  });
 });

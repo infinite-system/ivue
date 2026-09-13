@@ -1435,8 +1435,27 @@
   color: var(--ac-muted);
 }
 .ai-chat .ac-msg-ago {
+  position: relative;
   color: var(--ac-muted);
   opacity: 0.8;
+  cursor: pointer;
+}
+/* the exact time a tap on the relative one opens, for a moment */
+.ai-chat .ac-msg-when {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  border-radius: 7px;
+  background: var(--ac-text);
+  color: var(--ac-bg);
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: var(--ac-shadow);
+  z-index: 3;
+  pointer-events: none;
 }
 .ai-chat .ac-msg-ago::before {
   content: '·';
@@ -3396,8 +3415,17 @@
   /* the rows use the width: a hand's worth of padding, and the tool cards and a batch's
      calls stand flush with no rail under the arrow, so the code in an expansion is wider */
   .ai-chat .ac-msg {
-    padding: 10px 12px 10px 10px;
+    /* room on the right for the scrollbar that rides the content */
+    padding: 10px 18px 10px 10px;
     column-gap: 8px;
+  }
+  /* the clock time and the date go; the relative time stays, and a tap on it shows the exact one */
+  .ai-chat .ac-msg-time,
+  .ai-chat .ac-msg-date {
+    display: none;
+  }
+  .ai-chat .ac-msg-ago::before {
+    content: none;
   }
   .ai-chat .ac-msg-system {
     padding: 4px 12px 4px 10px;

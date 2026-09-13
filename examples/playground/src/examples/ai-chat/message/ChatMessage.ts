@@ -1,3 +1,4 @@
+import { ref } from 'vue';
 import { Reactive } from '../../../ivue';
 import { Static } from '../../../Static';
 import { Kit } from '../../../kit/Kit';
@@ -67,14 +68,24 @@ class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles> {
   /** the distance from `at` to `now` in the coarsest unit that is at least one */
   static relative(at: number, now: number): string {
     const dayMs = 86_400_000;
-    const days = Math.floor((now - at) / dayMs);
-    if (days <= 0) return 'today';
+    const elapsed = Math.max(0, now - at);
+    if (elapsed < 60_000) return 'just now';
+    const minutes = Math.floor(elapsed / 60_000);
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    const days = Math.floor(elapsed / dayMs);
     if (days === 1) return 'yesterday';
     if (days < 7) return `${days} days ago`;
     if (days < 30) return `${Math.floor(days / 7)} week${days < 14 ? '' : 's'} ago`;
     if (days < 365) return `${Math.floor(days / 30)} month${days < 60 ? '' : 's'} ago`;
     const years = Math.floor(days / 365);
     return `${years} year${years === 1 ? '' : 's'} ago`;
+  }
+
+  /** how long a tapped time bubble stays */
+  static get WHEN_MS() {
+    return 2600;
   }
 
   static readonly SPEAKER_LABELS: Record<SessionLog.Speaker, string> = {
@@ -86,6 +97,9 @@ class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles> {
   constructor(public props: ChatMessage.Props) {
     super();
   }
+
+  /** the tapped bubble's timer — a plain holder, nothing renders it */
+  protected readonly whenTimer = { timer: null as ReturnType<typeof setTimeout> | null };
 
   /** The one cast per class: instance code reads its own statics here. */
   protected override get self() {
@@ -166,9 +180,24 @@ class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles> {
   }
 
   /** `3 days ago`, `today`, `2 months ago` — how far back the message sits */
+  /** read off the clock's minute, so the label turns as time passes and re-renders once a minute */
   get relativeLabel(): string {
     const at = this.message?.timestamp ?? 0;
-    return at ? this.self.relative(at, Date.now()) : '';
+    return at ? this.self.relative(at, this.chat.clock.minuteNow.value) : '';
+  }
+
+  /** the exact time behind the relative one: the tooltip, and the bubble a tap opens */
+  get fullTimeLabel(): string {
+    return this.hasDate ? `${this.timeLabel} · ${this.dateLabel}` : this.timeLabel;
+  }
+
+  // MUTABLE STATE — the tapped bubble with the exact time, open for a moment
+  get whenShown() {
+    return ref(false);
+  }
+
+  get isWhenShown(): boolean {
+    return this.whenShown.value;
   }
 
   get hasDate(): boolean {
@@ -299,6 +328,21 @@ class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles> {
 
   skeletonStyle(block: ChatMessage.SkeletonBlock): Record<string, string> {
     return { width: block.width, opacity: String(block.opacity) };
+  }
+
+  /** a tap on the relative time shows the exact one for a moment — a phone has no hover for the tooltip */
+  toggleWhen() {
+    if (this.whenTimer.timer !== null) clearTimeout(this.whenTimer.timer);
+    this.whenTimer.timer = null;
+    this.whenShown.value = !this.whenShown.value;
+    if (this.whenShown.value) {
+      this.whenTimer.timer = setTimeout(() => this.hideWhen(), this.self.WHEN_MS);
+    }
+  }
+
+  hideWhen() {
+    this.whenTimer.timer = null;
+    this.whenShown.value = false;
   }
 }
 

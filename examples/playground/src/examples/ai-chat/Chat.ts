@@ -108,6 +108,8 @@ class $Chat extends KitContainer.$Class<Chat.Roles> {
   constructor(public props: Chat.Props = {}) {
     super();
     onMounted(() => this.load());
+    // the clock's minute turns while the thread is on screen: every row's "3 min ago" with it
+    onMounted(() => this.holdClock());
     onBeforeUnmount(() => this.dispose());
     watch(
       () => this.windowRange,
@@ -150,6 +152,9 @@ class $Chat extends KitContainer.$Class<Chat.Roles> {
   get clock(): Clock.Model {
     return this.$clock;
   }
+
+  /** the hold the mount takes on the clock, and its release — a plain holder, nothing renders it */
+  protected readonly clockHold = { release: null as (() => void) | null };
 
   /* ---- state ---- */
 
@@ -1021,7 +1026,14 @@ class $Chat extends KitContainer.$Class<Chat.Roles> {
 
   /* ---- teardown ---- */
 
+  holdClock() {
+    this.clockHold.release?.();
+    this.clockHold.release = this.clock.holdMinute();
+  }
+
   dispose() {
+    this.clockHold.release?.();
+    this.clockHold.release = null;
     this.stopStreaming();
     this.clock.dispose();
   }

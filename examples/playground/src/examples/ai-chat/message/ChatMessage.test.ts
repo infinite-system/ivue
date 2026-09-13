@@ -7,6 +7,7 @@ Goal: Prove the row is a container of roles: its sections render in the kit's `o
 // domain-invariant: $ChatMessage — If a leaf reads its presence off the row, then the stub and the parts are the two states of one row, the await line shows only while the reply has nothing, the foot only with a receipt, and a layer changes presence by overriding the getter with a super fallback
 // domain-invariant: $ChatMessage — If a seam is built for a role, then a section receives `{ model, kit }` and the parts list receives the message's parts, the chat and the message from the row's one bind
 // domain-invariant: $ChatMessage — If a chat patch carries a subkit for the row and the row's subkit one for the parts list, then the part it names renders through the swapped view with the list's own bind, and every shipped kit on the path is untouched
+// domain-invariant: $ChatMessage — If a message's time is read against the clock's minute, then the label names the coarsest unit that is at least one — just now, minutes, hours, yesterday, days, weeks, months, years — and turns as the minute does
 Impossible if true: a row's template names a section, or seam() branches on a role
 
 === GENERATOR-DESCRIBED ===
@@ -234,4 +235,21 @@ describe('the row is a container of roles', () => {
     expect(list.propsOf(textPart, 0)).toMatchObject({ part: textPart, message: null });
     expect(KitInspect.Class.tree(Themed)).toMatch(/Text: view <pre> .* view←themed/);
   });
+});
+
+// domain-invariant: $ChatMessage — If a message's time is read against the clock's minute, then the label names the coarsest unit that is at least one — just now, minutes, hours, yesterday, days, weeks, months, years — and turns as the minute does
+it('the relative time names the coarsest unit that is at least one, down to the minute', () => {
+  const relative = ChatMessage.$Class.relative;
+  const now = Date.UTC(2026, 8, 13, 12, 0, 0);
+  const minute = 60_000;
+  expect(relative(now - 20_000, now)).toBe('just now');
+  expect(relative(now - minute, now)).toBe('1 min ago');
+  expect(relative(now - 59 * minute, now)).toBe('59 min ago');
+  expect(relative(now - 60 * minute, now)).toBe('1 hour ago');
+  expect(relative(now - 5 * 60 * minute, now)).toBe('5 hours ago');
+  expect(relative(now - 24 * 60 * minute, now)).toBe('yesterday');
+  expect(relative(now - 3 * 24 * 60 * minute, now)).toBe('3 days ago');
+  expect(relative(now - 8 * 24 * 60 * minute, now)).toBe('1 week ago');
+  expect(relative(now - 40 * 24 * 60 * minute, now)).toBe('1 month ago');
+  expect(relative(now - 400 * 24 * 60 * minute, now)).toBe('1 year ago');
 });

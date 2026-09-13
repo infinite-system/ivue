@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 
@@ -9,6 +9,8 @@ import { Static } from '../../Static';
 // last holder lets go. Nothing here ticks after its part is done.
 class $Clock {
   static readonly TICK_MS = 250;
+  /** the coarse interval a mounted thread holds: the minute a relative time turns on */
+  static readonly MINUTE_MS = 60_000;
 
   /** "1s", "47s", "1m 04s" — the counter's face; sub-second reads as 0s while live */
   static label(ms: number, live = false): string {
@@ -43,6 +45,45 @@ class $Clock {
     return this.timer.value !== null;
   }
 
+  /** the coarse hold: the thread on screen wants its relative times to turn once a minute,
+   *  without the fine interval a pending thing runs */
+  get minuteHolders() {
+    return ref(0);
+  }
+
+  get minuteTimer() {
+    return ref<ReturnType<typeof setInterval> | null>(null);
+  }
+
+  // computed: render-suppression — `now` moves every tick; a relative label re-renders
+  // only when the minute turns
+  get minuteNow() {
+    return computed(() => this.minuteOf(this.now.value));
+  }
+
+  /** something on screen asks for the minute to turn; returns the release */
+  holdMinute(): () => void {
+    this.minuteHolders.value++;
+    if (this.minuteTimer.value === null) {
+      this.now.value = Date.now();
+      this.minuteTimer.value = setInterval(() => this.tick(), this.self.MINUTE_MS);
+    }
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      this.releaseMinute();
+    };
+  }
+
+  releaseMinute() {
+    this.minuteHolders.value = Math.max(0, this.minuteHolders.value - 1);
+    if (this.minuteHolders.value === 0 && this.minuteTimer.value !== null) {
+      clearInterval(this.minuteTimer.value);
+      this.minuteTimer.value = null;
+    }
+  }
+
   /** a pending thing asks the clock to run; returns the release */
   hold(): () => void {
     this.holders.value++;
@@ -71,6 +112,11 @@ class $Clock {
     this.now.value = Date.now();
   }
 
+  /** a time floored to its minute */
+  minuteOf(time: number): number {
+    return Math.floor(time / 60_000) * 60_000;
+  }
+
   /** elapsed since a start, or the frozen duration once the thing is done */
   elapsed(startedAt: number, durationMs: number | null): number {
     if (durationMs !== null) return durationMs;
@@ -81,6 +127,9 @@ class $Clock {
     if (this.timer.value !== null) clearInterval(this.timer.value);
     this.timer.value = null;
     this.holders.value = 0;
+    if (this.minuteTimer.value !== null) clearInterval(this.minuteTimer.value);
+    this.minuteTimer.value = null;
+    this.minuteHolders.value = 0;
   }
 }
 

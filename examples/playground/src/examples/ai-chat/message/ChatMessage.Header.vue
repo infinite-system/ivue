@@ -12,7 +12,15 @@ defineProps<ChatMessage.SectionProps>();
     <span v-if="model.replayLabel" class="ac-msg-replay">{{ model.replayLabel }}</span>
     <span class="ac-msg-time">{{ model.timeLabel }}</span>
     <span v-if="model.hasDate" class="ac-msg-date">{{ model.dateLabel }}</span>
-    <span v-if="model.hasDate" class="ac-msg-ago">{{ model.relativeLabel }}</span>
+    <span
+      v-if="model.hasDate"
+      class="ac-msg-ago"
+      :title="model.fullTimeLabel"
+      @click.stop="model.toggleWhen()"
+    >
+      {{ model.relativeLabel }}
+      <span v-if="model.isWhenShown" class="ac-msg-when">{{ model.fullTimeLabel }}</span>
+    </span>
     <span class="ac-msg-index">{{ model.indexLabel }}</span>
   </header>
 </template>
