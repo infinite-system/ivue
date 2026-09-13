@@ -79,6 +79,14 @@ describe('Peek', () => {
     expect(peek.open.value).toBe(true);
     expect(peek.positionLabel).toBe('#501 of 1,001');
     expect(peek.percentLabel).toBe('50%');
+    // the pointer on a row of the list: the head describes that row, then the track's again
+    peek.onRowEnter(chat.rows.value[42]);
+    expect(peek.positionLabel).toBe('#43 of 1,001');
+    expect(peek.percentLabel).toBe('4%');
+    expect(peek.dateLabel).toBe(peek.dateLabel);
+    expect(peek.focusRow?.preview).toBe('message 42');
+    peek.onListLeave();
+    expect(peek.positionLabel).toBe('#501 of 1,001');
     expect(peek.row?.preview).toBe('message 500');
     expect(peek.previewText(peek.row as Chat.Row)).toBe('message 500');
     expect(peek.speakerMark(peek.row as Chat.Row)).toBe('you');
@@ -108,6 +116,17 @@ describe('Peek', () => {
     expect(peek.open.value).toBe(true);
     peek.onThreadPointerLeave();
     vi.advanceTimersByTime(Peek.$Class.LINGER_MS);
+    expect(peek.open.value).toBe(false);
+    // a spent linger arms again: open, leave, and a pointer wandering over the thread neither
+    // keeps the card open nor blocks the next close
+    move(peek, 400, null, 'track');
+    vi.advanceTimersByTime(Peek.$Class.OPEN_DELAY_MS);
+    expect(peek.open.value).toBe(true);
+    move(peek, 400, null, 'none');
+    for (let wander = 0; wander < 5; wander++) {
+      vi.advanceTimersByTime(Peek.$Class.LINGER_MS / 2);
+      move(peek, 400 + wander, null, 'none');
+    }
     expect(peek.open.value).toBe(false);
 
     // a pass across the track opens nothing: the pointer left before the delay ran

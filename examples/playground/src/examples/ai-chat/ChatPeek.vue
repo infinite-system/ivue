@@ -80,12 +80,14 @@ defineExpose(model as Peek.Instance);
             </div>
           </div>
           <header class="ac-peek-head">
-            <span class="ac-peek-date">{{ model.dateLabel }}</span>
-            <span class="ac-peek-match">{{ model.matchLabel }}</span>
             <span class="ac-peek-pos">{{ model.positionLabel }}</span>
-            <span class="ac-peek-pct">{{ model.percentLabel }}</span>
+            <span class="ac-peek-match">{{ model.matchLabel }}</span>
+            <span class="ac-peek-when">
+              <span class="ac-peek-date">{{ model.dateLabel }}</span>
+              <span class="ac-peek-pct">{{ model.percentLabel }}</span>
+            </span>
           </header>
-          <div class="ac-peek-list" :style="model.listStyle">
+          <div class="ac-peek-list" :style="model.listStyle" @pointerleave="model.onListLeave()">
             <component
               :is="model.kit.Scroller.view"
               ref="scroller"
@@ -98,7 +100,12 @@ defineExpose(model as Peek.Instance);
               :padding-quantity="4"
             >
               <template #item="{ item }">
-                <div class="ac-peek-row" :class="model.rowClass(item)" @click="model.select(item)">
+                <div
+                  class="ac-peek-row"
+                  :class="model.rowClass(item)"
+                  @pointerenter="model.onRowEnter(item)"
+                  @click="model.select(item)"
+                >
                   <span class="ac-peek-role">{{ model.speakerMark(item) }}</span>
                   <span class="ac-peek-text">{{ model.previewText(item) }}</span>
                   <span class="ac-peek-time">{{ model.timeLabel(item) }}</span>

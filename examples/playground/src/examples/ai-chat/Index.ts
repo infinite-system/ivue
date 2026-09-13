@@ -162,6 +162,22 @@ class $Index {
     }));
   }
 
+  get isNewestFirst(): boolean {
+    return this.order.value === 'newest';
+  }
+
+  get orderTitle(): string {
+    return this.self.ORDER_LABELS[this.order.value];
+  }
+
+  get orderIcon(): string {
+    return Icons.Class.PATHS.arrow;
+  }
+
+  get wrenchIcon(): string {
+    return Icons.Class.PATHS.wrench;
+  }
+
   get toolOptions(): { value: Index.ToolFilter; label: string }[] {
     return (Object.keys(this.self.TOOL_LABELS) as Index.ToolFilter[]).map((value) => ({
       value,
@@ -251,12 +267,11 @@ class $Index {
     void nextTick(() => this.searchElement.value?.focus());
   }
 
-  /** where a fresh list lands: its end in thread order, its start when the newest is first */
+  /** where a fresh list lands: its top, in either order */
   landAfterFilter() {
     const scroller = this.scroller.value;
-    const count = this.rows.value.length;
-    if (!scroller || !count) return;
-    scroller.scrollToIndex(this.order.value === 'newest' ? 0 : count - 1, undefined, false, 0);
+    if (!scroller || !this.rows.value.length) return;
+    scroller.scrollToIndex(0, undefined, false, 0);
   }
   /* ---- per row ---- */
 
@@ -292,6 +307,20 @@ class $Index {
 
   toolsLabel(row: Index.Row): string {
     return row.entry.calls ? `${row.entry.calls} tool${row.entry.calls === 1 ? '' : 's'}` : '';
+  }
+
+  hasTools(row: Index.Row): boolean {
+    return row.entry.calls > 0;
+  }
+
+  /** the count beside the wrench: the number alone, the glyph says the rest */
+  toolsCount(row: Index.Row): string {
+    return String(row.entry.calls);
+  }
+
+  /** the tools filter as a pick list: the value the reader chose */
+  onToolsPick(event: Event) {
+    this.setTools((event.target as HTMLSelectElement).value as Index.ToolFilter);
   }
 
   previewText(row: Index.Row): string {
@@ -423,6 +452,11 @@ class $Index {
 
   setOrder(value: Index.Order) {
     this.order.value = value;
+  }
+
+  /** the one Date button: it turns the order over */
+  toggleOrder() {
+    this.order.value = this.order.value === 'newest' ? 'oldest' : 'newest';
   }
 
   isOrder(value: Index.Order): boolean {

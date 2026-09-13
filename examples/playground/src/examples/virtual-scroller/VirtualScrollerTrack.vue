@@ -18,6 +18,7 @@ defineProps<{
     @pointermove="scroller.onTrackPointerMove"
     @pointerup="scroller.onTrackPointerUp"
     @pointercancel="scroller.onTrackPointerCancel"
+    @lostpointercapture="scroller.onTrackLostCapture"
     @touchstart="scroller.onTrackTouchStart"
     @touchmove="scroller.onTrackTouchMove"
   >

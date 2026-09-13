@@ -3,7 +3,7 @@
 Goal: Prove the index lists every message from the small index rows without a content page, filters by speaker, tool calls and text, seeks the chat on a click, and keeps a selection that is a set of ids with an anchor: click picks one, shift-click takes the range in the filtered order, ctrl-click toggles, a filter change loses nothing, and export leaves in thread order in the chosen form.
 [Selection is a set of ids](./ai-chat.invariants.md#selection-is-a-set-of-ids)
 // domain-invariant: $Index — If a filter changes, then every selected id stays selected
-// domain-invariant: $Index — If the list is filtered or ordered, then it lands at its end in thread order and at its start when the newest is first, the way the chat opens at its end
+// domain-invariant: $Index — If the list is filtered or ordered, then it lands at its top in either order
 // domain-invariant: $Index — If shift is held on a click, then every row between the anchor and the click in the filtered order joins the selection
 Impossible if true: an export leaves in the order the rows were clicked
 
@@ -55,13 +55,18 @@ describe('Index', () => {
     vi.restoreAllMocks();
   });
 
-  // domain-invariant: $Index — If the list is filtered or ordered, then it lands at its end in thread order and at its start when the newest is first, the way the chat opens at its end
-  it('lands at the end of the list in thread order, at the start when the newest is first, and reverses on demand', async () => {
+  // domain-invariant: $Index — If the list is filtered or ordered, then it lands at its top in either order
+  it('lands at the top of the list in either order, and the Date button turns the order over', async () => {
     const { index, unmount } = make();
     const seeks: number[] = [];
     index.scroller.value = { scrollToIndex: (at: number) => seeks.push(at) } as never;
     index.landAfterFilter();
-    expect(seeks).toEqual([6]); // the end, like the chat
+    expect(seeks).toEqual([0]); // the top
+    expect(index.isNewestFirst).toBe(false);
+    expect(index.orderTitle).toBe('Oldest first');
+    index.toggleOrder();
+    expect(index.isNewestFirst).toBe(true);
+    expect(index.orderTitle).toBe('Newest first');
     index.setOrder('newest');
     expect(index.rows.value.map((row) => row.id)).toEqual(['g', 'f', 'e', 'd', 'c', 'b', 'a']);
     await Promise.resolve();
@@ -74,7 +79,7 @@ describe('Index', () => {
     index.setOrder('oldest');
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(index.rows.value.map((row) => row.id)).toEqual(['a', 'd']);
-    expect(seeks.at(-1)).toBe(1);
+    expect(seeks.at(-1)).toBe(0);
     unmount();
   });
 

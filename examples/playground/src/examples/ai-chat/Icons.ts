@@ -21,6 +21,11 @@ class $Icons {
     jump: 'M4 12h15M13 6l6 6-6 6',
     /** open somewhere else — the index on a file */
     open: 'M7 17 17 7M9 7h8v8',
+    /** a tool call — the wrench beside a count */
+    wrench:
+      'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z',
+    /** a straight arrow, drawn down; the order toggle turns it up */
+    arrow: 'M12 5v14M5 12l7 7 7-7',
     /** the more menu — the side panels, on a phone */
     more: 'M5 12h.01M12 12h.01M19 12h.01'
   };

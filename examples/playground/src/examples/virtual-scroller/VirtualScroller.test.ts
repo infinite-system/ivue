@@ -341,6 +341,17 @@ test('a thumb drag never stops autoplay: it re-arms on release either way, start
   instance.onTrackPointerMove(pointer(60));
   instance.onTrackPointerUp();
   expect(instance.isAutoPlaying.value).toBe(true);
+  // a release the track never heard: a mouse move with no button held ends the drag
+  instance.onTrackPointerDown(pointer(20));
+  expect(instance.scrollbarDragging.value).toBe(true);
+  instance.onTrackPointerMove({ ...pointer(40), pointerType: 'mouse', buttons: 0 } as PointerEvent);
+  expect(instance.scrollbarDragging.value).toBe(false);
+  // a lost capture ends it too
+  instance.onTrackPointerDown(pointer(20));
+  instance.onTrackLostCapture(pointer(20));
+  expect(instance.scrollbarDragging.value).toBe(false);
+  instance.onTrackPointerDown(pointer(20));
+  instance.onTrackPointerUp();
   expect(instance.probeVirtualScrolling()).toBe(false);
   vi.advanceTimersByTime(3);
   expect(play).toHaveBeenCalledTimes(1);

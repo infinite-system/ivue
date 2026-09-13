@@ -114,6 +114,11 @@ class $Peek {
     return computed(() => this.filtered());
   }
 
+  /** the row under the pointer in the card's list, when one is: the head reads it instead of the track's row */
+  get hovered() {
+    return shallowRef<Chat.Row | null>(null);
+  }
+
   // TEMPLATE-REF TARGET — the mini scroller's exposed instance
   get scroller() {
     return ref<VirtualScroller.Exposed<Chat.Row> | null>(null);
@@ -207,13 +212,22 @@ class $Peek {
     return { 'ac-dark': Boolean(this.chat.props.dark) };
   }
 
+  /** the row the head describes: the one under the pointer in the list, else the track's */
+  get focusRow(): Chat.Row | undefined {
+    return this.hovered.value ?? this.row;
+  }
+
+  get focusIndex(): number {
+    return this.hovered.value?.index ?? this.index.value;
+  }
+
   get positionLabel(): string {
     if (!this.count) return '';
-    return `#${(this.index.value + 1).toLocaleString()} of ${this.count.toLocaleString()}`;
+    return `#${(this.focusIndex + 1).toLocaleString()} of ${this.count.toLocaleString()}`;
   }
 
   get dateLabel(): string {
-    const row = this.row;
+    const row = this.focusRow;
     if (!row?.at) return '';
     const date = new Date(row.at);
     return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
@@ -221,7 +235,7 @@ class $Peek {
 
   get percentLabel(): string {
     if (this.count < 2) return '';
-    return `${Math.round((this.index.value / (this.count - 1)) * 100)}%`;
+    return `${Math.round((this.focusIndex / (this.count - 1)) * 100)}%`;
   }
 
   isSpeaker(value: Index.SpeakerFilter): boolean {
@@ -272,9 +286,11 @@ class $Peek {
     }
     const overTrack = Boolean(target && track.contains(target));
     if (!overTrack) {
-      // anywhere else a pending open is dropped, and an open card lingers, then goes
+      // anywhere else a pending open is dropped, and an open card lingers, then goes —
+      // the linger is armed once, not restarted by every move: a pointer wandering
+      // over the thread kept re-arming it and the card never went
       this.cancelOpen();
-      if (this.open.value) this.leave();
+      if (this.open.value && this.lingerTimer.value === null) this.leave();
       return;
     }
     const rect = track.getBoundingClientRect();
@@ -299,6 +315,15 @@ class $Peek {
 
   onCardLeave() {
     this.leave();
+  }
+
+  /** the pointer rests on a row of the list: the head follows it */
+  onRowEnter(row: Chat.Row) {
+    this.hovered.value = row;
+  }
+
+  onListLeave() {
+    this.hovered.value = null;
   }
 
   onSearchFocus() {
@@ -378,11 +403,18 @@ class $Peek {
   leave() {
     this.cancelLinger();
     if (this.isPinned) return;
-    this.lingerTimer.value = setTimeout(() => this.close(), this.self.LINGER_MS);
+    this.lingerTimer.value = setTimeout(() => this.onLingered(), this.self.LINGER_MS);
+  }
+
+  /** the linger ran out: the timer is spent before the close, so the next leave can arm one */
+  onLingered() {
+    this.lingerTimer.value = null;
+    this.close();
   }
 
   close() {
     this.open.value = false;
+    this.hovered.value = null;
     this.query.value = '';
     this.resetFilters();
     this.searchFocused.value = false;

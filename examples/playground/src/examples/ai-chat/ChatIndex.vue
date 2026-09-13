@@ -8,6 +8,7 @@ const model = new ((props.kit?.namespace?.Class as typeof Index.Class | undefine
 );
 const {
   // state refs
+  tools,
   query,
   exportForm,
   // computed refs
@@ -40,28 +41,29 @@ const {
             {{ option.label }}
           </button>
         </div>
-        <div class="ac-seg" role="group" aria-label="Tool calls">
-          <button
-            v-for="option in model.toolOptions"
-            :key="option.value"
-            type="button"
-            :class="{ 'ac-on': model.isTools(option.value) }"
-            @click="model.setTools(option.value)"
-          >
+        <select
+          class="ac-pick"
+          aria-label="Tool calls"
+          :value="tools"
+          @change="model.onToolsPick($event)"
+        >
+          <option v-for="option in model.toolOptions" :key="option.value" :value="option.value">
             {{ option.label }}
-          </button>
-        </div>
-        <div class="ac-seg" role="group" aria-label="Order">
-          <button
-            v-for="option in model.orderOptions"
-            :key="option.value"
-            type="button"
-            :class="{ 'ac-on': model.isOrder(option.value) }"
-            @click="model.setOrder(option.value)"
-          >
-            {{ option.label }}
-          </button>
-        </div>
+          </option>
+        </select>
+        <button
+          type="button"
+          class="ac-order"
+          :class="{ 'ac-newest': model.isNewestFirst }"
+          :title="model.orderTitle"
+          :aria-label="model.orderTitle"
+          @click="model.toggleOrder()"
+        >
+          <span>Date</span>
+          <svg class="ac-order-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path :d="model.orderIcon" />
+          </svg>
+        </button>
       </div>
       <div class="ac-index-search">
         <svg class="ac-search-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -128,9 +130,12 @@ const {
               model.speakerMark(item)
             }}</span>
             <span class="ac-ix-text">{{ model.previewText(item) }}</span>
-            <span v-if="model.toolsLabel(item)" class="ac-ix-tools">{{
-              model.toolsLabel(item)
-            }}</span>
+            <span v-if="model.hasTools(item)" class="ac-ix-tools" :title="model.toolsLabel(item)">
+              <span>{{ model.toolsCount(item) }}</span>
+              <svg class="ac-ix-wrench" viewBox="0 0 24 24" aria-hidden="true">
+                <path :d="model.wrenchIcon" />
+              </svg>
+            </span>
             <span class="ac-ix-time">{{ model.timeLabel(item) }}</span>
             <button
               type="button"

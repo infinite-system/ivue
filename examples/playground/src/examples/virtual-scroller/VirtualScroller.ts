@@ -1679,11 +1679,21 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.thumbDrag.from = fraction;
     this.thumbDrag.to = fraction;
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    // the release reaches the track through its capture; when the track
+    // re-renders mid-drag the capture goes with it, so the window hears
+    // the release too, once — a drag that outlives its release followed
+    // the mouse with no button held
+    window.addEventListener('pointerup', this.onTrackPointerUp, { once: true });
     this.seekToPointer(event);
   }
 
   onTrackPointerMove(event: PointerEvent) {
     if (!this.scrollbarDragging.value) return;
+    // a mouse move with no button held is a release the track never heard
+    if (event.pointerType === 'mouse' && event.buttons === 0) {
+      this.onTrackPointerUp();
+      return;
+    }
     const track = this.trackOf(event);
     if (track) this.thumbDrag.to = this.trackPointerFraction(event, track.getBoundingClientRect());
     this.seekToPointer(event);
@@ -1691,6 +1701,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   onTrackPointerUp() {
     if (!this.scrollbarDragging.value) return;
+    window.removeEventListener('pointerup', this.onTrackPointerUp);
     this.scrollbarDragging.value = false;
     this.virtualScrolling = false;
     const forward = this.thumbDrag.to > this.thumbDrag.from;
@@ -1705,6 +1716,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** A cancelled pointer ends the drag as a lift does — its own handler,
    *  so a subclass can treat a cancel differently without touching the lift. */
   onTrackPointerCancel(_event: PointerEvent) {
+    this.onTrackPointerUp();
+  }
+
+  /** The track lost its capture — it re-rendered, or the browser took the pointer: the drag ends. */
+  onTrackLostCapture(_event: PointerEvent) {
     this.onTrackPointerUp();
   }
 
