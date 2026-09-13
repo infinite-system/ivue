@@ -44,7 +44,7 @@ function row(message: SessionLog.Message | null): Chat.Row {
     position: '1',
     index: 0,
     page: 0,
-    role: 'assistant',
+    speaker: 'assistant',
     preview: 'a preview',
     calls: 0,
     at: 1_000,
@@ -56,7 +56,7 @@ const textPart: SessionLog.TextPart = { kind: 'text', text: 'hello' };
 const reply: SessionLog.Message = {
   id: 'm1',
   index: 0,
-  role: 'assistant',
+  speaker: 'assistant',
   timestamp: 1_000,
   parts: [textPart],
   sidechain: false,

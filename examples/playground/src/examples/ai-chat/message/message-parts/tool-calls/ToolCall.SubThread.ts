@@ -35,7 +35,7 @@ class $ToolCallSubThread {
       position: String(at + 1),
       index: at,
       page: -1,
-      role: message.role,
+      speaker: message.speaker,
       preview: '',
       message
     }));

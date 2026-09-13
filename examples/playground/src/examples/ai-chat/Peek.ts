@@ -41,7 +41,7 @@ class $Peek {
 
   constructor(public props: Peek.Props) {
     watch(
-      () => [this.query.value, this.role.value, this.tools.value],
+      () => [this.query.value, this.speaker.value, this.tools.value],
       () => this.onQueryChange()
     );
   }
@@ -95,8 +95,8 @@ class $Peek {
     return ref(false);
   }
 
-  get role() {
-    return ref<Index.RoleFilter>('all');
+  get speaker() {
+    return ref<Index.SpeakerFilter>('all');
   }
 
   get tools() {
@@ -135,10 +135,10 @@ class $Peek {
     return Icons.Class.PATHS.search;
   }
 
-  get roleOptions(): { value: Index.RoleFilter; label: string }[] {
-    return (Object.keys(Index.Class.ROLE_LABELS) as Index.RoleFilter[]).map((value) => ({
+  get speakerOptions(): { value: Index.SpeakerFilter; label: string }[] {
+    return (Object.keys(Index.Class.SPEAKER_LABELS) as Index.SpeakerFilter[]).map((value) => ({
       value,
-      label: Index.Class.ROLE_LABELS[value]
+      label: Index.Class.SPEAKER_LABELS[value]
     }));
   }
 
@@ -155,7 +155,7 @@ class $Peek {
 
   /** anything narrows the list: words in the box, a role, a tools pick */
   get isFiltered(): boolean {
-    return this.hasQuery || this.role.value !== 'all' || this.tools.value !== 'include';
+    return this.hasQuery || this.speaker.value !== 'all' || this.tools.value !== 'include';
   }
 
   /** the card holds while the reader is narrowing it — a filter set, text in the box, or focus on it */
@@ -224,28 +224,28 @@ class $Peek {
     return `${Math.round((this.index.value / (this.count - 1)) * 100)}%`;
   }
 
-  isRole(value: Index.RoleFilter): boolean {
-    return this.role.value === value;
+  isSpeaker(value: Index.SpeakerFilter): boolean {
+    return this.speaker.value === value;
   }
 
   isTools(value: Index.ToolFilter): boolean {
     return this.tools.value === value;
   }
 
-  setRole(value: Index.RoleFilter) {
-    this.role.value = value;
+  setSpeaker(value: Index.SpeakerFilter) {
+    this.speaker.value = value;
   }
 
   setTools(value: Index.ToolFilter) {
     this.tools.value = value;
   }
 
-  roleMark(row: Chat.Row): string {
-    return row.role === 'user' ? 'you' : row.role === 'assistant' ? 'agent' : 'sys';
+  speakerMark(row: Chat.Row): string {
+    return row.speaker === 'user' ? 'you' : row.speaker === 'assistant' ? 'agent' : 'sys';
   }
 
   rowClass(row: Chat.Row): Record<string, boolean> {
-    return { [`ac-role-${row.role}`]: true };
+    return { [`ac-role-${row.speaker}`]: true };
   }
 
   previewText(row: Chat.Row): string {
@@ -321,7 +321,7 @@ class $Peek {
   }
 
   resetFilters() {
-    this.role.value = 'all';
+    this.speaker.value = 'all';
     this.tools.value = 'include';
   }
 
@@ -394,17 +394,17 @@ class $Peek {
   /** the rows the card lists: all of them, or those whose preview holds every word of the query */
   protected filtered(): Chat.Row[] {
     const words = this.query.value.toLowerCase().split(/\s+/).filter(Boolean);
-    const role = this.role.value;
+    const speaker = this.speaker.value;
     const tools = this.tools.value;
     const rows = this.allRows.value;
     if (!this.isFiltered) return rows;
     return rows.filter((row) => {
-      if (role !== 'all' && row.role !== role) return false;
+      if (speaker !== 'all' && row.speaker !== speaker) return false;
       if (tools === 'exclude' && row.calls > 0) return false;
-      if (tools === 'compaction' && !SessionLog.Class.isCompaction(row.role, row.preview))
+      if (tools === 'compaction' && !SessionLog.Class.isCompaction(row.speaker, row.preview))
         return false;
       if (!words.length) return true;
-      const text = `${this.roleMark(row)} ${row.preview}`.toLowerCase();
+      const text = `${this.speakerMark(row)} ${row.preview}`.toLowerCase();
       return words.every((word) => text.includes(word));
     });
   }

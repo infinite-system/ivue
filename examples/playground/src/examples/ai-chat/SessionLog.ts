@@ -122,8 +122,8 @@ class $SessionLog {
   static readonly COMPACTION_TEXT = 'Context compacted';
 
   /** a compaction, as the index row or the chat row carries it: a system message with the compaction text */
-  static isCompaction(role: string, text: string): boolean {
-    return role.startsWith('s') && text.startsWith(this.COMPACTION_TEXT);
+  static isCompaction(speaker: string, text: string): boolean {
+    return speaker.startsWith('s') && text.startsWith(this.COMPACTION_TEXT);
   }
 
   /** the plain text a message projects — what copy and the index read */
@@ -154,7 +154,7 @@ class $SessionLog {
   /** an assistant message that holds tool calls and thinking only — a batch candidate */
   static isToolOnly(message: SessionLog.Message): boolean {
     return (
-      message.role === 'assistant' &&
+      message.speaker === 'assistant' &&
       message.parts.length > 0 &&
       message.parts.every((part) => part.kind === 'tool_call' || part.kind === 'thinking')
     );
@@ -216,7 +216,7 @@ export namespace SessionLog {
     cache_creation_input_tokens?: number;
   }
 
-  export type Role = 'user' | 'assistant' | 'system';
+  export type Speaker = 'user' | 'assistant' | 'system';
   export type CallState = 'pending' | 'running' | 'done' | 'failed';
 
   export interface ToolResult {
@@ -280,7 +280,7 @@ export namespace SessionLog {
   export interface Message {
     id: string;
     index: number;
-    role: Role;
+    speaker: Speaker;
     timestamp: number;
     parts: Part[];
     model?: string;

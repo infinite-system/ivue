@@ -25,7 +25,7 @@ class $Index {
     } satisfies Kit.Of<'Scroller'>;
   }
 
-  static readonly ROLE_LABELS: Record<Index.RoleFilter, string> = {
+  static readonly SPEAKER_LABELS: Record<Index.SpeakerFilter, string> = {
     all: 'All',
     user: 'You',
     assistant: 'Agent'
@@ -96,8 +96,8 @@ class $Index {
 
   /* ---- state ---- */
 
-  get role() {
-    return ref<Index.RoleFilter>('all');
+  get speaker() {
+    return ref<Index.SpeakerFilter>('all');
   }
 
   get order() {
@@ -148,10 +148,10 @@ class $Index {
 
   /* ---- the filtered list ---- */
 
-  get roleOptions(): { value: Index.RoleFilter; label: string }[] {
-    return (Object.keys(this.self.ROLE_LABELS) as Index.RoleFilter[]).map((value) => ({
+  get speakerOptions(): { value: Index.SpeakerFilter; label: string }[] {
+    return (Object.keys(this.self.SPEAKER_LABELS) as Index.SpeakerFilter[]).map((value) => ({
       value,
-      label: this.self.ROLE_LABELS[value]
+      label: this.self.SPEAKER_LABELS[value]
     }));
   }
 
@@ -228,15 +228,16 @@ class $Index {
   /* ---- the walk behind rows ---- */
 
   filterRows(): Index.Row[] {
-    const role = this.role.value;
+    const speaker = this.speaker.value;
     const tools = this.tools.value;
     const query = this.query.value.trim().toLowerCase();
     const output: Index.Row[] = [];
     this.chat.indexRows.value.forEach((entry, at) => {
-      if (role === 'user' && entry.role !== 'user') return;
-      if (role === 'assistant' && entry.role !== 'assistant') return;
+      if (speaker === 'user' && entry.speaker !== 'user') return;
+      if (speaker === 'assistant' && entry.speaker !== 'assistant') return;
       if (tools === 'exclude' && entry.calls > 0) return;
-      if (tools === 'compaction' && !SessionLog.Class.isCompaction(entry.role, entry.text)) return;
+      if (tools === 'compaction' && !SessionLog.Class.isCompaction(entry.speaker, entry.text))
+        return;
       if (query && !entry.text.toLowerCase().includes(query)) return;
       output.push({ id: entry.id, body: '', position: String(at + 1), index: at, entry });
     });
@@ -271,12 +272,16 @@ class $Index {
     return this.focusedIndex.value === this.rows.value.indexOf(row);
   }
 
-  roleMark(row: Index.Row): string {
-    return row.entry.role === 'user' ? 'you' : row.entry.role === 'assistant' ? 'agent' : 'sys';
+  speakerMark(row: Index.Row): string {
+    return row.entry.speaker === 'user'
+      ? 'you'
+      : row.entry.speaker === 'assistant'
+        ? 'agent'
+        : 'sys';
   }
 
-  roleClass(row: Index.Row): string {
-    return `ix-role-${row.entry.role[0]}`;
+  speakerClass(row: Index.Row): string {
+    return `ix-role-${row.entry.speaker[0]}`;
   }
 
   timeLabel(row: Index.Row): string {
@@ -294,7 +299,7 @@ class $Index {
   }
 
   rowText(row: Index.Row): string {
-    return `${this.roleMark(row)} ${row.entry.text}`;
+    return `${this.speakerMark(row)} ${row.entry.text}`;
   }
 
   rowClass(row: Index.Row): Record<string, boolean> {
@@ -412,8 +417,8 @@ class $Index {
 
   /* ---- filters ---- */
 
-  setRole(value: Index.RoleFilter) {
-    this.role.value = value;
+  setSpeaker(value: Index.SpeakerFilter) {
+    this.speaker.value = value;
   }
 
   setOrder(value: Index.Order) {
@@ -428,8 +433,8 @@ class $Index {
     this.tools.value = value;
   }
 
-  isRole(value: Index.RoleFilter): boolean {
-    return this.role.value === value;
+  isSpeaker(value: Index.SpeakerFilter): boolean {
+    return this.speaker.value === value;
   }
 
   isTools(value: Index.ToolFilter): boolean {
@@ -491,7 +496,7 @@ export namespace Index {
     kit?: Kit.Entry;
   }
 
-  export type RoleFilter = 'all' | 'user' | 'assistant';
+  export type SpeakerFilter = 'all' | 'user' | 'assistant';
   export type ToolFilter = 'include' | 'exclude' | 'compaction';
   export type Order = 'oldest' | 'newest';
 

@@ -29,13 +29,13 @@ const {
         </button>
       </div>
       <div class="ac-index-filters">
-        <div class="ac-seg" role="group" aria-label="Role">
+        <div class="ac-seg" role="group" aria-label="Speaker">
           <button
-            v-for="option in model.roleOptions"
+            v-for="option in model.speakerOptions"
             :key="option.value"
             type="button"
-            :class="{ 'ac-on': model.isRole(option.value) }"
-            @click="model.setRole(option.value)"
+            :class="{ 'ac-on': model.isSpeaker(option.value) }"
+            @click="model.setSpeaker(option.value)"
           >
             {{ option.label }}
           </button>
@@ -124,8 +124,8 @@ const {
               :checked="model.isSelected(item)"
               @click="model.onRowCheck(item, $event)"
             />
-            <span class="ac-ix-role" :class="model.roleClass(item)">{{
-              model.roleMark(item)
+            <span class="ac-ix-role" :class="model.speakerClass(item)">{{
+              model.speakerMark(item)
             }}</span>
             <span class="ac-ix-text">{{ model.previewText(item) }}</span>
             <span v-if="model.toolsLabel(item)" class="ac-ix-tools">{{

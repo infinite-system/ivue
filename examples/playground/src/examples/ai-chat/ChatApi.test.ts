@@ -77,7 +77,7 @@ describe('ChatApi', () => {
     const source: SessionLog.Message = {
       id: 'm',
       index: 0,
-      role: 'assistant',
+      speaker: 'assistant',
       timestamp: 0,
       sidechain: false,
       parts: [
@@ -188,7 +188,7 @@ it('a thought spans at least the minimum, however short its text', async () => {
   const source: SessionLog.Message = {
     id: 't',
     index: 0,
-    role: 'assistant',
+    speaker: 'assistant',
     timestamp: 0,
     sidechain: false,
     parts: [{ kind: 'thinking', text: 'plan it', durationMs: 5, startedAt: 0 }]

@@ -57,27 +57,31 @@ class $ChatMessage {
    *  entry would refuse the one bind all six share. */
   static get $kit(): ChatMessage.Roles {
     return {
-      Text: { view: MessagePartTextView, namespace: MessagePartText, bind: this.bindPart },
+      Text: { view: MessagePartTextView, namespace: MessagePartText, bind: this.bindMessagePart },
       Thinking: {
         view: MessagePartThinkingView,
         namespace: MessagePartThinking,
-        bind: this.bindPart
+        bind: this.bindMessagePart
       },
       Attachment: {
         view: MessagePartAttachmentView,
         namespace: MessagePartAttachment,
-        bind: this.bindPart
+        bind: this.bindMessagePart
       },
-      System: { view: MessagePartSystemView, namespace: MessagePartSystem, bind: this.bindPart },
+      System: {
+        view: MessagePartSystemView,
+        namespace: MessagePartSystem,
+        bind: this.bindMessagePart
+      },
       ToolCall: {
         view: MessagePartToolCallView,
         namespace: MessagePartToolCall,
-        bind: this.bindPart
+        bind: this.bindMessagePart
       },
       ToolBatch: {
         view: MessagePartToolBatchView,
         namespace: MessagePartToolBatch,
-        bind: this.bindPart
+        bind: this.bindMessagePart
       },
       Gutter: { view: GutterView },
       Header: { view: HeaderView },
@@ -90,7 +94,10 @@ class $ChatMessage {
   }
 
   /** what every part receives from the row: its part, the chat, the message — the seam's item is the part */
-  static bindPart({ model, item }: Kit.Seam<$ChatMessage, SessionLog.Part>): MessagePart.Props {
+  static bindMessagePart({
+    model,
+    item
+  }: Kit.Seam<$ChatMessage, SessionLog.Part>): MessagePart.Props {
     return { part: item, chat: model.chat, message: model.message };
   }
 
@@ -117,7 +124,7 @@ class $ChatMessage {
     return `${years} year${years === 1 ? '' : 's'} ago`;
   }
 
-  static readonly ROLE_LABELS: Record<SessionLog.Role, string> = {
+  static readonly SPEAKER_LABELS: Record<SessionLog.Speaker, string> = {
     user: 'You',
     assistant: 'Agent',
     system: 'System'
@@ -153,29 +160,29 @@ class $ChatMessage {
     return this.message === null;
   }
 
-  get role(): SessionLog.Role {
-    return this.row.role;
+  get speaker(): SessionLog.Speaker {
+    return this.row.speaker;
   }
 
-  get roleLabel(): string {
-    return this.self.ROLE_LABELS[this.role];
+  get speakerLabel(): string {
+    return this.self.SPEAKER_LABELS[this.speaker];
   }
 
   get avatarLetter(): string {
-    return this.roleLabel.slice(0, 1);
+    return this.speakerLabel.slice(0, 1);
   }
 
-  get roleClass(): string {
-    return `ac-msg-${this.role}`;
+  get speakerClass(): string {
+    return `ac-msg-${this.speaker}`;
   }
 
   get rowClass(): Record<string, boolean> {
     return {
-      [this.roleClass]: true,
+      [this.speakerClass]: true,
       'ac-msg-stub': this.isStub,
       'ac-msg-streaming': this.isStreamingRow,
       'ac-msg-focused': this.chat.isFocused(this.row),
-      'ac-msg-system': this.role === 'system'
+      'ac-msg-system': this.speaker === 'system'
     };
   }
 
@@ -233,7 +240,7 @@ class $ChatMessage {
   /** the reply's stamp once it is done: tokens and wall time */
   get receiptLabel(): string {
     const message = this.message;
-    if (!message || message.role !== 'assistant') return '';
+    if (!message || message.speaker !== 'assistant') return '';
     const pieces: string[] = [];
     const tokens = message.usage?.output_tokens;
     if (tokens) pieces.push(`${tokens.toLocaleString('en-US')} tokens`);
@@ -271,7 +278,7 @@ class $ChatMessage {
   /* ---- the stub ---- */
 
   get stubLabel(): string {
-    return this.row.preview || `${this.roleLabel} message`;
+    return this.row.preview || `${this.speakerLabel} message`;
   }
 
   /**

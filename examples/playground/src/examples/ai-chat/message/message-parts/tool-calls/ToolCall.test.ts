@@ -212,7 +212,7 @@ describe('tool cards', () => {
       {
         id: 's1',
         index: 0,
-        role: 'user',
+        speaker: 'user',
         timestamp: 0,
         parts: [{ kind: 'text', text: 'go' }],
         sidechain: true

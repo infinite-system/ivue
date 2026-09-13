@@ -13,8 +13,8 @@ class $ChatExport {
         const stamp = message.timestamp ? new Date(message.timestamp).toISOString() : '';
         const heading =
           form === 'markdown'
-            ? `## ${message.role}${stamp ? ` · ${stamp}` : ''}`
-            : `[${message.role}]${stamp ? ` ${stamp}` : ''}`;
+            ? `## ${message.speaker}${stamp ? ` · ${stamp}` : ''}`
+            : `[${message.speaker}]${stamp ? ` ${stamp}` : ''}`;
         const body = message.parts.map((part) => this.part(part, form)).join('\n\n');
         return `${heading}\n\n${body}`;
       })

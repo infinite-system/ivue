@@ -79,7 +79,7 @@ describe('Peek', () => {
     expect(peek.percentLabel).toBe('50%');
     expect(peek.row?.preview).toBe('message 500');
     expect(peek.previewText(peek.row as Chat.Row)).toBe('message 500');
-    expect(peek.roleMark(peek.row as Chat.Row)).toBe('you');
+    expect(peek.speakerMark(peek.row as Chat.Row)).toBe('you');
     expect(peek.rowClass(peek.row as Chat.Row)['ac-role-user']).toBe(true);
     expect(peek.style.top).toBe(`${400 - peek.cardHeight / 2}px`);
     expect(peek.style.left).toBe('8px'); // the fake track sits at the viewport's left: the card stays inside the window
@@ -146,20 +146,20 @@ describe('Peek', () => {
     expect(peek.query.value).toBe('');
     expect(peek.rows.value).toHaveLength(1001);
     // the pickers narrow by role and by tool calls, and Escape resets them once the box is clear
-    peek.setRole('user');
-    expect(peek.rows.value.every((row) => row.role === 'user')).toBe(true);
+    peek.setSpeaker('user');
+    expect(peek.rows.value.every((row) => row.speaker === 'user')).toBe(true);
     expect(peek.rows.value).toHaveLength(491);
-    peek.setRole('all');
+    peek.setSpeaker('all');
     peek.setTools('compaction');
     expect(peek.rows.value.map((row) => row.index)).toEqual([
       50, 150, 250, 350, 450, 550, 650, 750, 850, 950
     ]);
-    peek.setRole('user');
+    peek.setSpeaker('user');
     peek.setTools('exclude');
     expect(peek.rows.value.every((row) => row.calls === 0)).toBe(true);
     expect(peek.isPinned).toBe(true);
     peek.onSearchKeydown({ key: 'Escape', preventDefault: () => undefined } as KeyboardEvent);
-    expect(peek.isRole('all')).toBe(true);
+    expect(peek.isSpeaker('all')).toBe(true);
     expect(peek.isTools('include')).toBe(true);
     expect(peek.rows.value).toHaveLength(1001);
     peek.onSearchFocus();

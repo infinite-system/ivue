@@ -446,7 +446,7 @@ class $Chat {
       position: String(at + 1),
       index: at,
       page: Math.floor(at / pageSize),
-      role: entry.role,
+      speaker: entry.speaker,
       preview: entry.text,
       calls: entry.calls,
       at: entry.at,
@@ -504,7 +504,7 @@ class $Chat {
       const at = start + offset;
       const row = next[at];
       if (!row) return;
-      next[at] = { ...row, message, role: message.role, preview: row.preview };
+      next[at] = { ...row, message, speaker: message.speaker, preview: row.preview };
     });
     this.rows.value = next;
     const loaded = new Set(this.loadedPages.value);
@@ -688,7 +688,7 @@ class $Chat {
     this.append({
       id: `local-user-${now}`,
       index: this.count,
-      role: 'user',
+      speaker: 'user',
       timestamp: now,
       parts,
       sidechain: false
@@ -705,7 +705,7 @@ class $Chat {
       position: String(this.count + 1),
       index: this.count,
       page: -1,
-      role: message.role,
+      speaker: message.speaker,
       preview: this.self.messageText(message).replace(/\s+/g, ' ').slice(0, 96),
       calls: this.self.callCount(message),
       at: message.timestamp,
@@ -716,7 +716,7 @@ class $Chat {
       ...this.indexRows.value,
       {
         id: row.id,
-        role: message.role,
+        speaker: message.speaker,
         text: row.preview,
         calls: this.self.callCount(message),
         at: message.timestamp
@@ -737,7 +737,7 @@ class $Chat {
     const candidates = this.rows.value
       .map((row) => row.message)
       .filter((message): message is SessionLog.Message =>
-        Boolean(message && message.role === 'assistant' && !message.id.startsWith('local-'))
+        Boolean(message && message.speaker === 'assistant' && !message.id.startsWith('local-'))
       );
     const withText = candidates.filter((message) =>
       message.parts.some((part) => part.kind === 'text')
@@ -747,7 +747,7 @@ class $Chat {
       return {
         id: 'fallback',
         index: 0,
-        role: 'assistant',
+        speaker: 'assistant',
         timestamp: Date.now(),
         parts: [
           { kind: 'text', text: 'No turn is loaded yet to replay — scroll the thread first.' }
@@ -772,7 +772,7 @@ class $Chat {
     const message: SessionLog.Message = {
       id: `local-reply-${startedAt}`,
       index: this.count,
-      role: 'assistant',
+      speaker: 'assistant',
       timestamp: startedAt,
       parts: [],
       sidechain: false,
@@ -979,7 +979,7 @@ class $Chat {
     this.expanded.value = new Set();
     this.indexRows.value = messages.map((message) => ({
       id: message.id,
-      role: message.role,
+      speaker: message.speaker,
       text: this.self.messageText(message).replace(/\s+/g, ' ').slice(0, 96),
       calls: this.self.callCount(message),
       at: message.timestamp
@@ -990,7 +990,7 @@ class $Chat {
       position: String(at + 1),
       index: at,
       page: -1,
-      role: message.role,
+      speaker: message.speaker,
       preview: this.indexRows.value[at].text,
       calls: this.indexRows.value[at].calls,
       at: message.timestamp,
@@ -1056,7 +1056,7 @@ export namespace Chat {
   export interface Row extends VirtualScroller.BaseItem {
     index: number;
     page: number;
-    role: SessionLog.Role;
+    speaker: SessionLog.Speaker;
     preview: string;
     /** how many tool calls it made — known from the index before the page loads */
     calls: number;

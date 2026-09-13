@@ -19,13 +19,13 @@ import type { SessionLog } from './SessionLog';
 import { hosted } from '../virtual-scroller/hosted';
 
 const rows: ChatApi.IndexEntry[] = [
-  { id: 'a', role: 'user', text: 'hello there', calls: 0, at: 1_700_000_000_000 },
-  { id: 'b', role: 'assistant', text: 'running tools', calls: 3, at: 1_700_000_060_000 },
-  { id: 'c', role: 'system', text: 'Turn took 4s', calls: 0, at: 0 },
-  { id: 'd', role: 'user', text: 'next question', calls: 0, at: 1_700_000_120_000 },
-  { id: 'e', role: 'assistant', text: 'plain answer', calls: 0, at: 1_700_000_180_000 },
-  { id: 'f', role: 'assistant', text: 'more tools', calls: 1, at: 1_700_000_240_000 },
-  { id: 'g', role: 'system', text: 'Context compacted', calls: 0, at: 1_700_000_300_000 }
+  { id: 'a', speaker: 'user', text: 'hello there', calls: 0, at: 1_700_000_000_000 },
+  { id: 'b', speaker: 'assistant', text: 'running tools', calls: 3, at: 1_700_000_060_000 },
+  { id: 'c', speaker: 'system', text: 'Turn took 4s', calls: 0, at: 0 },
+  { id: 'd', speaker: 'user', text: 'next question', calls: 0, at: 1_700_000_120_000 },
+  { id: 'e', speaker: 'assistant', text: 'plain answer', calls: 0, at: 1_700_000_180_000 },
+  { id: 'f', speaker: 'assistant', text: 'more tools', calls: 1, at: 1_700_000_240_000 },
+  { id: 'g', speaker: 'system', text: 'Context compacted', calls: 0, at: 1_700_000_300_000 }
 ];
 
 function make() {
@@ -67,7 +67,7 @@ describe('Index', () => {
     await Promise.resolve();
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(seeks.at(-1)).toBe(0); // the start: the newest is first now
-    index.setRole('user');
+    index.setSpeaker('user');
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(index.rows.value.map((row) => row.id)).toEqual(['d', 'a']);
     expect(seeks.at(-1)).toBe(0);
@@ -82,13 +82,13 @@ describe('Index', () => {
     const { index, unmount } = make();
     expect(index.count).toBe(7);
     expect(index.countLabel).toBe('7 messages');
-    index.setRole('user');
+    index.setSpeaker('user');
     expect(index.rows.value.map((row) => row.id)).toEqual(['a', 'd']);
     expect(index.countLabel).toBe('2 of 7');
-    index.setRole('assistant');
+    index.setSpeaker('assistant');
     index.setTools('exclude');
     expect(index.rows.value.map((row) => row.id)).toEqual(['e']);
-    index.setRole('all');
+    index.setSpeaker('all');
     index.setTools('compaction');
     expect(index.rows.value.map((row) => row.id)).toEqual(['g']);
     index.setTools('include');
@@ -96,11 +96,11 @@ describe('Index', () => {
     expect(index.rows.value.map((row) => row.id)).toEqual(['b', 'f']);
     index.clearQuery();
     expect(index.count).toBe(7);
-    expect(index.isRole('all')).toBe(true);
+    expect(index.isSpeaker('all')).toBe(true);
     expect(index.isTools('include')).toBe(true);
     const row = index.rows.value[1];
-    expect(index.roleMark(row)).toBe('agent');
-    expect(index.roleClass(row)).toBe('ix-role-a');
+    expect(index.speakerMark(row)).toBe('agent');
+    expect(index.speakerClass(row)).toBe('ix-role-a');
     expect(index.toolsLabel(row)).toBe('3 tools');
     expect(index.toolsLabel(index.rows.value[5])).toBe('1 tool');
     expect(index.timeLabel(index.rows.value[2])).toBe('');
@@ -115,7 +115,7 @@ describe('Index', () => {
   // invariant: Selection is a set of ids (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
   it('click picks one and anchors, shift-click takes the range in filtered order, ctrl-click toggles, and a filter keeps the picks', () => {
     const { index, unmount } = make();
-    index.setRole('assistant');
+    index.setSpeaker('assistant');
     const [b, e, f] = index.rows.value;
     index.onRowClick(b, click());
     expect([...index.selected.value]).toEqual(['b']);
@@ -125,7 +125,7 @@ describe('Index', () => {
     index.onRowClick(e, click({ ctrlKey: true }));
     expect([...index.selected.value].sort()).toEqual(['b', 'f']);
     expect(index.anchorId.value).toBe('b');
-    index.setRole('all');
+    index.setSpeaker('all');
     expect([...index.selected.value].sort()).toEqual(['b', 'f']);
     expect(index.selectedLabel).toBe('2 selected');
     expect(index.isSelected(index.rows.value[1])).toBe(true);
@@ -190,7 +190,7 @@ describe('Index', () => {
       {
         id: 'a',
         index: 0,
-        role: 'user',
+        speaker: 'user',
         timestamp: 1_700_000_000_000,
         parts: [{ kind: 'text', text: 'hello **there**' }],
         sidechain: false
@@ -198,7 +198,7 @@ describe('Index', () => {
       {
         id: 'b',
         index: 1,
-        role: 'assistant',
+        speaker: 'assistant',
         timestamp: 1_700_000_060_000,
         parts: [
           { kind: 'thinking', text: 'plan\nmore', durationMs: 1 },
@@ -221,7 +221,7 @@ describe('Index', () => {
       {
         id: 'c',
         index: 2,
-        role: 'system',
+        speaker: 'system',
         timestamp: 0,
         parts: [
           {

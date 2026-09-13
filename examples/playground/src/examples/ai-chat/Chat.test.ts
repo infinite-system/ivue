@@ -22,7 +22,7 @@ import { hosted } from '../virtual-scroller/hosted';
 const PAGE_SIZE = 3;
 const message = (
   id: string,
-  role: SessionLog.Role,
+  role: SessionLog.Speaker,
   text: string,
   extra: Partial<SessionLog.Message> = {}
 ): SessionLog.Message => ({
@@ -69,7 +69,7 @@ const META: ChatApi.Meta = {
   indexBytes: 1,
   firstAt: 0,
   lastAt: 0,
-  roles: {},
+  speakers: {},
   models: {},
   tools: {},
   calls: 2,
@@ -78,7 +78,7 @@ const META: ChatApi.Meta = {
 };
 const INDEX: ChatApi.IndexRecord[] = THREAD.map((entry) => ({
   id: entry.id,
-  r: entry.role[0],
+  r: entry.speaker[0],
   t: (entry.parts[0] as SessionLog.TextPart).text,
   c: entry.parts.some((part) => part.kind === 'tool_batch') ? 2 : 0,
   at: entry.timestamp
@@ -163,7 +163,7 @@ describe('Chat', () => {
     expect(chat.rows.value.every((row) => row.message === null)).toBe(true);
     expect(chat.rows.value[3]).toMatchObject({
       id: 'm3',
-      role: 'assistant',
+      speaker: 'assistant',
       page: 1,
       preview: 'answer with calls'
     });
@@ -280,7 +280,7 @@ describe('Chat', () => {
     expect(chat.count).toBe(8);
     const user = chat.rows.value[6];
     const reply = chat.rows.value[7];
-    expect(user.role).toBe('user');
+    expect(user.speaker).toBe('user');
     expect(user.message?.parts).toEqual([{ kind: 'text', text: 'show me scrollers' }]);
     expect(reply.message?.replay).toBe(true);
     expect(reply.message?.model).toBe('Quick');
@@ -301,7 +301,7 @@ describe('Chat', () => {
     expect(chat.clock.isTicking).toBe(false);
     expect(chat.indexRows.value.at(-1)).toMatchObject({
       id: reply.id,
-      role: 'assistant',
+      speaker: 'assistant',
       calls: 2
     });
 
@@ -426,7 +426,7 @@ describe('Chat', () => {
         type: 'user',
         uuid: 'f1',
         timestamp: '2026-09-09T10:00:00.000Z',
-        message: { role: 'user', content: 'from disk ekalashnikov@gmail.com' }
+        message: { speaker: 'user', content: 'from disk ekalashnikov@gmail.com' }
       },
       {
         type: 'assistant',

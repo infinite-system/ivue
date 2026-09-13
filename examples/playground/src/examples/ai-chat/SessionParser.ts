@@ -82,7 +82,7 @@ class $SessionParser {
       this.open = {
         id: record.uuid ?? `${apiId}-${this.lineCount}`,
         index: -1,
-        role: 'assistant',
+        speaker: 'assistant',
         timestamp: SessionLog.Class.epoch(record),
         parts: [],
         model: message.model,
@@ -128,7 +128,7 @@ class $SessionParser {
       this.target(record).push({
         id: record.uuid ?? `compact-${this.lineCount}`,
         index: -1,
-        role: 'system',
+        speaker: 'system',
         timestamp: SessionLog.Class.epoch(record),
         parts: [
           {
@@ -151,7 +151,7 @@ class $SessionParser {
       this.target(record).push({
         id: record.uuid ?? `user-${this.lineCount}`,
         index: -1,
-        role: 'user',
+        speaker: 'user',
         timestamp: SessionLog.Class.epoch(record),
         parts: [{ kind: 'text', text }],
         sidechain: Boolean(record.isSidechain)
@@ -185,7 +185,7 @@ class $SessionParser {
       this.target(record).push({
         id: record.uuid ?? `user-${this.lineCount}`,
         index: -1,
-        role: 'user',
+        speaker: 'user',
         timestamp: receivedAt,
         parts: [{ kind: 'text', text: typed.join('\n\n') }],
         sidechain: Boolean(record.isSidechain)
@@ -208,7 +208,7 @@ class $SessionParser {
     this.target(record).push({
       id: record.uuid ?? `system-${this.lineCount}`,
       index: -1,
-      role: 'system',
+      speaker: 'system',
       timestamp: SessionLog.Class.epoch(record),
       parts: [
         {
@@ -255,7 +255,7 @@ class $SessionParser {
       messages.push({
         id: `sidechain-${thread[0].id}`,
         index: -1,
-        role: 'system',
+        speaker: 'system',
         timestamp: thread[0].timestamp,
         parts: [
           {
@@ -288,9 +288,7 @@ class $SessionParser {
           .map((part) => part.call)
       );
       const thinking = run.flatMap((message) =>
-        message.parts.filter(
-          (part): part is SessionLog.ThinkingPart => part.kind === 'thinking'
-        )
+        message.parts.filter((part): part is SessionLog.ThinkingPart => part.kind === 'thinking')
       );
       if (calls.length >= 2) {
         const first = run[0];
@@ -298,7 +296,7 @@ class $SessionParser {
         output.push({
           id: `batch-${first.id}`,
           index: -1,
-          role: 'assistant',
+          speaker: 'assistant',
           timestamp: first.timestamp,
           parts: [
             ...thinking,
@@ -325,7 +323,7 @@ class $SessionParser {
 
   /** inside a mixed turn (text, then several calls): the consecutive calls contract */
   protected batchWithin(message: SessionLog.Message): SessionLog.Message {
-    if (message.role !== 'assistant') return message;
+    if (message.speaker !== 'assistant') return message;
     const parts: SessionLog.Part[] = [];
     let calls: SessionLog.ToolCall[] = [];
     const flush = () => {

@@ -47,7 +47,10 @@ const toolResult = (
     type: 'user',
     uuid,
     timestamp: at(seconds),
-    message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: toolUseId, content }] },
+    message: {
+      speaker: 'user',
+      content: [{ type: 'tool_result', tool_use_id: toolUseId, content }]
+    },
     toolUseResult: structured,
     ...extra
   });
@@ -56,7 +59,7 @@ const prompt = (uuid: string, text: string, seconds: number, extra: object = {})
     type: 'user',
     uuid,
     timestamp: at(seconds),
-    message: { role: 'user', content: text },
+    message: { speaker: 'user', content: text },
     ...extra
   });
 
@@ -137,7 +140,7 @@ const SESSION = [
     uuid: 'c1',
     timestamp: at(14),
     isCompactSummary: true,
-    message: { role: 'user', content: 'Summary of everything' }
+    message: { speaker: 'user', content: 'Summary of everything' }
   }),
   prompt('m1', 'meta text', 15, { isMeta: true }),
   assistant(
@@ -158,7 +161,7 @@ describe('SessionLog', () => {
   // invariant: A tool result joins its call (examples/playground/src/examples/ai-chat/ai-chat.invariants.md)
   it('merges split turns, joins results, contracts runs to batches and keeps a single call bare', () => {
     const messages = SessionLog.Class.parse(SESSION);
-    expect(messages.map((message) => message.role)).toEqual([
+    expect(messages.map((message) => message.speaker)).toEqual([
       'user',
       'assistant',
       'assistant',
@@ -206,7 +209,10 @@ describe('SessionLog', () => {
     const agentPart = agent.parts[0];
     if (agentPart.kind !== 'tool_call') throw new Error('expected the agent call');
     expect(agentPart.call.result?.text).toBe('Findings.');
-    expect(agentPart.call.children?.map((message) => message.role)).toEqual(['user', 'assistant']);
+    expect(agentPart.call.children?.map((message) => message.speaker)).toEqual([
+      'user',
+      'assistant'
+    ]);
     expect(agentPart.call.children?.[1].parts).toEqual([{ kind: 'text', text: 'found it' }]);
 
     expect(done.parts).toEqual([{ kind: 'text', text: 'Done, mailed ekalashnikov@gmail.com' }]);
@@ -239,7 +245,7 @@ describe('SessionLog', () => {
     expect(
       parser
         .finish()
-        .filter((message) => message.role === 'system')
+        .filter((message) => message.speaker === 'system')
         .map((message) => message.parts[0])
     ).toMatchObject([{ subtype: 'compaction' }]);
     expect(parser.scrubCounts.email).toBe(1);
@@ -356,6 +362,6 @@ describe('SessionLog', () => {
       subtype: 'subagent',
       text: 'Subagent thread (2 messages)'
     });
-    expect(messages[1].children?.map((message) => message.role)).toEqual(['user', 'assistant']);
+    expect(messages[1].children?.map((message) => message.speaker)).toEqual(['user', 'assistant']);
   });
 });

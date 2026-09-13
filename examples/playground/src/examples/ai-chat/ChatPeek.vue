@@ -56,13 +56,13 @@ defineExpose(model as Peek.Instance);
             </button>
           </div>
           <div class="ac-peek-filters">
-            <div class="ac-seg" role="group" aria-label="Role">
+            <div class="ac-seg" role="group" aria-label="Speaker">
               <button
-                v-for="option in model.roleOptions"
+                v-for="option in model.speakerOptions"
                 :key="option.value"
                 type="button"
-                :class="{ 'ac-on': model.isRole(option.value) }"
-                @click="model.setRole(option.value)"
+                :class="{ 'ac-on': model.isSpeaker(option.value) }"
+                @click="model.setSpeaker(option.value)"
               >
                 {{ option.label }}
               </button>
@@ -98,7 +98,7 @@ defineExpose(model as Peek.Instance);
             >
               <template #item="{ item }">
                 <div class="ac-peek-row" :class="model.rowClass(item)" @click="model.select(item)">
-                  <span class="ac-peek-role">{{ model.roleMark(item) }}</span>
+                  <span class="ac-peek-role">{{ model.speakerMark(item) }}</span>
                   <span class="ac-peek-text">{{ model.previewText(item) }}</span>
                   <span class="ac-peek-time">{{ model.timeLabel(item) }}</span>
                 </div>

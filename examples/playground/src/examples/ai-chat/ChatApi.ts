@@ -129,7 +129,7 @@ class $ChatApi {
   }
 
   /** the role letters the index file carries — the file is sized for the network, the entry for the reader */
-  static readonly INDEX_ROLES: Record<string, SessionLog.Role> = {
+  static readonly INDEX_SPEAKERS: Record<string, SessionLog.Speaker> = {
     u: 'user',
     a: 'assistant',
     s: 'system'
@@ -138,7 +138,7 @@ class $ChatApi {
   static entry(record: ChatApi.IndexRecord): ChatApi.IndexEntry {
     return {
       id: record.id,
-      role: this.INDEX_ROLES[record.r] ?? 'system',
+      role: this.INDEX_SPEAKERS[record.r] ?? 'system',
       text: record.t,
       calls: record.c,
       at: record.at
@@ -277,7 +277,7 @@ export namespace ChatApi {
     indexBytes: number;
     firstAt: number;
     lastAt: number;
-    roles: Record<string, number>;
+    speakers: Record<string, number>;
     models: Record<string, number>;
     tools: Record<string, number>;
     calls: number;
@@ -298,7 +298,7 @@ export namespace ChatApi {
   /** one message as the index knows it, named in full: what every panel reads */
   export interface IndexEntry {
     id: string;
-    role: SessionLog.Role;
+    speaker: SessionLog.Speaker;
     text: string;
     calls: number;
     at: number;
