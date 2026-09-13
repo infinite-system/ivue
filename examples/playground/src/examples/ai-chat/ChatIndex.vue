@@ -172,7 +172,7 @@ const {
               type="button"
               class="ac-ix-go ac-go"
               title="Show in the chat"
-              @click.stop="model.seek(item)"
+              @click.stop="model.go(item)"
             >
               <svg class="ac-go-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path :d="model.jumpIcon" />

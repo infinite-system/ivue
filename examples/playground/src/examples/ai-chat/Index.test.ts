@@ -209,6 +209,12 @@ describe('Index', () => {
     index.onRowDoubleClick(index.rows.value[4]);
     expect(jump).toHaveBeenLastCalledWith(4);
     expect(index.isCurrent(index.rows.value[4])).toBe(true);
+    // the row's go button shows the message and closes the index over it
+    chat.toggleSidebar('Index');
+    expect(chat.sidebarTab.value).toBe('Index');
+    index.go(index.rows.value[3]);
+    expect(jump).toHaveBeenLastCalledWith(index.rows.value[3].index);
+    expect(chat.sidebarTab.value).toBeNull();
     unmount();
   });
 

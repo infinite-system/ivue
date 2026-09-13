@@ -505,6 +505,12 @@ class $Index {
     this.chat.jumpTo(row.index);
   }
 
+  /** the row's go button: show the message and close the index over it */
+  go(row: Index.Row) {
+    this.seek(row);
+    this.chat.closeSidebar();
+  }
+
   onRowDoubleClick(row: Index.Row) {
     this.seek(row);
   }
