@@ -1374,3 +1374,51 @@ tail, the glide's peak and length, the reversal's latency, the gap after
 a send. A breach exits 1. Run it after any change to `VirtualScroller`,
 `VirtualScrollerPadding`, `Lenis` or the chat's pin, with the dev server
 up; the unit suite cannot see a forced layout or a 100 ms frame.
+
+## Measure the gate before the refactor, not after (2026-09-14)
+
+Splitting `VirtualScroller` into hosted classes broke the standards gate
+twice, the same way both times: a new method placed among the getters
+(`createGeometry()`, then `onMount()` and friends) makes
+`class_members_are_ordered_and_spaced` fire on EVERY getter after it —
+one misplaced member, eighty findings. The count is alarming and the
+cause is trivial, so the reflex to have is not panic but a baseline:
+`git stash push -u -m <tag>` → run `npm run gate:docs` → `git stash
+apply <sha>` → drop, which is how the 82 was shown to be 0 before the
+change and therefore all mine. The same trick settled `vue-tsc`, whose
+28 errors in `ChooseField.vue` and `Sidebar.Files.Row.vue` are
+pre-existing Quasar slot-typing noise: capture the per-file counts to a
+file first, diff after. Never report "N pre-existing errors" without
+having measured N on the other side of the change.
+
+## A hosted capability is a field, not a `$`-getter (2026-09-14)
+
+`$geometry`, `$padding` and `$selection` were lazy `$`-cached getters,
+and none of them was ever lazy in practice: the constructor's own repair
+call reads the geometry, the window walk reads the pad every frame, the
+selection's first watch evaluates the walk. So they are constructor-
+assigned `readonly` fields built through `createX()` factories — the
+form the standard's constants table already names for a constructed
+dependency. Three consequences worth knowing: a plain field read beats
+the `$`-cache's own-property guard on a per-frame path; a subclass swaps
+a capability by overriding one method instead of reaching for the
+namespace slot; and ORDER now matters — the capabilities must be built
+after the inputs they read, because the selection's first watch
+evaluates the window walk, which reads the container size the resize
+observer was assigned two lines earlier. Building them at the top of the
+constructor threw `Cannot read properties of undefined`.
+
+## A pure refactor should measure as parity, and that is the finding (2026-09-14)
+
+The five-class split was benchmarked honestly: same scripted 40-notch
+flick on `/examples/virtual-scroller`, CDP `Performance.getMetrics`
+under 6x CPU throttling, seven flicks per pass, three passes per side,
+with the pre-refactor tree checked out over the same dev server. Before:
+script 162–181 ms, layout 159–207 ms, style 364–474 ms. After: script
+163–216 ms, layout 158–232 ms, style 348–431 ms. The run-to-run spread
+is wider than any difference between the sides, so the honest headline
+is parity — a structural refactor that moved no work should not get
+faster, and the thing worth proving is that it did not get slower. Frame
+time cannot answer this question at all: vsync pins it to 16.7 ms on
+both sides. Reach for CPU metrics under throttling, and report the
+spread, not a single median.
