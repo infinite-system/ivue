@@ -663,7 +663,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return computed(() => this.computeVisibleItems());
   }
 
-  /* Scrolling */
+  /* Scrollbar geometry — the thumb's size and travel over the VIRTUAL
+     position, since a native scrollbar can never exist here */
 
   /** Scrollbar geometry over the VIRTUAL position (native scrollTop stays
    *  0 by design, so a native scrollbar can never exist here). Fraction of
@@ -685,7 +686,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return Math.min(Math.max(this.scrollPosition.value / scrollable, 0), 1);
   }
 
-  /* Scrollbar drag (the built-in track) */
+  /* Scrollbar drag state — what a live thumb drag holds */
 
   /** True while a pointer owns the thumb — the thumb's easing turns off so
    *  it sticks to the finger (see the .dragging CSS). */
@@ -778,7 +779,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     };
   }
 
-  /* Autoplay (Lenis-driven) */
+  /* Motion state — the integrator, the frame loop's handle, and the plain
+     holders the hot paths read and write per frame */
 
   lenis: Lenis.Model | null = null;
 
@@ -1185,7 +1187,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.emit('itemsChanged', args);
   }
 
-  /* Positions */
+  /* Measuring and anchoring — the scroller's half of the position model:
+     it reads the DOM and keeps the reader's row still; the geometry answers */
 
   /**
    * Structural repair after a splice: the geometry re-derives its
@@ -1392,6 +1395,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.geometry.applySize(index, size, doUpdatePositions);
   }
 
+  /* Position queries — answered by VirtualScrollerGeometry; these are the
+     surface consumers call */
+
   /** Top offset of item `index` — the geometry's prefix sum, `undefined`
    *  outside the current items range. Reactive: re-evaluates when geometry
    *  settles, so `watch(() => scroller.getIndexPosition(index), …)` behaves
@@ -1420,6 +1426,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   getIndexAtPosition(offset: number): VirtualScrollerGeometry.At | undefined {
     return this.geometry.indexAt(offset);
   }
+
+  /* The position write — every path that moves the content comes through
+     setScrollPosition, and the frame is never natively panned */
 
   // invariant: The frame is never natively panned along its own axis (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   /**
@@ -1526,17 +1535,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (element) element.scrollTop = 0;
   }
 
-  /** Seek to a 0..1 track fraction in ITEM-INDEX space — the external seek
-   *  bar's contract (see the landing). */
-  seekToFraction(fraction: number) {
-    this.landing.toFraction(fraction);
-  }
-
-  /** Seek to a 0..1 fraction of the SCROLLABLE RANGE — the thumb's own
-   *  inverse, so a drag lands where it points (see the landing). */
-  seekToProgress(fraction: number) {
-    this.landing.toProgress(fraction);
-  }
+  /* The built-in track — a pointer owns the thumb, and its fraction seeks */
 
   /** A thumb drag never stops autoplay: a reader repositioning by the
    *  thumb, either way, is still reading, so a playing scroller re-arms
@@ -1626,6 +1625,27 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.seekToProgress(this.trackPointerFraction(event, track.getBoundingClientRect()));
   }
 
+  /* Landing — the seek, the thumb's target and step mode's snap all live on
+     VirtualScrollerLanding; these are the surface consumers call, plus the
+     one DOM read it needs back from the frame */
+
+  /** Seek to a 0..1 track fraction in ITEM-INDEX space — the external seek
+   *  bar's contract (see the landing). */
+  seekToFraction(fraction: number) {
+    this.landing.toFraction(fraction);
+  }
+
+  /** Seek to a 0..1 fraction of the SCROLLABLE RANGE — the thumb's own
+   *  inverse, so a drag lands where it points (see the landing). */
+  seekToProgress(fraction: number) {
+    this.landing.toProgress(fraction);
+  }
+
+  /** Step mode's landing: the nearest item boundary (see the landing). */
+  snapToNearest() {
+    this.landing.snapToNearest();
+  }
+
   /** Main-axis offset that places item `index` per the snapAlign prop (see
    *  the landing). */
   snapAlignOffset(index: number): number {
@@ -1668,6 +1688,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   cancelSeek() {
     this.landing.cancel();
   }
+
+  /* Input intake and the frame loop — what a gesture means, and the one rAF
+     that paints it; the creep keeps its own (see VirtualScrollerAutoplay) */
 
   onVirtualScroll({ deltaX, deltaY }: { deltaX: number; deltaY: number }) {
     const delta = this.axisDelta({ deltaX, deltaY });
@@ -1714,11 +1737,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // scrollToIndex pipeline a seek uses.
       this.landing.armSnap();
     }
-  }
-
-  /** Step mode's landing: the nearest item boundary (see the landing). */
-  snapToNearest() {
-    this.landing.snapToNearest();
   }
 
   // invariant: The transform lerps to the target over many frames (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
