@@ -167,7 +167,21 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  size via lenis.virtualLimit. */
   protected static readonly TRAILING_SPACER_RENDER_CAP = 2048;
 
-  protected static readonly RENDER_BIAS_CHUNK = 65536;
+  /** The rebase step, and with it the size of the composited layer. The
+   *  rendered offset lives in [chunk, 2 x chunk), so the leading spacer —
+   *  and the layer, which is content-sized — is never taller than about
+   *  twice this. At 65536 that was a 133,000 px layer deep in a long
+   *  thread, and a layer that size does not stay rasterized once the
+   *  content stops moving: a row at the viewport's edge rendered while
+   *  scrolling and went blank the moment the reader stopped, in Chrome and
+   *  Safari alike (seen on #10,326 of the ai-chat sample). The trailing
+   *  side already knew this — see TRAILING_SPACER_RENDER_CAP, capped for
+   *  the same compositor heaviness — and only the leading side was left
+   *  merely rebased. The floor is what the walk can extend BACKWARDS in one
+   *  go: the pad rows plus a flick's gap, a few thousand px at most, and
+   *  the leading spacer clamps at zero below that. f32 is unbothered either
+   *  way; it resolves fractions to about 8.4M. */
+  protected static readonly RENDER_BIAS_CHUNK = 16384;
 
   /**
    * Device-pixel snap for LANDINGS (seeks/jumps): a resting position on
