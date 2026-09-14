@@ -193,15 +193,15 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### Rendered offsets are rebased by whole chunks
 
-**Invariant:** If the scroll passes a chunk of `RENDER_BIAS_CHUNK` px, then a bias one chunk below the current chunk is subtracted from both the leading spacer and the applied transform in the same frame, so the rendered offset stays inside [chunk, 2 x chunk) at any depth — and with it the composited layer, which is content-sized.
+**Invariant:** If the scroll passes a chunk of 65,536 px, then a bias one chunk below the current chunk is subtracted from both the leading spacer and the applied transform in the same frame, so the rendered numbers stay below about 131k px at any depth.
 
 **Scope:** `VirtualScroller.ts`: `renderBias`, `updateRenderBias`, `leadingSpacerPx`, `setScrollPosition`, `loop`, and `lenis.renderOffset`.
 
-**Renegotiable at:** GPU compositing — single-precision floats lose sub-pixel placement past about 2^23 px, and a composited layer stops staying rasterized long before that. The chunk is set by the second limit, not the first: at 65,536 the layer reached 133,000 px deep in a long thread and a row at the viewport's edge painted while the content moved and went blank the moment it stopped, in Chrome and Safari alike. The floor is what the walk can extend BACKWARDS in one go — the pad rows plus a flick's gap — below which the leading spacer clamps at zero.
+**Renegotiable at:** GPU compositing precision — single-precision floats lose sub-pixel placement past about 2^23 px. The floor is what the walk can extend BACKWARDS in one go — the pad rows plus a flick's gap — below which the leading spacer clamps at zero and the content jumps.
 
 **Mechanism:** All scroll math stays absolute; only the two render outputs are shifted by the same bias, so their difference, everything visible, is unchanged. `loop` rebases from the ANIMATED scroll before Lenis writes the frame's transform so the spacer (this frame's flush) and the transform shift together; a write that moves the position without writing the transform (`setScrollPosition` with `translateY` false — the loop's target write) never rebases, because the target and the animated scroll can straddle a chunk boundary and a second rebase from the target flipped the bias mid-frame: the spacer on the new bias, the transform on the old, a whole chunk apart for that frame.
 
-**Generates:** The `renderBias` ref (a ref, because the spacer binding must re-render on rebase); the `RENDER_BIAS_CHUNK` static, which is the layer's size knob as much as the precision one — the trailing side caps its spacer outright for the same reason (see `TRAILING_SPACER_RENDER_CAP`).
+**Generates:** The `renderBias` ref (a ref, because the spacer binding must re-render on rebase); the `RENDER_BIAS_CHUNK` static.
 
 **Evidence:** `VirtualScroller.ts` `updateRenderBias`, `setScrollPosition`, the `renderBias` doc comment. Tests: "deep in the list the render bias rebases the leading spacer by whole chunks", "a position write without a transform write leaves the render bias alone". Seen on the chat: one frame in a long wheel up rendered the rows 63k px off the viewport, at the tick where the target crossed a chunk the animated scroll had not.
 
