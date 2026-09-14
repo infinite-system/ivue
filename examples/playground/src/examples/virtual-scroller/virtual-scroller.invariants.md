@@ -563,7 +563,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### The pad covers the lerp gap exactly
 
-**Invariant:** If the window walk runs during a lerp, then the window covers the animated position in PIXELS over the measured sizes — the walk extends past the target by the lerp gap (`|targetScroll − animatedScroll|`) toward the animated side, whatever the rows between measure — and on top of that the trailing pad is the gap in rows of the estimate (rounded up, capped at 160) and the leading pad is the base plus a velocity lookahead — both held with hysteresis.
+**Invariant:** If the window walk runs, then it covers a container measured from the SCROLL POSITION — not from the top of the row that contains it, which under-covers by however far the scroll has travelled into that row — and during a lerp it covers the animated position too, in PIXELS over the measured sizes — the walk extends past the target by the lerp gap (`|targetScroll − animatedScroll|`) toward the animated side, whatever the rows between measure — and on top of that the trailing pad is the gap in rows of the estimate (rounded up, capped at 160) and the leading pad is the base plus a velocity lookahead — both held with hysteresis.
 
 **Scope:** `VirtualScroller.ts` `computeVisibleItems` (the pixel extension over `scrollGap`); `VirtualScrollerPadding.ts`: `rowsBehind`, `rowsAhead`, `split`, `settle`, `pad`; the scroller's `scrollGap`, `scrollVelocity`, `halfPaddingQuantity` and `estimatedItemSize` accessors.
 
@@ -575,7 +575,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Evidence:** `VirtualScroller.ts` `computeVisibleItems`, `VirtualScrollerPadding.ts` `pad`. Tests: "mid-lerp the window covers the animated position in pixels, over rows far shorter than the estimate", "rows behind cover the lerp gap exactly, rounded up and capped", "pad() holds the gap rows and the lookahead across a decaying tail and releases both at rest, reading the owner each call". Probe: 0/0/0 uncovered frames at 2000/4000/8000 px flicks (`docs_v2/examples/virtual-scroller.md`); on the chat, 120 wheel ticks up over short system rows: 0 uncovered frames, where the row pad alone left 3 with up to 243px blank at the bottom.
 
-**Impossible if true:** A pad that shrinks on the first frame of a flick's decay. Gap rows trimmed while the lerp still travels. Blank canvas under the viewport while the gap in rows is below the cap. A viewport bottom left uncovered mid-lerp because the rows behind the target measure shorter than the estimate.
+**Impossible if true:** A window that stops short of the viewport because the row at its top is taller than the frame. A pad that shrinks on the first frame of a flick's decay. Gap rows trimmed while the lerp still travels. Blank canvas under the viewport while the gap in rows is below the cap. A viewport bottom left uncovered mid-lerp because the rows behind the target measure shorter than the estimate.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.test.ts`; the feel itself, `npm run probe:scroller` against the docs dev server — a flick's tail unmounting a row, or a frame past 84 ms, fails it.
 
